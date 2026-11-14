@@ -11,6 +11,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import { constTrue } from "effect/Function";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
@@ -214,7 +215,21 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
       })
     )
   );
-  const acquire = Effect.fn("Citation.claimLaneUnit")(function* () {
+  const refused = (authorized: () => boolean) => {
+    if (closed) return O.some(CitationNativeLaneFailure.make({ reason: "closed" }));
+    if (poisoned) return O.some(CitationNativeLaneFailure.make({ reason: "quarantined" }));
+    if (!authorized()) return O.some(CitationNativeLaneFailure.make({ reason: "closed" }));
+    return O.none<CitationNativeLaneFailure>();
+  };
+  const ensureAuthority = Effect.fnUntraced(function* (authorized: () => boolean) {
+    const failure = refused(authorized);
+    if (O.isSome(failure)) {
+      yield* release;
+      return yield* failure.value;
+    }
+  });
+  const acquire = Effect.fn("Citation.claimLaneUnit")(function* (authorized: () => boolean = constTrue) {
+    yield* ensureAuthority(authorized);
     let lease = O.getOrUndefined(permit);
     if (lease === undefined) {
       lease = yield* acquireCitationNativeLease(admission, operation, false, (reason) =>
@@ -222,14 +237,12 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
       );
       permit = O.some(lease);
       unitsAcquired++;
-      if (closed || poisoned) {
-        yield* lease.release;
-        permit = O.none();
-        return yield* CitationNativeLaneFailure.make({ reason: "quarantined" });
-      }
+      yield* ensureAuthority(authorized);
       yield* Effect.void.pipe(Effect.withSpan("Citation.acquireNativeLane"));
+      yield* ensureAuthority(authorized);
     }
     const status = yield* admission.snapshot;
+    yield* ensureAuthority(authorized);
     if (status.closed || status.quarantined > 0) {
       yield* release;
       return yield* CitationNativeLaneFailure.make({ reason: status.closed ? "closed" : "quarantined" });
@@ -244,37 +257,46 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     yield* owner.ensureOpen;
     return owner;
   });
-  const reserveUnlocked = availableOwner.pipe(Effect.andThen(acquire), Effect.asVoid, Effect.uninterruptible);
+  const reserveUnlocked = availableOwner.pipe(
+    Effect.andThen(() => acquire()),
+    Effect.asVoid,
+    Effect.uninterruptible
+  );
   const reserve = lock.withPermit(reserveUnlocked);
-  const startUnlocked: CitationNativeStart = Effect.fn("Citation.startNativeLane")(function* (
-    _kind,
-    command,
-    onRetiring = Effect.void
+  const startUnlocked = Effect.fn("Citation.startNativeLane")(function* (
+    _kind: CitationNativeKind,
+    command: ChildProcess.Command,
+    onRetiring = Effect.void,
+    authorized: () => boolean = constTrue
   ) {
     return yield* Effect.uninterruptible(
       Effect.gen(function* () {
         const owner = yield* availableOwner;
         yield* retire;
-        const lease = yield* acquire();
+        const lease = yield* acquire(authorized);
         returning = false;
         const notification = makeRetirementNotification();
         let spawned = false;
         let acknowledged = false;
         const record = yield* owner
-          .start(command, {
-            quarantine: lease.quarantine,
-            release: Effect.gen(function* () {
-              if (!acknowledged) {
-                acknowledged = true;
-                if (spawned) confirmed++;
-              }
-              if (returning || closed) {
-                yield* lease.release;
-                if (O.isSome(permit) && permit.value === lease) permit = O.none();
-              }
-              yield* notification.confirm;
-            }),
-          })
+          .start(
+            command,
+            {
+              quarantine: lease.quarantine,
+              release: Effect.gen(function* () {
+                if (!acknowledged) {
+                  acknowledged = true;
+                  if (spawned) confirmed++;
+                }
+                if (returning || closed) {
+                  yield* lease.release;
+                  if (O.isSome(permit) && permit.value === lease) permit = O.none();
+                }
+                yield* notification.confirm;
+              }),
+            },
+            () => refused(authorized)
+          )
           .pipe(
             Effect.onError(() =>
               release.pipe(Effect.catchCause(() => Effect.logError("Citation lane cleanup remains quarantined")))
@@ -294,10 +316,7 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
             ),
         };
         occupant = O.some(process);
-        if (closed || poisoned) {
-          yield* release;
-          return yield* CitationNativeLaneFailure.make({ reason: "quarantined" });
-        }
+        yield* ensureAuthority(authorized);
         return { child: record.child, process, scope: record.scope, onRetired: notification.onRetired };
       })
     );
@@ -357,13 +376,24 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
             const retirementBound = limits.cleanupDeadline;
             // Start can retire one occupant, claim admission, then transfer a spawn.
             const startBound = Duration.sum(admissionBound, Duration.times(retirementBound, 2));
-            const start: CitationNativeStart = (...args) => guard(startUnlocked(...args), startBound);
+            const start: CitationNativeStart = (kind, command, onRetiring) =>
+              guard(
+                startUnlocked(kind, command, onRetiring, () => live),
+                startBound
+              );
             const outcome = yield* Effect.exit(
               restore(
                 Effect.suspend(() =>
                   body(
                     start,
-                    guard(reserveUnlocked, admissionBound),
+                    guard(
+                      availableOwner.pipe(
+                        Effect.andThen(() => acquire(() => live)),
+                        Effect.asVoid,
+                        Effect.uninterruptible
+                      ),
+                      admissionBound
+                    ),
                     guard(release.pipe(Effect.uninterruptible), retirementBound)
                   )
                 ).pipe(Effect.provideService(LaneUses, A.append(parents, { lock, live: () => live })))
