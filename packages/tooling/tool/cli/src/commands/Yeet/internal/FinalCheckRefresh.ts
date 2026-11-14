@@ -16,7 +16,10 @@
  * MBF = merge-base(F, base). A path in `git diff R F` is the lane's own change
  * when it is absent from `git diff MBR MBF`, or when the lane's patch for it
  * differs (`MBR..R` against `MBF..F`, compared verbatim after dropping
- * per-file identity headers and hunk line numbers). Every own change must be on the
+ * per-file identity headers and hunk line numbers). Both reads pin every diff
+ * option local git config could change (`--ignore-submodules=none` on the path
+ * lists, `PATCH_IDENTITY_DIFF_FLAGS` on the patches), so diff config can
+ * neither hide a moved gitlink nor change the verdict. Every own change must be on the
  * allowlist: the tool-regenerated standards inventories, or goal-packet
  * `SPEC.md`, `PLAN.md`, `README.md`, `ops/manifest.json` and reuse ledgers.
  * Code, tests and config always need a full final-check.
@@ -71,7 +74,7 @@ import {
 } from "./GitExec.ts";
 import { YeetHeadMoveRequest } from "./HeadMove.schemas.ts";
 import { YeetHeadMoveClassifier } from "./HeadMove.ts";
-import { finalCheckPatchIdentityDigest } from "./PatchIdentity.ts";
+import { finalCheckPatchIdentityDigest, PATCH_IDENTITY_DIFF_FLAGS } from "./PatchIdentity.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
@@ -225,16 +228,22 @@ export const decideFinalCheckRefresh = (facts: FinalCheckRefreshFacts): FinalChe
 
 type GitServices = Digest.Digest | ChildProcessSpawner.ChildProcessSpawner | Git;
 
+// `diff.ignoreSubmodules` or a checked-out `.gitmodules` `ignore = all` hides a moved gitlink from
+// the path list, so `none` is pinned; textconv, external diff, colour, context and the algorithm
+// never change a `--name-only` list, and `--no-relative` and `--no-renames` are already pinned.
 const changedPaths = (repoRoot: string, from: string, to: string) =>
-  changedYeetPaths(repoRoot, YeetChangedPathsQuery.make({ base: from, head: to, noRenames: true })).pipe(
-    Effect.map(HashSet.fromIterable)
-  );
+  changedYeetPaths(
+    repoRoot,
+    YeetChangedPathsQuery.make({ base: from, head: to, noRenames: true, ignoreSubmodules: "none" })
+  ).pipe(Effect.map(HashSet.fromIterable));
 
 // KEEP (D-18): a streamed byte fold; the patch identity keeps every byte, invalid UTF-8 included, and the kit buffers decoded text.
+// The pinned flags keep local config from hiding or reshaping the patch; `--literal-pathspecs`
+// keeps a path such as `:(top)a` from being read as pathspec magic.
 const filePatch = (repoRoot: string, from: string, to: string, path: string) =>
   runGitFoldedStdout(
     repoRoot,
-    ["diff", "--no-color", "--no-renames", "--no-ext-diff", "--binary", "--full-index", from, to, "--", path],
+    ["--literal-pathspecs", "diff", ...PATCH_IDENTITY_DIFF_FLAGS, from, to, "--", path],
     finalCheckPatchIdentityDigest
   );
 
@@ -358,9 +367,10 @@ const isAncestor = (repoRoot: string, ancestor: string, head: string) =>
  * by a strict ancestor of `finalHead`, and returns the head with the fewest
  * commits to `finalHead`. The choice is made by file name before any decode,
  * so a nearer failing, partial or malformed receipt is the one judged and
- * refuses; an older passing receipt never stands in for it. Subset-run
- * receipts sit under the `subsets/` directory, which is not a `.json` entry,
- * so they are never candidates.
+ * refuses; an older passing receipt never stands in for it. A distance that
+ * cannot be read chooses none for the same reason. Subset-run receipts sit
+ * under the `subsets/` directory, which is not a `.json` entry, so they are
+ * never candidates.
  *
  * **Example** (Build the receipt search)
  *
@@ -397,19 +407,19 @@ export const findFinalCheckRefreshReceipt = Effect.fn("Yeet.findFinalCheckRefres
     A.filter(heads, (head) => head !== finalHead),
     (head) => isAncestor(repoRoot, head, finalHead)
   );
+  // An unread distance may be the nearest receipt's, so the whole choice fails closed to none.
   const distances = yield* Effect.forEach(ancestors, (head) =>
-    countYeetRevisions(repoRoot, `${head}..${finalHead}`).pipe(
-      Effect.map((count) => [count, head] as const),
-      Effect.option
-    )
-  );
-  return A.head(
-    A.map(
-      A.sort(
-        A.getSomes(distances),
-        Order.mapInput(Order.Number, ([distance]: readonly [number, string]) => distance)
-      ),
-      ([, head]) => head
+    countYeetRevisions(repoRoot, `${head}..${finalHead}`).pipe(Effect.map((count) => [count, head] as const))
+  ).pipe(Effect.option);
+  return O.flatMap(distances, (rows) =>
+    A.head(
+      A.map(
+        A.sort(
+          rows,
+          Order.mapInput(Order.Number, ([distance]: readonly [number, string]) => distance)
+        ),
+        ([, head]) => head
+      )
     )
   );
 });

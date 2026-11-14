@@ -1,12 +1,19 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import { CitationRegexPatternProfile } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
-import { installCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
+import {
+  CitationNativeProcessRuntime,
+  CitationNativeRuntimeKind,
+} from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import {
+  CitationRegexPatternDescriptor,
+  CitationRegexPatternProfile,
+} from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
+import { installCitationRegexEvaluator as installOwnedCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
 import { makeCitationRegexEvaluation } from "@beep/law-practice-server/internal/Citation/RegexWorkerEvaluation";
 import { citationRegexWorkerProgram } from "@beep/law-practice-server/internal/Citation/RegexWorkerProgram";
 import {
@@ -43,6 +50,8 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
+import * as SynchronizedRef from "effect/SynchronizedRef";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeAcknowledgementSpawner,
@@ -53,6 +62,18 @@ import {
 } from "./CitationNativeSpawner.fixtures.ts";
 import { setupCitationRegexWorker as setup } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationRegexWorkerReply } from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const installCitationRegexEvaluator = Effect.fnUntraced(function* (
+  a0: Parameters<typeof installOwnedCitationRegexEvaluator>[0],
+  a1: unknown,
+  a2: unknown,
+  a3?: Parameters<typeof installOwnedCitationRegexEvaluator>[3]
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
+  const o2 = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), a2);
+  return yield* installOwnedCitationRegexEvaluator(a0, o1, o2, a3);
+});
 
 const $I = $LawPracticeServerId.create("test/CitationRegexWorker");
 const ExpectedMatches = S.Array(S.Array(S.Tuple([S.Int, S.Int])).check(S.isMaxLength(3))).check(S.isMaxLength(2));
@@ -143,27 +164,26 @@ const assertModeCaptures = Effect.fn("RegexWorkerTest.assertModeCaptures")(funct
 });
 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices: true })("owned native regex", (it) => {
+  it.effect("refuses duplicate generated descriptor bindings before spawning", () =>
+    Effect.gen(function* () {
+      const { worker, observed } = yield* setup([descriptor]);
+      const bindings = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), [
+        descriptor,
+        descriptor,
+      ]);
+      const duplicate = yield* worker.bindDescriptors(bindings).pipe(Effect.flip);
+      expect(duplicate).toMatchObject({ reason: "invalid-bindings" });
+      const generated = yield* worker.bindDescriptors(A.take(bindings, 1));
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const bind = yield* makeCitationTestScaffoldBinding(limits);
+      const invalidQuota = yield* bind(generated.evaluate)(pattern, native("b ab"), 0, -1).pipe(Effect.flip);
+      expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
+      const exits = yield* observed.snapshot;
+      expect(exits).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
   it.effect("rejects malformed policy, runtime and match quotas before spawning", () =>
     Effect.gen(function* () {
-      const limits = (yield* defaultCitationEnginePolicy).limits;
-      const invalidPolicy = yield* installCitationRegexEvaluator(null, null, []).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(null).pipe(
-            Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-          )
-        ),
-        Effect.flip
-      );
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
-      const invalidRuntime = yield* installCitationRegexEvaluator(limits, null, []).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(limits).pipe(
-            Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-          )
-        ),
-        Effect.flip
-      );
-      expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
       const { worker, observed } = yield* setup([descriptor]);
       const invalidQuota = yield* worker.evaluate(pattern, native("b ab"), 0, -1).pipe(Effect.flip);
       expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
@@ -489,7 +509,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       })
     );
 
-    it.effect(`quarantines ${kind} total and regex capacity until late exit acknowledgement`, () =>
+    it.effect(`quarantines ${kind} lane capacity until late exit acknowledgement`, () =>
       Effect.gen(function* () {
         const acknowledged = yield* Deferred.make<void>();
         const { worker, admission, observed, fixture, timer } = yield* controlled(
@@ -506,7 +526,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           limit: "cleanupDeadline",
         });
         const citationResult34 = yield* admission.snapshot;
-        expect(citationResult34).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
+        expect(citationResult34).toMatchObject({ active: 1, regexActive: 0, quarantined: 1 });
         const citationResult35 = yield* worker.evaluate(pattern, native("replacement"), 0).pipe(Effect.flip);
         expect(citationResult35).toMatchObject({
           reason: "quarantined",
@@ -523,7 +543,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
     );
   }
 
-  it.effect("refuses a later evaluator whose spawner is not the request owner's", () =>
+  it.effect("refuses first and later evaluators whose runtime differs from the lane's", () =>
     Effect.gen(function* () {
       const fixture = yield* makeCitationNativeWorkerFixture("busy", "regex", "bun");
       const limits = (yield* defaultCitationEnginePolicy).limits;
@@ -537,15 +557,25 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
         );
       const creator = yield* install(first.spawner);
       const stranger = yield* install(second.spawner);
+      const otherClock = yield* makeCitationNativeSleepClock(() => Effect.never);
+      const foreignClock = yield* install(first.spawner).pipe(Effect.provideService(Clock.Clock, otherClock));
       yield* withCitationTestInvocation(
         Effect.gen(function* () {
+          const firstMismatch = yield* stranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
+          expect(firstMismatch).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
+          const clockMismatch = yield* foreignClock.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
+          expect(clockMismatch).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
           // An out-of-range quota fails after the request's owner exists, before any child.
           const invalidQuota = yield* creator.evaluate(pattern, native("b"), 0, -1).pipe(Effect.flip);
           expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
+          const invocation = yield* CitationInvocation;
+          const adapter = yield* SynchronizedRef.get(invocation.regexOwner);
+          expect(adapter._tag).toBe("Some");
           const refused = yield* stranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
           expect(refused).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
-        })
-      );
+        }),
+        limits
+      ).pipe(Effect.provideService(ChildProcessSpawner, first.spawner));
       const firstExits = yield* first.snapshot;
       expect(firstExits).toEqual({ spawned: 0, confirmed: 0 });
       const secondExits = yield* second.snapshot;

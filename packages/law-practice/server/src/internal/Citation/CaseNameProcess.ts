@@ -2,6 +2,7 @@
  * Free Law Project; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationEngineAbsoluteMaxima,
@@ -14,11 +15,12 @@ import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import { reserveCitationInvocationText } from "./Invocation.ts";
 import {
-  copyCitationMetadataPatternConfiguration,
   makeCitationMetadataStage,
   ownCitationStageCall,
+  prepareCitationMetadataPatternConfiguration,
   substituteCitationMetadataMatches,
 } from "./MetadataComposition.ts";
 import { trimCitationMetadataBoundary } from "./MetadataStrings.ts";
@@ -28,10 +30,11 @@ import { makeCitationRegexInput } from "./RegexInput.ts";
 import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import {
   CitationStopWordsConfiguration,
-  copyCitationStopWordsConfiguration,
   installCitationStopWordCleanup,
+  verifyCitationStopWordsConfiguration,
 } from "./StopWords.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseNameProcess");
@@ -139,7 +142,6 @@ export class CitationCaseNameProcessResult extends S.Opaque<
   )
 ) {}
 const Input = S.toType(CitationCaseNameProcessInput);
-const Config = S.toType(CitationCaseNameProcessConfiguration);
 const empty = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array(0) });
 const bound = (index: number, length: number) => Num.max(0, Num.min(length, index < 0 ? length + index : index));
 const plaintiffBoundary = (point: number) =>
@@ -257,25 +259,24 @@ export const installCitationCaseNameProcess = Effect.fn("Citation.installCaseNam
     return CitationCaseNameProcessPatch.make({ ...names, plaintiff, year: year.year, numericYear: year.numericYear });
   });
 });
-/** Copy the source-bound processing configuration for enclosing composition.
+/** Authenticate the owned source-bound processing configuration for enclosing composition.
  * @internal @category operations @since 0.0.0
  */
-export const copyCitationCaseNameProcessConfiguration = Effect.fn("Citation.copyCaseNameProcessConfiguration")(
-  function* (limits: CitationEngineLimits, decoded: CitationCaseNameProcessConfiguration) {
-    const owned = yield* copyCitationMetadataPatternConfiguration(
+export const verifyCitationCaseNameProcessConfiguration = Effect.fn("Citation.verifyCaseNameProcessConfiguration")(
+  function* (limits: CitationEngineLimits, decoded: CitationOwned<CitationCaseNameProcessConfiguration>) {
+    const owned = yield* prepareCitationMetadataPatternConfiguration(
       limits,
-      Patterns,
       decoded.patterns,
       decoded.bindings,
       fingerprints,
       () => fail("invalid-configuration")
     );
-    const cleaner = yield* copyCitationStopWordsConfiguration(limits, decoded.cleaner);
+    const cleaner = yield* verifyCitationStopWordsConfiguration(limits, ownedField(decoded, "cleaner"));
     return CitationCaseNameProcessConfiguration.make({ ...owned, cleaner });
   }
 );
 const ownProcess = ownCitationStageCall({
-  copy: copyCitationCaseNameProcessConfiguration,
+  verify: verifyCitationCaseNameProcessConfiguration,
   install: installCitationCaseNameProcess,
 });
 /** Install one admitted composition; cleaner calls share its Scope and budget
@@ -284,8 +285,6 @@ const ownProcess = ownCitationStageCall({
  */
 export const makeCitationCaseNameProcess = makeCitationMetadataStage({
   method: "apply",
-  schema: Config,
-  invalid: () => fail("invalid-configuration"),
   own: ownProcess,
   prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownProcess>>, raw) => run(raw),
   project: (patch, reservedUnits) => CitationCaseNameProcessResult.make({ patch, reservedUnits }),

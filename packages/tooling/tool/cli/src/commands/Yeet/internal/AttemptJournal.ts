@@ -22,6 +22,7 @@ import { attemptInputFactFields } from "../../../internal/repo-run/QualitySchedu
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
 import { FinalCheckReceipt } from "./FinalCheck.schemas.ts";
+import { TurboForceReceipt } from "./TurboForce.ts";
 import { YeetVerdict } from "./Verdict.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as FileSystem from "effect/FileSystem";
@@ -64,6 +65,9 @@ export class YeetAttemptStarted extends S.Opaque<YeetAttemptStarted, { readonly 
     ...attemptInputFactFields,
     // Set only when `--force-local` kept a worker-profile publish local.
     forceLocal: S.Boolean.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    // Set on repair, verify and publish attempts: why Turbo was forced, and the TURB-05 shadow.
+    // Rows written before the field existed decode with it absent.
+    turboForce: TurboForceReceipt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("YeetAttemptStarted", {
       description: "A durable marker written immediately before a Yeet attempt executes.",

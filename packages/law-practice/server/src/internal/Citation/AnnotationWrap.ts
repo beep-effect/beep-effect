@@ -22,6 +22,7 @@ import type {
   CitationEngineLimits,
   CitationPythonUnicodeStorage,
 } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const pattern = { width: 1, bytes: new TextEncoder().encode("(<[^>]+>)") };
@@ -51,7 +52,7 @@ const queryFailure = (error: { readonly _tag: string }) =>
  */
 export const makeCitationAnnotationWrap = Effect.fn("Citation.makeAnnotationWrap")(function* (
   limits: CitationEngineLimits,
-  runtime: unknown
+  runtime: CitationNativeProcessRuntime
 ) {
   const worker = yield* installCitationRegexEvaluator(limits, runtime, bindings, "python-re").pipe(
     Effect.provideService(CitationRegexOperation, "annotate")

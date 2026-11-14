@@ -2,7 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -18,34 +18,16 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
 import type { CitationNativeProcessLease } from "./NativeAdmission.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/NativeProcess");
-const LimitsType = S.toType(CitationEngineLimits);
 const RuntimePath = S.NonEmptyString.check(S.isMaxLength(4096)).pipe(
   $I.annoteSchema("RuntimePath", {
     description: "Explicit trusted local worker executable/script/working-directory path.",
   })
 );
-/** Snapshot schema-owned limits and explicit runtime capabilities at installation.
- * @internal @category operations @since 0.0.0
- */
-export const prepareCitationNativeRuntime = Effect.fn("Citation.prepareNativeRuntime")(function* <E>(
-  policy: unknown,
-  runtimeInput: unknown,
-  invalid: () => E
-) {
-  const decoded = yield* S.decodeUnknownEffect(LimitsType)(policy).pipe(Effect.mapError(invalid));
-  const limits = yield* S.encodeEffect(CitationEngineLimits)(decoded).pipe(
-    Effect.flatMap(S.decodeEffect(CitationEngineLimits)),
-    Effect.mapError(invalid)
-  );
-  const runtime = yield* S.decodeUnknownEffect(CitationNativeProcessRuntime)(runtimeInput).pipe(
-    Effect.mapError(invalid)
-  );
-  return { limits, runtime };
-});
 /** @internal @category models @since 0.0.0 */
 export const CitationNativeRuntimeKind = LiteralKit(["bun", "node"]).pipe(
   $I.annoteSchema("CitationNativeRuntimeKind", {
@@ -226,11 +208,10 @@ export class CitationNativeProcessOwnerSnapshot extends S.Opaque<
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationNativeProcessOwner = Effect.fn("Citation.makeNativeProcessOwner")(function* <E>(
-  policy: unknown,
+  limits: CitationEngineLimits,
   operation: CitationSafetyLimitExceeded["operation"],
   fail: (reason: CitationNativeProcessFailureReason) => E
 ) {
-  const limits = yield* S.decodeUnknownEffect(LimitsType)(policy).pipe(Effect.mapError(() => fail("invalid-runtime")));
   const cleanupDeadline = limits.cleanupDeadline.pipe(Duration.toMillis, Duration.millis);
   const concurrency = limits.concurrentOperations;
   const clock = yield* Clock.Clock;

@@ -124,7 +124,8 @@ checks and optional lanes (`Heavy / *`) never hold it. Otherwise it refuses
 with the first blocker named (`pr-open`, `no-required-red`,
 `threads-resolved`, `final-check`); skipped final-check gates are printed so
 the PR body can name them. There is no `--force`. Flip only when no further push is
-planned: a push after the flip restarts the review window. Squash-message advice: [`gh-rest.md`](gh-rest.md).
+planned: a push after the flip restarts the review window, unless it is a proven clean
+merge of the base (see the merge gate below). Squash-message advice: [`gh-rest.md`](gh-rest.md).
 
 ### Refresh after a main merge
 
@@ -177,6 +178,45 @@ is `review window unknown`, which blocks exactly like an open window.
 `BEEP_YEET_REVIEW_WINDOW` overrides the length with an Effect duration string
 (`"30 minutes"`); the default is `YEET_REVIEW_WINDOW_DEFAULT` in
 `internal/ReviewWindow.ts`. No reviewer has to post for the window to elapse.
+
+A push that leaves the PR's own patch unchanged keeps the earlier push as the anchor: a
+proven GitHub rewrite (cascade, restack; #3130) or a merge of the base (PERIL-09, ruling
+D12). For a base merge the head-move classifier (`classifyBaseMerge` in
+`internal/HeadMove.ts`) must prove that the new head is one two-parent commit whose first
+parent is the old head, and whose push row in the branch's activity moved the branch from
+it; that the merged commit is on the synchronized base (`base.sha`); that the pushed tree
+is git's clean automatic merge, so no conflict was resolved and nothing was edited inside
+the merge commit; and that the PR's patch against the base (GitHub's three-dot diff) has
+the same identity before and after, compared byte for byte with hunk line numbers erased
+and every config-dependent diff default pinned (a checkout's `diff.ignoreSubmodules` or a
+`.gitmodules` `ignore = all` cannot hide a moved gitlink). The anchor then walks back
+across consecutive proven base merges and stops at the first activity row that is not one.
+That is usually the push that changed the patch; when it is a force-push row, the anchor
+stays at that rewrite's push, even for an unchanged GitHub rewrite. The status line ends
+`carried across N base merge(s) from <sha>`. Anything else re-arms the window: a conflict
+resolution, an edit inside the merge, a base change that moves a context line of a PR
+hunk, a force push of the merged head, a shallow checkout, a missing object, a failed or
+timed-out fetch, a failed activity read and any `unknown` verdict. A GitHub rewrite of a
+head that is not a merge follows #3130's rule and keeps the earlier anchor when it is
+proven unchanged.
+
+What it costs: nothing is spent on a base merge once the uncarried push no longer holds
+the window. While it does, the read first decides whether the head is a two-parent commit
+without any new request or fetch: the timeline it already reads lists pushed commits with
+their parents (`committed` events), and a head the timeline does not list is read from the
+local object store only (a head the checkout lacks counts as no merge). An ordinary
+one-parent head stops there: no GitHub read either way, and no git process for a head the
+timeline lists. A two-parent head adds the pull request read (when the caller has not read
+it already), the branch's ref activity read, the classifier's local git reads and, when
+the merge carries, the root commit's check-suite read. When the checkout lacks the head,
+the old head or the base, the classifier fetches them with `git fetch origin <sha...>`
+bounded at 60 seconds, each object at most once per head per checkout per process, so a
+fetch that failed or timed out is not retried by later polls of the same monitor: the
+object stays missing, the verdict stays `unknown` and the window counts from the merge
+push. A failed fetch never fails the read. Every surface (the monitor and its inbox rows,
+`yeet status --remote`, `yeet merge-gate`, `yeet gate-table`, `yeet gh pr status`) reads
+this one anchor. A base merge carries only the window; the final-check receipt follows the
+refresh rule above.
 
 The `beep-reviewer` check gates a merge only while `main`'s ruleset lists it as a
 required check: `yeet merge` and `yeet merge-gate` run `enforceReviewerGate`, which

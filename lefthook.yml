@@ -25,6 +25,12 @@ pre-commit:
     cache-profile:
       glob: "{biome.jsonc,biome.identity.jsonc}"
       run: bun run beep cache profile
+    # The no-tracked-python law (`bun run beep laws no-tracked-python --check`) has no allowlist,
+    # so a staged add or edit of a Python file fails without starting bun. Deletions are not staged
+    # files here, so commits that remove Python pass.
+    no-tracked-python:
+      glob: "*.{py,pyi,pyw,ipynb}"
+      run: printf '%s  port it to TypeScript or run it outside the repository; tracked Python is banned\n' {staged_files} >&2; exit 1
     instructions-drift:
       glob: "{CLAUDE.md,AGENTS.md}"
       run: bun run instructions:drift

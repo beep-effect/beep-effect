@@ -2,7 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineAbsoluteMaxima, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Bytes from "effect/Bytes";
@@ -13,8 +13,10 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationRegexProgram, makeCitationRegexProgram } from "./RegexProgram.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationRegexEngine } from "./RegexEngine.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexDescriptors");
 const Reason = LiteralKit(["invalid-bindings", "unknown-pattern", "profile-mismatch", "fingerprint-unavailable"]).pipe(
@@ -82,13 +84,6 @@ export class CitationRegexPatternDescriptor extends S.Opaque<
     })
   )
 ) {}
-const Bindings = S.Array(CitationRegexPatternDescriptor)
-  .check(S.isMaxLength(CitationEngineAbsoluteMaxima.patterns))
-  .pipe(
-    $I.annoteSchema("Bindings", {
-      description: "Bounded trusted server descriptor configuration, never raw-text input.",
-    })
-  );
 const ProfileType = S.toType(CitationRegexPatternProfile);
 const sameProfile = S.toEquivalence(CitationRegexPatternProfile);
 const fail = (reason: CitationRegexDescriptorFailure["reason"]) => CitationRegexDescriptorFailure.make({ reason });
@@ -111,26 +106,21 @@ export const copyCitationRegexDescriptor = (descriptor: CitationRegexPatternDesc
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegexDescriptorRegistry")(function* (
-  policy: unknown,
-  bindingsInput: unknown,
-  engineInput: unknown = "python-re"
+  limits: CitationEngineLimits,
+  bindings: ReadonlyArray<CitationRegexPatternDescriptor>,
+  engine: typeof CitationRegexEngine.Type = "python-re"
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-bindings"));
-  if (!A.isArray(bindingsInput)) return yield* fail("invalid-bindings");
-  if (bindingsInput.length > limits.patterns)
+  if (bindings.length > limits.patterns)
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patterns" });
-  const bindings = yield* S.decodeUnknownEffect(Bindings, { onExcessProperty: "error" })(bindingsInput).pipe(
-    Effect.mapError(() => fail("invalid-bindings"))
-  );
   const crypto = yield* Digest.Digest;
   const input = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern");
-  const compiler = yield* makeCitationRegexProgram(limits, engineInput);
+  const compiler = yield* makeCitationRegexProgram(limits, engine);
   const { timed } = yield* makeCitationRegexTiming(limits, false);
   const installed = MutableHashMap.empty<string, CitationRegexPatternDescriptor>();
   for (const descriptor of bindings) {
     const identity = key(descriptor.patternSha256, descriptor.flags);
     if (MutableHashMap.has(installed, identity)) return yield* fail("invalid-bindings");
-    MutableHashMap.set(installed, identity, copyCitationRegexDescriptor(descriptor));
+    MutableHashMap.set(installed, identity, descriptor);
   }
   const bind = Effect.fn("Citation.bindRegexDescriptor")(function* (nativePattern: unknown, flagsInput: unknown) {
     const flags = yield* S.decodeUnknownEffect(CitationRegexProgram.fields.sourceFlags)(flagsInput).pipe(

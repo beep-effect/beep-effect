@@ -27,6 +27,7 @@ import {
   GithubCheckLaneRunStatus,
   QualityTaskLaneRunReport,
 } from "../../Quality/Quality.schemas.ts";
+import { YeetHandlerErrorKind } from "../Yeet.errors.ts";
 import { laneRunLabels, laneRunsForWrapper } from "./InnerLaneReports.ts";
 import { GIT_PUSH_STEP_ID } from "./Planner.schemas.ts";
 import { knownSubLaneHintForLaneRun, knownSubLaneRemediationFromOutput } from "./QualityIssueIndex.ts";
@@ -605,6 +606,10 @@ export const YeetMergeReadyFromEncoded = YeetMergeReadyEncoded.pipe(
  * for `publishedHeadSha`; that field alone grants no proof reuse, qualification
  * or hosted-status authority.
  *
+ * `handlerErrorKind` is present only on a failure whose handler error named
+ * what it refused or failed on (`YeetHandlerErrorKind`); verdicts written
+ * before the key existed, and handler errors with no kind, omit it.
+ *
  * **Example** (Construct a yeet verdict)
  *
  * ```ts
@@ -669,6 +674,7 @@ export class YeetVerdict extends S.Opaque<YeetVerdict, { readonly brand: unique 
     flakeQuarantine: FlakeQuarantineIncident.pipe(S.Array, S.optionalKey),
     failedStepId: S.optionalKey(S.String),
     failureKind: YeetFailureKind.pipe(S.optionalKey),
+    handlerErrorKind: YeetHandlerErrorKind.pipe(S.optionalKey),
     mergeReady: YeetMergeReadyFromEncoded.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("YeetVerdict", {
@@ -896,6 +902,7 @@ export class BuildYeetVerdictInput extends S.Opaque<BuildYeetVerdictInput, { rea
     stash: S.optionalKey(YeetStashState),
     failedStepId: S.optionalKey(S.String),
     failureKind: S.optionalKey(YeetFailureKind),
+    handlerErrorKind: S.optionalKey(YeetHandlerErrorKind),
     mergeReady: S.optionalKey(YeetMergeReady),
   }).pipe(
     $I.annoteSchema("BuildYeetVerdictInput", {
@@ -996,6 +1003,7 @@ export const buildYeetVerdict = (input: BuildYeetVerdictInput): YeetVerdict => {
       flakeQuarantine: pipe(O.fromUndefinedOr(input.flakeQuarantine), O.filter(A.isReadonlyArrayNonEmpty)),
       failedStepId: O.fromUndefinedOr(input.failedStepId),
       failureKind: O.fromUndefinedOr(input.failureKind),
+      handlerErrorKind: O.fromUndefinedOr(input.handlerErrorKind),
     }),
   });
 };

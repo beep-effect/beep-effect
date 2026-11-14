@@ -148,6 +148,7 @@ export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCoun
       nativeProcesses,
       regexDescriptorBindings,
       nativeProcessOwners,
+      nativeLaneUnits: 1,
       diffXmlWorkerConstructions,
     })
 );
@@ -173,13 +174,14 @@ export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCoun
  */
 export const citationCanonicalFullSpanConstruction = CitationEngineWorkCounts.make({
   metadataOperationInstalls: 16,
-  configurationDetaches: 10,
+  configurationDetaches: 1,
   tokenizerBuilds: 1,
   regexWorkerConstructions: 26,
   regexEvaluations: 0,
   nativeProcesses: 0,
   regexDescriptorBindings: 0,
   nativeProcessOwners: 1,
+  nativeLaneUnits: 0,
   diffXmlWorkerConstructions: 0,
 });
 /** Check and log the work one engine construction performed.

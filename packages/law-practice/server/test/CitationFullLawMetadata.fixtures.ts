@@ -8,7 +8,8 @@ import {
 } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
 import {
   CitationFullLawMetadataInput,
-  makeCitationFullLawMetadata,
+  CitationLawMetadataConfiguration,
+  makeCitationFullLawMetadata as makeOwnedCitationFullLawMetadata,
 } from "@beep/law-practice-server/internal/Citation/LawMetadata";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -18,8 +19,9 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { loadCitationLawMetadataFixtures } from "./CitationLawMetadata.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
@@ -27,6 +29,11 @@ import {
   setupCitationRegexRuntime,
 } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationFullLawMetadata = installCitationOwnedTestStage({
+  schema: CitationLawMetadataConfiguration,
+  install: makeOwnedCitationFullLawMetadata,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationFullLawMetadata");
 const Corpus = S.fromJsonString(
@@ -86,6 +93,9 @@ const install = Effect.fn("FullLawMetadataTest.install")(function* (
   const { operation, context: base } = yield* makeCitationMetadataTestContext(setup.context, limits);
   const context = Context.add(base, CitationFrozenEditions, observedOwner);
   const metadata = yield* makeCitationFullLawMetadata(limits, setup.runtime, law.configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+    ),
     Effect.provideContext(context),
     DateTime.withCurrentZoneOffset(0)
   );

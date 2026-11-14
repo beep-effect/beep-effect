@@ -127,9 +127,8 @@ const frozenRanges = Effect.fn("Citation.readFrozenRegexClass")(function* (text:
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationRegexPointSets = Effect.fn("Citation.makeRegexPointSets")(function* (
-  engineInput: unknown = "python-re"
+  engine: typeof CitationRegexEngine.Type = "python-re"
 ) {
-  const engine = yield* S.decodeUnknownEffect(CitationRegexEngine)(engineInput).pipe(Effect.mapError(unsupported));
   const data = CitationRegexEngine.match(engine, {
     "python-re": () => citationPythonRegexData,
     "python-regex-v0": () => citationRegexV0Data,

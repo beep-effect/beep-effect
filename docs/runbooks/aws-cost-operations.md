@@ -625,7 +625,7 @@ alone does not establish that production uses the new image.
 | Stack | Ownership | Cost treatment |
 | --- | --- | --- |
 | CI production, `infra/ci-runners` | AWS fleet, network, cache; account controls composed alongside them. | Preserve reliability; account controls are protected against stack deletion. |
-| OIP staging/production, `infra/oip-web` | Vercel hosting, Cloudflare DNS, AWS S3 assets/state. | Current resources retained; `opip-web` is a historical state namespace, not proof of abandonment. |
+| OIP staging/production, `apps/oip-web/alchemy.run.ts` (the `OipWeb` Alchemy stack; the Pulumi `opip-web` stacks were removed 2026-11-14) | Vercel hosting, Cloudflare DNS, AWS S3 assets bucket `oip-law-web-assets-<stage>`. | Current resources retained; the old `assets.oip.law` and `staging-assets.oip.law` buckets were deleted empty. |
 | Storybook | Vercel deployment and shared CI/cache usage. | No dedicated AWS compute service found. |
 | OpenClaw workstation | Local generation applicator and managed workstation services. | Outside AWS workload retirement. |
 

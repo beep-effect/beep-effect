@@ -4,6 +4,7 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
@@ -23,6 +24,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type * as PlatformError from "effect/PlatformError";
+
+/** Explicit platform services for Node-parent native qualification.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationNativeNodeTestPlatform = Layer.merge(NodeServices.layer, NodeCrypto.layer);
 
 /** Bundle the actual owned HTML entrypoint once per scope, retaining its WASM asset lookup.
  * @internal @category testing @since 0.0.0
@@ -215,12 +221,16 @@ export const makeCitationObservedSpawner = Effect.fn("NativeSourceTest.makeSpawn
   const real = yield* ChildProcessSpawner;
   let spawned = 0;
   let confirmed = 0;
+  let live = 0;
+  let maximumAlive = 0;
   const spawner = ChildProcessSpawner.of({
     ...real,
     spawn: Effect.fn("NativeSourceTest.spawn")((command) =>
       real.spawn(command).pipe(
         Effect.map((handle) => {
           spawned++;
+          live++;
+          maximumAlive = Math.max(maximumAlive, live);
           let seen = false;
           return {
             ...handle,
@@ -234,6 +244,7 @@ export const makeCitationObservedSpawner = Effect.fn("NativeSourceTest.makeSpawn
                     );
                     seen = true;
                     confirmed++;
+                    live--;
                   }
                 })
               )
@@ -243,7 +254,11 @@ export const makeCitationObservedSpawner = Effect.fn("NativeSourceTest.makeSpawn
       )
     ),
   });
-  return { spawner, snapshot: Effect.sync(() => CitationNativeExitCounts.make({ spawned, confirmed })) };
+  return {
+    spawner,
+    snapshot: Effect.sync(() => CitationNativeExitCounts.make({ spawned, confirmed })),
+    maximumAlive: Effect.sync(() => maximumAlive),
+  };
 });
 /** Delay kill acknowledgement independently of the actual OS exit, preserving
  * the existing observed-spawner proof and enabling quarantine controls.

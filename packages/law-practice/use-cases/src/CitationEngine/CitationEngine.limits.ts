@@ -139,12 +139,23 @@ const DeadlineFields = {
  * @since 0.0.0
  */
 export class CitationEngineLimits extends S.Opaque<CitationEngineLimits, { readonly brand: unique symbol }>()(
-  S.Struct({ ...CountFields, ...DeadlineFields }).pipe(
-    $I.annoteSchema("CitationEngineLimits", {
-      description:
-        "Complete finite citation budgets bounded by non-configurable absolute ceilings; durations encode as milliseconds.",
-    })
-  )
+  S.Struct({ ...CountFields, ...DeadlineFields })
+    .check(
+      S.makeFilter(
+        (limits) => limits.concurrentRegexProcesses >= limits.concurrentOperations,
+        $I.annote("NativeLaneCapacity", {
+          title: "Native lane capacity",
+          description: "Every admitted operation must have capacity for its native lane.",
+          message: "Regex process concurrency must be at least operation concurrency.",
+        })
+      )
+    )
+    .pipe(
+      $I.annoteSchema("CitationEngineLimits", {
+        description:
+          "Complete finite citation budgets bounded by non-configurable absolute ceilings; durations encode as milliseconds.",
+      })
+    )
 ) {}
 
 /**
@@ -166,7 +177,7 @@ export class CitationEngineEffectivePolicy extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    version: S.tag("citation-engine-policy/v1"),
+    version: S.tag("citation-engine-policy/v2"),
     execution: S.tag("isolated-process"),
     limits: CitationEngineLimits,
   }).pipe(

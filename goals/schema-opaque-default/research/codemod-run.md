@@ -79,7 +79,7 @@ Per top-level family (Class to Opaque / TaggedClass to Opaque / brand added / ge
 - `scratchpad/test/jsonl/merge.test.ts:124,134` `Payload`
 - `apps/labs/api-docs/src/Catalog.ts:32,40,48,56,64,76,88,100,112` `CatalogEntry` (declared in `scratchpad/effected`, brand-only by D6)
 
-`static-super`: `infra/src/OipWeb.ts` `OipPulumiStateBackendConfig` overrides
+`static-super`: infra/src/OipWeb.ts (removed in #3341) `OipPulumiStateBackendConfig` overrides
 `static make` and calls `super.make`. Schema objects memoize `make`,
 `makeEffect` and `makeOption` through prototype getters that
 `defineProperty` onto `this`, so on an `S.Opaque` the first `super.make` call

@@ -1317,6 +1317,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         );
 
         expect(error.message).toContain("yeet publish requires --message with a conventional commit message");
+        expect(error.handlerErrorKind).toBe("publish-input");
       })
     );
 
@@ -4412,6 +4413,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 
         const noAhead = yield* collectPublishIntent(tempContext, false).pipe(Effect.flip);
         expect(noAhead.message).toContain("requires reviewed staged changes or a clean local commit ahead");
+        expect(noAhead.handlerErrorKind).toBe("publish-input");
 
         yield* fs.writeFileString(filePath, "dirty\n");
         const dirty = yield* collectPublishIntent(tempContext, false).pipe(Effect.flip);

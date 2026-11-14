@@ -3,6 +3,7 @@ import { CitationHtmlDiscoveryConfiguration } from "@beep/law-practice-server/in
 import { CitationHtmlGeometryPreparationConfiguration } from "@beep/law-practice-server/internal/Citation/HtmlGeometryPreparation";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
@@ -20,12 +21,15 @@ export const installCitationAnnotationEntryFixture = Effect.fn("AnnotationEntryT
   const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-entry-diff-" });
   const diffRuntime = yield* makeCitationDiffTestRuntime(kind, cwd);
   const xmlRuntime = yield* makeCitationXmlTestRuntime(kind);
-  const configuration = CitationAnnotationEntryConfiguration.make({
-    geometry: CitationHtmlGeometryPreparationConfiguration.make({
-      discovery: CitationHtmlDiscoveryConfiguration.make(discovery.configuration),
-      diffRuntime,
-    }),
-    xmlRuntime,
-  });
+  const configuration = yield* ownCitationTestConfiguration(
+    CitationAnnotationEntryConfiguration,
+    CitationAnnotationEntryConfiguration.make({
+      geometry: CitationHtmlGeometryPreparationConfiguration.make({
+        discovery: CitationHtmlDiscoveryConfiguration.make(discovery.configuration),
+        diffRuntime,
+      }),
+      xmlRuntime,
+    })
+  );
   return { ...setup, configuration };
 });

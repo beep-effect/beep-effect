@@ -8,7 +8,6 @@ import {
   CitationBuiltinCleanerName,
   CitationCleanerContainerKind,
   CitationCleanerFailure,
-  CitationEngineLimits,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
@@ -23,7 +22,7 @@ import * as Str from "effect/String";
 import { CitationCleanerProtocols } from "./CleanerRegistry.ts";
 import { CitationCleanerValues } from "./CleanerValues.ts";
 import { CitationDocumentInputFailure, CitationDocumentInputProtocols } from "./InputDocument.ts";
-import type { CitationCleanerObject } from "@beep/law-practice-use-cases/server";
+import type { CitationCleanerObject, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/DocumentCleanerProtocols");
 const GeneratorState = S.Struct({
@@ -65,9 +64,6 @@ const invalid = () => CitationCleanerFailure.make({ reason: "invalid-input" });
 const sourceFailure = (sourceError: CitationDocumentInputFailure["sourceError"]) =>
   CitationDocumentInputFailure.make({ reason: "source-protocol", sourceError });
 
-const LimitsValue = S.toType(CitationEngineLimits).pipe(
-  $I.annoteSchema("LimitsValue", { description: "Captured static boundary codec for bounded citation processing." })
-);
 /** Capture one value owner, original cleaner protocols and optional host Document
  * protocols. Issued named containers share their exact handles between constructor
  * truth/membership and cleaner iteration. Selecting a plan never iterates it;
@@ -78,9 +74,8 @@ const LimitsValue = S.toType(CitationEngineLimits).pipe(
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocumentCleanerProtocols")(function* (
-  policy: unknown
+  limits: CitationEngineLimits
 ) {
-  const limits = yield* S.decodeUnknownEffect(LimitsValue)(policy).pipe(Effect.mapError(invalid));
   const values = yield* CitationCleanerValues;
   const hostCleaner = yield* CitationCleanerProtocols;
   const hostDocument = yield* Effect.serviceOption(CitationDocumentInputProtocols);

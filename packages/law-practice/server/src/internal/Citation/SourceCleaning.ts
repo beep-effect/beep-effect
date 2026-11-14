@@ -24,7 +24,9 @@ import { CitationRegexOperation, makeCitationRegexTiming } from "./RegexPolicy.t
 import { captureCitationOperationPolicy, snapshotCitationValue } from "./Snapshot.ts";
 import { makeCitationSourceEvidence } from "./SourceEvidence.ts";
 import { measureCitationTextWork } from "./TextBudget.ts";
-import type { CitationCleanerObject } from "@beep/law-practice-use-cases/server";
+import type { CitationCleanerObject, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { Sha256Hex } from "@beep/schema";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 
 const InputType = S.toType(CitationEngineCleanInput);
 const InputJson = CitationEngineCleanInput.pipe(S.toCodecJson, S.fromJsonString);
@@ -38,9 +40,8 @@ const InputJson = CitationEngineCleanInput.pipe(S.toCodecJson, S.fromJsonString)
  * @internal @category constructors @since 0.0.0
  */
 export const makeCitationSourceCleaning = Effect.fn("Citation.makeSourceCleaning")(
-  function* (policy: unknown, artifact: unknown) {
+  function* (limits: CitationOwned<CitationEngineLimits>, engineArtifact: Sha256Hex) {
     const invalid = () => CitationInputError.make({ operation: "clean" });
-    const { limits, engineArtifact } = yield* captureCitationOperationPolicy(policy, artifact, invalid);
     const cleaner = yield* CitationCleaner;
     const values = yield* CitationCleanerValues;
     const clock = yield* Clock.Clock;

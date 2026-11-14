@@ -1,6 +1,7 @@
 /** Shared pinned-source tokenizer composition and real process setup.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
@@ -13,8 +14,9 @@ import {
   makeCitationRegexInput,
 } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
+  CitationTokenizerConfiguration,
   CitationTokenizerExtractor,
-  makeCitationTokenizer,
+  makeCitationTokenizer as makeOwnedCitationTokenizer,
 } from "@beep/law-practice-server/internal/Citation/Tokenizer";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import * as BunChildProcessSpawner from "@effect/platform-bun/BunChildProcessSpawner";
@@ -30,6 +32,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeManualClock,
@@ -37,6 +40,11 @@ import {
   makeCitationRegexTestRuntime,
 } from "./CitationNativeSpawner.fixtures.ts";
 import { CitationTokenSeedHex } from "./CitationTokenSeed.fixtures.ts";
+
+const makeCitationTokenizer = installCitationOwnedTestStage({
+  schema: CitationTokenizerConfiguration,
+  install: makeOwnedCitationTokenizer,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationTokenizer");
 const Native = S.Struct({ width: S.Literals([1, 2, 4]), bytes: S.Uint8ArrayFromHex });
@@ -128,9 +136,9 @@ export const setupCitationTokenizer = Effect.fn("TokenizerTest.setup")(function*
   const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-tokenizer-" });
   const runtime = yield* makeCitationRegexTestRuntime(kind, cwd);
 
-  const admission = yield* makeCitationOperationAdmission(limits);
   const observed = yield* makeCitationObservedSpawner();
   const timer = yield* makeCitationNativeManualClock(limits.regexDeadline);
+  const admission = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideService(Clock.Clock, timer.clock));
   const tokenizer = yield* makeCitationTokenizer(limits, runtime, configuration).pipe(
     Effect.flatMap((stage) =>
       makeCitationTestScaffoldBinding(limits).pipe(
@@ -141,7 +149,7 @@ export const setupCitationTokenizer = Effect.fn("TokenizerTest.setup")(function*
     Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(ChildProcessSpawner, observed.spawner)
   );
-  return { tokenizer, admission, observed, limits };
+  return { tokenizer, admission, observed, limits, clock: timer.clock };
 });
 /** @internal @category testing @since 0.0.0 */
 export const assertCitationTokenizerCase = Effect.fn("TokenizerTest.case")(function* (

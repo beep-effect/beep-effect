@@ -113,8 +113,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("pinned sour
           [9, 13],
           [32, 32],
         ]);
-        const invalid = yield* makeCitationRegexPointSets("unknown").pipe(Effect.flip);
-        expect(invalid).toMatchObject({ reason: "unsupported-syntax" });
       }),
     { timeout: 60000 }
   );

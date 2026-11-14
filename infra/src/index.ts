@@ -117,20 +117,6 @@ export * from "./CiTurboCache.ts";
  */
 export * from "./NotificationRecipients.ts";
 /**
- * OIP web Pulumi orchestration exports.
- *
- * @example
- * ```ts
- * import { OipWebStack } from "@beep/infra"
- *
- * console.log(OipWebStack)
- * ```
- *
- * @category resources
- * @since 0.0.0
- */
-export * from "./OipWeb.ts";
-/**
  * OpenClaw workstation Pulumi orchestration exports.
  *
  * @example
@@ -158,31 +144,3 @@ export * from "./OpenClaw.ts";
  * @since 0.0.0
  */
 export * from "./OpenClawArtifacts.ts";
-/**
- * Storybook Pulumi orchestration exports.
- *
- * @example
- * ```ts
- * import { StorybookStack } from "@beep/infra"
- *
- * console.log(StorybookStack)
- * ```
- *
- * @category resources
- * @since 0.0.0
- */
-export * from "./Storybook.ts";
-/**
- * Shared Vercel provider schemas for infra stacks.
- *
- * @example
- * ```ts
- * import { VercelAuthenticationDeploymentType } from "@beep/infra"
- *
- * console.log(VercelAuthenticationDeploymentType.Enum.none)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export * from "./Vercel.ts";

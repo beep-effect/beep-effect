@@ -1,8 +1,12 @@
 /** Original find_case_name through a single captured scan/process invocation.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { makeCitationCaseName } from "@beep/law-practice-server/internal/Citation/CaseName";
+import {
+  CitationCaseNameConfiguration,
+  makeCitationCaseName as makeOwnedCitationCaseName,
+} from "@beep/law-practice-server/internal/Citation/CaseName";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -13,6 +17,7 @@ import {
   readCitationCaseNameProcessCorpus,
 } from "./CitationCaseNameProcess.fixtures.ts";
 import { citationCaseNameScanErrorReason, readCitationCaseNameScanCorpus } from "./CitationCaseNameScan.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
@@ -20,6 +25,11 @@ import {
   readCitationOracleFixture,
 } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationCaseName = installCitationOwnedTestStage({
+  schema: CitationCaseNameConfiguration,
+  install: makeOwnedCitationCaseName,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationCaseName");
 const Corpus = S.fromJsonString(

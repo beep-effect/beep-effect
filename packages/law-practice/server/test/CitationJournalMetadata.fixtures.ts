@@ -9,7 +9,7 @@ import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/
 import {
   CitationJournalMetadataConfiguration,
   CitationJournalMetadataPatch,
-  makeCitationJournalMetadata,
+  makeCitationJournalMetadata as makeOwnedCitationJournalMetadata,
 } from "@beep/law-practice-server/internal/Citation/JournalMetadata";
 import { CitationLawMetadataInput } from "@beep/law-practice-server/internal/Citation/LawMetadata";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
@@ -25,6 +25,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
@@ -36,6 +37,11 @@ import {
   setupCitationRegexRuntime,
 } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationJournalMetadata = installCitationOwnedTestStage({
+  schema: CitationJournalMetadataConfiguration,
+  install: makeOwnedCitationJournalMetadata,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationJournalMetadata");
 const Native = S.Struct({ width: S.Literals([1, 2, 4]), bytes: S.Uint8ArrayFromHex });
@@ -127,7 +133,7 @@ const install = Effect.fn("JournalMetadataTest.install")(function* (
     Effect.provideContext(installed),
     DateTime.withCurrentZoneOffset(0)
   );
-  return { ...setup, corpus, configuration, metadata, reads, operation, text };
+  return { ...setup, corpus, configuration, metadata, reads, operation, text, installed };
 });
 /** Native source updates, superclass choices and ordered reads through actual processes. */
 export const replayCitationJournalMetadata = Effect.fn("JournalMetadataTest.replay")(function* (
@@ -187,7 +193,7 @@ export const assertCitationJournalMetadataBudget = Effect.fn("JournalMetadataTes
       expect(used).toBe(36);
     }),
     outer.limits
-  );
+  ).pipe(Effect.provideContext(outer.installed));
   const future = A.getUnsafe(exact.corpus.inputs, 63);
   const frozenYear = yield* exact.metadata.apply({ ...future.request, ...A.getUnsafe(exact.corpus.controls, 0) });
   const futurePatch = yield* Effect.fromOption(frozenYear.patch);
@@ -222,12 +228,10 @@ export const assertCitationJournalMetadataConfiguration = Effect.fn("JournalMeta
   const editions = yield* makeCitationFrozenEditions(bundle);
   const installed = Context.add(setup.provided, CitationFrozenEditions, editions);
   const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
+  // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   for (const [policy, runtime, configuration] of [
-    [{}, setup.runtime, corpus.configuration],
-    [setup.limits, setup.runtime, {}],
-    [setup.limits, {}, corpus.configuration],
     [setup.limits, setup.runtime, { ...corpus.configuration, journalPattern: changedPattern }],
-  ]) {
+  ] as const) {
     const failed = yield* makeCitationJournalMetadata(policy, runtime, configuration).pipe(
       Effect.flatMap((stage) =>
         makeCitationTestScaffoldBinding(policy).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))

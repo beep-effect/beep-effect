@@ -73,17 +73,17 @@ outside the repo if you must, never commit it."
 
 ## Acceptance Criteria
 
-- [ ] `git ls-files '*.py'` is empty on `main`.
-- [ ] `bun run beep lint laws` fails on a fixture repo containing a tracked `.py` and passes on `main`;
+- [x] `git ls-files '*.py'` is empty on `main`.
+- [x] `bun run beep lint laws` fails on a fixture repo containing a tracked `.py` and passes on `main`;
       lefthook blocks a commit adding one; the hosted cheap-tier check runs the law.
-- [ ] `beep files match-person` runs end to end without Python on Linux x64 with parity evidence
+- [x] `beep files match-person` runs end to end without Python on Linux x64 with parity evidence
       recorded under `research/`.
-- [ ] The `plasma-sensitive-entry` and `ontology-foundational-auditor` skills work from their
+- [x] The `plasma-sensitive-entry` and `ontology-foundational-auditor` skills work from their
       TypeScript scripts.
-- [ ] A triage table under `research/` lists every deleted or ported file with its consumer (or
+- [x] A triage table under `research/` lists every deleted or ported file with its consumer (or
       "none, output retained at <path>").
-- [ ] `AGENTS.md` carries the one-line law.
-- [ ] No unrelated refactors or formatting churn.
+- [x] `AGENTS.md` carries the one-line law.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 

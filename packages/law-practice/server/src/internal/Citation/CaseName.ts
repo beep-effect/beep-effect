@@ -2,6 +2,7 @@
  * Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
@@ -12,19 +13,21 @@ import {
   CitationCaseNameProcessInput,
   CitationCaseNameProcessPatch,
   citationUnchangedCaseNamePatch,
-  copyCitationCaseNameProcessConfiguration,
   installCitationCaseNameProcess,
+  verifyCitationCaseNameProcessConfiguration,
 } from "./CaseNameProcess.ts";
 import {
   CitationCaseNameScanConfiguration,
   CitationCaseNameScanFailure,
   CitationCaseNameScanInput,
   CitationCaseNameScanState,
-  copyCitationCaseNameScanConfiguration,
   installCitationCaseNameScan,
+  verifyCitationCaseNameScanConfiguration,
 } from "./CaseNameScan.ts";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import { makeCitationMetadataStage, ownCitationStageCall } from "./MetadataComposition.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseName");
@@ -60,7 +63,6 @@ export class CitationCaseNameResult extends S.Opaque<CitationCaseNameResult, { r
     })
   )
 ) {}
-const invalid = () => CitationCaseNameScanFailure.make({ reason: "invalid-configuration" });
 const noneText = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array([78, 111, 110, 101]) });
 /** Project the built-in None token spelling without changing native text values.
  * @internal @category utilities @since 0.0.0
@@ -114,19 +116,19 @@ export const installCitationPlainCaseName = Effect.fn("Citation.installPlainCase
     return { state, patch };
   });
 });
-/** Copy trusted helper configuration for enclosing metadata composition.
+/** Authenticate owned helper configuration for enclosing metadata composition.
  * @internal @category operations @since 0.0.0
  */
-export const copyCitationCaseNameConfiguration = Effect.fn("Citation.ownCaseNameConfiguration")(function* (
+export const verifyCitationCaseNameConfiguration = Effect.fn("Citation.ownCaseNameConfiguration")(function* (
   limits: CitationEngineLimits,
-  config: CitationCaseNameConfiguration
+  config: CitationOwned<CitationCaseNameConfiguration>
 ) {
-  const scan = yield* copyCitationCaseNameScanConfiguration(limits, config.scan);
-  const process = yield* copyCitationCaseNameProcessConfiguration(limits, config.process);
+  const scan = yield* verifyCitationCaseNameScanConfiguration(limits, ownedField(config, "scan"));
+  const process = yield* verifyCitationCaseNameProcessConfiguration(limits, ownedField(config, "process"));
   return CitationCaseNameConfiguration.make({ scan, process });
 });
 const ownPlainCaseName = ownCitationStageCall({
-  copy: copyCitationCaseNameConfiguration,
+  verify: verifyCitationCaseNameConfiguration,
   install: installCitationPlainCaseName,
 });
 /** Both phases share operation admission, deadline, native Scope and text budget;
@@ -135,8 +137,6 @@ const ownPlainCaseName = ownCitationStageCall({
  */
 export const makeCitationCaseName = makeCitationMetadataStage({
   method: "extract",
-  schema: S.toType(CitationCaseNameConfiguration),
-  invalid,
   own: ownPlainCaseName,
   prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownPlainCaseName>>, raw) => run(raw),
   project: (result, reservedUnits) => CitationCaseNameResult.make({ ...result, reservedUnits }),

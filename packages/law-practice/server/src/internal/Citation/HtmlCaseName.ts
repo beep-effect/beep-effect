@@ -2,6 +2,7 @@
  * Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
@@ -10,13 +11,14 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationCaseNameProcessPatch } from "./CaseNameProcess.ts";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import { CitationHtmlTagGeometryInput, makeCitationHtmlTagGeometry } from "./HtmlTagGeometry.ts";
 import { reserveCitationInvocationText } from "./Invocation.ts";
 import {
-  copyCitationMetadataPatternConfiguration,
   decodeCitationMetadataWordRequest,
   makeCitationMetadataStage,
   ownCitationStageCall,
+  prepareCitationMetadataPatternConfiguration,
 } from "./MetadataComposition.ts";
 import { citationMetadataWhitespaceBoundary, trimCitationMetadataBoundary } from "./MetadataStrings.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
@@ -25,11 +27,12 @@ import { makeCitationRegexInput } from "./RegexInput.ts";
 import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import {
   CitationStopWordsConfiguration,
-  copyCitationStopWordsConfiguration,
   installCitationStopWordCleanup,
+  verifyCitationStopWordsConfiguration,
 } from "./StopWords.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationHtmlEmphasis } from "./HtmlTagGeometry.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
@@ -314,26 +317,25 @@ export const installCitationHtmlCaseName = Effect.fn("Citation.installHtmlCaseNa
     return unchanged;
   });
 });
-/** Copy trusted helper configuration for enclosing metadata composition.
+/** Authenticate owned helper configuration for enclosing metadata composition.
  * @internal @category operations @since 0.0.0
  */
-export const copyCitationHtmlCaseNameConfiguration = Effect.fn("Citation.ownHtmlCaseNameConfiguration")(function* (
+export const verifyCitationHtmlCaseNameConfiguration = Effect.fn("Citation.ownHtmlCaseNameConfiguration")(function* (
   limits: CitationEngineLimits,
-  config: CitationHtmlCaseNameConfiguration
+  config: CitationOwned<CitationHtmlCaseNameConfiguration>
 ) {
-  const patterns = yield* copyCitationMetadataPatternConfiguration(
+  const patterns = yield* prepareCitationMetadataPatternConfiguration(
     limits,
-    Patterns,
     config.patterns,
     config.bindings,
     fingerprints,
     () => fail("invalid-configuration")
   );
-  const cleaner = yield* copyCitationStopWordsConfiguration(limits, config.cleaner);
+  const cleaner = yield* verifyCitationStopWordsConfiguration(limits, ownedField(config, "cleaner"));
   return CitationHtmlCaseNameConfiguration.make({ ...patterns, cleaner });
 });
 const ownHtmlCaseName = ownCitationStageCall({
-  copy: copyCitationHtmlCaseNameConfiguration,
+  verify: verifyCitationHtmlCaseNameConfiguration,
   install: installCitationHtmlCaseName,
 });
 /** Captured operation, Scope, text authority and workers; extract requires R=never.
@@ -341,8 +343,6 @@ const ownHtmlCaseName = ownCitationStageCall({
  */
 export const makeCitationHtmlCaseName = makeCitationMetadataStage({
   method: "extract",
-  schema: S.toType(CitationHtmlCaseNameConfiguration),
-  invalid: () => fail("invalid-configuration"),
   own: ownHtmlCaseName,
   prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownHtmlCaseName>>, raw) => run(raw),
   project: (patch, reservedUnits) => CitationHtmlCaseNameResult.make({ patch, reservedUnits }),

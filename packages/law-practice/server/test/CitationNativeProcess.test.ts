@@ -34,8 +34,6 @@ it.layer(BunServices.layer, { excludeTestServices: true })("shared native proces
   it.effect("quarantines uncertain liveness and recovers without releasing the permit early", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
-      const malformed = yield* makeCitationNativeProcessOwner(null, "extract", failure).pipe(Effect.flip);
-      expect(malformed).toMatchObject({ reason: "invalid-runtime" });
       const admission = yield* makeCitationNativeProcessAdmission(limits);
       const observed = yield* makeCitationObservedSpawner();
       let uncertain = true;

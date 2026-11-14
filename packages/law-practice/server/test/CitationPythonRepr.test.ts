@@ -110,13 +110,6 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
       Effect.gen(function* () {
         const policy = yield* defaultCitationEnginePolicy;
         const raw = yield* table;
-        const refused = yield* makeCitationPythonRepr({}, raw).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({}).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
-          ),
-          Effect.flip
-        );
-        expect(refused).toMatchObject({ reason: "invalid-policy" });
         const repr = yield* makeCitationPythonRepr(policy.limits, raw).pipe(
           Effect.flatMap((stage) =>
             makeCitationTestScaffoldBinding(policy.limits).pipe(

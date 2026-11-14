@@ -1,4 +1,8 @@
-import { makeCitationRegexDescriptorRegistry } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
+import {
+  CitationRegexPatternDescriptor,
+  CitationRegexPatternProfile,
+  makeCitationRegexDescriptorRegistry as makeOwnedCitationRegexDescriptorRegistry,
+} from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -9,6 +13,18 @@ import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
+import * as S from "effect/Schema";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationRegexDescriptorRegistry = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationRegexDescriptorRegistry>[0],
+  a1: unknown,
+  a2?: Parameters<typeof makeOwnedCitationRegexDescriptorRegistry>[2]
+) {
+  const o1 = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), a1);
+  return yield* makeOwnedCitationRegexDescriptorRegistry(a0, o1, a2);
+});
 
 // Fixed vectors independently computed with Python 3.11.15 hashlib over a width
 // byte and little-endian Python points; no target fingerprint helper is used.
@@ -25,19 +41,27 @@ const descriptor = () => ({
 });
 const pattern = () => ({ width: 1, bytes: new TextEncoder().encode("(?P<maybe>a)?(b)") });
 
+// The ProfileNames rule guards the boundary decode and per-request descriptors.
+it.effect("refuses capture names that are empty, out of range or shared, and drops non-identifier keys", () =>
+  Effect.gen(function* () {
+    const isProfile = S.is(CitationRegexPatternProfile);
+    const profile = descriptor().profile;
+    for (const names of [{ "": 1 }, { a: 0 }, { a: 3 }, { a: 1, b: 1 }]) {
+      expect(isProfile({ ...profile, names })).toBe(false);
+    }
+    expect(isProfile(profile)).toBe(true);
+    expect(isProfile({ ...profile, names: { a: 1, b: 2 } })).toBe(true);
+    // The GroupIdentifier key rule does not refuse: a v4 Record drops a key that
+    // fails its key schema, so the name never reaches the owned profile.
+    const dropped = yield* S.decodeEffect(CitationRegexPatternProfile)({
+      ...profile,
+      names: { "private source": 1 },
+    });
+    expect(dropped.names).toEqual({});
+  })
+);
+
 it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
-  it.effect("rejects incoherent capture names before installing a descriptor", () =>
-    Effect.gen(function* () {
-      const limits = (yield* defaultCitationEnginePolicy).limits;
-      for (const names of [{ "": 1 }, { a: 0 }, { a: 3 }, { a: 1, b: 1 }, { "private source": 1 }]) {
-        const failed = yield* makeCitationRegexDescriptorRegistry(limits, [
-          { ...descriptor(), profile: { ...descriptor().profile, names } },
-        ]).pipe(Effect.flip);
-        expect(failed).toMatchObject({ reason: "invalid-bindings" });
-        expect(failed.message).not.toContain("private source");
-      }
-    })
-  );
   it.effect("retains its captured Clock and total deadline precedence", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
@@ -84,8 +108,6 @@ it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
   );
   it.effect("binds native words, flags and fresh compiler facts against owned installed metadata", () =>
     Effect.gen(function* () {
-      const invalidPolicy = yield* makeCitationRegexDescriptorRegistry(null, []).pipe(Effect.flip);
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-bindings" });
       const source = descriptor();
       const citationResult3 = yield* defaultCitationEnginePolicy;
       const registry = yield* makeCitationRegexDescriptorRegistry(citationResult3.limits, [source]);
@@ -145,7 +167,7 @@ it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
     })
   );
 
-  it.effect("rejects duplicate keys and checks installed pattern capacity before decoding bindings", () =>
+  it.effect("rejects duplicate keys and checks installed pattern capacity before installing bindings", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
       const citationResult9 = yield* makeCitationRegexDescriptorRegistry(limits, [descriptor(), descriptor()]).pipe(
@@ -154,7 +176,7 @@ it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
       expect(citationResult9).toMatchObject({ reason: "invalid-bindings" });
       const citationResult10 = yield* makeCitationRegexDescriptorRegistry({ ...limits, patterns: 1 }, [
         descriptor(),
-        "malformed",
+        descriptor(),
       ]).pipe(Effect.flip);
       expect(citationResult10).toMatchObject({ limit: "patterns" });
     })

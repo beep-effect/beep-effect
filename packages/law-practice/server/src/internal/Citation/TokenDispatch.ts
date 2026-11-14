@@ -17,7 +17,8 @@ import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { CitationFrozenEditions } from "./FrozenEditions.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TokenDispatch");
 const Action = LiteralKit([
@@ -92,15 +93,11 @@ const overflow = () => CitationSafetyLimitExceeded.make({ operation: "extract", 
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationTokenDispatch = Effect.fn("Citation.makeTokenDispatch")(function* (
-  policy: unknown,
-  bindingsInput: unknown
+  limits: CitationEngineLimits,
+  bindings: CitationTokenDispatchBindings
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-input"));
   const timing = yield* makeCitationRegexTiming(limits, true);
   const editions = yield* CitationFrozenEditions;
-  const bindings: CitationTokenDispatchBindings = yield* S.decodeUnknownEffect(CitationTokenDispatchBindings)(
-    bindingsInput
-  ).pipe(Effect.mapError(() => fail("invalid-bindings")));
   const rows = HashMap.fromIterable(A.map(bindings, (row) => Tuple.make(row.id, row.ref)));
   if (HashMap.size(rows) !== bindings.length) return yield* fail("invalid-bindings");
   const full = Effect.fn("Citation.selectFullCitationClass")(function* (seed: CitationTokenSeed) {

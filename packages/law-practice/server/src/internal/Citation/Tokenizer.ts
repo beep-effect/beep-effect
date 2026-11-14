@@ -10,7 +10,6 @@ import {
   CitationTokenizerResult,
 } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
-import * as Bytes from "effect/Bytes";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as MutableList from "effect/MutableList";
@@ -26,9 +25,8 @@ import {
   makeCitationExtractorRecipes,
 } from "./ExtractorRecipes.ts";
 import { reserveCitationInvocationText } from "./Invocation.ts";
-import { CitationRegexPatternDescriptor, CitationRegexPatternProfile } from "./RegexDescriptors.ts";
+import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import { CitationTokenAssemblyFailure, CitationTokenAssemblyHost, makeCitationTokenAssembly } from "./TokenAssembly.ts";
 import { CitationTokenCaptureRuntime, makeCitationTokenCapture } from "./TokenCapture.ts";
@@ -36,6 +34,8 @@ import { CitationTokenEditionBinding } from "./TokenEditions.ts";
 import { makeCitationTokenObjects } from "./TokenObjects.ts";
 import { makeCitationTokenText } from "./TokenText.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Tokenizer");
 /** Trusted source metadata, not raw-request execution authority.
@@ -96,7 +96,6 @@ export class CitationTokenizerConfiguration extends S.Opaque<
     })
   )
 ) {}
-const Configuration = S.toType(CitationTokenizerConfiguration);
 const failure = (reason: CitationTokenizerFailure["reason"]) => CitationTokenizerFailure.make({ reason });
 const invalidConfiguration = () => failure("invalid-configuration");
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
@@ -106,34 +105,11 @@ const sameDescriptor = S.toEquivalence(CitationRegexPatternDescriptor);
 
 const prepareTokenizerConfiguration = Effect.fn("Citation.prepareTokenizerConfiguration")(function* (
   limits: CitationEngineLimits,
-  configurationInput: unknown
+  config: CitationOwned<CitationTokenizerConfiguration>
 ) {
-  const config = yield* S.decodeUnknownEffect(Configuration)(configurationInput).pipe(
-    Effect.mapError(invalidConfiguration)
-  );
   if (config.extractors.length > limits.patterns) return yield* safety("patterns");
-  const installed = A.map(config.extractors, (row) => ({
-    ordering: CitationExtractorOrderingBinding.make({
-      ...row.ordering,
-      strings: A.map(row.ordering.strings, (value) =>
-        CitationPythonUnicodeStorage.make({ width: value.width, bytes: Bytes.concat([value.bytes]) })
-      ),
-    }),
-    recipe: CitationExtractorRecipe.make({
-      ...row.recipe,
-      exact: A.copy(row.recipe.exact),
-      variation: A.copy(row.recipe.variation),
-    }),
-    descriptor: CitationRegexPatternDescriptor.make({
-      ...row.descriptor,
-      profile: CitationRegexPatternProfile.make({
-        ...row.descriptor.profile,
-        names: { ...row.descriptor.profile.names },
-      }),
-    }),
-    pattern: CitationPythonUnicodeStorage.make({ width: row.pattern.width, bytes: Bytes.concat([row.pattern.bytes]) }),
-  }));
-  const editionRows = A.map(config.editions, (row) => CitationTokenizerEdition.make({ ...row }));
+  const installed = config.extractors;
+  const editionRows = config.editions;
   const entries = HashMap.fromIterable(A.map(installed, (row) => Tuple.make(row.recipe.id, row)));
   if (HashMap.size(entries) !== installed.length) return yield* failure("invalid-configuration");
   let descriptors = HashMap.empty<string, CitationRegexPatternDescriptor>();
@@ -156,15 +132,11 @@ const prepareTokenizerConfiguration = Effect.fn("Citation.prepareTokenizerConfig
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationTokenizer = Effect.fn("Citation.makeTokenizer")(function* (
-  policy: unknown,
-  runtime: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  configuration: CitationOwned<CitationTokenizerConfiguration>
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, invalidConfiguration);
-  const { installed, editionRows, entries, descriptors } = yield* prepareTokenizerConfiguration(
-    limits,
-    configurationInput
-  );
+  const { installed, editionRows, entries, descriptors } = yield* prepareTokenizerConfiguration(limits, configuration);
   const ordering = yield* makeCitationExtractorOrdering(
     limits,
     A.map(installed, (row) => row.ordering)

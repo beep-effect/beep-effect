@@ -2,16 +2,18 @@ import {
   CitationInvocation,
   reserveCitationInvocationText,
 } from "@beep/law-practice-server/internal/Citation/Invocation";
-import { makeCitationMetadataStrings } from "@beep/law-practice-server/internal/Citation/MetadataStrings";
+import { makeCitationMetadataStrings as makeOwnedCitationMetadataStrings } from "@beep/law-practice-server/internal/Citation/MetadataStrings";
 import { makeCitationMetadataYearFromBound } from "@beep/law-practice-server/internal/Citation/MetadataYear";
+import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
+import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import {
   citationUnaccountedText,
   makeCitationRegexInput,
 } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { makeCitationTokenContext } from "@beep/law-practice-server/internal/Citation/TokenContext";
-import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -20,6 +22,8 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as S from "effect/Schema";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import {
   makeCitationTestScaffoldBinding,
   withCitationTestInvocation,
@@ -29,14 +33,25 @@ import { loadCitationMetadataStrings } from "./CitationMetadataStrings.fixtures.
 import { setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationMetadataStrings = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationMetadataStrings>[0],
+  a1: unknown,
+  a2: unknown,
+  a3: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
+  const o2 = yield* ownCitationTestConfiguration(CitationPythonUnicodeStorage, a2);
+  const o3 = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), a3);
+  return yield* makeOwnedCitationMetadataStrings(a0, o1, o2, o3);
+});
+
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed parent text budget", (it) => {
   it.effect("atomically accepts only available charges and keeps allocated units across caller rollback", () =>
     withCitationTestInvocation(
       Effect.gen(function* () {
         const limits = (yield* defaultCitationEnginePolicy).limits;
-        const invalidPolicy = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: -1 }).pipe(Effect.flip);
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const budget = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: 10 });
         const results = yield* Effect.forEach([6, 6], (units) => budget.reserve(units).pipe(Effect.exit), {
           concurrency: 2,
@@ -103,8 +118,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
         assertNone(rejected);
         const used = yield* budget.snapshot;
         expect(used).toBe(8);
-        const invalid = yield* makeCitationMetadataYearFromBound(limits, 10001).pipe(Effect.flip);
-        expect(invalid).toMatchObject({ reason: "invalid-bound" });
       })
     )
   );
@@ -183,43 +196,45 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
   it.effect(
     "shares the counter through metadata, context and actual worker stages without partial success",
     () =>
-      withCitationTestTextBudget(
-        24,
-        Effect.gen(function* () {
-          const corpus = yield* loadCitationMetadataStrings();
-          const setup = yield* setupCitationRegexRuntime("bun", 24);
-          const budget = (yield* CitationInvocation).budget;
-          const helpers = yield* makeCitationMetadataStrings(
-            setup.limits,
-            setup.runtime,
-            corpus.yearPattern,
-            corpus.bindings
-          ).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(setup.limits).pipe(
-                Effect.map((bind) => ({
-                  ...stage,
-                  cleanPinCite: bind(stage.cleanPinCite),
-                  parenthetical: bind(stage.parenthetical),
-                }))
-              )
-            ),
-            Effect.provideContext(setup.context.pipe(Context.add(CitationTextBudget, budget)))
-          );
-          const pin = yield* helpers.cleanPinCite(native(" a "));
-          expect(pin).toEqual(native("a"));
-          const first = yield* helpers.parenthetical(native("abc"));
-          expect(first).toEqual(native("abc"));
-          const failure = yield* helpers.parenthetical(native("abc")).pipe(Effect.flip);
-          expect(failure).toMatchObject({ limit: "producedTextUtf16" });
-          const used = yield* budget.snapshot;
-          expect(used).toBe(22);
-          const observed = yield* setup.observed.snapshot;
-          expect(observed).toEqual({ spawned: 1, confirmed: 1 });
-          const admission = yield* setup.admission.snapshot;
-          expect(admission).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
-        })
-      ),
+      Effect.gen(function* () {
+        const setup = yield* setupCitationRegexRuntime("bun", 24);
+        yield* withCitationTestTextBudget(
+          24,
+          Effect.gen(function* () {
+            const corpus = yield* loadCitationMetadataStrings();
+            const budget = (yield* CitationInvocation).budget;
+            const helpers = yield* makeCitationMetadataStrings(
+              setup.limits,
+              setup.runtime,
+              corpus.yearPattern,
+              corpus.bindings
+            ).pipe(
+              Effect.flatMap((stage) =>
+                makeCitationTestScaffoldBinding(setup.limits).pipe(
+                  Effect.map((bind) => ({
+                    ...stage,
+                    cleanPinCite: bind(stage.cleanPinCite),
+                    parenthetical: bind(stage.parenthetical),
+                  }))
+                )
+              ),
+              Effect.provideContext(setup.context.pipe(Context.add(CitationTextBudget, budget)))
+            );
+            const pin = yield* helpers.cleanPinCite(native(" a "));
+            expect(pin).toEqual(native("a"));
+            const first = yield* helpers.parenthetical(native("abc"));
+            expect(first).toEqual(native("abc"));
+            const failure = yield* helpers.parenthetical(native("abc")).pipe(Effect.flip);
+            expect(failure).toMatchObject({ limit: "producedTextUtf16" });
+            const used = yield* budget.snapshot;
+            expect(used).toBe(22);
+            const observed = yield* setup.observed.snapshot;
+            expect(observed).toEqual({ spawned: 1, confirmed: 1 });
+          })
+        ).pipe(Effect.provideContext(setup.context));
+        const admission = yield* setup.admission.snapshot;
+        expect(admission).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+      }),
     { timeout: 60000 }
   );
 });

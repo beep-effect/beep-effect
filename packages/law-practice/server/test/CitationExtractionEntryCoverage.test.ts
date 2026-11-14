@@ -1,5 +1,6 @@
 import { CitationDocumentStepContainers } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
-import { makeCitationExtractionEntry } from "@beep/law-practice-server/internal/Citation/ExtractionEntry";
+import { CitationDocumentExtractionConfiguration } from "@beep/law-practice-server/internal/Citation/DocumentExtraction";
+import { makeCitationExtractionEntry as makeOwnedCitationExtractionEntry } from "@beep/law-practice-server/internal/Citation/ExtractionEntry";
 import { CitationEngineCleanerPlan } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -7,11 +8,17 @@ import { deepStrictEqual } from "@effect/vitest/utils";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { assertCitationWorkerCompositionReleased } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+
+const makeCitationExtractionEntry = installCitationOwnedTestStage({
+  schema: CitationDocumentExtractionConfiguration,
+  install: makeOwnedCitationExtractionEntry,
+});
 
 const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimits> = {}) {
   const installed = yield* installCitationDocumentExtractionFixture("bun");
@@ -35,33 +42,6 @@ const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimit
 });
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("primitive extraction entry refusals", (it) => {
-  it.effect("refuses invalid installation configuration before capturing workers", () =>
-    Effect.gen(function* () {
-      const { setup, provided } = yield* install();
-      const before = yield* setup.observed.snapshot;
-      const failure = yield* makeCitationExtractionEntry(setup.limits, setup.runtime, {}).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(setup.limits).pipe(
-            Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-          )
-        ),
-        Effect.provideContext(provided),
-        DateTime.withCurrentZoneOffset(0),
-        Effect.flip
-      );
-      deepStrictEqual(
-        { _tag: failure._tag, reason: "reason" in failure ? failure.reason : undefined },
-        { _tag: "CitationExtractionEntryFailure", reason: "invalid-configuration" }
-      );
-      yield* assertCitationWorkerCompositionReleased(
-        setup.operation,
-        setup.admission,
-        setup.observed.snapshot,
-        before.spawned
-      );
-    })
-  );
-
   it.effect("rejects ordinary oversized source text before launching native extraction", () =>
     Effect.gen(function* () {
       const { entry, setup } = yield* install({ sourceUtf16: 3 });

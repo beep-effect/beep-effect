@@ -363,8 +363,6 @@ it.effect("maps stream failures without leaking their original payload", () =>
 
 it.effect("rejects malformed preparation inputs and closes platform stream failures", () =>
   Effect.gen(function* () {
-    const invalidPolicy = yield* makeCitationRegexJobPreparation(null, citationUnaccountedText).pipe(Effect.flip);
-    expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
     const limits = (yield* defaultCitationEnginePolicy).limits;
     const preparation = yield* makeCitationRegexJobPreparation(limits, citationUnaccountedText);
     const invalidSource = yield* preparation

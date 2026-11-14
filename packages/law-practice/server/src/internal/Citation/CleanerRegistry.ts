@@ -9,7 +9,6 @@ import {
   CitationBuiltinCleanerName,
   CitationCleaner,
   CitationCleanerFailure,
-  CitationEngineLimits,
   CitationLiveCleanerObject,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
@@ -37,13 +36,13 @@ import type {
   CitationCleanerObject,
   CitationCleanerProduced,
   CitationCleanerWork,
+  CitationEngineLimits,
 } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonHashFailure } from "./PythonHash.ts";
 
 const crossPrimitiveKinds = (leftText: boolean, rightText: boolean, leftBytes: boolean, rightBytes: boolean) =>
   (leftText && rightBytes) || (rightText && leftBytes);
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerRegistry");
-const Limits = S.toType(CitationEngineLimits);
 const Hash = S.toType(CitationRuntimeDictionaryKey.fields.hash);
 const RegistryEntry = S.Tuple([
   CitationLiveCleanerObject,
@@ -93,8 +92,9 @@ export class CitationCleanerProtocols extends Context.Service<
  * detached/forked callback mutation is outside this trusted protocol contract.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegistry")(function* (policy: unknown) {
-  const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(Effect.mapError(invalidInput));
+export const makeCitationCleanerRegistry = Effect.fn("Citation.makeCleanerRegistry")(function* (
+  limits: CitationEngineLimits
+) {
   const values = yield* CitationCleanerValues;
   const builtins = yield* CitationBuiltinCleaners;
   const protocols = yield* CitationCleanerProtocols;

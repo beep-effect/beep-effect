@@ -7,7 +7,7 @@ import { makeCitationPinCiteCleaner } from "@beep/law-practice-server/internal/C
 import {
   CitationPostCaseMetadataConfiguration,
   CitationPostCaseMetadataInput,
-  makeCitationPostCaseMetadata,
+  makeCitationPostCaseMetadata as makeOwnedCitationPostCaseMetadata,
 } from "@beep/law-practice-server/internal/Citation/PostCaseMetadata";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -17,6 +17,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFixtureLifetime,
@@ -29,6 +30,11 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationPostCaseMetadata = installCitationOwnedTestStage({
+  schema: CitationPostCaseMetadataConfiguration,
+  install: makeOwnedCitationPostCaseMetadata,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationPostCaseMetadata");
 const Value = S.NullOr(CitationNativeUnicodeHex);

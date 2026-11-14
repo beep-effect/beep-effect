@@ -1,8 +1,0 @@
-name: opip-web
-runtime:
-  name: nodejs
-  options:
-    # Classic TypeScript API for the Pulumi runtime: infra's TS6 (path from src/internal).
-    nodeargs: --require ../../pulumi-typescript6.cjs
-description: Production web infrastructure for oip.law. Pulumi project name is retained for state continuity.
-main: ../src/internal/oip-web-entry.ts

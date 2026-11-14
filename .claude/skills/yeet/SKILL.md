@@ -449,16 +449,16 @@ for S31b subject limits, exact-text hashes and main-merge changes.
     required check that is already red, or an unanswered thread. A job that
     ends `ready-pending-flip` (exit 0) means a draft is green on the cheap
     tier: flip it, then the heavy matrix and the full review window still run.
-    Mergeable means all of: required checks green; no outstanding review
-    thread — unresolved, or resolved by the author with a later human reviewer
-    comment nobody answered, outdated threads included until they are
-    explicitly resolved; GitHub reports the branch mergeable; and the review
-    window has elapsed — 20 minutes since the later of the open (or, for a
-    draft, the last ready-for-review event) and the last push to the head, so
-    a fix push restarts it. Never flip and merge in one step, and re-read the threads
-    right before merging. `bun run beep yeet status --remote` prints a
-    `merge-ready:` line that names the first failing criterion, with
-    `review window open: N min left` when the window is the last one.
+    Mergeable means all of: required checks green; no outstanding review thread —
+    unresolved, or resolved by the author with a later human reviewer comment nobody
+    answered, outdated threads included until they are explicitly resolved; GitHub
+    reports the branch mergeable; and the review window has elapsed — 20 minutes since
+    the later of the open (or, for a draft, the last ready-for-review event) and the last
+    push to the head, so a fix push restarts it (a proven clean base merge keeps the
+    earlier push: [`merge-loop.md`](references/merge-loop.md#ready)). Never flip and merge
+    in one step, and re-read the threads right before merging.
+    `bun run beep yeet status --remote` prints a `merge-ready:` line that names the first
+    failing criterion, with `review window open: N min left` when the window is the last one.
 11. After the merge lands, run `bun run beep yeet sweep` — or, from a lane
     worktree, `bun run beep yeet sweep --retire` — or let
     `monitor --until-merged` run the sweep on merged detection — so the next
