@@ -200,6 +200,50 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** scope the coverage replay by the workspaces whose resolved dependencies
   changed in the lockfile diff, not by the lockfile path alone.
 
+## 2026-11-13: `@alchemy.run/test` `test(name, effect)` takes an Effect, not a thunk
+
+- **Doing:** P4 hosts stacks (lane `goals/infra-alchemy-rebuild-p4-hosts`), first hermetic stack tests on
+  `Test.make(...)` from `@alchemy.run/test/Vitest`.
+- **Evidence:** written in the `@effect/vitest` shape `test("…", () => Effect.gen(…))`, every test failed with
+  `TypeError: (testDev ? provideTestServices(body) : body).pipe is not a function` from
+  `@alchemy.run/test/src/Core.ts:575`. The harness's `TestFn` is `(name, eff: TestEffect<void>)`: the second
+  argument is the Effect itself. The type checker did not flag the thunk because the call was not yet checked.
+- **Would have prevented it:** a worked stack-test example in `docs/runbooks/alchemy-infra.md` ("Adding an
+  infra package") showing `test("…", Effect.gen(…))`, fake providers and `inMemoryState`, or an upstream
+  `Test.make` overload that rejects a function.
+
+## 2026-11-13: adopting a Compose-managed Docker volume would replace it
+
+- **Doing:** the same lane, mapping the AI metrics Compose volume onto `Docker.Volume`.
+- **Evidence:** `@alchemy.run/docker` `Volume.diff` returns `replace` with `deleteFirst: true` whenever the
+  observed user labels differ from the declared ones (`node_modules/@alchemy.run/docker/src/Volume.ts`, diff),
+  and a Compose volume carries `com.docker.compose.*` labels, so `adopt(true)` on the Phoenix data volume
+  would plan a delete of the data. `Docker.Volume.lookup` (read, never created or removed) is the safe
+  primitive; the stack uses it.
+- **Would have prevented it:** a note in the P0 matrix row for `@beep/infra-hosts` that named data volumes
+  are looked up, not adopted.
+
+## 2026-11-13: Fallow does not know a second Alchemy entry file
+
+- **Doing:** the same lane; the OpenClaw stack is a second entry, `openclaw.alchemy.run.ts`, beside the
+  package's `alchemy.run.ts`.
+- **Evidence:** `fallow dead-code --config .fallowrc.jsonc` reported
+  `unused-file packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts` (the CLI loads it by path,
+  `alchemy deploy <file>`); fixed with an entry glob `packages/tooling/infra/*/*.alchemy.run.ts`.
+- **Would have prevented it:** the `infra` package kind registering `*.alchemy.run.ts` entries with Fallow
+  when it registers `alchemy.run.ts`.
+
+## 2026-11-13: code moved out of `infra/` meets the docs lint and JSDoc ratchet for the first time
+
+- **Doing:** P4 hosts lane, moving the OpenClaw renderers from `infra/src/OpenClaw.ts` into
+  `@beep/infra-hosts`.
+- **Evidence:** the root docs lint (`oxlint . --config .oxlintrc.docs.json --max-warnings=0`) reported about
+  30 functions without `@param`/`@returns`, and `jsdoc:ratchet:check` reported
+  `multiple-description-paragraphs: 167 > 157`; the same doc blocks had passed while they lived under `infra/`.
+  Fixed by adding the tags and a `**Details**` section (the ratchet then read 137).
+- **Would have prevented it:** `package-verify` running the docs oxlint rules and the package-scoped JSDoc
+  ratchet, so a move into `packages/` fails before hosted CI.
+
 ## 2026-11-14: the plan cannot show that an AWS services anomaly monitor is an account singleton
 
 - **Doing:** P3 cost controls stack (lane `goals/infra-alchemy-rebuild-p3-cost-controls`); the brief and the
@@ -243,3 +287,56 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** a small shared test-kit for `@alchemy.run/test` suites (fake AWS
   environment layer, awsJson `HttpClient` from a route table, typed scratch-stack view, failure
   helpers) that every `@beep/alchemy-*` and `@beep/infra-*` package imports.
+
+## 2026-11-14: hosted Commitlint lints every commit in the PR range
+
+- **Doing:** P2 runner composite lane (`@beep/alchemy-github-runners`), recorded here for that retired lane.
+- **Evidence:** pushed `wip(...)` commits failed hosted Commitlint, which checks every commit in the range; a
+  pushed commit cannot be fixed without a force push, so #3313 was replaced by the squashed #3314.
+- **Would have prevented it:** a lane-local commit-type check before push, or `yeet open` refusing a range that
+  holds a disallowed type.
+
+## 2026-11-14: skipped repo-wide gates hide package-scoped law reds until hosted CI
+
+- **Doing:** the same runner lane, with the repo-wide `final-check` gates skipped under the disk-load rule.
+- **Evidence:** each of these cost a push: schema-first D1 (plain-data `S.Class` must be a branded
+  `S.Opaque`; an untracked advisory row also exits 1), the JSDoc ratchet (a titled Example on each new exported
+  schema; module docs with more than one paragraph), `semantic-delta` reading a backticked goal branch name as a
+  missing path, and oxlint `beep(no-inline-schema-compile)` in test code (#3320).
+- **Would have prevented it:** a cheap package-scoped law-check bundle that the constrained-compute rule allows.
+
+## 2026-11-14: two gates look green while checking nothing
+
+- **Doing:** the same runner lane.
+- **Evidence:** `bunx turbo run lint:schema-first --filter=<pkg>` runs zero tasks and exits 0, because the task is
+  root-declared; `jsdoc:ratchet:check` reads an untracked `.beep/ci` inventory that stays stale until it is
+  regenerated, so it passes or fails on old findings.
+- **Would have prevented it:** both commands refusing to report success when they evaluated nothing or read an
+  inventory older than the working tree.
+
+## 2026-11-14: `yeet open` took a sibling PR's title
+
+- **Doing:** the same runner lane, opening #3313.
+- **Evidence:** `yeet open` titled the PR from the first non-merge commit in the range, which belonged to a
+  sibling PR (#3313 got the title of #3291).
+- **Would have prevented it:** titling from the first commit unique to the head, not reachable from the base or
+  an open sibling.
+
+## 2026-11-14: an orphaned test fixture blocked `sweep --retire`
+
+- **Doing:** retiring the runner lane.
+- **Evidence:** a repo-cli test fixture process (`exchange-crash-writer.ts`) ignored SIGTERM, kept the lane
+  checkout busy and blocked `yeet sweep --retire`.
+- **Would have prevented it:** the fixture exiting on SIGTERM, or the retire fence naming the holding process.
+
+## 2026-11-14: `yeet publish` cannot push a fix wave while an inherited cheap gate is red
+
+- **Doing:** P4 hosts lane, pushing review-round-1 fixes and a main merge to the open #3325 while
+  `observability:catalog-check` was red from #3314 (the runners instrumentation catalog, fixed by #3327).
+- **Evidence:** `yeet publish --push-only` answered `requires --reuse-verified unless HEAD is a reproducible
+  merge of the base`; `--reuse-verified` answered `No reusable Yeet proof state found`; `publish --amend
+  --no-edit` re-runs cheap-gates, which has no `--skip` for an attributed inherited lane. The head had a passing
+  `final-check` receipt recording that skip. A plain `git push` went through instead, losing nothing (the
+  readiness monitor followed the new head and the body kept its provenance footer), but outside Yeet.
+- **Would have prevented it:** `yeet publish` naming `yeet open` as the route for a committed head with a
+  passing receipt on an already open PR, or accepting the receipt's recorded skips for its own cheap-gates run.
