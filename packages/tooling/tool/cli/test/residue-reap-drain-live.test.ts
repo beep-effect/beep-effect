@@ -97,12 +97,10 @@ describe("live residue drain probe", () => {
 
         const read = yield* withConfig(probe.facts(host.repo));
         const facts = O.getOrThrow(read);
-        expect(A.sort(facts.timerDirectories ?? [], Str.Order)).toEqual([
-          `${host.home}/projects/a`,
-          `${host.home}/projects/b`,
-          "/srv/e",
-          "/srv/shared",
-        ]);
+        // Both sides sorted: the temp HOME sorts before or after /srv depending on the host's TMPDIR.
+        expect(A.sort(facts.timerDirectories ?? [], Str.Order)).toEqual(
+          A.sort([`${host.home}/projects/a`, `${host.home}/projects/b`, "/srv/e", "/srv/shared"], Str.Order)
+        );
         expect(facts.proofUnitCheckouts).toEqual(["/p/beep-effect-worktrees/lane"]);
         expect(facts.openPullRequestHeads).toEqual(["feat/lane"]);
         expect(facts.openSessionCheckouts).toEqual([]);
