@@ -188,3 +188,16 @@ to the gap between the reference checkout (main) and the pinned release.
   uses with `Region.of("us-east-1")` in that chain, and the account guard also checks the region.
 - **Would have prevented it:** a `region` option on `AWS.providers()` and the extras layer, or the matrix row
   naming where `Region.of` must sit.
+
+## 2026-11-14: every Alchemy package grows its own copy of the fake-AWS test harness
+
+- **Doing:** P3 cost controls stack (lane `goals/infra-alchemy-rebuild-p3-cost-controls`), pushing the
+  round-2 review fixes for #3310.
+- **Evidence:** cheap-gates `fallow:audit` refused the push with `audit-introduced-duplication-1`: the
+  package's `test/support/FakeAws.ts` repeated the generic parts of `@beep/alchemy-aws-extras`'
+  fake (operation log, failure-tag walk, deploy-failure helper, typed `test.provider` wrapper, the
+  awsJson `HttpClient`), seven clone groups. The PR shrank its fake to what its tests need instead of
+  adding a package mid-review.
+- **Would have prevented it:** a small shared test-kit for `@alchemy.run/test` suites (fake AWS
+  environment layer, awsJson `HttpClient` from a route table, typed scratch-stack view, failure
+  helpers) that every `@beep/alchemy-*` and `@beep/infra-*` package imports.

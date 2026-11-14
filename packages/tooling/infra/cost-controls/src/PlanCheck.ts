@@ -77,6 +77,15 @@ export class PlanEntry extends S.Opaque<PlanEntry, { readonly brand: unique symb
   )
 ) {}
 
+const TagStatus = S.Struct({ TagKey: S.String, Status: S.String });
+const ComputeOptimizerStatus = S.Struct({ status: S.String, memberAccountsEnrolled: S.optionalKey(S.Boolean) });
+const HubItem = S.Struct({ status: S.String });
+const MonitorSummary = S.Struct({
+  MonitorName: S.String,
+  MonitorType: S.String,
+  MonitorDimension: S.optionalKey(S.String),
+});
+
 /**
  * The live values of the nine adopted settings, as the workflow reads them
  * with the AWS CLI (`list-cost-allocation-tags`, `get-enrollment-status`,
@@ -102,15 +111,10 @@ export class PlanEntry extends S.Opaque<PlanEntry, { readonly brand: unique symb
  */
 export class LiveSettings extends S.Opaque<LiveSettings, { readonly brand: unique symbol }>()(
   S.Struct({
-    costAllocationTags: S.Array(S.Struct({ TagKey: S.String, Status: S.String })),
-    computeOptimizer: S.Struct({ status: S.String, memberAccountsEnrolled: S.optionalKey(S.Boolean) }),
-    costOptimizationHub: S.Struct({
-      includeMemberAccounts: S.optionalKey(S.Boolean),
-      items: S.Array(S.Struct({ status: S.String })),
-    }),
-    anomalyMonitors: S.Array(
-      S.Struct({ MonitorName: S.String, MonitorType: S.String, MonitorDimension: S.optionalKey(S.String) })
-    ),
+    costAllocationTags: S.Array(TagStatus),
+    computeOptimizer: ComputeOptimizerStatus,
+    costOptimizationHub: S.Struct({ includeMemberAccounts: S.optionalKey(S.Boolean), items: S.Array(HubItem) }),
+    anomalyMonitors: S.Array(MonitorSummary),
   }).pipe(
     $I.annoteSchema("LiveSettings", { description: "Live values of the nine account settings the stack adopts." })
   )
@@ -144,19 +148,13 @@ export class LiveSettings extends S.Opaque<LiveSettings, { readonly brand: uniqu
  */
 export class AwsSettingsOutputs extends S.Opaque<AwsSettingsOutputs, { readonly brand: unique symbol }>()(
   S.Struct({
-    costAllocationTags: S.Struct({
-      CostAllocationTags: S.Array(S.Struct({ TagKey: S.String, Status: S.String })).pipe(S.optionalKey),
-    }),
-    computeOptimizer: S.Struct({ status: S.String, memberAccountsEnrolled: S.optionalKey(S.Boolean) }),
+    costAllocationTags: S.Struct({ CostAllocationTags: S.Array(TagStatus).pipe(S.optionalKey) }),
+    computeOptimizer: ComputeOptimizerStatus,
     costOptimizationHub: S.Struct({
       includeMemberAccounts: S.optionalKey(S.Boolean),
-      items: S.Array(S.Struct({ status: S.String })).pipe(S.optionalKey),
+      items: S.Array(HubItem).pipe(S.optionalKey),
     }),
-    anomalyMonitors: S.Struct({
-      AnomalyMonitors: S.Array(
-        S.Struct({ MonitorName: S.String, MonitorType: S.String, MonitorDimension: S.optionalKey(S.String) })
-      ).pipe(S.optionalKey),
-    }),
+    anomalyMonitors: S.Struct({ AnomalyMonitors: S.Array(MonitorSummary).pipe(S.optionalKey) }),
   }).pipe(
     $I.annoteSchema("AwsSettingsOutputs", {
       description: "Raw AWS CLI outputs for the nine adopted settings, before shaping.",
@@ -366,27 +364,30 @@ const singletonSet = HashSet.fromIterable(SingletonIds);
 const violation = (subject: string, reason: ViolationReason, detail: string) =>
   PlanViolation.make({ subject, reason, detail });
 
+const isDestructive = (action: PlanAction) =>
+  PlanAction.is.delete(action) || PlanAction.is.replace(action) || PlanAction.is.orphaned(action);
+
+const isRollbackDelete = (entry: PlanEntry) => PlanAction.is.delete(entry.action) && entry.fqn === rollbackDeletable;
+
+const singletonViolations = (entry: PlanEntry): ReadonlyArray<PlanViolation> => {
+  if (!(PlanAction.is.adopted(entry.action) || PlanAction.is.noop(entry.action))) {
+    return [violation(entry.fqn, "singleton-not-adopt-or-noop", entry.action)];
+  }
+  return A.isReadonlyArrayNonEmpty(entry.changedProperties)
+    ? [violation(entry.fqn, "singleton-property-change", A.join(entry.changedProperties, ","))]
+    : [];
+};
+
+const entryViolations = (entry: PlanEntry): ReadonlyArray<PlanViolation> => {
+  if (!HashSet.has(allowedResources, entry.fqn)) return [violation(entry.fqn, "unexpected-resource", entry.action)];
+  if (isDestructive(entry.action) && !isRollbackDelete(entry)) {
+    return [violation(entry.fqn, "delete-or-replace", entry.action)];
+  }
+  return HashSet.has(singletonSet, entry.fqn) ? singletonViolations(entry) : [];
+};
+
 const planViolations = (entries: ReadonlyArray<PlanEntry>): ReadonlyArray<PlanViolation> =>
-  A.flatMap(entries, (entry) => {
-    if (!HashSet.has(allowedResources, entry.fqn)) {
-      return [violation(entry.fqn, "unexpected-resource", entry.action)];
-    }
-    if (PlanAction.is.delete(entry.action) && entry.fqn === rollbackDeletable) return [];
-    if (
-      PlanAction.is.delete(entry.action) ||
-      PlanAction.is.replace(entry.action) ||
-      PlanAction.is.orphaned(entry.action)
-    ) {
-      return [violation(entry.fqn, "delete-or-replace", entry.action)];
-    }
-    if (!HashSet.has(singletonSet, entry.fqn)) return [];
-    if (!(PlanAction.is.adopted(entry.action) || PlanAction.is.noop(entry.action))) {
-      return [violation(entry.fqn, "singleton-not-adopt-or-noop", entry.action)];
-    }
-    return A.isReadonlyArrayNonEmpty(entry.changedProperties)
-      ? [violation(entry.fqn, "singleton-property-change", A.join(entry.changedProperties, ","))]
-      : [];
-  });
+  A.flatMap(entries, entryViolations);
 
 const missingSingletons = (entries: ReadonlyArray<PlanEntry>): ReadonlyArray<PlanViolation> => {
   const planned = HashSet.fromIterable(A.map(entries, (entry) => entry.fqn));
@@ -397,29 +398,45 @@ const missingSingletons = (entries: ReadonlyArray<PlanEntry>): ReadonlyArray<Pla
   );
 };
 
-const liveViolations = (live: LiveSettings): ReadonlyArray<PlanViolation> => {
-  const tags = A.flatMap(CostAllocationTagKey.literals, (tagKey) =>
+const differs = (subject: string, detail: string) => [violation(subject, "live-setting-differs", detail)];
+
+const tagViolations = (live: LiveSettings): ReadonlyArray<PlanViolation> =>
+  A.flatMap(CostAllocationTagKey.literals, (tagKey) =>
     A.some(live.costAllocationTags, (tag) => tag.TagKey === tagKey && tag.Status === "Active")
       ? []
-      : [violation(`tag ${tagKey}`, "live-setting-differs", "not Active")]
+      : differs(`tag ${tagKey}`, "not Active")
   );
-  const computeOptimizer =
-    live.computeOptimizer.status === "Active" && live.computeOptimizer.memberAccountsEnrolled !== true
-      ? []
-      : [violation("ComputeOptimizer", "live-setting-differs", "not Active for this account only")];
-  const hub =
-    A.some(live.costOptimizationHub.items, (item) => item.status === "Active") &&
-    live.costOptimizationHub.includeMemberAccounts !== true
-      ? []
-      : [violation("CostOptimizationHub", "live-setting-differs", "not Active for this account only")];
-  const monitors = A.filter(live.anomalyMonitors, (monitor) => monitor.MonitorName === PhysicalNames.servicesMonitor);
-  const monitor =
-    monitors.length === 1 &&
-    A.every(monitors, (m) => m.MonitorType === "DIMENSIONAL" && m.MonitorDimension === "SERVICE")
-      ? []
-      : [violation("AccountServicesMonitor", "live-setting-differs", "not exactly one DIMENSIONAL SERVICE monitor")];
-  return [...tags, ...computeOptimizer, ...hub, ...monitor];
+
+const accountOnly = "not Active for this account only";
+
+const computeOptimizerViolations = ({ computeOptimizer }: LiveSettings): ReadonlyArray<PlanViolation> =>
+  computeOptimizer.status === "Active" && computeOptimizer.memberAccountsEnrolled !== true
+    ? []
+    : differs("ComputeOptimizer", accountOnly);
+
+const hubViolations = ({ costOptimizationHub }: LiveSettings): ReadonlyArray<PlanViolation> => {
+  const active = A.some(costOptimizationHub.items, (item) => item.status === "Active");
+  return active && costOptimizationHub.includeMemberAccounts !== true
+    ? []
+    : differs("CostOptimizationHub", accountOnly);
 };
+
+const isServicesMonitor = (monitor: typeof MonitorSummary.Type) =>
+  monitor.MonitorType === "DIMENSIONAL" && monitor.MonitorDimension === "SERVICE";
+
+const monitorViolations = (live: LiveSettings): ReadonlyArray<PlanViolation> => {
+  const named = A.filter(live.anomalyMonitors, (monitor) => monitor.MonitorName === PhysicalNames.servicesMonitor);
+  return named.length === 1 && A.every(named, isServicesMonitor)
+    ? []
+    : differs("AccountServicesMonitor", "not exactly one DIMENSIONAL SERVICE monitor");
+};
+
+const liveViolations = (live: LiveSettings): ReadonlyArray<PlanViolation> => [
+  ...tagViolations(live),
+  ...computeOptimizerViolations(live),
+  ...hubViolations(live),
+  ...monitorViolations(live),
+];
 
 // Every reason the plan may not deploy; empty when it may.
 const planCheckViolations = (entries: ReadonlyArray<PlanEntry>, live: LiveSettings): ReadonlyArray<PlanViolation> => [

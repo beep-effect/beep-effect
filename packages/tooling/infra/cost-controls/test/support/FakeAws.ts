@@ -69,7 +69,7 @@ export interface SubscriptionRecord {
 export interface FakeAccount {
   readonly accountId: string;
   readonly budgets: MutableHashMap.MutableHashMap<string, BudgetRecord>;
-  /** Every operation called, in order, as `<service>:<Operation>`. */
+  /** Every operation name called, in order. */
   readonly calls: Array<string>;
   computeOptimizer: { status: string; memberAccountsEnrolled: boolean };
   /** Tag keys billing has ingested (only these may change status). */
@@ -112,17 +112,21 @@ const monitorArn = (account: FakeAccount, id: number) =>
   `arn:aws:ce::${account.accountId}:anomalymonitor/${Str.padStart(8, "0")(`${id}`)}`;
 
 const makeAccount = (seed: Seed = {}): FakeAccount => {
+  const enrolled = (status: string | undefined) => status ?? "Inactive";
   const account: FakeAccount = {
     accountId: seed.accountId ?? productionAccountId,
     calls: [],
+    nextId: 1,
     budgets: MutableHashMap.empty(),
     monitors: MutableHashMap.empty(),
     subscriptions: MutableHashMap.empty(),
-    costAllocationTags: MutableHashMap.fromIterable(R.toEntries(seed.costAllocationTags ?? {})),
-    computeOptimizer: { status: seed.computeOptimizer ?? "Inactive", memberAccountsEnrolled: false },
-    costOptimizationHub: { status: seed.costOptimizationHub ?? "Inactive", includeMemberAccounts: false },
-    nextId: 1,
+    costAllocationTags: MutableHashMap.empty(),
+    computeOptimizer: { memberAccountsEnrolled: false, status: enrolled(seed.computeOptimizer) },
+    costOptimizationHub: { includeMemberAccounts: false, status: enrolled(seed.costOptimizationHub) },
   };
+  for (const [key, status] of R.toEntries(seed.costAllocationTags ?? {})) {
+    MutableHashMap.set(account.costAllocationTags, key, status);
+  }
   for (const name of seed.budgets ?? []) {
     MutableHashMap.set(account.budgets, name, {
       budget: { BudgetName: name, BudgetType: "COST", TimeUnit: "MONTHLY" },
@@ -143,16 +147,8 @@ const makeAccount = (seed: Seed = {}): FakeAccount => {
   return account;
 };
 
-/** Operation names the account served, without the service prefix. */
-export const operations = (account: FakeAccount): Array<string> =>
-  A.map(account.calls, (call) =>
-    pipe(
-      call,
-      Str.split(":"),
-      A.last,
-      O.getOrElse(() => call)
-    )
-  );
+/** Operation names the account served, in order. */
+export const operations = (account: FakeAccount): ReadonlyArray<string> => account.calls;
 
 /** Operations that change account state. */
 export const mutations = (account: FakeAccount): Array<string> =>
@@ -242,6 +238,20 @@ const findNotification = (found: BudgetRecord, input: Loose) =>
     (entry) => notificationKey(entry.notification) === notificationKey(record(input.Notification))
   );
 
+/** A Budgets tag operation on the budget its `ResourceARN` names. */
+const withTaggedBudget =
+  (handle: (record: BudgetRecord, input: Loose) => FakeResponse): Handler =>
+  (account, input) => {
+    const name = pipe(
+      str(input, "ResourceARN") ?? "",
+      Str.split("/"),
+      A.last,
+      O.getOrElse(() => "")
+    );
+    const found = budget(account, name);
+    return found === undefined ? fail("NotFoundException", "Resource not found") : handle(found, input);
+  };
+
 const budgetsOperations: Readonly<Record<string, Handler>> = {
   DescribeBudget: withBudget((found) => ok({ Budget: found.budget })),
   DescribeBudgets: (account) => ok({ Budgets: A.map(valuesOf(account.budgets), (b) => b.budget) }),
@@ -317,49 +327,16 @@ const budgetsOperations: Readonly<Record<string, Handler>> = {
       },
     })
   ),
-  ListTagsForResource: (account, input) => {
-    const found = budget(
-      account,
-      pipe(
-        str(input, "ResourceARN") ?? "",
-        Str.split("/"),
-        A.last,
-        O.getOrElse(() => "")
-      )
-    );
-    return found === undefined
-      ? fail("NotFoundException", "Resource not found")
-      : ok({ ResourceTags: toTagList(found.tags) });
-  },
-  TagResource: (account, input) => {
-    const found = budget(
-      account,
-      pipe(
-        str(input, "ResourceARN") ?? "",
-        Str.split("/"),
-        A.last,
-        O.getOrElse(() => "")
-      )
-    );
-    if (found === undefined) return fail("NotFoundException", "Resource not found");
+  ListTagsForResource: withTaggedBudget((found) => ok({ ResourceTags: toTagList(found.tags) })),
+  TagResource: withTaggedBudget((found, input) => {
     found.tags = { ...found.tags, ...tagList(input.ResourceTags) };
     return ok({});
-  },
-  UntagResource: (account, input) => {
-    const found = budget(
-      account,
-      pipe(
-        str(input, "ResourceARN") ?? "",
-        Str.split("/"),
-        A.last,
-        O.getOrElse(() => "")
-      )
-    );
-    if (found === undefined) return fail("NotFoundException", "Resource not found");
+  }),
+  UntagResource: withTaggedBudget((found, input) => {
     const removed = strings(input, "ResourceTagKeys");
     found.tags = R.filter(found.tags, (_, key) => !A.contains(removed, key));
     return ok({});
-  },
+  }),
 };
 
 // ---------------------------------------------------------------------------
@@ -562,21 +539,24 @@ const route = Effect.fn("FakeAws.route")(function* (
   const input = yield* decodeInput(text === "" ? "{}" : text);
   const service = A.findFirst(services, (candidate) => Str.startsWith(candidate.prefix)(url.hostname));
   if (O.isNone(service)) return fail("UnknownServiceException", url.hostname);
-  account.calls.push(`${service.value.service}:${operation}`);
+  account.calls.push(operation);
   const handler = service.value.operations[operation];
   return handler === undefined ? fail("UnknownOperationException", operation) : handler(account, input);
 });
 
+const jsonHeaders = { "content-type": "application/x-amz-json-1.1" };
+
+/** Every request is answered by {@link route} as an awsJson 1.1 response. */
 const httpClient = (account: FakeAccount): HttpClient.HttpClient =>
-  HttpClient.make(
-    Effect.fn("FakeAws.send")(function* (request, url) {
-      const response = yield* route(account, request, url);
-      const body = yield* encodeJson(response.json);
-      return HttpClientResponse.fromWeb(
-        request,
-        new Response(body, { status: response.status, headers: { "content-type": "application/x-amz-json-1.1" } })
-      );
-    }, Effect.orDie)
+  HttpClient.make((request, url) =>
+    route(account, request, url).pipe(
+      Effect.flatMap(({ json: payload, status }) =>
+        Effect.map(encodeJson(payload), (body) =>
+          HttpClientResponse.fromWeb(request, new Response(body, { status, headers: jsonHeaders }))
+        )
+      ),
+      Effect.orDie
+    )
   );
 
 const environment = (account: FakeAccount, environmentRegion: string) =>
@@ -635,36 +615,29 @@ export const harness = (options: { readonly seed?: Seed; readonly stage: string 
     state: inMemoryState(),
     stage,
   });
-  const provider = (name: string, body: (stack: TypedStack) => Effect.Effect<void, StackFailure>) =>
-    test.provider(name, (stack) => {
-      const typed: TypedStack = stack;
-      return body(typed);
-    });
   return {
     account,
-    provider,
+    provider: (name: string, body: (stack: TypedStack) => Effect.Effect<void, StackFailure>) =>
+      test.provider(name, (stack: TypedStack) => body(stack)),
     budget: (name: string) => budget(account, name),
     monitor: (name: string) => monitorByName(account, name),
     subscription: (name: string) => subscriptionByName(account, name),
   };
 };
 
-/** Run a deploy expected to fail and return its failure. */
+const unexpectedSuccess: StackFailure = { _tag: "UnexpectedDeploySuccess" };
+
+/** Deploy expecting a failure; the failure becomes the success value. */
 export const deployFailure =
   (stack: TypedStack) =>
   <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<StackFailure, StackFailure> =>
-    stack.deploy(effect).pipe(
-      Effect.flip,
-      Effect.mapError((): StackFailure => ({ _tag: "UnexpectedDeploySuccess" }))
-    );
+    Effect.matchEffect(stack.deploy(effect), {
+      onFailure: Effect.succeed,
+      onSuccess: () => Effect.fail(unexpectedSuccess),
+    });
 
-/** Every `_tag` in a failure and its nested causes, outermost first. */
-export const failureTags = (failure: unknown): Array<string> => {
-  const tags: Array<string> = [];
-  let current: unknown = failure;
-  while (P.hasProperty(current, "_tag") && P.isString(current._tag)) {
-    tags.push(current._tag);
-    current = P.hasProperty(current, "cause") ? current.cause : undefined;
-  }
-  return tags;
-};
+/** The `_tag` of a failure and of each nested `cause`, outermost first. */
+export const failureTags = (failure: unknown): ReadonlyArray<string> =>
+  P.hasProperty(failure, "_tag") && P.isString(failure._tag)
+    ? [failure._tag, ...failureTags(P.hasProperty(failure, "cause") ? failure.cause : undefined)]
+    : [];
