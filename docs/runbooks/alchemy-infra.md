@@ -279,13 +279,18 @@ whole body. Two rules keep a deploy a no-op on it:
   sending no PUT, if anything differs.
 - The post-deploy check (`ruleset-guard.ts <after> --reviewer-from <before>`) compares the
   ruleset read after the deploy with the body the deploy wrote, whose `beep-reviewer`
-  check came from the before capture. A switch flipped in the last round-trip before the
-  write fails it with "beep-reviewer changed during the deploy window": re-apply the
-  switch with `beep reviewer ruleset release|require --apply` and re-run the deploy.
+  check came from the before capture. It fails when the ruleset differs from what the
+  deploy wrote, which means the ruleset moved after the write and nothing was undone;
+  confirm the switch position. The write guard closes the capture-to-PUT window except
+  for its single GET-to-PUT round-trip: a switch flipped inside that round-trip is
+  overwritten and not detected.
 
 Do not flip the reviewer switch (`beep reviewer ruleset release|require --apply`) while a
-`Deploy infra-github` run is in progress. A run refused by either guard wrote nothing:
-re-run it, and it takes a fresh capture.
+`Deploy infra-github` run is in progress; this practice is what covers the one round-trip
+the write guard leaves open. After any `Deploy infra-github` run that overlapped a switch, read the ruleset
+(`gh api repos/beep-effect/beep-effect/rulesets/10240248`) and re-run
+`beep reviewer ruleset release|require --apply` if `beep-reviewer` is not in the intended state. A run refused by either guard wrote nothing: re-run
+it, and it takes a fresh capture.
 
 Pre-arming evidence, read-only and with no App: print the field-by-field diff of planned
 against live. It must say `empty diff` before `INFRA_GITHUB_DEPLOY_ARMED` is switched:

@@ -5,8 +5,8 @@
  * prints every guarded field whose planned value differs from the live one,
  * and exits non-zero on any difference. `--reviewer-from <before>` is the
  * post-deploy mode: the planned body carries the `beep-reviewer` check of the
- * capture the deploy wrote from, so a switch flipped during the deploy window
- * fails with its own message. `--diff-only` prints the diff and exits zero:
+ * capture the deploy wrote from, so a `beep-reviewer` that differs from what the
+ * deploy wrote (it moved after the write) fails with its own message. `--diff-only` prints the diff and exits zero:
  * the read-only evidence an operator shows before arming. A capture the strict
  * decoder cannot read is refused in every mode.
  *
@@ -32,6 +32,7 @@ import {
   liveFields,
   liveReviewerCheck,
   plannedFields,
+  reviewerMismatchMessage,
 } from "./src/RulesetGuard.ts";
 import type { FieldDiff } from "./src/RulesetGuard.ts";
 
@@ -90,10 +91,7 @@ const rulesetGuard = Command.make(
     yield* checked.pipe(
       Effect.tapError((error) =>
         error._tag === "ReviewerChangedDuringDeploy"
-          ? Console.error(
-              `ruleset-guard: beep-reviewer changed during the deploy window (written: ${error.written}; live now: ${error.live}). ` +
-                "Re-apply the switch with beep reviewer ruleset release|require --apply, then re-run Deploy infra-github."
-            )
+          ? error.pipe(reviewerMismatchMessage, Console.error)
           : printDiffs(error.diffs).pipe(
               Effect.andThen(
                 Console.error(

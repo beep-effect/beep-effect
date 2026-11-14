@@ -537,8 +537,10 @@ export const guardRuleset = Effect.fn("InfraGithub.guardRuleset")(function* (rul
 
 /**
  * Raised by the post-deploy check when the only guarded difference is the
- * `beep-reviewer` check: it moved between the capture the deploy wrote and the
- * after-deploy read, so the switch must be re-applied.
+ * `beep-reviewer` check: the ruleset read after the deploy differs from what the
+ * deploy wrote, so the switch moved after the write and the deploy undid nothing.
+ * Confirm the switch position. A switch flipped inside the write guard's single
+ * GET-to-PUT round-trip is overwritten and never reaches this check.
  *
  * **Example** (Inspect the refusal)
  *
@@ -559,7 +561,7 @@ export class ReviewerChangedDuringDeploy extends S.TaggedError<
   "ReviewerChangedDuringDeploy",
   { written: S.String, live: S.String },
   $I.annote("ReviewerChangedDuringDeploy", {
-    description: "The beep-reviewer check changed during the deploy window and must be re-applied.",
+    description: "The beep-reviewer check differs from what the deploy wrote; confirm the switch position.",
   })
 ) {}
 
@@ -570,8 +572,9 @@ const reviewerPosition = (check: O.Option<RequiredCheck>) =>
  * The post-deploy check: the ruleset read after the deploy must equal the body
  * the deploy wrote, whose `beep-reviewer` check came from the `before` capture.
  * A difference only in that check fails with {@link ReviewerChangedDuringDeploy}
- * (the switch moved in the last round-trip); any other difference fails with
- * {@link RulesetDrift}.
+ * (the switch moved after the write, so nothing was undone); any other
+ * difference fails with {@link RulesetDrift}. A switch flipped inside the write
+ * guard's single GET-to-PUT round-trip is overwritten and not detected.
  *
  * **Example** (Compose the post-deploy check)
  *
@@ -612,3 +615,25 @@ export const guardAfterDeploy = Effect.fn("InfraGithub.guardAfterDeploy")(functi
   }
   return yield* RulesetDrift.make({ diffs });
 });
+
+/**
+ * The post-deploy check's message for {@link ReviewerChangedDuringDeploy}: it
+ * reports what was written and what is live, without asserting the switch must
+ * be re-applied, because the difference arose after the write.
+ *
+ * **Example** (Render the message)
+ *
+ * ```ts
+ * import { ReviewerChangedDuringDeploy, reviewerMismatchMessage } from "@beep/infra-github/RulesetGuard"
+ *
+ * const changed = ReviewerChangedDuringDeploy.make({ written: "required (App 5321138)", live: "advisory (absent)" })
+ * console.log(reviewerMismatchMessage(changed).startsWith("ruleset-guard: beep-reviewer differs")) // true
+ * ```
+ *
+ * @param error - The post-deploy refusal.
+ * @returns The line the guard command prints.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const reviewerMismatchMessage = (error: ReviewerChangedDuringDeploy): string =>
+  `ruleset-guard: beep-reviewer differs from what the deploy wrote (written: ${error.written}; live now: ${error.live}); confirm the switch position.`;

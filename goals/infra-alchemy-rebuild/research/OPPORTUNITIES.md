@@ -271,3 +271,15 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** a small shared test-kit for `@alchemy.run/test` suites (fake AWS
   environment layer, awsJson `HttpClient` from a route table, typed scratch-stack view, failure
   helpers) that every `@beep/alchemy-*` and `@beep/infra-*` package imports.
+
+## 2026-11-14: no conditional update on GitHub rulesets leaves one GET-to-PUT round-trip open
+
+- **Doing:** P3 GitHub stack, review round 2 on #3324: the write guard re-reads ruleset 10240248 just before the
+  provider's PUT, but a `beep reviewer ruleset release|require --apply` landing between that GET and the PUT is
+  overwritten and not detected.
+- **Evidence:** the REST API description for `PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}` lists only `owner`,
+  `repo` and `ruleset_id`, with no `If-Match` or precondition parameter; the ruleset GET returns a weak `ETag`, which
+  GitHub documents for conditional GETs (`If-None-Match`, 304) only. The window-5 owner ruled the write guard plus the
+  runbook practice sufficient for arming.
+- **Would have prevented it:** a precondition (`If-Match` on the ETag, or an expected `updated_at`) on the ruleset
+  PUT. If GitHub adds one, the wrapped `GitHub.Ruleset` provider in `@beep/infra-github` can send it.

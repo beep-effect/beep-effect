@@ -126,10 +126,11 @@ jobs:
         run: bunx alchemy deploy --stage prod --yes --env-file /dev/null
 
       # The ruleset read can lag the write, so poll: a fresh capture must equal
-      # the body the deploy wrote, beep-reviewer check taken from the before
-      # capture, so a switch flipped in the last round-trip before the write is
-      # reported (and must be re-applied). Fails with the last diff after 120
-      # seconds.
+      # the body the deploy wrote (beep-reviewer check taken from the before
+      # capture). A difference means the ruleset moved after the write, so the
+      # deploy undid nothing; confirm the switch position. A switch flipped
+      # inside the write guard's single GET-to-PUT round-trip is overwritten
+      # and not detected here. Fails with the last diff after 120 seconds.
       - name: Check the main ruleset after deploy
         working-directory: packages/tooling/infra/github
         shell: bash

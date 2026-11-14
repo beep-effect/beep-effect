@@ -93,9 +93,12 @@ switch, armed or not. The ruleset is written as a whole body, so leaving the che
 live check survives a deploy present and absent. Because the body is built from a capture,
 `src/RulesetWriteGuard.ts` wraps the `GitHub.Ruleset` provider: immediately before the PUT
 it re-reads the live ruleset and refuses, writing nothing, if it no longer equals the
-capture (a switch flipped between capture and write). Tests cover the equal case and the
-check flipped either way. The post-deploy check (`--reviewer-from`) is the other half: if the
-switch moved in the last round-trip before the write, it fails and names the switch to re-apply.
+capture. This closes the capture-to-PUT window except for the single GET-to-PUT round-trip: a
+switch flipped inside that round-trip is overwritten and not detected. Tests cover the equal
+case and the check flipped either way. The post-deploy check (`--reviewer-from`) fails when the
+ruleset differs from what the deploy wrote, which means it moved after the write and nothing was
+undone. The remaining round-trip is covered by practice: the switch is not flipped while a
+`Deploy infra-github` run is in progress (runbook, InfraGithub section).
 
 ### The ruleset 10240248 guard
 

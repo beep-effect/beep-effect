@@ -7,6 +7,7 @@ import {
   guardRuleset,
   liveReviewerCheck,
   plannedFields,
+  reviewerMismatchMessage,
 } from "@beep/infra-github/RulesetGuard";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -172,6 +173,11 @@ describe("the ruleset 10240248 guard", () => {
       ] as const) {
         const failure = yield* Effect.flip(guardAfterDeploy(productionConfig.mainRuleset, before, after));
         expect(failure._tag).toBe("ReviewerChangedDuringDeploy");
+        if (failure._tag === "ReviewerChangedDuringDeploy") {
+          expect(reviewerMismatchMessage(failure)).toMatch(
+            /^ruleset-guard: beep-reviewer differs from what the deploy wrote \(written: .+; live now: .+\); confirm the switch position\.$/
+          );
+        }
       }
       // Any other difference is ordinary drift.
       const strict = yield* decodeLive(
