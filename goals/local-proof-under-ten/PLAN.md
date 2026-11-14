@@ -145,6 +145,22 @@ Lane chore/ci-goals-finish
 
 Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
 
+### Final-check refresh reads pin their diff options, 2026-11-14
+
+Found during slice 7. The final-check refresh rule decides whether an ancestor's receipt carries to a new head from two git reads: the changed-path lists (`git diff R F` and `git diff MBR MBF`) and one patch per path (`MBR..R` against `MBF..F`). Both ran with git's porcelain defaults, so local config could change the verdict:
+
+- `diff.ignoreSubmodules=all`, or a checked-out `.gitmodules` entry with `ignore = all`, hid a moved gitlink from the path list and emptied its patch, so a receipt carried to a head whose only change was a gitlink pointer.
+- A textconv driver could empty both patches. `diff.context=0`, or a `-diff` attribute (a binary delta copies source bytes by offset), could hide a change to the patch's context.
+- A file named like pathspec magic, such as `:(top)a`, was read as another path.
+
+The path lists now pass `--ignore-submodules=none` through a new optional `ignoreSubmodules` on `Git.changedFiles`. Nothing else in config changes a `--name-only -z --no-relative --no-renames` list. The patch read runs `git --literal-pathspecs diff` with `PATCH_IDENTITY_DIFF_FLAGS` from `Yeet/internal/PatchIdentity.ts`. The flags pin submodule visibility and format, colour, renames, external diff, textconv, binary detection (`--text` replaces `--binary`, so a binary file diffs as bytes under the same context rule as text), the index line, the prefixes, context, hunk joining, the algorithm and the indent heuristic. Three settings stay unpinned because they cannot change the identity: `diff.relative` (git runs at the top level), `core.quotePath` (it respells only dropped header lines) and `diff.suppressBlankEmpty` (one-to-one on both sides). A receipt distance that cannot be read now chooses no receipt instead of an older one.
+
+The rewrite proof's patch read in `HeadMove.ts`, which PR #3329 pins separately, can use the same flag list once both merge. It would gain `--text` and drop `--no-relative`, a no-op at the top level.
+
+Lane fix/final-check-refresh-diff-pins
+
+Reverse: Restore the unpinned filePatch argv and drop ignoreSubmodules from changedPaths in Yeet/internal/FinalCheckRefresh.ts; the kit option and PATCH_IDENTITY_DIFF_FLAGS can stay unused.
+
 ### Slice 3 (SCHE-08): admission unit schema, tolerant decoder and units gate implemented, 2026-11-14
 
 Slice 3 lands SCHE-08's schema half on `feat/local-proof-admission-unit`: `AdmissionUnit`, `AdmissionWeightSource` and `AdmissionOwner` as optional keys on tickets, leases and the enqueue, admission, v3 release and withdrawal rows; `RecordedAdmissionWorkKind` as the tolerant reader of the persisted kind; and a `units` key on the v2 protocol marker, flipped with `bun run beep quality scheduler protocol --units on|off` and off by default (decision files `sche-08-admission-unit-schema` and `sche-08-units-protocol-gate`). Scheduler behaviour is unchanged: admission order, weights and the review-fix cap are as before, and with the gate off every record keeps origin/main's bytes. Gate evidence: `test/quality-scheduler-admission-unit.test.ts` (12 cases, Node and Bun, in-memory filesystem and a fixed procfs entry) covers the mixed-version decode in both directions, the gate off and on through `withQualityAdmission`, and a newer writer's lease charged instead of quarantined; the ciops frozen-journal replay is 41 of 41 (`evidence:s7` PASS) and stays 41 of 41 with the unit keys injected on every row (new `property 5b` in `apps/labs/ciops/test/projection.test.ts`). The gate stays off on the workstation until every live checkout runs this revision. Next for SCHE-08 is slice 6: the scheduler `Context.Service` facade and Cache's own work kind, written behind the same gate.
