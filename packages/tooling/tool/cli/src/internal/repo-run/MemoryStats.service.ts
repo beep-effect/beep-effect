@@ -319,7 +319,9 @@ const readCgroupMemoryBytes = Effect.fnUntraced(function* (directory: string) {
 
 // The writer's own cgroup is its lease's run scope (or detached proof unit), so its parent is
 // `agent-runs.slice` exactly when run scopes are active. Lease owners are read by pid: the
-// scan that listed them has just verified each one alive.
+// scan that listed them has just verified each one alive. A lease whose membership cannot be
+// read (its owner exited since the scan) makes the remainder unknown rather than overstated,
+// so every membership must read; readable memberships outside the slice are left out.
 const readUnadmittedSliceBytes = Effect.fnUntraced(function* (leases: ReadonlyArray<YeetAdmissionLease>) {
   const fs = yield* FileSystem.FileSystem;
   const ownMembership = yield* readCgroupMembership(process.pid);
@@ -329,7 +331,8 @@ const readUnadmittedSliceBytes = Effect.fnUntraced(function* (leases: ReadonlyAr
   const mounts = yield* fs.readFileString(MOUNTINFO_PATH);
   const mount = yield* requireBudgetMetadata(cgroupMountOf(mounts));
   const memberships = yield* Effect.forEach(leases, (lease) => readCgroupMembership(lease.pid), { concurrency: 1 });
-  const leaseCgroups = A.dedupe(A.filter(A.getSomes(memberships), Str.startsWith(`${slice}/`)));
+  const everyMembership = yield* requireBudgetMetadata(O.all(memberships));
+  const leaseCgroups = A.dedupe(A.filter(everyMembership, Str.startsWith(`${slice}/`)));
   const sliceBytes = yield* readCgroupMemoryBytes(cgroupDirectoryFor(mount.root, mount.point, slice));
   const leaseBytes = yield* Effect.forEach(
     leaseCgroups,
@@ -349,8 +352,10 @@ const readUnadmittedSliceBytes = Effect.fnUntraced(function* (leases: ReadonlyAr
  * parser. `unadmittedSliceGib` is `agent-runs.slice` `memory.current` minus
  * the `memory.current` of each live lease owner's cgroup inside the slice,
  * rounded to 0.001 GiB. Every reading is best effort: a missing or malformed
- * pressure file, a writer outside the slice, or an unreadable cgroup file
- * reads `None`, and nothing here fails or feeds an admission decision.
+ * pressure file, a writer outside the slice, a lease owner whose cgroup
+ * membership cannot be read, or an unreadable cgroup file reads `None`, so a
+ * partial reading is never reported as a number. Nothing here fails or feeds
+ * an admission decision.
  *
  * **Example** (Build the reading effect)
  *

@@ -607,9 +607,13 @@ const PressureSome10 = PressureStats.fields.avg10.pipe(
  * `agent-runs.slice` `memory.current` minus the `memory.current` of every
  * live lease's cgroup in the slice: memory the slice holds for work no lease
  * accounts for. It is absent when the writer does not run inside the slice
- * (run scopes off or unsupported) or a cgroup file cannot be read.
+ * (run scopes off or unsupported), when a lease owner's cgroup membership
+ * cannot be read, or when a cgroup file cannot be read, so it is never a sum
+ * over only some of the leases.
  *
- * The stamp is telemetry: no admission decision reads it.
+ * Each admission and release reads the protocol's `pressure` gate when it
+ * samples, so turning the gate off or on applies to requests already queued
+ * or running. The stamp is telemetry: no admission decision reads it.
  *
  * **Example** (Stamp an admission on a host without pressure files)
  *
@@ -672,8 +676,9 @@ export declare namespace AdmissionPressureStamp {
  *
  * **Details**
  *
- * `pressure` is an optional key read as an `Option`, written only while the
- * admission protocol's `pressure` gate is on; with it off every record is
+ * `pressure` is an optional key read as an `Option`, written only when the
+ * admission protocol's `pressure` gate is on at the moment the transition
+ * samples (read afresh at each admission and release); with it off every record is
  * byte-identical to the format before the stamp. A row without the key, or
  * with a stamp shape this revision cannot decode, reads `None`, and the row
  * itself still decodes. Readers older than the stamp ignore the key, and a
@@ -1028,9 +1033,9 @@ export type AdmissionPromotionPhase = typeof AdmissionPromotionPhase.Type;
  * **Details**
  *
  * A transition published with its lease carries the admission's pressure stamp
- * ({@link admissionPressureFields}) while the protocol's `pressure` gate is on,
- * so the admitted row recovery journals later still records the instant of
- * admission. A transition recovered from the `prepared` phase has no stamp,
+ * ({@link admissionPressureFields}) when the protocol's `pressure` gate was on
+ * as the admission sampled, so the admitted row recovery journals later still
+ * records the instant of admission, whatever the gate says by then. A transition recovered from the `prepared` phase has no stamp,
  * and neither has its admitted row.
  *
  * **Example** (Reference the promotion transition class)

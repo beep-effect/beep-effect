@@ -642,9 +642,12 @@ included), `queuedTokens` and `queuedTickets` (the other tickets waiting),
 admission's stamp comes from the scan and capacity its admission was checked
 against and rides the promotion transition, so recovery journals the same
 values; a release's stamp is read just before the release row. A reading the
-host cannot give (no pressure files, a writer outside the slice) is left out.
-Writers add the key only when `protocol.json` carries `pressure: "on"`
-(`bun run beep quality scheduler protocol --pressure on`). Every reader
+host cannot give (no pressure files, a writer outside the slice, a lease owner
+whose cgroup membership cannot be read) is left out. Writers add the key only
+when `protocol.json` carries `pressure: "on"`
+(`bun run beep quality scheduler protocol --pressure on`) at the moment an
+admission or release samples, so the switch applies to requests already
+queued or running; recovery still journals a stamp an admission took. Every reader
 revision ignores the key and every locked rewrite keeps each row's bytes, so
 it can go on at any time; with it off every record keeps its earlier bytes.
 `bun run beep quality scheduler history` counts the stamped rows and `--json`

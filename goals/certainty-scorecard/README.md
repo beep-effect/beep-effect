@@ -90,10 +90,12 @@ declaration-only builds) are not comparable with later readings (checkpoint
   scratch `--corpus` directory, replays to 5,083 heads, 242 skipped lane runs, 0 skipped reds and recall 1, with
   0 unknown-red heads.
 - Slice 5b's overhead, one sequential run per mode of 100 admissions over a 600-row journal on a busy host
-  (`ops/admission-stamp-overhead.ts`): promotion p50 and p95 64.7 and 172.6 ms on origin/main, 50.7 and 60.2 ms
-  with the gate off, 55.9 and 152.8 ms with it on; release 16.0 and 33.7, 13.2 and 17.8, 16.4 and 38.3 ms. A
-  stamp adds about 165 bytes to each admitted and released row. With every gate off, every record matches the
-  bytes captured from origin/main's encoder.
+  (`ops/admission-stamp-overhead.ts`): promotion p50 and p95 64.7 and 172.6 ms on origin/main; on the final
+  revision, which reads the gate at each transition, 58.1 and 157.5 ms with the gate off and 88.9 and 157.9 ms
+  with it on; release 16.0 and 33.7, 15.1 and 31.4, 20.9 and 40.4 ms. The same mode moved by up to 33 ms at p50
+  between two runs, so host load dominates (decision `sche-09-pressure-stamps` has both runs). A stamp adds about
+  165 bytes to each admitted and released row. With every gate off, every record matches the bytes captured
+  from origin/main's encoder.
 - Slice 4's cost reading: the 2026-11-12 UTC day, run locally through the nightly workflow's own scripts, took
   83 GitHub reads and 99 s for 43 heads and was certified. The day predates both baseline breaks, so it is not a
   baseline; the first dispatched run on main measures the hosted runner-minutes.

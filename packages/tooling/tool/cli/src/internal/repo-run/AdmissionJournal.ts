@@ -705,7 +705,7 @@ class AdmissionJournalCheckoutIdentity extends S.Class<
  *
  * Besides the lease's admission-unit fields, the row carries the pressure
  * stamp ({@link admissionPressureFields}) read just before the release is
- * journaled, while the protocol's `pressure` gate is on.
+ * journaled, when the protocol's `pressure` gate is on at that moment.
  *
  * **Example** (Read the release version)
  *

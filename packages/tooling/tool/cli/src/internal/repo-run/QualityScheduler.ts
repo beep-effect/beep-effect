@@ -536,9 +536,12 @@ export const setAdmissionUnitProtocol = Effect.fn("QualityScheduler.setAdmission
  * **Details**
  *
  * Every reader revision ignores the stamp, so the gate can go on at any time;
- * it costs a few procfs and cgroup reads per promotion and release. The
- * eviction and unit gates keep their state, and an older checkout that
- * rewrites the marker drops the key, which turns the stamps off again.
+ * it costs a few procfs and cgroup reads per promotion and release. Each
+ * admission and release reads the gate when it samples, so the change applies
+ * to requests already queued or running; recovery still journals a stamp an
+ * admission took before the change. The eviction and unit gates keep their
+ * state, and an older checkout that rewrites the marker drops the key, which
+ * turns the stamps off again.
  *
  * **Example** (Reference the pressure-gate writer)
  *
@@ -1804,18 +1807,22 @@ const readAdmissionPressureStamp = Effect.fnUntraced(function* (
   });
 });
 
+// Each transition reads the pressure gate at its own instant, so turning it off stops the
+// next admission and release sampling, and turning it on starts it, even for a running request.
 // The admitted stamp reuses the scan, capacity and memory reading the admission was checked against.
-const stampAdmittedPressure = (
-  pressure: AdmissionPressureEmission,
+const stampAdmittedPressure = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
   state: LiveAdmissionState,
   capacityTokens: number,
   availableGib: number,
   nonce: string
-): Effect.Effect<O.Option<AdmissionPressureStamp>, never, FileSystem.FileSystem> =>
-  AdmissionPressureEmission.match(pressure, {
+): Effect.fn.Return<O.Option<AdmissionPressureStamp>, never, FileSystem.FileSystem | Path.Path> {
+  const protocol = yield* readAdmissionProtocol(directories.root);
+  return yield* AdmissionPressureEmission.match(protocol.pressure, {
     off: () => Effect.succeedNone,
     on: () => Effect.asSome(readAdmissionPressureStamp(state, capacityTokens, availableGib, nonce)),
   });
+});
 
 // The released stamp scans afresh, read-only; a scan that fails leaves the row unstamped.
 const readReleasedPressureStamp = Effect.fnUntraced(function* (
@@ -1835,20 +1842,21 @@ const readReleasedPressureStamp = Effect.fnUntraced(function* (
   return yield* readAdmissionPressureStamp(state, capacityTokens, availableGib, nonce);
 });
 
-const stampReleasedPressure = (
-  pressure: AdmissionPressureEmission,
+const stampReleasedPressure = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   config: AdmissionConfig,
   nonce: string
-): Effect.Effect<
+): Effect.fn.Return<
   O.Option<AdmissionPressureStamp>,
   never,
   SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | MemoryStats | Digest.Digest
-> =>
-  AdmissionPressureEmission.match(pressure, {
+> {
+  const protocol = yield* readAdmissionProtocol(directories.root);
+  return yield* AdmissionPressureEmission.match(protocol.pressure, {
     off: () => Effect.succeedNone,
     on: () => Effect.option(readReleasedPressureStamp(directories, config, nonce)),
   });
+});
 
 const hasLegacySameOriginLease = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
   A.some(
@@ -2124,8 +2132,7 @@ const tryAdmitSelf = Effect.fnUntraced(function* <OriginLease, GateError, GateRe
   request: AdmissionRequest,
   ticket: YeetAdmissionTicket,
   gate: AdmissionOriginGate<OriginLease, GateError, GateRequirements>,
-  config: AdmissionConfig,
-  pressure: AdmissionPressureEmission
+  config: AdmissionConfig
 ): Effect.fn.Return<
   AdmissionAttempt<OriginLease>,
   QualitySchedulerError | GateError,
@@ -2145,7 +2152,7 @@ const tryAdmitSelf = Effect.fnUntraced(function* <OriginLease, GateError, GateRe
   // over to the admitted-state finalizer must release it (both review bots
   // flagged the leak on encode/stage/link failures); the overshoot rollback
   // success path releases it explicitly below.
-  const selfLease = yield* stageSelfLease(directories, request, ticket, config, pressure).pipe(
+  const selfLease = yield* stageSelfLease(directories, request, ticket, config).pipe(
     Effect.onError(() => gate.release(originLease.value).pipe(Effect.ignore))
   );
   if (O.isNone(selfLease[0])) {
@@ -2168,8 +2175,7 @@ const stageSelfLease = Effect.fnUntraced(function* (
   directories: AdmissionDirectories,
   request: AdmissionRequest,
   ticket: YeetAdmissionTicket,
-  config: AdmissionConfig,
-  pressure: AdmissionPressureEmission
+  config: AdmissionConfig
 ): Effect.fn.Return<
   readonly [
     O.Option<{ readonly lease: YeetAdmissionLease; readonly leasePath: string; readonly promotionPath: string }>,
@@ -2265,7 +2271,7 @@ const stageSelfLease = Effect.fnUntraced(function* (
   const encodedLeaseText = yield* encodeLeaseText(scopedLease);
   yield* refreshHeartbeat(leasePath, encodedLeaseText);
   // Read only once the admission holds, from the scan and capacity it was checked against.
-  const stamp = yield* stampAdmittedPressure(pressure, rescanned, scopedCapacity, availableGib7, ticket.nonce);
+  const stamp = yield* stampAdmittedPressure(directories, rescanned, scopedCapacity, availableGib7, ticket.nonce);
   yield* persistPromotionTransition(
     promotionPath,
     AdmissionPromotionTransition.make({ ...prepared, lease: scopedLease, phase: "lease-published", pressure: stamp })
@@ -2310,8 +2316,7 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   ticket: YeetAdmissionTicket,
   gate: AdmissionOriginGate<OriginLease, GateError, GateRequirements>,
   config: AdmissionConfig,
-  destination: O.Option<string>,
-  pressure: AdmissionPressureEmission
+  destination: O.Option<string>
 ): Effect.fn.Return<
   PromotionTick<OriginLease>,
   QualitySchedulerError | GateError,
@@ -2341,7 +2346,7 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   if (!selfMayAttempt(state, capacityTokens, nowMillis, config, ticket)) {
     return { admitted: O.none(), info, originBusy: hasLegacySameOriginOwner(state, ticket), scopeUnavailable: false };
   }
-  const attempt = yield* tryAdmitSelf(directories, request, ticket, gate, config, pressure);
+  const attempt = yield* tryAdmitSelf(directories, request, ticket, gate, config);
   if (O.isNone(attempt.admitted)) {
     return { admitted: O.none(), info, originBusy: attempt.originBusy, scopeUnavailable: attempt.scopeUnavailable };
   }
@@ -2426,7 +2431,6 @@ const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   initialTicket: YeetAdmissionTicket,
   gate: AdmissionOriginGate<OriginLease, GateError, GateRequirements>,
   config: AdmissionConfig,
-  pressure: AdmissionPressureEmission,
   restore: <RestoredA, RestoredE, RestoredR>(
     effect: Effect.Effect<RestoredA, RestoredE, RestoredR>
   ) => Effect.Effect<RestoredA, RestoredE, RestoredR>
@@ -2450,7 +2454,7 @@ const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, Ga
     escalated: 0,
   };
   while (true) {
-    const tick = yield* tryPromoteTicket(directories, request, ticket, gate, config, destination, pressure);
+    const tick = yield* tryPromoteTicket(directories, request, ticket, gate, config, destination);
     if (tick.scopeUnavailable) destination = O.none();
     if (O.isSome(tick.admitted)) {
       return tick.admitted.value;
@@ -2495,7 +2499,6 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
   releaseOrigin: (lease: OriginLease) => Effect.Effect<void, never, GateRequirements>,
   use: Effect.Effect<Success, UseError, UseRequirements>,
   config: AdmissionConfig,
-  pressure: AdmissionPressureEmission,
   restore: <RestoredA, RestoredE, RestoredR>(
     effect: Effect.Effect<RestoredA, RestoredE, RestoredR>
   ) => Effect.Effect<RestoredA, RestoredE, RestoredR>
@@ -2521,7 +2524,7 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
       );
       const releasedAtMillis = yield* Clock.currentTimeMillis;
       const telemetry = yield* readLeaseRunScopeTelemetry(admitted.lease);
-      const stamp = yield* stampReleasedPressure(pressure, directories, config, admitted.lease.nonce);
+      const stamp = yield* stampReleasedPressure(directories, config, admitted.lease.nonce);
       yield* appendAdmissionJournalEvent(
         directories.root,
         AdmissionJournalReleasedV3.make({
@@ -2878,10 +2881,9 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
           enqueued,
           gate,
           resolved,
-          protocol.pressure,
           restore
         );
-        return yield* runAdmitted(directories, admitted, gate.release, use, resolved, protocol.pressure, restore);
+        return yield* runAdmitted(directories, admitted, gate.release, use, resolved, restore);
       }),
       (enqueued) => finalizeAdmissionTicket(directories, ticketPath, enqueued)
     )

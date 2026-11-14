@@ -42,11 +42,15 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import * as TestClock from "effect/testing/TestClock";
 
 // Bytes origin/main's encoder wrote at 653c2cdef18, before the pressure stamp, for one verify
 // lifecycle (lease, enqueued, admitted, released), one withdrawn ticket, the same lifecycle with
@@ -211,6 +215,17 @@ const admitOnce = Effect.fn("AdmissionPressureTest.admitOnce")(function* (root: 
   const journalPath = yield* admissionJournalPath(root);
   const journal = yield* readLines(journalPath);
   return { leaseText: Str.trim(leaseText), journal };
+});
+
+// Admit the verify request with the given admitted work; read the journal it leaves.
+const admitWith = Effect.fn("AdmissionPressureTest.admitWith")(function* <E, R>(
+  root: string,
+  use: Effect.Effect<unknown, E, R>
+) {
+  const scheduler = yield* QualityScheduler;
+  yield* scheduler.admit(verifyRequest, noAdmissionOriginGate, use);
+  const journalPath = yield* admissionJournalPath(root);
+  return yield* readLines(journalPath);
 });
 
 // Queue the verify request behind a busy origin gate, read its ticket, then interrupt it so it withdraws.
@@ -558,7 +573,11 @@ it.layer(SchedulerTestLayer, { concurrent: false, timeout: "20 seconds" })("pres
           `${transitionText}\n`
         );
       }
-      // This admission's repair scan recovers both promotions before it promotes itself (gates off).
+      // The pressure gate is off now: recovery still copies the stamp the admission took while it was on.
+      const scheduler = yield* QualityScheduler;
+      const protocol = yield* scheduler.protocol.pipe(provideRuntimeRootForTesting(choice));
+      strictEqual(protocol.pressure, "off");
+      // This admission's repair scan recovers both promotions before it promotes itself.
       const { journal } = yield* admitOnce(root).pipe(provideRuntimeRootForTesting(choice));
       const rows = yield* decodeRows(journal);
       const admitted = A.filter(rows, S.is(AdmissionJournalAdmitted));
@@ -573,6 +592,77 @@ it.layer(SchedulerTestLayer, { concurrent: false, timeout: "20 seconds" })("pres
       strictEqual(A.length(admitted), 3);
     })
   );
+
+  it.effect("reads the gate at release: turned off mid-run leaves the release unstamped, turned on stamps it", () =>
+    Effect.gen(function* () {
+      const scheduler = yield* QualityScheduler;
+      yield* writePressureFixture();
+      const offRoot = yield* prepareRoot("gate-off-mid-run");
+      const turnedOff = yield* scheduler
+        .setPressureProtocol("on")
+        .pipe(
+          Effect.andThen(admitWith(offRoot.root, scheduler.setPressureProtocol("off"))),
+          provideRuntimeRootForTesting(offRoot.choice)
+        );
+      const offRows = yield* decodeRows(turnedOff);
+      deepStrictEqual(A.map(offRows, pressureOf), [O.none(), O.some(stampOf()), O.none()]);
+      // Pinned: a gate turned on while the work runs stamps its release, though its admission has no stamp.
+      const onRoot = yield* prepareRoot("gate-on-mid-run");
+      const turnedOn = yield* admitWith(onRoot.root, scheduler.setPressureProtocol("on")).pipe(
+        provideRuntimeRootForTesting(onRoot.choice)
+      );
+      const onRows = yield* decodeRows(turnedOn);
+      deepStrictEqual(A.map(onRows, pressureOf), [O.none(), O.none(), O.some(stampOf())]);
+    })
+  );
+
+  // The only clock-adjusting case owns its TestClock in a single-case block.
+  it.layer(TestClock.layer(), { timeout: "20 seconds" })("isolated queued-gate clock", (it) => {
+    it.effect("reads the gate at admission: turned off while queued leaves the admission unstamped", () =>
+      Effect.gen(function* () {
+        const scheduler = yield* QualityScheduler;
+        yield* writePressureFixture();
+        const { root, choice } = yield* prepareRoot("gate-off-queued");
+        // The origin gate is busy on the first attempt, so the request waits a heartbeat in the queue.
+        const reached = yield* Deferred.make<void>();
+        const attempts = yield* Ref.make(0);
+        const busyOnce = {
+          tryAcquire: Ref.getAndUpdate(attempts, Num.increment).pipe(
+            Effect.tap(() => Deferred.succeed(reached, undefined)),
+            Effect.map((count) => (count === 0 ? O.none<string>() : O.some("origin")))
+          ),
+          tryAcquireFallback: Effect.succeedNone,
+          release: () => Effect.void,
+        };
+        const fiber = yield* scheduler
+          .setPressureProtocol("on")
+          .pipe(
+            Effect.andThen(scheduler.admit(verifyRequest, busyOnce, Effect.void)),
+            provideRuntimeRootForTesting(choice),
+            Effect.forkChild
+          );
+        yield* Deferred.await(reached);
+        yield* scheduler.setPressureProtocol("off").pipe(provideRuntimeRootForTesting(choice));
+        yield* Effect.repeat(TestClock.adjust("1 second"), {
+          until: () => P.isNotUndefined(fiber.pollUnsafe()),
+          times: 30,
+        });
+        yield* Fiber.join(fiber);
+        const journalPath = yield* admissionJournalPath(root);
+        const rows = yield* readLines(journalPath).pipe(Effect.flatMap(decodeRows));
+        deepStrictEqual(
+          A.map(rows, (row) => [row._tag, O.isSome(pressureOf(row))]),
+          [
+            ["admission-enqueued", false],
+            ["admission-admitted", false],
+            ["admission-released", false],
+          ]
+        );
+        const attempted = yield* Ref.get(attempts);
+        strictEqual(attempted, 2);
+      })
+    );
+  });
 
   it.effect("an older reader's locked rewrite keeps stamped rows byte for byte in the journal and the archive", () =>
     Effect.forEach(
@@ -620,6 +710,7 @@ const mountinfoFixture = "30 23 0:26 / /sys/fs/cgroup rw,nosuid,nodev,noexec,rel
 const sliceCgroup = "/user.slice/user-1000.slice/user@1000.service/agent-runs.slice";
 const ownScope = `${sliceCgroup}/agent-run-own.scope`;
 const OUTSIDE_PID = 2_147_483_000;
+const EXITED_PID = 2_147_483_001;
 
 const leaseFor = (pid: number, nonce: string) =>
   YeetAdmissionLease.make({
@@ -711,6 +802,19 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { concurrent: false
         );
         const unmounted = yield* readAdmissionHostPressure([]);
         assertNone(unmounted.unadmittedSliceGib);
+      })
+    );
+
+    it.effect("reads no slice memory when a lease owner's membership cannot be read", () =>
+      Effect.gen(function* () {
+        yield* writeCgroupFixture(ownScope);
+        const own = leaseFor(process.pid, "9a0b1c2d-0000-4000-8000-000000000006");
+        const readable = yield* readAdmissionHostPressure([own]);
+        deepStrictEqual(readable.unadmittedSliceGib, O.some(4));
+        // This owner exited between the scan and the read: no /proc/<pid>/cgroup, so the remainder is unknown.
+        const exited = leaseFor(EXITED_PID, "9a0b1c2d-0000-4000-8000-000000000007");
+        const partial = yield* readAdmissionHostPressure([own, exited]);
+        assertNone(partial.unadmittedSliceGib);
       })
     );
   }
