@@ -24,11 +24,12 @@ import {
   copyCitationMetadataPatternConfiguration,
   decodeCitationMetadataWordRequest,
   makeCitationMetadataStage,
+  ownCitationStageCall,
 } from "./MetadataComposition.ts";
 import { citationPythonPointAt, concatCitationPythonRanges } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { makeCitationRegexWorker } from "./RegexWorker.ts";
+import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
@@ -147,206 +148,217 @@ const bound = (index: number, length: number) => Num.max(0, Num.min(length, inde
 /** Execute default source scan inside an existing operation, Scope and text authority.
  * @internal @category operations @since 0.0.0
  */
-export const scanCitationCaseName = Effect.fn("Citation.runCaseNameScan")(function* (
+export const installCitationCaseNameScan = Effect.fn("Citation.installCaseNameScan")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationCaseNameScanConfiguration,
-  raw: unknown
+  config: CitationCaseNameScanConfiguration
 ) {
-  const request = yield* decodeCitationMetadataWordRequest(limits, Input, raw, () => fail("invalid-input"));
-  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
-  const budget = yield* CitationTextBudget;
-  const predicates = yield* makeCitationCaseNamePredicates();
-  const words = yield* Effect.forEach(
-    request.words,
-    Effect.fn("Citation.ownCaseNameWord")(function* (word) {
-      const source = yield* word.data === null
-        ? input.prepareText("None", () => Effect.void)
-        : input.prepareUnicode(word.data, () => Effect.void);
-      const stop = R.get(word.groups, "stop_word");
-      const stopWord = yield* O.isSome(stop) && stop.value !== null
-        ? input
-            .prepareUnicode(stop.value, () => Effect.void)
-            .pipe(Effect.map((prepared) => O.some(prepared.value.text)))
-        : Effect.succeed(O.map(stop, () => null));
-      return { ...word, source, stopWord };
-    })
+  const installedInput = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText));
+  const installedPredicates = yield* Effect.exit(makeCitationCaseNamePredicates());
+  const installedWorker = yield* Effect.exit(
+    installCitationRegexEvaluator(limits, runtime, config.bindings, "python-regex-v0")
   );
-  const state = yield* Ref.make(
-    CitationCaseNameScanState.make({
-      offset: 0,
-      vTokenIndex: null,
-      startIndex: null,
-      candidateCaseName: null,
-      preCiteYear: null,
-      titleStartingIndex: request.index - 1,
-      caseNameLength: 0,
-      plaintiffLength: 0,
-    })
-  );
-  const worker = yield* makeCitationRegexWorker(limits, runtime, config.bindings, "python-regex-v0");
-  const update = (patch: Partial<CitationCaseNameScanState>) =>
-    Ref.update(state, (current) => CitationCaseNameScanState.make({ ...current, ...patch }));
-  const join = Effect.fn("Citation.extractCaseNameText")(function* (start: number, end: number) {
-    const first = bound(start, words.length);
-    const last = bound(end, words.length);
-    const selected = A.take(A.drop(words, first), Num.max(0, last - first));
-    return yield* concatCitationPythonRanges(
-      A.map(selected, (word) => ({ source: word.source.value.storage, start: 0, end: word.source.value.pythonLength })),
-      (layout) => budget.reserve(layout.utf16Units)
+  return Effect.fn("Citation.runCaseNameScan")(function* (raw: unknown) {
+    const request = yield* decodeCitationMetadataWordRequest(limits, Input, raw, () => fail("invalid-input"));
+    const input = yield* installedInput;
+    const budget = yield* CitationTextBudget;
+    const predicates = yield* installedPredicates;
+    const words = yield* Effect.forEach(
+      request.words,
+      Effect.fn("Citation.ownCaseNameWord")(function* (word) {
+        const source = yield* word.data === null
+          ? input.prepareText("None", () => Effect.void)
+          : input.prepareUnicode(word.data, () => Effect.void);
+        const stop = R.get(word.groups, "stop_word");
+        const stopWord = yield* O.isSome(stop) && stop.value !== null
+          ? input
+              .prepareUnicode(stop.value, () => Effect.void)
+              .pipe(Effect.map((prepared) => O.some(prepared.value.text)))
+          : Effect.succeed(O.map(stop, () => null));
+        return { ...word, source, stopWord };
+      })
     );
-  });
-  const match = Effect.fn("Citation.matchCaseNamePattern")(function* (
-    name: PatternName,
-    source: CitationPythonUnicodeStorage
-  ) {
-    const evaluated = yield* worker.evaluate(
-      config.patterns[name],
-      source,
-      name === "connectorBoundary" ? 2 : 0,
-      1,
-      name === "year" ? "match" : "search"
+    const state = yield* Ref.make(
+      CitationCaseNameScanState.make({
+        offset: 0,
+        vTokenIndex: null,
+        startIndex: null,
+        candidateCaseName: null,
+        preCiteYear: null,
+        titleStartingIndex: request.index - 1,
+        caseNameLength: 0,
+        plaintiffLength: 0,
+      })
     );
-    if (evaluated.result.matches === 0) return O.none();
-    const span = yield* evaluated.result.capture(0, 0);
-    if (span._tag === "Unmatched") return yield* fail("missing-capture");
-    return O.some({ source: evaluated.source, span });
-  });
-  const removePrefix = Effect.fn("Citation.removeCaseNamePrefix")(function* (
-    name: "connectorSpace" | "connectorBoundary",
-    source: CitationPythonUnicodeStorage
-  ) {
-    const matched = yield* match(name, source);
-    return O.isNone(matched)
-      ? source
-      : yield* matched.value.source.slice(
-          { start: matched.value.span.end, end: matched.value.source.value.pythonLength },
-          () => Effect.void
-        );
-  });
-  const extract = Effect.fn("Citation.setCaseNameCandidate")(function* (start: number) {
-    const current = yield* Ref.get(state);
-    const candidateCaseName = yield* join(start, current.titleStartingIndex);
-    yield* update({ startIndex: start, candidateCaseName });
-    return candidateCaseName;
-  });
-  const accumulate = Effect.fn("Citation.accumulateCaseNameWord")(function* (index: number) {
-    const word = A.getUnsafe(words, index);
-    if (word.data === null) return yield* fail("invalid-token-length");
-    const current = yield* Ref.get(state);
-    yield* update({ offset: current.offset + word.source.value.pythonLength });
-    // Python compares the original word: dataclass token objects do not equal a bare comma string.
-    if (word.kind === "Text" && word.source.value.text === ",") return Step.Enum.continue;
-    const plaintiff = current.vTokenIndex !== null && (yield* predicates.isNonblank(word.source.value));
-    yield* update({
-      caseNameLength: current.caseNameLength + 1,
-      plaintiffLength: current.plaintiffLength + (plaintiff ? 1 : 0),
+    const worker = yield* installedWorker;
+    const update = (patch: Partial<CitationCaseNameScanState>) =>
+      Ref.update(state, (current) => CitationCaseNameScanState.make({ ...current, ...patch }));
+    const join = Effect.fn("Citation.extractCaseNameText")(function* (start: number, end: number) {
+      const first = bound(start, words.length);
+      const last = bound(end, words.length);
+      const selected = A.take(A.drop(words, first), Num.max(0, last - first));
+      return yield* concatCitationPythonRanges(
+        A.map(selected, (word) => ({
+          source: word.source.value.storage,
+          start: 0,
+          end: word.source.value.pythonLength,
+        })),
+        (layout) => budget.reserve(layout.utf16Units)
+      );
     });
-    return Step.Enum.next;
-  });
-  const early = Effect.fn("Citation.scanEarlyCaseNameBoundary")(function* (index: number) {
-    const word = A.getUnsafe(words, index);
-    if (word.kind === "CitationToken") {
-      yield* update({ titleStartingIndex: index - 1 });
-      return Step.Enum.continue;
-    }
-    const text = word.source.value.text;
-    if (Str.endsWith(";")(text) || Str.endsWith("”")(text) || Str.endsWith('"')(text)) {
-      yield* extract(index + 2);
-      return Step.Enum.stop;
-    }
-    const year = yield* match("year", word.source.value.storage);
-    if (O.isNone(year)) return Step.Enum.next;
-    const preCiteYear = yield* word.source.slice({ start: 1, end: 5 }, () => Effect.void);
-    yield* update({ titleStartingIndex: index - 1, preCiteYear });
-    return Step.Enum.continue;
-  });
-  const parenthesis = Effect.fn("Citation.scanCaseNameParenthesis")(function* (index: number) {
-    const word = A.getUnsafe(words, index).source.value;
-    const current = yield* Ref.get(state);
-    if (!Str.startsWith("(")(word.text) || current.caseNameLength <= 3) return Step.Enum.next;
-    const second = word.pythonLength > 1 ? citationPythonPointAt(word.storage, 1) : undefined;
-    const skip =
-      word.pythonLength === 1 || (second !== undefined && predicates.isAlpha(second) && predicates.isLower(second));
-    yield* extract(skip ? index + 2 : index);
-    return Step.Enum.stop;
-  });
-  const afterV = Effect.fn("Citation.scanCaseNameAfterV")(function* (index: number) {
-    const word = A.getUnsafe(words, index);
-    const current = yield* Ref.get(state);
-    if (!(yield* predicates.isLowercaseAfterV(word.source.value, current.vTokenIndex !== null))) return Step.Enum.next;
-    const candidate = yield* extract(index + 2);
-    const candidateCaseName = yield* removePrefix("connectorSpace", candidate);
-    yield* update({ candidateCaseName });
-    return Step.Enum.stop;
-  });
-  const vToken = Effect.fn("Citation.scanCaseNameVToken")(function* (index: number) {
-    const word = A.getUnsafe(words, index);
-    if (word.kind === "PlaceholderCitationToken") {
-      yield* update({ titleStartingIndex: index - 1 });
-      return Step.Enum.continue;
-    }
-    if (word.kind === "StopWordToken") {
-      const stop = yield* Effect.fromOption(word.stopWord, () => fail("missing-stop-word"));
-      if (stop === "v") {
-        yield* update({ vTokenIndex: index });
-        yield* extract(index - 2);
+    const match = Effect.fn("Citation.matchCaseNamePattern")(function* (
+      name: PatternName,
+      source: CitationPythonUnicodeStorage
+    ) {
+      const evaluated = yield* worker.evaluate(
+        config.patterns[name],
+        source,
+        name === "connectorBoundary" ? 2 : 0,
+        1,
+        name === "year" ? "match" : "search"
+      );
+      if (evaluated.result.matches === 0) return O.none();
+      const span = yield* evaluated.result.capture(0, 0);
+      if (span._tag === "Unmatched") return yield* fail("missing-capture");
+      return O.some({ source: evaluated.source, span });
+    });
+    const removePrefix = Effect.fn("Citation.removeCaseNamePrefix")(function* (
+      name: "connectorSpace" | "connectorBoundary",
+      source: CitationPythonUnicodeStorage
+    ) {
+      const matched = yield* match(name, source);
+      return O.isNone(matched)
+        ? source
+        : yield* matched.value.source.slice(
+            { start: matched.value.span.end, end: matched.value.source.value.pythonLength },
+            () => Effect.void
+          );
+    });
+    const extract = Effect.fn("Citation.setCaseNameCandidate")(function* (start: number) {
+      const current = yield* Ref.get(state);
+      const candidateCaseName = yield* join(start, current.titleStartingIndex);
+      yield* update({ startIndex: start, candidateCaseName });
+      return candidateCaseName;
+    });
+    const accumulate = Effect.fn("Citation.accumulateCaseNameWord")(function* (index: number) {
+      const word = A.getUnsafe(words, index);
+      if (word.data === null) return yield* fail("invalid-token-length");
+      const current = yield* Ref.get(state);
+      yield* update({ offset: current.offset + word.source.value.pythonLength });
+      // Python compares the original word: dataclass token objects do not equal a bare comma string.
+      if (word.kind === "Text" && word.source.value.text === ",") return Step.Enum.continue;
+      const plaintiff = current.vTokenIndex !== null && (yield* predicates.isNonblank(word.source.value));
+      yield* update({
+        caseNameLength: current.caseNameLength + 1,
+        plaintiffLength: current.plaintiffLength + (plaintiff ? 1 : 0),
+      });
+      return Step.Enum.next;
+    });
+    const early = Effect.fn("Citation.scanEarlyCaseNameBoundary")(function* (index: number) {
+      const word = A.getUnsafe(words, index);
+      if (word.kind === "CitationToken") {
+        yield* update({ titleStartingIndex: index - 1 });
         return Step.Enum.continue;
       }
-    }
-    const current = yield* Ref.get(state);
-    const abbreviation = yield* predicates.isCapitalizedAbbreviation(
-      word.source.value,
-      current.vTokenIndex !== null,
-      current.plaintiffLength
-    );
-    if (!abbreviation && word.kind !== "StopWordToken") return Step.Enum.next;
-    yield* extract(index + 2);
-    return Step.Enum.stop;
-  });
-  const withoutV = Effect.fn("Citation.scanCaseNameWithoutV")(function* (index: number) {
-    const word = A.getUnsafe(words, index);
-    const current = yield* Ref.get(state);
-    if (!(yield* predicates.isLowercaseWithoutV(word.source.value, current.vTokenIndex !== null)))
-      return Step.Enum.next;
-    if (word.source.value.text === "ex" || word.source.value.text === "rel.") return Step.Enum.continue;
-    if (word.kind === "SupraToken") {
-      yield* update({ titleStartingIndex: index - 1 });
+      const text = word.source.value.text;
+      if (Str.endsWith(";")(text) || Str.endsWith("”")(text) || Str.endsWith('"')(text)) {
+        yield* extract(index + 2);
+        return Step.Enum.stop;
+      }
+      const year = yield* match("year", word.source.value.storage);
+      if (O.isNone(year)) return Step.Enum.next;
+      const preCiteYear = yield* word.source.slice({ start: 1, end: 5 }, () => Effect.void);
+      yield* update({ titleStartingIndex: index - 1, preCiteYear });
       return Step.Enum.continue;
+    });
+    const parenthesis = Effect.fn("Citation.scanCaseNameParenthesis")(function* (index: number) {
+      const word = A.getUnsafe(words, index).source.value;
+      const current = yield* Ref.get(state);
+      if (!Str.startsWith("(")(word.text) || current.caseNameLength <= 3) return Step.Enum.next;
+      const second = word.pythonLength > 1 ? citationPythonPointAt(word.storage, 1) : undefined;
+      const skip =
+        word.pythonLength === 1 || (second !== undefined && predicates.isAlpha(second) && predicates.isLower(second));
+      yield* extract(skip ? index + 2 : index);
+      return Step.Enum.stop;
+    });
+    const afterV = Effect.fn("Citation.scanCaseNameAfterV")(function* (index: number) {
+      const word = A.getUnsafe(words, index);
+      const current = yield* Ref.get(state);
+      if (!(yield* predicates.isLowercaseAfterV(word.source.value, current.vTokenIndex !== null)))
+        return Step.Enum.next;
+      const candidate = yield* extract(index + 2);
+      const candidateCaseName = yield* removePrefix("connectorSpace", candidate);
+      yield* update({ candidateCaseName });
+      return Step.Enum.stop;
+    });
+    const vToken = Effect.fn("Citation.scanCaseNameVToken")(function* (index: number) {
+      const word = A.getUnsafe(words, index);
+      if (word.kind === "PlaceholderCitationToken") {
+        yield* update({ titleStartingIndex: index - 1 });
+        return Step.Enum.continue;
+      }
+      if (word.kind === "StopWordToken") {
+        const stop = yield* Effect.fromOption(word.stopWord, () => fail("missing-stop-word"));
+        if (stop === "v") {
+          yield* update({ vTokenIndex: index });
+          yield* extract(index - 2);
+          return Step.Enum.continue;
+        }
+      }
+      const current = yield* Ref.get(state);
+      const abbreviation = yield* predicates.isCapitalizedAbbreviation(
+        word.source.value,
+        current.vTokenIndex !== null,
+        current.plaintiffLength
+      );
+      if (!abbreviation && word.kind !== "StopWordToken") return Step.Enum.next;
+      yield* extract(index + 2);
+      return Step.Enum.stop;
+    });
+    const withoutV = Effect.fn("Citation.scanCaseNameWithoutV")(function* (index: number) {
+      const word = A.getUnsafe(words, index);
+      const current = yield* Ref.get(state);
+      if (!(yield* predicates.isLowercaseWithoutV(word.source.value, current.vTokenIndex !== null)))
+        return Step.Enum.next;
+      if (word.source.value.text === "ex" || word.source.value.text === "rel.") return Step.Enum.continue;
+      if (word.kind === "SupraToken") {
+        yield* update({ titleStartingIndex: index - 1 });
+        return Step.Enum.continue;
+      }
+      const candidate = yield* extract(index + 2);
+      const capital = yield* match("capitalized", candidate);
+      const candidateCaseName = O.isNone(capital)
+        ? null
+        : yield* capital.value.source.slice(
+            { start: capital.value.span.start, end: capital.value.source.value.pythonLength },
+            () => Effect.void
+          );
+      yield* update({ candidateCaseName });
+      return Step.Enum.stop;
+    });
+    const beginning = Effect.fn("Citation.scanCaseNameBeginning")(function* (index: number) {
+      if (index !== 0) return Step.Enum.next;
+      const candidate = yield* extract(0);
+      const stripped = yield* removePrefix("connectorBoundary", candidate);
+      const digits = yield* match("trailingDigits", stripped);
+      yield* update({ candidateCaseName: O.isSome(digits) ? null : stripped });
+      return Step.Enum.next;
+    });
+    const handlers = [accumulate, early, parenthesis, afterV, vToken, withoutV, beginning];
+    const step = Effect.fn("Citation.advanceCaseNameScan")(function* (index: number) {
+      if (index < 0 || index >= words.length) return yield* fail("index-out-of-range");
+      for (const handler of handlers) {
+        const result = yield* handler(index);
+        if (result !== Step.Enum.next) return result;
+      }
+      return Step.Enum.next;
+    });
+    for (let index = request.index - 1; index > Num.max(request.index - 28, -1); index--) {
+      const result = yield* step(index);
+      if (result === Step.Enum.stop) break;
     }
-    const candidate = yield* extract(index + 2);
-    const capital = yield* match("capitalized", candidate);
-    const candidateCaseName = O.isNone(capital)
-      ? null
-      : yield* capital.value.source.slice(
-          { start: capital.value.span.start, end: capital.value.source.value.pythonLength },
-          () => Effect.void
-        );
-    yield* update({ candidateCaseName });
-    return Step.Enum.stop;
+    return yield* Ref.get(state);
   });
-  const beginning = Effect.fn("Citation.scanCaseNameBeginning")(function* (index: number) {
-    if (index !== 0) return Step.Enum.next;
-    const candidate = yield* extract(0);
-    const stripped = yield* removePrefix("connectorBoundary", candidate);
-    const digits = yield* match("trailingDigits", stripped);
-    yield* update({ candidateCaseName: O.isSome(digits) ? null : stripped });
-    return Step.Enum.next;
-  });
-  const handlers = [accumulate, early, parenthesis, afterV, vToken, withoutV, beginning];
-  const step = Effect.fn("Citation.advanceCaseNameScan")(function* (index: number) {
-    if (index < 0 || index >= words.length) return yield* fail("index-out-of-range");
-    for (const handler of handlers) {
-      const result = yield* handler(index);
-      if (result !== Step.Enum.next) return result;
-    }
-    return Step.Enum.next;
-  });
-  for (let index = request.index - 1; index > Num.max(request.index - 28, -1); index--) {
-    const result = yield* step(index);
-    if (result === Step.Enum.stop) break;
-  }
-  return yield* Ref.get(state);
 });
 /** Copy the source-bound scan configuration for enclosing composition.
  * @internal @category operations @since 0.0.0
@@ -365,6 +377,10 @@ export const copyCitationCaseNameScanConfiguration = Effect.fn("Citation.copyCas
   );
   return CitationCaseNameScanConfiguration.make(owned);
 });
+const ownScan = ownCitationStageCall({
+  copy: copyCitationCaseNameScanConfiguration,
+  install: installCitationCaseNameScan,
+});
 /** Capture fixed patterns and existing operation/runtime ownership. Every scan
  * gets fresh Ref state and a native Scope under one budget/admission/deadline.
  * Returned methods have R = never. Custom initial dict/protocol behavior remains
@@ -375,10 +391,8 @@ export const makeCitationCaseNameScan = makeCitationMetadataStage({
   method: "scan",
   schema: Config,
   invalid: invalidConfiguration,
-  own: copyCitationCaseNameScanConfiguration,
-  prepare: (limits, runtime, config, raw) =>
-    scanCitationCaseName(limits, runtime, config, raw).pipe(
-      Effect.catchTag("CitationCaseNamePredicateFailure", () => Effect.fail(fail("empty-word")))
-    ),
+  own: ownScan,
+  prepare: (_limits, _runtime, scan: Effect.Success<ReturnType<typeof ownScan>>, raw) =>
+    scan(raw).pipe(Effect.catchTag("CitationCaseNamePredicateFailure", () => Effect.fail(fail("empty-word")))),
   project: (state, reservedUnits) => CitationCaseNameScanResult.make({ state, reservedUnits }),
 });

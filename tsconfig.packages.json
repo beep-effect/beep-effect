@@ -523,7 +523,13 @@
       "path": "packages/shared/use-cases"
     },
     {
+      "path": "packages/tooling/infra/cost-controls"
+    },
+    {
       "path": "packages/tooling/infra/github"
+    },
+    {
+      "path": "packages/tooling/infra/turbo-cache"
     },
     {
       "path": "packages/tooling/library/agent-memory-store"
@@ -533,6 +539,15 @@
     },
     {
       "path": "packages/tooling/library/ai-sync"
+    },
+    {
+      "path": "packages/tooling/library/alchemy-aws-extras"
+    },
+    {
+      "path": "packages/tooling/library/alchemy-github-runners"
+    },
+    {
+      "path": "packages/tooling/library/alchemy-vercel"
     },
     {
       "path": "packages/tooling/library/codegen-kit"

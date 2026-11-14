@@ -19,12 +19,12 @@ export type RuleSource = {
 
 export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
   "no-citation-optional-invocation": {
-    invalidCount: 36,
+    invalidCount: 72,
     messageIncludes: "citation request authority must be explicit",
     invalid:
-      "const v000 = Effect.serviceOption(CitationTextBudget); const v001 = Context.getOption(context, CitationTextBudget); const v010 = Effect.serviceOption(UC.CitationTextBudget); const v011 = Context.getOption(context, UC.CitationTextBudget); const v100 = Effect.serviceOption(CitationOperationAdmission); const v101 = Context.getOption(context, CitationOperationAdmission); const v110 = Effect.serviceOption(UC.CitationOperationAdmission); const v111 = Context.getOption(context, UC.CitationOperationAdmission); const v200 = Effect.serviceOption(CitationInvocation); const v201 = Context.getOption(context, CitationInvocation); const v210 = Effect.serviceOption(UC.CitationInvocation); const v211 = Context.getOption(context, UC.CitationInvocation); const added00 = Context.getOption(CitationTextBudget); const added01 = Context.getOrUndefined(context, CitationTextBudget); const added02 = Context.getOrUndefined(CitationTextBudget); const added03 = serviceOption(CitationTextBudget); const added10 = Context.getOption(CitationOperationAdmission); const added11 = Context.getOrUndefined(context, CitationOperationAdmission); const added12 = Context.getOrUndefined(CitationOperationAdmission); const added13 = serviceOption(CitationOperationAdmission); const added20 = Context.getOption(CitationInvocation); const added21 = Context.getOrUndefined(context, CitationInvocation); const added22 = Context.getOrUndefined(CitationInvocation); const added23 = serviceOption(CitationInvocation); const added30 = Context.getOption(UC.CitationTextBudget); const added31 = Context.getOrUndefined(context, UC.CitationTextBudget); const added32 = Context.getOrUndefined(UC.CitationTextBudget); const added33 = serviceOption(UC.CitationTextBudget); const added40 = Context.getOption(UC.CitationOperationAdmission); const added41 = Context.getOrUndefined(context, UC.CitationOperationAdmission); const added42 = Context.getOrUndefined(UC.CitationOperationAdmission); const added43 = serviceOption(UC.CitationOperationAdmission); const added50 = Context.getOption(UC.CitationInvocation); const added51 = Context.getOrUndefined(context, UC.CitationInvocation); const added52 = Context.getOrUndefined(UC.CitationInvocation); const added53 = serviceOption(UC.CitationInvocation);",
+      "const v000 = Effect.serviceOption(CitationTextBudget); const v001 = Context.getOption(context, CitationTextBudget); const v010 = Effect.serviceOption(UC.CitationTextBudget); const v011 = Context.getOption(context, UC.CitationTextBudget); const v100 = Effect.serviceOption(CitationOperationAdmission); const v101 = Context.getOption(context, CitationOperationAdmission); const v110 = Effect.serviceOption(UC.CitationOperationAdmission); const v111 = Context.getOption(context, UC.CitationOperationAdmission); const v200 = Effect.serviceOption(CitationInvocation); const v201 = Context.getOption(context, CitationInvocation); const v210 = Effect.serviceOption(UC.CitationInvocation); const v211 = Context.getOption(context, UC.CitationInvocation); const added00 = Context.getOption(CitationTextBudget); const added01 = Context.getOrUndefined(context, CitationTextBudget); const added02 = Context.getOrUndefined(CitationTextBudget); const added03 = serviceOption(CitationTextBudget); const added10 = Context.getOption(CitationOperationAdmission); const added11 = Context.getOrUndefined(context, CitationOperationAdmission); const added12 = Context.getOrUndefined(CitationOperationAdmission); const added13 = serviceOption(CitationOperationAdmission); const added20 = Context.getOption(CitationInvocation); const added21 = Context.getOrUndefined(context, CitationInvocation); const added22 = Context.getOrUndefined(CitationInvocation); const added23 = serviceOption(CitationInvocation); const added30 = Context.getOption(UC.CitationTextBudget); const added31 = Context.getOrUndefined(context, UC.CitationTextBudget); const added32 = Context.getOrUndefined(UC.CitationTextBudget); const added33 = serviceOption(UC.CitationTextBudget); const added40 = Context.getOption(UC.CitationOperationAdmission); const added41 = Context.getOrUndefined(context, UC.CitationOperationAdmission); const added42 = Context.getOrUndefined(UC.CitationOperationAdmission); const added43 = serviceOption(UC.CitationOperationAdmission); const added50 = Context.getOption(UC.CitationInvocation); const added51 = Context.getOrUndefined(context, UC.CitationInvocation); const added52 = Context.getOrUndefined(UC.CitationInvocation); const added53 = serviceOption(UC.CitationInvocation); const captured00 = Context.get(context, CitationTextBudget); const captured01 = Context.get(CitationTextBudget); const captured02 = Context.getUnsafe(context, CitationTextBudget); const captured03 = Context.getUnsafe(CitationTextBudget); const captured04 = Context.getOrElse(context, CitationTextBudget, orElse); const captured05 = Context.getOrElse(CitationTextBudget, orElse); const captured10 = Context.get(context, CitationOperationAdmission); const captured11 = Context.get(CitationOperationAdmission); const captured12 = Context.getUnsafe(context, CitationOperationAdmission); const captured13 = Context.getUnsafe(CitationOperationAdmission); const captured14 = Context.getOrElse(context, CitationOperationAdmission, orElse); const captured15 = Context.getOrElse(CitationOperationAdmission, orElse); const captured20 = Context.get(context, CitationInvocation); const captured21 = Context.get(CitationInvocation); const captured22 = Context.getUnsafe(context, CitationInvocation); const captured23 = Context.getUnsafe(CitationInvocation); const captured24 = Context.getOrElse(context, CitationInvocation, orElse); const captured25 = Context.getOrElse(CitationInvocation, orElse); const captured30 = Context.get(context, UC.CitationTextBudget); const captured31 = Context.get(UC.CitationTextBudget); const captured32 = Context.getUnsafe(context, UC.CitationTextBudget); const captured33 = Context.getUnsafe(UC.CitationTextBudget); const captured34 = Context.getOrElse(context, UC.CitationTextBudget, orElse); const captured35 = Context.getOrElse(UC.CitationTextBudget, orElse); const captured40 = Context.get(context, UC.CitationOperationAdmission); const captured41 = Context.get(UC.CitationOperationAdmission); const captured42 = Context.getUnsafe(context, UC.CitationOperationAdmission); const captured43 = Context.getUnsafe(UC.CitationOperationAdmission); const captured44 = Context.getOrElse(context, UC.CitationOperationAdmission, orElse); const captured45 = Context.getOrElse(UC.CitationOperationAdmission, orElse); const captured50 = Context.get(context, UC.CitationInvocation); const captured51 = Context.get(UC.CitationInvocation); const captured52 = Context.getUnsafe(context, UC.CitationInvocation); const captured53 = Context.getUnsafe(UC.CitationInvocation); const captured54 = Context.getOrElse(context, UC.CitationInvocation, orElse); const captured55 = Context.getOrElse(UC.CitationInvocation, orElse);",
     valid:
-      "const a = Effect.serviceOption(CitationNativeProcessAdmission); const b = Context.getOption(context, UC.CitationNativeProcessAdmission); const c = reserveCitationInvocationText(4);",
+      "const a = Effect.serviceOption(CitationNativeProcessAdmission); const b = Context.getOption(context, UC.CitationNativeProcessAdmission); const c = reserveCitationInvocationText(4); const d = Context.get(context, CitationNativeProcessAdmission);",
   },
   "no-file-url-pathname": {
     invalidCount: 4,
@@ -307,6 +307,86 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
         "export const relaxed = JsoncFingerprint.canonicalizeResult(value, JsoncCanonicalizeOptions.make({ omitUndefinedMembers: true }));",
         "export const inString = \"`{${A.join(members, ',')}}`\";",
         '// `{${A.join(members, ",")}}` in a comment',
+      ],
+      "\n"
+    ),
+  },
+  "no-hand-rolled-git-gh-spawn": {
+    invalidCount: 14,
+    messageIncludes: "hand-rolled git or gh spawn",
+    // One site per shape the repo-cli and ai-metrics census found: a program
+    // literal in the first three arguments followed by argv, a runner spec, a
+    // Bun argv and the shared gh-CLI route.
+    invalid: A.join(
+      [
+        'export const kitless = ChildProcess.make("git", ["status"], { cwd });',
+        'export const variableArgv = ChildProcess.make("gh", args, { cwd });',
+        "export const capture = runRepoCommandCapture(",
+        '  "gh",',
+        '  ["pr", "checks", "--json", "name"],',
+        "  root",
+        ");",
+        "export const singleQuoted = runRepoCommandCaptureRaw('git', ['ls-files', '-z'], root);",
+        'export const second = captureVersion(root, "git", ["rev-parse", "--git-common-dir"]);',
+        'export const third = mustRun(home, canonicalRoot, "git", ["clone", "--quiet"]);',
+        'export const computedArgv = captureCommand("git", leasedRemoteDeletionArgs(state), cwd);',
+        'export const pinned = runCapturedStreams({ command: "/usr/bin/git", args, cwd });',
+        'export const spec = runCaptured({ command: "gh", args: ["api", path], cwd });',
+        'export const step = QualityTaskStep.make({ label: "fetch", command: "git", args: ["fetch"] });',
+        'export const preRuntime = Bun.spawnSync({ cmd: ["git", ...args], stdout: "pipe" });',
+        'export const bunArgv = Bun.spawn(["gh", "api", "user"], { stdout: "pipe" });',
+        "export const sharedGh = ghOutput({ args, cwd, label, onFailure });",
+        'export const exitStatus = yield* status("git", ["diff", "--quiet", "HEAD"]);',
+      ],
+      "\n"
+    ),
+    valid: A.join(
+      [
+        'export const gitCommand = Command.make("git", {}, () => Console.log("git commands"));',
+        'export const ghCommand = Command.make("gh");',
+        'export const line = formatCommandLine("git", invocation.redactedArgs);',
+        'export const exited = withExitCode("lint:jsdoc-module-tags", "git", ["ls-files"], 1);',
+        'export const label = RouteError.new("git", `git diff ${base} failed`);',
+        'export const mapped = RouteError.mapError("git", "Failed to spawn git.");',
+        'export const detail = YeetCommandError.new("refused", { command: "git", exitCode: 1 });',
+        'export const otherProgram = runFixedStep(root, "secrets:gitleaks", "gitleaks", ["git", "--no-banner"]);',
+        'export const domain = LiteralKit(["op", "gh", "network"]);',
+        'export const prefix = spawn("github", ["x"]);',
+        'export const df = Bun.spawnSync(["df", "--output=avail"]);',
+        "export const dynamic = Bun.spawnSync({ cmd: [command, ...args] });",
+        'export const kit = Git.log({ revisions: ["HEAD"], limit: 1 });',
+        'export const helper = closeoutGhOutput(context, ["repo", "view"], "gh repo view");',
+        'export const quoted = "ChildProcess.make(\\"git\\", [\\"status\\"])";',
+        '// ChildProcess.make("git", ["status"]) in a comment',
+        "// biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22): no kit member reads a commit's parent list",
+        'export const recorded = runRepoCommandCapture("git", ["show", "-s", "--format=%P", sha], root);',
+      ],
+      "\n"
+    ),
+  },
+  "no-unrecorded-spawner-double": {
+    invalidCount: 3,
+    messageIncludes: "hand-rolled ChildProcessSpawner test double",
+    invalid: A.join(
+      [
+        "export const decorator = ChildProcessSpawner.make((command) => real.spawn(command));",
+        "export const generator = ChildProcessSpawner.make(",
+        "  Effect.fnUntraced(function* (command) {",
+        "    return yield* real.spawn(command);",
+        "  })",
+        ");",
+        "export const canned = ChildProcessSpawner.make(() => Effect.succeed(handle));",
+      ],
+      "\n"
+    ),
+    valid: A.join(
+      [
+        'export const guard = ChildProcessSpawner.make(() => Effect.die("must not spawn"));',
+        'export const spread = { ...ChildProcessSpawner.make(() => Effect.die("Unexpected process spawn")) };',
+        'export const scripted = ScriptedSpawner.make({ script: () => ({ stdout: "ok", exit: 0 }) });',
+        "export const handle = ChildProcessSpawner.makeHandle({ pid: ChildProcessSpawner.ProcessId(1) });",
+        "// biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double: decorates the real platform spawner",
+        "export const recorded = ChildProcessSpawner.make((command) => real.spawn(command));",
       ],
       "\n"
     ),

@@ -17,6 +17,7 @@ const config = {
     "packages/shared/use-cases/package.json",
     "packages/shared/tables/package.json",
     "packages/tooling/library/*/package.json",
+    "packages/tooling/infra/*/package.json",
     "packages/tooling/policy-pack/*/package.json",
     "packages/tooling/test-kit/*/package.json",
     "packages/tooling/tool/*/package.json",
@@ -137,7 +138,6 @@ const config = {
     "packages/drivers/firecrawl/package.json",
     "packages/drivers/eyecite/package.json",
     "packages/drivers/sqlite/package.json",
-    "packages/tooling/infra/github/package.json",
   ],
   customTypes: {
     catalog: {

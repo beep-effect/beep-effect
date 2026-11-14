@@ -13,25 +13,23 @@ import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
 import {
   ArchivePoorCandidatesManifest,
   boundedPersonMatchDirectoryNamesForTesting,
-  CanonicalMatchPersonInputs,
   DetectBordersReport,
+  FilesCommandService,
   FilesCommandServiceLive,
   FlattenMediaOptions,
   flattenMediaFiles,
   ImageAuditManifest,
   ImageCurationDecisionDocument,
   ImageCurationManifest,
-  MatchPersonOptions,
+  MatchPersonProtocolError,
+  makeFilesMatchPersonCommand,
   NormalizeManifest,
-  PersonMatchDeviceIndexesFromCsv,
   PersonMatchModel,
   PersonMatchModelArtifactVerifier,
   PersonMatchReport,
-  PersonMatchWorkerPolicyForTest,
   PersonMatchWorkerReport,
   PersonMatchWorkerService,
   PersonMatchWorkerSuccess,
-  PreparedAdaFaceArtifacts,
   ProcessFilesOptions,
   probeMediaCreationDate,
   processFiles,
@@ -48,6 +46,7 @@ import { expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
+import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
 import * as Context from "effect/Context";
@@ -68,14 +67,15 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
 import sharp from "sharp";
-import type { FilesCommandService, FlattenMediaSummary } from "@beep/repo-cli/test/Files";
+import type { FlattenMediaSummary } from "@beep/repo-cli/test/Files";
 
-const decodePersonMatchDeviceIndexesFromCsv = S.decodeEffect(PersonMatchDeviceIndexesFromCsv);
 const decodeUnknownPersonMatchModelOption = S.decodeUnknownOption(PersonMatchModel);
 const decodeUnknownPersonMatchWorkerReportOption = S.decodeUnknownOption(PersonMatchWorkerReport);
 
 const testLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, FetchHttpClient.layer);
-const runFilesCommand = Command.runWith(filesCommand, { version: "0.0.0" });
+const runOrdinaryFilesCommand = Command.runWith(filesCommand, { version: "0.0.0" });
+const runFilesCommand = (args: ReadonlyArray<string>) =>
+  args[0] === "match-person" ? runStubbedMatchCommand(args) : runOrdinaryFilesCommand(args);
 const decodeArchivePoorCandidatesManifest = S.decodeUnknownEffect(S.fromJsonString(ArchivePoorCandidatesManifest));
 const decodeDetectBordersReport = S.decodeUnknownEffect(S.fromJsonString(DetectBordersReport));
 const decodeImageAuditManifest = S.decodeUnknownEffect(S.fromJsonString(ImageAuditManifest));
@@ -84,8 +84,10 @@ const decodeChildArtifactRecord = S.decodeUnknownEffect(S.fromJsonString(ChildAr
 const decodeFileProcessingCoverageSummary = S.decodeUnknownEffect(S.fromJsonString(FileProcessingCoverageSummary));
 const decodeFileProcessingFailureRecord = S.decodeUnknownEffect(S.fromJsonString(FileProcessingFailureRecord));
 const decodeNormalizeManifest = S.decodeUnknownEffect(S.fromJsonString(NormalizeManifest));
+const decodeWorkerSuccessJson = S.decodeEffect(S.fromJsonString(PersonMatchWorkerSuccess), {
+  onExcessProperty: "error",
+});
 const decodePersonMatchReport = S.decodeUnknownEffect(S.fromJsonString(PersonMatchReport));
-const decodePersonMatchWorkerSuccess = S.decodeUnknownEffect(PersonMatchWorkerSuccess);
 const decodeProcessRunManifest = S.decodeUnknownEffect(S.fromJsonString(ProcessRunManifest));
 const decodeSourceProcessingRecord = S.decodeUnknownEffect(S.fromJsonString(SourceProcessingRecord));
 const encodeDetectBordersReport = S.encodeUnknownEffect(S.fromJsonString(DetectBordersReport));
@@ -438,10 +440,10 @@ const makeAdaFaceModelFixture = (path: Path.Path, cacheDir: string) => {
 
 const buffaloParametersFixture = {
   backend: "buffalo-l",
-  compute: "auto",
+  compute: "cpu",
   actualCompute: "cpu",
   devices: [],
-  batchSize: 32,
+  batchSize: 1,
   precision: "fp32",
   thresholdSource: "calibrated-default",
   detectionThreshold: 0.6,
@@ -450,22 +452,6 @@ const buffaloParametersFixture = {
   minFaceAreaPct: 1,
   recursive: false,
 };
-
-const adaFaceRocmParametersFixture = {
-  backend: "adaface-kprpe",
-  compute: "rocm",
-  actualCompute: "rocm",
-  devices: [0],
-  batchSize: 32,
-  precision: "fp32",
-  thresholdSource: "calibrated-default",
-  detectionThreshold: 0.6,
-  matchThreshold: 0.5,
-  reviewThreshold: 0.35,
-  minFaceAreaPct: 1,
-  recursive: false,
-};
-
 const workerLimitsFixture = {
   referenceImages: 256,
   candidateImages: 10_000,
@@ -485,78 +471,6 @@ const makePersonMatchFaceFixture = (matchScore: number) => ({
   bestReferenceScore: matchScore,
   bestReferenceName: "reference.jpg",
   qualityFlags: [],
-});
-
-const makeAdaFaceRocmWorkerReportFixture = (
-  path: Path.Path,
-  cacheDir: string,
-  candidateDir: string,
-  referencePath: string
-) => ({
-  schemaVersion: "beep.files.match-person.worker.v3",
-  ok: true,
-  limits: workerLimitsFixture,
-  model: makeAdaFaceModelFixture(path, cacheDir),
-  parameters: adaFaceRocmParametersFixture,
-  references: [
-    {
-      sourceName: "reference.jpg",
-      sourcePath: referencePath,
-      accepted: true,
-      faceCount: 1,
-      detectionScore: 0.99,
-    },
-  ],
-  entries: [
-    {
-      sourceName: "solo.jpg",
-      sourcePath: path.join(candidateDir, "solo.jpg"),
-      relativePath: "solo.jpg",
-      disposition: "solo-match",
-      faceCount: 1,
-      bestScore: 0.81,
-      faces: [makePersonMatchFaceFixture(0.81)],
-    },
-    {
-      sourceName: "review.jpg",
-      sourcePath: path.join(candidateDir, "review.jpg"),
-      relativePath: "review.jpg",
-      disposition: "review",
-      faceCount: 1,
-      bestScore: 0.4,
-      faces: [makePersonMatchFaceFixture(0.4)],
-    },
-    {
-      sourceName: "no-face.jpg",
-      sourcePath: path.join(candidateDir, "no-face.jpg"),
-      relativePath: "no-face.jpg",
-      disposition: "no-face",
-      faceCount: 0,
-      faces: [],
-    },
-    {
-      sourceName: "aligner-rejected.jpg",
-      sourcePath: path.join(candidateDir, "aligner-rejected.jpg"),
-      relativePath: "aligner-rejected.jpg",
-      disposition: "no-face",
-      faceCount: 0,
-      faces: [],
-      reason: "aligner-confidence-failed",
-    },
-  ],
-  summary: {
-    totalCount: 4,
-    soloMatchCount: 1,
-    groupMatchCount: 0,
-    lowQualityMatchCount: 0,
-    reviewCount: 1,
-    noMatchCount: 0,
-    noFaceCount: 2,
-    unreadableCount: 0,
-    acceptedReferenceCount: 1,
-    rejectedReferenceCount: 0,
-  },
-  elapsedSeconds: 0.25,
 });
 
 const makeBuffaloWorkerReportFixture = (
@@ -1690,331 +1604,6 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
-  it.effect("validates a pinned AdaFace ROCm orchestration report with review and no-face semantics", () =>
-    Effect.gen(function* () {
-      const tmpDir = yield* temporaryWorkingDirectory;
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const candidateDir = path.join(tmpDir, "candidates");
-      const referenceDir = path.join(tmpDir, "references");
-      const cacheDir = path.join(tmpDir, "cache");
-      const manifestPath = path.join(tmpDir, "person-match.json");
-      const uvPath = path.join(tmpDir, "uv");
-      const liveWorkerMarkerPath = path.join(tmpDir, "live-worker-started");
-      const referencePath = path.join(referenceDir, "reference.jpg");
-      yield* fs.makeDirectory(candidateDir, { recursive: true });
-      yield* fs.makeDirectory(referenceDir, { recursive: true });
-      yield* Effect.forEach(
-        ["aligner-rejected.jpg", "no-face.jpg", "review.jpg", "solo.jpg"],
-        (name) => fs.writeFileString(path.join(candidateDir, name), name),
-        { concurrency: 1, discard: true }
-      );
-      yield* fs.writeFileString(referencePath, "reference");
-      yield* writeProcessStub(`#!/usr/bin/env bash\nprintf invoked > "${liveWorkerMarkerPath}"\nexit 99\n`, uvPath);
-      const rocmWorkerReport = makeAdaFaceRocmWorkerReportFixture(path, cacheDir, candidateDir, referencePath);
-      const worker = yield* decodePersonMatchWorkerSuccess(rocmWorkerReport).pipe(Effect.mapError(filesTestError));
-      const devices = yield* decodePersonMatchDeviceIndexesFromCsv("0").pipe(Effect.mapError(filesTestError));
-      const options = MatchPersonOptions.make({
-        acceptModelLicense: true,
-        backend: "adaface-kprpe",
-        cacheDir: O.some(cacheDir),
-        compute: "rocm",
-        detectionThreshold: 0.6,
-        devices: O.some(devices),
-        dir: candidateDir,
-        manifest: manifestPath,
-        matchThreshold: 0.5,
-        minFaceAreaPct: 1,
-        references: referenceDir,
-        reviewThreshold: 0.35,
-      });
-      const modelRoot = path.join(cacheDir, "adaface-kprpe");
-      const inputs = CanonicalMatchPersonInputs.make({
-        cacheRoot: cacheDir,
-        candidateDirectory: candidateDir,
-        manifestPath,
-        modelRoot,
-        outputDirectory: O.none(),
-        referenceDirectory: referenceDir,
-        uvCacheRoot: path.join(cacheDir, "uv-cache"),
-        uvCpuEnvironment: path.join(cacheDir, "venv-adaface-cpu-py312-v1"),
-        uvEnvironment: path.join(cacheDir, "venv-adaface-rocm72-py312-v1"),
-        uvPath,
-      });
-      const artifacts = PreparedAdaFaceArtifacts.make({
-        alignerPath: path.join(modelRoot, "pinned", "aligner", "model.safetensors"),
-        recognizerPath: path.join(modelRoot, "pinned", "recognizer", "model.safetensors"),
-      });
-      const rocmLibraryDirectory = path.join(tmpDir, "rocm-library");
-      const rocmVersionedLibrary = path.join(rocmLibraryDirectory, "libhipsparselt.so.0.2");
-      yield* fs.makeDirectory(rocmLibraryDirectory, { recursive: true });
-      yield* fs.writeFileString(rocmVersionedLibrary, "fixture");
-      yield* fs.symlink(rocmVersionedLibrary, path.join(rocmLibraryDirectory, "libhipsparselt.so.0"));
-      yield* PersonMatchWorkerPolicyForTest.validateRuntimeRequest(options);
-      yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(worker, options, inputs);
-      const configuredLibraryPath = yield* PersonMatchWorkerPolicyForTest.resolveWorkerLibraryPath(
-        options,
-        inputs,
-        "primary"
-      ).pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromUnknown({
-            BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH: rocmLibraryDirectory,
-            LD_LIBRARY_PATH: "/system/lib",
-          })
-        )
-      );
-      expect(configuredLibraryPath).toEqual(O.some(`${rocmLibraryDirectory}:/system/lib`));
-      const configuredLibraryPathWithoutInherited = yield* PersonMatchWorkerPolicyForTest.resolveWorkerLibraryPath(
-        options,
-        inputs,
-        "primary"
-      ).pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromUnknown({ BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH: rocmLibraryDirectory })
-        )
-      );
-      expect(configuredLibraryPathWithoutInherited).toEqual(O.some(rocmLibraryDirectory));
-      const missingDirectoryError = yield* PersonMatchWorkerPolicyForTest.resolveWorkerLibraryPath(
-        options,
-        inputs,
-        "primary"
-      ).pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromUnknown({
-            BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH: path.join(tmpDir, "missing-rocm-library"),
-          })
-        ),
-        Effect.flip
-      );
-      expect(missingDirectoryError._tag).toBe("MatchPersonPathError");
-      const incompleteLibraryDirectory = path.join(tmpDir, "incomplete-rocm-library");
-      yield* fs.makeDirectory(incompleteLibraryDirectory, { recursive: true });
-      const incompleteLibraryError = yield* PersonMatchWorkerPolicyForTest.resolveWorkerLibraryPath(
-        options,
-        inputs,
-        "primary"
-      ).pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromUnknown({
-            BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH: incompleteLibraryDirectory,
-          })
-        ),
-        Effect.flip
-      );
-      expect(incompleteLibraryError._tag).toBe("MatchPersonPathError");
-      const missingSonameDirectory = path.join(tmpDir, "missing-soname-rocm-library");
-      yield* fs.makeDirectory(missingSonameDirectory, { recursive: true });
-      yield* fs.writeFileString(path.join(missingSonameDirectory, "libhipsparselt.so.0.2"), "fixture");
-      const missingSonameError = yield* PersonMatchWorkerPolicyForTest.resolveWorkerLibraryPath(
-        options,
-        inputs,
-        "primary"
-      ).pipe(
-        Effect.provideService(
-          ConfigProvider.ConfigProvider,
-          ConfigProvider.fromUnknown({ BEEP_PHOTO_FACE_ROCM_LIBRARY_PATH: missingSonameDirectory })
-        ),
-        Effect.flip
-      );
-      expect(missingSonameError._tag).toBe("MatchPersonPathError");
-      const automaticOptions = MatchPersonOptions.make({
-        ...options,
-        compute: "auto",
-        devices: O.none(),
-      });
-      const cpuWorkerReport = {
-        ...rocmWorkerReport,
-        model: {
-          ...worker.model,
-          runtime: {
-            framework: "pytorch",
-            distribution: "cpu",
-            packageVersion: "2.13.0+cpu",
-            actualCompute: "cpu",
-            precision: "fp32",
-            devices: [],
-            warnings: [
-              {
-                code: "rocm-fallback-to-cpu",
-                message: "ROCm was unavailable, so automatic compute selected the pinned CPU runtime.",
-              },
-            ],
-          },
-        },
-        parameters: {
-          ...worker.parameters,
-          compute: "auto",
-          actualCompute: "cpu",
-          devices: [],
-        },
-      };
-      const cpuWorker = yield* decodePersonMatchWorkerSuccess(cpuWorkerReport).pipe(Effect.mapError(filesTestError));
-      yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(cpuWorker, automaticOptions, inputs);
-      const mismatchedParametersWorker = yield* decodePersonMatchWorkerSuccess({
-        ...rocmWorkerReport,
-        parameters: { ...rocmWorkerReport.parameters, batchSize: 64 },
-      }).pipe(Effect.mapError(filesTestError));
-      const mismatchedParametersError = yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(
-        mismatchedParametersWorker,
-        options,
-        inputs
-      ).pipe(Effect.flip);
-      expect(mismatchedParametersError.message).toContain("parameters that do not match");
-      const invalidHipWorker = yield* decodePersonMatchWorkerSuccess({
-        ...rocmWorkerReport,
-        model: {
-          ...rocmWorkerReport.model,
-          runtime: { ...rocmWorkerReport.model.runtime, hipVersion: "7.1.0" },
-        },
-      }).pipe(Effect.mapError(filesTestError));
-      const invalidHipError = yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(
-        invalidHipWorker,
-        options,
-        inputs
-      ).pipe(Effect.flip);
-      expect(invalidHipError.message).toContain("pinned HIP 7.2 family");
-      const unexpectedWarningWorker = yield* decodePersonMatchWorkerSuccess({
-        ...rocmWorkerReport,
-        model: {
-          ...rocmWorkerReport.model,
-          runtime: {
-            ...rocmWorkerReport.model.runtime,
-            warnings: [
-              {
-                code: "rocm-fallback-to-cpu",
-                message: "A ROCm execution cannot also claim a CPU fallback.",
-              },
-            ],
-          },
-        },
-        parameters: { ...rocmWorkerReport.parameters, compute: "auto" },
-      }).pipe(Effect.mapError(filesTestError));
-      const unexpectedWarningError = yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(
-        unexpectedWarningWorker,
-        automaticOptions,
-        inputs
-      ).pipe(Effect.flip);
-      expect(unexpectedWarningError.message).toContain("incoherent compute-fallback provenance");
-      for (const packageVersion of ["2.9.1+cpu", "2.13.0", "2.13.0+rocm7.2"]) {
-        const wrongCpuPackageWorker = yield* decodePersonMatchWorkerSuccess({
-          ...cpuWorkerReport,
-          model: {
-            ...cpuWorkerReport.model,
-            runtime: { ...cpuWorkerReport.model.runtime, packageVersion },
-          },
-        }).pipe(Effect.mapError(filesTestError));
-        const wrongCpuPackageError = yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(
-          wrongCpuPackageWorker,
-          automaticOptions,
-          inputs
-        ).pipe(Effect.flip);
-        expect(wrongCpuPackageError.message).toContain("pinned cpu PyTorch runtime 2.13.0+cpu");
-      }
-      for (const packageVersion of ["2.9.1+rocm7.2.0.git7e1940d4", "2.13.0", "2.13.0+cpu"]) {
-        const wrongRocmPackageWorker = yield* decodePersonMatchWorkerSuccess({
-          ...rocmWorkerReport,
-          model: {
-            ...rocmWorkerReport.model,
-            runtime: { ...rocmWorkerReport.model.runtime, packageVersion },
-          },
-        }).pipe(Effect.mapError(filesTestError));
-        const wrongRocmPackageError = yield* PersonMatchWorkerPolicyForTest.validateWorkerEnvelope(
-          wrongRocmPackageWorker,
-          options,
-          inputs
-        ).pipe(Effect.flip);
-        expect(wrongRocmPackageError.message).toContain("pinned rocm72 PyTorch runtime 2.13.0+rocm7.2");
-      }
-      expect(PersonMatchWorkerPolicyForTest.workerSyncArguments(options, "primary")).toEqual(
-        expect.arrayContaining(["--extra", "adaface"])
-      );
-      expect(PersonMatchWorkerPolicyForTest.workerSyncArguments(options, "cpu")).toEqual(
-        expect.arrayContaining(["--extra", "adaface-cpu"])
-      );
-      expect(PersonMatchWorkerPolicyForTest.workerArguments(options, inputs, O.some(artifacts))).toEqual(
-        expect.arrayContaining([
-          "--backend",
-          "adaface-kprpe",
-          "--compute",
-          "rocm",
-          "--devices",
-          "0",
-          "--aligner-path",
-          artifacts.alignerPath,
-          "--recognizer-path",
-          artifacts.recognizerPath,
-        ])
-      );
-      let workerCallCount = 0;
-      const workerService = PersonMatchWorkerService.of({
-        run: Effect.fn("PersonMatchWorkerService.run")(() =>
-          Effect.sync(() => {
-            workerCallCount += 1;
-            return worker;
-          })
-        ),
-      });
-      yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
-        runMatchPerson(options).pipe(Effect.provideService(PersonMatchWorkerService, workerService))
-      );
-      const manifest = yield* readPersonMatchManifest(manifestPath);
-      const reviewEntry = O.getOrUndefined(A.findFirst(manifest.entries, (entry) => entry.sourceName === "review.jpg"));
-      const noFaceEntry = O.getOrUndefined(
-        A.findFirst(manifest.entries, (entry) => entry.sourceName === "no-face.jpg")
-      );
-      const alignerRejectedEntry = O.getOrUndefined(
-        A.findFirst(manifest.entries, (entry) => entry.sourceName === "aligner-rejected.jpg")
-      );
-      expect(workerCallCount).toBe(1);
-      const exists43 = yield* fs.exists(liveWorkerMarkerPath);
-      expect(exists43).toBe(false);
-      expect(manifest.manifestWritten).toBe(true);
-      expect(manifest.model).toMatchObject({
-        backend: "adaface-kprpe",
-        runtime: {
-          actualCompute: "rocm",
-          devices: [{ architecture: "gfx1201", index: 0 }],
-          distribution: "rocm72",
-          packageVersion: "2.13.0+rocm7.2",
-          warnings: [],
-        },
-      });
-      expect(A.map(manifest.model.components, (component) => component.role)).toEqual([
-        "detector",
-        "aligner",
-        "recognizer",
-      ]);
-      expect(manifest.parameters).toMatchObject({
-        actualCompute: "rocm",
-        backend: "adaface-kprpe",
-        compute: "rocm",
-        devices: [0],
-      });
-      expect(manifest.summary).toMatchObject({
-        acceptedReferenceCount: 1,
-        noFaceCount: 2,
-        reviewCount: 1,
-        soloMatchCount: 1,
-        totalCount: 4,
-      });
-      expect(reviewEntry).toMatchObject({ disposition: "review" });
-      expect(reviewEntry?.reason).toBeUndefined();
-      expect(noFaceEntry).toMatchObject({ disposition: "no-face" });
-      expect(noFaceEntry?.reason).toBeUndefined();
-      expect(alignerRejectedEntry).toMatchObject({
-        disposition: "no-face",
-        reason: "aligner-confidence-failed",
-      });
-    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-  );
-
   it.effect("bounds person-match directory enumeration before sorting the discovered names", () =>
     Effect.gen(function* () {
       const tmpDir = yield* temporaryWorkingDirectory;
@@ -2032,87 +1621,6 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
-  it.effect.each([
-    { deviceCsv: "0,0", invalidCase: "duplicate" },
-    { deviceCsv: "0,,1", invalidCase: "blank" },
-  ])("rejects $invalidCase person-match device indexes before starting a worker", ({ deviceCsv }) =>
-    Effect.gen(function* () {
-      const tmpDir = yield* temporaryWorkingDirectory;
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const candidateDir = path.join(tmpDir, "candidates");
-      const referenceDir = path.join(tmpDir, "references");
-      const manifestPath = path.join(tmpDir, "person-match.json");
-      yield* fs.makeDirectory(candidateDir, { recursive: true });
-      yield* fs.makeDirectory(referenceDir, { recursive: true });
-      const message = yield* expectFilesCommandFailure([
-        "match-person",
-        "--references",
-        referenceDir,
-        "--dir",
-        candidateDir,
-        "--manifest",
-        manifestPath,
-        "--devices",
-        deviceCsv,
-      ]);
-      expect(message).toContain("Invalid --devices value");
-      const exists44 = yield* fs.exists(manifestPath);
-      expect(exists44).toBe(false);
-    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-  );
-
-  it.effect.each([
-    {
-      invalidCase: "Buffalo with required ROCm",
-      options: ["--backend", "buffalo-l", "--compute", "rocm"],
-      expectedMessage: "Buffalo backend is CPU-only",
-    },
-    {
-      invalidCase: "CPU with explicit GPU devices",
-      options: ["--backend", "adaface-kprpe", "--compute", "cpu", "--devices", "0"],
-      expectedMessage: "Explicit GPU devices cannot be combined with --compute cpu",
-    },
-  ])("rejects $invalidCase before acquisition or worker startup", ({ expectedMessage, options }) =>
-    Effect.gen(function* () {
-      const tmpDir = yield* temporaryWorkingDirectory;
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const candidateDir = path.join(tmpDir, "candidates");
-      const referenceDir = path.join(tmpDir, "references");
-      const cacheDir = path.join(tmpDir, "cache");
-      const manifestPath = path.join(tmpDir, "person-match.json");
-      const uvPath = path.join(tmpDir, "uv");
-      const workerMarkerPath = path.join(tmpDir, "worker-started");
-      yield* fs.makeDirectory(candidateDir, { recursive: true });
-      yield* fs.makeDirectory(referenceDir, { recursive: true });
-      yield* fs.writeFileString(path.join(referenceDir, "reference.jpg"), "reference");
-      yield* writeProcessStub(`#!/usr/bin/env bash\nprintf invoked > "${workerMarkerPath}"\nexit 99\n`, uvPath);
-      const message = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
-        expectFilesCommandFailure([
-          "match-person",
-          "--references",
-          referenceDir,
-          "--dir",
-          candidateDir,
-          "--cache-dir",
-          cacheDir,
-          "--manifest",
-          manifestPath,
-          "--accept-model-license",
-          ...options,
-        ])
-      );
-      expect(message).toContain(expectedMessage);
-      const exists45 = yield* fs.exists(workerMarkerPath);
-      expect(exists45).toBe(false);
-      const exists46 = yield* fs.exists(manifestPath);
-      expect(exists46).toBe(false);
-    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-  );
-
   it.effect("rejects an empty reference directory before AdaFace acquisition or worker startup", () =>
     Effect.gen(function* () {
       const tmpDir = yield* temporaryWorkingDirectory;
@@ -2122,15 +1630,13 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
       const referenceDir = path.join(tmpDir, "references");
       const cacheDir = path.join(tmpDir, "cache");
       const manifestPath = path.join(tmpDir, "person-match.json");
-      const uvPath = path.join(tmpDir, "uv");
       const workerMarkerPath = path.join(tmpDir, "worker-started");
       yield* fs.makeDirectory(candidateDir, { recursive: true });
       yield* fs.makeDirectory(referenceDir, { recursive: true });
       yield* fs.writeFileString(path.join(candidateDir, "candidate.jpg"), "candidate");
-      yield* writeProcessStub(`#!/usr/bin/env bash\nprintf invoked > "${workerMarkerPath}"\nexit 99\n`, uvPath);
       const message = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        "",
         expectFilesCommandFailure([
           "match-person",
           "--references",
@@ -2154,134 +1660,6 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
-  it.effect.each([
-    {
-      compute: "auto",
-      expectedEnvironmentChildren: ["venv-adaface-rocm72-py312-v1", "venv-adaface-cpu-py312-v1"],
-    },
-    {
-      compute: "rocm",
-      expectedEnvironmentChildren: ["venv-adaface-rocm72-py312-v1"],
-    },
-  ])(
-    "bounds AdaFace $compute environment setup failures before model acquisition",
-    ({ compute, expectedEnvironmentChildren }) =>
-      Effect.gen(function* () {
-        const tmpDir = yield* temporaryWorkingDirectory;
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const candidateDir = path.join(tmpDir, "candidates");
-        const referenceDir = path.join(tmpDir, "references");
-        const cacheDir = path.join(tmpDir, "cache");
-        const manifestPath = path.join(tmpDir, "person-match.json");
-        const uvPath = path.join(tmpDir, "uv");
-        const invocationPath = path.join(tmpDir, "uv-invocations");
-        yield* fs.makeDirectory(candidateDir, { recursive: true });
-        yield* fs.makeDirectory(referenceDir, { recursive: true });
-        yield* fs.writeFileString(path.join(candidateDir, "candidate.jpg"), "candidate");
-        yield* fs.writeFileString(path.join(referenceDir, "reference.jpg"), "reference");
-        yield* writeProcessStub(
-          `#!/usr/bin/env bash
-printf '%s\t%s\n' "$UV_PROJECT_ENVIRONMENT" "$*" >> "${invocationPath}"
-if [ "$1" = "lock" ]; then exit 0; fi
-printf 'simulated pinned environment setup failure' >&2
-exit 73
-`,
-          uvPath
-        );
-        const message = yield* withEnvVar(
-          "BEEP_UV_PATH",
-          uvPath,
-          expectFilesCommandFailure([
-            "match-person",
-            "--backend",
-            "adaface-kprpe",
-            "--compute",
-            compute,
-            "--references",
-            referenceDir,
-            "--dir",
-            candidateDir,
-            "--cache-dir",
-            cacheDir,
-            "--manifest",
-            manifestPath,
-            "--accept-model-license",
-          ])
-        );
-        const readFileString50 = yield* fs.readFileString(invocationPath);
-        const invocations = A.filter(Str.split(readFileString50, "\n"), Str.isNonEmpty);
-        expect(invocations[0]).toContain("lock --check");
-        expect(A.drop(invocations, 1)).toHaveLength(A.length(expectedEnvironmentChildren));
-        A.forEach(expectedEnvironmentChildren, (environmentChild, index) => {
-          const invocation = invocations[index + 1];
-          expect(invocation).toContain(path.join(cacheDir, environmentChild));
-          expect(invocation).toContain("sync");
-          expect(invocation).toContain(
-            Str.includes("cpu")(environmentChild) ? "--extra adaface-cpu" : "--extra adaface"
-          );
-        });
-        expect(message).toContain("environment");
-        const exists51 = yield* fs.exists(path.join(cacheDir, "adaface-kprpe", "pinned"));
-        expect(exists51).toBe(false);
-        const exists52 = yield* fs.exists(manifestPath);
-        expect(exists52).toBe(false);
-      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-  );
-
-  it.effect("fails closed on an invalid person-match uv lock before environment or model setup", () =>
-    Effect.gen(function* () {
-      const tmpDir = yield* temporaryWorkingDirectory;
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const candidateDir = path.join(tmpDir, "candidates");
-      const referenceDir = path.join(tmpDir, "references");
-      const cacheDir = path.join(tmpDir, "cache");
-      const manifestPath = path.join(tmpDir, "person-match.json");
-      const uvPath = path.join(tmpDir, "uv");
-      const invocationPath = path.join(tmpDir, "uv-invocations");
-      yield* fs.makeDirectory(candidateDir, { recursive: true });
-      yield* fs.makeDirectory(referenceDir, { recursive: true });
-      yield* fs.writeFileString(path.join(candidateDir, "candidate.jpg"), "candidate");
-      yield* fs.writeFileString(path.join(referenceDir, "reference.jpg"), "reference");
-      yield* writeProcessStub(
-        `#!/usr/bin/env bash
-printf '%s\n' "$*" >> "${invocationPath}"
-printf 'simulated stale uv lock' >&2
-exit 74
-`,
-        uvPath
-      );
-      const message = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
-        expectFilesCommandFailure([
-          "match-person",
-          "--backend",
-          "adaface-kprpe",
-          "--references",
-          referenceDir,
-          "--dir",
-          candidateDir,
-          "--cache-dir",
-          cacheDir,
-          "--manifest",
-          manifestPath,
-          "--accept-model-license",
-        ])
-      );
-      const readFileString53 = yield* fs.readFileString(invocationPath);
-      const invocations = A.filter(Str.split(readFileString53, "\n"), Str.isNonEmpty);
-      expect(invocations).toHaveLength(1);
-      expect(invocations[0]).toContain("lock --check");
-      expect(message).toContain("lock");
-      const exists54 = yield* fs.exists(path.join(cacheDir, "adaface-kprpe", "pinned"));
-      expect(exists54).toBe(false);
-      const exists55 = yield* fs.exists(manifestPath);
-      expect(exists55).toBe(false);
-    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-  );
-
   it.effect("resolves Buffalo thresholds and requires an exact v2 worker parameter echo", () =>
     Effect.gen(function* () {
       const tmpDir = yield* temporaryWorkingDirectory;
@@ -2290,7 +1668,6 @@ exit 74
       const candidateDir = path.join(tmpDir, "candidates");
       const referenceDir = path.join(tmpDir, "references");
       const cacheDir = path.join(tmpDir, "cache");
-      const uvPath = path.join(tmpDir, "uv");
       const referencePath = path.join(referenceDir, "reference.jpg");
       yield* fs.makeDirectory(candidateDir, { recursive: true });
       yield* fs.makeDirectory(referenceDir, { recursive: true });
@@ -2303,10 +1680,9 @@ exit 74
       const defaultManifestPath = path.join(tmpDir, "default-person-match.json");
       const defaultWorkerReport = makeBuffaloWorkerReportFixture(path, cacheDir, candidateDir, referencePath);
       const defaultWorkerJson = yield* encodeUnknownJson(defaultWorkerReport);
-      yield* writeProcessStub(`#!/usr/bin/env bash\nprintf '%s' '${defaultWorkerJson}'\n`, uvPath);
       yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        defaultWorkerJson,
         runFilesCommand([
           "match-person",
           "--backend",
@@ -2334,10 +1710,9 @@ exit 74
       const explicitManifestPath = path.join(tmpDir, "explicit-person-match.json");
       const explicitWorkerReport = { ...defaultWorkerReport, parameters: explicitParameters };
       const explicitWorkerJson = yield* encodeUnknownJson(explicitWorkerReport);
-      yield* writeProcessStub(`#!/usr/bin/env bash\nprintf '%s' '${explicitWorkerJson}'\n`, uvPath);
       yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        explicitWorkerJson,
         runFilesCommand([
           "match-person",
           "--backend",
@@ -2368,10 +1743,9 @@ exit 74
         parameters: { ...buffaloParametersFixture, batchSize: 64 },
       };
       const mismatchedWorkerJson = yield* encodeUnknownJson(mismatchedWorkerReport);
-      yield* writeProcessStub(`#!/usr/bin/env bash\nprintf '%s' '${mismatchedWorkerJson}'\n`, uvPath);
       const message = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        mismatchedWorkerJson,
         expectFilesCommandFailure([
           "match-person",
           "--backend",
@@ -2406,7 +1780,6 @@ exit 74
       const cacheDir = path.join(tmpDir, "cache");
       const manifestPath = path.join(tmpDir, "person-match.json");
       const outDir = path.join(tmpDir, "matched");
-      const uvPath = path.join(tmpDir, "uv");
       const soloPath = path.join(candidateDir, "solo.jpg");
       const groupPath = path.join(candidateDir, "group.jpg");
       const otherPath = path.join(candidateDir, "other.jpg");
@@ -2421,8 +1794,6 @@ exit 74
       yield* fs.writeFileString(referencePath, "reference source");
       const workerReport = makeBuffaloWorkerReportFixture(path, cacheDir, candidateDir, referencePath);
       const workerReportJson = yield* encodeUnknownJson(workerReport);
-      yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${workerReportJson}'\n`);
-      yield* fs.chmod(uvPath, 0o755);
       const jsonChunks: Array<string> = [];
       let hardLinkCallCount = 0;
       const noHardLinkFileSystem: FileSystem.FileSystem = {
@@ -2440,8 +1811,8 @@ exit 74
           }),
       };
       yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        workerReportJson,
         runFilesCommand([
           "match-person",
           "--backend",
@@ -2512,8 +1883,8 @@ exit 74
       const backupNamedManifestPath = path.join(tmpDir, ".previous-manifest");
       yield* fs.writeFileString(backupNamedManifestPath, "previous manifest");
       yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        workerReportJson,
         runFilesCommand([
           "match-person",
           "--backend",
@@ -2546,10 +1917,9 @@ exit 74
         },
       };
       const partialAlignerWorkerJson = yield* encodeUnknownJson(partialAlignerWorkerReport);
-      yield* writeProcessStub(`#!/usr/bin/env bash\nprintf '%s' '${partialAlignerWorkerJson}'\n`, uvPath);
       yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        partialAlignerWorkerJson,
         runFilesCommand([
           "match-person",
           "--backend",
@@ -2571,6 +1941,51 @@ exit 74
         disposition: "review",
         reason: "aligner-confidence-failed",
       });
+      const invalidEmbeddingManifestPath = path.join(tmpDir, "invalid-embedding-person-match.json");
+      const invalidEmbeddingWorkerReport = {
+        ...workerReport,
+        entries: A.map(workerReport.entries, (entry) =>
+          entry.disposition === "group-match"
+            ? {
+                sourceName: entry.sourceName,
+                sourcePath: entry.sourcePath,
+                relativePath: entry.relativePath,
+                disposition: "review",
+                reason: "invalid-embedding",
+                faceCount: 0,
+                faces: [],
+              }
+            : entry
+        ),
+        summary: { ...workerReport.summary, groupMatchCount: 0, reviewCount: 1 },
+      };
+      const invalidEmbeddingJson = yield* encodeUnknownJson(invalidEmbeddingWorkerReport);
+      yield* withEnvVar(
+        "BEEP_TEST_MATCH_REPORT",
+        invalidEmbeddingJson,
+        runFilesCommand([
+          "match-person",
+          "--backend",
+          "buffalo-l",
+          "--references",
+          referenceDir,
+          "--dir",
+          candidateDir,
+          "--cache-dir",
+          cacheDir,
+          "--manifest",
+          invalidEmbeddingManifestPath,
+          "--accept-model-license",
+        ])
+      );
+      const invalidEmbeddingReport = yield* readPersonMatchManifest(invalidEmbeddingManifestPath);
+      expect(invalidEmbeddingReport.entries[0]).toMatchObject({
+        disposition: "review",
+        reason: "invalid-embedding",
+        faceCount: 0,
+        faces: [],
+      });
+      expect(invalidEmbeddingReport.summary.reviewCount).toBe(1);
       const incompleteManifestPath = path.join(tmpDir, "incomplete-person-match.json");
       const incompleteWorkerReport = {
         ...workerReport,
@@ -2582,10 +1997,9 @@ exit 74
         },
       };
       const incompleteWorkerJson = yield* encodeUnknownJson(incompleteWorkerReport);
-      yield* writeProcessStub(`#!/usr/bin/env bash\nprintf '%s' '${incompleteWorkerJson}'\n`, uvPath);
       const incompleteMessage = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        incompleteWorkerJson,
         expectFilesCommandFailure([
           "match-person",
           "--backend",
@@ -2620,10 +2034,9 @@ exit 74
         ),
       };
       const invalidWorkerReportJson = yield* encodeUnknownJson(invalidWorkerReport);
-      yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${invalidWorkerReportJson}'\n`);
       const invalidMessage = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        invalidWorkerReportJson,
         expectFilesCommandFailure([
           "match-person",
           "--backend",
@@ -2654,10 +2067,9 @@ exit 74
         ),
       };
       const excessiveFacesWorkerReportJson = yield* encodeUnknownJson(excessiveFacesWorkerReport);
-      yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${excessiveFacesWorkerReportJson}'\n`);
       const excessiveFacesMessage = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        excessiveFacesWorkerReportJson,
         expectFilesCommandFailure([
           "match-person",
           "--backend",
@@ -2684,13 +2096,9 @@ exit 74
         ),
       };
       const inconsistentFaceCountWorkerReportJson = yield* encodeUnknownJson(inconsistentFaceCountWorkerReport);
-      yield* fs.writeFileString(
-        uvPath,
-        `#!/usr/bin/env bash\nprintf '%s' '${inconsistentFaceCountWorkerReportJson}'\n`
-      );
       const inconsistentFaceCountMessage = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        inconsistentFaceCountWorkerReportJson,
         expectFilesCommandFailure([
           "match-person",
           "--backend",
@@ -2727,10 +2135,9 @@ exit 74
         },
       };
       const unpinnedWorkerReportJson = yield* encodeUnknownJson(unpinnedWorkerReport);
-      yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${unpinnedWorkerReportJson}'\n`);
       const unpinnedMessage = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        unpinnedWorkerReportJson,
         expectFilesCommandFailure([
           "match-person",
           "--backend",
@@ -2770,10 +2177,9 @@ exit 74
         ),
       };
       const misclassifiedWorkerReportJson = yield* encodeUnknownJson(misclassifiedWorkerReport);
-      yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${misclassifiedWorkerReportJson}'\n`);
       const misclassifiedMessage = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        misclassifiedWorkerReportJson,
         expectFilesCommandFailure([
           "match-person",
           "--backend",
@@ -2805,10 +2211,9 @@ exit 74
         ),
       };
       const inconsistentWorkerReportJson = yield* encodeUnknownJson(inconsistentWorkerReport);
-      yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${inconsistentWorkerReportJson}'\n`);
       const inconsistentMessage = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        inconsistentWorkerReportJson,
         expectFilesCommandFailure([
           "match-person",
           "--backend",
@@ -2845,10 +2250,9 @@ exit 74
         summary: { ...workerReport.summary, acceptedReferenceCount: 2 },
       };
       const duplicateWorkerReportJson = yield* encodeUnknownJson(duplicateWorkerReport);
-      yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${duplicateWorkerReportJson}'\n`);
       const duplicateMessage = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        duplicateWorkerReportJson,
         expectFilesCommandFailure([
           "match-person",
           "--backend",
@@ -2873,7 +2277,6 @@ exit 74
       yield* fs.writeFileString(acceptedTarget, "previous solo");
       yield* fs.writeFileString(groupTarget, "previous group");
       yield* fs.writeFileString(manifestPath, "previous manifest");
-      yield* fs.writeFileString(uvPath, `#!/usr/bin/env bash\nprintf '%s' '${workerReportJson}'\n`);
       let stagedRenameCount = 0;
       let linkCallCount = 0;
       const failingFileSystem: FileSystem.FileSystem = {
@@ -2907,8 +2310,8 @@ exit 74
           }),
       };
       const rollbackExit = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        workerReportJson,
         runFilesCommand([
           "match-person",
           "--backend",
@@ -2961,10 +2364,6 @@ exit 74
   it.effect.each([
     { cacheChild: "insightface", targetState: "existing" },
     { cacheChild: "insightface", targetState: "dangling" },
-    { cacheChild: "venv-cpu-py312-v1", targetState: "existing" },
-    { cacheChild: "venv-cpu-py312-v1", targetState: "dangling" },
-    { cacheChild: "uv-cache", targetState: "existing" },
-    { cacheChild: "uv-cache", targetState: "dangling" },
   ])(
     "rejects a $targetState symlinked $cacheChild cache child before starting the worker",
     ({ cacheChild, targetState }) =>
@@ -2978,7 +2377,6 @@ exit 74
         const escapedDir = path.join(tmpDir, "escaped");
         const canaryPath = path.join(escapedDir, "canary.txt");
         const manifestPath = path.join(tmpDir, "person-match.json");
-        const uvPath = path.join(tmpDir, "uv");
         const workerMarkerPath = path.join(tmpDir, "worker-started");
         const targetExists = targetState === "existing";
         yield* fs.makeDirectory(candidateDir, { recursive: true });
@@ -2989,10 +2387,9 @@ exit 74
           yield* fs.writeFileString(canaryPath, "untouched");
         }
         yield* fs.symlink(escapedDir, path.join(cacheDir, cacheChild));
-        yield* writeProcessStub(`#!/usr/bin/env bash\nprintf invoked > "${workerMarkerPath}"\nexit 99\n`, uvPath);
         const message = yield* withEnvVar(
-          "BEEP_UV_PATH",
-          uvPath,
+          "BEEP_TEST_MATCH_REPORT",
+          "",
           expectFilesCommandFailure([
             "match-person",
             "--backend",
@@ -3034,15 +2431,12 @@ exit 74
       const candidateDir = path.join(tmpDir, "candidates");
       const referenceDir = path.join(tmpDir, "references");
       const outputDir = path.join(tmpDir, "output");
-      const uvPath = path.join(tmpDir, "uv");
       yield* fs.makeDirectory(candidateDir, { recursive: true });
       yield* fs.makeDirectory(referenceDir, { recursive: true });
       yield* fs.makeDirectory(outputDir, { recursive: true });
-      yield* fs.writeFileString(uvPath, "#!/usr/bin/env bash\nexit 99\n");
-      yield* fs.chmod(uvPath, 0o755);
       const message = yield* withEnvVar(
-        "BEEP_UV_PATH",
-        uvPath,
+        "BEEP_TEST_MATCH_REPORT",
+        "",
         expectFilesCommandFailure([
           "match-person",
           "--references",
@@ -5380,3 +4774,36 @@ exit 74
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 });
+
+const stubbedMatchLayer = Layer.effect(
+  FilesCommandService,
+  Effect.gen(function* () {
+    const original = yield* FilesCommandService;
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    return FilesCommandService.of({
+      ...original,
+      matchPerson: Effect.fn("FilesTest.matchPerson")(function* (options) {
+        const worker = PersonMatchWorkerService.of({
+          run: Effect.fn("FilesTest.workerRun")(() =>
+            Config.String("BEEP_TEST_MATCH_REPORT").pipe(
+              Effect.flatMap(decodeWorkerSuccessJson),
+              Effect.mapError((cause) =>
+                MatchPersonProtocolError.make({ message: "Person-match worker returned invalid report.", cause })
+              )
+            )
+          ),
+        });
+        return yield* runMatchPerson(options).pipe(
+          Effect.provideService(PersonMatchWorkerService, worker),
+          Effect.provideService(FileSystem.FileSystem, fs),
+          Effect.provideService(Path.Path, path)
+        );
+      }),
+    });
+  })
+).pipe(Layer.provide(FilesCommandServiceLive));
+const runStubbedMatchCommand = Command.runWith(
+  Command.make("files").pipe(Command.withSubcommands([makeFilesMatchPersonCommand(stubbedMatchLayer)])),
+  { version: "0.0.0" }
+);

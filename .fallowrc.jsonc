@@ -14,8 +14,12 @@
     // Executable offline claim evaluation commands in the fixed replay protocol.
     "packages/law-practice/server/test/evaluation/*.main.ts",
     "infra/src/internal/*-entry.ts",
-    // Alchemy stacks of the tooling `infra` kind: the CLI loads alchemy.run.ts.
+    // Alchemy stacks of the tooling `infra` kind: the CLI loads alchemy.run.ts;
+    // the turbo cache's token handoff command is run by operators (runbook);
+    // the cost-controls deploy workflow runs plan-check.ts between plan and deploy.
     "packages/tooling/infra/*/alchemy.run.ts",
+    "packages/tooling/infra/turbo-cache/token.ts",
+    "packages/tooling/infra/cost-controls/plan-check.ts",
     // Preloaded by every infra Pulumi.yaml (runtime.options.nodeargs).
     "infra/pulumi-typescript6.cjs",
     "apps/*/src/main.tsx",

@@ -179,6 +179,51 @@ const assertPrunesAptSourcesBefore = (run: string, command: string): void => {
   );
 };
 
+const PRODUCER_BUILD_TOOL_PIN_KEYS = [
+  "ZIG_VERSION",
+  "ZIG_URL",
+  "ZIG_SHA256",
+  "CARGO_ZIGBUILD_VERSION",
+  "CARGO_ZIGBUILD_URL",
+  "CARGO_ZIGBUILD_SHA256",
+];
+
+// The pins file is the single source of the installed producer build tools and is digested into build.json.
+const expectPinnedProducerBuildTools = (installRun: string, buildTools: string): void => {
+  expect(installRun).not.toMatch(/python3|pip install|venv/u);
+  expect(installRun).toContain("pins=infra/r2-cache/policy-build-tools.txt");
+  for (const key of PRODUCER_BUILD_TOOL_PIN_KEYS) expect(installRun).toContain(`"$(pin ${key})"`);
+  expect(installRun).not.toMatch(/https:\/\/|[0-9a-f]{64}/u);
+  expect(installRun).toContain('fetch zig.tar.xz "$zig_url"');
+  expect(installRun).toContain('"$zig_sha256" "$tools/downloads/zig.tar.xz"');
+  expect(installRun).toContain('"$zigbuild_sha256" "$tools/downloads/cargo-zigbuild.whl"');
+  expect(installRun).toContain("sha256sum --check --strict");
+  expect(installRun).toContain('test "$("$tools/bin/zig" version)" = "$zig_version"');
+  expect(installRun).toContain('test "$("$tools/bin/cargo-zigbuild" --version)" = "cargo-zigbuild $zigbuild_version"');
+  expect(buildTools).toContain("\nZIG_VERSION=0.14.1\n");
+  expect(buildTools).toContain("\nZIG_URL=https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz\n");
+  expect(buildTools).toContain("\nZIG_SHA256=24aeeec8af16c381934a6cd7d95c807a8cb2cf7df9fa40d359aa884195c4716c\n");
+  expect(buildTools).toContain("\nCARGO_ZIGBUILD_VERSION=0.20.1\n");
+  expect(buildTools).toContain(
+    "\nCARGO_ZIGBUILD_SHA256=cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6\n"
+  );
+  expect(buildTools).not.toMatch(/ziglang==|--hash=/u);
+};
+
+// Only the cleanup step carries env; no step may set up the monorepo, touch caches, read secrets or run producers.
+const expectCredentialFreeProducerSteps = (steps: ReadonlyArray<WorkflowStep>, cleanupName: string): void => {
+  for (const step of steps) {
+    if (step.name !== cleanupName) expect(step.env).toBeUndefined();
+    expect(step.uses).not.toBe(SETUP_MONOREPO_ACTION);
+    const uses = step.uses ?? "";
+    const run = step.run ?? "";
+    expect(uses).not.toContain("actions/cache");
+    for (const forbidden of ["secrets.", "producer-install", "producer-run", "op read"]) {
+      expect(run).not.toContain(forbidden);
+    }
+  }
+};
+
 const setupMonorepoStep = (jobs: WorkflowJobs, jobId: string): WorkflowStep =>
   O.getOrThrowWith(
     A.findFirst(jobSteps(jobs, jobId), (step) => step.uses === SETUP_MONOREPO_ACTION),
@@ -462,6 +507,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const root = yield* findRepoRoot();
       const heavyYaml = yield* fs.readFileString(`${root}/.github/workflows/heavy.yml`);
       const heavy = parseWorkflowYaml(heavyYaml);
+      // Callers and required contexts name the workflow "Heavy"; a stray paste into the plain
+      // scalar folds into the name without breaking the YAML (seen on PR #3296).
+      expect(yamlAt(heavy, ["name"])).toBe("Heavy");
       const requested = yamlAt(heavy, ["jobs", "producer-execute", "permissions"]);
       expect(requested).toEqual({ contents: "read", actions: "read" });
       expect(yamlAt(heavy, ["permissions"])).toEqual({ contents: "read" });
@@ -2086,10 +2134,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Post-merge publisher of the commit-message overlay ref; it proves the
         // ref with `beep history notes --check` and grants no quality verdict.
         "history-notes-publish.yml:Publish refs/notes/history",
-        // Prod deploy of the Alchemy stack; environment-gated, not a local lane.
+        // Prod deploys of the Alchemy stacks; environment-gated, not local lanes.
         "deploy-beep-effect-web.yml:Deploy beep-effect-web (prod)",
-        // Prod deploy of the Storybook Alchemy stack; environment-gated, not a local lane.
+        "deploy-cost-controls.yml:Deploy cost controls (prod)",
         "deploy-storybook.yml:Deploy Storybook (prod)",
+        "deploy-turbo-cache.yml:Deploy turbo cache (prod)",
         // Prod deploy of the InfraGithub Alchemy stack; environment-gated and armed by a variable.
         "deploy-infra-github.yml:Deploy infra-github (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
@@ -2555,9 +2604,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const diagnostic = stepByName(steps, diagnosticName);
       expect(diagnostic.env).toEqual({ SOURCE_REPORT: "${{ steps.inspection.outputs.report }}" });
       expect(diagnostic.run).toContain('test "$(git rev-parse HEAD)" = "$GITHUB_SHA"');
-      expect(diagnostic.run).toContain(
-        "/usr/bin/python3 -I -S goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py"
-      );
+      expect(diagnostic.run).toContain("bun --no-env-file run beep cache producer-diagnose");
+      expect(diagnostic.run).not.toContain("python");
       expect(diagnostic.run).toContain('--source-report "$SOURCE_REPORT" --output "$diagnostic"');
       expect(diagnostic.run).toContain('--revision "$GITHUB_SHA"');
       expect(stepIndexByName(steps, "Write bounded source inspection")).toBeLessThan(
@@ -2574,6 +2622,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         SOURCE_REPORT: "${{ steps.inspection.outputs.report }}",
         DIAGNOSTIC_REPORT: "${{ steps.dependency-diagnostics.outputs.report }}",
       });
+      expect(publication.run).toContain("bun --no-env-file run beep cache producer-diagnose");
+      expect(publication.run).not.toContain("python");
       expect(publication.run).toContain('--publication-only --source-report "$SOURCE_REPORT"');
       expect(publication.run).toContain('--output "$DIAGNOSTIC_REPORT"');
       expect(publication.run).toContain('>> "$GITHUB_OUTPUT"');
@@ -2696,30 +2746,21 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(hostSetup).toContain("perl --version");
       assertPrunesAptSourcesBefore(hostSetup, '"${privilege[@]}" apt-get update');
       expect(stepIndexByName(steps, hostTools)).toBeLessThan(stepIndexByName(steps, "Build pinned portable candidate"));
-      const install = stepByName(steps, "Install pinned portable build tools");
-      expect(install.run).toContain("--require-hashes");
-      expect(install.run).toContain("--only-binary=:all:");
-      const buildRequirements = yield* fs.readFileString(`${root}/infra/r2-cache/policy-build-requirements.txt`);
-      expect(buildRequirements).toContain("cargo-zigbuild==0.20.1");
-      expect(buildRequirements).toContain(
-        "--hash=sha256:cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6"
-      );
-      expect(buildRequirements).toContain("ziglang==0.14.1");
-      expect(buildRequirements).toContain(
-        "--hash=sha256:6eb9d4d759b292c83810dbee2e9e8e3fbfbf01d864e6e9811bae711fd74e1c2f"
-      );
+      const buildTools = yield* fs.readFileString(`${root}/infra/r2-cache/policy-build-tools.txt`);
+      expectPinnedProducerBuildTools(stepRun(steps, "Install pinned portable build tools"), buildTools);
       const build = stepByName(steps, "Build pinned portable candidate");
       expect(build.run).toContain("infra/r2-cache/policy.sh cargo-build-musl");
       expect(build.run).toContain("infra/r2-cache/policy.sh prepare");
       expect(build.run).toContain("readelf -lW");
-      expect(build.run).toContain("size+len(encoded)>16*1024*1024");
-      expect(build.run).toContain("len(encoded)>64*1024");
+      expect(build.run).not.toContain("python");
+      expect(build.run).toContain("size + manifest > 16*1024*1024");
+      expect(build.run).toContain("manifest > 64*1024");
       expect(build.run).toContain("independent approval and runtime qualification are required");
-      expect(build.run).toContain("'toolExecutables':{name:executable_digest(path)");
-      expect(build.run).toContain("['rustup','which','rustc']");
-      expect(build.run).toContain("'hostCc':shutil.which('cc')");
-      expect(build.run).toContain("'hostLinker':shutil.which('ld')");
-      expect(build.run).toContain("'readelf':shutil.which('readelf')");
+      expect(build.run).toContain("toolExecutables: $toolExecutables");
+      expect(build.run).toContain('rustc_path="$(rustup which rustc)"');
+      expect(build.run).toContain('"hostCc:cc:cc --version"');
+      expect(build.run).toContain('"hostLinker:ld:ld --version"');
+      expect(build.run).toContain('"readelf:readelf:readelf --version"');
       expect(stepByName(steps, "Retain candidate for at most one day").with).toEqual({
         name: "cache-producer-adapter-${{ github.run_id }}-${{ github.run_attempt }}",
         path: "${{ steps.scratch.outputs.artifact }}",
@@ -2727,19 +2768,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "retention-days": 1,
         "compression-level": 0,
       });
-      const cleanup = stepByName(steps, "Remove only this job's build scratch");
+      const cleanupName = "Remove only this job's build scratch";
+      const cleanup = stepByName(steps, cleanupName);
       expect(cleanup.if).toBe("always() && steps.scratch.outputs.root != ''");
       expect(cleanup.env).toEqual({ BUILD_SCRATCH_ROOT: "${{ steps.scratch.outputs.root }}" });
       expect(cleanup.run).toContain("*/beep/cache-producer-build.??????)");
-      for (const step of steps) {
-        if (step.name !== cleanup.name) expect(step.env).toBeUndefined();
-        expect(step.uses).not.toBe(SETUP_MONOREPO_ACTION);
-        expect(step.uses ?? "").not.toContain("actions/cache");
-        expect(step.run ?? "").not.toContain("secrets.");
-        expect(step.run ?? "").not.toContain("producer-install");
-        expect(step.run ?? "").not.toContain("producer-run");
-        expect(step.run ?? "").not.toContain("op read");
-      }
+      expectCredentialFreeProducerSteps(steps, cleanupName);
       const workflowPolicyDiagnostics28 = yield* workflowPolicyDiagnostics("cache-producer-prepare.yml", text);
       expect(workflowPolicyDiagnostics28).toEqual([]);
       const workflowPolicyDiagnostics29 = yield* workflowPolicyDiagnostics("heavy.yml", heavyText);
@@ -3218,6 +3252,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         const manifestGuard =
           Str.split(stepByName(comparison, "Compare coverage evidence").run ?? "", "shape_args=")[0] ?? "";
         expect(authenticate).toContain("--paginate --slurp");
+        // A 100-job page of a rerun attempt's listing is the request GitHub answers 502 to.
+        expect(authenticate).toContain("/jobs?per_page=30");
+        expect(authenticate).not.toContain("per_page=100");
         expect(manifestGuard).toContain('"$labs_manifest"');
         const temp = yield* fs.makeTempDirectoryScoped();
         const output = path.join(temp, "github-output");
@@ -3225,9 +3262,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         yield* fs.writeFileString(output, "");
         yield* fs.writeFileString(
           path.join(temp, "gh"),
-          '#!/bin/bash\nset -euo pipefail\n[[ "${@: -1}" =~ /attempts/([0-9]+)/jobs ]] || exit 24\nattempt="${BASH_REMATCH[1]}"\nprintf "%s\\n" "$attempt" >> "$API_CALLS"\ncat "$JOBS_FIXTURES/$attempt.json"\n'
+          '#!/bin/bash\nset -euo pipefail\n[[ "${@: -1}" =~ /attempts/([0-9]+)/jobs ]] || exit 24\nattempt="${BASH_REMATCH[1]}"\nprintf "%s\\n" "$attempt" >> "$API_CALLS"\nif (( $(grep -c -x "$attempt" "$API_CALLS") <= ${FAILING_CALLS:-0} )); then echo "gh: Server Error (HTTP 502)" >&2; exit 1; fi\ncat "$JOBS_FIXTURES/$attempt.json"\n'
         );
         yield* fs.chmod(path.join(temp, "gh"), 0o700);
+        // The retry waits between tries; the stand-in records the wait instead of sleeping.
+        yield* fs.writeFileString(
+          path.join(temp, "sleep"),
+          '#!/bin/bash\nprintf "%s\\n" "$1" >> "$API_CALLS.sleeps"\n'
+        );
+        yield* fs.chmod(path.join(temp, "sleep"), 0o700);
         const original = {
           name: "Labs",
           run_attempt: 1,
@@ -3277,7 +3320,26 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         const readFileString33 = yield* fs.readFileString(output);
         expect(readFileString33).toBe(scenario.output);
         const readFileString34 = yield* fs.readFileString(calls);
-        expect(readFileString34).toBe(scenario.original ? "1\n2\n" : "1\n");
+        // A listing that cannot be read is tried four times, then the step fails.
+        expect(readFileString34).toBe(scenario.original ? "1\n2\n" : "1\n1\n1\n1\n");
+        if (scenario.original) {
+          // Two 502 answers per attempt are retried after 10 and 20 seconds and change nothing else.
+          yield* fs.writeFileString(output, "");
+          yield* fs.writeFileString(calls, "");
+          const retried = Bun.spawnSync(["bash", "-c", authenticate], {
+            cwd: root,
+            env: { ...env, FAILING_CALLS: "2" },
+            stdout: "pipe",
+            stderr: "pipe",
+          });
+          expect(retried.exitCode === 0).toBe(Str.isNonEmpty(scenario.output));
+          const retriedOutput = yield* fs.readFileString(output);
+          expect(retriedOutput).toBe(scenario.output);
+          const retriedCalls = yield* fs.readFileString(calls);
+          expect(retriedCalls).toBe("1\n1\n1\n2\n2\n2\n");
+          const waits = yield* fs.readFileString(`${calls}.sleeps`);
+          expect(waits).toBe("10\n20\n10\n20\n");
+        }
         if (Str.isNonEmpty(scenario.output)) {
           const attempt = parseProfileOutput(scenario.output).attempt ?? "";
           const manifest = path.join(temp, `.beep/ci-coverage-inputs/unit-coverage-123-${attempt}-labs/manifest.json`);

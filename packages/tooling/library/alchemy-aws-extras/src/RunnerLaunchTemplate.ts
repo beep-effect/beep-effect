@@ -1,0 +1,1010 @@
+/**
+ * EC2 launch template with the block-device, EBS-optimisation, Spot and tag
+ * specification props Alchemy's `AWS.AutoScaling.LaunchTemplate` lacks.
+ *
+ * @packageDocumentation
+ * @category resources
+ * @since 0.0.0
+ */
+
+import { AWSEnvironment } from "@alchemy.run/aws/Environment";
+import { $AlchemyAwsExtrasId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
+import * as O from "@beep/utils/Option";
+import * as ec2 from "@distilled.cloud/aws/ec2";
+import { Unowned } from "alchemy/AdoptPolicy";
+import { deepEqual, isResolved } from "alchemy/Diff";
+import { createPhysicalName } from "alchemy/PhysicalName";
+import * as Provider from "alchemy/Provider";
+import { Resource } from "alchemy/Resource";
+import { createInternalTags, diffTags, hasTags } from "alchemy/Tags";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Base64 from "effect/encoding/Base64";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
+import { LaunchTemplateUnexpectedResponse } from "./Errors.ts";
+import { decodeProps } from "./internal/decodeProps.ts";
+import type { ExtrasResource } from "./internal/ExtrasResource.ts";
+import type { Providers } from "./Providers.ts";
+
+const $I = $AlchemyAwsExtrasId.create("RunnerLaunchTemplate");
+
+/**
+ * Resource type string registered by {@link RunnerLaunchTemplate}.
+ *
+ * **Example** (Read the registered type)
+ *
+ * ```ts
+ * import { RunnerLaunchTemplateType } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(RunnerLaunchTemplateType) // "BeepAWS.EC2.RunnerLaunchTemplate"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const RunnerLaunchTemplateType = "BeepAWS.EC2.RunnerLaunchTemplate" as const;
+
+/**
+ * EBS volume types a block device mapping may request.
+ *
+ * **Example** (Read the gp3 literal)
+ *
+ * ```ts
+ * import { EbsVolumeType } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(EbsVolumeType.Enum.gp3) // "gp3"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const EbsVolumeType = LiteralKit(["gp2", "gp3", "io1", "io2", "st1", "sc1", "standard"]).pipe(
+  $I.annoteSchema("EbsVolumeType", { description: "EBS volume type of a launch-template block device." })
+);
+
+/**
+ * Decoded {@link EbsVolumeType}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EbsVolumeType = typeof EbsVolumeType.Type;
+
+const PositiveInt = S.Int.check(S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("PositiveInt", { description: "A strictly positive integer." })
+);
+
+/**
+ * EBS settings of one launch-template block device.
+ *
+ * **Example** (Decode a gp3 root volume)
+ *
+ * ```ts
+ * import { LaunchTemplateEbs } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ * import * as S from "effect/Schema"
+ *
+ * const ebs = S.decodeUnknownSync(LaunchTemplateEbs)({ volumeSize: 100, volumeType: "gp3", encrypted: true })
+ * console.log(ebs.volumeSize) // 100
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LaunchTemplateEbs extends S.Opaque<LaunchTemplateEbs, { readonly brand: unique symbol }>()(
+  S.Struct({
+    volumeSize: S.optionalKey(PositiveInt),
+    volumeType: S.optionalKey(EbsVolumeType),
+    iops: S.optionalKey(PositiveInt),
+    throughput: S.optionalKey(PositiveInt),
+    encrypted: S.optionalKey(S.Boolean),
+    kmsKeyId: S.optionalKey(S.NonEmptyString),
+    snapshotId: S.optionalKey(S.NonEmptyString),
+    deleteOnTermination: S.optionalKey(S.Boolean),
+  }).pipe($I.annoteSchema("LaunchTemplateEbs", { description: "EBS settings of one launch-template block device." }))
+) {}
+
+/**
+ * Companion types for {@link LaunchTemplateEbs}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace LaunchTemplateEbs {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LaunchTemplateEbs.Encoded;
+}
+
+/**
+ * One block device mapping of the launch template.
+ *
+ * **Example** (Decode an AL2023 root mapping)
+ *
+ * ```ts
+ * import { LaunchTemplateBlockDevice } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ * import * as S from "effect/Schema"
+ *
+ * const device = S.decodeUnknownSync(LaunchTemplateBlockDevice)({
+ *   deviceName: "/dev/xvda",
+ *   ebs: { volumeSize: 100, volumeType: "gp3" }
+ * })
+ * console.log(device.deviceName) // "/dev/xvda"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LaunchTemplateBlockDevice extends S.Opaque<LaunchTemplateBlockDevice, { readonly brand: unique symbol }>()(
+  S.Struct({
+    deviceName: S.NonEmptyString,
+    ebs: LaunchTemplateEbs,
+  }).pipe($I.annoteSchema("LaunchTemplateBlockDevice", { description: "One EBS block device mapping." }))
+) {}
+
+/**
+ * Companion types for {@link LaunchTemplateBlockDevice}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace LaunchTemplateBlockDevice {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LaunchTemplateBlockDevice.Encoded;
+}
+
+/**
+ * Spot request type of a launch template.
+ *
+ * **Example** (Read one literal)
+ *
+ * ```ts
+ * import { SpotInstanceType } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(SpotInstanceType.Enum["one-time"]) // "one-time"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SpotInstanceType = LiteralKit(["one-time", "persistent"]).pipe(
+  $I.annoteSchema("SpotInstanceType", { description: "Whether a Spot request is one-time or persistent." })
+);
+
+/**
+ * Decoded {@link SpotInstanceType}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SpotInstanceType = typeof SpotInstanceType.Type;
+
+/**
+ * What EC2 does to a Spot instance it reclaims.
+ *
+ * **Example** (Read one literal)
+ *
+ * ```ts
+ * import { SpotInterruptionBehavior } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(SpotInterruptionBehavior.Enum["hibernate"]) // "hibernate"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const SpotInterruptionBehavior = LiteralKit(["hibernate", "stop", "terminate"]).pipe(
+  $I.annoteSchema("SpotInterruptionBehavior", { description: "Behaviour of a Spot instance on interruption." })
+);
+
+/**
+ * Decoded {@link SpotInterruptionBehavior}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SpotInterruptionBehavior = typeof SpotInterruptionBehavior.Type;
+
+/**
+ * Spot market options of the launch template.
+ *
+ * **Example** (Decode one-time Spot options)
+ *
+ * ```ts
+ * import { LaunchTemplateMarketOptions } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ * import * as S from "effect/Schema"
+ *
+ * const market = S.decodeUnknownSync(LaunchTemplateMarketOptions)({
+ *   marketType: "spot",
+ *   spotOptions: { spotInstanceType: "one-time", instanceInterruptionBehavior: "terminate" }
+ * })
+ * console.log(market.marketType) // "spot"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LaunchTemplateMarketOptions extends S.Opaque<
+  LaunchTemplateMarketOptions,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    marketType: S.tag("spot"),
+    spotOptions: S.optionalKey(
+      S.Struct({
+        maxPrice: S.optionalKey(S.NonEmptyString),
+        spotInstanceType: S.optionalKey(SpotInstanceType),
+        instanceInterruptionBehavior: S.optionalKey(SpotInterruptionBehavior),
+      })
+    ),
+  }).pipe(
+    $I.annoteSchema("LaunchTemplateMarketOptions", { description: "Spot purchasing options for launched instances." })
+  )
+) {}
+
+/**
+ * Companion types for {@link LaunchTemplateMarketOptions}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace LaunchTemplateMarketOptions {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LaunchTemplateMarketOptions.Encoded;
+}
+
+/**
+ * An `enabled` / `disabled` switch.
+ *
+ * **Example** (Read one literal)
+ *
+ * ```ts
+ * import { EnabledState } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(EnabledState.Enum["enabled"]) // "enabled"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const EnabledState = LiteralKit(["enabled", "disabled"]).pipe(
+  $I.annoteSchema("EnabledState", { description: "An instance-metadata enabled/disabled switch." })
+);
+
+/**
+ * Decoded {@link EnabledState}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EnabledState = typeof EnabledState.Type;
+
+/**
+ * What EC2 does when the instance shuts itself down from the guest OS.
+ *
+ * **Example** (Read the terminate literal)
+ *
+ * ```ts
+ * import { ShutdownBehavior } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(ShutdownBehavior.Enum.terminate) // "terminate"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ShutdownBehavior = LiteralKit(["stop", "terminate"]).pipe(
+  $I.annoteSchema("ShutdownBehavior", { description: "Instance-initiated shutdown behavior of a launch template." })
+);
+
+/**
+ * Decoded {@link ShutdownBehavior}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ShutdownBehavior = typeof ShutdownBehavior.Type;
+
+/**
+ * Whether IMDS requires session tokens (IMDSv2).
+ *
+ * **Example** (Read one literal)
+ *
+ * ```ts
+ * import { HttpTokensState } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(HttpTokensState.Enum["optional"]) // "optional"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const HttpTokensState = LiteralKit(["optional", "required"]).pipe(
+  $I.annoteSchema("HttpTokensState", { description: "IMDS session-token requirement; required means IMDSv2." })
+);
+
+/**
+ * Decoded {@link HttpTokensState}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type HttpTokensState = typeof HttpTokensState.Type;
+
+/**
+ * Instance metadata service options of the launch template.
+ *
+ * **Example** (Decode IMDSv2 with instance tags)
+ *
+ * ```ts
+ * import { LaunchTemplateMetadataOptions } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ * import * as S from "effect/Schema"
+ *
+ * const imds = S.decodeUnknownSync(LaunchTemplateMetadataOptions)({
+ *   httpTokens: "required",
+ *   httpPutResponseHopLimit: 1
+ * })
+ * console.log(imds.httpTokens) // "required"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LaunchTemplateMetadataOptions extends S.Opaque<
+  LaunchTemplateMetadataOptions,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    httpEndpoint: S.optionalKey(EnabledState),
+    httpTokens: S.optionalKey(HttpTokensState),
+    httpPutResponseHopLimit: S.optionalKey(S.Int.check(S.isBetween({ minimum: 1, maximum: 64 }))),
+    httpProtocolIpv6: S.optionalKey(EnabledState),
+    instanceMetadataTags: S.optionalKey(EnabledState),
+  }).pipe(
+    $I.annoteSchema("LaunchTemplateMetadataOptions", { description: "Instance metadata service (IMDS) options." })
+  )
+) {}
+
+/**
+ * Companion types for {@link LaunchTemplateMetadataOptions}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace LaunchTemplateMetadataOptions {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LaunchTemplateMetadataOptions.Encoded;
+}
+
+/**
+ * Resources a launch template may tag at launch.
+ *
+ * **Example** (Read one literal)
+ *
+ * ```ts
+ * import { LaunchTagResourceType } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(LaunchTagResourceType.Enum.instance) // "instance"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const LaunchTagResourceType = LiteralKit([
+  "instance",
+  "volume",
+  "network-interface",
+  "spot-instances-request",
+]).pipe(
+  $I.annoteSchema("LaunchTagResourceType", { description: "Resource kind tagged at launch by a tag specification." })
+);
+
+/**
+ * Decoded {@link LaunchTagResourceType}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type LaunchTagResourceType = typeof LaunchTagResourceType.Type;
+
+const TagMap = S.Record(S.String, S.String).pipe(
+  $I.annoteSchema("TagMap", { description: "AWS tags as a key/value record." })
+);
+
+/**
+ * Tags applied to resources EC2 creates at launch.
+ *
+ * **Example** (Tag launched instances)
+ *
+ * ```ts
+ * import { LaunchTagSpecification } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ * import * as S from "effect/Schema"
+ *
+ * const spec = S.decodeUnknownSync(LaunchTagSpecification)({
+ *   resourceType: "instance",
+ *   tags: { "beep-ci": "runner" }
+ * })
+ * console.log(spec.resourceType) // "instance"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class LaunchTagSpecification extends S.Opaque<LaunchTagSpecification, { readonly brand: unique symbol }>()(
+  S.Struct({
+    resourceType: LaunchTagResourceType,
+    tags: TagMap,
+  }).pipe($I.annoteSchema("LaunchTagSpecification", { description: "Tags applied to one resource kind at launch." }))
+) {}
+
+/**
+ * Companion types for {@link LaunchTagSpecification}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace LaunchTagSpecification {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LaunchTagSpecification.Encoded;
+}
+
+/**
+ * Props of a {@link RunnerLaunchTemplate}.
+ *
+ * **Details**
+ *
+ * `imageId` takes an AMI id or an SSM parameter reference in EC2's
+ * `resolve:ssm:<parameter>` form (see {@link resolveSsmImageId}); EC2
+ * resolves the parameter at each launch. `launchTemplateName` is the
+ * identity: changing it replaces the template. Every other prop change
+ * publishes a new default version.
+ *
+ * **Example** (Decode the minimal props)
+ *
+ * ```ts
+ * import { RunnerLaunchTemplateProps } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ * import * as S from "effect/Schema"
+ *
+ * const props = S.decodeUnknownSync(RunnerLaunchTemplateProps)({
+ *   imageId: "resolve:ssm:/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-x86_64",
+ *   ebsOptimized: true
+ * })
+ * console.log(props.ebsOptimized) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RunnerLaunchTemplateProps extends S.Opaque<RunnerLaunchTemplateProps, { readonly brand: unique symbol }>()(
+  S.Struct({
+    launchTemplateName: S.optionalKey(S.NonEmptyString),
+    imageId: S.NonEmptyString,
+    instanceType: S.optionalKey(S.NonEmptyString),
+    instanceProfileArn: S.optionalKey(S.NonEmptyString),
+    instanceProfileName: S.optionalKey(S.NonEmptyString),
+    securityGroupIds: S.NonEmptyString.pipe(S.Array, S.optionalKey),
+    associatePublicIpAddress: S.optionalKey(S.Boolean),
+    userData: S.optionalKey(S.String),
+    ebsOptimized: S.optionalKey(S.Boolean),
+    instanceInitiatedShutdownBehavior: S.optionalKey(ShutdownBehavior),
+    blockDeviceMappings: LaunchTemplateBlockDevice.pipe(S.Array, S.optionalKey),
+    instanceMarketOptions: S.optionalKey(LaunchTemplateMarketOptions),
+    metadataOptions: S.optionalKey(LaunchTemplateMetadataOptions),
+    tagSpecifications: LaunchTagSpecification.pipe(S.Array, S.optionalKey),
+    tags: S.optionalKey(TagMap),
+  }).pipe(
+    $I.annoteSchema("RunnerLaunchTemplateProps", {
+      description: "Desired EC2 launch template for self-hosted CI runner instances.",
+    })
+  )
+) {}
+
+/**
+ * Companion types for {@link RunnerLaunchTemplateProps}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace RunnerLaunchTemplateProps {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RunnerLaunchTemplateProps.Encoded;
+}
+
+/**
+ * Attributes EC2 reports for the launch template.
+ *
+ * **Example** (Decode observed attributes)
+ *
+ * ```ts
+ * import { RunnerLaunchTemplateAttributes } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ * import * as S from "effect/Schema"
+ *
+ * const attrs = S.decodeUnknownSync(RunnerLaunchTemplateAttributes)({
+ *   launchTemplateId: "lt-0123456789abcdef0",
+ *   launchTemplateArn: "arn:aws:ec2:us-east-1:123456789012:launch-template/lt-0123456789abcdef0",
+ *   launchTemplateName: "runners",
+ *   defaultVersionNumber: 1,
+ *   latestVersionNumber: 1,
+ *   tags: {}
+ * })
+ * console.log(attrs.defaultVersionNumber) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RunnerLaunchTemplateAttributes extends S.Opaque<
+  RunnerLaunchTemplateAttributes,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    launchTemplateId: S.String,
+    launchTemplateArn: S.String,
+    launchTemplateName: S.String,
+    defaultVersionNumber: S.Finite,
+    latestVersionNumber: S.Finite,
+    tags: TagMap,
+  }).pipe(
+    $I.annoteSchema("RunnerLaunchTemplateAttributes", { description: "Observed state of the EC2 launch template." })
+  )
+) {}
+
+/**
+ * Companion types for {@link RunnerLaunchTemplateAttributes}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace RunnerLaunchTemplateAttributes {
+  /**
+   * The plain, unbranded shape callers pass and attributes report.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RunnerLaunchTemplateAttributes.Encoded;
+}
+
+/**
+ * Alchemy resource contract for {@link RunnerLaunchTemplate}.
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export type RunnerLaunchTemplate = Resource<
+  typeof RunnerLaunchTemplateType,
+  RunnerLaunchTemplateProps.Encoded,
+  RunnerLaunchTemplateAttributes.Encoded,
+  never,
+  Providers
+>;
+
+const RunnerLaunchTemplateResource = Resource<RunnerLaunchTemplate>(RunnerLaunchTemplateType);
+
+/**
+ * An EC2 launch template for CI runner instances launched by `CreateFleet`.
+ *
+ * **Details**
+ *
+ * Covers what `AWS.AutoScaling.LaunchTemplate` cannot express: block device
+ * mappings (gp3 root volume, encryption, IOPS, throughput), `ebsOptimized`,
+ * Spot `instanceMarketOptions` and launch `tagSpecifications`, beside IMDS
+ * options, an instance profile, security groups, user data and an
+ * SSM-resolved AMI. An update publishes a new version and makes it the
+ * default only when the launch data changes (`tagSpecifications` included);
+ * a change to the template's own `tags` edits its tags without a new version,
+ * and an adopted template always gets a version with the declared data.
+ * Ownership is tag-based: `read` brands a same-name template
+ * without Alchemy's internal tags `Unowned`, so adopting it needs an explicit
+ * adopt policy.
+ *
+ * **Example** (Declare the runner template)
+ *
+ * ```ts
+ * import { RunnerLaunchTemplate, resolveSsmImageId } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * const template = RunnerLaunchTemplate("Runners", {
+ *   imageId: resolveSsmImageId("/beep-ci/runner-ami-id"),
+ *   ebsOptimized: true,
+ *   blockDeviceMappings: [
+ *     { deviceName: "/dev/xvda", ebs: { volumeSize: 100, volumeType: "gp3", encrypted: true } }
+ *   ]
+ * })
+ * console.log(typeof template) // "object"
+ * ```
+ *
+ * @category resources
+ * @since 0.0.0
+ */
+export const RunnerLaunchTemplate: ExtrasResource<RunnerLaunchTemplate> = RunnerLaunchTemplateResource;
+
+/**
+ * Build the `resolve:ssm:` image reference EC2 resolves at each launch.
+ *
+ * **Example** (Reference an AMI parameter)
+ *
+ * ```ts
+ * import { resolveSsmImageId } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(resolveSsmImageId("/beep-ci/runner-ami-id")) // "resolve:ssm:/beep-ci/runner-ami-id"
+ * ```
+ *
+ * @param parameterName - SSM parameter name holding the AMI id.
+ * @returns The EC2 `resolve:ssm:` image reference.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const resolveSsmImageId = (parameterName: string): string => `resolve:ssm:${parameterName}`;
+
+const notFoundTags = [
+  "InvalidLaunchTemplateNameNotFoundException",
+  "InvalidLaunchTemplateIdNotFoundException",
+  "InvalidLaunchTemplateId.Malformed",
+  "InvalidLaunchTemplateId.NotFound",
+  "InvalidLaunchTemplateName.NotFoundException",
+  "InvalidLaunchTemplateId.NotFoundException",
+];
+
+const isLaunchTemplateNotFound = (error: unknown): boolean =>
+  P.hasProperty(error, "_tag") && P.isString(error._tag) && A.contains(notFoundTags, error._tag);
+
+const toTagRecord = (tags: ReadonlyArray<ec2.Tag> | undefined): Record<string, string> =>
+  R.fromEntries(
+    A.flatMap(tags ?? [], (tag) =>
+      tag.Key === undefined || tag.Value === undefined ? [] : [[tag.Key, tag.Value] as const]
+    )
+  );
+
+const toTagList = (tags: Readonly<Record<string, string>>): Array<ec2.Tag> =>
+  A.map(R.toEntries(tags), ([Key, Value]) => ({ Key, Value }));
+
+const toEbs = (ebs: LaunchTemplateEbs.Encoded): ec2.LaunchTemplateEbsBlockDeviceRequest =>
+  O.getSomesStruct({
+    VolumeSize: O.fromUndefinedOr(ebs.volumeSize),
+    VolumeType: O.fromUndefinedOr(ebs.volumeType),
+    Iops: O.fromUndefinedOr(ebs.iops),
+    Throughput: O.fromUndefinedOr(ebs.throughput),
+    Encrypted: O.fromUndefinedOr(ebs.encrypted),
+    KmsKeyId: O.fromUndefinedOr(ebs.kmsKeyId),
+    SnapshotId: O.fromUndefinedOr(ebs.snapshotId),
+    DeleteOnTermination: O.fromUndefinedOr(ebs.deleteOnTermination),
+  });
+
+const toMetadataOptions = (
+  options: LaunchTemplateMetadataOptions.Encoded
+): ec2.LaunchTemplateInstanceMetadataOptionsRequest =>
+  O.getSomesStruct({
+    HttpEndpoint: O.fromUndefinedOr(options.httpEndpoint),
+    HttpTokens: O.fromUndefinedOr(options.httpTokens),
+    HttpPutResponseHopLimit: O.fromUndefinedOr(options.httpPutResponseHopLimit),
+    HttpProtocolIpv6: O.fromUndefinedOr(options.httpProtocolIpv6),
+    InstanceMetadataTags: O.fromUndefinedOr(options.instanceMetadataTags),
+  });
+
+const toSpotOptions = (
+  spot: NonNullable<LaunchTemplateMarketOptions.Encoded["spotOptions"]>
+): ec2.LaunchTemplateSpotMarketOptionsRequest =>
+  O.getSomesStruct({
+    MaxPrice: O.fromUndefinedOr(spot.maxPrice),
+    SpotInstanceType: O.fromUndefinedOr(spot.spotInstanceType),
+    InstanceInterruptionBehavior: O.fromUndefinedOr(spot.instanceInterruptionBehavior),
+  });
+
+const toMarketOptions = (
+  market: LaunchTemplateMarketOptions.Encoded
+): ec2.LaunchTemplateInstanceMarketOptionsRequest => ({
+  MarketType: market.marketType,
+  ...O.getSomesStruct({ SpotOptions: O.map(O.fromUndefinedOr(market.spotOptions), toSpotOptions) }),
+});
+
+const copyGroups = (props: RunnerLaunchTemplateProps.Encoded): O.Option<Array<string>> =>
+  O.map(O.fromUndefinedOr(props.securityGroupIds), (groups) => A.copy(groups));
+
+const toNetworking = (props: RunnerLaunchTemplateProps.Encoded): ec2.RequestLaunchTemplateData =>
+  props.associatePublicIpAddress === undefined
+    ? O.getSomesStruct({ SecurityGroupIds: copyGroups(props) })
+    : {
+        NetworkInterfaces: [
+          {
+            DeviceIndex: 0,
+            AssociatePublicIpAddress: props.associatePublicIpAddress,
+            DeleteOnTermination: true,
+            ...O.getSomesStruct({ Groups: copyGroups(props) }),
+          },
+        ],
+      };
+
+const toInstanceProfile = (props: RunnerLaunchTemplateProps.Encoded): ec2.RequestLaunchTemplateData =>
+  props.instanceProfileArn !== undefined
+    ? { IamInstanceProfile: { Arn: props.instanceProfileArn } }
+    : props.instanceProfileName !== undefined
+      ? { IamInstanceProfile: { Name: props.instanceProfileName } }
+      : {};
+
+const toBlockDevice = (device: LaunchTemplateBlockDevice.Encoded): ec2.LaunchTemplateBlockDeviceMappingRequest => ({
+  DeviceName: device.deviceName,
+  Ebs: toEbs(device.ebs),
+});
+
+const toTagSpecification = (spec: LaunchTagSpecification.Encoded): ec2.LaunchTemplateTagSpecificationRequest => ({
+  ResourceType: spec.resourceType,
+  Tags: toTagList(spec.tags),
+});
+
+/**
+ * Translate decoded props into the EC2 `LaunchTemplateData` request shape.
+ *
+ * **Example** (Inspect the gp3 mapping EC2 receives)
+ *
+ * ```ts
+ * import { toLaunchTemplateData } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * const data = toLaunchTemplateData({
+ *   imageId: "ami-0123456789abcdef0",
+ *   blockDeviceMappings: [{ deviceName: "/dev/xvda", ebs: { volumeType: "gp3" } }]
+ * })
+ * console.log(data.BlockDeviceMappings?.[0]?.Ebs?.VolumeType) // "gp3"
+ * ```
+ *
+ * @param props - The plain launch template props.
+ * @returns The `LaunchTemplateData` request body EC2 receives.
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+export const toLaunchTemplateData = (props: RunnerLaunchTemplateProps.Encoded): ec2.RequestLaunchTemplateData => ({
+  ImageId: props.imageId,
+  ...O.getSomesStruct({
+    InstanceType: O.fromUndefinedOr(props.instanceType),
+    EbsOptimized: O.fromUndefinedOr(props.ebsOptimized),
+    InstanceInitiatedShutdownBehavior: O.fromUndefinedOr(props.instanceInitiatedShutdownBehavior),
+    UserData: O.map(O.fromUndefinedOr(props.userData), Base64.encode),
+    BlockDeviceMappings: O.map(O.fromUndefinedOr(props.blockDeviceMappings), A.map(toBlockDevice)),
+    InstanceMarketOptions: O.map(O.fromUndefinedOr(props.instanceMarketOptions), toMarketOptions),
+    MetadataOptions: O.map(O.fromUndefinedOr(props.metadataOptions), toMetadataOptions),
+    TagSpecifications: O.map(O.fromUndefinedOr(props.tagSpecifications), A.map(toTagSpecification)),
+  }),
+  ...toNetworking(props),
+  ...toInstanceProfile(props),
+});
+
+/**
+ * Provider layer for {@link RunnerLaunchTemplate}.
+ *
+ * **Example** (Register the provider)
+ *
+ * ```ts
+ * import { RunnerLaunchTemplateProvider } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * const layer = RunnerLaunchTemplateProvider
+ * console.log(typeof layer) // "object"
+ * ```
+ *
+ * @category providers
+ * @since 0.0.0
+ */
+export const RunnerLaunchTemplateProvider = Provider.effect(
+  RunnerLaunchTemplateResource,
+  Effect.sync(() => {
+    const toName = (id: string, props: { readonly launchTemplateName?: string | undefined } | undefined) =>
+      props?.launchTemplateName === undefined
+        ? createPhysicalName({ id, maxLength: 128, lowercase: true })
+        : Effect.succeed(props.launchTemplateName);
+
+    const describe = (request: ec2.DescribeLaunchTemplatesRequest) =>
+      ec2.describeLaunchTemplates(request).pipe(
+        Effect.map((result) => A.head(result.LaunchTemplates ?? [])),
+        Effect.map((option) => (option._tag === "Some" ? option.value : undefined)),
+        Effect.catchIf(isLaunchTemplateNotFound, () => Effect.undefined)
+      );
+
+    const describeById = (launchTemplateId: string) => describe({ LaunchTemplateIds: [launchTemplateId] });
+    const describeByName = (launchTemplateName: string) => describe({ LaunchTemplateNames: [launchTemplateName] });
+
+    const observe = Effect.fn("RunnerLaunchTemplate.observe")(function* (
+      id: string,
+      props: { readonly launchTemplateName?: string | undefined } | undefined,
+      output: RunnerLaunchTemplateAttributes.Encoded | undefined
+    ) {
+      const byId = output === undefined ? undefined : yield* describeById(output.launchTemplateId);
+      if (byId !== undefined) return byId;
+      const name = yield* toName(id, props);
+      return yield* describeByName(name);
+    });
+
+    const toAttributes = Effect.fn("RunnerLaunchTemplate.toAttributes")(function* (template: ec2.LaunchTemplate) {
+      if (template.LaunchTemplateId === undefined || template.LaunchTemplateName === undefined) {
+        return yield* LaunchTemplateUnexpectedResponse.make({
+          message: "EC2 returned a launch template without an id or name",
+        });
+      }
+      const env = yield* AWSEnvironment.current;
+      return {
+        launchTemplateId: template.LaunchTemplateId,
+        launchTemplateArn: `arn:aws:ec2:${env.region}:${env.accountId}:launch-template/${template.LaunchTemplateId}`,
+        launchTemplateName: template.LaunchTemplateName,
+        defaultVersionNumber: template.DefaultVersionNumber ?? 1,
+        latestVersionNumber: template.LatestVersionNumber ?? template.DefaultVersionNumber ?? 1,
+        tags: toTagRecord(template.Tags),
+      } satisfies RunnerLaunchTemplateAttributes.Encoded;
+    });
+
+    const publishVersion = Effect.fn("RunnerLaunchTemplate.publishVersion")(function* (
+      launchTemplateId: string,
+      props: RunnerLaunchTemplateProps.Encoded
+    ) {
+      const created = yield* ec2.createLaunchTemplateVersion({
+        LaunchTemplateId: launchTemplateId,
+        VersionDescription: "alchemy-update",
+        LaunchTemplateData: toLaunchTemplateData(props),
+      });
+      const versionNumber = created.LaunchTemplateVersion?.VersionNumber;
+      if (versionNumber === undefined) {
+        return yield* LaunchTemplateUnexpectedResponse.make({
+          message: `createLaunchTemplateVersion returned no version for '${launchTemplateId}'`,
+        });
+      }
+      yield* ec2.modifyLaunchTemplate({ LaunchTemplateId: launchTemplateId, DefaultVersion: `${versionNumber}` });
+    });
+
+    const syncTags = Effect.fn("RunnerLaunchTemplate.syncTags")(function* (
+      launchTemplateId: string,
+      observed: Record<string, string>,
+      desired: Record<string, string>
+    ) {
+      const { removed, upsert } = diffTags(observed, desired);
+      if (A.isReadonlyArrayNonEmpty(removed)) {
+        yield* ec2.deleteTags({ Resources: [launchTemplateId], Tags: A.map(removed, (Key) => ({ Key })) });
+      }
+      if (A.isReadonlyArrayNonEmpty(upsert)) {
+        yield* ec2.createTags({ Resources: [launchTemplateId], Tags: upsert });
+      }
+    });
+
+    const decodeTemplateProps = decodeProps({
+      resourceType: RunnerLaunchTemplateType,
+      schema: RunnerLaunchTemplateProps,
+    });
+
+    const createTemplate = Effect.fn("RunnerLaunchTemplate.createTemplate")(function* (
+      launchTemplateName: string,
+      props: RunnerLaunchTemplateProps.Encoded,
+      desiredTags: Record<string, string>
+    ) {
+      const created = yield* ec2.createLaunchTemplate({
+        LaunchTemplateName: launchTemplateName,
+        VersionDescription: "alchemy-create",
+        TagSpecifications: [{ ResourceType: "launch-template", Tags: toTagList(desiredTags) }],
+        LaunchTemplateData: toLaunchTemplateData(props),
+      });
+      if (created.LaunchTemplate === undefined) {
+        return yield* LaunchTemplateUnexpectedResponse.make({
+          message: `createLaunchTemplate returned no launch template for '${launchTemplateName}'`,
+        });
+      }
+      return yield* toAttributes(created.LaunchTemplate);
+    });
+
+    // Publish a version only when the launch data changed: a tag-only change edits
+    // the template resource, not its versions. An adopted template (no ownership
+    // tags yet) always gets our data, because adoption records `olds = news`.
+    const needsNewVersion = Effect.fn("RunnerLaunchTemplate.needsNewVersion")(function* (
+      olds: unknown,
+      props: RunnerLaunchTemplateProps.Encoded,
+      owned: boolean
+    ) {
+      if (olds === undefined || !owned) return true;
+      const previous = yield* decodeTemplateProps(olds);
+      return !deepEqual(toLaunchTemplateData(previous), toLaunchTemplateData(props));
+    });
+
+    const updateTemplate = Effect.fn("RunnerLaunchTemplate.updateTemplate")(function* (input: {
+      readonly launchTemplateId: string;
+      readonly launchTemplateName: string;
+      readonly observedTags: Record<string, string>;
+      readonly internalTags: Record<string, string>;
+      readonly desiredTags: Record<string, string>;
+      readonly props: RunnerLaunchTemplateProps.Encoded;
+      readonly olds: unknown;
+    }) {
+      const publish = yield* needsNewVersion(input.olds, input.props, hasTags(input.internalTags, input.observedTags));
+      if (publish) {
+        yield* publishVersion(input.launchTemplateId, input.props);
+      }
+      yield* syncTags(input.launchTemplateId, input.observedTags, input.desiredTags);
+      const refreshed = yield* describeById(input.launchTemplateId);
+      if (refreshed === undefined) {
+        return yield* LaunchTemplateUnexpectedResponse.make({
+          message: `launch template '${input.launchTemplateName}' was not readable after reconcile`,
+        });
+      }
+      return yield* toAttributes(refreshed);
+    });
+
+    return {
+      stables: ["launchTemplateId", "launchTemplateArn", "launchTemplateName"],
+      diff: Effect.fn("RunnerLaunchTemplate.diff")(function* ({ id, olds, news }) {
+        if (!isResolved(news)) return undefined;
+        const oldName = yield* toName(id, olds);
+        const newName = yield* toName(id, news as RunnerLaunchTemplateProps.Encoded);
+        return oldName === newName ? undefined : ({ action: "replace" } as const);
+      }),
+      read: Effect.fn("RunnerLaunchTemplate.read")(function* ({ id, olds, output }) {
+        const template = yield* observe(id, olds, output);
+        if (template === undefined) return undefined;
+        const attrs = yield* toAttributes(template);
+        const internalTags = yield* createInternalTags(id);
+        return hasTags(internalTags, attrs.tags) ? attrs : Unowned(attrs);
+      }),
+      list: () =>
+        ec2.describeLaunchTemplates.pages({}).pipe(
+          Stream.runCollect,
+          Effect.flatMap((pages) =>
+            Effect.forEach(
+              A.flatMap(A.fromIterable(pages), (page) => page.LaunchTemplates ?? []),
+              toAttributes
+            )
+          )
+        ),
+      reconcile: Effect.fn("RunnerLaunchTemplate.reconcile")(function* ({ id, news, olds, output, session }) {
+        const props = yield* decodeTemplateProps(news);
+        const launchTemplateName = output?.launchTemplateName ?? (yield* toName(id, props));
+        const internalTags = yield* createInternalTags(id);
+        const desiredTags = { ...internalTags, ...props.tags };
+        const existing = yield* observe(id, props, output);
+        const attrs =
+          existing?.LaunchTemplateId === undefined
+            ? yield* createTemplate(launchTemplateName, props, desiredTags)
+            : yield* updateTemplate({
+                launchTemplateId: existing.LaunchTemplateId,
+                launchTemplateName,
+                observedTags: toTagRecord(existing.Tags),
+                internalTags,
+                desiredTags,
+                props,
+                olds,
+              });
+        yield* session.note(attrs.launchTemplateId);
+        return attrs;
+      }),
+      delete: Effect.fn("RunnerLaunchTemplate.delete")(function* ({ output }) {
+        yield* ec2
+          .deleteLaunchTemplate({ LaunchTemplateId: output.launchTemplateId })
+          .pipe(Effect.catchIf(isLaunchTemplateNotFound, () => Effect.void));
+      }),
+    };
+  })
+);

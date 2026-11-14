@@ -83,13 +83,13 @@
       "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
       // Sealed generated diff corpus; dedicated schema/hash verification owns its bytes.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/diff-kernel.json",
-      // Complete compact source rows are sealed by ops/verify-builtin-diff.py.
+      // Complete compact source rows, sealed by ops/verify-builtin-diff.py (removed, goal python-free-repo).
       "!packages/law-practice/use-cases/test/fixtures/eyecite/builtin-diff.json",
       // Complete source traces; ops/check-cleaner-pipeline.ts seals their bytes.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
-      // Complete byte-source outcomes sealed by ops/verify-html-bytes.py.
+      // Complete byte-source outcomes; CitationHtmlBytes.test.ts pins their digest.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/html-bytes.json",
-      // Complete source identity relations sealed by ops/verify-cleaner-identities.py.
+      // Complete source identity relations, sealed by ops/verify-cleaner-identities.py (removed, goal python-free-repo).
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-identities.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/unicode-dictionary.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/python-hashes.json",
@@ -396,6 +396,31 @@
       "includes": ["**/src/**", "!packages/foundation/modeling/jsonc/**"],
       "plugins": [
         "./packages/tooling/policy-pack/lint-rules/rules/no-hand-rolled-canonical-json.grit"
+      ]
+    },
+    {
+      // no-hand-rolled-git-gh-spawn (goals/repo-cli-gh-git-consolidation, D-23):
+      // repo-cli and ai-metrics source run git and gh through @beep/git,
+      // @beep/github and @beep/commands. A spawn that stays hand-rolled carries an
+      // in-source `biome-ignore ...: KEEP (D-nn): <reason>`.
+      "includes": [
+        "packages/tooling/tool/cli/src/**",
+        "packages/tooling/library/ai-metrics/src/**"
+      ],
+      "plugins": [
+        "./packages/tooling/policy-pack/lint-rules/rules/no-hand-rolled-git-gh-spawn.grit"
+      ]
+    },
+    {
+      // no-unrecorded-spawner-double (D-14, D-23): repo-cli and ai-metrics tests
+      // script child processes with @beep/commands ScriptedSpawner; a hand-rolled
+      // double carries an in-source `biome-ignore ...: Own double: <reason>`.
+      "includes": [
+        "packages/tooling/tool/cli/test/**",
+        "packages/tooling/library/ai-metrics/test/**"
+      ],
+      "plugins": [
+        "./packages/tooling/policy-pack/lint-rules/rules/no-unrecorded-spawner-double.grit"
       ]
     },
     {

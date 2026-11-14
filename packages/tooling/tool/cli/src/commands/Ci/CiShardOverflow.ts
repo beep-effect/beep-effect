@@ -676,10 +676,11 @@ export const renderShardOverflowOutputs = Effect.fn("Ci.renderShardOverflowOutpu
 const decodeRunIdLine = S.decodeUnknownOption(S.FiniteFromString);
 const decodeJobLine = S.decodeUnknownOption(S.fromJsonString(ShardOverflowJob));
 
-// KEEP (D-22): `GithubRest` has no listing of runs by status or of a run's jobs with runner
-// `labels`; both reads are gh `--jq` projections of the raw pages.
 const ghLines = Effect.fn("Ci.shardOverflowGhLines")(function* (args: ReadonlyArray<string>) {
   const gh = yield* ChildProcessSpawner.ChildProcessSpawner.use((spawner) =>
+    // KEEP (D-22): `GithubRest` has no listing of runs by status or of a run's jobs with runner `labels`;
+    // both reads are gh `--jq` projections of the raw pages.
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
     spawner.spawn(ChildProcess.make("gh", args, { stdin: "ignore", stderr: "inherit" }))
   );
   const lines = gh.stdout.pipe(Stream.decodeText, Stream.splitLines, Stream.filter(Str.isNonEmpty), Stream.runCollect);

@@ -165,6 +165,9 @@ export const observeAiMetricsGitRoot = Effect.fn("AiMetrics.observeGitRoot")(fun
       Effect.scoped(
         Effect.gen(function* () {
           const handle = yield* spawner.value.spawn(
+            // KEEP funnel: `readGit` runs the KEEP (D-22) and KEEP (D-21, X10) reads below; each call site
+            // records its reason.
+            // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP funnel, reason above
             ChildProcess.make("git", args, {
               cwd: root,
               stderr: "ignore",

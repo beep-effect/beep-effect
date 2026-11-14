@@ -145,4 +145,48 @@ Lane chore/ci-goals-finish
 
 Reverse: Delete this checkpoint; it records a fact about main and changes no behaviour.
 
+### Slice 3 (SCHE-08): admission unit schema, tolerant decoder and units gate implemented, 2026-11-14
+
+Slice 3 lands SCHE-08's schema half on `feat/local-proof-admission-unit`: `AdmissionUnit`, `AdmissionWeightSource` and `AdmissionOwner` as optional keys on tickets, leases and the enqueue, admission, v3 release and withdrawal rows; `RecordedAdmissionWorkKind` as the tolerant reader of the persisted kind; and a `units` key on the v2 protocol marker, flipped with `bun run beep quality scheduler protocol --units on|off` and off by default (decision files `sche-08-admission-unit-schema` and `sche-08-units-protocol-gate`). Scheduler behaviour is unchanged: admission order, weights and the review-fix cap are as before, and with the gate off every record keeps origin/main's bytes. Gate evidence: `test/quality-scheduler-admission-unit.test.ts` (12 cases, Node and Bun, in-memory filesystem and a fixed procfs entry) covers the mixed-version decode in both directions, the gate off and on through `withQualityAdmission`, and a newer writer's lease charged instead of quarantined; the ciops frozen-journal replay is 41 of 41 (`evidence:s7` PASS) and stays 41 of 41 with the unit keys injected on every row (new `property 5b` in `apps/labs/ciops/test/projection.test.ts`). The gate stays off on the workstation until every live checkout runs this revision. Next for SCHE-08 is slice 6: the scheduler `Context.Service` facade and Cache's own work kind, written behind the same gate.
+
+Lane feat/local-proof-admission-unit
+
+Reverse: Revert the slice 3 PR; with the units gate off nothing on disk changed, and records written while it was on still decode on older revisions.
+
+### Slice 4: beep-heavy rule retired from the orchestrate skill and runbook, 2026-11-14
+
+Slice 4 lands PERIL-10's documentation half. `beep-heavy` is a slot wrapper installed outside the repo on 2026-10-06: it ran a command in `agent-runs.slice` after taking one of a few machine-wide `flock` slots. The exploration inventory found no `beep-heavy` unit since 2026-10-25, and no repo code calls it. The quality scheduler is the one admission authority (ruling D3), so live instructions now state what it does instead of the wrapper rule:
+
+- `.claude/skills/orchestrate/SKILL.md`: the gate-table poller runs as a plain user unit (`systemd-run --user --unit=orchestrator-gate --collect --same-dir -E PATH ...`) or a T3 scheduled task. Hand-off re-creates a background poller as a `yeet ... --detach` job, a `systemd-run --user` unit or a scheduled task. "Where to launch" now says heavy commands need no wrapper: Yeet's full, merged-preview and review-fix proofs wait for weighted scheduler admission and run in `agent-run-<ticket>.scope`; other commands, such as `quality package-verify`, are not admitted yet (SCHE-02) and run directly; `beep-heavy` stays out of briefs.
+- `docs/runbooks/practice-m365-contacts-seeding.md`: the two single-file live-test commands run without the `beep-heavy` prefix.
+- `goals/design-figure-review-loop/PLAN.md`: its execution note no longer routes heavy commands through `beep-heavy`.
+
+Left unchanged: `goals/oppold-corpus-salvage-restoration` (paused; its mentions are dated decision records and the frozen launch protocol of its paused extraction wave, which that goal revisits when it resumes); `goals/declaration-only-builds/ops/measure-build-baseline.ts` (a completed goal's script, where the mention is a usage comment); and every history, decisions and research file. The wrapper script itself and the personal memory notes that still describe it live outside the repo and are the operator's to retire.
+
+PERIL-10 is now fully landed (slice 2 for the status summary and archive, slice 4 for the documentation).
+
+Lane docs/local-proof-retire-beep-heavy
+
+Reverse: Restore the removed beep-heavy lines in the three edited files from this commit's parent; the wrapper itself was never changed.
+
+### Slice 5: live readiness monitor reused, 2026-11-14
+
+Slice 5 lands PERIL-02 on `fix/local-proof-monitor-reuse`. `yeet monitor --until-ready --detach` now hands back a live readiness monitor for the same branch and readiness argv instead of submitting a second job, as long as the live job's time left under its runtime cap (its cap minus the time since it was submitted) is at least what `--job-max-runtime` asks for: it prints the existing job (its JSON record with `--json`) and a stderr note that states the job's time left and ends `not re-submitted`. When an earlier `job wait` on that job already returned inbox rows, a second note says so, because `job wait` does not return them again. A job is live while it is submitted or running with no cancel request and its runner process is not provably dead; a record whose runner is gone is named and skipped. The runner check moved from `Handler.ts` into `ProofJobLauncher.ts` (`readyMonitorRunnerStatus`, `pickLiveReadyMonitor`, `findReusableReadyMonitor`), and publish and the CLI share it. No record or schema on disk changed.
+
+The defect at the old `ReadyGate.ts:565`: after a flip, `yeet ready` named any `running` record as the monitor still watching the pull request without checking its runner, so an agent could be told to `job wait` on a job that had died without a finalizer. The hint now runs the same runner check and, when only a dead record exists, says no detached monitor is registered and how to submit one.
+
+Decision files `ready-monitor-argv-key` and `ready-monitor-cli-reuse-scope` record the key and the matching scope. Gate evidence: `test/yeet-ready-monitor-reuse.test.ts` (31 cases, Node and Bun, with a fake registry, submit and runner probe) covers two identical submissions yielding one job, the runtime rule on the TestClock (a 60-minute job 50 minutes in is not reused for a 30-minute request but is for 5 minutes, ten minutes left serves a ten-minute request exactly, a job without a readable start time is refused for a capped request, and an explicit `none` against a capped job submits), the earlier-wave note and the `--job-max-runtime` parse, a publish-submitted monitor handed back to a later `--detach`, a stricter request submitting a new job, a dead runner skipped, a registry read failure, other modes bypassing the lookup, and the ready hint, whose dead-runner case fails against the old lookup. `test/yeet-command-wiring.test.ts` adds publish submitting a new monitor when the live one runs with a longer settle timeout. PERIL-03's back-off (slice 8) can start; its 7-day A/B stays open in the acceptance criteria.
+
+Lane fix/local-proof-monitor-reuse
+
+Reverse: Revert the slice 5 PR; monitor --until-ready --detach submits a new job every time again, and job records are unchanged.
+
+### Slice 6: scheduler facade and Cache work kind, 2026-11-14
+
+Slice 6 lands SCHE-08's service half on `refactor/local-proof-scheduler-facade` (decision files `sche-08-scheduler-facade` and `sche-08-cache-work-kind`). Callers reach the scheduler through the `QualityScheduler` service (`admit`, `observe`, `reap`, `protocol`, `setEvictionProtocol`, `setUnitProtocol`, `history`, `archive`, `recordRoute`), with `QualitySchedulerLive` over the existing functions. Cache commands request their own `cache` kind at weight 1; with the units gate off the files keep origin/main's `review-fix` bytes, and the review-fix class cap counts Cache work as before. Scheduler policy is unchanged: admission order, weights, the cap and journal rows. Gate evidence: `test/quality-scheduler-admission-unit.test.ts` gains four cases (Node and Bun, in-memory filesystem, fixed procfs entry, TestClock): gate off writes origin/main's captured bytes for a Cache admission and withdrawal, gate on writes `cache` that a pre-SCHE-08 reader refuses, and a Cache ticket waits a heartbeat while two review-fix leases and one Cache lease fill the cap. The Cache tests replace the scheduler through a recording Layer and assert each site requests `cache` (dependency materialization in `cache-dependencies.test.ts`, protocol and signed pilot in `cache-signed-runner.test.ts`, the pilot in `cache-pilot-orchestration.test.ts`, producer workflow verification in `cache-workflow.test.ts`). The existing scheduler suites pass on Node and Bun. The units gate stays off on the workstation until every live checkout runs this revision. With this slice both halves of SCHE-08, the schema and the service, are implemented; the journal fields still wait on SCHE-09's retention for their readers.
+
+Lane refactor/local-proof-scheduler-facade
+
+Reverse: Revert the slice 6 PR; with the units gate off nothing on disk changed, and a cache lease written while it was on stays charged on slice 3 and later readers.
+
 <!-- beep:decisions:end -->

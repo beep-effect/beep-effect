@@ -271,6 +271,38 @@ describe("opaque-roundtrips", () => {
     })
   );
 
+  // LINT-04 P12/P11 parity gate (goals/heavy-pool-diet): the assertion-ancestor pre-pass must not
+  // drop an assertion whose Arbitrary only an inferred type names, whose Opaque class is reached
+  // through a const and a type alias, and which sits two callbacks below the property call. The
+  // pre-#3019 scanner reports the same single row for this fixture.
+  it.effect(
+    "reports an aliased assertion whose Arbitrary and Opaque class are reached only through inference",
+    Effect.fnUntraced(function* () {
+      const findings = yield* Effect.sync(() =>
+        detect(`
+      const arbitraryFor = (schema: typeof Value) => Arbitrary.schema(schema);
+      const Alias = Value;
+      type AliasType = Value;
+      const check = (run: () => void) => run();
+      FastCheck.assert(FastCheck.property(arbitraryFor(Alias), (sample: AliasType) => {
+        const decoded = Result.getOrThrow(S.decodeUnknownResult(Alias)(sample));
+        check(() => {
+          [decoded].forEach((value) => {
+            expect(value).toStrictEqual(sample);
+          });
+        });
+      }));
+      FastCheck.assert(FastCheck.property(arbitraryFor(Alias), (sample: AliasType) => {
+        expect(Alias.make(sample)).toStrictEqual(Alias.make(sample));
+      }));
+    `)
+      );
+      expect(A.map(findings, (finding) => [finding.opaque, finding.text])).toEqual([
+        [["Value"], "expect(value).toStrictEqual(sample)"],
+      ]);
+    })
+  );
+
   it.effect(
     "type-queries only the calls that enclose a strict-equality assertion",
     Effect.fnUntraced(function* () {

@@ -9,9 +9,9 @@ Status: `active`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Deep-research pass: the alchemy.run doc pages listed in `research/SOURCES.md`, the full `alchemy` and `distilled` sources, t3code t3code's relay and task-cache stacks, all 47 alchemy.run blog posts (grok-4.7 xhigh lanes). Produce the "use this, never roll that" matrix. | Matrix reviewed by the operator; every planned package and resource maps to an Alchemy/distilled primitive or a recorded gap. |
-| P1 Foundations | in-progress | Doctrine amendment (tooling kind `infra`); catalog pins for `alchemy`, `@alchemy.run/*`, `@distilled.cloud/*`; S3 state store bootstrapped under a new bucket; `BeepEffectWeb` re-adopted into it; CI deploy skeleton (per-stack concurrency, `op run`). | `alchemy plan` for `BeepEffectWeb` is a no-op on the shared store; one workflow deploys a stack from `main`. |
-| P2 Providers | pending | `@beep/alchemy-vercel`, `@beep/alchemy-aws-extras`, `@beep/alchemy-github-runners`, each on the `@alchemy.run/test` harness. | `package-verify` green; provider tests cover create/update/delete/read/adopt. |
-| P3 Low-risk stacks | pending | Storybook, turbo cache (move scratchpad module, delete scratchpad), cost controls, GitHub. Parallel build, flip, destroy Pulumi program. | Each stack live on Alchemy; CI enrolled on the Worker cache with hit evidence; four Pulumi programs destroyed with export archives recorded. |
+| P1 Foundations | complete | Doctrine amendment (tooling kind `infra`); catalog pins for `alchemy`, `@alchemy.run/*`, `@distilled.cloud/*`; S3 state store bootstrapped under a new bucket; `BeepEffectWeb` re-adopted into it; CI deploy skeleton (per-stack concurrency, `op run`). | `alchemy plan` for `BeepEffectWeb` is a no-op on the shared store; one workflow deploys a stack from `main`. |
+| P2 Providers | complete | `@beep/alchemy-vercel`, `@beep/alchemy-aws-extras`, `@beep/alchemy-github-runners`, each on the `@alchemy.run/test` harness. | `package-verify` green; provider tests cover create/update/delete/read/adopt. |
+| P3 Low-risk stacks | in-progress | Storybook, turbo cache (move scratchpad module, delete scratchpad), cost controls, GitHub. Parallel build, flip, destroy Pulumi program. | Each stack live on Alchemy; CI enrolled on the Worker cache with hit evidence; four Pulumi programs destroyed with export archives recorded. |
 | P4 OIP and hosts | pending | OIP web (Vercel project, env vars, domains, DNS, assets bucket), AI metrics and OpenClaw through `@beep/infra-hosts`. | oip.law prod and staging served from Alchemy-managed config; hosts deploy via Alchemy; two more Pulumi programs destroyed. |
 | P5 Runner fleet | pending | `@beep/infra-ci-runners` deployed beside the live fleet, CI moved over, old fleet destroyed. | Hosted CI green on the new fleet for a full day; `beep-ci-runners` destroyed; export archived. |
 | P6 Retire | pending | Delete `infra/`, Pulumi and TS6 pins, root `postinstall` hook, runbook rewrite. | Verification matrix rows "Pulumi gone" and "Infra gone" pass on `main`. |
@@ -72,5 +72,29 @@ P0 closed 2026-11-09: the "use this, never roll that" matrix was reviewed in the
 Lane goals/infra-alchemy-rebuild-p1
 
 Reverse: n/a (status note)
+
+### P1 complete, P2 Providers in progress, 2026-11-13
+
+P1 Foundations closed 2026-11-13. Its exit criterion held on the shared S3 store: PRs #3021 and #3133 merged, and hosted run 43407236289 (`Deploy beep-effect-web`, `main`, 2026-11-13) logged `Plan: 1 to update` and `[Website] update`, then `Done: 1 succeeded`, with no create or replace. P2 Providers started the same day as three parallel lanes, each its own PR: `@beep/alchemy-aws-extras` (this lane), `@beep/alchemy-vercel` and `@beep/alchemy-github-runners`. P2 exits when all three pass `package-verify` with `@alchemy.run/test` coverage of create, update, delete, read and adopt.
+
+Lane goals/infra-alchemy-rebuild-p2-aws-extras
+
+Reverse: n/a (status note)
+
+### Storybook is live on Alchemy; Pulumi stack beep-storybook/production removed, 2026-11-13
+
+PR #3289 merged 2026-11-13T22:12:56Z as 457e3ae3e8b6. Hosted run 43517423865 (Deploy Storybook, main) planned `2 to create` (Storybook/Build, Storybook), deployed `Done: 2 succeeded` with one Worker route reconciled; its smoke step failed on `iframe=404` one second after the route was created (propagation race, fixed in the turbo-cache PR, which makes both deploy workflows poll their smoke probes for up to 120 seconds). Probed by hand at 22:25Z: the index, the iframe (after its redirect), index.json and the bare slug with a query all return 200 under the public origin's storybook route, an unknown asset returns 404, and the apex still returns 200. `pulumi stack rm production --yes` then removed the empty Pulumi stack (0 resources at removal; the archive's sha256 matched the decision file); `pulumi stack ls` in that project lists no stacks.
+
+Lane goals/infra-alchemy-rebuild-p3-turbo-cache
+
+Reverse: n/a (status note)
+
+### P2 Providers complete, 2026-11-14
+
+P2 Providers closed 2026-11-14 with all three provider packages on `main` or in their last PR: `@beep/alchemy-aws-extras` (#3292), `@beep/alchemy-vercel` (#3290) and `@beep/alchemy-github-runners` (#3291 for the Lambdas, plus #3314 for `RunnerFleet`, `RunnerSweep` and the runner user data, composing `RunnerLaunchTemplate` from aws-extras). Each passes `package-verify` with hermetic provider tests covering create, update, delete, read and adopt; nothing was deployed and no workflow changed. P3 status is left as `main` records it.
+
+Lane goals/infra-alchemy-rebuild-p2-github-runners-composite
+
+Reverse: Set P2 back to in-progress in ops/manifest.json, PLAN.md and README.md and delete this checkpoint.
 
 <!-- beep:decisions:end -->

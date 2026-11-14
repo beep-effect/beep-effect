@@ -1,14 +1,14 @@
 {
   "catalog": {
-    "@alchemy.run/aws": "2.0.0-beta.86",
-    "@alchemy.run/cloudflare": "2.0.0-beta.86",
-    "@alchemy.run/domain": "2.0.0-beta.86",
-    "@alchemy.run/github": "2.0.0-beta.86",
-    "@alchemy.run/test": "2.0.0-beta.86",
+    "@alchemy.run/aws": "2.0.0-beta.87",
+    "@alchemy.run/cloudflare": "2.0.0-beta.87",
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@alchemy.run/github": "2.0.0-beta.87",
+    "@alchemy.run/test": "2.0.0-beta.87",
     "@arizeai/phoenix-client": "8.0.0",
     "@azure/core-http-compat": "2.5.0",
     "@azure/core-rest-pipeline": "1.25.1",
-    "@azure/msal-node": "^7.2.1",
+    "@azure/msal-node": "^7.2.2",
     "@azure/storage-blob": "12.34.0",
     "@babel/code-frame": "^8.0.6",
     "@base-ui/react": "^1.9.0",
@@ -25,6 +25,9 @@
     "@csstools/css-color-parser": "^4.2.7",
     "@csstools/css-tokenizer": "^4.0.2",
     "@csstools/media-query-list-parser": "^5.0.2",
+    "@distilled.cloud/aws": "1.0.0-rc.20",
+    "@distilled.cloud/github": "1.0.0-rc.20",
+    "@distilled.cloud/vercel": "1.0.0-rc.19",
     "@duckdb/node-api": "2.0.0-r.1",
     "@effect/ai-anthropic": "4.1.4",
     "@effect/ai-openai": "4.1.4",
@@ -71,8 +74,8 @@
     "@mui/x-date-pickers": "^9.17.0",
     "@mui/x-date-pickers-pro": "^9.17.0",
     "@mui/x-tree-view": "^9.17.0",
-    "@next/bundle-analyzer": "16.5.0-canary.48",
-    "@next/mdx": "16.5.0-canary.48",
+    "@next/bundle-analyzer": "16.5.0-canary.49",
+    "@next/mdx": "16.5.0-canary.49",
     "@noble/hashes": "^2.4.0",
     "@octokit/core": "^7.0.8",
     "@octokit/plugin-paginate-rest": "^16.0.0",
@@ -147,7 +150,7 @@
     "@xstate/test": "2.0.0-beta.1",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
-    "alchemy": "2.0.0-beta.86",
+    "alchemy": "2.0.0-beta.87",
     "ast-v8-to-istanbul": "1.0.8",
     "babel-plugin-react-compiler": "^1.0.0",
     "bippy": "^0.7.3",
@@ -195,7 +198,7 @@
     "micromark": "^4.0.3",
     "micromark-extension-gfm": "^3.0.0",
     "n3": "^2.13.12",
-    "next": "16.5.0-canary.48",
+    "next": "16.5.0-canary.49",
     "next-themes": "^0.4.6",
     "opentype.js": "2.0.0",
     "oxlint": "1.93.0",
@@ -255,6 +258,7 @@
     "are-docs-informative": "0.1.1",
     "@microsoft/tsdoc": "0.17.1",
     "@microsoft/tsdoc-config": "0.18.3",
+    "onnxruntime-node": "1.31.1",
     "oxlint-tsgolint": "7.0.2007",
     "protobufjs": "^8.8.1"
   },
@@ -322,7 +326,7 @@
   },
   "packageManager": "bun@1.4.4",
   "patchedDependencies": {
-    "@alchemy.run/domain@2.0.0-beta.86": "patches/@alchemy.run%2Fdomain@2.0.0-beta.86.patch"
+    "@alchemy.run/domain@2.0.0-beta.87": "patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch"
   },
   "private": true,
   "repository": {
@@ -468,6 +472,7 @@
     "packages/shared/use-cases",
     "packages/shared/tables",
     "packages/tooling/library/*",
+    "packages/tooling/infra/*",
     "packages/tooling/policy-pack/*",
     "packages/tooling/test-kit/*",
     "packages/tooling/tool/*",
@@ -587,7 +592,6 @@
     "packages/drivers/alchemy-postgres",
     "packages/drivers/firecrawl",
     "packages/drivers/eyecite",
-    "packages/drivers/sqlite",
-    "packages/tooling/infra/github"
+    "packages/drivers/sqlite"
   ]
 }

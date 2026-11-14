@@ -247,6 +247,24 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
         ["packages/consumer/package.json", "packages/upstream/package.json", "packages/unrelated/package.json"],
         (file) => assertMutation(file, [true, false, true])
       );
+      // LINT-04 P28 re-key probe (goals/heavy-pool-diet): a manifest eight directories below packages/
+      // re-keys the WORKSPACE_MANIFEST_WALK seal like a shallow edit, and so does renaming the
+      // directory that holds it; removing it restores every hash.
+      const rekeyed = (label: string, probed: ReadonlyArray<{ readonly hash: string }>, against: typeof baseline) =>
+        expect(
+          A.map(probed, (task, index) => task.hash !== against[index]?.hash),
+          label
+        ).toEqual([true, false, true]);
+      const deepDirectory = "packages/unrelated/l2/l3/l4/l5/l6/l7/l8";
+      yield* writeJson(root, `${deepDirectory}/package.json`, { name: "@fixture/deep" });
+      const deep = yield* lawHashes(root, binary);
+      rekeyed(deepDirectory, deep, baseline);
+      yield* fs.rename(path.join(root, deepDirectory), path.join(root, "packages/unrelated/l2/l3/l4/l5/l6/l7/renamed"));
+      const renamed = yield* lawHashes(root, binary);
+      rekeyed(`${deepDirectory}: renamed`, renamed, deep);
+      yield* fs.remove(path.join(root, "packages/unrelated/l2"), { recursive: true });
+      const restored = yield* lawHashes(root, binary);
+      expect(restored, `${deepDirectory}: removed`).toEqual(baseline);
       yield* Effect.forEach(
         ["scratchpad/example.tsx", "packages/_internal/db-admin/effect-ontology/example.ts"],
         (file) => assertMutation(file, [false, true, false])

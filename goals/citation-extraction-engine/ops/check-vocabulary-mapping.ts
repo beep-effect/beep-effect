@@ -78,13 +78,14 @@ const program = Effect.gen(function* () {
     report.publicCourtsVersion !== current.courts.source.release
   )
     return yield* reject("public vocabulary version mismatch");
-  for (const [file, expected] of [
-    ["export-vocabulary-mapping.py", report.exporterSha256],
-    ["export-public-vocabulary.ts", report.publicExporterSha256],
-  ]) {
-    const bytes = yield* Effect.tryPromise(() => Bun.file(new URL(`./${file}`, import.meta.url)).bytes());
-    if (sha(bytes) !== expected) return yield* reject("vocabulary exporter hash mismatch");
-  }
+  // export-vocabulary-mapping.py was removed with the repository's Python (goal python-free-repo). Its
+  // digest is pinned from the recovery commit: `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/export-vocabulary-mapping.py`.
+  if (report.exporterSha256 !== "273c9dd49ccae0f66dcbde05d7e92e5a6a9fac0112f72f2a1cfed9eaf29ef669")
+    return yield* reject("vocabulary exporter hash mismatch");
+  const publicExporter = yield* Effect.tryPromise(() =>
+    Bun.file(new URL("./export-public-vocabulary.ts", import.meta.url)).bytes()
+  );
+  if (sha(publicExporter) !== report.publicExporterSha256) return yield* reject("vocabulary exporter hash mismatch");
   const operationBytes = yield* Effect.tryPromise(() =>
     Bun.file(
       new URL("../../../packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json", import.meta.url)
