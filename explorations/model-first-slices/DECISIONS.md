@@ -919,3 +919,56 @@ D5 verdict: not met. The pass rests on three local patches, the stale runner is 
 an upgrade that adds a consumer gets no history on this host. Open for the operator: accept
 first-commit-wins or fence commits on shard ownership; patch the backfill defect locally or wait;
 whether an upgrade drains the old publisher first; and D44 (nothing is posted upstream).
+
+## 2026-11-14 — D45 a runner that lost its shard (extends D41)
+
+**Question:** With the version check, a runner paused inside its commit no longer loses a write,
+but in all three runs the paused runner's write was the one acknowledged, because its transaction
+began first. What is the rule?
+
+**Answer:** Fence the commit on shard ownership. A fourth local patch makes the commit transaction
+also establish that this runner owns the instance's shard, so a runner that lost its shard is
+refused and the caller's retry reaches the current owner. The case is rerun and the patch joins the
+upstream set.
+
+**Rationale:** `research/17`. Ordering commits by transaction keeps every acknowledged write, but
+it lets a runner the cluster no longer trusts with the instance speak for it. Rejected: accepting
+first-commit-wins as the guarantee and rewriting the case to assert only that. Recommended answer
+accepted.
+
+## 2026-11-14 — D46 the backfill that lists nothing on Effect Cluster
+
+**Question:** On Effect Cluster a new consumer's backfill lists no instances, because the missing
+first-page cursor arrives as `null`. The new facts stream therefore holds only decisions made after
+the upgrade. Patch it locally like the other three defects?
+
+**Answer:** Patch and rerun. Fix it in the local patch, save an upstream-ready diff with the failing
+case, and rerun the upgrade case so the new stream generation is shown complete on the cluster.
+
+**Rationale:** `research/17`. Without it an upgrade that adds or rebuilds a consumer gets no history
+on this host, and the first generation of a published stream can never be retired. Rejected:
+keeping the write-up only and serving the old generation indefinitely. Recommended answer accepted.
+
+## 2026-11-14 — D47 upgrades that replace a publisher (extends D43)
+
+**Question:** A decision made under the old code whose fact was never published now reaches only
+the run its event names, not every review run of that claim. Should an upgrade drain the old
+publisher first?
+
+**Answer:** Yes. An upgrade that replaces a publisher waits until the old one has published
+everything pending. The deployment check enforces it and a case proves it.
+
+**Rationale:** `research/17`. The narrower fact is a silent loss for the other review runs, and the
+old publisher is the only code that knows the full scope of an old decision. Rejected: accepting
+the gap with the phase 9 fallback and a logged warning. Recommended answer accepted.
+
+## 2026-11-14 — D48 upstream timing (renews D44)
+
+**Question:** Three patches, a lease proposal and two issue write-ups are saved in the prototype.
+Send them now?
+
+**Answer:** Hold until the next rerun. Nothing is posted until D45 to D47 are built and the suite
+is rerun, so the set that goes out is final. The operator is asked again then.
+
+**Rationale:** Two more patches are about to join the set, and one of the write-ups becomes a patch.
+Rejected: reading the six drafts now; stopping the lane. Recommended answer accepted.

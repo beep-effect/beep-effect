@@ -17,25 +17,25 @@ system alongside people?
 
 ## Next Open Question
 
-After phase 9 every conformance case passes as written on the Postgres swarm host, on three local
-patches. Four things are open, each for the operator: whether to accept that the first commit wins
-when a runner is paused inside its commit (nothing is lost, but the stale runner is acknowledged)
-or to fence commits on shard ownership; whether to patch a fourth library defect, a backfill that
-lists no instances on Effect Cluster; whether an upgrade drains the old fact publisher first; and
-whether to send the patches and write-ups under the prototype's `notes/upstream/` (D44 holds them).
-Behind those: whether a pass on local patches counts toward the D16 gate. [`BRIEF.md`](./BRIEF.md)
-has not been confirmed in words.
+Phase 10 is building D45 to D47 (fence commits on shard ownership, patch the Effect Cluster
+backfill, drain the old publisher before an upgrade) and will rerun the cluster suite. After it,
+two things are for the operator: whether to send the patches and write-ups under the prototype's
+`notes/upstream/` (D48 holds them), and whether a pass on local patches counts toward the D16
+gate. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
 2. [`CAPTURE.md`](./CAPTURE.md) - the operator's brief and ground rules.
 3. [`RESEARCH.md`](./RESEARCH.md) - the proposal, the prototype, the outside reviews.
-4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D44.
+4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D48.
 5. [`BRIEF.md`](./BRIEF.md) - shaped pitch, awaiting the operator's confirmation.
 
 ## Trail
 
+- 2026-11-14: D45 to D48 settled phase 9's open points: fence commits on shard ownership, patch
+  the backfill defect and rerun, drain the old publisher before an upgrade, hold upstream until
+  the rerun. Phase 10 launched.
 - 2026-11-14: phase 9 built D41 to D43 and reran the cluster suite. Every case passes as written:
   no write is overwritten, recovery finishes inside the 80-second bound, and the upgrade case
   publishes its fact. The stale runner is still acknowledged, and a fourth library defect (backfill

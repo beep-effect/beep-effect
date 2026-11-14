@@ -6,10 +6,8 @@
     "status": "active",
     "stage": "shape",
     "openQuestions": [
-      "Operator: the paused-inside-commit case. The version check (D41) stops the overwrite but the stale runner is still acknowledged (research/17). Accept first-commit-wins, or fence commits on shard ownership (a fourth local patch)?",
-      "Operator: backfill lists no instances on Effect Cluster (research/17, a fourth library defect, unpatched). Patch locally or wait for upstream? Until fixed, generation 1 of the facts stream cannot be retired.",
-      "Operator: does an upgrade drain the old publisher first, so a decision whose fact was never published reaches every review run?",
-      "Operator: D44 holds. Three patches, a lease proposal and two issue write-ups sit in the prototype's notes/upstream/; none is posted. Does a pass on local patches count toward the D16 gate?",
+      "IN PROGRESS: phase 10 builds D45 (fence commits on shard ownership), D46 (patch the Cluster backfill) and D47 (drain the old publisher before an upgrade), then reruns the cluster suite.",
+      "Operator, after the rerun: send the patches and write-ups under the prototype's notes/upstream/ (D48 holds them)? Does a pass on local patches count toward the D16 gate?",
       "DEFERRED: browser session credentials, tenant and cache clearing (outside the D16 gate).",
       "Shape review: BRIEF.md and the artifact have not been confirmed in words by the operator."
     ],
