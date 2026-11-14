@@ -184,7 +184,7 @@ const answer = <V>(table: Readonly<Record<string, V>>, key: string, args: Readon
   Effect.fromOption(R.get(table, key)).pipe(Effect.mapError(() => unrecorded(args)));
 
 /** The Git kit members a base-merge proof reads, answered from a replay. */
-export const replayGit = (replay: BaseMergeReplay) =>
+const replayGit = (replay: BaseMergeReplay) =>
   Git.layerTest({
     configGet: () => Effect.succeedNone,
     refExists: () => Effect.succeed(true),
@@ -213,7 +213,7 @@ const rawRead = (replay: BaseMergeReplay, args: ReadonlyArray<string>): O.Option
 };
 
 /** The argv-level git reads of a base-merge proof, answered from a replay. */
-export const replaySpawner = (replay: BaseMergeReplay) =>
+const replaySpawner = (replay: BaseMergeReplay) =>
   ScriptedSpawner.make((_command, args) =>
     O.match(rawRead(replay, args), {
       onNone: () => ({ stderr: `fatal: not recorded: ${A.join(args, " ")}`, exit: 128 }),
@@ -222,7 +222,7 @@ export const replaySpawner = (replay: BaseMergeReplay) =>
   );
 
 /** A deterministic `SecureRandom` for the scripted child processes. */
-export const replaySecureRandom = Layer.succeed(
+const replaySecureRandom = Layer.succeed(
   SecureRandom.SecureRandom,
   SecureRandom.make((size) => new Uint8Array(size))
 );
