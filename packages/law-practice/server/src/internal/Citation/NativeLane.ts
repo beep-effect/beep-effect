@@ -174,8 +174,9 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     )
   );
   const acquire = Effect.fn("Citation.claimLaneUnit")(function* () {
-    if (O.isNone(permit)) {
-      const lease = yield* acquireCitationNativeLease(admission, operation, false, (reason) =>
+    let lease = O.getOrUndefined(permit);
+    if (lease === undefined) {
+      lease = yield* acquireCitationNativeLease(admission, operation, false, (reason) =>
         CitationNativeLaneFailure.make({ reason })
       );
       permit = O.some(lease);
@@ -187,9 +188,7 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
       yield* release;
       return yield* CitationNativeLaneFailure.make({ reason: status.closed ? "closed" : "quarantined" });
     }
-    return yield* Effect.fromOption(permit).pipe(
-      Effect.mapError(() => CitationNativeLaneFailure.make({ reason: "closed" }))
-    );
+    return lease;
   });
   const availableOwner = Effect.gen(function* () {
     if (closed) return yield* CitationNativeLaneFailure.make({ reason: "closed" });
