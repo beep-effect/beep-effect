@@ -22,7 +22,6 @@
     {"file":"infra/src/CiShardOverflowPool.ts","symbol":"CiShardOverflowPoolConfigError","kind":"tagged-error","owner":"@beep/infra","identity":"CiShardOverflowPoolConfigError"},
     {"file":"infra/src/CiTurboCache.ts","symbol":"CiTurboCachePulumiConfigValues","kind":"schema-class","owner":"@beep/infra","identity":"CiTurboCachePulumiConfigValues","description":"Validated Pulumi configuration for the asymmetric Turbo cache component."},
     {"file":"infra/src/CiTurboCache.ts","symbol":"CiTurboCacheRemediation","kind":"struct-const","owner":"@beep/infra","identity":"CiTurboCacheRemediation","description":"Optional evolved-incumbent settings; omitted fields keep the deployed values."},
-    {"file":"infra/src/CiTurboCache.ts","symbol":"TurboCacheLabBucketsInput","kind":"struct-const","owner":"@beep/infra","identity":"TurboCacheLabBucketsInput","description":"Raw lab epoch and incumbent bucket name, validated by resolveTurboCacheLabBuckets."},
     {"file":"infra/src/OpenClaw.ts","symbol":"OpenClawPulumiConfigValues","kind":"schema-class","owner":"@beep/infra","identity":"OpenClawPulumiConfigValues","description":"Configuration values for OpenClaw Pulumi resources"}
   ]
 }

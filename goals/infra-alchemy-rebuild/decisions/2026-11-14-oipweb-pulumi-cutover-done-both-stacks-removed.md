@@ -60,7 +60,9 @@ per key, the same types and targets, and unchanged domains and DNS records.
   lastUpdate 2026-11-14T05:22:19.684Z, unchanged throughout.
 - Both old buckets return 404; both Alchemy buckets exist; all six hostnames serve.
 
-**What this PR retires.** The Pulumi program goes: infra/oip-web, infra/src/OipWeb.ts, its
-entry and test, and the `@pulumi/cloudflare` dependency, which nothing else used.
-`infra/src/Vercel.ts` and `@pulumiverse/vercel` stay, because the Storybook Pulumi program
-still imports them. The runners program is unchanged.
+**What this PR retires (#3341).** The Pulumi program goes: infra/oip-web (removed in #3341), infra/src/OipWeb.ts
+(removed in #3341), its entry and test. The Storybook Pulumi program goes in the same PR, under the P6 retire inventory
+R1 (its stack was removed on 2026-11-13): infra/storybook (removed in #3341) and infra/src/Storybook.ts (removed in #3341), with its
+entry and test, and infra/src/Vercel.ts (removed in #3341), which only those two programs imported. So
+`@pulumi/cloudflare` and `@pulumiverse/vercel` leave `infra/`, the root catalog and `bun.lock`. The
+turbo-cache lab program and the runners program are unchanged.

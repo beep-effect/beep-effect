@@ -501,13 +501,13 @@ change to any project, domain or DNS record. Decision:
 
    Each step was checked against a fresh `pulumi stack export`. Afterwards `pulumi stack ls -a` on
    `s3://oip-law-pulumi-state` lists only `organization/beep-ci-runners/production` (354 resources,
-   untouched). The Pulumi program (infra/oip-web and infra/src/OipWeb.ts) was deleted after the
-   cutover; `infra/src/Vercel.ts` stays for the Storybook program until P6.
+   untouched). The Pulumi program (infra/oip-web (removed in #3341) and infra/src/OipWeb.ts (removed in #3341)) was deleted after the
+   cutover, together with the Storybook program and infra/src/Vercel.ts (removed in #3341).
 
 **Rollback** (re-creates Pulumi state; the live objects never left Alchemy):
 
 1. Disarm with `gh variable delete OIP_WEB_INFRA_DEPLOY -R beep-effect/beep-effect`.
-2. Check out a commit that still has the deleted infra/oip-web directory, such as `6e393d55c29`.
+2. Check out a commit that still has infra/oip-web (removed in #3341), such as `6e393d55c29`.
 3. Run the archived script's `rollback <stack> --preview`, then `--apply --confirmed`. It runs
    `pulumi stack init`, then `pulumi stack import` of the archive, then
    `pulumi refresh --target <bucket urn> --target-dependents`, which drops the destroyed bucket

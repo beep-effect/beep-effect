@@ -114,7 +114,7 @@ configuration, never derived from a state-held instance id.
 
 | Variable | Today | Under the stack |
 | --- | --- | --- |
-| `NEXT_DISABLE_PWA` | literal `0` in `infra/src/OipWeb.ts` | literal in `OipWebStack.ts` |
+| `NEXT_DISABLE_PWA` | literal `0` in infra/src/OipWeb.ts (removed in #3341) | literal in `OipWebStack.ts` |
 | `CRM_HUBSPOT_ACCOUNT_ID` | plain Pulumi config (`246203876`) | literal in `OipWebConfig.ts` |
 | `CRM_HUBSPOT_SERVICE_KEY` | Pulumi `secure:` value (decrypts with `op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE`; the same token in both stacks) and Vercel `sensitive` | `valueFrom: { config: "CRM_HUBSPOT_SERVICE_KEY" }`: `op://BEEP_SECRETS/OIP_SECRETS/CRM_HUBSPOT_SERVICE_KEY` through `op run` on a workstation, the one `CRM_HUBSPOT_SERVICE_KEY` environment secret in CI; state keeps the key name and a SHA-256 |
 
