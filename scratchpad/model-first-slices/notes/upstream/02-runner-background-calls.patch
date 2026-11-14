@@ -1,0 +1,107 @@
+fix(domain): on a runner, route calls from background fibers through the cluster
+
+Against alchemy `packages/domain/src` at 33c10dd (2.0.0-beta.87). Apply from the
+repository root with `git apply`; the text above the first `---` line is ignored.
+
+## Problem
+
+On a runner, `DomainCluster.layerEntities` builds the platform's namespace as
+`makeNamespace(objects, { url: "", token: "", service: "" })`.
+`makeNamespace(...).getByName` (in `@alchemy.run/effect-cluster`) routes a call
+through Effect Cluster only when `Sharding` is in the calling fiber's context;
+otherwise it uses the gateway's HTTP client, here with an empty URL.
+
+Entity handlers run with `Sharding`. Fibers that the model's Layer starts while
+it builds do not: the runner bootstrap builds the entrypoint Layer before the
+cluster Layer exists. So any call from such a fiber fails with
+`RpcClientError: HttpError: InvalidUrl (POST /rpc/)`. This covers a stream's
+`list`, a view's `get` and a command's `send` alike; it is not specific to
+reads.
+
+Seen with a consumer that polls another context's fact stream from a Layer
+(`Effect.forkScoped`) on the runners: every read failed, the fact was
+published and never consumed, and a run waiting for an approval never
+concluded.
+
+## Change
+
+In runner mode only:
+
+- the Layer the runner launches inside the cluster (`runner.value.host(hosted,
+  ...)`, where the workflow engine is already captured) also captures the
+  runner's `Sharding` in a `Deferred`;
+- the namespace passed to `remote` gives a call whose fiber has no `Sharding`
+  that one, waiting until the runner has joined. A call that already has
+  `Sharding` goes through unchanged.
+
+## Why it is safe
+
+- Calls from entity handlers are unchanged (they have `Sharding`).
+- A background call made before the runner has joined now waits for it
+  instead of failing, as workflow calls already wait for `started`.
+- No wire protocol change; one file. Callers (caller mode, through the
+  gateway) are untouched.
+
+An alternative is to make `makeNamespace` itself fall back to a runner-wide
+`Sharding` in `@alchemy.run/effect-cluster`; this change keeps the fix inside
+`@alchemy.run/domain`, where the empty URL is chosen.
+
+## Tests
+
+On Effect Cluster with Postgres (two runners on a local swarm): a runs inbox
+polling Party's fact stream on the runners consumed the decision; a run
+waiting for approval completed after approval across a runner restart, and
+across a `pg_dump` and restore into a fresh stack. There is no in-memory test:
+reproducing it needs the runner bootstrap.
+
+---
+--- a/packages/domain/src/EffectCluster/index.ts
++++ b/packages/domain/src/EffectCluster/index.ts
+@@ -24,7 +24,7 @@
+ import { makeInputGate, type InputGateShape } from "alchemy/Workers/InputGate";
+ import { decodeResult, encodeResult, payloadCodec } from "alchemy/WorkflowEncoding";
+ import type * as Cause from "effect/Cause";
+-import { ClusterSchema, DeliverAt, Entity as EffectEntity } from "effect/cluster";
++import { ClusterSchema, DeliverAt, Entity as EffectEntity, Sharding } from "effect/cluster";
+ import * as Config from "effect/Config";
+ import * as Context from "effect/Context";
+ import * as SecureRandom from "effect/crypto/SecureRandom";
+@@ -760,11 +760,13 @@
+             readonly [Workflow.Any, (payload: any, id: string) => Effect.Effect<any, any, any>]
+           >
+         >([]);
++        const joined = yield* Deferred.make<Sharding.Sharding["Service"]>();
+         // Sagas register while the model's Layer builds, before the runner
+         // joins the cluster: hold them until then, then run every call on its engine.
+         yield* runner.value.host(
+           hosted,
+           Effect.gen(function* () {
++            yield* Deferred.succeed(joined, yield* Sharding.Sharding);
+             const clusterEngine = yield* WorkflowEngine.WorkflowEngine;
+             for (const [workflow, execute] of yield* Ref.get(registrations))
+               yield* clusterEngine.register(workflow as never, execute as never);
+@@ -802,9 +804,21 @@
+             Effect.flatMap(started, (engine) => engine.scheduleClock(placed(workflow), opts)),
+         });
+         // Inside the cluster, calls route through Effect Cluster itself.
+-        const self = remote(
+-          makeNamespace(objects as never, { url: "", token: "", service: "" }) as never,
+-        );
++        const inCluster = makeNamespace(objects as never, { url: "", token: "", service: "" });
++        // A call from a fiber the model's Layer started here (a poller, a
++        // consumer) runs without the runner's Sharding, which arrives only
++        // once the runner joins: give it that one, or it goes to a gateway
++        // this runner has no URL for.
++        const self = remote({
++          getByName: (id: string) =>
++            Effect.flatMap(Effect.serviceOption(Sharding.Sharding), (current) =>
++              Option.isSome(current)
++                ? inCluster.getByName(id)
++                : Effect.flatMap(Deferred.await(joined), (sharding) =>
++                    Effect.provideService(inCluster.getByName(id), Sharding.Sharding, sharding),
++                  ),
++            ),
++        } as never);
+         const host: Host = {
+           declare: ({ modelName }, cls, impl: ObjectImpl) =>
+             Effect.sync(() => {

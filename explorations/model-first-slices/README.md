@@ -17,11 +17,12 @@ system alongside people?
 
 ## Next Open Question
 
-The graduation gate has one open item: conformance on the Postgres swarm host, which was run and
-fails three cases on two upstream defects (`research/13`, upstream issues 1 and 2). The packet
-cannot graduate until those are fixed upstream and the suite is re-run. Next: the operator decides
-whether to file the issues written out in `research/13` (none is filed), and whether a fifth draft
-of the artifact body is wanted now. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
+Wire `@effect/tsgo` into the prototype and clear every Effect diagnostic (operator request,
+2026-11-13); fix the review saga so a refused report is recorded and its reservation released.
+Then the operator decides: whether recovery after a killed runner may wait out the 60-second
+lease; whether the lost write (D38) is patched locally or only filed upstream; whether to open the
+two upstream pull requests saved under the prototype's `notes/upstream/`; and whether a pass with
+local patches counts toward the D16 gate. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
 
 ## Read This First
 
@@ -33,6 +34,10 @@ of the artifact body is wanted now. [`BRIEF.md`](./BRIEF.md) has not been confir
 
 ## Trail
 
+- 2026-11-13: phase 6 patched two library defects locally and reran conformance: fifteen of
+  eighteen cases pass, and a new timing reproduced the lost write D38 describes. Notes in
+  `research/14`. The Effect language-service rules were found never to have run on the prototype;
+  wiring `@effect/tsgo` and clearing its diagnostics is the next task.
 - 2026-11-13: phase 5 ran on a local Docker swarm and was torn down. Upstream's ten Domain cases
   pass; three of the prototype's eight fail on two upstream defects (a killed runner strands its
   outbox; a runner cannot read a stream). D5 verdict: not yet. Notes in `research/13`.

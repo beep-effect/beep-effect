@@ -3,7 +3,7 @@
 <!-- Generated from proofs/Proofs.data.ts by scripts/proofs.ts. Do not edit: `bun run proofs`
      rewrites it, and `bun run proofs --check` fails on drift. -->
 
-Every invariant this prototype enforces (D8): 27 entries. Mechanical laws run in
+Every invariant this prototype enforces (D8): 28 entries. Mechanical laws run in
 `bun run check`, `bun run test` and `bun run generated:check`; semantic questions stay with a
 reviewer who did not write the change.
 
@@ -229,6 +229,16 @@ Generated files are never edited: handler registries, the web bindings and this 
 - **Gaps:** None known.
 - **Left to a reviewer:** Nothing mechanical.
 
+### drain-lease-takeover
+
+A queue or projection drain that finds its lease held comes back just after the lease expires, so rows a dead drain left are delivered; while live drains keep taking the lease it comes back once per lease, not in a loop.
+
+- **Checker:** `conformance/test/StrandedDrain.test.ts`, `conformance/test/SimHost.ts`, `patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch`
+- **Reads:** An in-process Durable Object host over the patched library, with a TestClock and a lease written as a dead instance leaves it; the view, the stream and lease reads.
+- **Assumes:** The lease row is what a runner killed mid-drain leaves; the in-process alarm stands in for a host's.
+- **Gaps:** The cluster's wake delivery latency is not modelled (it adds seconds after the lease on Effect Cluster).
+- **Left to a reviewer:** Whether waiting out the lease is acceptable, or the lease should follow shard ownership.
+
 ### cluster-upstream-conformance
 
 The host passes upstream's ten Domain conformance cases, with the vendored conformance model on the stack's pool.
@@ -238,7 +248,7 @@ The host passes upstream's ten Domain conformance cases, with the vendored confo
 - **Assumes:** The vendored files match upstream at 33c10dd except import paths.
 - **Gaps:** Two runners on one workstation; no network partitions.
 - **Left to a reviewer:** Nothing mechanical.
-- **Needs a live stack:** run with `bun run conformance` against a deployed stage.
+- **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
 ### cluster-idempotent-sends
 
@@ -249,7 +259,7 @@ On the cluster, a command sent twice, or retried after a lost response, under on
 - **Assumes:** The client's timeout stands in for a lost response.
 - **Gaps:** Retries from another client, after the receipt's retention (none exists), are not covered.
 - **Left to a reviewer:** Nothing mechanical.
-- **Needs a live stack:** run with `bun run conformance` against a deployed stage.
+- **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
 ### cluster-faults
 
@@ -257,10 +267,10 @@ A runner killed after a commit, a projection batch cut by a crash, a grant revok
 
 - **Checker:** `conformance/test/Own.conformance.ts`
 - **Reads:** The front's Apis, the runs-state route, and the cluster database through `docker exec psql`.
-- **Assumes:** `docker kill` of every runner models a crash; timing is not controlled, so a case may not hit its window.
-- **Gaps:** See notes/phase-5.md: kill-after-commit fails (stranded outbox). The projection window is approximated on the cluster.
+- **Assumes:** `docker kill` of every runner models a crash. The projection crash and the revocation are placed by a row lock held from a session of the conformance's own (phase 6); the kill after a commit is not timed.
+- **Gaps:** See notes/phase-6.md. With the patched library the kill-after-commit reactions happen once, after the dead drain's 60 s lease, which is later than the case's view read waits, so the case still fails as written. A revocation between two hops of a running chain is not recorded on the claim (the review saga ends on `RunRefused`).
 - **Left to a reviewer:** Whether each fault was really exercised (the evidence log says).
-- **Needs a live stack:** run with `bun run conformance` against a deployed stage.
+- **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
 ### cluster-two-runners
 
@@ -268,10 +278,10 @@ Two runners never both commit to one instance (D38): a runner paused past its sh
 
 - **Checker:** `conformance/test/Own.conformance.ts`, `conformance/src/TwoRunners.model.ts`
 - **Reads:** The slot's stored events in alchemy_domain_objects before and after unpausing.
-- **Assumes:** `docker pause` freezes the runner's shard-lock refresh as a long GC pause or partition would.
-- **Gaps:** One timing; not a model-checked proof.
+- **Assumes:** `docker pause` freezes the runner's shard-lock refresh as a long GC pause or partition would; a row lock holds the stale runner inside its commit for the second timing.
+- **Gaps:** Two timings; not a model-checked proof. The second (paused inside the commit) overwrote the stale runner's acknowledged event: D38 is open (notes/phase-6.md).
 - **Left to a reviewer:** Whether the observed outcome is acceptable for every aggregate.
-- **Needs a live stack:** run with `bun run conformance` against a deployed stage.
+- **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
 ### cluster-backup-restore
 
@@ -279,10 +289,10 @@ A pg_dump taken while a run waits for approval restores into a fresh stack with 
 
 - **Checker:** `conformance/test/Restore.conformance.ts`
 - **Reads:** The seeded expectations file and the restored stack through the front.
-- **Assumes:** Runners are scaled to zero around the dump and the restore.
+- **Assumes:** Runners are scaled to zero around the dump and the restore. Scheduled work due while the stack is down is exercised only when the dump lands before it is due (phase 5 did; phase 6 did not).
 - **Gaps:** A volume-level restore (which needs the matching Alchemy state) is not exercised.
 - **Left to a reviewer:** What must be retained with a backup besides the database.
-- **Needs a live stack:** run with `bun run conformance` against a deployed stage.
+- **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
 ## Outcome coverage gaps
 

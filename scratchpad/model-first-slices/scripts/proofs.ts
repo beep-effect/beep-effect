@@ -29,7 +29,7 @@ const render = Effect.gen(function* () {
       `- **Assumes:** ${proof.assumptions}`,
       `- **Gaps:** ${proof.gaps}`,
       `- **Left to a reviewer:** ${proof.reviewer}`,
-      ...(proof.live === true ? ["- **Needs a live stack:** run with `bun run conformance` against a deployed stage."] : []),
+      ...(proof.live === true ? ["- **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README)."] : []),
     ].join("\n"),
   );
   return [

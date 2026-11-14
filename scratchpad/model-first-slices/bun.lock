@@ -94,6 +94,7 @@
         "@proto/authority-host": "workspace:*",
         "@proto/party-contract": "workspace:*",
         "@proto/runs-contract": "workspace:*",
+        "alchemy": "2.0.0-beta.87",
         "vitest": "5.0.4",
       },
     },
@@ -267,6 +268,9 @@
         "vitest": "5.0.4",
       },
     },
+  },
+  "patchedDependencies": {
+    "@alchemy.run/domain@2.0.0-beta.87": "patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch",
   },
   "overrides": {
     "effect": "4.1.4",

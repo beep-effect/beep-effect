@@ -43,6 +43,43 @@ export const psql = (query: string) =>
     docker("exec", ids[0] ?? "", "psql", "-U", "postgres", "-d", "cluster", "-At", "-F", "|", "-c", query),
   );
 
+// Phase 6: a row lock held from a session of the conformance's own, so a case can stop a write at
+// a chosen point (a projection's checkpoint, a run's next commit, a commit already begun) without
+// changing the model or the library. The lock changes no data, and is released by ending that
+// session.
+const LOCK_APP = "mfs-lock";
+
+/**
+ * In the background: wait, server side every 10 ms, until `ready` (a query) returns a row; then
+ * lock the rows `rows` (a query on `alchemy_domain_objects`) FOR UPDATE and hold them until
+ * {@link releaseLock}, or for `seconds`. Gives up after two minutes if `ready` never holds.
+ */
+export const holdLock = (ready: string, rows: string, seconds = 300) =>
+  Effect.flatMap(containersOf(process.env.POSTGRES_SERVICE ?? ""), (ids) =>
+    docker(
+      "exec", "-e", `PGAPPNAME=${LOCK_APP}`, ids[0] ?? "", "psql", "-U", "postgres", "-d", "cluster", "-At", "-c",
+      `BEGIN; DO $$ DECLARE deadline timestamptz := clock_timestamp() + interval '120 seconds'; BEGIN LOOP EXIT WHEN EXISTS (${ready}); IF clock_timestamp() > deadline THEN RAISE EXCEPTION 'never ready'; END IF; PERFORM pg_sleep(0.01); END LOOP; END $$; ${rows} FOR UPDATE; SELECT pg_sleep(${seconds}); ROLLBACK;`,
+    ),
+  ).pipe(Effect.exit, Effect.forkChild);
+
+/** How many table locks the lock session holds for its FOR UPDATE: "1" once it holds the rows. */
+export const lockHeld = psql(
+  `SELECT count(*) FROM pg_locks k JOIN pg_stat_activity a ON a.pid = k.pid WHERE a.application_name = '${LOCK_APP}' AND k.mode = 'RowShareLock'`,
+);
+
+/** The backends waiting on the lock session, with what they run. */
+export const blockedByLock = psql(
+  `SELECT a.pid, a.state, left(a.query, 120) FROM pg_stat_activity a, pg_stat_activity l WHERE l.application_name = '${LOCK_APP}' AND l.pid = ANY(pg_blocking_pids(a.pid))`,
+);
+
+/** End the backends waiting on the lock session, as a crash ends their connections. */
+export const endBlocked = psql(
+  `SELECT pg_terminate_backend(a.pid) FROM pg_stat_activity a, pg_stat_activity l WHERE l.application_name = '${LOCK_APP}' AND l.pid = ANY(pg_blocking_pids(a.pid))`,
+);
+
+/** End the lock session: its transaction rolls back, and the rows are free. */
+export const releaseLock = psql(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = '${LOCK_APP}'`);
+
 /** GET a route of the front, as JSON. */
 export const get = <T>(path: string) =>
   Effect.gen(function* () {
@@ -66,15 +103,23 @@ export const eventually = <A, E, R>(read: Effect.Effect<A, E, R>, until: (a: A) 
     Effect.filterOrFail(until, (last) => new Error(`never held; last: ${JSON.stringify(last)}`)),
   );
 
+/**
+ * Kill every runner container, run `afterKill` (phase 6: end what a crash ends in Postgres), then
+ * wait until swarm has two running again and they have taken their shards.
+ */
+export const killRunnersThen = <A, E, R>(afterKill: Effect.Effect<A, E, R>) =>
+  Effect.gen(function* () {
+    const before = yield* containersOf(runnerService);
+    yield* docker("kill", ...before);
+    const after = yield* afterKill;
+    yield* eventually(containersOf(runnerService), (ids) => ids.length === 2 && A.every(ids, (id) => !A.contains(before, id)), 240);
+    // The new runners must join the cluster and take their shards.
+    yield* Effect.sleep("15 seconds");
+    return { before, after };
+  });
+
 /** Kill every runner container, then wait until swarm has two running again and the front answers. */
-export const killRunners = Effect.gen(function* () {
-  const before = yield* containersOf(runnerService);
-  yield* docker("kill", ...before);
-  yield* eventually(containersOf(runnerService), (ids) => ids.length === 2 && A.every(ids, (id) => !A.contains(before, id)), 240);
-  // The new runners must join the cluster and take their shards.
-  yield* Effect.sleep("15 seconds");
-  return before;
-});
+export const killRunners = Effect.map(killRunnersThen(Effect.void), ({ before }) => before);
 
 /** The two contract clients, over the front. */
 export const clients = Effect.gen(function* () {

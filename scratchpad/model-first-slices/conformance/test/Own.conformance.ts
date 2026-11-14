@@ -8,7 +8,29 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
-import { clients, containersOf, docker, eventually, fresh, get, human, issue, killRunners, psql, revoke, runnerService, runState, services } from "./Stack.ts";
+import * as Str from "effect/String";
+import {
+  blockedByLock,
+  clients,
+  containersOf,
+  docker,
+  endBlocked,
+  eventually,
+  fresh,
+  get,
+  holdLock,
+  human,
+  issue,
+  killRunners,
+  killRunnersThen,
+  lockHeld,
+  psql,
+  releaseLock,
+  revoke,
+  runnerService,
+  runState,
+  services,
+} from "./Stack.ts";
 
 // The prototype's own conformance cases (phase 5, D5, D16), against the deployed stack over its
 // Apis. Each case records its evidence with console.log; a failure is a finding, not a retry.
@@ -105,10 +127,26 @@ live("a projection batch cut by a runner crash is redelivered and the Postgres d
   const { org, r } = yield* setup;
   const { intake, reviewer } = yield* clients;
   const party = PartyId.make(`party_${r}`);
+  // Phase 6: the crash is forced between the sink write and the checkpoint. From the moment the
+  // key accepts the input, its meta row (where the checkpoint goes) is locked: the sink writes
+  // the row, then the checkpoint waits on the lock. The runners are killed there, and the waiting
+  // checkpoint write is ended with them, as their connections would be.
+  const meta = `FROM alchemy_domain_objects WHERE object LIKE '%PartyDirectoryProjection/${party}' AND key = 'meta'`;
+  const lock = yield* holdLock(`SELECT 1 ${meta}`, `SELECT key ${meta}`);
   const registered = yield* intake.RegisterParty(party, { org, name: `Dana ${r}` }, { ...human("p_intake"), commandId: `reg_${r}` });
-  // The directory projection batches for up to a second: kill the runners inside that window.
-  const rowsAtKill = yield* psql(`SELECT count(*) FROM party_directory_rows WHERE party_id = '${party}'`).pipe(Effect.orElseSucceed(() => "no table yet"));
-  yield* killRunners;
+  const window = yield* eventually(
+    Effect.all({
+      rows: psql(`SELECT count(*) FROM party_directory_rows WHERE party_id = '${party}'`).pipe(Effect.orElseSucceed(() => "no table yet")),
+      blocked: blockedByLock,
+      meta: psql(`SELECT left(value, 160) ${meta}`),
+    }),
+    (w) => w.rows === "1" && Str.isNonEmpty(w.blocked),
+    60,
+  );
+  const rowsAtKill = window.rows;
+  const killed = yield* killRunnersThen(Effect.all({ ended: endBlocked, released: releaseLock }));
+  yield* Fiber.join(lock);
+  yield* log("projection-window", { window, killed });
   const found = yield* eventually(
     reviewer.FindParties({ org, text: r }, { ...human("p_rev"), atLeast: registered }).pipe(Effect.orElseSucceed(() => ({ entries: [] as ReadonlyArray<unknown> }))),
     (page) => page.entries.length === 1,
@@ -124,9 +162,20 @@ live("a grant revoked while a chain is in flight: the next hop is refused and re
   const { org, r } = yield* setup;
   const { intake, reviewer } = yield* clients;
   const claim = ClaimId.make(`claim_revoke_${r}`);
+  // Phase 6: the revocation lands mid-chain. Once the review run is activated (the policy's hop
+  // and the grant are done), its meta row is locked, so its next commit (the saga's reserve) waits.
+  // The propose grant is revoked while the chain is held there; then the lock is released.
+  const runObject = `FROM alchemy_domain_objects WHERE object LIKE '%AgentRun%/review:${claim}:1'`;
+  const lock = yield* holdLock(`SELECT 1 ${runObject} AND key LIKE 'event:%' AND value LIKE '%RunActivated%'`, `SELECT key ${runObject} AND key = 'meta'`);
   const receipt = yield* intake.AssertClaim(claim, assertion(org), human("p_intake"));
-  // Revoke the propose grant the review run's delegation comes from, as soon as the assertion commits.
+  yield* eventually(lockHeld, (n) => n !== "0", 120);
+  const held = yield* eventually(blockedByLock, Str.isNonEmpty, 20).pipe(Effect.orElseSucceed(() => "nothing waiting yet"));
+  const runAtRevoke = yield* psql(`SELECT key, left(value, 100) ${runObject} ORDER BY key`);
+  // Revoke the propose grant the review run's delegation comes from, while the run is held.
   const revoked = yield* revoke(`g_propose_${r}`, org);
+  yield* releaseLock;
+  yield* Fiber.join(lock);
+  yield* log("revocation-window", { held, runAtRevoke, revoked });
   const view = yield* eventually(
     reviewer.ClaimReview.get(claim, { ...human("p_rev"), atLeast: receipt }),
     (v) => (v?.notes.length ?? 0) > 0 || v?.proposal != null,
@@ -178,4 +227,49 @@ live("two runners on one instance (D38): a runner paused past its shard lock com
   const after = yield* events;
   const state = yield* get(`/tworunners/state?slot=${slot}`);
   yield* log("after-unpause", { slow: slowResult, events: after, state });
+}));
+
+// Phase 6: the same race with the stale runner stopped later, inside its commit. A first write gives
+// the slot a meta row; that row is locked before the held write's decide returns, so its commit
+// starts and waits there. The runner is paused, the lock released (the commit's statement goes
+// through in Postgres and its transaction stays open), and another runner writes after taking the
+// shard. Observational, as the case above: it records what is stored.
+live("two runners on one instance (D38), the stale runner paused inside its commit", Effect.gen(function* () {
+  const slot = fresh("slot");
+  const held = `held_${slot}`;
+  const objects = `FROM alchemy_domain_objects WHERE object LIKE '%${slot}%'`;
+  const events = psql(`SELECT key, left(value::text, 160) ${objects} ORDER BY key`);
+  yield* get(`/tworunners/write?slot=${slot}&label=first_${slot}&hold=0`);
+  const lock = yield* holdLock("SELECT 1", `SELECT key ${objects} AND key = 'meta'`);
+  yield* eventually(lockHeld, (n) => n !== "0", 40);
+  const slow = yield* Effect.forkChild(get(`/tworunners/write?slot=${slot}&label=${held}&hold=2000`).pipe(Effect.exit));
+  const runners = yield* containersOf(runnerService);
+  const owner = yield* eventually(
+    Effect.forEach(runners, (id) => Effect.map(docker("logs", id), (out) => (out.includes(`committing ${held}`) ? [id] : []))).pipe(
+      Effect.map(A.flatten),
+    ),
+    (found) => found.length === 1,
+    40,
+  );
+  const waiting = yield* eventually(blockedByLock, Str.isNonEmpty, 40);
+  const stale = owner[0]!;
+  yield* docker("pause", stale);
+  yield* releaseLock;
+  yield* Fiber.join(lock);
+  yield* Effect.sleep("1 second");
+  const pid = Str.split(waiting, "|")[0] ?? "0";
+  const inCommit = yield* psql(`SELECT state, wait_event_type, left(query, 120) FROM pg_stat_activity WHERE pid = ${pid}`);
+  yield* log("paused-in-commit", { stale, runners, waiting, inCommit });
+  // Past the shard lock's 35 s expiry, the other runner takes the shard and writes.
+  yield* Effect.sleep("45 seconds");
+  const quick = yield* get(`/tworunners/write?slot=${slot}&label=other_${slot}&hold=0`).pipe(Effect.timeout("60 seconds"), Effect.exit);
+  const before = yield* events;
+  const sessions = yield* psql(`SELECT pid, state, wait_event_type, left(query, 80) FROM pg_stat_activity WHERE datname = 'cluster' AND state <> 'idle' AND pid <> pg_backend_pid()`);
+  yield* log("in-commit-before-unpause", { quick, events: before, sessions });
+  yield* docker("unpause", stale);
+  const slowResult = yield* Fiber.join(slow).pipe(Effect.timeout("120 seconds"), Effect.exit);
+  yield* Effect.sleep("3 seconds");
+  const after = yield* events;
+  const state = yield* get(`/tworunners/state?slot=${slot}`);
+  yield* log("in-commit-after-unpause", { slow: slowResult, events: after, state });
 }));

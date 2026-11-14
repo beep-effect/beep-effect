@@ -1,0 +1,209 @@
+diff --git a/lib/DurableObjects.js b/lib/DurableObjects.js
+index ba7ba46be6cd3abc26b6d5ac3c8dfb185c4c44fd..b1e46574a6de2f019640312f6ac5d97948ccffb0 100644
+--- a/lib/DurableObjects.js
++++ b/lib/DurableObjects.js
+@@ -117,17 +117,20 @@ const queue = (name, process) => Effect.gen(function* () {
+     const state = yield* ObjectState;
+     const prefix = `${name}:`;
+     const lease = `${name}-lease`;
++    // `undefined` once taken; when another drain holds it, when that lease expires.
+     const acquire = exclusively(Effect.gen(function* () {
+         const held = yield* state.storage.get(lease);
+         if (held !== undefined && held > (yield* Clock.currentTimeMillis))
+-            return false;
++            return held;
+         yield* state.storage.put(lease, (yield* Clock.currentTimeMillis) + LEASE_MS);
+-        return true;
++        return undefined;
+     }));
+     // oxlint-disable-next-line effecttsgo/unsafe-effect-type-assertion -- the Durable Object provides its state and RuntimeContext on every event
+     const drain = Effect.gen(function* () {
+-        if (!(yield* acquire))
+-            return;
++        const held = yield* acquire;
++        // The holder may have died with the lease: come back just after it expires.
++        if (held !== undefined)
++            return yield* callback.schedule("drain", { at: held + 1, payload: {} });
+         yield* Effect.gen(function* () {
+             const rows = yield* state.storage.list({ prefix });
+             for (const [key, row] of rows) {
+@@ -834,12 +837,13 @@ const projectionObject = (kit, net, planOf, random) => Effect.gen(function* () {
+     const size = kit.options.batch?.size ?? 1;
+     const waitMillis = kit.options.batch?.waitMillis ?? 0;
+     const lease = "drain-lease";
++    // `undefined` once taken; when another drain holds it, when that lease expires.
+     const acquire = exclusively(Effect.gen(function* () {
+         const held = yield* state.storage.get(lease);
+         if (held !== undefined && held > (yield* Clock.currentTimeMillis))
+-            return false;
++            return held;
+         yield* state.storage.put(lease, (yield* Clock.currentTimeMillis) + LEASE_MS);
+-        return true;
++        return undefined;
+     }));
+     // Re-run the drain later: when a short batch has waited long enough, or after a failure.
+     let wake = () => Effect.void;
+@@ -853,8 +857,10 @@ const projectionObject = (kit, net, planOf, random) => Effect.gen(function* () {
+     });
+     // oxlint-disable-next-line effecttsgo/unsafe-effect-type-assertion -- the Durable Object provides its state and RuntimeContext on every event
+     const drain = Effect.gen(function* () {
+-        if (!(yield* acquire))
+-            return;
++        const held = yield* acquire;
++        // The holder may have died with the lease: come back just after it expires.
++        if (held !== undefined)
++            return yield* wake(held + 1);
+         const exit = yield* Effect.exit(Effect.gen(function* () {
+             while (true) {
+                 const meta = yield* readMeta;
+diff --git a/lib/EffectCluster/index.js b/lib/EffectCluster/index.js
+index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..228ee11084bc2ef843217adec05a721d54c66746 100644
+--- a/lib/EffectCluster/index.js
++++ b/lib/EffectCluster/index.js
+@@ -10,7 +10,7 @@ import { entrypointLayer, entrypointTag } from "alchemy/Runtime/Bootstrap";
+ import { RuntimeContext } from "alchemy/RuntimeContext";
+ import { makeInputGate } from "alchemy/Workers/InputGate";
+ import { decodeResult, encodeResult, payloadCodec } from "alchemy/WorkflowEncoding";
+-import { ClusterSchema, DeliverAt, Entity as EffectEntity } from "effect/cluster";
++import { ClusterSchema, DeliverAt, Entity as EffectEntity, Sharding } from "effect/cluster";
+ import * as Config from "effect/Config";
+ import * as Context from "effect/Context";
+ import * as SecureRandom from "effect/crypto/SecureRandom";
+@@ -510,9 +510,11 @@ Layer.unwrap(Effect.gen(function* () {
+             return yield* Effect.die(new HasNoPool({ message: `${name} did not finish its Construction phase.` }));
+         }
+         const registrations = yield* Ref.make([]);
++        const joined = yield* Deferred.make();
+         // Sagas register while the model's Layer builds, before the runner
+         // joins the cluster: hold them until then, then run every call on its engine.
+         yield* runner.value.host(hosted, Effect.gen(function* () {
++            yield* Deferred.succeed(joined, yield* Sharding.Sharding);
+             const clusterEngine = yield* WorkflowEngine.WorkflowEngine;
+             for (const [workflow, execute] of yield* Ref.get(registrations))
+                 yield* clusterEngine.register(workflow, execute);
+@@ -531,7 +533,16 @@ Layer.unwrap(Effect.gen(function* () {
+             scheduleClock: (workflow, opts) => Effect.flatMap(started, (engine) => engine.scheduleClock(placed(workflow), opts)),
+         });
+         // Inside the cluster, calls route through Effect Cluster itself.
+-        const self = remote(makeNamespace(objects, { url: "", token: "", service: "" }));
++        const inCluster = makeNamespace(objects, { url: "", token: "", service: "" });
++        // A call from a fiber the model's Layer started here (a poller, a
++        // consumer) runs without the runner's Sharding, which arrives only
++        // once the runner joins: give it that one, or it goes to a gateway
++        // this runner has no URL for.
++        const self = remote({
++            getByName: (id) => Effect.flatMap(Effect.serviceOption(Sharding.Sharding), (current) => Option.isSome(current)
++                ? inCluster.getByName(id)
++                : Effect.flatMap(Deferred.await(joined), (sharding) => Effect.provideService(inCluster.getByName(id), Sharding.Sharding, sharding))),
++        });
+         const host = {
+             declare: ({ modelName }, cls, impl) => Effect.sync(() => {
+                 classes.set(className(modelName, cls), impl);
+diff --git a/src/DurableObjects.ts b/src/DurableObjects.ts
+index 9ed59d4809d6a0e7aae0e6035f6c65b8090a99c9..62c91a814193c64efbae950b860e4a67b4ee5a86 100644
+--- a/src/DurableObjects.ts
++++ b/src/DurableObjects.ts
+@@ -339,17 +339,21 @@ const queue = <Row>(name: string, process: (row: Row) => Effect.Effect<void>) =>
+     const state = yield* ObjectState;
+     const prefix = `${name}:`;
+     const lease = `${name}-lease`;
++    // `undefined` once taken; when another drain holds it, when that lease expires.
+     const acquire = exclusively(
+       Effect.gen(function* () {
+         const held = yield* state.storage.get<number>(lease);
+-        if (held !== undefined && held > (yield* Clock.currentTimeMillis)) return false;
++        if (held !== undefined && held > (yield* Clock.currentTimeMillis)) return held;
+         yield* state.storage.put(lease, (yield* Clock.currentTimeMillis) + LEASE_MS);
+-        return true;
++        return undefined;
+       }),
+     );
+     // oxlint-disable-next-line effecttsgo/unsafe-effect-type-assertion -- the Durable Object provides its state and RuntimeContext on every event
+     const drain: Effect.Effect<void> = Effect.gen(function* () {
+-      if (!(yield* acquire)) return;
++      const held = yield* acquire;
++      // The holder may have died with the lease: come back just after it expires.
++      if (held !== undefined)
++        return yield* callback.schedule("drain", { at: held + 1, payload: {} });
+       yield* Effect.gen(function* () {
+         const rows = yield* state.storage.list<Row>({ prefix });
+         for (const [key, row] of rows) {
+@@ -1280,12 +1284,13 @@ const projectionObject = (
+     const size = kit.options.batch?.size ?? 1;
+     const waitMillis = kit.options.batch?.waitMillis ?? 0;
+     const lease = "drain-lease";
++    // `undefined` once taken; when another drain holds it, when that lease expires.
+     const acquire = exclusively(
+       Effect.gen(function* () {
+         const held = yield* state.storage.get<number>(lease);
+-        if (held !== undefined && held > (yield* Clock.currentTimeMillis)) return false;
++        if (held !== undefined && held > (yield* Clock.currentTimeMillis)) return held;
+         yield* state.storage.put(lease, (yield* Clock.currentTimeMillis) + LEASE_MS);
+-        return true;
++        return undefined;
+       }),
+     );
+     // Re-run the drain later: when a short batch has waited long enough, or after a failure.
+@@ -1300,7 +1305,9 @@ const projectionObject = (
+     });
+     // oxlint-disable-next-line effecttsgo/unsafe-effect-type-assertion -- the Durable Object provides its state and RuntimeContext on every event
+     const drain: Effect.Effect<void> = Effect.gen(function* () {
+-      if (!(yield* acquire)) return;
++      const held = yield* acquire;
++      // The holder may have died with the lease: come back just after it expires.
++      if (held !== undefined) return yield* wake(held + 1);
+       const exit = yield* Effect.exit(
+         Effect.gen(function* () {
+           while (true) {
+diff --git a/src/EffectCluster/index.ts b/src/EffectCluster/index.ts
+index a5de09720412654d192363a291658b6778a51b47..200979354421e3c8d0f020e814598ccea10678f3 100644
+--- a/src/EffectCluster/index.ts
++++ b/src/EffectCluster/index.ts
+@@ -24,7 +24,7 @@ import { RuntimeContext } from "alchemy/RuntimeContext";
+ import { makeInputGate, type InputGateShape } from "alchemy/Workers/InputGate";
+ import { decodeResult, encodeResult, payloadCodec } from "alchemy/WorkflowEncoding";
+ import type * as Cause from "effect/Cause";
+-import { ClusterSchema, DeliverAt, Entity as EffectEntity } from "effect/cluster";
++import { ClusterSchema, DeliverAt, Entity as EffectEntity, Sharding } from "effect/cluster";
+ import * as Config from "effect/Config";
+ import * as Context from "effect/Context";
+ import * as SecureRandom from "effect/crypto/SecureRandom";
+@@ -760,11 +760,13 @@ export const layerEntities = <PoolReq>(
+             readonly [Workflow.Any, (payload: any, id: string) => Effect.Effect<any, any, any>]
+           >
+         >([]);
++        const joined = yield* Deferred.make<Sharding.Sharding["Service"]>();
+         // Sagas register while the model's Layer builds, before the runner
+         // joins the cluster: hold them until then, then run every call on its engine.
+         yield* runner.value.host(
+           hosted,
+           Effect.gen(function* () {
++            yield* Deferred.succeed(joined, yield* Sharding.Sharding);
+             const clusterEngine = yield* WorkflowEngine.WorkflowEngine;
+             for (const [workflow, execute] of yield* Ref.get(registrations))
+               yield* clusterEngine.register(workflow as never, execute as never);
+@@ -802,9 +804,21 @@ export const layerEntities = <PoolReq>(
+             Effect.flatMap(started, (engine) => engine.scheduleClock(placed(workflow), opts)),
+         });
+         // Inside the cluster, calls route through Effect Cluster itself.
+-        const self = remote(
+-          makeNamespace(objects as never, { url: "", token: "", service: "" }) as never,
+-        );
++        const inCluster = makeNamespace(objects as never, { url: "", token: "", service: "" });
++        // A call from a fiber the model's Layer started here (a poller, a
++        // consumer) runs without the runner's Sharding, which arrives only
++        // once the runner joins: give it that one, or it goes to a gateway
++        // this runner has no URL for.
++        const self = remote({
++          getByName: (id: string) =>
++            Effect.flatMap(Effect.serviceOption(Sharding.Sharding), (current) =>
++              Option.isSome(current)
++                ? inCluster.getByName(id)
++                : Effect.flatMap(Deferred.await(joined), (sharding) =>
++                    Effect.provideService(inCluster.getByName(id), Sharding.Sharding, sharding),
++                  ),
++            ),
++        } as never);
+         const host: Host = {
+           declare: ({ modelName }, cls, impl: ObjectImpl) =>
+             Effect.sync(() => {

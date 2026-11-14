@@ -211,6 +211,10 @@ gate, until P3, P4 and P6 pass.
 
 ### 2. Reading a stream (or a view page) from code running on a runner fails with `InvalidUrl`
 
+> Corrected in `notes/phase-6.md`: the cause is not reads. Any call (a command too) from a fiber
+> without `Sharding` in context, such as one a model's Layer forks on a runner, goes to the gateway
+> with the empty URL. The pull request text is `notes/upstream/02-runner-background-calls.patch`.
+
 - **Package:** `@alchemy.run/domain` 2.0.0-beta.87, `src/EffectCluster/index.ts:792-795`.
   - In runner mode the platform's namespace is `makeNamespace(objects, { url: "", token: "",
     service: "" })`.

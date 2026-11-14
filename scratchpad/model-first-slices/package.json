@@ -22,7 +22,7 @@
   ],
   "scripts": {
     "check": "tsc --noEmit -p shared/kernel && tsc --noEmit -p shared/contract-kit && tsc --noEmit -p shared/tooling && tsc --noEmit -p party/contract && tsc --noEmit -p party/model && tsc --noEmit -p party/host && tsc --noEmit -p party/web && tsc --noEmit -p authority/contract && tsc --noEmit -p authority/model && tsc --noEmit -p authority/host && tsc --noEmit -p runs/contract && tsc --noEmit -p runs/model && tsc --noEmit -p runs/host && tsc --noEmit -p apps/practice && tsc --noEmit -p conformance && tsc --noEmit -p scripts",
-    "test": "rm -rf node_modules/.cache/proto-outcomes && bun run --cwd shared/tooling test && bun run --cwd party/contract test && bun run --cwd runs/contract test && bun run --cwd party/model test && bun run --cwd authority/model test && bun run --cwd runs/model test && bun run --cwd authority/host test && bun run --cwd runs/host test && bun run --cwd party/host test && bun run --cwd party/web test && bun run --cwd apps/practice test && bun scripts/outcomes.ts --check",
+    "test": "rm -rf node_modules/.cache/proto-outcomes && bun run --cwd shared/tooling test && bun run --cwd party/contract test && bun run --cwd runs/contract test && bun run --cwd party/model test && bun run --cwd authority/model test && bun run --cwd runs/model test && bun run --cwd authority/host test && bun run --cwd runs/host test && bun run --cwd party/host test && bun run --cwd party/web test && bun run --cwd apps/practice test && bun run --cwd conformance test && bun scripts/outcomes.ts --check",
     "handlers": "bun run --cwd party/model handlers && bun run --cwd authority/model handlers && bun run --cwd runs/model handlers",
     "handlers:check": "bun run --cwd party/model handlers --check && bun run --cwd authority/model handlers --check && bun run --cwd runs/model handlers --check",
     "bindings": "bun run --cwd party/web bindings",
@@ -40,5 +40,8 @@
   },
   "overrides": {
     "effect": "4.1.4"
+  },
+  "patchedDependencies": {
+    "@alchemy.run/domain@2.0.0-beta.87": "patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch"
   }
 }

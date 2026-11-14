@@ -715,3 +715,37 @@ local state are gone, and containers, images, volumes and networks match the bas
 
 D16 gate: seven items proven in memory; conformance on the Postgres swarm host is run and not
 passing, waiting on the two upstream defects.
+
+## 2026-11-13 — Phase 6: two local patches, and the conformance suite again
+
+The operator approved local patches for the two defects phase 5 found, and a second swarm session.
+Notes are in `research/14-rework-phase6-notes.md`. The patch is applied only through the
+prototype's own `patchedDependencies`; the monorepo root is unchanged. In memory, 14 packages
+type-check and 136 tests pass with the patch applied, re-run by the orchestrating session. Teardown
+matched a second Docker baseline.
+
+- **Patch 1, drain takeover.** A drain that finds its lease held reschedules itself for just after
+  the lease expires. The same defect was in the projection drain, so both places are patched. An
+  in-memory test fails without the patch and passes with it.
+- **Patch 2, calls from a runner's background fibers.** Phase 5's diagnosis was wrong: the fault
+  was not stream reads. Any call from a background fiber on a runner, commands included, fell back
+  to a gateway with an empty URL. The patch hands those calls the runner's cluster connection.
+- Both are saved as diffs against upstream's source under the prototype's `notes/upstream/`.
+  Nothing is filed or opened upstream.
+
+Conformance, eighteen cases plus one new timing:
+
+- Fifteen pass: upstream's ten, the duplicate and lost-response cases, the projection crash (now
+  forced exactly between the sink write and the checkpoint), the waiting run across a runner
+  restart, two runners paused during `decide`, and backup and restore.
+- **Runner killed after a commit: fails as written.** Every reaction happens exactly once, but only
+  after the dead drain's 60-second lease, and the case's read gives up first.
+- **Revocation mid-chain: fails on a defect in the prototype's own model.** The review saga catches
+  only one refusal; a refused settle fails the workflow, records nothing and leaves 40 budget units
+  reserved. To be fixed in the prototype.
+- **Two runners, stale runner paused inside its commit (new case): a lost write.** The stale
+  runner's acknowledged event 2 was overwritten by the other runner's event 2. This is the missing
+  version check recorded under D38, now reproduced. It is unpatched, as D38 rules.
+
+D5 verdict: still not yet. No host port was published this time: the conformance driver ran as a
+one-shot service on the stack's own network.
