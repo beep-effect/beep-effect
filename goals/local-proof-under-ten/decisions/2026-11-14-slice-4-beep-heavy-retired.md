@@ -12,6 +12,6 @@ Slice 4 lands PERIL-10's documentation half. `beep-heavy` is a slot wrapper inst
 - `docs/runbooks/practice-m365-contacts-seeding.md`: the two single-file live-test commands run without the `beep-heavy` prefix.
 - `goals/design-figure-review-loop/PLAN.md`: its execution note no longer routes heavy commands through `beep-heavy`.
 
-Left unchanged: `goals/oppold-corpus-salvage-restoration` (paused; its mentions are dated decision records and the frozen launch protocol of its paused extraction wave, which that goal revisits when it resumes); `goals/declaration-only-builds/ops/measure-build-baseline.ts` (a completed goal's script, where the mention is a usage comment); and every history, decisions and research file. The wrapper itself (`~/.local/bin/beep-heavy`) and the personal memory notes that still describe it live outside the repo and are the operator's to retire.
+Left unchanged: `goals/oppold-corpus-salvage-restoration` (paused; its mentions are dated decision records and the frozen launch protocol of its paused extraction wave, which that goal revisits when it resumes); `goals/declaration-only-builds/ops/measure-build-baseline.ts` (a completed goal's script, where the mention is a usage comment); and every history, decisions and research file. The wrapper script itself and the personal memory notes that still describe it live outside the repo and are the operator's to retire.
 
 PERIL-10 is now fully landed (slice 2 for the status summary and archive, slice 4 for the documentation).
