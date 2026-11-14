@@ -136,9 +136,9 @@ export const setupCitationTokenizer = Effect.fn("TokenizerTest.setup")(function*
   const cwd = yield* fs.makeTempDirectoryScoped({ prefix: "citation-tokenizer-" });
   const runtime = yield* makeCitationRegexTestRuntime(kind, cwd);
 
-  const admission = yield* makeCitationOperationAdmission(limits);
   const observed = yield* makeCitationObservedSpawner();
   const timer = yield* makeCitationNativeManualClock(limits.regexDeadline);
+  const admission = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideService(Clock.Clock, timer.clock));
   const tokenizer = yield* makeCitationTokenizer(limits, runtime, configuration).pipe(
     Effect.flatMap((stage) =>
       makeCitationTestScaffoldBinding(limits).pipe(
@@ -149,7 +149,7 @@ export const setupCitationTokenizer = Effect.fn("TokenizerTest.setup")(function*
     Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(ChildProcessSpawner, observed.spawner)
   );
-  return { tokenizer, admission, observed, limits };
+  return { tokenizer, admission, observed, limits, clock: timer.clock };
 });
 /** @internal @category testing @since 0.0.0 */
 export const assertCitationTokenizerCase = Effect.fn("TokenizerTest.case")(function* (

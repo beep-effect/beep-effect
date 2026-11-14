@@ -14,9 +14,7 @@ import { CitationOperationAdmission } from "./Admission.ts";
 import { makeCitationNativeLane } from "./NativeLane.ts";
 import { CitationRegexOperation, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { makeCitationTextBudget } from "./TextBudget.ts";
-import type { CitationTextBudget } from "@beep/law-practice-use-cases/server";
-import type * as Clock from "effect/Clock";
-import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
+import type { CitationSafetyLimitExceeded, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeLane } from "./NativeLane.ts";
 import type { CitationNativeProcessStarter } from "./NativeProcess.ts";
 import type { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
@@ -42,21 +40,17 @@ export class CitationInvocationPolicy extends S.Opaque<CitationInvocationPolicy,
     $I.annoteSchema("CitationInvocationPolicy", { description: "Engine policy and operation label for one request." })
   )
 ) {}
-// The regex adapter preserves the evaluator identity guard; physical ownership
-// and native capacity belong exclusively to the invocation lane.
+// The cached regex adapter delegates ownership to the invocation lane;
+// evaluators check runtime identity against that lane before using the adapter.
 interface CitationInvocationRegexOwner {
-  readonly clock: Clock.Clock;
-  readonly owner: CitationNativeProcessStarter<
-    CitationRegexWorkerFailure | import("@beep/law-practice-use-cases/server").CitationSafetyLimitExceeded
-  >;
-  readonly spawner: ChildProcessSpawner["Service"];
+  readonly owner: CitationNativeProcessStarter<CitationRegexWorkerFailure | CitationSafetyLimitExceeded>;
 }
 /** Holding this service proves that the outer boundary admitted the request.
  *
  * **Details**
  *
  * `lane` owns native capacity and physical children. `regexOwner` retains only
- * the protocol-v2 adapter and the evaluator spawner/Clock identity guard. It
+ * the protocol-v2 adapter; evaluator runtime identity is checked against the lane. It
  * holds no separate physical owner or native lease. Every job still retires
  * before returning, while the lane retains capacity until closure or a cleaner
  * yield. Diff and Xml retain their per-request preparation objects.

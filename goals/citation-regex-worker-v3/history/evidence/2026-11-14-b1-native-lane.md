@@ -1,11 +1,15 @@
 # B1: invocation native lanes and cleaner-boundary yield
 
-Status: locally verified, in review; owner publishes after the predecessor lands.
+Status: in review as PR #3336, published by the owner. The initial receipts below
+precede publication; current hosted repairs are recorded in Hosted round 1.
 Branch: `feat/citation-native-lane`. Base: `0e2b4c42e6d` (A4).
-No push, PR, rebase, stash operation, whole-package suite or coverage run.
+No push by this implementation session, rebase, stash operation, whole-package
+suite or coverage run.
 
 `C/` below means `packages/law-practice/server/src/internal/Citation/`.
-The limits policy v2 and major changeset are in accepted commit `df7dbe7f5dc`.
+Policy v2 is recorded as breaking in the packet. This private workspace takes no
+changeset; the temporary changeset was removed by owner commit `7f6718a75ec`
+(see decision `2026-11-14-record-policy-v2-as-breaking-in-the-packet-the-private-workspace-takes-no-changeset.md`).
 The implementation follows both owner rulings; neither historical stop remains.
 
 ## Count gate
@@ -179,3 +183,42 @@ the five large serial replays, hosted CI, or remote-worker timing. The brief
 requires bounded file-level checks and quick package verification on this shared
 host. B2/B3 and publication remain with the owner; no production/hosted acceptance
 is implied by these local proofs.
+
+## Hosted round 1
+
+PR #3336 at `7f6718a75ec` exposed missed fixture and runtime-identity paths.
+The fixes keep every expected child count and refusal assertion.
+
+- HTML bytes: its two-operation policy retained only one regex slot. Set both
+  ceilings to two, satisfying policy v2 without changing production limits.
+- Tokenizer larger-budget invocation: the caller opened its invocation outside
+  the fixture spawner/Clock. Supply both. The fixture operation admission also
+  captured the old Clock before the manual Clock existed; create admission under
+  the same manual Clock used by the stage and lane.
+- Full-law metadata, including the 768-row integration replay: the raw stage
+  reused an enclosing generic invocation instead of opening one with its observed
+  spawner and fixed calendar Clock. Bind apply through the existing explicit test
+  adapter. Create metadata operation admission after the fixed calendar Clock,
+  so it cannot replace that Clock with the pre-calendar Clock inside its body.
+- Shared text budget: install the observed runtime before opening the explicit
+  24-unit invocation and provide its Context to that invocation. All budget and
+  1/1 exit assertions remain. Check capacity return after invocation Scope closes,
+  because the lane retains its unit during the request.
+- HTML case-name lifetime: source attempted the removed worker path and returned
+  spawn-failed after installation Scope closure. Retain an explicit installation
+  closed flag and return the base closed refusal before runtime comparison.
+- Review A: compare every evaluator (including the first) with the lane captured
+  spawner/Clock using matchesRuntime. Cache only the adapter; remove dead provides
+  around Effect.succeed and stale comments. Extend the zero-spawn mismatch proof
+  to first/later evaluators and a differing Clock.
+- Review B: move inline import types into top-level type imports.
+
+Focused reruns: HTML bytes 2/2; tokenizer 11/11; full-law unit 2/2; text budget
+6/6; HTML case-name 3/3; regex worker 18/18. The requested integration file passes
+1/1 (all 768 observations and its original 936/936 process receipt) in 133.29 s
+under the package integration project. No other integration cohort is launched.
+
+The service search found 67 provider files. The unit audit follows provider
+fixtures to consumers, excludes platform-layer-only imports, and runs each file
+in a separate nice-19 process with a 285-second cap. CanonicalFullSpan is reserved
+for the final run after checks. Final per-file results are appended below.

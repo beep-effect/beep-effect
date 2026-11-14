@@ -88,6 +88,7 @@ export class CitationNativeLane extends Context.Service<
   {
     readonly start: CitationNativeStart;
     readonly reserve: Effect.Effect<void, CitationNativeLaneFailure | CitationSafetyLimitExceeded>;
+    readonly matchesRuntime: (spawner: ChildProcessSpawner["Service"], clock: Clock.Clock) => boolean;
     readonly ensureOpen: Effect.Effect<void, CitationNativeLaneFailure>;
     readonly snapshot: Effect.Effect<CitationNativeLaneSnapshot>;
     readonly yieldTo: <A, E, R>(
@@ -251,6 +252,7 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
   return CitationNativeLane.of({
     start,
     reserve,
+    matchesRuntime: (spawner, clock) => spawner === nativeSpawner && clock === nativeClock,
     ensureOpen: Effect.gen(function* () {
       if (closed) return yield* CitationNativeLaneFailure.make({ reason: "closed" });
       if (poisoned) return yield* CitationNativeLaneFailure.make({ reason: "quarantined" });

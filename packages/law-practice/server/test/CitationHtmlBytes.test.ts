@@ -62,9 +62,8 @@ const load = Effect.fn("HtmlBytesTest.load")(function* () {
   expect(data.nonTextCases).toHaveLength(45);
   expect(A.filter(data.nonTextCases, (r) => r.outcome.kind === "success")).toHaveLength(6);
   expect(A.every(data.nonTextCases, (r) => r.hooks.length === 0)).toBe(true);
-  // The Python producer was removed with the repository's Python (goal python-free-repo). Its
-  // digest stays pinned in the corpus as `producerSha256`; recover the exact producer with
-  // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-html-bytes.py`.
+  // The retired producer remains recoverable from commit 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3.
+  // Its exact digest stays pinned in the corpus as producerSha256.
   return { data, strings: HashMap.fromIterable(A.map(data.artifacts, (r) => [r.sha256, r.value] as const)) };
 });
 const verify = Effect.fn("HtmlBytesTest.verify")(function* (
@@ -134,7 +133,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           const citationResult9 = yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-bytes-" });
           const workerRuntime = yield* citationHtmlWorkerTestRuntime();
           const worker = yield* makeCitationHtmlWorker(
-            { ...limits, concurrentOperations: 2 },
+            { ...limits, concurrentOperations: 2, concurrentRegexProcesses: 2 },
             { ...workerRuntime, cwd: citationResult9 }
           ).pipe(
             Effect.provideService(ChildProcessSpawner, {

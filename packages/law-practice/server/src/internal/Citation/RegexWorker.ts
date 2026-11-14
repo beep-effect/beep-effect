@@ -10,7 +10,6 @@ import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import * as Scope from "effect/Scope";
 import * as SynchronizedRef from "effect/SynchronizedRef";
 import * as Tuple from "effect/Tuple";
 import { CitationInvocation, reserveCitationInvocationText } from "./Invocation.ts";
@@ -31,6 +30,7 @@ import {
   preflightCitationRegexControlFrames,
 } from "./RegexWorkerRpc.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type * as ChildProcess from "effect/process/ChildProcess";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import type { CitationRegexEngine } from "./RegexEngine.ts";
@@ -38,13 +38,12 @@ import type { CitationRegexEngine } from "./RegexEngine.ts";
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
 /** Install the engine-constant half of the regex supervisor once per call site
  * and operation: snapshot limits and runtime, the descriptor registry, job
- * preparation, control-frame preflight, Clock, spawner and the shared native
- * admission. Each evaluation reads CitationInvocation at call time, reserves its
- * source text on the invocation budget, and uses the invocation's one physical
- * owner, created in the invocation Scope on its first evaluation with that
- * evaluator's Clock, spawner and limits. Every evaluator of one engine shares
- * them; an evaluator with a different spawner or Clock is refused with
- * `invalid-runtime` rather than spawning through the first one's. The owner's
+ * preparation, control-frame preflight, Clock and spawner. Each evaluation reads
+ * CitationInvocation at call time, reserves its source text on the invocation
+ * budget, and starts through the lane's captured runtime. An evaluator whose
+ * Clock or spawner differs from the lane's is refused with `invalid-runtime`,
+ * including the first evaluator of an invocation. Installation Scope closure
+ * refuses later evaluations with `closed`. The lane owner's
  * open/quarantine check runs before job preparation (protocol v2: one child
  * per job). Full job preflight precedes
  * payload/map allocation and native acquisition. A native timer includes
@@ -64,6 +63,12 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
   const clock = yield* Clock.Clock;
   const spawner = yield* ChildProcessSpawner;
   const digest = yield* Digest.Digest;
+  let closed = false;
+  yield* Effect.addFinalizer(() =>
+    Effect.sync(() => {
+      closed = true;
+    })
+  );
   const selected = yield* CitationRegexOperation;
   const makeRegistry = (descriptors: ReadonlyArray<CitationRegexPatternDescriptor>) =>
     makeCitationRegexDescriptorRegistry(limits, descriptors, engine).pipe(
@@ -75,15 +80,17 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
   const preparation = yield* makeCitationRegexJobPreparation(limits, reserveCitationInvocationText);
   const regexDeadline = limits.regexDeadline.pipe(Duration.toMillis, Duration.millis);
   yield* preflightCitationRegexControlFrames(limits.processMessageBytes);
-  // The physical owner captures a Scope, so it belongs to the invocation, never the
-  // engine: the request's first evaluation creates it and later ones reuse it.
+  // This cached adapter has no runtime ownership: the lane owns spawning and
+  // captures its Clock/spawner when the invocation opens.
   const ownerFor = Effect.flatMap(CitationInvocation, (invocation) => {
-    const { scope, regexOwner } = invocation;
+    if (closed) return Effect.fail(failure("closed"));
+    if (!invocation.lane.matchesRuntime(spawner, clock)) return Effect.fail(failure("invalid-runtime"));
+    const { regexOwner } = invocation;
     return SynchronizedRef.modifyEffect(regexOwner, (current) => {
       if (O.isNone(current))
         return Effect.succeed({
           ensureOpen: invocation.lane.ensureOpen.pipe(Effect.mapError((error) => failure(error.reason))),
-          start: (command: import("effect/process/ChildProcess").Command) =>
+          start: (command: ChildProcess.Command) =>
             invocation.lane.start("regex", command).pipe(
               Effect.mapBoth({
                 onFailure: (error) => (error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error),
@@ -103,16 +110,8 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
                 }),
               })
             ),
-        }).pipe(
-          Effect.provideService(Scope.Scope, scope),
-          Effect.provideService(Clock.Clock, clock),
-          Effect.provideService(ChildProcessSpawner, spawner),
-          Effect.map((owner) => Tuple.make(owner, O.some({ owner, spawner, clock })))
-        );
-      // Fail closed: never spawn through another evaluator's spawner or Clock.
-      return current.value.spawner === spawner && current.value.clock === clock
-        ? Effect.succeed(Tuple.make(current.value.owner, current))
-        : Effect.fail(failure("invalid-runtime"));
+        }).pipe(Effect.map((owner) => Tuple.make(owner, O.some({ owner }))));
+      return Effect.succeed(Tuple.make(current.value.owner, current));
     });
   });
   const evaluateWith = (registry: Effect.Success<ReturnType<typeof makeRegistry>>) =>

@@ -265,7 +265,7 @@ export const assertCitationCaseMetadataBudget = Effect.fn("CaseMetadataTest.shar
       expect(budget.maximum - used).toBe(total - 1 - spent);
     }),
     outer.setup.limits
-  ).pipe(Effect.provideService(Clock.Clock, outer.setup.timer.clock));
+  ).pipe(Effect.provideContext(outer.setup.provided));
   yield* assertCitationWorkerCompositionReleased(
     tight.setup.operation,
     tight.setup.admission,
