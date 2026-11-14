@@ -6,7 +6,9 @@ import { ReviewerContract } from "@proto/party-contract/ReviewerApi.contract";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as SecureRandom from "effect/crypto/SecureRandom";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
@@ -177,3 +179,26 @@ export const clients = Effect.gen(function* () {
     reviewer: yield* ReviewerContract.clientHttp(`${front}/reviewer`),
   };
 });
+
+/** Where a case's evidence goes (`EVIDENCE_FILE`): one timestamped JSON line per record. */
+const evidenceFile = Config.String("EVIDENCE_FILE").pipe(Config.withDefault("/dev/null"));
+const encodeEvidence = S.encodeEffect(S.fromJsonString(S.Unknown));
+
+/**
+ * Append one evidence record (phase 10): a label and its value, as JSON, after the time.
+ *
+ * **Example** (Recording what a case read)
+ * ```ts
+ * import { record } from "./Stack.ts";
+ *
+ * const recorded = record("tally", { writes: 3 });
+ * ```
+ */
+export const record = Effect.fn("record")(function* (label: string, value: unknown) {
+  const fs = yield* FileSystem.FileSystem;
+  const file = yield* evidenceFile;
+  const now = yield* DateTime.now;
+  const text = yield* encodeEvidence(value);
+  yield* fs.writeFileString(file, `${DateTime.formatIso(now)} ${label}: ${text}\n`, { flag: "a" });
+}, Effect.orDie);
+

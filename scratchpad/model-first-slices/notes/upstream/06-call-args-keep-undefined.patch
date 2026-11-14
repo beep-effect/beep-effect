@@ -1,0 +1,111 @@
+fix(domain): on Effect Cluster, a call's left-out optional arguments arrive as undefined
+
+Against alchemy `packages/domain/src` at 33c10dd (2.0.0-beta.87). Apply from the
+repository root with `git apply`; the text above the first `---` line is ignored.
+Independent of 01 to 03 and 07: no hunk overlaps theirs.
+
+## Problem
+
+On Effect Cluster, a Durable-Object-style method call is sent as one RPC,
+`Call({ method, args: JSON.stringify(args) })`, and the entity calls the method
+with `...JSON.parse(payload.args)` (`EffectCluster/index.ts`). `JSON.stringify`
+writes an `undefined` array element as `null`, so an optional parameter the
+caller left out reaches the object as `null`. On Cloudflare (structured clone)
+and in memory it arrives as `undefined`, and the object code is written for
+that.
+
+It matters where a method tests `=== undefined` or has a default parameter:
+
+- `makeNode(...).list(path, after)` (`Backfill.ts`) lists a node's children
+  only when `after === undefined`, and passes `startAfter: after` to the
+  storage, whose cluster `list` adds `AND key > ${startAfter}` whenever it is
+  not `undefined`. With `null`, every listing of the directory is empty: no
+  children, and `key > NULL` matches no row. A backfill run's root sees no
+  subtrees, both passes are done at once, and the run completes with no
+  instance scanned. A consumer added by a deploy, or rebuilt outside the
+  in-place case, never receives the history.
+- `bfStart(..., waitMillis?)` and `bfConsumerReady(..., waitMillis?)` have
+  `waitMillis = 0` defaults, which `null` skips; they behave only because
+  `null <= 0` is true.
+
+Every other call site passes defined arguments, or reads its optional one with
+`?.` or `??`, which treat `null` like `undefined`.
+
+## Change
+
+`encodeCallArgs` (`DurableObjects.ts`, beside `Stub` and `Namespace`) leaves a
+call's trailing `undefined` arguments out of the JSON array, and the cluster
+transport uses it. The object then gets fewer arguments, and the parameters it
+did not get are `undefined`, as on Cloudflare.
+
+## Why it is safe
+
+- Every optional parameter of an object method is trailing (TypeScript requires
+  it), so this covers each one. An explicit `undefined` before a defined
+  argument would still arrive as `null`; no call site passes one.
+- The wire format is unchanged: still a JSON array of the arguments, only
+  shorter. An object on older code receiving the shorter array sees the same
+  `undefined` parameters; a caller on older code still sends `null`, as now.
+- Results are not changed: they cross as `JSON.stringify(result ?? null)`, and
+  no caller tells `null` from `undefined` in a result.
+
+## Tests
+
+- In memory (an in-process host like the `simHost` in
+  `packages/integration-tests/test/Domain/DurableObjects.test.ts`, its calls
+  carrying their arguments through JSON as the cluster transport does): a
+  ledger booked three times, then a deploy that adds a view keyed by a
+  constant over it, then one more booking. With `JSON.stringify` the view ends
+  at 1 booking (only the live one); with `encodeCallArgs`, at 4.
+- On Effect Cluster with Postgres (two runners on a local swarm): restoring a
+  dump of the previous code's data under code that adds such a view, the view
+  holds every earlier write; before the change its backfill run logged
+  `subtrees=0` and the view held nothing from before the deploy.
+
+---
+--- a/packages/domain/src/DurableObjects.ts
++++ b/packages/domain/src/DurableObjects.ts
+@@ -150,6 +150,23 @@
+   readonly getByName: (name: string) => Stub;
+ }
+ 
++/**
++ * A call's arguments as JSON text, for a host whose transport carries them so
++ * (Effect Cluster's `Call` RPC). JSON writes an `undefined` array element
++ * as `null`, so an optional parameter the caller left out would reach the
++ * object as `null`, where a Durable Object call (structured clone) gives
++ * `undefined`: a `=== undefined` test or a default parameter then misreads
++ * it (the directory node's first-page cursor did). Trailing `undefined`
++ * arguments are therefore left out, and the object sees them as `undefined`.
++ * Every optional parameter is trailing; an `undefined` before a defined
++ * argument would still arrive as `null`.
++ */
++export const encodeCallArgs = (args: ReadonlyArray<unknown>): string => {
++  let end = args.length;
++  while (end > 0 && args[end - 1] === undefined) end--;
++  return JSON.stringify(args.slice(0, end));
++};
++
+ /** What an instance runs with. */
+ export type InstanceServices = ObjectState | RuntimeContext | Scope.Scope;
+ 
+--- a/packages/domain/src/EffectCluster/index.ts
++++ b/packages/domain/src/EffectCluster/index.ts
+@@ -48,6 +48,8 @@
+ import * as Socket from "effect/socket/Socket";
+ import { SqlClient } from "effect/sql/SqlClient";
+ import * as Stream from "effect/Stream";
++// A call's arguments as JSON, with its left-out optional ones still left out.
++import { encodeCallArgs } from "../DurableObjects.ts";
+ import { DurableDeferred, Workflow, WorkflowEngine } from "effect/workflow";
+ import {
+   alarmCallbacks,
+@@ -307,7 +309,7 @@
+               : (...args: ReadonlyArray<unknown>) =>
+                   Effect.flatMap(namespace.getByName(`${cls}/${key}`), (client) =>
+                     client
+-                      .Call({ method: String(method), args: JSON.stringify(args) })
++                      .Call({ method: String(method), args: encodeCallArgs(args) })
+                       .pipe(Effect.map((result) => JSON.parse(result) as unknown)),
+                   ),
+         },

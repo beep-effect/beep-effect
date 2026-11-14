@@ -58,7 +58,8 @@ const orgOf = (state: ClaimState): O.Option<OrgId> =>
  * decision generation 1 never published (decided under the old code, its
  * delivery still pending when the code changed) takes its org from the
  * claim's state, which keeps the org, and only the review runs its event
- * names; that case is logged.
+ * names; that case is logged as an error, since an upgrade that drains the
+ * old publisher first (D47) never reaches it.
  *
  * **Example** (The deployed publisher)
  * ```ts
@@ -87,7 +88,8 @@ export const claimDecisionsLive = (version: number) =>
           // A decision event exists, so the claim was asserted and has an org.
           Effect.flatMap(O.match({ onNone: () => Effect.die(`ClaimDecisions: ${claim} is decided but has no org`), onSome: Effect.succeed })),
         );
-        yield* Effect.logWarning(`ClaimDecisions: ${factId} was decided before phase 9 and never published; its review runs are the ones its event names`);
+        // An upgrade drains the old publisher first (D47), so this is unreachable there: an error.
+        yield* Effect.logError(`ClaimDecisions: ${factId} was decided before phase 9 and never published; its review runs are the ones its event names`);
         return { org, reviewRuns: runsNamedBy(event) } satisfies Scope;
       });
 

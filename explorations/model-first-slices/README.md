@@ -17,11 +17,14 @@ system alongside people?
 
 ## Next Open Question
 
-Phase 10 is building D45 to D47 (fence commits on shard ownership, patch the Effect Cluster
-backfill, drain the old publisher before an upgrade) and will rerun the cluster suite. After it,
-two things are for the operator: whether to send the patches and write-ups under the prototype's
-`notes/upstream/` (D48 holds them), and whether a pass on local patches counts toward the D16
-gate. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
+After phase 10 the backfill and upgrade cases pass on the Postgres swarm host, on five local
+patches. One invariant fails: a runner that lost its shard can still be acknowledged when a write
+queued to it runs after it resumes (D45), because the fence cannot tell its own lock session from
+another runner's. No write is lost, doubled or reordered. Open for the operator: make the fence
+exact by naming the runner's lock session, or accept ordered commits as the guarantee; whether the
+drain check's backlog reader becomes generic; when a closed stream generation stops being served;
+and whether to send the patches and write-ups under the prototype's `notes/upstream/` (D48 holds
+them). [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
 
 ## Read This First
 
@@ -33,6 +36,10 @@ gate. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
 
 ## Trail
 
+- 2026-11-14: phase 10 built D45 to D47 and reran the cluster suite. The backfill fix and the
+  drain check pass, and the new stream generation is complete. The commit fence refuses a commit
+  during which the shard changed hands, but a runner that already lost its shard can still be
+  acknowledged, so D45's invariant fails in three of five runs. D5 not met. Notes in `research/18`.
 - 2026-11-14: D45 to D48 settled phase 9's open points: fence commits on shard ownership, patch
   the backfill defect and rerun, drain the old publisher before an upgrade, hold upstream until
   the rerun. Phase 10 launched.

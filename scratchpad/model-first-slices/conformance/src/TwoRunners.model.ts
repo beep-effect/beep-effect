@@ -50,9 +50,26 @@ export class Slot extends Domain.Aggregate("Slot", {
 }) {}
 
 /**
+ * Every write to every slot, counted under one key (phase 10, D46). It is new
+ * in phase 10, so restoring phase 9's data under this code adds it over
+ * existing slots: its backfill must bring them, through the directory.
+ *
+ * @category views
+ * @since 0.0.0
+ */
+export class SlotTally extends Domain.View("SlotTally", {
+  from: [Slot],
+  key: S.Literal("all"),
+  keyOf: { Slot: () => "all" as const },
+  state: S.Struct({ writes: S.Int }),
+  initial: { writes: 0 },
+  evolve: { Written: (tally) => ({ writes: tally.writes + 1 }) },
+}) {}
+
+/**
  * The conformance-only model of the two-runners case.
  *
  * @category models
  * @since 0.0.0
  */
-export class TwoRunnersModel extends Domain.Model("TwoRunners", { aggregates: [Slot] }) {}
+export class TwoRunnersModel extends Domain.Model("TwoRunners", { aggregates: [Slot], views: [SlotTally] }) {}

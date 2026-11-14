@@ -11,6 +11,7 @@
     "./ImportGraph": "./src/ImportGraph.ts",
     "./PrimaryExport": "./src/PrimaryExport.ts",
     "./PublishedStreams": "./src/PublishedStreams.ts",
+    "./PublisherHandover": "./src/PublisherHandover.ts",
     "./RejectionClass": "./src/RejectionClass.ts",
     "./RpcParity": "./src/RpcParity.ts",
     "./SourceScan": "./src/SourceScan.ts"

@@ -10,6 +10,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Schema from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
@@ -20,6 +21,8 @@ import * as Str from "effect/String";
 // and one alarm driven by `Effect.sleep`, so a test's `TestClock` decides when callbacks fire.
 // Calls cross a JSON boundary, as Workers RPC does. Phase 9: an instance can run on more than one
 // "runner" over one storage, as two cluster runners do while a shard moves (`serveFrom`).
+// Phase 10: the shard's ownership can fence commits (`fenced`), and calls can carry their
+// arguments as the Effect Cluster transport does (`args`).
 
 /** What a test reads back from the host: how often each instance read each lease key. */
 export interface SimHost {
@@ -40,7 +43,32 @@ export interface SimHost {
   readonly serveFrom: (runner: number) => void;
   /** An instance's storage, once any runner built it. */
   readonly storageOf: (id: string) => O.Option<DurableObjects.ObjectStorage>;
+  /** The runner of each transaction on an instance that completed, in order. */
+  readonly committers: (id: string) => ReadonlyArray<number>;
 }
+
+/**
+ * How a host runs (phase 10). `fenced`: a transaction completes only if its runner still owns
+ * the instance (serves its calls) when it commits, as Effect Cluster's commit fence does;
+ * otherwise it is rolled back and dies with `ShardLost`. `args`: how a call's arguments cross:
+ * `clone` (structured clone, as Workers RPC does), `json` (as Effect Cluster's transport did:
+ * `JSON.stringify`), or `cluster` (its transport with patch 5's `encodeCallArgs`).
+ */
+export interface SimHostOptions {
+  readonly fenced?: boolean;
+  readonly args?: "clone" | "json" | "cluster";
+}
+
+const JsonArgs = Schema.fromJsonString(Schema.Unknown.pipe(Schema.Array));
+const decodeArgs = Schema.decodeUnknownEffect(JsonArgs);
+const encodeArgs = Schema.encodeEffect(JsonArgs);
+
+/** A call's arguments as they arrive, per `SimHostOptions.args`. */
+const crossArgs = (mode: NonNullable<SimHostOptions["args"]>, args: ReadonlyArray<unknown>): Effect.Effect<ReadonlyArray<unknown>> =>
+  (mode === "clone"
+    ? Effect.sync(() => structuredClone(args))
+    : Effect.flatMap(mode === "json" ? encodeArgs(args) : Effect.sync(() => DurableObjects.encodeCallArgs(args)), decodeArgs)
+  ).pipe(Effect.orDie);
 
 const readKey = (id: string, key: string) => `${id}#${key}`;
 
@@ -129,13 +157,53 @@ const makeStorage = (id: string, reads: MutableHashMap.MutableHashMap<string, nu
  * console.log(sim.ids());
  * ```
  */
-export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<string, unknown>>): SimHost => {
+export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<string, unknown>>): SimHost =>
+  makeSimHostWith({})(seed);
+
+/**
+ * An in-process host run per `options` (phase 10): fenced commits, or arguments crossing as the
+ * Effect Cluster transport carries them.
+ *
+ * **Example** (A host that fences commits on the serving runner)
+ *
+ * ```ts
+ * import { makeSimHostWith } from "./SimHost.ts";
+ *
+ * const sim = makeSimHostWith({ fenced: true })(() => ({}));
+ * sim.serveFrom(1);
+ * ```
+ */
+export const makeSimHostWith = (options: SimHostOptions) => (seed: (id: string, now: number) => Readonly<Record<string, unknown>>): SimHost => {
   const classes = MutableHashMap.empty<string, DurableObjects.ObjectImpl>();
   const instances = MutableHashMap.empty<string, Effect.Effect<Record<string, Method>>>();
   const reads = MutableHashMap.empty<string, number>();
   const scopes = MutableHashMap.empty<string, Scope.Closeable>();
   const storages = MutableHashMap.empty<string, DurableObjects.ObjectStorage>();
+  const commits = MutableHashMap.empty<string, ReadonlyArray<number>>();
   let serving = 0;
+
+  /** The storage a runner sees: its transactions are logged, and fenced when the host is. */
+  const runnerStorage = (storage: DurableObjects.ObjectStorage, id: string, runner: number): DurableObjects.ObjectStorage => ({
+    ...storage,
+    transaction: (effect) =>
+      storage
+        .transaction(
+          effect.pipe(
+            Effect.tap(() =>
+              options.fenced === true && serving !== runner
+                ? Effect.die(new DurableObjects.ShardLost({ id, shard: `sim:${runner}` }))
+                : Effect.void,
+            ),
+          ),
+        )
+        .pipe(
+          Effect.tap(() =>
+            Effect.sync(() =>
+              MutableHashMap.modifyAt(commits, id, (log) => O.some(A.append(O.getOrElse(log, A.empty<number>), runner))),
+            ),
+          ),
+        ),
+  });
 
   const build = (cls: string, id: string, runner: number): Effect.Effect<Record<string, Method>> => {
     // One storage per instance, whichever runner builds it; seeded by the first.
@@ -168,7 +236,7 @@ export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<s
         }),
       });
       const state = {
-        storage,
+        storage: runnerStorage(storage, id, runner),
         exclusive: (effect) => gate.withPermits(1)(effect),
         waitUntil: (effect) => Effect.asVoid(Effect.forkIn(effect, scope)),
       } satisfies DurableObjects.ObjectStateShape;
@@ -218,14 +286,18 @@ export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<s
         get:
           (_, method: string) =>
           (...args: ReadonlyArray<unknown>) =>
-            Effect.flatMap(instance(cls, name), (methods) =>
-              O.match(R.get(methods, method), {
-                onNone: () => Effect.die(`${cls}/${name} has no method ${method}`),
-                onSome: (call) =>
-                  call(...structuredClone(args)).pipe(
-                    Effect.map((result) => (result === undefined ? result : structuredClone(result))),
-                  ),
-              }),
+            // Routed when the call runs, not when it is built: a retry reaches whichever runner
+            // serves the instance then, as a cluster call does.
+            Effect.flatMap(
+              Effect.suspend(() => instance(cls, name)),
+              (methods) =>
+                O.match(R.get(methods, method), {
+                  onNone: () => Effect.die(`${cls}/${name} has no method ${method}`),
+                  onSome: (call) =>
+                    Effect.flatMap(crossArgs(options.args ?? "clone", args), (crossed) => call(...crossed)).pipe(
+                      Effect.map((result) => (result === undefined ? result : structuredClone(result))),
+                    ),
+                }),
             ),
       }),
   });
@@ -254,5 +326,6 @@ export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<s
       serving = runner;
     },
     storageOf: (id) => MutableHashMap.get(storages, id),
+    committers: (id) => O.getOrElse(MutableHashMap.get(commits, id), A.empty<number>),
   };
 };

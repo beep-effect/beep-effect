@@ -142,6 +142,34 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
     }),
   );
 
+  // Phase 10 (D47): an upgrade republishes a decision in the new stream generation; the feed then
+  // serves the fact twice, versions 1 and 2 each. Every review run of the claim concludes once.
+  it.effect("a fact republished in a new stream generation concludes every review run of its claim once", () =>
+    Effect.gen(function* () {
+      const harness = yield* Harness;
+      const inbox = yield* ClaimDecidedInbox;
+      yield* harness.grant;
+      yield* awaiting("run_1");
+      yield* awaiting("run_2");
+      const before1 = yield* harness.commitsOn("run_1");
+      const before2 = yield* harness.commitsOn("run_2");
+      const first = yield* v1("claim_1:decided", ["run_1", "run_2"]);
+      const second = yield* v2("claim_1:decided", ["run_1", "run_2"]);
+      // Generation 1, then generation 2 with the same fact.
+      yield* harness.publish(first, second, first, second);
+      const read = yield* inbox.drain;
+      expect(read).toBe(4);
+      const concluded = yield* Effect.all([
+        harness.run("run_1", (state) => state._tag === "Completed"),
+        harness.run("run_2", (state) => state._tag === "Completed"),
+      ]);
+      expect(concluded).toMatchObject([{ outcome: "accepted" }, { outcome: "accepted" }]);
+      const after1 = yield* harness.commitsOn("run_1");
+      const after2 = yield* harness.commitsOn("run_2");
+      expect([after1 - before1, after2 - before2]).toEqual([1, 1]);
+    }),
+  );
+
   it.effect("a crash between the command and the checkpoint: the redelivery is answered from the first receipt", () =>
     Effect.gen(function* () {
       const harness = yield* Harness;

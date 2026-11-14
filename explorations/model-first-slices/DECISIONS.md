@@ -972,3 +972,52 @@ is rerun, so the set that goes out is final. The operator is asked again then.
 
 **Rationale:** Two more patches are about to join the set, and one of the write-ups becomes a patch.
 Rejected: reading the six drafts now; stopping the lane. Recommended answer accepted.
+
+## 2026-11-14 — Phase 10: D45 to D47 built, and the cluster suite a fifth time
+
+The operator's answers to D45 and D46 asked for a rerun, taken as the go-ahead for a fifth swarm
+session. Notes are in `research/18-rework-phase10-notes.md`. Teardown matched a fifth Docker
+baseline apart from 21.4 MB of build cache. In memory, the Effect check has zero diagnostics, 175
+tests pass and 109 of 109 declared outcomes run, re-run by the orchestrating session.
+
+- **How Effect Cluster 4.1.4 holds a shard** (read from source, cited in `research/18`): a
+  session-level Postgres advisory lock on one reserved connection per runner, whose
+  `idle_session_timeout` is the 35 s lock expiry. The domain commits on a connection from another
+  pool. A paused runner's lock session is ended by the server at 35 s; in all five pauses the lock
+  passed to the other runner 28.8 to 36.4 s in. Earlier phases judged takeover by which runner
+  handled the next write, which is not the same thing: that write is sometimes routed to the paused
+  runner after its shard has moved.
+- **D45, the fence (local patch 4).** A takeover cannot be made to wait for an open commit, so the
+  fence records the lock holder at the start of the transaction and a deferred constraint trigger
+  refuses the commit at `COMMIT` if the lock changed hands. It refused the paused runner's commit
+  in five of five runs. **The invariant still fails:** in three of five runs a write queued to the
+  paused runner ran after it resumed and was committed by it while the other runner held the shard
+  (one run held, one was not sampled). On this stack every session arrives from the swarm load
+  balancer's address under the client's default name, so the fence cannot tell its own runner's
+  lock session from another's. No write was lost, doubled or reordered in any run; the version
+  check and the per-instance advisory lock still order every commit.
+- **D46, the backfill (local patch 5).** Fixed in the cluster transport: trailing arguments a
+  caller leaves out are omitted, so they arrive as `undefined`. Two other calls had worked only by
+  accident. A view added over phase 9's data held 11 of 11 earlier writes, and generation 2 of the
+  facts stream now holds the phase 6 decision, identical to generation 1's. Each fact reached the
+  consumer once. Generation 1 is still served.
+- **D47, the drain check.** `checkPublisherHandover` in `shared/tooling` refuses a deploy that
+  closes a generation or replaces its writer while the outgoing publisher has anything unpublished.
+  It passes once drained, in memory and against phase 6's data. Its backlog reader is specific to
+  Party's publisher. The drain itself was not run on the cluster, since no old code was deployed
+  there. The never-published fallback is logged as an error and was not taken.
+- Every other case passed. Upstream's ten, P1 to P7, P7b and P9 ran on a build whose fence matched
+  sessions by address only; the final build tries the session name first, which no session here
+  has, so behaviour is the same but those cases were not rerun on it.
+
+The child proposed that Effect name its lock session after the runner (`notes/upstream/08`), a
+change outside Alchemy. The orchestrating session read the source and found a route that needs no
+change in Effect, not yet run: the lock session is reserved from the pool that
+`@alchemy.run/effect-cluster`'s bootstrap builds with `PgClient.layer({ url })`, and `PgClient`
+4.1.4 accepts `applicationName`. Naming that pool `effect-cluster:<host>:<port>` gives the fence
+the identity it already looks for first.
+
+D5 verdict: not met. D45's invariant fails on the cluster, and the pass rests on five local
+patches. Open for the operator: make the fence exact or accept ordered commits as the guarantee;
+whether the drain check's backlog reader becomes generic; the rule for when a generation stops
+being served; and D48 (nothing is posted upstream).

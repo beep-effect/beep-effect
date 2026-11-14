@@ -9,6 +9,7 @@
     "./Authority.external": "./src/Authority.external.ts",
     "./Claim/Claim.aggregate": "./src/Claim/Claim.aggregate.ts",
     "./Claim/Claim.rules": "./src/Claim/Claim.rules.ts",
+    "./Claim/ClaimReview.handler": "./src/Claim/ClaimReview.handler.ts",
     "./Claim/ClaimReview.view": "./src/Claim/ClaimReview.view.ts",
     "./Directory/FindParties.query": "./src/Directory/FindParties.query.ts",
     "./Directory/PartyDirectory.handler": "./src/Directory/PartyDirectory.handler.ts",

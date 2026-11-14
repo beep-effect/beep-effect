@@ -1,0 +1,374 @@
+fix(domain): on Effect Cluster, fence a commit on its runner's shard lock
+
+Against alchemy `packages/domain/src` at 33c10dd (2.0.0-beta.87) with
+`03-commit-version-check.patch` applied first: it extends 03's refusal of a
+commit. Apply from the repository root with `git apply`; the text above the
+first `---` line is ignored. No hunk overlaps 01, 02 or 06.
+
+## Problem
+
+With 03, two runners holding one instance while its shard moves no longer lose
+an acknowledged write: their commits serialize on the instance's advisory lock
+and the later one fails its version check. But they are ordered by
+transaction, not by ownership. A runner that stalls inside its commit (a GC
+pause, a partition, a frozen container) past its shard lock, while another
+runner takes the shard and writes, is still acknowledged when it resumes,
+because its transaction began first.
+
+How Effect Cluster 4.1.4 records ownership on PostgreSQL
+(`packages/effect/src/cluster/SqlRunnerStorage.ts`, `Sharding.ts`):
+
+- each shard is a session-level advisory lock,
+  `pg_try_advisory_lock(namespace, (groupIndex + 1) * 1000000 + shard)`,
+  with the namespace an FNV-1a hash of `effect-cluster:<prefix>`, held on one
+  reserved connection per runner (`acquireLockConn`, `pgLocks`);
+- that session's `idle_session_timeout` is the lock expiry (35 s by default),
+  so a frozen runner's session ends and its locks are released;
+- a runner is listed only while its heartbeat in `cluster_runners` is within
+  the same expiry (`getRunners`), and shards are assigned over the listed
+  runners (`Sharding.ts`, the hash ring); so 35 s into a freeze another
+  runner is assigned the shards and takes their locks.
+
+A domain commit runs on another connection (the domain's own pool). It cannot
+take or share the shard's lock, whose holder is another session; it can read
+it in `pg_locks`.
+
+## Change
+
+`objectStorage.transaction` fences every transaction, after the instance's
+advisory lock (03):
+
+- first, it finds the session holding the instance's shard lock that is this
+  runner's (see below), and records that session's pid in a transaction-local
+  setting, `alchemy.commit_fence`; with none, the transaction dies with
+  `ShardLost` before it writes;
+- a deferred constraint trigger on the storage table (`AFTER INSERT OR UPDATE`,
+  `WHEN (NEW.key = 'meta')`, `INITIALLY DEFERRED`) checks at `COMMIT` that the
+  same pid still holds the lock, and otherwise raises SQLSTATE `AD001`, which
+  aborts the commit; the storage reports it as `ShardLost`. The migration
+  creates the trigger and its function, one runner at a time.
+- `commit` turns `ShardLost` into the call's failure, as it does 03's
+  `CommitConflict` (`reportDefectsUnlessRefused`): never acknowledged, retried
+  by the caller under the same command id, starting from the receipt lookup.
+- Each refusal is logged (`commit fenced: ...`).
+
+The check at `COMMIT` runs after the last point where the runner itself can
+stall. A takeover can complete only inside the server's own commit, between
+the trigger and the commit record; even then the new owner cannot commit to
+the instance before this commit is visible (03's advisory lock), and its own
+commit then fails 03's version check.
+
+## Why it is safe, and what it needs
+
+- Durable Objects (Cloudflare) and Rivet are unchanged: the fence is in the
+  Effect Cluster storage only, and their storage already admits one instance
+  at a time. The in-memory platform is unchanged.
+- A commit that is refused writes nothing, and its retry reaches the current
+  owner: the same path as 03's `CommitConflict`.
+- Which session is this runner's. A session cannot say so today: Effect does
+  not expose its lock session's pid, every session's `application_name` is the
+  client's default, and behind a proxy or load balancer every session has the
+  same address. The fence takes the session Effect names `effect-cluster:<host>:<port>`
+  (a one-line change to `SqlRunnerStorage`, proposed separately), and until
+  Effect names it, the one connected from this runner's address. That
+  fallback is exact only where each runner has an address of its own.
+
+## Tests
+
+- In memory (two in-process runners on one instance's storage, the host
+  fencing a transaction whose runner no longer serves the instance when it
+  commits): runner 0 decides, the instance moves to runner 1, runner 0's commit
+  returns with the version unchanged. Without the fence it is acknowledged;
+  with it, it is refused and its retry commits on runner 1.
+- On Effect Cluster with Postgres (two runners on a local swarm, a runner frozen
+  with `docker pause` inside its commit until another runner holds its shard):
+  in five runs the frozen runner's commit was refused at `COMMIT` every time.
+  The swarm's overlay load balancer gives every session one address, so the
+  fallback cannot tell the runners' sessions apart: in three of the five runs
+  a write queued to the frozen runner was decided and committed by it after it
+  resumed, with the other runner's session holding the shard. Exactness needs
+  Effect to name the lock session.
+
+---
+--- a/packages/domain/src/DurableObjects.ts
++++ b/packages/domain/src/DurableObjects.ts
+@@ -245,17 +245,32 @@
+ }> {}
+ 
+ /**
+- * Like {@link reportDefects}, except that a lost version check fails the call
+- * itself, so the caller's `unwrapDefects` retries it in transit under the
+- * same command id, and the retry starts again from the receipt lookup.
+- */
+-const reportDefectsUnlessConflict = <A, E, R>(effect: Effect.Effect<A, E | CommitConflict, R>) =>
+-  reportDefects(
+-    effect.pipe(Effect.catchIf((error): error is CommitConflict => error instanceof CommitConflict, Effect.succeed)),
+-  ).pipe(
+-    Effect.flatMap((value) =>
+-      value instanceof CommitConflict ? Effect.fail(value) : Effect.succeed(value as A),
+-    ),
++ * A commit was refused because the host running it no longer owns the
++ * instance: on Effect Cluster, its runner did not hold the instance's shard
++ * lock for the whole commit transaction (the runner stalled and the shard
++ * moved, or its lock session ended). Nothing was written and nothing is
++ * acknowledged; the caller retries, and the retry reaches the current owner.
++ */
++export class ShardLost extends Data.TaggedError("ShardLost")<{
++  readonly id: string;
++  readonly shard: string;
++}> {}
++
++/** A commit the host refused: retried by the caller, never acknowledged. */
++const isRefusal = (value: unknown): value is CommitConflict | ShardLost =>
++  value instanceof CommitConflict || value instanceof ShardLost;
++
++/**
++ * Like {@link reportDefects}, except that a refused commit (a lost version
++ * check or a lost shard) fails the call itself, so the caller's
++ * `unwrapDefects` retries it in transit under the same command id, and the
++ * retry starts again from the receipt lookup.
++ */
++const reportDefectsUnlessRefused = <A, E, R>(
++  effect: Effect.Effect<A, E | CommitConflict | ShardLost, R>,
++) =>
++  reportDefects(effect.pipe(Effect.catchIf(isRefusal, Effect.succeed))).pipe(
++    Effect.flatMap((value) => (isRefusal(value) ? Effect.fail(value) : Effect.succeed(value as A))),
+   );
+ 
+ /**
+@@ -881,6 +896,12 @@
+             yield* outbox.stage(live.send);
+             return live.send;
+           }),
++        ).pipe(
++          // A host that fences commits on ownership refuses one whose runner lost the
++          // instance, as a defect of its storage: here it is the call's failure.
++          Effect.catchDefect((defect) =>
++            defect instanceof ShardLost ? Effect.fail(defect) : Effect.die(defect),
++          ),
+         );
+         // Lost the check: never acknowledged, and nothing was written.
+         if (routed === undefined) {
+@@ -937,7 +958,7 @@
+     );
+     return {
+       send: (id: string, command: Json, meta: Aggregate.SendMeta) =>
+-        reportDefectsUnlessConflict(send(id, command, meta)),
++        reportDefectsUnlessRefused(send(id, command, meta)),
+       schedule: (
+         id: string,
+         name: string,
+--- a/packages/domain/src/EffectCluster/index.ts
++++ b/packages/domain/src/EffectCluster/index.ts
+@@ -66,6 +66,9 @@
+   SUBSCRIPTION_HEADER,
+ } from "../DurableObjects.ts";
+ import type { Platform, Subscription } from "../Platform.ts";
++// The commit fence: who owns a shard, as Effect Cluster's runner storage records it.
++import * as ShardingConfig from "effect/cluster/ShardingConfig";
++import { ShardLost } from "../DurableObjects.ts";
+ 
+ /**
+  * Wake an instance at `at`: a persisted message delivered when it is due,
+@@ -200,10 +203,120 @@
+ const decode = <T>(text: string) => JSON.parse(text) as T;
+ 
+ /**
++ * The commit fence (D45 in the prototype): a commit is acknowledged only if
++ * its runner held the instance's shard lock for the whole commit transaction.
++ *
++ * Effect Cluster's SQL runner storage holds each shard as a session-level
++ * PostgreSQL advisory lock, `pg_try_advisory_lock(namespace, groupBase +
++ * shard)`, on one reserved connection per runner (`SqlRunnerStorage.ts`). A
++ * commit runs on another connection, so it cannot take or share that lock;
++ * it can read it in `pg_locks`. The fence reads it twice:
++ *
++ * - first in the transaction, it finds the session holding the shard's lock
++ *   that is this runner's, and remembers its pid in a transaction-local
++ *   setting; no such session, and the commit is refused before it writes;
++ * - at `COMMIT`, a deferred constraint trigger checks that the same session
++ *   still holds the lock, after the last point at which the runner itself can
++ *   stall. A lock lost meanwhile (the session ended, the shard moved) aborts
++ *   the commit with SQLSTATE `AD001`, which the storage reports as
++ *   `ShardLost`.
++ *
++ * Which session is this runner's: the one Effect names after the runner
++ * (`effect-cluster:host:port`, a proposed change to its SQL runner storage);
++ * until it does, the one connected from this runner's address. That fallback
++ * is not exact where runners reach PostgreSQL through a proxy or load balancer
++ * (every session then has its address): there the fence still refuses a
++ * commit during which the lock changed hands, but takes the new holder's
++ * session for its own when the runner lost the shard before the commit began.
++ *
++ * A takeover cannot complete only in the server's own commit, between the
++ * trigger and the commit record; even then the new owner cannot commit to the
++ * instance before this commit is visible (the instance's advisory lock), and
++ * its own commit then fails the version check.
++ */
++interface CommitFence {
++  /** The shard, as `group:id`. */
++  readonly shard: string;
++  /** The name Effect gives this runner's lock session, when it names it (`effect-cluster:host:port`). */
++  readonly named: string;
++  /** The lock's two keys as `pg_locks` shows them (`classid`, `objid`). */
++  readonly classid: number;
++  readonly objid: number;
++}
++
++/**
++ * The advisory-lock namespace of Effect Cluster's SQL runner storage for its
++ * default table prefix: FNV-1a of `effect-cluster:cluster`
++ * (`SqlRunnerStorage.ts`, `postgresLockNamespace`, a persistent wire format).
++ */
++const clusterLockNamespace = (prefix: string): number => {
++  const bytes = new TextEncoder().encode(`effect-cluster:${prefix}`);
++  let hash = 0x811c9dc5;
++  for (let i = 0; i < bytes.length; i++) hash = Math.imul(hash ^ bytes[i]!, 0x01000193);
++  return hash | 0;
++};
++
++/**
++ * The fence of an instance on `shardId`, as the runner storage numbers its
++ * lock (`(group index + 1) * 1000000 + shard`, groups sorted). None where the
++ * storage uses no advisory locks.
++ */
++const commitFence = (shardId: { readonly group: string; readonly id: number }) =>
++  Effect.map(Effect.serviceOption(ShardingConfig.ShardingConfig), (config): CommitFence | undefined => {
++    const service = Option.getOrElse(config, () => ShardingConfig.defaults);
++    if (service.shardLockDisableAdvisory) return undefined;
++    const index = Array.from(ShardingConfig.shardGroupConfig(service).available).indexOf(shardId.group);
++    if (index < 0) return undefined;
++    return {
++      shard: `${shardId.group}:${shardId.id}`,
++      named: Option.match(service.runnerAddress, {
++        onNone: () => "",
++        onSome: (address) => `effect-cluster:${address.host}:${address.port}`,
++      }),
++      classid: clusterLockNamespace("cluster") >>> 0,
++      objid: (index + 1) * 1_000_000 + shardId.id,
++    };
++  });
++
++/** The fence's first read: the session of this runner that holds the shard's lock, or a refusal. */
++const enterFence = (sql: SqlClient, object: string, fence: CommitFence) =>
++  sql<{ pid: number }>`SELECT l.pid FROM pg_locks l JOIN pg_stat_activity a ON a.pid = l.pid
++    WHERE l.locktype = 'advisory' AND l.classid = ${fence.classid}::oid AND l.objid = ${fence.objid}::oid
++      AND l.objsubid = 2 AND l.granted
++      AND (a.application_name = ${fence.named} OR (a.application_name NOT LIKE 'effect-cluster:%'
++        AND a.client_addr IS NOT DISTINCT FROM inet_client_addr()))`.pipe(
++    Effect.flatMap((rows) =>
++      rows[0] === undefined
++        ? Effect.logWarning(`commit fenced: ${object} does not hold shard ${fence.shard}`).pipe(
++            Effect.andThen(Effect.die(new ShardLost({ id: object, shard: fence.shard }))),
++          )
++        : sql`SELECT set_config('alchemy.commit_fence', ${`${fence.classid}:${fence.objid}:${rows[0].pid}`}, true)`,
++    ),
++    Effect.asVoid,
++  );
++
++/** The deferred trigger refused the commit: the shard's lock moved before `COMMIT`. */
++const isFenceRefusal = (error: unknown): boolean => {
++  let cause: unknown = error;
++  for (let depth = 0; depth < 4 && typeof cause === "object" && cause !== null; depth++) {
++    if ((cause as { readonly code?: unknown }).code === "AD001") return true;
++    cause = (cause as { readonly reason?: unknown; readonly cause?: unknown }).reason ??
++      (cause as { readonly cause?: unknown }).cause;
++  }
++  return false;
++};
++
++/**
+  * Domain's storage for one entity id over the cluster's Postgres. Every
+- * operation goes through the instance's input gate, as on Cloudflare.
++ * operation goes through the instance's input gate, as on Cloudflare. With a
++ * fence, each transaction is a fenced commit (see `CommitFence`).
+  */
+-const objectStorage = (sql: SqlClient, object: string, gate: InputGateShape): ObjectStorage => {
++const objectStorage = (
++  sql: SqlClient,
++  object: string,
++  gate: InputGateShape,
++  fence: CommitFence | undefined,
++): ObjectStorage => {
+   const run = <A>(effect: Effect.Effect<A, unknown>) => gate.storage(Effect.orDie(effect));
+   const putOne = (key: string, value: unknown) =>
+     sql`INSERT INTO ${sql(TABLE)} (object, key, value) VALUES (${object}, ${key}, ${encode(value)})
+@@ -260,22 +373,65 @@
+         sql
+           .withTransaction(
+             sql`SELECT pg_advisory_xact_lock(hashtextextended(${object}, 0))`.pipe(
++              Effect.andThen(fence === undefined ? Effect.void : enterFence(sql, object, fence)),
+               Effect.andThen(effect),
+             ),
+           )
+-          .pipe(Effect.orDie),
++          .pipe(
++            Effect.catchIf(isFenceRefusal, () =>
++              Effect.logWarning(`commit fenced: ${object} lost shard ${fence?.shard ?? ""} before COMMIT`).pipe(
++                Effect.andThen(Effect.die(new ShardLost({ id: object, shard: fence?.shard ?? "" }))),
++              ),
++            ),
++            Effect.orDie,
++          ),
+       ) as never,
+   };
+ };
+ 
+-/** Create the storage table, once per runner. */
++/**
++ * Create the storage table and the commit fence's deferred trigger, once per
++ * runner. Runners migrate one at a time (a transaction-level advisory lock).
++ * The trigger checks only a transaction that set `alchemy.commit_fence`.
++ */
+ const migrate = (sql: SqlClient) =>
+-  sql`CREATE TABLE IF NOT EXISTS ${sql(TABLE)} (
++  sql
++    .withTransaction(
++      Effect.all(
++        [
++          sql`SELECT pg_advisory_xact_lock(hashtextextended('alchemy_domain_migrate', 0))`,
++          sql`CREATE TABLE IF NOT EXISTS ${sql(TABLE)} (
+     object TEXT COLLATE "C" NOT NULL,
+     key TEXT COLLATE "C" NOT NULL,
+     value TEXT NOT NULL,
+     PRIMARY KEY (object, key)
+-  )`.pipe(Effect.orDie);
++  )`,
++          sql.unsafe(`CREATE OR REPLACE FUNCTION alchemy_domain_commit_fence() RETURNS trigger
++  LANGUAGE plpgsql AS $fence$
++DECLARE
++  fence text := coalesce(current_setting('alchemy.commit_fence', true), '');
++  parts text[];
++BEGIN
++  IF fence = '' THEN RETURN NULL; END IF;
++  parts := string_to_array(fence, ':');
++  IF NOT EXISTS (SELECT 1 FROM pg_locks WHERE locktype = 'advisory' AND classid = parts[1]::oid
++      AND objid = parts[2]::oid AND objsubid = 2 AND granted AND pid = parts[3]::int) THEN
++    RAISE EXCEPTION 'alchemy: the shard lock was lost before COMMIT (%)', fence USING ERRCODE = 'AD001';
++  END IF;
++  RETURN NULL;
++END $fence$`),
++          sql.unsafe(`DO $trigger$ BEGIN
++  IF NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'alchemy_domain_commit_fence') THEN
++    CREATE CONSTRAINT TRIGGER alchemy_domain_commit_fence AFTER INSERT OR UPDATE ON ${TABLE}
++      DEFERRABLE INITIALLY DEFERRED FOR EACH ROW WHEN (NEW.key = 'meta')
++      EXECUTE FUNCTION alchemy_domain_commit_fence();
++  END IF;
++END $trigger$`),
++        ],
++        { discard: true },
++      ),
++    )
++    .pipe(Effect.orDie);
+ 
+ /** A Domain host entity was asked for an object of a class it doesn't host. */
+ export class DomainClassNotHosted extends Data.TaggedError("Cluster.DomainClassNotHosted")<{
+@@ -622,7 +778,7 @@
+         // fiber of its own, which this gate would hold behind the transaction.
+         const storage: ObjectStorage = Option.isSome(native)
+           ? native.value
+-          : objectStorage(yield* sql, `${name}/${id}`, gate);
++          : objectStorage(yield* sql, `${name}/${id}`, gate, yield* commitFence(address.shardId));
+         const instanceScope = yield* Scope.Scope;
+         const wakes = yield* objects.client;
+         const callbacks = alarmCallbacks(storage, {

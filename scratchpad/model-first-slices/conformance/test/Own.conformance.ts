@@ -16,6 +16,7 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
@@ -43,6 +44,16 @@ import {
   services,
 } from "./Stack.ts";
 import { RECOVERY_BOUND_MS } from "./RecoveryBound.ts";
+import {
+  fenceRefusals,
+  holderOf,
+  lockNamespace,
+  lockWaiters,
+  runnerHealth,
+  runnerLogging,
+  shardOf,
+  slotEntity,
+} from "./ShardOwnership.ts";
 
 // The prototype's own conformance cases (phase 5, D5, D16), against the deployed stack over its
 // Apis. Each case records its evidence with console.log; a failure is a finding, not a retry.
@@ -295,47 +306,122 @@ live("two runners on one instance (D38): a runner paused past its shard lock com
   yield* log("after-unpause", { slow: slowResult, events: after, state });
 }));
 
-// Phase 6: the same race with the stale runner stopped later, inside its commit. A first write gives
-// the slot a meta row; that row is locked before the held write's decide returns, so its commit
-// starts and waits there. The runner is paused, the lock released (the commit's statement goes
-// through in Postgres and its transaction stays open), and another runner writes after taking the
-// shard. Observational, as the case above: it records what is stored.
-live("two runners on one instance (D38), the stale runner paused inside its commit", Effect.gen(function* () {
+// Phase 10 (D45), the same race with the stale runner stopped inside its commit, rewritten to the
+// invariant: a commit is acknowledged only if its runner owned the instance's shard for the whole
+// commit transaction. A first write gives the slot a meta row; that row is locked before a held
+// write's decide returns, so its commit starts and waits there; its runner is paused and the lock
+// released, so the transaction stays open with its writes done. The run counts only if the shard
+// is then seen to move to the other runner while that transaction is open (a run where it does not
+// move fails as "no takeover", not a pass). The other runner then writes; the paused runner is unpaused; the stored events must show that the paused
+// runner's commit was never acknowledged, and that every write acknowledged is stored once. A shard
+// moves once the paused runner's heartbeat is older than the lock expiry (35 s: `getRunners` lists
+// only runners heard from within it) and its lock session has ended (the lock connection's
+// `idle_session_timeout`, also 35 s), so the case samples both while it waits (`ShardOwnership.ts`).
+live("two runners on one instance (D45): a runner paused inside its commit after its shard moved is never acknowledged", Effect.gen(function* () {
+  const now = yield* DateTime.now;
+  const startedAt = DateTime.formatIso(now);
+  // Both runners registered and live (a heartbeat within the lock expiry), and holding shards.
+  yield* eventually(runnerHealth, (rows) => Str.split(rows, "\n").length === 2 && !pipe(rows, Str.includes("|f")), 240);
   const slot = yield* fresh("slot");
+  const shard = shardOf(slotEntity(slot));
   const held = `held_${slot}`;
   const objects = `FROM alchemy_domain_objects WHERE object LIKE '%${slot}%'`;
-  const events = psql(`SELECT key, left(value::text, 160) ${objects} ORDER BY key`);
+  const events = psql(
+    `SELECT key, value::jsonb->'event'->>'label', value::jsonb->'event'->>'runner', value::jsonb->'envelope'->>'at' ${objects} AND key LIKE 'event:%' ORDER BY key`,
+  );
   yield* get(`/tworunners/write?slot=${slot}&label=first_${slot}&hold=0`);
+  // The owner is the runner that decided the first write; its lock session holds the slot's shard.
+  const owners = yield* eventually(runnerLogging(`deciding first_${slot}`, startedAt), (found) => found.length === 1, 40);
+  const staleRunner = owners[0]!;
+  const runners = yield* containersOf(runnerService);
+  const otherRunner = yield* Effect.fromOption(A.findFirst(runners, (id) => id !== staleRunner)).pipe(Effect.orDie);
+  const ownerSession = yield* holderOf(shard).pipe(Effect.flatMap(Effect.fromOption), Effect.orDie);
+  yield* log("fenced-setup", { slot, shard, stale: staleRunner, other: otherRunner, ownerSession });
   const lock = yield* holdLock("SELECT 1", `SELECT key ${objects} AND key = 'meta'`);
   yield* eventually(lockHeld, (n) => n !== "0", 40);
   const slow = yield* Effect.forkChild(get(`/tworunners/write?slot=${slot}&label=${held}&hold=2000`).pipe(Effect.exit));
-  const runners = yield* containersOf(runnerService);
-  const owner = yield* eventually(
-    Effect.forEach(runners, (id) => Effect.map(docker("logs", id), (out) => (pipe(out, Str.includes(`committing ${held}`)) ? [id] : []))).pipe(
-      Effect.map(A.flatten),
-    ),
-    (found) => found.length === 1,
-    40,
-  );
+  yield* eventually(Effect.map(docker("logs", "--since", startedAt, staleRunner), Str.includes(`committing ${held}`)), (yes) => yes, 40);
   const waiting = yield* eventually(blockedByLock, Str.isNonEmpty, 40);
-  const stale = owner[0]!;
-  yield* docker("pause", stale);
+  const pid = Str.split(waiting, "|")[0] ?? "0";
+  yield* docker("pause", staleRunner);
+  const pausedAt = yield* Clock.currentTimeMillis;
   yield* releaseLock;
   yield* Fiber.join(lock);
-  yield* Effect.sleep("1 second");
-  const pid = Str.split(waiting, "|")[0] ?? "0";
-  const inCommit = yield* psql(`SELECT state, wait_event_type, left(query, 120) FROM pg_stat_activity WHERE pid = ${pid}`);
-  yield* log("paused-in-commit", { stale, runners, waiting, inCommit });
-  // Past the shard lock's 35 s expiry, the other runner takes the shard and writes.
-  yield* Effect.sleep("45 seconds");
-  const quick = yield* get(`/tworunners/write?slot=${slot}&label=other_${slot}&hold=0`).pipe(Effect.timeout("60 seconds"), Effect.exit);
+  const commitState = psql(`SELECT state FROM pg_stat_activity WHERE pid = ${pid}`);
+  // Did the shard move (another session holds its lock) while the paused runner's transaction was
+  // open? Sampled each second: the slot's shard holder, the paused runner's commit, and the
+  // runners' heartbeats and lock counts per session, so a run that does not take over shows why.
+  const sample = Effect.gen(function* () {
+    const holder = yield* holderOf(shard);
+    const state = yield* commitState;
+    const heartbeats = yield* psql("SELECT address, healthy, round(extract(epoch FROM now() - last_heartbeat)) FROM cluster_runners ORDER BY address");
+    const locks = yield* psql(
+      `SELECT l.pid, count(*) FROM pg_locks l WHERE l.locktype = 'advisory' AND l.classid = ${lockNamespace} AND l.objsubid = 2 AND l.granted GROUP BY 1 ORDER BY 1`,
+    );
+    const at = (yield* Clock.currentTimeMillis) - pausedAt;
+    return { at, holder: O.getOrUndefined(holder), state, heartbeats, locks };
+  });
+  const samples = yield* Ref.make(A.empty<Effect.Success<typeof sample>>());
+  const moved = yield* sample.pipe(
+    Effect.tap((taken) => Ref.update(samples, A.append(taken))),
+    Effect.repeat({
+      schedule: Schedule.spaced("1 second"),
+      until: ({ holder, state }) => holder !== undefined && holder !== ownerSession && state === "idle in transaction",
+      times: 150,
+    }),
+  );
+  const tookOver = moved.holder !== undefined && moved.holder !== ownerSession && moved.state === "idle in transaction";
+  const sampled = yield* Ref.get(samples);
+  yield* log("fenced-takeover", { tookOver, movedAfterMs: moved.at, holder: moved.holder, commitState: moved.state, samples: A.filter(sampled, (_, i) => i % 5 === 0) });
+  if (!tookOver) {
+    yield* docker("unpause", staleRunner);
+    yield* Fiber.join(slow).pipe(Effect.timeout("150 seconds"), Effect.exit);
+  }
+  expect(tookOver, "no takeover: the shard did not move while the paused runner's commit was open").toBe(true);
+  // The other runner, now the owner, writes; its commit waits on the instance's advisory lock.
+  const quick = yield* Effect.forkChild(get(`/tworunners/write?slot=${slot}&label=other_${slot}&hold=0`).pipe(Effect.timeout("150 seconds"), Effect.exit));
+  const queued = yield* lockWaiters.pipe(
+    Effect.repeat({ schedule: Schedule.spaced("500 millis"), until: Str.includes("pg_advisory_xact_lock"), times: 40 }),
+  );
   const before = yield* events;
-  const sessions = yield* psql(`SELECT pid, state, wait_event_type, left(query, 80) FROM pg_stat_activity WHERE datname = 'cluster' AND state <> 'idle' AND pid <> pg_backend_pid()`);
-  yield* log("in-commit-before-unpause", { quick, events: before, sessions });
-  yield* docker("unpause", stale);
-  const slowResult = yield* Fiber.join(slow).pipe(Effect.timeout("120 seconds"), Effect.exit);
+  yield* log("fenced-before-unpause", { queued, events: before });
+  yield* docker("unpause", staleRunner);
+  // After the unpause: who holds the shard, every half second, until both writes have answered.
+  const holders = yield* Ref.make(A.empty<{ readonly at: number; readonly holder: string | undefined }>());
+  const watch = yield* Effect.forkChild(
+    Effect.gen(function* () {
+      const holder = yield* holderOf(shard);
+      const at = yield* Clock.currentTimeMillis;
+      yield* Ref.update(holders, A.append({ at, holder: O.getOrUndefined(holder) }));
+    }).pipe(Effect.repeat(Schedule.spaced("500 millis"))),
+  );
+  const slowResult = yield* Fiber.join(slow).pipe(Effect.timeout("150 seconds"), Effect.exit);
+  const quickResult = yield* Fiber.join(quick);
   yield* Effect.sleep("3 seconds");
+  yield* Fiber.interrupt(watch);
+  const afterUnpause = yield* Ref.get(holders);
   const after = yield* events;
   const state = yield* get(`/tworunners/state?slot=${slot}`);
-  yield* log("in-commit-after-unpause", { slow: slowResult, events: after, state });
+  const refusals = yield* fenceRefusals(staleRunner, startedAt);
+  const rows = A.map(A.filter(Str.split(after, "\n"), Str.isNonEmpty), (line) => Str.split(line, "|"));
+  const byLabel = (label: string) => A.filter(rows, (row) => row[1] === label);
+  // Who held the shard when a write committed: the last sample at or before its commit, which is
+  // its envelope's time (when it was decided) plus the hold its decide took.
+  const holderAt = (at: number) => O.getOrUndefined(A.last(A.filter(afterUnpause, (taken) => taken.at <= at)))?.holder;
+  const stale = A.map(A.filter(rows, (row) => row[2] === staleRunner && row[1] !== `first_${slot}`), (row) => ({
+    key: row[0],
+    label: row[1],
+    holder: holderAt(Number(row[3]) + (row[1] === held ? 2000 : 0)),
+  }));
+  yield* log("fenced-after-unpause", { slow: slowResult, quick: quickResult, events: after, state, refusals, afterUnpause, stale, owners: { before: ownerSession, during: moved.holder } });
+  // The paused runner's commit was refused at COMMIT (the fence), so it was never acknowledged:
+  // the version it decided on was taken by the other runner's write.
+  expect(A.some(refusals, Str.includes("before COMMIT"))).toBe(true);
+  expect(A.map(A.filter(rows, (row) => row[0] === "event:000000000002"), (row) => row[2])).toEqual([otherRunner]);
+  // A later write of the paused runner (its caller's retry) committed only once the other runner's
+  // session no longer held the shard: the paused runner had taken it back.
+  expect(A.filter(stale, (write) => write.holder === undefined || write.holder === moved.holder)).toEqual([]);
+  // Every acknowledged write is stored exactly once.
+  expect(A.map([`first_${slot}`, `other_${slot}`, held], (label) => byLabel(label).length)).toEqual([1, 1, 1]);
+  expect(rows.length).toBe(3);
 }));
