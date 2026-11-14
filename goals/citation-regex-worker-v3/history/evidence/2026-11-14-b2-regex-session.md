@@ -1,9 +1,9 @@
 # B2 regex session evidence
 
 The earlier receipts below are retained as history. The latest verification is
-[B1 merge and green run](#b1-merge-and-green-run): 276 files, 1299 passing tests,
-zero failures and zero skips. [Review round 1](#review-round-1) records the
-accepted findings and their fixes.
+[Review round 2](#review-round-2): 22 affected files, 273 passing tests, zero
+failures or skips, plus passing single-file coverage runs. The prior complete
+directory receipt remains in [B1 merge and green run](#b1-merge-and-green-run).
 
 B2 is implemented on `feat/citation-regex-session` in
 `~/YeeBois/projects/beep-effect-worktrees/citation-regex-session`.
@@ -1644,3 +1644,221 @@ is using the exact merged base commit after the remote branch disappeared; all
 other lifecycle/coverage interpretations are stated in this receipt. There was
 no further design conflict. Commits remain local: no push, rebase or additional
 merge, and no subagents.
+
+## Review round 2
+
+The owner merged main at `cc9e2741191` before this wave. All work remains local
+on `feat/citation-regex-session`; this wave performs no push, merge or rebase.
+The final comparison base is `origin/main` at
+`18cf1f69f889a351468c77a25b82a312704811f7`.
+
+### Findings, fixes and regressions
+
+| Accepted finding | Cause and fix | Committed regression |
+| --- | --- | --- |
+| BLOCKER: escaped unlocked lane operations | `withUse` previously returned unrestricted unlocked operations. Every call now owns a revocation token and an admission semaphore. Every start, reserve and release checks the token after admission; callback completion revokes it, then drains admitted work before releasing handover. Callback invocation is suspended so a synchronous defect also follows revocation. | `revokes a returned unlocked start and a forked late user before releasing the lane`; `revokes capabilities even when the callback throws before returning an Effect`; `holds handover until a concurrently admitted bun operation finishes` and the Node variant. |
+| MAJOR: pattern-sized fingerprint copy precedes exact frame refusal | Descriptor selection concatenated the width byte with the pattern. It now incrementally hashes the width and borrowed bytes with the existing catalog's `@noble/hashes` SHA-256. Selection retains only a fixed-size digest. Authoritative verification still uses the captured Effect Digest after exact frame preflight and preparation. | `preflights the installed bun evaluator before pattern maps or compilation` and the Node variant now observe both Uint32Array maps and Uint8Array pattern-byte copies, through the installed evaluator, with a registered pattern and 700-byte source exceeding the complete 1024-byte frame bound. |
+| Proof gap: genuine closed stdin and blocked writes | The earlier injected typed I/O test did not prove a real pipe. Two new child modes exercise the actual stdin sink without replacing its error or delaying EPIPE. | `confirms bun death after a real large stdin write receives EPIPE`; `expires the job deadline while a large write to a real bun child is blocked`; both also run with actual Node children. |
+
+The negative controls reproduce the findings: restoring the original unlocked
+`withUse` makes the escaped-start regression fail; retaining revocation but
+removing its drain makes both handover tests fail. Restoring selection's old
+concatenating fingerprint makes both installed-evaluator allocation regressions
+fail with an observed pattern-sized copy. All temporary production mutations
+were restored before final verification.
+
+The lifetime token remains mandatory at runtime. A Scope requirement on an
+Effect cannot stop JavaScript callers from retaining a function or forked fiber;
+changing the callback's generic result type would not establish non-escape.
+The existing callback contract remains, with runtime revocation for every
+operation and a drain inside the handover permit. No trusted-callback assumption
+remains. The concurrent tests gate a real spawn with Deferred and prove another
+`withUse` evaluation cannot interleave while the admitted operation is pending.
+
+The Effect reference `packages/effect/src/crypto/Digest.ts` exposes a single
+contiguous Uint8Array digest input, with no streaming/multi-part service API.
+The repo already uses Noble incremental SHA-256; this package now declares that
+existing catalog dependency. Its fixed-size state avoids a proportional input
+allocation. The original post-preparation Digest verification and typed
+fingerprint refusal remain. The existing snapshot regression now asserts
+`owns the bun prepared pattern through authoritative fingerprint awaits`
+(and Node): mutation of borrowed input during the later authoritative digest
+cannot change the owned prepared job. This replaces the old expectation of
+mutation during asynchronous descriptor selection, which is now synchronous.
+No test was deleted, no guard was removed and no ceiling was changed.
+
+### Paired real-pipe proofs
+
+Both child runtimes receive an encoded frame larger than 1 MiB (one million
+ASCII source bytes). A Deferred observes entry to the real sink; a separate
+completion Deferred remains unset while the pipe is backpressured. In the
+closed-stdin case the child then closes every duplicate of its actual stdin
+read side and stays alive. The parent promptly returns `channel-failed` from
+genuine EPIPE. In the open/nonreading case, the write remains pending until the
+session's actual job sleep is triggered, returning `regexDeadline`.
+
+Each test asserts one live parent SIGKILL, started = confirmed = 1, PID absent
+before the joined evaluate result is inspected, capacity returned exactly once,
+and a subsequent identical refusal with zero additional starts. Closing Scope
+still leaves the return count at one. Both paths pass with Bun and Node child
+runtimes, and with Bun and Node parent runners.
+
+The earlier Bun-parent hang no longer reproduces. The earlier small-frame probe
+left its manual job timer undriven and did not observe sink completion; it could
+not distinguish waiting in write from waiting for a reply. The new proof uses
+measured backpressure, an explicit child-close handshake and write-completion
+observation, and drives the real job timer for the nonreading case. Effect's
+current NodeShared sink has error callback handling and cancellable drain waits;
+the Bun platform uses that shared child-process implementation. The relevant
+installed Effect/platform versions did not change across the owner's main
+merge. No production sink patch was necessary; this is a corrected probe, not
+a claim that a package upgrade fixed the old hang. The owner's paired-proof
+ruling is recorded in the corresponding decision file.
+
+### Serial affected-file run
+
+Each file ran separately with `nice -n 19 bunx vitest run test/<file>` from the
+server package. These 21 files pass **261 tests**, zero failures or skips.
+This includes every direct test importer of NativeLane, RegexDescriptors or
+RegexSession, the session/protocol/descriptor/worker files, and lane composition,
+transfer and cleaner callers. The four real-pipe cases also pass in the
+single-file Bun-parent coverage runs.
+
+| Test file | Passing tests |
+| --- | ---: |
+| CitationAnnotationFailure.test.ts | 2 |
+| CitationCleanerPipelineCoverage.test.ts | 7 |
+| CitationDiffLaneCoverage.test.ts | 9 |
+| CitationHtmlWorker.test.ts | 13 |
+| CitationMarkupWorkerCoverage.test.ts | 8 |
+| CitationNativeLane.test.ts | 16 |
+| CitationNativeLaneCoverage.test.ts | 13 |
+| CitationNativeLaneReservation.test.ts | 32 |
+| CitationRegexDescriptors.test.ts | 9 |
+| CitationRegexEngine.test.ts | 4 |
+| CitationRegexLaneCoverage.test.ts | 6 |
+| CitationRegexSession.test.ts | 64 |
+| CitationRegexSessionProgram.test.ts | 3 |
+| CitationRegexSessionProtocol.test.ts | 5 |
+| CitationRegexSessionRpc.test.ts | 4 |
+| CitationRegexWorker.test.ts | 19 |
+| CitationRegexWorkerProtocol.test.ts | 15 |
+| CitationTextBudget.test.ts | 6 |
+| CitationNativeLaneComposition.test.ts | 4 |
+| CitationNativeLaneTransfer.test.ts | 4 |
+| CitationCleanerPipeline.test.ts | 18 |
+
+### Single-file coverage union
+
+Each row below is the union of separate one-test-file, one-source-file
+Bun-parent Istanbul runs; no package-wide coverage was run. The baseline was
+not edited. NativeLane and all four new session files reach 100% in all four
+metrics. The descriptor file exceeds every existing baseline floor.
+
+| Source | Lines | Statements | Functions | Branches |
+| --- | ---: | ---: | ---: | ---: |
+| NativeLane.ts | 100% | 100% | 100% | 100% |
+| RegexSession.ts | 100% | 100% | 100% | 100% |
+| RegexSessionProtocol.ts | 100% | 100% | 100% | 100% |
+| RegexSessionRpc.ts | 100% | 100% | 100% | 100% |
+| RegexSessionProgram.ts | 100% | 100% | 100% | 100% |
+| RegexDescriptors.ts | 100% | 96.96% | 94.73% | 94.44% |
+
+RegexDescriptors' floors are 97.82/96.15/93.33/92.85 respectively. Its retained
+uncovered defensive paths are the authoritative digest-mismatch refusal and
+invalid compiled-profile decode mapping. Normal registered patterns produce a
+valid owned snapshot and valid compiler profile; this bounded matrix does not
+inject corruption into those two internal contracts. Those guards remain.
+No guard is uncovered in NativeLane or the four new session files.
+
+| Test file | Source measured | Result |
+| --- | --- | --- |
+| CitationNativeLaneCoverage.test.ts | NativeLane.ts | Pass |
+| CitationNativeLane.test.ts | NativeLane.ts | Pass |
+| CitationNativeLaneReservation.test.ts | NativeLane.ts | Pass |
+| CitationNativeLaneComposition.test.ts | NativeLane.ts | Pass |
+| CitationNativeLaneTransfer.test.ts | NativeLane.ts | Pass |
+| CitationRegexSession.test.ts | NativeLane.ts | Pass |
+| CitationRegexSession.test.ts | RegexSession.ts | Pass |
+| CitationRegexLaneCoverage.test.ts | RegexSession.ts | Pass |
+| CitationRegexSessionProtocol.test.ts | RegexSessionProtocol.ts | Pass |
+| CitationRegexSessionRpc.test.ts | RegexSessionRpc.ts | Pass |
+| CitationRegexSessionProgram.test.ts | RegexSessionProgram.ts | Pass |
+| CitationRegexDescriptors.test.ts | RegexDescriptors.ts | Pass |
+| CitationRegexSession.test.ts | RegexDescriptors.ts | Pass |
+
+### Final count gate and required checks
+
+`CitationCanonicalFullSpan.test.ts` ran last and passed **12/12** (ten Bun
+calls, construction and Node parity). The 21-file affected run plus this gate
+is **22 files and 273 passing tests**, zero failures or skips. Session was
+rerun after its final assertion change: 64/64. The final file took **35.88 s
+wall time**, Vitest 35.40 s, at load **11.60 / 11.72 / 15.39**. Timing gates
+nothing. Every work-count assertion passes unchanged from the previous B2 head.
+
+| Per ten plain-text Bun calls | B1 | Round 2 B2 |
+| --- | ---: | ---: |
+| Regex child processes | 291 | 10 |
+| Regex evaluations | 291 | 291 |
+| Metadata-operation installs | 0 | 0 |
+| Configuration detaches | 0 | 0 |
+| Tokenizer builds | 0 | 0 |
+| Regex evaluator constructions | 0 | 0 |
+| Descriptor bindings | 4 | 4 |
+| Physical native owners | 10 | 10 |
+| Native lane acquisitions | 10 | 10 |
+| Diff/Xml worker constructions | 0 | 0 |
+
+| Engine construction | B1 | Round 2 B2 |
+| --- | ---: | ---: |
+| Metadata-operation installs | 16 | 16 |
+| Configuration detaches | 1 | 1 |
+| Tokenizer builds | 1 | 1 |
+| Regex evaluator constructions | 26 | 26 |
+| Regex evaluations | 0 | 0 |
+| Regex child processes | 0 | 0 |
+| Descriptor bindings | 0 | 0 |
+| Physical native owners | 1 | 1 |
+| Native lane acquisitions | 0 | 0 |
+| Diff/Xml worker constructions | 0 | 0 |
+
+The session's original eight real-process obligations pass again on both Bun
+and Node children: catastrophic deadline with responsive parent and confirmed
+death before return; fail-closed job after kill; wrong sequence; early EOF;
+oversize frame; unsolicited idle frame; Sent interruption; Running interruption.
+Live stdout closure, mixed engines, invalid engine, preparation/startup/write/
+read/retirement interruption barriers and both expected handovers also pass.
+Their exact names remain in the earlier proof tables and the session test file.
+The four new pipe proofs and capability/preflight regressions pass as detailed
+above. No spawn-count assertion required rewriting in this round.
+
+| Check | Result |
+| --- | --- |
+| bun install --frozen-lockfile | Pass |
+| Server bun run check | Pass; repeated by quick package verification |
+| quality package-verify @beep/law-practice-server --quick | Pass, lint and check |
+| Server lint:laws | Pass; three inherited advisory terse-effect findings, strict laws zero |
+| Fallow audit --base origin/main | Pass, zero introduced, 35 inherited findings excluded |
+| bun run docgen:local --full | Pass, 188-package metadata check, generation and aggregate |
+| bun run beep lint effect-vitest | Pass, zero introduced, one resolved |
+| bun run beep lint schema-first | Pass, zero introduced, inventory unchanged |
+| Root Oxlint on branch-touched TypeScript/MJS | Pass |
+| git diff --check and commit hooks | Pass |
+
+An unflagged docgen:local attempt correctly required full mode because the
+workspace lockfile changed; the full local run passed. Early development
+negative-control failures are intentional reproductions, not final reds.
+No coverage baseline, schema-first inventory, limit or public engine shape was
+changed. The only added dependency is the existing catalog's Noble hash package.
+
+The whole Citation directory was not rerun in this focused review wave; its
+previous 276-file green receipt is retained above. No package-wide tests or
+package-wide coverage ran. Hosted CI is not claimed. No requested affected file
+or required check was skipped. The three known Bun.version environment-only
+files were outside this wave's affected set; they passed with a Bun parent in
+the prior complete run. There is no further design conflict or new stop.
+
+Implementation: `0aa05bf28c4` (`fix(citation): revoke lane capabilities and prove
+real pipe retirement`). This evidence, the paired-pipe ruling and the generated
+checkpoint ship in the subsequent documentation commit. B2 remains **in review**;
+both earlier stops remain resolved. No push, merge, rebase or subagents.

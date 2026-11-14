@@ -150,6 +150,12 @@ B2 implements the depth-4 and per-job-engine owner rulings; both stops are resol
 
 Reverse: Return B2 to in progress if review finds an introduced failure; retain both owner protocol rulings and rerun the focused proofs and final count gate after changes.
 
+### B2 round 2 fixes retain ten regex processes per ten calls, 2026-11-14
+
+Accepted round 2 fixes revoke and drain unlocked lane capabilities and avoid proportional descriptor fingerprint allocation before exact frame refusal. Paired real-pipe regressions cover prompt EPIPE and deadline-interrupted backpressure on both child runtimes. B2 remains in review; final test, coverage, checks and count receipts are recorded in the Review round 2 evidence section. No publication is authorized.
+
+Reverse: Return B2 to in progress if the independent review finds a lifecycle or preflight defect.
+
 ### Record hosted round 1 repairs and the completed provider audit, 2026-11-14
 
 B1 remains in review as PR #3336. Hosted round 1 repairs preserve every expected
