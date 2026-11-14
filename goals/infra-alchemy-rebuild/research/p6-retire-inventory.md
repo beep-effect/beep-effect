@@ -20,7 +20,7 @@ Method, so a later lane can re-run it:
 
 Line numbers are for the tree above. They drift, so re-run the search, not the line.
 
-Revision 4 (2026-11-14, after #3341 merged) marks R1 and R2 done, records the gate's rulings on R6.6 and on references in hard-scanned files, and rewrites this document's mentions of paths #3341 deleted as plain text. Revision 3 (2026-11-14) adds section 6: what `delete-package` offers for acknowledged residue, the 330 remaining dependents classified by PR, the true residue, and the R6.6 design. Revision 2 (2026-11-14, same day) records the gate's rulings on Q1 to Q10 (section 4), the lab
+Revision 4 (2026-11-14, after #3341 merged) marks R1 and R2 done, records the gate's rulings on R6.6 and on references in hard-scanned files, rewrites this document's mentions of paths #3341 deleted as plain text, and re-measures the dependents on its own tree (325; R7 starts at 235, section 6.2). Revision 3 (2026-11-14) adds section 6: what `delete-package` offers for acknowledged residue, the 330 remaining dependents classified by PR, the true residue, and the R6.6 design. Revision 2 (2026-11-14, same day) records the gate's rulings on Q1 to Q10 (section 4), the lab
 check (Q6, seven more read-only AWS calls), the changeset and coverage answers (Q7, Q8) and
 the new PR R6.5.
 
@@ -78,9 +78,10 @@ default backend URL) holds 507 objects:
 | `.pulumi-migration-archive/2026-06-02T19-37-02.652Z/` | 315 | An earlier backend-migration archive (object names are base64 of old `opip-web` keys). |
 | `.pulumi/meta.yaml` | 1 | Backend metadata. |
 
-`beep-turbo-cache-lab/lab-c1023a` has no stack file, only a `.bak`, and no decision file in the
-packet records its removal (`rg lab-c1023a goals` finds nothing). The lab was destroyed on
-2026-10-24 and nothing of it is live in AWS (checked 2026-11-14, Q6 in section 4).
+`beep-turbo-cache-lab/lab-c1023a` has no stack file, only a `.bak`. When this was first measured, no decision
+file recorded its removal. #3341 added that record:
+`goals/infra-alchemy-rebuild/decisions/2026-11-14-turbo-cache-lab-lab-c1023a-was-destroyed-on-2026-10-24-nothing-is-live.md`.
+The lab was destroyed on 2026-10-24, and nothing of it is live in AWS (checked 2026-11-14, Q6 in section 4).
 
 ### 1.2 `infra/` by stack
 
@@ -88,22 +89,22 @@ Every tracked file under `infra/`, grouped by the Pulumi project or capability i
 is the state today, "Leaves with" is the PR in section 2.
 
 **Storybook** (Pulumi project `beep-storybook`; stack removed 2026-11-13, decision
-`2026-11-13-pulumi-beep-storybook-stack-removed.md`). Leaves with R1/R2.
+`2026-11-13-pulumi-beep-storybook-stack-removed.md`). Deleted by #3341 (R1).
 
 - infra/storybook/Pulumi.yaml (removed in #3341), infra/storybook/Pulumi.production.yaml (removed in #3341)
 - infra/src/Storybook.ts (removed in #3341) (425 lines; imports `@pulumiverse/vercel`, `@pulumi/pulumi`)
 - infra/src/internal/storybook-entry.ts (removed in #3341), infra/test/Storybook.test.ts (removed in #3341)
 
 **Turbo-cache lab** (Pulumi project `beep-turbo-cache-lab`; stack gone, `.bak` only; disposable
-conformance lab of the completed goal `turborepo-cache-conformance`). Leaves with R1.
+conformance lab of the completed goal `turborepo-cache-conformance`). Deleted by #3341 (R1).
 
 - infra/turbo-cache-lab/Pulumi.yaml (removed in #3341), infra/turbo-cache-lab/lab-aws.sh (removed in #3341), infra/turbo-cache-lab/.gitignore (removed in #3341)
 - infra/src/internal/turbo-cache-lab-entry.ts (removed in #3341) (imports `resolveTurboCacheLabBuckets` and
   `TurboCacheLabBucketsInput` from `infra/src/CiTurboCache.ts:17-24`; those two exports and their
   tests go with it, the rest of `CiTurboCache.ts` stays until R6)
 
-**OIP web** (Pulumi project `opip-web`; both stacks removed 2026-11-14 11:57Z and 11:59Z). Leaves
-with R2, which another lane is building.
+**OIP web** (Pulumi project `opip-web`; both stacks removed 2026-11-14 11:57Z and 11:59Z). Deleted
+by #3341 (R2).
 
 - infra/oip-web/Pulumi.yaml, infra/oip-web/Pulumi.production.yaml and infra/oip-web/Pulumi.staging.yaml (all removed in #3341)
 - infra/src/OipWeb.ts (removed in #3341) (1,147 lines; `@pulumi/aws`, `@pulumi/cloudflare`, `@pulumiverse/vercel`)
@@ -176,8 +177,8 @@ row passes today.
 
 | Item | Where | Used by today | Can go after |
 | --- | --- | --- | --- |
-| `@pulumiverse/vercel` catalog entry | `package.json:105`; `infra/package.json` dependency | infra/src/OipWeb.ts (removed in #3341), infra/src/Storybook.ts (removed in #3341) | R2 (with Storybook removed) |
-| `@pulumi/cloudflare` | `package.json:102`; `infra/package.json` | infra/src/OipWeb.ts (removed in #3341) only | R2 |
+| `@pulumiverse/vercel` catalog entry | was `package.json:105` and an `infra/package.json` dependency | nothing | removed in #3341 |
+| `@pulumi/cloudflare` | was `package.json:102` and an `infra/package.json` dependency | nothing | removed in #3341 |
 | `@pulumi/command` | `package.json:103`; `infra/package.json` | `infra/src/AIMetrics.ts`, `infra/src/OpenClaw.ts` | R4 |
 | `@pulumi/aws` | `package.json:101`; `infra/package.json` | `CiRunners.ts`, `CiFleetController.ts`, `CiTurboCache.ts`, `OipWeb.ts`, `AccountCostControls.ts` | R6 |
 | `@pulumi/pulumi` (exact `3.276.0`) | `package.json:104`; `infra/package.json` | every program and most `infra/test/*` | R7 (last importer is `InfraArtifactPath.ts`/`PulumiConfigSchema.ts`) |
@@ -288,12 +289,12 @@ turbo-cache stage 2 PR replaces them.
 | `packages/foundation/modeling/identity/src/packages.ts:51`, `:869-882` (`$InfraId`); `test/shape-stable.test.ts`; `biome.identity.jsonc` | identity segment | `delete-package` step "identity-segment" (R7). Use `--identity-major` only if the gate rules the removal a breaking identity change (Q7) |
 | `standards/coverage.regression-baseline.jsonc:39` (reason row), `:15730+` (package totals 72.23/72.28/... and one row per `infra/src` file) | per-file and per-package coverage | each R-PR removes its file rows, and the package totals shift (section 2, "Coverage") |
 | `standards/cache-qualification-baseline.json:690` subject `@beep/infra` (last recorded by the infra-hosts lane) plus root-subject task digests | cache baseline | `bun run beep cache audit`, then `bun run beep cache baseline --request <request.json>` with a review under `goals/infra-alchemy-rebuild/research/` |
-| `standards/schema-catalog/@beep/infra.generated.jsonc` (31 rows) | schema catalog shard | `bun run beep lint schema-catalog --write` |
-| `standards/schema-first.inventory.jsonc:7` (scope `infra/{src,test}/**/*.ts`), `:59-63` (`OipPulumiStateBackendConfig`) | schema-first inventory | `bun run beep lint schema-first --write` |
+| `standards/schema-catalog/@beep/infra.generated.jsonc` (31 rows at 653c2cdef18; #3341 removed its deleted modules' rows) | schema catalog shard | `bun run beep lint schema-catalog --write` |
+| `standards/schema-first.inventory.jsonc:7` (scope `infra/{src,test}/**/*.ts`), `:59-63` (`OipPulumiStateBackendConfig`, removed by #3341) | schema-first inventory | `bun run beep lint schema-first --write` |
 | `standards/jsdoc-documentation.inventory.jsonc` (122 lines), `standards/jsdoc-documentation.inventory.md` | JSDoc inventory | `bun run jsdoc:inventory` |
 | `standards/effect-vitest.census.json` (28), `standards/effect-vitest.inventory.jsonc` (16) | effect-vitest census and baseline | `bun run beep lint effect-vitest --census` and `--write` |
 | `standards/fallow.boundaries.generated.jsonc:513-517` (zone), `:3091-3112` (allow lists); `standards/fallow.boundaries.provenance.jsonc:387-392` | Fallow boundaries | `bun run fallow:boundaries:write` |
-| `standards/fallow.health.regression-baseline.jsonc:29` (infra/src/OipWeb.ts (removed in #3341)) | Fallow health | `bun run fallow:health:baseline:write` (R2) |
+| `standards/fallow.health.regression-baseline.jsonc:29` (infra/src/OipWeb.ts (removed in #3341)) | Fallow health | removed by #3341 (R2) |
 | `standards/policy-tools.fingerprint.json:488` (`infra/package.json`) and the generated `turbo.json` seal inputs | policy fingerprint | `bun run beep lint policy-fingerprint --write` |
 | `standards/root-package.projection.generated.json:117`, `:133`, `:200` | root manifest projection | `bun run beep tsconfig-sync` |
 | `standards/cache-conformance/pins-2026-10-23.json:57`, `:76` | dated conformance evidence naming `infra/lambda/turbo-cache` and `infra/r2-cache/adapter.sh` | keep: it is a dated record (the `delete-package` plan lists it as baseline evidence to preserve) |
@@ -309,13 +310,13 @@ the schema catalog, effect-vitest census and cache baseline writers above.
 
 - `docs/runbooks/alchemy-infra.md`: 45 Pulumi lines, including "Cutover from Pulumi" (476-532), the
   freeze notes in "Cost controls" (around 182), the host rollback (`infra/src/AIMetrics.ts`, 246 in
-  SPEC), "Later" step 7 (528-529) and the stage-2 sentence (638).
+  SPEC), "Later" step 7 (528-529; #3341 rewrote the cutover section as done and removed step 7) and the stage-2 sentence (638).
 - `docs/runbooks/ci-runner-reliability.md`: 19 Pulumi lines; the live pool table and
   "Deploy and verify" (421-425, 553) are Pulumi procedures.
 - `docs/runbooks/aws-cost-operations.md`: 9 Pulumi lines (81, 190, 260, 272, 301-310, 394, 595,
   627-628, 646-648): the runner-image and AMI pin procedure and the state census row.
 - `docs/runbooks/typescript-toolchain.md:5`, `:625-637` (the "infra/Pulumi" TS6 paragraph).
-- `docs/runbooks/turbo-cache-inputs.md:213`, `:390`; `docs/runbooks/vercel-deploys.md:9`;
+- `docs/runbooks/turbo-cache-inputs.md:213`, `:390`; `docs/runbooks/vercel-deploys.md:9` (rewritten by #3341);
   `docs/runbooks/onepassword-beep-secrets-layout.md:70`; `docs/README.md:22`.
 - `standards/turbo-remote-cache.md`: the whole document describes the AWS Lambda cache
   (`:4`, `:34`, `:350`). Rewrite it for the Worker in stage 2 or R6.
@@ -413,7 +414,7 @@ named the deleted paths, in the same PR.
   `standards/cache-qualification-baseline.json`: take `main`'s copy and re-record with a fresh
   `previous`.
 - **Schema, instrumentation and JSDoc catalogs.** `lint schema-catalog --write` (the
-  `@beep/infra` shard shrinks), `lint schema-first --write` (R2 removes `OipPulumiStateBackendConfig`),
+  `@beep/infra` shard shrinks), `lint schema-first --write` (R2 removed `OipPulumiStateBackendConfig` in #3341),
   `jsdoc:inventory`, `lint effect-vitest --census`/`--write`. The cost-controls removal commit
   regenerated these inventories and produced +54k and +15k line diffs. Regenerate on a fresh merge
   of `main` so the diff stays reviewable.
@@ -742,7 +743,7 @@ The SPEC's "Pulumi gone" row, unchanged:
 rg -n '@pulumi|pulumiverse|typescript6' package.json packages apps bun.lock
 ```
 
-Today it matches `package.json` (101-105, 380), `bun.lock` (26 lines) and three test locations
+It matched `package.json` (101-105, 380), `bun.lock` (26 lines) and three test locations at 653c2cdef18. After #3341 it matches `package.json` 101-103 and 378 and `bun.lock` (20 lines), plus the same test locations
 (section 1.5). The codec fixture and the two test fixtures need renaming for the row to pass. The
 row's scope misses residue elsewhere, so R7 also runs these wider checks:
 
@@ -922,7 +923,8 @@ and any evidence gathered after it):
   - Cost: nothing accrues. The only remnants are five small objects in the Pulumi backend (the
     `.bak` and four backups, about 0.5 MB), which stay with the bucket (Q5).
   - Consequence: no removal procedure is needed. R1 may delete infra/turbo-cache-lab/lab-aws.sh (removed in #3341)
-    with the program, and records this result in a short decision file (R1 entry). Note that
+    with the program. #3341 did both: it deleted the script and recorded this result in
+    `goals/infra-alchemy-rebuild/decisions/2026-11-14-turbo-cache-lab-lab-c1023a-was-destroyed-on-2026-10-24-nothing-is-live.md`. Note that
     `lab-aws.sh` cites standards/cache-conformance/lab-deployment-preview.md (plain text: no such file) for the approved cost
     ceiling, and that document is not in the tree.
 - **Q7:** is removing `$InfraId` from `@beep/identity` an identity-major change
@@ -1003,7 +1005,7 @@ Runbook rewrite, section by section:
 | | "Stacks" table | adds `CiRunners`, `InfraGithub` and `TurboCache` rows; no Pulumi column |
 | | "Cost controls" | drops the freeze and the `pulumi config get` recipient bootstrap; keeps the Alchemy procedure |
 | | "Host stacks" | drops "the Pulumi program stays on main until P6"; rollback is `rollbackToCompose` only |
-| | "OipWeb" / "Cutover from Pulumi" | the cutover becomes a two-line historical note that points at `goals/infra-alchemy-rebuild/decisions/2026-11-14-oipweb-cutover-procedure-from-pulumi.md` |
+| | "OipWeb" / "Cutover from Pulumi" | #3341 already rewrote it as a dated "done" section; it shrinks to a short historical note that points at `goals/infra-alchemy-rebuild/decisions/2026-11-14-oipweb-cutover-procedure-from-pulumi.md` |
 | | "Turbo cache" | drops "until CI is flipped (cutover stage 2)"; the Worker is the only cache; token issue and rotate stay |
 | | new "Runner fleet" | from `@beep/infra-ci-runners`: deploy, phases, bake-to-config, reaper, rollback |
 | | new "Retired: Pulumi" | where the export archive lives (described, not a home path), which passphrase field decrypts which archive, and the `pulumi stack import` recipe from the decision files |
@@ -1042,7 +1044,7 @@ Packet closeout, in the same PR:
 
 Read-only, 2026-11-14. Measured with `bun run beep delete-package @beep/infra --dry-run` at #3343's
 head `4810cc93ccc`, on a tree with gitignored local build output removed. Result: 330 hard dependent
-hits (329 `file-path` and 1 `script`). Nothing was applied.
+hits (329 `file-path` and 1 `script`). Nothing was applied. Revision 4 re-measured after #3341 merged: 325 (6.2).
 
 ### 6.1 What `delete-package` offers for acknowledged residue today
 
@@ -1067,19 +1069,27 @@ Nothing that accepts named hits. Read from
   gate other refusals, not dependents.
 - No human-edited plan file exists. The printed inverse plan is output only.
 
-### 6.2 The 330 hits, by the PR that removes them
+### 6.2 The dependents, by the PR that removes them
+
+Re-measured on this PR's tree, which is `main` at `e051bd152f3` plus this PR's edits, with gitignored build output
+removed. The command was #3343's CLI (`fb850d55014`), run from that branch's worktree because this branch does not
+contain the R6.5 matcher yet: `delete-package @beep/infra --dry-run` reports **325** hard hits (324 `file-path`, 1
+`script`). This branch's own CLI reports 348; the difference is the 23 sibling false matches R6.5 removes. The
+first measurement, at #3343's `4810cc93ccc` before #3341 merged, was 330. #3341 changed no counted line except the
+three `apps/oip-web` rewrites below. This PR removes 5 hits, all R7: those three references and
+`no-manual-effect-runtime-in-tests.ts:61-62`.
 
 | Removed by | Hits | Notes |
 | --- | --- | --- |
-| R1 + R2 (#3341) | 0 | #3341 rewrote the three `apps/oip-web` lines to plain text plus "(removed in #3341)", and the path text still matched. The P6 housekeeping PR drops those three references (gate ruling), so R7's count falls by 3, to 209. It also removes the two stale `LEGACY_BASELINE` entries #3341 left in `no-manual-effect-runtime-in-tests.ts`. Those entries were not `delete-package` hits, because the deleted files are no longer scanned. |
+| R1 + R2 (#3341) | 0 | #3341 rewrote the three `apps/oip-web` lines to plain text plus "(removed in #3341)", and the path text still matched. It also left the `LEGACY_BASELINE` entries for its two deleted tests in `no-manual-effect-runtime-in-tests.ts:61-62`, and those are hits too: the hit is the path text in the scanned rule file. The P6 housekeeping PR removes all five, so R7 falls from 212 to 207. |
 | Cost-controls removal | 0 | No hit is in a file it changes. |
 | R4 (hosts) | 8 | AI metrics installer and tests, `infra-hosts` provenance, the AIMetrics allowlist entry. |
 | R5 (R2 pilot) | 57 | `Cache.r2*`, adapter, producer tests, every `r2-cache` CI line, the tracked-shell test fixture. |
 | R6 (fleet) | 25 | `beep runners bake`, overflow preflight, SDK and Lambda exclusions, `check.yml:421`. |
-| R7 (package removal) | 209 (212 before the P6 housekeeping PR dropped 3) | Scan roots, globs, the `infra` package kind, coverage and partition rows, the root policy files, and Q10 provenance prose. Four of these only borrow the word as fixture text (6.3). |
+| R7 (package removal) | 207 (212 before the P6 housekeeping PR removed 5) | Scan roots, globs, the `infra` package kind, coverage and partition rows, the root policy files, and Q10 provenance prose. Four of these only borrow the word as fixture text (6.3). |
 | True residue | 28 | Listed in 6.3. |
 
-If every earlier PR merges, the command sees **237** hits when R7 starts (209 + 28; the P6 housekeeping PR removed 3 of the original 212). After R7's own
+If every earlier PR merges, the command sees **235** hits when R7 starts (207 + 28). The table sums to the measured 325: 8 + 57 + 25 + 207 + 28. After R7's own
 edits it sees **32**: the 28 residue lines plus the 4 borrowed fixture lines, or 28 if R7 renames
 those four. Lines that R4 to R6 or other lanes add before R7 are not predicted. One case is
 predictable: a Q3 rewrite in a hard-scanned file (anything under `packages/`, `apps/`, `.github/`, or
@@ -1087,7 +1097,7 @@ a root policy file) keeps the `infra/...` text and stays a dependent. In those f
 drop the reference (Q10), not rewrite it. Q3 rewrites under `goals/`, `explorations/` and
 `research/` are classed as `packet`, `historical-doc` or `baseline`, which do not block.
 
-Per-file detail (line numbers at `4810cc93ccc`):
+Per-file detail (line numbers on this PR's tree, at the 325-hit measurement):
 
 R4:
 
@@ -1150,9 +1160,6 @@ R7:
 
 | File | Hits | Lines |
 | --- | --- | --- |
-| `apps/oip-web/README.md` | 1 | 117 |
-| `apps/oip-web/stack/OipWebConfig.ts` | 1 | 375 |
-| `apps/oip-web/stack/OipWebStack.ts` | 1 | 5 |
 | `apps/todox/vercel.json` | 1 | 7 |
 | `biome.jsonc` | 1 | whole file |
 | `.github/workflows/catalog-regeneration.yml` | 1 | 75 |
@@ -1170,7 +1177,7 @@ R7:
 | `packages/tooling/library/repo-cli-kit/test/package-scripts.schemas.test.ts` | 3 | 121, 123, 192 |
 | `packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts` | 1 | 383 |
 | `packages/tooling/policy-pack/lint-rules/README.md` | 2 | 28, 74 |
-| `packages/tooling/policy-pack/lint-rules/src/rules/no-manual-effect-runtime-in-tests.ts` | 3 | 53, 61, 62 |
+| `packages/tooling/policy-pack/lint-rules/src/rules/no-manual-effect-runtime-in-tests.ts` | 1 | 53 |
 | `packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts` | 3 | 405, 587, 640 |
 | `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts` | 1 | 2259 |
 | `packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json` | 1 | 5 |
@@ -1206,7 +1213,7 @@ R7:
 | `packages/tooling/tool/cli/test/ci-runner-security.test.ts` | 2 | 1809, 498 |
 | `packages/tooling/tool/cli/test/commands/Goals/Harvest.test.ts` | 4 | 175, 318, 320, 321 |
 | `packages/tooling/tool/cli/test/coverage-scope-tooling-input-owners.test.ts` | 3 | 193, 23, 30 |
-| `packages/tooling/tool/cli/test/delete-package.test.ts` | 3 | 383, 385, 391 |
+| `packages/tooling/tool/cli/test/delete-package.test.ts` | 3 | 308, 310, 316 |
 | `packages/tooling/tool/cli/test/doctest-lane.test.ts` | 1 | 37 |
 | `packages/tooling/tool/cli/test/effect-fn.test.ts` | 1 | 51 |
 | `packages/tooling/tool/cli/test/effect-imports.test.ts` | 11 | 1055, 1062, 1071, 1449, 1456, 1468, 1514, 1520, 1532, 1572, 1575 |
@@ -1330,7 +1337,7 @@ The gate reviews them as a list, and any new collision fails loudly.
 ### 6.5 Tracked files only: the scan's file enumeration
 
 Today the dependents scan and the doctor enumerate files by walking the filesystem.
-`collectFiles` (`RegistrationGeometry.probes.ts:73-98`) recurses from each root and skips only the
+`collectFiles` (`RegistrationGeometry.probes.ts:73-98`; line numbers in this section are at #3343's `4810cc93ccc`) recurses from each root and skips only the
 directory names in `EXCLUDED_DIRECTORIES` (`.git`, `node_modules`, `dist`, `coverage`, `.turbo`,
 `.beep`, at `:53`). It never consults git, so gitignored output is read. Callers:
 
