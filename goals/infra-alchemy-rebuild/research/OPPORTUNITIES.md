@@ -315,3 +315,16 @@ to the gap between the reference checkout (main) and the pinned release.
   `beep quality package-verify --laws` running every root law task filtered to the changed files.
 - Operator approval of a workflow file pinned to a blob is invalidated by any review-driven edit to that file;
   #3323 and #3324 each needed a second ask. Prevent: ask after the first review round, not at open.
+
+## 2026-11-14: `Lambda.Function` cannot pin its execution role's name
+
+- **Doing:** P5 ci-runners stack (lane `goals/infra-alchemy-rebuild-p5-ci-runners`), pinning every `prod`
+  physical name so a lost or moved state cannot mint a second fleet (the #3133 lesson).
+- **Evidence:** Alchemy 2.0.0-beta.87 `Lambda.Function` names its own role with
+  `createPhysicalName({ id, maxLength: 64 })` (`CiRunners-<logical id>-prod-<instance suffix>`) and its props
+  take no `role`, `roleArn` or `roleName`. Functions, queues, runner roles, profiles, templates, rules and the
+  bucket are pinned through `RunnerFleetProps.namePrefix`; the nine execution roles stay generated, and the
+  deploy role keeps a `role/CiRunners-*-prod-*` allowance for them. Accepted by the packet gate: the pinned
+  function names collide after a state loss, so no second fleet appears.
+- **Would have prevented it:** an optional `roleName` prop on `Lambda.Function` (used instead of the generated
+  name when set). Proposed upstream under D14 (in-repo first, upstream when stable); no bun patch in this packet.
