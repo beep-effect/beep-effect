@@ -63,8 +63,10 @@ export type FinalCheckRefreshAllowance = typeof FinalCheckRefreshAllowance.Type;
  * `malformed-receipt`: a receipt file for the head or for the nearest ancestor
  * exists but does not decode (an interrupted write, say), so no older receipt
  * may stand in for it.
- * `ancestor-receipt-not-passing`: the nearest ancestor receipt failed or ran
- * a `--gates` subset, so an older passing receipt cannot stand in for it.
+ * `ancestor-receipt-not-passing`: the nearest ancestor receipt failed or is
+ * incomplete (`--fail-fast` stopped it, or it is a subset receipt written
+ * before subset runs moved to their own files), so an older passing receipt
+ * cannot stand in for it.
  *
  * **Example** (Check a refusal reason)
  *
