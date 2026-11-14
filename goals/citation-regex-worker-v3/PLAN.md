@@ -20,7 +20,7 @@ Each slice is one PR and runs the phases above. They land in order.
 
 | Slice | Status | Content | Count that must move |
 | --- | --- | --- | --- |
-| B1 | in review | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
+| B1 | merged (#3336) | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
 | B2 | in review | Protocol v3 messages, looping worker, `CitationRegexSession`, sleep-counting clock, the real-process proofs; every regex call site switches. | regex processes 291 to 10 |
 | B3 | pending | Delete v2; rewrite spawn-count assertions; re-record shard timings; append isolation evidence. | none |
 

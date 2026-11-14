@@ -480,9 +480,7 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
  * **Example** (Keeping capacity with the invocation)
  * ```ts
  * import { CitationNativeLane, citationNativeJobReservation } from "@beep/law-practice-server/internal/Citation/NativeLane";
- * import * as Deferred from "effect/Deferred";
-import * as Duration from "effect/Duration";
-import * as Effect from "effect/Effect";
+ * import * as Effect from "effect/Effect";
  * const reservation = Effect.flatMap(CitationNativeLane, (lane) =>
  *   lane.reserve.pipe(citationNativeJobReservation((reason) => ({ reason }))));
  * ```

@@ -12,7 +12,7 @@
   "packetPath": "goals/citation-regex-worker-v3",
   "lifecycle": "active",
   "mission": "Serve a request's regex jobs from one child process at a time in a per-invocation native lane, under a parent timer per job, keeping SIGKILL retirement and capacity release only on confirmed death.",
-  "statusNote": "Graduated 2026-11-12, not started. Waits on slice A2 of citation-engine-install-once; first slice B1, the native lane.",
+  "statusNote": "B1 merged as #3336 (fa8f0f0757): one native lane per invocation and limits policy v2. B2 is in review on #3352: protocol v3 and CitationRegexSession, one regex child process per invocation; ten plain-text calls go from 291 regex children to 10 with 291 evaluations unchanged. B3 follows once B2 merges.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
