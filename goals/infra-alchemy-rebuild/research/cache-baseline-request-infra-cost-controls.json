@@ -1,5 +1,5 @@
 {
-  "previous": "bdfe507b7babede6b53810e4ab227949184623b5a4f128f34607f2832b421160",
+  "previous": "04badd83193d15cbfc4f587d9a8467ad7158e9ab264796f41bdb3edadb5ff785",
   "review": {
     "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p3-cost-controls)",
     "reason": "Record the new @beep/infra-cost-controls package at its generated scripts and its manifest joining the //#lint:policy-fingerprint inputs in turbo.json; no command, output or environment changes, no qualification granted.",
