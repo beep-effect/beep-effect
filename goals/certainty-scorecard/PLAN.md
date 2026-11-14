@@ -211,6 +211,14 @@ Lane chore/certainty-peril-11-fleet-roots
 
 Reverse: Delete this checkpoint so the slice-7 checkpoint is the latest PLAN status note, and revert the slice-8 PR.
 
+### Slice 10b: residual handler errors typed and located, 2026-11-14
+
+Slice 10b (MEAS-03 slice 2) types the handler errors slice 10 left `unlocated`. `YeetCommandError` carries an optional `handlerErrorKind` from the closed `YeetHandlerErrorKind` domain (`publish-input`, `review-threads`, `github-rate-limit`, `github-transport`), set at the publish input and review-thread raise sites and read from a `GitHubError` cause by its structural kind; the run verdict records it. `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts` locates such a red, after the lane and step tiers and before `unexecuted`, as `refusal:publish-input`, `refusal:review-threads`, `github:rate-limit` or `github:transport`, reading the raise sites' sentences for rows written before the key existed; `unlocated` stays the unknown bucket (decision `handler-errors-typed-and-located`). On the workstation fleet 133 of the 160 `unlocated` reds are now located and 27 stay unknown, with `redAttempts` and the mix total unchanged at 1201. The admission gate is `packages/tooling/tool/cli/test/yeet-economics-handler-errors.test.ts` over the committed journal `test/fixtures/yeet-economics/adjudicated-handler-errors.ndjson`. Slice 10b is unscheduled and does not gate the closeout.
+
+Lane fix/certainty-type-unlocated-errors
+
+Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-10b PR.
+
 ### Slice 5b: capacity and host pressure on admission rows, 2026-11-14
 
 Slice 8 (PERIL-11 slice 2) merged as #3273 and slice 14 (MEAS-05 slice 1) as #3274. Slice 5b (SCHE-09 slice 2) is in review: admitted and v3 released rows carry an optional `pressure` stamp (capacity, active and queued tokens, MemAvailable, PSI some avg10 for cpu, memory and io, and unadmitted agent-runs.slice memory), written only while the admission protocol's new `pressure` key is on (`bun run beep quality scheduler protocol --pressure on`). `quality scheduler history` counts the stamped rows and `--json` lists them (decision `sche-09-pressure-stamps`). The key needs no reader census, because every revision ignores it and keeps the row's bytes, so it can go on once this slice merges. From then on local-proof-under-ten's scheduler levers (SCHE-01, SCHE-02, SCHE-04, SCHE-07) can read capacity at admit and release from the retained history. With 5b merged, both SCHE-09 PR slices have landed.
