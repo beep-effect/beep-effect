@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,18 +31,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Slice A4 in review after owner round 3: configuration owned once per engine
-(`CitationOwned`; the default engine derives its installed configuration from
-the owned caller configuration), leaf helpers typed, reference-pattern
-authentication hoisted to install. A1 (#3253), A2 (#3265) and A3 (#3282) are
-merged.
+All four slices are merged: A1 (#3253), A2 (#3265), A3 (#3282) and A4 (#3319). The packet is in
+closeout; the reflection is
+[`history/reflections/2026-11-14-claude.md`](./history/reflections/2026-11-14-claude.md).
 
 ## Latest Evidence
 
 [`history/evidence/2026-11-13-a4-owned-configuration.md`](./history/evidence/2026-11-13-a4-owned-configuration.md):
-per call still 0 installs, 0 detaches, 0 tokenizer builds and 0 evaluator
-installs with 291 child processes over ten calls; engine construction now
-performs 1 configuration detach (10 at A3).
+per call 0 installs, 0 detaches, 0 tokenizer builds and 0 evaluator installs with 291 child
+processes over ten calls; engine construction performs 1 configuration detach (10 at A3). The 291
+child processes are the target of `goals/citation-regex-worker-v3`.
 
 ## Notes
 
