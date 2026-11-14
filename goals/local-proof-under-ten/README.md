@@ -37,9 +37,10 @@ Use this command for execution-capable sessions:
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
 (`decisions/2026-11-10-p0-baseline.md`). Slices 1 (PERIL-13), 2 (PERIL-10 summary and archive), 3 (SCHE-08, the
-admission unit schema, #3308), 4 (the beep-heavy retirement, which completes PERIL-10, #3312) and 6 (SCHE-08, the
-scheduler service facade and the Cache work kind, #3317) are done; slice 5 (PERIL-02, one live readiness monitor
-per pull request and readiness argv) is open as #3316.
+admission unit schema, #3308), 4 (the beep-heavy retirement, which completes PERIL-10, #3312), 5 (PERIL-02, one live
+readiness monitor per pull request and readiness argv, #3316) and 6 (SCHE-08, the scheduler service facade and the
+Cache work kind, #3317) are merged. Slice 9 (TURB-05: the force reason, the narrowed-force shadow, and forcing
+patch-only and override-only commits) is implemented on `perf/local-proof-force-reason`.
 
 ## Latest Evidence
 
@@ -81,6 +82,14 @@ per pull request and readiness argv) is open as #3316.
   request their own `cache` kind at weight 1, kept in the review-fix class cap. With the units gate off a Cache
   admission writes origin/main's `review-fix` bytes (fixture captured from its encoder); with it on, `cache`.
   The scheduler suites pass on Node and Bun.
+- 2026-11-14: slice 9 (TURB-05) records why a run forced Turbo and closes a stale-green hole. Patch-only commits
+  (`patches/` or the root `patchedDependencies`, as #2873 was) and override-only commits (root `overrides` or
+  `resolutions`) are now forced; before, only a `bun.lock` change forced, and nothing else about the forced set
+  changed. The decision moved into `Yeet/internal/TurboForce.ts`, with one `git diff --name-only` and the root
+  `package.json` read only when it is in that diff (43 to 55 ms). Every repair, verify and publish attempt-started row
+  carries `turboForce`: the reasons that applied and a shadow of the narrowed decision (no force for a lockfile-only
+  change), with each package's locked installed-tree digest at the merge base and HEAD on lockfile attempts (0.62 s
+  under load on this repo's 209 packages). The shadow drives nothing (D14).
 
 ## Notes
 
