@@ -31,16 +31,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Providers (started 2026-11-13), run as three parallel lanes with one PR each:
-`@beep/alchemy-aws-extras` (cost-allocation tags, the Compute Optimizer and Cost Optimization Hub
-enrollments, `RunnerLaunchTemplate`; `KmsGrant` dropped because the GitHub App key delegates to
-IAM), `@beep/alchemy-vercel` and `@beep/alchemy-github-runners`. P2 exits when all three pass
-`package-verify` with `@alchemy.run/test` coverage of create, update, delete, read and adopt.
-P1 Foundations closed 2026-11-13: the first `prod` deploy on the shared S3 store showed no create
-or replace.
+P2 Providers closed 2026-11-14: `@beep/alchemy-aws-extras` (#3292), `@beep/alchemy-vercel` (#3290) and
+`@beep/alchemy-github-runners` (#3291 for the Lambdas, then the composite PR from
+`goals/infra-alchemy-rebuild-p2-github-runners-composite`) each pass `package-verify`, with
+`@alchemy.run/test` or fake-HTTP coverage of create, update, delete, read and adopt. Nothing was deployed.
+P3 Low-risk stacks lanes are under way: Storybook merged (#3289); turbo cache and cost controls are in
+review. P1 Foundations closed 2026-11-13.
 
 ## Latest Evidence
 
+- 2026-11-14 P2 exit: #3292 (aws-extras), #3290 (vercel), #3291 (runner Lambdas) and the runners composite PR (`RunnerFleet`, `RunnerSweep`, runner user data, composing `RunnerLaunchTemplate`); `decisions/2026-11-14-p2-providers-complete.md`.
 - 2026-11-13 P1 exit: PRs #3021 and #3133 merged; hosted run 43407236289 (`Deploy beep-effect-web`, `main`) logged `Plan: 1 to update`, `[Website] update` and `Done: 1 succeeded`, no create or replace (`decisions/2026-11-13-p1-complete-p2-providers-in-progress.md`).
 - 2026-11-13 P2 aws-extras lane: `decisions/2026-11-13-*.md` (KmsGrant dropped, resource shape, fake-HTTP provider tests, launch template placement).
 - 2026-11-09 P1 bootstrap receipts: `decisions/2026-11-09-*.md` (state bucket, OIDC role, state move, bun patch).

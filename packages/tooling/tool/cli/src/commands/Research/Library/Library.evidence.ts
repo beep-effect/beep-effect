@@ -616,8 +616,9 @@ const prepareGithubContext = Effect.fn("Library.prepareGithubContext")(function*
   const realClone = yield* fs.realPath(clone);
   const relative = path.relative(realRoot, realClone);
   if (path.isAbsolute(relative) || relative === ".." || Str.startsWith(`..${path.sep}`)(relative)) return O.none();
-  // KEEP (D-19): every git call below rides this helper and its hardened untrusted-clone boundary.
   const git = (args: ReadonlyArray<string>) =>
+    // KEEP (D-19): every git call below rides this helper and its hardened untrusted-clone boundary.
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
     runLibraryCommand(root, "git", ["-c", "core.hooksPath=/dev/null", "-C", clone, ...args]);
   if (
     (yield* git(["remote", "get-url", "origin"]).pipe(Effect.map(Str.trim))) !== pin.value.remote ||
