@@ -709,6 +709,18 @@ Lane goals/infra-alchemy-rebuild-p3-cost-controls
 
 Reverse: Delete .github/workflows/deploy-cost-controls.yml and its line in the ci-runner-security exemption list; the stack's resources stay as last deployed.
 
+### Cost controls cutover goes live first, Pulumi destroy second (packet gate), 2026-11-14
+
+Ruling of the packet gate session, 2026-11-14, superseding the destroy-first order and the two-hour gap rule recorded on 2026-11-14 (cutover decision, timing; silent-parallel-run decision, gap limit): in the Pulumi cutover `live` goes first and the Pulumi destroy second.
+
+Why: the destroy-first order leaves a gap between destroying `Monthly Budget` and `beep-account-daily-anomalies` and the `live` deploy in which the account, already over its budget ($371.54 month to date against $200 on 2026-11-13), has no budget and no anomaly mail at all. The cost of the new order is one duplicate burst: the new budget sends each threshold mail once when its notifications are created, and the new `AnomalyAlerts` subscription runs beside the old Pulumi one, so at most one duplicate daily anomaly digest, until the gate session destroys the old pair right after the `live` deploy is verified.
+
+New order: (1) merge the `live` PR, whose deploy adds the budget notifications and creates `AnomalyAlerts` (the pre-deploy gate accepts a budget update and an `AnomalyAlerts` create while the nine singletons stay no-op; the PR does not touch the workflow, so it is an ordinary gate merge, disclosed to the orchestrator before it merges as the window-5 owner asked); (2) verify both exist and the gate step passed; (3) the gate session destroys only the old Pulumi budget and subscription by target, then removes the monitor, six tags, two enrollments, provider and component from Pulumi state; (4) the component-removal PR merges after `live` has been green for 24 hours. Rollback follows the order: before (3), a PR back to `silent` (the gate's single allowed `AnomalyAlerts` delete); after (3), restore the Pulumi pair (import, refresh, preview two creates, targeted up), then `silent`; after (4), revert the removal PR first. The cutover decision, the silent-parallel-run decision, the runbook and the package README carry the new order.
+
+Lane goals/infra-alchemy-rebuild-p3-cost-controls-live
+
+Reverse: Return to the destroy-first order with a bounded gap: destroy the old Pulumi pair before merging live; requires a new packet gate ruling.
+
 ### Cost controls personal-stage plan: 1 create, no account singleton, no delete or replace; no spend, 2026-11-14
 
 Amended 2026-11-14 after beep-reviewer round 1 on #3310 (P2, relayed by the packet gate session): personal stages no longer declare any account singleton, so a workstation deploy cannot adopt or write an account-wide setting outside the workflow's pre-deploy gate. Re-measured the same day with the same read-only command (`bunx alchemy plan --stage dev_elpresidank --env-file /dev/null --no-input`): `Plan: 1 to create`, the only line `[MonthlyBudget] create`; the state bucket still held only `BeepEffectWeb/` and `Storybook/` afterwards. The `prod` graph is unchanged. The first measurement, kept below as history, planned `1 to create, 8 to adopted` because every stage then adopted the six tags and two enrollments.
@@ -779,7 +791,7 @@ URNs (13: eleven live resources, the component's AWS provider, the component). E
 
 Why state delete for 3-11: a Pulumi delete of a tag deactivates it, of an enrollment opts the account out, and of the monitor deletes the account's only services monitor that Alchemy now owns. Only the budget and the subscription, which Alchemy replaced under new names, are destroyed.
 
-Preconditions: the first `prod` deploy of `CostControls` is green including its verify step; `alchemy plan --stage prod` in CI shows no create or replace; `aws ce list-tags-for-resource` on the monitor shows `alchemy::stack=CostControls`; the orchestrator has been told the Pulumi steps are about to run.
+Preconditions: the first `prod` deploy of `CostControls` is green including its verify step (done 2026-11-14, run 43555854755); `alchemy plan --stage prod` in CI shows no create or replace; `aws ce list-tags-for-resource` on the monitor shows `alchemy::stack=CostControls`; the orchestrator has been told the Pulumi steps are about to run.
 
 Environment, from `infra/ci-runners` (single quotes: URNs contain `$` and `:`):
 
@@ -801,14 +813,18 @@ U12='urn:pulumi:production::beep-ci-runners::beep:infra:AccountCostControls$pulu
 U13='urn:pulumi:production::beep-ci-runners::beep:infra:AccountCostControls::account-cost-controls'
 ```
 
-1. Unprotect, state only, URNs 1-12:
+Order (packet gate ruling, 2026-11-14, superseding the earlier destroy-first order and its two-hour gap rule): `live` goes first and the Pulumi destroy second, so the account, already over its budget, is never without budget and anomaly mail. The cost is one duplicate burst: the new budget sends its threshold mails once when its notifications are created, and the new `AnomalyAlerts` subscription runs beside the old Pulumi one until step 4.
+
+1. Merge the `live` PR (an ordinary gate merge; it does not touch the workflow). Its deploy updates the budget with the four notifications and creates `AnomalyAlerts`; the pre-deploy gate accepts that plan because the budget and the subscription are not singletons, and the nine singletons stay no-op.
+2. Verify: the workflow's gate step printed all nine singletons as `noop` and `deploy may run`; `aws budgets describe-notifications-for-budget --account-id 832907639880 --budget-name beep-account-monthly-cost` lists four notifications; `aws ce get-anomaly-subscriptions` lists `beep-account-anomaly-alerts` on the monitor's ARN with threshold 10, beside the old `beep-account-daily-anomalies`.
+3. Unprotect, state only, URNs 1-12:
 
    ```sh
    PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run -- pulumi state unprotect --stack production --yes "$U1" "$U2" "$U3" "$U4" "$U5" "$U6" "$U7" "$U8" "$U9" "$U10" "$U11" "$U12"
    ```
 
    Check: `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run -- pulumi stack export --stack production | jq '[.deployment.resources[] | select(.urn|test("AccountCostControls")) | .protect // false] | any'` prints `false`, and `| jq '.deployment.resources|length'` still prints 367.
-2. Only once the `live` PR (step 4) is open with its `final` posted and ready to merge: destroy the old budget and subscription, preview first. Merge the `live` PR right after; the two-hour limit below starts here.
+4. Destroy the old budget and subscription, preview first, right after step 2 passed:
 
    ```sh
    PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run -- pulumi destroy --stack production --target "$U1" --target "$U2" --preview-only
@@ -816,7 +832,7 @@ U13='urn:pulumi:production::beep-ci-runners::beep:infra:AccountCostControls::acc
    ```
 
    The preview must show exactly 2 deletes, both named above, nothing else; never add `--target-dependents` or `--run-program`. Check: `aws budgets describe-budgets --account-id 832907639880 --query 'Budgets[].BudgetName'` lists `beep-account-monthly-cost` and not `Monthly Budget`; `aws ce get-anomaly-subscriptions --query 'AnomalySubscriptions[].SubscriptionName'` lacks `beep-account-daily-anomalies`; `aws ce get-anomaly-monitors` still lists `beep-account-services`.
-3. State delete, URN 3 first (its dependent, URN 2, is gone), then 4-11, then 12, then 13:
+5. State delete, URN 3 first (its dependent, URN 2, is gone), then 4-11, then 12, then 13:
 
    ```sh
    for u in "$U3" "$U4" "$U5" "$U6" "$U7" "$U8" "$U9" "$U10" "$U11" "$U12" "$U13"; do
@@ -825,16 +841,15 @@ U13='urn:pulumi:production::beep-ci-runners::beep:infra:AccountCostControls::acc
    ```
 
    Check after the loop: no `AccountCostControls` URN in the export and 354 resources; `aws` reads unchanged (six tags Active, both enrollments Active, monitor present).
-4. Merge the PR that flips `notifications` to `live` in the `prod` configuration (`packages/tooling/infra/cost-controls/src/Config.ts`), prepared before step 2; the `COST_CONTROLS_NOTIFICATION_EMAILS` environment secret was already set in the bootstrap step (deploy-role decision). Its deploy adds the budget notifications and creates `beep-account-anomaly-alerts`. Check: `aws budgets describe-notifications-for-budget --account-id 832907639880 --budget-name beep-account-monthly-cost` lists four notifications; the subscription exists on the monitor's ARN with threshold 10.
-5. In a later PR, merged only after the `live` deploy has been green for 24 hours, delete `AccountCostControls` from `infra/src/internal/ci-runners-entry.ts`, `infra/src/AccountCostControls.ts` and its test, and the `accountCostControls:` keys from `Pulumi.production.yaml` except `notificationEmailAddresses`, which the turbo-cache throttle alarm keeps reading. That PR merges before the next `pulumi preview` or `up` of this stack: until then the program still declares the component, and a preview would plan to create all eleven resources again (the monitor create would hit the one-per-account quota). After it, the recipient list lives in two places only: that Pulumi config key and the `cost-controls-prod` GitHub secret.
+6. In a later PR, merged only after the `live` deploy has been green for 24 hours, delete `AccountCostControls` from `infra/src/internal/ci-runners-entry.ts`, `infra/src/AccountCostControls.ts` and its test, and the `accountCostControls:` keys from `Pulumi.production.yaml` except `notificationEmailAddresses`, which the turbo-cache throttle alarm keeps reading. That PR merges before the next `pulumi preview` or `up` of this stack: until then the program still declares the component, and a preview would plan to create all eleven resources again (the monitor create would hit the one-per-account quota). After it, the recipient list lives in two places only: that Pulumi config key and the `cost-controls-prod` GitHub secret.
 
-Rollback, in three cases (packet gate rulings C, D and E on the #3310 review, 2026-11-14):
+Rollback, by stage:
 
-- Leaving the `live` phase (after step 4): one PR sets `notifications` back to `silent`. Its plan deletes the stack's own `AnomalyAlerts` subscription, the single delete `checkPlan` allows, by logical id and by the `delete` action only; the budget's notifications update to none. Every other delete, every replace and every orphan is still refused, and the nine adopted settings still may not change, so the window-5 condition is not weakened. Check: the gate step passes, and `aws ce get-anomaly-subscriptions` no longer lists `beep-account-anomaly-alerts` after the deploy.
-- Restoring the Pulumi budget and subscription while the component-removal PR (step 5) has not merged: `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run -- pulumi stack import --stack production --file <newest archive>` (import only if no other update ran since the export; otherwise re-add single objects with `pulumi import`). The import restores state only, and that state still lists two objects step 2 deleted, so refresh them first: `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run -- pulumi refresh --stack production --target "$U1" --target "$U2" --yes`, then `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run -- pulumi preview --stack production --target "$U1" --target "$U2"` and confirm it plans exactly two creates, then `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run -- pulumi up --stack production --target "$U1" --target "$U2" --yes`. Check: `aws budgets describe-budgets` lists `Monthly Budget` and `aws ce get-anomaly-subscriptions` lists `beep-account-daily-anomalies` before going on. Then take the Alchemy prod stage to `silent` (first case, if it was `live`), and `aws budgets delete-budget --account-id 832907639880 --budget-name beep-account-monthly-cost` removes the retained Alchemy budget. The singletons need nothing: neither tool changed their status.
-- The same restore after step 5 merged: `pulumi up` and `preview` build their desired graph from the current program, which no longer declares the component, so first revert the component-removal PR (restoring `AccountCostControls` in the program and its config keys) and merge the revert, then run the import, refresh, preview and targeted `up` above. The orchestrator is told first, as for every step here.
+- Before step 4 (the Pulumi pair is still live): one PR sets `notifications` back to `silent`. Its plan deletes the stack's own `AnomalyAlerts` subscription, the single delete `checkPlan` allows, by logical id and by the `delete` action only; the budget's notifications update to none. Every other delete, every replace and every orphan is still refused, and the nine adopted settings still may not change, so the window-5 condition is not weakened. Check: the gate step passes, and `aws ce get-anomaly-subscriptions` no longer lists `beep-account-anomaly-alerts`.
+- After step 4, before the component-removal PR (step 6) merges, restore the Pulumi budget and subscription: `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run -- pulumi stack import --stack production --file <newest archive>` (import only if no other update ran since the export; otherwise re-add single objects with `pulumi import`). The import restores state only, and that state still lists the two objects step 4 deleted, so refresh them first: `... op run -- pulumi refresh --stack production --target "$U1" --target "$U2" --yes`, then `... op run -- pulumi preview --stack production --target "$U1" --target "$U2"` and confirm exactly two creates, then `... op run -- pulumi up --stack production --target "$U1" --target "$U2" --yes`. Check: `aws budgets describe-budgets` lists `Monthly Budget` and `aws ce get-anomaly-subscriptions` lists `beep-account-daily-anomalies`. Then take the Alchemy prod stage back to `silent` (first case) so only one set mails. The singletons need nothing: neither tool changed their status.
+- After step 6 merged: `pulumi up` and `preview` build their desired graph from the current program, which no longer declares the component, so first revert the component-removal PR (restoring `AccountCostControls` in the program and its config keys) and merge the revert, then run the import, refresh, preview and targeted `up` above. The orchestrator is told first, as for every step here.
 
-Timing (ruling E): step 2 does not run until the `live` PR is open with its `final` posted and is ready to merge, so the gap without budget and anomaly mail is one merge plus one deploy. The gap is at most two hours from the destroy in step 2; if the `live` deploy has not succeeded by then, the restore rollback above runs. The component-removal PR (step 5) does not merge until the `live` deploy has been green for 24 hours.
+Timing: steps 3 to 5 run right after step 2 is verified; the duplicate mails last only until step 4. The component-removal PR (step 6) does not merge until the `live` deploy has been green for 24 hours.
 
 Lane goals/infra-alchemy-rebuild-p3-cost-controls
 
@@ -847,15 +862,13 @@ Two budgets and two anomaly subscriptions would mail the same people twice, and 
 The stack therefore runs in two phases, set by `notifications` in the tracked `prod` configuration:
 
 1. `silent` (what this lane ships): the new budget exists with no notifications and no anomaly subscription is declared; the adopted monitor keeps feeding the Pulumi-owned subscription. Nobody is mailed by the new stack.
-2. `live`: one-line PR after the Pulumi cutover destroyed `Monthly Budget` and `beep-account-daily-anomalies`; the deploy it triggers adds the four budget notifications and creates `beep-account-anomaly-alerts` on the adopted monitor.
+2. `live`: one-line PR, merged before the Pulumi destroy (packet gate ruling, 2026-11-14); the deploy it triggers adds the four budget notifications and creates `beep-account-anomaly-alerts` on the adopted monitor. The old Pulumi budget and subscription are destroyed right after the `live` deploy is verified.
 
-So recipients are never mailed twice. Each threshold mails once from the new budget when the phase flips, because the month is already over budget, which is the alert the old budget would also have sent at the next breach. The gap without budget alerts is the time between the destroy step of the cutover and the `live` deploy, one PR merge; the gap without anomaly mail is the same window, and the daily anomaly digest is at most one day late. The parallel period itself is the time between the first `prod` deploy and the cutover, which the launching session runs right after verifying that deploy.
-
-Gap limit (packet gate ruling E on the #3310 review, 2026-11-14): the cutover's destroy step does not run until the `live` PR is open, has its `final` posted and is ready to merge, so the gap without budget and anomaly mail is one merge plus one deploy. Maximum gap: two hours from the destroy step. Trigger: if the `live` deploy has not succeeded two hours after the destroy step, the cutover decision's restore rollback runs (re-import, refresh, preview, then recreate `Monthly Budget` and `beep-account-daily-anomalies` through Pulumi), and the orchestrator is told. The component-removal PR waits until `live` has been green for 24 hours. This matters because month-to-date spend is already over the budget.
+Superseded in part (packet gate ruling, 2026-11-14): the silent phase kept recipients from being mailed twice during the parallel run, but the destroy-first order it assumed left a gap with no budget or anomaly mail on an account already over its budget. The order is now `live` first, Pulumi destroy second. The cost is one duplicate burst: each threshold mails once from the new budget when its notifications are created (the month is already over budget), and the new daily anomaly subscription runs beside the old one until the gate session destroys the old pair right after the `live` deploy is verified, so at most one duplicate daily digest. There is no gap and no gap limit; the earlier two-hour rule is withdrawn. The component-removal PR still waits until `live` has been green for 24 hours.
 
 Lane goals/infra-alchemy-rebuild-p3-cost-controls
 
-Reverse: Set notifications to live in the prod configuration before the cutover (recipients then get every alert twice until the Pulumi budget and subscription are destroyed).
+Reverse: Return prod to silent with one PR (notifications: silent); its plan deletes only the stack's own AnomalyAlerts subscription, the single delete the pre-deploy gate allows.
 
 ### Cost controls configuration is a tracked schema; recipients come only from the environment, 2026-11-14
 

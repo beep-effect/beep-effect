@@ -2,11 +2,9 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `active`
 
-**Paused by operator ruling (finish board, 2026-11-13).** Useful housekeeping but unstarted and overlaps lane-bootstrap. No lane is working on it; resume with `bun run beep goals set-status legacy-drain active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
-
-Its dependency goals/ops-seat-timers (the `fleet/ops-seat` provider) was closed by the same ruling; resuming this packet means re-opening or re-graduating that work first.
+Resumed by the operator on 2026-11-13. The `drainable` residue-reap class is built and observing the live fleet; the first apply wave is time-gated by the 7-day grace window (earliest 2026-11-20T22:06Z). goals/ops-seat-timers is replaced by the `timer-host` check: [`decisions/2026-11-13-resume-without-ops-seat-timers.md`](./decisions/2026-11-13-resume-without-ops-seat-timers.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -38,11 +36,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research. Read `SPEC.md`, the exploration brief and map, then confirm scope against live source before implementing.
+P3 Yeet. P0 to P2 are done: the `drainable` class (`ResidueReapDrain*.ts`), the seats/lanes/registry/drain section of `standards/git-worktrees.md`, and the `AGENTS.md` worktree bullet. Remaining: merge the PR, then run the first apply wave once grace windows elapse, and close out (P4).
 
 ## Latest Evidence
 
-Not started
+- 2026-11-13 first live dry run (`residue-reap --fleet --classes drainable`, 56 s): 352 fleet checkouts, 9 legacy clones holding 166,242,401,382 bytes; 221 lanes started grace windows, 129 refused with per-check reasons. Details: [`decisions/2026-11-13-first-live-observation.md`](./decisions/2026-11-13-first-live-observation.md).
+- Design calls: [`decisions/2026-11-13-drainable-predicate-design.md`](./decisions/2026-11-13-drainable-predicate-design.md).
+- Fixture proof: `packages/tooling/tool/cli/test/residue-reap-drain.test.ts`.
 
 ## Notes
 
