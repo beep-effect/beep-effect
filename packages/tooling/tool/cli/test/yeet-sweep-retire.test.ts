@@ -163,6 +163,9 @@ const ghSpawner = Effect.fn("YeetRetireTest.ghSpawner")(function* (
       unref: Effect.succeed(Effect.void),
     });
   };
+  // Own double (D-14): the gh decorator over the real platform spawner, which `ScriptedSpawner` replaces
+  // rather than wraps.
+  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
   return ChildProcessSpawner.make((command) =>
     ChildProcess.isStandardCommand(command) && command.command === "gh"
       ? Effect.succeed(

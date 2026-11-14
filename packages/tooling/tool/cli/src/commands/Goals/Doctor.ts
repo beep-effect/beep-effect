@@ -640,7 +640,9 @@ export const makeGoalPacketWorkingTreeReader = Effect.fn("Goals.makeGoalPacketWo
 ) {
   const path = yield* Path.Path;
   const base = makeGoalPacketFilesystemReader();
-  // KEEP (D-21): `ls-files --others --ignored` has no kit member; the raw stdout capture keeps the NUL records.
+  // KEEP (D-21): `ls-files --others --ignored` has no kit member; the raw stdout capture keeps the NUL
+  // records.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-21), reason above
   const listed = yield* runRepoCommandCaptureRaw(
     "git",
     ["ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--", GOALS_DIR],

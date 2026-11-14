@@ -88,27 +88,39 @@ const Input = S.toType(CitationTokenizedExtractionInput);
 const Configuration = S.toType(CitationTokenizedExtractionConfiguration);
 const ConfigurationJson = Configuration.pipe(S.toCodecJson);
 const own = Effect.fn("Citation.ownTokenizedExtraction")(function* (
-  _limits: CitationEngineLimits,
-  configuration: CitationTokenizedExtractionConfiguration
+  limits: CitationEngineLimits,
+  configuration: CitationTokenizedExtractionConfiguration,
+  runtime: CitationNativeProcessRuntime
 ) {
   const config = yield* detachCitationMetadataConfiguration(ConfigurationJson, configuration, () =>
     fail("invalid-configuration")
   );
   const children = yield* captureCitationExtractionChildren();
-  return { config, children };
+  // Installed once; an install failure surfaces where each request used to install it.
+  const tokenizer = yield* Effect.exit(makeCitationTokenizer(limits, runtime, config.tokenizer));
+  const loop = yield* Effect.exit(
+    makeCitationExtractionLoop(limits, runtime, config.loop).pipe(Effect.provideContext(children))
+  );
+  const input = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText, "source"));
+  return { config, children, tokenizer, loop, input };
 });
 const prepare = Effect.fn("Citation.tokenizeAndExtract")(function* (
-  limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
-  owned: Effect.Success<ReturnType<typeof own>>,
+  _limits: CitationEngineLimits,
+  _runtime: CitationNativeProcessRuntime,
+  {
+    children,
+    tokenizer: installedTokenizer,
+    loop: installedLoop,
+    input: installedInput,
+  }: Effect.Success<ReturnType<typeof own>>,
   raw: unknown
 ) {
   const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
   return yield* Effect.gen(function* () {
-    const tokenizer = yield* makeCitationTokenizer(limits, runtime, owned.config.tokenizer);
-    const loop = yield* makeCitationExtractionLoop(limits, runtime, owned.config.loop);
+    const tokenizer = yield* installedTokenizer;
+    const loop = yield* installedLoop;
     const tokenized = yield* tokenizer.port.tokenize(request.plain);
-    const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
+    const input = yield* installedInput;
     const source = yield* input.prepareUnicode(tokenized.source, () => Effect.void);
     const tokens = HashMap.fromIterable(A.map(tokenized.tokens, (row) => Tuple.make(row.id, row.seed)));
     const lookup = (id: number) => Effect.fromOption(HashMap.get(tokens, id), () => fail("missing-token"));
@@ -134,7 +146,7 @@ const prepare = Effect.fn("Citation.tokenizeAndExtract")(function* (
     );
     const extraction = yield* loop.extract({ ...request, plain: tokenized.source, words, tokens: citations });
     return { tokenizer: tokenized, extraction };
-  }).pipe(Effect.provideContext(owned.children));
+  }).pipe(Effect.provideContext(children));
 });
 /** Tokenize native Document text and construct/filter citations under one captured
  * admission, Scope, deadline and text authority. Input cleaning and the joke

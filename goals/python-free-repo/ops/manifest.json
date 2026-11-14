@@ -37,6 +37,9 @@
   "researchReports": [
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
+    "research/photo-face-cache-request.json",
+    "research/photo-face-cache-review.md",
+    "research/photo-face-parity.md",
     "research/r2-cache-port.md",
     "research/triage.md"
   ],

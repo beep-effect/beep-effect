@@ -232,6 +232,9 @@ const runGit = Effect.fnUntraced(function* (
   args: ReadonlyArray<string>,
   env: Readonly<Record<string, string | undefined>>
 ) {
+  // KEEP funnel: `runGit` runs the KEEP (D-19) temporary-index reads below; each call site records its
+  // reason.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP funnel, reason above
   const result = yield* runCapturedStreams({
     command: "git",
     args,

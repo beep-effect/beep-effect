@@ -6,7 +6,7 @@ import {
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
 import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexPatternProfile } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
-import { makeCitationRegexWorker } from "@beep/law-practice-server/internal/Citation/RegexWorker";
+import { installCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
 import { makeCitationRegexEvaluation } from "@beep/law-practice-server/internal/Citation/RegexWorkerEvaluation";
 import { citationRegexWorkerProgram } from "@beep/law-practice-server/internal/Citation/RegexWorkerProgram";
 import {
@@ -43,7 +43,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
-import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeAcknowledgementSpawner,
   makeCitationNativeManualClock,
@@ -114,7 +114,7 @@ const controlled = Effect.fn("RegexWorkerTest.controlled")(function* (
   const admission = yield* makeCitationNativeProcessAdmission(limits);
   const observed = yield* makeCitationNativeAcknowledgementSpawner(afterKill);
   const spawner = observed.spawner;
-  const worker = yield* makeCitationRegexWorker(limits, fixture, [descriptor]).pipe(
+  const worker = yield* installCitationRegexEvaluator(limits, fixture, [descriptor]).pipe(
     Effect.flatMap((stage) =>
       makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) })))
     ),
@@ -126,7 +126,7 @@ const controlled = Effect.fn("RegexWorkerTest.controlled")(function* (
 });
 
 type CompletedRegex = Effect.Success<
-  ReturnType<Effect.Success<ReturnType<typeof makeCitationRegexWorker>>["evaluate"]>
+  ReturnType<Effect.Success<ReturnType<typeof installCitationRegexEvaluator>>["evaluate"]>
 >;
 const assertModeCaptures = Effect.fn("RegexWorkerTest.assertModeCaptures")(function* (
   completed: CompletedRegex,
@@ -146,7 +146,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
   it.effect("rejects malformed policy, runtime and match quotas before spawning", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
-      const invalidPolicy = yield* makeCitationRegexWorker(null, null, []).pipe(
+      const invalidPolicy = yield* installCitationRegexEvaluator(null, null, []).pipe(
         Effect.flatMap((stage) =>
           makeCitationTestScaffoldBinding(null).pipe(
             Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
@@ -155,7 +155,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
         Effect.flip
       );
       expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
-      const invalidRuntime = yield* makeCitationRegexWorker(limits, null, []).pipe(
+      const invalidRuntime = yield* installCitationRegexEvaluator(limits, null, []).pipe(
         Effect.flatMap((stage) =>
           makeCitationTestScaffoldBinding(limits).pipe(
             Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
@@ -467,8 +467,6 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
         yield* timer.trigger;
         const failed = yield* Fiber.join(pending).pipe(Effect.flip);
         expect(failed).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "regexDeadline" });
-        const citationResult25 = yield* worker.snapshot;
-        expect(citationResult25).toMatchObject({ processes: 0, quarantined: 0 });
         const citationResult26 = yield* observed.snapshot;
         expect(citationResult26).toEqual({ spawned: 1, confirmed: 1 });
         const citationResult27 = yield* admission.snapshot;
@@ -486,8 +484,6 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
         expect(Exit.hasInterrupts(citationResult28)).toBe(true);
         const citationResult29 = yield* observed.snapshot;
         expect(citationResult29).toEqual({ spawned: 1, confirmed: 1 });
-        const citationResult30 = yield* worker.snapshot;
-        expect(citationResult30).toMatchObject({ processes: 0, quarantined: 0 });
         const citationResult31 = yield* admission.snapshot;
         expect(citationResult31).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
       })
@@ -509,8 +505,6 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           _tag: "CitationSafetyLimitExceeded",
           limit: "cleanupDeadline",
         });
-        const citationResult33 = yield* worker.snapshot;
-        expect(citationResult33).toMatchObject({ processes: 1, quarantined: 1 });
         const citationResult34 = yield* admission.snapshot;
         expect(citationResult34).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
         const citationResult35 = yield* worker.evaluate(pattern, native("replacement"), 0).pipe(Effect.flip);
@@ -520,7 +514,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
         const citationResult36 = yield* observed.snapshot;
         expect(citationResult36).toEqual({ spawned: 1, confirmed: 0 });
         yield* Deferred.succeed(acknowledged, undefined);
-        yield* waitForCitationNativeTest(worker.snapshot.pipe(Effect.map((state) => state.processes === 0)));
+        yield* waitForCitationNativeTest(admission.snapshot.pipe(Effect.map((state) => state.quarantined === 0)));
         const citationResult37 = yield* observed.snapshot;
         expect(citationResult37).toEqual({ spawned: 1, confirmed: 1 });
         const citationResult38 = yield* admission.snapshot;
@@ -528,6 +522,38 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       })
     );
   }
+
+  it.effect("refuses a later evaluator whose spawner is not the request owner's", () =>
+    Effect.gen(function* () {
+      const fixture = yield* makeCitationNativeWorkerFixture("busy", "regex", "bun");
+      const limits = (yield* defaultCitationEnginePolicy).limits;
+      const admission = yield* makeCitationNativeProcessAdmission(limits);
+      const first = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
+      const second = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
+      const install = (spawner: typeof first.spawner) =>
+        installCitationRegexEvaluator(limits, fixture, [descriptor]).pipe(
+          Effect.provideService(CitationNativeProcessAdmission, admission),
+          Effect.provideService(ChildProcessSpawner, spawner)
+        );
+      const creator = yield* install(first.spawner);
+      const stranger = yield* install(second.spawner);
+      yield* withCitationTestInvocation(
+        Effect.gen(function* () {
+          // An out-of-range quota fails after the request's owner exists, before any child.
+          const invalidQuota = yield* creator.evaluate(pattern, native("b"), 0, -1).pipe(Effect.flip);
+          expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
+          const refused = yield* stranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
+          expect(refused).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
+        })
+      );
+      const firstExits = yield* first.snapshot;
+      expect(firstExits).toEqual({ spawned: 0, confirmed: 0 });
+      const secondExits = yield* second.snapshot;
+      expect(secondExits).toEqual({ spawned: 0, confirmed: 0 });
+      const released = yield* admission.snapshot;
+      expect(released).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+    })
+  );
 
   it.effect("rejects missing startup arguments and capture metadata beyond the installation budget", () =>
     Effect.gen(function* () {

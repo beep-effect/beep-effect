@@ -60,9 +60,27 @@
         ]
       },
       {
+        "name": "@beep/alchemy-aws-extras",
+        "patterns": [
+          "packages/tooling/library/alchemy-aws-extras/src/**"
+        ]
+      },
+      {
+        "name": "@beep/alchemy-github-runners",
+        "patterns": [
+          "packages/tooling/library/alchemy-github-runners/src/**"
+        ]
+      },
+      {
         "name": "@beep/alchemy-postgres",
         "patterns": [
           "packages/drivers/alchemy-postgres/src/**"
+        ]
+      },
+      {
+        "name": "@beep/alchemy-vercel",
+        "patterns": [
+          "packages/tooling/library/alchemy-vercel/src/**"
         ]
       },
       {
@@ -1443,6 +1461,34 @@
         ]
       },
       {
+        "from": "@beep/alchemy-aws-extras",
+        "allow": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/alchemy-github-runners",
+        "allow": [
+          "@beep/alchemy-github-runners",
+          "@beep/identity",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-github-runners",
+          "@beep/identity",
+          "@beep/schema"
+        ]
+      },
+      {
         "from": "@beep/alchemy-postgres",
         "allow": [
           "@beep/alchemy-postgres",
@@ -1459,6 +1505,21 @@
           "@beep/observability",
           "@beep/pglite",
           "@beep/postgres",
+          "@beep/schema",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/alchemy-vercel",
+        "allow": [
+          "@beep/alchemy-vercel",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-vercel",
+          "@beep/identity",
           "@beep/schema",
           "@beep/utils"
         ]
@@ -5490,6 +5551,7 @@
         "allow": [
           "@beep/epistemic-ui",
           "@beep/graph-3d",
+          "@beep/public-site",
           "@beep/storybook",
           "@beep/ui",
           "@beep/utils"
@@ -5497,6 +5559,7 @@
         "allowTypeOnly": [
           "@beep/epistemic-ui",
           "@beep/graph-3d",
+          "@beep/public-site",
           "@beep/storybook",
           "@beep/ui",
           "@beep/utils"

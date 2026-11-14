@@ -169,7 +169,11 @@ older checkout could erase unknown rows during a locked rewrite. Only after
 every live checkout runs the preservation release, enable emission with
 `bun run beep quality scheduler protocol --enable-evictions`. Disable it before
 introducing an older checkout; inspect the current state with
-`bun run beep quality scheduler protocol`.
+`bun run beep quality scheduler protocol`. Admission-unit fields on tickets,
+leases and journal rows follow the same rule: turn them on with
+`bun run beep quality scheduler protocol --units on` only after every live
+checkout reads them, and back off with `--units off` before introducing an
+older checkout.
 
 ## Retiring a worktree
 

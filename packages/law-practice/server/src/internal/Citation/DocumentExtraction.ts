@@ -131,6 +131,22 @@ export const ownCitationDocumentExtraction = Effect.fn("Citation.ownDocumentExtr
   );
   return { config, values, children };
 });
+/** Own the configuration and install the tokenized extraction and input document stages once.
+ * @internal @category operations @since 0.0.0
+ */
+const ownStages = Effect.fn("Citation.ownDocumentExtractionStages")(function* (
+  limits: CitationEngineLimits,
+  configuration: CitationDocumentExtractionConfiguration,
+  runtime: CitationNativeProcessRuntime
+) {
+  const owned = yield* ownCitationDocumentExtraction(limits, configuration);
+  return yield* Effect.gen(function* () {
+    // Installed once; an install failure surfaces where each request used to install it.
+    const tokenized = yield* Effect.exit(makeCitationTokenizedExtraction(limits, runtime, owned.config.extraction));
+    const initializer = yield* Effect.exit(makeCitationInputDocument(limits, runtime, owned.config.document));
+    return { ...owned, tokenized, initializer };
+  }).pipe(Effect.provideContext(owned.children));
+});
 const markupValue = Effect.fn("Citation.extractDocumentMarkup")(function* (
   values: CitationCleanerValues["Service"],
   value: CitationCleanerObject
@@ -141,9 +157,7 @@ const markupValue = Effect.fn("Citation.extractDocumentMarkup")(function* (
   return text.storage;
 });
 const extractInitialized = Effect.fn("Citation.extractInitializedDocument")(function* (
-  limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
-  owned: Effect.Success<ReturnType<typeof ownCitationDocumentExtraction>>,
+  owned: Effect.Success<ReturnType<typeof ownStages>>,
   document: CitationInputDocument,
   removeAmbiguous: boolean
 ) {
@@ -153,8 +167,8 @@ const extractInitialized = Effect.fn("Citation.extractInitializedDocument")(func
   yield* owned.values.assertOwned(document.steps);
   const plain = yield* copyCitationCleanerUnicode(owned.values, document.plain, () => fail("non-unicode-document"));
   const markup = yield* markupValue(owned.values, document.markup);
-  const stage = yield* makeCitationTokenizedExtraction(limits, runtime, owned.config.extraction);
-  const extraction = yield* stage.extract({
+  const tokenized = yield* owned.tokenized;
+  const extraction = yield* tokenized.extract({
     plain: plain.storage,
     markup,
     geometry: document.geometry,
@@ -163,36 +177,34 @@ const extractInitialized = Effect.fn("Citation.extractInitializedDocument")(func
   return { document, extraction };
 });
 const extractDocument = Effect.fn("Citation.extractDecodedDocument")(function* (
-  limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
-  owned: Effect.Success<ReturnType<typeof ownCitationDocumentExtraction>>,
+  owned: Effect.Success<ReturnType<typeof ownStages>>,
   request: CitationDocumentExtractionInput
 ) {
-  const initializer = yield* makeCitationInputDocument(limits, runtime, owned.config.document);
+  const initializer = yield* owned.initializer;
   const document = yield* initializer.initialize(request);
-  return yield* extractInitialized(limits, runtime, owned, document, request.removeAmbiguous);
+  return yield* extractInitialized(owned, document, request.removeAmbiguous);
 });
 const prepareRetained = Effect.fn("Citation.extractRetainedDocument")(function* (
-  limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
-  owned: Effect.Success<ReturnType<typeof ownCitationDocumentExtraction>>,
+  _limits: CitationEngineLimits,
+  _runtime: CitationNativeProcessRuntime,
+  owned: Effect.Success<ReturnType<typeof ownStages>>,
   raw: unknown
 ) {
   const request = yield* S.decodeUnknownEffect(RetainedInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-  return yield* extractInitialized(limits, runtime, owned, request.document, request.removeAmbiguous).pipe(
+  return yield* extractInitialized(owned, request.document, request.removeAmbiguous).pipe(
     Effect.provideContext(owned.children)
   );
 });
 const prepare = Effect.fn("Citation.extractLiveDocument")(
   (
-    limits: CitationEngineLimits,
-    runtime: CitationNativeProcessRuntime,
-    owned: Effect.Success<ReturnType<typeof ownCitationDocumentExtraction>>,
+    _limits: CitationEngineLimits,
+    _runtime: CitationNativeProcessRuntime,
+    owned: Effect.Success<ReturnType<typeof ownStages>>,
     raw: unknown
   ) =>
     S.decodeUnknownEffect(Input)(raw).pipe(
       Effect.mapError(() => fail("invalid-input")),
-      Effect.flatMap((request) => extractDocument(limits, runtime, owned, request)),
+      Effect.flatMap((request) => extractDocument(owned, request)),
       Effect.provideContext(owned.children)
     )
 );
@@ -204,7 +216,7 @@ const prepare = Effect.fn("Citation.extractLiveDocument")(
  */
 const definition = {
   invalid: () => fail("invalid-configuration"),
-  own: ownCitationDocumentExtraction,
+  own: ownStages,
   project: (
     result: Effect.Success<ReturnType<typeof extractInitialized>>,
     reservedUnits: number

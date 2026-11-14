@@ -399,6 +399,31 @@
       ]
     },
     {
+      // no-hand-rolled-git-gh-spawn (goals/repo-cli-gh-git-consolidation, D-23):
+      // repo-cli and ai-metrics source run git and gh through @beep/git,
+      // @beep/github and @beep/commands. A spawn that stays hand-rolled carries an
+      // in-source `biome-ignore ...: KEEP (D-nn): <reason>`.
+      "includes": [
+        "packages/tooling/tool/cli/src/**",
+        "packages/tooling/library/ai-metrics/src/**"
+      ],
+      "plugins": [
+        "./packages/tooling/policy-pack/lint-rules/rules/no-hand-rolled-git-gh-spawn.grit"
+      ]
+    },
+    {
+      // no-unrecorded-spawner-double (D-14, D-23): repo-cli and ai-metrics tests
+      // script child processes with @beep/commands ScriptedSpawner; a hand-rolled
+      // double carries an in-source `biome-ignore ...: Own double: <reason>`.
+      "includes": [
+        "packages/tooling/tool/cli/test/**",
+        "packages/tooling/library/ai-metrics/test/**"
+      ],
+      "plugins": [
+        "./packages/tooling/policy-pack/lint-rules/rules/no-unrecorded-spawner-double.grit"
+      ]
+    },
+    {
       // noConsole allowlist: tests, examples, stories, scripts, seeds, CLI bins, and
       // exploration research regenerators (evidence scripts under research/) legitimately
       // use console. Keeps the advisory signal focused on runtime source.

@@ -2136,6 +2136,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "history-notes-publish.yml:Publish refs/notes/history",
         // Prod deploy of the Alchemy stack; environment-gated, not a local lane.
         "deploy-beep-effect-web.yml:Deploy beep-effect-web (prod)",
+        // Prod deploy of the Storybook Alchemy stack; environment-gated, not a local lane.
+        "deploy-storybook.yml:Deploy Storybook (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
         "fleet-shadow-check.yml:Shadow Probe",
         "heavy-admit.yml:Heavy Admission",
@@ -3247,6 +3249,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         const manifestGuard =
           Str.split(stepByName(comparison, "Compare coverage evidence").run ?? "", "shape_args=")[0] ?? "";
         expect(authenticate).toContain("--paginate --slurp");
+        // A 100-job page of a rerun attempt's listing is the request GitHub answers 502 to.
+        expect(authenticate).toContain("/jobs?per_page=30");
+        expect(authenticate).not.toContain("per_page=100");
         expect(manifestGuard).toContain('"$labs_manifest"');
         const temp = yield* fs.makeTempDirectoryScoped();
         const output = path.join(temp, "github-output");
@@ -3254,9 +3259,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         yield* fs.writeFileString(output, "");
         yield* fs.writeFileString(
           path.join(temp, "gh"),
-          '#!/bin/bash\nset -euo pipefail\n[[ "${@: -1}" =~ /attempts/([0-9]+)/jobs ]] || exit 24\nattempt="${BASH_REMATCH[1]}"\nprintf "%s\\n" "$attempt" >> "$API_CALLS"\ncat "$JOBS_FIXTURES/$attempt.json"\n'
+          '#!/bin/bash\nset -euo pipefail\n[[ "${@: -1}" =~ /attempts/([0-9]+)/jobs ]] || exit 24\nattempt="${BASH_REMATCH[1]}"\nprintf "%s\\n" "$attempt" >> "$API_CALLS"\nif (( $(grep -c -x "$attempt" "$API_CALLS") <= ${FAILING_CALLS:-0} )); then echo "gh: Server Error (HTTP 502)" >&2; exit 1; fi\ncat "$JOBS_FIXTURES/$attempt.json"\n'
         );
         yield* fs.chmod(path.join(temp, "gh"), 0o700);
+        // The retry waits between tries; the stand-in records the wait instead of sleeping.
+        yield* fs.writeFileString(
+          path.join(temp, "sleep"),
+          '#!/bin/bash\nprintf "%s\\n" "$1" >> "$API_CALLS.sleeps"\n'
+        );
+        yield* fs.chmod(path.join(temp, "sleep"), 0o700);
         const original = {
           name: "Labs",
           run_attempt: 1,
@@ -3306,7 +3317,26 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         const readFileString33 = yield* fs.readFileString(output);
         expect(readFileString33).toBe(scenario.output);
         const readFileString34 = yield* fs.readFileString(calls);
-        expect(readFileString34).toBe(scenario.original ? "1\n2\n" : "1\n");
+        // A listing that cannot be read is tried four times, then the step fails.
+        expect(readFileString34).toBe(scenario.original ? "1\n2\n" : "1\n1\n1\n1\n");
+        if (scenario.original) {
+          // Two 502 answers per attempt are retried after 10 and 20 seconds and change nothing else.
+          yield* fs.writeFileString(output, "");
+          yield* fs.writeFileString(calls, "");
+          const retried = Bun.spawnSync(["bash", "-c", authenticate], {
+            cwd: root,
+            env: { ...env, FAILING_CALLS: "2" },
+            stdout: "pipe",
+            stderr: "pipe",
+          });
+          expect(retried.exitCode === 0).toBe(Str.isNonEmpty(scenario.output));
+          const retriedOutput = yield* fs.readFileString(output);
+          expect(retriedOutput).toBe(scenario.output);
+          const retriedCalls = yield* fs.readFileString(calls);
+          expect(retriedCalls).toBe("1\n1\n1\n2\n2\n2\n");
+          const waits = yield* fs.readFileString(`${calls}.sleeps`);
+          expect(waits).toBe("10\n20\n10\n20\n");
+        }
         if (Str.isNonEmpty(scenario.output)) {
           const attempt = parseProfileOutput(scenario.output).attempt ?? "";
           const manifest = path.join(temp, `.beep/ci-coverage-inputs/unit-coverage-123-${attempt}-labs/manifest.json`);

@@ -13,7 +13,7 @@ import {
   CitationCaseNameProcessPatch,
   citationUnchangedCaseNamePatch,
   copyCitationCaseNameProcessConfiguration,
-  processCitationCaseName,
+  installCitationCaseNameProcess,
 } from "./CaseNameProcess.ts";
 import {
   CitationCaseNameScanConfiguration,
@@ -21,9 +21,9 @@ import {
   CitationCaseNameScanInput,
   CitationCaseNameScanState,
   copyCitationCaseNameScanConfiguration,
-  scanCitationCaseName,
+  installCitationCaseNameScan,
 } from "./CaseNameScan.ts";
-import { makeCitationMetadataStage } from "./MetadataComposition.ts";
+import { makeCitationMetadataStage, ownCitationStageCall } from "./MetadataComposition.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
@@ -75,41 +75,44 @@ const CaseNameInputValue = S.toType(CitationCaseNameInput).pipe(
 /** Run the built-in name helper inside an existing captured operation.
  * @internal @category operations @since 0.0.0
  */
-export const findCitationPlainCaseName = Effect.fn("Citation.findPlainCaseName")(function* (
+export const installCitationPlainCaseName = Effect.fn("Citation.installPlainCaseName")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationCaseNameConfiguration,
-  raw: unknown
+  config: CitationCaseNameConfiguration
 ) {
-  const request = yield* S.decodeUnknownEffect(CaseNameInputValue)(raw).pipe(
-    Effect.mapError(() => CitationCaseNameScanFailure.make({ reason: "invalid-input" }))
-  );
-  const state = yield* scanCitationCaseName(limits, runtime, config.scan, request).pipe(
-    Effect.catchTag("CitationCaseNamePredicateFailure", () =>
-      Effect.fail(CitationCaseNameScanFailure.make({ reason: "empty-word" }))
-    )
-  );
-  if (state.candidateCaseName === null || state.candidateCaseName.bytes.length === 0)
-    return { state, patch: citationUnchangedCaseNamePatch };
-  let hasV = false;
-  if (state.vTokenIndex !== null) {
-    const word = yield* Effect.fromOption(A.get(request.words, state.vTokenIndex), () =>
-      CitationCaseNameScanFailure.make({ reason: "index-out-of-range" })
+  const scan = yield* installCitationCaseNameScan(limits, runtime, config.scan);
+  const processName = yield* installCitationCaseNameProcess(limits, runtime, config.process);
+  return Effect.fn("Citation.findPlainCaseName")(function* (raw: unknown) {
+    const request = yield* S.decodeUnknownEffect(CaseNameInputValue)(raw).pipe(
+      Effect.mapError(() => CitationCaseNameScanFailure.make({ reason: "invalid-input" }))
     );
-    if (word.data === null) return yield* CitationCaseNameScanFailure.make({ reason: "invalid-token-length" });
-    hasV = word.data.bytes.length !== 0;
-  }
-  const patch = yield* processCitationCaseName(limits, runtime, config.process, {
-    words: A.map(request.words, (word) => citationCaseNameWordText(word.data)),
-    index: request.index,
-    spanStart: request.spanStart,
-    short: request.short,
-    candidateCaseName: state.candidateCaseName,
-    hasV,
-    startIndex: state.startIndex,
-    preCiteYear: state.preCiteYear,
+    const state = yield* scan(request).pipe(
+      Effect.catchTag("CitationCaseNamePredicateFailure", () =>
+        Effect.fail(CitationCaseNameScanFailure.make({ reason: "empty-word" }))
+      )
+    );
+    if (state.candidateCaseName === null || state.candidateCaseName.bytes.length === 0)
+      return { state, patch: citationUnchangedCaseNamePatch };
+    let hasV = false;
+    if (state.vTokenIndex !== null) {
+      const word = yield* Effect.fromOption(A.get(request.words, state.vTokenIndex), () =>
+        CitationCaseNameScanFailure.make({ reason: "index-out-of-range" })
+      );
+      if (word.data === null) return yield* CitationCaseNameScanFailure.make({ reason: "invalid-token-length" });
+      hasV = word.data.bytes.length !== 0;
+    }
+    const patch = yield* processName({
+      words: A.map(request.words, (word) => citationCaseNameWordText(word.data)),
+      index: request.index,
+      spanStart: request.spanStart,
+      short: request.short,
+      candidateCaseName: state.candidateCaseName,
+      hasV,
+      startIndex: state.startIndex,
+      preCiteYear: state.preCiteYear,
+    });
+    return { state, patch };
   });
-  return { state, patch };
 });
 /** Copy trusted helper configuration for enclosing metadata composition.
  * @internal @category operations @since 0.0.0
@@ -122,6 +125,10 @@ export const copyCitationCaseNameConfiguration = Effect.fn("Citation.ownCaseName
   const process = yield* copyCitationCaseNameProcessConfiguration(limits, config.process);
   return CitationCaseNameConfiguration.make({ scan, process });
 });
+const ownPlainCaseName = ownCitationStageCall({
+  copy: copyCitationCaseNameConfiguration,
+  install: installCitationPlainCaseName,
+});
 /** Both phases share operation admission, deadline, native Scope and text budget;
  * each invocation initializes fresh source state and extract requires R=never.
  * @internal @category constructors @since 0.0.0
@@ -130,7 +137,7 @@ export const makeCitationCaseName = makeCitationMetadataStage({
   method: "extract",
   schema: S.toType(CitationCaseNameConfiguration),
   invalid,
-  own: copyCitationCaseNameConfiguration,
-  prepare: findCitationPlainCaseName,
+  own: ownPlainCaseName,
+  prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownPlainCaseName>>, raw) => run(raw),
   project: (result, reservedUnits) => CitationCaseNameResult.make({ ...result, reservedUnits }),
 });
