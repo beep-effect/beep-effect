@@ -155,9 +155,9 @@ Lane feat/certainty-rout-05-step-outcomes
 
 Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-11 commits.
 
-### Slice 14 (MEAS-05 slice 1) in review: one lane map for every job-name join, 2026-11-13
+### Slice 14 (MEAS-05 slice 1), merged as #3274: one lane map for every job-name join, 2026-11-13
 
-Slice 14 makes `CI_LANE_DESCRIPTORS` the one job-name map: the descriptors gain `jobAliases` and `shardFamily`, and the new `packages/tooling/tool/cli/src/commands/Ci/CiLaneJobs.ts` derives the joins the route census, the lane-timings census, the certainty scorecard, heavy admission and the ruleset governance check read, in place of their own literals (decision `lane-job-map`). #3256's overflow name is the map's one called shard job. The admission gate holds: no existing test changed, `ci-lane-jobs.test.ts` reproduces every answer the replaced mappers gave on a56516d6d30 (fixture `test/fixtures/ci-lane-jobs/job-name-conservation.json`), and the 2026-09-01..10-30 receipt still replays to 242 skipped lane runs and 0 skipped reds. Slice 15 (the ledger fold) can read lanes and shard families from the map.
+Slice 14 merged as #3274. It makes `CI_LANE_DESCRIPTORS` the one job-name map: the descriptors gain `jobAliases` and `shardFamily`, and the new `packages/tooling/tool/cli/src/commands/Ci/CiLaneJobs.ts` derives the joins the route census, the lane-timings census, the certainty scorecard, heavy admission and the ruleset governance check read, in place of their own literals (decision `lane-job-map`). #3256's overflow name is the map's one called shard job. The admission gate holds: no existing test changed, `ci-lane-jobs.test.ts` reproduces every answer the replaced mappers gave on a56516d6d30 (fixture `test/fixtures/ci-lane-jobs/job-name-conservation.json`), and the 2026-09-01..10-30 receipt still replays to 242 skipped lane runs and 0 skipped reds. Slice 15 (the ledger fold) can read lanes and shard families from the map.
 
 Lane refactor/certainty-meas-05-lane-map
 
@@ -218,5 +218,13 @@ Slice 10b (MEAS-03 slice 2) types the handler errors slice 10 left `unlocated`. 
 Lane fix/certainty-type-unlocated-errors
 
 Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-10b PR.
+
+### Slice 5b: capacity and host pressure on admission rows, 2026-11-14
+
+Slice 8 (PERIL-11 slice 2) merged as #3273 and slice 14 (MEAS-05 slice 1) as #3274. Slice 5b (SCHE-09 slice 2) is in review: admitted and v3 released rows carry an optional `pressure` stamp (capacity, active and queued tokens, MemAvailable, PSI some avg10 for cpu, memory and io, and unadmitted agent-runs.slice memory), written only while the admission protocol's new `pressure` key is on (`bun run beep quality scheduler protocol --pressure on`). `quality scheduler history` counts the stamped rows and `--json` lists them (decision `sche-09-pressure-stamps`). The key needs no reader census, because every revision ignores it and keeps the row's bytes, so it can go on once this slice merges. From then on local-proof-under-ten's scheduler levers (SCHE-01, SCHE-02, SCHE-04, SCHE-07) can read capacity at admit and release from the retained history. With 5b merged, both SCHE-09 PR slices have landed.
+
+Lane feat/certainty-admission-pressure-fields
+
+Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-5b PR.
 
 <!-- beep:decisions:end -->

@@ -8,11 +8,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p4-hosts)",
-      "reason": "Record the new @beep/infra-hosts subject with its generated scripts, re-record @beep/infra after it gains one workspace dependency on @beep/infra-hosts, and the root subject for the new workspace member and its @alchemy.run/docker catalog pin; no command, output or environment changes, no qualification granted.",
+      "reviewer": "Claude Opus 5.5 (certainty-scorecard slice 5b, feat/certainty-admission-pressure-fields)",
+      "reason": "Record the root drift of //#lint:policy-fingerprint: its inputs gain packages/tooling/library/palantiri/src/** because the admission scheduler now imports the host-pressure parcel's percent schema and PSI parser from @beep/palantiri, so a change to them must invalidate the policy-lint cache. Commands, cache flags, outputs and environment are unchanged; inputs only grow; no qualification or exception.",
       "basis": {
-        "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-hosts.md",
-        "sha256": "a9155c262f04ad7f2d780857dfd5757200de818ebf00b7a236cf4d0fc61f1217"
+        "path": "goals/certainty-scorecard/research/slice-5b-cache-review.md",
+        "sha256": "d4528aa167132df5280023727b6c7f8a58c85af3522c84d9da83c84a0949ef62"
       }
     },
     "@beep/acp": {
@@ -3759,6 +3759,7 @@
             "packages/tooling/library/codegen-kit/package.json",
             "packages/tooling/library/mcpb-kit/package.json",
             "packages/tooling/library/palantiri/package.json",
+            "packages/tooling/library/palantiri/src/**",
             "packages/tooling/library/qa-capture/package.json",
             "packages/tooling/library/qa-capture/src/**",
             "packages/tooling/library/repo-cli-kit/package.json",
@@ -132595,7 +132596,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "3a7bfd4793ab57cbc4e4034fbc646cdb6509fda5e480f5c8c44a3cdfb1e85e5b"
+        "sha256": "5c99a7cef1b0f9fbdecfac8fdac201e9b99b024e2a2592a1b096d409c9536bbc"
       }
     ]
   }
