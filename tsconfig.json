@@ -2534,6 +2534,15 @@
       ],
       "@beep/sqlite": ["./packages/drivers/sqlite/src/index.ts"],
       "@beep/sqlite/*": ["./packages/drivers/sqlite/src/*"],
+      "@beep/alchemy-github-runners": [
+        "./packages/tooling/library/alchemy-github-runners/src/index.ts"
+      ],
+      "@beep/alchemy-github-runners/*": [
+        "./packages/tooling/library/alchemy-github-runners/src/*"
+      ],
+      "@beep/alchemy-github-runners/internal/*": [
+        "./packages/tooling/library/alchemy-github-runners/src/internal/*"
+      ],
       "@beep/alchemy-aws-extras": [
         "./packages/tooling/library/alchemy-aws-extras/src/index.ts"
       ],
