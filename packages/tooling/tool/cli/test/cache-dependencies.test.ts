@@ -1,6 +1,13 @@
-import { CacheCensusWorkspace, CacheDependencyMaterialization } from "@beep/repo-cli/commands/Cache";
+import { Git } from "@beep/git/Git";
+import {
+  CacheCensusWorkspace,
+  CacheDependencyMaterialization,
+  materializeCacheDependencies,
+} from "@beep/repo-cli/commands/Cache";
 import { inspectCacheDependencyTree, readCacheDependencyMaterialization } from "@beep/repo-cli/test/Cache";
+import { MemoryStats, QualitySchedulerError } from "@beep/repo-cli/test/RepoRun";
 import { CacheEvidenceReference } from "@beep/repo-configs/cache";
+import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { fcRuns } from "@beep/test-utils";
 import { NodeServices } from "@effect/platform-node";
@@ -14,6 +21,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { makeAdmissionRecorder } from "./support/AdmissionRecorder.ts";
 
 const materializationJson = S.fromJsonString(CacheDependencyMaterialization);
 const encodeMaterialization = S.encodeEffect(materializationJson);
@@ -124,6 +132,44 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("installed cache 
       const alternate = yield* fs.makeTempDirectoryScoped({ prefix: "cache-dependency-link-test-" });
       yield* fs.symlink(modules, path.join(alternate, "node_modules"));
       (yield* inspectCacheDependencyTree(alternate, []).pipe(Effect.result)).pipe(Result.isFailure, assertTrue);
+    })
+  );
+});
+
+// Materialization reaches admission through the QualityScheduler service; the recorder refuses it here.
+const admissionRecorder = makeAdmissionRecorder();
+const AdmissionTestLayer = Layer.mergeAll(
+  NodeServices.layer,
+  NodeCrypto.layer,
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  Git.layer.pipe(Layer.provide(NodeServices.layer)),
+  Layer.succeed(
+    MemoryStats,
+    MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64), ceilingGib: Effect.succeed(64) })
+  ),
+  admissionRecorder.layer
+);
+
+it.layer(AdmissionTestLayer, { timeout: "30 seconds" })("dependency materialization admission", (it) => {
+  it.effect("requests the Cache work kind and copies nothing when admission refuses", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "cache-dependency-admission-test-" });
+      const admitted = admissionRecorder.admitted.mockReset();
+      const refusal = QualitySchedulerError.make({ message: "Controlled admission refusal." });
+      admitted.mockReturnValue(Effect.fail(refusal));
+      const error = yield* materializeCacheDependencies(root).pipe(Effect.flip);
+      expect(error.message).toBe("Cannot materialize installed dependencies.");
+      expect(admitted).toHaveBeenCalledOnce();
+      expect(admitted.mock.calls[0]?.[0]).toMatchObject({
+        kind: "cache",
+        weightTokens: 1,
+        priority: "verify",
+        checkoutRoot: root,
+        command: "cache dependency materialization",
+      });
+      const entries = yield* fs.readDirectory(root);
+      expect(entries).toEqual([]);
     })
   );
 });

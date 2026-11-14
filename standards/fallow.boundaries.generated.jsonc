@@ -516,6 +516,12 @@
         ]
       },
       {
+        "name": "@beep/infra-cost-controls",
+        "patterns": [
+          "packages/tooling/infra/cost-controls/src/**"
+        ]
+      },
+      {
         "name": "@beep/infra-turbo-cache",
         "patterns": [
           "packages/tooling/infra/turbo-cache/src/**"
@@ -3094,6 +3100,21 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/infra-cost-controls",
+        "allow": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/infra-cost-controls",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/infra-cost-controls",
+          "@beep/schema"
         ]
       },
       {
