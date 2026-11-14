@@ -42,12 +42,14 @@ export const ConformanceCluster = <ROut, E, R>(platform: Layer.Layer<ROut, E, R>
       Conformance: Layer.effectDiscard(Effect.void).pipe(Layer.provide(Layer.merge(upstream, twoRunners))),
     },
     // Built into the caller's scope, as the other contexts' Apis are (D39): they serve requests
-    // long after this effect returns.
+    // long after this effect returns. Each model gets its own context: a hosted model provides its
+    // `Model.Internals`, so one context merged from two would route every Api to the second model.
     apis: Effect.gen(function* () {
-      const context = yield* Layer.build(Layer.merge(upstream, twoRunners));
-      return yield* Effect.gen(function* () {
-        return { "": yield* app, tworunners: yield* slots };
-      }).pipe(Effect.provideContext(context));
+      const conformanceModel = yield* Layer.build(upstream);
+      const slotModel = yield* Layer.build(twoRunners);
+      const root = yield* Effect.provideContext(app, conformanceModel);
+      const tworunners = yield* Effect.provideContext(slots, slotModel);
+      return { "": root, tworunners };
     }),
   };
 };

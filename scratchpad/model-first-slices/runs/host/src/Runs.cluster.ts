@@ -1,14 +1,18 @@
 import { RunId } from "@proto/kernel/Ids";
-import { AgentRun } from "@proto/runs-model/Run/AgentRun.aggregate";
+import { AgentRun, StoredAgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
 import { RunsApi } from "@proto/runs-model/RunsApi.api";
 import * as Effect from "effect/Effect";
 import { HttpServerRequest } from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { hostRuns } from "./Host.ts";
 import { ClaimDecidedInboxLive, ClaimDecidedInboxPoller } from "./Inbox/ClaimDecided.inbox.ts";
 import { PgInboxStore } from "./Inbox/PgInboxStore.adapter.ts";
 import { RunsGatewayLive } from "./RunsGateway.adapter.ts";
+
+/** A run's state as JSON, as its storage holds it: `null` for an absent value, not an `Option` object. */
+const encodeRunState = S.encodeEffect(S.toCodecJson(StoredAgentRunState));
 
 /**
  * The runs context on a cluster (D13, D39): its model hosted once on the
@@ -21,13 +25,14 @@ import { RunsGatewayLive } from "./RunsGateway.adapter.ts";
  */
 export const RunsCluster = <ROut, E, R>(platform: Layer.Layer<ROut, E, R>) => {
   const hosted = hostRuns(platform);
-  // A conformance-only read of a run's state: the runs client, then the route.
+  // A conformance-only read of a run's state, in its stored JSON form: the runs client, then the route.
   const state = Effect.map(Effect.service(AgentRun), (runs) =>
     Effect.gen(function* () {
       const request = yield* HttpServerRequest;
       const url = new URL(request.url, "http://front");
       const run = yield* runs.get(RunId.make(url.searchParams.get("run") ?? ""));
-      return yield* HttpServerResponse.json(run);
+      const stored = yield* Effect.orDie(encodeRunState(run));
+      return yield* HttpServerResponse.json(stored);
     }),
   );
   return {

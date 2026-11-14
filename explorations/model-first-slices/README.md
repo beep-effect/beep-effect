@@ -17,12 +17,12 @@ system alongside people?
 
 ## Next Open Question
 
-Re-run the cluster conformance suite on the phase 7 code (the saga fix, the remodelled state and
-the linked `@beep/*` packages are unproven in the cluster bundles). Then the operator decides:
-whether recovery after a killed runner may wait out the 60-second lease; whether the lost write
-(D38) is patched locally or only filed upstream; whether to open the two upstream pull requests
-saved under the prototype's `notes/upstream/`; and whether a pass with local patches counts toward
-the D16 gate. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
+Three things keep the first host from passing (D5), and each needs the operator: the 60-second
+recovery after a killed runner; the lost write in the commit path (D38); and published facts
+dropped when a view's version is bumped over live data, which bears on D33. Also open: whether to
+open the two upstream pull requests saved under the prototype's `notes/upstream/`, and whether a
+pass with local patches counts toward the D16 gate. [`BRIEF.md`](./BRIEF.md) has not been confirmed
+in words.
 
 ## Read This First
 
@@ -34,6 +34,9 @@ the D16 gate. [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
 
 ## Trail
 
+- 2026-11-13: phase 8 reran the cluster suite on the phase 7 code. The bundles build with the
+  linked `@beep/*` sources; the saga fix holds on the cluster; a new upgrade case shows published
+  facts dropped after a view version bump. Three cases fail. Notes in `research/16`.
 - 2026-11-13: phase 7 wired the Effect build into the prototype's check and cleared 981
   diagnostics to zero; applied the operator's review (tagged-union state, `Option` by decode,
   `@beep/identity` keys); fixed the review saga. 152 tests pass. Notes in `research/15`. The cluster

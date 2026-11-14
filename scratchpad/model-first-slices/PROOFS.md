@@ -3,7 +3,7 @@
 <!-- Generated from proofs/Proofs.data.ts by scripts/proofs.ts. Do not edit: `bun run proofs`
      rewrites it, and `bun run proofs --check` fails on drift. -->
 
-Every invariant this prototype enforces (D8): 31 entries. Mechanical laws run in
+Every invariant this prototype enforces (D8): 32 entries. Mechanical laws run in
 `bun run check`, `bun run test` and `bun run generated:check`; semantic questions stay with a
 reviewer who did not write the change.
 
@@ -263,10 +263,10 @@ An Effect-only finding (a floating Effect) fails the check: the canary project f
 
 A report hop of the review run (reserve, settle, step, release, exhaust, the wait) the runs context refuses, for example after the delegation was revoked, is recorded on the claim and reported to the run, which gives back what its open reservations held; the executor stops there.
 
-- **Checker:** `party/model/test/Review.story.test.ts`, `runs/model/test/Runs.story.test.ts`, `runs/host/test/RunsHost.test.ts`
-- **Reads:** The saga's port calls and the claim's events (party), the run's RunRejected and Refused state (runs model), and the gateway over the real authority with the grant revoked before settle (runs host).
+- **Checker:** `party/model/test/Review.story.test.ts`, `runs/model/test/Runs.story.test.ts`, `runs/host/test/RunsHost.test.ts`, `conformance/test/Own.conformance.ts`
+- **Reads:** The saga's port calls and the claim's events (party), the run's RunRejected and Refused state (runs model), the gateway over the real authority with the grant revoked before settle (runs host), and on the cluster (phase 8, P5) the saga's activity replies, the claim's events and the run's stored events and state.
 - **Assumes:** The refusal report needs no re-admission, so it lands although the hop's grant lapsed.
-- **Gaps:** In memory only; the cluster case P5 is not re-run this phase (no Docker).
+- **Gaps:** On the cluster only the settle hop has been refused (P5 holds the run's next commit, which is the reservation's); the other hops are in-memory stories.
 - **Left to a reviewer:** Whether a refused report should end the run, or leave it for a person to resume.
 
 ### cluster-upstream-conformance
@@ -315,13 +315,24 @@ Two runners never both commit to one instance (D38): a runner paused past its sh
 
 ### cluster-backup-restore
 
-A pg_dump taken while a run waits for approval restores into a fresh stack with aggregates, views, the directory, receipts, the waiting run and scheduled work intact.
+A pg_dump taken while a run waits for approval and a hold's expiry is pending restores into a fresh stack with aggregates, views, the directory, receipts, the waiting run and scheduled work intact, and the pending expiry is delivered after the restore.
 
 - **Checker:** `conformance/test/Restore.conformance.ts`
 - **Reads:** The seeded expectations file and the restored stack through the front.
-- **Assumes:** Runners are scaled to zero around the dump and the restore. Scheduled work due while the stack is down is exercised only when the dump lands before it is due (phase 5 did; phase 6 did not).
-- **Gaps:** A volume-level restore (which needs the matching Alchemy state) is not exercised.
+- **Assumes:** Phase 8 freezes the runners and the front with docker pause the moment the before half records, then dumps: scaling them to zero lets a runner finish a due expiry during its graceful stop. Runners are scaled to zero around the restore.
+- **Gaps:** A volume-level restore (which needs the matching Alchemy state) is not exercised. A dump of an older code version restored under this one fails on facts (cluster-stored-forms).
 - **Left to a reviewer:** What must be retained with a backup besides the database.
+- **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
+
+### cluster-stored-forms
+
+State in the forms earlier phases stored decodes on the cluster under today's declarations: a run written in phase 6's requested and cancelled-before-grant forms and a session view in phase 6's form take a command and read back, and a stack restored from phase 6's dump reads its claim, run, party, directory, receipt and hold, and completes the waiting run on approval.
+
+- **Checker:** `conformance/test/StoredForms.conformance.ts`
+- **Reads:** Rows written straight into the cluster's object storage from the frozen run fixtures and phase 6's view form; phase 6's dump and restore record (RESTORE_PHASE=across).
+- **Assumes:** The object and key names are the cluster storage's as observed (Practice/<Context>.<Class>/<id>, meta, snapshot).
+- **Gaps:** Phase 8: the restore from phase 6 fails at the last step. ClaimReview's version 1 rebuilt ClaimFacts as generation 1, whose first writes the facts stream kept from generation 0 refuses (stream origin [1,1]), so ClaimDecided is never published and the run is not concluded (notes/phase-8.md).
+- **Left to a reviewer:** Whether a view's version bump may rebuild the projection that writes a published stream.
 - **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
 ## Outcome coverage gaps

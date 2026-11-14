@@ -1,7 +1,7 @@
 # model-first-slices
 
 A standalone prototype of the model-first slices design, reworked to
-`explorations/model-first-slices/DECISIONS.md` through phase 7 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster; phase 6 patched two library defects locally and ran it again; phase 7 put `bun run check` on the Effect build of the compiler and applied the owner's review):
+`explorations/model-first-slices/DECISIONS.md` through phase 8 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster; phase 6 patched two library defects locally and ran it again; phase 7 put `bun run check` on the Effect build of the compiler and applied the owner's review; phase 8 ran the suite on the swarm against the phase 7 code):
 file grammar, contract packages, the authority context, re-admission at each hop, the `runs`
 context, approval as an authenticated command, the Reasoner evaluation contract, an integration fact
 through an outbox and an inbox, a projection rebuild with no side effects, stored-format
@@ -17,7 +17,9 @@ Phase notes: `FINDINGS.md` (phase 1), `notes/phase-2.md`, `notes/phase-3.md`, `n
 `notes/phase-5.md` (the cluster run, the conformance table and the D16 gate), `notes/phase-6.md` (the library patches, the
 conformance table before and after, the D38 overwrite), `notes/phase-7.md` (the Effect build of the compiler, the
 diagnostics before and after, lifecycle unions and `Option`s, stored-format changes, the review saga fix, and the
-findings left failing). Every invariant and its checker: `PROOFS.md` (generated).
+findings left failing), `notes/phase-8.md` (the swarm run of the phase 7 code: bundles, the conformance table beside
+phase 6, stored forms and a restore across code versions, the D5 verdict). Every invariant and its checker: `PROOFS.md`
+(generated).
 
 This directory is not part of the monorepo's bun workspace. It has its own `package.json` (with
 `workspaces`), `bun.lock` and `node_modules`, and the monorepo's `scratchpad/tsconfig.json` excludes it.
@@ -234,7 +236,7 @@ The same fixes as diffs against upstream at 33c10dd, with pull request text, are
 `notes/upstream/`; nothing is filed upstream. The commit path's missing version check (D38) is not
 patched. `notes/phase-6.md` has the details.
 
-## Cluster stage and conformance (phases 5 and 6)
+## Cluster stage and conformance (phases 5, 6 and 8)
 
 Only with the owner's approval: the stack creates Docker swarm services for Postgres (with a
 volume), a pool of two runners and the front, on one overlay network. Since phase 6 the front
@@ -247,8 +249,9 @@ bun run entries                                   # regenerate apps/practice/gen
 (cd apps/practice && bun run deploy)              # alchemy deploy --stage mfs-conformance (local state)
 
 # The driver: the runner image (it has Node), on the stack's network, with this directory, the
-# repository's tsconfig.base.json and the Docker socket and CLI mounted (cases kill, pause and
-# exec into this stack's containers), as the invoking user.
+# repository's tsconfig.base.json, its packages/ and node_modules/ (the linked @beep/* sources and
+# their dependencies, read-only, since phase 8) and the Docker socket and CLI mounted (cases kill,
+# pause and exec into this stack's containers), as the invoking user.
 NET=$(docker network ls --format '{{.Name}}' --filter name=practice-practicenetwork-mfs-conformance)
 IMG=$(docker service inspect practice-mfs-conformance-default --format '{{.Spec.TaskTemplate.ContainerSpec.Image}}')
 FRONT=$(docker service ls --format '{{.Name}}' --filter name=practice-practicefront-mfs-conformance)
@@ -257,6 +260,8 @@ docker service create --detach --no-resolve-image --name mfs-driver --network "$
   --restart-condition none --user "$(id -u):$(id -g)" --group "$(stat -c %g /var/run/docker.sock)" \
   --mount type=bind,src=$PWD,dst=$PWD \
   --mount type=bind,src=$PWD/../../tsconfig.base.json,dst=$PWD/../../tsconfig.base.json,readonly \
+  --mount type=bind,src=$PWD/../../packages,dst=$PWD/../../packages,readonly \
+  --mount type=bind,src=$PWD/../../node_modules,dst=$PWD/../../node_modules,readonly \
   --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
   --mount type=bind,src=/usr/bin/docker,dst=/usr/bin/docker,readonly \
   --env HOME=/tmp --env CONFORMANCE_URL=http://$FRONT:3000 --env POSTGRES_SERVICE=$PG \
@@ -273,9 +278,17 @@ between the sink write and the checkpoint, a revocation between two hops of a ru
 runner paused inside its commit.
 
 Backup and restore is two halves around manual steps: `RESTORE_PHASE=before` (seeds and records
-to `RESTORE_FILE`), scale the runner and front services to 0, `pg_dump -Fc` inside the Postgres
-container, destroy, deploy, scale to 0, `pg_restore --clean --if-exists`, scale back, then
-`RESTORE_PHASE=after`, each half through the driver with those variables added.
+to `RESTORE_FILE`), freeze the runner and front containers with `docker pause` the moment the record
+lands (phase 8: scaling to 0 lets a runner finish the hold's 4 s expiry during its graceful stop, so
+the dump would hold no pending work), `pg_dump -Fc` inside the Postgres container, unpause, destroy,
+deploy, scale to 0, `pg_restore --clean --if-exists`, scale back, then `RESTORE_PHASE=after`, each half
+through the driver with those variables added.
+
+`test/StoredForms.conformance.ts` (phase 8) writes runs and a session view in phase 6's stored forms
+straight into the cluster's storage, then sends a command and reads the view. With
+`RESTORE_PHASE=across` and `RESTORE_FILE` set to phase 6's restore record, its second case reads a
+stack restored from phase 6's dump under today's code; it fails today on the facts stream
+(`notes/phase-8.md`).
 
 Teardown, always: `(cd apps/practice && bun run destroy)`, check that no `practice-*` or driver
 service, container, network, volume or image remains, remove the image the deploy pulled by digest

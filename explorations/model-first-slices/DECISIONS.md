@@ -790,3 +790,35 @@ As built, re-run by the orchestrating session:
 
 Not re-run after this phase: the cluster conformance suite. The saga fix, the remodelled state and
 the linked `@beep/*` packages have not been exercised in the runner and front bundles.
+
+## 2026-11-13 — Phase 8: the cluster suite on the phase 7 code
+
+The operator approved a third swarm session. Notes are in `research/16-rework-phase8-notes.md`.
+Teardown matched a third Docker baseline apart from build cache. In memory, the Effect check has
+zero diagnostics and 152 tests pass, re-run by the orchestrating session.
+
+- The runner and front bundles built and started with the linked `@beep/*` sources and the patched
+  library. One regression from phase 7 was fixed first: the conformance wiring had merged two
+  hosted models into one context.
+- Upstream's ten cases pass. Of the prototype's cases: duplicate send, lost response, projection
+  crash, the waiting run across a restart, backup and restore (pending scheduled work was present
+  and delivered this time) and a new case writing old stored forms directly all pass.
+- **Revocation mid-chain now passes on the cluster.** The refused settle is recorded on the claim,
+  the run gives back its 40 reserved units, and the executor stops cleanly. This is the phase 7
+  saga fix.
+- Three cases fail:
+  - **Runner killed after a commit**, as in phase 6: recovery waits out the 60-second lease and the
+    case's read gives up first.
+  - **Runner paused inside its commit**: the lost write again (D38), unpatched as ruled.
+  - **New: phase 6's dump restored under the phase 7 code.** Every old form decoded and every read
+    passed, but approval published no integration fact, so the waiting run never concluded. Phase 7
+    moved the claim review view to version 1, which rebuilt the facts projection with its input log
+    restarting at position 1. The facts stream kept the earlier generation's write position and
+    refused the rebuilt projection's first writes as older ones. An upgrade over live data with a
+    view version bump can therefore drop published facts silently. This bears on D33 (the outbox as
+    a model-level projection into a stream).
+- The runner paused during `decide` passed, but no takeover happened in this run, so that timing is
+  covered by phase 6's run only.
+
+D5 verdict: still not yet, for three reasons: the 60-second recovery, the lost write, and facts
+dropped on an upgrade with a view version bump.
