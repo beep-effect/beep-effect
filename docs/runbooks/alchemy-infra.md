@@ -221,6 +221,40 @@ Rollback (decision "Cost controls cutover from Pulumi"):
 - After the component-removal PR merged, `pulumi up` no longer sees the old
   declarations: revert that PR first, then import, refresh, preview and up.
 
+## CI runners
+
+`CiRunners` (`@beep/infra-ci-runners`) replaces the Pulumi runner fleet of
+`beep-ci-runners/production`: the network, the heavy and shard-overflow pools
+through `RunnerFleet`, the runner IAM policies and the reaper. Design and
+resource table: the package README. Decisions:
+`goals/infra-alchemy-rebuild/decisions/*-ci-runners-*.md`. Not deployed: the
+first `prod` deploy, its workflow (`deploy-ci-runners.yml`, drafted in the
+workflow decision), its deploy role and the `ci-runners-prod` environment wait
+for the window-5 release of P5.
+
+Personal stage (plan needs no credentials; a deploy builds a fleet that cannot
+launch or register a runner unless `CI_RUNNERS_REHEARSAL_REPOSITORY` names a
+sandbox repository):
+
+```sh
+eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
+export AWS_REGION=us-east-1
+cd packages/tooling/infra/ci-runners
+bunx alchemy plan --stage "dev_$USER" --env-file /dev/null
+```
+
+Pre-deploy gate. `plan-check.ts <plan log>` (tested in `test/PlanCheck.test.ts`)
+fails the job before any deploy on a replace, delete or orphan of any
+resource, a resource outside the stack, an action task, or a line after the
+`Plan:` header it cannot read. If it fails, do not re-run or work around it:
+ask the CI goals driver through the orchestrator. A change that must replace
+or delete a resource is an operator-reviewed deploy, never the push job.
+
+Outside IaC, owned by the operator: the org runner groups `beep-ec2-heavy` and
+`beep-shard-overflow` (selected workflows only) and the GitHub App and webhook
+that deliver `workflow_job` events to the fleet's function URL. Cutover order,
+checks and rollback: decision "CI runners cutover from the Pulumi fleet".
+
 ## Acceptance evidence
 
 `alchemy plan` has no changes-pending exit code and GitHub secrets re-upload on

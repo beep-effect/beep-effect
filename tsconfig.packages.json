@@ -523,6 +523,9 @@
       "path": "packages/shared/use-cases"
     },
     {
+      "path": "packages/tooling/infra/ci-runners"
+    },
+    {
       "path": "packages/tooling/infra/cost-controls"
     },
     {
