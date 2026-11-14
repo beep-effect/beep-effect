@@ -758,21 +758,41 @@ const bundleLocalOnlyWork = Effect.fnUntraced(function* (
 
 const DRAIN_BUNDLES = "drain-bundles";
 
-// Copy the gitignored local-only files a checkout holds (the ones `worktree new` seeds) beside its
-// bundle: `git status` never reports them and no bundle carries them.
+// Gitignored paths that hold secrets or machine-local config: every `.env*` (`.env.local`,
+// `.env.keys`, `.envrc.local`), `secrets.json`, a `secrets/` or `.secrets/` directory, any
+// `*.local*` name (`settings.local.json`, `CLAUDE.local.md`), plus the files `worktree new` seeds.
+const LOCAL_SECRET_NAME = /^(?:\.env.*|secrets\.json|\.?secrets\/?|[^/]*\.local(?:\.[^/]*)?\/?)$/u;
+
+const isLocalOnlyIgnoredPath = (entry: string): boolean => {
+  const trimmed = Str.replace(/\/$/u, "")(entry);
+  const name = O.getOrElse(A.last(Str.split("/")(trimmed)), () => trimmed);
+  return A.contains(WORKTREE_LOCAL_FILE_ENTRIES, trimmed) || LOCAL_SECRET_NAME.test(name);
+};
+
+// Copy every gitignored secret or local-config path a checkout holds beside its bundle: `git status`
+// never reports them and no bundle carries them. Ignored directories are listed collapsed
+// (`--directory`), so `node_modules/` stays one entry and a `secrets/` directory is copied whole.
 const preserveLocalFiles = Effect.fnUntraced(function* (layout: DrainLayout, stateDirectory: string, runId: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const present = yield* Effect.filter(WORKTREE_LOCAL_FILE_ENTRIES, (entry) =>
-    fs.exists(path.join(layout.real, entry)).pipe(Effect.orElseSucceed(() => true))
-  );
+  const listing = yield* gitStdout(layout.real, [
+    "ls-files",
+    "--others",
+    "--ignored",
+    "--exclude-standard",
+    "--directory",
+    "-z",
+  ]);
+  if (O.isNone(listing)) return Result.fail("git ls-files could not list the ignored files");
+  const present = A.filter(A.filter(Str.split("\u0000")(listing.value), Str.isNonEmpty), isLocalOnlyIgnoredPath);
   if (A.isReadonlyArrayEmpty(present)) return Result.succeed(O.none<string>());
   const directory = path.join(stateDirectory, DRAIN_BUNDLES, `${bundleFileName(layout.real, runId)}.local`);
   const copied = yield* Effect.forEach(present, (entry) => {
-    const target = path.join(directory, entry);
+    const relative = Str.replace(/\/$/u, "")(entry);
+    const target = path.join(directory, relative);
     return fs
       .makeDirectory(path.dirname(target), { recursive: true })
-      .pipe(Effect.andThen(fs.copyFile(path.join(layout.real, entry), target)), Effect.option);
+      .pipe(Effect.andThen(fs.copy(path.join(layout.real, relative), target)), Effect.option);
   });
   return A.every(copied, O.isSome)
     ? Result.succeed(O.some(directory))
@@ -821,9 +841,9 @@ const settledAfterPreservation = Effect.fnUntraced(function* (
  * otherwise the result fails with `drain-blocked` and the fresh assessment.
  * Local-only work is then written to a bundle under the fleet state
  * directory's `drain-bundles/`, which must pass `git bundle verify` and cover
- * every local-only commit, and the gitignored local-only files `worktree new`
- * seeds (`.env`, `.claude/settings.local.json`, `CLAUDE.local.md`, the
- * machine-local `.idea` files) are copied to `<bundle>.local/`; either failure
+ * every local-only commit, and every gitignored secret or local-config path
+ * (`.env*`, `secrets.json`, `secrets/`, `.secrets/`, `*.local*`, plus the files
+ * `worktree new` seeds) is copied to `<bundle>.local/`; either failure
  * fails the result with `drain-bundle-failed`. Last, the checkout is read again:
  * a moved HEAD, a changed tree, a live process or a local-only commit no bundle
  * holds fails it with `drain-blocked`.

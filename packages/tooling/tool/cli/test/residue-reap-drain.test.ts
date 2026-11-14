@@ -98,7 +98,7 @@ const makeFleet = Effect.fn("ResidueDrainTest.makeFleet")(function* () {
   yield* run(projects, "git", ["init", "--quiet", "--bare", "-b", "main", "origin.git"]);
   const invoker = yield* cloneOrigin(projects, "beep-effect");
   yield* fs.writeFileString(path.join(invoker, "README.md"), "fleet\n");
-  yield* fs.writeFileString(path.join(invoker, ".gitignore"), ".env\n");
+  yield* fs.writeFileString(path.join(invoker, ".gitignore"), ".env\n.env.local\nsecrets/\nnode_modules/\n");
   yield* run(invoker, "git", ["add", "README.md", ".gitignore"]);
   yield* run(invoker, "git", ["commit", "--quiet", "-m", "seed"]);
   yield* run(invoker, "git", ["push", "--quiet", "origin", "main"]);
@@ -112,6 +112,12 @@ const makeFleet = Effect.fn("ResidueDrainTest.makeFleet")(function* () {
   yield* run(stray, "git", ["commit", "--quiet", "-m", "unpushed work"]);
   // Ignored local-only file: clean to git status, carried by no bundle.
   yield* fs.writeFileString(path.join(stray, ".env"), "API_KEY=op://vault/item/field\n");
+  yield* fs.writeFileString(path.join(stray, ".env.local"), "LOCAL_ONLY=1\n");
+  yield* fs.makeDirectory(path.join(stray, "secrets"), { recursive: true });
+  yield* fs.writeFileString(path.join(stray, "secrets", "token.txt"), "token\n");
+  // Regenerable ignored residue is removed, never copied.
+  yield* fs.makeDirectory(path.join(stray, "node_modules", "dep"), { recursive: true });
+  yield* fs.writeFileString(path.join(stray, "node_modules", "dep", "index.js"), "module.exports = 1\n");
   yield* fs.writeFileString(path.join(stray, "README.md"), "stashed edit\n");
   yield* run(stray, "git", ["stash", "push", "--quiet", "-m", "stashed edit"]);
   return { home, projects, state, invoker, clone, lane, stray };
@@ -321,6 +327,11 @@ describe("residue reap drainable class", () => {
         const preserved = O.getOrThrow(O.fromNullishOr(removed.drain?.preserved));
         const env = yield* fs.readFileString(path.join(preserved, ".env"));
         expect(env).toBe("API_KEY=op://vault/item/field\n");
+        const envLocal = yield* fs.readFileString(path.join(preserved, ".env.local"));
+        expect(envLocal).toBe("LOCAL_ONLY=1\n");
+        const token = yield* fs.readFileString(path.join(preserved, "secrets", "token.txt"));
+        expect(token).toBe("token\n");
+        yield* expectExists(path.join(preserved, "node_modules"), false);
         yield* expectExists(bundle, true);
         yield* run(fleet.clone, "git", ["bundle", "verify", bundle]);
         const heads = yield* run(fleet.clone, "git", ["bundle", "list-heads", bundle]);
