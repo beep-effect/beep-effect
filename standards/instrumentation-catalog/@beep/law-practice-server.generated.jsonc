@@ -325,6 +325,7 @@
     {"name":"Citation.findPlainCaseName","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.findUnbalancedParentheticalEnd","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.fingerprintMetadataPattern","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.fingerprintRegexDescriptor","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.finishCaseNameAssignments","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.finishRegexInput","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.frozenArtifactDigest","owner":"@beep/law-practice-server","family":"slice","conforms":true},

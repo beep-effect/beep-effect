@@ -12,11 +12,10 @@ import {
 } from "@beep/law-practice-server/internal/Citation/RegexSessionProtocol";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
-import { expect } from "@effect/vitest";
+import { expect, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { vi } from "vitest";
 
 const decodeStructuralProof = makeCitationNativeJsonDecoder({
   codec: S.fromJsonString(S.Struct({ a: S.Unknown })),

@@ -2,7 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Bytes from "effect/Bytes";
@@ -87,7 +87,7 @@ export class CitationRegexPatternDescriptor extends S.Opaque<
 const ProfileType = S.toType(CitationRegexPatternProfile);
 const decodeFlags = S.decodeUnknownEffect(CitationRegexProgram.fields.sourceFlags);
 const decodeProfile = S.decodeUnknownEffect(ProfileType);
-const decodeNative = S.decodeUnknownEffect(S.Struct({ width: S.Literals([1, 2, 4]), bytes: S.Uint8Array }));
+const decodeNative = S.decodeUnknownEffect(CitationPythonUnicodeStorage);
 const sameProfile = S.toEquivalence(CitationRegexPatternProfile);
 const fail = (reason: CitationRegexDescriptorFailure["reason"]) => CitationRegexDescriptorFailure.make({ reason });
 const key = (digest: string, flags: number) => `${flags}:${digest}`;
@@ -125,6 +125,14 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
     if (MutableHashMap.has(installed, identity)) return yield* fail("invalid-bindings");
     MutableHashMap.set(installed, identity, descriptor);
   }
+  const fingerprint = Effect.fn("Citation.fingerprintRegexDescriptor")(function* (
+    storage: CitationPythonUnicodeStorage
+  ) {
+    const words = Bytes.concat([new Uint8Array([storage.width]), storage.bytes]);
+    return yield* crypto
+      .digestHex(Digest.sha256, words)
+      .pipe(Effect.catchDefect(() => Effect.fail(fail("fingerprint-unavailable"))));
+  });
   const select = Effect.fn("Citation.selectRegexDescriptor")(function* (nativePattern: unknown, flagsInput: unknown) {
     const flags = yield* decodeFlags(flagsInput).pipe(Effect.mapError(() => fail("unknown-pattern")));
     const storage = yield* decodeNative(nativePattern).pipe(Effect.mapError(() => fail("unknown-pattern")));
@@ -132,10 +140,7 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "processMessageBytes" });
     if (storage.bytes.byteLength / storage.width > limits.patternUtf16)
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternUtf16" });
-    const words = Bytes.concat([new Uint8Array([storage.width]), storage.bytes]);
-    const digest = yield* crypto
-      .digestHex(Digest.sha256, words)
-      .pipe(Effect.catchDefect(() => Effect.fail(fail("fingerprint-unavailable"))));
+    const digest = yield* fingerprint(storage);
     const descriptor = yield* Effect.fromOption(MutableHashMap.get(installed, key(digest, flags))).pipe(
       Effect.mapError(() => fail("unknown-pattern"))
     );
@@ -145,16 +150,18 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
     descriptor: CitationRegexPatternDescriptor,
     prepared: Effect.Success<ReturnType<typeof input.prepareUnicode>>
   ) {
+    const digest = yield* fingerprint(prepared.value.storage);
+    if (digest !== descriptor.patternSha256) return yield* fail("unknown-pattern");
     const program = yield* compiler.compile(prepared.value.storage, descriptor.flags);
     const profile = yield* decodeProfile(program).pipe(Effect.mapError(() => fail("profile-mismatch")));
     if (!sameProfile(profile, descriptor.profile)) return yield* fail("profile-mismatch");
     return { descriptor: copyCitationRegexDescriptor(descriptor), program, prepared };
   }, timed);
   const bind = Effect.fn("Citation.bindRegexDescriptor")(function* (nativePattern: unknown, flags: unknown) {
-    const descriptor = yield* select(nativePattern, flags);
     const prepared = yield* input
       .prepareUnicode(nativePattern, () => Effect.void)
       .pipe(Effect.catchTag("CitationRegexInputFailure", () => Effect.fail(fail("unknown-pattern"))));
+    const descriptor = yield* select(prepared.value.storage, flags);
     return yield* verify(descriptor, prepared);
   }, timed);
   return { engine: compiler.engine, select, verify, bind };

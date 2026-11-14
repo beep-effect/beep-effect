@@ -83,6 +83,9 @@ export type CitationNativeStart = (
   CitationNativeLaneFailure | CitationSafetyLimitExceeded
 >;
 /** One native unit and one confirmed occupant at a time, yielded across cleaner calls.
+ * withUse serializes preparation/dispatch against handover and supplies trusted
+ * already-locked operations across preparation timer fibers. Cleaner work holds
+ * only its logical yield depth; its body never holds the handover lock.
  * @internal @category services @since 0.0.0
  */
 export class CitationNativeLane extends Context.Service<

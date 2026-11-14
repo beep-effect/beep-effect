@@ -19,6 +19,7 @@ import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
+import * as Digest from "effect/crypto/Digest";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -86,7 +87,20 @@ const setup = Effect.fn("RegexSessionTest.setup")(function* (
     cleanupDeadline: Duration.seconds(2),
     processMessageBytes: mode === "oversize" || mode === "preflight" ? 1024 : 8192,
   };
-  const admission = yield* makeCitationNativeProcessAdmission(limits);
+  const owner = yield* makeCitationNativeProcessAdmission(limits);
+  let returns = 0;
+  const admission = CitationNativeProcessAdmission.of({
+    ...owner,
+    acquire: Effect.fn("RegexSessionTest.observeLease")(function* (operation) {
+      const lease = yield* owner.acquire(operation);
+      return {
+        ...lease,
+        release: Effect.sync(() => {
+          returns++;
+        }).pipe(Effect.andThen(lease.release)),
+      };
+    }),
+  });
   const observed = yield* makeCitationObservedSpawner();
   let liveSigkills = 0;
   let pids = A.empty<number>();
@@ -165,6 +179,7 @@ const setup = Effect.fn("RegexSessionTest.setup")(function* (
     lane,
     scope,
     admission,
+    returns: Effect.sync(() => returns),
     observed,
     timer,
     liveSigkills: Effect.sync(() => liveSigkills),
@@ -191,6 +206,8 @@ const assertClosed = Effect.fn("RegexSessionTest.assertClosed")(function* (
   expect(before).toEqual({ spawned: count, confirmed: count });
   const lane = yield* fixture.lane.snapshot;
   expect(lane).toMatchObject({ started: count, confirmed: count, acquired: false, occupied: false, unitsAcquired: 1 });
+  const returned = yield* fixture.returns;
+  expect(returned).toBe(1);
   const capacity = yield* fixture.admission.snapshot;
   expect(capacity).toMatchObject({ active: 0, queued: 0, quarantined: 0 });
   for (const pid of yield* fixture.pids) {
@@ -202,14 +219,52 @@ const assertClosed = Effect.fn("RegexSessionTest.assertClosed")(function* (
   yield* Scope.close(fixture.scope, Exit.void);
   const after = yield* fixture.observed.snapshot;
   expect(after).toEqual(before);
+  const finalReturns = yield* fixture.returns;
+  expect(finalReturns).toBe(1);
   const closedLane = yield* fixture.lane.snapshot;
   expect(closedLane).toMatchObject({ acquired: false, unitsAcquired: 1 });
+});
+
+const interruptAwait = Effect.fn("RegexSessionTest.interruptAwait")(function* (
+  kind: CitationNativeRuntimeKind,
+  stage: string
+) {
+  const entered = yield* Deferred.make<void>();
+  const release = yield* Deferred.make<void>();
+  const fixture = yield* setup(kind, stage === "retire" ? "wrong-sequence" : stage === "read" ? "result" : "real", {
+    stage,
+    entered,
+    release,
+  });
+  const pending = yield* fixture.evaluate.pipe(Effect.forkChild);
+  if (stage === "read") {
+    yield* waitForCitationNativeTest(fixture.session.snapshot.pipe(Effect.map((value) => value.state === "running")));
+    yield* fixture.fs.writeFileString(`${fixture.workerFile}.result-release`, "release");
+  }
+  yield* Deferred.await(entered);
+  const acknowledged = yield* Deferred.make<void>();
+  const interrupted = yield* Fiber.interrupt(pending).pipe(
+    Effect.andThen(Deferred.succeed(acknowledged, undefined)),
+    Effect.forkChild
+  );
+  if (stage === "retire" || stage === "spawn") {
+    yield* Effect.yieldNow;
+    const done = yield* Deferred.isDone(acknowledged);
+    expect(done).toBe(false);
+    const held = yield* fixture.admission.snapshot;
+    expect(held.active).toBe(1);
+    yield* Deferred.succeed(release, undefined);
+  }
+  yield* Fiber.join(interrupted);
+  const outcome = yield* Fiber.await(pending);
+  expect(Exit.hasInterrupts(outcome)).toBe(true);
+  yield* assertClosed(fixture, 1, stage === "retire" ? "invalid-frame" : "closed");
 });
 
 it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "30 seconds", concurrent: false })(
   "regex sessions with real child runtimes",
   (it) => {
-    for (const kind of ["bun", "node"] as const) {
+    A.forEach(["bun", "node"] as const, (kind) => {
       it.effect(`preflights the installed ${kind} evaluator before pattern maps or compilation`, () =>
         Effect.gen(function* () {
           const fixture = yield* setup(kind, "preflight");
@@ -252,6 +307,56 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
           expect(allocations).toBe(0);
           const receipt = yield* fixture.lane.snapshot;
           expect(receipt).toMatchObject({ started: 0, unitsAcquired: 0, acquired: false });
+        })
+      );
+      it.effect(`rechecks ${kind} captured pattern identity after descriptor selection awaits`, () =>
+        Effect.gen(function* () {
+          const fixture = yield* setup(kind, "real");
+          const entered = yield* Deferred.make<void>();
+          const release = yield* Deferred.make<void>();
+          const crypto = yield* Digest.Digest;
+          let first = true;
+          const digest = Digest.Digest.of({
+            ...crypto,
+            digestHex: Effect.fn("RegexSessionTest.gatedFingerprint")(function* (algorithm, bytes) {
+              if (first) {
+                first = false;
+                yield* Deferred.succeed(entered, undefined);
+                yield* Deferred.await(release);
+              }
+              return yield* crypto.digestHex(algorithm, bytes);
+            }),
+          });
+          const evaluator = yield* installCitationRegexEvaluator(fixture.limits, fixture.runtime, [fixture.bound]).pipe(
+            Effect.provideService(Clock.Clock, fixture.lane.clock),
+            Effect.provideService(ChildProcessSpawner, fixture.spawner),
+            Effect.provideService(Digest.Digest, digest)
+          );
+          const budget = yield* makeCitationTextBudget(fixture.limits);
+          const invocation = CitationInvocation.of({
+            scope: fixture.scope,
+            budget,
+            lane: fixture.lane,
+            regex: fixture.session,
+            policy: CitationInvocationPolicy.make({
+              limits: fixture.limits,
+              operation: "extract",
+              deadlineStarts: "before-admission",
+            }),
+          });
+          const pattern = native("(?P<maybe>a)?(b)");
+          const pending = yield* evaluator
+            .evaluate(pattern, native("ab"), 0, 2)
+            .pipe(Effect.provideService(CitationInvocation, invocation), Effect.forkChild);
+          yield* Deferred.await(entered);
+          pattern.bytes.fill(97);
+          yield* Deferred.succeed(release, undefined);
+          const failure = yield* Fiber.join(pending).pipe(Effect.flip);
+          expect(failure).toMatchObject({ reason: "unknown-pattern" });
+          const counts = yield* fixture.observed.snapshot;
+          expect(counts).toEqual({ spawned: 0, confirmed: 0 });
+          const capacity = yield* fixture.admission.snapshot;
+          expect(capacity).toMatchObject({ active: 0, quarantined: 0 });
         })
       );
       for (const warm of [false, true]) {
@@ -354,43 +459,14 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
             const count = handover === "diff" ? 3 : 2;
             const counts = yield* fixture.observed.snapshot;
             expect(counts).toEqual({ spawned: count, confirmed: count });
+            const receipt = yield* fixture.lane.snapshot;
+            expect(receipt).toMatchObject({ acquired: false, unitsAcquired: handover === "cleaner" ? 2 : 1 });
           })
         );
       }
       for (const stage of ["spawn", "startup", "write", "read", "retire"]) {
         it.effect(`confirms ${kind} retirement on interruption during ${stage} await`, () =>
-          Effect.gen(function* () {
-            const entered = yield* Deferred.make<void>();
-            const release = yield* Deferred.make<void>();
-            const fixture = yield* setup(
-              kind,
-              stage === "retire" ? "wrong-sequence" : stage === "read" ? "result" : "real",
-              { stage, entered, release }
-            );
-            const pending = yield* fixture.evaluate.pipe(Effect.forkChild);
-            if (stage === "read") {
-              yield* waitForCitationNativeTest(
-                fixture.session.snapshot.pipe(Effect.map((value) => value.state === "running"))
-              );
-              yield* fixture.fs.writeFileString(`${fixture.workerFile}.result-release`, "release");
-            }
-            yield* Deferred.await(entered);
-            const acknowledged = yield* Deferred.make<void>();
-            const interrupted = yield* Fiber.interrupt(pending).pipe(
-              Effect.andThen(Deferred.succeed(acknowledged, undefined)),
-              Effect.forkChild
-            );
-            if (stage === "retire" || stage === "spawn") {
-              yield* Effect.yieldNow;
-              const done = yield* Deferred.isDone(acknowledged);
-              expect(done).toBe(false);
-              yield* Deferred.succeed(release, undefined);
-            }
-            yield* Fiber.join(interrupted);
-            const outcome = yield* Fiber.await(pending);
-            expect(Exit.hasInterrupts(outcome)).toBe(true);
-            yield* assertClosed(fixture, 1, stage === "retire" ? "invalid-frame" : "closed");
-          })
+          interruptAwait(kind, stage)
         );
       }
       it.effect(`reuses one real ${kind} worker and restarts only after a lane handover`, () =>
@@ -569,6 +645,6 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
           })
         );
       }
-    }
+    });
   }
 );

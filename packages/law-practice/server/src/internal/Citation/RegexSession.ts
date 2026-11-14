@@ -116,6 +116,16 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
     yield* poison(error);
     yield* release.pipe(Effect.mapError(mapLaneFailure));
   });
+  const settle = Effect.fnUntraced(function* <A, E>(
+    outcome: Exit.Exit<A, E>,
+    release: CitationNativeLane["Service"]["retire"]
+  ) {
+    if (Exit.isFailure(outcome)) {
+      const error = outcome.cause.pipe(Cause.findErrorOption, O.filter(isExecutionFailure), O.getOrElse(closed));
+      yield* terminate(error, release);
+    }
+    return yield* outcome;
+  });
   const timeout = <A, E, R>(body: Effect.Effect<A, E, R>) =>
     body.pipe(
       Effect.timeoutOrElse({
@@ -199,8 +209,8 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
     function* (runtime, prepare) {
       return yield* lock
         .withPermit(
-          lane.withUse((startNative, reserve, release) =>
-            Effect.gen(function* () {
+          lane.withUse(
+            Effect.fnUntraced(function* (startNative, reserve, release) {
               yield* ensureOpen;
               if (state === "absent") transport = O.none();
               const run = Effect.fnUntraced(function* (job: CitationRegexSessionJob, frame: Uint8Array) {
@@ -252,15 +262,7 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
                       }).pipe(Effect.scoped, timeout);
                     });
                     const outcome = yield* Effect.exit(restore(work));
-                    if (Exit.isFailure(outcome)) {
-                      const error = outcome.cause.pipe(
-                        Cause.findErrorOption,
-                        O.filter(isExecutionFailure),
-                        O.getOrElse(closed)
-                      );
-                      yield* terminate(error, release);
-                    }
-                    return yield* outcome;
+                    return yield* settle(outcome, release);
                   })
                 );
               });
@@ -269,15 +271,7 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
                   const outcome = yield* Effect.exit(
                     restore(prepare(sequence, run, reserve.pipe(Effect.mapError(mapLaneFailure))))
                   );
-                  if (Exit.isFailure(outcome)) {
-                    const error = outcome.cause.pipe(
-                      Cause.findErrorOption,
-                      O.filter(isExecutionFailure),
-                      O.getOrElse(closed)
-                    );
-                    yield* terminate(error, release);
-                  }
-                  return yield* outcome;
+                  return yield* settle(outcome, release);
                 })
               );
             })

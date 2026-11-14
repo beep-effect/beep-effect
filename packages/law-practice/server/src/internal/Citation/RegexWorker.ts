@@ -23,8 +23,9 @@ const decodeQuota = S.decodeUnknownEffect(CitationRegexWorkerJob.fields.maxMatch
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
 /** Install descriptor binding and job preparation once per call site. Each
  * evaluation reads the invocation's regex session and verifies its Clock/spawner
- * identity against the lane. Binding precedes exact descriptor-bearing frame
- * preflight, allocation and lane reservation. The session owns separate startup
+ * identity against the lane. Descriptor selection precedes the exact full-frame
+ * preflight; payload/map allocation and compilation follow it. The immutable
+ * prepared pattern is fingerprinted again before execution. The session owns separate startup
  * and job timers, reuses the child across jobs, and confirms retirement on every
  * unsuccessful job wait. Successful bounded results are consumed while idle.
  * @internal @category operations @since 0.0.0
