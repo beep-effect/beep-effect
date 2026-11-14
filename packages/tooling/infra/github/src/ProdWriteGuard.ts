@@ -100,6 +100,14 @@ export class ProdChangeRefused extends S.TaggedError<ProdChangeRefused, { readon
       "A prod plan or deploy would take a refused create, replace or delete; that resource's request was not sent.",
   })
 ) {
+  /**
+   * The refusal as one line, for `Cause.pretty` and the deploy log: the
+   * refused change, the logical id and resource type, the reason, and that
+   * writes completed earlier in the same deploy stand.
+   *
+   * @returns The rendered refusal.
+   * @since 0.0.0
+   */
   override get message(): string {
     return `prod refuses the ${this.change} of ${this.logicalId} (${this.resourceType}): ${this.reason}; its request was not sent, and writes completed earlier in this deploy stand.`;
   }
