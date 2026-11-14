@@ -328,3 +328,15 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Evidence:** a repo-cli test fixture process (`exchange-crash-writer.ts`) ignored SIGTERM, kept the lane
   checkout busy and blocked `yeet sweep --retire`.
 - **Would have prevented it:** the fixture exiting on SIGTERM, or the retire fence naming the holding process.
+
+## 2026-11-14: `yeet publish` cannot push a fix wave while an inherited cheap gate is red
+
+- **Doing:** P4 hosts lane, pushing review-round-1 fixes and a main merge to the open #3325 while
+  `observability:catalog-check` was red from #3314 (the runners instrumentation catalog, fixed by #3327).
+- **Evidence:** `yeet publish --push-only` answered `requires --reuse-verified unless HEAD is a reproducible
+  merge of the base`; `--reuse-verified` answered `No reusable Yeet proof state found`; `publish --amend
+  --no-edit` re-runs cheap-gates, which has no `--skip` for an attributed inherited lane. The head had a passing
+  `final-check` receipt recording that skip. A plain `git push` went through instead, losing nothing (the
+  readiness monitor followed the new head and the body kept its provenance footer), but outside Yeet.
+- **Would have prevented it:** `yeet publish` naming `yeet open` as the route for a committed head with a
+  passing receipt on an already open PR, or accepting the receipt's recorded skips for its own cheap-gates run.
