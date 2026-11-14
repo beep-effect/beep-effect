@@ -1,4 +1,4 @@
-import { requiredChecks } from "@beep/infra-github/Config";
+import { MainRuleset, requiredChecks } from "@beep/infra-github/Config";
 import { productionConfig } from "@beep/infra-github/Production";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -24,6 +24,52 @@ const unmanagedNames = (objectClass: string) =>
 
 const mainRuleset = O.getOrThrow(A.findFirst(census.rulesets, (ruleset) => ruleset.name === "main"));
 
+/** The main ruleset as GitHub stores it, built from the declared configuration. */
+const storedRuleset = (ruleset: MainRuleset) => {
+  const pullRequest = ruleset.pullRequest;
+  return {
+    name: ruleset.name,
+    target: "branch",
+    enforcement: ruleset.enforcement,
+    conditions: { ref_name: { exclude: ruleset.exclude, include: ruleset.include } },
+    bypass_actors: A.map(ruleset.bypassActors, ({ actorType, actorId, bypassMode }) => ({
+      actor_id: actorId,
+      actor_type: actorType,
+      bypass_mode: bypassMode,
+    })),
+    rules: [
+      // Built from the flags, as plannedRuleTypes does, so a flag turned off shows as drift.
+      ...(ruleset.deletion ? [{ type: "deletion" }] : []),
+      ...(ruleset.nonFastForward ? [{ type: "non_fast_forward" }] : []),
+      {
+        type: "pull_request",
+        parameters: {
+          required_approving_review_count: pullRequest.requiredApprovingReviewCount,
+          dismiss_stale_reviews_on_push: pullRequest.dismissStaleReviewsOnPush,
+          required_reviewers: [],
+          require_code_owner_review: pullRequest.requireCodeOwnerReview,
+          dismissal_restriction: { enabled: false, allowed_actors: [] },
+          require_last_push_approval: pullRequest.requireLastPushApproval,
+          required_review_thread_resolution: pullRequest.requiredReviewThreadResolution,
+          require_extra_approval_for_unattributed_changes: pullRequest.requireExtraApprovalForUnattributedChanges,
+          allowed_merge_methods: pullRequest.allowedMergeMethods,
+        },
+      },
+      {
+        type: "required_status_checks",
+        parameters: {
+          strict_required_status_checks_policy: ruleset.strictRequiredStatusChecksPolicy,
+          do_not_enforce_on_create: false,
+          required_status_checks: A.map(requiredChecks(ruleset, O.none()), ({ context, integrationId }) => ({
+            context,
+            integration_id: integrationId,
+          })),
+        },
+      },
+    ],
+  };
+};
+
 describe("the declared configuration matches the census", () => {
   it("repository settings", () => {
     const { settings } = config;
@@ -46,48 +92,13 @@ describe("the declared configuration matches the census", () => {
   });
 
   it("main ruleset, in the shape GitHub stores it", () => {
-    const ruleset = config.mainRuleset;
-    const pullRequest = ruleset.pullRequest;
-    expect({
-      name: ruleset.name,
-      target: "branch",
-      enforcement: ruleset.enforcement,
-      conditions: { ref_name: { exclude: ruleset.exclude, include: ruleset.include } },
-      bypass_actors: A.map(ruleset.bypassActors, ({ actorType, actorId, bypassMode }) => ({
-        actor_id: actorId,
-        actor_type: actorType,
-        bypass_mode: bypassMode,
-      })),
-      rules: [
-        { type: "deletion" },
-        { type: "non_fast_forward" },
-        {
-          type: "pull_request",
-          parameters: {
-            required_approving_review_count: pullRequest.requiredApprovingReviewCount,
-            dismiss_stale_reviews_on_push: pullRequest.dismissStaleReviewsOnPush,
-            required_reviewers: [],
-            require_code_owner_review: pullRequest.requireCodeOwnerReview,
-            dismissal_restriction: { enabled: false, allowed_actors: [] },
-            require_last_push_approval: pullRequest.requireLastPushApproval,
-            required_review_thread_resolution: pullRequest.requiredReviewThreadResolution,
-            require_extra_approval_for_unattributed_changes: pullRequest.requireExtraApprovalForUnattributedChanges,
-            allowed_merge_methods: pullRequest.allowedMergeMethods,
-          },
-        },
-        {
-          type: "required_status_checks",
-          parameters: {
-            strict_required_status_checks_policy: ruleset.strictRequiredStatusChecksPolicy,
-            do_not_enforce_on_create: false,
-            required_status_checks: A.map(requiredChecks(ruleset, O.none()), ({ context, integrationId }) => ({
-              context,
-              integration_id: integrationId,
-            })),
-          },
-        },
-      ],
-    }).toEqual(mainRuleset);
+    expect(storedRuleset(config.mainRuleset)).toEqual(mainRuleset);
+  });
+
+  it("main ruleset: a protection flag turned off shows as drift", () => {
+    for (const flags of [{ deletion: false }, { nonFastForward: false }]) {
+      expect(storedRuleset(MainRuleset.make({ ...config.mainRuleset, ...flags }))).not.toEqual(mainRuleset);
+    }
   });
 
   it("owned environments: branch policies and variables", () => {

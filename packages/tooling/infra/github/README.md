@@ -40,6 +40,7 @@ Design order is schema, typed configuration, then resources.
 | Repo variables `TURBO_*` | unmanaged | the turbo cache cutover sets them |
 | All 26 labels | owned, adopted by name | `GitHub.Label` observes by name and updates |
 | Every secret (11 repository, 9 environment) | unmanaged | see "Secrets" |
+| Environment secret `INFRA_GITHUB_APP_PRIVATE_KEY` on `infra-github-prod` | operator-set, not managed by the stack | the deploy identity; only the token-mint step reads it (ruling 2026-11-14) |
 | Two repository webhooks (`workflow_job`) | unmanaged | runner fleet; their secret belongs to the ci-runners stack (P5) |
 | Actions permissions | unmanaged | no `@alchemy.run/github` resource (verified gap) |
 
@@ -64,8 +65,12 @@ deploy can read its value. On day one the stack manages none:
   `beep-effect-web-prod`, `storybook-prod`, `turbo-cache-prod` (each stack's deploy).
 
 Ruling (packet gate, 2026-11-13): every secret stays unmanaged on day one, and no
-1Password service-account token or other new long-lived credential goes into CI for this
-stack. The lists above are what a later decision works from.
+1Password service-account token goes into CI for this stack. The lists above are what a
+later decision works from. Amended 2026-11-14 for one credential, the deploy identity. The
+`beep-infra-github` App's private key is an environment secret on `infra-github-prod`
+(`main`-only branch policy). It enters CI only in the token-mint step, which exchanges it
+for a one-hour installation token. It is never a repository secret, and the operator mints
+and stores it (decision `2026-11-14-packet-gate-ruling-the-infra-github-app-key-is-the-one-credential-that-enters-ci`).
 
 ### Credential
 
@@ -92,8 +97,8 @@ switch, armed or not. The ruleset is written as a whole body, so leaving the che
 (option (a)) would remove it; carrying it is what the resource model supports. Tests prove a
 live check survives a deploy present and absent. Because the body is built from a capture,
 `src/RulesetWriteGuard.ts` wraps the `GitHub.Ruleset` provider: immediately before the PUT
-it re-reads the live ruleset and refuses, writing nothing, if it no longer equals the
-capture. This closes the capture-to-PUT window except for the single GET-to-PUT round-trip: a
+it re-reads the live ruleset and refuses its PUT if it no longer equals the capture. The
+refusal stops that PUT only: writes other resources completed earlier in the same deploy stand. This closes the capture-to-PUT window except for the single GET-to-PUT round-trip: a
 switch flipped inside that round-trip is overwritten and not detected. Tests cover the equal
 case and the check flipped either way. The post-deploy check (`--reviewer-from`) fails when the
 ruleset differs from what the deploy wrote, which means it moved after the write and nothing was

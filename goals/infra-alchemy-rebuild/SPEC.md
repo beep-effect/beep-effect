@@ -401,6 +401,8 @@ Reverse: Delete the INFRA_GITHUB_DEPLOY_ARMED branch in updateReviewerRuleset (R
 
 Ruling by the packet gate session, 2026-11-13, on the open question about secret delivery. All repository and environment secrets stay unmanaged on day one. No 1Password service-account token, and no other new long-lived credential, goes into CI for this stack. The README of `@beep/infra-github` keeps the table of secret names with and without a value source; a later decision works from it.
 
+Amended by `2026-11-14-packet-gate-ruling-the-infra-github-app-key-is-the-one-credential-that-enters-ci.md`: the secret-value ruling above stands, and the `beep-infra-github` App's private key, an environment secret on `infra-github-prod` that only the token-mint step reads, is the one credential that enters CI for this stack.
+
 Lane goals/infra-alchemy-rebuild-p3-github
 
 Reverse: A later decision names the secrets to manage and the delivery route the gate approves.
@@ -408,6 +410,8 @@ Reverse: A later decision names the secrets to manage and the delivery route the
 ### Packet gate ruling: the first infra-github plan is accepted; the first deploy is bracketed by a ruleset capture, 2026-11-13
 
 Ruling by the packet gate session, 2026-11-13, on the plan result. Accepted as it stands: the 36 provider-gap `create` entries are explained and the stack tests prove the first apply sends no create request; the work is not held on an upstream contribution, and the gap is recorded as friction with file evidence in `research/OPPORTUNITIES.md` so it can go upstream later. Added before any arming: because the `main` ruleset is rewritten on every deploy, the runbook's first-deploy procedure captures `gh api repos/beep-effect/beep-effect/rulesets/10240248` before and after the run under `~/.local/state/beep/infra-github/`, diffs them with `updated_at` removed (the diff must be empty), and on any other difference disarms and re-applies the captured JSON with `gh api -X PUT`.
+
+Amendment, 2026-11-14 (packet gate, on review thread discussion_r4572751669): the compare and the restore leave out the `beep-reviewer` required check. The captures are compared with `updated_at` and that entry removed, and the switch position is read separately. On any other difference the restore re-applies the captured JSON with `gh api -X PUT`, except the `beep-reviewer` entry, which is taken from a fresh live read and kept at its live state, so a switch made by `beep reviewer ruleset release|require --apply` between the captures is not reverted. The restore is a runbook `jq` step, not code.
 
 Lane goals/infra-alchemy-rebuild-p3-github
 
@@ -961,6 +965,61 @@ Lane goals/infra-alchemy-rebuild-p3-github
 
 Reverse: Re-add a committed reviewerCheck flag to MainRuleset and the armed-mode CLI branch (ReviewerRulesetOwner.ts in 0b8d6385b34), and drop the carry in requiredChecks.
 
+### InfraGithub deploys through a stack-scoped OIDC role, beep-alchemy-infra-github-deploy, 2026-11-14
+
+Ruling by the packet gate session, 2026-11-14: like the other stacks' deploy jobs, `Deploy infra-github` assumes a stack-scoped role, not the shared `beep-alchemy-state-rw`. The variable name (`ALCHEMY_STATE_ROLE_ARN` on `infra-github-prod`) and the workflow do not change; only the role it names does. The runbook step that added `repo:beep-effect/beep-effect:environment:infra-github-prod` to the trust policy of `beep-alchemy-state-rw` is dropped. The role is not created yet; the commands below are for the bootstrap, on the gate's word.
+
+What the store code touches (read at Alchemy 2.0.0-beta.87; `AWS.state({ backend: "s3", … })` in `alchemy.run.ts` sets no `prefix`; the stack name is `InfraGithub`):
+
+- Bucket `alchemy-state-832907639880-us-east-1-an` (`createStateBucketName(accountId, region)`).
+- Bucket configuration, `ensureStateBucket` in `@alchemy.run/aws` `src/StateStore/State.ts`. It calls `headBucket` (`s3:ListBucket`), then reads versioning, encryption, the public access block and ownership controls. It writes them only on drift. Under this role a drift therefore fails the deploy instead of being converged, which is the intended fail-closed behavior: the bucket is a bootstrap singleton.
+- Objects, `makeBucketState` in `alchemy` `src/State/BucketState.ts`. Every key is `{prefix}{stack}/{stage}/…`, so `InfraGithub/prod/{fqn}.json`, `InfraGithub/prod/__stack_output__.json` and `InfraGithub/prod/__lease__.json`:
+  - reads: `GetObject`;
+  - writes: `PutObject`, including the conditional lease write;
+  - deletes: `DeleteObject` and the batch `DeleteObjects`, which S3 authorizes as `s3:DeleteObject` per key; stale rows and the lease release.
+- Listings (`ListObjectsV2`, `s3:ListBucket`) use the stage prefix. Stack and stage enumeration lists bucket-level names but reads no object.
+- No key outside `InfraGithub/` is read, written or deleted.
+- Encryption is SSE-KMS with the AWS-managed `aws/s3` key. Its key policy grants use through S3 to principals in the account, so the role needs no KMS statement.
+
+Trust: the existing provider `token.actions.githubusercontent.com`, audience `sts.amazonaws.com`, subject exactly `repo:beep-effect/beep-effect:environment:infra-github-prod`. Session length one hour.
+
+Commands (operator workstation, `AWS_PROFILE=elpresidank-vault`), then the GitHub side:
+
+```sh
+export AWS_PROFILE=elpresidank-vault AWS_REGION=us-east-1
+D="$(mktemp -d)"
+cat > "$D/trust.json" <<'JSON'
+{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Federated":"arn:aws:iam::832907639880:oidc-provider/token.actions.githubusercontent.com"},"Action":"sts:AssumeRoleWithWebIdentity","Condition":{"StringEquals":{"token.actions.githubusercontent.com:aud":"sts.amazonaws.com","token.actions.githubusercontent.com:sub":"repo:beep-effect/beep-effect:environment:infra-github-prod"}}}]}
+JSON
+cat > "$D/policy.json" <<'JSON'
+{"Version":"2012-10-17","Statement":[
+{"Sid":"StateBucketRead","Effect":"Allow","Action":["s3:ListBucket","s3:GetBucketLocation","s3:GetBucketVersioning","s3:GetBucketOwnershipControls","s3:GetBucketPublicAccessBlock","s3:GetEncryptionConfiguration"],"Resource":"arn:aws:s3:::alchemy-state-832907639880-us-east-1-an"},
+{"Sid":"StateObjects","Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject"],"Resource":"arn:aws:s3:::alchemy-state-832907639880-us-east-1-an/InfraGithub/*"}]}
+JSON
+aws iam create-role --role-name beep-alchemy-infra-github-deploy \
+  --assume-role-policy-document "file://$D/trust.json" --max-session-duration 3600 \
+  --description "GitHub OIDC deploy role for the InfraGithub Alchemy stack (infra-github-prod)" \
+  --tags Key=beep:owner,Value=infra-alchemy-rebuild Key=beep:bootstrap,Value=infra-github-deploy
+aws iam put-role-policy --role-name beep-alchemy-infra-github-deploy \
+  --policy-name infra-github-deploy --policy-document "file://$D/policy.json"
+aws iam get-role --role-name beep-alchemy-infra-github-deploy --query Role.Arn --output text
+rm -r "$D"
+
+gh variable set ALCHEMY_STATE_ROLE_ARN --env infra-github-prod --repo beep-effect/beep-effect \
+  --body arn:aws:iam::832907639880:role/beep-alchemy-infra-github-deploy
+```
+
+Checks after creation (`aws iam simulate-principal-policy --policy-source-arn <role arn>`):
+- `s3:PutObject` on `arn:aws:s3:::alchemy-state-832907639880-us-east-1-an/InfraGithub/prod/x.json` must say `allowed`;
+- `s3:PutObject` on `…/CostControls/prod/x.json` must say `implicitDeny`;
+- `s3:PutBucketVersioning` on the bucket must say `implicitDeny`.
+
+The role is a bootstrap singleton, like the state role, until `@beep/infra-ci-runners` adopts the OIDC roles.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: gh variable delete ALCHEMY_STATE_ROLE_ARN --env infra-github-prod --repo beep-effect/beep-effect; aws iam delete-role-policy --role-name beep-alchemy-infra-github-deploy --policy-name infra-github-deploy; aws iam delete-role --role-name beep-alchemy-infra-github-deploy
+
 ### InfraGithub prod create guard lives in the providers, not in a plan-log step, 2026-11-14
 
 The packet gate asked what refuses an unexpected `create` on `prod`. Nothing did: the
@@ -1007,6 +1066,56 @@ beep-reviewer (#3313, P2) found that a non-ephemeral pool with the default `jitC
 Lane goals/infra-alchemy-rebuild-p2-github-runners-fleet · PR #3314
 
 Reverse: Refuse jitConfig true on a non-ephemeral pool in the RunnerPool schema, with the default following ephemeral, and drop the user-data guard.
+
+### Packet gate ruling: the beep-infra-github App key is the one credential that enters CI for this stack, 2026-11-14
+
+Ruling by the packet gate session, 2026-11-14, on review thread discussion_r4572751666. It amends
+`2026-11-13-packet-gate-ruling-every-secret-stays-unmanaged-and-no-new-long-lived-credential-enters-ci.md`,
+whose reversal line anticipated this ("a later decision names … the delivery route the gate approves").
+
+What stands unchanged: the 2026-11-13 ruling was about delivering secret values. It kept a 1Password
+service-account token, which can read every secret, out of CI. So every repository and environment secret stays
+unmanaged by the stack.
+
+What is amended, for one credential only: the deploy identity. The private key of the `beep-infra-github` App is
+stored as an environment secret, `INFRA_GITHUB_APP_PRIVATE_KEY`, on `infra-github-prod`. It enters CI only in the
+token-mint step of `deploy-infra-github.yml` (`actions/create-github-app-token`), which exchanges it for a one-hour
+installation token.
+
+Why: the stack writes repository settings, rulesets, environments, variables and labels, and the Actions
+`GITHUB_TOKEN` can do none of that, so some administrative identity is unavoidable. The narrowest one available is
+an App that:
+- is installed on this one repository;
+- has only the permissions the stack needs;
+- has a key readable only by jobs on `main`, through a protected environment;
+- exchanges that key for a one-hour token on every run.
+
+The App and its environment:
+- **App permissions** (checked-in manifest
+  `packages/tooling/policy-pack/repo-configs/data/github-apps/beep-infra-github.manifest.json`): repository
+  `administration` write (settings and rulesets), `environments` write, `actions_variables` write, `issues` write
+  (labels), `metadata` read. No secrets permission, no events, webhook inactive.
+- **Installation:** `beep-effect/beep-effect` only.
+- **Mint step:** no `permission-*` inputs, so the token carries exactly the App's permissions.
+- **Environment `infra-github-prod`:** deployment branch policy `protected_branches: false`,
+  `custom_branch_policies: true`, with one branch policy, `main` (type `branch`). Only a job running on `main` can
+  read the secret.
+
+Alternative considered and not taken: keeping the key in AWS (SSM Parameter Store or Secrets Manager) and fetching
+it through the OIDC role. That keeps the key out of GitHub's secret store but not out of the job's reach, and it
+adds a second system to rotate.
+
+Controls:
+- The key is never a repository-level secret.
+- It reaches no step but the mint step. This is already true in the workflow (blob
+  `9b4af8a47264f24357b22016096c59689fca8fc3`), and the job-level `env` holds no secret.
+- Rotation (runbook, InfraGithub section): mint a new key in the App settings, replace the environment secret, then
+  delete the old key in the App settings.
+- The operator mints the App and stores the key, so the credential exists only by their act.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Delete the environment secret INFRA_GITHUB_APP_PRIVATE_KEY on infra-github-prod and uninstall the beep-infra-github App; the stack then cannot deploy from CI.
 
 ### RunnerFleet declares each pool's RunnerLaunchTemplate from aws-extras, 2026-11-14
 

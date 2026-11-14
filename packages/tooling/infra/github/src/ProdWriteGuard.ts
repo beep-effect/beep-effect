@@ -96,11 +96,12 @@ export class ProdChangeRefused extends S.TaggedError<ProdChangeRefused, { readon
   "ProdChangeRefused",
   { logicalId: S.String, resourceType: S.String, change: RefusedChange, reason: S.String },
   $I.annote("ProdChangeRefused", {
-    description: "A prod plan or deploy would take a refused create, replace or delete; nothing was sent.",
+    description:
+      "A prod plan or deploy would take a refused create, replace or delete; that resource's request was not sent.",
   })
 ) {
   override get message(): string {
-    return `prod refuses the ${this.change} of ${this.logicalId} (${this.resourceType}): ${this.reason}; nothing was sent.`;
+    return `prod refuses the ${this.change} of ${this.logicalId} (${this.resourceType}): ${this.reason}; its request was not sent, and writes completed earlier in this deploy stand.`;
   }
 }
 

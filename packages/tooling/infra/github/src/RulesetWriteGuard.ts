@@ -6,7 +6,9 @@
  * capture and the write would be overwritten.
  * This module wraps the shipped `GitHub.Ruleset` provider: inside the
  * provider's update path, immediately before the PUT, it re-reads the live
- * ruleset and refuses, writing nothing, if it differs from the capture.
+ * ruleset and refuses its PUT if it differs from the capture. The refusal
+ * stops that PUT only: writes other resources completed earlier in the same
+ * deploy stand.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -48,7 +50,7 @@ export class RulesetChangedSinceCapture extends S.TaggedError<
   "RulesetChangedSinceCapture",
   { rulesetId: S.Int, diffs: S.Array(FieldDiff) },
   $I.annote("RulesetChangedSinceCapture", {
-    description: "The live ruleset changed after the capture the plan was built from; nothing was written.",
+    description: "The live ruleset changed after the capture the plan was built from; its PUT was not sent.",
   })
 ) {}
 
@@ -78,7 +80,8 @@ export class CaptureWithoutId extends S.TaggedError<CaptureWithoutId, { readonly
 /**
  * Raised when the ruleset the provider would write is not the captured one:
  * the reconcile has no prior output (its create path POSTs a new ruleset) or
- * its state names a different ruleset id. Nothing is sent.
+ * its state names a different ruleset id. The ruleset request is not sent;
+ * writes other resources completed earlier in the same deploy stand.
  *
  * **Example** (A write aimed at another ruleset)
  *
@@ -100,7 +103,8 @@ export class RulesetTargetIsNotTheCapture extends S.TaggedError<
   "RulesetTargetIsNotTheCapture",
   { rulesetName: S.String, capturedId: S.Int, targetId: S.Option(S.Int) },
   $I.annote("RulesetTargetIsNotTheCapture", {
-    description: "The ruleset write would create a ruleset or target another id than the capture; nothing was sent.",
+    description:
+      "The ruleset write would create a ruleset or target another id than the capture; its request was not sent.",
   })
 ) {}
 

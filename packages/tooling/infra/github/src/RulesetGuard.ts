@@ -287,7 +287,9 @@ export class FieldDiff extends S.Opaque<FieldDiff, { readonly brand: unique symb
 export class RulesetDrift extends S.TaggedError<RulesetDrift, { readonly brand: unique symbol }>($I`RulesetDrift`)(
   "RulesetDrift",
   { diffs: S.Array(FieldDiff) },
-  $I.annote("RulesetDrift", { description: "The planned ruleset body differs from the live one; nothing is written." })
+  $I.annote("RulesetDrift", {
+    description: "The planned ruleset body differs from the live one; the check itself writes nothing.",
+  })
 ) {}
 
 type Rule = LiveRuleset["rules"][number];

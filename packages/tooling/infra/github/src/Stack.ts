@@ -109,7 +109,8 @@ const declareLabel = (config: StackConfig, spec: LabelSpec) =>
     repository: config.repository,
     name: spec.name,
     color: spec.color,
-    ...O.match(spec.description, { onNone: () => ({}), onSome: (description) => ({ description }) }),
+    // `None` sends GitHub's clearing value: an omitted description is dropped from the PATCH and keeps the old text.
+    description: O.getOrElse(spec.description, () => ""),
   });
 
 /**

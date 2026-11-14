@@ -177,6 +177,28 @@ scenario("updates converge labels, variables and environment branch policies", (
   })
 );
 
+scenario("a label description going from Some to None is cleared in the PATCH body", (stack, fake) =>
+  Effect.gen(function* () {
+    const withDescription = (description: O.Option<string>) =>
+      StackConfig.make({
+        ...productionConfig,
+        labels: A.map(productionConfig.labels, (label) =>
+          label.name === "bug" ? LabelSpec.make({ ...label, description }) : label
+        ),
+      });
+    yield* stack.deploy(declareStack(withDescription(O.some("Broken")), O.none()));
+    expect(O.getOrThrow(MutableHashMap.get(fake.labels, "bug"))).toMatchObject({ description: "Broken" });
+    fake.calls.length = 0;
+    yield* stack.deploy(declareStack(withDescription(O.none()), O.none()));
+    const patches = A.filter(
+      fake.writes(),
+      (call) => call.method === "PATCH" && Str.endsWith("/labels/bug")(call.path)
+    );
+    expect(A.map(patches, (call) => call.body.description)).toEqual([""]);
+    expect(O.getOrThrow(MutableHashMap.get(fake.labels, "bug"))).toMatchObject({ description: "" });
+  })
+);
+
 scenario("dropping declarations deletes nothing, and a stage destroy is refused", (stack, fake) =>
   Effect.gen(function* () {
     yield* stack.deploy(declareStack(productionConfig, O.none()));
