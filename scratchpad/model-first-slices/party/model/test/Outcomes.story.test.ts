@@ -26,6 +26,7 @@ import { Party } from "@proto/party-model/Party/Party.aggregate";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { acme, agentRun, delegated, human, onOrg, oneSource } from "./fixtures.ts";
 
 // The outcomes the other stories leave unexecuted (`bun run outcomes`): each refusal a Party
@@ -43,7 +44,7 @@ const claim = Claim.ref("claim_1");
 const run1 = RunId.make("review:claim_1:1");
 const sameParty = Proposition.cases.SameParty.make({ survivor: PartyId.make("party_a"), absorbed: PartyId.make("party_b") });
 const asserted = ClaimAsserted.make({ org: acme, proposition: sameParty, signals: oneSource, provenance: provenanceOf(intake) });
-const retracted = ClaimRetracted.make({ reason: "wrong", provenance: provenanceOf(reviewer) });
+const retracted = ClaimRetracted.make({ reason: "wrong", org: O.some(acme), reviewRuns: O.some([]), provenance: provenanceOf(reviewer) });
 const proposal = { disposition: "accept" as const, rationale: "same phone", run: run1, evidenceRevision: 1 };
 const digest = proposalDigest(proposal);
 const asRun = agentRun(run1, "p_intake", [delegated({ grant: "g_p", delegation: `dlg:${run1}`, capability: PartyPropose, org: acme, record: "Claim/claim_1", operations: ["ProposeDisposition"] })]);

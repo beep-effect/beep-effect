@@ -42,6 +42,8 @@ const dana = Party.ref("party_dana");
 const duplicate = Party.ref("party_dup");
 const sameParty = Proposition.cases.SameParty.make({ survivor: dana.id, absorbed: duplicate.id });
 const asserted = ClaimAsserted.make({ org: acme, proposition: sameParty, signals: twoSources, provenance: provenanceOf(intake) });
+/** The scope a decision on this claim carries: its org, and no review run (its history asked for none). */
+const unreviewed = { org: O.some(acme), reviewRuns: O.some([]) };
 
 it.effect("a caller without the capability grant is refused by decide", () =>
   story(
@@ -81,7 +83,7 @@ it.effect("a grant on one record reaches that record only", () => {
     when(otherClaim, AcceptClaim.make({})),
     rejected(MissingGrant.make({ capability: PartyReview.id, operation: "AcceptClaim" })),
     when(claim, AcceptClaim.make({})),
-    then(claim, ClaimAccepted.make({ proposition: sameParty, provenance: provenanceOf(narrow) })),
+    then(claim, ClaimAccepted.make({ proposition: sameParty, ...unreviewed, provenance: provenanceOf(narrow) })),
     // Re-admitted for the merge, the same grant reaches Claim/claim_1 only: the merge is refused, and recorded.
     call(Authority.readmit, { provenance: provenanceOf(narrow), hop: mergeHop }),
     succeed(Authority.readmit, readmitted(narrow, mergeHop)),
@@ -133,7 +135,7 @@ it.effect("a merge runs under the reviewer's re-admitted grants, so a reviewer w
     given(claim, asserted),
     as(reviewer),
     when(claim, AcceptClaim.make({})),
-    then(claim, ClaimAccepted.make({ proposition: sameParty, provenance: provenanceOf(reviewer) })),
+    then(claim, ClaimAccepted.make({ proposition: sameParty, ...unreviewed, provenance: provenanceOf(reviewer) })),
     // The policy acts with no more authority than the root has now: the merge is refused, and recorded.
     call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop }),
     succeed(Authority.readmit, readmitted(reviewer, mergeHop)),

@@ -5,14 +5,16 @@ import { Session } from "@proto/kernel/Session.middleware";
 import * as S from "effect/Schema";
 import { ClaimId } from "./Claim.id.ts";
 import { ClaimNotPending } from "./ClaimNotPending.rejection.ts";
+import { DecisionScope } from "./DecisionScope.ts";
 
 /**
- * The fact: a pending claim was withdrawn, and why.
+ * The fact: a pending claim was withdrawn, and why. Phase 9 added its scope,
+ * the org and review runs (D43).
  *
  * @category events
  * @since 0.0.0
  */
-export class ClaimRetracted extends Domain.Event("ClaimRetracted", carry({ reason: S.String })) {}
+export class ClaimRetracted extends Domain.Event("ClaimRetracted", carry({ reason: S.String, ...DecisionScope })) {}
 
 /**
  * Withdraw a pending claim.

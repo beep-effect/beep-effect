@@ -10,6 +10,7 @@
     "./HandlerRegistry": "./src/HandlerRegistry.ts",
     "./ImportGraph": "./src/ImportGraph.ts",
     "./PrimaryExport": "./src/PrimaryExport.ts",
+    "./PublishedStreams": "./src/PublishedStreams.ts",
     "./RejectionClass": "./src/RejectionClass.ts",
     "./RpcParity": "./src/RpcParity.ts",
     "./SourceScan": "./src/SourceScan.ts"

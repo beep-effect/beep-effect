@@ -35,7 +35,7 @@ import * as O from "effect/Option";
 import { identity } from "effect/Function";
 import * as S from "effect/Schema";
 import { reviewRun } from "../Review/ReviewPlan.ts";
-import { admission, claimIn, requireAdmission, requireGranted, requirePending } from "./Claim.rules.ts";
+import { admission, claimIn, requireAdmission, requireGranted, requirePending, scopeOf } from "./Claim.rules.ts";
 
 /**
  * A claim's lifecycle. The union is the state machine: `decide` guards each
@@ -135,17 +135,19 @@ export class Claim extends Domain.Aggregate(
         ];
       }),
 
-      AcceptClaim: Effect.fn(function* (state, command, { stream, now }) {
+      AcceptClaim: Effect.fn(function* (state, command, { id, stream, now }) {
         const invocation = yield* requireGranted({ capability: PartyReview, operation: command._tag, state, stream, at: now });
         const pending = yield* requirePending(state);
         yield* requireAdmission(pending);
-        return [ClaimAccepted.make({ proposition: pending.proposition, provenance: provenanceOf(invocation) })];
+        return [
+          ClaimAccepted.make({ proposition: pending.proposition, ...scopeOf(id, pending), provenance: provenanceOf(invocation) }),
+        ];
       }),
 
-      RetractClaim: Effect.fn(function* (state, command, { stream, now }) {
+      RetractClaim: Effect.fn(function* (state, command, { id, stream, now }) {
         const invocation = yield* requireGranted({ capability: PartyReview, operation: command._tag, state, stream, at: now });
-        yield* requirePending(state);
-        return [ClaimRetracted.make({ reason: command.reason, provenance: provenanceOf(invocation) })];
+        const pending = yield* requirePending(state);
+        return [ClaimRetracted.make({ reason: command.reason, ...scopeOf(id, pending), provenance: provenanceOf(invocation) })];
       }),
 
       AddEvidence: Effect.fn(function* (state, command, { stream, now }) {
@@ -175,7 +177,7 @@ export class Claim extends Domain.Aggregate(
         ];
       }),
 
-      ApproveProposal: Effect.fn(function* (state, command, { stream, now, commandId }) {
+      ApproveProposal: Effect.fn(function* (state, command, { id, stream, now, commandId }) {
         // A person approves, signed in and acting directly: never an agent root, never a relayed hop.
         const acting = yield* Effect.service(CurrentInvocation);
         if (!Root.guards.Human(acting.root) || !Operator.guards.Human(operatorOf(acting))) {
@@ -200,6 +202,7 @@ export class Claim extends Domain.Aggregate(
             outcome: proposal.disposition === "accept" ? "accepted" : "retracted",
             proposition: pending.proposition,
             corroboration: O.some(corroboration),
+            ...scopeOf(id, pending),
             provenance: provenanceOf(invocation),
           }),
         ];

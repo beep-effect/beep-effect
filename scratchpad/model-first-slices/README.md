@@ -1,7 +1,7 @@
 # model-first-slices
 
 A standalone prototype of the model-first slices design, reworked to
-`explorations/model-first-slices/DECISIONS.md` through phase 8 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster; phase 6 patched two library defects locally and ran it again; phase 7 put `bun run check` on the Effect build of the compiler and applied the owner's review; phase 8 ran the suite on the swarm against the phase 7 code):
+`explorations/model-first-slices/DECISIONS.md` through phase 9 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster; phase 6 patched two library defects locally and ran it again; phase 7 put `bun run check` on the Effect build of the compiler and applied the owner's review; phase 8 ran the suite on the swarm against the phase 7 code; phase 9 built the rulings on its three failures, D41 to D43, and ran it again):
 file grammar, contract packages, the authority context, re-admission at each hop, the `runs`
 context, approval as an authenticated command, the Reasoner evaluation contract, an integration fact
 through an outbox and an inbox, a projection rebuild with no side effects, stored-format
@@ -18,7 +18,9 @@ Phase notes: `FINDINGS.md` (phase 1), `notes/phase-2.md`, `notes/phase-3.md`, `n
 conformance table before and after, the D38 overwrite), `notes/phase-7.md` (the Effect build of the compiler, the
 diagnostics before and after, lifecycle unions and `Option`s, stored-format changes, the review saga fix, and the
 findings left failing), `notes/phase-8.md` (the swarm run of the phase 7 code: bundles, the conformance table beside
-phase 6, stored forms and a restore across code versions, the D5 verdict). Every invariant and its checker: `PROOFS.md`
+phase 6, stored forms and a restore across code versions, the D5 verdict), `notes/phase-9.md` (the commit version check and its
+safety per host, the recovery case and its bound, the publisher on claim events with a second stream generation, the
+conformance table beside phase 8, the D5 verdict). Every invariant and its checker: `PROOFS.md`
 (generated).
 
 This directory is not part of the monorepo's bun workspace. It has its own `package.json` (with
@@ -124,7 +126,11 @@ at request, narrowed, and only while a human answers for it.
   - two saga versions side by side across a redeploy, and stored activity results converting on
     read (D35);
   - the fact published for a direct decision, an approval and a retraction, and none for a
-    rejected command;
+    rejected command, built from the decision event alone (phase 9, D43); a decision stored before
+    its event carried a scope takes it from what generation 1 published, or else from the claim's
+    state and the event;
+  - the published streams match their pins: the deployed publisher passes, a bumped one fails
+    (`StreamPins.test.ts`, phase 9);
   - the directory sink refusing stale and replayed changes (Astra's counterexample), a crash
     between sink write and checkpoint, and a rebuild that serves the old generation until it
     switches, with zero side effects;
@@ -142,6 +148,8 @@ at request, narrowed, and only while a human answers for it.
 - `runs/host`, with the real authority host: the gateway following a continuation (a carried
   reservation settles there), a hop refused after the grant is revoked and recorded without re-admission, the
   inbox (duplicate delivery, crash before the checkpoint, version 1 beside version 2), and the request-key guard.
+  `party/host` (phase 9): the fact feed serves the closed generation, then generation 2 after it, each position once
+  by any page size.
 - `authority/host`: through the real Session, agent admission and refusal, revocation dropping a
   delegation; re-admission never adds a grant and refuses when all lapse; `grantRun`; only the
   boundary builds roots (source scan).
@@ -164,11 +172,16 @@ at request, narrowed, and only while a human answers for it.
 - `apps/practice`: the composed descriptors publish every fact version they consume; dropping one
   fails; unconsumed versions are reported retirable (D34).
 - `shared/tooling` and the root: every role file has one designated primary export; every declared
-  command outcome is executed by some test, or listed with a reason (`bun run outcomes`).
+  command outcome is executed by some test, or listed with a reason (`bun run outcomes`); the stream-pin
+  check fails on a bumped version, a changed source set, another writer, a reopened closed generation, an
+  unpinned or a dropped stream, and passes a new generation opened the right way (phase 9).
 - `conformance` (in memory, phase 6): on an in-process Durable Object host with a `TestClock`, an
   outbox drain and a projection drain whose lease a dead instance left are taken over once the
   lease expires, and a backstop comes back once per lease while live drains keep it. This fails on
-  the unpatched library (see "Library patches").
+  the unpatched library (see "Library patches"). Phase 9: two in-process runners on one instance, the
+  first deciding on version 0 while the second commits version 1; the first's commit is refused and
+  its retry lands at version 2, where the unpatched library lost the second write. The recovery case's
+  bound is checked against the library's lease and the cluster's message poll in the installed sources.
 
 ## Commands
 
@@ -219,7 +232,7 @@ TypeScript errors only. `shared/tooling/test/Compiler.guard.test.ts` guards the 
 `link:` dev dependencies onto the monorepo's own packages. They resolve to source and need the monorepo's
 `bun install` for their dependencies.
 
-## Library patches (phase 6)
+## Library patches (phases 6 and 9)
 
 `@alchemy.run/domain` 2.0.0-beta.87 is patched in this workspace only, through `patchedDependencies`
 in `package.json` and `patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch` (`bun install` applies
@@ -231,12 +244,19 @@ tests under vitest):
    drain whose runner died are delivered (`DurableObjects.ts`).
 2. On a runner, a call from a fiber the model's Layer started (a poller) goes through the cluster
    instead of a gateway with an empty URL (`EffectCluster/index.ts`).
+3. Phase 9 (D41): a commit checks, first in its transaction, that the stored version is the one
+   `decide` was given; when it moved, nothing is written and the call fails with `CommitConflict`,
+   which the caller retries under the same command id. On Effect Cluster the transaction first takes
+   the instance's advisory lock, so two runners' commits on one instance serialize
+   (`DurableObjects.ts`, `EffectCluster/index.ts`).
 
 The same fixes as diffs against upstream at 33c10dd, with pull request text, are in
-`notes/upstream/`; nothing is filed upstream. The commit path's missing version check (D38) is not
-patched. `notes/phase-6.md` has the details.
+`notes/upstream/` (`01` to `03`), with a proposal for leases that follow shard ownership (`04`), an
+issue for a rebuilt projection's dropped stream appends (`05`), and one for Effect Cluster's backfill
+listing nothing (`06`, found in phase 9, not patched); nothing is filed upstream (D44).
+`notes/phase-6.md` and `notes/phase-9.md` have the details.
 
-## Cluster stage and conformance (phases 5, 6 and 8)
+## Cluster stage and conformance (phases 5, 6, 8 and 9)
 
 Only with the owner's approval: the stack creates Docker swarm services for Postgres (with a
 volume), a pool of two runners and the front, on one overlay network. Since phase 6 the front
@@ -287,8 +307,8 @@ through the driver with those variables added.
 `test/StoredForms.conformance.ts` (phase 8) writes runs and a session view in phase 6's stored forms
 straight into the cluster's storage, then sends a command and reads the view. With
 `RESTORE_PHASE=across` and `RESTORE_FILE` set to phase 6's restore record, its second case reads a
-stack restored from phase 6's dump under today's code; it fails today on the facts stream
-(`notes/phase-8.md`).
+stack restored from phase 6's dump under today's code (phase 8 failed it on the facts stream; phase 9's
+result is in `notes/phase-9.md`).
 
 Teardown, always: `(cd apps/practice && bun run destroy)`, check that no `practice-*` or driver
 service, container, network, volume or image remains, remove the image the deploy pulled by digest

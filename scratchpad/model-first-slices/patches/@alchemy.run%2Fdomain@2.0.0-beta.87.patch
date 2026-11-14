@@ -1,8 +1,63 @@
+diff --git a/lib/DurableObjects.d.ts b/lib/DurableObjects.d.ts
+index f8b13040a340c70854475b0d539e8e8e88b65a41..77b47c26640118ea2438182c00902070866167d3 100644
+--- a/lib/DurableObjects.d.ts
++++ b/lib/DurableObjects.d.ts
+@@ -137,6 +137,21 @@ export interface Host<R = never> {
+     /** Models whose names collide on the same key fail to host: one per Worker, pool or class. */
+     readonly claimKey: Effect.Effect<object, never, R>;
+ }
++declare const CommitConflict_base: new <A extends Record<string, any> = {}>(args: import("effect/Types").VoidIfEmpty<{ readonly [P in keyof A as P extends "_tag" ? never : P]: A[P]; }>) => import("effect/Cause").YieldableError & {
++    readonly _tag: "CommitConflict";
++} & Readonly<A>;
++/**
++ * A commit found the instance's stored version moved since `decide` was
++ * given its state: another host committed to the same instance meanwhile (on
++ * Effect Cluster, two runners holding one instance while its shard moves).
++ * Nothing was written and nothing is acknowledged; the caller retries.
++ */
++export declare class CommitConflict extends CommitConflict_base<{
++    readonly id: string;
++    readonly decided: number;
++    readonly stored: number;
++}> {
++}
+ /**
+  * How long to keep retrying a call that failed in transit: an instance being
+  * reset reports an opaque error, and for a while after a deploy some instances
 diff --git a/lib/DurableObjects.js b/lib/DurableObjects.js
-index ba7ba46be6cd3abc26b6d5ac3c8dfb185c4c44fd..b1e46574a6de2f019640312f6ac5d97948ccffb0 100644
+index ba7ba46be6cd3abc26b6d5ac3c8dfb185c4c44fd..9e0e90c283ad79975a9ccc3ca5e7c911590bf0ca 100644
 --- a/lib/DurableObjects.js
 +++ b/lib/DurableObjects.js
-@@ -117,17 +117,20 @@ const queue = (name, process) => Effect.gen(function* () {
+@@ -3,6 +3,7 @@ import * as Cause from "effect/Cause";
+ import * as Clock from "effect/Clock";
+ import * as Context from "effect/Context";
+ import * as SecureRandom from "effect/crypto/SecureRandom";
++import * as Data from "effect/Data";
+ import * as Duration from "effect/Duration";
+ import * as Effect from "effect/Effect";
+ import { HttpServerRequest } from "effect/http/HttpServerRequest";
+@@ -42,6 +43,20 @@ const DefectTag = "alchemy/Domain/Defect";
+  * rethrow them as defects on the calling side.
+  */
+ const reportDefects = (effect) => effect.pipe(Effect.catchCause((cause) => Effect.succeed({ [DefectTag]: Cause.pretty(cause) })));
++/**
++ * A commit found the instance's stored version moved since `decide` was
++ * given its state: another host committed to the same instance meanwhile (on
++ * Effect Cluster, two runners holding one instance while its shard moves).
++ * Nothing was written and nothing is acknowledged; the caller retries.
++ */
++export class CommitConflict extends Data.TaggedError("CommitConflict") {
++}
++/**
++ * Like {@link reportDefects}, except that a lost version check fails the call
++ * itself, so the caller's `unwrapDefects` retries it in transit under the
++ * same command id, and the retry starts again from the receipt lookup.
++ */
++const reportDefectsUnlessConflict = (effect) => reportDefects(effect.pipe(Effect.catchIf((error) => error instanceof CommitConflict, Effect.succeed))).pipe(Effect.flatMap((value) => value instanceof CommitConflict ? Effect.fail(value) : Effect.succeed(value)));
+ /**
+  * How long to keep retrying a call that failed in transit: an instance being
+  * reset reports an opaque error, and for a while after a deploy some instances
+@@ -117,17 +132,20 @@ const queue = (name, process) => Effect.gen(function* () {
      const state = yield* ObjectState;
      const prefix = `${name}:`;
      const lease = `${name}-lease`;
@@ -27,7 +82,41 @@ index ba7ba46be6cd3abc26b6d5ac3c8dfb185c4c44fd..b1e46574a6de2f019640312f6ac5d979
          yield* Effect.gen(function* () {
              const rows = yield* state.storage.list({ prefix });
              for (const [key, row] of rows) {
-@@ -834,12 +837,13 @@ const projectionObject = (kit, net, planOf, random) => Effect.gen(function* () {
+@@ -508,6 +526,12 @@ const aggregateObject = (kit, net, model, planOf, random) => Effect.gen(function
+             },
+         };
+         const routed = yield* state.storage.transaction(Effect.gen(function* () {
++            // The version check, first in the commit's transaction: the commit applies only
++            // to the version `decide` was given. On a host whose transactions serialize per
++            // instance (Effect Cluster's Postgres storage) it sees every commit before it.
++            const stored = yield* currentMeta;
++            if (stored.version !== current.version)
++                return undefined;
+             const events = {};
+             for (const event of result.events)
+                 events[`event:${pad(event.envelope.seq)}`] = event;
+@@ -523,6 +547,11 @@ const aggregateObject = (kit, net, model, planOf, random) => Effect.gen(function
+             yield* outbox.stage(live.send);
+             return live.send;
+         }));
++        // Lost the check: never acknowledged, and nothing was written.
++        if (routed === undefined) {
++            const stored = yield* currentMeta;
++            return yield* Effect.fail(new CommitConflict({ id, decided: current.version, stored: stored.version }));
++        }
+         return { sent, kick: routed.length > 0 };
+     });
+     const send = (id, command, meta) => Effect.gen(function* () {
+@@ -557,7 +586,7 @@ const aggregateObject = (kit, net, model, planOf, random) => Effect.gen(function
+             yield* outbox.kick;
+     }));
+     return {
+-        send: (id, command, meta) => reportDefects(send(id, command, meta)),
++        send: (id, command, meta) => reportDefectsUnlessConflict(send(id, command, meta)),
+         schedule: (id, name, command, meta, due) => Effect.gen(function* () {
+             // The same arming again (a policy or step ran again): leave it as it is.
+             const armed = yield* state.storage.get(`armed:${name}`);
+@@ -834,12 +863,13 @@ const projectionObject = (kit, net, planOf, random) => Effect.gen(function* () {
      const size = kit.options.batch?.size ?? 1;
      const waitMillis = kit.options.batch?.waitMillis ?? 0;
      const lease = "drain-lease";
@@ -43,7 +132,7 @@ index ba7ba46be6cd3abc26b6d5ac3c8dfb185c4c44fd..b1e46574a6de2f019640312f6ac5d979
      }));
      // Re-run the drain later: when a short batch has waited long enough, or after a failure.
      let wake = () => Effect.void;
-@@ -853,8 +857,10 @@ const projectionObject = (kit, net, planOf, random) => Effect.gen(function* () {
+@@ -853,8 +883,10 @@ const projectionObject = (kit, net, planOf, random) => Effect.gen(function* () {
      });
      // oxlint-disable-next-line effecttsgo/unsafe-effect-type-assertion -- the Durable Object provides its state and RuntimeContext on every event
      const drain = Effect.gen(function* () {
@@ -57,7 +146,7 @@ index ba7ba46be6cd3abc26b6d5ac3c8dfb185c4c44fd..b1e46574a6de2f019640312f6ac5d979
              while (true) {
                  const meta = yield* readMeta;
 diff --git a/lib/EffectCluster/index.js b/lib/EffectCluster/index.js
-index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..228ee11084bc2ef843217adec05a721d54c66746 100644
+index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..7562ae71c0e5506bd0bcaf64169eca468596951a 100644
 --- a/lib/EffectCluster/index.js
 +++ b/lib/EffectCluster/index.js
 @@ -10,7 +10,7 @@ import { entrypointLayer, entrypointTag } from "alchemy/Runtime/Bootstrap";
@@ -69,7 +158,22 @@ index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..228ee11084bc2ef843217adec05a721d
  import * as Config from "effect/Config";
  import * as Context from "effect/Context";
  import * as SecureRandom from "effect/crypto/SecureRandom";
-@@ -510,9 +510,11 @@ Layer.unwrap(Effect.gen(function* () {
+@@ -152,8 +152,12 @@ const objectStorage = (sql, object, gate) => {
+           ${end !== undefined ? sql `AND key < ${end}` : sql ``}
+           ${reverse ? sql `ORDER BY key DESC` : sql `ORDER BY key`}
+           ${limit !== undefined ? sql `LIMIT ${Math.max(0, limit | 0)}` : sql ``}`.pipe(Effect.map((rows) => new Map(rows.map((row) => [row.key, decode(row.value)]))))),
+-        // Held across the whole transaction, as Cloudflare's gate is.
+-        transaction: (effect) => gate.exclusive(sql.withTransaction(effect).pipe(Effect.orDie)),
++        // Held across the whole transaction, as Cloudflare's gate is. The transaction first takes
++        // the object's advisory lock: two runners can hold one instance while its shard moves, and
++        // their transactions on it serialize here, so a commit's version check sees the other's.
++        transaction: (effect) => gate.exclusive(sql
++            .withTransaction(sql `SELECT pg_advisory_xact_lock(hashtextextended(${object}, 0))`.pipe(Effect.andThen(effect)))
++            .pipe(Effect.orDie)),
+     };
+ };
+ /** Create the storage table, once per runner. */
+@@ -510,9 +514,11 @@ Layer.unwrap(Effect.gen(function* () {
              return yield* Effect.die(new HasNoPool({ message: `${name} did not finish its Construction phase.` }));
          }
          const registrations = yield* Ref.make([]);
@@ -81,7 +185,7 @@ index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..228ee11084bc2ef843217adec05a721d
              const clusterEngine = yield* WorkflowEngine.WorkflowEngine;
              for (const [workflow, execute] of yield* Ref.get(registrations))
                  yield* clusterEngine.register(workflow, execute);
-@@ -531,7 +533,16 @@ Layer.unwrap(Effect.gen(function* () {
+@@ -531,7 +537,16 @@ Layer.unwrap(Effect.gen(function* () {
              scheduleClock: (workflow, opts) => Effect.flatMap(started, (engine) => engine.scheduleClock(placed(workflow), opts)),
          });
          // Inside the cluster, calls route through Effect Cluster itself.
@@ -100,10 +204,51 @@ index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..228ee11084bc2ef843217adec05a721d
              declare: ({ modelName }, cls, impl) => Effect.sync(() => {
                  classes.set(className(modelName, cls), impl);
 diff --git a/src/DurableObjects.ts b/src/DurableObjects.ts
-index 9ed59d4809d6a0e7aae0e6035f6c65b8090a99c9..62c91a814193c64efbae950b860e4a67b4ee5a86 100644
+index 9ed59d4809d6a0e7aae0e6035f6c65b8090a99c9..8cc46b8bdb896d85deab62ddd0e902c969cb0f24 100644
 --- a/src/DurableObjects.ts
 +++ b/src/DurableObjects.ts
-@@ -339,17 +339,21 @@ const queue = <Row>(name: string, process: (row: Row) => Effect.Effect<void>) =>
+@@ -22,6 +22,7 @@ import * as Cause from "effect/Cause";
+ import * as Clock from "effect/Clock";
+ import * as Context from "effect/Context";
+ import * as SecureRandom from "effect/crypto/SecureRandom";
++import * as Data from "effect/Data";
+ import * as Duration from "effect/Duration";
+ import * as Effect from "effect/Effect";
+ import { HttpServerRequest } from "effect/http/HttpServerRequest";
+@@ -231,6 +232,32 @@ const reportDefects = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+     ),
+   );
+ 
++/**
++ * A commit found the instance's stored version moved since `decide` was
++ * given its state: another host committed to the same instance meanwhile (on
++ * Effect Cluster, two runners holding one instance while its shard moves).
++ * Nothing was written and nothing is acknowledged; the caller retries.
++ */
++export class CommitConflict extends Data.TaggedError("CommitConflict")<{
++  readonly id: string;
++  readonly decided: number;
++  readonly stored: number;
++}> {}
++
++/**
++ * Like {@link reportDefects}, except that a lost version check fails the call
++ * itself, so the caller's `unwrapDefects` retries it in transit under the
++ * same command id, and the retry starts again from the receipt lookup.
++ */
++const reportDefectsUnlessConflict = <A, E, R>(effect: Effect.Effect<A, E | CommitConflict, R>) =>
++  reportDefects(
++    effect.pipe(Effect.catchIf((error): error is CommitConflict => error instanceof CommitConflict, Effect.succeed)),
++  ).pipe(
++    Effect.flatMap((value) =>
++      value instanceof CommitConflict ? Effect.fail(value) : Effect.succeed(value as A),
++    ),
++  );
++
+ /**
+  * How long to keep retrying a call that failed in transit: an instance being
+  * reset reports an opaque error, and for a while after a deploy some instances
+@@ -339,17 +366,21 @@ const queue = <Row>(name: string, process: (row: Row) => Effect.Effect<void>) =>
      const state = yield* ObjectState;
      const prefix = `${name}:`;
      const lease = `${name}-lease`;
@@ -128,7 +273,42 @@ index 9ed59d4809d6a0e7aae0e6035f6c65b8090a99c9..62c91a814193c64efbae950b860e4a67
        yield* Effect.gen(function* () {
          const rows = yield* state.storage.list<Row>({ prefix });
          for (const [key, row] of rows) {
-@@ -1280,12 +1284,13 @@ const projectionObject = (
+@@ -828,6 +859,11 @@ const aggregateObject = (
+         };
+         const routed = yield* state.storage.transaction(
+           Effect.gen(function* () {
++            // The version check, first in the commit's transaction: the commit applies only
++            // to the version `decide` was given. On a host whose transactions serialize per
++            // instance (Effect Cluster's Postgres storage) it sees every commit before it.
++            const stored = yield* currentMeta;
++            if (stored.version !== current.version) return undefined;
+             const events: Record<string, StoredEvent> = {};
+             for (const event of result.events) events[`event:${pad(event.envelope.seq)}`] = event;
+             yield* state.storage.put(events);
+@@ -850,6 +886,13 @@ const aggregateObject = (
+             return live.send;
+           }),
+         );
++        // Lost the check: never acknowledged, and nothing was written.
++        if (routed === undefined) {
++          const stored = yield* currentMeta;
++          return yield* Effect.fail(
++            new CommitConflict({ id, decided: current.version, stored: stored.version }),
++          );
++        }
+         return { sent, kick: routed.length > 0 };
+       });
+     const send = (id: string, command: Json, meta: Aggregate.SendMeta) =>
+@@ -898,7 +941,7 @@ const aggregateObject = (
+     );
+     return {
+       send: (id: string, command: Json, meta: Aggregate.SendMeta) =>
+-        reportDefects(send(id, command, meta)),
++        reportDefectsUnlessConflict(send(id, command, meta)),
+       schedule: (
+         id: string,
+         name: string,
+@@ -1280,12 +1323,13 @@ const projectionObject = (
      const size = kit.options.batch?.size ?? 1;
      const waitMillis = kit.options.batch?.waitMillis ?? 0;
      const lease = "drain-lease";
@@ -144,7 +324,7 @@ index 9ed59d4809d6a0e7aae0e6035f6c65b8090a99c9..62c91a814193c64efbae950b860e4a67
        }),
      );
      // Re-run the drain later: when a short batch has waited long enough, or after a failure.
-@@ -1300,7 +1305,9 @@ const projectionObject = (
+@@ -1300,7 +1344,9 @@ const projectionObject = (
      });
      // oxlint-disable-next-line effecttsgo/unsafe-effect-type-assertion -- the Durable Object provides its state and RuntimeContext on every event
      const drain: Effect.Effect<void> = Effect.gen(function* () {
@@ -156,7 +336,7 @@ index 9ed59d4809d6a0e7aae0e6035f6c65b8090a99c9..62c91a814193c64efbae950b860e4a67
          Effect.gen(function* () {
            while (true) {
 diff --git a/src/EffectCluster/index.ts b/src/EffectCluster/index.ts
-index a5de09720412654d192363a291658b6778a51b47..200979354421e3c8d0f020e814598ccea10678f3 100644
+index a5de09720412654d192363a291658b6778a51b47..18c48dc2c7afbb2200e2b2007dfb35a61ddb1a9c 100644
 --- a/src/EffectCluster/index.ts
 +++ b/src/EffectCluster/index.ts
 @@ -24,7 +24,7 @@ import { RuntimeContext } from "alchemy/RuntimeContext";
@@ -168,7 +348,29 @@ index a5de09720412654d192363a291658b6778a51b47..200979354421e3c8d0f020e814598cce
  import * as Config from "effect/Config";
  import * as Context from "effect/Context";
  import * as SecureRandom from "effect/crypto/SecureRandom";
-@@ -760,11 +760,13 @@ export const layerEntities = <PoolReq>(
+@@ -252,9 +252,19 @@ const objectStorage = (sql: SqlClient, object: string, gate: InputGateShape): Ob
+           Effect.map((rows) => new Map(rows.map((row) => [row.key, decode<T>(row.value)]))),
+         ),
+       ),
+-    // Held across the whole transaction, as Cloudflare's gate is.
++    // Held across the whole transaction, as Cloudflare's gate is. The transaction first takes
++    // the object's advisory lock: two runners can hold one instance while its shard moves, and
++    // their transactions on it serialize here, so a commit's version check sees the other's.
+     transaction: (effect) =>
+-      gate.exclusive(sql.withTransaction(effect).pipe(Effect.orDie)) as never,
++      gate.exclusive(
++        sql
++          .withTransaction(
++            sql`SELECT pg_advisory_xact_lock(hashtextextended(${object}, 0))`.pipe(
++              Effect.andThen(effect),
++            ),
++          )
++          .pipe(Effect.orDie),
++      ) as never,
+   };
+ };
+ 
+@@ -760,11 +770,13 @@ export const layerEntities = <PoolReq>(
              readonly [Workflow.Any, (payload: any, id: string) => Effect.Effect<any, any, any>]
            >
          >([]);
@@ -182,7 +384,7 @@ index a5de09720412654d192363a291658b6778a51b47..200979354421e3c8d0f020e814598cce
              const clusterEngine = yield* WorkflowEngine.WorkflowEngine;
              for (const [workflow, execute] of yield* Ref.get(registrations))
                yield* clusterEngine.register(workflow as never, execute as never);
-@@ -802,9 +804,21 @@ export const layerEntities = <PoolReq>(
+@@ -802,9 +814,21 @@ export const layerEntities = <PoolReq>(
              Effect.flatMap(started, (engine) => engine.scheduleClock(placed(workflow), opts)),
          });
          // Inside the cluster, calls route through Effect Cluster itself.

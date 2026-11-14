@@ -14,6 +14,7 @@
     "./Claim/Claim.id": "./src/Claim/Claim.id.ts",
     "./Claim/ClaimNotPending.rejection": "./src/Claim/ClaimNotPending.rejection.ts",
     "./Claim/ClaimReview.read": "./src/Claim/ClaimReview.read.ts",
+    "./Claim/DecisionScope": "./src/Claim/DecisionScope.ts",
     "./Claim/ProposalDigest": "./src/Claim/ProposalDigest.ts",
     "./Claim/ProposeDisposition.command": "./src/Claim/ProposeDisposition.command.ts",
     "./Claim/RecordMergeRefused.command": "./src/Claim/RecordMergeRefused.command.ts",

@@ -6,6 +6,7 @@ import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { Proposition } from "@proto/party-contract/Proposition";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -13,7 +14,9 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import * as Str from "effect/String";
@@ -39,6 +42,7 @@ import {
   runState,
   services,
 } from "./Stack.ts";
+import { RECOVERY_BOUND_MS } from "./RecoveryBound.ts";
 
 // The prototype's own conformance cases (phase 5, D5, D16), against the deployed stack over its
 // Apis. Each case records its evidence with console.log; a failure is a finding, not a retry.
@@ -125,21 +129,62 @@ live("a lost response, retried under the same id, gets the stored result", Effec
   expect(assertions).toBe(1);
 }));
 
-live("a runner killed right after a commit: the retry gets the stored result, each reaction happens once", Effect.gen(function* () {
+/** How many events of each tag an instance stored, one `Tag|count` line per tag, by tag. */
+const storedTags = (object: string) =>
+  psql(
+    `SELECT value::jsonb->'event'->>'_tag', count(*) FROM alchemy_domain_objects WHERE object = '${object}' AND key LIKE 'event:%' GROUP BY 1 ORDER BY 1`,
+  );
+/** What AssertClaim leads to on the claim: the assertion, its review request, the run's proposal. */
+const claimReactions = "ClaimAsserted|1\nDispositionProposed|1\nReviewRequested|1";
+/** What it leads to on review run 1: requested, activated, its budget, its one step, the wait. */
+const runReactions = "BudgetReserved|1\nRunActivated|1\nRunAwaitingApproval|1\nRunRequested|1\nStepRecorded|1\nUsageSettled|1";
+
+// D42: the guarantee is that reactions resume within one lease after a runner dies. Every reaction
+// of the committed command happens, each exactly once, all within RECOVERY_BOUND_MS of the kill.
+live("a runner killed right after a commit: every reaction happens once, within one lease and the wake allowance of the kill", Effect.gen(function* () {
   const { org, r } = yield* setup;
-  const { intake } = yield* clients;
+  const { intake, reviewer } = yield* clients;
   const claim = ClaimId.make(`claim_kill_${r}`);
   const commandId = `kill_${r}`;
   const first = yield* intake.AssertClaim(claim, assertion(org), { ...human("p_intake"), commandId });
-  const killed = yield* killRunners;
+  const { before: killed, after: killedAt } = yield* killRunnersThen(Clock.currentTimeMillis);
   const retried = yield* intake.AssertClaim(claim, assertion(org), { ...human("p_intake"), commandId });
-  yield* log("kill", { killed, first, retried });
   expect(retried.version).toBe(first.version);
-  const assertions = yield* asserted(claim, retried);
-  expect(assertions).toBe(1);
-  const run1 = yield* eventually(runState(`review:${claim}:1`), (s) => s._tag === "AwaitingApproval");
+  const reactions = Effect.all({
+    claim: storedTags(`Practice/Party.ClaimAggregate/${claim}`),
+    run: storedTags(`Practice/Runs.AgentRunAggregate/review:${claim}:1`),
+    review: reviewer.ClaimReview.get(claim, human("p_rev")).pipe(
+      Effect.map((found) => O.isSome(proposalIn(found))),
+      Effect.orElseSucceed(() => false),
+    ),
+  });
+  const done = (seen: Effect.Success<typeof reactions>) => seen.claim === claimReactions && seen.run === runReactions && seen.review;
+  const deadline = killedAt + RECOVERY_BOUND_MS;
+  const remaining = Effect.map(Clock.currentTimeMillis, (now) => Num.max(deadline - now, 0));
+  const untilDone = yield* remaining;
+  const atDone = yield* reactions.pipe(
+    Effect.repeat({ schedule: Schedule.spaced("1 second"), until: done }),
+    Effect.timeoutOption(untilDone),
+  );
+  const doneAt = yield* Clock.currentTimeMillis;
+  // Held to the bound: nothing more arrives late (each reaction exactly once).
+  const untilBound = yield* remaining;
+  yield* Effect.sleep(untilBound);
+  const atBound = yield* reactions;
   const run2 = yield* runState(`review:${claim}:2`);
-  yield* log("kill-runs", { run1: run1._tag, run2: run2._tag });
+  yield* log("kill-recovery", {
+    killed,
+    first,
+    retried,
+    boundMs: RECOVERY_BOUND_MS,
+    doneAfterMs: O.map(atDone, () => doneAt - killedAt),
+    atDone,
+    atBound,
+    run2: run2._tag,
+  });
+  expect(O.map(atDone, done)).toEqual(O.some(true));
+  expect(doneAt - killedAt).toBeLessThanOrEqual(RECOVERY_BOUND_MS);
+  expect(atBound).toEqual({ claim: claimReactions, run: runReactions, review: true });
   expect(run2._tag).toBe("Unrequested");
 }));
 

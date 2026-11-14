@@ -6,8 +6,10 @@
     "status": "active",
     "stage": "shape",
     "openQuestions": [
-      "BLOCKED on upstream: conformance on the Postgres swarm host fails three cases on two library defects (research/13, issues 1 and 2); the D16 gate stays open until they are fixed and the suite is re-run.",
-      "Operator: file the upstream issues written out in research/13? None is filed.",
+      "Operator: the paused-inside-commit case. The version check (D41) stops the overwrite but the stale runner is still acknowledged (research/17). Accept first-commit-wins, or fence commits on shard ownership (a fourth local patch)?",
+      "Operator: backfill lists no instances on Effect Cluster (research/17, a fourth library defect, unpatched). Patch locally or wait for upstream? Until fixed, generation 1 of the facts stream cannot be retired.",
+      "Operator: does an upgrade drain the old publisher first, so a decision whose fact was never published reaches every review run?",
+      "Operator: D44 holds. Three patches, a lease proposal and two issue write-ups sit in the prototype's notes/upstream/; none is posted. Does a pass on local patches count toward the D16 gate?",
       "DEFERRED: browser session credentials, tenant and cache clearing (outside the D16 gate).",
       "Shape review: BRIEF.md and the artifact have not been confirmed in words by the operator."
     ],
@@ -21,6 +23,6 @@
       "supersededBy": null
     },
     "created": "2026-11-13",
-    "updated": "2026-11-13"
+    "updated": "2026-11-14"
   }
 }

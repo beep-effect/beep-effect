@@ -20,7 +20,7 @@ import { Proposition } from "@proto/party-contract/Proposition";
 import { Authority } from "@proto/party-model/Authority.external";
 import { Claim } from "@proto/party-model/Claim/Claim.aggregate";
 import { MemoryPartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
-import { PartyFacts } from "@proto/party-model/Facts/PartyFacts.stream";
+import { PartyFacts2 } from "@proto/party-model/Facts/PartyFacts2.stream";
 import { PartyHandlers } from "@proto/party-model/Party.handlers";
 import { PartyModel } from "@proto/party-model/Party.model";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
@@ -72,15 +72,17 @@ const asserted = given(
   }),
 );
 const common = { factId: "claim_1:decided", claim: ClaimId.make("claim_1"), org: acme, reviewRuns: [run1] };
+/** What each decision event carries since phase 9 (D43): the fact is built from it alone. */
+const scope = { org: O.some(acme), reviewRuns: O.some([run1]) };
 
 it.effect("a claim decided directly publishes ClaimDecided once, in both versions, with no private field", () =>
   story(
     asserted,
     as(reviewer),
     when(claim, AcceptClaim.make({})),
-    then(claim, ClaimAccepted.make({ proposition: hasIdentifier, provenance: provenanceOf(reviewer) })),
+    then(claim, ClaimAccepted.make({ proposition: hasIdentifier, ...scope, provenance: provenanceOf(reviewer) })),
     streamed(
-      PartyFacts,
+      PartyFacts2,
       "claims",
       ClaimDecidedV1.make({ ...common, outcome: "accepted" }),
       ClaimDecidedV2.make({ ...common, decision: "accepted", basis: "direct", approval: O.none() }),
@@ -104,11 +106,12 @@ it.effect("an approved proposal publishes the decision with its approval", () =>
         outcome: "accepted",
         proposition: hasIdentifier,
         corroboration: O.some(2),
+        ...scope,
         provenance: provenanceOf(reviewer),
       }),
     ),
     streamed(
-      PartyFacts,
+      PartyFacts2,
       "claims",
       ClaimDecidedV1.make({ ...common, outcome: "accepted" }),
       ClaimDecidedV2.make({
@@ -126,15 +129,64 @@ it.effect("a retraction is a decision too; a rejected command publishes nothing"
     asserted,
     as(reviewer),
     when(claim, RetractClaim.make({ reason: "wrong person" })),
-    then(claim, ClaimRetracted.make({ reason: "wrong person", provenance: provenanceOf(reviewer) })),
+    then(claim, ClaimRetracted.make({ reason: "wrong person", ...scope, provenance: provenanceOf(reviewer) })),
     streamed(
-      PartyFacts,
+      PartyFacts2,
       "claims",
       ClaimDecidedV1.make({ ...common, outcome: "retracted" }),
       ClaimDecidedV2.make({ ...common, decision: "retracted", basis: "direct", approval: O.none() }),
     ),
     when(claim, RetractClaim.make({ reason: "again" })),
     Story.rejected(ClaimNotPending.make({ status: "Retracted" })),
-    streamed(PartyFacts, "claims"),
+    streamed(PartyFacts2, "claims"),
+  ),
+);
+
+// Decisions stored before phase 9 carry no scope. Generation 1 never published these two (its
+// stream is empty here), so the org comes from the claim's state and the runs from the event.
+const legacy = { org: O.none(), reviewRuns: O.none() };
+
+it.effect("a direct decision stored without a scope, never published: the org from the claim, no run", () =>
+  story(
+    asserted,
+    given(claim, ClaimAccepted.make({ proposition: hasIdentifier, ...legacy, provenance: provenanceOf(reviewer) })),
+    streamed(
+      PartyFacts2,
+      "claims",
+      ClaimDecidedV1.make({ ...common, reviewRuns: [], outcome: "accepted" }),
+      ClaimDecidedV2.make({ ...common, reviewRuns: [], decision: "accepted", basis: "direct", approval: O.none() }),
+    ),
+  ),
+);
+
+it.effect("an approval stored without a scope, never published: the org from the claim, the approved run", () =>
+  story(
+    asserted,
+    given(
+      claim,
+      DispositionProposed.make({ ...proposal, digest, provenance: provenanceOf(asRun) }),
+      ProposalApproved.make({
+        approval: ApprovalId.make("approval_1"),
+        run: run1,
+        digest,
+        evidenceRevision: 1,
+        outcome: "retracted",
+        proposition: hasIdentifier,
+        corroboration: O.none(),
+        ...legacy,
+        provenance: provenanceOf(reviewer),
+      }),
+    ),
+    streamed(
+      PartyFacts2,
+      "claims",
+      ClaimDecidedV1.make({ ...common, outcome: "retracted" }),
+      ClaimDecidedV2.make({
+        ...common,
+        decision: "retracted",
+        basis: "approval",
+        approval: O.some(ApprovalId.make("approval_1")),
+      }),
+    ),
   ),
 );

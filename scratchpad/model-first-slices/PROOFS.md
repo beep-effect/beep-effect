@@ -3,7 +3,7 @@
 <!-- Generated from proofs/Proofs.data.ts by scripts/proofs.ts. Do not edit: `bun run proofs`
      rewrites it, and `bun run proofs --check` fails on drift. -->
 
-Every invariant this prototype enforces (D8): 32 entries. Mechanical laws run in
+Every invariant this prototype enforces (D8): 35 entries. Mechanical laws run in
 `bun run check`, `bun run test` and `bun run generated:check`; semantic questions stay with a
 reviewer who did not write the change.
 
@@ -139,6 +139,26 @@ A producer publishes every fact version some composed descriptor consumes; versi
 - **Gaps:** One app today; descriptors from other apps would need composing too.
 - **Left to a reviewer:** Whether a retirable version may really go (consumers outside the repo).
 
+### published-stream-generations
+
+A projection that writes a published stream is never rebuilt or re-sourced behind it: a bump of its version, of a view it reads, a change of its sources or of the projection itself fails unless the stream generation is pinned closed and a new one opened (D43, phase 9).
+
+- **Checker:** `shared/tooling/src/PublishedStreams.ts`, `shared/tooling/test/PublishedStreams.test.ts`, `party/model/test/StreamPins.test.ts`, `party/model/src/Facts/StreamPins.ts`
+- **Reads:** Each model's pins; the hosted model's streams, their writers, and each writer's generation from the hosted kernel (its Layer version included) and sources.
+- **Assumes:** Every stream of the model is published, so every stream is pinned. A pinned writer is identified by projection name, generation and source names; a handler rewritten with the same three is not caught.
+- **Gaps:** Only Party has a published stream today. What a new generation republishes is the writer's business: here it is every decision, under the same fact ids, and consumers dedupe (party/host/test/PartyFactsFeed.test.ts).
+- **Left to a reviewer:** Whether a handler change that keeps the version should have opened a new generation anyway.
+
+### decision-scope
+
+Each decision event carries the org and review runs the published fact needs, so the fact is built from the event alone; a decision stored before that reads with no scope and takes it from what generation 1 published, or else from the claim's state and the event (D43, D22).
+
+- **Checker:** `party/model/test/Facts.story.test.ts`, `party/model/src/Facts/ClaimDecisions.handler.ts`
+- **Reads:** Stories over decide and over seeded decisions without a scope (generation 1 empty).
+- **Assumes:** Review runs are named `review:<claim>:<n>` from 1 to the claim's review count, as decide names them.
+- **Gaps:** The lookup in generation 1 is not exercised: in memory nothing writes generation 1, and on the cluster the one legacy decision in phase 6's dump never reached the publisher (the backfill lists no instances there). A decision stored before phase 9 that generation 1 never published gets only the run its event names: other review runs of that claim are not concluded by the fact (logged).
+- **Left to a reviewer:** Whether an upgrade should drain the old publisher first, closing that gap.
+
 ### stored-formats
 
 Stored events, state, receipts with replies, saga payloads, activity results and provenance written by earlier declarations still decode and replay, converted on read, with bytes untouched (D22, D35).
@@ -239,6 +259,16 @@ A queue or projection drain that finds its lease held comes back just after the 
 - **Gaps:** The cluster's wake delivery latency is not modelled (it adds seconds after the lease on Effect Cluster).
 - **Left to a reviewer:** Whether waiting out the lease is acceptable, or the lease should follow shard ownership.
 
+### commit-version-check
+
+A commit is acknowledged only on the version its decide read: when the stored version moved meanwhile (two runners on one instance while its shard moves), the commit writes nothing and fails the call, and the caller's retry decides again under the same command id (D41, patch 3).
+
+- **Checker:** `conformance/test/LostWrite.test.ts`, `conformance/test/SimHost.ts`, `patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch`
+- **Reads:** Two in-process runners sharing one instance's storage over the patched library, with a TestClock: events and meta after both commits.
+- **Assumes:** The shared storage serializes transactions per instance, as the cluster's advisory lock does in patch 3.
+- **Gaps:** Whichever runner's transaction runs first wins; a stale runner that commits first is acknowledged and the other retries. Fencing by shard ownership would refuse the stale one instead (notes/phase-9.md).
+- **Left to a reviewer:** Whether first-commit-wins is the guarantee wanted, or the stale runner must always lose.
+
 ### compiler-effect-build
 
 `bun run check` runs the Effect build of tsrs at the monorepo's pinned @effect/tsgo and tsrs over every project, each taking its rules from the monorepo's base config, and exits 0; only the vendored upstream project drops the rules. The prototype holds one inline diagnostics directive: `strictEffectProvide:off` on the generated front's deploy-time `Effect.provide(Database)`, an Alchemy class entry point, emitted by apps/practice/scripts/entries.ts with its reason, owner (@proto/practice) and exit.
@@ -298,7 +328,7 @@ A runner killed after a commit, a projection batch cut by a crash, a grant revok
 - **Checker:** `conformance/test/Own.conformance.ts`
 - **Reads:** The front's Apis, the runs-state route, and the cluster database through `docker exec psql`.
 - **Assumes:** `docker kill` of every runner models a crash. The projection crash and the revocation are placed by a row lock held from a session of the conformance's own (phase 6); the kill after a commit is not timed.
-- **Gaps:** See notes/phase-6.md. With the patched library the kill-after-commit reactions happen once, after the dead drain's 60 s lease, which is later than the case's view read waits, so the case still fails as written. A revocation between two hops of a running chain is not recorded on the claim (the review saga ends on `RunRefused`).
+- **Gaps:** Since phase 9 (D42) the kill-after-commit case asserts the guarantee as ruled: every reaction once, all within RECOVERY_BOUND_MS (the library's 60 s lease plus two 10 s message polls, checked against the installed sources by conformance/test/RecoveryBound.test.ts) of the kill; phase 9 measured 66.8 s. Recovery is still bounded by the lease, not by shard ownership (notes/upstream/04).
 - **Left to a reviewer:** Whether each fault was really exercised (the evidence log says).
 - **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
@@ -309,8 +339,8 @@ Two runners never both commit to one instance (D38): a runner paused past its sh
 - **Checker:** `conformance/test/Own.conformance.ts`, `conformance/src/TwoRunners.model.ts`
 - **Reads:** The slot's stored events in alchemy_domain_objects before and after unpausing.
 - **Assumes:** `docker pause` freezes the runner's shard-lock refresh as a long GC pause or partition would; a row lock holds the stale runner inside its commit for the second timing.
-- **Gaps:** Two timings; not a model-checked proof. The second (paused inside the commit) overwrote the stale runner's acknowledged event: D38 is open (notes/phase-6.md).
-- **Left to a reviewer:** Whether the observed outcome is acceptable for every aggregate.
+- **Gaps:** Two timings; not a model-checked proof. Phase 9 ran the paused-inside-commit timing three times with patch 3: nothing acknowledged was lost, but the stale runner was acknowledged each time (its transaction began first), and only one run moved the shard to the other runner, whose commit then waited on the advisory lock, lost the version check and landed after it. Paused in decide, the shard did not move (notes/phase-9.md).
+- **Left to a reviewer:** Whether first-commit-wins is acceptable, or the stale runner must be fenced out (shard ownership inside the commit).
 - **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
 ### cluster-backup-restore
@@ -331,8 +361,8 @@ State in the forms earlier phases stored decodes on the cluster under today's de
 - **Checker:** `conformance/test/StoredForms.conformance.ts`
 - **Reads:** Rows written straight into the cluster's object storage from the frozen run fixtures and phase 6's view form; phase 6's dump and restore record (RESTORE_PHASE=across).
 - **Assumes:** The object and key names are the cluster storage's as observed (Practice/<Context>.<Class>/<id>, meta, snapshot).
-- **Gaps:** Phase 8: the restore from phase 6 fails at the last step. ClaimReview's version 1 rebuilt ClaimFacts as generation 1, whose first writes the facts stream kept from generation 0 refuses (stream origin [1,1]), so ClaimDecided is never published and the run is not concluded (notes/phase-8.md).
-- **Left to a reviewer:** Whether a view's version bump may rebuild the projection that writes a published stream.
+- **Gaps:** Phase 9: the restore from phase 6 passes (the publisher reads claim events and writes generation 2). But on Effect Cluster a new consumer's backfill lists no instances (object-call arguments go through JSON, so the directory listing's absent cursor arrives as null and lists nothing), so generation 2 holds only decisions made after the upgrade; consumers stay correct because the feed still serves generation 1 (notes/phase-9.md, notes/upstream/06).
+- **Left to a reviewer:** Whether generation 2 must be complete on its own before generation 1 may ever be retired.
 - **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
 ## Outcome coverage gaps

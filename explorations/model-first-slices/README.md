@@ -17,12 +17,14 @@ system alongside people?
 
 ## Next Open Question
 
-Three things keep the first host from passing (D5), and each needs the operator: the 60-second
-recovery after a killed runner; the lost write in the commit path (D38); and published facts
-dropped when a view's version is bumped over live data, which bears on D33. Also open: whether to
-open the two upstream pull requests saved under the prototype's `notes/upstream/`, and whether a
-pass with local patches counts toward the D16 gate. [`BRIEF.md`](./BRIEF.md) has not been confirmed
-in words.
+After phase 9 every conformance case passes as written on the Postgres swarm host, on three local
+patches. Four things are open, each for the operator: whether to accept that the first commit wins
+when a runner is paused inside its commit (nothing is lost, but the stale runner is acknowledged)
+or to fence commits on shard ownership; whether to patch a fourth library defect, a backfill that
+lists no instances on Effect Cluster; whether an upgrade drains the old fact publisher first; and
+whether to send the patches and write-ups under the prototype's `notes/upstream/` (D44 holds them).
+Behind those: whether a pass on local patches counts toward the D16 gate. [`BRIEF.md`](./BRIEF.md)
+has not been confirmed in words.
 
 ## Read This First
 
@@ -34,6 +36,11 @@ in words.
 
 ## Trail
 
+- 2026-11-14: phase 9 built D41 to D43 and reran the cluster suite. Every case passes as written:
+  no write is overwritten, recovery finishes inside the 80-second bound, and the upgrade case
+  publishes its fact. The stale runner is still acknowledged, and a fourth library defect (backfill
+  lists nothing on Effect Cluster) leaves the new stream generation incomplete. D5 not met. Notes
+  in `research/17`.
 - 2026-11-13: D41 to D44 settled the three failing cases: patch the lost write locally, state
   one-lease recovery as the guarantee, publish facts from aggregate events with the publisher
   never rebuilt in place. Upstream is held until those are built and rerun. Phase 9 launched.

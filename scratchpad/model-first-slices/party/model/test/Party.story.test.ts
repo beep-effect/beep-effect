@@ -24,6 +24,7 @@ import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
 import * as A from "effect/Array";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import { acme, globex, human, onOrg, oneSource, readmitted, twoSources } from "./fixtures.ts";
 
 const { call, fail, given, provide, query, rejected, succeed, then, view, when } = Story;
@@ -61,6 +62,8 @@ const registered = [
 ];
 const asserted = (signals = twoSources) =>
   given(claim, ClaimAsserted.make({ org: acme, proposition: sameParty, signals, provenance: provenanceOf(intake) }));
+/** The scope a decision on this claim carries: its org, and no review run (its history asked for none). */
+const unreviewed = { org: O.some(acme), reviewRuns: O.some([]) };
 
 it.effect("a policy's command runs under the reviewer's root, re-admitted for its hop, never a system", () => {
   const merging = readmitted(reviewer, mergeHop(2));
@@ -71,7 +74,7 @@ it.effect("a policy's command runs under the reviewer's root, re-admitted for it
     asserted(),
     as(reviewer),
     when(claim, AcceptClaim.make({})),
-    then(claim, ClaimAccepted.make({ proposition: sameParty, provenance: provenanceOf(reviewer) })),
+    then(claim, ClaimAccepted.make({ proposition: sameParty, ...unreviewed, provenance: provenanceOf(reviewer) })),
     // The policy asks the authority context for this hop, and sends under what comes back.
     call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop(2) }),
     succeed(Authority.readmit, merging),
@@ -86,7 +89,7 @@ it.effect("a grant revoked between two hops stops the second hop, and the refusa
     asserted(),
     as(reviewer),
     when(claim, AcceptClaim.make({})),
-    then(claim, ClaimAccepted.make({ proposition: sameParty, provenance: provenanceOf(reviewer) })),
+    then(claim, ClaimAccepted.make({ proposition: sameParty, ...unreviewed, provenance: provenanceOf(reviewer) })),
     call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop(2) }),
     // The review grant was revoked after the accept: authority re-admits with the read grant alone.
     succeed(Authority.readmit, readmitted(reviewer, mergeHop(2), [onOrg("g_rev_read", PartyRead, acme)])),
@@ -107,7 +110,7 @@ it.effect("a refused re-admission and a veto are recorded, never dropped", () =>
     asserted(),
     as(reviewer),
     when(claim, AcceptClaim.make({})),
-    then(claim, ClaimAccepted.make({ proposition: sameParty, provenance: provenanceOf(reviewer) })),
+    then(claim, ClaimAccepted.make({ proposition: sameParty, ...unreviewed, provenance: provenanceOf(reviewer) })),
     call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop(2) }),
     fail(Authority.readmit, ReadmissionRefused.make({ reason: "lapsed", lapsed: [] })),
     then(claim, MergeRefused.make({ reason: MergeRefusal.cases.Readmission.make({ reason: "lapsed" }), provenance: extend(provenanceOf(reviewer), mergeHop(2)) })),
@@ -120,7 +123,7 @@ it.effect("a merge the survivor cannot take is a recorded veto", () =>
     asserted(),
     as(reviewer),
     when(claim, AcceptClaim.make({})),
-    then(claim, ClaimAccepted.make({ proposition: sameParty, provenance: provenanceOf(reviewer) })),
+    then(claim, ClaimAccepted.make({ proposition: sameParty, ...unreviewed, provenance: provenanceOf(reviewer) })),
     call(Authority.readmit, { provenance: provenanceOf(reviewer), hop: mergeHop(2) }),
     succeed(Authority.readmit, readmitted(reviewer, mergeHop(2))),
     then(

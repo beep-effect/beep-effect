@@ -878,3 +878,44 @@ out is final. Nothing is posted.
 **Rationale:** Posting is under the operator's GitHub account, and a third fix and a rewritten case
 are about to change the evidence. Rejected: opening the two pull requests now; opening everything
 now. Recommended answer accepted.
+
+## 2026-11-14 — Phase 9: D41 to D43 built, and the cluster suite a fourth time
+
+The operator approved a fourth swarm session. Notes are in `research/17-rework-phase9-notes.md`.
+Teardown matched a fourth Docker baseline apart from 10.7 MB of build cache. In memory, the Effect
+check has zero diagnostics, 166 tests pass and 109 of 109 declared outcomes run, re-run by the
+orchestrating session.
+
+- **D41, the version check.** A third local patch re-reads `meta` as the first step of the commit
+  transaction and writes nothing when the version moved since `decide`; the call fails with
+  `CommitConflict` and the caller's retry starts at the receipt lookup. On Effect Cluster the
+  transaction first takes a per-instance advisory lock, without which two runners would both read
+  the old version under read-committed isolation. Saved upstream-ready as
+  `notes/upstream/03-commit-version-check.patch` in the prototype, with an in-process reproduction
+  (`LostWrite.test.ts`).
+- **D42, the recovery case.** Rewritten to assert every reaction exactly once within the library's
+  60 s lease plus two 10 s message polls (80 s). It passed at 66.8 s. A test pins both constants to
+  the installed sources. The shard-ownership lease proposal is written (`notes/upstream/04`).
+- **D43, facts from events.** The decision events now carry their scope (org and review runs), a
+  new projection reads `Claim` events and writes generation 2 of the published stream, and the feed
+  serves generation 1 then generation 2 as one log so old checkpoints keep their meaning. A checker
+  pins every published stream to its writer, generation and sources. The upgrade case (phase 6's
+  dump under the new code) now passes: the decision is published, the waiting run completes, and no
+  fact reaches a consumer's command twice.
+- **Every case of the suite passes as written.** Two things fall short of what was asked:
+  - **The stale runner is still acknowledged.** In three paused-inside-commit runs nothing was
+    overwritten, but the paused runner's transaction began first, so it won each time. The shard
+    moved in one run, and there the other runner's commit was refused and retried. A version check
+    orders commits by transaction, not by shard ownership.
+  - **A fourth library defect.** On Effect Cluster an object call's arguments go through
+    `JSON.stringify`, so the directory listing's missing first-page cursor arrives as `null` and a
+    new consumer's backfill lists no instances. Generation 2 therefore holds only decisions made
+    after the upgrade, and generation 1 cannot be retired. This also explains phase 8's upgrade
+    failure. Written up as `notes/upstream/06`, not patched.
+- A decision stored before phase 9 whose fact was never published gets only the run its event
+  names. Draining the old publisher before an upgrade would close that case.
+
+D5 verdict: not met. The pass rests on three local patches, the stale runner is acknowledged, and
+an upgrade that adds a consumer gets no history on this host. Open for the operator: accept
+first-commit-wins or fence commits on shard ownership; patch the backfill defect locally or wait;
+whether an upgrade drains the old publisher first; and D44 (nothing is posted upstream).

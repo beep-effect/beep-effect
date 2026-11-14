@@ -163,6 +163,8 @@ it.effect("a review run proposes under its delegation and waits; a person's appr
         outcome: "accepted",
         proposition: hasIdentifier,
         corroboration: O.some(1),
+        org: O.some(acme),
+        reviewRuns: O.some([run1]),
         provenance: provenanceOf(reviewer),
       }),
     ),
@@ -401,7 +403,7 @@ it.effect("a claim decided before the proposal lands ends the executor cleanly, 
     // While the Reasoner works, a reviewer decides the claim directly.
     as(reviewer),
     when(claim, RetractClaim.make({ reason: "duplicate" })),
-    then(claim, ClaimRetracted.make({ reason: "duplicate", provenance: provenanceOf(reviewer) })),
+    then(claim, ClaimRetracted.make({ reason: "duplicate", org: O.some(acme), reviewRuns: O.some([run1]), provenance: provenanceOf(reviewer) })),
     succeed(Reasoner.assess, {
       assessment: { disposition: "accept", rationale },
       usage: { units: 12, cachedUnits: 0 },

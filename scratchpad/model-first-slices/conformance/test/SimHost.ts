@@ -18,7 +18,8 @@ import * as Str from "effect/String";
 // upstream's `packages/integration-tests/test/Domain/DurableObjects.test.ts` at 33c10dd. Each
 // instance has its own sorted storage, an exclusive section, background work in its own scope,
 // and one alarm driven by `Effect.sleep`, so a test's `TestClock` decides when callbacks fire.
-// Calls cross a JSON boundary, as Workers RPC does.
+// Calls cross a JSON boundary, as Workers RPC does. Phase 9: an instance can run on more than one
+// "runner" over one storage, as two cluster runners do while a shard moves (`serveFrom`).
 
 /** What a test reads back from the host: how often each instance read each lease key. */
 export interface SimHost {
@@ -31,6 +32,14 @@ export interface SimHost {
   readonly write: (id: string, entries: Readonly<Record<string, unknown>>) => Effect.Effect<void>;
   /** Interrupts every instance's background work and alarm. */
   readonly close: Effect.Effect<void>;
+  /**
+   * Which runner serves the calls made from now on (0 at first). Each runner builds its own copy
+   * of an instance, with its own exclusive section, over the instance's one storage; a call
+   * already running stays on the runner that took it.
+   */
+  readonly serveFrom: (runner: number) => void;
+  /** An instance's storage, once any runner built it. */
+  readonly storageOf: (id: string) => O.Option<DurableObjects.ObjectStorage>;
 }
 
 const readKey = (id: string, key: string) => `${id}#${key}`;
@@ -126,16 +135,19 @@ export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<s
   const reads = MutableHashMap.empty<string, number>();
   const scopes = MutableHashMap.empty<string, Scope.Closeable>();
   const storages = MutableHashMap.empty<string, DurableObjects.ObjectStorage>();
+  let serving = 0;
 
-  const build = (cls: string, id: string): Effect.Effect<Record<string, Method>> => {
-    const storage = makeStorage(id, reads);
+  const build = (cls: string, id: string, runner: number): Effect.Effect<Record<string, Method>> => {
+    // One storage per instance, whichever runner builds it; seeded by the first.
+    const existing = MutableHashMap.get(storages, id);
+    const storage = O.getOrElse(existing, () => makeStorage(id, reads));
     MutableHashMap.set(storages, id, storage);
     const gate = Semaphore.makeUnsafe(1);
     const scope = Scope.makeUnsafe();
-    MutableHashMap.set(scopes, id, scope);
+    MutableHashMap.set(scopes, `${runner}|${id}`, scope);
     return Effect.gen(function* () {
       const builtAt = yield* Clock.currentTimeMillis;
-      yield* storage.put(seed(id, builtAt));
+      if (O.isNone(existing)) yield* storage.put(seed(id, builtAt));
       let timer: { readonly at: number; readonly fiber: Fiber.Fiber<void> } | undefined;
       const callbacks = DurableObjects.alarmCallbacks(storage, {
         get: Effect.sync(() => timer?.at ?? null),
@@ -191,9 +203,11 @@ export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<s
 
   const instance = (cls: string, name: string) => {
     const id = `${cls}/${name}`;
-    return O.getOrElse(MutableHashMap.get(instances, id), () => {
-      const built = build(cls, id);
-      MutableHashMap.set(instances, id, built);
+    const runner = serving;
+    const key = `${runner}|${id}`;
+    return O.getOrElse(MutableHashMap.get(instances, key), () => {
+      const built = build(cls, id, runner);
+      MutableHashMap.set(instances, key, built);
       return built;
     });
   };
@@ -228,7 +242,7 @@ export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<s
       claimKey: Effect.sync(() => ({})),
     },
     reads: (id, key) => O.getOrElse(MutableHashMap.get(reads, readKey(id, key)), () => 0),
-    ids: () => instances.pipe(MutableHashMap.keys, A.fromIterable),
+    ids: () => storages.pipe(MutableHashMap.keys, A.fromIterable),
     write: (id, entries) =>
       Effect.flatMap(Effect.fromOption(MutableHashMap.get(storages, id)).pipe(Effect.orDie), (storage) =>
         storage.put(entries),
@@ -236,5 +250,9 @@ export const makeSimHost = (seed: (id: string, now: number) => Readonly<Record<s
     close: Effect.forEach(scopes.pipe(MutableHashMap.values, A.fromIterable), (scope) => Scope.close(scope, Exit.void), {
       discard: true,
     }),
+    serveFrom: (runner) => {
+      serving = runner;
+    },
+    storageOf: (id) => MutableHashMap.get(storages, id),
   };
 };

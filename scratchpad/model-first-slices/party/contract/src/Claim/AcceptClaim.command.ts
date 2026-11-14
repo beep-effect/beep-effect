@@ -7,6 +7,7 @@ import * as S from "effect/Schema";
 import { Proposition } from "../Proposition.ts";
 import { ClaimId } from "./Claim.id.ts";
 import { ClaimNotPending } from "./ClaimNotPending.rejection.ts";
+import { DecisionScope } from "./DecisionScope.ts";
 import { $PartyContractId } from "@proto/kernel/Identity";
 
 const $I = $PartyContractId.create("Claim/AcceptClaim.command");
@@ -39,12 +40,12 @@ export class AdmissionGateUnmet extends S.TaggedError<AdmissionGateUnmet, { read
 /**
  * The fact, with the invocation it ran under. Phase 3 removed its
  * `corroboration` (D22): older stored events still carry the key, and a read
- * ignores it.
+ * ignores it. Phase 9 added its scope, the org and review runs (D43).
  *
  * @category events
  * @since 0.0.0
  */
-export class ClaimAccepted extends Domain.Event("ClaimAccepted", carry({ proposition: Proposition })) {}
+export class ClaimAccepted extends Domain.Event("ClaimAccepted", carry({ proposition: Proposition, ...DecisionScope })) {}
 
 /**
  * Accept a pending claim once its admission gate is met.

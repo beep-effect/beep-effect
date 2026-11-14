@@ -17,7 +17,7 @@ import { partyDirectoryLive } from "@proto/party-model/Directory/PartyDirectory.
 import { MemoryPartyDirectoryStore, PartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
 import { switchWhenCaughtUp } from "@proto/party-model/Directory/RebuildDirectory";
 import { ContactSource, MailboxUnavailable } from "@proto/party-model/Evidence/ContactSource.external";
-import { PartyFacts } from "@proto/party-model/Facts/PartyFacts.stream";
+import { PartyFacts2 } from "@proto/party-model/Facts/PartyFacts2.stream";
 import { PartyHandlers } from "@proto/party-model/Party.handlers";
 import { PartyModel } from "@proto/party-model/Party.model";
 import { Party } from "@proto/party-model/Party/Party.aggregate";
@@ -95,7 +95,7 @@ it.live("a rebuild writes a new generation beside the old one, with zero side ef
     const storeContext = yield* Layer.build(MemoryPartyDirectoryStore);
     const store = Layer.succeedContext(storeContext);
     const directory = Effect.flatMap(Effect.service(PartyDirectoryStore), (s) => s.search(acme, "dana", page));
-    const facts = Effect.flatMap(Effect.service(PartyFacts), (s) => s.list("claims"));
+    const facts = Effect.flatMap(Effect.service(PartyFacts2), (s) => s.list("claims"));
 
     // Generation 0: the history, its policy's port call, its published fact and its directory.
     // Each generation is one deployment: built in a scope of its own, torn down when it ends.

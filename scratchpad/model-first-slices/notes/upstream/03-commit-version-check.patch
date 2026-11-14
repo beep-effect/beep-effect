@@ -1,0 +1,193 @@
+fix(domain): never acknowledge a commit on a version that moved since decide
+
+Against alchemy `packages/domain/src` at 33c10dd (2.0.0-beta.87). Apply from the
+repository root with `git apply`; the text above the first `---` line is ignored.
+Independent of the drain-lease and runner-background-call fixes: no hunk
+overlaps theirs, and the three apply in any order.
+
+## Problem
+
+An aggregate's `commit` reads `meta`, runs `decide` on that state, and writes
+the events, `meta`, the receipt and the outbox in one storage transaction. It
+does not check, inside that transaction, that `meta` is still the version
+`decide` was given. It relies on one-at-a-time execution per instance.
+
+On Effect Cluster that holds only while one runner owns the instance. A runner
+that stalls (a GC pause, a partition, a frozen container) past its shard
+lock's 35 s expiry keeps running the entity it had; another runner takes the
+shard and serves the same instance. Both can then commit:
+
+- the second runner decides on version 1 and commits version 2;
+- the stalled runner's commit, decided on version 1 too, then writes
+  `event:000000000002` and `meta` over it.
+
+Postgres row locks do not prevent this: both transactions read `meta` at
+version 1 before either commits, and the second simply waits for the first's
+row locks and then overwrites. The first write was acknowledged and is lost.
+
+Seen twice on Effect Cluster with Postgres (two runners on a local swarm, a
+runner frozen with `docker pause` while its commit was waiting on a row lock):
+the stale runner was acknowledged at version 2, and the other runner's event
+then replaced it.
+
+## Change
+
+- `commit`: the transaction first reads `meta` again and returns `undefined`,
+  writing nothing, when its version is not the one `decide` was given. The
+  commit then fails with a new `CommitConflict` (`id`, `decided`, `stored`).
+- The object method `send` passes `CommitConflict` through as a failure of the
+  call (`reportDefectsUnlessConflict`), where every other cause is still
+  reported as a defect value. The caller's `unwrapDefects` already retries a
+  failed call with `TRANSIT_RETRY`, under the same command id; a scheduled
+  command's job is retried by its callback.
+- Effect Cluster: `objectStorage.transaction` takes
+  `pg_advisory_xact_lock(hashtextextended(object, 0))` first, so transactions
+  on one instance serialize across runners and the version check sees the
+  other's commit. The lock ends with the transaction.
+
+## Why it is safe
+
+- Never acknowledged: a commit that loses the check writes nothing (the check
+  is the transaction's first step) and returns no receipt.
+- Idempotency: the retry starts from the receipt lookup, which answers first,
+  as before. If the other runner committed this same command, the retry gets
+  that receipt; otherwise it decides again on the stored state.
+- One at a time: the retry is a new call, routed to whichever runner owns the
+  instance now, so only the current owner decides again. Re-deciding inside
+  the losing object instead would run `decide` on a runner that may no longer
+  own the instance, and could repeat the race.
+- Durable Objects (Cloudflare) and Rivet: storage transactions on one instance
+  already serialize, so the check always passes. Its cost is one `meta` read
+  inside the transaction.
+- The in-memory platform has its own commit path and is unchanged.
+
+## Cost and limits
+
+One `meta` read and one advisory lock per commit on Effect Cluster. The
+advisory key is a 64-bit hash of the object name, so two objects can share a
+key and serialize their commits; they never deadlock, since a transaction
+takes one key.
+
+The check orders commits by their transactions, not by shard ownership: when
+the stale runner's transaction started first (it took the lock before the
+other runner), the stale runner is acknowledged and the other runner's commit
+is the one refused and retried. Nothing acknowledged is lost either way.
+Refusing the stale runner itself needs a fence on shard ownership inside the
+transaction; that is a larger change and is not attempted here.
+
+## Tests
+
+- In memory (two in-process runners sharing one instance's storage, with
+  serialized transactions and a `TestClock`): runner 0 decides on version 0
+  and holds; runner 1 commits version 1; runner 0's commit returns. Before the
+  change, runner 0 is acknowledged at version 1 and the stored events are
+  `[A]` (B lost). After it, runner 0's first commit is refused, its retry is
+  acknowledged at version 2, and the events are `[B, A]`.
+- The in-memory and Durable Objects suites pass unchanged, and so does the
+  Domain conformance suite on Effect Cluster.
+- On Effect Cluster with Postgres: the paused-inside-commit case. See the PR
+  discussion for its runs.
+
+---
+--- a/packages/domain/src/DurableObjects.ts
++++ b/packages/domain/src/DurableObjects.ts
+@@ -22,6 +22,7 @@
+ import * as Clock from "effect/Clock";
+ import * as Context from "effect/Context";
+ import * as SecureRandom from "effect/crypto/SecureRandom";
++import * as Data from "effect/Data";
+ import * as Duration from "effect/Duration";
+ import * as Effect from "effect/Effect";
+ import { HttpServerRequest } from "effect/http/HttpServerRequest";
+@@ -232,6 +233,32 @@
+   );
+ 
+ /**
++ * A commit found the instance's stored version moved since `decide` was
++ * given its state: another host committed to the same instance meanwhile (on
++ * Effect Cluster, two runners holding one instance while its shard moves).
++ * Nothing was written and nothing is acknowledged; the caller retries.
++ */
++export class CommitConflict extends Data.TaggedError("CommitConflict")<{
++  readonly id: string;
++  readonly decided: number;
++  readonly stored: number;
++}> {}
++
++/**
++ * Like {@link reportDefects}, except that a lost version check fails the call
++ * itself, so the caller's `unwrapDefects` retries it in transit under the
++ * same command id, and the retry starts again from the receipt lookup.
++ */
++const reportDefectsUnlessConflict = <A, E, R>(effect: Effect.Effect<A, E | CommitConflict, R>) =>
++  reportDefects(
++    effect.pipe(Effect.catchIf((error): error is CommitConflict => error instanceof CommitConflict, Effect.succeed)),
++  ).pipe(
++    Effect.flatMap((value) =>
++      value instanceof CommitConflict ? Effect.fail(value) : Effect.succeed(value as A),
++    ),
++  );
++
++/**
+  * How long to keep retrying a call that failed in transit: an instance being
+  * reset reports an opaque error, and for a while after a deploy some instances
+  * still run the previous code (whose classes don't implement our methods).
+@@ -828,6 +855,11 @@
+         };
+         const routed = yield* state.storage.transaction(
+           Effect.gen(function* () {
++            // The version check, first in the commit's transaction: the commit applies only
++            // to the version `decide` was given. On a host whose transactions serialize per
++            // instance (Effect Cluster's Postgres storage) it sees every commit before it.
++            const stored = yield* currentMeta;
++            if (stored.version !== current.version) return undefined;
+             const events: Record<string, StoredEvent> = {};
+             for (const event of result.events) events[`event:${pad(event.envelope.seq)}`] = event;
+             yield* state.storage.put(events);
+@@ -850,6 +882,13 @@
+             return live.send;
+           }),
+         );
++        // Lost the check: never acknowledged, and nothing was written.
++        if (routed === undefined) {
++          const stored = yield* currentMeta;
++          return yield* Effect.fail(
++            new CommitConflict({ id, decided: current.version, stored: stored.version }),
++          );
++        }
+         return { sent, kick: routed.length > 0 };
+       });
+     const send = (id: string, command: Json, meta: Aggregate.SendMeta) =>
+@@ -898,7 +937,7 @@
+     );
+     return {
+       send: (id: string, command: Json, meta: Aggregate.SendMeta) =>
+-        reportDefects(send(id, command, meta)),
++        reportDefectsUnlessConflict(send(id, command, meta)),
+       schedule: (
+         id: string,
+         name: string,
+--- a/packages/domain/src/EffectCluster/index.ts
++++ b/packages/domain/src/EffectCluster/index.ts
+@@ -252,9 +252,19 @@
+           Effect.map((rows) => new Map(rows.map((row) => [row.key, decode<T>(row.value)]))),
+         ),
+       ),
+-    // Held across the whole transaction, as Cloudflare's gate is.
++    // Held across the whole transaction, as Cloudflare's gate is. The transaction first takes
++    // the object's advisory lock: two runners can hold one instance while its shard moves, and
++    // their transactions on it serialize here, so a commit's version check sees the other's.
+     transaction: (effect) =>
+-      gate.exclusive(sql.withTransaction(effect).pipe(Effect.orDie)) as never,
++      gate.exclusive(
++        sql
++          .withTransaction(
++            sql`SELECT pg_advisory_xact_lock(hashtextextended(${object}, 0))`.pipe(
++              Effect.andThen(effect),
++            ),
++          )
++          .pipe(Effect.orDie),
++      ) as never,
+   };
+ };
+ 

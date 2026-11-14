@@ -9,6 +9,7 @@ import { AdmissionGateUnmet } from "./AcceptClaim.command.ts";
 import { ApprovalId } from "./Approval.id.ts";
 import { ClaimId } from "./Claim.id.ts";
 import { ClaimNotPending } from "./ClaimNotPending.rejection.ts";
+import { DecisionScope } from "./DecisionScope.ts";
 import { $PartyContractId } from "@proto/kernel/Identity";
 
 const $I = $PartyContractId.create("Claim/ApproveProposal.command");
@@ -56,6 +57,8 @@ export class ProposalApproved extends Domain.Event(
     proposition: Proposition,
     // Widened in phase 3 (D22): every stored integer still reads; absent is stored as `null`.
     corroboration: S.OptionFromNullOr(S.Int),
+    // Added in phase 9 (D43): the decision's scope, absent on events stored before it.
+    ...DecisionScope,
   }),
 ) {}
 

@@ -4,7 +4,7 @@ import * as Layer from "effect/Layer";
 import { ClaimReviewLive } from "./Claim/ClaimReview.handler.ts";
 import { FindPartiesLive } from "./Directory/FindParties.handler.ts";
 import { PartyDirectoryLive } from "./Directory/PartyDirectory.handler.ts";
-import { ClaimFactsLive } from "./Facts/ClaimFacts.handler.ts";
+import { ClaimDecisionsLive } from "./Facts/ClaimDecisions.handler.ts";
 import { EffectivePartyLive } from "./Party/EffectiveParty.handler.ts";
 import { MergeOnSamePartyLive } from "./Party/MergeOnSameParty.handler.ts";
 import { ReviewAssistLive } from "./Review/ReviewAssist.handler.ts";
@@ -23,6 +23,6 @@ export const PartyHandlers = Layer.mergeAll(
   ReviewOnRequestLive,
   ReviewAssistLive,
   PartyDirectoryLive,
-  ClaimFactsLive,
+  ClaimDecisionsLive,
   FindPartiesLive,
 );
