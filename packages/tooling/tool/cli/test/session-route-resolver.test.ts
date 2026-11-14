@@ -955,8 +955,8 @@ describe("route probe and resolver edges", () => {
 
     it.effect("falls back to $HOME for the T3 home and reads none without either", () =>
       Effect.gen(function* () {
-        const fromHome = yield* t3HomeDirectory.pipe(withEnv({ HOME: "/home/agent" }));
-        assertSome(fromHome, "/home/agent/.t3");
+        const fromHome = yield* t3HomeDirectory.pipe(withEnv({ HOME: "/home/alice" }));
+        assertSome(fromHome, "/home/alice/.t3");
         const neither = yield* t3HomeDirectory.pipe(withEnv({}));
         assertNone(neither);
         const environmentId = yield* localT3EnvironmentId.pipe(withEnv({}));
