@@ -275,6 +275,14 @@ Coverage floors are untouched.
 
 Reverse: Revert this slice's squash commit; the fixtures and parity record disappear and no checker changes.
 
+### Slice 3: the heavy lanes have not run on #3302; they run when the hold lifts, 2026-11-14
+
+Read on 2026-11-14: #3302 never received the ready-for-heavy label (it was marked ready through the shared login, not by yeet ready), so on its heads 783685b532, 9273a1dffc and 49c2ace7d5 the Heavy call was skipped and Heavy / Check, Lint Policy, Docgen, Doctest and Build did not run. Its other hosted checks pass, and workflow-lint, the cache audit and the quick package verify pass locally. yeet ready applies the label only when every review thread is answered, and the driver's window-5-hold thread must stay unresolved, so the label is not applied by hand around it. Before any final on #3302: resolve of the hold by the driver, yeet ready, a green run of the five heavy lanes, then the final. The same gap let #3311 merge without its heavy lanes, which put the ep101 check errors on main. Slices 6 and 9 are stacked on this branch and inherit the rule.
+
+Lane perf/heavy-pool-diet-lanes-first · PR #3302
+
+Reverse: Apply ready-for-heavy by hand before the hold lifts if the driver wants the heavy proof early; each later push then re-runs the five lanes.
+
 ### Slices 4, 4b and 7 landed; the first pin-bump pull request is read on main, 2026-11-14
 
 Slice 4 merged as #3301 (11d8e70ed4), slice 4b as #3311 (538f2cdd54, its check errors fixed on main by #3318) and slice 7 as #3299 (c2de80d2a0). The first main run after #3299 re-recorded the closure digest on a byte-identical release, cut no release and opened pin-bump pull request #3326; a newer release then force-updated that same pull request. Readings: history/2026-11-14-perih-11-slice-2-on-main-reading.md. Open with the driver: a pending bump is replaced on every release (21 releases on 2026-11-13), and no rule limits that. Slice 3 (#3302) and slice 6 stay held until the ci-lane-economics window-5 verdict; slice 9 waits on PERIH-10.
