@@ -2210,6 +2210,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "deploy-beep-effect-web.yml:Deploy beep-effect-web (prod)",
         "deploy-cost-controls.yml:Deploy cost controls (prod)",
         "deploy-storybook.yml:Deploy Storybook (prod)",
+        // Staging and prod deploy of the oip-web Alchemy stack; environment-gated, not a local lane.
+        "deploy-oip-web-infra.yml:Deploy oip-web infrastructure (staging, prod)",
         "deploy-turbo-cache.yml:Deploy turbo cache (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
         "fleet-shadow-check.yml:Shadow Probe",

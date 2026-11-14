@@ -30,6 +30,13 @@
     {"file":"apps/oip-web/src/content/OipContent.model.ts","symbol":"SiteMetadataContent","kind":"struct-const","owner":"@beep/oip-web","identity":"SiteMetadataContent","description":"Top-level metadata used by Next.js and JSON-LD generation."},
     {"file":"apps/oip-web/src/content/OipContent.model.ts","symbol":"SocialLink","kind":"struct-const","owner":"@beep/oip-web","identity":"SocialLink","description":"Public social media profile link for the OIP firm."},
     {"file":"apps/oip-web/src/content/OipContent.model.ts","symbol":"SocialPlatform","kind":"literal-kit","owner":"@beep/oip-web","identity":"SocialPlatform","description":"Social platform the OIP firm maintains a public profile on."},
-    {"file":"apps/oip-web/src/content/OipContent.runtime.ts","symbol":"OipContentLoadError","kind":"tagged-error","owner":"@beep/oip-web","identity":"OipContentLoadError"}
+    {"file":"apps/oip-web/src/content/OipContent.runtime.ts","symbol":"OipContentLoadError","kind":"tagged-error","owner":"@beep/oip-web","identity":"OipContentLoadError"},
+    {"file":"apps/oip-web/stack/OipWebConfig.ts","symbol":"LiveProjectName","kind":"literal-kit","owner":"@beep/oip-web","identity":"LiveProjectName","description":"Name of a Vercel project that serves oip.law today."},
+    {"file":"apps/oip-web/stack/OipWebConfig.ts","symbol":"LiveStage","kind":"literal-kit","owner":"@beep/oip-web","identity":"LiveStage","description":"Alchemy stage that owns live oip.law objects; replaces the Pulumi stacks production and staging."},
+    {"file":"apps/oip-web/stack/OipWebConfig.ts","symbol":"OipDomain","kind":"struct-const","owner":"@beep/oip-web","identity":"OipDomain","description":"Hostname attached to a stage's Vercel project, with its Cloudflare DNS record."},
+    {"file":"apps/oip-web/stack/OipWebConfig.ts","symbol":"OipRecordType","kind":"literal-kit","owner":"@beep/oip-web","identity":"OipRecordType","description":"DNS record type pointing an oip.law hostname at Vercel."},
+    {"file":"apps/oip-web/stack/OipWebConfig.ts","symbol":"OipWebStackConfig","kind":"struct-const","owner":"@beep/oip-web","identity":"OipWebStackConfig","description":"Vercel project, environment variables, domains, DNS records and assets bucket of one stage."},
+    {"file":"apps/oip-web/stack/OipWebConfig.ts","symbol":"OipZone","kind":"literal-kit","owner":"@beep/oip-web","identity":"OipZone","description":"Cloudflare zone holding an oip.law DNS record."},
+    {"file":"apps/oip-web/stack/OipWebConfig.ts","symbol":"ReservedBucketName","kind":"literal-kit","owner":"@beep/oip-web","identity":"ReservedBucketName","description":"S3 bucket name owned by a live oip.law stage or by the retiring Pulumi stacks."}
   ]
 }

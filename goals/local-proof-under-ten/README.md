@@ -37,10 +37,11 @@ Use this command for execution-capable sessions:
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
 (`decisions/2026-11-10-p0-baseline.md`). Slices 1 (PERIL-13), 2 (PERIL-10 summary and archive), 3 (SCHE-08, the
-admission unit schema, #3308), 4 (the beep-heavy retirement, which completes PERIL-10, #3312), 5 (PERIL-02, one live
-readiness monitor per pull request and readiness argv, #3316) and 6 (SCHE-08, the scheduler service facade and the
-Cache work kind, #3317) are merged. Slice 9 (TURB-05: the force reason, the narrowed-force shadow, and forcing
-patch-only and override-only commits) is implemented on `perf/local-proof-force-reason`.
+admission unit schema, #3308), 4 (the beep-heavy retirement, which completes PERIL-10, #3312), 5 (PERIL-02, one
+live readiness monitor per pull request and readiness argv, #3316), 6 (SCHE-08, the scheduler service facade and
+the Cache work kind, #3317) and 9 (TURB-05: the force reason, the narrowed-force shadow, and forcing patch-only
+and override-only commits, #3331) are merged. Slice 7 (PERIL-09, the review-window anchor kept across a push that
+only merges the base, with the AGENTS.md mergeable amendment) is open as #3329.
 
 ## Latest Evidence
 
@@ -90,6 +91,19 @@ patch-only and override-only commits) is implemented on `perf/local-proof-force-
   carries `turboForce`: the reasons that applied and a shadow of the narrowed decision (no force for a lockfile-only
   change), with each package's locked installed-tree digest at the merge base and HEAD on lockfile attempts (0.62 s
   under load on this repo's 209 packages). The shadow drives nothing (D14).
+- 2026-11-14: slice 7 (PERIL-09) keeps the review-window anchor across a push that only merges the base. #3130's
+  `YeetHeadMoveClassifier` gains `classifyBaseMerge`: the head is one two-parent commit on the old head, the merged
+  commit is on `base.sha`, the pushed tree is git's clean automatic merge, and the PR's three-dot patch has the same
+  identity before and after, with every config-dependent diff default pinned. `ReviewWindow.ts` walks push rows back
+  across consecutive such merges and stops at the first row that is not one, usually the push that changed the
+  patch; at a force-push row the anchor stays at that rewrite. It learns whether the head is a merge commit from the
+  timeline it already reads, or else the local object store, so an ordinary push costs no new request and no fetch;
+  only a two-parent head reads the ref activity, and it is fetched when the checkout lacks it, once per head per
+  process, within 60 seconds. A conflict resolution, an edited merge, a moved hunk context, a force push of the
+  merged head, a shallow history, a failed read or fetch and any unknown verdict re-arm. AGENTS.md's mergeable
+  definition and the yeet and orchestrate skills state the rule. Replay fixtures recorded from git 2.56.1
+  (`test/support/YeetBaseMergeReplay.ts`) run the real classifier through `Git.layerTest` and a scripted spawner, on
+  Node and Bun.
 
 ## Notes
 
