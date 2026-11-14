@@ -304,6 +304,22 @@ const ansi = /\u001b\[[0-9;]*m/gu;
 const logPrefix = /^\[\d{2}:\d{2}:\d{2}\.\d{3}\] [A-Z]+: ?/u;
 const resourceLine = /^\[([^\]]+)\] ([a-z]+)\b(?! \[action\])/u;
 const changeLine = /^ {2}([+-]) ([^:]+)/u;
+const propertyName = /^[A-Za-z_$][\w$.-]*$/u;
+
+/**
+ * The name a change line contributes, never its value: the text before the
+ * first colon with any YAML list marker removed, kept only when it is
+ * identifier-shaped. A bare scalar (an array element such as an address) is
+ * reported as `(value)`, so no declared value reaches the job log.
+ *
+ * @param raw - The text a change line carries after its marker.
+ * @returns The property name, `(value)` for a bare scalar, or `""` for an empty line.
+ */
+const safePropertyName = (raw: string): string => {
+  const name = pipe(raw, Str.trim, Str.replace(/^-\s*/u, ""), Str.trim);
+  if (Str.isEmpty(name)) return "";
+  return propertyName.test(name) ? name : "(value)";
+};
 
 const clean = (line: string) => pipe(line, Str.replace(ansi, ""), Str.replace(logPrefix, ""));
 const isPlanAction = S.is(PlanAction);
@@ -335,7 +351,7 @@ export const parsePlanLog = (log: string): ReadonlyArray<PlanEntry> =>
       return A.append(entries, PlanEntry.make({ fqn: resource[1] ?? "", action, changedProperties: [] }));
     }
     const change = changeLine.exec(line);
-    const property = Str.trim(change?.[2] ?? "");
+    const property = safePropertyName(change?.[2] ?? "");
     return pipe(
       A.last(entries),
       O.filter(() => Str.isNonEmpty(property)),
