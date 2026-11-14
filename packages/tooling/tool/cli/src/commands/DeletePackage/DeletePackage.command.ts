@@ -268,13 +268,7 @@ const printPlan = Effect.fn("DeletePackage.printPlan")(function* (
     `  transitive: ${A.isReadonlyArrayNonEmpty(report.transitiveWorkspaceDependents) ? A.join(report.transitiveWorkspaceDependents, ", ") : "(none)"}`
   );
   for (const hit of report.hits) {
-    yield* Console.log(
-      `  - ${hit.kind}: ${hit.owner} ${hit.file}${pipe(
-        hit.line,
-        O.map((line) => `:${line}`),
-        O.getOrElse(() => Str.empty)
-      )}`
-    );
+    yield* Console.log(`  - ${hit.kind}: ${hit.owner} ${DeletePackagePolicyEvaluation.hitLocation(hit)}`);
   }
   yield* Console.log(`${prefix} Inverse plan ${plan.version}:`);
   for (const operation of plan.operations) {
@@ -872,7 +866,7 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
   const geometry = yield* makeRegistrationGeometryService(
     repoRoot,
     executePlan,
-    DeletePackagePolicyEvaluation.acknowledgedLineFor(policy)
+    DeletePackagePolicyEvaluation.acknowledgedOccurrencesFor(policy)
   );
   const report = yield* geometry.dependentsOf(resolved.target);
   const plan = yield* geometry.planInverse(resolved.target);

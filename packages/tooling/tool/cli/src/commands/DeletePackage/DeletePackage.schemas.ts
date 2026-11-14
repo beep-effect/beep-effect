@@ -8,7 +8,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { RepoRelativePath } from "../Codex/Security.schemas.ts";
@@ -28,9 +30,12 @@ const AcknowledgedText = S.NonEmptyString.check(S.isTrimmed()).pipe(
  * **Details**
  *
  * An entry matches by path and text, never by line number, so edits above the
- * line do not break it. For a root `script` hit, `text` is the script's
- * command. `occurrences` defaults to 1 and must equal the number of hits the
- * entry matches.
+ * line do not break it. A root `script` hit is matched by `script` (the
+ * script's name) plus `text` (its exact trimmed command) and requires `path`
+ * `package.json`; an entry without `script` never accepts a script hit, so two
+ * scripts with one command need one entry each. `occurrences` defaults to 1
+ * and must equal the number of hits the entry matches; one entry with
+ * `occurrences: 1` never covers two identical lines.
  *
  * **Example** (Acknowledge a tooling-kind literal)
  *
@@ -45,6 +50,21 @@ const AcknowledgedText = S.NonEmptyString.check(S.isTrimmed()).pipe(
  * console.log(entry.occurrences) // 1
  * ```
  *
+ * **Example** (Acknowledge a root script by name and command)
+ *
+ * ```ts
+ * import { DeletePackageAcknowledgement } from "@beep/repo-cli/commands/DeletePackage"
+ * import * as O from "effect/Option"
+ *
+ * const entry = DeletePackageAcknowledgement.make({
+ *   path: "package.json",
+ *   script: O.some("lint"),
+ *   text: "biome lint apps packages deploy",
+ *   reason: "The lint root list is edited in the same PR.",
+ * })
+ * console.log(O.getOrNull(entry.script)) // "lint"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -54,6 +74,7 @@ export class DeletePackageAcknowledgement extends S.Opaque<
 >()(
   S.Struct({
     path: RepoRelativePath,
+    script: S.OptionFromOptionalKey(AcknowledgedText).pipe(S.withConstructorDefault(Effect.succeedNone)),
     text: AcknowledgedText,
     reason: AcknowledgedText,
     occurrences: S.Int.check(S.isGreaterThan(0)).pipe(
@@ -61,6 +82,18 @@ export class DeletePackageAcknowledgement extends S.Opaque<
       S.withDecodingDefaultKey(Effect.succeed(1))
     ),
   }).pipe(
+    S.check(
+      S.makeFilter(
+        (entry: { readonly path: string; readonly script: O.Option<string> }) =>
+          O.isNone(entry.script) ||
+          Str.equivalence(entry.path, "package.json") ||
+          "a `script` entry must have path package.json",
+        $I.annote("ScriptAcknowledgementPath", {
+          title: "Script acknowledgement path",
+          description: "A root script acknowledgement names the root package.json.",
+        })
+      )
+    ),
     $I.annoteSchema("DeletePackageAcknowledgement", {
       description: "One reviewed file-path or script hit a deletion accepts, matched by path and trimmed line text.",
     })

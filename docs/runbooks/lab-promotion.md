@@ -68,7 +68,11 @@ bun run beep delete-package <lab> --check     # doctor: zero residue
 - No flag overrides a live dependent. A reviewed `file-path` or `script` hit
   that no rule can separate goes in a committed `--acknowledge <file>` JSONC
   list (path, exact line text, reason); manifest and import edges can never
-  be acknowledged.
+  be acknowledged. Each entry names one dependent: a root script needs
+  `"path": "package.json"` plus its `"script"` name and exact command as
+  `"text"`, so two scripts with one command need two entries. `occurrences`
+  must equal the number of matching lines, and the post-apply doctor honours
+  the same counts.
 - Manifest-declared Postgres state: deletion never drops the lab-owned
   `lab_<slug>` schema automatically. With explicit `--drop-data` consent it
   reports the exact manual `DROP SCHEMA` cleanup step; without consent it

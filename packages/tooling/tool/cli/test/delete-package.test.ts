@@ -1660,7 +1660,19 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       `{ "path": "${file}", "text": "${text}", "reason": "${reason}", "occurrences": ${occurrences} }`;
 
     const README_ENTRY = ackEntry("packages/consumer/README.md", README_LINE, README_REASON);
-    const SCRIPT_ENTRY = ackEntry("package.json", "bun run --cwd deploy build", SCRIPT_REASON);
+    const scriptEntry = (script: string, command: string, reason: string): string =>
+      `{ "path": "package.json", "script": "${script}", "text": "${command}", "reason": "${reason}" }`;
+
+    const BUILD_COMMAND = "bun run --cwd deploy build";
+    const SCRIPT_ENTRY = scriptEntry("build:deploy", BUILD_COMMAND, SCRIPT_REASON);
+
+    const writeRootScripts = Effect.fn("writeRootScripts")(function* (scripts: string) {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.writeFileString(
+        "package.json",
+        `{ "name": "fixture", "private": true, "workspaces": ["deploy", "packages/consumer"], "scripts": ${scripts} }\n`
+      );
+    });
 
     const ackFile = (target: string, entries: ReadonlyArray<string>): string =>
       A.join(
@@ -1697,7 +1709,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           expect(errors).toStrictEqual([]);
           expect(logs).toContain("[delete-package] ACK 2 acknowledged dependent hit(s):");
           expect(logs).toContain(`  - file-path: @beep/consumer packages/consumer/README.md:1 (${README_REASON})`);
-          expect(logs).toContain(`  - script: @beep/root package.json (${SCRIPT_REASON})`);
+          expect(logs).toContain(`  - script: @beep/root package.json#build:deploy (${SCRIPT_REASON})`);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1857,7 +1869,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     );
 
     const acknowledgedPolicy = (entries: ReadonlyArray<DeletePackageAcknowledgement>) =>
-      DeletePackagePolicyEvaluation.acknowledgedLineFor(
+      DeletePackagePolicyEvaluation.acknowledgedOccurrencesFor(
         policy({
           acknowledgements: O.some(DeletePackageAcknowledgements.make({ target: "@beep/deploy", entries })),
         })
@@ -1869,7 +1881,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const repoRoot = yield* writeDeletedDeployLayout([["packages/consumer/README.md", `${README_LINE}\n`]]);
-          const isAcknowledgedLine = acknowledgedPolicy([
+          const acknowledgedOccurrences = acknowledgedPolicy([
             DeletePackageAcknowledgement.make({
               path: "packages/consumer/README.md",
               text: README_LINE,
@@ -1879,15 +1891,274 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
           const unacknowledged = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
           expect(statusOf(unacknowledged, "authored-references")).toBe("residue");
-          const acknowledged = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget, isAcknowledgedLine);
+          const acknowledged = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget, acknowledgedOccurrences);
           expect(statusOf(acknowledged, "authored-references")).toBe("clean");
           expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, acknowledged)).toBe(true);
 
           yield* fs.writeFileString("packages/consumer/notes.md", "Builds `deploy/src/Stack.ts`.\n");
-          const residue = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget, isAcknowledgedLine);
+          const residue = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget, acknowledgedOccurrences);
           expect(statusOf(residue, "authored-references")).toBe("residue");
           expect(evidenceOf(residue, "authored-references")).toStrictEqual(["packages/consumer/notes.md"]);
           expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, residue)).toBe(false);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+    const readmeAcknowledgement = (occurrences: number) =>
+      DeletePackageAcknowledgement.make({
+        path: "packages/consumer/README.md",
+        text: README_LINE,
+        reason: README_REASON,
+        occurrences,
+      });
+
+    it.effect("counts identical acknowledged lines in the doctor against the entry's occurrences", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeDeletedDeployLayout([
+            ["packages/consumer/README.md", `${README_LINE}\n\n${README_LINE}\n`],
+          ]);
+
+          const once = yield* inspectTargetAtRoot(
+            repoRoot,
+            rootDeployTarget,
+            acknowledgedPolicy([readmeAcknowledgement(1)])
+          );
+          expect(statusOf(once, "authored-references")).toBe("residue");
+          const twice = yield* inspectTargetAtRoot(
+            repoRoot,
+            rootDeployTarget,
+            acknowledgedPolicy([readmeAcknowledgement(2)])
+          );
+          expect(statusOf(twice, "authored-references")).toBe("clean");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("keeps an acknowledged root script clean in the doctor and reports another script", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const manifest = (scripts: string) =>
+            `{ "name": "fixture", "private": true, "workspaces": ["packages/tooling/deploy/x", "packages/consumer"], "scripts": ${scripts} }\n`;
+          const repoRoot = yield* writeDeletedDeployLayout([
+            ["package.json", manifest(`{\n    "build:deploy": "${BUILD_COMMAND}"\n  }`)],
+          ]);
+          const acknowledgedOccurrences = acknowledgedPolicy([
+            DeletePackageAcknowledgement.make({
+              path: "package.json",
+              script: O.some("build:deploy"),
+              text: BUILD_COMMAND,
+              reason: SCRIPT_REASON,
+            }),
+          ]);
+
+          const unacknowledged = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(evidenceOf(unacknowledged, "authored-references")).toStrictEqual(["package.json"]);
+          const acknowledged = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget, acknowledgedOccurrences);
+          expect(statusOf(acknowledged, "authored-references")).toBe("clean");
+
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.writeFileString(
+            "package.json",
+            manifest(`{\n    "build:deploy": "${BUILD_COMMAND}",\n    "rebuild:deploy": "${BUILD_COMMAND}"\n  }`)
+          );
+          const residue = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget, acknowledgedOccurrences);
+          expect(evidenceOf(residue, "authored-references")).toStrictEqual(["package.json"]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("keeps every root script naming the target when only one is acknowledged", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeLiveDeployFixture([[ACK_FILE, ackFile("@beep/deploy", [README_ENTRY, SCRIPT_ENTRY])]]);
+          yield* writeRootScripts(`{ "build:deploy": "${BUILD_COMMAND}", "test:deploy": "bun run --cwd deploy test" }`);
+
+          const { exit, logs, errors } = yield* dryRun;
+          expectReportedExit(exit);
+          expect(logs).toContain("[delete-package] ACK 2 acknowledged dependent hit(s):");
+          expect(logs).toContain("  - script: @beep/root package.json#test:deploy");
+          expect(errors).toStrictEqual([
+            "[delete-package] REFUSE [dependent/hard] 1 unacknowledged production/test/script/path dependent hit(s); only file-path and script hits can be acknowledged.",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("needs one acknowledgement per root script when two scripts share a command", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeLiveDeployFixture([[ACK_FILE, ackFile("@beep/deploy", [README_ENTRY, SCRIPT_ENTRY])]]);
+          yield* writeRootScripts(`{ "build:deploy": "${BUILD_COMMAND}", "rebuild:deploy": "${BUILD_COMMAND}" }`);
+
+          const oneEntry = yield* dryRun;
+          expectReportedExit(oneEntry.exit);
+          expect(oneEntry.errors).toStrictEqual([
+            "[delete-package] REFUSE [dependent/hard] 1 unacknowledged production/test/script/path dependent hit(s); only file-path and script hits can be acknowledged.",
+          ]);
+
+          yield* fs.writeFileString(
+            ACK_FILE,
+            ackFile("@beep/deploy", [README_ENTRY, ackEntry("package.json", BUILD_COMMAND, SCRIPT_REASON, 2)])
+          );
+          const byCommand = yield* Effect.exit(runDeletePackage(["deploy", "--dry-run", "--acknowledge", ACK_FILE]));
+          expectReportedExit(byCommand);
+          const byCommandErrors = yield* TestConsole.errorLines;
+          expect(
+            linesIncluding(
+              byCommandErrors,
+              "package.json line `bun run --cwd deploy build` names the root script at package.json#build:deploy by its command alone; add its `script` name."
+            )
+          ).toBe(true);
+
+          yield* fs.writeFileString(
+            ACK_FILE,
+            ackFile("@beep/deploy", [
+              README_ENTRY,
+              SCRIPT_ENTRY,
+              scriptEntry("rebuild:deploy", BUILD_COMMAND, SCRIPT_REASON),
+            ])
+          );
+          const perScript = yield* Effect.exit(runDeletePackage(["deploy", "--dry-run", "--acknowledge", ACK_FILE]));
+          assertTrue(Exit.isSuccess(perScript), Exit.isFailure(perScript) ? Cause.pretty(perScript.cause) : undefined);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("refuses an entry listed twice", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeLiveDeployFixture([
+            [ACK_FILE, ackFile("@beep/deploy", [README_ENTRY, SCRIPT_ENTRY, README_ENTRY])],
+          ]);
+
+          const { exit, errors } = yield* dryRun;
+          expectReportedExit(exit);
+          expect(errors).toStrictEqual([
+            "[delete-package] REFUSE [acknowledgement/hard] packages/consumer/README.md line `Reads `deploy/src/index.ts`.` is listed more than once; merge it into one entry.",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
+
+  describe("delete-package hits without a line stay distinct", () => {
+    const hitRows = (report: DependentsReport): ReadonlyArray<string> =>
+      A.map(report.hits, (hit) => `${hit.kind}|${hit.owner}|${hit.file}`);
+
+    const writeManifestFixture = Effect.fn("writeManifestFixture")(function* (
+      workspaces: ReadonlyArray<string>,
+      files: ReadonlyArray<readonly [string, string]>
+    ) {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* fs.realPath(".");
+      yield* fs.writeFileString(
+        "package.json",
+        `{ "name": "fixture", "private": true, "workspaces": [${A.join(
+          A.map(workspaces, (workspace) => `"${workspace}"`),
+          ", "
+        )}] }\n`
+      );
+      yield* fs.writeFileString("bun.lock", "");
+      yield* Effect.forEach(files, ([file, content]) =>
+        Effect.andThen(fs.makeDirectory(path.dirname(file), { recursive: true }), fs.writeFileString(file, content))
+      );
+      yield* gitFixture(repoRoot);
+      return repoRoot;
+    });
+
+    const deployManifest: readonly [string, string] = [
+      "deploy/package.json",
+      '{ "name": "@beep/deploy", "private": true }\n',
+    ];
+
+    it.effect("reports a whole-file hit for each root policy file", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeManifestFixture(
+            ["deploy"],
+            [deployManifest, ["turbo.json", '{ "inputs": ["deploy/**"] }\n'], ["lefthook.yml", "glob: deploy/**\n"]]
+          );
+          const report = yield* dependentsOfAtRoot(repoRoot, rootDeployTarget);
+          expect(hitRows(report)).toStrictEqual([
+            "file-path|@beep/root|lefthook.yml",
+            "file-path|@beep/root|turbo.json",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("reports a manifest hit for each owner and each dependency bucket", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeManifestFixture(
+            ["deploy", "packages/a", "packages/b"],
+            [
+              deployManifest,
+              [
+                "packages/a/package.json",
+                '{ "name": "@beep/a", "private": true, "dependencies": { "@beep/deploy": "workspace:*" }, "devDependencies": { "@beep/deploy": "workspace:*" } }\n',
+              ],
+              [
+                "packages/b/package.json",
+                '{ "name": "@beep/b", "private": true, "dependencies": { "@beep/deploy": "workspace:*" } }\n',
+              ],
+            ]
+          );
+          const report = yield* dependentsOfAtRoot(repoRoot, rootDeployTarget);
+          expect(A.filter(hitRows(report), Str.startsWith("manifest-"))).toStrictEqual([
+            "manifest-dev|@beep/a|packages/a/package.json",
+            "manifest-prod|@beep/a|packages/a/package.json",
+            "manifest-prod|@beep/b|packages/b/package.json",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("reports a path hit for each descendant workspace", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeManifestFixture(
+            ["deploy", "deploy/one", "deploy/two"],
+            [
+              deployManifest,
+              ["deploy/one/package.json", '{ "name": "@beep/deploy-one", "private": true }\n'],
+              ["deploy/two/package.json", '{ "name": "@beep/deploy-two", "private": true }\n'],
+            ]
+          );
+          const report = yield* dependentsOfAtRoot(repoRoot, rootDeployTarget);
+          expect(hitRows(report)).toStrictEqual([
+            "file-path|@beep/deploy-one|deploy/one/package.json",
+            "file-path|@beep/deploy-two|deploy/two/package.json",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("reports a script hit for each root script, even with one command", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const repoRoot = yield* writeManifestFixture(["deploy"], [deployManifest]);
+          yield* fs.writeFileString(
+            "package.json",
+            '{ "name": "fixture", "private": true, "workspaces": ["deploy"], "scripts": { "a": "bun run --cwd deploy build", "b": "bun run --cwd deploy build" } }\n'
+          );
+          const report = yield* dependentsOfAtRoot(repoRoot, rootDeployTarget);
+          expect(A.map(report.hits, (hit) => `${hit.kind}|${O.getOrElse(hit.script, () => "")}`)).toStrictEqual([
+            "script|a",
+            "script|b",
+          ]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -1914,6 +2185,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ["an absolute path", { ...entry, path: "/etc/passwd" }],
       ["a parent-directory path", { ...entry, path: "packages/../../outside.md" }],
       ["a zero occurrence count", { ...entry, occurrences: 0 }],
+      ["a script entry outside package.json", { ...entry, script: "build" }],
     ];
 
     it.effect.each(invalidEntries)("rejects %s", ([, invalid]) =>

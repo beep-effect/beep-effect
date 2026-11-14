@@ -8,7 +8,7 @@ import * as Path from "effect/Path";
 import { RegistrationGeometryError } from "./RegistrationGeometry.errors.ts";
 import { planForwardForTarget, planInverseForTarget, surfacesForTarget } from "./RegistrationGeometry.plan.ts";
 import { dependentsOfAtRoot, inspectTargetAtRoot } from "./RegistrationGeometry.probes.ts";
-import type { AcknowledgedLine } from "./RegistrationGeometry.probes.ts";
+import type { AcknowledgedOccurrences } from "./RegistrationGeometry.probes.ts";
 import type {
   DependentsReport,
   RegistrationObservation,
@@ -106,14 +106,14 @@ export class RegistrationGeometryService extends Context.Service<
  *
  * @param repoRoot - Repository root that inspection and dependent scans resolve against.
  * @param executePlan - Flag-aware executor that performs a plan's file operations.
- * @param isAcknowledgedLine - Acknowledged `(file, trimmed line)` pairs for `inspect` and `apply`.
+ * @param acknowledgedOccurrences - Acknowledged occurrences per `(file, trimmed line)` for `inspect` and `apply`.
  * @category factories
  * @since 0.0.0
  */
 export const makeRegistrationGeometryService = Effect.fn("RegistrationGeometry.makeService")(function* <E, R>(
   repoRoot: string,
   executePlan: (plan: RegistrationPlan) => Effect.Effect<void, E, R>,
-  isAcknowledgedLine?: AcknowledgedLine
+  acknowledgedOccurrences?: AcknowledgedOccurrences
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -121,7 +121,7 @@ export const makeRegistrationGeometryService = Effect.fn("RegistrationGeometry.m
   const git = yield* Git;
   const executorContext = yield* Effect.context<R>();
   const inspect = (target: RegistrationTarget) =>
-    inspectTargetAtRoot(repoRoot, target, isAcknowledgedLine).pipe(
+    inspectTargetAtRoot(repoRoot, target, acknowledgedOccurrences).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
       Effect.provideService(Path.Path, path),
       Effect.provideService(Git, git),

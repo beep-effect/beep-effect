@@ -8,7 +8,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -146,37 +146,41 @@ const readVisibleFile = Effect.fn("RegistrationGeometry.readVisibleFile")(functi
 });
 
 /**
- * Whether a trimmed matched line in a repository-relative file is an
- * acknowledged hit the doctor treats as clean.
+ * How many occurrences of a trimmed line in a repository-relative file are
+ * acknowledged, so the doctor treats up to that many matching lines as clean.
  *
  * **Example** (Acknowledge nothing)
  *
  * ```ts
- * import type { AcknowledgedLine } from "@beep/repo-cli/test/DeletePackage"
+ * import type { AcknowledgedOccurrences } from "@beep/repo-cli/test/DeletePackage"
  *
- * const none: AcknowledgedLine = () => false
- * console.log(none("package.json", '"kind": "deploy",')) // false
+ * const none: AcknowledgedOccurrences = () => 0
+ * console.log(none("package.json", '"kind": "deploy",')) // 0
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type AcknowledgedLine = (file: string, text: string) => boolean;
+export type AcknowledgedOccurrences = (file: string, text: string) => number;
 
-const noAcknowledgedLine: AcknowledgedLine = () => false;
+const noAcknowledgedOccurrences: AcknowledgedOccurrences = () => 0;
 
-// A file is authored-reference evidence unless every line naming the target is acknowledged. A file
-// whose text matches but no single line does keeps counting, as it did before evidence was line-aware.
+// A file is authored-reference evidence unless every line naming the target is acknowledged, counted per
+// distinct trimmed text: two identical lines need an allowance of two. A file whose text matches but no
+// single line does keeps counting, as it did before evidence was line-aware.
 const hasUnacknowledgedMention = (
   file: string,
   content: string,
   mentionsNeedle: (text: string) => boolean,
-  isAcknowledgedLine: AcknowledgedLine
+  acknowledgedOccurrences: AcknowledgedOccurrences
 ): boolean => {
-  const mentioningLines = A.filter(Str.split("\n")(content), mentionsNeedle);
+  const mentioningLines = A.map(A.filter(Str.split("\n")(content), mentionsNeedle), Str.trim);
   return (
     A.isReadonlyArrayEmpty(mentioningLines) ||
-    A.some(mentioningLines, (line) => !isAcknowledgedLine(file, Str.trim(line)))
+    A.some(
+      R.toEntries(A.groupBy(mentioningLines, identity)),
+      ([text, lines]) => A.length(lines) > acknowledgedOccurrences(file, text)
+    )
   );
 };
 
@@ -261,7 +265,7 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
   surface: RegistrationSurface,
   matchNeedles: NeedleMatcher,
   visibleFiles: ReadonlyArray<string>,
-  isAcknowledgedLine: AcknowledgedLine
+  acknowledgedOccurrences: AcknowledgedOccurrences
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -326,7 +330,7 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
         if (
           O.isSome(content) &&
           mentionsNeedle(content.value) &&
-          hasUnacknowledgedMention(relative, content.value, mentionsNeedle, isAcknowledgedLine)
+          hasUnacknowledgedMention(relative, content.value, mentionsNeedle, acknowledgedOccurrences)
         )
           evidence = A.append(evidence, relative);
       }
@@ -412,8 +416,8 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
  * `Git`. Candidate files come from one git-visible listing (tracked plus
  * untracked, not ignored), so gitignored build output is never evidence; only
  * the runtime-artifact probe walks the gitignored `.beep/ci` tree. An
- * `authored-reference` file whose only matching lines are acknowledged reads
- * `clean`.
+ * `authored-reference` file whose only matching lines are acknowledged, no more
+ * often than acknowledged, reads `clean`.
  *
  * **Gotchas**
  *
@@ -442,21 +446,21 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
  *
  * @param repoRoot - Absolute or working-directory-relative repository root.
  * @param target - Package whose surfaces are probed.
- * @param isAcknowledgedLine - Acknowledged `(file, trimmed line)` pairs; none by default.
+ * @param acknowledgedOccurrences - Acknowledged occurrences per `(file, trimmed line)`; none by default.
  * @category queries
  * @since 0.0.0
  */
 export const inspectTargetAtRoot = Effect.fn("RegistrationGeometry.inspectTargetAtRoot")(function* (
   repoRoot: string,
   target: RegistrationTarget,
-  isAcknowledgedLine: AcknowledgedLine = noAcknowledgedLine
+  acknowledgedOccurrences: AcknowledgedOccurrences = noAcknowledgedOccurrences
 ) {
   const workspacePaths = yield* workspacePathsAt(repoRoot);
   const matchNeedles = needleMatcherFor(target, workspacePaths);
   const visibleFiles = yield* gitVisibleFilesAt(repoRoot);
   return yield* Effect.forEach(
     surfacesForTarget(target),
-    (surface) => inspectSurface(repoRoot, target, surface, matchNeedles, visibleFiles, isAcknowledgedLine),
+    (surface) => inspectSurface(repoRoot, target, surface, matchNeedles, visibleFiles, acknowledgedOccurrences),
     { concurrency: 8 }
   );
 });
@@ -479,8 +483,13 @@ const manifestKindFor = (bucket: string): DependentHitKind =>
         ? "manifest-peer"
         : "manifest-optional";
 
+// One key per distinct dependent. A line-located hit is one line of one kind in one file, so
+// (kind, owner, file, line) names it. A hit without a line is unique by construction for every kind but
+// `script`: a manifest edge per (owner manifest, bucket), a root policy file per file, a descendant
+// workspace per manifest path. Root scripts all share `package.json` with no line, so the script name
+// keys them; without it every script after the first naming the target vanished from the report.
 const hitKey = (hit: DependentHit): string =>
-  `${hit.kind}\u0000${hit.owner}\u0000${hit.file}\u0000${O.getOrElse(hit.line, () => 0)}`;
+  `${hit.kind}\u0000${hit.owner}\u0000${hit.file}\u0000${O.getOrElse(hit.line, () => 0)}\u0000${O.getOrElse(hit.script, () => Str.empty)}`;
 
 const ownerForFile = (file: string, workspaces: ReadonlyArray<readonly [name: string, dir: string]>): string =>
   pipe(
@@ -659,7 +668,7 @@ const rootScriptHits = (
   pipe(
     R.toEntries(scripts),
     A.filter(([, command]) => mentionsTarget(command)),
-    A.map(([, command]) =>
+    A.map(([name, command]) =>
       DependentHit.make({
         kind: "script",
         owner: "@beep/root",
@@ -667,6 +676,7 @@ const rootScriptHits = (
         line: O.none(),
         direct: true,
         text: O.some(Str.trim(command)),
+        script: O.some(name),
       })
     )
   );
