@@ -28,6 +28,17 @@ on:
         type: string
         default: ""
 
+      lane_skips:
+        description: >-
+          Comma-separated heavy lane ids Heavy Admission skips for a reason
+          other than the route: every lane on a goals-only diff, and docgen on
+          a pull request whose diff has no Docgen-relevant path. Each lane job
+          skips at job level before a runner boots. Callers pass it from
+          goals/heavy-pool-diet slice 6; until then the in-VM lane gate decides.
+        required: false
+        type: string
+        default: ""
+
       producer_inspection:
         description: >-
           Run only the credential-free protected source inspection for the
@@ -105,7 +116,14 @@ jobs:
     name: Lint Policy
     # No matrix: GitHub appends matrix values even to an active literal name.
     # Static names preserve both active and skipped required check contexts.
-    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
+    # Ruling D11 (goals/heavy-pool-diet): the required lanes take the cap-2
+    # heavy pool first; `!cancelled()` still runs and reports Lint Policy when
+    # one of them fails or skips. Build is not a required lane, so not needed.
+    needs: [check, docgen, doctest]
+    # HOST-06: a lane in `lane_skips`, or a pull request lane in `route_skips`,
+    # is skipped here before a Spot VM boots; the skipped literal-named job
+    # still reports its exact `Heavy / <lane>` context.
+    if: ${{ !cancelled() && inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation && !contains(format(',{0},', inputs.lane_skips), ',lint-policy,') && (github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',lint-policy,')) }}
     runs-on: beep-ec2-heavy
     timeout-minutes: 50
     environment: ${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}
@@ -332,7 +350,7 @@ jobs:
 
   check:
     name: Check
-    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
+    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation && !contains(format(',{0},', inputs.lane_skips), ',check,') && (github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',check,')) }}
     runs-on: beep-ec2-heavy
     timeout-minutes: 120
     environment: ${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}
@@ -352,7 +370,7 @@ jobs:
 
   docgen:
     name: Docgen
-    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
+    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation && !contains(format(',{0},', inputs.lane_skips), ',docgen,') && (github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',docgen,')) }}
     runs-on: beep-ec2-heavy
     timeout-minutes: 60
     environment: ${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}
@@ -368,7 +386,7 @@ jobs:
 
   doctest:
     name: Doctest
-    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
+    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation && !contains(format(',{0},', inputs.lane_skips), ',doctest,') && (github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',doctest,')) }}
     runs-on: beep-ec2-heavy
     timeout-minutes: 60
     environment: ${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}
@@ -386,7 +404,7 @@ jobs:
   # pushes stay unscoped and own cache writes; this path owns fleet access.
   build:
     name: Build
-    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}
+    if: ${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation && !contains(format(',{0},', inputs.lane_skips), ',build,') && (github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',build,')) }}
     runs-on: beep-ec2-heavy
     timeout-minutes: 40
     environment: ${{ github.event_name == 'push' && inputs.admitted && 'turbo-cache-write' || null }}

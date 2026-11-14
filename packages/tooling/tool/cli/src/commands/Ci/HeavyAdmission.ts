@@ -37,7 +37,7 @@ import * as Console from "effect/Console";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -45,8 +45,11 @@ import * as Str from "effect/String";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import { patientGit } from "../../internal/repo-run/PatientGit.ts";
 import { CiCommandError } from "./Ci.errors.ts";
+import { CI_LANE_ID_VALUES, CiLaneId } from "./CiLane.ts";
 import { isCiHeavyLane } from "./CiLaneJobs.ts";
 import { isHeavyDocsOnlyPath } from "./CiOperational.schemas.ts";
+import { classifyChangeProfile, readCheckoutCiPatterns, readPinnedPrDiff } from "./CiOperational.service.ts";
+import type { CiOperationalPatterns } from "./CiOperational.schemas.ts";
 
 export { heavyDocsOnlyPattern, isHeavyDocsOnlyPath } from "./CiOperational.schemas.ts";
 
@@ -54,6 +57,7 @@ import { CHANGE_ATOM_KIND_VALUES, RouteLaneDecision, RouteSentinel } from "./Rou
 import { ChangeClassifier, ClassifyInput } from "./Route.service.ts";
 import { routeFootprintDigest } from "./RouteCensus.ts";
 import { routeLaneDecisions } from "./RouteFootprints.ts";
+import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliId.create("commands/Ci/HeavyAdmission");
@@ -255,8 +259,21 @@ export class HeavyAdmissionRoute extends S.Opaque<HeavyAdmissionRoute, { readonl
 const ROUTE_READ_TIMEOUT = Duration.minutes(3);
 
 const unavailableRoute = HeavyAdmissionRoute.make({ lanes: [], receipt: "route-unavailable" });
+const heavyAdmissionLaneSkipsDefault = A.empty<CiLaneId>();
 const RouteReceiptJson = S.fromJsonString(S.Unknown);
 const decodeRouteSentinel = S.decodeUnknownEffect(S.fromJsonString(RouteSentinel));
+
+// An admission read never blocks Heavy: a stall past the bound or any failure falls back to running
+// every lane, and the cause goes to stderr (stdout carries the admission JSON) so a read that breaks
+// on every PR stays visible in the job log.
+const failOpenWithin =
+  <A>(readTimeout: Duration.Input, label: string, fallback: A) =>
+  <E, R>(read: Effect.Effect<A, E, R>): Effect.Effect<A, never, R> =>
+    read.pipe(
+      Effect.timeout(readTimeout),
+      Effect.tapCause((cause) => Console.error(`${label}; every heavy lane runs: ${Cause.pretty(cause)}`)),
+      Effect.catchCause(() => Effect.succeed(fallback))
+    );
 
 /**
  * The admission decision as data: verdict, its sources, and the docs-only flag.
@@ -289,6 +306,10 @@ export class HeavyAdmission extends S.Opaque<HeavyAdmission, { readonly brand: u
     route: HeavyAdmissionRoute.pipe(
       S.withConstructorDefault(Effect.succeed(unavailableRoute)),
       S.withDecodingDefaultTypeKey(Effect.succeed(unavailableRoute))
+    ),
+    laneSkips: S.Array(CiLaneId).pipe(
+      S.withConstructorDefault(Effect.succeed(heavyAdmissionLaneSkipsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(heavyAdmissionLaneSkipsDefault))
     ),
   }).pipe(
     $I.annoteSchema("HeavyAdmission", {
@@ -388,8 +409,12 @@ class GhEventPullRequest extends S.Opaque<GhEventPullRequest, { readonly brand: 
       S.withConstructorDefault(Effect.succeed(ghEventPullRequestLabelsDefault)),
       S.withDecodingDefaultTypeKey(Effect.succeed(ghEventPullRequestLabelsDefault))
     ),
-    head: S.optionalKey(S.Struct({ repo: S.NullOr(S.Struct({ full_name: S.String })) })),
-    base: S.Struct({ ref: S.String, repo: S.optionalKey(S.Struct({ full_name: S.String })) }),
+    head: S.optionalKey(S.Struct({ repo: S.NullOr(S.Struct({ full_name: S.String })), sha: S.optionalKey(S.String) })),
+    base: S.Struct({
+      ref: S.String,
+      repo: S.optionalKey(S.Struct({ full_name: S.String })),
+      sha: S.optionalKey(S.String),
+    }),
   }).pipe(
     $I.annoteSchema("GhEventPullRequest", {
       description: "The pull_request fields of a GitHub event payload that admission reads.",
@@ -657,15 +682,188 @@ export const readHeavyAdmissionRoute = Effect.fn("Ci.readHeavyAdmissionRoute")(f
       ),
     });
     return receipt.length > 8192 ? unavailableRoute : HeavyAdmissionRoute.make({ lanes, receipt });
+  }).pipe(failOpenWithin(readTimeout, "verification route unavailable", unavailableRoute));
+});
+
+/**
+ * The Docgen relevance expression, as the `grep -E` source text `heavy.yml`'s
+ * `Determine lane execution` step greps the pinned PR diff with.
+ *
+ * **Details**
+ *
+ * `ci-runner-security.test.ts` pins the workflow's text to this string until
+ * the in-VM decision is retired.
+ *
+ * **Example** (Print the expression)
+ *
+ * ```ts
+ * import { HEAVY_DOCGEN_RELEVANT_SOURCE } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(HEAVY_DOCGEN_RELEVANT_SOURCE.startsWith("(^apps/")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HEAVY_DOCGEN_RELEVANT_SOURCE = "(^apps/|^packages/|^infra/|/docgen\\.json$|\\.(ts|tsx|mts|cts|md)$)";
+
+/**
+ * The Docgen relevance pattern: a pull-request path matching it (`grep -E`
+ * semantics, anywhere in the line) keeps the Docgen lane running.
+ *
+ * **Example** (A source file is Docgen-relevant, a workflow file is not)
+ *
+ * ```ts
+ * import { heavyDocgenRelevantPattern } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(heavyDocgenRelevantPattern.test("packages/a/src/index.ts")) // true
+ * console.log(heavyDocgenRelevantPattern.test(".github/workflows/heavy.yml")) // false
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const heavyDocgenRelevantPattern = new RegExp(HEAVY_DOCGEN_RELEVANT_SOURCE, "u");
+
+/**
+ * The heavy lanes `heavy.yml` runs, in lane-id order.
+ *
+ * **Example** (List the heavy lanes)
+ *
+ * ```ts
+ * import { HEAVY_LANE_IDS } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(HEAVY_LANE_IDS) // ["build", "check", "docgen", "doctest", "lint-policy"]
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const HEAVY_LANE_IDS: ReadonlyArray<CiLaneId> = A.filter(CI_LANE_ID_VALUES, isCiHeavyLane);
+
+/**
+ * Decide which heavy lanes skip for a reason other than the verification route.
+ *
+ * **Details**
+ *
+ * Reproduces the in-VM `Determine lane execution` step of `heavy.yml`, so the
+ * caller can skip those lanes at job level before a runner boots. Only a
+ * `pull_request` with a readable pinned diff (`Some`) can skip: every heavy
+ * lane when the change profile is goals-only, and Docgen when no changed path
+ * matches {@link heavyDocgenRelevantPattern} (an empty diff included). A `None`
+ * diff or `None` patterns skips nothing for that reason, so an unreadable input
+ * never removes a lane.
+ *
+ * **Example** (Goals-only, Docgen-irrelevant and unreadable diffs)
+ *
+ * ```ts
+ * import { decideHeavyLaneSkips, ciOperationalPatterns } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const patterns = O.some(ciOperationalPatterns)
+ * console.log(decideHeavyLaneSkips("pull_request", O.some(["goals/x/PLAN.md"]), patterns).length) // 5
+ * console.log(decideHeavyLaneSkips("pull_request", O.some([".github/workflows/heavy.yml"]), patterns)) // ["docgen"]
+ * console.log(decideHeavyLaneSkips("pull_request", O.none(), patterns)) // []
+ * console.log(decideHeavyLaneSkips("push", O.some([]), patterns)) // []
+ * ```
+ *
+ * @param eventName - The GitHub event.
+ * @param paths - The pinned PR diff lines, or `None` when unreadable.
+ * @param patterns - The checkout's CI pattern data, or `None` when unreadable.
+ * @returns The skipped heavy lane ids, in {@link HEAVY_LANE_IDS} order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const decideHeavyLaneSkips: {
+  (
+    paths: O.Option<ReadonlyArray<string>>,
+    patterns: O.Option<CiOperationalPatterns>
+  ): (eventName: HeavyAdmissionEventName) => ReadonlyArray<CiLaneId>;
+  (
+    eventName: HeavyAdmissionEventName,
+    paths: O.Option<ReadonlyArray<string>>,
+    patterns: O.Option<CiOperationalPatterns>
+  ): ReadonlyArray<CiLaneId>;
+} = dual(
+  3,
+  (
+    eventName: HeavyAdmissionEventName,
+    paths: O.Option<ReadonlyArray<string>>,
+    patterns: O.Option<CiOperationalPatterns>
+  ): ReadonlyArray<CiLaneId> => {
+    if (!HeavyAdmissionEventName.is.pull_request(eventName) || O.isNone(paths)) {
+      return heavyAdmissionLaneSkipsDefault;
+    }
+    const changed = paths.value;
+    const goalsOnly = O.match(patterns, {
+      onNone: () => false,
+      onSome: (data) => classifyChangeProfile(data, changed).goalsOnly,
+    });
+    const docgenIrrelevant = !A.some(changed, (path) => heavyDocgenRelevantPattern.test(path));
+    return A.filter(HEAVY_LANE_IDS, (lane) => goalsOnly || (docgenIrrelevant && CiLaneId.is.docgen(lane)));
+  }
+);
+
+/**
+ * Read the pinned PR diff and the checkout's CI patterns and decide the
+ * non-route heavy lane skips, failing open on every error.
+ *
+ * **Details**
+ *
+ * The base and head SHAs come from the `pull_request` payload, the same
+ * `github.event.pull_request.{base,head}.sha` values `heavy.yml` pins. A
+ * missing SHA, an unreadable diff or pattern file, a stall past the read bound
+ * or any other failure skips nothing for that reason; the cause goes to stderr.
+ * Push and merge-group events never spawn git.
+ *
+ * **Example** (Build the read)
+ *
+ * ```ts
+ * import { HeavyAdmissionReadInput, readHeavyLaneSkips } from "@beep/repo-cli/commands/Ci"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readHeavyLaneSkips(HeavyAdmissionReadInput.make({ eventName: "push", cwd: "." })))) // true
+ * ```
+ *
+ * @param input - Resolved event name, optional payload path, and the checkout.
+ * @param readTimeout - The bound on the whole read.
+ * @returns The skipped heavy lane ids.
+ * @category services
+ * @since 0.0.0
+ */
+export const readHeavyLaneSkips = Effect.fn("Ci.readHeavyLaneSkips")(function* (
+  input: HeavyAdmissionReadInput,
+  readTimeout: Duration.Input = ROUTE_READ_TIMEOUT
+): Effect.fn.Return<
+  ReadonlyArray<CiLaneId>,
+  never,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
+  if (!HeavyAdmissionEventName.is.pull_request(input.eventName)) {
+    return heavyAdmissionLaneSkipsDefault;
+  }
+  return yield* Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Effect.fromOption(input.eventPath);
+    const payload = yield* fs.readFileString(path).pipe(Effect.flatMap(decodeGhPullRequestEventPayload));
+    const base = O.filter(O.fromUndefinedOr(payload.pull_request.base.sha), Str.isNonEmpty);
+    const head = O.filter(O.fromUndefinedOr(payload.pull_request.head?.sha), Str.isNonEmpty);
+    const paths = yield* O.match(O.all([base, head]), {
+      onNone: () => Effect.succeedNone,
+      onSome: ([baseSha, headSha]) => readPinnedPrDiff(baseSha, headSha, O.some(input.cwd)),
+    });
+    if (O.isNone(paths)) {
+      yield* Console.error("heavy lane skips: pinned PR diff unavailable; every heavy lane runs");
+    }
+    const patterns = yield* readCheckoutCiPatterns(input.cwd).pipe(
+      Effect.tapCause((cause) =>
+        Console.error(`heavy lane skips: CI patterns unreadable; goals-only skips nothing: ${Cause.pretty(cause)}`)
+      ),
+      Effect.option
+    );
+    return decideHeavyLaneSkips(input.eventName, paths, patterns);
   }).pipe(
-    // The route never blocks Heavy: a stall past the bound or any failure falls back to running
-    // every lane, and the cause goes to stderr (stdout carries the admission JSON) so a route
-    // that breaks on every PR stays visible in the job log.
-    Effect.timeout(readTimeout),
-    Effect.tapCause((cause) =>
-      Console.error(`verification route unavailable; every heavy lane runs: ${Cause.pretty(cause)}`)
-    ),
-    Effect.catchCause(() => Effect.succeed(unavailableRoute))
+    failOpenWithin<ReadonlyArray<CiLaneId>>(readTimeout, "heavy lane skips unavailable", heavyAdmissionLaneSkipsDefault)
   );
 });
 
@@ -679,11 +877,12 @@ export const readHeavyAdmissionRoute = Effect.fn("Ci.readHeavyAdmissionRoute")(f
  *
  * const admission = HeavyAdmission.make({ verdict: "run", admitted: true, sources: ["label"], docsOnly: false, changedPathCount: 2 })
  * console.log(heavyAdmissionGithubOutputs(admission))
- * // [["verdict","run"],["admitted","true"],["docs_only","false"],["sources","label"],["route_skips",""],["route_receipt","route-unavailable"]]
+ * // [["verdict","run"],["admitted","true"],["docs_only","false"],["sources","label"],["route_skips",""],["route_receipt","route-unavailable"],["lane_skips",""]]
  * ```
  *
  * @param admission - The decided admission.
- * @returns Admission outputs plus comma-separated `route_skips` and the single-line JSON `route_receipt`.
+ * @returns Admission outputs plus comma-separated `route_skips`, the single-line JSON `route_receipt`, and
+ * comma-separated `lane_skips`.
  * @category formatting
  * @since 0.0.0
  */
@@ -703,6 +902,7 @@ export const heavyAdmissionGithubOutputs = (admission: HeavyAdmission): Readonly
     ),
   ],
   ["route_receipt", admission.route.receipt],
+  ["lane_skips", A.join(admission.laneSkips, ",")],
 ];
 
 /**

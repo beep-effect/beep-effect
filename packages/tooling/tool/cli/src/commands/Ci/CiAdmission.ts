@@ -8,8 +8,8 @@
  * heavy workflow is called. It reads `GITHUB_EVENT_NAME` / `GITHUB_EVENT_PATH`
  * (overridable by `--event-name` / `--event-path`), diffs against
  * `origin/<base>`, prints the {@link HeavyAdmission} JSON, and with
- * `--github-output` publishes the `verdict`, `admitted`, `docs_only` and
- * `sources` step outputs to `$GITHUB_OUTPUT` through `ActionOutputs`. Every verdict exits 0; only unreadable
+ * `--github-output` publishes the `verdict`, `admitted`, `docs_only`,
+ * `sources`, `route_skips`, `route_receipt` and `lane_skips` step outputs to `$GITHUB_OUTPUT` through `ActionOutputs`. Every verdict exits 0; only unreadable
  * inputs exit non-zero.
  *
  * @since 0.0.0
@@ -37,6 +37,7 @@ import {
   heavyAdmissionGithubOutputs,
   readHeavyAdmissionEvent,
   readHeavyAdmissionRoute,
+  readHeavyLaneSkips,
   renderHeavyAdmissionSummary,
 } from "./HeavyAdmission.ts";
 import { ChangeClassifierLive } from "./RouteClassify.ts";
@@ -44,6 +45,7 @@ import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ChangeClassifier } from "./Route.service.ts";
 
@@ -135,6 +137,7 @@ export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
   HeavyAdmission,
   CiCommandError,
   | FileSystem.FileSystem
+  | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Git
   | ActionOutputs
@@ -151,10 +154,17 @@ export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
   const event = yield* readHeavyAdmissionEvent(
     HeavyAdmissionReadInput.make({ eventName, eventPath: input.eventPath, base: input.base, cwd: input.cwd })
   );
-  const route = yield* readHeavyAdmissionRoute(
-    HeavyAdmissionReadInput.make({ eventName, eventPath: input.eventPath, base: input.base, cwd: input.cwd })
-  );
-  const admission = HeavyAdmission.make({ ...decideHeavyAdmission(event), route });
+  const readInput = HeavyAdmissionReadInput.make({
+    eventName,
+    eventPath: input.eventPath,
+    base: input.base,
+    cwd: input.cwd,
+  });
+  const route = yield* readHeavyAdmissionRoute(readInput);
+  // HOST-06: the goals-only and Docgen skips heavy.yml's in-VM lane gate takes, decided here so the
+  // caller can skip those lanes at job level before a runner boots. Fails open to no skip.
+  const laneSkips = yield* readHeavyLaneSkips(readInput);
+  const admission = HeavyAdmission.make({ ...decideHeavyAdmission(event), route, laneSkips });
   yield* input.json
     ? HeavyAdmissionJson.encode(admission).pipe(
         CiCommandError.mapError("Failed to encode the heavy admission verdict."),

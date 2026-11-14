@@ -8,11 +8,11 @@
   ],
   "reviews": {
     "//": {
-      "reviewer": "Claude Opus 5.5 (certainty-scorecard slice 5b, feat/certainty-admission-pressure-fields)",
-      "reason": "Record the root drift of //#lint:policy-fingerprint: its inputs gain packages/tooling/library/palantiri/src/** because the admission scheduler now imports the host-pressure parcel's percent schema and PSI parser from @beep/palantiri, so a change to them must invalidate the policy-lint cache. Commands, cache flags, outputs and environment are unchanged; inputs only grow; no qualification or exception.",
+      "reviewer": "Claude Opus 5.5 (heavy-pool-diet slice 3, perf/heavy-pool-diet-lanes-first)",
+      "reason": "Record the policy-fingerprint input drift from Heavy Admission importing the change profile readers: the root task gains CiOperational.service.ts and @beep/github-reporting source as generated inputs. No command, output, environment or cache flag changed; no qualification is granted.",
       "basis": {
-        "path": "goals/certainty-scorecard/research/slice-5b-cache-review.md",
-        "sha256": "d4528aa167132df5280023727b6c7f8a58c85af3522c84d9da83c84a0949ef62"
+        "path": "docs/reports/heavy-pool-diet-lane-skips-cache-review-2026-11-13.md",
+        "sha256": "3fd4da242c819aa407056e8f4c267901c3811d60df9ec1534f997a6fff4ab5b2"
       }
     },
     "@beep/acp": {
@@ -3677,6 +3677,7 @@
             "packages/foundation/modeling/github-commands/src/**",
             "packages/foundation/modeling/github-references/package.json",
             "packages/foundation/modeling/github-reporting/package.json",
+            "packages/foundation/modeling/github-reporting/src/**",
             "packages/foundation/modeling/glob/package.json",
             "packages/foundation/modeling/glob/src/**",
             "packages/foundation/modeling/html/package.json",
@@ -132596,7 +132597,7 @@
       },
       {
         "path": "turbo.json",
-        "sha256": "5c99a7cef1b0f9fbdecfac8fdac201e9b99b024e2a2592a1b096d409c9536bbc"
+        "sha256": "d726966784441d4e756ee6f5677b83d12e1cf886dfc070c2a6353f49aceaed67"
       }
     ]
   }

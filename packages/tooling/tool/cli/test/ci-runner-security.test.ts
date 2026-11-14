@@ -3,6 +3,8 @@ import {
   CI_LANE_DESCRIPTORS,
   CiOperationalPatterns,
   ciOperationalPatterns,
+  HEAVY_DOCGEN_RELEVANT_SOURCE,
+  HEAVY_LANE_IDS,
   isHeavyDocsOnlyPath,
   workflowJobContexts,
   workflowPolicyDiagnostics,
@@ -79,6 +81,10 @@ const LANE_WRITE_TOKEN =
   "${{ github.event_name == 'push' && env.BEEP_CI_LANE_USES_TURBO == 'true' && secrets.TURBO_TOKEN || '' }}";
 const SECRET_INPUT_LINES = [...A.map(SECRET_INPUTS, secretInputLine), `turbo-token: ${LANE_WRITE_TOKEN}`];
 const SECRET_REFERENCES = A.map(SECRET_INPUTS, ([, name]) => `secrets.${name}`);
+// Lint Policy's job-level guard: after the required lanes (ruling D11), off for the producer and
+// pilot dispatchers, and skipped before boot by `lane_skips` or a pull request route skip (HOST-06).
+const HEAVY_VERIFY_IF =
+  "${{ !cancelled() && inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation && !contains(format(',{0},', inputs.lane_skips), ',lint-policy,') && (github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',lint-policy,')) }}";
 
 const WorkflowStep = S.Struct({
   name: S.optionalKey(S.String),
@@ -104,6 +110,9 @@ const decodeInspectionPolicy = S.decodeUnknownEffect(
 );
 const encodeJobsFixture = S.encodeEffect(S.fromJsonString(S.Unknown));
 const decodeYamlRecord = S.decodeUnknownEffect(S.Record(S.String, S.Unknown));
+const decodeBranchProtectionContexts = S.decodeUnknownEffect(
+  S.fromJsonString(S.Struct({ requiredStatusChecks: S.Array(S.String) }))
+);
 
 const workflowJobs = Effect.fnUntraced(function* (document: unknown) {
   return yield* decodeWorkflowJobs(yamlAt(document, ["jobs"]));
@@ -1824,6 +1833,69 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   );
 
   it.effect(
+    "orders the required heavy lanes first and skips heavy lanes at job level (ruleset parity ledger)",
+    Effect.fnUntraced(function* () {
+      const { workflow, heavyWorkflow, heavyWorkflowText } = yield* readCredentialPolicySources();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const contexts = yield* fs
+        .readFileString(path.join(repoRoot, "standards/branch-protection-contexts.json"))
+        .pipe(Effect.flatMap(decodeBranchProtectionContexts));
+      const heavyJobs = yield* decodeYamlRecord(yamlAt(heavyWorkflow, ["jobs"]));
+      const checkJobs = yield* decodeYamlRecord(yamlAt(workflow, ["jobs"]));
+      const jobText = (jobs: unknown, job: string, key: string): string => {
+        const value = yamlAt(jobs, [job, key]);
+        return typeof value === "string" ? value : "";
+      };
+      // Every heavy lane job: a literal name (GitHub keeps a skipped job's context only for a literal
+      // name), no matrix, and a job-level guard that skips its own id from `lane_skips` and, on a pull
+      // request, from `route_skips` before a Spot VM boots (HOST-06).
+      const laneJobs = A.filter(R.keys(heavyJobs), (job) =>
+        A.contains(HEAVY_LANE_IDS, yamlAt(heavyJobs, [job, "env", "BEEP_CI_LANE_ID"]))
+      );
+      assert.lengthOf(laneJobs, A.length(HEAVY_LANE_IDS));
+      for (const job of laneJobs) {
+        const lane = String(yamlAt(heavyJobs, [job, "env", "BEEP_CI_LANE_ID"]));
+        const name = jobText(heavyJobs, job, "name");
+        const guard = jobText(heavyJobs, job, "if");
+        assert.notInclude(name, "${{", job);
+        assert.strictEqual(name, yamlAt(heavyJobs, [job, "env", "BEEP_CI_LANE_NAME"]), job);
+        assert.isUndefined(yamlAt(heavyJobs, [job, "strategy"]), job);
+        assert.include(guard, `!contains(format(',{0},', inputs.lane_skips), ',${lane},')`, job);
+        assert.include(
+          guard,
+          `(github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',${lane},'))`,
+          job
+        );
+      }
+      // Ruling D11: Lint Policy needs exactly the required lanes and still reports when one fails or skips.
+      assert.deepStrictEqual(yamlAt(heavyJobs, ["verify", "needs"]), ["check", "docgen", "doctest"]);
+      assertTrue(Str.startsWith("${{ !cancelled() && ")(jobText(heavyJobs, "verify", "if")));
+      assert.isUndefined(yamlAt(heavyJobs, ["build", "needs"]));
+      for (const job of ["check", "docgen", "doctest"]) {
+        assert.isUndefined(yamlAt(heavyJobs, [job, "needs"]), job);
+      }
+      // The input is additive (empty default) so callers that predate it keep today's behaviour.
+      assert.deepStrictEqual(yamlAt(heavyWorkflow, ["on", "workflow_call", "inputs", "lane_skips", "default"]), "");
+      // The in-VM gate still decides until slice 6, on the same Docgen expression admission uses.
+      assert.include(heavyWorkflowText, `grep -Eq '${HEAVY_DOCGEN_RELEVANT_SOURCE}'`);
+      // Ruleset parity ledger: every required `Heavy / *` context maps to one literal-named job,
+      // either a heavy.yml lane job called through check.yml's `Heavy` caller or a check.yml job
+      // that reports the full context itself.
+      const heavyContexts = A.filter(contexts.requiredStatusChecks, Str.startsWith("Heavy / "));
+      assert.isAbove(A.length(heavyContexts), 0);
+      for (const context of heavyContexts) {
+        const lane = Str.slice(Str.length("Heavy / "))(context);
+        const heavyOwners = A.filter(laneJobs, (job) => jobText(heavyJobs, job, "name") === lane);
+        const checkOwners = A.filter(R.keys(checkJobs), (job) => jobText(checkJobs, job, "name") === context);
+        assert.lengthOf([...heavyOwners, ...checkOwners], 1, context);
+      }
+      assert.strictEqual(jobText(checkJobs, "heavy", "name"), "Heavy");
+    })
+  );
+
+  it.effect(
     "gives same-repository pull requests read-only cache access while forks and untrusted events stay local-only",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -2917,9 +2989,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         type: "boolean",
         default: false,
       });
-      expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
-      );
+      expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(HEAVY_VERIFY_IF);
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "if"])).toBe(
         A.join(
           [
@@ -3062,9 +3132,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         type: "boolean",
         default: false,
       });
-      expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
-      );
+      expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(HEAVY_VERIFY_IF);
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "if"])).toBe(
         A.join(
           [
@@ -3201,9 +3269,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         expect(yamlAt(heavy, ["on", "workflow_call", "secrets", name, "required"])).toBe(false);
       }
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "producer_execution", "default"])).toBe(false);
-      expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(
-        "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}"
-      );
+      expect(yamlAt(heavy, ["jobs", "verify", "if"])).toBe(HEAVY_VERIFY_IF);
       expect(yamlAt(heavy, ["jobs", "producer-execute", "if"])).toBe(
         A.join(
           [
