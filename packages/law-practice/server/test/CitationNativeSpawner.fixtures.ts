@@ -316,15 +316,30 @@ export const makeCitationNativeManualClock = Effect.fn("WorkerTest.manualSleep")
 ) {
   const clock = yield* Clock.Clock;
   const requested = yield* Deferred.make<void>();
-  const wake = yield* Deferred.make<void>();
+  let sleeps = A.empty<Deferred.Deferred<void>>();
   const controlled = yield* makeCitationNativeSleepClock((input) =>
     Duration.equals(input, duration)
-      ? Deferred.succeed(requested, undefined).pipe(Effect.andThen(Deferred.await(wake)))
+      ? Effect.gen(function* () {
+          const wake = yield* Deferred.make<void>();
+          sleeps = A.append(sleeps, wake);
+          yield* Deferred.succeed(requested, undefined);
+          yield* Deferred.await(wake);
+        })
       : clock.sleep(input)
+  );
+  const triggerSleep = Effect.fn("WorkerTest.triggerSleep")((index: number) =>
+    Effect.suspend(() =>
+      O.match(A.get(sleeps, index), {
+        onNone: () => Effect.never,
+        onSome: (wake) => Deferred.succeed(wake, undefined).pipe(Effect.asVoid),
+      })
+    )
   );
   return {
     clock: controlled,
-    trigger: Deferred.await(requested).pipe(Effect.andThen(Deferred.succeed(wake, undefined))),
+    sleeps: Effect.sync(() => sleeps.length),
+    triggerSleep,
+    trigger: Deferred.await(requested).pipe(Effect.andThen(Effect.suspend(() => triggerSleep(sleeps.length - 1)))),
   };
 });
 /** @internal @category testing @since 0.0.0 */
@@ -333,9 +348,9 @@ export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(f
   family: "html" | "regex" | "diff" = "html",
   runtimeKind: CitationNativeRuntimeKind = "bun"
 ) {
-  const version = family === "regex" ? "v2" : "v1";
+  const version = family === "regex" ? "v3" : "v1";
   const ready = `{"_tag":"Ready","version":"citation-${family}-worker/${version}"}\\n`;
-  const started = `{"_tag":"Started","version":"citation-${family}-worker/${version}"}\\n`;
+  const started = `{"_tag":"Started","version":"citation-${family}-worker/${version}"${family === "regex" ? ',"sequence":0' : ""}}\\n`;
   const success = '{"_tag":"Success","version":"citation-html-worker/v1","text":"released"}\\n';
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -351,7 +366,7 @@ export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(f
       : `const timer=setInterval(()=>{if(existsSync(${releaseLiteral})){clearInterval(timer);process.stdout.write('${success}');}},10);`;
   yield* fs.writeFileString(
     workerFile,
-    `import {writeFileSync,existsSync} from 'node:fs';process.stdout.write('${ready}');process.stdin.resume();process.stdin.on('end',()=>process.stdout.write('${started}',()=>{writeFileSync(${markerLiteral},'entered');${action}}));`
+    `import {writeFileSync,existsSync} from 'node:fs';process.stdout.write('${ready}');process.stdin.resume();process.stdin.on('${family === "regex" ? "data" : "end"}',()=>process.stdout.write('${started}',()=>{writeFileSync(${markerLiteral},'entered');${action}}));`
   );
   const executable = yield* runtimeKind === "node" ? citationNodeTestExecutable : citationBunTestExecutable;
   return { fs, cwd, workerFile, marker, release, kind: runtimeKind, executable };

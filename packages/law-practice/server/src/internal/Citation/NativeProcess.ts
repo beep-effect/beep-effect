@@ -329,7 +329,7 @@ export const makeCitationNativeProcessOwner = Effect.fn("Citation.makeNativeProc
               yield* Ref.set(phase, "running");
             }
             const process: CitationOwnedNativeProcess<E> = { retire: (retry) => retire(resource, retry) };
-            return { process, child };
+            return { process, child, scope };
           })
         )
         .pipe(Effect.uninterruptible, Effect.provideService(Clock.Clock, clock))

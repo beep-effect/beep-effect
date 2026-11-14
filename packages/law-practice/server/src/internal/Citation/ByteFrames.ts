@@ -27,13 +27,13 @@ export interface CitationNativeFrameErrors<Invalid, Exceeded, Failed> {
 export const makeCitationNativeFrameReader = <Invalid, Exceeded, Failed>(
   errors: CitationNativeFrameErrors<Invalid, Exceeded, Failed>
 ) =>
-  Effect.fn("Citation.readNativeFrames")(function* <SourceError>(
+  Effect.fn("Citation.readNativeFrames")(function* <SourceError, E = never, R = never>(
     source: Stream.Stream<Uint8Array, SourceError>,
     maximum: number,
-    expected: 1 | 3,
-    onFrame: (bytes: Uint8Array) => Effect.Effect<void, Invalid | Exceeded | Failed>
+    expected: 1 | 3 | "continuous",
+    onFrame: (bytes: Uint8Array) => Effect.Effect<void, Invalid | Exceeded | Failed | E, R>
   ) {
-    yield* readCitationByteFrames<SourceError, Invalid | Exceeded | Failed>(
+    yield* readCitationByteFrames<SourceError, Invalid | Exceeded | Failed | E, R>(
       source,
       maximum,
       expected,
@@ -49,11 +49,11 @@ export const makeCitationNativeFrameReader = <Invalid, Exceeded, Failed>(
  * bounded buffer state, not an unbounded list of chunk objects.
  * @internal @category operations @since 0.0.0
  */
-export const readCitationByteFrames = Effect.fn("Citation.readByteFrames")(function* <SourceError, E>(
+export const readCitationByteFrames = Effect.fn("Citation.readByteFrames")(function* <SourceError, E, R = never>(
   source: Stream.Stream<Uint8Array, SourceError>,
   maximum: number,
-  expected: 1 | 3,
-  onFrame: (bytes: Uint8Array) => Effect.Effect<void, E>,
+  expected: 1 | 3 | "continuous",
+  onFrame: (bytes: Uint8Array) => Effect.Effect<void, E, R>,
   invalid: () => E,
   exceeded: () => E,
   channelFailed: () => E
@@ -63,7 +63,7 @@ export const readCitationByteFrames = Effect.fn("Citation.readByteFrames")(funct
   let used = 0;
   let frames = 0;
   const consumeByte = Effect.fnUntraced(function* (byte: number | undefined) {
-    if (frames >= expected) return yield* Effect.fail(invalid());
+    if (expected !== "continuous" && frames >= expected) return yield* Effect.fail(invalid());
     if (byte !== 10) {
       if (used + 1 >= limit) return yield* Effect.fail(exceeded());
       if (used === buffer.byteLength) {
@@ -90,5 +90,5 @@ export const readCitationByteFrames = Effect.fn("Citation.readByteFrames")(funct
       }
     })
   );
-  if (frames !== expected || used !== 0) return yield* Effect.fail(invalid());
+  if ((expected !== "continuous" && frames !== expected) || used !== 0) return yield* Effect.fail(invalid());
 });

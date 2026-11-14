@@ -6,11 +6,11 @@ import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import { citationRegexWorkerProgram } from "./RegexWorkerProgram.ts";
+import { citationRegexSessionProgram } from "./RegexSessionProgram.ts";
 
 const main = Layer.merge(NodeCrypto.layerDigest, NodeStdio.layer).pipe(
   Layer.build,
-  Effect.flatMap((context) => Effect.provide(citationRegexWorkerProgram, context)),
+  Effect.flatMap((context) => Effect.provide(citationRegexSessionProgram, context)),
   Effect.scoped
 );
 NodeRuntime.runMain(main);

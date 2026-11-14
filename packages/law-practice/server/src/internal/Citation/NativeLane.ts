@@ -71,9 +71,11 @@ export class CitationNativeLaneSnapshot extends S.Opaque<
  */
 export type CitationNativeStart = (
   kind: CitationNativeKind,
-  command: ChildProcess.Command
+  command: ChildProcess.Command,
+  onRetiring?: Effect.Effect<void>
 ) => Effect.Effect<
   {
+    readonly scope: Scope.Scope;
     readonly process: CitationOwnedNativeProcess<CitationNativeLaneFailure>;
     readonly child: Exit.Exit<ChildProcessHandle, CitationNativeLaneFailure>;
     readonly onRetired: (finalizer: Effect.Effect<void>) => Effect.Effect<void>;
@@ -86,6 +88,8 @@ export type CitationNativeStart = (
 export class CitationNativeLane extends Context.Service<
   CitationNativeLane,
   {
+    readonly clock: Clock.Clock;
+    readonly spawner: ChildProcessSpawner["Service"];
     readonly start: CitationNativeStart;
     readonly reserve: Effect.Effect<void, CitationNativeLaneFailure | CitationSafetyLimitExceeded>;
     readonly ensureOpen: Effect.Effect<void, CitationNativeLaneFailure>;
@@ -199,7 +203,11 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     return owner;
   });
   const reserve = lock.withPermit(availableOwner.pipe(Effect.andThen(acquire), Effect.asVoid, Effect.uninterruptible));
-  const start: CitationNativeStart = Effect.fn("Citation.startNativeLane")(function* (_kind, command) {
+  const start: CitationNativeStart = Effect.fn("Citation.startNativeLane")(function* (
+    _kind,
+    command,
+    onRetiring = Effect.void
+  ) {
     return yield* lock.withPermit(
       Effect.uninterruptible(
         Effect.gen(function* () {
@@ -234,7 +242,8 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
           if (spawned) started++;
           const process: CitationOwnedNativeProcess<CitationNativeLaneFailure> = {
             retire: (retry) =>
-              record.process.retire(retry).pipe(
+              onRetiring.pipe(
+                Effect.andThen(record.process.retire(retry)),
                 Effect.tapError(() =>
                   Effect.sync(() => {
                     poisoned = true;
@@ -243,12 +252,14 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
               ),
           };
           occupant = O.some(process);
-          return { child: record.child, process, onRetired: notification.onRetired };
+          return { child: record.child, process, scope: record.scope, onRetired: notification.onRetired };
         })
       )
     );
   });
   return CitationNativeLane.of({
+    clock: nativeClock,
+    spawner: nativeSpawner,
     start,
     reserve,
     ensureOpen: Effect.gen(function* () {
