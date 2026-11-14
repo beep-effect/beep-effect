@@ -26,7 +26,8 @@ layer(BunCrypto.layer, { timeout: "30 seconds" })((it) => {
         detectEffectVitestFindings(project.createSourceFile(file, text), file, "@beep/example")
       );
       const flat = A.flatten(findings);
-      const rows = A.sort(yield* Effect.forEach(flat, (finding) => encodeFinding(finding)), Order.String);
+      const encoded = yield* Effect.forEach(flat, (finding) => encodeFinding(finding));
+      const rows = A.sort(encoded, Order.String);
       const crypto = yield* Digest.Digest;
       const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(A.join(rows, "\n")));
 
