@@ -23,7 +23,6 @@ import {
   CacheProducerAdapterReceipt,
   CacheProducerUploadApproval,
   CacheProducerUploadRuntime,
-  CacheRuntimeAdmission,
   CacheRuntimeProcess,
   runCacheProducerUploadExperiment,
 } from "@beep/repo-cli/test/Cache";
@@ -59,6 +58,7 @@ import { bearers, repoRoot, secrets, targetFor } from "./cache-conformance-serve
 import { makeOwnedUploadFixture } from "./helpers/cache-producer-upload-fixture.ts";
 import { executionInput } from "./helpers/cache-protocol-fixture.ts";
 import { signedPilotInput } from "./helpers/cache-signed-pilot-fixture.ts";
+import { makeAdmissionRecorder } from "./support/AdmissionRecorder.ts";
 
 const Fault = LiteralKit(["none", "pin", "git", "exit", "truncated", "identity", "issuer-change", "issuer-exposed"]);
 const isPrivateCaptureFault = S.is(Fault.pick(["exit", "truncated"]));
@@ -72,6 +72,8 @@ const encodeReport = S.encodeEffect(S.fromJsonString(CacheSignedPilotReceipt));
 const encodePilotRun = S.encodeEffect(S.fromJsonString(CacheSignedPilotRun));
 const encodeText = S.encodeEffect(S.fromJsonString(S.String));
 const nativeFoldedStdout = CacheRuntimeProcess.runFoldedStdout;
+// Admission runs through a recording QualityScheduler; each fixture resets it.
+const admissionRecorder = makeAdmissionRecorder();
 afterEach(() => {
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
@@ -128,15 +130,7 @@ const fixture = Effect.fn("SignedRunnerTest.fixture")(function* (fault: typeof F
       selection: "full",
     }),
   });
-  const admission = vi
-    .spyOn(CacheRuntimeAdmission, "withQualityAdmission")
-    .mockImplementation(
-      <Success, Error, Requirements>(
-        _request: unknown,
-        _gate: unknown,
-        use: Effect.Effect<Success, Error, Requirements>
-      ) => use
-    );
+  const admission = admissionRecorder.admitted.mockReset();
   vi.spyOn(Evidence, "hashCacheExperimentExecutable").mockReturnValue(
     Effect.succeed(fault === "pin" ? Sha256Hex.make(Str.repeat(64)("b")) : digest)
   );
@@ -349,7 +343,8 @@ it.layer(
     Layer.succeed(
       MemoryStats,
       MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64), ceilingGib: Effect.succeed(64) })
-    )
+    ),
+    admissionRecorder.layer
   ),
   { timeout: "30 seconds" }
 )("signed pilot supervisor", (it) => {
@@ -620,12 +615,8 @@ export const runCacheSignedPilotWorker = () => Effect.gen(function* () {
         const f = yield* ownedUploadFixture("none");
         const queued = yield* Deferred.make<void>();
         const admitted = yield* Deferred.make<void>();
-        f.admission.mockImplementation(
-          <Success, Error, Requirements>(
-            _request: unknown,
-            _gate: unknown,
-            use: Effect.Effect<Success, Error, Requirements>
-          ) => Deferred.succeed(queued, undefined).pipe(Effect.andThen(Deferred.await(admitted)), Effect.andThen(use))
+        f.admission.mockImplementation(() =>
+          Deferred.succeed(queued, undefined).pipe(Effect.andThen(Deferred.await(admitted)))
         );
         const worker = yield* runCacheProducerUploadExperiment(
           f.root,
@@ -675,6 +666,11 @@ export const runCacheSignedPilotWorker = () => Effect.gen(function* () {
         expect(report.channel).toBe("stable");
       }
       expect(admission).toHaveBeenCalledTimes(2);
+      expect(admission.mock.calls[0]?.[0]).toMatchObject({
+        kind: "cache",
+        weightTokens: 1,
+        command: "bun run beep cache pilot-signed",
+      });
       expect(process).toHaveBeenCalledTimes(4);
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -804,13 +800,7 @@ const protocolFixture = Effect.fn("ProtocolSupervisorTest.fixture")(function* (f
     executable,
     client: CacheClientPin.make({ ...executionInput.observation.client, sha256: digest }),
   });
-  vi.spyOn(CacheRuntimeAdmission, "withQualityAdmission").mockImplementation(
-    <Success, Error, Requirements>(
-      _request: unknown,
-      _gate: unknown,
-      use: Effect.Effect<Success, Error, Requirements>
-    ) => use
-  );
+  admissionRecorder.admitted.mockReset();
   vi.spyOn(Evidence, "hashCacheExperimentExecutable").mockReturnValue(
     Effect.succeed(Sha256Hex.make(executionInput.bunSha256))
   );
@@ -860,7 +850,8 @@ it.layer(
     Layer.succeed(
       ChildProcessSpawner.ChildProcessSpawner,
       ChildProcessSpawner.make(() => Effect.die("Unexpected native process"))
-    )
+    ),
+    admissionRecorder.layer
   ),
   { timeout: "30 seconds" }
 )("protocol supervisor", (it) => {
@@ -869,6 +860,12 @@ it.layer(
       const { root, request } = yield* protocolFixture("none");
       const report = yield* runCacheProtocolExperiment(root, request);
       expect(report.roots).toHaveLength(9);
+      expect(admissionRecorder.admitted).toHaveBeenCalledOnce();
+      expect(admissionRecorder.admitted.mock.calls[0]?.[0]).toMatchObject({
+        kind: "cache",
+        weightTokens: 1,
+        command: "bun run beep cache protocol-run",
+      });
     })
   );
   it.effect("rejects unsupported hosts before launching the worker", () =>

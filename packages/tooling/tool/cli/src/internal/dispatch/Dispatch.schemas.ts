@@ -30,7 +30,8 @@ const $I = $RepoCliId.create("internal/dispatch/Dispatch.schemas");
  * The platform base (Bun services, HTTP client, crypto) is built for every
  * route. Each key here names one extra Layer the bin builds only when the
  * dispatched group declares it: `fs-utils` is `FsUtilsLive`, `ts-morph` is
- * `TSMorphServiceLive` and `memory-stats` is `MemoryStatsLive`.
+ * `TSMorphServiceLive` and `memory-stats` is `MemoryStatsLive` with the
+ * `QualitySchedulerLive` service that reads it.
  *
  * @internal
  * @category models

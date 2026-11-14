@@ -20,8 +20,9 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
-import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
+import { AdmissionRequest, admissionTokenWeight } from "../../internal/repo-run/QualityScheduler.schemas.ts";
+import { QualityScheduler } from "../../internal/repo-run/QualityScheduler.service.ts";
+import { noAdmissionOriginGate } from "../../internal/repo-run/QualityScheduler.ts";
 import { collectCacheCensus } from "./Cache.census.ts";
 import {
   CacheDependencyLink,
@@ -312,10 +313,11 @@ export const materializeCacheDependencies = Effect.fn("CacheDependencies.materia
       return receipt;
     }).pipe(Effect.onError(() => fs.remove(directory, { recursive: true, force: true }).pipe(Effect.ignore)));
   });
-  return yield* withQualityAdmission(
+  const scheduler = yield* QualityScheduler;
+  return yield* scheduler.admit(
     AdmissionRequest.make({
-      kind: "review-fix",
-      weightTokens: 1,
+      kind: "cache",
+      weightTokens: admissionTokenWeight("cache"),
       priority: "verify",
       originKey: "",
       checkoutRoot: root,

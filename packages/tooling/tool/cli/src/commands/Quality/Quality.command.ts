@@ -50,22 +50,16 @@ import {
   AdmissionJournalHistory,
   AdmissionUnitEmission,
   adaptGitKitError,
-  admissionJournalArchiveStatus,
-  admissionJournalHistory,
-  admissionProtocolStatus,
-  admissionStatus,
   GITHUB_CHECK_MODE_VALUES,
   installAgentRunsSlice,
   isAgedAdmissionJournalArchiveSegment,
   isAgedQuarantineEntry,
   QUARANTINE_ARCHIVE_DIRECTORY_NAME,
   QUARANTINE_ARCHIVE_MIN_AGE_MILLIS,
+  QualityScheduler,
   quarantinedAtMillisOf,
-  reapAdmissionState,
   reconcileAttemptJournalsForCheckout,
   renderAgentRunsSliceListing,
-  setAdmissionEvictionProtocol,
-  setAdmissionUnitProtocol,
 } from "../../internal/repo-run/index.ts";
 import { cachePolicyCommand } from "../Cache/CachePolicy.command.ts";
 import { residueReapCommand, tmpfsReapCommand } from "../Worktree/Janitor.command.ts";
@@ -4084,7 +4078,8 @@ const schedulerStatusCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ json }) {
-    const snapshot = yield* admissionStatus();
+    const scheduler = yield* QualityScheduler;
+    const snapshot = yield* scheduler.observe();
     if (json) {
       const rendered = yield* jsonStringifyPretty(snapshot);
       yield* printLines([rendered]);
@@ -4111,14 +4106,15 @@ const schedulerReapCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ apply }) {
+    const scheduler = yield* QualityScheduler;
     // Read-only pre-scan: the aged set the reap pass is about to archive.
-    const before = apply ? yield* Effect.asSome(admissionStatus()) : O.none<AdmissionSnapshot>();
-    const archiveBefore = yield* Effect.result(admissionJournalArchiveStatus());
+    const before = apply ? yield* Effect.asSome(scheduler.observe()) : O.none<AdmissionSnapshot>();
+    const archiveBefore = yield* Effect.result(scheduler.archive);
     const beforeMillis = yield* Clock.currentTimeMillis;
-    const snapshot = yield* reapAdmissionState({ apply });
+    const snapshot = yield* scheduler.reap({ apply });
     const nowMillis = yield* Clock.currentTimeMillis;
     const archiveRemaining = apply
-      ? yield* Effect.result(Effect.map(admissionJournalArchiveStatus(), (archive) => archive.segments))
+      ? yield* Effect.result(Effect.map(scheduler.archive, (archive) => archive.segments))
       : Result.succeed(A.empty<string>());
     const pruneLine = renderAdmissionArchivePruneOutcome(apply, beforeMillis, archiveBefore, archiveRemaining);
     const reconciledAttempts = apply ? yield* reconcileCurrentCheckoutAttemptJournals() : 0;
@@ -4158,7 +4154,8 @@ const schedulerHistoryCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ json }) {
-    const history = yield* admissionJournalHistory();
+    const scheduler = yield* QualityScheduler;
+    const history = yield* scheduler.history;
     if (json) {
       const encoded = yield* encodeAdmissionJournalHistory(history).pipe(
         QualityScriptCommandError.mapError("Failed to encode the admission history.")
@@ -4197,14 +4194,15 @@ const schedulerProtocolCommand = Command.make(
         exitCode: 1,
       });
     }
+    const scheduler = yield* QualityScheduler;
     const evictionProtocol = enableEvictions
-      ? yield* setAdmissionEvictionProtocol("on")
+      ? yield* scheduler.setEvictionProtocol("on")
       : disableEvictions
-        ? yield* setAdmissionEvictionProtocol("off")
-        : yield* admissionProtocolStatus();
+        ? yield* scheduler.setEvictionProtocol("off")
+        : yield* scheduler.protocol;
     const protocol = yield* O.match(units, {
       onNone: () => Effect.succeed(evictionProtocol),
-      onSome: setAdmissionUnitProtocol,
+      onSome: scheduler.setUnitProtocol,
     });
     yield* printLines([
       `admission eviction rows: ${protocol.eviction}`,
