@@ -1,9 +1,12 @@
 import * as NodeURL from "node:url";
 import { makeCitationHtmlWorker as makeOwnedCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
+import { CitationHtmlWorkerFailure } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
+import { makeCitationMarkupWorker } from "@beep/law-practice-server/internal/Citation/MarkupWorker";
 import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
+import { makeCitationStandaloneNativeStarter } from "@beep/law-practice-server/internal/Citation/NativeLane";
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
@@ -27,8 +30,8 @@ import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.f
 import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
 import type { CitationHtmlInputFailure } from "@beep/law-practice-server/internal/Citation/HtmlInput";
 import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
-import type { CitationHtmlWorkerFailure } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
 import type { CitationMarkupWorkerSnapshot } from "@beep/law-practice-server/internal/Citation/MarkupWorker";
+import type { CitationNativeStart } from "@beep/law-practice-server/internal/Citation/NativeLane";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 
 // Own the fixture configuration through the engine boundary before the direct install.
@@ -48,6 +51,7 @@ import {
   citationBunTestExecutable,
   makeCitationNativeWorkerFixture as fixture,
   makeCitationNativeSleepClock,
+  makeCitationObservedSpawner,
   makeCitationNativeManualClock as manualSleep,
   waitForCitationNativeTest as waitFor,
 } from "./CitationNativeSpawner.fixtures.ts";
@@ -124,6 +128,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         if (failed._tag === "CitationSafetyLimitExceeded") expect(failed.limit).toBe("nativeHtmlParserResource");
         expect(pids).toHaveLength(3);
         for (const pid of pids) expect(() => process.kill(pid, 0)).toThrow();
+        yield* worker.reap();
         const citationResult4 = yield* worker.snapshot;
         expect(citationResult4).toEqual({ active: 0, queued: 0, processes: 0, quarantined: 0, closed: false });
       }),
@@ -217,6 +222,131 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
       }),
     { timeout: 60_000 }
   );
+  for (const runtimeKind of ["bun", "node"] as const) {
+    it.effect(
+      `keeps a concurrent ${runtimeKind} quarantine when reap confirms an earlier record`,
+      () =>
+        Effect.gen(function* () {
+          const f = yield* fixture("busy", "html", runtimeKind);
+          const base = (yield* defaultCitationEnginePolicy).limits;
+          const limits = {
+            ...base,
+            concurrentOperations: 2,
+            concurrentRegexProcesses: 2,
+            cleanupDeadline: Duration.millis(250),
+          };
+          const admission = yield* makeCitationNativeProcessAdmission(limits);
+          const observed = yield* makeCitationObservedSpawner();
+          const captured = yield* Deferred.make<void>();
+          const finishReap = yield* Deferred.make<void>();
+          const finishFirst = yield* Deferred.make<void>();
+          const firstEntered = yield* Deferred.make<void>();
+          const lateConfirmation = yield* Deferred.make<void>();
+          let births = 0;
+          const spawner = ChildProcessSpawner.of({
+            ...observed.spawner,
+            spawn: Effect.fn("MarkupReapTest.spawn")(function* (command) {
+              const child = yield* observed.spawner.spawn(command);
+              births++;
+              return births === 2
+                ? {
+                    ...child,
+                    kill: (options) => child.kill(options).pipe(Effect.andThen(Deferred.await(lateConfirmation))),
+                  }
+                : child;
+            }),
+          });
+          const standalone = yield* makeCitationStandaloneNativeStarter(limits, "clean").pipe(
+            Effect.provideService(CitationNativeProcessAdmission, admission),
+            Effect.provideService(ChildProcessSpawner, spawner)
+          );
+          const worker = yield* makeCitationMarkupWorker(
+            limits,
+            CitationNativeProcessRuntime.make(f),
+            "",
+            "clean",
+            (reason) => CitationHtmlWorkerFailure.make({ reason })
+          );
+          let starts = 0;
+          const start: CitationNativeStart = Effect.fn("MarkupReapTest.start")(function* (kind, command) {
+            const record = yield* standalone.start(kind, command);
+            starts++;
+            if (starts !== 1) return record;
+            return {
+              ...record,
+              process: {
+                retire: (retry) =>
+                  retry
+                    ? Deferred.succeed(captured, undefined).pipe(
+                        Effect.andThen(Deferred.await(finishReap)),
+                        Effect.andThen(record.process.retire(true))
+                      )
+                    : record.process.retire(false),
+              },
+            };
+          });
+          yield* Effect.gen(function* () {
+            const first = yield* worker
+              .run(
+                Effect.succeed(() =>
+                  Deferred.succeed(firstEntered, undefined).pipe(Effect.andThen(Deferred.await(finishFirst)))
+                ),
+                start
+              )
+              .pipe(Effect.forkChild);
+            yield* Deferred.await(firstEntered);
+            const reaping = yield* worker.reap().pipe(Effect.forkChild);
+            yield* Deferred.await(captured);
+            const failed = yield* worker
+              .run(
+                Effect.succeed(() => Effect.void),
+                start
+              )
+              .pipe(Effect.flip);
+            expect(failed).toMatchObject({ limit: "cleanupDeadline" });
+            const before = yield* worker.snapshot;
+            expect(before).toMatchObject({ processes: 2, active: 2, quarantined: 1 });
+            yield* Deferred.succeed(finishReap, undefined);
+            yield* Fiber.join(reaping);
+            const after = yield* worker.snapshot;
+            expect(after).toMatchObject({ processes: 1, active: 1, quarantined: 1 });
+            const refused = yield* worker
+              .run(
+                Effect.succeed(() => Effect.void),
+                start
+              )
+              .pipe(Effect.flip);
+            expect(refused).toMatchObject({ reason: "quarantined" });
+            yield* Deferred.succeed(finishFirst, undefined);
+            yield* Fiber.join(first);
+            const retained = yield* admission.snapshot;
+            expect(retained).toMatchObject({ active: 1, quarantined: 1 });
+            yield* Deferred.succeed(lateConfirmation, undefined);
+            yield* waitFor(worker.snapshot.pipe(Effect.map((state) => state.processes === 0)));
+            yield* worker.reap();
+            yield* worker.reap();
+            const settled = yield* worker.snapshot;
+            expect(settled).toMatchObject({ active: 0, processes: 0, quarantined: 0 });
+            const exits = yield* observed.snapshot;
+            expect(exits).toEqual({ spawned: 2, confirmed: 2 });
+            const released = yield* admission.snapshot;
+            expect(released).toMatchObject({ active: 0, quarantined: 0 });
+          }).pipe(
+            Effect.ensuring(
+              Effect.all(
+                [
+                  Deferred.succeed(finishReap, undefined),
+                  Deferred.succeed(finishFirst, undefined),
+                  Deferred.succeed(lateConfirmation, undefined),
+                ],
+                { discard: true }
+              )
+            )
+          );
+        }),
+      { timeout: 60_000 }
+    );
+  }
   it.effect(
     "quarantines an unconfirmed cleanup and admits no replacement until late acknowledgement",
     () =>

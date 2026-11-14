@@ -29,7 +29,8 @@ import {
   preflightCitationHtmlJob,
 } from "./HtmlWorkerProtocol.ts";
 import { CitationHtmlWorkerStartup, prepareCitationHtmlRpc } from "./HtmlWorkerRpc.ts";
-import { makeCitationMarkupWorker } from "./MarkupWorker.ts";
+import { CitationMarkupWorkerSnapshot, makeCitationMarkupWorker } from "./MarkupWorker.ts";
+import { makeCitationStandaloneNativeStarter } from "./NativeLane.ts";
 import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
@@ -95,6 +96,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     CitationHtmlWorkerStartup.make({ maximum: limits.processMessageBytes, assetPath })
   ).pipe(Effect.mapError(invalidRuntime));
   const preparation = yield* makeCitationHtmlInput(limits);
+  const standalone = yield* makeCitationStandaloneNativeStarter(limits, "clean");
   const worker = yield* makeCitationMarkupWorker(limits, runtime, argument, "clean", failure);
   const validateSource = Effect.fnUntraced(function* (input: unknown, kind: "raw" | "text" | "bytes" | "unicode") {
     if (kind === "bytes") {
@@ -137,7 +139,8 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
           }),
           limits.processMessageBytes
         );
-      })
+      }),
+      standalone.start
     );
   });
 
@@ -154,8 +157,16 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
         )
   );
   return {
-    snapshot: worker.snapshot,
-    reap: worker.reap,
+    snapshot: Effect.gen(function* () {
+      const local = yield* worker.snapshot;
+      const physical = yield* standalone.snapshot;
+      return CitationMarkupWorkerSnapshot.make({
+        ...local,
+        ...physical,
+        active: local.active,
+      });
+    }),
+    reap: () => standalone.reap().pipe(Effect.andThen(worker.reap())),
     clean: (input: unknown) => clean(input, limits.producedTextUtf16, "raw"),
     cleanBytes: (input: unknown) => clean(input, limits.producedTextUtf16, "bytes"),
     cleanUnicode: (input: unknown) => clean(input, limits.producedTextUtf16, "unicode"),

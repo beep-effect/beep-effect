@@ -153,6 +153,320 @@ Lane explore/citation-engine-install-and-worker-reuse
 
 Reverse: Restore policy v1 and protocol v2.
 
+### Keep Diff and Xml preparation per request and retain Markup private queues, 2026-11-14
+
+B1 does not require hoisting Diff or Xml to engine construction. Their preparation and per-job diagnostics remain per request. Markup private semaphores and queue/deadline guards remain: the default HTML cleaner serves the closed standalone port, whose callers need that queue. Xml passes lane.start explicitly. Diff receives both the starter and text reservation explicitly and performs no Invocation or native-admission lookup. No installed-stage, tokenizer, evaluator or detach count is moved.
+
+Reverse: Hoist these objects only with an explicit replacement for their per-owner lifecycle and queue state.
+
+### Keep markup quarantine per record and synchronize concurrent lane proofs, 2026-11-14
+
+Each markup job owns its quarantine contribution. Remove reap's aggregate reset:
+a concurrently registered record must remain quarantined until its own confirmed
+retirement. NativeProcess retirement rechecks isRunning, closes the child Scope,
+then invokes binding.release; the standalone binding invokes notification.confirm,
+which drains its listeners once. A successful record.retire(true) therefore runs
+that record's Markup onRetired callback. The callback decrements only when the
+same record's uncertain flag was set by its failed retirement. If confirmation
+wins the race, acknowledged prevents the increment; otherwise one increment is
+matched by one callback decrement. No saturation clamp or blanket reset is needed.
+
+A real-process regression holds reap on captured record A, lets B's retirement
+expire, confirms A and checks B remains quarantined with starts refused. B's late
+confirmation restores zero; repeated reap stays zero and started equals confirmed.
+The test fails against the old reset for both Bun and Node children.
+
+Force the first two composition spawns through a test-only Deferred barrier so
+two admitted requests have live children before either proceeds. Keep exact peak
+2. The other lane peak-2 proof already gates its two live child bodies on a
+Deferred; serial peak-1 proofs do not depend on scheduling.
+
+Respect the owner's reverted parent-runtime tests and restored producer-recovery
+comment. Correct the evidence to 165 green Node-parent files / 740 tests, plus
+three Node-parent red files with six passes / 26 failures due to Bun.version.
+Existing goal references are retained; no new test goal-path reference is added.
+
+Reverse: Restore aggregate bookkeeping only with an equivalent per-record confirmation proof; retain deterministic overlap.
+
+### Prove reachable coverage paths and retain typed native invariants, 2026-11-14
+
+The owner extended this wave to hosted coverage job 132419052799 at b749cd91e7e.
+Measure one test file per process, with explicit source includes; never run
+whole-package coverage or edit the regression baseline. Merge the eight hosted
+law-practice artifacts with single-file reports only to assess unchanged source
+rows. MarkupWorker's current-source union uses its Html/Xml/adapter test reports,
+because deleting the reset changed its source map. Keep that evidence distinct
+from a fresh hosted producer run.
+
+Add real refusal, process retirement, Scope closure, listener and lease-defect
+assertions. The single-file tests reach every reported branch. No typed refusal
+is converted to a defect, and the intentionally defective onRetired/lease-release
+callbacks model the exact existing catchCause boundaries with real child records.
+A test-only queue helper forks its waiter in the caller's explicit Scope: a child
+fiber would disappear when the Unicode preparation timer fiber ends and remove
+the contention before start. Explicit cleanup interrupts that waiter before
+retiring the real blocker; its Scope finalizer preserves cleanup on every exit.
+
+Six guard sites remain unreachable through current typed control flow and stay:
+DiffWorker:62 Boolean decoder, :153 ownership transfer callback, :198-199 prepared
+Option invariants; RegexWorker:132 ownership transfer callback; NativeLane:191
+private permit invariant. Their source/line arguments and measured rows are in
+history/evidence/2026-11-14-b1-native-lane.md. The artifact union clears every
+reported regression floor. New NativeLane is 99.24/99.32/100/97.67 (L/S/B/F),
+with the retained permit mapper the only miss. Report these guards to the owner;
+never force them with casts, remove them or hide them with coverage directives.
+
+Effect Vitest identified one new EV003 request fixture. Retain it as a reviewed exception under the existing direct-invocation fixture policy: the cleaner test keeps an open request budget and separately closes its lane Scope to prove refusal mapping. A shared Layer would merge the authority being tested. Fix the other four findings with explicit 30-second layer hook budgets and the existing narrow tokenizer platform layer; preserve all inventory rows outside the touched cleaner test.
+
+Reverse: Rerun the same bounded coverage reports when callers or ownership invariants change; keep safety guards and baseline intact.
+
+### Record policy v2 as breaking in the packet; the private workspace takes no changeset, 2026-11-14
+
+The design asks for a major changeset with policy v2. `repo-sanity:changeset-graph` forbids a changeset for a private workspace, and `@beep/law-practice-use-cases` is private, so the changeset is removed. The breaking change is recorded here and in the PR body: policy tag `citation-engine-policy/v2`; a policy with fewer regex process slots than operation slots, and any v1 payload, is refused. No limit field or default value changes.
+
+Lane feat/citation-native-lane
+
+Reverse: Add a major changeset for @beep/law-practice-use-cases if the package becomes publishable.
+
+### Retain the regex identity adapter and move physical ownership into the lane, 2026-11-14
+
+regexOwner retains only the protocol-v2 start adapter and the evaluator spawner/Clock identity guard. It no longer creates a physical regex owner or claims native capacity. The lane owns the exact children. The existing per-job wrapper confirms retirement before returning a result, while its adapter has no independent lease. The lane and its physical owner are invocation-scoped; the lane unit and physical owner are lazy. The named standalone cleaner starter stays separate.
+
+Reverse: Replace the adapter with the protocol-v3 session in B2; restore per-job native leases only with a policy reversal.
+
+### Settle job bookkeeping on exact confirmed retirement, 2026-11-14
+
+The explicit native start result carries onRetired registration. The existing physical owner invokes it from its confirmed-retirement binding, after isRunning and child-Scope close. A late acknowledgement or owner-Scope reap therefore releases Markup private slots and clears Diff/Markup diagnostics even when the job fiber already failed. Registration after confirmation runs immediately. Notifications do not kill, acknowledge death themselves or return unconfirmed capacity. The native admission transaction-isolation combinator is shared with reentrant cleaner-yield coordination.
+
+Reverse: Remove the notification only if every owner-scope and late-retirement path settles the same private state.
+
+### Reserve native lanes at the base admission points, 2026-11-14
+
+Owner ruling 3 resolves this stop and authorizes CitationNativeLane.reserve,
+including Diff. Reservation is the first native need: it claims the invocation's
+unit without spawning. The request finalizer is already installed. It uses the
+same short Semaphore and masked acquisition as start, and the same closed,
+quarantined and yielding guards. A held unit is reused; reserve followed by start
+counts one successful claim. Unused reservations return on Scope closure.
+
+Regex reserves through the existing preparation acquisition callback, before
+regexDeadline. Diff takes an explicit reservation effect alongside its explicit
+starter and reserves at the existing preflight acquisition point, before payload
+copying. Xml reserves after RPC preparation, at the old Markup acquisition point
+inside annotateDeadline. Markup and Diff perform no request-authority lookup.
+Standalone HTML keeps its own admission inside cleanDeadline at the existing
+point after preparation. No public CitationCleaner contract changes.
+
+The old no-op preparation acquisition is removed. The shared job supervisor's
+adapter now executes actual lane.reserve there. Its per-job bookkeeping ticket
+has non-releasing hooks because request Scope/yield owns the real native unit;
+it neither claims another unit nor impersonates a standalone native lease.
+
+Handover retirement remains inside start and its caller's job/stage timer. Under
+built-in protocol v2 each job confirms retirement before returning, so the next
+start can call retire on the retained previous record, but that call observes its
+already successful retirement task. There is no live-child handover retirement
+on the serial built-in v2 path. Direct lane clients can start with a live occupant;
+that guarded handover remains required and proved with real children. An
+unconfirmed job retirement fails the call and poisons the lane; it never becomes
+a built-in path to another spawn.
+
+Real Bun/Node child proofs cover queue-full and queue expiry for regex, Diff,
+Xml and standalone HTML; global quarantine before reservation starts no job
+child; a successful reservation followed by the captured job timer confirms
+physical death and retains/returns capacity according to the boundary. The regex
+queue proof observes that regexDeadline has not even started while admission is
+queued. The direct-stage deadline fixture suppresses only the enclosing invocation
+timer of equal duration to isolate the worker's captured timer, leaving production
+timer placement unchanged. Source references, exact refusals and runtime receipts
+are in history/evidence/2026-11-14-b1-reservation.md.
+
+## Behaviour that changes by design
+
+The base acquisition/error/timer comparison applies when an acquisition meets
+the same admission state. Design 3.2 rule 1 intentionally retains one native unit
+per admitted operation from first need until invocation Scope closure or cleaner
+yield; the base returned capacity after each child's confirmed retirement.
+
+Under 1/1, an invocation can finish regex and continue non-native work beyond the
+queue deadline while holding its idle unit. A direct host call to the exported
+HTML cleaner could acquire on the base but can now fail with
+CitationSafetyLimitExceeded { operation: clean, limit: queueDeadline }. Under
+2/2, two idle invocation holders cause the equivalent external contention.
+This lifetime is what goal B's protocol v3 session relies on. Keep it unchanged;
+reservation preserves placement and translation, not between-job availability.
+
+Reverse: Revert the reservation wiring only with an owner-approved replacement that preserves preflight, queue, timer and quarantine precedence.
+
+### Pass native starters explicitly across closed cleaner boundaries, 2026-11-14
+
+Owner ruling: a native starter crosses a closed boundary as an explicit argument,
+never a Context lookup or an optional fallback. Markup and Diff take the lane's
+start shape explicitly at call time or per-request construction. Invocation-owned
+regex, Diff, Xml and HTML cleaning all use that invocation's lane. A named
+standalone starter claims one native unit per process only for genuinely external
+calls, retaining confirmed retirement and quarantine. The public cleaner port
+keeps its shape. This supersedes the earlier proposal to exempt engine HTML
+cleaning from lane accounting.
+
+Owner ruling 2, recorded in the cleaner-yield decision, supersedes the earlier
+requirement that engine HTML cleaning use the lane starter directly. The closed
+port uses the standalone starter only after the lane yields its unit.
+
+## Historical call-path audit (at e607ca22cad, before B1 implementation)
+
+Paths below are relative to `packages/law-practice/`.
+
+There is exactly one production call expression to `CitationBuiltinCleaners.invoke`:
+`server/src/internal/Citation/CleanerRegistry.ts:357`. Registry construction captures
+that object at line 99. Its callers reach it through `CitationCleaner.invoke`:
+
+| Entry / route | Invocation status |
+| --- | --- |
+| Engine clean: `server/src/CitationEngine/CitationEngine.layer.ts:152` -> `server/src/internal/Citation/SourceCleaning.ts:74` -> `CleanerPipeline.ts:236` -> `CleanerRegistry.ts:357` | Inside `openCitationInvocation`, engine layer lines 138-149. |
+| Engine extract: engine layer line 157 -> source/document extraction -> `InputDocument.ts:169` -> `CleanerPipeline.ts:236` -> `CleanerRegistry.ts:357` | Inside the same engine invocation. Plain input with cleaning steps uses `InputDocument.ts:176`; markup uses line 193. |
+| Six-form extractor: `server/src/CitationExtractor/CitationExtractor.layer.ts:90-100,132` | Has an invocation but uses Recognizer, not this cleaner; no route into builtin invoke. |
+| Direct returned registry runtime / pipeline / builtin invocation | No invocation is required by the closed port; an external caller can invoke it directly. If a caller already has an invocation, the current port still has the identical signature and object. |
+| Nested cleaner plan: `CleanerPipeline.ts:252` calls `execute`, whose line 236 dispatches through the same runtime | Inherits the caller's invocation status; it creates no invocation. |
+
+Other source-level host dispatch is `CleanerRegistry.ts:361`, calling captured
+`protocols.invoke`. `DocumentCleanerProtocols.ts:196` spreads the supplied host
+protocols, retaining that invoke implementation. Those callbacks are opaque to
+the engine. This inspection does not establish that an arbitrary host callback
+actually starts a process; its implementation is not available here.
+
+Direct test adapters also reach builtins: `CitationBuiltinCleaners.test.ts:197`
+(the pipeline is invocation-bound at lines 163-164), and
+`CitationCleanerRegistry.fixtures.ts:121` (wrapper around the real builtin).
+`CitationUnicodePipeline.fixtures.ts:134` wraps the registry runtime; its pipeline
+is invocation-bound at lines 145-149. These do not add production entry paths.
+
+### Object identity
+
+Yes, in the default assembly the engine uses the same closed registry runtime
+that is exposed to the host. `DocumentServices.ts:61-71` creates one registry,
+provides its runtime to the pipeline, and puts that exact runtime into the output
+Context. Line 74 also returns the registry and builtin objects. The default engine
+passes these services into install (`CitationEngine.layer.ts:276-280`).
+`SourceCleaning.ts:45` captures `CitationCleaner` and provides that same object
+at line 78. General `CitationEngineLive` instead accepts whatever public cleaner
+the host supplied; it does not require the internal registry or builtin service.
+
+### Does one invocation use both cleaning and other native work?
+
+Yes: markup extraction cleans at `InputDocument.ts:193`, then computes geometry
+at line 196 (regex and Diff), then tokenizes in `DocumentExtraction.ts:173` after
+initialization at lines 185-187. Those stages share one invocation. In the normal
+built-in source order, HTML cleaning precedes regex/Diff; inspection found no
+normal built-in path holding a regex/Diff/Xml occupant before entering that HTML
+cleaner. Today no lane exists, so no current execution can literally hold a lane
+occupant. Host callback reentry and process use are opaque, not proved absent.
+Engine annotate does not call this cleaner pipeline; it has its own geometry/Xml
+path. Engine resolve does not call it either.
+
+## Historical second stop: resolved by owner ruling 2
+
+The internal default assembly can be given an explicit-starter entry. That alone
+cannot satisfy the ruling for the general live engine: `SourceCleaning.ts:45`
+and `InputDocument.ts:143` capture the public `CitationCleaner`, and
+`CleanerPipeline.ts:73,236` has only that port's closed invoke method.
+`use-cases/src/CitationEngine/CitationEngine.cleaner.ts:238-260` defines it;
+`use-cases/src/server.ts:23` exports it. Neither invoke nor the public
+`CitationCleanerWork` argument (cleaner.ts:203-217, exported at server.ts:373)
+carries native starter authority.
+
+Passing the starter through an arbitrary existing implementation requires a public
+contract amendment or an additional required installation capability specifying
+how host cleaners bind invocation authority. Substituting a new internal runtime
+would bypass the host's cleaner semantics and owned-value/registry identity.
+A Context lookup, optional fallback, identity cache, or silently using standalone
+inside the engine is forbidden. Per owner ruling item 5, stop here before lane
+implementation. No claim is made that an unseen host callback was observed
+spawning; the demonstrated blocker is the exported port on the explicit argument
+route, independently of that second possible stop condition.
+
+Proposed next ruling: define the required host installation capability for an
+invocation-bound cleaner view, including preservation of registry/value identity
+and host invoke semantics, or explicitly authorize a public cleaner contract
+amendment carrying starter authority. No such change is implemented here.
+
+Reverse: Replace the explicit starter route only through a new owner ruling with equivalent capacity proofs.
+
+### Yield lane capacity across closed cleaner port calls, 2026-11-14
+
+Owner ruling 2 supersedes the second stop. CitationCleaner and CitationCleanerWork
+remain unchanged. The cleaner port is a separate boundary, like Recognizer: its
+native children use a named standalone starter and their own per-process leases.
+The default HTML cleaner passes that starter explicitly to MarkupWorker. Diff,
+regex and invocation-owned Xml use the invocation lane. Neither Diff nor Markup
+looks up an invocation, a lane or native admission.
+
+Lane rule 1 is amended: one unit is held from the first native need until the
+invocation Scope closes, except while calling through the closed cleaner port.
+The pipeline wraps each invoke with lane.yieldTo, including nested cleaner plans.
+Yield confirms retirement of the current occupant, returns the unit, runs the
+port effect, and leaves the lane un-acquired. The next start acquires lazily.
+An unconfirmed retirement quarantines and prevents the port effect from running.
+There is no alternate spawn or graceful-exit path. A lane whose retirement was
+unconfirmed remains terminal even after late confirmation returns the unit; both
+start and yieldTo refuse further work in that invocation. The real-process proof
+checks this after acknowledgement as well as before it.
+
+NativeAdmission.ts uses concurrentOperations for the total active ceiling; the
+regex subset additionally checks concurrentRegexProcesses. Policy v2 requires
+that subset ceiling to be at least concurrentOperations (default 2/2; test 1/1).
+For admitted operations following this serial native-call contract, each holds
+at most one unit, in its lane or its cleaner call. Other admitted operations
+therefore cannot fill the final unit needed by this operation. The shared native
+admission still enforces its hard total ceiling across separate external callers;
+quarantine refuses native work rather than admitting a replacement.
+
+Normal built-in HTML cleaning precedes geometry/regex native work. Yield there
+has no held unit to return and performs no new admission or owner-open check.
+It preserves the port call's order and refusal. The reversed regex-then-HTML
+proof deliberately uses a direct-stage invocation because the built-in order
+does not exercise that transition. The snapshot and probe count cumulative
+successful unit acquisitions, so a later reacquisition is observable.
+
+Review round 1 corrects the initial fiber-reentrant lock implementation. No lock
+is held across the opaque cleaner effect. A one-permit Semaphore serializes only
+entry and exit against lane start/handover. On the depth 0 -> 1 transition,
+confirmed retirement and unit return finish before incrementing depth or running
+the effect. Other entrants cannot pass that transition until it finishes. Each
+successful entry increments logical depth; a masked finalizer decrements it on
+every exit. A start during any yield still fails closed. Unconfirmed retirement
+leaves depth unchanged, quarantines, and never runs the effect.
+
+This preserves forked and concurrent work.nested plans from any fiber. Independent
+host cleaner calls may themselves request multiple standalone children; the
+shared admission still bounds their total and applies its original queue policy.
+The one-unit-per-operation counting argument above applies to the serial built-in
+call path, not arbitrary host parallelism. Tests explicitly exercise concurrent
+yields with two real children under the 2/2 policy, without promising serialization
+of opaque host code. No transaction is held or introduced around that code.
+
+The four original lane proofs and the cleaner additions run against real Bun and
+Node children. New proof files also pass under a Node-parent Vitest runner using
+explicit Node platform services. Kill/retirement remains the existing physical
+owner's SIGKILL, isRunning re-check and child-Scope close before acknowledgement.
+
+Arbitrary host-cleaner parallelism is bounded by the shared admission but is not
+proved deadlock-free; the one-unit counting argument covers serial built-in calls.
+A recursive public engine call from a cleaner still needs a second operation
+permit, as on main; yielding native capacity does not release that outer permit.
+
+The private lane snapshot exposes the existing yield-depth counter so the combined
+two-entrant unconfirmed-retirement proof asserts depth zero directly. This adds
+an observation only; it changes no transition, failure or lane lifetime.
+
+Reverse: Restore request-long lane ownership only after replacing the cleaner boundary with an owner-approved explicit authority contract.
+
+### Validate evaluator runtime against the lane and retain installation closure, 2026-11-14
+
+Hosted round 1 exposed fixtures whose invocation opened outside their counting spawner or captured Clock. Each evaluator must match the lane runtime on every evaluation, including the first. CitationNativeLane.matchesRuntime compares the actual captured handles; regexOwner caches only an adapter. Remove ineffective provides around Effect.succeed. The evaluator also retains an installation-Scope closed flag and refuses closed before runtime comparison, preserving the closed-owner failure rather than trying a deleted worker path and returning spawn-failed. This does not move physical children out of invocation Scope. Fixtures must open their invocation with the same spawner and Clock, including the Clock captured by their operation admission; matching sleep functions in different Clock objects is insufficient. Keep expected process counts and budget/refusal assertions; move capacity-return assertions after invocation closure where lane lifetime requires it.
+
+Reverse: Replace these guards only with equivalent lane-runtime and closed-installation refusal checks.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

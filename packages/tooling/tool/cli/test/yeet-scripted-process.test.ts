@@ -379,6 +379,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
       );
       expect(rejected.message).toBe("commit message failed commitlint:\nsubject may not be empty");
       expect(rejected.exitCode).toBe(3);
+      expect(rejected.handlerErrorKind).toBe("publish-input");
       expect(rejected.command).toBe(`commitlint --edit ${messagePath}`);
 
       const unspawnable = yield* validateCommitMessage(context, "nope").pipe(

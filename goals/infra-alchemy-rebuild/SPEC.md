@@ -263,7 +263,7 @@ Reverse: Rename the types to AWS.* with the old names as Resource aliases, swap 
 
 ### @beep/alchemy-vercel resource shape: Project, EnvVar, Domain over 14 project operations, 2026-11-13
 
-Exactly three resources (`Vercel.Project`, `Vercel.EnvVar`, `Vercel.Domain`) over `createProject/getProject/updateProject/deleteProject`, `createProjectEnv(upsert)/filterProjectEnvs/editProjectEnv/removeProjectEnv` and `addProjectDomain/getProjectDomain/updateProjectDomain/removeProjectDomain/verifyProjectDomain/moveProjectDomain`. Props, attributes and the env request body are `effect/Schema` schemas with the TS types derived from them. Attributes and the request body are branded `S.Opaque` (the provider builds them with `.make`); props (`ProjectProps`, `ProjectGitRepository`, `EnvVarProps`, `DomainProps`) stay annotated structs with schema-first inventory exceptions, because stacks pass them as plain object literals wrapped in `Input<>` and the engine round-trips them through state as JSON. The three resource interfaces are Alchemy handle types and carry the same kind of exception. Project props cover what `infra/src/OipWeb.ts` sets: framework, build and install commands, root directory, git repository, deployment protection (the API's `ssoProtection` values; `none` maps to `null`, Pulumi's `standardProtection` is `prod_deployment_urls_and_all_previews`), node version and `autoExposeSystemEnvs`. `teamId` and `gitRepository` replace the project (the project API cannot relink a repository); a same-name replacement deletes first because names are unique per team. Adopting a project linked to another repository fails with `ProjectRepositoryMismatch` rather than drifting. An existing env var is matched on key, branch and any overlapping target (Vercel's upsert overwrites on overlap), so an overlapping foreign variable needs `adopt(true)`; an omitted `type` compares as `encrypted`. The declared env `type` is a minimum on the order `plain` < `encrypted` < `sensitive`: a stored type that is equal or stronger (for example a team policy that stores Production and Preview values as `sensitive`) is accepted and never replaced; a weaker stored type plans an update, and reconcile replaces it delete-first, because Vercel does not promise an in-place type change; a write that still leaves a weaker type fails with `EnvVarTypeNotApplied` rather than churning. Repository identity is the git provider (GitHub link variants normalized) plus the path. An unverified domain plans an update on every deploy (the engine passes the stored output to `diff`), so reconcile re-runs `verifyProjectDomain` after the DNS change with unchanged props. EnvVar defines its own request-body schema (`EnvVarRequestBody`) because distilled types the body `unknown`; the value prop is `Redacted<string>`, unwrapped only to build that body, and is never an attribute. Storybook does not use the package (2026-11-09 decision).
+Exactly three resources (`Vercel.Project`, `Vercel.EnvVar`, `Vercel.Domain`) over `createProject/getProject/updateProject/deleteProject`, `createProjectEnv(upsert)/filterProjectEnvs/editProjectEnv/removeProjectEnv` and `addProjectDomain/getProjectDomain/updateProjectDomain/removeProjectDomain/verifyProjectDomain/moveProjectDomain`. Props, attributes and the env request body are `effect/Schema` schemas with the TS types derived from them. Attributes and the request body are branded `S.Opaque` (the provider builds them with `.make`); props (`ProjectProps`, `ProjectGitRepository`, `EnvVarProps`, `DomainProps`) stay annotated structs with schema-first inventory exceptions, because stacks pass them as plain object literals wrapped in `Input<>` and the engine round-trips them through state as JSON. The three resource interfaces are Alchemy handle types and carry the same kind of exception. Project props cover what infra/src/OipWeb.ts (removed in #3341) sets: framework, build and install commands, root directory, git repository, deployment protection (the API's `ssoProtection` values; `none` maps to `null`, Pulumi's `standardProtection` is `prod_deployment_urls_and_all_previews`), node version and `autoExposeSystemEnvs`. `teamId` and `gitRepository` replace the project (the project API cannot relink a repository); a same-name replacement deletes first because names are unique per team. Adopting a project linked to another repository fails with `ProjectRepositoryMismatch` rather than drifting. An existing env var is matched on key, branch and any overlapping target (Vercel's upsert overwrites on overlap), so an overlapping foreign variable needs `adopt(true)`; an omitted `type` compares as `encrypted`. The declared env `type` is a minimum on the order `plain` < `encrypted` < `sensitive`: a stored type that is equal or stronger (for example a team policy that stores Production and Preview values as `sensitive`) is accepted and never replaced; a weaker stored type plans an update, and reconcile replaces it delete-first, because Vercel does not promise an in-place type change; a write that still leaves a weaker type fails with `EnvVarTypeNotApplied` rather than churning. Repository identity is the git provider (GitHub link variants normalized) plus the path. An unverified domain plans an update on every deploy (the engine passes the stored output to `diff`), so reconcile re-runs `verifyProjectDomain` after the DNS change with unchanged props. EnvVar defines its own request-body schema (`EnvVarRequestBody`) because distilled types the body `unknown`; the value prop is `Redacted<string>`, unwrapped only to build that body, and is never an attribute. Storybook does not use the package (2026-11-09 decision).
 
 Lane goals/infra-alchemy-rebuild-p2-vercel
 
@@ -405,7 +405,7 @@ Reverse: Replace test/support/FakeAws.ts with live tests under the alchemy-test 
 
 ### Pulumi stack beep-storybook/production is removed; it held no resources, 2026-11-13
 
-The Pulumi Storybook program was never applied: `pulumi stack ls` in `infra/storybook` (backend `s3://oip-law-pulumi-state`) showed `production` with 0 resources, last updated five months ago. `pulumi stack export --stack production` was archived 2026-11-13 outside the repo at `~/.local/state/beep/infra-archives/pulumi-exports/beep-storybook-production-2026-11-13.json` (493 bytes, deployment version 3, 0 resources, 0 pending operations, sha256 `fde291a6f1488725c2dd0285b4bd25491578b95deb4d8e9b0823dd33f2448bbf`). `pulumi stack rm production --yes` runs after this decision merges. There is nothing to destroy and nothing to flip. The program sources (`infra/storybook`, `infra/src/Storybook.ts`) leave with the rest of `infra/` in P6; the Vercel config file beside the Storybook app is deleted now because no Vercel project reads it.
+The Pulumi Storybook program was never applied: `pulumi stack ls` in infra/storybook (removed in #3341) (backend `s3://oip-law-pulumi-state`) showed `production` with 0 resources, last updated five months ago. `pulumi stack export --stack production` was archived 2026-11-13 outside the repo at `~/.local/state/beep/infra-archives/pulumi-exports/beep-storybook-production-2026-11-13.json` (493 bytes, deployment version 3, 0 resources, 0 pending operations, sha256 `fde291a6f1488725c2dd0285b4bd25491578b95deb4d8e9b0823dd33f2448bbf`). `pulumi stack rm production --yes` runs after this decision merges. There is nothing to destroy and nothing to flip. The program sources (infra/storybook (removed in #3341), infra/src/Storybook.ts (removed in #3341)) leave with the rest of `infra/` in P6; the Vercel config file beside the Storybook app is deleted now because no Vercel project reads it.
 
 Lane goals/infra-alchemy-rebuild-p3-storybook
 
@@ -909,10 +909,27 @@ destroyed afterwards:
   4. A rotation of the sensitive value.
   5. A target change on the sensitive variable.
 - The staging re-run shape ran separately: the variable's row was dropped while the project's row
-  stayed, so the plan was `1 to adopted`, and the plan after it had no changes.
+  stayed, so the plan was `1 to adopted`, and the plan after it had no changes. A failed create does
+  not delete its row, though: it leaves a `creating` checkpoint, which plans as `create` (below).
 - The real `OipWeb` personal stage was deployed and destroyed, covering its project, two variables
   and bucket.
 - Every write succeeded in place: same ids, no duplicates, stored types unchanged.
+
+**The re-run.** After #3339 merged (`6e393d55c29`, 11:44:22Z) the gate re-armed at 11:45:21Z, and run
+43591525409 succeeded on both stages:
+- staging: `Plan: 1 to create` (`[EnvHubSpotServiceKey] create`, the eight others `noop`), then `Done: 1 succeeded`;
+- prod: `Plan: 8 to create, 5 to adopted`, then `Done: 13 succeeded`.
+
+Staging printed `create` rather than the probe's `adopted`. Alchemy commits a `creating` checkpoint
+without attributes before it calls the provider (`Apply.ts`), the failed call left it in state, and the
+planner prints such a row as `create`, deferring adoption to apply time (`Plan.ts`). The probe had
+deleted the row instead, a wrong model of a failed create.
+
+After the run, read-only:
+- All six live variables kept their pre-arming ids, types and targets, with one variable per key.
+- The six domains, six DNS records and both `*.vercel.app` domains were unchanged.
+- No log line carried a value or a `__redacted__` envelope.
+- Every `OipWeb` state row is `created` or `updated`.
 
 **Rule from now on.** A provider write path is exercised against the real API on a scratch stage
 before any live stage is armed. Fake-only evidence is not enough for a first arm. A fake encodes
@@ -1004,7 +1021,7 @@ Reverse: gh variable delete OIP_WEB_INFRA_DEPLOY -R beep-effect/beep-effect; gh 
 
 ### OipWeb cutover procedure from Pulumi, 2026-11-14
 
-The procedure is the runbook's "Cutover from Pulumi" (`docs/runbooks/alchemy-infra.md`), executed by the packet gate session. Pulumi commands run from `infra/oip-web` as `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE op run -- pulumi <command>` with `AWS_PROFILE=elpresidank-vault` and `PULUMI_BACKEND_URL=s3://oip-law-pulumi-state` (the packet gate session found that this passphrase decrypts both stacks; the `BEEP_SECRETS` item's passphrase belongs to the runners stack). Steps: (1) read-only preconditions: the token at `op://BEEP_SECRETS/OIP_SECRETS/CRM_HUBSPOT_SERVICE_KEY` returns HTTP 200 and portal 246203876 from HubSpot's account-info endpoint (verified by the packet gate session 2026-11-14), and the Alchemy Cloudflare token lists the records of both zones; (2) `pulumi stack export` of both stacks archived under `~/.local/state/beep/infra-archives/pulumi-exports/` with size and sha256 in a decision file; (3) the bootstrap decision's commands; (4) Pulumi frozen; (5) immediately before arming, the account-info read repeated with the token the environment secret was set from, then the packet gate session tells the orchestrator the time and sets `OIP_WEB_INFRA_DEPLOY=enabled` itself; plans must match the expected-plan decision, smoke checks pass, a second dispatch plans no changes, drift exits 0; (6) `pulumi state delete` for every adopted object, then `pulumi state unprotect` and a targeted destroy of the empty old buckets, then `pulumi stack rm`. Expected visitor effect: none; no project, domain or DNS record changes, and the variables are rewritten with their current values, which reach new deployments only. Each step names its check and rollback in the runbook.
+The procedure is the runbook's "Cutover from Pulumi" (`docs/runbooks/alchemy-infra.md`), executed by the packet gate session. Pulumi commands run from infra/oip-web (removed in #3341) as `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE op run -- pulumi <command>` with `AWS_PROFILE=elpresidank-vault` and `PULUMI_BACKEND_URL=s3://oip-law-pulumi-state` (the packet gate session found that this passphrase decrypts both stacks; the `BEEP_SECRETS` item's passphrase belongs to the runners stack). Steps: (1) read-only preconditions: the token at `op://BEEP_SECRETS/OIP_SECRETS/CRM_HUBSPOT_SERVICE_KEY` returns HTTP 200 and portal 246203876 from HubSpot's account-info endpoint (verified by the packet gate session 2026-11-14), and the Alchemy Cloudflare token lists the records of both zones; (2) `pulumi stack export` of both stacks archived under `~/.local/state/beep/infra-archives/pulumi-exports/` with size and sha256 in a decision file; (3) the bootstrap decision's commands; (4) Pulumi frozen; (5) immediately before arming, the account-info read repeated with the token the environment secret was set from, then the packet gate session tells the orchestrator the time and sets `OIP_WEB_INFRA_DEPLOY=enabled` itself; plans must match the expected-plan decision, smoke checks pass, a second dispatch plans no changes, drift exits 0; (6) `pulumi state delete` for every adopted object, then `pulumi state unprotect` and a targeted destroy of the empty old buckets, then `pulumi stack rm`. Expected visitor effect: none; no project, domain or DNS record changes, and the variables are rewritten with their current values, which reach new deployments only. Each step names its check and rollback in the runbook.
 
 Lane goals/infra-alchemy-rebuild-p4-oip-web
 
@@ -1042,13 +1059,83 @@ Reverse: Re-declare any project field in OipWebStack.ts (and drop the pull-reque
 
 Read-only `alchemy plan --stage dev_elpresidank --env-file /dev/null` from `apps/oip-web` (aws-vault credentials exported, provider tokens through `op run`), 2026-11-14, twice: first with the account IaC Cloudflare token, then, after the project and DNS declarations narrowed, with the Alchemy token the workflow uses. Both exited 0 with `Plan: 4 to create`: `[AssetsBucket]`, `[EnvHubSpotAccountId]`, `[EnvNextDisablePwa]` and `[Project]`, all stage-named (`oip-web-dev-elpresidank`, `oip-law-web-assets-dev-elpresidank`); nothing adopted, moved or modified; no deploy; the state bucket holds no `OipWeb/` object afterwards. CI-style plan lines carry a `[HH:MM:SS.mmm] INFO: ` prefix and a `Plan · <stage>` title line; the plan guard strips the prefix and reads the stage from the title (fixtures in `test/stack/PlanGuard.test.ts`).
 
-Corrected 2026-11-14 for the packet gate session (the first prediction of `1 to create, 12 to adopted` was wrong). The first plans, rendered by the engine itself against the seeded census in `apps/oip-web/test/stack/OipWebStack.test.ts` ("the first live plans pass the plan guard"), are `prod`: `Plan: 8 to create, 5 to adopted`, with `[Project]` and `[Dns-oip-law]`, `[Dns-opip-law]`, `[Dns-www-oip-law]`, `[Dns-www-opip-law]` adopted and `[AssetsBucket]`, `[Domain-oip-law]`, `[Domain-opip-law]`, `[Domain-www-oip-law]`, `[Domain-www-opip-law]`, `[EnvHubSpotAccountId]`, `[EnvHubSpotServiceKey]`, `[EnvNextDisablePwa]` create; `staging`: `Plan: 6 to create, 3 to adopted`, with `[Project]`, `[Dns-staging-oip-law]` and `[Dns-staging-opip-law]` adopted and `[AssetsBucket]`, `[Domain-staging-oip-law]`, `[Domain-staging-opip-law]` and the three variables create. Nothing is written while planning. The variables and domains plan as `create` because their `project` prop is the adopted project's output, which is unresolved when the plan is made, so the engine cannot read them for adoption; at apply it still gates each on `adopt(true)`. With the real providers over the in-memory Vercel API (`packages/tooling/library/alchemy-vercel/test/CreatePath.test.ts`): a domain already on the target project with equal routing gets no mutating request, and without `adopt(true)` it is refused with `OwnedBySomeoneElse`; an existing variable (literal `encrypted`, and sensitive `valueFrom`) gets exactly one `PATCH Env` on its own id, with the same key, type and targets, no `DELETE`, no `POST`, and stays the only variable with that key. That last result held only against the fake: the real API refuses the `key` the edit then sent on a sensitive variable, so the first armed staging deploy (run 43585534113) failed on `EnvHubSpotServiceKey`. The edit now sends only the value plus the targets and branch that differ, the fake refuses what the real API refuses, and the path is rehearsed on the real API (decision `2026-11-14-first-armed-oipweb-deploy-failed-on-a-sensitive-variable-edit`). The staging re-run with eight of nine rows written plans `Plan: 1 to adopted` (`[EnvHubSpotServiceKey] adopted`, every other row `noop`) and passes the guard (`OipWebStack.test.ts`, "the staging re-run after the 2026-11-14 partial deploy"); prod's first plan is unchanged.
+Corrected 2026-11-14 for the packet gate session (the first prediction of `1 to create, 12 to adopted` was wrong). The first plans, rendered by the engine itself against the seeded census in `apps/oip-web/test/stack/OipWebStack.test.ts` ("the first live plans pass the plan guard"), are `prod`: `Plan: 8 to create, 5 to adopted`, with `[Project]` and `[Dns-oip-law]`, `[Dns-opip-law]`, `[Dns-www-oip-law]`, `[Dns-www-opip-law]` adopted and `[AssetsBucket]`, `[Domain-oip-law]`, `[Domain-opip-law]`, `[Domain-www-oip-law]`, `[Domain-www-opip-law]`, `[EnvHubSpotAccountId]`, `[EnvHubSpotServiceKey]`, `[EnvNextDisablePwa]` create; `staging`: `Plan: 6 to create, 3 to adopted`, with `[Project]`, `[Dns-staging-oip-law]` and `[Dns-staging-opip-law]` adopted and `[AssetsBucket]`, `[Domain-staging-oip-law]`, `[Domain-staging-opip-law]` and the three variables create. Nothing is written while planning. The variables and domains plan as `create` because their `project` prop is the adopted project's output, which is unresolved when the plan is made, so the engine cannot read them for adoption; at apply it still gates each on `adopt(true)`. With the real providers over the in-memory Vercel API (`packages/tooling/library/alchemy-vercel/test/CreatePath.test.ts`): a domain already on the target project with equal routing gets no mutating request, and without `adopt(true)` it is refused with `OwnedBySomeoneElse`; an existing variable (literal `encrypted`, and sensitive `valueFrom`) gets exactly one `PATCH Env` on its own id, with the same key, type and targets, no `DELETE`, no `POST`, and stays the only variable with that key. That last result held only against the fake: the real API refuses the `key` the edit then sent on a sensitive variable, so the first armed staging deploy (run 43585534113) failed on `EnvHubSpotServiceKey`. The edit now sends only the value plus the targets and branch that differ, the fake refuses what the real API refuses, and the path is rehearsed on the real API (decision `2026-11-14-first-armed-oipweb-deploy-failed-on-a-sensitive-variable-edit`). The re-run (run 43591525409, main `6e393d55c29`, re-armed 2026-11-14T11:45:21Z) printed staging `Plan: 1 to create` (`[EnvHubSpotServiceKey] create`, the eight others `noop`) and prod `Plan: 8 to create, 5 to adopted`; both passed the guard and deployed (`Done: 1 succeeded`, `Done: 13 succeeded`). The failed run had left a `creating` checkpoint without attributes for `EnvHubSpotServiceKey` (Alchemy commits one before calling the provider), and the planner prints such a row as `create` and decides adoption at apply time. An earlier probe that deleted the row instead predicted `1 to adopted`; the stack test now models the checkpoint and asserts `1 to create` (`OipWebStack.test.ts`, "the staging re-run after the 2026-11-14 partial deploy"). After the deploy all six variables kept their ids, types and targets, and the six domains and six DNS records were unchanged.
 
 Because the deploy job runs plan, guard and deploy unattended, the stop rule is code: on `prod` and `staging` the plan guard refuses every `create` outside an explicit allow-list (`prod`: `AssetsBucket`, `EnvNextDisablePwa`, `EnvHubSpotAccountId`, `EnvHubSpotServiceKey`, `Domain-oip-law`, `Domain-www-oip-law`, `Domain-opip-law`, `Domain-www-opip-law`; `staging`: the bucket, the three variables, `Domain-staging-oip-law`, `Domain-staging-opip-law`) with `PlanCreateRefused`, so a project or DNS record that fails to adopt can never be created a second time and a resource added to the stack later must be allow-listed deliberately. Personal stages create freely. `CRM_HUBSPOT_SERVICE_KEY` must be present at plan time: the stack reads it before declaring anything and `Vercel.EnvVar.diff` resolves it, so a missing key is a `ConfigError` before any write. Remaining stop signs for the reader of the run: any `replace`, `delete` or `orphaned` line (the guard and `RemovalPolicy.protect` both refuse it); `OwnedBySomeoneElse`, `EnvVarTypeNotApplied` or a Cloudflare 403; a `ConfigError` on `CI` or `CRM_HUBSPOT_SERVICE_KEY`; a second dispatch that plans anything but no changes.
 
 Lane goals/infra-alchemy-rebuild-p4-oip-web
 
 Reverse: n/a (evidence record); a later plan that differs supersedes it with its own decision file.
+
+### OipWeb Pulumi cutover done, both stacks removed, 2026-11-14
+
+The packet gate session ran the `opip-web` Pulumi cutover on 2026-11-14, staging first. It used the
+attended script, with one `stack_ls_json` fix: bare stack names are normalized to full names. Every
+step was announced to the orchestrator, and every time below is UTC from command output.
+
+**Archives, taken 10:29Z.** Both are kept until P6 under
+`~/.local/state/beep/infra-archives/pulumi-exports/`, off-repo.
+
+| Stack | Resources | Bytes | sha256 |
+| --- | --- | --- | --- |
+| staging | 18 | 79,266 | `23c44a9f49d6c5d0804af5b3e794aacfe8958e2882624572d20150df2d1b4a93` |
+| production | 22 | 101,138 | `465ab3f9bca3d89165819155e63ec341469ddea20ee7fa04fc1f3ed61a81c803` |
+
+The same directory (`opip-web-<stack>-2026-11-14-*`) also holds every step snapshot, the compare
+inputs, both destroy previews (JSON) and both destroy logs, plus the script (`oip-web-pulumi-cutover.sh`)
+and its steps file. Those are what `rollback` needs.
+
+**The armed deploy before it.** Run 43591525409 (main `6e393d55c29`):
+- staging planned `Plan: 1 to create` (`[EnvHubSpotServiceKey] create`, eight `noop`);
+- prod planned `Plan: 8 to create, 5 to adopted`;
+- both deployed, and the smoke checks passed.
+
+The probe had predicted `1 to adopted` for staging. Why `create` printed instead:
+1. Alchemy commits a `creating` checkpoint with no attributes before it calls the provider
+   (`Apply.ts`).
+2. The failed first run (43585534113) left that checkpoint for `EnvHubSpotServiceKey`.
+3. The planner prints such a row as `create` and decides adoption at apply time (`Plan.ts`).
+4. The probe had deleted the row instead, a wrong model of a failed create. The stack test now
+   models the checkpoint.
+
+Before the cutover, the live state matched the pre-arming census: the six variable ids, one variable
+per key, the same types and targets, and unchanged domains and DNS records.
+
+**Staging.**
+1. Detach 8 URNs, 11:54:24Z to 11:54:39Z: 18 to 10 resources, compare ok.
+2. Old bucket `staging-assets.oip.law`: 0 versions, 0 delete markers.
+3. Unprotect 5 resources at 11:55:09Z.
+4. The destroy preview showed exactly five deletes; destroy ran 11:56:08Z to 11:56:21Z with the
+   orchestrator's go: `5 deleted, 2 unchanged`, 10 to 5, compare ok.
+5. Component state delete at 11:56:54Z: 4 left.
+6. `stack rm --force --preserve-config` at 11:57:10Z.
+
+**Production.**
+1. Detach 12 URNs, 11:57:39Z to 11:58:01Z: 22 to 10, compare ok.
+2. Old bucket `assets.oip.law`: 0 versions, 0 delete markers.
+3. Unprotect 5 resources at 11:58:04Z.
+4. The destroy preview showed exactly five deletes; destroy ran 11:58:51Z to 11:59:06Z with the
+   orchestrator's go: `5 deleted, 2 unchanged`, 10 to 5, compare ok.
+5. Component state delete at 11:59:26Z: 4 left.
+6. `stack rm` at 11:59:33Z.
+
+**After.**
+- `pulumi stack ls -a` lists only `organization/beep-ci-runners/production`: 354 resources,
+  lastUpdate 2026-11-14T05:22:19.684Z, unchanged throughout.
+- Both old buckets return 404; both Alchemy buckets exist; all six hostnames serve.
+
+**What this PR retires (#3341).** The Pulumi program goes: infra/oip-web (removed in #3341), infra/src/OipWeb.ts
+(removed in #3341), its entry and test. The Storybook Pulumi program goes in the same PR, under the P6 retire inventory
+R1 (its stack was removed on 2026-11-13): infra/storybook (removed in #3341) and infra/src/Storybook.ts (removed in #3341), with its
+entry and test, and infra/src/Vercel.ts (removed in #3341), which only those two programs imported. So
+`@pulumi/cloudflare` and `@pulumiverse/vercel` leave `infra/`, the root catalog and `bun.lock`. This PR
+also deletes the turbo-cache lab program (lab `c1023a`, destroyed 2026-10-24; decision
+`2026-11-14-turbo-cache-lab-lab-c1023a-was-destroyed-on-2026-10-24-nothing-is-live`). The runners
+program is unchanged.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web-cutover
+
+Reverse: Run the archived script's rollback per stack from a checkout that still has infra/oip-web (6e393d55c29): stack init, stack import of the archive, targeted refresh of the bucket group; disarm OIP_WEB_INFRA_DEPLOY first
 
 ### OipWeb stages: prod and staging own the live objects, names are pinned, personal stages are fenced off, 2026-11-14
 
@@ -1065,6 +1152,57 @@ With `@beep/alchemy-aws-extras` on `main` (#3292), `RunnerFleet` declares one `R
 Lane goals/infra-alchemy-rebuild-p2-github-runners-composite
 
 Reverse: Restore a caller-supplied launchTemplate(spec) effect returning a template id and version, built from a RunnerLaunchSpec the composite hands out.
+
+### Turbo-cache lab lab-c1023a was destroyed on 2026-10-24; nothing is live, 2026-11-14
+
+**What the lab was.** It was the disposable AWS conformance lab of the completed goal
+`turborepo-cache-conformance`, epoch `c1023a`, Pulumi stack `beep-turbo-cache-lab/lab-c1023a`.
+- Its program, infra/src/internal/turbo-cache-lab-entry.ts (removed in #3341), deployed two
+  `CiTurboCache` copies: an incumbent and an "evolved" incumbent.
+- Each copy had an S3 bucket, an HTTP API with its authorizer, reader and writer Lambdas, their IAM
+  roles and their log groups.
+- The lab script's bootstrap added one KMS key and three SSM SecureStrings under
+  `/beep-ci/cache-lab/c1023a/`.
+- Every resource carried the tags `beep:lab=turbo-cache-conformance` and `beep:lab-epoch=c1023a`.
+
+**Lifetime.** The Pulumi backend keeps four backups of that stack:
+- First update 2026-10-24T01:12:05Z, a 100 KB checkpoint.
+- Grown at 02:23:46Z to 201 KB, with both incumbents.
+- Last full checkpoint at 03:21:10Z, 191 KB.
+- At 03:21:59Z, 392 bytes: an empty deployment. That is consistent with the script's destroy (a
+  targeted destroy of the bucket policies, emptying the buckets, a full destroy) followed by
+  `pulumi stack rm`, which leaves only the `.bak`.
+
+The backend lists no such stack today.
+
+**Live check, 2026-11-14.** Seven read-only AWS calls in `us-east-1`, each made once, all came back
+empty:
+1. The resource-tag query for `beep:lab-epoch=c1023a`.
+2. The same query for `beep:lab=turbo-cache-conformance`, any epoch.
+3. SSM parameters under `/beep-ci/cache-lab/`.
+4. CloudWatch log groups with the prefix `/aws/lambda/beep-tcl-`.
+5. CloudWatch log groups matching the pattern `beep-tcl`.
+6. IAM roles whose names start with `beep-tcl`.
+7. S3 buckets whose names start with `beep-tcl`.
+
+The KMS key's 7-day deletion window has long passed, and the key no longer appears in the tag query.
+Nothing accrues cost.
+
+**What remains.** Five small objects in the Pulumi backend bucket belong to that stack: the `.bak` and
+the four backups, about 0.5 MB together. They stay with the bucket, whose fate the operator decides at
+closeout.
+
+**Consequence.** Deleting the lab program and its script (#3341) loses no capability and strands no
+resource. To reverse it, restore the files from git history; there is nothing to redeploy.
+
+**Who gathered the evidence, and its limits.** The packet's P6 retire-inventory lane gathered it on
+2026-11-14. It read the lab program and the lab script, then made the seven read-only calls above
+under the operator workstation's AWS profile. The P6 inventory document is committed under the
+packet's research directory by a following packet PR. The check covers the lab's tag, name-prefix and
+parameter-path conventions as the lab script creates them; a resource created outside those
+conventions would not be found by it.
+
+Reverse: n/a (record only)
 
 ### Vercel.EnvVar gains valueFrom so a secret never enters Alchemy state, 2026-11-14
 

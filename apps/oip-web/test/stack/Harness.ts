@@ -109,15 +109,31 @@ export const renderPlanLog =
     A.join([`Plan · ${stage}`, ...A.map(formatPlanLines(plan), Str.replace(ANSI, ""))], "\n");
 
 /**
- * Remove one resource's row from every stage of the scratch state store, leaving the live object
- * in place: the state a deploy leaves when that one resource failed (staging, 2026-11-14).
+ * Turn one resource's row into the checkpoint a failed create leaves: Alchemy commits a `creating`
+ * row without attributes before it calls the provider, and keeps it when the call fails (staging,
+ * run 43585534113). The live object stays in place.
  */
-export const dropStateRow = Effect.fn("dropStateRow")(function* (fqn: string) {
+export const checkpointAsCreating = Effect.fn("checkpointAsCreating")(function* (fqn: string) {
   const store = yield* yield* State;
   const stacks = yield* store.listStacks();
   yield* Effect.forEach(stacks, (stack) =>
-    store
-      .listStages(stack)
-      .pipe(Effect.flatMap((stages) => Effect.forEach(stages, (stage) => store.delete({ stack, stage, fqn }))))
+    store.listStages(stack).pipe(
+      Effect.flatMap((stages) =>
+        Effect.forEach(stages, (stage) =>
+          store.get({ stack, stage, fqn }).pipe(
+            Effect.flatMap((row) =>
+              row === undefined
+                ? Effect.void
+                : store.set({
+                    stack,
+                    stage,
+                    fqn,
+                    value: { ...row, status: "creating", attr: undefined } as typeof row,
+                  })
+            )
+          )
+        )
+      )
+    )
   );
 });

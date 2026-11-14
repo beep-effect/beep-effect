@@ -123,7 +123,7 @@ const install = Effect.fn("LawMetadataTest.install")(function* (
     ),
     Effect.provideContext(installed)
   );
-  return { ...setup, operation, owner, metadata };
+  return { ...setup, operation, owner, metadata, installed };
 });
 /** Complete field/state comparisons, with acknowledged source search routes. */
 export const replayCitationLawMetadata = Effect.fn("LawMetadataTest.replay")(function* (
@@ -171,7 +171,7 @@ export const assertCitationLawMetadataBudget = Effect.fn("LawMetadataTest.budget
       expect(reserved).toBe(36);
     }),
     outer.limits
-  );
+  ).pipe(Effect.provideContext(outer.installed));
   const ownedConfig = { ...corpus.configuration, highestValidYear: corpus.configuration.highestValidYear };
   const owned = yield* install("bun", ownedConfig);
   ownedConfig.highestValidYear = 9999;
@@ -244,6 +244,9 @@ export const assertCitationFullLawMetadataInput = Effect.fn("LawMetadataTest.ful
   const { bundle } = yield* loadCitationFrozenEditionFixtures();
   const editions = yield* makeCitationFrozenEditions(bundle);
   const metadata = yield* makeCitationFullLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+    ),
     Effect.provideContext(Context.add(setup.provided, CitationFrozenEditions, editions)),
     DateTime.withCurrentZoneOffset(0)
   );

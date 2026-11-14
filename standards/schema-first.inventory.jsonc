@@ -56,14 +56,6 @@
       "reason": "Sidecar registration regression decodes fixed RPC payload/result envelopes to prove wiring; schema-derived arbitrary coverage belongs with the use-case schemas."
     },
     {
-      "file": "infra/src/OipWeb.ts",
-      "symbol": "OipPulumiStateBackendConfig",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/infra",
-      "reason": "Stays a branded S.Class (codemod keep reason static-super): its static `make` override calls `super.make`, which S.Opaque replaces with the base method after the first call. Follow-up: drop the override (decode-time defaults) and convert to a branded S.Opaque."
-    },
-    {
       "file": "packages/_internal/db-admin/test/integration/DocumentsSyncMigration.pglite.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -1265,7 +1257,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 333,
+      "line": 361,
       "owner": "@beep/law-practice-server",
       "reason": "Exercises a live registry cursor, membership-before-lookup and fixed source cleaner observations. The fixture codec only authenticates recorded input; stateful runtime callback ordering is tested explicitly. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
