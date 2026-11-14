@@ -146,22 +146,27 @@ const FIXTURE_GIT_STEPS: ReadonlyArray<ReadonlyArray<string>> = [
 ];
 
 // A repository-locating variable inherited from a git hook or a linked worktree would point the fixture's
-// `git init`/`git add` at the real checkout. With `extendEnv: true`, an `undefined` value removes the
-// variable from the child environment (Effect `ChildProcess` `env` docs; the Node spawner deletes the
-// key), so the rest of the inherited environment stays. Same scrub as ai-metrics `git-root-evidence.ts`.
+// `git init`/`git add` at the real checkout, and an inherited object directory would make `git add` write
+// blobs into another store. With `extendEnv: true`, an `undefined` value removes the variable from the
+// child environment (Effect `ChildProcess` `env` docs; the Node spawner deletes the key), so the rest of
+// the inherited environment stays. The removed keys match the repository-locating keys of ai-metrics
+// `git-root-evidence.ts`; its `GIT_OPTIONAL_LOCKS=0` is left out because the fixture writes.
 const FIXTURE_GIT_ENV = {
   GIT_DIR: undefined,
   GIT_WORK_TREE: undefined,
   GIT_INDEX_FILE: undefined,
   GIT_COMMON_DIR: undefined,
+  GIT_OBJECT_DIRECTORY: undefined,
+  GIT_ALTERNATE_OBJECT_DIRECTORIES: undefined,
 };
 
 /**
  * Turns a fixture directory into a git work tree: `git init`, a local identity, and every file present
  * staged. Re-running it stages files written since; files written later and never staged stay
  * untracked, which a git-visible listing still includes unless a `.gitignore` excludes them. Inherited
- * `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE` and `GIT_COMMON_DIR` are removed from each git child, so
- * the fixture never acts on the repository the tests run from.
+ * `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE`, `GIT_COMMON_DIR`, `GIT_OBJECT_DIRECTORY` and
+ * `GIT_ALTERNATE_OBJECT_DIRECTORIES` are removed from each git child, so the fixture never acts on the
+ * repository the tests run from or writes objects into another store.
  *
  * **Example** (Stage a fixture tree)
  * ```ts

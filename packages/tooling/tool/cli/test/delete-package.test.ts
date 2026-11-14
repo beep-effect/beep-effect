@@ -2140,7 +2140,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
-    it.effect("keeps fixture git off an inherited GIT_DIR", () =>
+    it.effect("keeps fixture git off an inherited GIT_DIR and GIT_OBJECT_DIRECTORY", () =>
       Effect.andThen(
         temporaryGitWorkingDirectory,
         Effect.gen(function* () {
@@ -2149,18 +2149,29 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           const root = yield* fs.realPath(".");
           const fixture = path.join(root, "fixture");
           const planted = path.join(root, "planted.git");
+          const plantedObjects = path.join(root, "planted-objects");
           yield* fs.makeDirectory(fixture);
+          yield* fs.writeFileString(path.join(fixture, "staged.txt"), "staged\n");
           // `vi.stubEnv` plants the variable in this isolated suite's inherited environment and
           // `vi.unstubAllEnvs` restores it.
           yield* Effect.acquireUseRelease(
-            Effect.sync(() => vi.stubEnv("GIT_DIR", planted)),
+            Effect.sync(() => {
+              vi.stubEnv("GIT_DIR", planted);
+              vi.stubEnv("GIT_OBJECT_DIRECTORY", plantedObjects);
+            }),
             () => gitFixture(fixture),
             () => Effect.sync(() => vi.unstubAllEnvs())
           );
           const fixtureRepository = yield* fs.exists(path.join(fixture, ".git"));
           const plantedRepository = yield* fs.exists(planted);
+          const plantedObjectStore = yield* fs.exists(plantedObjects);
+          // `git add -A` stored `staged.txt` as a loose blob, so the fixture's own store holds it.
+          const fixtureObjects = yield* fs.readDirectory(path.join(fixture, ".git", "objects"), { recursive: true });
+          const looseObjects = A.filter(fixtureObjects, (entry) => /^[0-9a-f]{2}\/[0-9a-f]{38}$/.test(entry));
           expect(fixtureRepository).toBe(true);
           expect(plantedRepository).toBe(false);
+          expect(plantedObjectStore).toBe(false);
+          expect(A.isReadonlyArrayNonEmpty(looseObjects)).toBe(true);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
