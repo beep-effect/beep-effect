@@ -21,10 +21,8 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import { GithubClientRequest, GithubIdentity, layerGithubClientFor } from "../../internal/github/GithubIdentity.ts";
 import { ReviewerError } from "./ReviewerErrors.ts";
-import { readRulesetOwner, switchStackReviewerCheck } from "./ReviewerRulesetOwner.ts";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { ReviewerChangedFile } from "./ReviewerModels.ts";
-import type { ReviewerSwitch } from "./ReviewerRulesetOwner.ts";
 
 const $I = $RepoCliId.create("commands/Reviewer/ReviewerRuleset.service");
 const ROOT = "repos/beep-effect/beep-effect";
@@ -282,14 +280,10 @@ export const releaseReviewerInRuleset = Effect.fn("Reviewer.releaseInRuleset")(
 );
 
 // Selects the default branch's repository ruleset, prints the diff, and PUTs only on an explicit apply.
-// Once INFRA_GITHUB_DEPLOY_ARMED is true the InfraGithub stack owns the ruleset: the switch then edits the
-// stack configuration instead, and the live ruleset is never written from here.
 const updateReviewerRuleset = Effect.fnUntraced(function* (
   transform: (value: unknown) => Effect.Effect<typeof ObjectRecord.Type, ReviewerError>,
   apply: boolean,
-  rulesetId: number | undefined,
-  position: ReviewerSwitch,
-  appId: O.Option<number>
+  rulesetId: number | undefined
 ) {
   const client = yield* GitHubClient;
   const user = yield* client
@@ -297,7 +291,6 @@ const updateReviewerRuleset = Effect.fnUntraced(function* (
     .pipe(Effect.flatMap(decodeLogin), Effect.mapError(ghFailure));
   if (user.login !== "kriegcloud")
     return yield* fail("Ruleset administration must use Benjamin Oppold's gh login (kriegcloud).");
-  if ((yield* readRulesetOwner()) === "stack") return yield* switchStackReviewerCheck(position, apply, appId);
   const repo = yield* api(ROOT).pipe(Effect.flatMap(decodeRepo));
   const branchRules = yield* api(`${ROOT}/rules/branches/${encodeURIComponent(repo.default_branch)}`).pipe(
     Effect.flatMap(decodeBranchRules)
@@ -354,9 +347,7 @@ const updateReviewerRuleset = Effect.fnUntraced(function* (
  *
  * **Details**
  * A ruleset id can disambiguate multiple active repository rulesets. Inherited organization rules
- * are never edited. A second read rejects concurrent edits before writing. While the repository
- * variable `INFRA_GITHUB_DEPLOY_ARMED` is `true` the InfraGithub stack owns the ruleset: the command
- * then sets `reviewerCheck` in the stack configuration instead and never writes the live ruleset.
+ * are never edited. A second read rejects concurrent edits before writing.
  *
  * **Example** (Compose a dry run)
  * ```ts
@@ -373,13 +364,7 @@ export const requireReviewerRuleset = Effect.fn("Reviewer.requireRuleset")(funct
   apply: boolean,
   rulesetId: number | undefined
 ) {
-  return yield* updateReviewerRuleset(
-    (value) => requireReviewerInRuleset(value, appId),
-    apply,
-    rulesetId,
-    "required",
-    O.some(appId)
-  );
+  return yield* updateReviewerRuleset((value) => requireReviewerInRuleset(value, appId), apply, rulesetId);
 });
 
 /**
@@ -388,8 +373,7 @@ export const requireReviewerRuleset = Effect.fn("Reviewer.requireRuleset")(funct
  * **Details**
  * Use when the reviewer cannot run (for example, its model quota is exhausted). The merge gate
  * follows the ruleset, so `yeet merge` and `yeet merge-gate` stop waiting for a review once applied.
- * Restore enforcement with `beep reviewer ruleset require --apply`. While `INFRA_GITHUB_DEPLOY_ARMED`
- * is `true` the command edits the InfraGithub stack configuration instead of the live ruleset.
+ * Restore enforcement with `beep reviewer ruleset require --apply`.
  *
  * **Example** (Compose a dry run)
  * ```ts
@@ -405,7 +389,7 @@ export const releaseReviewerRuleset = Effect.fn("Reviewer.releaseRuleset")(funct
   apply: boolean,
   rulesetId: number | undefined
 ) {
-  return yield* updateReviewerRuleset(releaseReviewerInRuleset, apply, rulesetId, "advisory", O.none());
+  return yield* updateReviewerRuleset(releaseReviewerInRuleset, apply, rulesetId);
 });
 
 /**

@@ -80,7 +80,7 @@ describe("the declared configuration matches the census", () => {
           parameters: {
             strict_required_status_checks_policy: ruleset.strictRequiredStatusChecksPolicy,
             do_not_enforce_on_create: false,
-            required_status_checks: A.map(requiredChecks(ruleset), ({ context, integrationId }) => ({
+            required_status_checks: A.map(requiredChecks(ruleset, O.none()), ({ context, integrationId }) => ({
               context,
               integration_id: integrationId,
             })),

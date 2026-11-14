@@ -6,6 +6,8 @@
   "attributes": [],
   "instruments": [],
   "spans": [
-    {"name":"InfraGithub.declareStack","owner":"@beep/infra-github","family":"tooling","conforms":true}
+    {"name":"InfraGithub.declareStack","owner":"@beep/infra-github","family":"tooling","conforms":true},
+    {"name":"InfraGithub.diffFields","owner":"@beep/infra-github","family":"tooling","conforms":true},
+    {"name":"InfraGithub.guardRuleset","owner":"@beep/infra-github","family":"tooling","conforms":true}
   ]
 }

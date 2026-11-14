@@ -15,7 +15,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { requiredChecks } from "./Config.ts";
-import type { EnvironmentSpec, LabelSpec, StackConfig, VariableSpec } from "./Config.ts";
+import type { EnvironmentSpec, LabelSpec, RequiredCheck, StackConfig, VariableSpec } from "./Config.ts";
 
 /**
  * A logical id fragment for a GitHub object name: anything other than letters,
@@ -54,7 +54,7 @@ const declareRepository = (config: StackConfig) =>
     topics: A.copy(config.settings.topics),
   }).pipe(adopt(true), protect());
 
-const declareMainRuleset = (config: StackConfig) => {
+const declareMainRuleset = (config: StackConfig, liveReviewer: O.Option<RequiredCheck>) => {
   const ruleset = config.mainRuleset;
   return GitHub.Ruleset("MainRuleset", {
     owner: config.owner,
@@ -72,7 +72,10 @@ const declareMainRuleset = (config: StackConfig) => {
     nonFastForward: ruleset.nonFastForward,
     pullRequest: { ...ruleset.pullRequest, allowedMergeMethods: A.copy(ruleset.pullRequest.allowedMergeMethods) },
     requiredStatusChecks: {
-      checks: A.map(requiredChecks(ruleset), ({ context, integrationId }) => ({ context, integrationId })),
+      checks: A.map(requiredChecks(ruleset, liveReviewer), ({ context, integrationId }) => ({
+        context,
+        integrationId,
+      })),
       strictRequiredStatusChecksPolicy: ruleset.strictRequiredStatusChecksPolicy,
     },
   }).pipe(adopt(true), protect());
@@ -112,7 +115,9 @@ const declareLabel = (config: StackConfig, spec: LabelSpec) =>
 /**
  * Declares every resource of the configuration. The repository and the main
  * ruleset are adopted per object (`adopt(true)`, D20) and protected against
- * replacement and deletion; every resource is retained on removal.
+ * replacement and deletion; every resource is retained on removal. The main
+ * ruleset carries `liveReviewer`, the live `beep-reviewer` check, through
+ * unchanged (see `RulesetGuard`).
  *
  * **Example** (Declare the production configuration inside a stack)
  *
@@ -120,22 +125,27 @@ const declareLabel = (config: StackConfig, spec: LabelSpec) =>
  * import { productionConfig } from "@beep/infra-github/Production"
  * import { declareStack } from "@beep/infra-github/Stack"
  *
- * const program = declareStack(productionConfig)
+ * import * as O from "effect/Option"
+ *
+ * const program = declareStack(productionConfig, O.none())
  * console.log(typeof program) // "object"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const declareStack = Effect.fn("InfraGithub.declareStack")(function* (config: StackConfig) {
+export const declareStack = Effect.fn("InfraGithub.declareStack")(function* (
+  config: StackConfig,
+  liveReviewer: O.Option<RequiredCheck>
+) {
   const repository = yield* declareRepository(config);
-  const ruleset = yield* declareMainRuleset(config);
+  const ruleset = yield* declareMainRuleset(config, liveReviewer);
   yield* Effect.forEach(config.environments, (spec) => declareEnvironment(config, spec));
   yield* Effect.forEach(config.variables, (variable) => declareVariable(config, `Variable-${variable.name}`, variable));
   yield* Effect.forEach(config.labels, (spec) => declareLabel(config, spec));
   return {
     repository: repository.fullName,
     mainRulesetId: ruleset.rulesetId,
-    reviewerCheck: config.mainRuleset.reviewerCheck,
+    reviewerCarried: O.isSome(liveReviewer),
   };
 }, retain());

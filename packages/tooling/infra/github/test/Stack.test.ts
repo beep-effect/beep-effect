@@ -10,6 +10,7 @@ import {
   VariableSpec,
 } from "@beep/infra-github/Config";
 import { productionConfig } from "@beep/infra-github/Production";
+import { decodeLiveRuleset, liveReviewerCheck } from "@beep/infra-github/RulesetGuard";
 import { declareStack } from "@beep/infra-github/Stack";
 import { expect } from "@effect/vitest";
 import { destroy } from "alchemy/RemovalPolicy";
@@ -33,11 +34,39 @@ const scenario = <E>(name: string, body: (stack: TypedScratch, fake: FakeReposit
   test.provider(name, (stack) => body(typed(stack), fake));
 };
 
-const withReviewer = (reviewerCheck: MainRuleset["reviewerCheck"]) =>
-  StackConfig.make({
-    ...productionConfig,
-    mainRuleset: MainRuleset.make({ ...productionConfig.mainRuleset, reviewerCheck }),
+const decodeLive = decodeLiveRuleset;
+
+/** What the operator's `beep reviewer ruleset require --apply` leaves in the live ruleset: the check appended last. */
+const requireReviewerLive = (fake: FakeRepository) => {
+  const live = fake.ruleset(10_240_248);
+  const rules = live.rules as ReadonlyArray<{ type: string; parameters?: Record<string, unknown> }>;
+  MutableHashMap.set(fake.rulesets, 10_240_248, {
+    ...live,
+    rules: A.map(rules, (rule) =>
+      rule.type === "required_status_checks"
+        ? {
+            ...rule,
+            parameters: {
+              ...rule.parameters,
+              required_status_checks: [
+                ...((rule.parameters?.required_status_checks ?? []) as ReadonlyArray<unknown>),
+                { context: "beep-reviewer", integration_id: 5_321_138 },
+              ],
+            },
+          }
+        : rule
+    ),
   });
+};
+
+/** The deploy as the workflow runs it: carry the live reviewer check read right before. */
+const deployCarrying = Effect.fn("InfraGithubTest.deployCarrying")(function* (
+  stack: TypedScratch,
+  fake: FakeRepository
+) {
+  const live = yield* decodeLive(fake.ruleset(10_240_248));
+  return yield* stack.deploy(declareStack(productionConfig, liveReviewerCheck(live)));
+});
 
 const checkContexts = (ruleset: Record<string, unknown>) => {
   const rules = (ruleset.rules ?? []) as ReadonlyArray<{ type: string; parameters?: Record<string, unknown> }>;
@@ -63,7 +92,7 @@ const actions = (plan: { readonly resources: Record<string, { readonly action: s
 
 scenario("a first plan adopts the main ruleset and creates no ruleset", (stack, fake) =>
   Effect.gen(function* () {
-    const plan = yield* stack.plan(declareStack(productionConfig));
+    const plan = yield* stack.plan(declareStack(productionConfig, O.none()));
     const planned = actions(plan);
     expect(planned.MainRuleset).toBe("adopted");
     expect(A.filter(R.values(planned), (action) => action === "replace" || action === "delete")).toEqual([]);
@@ -74,7 +103,7 @@ scenario("a first plan adopts the main ruleset and creates no ruleset", (stack, 
 
 scenario("the first deploy adopts every live object in place and creates nothing", (stack, fake) =>
   Effect.gen(function* () {
-    const output = yield* stack.deploy(declareStack(productionConfig));
+    const output = yield* stack.deploy(declareStack(productionConfig, O.none()));
     expect(output.mainRulesetId).toBe(10_240_248);
     expect(output.repository).toBe("beep-effect/beep-effect");
     const creates = A.filter(fake.writes(), (call) => call.method === "POST");
@@ -89,23 +118,27 @@ scenario("the first deploy adopts every live object in place and creates nothing
     expect(MutableHashMap.size(fake.labels)).toBe(productionConfig.labels.length);
     // A redeploy with no change reads and writes nothing it does not need to.
     const before = fake.writes().length;
-    yield* stack.deploy(declareStack(productionConfig));
+    yield* stack.deploy(declareStack(productionConfig, O.none()));
     expect(A.filter(A.drop(fake.writes(), before), (call) => Str.includes("/rulesets")(call.path))).toEqual([]);
   })
 );
 
-scenario("the reviewer switch adds and removes only the beep-reviewer check", (stack, fake) =>
+scenario("a live beep-reviewer check survives a deploy, present or absent", (stack, fake) =>
   Effect.gen(function* () {
-    yield* stack.deploy(declareStack(withReviewer("required")));
-    const required = checkContexts(fake.ruleset(10_240_248));
-    expect(required.at(-1)).toBe("beep-reviewer@5321138");
-    expect(required.length).toBe(productionConfig.mainRuleset.checks.length + 1);
+    // Absent: the census state. The deploy writes no reviewer check.
+    yield* deployCarrying(stack, fake);
+    const absent = checkContexts(fake.ruleset(10_240_248));
+    expect(A.filter(absent, (context) => Str.startsWith("beep-reviewer")(context))).toEqual([]);
+    expect(absent.length).toBe(productionConfig.mainRuleset.checks.length);
 
-    yield* stack.deploy(declareStack(withReviewer("advisory")));
-    const advisory = checkContexts(fake.ruleset(10_240_248));
-    expect(advisory).not.toContain("beep-reviewer@5321138");
-    expect(advisory.length).toBe(productionConfig.mainRuleset.checks.length);
-    // Bypass actors survive both flips.
+    // Present: the operator required the reviewer by hand; the next deploy keeps it, App binding included.
+    requireReviewerLive(fake);
+    yield* deployCarrying(stack, fake);
+    const present = checkContexts(fake.ruleset(10_240_248));
+    expect(present.at(-1)).toBe("beep-reviewer@5321138");
+    expect(present.length).toBe(productionConfig.mainRuleset.checks.length + 1);
+
+    // Bypass actors survive both deploys.
     expect(fake.ruleset(10_240_248).bypass_actors).toEqual([
       { actor_type: "RepositoryRole", actor_id: 5, bypass_mode: "always" },
       { actor_type: "Integration", actor_id: 5_309_624, bypass_mode: "always" },
@@ -131,7 +164,7 @@ scenario("updates converge labels, variables and environment branch policies", (
           : environment
       ),
     });
-    yield* stack.deploy(declareStack(changed));
+    yield* stack.deploy(declareStack(changed, O.none()));
     expect(O.getOrThrow(MutableHashMap.get(fake.labels, "bug"))).toMatchObject({
       color: "ff0000",
       description: "Broken",
@@ -146,7 +179,7 @@ scenario("updates converge labels, variables and environment branch policies", (
 
 scenario("dropping declarations deletes nothing, and a stage destroy is refused", (stack, fake) =>
   Effect.gen(function* () {
-    yield* stack.deploy(declareStack(productionConfig));
+    yield* stack.deploy(declareStack(productionConfig, O.none()));
     // A dropped label or environment is retained on GitHub, only forgotten.
     yield* stack.deploy(
       declareStack(
@@ -154,7 +187,8 @@ scenario("dropping declarations deletes nothing, and a stage destroy is refused"
           ...productionConfig,
           labels: A.drop(productionConfig.labels, 1),
           environments: A.drop(productionConfig.environments, 1),
-        })
+        }),
+        O.none()
       )
     );
     // The repository and the main ruleset are protected: destroy plans fail.
@@ -237,13 +271,16 @@ scenario("required checks list beep-reviewer last and only once", () =>
   Effect.sync(() => {
     const doubled = MainRuleset.make({
       ...productionConfig.mainRuleset,
-      reviewerCheck: "required",
       checks: [
         ...productionConfig.mainRuleset.checks,
         RequiredCheck.make({ context: "beep-reviewer", integrationId: 1 }),
       ],
     });
-    const contexts = A.map(requiredChecks(doubled), ({ context, integrationId }) => `${context}@${integrationId}`);
+    const live = O.some(RequiredCheck.make({ context: "beep-reviewer", integrationId: 5_321_138 }));
+    const contexts = A.map(
+      requiredChecks(doubled, live),
+      ({ context, integrationId }) => `${context}@${integrationId}`
+    );
     expect(A.filter(contexts, (context) => Str.startsWith("beep-reviewer")(context))).toEqual([
       "beep-reviewer@5321138",
     ]);

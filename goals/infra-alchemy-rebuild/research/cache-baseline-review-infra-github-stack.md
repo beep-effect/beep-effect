@@ -10,11 +10,15 @@ the same generated tasks every tooling package carries; no script was hand-edite
 
 What the package adds to their inputs beyond the generated shape:
 
-- `tsconfig.json` includes `alchemy.run.ts` beside `src` (`rootDir` is the package root), the shape of the
-  sibling turbo cache stack, so `build` and `check` typecheck the stack entry;
+- `tsconfig.json` includes `alchemy.run.ts` and `ruleset-guard.ts` beside `src` (`rootDir` is the package
+  root), the shape of the sibling turbo cache and cost-controls stacks, so `build` and `check` typecheck the
+  stack entry and the pre-write guard command;
 - `test/fixtures/census.json` is a committed snapshot of non-secret repository settings that `test` reads;
-- dependencies `@alchemy.run/aws`, `@alchemy.run/github`, `alchemy`, `@beep/identity`, `@beep/schema`,
-  `effect`, and dev dependency `@alchemy.run/test`.
+- dependencies `@alchemy.run/aws`, `@alchemy.run/github`, `@effect/platform-bun` (the guard command's runtime),
+  `alchemy`, `@beep/identity`, `@beep/schema`, `effect`, and dev dependency `@alchemy.run/test`.
+
+Re-recorded 2026-11-14 after merging `main` at Alchemy 2.0.0-beta.87: the merge took main's baseline, so
+both subjects are stamped again.
 
 No task reads the network or a credential: the stack tests serve GitHub from an in-memory fake, and nothing
 writes outside the declared outputs. Recording `@beep/infra-github` adds its computations to the reviewed

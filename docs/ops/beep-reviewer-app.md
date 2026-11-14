@@ -281,30 +281,13 @@ BEEP_REVIEWER_APP_ID=5321138 beep reviewer ruleset require --apply
 Record each switch, its reason and the restore condition in the owning packet's
 decision log (`goals/cloud-agent-readiness/SPEC.md`).
 
-### Once the InfraGithub stack owns the ruleset
-
-The `InfraGithub` Alchemy stack (`packages/tooling/infra/github`, goal
-`goals/infra-alchemy-rebuild`, D20) declares the default-branch ruleset, and its
-deploy rewrites the whole ruleset on every run. Its committed configuration holds the
-switch: `reviewerCheck` (`required` or `advisory`) in
-`packages/tooling/infra/github/src/Production.ts`. Which path `release` and `require`
-take depends on the repository variable `INFRA_GITHUB_DEPLOY_ARMED`, read live on
-every run after the login check:
-
-| `INFRA_GITHUB_DEPLOY_ARMED` | Owner | What `release` / `require` do |
-| --- | --- | --- |
-| absent, or anything but `true` | CLI | edit the live ruleset as described above (today's behavior) |
-| `true` | stack | never write the live ruleset; set `reviewerCheck` in the stack configuration (`--apply` writes the file, otherwise preview) and print the next steps |
-| unreadable | none | refuse without reading or writing the ruleset |
-
-With the stack in charge, the switch reaches GitHub through a pull request: commit the
-edited file, open the PR through Yeet, and its merge runs `Deploy infra-github (prod)`,
-which applies the ruleset and polls it until `beep-reviewer` is present exactly when
-the configuration says `required`. `require` also refuses an App id other than the
-one the configuration binds (`beepReviewerAppId`). A `release` raised because the
-reviewer is down cannot pass a required `beep-reviewer` check itself; merging that PR
-through the repository-admin bypass the ruleset keeps is the accepted route (packet gate
-ruling, 2026-11-13).
+The `InfraGithub` Alchemy stack (`packages/tooling/infra/github`) also writes this
+ruleset, as a whole body, once its deploy workflow is armed. It does not own the
+`beep-reviewer` entry: each deploy reads the live ruleset and writes that entry back
+exactly as `release` or `require` left it, so these commands remain the switch whether
+or not the stack is armed, and a deploy never undoes them. A pre-write guard refuses a
+deploy that would change any other required check, the strict policy, bypass actors,
+merge methods or conditions (`docs/runbooks/alchemy-infra.md`, InfraGithub section).
 
 ## Acceptance on a scratch PR
 

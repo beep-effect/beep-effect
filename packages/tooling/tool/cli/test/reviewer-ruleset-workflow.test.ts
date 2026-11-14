@@ -3,12 +3,9 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import {
   enforceReviewerGate,
-  infraGithubConfigPath,
   releaseReviewerRuleset,
   requireReviewerRuleset,
   reviewerCommand,
-  rulesetOwnerFor,
-  setStackReviewerCheck,
 } from "@beep/repo-cli/commands/Reviewer";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import { it } from "@beep/test-runner";
@@ -39,7 +36,6 @@ import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
 const ROOT = "/repos/beep-effect/beep-effect";
 const LIST = `GET ${ROOT}/rulesets`;
-const ARMED = `GET ${ROOT}/actions/variables/INFRA_GITHUB_DEPLOY_ARMED`;
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const decodeObject = S.decodeUnknownEffect(S.Record(S.String, S.Unknown));
 const runReviewer = Command.runWith(reviewerCommand, { version: "0.0.0" });
@@ -97,9 +93,6 @@ const defaults = {
     { id: 4, source_type: "Repository", enforcement: "disabled" },
   ] as ReadonlyArray<unknown>,
   rulesets: [[11, [ruleset(11)]]] as ReadonlyArray<readonly [number, ReadonlyArray<unknown>]>,
-  // The InfraGithub arming variable: absent (404) unless a test sets a value or another status.
-  armed: O.none<string>() as O.Option<string>,
-  armedStatus: 404,
 };
 type GithubFixture = typeof defaults;
 
@@ -136,11 +129,6 @@ const respond = (fixture: GithubFixture, call: GithubFetchCall, priorCalls: Read
     };
   if (key === "GET /user") return { login: fixture.login };
   if (key === `GET ${ROOT}`) return { default_branch: "main" };
-  if (key === ARMED)
-    return O.match(fixture.armed, {
-      onNone: () => reply(fixture.armedStatus)({ message: "Not Found" }),
-      onSome: (value) => ({ name: "INFRA_GITHUB_DEPLOY_ARMED", value }),
-    });
   if (key === `GET ${ROOT}/rules/branches/main`) return fixture.branchRules;
   if (key === LIST) return fixture.summaries;
   if (call.method === "PUT") return {};
@@ -204,35 +192,6 @@ const withFakeGithub = Effect.fnUntraced(function* <A, E, R>(
   expect(A.every(spawner.spawns, (spawn) => isGhAuthToken(spawn) || spawn.command === "python3")).toBe(true);
   return { exit, calls: A.copy(api.calls), spawns: A.copy(spawner.spawns) };
 }, Effect.scoped);
-
-// The working directory stands in for a repository root holding only the InfraGithub stack configuration.
-const stackRoot = process.cwd();
-const stackFiles = (switchLine: string) => {
-  let content = `const beepReviewerAppId = 5321138;\n    ${switchLine}\n`;
-  let writes = 0;
-  const target = `${stackRoot}/${infraGithubConfigPath}`;
-  const fs = FileSystem.makeNoop({
-    exists: (path) => Effect.succeed(path === `${stackRoot}/.git`),
-    realPath: (path) => Effect.succeed(path),
-    readFileString: (path) =>
-      path === target
-        ? Effect.succeed(content)
-        : Effect.fail(PlatformError.systemError({ _tag: "NotFound", module: "FileSystem", method: "readFileString" })),
-    writeFileString: (path, data) =>
-      Effect.sync(() => {
-        if (path === target) {
-          content = data;
-          writes += 1;
-        }
-      }),
-  });
-  return {
-    read: () => content,
-    writes: () => writes,
-    provide: <A, E, R>(program: Effect.Effect<A, E, R>) =>
-      program.pipe(Effect.provideService(FileSystem.FileSystem, fs)),
-  };
-};
 
 const putCalls = (calls: ReadonlyArray<GithubFetchCall>) => A.filter(calls, (call) => call.method === "PUT");
 const callKeys = (calls: ReadonlyArray<GithubFetchCall>) => A.map(calls, callKey);
@@ -360,7 +319,6 @@ describe("reviewer ruleset workflow", () => {
       const { lines } = yield* exit;
       expect(callKeys(calls)).toEqual([
         "GET /user",
-        ARMED,
         `GET ${ROOT}`,
         `GET ${ROOT}/rules/branches/main`,
         LIST,
@@ -447,7 +405,7 @@ describe("reviewer ruleset workflow", () => {
         releaseReviewerRuleset(false, undefined)
       );
       expect(O.getOrThrow(failureMessage(result.exit))).toContain("zero or multiple matching repository rulesets");
-      expect(A.length(result.calls)).toBe(5);
+      expect(A.length(result.calls)).toBe(4);
     })
   );
 
@@ -478,7 +436,7 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("reviewer ruleset command", (i
       const { lines } = yield* result.exit;
       expect(A.map(lines, String)).toContainEqual(expect.stringContaining("--- ruleset 11\n- "));
       expect(putCalls(result.calls)).toEqual([]);
-      expect(A.length(result.calls)).toBe(6);
+      expect(A.length(result.calls)).toBe(5);
     })
   );
 
@@ -513,86 +471,6 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("reviewer ruleset command", (i
       );
       expect(O.getOrThrow(failureMessage(result.exit))).toContain("A positive App id is required.");
       expect(result.calls).toEqual([]);
-    })
-  );
-  it.effect("an arming variable other than true keeps the direct ruleset edit", () =>
-    Effect.gen(function* () {
-      expect(rulesetOwnerFor(O.none())).toBe("cli");
-      expect(rulesetOwnerFor(O.some("false"))).toBe("cli");
-      expect(rulesetOwnerFor(O.some("TRUE"))).toBe("cli");
-      expect(rulesetOwnerFor(O.some("true"))).toBe("stack");
-      const result = yield* withFakeGithub(
-        { ...defaults, armed: O.some("false") },
-        releaseReviewerRuleset(true, undefined)
-      );
-      yield* result.exit;
-      expect(callKeys(putCalls(result.calls))).toEqual([`PUT ${ROOT}/rulesets/11`]);
-    })
-  );
-
-  it.effect("an unreadable arming variable refuses before reading or writing the ruleset", () =>
-    Effect.gen(function* () {
-      const result = yield* withFakeGithub({ ...defaults, armedStatus: 500 }, releaseReviewerRuleset(true, undefined));
-      expect(O.getOrThrow(failureMessage(result.exit))).toContain("Cannot read INFRA_GITHUB_DEPLOY_ARMED");
-      expect(callKeys(result.calls)).toEqual(["GET /user", ARMED]);
-    })
-  );
-
-  it.effect("armed: release --apply edits the stack configuration, never the live ruleset", () =>
-    Effect.gen(function* () {
-      const files = stackFiles('reviewerCheck: "required",');
-      const result = yield* withFakeGithub(
-        { ...defaults, armed: O.some("true") },
-        files.provide(runReviewer(["ruleset", "release", "--apply"]))
-      );
-      const { lines } = yield* result.exit;
-      expect(callKeys(result.calls)).toEqual(["GET /user", ARMED]);
-      expect(files.read()).toContain('reviewerCheck: "advisory",');
-      const output = A.join(A.map(lines, String), "\n");
-      expect(output).toContain("the live ruleset is not edited");
-      expect(output).toContain("open a PR through Yeet");
-      expect(output).toContain("repository-admin bypass");
-    })
-  );
-
-  it.effect("armed: a dry run prints the edit and writes nothing", () =>
-    Effect.gen(function* () {
-      const files = stackFiles('reviewerCheck: "advisory",');
-      const result = yield* withFakeGithub(
-        { ...defaults, armed: O.some("true") },
-        files.provide(requireReviewerRuleset(5_321_138, false, undefined))
-      );
-      const { lines } = yield* result.exit;
-      expect(files.read()).toContain('reviewerCheck: "advisory",');
-      expect(files.writes()).toBe(0);
-      expect(A.join(A.map(lines, String), "\n")).toContain('reviewerCheck -> "required"');
-      expect(putCalls(result.calls)).toEqual([]);
-    })
-  );
-
-  it.effect("armed: require refuses an App id the stack does not bind", () =>
-    Effect.gen(function* () {
-      const files = stackFiles('reviewerCheck: "advisory",');
-      const result = yield* withFakeGithub(
-        { ...defaults, armed: O.some("true") },
-        files.provide(requireReviewerRuleset(42, true, undefined))
-      );
-      expect(O.getOrThrow(failureMessage(result.exit))).toContain("binds beep-reviewer to App 5321138, not 42");
-      expect(files.writes()).toBe(0);
-      expect(putCalls(result.calls)).toEqual([]);
-    })
-  );
-
-  it.effect("the stack switch rewrites exactly one assignment", () =>
-    Effect.gen(function* () {
-      const flipped = yield* setStackReviewerCheck('x\n    reviewerCheck: "advisory",\n', "required");
-      expect(flipped).toBe('x\n    reviewerCheck: "required",\n');
-      const none = yield* Effect.exit(setStackReviewerCheck("no switch here", "required"));
-      expect(O.getOrThrow(failureMessage(none))).toContain("found 0");
-      const two = yield* Effect.exit(
-        setStackReviewerCheck('reviewerCheck: "advisory" reviewerCheck: "required"', "required")
-      );
-      expect(O.getOrThrow(failureMessage(two))).toContain("found 2");
     })
   );
 });

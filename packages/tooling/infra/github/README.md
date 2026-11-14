@@ -85,14 +85,26 @@ which could mint in-process instead.
 
 ### The beep-reviewer switch
 
-`mainRuleset.reviewerCheck` (`required` | `advisory`) decides whether the ruleset lists
-`beep-reviewer` bound to App 5321138; every other check, the bypass actors and the rest of
-the ruleset are unaffected (tests prove both flips). The committed value is `advisory`, the
-live position. Once the stack owns the ruleset, `beep reviewer ruleset release|require`
-stop PUTting the ruleset: while `INFRA_GITHUB_DEPLOY_ARMED` is `true` they rewrite
-`reviewerCheck` in `src/Production.ts` instead (the switch then lands through a PR and this
-workflow), and they refuse when the variable cannot be read. Unarmed, they keep editing the
-live ruleset directly. Details: `docs/ops/beep-reviewer-app.md`.
+The stack does not own the `beep-reviewer` check (window-5 requirement, option (b)): the
+deploy reads the live ruleset and writes its `beep-reviewer` entry back exactly as it is,
+App binding included, so `beep reviewer ruleset release|require --apply` stays the only
+switch, armed or not. The ruleset is written as a whole body, so leaving the check out of it
+(option (a)) would remove it; carrying it is what the resource model supports. Tests prove a
+live check survives a deploy present and absent.
+
+### The ruleset 10240248 guard
+
+`src/RulesetGuard.ts` states every field the deploy writes for ruleset 10240248 (name,
+target, enforcement, conditions, bypass actors, the rule types in order, the pull request
+settings and merge methods, the strict policy, required checks with their integration ids)
+and compares it with a capture of the live ruleset. The guard fails closed: the capture is decoded strictly, so an unknown key, an
+unknown rule type, a missing field, or a setting the provider never sends standing away
+from its default (required reviewers, an enabled dismissal restriction,
+`do_not_enforce_on_create`) refuses the deploy in both modes instead of being skipped. `ruleset-guard.ts`
+is its command. The deploy workflow runs it between plan and deploy and again after the
+deploy. `--diff-only` prints the same field-by-field diff without failing: the read-only
+pre-arming evidence (runbook, InfraGithub section). On 2026-11-14 the diff against live was
+empty.
 
 ## Commands
 
@@ -106,6 +118,9 @@ Read-only preview against the live repository (never `deploy` a non-`prod` stage
 eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
 export AWS_REGION=us-east-1
 cd packages/tooling/infra/github
+mkdir -p ~/.local/state/beep/infra-github
+gh api repos/beep-effect/beep-effect/rulesets/10240248 > ~/.local/state/beep/infra-github/ruleset-10240248.live.json
 GITHUB_TOKEN="$(gh auth token)" INFRA_GITHUB_LIVE_PREVIEW=plan-only \
+  INFRA_GITHUB_LIVE_RULESET=~/.local/state/beep/infra-github/ruleset-10240248.live.json \
   bunx alchemy plan --stage "preview_$USER" --env-file /dev/null
 ```

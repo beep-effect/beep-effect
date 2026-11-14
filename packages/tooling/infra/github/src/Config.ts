@@ -9,40 +9,11 @@
 import { $InfraGithubId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
 const $I = $InfraGithubId.create("Config");
-
-/**
- * Position of the beep-reviewer advisory switch (D20): `required` lists the
- * `beep-reviewer` check, bound to the reviewer App, in the main ruleset;
- * `advisory` leaves it out, so neither GitHub nor the `yeet` merge gate waits
- * for the reviewer.
- *
- * **Example** (Narrow a switch position)
- *
- * ```ts
- * import { ReviewerCheck } from "@beep/infra-github/Config"
- *
- * console.log(ReviewerCheck.is.advisory("advisory")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const ReviewerCheck = LiteralKit(["required", "advisory"]).pipe(
-  $I.annoteSchema("ReviewerCheck", {
-    description: "Whether the main ruleset requires the beep-reviewer check (required) or not (advisory).",
-  })
-);
-
-/**
- * Runtime type for {@link ReviewerCheck}.
- *
- * @category models
- * @since 0.0.0
- */
-export type ReviewerCheck = typeof ReviewerCheck.Type;
 
 /**
  * A pull request merge method a ruleset allows.
@@ -299,15 +270,16 @@ export class PullRequestRule extends S.Opaque<PullRequestRule, { readonly brand:
 
 /**
  * The default-branch ruleset (`main`, live id 10240248), adopted in place.
- * `checks` lists every required check except `beep-reviewer`, whose presence
- * is the {@link ReviewerCheck} switch.
+ * `checks` lists every required check except `beep-reviewer`: the stack does
+ * not own that check, it carries the live one through unchanged, so
+ * `beep reviewer ruleset release|require` stays the only switch.
  *
- * **Example** (Read the switch position)
+ * **Example** (Count the owned checks)
  *
  * ```ts
  * import { productionConfig } from "@beep/infra-github/Production"
  *
- * console.log(productionConfig.mainRuleset.reviewerCheck) // "advisory"
+ * console.log(productionConfig.mainRuleset.checks.length) // 15
  * ```
  *
  * @category models
@@ -325,9 +297,11 @@ export class MainRuleset extends S.Opaque<MainRuleset, { readonly brand: unique 
     pullRequest: PullRequestRule,
     checks: S.Array(RequiredCheck),
     strictRequiredStatusChecksPolicy: S.Boolean,
-    reviewerCheck: ReviewerCheck,
-    reviewerIntegrationId: S.Int,
-  }).pipe($I.annoteSchema("MainRuleset", { description: "The default-branch ruleset, with the beep-reviewer switch." }))
+  }).pipe(
+    $I.annoteSchema("MainRuleset", {
+      description: "The default-branch ruleset; the beep-reviewer check is carried from the live ruleset.",
+    })
+  )
 ) {}
 
 /**
@@ -474,33 +448,41 @@ export class StackConfig extends S.Opaque<StackConfig, { readonly brand: unique 
 export const reviewerContext = "beep-reviewer";
 
 /**
- * The required checks the main ruleset carries for a switch position: the
- * configured checks, plus `beep-reviewer` bound to the reviewer App when the
- * switch is `required`.
+ * The required checks the stack writes: the configured checks, then the live
+ * `beep-reviewer` check exactly as GitHub holds it, when it holds one.
  *
- * **Example** (List the checks with the reviewer required)
+ * **Details**
+ *
+ * The ruleset is written as a whole body, so a check left out of it is
+ * removed. Carrying the live entry keeps whatever the last
+ * `beep reviewer ruleset release|require --apply` set; it is appended last
+ * because that is where the command puts it.
+ *
+ * **Example** (Carry a live reviewer check)
  *
  * ```ts
- * import { requiredChecks } from "@beep/infra-github/Config"
+ * import { RequiredCheck, requiredChecks } from "@beep/infra-github/Config"
  * import { productionConfig } from "@beep/infra-github/Production"
+ * import * as O from "effect/Option"
  *
- * const checks = requiredChecks({ ...productionConfig.mainRuleset, reviewerCheck: "required" })
- * console.log(checks.at(-1)?.context) // "beep-reviewer"
+ * const live = O.some(RequiredCheck.make({ context: "beep-reviewer", integrationId: 5321138 }))
+ * console.log(requiredChecks(productionConfig.mainRuleset, live).at(-1)?.context) // "beep-reviewer"
  * ```
  *
- * @param ruleset - The configured checks, the switch position and the reviewer App id.
+ * @param ruleset - The configured checks.
+ * @param liveReviewer - The live `beep-reviewer` check, `None` when the live ruleset lists none.
  * @returns The checks the ruleset requires, `beep-reviewer` last and at most once.
  * @category utilities
  * @since 0.0.0
  */
-export const requiredChecks = (
-  ruleset: Pick<MainRuleset, "checks" | "reviewerCheck" | "reviewerIntegrationId">
-): ReadonlyArray<RequiredCheck> =>
-  ReviewerCheck.match(ruleset.reviewerCheck, {
-    advisory: () => ruleset.checks,
-    required: () =>
-      A.append(
-        A.filter(ruleset.checks, (check) => check.context !== reviewerContext),
-        RequiredCheck.make({ context: reviewerContext, integrationId: ruleset.reviewerIntegrationId })
-      ),
-  });
+export const requiredChecks: {
+  (liveReviewer: O.Option<RequiredCheck>): (ruleset: Pick<MainRuleset, "checks">) => ReadonlyArray<RequiredCheck>;
+  (ruleset: Pick<MainRuleset, "checks">, liveReviewer: O.Option<RequiredCheck>): ReadonlyArray<RequiredCheck>;
+} = dual(
+  2,
+  (ruleset: Pick<MainRuleset, "checks">, liveReviewer: O.Option<RequiredCheck>): ReadonlyArray<RequiredCheck> =>
+    A.appendAll(
+      A.filter(ruleset.checks, (check) => check.context !== reviewerContext),
+      O.toArray(liveReviewer)
+    )
+);

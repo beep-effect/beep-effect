@@ -42,9 +42,6 @@ export const productionStage = "prod";
 /** GitHub Actions' App id: the source every repository check is bound to. */
 const githubActionsAppId = 15368;
 
-/** App id of `beep-reviewer` (docs/ops/beep-reviewer-app.md). */
-const beepReviewerAppId = 5321138;
-
 /** App id of `beep-fleet-orchestrator`, the fleet's merging App. */
 const fleetOrchestratorAppId = 5309624;
 
@@ -158,11 +155,8 @@ export const productionConfig: StackConfig = StackConfig.make({
       check("Heavy / Doctest"),
       check("JSDoc Ratchet"),
     ],
+    // beep-reviewer is not listed: the stack carries the live entry (RulesetGuard).
     strictRequiredStatusChecksPolicy: false,
-    // Advisory since the last `beep reviewer ruleset release --apply`; the live
-    // ruleset lists no beep-reviewer check (census 2026-11-13).
-    reviewerCheck: "advisory",
-    reviewerIntegrationId: beepReviewerAppId,
   }),
   environments: [
     mainOnly("beep-effect-web-prod", [stateRoleVariable]),

@@ -3,8 +3,26 @@ import * as GitHub from "@alchemy.run/github";
 import * as Alchemy from "alchemy";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
 import { productionConfig, productionStage } from "./src/Production.ts";
+import { decodeLiveRulesetJson, liveReviewerCheck } from "./src/RulesetGuard.ts";
 import { declareStack } from "./src/Stack.ts";
+
+/**
+ * The live default-branch ruleset, captured by the caller right before the
+ * plan (`gh api repos/beep-effect/beep-effect/rulesets/10240248 > <file>`) and
+ * named by `INFRA_GITHUB_LIVE_RULESET`. The stack carries its `beep-reviewer`
+ * check through unchanged; the deploy workflow's guard step compares every
+ * other guarded field against the same capture before anything is written.
+ */
+const liveReviewer = Effect.gen(function* () {
+  const path = yield* Config.String("INFRA_GITHUB_LIVE_RULESET");
+  const fs = yield* FileSystem.FileSystem;
+  // A missing capture, or one the strict decoder cannot read (an unknown key, rule type or value),
+  // stops the plan: the stack never writes a ruleset it could not fully read.
+  const live = yield* fs.readFileString(path).pipe(Effect.flatMap(decodeLiveRulesetJson), Effect.orDie);
+  return liveReviewerCheck(live);
+});
 
 /**
  * The shared Alchemy state store (goals/infra-alchemy-rebuild, D6 and D17):
@@ -37,7 +55,8 @@ export const program = Effect.gen(function* () {
   } else {
     yield* Config.Literal("plan-only", "INFRA_GITHUB_LIVE_PREVIEW");
   }
-  return yield* declareStack(productionConfig);
+  const reviewer = yield* liveReviewer;
+  return yield* declareStack(productionConfig, reviewer);
 });
 
 export default Alchemy.Stack(

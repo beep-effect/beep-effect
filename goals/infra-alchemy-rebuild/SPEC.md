@@ -587,6 +587,14 @@ Lane goals/infra-alchemy-rebuild-p2-vercel
 
 Reverse: Add an opt-in live suite behind an environment flag that creates and deletes a scratch project, never touching oip.law.
 
+### A tested pre-write guard holds every infra-github deploy to a no-op on ruleset 10240248, 2026-11-14
+
+Window-5 requirements 1 and 3 (window-5 owner via the packet gate, 2026-11-14). `src/RulesetGuard.ts` states the guarded fields of the body the stack writes for ruleset 10240248 (required checks with context names and integration ids in order, the strict up-to-date policy, bypass actors, allowed merge methods, ref include and exclude) and compares them with a capture of the live ruleset. It also compares the rest of what the PUT writes (name, target, enforcement, rule types in order, the other pull request settings), and it fails closed (PR #3323 review findings carried here): the capture is decoded strictly with excess keys refused at every level, so an unknown key, rule type or condition, a missing field, or a provider-unsent setting away from its default (required reviewers, an enabled dismissal restriction, `do_not_enforce_on_create`) refuses the deploy in both modes; server-managed fields (ids, node ids, timestamps, links, `current_user_can_bypass`) are never read. `ruleset-guard.ts <capture>` exits non-zero on any difference and prints each differing field with planned and live values; `--diff-only` prints the same diff and exits zero. The deploy workflow runs it between plan and deploy against the same capture the stack reads (nothing is written on a difference) and again after the deploy on a fresh capture, polled for 120 seconds. Tests cover the equal case, server fields ignored, the reviewer check carried in both positions, and each guarded field differing. Pre-arming evidence: the runbook's InfraGithub section gives the read-only command, which needs no App and no arming. Run 2026-11-14 against live: empty diff, so no declared value had to move; any intended change to a guarded field waits for the window-5 verdict (2026-11-20T20:10Z), and declared values follow live. Unarmed (`INFRA_GITHUB_DEPLOY_ARMED` not `true`), the job is skipped before any step: nothing is planned against the live rulesets and the App need not exist.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Delete the Check the ruleset before deploy and after deploy steps from deploy-infra-github.yml and remove ruleset-guard.ts and src/RulesetGuard.ts.
+
 ### Cost controls adopts nine account singletons (D20), 2026-11-14
 
 D20 per-object adoption list for the `CostControls` stack. Nine live account objects are adopted, not recreated; none has a greenfield name. All nine are declared by `prod` only (amended 2026-11-14 after beep-reviewer round 1 on #3310): `prod` deploys only from CI behind the pre-deploy gate, and personal stages declare their own budget alone, so no workstation deploy adopts, claims or writes an account-wide setting and no two stage states claim one singleton.
@@ -875,6 +883,14 @@ The workflow keeps its disclosed shape: push to `main` path-filtered plus an opt
 Lane goals/infra-alchemy-rebuild-p3-cost-controls
 
 Reverse: Only by a new ruling of the CI window owner; mechanically, drop the plan-check step from deploy-cost-controls.yml and the enforcement test, which this ruling forbids without one.
+
+### infra-github carries the live beep-reviewer check; the reviewer CLI stays the only switch, 2026-11-14
+
+Window-5 requirement 2 (window-5 owner via the packet gate, 2026-11-14) asked for one of: (a) the stack does not own the `beep-reviewer` required check, or (b) it reads the live state of that check and carries it through unchanged. Chosen: (b). `GitHub.Ruleset` writes the ruleset as a whole body, so (a), leaving the check out of the body, would delete it on every deploy; carrying it is what the resource model supports cleanly. The workflow captures ruleset 10240248 once (`gh api repos/beep-effect/beep-effect/rulesets/10240248`) and hands the file to the stack as `INFRA_GITHUB_LIVE_RULESET`; `liveReviewerCheck` reads the `beep-reviewer` entry with its App binding and `requiredChecks` appends it after the 15 configured checks, where `beep reviewer ruleset require` puts it. Stack tests prove a live check survives a deploy present (bound to App 5321138) and absent. This supersedes the implementation of the packet-gate ruling 'beep reviewer ruleset edits the stack configuration once the stack is armed' (2026-11-13): with the live check carried, a committed `reviewerCheck` would be ignored and an armed CLI that edits it would silently do nothing, so the committed flag is removed and `beep reviewer ruleset release|require` keeps its direct edit of the live ruleset in every state, which is the hazard that ruling guarded against now closed by the carry. The ruling's goal holds: no deploy can undo the operator's switch.
+
+Lane goals/infra-alchemy-rebuild-p3-github
+
+Reverse: Re-add a committed reviewerCheck flag to MainRuleset and the armed-mode CLI branch (ReviewerRulesetOwner.ts in 0b8d6385b34), and drop the carry in requiredChecks.
 
 ### JIT registration applies to ephemeral pools only; a failed runner start terminates, 2026-11-14
 

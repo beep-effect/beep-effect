@@ -227,15 +227,53 @@ plan-only preview and refuses to start without `INFRA_GITHUB_LIVE_PREVIEW=plan-o
 eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
 export AWS_REGION=us-east-1
 cd packages/tooling/infra/github
+mkdir -p ~/.local/state/beep/infra-github
+gh api repos/beep-effect/beep-effect/rulesets/10240248 > ~/.local/state/beep/infra-github/ruleset-10240248.live.json
 GITHUB_TOKEN="$(gh auth token)" INFRA_GITHUB_LIVE_PREVIEW=plan-only \
+  INFRA_GITHUB_LIVE_RULESET=~/.local/state/beep/infra-github/ruleset-10240248.live.json \
   bunx alchemy plan --stage "preview_$USER" --env-file /dev/null
 ```
 
 The first plan shows the `main` ruleset as `adopted` and every other object as
 `create`: `GitHub.Repository`, `Environment`, `Variable` and `Label` have no adoption
-probe in beta.86, and their reconcile observes the live object by name and updates it in
+probe in beta.86 or beta.87, and their reconcile observes the live object by name and updates it in
 place (the stack tests prove a first deploy issues no POST). Ownership, secrets and the
 beep-reviewer switch: `packages/tooling/infra/github/README.md`.
+
+### Ruleset 10240248 guard and the pre-arming evidence
+
+Ruleset 10240248 defines the 15 required merge checks, and the deploy rewrites it as a
+whole body. Two rules keep a deploy a no-op on it:
+
+- The stack does not own the `beep-reviewer` check. It reads the live one from a capture
+  of the ruleset taken right before the plan (`INFRA_GITHUB_LIVE_RULESET`) and writes it
+  back unchanged, so `beep reviewer ruleset release|require --apply` stays the only
+  switch, armed or not.
+- Before the deploy writes anything, `ruleset-guard.ts` (tested `src/RulesetGuard.ts`)
+  compares the body the stack will write with that capture over every field the PUT
+  writes: required checks (contexts and integration ids, in order), the strict up-to-date
+  setting, bypass actors, allowed merge methods and the other pull request settings, the
+  rule types, conditions, name, target and enforcement. Server-managed fields (ids, node
+  ids, timestamps, links) are not compared. Any difference fails the step and nothing is
+  written; after the deploy the same guard must pass on a fresh capture.
+- The guard fails closed: the capture is decoded strictly, so an unknown key, an
+  unknown rule type, a missing field, or a setting the provider never sends standing away
+  from its default (required reviewers, an enabled dismissal restriction,
+  `do_not_enforce_on_create`) refuses the deploy in both modes instead of being skipped.
+
+Pre-arming evidence, read-only and with no App: print the field-by-field diff of planned
+against live. It must say `empty diff` before `INFRA_GITHUB_DEPLOY_ARMED` is switched:
+
+```sh
+cd packages/tooling/infra/github
+mkdir -p ~/.local/state/beep/infra-github
+gh api repos/beep-effect/beep-effect/rulesets/10240248 > ~/.local/state/beep/infra-github/ruleset-10240248.live.json
+bun ruleset-guard.ts ~/.local/state/beep/infra-github/ruleset-10240248.live.json --diff-only
+```
+
+Without `--diff-only` the same command exits non-zero on any difference (the deploy
+step's mode). Any intended change to a guarded field waits for the window-5 verdict
+(2026-11-20T20:10Z); until then the declared values follow live, never the reverse.
 
 ### Before arming: the operator's one-time setup
 
@@ -283,9 +321,8 @@ live settings; run them only when the gate asks.
    `repo:beep-effect/beep-effect:environment:infra-github-prod` joins the `sub` condition
    list of `beep-alchemy-state-rw` (`aws iam get-role`, edit the
    `token.actions.githubusercontent.com:sub` list, `aws iam update-assume-role-policy`).
-6. Only on the gate's word: `gh variable set INFRA_GITHUB_DEPLOY_ARMED --body true`. From
-   then on `beep reviewer ruleset release|require` edits the stack configuration instead
-   of the live ruleset (`docs/ops/beep-reviewer-app.md`).
+6. Show the orchestrator an empty `ruleset-guard.ts --diff-only` (section above). Then, only
+   on the gate's word: `gh variable set INFRA_GITHUB_DEPLOY_ARMED --body true`.
 
 ### First deploy: capture, compare, roll back
 
