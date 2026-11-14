@@ -256,6 +256,7 @@ const generatedComposers = $I.compose(
   "eyecite",
   "agent-memory-store",
   "sqlite",
+  "alchemy-aws-extras",
   "alchemy-vercel"
 );
 
@@ -3807,6 +3808,23 @@ export const $AgentMemoryStoreId: Identity.IdentityComposer<"@beep/agent-memory-
  * @since 0.0.0
  */
 export const $SqliteId: Identity.IdentityComposer<"@beep/sqlite"> = composers.$SqliteId;
+
+/**
+ * Identity composer for `@beep/alchemy-aws-extras`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $AlchemyAwsExtrasId } from "@beep/identity/packages"
+ *
+ * const id = $AlchemyAwsExtrasId.make("AlchemyAwsExtras")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $AlchemyAwsExtrasId: Identity.IdentityComposer<"@beep/alchemy-aws-extras"> = composers.$AlchemyAwsExtrasId;
 
 /**
  * Identity composer for `@beep/alchemy-vercel`.
