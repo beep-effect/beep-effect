@@ -64,5 +64,7 @@ per key, the same types and targets, and unchanged domains and DNS records.
 (removed in #3341), its entry and test. The Storybook Pulumi program goes in the same PR, under the P6 retire inventory
 R1 (its stack was removed on 2026-11-13): infra/storybook (removed in #3341) and infra/src/Storybook.ts (removed in #3341), with its
 entry and test, and infra/src/Vercel.ts (removed in #3341), which only those two programs imported. So
-`@pulumi/cloudflare` and `@pulumiverse/vercel` leave `infra/`, the root catalog and `bun.lock`. The
-turbo-cache lab program and the runners program are unchanged.
+`@pulumi/cloudflare` and `@pulumiverse/vercel` leave `infra/`, the root catalog and `bun.lock`. This PR
+also deletes the turbo-cache lab program (lab `c1023a`, destroyed 2026-10-24; decision
+`2026-11-14-turbo-cache-lab-lab-c1023a-was-destroyed-on-2026-10-24-nothing-is-live`). The runners
+program is unchanged.
