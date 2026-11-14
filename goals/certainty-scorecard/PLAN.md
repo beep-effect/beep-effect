@@ -219,6 +219,14 @@ Lane fix/certainty-type-unlocated-errors
 
 Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-10b PR.
 
+### Slice 15: ledger fold with absent-source rows, 2026-11-14
+
+Slice 15 (MEAS-05 slice 2) adds `beep ci ledger`, a read-only fold of named workflow runs into rows at (lane, partition) grain over the slice-14 lane map, with the run's lane, support and unknown minutes summing to its total and every Test Unit and Test Integration partition row judged `selected`, `empty` or `undetermined` against the run's Test Plan output (decision `ledger-fold-absent-sources`). Rerun copies are dropped, skipped jobs and wrappers are counted apart, and an aggregate that ran is its own row beside its partitions, so no minute is counted twice. The local and per-task sources (turbo tasks, final-check journals, economics lanes, PSI) are `absent` rows. The admission gate holds on three Check runs read 2026-11-14 and committed as `packages/tooling/tool/cli/test/fixtures/ci-cost-ledger/reference-runs.json`: 43604442987 (full matrix, 307.1 job-minutes), 43585338714 (documentation only, 7.1) and 43605277972 (an empty `int-rest` leg of 1.97 min) each map 100% of their job-minutes to a lane or a named support job (lane share 99.4%, 78.2% and 98.2%), and `packages/tooling/tool/cli/test/ci-cost-ledger.test.ts` holds an umbrella, wrapper and rerun fixture with no double count. MEAS-08 can now join pressure samples onto ledger rows.
+
+Lane feat/certainty-ledger-fold-absent-sources
+
+Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-15 PR.
+
 ### Slice 5b: capacity and host pressure on admission rows, 2026-11-14
 
 Slice 8 (PERIL-11 slice 2) merged as #3273 and slice 14 (MEAS-05 slice 1) as #3274. Slice 5b (SCHE-09 slice 2) is in review: admitted and v3 released rows carry an optional `pressure` stamp (capacity, active and queued tokens, MemAvailable, PSI some avg10 for cpu, memory and io, and unadmitted agent-runs.slice memory), written only while the admission protocol's new `pressure` key is on (`bun run beep quality scheduler protocol --pressure on`). `quality scheduler history` counts the stamped rows and `--json` lists them (decision `sche-09-pressure-stamps`). The key needs no reader census, because every revision ignores it and keeps the row's bytes, so it can go on once this slice merges. From then on local-proof-under-ten's scheduler levers (SCHE-01, SCHE-02, SCHE-04, SCHE-07) can read capacity at admit and release from the retained history. With 5b merged, both SCHE-09 PR slices have landed.
