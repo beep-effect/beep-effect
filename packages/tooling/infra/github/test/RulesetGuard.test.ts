@@ -1,3 +1,4 @@
+import { MainRuleset } from "@beep/infra-github/Config";
 import { productionConfig } from "@beep/infra-github/Production";
 import {
   decodeLiveRuleset,
@@ -5,6 +6,7 @@ import {
   guardAfterDeploy,
   guardRuleset,
   liveReviewerCheck,
+  plannedFields,
 } from "@beep/infra-github/RulesetGuard";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -180,6 +182,26 @@ describe("the ruleset 10240248 guard", () => {
       );
       const drift = yield* Effect.flip(guardAfterDeploy(productionConfig.mainRuleset, without, strict));
       expect(drift._tag).toBe("RulesetDrift");
+    })
+  );
+
+  it.effect("rule types, a missing pull request rule and an absent extra-approval setting are all compared", () =>
+    Effect.gen(function* () {
+      // A declared ruleset without the deletion or non-fast-forward rule plans fewer rule types.
+      const lean = MainRuleset.make({ ...productionConfig.mainRuleset, deletion: false, nonFastForward: false });
+      expect(plannedFields(lean, O.none()).ruleTypes).toEqual(["pull_request", "required_status_checks"]);
+      // A live ruleset with no pull request rule differs in the rule types, the settings and the merge methods.
+      const noPullRequest = {
+        ...liveMain,
+        rules: A.filter(liveMain.rules as ReadonlyArray<Rule>, (rule) => rule.type !== "pull_request"),
+      };
+      yield* expectDrift(noPullRequest, ["ruleTypes", "pullRequest", "allowedMergeMethods"]);
+      // An absent extra-approval setting reads as false, which differs from the declared true.
+      const absent = editRule(
+        "pull_request",
+        ({ require_extra_approval_for_unattributed_changes: _, ...rest }) => rest
+      );
+      yield* expectDrift(absent, ["pullRequest"]);
     })
   );
 });

@@ -85,7 +85,8 @@ const readOnly = <R extends ResourceLike, E, RIn>(
         Effect.fail(PreviewStageIsReadOnly.make({ stage, resourceType: resource.Type, operation }));
       return {
         ...base,
-        ...(base.precreate === undefined ? {} : { precreate: refuse("precreate") }),
+        // Apply calls precreate only for dependency cycles, and it writes: refuse it like the rest.
+        precreate: refuse("precreate"),
         reconcile: refuse("reconcile"),
         delete: refuse("delete"),
       };

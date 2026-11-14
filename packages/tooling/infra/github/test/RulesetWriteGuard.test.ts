@@ -1,3 +1,4 @@
+import * as GitHub from "@alchemy.run/github";
 import * as Test from "@alchemy.run/test/Vitest";
 import { productionConfig } from "@beep/infra-github/Production";
 import { decodeLiveRuleset, liveReviewerCheck } from "@beep/infra-github/RulesetGuard";
@@ -115,3 +116,46 @@ scenario(
       expect(writesToMain(fake)).toEqual([]);
     })
 );
+
+// A capture without an id cannot be re-read: the deploy fails closed before any write.
+{
+  const fake = FakeRepository.fromCensus();
+  const { id: _id, ...withoutId } = fake.ruleset(MAIN);
+  const capture = Effect.runSync(decodeLiveRuleset(withoutId));
+  const providers = guardedRulesetProvider(capture).pipe(Layer.provideMerge(fakeProviders(fake)));
+  const { test } = Test.make({ providers, stage: "test" });
+  test.provider("a capture without an id refuses the write", (scratch) =>
+    Effect.gen(function* () {
+      const exit = yield* deploy(typed(scratch), liveReviewerCheck(capture));
+      const message = Exit.match(exit, { onSuccess: () => "deployed", onFailure: Cause.pretty });
+      expect(Str.includes("CaptureWithoutId")(message)).toBe(true);
+      expect(writesToMain(fake)).toEqual([]);
+    })
+  );
+}
+
+// Any other ruleset goes straight to the shipped provider, with no re-read of 10240248.
+{
+  const fake = FakeRepository.fromCensus();
+  const capture = Effect.runSync(decodeLiveRuleset(fake.ruleset(MAIN)));
+  const providers = guardedRulesetProvider(capture).pipe(Layer.provideMerge(fakeProviders(fake)));
+  const { test } = Test.make({ providers, stage: "test" });
+  test.provider("a ruleset with another name is written without the re-read", (scratch) =>
+    Effect.gen(function* () {
+      const exit = yield* Effect.exit(
+        typed(scratch).deploy(
+          GitHub.Ruleset("Other", {
+            owner: "beep-effect",
+            repository: "beep-effect",
+            name: "other",
+            conditions: { include: ["refs/heads/other"] },
+          })
+        )
+      );
+      expect(exit._tag).toBe("Success");
+      expect(
+        A.filter(fake.calls, (call) => call.method === "GET" && Str.endsWith(`/rulesets/${MAIN}`)(call.path))
+      ).toEqual([]);
+    })
+  );
+}

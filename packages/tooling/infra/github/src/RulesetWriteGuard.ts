@@ -1,8 +1,9 @@
 /**
  * The last-moment check on ruleset 10240248: the stack builds the body it
  * writes from a capture of the live ruleset (it carries the live
- * `beep-reviewer` check through), so a `beep reviewer ruleset release|require
- * --apply` that lands between that capture and the write would be overwritten.
+ * `beep-reviewer` check through), so a
+ * `beep reviewer ruleset release|require --apply` that lands between that
+ * capture and the write would be overwritten.
  * This module wraps the shipped `GitHub.Ruleset` provider: inside the
  * provider's update path, immediately before the PUT, it re-reads the live
  * ruleset and refuses, writing nothing, if it differs from the capture.
