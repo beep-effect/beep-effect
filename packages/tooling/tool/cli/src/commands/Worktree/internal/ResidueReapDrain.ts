@@ -358,14 +358,15 @@ const livenessCheck = Effect.fnUntraced(function* (context: ResidueDrainContext,
 
 const ownedWorktreesCheck = Effect.fnUntraced(function* (layout: DrainLayout) {
   if (layout.kind !== "clone") return checkResult("owned-worktrees", "pass", "linked worktree owns no worktrees");
-  const fs = yield* FileSystem.FileSystem;
   const git = yield* Git;
   const listing = yield* git.worktreeList(layout.real).pipe(Effect.option);
   if (O.isNone(listing)) return checkResult("owned-worktrees", "probe-failed", "git worktree list failed");
-  // Every entry but the clone itself; one whose directory is gone is prunable and holds nothing.
-  const registered = yield* Effect.filter(
-    A.filter(listing.value, (entry) => !entry.bare && !Str.Equivalence(entry.path, layout.real)),
-    (entry) => fs.exists(entry.path).pipe(Effect.orElseSucceed(() => true))
+  // Every entry but the clone itself, unless git calls it prunable. A locked worktree is never
+  // prunable to git, even with its directory gone (unmounted storage): its HEAD lives in this clone.
+  const registered = A.filter(
+    listing.value,
+    (entry) =>
+      !entry.bare && !Str.Equivalence(entry.path, layout.real) && (entry.locked !== undefined || !entry.prunable)
   );
   return A.isReadonlyArrayEmpty(registered)
     ? checkResult("owned-worktrees", "pass", "no registered worktrees")

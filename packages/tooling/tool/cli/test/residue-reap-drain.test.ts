@@ -501,6 +501,24 @@ describe("residue reap drainable class", () => {
       })
     );
 
+    it.effect("keeps a clone whose locked lane lost its directory, and drops a prunable one", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const fs = yield* FileSystem.FileSystem;
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const probe = fleetProbe(fleet, registry);
+        // Unmounted storage: the lane is locked and its directory is gone.
+        yield* run(fleet.clone, "git", ["worktree", "lock", "--reason", "removable volume", fleet.lane]);
+        yield* fs.remove(fleet.lane, { recursive: true });
+        const locked = yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+        expect(outcomeOf(drainRow(locked, fleet.clone), "owned-worktrees")).toBe("fail");
+
+        yield* run(fleet.clone, "git", ["worktree", "unlock", fleet.lane]);
+        const prunable = yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+        expect(outcomeOf(drainRow(prunable, fleet.clone), "owned-worktrees")).toBe("pass");
+      })
+    );
+
     it.effect("refuses a checkout with live activity", () =>
       Effect.gen(function* () {
         const fleet = yield* makeFleet();
