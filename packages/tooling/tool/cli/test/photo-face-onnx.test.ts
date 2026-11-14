@@ -21,27 +21,34 @@ const checkpoint = Effect.fn("test.faceCheckpoint")(function* (header: unknown, 
   bytes.set(data, 8 + encoded.length);
   return bytes;
 });
+// Unit scales (BatchNorm variance, 1-D weights) are 1 so activations stay finite; the final
+// feature bias counts up so the recognizer output is a recognizable 1..n sequence.
+const isUnitScale = (name: string, shape: ReadonlyArray<number>) =>
+  Str.endsWith("running_var")(name) || (Str.endsWith("weight")(name) && shape.length === 1);
+const syntheticTensor = (name: string, shape: ReadonlyArray<number>): Float32Array => {
+  const count = A.reduce(shape, 1, (a, b) => a * b);
+  if (name === "model.net.feature.3.bias") return Float32Array.from(A.makeBy(count, (i) => i + 1));
+  return new Float32Array(count).fill(isUnitScale(name, shape) ? 1 : 0);
+};
+const concatBytes = (chunks: ReadonlyArray<Uint8Array>): Uint8Array => {
+  const payload = new Uint8Array(A.reduce(chunks, 0, (total, chunk) => total + chunk.length));
+  A.reduce(chunks, 0, (offset, chunk) => {
+    payload.set(chunk, offset);
+    return offset + chunk.length;
+  });
+  return payload;
+};
 const weights = Effect.fn("test.faceWeights")(function* (shapes: Readonly<Record<string, ReadonlyArray<number>>>) {
-  let offset = 0;
   const chunks: Array<Uint8Array> = [];
   const headers: Record<string, unknown> = {};
+  let offset = 0;
   for (const [name, shape] of R.toEntries(shapes)) {
-    const count = A.reduce(shape, 1, (a, b) => a * b);
-    const values = new Float32Array(count);
-    if (Str.endsWith("running_var")(name) || (Str.endsWith("weight")(name) && shape.length === 1)) values.fill(1);
-    if (name === "model.net.feature.3.bias") for (let i = 0; i < count; i++) values[i] = i + 1;
-    const data = new Uint8Array(values.buffer);
+    const data = new Uint8Array(syntheticTensor(name, shape).buffer);
     headers[name] = { dtype: "F32", shape, data_offsets: [offset, offset + data.length] };
     offset += data.length;
     chunks.push(data);
   }
-  const payload = new Uint8Array(offset);
-  offset = 0;
-  for (const chunk of chunks) {
-    payload.set(chunk, offset);
-    offset += chunk.length;
-  }
-  return yield* checkpoint(headers, payload);
+  return yield* checkpoint(headers, concatBytes(chunks));
 });
 const dimensions = RecognizerGraphDimensions.make({ gridSide: 4, patchSide: 2, heads: 2, headWidth: 4, blocks: 2 });
 const recognizerShapes = (): Record<string, ReadonlyArray<number>> => {
