@@ -91,6 +91,14 @@ export class CitationNativeLane extends Context.Service<
     readonly clock: Clock.Clock;
     readonly spawner: ChildProcessSpawner["Service"];
     readonly start: CitationNativeStart;
+    readonly withUse: <A, E, R>(
+      body: (
+        start: CitationNativeStart,
+        reserve: Effect.Effect<void, CitationNativeLaneFailure | CitationSafetyLimitExceeded>,
+        release: Effect.Effect<void, CitationNativeLaneFailure | CitationSafetyLimitExceeded>
+      ) => Effect.Effect<A, E, R>
+    ) => Effect.Effect<A, E, R>;
+    readonly retire: Effect.Effect<void, CitationNativeLaneFailure | CitationSafetyLimitExceeded>;
     readonly reserve: Effect.Effect<void, CitationNativeLaneFailure | CitationSafetyLimitExceeded>;
     readonly ensureOpen: Effect.Effect<void, CitationNativeLaneFailure>;
     readonly snapshot: Effect.Effect<CitationNativeLaneSnapshot>;
@@ -202,65 +210,69 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     yield* owner.ensureOpen;
     return owner;
   });
-  const reserve = lock.withPermit(availableOwner.pipe(Effect.andThen(acquire), Effect.asVoid, Effect.uninterruptible));
-  const start: CitationNativeStart = Effect.fn("Citation.startNativeLane")(function* (
+  const reserveUnlocked = availableOwner.pipe(Effect.andThen(acquire), Effect.asVoid, Effect.uninterruptible);
+  const reserve = lock.withPermit(reserveUnlocked);
+  const startUnlocked: CitationNativeStart = Effect.fn("Citation.startNativeLane")(function* (
     _kind,
     command,
     onRetiring = Effect.void
   ) {
-    return yield* lock.withPermit(
-      Effect.uninterruptible(
-        Effect.gen(function* () {
-          const owner = yield* availableOwner;
-          yield* retire;
-          const lease = yield* acquire();
-          returning = false;
-          const notification = makeRetirementNotification();
-          let spawned = false;
-          let acknowledged = false;
-          const record = yield* owner
-            .start(command, {
-              quarantine: lease.quarantine,
-              release: Effect.gen(function* () {
-                if (!acknowledged) {
-                  acknowledged = true;
-                  if (spawned) confirmed++;
-                }
-                if (returning || closed) {
-                  yield* lease.release;
-                  if (O.isSome(permit) && permit.value === lease) permit = O.none();
-                }
-                yield* notification.confirm;
-              }),
-            })
-            .pipe(
-              Effect.onError(() =>
-                release.pipe(Effect.catchCause(() => Effect.logError("Citation lane cleanup remains quarantined")))
+    return yield* Effect.uninterruptible(
+      Effect.gen(function* () {
+        const owner = yield* availableOwner;
+        yield* retire;
+        const lease = yield* acquire();
+        returning = false;
+        const notification = makeRetirementNotification();
+        let spawned = false;
+        let acknowledged = false;
+        const record = yield* owner
+          .start(command, {
+            quarantine: lease.quarantine,
+            release: Effect.gen(function* () {
+              if (!acknowledged) {
+                acknowledged = true;
+                if (spawned) confirmed++;
+              }
+              if (returning || closed) {
+                yield* lease.release;
+                if (O.isSome(permit) && permit.value === lease) permit = O.none();
+              }
+              yield* notification.confirm;
+            }),
+          })
+          .pipe(
+            Effect.onError(() =>
+              release.pipe(Effect.catchCause(() => Effect.logError("Citation lane cleanup remains quarantined")))
+            )
+          );
+        spawned = Exit.isSuccess(record.child);
+        if (spawned) started++;
+        const process: CitationOwnedNativeProcess<CitationNativeLaneFailure> = {
+          retire: (retry) =>
+            onRetiring.pipe(
+              Effect.andThen(record.process.retire(retry)),
+              Effect.tapError(() =>
+                Effect.sync(() => {
+                  poisoned = true;
+                })
               )
-            );
-          spawned = Exit.isSuccess(record.child);
-          if (spawned) started++;
-          const process: CitationOwnedNativeProcess<CitationNativeLaneFailure> = {
-            retire: (retry) =>
-              onRetiring.pipe(
-                Effect.andThen(record.process.retire(retry)),
-                Effect.tapError(() =>
-                  Effect.sync(() => {
-                    poisoned = true;
-                  })
-                )
-              ),
-          };
-          occupant = O.some(process);
-          return { child: record.child, process, scope: record.scope, onRetired: notification.onRetired };
-        })
-      )
+            ),
+        };
+        occupant = O.some(process);
+        return { child: record.child, process, scope: record.scope, onRetired: notification.onRetired };
+      })
     );
   });
+  const start: CitationNativeStart = (...args) => lock.withPermit(startUnlocked(...args));
   return CitationNativeLane.of({
     clock: nativeClock,
     spawner: nativeSpawner,
     start,
+    withUse: Effect.fn("Citation.useNativeLane")((body) =>
+      lock.withPermit(Effect.suspend(() => body(startUnlocked, reserveUnlocked, release.pipe(Effect.uninterruptible))))
+    ),
+    retire: lock.withPermit(release.pipe(Effect.uninterruptible)),
     reserve,
     ensureOpen: Effect.gen(function* () {
       if (closed) return yield* CitationNativeLaneFailure.make({ reason: "closed" });

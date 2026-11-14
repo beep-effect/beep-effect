@@ -45,6 +45,17 @@ createInterface({ input: process.stdin }).on("line", () => {
     return;
   }
   if (mode === "wrong-sequence") return;
+  if (mode === "result") {
+    const timer = setInterval(() => {
+      if (existsSync(`${file}.result-release`)) {
+        clearInterval(timer);
+        process.stdout.write(
+          `{"_tag":"Complete","version":"citation-regex-result/v1","sequence":${sequence},"groups":0,"matches":0,"spans":""}\n`
+        );
+      }
+    }, 5);
+    return;
+  }
   process.stdout.write(
     `{"_tag":"Complete","version":"citation-regex-result/v1","sequence":${sequence},"groups":0,"matches":0,"spans":""}\n`
   );

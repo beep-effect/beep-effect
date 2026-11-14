@@ -85,6 +85,9 @@ export class CitationRegexPatternDescriptor extends S.Opaque<
   )
 ) {}
 const ProfileType = S.toType(CitationRegexPatternProfile);
+const decodeFlags = S.decodeUnknownEffect(CitationRegexProgram.fields.sourceFlags);
+const decodeProfile = S.decodeUnknownEffect(ProfileType);
+const decodeNative = S.decodeUnknownEffect(S.Struct({ width: S.Literals([1, 2, 4]), bytes: S.Uint8Array }));
 const sameProfile = S.toEquivalence(CitationRegexPatternProfile);
 const fail = (reason: CitationRegexDescriptorFailure["reason"]) => CitationRegexDescriptorFailure.make({ reason });
 const key = (digest: string, flags: number) => `${flags}:${digest}`;
@@ -122,14 +125,13 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
     if (MutableHashMap.has(installed, identity)) return yield* fail("invalid-bindings");
     MutableHashMap.set(installed, identity, descriptor);
   }
-  const bind = Effect.fn("Citation.bindRegexDescriptor")(function* (nativePattern: unknown, flagsInput: unknown) {
-    const flags = yield* S.decodeUnknownEffect(CitationRegexProgram.fields.sourceFlags)(flagsInput).pipe(
-      Effect.mapError(() => fail("unknown-pattern"))
-    );
-    const prepared = yield* input
-      .prepareUnicode(nativePattern, () => Effect.void)
-      .pipe(Effect.catchTag("CitationRegexInputFailure", () => Effect.fail(fail("unknown-pattern"))));
-    const storage = prepared.value.storage;
+  const select = Effect.fn("Citation.selectRegexDescriptor")(function* (nativePattern: unknown, flagsInput: unknown) {
+    const flags = yield* decodeFlags(flagsInput).pipe(Effect.mapError(() => fail("unknown-pattern")));
+    const storage = yield* decodeNative(nativePattern).pipe(Effect.mapError(() => fail("unknown-pattern")));
+    if (storage.bytes.byteLength > limits.processMessageBytes)
+      return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "processMessageBytes" });
+    if (storage.bytes.byteLength / storage.width > limits.patternUtf16)
+      return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternUtf16" });
     const words = Bytes.concat([new Uint8Array([storage.width]), storage.bytes]);
     const digest = yield* crypto
       .digestHex(Digest.sha256, words)
@@ -137,12 +139,23 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
     const descriptor = yield* Effect.fromOption(MutableHashMap.get(installed, key(digest, flags))).pipe(
       Effect.mapError(() => fail("unknown-pattern"))
     );
-    const program = yield* compiler.compile(storage, flags);
-    const profile = yield* S.decodeUnknownEffect(ProfileType)(program).pipe(
-      Effect.mapError(() => fail("profile-mismatch"))
-    );
+    return copyCitationRegexDescriptor(descriptor);
+  }, timed);
+  const verify = Effect.fn("Citation.verifyRegexDescriptor")(function* (
+    descriptor: CitationRegexPatternDescriptor,
+    prepared: Effect.Success<ReturnType<typeof input.prepareUnicode>>
+  ) {
+    const program = yield* compiler.compile(prepared.value.storage, descriptor.flags);
+    const profile = yield* decodeProfile(program).pipe(Effect.mapError(() => fail("profile-mismatch")));
     if (!sameProfile(profile, descriptor.profile)) return yield* fail("profile-mismatch");
     return { descriptor: copyCitationRegexDescriptor(descriptor), program, prepared };
   }, timed);
-  return { engine: compiler.engine, bind };
+  const bind = Effect.fn("Citation.bindRegexDescriptor")(function* (nativePattern: unknown, flags: unknown) {
+    const descriptor = yield* select(nativePattern, flags);
+    const prepared = yield* input
+      .prepareUnicode(nativePattern, () => Effect.void)
+      .pipe(Effect.catchTag("CitationRegexInputFailure", () => Effect.fail(fail("unknown-pattern"))));
+    return yield* verify(descriptor, prepared);
+  }, timed);
+  return { engine: compiler.engine, select, verify, bind };
 });

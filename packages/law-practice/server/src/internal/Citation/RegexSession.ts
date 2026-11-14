@@ -65,7 +65,8 @@ export class CitationRegexSession extends Context.Service<
         evaluate: (
           job: CitationRegexSessionJob,
           frame: Uint8Array
-        ) => Effect.Effect<Uint8Array, CitationRegexExecutionFailure>
+        ) => Effect.Effect<Uint8Array, CitationRegexExecutionFailure>,
+        reserve: Effect.Effect<void, CitationRegexWorkerFailure | CitationSafetyLimitExceeded>
       ) => Effect.Effect<A, E, R>
     ) => Effect.Effect<A, E | CitationRegexExecutionFailure, R>;
     readonly snapshot: Effect.Effect<CitationRegexSessionSnapshot>;
@@ -108,9 +109,12 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
   const retire = Effect.suspend(() =>
     O.isSome(current) ? current.value.process.retire(false).pipe(Effect.mapError(mapLaneFailure)) : Effect.void
   );
-  const terminate = Effect.fnUntraced(function* (error: CitationRegexExecutionFailure) {
+  const terminate = Effect.fnUntraced(function* (
+    error: CitationRegexExecutionFailure,
+    release: CitationNativeLane["Service"]["retire"] = lane.retire
+  ) {
     yield* poison(error);
-    yield* retire;
+    yield* release.pipe(Effect.mapError(mapLaneFailure));
   });
   const timeout = <A, E, R>(body: Effect.Effect<A, E, R>) =>
     body.pipe(
@@ -120,7 +124,10 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
       }),
       Effect.provideService(Clock.Clock, lane.clock)
     );
-  const start = Effect.fn("Citation.startRegexSession")(function* (runtime: CitationNativeProcessRuntime) {
+  const start = Effect.fn("Citation.startRegexSession")(function* (
+    runtime: CitationNativeProcessRuntime,
+    startNative: CitationNativeStart
+  ) {
     const argument = yield* encodeCitationRegexSessionStartup(CitationRegexSessionStartup.make({ limits }));
     const replies = yield* Queue.make<CitationRegexSessionReply, CitationRegexExecutionFailure>({ capacity: 1 });
     const failed = yield* Deferred.make<O.Option<CitationRegexExecutionFailure>>();
@@ -136,13 +143,11 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
     });
     state = "spawned";
     const command = citationNativeProcessCommand(runtime, argument);
-    const record = yield* lane
-      .start(
-        "regex",
-        { ...command, options: { ...command.options, stdin: { stream: "pipe", endOnDone: false } } },
-        retiring
-      )
-      .pipe(Effect.mapError(mapLaneFailure));
+    const record = yield* startNative(
+      "regex",
+      { ...command, options: { ...command.options, stdin: { stream: "pipe", endOnDone: false } } },
+      retiring
+    ).pipe(Effect.mapError(mapLaneFailure));
     current = O.some(record);
     const child = yield* record.child.pipe(Effect.mapError(mapLaneFailure));
     const transition = Effect.fnUntraced(function* (from: typeof Phase.Type, to: typeof Phase.Type, incoming: number) {
@@ -180,7 +185,7 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
     // Retirement runs outside the reader's process Scope, so closing that Scope
     // can interrupt and join its reader without a circular retirement wait.
     yield* Deferred.await(failed).pipe(
-      Effect.flatMap(O.match({ onNone: () => Effect.void, onSome: terminate })),
+      Effect.flatMap(O.match({ onNone: () => Effect.void, onSome: (error) => terminate(error) })),
       Effect.catchCause(() => Effect.logError("Citation regex session retirement remains quarantined")),
       Effect.forkIn(scope)
     );
@@ -192,81 +197,93 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
   let transport = O.none<Effect.Success<ReturnType<typeof start>>>();
   const evaluate: CitationRegexSession["Service"]["evaluate"] = Effect.fn("Citation.evaluateRegexSession")(
     function* (runtime, prepare) {
-      return yield* lock.withPermit(
-        Effect.gen(function* () {
-          yield* ensureOpen;
-          if (state === "absent") transport = O.none();
-          const run = Effect.fnUntraced(function* (job: CitationRegexSessionJob, frame: Uint8Array) {
-            return yield* Effect.uninterruptibleMask(
-              Effect.fnUntraced(function* (restore) {
-                const work = Effect.gen(function* () {
-                  if (O.isNone(transport)) {
-                    const started = yield* timeout(start(runtime));
-                    transport = O.some(started);
-                  }
-                  const connection = yield* Effect.fromOption(transport).pipe(Effect.mapError(invalid));
-                  if (state !== "idle" || job.sequence !== sequence) return yield* invalid();
-                  return yield* Effect.gen(function* () {
-                    state = "sent";
-                    jobs++;
-                    const native = yield* makeCitationNativeRpcTransport(
-                      connection.child,
-                      frame,
-                      () => CitationRegexWorkerFailure.make({ reason: "channel-failed" }),
-                      sequence
-                    );
-                    const rpc = yield* RpcClient.makeNoSerialization(CitationRegexSessionRpcs, native.options);
-                    const deliver = makeCitationNativeRpcDelivery({
-                      sent: native.sent,
-                      write: rpc.write,
-                      requestId: native.requestId,
+      return yield* lock
+        .withPermit(
+          lane.withUse((startNative, reserve, release) =>
+            Effect.gen(function* () {
+              yield* ensureOpen;
+              if (state === "absent") transport = O.none();
+              const run = Effect.fnUntraced(function* (job: CitationRegexSessionJob, frame: Uint8Array) {
+                return yield* Effect.uninterruptibleMask(
+                  Effect.fnUntraced(function* (restore) {
+                    const work = Effect.gen(function* () {
+                      if (O.isNone(transport)) {
+                        const started = yield* timeout(start(runtime, startNative));
+                        transport = O.some(started);
+                      }
+                      const connection = yield* Effect.fromOption(transport).pipe(Effect.mapError(invalid));
+                      if (state !== "idle" || job.sequence !== sequence) return yield* invalid();
+                      return yield* Effect.gen(function* () {
+                        state = "sent";
+                        jobs++;
+                        const native = yield* makeCitationNativeRpcTransport(
+                          connection.child,
+                          frame,
+                          () => CitationRegexWorkerFailure.make({ reason: "channel-failed" }),
+                          sequence
+                        );
+                        const rpc = yield* RpcClient.makeNoSerialization(CitationRegexSessionRpcs, native.options);
+                        const deliver = makeCitationNativeRpcDelivery({
+                          sent: native.sent,
+                          write: rpc.write,
+                          requestId: native.requestId,
+                        });
+                        const receive = Effect.gen(function* () {
+                          const started = yield* connection.take;
+                          if (!CitationRegexSessionReply.guards.Started(started)) return yield* invalid();
+                          const reply = yield* connection.take;
+                          if (CitationRegexSessionReply.guards.Failure(reply))
+                            return yield* reply.failure.pipe(Exit.fail, deliver);
+                          if (!CitationRegexSessionReply.guards.Complete(reply)) return yield* invalid();
+                          const body = yield* citationRegexSessionResult(reply);
+                          yield* deliver(Exit.succeed(body));
+                        });
+                        const body = yield* Effect.zipWith(
+                          receive,
+                          rpc.client.Evaluate(job),
+                          (_received, value) => value,
+                          {
+                            concurrent: true,
+                          }
+                        );
+                        yield* ensureOpen;
+                        sequence++;
+                        return body;
+                      }).pipe(Effect.scoped, timeout);
                     });
-                    const receive = Effect.gen(function* () {
-                      const started = yield* connection.take;
-                      if (!CitationRegexSessionReply.guards.Started(started)) return yield* invalid();
-                      const reply = yield* connection.take;
-                      if (CitationRegexSessionReply.guards.Failure(reply))
-                        return yield* reply.failure.pipe(Exit.fail, deliver);
-                      if (!CitationRegexSessionReply.guards.Complete(reply)) return yield* invalid();
-                      const body = yield* citationRegexSessionResult(reply);
-                      yield* deliver(Exit.succeed(body));
-                    });
-                    const body = yield* Effect.zipWith(receive, rpc.client.Evaluate(job), (_received, value) => value, {
-                      concurrent: true,
-                    });
-                    yield* ensureOpen;
-                    sequence++;
-                    return body;
-                  }).pipe(Effect.scoped, timeout);
-                });
-                const outcome = yield* Effect.exit(restore(work));
-                if (Exit.isFailure(outcome)) {
-                  const error = outcome.cause.pipe(
-                    Cause.findErrorOption,
-                    O.filter(isExecutionFailure),
-                    O.getOrElse(closed)
+                    const outcome = yield* Effect.exit(restore(work));
+                    if (Exit.isFailure(outcome)) {
+                      const error = outcome.cause.pipe(
+                        Cause.findErrorOption,
+                        O.filter(isExecutionFailure),
+                        O.getOrElse(closed)
+                      );
+                      yield* terminate(error, release);
+                    }
+                    return yield* outcome;
+                  })
+                );
+              });
+              return yield* Effect.uninterruptibleMask(
+                Effect.fnUntraced(function* (restore) {
+                  const outcome = yield* Effect.exit(
+                    restore(prepare(sequence, run, reserve.pipe(Effect.mapError(mapLaneFailure))))
                   );
-                  yield* terminate(error);
-                }
-                return yield* outcome;
-              })
-            );
-          });
-          const before = jobs;
-          return yield* prepare(sequence, run).pipe(
-            Effect.onExit((outcome) =>
-              Exit.isFailure(outcome) && jobs > before && state !== "killed"
-                ? outcome.cause.pipe(
-                    Cause.findErrorOption,
-                    O.filter(isExecutionFailure),
-                    O.getOrElse(closed),
-                    terminate
-                  )
-                : Effect.void
-            )
-          );
-        })
-      );
+                  if (Exit.isFailure(outcome)) {
+                    const error = outcome.cause.pipe(
+                      Cause.findErrorOption,
+                      O.filter(isExecutionFailure),
+                      O.getOrElse(closed)
+                    );
+                    yield* terminate(error, release);
+                  }
+                  return yield* outcome;
+                })
+              );
+            })
+          )
+        )
+        .pipe(Effect.onInterrupt(() => terminate(closed())));
     }
   );
   return CitationRegexSession.of({

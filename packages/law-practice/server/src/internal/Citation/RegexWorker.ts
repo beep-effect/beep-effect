@@ -65,26 +65,22 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
         yield* lane.ensureOpen.pipe(Effect.mapError((error) => failure(error.reason)));
         const quota = yield* decodeQuota(maximumMatches).pipe(Effect.mapError(() => failure("invalid-runtime")));
         if (quota > limits.patternMatches) return yield* safety("patternMatches");
-        const bound = yield* registry.bind(pattern, flags);
         return yield* regex.evaluate(
           runtime,
-          Effect.fnUntraced(function* (sequence, evaluate) {
+          Effect.fnUntraced(function* (sequence, evaluate, reserve) {
+            const descriptor = yield* registry.select(pattern, flags);
             const prepared = yield* preparation.prepare(
               registry.engine,
-              bound.descriptor,
+              descriptor,
               sequence,
               pattern,
               source,
               flags,
               quota,
-              () =>
-                lane.reserve.pipe(
-                  Effect.mapError((error) =>
-                    error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error
-                  )
-                ),
+              () => reserve,
               mode
             );
+            const bound = yield* registry.verify(descriptor, prepared.pattern);
             const result = yield* makeCitationRegexResult(
               limits,
               bound.program.groups,

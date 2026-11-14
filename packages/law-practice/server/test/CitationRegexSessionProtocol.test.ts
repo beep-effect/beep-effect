@@ -1,3 +1,7 @@
+import {
+  makeCitationNativeJsonDecoder,
+  preflightCitationNativeJson,
+} from "@beep/law-practice-server/internal/Citation/NativeJson";
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { citationUnaccountedText } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
@@ -12,7 +16,14 @@ import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { vi } from "vitest";
 
+const decodeStructuralProof = makeCitationNativeJsonDecoder({
+  codec: S.fromJsonString(S.Struct({ a: S.Unknown })),
+  propertyCeiling: 64,
+  maximumDepth: 4,
+  invalid: () => "depth-exceeded",
+});
 const decodeDescriptor = S.decodeUnknownEffect(CitationRegexPatternDescriptor);
 const descriptor = decodeDescriptor({
   patternSha256: "b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7",
@@ -55,12 +66,21 @@ it.effect("accepts the depth-four names object and preflights its exact descript
 
 it.effect("refuses depth five in structural preflight before base64 payload allocation", () =>
   Effect.gen(function* () {
-    // Invalid base64 would fail if decoding reached the payload. The nested names
-    // value must be rejected by the structural guard first.
-    const text =
-      '{"_tag":"Evaluate","version":"citation-regex-worker/v3","sequence":0,"engine":"python-re","descriptor":{"patternSha256":"b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7","flags":0,"profile":{"groups":2,"names":{"maybe":{"deep":1}},"minimumWidthFloor":1,"repeatedCaptures":false,"nullableMultiRepeat":false}},"patternWidth":1,"patternBytes":"!","sourceWidth":1,"sourceBytes":"!","flags":0,"maxMatches":1,"mode":"finditer"}';
-    const failure = yield* decodeCitationRegexSessionJob(new TextEncoder().encode(text)).pipe(Effect.flip);
-    expect(failure).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-frame" });
+    const bytes = new TextEncoder().encode('{"a":{"b":{"c":{"d":{"payload":"YQ=="}}}}}');
+    const structural = yield* preflightCitationNativeJson(bytes, 64, () => "depth-exceeded", 4).pipe(Effect.flip);
+    expect(structural).toBe("depth-exceeded");
+    const parse = vi.spyOn(JSON, "parse");
+    yield* Effect.gen(function* () {
+      yield* decodeStructuralProof(new TextEncoder().encode('{"a":{"b":{"c":{"payload":"YQ=="}}}}'));
+      expect(parse).toHaveBeenCalled();
+      parse.mockClear();
+      const refused = yield* decodeStructuralProof(bytes).pipe(Effect.flip);
+      expect(refused).toBe("depth-exceeded");
+      expect(parse).not.toHaveBeenCalled();
+      const failure = yield* decodeCitationRegexSessionJob(bytes).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-frame" });
+      expect(parse).not.toHaveBeenCalled();
+    }).pipe(Effect.ensuring(Effect.sync(() => parse.mockRestore())));
   })
 );
 
