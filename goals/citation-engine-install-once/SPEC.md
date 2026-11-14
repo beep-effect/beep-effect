@@ -368,6 +368,16 @@ Lane perf/citation-owned-configuration
 
 Reverse: Restore the stage-level configuration decode and the old direct-stage assertions together.
 
+### Keep fixed-pattern authentication at the installed call site, once per engine, 2026-11-14
+
+Owner ruling, round 2: a reshape of design section 2.1's fingerprint rule. Ownership is carried by the type (`CitationOwned`); authentication stays with the stage that knows its expected constant and runs at that installed call site, once per engine. Authenticating a stage's patterns against its own constant is a safety guard, and moving it into the generic boundary or changing the exported configuration schemas' decoded types to carry fingerprints would weaken that for no gain. This covers the fixed-pattern fingerprints (`copyCitationMetadataPatterns`, `prepareCitationPublicationMetadata`), the court-table authentication in CaseMetadata and PostCaseMetadata, and the vocabulary that SemanticProjection rebuilds at install.
+
+The one per-request repeat is fixed in this slice: the reference-pattern builder re-checked its fixed-pattern fingerprints and recomputed the rejection pattern's fingerprint on every request. `installCitationReferencePatterns` now runs both once per installed call site, captures each outcome with `Effect.exit`, and each request's `make` replays the authentication outcome right after the budget-ceiling check, where the check ran before, and the rejection fingerprint where the rejection descriptor is built. The builder itself stays per request because it reserves its fixed fragments on the request budget (the A3 decision on generated references). The authentication used an unaccounted pattern input, so `producedTextUtf16` and refusal order are unchanged. Because the authentication prepares patterns under the limits, the builder now takes its limits at install; production already passed the installed limits on every request.
+
+Lane perf/citation-owned-configuration
+
+Reverse: Carry fingerprints on the owned value through a fingerprinted pattern codec and compare them at each stage, if a later design wants it.
+
 ### Keep leaf helper argument decoding and the per-request reference builder decode, 2026-11-14
 
 A4 removes every configuration detach below the boundary and every stage-level configuration decode: makeCitationMetadataStage, the publication operation, installCitationMetadataConfigurationStage and the four detachCitationMetadataConfiguration sites no longer decode or detach, and stage installers take CitationOwned configuration with typed limits and runtime. Leaf helpers below the stages (context matcher, metadata strings and year, regex input, evaluator install, token dispatch, edition inference, extractor ordering and recipes) keep their existing unknown-typed signatures and re-validate their scalar arguments; they are shared with many direct tests and copy nothing the probe counts. The per-request reference-pattern builder (kept per request by the A3 decision on generated references) still decodes its configuration argument each request. Both are argument validation, not ownership; typing them through is mechanical and left for a follow-on slice so this one stays reviewable.
@@ -376,27 +386,26 @@ Lane perf/citation-owned-configuration
 
 Reverse: Type the leaf helper and reference builder arguments and delete their decodes in a follow-on slice.
 
-### Stop pattern fingerprints and artifact hashes at each installed call site, 2026-11-14
+### Stop the default engine at two owns: the tokenizer catalog is derived, not decoded, 2026-11-14
 
-Stop rule, design section 2.1 (fingerprints, court table hash and vocabulary artifact hash run inside own once and live on the owned value). ownCitationConfiguration is generic over a schema and does not know which fields are fixed patterns or what each stage expects, so it cannot compute or check them. Carrying the results on the owned value needs the configuration's decoded type to hold them, for example a fingerprinted pattern schema whose decoded side is the storage plus its SHA-256. CitationEngineConfiguration and the stage configurations are exported schemas, so that changes public types and wants its own design pass.
+Second stop, after the owner's round-2 ruling chose reshape (a): a sealed-text minting route whose input is an immutable string decoded through the schema's JSON codec, loaders and `makeCitationDefaultEngineConfiguration` returning owned parts assembled with `ownedStruct`, and `makeDefault` calling the internal owned install directly.
 
-What this slice does instead: every authentication stays (no guard removed). Each installed stage prepares and fingerprints its fixed patterns once per call site at engine construction (copyCitationMetadataPatterns, prepareCitationPublicationMetadata); the per-request reference-pattern builder still re-checks its fingerprints per request, CaseMetadata and PostCaseMetadata still hash the court table at install, and SemanticProjection still rebuilds the vocabulary (and its hash) at install. The schema decodes and descriptor copies that surrounded the fingerprints are gone. Proposed reshape: a fingerprinted pattern codec in the configuration schemas, computed during the boundary decode, and stage installers that compare the carried fingerprint with their expected constant.
+What the loaders do. `loadCitationTextAsset` reads at most the sealed length plus one byte through Effect FileSystem, checks the length and the SHA-256 of the bytes, and returns `new TextDecoder().decode(bytes)`. `loadCitationJsonAsset` decodes that text through the asset's `S.toCodecJson` + `S.fromJsonString` codec. So the parser catalog asset and the helper configurations asset are decoded from text, and the sealed route would be sound for them; the vocabulary is raw text.
+
+Why it still stops. The engine configuration is not those decoded assets; it is derived from them by engine computation:
+
+- `makeCitationCanonicalTokenizerCatalog` (`TokenizerCatalog.ts`) takes the catalog's `payload` string and `metadata`, re-hashes the payload, decodes it into 6,805 source rows, converts each row's regex text into new native storage (`RegexInput.prepareText`), fingerprints it, looks the descriptor up in a `HashMap` built from metadata rows, converts each required string with `PythonUnicode.fromText`, and builds a new `CitationTokenizerExtractor` and ordering binding per row. The resulting `CitationTokenizerConfiguration` is the bulk of the engine configuration (`extraction.extraction.tokenizer`).
+- `makeCitationHelperConfigurations` splices a `highestValidYear` computed from the Clock into four nested configurations and decodes edition bindings that `makeCitationDefaultConfiguration` derives from the computed catalog.
+
+Those values are unshared by construction (new buffers from immutable strings, numbers, and objects built inside construction), but nothing types them owned: `ownedStruct` needs every field already `CitationOwned`, and the fresh pattern and string storages come out of `prepareText` and `fromText` as plain `CitationPythonUnicodeStorage`. Typing them owned needs a minting route for engine-encoded text (storage encoded from an immutable string) in `ConfigurationOwnership`, used by `PythonUnicode` and `RegexInput`, plus an owned primitive route for computed numbers; or the catalog derivation moves to build time and ships as sealed JSON. Neither is in the ruling, and a mint that accepts any engine-built value would be the brand constructor under another name, so this slice does not improvise one.
+
+State kept: `makeDefault` owns its caller configuration (`ownCitationConfiguration`) before the asynchronous asset reads, then calls `make`, which owns the assembled configuration: 2 configuration detaches at construction. `makeCitationDefaultEngineConfiguration`, `makeCitationEngineArtifact` and `makeCitationSixFormArtifact` keep their `snapshotCitationValue` copies: each is a separately callable entry point with its own tests of raw input (`CitationDefaultConfiguration.test.ts`, `CitationEngineArtifact.test.ts`, `CitationSixFormArtifact.test.ts`).
+
+Proposed reshapes, owner's choice: (1) an owned encoding route for text-to-storage in `ConfigurationOwnership` plus an owned-primitive route, threading `CitationOwned` through the catalog and helper derivations; or (2) precompute the tokenizer catalog and the year-free helper configuration at build time into sealed JSON assets, so the engine only decodes sealed text.
 
 Lane perf/citation-owned-configuration
 
-Reverse: Delete this stop when fingerprints move into the owned value; the per-call-site checks stay until then.
-
-### Stop the default engine at two owns: engine-loaded assets cannot be minted owned, 2026-11-14
-
-Stop rule, design section 2.1. The design runs ownCitationConfiguration in both makeDefault and make and expects one detach per engine. makeDefault owns its caller configuration (limits, build, asset paths, runtimes) before the asynchronous asset reads, as the old snapshot did. It then assembles a CitationEngineConfiguration from that owned value and from values the engine itself decoded from sealed asset files (parser catalog, helper configurations, vocabulary). Nothing outside the engine holds those, but the brand constructor is module-private and the only minting route is the JSON-codec detach, so the assembly reaches the installers through make, which owns it with a second detach. The full-span construction row therefore shows 2 configuration detaches, not 1 (10 before; the per-call rows stay 0). An engine built with CitationEngineLive and the extractor own once.
-
-Not improvised: exporting a mint for engine-built values would be the brand constructor under another name. Proposed reshapes, operator's choice: (a) give ConfigurationOwnership a second minting route that decodes sealed asset text through the JSON codec (decoding from an immutable string yields unshared values) and have the asset loaders and makeCitationDefaultConfiguration return owned parts, assembled with ownedStruct; or (b) accept 2 for the default engine and amend acceptance criterion A4 to one own per caller boundary.
-
-Also still below the default boundary and not counted by the probe: makeCitationDefaultEngineConfiguration snapshots build identity and limits (two snapshotCitationValue calls), and makeCitationEngineArtifact and makeCitationSixFormArtifact snapshot their artifact descriptors. These are separately tested artifact-identity entry points that take unknown input; reshape (a) would type them owned and drop the snapshots.
-
-Lane perf/citation-owned-configuration
-
-Reverse: Delete this stop once the operator picks a reshape; until then the default engine owns its raw configuration and its assembled configuration.
+Reverse: Delete this stop once the owner picks how engine-derived configuration is typed owned; until then the default engine owns its caller configuration and its assembled configuration.
 
 <!-- beep:decisions:end -->
 

@@ -2,7 +2,6 @@ import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Ci
 import { makeCitationReferenceNames } from "@beep/law-practice-server/internal/Citation/ReferenceNames";
 import {
   CitationReferencePatternConfiguration,
-  makeCitationReferencePatterns,
   verifyCitationReferencePatternConfiguration,
 } from "@beep/law-practice-server/internal/Citation/ReferencePatterns";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
@@ -24,7 +23,10 @@ import {
   makeCitationReferenceNameMetadata,
   readCitationGeneratedReferenceSource,
 } from "./CitationReferenceNames.fixtures.ts";
-import { readCitationReferenceTemplate } from "./CitationReferencePatterns.fixtures.ts";
+import {
+  makeCitationReferencePatternsAtBoundary,
+  readCitationReferenceTemplate,
+} from "./CitationReferencePatterns.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 const Names = S.fromJsonString(S.Struct({ disallowedNames: S.Array(S.String) }));
@@ -84,7 +86,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference p
       Effect.gen(function* () {
         const { budget, configuration, limits, tampered } = yield* install();
         const run = (policy: unknown, input: unknown) =>
-          makeCitationReferencePatterns(policy, input).pipe(Effect.provideService(CitationTextBudget, budget));
+          makeCitationReferencePatternsAtBoundary(policy, input).pipe(
+            Effect.provideService(CitationTextBudget, budget)
+          );
         const invalidPolicy = { _tag: "CitationReferencePatternFailure", reason: "invalid-policy" };
         const invalidConfiguration = { _tag: "CitationReferencePatternFailure", reason: "invalid-configuration" };
         yield* refuses(run({}, configuration), invalidPolicy);
@@ -100,7 +104,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference p
     withCitationTestInvocation(
       Effect.gen(function* () {
         const { budget, configuration, limits } = yield* install();
-        const refused = yield* makeCitationReferencePatterns(
+        const refused = yield* makeCitationReferencePatternsAtBoundary(
           { ...limits, producedTextUtf16: budget.maximum - 1 },
           configuration
         ).pipe(Effect.provideService(CitationTextBudget, budget), Effect.flip);
@@ -124,7 +128,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference p
     withCitationTestInvocation(
       Effect.gen(function* () {
         const { budget, configuration, limits, unicode } = yield* install();
-        const builder = yield* makeCitationReferencePatterns(limits, configuration).pipe(
+        const builder = yield* makeCitationReferencePatternsAtBoundary(limits, configuration).pipe(
           Effect.provideService(CitationTextBudget, budget)
         );
         const name = yield* unicode.fromText("Abc $de");
@@ -134,7 +138,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference p
         assertTrue(pipe(text.text, Str.includes("Abc\\s+\\$de")));
         const patternUtf16 =
           A.reduce(R.values(configuration.patterns), 0, (n, p) => Num.max(n, p.bytes.length / p.width)) + 32;
-        const small = yield* makeCitationReferencePatterns({ ...limits, patternUtf16 }, configuration).pipe(
+        const small = yield* makeCitationReferencePatternsAtBoundary({ ...limits, patternUtf16 }, configuration).pipe(
           Effect.provideService(CitationTextBudget, budget)
         );
         const long = yield* unicode.fromText(`A${Str.repeat(patternUtf16 + 1)("b")}`);

@@ -370,6 +370,7 @@
     {"name":"Citation.installPlainCaseName","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.installPostCaseMetadata","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.installPreCaseMetadata","owner":"@beep/law-practice-server","family":"slice","conforms":true},
+    {"name":"Citation.installReferencePatterns","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.installReferenceToken","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.installRegexEvaluator","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.installSelectionBinding","owner":"@beep/law-practice-server","family":"slice","conforms":true},

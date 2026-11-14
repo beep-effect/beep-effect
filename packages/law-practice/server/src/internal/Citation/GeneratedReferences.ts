@@ -21,7 +21,7 @@ import { CitationCaseMetadataFields } from "./CaseMetadata.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import { reserveCitationInvocationText } from "./Invocation.ts";
 import { makeCitationMetadataStage, ownCitationStageCall } from "./MetadataComposition.ts";
-import { makeCitationReferencePatterns, verifyCitationReferencePatternConfiguration } from "./ReferencePatterns.ts";
+import { installCitationReferencePatterns, verifyCitationReferencePatternConfiguration } from "./ReferencePatterns.ts";
 import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
 import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import { makeCitationSpanOffsets } from "./SpanOffsets.ts";
@@ -167,10 +167,11 @@ const installPincited = Effect.fn("Citation.installPincitedReferences")(function
 ) {
   const installedInput = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText, "source"));
   const installedGenerated = yield* Effect.exit(installCitationRegexEvaluator(limits, runtime, []));
+  const patterns = yield* installCitationReferencePatterns(limits, config);
   return Effect.fn("Citation.extractPincitedReferences")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
     // Per request: the builder charges its fixed fragments to the request budget.
-    const builder = yield* makeCitationReferencePatterns(limits, config);
+    const builder = yield* patterns.make();
     const pattern = yield* builder.build(request.metadata, "pin");
     if (O.isNone(pattern)) return A.empty<CitationGeneratedReference>();
     const input = yield* installedInput;
@@ -261,10 +262,11 @@ const installMarkup = Effect.fn("Citation.installMarkupReferences")(function* (
   config: CitationReferencePatternConfiguration
 ) {
   const installedGenerated = yield* Effect.exit(installCitationRegexEvaluator(limits, runtime, []));
+  const patterns = yield* installCitationReferencePatterns(limits, config);
   return Effect.fn("Citation.extractMarkupReferences")(function* (raw: unknown) {
     const request = yield* S.decodeUnknownEffect(MarkupInput)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
     // Per request: the builder charges its fixed fragments to the request budget.
-    const builder = yield* makeCitationReferencePatterns(limits, config);
+    const builder = yield* patterns.make();
     const pattern = yield* builder.build(request.metadata, "markup");
     if (O.isNone(pattern) || O.isNone(request.geometry) || request.markup.bytes.length === 0)
       return A.empty<CitationGeneratedReference>();
