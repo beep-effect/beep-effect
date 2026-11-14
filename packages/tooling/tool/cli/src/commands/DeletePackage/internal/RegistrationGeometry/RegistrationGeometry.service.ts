@@ -1,3 +1,4 @@
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { FsUtils } from "@beep/repo-utils";
 import * as Context from "effect/Context";
@@ -7,6 +8,7 @@ import * as Path from "effect/Path";
 import { RegistrationGeometryError } from "./RegistrationGeometry.errors.ts";
 import { planForwardForTarget, planInverseForTarget, surfacesForTarget } from "./RegistrationGeometry.plan.ts";
 import { dependentsOfAtRoot, inspectTargetAtRoot } from "./RegistrationGeometry.probes.ts";
+import type { AcknowledgedLine } from "./RegistrationGeometry.probes.ts";
 import type {
   DependentsReport,
   RegistrationObservation,
@@ -77,9 +79,11 @@ export class RegistrationGeometryService extends Context.Service<
  *
  * **Details**
  *
- * The caller supplies the flag-aware plan executor. The service captures its
- * requirements, maps failures into the geometry error channel, and performs the
- * post-apply doctor from the same declarations.
+ * The caller supplies the flag-aware plan executor and, optionally, the
+ * acknowledged lines the doctor treats as clean. The service captures its
+ * requirements (`Git` included, for the git-visible file listing), maps
+ * failures into the geometry error channel, and performs the post-apply doctor
+ * from the same declarations.
  *
  * **Example** (Build the service with a no-op executor)
  *
@@ -102,21 +106,25 @@ export class RegistrationGeometryService extends Context.Service<
  *
  * @param repoRoot - Repository root that inspection and dependent scans resolve against.
  * @param executePlan - Flag-aware executor that performs a plan's file operations.
+ * @param isAcknowledgedLine - Acknowledged `(file, trimmed line)` pairs for `inspect` and `apply`.
  * @category factories
  * @since 0.0.0
  */
 export const makeRegistrationGeometryService = Effect.fn("RegistrationGeometry.makeService")(function* <E, R>(
   repoRoot: string,
-  executePlan: (plan: RegistrationPlan) => Effect.Effect<void, E, R>
+  executePlan: (plan: RegistrationPlan) => Effect.Effect<void, E, R>,
+  isAcknowledgedLine?: AcknowledgedLine
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const fsUtils = yield* FsUtils;
+  const git = yield* Git;
   const executorContext = yield* Effect.context<R>();
   const inspect = (target: RegistrationTarget) =>
-    inspectTargetAtRoot(repoRoot, target).pipe(
+    inspectTargetAtRoot(repoRoot, target, isAcknowledgedLine).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
       Effect.provideService(Path.Path, path),
+      Effect.provideService(Git, git),
       Effect.mapError(
         RegistrationGeometryError.newCause(`Failed to inspect registration geometry for ${target.packageName}.`)
       )
@@ -146,6 +154,7 @@ export const makeRegistrationGeometryService = Effect.fn("RegistrationGeometry.m
         Effect.provideService(FileSystem.FileSystem, fs),
         Effect.provideService(Path.Path, path),
         Effect.provideService(FsUtils, fsUtils),
+        Effect.provideService(Git, git),
         Effect.mapError(RegistrationGeometryError.newCause(`Failed to inspect dependents for ${target.packageName}.`))
       )
     ),

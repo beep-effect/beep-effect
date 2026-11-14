@@ -1,6 +1,8 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   BaselineOutputStamp,
+  DeletePackageAcknowledgement,
+  DeletePackageAcknowledgements,
   DeletePackageBaselineWriters,
   DeletePackagePolicy,
   DeletePackagePolicyEvaluation,
@@ -34,8 +36,9 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { expectReportedExit, temporaryWorkingDirectory } from "./support/CommandTest.ts";
+import { expectReportedExit, gitFixture, NodeTestLayer, temporaryGitWorkingDirectory } from "./support/CommandTest.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { DeletePackageRefusal } from "@beep/repo-cli/test/DeletePackage";
 
@@ -43,6 +46,8 @@ const temporaryDirectory = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.makeTempDirectoryScoped();
 });
+
+const temporaryGitDirectory = Effect.tap(temporaryDirectory, gitFixture);
 
 // A root `deploy` workspace beside `packages/tooling/deploy/x`, whose path ends in `deploy/x`: the
 // shape that made `delete-package @beep/deploy` count every `packages/tooling/deploy/**` line.
@@ -152,8 +157,7 @@ const target = RegistrationTarget.make({
 });
 
 const commandLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
+  NodeTestLayer,
   FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
   TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
@@ -162,7 +166,7 @@ const runDeletePackage = Command.runWith(deletePackageCommand, { version: "0.0.0
 it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
   describe("delete-package registration geometry", () => {
     it.effect("reports every synthetic PR #680 residue class without relying on ambient state", () =>
-      Effect.flatMap(temporaryDirectory, (repoRoot) =>
+      Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -211,7 +215,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     );
 
     it.effect("rejects tampered and mismatched deletion notes that reuse the canonical basename", () =>
-      Effect.flatMap(temporaryDirectory, (repoRoot) =>
+      Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -237,7 +241,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("delete-package --check prints every synthetic residue class and exits nonzero", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -284,7 +288,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     );
 
     it.effect("classifies identity-accessor importers outside the target tree as hard import dependents", () =>
-      Effect.flatMap(temporaryDirectory, (repoRoot) =>
+      Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -314,7 +318,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("classifies a nested resolved workspace as a hard path dependent of its ancestor", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -352,7 +356,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("ignores a sibling workspace path that only ends in the target's path", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const repoRoot = yield* writeShadowedDeployFixture;
           const rootDeploy = RegistrationTarget.make({
@@ -372,7 +376,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("still finds dependents of a nested target that contains a sibling workspace's path", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const repoRoot = yield* writeShadowedDeployFixture;
           const nested = RegistrationTarget.make({
@@ -391,7 +395,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("keeps the doctor clean when only sibling workspace paths end in the deleted path", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const repoRoot = yield* writeDeletedDeployLayout([
             ["tsconfig.packages.json", '{ "references": [{ "path": "packages/tooling/deploy/x" }] }\n'],
@@ -410,7 +414,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("keeps path-keyed inventories clean when only sibling workspace paths remain in them", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const repoRoot = yield* writeDeletedDeployLayout(
             pathKeyedInventories("packages/tooling/deploy/x/src/Stack.ts")
@@ -429,7 +433,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("still reports a path-keyed inventory entry for the deleted path itself", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const repoRoot = yield* writeDeletedDeployLayout(pathKeyedInventories("deploy/src/Stack.ts"));
 
@@ -445,7 +449,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("still reports a real reference to the deleted path beside sibling workspace paths", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const repoRoot = yield* writeDeletedDeployLayout([
             [
@@ -466,7 +470,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     );
 
     it.effect("classifies packet history and ledger references as historical, not live packet claims", () =>
-      Effect.flatMap(temporaryDirectory, (repoRoot) =>
+      Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -507,7 +511,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     );
 
     it.effect("ignores machine-local .beep artifacts in the authored-reference probe", () =>
-      Effect.flatMap(temporaryDirectory, (repoRoot) =>
+      Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -536,7 +540,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     );
 
     it.effect("probes the target's catalog shards, not the retired single-file catalogs", () =>
-      Effect.flatMap(temporaryDirectory, (repoRoot) =>
+      Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -583,7 +587,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("treats an absent private flag as publish-enabled during deletion", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -607,7 +611,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("refuses deleting a live package whose README carries a promotion record", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -639,7 +643,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("refuses a repository-root workspace target before planning recursive removal", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           yield* fs.writeFileString("bun.lock", "");
@@ -664,7 +668,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("refuses a workspace target that contains another resolved workspace", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -701,7 +705,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("revalidates the owned tree before applying a leaf deletion", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -763,13 +767,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           );
 
           const exit = yield* Effect.exit(
-            runDeletePackage([
-              "courtlistener",
-              "--force",
-              "--allow-stale-packets",
-              "--skip-lockfile",
-              "--skip-baselines",
-            ])
+            runDeletePackage(["courtlistener", "--allow-stale-packets", "--skip-lockfile", "--skip-baselines"])
           );
           assertTrue(Exit.isSuccess(exit), Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined);
 
@@ -885,7 +883,6 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       allowPublished: false,
       allowStalePackets: true,
       cascade: false,
-      force: true,
       pruneCatalog: false,
       rewritePackets: false,
       skipBaselines: false,
@@ -1184,7 +1181,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
   describe("delete-package exact name matching", () => {
     it.effect("does not flag a retired-name collision for a prefix-sharing retired name", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           yield* seedLiveCourtlistener("@beep/courtlistener-mcp");
           const exit = yield* Effect.exit(runDeletePackage(["courtlistener", "--dry-run"]));
@@ -1197,7 +1194,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("still flags a retired-name collision for the exact live name", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           yield* seedLiveCourtlistener("@beep/courtlistener");
           const exit = yield* Effect.exit(runDeletePackage(["courtlistener", "--dry-run"]));
@@ -1272,7 +1269,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
   describe("delete-package registration-geometry tokens", () => {
     const SHAPE_TEST = "packages/foundation/modeling/identity/test/shape-stable.test.ts";
     const preflightRefusal = (hits: number) =>
-      `[delete-package] REFUSE [dependent/hard] ${hits} production/test/script/path dependent hit(s); --force never overrides dependents.`;
+      `[delete-package] REFUSE [dependent/hard] ${hits} unacknowledged production/test/script/path dependent hit(s); only file-path and script hits can be acknowledged.`;
 
     const writeShapeTest = Effect.fn(function* (lines: ReadonlyArray<string>) {
       const fs = yield* FileSystem.FileSystem;
@@ -1305,7 +1302,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("does not block on the target's own shape-test rows, which the deletion removes", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           yield* seedLiveCourtlistener("@beep/retired-fixture");
           yield* writeShapeTest([
@@ -1327,7 +1324,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("still blocks on a shape-test line that is not one of the target's rows", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           yield* seedLiveCourtlistener("@beep/retired-fixture");
           yield* writeShapeTest([
@@ -1346,7 +1343,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("refuses when the shape test names the removed accessor outside its rows", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           yield* seedLiveCourtlistener("@beep/retired-fixture");
           yield* writeShapeTest([
@@ -1372,7 +1369,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("refuses when another identity-package file uses the removed accessor", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           yield* seedLiveCourtlistener("@beep/retired-fixture");
@@ -1390,7 +1387,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     // The doctor re-checks the shape test even when a deletion skipped the preflight.
     it.effect("reports a leftover shape-test accessor as identity-segment residue", () =>
-      Effect.flatMap(temporaryDirectory, (repoRoot) =>
+      Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -1412,7 +1409,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("does not block on a prefix-sharing sibling package", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           yield* seedLiveCourtlistener("@beep/retired-fixture");
           yield* seedPrefixSibling();
@@ -1425,7 +1422,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("deletes a package next to a prefix-sharing sibling and passes the post-apply doctor", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           yield* seedLiveCourtlistener("@beep/retired-fixture");
@@ -1487,13 +1484,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           ]);
 
           const exit = yield* Effect.exit(
-            runDeletePackage([
-              "courtlistener",
-              "--force",
-              "--allow-stale-packets",
-              "--skip-lockfile",
-              "--skip-baselines",
-            ])
+            runDeletePackage(["courtlistener", "--allow-stale-packets", "--skip-lockfile", "--skip-baselines"])
           );
           assertTrue(Exit.isSuccess(exit), Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined);
           const errorLines17 = yield* TestConsole.errorLines;
@@ -1540,6 +1531,396 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         )
       )
+    );
+  });
+
+  describe("delete-package git-visible enumeration", () => {
+    const README_LINE = "Reads `deploy/src/index.ts`.";
+
+    // A live root `deploy` workspace beside a consumer whose README names its path, as a git work tree.
+    const writeLiveDeployFixture = Effect.fn("writeLiveDeployFixture")(function* (
+      files: ReadonlyArray<readonly [string, string]>
+    ) {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* fs.realPath(".");
+      yield* fs.writeFileString(
+        "package.json",
+        '{ "name": "fixture", "private": true, "workspaces": ["deploy", "packages/consumer"], "scripts": { "build:deploy": "bun run --cwd deploy build" } }\n'
+      );
+      yield* fs.writeFileString("bun.lock", "");
+      yield* fs.makeDirectory("deploy", { recursive: true });
+      yield* fs.writeFileString(path.join("deploy", "package.json"), '{ "name": "@beep/deploy", "private": true }\n');
+      yield* fs.makeDirectory(path.join("packages", "consumer"), { recursive: true });
+      yield* fs.writeFileString(
+        path.join("packages", "consumer", "package.json"),
+        '{ "name": "@beep/consumer", "private": true }\n'
+      );
+      yield* fs.writeFileString(path.join("packages", "consumer", "README.md"), `${README_LINE}\n`);
+      yield* Effect.forEach(files, ([file, content]) =>
+        Effect.andThen(fs.makeDirectory(path.dirname(file), { recursive: true }), fs.writeFileString(file, content))
+      );
+      yield* gitFixture(repoRoot);
+      return repoRoot;
+    });
+
+    const hitFiles = (report: DependentsReport): ReadonlyArray<string> => A.map(report.hits, (hit) => hit.file);
+
+    it.effect("never reads a gitignored file as a dependent or as authored-reference evidence", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeLiveDeployFixture([
+            [".gitignore", "**/docs\n"],
+            ["packages/consumer/docs/modules/X.md", `${README_LINE}\n`],
+          ]);
+
+          const report = yield* dependentsOfAtRoot(repoRoot, rootDeployTarget);
+          expect(hitFiles(report)).toContain("packages/consumer/README.md");
+          expect(hitFiles(report)).not.toContain("packages/consumer/docs/modules/X.md");
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(evidenceOf(observations, "authored-references")).toContain("packages/consumer/README.md");
+          expect(evidenceOf(observations, "authored-references")).not.toContain("packages/consumer/docs/modules/X.md");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("still reads an untracked file git does not ignore", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const repoRoot = yield* writeLiveDeployFixture([]);
+          yield* fs.writeFileString("packages/consumer/new.md", `${README_LINE}\n`);
+
+          const report = yield* dependentsOfAtRoot(repoRoot, rootDeployTarget);
+          expect(hitFiles(report)).toContain("packages/consumer/new.md");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("skips a tracked file that is gone from disk but still in the index", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const repoRoot = yield* writeLiveDeployFixture([["packages/consumer/old.md", `${README_LINE}\n`]]);
+          yield* fs.remove("packages/consumer/old.md");
+
+          const report = yield* dependentsOfAtRoot(repoRoot, rootDeployTarget);
+          expect(hitFiles(report)).not.toContain("packages/consumer/old.md");
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(evidenceOf(observations, "authored-references")).not.toContain("packages/consumer/old.md");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("still walks the gitignored .beep/ci tree for runtime artifacts", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeLiveDeployFixture([
+            [".gitignore", ".beep/\n"],
+            [".beep/ci/inventory.jsonc", '{ "package": "@beep/deploy" }\n'],
+          ]);
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(statusOf(observations, "runtime-artifacts")).toBe("residue");
+          expect(evidenceOf(observations, "runtime-artifacts")).toContain(".beep/ci/inventory.jsonc");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("fails with a typed error naming a root that is not a git work tree", () =>
+      Effect.flatMap(temporaryDirectory, (repoRoot) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.writeFileString(
+            path.join(repoRoot, "package.json"),
+            '{ "name": "fixture", "private": true, "workspaces": [] }\n'
+          );
+          yield* fs.writeFileString(path.join(repoRoot, "bun.lock"), "");
+
+          const dependentsError = yield* Effect.flip(dependentsOfAtRoot(repoRoot, rootDeployTarget));
+          const doctorError = yield* Effect.flip(inspectTargetAtRoot(repoRoot, rootDeployTarget));
+          for (const error of [dependentsError, doctorError]) {
+            expect(error._tag).toBe("RegistrationGeometryError");
+            expect(error.message).toContain(`Cannot list git-visible files at ${repoRoot}`);
+          }
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    const ACK_FILE = "goals/demo/history/delete-deploy.acknowledgements.jsonc";
+    const README_REASON = "The README describes the build, reviewed.";
+    const SCRIPT_REASON = "The build alias is removed by hand, reviewed.";
+
+    const ackEntry = (file: string, text: string, reason: string, occurrences = 1): string =>
+      `{ "path": "${file}", "text": "${text}", "reason": "${reason}", "occurrences": ${occurrences} }`;
+
+    const README_ENTRY = ackEntry("packages/consumer/README.md", README_LINE, README_REASON);
+    const SCRIPT_ENTRY = ackEntry("package.json", "bun run --cwd deploy build", SCRIPT_REASON);
+
+    const ackFile = (target: string, entries: ReadonlyArray<string>): string =>
+      A.join(
+        [
+          "// Reviewed delete-package hits.",
+          "{",
+          '  "schemaVersion": "delete-package-acknowledgements/v1",',
+          `  "target": "${target}",`,
+          `  "entries": [${A.join(entries, ", ")}],`,
+          "}",
+          "",
+        ],
+        "\n"
+      );
+
+    const dryRun = Effect.gen(function* () {
+      const exit = yield* Effect.exit(runDeletePackage(["deploy", "--dry-run", "--acknowledge", ACK_FILE]));
+      const logs = yield* TestConsole.logLines;
+      const errors = yield* TestConsole.errorLines;
+      return { exit, logs, errors };
+    });
+
+    const linesIncluding = (lines: ReadonlyArray<unknown>, text: string): boolean =>
+      A.some(lines, (line) => P.isString(line) && Str.includes(text)(line));
+
+    it.effect("accepts acknowledged file-path and script hits and prints each with its reason", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeLiveDeployFixture([[ACK_FILE, ackFile("@beep/deploy", [README_ENTRY, SCRIPT_ENTRY])]]);
+
+          const { exit, logs, errors } = yield* dryRun;
+          assertTrue(Exit.isSuccess(exit), Exit.isFailure(exit) ? Cause.pretty(exit.cause) : undefined);
+          expect(errors).toStrictEqual([]);
+          expect(logs).toContain("[delete-package] ACK 2 acknowledged dependent hit(s):");
+          expect(logs).toContain(`  - file-path: @beep/consumer packages/consumer/README.md:1 (${README_REASON})`);
+          expect(logs).toContain(`  - script: @beep/root package.json (${SCRIPT_REASON})`);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("refuses a stale entry that matches no current hit", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeLiveDeployFixture([
+            [
+              ACK_FILE,
+              ackFile("@beep/deploy", [
+                README_ENTRY,
+                SCRIPT_ENTRY,
+                ackEntry("packages/consumer/notes.md", "Gone line.", "Removed earlier."),
+              ]),
+            ],
+          ]);
+
+          const { exit, errors } = yield* dryRun;
+          expectReportedExit(exit);
+          expect(errors).toStrictEqual([
+            "[delete-package] REFUSE [acknowledgement/hard] packages/consumer/notes.md line `Gone line.` matches no current dependent hit; remove the stale acknowledgement.",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("refuses an entry whose matched count differs from its occurrences", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeLiveDeployFixture([[ACK_FILE, ackFile("@beep/deploy", [README_ENTRY, SCRIPT_ENTRY])]]);
+          yield* fs.writeFileString("packages/consumer/README.md", `${README_LINE}\n\n${README_LINE}\n`);
+
+          const refused = yield* dryRun;
+          expectReportedExit(refused.exit);
+          expect(refused.errors).toStrictEqual([
+            "[delete-package] REFUSE [acknowledgement/hard] packages/consumer/README.md line `Reads `deploy/src/index.ts`.` matches 2 hit(s); the acknowledgement declares 1.",
+          ]);
+
+          yield* fs.writeFileString(
+            ACK_FILE,
+            ackFile("@beep/deploy", [
+              ackEntry("packages/consumer/README.md", README_LINE, README_REASON, 2),
+              SCRIPT_ENTRY,
+            ])
+          );
+          const accepted = yield* Effect.exit(runDeletePackage(["deploy", "--dry-run", "--acknowledge", ACK_FILE]));
+          assertTrue(Exit.isSuccess(accepted), Exit.isFailure(accepted) ? Cause.pretty(accepted.cause) : undefined);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("refuses a new unacknowledged hit beside acknowledged ones", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeLiveDeployFixture([
+            [ACK_FILE, ackFile("@beep/deploy", [README_ENTRY, SCRIPT_ENTRY])],
+            ["packages/consumer/notes.md", "Also reads `deploy/src/Stack.ts`.\n"],
+          ]);
+
+          const { exit, logs, errors } = yield* dryRun;
+          expectReportedExit(exit);
+          expect(logs).toContain("[delete-package] ACK 2 acknowledged dependent hit(s):");
+          expect(errors).toStrictEqual([
+            "[delete-package] REFUSE [dependent/hard] 1 unacknowledged production/test/script/path dependent hit(s); only file-path and script hits can be acknowledged.",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("refuses an entry that names an import-prod hit", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeLiveDeployFixture([
+            ["packages/consumer/src/index.ts", 'import { start } from "@beep/deploy";\n\nexport const run = start;\n'],
+            [
+              ACK_FILE,
+              ackFile("@beep/deploy", [
+                README_ENTRY,
+                SCRIPT_ENTRY,
+                `{ "path": "packages/consumer/src/index.ts", "text": "import { start } from \\"@beep/deploy\\";", "reason": "An import, wrongly acknowledged." }`,
+              ]),
+            ],
+          ]);
+
+          const { exit, errors } = yield* dryRun;
+          expectReportedExit(exit);
+          expect(errors).toStrictEqual([
+            "[delete-package] REFUSE [dependent/hard] 1 unacknowledged production/test/script/path dependent hit(s); only file-path and script hits can be acknowledged.",
+            '[delete-package] REFUSE [acknowledgement/hard] packages/consumer/src/index.ts line `import { start } from "@beep/deploy";` names the import-prod hit at packages/consumer/src/index.ts:1; manifest and import edges are never acknowledged.',
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("matches an entry by text after its line moves and refuses once the text changes", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeLiveDeployFixture([[ACK_FILE, ackFile("@beep/deploy", [README_ENTRY, SCRIPT_ENTRY])]]);
+          yield* fs.writeFileString("packages/consumer/README.md", `# Consumer\n\n${README_LINE}\n`);
+
+          const moved = yield* dryRun;
+          assertTrue(
+            Exit.isSuccess(moved.exit),
+            Exit.isFailure(moved.exit) ? Cause.pretty(moved.exit.cause) : undefined
+          );
+          expect(moved.logs).toContain(
+            `  - file-path: @beep/consumer packages/consumer/README.md:3 (${README_REASON})`
+          );
+
+          yield* fs.writeFileString("packages/consumer/README.md", "Reads `deploy/src/main.ts`.\n");
+          const changed = yield* Effect.exit(runDeletePackage(["deploy", "--dry-run", "--acknowledge", ACK_FILE]));
+          expectReportedExit(changed);
+          const errors = yield* TestConsole.errorLines;
+          expect(linesIncluding(errors, "matches no current dependent hit")).toBe(true);
+          expect(linesIncluding(errors, "1 unacknowledged production/test/script/path dependent hit(s)")).toBe(true);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("refuses an acknowledgement file that names another target", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeLiveDeployFixture([[ACK_FILE, ackFile("@beep/other", [README_ENTRY, SCRIPT_ENTRY])]]);
+
+          const { exit, logs, errors } = yield* dryRun;
+          expectReportedExit(exit);
+          expect(linesIncluding(logs, "[delete-package] ACK")).toBe(false);
+          expect(errors).toStrictEqual([
+            "[delete-package] REFUSE [dependent/hard] 2 unacknowledged production/test/script/path dependent hit(s); only file-path and script hits can be acknowledged.",
+            "[delete-package] REFUSE [acknowledgement/hard] The acknowledgement file names @beep/other, not the resolved target @beep/deploy.",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("fails when the acknowledgement file cannot be read", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeLiveDeployFixture([]);
+          const exit = yield* Effect.exit(runDeletePackage(["deploy", "--dry-run", "--acknowledge", ACK_FILE]));
+          exit.pipe(Exit.isFailure, assertTrue);
+          if (Exit.isFailure(exit)) {
+            expect(Cause.pretty(exit.cause)).toContain(`Failed to read acknowledgement file ${ACK_FILE}.`);
+          }
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    const acknowledgedPolicy = (entries: ReadonlyArray<DeletePackageAcknowledgement>) =>
+      DeletePackagePolicyEvaluation.acknowledgedLineFor(
+        policy({
+          acknowledgements: O.some(DeletePackageAcknowledgements.make({ target: "@beep/deploy", entries })),
+        })
+      );
+
+    it.effect("keeps the post-apply doctor clean for acknowledged lines and residue for the rest", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const repoRoot = yield* writeDeletedDeployLayout([["packages/consumer/README.md", `${README_LINE}\n`]]);
+          const isAcknowledgedLine = acknowledgedPolicy([
+            DeletePackageAcknowledgement.make({
+              path: "packages/consumer/README.md",
+              text: README_LINE,
+              reason: README_REASON,
+            }),
+          ]);
+
+          const unacknowledged = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(statusOf(unacknowledged, "authored-references")).toBe("residue");
+          const acknowledged = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget, isAcknowledgedLine);
+          expect(statusOf(acknowledged, "authored-references")).toBe("clean");
+          expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, acknowledged)).toBe(true);
+
+          yield* fs.writeFileString("packages/consumer/notes.md", "Builds `deploy/src/Stack.ts`.\n");
+          const residue = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget, isAcknowledgedLine);
+          expect(statusOf(residue, "authored-references")).toBe("residue");
+          expect(evidenceOf(residue, "authored-references")).toStrictEqual(["packages/consumer/notes.md"]);
+          expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, residue)).toBe(false);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
+
+  describe("delete-package acknowledgement decoding", () => {
+    const decodeAcknowledgements = S.decodeUnknownEffect(DeletePackageAcknowledgements);
+    const document = (entry: Record<string, unknown>) => ({
+      schemaVersion: "delete-package-acknowledgements/v1",
+      target: "@beep/deploy",
+      entries: [entry],
+    });
+    const entry = { path: "packages/consumer/README.md", text: "Reads it.", reason: "Reviewed." };
+
+    it.effect("defaults occurrences to one", () =>
+      Effect.gen(function* () {
+        const decoded = yield* decodeAcknowledgements(document(entry));
+        expect(A.map(decoded.entries, (item) => item.occurrences)).toStrictEqual([1]);
+      })
+    );
+
+    const invalidEntries: ReadonlyArray<readonly [string, Record<string, unknown>]> = [
+      ["an empty reason", { ...entry, reason: "" }],
+      ["an absolute path", { ...entry, path: "/etc/passwd" }],
+      ["a parent-directory path", { ...entry, path: "packages/../../outside.md" }],
+      ["a zero occurrence count", { ...entry, occurrences: 0 }],
+    ];
+
+    it.effect.each(invalidEntries)("rejects %s", ([, invalid]) =>
+      Effect.gen(function* () {
+        const exit = yield* Effect.exit(decodeAcknowledgements(document(invalid)));
+        exit.pipe(Exit.isFailure, assertTrue);
+      })
     );
   });
 });

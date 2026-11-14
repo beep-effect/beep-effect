@@ -11,11 +11,112 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { RepoRelativePath } from "../Codex/Security.schemas.ts";
 
 const $I = $RepoCliId.create("commands/DeletePackage/schemas");
 
+const AcknowledgedText = S.NonEmptyString.check(S.isTrimmed()).pipe(
+  $I.annoteSchema("AcknowledgedText", {
+    description: "Non-empty text with no leading or trailing whitespace.",
+  })
+);
+
+/**
+ * One reviewed dependent hit that a deletion accepts: the file, the exact
+ * trimmed line text, why it is not a real dependent, and how often it occurs.
+ *
+ * **Details**
+ *
+ * An entry matches by path and text, never by line number, so edits above the
+ * line do not break it. For a root `script` hit, `text` is the script's
+ * command. `occurrences` defaults to 1 and must equal the number of hits the
+ * entry matches.
+ *
+ * **Example** (Acknowledge a tooling-kind literal)
+ *
+ * ```ts
+ * import { DeletePackageAcknowledgement } from "@beep/repo-cli/commands/DeletePackage"
+ *
+ * const entry = DeletePackageAcknowledgement.make({
+ *   path: "packages/tooling/deploy/hosts/package.json",
+ *   text: '"kind": "deploy",',
+ *   reason: "The tooling kind value, not the deleted package.",
+ * })
+ * console.log(entry.occurrences) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DeletePackageAcknowledgement extends S.Opaque<
+  DeletePackageAcknowledgement,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    path: RepoRelativePath,
+    text: AcknowledgedText,
+    reason: AcknowledgedText,
+    occurrences: S.Int.check(S.isGreaterThan(0)).pipe(
+      S.withConstructorDefault(Effect.succeed(1)),
+      S.withDecodingDefaultKey(Effect.succeed(1))
+    ),
+  }).pipe(
+    $I.annoteSchema("DeletePackageAcknowledgement", {
+      description: "One reviewed file-path or script hit a deletion accepts, matched by path and trimmed line text.",
+    })
+  )
+) {}
+
+/**
+ * The committed acknowledgement file passed to `delete-package --acknowledge`.
+ *
+ * **Details**
+ *
+ * `target` must equal the resolved deletion target. Only `file-path` and
+ * `script` hits can be acknowledged; an entry that matches a manifest or
+ * import edge, matches no current hit, or matches a different number of hits
+ * than it declares refuses the deletion.
+ *
+ * **Example** (Decode an acknowledgement file)
+ *
+ * ```ts
+ * import { DeletePackageAcknowledgements } from "@beep/repo-cli/commands/DeletePackage"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ *
+ * const decoded = S.decodeUnknownEffect(DeletePackageAcknowledgements)({
+ *   schemaVersion: "delete-package-acknowledgements/v1",
+ *   target: "@beep/deploy",
+ *   entries: [{ path: "packages/consumer/notes.md", text: "Deploys `deploy/` builds.", reason: "Prose about a verb." }],
+ * })
+ * console.log(Effect.isEffect(decoded)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class DeletePackageAcknowledgements extends S.Opaque<
+  DeletePackageAcknowledgements,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    schemaVersion: S.tag("delete-package-acknowledgements/v1"),
+    target: S.NonEmptyString,
+    entries: S.Array(DeletePackageAcknowledgement),
+  }).pipe(
+    $I.annoteSchema("DeletePackageAcknowledgements", {
+      description: "Committed list of reviewed dependent hits one package deletion accepts.",
+    })
+  )
+) {}
+
 /**
  * Decoded delete-package flags and preflight facts.
+ *
+ * **Details**
+ *
+ * `acknowledgements` holds the decoded `--acknowledge` file and defaults to
+ * `Option.none()` at construction.
  *
  * **Example** (Assemble a preflight policy)
  *
@@ -26,7 +127,6 @@ const $I = $RepoCliId.create("commands/DeletePackage/schemas");
  *   allowPublished: false,
  *   allowStalePackets: false,
  *   cascade: false,
- *   force: false,
  *   pruneCatalog: false,
  *   rewritePackets: false,
  *   skipBaselines: false,
@@ -41,7 +141,7 @@ const $I = $RepoCliId.create("commands/DeletePackage/schemas");
  *   dataConnectionNonLocal: false,
  *   dataOwnershipProven: false,
  * })
- * console.log(policy.force) // false
+ * console.log(policy.cascade) // false
  * ```
  *
  * @category models
@@ -52,7 +152,6 @@ export class DeletePackagePolicy extends S.Opaque<DeletePackagePolicy, { readonl
     allowPublished: S.Boolean,
     allowStalePackets: S.Boolean,
     cascade: S.Boolean,
-    force: S.Boolean,
     pruneCatalog: S.Boolean,
     rewritePackets: S.Boolean,
     skipBaselines: S.Boolean,
@@ -66,6 +165,9 @@ export class DeletePackagePolicy extends S.Opaque<DeletePackagePolicy, { readonl
     dataResourceDeclared: S.Boolean,
     dataConnectionNonLocal: S.Boolean,
     dataOwnershipProven: S.Boolean,
+    acknowledgements: S.OptionFromOptionalKey(DeletePackageAcknowledgements).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
   }).pipe(
     $I.annoteSchema("DeletePackagePolicy", {
       description: "Decoded delete-package flags and preflight facts consumed by refusal policy.",
@@ -100,6 +202,7 @@ export const DeletePackageRefusalKind = LiteralKit([
   "packet-claim",
   "data-non-local",
   "data-ownership",
+  "acknowledgement",
 ]).pipe(
   $I.annoteSchema("DeletePackageRefusalKind", {
     description: "Closed hard and soft refusal reasons emitted before deletion.",
@@ -147,7 +250,7 @@ class SoftDeletePackageRefusal extends S.Opaque<SoftDeletePackageRefusal, { read
  *
  * const refusal = DeletePackageRefusal.cases.hard.make({
  *   kind: "dependent",
- *   detail: "2 production dependents; --force never overrides dependents.",
+ *   detail: "2 unacknowledged production/test/script/path dependent hit(s).",
  * })
  * console.log(refusal.severity) // "hard"
  * ```

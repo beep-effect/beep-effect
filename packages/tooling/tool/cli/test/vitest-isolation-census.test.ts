@@ -10,7 +10,7 @@ import * as Str from "effect/String";
 // Process-wide state a suite can leak into the next file of a shared (`isolate: false`) worker.
 const leakPatterns = [
   /process\.chdir\(/,
-  /\b(?:temporaryWorkingDirectory|withTempWorkingDirectory)\b/,
+  /\b(?:temporaryWorkingDirectory|temporaryGitWorkingDirectory|withTempWorkingDirectory)\b/,
   // Any reassignment, anywhere on a line; `exitCode` only appears in child-process scripts.
   /(?<![\w$.])process\.(?!exitCode\b)[A-Za-z_$][\w$]*\s*=(?!=)/,
   /(?<![\w$.])globalThis\.[A-Za-z_$][\w$]*\s*=(?!=)/,
