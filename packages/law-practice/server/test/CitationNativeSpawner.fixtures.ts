@@ -14,6 +14,7 @@ import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -315,15 +316,22 @@ export const makeCitationNativeManualClock = Effect.fn("WorkerTest.manualSleep")
   duration: Duration.Duration
 ) {
   const clock = yield* Clock.Clock;
-  const requested = yield* Deferred.make<void>();
+  let active = HashSet.empty<number>();
   let sleeps = A.empty<Deferred.Deferred<void>>();
   const controlled = yield* makeCitationNativeSleepClock((input) =>
     Duration.equals(input, duration)
       ? Effect.gen(function* () {
           const wake = yield* Deferred.make<void>();
+          const index = sleeps.length;
           sleeps = A.append(sleeps, wake);
-          yield* Deferred.succeed(requested, undefined);
-          yield* Deferred.await(wake);
+          active = HashSet.add(active, index);
+          yield* Deferred.await(wake).pipe(
+            Effect.ensuring(
+              Effect.sync(() => {
+                active = HashSet.remove(active, index);
+              })
+            )
+          );
         })
       : clock.sleep(input)
   );
@@ -339,7 +347,11 @@ export const makeCitationNativeManualClock = Effect.fn("WorkerTest.manualSleep")
     clock: controlled,
     sleeps: Effect.sync(() => sleeps.length),
     triggerSleep,
-    trigger: Deferred.await(requested).pipe(Effect.andThen(Effect.suspend(() => triggerSleep(sleeps.length - 1)))),
+    trigger: Effect.yieldNow.pipe(
+      Effect.andThen(Effect.sync(() => A.findFirstIndex(sleeps, (_, index) => HashSet.has(active, index)))),
+      Effect.repeat({ until: O.isSome }),
+      Effect.flatMap(O.match({ onNone: () => Effect.never, onSome: triggerSleep }))
+    ),
   };
 });
 /** @internal @category testing @since 0.0.0 */

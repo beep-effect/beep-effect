@@ -131,5 +131,5 @@ export const replayCitationFullExtraction = Effect.fn("FullExtractionTest.replay
     .extract({ ...source, token: { ...source.token, exact: [], variation: [] }, geometry: O.none() })
     .pipe(Effect.flip);
   expect(unknown).toMatchObject({ _tag: "CitationTokenDispatchFailure", reason: "unknown-source" });
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 91);
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 15);
 });

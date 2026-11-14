@@ -166,6 +166,6 @@ export const replayCitationReferenceToken = Effect.fn("ReferenceTokenTest.replay
     installed.setup.operation,
     installed.setup.admission,
     installed.setup.observed.snapshot,
-    94
+    29
   );
 });

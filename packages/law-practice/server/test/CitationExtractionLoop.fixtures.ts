@@ -196,7 +196,8 @@ export const replayCitationExtractionLoop = Effect.fn("ExtractionLoopTest.replay
 ) {
   const { corpus, setup, configuration, stage, geometry } = yield* installCitationExtractionLoopFixture(kind);
   const { limits, operation } = setup;
-  for (const row of A.take(A.drop(corpus.cases, from), count)) {
+  const rows = A.take(A.drop(corpus.cases, from), count);
+  for (const row of rows) {
     const maps = yield* prepareCitationOptionalHtmlGeometry(geometry, row, row.markup.bytes.length > 0);
     const invocation = stage.extract({ ...row, geometry: maps });
     const closed: Effect.Effect<Effect.Success<typeof invocation>, Effect.Error<typeof invocation>> = invocation;
@@ -216,7 +217,7 @@ export const replayCitationExtractionLoop = Effect.fn("ExtractionLoopTest.replay
       const refused = yield* tight.extract({ ...row, geometry: maps }).pipe(Effect.flip);
       expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
       const after = yield* setup.observed.snapshot;
-      expect(after.spawned).toBeGreaterThan(before.spawned);
+      expect(after.spawned).toBe(before.spawned + 1);
     }
     expect(result.models).toHaveLength(row.before.length);
     yield* Effect.forEach(
@@ -234,8 +235,14 @@ export const replayCitationExtractionLoop = Effect.fn("ExtractionLoopTest.replay
     }
   }
   const counts = yield* setup.observed.snapshot;
-  expect(counts.spawned).toBeGreaterThan(count);
-  yield* assertCitationWorkerCompositionReleased(operation, setup.admission, setup.observed.snapshot, counts.spawned);
+  const expected = A.reduce(
+    rows,
+    0,
+    (total, row) =>
+      total + (row.tokens.length > 0 ? 1 : 0) + (row.markup.bytes.length > 0 ? 4 : 0) + (row.id === 2 ? 1 : 0)
+  );
+  expect(counts.spawned).toBe(expected);
+  yield* assertCitationWorkerCompositionReleased(operation, setup.admission, setup.observed.snapshot, expected);
 });
 /** Pin the corpus size and the malformed-input refusal once per runtime. */
 export const assertCitationExtractionLoopBoundary = Effect.fn("ExtractionLoopTest.boundary")(function* (
@@ -245,11 +252,5 @@ export const assertCitationExtractionLoopBoundary = Effect.fn("ExtractionLoopTes
   expect(corpus.cases).toHaveLength(citationExtractionLoopCases);
   const malformed = yield* stage.extract(null).pipe(Effect.flip);
   expect(malformed).toMatchObject({ _tag: "CitationExtractionLoopFailure", reason: "invalid-input" });
-  const counts = yield* setup.observed.snapshot;
-  yield* assertCitationWorkerCompositionReleased(
-    setup.operation,
-    setup.admission,
-    setup.observed.snapshot,
-    counts.spawned
-  );
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 0);
 });

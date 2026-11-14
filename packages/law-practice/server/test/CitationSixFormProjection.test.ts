@@ -19,6 +19,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { citationFixtureEngineBuild } from "./CitationEngineArtifact.fixtures.ts";
 import { makeCitationBundledTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import type { Citation, CitationDocument, CitationMention, CitationResolution } from "@beep/law-practice-domain/values";
@@ -173,7 +174,7 @@ const install = Effect.fnUntraced(function* (
     runtime,
     installation: {
       implementation,
-      runtime: { kind: runtime.kind, version: runtime.kind === "bun" ? Bun.version : process.versions.node },
+      runtime: citationFixtureEngineBuild(runtime.kind).runtime,
       limits,
       vocabularyVersion: Result.getOrThrow(CourtReporterArtifact).artifactVersion,
     },

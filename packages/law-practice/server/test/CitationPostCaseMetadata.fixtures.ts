@@ -143,9 +143,15 @@ export const replayCitationPostCaseMetadata = Effect.fn("PostCaseMetadataTest.re
     expect(observed, `source post-case ${row.id}`).toEqual(row.observed);
   }
   expect(rows).toHaveLength(full ? 184 : 28);
+  const processCount = A.filter(rows, (row) => row.calls > 0).length;
   const calls = A.reduce(rows, 0, (total, row) => total + row.calls);
   expect(calls).toBe(full ? 220 : 36);
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
+  yield* assertCitationWorkerCompositionReleased(
+    setup.operation,
+    setup.admission,
+    setup.observed.snapshot,
+    processCount
+  );
 });
 
 /** Exact preflight and captured configuration with one shared invocation owner. */

@@ -208,7 +208,7 @@ const assertRow = Effect.fn("CaseMetadataTest.row")(function* (
     0,
     (total, call) => total + (call.phase === "Post" && call.method === "sub" ? 0 : call.count)
   );
-  return regex + (document.hasMarkup ? 4 : 0);
+  return (regex > 0 ? 1 : 0) + (document.hasMarkup ? 4 : 0);
 });
 /** Assert final original model fields after all five phase families, on both runtimes. */
 export const replayCitationCaseMetadata = Effect.fn("CaseMetadataTest.replay")(function* (

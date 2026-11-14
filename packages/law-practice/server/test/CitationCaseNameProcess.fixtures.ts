@@ -202,7 +202,7 @@ export const replayCitationCaseNameProcess = Effect.fn("CaseNameProcessTest.repl
   const rows = A.filter(setup.corpus.cases, (row) => full || row.error === "TypeError" || A.contains(smoke, row.id));
   for (const row of rows) yield* assertRow(setup.stage, row);
   expect(rows).toHaveLength(full ? 328 : 114);
-  const calls = A.reduce(rows, 0, (sum, row) => sum + (row.error === "TypeError" ? 0 : row.calls.length));
+  const calls = A.reduce(rows, 0, (sum, row) => sum + (row.error !== "TypeError" && row.calls.length > 0 ? 1 : 0));
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
 });
 /** Exact source int conversion includes large values, parser spaces and digit ceilings. */
@@ -240,14 +240,14 @@ export const assertCitationCaseNameProcessBudget = Effect.fn("CaseNameProcessTes
   setup.configuration.cleaner.patterns.stopWords.bytes.fill(0);
   const repeated = yield* setup.stage.apply(request(row));
   expect(repeated).toEqual(accepted);
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 6);
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 2);
   const tight = yield* install("bun", 53);
   yield* assertCitationMetadataRefusal(
     tight.stage.apply(request(row)),
     tight.operation,
     tight.admission,
     tight.observed.snapshot,
-    3
+    1
   );
 });
 /** Captured lifetime/timer reject before a child; no nested admission deadlock. */

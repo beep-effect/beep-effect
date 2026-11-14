@@ -122,7 +122,7 @@ const assertRow = Effect.fn("CaseNameSelectionTest.row")(function* (
   ]);
   expect(result.usedHtml).toBe(A.contains(row.trace, "html"));
   expect(result.usedPlain).toBe(A.contains(row.trace, "plain"));
-  return row.regexCalls.length + (row.hasMarkup ? 4 : 0);
+  return (row.regexCalls.length > 0 ? 1 : 0) + (row.hasMarkup ? 4 : 0);
 });
 /** Empty assignments and retained empty fields suppress fallback; plain-only calls still scan. */
 export const replayCitationCaseNameSelection = Effect.fn("CaseNameSelectionTest.replay")(function* (

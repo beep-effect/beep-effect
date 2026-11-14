@@ -131,14 +131,26 @@ it.layer(
               const invocation = yield* CitationInvocation;
               yield* discovery.placeholder(word(proof.sourceText));
               const before = yield* invocation.lane.snapshot;
-              expect(before).toMatchObject({ started: 1, confirmed: 1, acquired: true, unitsAcquired: 1 });
+              expect(before).toMatchObject({
+                started: 1,
+                confirmed: 0,
+                occupied: true,
+                acquired: true,
+                unitsAcquired: 1,
+              });
               const cleaned = yield* invocation.lane.yieldTo(
                 cleaner.invoke(callable, source, hostWork(setup.limits.producedTextUtf16))
               );
               const text = yield* values.getUnicode(cleaned.value);
               expect(O.getOrThrow(text).storage).toEqual(word("Example"));
               const after = yield* invocation.lane.snapshot;
-              expect(after).toMatchObject({ started: 1, confirmed: 1, acquired: false, unitsAcquired: 1 });
+              expect(after).toMatchObject({
+                started: 1,
+                confirmed: 1,
+                occupied: false,
+                acquired: false,
+                unitsAcquired: 1,
+              });
             })
           ).pipe(Effect.provideContext(provided));
           expect(acquisitions).toBe(4);
