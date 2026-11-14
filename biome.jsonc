@@ -63,7 +63,6 @@
       "!standards/instrumentation-catalog",
       "!standards/schema-catalog",
       "!standards/fallow.dead-code.regression-baseline.jsonc",
-      "!standards/jsdoc-documentation.inventory.jsonc",
       "!standards/repo-exports.catalog.jsonc",
       // Only the CI knowledge mint writes the sealed baseline bytes.
       "!goals/knowledge-doctor.baseline.jsonc",

@@ -44,7 +44,6 @@ const owners = [repoCli, repoCliKit, unrelated];
 // One concrete changed file per row; the catalog row is a directory glob.
 const SAMPLE_CHANGED_FILES = [
   "standards/instrumentation-catalog/@beep/schema.generated.jsonc",
-  "standards/jsdoc-documentation.inventory.jsonc",
   "standards/schema-first.inventory.jsonc",
   "standards/policy-tools.fingerprint.json",
   "standards/cache-qualification-baseline.json",

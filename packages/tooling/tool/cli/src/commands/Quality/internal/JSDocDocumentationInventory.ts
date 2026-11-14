@@ -215,22 +215,28 @@ type DirectExportDescriptor =
       readonly declaration: Node;
     };
 
-const outputJsonRelativePath = "standards/jsdoc-documentation.inventory.jsonc";
+const outputJsonRelativePath = ".beep/ci/jsdoc-documentation.inventory.jsonc";
 /**
  * Default path for the human-readable JSDoc documentation inventory.
+ *
+ * **Details**
+ *
+ * Both inventory outputs live under the gitignored `.beep/ci/` root. The
+ * committed gate input is the totals baseline, so a committed whole-repo copy
+ * only collected unrelated drift.
  *
  * **Example** (Resolve the companion inventory)
  *
  * ```ts
  * import { defaultJSDocDocumentationInventoryMarkdownPath } from "@beep/repo-cli/test/Quality"
  *
- * console.log(defaultJSDocDocumentationInventoryMarkdownPath === "standards/jsdoc-documentation.inventory.md") // true
+ * console.log(defaultJSDocDocumentationInventoryMarkdownPath === ".beep/ci/jsdoc-documentation.inventory.md") // true
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const defaultJSDocDocumentationInventoryMarkdownPath = "standards/jsdoc-documentation.inventory.md";
+export const defaultJSDocDocumentationInventoryMarkdownPath = ".beep/ci/jsdoc-documentation.inventory.md";
 const requiredExportTags = ["@example", "@category", "@since"];
 const requiredModuleTags = ["@since"];
 const forbiddenTags = ["@module", "@template"];

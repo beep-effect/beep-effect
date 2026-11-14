@@ -3643,15 +3643,15 @@ const jsdocInventoryCommand = Command.make(
   "jsdoc-inventory",
   {
     outputJson: Flag.String("output-json").pipe(
-      Flag.withDescription("JSONC inventory output path; defaults to the tracked standards artifact"),
+      Flag.withDescription("JSONC inventory output path; defaults to the ignored .beep/ci/ copy the ratchet reads"),
       Flag.optional
     ),
     outputMarkdown: Flag.String("output-markdown").pipe(
-      Flag.withDescription("Markdown inventory output path; defaults to the tracked standards artifact"),
+      Flag.withDescription("Markdown inventory output path; defaults to the ignored .beep/ci/ copy"),
       Flag.optional
     ),
     ciOutputJson: Flag.String("ci-output-json").pipe(
-      Flag.withDescription("Extra JSONC path written from the same scan (the .beep/ci/ copy the ratchet lane reads)"),
+      Flag.withDescription("Extra JSONC path written from the same scan"),
       Flag.optional
     ),
     ciOutputMarkdown: Flag.String("ci-output-markdown").pipe(

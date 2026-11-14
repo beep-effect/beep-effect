@@ -84,7 +84,6 @@ export const RegistrationWriter = LiteralKit([
   "tsconfig-sync",
   "install",
   "fallow-boundaries",
-  "jsdoc-inventory",
   "schema-first-inventory",
   "schema-catalog",
   "instrumentation-catalog",
