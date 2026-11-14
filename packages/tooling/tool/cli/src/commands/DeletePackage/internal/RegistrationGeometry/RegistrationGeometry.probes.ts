@@ -101,10 +101,16 @@ const collectFiles = Effect.fn("RegistrationGeometry.collectFiles")(function* (
   return A.sort(walk2, Order.String);
 });
 
-// One matcher for every probe that searches for a target: the target's own path needle skips the
-// occurrences a sibling workspace path accounts for (`packages/tooling/deploy/x` does not name
-// `deploy`); every other needle (package name, identity accessor, membership key) is a whole token.
-// The dependents scan, the plan, `--check` and the post-apply doctor share it, so they agree.
+// The matcher for every search whose needle can be the target's package path. A needle equal to
+// `target.packagePath` skips the occurrences a sibling workspace path accounts for
+// (`packages/tooling/deploy/x` does not name `deploy`); any other needle stays a whole token. Its
+// users: the dependents scan (workspace files, root scripts, root policy files) and the doctor
+// surfaces `derived-rebuild`, `generated-inventory` (the path-keyed Fallow baselines,
+// schema-first inventory and schema-catalog shard; the name-keyed ones are unaffected),
+// `authored-reference` and `historical-record`. So `--dry-run`, `--check` and the post-apply
+// doctor judge a path needle the same way. Needles that can never be a package path keep
+// `mentionsToken` directly: the quoted workspace literal (its quotes anchor it), the identity slug
+// and accessor, and the package name in `pending-changeset` and `runtime-artifact`.
 type NeedleMatcher = (needles: ReadonlyArray<string>) => (text: string) => boolean;
 
 const needleMatcherFor =
@@ -205,7 +211,7 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
       return observation(derived.id, A.isReadonlyArrayNonEmpty(evidence) ? dirtyStatus : "clean", evidence);
     }),
     "generated-inventory": Effect.fn(function* (inventory) {
-      const evidence = yield* existingEvidence(repoRoot, inventory.outputs, mentionsToken(inventory.membershipKey));
+      const evidence = yield* existingEvidence(repoRoot, inventory.outputs, matchNeedles([inventory.membershipKey]));
       return observation(inventory.id, A.isReadonlyArrayNonEmpty(evidence) ? "residue" : "clean", evidence);
     }),
     "authored-reference": Effect.fn(function* (authored) {

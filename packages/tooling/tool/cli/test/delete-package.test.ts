@@ -121,6 +121,16 @@ const writeDeletedDeployLayout = Effect.fn("writeDeletedDeployLayout")(function*
   return repoRoot;
 });
 
+// The generated inventories keyed by file path (`membershipKey: target.packagePath`), each holding
+// one entry for `file`.
+const PATH_KEYED_INVENTORY_SURFACES = ["fallow-health-baseline", "fallow-dead-code-baseline", "schema-first-inventory"];
+
+const pathKeyedInventories = (file: string): ReadonlyArray<readonly [string, string]> => [
+  ["standards/fallow.health.regression-baseline.jsonc", `{ "files": { "${file}": { "cyclomatic": 3 } } }\n`],
+  ["standards/fallow.dead-code.regression-baseline.jsonc", `{ "unused_exports": ["${file}:helper"] }\n`],
+  ["standards/schema-first.inventory.jsonc", `{ "entries": [{ "file": "${file}", "symbol": "Stack" }] }\n`],
+];
+
 type ObservationRow = { readonly surfaceId: string; readonly status: string; readonly evidence: ReadonlyArray<string> };
 
 const observationOf = (observations: ReadonlyArray<ObservationRow>, surfaceId: string) =>
@@ -394,6 +404,41 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           expect(statusOf(observations, "authored-references")).toBe("clean");
           expect(statusOf(observations, "historical-records")).toBe("clean");
           expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, observations)).toBe(true);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("keeps path-keyed inventories clean when only sibling workspace paths remain in them", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeDeletedDeployLayout(
+            pathKeyedInventories("packages/tooling/deploy/x/src/Stack.ts")
+          );
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(A.map(PATH_KEYED_INVENTORY_SURFACES, (surfaceId) => statusOf(observations, surfaceId))).toEqual([
+            "clean",
+            "clean",
+            "clean",
+          ]);
+          expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, observations)).toBe(true);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("still reports a path-keyed inventory entry for the deleted path itself", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeDeletedDeployLayout(pathKeyedInventories("deploy/src/Stack.ts"));
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(A.map(PATH_KEYED_INVENTORY_SURFACES, (surfaceId) => statusOf(observations, surfaceId))).toEqual([
+            "residue",
+            "residue",
+            "residue",
+          ]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
