@@ -1,6 +1,6 @@
 # Cache baseline review: `@beep/alchemy-github-runners` composite (2026-11-14)
 
-Reviewer: Claude Opus 5.5 (lane `goals/infra-alchemy-rebuild-p2-github-runners-composite`).
+Reviewer: Claude Opus 5.5 (the runners composite lane, #3314).
 
 ## What changed
 

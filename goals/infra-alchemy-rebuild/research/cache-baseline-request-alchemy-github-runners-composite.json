@@ -5,7 +5,7 @@
     "reason": "Record the new workspace and catalog dependency edges of @beep/alchemy-github-runners (RunnerFleet composite); no command, output or environment changes, no qualification granted.",
     "basis": {
       "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-alchemy-github-runners-composite.md",
-      "sha256": "c5ca86dac06c7dfd184bc2bcdda345c5708c85f22374bafed4fd20bb27cc0f45"
+      "sha256": "111d6223dafeb2d8ca8959e38650cbc2a414f7c0164ffcf275965b14fd50fc6b"
     }
   },
   "scope": ["@beep/identity#lint", "@beep/types#lint"],

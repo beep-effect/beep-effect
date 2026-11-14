@@ -16,9 +16,11 @@ import { Resource } from "alchemy/Resource";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { Ec2Fleet } from "./Ec2Fleet.service.ts";
 import { RunnerOwner } from "./GitHubRunners.models.ts";
+import { GitHubApiError, RunnerSweepIncomplete } from "./RunnerFleet.errors.ts";
 import { RunnerFilter } from "./RunnerInstance.models.ts";
 import { RunnerType } from "./RunnerPool.models.ts";
 import { SsmStore } from "./SsmStore.service.ts";
@@ -29,6 +31,22 @@ import type { GitHubAppAuth, GitHubRunners } from "./GitHubApp.service.ts";
 const $I = $AlchemyGithubRunnersId.create("RunnerSweep");
 
 const isRunnerType = S.is(RunnerType);
+
+const isBusy = (error: { readonly _tag: string }): boolean =>
+  S.is(GitHubApiError)(error) && O.contains(error.status, 422);
+
+// A runner still finishing a job answers 422 right after TerminateInstances; it goes
+// idle once the instance stops, so the sweep retries for about two minutes.
+const busyRetry = { schedule: Schedule.spaced("15 seconds"), times: 8, while: isBusy };
+
+const deregisterIdle = (input: Parameters<typeof deregisterRunner>[0]) =>
+  deregisterRunner(input).pipe(
+    Effect.filterOrFail(
+      (outcome): outcome is Exclude<typeof outcome, "busy"> => outcome !== "busy",
+      () => GitHubApiError.make({ operation: "deleteRunner", status: O.some(422), message: "runner is busy" })
+    ),
+    Effect.retry(busyRetry)
+  );
 
 /**
  * Every instance state a runtime-created runner can be in before it is gone.
@@ -75,8 +93,12 @@ export class SweepReport extends S.Opaque<SweepReport, { readonly brand: unique 
  * **Details**
  *
  * Instances are terminated first, so a busy runner goes offline and its
- * deregistration then succeeds; a runner GitHub no longer knows counts as
- * done. Idempotent: a second sweep finds nothing.
+ * deregistration then succeeds; a runner still busy (422) is retried every 15
+ * seconds, up to 8 times. A runner GitHub no longer knows counts as done.
+ * Tokens are deleted either way; then, if any deregistration failed, the sweep
+ * fails with `RunnerSweepIncomplete` naming those instances, so a destroy stops
+ * instead of leaving offline registrations behind. Idempotent: a second sweep
+ * finds nothing.
  *
  * **Example** (Wire the sweep)
  *
@@ -87,7 +109,7 @@ export class SweepReport extends S.Opaque<SweepReport, { readonly brand: unique 
  * ```
  *
  * @param input - Pool `ghr:environment` values and token paths.
- * @returns The sweep report.
+ * @returns The sweep report; fails with `RunnerSweepIncomplete` when a runner stays registered.
  * @category use-cases
  * @since 0.0.0
  */
@@ -104,20 +126,31 @@ export const sweepRunners = Effect.fn("RunnerSweep.sweep")(function* (input: {
   yield* Effect.forEach(runners, (runner) => ec2.terminate(runner.instanceId), { discard: true });
   const outcomes = yield* Effect.forEach(runners, (runner) =>
     O.match(O.all({ owner: runner.owner, type: O.filter(runner.type, isRunnerType) }), {
-      onNone: () => Effect.succeed(false),
+      onNone: () => Effect.succeed("skipped" as const),
       onSome: ({ owner, type }) =>
-        deregisterRunner({ instanceId: runner.instanceId, owner: RunnerOwner.make({ type, owner }) }).pipe(
-          Effect.map((outcome) => outcome === "deregistered"),
-          Effect.orElseSucceed(() => false)
+        deregisterIdle({ instanceId: runner.instanceId, owner: RunnerOwner.make({ type, owner }) }).pipe(
+          Effect.match({
+            onFailure: () => "failed" as const,
+            onSuccess: (outcome) => (outcome === "deregistered" ? ("deregistered" as const) : ("skipped" as const)),
+          })
         ),
     })
   );
   const tokens = yield* Effect.forEach(input.tokenPaths, ssm.listByPath);
   const tokenNames = A.map(A.flatten(tokens), (entry) => entry.name);
   yield* Effect.forEach(tokenNames, ssm.delete, { discard: true });
+  const failed = A.flatMap(A.zip(runners, outcomes), ([runner, outcome]) =>
+    outcome === "failed" ? [runner.instanceId] : []
+  );
+  if (A.isReadonlyArrayNonEmpty(failed)) {
+    return yield* RunnerSweepIncomplete.make({
+      instanceIds: failed,
+      message: `${failed.length} runner(s) left registered after the sweep terminated their instances`,
+    });
+  }
   return SweepReport.make({
     terminated: A.map(runners, (runner) => runner.instanceId),
-    deregistered: A.filter(outcomes, (done) => done).length,
+    deregistered: A.filter(outcomes, (outcome) => outcome === "deregistered").length,
     tokensDeleted: tokenNames.length,
   });
 });

@@ -101,7 +101,10 @@ const imds = [
  * instance metadata tags), waits for its configuration at
  * `<token path>/<instance id>`, deletes it, and runs the runner from
  * `/opt/actions-runner` with `./run.sh`, so a post-install that wraps
- * `run.sh` keeps working. On exit an ephemeral instance terminates itself.
+ * `run.sh` keeps working. JIT registration applies to ephemeral pools only,
+ * matching scale-up; other pools register with `config.sh`. On exit an
+ * ephemeral instance terminates itself, and any instance terminates itself
+ * when the runner exits non-zero.
  *
  * **Example** (Render the script)
  *
@@ -118,15 +121,18 @@ const imds = [
  * @since 0.0.0
  */
 export const renderRunnerUserData = (input: RunnerUserDataInput): string => {
-  const runCommand = input.jitConfig
-    ? 'sudo -u "$run_as" -- ./run.sh --jitconfig "$config"'
-    : A.join(
-        [
-          'sudo -u "$run_as" -- ./config.sh --unattended --name "$runner_name_prefix$instance_id" --work _work $config',
-          'sudo -u "$run_as" -- ./run.sh',
-        ],
-        "\n"
-      );
+  // Scale-up writes a JIT config only for ephemeral pools (upstream start-runner.sh agrees);
+  // any other pool gets config.sh arguments.
+  const runCommand =
+    input.ephemeral && input.jitConfig
+      ? 'sudo -u "$run_as" -- ./run.sh --jitconfig "$config"'
+      : A.join(
+          [
+            'sudo -u "$run_as" -- ./config.sh --unattended --name "$runner_name_prefix$instance_id" --work _work $config',
+            'sudo -u "$run_as" -- ./run.sh',
+          ],
+          "\n"
+        );
   return A.join(
     [
       "#!/bin/bash -e",
@@ -162,7 +168,7 @@ export const renderRunnerUserData = (input: RunnerUserDataInput): string => {
       '  echo "runner exited with status $status"',
       input.ephemeral
         ? '  aws ec2 terminate-instances --instance-ids "$instance_id" --region "$region" || true'
-        : "  true",
+        : '  if [ "$status" -ne 0 ]; then aws ec2 terminate-instances --instance-ids "$instance_id" --region "$region" || true; fi',
       "}",
       "trap cleanup EXIT",
       'config=""',

@@ -59,8 +59,9 @@ const runnerTarballKey = "actions-runner-linux.tar.gz";
  *
  * Each pool gets its own `RunnerLaunchTemplate` from
  * `@beep/alchemy-aws-extras`. The composite sets the instance profile, the
- * rendered user data, and metadata options that require IMDSv2 with instance
- * metadata tags enabled (the user data reads its token path from the
+ * rendered user data, `terminate` as the instance-initiated shutdown behavior
+ * (a runner that powers off is gone, never stopped), and metadata options that
+ * require IMDSv2 with instance metadata tags enabled (the user data reads its token path from the
  * `ghr:token_path` tag). Instance types and Spot or on-demand capacity are
  * chosen per launch by scale-up's `CreateFleet` call, so they are not here.
  * `imageId` takes an AMI id or `resolveSsmImageId(...)`.
@@ -310,6 +311,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
             const template = yield* RunnerLaunchTemplate("LaunchTemplate", {
               ...props.launchTemplate,
               instanceProfileArn: instanceProfile.instanceProfileArn,
+              // A runner that powers itself off must not leak as a stopped instance (upstream does the same).
+              instanceInitiatedShutdownBehavior: "terminate",
               metadataOptions: {
                 httpEndpoint: "enabled",
                 httpTokens: "required",
@@ -650,7 +653,14 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         props: {
           environments: A.map(pools, (pool) => pool.environment),
           tokenPaths,
-          dependsOn: A.map(pools, (pool) => pool.scaleUp.functionName),
+          // Everything the sweep reads at delete time stays alive until it finishes.
+          dependsOn: [
+            ...A.map(pools, (pool) => pool.scaleUp.functionName),
+            watcher.functionName,
+            appId.parameterArn,
+            appKey.parameterArn,
+            key.keyArn,
+          ],
         },
       });
 

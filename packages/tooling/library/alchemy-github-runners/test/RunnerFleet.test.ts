@@ -249,11 +249,33 @@ twoPools.test.provider("two pools get their own queues and Lambdas behind one we
       O.isNone(overflowConfig.jobRetryQueueUrl),
     ]).toStrictEqual(["beep-ci-overflow", 48, true]);
     expect(A.map(out.pools, (pool) => pool.environment)).toStrictEqual(["beep-ci-heavy", "beep-ci-overflow"]);
+    expect(
+      A.map(recorder.ofType("BeepAWS.EC2.RunnerLaunchTemplate"), (template) => [
+        template.fqn,
+        template.news.instanceInitiatedShutdownBehavior,
+      ])
+    ).toStrictEqual([
+      ["Runners/Poolheavy/LaunchTemplate", "terminate"],
+      ["Runners/Pooloverflow/LaunchTemplate", "terminate"],
+    ]);
     const runnerTags = { "ghr:Application": "github-action-runner", "ghr:Owner": "beep-effect", "ghr:Type": "Org" };
     const heavyRunners = world.launch(1, { ...runnerTags, "ghr:environment": "beep-ci-heavy" });
     const overflowRunners = world.launch(1, { ...runnerTags, "ghr:environment": "beep-ci-overflow" });
+    // What the sweep reads at delete time must still exist when it terminates the first runner.
+    const sweepReads = [
+      "SSM.Parameter:Runners/AppId",
+      "SSM.Parameter:Runners/AppKey",
+      "KMS.Key:Runners/SecretsKey",
+      "Lambda.Function:Runners/TerminationWatcher",
+    ];
+    const deletedBeforeSweep: Array<ReadonlyArray<string>> = [];
+    world.onTerminate = () => {
+      deletedBeforeSweep.push(A.copy(recorder.deleted));
+    };
     yield* destroy(stack);
     expect(world.terminated).toStrictEqual([...heavyRunners, ...overflowRunners]);
+    expect(A.map(deletedBeforeSweep, A.intersection(sweepReads))).toStrictEqual([[], []]);
+    expect(A.intersection(recorder.deleted, sweepReads)).toHaveLength(sweepReads.length);
   })
 );
 
