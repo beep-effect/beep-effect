@@ -497,7 +497,6 @@ const BASELINE_WRITER_STEPS: ReadonlyArray<BaselineWriterStep> = [
     verifiedOutput: O.some(PosixPath.make("standards/fallow.health.regression-baseline.jsonc")),
   }),
   BaselineWriterStep.make({ label: "fallow dead-code baseline", args: ["run", "fallow:dead-code:baseline:write"] }),
-  BaselineWriterStep.make({ label: "JSDoc inventory pair", args: ["run", "beep", "quality", "jsdoc-inventory"] }),
   BaselineWriterStep.make({
     label: "schema-first inventory",
     args: ["run", "beep", "lint", "schema-first", "--write"],

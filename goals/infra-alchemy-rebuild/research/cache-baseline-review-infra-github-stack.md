@@ -31,6 +31,12 @@ Re-recorded again 2026-11-14 after merging `main` with #3344 (9374859de92), whic
 last record the package gained the fake's ruleset-validation test (`test/FakeGitHubRulesets.test.ts`) inside its default
 inputs only; no command, output or environment changes.
 
+Re-recorded again 2026-11-14 after merging `main` with #3348 (49614f6e2bc), which split the reviewed baseline into
+one file per subject under `standards/cache-baseline/` and deleted `standards/cache-qualification-baseline.json`. The
+merge takes that deletion; this record writes the new `@beep/infra-github` subject file and rewrites `_root.json`
+with the root rows below. Since the last record the package gained `test/StackLogicalIds.test.ts` inside its
+default inputs only; no command, output or environment changes.
+
 No task reads the network or a credential: the stack tests serve GitHub from an in-memory fake, and nothing
 writes outside the declared outputs. Recording `@beep/infra-github` adds its computations to the reviewed
 baseline as legacy settings. No task becomes cacheable, no exception row is added, and scope, profile and

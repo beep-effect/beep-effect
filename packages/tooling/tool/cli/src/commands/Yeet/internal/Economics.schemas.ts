@@ -20,6 +20,7 @@ import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { YeetHandlerErrorKind } from "../Yeet.errors.ts";
+import { FleetHostReadReceipt } from "./FleetHosts.schemas.ts";
 import { DEFAULT_YEET_PACKET_DIR } from "./Planner.schemas.ts";
 import { YeetReviewerKind } from "./ReviewLane.schemas.ts";
 import { YeetFailureKind, YeetLaneStatus, YeetOutcome } from "./Verdict.ts";
@@ -49,6 +50,10 @@ const $I = $RepoCliId.create("commands/Yeet/internal/Economics.schemas");
  * the wait itself is the new `monitorWait` section. The M1 walk and the M4
  * proxy are unchanged; the open-streak split gains
  * `rightCensoredMonitorAttempts`, and the three members sum to the v2 figure.
+ *
+ * PERIL-11 slice 3 adds keys without changing any meaning, so the version
+ * stays v4: `hostMix` and `seatMix` in each attempt mix, and `hosts` (one
+ * receipt per fleet host read) in the scope.
  *
  * **Example** (Tell an economics document from an A1 one)
  *
@@ -139,6 +144,8 @@ const EconomicsCount = S.Int.check(S.isGreaterThanOrEqualTo(0));
 const OptionalMs = S.OptionFromNullOr(S.Int);
 const OptionalString = S.OptionFromNullOr(S.String);
 const AbsentByDefault = OptionalString.pipe(S.withConstructorDefault(Effect.succeedNone));
+const EmptyByDefault = <Item extends S.Top>(item: Item) =>
+  S.Array(item).pipe(S.withConstructorDefault(Effect.succeed(A.empty<Item["Type"]>())));
 
 /**
  * One key of a count mix and how many observations carried it.
@@ -391,7 +398,10 @@ export type EconomicsAttemptClass = typeof EconomicsAttemptClass.Type;
  * the first-failure denominator and its `terminated` and `monitor` rows the
  * attempts kept apart from it. The failure-kind mix covers red attempts only:
  * a terminated attempt has no failure kind, and a monitor-decided one is not
- * a local red.
+ * a local red. `hostMix` and `seatMix` count each attempt's start-row
+ * `host` and `seat` (PERIL-11 slice 3); an attempt whose start row predates
+ * those keys, or has no start row, counts as `unrecorded`. Both default to
+ * empty when constructed.
  *
  * **Example** (An empty mix)
  *
@@ -411,10 +421,12 @@ export class EconomicsAttemptMix extends S.Opaque<EconomicsAttemptMix, { readonl
     classMix: S.Array(EconomicsCountRow),
     modeMix: S.Array(EconomicsCountRow),
     failureKindMix: S.Array(EconomicsCountRow),
+    hostMix: EmptyByDefault(EconomicsCountRow),
+    seatMix: EmptyByDefault(EconomicsCountRow),
   }).pipe(
     $I.annoteSchema("EconomicsAttemptMix", {
       description:
-        "Outcome, green/red/terminated class, mode, and red failure-kind mixes over a set of attempts; missing values are unknown.",
+        "Outcome, green/red/terminated class, mode, red failure-kind, host and seat mixes over a set of attempts; missing values are unknown, or unrecorded for host and seat.",
     })
   )
 ) {}
@@ -1064,7 +1076,10 @@ export type EconomicsScopeKind = typeof EconomicsScopeKind.Type;
  *
  * A checkout outside the projects root, such as a T3 Code lane under a
  * configured `<home>/.t3/worktrees/<clone>` root, is labelled by its relative
- * path, which then starts with `..`.
+ * path, which then starts with `..`. A fleet host's checkout is labelled
+ * `<host>:<home-relative path>` and its own store `<host>:(retained)`.
+ * `hosts` holds one {@link FleetHostReadReceipt} per fleet host read, in
+ * `hosts.json` order, and is empty unless `--fleet-hosts` was given.
  *
  * **Example** (A checkout scope)
  *
@@ -1084,10 +1099,11 @@ export class EconomicsScope extends S.Opaque<EconomicsScope, { readonly brand: u
     kind: EconomicsScopeKind,
     checkouts: S.Array(S.String),
     branch: OptionalString,
+    hosts: EmptyByDefault(FleetHostReadReceipt),
   }).pipe(
     $I.annoteSchema("EconomicsScope", {
       description:
-        "Report scope kind, the checkout labels read (relative to the projects root), and the narrowed branch.",
+        "Report scope kind, the checkout labels read (relative to the projects root), the narrowed branch, and each fleet host's read counts.",
     })
   )
 ) {}
@@ -1428,7 +1444,9 @@ export const YeetEconomicsReportJson = JsonStringCodec(YeetEconomicsReport);
  *
  * `packetDir` is the Yeet packet directory whose `runs` directory holds the
  * journals, resolved against each checkout root unless absolute; it defaults
- * to `.beep/yeet`.
+ * to `.beep/yeet`. `fleetHosts` (`--fleet-hosts`, default `false`) also reads
+ * the fleet hosts in `hosts.json` read-only over their SSH wrappers, and
+ * implies `fleet`.
  *
  * **Example** (Ask for the fleet as JSON)
  *
@@ -1448,11 +1466,12 @@ export class YeetEconomicsOptions extends S.Opaque<YeetEconomicsOptions, { reado
     json: S.Boolean,
     branch: OptionalString,
     fleet: S.Boolean,
+    fleetHosts: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     packetDir: S.String.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_YEET_PACKET_DIR))),
   }).pipe(
     $I.annoteSchema("YeetEconomicsOptions", {
       description:
-        "Parsed `yeet economics` flags: JSON output, an optional branch narrowing, the sibling fleet, and the packet directory.",
+        "Parsed `yeet economics` flags: JSON output, an optional branch narrowing, the sibling fleet, the configured fleet hosts, and the packet directory.",
     })
   )
 ) {}
@@ -1524,6 +1543,8 @@ export class EconomicsLane extends S.Opaque<EconomicsLane, { readonly brand: uni
  * right-censored streak. `handlerErrorKind` is the verdict's
  * `handlerErrorKind` when it is a kind this reader knows, else none (rows
  * written before the key existed, or by a writer with a newer kind).
+ * `host` and `seat` are the start row's keys (PERIL-11 slice 3), read as
+ * plain strings, and none when the start row predates them or is missing.
  *
  * **Example** (A green verify attempt)
  *
@@ -1573,6 +1594,8 @@ export class EconomicsAttempt extends S.Opaque<EconomicsAttempt, { readonly bran
     terminationReason: S.OptionFromNullOr(YeetAttemptTerminationReason),
     verdictSchemaVersion: OptionalString,
     handlerErrorKind: S.OptionFromNullOr(YeetHandlerErrorKind).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    host: AbsentByDefault,
+    seat: AbsentByDefault,
     lanes: S.Array(EconomicsLane),
   }).pipe(
     $I.annoteSchema("EconomicsAttempt", {
@@ -1637,6 +1660,38 @@ export class EconomicsJournal extends S.Opaque<EconomicsJournal, { readonly bran
 ) {}
 
 /**
+ * The fleet hosts' journals and their aggregate receipts, as the fleet-host
+ * source returns them to the economics run.
+ *
+ * **Details**
+ *
+ * `journals` stay in memory and join the fold; only `receipts` (counts per
+ * host) reach the report.
+ *
+ * **Example** (No host read)
+ *
+ * ```ts
+ * import { FleetHostsRead } from "@beep/repo-cli/test/Yeet"
+ *
+ * const none = FleetHostsRead.make({ journals: [], receipts: [] })
+ * console.log(none.receipts.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FleetHostsRead extends S.Opaque<FleetHostsRead, { readonly brand: unique symbol }>()(
+  S.Struct({
+    journals: S.Array(EconomicsJournal),
+    receipts: S.Array(FleetHostReadReceipt),
+  }).pipe(
+    $I.annoteSchema("FleetHostsRead", {
+      description: "The fleet hosts' folded journals, kept in memory, and their per-host aggregate receipts.",
+    })
+  )
+) {}
+
+/**
  * What {@link YeetEconomicsReport} journals to read: the checkout root, an
  * optional branch narrowing, and whether to add the sibling fleet.
  *
@@ -1646,7 +1701,8 @@ export class EconomicsJournal extends S.Opaque<EconomicsJournal, { readonly bran
  * unless absolute, and its `runs` directory is read. `inFlightAttemptId`
  * (default none) is an attempt the caller is still running: its start row is
  * dropped before folding when it has no terminal row, and counted in
- * `inFlightStartsExcluded`.
+ * `inFlightStartsExcluded`. `fleetHosts` (default `false`) asks the
+ * fleet-host source to read the hosts in the fleet's `hosts.json`.
  *
  * **Example** (Request one branch's run)
  *
@@ -1666,6 +1722,7 @@ export class EconomicsScopeRequest extends S.Opaque<EconomicsScopeRequest, { rea
     repoRoot: S.String,
     branch: OptionalString,
     fleet: S.Boolean,
+    fleetHosts: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     packetDir: S.String.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_YEET_PACKET_DIR))),
     inFlightAttemptId: AbsentByDefault,
   }).pipe(

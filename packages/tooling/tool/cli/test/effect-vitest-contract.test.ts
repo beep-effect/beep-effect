@@ -201,13 +201,20 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
   );
 
   it.effect(
-    "rejects newly detected membership when the baseline is absent",
+    "rejects newly detected membership when the baseline is absent, without reading any census",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const fsUtils = yield* FsUtils;
       const absolute = path.join(repositoryRoot, scannedTestFile);
       const inventory = path.join(repositoryRoot, EffectVitestInventoryPath);
+      // The census is a measurement, not a ratchet input: neither its ignored
+      // path nor the retired committed copy may be touched by the default mode.
+      const censusPaths = A.map([EffectVitestCensusPath, "standards/effect-vitest.census.json"], (file) =>
+        path.join(repositoryRoot, file)
+      );
+      const refuseCensus = (file: string) =>
+        A.contains(censusPaths, file) ? Effect.die(`the ratchet touched the census at ${file}`) : Effect.void;
       let reported = A.empty<string>();
       const currentConsole = yield* Console.Console;
       const capturingConsole: Console.Console = {
@@ -220,7 +227,11 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
         Effect.provideService(FsUtils, withDiscoveredSources(fsUtils, [absolute])),
         Effect.provideService(FileSystem.FileSystem, {
           ...fs,
-          exists: (file) => (file === inventory ? Effect.succeed(false) : fs.exists(file)),
+          exists: (file) =>
+            Effect.andThen(refuseCensus(file), file === inventory ? Effect.succeed(false) : fs.exists(file)),
+          readFileString: (file, encoding) => Effect.andThen(refuseCensus(file), fs.readFileString(file, encoding)),
+          writeFileString: (file, data, options) =>
+            Effect.andThen(refuseCensus(file), fs.writeFileString(file, data, options)),
         }),
         Effect.provideService(Console.Console, capturingConsole),
         Effect.flip

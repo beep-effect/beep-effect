@@ -347,7 +347,7 @@ const PRE_CHANGE_SNAPSHOT_JSON = A.join(
     'unproven","gateId":"test-typecheck-blindspot","detail":"standards/test-typecheck.blindspot-baseline.',
     'jsonc does not exist"},{"status":"unproven","gateId":"goals-doctor","detail":"goals/goals-doctor.',
     'baseline.jsonc does not exist"},{"status":"unproven","gateId":"jsdoc-documentation-inventory","',
-    'detail":"standards/jsdoc-documentation.inventory.jsonc does not exist"},{"status":"unproven","gateId',
+    'detail":".beep/ci/jsdoc-documentation.inventory.jsonc does not exist"},{"status":"unproven","gateId',
     '":"fallow-health","detail":"standards/fallow.health.regression-baseline.jsonc does not exist"},{"',
     'status":"unproven","gateId":"schema-first-inventory","detail":"standards/schema-first.inventory.',
     'jsonc does not exist"}]}',
