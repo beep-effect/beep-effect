@@ -261,6 +261,14 @@ Coverage floors are untouched.
 
 Reverse: Revert this slice's squash commit; the fixtures and parity record disappear and no checker changes.
 
+### PERIH-11 is paid: the first pin bump passed its own Check and merged, 2026-11-14
+
+The first pin-bump pull request (#3326, the pin for beep-ci-00e2e35dbaee) passed its own Check with all five heavy lanes green and merged on 2026-11-14 as 76238b4c11. The next two main pushes that matched the workflow's path filter (#3331, #3332) left the closure unchanged: no compile, no release and no pull request. With the earlier readings (the first run re-recorded on a byte-identical release; a newer release updated the same pull request) the SPEC acceptance line for PERIH-11 holds and is checked. Not yet seen and named in the note: a closure change after a merged bump opening a new pull request. Readings: history/2026-11-14-perih-11-slice-2-after-the-bump.md. The pin bump was the gate on route-soundness-repair PERIH-10, which PLAN slice 9 waits on.
+
+Lane docs/heavy-pool-diet-pin-bump-merged
+
+Reverse: Revert this PR's squash commit; the PERIH-11 acceptance line reads unchecked again and the reading note is removed.
+
 ### Slices 4, 4b and 7 landed; the first pin-bump pull request is read on main, 2026-11-14
 
 Slice 4 merged as #3301 (11d8e70ed4), slice 4b as #3311 (538f2cdd54, its check errors fixed on main by #3318) and slice 7 as #3299 (c2de80d2a0). The first main run after #3299 re-recorded the closure digest on a byte-identical release, cut no release and opened pin-bump pull request #3326; a newer release then force-updated that same pull request. Readings: history/2026-11-14-perih-11-slice-2-on-main-reading.md. Open with the driver: a pending bump is replaced on every release (21 releases on 2026-11-13), and no rule limits that. Slice 3 (#3302) and slice 6 stay held until the ci-lane-economics window-5 verdict; slice 9 waits on PERIH-10.
