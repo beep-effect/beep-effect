@@ -8,6 +8,7 @@ import {
   decodeAdmissionJournalEvent,
   makeComputeProfileProbe,
   provideRuntimeRootForTesting,
+  QualitySchedulerLive,
   RuntimeRootChoice,
 } from "@beep/repo-cli/test/RepoRun";
 import { UUID } from "@beep/repo-cli/test/SharedInternals";
@@ -327,7 +328,10 @@ const journalEvents = Effect.fnUntraced(function* (root: string) {
 });
 
 // The economics source reads the journals the runs wrote through the real filesystem.
-const JournalTestLayer = Layer.provideMerge(YeetEconomicsSource.layer, NodeCommandTestLayer);
+const JournalTestLayer = Layer.provideMerge(
+  Layer.merge(YeetEconomicsSource.layer, QualitySchedulerLive),
+  NodeCommandTestLayer
+);
 
 const finishedRows = A.filter(YeetAttemptJournalEvent.guards["attempt-finished"]);
 const startedRows = A.filter(YeetAttemptJournalEvent.guards["attempt-started"]);

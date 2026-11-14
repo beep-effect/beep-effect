@@ -36,7 +36,7 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
-import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
+import { MemoryStatsLive, QualitySchedulerLive } from "../../internal/repo-run/QualityScheduler.ts";
 import { CacheProducerAcceptanceReference, CacheProducerImportRequest } from "./Cache.acceptance.schemas.ts";
 import {
   cacheProducerImportMaxBytes,
@@ -62,6 +62,11 @@ import {
 } from "./Cache.conformance.ts";
 import { CacheDependencyMaterialization } from "./Cache.dependencies.schemas.ts";
 import { materializeCacheDependencies } from "./Cache.dependencies.ts";
+import {
+  defaultCacheDependencyDiagnosticLimits,
+  planCacheDiagnosticPublication,
+  writeCacheDependencyDiagnostic,
+} from "./Cache.diagnostics.ts";
 import { CacheEntrypointReviewRequest } from "./Cache.entrypoints.schemas.ts";
 import { attachCacheEntrypointReview } from "./Cache.entrypoints.ts";
 import { CacheCommandError } from "./Cache.errors.ts";
@@ -82,6 +87,7 @@ import { CacheProtocolExecution, CacheProtocolRequest } from "./Cache.protocol.r
 import { runCacheProtocolExperiment } from "./Cache.protocol.runner.ts";
 import { CacheProtocolObservation } from "./Cache.protocol.schemas.ts";
 import { validateCacheProtocolObservation } from "./Cache.protocol.ts";
+import { cacheR2Command } from "./Cache.r2.command.ts";
 import { runCacheRuntimeTasks } from "./Cache.runtime.ts";
 import {
   CacheActivationPreview,
@@ -896,7 +902,8 @@ const cacheDependenciesCommand = Command.make("dependencies", { output: outputFl
   }).pipe(renderCacheFailure)
 ).pipe(
   Command.withDescription("Copy and verify the installed dependency tree; retain the machine-local receipt privately"),
-  Command.provide(MemoryStatsLive)
+  Command.provide(MemoryStatsLive),
+  Command.provide(QualitySchedulerLive)
 );
 
 const cachePilotCommand = Command.make(
@@ -912,7 +919,8 @@ const cachePilotCommand = Command.make(
     }).pipe(renderCacheFailure)
 ).pipe(
   Command.withDescription("Compare the real lint pilot in bounded, network-isolated read-only worktree overlays"),
-  Command.provide(MemoryStatsLive)
+  Command.provide(MemoryStatsLive),
+  Command.provide(QualitySchedulerLive)
 );
 
 const cacheSignedPilotCommand = Command.make(
@@ -926,7 +934,8 @@ const cacheSignedPilotCommand = Command.make(
     }).pipe(renderCacheFailure)
 ).pipe(
   Command.withDescription("Compare signed real-pilot pairs in a supervised private network"),
-  Command.provide(MemoryStatsLive)
+  Command.provide(MemoryStatsLive),
+  Command.provide(QualitySchedulerLive)
 );
 
 const cacheAcceptCommand = Command.make(
@@ -1034,6 +1043,7 @@ const cacheProducerRunCommand = Command.make(
     "Execute and authenticate an owned producer using independently provisioned private approval"
   ),
   Command.provide(MemoryStatsLive),
+  Command.provide(QualitySchedulerLive),
   Command.provide(FetchHttpClient.layer)
 );
 
@@ -1236,6 +1246,46 @@ const cacheProducerInspectCommand = Command.make(
   Command.withDescription("Inspect clean producer sources and tools without loading credentials or approving them")
 );
 
+const cacheProducerDiagnoseCommand = Command.make(
+  "producer-diagnose",
+  {
+    sourceReport: Flag.String("source-report").pipe(
+      Flag.withDescription("Producer inspection report whose declared dependency digest the passes must match")
+    ),
+    output: Flag.String("output").pipe(
+      Flag.withDescription("New private diagnostic path; an existing file is refused, never replaced")
+    ),
+    revision: Flag.String("revision").pipe(Flag.withDescription("Exact 40-hex source revision the report must name")),
+    publicationOnly: Flag.Boolean("publication-only").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Print source=/diagnostic= publication flags from report metadata only")
+    ),
+  },
+  Effect.fn("Cache.producerDiagnoseCommand")(function* ({ sourceReport, output, revision, publicationOnly }) {
+    const limits = defaultCacheDependencyDiagnosticLimits;
+    if (publicationOnly) {
+      const plan = yield* planCacheDiagnosticPublication(sourceReport, output, limits);
+      yield* Console.log(`source=${plan.source}\ndiagnostic=${plan.diagnostic}`);
+      if (!(plan.source && plan.diagnostic)) return yield* failWithReportedExit("Inspection publication is partial.");
+      return;
+    }
+    const status = yield* writeCacheDependencyDiagnostic(process.cwd(), sourceReport, output, revision, limits);
+    if (O.isNone(status)) {
+      yield* Console.log("Refusing existing or unavailable diagnostic output.");
+      return yield* failWithReportedExit("Refusing existing or unavailable diagnostic output.");
+    }
+    if (status.value !== 0) {
+      yield* Console.log("Dependency diagnostic refused; no approval granted.");
+      return yield* failWithReportedExit("Dependency diagnostic refused; no approval granted.");
+    }
+    yield* Console.log("Dependency diagnostic saved.");
+  })
+).pipe(
+  Command.withDescription(
+    "Diagnose installed dependency drift with two bounded archive passes; observation only, never approval"
+  )
+);
+
 const cacheProtocolRunCommand = Command.make(
   "protocol-run",
   { request: Flag.File("request"), output: outputFlag },
@@ -1247,7 +1297,8 @@ const cacheProtocolRunCommand = Command.make(
     }).pipe(renderCacheFailure)
 ).pipe(
   Command.withDescription("Execute pinned signed native fixtures in an isolated private network"),
-  Command.provide(MemoryStatsLive)
+  Command.provide(MemoryStatsLive),
+  Command.provide(QualitySchedulerLive)
 );
 
 const cacheProtocolReviewCommand = Command.make(
@@ -1472,7 +1523,7 @@ const cacheRemoteReadsCommand = Command.make(
 
 const cacheCommandDefinition = Command.make("cache", {}, () =>
   Console.log(
-    "cache commands: census, audit, baseline, fingerprint, profile, activation, transition, dependencies, pilot, pilot-signed, producer-run, producer-publish, producer-fetch, producer-cleanup, producer-inspect, producer-provision, producer-install, accept, protocol-run, protocol-review, conformance-corpus, conformance-run, conformance-native, conformance-lab, conformance-compare, warm, probe, dashboard, execute"
+    "cache commands: census, audit, baseline, fingerprint, profile, activation, transition, dependencies, pilot, pilot-signed, producer-run, producer-publish, producer-fetch, producer-cleanup, producer-inspect, producer-diagnose, producer-provision, producer-install, accept, protocol-run, protocol-review, conformance-corpus, conformance-run, conformance-native, conformance-lab, conformance-compare, warm, probe, dashboard, execute, r2"
   )
 ).pipe(
   Command.withDescription("Turbo cache recovery and evidence operations"),
@@ -1494,6 +1545,7 @@ const cacheCommandDefinition = Command.make("cache", {}, () =>
     cacheProducerFetchCommand,
     cacheProducerCleanupCommand,
     cacheProducerInspectCommand,
+    cacheProducerDiagnoseCommand,
     cacheProducerProvisionCommand,
     cacheProducerInstallCommand,
     cacheAcceptCommand,
@@ -1507,6 +1559,7 @@ const cacheCommandDefinition = Command.make("cache", {}, () =>
     cacheWarmCommand,
     cacheProbeCommand,
     cacheDashboardCommand,
+    cacheR2Command,
   ])
 );
 

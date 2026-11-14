@@ -57,9 +57,7 @@ const captureTestNativeEnvironment = Effect.fn("CitationInvocationTest.nativeEnv
   const native =
     environment !== undefined && O.isSome(environment.native)
       ? environment.native.value
-      : yield* captureCitationNativeAdmission(limits, () =>
-          CitationAdmissionFailure.make({ reason: "invalid-policy" })
-        ).pipe(Effect.orDie);
+      : yield* captureCitationNativeAdmission(limits);
   const supplied = environment === undefined ? yield* Effect.serviceOption(ChildProcessSpawner) : environment.spawner;
   if (O.isSome(supplied)) return { native, spawner: supplied.value };
   const platform = yield* Layer.build(NodeServices.layer);

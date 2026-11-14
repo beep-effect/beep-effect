@@ -660,7 +660,7 @@ protected producer provenance, current-main qualification or production rollout.
 
 ### 2026-11-02 — candidate adapter build preparation
 
-- Existing `infra/r2-cache/policy.sh`, its reviewed upstream patch and `policy-build-requirements.txt` remain the build authority. The former private portable artifacts remain historical, separately bound evidence.
+- Existing `infra/r2-cache/policy.sh`, its reviewed upstream patch and `policy-build-requirements.txt` (now `policy-build-tools.txt`, goal python-free-repo) remain the build authority. The former private portable artifacts remain historical, separately bound evidence.
 - The already-used immutable [Rust setup action](https://github.com/actions-rust-lang/setup-rust-toolchain/blob/ecabd13d1c56bd1345c230e542e9144811ad706f/action.yml) exposes explicit toolchain/target selection and disabling cache restoration and directory overrides. The new leaf selects those options and an isolated Rustup/Cargo home.
 - The existing pinned ziglang 0.14.1 installation has no console entry point. Its explicit `bin/zig` link points to the installed module binary; candidate preparation repeats that setup and checks the requested versions.
 - The installed Turbo 2.11.10 CI documentation and the existing main-only inspection caller informed the separate operational mode. Preparation leaves ordinary required matrix contexts and cache posture unchanged; it does not emit quality or producer verdicts.

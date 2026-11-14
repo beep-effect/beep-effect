@@ -179,15 +179,15 @@ and preserves unrelated dotenv edits. Record any unresolved conflict explicitly.
 
 ## Bounded main-ref qualification
 
-Run `probe.py seed --marker <sixteen-hex-marker>` on the owner workstation using
-its resolved client environment. It executes a writer-only task and stores the
+Run `bun run beep cache r2 probe seed --marker <sixteen-hex-marker>` on the owner
+workstation using its resolved client environment. It executes a writer-only task and stores the
 safe seed receipt and two large payloads. Dispatch Cache Warm on main with
 `r2_probe=true`, that marker and a reviewed `r2_source_sha`. The source revision
 must be an ancestor of main before any repository code runs. CI restores the
 workstation hash, executes/uploads a second task and tests the reader grant.
 The global heavy-job flag may remain false throughout this qualification.
 
-Then run `probe.py restore` with the same marker. It requires the CI-produced
+Then run `bun run beep cache r2 probe restore` with the same marker. It requires the CI-produced
 hash, the CI execution duration metadata and both large payloads to match.
 Only the sanitized `ci-proof.json` is uploaded for a probe. A successful probe
 is permission/transport evidence, not a measured fleet savings percentage.
@@ -204,10 +204,13 @@ After installing the host adapter, inventory clones and registered worktrees wit
 an exact upstream check. The default is a read-only plan:
 
 ```sh
-python3 infra/r2-cache/fleet.py "$HOME/YeeBois/projects"
-python3 infra/r2-cache/fleet.py "$HOME/YeeBois/projects" --apply \
+bun run beep cache r2 fleet "$HOME/YeeBois/projects"
+bun run beep cache r2 fleet "$HOME/YeeBois/projects" --apply \
   --output "$HOME/.local/state/beep/r2-cache/fleet-enrollment.json"
 ```
+
+Run it from a checkout root; it enrolls through that checkout's
+`infra/r2-cache/workstation.sh`.
 
 Enrollment writes only ignored cache references and retains per-checkout rollback
 receipts. Current resolvers receive trusted read/write mode; historical resolvers
@@ -298,19 +301,16 @@ remain unassigned to cache consumers, with expiry on 2026-11-28.
 That attended OAuth route is not a durable service credential; future token
 management needs a current approved management credential or current CLI login.
 
-From the repository root, the retained storage control checks the exact active
-policies against Alchemy's state, uploads a small owned object, requires the
-reader's exact bytes, rejects reader upload/deletion, then deletes both owned
-probe keys and requires 404 on both cleanup HEADs:
-
-```sh
-uv run --no-project --with boto3==1.43.121 python3 infra/r2-cache/trial-grants.py
-```
-
-It uses the existing owner-only Cloudflare CLI login and Alchemy state; it
-does not log token values or activate a consumer. Its receipt is under
-`.beep/producer-upload`. Run only while this exact trial and its expiry remain
-current. Storage-grant proof does not establish signed adapter startup, native
+The one-shot storage control `trial-grants.py` checked the exact active
+policies against Alchemy's state, uploaded a small owned object, required the
+reader's exact bytes, rejected reader upload/deletion, then deleted both owned
+probe keys and required 404 on both cleanup HEADs. Its sanitized result is
+retained as `research/saved-storage-grants-checkpoint-2026-11-03.json` under the
+trust packet. The script was removed with the repository's Python (goal
+`python-free-repo`); recover it with
+`git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:infra/r2-cache/trial-grants.py`
+and run it outside the repository if a new trial needs the same proof.
+Storage-grant proof does not establish signed adapter startup, native
 restoration, protected producer publication or task qualification.
 
 ## Signed-policy component lab
@@ -347,32 +347,35 @@ dotenvy and security dependency updates. The loopback server compiles the HTTP1
 and macros features it uses. Native artifact bytes remain opaque. The upstream
 MIT notice is retained in `patches/LICENSE.upstream.txt`.
 
-The optional `policy-lab.py` uses the pinned Python environment in
-`policy-lab-requirements.txt`. It starts two actual patched adapter processes and
-disposable loopback Moto S3, checks denials have zero storage calls, verifies
-metadata roundtrips, and tests valid and corrupt signed restores with both native
-Turbo pins. It takes `--adapter`, `--adapter-sha256` and `--output`; the executable
-must match the independently reviewed digest. Only synthetic credentials are used,
-and only exact owned child processes are stopped. See the packet's
-`research/adapter-policy-lab.json` for the local result and limits.
+The optional Python process lab (`policy-lab.py` with
+`policy-lab-requirements.txt`) started two actual patched adapter processes and
+disposable loopback Moto S3, checked denials have zero storage calls, verified
+metadata roundtrips, and tested valid and corrupt signed restores with both native
+Turbo pins against an independently reviewed digest, using synthetic credentials
+only. Its results are retained in the trust packet's
+`research/adapter-policy-lab.json`, `research/adapter-runtime-lab.json` and
+`research/adapter-runtime-checkpoint.json`. The lab was removed with the
+repository's Python (goal `python-free-repo`); recover it with
+`git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:infra/r2-cache/policy-lab.py`.
 
 The earlier policy candidate's statically linked x86_64 musl release build passed
 all20 wire, one startup-boundary and12 native controls on the current workstation. Earlier glibc
 receipts retain their original source inputs. The portable build uses installed
 Rust1.96.0 plus cargo-zigbuild0.20.1/Zig0.14.1, pinned in
-`policy-build-requirements.txt`; its checksum and byte size are retained beside
-the source patch. `cargo-build-musl` reproduces that build inside admission.
-The requirements now lock the reviewed Linux x86_64 wheel hashes. Candidate
-CI installs with `--require-hashes` and records actual compiler/linker
-executable digests alongside their versions; other host wheels fail closed.
+`policy-build-tools.txt` (the Zig release tarball and the `cargo-zigbuild`
+wheel, each with its URL, sha256 and version). `cargo-build-musl` reproduces
+that build inside admission. Candidate CI reads every pin from that file,
+verifies each download's sha256 before extracting it, checks the installed
+versions, and records the compiler and linker executable digests next to their
+versions. Each candidate's build.json digests the pins file as a source input.
 Remote fleet execution, R2 grant negatives, producer attribution, rotation/rollback,
 deployment and representative observation remain required before activation.
 
 The current candidate fixes two Tokio core workers, two HTTP workers and two
 blocking threads per runtime. `cargo-test` includes the binary runtime test.
-Add `--runtime-envelope` to the process lab on Linux with an active systemd user
-manager to measure the actual executable, explicit environment, worker counts
-and cgroup limits at readiness and after load. The synthetic services have a
+The retired process lab's `--runtime-envelope` mode measured the actual
+executable, explicit environment, worker counts and cgroup limits at readiness
+and after load on Linux with an active systemd user manager. The synthetic services have a
 two-CPU quota, 256 MiB memory cap and sixteen-task cap. Cleanup stops only fresh
 owned units and also proves an activating unit is stopped. All 33 original
 wire/startup/native controls pass with this envelope and zero adapter output;
@@ -380,10 +383,14 @@ the source-bound results are `research/adapter-runtime-checkpoint.json` and
 `research/adapter-runtime-lab.json` under the trust packet. The actual deployed
 credential-launcher chain still requires its own resource and grant proof.
 
-`policy_runtime.py` owns the shared user-unit startup and observation code used
-by the runtime lab. Startup configuration travels through an anonymous pipe;
-it is absent from command arguments, unit properties and environment files.
-The caller installs the exhaustive cleanup scope before launch. Readiness and
+The CLI's in-process owned-adapter host
+(`packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.host.ts`, formerly
+the `policy_runtime.py` subprocess) owns user-unit startup and observation for
+producer uploads. Startup configuration travels through the unit's anonymous
+pipe to a launcher started under `/usr/bin/env -i`, which `execve`s the adapter
+with exactly the approved environment; it is absent from command arguments,
+unit properties and environment files. The caller's scope installs the
+exhaustive cleanup finalizer before launch. Readiness and
 after-load checks bind the same actual PID and executable to the adapter's
 loopback listener and measured cgroup limits. Invalid executable pins, broader
 listeners, artifact keys and agent credentials are refused before a unit is
@@ -392,11 +399,10 @@ executables and unexpected environment names. This component does not activate
 the signed producer or provide R2 grant/deployment qualification.
 
 Cleanup attempts every owned unit and child before reporting an aggregate
-failure. An ExitStack closes logs, temporary data and the storage fixture even
-if stopping or another closure fails. Three failure controls cover a stop
-timeout, a status-query failure and combined cleanup/log closure failures;
-the first two use real disposable units and a child process. A success receipt
-is written only after teardown finishes.
+failure, and a success receipt is produced only after teardown finishes.
+`cache-producer-adapter.test.ts` replays recorded process snapshots for the
+positive and negative observations, refuses invalid startup input before a unit
+exists, and runs the real launcher to prove the exact piped environment.
 
 Run `policy.sh cargo-security` inside admission or hosted CI for the pinned
 Cargo lock scan. It mounts only public lock/config inputs into the exact OSV

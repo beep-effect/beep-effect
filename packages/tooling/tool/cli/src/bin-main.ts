@@ -218,7 +218,7 @@ const runtimeLayerFor = Effect.fnUntraced(function* (services: HashSetType.HashS
       O.map(repoUtils, ({ TSMorphServiceLive }) => TSMorphServiceLive),
       () => HashSet.has(services, "ts-morph")
     ),
-    O.map(scheduler, ({ MemoryStatsLive }) => MemoryStatsLive),
+    O.map(scheduler, ({ MemoryStatsLive, QualitySchedulerLive }) => Layer.merge(MemoryStatsLive, QualitySchedulerLive)),
   ]);
   return Layer.mergeAll(Layer.empty, ...extras).pipe(Layer.provideMerge(BaseLayers));
 });
@@ -277,11 +277,12 @@ const qualityTaskInvocation =
 
 if (O.isSome(qualityTaskInvocation)) {
   // The quality-task route resolves the admission-aware concurrency plan, which
-  // reads MemAvailable through MemoryStats; the scheduler module loads only here.
-  const { MemoryStatsLive } = await import("./internal/repo-run/QualityScheduler.ts");
+  // reads the admission snapshot through the QualityScheduler service and
+  // MemAvailable through MemoryStats; the scheduler module loads only here.
+  const { MemoryStatsLive, QualitySchedulerLive } = await import("./internal/repo-run/QualityScheduler.ts");
   runRepoCliMain(
     Effect.scoped(
-      MemoryStatsLive.pipe(
+      Layer.merge(MemoryStatsLive, QualitySchedulerLive).pipe(
         Layer.provideMerge(BaseLayers),
         Layer.build,
         Effect.flatMap((context) =>

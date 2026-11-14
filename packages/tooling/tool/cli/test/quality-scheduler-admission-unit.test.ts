@@ -22,6 +22,8 @@ import {
   MemoryStats,
   noAdmissionOriginGate,
   provideRuntimeRootForTesting,
+  QualityScheduler,
+  QualitySchedulerLive,
   RecordedAdmissionWorkKind,
   RuntimeRootChoice,
   setAdmissionEvictionProtocol,
@@ -40,15 +42,22 @@ import { assertFalse, assertNone, assertTrue, deepStrictEqual, strictEqual } fro
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
+import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import * as TestClock from "effect/testing/TestClock";
 
 // Bytes the origin/main encoder (before SCHE-08) wrote for one lifecycle, captured from it verbatim.
 const preUnitText = {
@@ -68,14 +77,17 @@ const preUnitText = {
 
 const unitKeys = ["unit", "weightSource", "owner"] as const;
 
+// The closed kind literal a pre-SCHE-08 checkout decodes: it has no `cache` kind.
+const PreUnitWorkKind = AdmissionWorkKind.pick(["full-proof", "merged-preview", "review-fix", "publish"]);
+
 // The readers a pre-SCHE-08 checkout runs: the same records without the unit keys and with the closed kind.
-const preUnitLeaseReader = S.Struct({ ...Struct.omit(YeetAdmissionLease.fields, unitKeys), kind: AdmissionWorkKind });
-const preUnitTicketReader = S.Struct({ ...Struct.omit(YeetAdmissionTicket.fields, unitKeys), kind: AdmissionWorkKind });
+const preUnitLeaseReader = S.Struct({ ...Struct.omit(YeetAdmissionLease.fields, unitKeys), kind: PreUnitWorkKind });
+const preUnitTicketReader = S.Struct({ ...Struct.omit(YeetAdmissionTicket.fields, unitKeys), kind: PreUnitWorkKind });
 const preUnitRowReader = S.Union([
-  S.Struct({ ...Struct.omit(AdmissionJournalEnqueued.fields, unitKeys), kind: AdmissionWorkKind }),
-  S.Struct({ ...Struct.omit(AdmissionJournalAdmitted.fields, unitKeys), kind: AdmissionWorkKind }),
+  S.Struct({ ...Struct.omit(AdmissionJournalEnqueued.fields, unitKeys), kind: PreUnitWorkKind }),
+  S.Struct({ ...Struct.omit(AdmissionJournalAdmitted.fields, unitKeys), kind: PreUnitWorkKind }),
   S.Struct(Struct.omit(AdmissionJournalReleasedV3.fields, unitKeys)),
-  S.Struct({ ...Struct.omit(AdmissionJournalWithdrawn.fields, unitKeys), kind: AdmissionWorkKind }),
+  S.Struct({ ...Struct.omit(AdmissionJournalWithdrawn.fields, unitKeys), kind: PreUnitWorkKind }),
 ]);
 
 const leaseCodec = S.fromJsonString(YeetAdmissionLease);
@@ -346,7 +358,8 @@ const SchedulerTestLayer = Layer.mergeAll(
     MemoryStats,
     MemoryStats.of({ availableGib: Effect.succeed(50), totalGib: Effect.succeed(128), ceilingGib: Effect.succeed(128) })
   ),
-  Layer.succeed(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" }))
+  Layer.succeed(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
+  QualitySchedulerLive
 );
 
 // A private 0700 admission root owned by this uid, inside the in-memory volume.
@@ -501,4 +514,213 @@ it.layer(SchedulerTestLayer, { concurrent: false, timeout: "20 seconds" })("admi
       deepStrictEqual(snapshot.quarantined, []);
     })
   );
+});
+
+// Bytes origin/main wrote for a Cache-site admission (kind `review-fix`, weight 1, no origin, no branch),
+// captured verbatim from its encoder. @PID@ and @NONCE@ stand for this process's pid and the run's nonce.
+const preCacheKindText = {
+  lease:
+    '{"schemaVersion":"yeet-admission-lease/v1","computeProfile":"workstation","pid":@PID@,"procStart":"424242","kind":"review-fix","weightTokens":1,"priority":"verify","originKey":"","checkoutRoot":"/repo/cache-kind","branch":"","coordinationProtocol":"scheduler-origin-concurrency/v1","forceLocal":false,"command":"bun run beep cache pilot","startedAt":"1970-01-01T00:00:00.000Z","admittedAtMillis":0,"heartbeatAtMillis":0,"enqueuedAtMillis":0,"nonce":"@NONCE@","hotPaths":[],"runScope":{"unitName":"agent-run-@NONCE@.scope","support":"disabled","attachedPid":@PID@,"attachedAt":"1970-01-01T00:00:00.000Z"}}',
+  ticket:
+    '{"schemaVersion":"yeet-admission-ticket/v1","computeProfile":"workstation","pid":@PID@,"procStart":"424242","kind":"review-fix","weightTokens":1,"priority":"verify","originKey":"","checkoutRoot":"/repo/cache-kind","branch":"","coordinationProtocol":"scheduler-origin-concurrency/v1","forceLocal":false,"enqueuedAtMillis":0,"heartbeatAtMillis":0,"blockedOnOriginAtMillis":0,"nonce":"@NONCE@"}',
+  enqueued:
+    '{"pid":@PID@,"procStart":"424242","kind":"review-fix","priority":"verify","originKey":"","checkoutRoot":"/repo/cache-kind","branch":"","enqueuedAtMillis":0,"nonce":"@NONCE@","schemaVersion":"yeet-admission-journal/v3","_tag":"admission-enqueued","weightTokens":1}',
+  admitted:
+    '{"_tag":"admission-admitted","schemaVersion":"yeet-admission-journal/v1","nonce":"@NONCE@","pid":@PID@,"procStart":"424242","kind":"review-fix","weightTokens":1,"priority":"verify","originKey":"","enqueuedAtMillis":0,"admittedAtMillis":0}',
+  released:
+    '{"checkoutRoot":"/repo/cache-kind","branch":"","_tag":"admission-released","schemaVersion":"yeet-admission-journal/v3","nonce":"@NONCE@","pid":@PID@,"releasedAtMillis":0}',
+  withdrawn:
+    '{"pid":@PID@,"procStart":"424242","kind":"review-fix","priority":"verify","originKey":"","checkoutRoot":"/repo/cache-kind","branch":"","enqueuedAtMillis":0,"nonce":"@NONCE@","schemaVersion":"yeet-admission-journal/v3","_tag":"admission-withdrawn","withdrawnAtMillis":0}',
+};
+
+const fillIdentity = (runNonce: string) =>
+  flow(Str.replaceAll("@NONCE@", runNonce), Str.replaceAll("@PID@", `${process.pid}`));
+
+// The request every Cache command makes, as `beep cache pilot` does.
+const cacheRequest = AdmissionRequest.make({
+  kind: "cache",
+  weightTokens: admissionTokenWeight("cache"),
+  priority: "verify",
+  originKey: "",
+  checkoutRoot: "/repo/cache-kind",
+  branch: "",
+  command: "bun run beep cache pilot",
+});
+
+// Admit one Cache request through the QualityScheduler service and read the lease it held and the journal.
+const admitCache = Effect.fn("AdmissionUnitTest.admitCache")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const scheduler = yield* QualityScheduler;
+  const leases = path.join(root, "leases");
+  const leaseText = yield* scheduler.admit(
+    cacheRequest,
+    noAdmissionOriginGate,
+    fs
+      .readDirectory(leases)
+      .pipe(Effect.flatMap((names) => fs.readFileString(path.join(leases, A.join(A.take(names, 1), "")))))
+  );
+  const journalPath = yield* admissionJournalPath(root);
+  const journal = yield* readLines(journalPath);
+  return { leaseText: Str.trim(leaseText), journal };
+});
+
+// Queue one Cache request behind a busy origin gate, read its ticket, then interrupt it so it withdraws.
+const queueCacheAndWithdraw = Effect.fn("AdmissionUnitTest.queueCacheAndWithdraw")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const scheduler = yield* QualityScheduler;
+  const reached = yield* Deferred.make<void>();
+  const busyGate = {
+    tryAcquire: Deferred.succeed(reached, undefined).pipe(Effect.as(O.none<string>())),
+    tryAcquireFallback: Effect.succeedNone,
+    release: () => Effect.void,
+  };
+  const fiber = yield* scheduler.admit(cacheRequest, busyGate, Effect.void).pipe(Effect.forkChild);
+  yield* Deferred.await(reached);
+  const queue = path.join(root, "queue");
+  const names = yield* fs.readDirectory(queue);
+  const ticketText = yield* fs.readFileString(path.join(queue, A.join(A.take(names, 1), "")));
+  yield* Fiber.interrupt(fiber);
+  const journalPath = yield* admissionJournalPath(root);
+  const journal = yield* readLines(journalPath);
+  return { ticketText: Str.trim(ticketText), journal };
+});
+
+const kindsOf = (rows: ReadonlyArray<AdmissionJournalEvent>) =>
+  A.map(rows, (row) => [row._tag, "kind" in row ? row.kind : "-"]);
+
+it.layer(SchedulerTestLayer, { concurrent: false, timeout: "20 seconds" })("Cache work kind (SCHE-08)", (it) => {
+  it("charges the Cache kind the review-fix weight it borrowed", () => {
+    strictEqual(admissionTokenWeight("cache"), admissionTokenWeight("review-fix"));
+    assertFalse(S.is(UnrecognizedAdmissionWorkKind)("cache"));
+  });
+
+  it.effect("writes origin/main's review-fix bytes for a Cache admission while the gate is off", () =>
+    Effect.gen(function* () {
+      const admittedRoot = yield* prepareRoot("cache-gate-off");
+      const admitted = yield* admitCache(admittedRoot.root).pipe(provideRuntimeRootForTesting(admittedRoot.choice));
+      const lease = yield* decodeLease(admitted.leaseText);
+      deepStrictEqual(
+        [admitted.leaseText, ...admitted.journal],
+        A.map(
+          [preCacheKindText.lease, preCacheKindText.enqueued, preCacheKindText.admitted, preCacheKindText.released],
+          fillIdentity(lease.nonce)
+        )
+      );
+      const queuedRoot = yield* prepareRoot("cache-gate-off-queued");
+      const queued = yield* queueCacheAndWithdraw(queuedRoot.root).pipe(
+        provideRuntimeRootForTesting(queuedRoot.choice)
+      );
+      const ticket = yield* decodeTicket(queued.ticketText);
+      deepStrictEqual(
+        [queued.ticketText, ...queued.journal],
+        A.map(
+          [preCacheKindText.ticket, preCacheKindText.enqueued, preCacheKindText.withdrawn],
+          fillIdentity(ticket.nonce)
+        )
+      );
+    })
+  );
+
+  it.effect("writes the Cache kind with the unit fields while the gate is on", () =>
+    Effect.gen(function* () {
+      const scheduler = yield* QualityScheduler;
+      const admittedRoot = yield* prepareRoot("cache-gate-on");
+      const admitted = yield* scheduler
+        .setUnitProtocol("on")
+        .pipe(Effect.andThen(admitCache(admittedRoot.root)), provideRuntimeRootForTesting(admittedRoot.choice));
+      const lease = yield* decodeLease(admitted.leaseText);
+      deepStrictEqual(
+        [lease.kind, lease.weightTokens, lease.unit, lease.weightSource],
+        ["cache", 1, O.some(AdmissionUnit.cases.tier.make({})), O.some(staticSeed)]
+      );
+      const rows = yield* decodeRows(admitted.journal);
+      deepStrictEqual(kindsOf(rows), [
+        ["admission-enqueued", "cache"],
+        ["admission-admitted", "cache"],
+        ["admission-released", "-"],
+      ]);
+      // A reader older than SCHE-08 cannot decode the Cache kind, which is why it waits behind the gate.
+      const refused = yield* decodePreUnitLease(admitted.leaseText).pipe(Effect.flip);
+      strictEqual(refused._tag, "SchemaError");
+      const queuedRoot = yield* prepareRoot("cache-gate-on-queued");
+      const queued = yield* scheduler
+        .setUnitProtocol("on")
+        .pipe(Effect.andThen(queueCacheAndWithdraw(queuedRoot.root)), provideRuntimeRootForTesting(queuedRoot.choice));
+      const ticket = yield* decodeTicket(queued.ticketText);
+      strictEqual(ticket.kind, "cache");
+      const queuedRows = yield* decodeRows(queued.journal);
+      deepStrictEqual(kindsOf(queuedRows), [
+        ["admission-enqueued", "cache"],
+        ["admission-withdrawn", "cache"],
+      ]);
+    })
+  );
+
+  // The only clock-adjusting case owns its TestClock in a single-case block.
+  it.layer(TestClock.layer(), { timeout: "20 seconds" })("isolated class-cap clock", (it) => {
+    it.effect("keeps Cache work inside the review-fix class cap", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const scheduler = yield* QualityScheduler;
+        const { root, choice } = yield* prepareRoot("class-cap");
+        const leases = path.join(root, "leases");
+        yield* fs.makeDirectory(leases, { recursive: true, mode: 0o700 });
+        // The cap (3) is full only because the Cache lease counts as a member of the class.
+        const holders = [
+          { kind: "review-fix", checkoutRoot: "/repo/holder-a", nonce: "5d0c2e61-7c3a-4f0e-9a11-3b1f3c0a0001" },
+          { kind: "review-fix", checkoutRoot: "/repo/holder-b", nonce: "5d0c2e61-7c3a-4f0e-9a11-3b1f3c0a0002" },
+          { kind: "cache", checkoutRoot: "/repo/holder-c", nonce: "5d0c2e61-7c3a-4f0e-9a11-3b1f3c0a0003" },
+        ] as const;
+        const leasePaths = yield* Effect.forEach(
+          holders,
+          Effect.fnUntraced(function* (holder) {
+            const text = yield* encodeLease(leaseOf({ ...holder, pid: process.pid, weightTokens: 1 }));
+            const leasePath = path.join(leases, `${holder.nonce}-${process.pid}.lease.json`);
+            yield* fs.writeFileString(leasePath, `${text}\n`);
+            return leasePath;
+          })
+        );
+        // The first availableGib read follows the first scan of the queue, which saw all three holders.
+        const scanned = yield* Deferred.make<void>();
+        const reads = yield* Ref.make(0);
+        const signallingStats = MemoryStats.of({
+          availableGib: Ref.getAndUpdate(reads, Num.increment).pipe(
+            Effect.tap((count) => (count === 0 ? Deferred.succeed(scanned, undefined) : Effect.void)),
+            Effect.as(50)
+          ),
+          totalGib: Effect.succeed(128),
+          ceilingGib: Effect.succeed(128),
+        });
+        const fiber = yield* scheduler
+          .setUnitProtocol("on")
+          .pipe(
+            Effect.andThen(scheduler.admit(cacheRequest, noAdmissionOriginGate, Effect.succeed("cache ran"))),
+            Effect.provideService(MemoryStats, signallingStats),
+            provideRuntimeRootForTesting(choice),
+            Effect.forkChild
+          );
+        yield* Deferred.await(scanned);
+        yield* fs.remove(A.getUnsafe(leasePaths, 2));
+        yield* Effect.repeat(TestClock.adjust("1 second"), {
+          until: () => P.isNotUndefined(fiber.pollUnsafe()),
+          times: 30,
+        });
+        const ran = yield* Fiber.join(fiber);
+        strictEqual(ran, "cache ran");
+        const journalPath = yield* admissionJournalPath(root);
+        const journal = yield* readLines(journalPath);
+        const rows = yield* decodeRows(journal);
+        // Admitted only after a heartbeat, once a seat in the class was free: the first attempt was capped.
+        assertTrue(
+          O.exists(
+            A.findFirst(rows, S.is(AdmissionJournalAdmitted)),
+            (row) => row.kind === "cache" && row.admittedAtMillis >= 5_000
+          )
+        );
+      })
+    );
+  });
 });

@@ -382,3 +382,48 @@ unchanged) and `CitationEngineLayer` (15/15). `package-verify --quick`,
 `lint:laws` (effect-fn 0), fallow audit vs `origin/main` (0 introduced),
 `docgen:local`, biome, typecheck and effect-vitest (0 introduced, 0
 resolved) pass.
+
+## Coverage floors after the test deletions
+
+Focused Bun/Istanbul runs, one small source-specific group at a time, `nice -n
+15`, `--maxWorkers=1`, with `--coverage.include` restricted to the named source.
+No package-wide coverage, baseline writer or coverage ignores. Five rows were
+re-baselined by hand to the values hosted `Heavy / Coverage Regression` measured on
+head `0e2b4c42e6d` (decision "Re-baseline five coverage rows after deleting the
+tautological refusal tests"); the other three files meet their existing floors.
+Percentages below are functions / statements (and lines where gated), followed
+by the hosted floor. Each group passed.
+
+| File | Uncovered code and disposition | Focused result versus floor |
+| --- | --- | --- |
+| AnnotationEntry.ts | The configurationFailure mapper is unreachable with typed limits and the literal annotate operation. Kept: a typed, closed refusal stays in place of a defect. Row re-baselined. | hosted 94.44 functions, 98.64 statements; floor set to those values |
+| CleanerRegistry.ts | The hash-constructor runtime-failed and dictionary-constructor invalid-input mappers are unreachable with typed limits. Kept as typed refusals. Row re-baselined. | hosted 97.05 functions, 98.11 statements; floor set to those values |
+| ExtractorOrdering.ts | The missing-key and missing-class mappers and the set-failed fallback are unreachable while keys come from the captured bindings. Kept as typed refusals. Row re-baselined. | hosted 76.92 functions, 92.5 statements; floor set to those values |
+| HelperConfigurations.ts | Live invalid-data and invalid-policy callbacks at the raw assembly boundary. Added malformed-bindings and malformed-policy test against the real helper with authenticated asset bytes; verifies failures and zero child processes. | 100 / 100; lines 100 >= 75 / 94.11; lines 93.75 |
+| MetadataYear.ts | The invalid-bound mapper is unreachable after the 1..9999 year validation. Kept as a typed refusal. Row re-baselined. | hosted 87.5 functions, 95.45 lines, 95.65 statements; floor set to those values |
+| RecognizerWorker.ts | Dead admission-install error mapper: prepareCitationAdmissionPolicy now only returns typed limits and normalized duration; removed its unused callback parameter and updated all four callers. Live source-limit translation is exercised by existing CitationExtractorControls backend-failure fixture. Consolidated lifecycle invalid-runtime thunk into the existing failure factory; lifecycle checks remain. | 100 / 100 >= 100 / 100 |
+| RegexWorker.ts | Same dead admission callback; consolidated lifecycle thunk while preserving its guard. Live generated descriptor binder now tested for duplicate refusal, successful binding, and bound evaluator quota refusal with no spawn. | 100 / 97.77 >= 90.9 / 93.93 |
+| RegexWorkerProtocol.ts | The job-preparer invalid-runtime mapper is unreachable with typed limits; the post-encode byte-count check is a frame-size guard and stays. Both kept. Row re-baselined. | hosted 94.11 functions, 97.26 statements; floor set to those values |
+
+Focused groups (test basenames, all under the server test directory):
+
+- AnnotationEntry: CitationAnnotationEntry, CitationAnnotationEntryCoverage,
+  CitationAnnotationFailure.
+- CleanerRegistry: CitationCleanerRegistry, CitationCleanerParentBudget,
+  CitationDocumentCleanerProtocols.
+- ExtractorOrdering: CitationExtractorOrdering.
+- HelperConfigurations: CitationHelperConfigurations.
+- MetadataYear: CitationMetadataYear.
+- RecognizerWorker: CitationRecognizerWorker, CitationExtractorControls
+  (the initial diagnostic group also included CitationRecognizerProgram).
+- RegexWorker: CitationRegexWorker (the diagnostic expansion also included
+  CitationReferenceTokenExtractionCoverage and CitationReferencePatternsCoverage).
+- RegexWorkerProtocol: CitationRegexWorkerProtocol.
+
+Validation: both edited test files pass individually; package typecheck and
+`lint:laws`, changed-file Biome, root oxlint, `package-verify --quick`,
+effect-vitest (zero introduced), `docgen:local`, and fallow audit against
+`origin/main` (zero introduced) pass. Effect-vitest's unrelated positional
+refresh was restored to HEAD; no inventory change is included.
+`CitationCanonicalFullSpan` passed 12/12 in 63.17 seconds: one construction
+detach, 291 evaluations and 291 child processes across ten calls remain pinned.

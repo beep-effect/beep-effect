@@ -74,7 +74,7 @@ export const makeCitationRecognizerWorker = Effect.fn("Citation.makeRecognizerWo
   const timing = yield* makeCitationRegexTiming(limits, false);
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation: timing.operation, limit });
-  const admission = yield* captureCitationNativeAdmission(limits, invalid);
+  const admission = yield* captureCitationNativeAdmission(limits);
   const owner = yield* makeCitationNativeProcessOwner<CitationRecognizerFailure | CitationSafetyLimitExceeded>(
     limits,
     timing.operation,

@@ -344,9 +344,7 @@ export const makeCitationStandaloneNativeStarter = Effect.fn("Citation.makeStand
   limits: CitationEngineLimits,
   operation: CitationEngineOperation
 ) {
-  const admission = yield* captureCitationNativeAdmission(limits, () =>
-    CitationNativeLaneFailure.make({ reason: "invalid-runtime" })
-  );
+  const admission = yield* captureCitationNativeAdmission(limits);
   const owner = yield* makeCitationNativeProcessOwner(limits, operation, (reason) =>
     CitationNativeLaneFailure.make({ reason })
   );

@@ -96,9 +96,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     CitationHtmlWorkerStartup.make({ maximum: limits.processMessageBytes, assetPath })
   ).pipe(Effect.mapError(invalidRuntime));
   const preparation = yield* makeCitationHtmlInput(limits);
-  const standalone = yield* makeCitationStandaloneNativeStarter(limits, "clean").pipe(
-    Effect.mapError((error) => failure(error.reason))
-  );
+  const standalone = yield* makeCitationStandaloneNativeStarter(limits, "clean");
   const worker = yield* makeCitationMarkupWorker(limits, runtime, argument, "clean", failure);
   const validateSource = Effect.fnUntraced(function* (input: unknown, kind: "raw" | "text" | "bytes" | "unicode") {
     if (kind === "bytes") {

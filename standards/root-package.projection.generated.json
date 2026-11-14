@@ -63,7 +63,7 @@
   },
   "packageManager": "bun@1.4.4",
   "patchedDependencies": {
-    "@alchemy.run/domain@2.0.0-beta.86": "patches/@alchemy.run%2Fdomain@2.0.0-beta.86.patch"
+    "@alchemy.run/domain@2.0.0-beta.87": "patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch"
   },
   "private": true,
   "repository": {
@@ -182,6 +182,7 @@
     "lint:private-home-paths": "bun run beep laws private-home-paths --check",
     "lint:schema-tag-idioms": "bun run beep laws schema-tag-idioms --check",
     "lint:tracked-shell-allowlist": "bun run beep laws tracked-shell-allowlist --check",
+    "lint:no-tracked-python": "bun run beep laws no-tracked-python --check",
     "lint:holds": "bun run beep holds lint",
     "lint:ecosystem-polarity": "bun run beep lint ecosystem-polarity",
     "goals:index-check": "bun run beep goals index --check",

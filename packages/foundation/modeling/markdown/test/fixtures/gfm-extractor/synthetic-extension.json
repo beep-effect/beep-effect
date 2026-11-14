@@ -1,0 +1,10 @@
+[
+  {
+    "markdown": "| a\tb |\n",
+    "html": "<p>| a\tb |</p>\n",
+    "example": 1,
+    "start_line": 5,
+    "end_line": 9,
+    "section": "Tables draft (EXTENSION)"
+  }
+]

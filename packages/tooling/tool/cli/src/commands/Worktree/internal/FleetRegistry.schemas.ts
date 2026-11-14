@@ -11,6 +11,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { GitObjectId } from "@beep/schema/Conformance";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -89,8 +90,15 @@ export type FleetDrainStatus = typeof FleetDrainStatus.Type;
  *
  * **Details**
  *
- * A hand-authored row may omit `owningSeat`, `drainStatus` and
- * `retentionExempt`; decoding fills `null`, `active` and `false`.
+ * A hand-authored row may omit `owningSeat`, `drainStatus`,
+ * `retentionExempt`, `drainingSince` and `drainingHead`; decoding fills
+ * `null`, `active`, `false`, `null` and `null`.
+ *
+ * `drainingSince` and `drainingHead` are written by residue reap's
+ * `drainable` class: the first observation at which the checkout met the
+ * drain predicate, and the HEAD it sat on then. A failing observation, or a
+ * HEAD that moved, clears them, so the grace window always measures an
+ * unbroken drainable run at one commit.
  *
  * **Example** (Decode a minimal hand-authored row)
  *
@@ -121,9 +129,18 @@ export class FleetRegistryRow extends S.Opaque<FleetRegistryRow, { readonly bran
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultKey(Effect.succeed(false))
     ),
+    drainingSince: S.NullOr(S.DateTimeUtcFromString).pipe(
+      S.withConstructorDefault(Effect.succeed(null)),
+      S.withDecodingDefaultKey(Effect.succeed(null))
+    ),
+    drainingHead: S.NullOr(GitObjectId).pipe(
+      S.withConstructorDefault(Effect.succeed(null)),
+      S.withDecodingDefaultKey(Effect.succeed(null))
+    ),
   }).pipe(
     $I.annoteSchema("FleetRegistryRow", {
-      description: "Authored facts for one fleet checkout: seat role, owning seat, drain status, retention exemption.",
+      description:
+        "Authored facts for one fleet checkout: seat role, owning seat, drain status and grace start, retention exemption.",
     })
   )
 ) {}

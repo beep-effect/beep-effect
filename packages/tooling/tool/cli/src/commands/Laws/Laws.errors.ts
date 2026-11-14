@@ -362,6 +362,41 @@ export class TrackedShellAllowlistExecutionError extends S.TaggedError<
 }
 
 /**
+ * Failure raised when the no-tracked-python law cannot list the git index.
+ *
+ * **Example** (Read a no-tracked-python execution error)
+ *
+ * ```ts
+ * import { NoTrackedPythonExecutionError } from "@beep/repo-cli/commands/Laws/Laws.errors"
+ *
+ * const error = NoTrackedPythonExecutionError.new("Could not list tracked files.")
+ * console.log(error.message) // "Could not list tracked files."
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class NoTrackedPythonExecutionError extends S.TaggedError<
+  NoTrackedPythonExecutionError,
+  { readonly brand: unique symbol }
+>($I`NoTrackedPythonExecutionError`)(
+  "NoTrackedPythonExecutionError",
+  {
+    message: S.String,
+  },
+  $I.annoteError<NoTrackedPythonExecutionError>("NoTrackedPythonExecutionError", {
+    description: "The no-tracked-python law could not locate the repository or list the git index.",
+  })
+) {
+  static readonly new = (message: string): NoTrackedPythonExecutionError =>
+    NoTrackedPythonExecutionError.make({ message });
+
+  static readonly mapError = Err.mapCauseError<NoTrackedPythonExecutionError, [message: string]>((cause, message) =>
+    NoTrackedPythonExecutionError.new(messageWithCause(message, cause))
+  );
+}
+
+/**
  * Failure raised when the Markdown fence typecheck law cannot list, read, stage or compile the fences.
  *
  * **Example** (Read a Markdown fences execution error)
