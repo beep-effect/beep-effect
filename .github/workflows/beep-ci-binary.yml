@@ -308,22 +308,39 @@ jobs:
           parked=false
           if [[ "$changed" == "true" ]]; then
             title="ci: bump the beep CI binary pin to ${tag}"
-            pulls="$(gh pr list --head "$PIN_BRANCH" --state all --json number,state,title,labels 2>/dev/null || echo '[]')"
+            # Decide only from state actually read: a failed lookup fails the step
+            # (no push, no pull request) instead of reading as "nothing there".
+            # A 404 on the contents read is the one failure that means "no branch".
+            lookup_failed() {
+              echo "::error::Beep CI pin bump: $1 failed, so the bump state is unknown; no branch was pushed and no pull request was opened. Re-run the job."
+              echo "- $1 failed: bump state unknown; nothing pushed, no pull request opened." >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            }
+            pulls="$(gh pr list --head "$PIN_BRANCH" --state all --json number,state,title,labels)" \
+              || lookup_failed "the pin-bump pull request lookup"
             closed="$(jq --arg title "$title" \
-              '[.[] | select(.state == "CLOSED" and .title == $title)] | length' <<<"$pulls" 2>/dev/null || echo 0)"
+              '[.[] | select(.state == "CLOSED" and .title == $title)] | length' <<<"$pulls")"
             open_labelled="$(jq --arg title "$title" \
               '[.[] | select(.state == "OPEN" and .title == $title and any(.labels[]; .name == "ready-for-heavy"))] | length' \
-              <<<"$pulls" 2>/dev/null || echo 0)"
-            branch_pin="$(gh api "repos/${GH_REPO}/contents/.github/actions/fetch-beep-ci/action.yml?ref=${PIN_BRANCH}" \
-              --jq .content 2>/dev/null | base64 --decode 2>/dev/null || true)"
+              <<<"$pulls")"
+            branch_error="${RUNNER_TEMP}/pin-branch-read.err"
+            if branch_content="$(gh api "repos/${GH_REPO}/contents/.github/actions/fetch-beep-ci/action.yml?ref=${PIN_BRANCH}" \
+              --jq .content 2>"$branch_error")"; then
+              branch_pin="$(base64 --decode <<<"$branch_content")"
+            elif grep -q "HTTP 404" "$branch_error"; then
+              branch_pin=""
+            else
+              cat "$branch_error" >&2
+              lookup_failed "the pin-bump branch read"
+            fi
             branch_current=false
             if grep -Eq "^[[:space:]]*BEEP_CI_RELEASE_TAG:[[:space:]]*${tag}[[:space:]]*$" <<<"$branch_pin" \
               && grep -Eq "^[[:space:]]*BEEP_CI_SHA256:[[:space:]]*${sha256}[[:space:]]*$" <<<"$branch_pin"; then
               branch_current=true
             fi
-            if [[ "${closed:-0}" -ge 1 ]]; then
+            if [[ "$closed" -ge 1 ]]; then
               parked=true
-            elif [[ "$branch_current" != "true" || "${open_labelled:-0}" -lt 1 ]]; then
+            elif [[ "$branch_current" != "true" || "$open_labelled" -lt 1 ]]; then
               bump=true
             fi
           fi

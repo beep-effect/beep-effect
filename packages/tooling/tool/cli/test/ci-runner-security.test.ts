@@ -2278,10 +2278,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       for (const fragment of [
         'grep -Eq "^[[:space:]]*BEEP_CI_RELEASE_TAG:[[:space:]]*${tag}[[:space:]]*$" <<<"$branch_pin"',
         'grep -Eq "^[[:space:]]*BEEP_CI_SHA256:[[:space:]]*${sha256}[[:space:]]*$" <<<"$branch_pin"',
-        'gh pr list --head "$PIN_BRANCH" --state all --json number,state,title,labels',
+        'pulls="$(gh pr list --head "$PIN_BRANCH" --state all --json number,state,title,labels)"',
+        '|| lookup_failed "the pin-bump pull request lookup"',
+        'elif grep -q "HTTP 404" "$branch_error"; then',
+        'lookup_failed "the pin-bump branch read"',
         'select(.state == "CLOSED" and .title == $title)',
         'select(.state == "OPEN" and .title == $title and any(.labels[]; .name == "ready-for-heavy"))',
-        'elif [[ "$branch_current" != "true" || "${open_labelled:-0}" -lt 1 ]]; then',
+        'elif [[ "$branch_current" != "true" || "$open_labelled" -lt 1 ]]; then',
         'echo "parked=$parked"',
       ]) {
         expect(rewrite).toContain(fragment);
@@ -2378,14 +2381,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           [child.exitCode, child.stderr.pipe(Stream.decodeText(), Stream.mkString)],
           { concurrency: "unbounded" }
         );
-        expect(stderr).toBe("");
-        expect(Number(status)).toBe(0);
+        return { status: Number(status), stderr };
       });
       const runCase = Effect.fnUntraced(function* (
         mainPin: string,
         branchPin: O.Option<string>,
         pulls: string,
-        newest: { readonly tag: string; readonly sha: string } = { tag: newTag, sha: newSha }
+        newest: { readonly tag: string; readonly sha: string } = { tag: newTag, sha: newSha },
+        failing: "none" | "pulls" | "branch" = "none"
       ) {
         const directory = yield* fs.makeTempDirectoryScoped();
         const work = yield* fs.realPath(directory);
@@ -2408,8 +2411,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
               '    [ "$pattern" = beep-linux-x64.sha256 ] || exit 1',
               '    mkdir -p "$dir"; printf "%s  beep-linux-x64\\n" "$NEWEST_SHA" > "$dir/$pattern" ;;',
               '  "release view") echo "$NEWEST_TARGET" ;;',
-              '  "api repos/"*) if [ -f "$BRANCH_PIN_FILE" ]; then base64 -w0 "$BRANCH_PIN_FILE"; echo; else exit 1; fi ;;',
-              '  "pr list") echo "$PULLS" ;;',
+              '  "api repos/"*)',
+              '    if [ "$FAILING" = branch ]; then echo "gh: Server Error (HTTP 502)" >&2; exit 1; fi',
+              '    if [ -f "$BRANCH_PIN_FILE" ]; then base64 -w0 "$BRANCH_PIN_FILE"; echo; else echo "gh: Not Found (HTTP 404)" >&2; exit 1; fi ;;',
+              '  "pr list") if [ "$FAILING" = pulls ]; then echo "gh: Server Error (HTTP 502)" >&2; exit 1; fi; echo "$PULLS" ;;',
               "  *) exit 2 ;;",
               "esac",
               "",
@@ -2431,27 +2436,33 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         );
         yield* fs.chmod(`${stubs}/gh`, 0o755);
         yield* fs.chmod(`${stubs}/bun`, 0o755);
-        yield* runBash(
+        const setup = yield* runBash(
           repo,
           "git -c init.defaultBranch=main init -q . && git add -A && git -c user.name=fixture -c user.email=fixture@example.invalid -c core.hooksPath=/dev/null commit -qm main",
           {}
         );
+        expect(setup).toEqual({ status: 0, stderr: "" });
         const outputPath = `${work}/github-output`;
         yield* fs.writeFileString(outputPath, "");
         const searchPath = yield* Config.String("PATH");
-        yield* runBash(repo, script, {
+        const summaryPath = `${work}/summary.md`;
+        yield* fs.writeFileString(summaryPath, "");
+        const run = yield* runBash(repo, script, {
           PATH: `${stubs}:${searchPath}`,
           GH_REPO: "fixture/repo",
           PIN_BRANCH: "ci/beep-ci-pin-bump",
           GITHUB_OUTPUT: outputPath,
-          GITHUB_STEP_SUMMARY: `${work}/summary.md`,
+          GITHUB_STEP_SUMMARY: summaryPath,
           RUNNER_TEMP: work,
           NEWEST_TAG: newest.tag,
           NEWEST_SHA: newest.sha,
           NEWEST_TARGET: "0123456789abcdef0123456789abcdef01234567",
           BRANCH_PIN_FILE: `${work}/branch-action.yml`,
           PULLS: pulls,
+          FAILING: failing,
         });
+        if (failing === "none") expect(run).toEqual({ status: 0, stderr: "" });
+        const summary = yield* fs.readFileString(summaryPath);
         const outputText = yield* fs.readFileString(outputPath);
         const outputs = R.fromEntries(
           A.map(Str.split(Str.trim(outputText), "\n"), (line) => {
@@ -2459,7 +2470,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
             return [key, A.join(rest, "=")] as const;
           })
         );
-        return { changed: outputs.changed, bump: outputs.bump, parked: outputs.parked };
+        return {
+          decision: { changed: outputs.changed, bump: outputs.bump, parked: outputs.parked },
+          status: run.status,
+          stderr: run.stderr,
+          summary,
+        };
       });
       const pull = (state: string, tag: string, labels: ReadonlyArray<string>) =>
         `{"number":7,"state":"${state}","title":"ci: bump the beep CI binary pin to ${tag}","labels":[${A.join(
@@ -2473,19 +2489,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const idle = { changed: "true", bump: "false", parked: "false" };
       // Re-run after a failed pull-request step: the branch was never created, so the step bumps.
       const rerun = yield* runCase(mainOld, O.none(), pulls());
-      expect(rerun).toEqual(bumps);
+      expect(rerun.decision).toEqual(bumps);
       // Done: the branch pins the newest tag and sha256 and an open PR for it carries ready-for-heavy.
       const done = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])));
-      expect(done).toEqual(idle);
+      expect(done.decision).toEqual(idle);
       // The branch is current but no PR exists for the release (creation failed after the push).
       const noPull = yield* runCase(mainOld, branchNew, pulls());
-      expect(noPull).toEqual(bumps);
+      expect(noPull.decision).toEqual(bumps);
       // The branch is current and the PR is open but unlabelled (labelling failed): repair it.
       const unlabelled = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ci"])));
-      expect(unlabelled).toEqual(bumps);
+      expect(unlabelled.decision).toEqual(bumps);
       // A PR for the release was closed unmerged: parked on purpose, no push and no reopen.
       const closed = yield* runCase(mainOld, branchNew, pulls(pull("CLOSED", newTag, ["ready-for-heavy"])));
-      expect(closed).toEqual({ changed: "true", bump: "false", parked: "true" });
+      expect(closed.decision).toEqual({ changed: "true", bump: "false", parked: "true" });
       // Closed for that release, then a newer release T2: a new bump opens normally.
       const newerTag = "beep-ci-fedcba987654";
       const newerSha = A.join(A.replicate("3", 64), "");
@@ -2493,20 +2509,48 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         tag: newerTag,
         sha: newerSha,
       });
-      expect(newer).toEqual(bumps);
+      expect(newer.decision).toEqual(bumps);
       // The branch pins the newest tag with a different sha256: refresh it.
       const staleSha = yield* runCase(
         mainOld,
         O.some(pinText(newTag, oldSha)),
         pulls(pull("OPEN", newTag, ["ready-for-heavy"]))
       );
-      expect(staleSha).toEqual(bumps);
+      expect(staleSha.decision).toEqual(bumps);
       // The branch pins an older release: a newer release updates it.
       const older = yield* runCase(mainOld, O.some(mainOld), pulls(pull("OPEN", oldTag, ["ready-for-heavy"])));
-      expect(older).toEqual(bumps);
+      expect(older.decision).toEqual(bumps);
       // Main already pins the newest release (a bump merged): nothing to do.
       const merged = yield* runCase(pinText(newTag, newSha), branchNew, pulls(pull("MERGED", newTag, [])));
-      expect(merged).toEqual({ changed: "false", bump: "false", parked: "false" });
+      expect(merged.decision).toEqual({ changed: "false", bump: "false", parked: "false" });
+      // A failed pull-request lookup is unknown state, never "no PR": the step fails and reports it,
+      // and writes no decision, so nothing is pushed and no PR is opened (#3299 review).
+      const pullsDown = yield* runCase(
+        mainOld,
+        branchNew,
+        pulls(pull("CLOSED", newTag, ["ready-for-heavy"])),
+        { tag: newTag, sha: newSha },
+        "pulls"
+      );
+      expect(pullsDown.status).not.toBe(0);
+      expect(pullsDown.decision.bump).toBeUndefined();
+      expect(pullsDown.stderr).toContain("HTTP 502");
+      expect(pullsDown.summary).toContain("the pin-bump pull request lookup failed");
+      // A failed branch read other than a 404 is unknown state too; only a 404 means "no branch".
+      const branchDown = yield* runCase(
+        mainOld,
+        branchNew,
+        pulls(pull("OPEN", newTag, ["ready-for-heavy"])),
+        { tag: newTag, sha: newSha },
+        "branch"
+      );
+      expect(branchDown.status).not.toBe(0);
+      expect(branchDown.decision.bump).toBeUndefined();
+      expect(branchDown.stderr).toContain("HTTP 502");
+      expect(branchDown.summary).toContain("the pin-bump branch read failed");
+      // A successful lookup that returns no PR, with the branch missing (a 404), runs the PR step.
+      const nothingThere = yield* runCase(mainOld, O.none(), pulls());
+      expect(nothingThere.decision).toEqual(bumps);
     })
   );
 
