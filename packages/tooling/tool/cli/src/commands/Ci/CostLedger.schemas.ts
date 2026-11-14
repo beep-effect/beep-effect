@@ -470,6 +470,10 @@ export class CiLedgerRow extends S.Opaque<CiLedgerRow, { readonly brand: unique 
  * the runner time. `mappedShare` is the known share (lane plus support) of
  * `totalMs`, `laneShare` the lane share. `emptyLegMs` is the time of the
  * planned lanes' empty partition jobs, absent while any leg is undetermined.
+ * `testPlan` counts the run's Test Plan join in parts, its Test Plan output
+ * and the selection line of each catch-all partition job it executed:
+ * `present` when every part was read, `partial` when some were, `absent`
+ * when none was.
  *
  * **Example** (Read a run's mapped share)
  *
@@ -516,6 +520,13 @@ export class CiLedgerRunRow extends S.Opaque<CiLedgerRunRow, { readonly brand: u
 
 /**
  * One source of the ledger and how much of it was read.
+ *
+ * **Details**
+ *
+ * `status` is judged over every part the source covers, summed across the
+ * runs (attempts for `hosted-jobs`; the Test Plan output and each executed
+ * catch-all partition's selection line for `test-plan`), and `note` names
+ * each part some run could not read. `runs` counts the runs read whole.
  *
  * **Example** (A source the fold does not join yet)
  *

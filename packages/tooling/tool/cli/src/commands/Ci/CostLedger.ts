@@ -241,6 +241,15 @@ const isRerunCopy = (jobs: ReadonlyArray<CiWorkflowJob>, job: CiWorkflowJob): bo
       earlier.completed_at === job.completed_at
   );
 
+// The executed listing of a job: the latest attempt that ran it, never a skipped job or a rerun copy.
+const latestJobNamed = (jobs: ReadonlyArray<CiWorkflowJob>, name: string): O.Option<CiWorkflowJob> =>
+  A.last(
+    A.sort(
+      A.filter(jobs, (job) => Str.Equivalence(job.name, name) && !isSkipped(job) && !isRerunCopy(jobs, job)),
+      Order.mapInput(Order.Number, (job: CiWorkflowJob) => job.run_attempt)
+    )
+  );
+
 interface CostedJob {
   readonly job: CiWorkflowJob;
   readonly jobClass: RouteJobClass;
@@ -443,7 +452,7 @@ export const foldCiLedgerRun = (run: CiLedgerRun): CiLedgerRunRow => {
     runId: run.run.id,
     skippedJobs: distinct.length - executed.length,
     supportMs: msOf(ofClass(costed, "support")),
-    testPlan: O.isSome(run.testPlan) ? "present" : "absent",
+    testPlan: testPlanStatus(run),
     totalMs: msOf(costed),
     undeterminedLegs: undetermined.length,
     unknownMs: msOf(unknown),
@@ -460,6 +469,44 @@ const readStatus = (read: number, total: number): CiLedgerSourceStatus =>
     Match.orElse((): CiLedgerSourceStatus => "partial")
   );
 
+// The parts of a run's Test Plan join: its Test Plan output, then the selection line of each catch-all
+// partition job the run executed. Each part names itself, so a source row can say which one is missing.
+const testPlanParts = (run: CiLedgerRun): ReadonlyArray<readonly [string, boolean]> => [
+  ["Test Plan output", O.isSome(run.testPlan)],
+  ...A.flatMap(CATCH_ALL_PARTITIONS, ([lane, partition]) =>
+    A.map(O.toArray(latestJobNamed(run.jobs, ciLaneShardJobName(partition, lane))), (): readonly [string, boolean] => [
+      `${lane} ${partition} selection line`,
+      A.some(run.partitionProofs, (proof) => proof.lane === lane && Str.Equivalence(proof.partition, partition)),
+    ])
+  ),
+];
+
+const readParts = (parts: ReadonlyArray<readonly [string, boolean]>): number =>
+  A.filter(parts, ([, read]) => read).length;
+
+const testPlanStatus = (run: CiLedgerRun): CiLedgerSourceStatus => {
+  const parts = testPlanParts(run);
+  return readStatus(readParts(parts), parts.length);
+};
+
+// A run read every attempt it had, or names each attempt whose jobs read failed.
+const attemptsRead = (run: CiLedgerRun): number => Num.max(0, run.run.run_attempt - run.partialReads.length);
+
+// `<part> (<n> of <runs> runs)` for every part some run could not read.
+const missingParts = (runs: ReadonlyArray<CiLedgerRun>): ReadonlyArray<string> =>
+  pipe(
+    A.flatMap(runs, (run) => A.filter(testPlanParts(run), ([, read]) => !read)),
+    A.groupBy(([part]) => part),
+    R.toEntries,
+    A.map(([part, missing]) => `${part} (${missing.length} of ${runs.length} runs)`)
+  );
+
+const withMissing = (note: string, missing: ReadonlyArray<string>): string =>
+  A.match(missing, {
+    onEmpty: () => note,
+    onNonEmpty: (parts) => `${note}; missing: ${A.join(parts, ", ")}`,
+  });
+
 // Sources this fold does not join yet, each with the lever that would supply it.
 const UNJOINED_SOURCES: ReadonlyArray<readonly [CiLedgerSourceKind, string]> = [
   ["turbo-tasks", "per-task hosted Turbo rows are MEAS-06, still open: unit-results.json is uploaded only on failure"],
@@ -469,20 +516,24 @@ const UNJOINED_SOURCES: ReadonlyArray<readonly [CiLedgerSourceKind, string]> = [
 ];
 
 const sourceRows = (runs: ReadonlyArray<CiLedgerRun>): ReadonlyArray<CiLedgerSourceRow> => {
-  const complete = A.filter(runs, (run) => A.isReadonlyArrayEmpty(run.partialReads)).length;
-  const planned = A.filter(runs, (run) => O.isSome(run.testPlan)).length;
+  const attempts = Num.sumAll(A.map(runs, (run) => run.run.run_attempt));
+  const read = Num.sumAll(A.map(runs, attemptsRead));
+  const parts = A.flatMap(runs, testPlanParts);
   return [
     CiLedgerSourceRow.make({
-      note: "per-attempt jobs listing of each run",
-      runs: runs.length,
+      note: withMissing(
+        "per-attempt jobs listing of each run",
+        A.map(A.filter([attempts - read], Num.isGreaterThan(0)), (unread) => `${unread} of ${attempts} attempts`)
+      ),
+      runs: A.filter(runs, (run) => A.isReadonlyArrayEmpty(run.partialReads)).length,
       source: "hosted-jobs",
-      status: readStatus(complete, runs.length),
+      status: readStatus(read, attempts),
     }),
     CiLedgerSourceRow.make({
-      note: "Test Plan output and the catch-all partition's selection line",
-      runs: planned,
+      note: withMissing("Test Plan output and the catch-all partition's selection line", missingParts(runs)),
+      runs: A.filter(runs, (run) => testPlanStatus(run) === "present").length,
       source: "test-plan",
-      status: readStatus(planned, runs.length),
+      status: readStatus(readParts(parts), parts.length),
     }),
     ...A.map(UNJOINED_SOURCES, ([source, note]) => CiLedgerSourceRow.make({ note, runs: 0, source, status: "absent" })),
   ];
@@ -632,14 +683,6 @@ export interface CiLedgerReaderShape {
 export class CiLedgerReader extends Context.Service<CiLedgerReader, CiLedgerReaderShape>()($I`CiLedgerReader`) {}
 
 const decodeRun = S.decodeUnknownEffect(CiWorkflowWindowRun);
-
-const latestJobNamed = (jobs: ReadonlyArray<CiWorkflowJob>, name: string): O.Option<CiWorkflowJob> =>
-  A.last(
-    A.sort(
-      A.filter(jobs, (job) => Str.Equivalence(job.name, name) && !isSkipped(job) && !isRerunCopy(jobs, job)),
-      Order.mapInput(Order.Number, (job: CiWorkflowJob) => job.run_attempt)
-    )
-  );
 
 const readJobLog = Effect.fn("CiLedgerReader.readJobLog")(function* (job: CiWorkflowJob) {
   const client = yield* GitHubClient;

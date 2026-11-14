@@ -330,6 +330,69 @@ describe("ci ledger fold", () => {
     );
     assertTrue(A.every(none.sources, (row) => row.status === "absent"));
   });
+
+  it("judges the Test Plan join by every part it covers, the catch-all selection line included", () => {
+    const plan = O.some(
+      CiLedgerTestPlan.make({ lanes: [lanePlan("test-integration", ["lps-int-1", "int-rest"], O.some(3))] })
+    );
+    const jobs = [job(1, "Test Integration (lps-int-1)", 0, 60), job(2, "Test Integration (int-rest)", 0, 120)];
+    const proof = CiLedgerPartitionProof.make({
+      lane: "test-integration",
+      partition: "int-rest",
+      partitionTasks: 2,
+      selectedTasks: 3,
+    });
+    const ledger = (run: CiLedgerRun) =>
+      foldCiLedger(
+        CiLedgerCapture.make({
+          capturedAt: DateTime.makeUnsafe(T0),
+          runs: [run],
+          schemaVersion: "ci-ledger-capture/v1",
+        })
+      );
+    const planRow = (report: CiLedgerReport) => [
+      report.sources[1]?.status,
+      report.sources[1]?.runs,
+      report.sources[1]?.note,
+    ];
+    // The catch-all job ran but its log was not read: the plan alone cannot judge it.
+    const unread = ledger(CiLedgerRun.make({ jobs, run: windowRun(15), testPlan: plan }));
+    deepStrictEqual(planRow(unread), [
+      "partial",
+      0,
+      "Test Plan output and the catch-all partition's selection line; missing: test-integration int-rest selection line (1 of 1 runs)",
+    ]);
+    strictEqual(runRow(unread, 15).testPlan, "partial");
+    assertNone(runRow(unread, 15).emptyLegMs);
+    deepStrictEqual(
+      A.map(runRow(unread, 15).rows, (row) => O.getOrNull(row.legTasks)),
+      ["undetermined", "selected"]
+    );
+    const read = ledger(CiLedgerRun.make({ jobs, partitionProofs: [proof], run: windowRun(16), testPlan: plan }));
+    deepStrictEqual(planRow(read), ["present", 1, "Test Plan output and the catch-all partition's selection line"]);
+    strictEqual(runRow(read, 16).testPlan, "present");
+    assertSome(runRow(read, 16).emptyLegMs, 0);
+  });
+
+  it("counts unread job attempts, so a rerun with one failed attempt read is partial, not absent", () => {
+    const report = foldCiLedger(
+      CiLedgerCapture.make({
+        capturedAt: DateTime.makeUnsafe(T0),
+        runs: [
+          CiLedgerRun.make({
+            jobs: [job(1, "Lint", 0, 60)],
+            partialReads: [CiWorkflowPartialRead.make({ attempt: 2, message: "HTTP 502", runId: 17 })],
+            run: windowRun(17, 2),
+          }),
+        ],
+        schemaVersion: "ci-ledger-capture/v1",
+      })
+    );
+    deepStrictEqual(
+      [report.sources[0]?.status, report.sources[0]?.runs, report.sources[0]?.note],
+      ["partial", 0, "per-attempt jobs listing of each run; missing: 1 of 2 attempts"]
+    );
+  });
 });
 
 describe("ci ledger log lines", () => {
@@ -602,6 +665,11 @@ describe("ci ledger command", () => {
         assertSome(runRow(report, LIVE_RUN).emptyLegMs, 120_000);
         strictEqual(runRow(report, LIVE_RUN).rerunCopies, 2);
         strictEqual(runRow(report, LIVE_RUN_WITHOUT_PLAN).undeterminedLegs, 1);
+        // Run 502 has no Test Plan job and its catch-all log is not served: neither part of its join was read.
+        deepStrictEqual(
+          [runRow(report, LIVE_RUN).testPlan, runRow(report, LIVE_RUN_WITHOUT_PLAN).testPlan],
+          ["present", "absent"]
+        );
         const markdown = yield* lastLog;
         expect(markdown).toContain("| test-plan | partial | 1 |");
         // The re-executed Test Plan is read, not the attempt it replaced.
