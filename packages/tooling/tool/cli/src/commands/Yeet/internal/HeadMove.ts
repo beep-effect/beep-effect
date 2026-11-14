@@ -186,9 +186,10 @@ const ensureObjects = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: s
     )
   );
 });
-// KEEP (D-22): `Git.commitInfo` and `Git.log` carry no parent list; `%P` is read raw.
+// KEEP (D-22): `Git.commitInfo` and `Git.log` carry no parent list; `%P` is read raw. Every `show`
+// passes `--no-show-signature`, so `log.showSignature` cannot add verification lines to the output.
 const readParents = Effect.fn("Yeet.headMoveReadParents")(function* (root: string, sha: string) {
-  const parentText = yield* read(root, ["show", "-s", "--format=%P", sha]);
+  const parentText = yield* read(root, ["show", "-s", "--no-show-signature", "--format=%P", sha]);
   return A.flatMap(lines(parentText), Str.split(" "));
 });
 const readCommit = Effect.fn("Yeet.headMoveReadCommit")(function* (root: string, sha: string) {
@@ -201,7 +202,13 @@ const readCommit = Effect.fn("Yeet.headMoveReadCommit")(function* (root: string,
   });
   // KEEP (D-22): no kit member reads the committer mailbox (`%ce`) or the author date with its
   // original offset (`%aI`); the kit's commit models carry neither.
-  const metadataText = yield* raw(root, ["show", "-s", "--format=format:%an%x00%ae%x00%aI%x00%ce", sha]);
+  const metadataText = yield* raw(root, [
+    "show",
+    "-s",
+    "--no-show-signature",
+    "--format=format:%an%x00%ae%x00%aI%x00%ce",
+    sha,
+  ]);
   const values = Str.split(metadataText, "\0");
   const [authorName, authorEmail, authorDate, email] = yield* decodeMetadata(values);
   // KEEP (D-22): the raw commit object (headers, `gpgsig`, the exact message) has no kit member
@@ -293,13 +300,15 @@ class PatchRange extends S.Opaque<PatchRange, { readonly brand: unique symbol }>
 const commitRange = (commit: Commit) => PatchRange.make({ from: `${commit.sha}^`, to: commit.sha });
 const rawEntries = Effect.fn("Yeet.headMoveRawEntries")(function* (root: string, range: PatchRange) {
   // KEEP (D-22): `Git.nameStatus` drops the old and new modes this comparison reads from
-  // `diff-tree --raw`.
+  // `diff-tree --raw`. Even this plumbing honors a submodule's `ignore` setting (a checked-out
+  // `.gitmodules` with `ignore = all` hides a moved gitlink), so `--ignore-submodules=none` is pinned.
   const entryText = yield* raw(root, [
     "diff-tree",
     "--no-commit-id",
     "--raw",
     "--no-renames",
     "--no-abbrev",
+    "--ignore-submodules=none",
     "-r",
     "-z",
     range.from,
@@ -317,25 +326,36 @@ const rawEntries = Effect.fn("Yeet.headMoveRawEntries")(function* (root: string,
   }
   return entries;
 });
+// Every porcelain `diff` default the patch identity keeps a byte of is pinned, so local config
+// cannot change it: submodule visibility (`diff.ignoreSubmodules`, a submodule's `ignore`) and
+// format (`diff.submodule`), context and hunk joining (`diff.context`, `diff.interHunkContext`),
+// the algorithm and heuristic (`diff.algorithm`, `diff.indentHeuristic`), `diff.relative`, renames,
+// color, external diff and textconv. The prefixes (`diff.noprefix`, `diff.mnemonicPrefix`) and path
+// quoting (`core.quotePath`) only change the per-file header lines the identity drops; the prefixes
+// are pinned anyway so the bytes are the same on every checkout.
+const PatchDiffFlags = [
+  "--no-color",
+  "--no-renames",
+  "--ignore-submodules=none",
+  "--submodule=short",
+  "--no-ext-diff",
+  "--no-textconv",
+  "--binary",
+  "--full-index",
+  "--src-prefix=a/",
+  "--dst-prefix=b/",
+  "--unified=3",
+  "--inter-hunk-context=0",
+  "--diff-algorithm=myers",
+  "--indent-heuristic",
+  "--no-relative",
+];
 // KEEP (D-22): the per-path patch identity is a streamed byte fold that keeps invalid UTF-8 (the
 // Y33 reason, D-18); the kit buffers decoded text.
 const patchDigest = Effect.fn("Yeet.headMovePatchDigest")((root: string, range: PatchRange, path: string) =>
   runGitFoldedStdout(
     root,
-    [
-      "--literal-pathspecs",
-      "diff",
-      "--no-color",
-      "--no-renames",
-      "--no-ext-diff",
-      "--no-textconv",
-      "--binary",
-      "--full-index",
-      range.from,
-      range.to,
-      "--",
-      path,
-    ],
+    ["--literal-pathspecs", "diff", ...PatchDiffFlags, range.from, range.to, "--", path],
     finalCheckPatchIdentityDigest
   )
 );
@@ -407,7 +427,10 @@ const absorbed = Effect.fn("Yeet.headMoveAbsorbed")(function* (
     ? O.none()
     : changed(request, "old-base-not-absorbed", "The synchronized base does not absorb the old base.");
 });
-// Step 9: erased hunk locations cannot hide a changed replay tree.
+// Step 9: erased hunk locations cannot hide a changed replay tree. Merge config (`merge.renames`,
+// `merge.directoryRenames`, attributes) only changes which automatic merge git computes, so a
+// config that differs from the pusher's yields a different tree and refuses; it cannot make an
+// edited tree match. The base-merge tree check (`Git.mergeTree`) is bounded the same way.
 const replay = Effect.fn("Yeet.headMoveReplay")(function* (
   root: string,
   request: YeetHeadMoveRequest,

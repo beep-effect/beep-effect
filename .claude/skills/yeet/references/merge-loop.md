@@ -179,21 +179,26 @@ is `review window unknown`, which blocks exactly like an open window.
 (`"30 minutes"`); the default is `YEET_REVIEW_WINDOW_DEFAULT` in
 `internal/ReviewWindow.ts`. No reviewer has to post for the window to elapse.
 
-A push that leaves the PR's own patch unchanged keeps the earlier push as the anchor:
-a proven GitHub rewrite (cascade, restack; #3130) or a merge of the base (PERIL-09,
-ruling D12). For a base merge the head-move classifier (`classifyBaseMerge` in
-`internal/HeadMove.ts`) must prove that the new head is one two-parent commit whose
-first parent is the old head, and whose push row in the branch's activity moved the
-branch from it; that the merged commit is on the synchronized base (`base.sha`); that the
-pushed tree is git's clean automatic merge, so no conflict was resolved and nothing was
-edited inside the merge commit; and that the PR's patch against the base (GitHub's
-three-dot diff) has the same identity before and after, compared byte for byte with hunk
-line numbers erased. The anchor then walks back across every such merge to the first
-push that changed the patch, and the status line ends `carried across N base merge(s)
-from <sha>`. Anything else re-arms the window: a conflict resolution, an edit inside the
-merge, a base change that moves a context line of a PR hunk, a force push, a shallow
-checkout, a missing object, a failed or timed-out fetch, a failed activity read and any
-`unknown` verdict.
+A push that leaves the PR's own patch unchanged keeps the earlier push as the anchor: a
+proven GitHub rewrite (cascade, restack; #3130) or a merge of the base (PERIL-09, ruling
+D12). For a base merge the head-move classifier (`classifyBaseMerge` in
+`internal/HeadMove.ts`) must prove that the new head is one two-parent commit whose first
+parent is the old head, and whose push row in the branch's activity moved the branch from
+it; that the merged commit is on the synchronized base (`base.sha`); that the pushed tree
+is git's clean automatic merge, so no conflict was resolved and nothing was edited inside
+the merge commit; and that the PR's patch against the base (GitHub's three-dot diff) has
+the same identity before and after, compared byte for byte with hunk line numbers erased
+and every config-dependent diff default pinned (a checkout's `diff.ignoreSubmodules` or a
+`.gitmodules` `ignore = all` cannot hide a moved gitlink). The anchor then walks back
+across consecutive proven base merges and stops at the first activity row that is not one.
+That is usually the push that changed the patch; when it is a force-push row, the anchor
+stays at that rewrite's push, even for an unchanged GitHub rewrite. The status line ends
+`carried across N base merge(s) from <sha>`. Anything else re-arms the window: a conflict
+resolution, an edit inside the merge, a base change that moves a context line of a PR
+hunk, a force push of the merged head, a shallow checkout, a missing object, a failed or
+timed-out fetch, a failed activity read and any `unknown` verdict. A GitHub rewrite of a
+head that is not a merge follows #3130's rule and keeps the earlier anchor when it is
+proven unchanged.
 
 What it costs: nothing is spent on a base merge once the uncarried push no longer holds
 the window. While it does, the read first decides whether the head is a two-parent commit

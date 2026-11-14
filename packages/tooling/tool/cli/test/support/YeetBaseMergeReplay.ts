@@ -123,6 +123,8 @@ export interface BaseMergeReplay {
   /** `rev-parse <ref>` answers. */
   readonly revisions: Readonly<Record<string, string>>;
   readonly shallow: boolean;
+  /** `diff-tree` output by `<from> <to>` when the argv omits `--ignore-submodules=none`, if it differs. */
+  readonly unpinnedDiffTrees?: Readonly<Record<string, string>>;
 }
 
 const clean = (tree: string) => MergeTreeResult.cases.clean.make({ tree });
@@ -181,6 +183,42 @@ export const recordedReplay: BaseMergeReplay = {
   shallow: false,
 };
 
+/**
+ * The commits of the gitlink recording, made 2026-11-14 with git 2.56.1 in a
+ * second scratch repository whose `.gitmodules` sets `ignore = all` for
+ * `vendor/lib`. The pull request commit `B` only moves the gitlink from `P0`
+ * to `P1`; `M` moves it to `P1` too and edits `README.md`, so `H` (`git merge
+ * main` on `B`) is clean and the PR's whole patch is absorbed. Under that
+ * `.gitmodules`, `diff-tree` without `--ignore-submodules=none` printed no
+ * entry for either range, so the patch looked unchanged.
+ */
+export const gitlinkSha = {
+  O: "99f60ba2504f01660eb04fe55522361705b02c04",
+  B: "b424586b0617786631a3ab8d678d4e8561731991",
+  M: "6620463aaba0b8dce05e9a3358cf0496bb9d7a75",
+  H: "b0bbe66da14aff1fac91a9c7ce227fe8175f2ac4",
+} as const;
+
+/** The gitlink recording: a base merge that absorbed a PR whose only change moved a submodule pointer. */
+export const gitlinkReplay: BaseMergeReplay = {
+  parents: { [gitlinkSha.B]: gitlinkSha.O, [gitlinkSha.H]: `${gitlinkSha.B} ${gitlinkSha.M}` },
+  ancestors: [`${gitlinkSha.M} ${gitlinkSha.M}`],
+  mergeTrees: { [`${gitlinkSha.B} ${gitlinkSha.M}`]: clean("72bbf76ea7484b79de7aa2c40117b4e1f51f2bfa") },
+  revisions: { [`${gitlinkSha.H}^{tree}`]: "72bbf76ea7484b79de7aa2c40117b4e1f51f2bfa" },
+  mergeBases: {
+    [`${gitlinkSha.M} ${gitlinkSha.B}`]: gitlinkSha.O,
+    [`${gitlinkSha.M} ${gitlinkSha.H}`]: gitlinkSha.M,
+  },
+  diffTrees: {
+    [`${gitlinkSha.O} ${gitlinkSha.B}`]:
+      ":160000 160000 0000000000000000000000000000000000000001 1111111111111111111111111111111111111111 M\0vendor/lib\0",
+    [`${gitlinkSha.M} ${gitlinkSha.H}`]: "",
+  },
+  unpinnedDiffTrees: { [`${gitlinkSha.O} ${gitlinkSha.B}`]: "", [`${gitlinkSha.M} ${gitlinkSha.H}`]: "" },
+  diffs: {},
+  shallow: false,
+};
+
 const unrecorded = (args: ReadonlyArray<string>) =>
   GitCommandError.make({ kind: "failed", args, cwd: REPLAY_ROOT, exitCode: 128, stderr: "fatal: not recorded" });
 
@@ -217,7 +255,8 @@ const rawRead = (state: CheckoutState, args: ReadonlyArray<string>): O.Option<st
     );
   if (A.contains(args, "diff-tree")) {
     const [from, to] = A.takeRight(args, 3);
-    return R.get(state.replay.diffTrees, `${from} ${to}`);
+    const pinned = A.contains(args, "--ignore-submodules=none");
+    return R.get((pinned ? undefined : state.replay.unpinnedDiffTrees) ?? state.replay.diffTrees, `${from} ${to}`);
   }
   const [from, to, , path] = A.takeRight(args, 4);
   return R.get(state.replay.diffs, `${from} ${to} ${path}`);

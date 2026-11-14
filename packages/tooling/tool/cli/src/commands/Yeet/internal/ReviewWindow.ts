@@ -687,7 +687,9 @@ const reviewWindowPushedAt = (
  * never a fetch), the walk follows push rows instead, across merges the
  * classifier proves only merged the synchronized base with the pull request's
  * own patch unchanged; a conflict resolution, a changed patch, a shallow or
- * unreadable history, a failed fetch and an unknown verdict all stop it. The
+ * unreadable history, a failed fetch and an unknown verdict all stop it, and
+ * so does a force-push row, whose rewrite then anchors the window even when it
+ * was an unchanged GitHub rewrite. A force-pushed merge head carries nothing. The
  * proofs fetch objects the checkout lacks (one `git fetch` bounded at 60
  * seconds, each object at most once per head per checkout per process); the probe
  * never fetches. Every carry

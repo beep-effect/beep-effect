@@ -14,6 +14,7 @@ import {
   YeetHeadMoveChanged,
   YeetHeadMoveClassifier,
   YeetHeadMoveRequest,
+  YeetHeadMoveUnchanged,
   YeetHeadMoveUnknown,
   YeetReviewWindowCarry,
 } from "@beep/repo-cli/test/Yeet";
@@ -33,6 +34,8 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import {
   fetchesOf,
+  gitlinkReplay,
+  gitlinkSha,
   provideBuilt,
   REPLAY_ROOT,
   recordedReplay,
@@ -219,12 +222,16 @@ interface WindowScene {
   readonly base: string;
   // Commits the timeline lists as pushed, with their parents.
   readonly commits?: ReadonlyArray<readonly [string, ReadonlyArray<string>]>;
+  // Earlier force pushes the timeline records, with each one's commit and instant.
+  readonly earlierForcePushes?: ReadonlyArray<readonly [string, string]>;
   readonly forcePushed?: boolean;
   readonly head: string;
   // Commits whose first check suite is the root push; every other commit's is the merge push.
   readonly roots?: ReadonlyArray<string>;
   // GitHub has no check suite for the root commit (its suites expired or were never created).
   readonly rootUnsuited?: boolean;
+  // Commits whose first check suite has its own instant.
+  readonly suites?: ReadonlyArray<readonly [string, string]>;
 }
 
 const pushRow = (before: string, after: string, timestamp: string) => ({
@@ -247,7 +254,13 @@ const sceneActivity = (scene: WindowScene): GithubAnswer =>
   };
 
 const suiteAt = (scene: WindowScene, path: string): string =>
-  A.some(scene.roots ?? [sha.B], (root) => Str.includes(root)(path)) ? ROOT_PUSHED_AT : MERGE_PUSHED_AT;
+  O.getOrElse(
+    O.map(
+      A.findFirst(scene.suites ?? [], ([commit]) => Str.includes(commit)(path)),
+      ([, at]) => at
+    ),
+    () => (A.some(scene.roots ?? [sha.B], (root) => Str.includes(root)(path)) ? ROOT_PUSHED_AT : MERGE_PUSHED_AT)
+  );
 
 const sceneRoutes = (scene: WindowScene): Readonly<Record<string, GithubAnswer>> => ({
   [`{repo}/issues/${PR}/timeline`]: {
@@ -259,6 +272,11 @@ const sceneRoutes = (scene: WindowScene): Readonly<Record<string, GithubAnswer>>
         event: "committed",
         sha: commit,
         parents: A.map(parents, (parent) => ({ sha: parent })),
+      })),
+      ...A.map(scene.earlierForcePushes ?? [], ([commit, at]) => ({
+        event: "head_ref_force_pushed",
+        created_at: at,
+        commit_id: commit,
       })),
       ...(scene.forcePushed === true
         ? [{ event: "head_ref_force_pushed", created_at: MERGE_PUSHED_AT, commit_id: scene.head }]
@@ -437,6 +455,51 @@ describe("base-merge window replay", () => {
     })
   );
 
+  it.effect("stops at a force-push row below the merges, so that rewrite anchors even when it was unchanged", () =>
+    Effect.gen(function* () {
+      const cascaded = "bbbbbbbbbb000000000000000000000000000000";
+      const cascadedAt = "2026-11-13T10:12:00Z";
+      // The rewrite proof would carry the cascade (unchanged, committed at its activity instant), and
+      // the base-merge proof carries the merge on top; the merge walk never asks for the rewrite proof.
+      const classifier = Layer.succeed(YeetHeadMoveClassifier, {
+        committerInstant: Effect.fn("WindowTest.cascadeInstant")((_sha: string) =>
+          Effect.succeedSome(DateTime.makeUnsafe(cascadedAt))
+        ),
+        classify: Effect.fn("WindowTest.cascadeUnchanged")((request: YeetHeadMoveRequest) =>
+          Effect.succeed(YeetHeadMoveUnchanged.make({ ...request, commits: 1 }))
+        ),
+        classifyBaseMerge: Effect.fn("WindowTest.mergeUnchanged")((request: YeetHeadMoveRequest) =>
+          Effect.succeed(YeetBaseMergeUnchanged.make({ ...request, merged: request.base }))
+        ),
+        isLocalMergeCommit: Effect.fn("WindowTest.everyMerge")((_sha: string) => Effect.succeed(true)),
+      });
+      const { window } = yield* readScene(
+        {
+          head: sha.H,
+          base: sha.M,
+          earlierForcePushes: [[cascaded, cascadedAt]],
+          suites: [[cascaded, cascadedAt]],
+          activity: {
+            body: [
+              pushRow(cascaded, sha.H, MERGE_PUSHED_AT),
+              { ...pushRow(sha.B, cascaded, cascadedAt), activity_type: "force_push" },
+              {
+                activity_type: "branch_creation",
+                before: Str.repeat(40)("0"),
+                after: sha.B,
+                timestamp: ROOT_PUSHED_AT,
+              },
+            ],
+          },
+        },
+        classifier,
+        "2026-11-13T10:27:00Z"
+      );
+      expect(window).toMatchObject({ _tag: "open", anchoredAt: "2026-11-13T10:12:00.000Z", remainingMs: 5 * 60_000 });
+      assertSome(carriedOf(window), YeetReviewWindowCarry.make({ rewrites: 0, merges: 1, rootSha: cascaded }));
+    })
+  );
+
   it.effect("spends no GitHub read on a base merge once the push no longer holds the window", () =>
     Effect.gen(function* () {
       const elapsed = yield* readScene({ head: sha.H, base: sha.M }, local(), "2026-11-13T10:41:00Z");
@@ -526,6 +589,37 @@ describe("base-merge fetch cost", () => {
         A.map(heads, () => O.some({ _tag: "open", anchoredAt: "2026-11-13T10:20:00.000Z" }))
       );
       expect(checkout.spawner.spawns).toStrictEqual([]);
+    })
+  );
+});
+
+describe("base-merge proof under submodule ignore settings", () => {
+  it.effect("a PR whose only change moved a gitlink and was absorbed refuses, and its window re-arms", () =>
+    Effect.gen(function* () {
+      const verdict = yield* classifyBaseMerge(gitlinkReplay, gitlinkSha.B, gitlinkSha.H, gitlinkSha.M);
+      expect(changeOf(verdict)).toBe("patch: The pull request's patch: raw entries differ at vendor/lib.");
+      const { window } = yield* readScene(
+        {
+          head: gitlinkSha.H,
+          base: gitlinkSha.M,
+          roots: [gitlinkSha.B],
+          activity: {
+            body: [
+              pushRow(gitlinkSha.B, gitlinkSha.H, MERGE_PUSHED_AT),
+              {
+                activity_type: "branch_creation",
+                before: Str.repeat(40)("0"),
+                after: gitlinkSha.B,
+                timestamp: ROOT_PUSHED_AT,
+              },
+            ],
+          },
+        },
+        local(gitlinkReplay),
+        "2026-11-13T10:27:00Z"
+      );
+      expect(window).toMatchObject({ _tag: "open", anchoredAt: "2026-11-13T10:20:00.000Z" });
+      assertNone(carriedOf(window));
     })
   );
 });
