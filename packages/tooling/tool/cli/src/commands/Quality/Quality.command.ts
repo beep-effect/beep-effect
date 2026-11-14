@@ -48,6 +48,7 @@ import {
   AdmissionConfig,
   AdmissionJournalEvent,
   AdmissionJournalHistory,
+  AdmissionUnitEmission,
   adaptGitKitError,
   admissionJournalArchiveStatus,
   admissionJournalHistory,
@@ -64,6 +65,7 @@ import {
   reconcileAttemptJournalsForCheckout,
   renderAgentRunsSliceListing,
   setAdmissionEvictionProtocol,
+  setAdmissionUnitProtocol,
 } from "../../internal/repo-run/index.ts";
 import { cachePolicyCommand } from "../Cache/CachePolicy.command.ts";
 import { residueReapCommand, tmpfsReapCommand } from "../Worktree/Janitor.command.ts";
@@ -1450,6 +1452,15 @@ const runSecurityScan = Effect.fn("QualityScriptCommands.runSecurityScan")(funct
 });
 
 // Paired `ruleid:`/`ok:` cases for every rule in .semgrep/first-party.yml.
+// The absolute path of a repository-relative file, when it still exists on disk.
+const existingRepoPath = (fs: FileSystem.FileSystem, path: Path.Path, repoRoot: string, filePath: string) => {
+  const absolutePath = path.join(repoRoot, filePath);
+  return fs.exists(absolutePath).pipe(
+    Effect.orElseSucceed(thunkFalse),
+    Effect.map((exists) => O.liftPredicate(absolutePath, () => exists))
+  );
+};
+
 const firstPartySemgrepFixturePath = ".semgrep/first-party.ts";
 
 const SAST_CHANGED_FILES_RANGE = {
@@ -1518,11 +1529,11 @@ const runSastScan = Effect.fn("QualityScriptCommands.runSastScan")(function* (
   const semgrepFiles = yield* Effect.forEach(
     candidateFiles,
     Effect.fn(function* (filePath) {
-      const absolutePath = path.join(repoRoot, filePath);
-      const exists = yield* fs.exists(absolutePath).pipe(Effect.orElseSucceed(thunkFalse));
-      if (!exists) {
+      const existing = yield* existingRepoPath(fs, path, repoRoot, filePath);
+      if (O.isNone(existing)) {
         return O.none<string>();
       }
+      const absolutePath = existing.value;
 
       const symlinkTarget = yield* fs.readLink(absolutePath).pipe(Effect.option);
       if (O.isSome(symlinkTarget)) {
@@ -3378,11 +3389,11 @@ export const runJSDocModuleTagsCheck = Effect.fn("QualityScriptCommands.runJSDoc
     const violations = yield* Effect.forEach(
       pipe(Str.split(result.output, "\n"), A.filter(Str.isNonEmpty), A.filter(isScannedPath)),
       Effect.fn(function* (filePath) {
-        const absolutePath = path.join(repoRoot, filePath);
-        const exists = yield* fs.exists(absolutePath).pipe(Effect.orElseSucceed(thunkFalse));
-        if (!exists) {
+        const existing = yield* existingRepoPath(fs, path, repoRoot, filePath);
+        if (O.isNone(existing)) {
           return A.empty<string>();
         }
+        const absolutePath = existing.value;
 
         const text = yield* fs
           .readFileString(absolutePath)
@@ -4171,8 +4182,14 @@ const schedulerProtocolCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Disable v2 eviction rows while mixed fleet revisions may still rewrite the journal")
     ),
+    units: Flag.Literals("units", AdmissionUnitEmission.literals).pipe(
+      Flag.optional,
+      Flag.withDescription(
+        "Turn admission-unit fields (unit, weight source, owner) on once every live checkout reads them, or off"
+      )
+    ),
   },
-  Effect.fn(function* ({ disableEvictions, enableEvictions }) {
+  Effect.fn(function* ({ disableEvictions, enableEvictions, units }) {
     if (disableEvictions && enableEvictions) {
       return yield* QualityScriptCommandError.make({
         message: "Choose only one of --enable-evictions or --disable-evictions.",
@@ -4180,17 +4197,23 @@ const schedulerProtocolCommand = Command.make(
         exitCode: 1,
       });
     }
-    const protocol = enableEvictions
+    const evictionProtocol = enableEvictions
       ? yield* setAdmissionEvictionProtocol("on")
       : disableEvictions
         ? yield* setAdmissionEvictionProtocol("off")
         : yield* admissionProtocolStatus();
+    const protocol = yield* O.match(units, {
+      onNone: () => Effect.succeed(evictionProtocol),
+      onSome: setAdmissionUnitProtocol,
+    });
     yield* printLines([
       `admission eviction rows: ${protocol.eviction}`,
       "Enable only after every live checkout runs the preservation release.",
+      `admission unit fields: ${protocol.units}`,
+      "Turn on only after every live checkout runs a revision that reads them (SCHE-08).",
     ]);
   })
-).pipe(Command.withDescription("Inspect or change the mixed-checkout eviction-row protocol gate"));
+).pipe(Command.withDescription("Inspect or change the mixed-checkout eviction-row and unit-field protocol gates"));
 
 const schedulerReconcileAttemptsCommand = Command.make(
   "reconcile-attempts",
@@ -4241,10 +4264,13 @@ const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
     "- bun run beep quality scheduler protocol",
     "- bun run beep quality scheduler protocol --enable-evictions",
     "- bun run beep quality scheduler protocol --disable-evictions",
+    "- bun run beep quality scheduler protocol --units on",
+    "- bun run beep quality scheduler protocol --units off",
     "- bun run beep quality scheduler reconcile-attempts",
     "- bun run beep quality scheduler slice",
     "- bun run beep quality scheduler slice --install",
     "Eviction rows default off; enable only after every live checkout runs the preservation release.",
+    "Unit fields default off; turn on only after every live checkout reads them.",
   ])
 ).pipe(
   Command.withDescription("Inspect and repair machine-wide quality admission"),
