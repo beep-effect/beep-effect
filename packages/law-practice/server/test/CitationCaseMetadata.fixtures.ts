@@ -1,11 +1,13 @@
 /** Original whole-model metadata transitions through the connected Effect stage.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
 import {
+  CitationCaseMetadataConfiguration,
   CitationCaseMetadataFields,
-  makeCitationCaseMetadata,
+  makeCitationCaseMetadata as makeOwnedCitationCaseMetadata,
 } from "@beep/law-practice-server/internal/Citation/CaseMetadata";
 import {
   CitationFrozenEditions,
@@ -20,6 +22,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { readCitationCaseNameCorpus } from "./CitationCaseName.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import { readCitationHtmlCaseNameCorpus } from "./CitationHtmlCaseName.fixtures.ts";
 import {
@@ -36,6 +39,11 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationCaseNameDocument, CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationCaseMetadata = installCitationOwnedTestStage({
+  schema: CitationCaseMetadataConfiguration,
+  install: makeOwnedCitationCaseMetadata,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationCaseMetadata");
 const Native = CitationNativeUnicodeHex;

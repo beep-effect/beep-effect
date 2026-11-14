@@ -1,7 +1,10 @@
 import * as NodeURL from "node:url";
 import { Citation, CitationEditionRef } from "@beep/law-practice-domain/values";
 import { getCitationExtractionShortcut } from "@beep/law-practice-server/internal/Citation/ExtractionShortcut";
-import { makeCitationSemanticProjection } from "@beep/law-practice-server/internal/Citation/SemanticProjection";
+import {
+  CitationSemanticProjectionConfiguration,
+  makeCitationSemanticProjection as makeOwnedCitationSemanticProjection,
+} from "@beep/law-practice-server/internal/Citation/SemanticProjection";
 import { makeCitationSemanticVocabulary } from "@beep/law-practice-server/internal/Citation/SemanticVocabulary";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -11,9 +14,15 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+const makeCitationSemanticProjection = installCitationOwnedTestStage({
+  schema: CitationSemanticProjectionConfiguration,
+  install: makeOwnedCitationSemanticProjection,
+});
 
 const load = Effect.fnUntraced(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -44,11 +53,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("semantic pr
     )
   );
 
-  it.effect("refuses malformed configuration and duplicate local edition ids", () =>
+  it.effect("refuses duplicate local edition ids", () =>
     withCitationTestInvocation(
       Effect.gen(function* () {
-        const malformed = yield* install({ editions: "none" }).pipe(Effect.flip);
-        expect(malformed).toMatchObject({ _tag: "CitationSemanticProjectionFailure", reason: "invalid-configuration" });
         const vocabulary = yield* load();
         const ref = yield* unknownEdition;
         const duplicate = yield* install({

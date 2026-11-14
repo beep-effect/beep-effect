@@ -28,9 +28,10 @@ import {
 } from "./PythonUnicode.ts";
 import { copyCitationReferenceExclusions, makeCitationReferenceNames } from "./ReferenceNames.ts";
 import { CitationRegexPatternDescriptor, CitationRegexPatternProfile } from "./RegexDescriptors.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationCaseMetadataFields } from "./CaseMetadata.ts";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ReferencePatterns");
 const Patterns = S.Struct({
@@ -92,7 +93,6 @@ export class CitationReferencePattern extends S.Opaque<CitationReferencePattern,
     })
   )
 ) {}
-const Configuration = S.toType(CitationReferencePatternConfiguration);
 const fail = (reason: typeof Reason.Type) => CitationReferencePatternFailure.make({ reason });
 const safety = () => CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternUtf16" });
 // Exhaustive CPython 3.11.15 re.escape single-point capture, not JavaScript escaping.
@@ -120,149 +120,150 @@ const words = Effect.fn("Citation.referenceMarkupWords")(function* (value: Citat
 /** Authenticate fixed templates and exclusions before retaining an installed stage.
  * @internal @category operations @since 0.0.0
  */
-export const copyCitationReferencePatternConfiguration = Effect.fn("Citation.copyReferencePatternConfiguration")(
-  function* (limits: CitationEngineLimits, config: CitationReferencePatternConfiguration) {
-    const copied = yield* copyCitationMetadataPatterns(limits, config.patterns, fingerprints, () =>
+export const verifyCitationReferencePatternConfiguration = Effect.fn("Citation.verifyReferencePatternConfiguration")(
+  function* (limits: CitationEngineLimits, config: CitationOwned<CitationReferencePatternConfiguration>) {
+    const patterns = yield* copyCitationMetadataPatterns(limits, config.patterns, fingerprints, () =>
       fail("invalid-configuration")
-    );
-    const patterns = yield* S.decodeUnknownEffect(Patterns)(copied).pipe(
-      Effect.mapError(() => fail("invalid-configuration"))
     );
     const disallowedNames = yield* copyCitationReferenceExclusions(config.disallowedNames);
     return CitationReferencePatternConfiguration.make({ patterns, disallowedNames });
   }
 );
 /** Literal-only expansion retains Python point identity, including surrogate words.
- * Shared Unicode assembly preflights output before allocating. The enclosing
- * extraction owner supplies the text authority; methods require R=never.
+ * Install once per call site from configuration the stage's `verify` step has
+ * already authenticated (`verifyCitationReferencePatternConfiguration`, once per
+ * engine): only the rejection fingerprint is computed here, and each request's
+ * `make` replays its outcome where it used to compute it. `make` stays per
+ * request because it reserves its fixed fragments on the request's text budget.
+ * The enclosing extraction owner supplies the text authority; methods require R=never.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationReferencePatterns = Effect.fn("Citation.makeReferencePatterns")(function* (
-  policy: unknown,
-  configurationInput: unknown
+export const installCitationReferencePatterns = Effect.fn("Citation.installReferencePatterns")(function* (
+  limits: CitationEngineLimits,
+  verified: CitationReferencePatternConfiguration
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
-  const config = yield* S.decodeUnknownEffect(Configuration)(configurationInput).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
+  const patterns = verified.patterns;
+  // The rejection fingerprint depends only on installed configuration: compute it
+  // once per installed call site and replay it where every request computed it.
+  const rejectionSha256 = yield* Effect.exit(
+    fingerprintCitationMetadataPattern(patterns.rejection, () => fail("invalid-configuration"))
   );
-  const budget = yield* CitationTextBudget;
-  if (budget.maximum > limits.producedTextUtf16) return yield* fail("invalid-policy");
-  const copiedPatterns = yield* copyCitationMetadataPatterns(limits, config.patterns, fingerprints, () =>
-    fail("invalid-configuration")
-  );
-  const patterns = yield* S.decodeUnknownEffect(Patterns)(copiedPatterns).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
-  );
-  const digest = yield* Digest.Digest;
-  const names = yield* makeCitationReferenceNames(limits, config.disallowedNames);
-  const unicode = yield* makeCitationPythonUnicode(limits);
-  const timing = yield* makeCitationRegexTiming(limits, true);
-  const ascii = Effect.fnUntraced(function* (text: string) {
-    return (yield* unicode.fromTextReserved(text, budget.reserve)).storage;
-  });
-  const slash = yield* ascii("\\");
-  const close = yield* ascii(")");
-  const bar = yield* ascii("|");
-  const whitespace = yield* ascii("\\s+");
-  const assemble = Effect.fnUntraced(function* (parts: ReadonlyArray<Range>) {
-    return yield* concatCitationPythonRanges(parts, (layout) => {
-      if (layout.utf16Units > limits.patternUtf16) return Effect.fail(safety());
-      return budget.reserve(layout.utf16Units);
+  const make = Effect.fn("Citation.makeReferencePatterns")(function* () {
+    const budget = yield* CitationTextBudget;
+    if (budget.maximum > limits.producedTextUtf16) return yield* fail("invalid-policy");
+    const digest = yield* Digest.Digest;
+    const names = yield* makeCitationReferenceNames(limits, verified.disallowedNames);
+    const unicode = yield* makeCitationPythonUnicode(limits);
+    const timing = yield* makeCitationRegexTiming(limits, true);
+    const ascii = Effect.fnUntraced(function* (text: string) {
+      return (yield* unicode.fromTextReserved(text, budget.reserve)).storage;
     });
-  });
-  const escaped = Effect.fnUntraced(function* (source: Range) {
-    const measured = yield* measureCitationPythonSlice(source.source, source.start, source.end);
-    if (measured.utf16Units > limits.patternUtf16) return yield* safety();
-    const parts = A.empty<Range>();
-    let cursor = source.start;
-    for (let index = source.start; index < source.end; index++) {
-      if (index % 256 === 0) yield* Effect.yieldNow;
-      if (!HashSet.has(escapes, citationPythonPointAt(source.source, index))) continue;
-      if (cursor < index) parts.push(range(source.source, cursor, index));
-      parts.push(range(slash));
-      cursor = index;
-    }
-    parts.push(range(source.source, cursor, source.end));
-    return yield* assemble(parts);
-  });
-  const literal = Effect.fnUntraced(function* (value: CitationPythonUnicodeStorage, markup: boolean) {
-    const sections = markup ? yield* words(value) : [range(value)];
-    const parts = A.empty<Range>();
-    for (const [index, section] of A.map(sections, (section, index) => Tuple.make(index, section))) {
-      if (index > 0) parts.push(range(whitespace));
-      const escapedSection = yield* escaped(section);
-      parts.push(range(escapedSection));
-    }
-    return {
-      value: yield* assemble(parts),
-      minimum: A.reduce(sections, 0, (n, section) => n + section.end - section.start) + Num.max(0, sections.length - 1),
-    };
-  });
-  const build = Effect.fn("Citation.buildLiteralReferencePattern")(
-    function* (metadata: CitationCaseMetadataFields, mode: "pin" | "markup") {
-      const selected = yield* names.collect(metadata);
-      if (selected.length === 0) return O.none<CitationReferencePattern>();
-      const markup = mode === "markup";
-      const alternatives = yield* Effect.forEach(
-        selected,
-        Effect.fnUntraced(function* (name) {
-          const open = yield* ascii(`(?P<${name.field}>`);
-          const escapedName = yield* literal(name.value, markup);
-          return {
-            field: name.field,
-            minimum: escapedName.minimum,
-            parts: [range(open), range(escapedName.value), range(close)],
-          };
-        }),
-        { concurrency: 1 }
-      );
-      const minimum = A.reduce(alternatives, limits.patternUtf16, (n, item) => Num.min(n, item.minimum));
-      const captureNames = R.fromEntries(
-        A.map(alternatives, (item, index) => Tuple.make(item.field, index + (markup ? 2 : 1)))
-      );
-      const captures = markup ? captureNames : R.set(captureNames, "pin_cite", selected.length + 1);
-      const parts = [
-        range(markup ? patterns.markupPrefix : patterns.pinPrefix),
-        ...A.flatten(
-          A.intersperse(
-            A.map(alternatives, (item) => item.parts),
-            [range(bar)]
-          )
-        ),
-        range(markup ? patterns.markupSuffix : patterns.pinSuffix),
-      ];
-      const pattern = yield* assemble(parts);
-      const patternSha256 = yield* fingerprintCitationMetadataPattern(pattern, () => fail("invalid-configuration"));
-      const descriptor = CitationRegexPatternDescriptor.make({
-        patternSha256,
-        flags: markup ? 0 : 64,
+    const slash = yield* ascii("\\");
+    const close = yield* ascii(")");
+    const bar = yield* ascii("|");
+    const whitespace = yield* ascii("\\s+");
+    const assemble = Effect.fnUntraced(function* (parts: ReadonlyArray<Range>) {
+      return yield* concatCitationPythonRanges(parts, (layout) => {
+        if (layout.utf16Units > limits.patternUtf16) return Effect.fail(safety());
+        return budget.reserve(layout.utf16Units);
+      });
+    });
+    const escaped = Effect.fnUntraced(function* (source: Range) {
+      const measured = yield* measureCitationPythonSlice(source.source, source.start, source.end);
+      if (measured.utf16Units > limits.patternUtf16) return yield* safety();
+      const parts = A.empty<Range>();
+      let cursor = source.start;
+      for (let index = source.start; index < source.end; index++) {
+        if (index % 256 === 0) yield* Effect.yieldNow;
+        if (!HashSet.has(escapes, citationPythonPointAt(source.source, index))) continue;
+        if (cursor < index) parts.push(range(source.source, cursor, index));
+        parts.push(range(slash));
+        cursor = index;
+      }
+      parts.push(range(source.source, cursor, source.end));
+      return yield* assemble(parts);
+    });
+    const literal = Effect.fnUntraced(function* (value: CitationPythonUnicodeStorage, markup: boolean) {
+      const sections = markup ? yield* words(value) : [range(value)];
+      const parts = A.empty<Range>();
+      for (const [index, section] of A.map(sections, (section, index) => Tuple.make(index, section))) {
+        if (index > 0) parts.push(range(whitespace));
+        const escapedSection = yield* escaped(section);
+        parts.push(range(escapedSection));
+      }
+      return {
+        value: yield* assemble(parts),
+        minimum:
+          A.reduce(sections, 0, (n, section) => n + section.end - section.start) + Num.max(0, sections.length - 1),
+      };
+    });
+    const build = Effect.fn("Citation.buildLiteralReferencePattern")(
+      function* (metadata: CitationCaseMetadataFields, mode: "pin" | "markup") {
+        const selected = yield* names.collect(metadata);
+        if (selected.length === 0) return O.none<CitationReferencePattern>();
+        const markup = mode === "markup";
+        const alternatives = yield* Effect.forEach(
+          selected,
+          Effect.fnUntraced(function* (name) {
+            const open = yield* ascii(`(?P<${name.field}>`);
+            const escapedName = yield* literal(name.value, markup);
+            return {
+              field: name.field,
+              minimum: escapedName.minimum,
+              parts: [range(open), range(escapedName.value), range(close)],
+            };
+          }),
+          { concurrency: 1 }
+        );
+        const minimum = A.reduce(alternatives, limits.patternUtf16, (n, item) => Num.min(n, item.minimum));
+        const captureNames = R.fromEntries(
+          A.map(alternatives, (item, index) => Tuple.make(item.field, index + (markup ? 2 : 1)))
+        );
+        const captures = markup ? captureNames : R.set(captureNames, "pin_cite", selected.length + 1);
+        const parts = [
+          range(markup ? patterns.markupPrefix : patterns.pinPrefix),
+          ...A.flatten(
+            A.intersperse(
+              A.map(alternatives, (item) => item.parts),
+              [range(bar)]
+            )
+          ),
+          range(markup ? patterns.markupSuffix : patterns.pinSuffix),
+        ];
+        const pattern = yield* assemble(parts);
+        const patternSha256 = yield* fingerprintCitationMetadataPattern(pattern, () => fail("invalid-configuration"));
+        const descriptor = CitationRegexPatternDescriptor.make({
+          patternSha256,
+          flags: markup ? 0 : 64,
+          profile: CitationRegexPatternProfile.make({
+            groups: selected.length + 1,
+            names: captures,
+            minimumWidthFloor: minimum + (markup ? 7 : 2),
+            repeatedCaptures: false,
+            nullableMultiRepeat: false,
+          }),
+        });
+        return O.some(CitationReferencePattern.make({ mode, pattern, descriptor }));
+      },
+      Effect.provideService(Digest.Digest, digest),
+      timing.timed
+    );
+    const rejection = CitationReferencePattern.make({
+      mode: "rejection",
+      pattern: patterns.rejection,
+      descriptor: CitationRegexPatternDescriptor.make({
+        patternSha256: yield* rejectionSha256,
+        flags: 0,
         profile: CitationRegexPatternProfile.make({
-          groups: selected.length + 1,
-          names: captures,
-          minimumWidthFloor: minimum + (markup ? 7 : 2),
+          groups: 1,
+          names: {},
+          minimumWidthFloor: 3,
           repeatedCaptures: false,
           nullableMultiRepeat: false,
         }),
-      });
-      return O.some(CitationReferencePattern.make({ mode, pattern, descriptor }));
-    },
-    Effect.provideService(Digest.Digest, digest),
-    timing.timed
-  );
-  const rejection = CitationReferencePattern.make({
-    mode: "rejection",
-    pattern: patterns.rejection,
-    descriptor: CitationRegexPatternDescriptor.make({
-      patternSha256: yield* fingerprintCitationMetadataPattern(patterns.rejection, () => fail("invalid-configuration")),
-      flags: 0,
-      profile: CitationRegexPatternProfile.make({
-        groups: 1,
-        names: {},
-        minimumWidthFloor: 3,
-        repeatedCaptures: false,
-        nullableMultiRepeat: false,
       }),
-    }),
+    });
+    return { build, rejection };
   });
-  return { build, rejection };
+  return { make };
 });

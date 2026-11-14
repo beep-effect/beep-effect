@@ -18,9 +18,11 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import * as Tuple from "effect/Tuple";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationAssemblyView, CitationTokenAssemblyFailure } from "./TokenAssembly.ts";
 import { makeCitationTokenEditions } from "./TokenEditions.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationTokenEditionBinding } from "./TokenEditions.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TokenObjects");
 const Position = CitationTokenSeed.fields.start;
@@ -63,10 +65,9 @@ const nativeBytes = (value: typeof Native.Type) => (value === null ? 0 : value.b
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationTokenObjects = Effect.fn("Citation.makeTokenObjects")(function* (
-  policy: unknown,
-  editionBindings: unknown
+  limits: CitationEngineLimits,
+  editionBindings: ReadonlyArray<CitationTokenEditionBinding>
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, failure);
   const timing = yield* makeCitationRegexTiming(limits, true);
   const unicode = yield* makeCitationPythonUnicode(limits);
   const editions = yield* makeCitationTokenEditions(limits, editionBindings);

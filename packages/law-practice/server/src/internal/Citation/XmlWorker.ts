@@ -11,7 +11,6 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { CitationInvocation } from "./Invocation.ts";
 import { makeCitationMarkupWorker } from "./MarkupWorker.ts";
-import { prepareCitationNativeRuntime } from "./NativeProcess.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { CitationXmlKernelFailure } from "./XmlBalanceKernel.ts";
 import {
@@ -22,7 +21,8 @@ import {
   preflightCitationXmlJob,
 } from "./XmlWorkerProtocol.ts";
 import { CitationXmlWorkerStartup, prepareCitationXmlRpc } from "./XmlWorkerRpc.ts";
-import type { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
+import type { CitationEngineLimits, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const XmlWorkerStartupJson = S.fromJsonString(CitationXmlWorkerStartup);
 
@@ -34,12 +34,11 @@ const $I = $LawPracticeServerId.create("internal/Citation/XmlWorker");
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationXmlWorker = Effect.fn("Citation.makeXmlWorker")(function* (
-  policy: unknown,
-  runtimeInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime
 ) {
   const failure = (reason: CitationXmlWorkerFailure["reason"]) => CitationXmlWorkerFailure.make({ reason });
   const invalid = () => failure("invalid-runtime");
-  const { limits, runtime } = yield* prepareCitationNativeRuntime(policy, runtimeInput, invalid);
   const path = yield* Path.Path;
   const assetPath = yield* path
     .fromFileUrl(new URL("../../../assets/citation-xml/kernel.wasm", import.meta.url))

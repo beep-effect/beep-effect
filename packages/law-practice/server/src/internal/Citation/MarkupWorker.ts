@@ -59,7 +59,7 @@ export const makeCitationMarkupWorker = Effect.fn("Citation.makeMarkupWorker")(f
   const deadlineKey = operation === "clean" ? "cleanDeadline" : "annotateDeadline";
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation, limit });
-  const nativeAdmission = yield* captureCitationNativeAdmission(limits, () => failure("invalid-runtime"));
+  const nativeAdmission = yield* captureCitationNativeAdmission(limits);
   const slots = yield* Semaphore.make(limits.concurrentOperations);
   const queueSlots = yield* Semaphore.make(limits.queuedOperations);
   const nativeOwner = yield* makeCitationNativeProcessOwner(limits, operation, failure);

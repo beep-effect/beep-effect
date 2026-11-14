@@ -12,7 +12,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationFrozenEditions, readCitationFrozenEdition } from "./FrozenEditions.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/EditionInference");
@@ -85,8 +85,9 @@ export const prepareCitationEditionInferenceInput = Effect.fn("Citation.prepareE
  * Methods have R = never. This performs selection only, not reporter correction.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationEditionInference = Effect.fn("Citation.makeEditionInference")(function* (policy: unknown) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-input"));
+export const makeCitationEditionInference = Effect.fn("Citation.makeEditionInference")(function* (
+  limits: CitationEngineLimits
+) {
   const editions = yield* CitationFrozenEditions;
   const zone = yield* DateTime.CurrentTimeZone;
   const timing = yield* makeCitationRegexTiming(limits, true);

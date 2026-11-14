@@ -47,3 +47,12 @@ does not touch `turbo.json`. Re-recording `//` and `@beep/oip-web` adopts both d
 `@beep/repo-cli#lint:policy-fingerprint:laws` and `:lint-laws`. The new task is uncached, so it grants no reuse;
 nothing outside `tasks` changed, and this lane's diff does not touch `turbo.json`. Re-recording `//` and
 `@beep/oip-web` on `main`'s baseline adopts both digests; no qualification is granted.
+
+## `@beep/oip-web` only, after merging `origin/main` at `6d366333e22` (2026-11-14)
+
+#3325 (infra-hosts) changed `standards/cache-qualification-baseline.json` and root `turbo.json` on `main`, which
+conflicted with this lane's recording. The lane took `main`'s baseline verbatim and re-recorded only its own
+subject. On `main`'s baseline the audit reports configuration drift for `@beep/oip-web` alone (`build`, `check`,
+`lint:deprecated-apis`, `test`, `test:property`), the same stack inputs described above; it reports nothing for
+`//`, because `main` already recorded #3325's `turbo.json` change. Re-recording `@beep/oip-web` adopts its digest;
+no exception row is added and no qualification is granted.

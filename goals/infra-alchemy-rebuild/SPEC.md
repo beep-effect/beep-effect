@@ -237,6 +237,14 @@ Lane fix/beep-effect-web-prod-worker-name
 
 Reverse: Remove productionWorkerName from apps/beep-effect-web/alchemy.run.ts once the S3 state holds a completed Website record; the generated name then stays authoritative.
 
+### AI metrics resource graph: SSH Docker context, owned network, looked-up data volume, Phoenix container, Command.Exec host steps, 2026-11-13
+
+The Pulumi program wrote a Compose file and a `systemd --user` unit over SSH and ran preflight, apply and health as remote commands. The `HostsAiMetrics` prod graph: `Docker.Context("Host")` with endpoint `host=ssh://<sshDestination>` and a pinned context name; `Docker.Network` (bridge, `beep-ai-metrics`), owned by the stack; the Phoenix data volume as `Docker.Volume.lookup` (read and mounted, never created, replaced or removed, so no plan can touch the data); `Docker.Container("Phoenix")` with the pinned image from configuration (the schema rejects `latest` and untagged images), `restart: unless-stopped`, `start: true`, `PHOENIX_WORKING_DIR=/data`, port `127.0.0.1:6006:6006` (loopback only, as in the Compose file) and a Docker healthcheck on `/healthz`; then `Command.Exec` steps over non-interactive SSH: Preflight (tools, engine, tailnet, data volume present), RetireCompose, TailscaleServe (the Pulumi apply script's port-switching logic unchanged, HTTPS 8447 to loopback 6006) and Health (Docker health is healthy, loopback answers, Serve fronts it, the public URL answers). Mapping: Compose service and `container_name` become the Container with the same name; the Compose project network becomes the stack's own network; the named Compose volume is the lookup; the systemd unit is retired, Docker's restart policy replaces it; the Tailscale Serve lines become their own step. `Docker.Service` is not used: it needs a swarm manager (D21 note). Ordering edges are Outputs (Exec `hash.input` in a later step's env, a constant container label mapped from RetireCompose), since Alchemy has no `dependsOn`. Each Exec hashes no files (`memo: { include: [], exclude: ["**"] }`), so it re-runs only when its rendered command or env changes. The two `op://` references (hash salt, raw archive key) are configuration fields the stack exports for clients; it never resolves them, and no resolved value is a prop, so none reaches state (tested).
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: alchemy destroy --stage prod, then run the saved rollbackToCompose command to re-enable the archived Compose unit; the Pulumi program (infra/src/AIMetrics.ts) stays on main until P6.
+
 ### App JWTs come from distilled GitHub App.appJwt; distilled pins follow main at rc.19, 2026-11-13
 
 The GitHub-facing Lambdas authenticate as the fleet's GitHub App: `GitHubAppAuth` reads the App id and base64 PEM key from SSM once, signs the App JWT with `@distilled.cloud/github/App` `appJwt` (RS256 over WebCrypto, PKCS#1 and PKCS#8 keys), and mints installation tokens through distilled `apps.createInstallationAccessToken`. A first draft signed the JWT itself because `@distilled.cloud/github@1.0.0-rc.18` had no App module; main moved the distilled family to `1.0.0-rc.19` with #3278 (Alchemy beta.86), which ships it, so the hand-rolled signer was deleted. Root catalog pins `@distilled.cloud/aws` and `@distilled.cloud/github` follow the version `bun.lock` resolves on main, `1.0.0-rc.19`. The webhook HMAC-SHA256 check stays on `crypto.subtle` with a constant-time compare: Effect ships no HMAC module.
@@ -293,6 +301,30 @@ Lane goals/infra-alchemy-rebuild-p2-github-runners
 
 Reverse: Fold the second PR's resources and composite into one PR if the first has not merged yet.
 
+### Host stack configuration is a schema-decoded JSON file per stack, named by an environment variable, 2026-11-13
+
+No tracked file carries a host address, login, path or port. `AiMetricsHostConfig` (`packages/tooling/infra/infra-hosts/src/AiMetricsConfig.ts`) and `OpenClawStackArgs` (`packages/tooling/infra/infra-hosts/src/OpenClawGeneration.ts`) are the stack configuration schemas; `loadHostConfigFile` (`packages/tooling/infra/infra-hosts/src/HostConfigFile.ts`) reads the file named by `BEEP_AI_METRICS_HOST_CONFIG` or `BEEP_OPENCLAW_HOST_CONFIG` and decodes it, turning a missing variable, an unreadable file, malformed JSON or a rejected value into a `ConfigError` before any resource is read (tested). Machine facts (SSH destination, tailnet name, legacy Compose root, workstation identity, backup target) are required fields; this stack's own conventions (container, network, volume and context names, ports 6006 and 8447, unit name) default to what the Compose deployment uses today. The files hold `op://` references only and live on the operator workstation outside the repo. The SSH agent socket is not a field: Docker's `ssh://` endpoint and the host steps both use the deploy process's `SSH_AUTH_SOCK`, which the runbook sets from the wrapped route.
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: Switch loadHostConfigFile to Config.schema over ConfigProvider.fromEnv with nested keys; the schemas stay the same.
+
+### No Pulumi state exists for AI metrics or OpenClaw; the host stacks adopt what is on the host, 2026-11-13
+
+Checked 2026-11-13 by the launching session: the Pulumi backend `s3://oip-law-pulumi-state` holds no stack for the AI metrics project and none for OpenClaw, so P4's cutover rule (export, then `pulumi destroy`) has nothing to act on for either; the programs describe deployments that exist on the hosts outside Pulumi state. Adoption therefore happens on the host, not in a state store. AI metrics: the data volume is looked up by name, the Compose container and unit are retired by the RetireCompose step, and the Tailscale Serve port state file is reused in place. OpenClaw: generations are content-addressed under the config root, so the first Alchemy apply writes a new generation directory beside any earlier ones and flips the `current` pointer through the same apply script; the snapshot and rollback paths are unchanged. The generation id changes once at this move, because the proof skill's recorded source path changed from `infra/src/OpenClawArtifacts.ts` to the new package. The Pulumi programs leave with `infra/` in P6; no `pulumi stack rm` is owed.
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: None needed: nothing is imported or destroyed in Pulumi. If a stack is later found in the backend, export it outside the repo and record it in a new decision before any pulumi destroy.
+
+### Host stacks: two Alchemy stacks, prod from the workstation only, every other stage a rehearsal, 2026-11-13
+
+`@beep/infra-hosts` holds two stacks, `HostsAiMetrics` (`packages/tooling/infra/infra-hosts/alchemy.run.ts`) and `HostsOpenClaw` (`packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts`): they target different machines (dankserver over SSH, the operator workstation under sudo), change on different cadences (a Phoenix image bump against an OpenClaw generation), and separate stacks keep separate S3 stage leases, so planning one never reads or locks the other. Stage `prod` is the only stage that mutates a real host. It runs from the operator workstation only (D21): both programs yield `WorkstationOnly` (`packages/tooling/infra/infra-hosts/src/HostsStage.ts`) before declaring a resource, a `Config` that fails with a `ConfigError` when `CI` is true, the inverse of the `Config.Literal("true", "CI")` guard the CI-deployed stacks use. The S3 store's stage lease is the overlap guard; there is no deploy workflow. Every other stage name is a rehearsal and may run anywhere: AI metrics deploys a throwaway Phoenix on stage-suffixed context, network, volume and container names on a separate loopback port, with no Compose retirement and no Tailscale Serve; OpenClaw renders the generation and declares no command. Tests: `packages/tooling/infra/infra-hosts/test/HostsStage.test.ts`, the CI cases in both stack tests.
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: Merge both programs into one stack in alchemy.run.ts, or drop the rehearsal branch so non-prod stages refuse; delete WorkstationOnly once a runner holds a scoped dankserver deploy key (Exception Ledger).
+
 ### One webhook per fleet routes jobs to every pool's build queue, 2026-11-13
 
 The live fleet runs one terraform module per pool, so the heavy and shard-overflow pools each have a webhook and a webhook secret. The port follows upstream's multi-runner design instead: one webhook Lambda per fleet holds a matcher per pool (labels, match mode, build-queue URL), tries strict matchers (bidirectional or all-of) before any-of ones and sends the job to the first match. Two pools therefore need one App webhook URL and one secret; the overflow pool's separate secret parameter is not carried over.
@@ -300,6 +332,22 @@ The live fleet runs one terraform module per pool, so the heavy and shard-overfl
 Lane goals/infra-alchemy-rebuild-p2-github-runners
 
 Reverse: Give each pool its own webhook Lambda and WebhookRuntimeConfig with a single matcher.
+
+### OpenClaw applicator steps become ordered Command.Exec resources; checks report by exit status, 2026-11-13
+
+The Pulumi program ran preflight, stage, apply, probe and an optional backup ship as `command.local.Command` resources with triggers, and exported the drift audit, live acceptance and rollback scripts as outputs plus each step's stdout as a secret output. `HostsOpenClaw` prod declares `Command.Exec` Preflight, Stage, Apply, Probe and (when `backup` is configured) BackupShip, in that order, each `shell: /bin/sh` over the rendered `/bin/bash --noprofile --norc -p -c '<program>'` script, with a 20-minute timeout on the long steps. Triggers map to the command text: every rendered script embeds what its Pulumi triggers listed (the generation id and tree for Stage, Apply, Probe and BackupShip; the declared identity for Preflight), and the memo hashes no files, so a step re-runs exactly when its rendered input changes. `Command.Exec` keeps no stdout and deletes nothing. That is not a gap here: every script fails closed with a non-zero exit (PREFLIGHT-FAIL, probe mismatches, BACKUP-FAIL receipts), which fails the deploy, and the step's stdout still streams to the deploy log. Nothing downstream consumed the stdout outputs. The drift audit, live acceptance and rollback stay operator commands, now stack outputs under `operatorCommands`, and the rollback command is the teardown, since `alchemy destroy` leaves the workstation untouched. `Command.Build` is not used: no step produces a file the stack consumes. The backup passphrase reaches the ship step only through the deploy process environment that `op run` builds, never through props or state (tested).
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: Replace each Exec with a repo-owned resource that captures stdout once a step's output must be kept; record the gap first (D16).
+
+### OpenClaw generation renderers move into @beep/infra-hosts; infra re-exports them until P6, 2026-11-13
+
+The pure generation model and every applicator script (about 2,300 lines from `infra/src/OpenClaw.ts`, plus `infra/src/OpenClawArtifacts.ts`) move to `@beep/infra-hosts/OpenClawGeneration` and `/OpenClawArtifacts`, so the Alchemy stack and the Pulumi program render from one copy. `infra/src/OpenClaw.ts` keeps only the Pulumi config mapping and component and re-exports the moved module; `infra/` gains a workspace dependency on `@beep/infra-hosts` and leaves in P6. Changes on the way: the backup target (`host`, `user`, `remoteDir`) loses its machine-specific defaults and is required wherever a backup is configured (the Pulumi mapping now requires the three config keys); messages that said `pulumi up` say `alchemy deploy`; doc examples decode the nested `OpenClawStackArgs` shape the stack's config file uses and name no real machine. The renderer tests moved with the code (`packages/tooling/infra/infra-hosts/test/OpenClawGeneration.test.ts`); the infra copy stays green until P6 deletes it.
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: Move src/OpenClawGeneration.ts and src/OpenClawArtifacts.ts back into infra/src and drop infra's @beep/infra-hosts dependency.
 
 ### Personal-stage live proof of the turbo cache, after the Cloudflare token gained R2 access, 2026-11-13
 
@@ -322,6 +370,14 @@ The hermetic equivalents run in CI: `bun run test:integration` in the package (w
 Lane goals/infra-alchemy-rebuild-p3-turbo-cache
 
 Reverse: n/a (evidence record; the stage was destroyed and verified gone).
+
+### Phoenix cutover: stop and replace the Compose container, keep and look up its data volume, 2026-11-13
+
+The live Phoenix container is Compose-managed, carries no Alchemy ownership labels, and `Docker.Container` recreates any adopted container whose config hash label is missing, so adopting it by name would replace it anyway. The stack therefore stops and replaces it and keeps the data. The RetireCompose step runs `systemctl --user disable --now ai-metrics-phoenix.service`; the unit's `ExecStop` is `docker compose down` without `-v`, which removes the container and the Compose network and keeps the named volume `beep-ai-metrics-dankserver_phoenix_data`. It moves the unit file into `<legacy config root>/retired-compose/`, reloads the user manager, refuses to continue if a Compose-labelled container named `beep-ai-metrics-phoenix` survived, and checks that the volume exists. The new container takes the same name and mounts the same volume at the same path, so Phoenix reads the same data. The volume is a `Docker.Volume.lookup`, not an adopted `Docker.Volume`: an adopted Compose volume carries Compose labels, `Volume`'s diff replaces (delete first) on any label difference, and the data is irreplaceable; a lookup is never deleted, and a missing volume fails the plan instead of mounting an empty one (tested). Downtime is the gap between `compose down` and the healthy container, about a minute. Rollback order matters because both containers share one name: save the `rollbackToCompose` operator command from the stack output, `alchemy destroy --stage prod` (removes the Alchemy container, network and context; the lookup leaves the volume alone), then run the saved command, which restores the archived unit and starts Compose against the same volume. Running it before the destroy would let the destroy delete the restored Compose container. Before the cutover the live session snapshots the volume with Phoenix stopped (runbook).
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: Save operatorCommands.rollbackToCompose from the prod stack output, run alchemy destroy --stage prod (removes the Alchemy container, network and context; the looked-up volume stays), then run the saved command: it restores the archived unit and starts it, and docker compose up reattaches the same named volume.
 
 ### Pin @distilled.cloud/vercel at 1.0.0-rc.18, 2026-11-13
 

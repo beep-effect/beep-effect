@@ -1,15 +1,15 @@
 {
-  "previous": "864483404cc6034c7d173a3b6c637df08a2f925c289fddfcfcbbac3d42cf982f",
+  "previous": "ea38560a763479df4cabe32642c76f1618f2dc063335aba793df2cc5dfe97359",
   "review": {
     "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p4-oip-web)",
-    "reason": "Re-record @beep/oip-web after the Alchemy stack adds stack sources, stack tests, the Alchemy dev dependencies and the @beep/alchemy-vercel edge, and the root subject for turbo.json input-list regeneration inherited from main (#3296, #3317, #3310, #3304, #3322); no command, output or environment changes, no qualification granted.",
+    "reason": "Re-record @beep/oip-web on main's baseline after merging origin/main at 6d366333e22 (#3325): the Alchemy stack adds stack sources, stack tests, the Alchemy dev dependencies and the @beep/alchemy-vercel edge; no command, output or environment changes, no qualification granted.",
     "basis": {
       "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-oip-web-alchemy-stack.md",
-      "sha256": "435260157ae230f6fc4d989ec855226c1fdab8e63fabfc974db981fe9220d0d1"
+      "sha256": "ced8760c628a97c755807815852b0732b18a23782a8eb97e1dcb815f72b0af23"
     }
   },
   "scope": ["@beep/identity#lint", "@beep/types#lint"],
   "profile": "local-linux-x64-bun1.4.4",
   "epoch": "qualification-v3",
-  "subjects": ["//", "@beep/oip-web"]
+  "subjects": ["@beep/oip-web"]
 }

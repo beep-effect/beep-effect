@@ -17,9 +17,10 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationRegexResultEnvelope } from "./RegexResult.ts";
 import { CitationTokenConstruction } from "./TokenObjects.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonSliceLayout } from "./PythonUnicode.ts";
 import type { CitationPreparedRegexInput } from "./RegexInput.ts";
 import type { CitationRegexCapture } from "./RegexResult.ts";
@@ -134,10 +135,9 @@ export class CitationTokenCaptureRuntime extends Context.Service<
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationTokenCapture = Effect.fn("Citation.makeTokenCapture")(function* (
-  policy: unknown,
+  limits: CitationEngineLimits,
   bindingsInput: unknown
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-input"));
   const timing = yield* makeCitationRegexTiming(limits, true);
   const runtime = yield* CitationTokenCaptureRuntime;
   const decoded = yield* S.decodeUnknownEffect(Bindings)(bindingsInput).pipe(

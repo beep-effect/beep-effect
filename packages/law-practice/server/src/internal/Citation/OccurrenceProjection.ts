@@ -43,6 +43,7 @@ import { CitationSemanticExtractionResult } from "./SemanticExtraction.ts";
 import { snapshotCitationValue } from "./Snapshot.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/OccurrenceProjection");
@@ -114,7 +115,6 @@ export class CitationOccurrenceProjectionConfiguration extends S.Opaque<
     })
   )
 ) {}
-const Configuration = S.toType(CitationOccurrenceProjectionConfiguration);
 const decodeRange = S.decodeResult(TextOffsetRange);
 /** @internal @category models @since 0.0.0 */
 export class CitationOccurrenceProjectionResult extends S.Opaque<
@@ -133,7 +133,8 @@ export class CitationOccurrenceProjectionResult extends S.Opaque<
   )
 ) {}
 const own = Effect.fn("Citation.ownOccurrenceProjection")(
-  (_limits: CitationEngineLimits, configuration: typeof Configuration.Type) => Effect.succeed(configuration)
+  (_limits: CitationEngineLimits, configuration: CitationOwned<CitationOccurrenceProjectionConfiguration>) =>
+    Effect.succeed(configuration)
 );
 const captureReturnedModels = Effect.fn("Citation.captureReturnedOccurrenceModels")(function* (
   result: CitationSemanticExtractionResult
@@ -333,7 +334,7 @@ const projectRows = Effect.fn("Citation.projectOccurrenceRows")(function* (
 const prepare = Effect.fn("Citation.projectVerifiedOccurrences")(function* (
   limits: CitationEngineLimits,
   _runtime: CitationNativeProcessRuntime,
-  configuration: typeof Configuration.Type,
+  configuration: CitationOccurrenceProjectionConfiguration,
   raw: unknown
 ) {
   const input = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
@@ -371,8 +372,6 @@ const prepare = Effect.fn("Citation.projectVerifiedOccurrences")(function* (
  */
 export const makeCitationOccurrenceProjection = makeCitationMetadataStage({
   method: "project",
-  schema: Configuration,
-  invalid: () => fail("invalid-configuration"),
   own,
   prepare,
   project: (result, reservedUnits) => CitationOccurrenceProjectionResult.make({ ...result, reservedUnits }),

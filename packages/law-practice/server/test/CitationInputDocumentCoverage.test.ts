@@ -1,11 +1,18 @@
-import { makeCitationInputDocument } from "@beep/law-practice-server/internal/Citation/InputDocument";
+import { CitationHtmlGeometryPreparationConfiguration } from "@beep/law-practice-server/internal/Citation/HtmlGeometryPreparation";
+import { makeCitationInputDocument as makeOwnedCitationInputDocument } from "@beep/law-practice-server/internal/Citation/InputDocument";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+const makeCitationInputDocument = installCitationOwnedTestStage({
+  schema: CitationHtmlGeometryPreparationConfiguration,
+  install: makeOwnedCitationInputDocument,
+});
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("input Document request boundary", (it) => {
   it.effect(

@@ -11,7 +11,8 @@ import * as S from "effect/Schema";
 import { reserveCitationInvocationText } from "./Invocation.ts";
 import { parseCitationPythonInteger } from "./PythonInteger.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/MetadataYear");
@@ -55,15 +56,9 @@ export type CitationMetadataYearBound = typeof CitationMetadataYearBound.Type;
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationMetadataYearFromBound = Effect.fn("Citation.makeMetadataYearFromBound")(function* (
-  policy: unknown,
-  bound: unknown
+  limits: CitationEngineLimits,
+  highest: CitationMetadataYearBound
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () =>
-    CitationMetadataYearFailure.make({ reason: "invalid-policy" })
-  );
-  const highest = yield* S.decodeUnknownEffect(CitationMetadataYearBound)(bound).pipe(
-    Effect.mapError(() => CitationMetadataYearFailure.make({ reason: "invalid-bound" }))
-  );
   const timing = yield* makeCitationRegexTiming(limits, true);
   const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
   const getYear = Effect.fn("Citation.getMetadataYear")(function* (raw: unknown) {
@@ -77,13 +72,16 @@ export const makeCitationMetadataYearFromBound = Effect.fn("Citation.makeMetadat
  * Unicode 14 integer semantics and the frozen 4300-digit conversion ceiling.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationMetadataYear = Effect.fn("Citation.makeMetadataYear")(function* (policy: unknown) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () =>
-    CitationMetadataYearFailure.make({ reason: "invalid-policy" })
-  );
+export const makeCitationMetadataYear = Effect.fn("Citation.makeMetadataYear")(function* (
+  limits: CitationEngineLimits
+) {
   const now = yield* DateTime.nowInCurrentZone;
   const currentYear = yield* S.decodeEffect(SourceDateYear)(DateTime.getPart(now, "year")).pipe(
     Effect.mapError(() => CitationMetadataYearFailure.make({ reason: "invalid-clock" }))
   );
-  return yield* makeCitationMetadataYearFromBound(limits, currentYear + 1);
+  // The computed ceiling is data, not configuration: its range is checked here.
+  const bound = yield* S.decodeEffect(CitationMetadataYearBound)(currentYear + 1).pipe(
+    Effect.mapError(() => CitationMetadataYearFailure.make({ reason: "invalid-bound" }))
+  );
+  return yield* makeCitationMetadataYearFromBound(limits, bound);
 });

@@ -9,6 +9,7 @@ import {
   CitationCleaner,
   CitationCleanerProduced,
   CitationEngineCleanResult,
+  CitationEngineLimits,
 } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256Hex } from "@beep/schema";
@@ -23,6 +24,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import type { CitationAdmissionFailure } from "@beep/law-practice-server/internal/Citation/Admission";
@@ -40,7 +42,8 @@ const setup = Effect.fn("SourceCleaningTest.setup")(function* () {
     ),
   });
   const install = (policy = limits, resolver = sourceResolver, reader = h.values) =>
-    makeCitationSourceCleaning(policy, artifact).pipe(
+    ownCitationTestConfiguration(CitationEngineLimits, policy).pipe(
+      Effect.flatMap((owned) => makeCitationSourceCleaning(owned, artifact)),
       Effect.flatMap((stage) =>
         makeCitationTestScaffoldBinding(policy, "clean").pipe(
           Effect.map((bind) => ({ ...stage, clean: bind(stage.clean) }))

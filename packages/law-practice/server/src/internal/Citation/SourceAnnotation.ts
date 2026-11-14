@@ -19,7 +19,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { captureCitationAnnotationReservation, failCitationAnnotationUnicode } from "./AnnotationBudget.ts";
 import {
-  CitationAnnotationEntryConfiguration,
   ownCitationAnnotationEntry,
   ownCitationAnnotationReplacements,
   prepareCitationAnnotationEntry,
@@ -27,11 +26,13 @@ import {
 import { failCitationAnnotationBoundary } from "./AnnotationFailure.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { CitationRegexOperation, decodeCitationRegexPolicy } from "./RegexPolicy.ts";
+import { CitationRegexOperation } from "./RegexPolicy.ts";
 import { snapshotCitationValue } from "./Snapshot.ts";
 import { makeCitationSourceEvidence } from "./SourceEvidence.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import type { CitationAnnotationEntryConfiguration } from "./AnnotationEntry.ts";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SourceAnnotation");
@@ -82,7 +83,7 @@ export class CitationSourceAnnotationResult extends S.Opaque<
 ) {}
 const own = Effect.fn("Citation.ownSourceAnnotation")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationAnnotationEntryConfiguration,
+  configuration: CitationOwned<CitationAnnotationEntryConfiguration>,
   runtime: CitationNativeProcessRuntime
 ) {
   const annotation = yield* ownCitationAnnotationEntry(limits, configuration, runtime);
@@ -173,8 +174,6 @@ const prepare = Effect.fn("Citation.annotateResolvedSource")(function* (
 });
 const install = makeCitationMetadataStage({
   method: "annotate",
-  schema: S.toType(CitationAnnotationEntryConfiguration),
-  invalid,
   own,
   prepare,
   project: (patch: Effect.Success<ReturnType<typeof prepare>>, reservedUnits: number) =>
@@ -186,8 +185,11 @@ const install = makeCitationMetadataStage({
  * @internal @category constructors @since 0.0.0
  */
 export const makeCitationSourceAnnotation = Effect.fn("Citation.makeSourceAnnotation")(
-  function* (policy: unknown, runtime: unknown, configuration: unknown) {
-    const limits = yield* decodeCitationRegexPolicy(policy, invalid);
+  function* (
+    limits: CitationEngineLimits,
+    runtime: CitationNativeProcessRuntime,
+    configuration: CitationOwned<CitationAnnotationEntryConfiguration>
+  ) {
     const stage = yield* install(limits, runtime, configuration);
     return {
       annotate: Effect.fn("Citation.annotateSourceBoundary")((raw: unknown) =>

@@ -1,17 +1,26 @@
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
-import { makeCitationFullExtraction } from "@beep/law-practice-server/internal/Citation/FullExtraction";
+import {
+  CitationFullExtractionConfiguration,
+  makeCitationFullExtraction as makeOwnedCitationFullExtraction,
+} from "@beep/law-practice-server/internal/Citation/FullExtraction";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { readCitationCaseMetadataConfiguration } from "./CitationCaseMetadata.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationFrozenMetadataRuntime } from "./CitationFrozenEditions.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationJournalMetadataCorpus } from "./CitationJournalMetadata.fixtures.ts";
 import { loadCitationLawMetadataFixtures } from "./CitationLawMetadata.fixtures.ts";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+const makeCitationFullExtraction = installCitationOwnedTestStage({
+  schema: CitationFullExtractionConfiguration,
+  install: makeOwnedCitationFullExtraction,
+});
 
 const Bindings = S.fromJsonString(
   S.Struct({ bindings: S.Array(S.Struct({ id: S.Natural, ref: CitationEditionRef })) })
@@ -40,8 +49,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("full-citati
             Effect.provideContext(setup.provided),
             DateTime.withCurrentZoneOffset(0)
           );
-        const malformed = yield* make({ editions: corpus.bindings }).pipe(Effect.flip);
-        expect(malformed).toMatchObject({ _tag: "CitationFullExtractionFailure", reason: "invalid-configuration" });
         const stage = yield* make({
           editions: corpus.bindings,
           case: cases,

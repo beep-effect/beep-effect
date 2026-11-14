@@ -1,11 +1,15 @@
 /** Authenticated input artifact through the complete live extraction path.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/SourceText";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
-import { makeCitationSourceExtraction } from "@beep/law-practice-server/internal/Citation/SourceExtraction";
+import { makeCitationSourceExtraction as makeOwnedCitationSourceExtraction } from "@beep/law-practice-server/internal/Citation/SourceExtraction";
 import { makeCitationSourceRequestAdapter } from "@beep/law-practice-server/internal/Citation/SourceRequest";
-import { makeCitationVerifiedExtraction } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
+import {
+  CitationVerifiedExtractionConfiguration,
+  makeCitationVerifiedExtraction as makeOwnedCitationVerifiedExtraction,
+} from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
 import { CitationEngineReport } from "@beep/law-practice-use-cases/server";
 import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { expect } from "@effect/vitest";
@@ -15,6 +19,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { citationEngineCorpusAmbiguousTwins } from "./CitationEngineCorpus.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
@@ -24,6 +29,15 @@ import { assertCitationTokenizedExtractionRow } from "./CitationTokenizedExtract
 import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+
+const makeCitationVerifiedExtraction = installCitationOwnedTestStage({
+  schema: CitationVerifiedExtractionConfiguration,
+  install: makeOwnedCitationVerifiedExtraction,
+});
+const makeCitationSourceExtraction = installCitationOwnedTestStage({
+  schema: CitationVerifiedExtractionConfiguration,
+  install: makeOwnedCitationSourceExtraction,
+});
 
 type Installed = Effect.Success<ReturnType<typeof installCitationDefaultConfigurationFixture>>;
 type SourceRow = Installed["corpus"]["cases"][number];

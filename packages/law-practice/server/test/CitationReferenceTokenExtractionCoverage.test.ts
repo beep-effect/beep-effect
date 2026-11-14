@@ -1,4 +1,7 @@
-import { makeCitationReferenceTokenExtraction } from "@beep/law-practice-server/internal/Citation/ReferenceTokenExtraction";
+import {
+  CitationReferenceTokenConfiguration,
+  makeCitationReferenceTokenExtraction as makeOwnedCitationReferenceTokenExtraction,
+} from "@beep/law-practice-server/internal/Citation/ReferenceTokenExtraction";
 import { CitationTokenDispatchBindings } from "@beep/law-practice-server/internal/Citation/TokenDispatch";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -8,11 +11,17 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readCitationCaseMetadataConfiguration } from "./CitationCaseMetadata.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationFrozenMetadataRuntime } from "./CitationFrozenEditions.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationPinExtractionCorpus } from "./CitationPinExtraction.fixtures.ts";
 import { readCitationReferenceTokenCorpus } from "./CitationReferenceToken.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+const makeCitationReferenceTokenExtraction = installCitationOwnedTestStage({
+  schema: CitationReferenceTokenConfiguration,
+  install: makeOwnedCitationReferenceTokenExtraction,
+});
 
 const install = Effect.fnUntraced(function* () {
   const corpus = yield* readCitationReferenceTokenCorpus();
@@ -67,11 +76,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference-t
   );
 
   it.effect(
-    "refuses malformed, unauthenticated and ambiguous installation data",
+    "refuses unauthenticated and ambiguous installation data",
     () =>
       Effect.gen(function* () {
         const { configuration, make } = yield* install();
-        yield* refuses(make({ ...configuration, editions: "none" }), invalidConfiguration);
         const pin = { ...configuration.pin, pattern: configuration.supra.pattern };
         yield* refuses(make({ ...configuration, pin }), invalidConfiguration);
         const supra = { ...configuration.supra, pattern: configuration.pin.pattern };

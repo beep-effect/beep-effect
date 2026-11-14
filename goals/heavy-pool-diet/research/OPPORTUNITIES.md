@@ -35,3 +35,29 @@ identifiers are redacted.
   minutes later.
 - **Would have prevented it:** `op-doctor` naming the check that failed, so a
   transient delivery failure can be told from a broken route.
+
+## 2026-11-14: full package verify of repo-cli exceeds a 10 GiB cap
+
+- **Doing:** `bun run beep quality package-verify @beep/repo-cli` (not
+  `--quick`) on the slice 8 branch, under
+  `systemd-run --user --scope -p MemoryMax=10G` on the 31 GiB worker.
+- **Evidence:** the scope ended after 8 min 18 s with result `oom-kill` at a
+  10 GiB memory peak and 1 h 12 min of CPU time; the command printed only
+  "script \"beep\" exited with code 130". The `--quick` subset (lint and
+  check) passes in about 65 s on the same head.
+- **Would have prevented it:** package-verify bounding its own fan-out by
+  available memory, or naming the step that was running when it was killed.
+
+## 2026-11-14: the pin-bump PR restarts on every release
+
+- **Doing:** watching #3326, the first pin-bump PR that #3299's automation
+  opened.
+- **Evidence:** opened at 05:34Z for `beep-ci-ae70a0c0a3f8`; force-updated
+  and retitled at 05:38Z for `beep-ci-00e2e35dbaee`, which restarted its
+  Check and review window. `gh release list` counts 21 `beep-ci-*` releases
+  on 2026-11-13 and 27 on 2026-11-09, so at that cadence the PR restarts
+  about hourly, each restart is a heavy-admitted Check run, and every merge
+  is an operator hand merge of a `.github` edit.
+- **Would have prevented it:** a rule for when a pending bump is replaced
+  (for example only once the open pull request's Check has finished), decided
+  before the automation went live.
