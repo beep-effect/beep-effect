@@ -238,8 +238,10 @@ export const productionStage = "prod";
 /**
  * Configuration input of the `prod` stage: the account the Pulumi component
  * guards (`accountCostControls:expectedAccountId`), its $200 monthly budget
- * and $10 anomaly impact threshold. The phase stays `silent` until the
- * Pulumi budget and subscription are destroyed (cutover in
+ * and $10 anomaly impact threshold, in the `live` phase: the budget mails
+ * its four threshold notifications and the daily anomaly subscription runs.
+ * `live` went first in the Pulumi cutover; the old Pulumi budget and
+ * subscription are destroyed after this phase is verified (cutover in
  * `docs/runbooks/alchemy-infra.md`).
  *
  * **Example** (Read the production budget)
@@ -258,7 +260,7 @@ export const productionConfig: CostControlsConfig.Encoded = {
   region: "us-east-1",
   monthlyBudgetUsd: 200,
   anomalyImpactUsd: 10,
-  notifications: "silent",
+  notifications: "live",
 };
 
 /**
