@@ -20,7 +20,7 @@ Method, so a later lane can re-run it:
 
 Line numbers are for the tree above. They drift, so re-run the search, not the line.
 
-Revision 3 (2026-11-14) adds section 6: what `delete-package` offers for acknowledged residue, the 330 remaining dependents classified by PR, the true residue, and the R6.6 design. Revision 2 (2026-11-14, same day) records the gate's rulings on Q1 to Q10 (section 4), the lab
+Revision 4 (2026-11-14, after #3341 merged) marks R1 and R2 done, records the gate's rulings on R6.6 and on references in hard-scanned files, and rewrites this document's mentions of paths #3341 deleted as plain text. Revision 3 (2026-11-14) adds section 6: what `delete-package` offers for acknowledged residue, the 330 remaining dependents classified by PR, the true residue, and the R6.6 design. Revision 2 (2026-11-14, same day) records the gate's rulings on Q1 to Q10 (section 4), the lab
 check (Q6, seven more read-only AWS calls), the changeset and coverage answers (Q7, Q8) and
 the new PR R6.5.
 
@@ -66,7 +66,7 @@ Use this for any P6 deletion PR (R1, R2, R4, R5, R6, R6.5, R7). Section 2 lists 
 ### 1.1 What is left in the Pulumi backend (external, read 2026-11-14)
 
 `s3://oip-law-pulumi-state` (versioning `Enabled`, tagged `Project=oip`, `Repository=beep-effect`;
-not managed by any Pulumi or Alchemy program: `infra/src/OipWeb.ts:34` only names it as the
+not managed by any Pulumi or Alchemy program: infra/src/OipWeb.ts:34 (removed in #3341) only names it as the
 default backend URL) holds 507 objects:
 
 | Prefix | Objects | Meaning |
@@ -90,24 +90,24 @@ is the state today, "Leaves with" is the PR in section 2.
 **Storybook** (Pulumi project `beep-storybook`; stack removed 2026-11-13, decision
 `2026-11-13-pulumi-beep-storybook-stack-removed.md`). Leaves with R1/R2.
 
-- `infra/storybook/Pulumi.yaml`, `infra/storybook/Pulumi.production.yaml`
-- `infra/src/Storybook.ts` (425 lines; imports `@pulumiverse/vercel`, `@pulumi/pulumi`)
-- `infra/src/internal/storybook-entry.ts`, `infra/test/Storybook.test.ts`
+- infra/storybook/Pulumi.yaml (removed in #3341), infra/storybook/Pulumi.production.yaml (removed in #3341)
+- infra/src/Storybook.ts (removed in #3341) (425 lines; imports `@pulumiverse/vercel`, `@pulumi/pulumi`)
+- infra/src/internal/storybook-entry.ts (removed in #3341), infra/test/Storybook.test.ts (removed in #3341)
 
 **Turbo-cache lab** (Pulumi project `beep-turbo-cache-lab`; stack gone, `.bak` only; disposable
 conformance lab of the completed goal `turborepo-cache-conformance`). Leaves with R1.
 
-- `infra/turbo-cache-lab/Pulumi.yaml`, `infra/turbo-cache-lab/lab-aws.sh`, `infra/turbo-cache-lab/.gitignore`
-- `infra/src/internal/turbo-cache-lab-entry.ts` (imports `resolveTurboCacheLabBuckets` and
+- infra/turbo-cache-lab/Pulumi.yaml (removed in #3341), infra/turbo-cache-lab/lab-aws.sh (removed in #3341), infra/turbo-cache-lab/.gitignore (removed in #3341)
+- infra/src/internal/turbo-cache-lab-entry.ts (removed in #3341) (imports `resolveTurboCacheLabBuckets` and
   `TurboCacheLabBucketsInput` from `infra/src/CiTurboCache.ts:17-24`; those two exports and their
   tests go with it, the rest of `CiTurboCache.ts` stays until R6)
 
 **OIP web** (Pulumi project `opip-web`; both stacks removed 2026-11-14 11:57Z and 11:59Z). Leaves
 with R2, which another lane is building.
 
-- `infra/oip-web/Pulumi.yaml`, `Pulumi.production.yaml`, `Pulumi.staging.yaml`
-- `infra/src/OipWeb.ts` (1,147 lines; `@pulumi/aws`, `@pulumi/cloudflare`, `@pulumiverse/vercel`)
-- `infra/src/Vercel.ts`, `infra/src/internal/oip-web-entry.ts`, `infra/test/OipWeb.test.ts`
+- infra/oip-web/Pulumi.yaml, infra/oip-web/Pulumi.production.yaml and infra/oip-web/Pulumi.staging.yaml (all removed in #3341)
+- infra/src/OipWeb.ts (removed in #3341) (1,147 lines; `@pulumi/aws`, `@pulumi/cloudflare`, `@pulumiverse/vercel`)
+- infra/src/Vercel.ts (removed in #3341), infra/src/internal/oip-web-entry.ts (removed in #3341), infra/test/OipWeb.test.ts (removed in #3341)
 
 **Hosts: AI metrics and OpenClaw** (Pulumi projects `beep-effect-ai-metrics` and `beep-openclaw`;
 never had Pulumi state, decision `2026-11-13-hosts-no-pulumi-state.md`). Leaves with R4.
@@ -176,8 +176,8 @@ row passes today.
 
 | Item | Where | Used by today | Can go after |
 | --- | --- | --- | --- |
-| `@pulumiverse/vercel` catalog entry | `package.json:105`; `infra/package.json` dependency | `infra/src/OipWeb.ts`, `infra/src/Storybook.ts` | R2 (with Storybook removed) |
-| `@pulumi/cloudflare` | `package.json:102`; `infra/package.json` | `infra/src/OipWeb.ts` only | R2 |
+| `@pulumiverse/vercel` catalog entry | `package.json:105`; `infra/package.json` dependency | infra/src/OipWeb.ts (removed in #3341), infra/src/Storybook.ts (removed in #3341) | R2 (with Storybook removed) |
+| `@pulumi/cloudflare` | `package.json:102`; `infra/package.json` | infra/src/OipWeb.ts (removed in #3341) only | R2 |
 | `@pulumi/command` | `package.json:103`; `infra/package.json` | `infra/src/AIMetrics.ts`, `infra/src/OpenClaw.ts` | R4 |
 | `@pulumi/aws` | `package.json:101`; `infra/package.json` | `CiRunners.ts`, `CiFleetController.ts`, `CiTurboCache.ts`, `OipWeb.ts`, `AccountCostControls.ts` | R6 |
 | `@pulumi/pulumi` (exact `3.276.0`) | `package.json:104`; `infra/package.json` | every program and most `infra/test/*` | R7 (last importer is `InfraArtifactPath.ts`/`PulumiConfigSchema.ts`) |
@@ -293,7 +293,7 @@ turbo-cache stage 2 PR replaces them.
 | `standards/jsdoc-documentation.inventory.jsonc` (122 lines), `standards/jsdoc-documentation.inventory.md` | JSDoc inventory | `bun run jsdoc:inventory` |
 | `standards/effect-vitest.census.json` (28), `standards/effect-vitest.inventory.jsonc` (16) | effect-vitest census and baseline | `bun run beep lint effect-vitest --census` and `--write` |
 | `standards/fallow.boundaries.generated.jsonc:513-517` (zone), `:3091-3112` (allow lists); `standards/fallow.boundaries.provenance.jsonc:387-392` | Fallow boundaries | `bun run fallow:boundaries:write` |
-| `standards/fallow.health.regression-baseline.jsonc:29` (`infra/src/OipWeb.ts`) | Fallow health | `bun run fallow:health:baseline:write` (R2) |
+| `standards/fallow.health.regression-baseline.jsonc:29` (infra/src/OipWeb.ts (removed in #3341)) | Fallow health | `bun run fallow:health:baseline:write` (R2) |
 | `standards/policy-tools.fingerprint.json:488` (`infra/package.json`) and the generated `turbo.json` seal inputs | policy fingerprint | `bun run beep lint policy-fingerprint --write` |
 | `standards/root-package.projection.generated.json:117`, `:133`, `:200` | root manifest projection | `bun run beep tsconfig-sync` |
 | `standards/cache-conformance/pins-2026-10-23.json:57`, `:76` | dated conformance evidence naming `infra/lambda/turbo-cache` and `infra/r2-cache/adapter.sh` | keep: it is a dated record (the `delete-package` plan lists it as baseline evidence to preserve) |
@@ -418,7 +418,7 @@ named the deleted paths, in the same PR.
   regenerated these inventories and produced +54k and +15k line diffs. Regenerate on a fresh merge
   of `main` so the diff stays reviewable.
 - **Fallow.** `fallow:boundaries:write` when `infra/package.json` dependencies change (R2, R4, R6),
-  and `fallow:health:baseline:write` when a file in the health baseline leaves (R2: `infra/src/OipWeb.ts`).
+  and `fallow:health:baseline:write` when a file in the health baseline leaves (R2: infra/src/OipWeb.ts (removed in #3341)).
   Removing an `index.ts` re-export can make sibling exports dead; run `fallow dead-code` on the PR.
 - **Policy fingerprint.** `lint policy-fingerprint --write` whenever a manifest, `turbo.json`,
   `.fallowrc.jsonc` or the tsconfig aliases change (R2, R4, R6, R7).
@@ -440,13 +440,17 @@ named the deleted paths, in the same PR.
   `TrackedShellAllowedRoot` (`TrackedShellAllowlist.model.ts:51`); the law test
   `laws-tracked-shell-allowlist.test.ts` follows.
 
-### R1: Storybook and turbo-cache-lab programs (can go now)
+### R1: Storybook and turbo-cache-lab programs (done in #3341)
 
-- Delete: `infra/storybook/`, `infra/src/Storybook.ts`, `infra/src/internal/storybook-entry.ts`,
-  `infra/test/Storybook.test.ts`, `infra/turbo-cache-lab/`, `infra/src/internal/turbo-cache-lab-entry.ts`,
+**Done.** #3341 merged at 13:35Z on 2026-11-14 (`e051bd152f3`), together with R2. Its merge touched
+`apps/oip-web/stack/**`, so the armed `Deploy oip-web infrastructure` workflow ran (run 43600573838) and
+planned no changes on both stages.
+
+- Delete: infra/storybook/ (removed in #3341), infra/src/Storybook.ts (removed in #3341), infra/src/internal/storybook-entry.ts (removed in #3341),
+  infra/test/Storybook.test.ts (removed in #3341), infra/turbo-cache-lab/ (removed in #3341), infra/src/internal/turbo-cache-lab-entry.ts (removed in #3341),
   the lab-only exports `resolveTurboCacheLabBuckets` and `TurboCacheLabBucketsInput` of
   `infra/src/CiTurboCache.ts` and their test cases; prune `infra/src/index.ts`.
-- First: nothing. The lab check (Q6) found no live AWS resource, so `infra/turbo-cache-lab/lab-aws.sh`
+- First: nothing. The lab check (Q6) found no live AWS resource, so infra/turbo-cache-lab/lab-aws.sh (removed in #3341)
   may go with the rest.
 - Ruled by the gate: R1 is folded into the OIP web deletion lane's PR (R2). Storybook is the other
   importer of `@pulumiverse/vercel`, so that PR drops the pin.
@@ -457,10 +461,20 @@ named the deleted paths, in the same PR.
   catalog, cache baseline.
 - Live spans to rewrite: 7.
 
-### R2: OIP web program (in flight, other lane; can go now)
+### R2: OIP web program (done in #3341)
 
-- Delete: `infra/oip-web/`, `infra/src/OipWeb.ts`, `infra/src/Vercel.ts`,
-  `infra/src/internal/oip-web-entry.ts`, `infra/test/OipWeb.test.ts`; plus R1 if folded in.
+**Done.** Merged in #3341 with R1; see R1. Two things it left behind are cleaned up by the P6
+housekeeping PR:
+
+- the `LEGACY_BASELINE` entries in `packages/tooling/policy-pack/lint-rules/src/rules/no-manual-effect-runtime-in-tests.ts`
+  for its two deleted tests;
+- the rows of its deleted files in `standards/effect-vitest.census.json` and
+  `standards/jsdoc-documentation.inventory.jsonc`, hand-removed. A separate lane owns the whole-file refresh.
+
+The same PR drops its three "(removed in #3341)" rewrites in `apps/oip-web` (gate ruling below).
+
+- Delete: infra/oip-web/ (removed in #3341), infra/src/OipWeb.ts (removed in #3341), infra/src/Vercel.ts (removed in #3341),
+  infra/src/internal/oip-web-entry.ts (removed in #3341), infra/test/OipWeb.test.ts (removed in #3341); plus R1 if folded in.
 - Drop `@pulumi/cloudflare` from `infra/package.json` and the root catalog (`package.json:102`).
   Drop `@pulumiverse/vercel` (`package.json:105`) only if Storybook leaves in the same PR. `bun install`.
 - Regenerate: `fallow:health:baseline:write` (`OipWeb.ts` row), `lint schema-first --write`
@@ -606,7 +620,15 @@ rows-only PR.
 - Live spans: 40 (`goals/infra-alchemy-rebuild/SPEC.md` and decisions, `goals/ci-lane-economics`,
   `explorations/pulumi-to-alchemy/DECISIONS.md`, runbooks).
 
-### R6.5: Fix `delete-package`'s path matcher (repo-cli; can go now; must merge before R7)
+### R6.5: Fix `delete-package`'s path matcher (#3343; must merge before R7)
+
+**Status:** #3343, open at `fb850d55014`. Three beep-reviewer rounds, each fixed in one push:
+
+1. The doctor probes `derived-rebuild`, `authored-reference` and `historical-record` share the dependents scan's matcher.
+2. The four path-keyed inventories (`generated-inventory`) use the same matcher, and the PR body tables every matcher in the command.
+3. The module doc and the `needleMatcherFor` comment state that coverage.
+
+The gate posts the final.
 
 Ruled by the gate (Q9): fix the matcher at its root, in its own small PR, not by working around it
 in R7.
@@ -700,14 +722,14 @@ edits (R6) apart from the large repo-cli edit (R7).
 
 | PR | Owner | Waits on |
 | --- | --- | --- |
-| R1 Storybook + lab | the OIP web deletion lane (folded into R2, gate ruling) | nothing: can go now (Q6 found nothing live) |
-| R2 OIP web | the OIP web deletion lane | nothing: can go now. Merge before the cost-controls PR (coverage) |
-| (cost-controls) | P3 cost-controls lane | not before 2026-11-15T05:18Z, ideally after R1+R2 (coverage); gates R5 and R6 |
+| R1 Storybook + lab | the OIP web deletion lane (folded into R2) | done: #3341 merged 2026-11-14 13:35Z |
+| R2 OIP web | the OIP web deletion lane | done: #3341 merged 2026-11-14 13:35Z; the armed deploy (run 43600573838) planned no changes |
+| (cost-controls) | P3 cost-controls lane | not before 2026-11-15T05:18Z. R1+R2 have merged, so the coverage merge-order note is satisfied; gates R5 and R6 |
 | R4 hosts | hosts lane | the attended AI metrics cutover |
 | R5 R2 pilot | turbo-cache lane | the 2026-11-20T20:10Z verdict, the stage 2 PR, the R2 teardown |
 | R6 fleet + AWS cache + SDK | P5 lane (step 6e) | the verdict, the cost-controls PR, P5 steps 0-6d |
-| R6.5 delete-package matcher | this lane (#3343) | open; the gate posts the final |
-| R6.6 delete-package acknowledgements + tracked-file scan | a repo-cli lane | #3343 merged (section 6) |
+| R6.5 delete-package matcher | this lane (#3343) | open at `fb850d55014`; the gate posts the final |
+| R6.6 delete-package acknowledgements + tracked-file scan | a repo-cli lane | #3343 merged; mechanism ruled (section 6.6) |
 | R7 package removal | P6/P7 final lane | R2, R4, R5, R6, R6.5, R6.6 merged |
 
 ## 3. Verification matrix rows as exact commands
@@ -878,7 +900,7 @@ and any evidence gathered after it):
   **Result (2026-11-14, read-only, `AWS_PROFILE=elpresidank-vault`, `us-east-1`, each call once):**
   - What it was: the disposable AWS conformance lab of the completed goal
     `turborepo-cache-conformance`. Epoch `c1023a`, Pulumi stack `beep-turbo-cache-lab/lab-c1023a`.
-    The program (`infra/src/internal/turbo-cache-lab-entry.ts`) deployed two `CiTurboCache`
+    The program (infra/src/internal/turbo-cache-lab-entry.ts (removed in #3341)) deployed two `CiTurboCache`
     components, an incumbent and an "evolved" incumbent. Each had an S3 bucket
     (`beep-tcl-c1023a-832907639880` and `beep-tcl-c1023a-evo-832907639880`), an HTTP API with its
     authorizer, reader and writer Lambdas, their IAM roles and log groups. `lab-aws.sh bootstrap`
@@ -899,7 +921,7 @@ and any evidence gathered after it):
     - The 7-day KMS deletion window has long passed, and the key no longer shows in the tag query.
   - Cost: nothing accrues. The only remnants are five small objects in the Pulumi backend (the
     `.bak` and four backups, about 0.5 MB), which stay with the bucket (Q5).
-  - Consequence: no removal procedure is needed. R1 may delete `infra/turbo-cache-lab/lab-aws.sh`
+  - Consequence: no removal procedure is needed. R1 may delete infra/turbo-cache-lab/lab-aws.sh (removed in #3341)
     with the program, and records this result in a short decision file (R1 entry). Note that
     `lab-aws.sh` cites standards/cache-conformance/lab-deployment-preview.md (plain text: no such file) for the approved cost
     ceiling, and that document is not in the tree.
@@ -1049,15 +1071,15 @@ Nothing that accepts named hits. Read from
 
 | Removed by | Hits | Notes |
 | --- | --- | --- |
-| R1 + R2 (#3341) | 0 | #3341 rewrites the three `apps/oip-web` lines to plain text plus "(removed in #3341)". The path text stays, so they still match; they leave in R7 (Q10). It does not touch `no-manual-effect-runtime-in-tests.ts:61-62`, which list `infra/test/OipWeb.test.ts` and `infra/test/Storybook.test.ts`, two files #3341 deletes. Those entries are stale once #3341 merges; that PR should drop them. |
+| R1 + R2 (#3341) | 0 | #3341 rewrote the three `apps/oip-web` lines to plain text plus "(removed in #3341)", and the path text still matched. The P6 housekeeping PR drops those three references (gate ruling), so R7's count falls by 3, to 209. It also removes the two stale `LEGACY_BASELINE` entries #3341 left in `no-manual-effect-runtime-in-tests.ts`. Those entries were not `delete-package` hits, because the deleted files are no longer scanned. |
 | Cost-controls removal | 0 | No hit is in a file it changes. |
 | R4 (hosts) | 8 | AI metrics installer and tests, `infra-hosts` provenance, the AIMetrics allowlist entry. |
 | R5 (R2 pilot) | 57 | `Cache.r2*`, adapter, producer tests, every `r2-cache` CI line, the tracked-shell test fixture. |
 | R6 (fleet) | 25 | `beep runners bake`, overflow preflight, SDK and Lambda exclusions, `check.yml:421`. |
-| R7 (package removal) | 212 | Scan roots, globs, the `infra` package kind, coverage and partition rows, the root policy files, and Q10 provenance prose. Four of these only borrow the word as fixture text (6.3). |
+| R7 (package removal) | 209 (212 before the P6 housekeeping PR dropped 3) | Scan roots, globs, the `infra` package kind, coverage and partition rows, the root policy files, and Q10 provenance prose. Four of these only borrow the word as fixture text (6.3). |
 | True residue | 28 | Listed in 6.3. |
 
-If every earlier PR merges, the command sees **240** hits when R7 starts (212 + 28). After R7's own
+If every earlier PR merges, the command sees **237** hits when R7 starts (209 + 28; the P6 housekeeping PR removed 3 of the original 212). After R7's own
 edits it sees **32**: the 28 residue lines plus the 4 borrowed fixture lines, or 28 if R7 renames
 those four. Lines that R4 to R6 or other lanes add before R7 are not predicted. One case is
 predictable: a Q3 rewrite in a hard-scanned file (anything under `packages/`, `apps/`, `.github/`, or
@@ -1355,6 +1377,14 @@ Smallest correct change, in R6.6:
   Node and Bun.
 
 ### 6.6 R6.6 entry (built after #3343 merges, its own small PR)
+
+**Ruled by the gate, 2026-11-14:** mechanism (b), the committed acknowledgement file (path plus exact line text;
+stale or new entries fail; import edges can never be acknowledged; the doctor honours the same file), together
+with the tracked-files-only enumeration through `@beep/git` (6.5). It is built after #3343 merges, in its own small PR.
+
+**Also ruled:** in files `delete-package` scans as hard dependents (under `packages/`, `apps/`, `.github/`), a
+reference to a deleted path is dropped, not rewritten. The "(removed in #N)" rewrite is for docs, decisions and
+packets. The checklist at the top of this document applies it.
 
 - Files:
   - `packages/drivers/git/src/GitCommand.ts` and `Git.ts` (the untracked option), with their tests;

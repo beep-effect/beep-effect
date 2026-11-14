@@ -1260,25 +1260,11 @@
     "lines": 378
   },
   {
-    "file": "infra/test/OipWeb.test.ts",
-    "package": "@beep/infra",
-    "kind": "test",
-    "bytes": 8957,
-    "lines": 208
-  },
-  {
     "file": "infra/test/OpenClaw.test.ts",
     "package": "@beep/infra",
     "kind": "test",
     "bytes": 46962,
     "lines": 1049
-  },
-  {
-    "file": "infra/test/Storybook.test.ts",
-    "package": "@beep/infra",
-    "kind": "test",
-    "bytes": 6683,
-    "lines": 158
   },
   {
     "file": "infra/test/schemaParity.ts",
