@@ -75,11 +75,15 @@ from the raise site into the verdict, and economics locates them as `refusal:pub
 slice 2) merged as #3347: `beep ci ledger` folds named workflow runs into rows at (lane, partition) grain over the
 slice-14 lane map, joins every Test Unit and Test Integration partition job to the run's Test Plan output for
 the empty-leg row, and reports the turbo-task, final-check, economics and PSI sources as absent rows (decision
-`ledger-fold-absent-sources`). In short, slices 1 to 8, 5b, 10, 10b, 11, 14 and 15 have merged. Slice 9 (PERIL-11
-slice 3) is open as #3349: attempt-started rows carry optional `host` and `seat` keys, every attempt mix gains
-`hostMix` and `seatMix`, and `yeet economics --fleet-hosts` reads the hosts in the fleet's `hosts.json`
-read-only over their existing SSH wrappers, reporting only per-host receipts (decision
-`peril-11-slice-3-host-seat-fleet-hosts`). Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
+`ledger-fold-absent-sources`). Slice 9 (PERIL-11 slice 3) merged as #3349: attempt-started rows carry optional
+`host` and `seat` keys, every attempt mix gains `hostMix` and `seatMix`, and `yeet economics --fleet-hosts` reads
+the hosts in the fleet's `hosts.json` read-only over their existing SSH wrappers, reporting only per-host
+receipts (decision `peril-11-slice-3-host-seat-fleet-hosts`). In short, slices 1 to 11, 5b, 10b, 14 and 15 have
+merged. Slice 16 (MEAS-08) is built, PR pending: `yeet economics` gains a `pressure` section that joins the PSI
+recorder samples onto each local attempt by time window and the admission rows' SCHE-09 stamps by attempt id,
+every missing field absent with its reason and both source rows `present` only when every line or row decoded;
+it samples and writes nothing, and the ledger's `psi` row stays `absent` because hosted runners are not the
+sampled host (decision `psi-join-onto-attempts`). Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
 declaration-only builds) are not comparable with later readings (checkpoint
 `baselines-before-d8326d5593-not-comparable`), nor are check-lane baselines taken before 3e822c71c5 (#3242).
 
@@ -124,6 +128,13 @@ declaration-only builds) are not comparable with later readings (checkpoint
   partition the plan allocated with 0 of 24 integration tasks selected). Every aggregate skipped on success on
   those runs; the umbrella, wrapper and rerun fixture in
   `packages/tooling/tool/cli/test/ci-cost-ledger.test.ts` shows no double count.
+- Slice 16 (`packages/tooling/tool/cli/test/yeet-economics-pressure.test.ts`, fixtures only, Node and Bun):
+  four recorder samples across two boots and eight attempts give one three-sample window (cpu mean 2 max 3,
+  io mean 5 max 6, MemAvailable min 79.5 GiB), one single-sample window whose io and MemAvailable figures are
+  absent because that sample lacks them, and one attempt per gap (no samples, outside the recorder span, two
+  untimed, a start row naming another host, a fleet-host attempt counted but not listed). A recorder with one of
+  five lines undecodable reads `partial`; an admission history whose rows all decode reads `present`; a missing,
+  unreadable or skipped source reads `absent` with the reason in its note.
 
 ## Notes
 
@@ -136,8 +147,8 @@ declaration-only builds) are not comparable with later readings (checkpoint
   #3263); PERIL-11 slice 2 (T3 root row and monitor waits apart, slice 8, #3273); MEAS-05 slice 1 (one lane map, slice 14,
   #3274); MEAS-03 slice 2 (residual handler errors typed and located, slice 10b, #3342); SCHE-09 slice 2
   (capacity and host-pressure stamps on admission rows, slice 5b, #3344); MEAS-05 slice 2 (the ledger fold with
-  absent-source rows, slice 15, #3347). Open: PERIL-11 slice 3 (host and seat fields, read-only fleet-host
-  reads, slice 9, #3349).
+  absent-source rows, slice 15, #3347); PERIL-11 slice 3 (host and seat fields, read-only fleet-host reads,
+  slice 9, #3349). Built: MEAS-08 (PSI samples and admission stamps joined onto attempts, slice 16).
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
   before journal retention (PERIL-11); SCHE-09 is owned here and consumed by `local-proof-under-ten` (D23); nightly reads are budgeted against

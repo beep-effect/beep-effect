@@ -25,6 +25,8 @@ export * from "../commands/Yeet/internal/closeout/GreptileSignal.ts";
 export * from "../commands/Yeet/internal/closeout/WritePlan.ts";
 export * from "../commands/Yeet/internal/Economics.schemas.ts";
 export * from "../commands/Yeet/internal/Economics.ts";
+export * from "../commands/Yeet/internal/EconomicsPressure.schemas.ts";
+export * from "../commands/Yeet/internal/EconomicsPressure.ts";
 export * from "../commands/Yeet/internal/ExpectationRewrite.ts";
 export {
   FallowFeedbackAllowedRoot,
