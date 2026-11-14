@@ -2,23 +2,50 @@ import {
   CitationCleanerValues,
   makeCitationCleanerValues,
 } from "@beep/law-practice-server/internal/Citation/CleanerValues";
-import { makeCitationDocumentExtraction } from "@beep/law-practice-server/internal/Citation/DocumentExtraction";
-import { CitationFrozenEditions } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
 import {
+  CitationDocumentExtractionConfiguration,
+  CitationDocumentExtractionFailure,
+  makeCitationDocumentExtraction as makeOwnedCitationDocumentExtraction,
+} from "@beep/law-practice-server/internal/Citation/DocumentExtraction";
+import { CitationFrozenEditions } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import { CitationHtmlGeometryPreparationConfiguration } from "@beep/law-practice-server/internal/Citation/HtmlGeometryPreparation";
+import {
+  CitationDocumentInputFailure,
   CitationDocumentInputProtocols,
-  makeCitationInputDocument,
+  makeCitationInputDocument as makeOwnedCitationInputDocument,
 } from "@beep/law-practice-server/internal/Citation/InputDocument";
-import { makeCitationTokenizedExtraction } from "@beep/law-practice-server/internal/Citation/TokenizedExtraction";
+import {
+  CitationTokenizedExtractionConfiguration,
+  CitationTokenizedExtractionFailure,
+  makeCitationTokenizedExtraction as makeOwnedCitationTokenizedExtraction,
+} from "@beep/law-practice-server/internal/Citation/TokenizedExtraction";
 import { CitationCleaner } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { installCitationTokenizedExtractionFixture } from "./CitationTokenizedExtraction.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+const makeCitationInputDocument = installCitationOwnedTestStage({
+  schema: CitationHtmlGeometryPreparationConfiguration,
+  install: makeOwnedCitationInputDocument,
+  invalid: () => CitationDocumentInputFailure.make({ reason: "invalid-input", sourceError: "TypeError" }),
+});
+const makeCitationTokenizedExtraction = installCitationOwnedTestStage({
+  schema: CitationTokenizedExtractionConfiguration,
+  install: makeOwnedCitationTokenizedExtraction,
+  invalid: () => CitationTokenizedExtractionFailure.make({ reason: "invalid-configuration" }),
+});
+const makeCitationDocumentExtraction = installCitationOwnedTestStage({
+  schema: CitationDocumentExtractionConfiguration,
+  install: makeOwnedCitationDocumentExtraction,
+  invalid: () => CitationDocumentExtractionFailure.make({ reason: "invalid-configuration" }),
+});
 
 const refusal = (failure: { readonly _tag: string }) => ({
   _tag: failure._tag,

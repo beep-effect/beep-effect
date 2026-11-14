@@ -4,7 +4,11 @@ import {
   CitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
 import { makeCitationExtractorOrdering } from "@beep/law-practice-server/internal/Citation/ExtractorOrdering";
-import { makeCitationTokenizer } from "@beep/law-practice-server/internal/Citation/Tokenizer";
+import {
+  CitationTokenizerConfiguration,
+  makeCitationTokenizer as makeOwnedCitationTokenizer,
+} from "@beep/law-practice-server/internal/Citation/Tokenizer";
+import { CitationEngineLimits, CitationTokenizerFailure } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -12,6 +16,10 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Order from "effect/Order";
+import {
+  installCitationOwnedTestStage,
+  refuseCitationTestConfigurations,
+} from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import {
   makeCitationTestScaffoldBinding,
@@ -26,6 +34,11 @@ import {
   setupCitationTokenizer,
 } from "./CitationTokenizer.fixtures.ts";
 import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
+
+const makeCitationTokenizer = installCitationOwnedTestStage({
+  schema: CitationTokenizerConfiguration,
+  install: makeOwnedCitationTokenizer,
+});
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned tokenizer composition", (it) => {
   it.effect("uses invocation admission instead of a closed install-time view", () =>
@@ -98,19 +111,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
   it.effect("rejects malformed policy, bindings and source without native work", () =>
     Effect.gen(function* () {
       const controls = yield* loadCitationTokenizerControls();
-      const runtime = yield* setupCitationMetadataRuntime("bun");
-      const invalidPolicy = yield* makeCitationTokenizer({}, runtime.runtime, controls.configuration).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding({}).pipe(
-            Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
-          )
-        ),
-        Effect.provideContext(runtime.provided),
-        Effect.flip
+      // Malformed policy and bindings are refused where configuration crosses into the engine.
+      const refusals = yield* refuseCitationTestConfigurations(
+        () => CitationTokenizerFailure.make({ reason: "invalid-configuration" }),
+        [
+          [CitationEngineLimits, {}],
+          [CitationTokenizerConfiguration, {}],
+        ]
       );
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-configuration" });
-      const invalidBindings = yield* setupCitationTokenizer("bun", {}).pipe(Effect.flip);
-      expect(invalidBindings).toMatchObject({ reason: "invalid-configuration" });
+      for (const refused of refusals) expect(refused).toMatchObject({ reason: "invalid-configuration" });
       const setup = yield* setupCitationTokenizer("bun", controls.configuration);
       for (const source of [{}, { width: 2, bytes: new Uint8Array([1]) }, { width: 3, bytes: new Uint8Array() }]) {
         const failed = yield* setup.tokenizer.port.tokenize(source).pipe(Effect.flip);

@@ -2,9 +2,10 @@ import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationPublicationMetadataConfiguration } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
 import {
+  CitationPreCaseMetadataFailure,
   CitationPreCaseMetadataInput,
   CitationPreCaseMetadataPatch,
-  makeCitationPreCaseMetadata,
+  makeCitationPreCaseMetadata as makeOwnedCitationPreCaseMetadata,
 } from "@beep/law-practice-server/internal/Citation/PreCaseMetadata";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -13,6 +14,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFixtureLifetime,
@@ -25,6 +27,11 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationPreCaseMetadata = installCitationOwnedTestStage({
+  schema: CitationPublicationMetadataConfiguration,
+  install: makeOwnedCitationPreCaseMetadata,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationPreCaseMetadata");
 const Value = S.NullOr(CitationNativeUnicodeHex);
@@ -152,7 +159,9 @@ export const assertCitationPreCaseMetadataConfiguration = Effect.fn("PreCaseMeta
         )
       ),
     setup,
-    corpus.configuration
+    corpus.configuration,
+    CitationPublicationMetadataConfiguration,
+    () => CitationPreCaseMetadataFailure.make({ reason: "invalid-configuration" })
   );
   const valid = yield* install("bun");
   const request = A.getUnsafe(valid.corpus.cases, 23).request;

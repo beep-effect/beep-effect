@@ -15,14 +15,15 @@ import {
   CitationMetadataStringConfiguration,
   CitationMetadataStringFields,
   citationMetadataContext,
-  installCitationMetadataConfigurationStage,
   installCitationMetadataContextMatch,
   installCitationMetadataStringProcessing,
+  installCitationOwnedStage,
   makeCitationMetadataOperation,
   prepareCitationPublicationMetadata,
 } from "./MetadataComposition.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationPublicationMetadataConfiguration } from "./MetadataComposition.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
@@ -108,7 +109,6 @@ export class CitationJournalMetadataResult extends S.Opaque<
   )
 ) {}
 const Input = S.toType(CitationJournalMetadataInput);
-const Config = S.toType(CitationJournalMetadataConfiguration);
 const installPatch = Effect.fn("Citation.installJournalMetadataPatch")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
@@ -145,41 +145,34 @@ const installPatch = Effect.fn("Citation.installJournalMetadataPatch")(function*
 });
 /** Compose source journal helper and superclass inference under shared owners.
  * Each native call owns a fresh Scope; one admission/deadline covers both stages.
- * Configuration is snapshotted once and returned methods have R = never.
+ * Configuration arrives owned from the engine boundary; returned methods have R = never.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationJournalMetadata = Effect.fn("Citation.makeJournalMetadata")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  configuration: CitationOwned<CitationJournalMetadataConfiguration>
 ) {
-  return yield* installCitationMetadataConfigurationStage(
-    policy,
-    configurationInput,
-    Config,
-    invalidConfiguration,
-    function* (limits, decoded) {
-      const { runtime, config } = yield* prepareCitationPublicationMetadata(
-        limits,
-        runtimeInput,
-        { ...decoded, pattern: decoded.journalPattern, bindings: decoded.journalBindings },
-        "1b0484f822d2762ae3517e7a1152feea80d96791582a126e0bd3f8789cb66200",
-        invalidConfiguration
-      );
-      const preparePatch = yield* installPatch(limits, runtime, config);
-      const installed = yield* makeCitationMetadataOperation(preparePatch);
-      const inference = yield* makeCitationEditionInference(limits);
-      const apply = Effect.fn("Citation.addJournalMetadata")((raw: unknown) =>
-        Effect.gen(function* () {
-          const selection = yield* prepareCitationEditionInferenceInput(limits, raw);
-          const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-          const [patch, reservedUnits] = yield* installed.run(request);
-          const year = O.match(patch, { onNone: () => request.year, onSome: (value) => value.year });
-          const editionGuess = yield* inference.guess({ ...selection, year });
-          return CitationJournalMetadataResult.make({ patch, editionGuess, reservedUnits });
-        })
-      );
-      return { apply };
-    }
-  );
+  return yield* installCitationOwnedStage(limits, configuration, function* (limits, decoded) {
+    const config = yield* prepareCitationPublicationMetadata(
+      limits,
+      { ...decoded, pattern: decoded.journalPattern, bindings: decoded.journalBindings },
+      "1b0484f822d2762ae3517e7a1152feea80d96791582a126e0bd3f8789cb66200",
+      invalidConfiguration
+    );
+    const preparePatch = yield* installPatch(limits, runtime, config);
+    const installed = yield* makeCitationMetadataOperation(preparePatch);
+    const inference = yield* makeCitationEditionInference(limits);
+    const apply = Effect.fn("Citation.addJournalMetadata")((raw: unknown) =>
+      Effect.gen(function* () {
+        const selection = yield* prepareCitationEditionInferenceInput(limits, raw);
+        const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+        const [patch, reservedUnits] = yield* installed.run(request);
+        const year = O.match(patch, { onNone: () => request.year, onSome: (value) => value.year });
+        const editionGuess = yield* inference.guess({ ...selection, year });
+        return CitationJournalMetadataResult.make({ patch, editionGuess, reservedUnits });
+      })
+    );
+    return { apply };
+  });
 });

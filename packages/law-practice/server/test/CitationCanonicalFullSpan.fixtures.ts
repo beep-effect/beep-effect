@@ -173,7 +173,7 @@ export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCoun
  */
 export const citationCanonicalFullSpanConstruction = CitationEngineWorkCounts.make({
   metadataOperationInstalls: 16,
-  configurationDetaches: 10,
+  configurationDetaches: 2,
   tokenizerBuilds: 1,
   regexWorkerConstructions: 26,
   regexEvaluations: 0,

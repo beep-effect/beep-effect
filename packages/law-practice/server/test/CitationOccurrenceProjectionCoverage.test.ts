@@ -1,7 +1,14 @@
 import * as NodeURL from "node:url";
 import { getCitationExtractionShortcut } from "@beep/law-practice-server/internal/Citation/ExtractionShortcut";
-import { makeCitationOccurrenceProjection } from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
-import { makeCitationSemanticProjection } from "@beep/law-practice-server/internal/Citation/SemanticProjection";
+import {
+  CitationOccurrenceProjectionConfiguration,
+  CitationOccurrenceProjectionFailure,
+  makeCitationOccurrenceProjection as makeOwnedCitationOccurrenceProjection,
+} from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
+import {
+  CitationSemanticProjectionConfiguration,
+  makeCitationSemanticProjection as makeOwnedCitationSemanticProjection,
+} from "@beep/law-practice-server/internal/Citation/SemanticProjection";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { deepStrictEqual } from "@effect/vitest/utils";
@@ -9,11 +16,22 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Str from "effect/String";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+
+const makeCitationSemanticProjection = installCitationOwnedTestStage({
+  schema: CitationSemanticProjectionConfiguration,
+  install: makeOwnedCitationSemanticProjection,
+});
+const makeCitationOccurrenceProjection = installCitationOwnedTestStage({
+  schema: CitationOccurrenceProjectionConfiguration,
+  install: makeOwnedCitationOccurrenceProjection,
+  invalid: () => CitationOccurrenceProjectionFailure.make({ reason: "invalid-configuration" }),
+});
 
 const artifact = Sha256Hex.make(Str.repeat(64)("a"));
 const refusal = (failure: { readonly _tag: string }) => ({

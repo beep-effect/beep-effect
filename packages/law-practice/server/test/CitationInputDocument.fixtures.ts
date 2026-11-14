@@ -1,6 +1,7 @@
 /** Source constructor replay through real owned cleaning and geometry.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
 import {
@@ -9,10 +10,11 @@ import {
 } from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
 import { CitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { makeCitationDocumentCleanerProtocols } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
+import { CitationHtmlGeometryPreparationConfiguration } from "@beep/law-practice-server/internal/Citation/HtmlGeometryPreparation";
 import {
   CitationDocumentInputFailure,
   CitationDocumentInputProtocols,
-  makeCitationInputDocument,
+  makeCitationInputDocument as makeOwnedCitationInputDocument,
 } from "@beep/law-practice-server/internal/Citation/InputDocument";
 import { CitationCleaner, CitationCleanerProduced } from "@beep/law-practice-use-cases/server";
 import { expect } from "@effect/vitest";
@@ -23,6 +25,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationCleanerRegistryHarness } from "./CitationCleanerRegistry.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
@@ -36,6 +39,11 @@ import type {
   CitationNativeRuntimeKind,
 } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationCleanerObject } from "@beep/law-practice-use-cases/server";
+
+const makeCitationInputDocument = installCitationOwnedTestStage({
+  schema: CitationHtmlGeometryPreparationConfiguration,
+  install: makeOwnedCitationInputDocument,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationInputDocument");
 const Value = S.Union([

@@ -1,13 +1,25 @@
-import { citationCaseNameWordText, makeCitationCaseName } from "@beep/law-practice-server/internal/Citation/CaseName";
+import {
+  CitationCaseNameConfiguration,
+  citationCaseNameWordText,
+  makeCitationCaseName as makeOwnedCitationCaseName,
+} from "@beep/law-practice-server/internal/Citation/CaseName";
+import { CitationCaseNameScanFailure } from "@beep/law-practice-server/internal/Citation/CaseNameScan";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import { deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import { readCitationCaseNameCorpus } from "./CitationCaseName.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+const makeCitationCaseName = installCitationOwnedTestStage({
+  schema: CitationCaseNameConfiguration,
+  install: makeOwnedCitationCaseName,
+  invalid: () => CitationCaseNameScanFailure.make({ reason: "invalid-configuration" }),
+});
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("plain case-name refusals", (it) => {
   it.effect("spells a None token and keeps native text identity", () =>

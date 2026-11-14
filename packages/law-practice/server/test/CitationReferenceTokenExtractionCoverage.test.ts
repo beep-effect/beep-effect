@@ -1,4 +1,8 @@
-import { makeCitationReferenceTokenExtraction } from "@beep/law-practice-server/internal/Citation/ReferenceTokenExtraction";
+import {
+  CitationReferenceTokenConfiguration,
+  CitationReferenceTokenFailure,
+  makeCitationReferenceTokenExtraction as makeOwnedCitationReferenceTokenExtraction,
+} from "@beep/law-practice-server/internal/Citation/ReferenceTokenExtraction";
 import { CitationTokenDispatchBindings } from "@beep/law-practice-server/internal/Citation/TokenDispatch";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -8,11 +12,18 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readCitationCaseMetadataConfiguration } from "./CitationCaseMetadata.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationFrozenMetadataRuntime } from "./CitationFrozenEditions.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationPinExtractionCorpus } from "./CitationPinExtraction.fixtures.ts";
 import { readCitationReferenceTokenCorpus } from "./CitationReferenceToken.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+const makeCitationReferenceTokenExtraction = installCitationOwnedTestStage({
+  schema: CitationReferenceTokenConfiguration,
+  install: makeOwnedCitationReferenceTokenExtraction,
+  invalid: () => CitationReferenceTokenFailure.make({ reason: "invalid-configuration" }),
+});
 
 const install = Effect.fnUntraced(function* () {
   const corpus = yield* readCitationReferenceTokenCorpus();

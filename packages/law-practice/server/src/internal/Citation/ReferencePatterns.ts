@@ -31,6 +31,7 @@ import { CitationRegexPatternDescriptor, CitationRegexPatternProfile } from "./R
 import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationCaseMetadataFields } from "./CaseMetadata.ts";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ReferencePatterns");
 const Patterns = S.Struct({
@@ -120,13 +121,10 @@ const words = Effect.fn("Citation.referenceMarkupWords")(function* (value: Citat
 /** Authenticate fixed templates and exclusions before retaining an installed stage.
  * @internal @category operations @since 0.0.0
  */
-export const copyCitationReferencePatternConfiguration = Effect.fn("Citation.copyReferencePatternConfiguration")(
-  function* (limits: CitationEngineLimits, config: CitationReferencePatternConfiguration) {
-    const copied = yield* copyCitationMetadataPatterns(limits, config.patterns, fingerprints, () =>
+export const verifyCitationReferencePatternConfiguration = Effect.fn("Citation.verifyReferencePatternConfiguration")(
+  function* (limits: CitationEngineLimits, config: CitationOwned<CitationReferencePatternConfiguration>) {
+    const patterns = yield* copyCitationMetadataPatterns(limits, config.patterns, fingerprints, () =>
       fail("invalid-configuration")
-    );
-    const patterns = yield* S.decodeUnknownEffect(Patterns)(copied).pipe(
-      Effect.mapError(() => fail("invalid-configuration"))
     );
     const disallowedNames = yield* copyCitationReferenceExclusions(config.disallowedNames);
     return CitationReferencePatternConfiguration.make({ patterns, disallowedNames });
@@ -147,11 +145,8 @@ export const makeCitationReferencePatterns = Effect.fn("Citation.makeReferencePa
   );
   const budget = yield* CitationTextBudget;
   if (budget.maximum > limits.producedTextUtf16) return yield* fail("invalid-policy");
-  const copiedPatterns = yield* copyCitationMetadataPatterns(limits, config.patterns, fingerprints, () =>
+  const patterns = yield* copyCitationMetadataPatterns(limits, config.patterns, fingerprints, () =>
     fail("invalid-configuration")
-  );
-  const patterns = yield* S.decodeUnknownEffect(Patterns)(copiedPatterns).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
   );
   const digest = yield* Digest.Digest;
   const names = yield* makeCitationReferenceNames(limits, config.disallowedNames);

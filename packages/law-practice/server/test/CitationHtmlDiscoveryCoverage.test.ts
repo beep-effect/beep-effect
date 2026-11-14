@@ -1,17 +1,31 @@
-import { makeCitationHtmlDiscovery } from "@beep/law-practice-server/internal/Citation/HtmlDiscovery";
+import {
+  CitationHtmlDiscoveryConfiguration,
+  CitationHtmlDiscoveryFailure,
+  makeCitationHtmlDiscovery as makeOwnedCitationHtmlDiscovery,
+} from "@beep/law-practice-server/internal/Citation/HtmlDiscovery";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import {
+  installCitationOwnedTestStage,
+  refuseCitationTestConfigurations,
+} from "./CitationConfigurationOwnership.fixtures.ts";
 import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+
+const makeCitationHtmlDiscovery = installCitationOwnedTestStage({
+  schema: CitationHtmlDiscoveryConfiguration,
+  install: makeOwnedCitationHtmlDiscovery,
+});
 
 const setup = Effect.fnUntraced(function* () {
   const loaded = yield* readCitationHtmlDiscoveryCorpus();
   const runtime = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
-  const make = (policy: unknown, configuration: unknown) =>
+  const make = (policy: CitationEngineLimits, configuration: unknown) =>
     makeCitationHtmlDiscovery(policy, runtime.runtime, configuration).pipe(
       Effect.flatMap((stage) =>
         makeCitationTestScaffoldBinding(policy).pipe(
@@ -27,7 +41,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("HTML discov
   it.effect("refuses malformed and unauthenticated fixed-pattern configuration", () =>
     Effect.gen(function* () {
       const { configuration, make, runtime } = yield* setup();
-      const malformed = yield* make(runtime.limits, { patterns: null }).pipe(Effect.flip);
+      // Malformed configuration is refused where it crosses into the engine.
+      const [malformed] = yield* refuseCitationTestConfigurations(
+        () => CitationHtmlDiscoveryFailure.make({ reason: "invalid-configuration" }),
+        [[CitationHtmlDiscoveryConfiguration, { patterns: null }]]
+      );
       expect(malformed).toMatchObject({ _tag: "CitationHtmlDiscoveryFailure", reason: "invalid-configuration" });
       const swapped = {
         ...configuration,

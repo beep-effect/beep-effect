@@ -1,19 +1,31 @@
 /** Primitive request replay, original early return and captured cleaner ports.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { CitationDocumentStepContainers } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
-import { makeCitationExtractionEntry } from "@beep/law-practice-server/internal/Citation/ExtractionEntry";
+import { CitationDocumentExtractionConfiguration } from "@beep/law-practice-server/internal/Citation/DocumentExtraction";
+import {
+  CitationExtractionEntryFailure,
+  makeCitationExtractionEntry as makeOwnedCitationExtractionEntry,
+} from "@beep/law-practice-server/internal/Citation/ExtractionEntry";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import { assertCitationTokenizedExtractionRow } from "./CitationTokenizedExtraction.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationExtractionEntry = installCitationOwnedTestStage({
+  schema: CitationDocumentExtractionConfiguration,
+  install: makeOwnedCitationExtractionEntry,
+  invalid: () => CitationExtractionEntryFailure.make({ reason: "invalid-configuration" }),
+});
 
 type SourceRow = Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>["corpus"]["cases"][number];
 /** Convert an authenticated source row into primitive request data for entry compositions. */

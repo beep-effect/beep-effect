@@ -22,6 +22,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationOperationAdmission } from "../internal/Citation/Admission.ts";
+import { ownCitationConfiguration } from "../internal/Citation/ConfigurationOwnership.ts";
 import { CitationInvocationPolicy, openCitationInvocation } from "../internal/Citation/Invocation.ts";
 import { makeCitationAdmissionOwners } from "../internal/Citation/NativeAdmission.ts";
 import { CitationNativeProcessRuntime } from "../internal/Citation/NativeProcess.ts";
@@ -33,7 +34,6 @@ import {
   makeCitationSixFormArtifact,
 } from "../internal/Citation/SixFormArtifact.ts";
 import { makeCitationSixFormProjection } from "../internal/Citation/SixFormProjection.ts";
-import { captureCitationSnapshot } from "../internal/Citation/Snapshot.ts";
 import { makeCitationSourceEvidence } from "../internal/Citation/SourceEvidence.ts";
 
 const decodeExtractorResult = S.decodeUnknownEffect(S.toType(CitationExtractorResult));
@@ -60,8 +60,6 @@ export class CitationExtractorConfiguration extends S.Opaque<
     })
   )
 ) {}
-const Configuration = S.toType(CitationExtractorConfiguration);
-const ConfigurationJson = CitationExtractorConfiguration.pipe(S.toCodecJson, S.fromJsonString);
 const invalidObservation = () => CitationRecognitionError.make({ reason: "invalid-observation" });
 const isFailure = S.is(CitationExtractorFailure);
 const normalize = Effect.fnUntraced(function* (cause: Cause.Cause<unknown>) {
@@ -72,7 +70,8 @@ const normalize = Effect.fnUntraced(function* (cause: Cause.Cause<unknown>) {
 });
 const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
   const invalid = () => CitationInputError.make({ operation: "extract" });
-  const configuration = yield* captureCitationSnapshot(Configuration, ConfigurationJson, raw, invalid);
+  // Configuration crosses from a caller into the extractor here: one detach.
+  const configuration = yield* ownCitationConfiguration(CitationExtractorConfiguration, raw, invalid);
   const { installation, runtime } = configuration;
   const { limits } = installation;
   if (runtime.kind !== installation.runtime.kind) return yield* invalid();

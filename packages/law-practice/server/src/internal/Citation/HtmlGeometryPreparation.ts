@@ -3,16 +3,18 @@
  * see THIRD_PARTY_NOTICES.md. Cleaning precedes this private stage.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import { makeCitationDiffWorker } from "./DiffWorker.ts";
 import {
   CitationHtmlDiscoveryConfiguration,
-  copyCitationHtmlDiscoveryConfiguration,
   makeCitationHtmlDiscoveryRunner,
+  verifyCitationHtmlDiscoveryConfiguration,
 } from "./HtmlDiscovery.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import { reserveCitationInvocationText } from "./Invocation.ts";
@@ -21,6 +23,7 @@ import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { CitationSpanOffsetsPlan } from "./SpanOffsets.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlGeometryPreparation");
 const Reason = LiteralKit(["invalid-configuration", "invalid-input"]).pipe(
@@ -74,20 +77,19 @@ export class CitationPreparedHtmlGeometry extends S.Opaque<
     })
   )
 ) {}
-const invalid = () => CitationHtmlGeometryPreparationFailure.make({ reason: "invalid-configuration" });
 const PreparedHtmlValue = S.toType(CitationPreparedHtmlSource).pipe(
   $I.annoteSchema("PreparedHtmlValue", {
     description: "Captured static boundary codec for bounded citation processing.",
   })
 );
-export const copyCitationHtmlGeometryConfiguration = Effect.fn("Citation.ownHtmlGeometryConfiguration")(function* (
+export const verifyCitationHtmlGeometryConfiguration = Effect.fn("Citation.ownHtmlGeometryConfiguration")(function* (
   limits: CitationEngineLimits,
-  config: CitationHtmlGeometryPreparationConfiguration
+  config: CitationOwned<CitationHtmlGeometryPreparationConfiguration>
 ) {
-  const discovery = yield* copyCitationHtmlDiscoveryConfiguration(limits, config.discovery);
+  const discovery = yield* verifyCitationHtmlDiscoveryConfiguration(limits, ownedField(config, "discovery"));
   return CitationHtmlGeometryPreparationConfiguration.make({
     discovery,
-    diffRuntime: CitationNativeProcessRuntime.make({ ...config.diffRuntime }),
+    diffRuntime: config.diffRuntime,
   });
 });
 /** Install the HTML discovery evaluator once. Each call prepares the original
@@ -162,7 +164,7 @@ const installPrepare = Effect.fn("Citation.installHtmlGeometryPreparation")(func
     return yield* html.geometry(source.markup, Effect.succeed(source.plain));
   });
 });
-const ownPrepare = ownCitationStageCall({ copy: copyCitationHtmlGeometryConfiguration, install: installPrepare });
+const ownPrepare = ownCitationStageCall({ verify: verifyCitationHtmlGeometryConfiguration, install: installPrepare });
 /** Capture the existing admitted operation and cumulative native text owner.
  * The method has R=never and preserves placeholder/forward/backward/emphasis
  * source order. Four independently retired children precede publication.
@@ -171,8 +173,6 @@ const ownPrepare = ownCitationStageCall({ copy: copyCitationHtmlGeometryConfigur
  */
 export const makeCitationHtmlGeometryPreparation = makeCitationMetadataStage({
   method: "prepare",
-  schema: S.toType(CitationHtmlGeometryPreparationConfiguration),
-  invalid,
   own: ownPrepare,
   prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownPrepare>>, raw) => run(raw),
   project: (geometry, reservedUnits) => CitationPreparedHtmlGeometry.make({ geometry, reservedUnits }),

@@ -31,13 +31,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Slice A1 in review: the probe fixture and recorded baseline.
+Slice A4 in review: configuration owned once at the engine boundary
+(`CitationOwned`), with two stops awaiting a reshape (the default engine's
+second own and the fingerprints). A1 (#3253), A2 (#3265) and A3 (#3282) are
+merged.
 
 ## Latest Evidence
 
-[`history/evidence/2026-11-13-a1-baseline.md`](./history/evidence/2026-11-13-a1-baseline.md):
-per call, 14 metadata-operation installs, 8 configuration detaches and 1
-tokenizer build; 291 child processes across the ten calls.
+[`history/evidence/2026-11-13-a4-owned-configuration.md`](./history/evidence/2026-11-13-a4-owned-configuration.md):
+per call still 0 installs, 0 detaches, 0 tokenizer builds and 0 evaluator
+installs with 291 child processes over ten calls; engine construction now
+performs 2 configuration detaches (10 before), the two boundary owns of the
+default engine.
 
 ## Notes
 

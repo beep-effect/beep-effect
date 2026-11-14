@@ -5,7 +5,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationCaseNameProcessConfiguration,
   CitationCaseNameProcessFailure,
-  makeCitationCaseNameProcess,
+  makeCitationCaseNameProcess as makeOwnedCitationCaseNameProcess,
 } from "@beep/law-practice-server/internal/Citation/CaseNameProcess";
 import { makeCitationMetadataStage } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
 import { parseCitationPythonInteger } from "@beep/law-practice-server/internal/Citation/PythonInteger";
@@ -25,6 +25,10 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Tuple from "effect/Tuple";
+import {
+  installCitationOwnedTestStage,
+  ownCitationTestConfiguration,
+} from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFailure,
@@ -38,9 +42,19 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationCaseNameProcessPatch } from "@beep/law-practice-server/internal/Citation/CaseNameProcess";
+import type { CitationOwned } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
+const makeCitationCaseNameProcess = installCitationOwnedTestStage({
+  schema: CitationCaseNameProcessConfiguration,
+  install: makeOwnedCitationCaseNameProcess,
+  invalid: () => CitationCaseNameProcessFailure.make({ reason: "invalid-configuration" }),
+});
+
 const $I = $LawPracticeServerId.create("test/CitationCaseNameProcess");
+const BlockedStage = S.Struct({}).pipe(
+  $I.annoteSchema("BlockedStage", { description: "No configuration is needed to block a stage under its deadline." })
+);
 const Native = CitationNativeUnicodeHex;
 const Value = S.NullOr(Native);
 /** Complete native name-phase model snapshot shared by composed replays. */
@@ -286,13 +300,12 @@ export const assertCitationMetadataStageDeadline = Effect.fn("CaseNameProcessTes
   );
   const make = makeCitationMetadataStage({
     method: "apply",
-    schema: S.Void,
-    invalid: () => CitationCaseNameProcessFailure.make({ reason: "invalid-configuration" }),
-    own: () => Effect.void,
+    own: (_limits, _configuration: CitationOwned<typeof BlockedStage.Type>) => Effect.void,
     prepare,
     project: identity,
   });
-  const stage = yield* make(setup.limits, setup.runtime, undefined).pipe(
+  const configuration = yield* ownCitationTestConfiguration(BlockedStage, {});
+  const stage = yield* make(setup.limits, setup.runtime, configuration).pipe(
     Effect.flatMap((stage) =>
       makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ apply: bind(stage.apply) })))
     ),

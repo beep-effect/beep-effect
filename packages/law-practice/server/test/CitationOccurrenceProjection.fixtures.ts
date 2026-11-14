@@ -1,7 +1,10 @@
 /** Primary occurrence evidence over actual raw-to-semantic extraction results.
  * @internal @packageDocumentation @since 0.0.0
  */
-import { makeCitationOccurrenceProjection } from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
+import {
+  CitationOccurrenceProjectionConfiguration,
+  makeCitationOccurrenceProjection as makeOwnedCitationOccurrenceProjection,
+} from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
 import { CitationSemanticExtractionResult } from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import {
@@ -17,6 +20,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import type { CitationMention } from "@beep/law-practice-domain/values";
 import type { CitationExtractionLoopModel } from "@beep/law-practice-server/internal/Citation/ExtractionLoop";
@@ -24,6 +28,11 @@ import type { CitationInvocation } from "@beep/law-practice-server/internal/Cita
 import type { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import type { installCitationDocumentExtractionFixture } from "./CitationDocumentExtraction.fixtures.ts";
 import type { CitationTestInvocationBound } from "./CitationInvocation.fixtures.ts";
+
+const makeCitationOccurrenceProjection = installCitationOwnedTestStage({
+  schema: CitationOccurrenceProjectionConfiguration,
+  install: makeOwnedCitationOccurrenceProjection,
+});
 
 type Installed = Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>;
 type SourceRow = Installed["corpus"]["cases"][number];

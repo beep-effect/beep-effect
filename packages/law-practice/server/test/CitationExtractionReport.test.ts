@@ -1,5 +1,9 @@
 import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/SourceText";
-import { makeCitationSourceExtraction } from "@beep/law-practice-server/internal/Citation/SourceExtraction";
+import { makeCitationSourceExtraction as makeOwnedCitationSourceExtraction } from "@beep/law-practice-server/internal/Citation/SourceExtraction";
+import {
+  CitationVerifiedExtractionConfiguration,
+  CitationVerifiedExtractionFailure,
+} from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as Clock from "effect/Clock";
@@ -9,10 +13,17 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as TestClock from "effect/testing/TestClock";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+const makeCitationSourceExtraction = installCitationOwnedTestStage({
+  schema: CitationVerifiedExtractionConfiguration,
+  install: makeOwnedCitationSourceExtraction,
+  invalid: () => CitationVerifiedExtractionFailure.make({ reason: "invalid-configuration" }),
+});
 
 it.layer(citationTokenizerTestLayer)("captured extraction report timing", (it) => {
   it.layer(TestClock.layer())("work duration", (it) => {

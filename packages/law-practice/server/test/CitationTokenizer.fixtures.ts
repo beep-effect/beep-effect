@@ -1,6 +1,7 @@
 /** Shared pinned-source tokenizer composition and real process setup.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
@@ -13,9 +14,11 @@ import {
   makeCitationRegexInput,
 } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import {
+  CitationTokenizerConfiguration,
   CitationTokenizerExtractor,
-  makeCitationTokenizer,
+  makeCitationTokenizer as makeOwnedCitationTokenizer,
 } from "@beep/law-practice-server/internal/Citation/Tokenizer";
+import { CitationTokenizerFailure } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import * as BunChildProcessSpawner from "@effect/platform-bun/BunChildProcessSpawner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -30,6 +33,7 @@ import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeManualClock,
@@ -37,6 +41,12 @@ import {
   makeCitationRegexTestRuntime,
 } from "./CitationNativeSpawner.fixtures.ts";
 import { CitationTokenSeedHex } from "./CitationTokenSeed.fixtures.ts";
+
+const makeCitationTokenizer = installCitationOwnedTestStage({
+  schema: CitationTokenizerConfiguration,
+  install: makeOwnedCitationTokenizer,
+  invalid: () => CitationTokenizerFailure.make({ reason: "invalid-configuration" }),
+});
 
 const $I = $LawPracticeServerId.create("test/CitationTokenizer");
 const Native = S.Struct({ width: S.Literals([1, 2, 4]), bytes: S.Uint8ArrayFromHex });

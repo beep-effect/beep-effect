@@ -2,15 +2,18 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { ownCitationConfiguration } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
 import {
   CitationStopWordsConfiguration,
-  makeCitationStopWords,
+  CitationStopWordsFailure,
+  makeCitationStopWords as makeOwnedCitationStopWords,
 } from "@beep/law-practice-server/internal/Citation/StopWords";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFailure,
@@ -23,6 +26,11 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationStopWords = installCitationOwnedTestStage({
+  schema: CitationStopWordsConfiguration,
+  install: makeOwnedCitationStopWords,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationStopWords");
 const Configuration = S.Struct({
@@ -133,8 +141,13 @@ export const assertCitationStopWordsBudget = Effect.fn("StopWordsTest.budget")(f
 export const assertCitationStopWordsLifetime = Effect.fn("StopWordsTest.lifetime")(function* () {
   const scope = yield* Scope.make();
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
+  // A configuration outside the schema is refused where it crosses into the engine.
+  const refused = yield* ownCitationConfiguration(CitationStopWordsConfiguration, null, () =>
+    CitationStopWordsFailure.make({ reason: "invalid-configuration" })
+  ).pipe(Effect.flip);
+  expect(refused).toMatchObject({ reason: "invalid-configuration" });
+  // An owned configuration whose pattern fails authentication is refused by the stage.
   for (const configuration of [
-    null,
     {
       ...closed.configuration,
       patterns: { ...closed.configuration.patterns, stopWords: { width: 1, bytes: new Uint8Array([88]) } },

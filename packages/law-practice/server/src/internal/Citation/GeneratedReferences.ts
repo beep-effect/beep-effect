@@ -21,16 +21,13 @@ import { CitationCaseMetadataFields } from "./CaseMetadata.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import { reserveCitationInvocationText } from "./Invocation.ts";
 import { makeCitationMetadataStage, ownCitationStageCall } from "./MetadataComposition.ts";
-import {
-  CitationReferencePatternConfiguration,
-  copyCitationReferencePatternConfiguration,
-  makeCitationReferencePatterns,
-} from "./ReferencePatterns.ts";
+import { makeCitationReferencePatterns, verifyCitationReferencePatternConfiguration } from "./ReferencePatterns.ts";
 import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
 import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import { makeCitationSpanOffsets } from "./SpanOffsets.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
+import type { CitationReferencePatternConfiguration } from "./ReferencePatterns.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/GeneratedReferences");
 const Value = S.NullOr(CitationPythonUnicodeStorage);
@@ -112,7 +109,6 @@ export class CitationGeneratedReferencesResult extends S.Opaque<
   )
 ) {}
 const Input = S.toType(CitationGeneratedReferenceInput);
-const Configuration = S.toType(CitationReferencePatternConfiguration);
 const fail = (reason: typeof Reason.Type) => CitationGeneratedReferenceFailure.make({ reason });
 type Evaluation = Effect.Success<
   ReturnType<Effect.Success<ReturnType<typeof installCitationRegexEvaluator>>["evaluate"]>
@@ -203,7 +199,10 @@ const installPincited = Effect.fn("Citation.installPincitedReferences")(function
     );
   });
 });
-const ownPincited = ownCitationStageCall({ copy: copyCitationReferencePatternConfiguration, install: installPincited });
+const ownPincited = ownCitationStageCall({
+  verify: verifyCitationReferencePatternConfiguration,
+  install: installPincited,
+});
 /** Run original plain-name reference generation through shared admission, captured
  * Scope/deadline/text authority, existing typed regex RPC and retirement barrier.
  * No partial references publish; whole-loop assembly follows.
@@ -211,8 +210,6 @@ const ownPincited = ownCitationStageCall({ copy: copyCitationReferencePatternCon
  */
 export const makeCitationGeneratedReferences = makeCitationMetadataStage({
   method: "pincited",
-  schema: Configuration,
-  invalid: () => fail("invalid-configuration"),
   own: ownPincited,
   prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownPincited>>, raw) => run(raw),
   project: (references, reservedUnits) => CitationGeneratedReferencesResult.make({ references, reservedUnits }),
@@ -317,15 +314,13 @@ const installMarkup = Effect.fn("Citation.installMarkupReferences")(function* (
     return kept;
   });
 });
-const ownMarkup = ownCitationStageCall({ copy: copyCitationReferencePatternConfiguration, install: installMarkup });
+const ownMarkup = ownCitationStageCall({ verify: verifyCitationReferencePatternConfiguration, install: installMarkup });
 /** Original markup-name reference generation using existing offset plans and
  * typed regex RPC under one captured operation, deadline and text authority.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationGeneratedMarkupReferences = makeCitationMetadataStage({
   method: "markup",
-  schema: Configuration,
-  invalid: () => fail("invalid-configuration"),
   own: ownMarkup,
   prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownMarkup>>, raw) => run(raw),
   project: (references, reservedUnits) => CitationGeneratedReferencesResult.make({ references, reservedUnits }),
@@ -379,15 +374,16 @@ const installCombined = Effect.fn("Citation.installGeneratedReferences")(functio
     return A.appendAll(pin, markup);
   });
 });
-const ownCombined = ownCitationStageCall({ copy: copyCitationReferencePatternConfiguration, install: installCombined });
+const ownCombined = ownCitationStageCall({
+  verify: verifyCitationReferencePatternConfiguration,
+  install: installCombined,
+});
 /** Original ordered plain/markup caller, sharing one Scope, deadline and
  * cumulative text budget across both generators; final filtering stays separate.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationGeneratedCombinedReferences = makeCitationMetadataStage({
   method: "combined",
-  schema: Configuration,
-  invalid: () => fail("invalid-configuration"),
   own: ownCombined,
   prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownCombined>>, raw) => run(raw),
   project: (references, reservedUnits) => CitationGeneratedReferencesResult.make({ references, reservedUnits }),

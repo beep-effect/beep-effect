@@ -5,9 +5,10 @@ import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationCaseNameScanConfiguration,
+  CitationCaseNameScanFailure,
   CitationCaseNameScanInput,
   CitationCaseNameScanState,
-  makeCitationCaseNameScan,
+  makeCitationCaseNameScan as makeOwnedCitationCaseNameScan,
 } from "@beep/law-practice-server/internal/Citation/CaseNameScan";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -16,6 +17,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFailure,
@@ -27,6 +29,12 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationCaseNameScan = installCitationOwnedTestStage({
+  schema: CitationCaseNameScanConfiguration,
+  install: makeOwnedCitationCaseNameScan,
+  invalid: () => CitationCaseNameScanFailure.make({ reason: "invalid-configuration" }),
+});
 
 const $I = $LawPracticeServerId.create("test/CitationCaseNameScan");
 const Value = S.NullOr(CitationNativeUnicodeHex);

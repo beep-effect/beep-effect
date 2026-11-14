@@ -7,9 +7,14 @@ import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
+import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { installCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
 import { CitationTokenContextInput } from "@beep/law-practice-server/internal/Citation/TokenContext";
-import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import {
+  CitationEngineLimits,
+  CitationPythonUnicodeStorage,
+  CitationTextBudget,
+} from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -26,6 +31,7 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
+import { refuseCitationTestConfigurations } from "./CitationConfigurationOwnership.fixtures.ts";
 import {
   CitationTestBudgetObservation,
   makeCitationTestBudgetObservation,
@@ -39,11 +45,7 @@ import {
   makeCitationRegexTestRuntime,
 } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationPublicationMetadataConfiguration } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
-import type {
-  CitationNativeProcessRuntime,
-  CitationNativeRuntimeKind,
-} from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationNativeExitCounts } from "./CitationNativeSpawner.fixtures.ts";
 
 /** Authenticate committed native oracle bytes before any schema projection. */
@@ -139,7 +141,11 @@ export const setupCitationMetadataRuntime = Effect.fn("RegexWorkerTest.metadataR
 /** Install a fresh source-bound fixture stage through the same existing runtime owners. */
 export const makeCitationMetadataFixtureInstaller =
   <Stage, StageError, StageEnv>(
-    factory: (policy: unknown, runtime: unknown, configuration: unknown) => Effect.Effect<Stage, StageError, StageEnv>
+    factory: (
+      limits: CitationEngineLimits,
+      runtime: CitationNativeProcessRuntime,
+      configuration: unknown
+    ) => Effect.Effect<Stage, StageError, StageEnv>
   ) =>
   <
     Corpus extends { readonly configuration: typeof CitationPublicationMetadataConfiguration.Encoded },
@@ -341,20 +347,30 @@ export const assertCitationMetadataInstallControls = Effect.fn("MetadataTest.ins
   E,
   R,
   C extends object,
+  Invalid,
 >(
-  install: (policy: unknown, runtime: unknown, configuration: unknown) => Effect.Effect<A, E, R>,
+  install: (
+    limits: CitationEngineLimits,
+    runtime: CitationNativeProcessRuntime,
+    configuration: unknown
+  ) => Effect.Effect<A, E, R>,
   setup: Effect.Success<ReturnType<typeof setupCitationMetadataRuntime>>,
-  configuration: C
+  configuration: C,
+  schema: S.Codec<unknown, unknown>,
+  invalid: () => Invalid
 ) {
+  // Malformed policy, configuration and runtime are refused where they cross into the engine.
+  const refusals = yield* refuseCitationTestConfigurations(invalid, [
+    [CitationEngineLimits, {}],
+    [schema, {}],
+    [CitationNativeProcessRuntime, {}],
+  ]);
+  for (const refused of refusals) expect(refused).toMatchObject({ reason: "invalid-configuration" });
+  // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
-  const attempts: ReadonlyArray<readonly [unknown, unknown, unknown]> = [
-    [{}, setup.runtime, configuration],
-    [setup.limits, setup.runtime, {}],
-    [setup.limits, {}, configuration],
-    [setup.limits, setup.runtime, { ...configuration, pattern: changedPattern }],
-  ];
-  for (const [policy, runtime, changed] of attempts) {
-    const failed = yield* install(policy, runtime, changed).pipe(Effect.provideContext(setup.provided), Effect.flip);
-    expect(failed).toMatchObject({ reason: "invalid-configuration" });
-  }
+  const failed = yield* install(setup.limits, setup.runtime, { ...configuration, pattern: changedPattern }).pipe(
+    Effect.provideContext(setup.provided),
+    Effect.flip
+  );
+  expect(failed).toMatchObject({ reason: "invalid-configuration" });
 });
