@@ -2554,6 +2554,15 @@
       ],
       "@beep/alchemy-vercel/*": [
         "./packages/tooling/library/alchemy-vercel/src/*"
+      ],
+      "@beep/infra-turbo-cache": [
+        "./packages/tooling/infra/turbo-cache/src/index.ts"
+      ],
+      "@beep/infra-turbo-cache/*": [
+        "./packages/tooling/infra/turbo-cache/src/*"
+      ],
+      "@beep/infra-turbo-cache/internal/*": [
+        "./packages/tooling/infra/turbo-cache/src/internal/*"
       ]
     }
   }

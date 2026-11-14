@@ -17,6 +17,7 @@ const config = {
     "packages/shared/use-cases/package.json",
     "packages/shared/tables/package.json",
     "packages/tooling/library/*/package.json",
+    "packages/tooling/infra/*/package.json",
     "packages/tooling/policy-pack/*/package.json",
     "packages/tooling/test-kit/*/package.json",
     "packages/tooling/tool/*/package.json",
