@@ -1,5 +1,4 @@
 import { makeCitationNativeArgumentEncoder } from "@beep/law-practice-server/internal/Citation/NativeJson";
-import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import {
   CitationRegexSessionComplete,
   CitationRegexSessionFailure,
@@ -13,13 +12,8 @@ import {
   encodeCitationRegexSessionStartup,
   preflightCitationRegexSessionControls,
 } from "@beep/law-practice-server/internal/Citation/RegexSessionRpc";
-import {
-  CitationRegexWorkerStartup,
-  encodeCitationRegexStartup,
-} from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
 import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
-import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -84,26 +78,5 @@ it.effect("bounds variable startup arguments after schema encoding", () =>
     expect(small).toBe('"ok"');
     const failure = yield* encodeArgument(Str.repeat(8192)("x")).pipe(Effect.flip);
     expect(failure).toBe("argument-exceeded");
-  })
-);
-
-it.effect("preserves the v2 startup capture-name bound while sharing the argument encoder", () =>
-  Effect.gen(function* () {
-    const { limits } = yield* defaultCitationEnginePolicy;
-    const descriptor = CitationRegexPatternDescriptor.make({
-      patternSha256: Sha256Hex.make(Str.repeat(64)("a")),
-      flags: 0,
-      profile: {
-        groups: 1,
-        names: { [Str.repeat(8)("x")]: 1 },
-        minimumWidthFloor: 1,
-        repeatedCaptures: false,
-        nullableMultiRepeat: false,
-      },
-    });
-    const failure = yield* encodeCitationRegexStartup(
-      CitationRegexWorkerStartup.make({ limits: { ...limits, patternUtf16: 1 }, engine: "python-re", descriptor })
-    ).pipe(Effect.flip);
-    expect(failure).toMatchObject({ reason: "invalid-runtime" });
   })
 );

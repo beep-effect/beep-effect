@@ -1,18 +1,9 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import {
-  CitationRegexPatternDescriptor,
-  CitationRegexPatternProfile,
-} from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
+import { CitationRegexPatternProfile } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { CitationRegexEngine } from "@beep/law-practice-server/internal/Citation/RegexEngine";
 import { makeCitationRegexPointSets } from "@beep/law-practice-server/internal/Citation/RegexPointSets";
-import {
-  CitationRegexWorkerStartup,
-  decodeCitationRegexStartup,
-  encodeCitationRegexStartup,
-} from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
-import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -115,37 +106,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("pinned sour
         ]);
       }),
     { timeout: 60000 }
-  );
-  it.effect("requires an explicit known child engine and round-trips either selected identity", () =>
-    Effect.gen(function* () {
-      const corpus = yield* load();
-      const row = yield* Effect.fromOption(A.head(corpus.workerCases));
-      const descriptor = CitationRegexPatternDescriptor.make({
-        patternSha256: row.patternSha256,
-        flags: row.flags,
-        profile: row.profile,
-      });
-      const limits = (yield* defaultCitationEnginePolicy).limits;
-      const envelope = S.fromJsonString(
-        S.Struct({ engine: S.optionalKey(S.String), limits: S.Unknown, descriptor: S.Unknown })
-      );
-      for (const engine of CitationRegexEngine.literals) {
-        const encoded = yield* encodeCitationRegexStartup(
-          CitationRegexWorkerStartup.make({ limits, descriptor, engine })
-        );
-        const decoded = yield* decodeCitationRegexStartup([encoded]);
-        expect(decoded.engine).toBe(engine);
-        const payload = yield* S.decodeEffect(envelope)(encoded);
-        for (const invalid of [
-          { limits: payload.limits, descriptor: payload.descriptor },
-          { ...payload, engine: "unknown" },
-        ]) {
-          const malformed = yield* S.encodeEffect(envelope)(invalid);
-          const failed = yield* decodeCitationRegexStartup([malformed]).pipe(Effect.flip);
-          expect(failed).toMatchObject({ reason: "invalid-runtime" });
-        }
-      }
-    })
   );
   for (const kind of CitationNativeRuntimeKind.literals) {
     it.effect(

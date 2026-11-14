@@ -9,12 +9,11 @@ import {
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
-import { dual, identity } from "effect/Function";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { makeCitationNativeFrameReader } from "./ByteFrames.ts";
-import { citationNativeBase64Length, citationNativeBytes, makeCitationNativeJsonDecoder } from "./NativeJson.ts";
+import { citationNativeBase64Length, citationNativeBytes } from "./NativeJson.ts";
 import { CitationNativeProcessFailureReason } from "./NativeProcess.ts";
 import { CitationRegexSourceFlags } from "./RegexEngine.ts";
 import { CitationRegexInputLayout, citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
@@ -61,9 +60,8 @@ const Limit = S.Int.check(S.isBetween({ minimum: 1, maximum: CitationEngineAbsol
  * before execution. This data is not a reviewed-pattern execution capability.
  * @internal @category models @since 0.0.0
  */
-export class CitationRegexWorkerJob extends S.Opaque<CitationRegexWorkerJob, { readonly brand: unique symbol }>()(
-  S.TaggedStruct("Evaluate", {
-    version: S.tag("citation-regex-worker/v2"),
+export class CitationRegexPayload extends S.Opaque<CitationRegexPayload, { readonly brand: unique symbol }>()(
+  S.Struct({
     patternWidth: CitationPythonUnicodeStorage.fields.width,
     patternBytes: PatternBytes,
     sourceWidth: CitationPythonUnicodeStorage.fields.width,
@@ -72,23 +70,18 @@ export class CitationRegexWorkerJob extends S.Opaque<CitationRegexWorkerJob, { r
     maxMatches: Matches,
     mode: CitationRegexMatchMode,
   }).pipe(
-    $I.annoteSchema("CitationRegexWorkerJob", {
+    $I.annoteSchema("CitationRegexPayload", {
       description:
         "One closed data-only regex invocation; projected JavaScript strings cannot replace either native carrier.",
     })
   )
 ) {}
-const JobJson = S.fromJsonString(CitationRegexWorkerJob);
-const JobType = S.toType(CitationRegexWorkerJob);
-const propertyCeiling = R.keys(CitationRegexWorkerJob.fields).length;
 const Layout = S.toType(CitationRegexInputLayout);
 const decodeMode = S.decodeUnknownEffect(CitationRegexMatchMode);
 const decodeFlags = S.decodeUnknownEffect(Flags);
 const decodeMatches = S.decodeUnknownEffect(Matches);
 const decodeLimit = S.decodeEffect(Limit);
 const decodeLayout = S.decodeEffect(Layout);
-const decodeJob = S.decodeEffect(JobType);
-const encodeJob = S.encodeEffect(JobJson);
 /** @internal @category operations @since 0.0.0 */
 export const decodeCitationRegexJobOptions = Effect.fnUntraced(function* (
   flagsInput: unknown,
@@ -117,48 +110,6 @@ export const decodeCitationRegexFrameInputs = Effect.fnUntraced(function* (
   const limit = yield* decodeLimit(maximum).pipe(Effect.mapError(invalid));
   return { ...options, pattern, source, limit };
 });
-const emptyJobHeader = Effect.fnUntraced(function* (
-  patternWidth: CitationRegexWorkerJob["patternWidth"],
-  sourceWidth: CitationRegexWorkerJob["sourceWidth"],
-  flags: CitationRegexWorkerJob["flags"],
-  maxMatches: CitationRegexWorkerJob["maxMatches"],
-  mode: CitationRegexWorkerJob["mode"]
-) {
-  return yield* encodeJob(
-    CitationRegexWorkerJob.make({
-      patternWidth,
-      sourceWidth,
-      flags,
-      maxMatches,
-      mode,
-      patternBytes: new Uint8Array(0),
-      sourceBytes: new Uint8Array(0),
-    })
-  ).pipe(Effect.mapError(invalid));
-});
-/** Check the exact encoded job while both preparers still have only layouts.
- * No pattern/source payload, base64 or whole-message allocation is required.
- * @internal @category operations @since 0.0.0
- */
-export const preflightCitationRegexJob = Effect.fn("Citation.preflightRegexJob")(function* (
-  patternInput: CitationRegexInputLayout,
-  sourceInput: CitationRegexInputLayout,
-  flagsInput: unknown,
-  maxMatchesInput: unknown,
-  maximum: number,
-  modeInput: unknown = "finditer"
-) {
-  const { mode, pattern, source, flags, maxMatches, limit } = yield* decodeCitationRegexFrameInputs(
-    patternInput,
-    sourceInput,
-    flagsInput,
-    maxMatchesInput,
-    maximum,
-    modeInput
-  );
-  const header = yield* emptyJobHeader(pattern.width, source.width, flags, maxMatches, mode);
-  return yield* preflightCitationRegexFrameBytes(header, pattern.byteLength, source.byteLength, limit);
-});
 /** @internal @category services @since 0.0.0 */
 export interface CitationRegexFrameCodec<Job> {
   readonly decode: (job: Job) => Effect.Effect<Job, CitationRegexWorkerFailure>;
@@ -180,27 +131,6 @@ export const makeCitationRegexJobEncoder = <
     const header = yield* codec.header(job, limit);
     return yield* encodeCitationRegexPayloadFrame(job, limit, header, codec.encode);
   });
-/** Encode only after exact size preflight. The caller already owns immutable
- * prepared carriers; the receiver repeats native-layout and policy validation.
- * @internal @category operations @since 0.0.0
- */
-export const encodeCitationRegexJob = makeCitationRegexJobEncoder({
-  decode: (input: CitationRegexWorkerJob) => decodeJob(input).pipe(Effect.mapError(invalid)),
-  header: (job) => emptyJobHeader(job.patternWidth, job.sourceWidth, job.flags, job.maxMatches, job.mode),
-  encode: (job) => encodeJob(job).pipe(Effect.mapError(invalid)),
-});
-// The request is flat. Reject structural amplification before JSON.parse or
-// base64 decoding; punctuation inside quoted strings is not structure.
-/** Decode a complete bounded frame body. Structural and encoded-byte ceilings
- * precede variable decoding allocations; unknown properties are rejected.
- * @internal @category operations @since 0.0.0
- */
-export const decodeCitationRegexJob = makeCitationNativeJsonDecoder({
-  codec: JobJson,
-  propertyCeiling: propertyCeiling,
-  maximumDepth: 1,
-  invalid,
-});
 /** @internal @category operations @since 0.0.0 */
 export const readCitationRegexFrames = makeCitationNativeFrameReader({
   invalid,
@@ -324,8 +254,10 @@ export interface CitationRegexPreparationCodec<Job> {
     job: Job,
     maximum: number
   ) => Effect.Effect<Uint8Array, CitationRegexWorkerFailure | CitationSafetyLimitExceeded>;
-  readonly make: (payload: CitationRegexWorkerJob) => Job;
-  readonly preflight: typeof preflightCitationRegexJob;
+  readonly make: (payload: CitationRegexPayload) => Job;
+  readonly preflight: (
+    ...inputs: Parameters<typeof decodeCitationRegexFrameInputs>
+  ) => Effect.Effect<number, CitationRegexWorkerFailure | CitationSafetyLimitExceeded>;
 }
 export const makeCitationRegexJobPreparationWith = Effect.fn("Citation.makeRegexJobPreparation")(function* <R>(
   limits: CitationEngineLimits,
@@ -354,7 +286,7 @@ export const makeCitationRegexJobPreparationWith = Effect.fn("Citation.makeRegex
     const preparedPattern = prepared.pattern;
     const sourceValue = prepared.source;
     const job = codec.make(
-      CitationRegexWorkerJob.make({
+      CitationRegexPayload.make({
         patternWidth: preparedPattern.value.storage.width,
         patternBytes: preparedPattern.value.storage.bytes,
         sourceWidth: sourceValue.value.storage.width,
@@ -368,24 +300,4 @@ export const makeCitationRegexJobPreparationWith = Effect.fn("Citation.makeRegex
     return { job, frame, pattern: preparedPattern, source: sourceValue };
   }, payload.timed);
   return { prepare };
-});
-
-const v2Codec: CitationRegexPreparationCodec<CitationRegexWorkerJob> = {
-  make: identity,
-  encode: encodeCitationRegexJob,
-  preflight: preflightCitationRegexJob,
-};
-/** @internal @category constructors @since 0.0.0 */
-export const makeCitationRegexJobPreparation = Effect.fn("Citation.makeRegexJobPreparation")(function* <R>(
-  limits: CitationEngineLimits,
-  reserve: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded, R>
-) {
-  const preparation = yield* makeCitationRegexJobPreparationWith(limits, reserve);
-  return {
-    prepare: (
-      ...args: Parameters<typeof preparation.prepare<CitationRegexWorkerJob>> extends [unknown, ...infer Args]
-        ? Args
-        : never
-    ) => preparation.prepare(v2Codec, ...args),
-  };
 });

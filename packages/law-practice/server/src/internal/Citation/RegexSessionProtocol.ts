@@ -10,8 +10,8 @@ import { makeCitationNativeJsonDecoder } from "./NativeJson.ts";
 import { CitationRegexPatternDescriptor, CitationRegexPatternProfile } from "./RegexDescriptors.ts";
 import { CitationRegexEngine } from "./RegexEngine.ts";
 import {
+  CitationRegexPayload,
   CitationRegexWorkerFailure,
-  CitationRegexWorkerJob,
   decodeCitationRegexFrameInputs,
   makeCitationRegexJobEncoder,
   makeCitationRegexJobPreparationWith,
@@ -29,7 +29,7 @@ const exceeded = () => CitationSafetyLimitExceeded.make({ operation: "extract", 
  */
 export class CitationRegexSessionJob extends S.Opaque<CitationRegexSessionJob, { readonly brand: unique symbol }>()(
   S.TaggedStruct("Evaluate", {
-    ...CitationRegexWorkerJob.fields,
+    ...CitationRegexPayload.fields,
     version: S.tag("citation-regex-worker/v3"),
     sequence: S.Natural,
     engine: CitationRegexEngine,
@@ -163,8 +163,7 @@ export const makeCitationRegexSessionPreparation = Effect.fn("Citation.makeRegex
     ) =>
       payload.prepare(
         {
-          make: (job) =>
-            CitationRegexSessionJob.make({ ...job, version: "citation-regex-worker/v3", engine, descriptor, sequence }),
+          make: (job) => CitationRegexSessionJob.make({ ...job, engine, descriptor, sequence }),
           encode: encodeCitationRegexSessionJob,
           preflight: (...inputs) => preflightCitationRegexSessionJob(engine, descriptor, sequence, ...inputs),
         },
