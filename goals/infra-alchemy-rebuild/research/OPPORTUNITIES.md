@@ -283,3 +283,14 @@ to the gap between the reference checkout (main) and the pinned release.
   runbook practice sufficient for arming.
 - **Would have prevented it:** a precondition (`If-Match` on the ETag, or an expected `updated_at`) on the ruleset
   PUT. If GitHub adds one, the wrapped `GitHub.Ruleset` provider in `@beep/infra-github` can send it.
+
+## 2026-11-14: a stray root `coverage/` turns local fallow health red repo-wide
+
+- **Doing:** P3 GitHub stack, pushing the create guard to #3324 with `yeet publish`.
+- **Evidence:** cheap-gates failed `fallow:health` with "46 blocking finding(s) in an ok envelope", all
+  `not-applicable` and none in the PR's files. The cause was an ignored root `coverage/` directory left by an earlier
+  `vitest run --coverage` from the repository root, whose `coverage-final.json` was `{}`. Fallow read it as zero
+  coverage and the CRAP scores crossed their thresholds across the repo. With the directory removed, the same check
+  reported 0 findings.
+- **Would have prevented it:** fallow health ignoring a coverage report that covers no files, or naming the coverage
+  source it used in the failure message.

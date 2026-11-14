@@ -23,9 +23,18 @@ import type { DeployError, TypedScratch } from "./support/Scratch.ts";
 
 const MAIN = 10_240_248;
 
+type PlanNode = { readonly action: string; readonly resource: { readonly Type: string } };
+
 /** The plan node for each logical id, with the action it prints. */
 const actions = (plan: { readonly resources: Record<string, unknown> }) =>
-  R.map(plan.resources, (node) => (node as { readonly action: string }).action);
+  R.map(plan.resources, (node) => (node as PlanNode).action);
+
+/** The resource type of each logical id in the plan. */
+const resourceTypes = (plan: { readonly resources: Record<string, unknown> }) =>
+  R.map(plan.resources, (node) => (node as PlanNode).resource.Type);
+
+/** The kinds whose shipped create path converges an existing object by name. */
+const convergeByName = ["GitHub.Repository", "GitHub.Environment", "GitHub.Variable", "GitHub.Label"];
 
 const failureText = <A, E>(exit: Exit.Exit<A, E>) => Exit.match(exit, { onSuccess: () => "", onFailure: Cause.pretty });
 
@@ -64,10 +73,14 @@ scenario(
   "the first prod plan creates exactly the allow-list, adopts the main ruleset and writes nothing",
   (stack, fake) =>
     Effect.gen(function* () {
+      // The plan comes from the committed declarations; the list is compared against it, never copied into it.
       const plan = yield* stack.plan(production);
       const planned = actions(plan);
       const creates = A.sort(R.keys(R.filter(planned, (action) => action === "create")), Order.String);
       expect(creates).toEqual(A.sort(productionCreateAllowList.logicalIds, Order.String));
+      // Listing an id cannot admit a kind whose create path makes a second object (a ruleset, say).
+      const types = resourceTypes(plan);
+      expect(A.filter(creates, (id) => !A.contains(convergeByName, types[id]))).toEqual([]);
       expect(R.filter(planned, (action) => action !== "create")).toEqual({ MainRuleset: "adopted" });
       expect(R.keys(plan.deletions ?? {})).toEqual([]);
       expect(fake.writes()).toEqual([]);
@@ -168,3 +181,23 @@ scenario("a planned replace fails the plan", (stack, fake) =>
     })
   );
 }
+
+scenario("a removed declaration plans orphaned and its deploy sends no mutating request", (stack, fake) =>
+  Effect.gen(function* () {
+    yield* stack.deploy(production);
+    const fewer = declareStack(
+      StackConfig.make({
+        ...productionConfig,
+        labels: A.filter(productionConfig.labels, (label) => label.name !== "bug"),
+      }),
+      O.none()
+    );
+    fake.calls.length = 0;
+    const plan = yield* stack.plan(fewer);
+    expect(R.map(plan.deletions ?? {}, (node) => (node as PlanNode).action)).toEqual({ "Label-bug": "orphaned" });
+    yield* stack.deploy(fewer);
+    // The live label stays in place, unmanaged: the deploy forgets the state row and writes nothing.
+    expect(fake.writes()).toEqual([]);
+    expect(MutableHashMap.has(fake.labels, "bug")).toBe(true);
+  })
+);

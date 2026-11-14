@@ -1,9 +1,13 @@
 /**
- * The `prod` stage's create guard. On `prod` a planned `create` normally
- * means "converge by name": the repository, environment, variable and label
- * providers read the live object by name and update it in place. That holds
- * only for the logical ids on an explicit allow-list (`CreateAllowList` in
- * `./Config.ts`). Every GitHub provider on `prod` is wrapped:
+ * The `prod` stage's create guard: every GitHub provider on `prod` is wrapped
+ * so that only the logical ids on an explicit allow-list (`CreateAllowList` in
+ * `./Config.ts`) may take the create path, and no replace or delete is sent.
+ *
+ * **Details**
+ *
+ * On `prod` a planned `create` normally means "converge by name": the
+ * repository, environment, variable and label providers read the live object
+ * by name and update it in place. The wrappers refuse the rest:
  *
  * - at plan time (in `alchemy plan` and again inside `alchemy deploy`, before
  *   anything is written), a provider `read` that finds nothing for a logical

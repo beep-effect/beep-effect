@@ -269,12 +269,18 @@ variables and labels (GET, then PATCH; POST only on a 404). It does not hold for
 - Plan-time refusals (the ruleset, the repository, every `replace`) run in both the
   `Plan prod stage` step and the plan inside `alchemy deploy`, before anything is written.
   Kinds with no `read` (environments, variables, labels) are refused at their create path,
-  before that resource's request. The package tests, which run first in the deploy job,
-  fail unless the first plan's `create` set equals the allow-list exactly. A new
-  declaration is therefore refused before a token is minted until it is added to the list.
-- A removed declaration plans `orphaned` (every resource is retained). That writes
-  nothing live and only forgets the state row; the guard does not refuse it. Refusing it
-  would mean checking the plan log, which needs a workflow change.
+  before that resource's request. The package tests run first in the deploy job. They
+  plan the committed declarations and fail unless the first plan's `create` set equals the
+  allow-list exactly. A new declaration is therefore refused before a token is minted until
+  it is added to the list.
+- Kinds with no `read` are refused only at their create path, so allowed writes earlier
+  in the same deploy may already have gone out. Their plan-time control is the package
+  test above: it plans the committed declarations and fails unless the `create` set equals
+  the allow-list and every listed id is a converge-by-name kind.
+- A removed declaration plans `orphaned` (every resource is retained), and its deploy sends
+  no mutating request (tested). The guard does not refuse it. A removed declaration leaves
+  the live object in place and unmanaged: removing a live object is a deliberate, attended
+  act outside the deploy job.
 
 ### Ruleset 10240248 guard and the pre-arming evidence
 

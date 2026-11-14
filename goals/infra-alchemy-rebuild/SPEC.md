@@ -926,8 +926,19 @@ needs `deploy-infra-github.yml` to save the log, which means asking the operator
 the workflow again. The provider guard binds the deploy's own plan and leaves the workflow
 byte-identical.
 
-Gap: a retained removal plans `orphaned`. It writes nothing live and the provider guard
-does not see it. Refusing it needs the plan-log check above.
+Kinds with no `read` (environments, variables, labels) are refused only when they reach
+the create path, after earlier allowed writes in the same deploy may have gone out. For
+those kinds the plan-time control is the package test, which runs first in the deploy job.
+It plans the committed stack declarations, not a copy of the list, and fails unless the
+`create` set equals `productionCreateAllowList` exactly. It also requires every listed id
+to be a converge-by-name kind (repository, environment, variable, label), so a kind whose
+create path makes a second object cannot be admitted by adding it to both the stack and the
+list.
+
+Accepted limit: a removed declaration plans `orphaned`, its deploy sends no mutating
+request (tested), and the guard does not refuse it. A removed declaration leaves the live
+object in place and unmanaged: removing a live object is a deliberate, attended act outside
+the deploy job. Refusing the orphan itself would need the plan-log check above.
 
 Lane goals/infra-alchemy-rebuild-p3-github-plan-guard
 
