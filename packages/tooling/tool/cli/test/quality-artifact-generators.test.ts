@@ -538,6 +538,8 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
       expect(A.map(published, ([, to]) => to)).toEqual([...targets]);
       for (const [from, to, visible] of published) {
         expect(path.dirname(from)).toBe(path.dirname(to));
+        // Dot-prefixed: a staging file a killed run strands stays outside Turbo's outputs glob.
+        assertTrue(Str.startsWith(".")(path.basename(from)));
         assertTrue(A.contains(writes, from));
         // Mid-write, the target still held the previous complete file.
         expect(visible).toBe(previous);

@@ -1807,7 +1807,9 @@ export const writeJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
 // within the one directory replaces the target, so a concurrent reader (the
 // ratchet, or another gate that reads the `.beep/ci/` copy) sees the previous
 // complete file or the new one, never a truncated write. A failed write
-// removes its staging file and leaves the target untouched.
+// removes its staging file and leaves the target untouched. The staging name
+// is dot-prefixed so a file a killed run leaves behind falls outside Turbo's
+// `.beep/ci/jsdoc-documentation.inventory.*` outputs glob and is never cached.
 const writeJSDocInventoryOutput = Effect.fn("JSDocDocumentationInventory.writeOutput")(function* (
   outputPath: string | undefined,
   content: string
@@ -1827,7 +1829,10 @@ const writeJSDocInventoryOutput = Effect.fn("JSDocDocumentationInventory.writeOu
       filePath: outputPath,
     })
   );
-  const stagingPath = `${outputPath}.${yield* random.uuidV4()}.tmp`;
+  const stagingPath = path.join(
+    path.dirname(outputPath),
+    `.${path.basename(outputPath)}.${yield* random.uuidV4()}.tmp`
+  );
   yield* fs.writeFileString(stagingPath, content).pipe(
     Effect.flatMap(() => fs.rename(stagingPath, outputPath)),
     Effect.onError(() => fs.remove(stagingPath, { force: true }).pipe(Effect.ignore)),
