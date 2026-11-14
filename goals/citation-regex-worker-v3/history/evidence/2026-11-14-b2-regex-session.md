@@ -652,8 +652,10 @@ stdout reader is paused on the terminal frame. Spawn and retirement tests prove
 interruption acknowledgment waits while ownership/kill acknowledgment is still
 held, with native capacity still active, then release that barrier.
 
-`poisons {runtime} when interrupted waiting for evaluation serialization` covers
-the session mutex wait. The original Sent and Running interruption tests remain.
+The historical `poisons {runtime} when interrupted waiting for evaluation serialization`
+expectation covered the session mutex wait. PR review round 1 supersedes that
+expectation: a queued evaluation owns nothing and cancellation leaves the holder
+untouched. The original Sent and Running interruption tests remain.
 Every new interruption case asserts started=confirmed, no occupied/acquired
 lane, admission active/queued/quarantined=0, one observed live SIGKILL when a
 child exists, and absent `/proc/<pid>` before interruption acknowledgment.
@@ -3151,3 +3153,208 @@ Test/comment commit: `f2b139c2d57`. This receipt, wording corrections and the
 round-5 in-review checkpoint ship in the following documentation commit. The
 lane remains local and preserved for independent review; no push, merge, rebase
 or subagents.
+
+
+## PR review round 1
+
+Owner opened B2 as PR #3352. This wave starts from `6da44434828`, including
+its JSDoc and B1 packet-status fixes. The owner's final-check process exited
+before any edit; its receipt passed with coverage explicitly skipped for this
+shared host. This wave supplies fresh bounded coverage proofs. No push, merge,
+rebase, stash, subagent or whole-package test run.
+
+### Cancellation ownership
+
+Cause: `RegexSession.evaluate` attached interruption cleanup outside
+`lock.withPermit`. Cancelling a caller still waiting for that permit therefore
+poisoned the shared session and retired the active holder's child.
+
+Fix: attach cleanup to the lane transaction *inside* the session permit.
+The session mutex wait remains interruptible and side-effect free. Once the
+permit is held, interruption of preparation, startup, write, read, retirement
+or any other owned await still poisons the session, SIGKILLs and confirms the
+child, and fails closed. The holder interruption tests are unchanged. No job
+was in flight for a queued waiter, so this does not relax the never-respawn
+rule. The owner ruling is recorded in
+`2026-11-14-a-cancelled-waiter-leaves-the-regex-session-untouched.md`.
+
+`NativeLane.withUse` already places its cleanup inside the handover semaphore
+permit. Effect v4 `Semaphore.withPermits` restores the permit acquisition wait
+and installs the body's finalizer only after acquisition
+(`.repos/effect/packages/effect/src/Semaphore.ts`, `withPermits`). No lane source
+change was necessary. New real-child tests verify this separately.
+
+Regression names, each instantiated for Bun and Node child runtimes:
+
+- `leaves {runtime} preparation and its idle child untouched when a queued evaluation is interrupted`
+  rewrites the former queued-interruption-poisons expectation. Admission stays
+  identical, the idle child survives, the holder completes, later work succeeds,
+  and Scope closure confirms retirement and returns the lease once.
+- `keeps the active {runtime} job healthy and reuses its child after cancelling a queued evaluation`
+  pauses the single stdout reader on the real worker's Complete frame, with the
+  job still in flight. After cancellation of B, admission is identical, counts
+  remain 1/0 and live SIGKILLs remain zero. Releasing A yields success and idle
+  state; a third evaluation returns the same result on the same child. Counts
+  remain 1/0 until Scope closure, then 1/1 with exactly one lease return.
+- `leaves the {runtime} handover holder untouched when a queued lane use is interrupted`
+  holds a lane transaction with a live child. Cancelling a queued lane caller
+  changes neither admission nor 1/0 process counts. The holder completes,
+  another lane transaction succeeds, and Scope closure confirms 1/1 and zero
+  active/quarantined capacity.
+
+All three use Deferred barriers and real platform-spawned children. The former
+round-1 historical mutex-wait expectation and checkpoint wording are marked as
+superseded by this owner ruling; all other holder interruption proofs remain.
+
+### Dead v2 client and coverage
+
+Before deletion, source and bundled-worker-entry searches found no importer of
+`RegexWorkerClient.ts`. Its only runtime importer was
+`CitationRegexWorkerProtocol.test.ts`, with two calls in the shared test
+`rejects out-of-order RPC controls and does not retry failed writes`.
+Hosted job 132571060487 measured branches 0%, functions 71.42%, lines 91.66%
+and statements 85.71%, because the old evaluator no longer calls that client.
+
+Following the owner ruling, delete the unused source file, its import and the
+shared test's two client-only assertion blocks (one `it.effect`). That test
+could no longer validate any production caller. Every other test in the file
+is retained, including the absolute pattern ceiling, JSON structural guard and
+encoder-accounting drift tests. The retained file passes 14/14. The decision
+`2026-11-14-delete-the-v2-regex-rpc-client-once-no-evaluator-calls-it.md` records
+the deletion and reversal before removal is committed.
+
+Only the deleted client's file row was removed from
+`standards/coverage.regression-baseline.jsonc`. Tooling's
+`CoverageRegression.perFileDroppedMetrics` deliberately reports vanished
+covered file paths; the prior CleanerOperation.ts deletion followed the same
+single-row removal, documented in the 2026-11-13 install-once decision.
+Package aggregate floors and all surviving file floors are unchanged.
+
+Remaining v2 source audit:
+
+- `RegexWorkerProgram.ts` has no production importer; both bundled worker
+  entries execute `RegexSessionProgram.ts`. Its sole runtime importer is
+  `CitationRegexWorker.test.ts` (import plus four direct program executions).
+  It is retained for B3: fresh coverage exactly meets its existing baseline
+  on all four metrics, so it does not need the client's deletion treatment.
+- `RegexWorkerProtocol.ts` remains used by production `RegexWorker`,
+  `RegexSession`, `RegexSessionProgram`, `RegexSessionProtocol`,
+  `RegexSessionRpc`, `RegexWorkerEvaluation`, failure models, alphabet and
+  result modules. It is not dead production code.
+- `RegexWorkerRpc.ts` remains used by `RegexSession`, `RegexSessionProgram`,
+  `RegexSessionRpc`, `RegexWorkerEvaluation` and failure models. Shared schemas
+  and failure types remain production dependencies. Keep the module.
+- `RegexWorkerEvaluation.ts` remains called by `RegexSessionProgram.ts` and
+  the v2 program; it is also tested directly by `CitationRegexWorker.test.ts`.
+
+### Fresh serial verification
+
+All entries below ran as individual Vitest invocations, one file at a time,
+with nice level 19. Bun parent was selected explicitly for focused and coverage
+runs; each runtime-specific test exercises both actual Bun and Node children.
+
+| Focused file | Passing tests | Failing tests |
+| --- | ---: | ---: |
+| `CitationDiffLaneCoverage.test.ts` | 9 | 0 |
+| `CitationNativeLane.test.ts` | 16 | 0 |
+| `CitationNativeLaneCleaner.test.ts` | 2 | 0 |
+| `CitationNativeLaneComposition.test.ts` | 4 | 0 |
+| `CitationNativeLaneCoverage.test.ts` | 22 | 0 |
+| `CitationNativeLaneFence.test.ts` | 10 | 0 |
+| `CitationNativeLaneReservation.test.ts` | 32 | 0 |
+| `CitationNativeLaneTransfer.test.ts` | 4 | 0 |
+| `CitationRegexLaneCoverage.test.ts` | 6 | 0 |
+| `CitationRegexSession.test.ts` | 66 | 0 |
+| `CitationRegexWorker.test.ts` | 19 | 0 |
+| `CitationRegexWorkerProtocol.test.ts` | 14 | 0 |
+
+Focused total: **12 files, 204 passing tests, zero failures**. Initial standalone
+smokes also passed Session 66/66 and NativeLaneCoverage 22/22; the focused loop
+then reran both on the final source. No runtime-identity guard, safety ceiling,
+process confirmation guard or extraction expectation was changed.
+
+Coverage was measured one test file and one source include per invocation,
+then unioned with Istanbul's coverage-map merger. All eight coverage invocations
+passed (223 test executions). The table order is lines/statements/functions/branches.
+
+| Source | Lines | Statements | Functions | Branches | Contributing test files |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `RegexSession.ts` | 100% | 100% | 100% | 100% | `CitationRegexSession.test.ts`, `CitationRegexLaneCoverage.test.ts` |
+| `RegexWorkerProgram.ts` | 96.87% | 91.42% | 75% | 83.33% | `CitationRegexWorker.test.ts` |
+| `RegexWorkerProtocol.ts` | 100% | 100% | 100% | 100% | `CitationRegexWorkerProtocol.test.ts`, `CitationRegexWorker.test.ts` |
+| `RegexWorkerRpc.ts` | 100% | 97.5% | 85.71% | 100% | `CitationRegexWorkerProtocol.test.ts`, `CitationRegexWorker.test.ts`, `CitationRegexSession.test.ts` |
+
+RegexSession meets 100% on all four metrics. The retained v2 program exactly
+matches its 96.87/91.42/75/83.33 baseline; the protocol and RPC exceed or meet
+all their existing floors. No newly uncovered session guard remains.
+`NativeLane.ts` source is untouched in this wave; its prior complete union is
+recorded in earlier rounds, and every lane test file has been rerun here.
+The other session source files are unchanged; their earlier 100% unions remain
+recorded in the previous review rounds.
+
+### Checks and final count gate
+
+| Check | Result |
+| --- | --- |
+| `bun run check` in server | pass, including test typecheck |
+| `bun run beep quality package-verify @beep/law-practice-server --quick` | pass: package lint and check |
+| Server `bun run lint:laws` | pass; zero strict findings; three existing terse-effect advisories |
+| `bunx fallow audit --config .fallowrc.jsonc --base origin/main` | pass, zero introduced findings; 35 inherited findings excluded |
+| `bun run docgen:local --full` | pass; metadata checked across 188 packages |
+| `bun run beep lint effect-vitest` | pass, introduced=0, resolved=2 |
+| `bun run beep lint schema-first` | pass, no unrelated inventory growth |
+| Root `bun run lint:oxlint -- <touched surviving TS/MJS files>` | pass |
+| `git diff --check` | pass |
+| Commit hooks | pass: gitleaks, Biome, typos, catalogs and commitlint |
+
+Fallow used `origin/main` at `6a9a7fbce4bd73ae59f4870f7950081e1a35f464`.
+The instrumentation catalog hook removed the deleted client's obsolete span;
+no unrelated generated catalog entry was added.
+
+`CitationCanonicalFullSpan.test.ts` ran **last**, one file under the prescribed
+`nice -n 19 bunx vitest run` command: **12/12 passed**. The exact construction
+and ten-call tables remain unchanged. For comparison, the original B1 table
+had 291 physical regex children per ten calls; B2 reduces that to 10.
+
+| Work count | Ten Bun calls before this review wave | Ten Bun calls after | One construction after (unchanged) |
+| --- | ---: | ---: | ---: |
+| Metadata operation installs | 0 | 0 | 16 |
+| Configuration detaches | 0 | 0 | 1 |
+| Tokenizer builds | 0 | 0 | 1 |
+| Regex worker constructions | 0 | 0 | 26 |
+| Regex evaluations | 291 | 291 | 0 |
+| Physical regex children | 10 | 10 | 0 |
+| Regex descriptor bindings | 4 | 4 | 0 |
+| Native process owners | 10 | 10 | 1 |
+| Native lane units | 10 | 10 | 0 |
+| Diff/Xml worker constructions | 0 | 0 | 0 |
+
+Wall time: **30.95 seconds** (Vitest duration 30.53 seconds); starting host load
+averages 2.57 / 3.02 / 3.40. Timing gates nothing. The final file also recomputes
+the first original full-span call on the Node child runtime.
+
+Final unique test result: **13 files, 216 passing tests, zero failures**.
+Including initial smokes and eight coverage invocations, this wave completed
+527 passing test executions. All test/coverage runs completed and their results
+were read; no background test run was left running.
+
+Not rerun: the entire Citation directory, the whole law-practice suite,
+whole-package coverage, a new Yeet final-check or hosted CI on these local
+commits. This wave uses the requested lane/session files, the retained v2
+worker/protocol files, and the final count gate; the earlier complete directory
+runs remain recorded above. Only RegexSession.ts needed a fresh 100% source
+union for this change; NativeLane.ts and the other session source files are
+unchanged. The owner controls PR publication and hosted verification.
+
+Local implementation commits:
+
+- `6fd61ecfe81` — `fix(citation): isolate cancellation of queued regex evaluations`.
+- `6509ed1f556` — `refactor(citation): remove the unused v2 regex RPC client`.
+
+Inbox receipts acknowledge the queued-cancellation finding with `6fd61ecfe81`
+and the hosted coverage failure with `6509ed1f556`. The JSDoc and packet-status
+threads are acknowledged with the owner's existing `6da44434828` fix.
+`beep yeet inbox` reports zero unacknowledged rows. No review reply was posted,
+no push was made, and the lane is preserved for the owner. B2 remains in review
+as PR #3352. The sole behavior interpretation is the owner's explicit permit
+ownership ruling; the v2 client deletion is also explicitly owner-directed.
