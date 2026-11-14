@@ -33,12 +33,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — P0 triage done (308 files; 273 probes deleted per packet). Ports run in four lanes; see [`decisions/2026-11-13-lane-split.md`](./decisions/2026-11-13-lane-split.md).
+P4 Close — all four lanes are done. #3283 (photo-face on onnxruntime-node), #3293 (skill scripts) and #3296 (probe deletions, workflow and r2-cache Python, small ports) merged on 2026-11-14. The final PR deletes the last two tracked `.py` files, lands the `no-tracked-python` law, the lefthook hook, the cheap-tier CI lane and the AGENTS.md line, and carries the closeout and the reflection.
 
 ## Latest Evidence
 
 - 2026-11-06 grill session decisions D4, D8, D15 in [`explorations/pulumi-to-alchemy/DECISIONS.md`](../../explorations/pulumi-to-alchemy/DECISIONS.md).
 - Inventory by location in `SPEC.md` Target Surfaces.
+- Per-file triage of all 308 tracked Python files: [`research/triage.md`](./research/triage.md).
+- photo-face parity against the retained Python: [`research/photo-face-parity.md`](./research/photo-face-parity.md).
+- infra/r2-cache port: [`research/r2-cache-port.md`](./research/r2-cache-port.md).
+- Friction receipts: [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md). Reflection: [`history/reflections/2026-11-13-claude.md`](./history/reflections/2026-11-13-claude.md).
+- On the final head `git ls-files '*.py'` is empty, and `bun run beep laws no-tracked-python --check` reports tracked_python_files=0.
 
 ## Notes
 

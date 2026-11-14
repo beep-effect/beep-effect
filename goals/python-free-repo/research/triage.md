@@ -262,8 +262,8 @@ reports and research notes count as recorded evidence, not consumers.
 | goals/repository-simplification-residue/ops/probe-nested-doctrine.py | deleted | none; output retained at `goals/repository-simplification-residue/history/2026-11-13-python-removed.md` (cited by 1 file(s)) |
 | goals/time-to-certainty/research/scripts/economics.py | deleted | none; output retained at `goals/time-to-certainty/history/2026-11-13-python-removed.md` (cited by 24 file(s)) |
 | goals/time-to-certainty/research/scripts/test_economics.py | deleted | none; output retained at `goals/time-to-certainty/history/2026-11-13-python-removed.md` (cited by 1 file(s)) |
-| goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py | ported → `beep cache producer-diagnose`; file deleted in the law PR | `.github/workflows/heavy.yml` (consumed @main) |
-| goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py | ported → `beep cache producer-diagnose`; file deleted in the law PR | `.github/workflows/heavy.yml` (consumed @main) |
+| goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py | ported → `beep cache producer-diagnose` (#3296); file deleted in the final PR | `.github/workflows/heavy.yml` (consumed @main) |
+| goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py | ported → `beep cache producer-diagnose` (#3296); file deleted in the final PR | `.github/workflows/heavy.yml` (consumed @main) |
 | goals/turborepo-cache-trust-observability/research/saved-trial-storage-grants.py | deleted | none; output retained at `goals/turborepo-cache-trust-observability/history/2026-11-13-python-removed.md` (cited by 2 file(s)) |
 | goals/turborepo-quality-cache-adoption/research/actual-ignored-input-control.py | deleted | none; output retained at `goals/turborepo-quality-cache-adoption/history/2026-11-13-python-removed.md` (cited by 5 file(s)) |
 | goals/turborepo-quality-cache-adoption/research/native-base-ref-controls.py | deleted | none; output retained at `goals/turborepo-quality-cache-adoption/history/2026-11-13-python-removed.md` (cited by 6 file(s)) |
