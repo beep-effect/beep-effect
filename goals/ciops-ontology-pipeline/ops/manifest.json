@@ -18,7 +18,7 @@
   "provenance": {
     "exploration": "explorations/beep-ci-operational-ontology",
     "graduated": "2026-10-01",
-    "note": "Graduates the exploration's Spark target (the operational ontology pipeline itself). Owns the KPI definition, T-Box/A-Box/CQs, auditor runs, apps/labs/ciops and the planEpisode body, the change-event ledger and the verdict. goals/time-to-certainty keeps M1-M5, yeet economics, the proof ledger and C4.2, the deployed wave order and the gate-order handoff's single writer (its ruling 79); facts cross only as documents read by path and sha256."
+    "note": "Graduates the exploration's Spark target (the operational ontology pipeline itself). Owns the KPI definition, T-Box/A-Box/CQs, auditor runs, apps/labs/ciops and the planEpisode body, the change-event ledger and the verdict. goals/time-to-certainty keeps M1-M5, yeet economics, the proof ledger and C4.2, the deployed wave order and the gate-order handoff's single writer (its ruling 79); facts cross only as documents read by path and sha256. The Python packet validators (research/scripts/validate_packet.py base/--s5/--s6) and research/scripts/run_cq_suite.py were removed with the repository's Python and left verificationCommands; see explorations/beep-ci-operational-ontology/history/2026-11-13-python-removed.md."
   },
   "completionGate": {
     "operator": "yeet",
@@ -107,11 +107,7 @@
     "bun run beep explore atlas --check",
     "git diff --check -- goals/ciops-ontology-pipeline",
     "bun run beep lint reflection-artifacts",
-    "bun run beep quality package-verify @beep/ciops",
-    "cd explorations/beep-ci-operational-ontology && uv run --with pyyaml --with rdflib python research/scripts/validate_packet.py",
-    "cd explorations/beep-ci-operational-ontology && uv run --with pyyaml --with rdflib python research/scripts/validate_packet.py --s5",
-    "cd explorations/beep-ci-operational-ontology && uv run --with pyyaml --with rdflib --with pyshacl python research/scripts/validate_packet.py --s6",
-    "cd explorations/beep-ci-operational-ontology && uv run --with pyyaml --with rdflib --with pyoxigraph python research/scripts/run_cq_suite.py"
+    "bun run beep quality package-verify @beep/ciops"
   ],
   "stopConditions": [
     "A change would edit a frozen pin or any byte under explorations/beep-ci-operational-ontology/ontology/extraction/** outside an append under a new run or pin root; the only repair routes are the exploration's run-3 Rulings 22 (unratified pins) and 23 (ratified pins).",

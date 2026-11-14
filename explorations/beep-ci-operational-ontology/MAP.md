@@ -106,7 +106,7 @@ Slices 1→3 on one thread, proven on the goal's first PR train:
 4. Amend S7 §3.2/§6 and widen `PlanEpisodeInput` (graduation Ruling 11), then hand the
    `gate-order-handoff/v1` document to a non-stub `planEpisode`, which emits a
    ScheduleProposal with 32 lane steps in `ciops-prov:`.
-5. Run amended CQ-020 over the emitted Turtle with `apps/labs/ciops/scripts/check-emission-cq.py`.
+5. Run amended CQ-020 over the emitted Turtle with `apps/labs/ciops/test/emission-cq.test.ts`.
 
 The slice is verified when the lab tests pass (byte-determinism, totality, the
 cyclic-input must-fail, and the 32-lane handoff fixture pinned by sha256), when

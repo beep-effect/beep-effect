@@ -2988,7 +2988,7 @@ const renderMirrorSyncPlan = Effect.fn("AIMetrics.renderMirrorSyncPlan")(functio
       ? yield* encodeCommandJson(result)
       : `ai-metrics mirror sync: dry-run; confirm with --confirm ${p7MirrorConfirmToken}`
   );
-  if (!json) yield* Effect.forEach(plannedCommands, Console.log, { discard: true });
+  if (!json) yield* Effect.forEach(plannedCommands, (command) => Console.log(command), { discard: true });
 });
 
 const renderMirrorSyncResult = Effect.fn("AIMetrics.renderMirrorSyncResult")(function* (

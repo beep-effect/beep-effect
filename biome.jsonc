@@ -83,13 +83,13 @@
       "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
       // Sealed generated diff corpus; dedicated schema/hash verification owns its bytes.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/diff-kernel.json",
-      // Complete compact source rows are sealed by ops/verify-builtin-diff.py.
+      // Complete compact source rows, sealed by ops/verify-builtin-diff.py (removed, goal python-free-repo).
       "!packages/law-practice/use-cases/test/fixtures/eyecite/builtin-diff.json",
       // Complete source traces; ops/check-cleaner-pipeline.ts seals their bytes.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
-      // Complete byte-source outcomes sealed by ops/verify-html-bytes.py.
+      // Complete byte-source outcomes; CitationHtmlBytes.test.ts pins their digest.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/html-bytes.json",
-      // Complete source identity relations sealed by ops/verify-cleaner-identities.py.
+      // Complete source identity relations, sealed by ops/verify-cleaner-identities.py (removed, goal python-free-repo).
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-identities.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/unicode-dictionary.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/python-hashes.json",
