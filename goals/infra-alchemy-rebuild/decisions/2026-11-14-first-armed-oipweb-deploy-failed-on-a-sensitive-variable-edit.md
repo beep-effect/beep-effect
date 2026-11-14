@@ -38,7 +38,9 @@ the service it models, so a green test proved nothing about this write.
     reach Vercel;
   - the targets and git branch, only when they differ from what is stored;
   - a declared comment.
-- It never sends `key` or `type`. A key change is now a delete-first replacement.
+- It never sends `key` or `type`. A key change is now a create-first replacement (review round 1
+  on #3339): the new variable is created before the old one is deleted, so a failed create leaves
+  the old one in place. Only a type change on the same project and key deletes first.
 - The fake refuses what the real API refuses: any `key` on a sensitive variable, a non-sensitive
   `type` on a sensitive variable, and a `gitBranch` without the `preview` target. It also records
   each PATCH body's fields so tests assert them.

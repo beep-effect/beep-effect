@@ -102,6 +102,8 @@ const envsById = MutableHashMap.empty<string, EnvRecord>();
 const domainsByName = MutableHashMap.empty<string, DomainRecord>();
 const dnsFixed = MutableHashSet.empty<string>();
 const storedTypes = MutableHashMap.empty<string, string>();
+/** Keys whose create the fake refuses, to model a create that fails mid-replacement. */
+const refusedEnvCreates = MutableHashSet.empty<string>();
 /**
  * Requests the fake answered, each tagged with the id of the project it targeted. Tests in a
  * file run concurrently, so assertions read one project's requests, never the whole log.
@@ -128,6 +130,13 @@ export const FakeVercel = {
       (env) => env.projectId === projectId
     ),
   domain: (name: string): O.Option<DomainRecord> => MutableHashMap.get(domainsByName, name),
+  /** Refuse every `POST /env` for this key with 400 until {@link FakeVercel.allowEnvCreate}. */
+  refuseEnvCreate: (key: string): void => {
+    MutableHashSet.add(refusedEnvCreates, key);
+  },
+  allowEnvCreate: (key: string): void => {
+    MutableHashSet.remove(refusedEnvCreates, key);
+  },
   /** Field names of each env PATCH body sent for one project, in order. */
   envPatchFieldsFor: (projectId: string): ReadonlyArray<ReadonlyArray<string>> =>
     A.map(
@@ -335,6 +344,7 @@ const sharesTarget = (env: EnvRecord, key: string, gitBranch: string | undefined
 const upsertEnv = (project: ProjectRecord, body: typeof EnvBody.Type, upsert: boolean) => {
   if (body.key === undefined || body.value === undefined || body.target === undefined) return error(400, "bad_request");
   const { key, value, target } = body;
+  if (MutableHashSet.has(refusedEnvCreates, key)) return error(400, "bad_request", "create refused by the test");
   const gitBranch = O.getOrUndefined(O.fromNullishOr(body.gitBranch));
   const existing = A.findFirst(FakeVercel.envsOf(project.id), (env) => sharesTarget(env, key, gitBranch, target));
   if (O.isSome(existing) && !upsert) return error(400, "env_already_exists");

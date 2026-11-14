@@ -4,8 +4,9 @@
  * personal stages only: a scratch project `oip-web-rehearsal-<stage>` and three variables shaped like
  * the stack's (an `encrypted` literal, a `sensitive` `valueFrom` secret, and a `plain` literal); the
  * plain and sensitive variables' targets switch to include `preview` with
- * `OIP_WEB_REHEARSAL_PLAIN_PREVIEW` and `OIP_WEB_REHEARSAL_SENSITIVE_PREVIEW`. With `OIP_WEB_REHEARSAL_ADOPT=true` every object is adopted, so a re-deploy
- * after `alchemy state delete OipWebRehearsal/<stage> -r` takes the live stages' path: the project
+ * `OIP_WEB_REHEARSAL_PLAIN_PREVIEW` and `OIP_WEB_REHEARSAL_SENSITIVE_PREVIEW`, and
+ * `OIP_WEB_REHEARSAL_SENSITIVE_KEY` renames the sensitive variable (a create-first replacement).
+ * With `OIP_WEB_REHEARSAL_ADOPT=true` every object is adopted, so a re-deploy after `alchemy state delete OipWebRehearsal/<stage> -r` takes the live stages' path: the project
  * adopted, each variable planned `create` and edited in place. Runbook: docs/runbooks/alchemy-infra.md,
  * "Live write rehearsal".
  *
@@ -60,6 +61,9 @@ export default Alchemy.Stack(
     const secretOnPreview = yield* Config.Boolean("OIP_WEB_REHEARSAL_SENSITIVE_PREVIEW").pipe(
       Config.withDefault(false)
     );
+    const secretKey = yield* Config.String("OIP_WEB_REHEARSAL_SENSITIVE_KEY").pipe(
+      Config.withDefault("REHEARSAL_SENSITIVE")
+    );
 
     const project = yield* Vercel.Project("Project", {
       name: `oip-web-rehearsal-${Str.replaceAll("_", "-")(Str.toLowerCase(stack.stage))}`,
@@ -76,7 +80,7 @@ export default Alchemy.Stack(
     yield* Vercel.EnvVar("EnvSensitive", {
       project: project.projectId,
       teamId: vercelTeamId,
-      key: "REHEARSAL_SENSITIVE",
+      key: secretKey,
       valueFrom: { config: "OIP_WEB_REHEARSAL_SECRET" },
       targets: secretOnPreview ? ["production", "preview"] : ["production"],
       type: "sensitive",

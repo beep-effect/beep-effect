@@ -6,6 +6,7 @@ import { formatPlanLines } from "alchemy/Cli/LoggingCli";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
@@ -199,30 +200,76 @@ describe("the create path onto existing objects", { concurrent: false }, () => {
       })
   );
 
-  test.provider(
-    "Vercel.EnvVar replaces a sensitive variable whose key is renamed, deleting the old one first",
-    (scratch) =>
-      Effect.gen(function* () {
-        const stack = typed(scratch);
-        yield* stack.destroy();
-        const project = FakeVercel.seedProject("vt-sensitive-rename");
-        const declare = (key: string) =>
-          Vercel.EnvVar("Secret", {
-            project: project.id,
-            teamId: TEAM_ID,
-            key,
-            value: Redacted.make("token"),
-            targets: ["production"],
-            type: "sensitive",
-          });
-        const first = yield* stack.deploy(declare("VT_OLD_NAME"));
-        const plan = yield* stack.plan(declare("VT_NEW_NAME"));
-        expect(planLines(plan)).toContain("[Secret] replace");
-        const renamed = yield* stack.deploy(declare("VT_NEW_NAME"));
-        expect(renamed.envId).not.toBe(first.envId);
-        expect(FakeVercel.envPatchFieldsFor(project.id)).toEqual([]);
-        expect(A.map(FakeVercel.envsOf(project.id), (record) => record.key)).toEqual(["VT_NEW_NAME"]);
-      })
+  test.provider("Vercel.EnvVar replaces a renamed sensitive variable create-first", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      const project = FakeVercel.seedProject("vt-sensitive-rename");
+      const declare = (key: string) =>
+        Vercel.EnvVar("Secret", {
+          project: project.id,
+          teamId: TEAM_ID,
+          key,
+          value: Redacted.make("token"),
+          targets: ["production"],
+          type: "sensitive",
+        });
+      const envWrites = (from: number) =>
+        A.filter(mutating(A.drop(FakeVercel.requestsFor(project.id), from)), (call) => / Envs?$/.test(call));
+      const first = yield* stack.deploy(declare("VT_OLD_NAME"));
+      const plan = yield* stack.plan(declare("VT_NEW_NAME"));
+      expect(planLines(plan)).toContain("[Secret] replace");
+
+      // A failed create leaves the old variable in place: nothing is deleted before the new one exists.
+      const start = A.length(FakeVercel.requestsFor(project.id));
+      FakeVercel.refuseEnvCreate("VT_NEW_NAME");
+      const failed = yield* Effect.exit(stack.deploy(declare("VT_NEW_NAME")));
+      FakeVercel.allowEnvCreate("VT_NEW_NAME");
+      expect(Exit.isFailure(failed)).toBe(true);
+      expect(envWrites(start)).not.toContain("DELETE Env");
+      expect(A.map(FakeVercel.envsOf(project.id), (record) => [record.id, record.key])).toEqual([
+        [first.envId, "VT_OLD_NAME"],
+      ]);
+
+      const before = A.length(FakeVercel.requestsFor(project.id));
+      const renamed = yield* stack.deploy(declare("VT_NEW_NAME"));
+      expect(envWrites(before)).toEqual(["POST Envs", "DELETE Env"]);
+      expect(renamed.envId).not.toBe(first.envId);
+      expect(FakeVercel.envPatchFieldsFor(project.id)).toEqual([]);
+      expect(A.map(FakeVercel.envsOf(project.id), (record) => record.key)).toEqual(["VT_NEW_NAME"]);
+    })
+  );
+
+  test.provider("Vercel.EnvVar still replaces a type change delete-first, after resolving the value", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      const project = FakeVercel.seedProject("vt-type-change");
+      const declare = (type: "encrypted" | "sensitive") =>
+        Vercel.EnvVar("Var", {
+          project: project.id,
+          teamId: TEAM_ID,
+          key: "VT_TYPE_CHANGE",
+          valueFrom: { config: "VT_TYPE_CHANGE_TOKEN" },
+          targets: ["production"],
+          type,
+        });
+      const envWrites = (from: number) =>
+        A.filter(mutating(A.drop(FakeVercel.requestsFor(project.id), from)), (call) => / Envs?$/.test(call));
+      const config = withConfig({ VT_TYPE_CHANGE_TOKEN: "token" });
+      yield* stack.deploy(declare("encrypted")).pipe(config);
+
+      // A missing `valueFrom` key fails the plan before the delete-first replacement deletes anything.
+      const start = A.length(FakeVercel.requestsFor(project.id));
+      const missing = yield* Effect.exit(stack.deploy(declare("sensitive")).pipe(withConfig({})));
+      expect(Exit.isFailure(missing)).toBe(true);
+      expect(mutating(A.drop(FakeVercel.requestsFor(project.id), start))).toEqual([]);
+
+      const before = A.length(FakeVercel.requestsFor(project.id));
+      yield* stack.deploy(declare("sensitive")).pipe(config);
+      expect(envWrites(before)).toEqual(["DELETE Env", "POST Envs"]);
+      expect(A.map(FakeVercel.envsOf(project.id), (record) => record.type)).toEqual(["sensitive"]);
+    })
   );
 
   test.provider(

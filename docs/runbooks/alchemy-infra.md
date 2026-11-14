@@ -465,7 +465,8 @@ never a real secret. Run each step with `bunx alchemy <plan|deploy|destroy> test
    `3 to create, 1 to adopted`, every write in place: same ids, no second variable.
 3. **Edits:** deploy with `OIP_WEB_REHEARSAL_PLAIN_PREVIEW=true` (plain target change), with a new
    `OIP_WEB_REHEARSAL_SECRET` (rotation), and with `OIP_WEB_REHEARSAL_SENSITIVE_PREVIEW=true` (sensitive
-   target change). Expect one update each.
+   target change). Expect one update each. Then deploy with `OIP_WEB_REHEARSAL_SENSITIVE_KEY=REHEARSAL_SENSITIVE_RENAMED`:
+   expect `1 to replace`, with the new variable created before the old one is deleted.
 4. **A missing row:** reseed, delete only `OipWebRehearsal/dev_$USER/EnvSensitive`, and deploy with
    adoption. Expect `1 to adopted`, then `no changes`.
 5. **Teardown:** `destroy`, and confirm the scratch project is gone.
