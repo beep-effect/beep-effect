@@ -1478,11 +1478,13 @@
       {
         "from": "@beep/alchemy-github-runners",
         "allow": [
+          "@beep/alchemy-aws-extras",
           "@beep/alchemy-github-runners",
           "@beep/identity",
           "@beep/schema"
         ],
         "allowTypeOnly": [
+          "@beep/alchemy-aws-extras",
           "@beep/alchemy-github-runners",
           "@beep/identity",
           "@beep/schema"
