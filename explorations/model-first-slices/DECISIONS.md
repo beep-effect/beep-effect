@@ -1021,3 +1021,54 @@ D5 verdict: not met. D45's invariant fails on the cluster, and the pass rests on
 patches. Open for the operator: make the fence exact or accept ordered commits as the guarantee;
 whether the drain check's backlog reader becomes generic; the rule for when a generation stops
 being served; and D48 (nothing is posted upstream).
+
+## 2026-11-14 — D49 the fence's identity (completes D45)
+
+**Question:** The fence refuses a commit during which the shard changed hands, but a runner that
+already lost its shard was acknowledged in three of five runs, because the fence cannot tell its
+own lock session from another runner's. What now?
+
+**Answer:** Name the lock session. A sixth local patch, in `@alchemy.run/effect-cluster`: its
+bootstrap names the runner's connection pool, from which Effect reserves the lock session, so the
+fence identifies its own runner. No change to Effect. The whole suite is rerun on the final build.
+
+**Rationale:** `research/18`, and the orchestrating session's reading of `SqlRunnerStorage.ts` and
+`Bootstrap.ts` (not yet run). Rejected: proposing the change to Effect and leaving the invariant
+unmet on this host meanwhile; reversing D45 for "every acknowledged write is stored once, in
+order". Recommended answer accepted.
+
+## 2026-11-14 — D50 the drain check reads any publisher (extends D47)
+
+**Question:** The drain check finds unpublished decisions with a query that knows Party's claims.
+Should it work for any publisher?
+
+**Answer:** Yes. It reads a writer's backlog from the host's own records (its sources' outboxes,
+plus what it accepted and has not processed), so every published stream gets the check with no
+per-slice query. A library call for it is proposed upstream later.
+
+**Rationale:** A check each slice must write is a check some slice will not write. Rejected: one
+backlog query per publisher. Recommended answer accepted.
+
+## 2026-11-14 — D51 when a closed generation stops being served (extends D34)
+
+**Question:** Generation 2 of the facts stream is complete on the cluster and generation 1 is still
+served. What is the rule?
+
+**Answer:** A closed generation stops being served only when the next holds every fact it held,
+every consumer in every deployment descriptor has read past it, and positions keep their meaning.
+The checker enforces it. Nothing is retired now.
+
+**Rationale:** The same shape as D34's rule for fact versions: retirement is decided by what
+deployed consumers still need, checked by a tool. Rejected: serving every closed generation
+forever. Recommended answer accepted.
+
+## 2026-11-14 — D52 upstream timing (renews D48)
+
+**Question:** Five patches, a lease proposal and two write-ups are saved in the prototype. Send
+them now?
+
+**Answer:** Hold until the fence is settled. Nothing is posted until D49 is built and rerun; the
+operator then sees the full set before anything goes out.
+
+**Rationale:** The fence's patch and its evidence are about to change. Rejected: reading the drafts
+now; stopping the lane. Recommended answer accepted.

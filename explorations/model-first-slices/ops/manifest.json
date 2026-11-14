@@ -6,10 +6,8 @@
     "status": "active",
     "stage": "shape",
     "openQuestions": [
-      "Operator: D45's invariant fails on the cluster (research/18): the fence refuses a commit during which the shard changed hands, but not one that starts on a runner after it lost its shard. Make it exact by naming the runner's lock session (a sixth patch, in @alchemy.run/effect-cluster), or accept ordered commits with nothing lost as the guarantee?",
-      "Operator: the drain check (D47) reads the backlog with a query specific to Party's publisher. Make it generic over the host's storage, or keep it per publisher?",
-      "Operator: the rule for when a closed generation of a published stream stops being served. Generation 1 is still served.",
-      "Operator: D48 holds. Five patches, a lease proposal and two write-ups sit in the prototype's notes/upstream/; none is posted. Does a pass on local patches count toward the D16 gate?",
+      "IN PROGRESS: phase 11 builds D49 (name the runner's lock session so the fence is exact), D50 (generic drain reader) and D51 (generation retirement rule), then reruns the whole cluster suite on one final build.",
+      "Operator, after the rerun: read the upstream set under the prototype's notes/upstream/ and decide whether to send it (D52 holds it). Does a pass on local patches count toward the D16 gate?",
       "DEFERRED: browser session credentials, tenant and cache clearing (outside the D16 gate).",
       "Shape review: BRIEF.md and the artifact have not been confirmed in words by the operator."
     ],

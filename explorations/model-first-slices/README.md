@@ -17,25 +17,26 @@ system alongside people?
 
 ## Next Open Question
 
-After phase 10 the backfill and upgrade cases pass on the Postgres swarm host, on five local
-patches. One invariant fails: a runner that lost its shard can still be acknowledged when a write
-queued to it runs after it resumes (D45), because the fence cannot tell its own lock session from
-another runner's. No write is lost, doubled or reordered. Open for the operator: make the fence
-exact by naming the runner's lock session, or accept ordered commits as the guarantee; whether the
-drain check's backlog reader becomes generic; when a closed stream generation stops being served;
-and whether to send the patches and write-ups under the prototype's `notes/upstream/` (D48 holds
-them). [`BRIEF.md`](./BRIEF.md) has not been confirmed in words.
+Phase 11 is building D49 to D51 (name the runner's lock session so the commit fence is exact, a
+drain check that reads any publisher's backlog, the rule for retiring a closed stream generation)
+and will rerun the whole cluster suite on one final build. After it, two things are for the
+operator: the upstream set under the prototype's `notes/upstream/` (D52 holds it), and whether a
+pass on local patches counts toward the D16 gate. [`BRIEF.md`](./BRIEF.md) has not been confirmed
+in words.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
 2. [`CAPTURE.md`](./CAPTURE.md) - the operator's brief and ground rules.
 3. [`RESEARCH.md`](./RESEARCH.md) - the proposal, the prototype, the outside reviews.
-4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D48.
+4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D52.
 5. [`BRIEF.md`](./BRIEF.md) - shaped pitch, awaiting the operator's confirmation.
 
 ## Trail
 
+- 2026-11-14: D49 to D52 settled phase 10's open points: name the runner's lock session so the
+  fence is exact, make the drain check generic, retire a closed generation by a checker rule, hold
+  upstream until the fence is settled. Phase 11 launched.
 - 2026-11-14: phase 10 built D45 to D47 and reran the cluster suite. The backfill fix and the
   drain check pass, and the new stream generation is complete. The commit fence refuses a commit
   during which the shard changed hands, but a runner that already lost its shard can still be
