@@ -4,6 +4,7 @@ import {
   JobRetryPolicy,
   PoolRuntimeConfig,
   RunnerFleet,
+  RunnerFleetProps,
   RunnerPool,
   runtimeConfigEnvName,
   SelfHostedRunner,
@@ -55,22 +56,24 @@ const overflow = RunnerPool.make({
 });
 
 const fleet = (pools: A.NonEmptyReadonlyArray<RunnerPool>) =>
-  RunnerFleet({
-    id: "Runners",
-    name: "beep-ci",
-    ssmRoot: "/beep-ci",
-    runnerType: "Org",
-    repositoryAllowList: ["beep-effect/beep-effect"],
-    subnetIds: ["subnet-a", "subnet-b"],
-    app: { id: Redacted.make("123"), keyBase64: Redacted.make("a2V5"), webhookSecret: Redacted.make("secret") },
-    pools,
-    runnerManagedPolicyArns: ["arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable"],
-    launchTemplate: {
-      imageId: "resolve:ssm:/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id",
-      securityGroupIds: ["sg-runner"],
-      ebsOptimized: true,
-    },
-  });
+  RunnerFleet(
+    RunnerFleetProps.make({
+      id: "Runners",
+      name: "beep-ci",
+      ssmRoot: "/beep-ci",
+      runnerType: "Org",
+      repositoryAllowList: ["beep-effect/beep-effect"],
+      subnetIds: ["subnet-a", "subnet-b"],
+      app: { id: Redacted.make("123"), keyBase64: Redacted.make("a2V5"), webhookSecret: Redacted.make("secret") },
+      pools,
+      runnerManagedPolicyArns: ["arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable"],
+      launchTemplate: {
+        imageId: "resolve:ssm:/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id",
+        securityGroupIds: ["sg-runner"],
+        ebsOptimized: true,
+      },
+    })
+  );
 
 type ScratchStack = Test.ScratchStack;
 
@@ -296,7 +299,7 @@ sweeping.test.provider("RunnerSweep changes nothing on create and update, and sw
     );
     world.ssm["/beep-ci/heavy/tokens/i-stale"] = { value: "x", modified: 0, tags: {} };
     const sweep = (tokenPaths: ReadonlyArray<string>) =>
-      declareRunnerSweep({ id: "Sweep", props: { environments: ["beep-ci-heavy"], tokenPaths, dependsOn: [] } }).pipe(
+      declareRunnerSweep("Sweep", { environments: ["beep-ci-heavy"], tokenPaths, dependsOn: [] }).pipe(
         Effect.as({ declared: true })
       );
     yield* deploy(stack, sweep(["/beep-ci/heavy/tokens"]));

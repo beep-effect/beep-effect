@@ -110,36 +110,30 @@ export type RunnerFleetLaunchTemplate = Pick<
  * @category models
  * @since 0.0.0
  */
-export const RunnerFleetProps = S.Struct({
-  app: S.Struct({
-    id: S.Redacted(S.String),
-    keyBase64: S.Redacted(S.String),
-    webhookSecret: S.Redacted(S.String),
-  }),
-  id: S.String,
-  launchTemplate: LaunchTemplateInput,
-  logRetention: S.optionalKey(DurationInput),
-  name: S.String,
-  pools: S.NonEmptyArray(RunnerPool),
-  postInstall: S.optionalKey(S.String),
-  preInstall: S.optionalKey(S.String),
-  repositoryAllowList: S.Array(S.String),
-  runAs: S.optionalKey(S.String),
-  runnerManagedPolicyArns: StringValue.pipe(S.Array, S.optionalKey),
-  runnerPermissionsBoundaryArn: S.optionalKey(StringValue),
-  runnerType: RunnerType,
-  ssmRoot: S.String,
-  subnetIds: S.NonEmptyArray(StringValue),
-  tokenMinimumDaysOld: S.optionalKey(S.Finite),
-}).pipe($I.annoteSchema("RunnerFleetProps", { description: "Props of one runner fleet." }));
-
-/**
- * Decoded {@link RunnerFleetProps}.
- *
- * @category models
- * @since 0.0.0
- */
-export type RunnerFleetProps = typeof RunnerFleetProps.Type;
+export class RunnerFleetProps extends S.Opaque<RunnerFleetProps, { readonly brand: unique symbol }>()(
+  S.Struct({
+    app: S.Struct({
+      id: S.Redacted(S.String),
+      keyBase64: S.Redacted(S.String),
+      webhookSecret: S.Redacted(S.String),
+    }),
+    id: S.String,
+    launchTemplate: LaunchTemplateInput,
+    logRetention: S.optionalKey(DurationInput),
+    name: S.String,
+    pools: S.NonEmptyArray(RunnerPool),
+    postInstall: S.optionalKey(S.String),
+    preInstall: S.optionalKey(S.String),
+    repositoryAllowList: S.Array(S.String),
+    runAs: S.optionalKey(S.String),
+    runnerManagedPolicyArns: StringValue.pipe(S.Array, S.optionalKey),
+    runnerPermissionsBoundaryArn: S.optionalKey(StringValue),
+    runnerType: RunnerType,
+    ssmRoot: S.String,
+    subnetIds: S.NonEmptyArray(StringValue),
+    tokenMinimumDaysOld: S.optionalKey(S.Finite),
+  }).pipe($I.annoteSchema("RunnerFleetProps", { description: "Props of one runner fleet." }))
+) {}
 
 const encodeJson = <A, I>(schema: S.Codec<A, I>) => {
   const encode = S.encodeEffect(S.fromJsonString(schema));
@@ -227,11 +221,12 @@ const queueWithDlq = Effect.fn("RunnerFleet.queueWithDlq")(function* (input: {
  * **Example** (One pool)
  *
  * ```ts
- * import { RunnerFleet } from "@beep/alchemy-github-runners/RunnerFleet"
+ * import { RunnerFleet, RunnerFleetProps } from "@beep/alchemy-github-runners/RunnerFleet"
  * import { RunnerPool } from "@beep/alchemy-github-runners/RunnerPool.models"
  * import * as Redacted from "effect/Redacted"
  *
- * const fleet = RunnerFleet({
+ * const fleet = RunnerFleet(
+ *   RunnerFleetProps.make({
  *   id: "Runners",
  *   name: "beep-ci",
  *   ssmRoot: "/beep-ci",
@@ -241,7 +236,8 @@ const queueWithDlq = Effect.fn("RunnerFleet.queueWithDlq")(function* (input: {
  *   app: { id: Redacted.make("1"), keyBase64: Redacted.make("a2V5"), webhookSecret: Redacted.make("s") },
  *   pools: [RunnerPool.make({ name: "heavy", instanceTypes: ["m7i.4xlarge"], maximumCount: 2, labels: ["beep-ec2-heavy"] })],
  *   launchTemplate: { imageId: "ami-0123456789abcdef0", securityGroupIds: ["sg-0123456789abcdef0"] },
- * })
+ *   })
+ * )
  * console.log(fleet)
  * ```
  *
@@ -676,20 +672,17 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         ])
       );
 
-      yield* declareRunnerSweep({
-        id: "Sweep",
-        props: {
-          environments: A.map(pools, (pool) => pool.environment),
-          tokenPaths,
-          // Everything the sweep reads at delete time stays alive until it finishes.
-          dependsOn: [
-            ...A.map(pools, (pool) => pool.scaleUp.functionName),
-            watcher.functionName,
-            appId.parameterArn,
-            appKey.parameterArn,
-            key.keyArn,
-          ],
-        },
+      yield* declareRunnerSweep("Sweep", {
+        environments: A.map(pools, (pool) => pool.environment),
+        tokenPaths,
+        // Everything the sweep reads at delete time stays alive until it finishes.
+        dependsOn: [
+          ...A.map(pools, (pool) => pool.scaleUp.functionName),
+          watcher.functionName,
+          appId.parameterArn,
+          appKey.parameterArn,
+          key.keyArn,
+        ],
       });
 
       return {

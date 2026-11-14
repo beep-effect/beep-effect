@@ -17,6 +17,7 @@ import * as Provider from "alchemy/Provider";
 import { Resource } from "alchemy/Resource";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
@@ -171,19 +172,29 @@ export const sweepRunners = Effect.fn("RunnerSweep.sweep")(function* (input: {
  * @category models
  * @since 0.0.0
  */
-export const RunnerSweepProps = S.Struct({
-  dependsOn: S.Array(S.String),
-  environments: S.Array(S.String),
-  tokenPaths: S.Array(S.String),
-}).pipe($I.annoteSchema("RunnerSweepProps", { description: "Props of the delete-only runner sweep." }));
+export class RunnerSweepProps extends S.Opaque<RunnerSweepProps, { readonly brand: unique symbol }>()(
+  S.Struct({
+    dependsOn: S.Array(S.String),
+    environments: S.Array(S.String),
+    tokenPaths: S.Array(S.String),
+  }).pipe($I.annoteSchema("RunnerSweepProps", { description: "Props of the delete-only runner sweep." }))
+) {}
 
 /**
- * Decoded {@link RunnerSweepProps}.
+ * Encoded side of {@link RunnerSweepProps}.
  *
  * @category models
  * @since 0.0.0
  */
-export type RunnerSweepProps = typeof RunnerSweepProps.Type;
+export declare namespace RunnerSweepProps {
+  /**
+   * The plain shape a stack passes as the resource props.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RunnerSweepProps.Encoded;
+}
 
 /**
  * Attributes of {@link RunnerSweep}: the props echoed back.
@@ -191,20 +202,30 @@ export type RunnerSweepProps = typeof RunnerSweepProps.Type;
  * @category models
  * @since 0.0.0
  */
-export const RunnerSweepAttributes = S.Struct({
-  environments: S.Array(S.String),
-  tokenPaths: S.Array(S.String),
-}).pipe(
-  $I.annoteSchema("RunnerSweepAttributes", { description: "Attributes of the runner sweep: its props echoed back." })
-);
+export class RunnerSweepAttributes extends S.Opaque<RunnerSweepAttributes, { readonly brand: unique symbol }>()(
+  S.Struct({
+    environments: S.Array(S.String),
+    tokenPaths: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("RunnerSweepAttributes", { description: "Attributes of the runner sweep: its props echoed back." })
+  )
+) {}
 
 /**
- * Decoded {@link RunnerSweepAttributes}.
+ * Encoded side of {@link RunnerSweepAttributes}.
  *
  * @category models
  * @since 0.0.0
  */
-export type RunnerSweepAttributes = typeof RunnerSweepAttributes.Type;
+export declare namespace RunnerSweepAttributes {
+  /**
+   * The plain shape the provider reports.
+   *
+   * @category models
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RunnerSweepAttributes.Encoded;
+}
 
 /**
  * The delete-only sweep resource type.
@@ -212,7 +233,11 @@ export type RunnerSweepAttributes = typeof RunnerSweepAttributes.Type;
  * @category resources
  * @since 0.0.0
  */
-export type RunnerSweep = Resource<"BeepGitHubRunners.RunnerSweep", RunnerSweepProps, RunnerSweepAttributes>;
+export type RunnerSweep = Resource<
+  "BeepGitHubRunners.RunnerSweep",
+  RunnerSweepProps.Encoded,
+  RunnerSweepAttributes.Encoded
+>;
 
 const RunnerSweepResource = Resource<RunnerSweep>("BeepGitHubRunners.RunnerSweep");
 
@@ -230,20 +255,29 @@ const RunnerSweepResource = Resource<RunnerSweep>("BeepGitHubRunners.RunnerSweep
  * ```ts
  * import { declareRunnerSweep } from "@beep/alchemy-github-runners/RunnerSweep"
  *
- * const sweep = declareRunnerSweep({
- *   id: "Sweep",
- *   props: { environments: ["beep-ci-heavy"], tokenPaths: ["/beep-ci/heavy/tokens"], dependsOn: [] },
+ * const sweep = declareRunnerSweep("Sweep", {
+ *   environments: ["beep-ci-heavy"],
+ *   tokenPaths: ["/beep-ci/heavy/tokens"],
+ *   dependsOn: [],
  * })
  * console.log(sweep)
  * ```
  *
- * @param input - Logical id and props.
+ * @param id - Logical id of the sweep.
+ * @param props - Pool environments, token paths and the resources the sweep reads at delete time.
  * @returns The resource declaration effect.
  * @category resources
  * @since 0.0.0
  */
-export const declareRunnerSweep = (input: { readonly id: string; readonly props: InputProps<RunnerSweepProps> }) =>
-  RunnerSweepResource(input.id, input.props);
+export const declareRunnerSweep: {
+  (
+    props: InputProps<RunnerSweepProps.Encoded>
+  ): (id: string) => Effect.Effect<RunnerSweep, never, Provider.Provider<RunnerSweep>>;
+  (
+    id: string,
+    props: InputProps<RunnerSweepProps.Encoded>
+  ): Effect.Effect<RunnerSweep, never, Provider.Provider<RunnerSweep>>;
+} = dual(2, (id: string, props: InputProps<RunnerSweepProps.Encoded>) => RunnerSweepResource(id, props));
 
 /**
  * The sweep's provider; it needs the fleet services to run the sweep on delete.
