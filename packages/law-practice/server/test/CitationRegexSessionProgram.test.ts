@@ -109,19 +109,31 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
           Effect.flip
         );
         expect(wrong).toMatchObject({ reason: "invalid-frame" });
-        const broken = yield* citationRegexSessionProgram.pipe(
-          Effect.provideService(Stdio.Stdio, {
-            ...stdio,
-            args: Effect.succeed([argument]),
-            stdin: Stream.empty,
-            stdout: () =>
-              Sink.forEach(() =>
-                Effect.fail(PlatformError.systemError({ _tag: "Unknown", module: "Stdio", method: "stdout" }))
-              ),
-          }),
-          Effect.flip
-        );
-        expect(broken).toMatchObject({ reason: "channel-failed" });
+        const validFrame = yield* frame(0);
+        for (const brokenStage of [1, 2, 3]) {
+          const tags = A.empty<string>();
+          const broken = yield* citationRegexSessionProgram.pipe(
+            Effect.provideService(Stdio.Stdio, {
+              ...stdio,
+              args: Effect.succeed([argument]),
+              stdin: Stream.make(validFrame),
+              stdout: () =>
+                Sink.forEach((chunk: string | Uint8Array) =>
+                  Effect.gen(function* () {
+                    const bytes = Predicate.isString(chunk) ? new TextEncoder().encode(chunk) : chunk;
+                    const reply = yield* decodeCitationRegexSessionReply(bytes.subarray(0, -1)).pipe(Effect.orDie);
+                    tags.push(reply._tag);
+                    if (tags.length === brokenStage)
+                      return yield* PlatformError.systemError({ _tag: "Unknown", module: "Stdio", method: "stdout" });
+                  })
+                ),
+            }),
+            Effect.flip
+          );
+          expect(broken).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "channel-failed" });
+          expect(tags).toEqual(A.take(["Ready", "Started", "Complete"], brokenStage));
+          expect(tags.length).toBe(brokenStage);
+        }
       })
     );
     it.effect("bounds the additional sequenced result header and sanitizes unexpected evaluator defects", () =>
