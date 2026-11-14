@@ -15,7 +15,9 @@
     {"file":"packages/tooling/infra/cost-controls/src/PlanCheck.ts","symbol":"PlanAction","kind":"literal-kit","owner":"@beep/infra-cost-controls","identity":"PlanAction","description":"The action alchemy plan prints for one resource."},
     {"file":"packages/tooling/infra/cost-controls/src/PlanCheck.ts","symbol":"PlanCheckFailed","kind":"tagged-error","owner":"@beep/infra-cost-controls","identity":"PlanCheckFailed"},
     {"file":"packages/tooling/infra/cost-controls/src/PlanCheck.ts","symbol":"PlanEntry","kind":"struct-const","owner":"@beep/infra-cost-controls","identity":"PlanEntry","description":"One resource of an alchemy plan and the property names it changes."},
+    {"file":"packages/tooling/infra/cost-controls/src/PlanCheck.ts","symbol":"PlanLog","kind":"struct-const","owner":"@beep/infra-cost-controls","identity":"PlanLog","description":"A parsed plan, readable entries and unreadable resource lines."},
     {"file":"packages/tooling/infra/cost-controls/src/PlanCheck.ts","symbol":"PlanViolation","kind":"struct-const","owner":"@beep/infra-cost-controls","identity":"PlanViolation","description":"One reason the pre-deploy gate refuses a plan."},
+    {"file":"packages/tooling/infra/cost-controls/src/PlanCheck.ts","symbol":"UnreadableResourceLine","kind":"struct-const","owner":"@beep/infra-cost-controls","identity":"UnreadableResourceLine","description":"A plan resource line whose action word is not a known plan action."},
     {"file":"packages/tooling/infra/cost-controls/src/PlanCheck.ts","symbol":"ViolationReason","kind":"literal-kit","owner":"@beep/infra-cost-controls","identity":"ViolationReason","description":"Why the pre-deploy gate refuses a plan."}
   ]
 }

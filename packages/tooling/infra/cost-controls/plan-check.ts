@@ -62,15 +62,15 @@ const planCheck = Command.make(
       anomalyMonitors: readJson(monitors),
     });
     const raw = yield* decodeOutputs(outputs);
-    const entries = parsePlanLog(planLog);
+    const log = parsePlanLog(planLog);
     const settings = liveSettingsFromAws(raw);
-    for (const entry of entries) {
+    for (const entry of log.entries) {
       const changed = A.isReadonlyArrayNonEmpty(entry.changedProperties)
         ? ` changes: ${A.join(entry.changedProperties, ", ")}`
         : "";
       yield* Console.log(`[${entry.fqn}] ${entry.action}${changed}`);
     }
-    yield* checkPlan(entries, settings).pipe(Effect.catchTag("PlanCheckFailed", report));
+    yield* checkPlan(log, settings).pipe(Effect.catchTag("PlanCheckFailed", report));
     yield* Console.log(
       "plan-check: every adopted singleton is an adopt or no-op with no property change; deploy may run"
     );

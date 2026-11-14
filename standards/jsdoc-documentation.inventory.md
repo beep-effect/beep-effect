@@ -1,6 +1,6 @@
 # JSDoc Documentation Compliance Inventory
 
-Generated: 2026-11-14T05:29:37.159Z
+Generated: 2026-11-14T06:07:29.272Z
 
 ## Scope
 
@@ -15,7 +15,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | packagesWithoutPublicSrcSurface | 2 |
 | packagesNeedingRemediation | 15 |
 | publicModules | 3983 |
-| publicExports | 28684 |
+| publicExports | 28686 |
 | openModules | 114 |
 | openExports | 88 |
 | missingExportExamples | 0 |
@@ -114,7 +114,7 @@ The package universe is the current `bun run topo-sort` output. This inventory c
 | 56 | `@beep/github` | `packages/drivers/github` | clean | 30 | 229 | 0 | 0 |
 | 57 | `@beep/html` | `packages/foundation/modeling/html` | clean | 15 | 544 | 0 | 0 |
 | 58 | `@beep/hubspot` | `packages/drivers/hubspot` | clean | 4 | 23 | 0 | 0 |
-| 59 | `@beep/infra-cost-controls` | `packages/tooling/infra/cost-controls` | clean | 6 | 45 | 0 | 0 |
+| 59 | `@beep/infra-cost-controls` | `packages/tooling/infra/cost-controls` | clean | 6 | 47 | 0 | 0 |
 | 60 | `@beep/infra-turbo-cache` | `packages/tooling/infra/turbo-cache` | clean | 7 | 45 | 0 | 0 |
 | 61 | `@beep/jsonl` | `packages/foundation/modeling/jsonl` | clean | 8 | 60 | 0 | 0 |
 | 62 | `@beep/lint-rules` | `packages/tooling/policy-pack/lint-rules` | needs-remediation | 14 | 41 | 1 | 0 |

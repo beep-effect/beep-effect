@@ -1,7 +1,7 @@
 {
   "standard": "jsdoc-documentation",
   "version": 1,
-  "generatedAt": "2026-11-14T05:29:37.159Z",
+  "generatedAt": "2026-11-14T06:07:29.272Z",
   "source": {
     "packageUniverseCommand": "bun run topo-sort",
     "generator": "bun run beep quality jsdoc-inventory",
@@ -66,7 +66,7 @@
     "packagesWithoutPublicSrcSurface": 2,
     "packagesNeedingRemediation": 15,
     "publicModules": 3983,
-    "publicExports": 28684,
+    "publicExports": 28686,
     "openModules": 114,
     "openExports": 88,
     "missingExportExamples": 0,
@@ -159478,7 +159478,7 @@
         "srcDir": "src",
         "sourceFileCount": 6,
         "publicModuleCount": 6,
-        "publicExportCount": 45
+        "publicExportCount": 47
       },
       "docgenCoverage": {
         "hasDocgenConfig": true,
@@ -159606,7 +159606,7 @@
           "schemaAnnotationGaps": [],
           "categoryViolations": [],
           "documentationShapeViolations": [],
-          "exportCount": 12,
+          "exportCount": 14,
           "remediationStatus": "resolved"
         },
         {
@@ -160329,12 +160329,56 @@
           "remediationStatus": "resolved"
         },
         {
+          "symbolName": "UnreadableResourceLine",
+          "exportKind": "class",
+          "filePath": "src/PlanCheck.ts",
+          "repoPath": "packages/tooling/infra/cost-controls/src/PlanCheck.ts",
+          "line": 98,
+          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-98-unreadableresourceline",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
+          "symbolName": "PlanLog",
+          "exportKind": "class",
+          "filePath": "src/PlanCheck.ts",
+          "repoPath": "packages/tooling/infra/cost-controls/src/PlanCheck.ts",
+          "line": 123,
+          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-123-planlog",
+          "currentTags": [
+            "@category",
+            "@since"
+          ],
+          "missingRequiredTags": [],
+          "forbiddenTags": [],
+          "missingSummary": false,
+          "malformedConditionalTags": [],
+          "exampleImportViolations": [],
+          "unsafeExampleViolations": [],
+          "schemaAnnotationGaps": [],
+          "categoryViolations": [],
+          "documentationShapeViolations": [],
+          "remediationStatus": "resolved"
+        },
+        {
           "symbolName": "LiveSettings",
           "exportKind": "class",
           "filePath": "src/PlanCheck.ts",
           "repoPath": "packages/tooling/infra/cost-controls/src/PlanCheck.ts",
-          "line": 112,
-          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-112-livesettings",
+          "line": 161,
+          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-161-livesettings",
           "currentTags": [
             "@category",
             "@since"
@@ -160355,8 +160399,8 @@
           "exportKind": "class",
           "filePath": "src/PlanCheck.ts",
           "repoPath": "packages/tooling/infra/cost-controls/src/PlanCheck.ts",
-          "line": 149,
-          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-149-awssettingsoutputs",
+          "line": 198,
+          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-198-awssettingsoutputs",
           "currentTags": [
             "@category",
             "@since"
@@ -160377,8 +160421,8 @@
           "exportKind": "const",
           "filePath": "src/PlanCheck.ts",
           "repoPath": "packages/tooling/infra/cost-controls/src/PlanCheck.ts",
-          "line": 190,
-          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-190-livesettingsfromaws",
+          "line": 239,
+          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-239-livesettingsfromaws",
           "currentTags": [
             "@param",
             "@returns",
@@ -160401,8 +160445,8 @@
           "exportKind": "const",
           "filePath": "src/PlanCheck.ts",
           "repoPath": "packages/tooling/infra/cost-controls/src/PlanCheck.ts",
-          "line": 229,
-          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-229-violationreason",
+          "line": 278,
+          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-278-violationreason",
           "currentTags": [
             "@category",
             "@since"
@@ -160423,8 +160467,8 @@
           "exportKind": "type",
           "filePath": "src/PlanCheck.ts",
           "repoPath": "packages/tooling/infra/cost-controls/src/PlanCheck.ts",
-          "line": 244,
-          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-244-violationreason",
+          "line": 294,
+          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-294-violationreason",
           "currentTags": [
             "@category",
             "@since"
@@ -160445,8 +160489,8 @@
           "exportKind": "class",
           "filePath": "src/PlanCheck.ts",
           "repoPath": "packages/tooling/infra/cost-controls/src/PlanCheck.ts",
-          "line": 262,
-          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-262-planviolation",
+          "line": 312,
+          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-312-planviolation",
           "currentTags": [
             "@category",
             "@since"
@@ -160467,8 +160511,8 @@
           "exportKind": "class",
           "filePath": "src/PlanCheck.ts",
           "repoPath": "packages/tooling/infra/cost-controls/src/PlanCheck.ts",
-          "line": 288,
-          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-288-plancheckfailed",
+          "line": 338,
+          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-338-plancheckfailed",
           "currentTags": [
             "@category",
             "@since"
@@ -160489,8 +160533,8 @@
           "exportKind": "const",
           "filePath": "src/PlanCheck.ts",
           "repoPath": "packages/tooling/infra/cost-controls/src/PlanCheck.ts",
-          "line": 346,
-          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-346-parseplanlog",
+          "line": 427,
+          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-427-parseplanlog",
           "currentTags": [
             "@param",
             "@returns",
@@ -160513,8 +160557,8 @@
           "exportKind": "const",
           "filePath": "src/PlanCheck.ts",
           "repoPath": "packages/tooling/infra/cost-controls/src/PlanCheck.ts",
-          "line": 490,
-          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-490-checkplan",
+          "line": 571,
+          "anchor": "packages-tooling-infra-cost-controls-src-plancheck-ts-571-checkplan",
           "currentTags": [
             "@param",
             "@returns",

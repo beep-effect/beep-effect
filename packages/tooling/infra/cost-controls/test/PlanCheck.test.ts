@@ -63,7 +63,7 @@ const refusal = (plan: string, settings: LiveSettings = live) =>
 
 describe("parsePlanLog", () => {
   it("reads actions through log prefixes and ANSI colors and keeps property names, not values", () => {
-    const entries = parsePlanLog(
+    const { entries } = parsePlanLog(
       A.join(
         [colored("AppTag", "update"), line("  - status: Active"), line("  + status: Inactive"), colored("X", "noop")],
         "\n"
@@ -76,7 +76,7 @@ describe("parsePlanLog", () => {
   });
 
   it("reports nested keys by name and a bare scalar as (value), so no address reaches the log", () => {
-    const entries = parsePlanLog(
+    const { entries } = parsePlanLog(
       A.join(
         [
           colored("MonthlyBudget", "update"),
@@ -94,7 +94,9 @@ describe("parsePlanLog", () => {
   });
 
   it("ignores action tasks and the summary line", () => {
-    expect(parsePlanLog(A.join([line("Plan: no changes"), line("[Seed] run [action]")], "\n"))).toEqual([]);
+    const log = parsePlanLog(A.join([line("Plan: no changes"), line("[Seed] run [action]")], "\n"));
+    expect(log.entries).toEqual([]);
+    expect(log.unreadable).toEqual([]);
   });
 });
 
@@ -262,6 +264,88 @@ describe("checkPlan rollback exception", () => {
     Effect.gen(function* () {
       const failure = yield* refusal(A.join([cleanPlan, colored("AnomalyAlerts", action)], "\n"));
       expect(A.map(failure.violations, (v) => [v.subject, v.reason])).toEqual([["AnomalyAlerts", "delete-or-replace"]]);
+    })
+  );
+});
+
+// Plan lines exactly as `Deploy cost controls` run 43560670140 logged them
+// (the first live deploy, 2026-11-14): timestamped INFO prefix, no ANSI.
+const runLine = (text: string) => `[05:18:13.716] INFO: ${text}`;
+const livePlanFromRun = A.join(
+  [
+    "[05:18:11.204] WARN: alchemy 2.0.0-beta.87 is available (you're on 2.0.0-beta.86).",
+    runLine("Plan · prod"),
+    runLine("Plan: 1 to create, 1 to update"),
+    runLine("[AccountServicesMonitor] noop"),
+    runLine("[AnomalyAlerts] create"),
+    runLine("  properties:"),
+    runLine("    frequency: DAILY"),
+    runLine("[AppTag] noop"),
+    runLine("[BeepCiTag] noop"),
+    runLine("[ComputeOptimizer] noop"),
+    runLine("[CostOptimizationHub] noop"),
+    runLine("[DataClassTag] noop"),
+    runLine("[GhrEnvironmentTag] noop"),
+    runLine("[ManagedByTag] noop"),
+    runLine("[MonthlyBudget] update"),
+    runLine("  properties:"),
+    runLine("  - notifications: []"),
+    runLine("  + notifications:"),
+    runLine("[ProjectTag] noop"),
+    "[05:18:15.689] INFO: Done: 2 succeeded (2.0s)",
+    "[18:56:21.770] ERROR (#1): @beep/infra-cost-controls/PlanCheck/PlanCheckFailed: ",
+  ],
+  "\n"
+);
+const noopPlan = A.join(
+  [
+    runLine("Plan: no changes"),
+    ...A.map([...singletons, "MonthlyBudget", "AnomalyAlerts"], (fqn) => runLine(`[${fqn}] noop`)),
+  ],
+  "\n"
+);
+
+describe("parsePlanLog fails closed on unreadable actions", () => {
+  it.effect("reads the live first deploy exactly as logged and passes the gate", () =>
+    Effect.gen(function* () {
+      const log = parsePlanLog(livePlanFromRun);
+      expect(log.unreadable).toEqual([]);
+      expect(A.map(log.entries, (entry) => entry.fqn)).toHaveLength(11);
+      yield* checkPlan(log, live);
+    })
+  );
+
+  it.effect("passes the silent first deploy and an all no-op plan unchanged", () =>
+    Effect.gen(function* () {
+      for (const plan of [cleanPlan, noopPlan]) {
+        const log = parsePlanLog(plan);
+        expect(log.unreadable).toEqual([]);
+        yield* checkPlan(log, live);
+      }
+    })
+  );
+
+  it.effect("refuses an unknown action on a singleton", () =>
+    Effect.gen(function* () {
+      const failure = yield* refusal(Str.replace(runLine("[AppTag] noop"), runLine("[AppTag] migrate"))(noopPlan));
+      expect(A.map(failure.violations, (v) => [v.subject, v.reason, v.detail])).toContainEqual([
+        "AppTag",
+        "unreadable-action",
+        "migrate",
+      ]);
+    })
+  );
+
+  it.effect("refuses an unknown action on a resource that is not a singleton, naming only the word", () =>
+    Effect.gen(function* () {
+      const plan = Str.replace(
+        runLine("[MonthlyBudget] noop"),
+        runLine("[MonthlyBudget] migrate to ops@example.com")
+      )(noopPlan);
+      const failure = yield* refusal(plan);
+      expect(A.map(failure.violations, (v) => [v.subject, v.reason, v.detail])).toEqual([
+        ["MonthlyBudget", "unreadable-action", "migrate"],
+      ]);
     })
   );
 });
