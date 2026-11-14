@@ -59,6 +59,7 @@ import {
   QUARANTINE_ARCHIVE_DIRECTORY_NAME,
   QUARANTINE_ARCHIVE_MIN_AGE_MILLIS,
   QualitySchedulerError,
+  QualitySchedulerLive,
   qualitySchedulerForTesting,
   quarantinedAtMillisOf,
   RunScopeRecord,
@@ -159,7 +160,11 @@ const SchedulerCommandLayer = Layer.mergeAll(
   FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
   Git.layer.pipe(Layer.provide(NodeServices.layer))
 );
-const runQualityCommand = Command.runWith(qualityCommand, { version: "0.0.0" });
+// The scheduler subcommands reach admission through the live QualityScheduler service.
+const runQualityCommand = flow(
+  Command.runWith(qualityCommand, { version: "0.0.0" }),
+  Effect.provide(QualitySchedulerLive)
+);
 
 const DEAD_PID = 2_147_483_647;
 const JOURNALED_ATTEMPT_ID = UUID.make("550e8400-e29b-41d4-a716-446655440020");

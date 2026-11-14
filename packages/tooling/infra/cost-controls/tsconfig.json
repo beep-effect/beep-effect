@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../tsconfig.base.json",
+  "include": ["src", "alchemy.run.ts", "plan-check.ts"],
+  "compilerOptions": {
+    "types": ["node"],
+    "outDir": "dist",
+    "rootDir": "."
+  },
+  "references": [
+    {
+      "path": "../../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../library/alchemy-aws-extras/tsconfig.json"
+    }
+  ]
+}

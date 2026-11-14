@@ -2,7 +2,12 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { qualityCommand } from "@beep/repo-cli/commands/Quality";
 import { runTsgoSmokeCheck } from "@beep/repo-cli/test/Quality";
-import { MemoryStats, provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
+import {
+  MemoryStats,
+  provideRuntimeRootForTesting,
+  QualitySchedulerLive,
+  RuntimeRootChoice,
+} from "@beep/repo-cli/test/RepoRun";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
@@ -33,7 +38,8 @@ const CommandTestLayer = Layer.mergeAll(
   NodeCrypto.layer,
   FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
   Git.layer.pipe(Layer.provide(NodeServices.layer)),
-  FixedMemoryStatsLayer
+  FixedMemoryStatsLayer,
+  QualitySchedulerLive
 );
 const runQualityCommand = Command.runWith(qualityCommand, { version: "0.0.0" });
 

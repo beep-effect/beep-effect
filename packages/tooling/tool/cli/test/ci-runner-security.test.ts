@@ -2088,6 +2088,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "history-notes-publish.yml:Publish refs/notes/history",
         // Prod deploys of the Alchemy stacks; environment-gated, not local lanes.
         "deploy-beep-effect-web.yml:Deploy beep-effect-web (prod)",
+        "deploy-cost-controls.yml:Deploy cost controls (prod)",
         "deploy-storybook.yml:Deploy Storybook (prod)",
         "deploy-turbo-cache.yml:Deploy turbo cache (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",

@@ -67,7 +67,7 @@ import {
 } from "../../../internal/repo-run/GateRoute.schemas.ts";
 import { processStartIdentityForPid } from "../../../internal/repo-run/ProcessIdentity.ts";
 import { AdmissionRoute } from "../../../internal/repo-run/QualityScheduler.schemas.ts";
-import { recordAdmissionRoute } from "../../../internal/repo-run/QualityScheduler.ts";
+import { QualityScheduler } from "../../../internal/repo-run/QualityScheduler.service.ts";
 import { repoRunArtifactId } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import { CiLocalStepPlan, ciLaneDispatchStep } from "../../Ci/CiLane.ts";
 import { ChangeAtomKind, RouteSentinel } from "../../Ci/Route.schemas.ts";
@@ -1858,11 +1858,12 @@ const recordWorkerFinalCheckRoutes = (
   A.match(routes, {
     onEmpty: () => Effect.void,
     onNonEmpty: Effect.fnUntraced(function* (decided) {
+      const scheduler = yield* QualityScheduler;
       const branch = yield* currentYeetBranch(repoRoot).pipe(Effect.orElseSucceed(constant("")));
       yield* Effect.forEach(
         decided,
         ([gate, outcome]) =>
-          recordAdmissionRoute(
+          scheduler.recordRoute(
             AdmissionRoute.make({
               checkoutRoot: repoRoot,
               branch,
@@ -1928,6 +1929,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | Git
+  | QualityScheduler
 > {
   const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(YeetCommandError.new("Failed to locate repo root.")));
   const gates = yield* parseFinalCheckGates(options.gates);

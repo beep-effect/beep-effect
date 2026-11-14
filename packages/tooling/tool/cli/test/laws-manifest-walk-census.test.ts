@@ -55,24 +55,24 @@ const writeManifest = Effect.fnUntraced(function* (root: string, directory: stri
 });
 
 // The pre-#3019 walk as an oracle: descend into every directory, prune nothing.
-const unprunedManifests = (root: string) =>
-  Effect.gen(function* () {
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const walk = (directory: string): Effect.Effect<ReadonlyArray<string>> =>
-      Effect.gen(function* () {
-        const entries = yield* fs.readDirectoryEntries(path.join(root, directory)).pipe(Effect.orDie);
-        const own = A.some(entries, (entry) => entry.type === "File" && entry.name === MANIFEST)
-          ? [path.join(directory, MANIFEST)]
-          : [];
-        const nested = yield* Effect.forEach(
-          A.filter(entries, (entry) => entry.type === "Directory"),
-          (entry) => walk(path.join(directory, entry.name))
-        );
-        return A.appendAll(own, A.flatten(nested));
-      });
-    return A.sort(yield* walk("packages"), Order.String);
-  });
+const unprunedManifests = Effect.fn("unprunedManifests")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const walk = (directory: string): Effect.Effect<ReadonlyArray<string>> =>
+    Effect.gen(function* () {
+      const entries = yield* fs.readDirectoryEntries(path.join(root, directory)).pipe(Effect.orDie);
+      const own = A.some(entries, (entry) => entry.type === "File" && entry.name === MANIFEST)
+        ? [path.join(directory, MANIFEST)]
+        : [];
+      const nested = yield* Effect.forEach(
+        A.filter(entries, (entry) => entry.type === "Directory"),
+        (entry) => walk(path.join(directory, entry.name))
+      );
+      return A.appendAll(own, A.flatten(nested));
+    });
+  const manifests = yield* walk("packages");
+  return A.sort(manifests, Order.String);
+});
 
 describe("lint:laws manifest walk census", () => {
   it.layer(NodeServices.layer, { timeout: "30 seconds" })((it) => {

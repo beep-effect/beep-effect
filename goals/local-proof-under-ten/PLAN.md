@@ -169,4 +169,12 @@ Lane docs/local-proof-retire-beep-heavy
 
 Reverse: Restore the removed beep-heavy lines in the three edited files from this commit's parent; the wrapper itself was never changed.
 
+### Slice 6: scheduler facade and Cache work kind, 2026-11-14
+
+Slice 6 lands SCHE-08's service half on `refactor/local-proof-scheduler-facade` (decision files `sche-08-scheduler-facade` and `sche-08-cache-work-kind`). Callers reach the scheduler through the `QualityScheduler` service (`admit`, `observe`, `reap`, `protocol`, `setEvictionProtocol`, `setUnitProtocol`, `history`, `archive`, `recordRoute`), with `QualitySchedulerLive` over the existing functions. Cache commands request their own `cache` kind at weight 1; with the units gate off the files keep origin/main's `review-fix` bytes, and the review-fix class cap counts Cache work as before. Scheduler policy is unchanged: admission order, weights, the cap and journal rows. Gate evidence: `test/quality-scheduler-admission-unit.test.ts` gains four cases (Node and Bun, in-memory filesystem, fixed procfs entry, TestClock): gate off writes origin/main's captured bytes for a Cache admission and withdrawal, gate on writes `cache` that a pre-SCHE-08 reader refuses, and a Cache ticket waits a heartbeat while two review-fix leases and one Cache lease fill the cap. The Cache tests replace the scheduler through a recording Layer and assert each site requests `cache` (dependency materialization in `cache-dependencies.test.ts`, protocol and signed pilot in `cache-signed-runner.test.ts`, the pilot in `cache-pilot-orchestration.test.ts`, producer workflow verification in `cache-workflow.test.ts`). The existing scheduler suites pass on Node and Bun. The units gate stays off on the workstation until every live checkout runs this revision. With this slice both halves of SCHE-08, the schema and the service, are implemented; the journal fields still wait on SCHE-09's retention for their readers.
+
+Lane refactor/local-proof-scheduler-facade
+
+Reverse: Revert the slice 6 PR; with the units gate off nothing on disk changed, and a cache lease written while it was on stays charged on slice 3 and later readers.
+
 <!-- beep:decisions:end -->

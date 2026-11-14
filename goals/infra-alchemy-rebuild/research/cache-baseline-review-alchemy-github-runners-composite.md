@@ -14,3 +14,11 @@ boundaries gained the new edge.
 Only `@beep/alchemy-github-runners` computations change their inputs: the package manifest, the tsconfig
 references and the new upstream workspace edge. Commands, outputs and environment are unchanged, and no
 qualification is granted.
+
+## Root drift inherited from main (2026-11-14)
+
+Re-recording after merging `main` at ca094874c08 also covers `//`. This lane changes no root
+configuration. #3317 added one input path,
+`packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.service.ts`, to a root-declared
+`turbo.json` task after the last baseline record (#3310). That is an input-list change only: no
+command, output or environment change, and no qualification granted.
