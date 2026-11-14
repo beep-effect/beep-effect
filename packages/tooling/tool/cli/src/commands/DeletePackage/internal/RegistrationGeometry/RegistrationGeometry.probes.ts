@@ -105,12 +105,14 @@ const collectFiles = Effect.fn("RegistrationGeometry.collectFiles")(function* (
 // `target.packagePath` skips the occurrences a sibling workspace path accounts for
 // (`packages/tooling/deploy/x` does not name `deploy`); any other needle stays a whole token. Its
 // users: the dependents scan (workspace files, root scripts, root policy files) and the doctor
-// surfaces `derived-rebuild`, `generated-inventory` (the path-keyed Fallow baselines,
-// schema-first inventory and schema-catalog shard; the name-keyed ones are unaffected),
-// `authored-reference` and `historical-record`. So `--dry-run`, `--check` and the post-apply
-// doctor judge a path needle the same way. Needles that can never be a package path keep
-// `mentionsToken` directly: the quoted workspace literal (its quotes anchor it), the identity slug
-// and accessor, and the package name in `pending-changeset` and `runtime-artifact`.
+// surfaces `derived-rebuild`, `generated-inventory` for the four path-keyed inventories
+// (`fallow-health-baseline`, `fallow-dead-code-baseline`, `schema-first-inventory`,
+// `schema-catalog`), `authored-reference` and `historical-record`. So `--dry-run`, `--check` and
+// the post-apply doctor judge a path needle the same way. Whole tokens stay for every needle that
+// cannot be a package path: package names (also in `pending-changeset` and `runtime-artifact`),
+// the identity slug and accessor, the membership keys of the name-keyed inventories
+// (`jsdoc-inventory`, `coverage-baseline`, `instrumentation-catalog`, `test-typecheck-baseline`)
+// and the quoted workspace literal (its quotes anchor it).
 type NeedleMatcher = (needles: ReadonlyArray<string>) => (text: string) => boolean;
 
 const needleMatcherFor =

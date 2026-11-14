@@ -13,13 +13,18 @@
  * ends another workspace's path (`packages/tooling/deploy/x`).
  * {@link mentionsRepoPath} skips the occurrences that such a sibling path
  * accounts for, using the prefixes {@link shadowPrefixesFor} derives from the
- * workspace list. In delete-package it covers the target's package-path needle
- * everywhere the target is searched for: the dependents scan (workspace files,
- * root scripts and the root policy files) and the doctor surfaces that search
- * for it (`derived-rebuild`, `authored-reference`, `historical-record`), so
- * the plan, `--check` and the post-apply doctor agree with the dependents
- * scan. Package names, identity accessors, membership keys and the quoted
- * workspace literal stay on {@link mentionsToken}.
+ * workspace list. In delete-package it covers every search whose needle can be
+ * the target's package path: the dependents scan (workspace files, root
+ * scripts and the root policy files) and the doctor surfaces
+ * `derived-rebuild`, `generated-inventory` for the four path-keyed
+ * inventories (`fallow-health-baseline`, `fallow-dead-code-baseline`,
+ * `schema-first-inventory`, `schema-catalog`), `authored-reference` and
+ * `historical-record`. So `--dry-run`, `--check` and the post-apply doctor
+ * judge a path needle the same way. {@link mentionsToken} stays for every
+ * needle that cannot be a package path: package names, the identity slug and
+ * accessor, the membership keys of the name-keyed inventories
+ * (`jsdoc-inventory`, `coverage-baseline`, `instrumentation-catalog`,
+ * `test-typecheck-baseline`) and the quoted workspace literal.
  *
  * **Gotchas**
  *
