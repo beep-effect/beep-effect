@@ -386,32 +386,31 @@ const ownerRoutes = (
   });
 
 const ownerSteps = (readings: ReadonlyArray<RouteReading>, owner: SessionClaim): ReadonlyArray<FallbackStep> => {
-  const withSend = A.filter(readings, (reading) => O.isSome(reading.send));
-  const first = (liveness: RouteReading["liveness"]) =>
-    A.findFirst(withSend, (reading) => reading.liveness === liveness);
-  const sendText = (reading: RouteReading) => O.getOrElse(reading.send, () => "");
+  // The send call of the first route at a liveness, in route order.
+  const first = (liveness: RouteReading["liveness"]): O.Option<string> =>
+    A.findFirst(readings, (reading) => (reading.liveness === liveness ? reading.send : O.none()));
   const live = first("live");
-  if (O.isSome(live)) return [FallbackStep.make({ rung: "send", instruction: sendText(live.value) })];
+  if (O.isSome(live)) return [FallbackStep.make({ rung: "send", instruction: live.value })];
   const dormant = first("dormant");
   if (O.isSome(dormant)) {
-    return [FallbackStep.make({ rung: "wake", instruction: `${sendText(dormant.value)}  # wakes the idle thread` })];
+    return [FallbackStep.make({ rung: "wake", instruction: `${dormant.value}  # wakes the idle thread` })];
   }
   const leading = A.flatten([
     O.match(first("unknown"), {
       onNone: A.empty<FallbackStep>,
-      onSome: (reading) => [
+      onSome: (send) => [
         FallbackStep.make({
           rung: "send",
-          instruction: `${sendText(reading)}  # liveness unknown: send, then confirm with t3_thread_read`,
+          instruction: `${send}  # liveness unknown: send, then confirm with t3_thread_read`,
         }),
       ],
     }),
     O.match(first("unreachable"), {
       onNone: A.empty<FallbackStep>,
-      onSome: (reading) => [
+      onSome: (send) => [
         FallbackStep.make({
           rung: "retry",
-          instruction: `${sendText(reading)}  # environment did not answer: retry, then fall back to the PR comment`,
+          instruction: `${send}  # environment did not answer: retry, then fall back to the PR comment`,
         }),
       ],
     }),

@@ -11,7 +11,9 @@ import {
   layerSessionPresenceStoreMemory,
   layerSessionResolver,
   layerSessionRouteProbeLive,
+  localT3EnvironmentId,
   makeSessionPresenceStoreLive,
+  makeSessionRouteProbeLive,
   PrRepository,
   RouteReading,
   recordPresence,
@@ -30,6 +32,7 @@ import {
   SessionRoute,
   sessionPresenceFileName,
   T3ThreadRoute,
+  t3HomeDirectory,
   UnroutableRoute,
   ViaParentRoute,
 } from "@beep/repo-cli/test/Session";
@@ -46,6 +49,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as Predicate from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
@@ -120,6 +124,8 @@ const makeFixture = Effect.fn("SessionRouteResolverTest.makeFixture")(function* 
   readonly threads?: ReadonlyArray<ThreadFixture>;
   readonly environments?: ReadonlyArray<object>;
   readonly malformedThread?: string;
+  readonly failingThread?: string;
+  readonly environmentsFail?: boolean;
 }) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -169,10 +175,16 @@ const makeFixture = Effect.fn("SessionRouteResolverTest.makeFixture")(function* 
     A.join(
       [
         "#!/bin/sh",
-        `if [ "$1" = environment ]; then cat '${environmentsFile}'; exit 0; fi`,
+        options.environmentsFail === true
+          ? `if [ "$1" = environment ]; then echo 'link store unavailable' >&2; exit 3; fi`
+          : `if [ "$1" = environment ]; then cat '${environmentsFile}'; exit 0; fi`,
         'case "$3" in',
         ...cases,
         malformed,
+        O.match(O.fromUndefinedOr(options.failingThread), {
+          onNone: () => "",
+          onSome: (id) => `  '${id}') echo 'server error' >&2; exit 2 ;;`,
+        }),
         '  *) echo "Thread $3 is no longer available." >&2; exit 1 ;;',
         "esac",
         "",
@@ -192,6 +204,16 @@ const makeFixture = Effect.fn("SessionRouteResolverTest.makeFixture")(function* 
     },
   };
 });
+
+const procDenied = (path: string) =>
+  Effect.fail(
+    PlatformError.systemError({
+      _tag: "PermissionDenied",
+      module: "FileSystem",
+      method: "readFileString",
+      pathOrDescriptor: path,
+    })
+  );
 
 const liveIndexEntry = (pid: number, procStart: string, sessionId: string, name: string) => ({
   pid,
@@ -358,6 +380,15 @@ describe("session claims", () => {
       ["/work/a", ["pr"], 1],
     ]);
     expect(claimsFor({ query: "nothing", pr: O.none(), checkout: "/nothing" })(rows)).toStrictEqual([]);
+    const renamed = claimsFor(
+      [
+        ledgerRow({ checkout: "/work/e", at: 1, pr: 77 }),
+        ledgerRow({ checkout: "/work/e", at: 4, pr: 77 }),
+        ledgerRow({ checkout: "/work/e", at: 2, pr: 77 }),
+      ],
+      { query: "77", pr: O.some(77), checkout: "/x/77" }
+    );
+    expect(A.map(renamed, (claim) => DateTime.toEpochMillis(claim.claimedAt))).toStrictEqual([4]);
   });
 
   it("stops matching a PR once the checkout's newest row names a different one", () => {
@@ -911,6 +942,156 @@ describe("session presence and resolve commands", () => {
           );
           assertNone(none);
         })
+    );
+  });
+});
+
+describe("route probe and resolver edges", () => {
+  it.layer(Layer.fresh(testLayer), { timeout: "60 seconds" })((it) => {
+    const withEnv = (env: Record<string, string>) =>
+      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv({ env }));
+    const route = (environmentId: string, threadId: string) =>
+      T3ThreadRoute.make({ environmentId, threadId, provider: "codex" });
+
+    it.effect("falls back to $HOME for the T3 home and reads none without either", () =>
+      Effect.gen(function* () {
+        const fromHome = yield* t3HomeDirectory.pipe(withEnv({ HOME: "/home/agent" }));
+        assertSome(fromHome, "/home/agent/.t3");
+        const neither = yield* t3HomeDirectory.pipe(withEnv({}));
+        assertNone(neither);
+        const environmentId = yield* localT3EnvironmentId.pipe(withEnv({}));
+        assertNone(environmentId);
+      })
+    );
+
+    it.effect("derives the Claude index and t3 CLI from $HOME when they are not configured", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* makeFixture({ threads: [{ id: "home-thread", status: "running", archived: false }] });
+        // Mirror the fixture under $HOME's default names.
+        yield* fs.symlink(path.join(fixture.root, "claude"), path.join(fixture.root, ".claude"));
+        yield* fs.symlink(fixture.env.T3CODE_HOME, path.join(fixture.root, ".t3"));
+        const probe = yield* makeSessionRouteProbeLive().pipe(withEnv({ HOME: fixture.root }));
+        const peer = yield* probe.claudePeer("nobody");
+        expect(peer.liveness).toBe("dead");
+        const thread = yield* probe.t3Thread(route(LOCAL_ENV, "home-thread"));
+        expect(thread.liveness).toBe("live");
+      })
+    );
+
+    it.effect("reads unknown everywhere when nothing is configured", () =>
+      Effect.gen(function* () {
+        const probe = yield* makeSessionRouteProbeLive().pipe(withEnv({}));
+        const peer = yield* probe.claudePeer("nobody");
+        expect([peer.liveness, peer.detail]).toStrictEqual([
+          "unknown",
+          "no Claude config directory (HOME and CLAUDE_CONFIG_DIR unset)",
+        ]);
+        const thread = yield* probe.t3Thread(route("env-x", "t"));
+        expect([thread.liveness, thread.detail]).toStrictEqual([
+          "unknown",
+          "environment is not this host; linked environments could not be listed",
+        ]);
+      })
+    );
+
+    it.effect("separates a failing link listing, an unknown environment, an unrunnable CLI and a server error", () =>
+      Effect.gen(function* () {
+        const failing = yield* makeFixture({ environmentsFail: true });
+        const noLinks = yield* makeSessionRouteProbeLive().pipe(withEnv(failing.env));
+        const environments = yield* noLinks.environments;
+        assertNone(environments);
+        const linked = yield* makeFixture({
+          environments: [{ environmentId: "env-other", label: "other", status: "reachable" }],
+          failingThread: "flaky",
+        });
+        const probe = yield* makeSessionRouteProbeLive().pipe(withEnv(linked.env));
+        const stranger = yield* probe.t3Thread(route("env-stranger", "t"));
+        expect([stranger.liveness, stranger.detail]).toStrictEqual([
+          "unknown",
+          "environment is neither this host nor a linked one",
+        ]);
+        const flaky = yield* probe.t3Thread(route(LOCAL_ENV, "flaky"));
+        expect([flaky.liveness, flaky.detail]).toStrictEqual([
+          "unreachable",
+          "the local T3 server did not answer (exit 2)",
+        ]);
+        const noCli = yield* makeSessionRouteProbeLive().pipe(
+          withEnv({ ...linked.env, T3CODE_CLI_PATH: `${linked.root}/missing-t3` })
+        );
+        const unrunnable = yield* noCli.t3Thread(route(LOCAL_ENV, "flaky"));
+        expect([unrunnable.liveness, unrunnable.detail]).toStrictEqual(["unknown", "the t3 CLI could not be run"]);
+      })
+    );
+
+    it.effect("reads unknown, not dead, when /proc cannot be read", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const fixture = yield* makeFixture({
+          liveIndex: [{ file: "1.json", content: liveIndexEntry(1, "1", "desk-1", "desk") }],
+        });
+        const noProc = FileSystem.FileSystem.of({
+          ...fs,
+          readFileString: Effect.fn("SessionRouteResolverTest.noProcRead")(function* (path: string, encoding?: string) {
+            return Str.startsWith("/proc/")(path) ? yield* procDenied(path) : yield* fs.readFileString(path, encoding);
+          }),
+        });
+        const probe = yield* makeSessionRouteProbeLive().pipe(
+          withEnv(fixture.env),
+          Effect.provideService(FileSystem.FileSystem, noProc)
+        );
+        const peer = yield* probe.claudePeer("desk-1");
+        expect([peer.liveness, peer.detail]).toStrictEqual([
+          "unknown",
+          "/proc is unreadable, so the pid cannot be checked",
+        ]);
+      })
+    );
+
+    it.effect("resolves unnamed live peers, unroutable owners and non-PR keys with unreadable links", () =>
+      Effect.gen(function* () {
+        const start = yield* ownStart;
+        const fixture = yield* makeFixture({
+          liveIndex: [
+            {
+              file: `${process.pid}.json`,
+              content: { pid: process.pid, procStart: start, sessionId: "unnamed", status: "busy" },
+            },
+          ],
+          environmentsFail: true,
+        });
+        const rows = [
+          ledgerRow({ checkout: "/work/unnamed", at: 1, pr: 11, sessionId: "unnamed" }),
+          ledgerRow({ checkout: "/work/codex", at: 1, pr: 12, sessionId: "codex-1", harness: "codex" }),
+          ledgerRow({ checkout: "/work/feat", at: 1, branch: "feat" }),
+        ];
+        const unnamed = yield* resolveWith({ env: fixture.env, rows, query: "11" });
+        expect(liveness(unnamed)).toStrictEqual([["claude-peer", "live"]]);
+        expect(unnamed.routes[0]?.detail).toContain("the session has no display name yet");
+        assertNone(unnamed.routes[0]?.send ?? O.some("missing"));
+        const codex = yield* resolveWith({ env: fixture.env, rows, query: "12" });
+        expect(liveness(codex)).toStrictEqual([["unroutable", "unknown"]]);
+        const twoKinds = yield* resolveWith({ env: fixture.env, rows, query: "feat" });
+        assertSome(
+          O.map(twoKinds.owner, (owner) => owner.matchedBy),
+          ["branch", "lane", "checkout"]
+        );
+        const rendered = renderSessionResolution(twoKinds);
+        expect(rendered).toContain("feat (feat) open by claude-code session unknown");
+        expect(rendered).toContain("routes: none recorded (the claim has no session id)");
+        const nobody = yield* resolveWith({ env: fixture.env, rows, query: "fix/nobody" });
+        expect(A.map(nobody.steps, (step) => step.rung)).toStrictEqual([
+          "search-environments",
+          "pr-comment",
+          "takeover",
+        ]);
+        expect(nobody.steps[0]?.instruction).toContain("List the linked environments with t3_environment_links");
+        expect(nobody.steps[1]?.instruction).toContain("No PR is recorded for this key");
+        expect(nobody.steps[2]?.instruction).toContain(
+          "takeover-lane --branch takeover/lane --base origin/<pr branch>"
+        );
+      })
     );
   });
 });
