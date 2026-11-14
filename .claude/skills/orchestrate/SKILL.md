@@ -243,6 +243,17 @@ operator can override.
 The composer's "Auto balance" is separate: it places new human threads and never
 `delegate_task` work.
 
+On the host itself, heavy commands need no wrapper. Yeet's full, merged-preview
+and review-fix proofs wait for weighted admission from the machine-wide quality
+scheduler before they start, and run in `agent-run-<ticket>.scope` under
+`agent-runs.slice` when the user manager allows it; `bun run beep quality
+scheduler status` shows the queue.
+Other commands, such as `quality package-verify` and coverage runs, are not
+admitted yet (`goals/local-proof-under-ten`, SCHE-02): run them directly and
+apply the table above and the AGENTS.md constrained-compute rule. The
+2026-10-06 `beep-heavy` slot wrapper is retired (PERIL-10): do not put it in
+briefs or wrap commands in it.
+
 ## Run
 
 Where each event is recorded, in the order it happens:
@@ -275,9 +286,11 @@ that would open a fourth sibling; route the work to an existing lane instead.
 files each would conflict on against `origin/main`.
 
 Poll `bun run beep yeet gate-table` every ~4 minutes from a detached job or
-a T3 scheduled task, not a foreground loop: `beep-heavy --detach
-orchestrator-gate bash -c 'while true; do bun run beep yeet gate-table; sleep
-240; done'` (register it as a `systemd-unit` row), or `schedule_task` with
+a T3 scheduled task, not a foreground loop: `systemd-run --user
+--unit=orchestrator-gate --collect --same-dir -E PATH bash -c 'while true; do
+bun run beep yeet gate-table; sleep 240; done'` (register it as a
+`systemd-unit` row; read its output with `journalctl --user -u
+orchestrator-gate`), or `schedule_task` with
 `{type: "interval", everyMs: 240000}` bound to this thread (register it as a
 `scheduled-task` row with the task id). `gate.sh` is kept as a one-line
 wrapper for pollers armed before the port. A `GATE-MET` row is a merge
@@ -359,10 +372,11 @@ orchestrator session):
      the waiting ask and the orphan plan); a subagent that cannot be
      relaunched keeps its brief and is marked unreachable.
    - Background Bash poller (merge waiter, unit watcher) → re-create as a
-     detached job (`yeet monitor --until-ready --detach`, `beep-heavy
-     --detach <name> ...`), a `systemd --user` unit, or a T3 `schedule_task`
-     bound to the successor's thread; move its row with `session register
-     convert --to-kind background-job|systemd-unit|scheduled-task`.
+     detached job (`yeet monitor --until-ready --detach`), a user unit
+     (`systemd-run --user --unit=<name> --collect --same-dir -E PATH ...`), or
+     a T3 `schedule_task` bound to the successor's thread; move its row with
+     `session register convert --to-kind
+     background-job|systemd-unit|scheduled-task`.
    - Scratchpad script → move it into the repo CLI or into
      `~/.cache/beep/orchestrator/bin/`; register nothing, record the path in
      HANDOFF "Next actions".
