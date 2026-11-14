@@ -389,8 +389,8 @@ Recommended use here:
 
 The fleet is every checkout that shares this repository's origin: each clone
 and every linked worktree registered to it, wherever it lives (the sibling
-`-worktrees` root, a clone's `.claude/worktrees`, `~/.t3/worktrees`,
-`~/.codex/worktrees`). `bun run beep worktree fleet` derives it read-only;
+`-worktrees` root, `<clone>/.claude/worktrees/<name>`, and the lanes
+T3 Code and Codex create under their own home-directory worktree roots). `bun run beep worktree fleet` derives it read-only;
 `--join` adds the registry and session-ledger facts.
 
 - **Seat**: a long-lived checkout with an authored, workload-named role:
