@@ -37,8 +37,9 @@ Use this command for execution-capable sessions:
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
 (`decisions/2026-11-10-p0-baseline.md`). Slices 1 (PERIL-13), 2 (PERIL-10 summary and archive), 3 (SCHE-08, the
-admission unit schema, #3308) and 4 (the beep-heavy retirement, which completes PERIL-10) are done; slice 5
-(PERIL-02) and slice 6 (the scheduler facade) are next.
+admission unit schema, #3308) and 4 (the beep-heavy retirement, which completes PERIL-10) are done; slice 6
+(SCHE-08, the scheduler service facade and the Cache work kind) is implemented on
+`refactor/local-proof-scheduler-facade`; slice 5 (PERIL-02) is in progress in its own lane.
 
 ## Latest Evidence
 
@@ -66,6 +67,12 @@ admission unit schema, #3308) and 4 (the beep-heavy retirement, which completes 
   hand-off use `systemd-run --user` or a T3 scheduled task; its "Where to launch" section says Yeet's proofs take
   quality-scheduler admission on their own and other commands run directly. The practice-contacts runbook and
   `goals/design-figure-review-loop`'s plan drop the wrapper. PERIL-10 is complete.
+- 2026-11-14: slice 6 (SCHE-08) puts the scheduler behind one `QualityScheduler` service (`admit`, `observe`,
+  `reap`, the protocol gates, history, archive, worker route rows) with a live Layer over the existing functions,
+  and moves Yeet, Cache, `quality scheduler`, Palantiri and the quality concurrency plan onto it. Cache commands
+  request their own `cache` kind at weight 1, kept in the review-fix class cap. With the units gate off a Cache
+  admission writes origin/main's `review-fix` bytes (fixture captured from its encoder); with it on, `cache`.
+  The scheduler suites pass on Node and Bun.
 
 ## Notes
 
