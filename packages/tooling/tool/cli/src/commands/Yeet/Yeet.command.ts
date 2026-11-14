@@ -84,7 +84,12 @@ import {
   proofJobUnitName,
   proofJobWaitExitFor,
 } from "./internal/ProofJob.ts";
-import { ProofJobLauncher, ProofJobWaitResult, reportProofJobCommand } from "./internal/ProofJobLauncher.ts";
+import {
+  ProofJobLauncher,
+  ProofJobWaitResult,
+  reportProofJobCommand,
+  submitProofJobReusingReadyMonitor,
+} from "./internal/ProofJobLauncher.ts";
 import { runYeetProofReportCommand } from "./internal/ProofShadow.ts";
 import { runYeetReady, yeetOpenReadyHooks } from "./internal/ReadyGate.ts";
 import { PositiveInt, ResumeOptions } from "./internal/Resume.schemas.ts";
@@ -953,7 +958,9 @@ const submitDetachedProofJob = Effect.fn("Yeet.submitDetached")(function* (mode:
     ? O.none<number>()
     : O.some(Math.ceil((yield* durationMillis(options.jobMaxRuntime)) / 1000));
   const launcher = yield* ProofJobLauncher.make(root);
-  const record = yield* launcher.submit(
+  // A second `monitor --until-ready --detach` with the same readiness flags hands back the live job.
+  const record = yield* submitProofJobReusingReadyMonitor(
+    launcher,
     ProofJobSubmission.make({
       request: ProofJobRequest.make({
         mode,

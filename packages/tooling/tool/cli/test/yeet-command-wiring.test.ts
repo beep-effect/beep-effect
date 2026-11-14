@@ -1500,6 +1500,41 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
   );
 
   it.effect(
+    "submits a new monitor when the live monitor runs with other readiness flags",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-other-flags-" });
+      const marker = `${root}/submitted.txt`;
+      const fixture = yield* tailFixture(root, `require("node:fs").writeFileSync("${marker}", "x")`);
+      // PERIL-02: publish keys reuse on its own readiness argv, so a monitor an
+      // agent started with a longer settle timeout is not handed back.
+      const longerSettle = ProofJobRecord.make({
+        ...running,
+        request: ProofJobRequest.make({
+          ...running.request,
+          argv: ["monitor", "--until-ready", "--settle-timeout", "2h"],
+        }),
+      });
+      const result = yield* finishPublishWithPullRequestForTesting(
+        fixture.plan,
+        defaultYeetRunOptions({ message: "fix(repo-cli): second push", pr: true }),
+        [fixture.submit],
+        fixture.recorder,
+        fixture.extras,
+        false,
+        {
+          ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("active"),
+          listJobs: () => Effect.succeed([longerSettle]),
+        }
+      );
+      expect(result.pushed).toBe(true);
+      const exists = yield* fs.exists(marker);
+      expect(exists).toBe(true);
+    })
+  );
+
+  it.effect(
     "submits a new monitor when the registry has no live monitor for the pull request",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;

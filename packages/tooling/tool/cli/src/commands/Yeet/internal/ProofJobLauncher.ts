@@ -35,7 +35,11 @@ import {
   appendProofJobAttemptTerminated,
   attemptJournalPathForCheckout,
 } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
-import { processIdentityStatus, processStartIdentityForPid } from "../../../internal/repo-run/ProcessIdentity.ts";
+import {
+  ProcessIdentityStatus,
+  processIdentityStatus,
+  processStartIdentityForPid,
+} from "../../../internal/repo-run/ProcessIdentity.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/RepoRun.executor.ts";
 import { detectRunScopeSupport } from "../../../internal/repo-run/RunScope.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -45,6 +49,8 @@ import { loadYeetPrWave, YeetPrWave } from "./InboxView.ts";
 import {
   forwardedProofJobEnvironment,
   isDeniedProofJobEnvName,
+  isReadyMonitorRequest,
+  isReusableReadyMonitorJob,
   isSettledProofJob,
   isTerminalProofJobPhase,
   needsProofJobPublication,
@@ -64,6 +70,7 @@ import {
   proofJobRowSeverityFor,
   proofJobSystemdRunArguments,
   proofJobUnitName,
+  ReadyMonitorRequest,
   stripProofJobSubmitFlags,
   terminationReasonForServiceResult,
   YeetProofJobCapsule,
@@ -901,6 +908,184 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
 export class ProofJobLauncher extends Context.Service<ProofJobLauncher, ProofJobLauncherShape>()($I`ProofJobLauncher`, {
   make: makeProofJobLauncher,
 }) {}
+
+/**
+ * Probe whether a job record's runner process is still alive.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ReadyMonitorRunnerProbe = (
+  record: ProofJobRecord
+) => Effect.Effect<ProcessIdentityStatus, never, FileSystem.FileSystem>;
+
+/**
+ * Read whether a readiness monitor's runner process still exists.
+ *
+ * **Details**
+ *
+ * A record can say `running` after its runner died without a finalizer: the
+ * unit stays loaded and the record is never stamped. The runner's pid and
+ * process-start identity are the liveness evidence. A `submitted` job has no
+ * runner yet because its unit is still starting, so it reads as alive; a unit
+ * that is gone with its submitter is already stamped by the registry read.
+ *
+ * **Example** (Use the live probe where a test would inject a fake)
+ *
+ * ```ts
+ * import { readyMonitorRunnerStatus } from "@beep/repo-cli/test/Yeet"
+ * import type { ReadyMonitorRunnerProbe } from "@beep/repo-cli/test/Yeet"
+ *
+ * const probe: ReadyMonitorRunnerProbe = readyMonitorRunnerStatus
+ * console.log(typeof probe) // "function"
+ * ```
+ *
+ * @param record - The job record whose runner is probed.
+ * @returns `alive`, `dead`, or `unknown`; a job without a runner yet is `alive`.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const readyMonitorRunnerStatus: ReadyMonitorRunnerProbe = (record) =>
+  O.match(record.runner, {
+    onNone: () => Effect.succeed(ProcessIdentityStatus.Enum.alive),
+    onSome: (runner) => processIdentityStatus({ pid: runner.pid, procStart: O.getOrElse(runner.procStart, () => "") }),
+  });
+
+/**
+ * Pick the newest matching readiness monitor whose runner is not provably dead.
+ *
+ * **Details**
+ *
+ * Records are newest first, as `ProofJobLauncher.list` returns them. Each
+ * matching record whose runner is dead is named on stderr and skipped, so a
+ * caller never hands back, or names as the watcher, a job that no longer polls.
+ * An `unknown` runner keeps the job.
+ *
+ * **Example** (No monitor in an empty registry)
+ *
+ * ```ts
+ * import { pickLiveReadyMonitor, readyMonitorRunnerStatus } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = pickLiveReadyMonitor([], () => true, readyMonitorRunnerStatus)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param records - The checkout's job records, newest first.
+ * @param matches - Which records the caller would accept.
+ * @param runnerStatus - The runner liveness probe.
+ * @returns The newest accepted record with a live runner, when one exists.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const pickLiveReadyMonitor = Effect.fn("ProofJob.pickLiveReadyMonitor")(function* (
+  records: ReadonlyArray<ProofJobRecord>,
+  matches: (record: ProofJobRecord) => boolean,
+  runnerStatus: ReadyMonitorRunnerProbe
+): Effect.fn.Return<O.Option<ProofJobRecord>, never, FileSystem.FileSystem> {
+  for (const candidate of A.filter(records, matches)) {
+    const status = yield* runnerStatus(candidate);
+    if (!ProcessIdentityStatus.is.dead(status)) return O.some(candidate);
+    yield* Console.error(
+      `[yeet] warning: readiness monitor job ${candidate.jobId} is recorded ${candidate.phase} but its runner process is gone; not reusing it`
+    );
+  }
+  return O.none();
+});
+
+/**
+ * Find the live readiness monitor a new request may reuse.
+ *
+ * **Details**
+ *
+ * The listing is matched with {@link isReusableReadyMonitorJob} and the runner
+ * checked with {@link pickLiveReadyMonitor}. A registry read failure never
+ * blocks a submit: it is reported and reads as no monitor, so the caller
+ * submits a fresh one.
+ *
+ * **Example** (Build the lookup)
+ *
+ * ```ts
+ * import { findReusableReadyMonitor, ReadyMonitorRequest, readyMonitorRunnerStatus } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const request = ReadyMonitorRequest.make({ branch: "feat/x", argv: ["monitor", "--until-ready"] })
+ * const program = findReusableReadyMonitor(Effect.succeed([]), request, readyMonitorRunnerStatus)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param listed - The checkout's job records, newest first.
+ * @param request - The monitor about to be submitted.
+ * @param runnerStatus - The runner liveness probe.
+ * @returns The live monitor to hand back, when one exists.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const findReusableReadyMonitor = Effect.fn("ProofJob.findReusableReadyMonitor")(function* <Requirements>(
+  listed: Effect.Effect<ReadonlyArray<ProofJobRecord>, YeetCommandError, Requirements>,
+  request: ReadyMonitorRequest,
+  runnerStatus: ReadyMonitorRunnerProbe
+): Effect.fn.Return<O.Option<ProofJobRecord>, never, Requirements | FileSystem.FileSystem> {
+  return yield* listed.pipe(
+    Effect.flatMap((records) => pickLiveReadyMonitor(records, isReusableReadyMonitorJob(request), runnerStatus)),
+    Effect.catch((error) =>
+      Console.error(`[yeet] warning: could not read the job registry; submitting a new monitor: ${error.message}`).pipe(
+        Effect.as(O.none<ProofJobRecord>())
+      )
+    )
+  );
+});
+
+/**
+ * Submit a detached proof job, or hand back the live readiness monitor that
+ * already does what a `monitor --until-ready --detach` submission asks for.
+ *
+ * **Details**
+ *
+ * Only a readiness monitor request looks for a job to reuse: one submitted
+ * from the same branch with the same `readyMonitorArgvKey` whose runner is
+ * alive. It is returned with a stderr note and nothing is submitted. Any
+ * other request, a stricter or looser readiness argv, or a monitor whose
+ * runner is dead submits a new job. The lookup takes no submit lock:
+ * `yeet publish` runs this command as its child while it holds that lock, and
+ * has already looked for a monitor to reuse for its pull request.
+ *
+ * **Example** (Build the submit)
+ *
+ * ```ts
+ * import { submitProofJobReusingReadyMonitor } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof submitProofJobReusingReadyMonitor) // "function"
+ * ```
+ *
+ * @param launcher - The checkout's job listing and submit.
+ * @param submission - The job the command would submit.
+ * @param runnerStatus - The runner liveness probe.
+ * @returns The submitted record, or the reused live monitor's record.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const submitProofJobReusingReadyMonitor = Effect.fn("ProofJob.submitReusingReadyMonitor")(function* (
+  launcher: Pick<ProofJobLauncherShape, "list" | "submit">,
+  submission: ProofJobSubmission,
+  runnerStatus: ReadyMonitorRunnerProbe = readyMonitorRunnerStatus
+): Effect.fn.Return<ProofJobRecord, YeetCommandError, FileSystem.FileSystem> {
+  const { request } = submission;
+  const live = isReadyMonitorRequest(request)
+    ? yield* findReusableReadyMonitor(
+        launcher.list,
+        ReadyMonitorRequest.make({ branch: request.branch, argv: request.argv }),
+        runnerStatus
+      )
+    : O.none<ProofJobRecord>();
+  return yield* O.match(live, {
+    onNone: () => launcher.submit(submission),
+    onSome: (record) =>
+      Console.error(
+        `[yeet] readiness monitor job ${record.jobId} is already ${record.phase} for ${request.branch} with the same readiness flags; not re-submitted`
+      ).pipe(Effect.as(record)),
+  });
+});
 
 /**
  * Apply one bookkeeping transition to the detached proof job this process runs inside.

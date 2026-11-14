@@ -16,7 +16,8 @@ import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -1080,7 +1081,8 @@ export class ReadyMonitorTarget extends S.Opaque<ReadyMonitorTarget, { readonly 
  * requested: a `finished` record is a loop that already ended and only awaits
  * its finalizer, a settled record is history, and a job with a cancel request
  * is about to stop polling. The record alone cannot prove the runner process
- * is still alive; publish checks that separately before reusing a job. The job follows the target when it bound the same pull request
+ * is still alive; callers check that separately (`pickLiveReadyMonitor`) before
+ * reusing or naming a job. The job follows the target when it bound the same pull request
  * number, or, before `--until-ready` resolved and bound the pull request, when
  * it was submitted for the same branch. Publish uses this to reuse the running
  * monitor instead of submitting a second job that would poll the same pull
@@ -1109,15 +1111,186 @@ export const isLiveReadyMonitorJob: {
 } = dual(
   2,
   (record: LiveReadyMonitorCandidate, target: Pick<ReadyMonitorTarget, "branch" | "prNumber">): boolean =>
-    !isSettledProofJob(record) &&
-    record.phase !== "finished" &&
-    O.isNone(record.cancelRequestedAt) &&
-    record.request.mode === "monitor" &&
-    A.contains(record.request.argv, "--until-ready") &&
-    O.match(record.prNumber, {
-      onNone: () => record.request.branch === target.branch,
-      onSome: (prNumber) => prNumber === target.prNumber,
+    isPollingReadyMonitor(record) && followsReadyMonitorTarget(record, target.branch, O.some(target.prNumber))
+);
+
+/**
+ * Recognize a request for a `monitor --until-ready` job.
+ *
+ * **Example** (Only an until-ready monitor qualifies)
+ *
+ * ```ts
+ * import { isReadyMonitorRequest } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(isReadyMonitorRequest({ mode: "monitor", argv: ["monitor", "--until-ready"] })) // true
+ * console.log(isReadyMonitorRequest({ mode: "monitor", argv: ["monitor", "--until-merged"] })) // false
+ * ```
+ *
+ * @param request - Mode and replay words of the job request.
+ * @returns Whether the request runs the readiness monitor loop.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isReadyMonitorRequest = (request: Pick<ProofJobRequest, "mode" | "argv">): boolean =>
+  request.mode === "monitor" && A.contains(request.argv, "--until-ready");
+
+// Still polling: not settled, not a loop that already ended, no cancel pending.
+const isPollingReadyMonitor = (record: LiveReadyMonitorCandidate): boolean =>
+  !isSettledProofJob(record) &&
+  record.phase !== "finished" &&
+  O.isNone(record.cancelRequestedAt) &&
+  isReadyMonitorRequest(record.request);
+
+// Pull request numbers decide when the job bound one and the caller knows one;
+// otherwise the branch the job was submitted from does.
+const followsReadyMonitorTarget = (
+  record: LiveReadyMonitorCandidate,
+  branch: string,
+  prNumber: O.Option<number>
+): boolean =>
+  O.getOrElse(
+    O.zipWith(record.prNumber, prNumber, (bound, wanted) => bound === wanted),
+    () => record.request.branch === branch
+  );
+
+// Presentation (`--json`, `--summary`) and cadence (`--poll-interval`) change
+// how a monitor prints or how often it reads, never the verdict it reaches.
+const READY_MONITOR_ARGV_IGNORED_FLAGS = HashSet.make("--json", "--summary", "--poll-interval");
+
+// `--flag=value` reads as `--flag value`, so both spellings key alike.
+const splitInlineFlagValue = (word: string): ReadonlyArray<string> =>
+  Str.startsWith("--")(word)
+    ? O.getOrElse(
+        O.map(Str.indexOf("=")(word), (index) => [Str.slice(0, index)(word), Str.slice(index + 1)(word)]),
+        () => [word]
+      )
+    : [word];
+
+// Each flag opens an entry; the words up to the next flag are its value.
+const groupReadyMonitorArgv = (words: ReadonlyArray<string>): ReadonlyArray<A.NonEmptyReadonlyArray<string>> =>
+  A.reduce(words, A.empty<A.NonEmptyReadonlyArray<string>>(), (entries, word) =>
+    A.isReadonlyArrayNonEmpty(entries) && !Str.startsWith("--")(word)
+      ? A.modifyLastNonEmpty(entries, (entry) => A.append(entry, word))
+      : A.append(entries, A.of(word))
+  );
+
+/**
+ * Normalize a readiness monitor's replay words into the key reuse compares.
+ *
+ * **Details**
+ *
+ * Launch-only flags are removed as {@link stripProofJobSubmitFlags} removes
+ * them from a record, and presentation and cadence flags (`--json`,
+ * `--summary`, `--poll-interval`) are dropped because they never change the
+ * verdict. Every other flag stays with its value, `--flag=value` and
+ * `--flag value` read alike, and the entries are sorted so flag order does not
+ * matter. A flag this list does not know, such as a future requirement flag,
+ * stays in the key, so a request that adds one never matches a job without it.
+ *
+ * **Example** (Same readiness flags in another order and spelling)
+ *
+ * ```ts
+ * import { readyMonitorArgvKey } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(readyMonitorArgvKey(["monitor", "--until-ready", "--settle-timeout=20m", "--detach", "--json"]))
+ * // ["--settle-timeout 20m", "--until-ready", "monitor"]
+ * console.log(readyMonitorArgvKey(["monitor", "--settle-timeout", "20m", "--until-ready"]))
+ * // ["--settle-timeout 20m", "--until-ready", "monitor"]
+ * ```
+ *
+ * @param argv - Words after the yeet command name, as submitted or as recorded.
+ * @returns The sorted readiness entries.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readyMonitorArgvKey = (argv: ReadonlyArray<string>): ReadonlyArray<string> =>
+  pipe(
+    stripProofJobSubmitFlags(argv),
+    A.flatMap(splitInlineFlagValue),
+    groupReadyMonitorArgv,
+    A.filter((entry) => !HashSet.has(READY_MONITOR_ARGV_IGNORED_FLAGS, A.headNonEmpty(entry))),
+    A.map(A.join(" ")),
+    A.sort(Str.Order)
+  );
+
+const readyMonitorArgvKeyEquivalence = A.makeEquivalence(Str.Equivalence);
+
+/**
+ * A readiness monitor a caller is about to submit: the branch it is submitted
+ * from, the pull request when the caller already knows it, and its replay
+ * words.
+ *
+ * **Example** (The request `monitor --until-ready --detach` makes)
+ *
+ * ```ts
+ * import { ReadyMonitorRequest } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const request = ReadyMonitorRequest.make({ branch: "feat/x", argv: ["monitor", "--until-ready", "--detach"] })
+ * console.log(O.isNone(request.prNumber)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ReadyMonitorRequest extends S.Opaque<ReadyMonitorRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
+    branch: S.String,
+    prNumber: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    argv: S.Array(S.String),
+  }).pipe(
+    $I.annoteSchema("ReadyMonitorRequest", {
+      description:
+        "A readiness monitor about to be submitted: its branch, the pull request when known, and its replay words.",
     })
+  )
+) {}
+
+/**
+ * Recognize a live readiness monitor that already does what a new request
+ * asks for, so the request can hand it back instead of submitting a second job.
+ *
+ * **Details**
+ *
+ * The job must still be polling (as for {@link isLiveReadyMonitorJob}), follow
+ * the same pull request, and carry the same {@link readyMonitorArgvKey}. When
+ * the request knows its pull request number and the job bound one, the numbers
+ * decide; otherwise the submitted branch does. Only an equal key is reused: a
+ * request with an extra or different readiness flag is never satisfied by a
+ * job without it, and a looser request does not take over a stricter job. The
+ * record alone cannot prove the runner process is alive; callers check that
+ * before reusing.
+ *
+ * **Example** (A stricter request is not satisfied by a looser job)
+ *
+ * ```ts
+ * import { isReusableReadyMonitorJob, ProofJobRequest, ReadyMonitorRequest } from "@beep/repo-cli/test/Yeet"
+ * import type { LiveReadyMonitorCandidate } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const request = ProofJobRequest.make({ mode: "monitor", argv: ["monitor", "--until-ready"], checkout: "/repo", branch: "feat/x", base: "origin/main", head: "0123456789abcdef0123456789abcdef01234567", forwardedEnvNames: [] })
+ * const job: LiveReadyMonitorCandidate = { phase: "running", systemd: O.none(), cancelRequestedAt: O.none(), request, prNumber: O.some(1427) }
+ * const same = ReadyMonitorRequest.make({ branch: "feat/x", argv: ["monitor", "--until-ready", "--detach"] })
+ * const stricter = ReadyMonitorRequest.make({ branch: "feat/x", argv: ["monitor", "--until-ready", "--settle-timeout", "2h"] })
+ * console.log(isReusableReadyMonitorJob(job, same)) // true
+ * console.log(isReusableReadyMonitorJob(job, stricter)) // false
+ * ```
+ *
+ * @param record - Phase, finalization stamp, replayed request, and bound pull request of the job.
+ * @param request - The monitor the caller is about to submit.
+ * @returns Whether the job can be handed back for the request. Data-last form takes `request` first.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isReusableReadyMonitorJob: {
+  (request: ReadyMonitorRequest): (record: LiveReadyMonitorCandidate) => boolean;
+  (record: LiveReadyMonitorCandidate, request: ReadyMonitorRequest): boolean;
+} = dual(
+  2,
+  (record: LiveReadyMonitorCandidate, request: ReadyMonitorRequest): boolean =>
+    isPollingReadyMonitor(record) &&
+    followsReadyMonitorTarget(record, request.branch, request.prNumber) &&
+    readyMonitorArgvKeyEquivalence(readyMonitorArgvKey(record.request.argv), readyMonitorArgvKey(request.argv))
 );
 
 /**

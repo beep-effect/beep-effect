@@ -37,8 +37,8 @@ Use this command for execution-capable sessions:
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
 (`decisions/2026-11-10-p0-baseline.md`). Slices 1 (PERIL-13), 2 (PERIL-10 summary and archive), 3 (SCHE-08, the
-admission unit schema, #3308) and 4 (the beep-heavy retirement, which completes PERIL-10) are done; slice 5
-(PERIL-02) and slice 6 (the scheduler facade) are next.
+admission unit schema, #3308), 4 (the beep-heavy retirement, which completes PERIL-10, #3312) and 5 (PERIL-02,
+one live readiness monitor per pull request and readiness argv) are done; slice 6 (the scheduler facade) is next.
 
 ## Latest Evidence
 
@@ -66,6 +66,13 @@ admission unit schema, #3308) and 4 (the beep-heavy retirement, which completes 
   hand-off use `systemd-run --user` or a T3 scheduled task; its "Where to launch" section says Yeet's proofs take
   quality-scheduler admission on their own and other commands run directly. The practice-contacts runbook and
   `goals/design-figure-review-loop`'s plan drop the wrapper. PERIL-10 is complete.
+- 2026-11-14: slice 5 (PERIL-02) makes `yeet monitor --until-ready --detach` hand back a live readiness monitor
+  submitted from the same branch with the same readiness argv instead of submitting a second job. The key drops
+  launch, output and cadence flags (`--detach`, `--job-max-runtime`, `--json`, `--summary`, `--poll-interval`)
+  and keeps every other flag, so a stricter request still gets its own job. A record whose runner process is gone
+  is skipped. Publish keys its reuse on the same argv, and `yeet ready` no longer names a dead-runner job as the
+  monitor still watching (the defect at the old `ReadyGate.ts:565`). Tests use a fake registry and runner probe,
+  on Node and Bun.
 
 ## Notes
 
