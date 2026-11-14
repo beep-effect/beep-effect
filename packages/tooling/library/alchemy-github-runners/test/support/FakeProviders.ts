@@ -10,6 +10,7 @@ import * as Lambda from "@alchemy.run/aws/Lambda";
 import * as S3 from "@alchemy.run/aws/S3";
 import * as SQS from "@alchemy.run/aws/SQS";
 import * as SSM from "@alchemy.run/aws/SSM";
+import { RunnerLaunchTemplate } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate";
 import { RunnerSweepProvider } from "@beep/alchemy-github-runners";
 import * as Provider from "alchemy/Provider";
 import * as A from "effect/Array";
@@ -17,6 +18,8 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Str from "effect/String";
 import { worldContext } from "./FakeWorld.ts";
+import type { RunnerLaunchTemplate as RunnerLaunchTemplateResource } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate";
+import type { ResourceClass } from "alchemy/Resource";
 import type * as O from "effect/Option";
 import type { World } from "./FakeWorld.ts";
 
@@ -42,6 +45,10 @@ export class Recorder {
     return A.findFirst(this.reconciled, (entry) => entry.fqn === fqn);
   }
 }
+
+// aws-extras exports its resources through a narrowed call surface; the runtime value is the
+// Resource class itself, which Provider.succeed needs to register a fake.
+const launchTemplateClass = RunnerLaunchTemplate as unknown as ResourceClass<RunnerLaunchTemplateResource>;
 
 const slug = (fqn: string) => Str.replaceAll("/", "-")(fqn);
 const arn = (service: string, path: string) => `arn:aws:${service}:us-east-1:123456789012:${slug(path)}`;
@@ -166,6 +173,17 @@ export const fakeProviders = ({ recorder, world }: { readonly recorder: Recorder
         ruleName: slug(fqn),
         ruleArn: arn("events", `rule/${fqn}`),
         eventBusName: "default",
+      })) as never
+    ),
+    Provider.succeed(
+      launchTemplateClass,
+      lifecycle(recorder, "BeepAWS.EC2.RunnerLaunchTemplate", (fqn, news) => ({
+        launchTemplateId: `lt-${slug(fqn)}`,
+        launchTemplateArn: arn("ec2", `launch-template/${fqn}`),
+        launchTemplateName: slug(fqn),
+        defaultVersionNumber: 1,
+        latestVersionNumber: 1,
+        tags: news.tags ?? {},
       })) as never
     ),
     RunnerSweepProvider.pipe(Layer.provide(Layer.succeedContext(worldContext(world))))

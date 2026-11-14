@@ -20,6 +20,7 @@ import * as Lambda from "@alchemy.run/aws/Lambda";
 import * as S3 from "@alchemy.run/aws/S3";
 import * as SQS from "@alchemy.run/aws/SQS";
 import * as SSM from "@alchemy.run/aws/SSM";
+import { RunnerLaunchTemplate } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate";
 import * as Namespace from "alchemy/Namespace";
 import * as Output from "alchemy/Output";
 import * as A from "effect/Array";
@@ -41,7 +42,8 @@ import {
 import { declareRunnerSweep } from "./RunnerSweep.ts";
 import { RunnerUserDataInput, renderRunnerUserData } from "./RunnerUserData.ts";
 import { AppParameterNames, appParameterNames, poolConfigPath, poolTokenPath } from "./SsmParameters.models.ts";
-import type { Input } from "alchemy/Input";
+import type { RunnerLaunchTemplateProps } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate";
+import type { Input, PropsInput } from "alchemy/Input";
 import type * as Redacted from "effect/Redacted";
 import type { RunnerPool, RunnerType } from "./RunnerPool.models.ts";
 
@@ -51,37 +53,25 @@ const lambdaDir = `${import.meta.dirname}/internal/lambda`;
 const runnerTarballKey = "actions-runner-linux.tar.gz";
 
 /**
- * What a pool's launch template is built from.
+ * The launch-template inputs a fleet supplies; the composite adds the rest.
  *
  * **Details**
  *
- * The composite owns the runner role and instance profile and renders the
- * user data; the caller turns them into a launch template (until
- * `@beep/alchemy-aws-extras` ships `RunnerLaunchTemplate`, any resource that
- * returns an id and a version). The template must require IMDSv2 and enable
- * instance metadata tags: the user data reads its token path from them.
+ * Each pool gets its own `RunnerLaunchTemplate` from
+ * `@beep/alchemy-aws-extras`. The composite sets the instance profile, the
+ * rendered user data, and metadata options that require IMDSv2 with instance
+ * metadata tags enabled (the user data reads its token path from the
+ * `ghr:token_path` tag). Instance types and Spot or on-demand capacity are
+ * chosen per launch by scale-up's `CreateFleet` call, so they are not here.
+ * `imageId` takes an AMI id or `resolveSsmImageId(...)`.
  *
  * @category models
  * @since 0.0.0
  */
-export interface RunnerLaunchSpec {
-  readonly environment: string;
-  readonly instanceProfileArn: Output.Output<string>;
-  readonly instanceProfileName: Output.Output<string>;
-  readonly pool: RunnerPool;
-  readonly userData: Output.Output<string>;
-}
-
-/**
- * The launch template a pool's scale-up Lambda launches from.
- *
- * @category models
- * @since 0.0.0
- */
-export interface RunnerLaunchTemplateRef {
-  readonly launchTemplateId: Value<string>;
-  readonly version: Value<string>;
-}
+export type RunnerFleetLaunchTemplate = Pick<
+  PropsInput<RunnerLaunchTemplateProps.Encoded>,
+  "associatePublicIpAddress" | "blockDeviceMappings" | "ebsOptimized" | "imageId" | "securityGroupIds" | "tags"
+>;
 
 /**
  * Props of {@link RunnerFleet}.
@@ -99,14 +89,14 @@ export interface RunnerLaunchTemplateRef {
  * @category models
  * @since 0.0.0
  */
-export interface RunnerFleetProps<E, R> {
+export interface RunnerFleetProps {
   readonly app: {
     readonly id: Redacted.Redacted<string>;
     readonly keyBase64: Redacted.Redacted<string>;
     readonly webhookSecret: Redacted.Redacted<string>;
   };
   readonly id: string;
-  readonly launchTemplate: (spec: RunnerLaunchSpec) => Effect.Effect<RunnerLaunchTemplateRef, E, R>;
+  readonly launchTemplate: RunnerFleetLaunchTemplate;
   readonly logRetention?: Duration.Input | undefined;
   readonly name: string;
   readonly pools: A.NonEmptyReadonlyArray<RunnerPool>;
@@ -198,8 +188,8 @@ const queueWithDlq = Effect.fn("RunnerFleet.queueWithDlq")(function* (input: {
  * **Details**
  *
  * Every resource is a shipped Alchemy primitive except the delete-only
- * `RunnerSweep` and the launch template the caller builds from
- * {@link RunnerLaunchSpec}. Lambda roles get least-privilege inline policies
+ * `RunnerSweep` and each pool's `RunnerLaunchTemplate` from
+ * `@beep/alchemy-aws-extras` (see {@link RunnerFleetLaunchTemplate}). Lambda roles get least-privilege inline policies
  * through `bind`; the termination watcher's `kms:Decrypt` is scoped by
  * `kms:EncryptionContext:PARAMETER_ARN` to the App id and key parameters (no
  * KMS grant). Each Lambda reads its runtime config from one JSON environment
@@ -210,7 +200,6 @@ const queueWithDlq = Effect.fn("RunnerFleet.queueWithDlq")(function* (input: {
  * ```ts
  * import { RunnerFleet } from "@beep/alchemy-github-runners/RunnerFleet"
  * import { RunnerPool } from "@beep/alchemy-github-runners/RunnerPool.models"
- * import * as Effect from "effect/Effect"
  * import * as Redacted from "effect/Redacted"
  *
  * const fleet = RunnerFleet({
@@ -222,7 +211,7 @@ const queueWithDlq = Effect.fn("RunnerFleet.queueWithDlq")(function* (input: {
  *   subnetIds: ["subnet-a"],
  *   app: { id: Redacted.make("1"), keyBase64: Redacted.make("a2V5"), webhookSecret: Redacted.make("s") },
  *   pools: [RunnerPool.make({ name: "heavy", instanceTypes: ["m7i.4xlarge"], maximumCount: 2, labels: ["beep-ec2-heavy"] })],
- *   launchTemplate: () => Effect.succeed({ launchTemplateId: "lt-0123456789abcdef0", version: "$Default" }),
+ *   launchTemplate: { imageId: "ami-0123456789abcdef0", securityGroupIds: ["sg-0123456789abcdef0"] },
  * })
  * console.log(fleet)
  * ```
@@ -232,7 +221,7 @@ const queueWithDlq = Effect.fn("RunnerFleet.queueWithDlq")(function* (input: {
  * @category constructors
  * @since 0.0.0
  */
-export const RunnerFleet = <E, R>(props: RunnerFleetProps<E, R>) =>
+export const RunnerFleet = (props: RunnerFleetProps) =>
   Namespace.push(
     props.id,
     Effect.gen(function* () {
@@ -318,11 +307,15 @@ export const RunnerFleet = <E, R>(props: RunnerFleetProps<E, R>) =>
             const instanceProfile = yield* IAM.InstanceProfile("RunnerInstanceProfile", {
               roleName: runnerRole.roleName,
             });
-            const template = yield* props.launchTemplate({
-              pool,
-              environment,
+            const template = yield* RunnerLaunchTemplate("LaunchTemplate", {
+              ...props.launchTemplate,
               instanceProfileArn: instanceProfile.instanceProfileArn,
-              instanceProfileName: instanceProfile.instanceProfileName,
+              metadataOptions: {
+                httpEndpoint: "enabled",
+                httpTokens: "required",
+                httpPutResponseHopLimit: 1,
+                instanceMetadataTags: "enabled",
+              },
               userData: tarballUrl.pipe(
                 Output.map((runnerTarballS3Url) =>
                   renderRunnerUserData(
@@ -352,8 +345,8 @@ export const RunnerFleet = <E, R>(props: RunnerFleetProps<E, R>) =>
 
             const runtimeConfig = Output.all(
               collect(props.subnetIds),
-              Output.asOutput(template.launchTemplateId),
-              Output.asOutput(template.version),
+              template.launchTemplateId,
+              template.defaultVersionNumber.pipe(Output.map(String)),
               buildQueue.queueUrl,
               jobRetryQueue.pipe(
                 O.map((queue) => queue.queueUrl),

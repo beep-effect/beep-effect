@@ -21,7 +21,6 @@ import * as Str from "effect/String";
 import { fakeProviders, Recorder } from "./support/FakeProviders.ts";
 import { World } from "./support/FakeWorld.ts";
 import type * as Core from "@alchemy.run/test/Core";
-import type { RunnerLaunchSpec } from "@beep/alchemy-github-runners";
 import type { Input } from "alchemy/Input";
 import type { StackServices } from "alchemy/Stack";
 
@@ -55,7 +54,7 @@ const overflow = RunnerPool.make({
   runnerNamePrefix: "beep-ovf-",
 });
 
-const fleet = (pools: A.NonEmptyReadonlyArray<RunnerPool>, launchSpecs: Array<RunnerLaunchSpec> = []) =>
+const fleet = (pools: A.NonEmptyReadonlyArray<RunnerPool>) =>
   RunnerFleet({
     id: "Runners",
     name: "beep-ci",
@@ -66,11 +65,11 @@ const fleet = (pools: A.NonEmptyReadonlyArray<RunnerPool>, launchSpecs: Array<Ru
     app: { id: Redacted.make("123"), keyBase64: Redacted.make("a2V5"), webhookSecret: Redacted.make("secret") },
     pools,
     runnerManagedPolicyArns: ["arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable"],
-    launchTemplate: (spec) =>
-      Effect.sync(() => {
-        launchSpecs.push(spec);
-        return { launchTemplateId: `lt-${spec.pool.name}`, version: "$Default" };
-      }),
+    launchTemplate: {
+      imageId: "resolve:ssm:/aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id",
+      securityGroupIds: ["sg-runner"],
+      ebsOptimized: true,
+    },
   });
 
 type ScratchStack = Test.ScratchStack;
@@ -109,9 +108,8 @@ const statementsOf = (recorder: Recorder, fqn: string) =>
 onePool.test.provider("one pool declares the whole fleet from shipped primitives", (stack) =>
   Effect.gen(function* () {
     const { recorder } = onePool;
-    const launchSpecs: Array<RunnerLaunchSpec> = [];
     yield* destroy(stack);
-    const out = yield* deploy(stack, fleet([heavy], launchSpecs));
+    const out = yield* deploy(stack, fleet([heavy]));
 
     expect(typeCounts(recorder)).toStrictEqual({
       "KMS.Key": 1,
@@ -120,6 +118,7 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
       "S3.Bucket": 1,
       "IAM.Role": 1,
       "IAM.InstanceProfile": 1,
+      "BeepAWS.EC2.RunnerLaunchTemplate": 1,
       "SQS.Queue": 6,
       "Lambda.Function": 7,
       "Lambda.EventSourceMapping": 3,
@@ -135,9 +134,16 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
     expect([
       config.environment,
       config.launchTemplate.launchTemplateId,
+      config.launchTemplate.version,
       config.tokenPath,
       config.subnetIds,
-    ]).toStrictEqual(["beep-ci-heavy", "lt-heavy", "/beep-ci/heavy/tokens", ["subnet-a", "subnet-b"]]);
+    ]).toStrictEqual([
+      "beep-ci-heavy",
+      "lt-Runners-Poolheavy-LaunchTemplate",
+      "1",
+      "/beep-ci/heavy/tokens",
+      ["subnet-a", "subnet-b"],
+    ]);
     expect(config.buildQueueUrl).toBe("https://sqs.us-east-1.amazonaws.com/123456789012/Runners-Poolheavy-BuildQueue");
     expect(O.getOrUndefined(config.jobRetryQueueUrl)).toBe(
       "https://sqs.us-east-1.amazonaws.com/123456789012/Runners-Poolheavy-JobRetryQueue"
@@ -193,8 +199,19 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
       },
     ]);
 
-    const spec = launchSpecs[launchSpecs.length - 1];
-    expect(spec?.environment).toBe("beep-ci-heavy");
+    const template = O.getOrThrow(recorder.byFqn("Runners/Poolheavy/LaunchTemplate"));
+    expect([
+      template.news.securityGroupIds,
+      template.news.ebsOptimized,
+      template.news.instanceProfileArn,
+      template.news.metadataOptions,
+    ]).toStrictEqual([
+      ["sg-runner"],
+      true,
+      "arn:aws:iam:us-east-1:123456789012:instance-profile-Runners-Poolheavy-RunnerInstanceProfile",
+      { httpEndpoint: "enabled", httpTokens: "required", httpPutResponseHopLimit: 1, instanceMetadataTags: "enabled" },
+    ]);
+    expect(Str.includes("ghr:token_path")(String(template.news.userData))).toBe(true);
     const role = O.getOrThrow(recorder.byFqn("Runners/Poolheavy/RunnerRole"));
     expect(role.news.managedPolicyArns).toStrictEqual(["arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable"]);
     const secrets = A.map(recorder.ofType("SSM.Parameter"), (parameter) => [parameter.news.name, parameter.news.type]);

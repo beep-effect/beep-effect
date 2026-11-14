@@ -317,14 +317,6 @@ Lane goals/infra-alchemy-rebuild-p2-github-runners-composite
 
 Reverse: Take existing parameter ARNs as inputs and drop the composite's KMS key and SSM parameters.
 
-### RunnerFleet takes the launch template as a typed input until aws-extras lands, 2026-11-13
-
-`@beep/alchemy-aws-extras` (and its `RunnerLaunchTemplate`) was not on `origin/main` when the composite was written. `RunnerFleet` therefore owns each pool's runner role and instance profile and renders its user data, and hands them to a caller-supplied `launchTemplate(spec)` effect that returns a launch template id and version (`RunnerLaunchSpec` -> `RunnerLaunchTemplateRef`). The template must require IMDSv2 and enable instance metadata tags. Once `RunnerLaunchTemplate` lands, the composite composes it by default and the input becomes an override.
-
-Lane goals/infra-alchemy-rebuild-p2-github-runners-composite
-
-Reverse: Replace the launchTemplate input with a RunnerLaunchTemplate declared inside the composite from RunnerLaunchSpec.
-
 ### RunnerLaunchTemplate lives in @beep/alchemy-aws-extras, 2026-11-13
 
 The P0 matrix row placed `RunnerLaunchTemplate` in `@beep/alchemy-github-runners`; SPEC Target Surfaces and the P2 brief place it in `@beep/alchemy-aws-extras`. It lands in aws-extras: it is a generic EC2 resource (block devices, EBS optimisation, Spot options, tag specifications) with no runner semantics, which is what aws-extras holds and what goes upstream as props on `AWS.AutoScaling.LaunchTemplate`. The runner composite imports it. Its props cover the live fleet template in `infra/src/CiFleetController.ts` lines 976-1062: the AL2023 AMI through `resolve:ssm:`, a 100 GB encrypted gp3 `/dev/xvda` at 3000 IOPS and 250 MB/s, EBS optimisation, IMDSv2 with hop limit 1 and instance tags, the instance profile, security groups, a public IPv4 address, user data and launch tags.
@@ -356,6 +348,14 @@ Upstream's spot termination handler listens for the CloudTrail `BidEvictedEvent`
 Lane goals/infra-alchemy-rebuild-p2-github-runners
 
 Reverse: Add an EventBridge rule on the CloudTrail BidEvictedEvent and decode it in TerminationEvent.
+
+### RunnerFleet declares each pool's RunnerLaunchTemplate from aws-extras, 2026-11-14
+
+With `@beep/alchemy-aws-extras` on `main` (#3292), `RunnerFleet` declares one `RunnerLaunchTemplate` per pool instead of taking a caller-built template id. The composite sets what it owns: the pool instance profile, the rendered user data, and metadata options that require IMDSv2 with instance metadata tags enabled (the user data reads `ghr:token_path` from them, hop limit 1 as upstream). The caller passes `launchTemplate`, a `Pick` of `RunnerLaunchTemplateProps` (`imageId`, `securityGroupIds`, `associatePublicIpAddress`, `blockDeviceMappings`, `ebsOptimized`, `tags`); instance types and Spot or on-demand capacity stay per launch in scale-up `CreateFleet`. Scale-up launches the template default version as a number, which the provider moves on every update, so a template change also rolls the scale-up runtime config. The earlier typed-input decision for this lane never merged and is replaced by this one.
+
+Lane goals/infra-alchemy-rebuild-p2-github-runners-composite
+
+Reverse: Restore a caller-supplied launchTemplate(spec) effect returning a template id and version, built from a RunnerLaunchSpec the composite hands out.
 
 <!-- beep:decisions:end -->
 
