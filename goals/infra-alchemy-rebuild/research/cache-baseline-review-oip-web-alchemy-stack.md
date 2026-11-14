@@ -1,6 +1,6 @@
 # Cache baseline review: @beep/oip-web gains an Alchemy stack (2026-11-14)
 
-Reviewer: Claude Opus 5.5 (`goals/infra-alchemy-rebuild-p4-oip-web`). No qualification is granted.
+Reviewer: Claude Opus 5.5 (lane goals/infra-alchemy-rebuild-p4-oip-web). No qualification is granted.
 
 The `OipWeb` stack (`apps/oip-web/alchemy.run.ts`, `apps/oip-web/stack/`, tests under
 `apps/oip-web/test/stack/`) changes the `@beep/oip-web` manifest and default inputs, so

@@ -5,7 +5,7 @@
     "reason": "Re-record @beep/oip-web after the Alchemy stack adds stack sources, stack tests, the Alchemy dev dependencies and the @beep/alchemy-vercel edge; no command, output or environment changes, no qualification granted.",
     "basis": {
       "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-oip-web-alchemy-stack.md",
-      "sha256": "ff38baae885cfeb4682729470ea781be33b6410ce5ac4b01cda237c50e610540"
+      "sha256": "f1f987f3a1808815347279c92723c5afd8046687c3fb09d65fdc2e0b097cb193"
     }
   },
   "scope": ["@beep/identity#lint", "@beep/types#lint"],
