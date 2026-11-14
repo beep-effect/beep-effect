@@ -107,6 +107,27 @@ export type RunnerFleetLaunchTemplate = Pick<
  * every pool's runner role (the live fleet attaches its IMDS-disable policy
  * this way).
  *
+ * **Example** (Build the props of a one-pool fleet)
+ *
+ * ```ts
+ * import { RunnerFleetProps } from "@beep/alchemy-github-runners/RunnerFleet"
+ * import { RunnerPool } from "@beep/alchemy-github-runners/RunnerPool.models"
+ * import * as Redacted from "effect/Redacted"
+ *
+ * const props = RunnerFleetProps.make({
+ *   id: "Runners",
+ *   name: "beep-ci",
+ *   ssmRoot: "/beep-ci",
+ *   runnerType: "Org",
+ *   repositoryAllowList: ["beep-effect/beep-effect"],
+ *   subnetIds: ["subnet-a"],
+ *   app: { id: Redacted.make("1"), keyBase64: Redacted.make("a2V5"), webhookSecret: Redacted.make("s") },
+ *   pools: [RunnerPool.make({ name: "heavy", instanceTypes: ["m7i.4xlarge"], maximumCount: 2, labels: ["beep-ec2-heavy"] })],
+ *   launchTemplate: { imageId: "ami-0123456789abcdef0" },
+ * })
+ * console.log(props.name) // "beep-ci"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */

@@ -169,6 +169,19 @@ export const sweepRunners = Effect.fn("RunnerSweep.sweep")(function* (input: {
  * runs while those still exist; a runner launched in that window is the next
  * destroy's to sweep.
  *
+ * **Example** (Sweep one pool)
+ *
+ * ```ts
+ * import { RunnerSweepProps } from "@beep/alchemy-github-runners/RunnerSweep"
+ *
+ * const props = RunnerSweepProps.make({
+ *   environments: ["beep-ci-heavy"],
+ *   tokenPaths: ["/beep-ci/heavy/tokens"],
+ *   dependsOn: [],
+ * })
+ * console.log(props.environments) // ["beep-ci-heavy"]
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -198,6 +211,15 @@ export declare namespace RunnerSweepProps {
 
 /**
  * Attributes of {@link RunnerSweep}: the props echoed back.
+ *
+ * **Example** (Read the echoed token paths)
+ *
+ * ```ts
+ * import { RunnerSweepAttributes } from "@beep/alchemy-github-runners/RunnerSweep"
+ *
+ * const attributes = RunnerSweepAttributes.make({ environments: ["beep-ci-heavy"], tokenPaths: ["/beep-ci/heavy/tokens"] })
+ * console.log(attributes.tokenPaths) // ["/beep-ci/heavy/tokens"]
+ * ```
  *
  * @category models
  * @since 0.0.0
