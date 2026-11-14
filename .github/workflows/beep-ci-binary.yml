@@ -66,6 +66,9 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: write
+      # Read only: the pin step checks that the open pin-bump pull request
+      # exists and carries ready-for-heavy before it treats the bump as done.
+      pull-requests: read
     steps:
       # Publish only default-branch commits. A dispatch from another ref fails
       # here instead of skipping, so a verify_reproducible run never reports a
@@ -294,14 +297,22 @@ jobs:
           # push until it merges. Touch the branch only when it does not already
           # pin this release (tag and sha256): a newer release updates it, a main push
           # alone does not.
-          # A missing branch reads as empty, so it is never current.
+          # The bump is done only in its whole end state: the branch pins this
+          # tag and sha256, AND an open pull request from it exists, AND that
+          # pull request carries ready-for-heavy. create-pull-request pushes the
+          # branch before it opens the pull request and labels it, so a failure
+          # after the push leaves a current branch with no (labelled) pull
+          # request; any missing part runs the pull-request step again, which
+          # opens or repairs it. A missing branch reads as empty.
           branch_current=false
           if [[ "$changed" == "true" ]]; then
             branch_pin="$(gh api "repos/${GH_REPO}/contents/.github/actions/fetch-beep-ci/action.yml?ref=${PIN_BRANCH}" \
               --jq .content 2>/dev/null | base64 --decode 2>/dev/null || true)"
             if grep -Eq "^[[:space:]]*BEEP_CI_RELEASE_TAG:[[:space:]]*${tag}[[:space:]]*$" <<<"$branch_pin" \
               && grep -Eq "^[[:space:]]*BEEP_CI_SHA256:[[:space:]]*${sha256}[[:space:]]*$" <<<"$branch_pin"; then
-              branch_current=true
+              labelled="$(gh pr list --head "$PIN_BRANCH" --state open --json number,labels 2>/dev/null \
+                | jq '[.[] | select(any(.labels[]; .name == "ready-for-heavy"))] | length' 2>/dev/null || echo 0)"
+              if [[ "${labelled:-0}" -ge 1 ]]; then branch_current=true; fi
             fi
           fi
           bump=false
@@ -323,7 +334,7 @@ jobs:
               exit 0
             fi
             if [[ "$bump" != "true" ]]; then
-              echo "- main pins an older release, and \`$PIN_BRANCH\` already pins \`$tag\` and its sha256: no push, no pull-request edit."
+              echo "- main pins an older release, and \`$PIN_BRANCH\` already pins \`$tag\` and its sha256 and has an open \`ready-for-heavy\` pull request: no push, no pull-request edit."
               exit 0
             fi
             echo "- main pins an older release: open or update the pin-bump pull request on \`$PIN_BRANCH\`."

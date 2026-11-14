@@ -2218,7 +2218,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const workflowText = yield* fs.readFileString(`${root}/.github/workflows/beep-ci-binary.yml`);
       const workflow = parseWorkflowYaml(workflowText);
       expect(yamlAt(workflow, ["permissions"])).toEqual({ contents: "read" });
-      expect(yamlAt(workflow, ["jobs", "publish", "permissions"])).toEqual({ contents: "write" });
+      expect(yamlAt(workflow, ["jobs", "publish", "permissions"])).toEqual({
+        contents: "write",
+        "pull-requests": "read",
+      });
       expect(yamlAt(workflow, ["concurrency"])).toEqual({
         group: "beep-ci-binary-${{ github.ref }}",
         "cancel-in-progress": false,
@@ -2280,6 +2283,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         expect(rewrite).toContain(fragment);
       }
       expect(rewrite).toContain('echo "bump=$bump"');
+      // ...and only when the bump is done in its whole end state: an open pin-bump PR carrying the label.
+      expect(rewrite).toContain('gh pr list --head "$PIN_BRANCH" --state open --json number,labels');
+      expect(rewrite).toContain('select(any(.labels[]; .name == "ready-for-heavy"))');
       expect(rewrite).not.toMatch(/\bsed\b/u);
       expect(stepEnvironment(pinStep)).toEqual({
         GH_TOKEN: "${{ github.token }}",
@@ -2327,9 +2333,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   );
 
   // The pin step's own script, run against stub `gh` and `bun` in a real git checkout: it decides from
-  // release state, so a re-run (pin-bump branch never created) still bumps, while a pin-bump branch that
-  // already pins the newest tag and sha256 is a true no-op, no push and no pull-request edit, so a main
-  // push alone never restarts the open pin-bump PR's heavy Check (#3299 review).
+  // release state, so a re-run (pin-bump branch never created) still bumps. A bump in its whole end
+  // state (branch pins the newest tag and sha256, an open PR from it carries ready-for-heavy) is a true
+  // no-op, so a main push alone never restarts that PR's heavy Check; a current branch whose PR was
+  // never opened or labelled runs the PR step again (#3299 review).
   it.effect("runs the pin step as a no-op when the pin-bump branch already pins the newest release", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -2371,7 +2378,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         expect(stderr).toBe("");
         expect(Number(status)).toBe(0);
       });
-      const runCase = Effect.fnUntraced(function* (mainPin: string, branchPin: O.Option<string>) {
+      const runCase = Effect.fnUntraced(function* (mainPin: string, branchPin: O.Option<string>, openPulls = "[]") {
         const directory = yield* fs.makeTempDirectoryScoped();
         const work = yield* fs.realPath(directory);
         const repo = `${work}/repo`;
@@ -2394,6 +2401,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
               '    mkdir -p "$dir"; printf "%s  beep-linux-x64\\n" "$NEWEST_SHA" > "$dir/$pattern" ;;',
               '  "release view") echo "$NEWEST_TARGET" ;;',
               '  "api repos/"*) if [ -f "$BRANCH_PIN_FILE" ]; then base64 -w0 "$BRANCH_PIN_FILE"; echo; else exit 1; fi ;;',
+              '  "pr list") echo "$OPEN_PULLS" ;;',
               "  *) exit 2 ;;",
               "esac",
               "",
@@ -2434,6 +2442,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           NEWEST_SHA: newSha,
           NEWEST_TARGET: "0123456789abcdef0123456789abcdef01234567",
           BRANCH_PIN_FILE: `${work}/branch-action.yml`,
+          OPEN_PULLS: openPulls,
         });
         const outputText = yield* fs.readFileString(outputPath);
         const outputs = R.fromEntries(
@@ -2447,19 +2456,30 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // Re-run after a failed pull-request step: the branch was never created, so the step bumps.
       const rerun = yield* runCase(pinText(oldTag, oldSha), O.none());
       expect(rerun).toEqual({ changed: "true", bump: "true" });
-      // The open pin-bump branch already pins the newest tag and sha256: no push, no edit.
-      const current = yield* runCase(pinText(oldTag, oldSha), O.some(pinText(newTag, newSha)));
+      const labelledPull = '[{"number":7,"labels":[{"name":"ready-for-heavy"}]}]';
+      // The branch pins the newest tag and sha256 and has an open ready-for-heavy PR: no push, no edit.
+      const current = yield* runCase(pinText(oldTag, oldSha), O.some(pinText(newTag, newSha)), labelledPull);
       expect(current).toEqual({ changed: "true", bump: "false" });
+      // The branch is current but no PR is open (PR creation failed after the push): run the PR step.
+      const noPull = yield* runCase(pinText(oldTag, oldSha), O.some(pinText(newTag, newSha)), "[]");
+      expect(noPull).toEqual({ changed: "true", bump: "true" });
+      // The branch is current and the PR is open but unlabelled (labelling failed): run the PR step.
+      const unlabelled = yield* runCase(
+        pinText(oldTag, oldSha),
+        O.some(pinText(newTag, newSha)),
+        '[{"number":7,"labels":[{"name":"ci"}]}]'
+      );
+      expect(unlabelled).toEqual({ changed: "true", bump: "true" });
       // The branch pins the newest tag with a different sha256: refresh it.
-      const staleSha = yield* runCase(pinText(oldTag, oldSha), O.some(pinText(newTag, oldSha)));
+      const staleSha = yield* runCase(pinText(oldTag, oldSha), O.some(pinText(newTag, oldSha)), labelledPull);
       expect(staleSha).toEqual({ changed: "true", bump: "true" });
       // The branch pins an older release: a newer release updates it.
-      const older = yield* runCase(pinText(oldTag, oldSha), O.some(pinText(oldTag, oldSha)));
+      const older = yield* runCase(pinText(oldTag, oldSha), O.some(pinText(oldTag, oldSha)), labelledPull);
       expect(older).toEqual({ changed: "true", bump: "true" });
       // Main already pins the newest release (a bump merged): nothing to do.
-      const merged = yield* runCase(pinText(newTag, newSha), O.some(pinText(newTag, newSha)));
+      const merged = yield* runCase(pinText(newTag, newSha), O.some(pinText(newTag, newSha)), labelledPull);
       expect(merged).toEqual({ changed: "false", bump: "false" });
-    }).pipe(Effect.scoped)
+    })
   );
 
   // goals/certainty-scorecard MEAS-01 slice 2: a scheduled scorer that reads Actions runs with the
