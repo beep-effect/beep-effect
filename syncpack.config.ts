@@ -137,6 +137,7 @@ const config = {
     "packages/drivers/firecrawl/package.json",
     "packages/drivers/eyecite/package.json",
     "packages/drivers/sqlite/package.json",
+    "packages/tooling/infra/cost-controls/package.json",
   ],
   customTypes: {
     catalog: {

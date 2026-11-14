@@ -2348,5 +2348,11 @@
   ],
   "@beep/alchemy-aws-extras/*": [
     "./packages/tooling/library/alchemy-aws-extras/src/*"
+  ],
+  "@beep/infra-cost-controls": [
+    "./packages/tooling/infra/cost-controls/src/index.ts"
+  ],
+  "@beep/infra-cost-controls/*": [
+    "./packages/tooling/infra/cost-controls/src/*"
   ]
 }

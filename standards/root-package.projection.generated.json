@@ -328,6 +328,7 @@
     "packages/drivers/alchemy-postgres",
     "packages/drivers/firecrawl",
     "packages/drivers/eyecite",
-    "packages/drivers/sqlite"
+    "packages/drivers/sqlite",
+    "packages/tooling/infra/cost-controls"
   ]
 }

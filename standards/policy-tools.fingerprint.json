@@ -677,6 +677,7 @@
     "packages/shared/domain/package.json",
     "packages/shared/tables/package.json",
     "packages/shared/use-cases/package.json",
+    "packages/tooling/infra/cost-controls/package.json",
     "packages/tooling/library/agent-memory-store/package.json",
     "packages/tooling/library/ai-metrics/package.json",
     "packages/tooling/library/ai-sync/package.json",

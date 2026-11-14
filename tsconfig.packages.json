@@ -523,6 +523,9 @@
       "path": "packages/shared/use-cases"
     },
     {
+      "path": "packages/tooling/infra/cost-controls"
+    },
+    {
       "path": "packages/tooling/library/agent-memory-store"
     },
     {

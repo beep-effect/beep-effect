@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../tsconfig.base.json",
+  "include": ["src", "test", "alchemy.run.ts"],
+  "compilerOptions": {
+    "composite": false,
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noEmit": true,
+    "outDir": "dist-test",
+    "rootDir": ".",
+    "sourceMap": false,
+    "types": ["node", "bun-types"]
+  },
+  "references": [
+    {
+      "path": "../../../foundation/modeling/identity/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../library/alchemy-aws-extras/tsconfig.json"
+    }
+  ]
+}

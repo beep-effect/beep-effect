@@ -504,6 +504,12 @@
         ]
       },
       {
+        "name": "@beep/infra-cost-controls",
+        "patterns": [
+          "packages/tooling/infra/cost-controls/src/**"
+        ]
+      },
+      {
         "name": "@beep/jsonc",
         "patterns": [
           "packages/foundation/modeling/jsonc/src/**"
@@ -3048,6 +3054,21 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/infra-cost-controls",
+        "allow": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/infra-cost-controls",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/infra-cost-controls",
+          "@beep/schema"
         ]
       },
       {

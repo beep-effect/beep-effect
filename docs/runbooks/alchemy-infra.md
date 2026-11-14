@@ -104,6 +104,7 @@ decision file per object).
 | --- | --- | --- | --- | --- |
 | `BeepEffectWeb` | `apps/beep-effect-web/alchemy.run.ts` | `deploy-beep-effect-web.yml` | `beep-effect-web-prod` | `https://beep-effect.com` (custom domain, `www` redirect) |
 | `Storybook` | `apps/storybook/alchemy.run.ts` | `deploy-storybook.yml` | `storybook-prod` | `https://beep-effect.com/storybook/` (zone route `beep-effect.com/storybook*` in front of the apex Worker) |
+| `CostControls` | `packages/tooling/infra/cost-controls/alchemy.run.ts` | `deploy-cost-controls.yml` | `cost-controls-prod` | AWS account budget, services anomaly monitor and subscription, cost allocation tags, Compute Optimizer and Cost Optimization Hub enrollment |
 
 Storybook is an assets-only Worker. Its build writes to `site/storybook` under the app
 (`bun run storybook:build:site`), so each asset path carries the `/storybook` prefix the
@@ -121,6 +122,64 @@ CLOUDFLARE_ACCOUNT_ID=op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ACCOUNT_ID
 ```
 
 Destroy it with the same command and `destroy` in place of `deploy`.
+
+## Cost controls
+
+`CostControls` (`@beep/infra-cost-controls`) replaces the Pulumi
+`AccountCostControls` component of `beep-ci-runners/production`. Design and
+resource table: the package README. Decisions:
+`goals/infra-alchemy-rebuild/decisions/*-cost-controls-*.md`.
+
+Deploy identity. The stack manages AWS resources, so it does not use the
+state role. Its workflow assumes `beep-alchemy-cost-controls-deploy` (variable
+`COST_CONTROLS_DEPLOY_ROLE_ARN` on `cost-controls-prod`), trusted only for
+`repo:beep-effect/beep-effect:environment:cost-controls-prod`. The inline
+policy allows the Budgets, Cost Explorer anomaly and cost-allocation-tag,
+Compute Optimizer and Cost Optimization Hub calls the five providers make,
+writes only the budget `beep-account-monthly-cost`, the adopted services
+monitor and anomaly subscriptions, and reads and writes state objects only
+under `CostControls/` in the state bucket. Budgets and Cost Explorer are
+global services on the `us-east-1` endpoint; Cost Optimization Hub exists only
+in `us-east-1`; the stack pins that region. Exact `aws iam` commands and their
+reversal: decision "Cost controls deploys through a stack-scoped OIDC role".
+
+Personal stage (plan only needs no recipients; the stage is always silent):
+
+```sh
+eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
+export AWS_REGION=us-east-1
+cd packages/tooling/infra/cost-controls
+bunx alchemy plan --stage "dev_$USER" --env-file /dev/null
+```
+
+Expect one create (the stage-suffixed budget) and eight adopts (six tags, two
+enrollments) with no property changes. A personal deploy creates a free
+budget with no notifications; `destroy` deletes that budget and leaves every
+account setting untouched.
+
+Phases. `prod` starts `silent`: the new budget has no notifications and there
+is no new anomaly subscription, so recipients are not mailed twice while the
+Pulumi budget and subscription still exist. After the cutover, one PR sets
+`notifications: "live"` in `src/Config.ts` and the environment secret
+`COST_CONTROLS_NOTIFICATION_EMAILS` (comma-separated, from 1Password, never
+printed); its deploy adds the four budget notifications and the daily anomaly
+subscription.
+
+Cutover from Pulumi (decision "Cost controls cutover from Pulumi"): export the
+`beep-ci-runners/production` stack to
+`~/.local/state/beep/infra-archives/pulumi-exports/`, unprotect the
+component's twelve state entries, `pulumi destroy --target` only the old
+budget and subscription (preview first: exactly two deletes), then
+`pulumi state delete` the monitor, the six tags, the two enrollments, the
+component provider and the component. Never `pulumi destroy` a tag, an
+enrollment or the monitor: Pulumi would deactivate the tag, opt the account
+out, or delete the services monitor Alchemy now owns. No step runs the
+program and none needs `pulumi up`; the PR deleting the component from the
+program must merge before the next `pulumi preview` of that stack.
+
+Rollback: `pulumi stack import` of the newest archive, `pulumi up --target`
+the old budget and subscription URNs, `prod` back to `silent`, and
+`aws budgets delete-budget` for the retained `beep-account-monthly-cost`.
 
 ## Acceptance evidence
 
