@@ -271,10 +271,14 @@ in `value`.
 ### Deploy path
 
 One job, `staging` then `prod`, each: `alchemy plan` (log teed to a file), the pre-deploy
-check `bun apps/oip-web/stack/plan-guard.ts <log>` (refuses any replace, delete or orphan
-of the project, a variable, a domain, a DNS record or a bucket, and fails closed on a log
-with no `Plan:` line, on a resource line it cannot read, and on per-action counts that
-disagree with the `Plan:` summary; its messages name FQNs and counts only), `alchemy deploy --yes`, then a curl poll of every hostname for its expected status.
+check `bun apps/oip-web/stack/plan-guard.ts <log>`. It refuses any replace, delete or orphan
+of the project, a variable, a domain, a DNS record or a bucket; on `prod` and `staging` it also
+refuses every `create` outside an explicit allow-list (the assets bucket, the three variables and
+that stage's domains), so a project or DNS record that failed to adopt can never be created a
+second time. It fails closed on a log with no `Plan · <stage>` title or no `Plan:` summary, on a
+resource line it cannot read, and on per-action counts that disagree with the summary; its
+messages name FQNs and counts only. `CRM_HUBSPOT_SERVICE_KEY` must be set for the plan step
+too: the stack reads it before declaring anything, so a missing key fails before any write, `alchemy deploy --yes`, then a curl poll of every hostname for its expected status.
 The job runs only while the repository variable `OIP_WEB_INFRA_DEPLOY` is `enabled`.
 
 The `oip-web-infra-prod` environment (branch policy `main`) carries:
@@ -335,9 +339,11 @@ PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE 
    value would break the contact form on the next deployment. Arming is a deploy act: tell the
    orchestrator the time first; the packet gate session sets `OIP_WEB_INFRA_DEPLOY=enabled`
    itself, never a workflow or a lane. Then dispatch the workflow (or let the next filtered
-   push run it). The staging plan must read `Plan: 1 to create, 8 to adopted` and the prod
-   plan `Plan: 1 to create, 12 to adopted` (lines in the expected-plan decision file);
-   anything else is a stop. Check: both smoke steps pass; a second dispatch plans
+   push run it). The staging plan must read `Plan: 6 to create, 3 to adopted` and the prod
+   plan `Plan: 8 to create, 5 to adopted` (lines in the expected-plan decision file): the
+   project and the DNS records `adopted`, the bucket, the variables and the domains `create`.
+   The plan guard refuses any other `create` before the deploy step runs; anything else that
+   differs is a stop. Check: both smoke steps pass; a second dispatch plans
    `no changes` for both stages; `alchemy drift --stage prod` exits 0. Rollback: unset the
    variable. The live objects are as they were apart from rewritten variable values (equal
    values), and Pulumi still holds them.

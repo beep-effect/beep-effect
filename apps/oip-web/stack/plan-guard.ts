@@ -38,12 +38,12 @@ export const planGuardCommand = Command.make(
     const entries = yield* checkPlan(log).pipe(
       Effect.tapError((error) =>
         Console.error(
-          error._tag === "PlanRefused"
-            ? `plan-guard: refused, the plan removes ${A.join(
+          error._tag === "PlanUnreadable"
+            ? `plan-guard: refused, ${error.reason}`
+            : `plan-guard: refused, the plan ${error._tag === "PlanRefused" ? "removes" : `creates on ${error.stage}, instead of adopting,`} ${A.join(
                 A.map(error.refused, (entry) => `${entry.fqn} (${entry.action})`),
                 ", "
               )}`
-            : `plan-guard: refused, ${error.reason}`
         )
       )
     );

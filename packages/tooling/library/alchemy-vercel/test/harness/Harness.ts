@@ -18,6 +18,7 @@ import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { FakeVercelLayer } from "./FakeVercel.ts";
+import type { formatPlanLines } from "alchemy/Cli/LoggingCli";
 import type * as Provider from "alchemy/Provider";
 import type { ResourceLike } from "alchemy/Resource";
 
@@ -27,6 +28,9 @@ export interface TypedStack {
     effect: Effect.Effect<A, never, Vercel.Providers>
   ): Effect.Effect<A["Attributes"], Provider.ProviderError>;
   destroy(options?: { readonly include?: never }): Effect.Effect<void, Provider.ProviderError>;
+  plan<A extends ResourceLike>(
+    effect: Effect.Effect<A, never, Vercel.Providers>
+  ): Effect.Effect<Parameters<typeof formatPlanLines>[0], Provider.ProviderError>;
 }
 
 /** Narrow the harness's scratch stack to {@link TypedStack}. */

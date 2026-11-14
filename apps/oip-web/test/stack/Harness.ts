@@ -4,6 +4,7 @@
  */
 
 import * as Test from "@alchemy.run/test/Vitest";
+import { formatPlanLines } from "alchemy/Cli/LoggingCli";
 import { inMemoryState, State } from "alchemy/State";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -16,6 +17,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { configForStage } from "../../stack/OipWebConfig.ts";
 import { oipWebResources } from "../../stack/OipWebStack.ts";
 import { FakeCloudProviders } from "./FakeCloud.ts";
@@ -38,6 +40,9 @@ export const stageProgram = (stage: string) =>
 export interface TypedStack {
   deploy<A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<Input.Resolve<A>, Provider.ProviderError | E>;
   destroy(options?: { readonly include?: never }): Effect.Effect<void, Provider.ProviderError>;
+  plan<A, E, R>(
+    effect: Effect.Effect<A, E, R>
+  ): Effect.Effect<Parameters<typeof formatPlanLines>[0], Provider.ProviderError | E>;
 }
 
 /** Narrow the harness's scratch stack to {@link TypedStack}. */
@@ -91,3 +96,14 @@ export const persistedStrings = Effect.gen(function* () {
   );
   return leafStrings(rows);
 });
+
+const ANSI = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
+
+/**
+ * A plan as the CI log prints it: the logger's `Plan · <stage>` title, then the summary and one
+ * line per resource, color codes removed. The plan guard reads exactly this.
+ */
+export const renderPlanLog =
+  (stage: string) =>
+  (plan: Parameters<typeof formatPlanLines>[0]): string =>
+    A.join([`Plan · ${stage}`, ...A.map(formatPlanLines(plan), Str.replace(ANSI, ""))], "\n");

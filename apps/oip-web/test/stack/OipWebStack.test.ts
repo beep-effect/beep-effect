@@ -16,8 +16,17 @@ import {
   zoneIdOf,
 } from "../../stack/OipWebConfig.ts";
 import { dnsRecordComment, oipWebResources, requireCiForLiveStage, servedHostnames } from "../../stack/OipWebStack.ts";
+import { checkPlan } from "../../stack/PlanGuard.ts";
 import { FakeCloud, liveHubSpotSecret, liveIds, liveProjectSettings } from "./FakeCloud.ts";
-import { failureTag, makeHarness, persistedStrings, stageProgram, typed, withConfig } from "./Harness.ts";
+import {
+  failureTag,
+  makeHarness,
+  persistedStrings,
+  renderPlanLog,
+  stageProgram,
+  typed,
+  withConfig,
+} from "./Harness.ts";
 
 const { test } = makeHarness();
 
@@ -264,4 +273,28 @@ describe("vercel-deploy.yml", () => {
     expect(A.contains(projectIds, liveIds.stagingProjectId)).toBe(true);
     expect(workflow).toContain(`VERCEL_ORG_ID: ${TEAM}`);
   });
+});
+
+// The guard's create allow-list against what the engine actually plans for the live census.
+describe("the first live plans pass the plan guard", { concurrent: false }, () => {
+  const expected = {
+    prod: { summary: "Plan: 8 to create, 5 to adopted", lines: 13 },
+    staging: { summary: "Plan: 6 to create, 3 to adopted", lines: 9 },
+  } as const;
+
+  for (const stage of ["prod", "staging"] as const) {
+    test.provider(`${stage}: ${expected[stage].summary}, accepted, with nothing written while planning`, (scratch) =>
+      Effect.gen(function* () {
+        const stack = typed(scratch);
+        FakeCloud.reset();
+        FakeCloud.seedLive();
+        const plan = yield* stack.plan(stageProgram(stage)).pipe(withConfig(liveSecret));
+        const log = renderPlanLog(stage)(plan);
+        expect(log).toContain(expected[stage].summary);
+        const entries = yield* checkPlan(log);
+        expect(A.length(entries)).toBe(expected[stage].lines);
+        expect(FakeCloud.writes()).toEqual([]);
+      })
+    );
+  }
 });

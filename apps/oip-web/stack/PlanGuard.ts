@@ -14,9 +14,11 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { LiveStage } from "./OipWebConfig.ts";
 
 const $I = $OipWebId.create("stack/PlanGuard");
 
@@ -80,6 +82,63 @@ class PlanUnreadable extends S.TaggedError<PlanUnreadable, { readonly brand: uni
   })
 ) {}
 
+/**
+ * Logical ids a first `prod` deploy may plan as `create`. The assets bucket is new; the variables
+ * and domains take the create path because their `project` prop is the adopted project's output,
+ * unresolved when the plan is made, and reconcile then lands on the live object (a variable is
+ * written in place, a domain already on the project is left alone). Everything else exists live and
+ * must be adopted, so a planned `create` of it (the project, a DNS record, or any resource added to
+ * the stack later) is refused until it is added here deliberately.
+ */
+const ProdCreatable = LiteralKit([
+  "AssetsBucket",
+  "EnvNextDisablePwa",
+  "EnvHubSpotAccountId",
+  "EnvHubSpotServiceKey",
+  "Domain-oip-law",
+  "Domain-www-oip-law",
+  "Domain-opip-law",
+  "Domain-www-opip-law",
+]).pipe(
+  $I.annoteSchema("ProdCreatable", {
+    description: "OipWeb logical id the prod stage may plan as create.",
+  })
+);
+
+/** Logical ids a `staging` deploy may plan as `create`; see {@link ProdCreatable}. */
+const StagingCreatable = LiteralKit([
+  "AssetsBucket",
+  "EnvNextDisablePwa",
+  "EnvHubSpotAccountId",
+  "EnvHubSpotServiceKey",
+  "Domain-staging-oip-law",
+  "Domain-staging-opip-law",
+]).pipe(
+  $I.annoteSchema("StagingCreatable", {
+    description: "OipWeb logical id the staging stage may plan as create.",
+  })
+);
+
+/** The create allow-list of each live stage. Personal stages create everything and have none. */
+const creatableOnLiveStage: HashMap.HashMap<string, HashSet.HashSet<string>> = HashMap.make(
+  [LiveStage.Enum.prod, HashSet.fromIterable(ProdCreatable.literals)],
+  [LiveStage.Enum.staging, HashSet.fromIterable(StagingCreatable.literals)]
+);
+
+/** Raised when a live stage plans `create` for a resource that exists live and must be adopted. */
+class PlanCreateRefused extends S.TaggedError<PlanCreateRefused, { readonly brand: unique symbol }>(
+  $I`PlanCreateRefused`
+)(
+  "PlanCreateRefused",
+  {
+    stage: S.String.annotateKey({ description: "The live stage the plan is for." }),
+    refused: S.Array(PlanEntry).annotateKey({ description: "The creates outside the stage's allow-list." }),
+  },
+  $I.annoteError<PlanCreateRefused>("PlanCreateRefused", {
+    description: "A live stage plans to create a resource that is not on its create allow-list.",
+  })
+) {}
+
 const ansiPattern = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
 
 /** The logger's line prefix in CI and other non-TTY runs: `[20:33:03.096] INFO: ` (or `INFO (#1): `). */
@@ -91,6 +150,9 @@ const planLinePattern = /^\[([^\]]+)\] ([a-z]+)\b/;
 
 /** Any line the renderer writes for a resource: `[<fqn>] ...`. */
 const resourceLinePattern = /^\[([^\]]+)\] /;
+
+/** The logger's title line, naming the operation and the stage: `Plan · prod`. */
+const stageHeaderPattern = /^(?:Plan|Deploy|Destroy) · (\S+)$/;
 
 /** One per-action count of the summary: `12 to adopted`. */
 const summaryCountPattern = /(\d+) to ([a-z]+)/g;
@@ -172,6 +234,42 @@ export const parsePlanLog: (log: string) => ReadonlyArray<PlanEntry> = flow(
 );
 
 /**
+ * The logical id of a resource: the last segment of its FQN.
+ *
+ * @param fqn - The resource FQN as the plan prints it.
+ * @returns The logical id.
+ */
+const logicalIdOf = (fqn: string): string =>
+  pipe(
+    Str.split("/")(fqn),
+    A.last,
+    O.getOrElse(() => fqn)
+  );
+
+/**
+ * The stage a plan log is for, from the logger's `Plan · <stage>` title line.
+ *
+ * @param lines - The log lines, cleaned.
+ * @returns The stage, or `None` when the log names none.
+ */
+const stageOf = (lines: ReadonlyArray<string>): O.Option<string> =>
+  A.findFirst(lines, (line) => O.fromNullishOr(stageHeaderPattern.exec(line)?.[1]));
+
+/**
+ * The planned creates a live stage does not allow; always empty for a personal stage.
+ *
+ * @param stage - The stage the plan is for.
+ * @param entries - The plan's resource lines.
+ * @returns The creates outside the stage's allow-list.
+ */
+const disallowedCreates = (stage: string, entries: ReadonlyArray<PlanEntry>): ReadonlyArray<PlanEntry> =>
+  O.match(HashMap.get(creatableOnLiveStage, stage), {
+    onNone: () => [],
+    onSome: (allowed) =>
+      A.filter(entries, (entry) => PlanAction.is.create(entry.action) && !HashSet.has(allowed, logicalIdOf(entry.fqn))),
+  });
+
+/**
  * The guarded kind of a resource, from the last segment of its FQN.
  *
  * **Example** (Classify a DNS record)
@@ -249,6 +347,10 @@ export const checkPlan = Effect.fn("OipWeb.checkPlan")(function* (log: string) {
   if (O.isNone(summary)) {
     return yield* PlanUnreadable.make({ reason: "the log has no Plan: summary line" });
   }
+  const stage = stageOf(lines);
+  if (O.isNone(stage)) {
+    return yield* PlanUnreadable.make({ reason: "the log names no stage (no `Plan · <stage>` line)" });
+  }
   const unreadable = A.filterMap(lines, (line) =>
     pipe(
       O.fromNullishOr(resourceLinePattern.exec(line)),
@@ -298,6 +400,10 @@ export const checkPlan = Effect.fn("OipWeb.checkPlan")(function* (log: string) {
   );
   if (A.isReadonlyArrayNonEmpty(refused)) {
     return yield* PlanRefused.make({ refused });
+  }
+  const creates = disallowedCreates(stage.value, entries);
+  if (A.isReadonlyArrayNonEmpty(creates)) {
+    return yield* PlanCreateRefused.make({ stage: stage.value, refused: creates });
   }
   return entries;
 });
