@@ -180,6 +180,35 @@ export {
  */
 export { materializeCacheDependencies, verifyCacheDependencies } from "./Cache.dependencies.ts";
 /**
+ * Bounded installed-dependency drift diagnostic contracts.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export {
+  CacheDependencyDiagnosticBounds,
+  CacheDependencyDiagnosticCode,
+  CacheDependencyDiagnosticFileDetails,
+  CacheDependencyDiagnosticFileKind,
+  CacheDependencyDiagnosticFileRow,
+  CacheDependencyDiagnosticGroupRow,
+  CacheDependencyDiagnosticLimits,
+  CacheDependencyDiagnosticRefusal,
+  CacheDependencyDiagnosticRefusalReport,
+  CacheDependencyDiagnosticReport,
+  CacheDependencyDiagnosticSecondPass,
+  CacheDependencyDiagnosticSnapshot,
+  CacheDependencyDiagnosticStatus,
+  CacheDependencyPublicationPlan,
+} from "./Cache.diagnostics.schemas.ts";
+/**
+ * Default installed-dependency drift diagnostic bounds.
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export { defaultCacheDependencyDiagnosticLimits } from "./Cache.diagnostics.ts";
+/**
  * Source-review artifact and census attachment contracts.
  *
  * @category schemas
