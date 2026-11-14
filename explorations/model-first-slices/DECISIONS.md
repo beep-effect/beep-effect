@@ -822,3 +822,59 @@ zero diagnostics and 152 tests pass, re-run by the orchestrating session.
 
 D5 verdict: still not yet, for three reasons: the 60-second recovery, the lost write, and facts
 dropped on an upgrade with a view version bump.
+
+## 2026-11-13 — D41 the lost write (reverses D38's "no local patch")
+
+**Question:** A runner paused inside its commit was acknowledged at version 2, and the other
+runner's event then overwrote it. D38 ruled out a local patch. The operator has since patched the
+other two library defects. What now?
+
+**Answer:** Patch it too. Add a version check inside the commit transaction to the prototype's
+local patch, save it as a third upstream-ready diff with the failing case, and rerun the
+paused-inside-commit case.
+
+**Rationale:** The overwrite is reproduced twice (`research/14`, `research/16`), and a tested fix is
+a stronger thing to send upstream than an issue. Rejected: keeping D38, with the case failing until
+upstream fixes it. Recommended answer accepted. D38's other half stands: the repo-owned platform is
+not retired on the strength of a local patch alone.
+
+## 2026-11-13 — D42 recovery after a killed runner
+
+**Question:** After a runner is killed mid-delivery, every reaction happens exactly once, but only
+after the dead runner's 60-second lease. What is the rule?
+
+**Answer:** The guarantee is that reactions resume within one lease after a runner dies. The case is
+rewritten to assert exactly that: nothing lost, nothing doubled, done within the lease plus wake
+latency. A proposal for leases that follow shard ownership goes upstream separately.
+
+**Rationale:** The earlier case asserted a ten-second read that the lease-based design cannot meet;
+the property that matters is no loss and no duplication within a stated bound. Rejected: patching
+the library for immediate takeover (a larger change than the patches so far); leaving the case
+failing. Recommended answer accepted.
+
+## 2026-11-13 — D43 facts and upgrades (narrows D33)
+
+**Question:** Bumping a view's version rebuilt the projection that publishes integration facts; its
+positions restarted and the facts stream refused its first writes as older. What is the rule?
+
+**Answer:** The publishing projection reads aggregate events directly, not a versioned view, so a
+view rebuild cannot touch it. A checker forbids bumping the version of any projection that feeds a
+published stream; a change to a fact is a new fact version instead. The library behaviour goes
+upstream as an issue.
+
+**Rationale:** `research/16`, the case restoring earlier data under the new code. D33's outbox stays
+in the model; what changes is what it may read and that it is never rebuilt in place. Rejected:
+reversing D33 for a host-owned outbox table; keeping the design with a stream-origin reset as a
+required upgrade step. Recommended answer accepted.
+
+## 2026-11-13 — D44 upstream timing
+
+**Question:** Two fixes are saved as upstream-ready diffs and two issues are written up. Open them
+now?
+
+**Answer:** Not yet. Hold everything upstream until D41 to D43 are built and rerun, so what goes
+out is final. Nothing is posted.
+
+**Rationale:** Posting is under the operator's GitHub account, and a third fix and a rewritten case
+are about to change the evidence. Rejected: opening the two pull requests now; opening everything
+now. Recommended answer accepted.

@@ -29,11 +29,14 @@ in words.
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
 2. [`CAPTURE.md`](./CAPTURE.md) - the operator's brief and ground rules.
 3. [`RESEARCH.md`](./RESEARCH.md) - the proposal, the prototype, the outside reviews.
-4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D40.
+4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D44.
 5. [`BRIEF.md`](./BRIEF.md) - shaped pitch, awaiting the operator's confirmation.
 
 ## Trail
 
+- 2026-11-13: D41 to D44 settled the three failing cases: patch the lost write locally, state
+  one-lease recovery as the guarantee, publish facts from aggregate events with the publisher
+  never rebuilt in place. Upstream is held until those are built and rerun. Phase 9 launched.
 - 2026-11-13: phase 8 reran the cluster suite on the phase 7 code. The bundles build with the
   linked `@beep/*` sources; the saga fix holds on the cluster; a new upgrade case shows published
   facts dropped after a view version bump. Three cases fail. Notes in `research/16`.
