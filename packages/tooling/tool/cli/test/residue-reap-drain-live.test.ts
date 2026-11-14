@@ -150,5 +150,34 @@ describe("live residue drain probe", () => {
         assertNone(unwritten);
       })
     );
+
+    it.effect("reads no timer hosts without HOME and runs the default systemd sources read-only", () =>
+      Effect.gen(function* () {
+        const host = yield* makeHost();
+        const withoutHome = Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          ConfigProvider.fromUnknown({ BEEP_FLEET_STATE_ROOT: host.state })
+        );
+        const injected = yield* makeResidueDrainProbe(
+          () => Effect.succeedSome([]),
+          () => Effect.succeedSome(""),
+          () => Effect.succeedSome(host.unitPaths)
+        ).pipe(Effect.provideService(FleetMirrorService, FleetMirrorService.of(mirrorFor(host.root))));
+        const homeless = yield* withoutHome(injected.facts(host.repo));
+        expect(O.getOrThrow(homeless).timerDirectories).toBeNull();
+
+        // systemctl and systemd-analyze only read; a host without a user manager answers null.
+        const defaults = yield* makeResidueDrainProbe(() => Effect.succeedSome([])).pipe(
+          Effect.provideService(FleetMirrorService, FleetMirrorService.of(mirrorFor(host.root)))
+        );
+        const read = yield* Effect.provideService(
+          ConfigProvider.ConfigProvider,
+          host.config
+        )(defaults.facts(host.repo));
+        const facts = O.getOrThrow(read);
+        expect(facts.proofUnitCheckouts === null || A.isArray(facts.proofUnitCheckouts)).toBe(true);
+        expect(facts.timerDirectories === null || A.isArray(facts.timerDirectories)).toBe(true);
+      })
+    );
   });
 });

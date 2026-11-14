@@ -184,6 +184,7 @@ const reap = (
     readonly apply?: boolean;
     readonly classes?: ReadonlyArray<ResidueReapClass>;
     readonly extraCheckouts?: ReadonlyArray<string>;
+    readonly liveCwd?: (candidate: string) => Effect.Effect<O.Option<boolean>>;
   }
 ) =>
   runResidueReap({
@@ -192,7 +193,7 @@ const reap = (
     checkoutRoots: [fleet.invoker, fleet.clone, fleet.lane, fleet.stray, ...(options.extraCheckouts ?? [])],
     fleet: true,
     nowMillis: options.nowMillis,
-    probeLiveCwd: noLiveCwd,
+    probeLiveCwd: options.liveCwd ?? noLiveCwd,
     probePidAlive: noLivePid,
     ...(options.apply === undefined ? {} : { apply: options.apply }),
     ...(options.classes === undefined ? {} : { classes: options.classes }),
@@ -683,6 +684,90 @@ describe("residue reap drainable class", () => {
         });
         expect(drainRow(wave, atHome).action).toBe("remove-dir");
         yield* expectExists(atHome, false);
+      })
+    );
+
+    it.effect("refuses dirty trees, live processes, unreadable alternates and an unreachable origin", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* fs.writeFileString(path.join(fleet.lane, "scratch.txt"), "uncommitted\n");
+        yield* fs.makeDirectory(path.join(fleet.stray, ".git", "objects", "info", "alternates"), { recursive: true });
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([
+          FleetRegistryRow.make({ checkout: path.join(fleet.projects, "beep-effect7"), seatRole: "legacy" }),
+        ]);
+        const probe = fleetProbe(fleet, registry);
+        const report = yield* reap(fleet, probe, {
+          nowMillis: NOW,
+          classes: ["drainable"],
+          liveCwd: (candidate) => Effect.succeedSome(Str.endsWith("beep-effect")(candidate)),
+        });
+        expect(outcomeOf(drainRow(report, fleet.lane), "clean-tree")).toBe("fail");
+        expect(outcomeOf(drainRow(report, fleet.invoker), "liveness")).toBe("fail");
+        expect(outcomeOf(drainRow(report, fleet.clone), "object-borrowers")).toBe("probe-failed");
+        // A registered legacy clone that is gone counts nowhere in the wave's disk totals.
+        expect(report.drainDiskBefore?.legacyClones).toBe(3);
+
+        yield* fs.rename(path.join(fleet.projects, "origin.git"), path.join(fleet.projects, "origin.gone"));
+        yield* fs.remove(path.join(fleet.lane, "scratch.txt"));
+        const offline = yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+        const lane = drainRow(offline, fleet.lane);
+        expect(outcomeOf(lane, "local-only-work")).toBe("probe-failed");
+        expect(outcomeOf(lane, "clean-tree")).toBe("not-evaluated");
+      })
+    );
+
+    it.effect("reports a detached checkout's pull requests as unreadable when GitHub cannot answer", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const path = yield* Path.Path;
+        const detached = path.join(fleet.projects, "beep-effect0-detached");
+        yield* run(fleet.clone, "git", ["worktree", "add", "--quiet", "--detach", detached]);
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const readable = yield* reap(fleet, fleetProbe(fleet, registry), {
+          nowMillis: NOW,
+          classes: ["drainable"],
+          extraCheckouts: [detached],
+        });
+        expect(drainRow(readable, detached).drain?.branch).toBeNull();
+        expect(outcomeOf(drainRow(readable, detached), "open-pr")).toBe("pass");
+        const unreadable = yield* reap(fleet, fleetProbe(fleet, registry, { lists: { openPullRequestHeads: null } }), {
+          nowMillis: NOW,
+          classes: ["drainable"],
+          extraCheckouts: [detached],
+        });
+        expect(outcomeOf(drainRow(unreadable, detached), "open-pr")).toBe("probe-failed");
+      })
+    );
+
+    it.effect("refuses a drain whose checkout goes live before its work is preserved", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const strayCalls = yield* Ref.make(0);
+        const armed = yield* Ref.make(false);
+        // Apply-time call 2 is the pre-bundle re-check.
+        const probe = fleetProbe(fleet, registry, {
+          readings: Effect.fn("ResidueDrainTest.earlyReadings")(function* (checkout: string) {
+            const on = yield* Ref.get(armed);
+            if (!on || !Str.Equivalence(checkout, fleet.stray)) return DORMANT;
+            const call = yield* Ref.updateAndGet(strayCalls, (count) => count + 1);
+            return call === 2
+              ? ResidueDrainLivenessReadings.make({
+                  transcript: { _tag: "measured", ageSeconds: 5 },
+                  worktreeMtime: { _tag: "measured", ageSeconds: 86_400 },
+                  sessionMatches: 0,
+                })
+              : DORMANT;
+          }),
+        });
+        yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+        yield* Ref.set(armed, true);
+        const wave = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
+        expect(drainRow(wave, fleet.stray).skipReason).toBe("drain-blocked");
+        expect(A.some(wave.warnings, Str.includes("the drain predicate no longer holds"))).toBe(true);
+        yield* expectExists(fleet.stray, true);
       })
     );
 
