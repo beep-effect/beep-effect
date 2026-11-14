@@ -6,13 +6,13 @@
     "title": "Citation Engine Install Once",
     "status": "active",
     "created": "2026-11-12",
-    "updated": "2026-11-13",
+    "updated": "2026-11-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-engine-install-once",
   "lifecycle": "active",
   "mission": "Install the citation stage tree, tokenizer and regex evaluators once per engine, bind each request's budget, Scope and admission through one invocation service, and own configuration once at the engine boundary, with no change to extraction results.",
-  "statusNote": "A1 merged as #3253 and A2 as #3265. A3 is in review on #3282 (ready for review): the stage tree, the tokenizer and every regex evaluator call site install once at engine construction, with per-call installs, detaches, tokenizer builds and evaluator installs at 0 and 291 evaluations and child processes unchanged. Review round 1 is fixed: each moved install surfaces its outcome where main ran it, one native admission per stage install, one regex process owner per invocation (10 owners in all for the ten calls, down from 56 on main), main's court-table check order, an extended authority lint rule, and probe columns for descriptor bindings, process owners and Diff/Xml workers. Under host pressure the full suite and coverage gate are left to hosted CI. See history/evidence/2026-11-13-a3-hoisted-installs.md.",
+  "statusNote": "All four slices are merged: A1 #3253, A2 #3265, A3 #3282, A4 #3319. Per request the engine performs 0 stage installs, 0 tokenizer builds, 0 evaluator installs and 0 configuration detaches; engine construction performs 1 detach (10 at A3), 1 tokenizer build, 16 installs and 26 evaluator installs. Extraction output, the public engine shape and limit values are unchanged; 291 regex evaluations and child processes per ten calls remain for citation-regex-worker-v3. #3319 merged over one accepted red, Heavy / Coverage Regression (not a required check), on six re-baselined rows; see the 2026-11-14 re-baseline decision. Reflection: history/reflections/2026-11-14-claude.md.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -58,22 +58,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "in-progress"
     }
   ],
   "verificationCommands": [
