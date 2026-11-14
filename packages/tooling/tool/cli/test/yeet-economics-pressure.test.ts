@@ -382,7 +382,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("YeetPressureSource", (it) =>
   it.effect("reads a missing recorder, no HOME, and unreadable sources without failing", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const absent = yield* readWith(O.some("/home/b"), "/runtime-b");
+      const absent = yield* readWith(O.some("/home/alice"), "/runtime-b");
       expect([absent.recorder.status, absent.admissions.status, absent.admissions.rows]).toEqual([
         "missing",
         "read",
@@ -391,10 +391,10 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("YeetPressureSource", (it) =>
       const noHome = yield* readWith(O.none(), "/runtime-b");
       expect(noHome.recorder.status).toBe("missing");
       // A directory where the recorder file belongs, and a file where the archive directory belongs.
-      yield* fs.makeDirectory("/home/c/.local/state/beep-psi/safe-pressure.jsonl", { recursive: true });
+      yield* fs.makeDirectory("/home/another/.local/state/beep-psi/safe-pressure.jsonl", { recursive: true });
       yield* fs.makeDirectory("/runtime-c/beep/admit", { recursive: true });
       yield* fs.writeFileString("/runtime-c/beep/admit/journal-archive", "not a directory");
-      const unreadable = yield* readWith(O.some("/home/c"), "/runtime-c");
+      const unreadable = yield* readWith(O.some("/home/another"), "/runtime-c");
       expect([unreadable.recorder.status, unreadable.admissions.status]).toEqual(["unreadable", "unreadable"]);
     })
   );
