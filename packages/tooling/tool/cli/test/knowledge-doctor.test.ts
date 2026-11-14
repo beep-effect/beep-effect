@@ -10,6 +10,8 @@ import {
   KNOWLEDGE_CLI_GLOBAL_FLAGS,
   KNOWLEDGE_DOCTOR_EVALUATORS,
   KNOWLEDGE_SPAN_CLASSIFICATION_RULES,
+  KnowledgeCommandsEvaluator,
+  KnowledgePathsEvaluator,
   KnowledgeSpan,
   KnowledgeSpanClass,
   KnowledgeTrackedEntry,
@@ -987,13 +989,18 @@ describe("knowledge static option surface", () => {
   });
 });
 
+const BYTE_FREE_LIVE_FORMS = A.appendAll(KnowledgePathsEvaluator.forms, KnowledgeCommandsEvaluator.forms);
+
 describe("knowledge doctor on this checkout", () => {
   it.layer(testLayer, { timeout: "30 seconds" })((it) => {
     it.effect(
       "reads HEAD and has no vacuous live witness",
       Effect.fnUntraced(function* () {
         // Only AGENTS.md (plus the command sources the surface is read from) is extracted: writing the
-        // whole archive to disk grew with the repository and timed hosted runners out.
+        // whole archive to disk grew with the repository and timed hosted runners out. The sample is
+        // therefore limited to the path and command evaluators, which read the entry list and the
+        // command surface but no other tracked bytes; symbol, packet-status and skill spans read
+        // manifests and source files outside the extraction and are covered by the fixture tests.
         const tree: KnowledgeDoctorTree = yield* makeKnowledgeDoctorTreePaths("HEAD", ["AGENTS.md"]);
         assert.isAbove(A.length(tree.trackedEntries), 0);
         const sample = yield* Effect.forEach(
@@ -1009,9 +1016,13 @@ describe("knowledge doctor on this checkout", () => {
         );
         const verdicts = yield* knowledgeCounterfactualVerdicts(
           tree,
-          A.take(A.flatten(sample), 50),
+          A.take(
+            A.filter(A.flatten(sample), (span) => A.contains(BYTE_FREE_LIVE_FORMS, span.form)),
+            50
+          ),
           KNOWLEDGE_DOCTOR_EVALUATORS
         );
+        assert.strictEqual(A.length(A.dedupe(A.map(verdicts, (verdict) => verdict.evaluator))), 2);
         assert.deepStrictEqual(
           A.filter(verdicts, (verdict) => verdict.verdict === "vacuous"),
           []
