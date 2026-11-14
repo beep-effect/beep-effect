@@ -17,6 +17,7 @@ import * as RpcClient from "effect/rpc/RpcClient";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
+import { CitationNativeLaneFailure } from "./NativeLane.ts";
 import { citationNativeProcessCommand } from "./NativeProcess.ts";
 import { makeCitationNativeRpcDelivery, makeCitationNativeRpcTransport } from "./NativeRpc.ts";
 import {
@@ -37,6 +38,7 @@ import type { CitationNativeLane, CitationNativeStart } from "./NativeLane.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationRegexSessionJob } from "./RegexSessionProtocol.ts";
 
+const isLaneFailure = S.is(CitationNativeLaneFailure);
 const $I = $LawPracticeServerId.create("internal/Citation/RegexSession");
 const Phase = LiteralKit(["absent", "spawned", "idle", "sent", "running", "killed"]).pipe(
   $I.annoteSchema("Phase", { description: "Parent-owned process conversation phase." })
@@ -277,7 +279,10 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
             })
           )
         )
-        .pipe(Effect.onInterrupt(() => terminate(closed())));
+        .pipe(
+          Effect.mapError((error) => (isLaneFailure(error) ? mapLaneFailure(error) : error)),
+          Effect.onInterrupt(() => terminate(closed()))
+        );
     }
   );
   return CitationRegexSession.of({
