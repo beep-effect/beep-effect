@@ -156,6 +156,12 @@ Accepted round 2 fixes revoke and drain unlocked lane capabilities and avoid pro
 
 Reverse: Return B2 to in progress if the independent review finds a lifecycle or preflight defect.
 
+### B2 round 3 is in review with bounded drains and a full green Citation run, 2026-11-14
+
+Round 3 fixes the unbounded revoked-capability drain, refuses nested withUse per call context, and adds 36 cross-implementation fingerprint vectors. All 276 Citation files pass serially: 1315 tests, zero failures or skips, including all integration corpora; the three Bun.version files run with a Bun parent. Thirty files were replayed after final source/assertion tightening. Eighteen single-file coverage runs pass; NativeLane and all four session files are 100 percent on lines, statements, functions and branches. Root beep lint, cache profile, quick package verification, check, laws, Fallow against origin/main with zero introduced, full local docgen, effect-vitest, schema-first and root Oxlint pass. FullSpan ran last and passes 12/12: ten regex children, 291 evaluations, every other column unchanged; wall 31.66 seconds at load 5.66/6.18/7.38. Evidence: history/evidence/2026-11-14-b2-regex-session.md, Review round 3. B2 remains in review. No push, merge, rebase or subagents.
+
+Reverse: Return B2 to in progress if independent review finds a remaining ownership or preflight defect.
+
 ### Record hosted round 1 repairs and the completed provider audit, 2026-11-14
 
 B1 remains in review as PR #3336. Hosted round 1 repairs preserve every expected

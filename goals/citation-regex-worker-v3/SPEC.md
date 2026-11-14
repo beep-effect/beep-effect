@@ -153,6 +153,12 @@ Lane explore/citation-engine-install-and-worker-reuse
 
 Reverse: Restore policy v1 and protocol v2.
 
+### Bound revoked lane drains while retaining unresolved native ownership, 2026-11-14
+
+Each withUse call retains admitted operations independently of caller cancellation. After callback revocation, reserve gets queueDeadline, release gets cleanupDeadline, and start gets queueDeadline plus two cleanupDeadline windows for prior-occupant retirement, admission and spawn transfer. These are conservative post-revocation completion budgets from existing policy fields, not new limits. Expiry poisons the lane and quarantines an acquired lease; the outer semaphore is released with typed cleanup-unconfirmed, while the retained operation and its private owner Scope keep unresolved resources. Invocation closure skips unresolved ownership, and late completion releases an unspawned lease or confirms the exact child through NativeProcess before returning capacity. Public retirement cannot release a pending spawn's lease. Interruption during masked drain is acknowledged within the same finite timer window. Callback context carries revocable call frames to reject nesting before lock acquisition, including nested child fibers, without fiber identity. No new spawn is admitted after poisoning.
+
+Reverse: Replace the retained-work drain only with a protocol that preserves quarantine and late confirmed retirement without blocking invocation finalizers.
+
 ### Carry the regex engine on each v3 job; startup keeps limits only, 2026-11-14
 
 Owner ruling on the second B2 stop. One invocation uses two dialects: the tokenizer installs `python-re` and the context matcher `python-regex-v0`. Design section 2.4 put the engine in the startup argv, which fits one process per evaluation and not one process per invocation. The engine becomes a required, parent-selected field of `CitationRegexWorkerJob`, beside the descriptor it already carries, and leaves `CitationRegexWorkerStartup`. It follows the earlier decision that each job carries its parent-selected descriptor: the worker never chooses or infers a dialect. Required with it: the engine is inside the exact size preflight and the finite property ceiling; the worker compiles each job under that job's engine and keeps no compiled program, cache or other state from one job to the next; a job whose engine fails its schema is a protocol deviation and kills; a real-process regression runs a `python-re` job then a `python-regex-v0` job (pattern `a(?i)b`, accepted by the second and refused by the first) in one process on both child runtimes. Rejected: restarting the process on an engine change (breaks one process per invocation and the never-respawn rule) and a common dialect (changes extraction output).
@@ -623,6 +629,12 @@ two-entrant unconfirmed-retirement proof asserts depth zero directly. This adds
 an observation only; it changes no transition, failure or lane lifetime.
 
 Reverse: Restore request-long lane ownership only after replacing the cleaner boundary with an owner-approved explicit authority contract.
+
+### Use incremental Noble hashing only for descriptor candidate selection, 2026-11-14
+
+Effect v4 Digest accepts one contiguous byte array and provides no streaming or multi-part input. The existing catalog dependency @noble/hashes is declared by the server package to hash the width byte and borrowed bytes incrementally without a pattern-sized concatenation before exact frame preflight. Selection chooses only a candidate; the captured Effect Digest service remains authoritative after preparation. The permanent registry regression compares selection with that service for all three widths, empty storage and 36 SHA-256 boundary vectors. No cache or compiled program is retained. Dependency and cache-policy validation is included in the root beep lint receipt.
+
+Reverse: Replace selection with a multi-part Effect Digest API when available, retaining exact preflight allocation ordering and the cross-implementation vectors.
 
 ### Validate evaluator runtime against the lane and retain installation closure, 2026-11-14
 
