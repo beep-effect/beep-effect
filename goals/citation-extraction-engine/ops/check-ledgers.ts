@@ -36,6 +36,11 @@ const filePath = (name: string) =>
   typeof fixtureRoot === "string" ? `${fixtureRoot}${name}` : new URL(name, fixtureRoot);
 const ProofPlanJson = S.fromJsonString(CitationOracleLedgerProofPlan);
 const checkedReference = Effect.fn("LedgerProof.checkReference")(function* (relative: string, expected: string) {
+  // Python producers were removed with the repository's Python (goal python-free-repo). Their
+  // recorded digests stay in the ledgers and were checked against the recovery commit when they
+  // were deleted; recover the exact bytes with
+  // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:<path>`.
+  if (Str.endsWith(".py")(relative)) return "";
   if (Str.startsWith("/")(relative) || A.contains(Str.split(relative, "/"), ".."))
     return yield* reject("proof reference must be repository relative");
   const url = yield* Effect.try(() => new URL(relative, root));
@@ -114,9 +119,11 @@ const program = Effect.gen(function* () {
       return yield* reject("source or regex proof needs an explicit supported binding");
   }
 
-  const exporter = yield* Effect.tryPromise(() => Bun.file(new URL("./export-ledgers.py", import.meta.url)).bytes());
+  // export-ledgers.py was removed with the repository's Python (goal python-free-repo). Its digest is
+  // pinned from the recovery commit: `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/export-ledgers.py`.
+  const exporterSha256 = "08eb1501bdb36728e191ce30aa4f9fe8d92b9e80ee30d63fd2f407e5208ec6fb";
   for (const ledger of [inventory, canonical, regex]) {
-    if (ledger.generatorSha256 !== hash(exporter)) return yield* reject("ledger generator hash mismatch");
+    if (ledger.generatorSha256 !== exporterSha256) return yield* reject("ledger generator hash mismatch");
     for (const evidence of R.values(ledger.evidence)) {
       const bytes = yield* Effect.tryPromise(() => Bun.file(new URL(evidence.path, root)).bytes());
       if (hash(bytes) !== evidence.sha256) return yield* reject("ledger evidence hash mismatch");

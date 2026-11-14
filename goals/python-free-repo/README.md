@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `active`
 
 **Paused by operator ruling (finish board, 2026-11-13).** Hygiene work with no execution yet and no urgency. No lane is working on it; resume with `bun run beep goals set-status python-free-repo active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 
@@ -33,7 +33,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. First step: the per-file triage table (`git ls-files '*.py'`, ~290 files) with consumer evidence.
+P1 Implement — P0 triage done (308 files; 273 probes deleted per packet). Ports run in four lanes; see [`decisions/2026-11-13-lane-split.md`](./decisions/2026-11-13-lane-split.md).
 
 ## Latest Evidence
 

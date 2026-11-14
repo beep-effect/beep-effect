@@ -3,13 +3,13 @@
   "initiative": {
     "id": "legacy-drain",
     "title": "Legacy Drain",
-    "status": "paused",
+    "status": "active",
     "created": "2026-10-05",
     "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/legacy-drain",
-  "lifecycle": "paused",
+  "lifecycle": "active",
   "mission": "Register the legacy `beep-effect*` clones read-only and drain them, lane by lane and clone by clone, under a drainable predicate the reaper enforces; land the seats-and-lanes worktree standard.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -50,22 +50,22 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
@@ -93,5 +93,5 @@
   ],
   "provides": ["fleet/drain"],
   "requires": ["fleet/registry", "fleet/lane-bootstrap", "fleet/ops-seat"],
-  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Useful housekeeping but unstarted and overlaps lane-bootstrap. Resume with `bun run beep goals set-status legacy-drain active` when it is picked up. Its dependency goals/ops-seat-timers (the `fleet/ops-seat` provider) was closed by the same ruling; resuming this packet means re-opening or re-graduating that work first."
+  "statusNote": "Active since 2026-11-13 (operator resumed it). The drainable class is built and observing: the first live run started 221 lane grace windows. The first apply wave is time-gated to on or after 2026-11-20T22:06Z. ops-seat-timers is replaced by the timer-host check (decisions/2026-11-13-resume-without-ops-seat-timers.md)."
 }
