@@ -34,7 +34,7 @@
     "goals/heavy-pool-diet/GOAL.md",
     "goals/heavy-pool-diet/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
