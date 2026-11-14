@@ -265,8 +265,9 @@ in `value`.
 
 One job, `staging` then `prod`, each: `alchemy plan` (log teed to a file), the pre-deploy
 check `bun apps/oip-web/stack/plan-guard.ts <log>` (refuses any replace, delete or orphan
-of the project, a variable, a domain, a DNS record or a bucket, and a log with no `Plan:`
-line), `alchemy deploy --yes`, then a curl poll of every hostname for its expected status.
+of the project, a variable, a domain, a DNS record or a bucket, and fails closed on a log
+with no `Plan:` line, on a resource line it cannot read, and on per-action counts that
+disagree with the `Plan:` summary; its messages name FQNs and counts only), `alchemy deploy --yes`, then a curl poll of every hostname for its expected status.
 The job runs only while the repository variable `OIP_WEB_INFRA_DEPLOY` is `enabled`.
 
 The `oip-web-infra-prod` environment (branch policy `main`) carries:

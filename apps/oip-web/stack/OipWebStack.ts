@@ -61,7 +61,6 @@ export const vercelCnameTarget = "cname.vercel-dns.com";
  * records (DNS Read). Rewording it later is its own deploy and needs DNS Edit.
  *
  * @category constants
- * @category constants
  * @since 0.0.0
  */
 export const dnsRecordComment = "Managed by Pulumi for oip.law Vercel routing.";

@@ -43,7 +43,7 @@ export const planGuardCommand = Command.make(
                 A.map(error.refused, (entry) => `${entry.fqn} (${entry.action})`),
                 ", "
               )}`
-            : "plan-guard: refused, the log has no Plan: summary line"
+            : `plan-guard: refused, ${error.reason}`
         )
       )
     );

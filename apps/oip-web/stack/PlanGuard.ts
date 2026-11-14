@@ -13,6 +13,8 @@ import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -67,23 +69,31 @@ class PlanRefused extends S.TaggedError<PlanRefused, { readonly brand: unique sy
   })
 ) {}
 
-/** Raised when the log holds no plan summary, so nothing can be judged; the check fails closed. */
+/** Raised when the plan cannot be read with certainty, so nothing can be judged; the check fails closed. */
 class PlanUnreadable extends S.TaggedError<PlanUnreadable, { readonly brand: unique symbol }>($I`PlanUnreadable`)(
   "PlanUnreadable",
-  {},
+  {
+    reason: S.String.annotateKey({ description: "What could not be read: names FQNs, actions and counts only." }),
+  },
   $I.annoteError<PlanUnreadable>("PlanUnreadable", {
-    description: "The log has no `Plan:` summary line, so the plan cannot be checked.",
+    description: "The plan log has no summary, an unreadable resource line, or counts that disagree with its lines.",
   })
 ) {}
 
 const ansiPattern = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g");
 
-/** The logger's line prefix in CI and other non-TTY runs: `[20:33:03.096] INFO: `. */
-const logPrefixPattern = /^\[\d{2}:\d{2}:\d{2}(?:\.\d+)?\] [A-Z]+: /;
+/** The logger's line prefix in CI and other non-TTY runs: `[20:33:03.096] INFO: ` (or `INFO (#1): `). */
+const logPrefixPattern = /^\[\d{2}:\d{2}:\d{2}(?:\.\d+)?\] [A-Z]+(?: \(#\d+\))?: /;
 
 const planSummaryPattern = /^Plan:\s/;
 
 const planLinePattern = /^\[([^\]]+)\] ([a-z]+)\b/;
+
+/** Any line the renderer writes for a resource: `[<fqn>] ...`. */
+const resourceLinePattern = /^\[([^\]]+)\] /;
+
+/** One per-action count of the summary: `12 to adopted`. */
+const summaryCountPattern = /(\d+) to ([a-z]+)/g;
 
 /**
  * Remove terminal color codes; the CI renderer colors actions.
@@ -168,16 +178,31 @@ export const guardedKindOf = (fqn: string): O.Option<GuardedKind> => {
 };
 
 /**
+ * Total count per action.
+ *
+ * @param counts - Pairs of an action and a count, one per resource line or per summary count.
+ * @returns The count per action.
+ */
+const countActions = (counts: ReadonlyArray<readonly [string, number]>): HashMap.HashMap<string, number> =>
+  A.reduce(counts, HashMap.empty<string, number>(), (acc, [action, count]) =>
+    HashMap.set(acc, action, O.getOrElse(HashMap.get(acc, action), () => 0) + count)
+  );
+
+/**
  * Check a plan log before a deploy.
  *
  * **Details**
  *
  * Passes a plan whose guarded resources are only created, updated, adopted
  * or unchanged; fails with {@link PlanRefused} when any is replaced, deleted
- * or orphaned, and with {@link PlanUnreadable} when the log has no
- * `Plan:` summary (a crashed or empty plan never passes). The engine's own
+ * or orphaned. It fails closed with {@link PlanUnreadable} when the log has
+ * no `Plan:` summary (a crashed or empty plan), when a resource line
+ * (`[<fqn>] ...`) carries an action outside the known set or another shape,
+ * and when the per-action counts of the summary differ from the resource
+ * lines it lists, so a silently dropped line never passes. The engine's own
  * `RemovalPolicy.protect` refuses the same plans on live stages; this check
- * is the workflow's independent second gate.
+ * is the workflow's independent second gate. Failures name resource FQNs and
+ * counts only, never line text.
  *
  * **Example** (A passing plan)
  *
@@ -196,10 +221,52 @@ export const guardedKindOf = (fqn: string): O.Option<GuardedKind> => {
  */
 export const checkPlan = Effect.fn("OipWeb.checkPlan")(function* (log: string) {
   const lines = A.map(Str.split("\n")(log), cleanLine);
-  if (!A.some(lines, (line) => planSummaryPattern.test(line))) {
-    return yield* PlanUnreadable.make({});
+  const summary = A.findFirst(lines, (line) => planSummaryPattern.test(line));
+  if (O.isNone(summary)) {
+    return yield* PlanUnreadable.make({ reason: "the log has no Plan: summary line" });
+  }
+  const unreadable = A.filterMap(lines, (line) =>
+    pipe(
+      O.fromNullishOr(resourceLinePattern.exec(line)),
+      O.filter(() => O.isNone(toEntry(line))),
+      O.map((match) => match[1] ?? ""),
+      Result.fromOption(() => line)
+    )
+  );
+  if (A.isReadonlyArrayNonEmpty(unreadable)) {
+    return yield* PlanUnreadable.make({ reason: `unreadable resource line for ${A.join(unreadable, ", ")}` });
   }
   const entries = parsePlanLog(log);
+  const summaryCounts = A.map(
+    A.fromIterable(Str.matchAll(summaryCountPattern)(summary.value)),
+    (match) => [match[2] ?? "", Number(match[1] ?? "0")] as const
+  );
+  const unknownSummaryActions = A.filter(summaryCounts, ([action]) => !S.is(PlanAction)(action));
+  if (A.isReadonlyArrayNonEmpty(unknownSummaryActions)) {
+    return yield* PlanUnreadable.make({
+      reason: `the Plan: summary counts an unknown action (${A.join(
+        A.map(unknownSummaryActions, ([action]) => action),
+        ", "
+      )})`,
+    });
+  }
+  const declared = countActions(summaryCounts);
+  const listed = countActions(
+    A.map(
+      A.filter(entries, (entry) => !PlanAction.is.noop(entry.action)),
+      (entry) => [entry.action, 1] as const
+    )
+  );
+  const mismatched = A.filter(
+    PlanAction.literals,
+    (action) =>
+      O.getOrElse(HashMap.get(declared, action), () => 0) !== O.getOrElse(HashMap.get(listed, action), () => 0)
+  );
+  if (A.isReadonlyArrayNonEmpty(mismatched)) {
+    return yield* PlanUnreadable.make({
+      reason: `the Plan: summary and the resource lines disagree on ${A.join(mismatched, ", ")}`,
+    });
+  }
   const refused = A.filter(
     entries,
     (entry) => S.is(DestructiveAction)(entry.action) && O.isSome(guardedKindOf(entry.fqn))
