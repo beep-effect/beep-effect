@@ -2324,6 +2324,375 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
 
+  // goals/heavy-pool-diet PERIH-11 slice 2: when main pins an older release than the newest
+  // `beep-ci-*` one, the job opens or updates one reviewed pin-bump pull request on a fixed branch,
+  // with the knowledge-mint App token minted right before the pull-request step and read by it
+  // alone. The decision reads release state, not this run's publish step: a re-run after a failed
+  // pull-request step takes the closure-unchanged skip path (the first attempt's release already
+  // records the digest) and must still reach it (#3299 review). A verify_reproducible dispatch and
+  // any other ref open nothing; the main-only guard and the ref-keyed concurrency group stay.
+  it.effect("opens the pin-bump pull request from release state on the default branch only", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const workflowText = yield* fs.readFileString(`${root}/.github/workflows/beep-ci-binary.yml`);
+      const workflow = parseWorkflowYaml(workflowText);
+      expect(yamlAt(workflow, ["permissions"])).toEqual({ contents: "read" });
+      expect(yamlAt(workflow, ["jobs", "publish", "permissions"])).toEqual({
+        contents: "write",
+        "pull-requests": "read",
+      });
+      expect(yamlAt(workflow, ["concurrency"])).toEqual({
+        group: "beep-ci-binary-${{ github.ref }}",
+        "cancel-in-progress": false,
+      });
+      expect(yamlAt(workflow, ["on", "push", "branches"])).toEqual(["main"]);
+      const jobs = yield* workflowJobs(workflow);
+      const steps = jobSteps(jobs, "publish");
+      expect(steps[0]?.name).toBe("Require the default branch");
+      const stepId = (name: string) =>
+        yamlAt(workflow, ["jobs", "publish", "steps", stepIndexByName(steps, name), "id"]);
+      const publish = stepIndexByName(steps, "Publish the release asset");
+      expect(stepByName(steps, "Publish the release asset").if).toBe(
+        "steps.closure.outputs.changed == 'true' && steps.bytes.outputs.same != 'true'"
+      );
+      // The pin bump follows the publish step directly, in this order, and nothing follows it.
+      const pinSteps = [
+        "Rewrite the pin to the newest release",
+        "Check the pin-bump App credential",
+        "Create pin-bump App token",
+        "Open or update the pin-bump pull request",
+      ];
+      expect(A.map(A.drop(steps, publish + 1), (step) => step.name)).toEqual(pinSteps);
+      expect(stepId("Rewrite the pin to the newest release")).toBe("pin");
+      const pinStep = stepByName(steps, "Rewrite the pin to the newest release");
+      // Re-run case: no condition on this attempt's closure, compile or publish outcome, so a re-run on
+      // the skip path still compares the newest release with the pin.
+      expect(pinStep.if).toBe(
+        "!inputs.verify_reproducible && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)"
+      );
+      const pinStepText = yield* encodeJobsFixture(pinStep);
+      for (const fragment of ["steps.publish", "steps.closure", "steps.bytes"]) {
+        expect(pinStepText).not.toContain(fragment);
+      }
+      for (const name of A.drop(pinSteps, 1)) {
+        expect(stepByName(steps, name).if).toBe("steps.pin.outputs.bump == 'true'");
+      }
+      // The newest release is chosen exactly as the closure comparison chooses it, the rewrite is the
+      // tested command (not a text edit in shell), and the decision is whether it changed the pin.
+      const rewrite = stepRun(steps, "Rewrite the pin to the newest release");
+      expect(rewrite).toContain(
+        `--jq '[.[] | select(.tagName | startswith("beep-ci-"))] | sort_by(.createdAt) | last | .tagName // ""'`
+      );
+      expect(stepRun(steps, "Compare the closure digest with the latest release")).toContain(
+        `--jq '[.[] | select(.tagName | startswith("beep-ci-"))] | sort_by(.createdAt) | last | .tagName // ""'`
+      );
+      expect(rewrite).toContain('bun run beep ci binary-pin --tag "$tag" --sha256 "$sha256" --write');
+      expect(rewrite).toContain("git diff --quiet -- .github/actions/fetch-beep-ci/action.yml");
+      expect(rewrite).toContain('echo "changed=$changed"');
+      // An open pin-bump branch that already pins the newest release is left alone, so a main push
+      // alone never force-updates it and restarts its heavy Check (#3299 review).
+      expect(rewrite).toContain('gh api "repos/${GH_REPO}/contents/.github/actions/fetch-beep-ci/action.yml?ref=$1"');
+      for (const fragment of [
+        'grep -Eq "^[[:space:]]*BEEP_CI_RELEASE_TAG:[[:space:]]*${tag}[[:space:]]*$" <<<"$1"',
+        'grep -Eq "^[[:space:]]*BEEP_CI_SHA256:[[:space:]]*${sha256}[[:space:]]*$" <<<"$1"',
+        'read_pin "$DEFAULT_BRANCH" "the live ${DEFAULT_BRANCH} pin read" require',
+        'if pins_release "$pin_text"; then changed=false; fi',
+        'pulls="$(gh pr list --head "$PIN_BRANCH" --base "$DEFAULT_BRANCH" --state all --limit 1000',
+        "--json number,state,title,labels,isCrossRepository,baseRefName)",
+        '|| lookup_failed "the pin-bump pull request lookup"',
+        "own='.[] | select(.isCrossRepository == false and .baseRefName == $base and .title == $title)'",
+        'elif [[ "$3" == "allow-missing" ]] && grep -q "HTTP 404" "$read_error"; then',
+        'read_pin "$PIN_BRANCH" "the pin-bump branch read" allow-missing',
+        'elif [[ "$branch_current" != "true" || "$open_labelled" -lt 1 ]]; then',
+        'echo "parked=$parked"',
+      ]) {
+        expect(rewrite).toContain(fragment);
+      }
+      expect(rewrite).toContain('echo "bump=$bump"');
+      // ...and only when the bump is done in its whole end state: an open pin-bump PR carrying the label.
+      expect(rewrite).not.toMatch(/\bsed\b/u);
+      expect(stepEnvironment(pinStep)).toEqual({
+        GH_TOKEN: "${{ github.token }}",
+        GH_REPO: "${{ github.repository }}",
+        PIN_BRANCH: "ci/beep-ci-pin-bump",
+        DEFAULT_BRANCH: "${{ github.event.repository.default_branch }}",
+      });
+      expect(stepEnvironment(stepByName(steps, "Check the pin-bump App credential"))).toEqual({
+        APP_CLIENT_ID: "${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}",
+      });
+      expect(stepByName(steps, "Create pin-bump App token").uses).toBe(
+        "actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510"
+      );
+      expect(stepInputs(stepByName(steps, "Create pin-bump App token"))).toEqual({
+        "client-id": "${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}",
+        "private-key": "${{ secrets.KNOWLEDGE_MINT_APP_PRIVATE_KEY }}",
+        "permission-contents": "write",
+        "permission-pull-requests": "write",
+        "permission-issues": "write",
+      });
+      const open = stepByName(steps, "Open or update the pin-bump pull request");
+      expect(open.uses).toBe("peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8");
+      const inputs = stepInputs(open);
+      expect(inputs.branch).toBe("ci/beep-ci-pin-bump");
+      expect(inputs.token).toBe("${{ steps.app-token.outputs.token }}");
+      expect(inputs["add-paths"]).toBe(".github/actions/fetch-beep-ci/action.yml");
+      expect(inputs.title).toBe("ci: bump the beep CI binary pin to ${{ steps.pin.outputs.tag }}");
+      expect(inputs["commit-message"]).toBe(inputs.title);
+      expect(inputs).not.toHaveProperty("auto-merge");
+      for (const fragment of [
+        "${{ steps.pin.outputs.tag }}",
+        "${{ steps.pin.outputs.digest }}",
+        "${{ steps.pin.outputs.sha256 }}",
+        "${{ steps.pin.outputs.target }}",
+        "${{ github.sha }}",
+        "never auto-merged",
+      ]) {
+        expect(inputs.body).toEqual(expect.stringContaining(fragment));
+      }
+      // The App token reaches the pull-request step alone; the private key reaches the mint alone.
+      const tokenReaders = yield* stepsReferencing(jobs, "steps.app-token.outputs.token");
+      const secretReaders = yield* stepsReferencing(jobs, "secrets.");
+      expect(tokenReaders).toEqual(["publish/Open or update the pin-bump pull request"]);
+      expect(secretReaders).toEqual(["publish/Create pin-bump App token"]);
+    })
+  );
+
+  // The pin step's own script, run against stub `gh` and `bun` in a real git checkout: it decides from
+  // release state, so a re-run (pin-bump branch never created) still bumps. A bump in its whole end
+  // state (branch pins the newest tag and sha256, an open PR for it carries ready-for-heavy) is a true
+  // no-op, so a main push alone never restarts that PR's heavy Check; a current branch whose PR was
+  // never opened or labelled runs the PR step again; a PR for the release closed unmerged parks it
+  // until a newer release (#3299 review).
+  it.effect("runs the pin step from release state: done, parked, repaired and re-run cases", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const workflowText = yield* fs.readFileString(`${root}/.github/workflows/beep-ci-binary.yml`);
+      const jobs = yield* workflowJobs(parseWorkflowYaml(workflowText));
+      const script = stepRun(jobSteps(jobs, "publish"), "Rewrite the pin to the newest release");
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const oldTag = "beep-ci-a56516d6d309";
+      const oldSha = A.join(A.replicate("1", 64), "");
+      const newTag = "beep-ci-0123456789ab";
+      const newSha = A.join(A.replicate("2", 64), "");
+      const pinText = (tag: string, sha: string) =>
+        A.join(
+          [
+            "runs:",
+            "  steps:",
+            "    - env:",
+            `        BEEP_CI_RELEASE_TAG: ${tag}`,
+            `        BEEP_CI_SHA256: ${sha}`,
+            "",
+          ],
+          "\n"
+        );
+      const runBash = Effect.fnUntraced(function* (cwd: string, text: string, env: Readonly<Record<string, string>>) {
+        const child = yield* spawner.spawn(
+          ChildProcess.make("/usr/bin/bash", ["--noprofile", "--norc", "-eo", "pipefail", "-c", text], {
+            cwd,
+            env,
+            extendEnv: true,
+            stdout: "pipe",
+            stderr: "pipe",
+          })
+        );
+        const [status, stderr] = yield* Effect.all(
+          [child.exitCode, child.stderr.pipe(Stream.decodeText(), Stream.mkString)],
+          { concurrency: "unbounded" }
+        );
+        return { status: Number(status), stderr };
+      });
+      const runCase = Effect.fnUntraced(function* (
+        mainPin: string,
+        branchPin: O.Option<string>,
+        pulls: string,
+        options: {
+          readonly newest?: { readonly tag: string; readonly sha: string };
+          readonly failing?: "none" | "pulls" | "branch" | "main";
+          readonly liveMain?: string;
+        } = {}
+      ) {
+        const newest = options.newest ?? { tag: newTag, sha: newSha };
+        const failing = options.failing ?? "none";
+        const directory = yield* fs.makeTempDirectoryScoped();
+        const work = yield* fs.realPath(directory);
+        const repo = `${work}/repo`;
+        const stubs = `${work}/bin`;
+        yield* fs.makeDirectory(`${repo}/.github/actions/fetch-beep-ci`, { recursive: true });
+        yield* fs.makeDirectory(stubs, { recursive: true });
+        yield* fs.writeFileString(`${repo}/.github/actions/fetch-beep-ci/action.yml`, mainPin);
+        if (O.isSome(branchPin)) yield* fs.writeFileString(`${work}/branch-action.yml`, branchPin.value);
+        // Live main pins what the checkout pins unless a case says main has moved since.
+        yield* fs.writeFileString(`${work}/main-action.yml`, options.liveMain ?? mainPin);
+        yield* fs.writeFileString(
+          `${stubs}/gh`,
+          A.join(
+            [
+              "#!/usr/bin/env bash",
+              'case "$1 $2" in',
+              '  "release list") echo "$NEWEST_TAG" ;;',
+              '  "release download")',
+              '    shift 3; pattern=""; dir=""',
+              '    while [ $# -gt 0 ]; do case "$1" in --pattern) pattern="$2"; shift 2 ;; --dir) dir="$2"; shift 2 ;; *) shift ;; esac; done',
+              '    [ "$pattern" = beep-linux-x64.sha256 ] || exit 1',
+              '    mkdir -p "$dir"; printf "%s  beep-linux-x64\\n" "$NEWEST_SHA" > "$dir/$pattern" ;;',
+              '  "release view") echo "$NEWEST_TARGET" ;;',
+              '  "api repos/"*)',
+              '    case "$2" in *"ref=$DEFAULT_BRANCH") side=main; file="$MAIN_PIN_FILE" ;; *) side=branch; file="$BRANCH_PIN_FILE" ;; esac',
+              '    if [ "$FAILING" = "$side" ]; then echo "gh: Server Error (HTTP 502)" >&2; exit 1; fi',
+              '    if [ -f "$file" ]; then base64 -w0 "$file"; echo; else echo "gh: Not Found (HTTP 404)" >&2; exit 1; fi ;;',
+              '  "pr list") if [ "$FAILING" = pulls ]; then echo "gh: Server Error (HTTP 502)" >&2; exit 1; fi; echo "$PULLS" ;;',
+              "  *) exit 2 ;;",
+              "esac",
+              "",
+            ],
+            "\n"
+          )
+        );
+        yield* fs.writeFileString(
+          `${stubs}/bun`,
+          A.join(
+            [
+              "#!/usr/bin/env bash",
+              'while [ $# -gt 0 ]; do case "$1" in --tag) t="$2"; shift 2 ;; --sha256) s="$2"; shift 2 ;; *) shift ;; esac; done',
+              'sed -i -E "s/^( *BEEP_CI_RELEASE_TAG: ).*/\\1$t/; s/^( *BEEP_CI_SHA256: ).*/\\1$s/" .github/actions/fetch-beep-ci/action.yml',
+              "",
+            ],
+            "\n"
+          )
+        );
+        yield* fs.chmod(`${stubs}/gh`, 0o755);
+        yield* fs.chmod(`${stubs}/bun`, 0o755);
+        const setup = yield* runBash(
+          repo,
+          "git -c init.defaultBranch=main init -q . && git add -A && git -c user.name=fixture -c user.email=fixture@example.invalid -c core.hooksPath=/dev/null commit -qm main",
+          {}
+        );
+        expect(setup).toEqual({ status: 0, stderr: "" });
+        const outputPath = `${work}/github-output`;
+        yield* fs.writeFileString(outputPath, "");
+        const searchPath = yield* Config.String("PATH");
+        const summaryPath = `${work}/summary.md`;
+        yield* fs.writeFileString(summaryPath, "");
+        const run = yield* runBash(repo, script, {
+          PATH: `${stubs}:${searchPath}`,
+          GH_REPO: "fixture/repo",
+          PIN_BRANCH: "ci/beep-ci-pin-bump",
+          GITHUB_OUTPUT: outputPath,
+          GITHUB_STEP_SUMMARY: summaryPath,
+          RUNNER_TEMP: work,
+          NEWEST_TAG: newest.tag,
+          NEWEST_SHA: newest.sha,
+          NEWEST_TARGET: "0123456789abcdef0123456789abcdef01234567",
+          BRANCH_PIN_FILE: `${work}/branch-action.yml`,
+          PULLS: pulls,
+          FAILING: failing,
+          DEFAULT_BRANCH: "main",
+          MAIN_PIN_FILE: `${work}/main-action.yml`,
+        });
+        if (failing === "none") expect(run).toEqual({ status: 0, stderr: "" });
+        const summary = yield* fs.readFileString(summaryPath);
+        const outputText = yield* fs.readFileString(outputPath);
+        const outputs = R.fromEntries(
+          A.map(Str.split(Str.trim(outputText), "\n"), (line) => {
+            const [key = "", ...rest] = Str.split(line, "=");
+            return [key, A.join(rest, "=")] as const;
+          })
+        );
+        return {
+          decision: { changed: outputs.changed, bump: outputs.bump, parked: outputs.parked },
+          status: run.status,
+          stderr: run.stderr,
+          summary,
+        };
+      });
+      const pull = (state: string, tag: string, labels: ReadonlyArray<string>, fork = false) =>
+        `{"number":7,"state":"${state}","isCrossRepository":${fork},"baseRefName":"main","title":"ci: bump the beep CI binary pin to ${tag}","labels":[${A.join(
+          A.map(labels, (name) => `{"name":"${name}"}`),
+          ","
+        )}]}`;
+      const pulls = (...entries: ReadonlyArray<string>) => `[${A.join(entries, ",")}]`;
+      const mainOld = pinText(oldTag, oldSha);
+      const branchNew = O.some(pinText(newTag, newSha));
+      const bumps = { changed: "true", bump: "true", parked: "false" };
+      const idle = { changed: "true", bump: "false", parked: "false" };
+      // Re-run after a failed pull-request step: the branch was never created, so the step bumps.
+      const rerun = yield* runCase(mainOld, O.none(), pulls());
+      expect(rerun.decision).toEqual(bumps);
+      // Done: the branch pins the newest tag and sha256 and an open PR for it carries ready-for-heavy.
+      const done = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])));
+      expect(done.decision).toEqual(idle);
+      // The branch is current but no PR exists for the release (creation failed after the push).
+      const noPull = yield* runCase(mainOld, branchNew, pulls());
+      expect(noPull.decision).toEqual(bumps);
+      // The branch is current and the PR is open but unlabelled (labelling failed): repair it.
+      const unlabelled = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ci"])));
+      expect(unlabelled.decision).toEqual(bumps);
+      // A PR for the release was closed unmerged: parked on purpose, no push and no reopen.
+      const closed = yield* runCase(mainOld, branchNew, pulls(pull("CLOSED", newTag, ["ready-for-heavy"])));
+      expect(closed.decision).toEqual({ changed: "true", bump: "false", parked: "true" });
+      // Closed for that release, then a newer release T2: a new bump opens normally.
+      const newerTag = "beep-ci-fedcba987654";
+      const newerSha = A.join(A.replicate("3", 64), "");
+      const newer = yield* runCase(mainOld, branchNew, pulls(pull("CLOSED", newTag, ["ready-for-heavy"])), {
+        newest: { tag: newerTag, sha: newerSha },
+      });
+      expect(newer.decision).toEqual(bumps);
+      // The branch pins the newest tag with a different sha256: refresh it.
+      const staleSha = yield* runCase(
+        mainOld,
+        O.some(pinText(newTag, oldSha)),
+        pulls(pull("OPEN", newTag, ["ready-for-heavy"]))
+      );
+      expect(staleSha.decision).toEqual(bumps);
+      // The branch pins an older release: a newer release updates it.
+      const older = yield* runCase(mainOld, O.some(mainOld), pulls(pull("OPEN", oldTag, ["ready-for-heavy"])));
+      expect(older.decision).toEqual(bumps);
+      // Main already pins the newest release (a bump merged): nothing to do.
+      const merged = yield* runCase(pinText(newTag, newSha), branchNew, pulls(pull("MERGED", newTag, [])));
+      expect(merged.decision).toEqual({ changed: "false", bump: "false", parked: "false" });
+      // A failed pull-request lookup is unknown state, never "no PR": the step fails and reports it,
+      // and writes no decision, so nothing is pushed and no PR is opened (#3299 review).
+      const pullsDown = yield* runCase(mainOld, branchNew, pulls(pull("CLOSED", newTag, ["ready-for-heavy"])), {
+        failing: "pulls",
+      });
+      expect(pullsDown.status).not.toBe(0);
+      expect(pullsDown.decision.bump).toBeUndefined();
+      expect(pullsDown.stderr).toContain("HTTP 502");
+      expect(pullsDown.summary).toContain("the pin-bump pull request lookup failed");
+      // A failed branch read other than a 404 is unknown state too; only a 404 means "no branch".
+      const branchDown = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])), {
+        failing: "branch",
+      });
+      expect(branchDown.status).not.toBe(0);
+      expect(branchDown.decision.bump).toBeUndefined();
+      expect(branchDown.stderr).toContain("HTTP 502");
+      expect(branchDown.summary).toContain("the pin-bump branch read failed");
+      // A successful lookup that returns no PR, with the branch missing (a 404), runs the PR step.
+      const nothingThere = yield* runCase(mainOld, O.none(), pulls());
+      expect(nothingThere.decision).toEqual(bumps);
+      // A re-run of an older job after the bump merged: the checkout still has the old pin, but live main
+      // already pins the release, so there is nothing to bump (#3299 review).
+      const staleCheckout = yield* runCase(mainOld, branchNew, pulls(pull("MERGED", newTag, [])), {
+        liveMain: pinText(newTag, newSha),
+      });
+      expect(staleCheckout.decision).toEqual({ changed: "false", bump: "false", parked: "false" });
+      // A failed live-main read is unknown state: the step fails and reports it, and nothing is bumped.
+      const mainDown = yield* runCase(mainOld, branchNew, pulls(), { failing: "main" });
+      expect(mainDown.status).not.toBe(0);
+      expect(mainDown.decision.bump).toBeUndefined();
+      expect(mainDown.summary).toContain("the live main pin read failed");
+      // A fork PR with the same branch name and title, closed, does not park the real bump; an open,
+      // labelled fork PR does not count as done (#3299 review).
+      const forkClosed = yield* runCase(mainOld, O.none(), pulls(pull("CLOSED", newTag, ["ready-for-heavy"], true)));
+      expect(forkClosed.decision).toEqual(bumps);
+      const forkOpen = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"], true)));
+      expect(forkOpen.decision).toEqual(bumps);
+    })
+  );
+
   // goals/certainty-scorecard MEAS-01 slice 2: a scheduled scorer that reads Actions runs with the
   // workflow token, runs default-branch code only, publishes no branch names, and turns red when the
   // night's report is not certified, so a refused night can never be counted toward the seven.

@@ -19,7 +19,7 @@ Order: schema, then the stack's typed configuration, then the resources.
 | `region` | `LiteralKit(["us-east-1"])` | `us-east-1` | same |
 | `monthlyBudgetUsd` | finite, positive | `200` | same |
 | `anomalyImpactUsd` | finite, positive | `10` | same |
-| `notifications` | `LiteralKit(["silent", "live"])` | `silent` until the Pulumi cutover | always `silent` |
+| `notifications` | `LiteralKit(["silent", "live"])` | `live` (was `silent` beside the Pulumi pair) | always `silent` |
 
 The stage inputs are tracked source, decoded through `resolveStageConfig`
 when the program starts; a bad value stops the stack with a `ConfigError`
@@ -59,9 +59,12 @@ The budget and subscription names differ from the Pulumi-owned
 `Monthly Budget` and `beep-account-daily-anomalies`, so both sets run side by
 side until the cutover. The services monitor is not recreated: AWS allows one
 `DIMENSIONAL`/`SERVICE` monitor per account, so `prod` adopts the live one by
-name. In the `silent` phase the budget has no notifications and no
-subscription exists, so nobody is mailed twice; the phase flips to `live`
-after the Pulumi budget and subscription are destroyed.
+name. The stack ran `silent` beside the Pulumi pair (no budget notifications,
+no subscription) and then went `live` before the Pulumi budget and
+subscription were destroyed (packet gate ruling, 2026-11-14): the account is
+never left without alerts, at the cost of one duplicate burst of mails until
+the old pair is destroyed right after the `live` deploy is verified. Cutover
+and rollback: `docs/runbooks/alchemy-infra.md`, section "Cost controls".
 
 The stack output names the budget, its ARN, the phase, the monitor and
 subscription ARNs, the tag keys and both enrollment statuses. It never
