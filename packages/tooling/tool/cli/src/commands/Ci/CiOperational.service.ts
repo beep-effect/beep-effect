@@ -271,6 +271,9 @@ export const CiOperationalLive = Layer.effect(
       );
       return O.getOrElse(loaded, () => ciOperationalPatterns);
     });
+    // KEEP (D-22): the change profile reads git's C-quoted `--name-only` lines, so a path with a
+    // non-ASCII or special byte never matches a docs pattern and keeps every profile active (pinned by
+    // the `quoted path` golden in `ci-bootstrap-parity`); `Git.changedFiles`' `-z` paths are raw.
     const pinnedDiff = (base: string, head: string) =>
       capture("git", ["diff", "--name-only", "--no-renames", `${base}...${head}`]).pipe(
         Effect.map(({ stdout, status }) => (status === 0 ? O.some(diffLines(stdout)) : O.none())),

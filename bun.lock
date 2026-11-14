@@ -630,6 +630,7 @@
       "dependencies": {
         "@beep/epistemic-ui": "workspace:^",
         "@beep/graph-3d": "workspace:^",
+        "@beep/public-site": "workspace:^",
         "@beep/ui": "workspace:^",
         "@storybook/addon-a11y": "catalog:",
         "@storybook/addon-docs": "catalog:",
@@ -648,12 +649,15 @@
         "vite": "catalog:",
       },
       "devDependencies": {
+        "@alchemy.run/aws": "catalog:",
+        "@alchemy.run/cloudflare": "catalog:",
         "@beep/utils": "workspace:^",
         "@types/node": "catalog:",
         "@types/react": "catalog:",
         "@types/react-dom": "catalog:",
         "@vitest/browser": "catalog:",
         "@vitest/browser-playwright": "catalog:",
+        "alchemy": "catalog:",
         "bippy": "catalog:",
         "playwright": "catalog:",
         "react-grab": "catalog:",
@@ -3993,6 +3997,25 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/library/alchemy-aws-extras": {
+      "name": "@beep/alchemy-aws-extras",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/aws": "catalog:",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "@distilled.cloud/aws": "catalog:",
+        "alchemy": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@alchemy.run/test": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/tooling/library/alchemy-github-runners": {
       "name": "@beep/alchemy-github-runners",
       "version": "0.0.0",
@@ -5065,6 +5088,8 @@
     "@beep/ai-provider-cli": ["@beep/ai-provider-cli@workspace:packages/drivers/ai-provider-cli"],
 
     "@beep/ai-sync": ["@beep/ai-sync@workspace:packages/tooling/library/ai-sync"],
+
+    "@beep/alchemy-aws-extras": ["@beep/alchemy-aws-extras@workspace:packages/tooling/library/alchemy-aws-extras"],
 
     "@beep/alchemy-github-runners": ["@beep/alchemy-github-runners@workspace:packages/tooling/library/alchemy-github-runners"],
 

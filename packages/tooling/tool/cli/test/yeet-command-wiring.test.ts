@@ -19,6 +19,8 @@ import {
   buildYeetRunPlanWithMode,
   decodeYeetAttemptJournalEvent,
   defaultYeetRunOptions,
+  FINAL_CHECK_RECEIPT_DIR,
+  FINAL_CHECK_SUBSET_RECEIPT_DIR,
   findLiveReadyMonitorJob,
   finishPublishWithPullRequestForTesting,
   isLiveReadyMonitorJob,
@@ -202,23 +204,33 @@ describe("yeet final-check command", () => {
           "--skip",
           "cheap-gates=covered by publish",
         ]);
-        const receipts = yield* fs.readDirectory(`${root}/.beep/yeet/final-check`);
+        // A subset run writes its own receipt under subsets/<head>/, never the head receipt.
+        const receiptDir = yield* fs.readDirectory(`${root}/${FINAL_CHECK_RECEIPT_DIR}`);
+        expect(receiptDir).toEqual(["subsets"]);
+        const subsetDir = `${root}/${FINAL_CHECK_SUBSET_RECEIPT_DIR}`;
+        const heads = yield* fs.readDirectory(subsetDir);
+        expect(heads).toHaveLength(1);
+        const receipts = yield* fs.readDirectory(`${subsetDir}/${heads[0]}`);
         expect(receipts).toHaveLength(1);
-        const receipt = yield* fs.readFileString(`${root}/.beep/yeet/final-check/${receipts[0]}`);
+        const receipt = yield* fs.readFileString(`${subsetDir}/${heads[0]}/${receipts[0]}`);
         assertInclude(receipt, '"complete":false');
         assertInclude(receipt, '"verdict":"pass"');
         assertInclude(receipt, '"status":"skipped"');
 
         const red = yield* finalCheck(["--base", "HEAD~1", "--gates", "repo-sanity", "--fail-fast"]).pipe(Effect.flip);
         expect(red.message).toContain("yeet final-check failed: final-check:repo-sanity");
+        const afterRed = yield* fs.readDirectory(`${subsetDir}/${heads[0]}`);
+        expect(afterRed).toHaveLength(2);
 
         // A gate that edits a tracked file while it runs: the gates then saw bytes
         // the pinned head does not hold, so no receipt may be written.
         yield* commit(root, "package.json", '{"scripts":{"beep":"echo drift >> README.md"}}\n', "drifting gate");
         const moved = yield* finalCheck(["--base", "HEAD~1", "--gates", "repo-sanity"]).pipe(Effect.flip);
         expect(moved.message).toContain("the checkout changed while the gates ran");
-        const readDirectory3 = yield* fs.readDirectory(`${root}/.beep/yeet/final-check`);
-        expect(readDirectory3).toHaveLength(1);
+        const headsAfterMove = yield* fs.readDirectory(subsetDir);
+        expect(headsAfterMove).toEqual(heads);
+        const receiptDirAfterMove = yield* fs.readDirectory(`${root}/${FINAL_CHECK_RECEIPT_DIR}`);
+        expect(receiptDirAfterMove).toEqual(["subsets"]);
       })
     );
 

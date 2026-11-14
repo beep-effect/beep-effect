@@ -240,6 +240,9 @@ const captureCacheTrackedDiscovery = Effect.fn("CacheFingerprint.captureTrackedD
   const searchPath = yield* configStringOption("PATH").pipe(
     Effect.flatMap(Effect.fromOption(() => CacheCommandError.new(`${subject} requires PATH.`)))
   );
+  // KEEP (D-22): both tracked-discovery rows hash git's raw NUL-framed stdout under a scrubbed
+  // environment (`extendEnv: false`), the B126 producer-trust reason (D-19); the kit inherits the
+  // environment and returns parsed entries.
   const result = yield* runCaptured({
     command: "git",
     args,

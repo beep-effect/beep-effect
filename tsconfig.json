@@ -2542,6 +2542,12 @@
       ],
       "@beep/alchemy-github-runners/internal/*": [
         "./packages/tooling/library/alchemy-github-runners/src/internal/*"
+      ],
+      "@beep/alchemy-aws-extras": [
+        "./packages/tooling/library/alchemy-aws-extras/src/index.ts"
+      ],
+      "@beep/alchemy-aws-extras/*": [
+        "./packages/tooling/library/alchemy-aws-extras/src/*"
       ]
     }
   }

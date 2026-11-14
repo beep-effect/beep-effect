@@ -19,6 +19,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import { provideLegacyGh } from "./support/YeetGithub.ts";
 
 const sha = Str.repeat(40)("a");
 const marker = `<!-- beep-reviewer:request sha=${sha} -->`;
@@ -34,6 +35,9 @@ const pull = (overrides = {}) => ({
   base: { repo: { full_name: "beep-effect/beep-effect" } },
   ...overrides,
 });
+// The comment `GithubRest.createIssueComment` decodes; the post runs on the REST client (W8, SPEC
+// D-22), which `provideLegacyGh` answers through the scripted `gh` as `gh api -X POST`.
+const postedComment = json({ id: 1, html_url: "https://github.com/beep-effect/beep-effect/pull/42#issuecomment-1" });
 const timeline = json([
   [
     { event: "ready_for_review", created_at: "2026-11-06T11:00:00Z" },
@@ -73,7 +77,7 @@ const requestStage = (args: ReadonlyArray<string>) =>
   );
 const scriptedOutput = (args: ReadonlyArray<string>, comments: unknown) =>
   Match.value(requestStage(args)).pipe(
-    Match.when("post", () => "{}"),
+    Match.when("post", () => postedComment),
     Match.when("auth", () => "kriegcloud"),
     Match.when("timeline", () => timeline),
     Match.when("census", () => json(comments)),
@@ -131,20 +135,16 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
           expect(command).toBe("gh");
           return { stdout: scriptedOutput(args, scenario.comments) };
         });
-        const message = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(provideSpawner(runner));
+        const message = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+          provideLegacyGh,
+          provideSpawner(runner)
+        );
         const seen = A.map(runner.spawns, (spawn) => spawn.args);
         expect(A.filter(seen, (args) => A.contains(args, "POST"))).toHaveLength(scenario.posts);
         expect(A.some(seen, (args) => A.contains(args, "--paginate") && A.contains(args, "--slurp"))).toBe(true);
         expect(message).toContain(scenario.posts === 1 ? "posted" : "already exists");
         if (scenario.posts === 1)
-          assertSome(A.last(seen), [
-            "api",
-            "repos/{owner}/{repo}/issues/42/comments",
-            "--method",
-            "POST",
-            "--field",
-            `body=${body}`,
-          ]);
+          assertSome(A.last(seen), ["api", "-X", "POST", "repos/{owner}/{repo}/issues/42/comments", `body=${body}`]);
       })
     );
   }
@@ -157,6 +157,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
           return requestStage(args) === stage ? { stdout: "denied", exit: 1 } : { stdout: scriptedOutput(args, [[]]) };
         });
         const error = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+          provideLegacyGh,
           provideSpawner(runner),
           Effect.flip
         );
@@ -184,6 +185,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
           return { stdout: json(reads === 1 ? pull() : changed) };
         });
         const error = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+          provideLegacyGh,
           provideSpawner(runner),
           Effect.flip
         );
@@ -204,6 +206,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
           return { stdout: json(changed) };
         });
         const error = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+          provideLegacyGh,
           provideSpawner(runner),
           Effect.flip
         );
@@ -222,6 +225,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
         return { stdout: A.contains(args, "user") ? "other-user" : json(pull()) };
       });
       const error = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+        provideLegacyGh,
         provideSpawner(runner),
         Effect.flip
       );
@@ -235,7 +239,10 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
         expect(command).toBe("gh");
         return { stdout: json(pull({ user: { login: "other-user" } })) };
       });
-      const message = yield* requestReviewerReviewForTesting(context, 42, sha, false).pipe(provideSpawner(runner));
+      const message = yield* requestReviewerReviewForTesting(context, 42, sha, false).pipe(
+        provideLegacyGh,
+        provideSpawner(runner)
+      );
       expect(message).toContain("no repeated review-trigger push");
     })
   );
@@ -247,6 +254,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
           expect.fail("invalid head must not reach GitHub");
         });
         const error = yield* requestReviewerReviewForTesting(context, 42, invalid, true).pipe(
+          provideLegacyGh,
           provideSpawner(runner),
           Effect.flip
         );
@@ -272,6 +280,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
         };
       });
       const message = yield* requestReviewerReviewForTesting(context, 42, sha, false, true).pipe(
+        provideLegacyGh,
         provideSpawner(runner)
       );
       expect(message).toContain("posted beep-reviewer request for #42");
@@ -293,6 +302,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
         };
       });
       const error = yield* requestReviewerReviewForTesting(context, 42, sha, false, true).pipe(
+        provideLegacyGh,
         provideSpawner(runner),
         Effect.flip
       );
@@ -315,6 +325,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
         };
       });
       const error = yield* requestReviewerReviewForTesting(context, 42, sha, false, true).pipe(
+        provideLegacyGh,
         provideSpawner(runner),
         Effect.flip
       );
@@ -351,6 +362,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
           };
         });
         const error = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+          provideLegacyGh,
           provideSpawner(runner),
           Effect.flip
         );
@@ -367,6 +379,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
         return { stdout: json(pull({ user: { login: "other-author" } })) };
       });
       const message = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+        provideLegacyGh,
         provideSpawner(runner),
         Effect.provideService(Git, Git.makeTest({ revParse: () => Effect.succeed("local-other-head") }))
       );
@@ -394,6 +407,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
         });
         // An unstubbed Git double dies on any call, so a `git commit` cannot pass silently.
         const message = yield* requestReviewerReviewForTesting(context, 42, sha, allowPush).pipe(
+          provideLegacyGh,
           provideSpawner(runner),
           Effect.provideService(Git, Git.makeTest())
         );
@@ -415,6 +429,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
         return { stdout: json(pull({ user: { login: "other-author" }, stack: null })) };
       });
       const message = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+        provideLegacyGh,
         provideSpawner(runner),
         Effect.provideService(
           Git,
@@ -444,6 +459,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
         };
       });
       const message = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+        provideLegacyGh,
         provideSpawner(runner),
         Effect.provideService(Git, Git.makeTest())
       );
@@ -459,7 +475,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
         expect(command).toBe("gh");
         if (A.contains(args, "POST")) {
           posted = true;
-          return { stdout: "{}" };
+          return { stdout: postedComment };
         }
         return {
           stdout: scriptedOutput(args, [
@@ -467,8 +483,14 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
           ]),
         };
       });
-      const first = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(provideSpawner(runner));
-      const second = yield* requestReviewerReviewForTesting(context, 42, sha, false).pipe(provideSpawner(runner));
+      const first = yield* requestReviewerReviewForTesting(context, 42, sha, true).pipe(
+        provideLegacyGh,
+        provideSpawner(runner)
+      );
+      const second = yield* requestReviewerReviewForTesting(context, 42, sha, false).pipe(
+        provideLegacyGh,
+        provideSpawner(runner)
+      );
       expect(first).toContain("posted");
       expect(second).toContain("already exists");
       expect(A.filter(runner.spawns, (spawn) => A.contains(spawn.args, "POST"))).toHaveLength(1);
@@ -511,7 +533,7 @@ it.layer(platform, { timeout: "15 seconds" })("ready reviewer comment route", (i
         42,
         sha,
         true
-      ).pipe(provideSpawner(runner));
+      ).pipe(provideLegacyGh, provideSpawner(runner));
       const after = yield* git(work, ["rev-parse", "HEAD"]);
       expect(after).toEqual(before);
       const indexAfter = yield* git(work, ["diff", "--cached", "--binary"]);
