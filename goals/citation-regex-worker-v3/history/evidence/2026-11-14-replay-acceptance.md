@@ -23,10 +23,12 @@ Retrieved workflow runs by head_sha, paginated jobs, then downloaded logs with g
 | Replay family (maximum individual replay test) | Configured watchdog ms | Before ms | After ms | After/watchdog | Under half | Before / after job |
 | --- | ---: | ---: | ---: | ---: | --- | --- |
 | FullSpan | 180000 | 29112.749 | 29140.059 | 0.1619 | yes | 132445009999 / 132618308361 |
-| ExtractionLoop | 30000 | 32401.329 | 5360.168 | 0.1787 | yes | 132445009976 / 132618308379 |
+| ExtractionLoop | 300000 (hosted, see note) | 32401.329 | 5360.168 | 0.0179 | yes | 132445009976 / 132618308379 |
 | PinSpan | 180000 | 52417.099 | 31637.672 | 0.1758 | yes | 132445010022 / 132618308372 |
 | PageCorrection | 180000 | 39920.170 | 17630.609 | 0.0979 | yes | 132445010022 / 132618308379 |
 | ParsedEquality | 180000 | 41727.284 | 25893.981 | 0.1439 | yes | 132445009976 / 132618308372 |
+
+Note on ExtractionLoop. Its tests set no timeout of their own (the layer `timeout: "5 seconds"` is the hook budget), so they take the package default `packageTestTimeout(30_000)` from `vitest.shared.ts`. That function returns 300000 ms when coverage is active, and the hosted `Test Unit (law-practice-*)` shards run `bunx --bun vitest run ... --coverage` (job 132618308379 log: `Coverage enabled with v8`). So the hosted watchdog for ExtractionLoop was 300 s both before and after, which is why the 32.4 s before test passed. The four other families set an explicit 180000 ms per test, which applies with or without coverage. Without coverage (the remote-worker run below) ExtractionLoop's watchdog is 30 s, and its slowest test there took 6.03 s, 20%.
 
 ### Every timed test (milliseconds)
 
