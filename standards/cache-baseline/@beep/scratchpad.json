@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "cache-baseline-package/v1",
+  "subject": "@beep/scratchpad",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p3-turbo-cache)",
+    "reason": "Record the new @beep/infra-turbo-cache workspace, re-record @beep/scratchpad after the turbo-cache-r2 module and its script moved out, and the root subject for the new manifest in the policy-fingerprint inputs; no command, output or environment changes, no qualification granted.",
+    "basis": {
+      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-turbo-cache.md",
+      "sha256": "2b9b77a00b005ba3f31c30f351c17887cc0ec929844ea7c98608d2e6be4211c5"
+    }
+  },
+  "nodes": [
+    {
+      "computation": "@beep/scratchpad#docgen",
+      "command": "bunx --bun --no-install docgen",
+      "commandDigest": "b3aa0d0077c0b46cf4185d5906aed91a064fd1a11cb6c113e80ca4b6a42d72e5",
+      "dependencies": [
+        "@beep/repo-docgen#transit",
+        "@beep/scratchpad#transit"
+      ],
+      "configuration": {
+        "cache": true,
+        "inputs": [
+          "!../package.json",
+          "!.beep/**",
+          "!.fallow/**",
+          "../.bun-version",
+          "../.nvmrc",
+          "../standards/root-package.projection.generated.json",
+          "../tsconfig.base.json",
+          "../tsconfig.json",
+          "../tsconfig.packages.json",
+          ".env",
+          ".env.*"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [
+          ".beep/docgen/**",
+          ".jsdoc-loop/generated-docs/**",
+          "docs/**"
+        ],
+        "dependsOn": [
+          "@beep/repo-docgen#transit",
+          "transit"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    }
+  ]
+}

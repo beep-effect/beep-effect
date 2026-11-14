@@ -1,0 +1,608 @@
+{
+  "schemaVersion": "cache-baseline-package/v1",
+  "subject": "@beep/storybook",
+  "review": {
+    "reviewer": "Claude Fable 5.2 (goals/infra-alchemy-rebuild-p3-storybook)",
+    "reason": "Re-record @beep/storybook after the Alchemy stack adds a build script, one linted file and the stack dependencies, and the root subject for turbo.json input-list regeneration inherited from main (#3263, #3271, #3274, #3276); no command, output or environment changes, no qualification granted.",
+    "basis": {
+      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-storybook-alchemy-stack.md",
+      "sha256": "d22636ceba560fac18f37d0b28ae28d6d04e7985c9f7765bae99027af3c117e5"
+    }
+  },
+  "nodes": [
+    {
+      "computation": "@beep/storybook#build",
+      "command": "bun run beep:build",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [
+        "@beep/epistemic-ui#build",
+        "@beep/graph-3d#build",
+        "@beep/public-site#build",
+        "@beep/ui#build",
+        "@beep/utils#build"
+      ],
+      "configuration": {
+        "cache": true,
+        "inputs": [
+          "!../../package.json",
+          "!.beep/**",
+          "!.fallow/**",
+          "!CHANGELOG.md",
+          "!LICENSE",
+          "!README.md",
+          "!test/**",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../standards/root-package.projection.generated.json",
+          "../../tools/tsgo-shim/package.json",
+          "../../tools/tsgo-shim/tsgo.js",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json",
+          "../../vite.shared.ts",
+          "../../vitest.aliases.generated.json",
+          "../../vitest.shared.ts"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [
+          "!**/.turbo/**",
+          "!.next/cache/**",
+          ".expo/**",
+          ".next/**",
+          ".output/**",
+          ".vercel/output/**",
+          "_next/**",
+          "build/**",
+          "dist/**",
+          "next-env.d.ts",
+          "storybook-static/**"
+        ],
+        "dependsOn": [
+          "^build"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "computation": "@beep/storybook#check",
+      "command": "bun run beep:check",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [
+        "@beep/dock-react#check",
+        "@beep/editor#check",
+        "@beep/epistemic-ui#build",
+        "@beep/graph-3d#build",
+        "@beep/public-site#build",
+        "@beep/ui#build",
+        "@beep/utils#build"
+      ],
+      "configuration": {
+        "cache": true,
+        "inputs": [
+          "!../../package.json",
+          "!.beep/**",
+          "!.fallow/**",
+          "!CHANGELOG.md",
+          "!LICENSE",
+          "!README.md",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../standards/root-package.projection.generated.json",
+          "../../tools/tsgo-shim/package.json",
+          "../../tools/tsgo-shim/tsgo.js",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json",
+          "../../vite.shared.ts",
+          "../../vitest.aliases.generated.json",
+          "../../vitest.shared.ts"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "@beep/dock-react#check",
+          "@beep/editor#check",
+          "^build"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "computation": "@beep/storybook#lint",
+      "command": "bun run beep:lint",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [],
+      "configuration": {
+        "cache": true,
+        "inputs": [
+          "!../../package.json",
+          "!../../tsconfig*.json",
+          "!.beep/**",
+          "!.beep/**",
+          "!.fallow/**",
+          "!.fallow/**",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../biome.jsonc",
+          "../../packages/foundation/ui-system/*/stories/**",
+          "../../packages/tooling/policy-pack/lint-rules/configs/**",
+          "../../packages/tooling/policy-pack/lint-rules/rules/**",
+          "../../standards/root-package.projection.generated.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "computation": "@beep/storybook#lint:deprecated-apis",
+      "command": "beep-cli lint deprecated-apis --package .",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [
+        "@beep/epistemic-ui#transit",
+        "@beep/graph-3d#transit",
+        "@beep/public-site#transit",
+        "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
+        "@beep/ui#transit",
+        "@beep/utils#transit"
+      ],
+      "configuration": {
+        "cache": true,
+        "inputs": [
+          "!**/.cache/**",
+          "!**/.next/**",
+          "!**/.turbo/**",
+          "!**/coverage/**",
+          "!**/dist/**",
+          "!**/docs/**",
+          "!**/generated/**",
+          "!**/node_modules/**",
+          "!**/vendor/**",
+          "!../../**/.beep/**/package.json",
+          "!../../**/.next/**/package.json",
+          "!../../**/.turbo/**/package.json",
+          "!../../**/build/**/package.json",
+          "!../../**/coverage/**/package.json",
+          "!../../**/dist/**/package.json",
+          "!../../**/node_modules/**/package.json",
+          "!../../**/storybook-static/**/package.json",
+          "!../../package.json",
+          "!.beep/**",
+          "!.fallow/**",
+          "!node_modules/**",
+          "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../.oxlintrc.deprecated-apis.jsonc",
+          "../../apps/**/package.json",
+          "../../apps/**/tsconfig*.json",
+          "../../infra/**/tsconfig*.json",
+          "../../infra/package.json",
+          "../../packages/**/package.json",
+          "../../packages/**/tsconfig*.json",
+          "../../standards/root-package.projection.generated.json",
+          "../../tsconfig*.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json",
+          ".env",
+          ".env.*",
+          "package.json",
+          "tsconfig*.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
+          "^transit"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "computation": "@beep/storybook#lint:fix",
+      "command": "bun run beep:lint:fix",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [],
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "!../../package.json",
+          "!../../tsconfig*.json",
+          "!.beep/**",
+          "!.fallow/**",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../biome.jsonc",
+          "../../standards/root-package.projection.generated.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "computation": "@beep/storybook#lint:jsdoc",
+      "command": "beep-cli lint jsdoc --package .",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [
+        "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
+      ],
+      "configuration": {
+        "cache": true,
+        "inputs": [
+          "!**/.next/**",
+          "!**/.turbo/**",
+          "!**/coverage/**",
+          "!**/dist/**",
+          "!**/docs/**",
+          "!**/node_modules/**",
+          "!**/src-tauri/target/**",
+          "!**/storybook-static/**",
+          "!../../**/.beep/**/package.json",
+          "!../../**/.next/**/package.json",
+          "!../../**/.turbo/**/package.json",
+          "!../../**/build/**/package.json",
+          "!../../**/coverage/**/package.json",
+          "!../../**/dist/**/package.json",
+          "!../../**/node_modules/**/package.json",
+          "!../../**/storybook-static/**/package.json",
+          "!../../package.json",
+          "!node_modules/**",
+          "**/*.{ts,tsx,js,jsx,mjs,cjs}",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../.oxlintrc.docs.json",
+          "../../packages/tooling/policy-pack/lint-rules/package.json",
+          "../../packages/tooling/policy-pack/lint-rules/src/**",
+          "../../packages/tooling/policy-pack/lint-rules/src/rules/**",
+          "../../standards/root-package.projection.generated.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json",
+          "../../tsdoc.json",
+          ".env",
+          ".env.*",
+          "package.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "computation": "@beep/storybook#lint:laws",
+      "command": "beep-cli lint laws --package .",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [
+        "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
+      ],
+      "configuration": {
+        "cache": true,
+        "inputs": [
+          "!**/.turbo/**",
+          "!**/build/**",
+          "!**/coverage/**",
+          "!**/dist/**",
+          "!**/node_modules/**",
+          "!../../package.json",
+          "!node_modules/**",
+          "**/*.{ts,tsx}",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../packages/tooling/policy-pack/repo-configs/src/internal/laws/generated/EffectLawsAllowlistSnapshot.ts",
+          "../../packages/tooling/policy-pack/repo-configs/src/laws/EffectLawsAllowlist.ts",
+          "../../packages/tooling/policy-pack/repo-configs/src/laws/NoNativeRuntimeHotspots.ts",
+          "../../standards/effect-laws.allowlist.jsonc",
+          "../../standards/root-package.projection.generated.json",
+          "../../tsconfig*.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json",
+          ".env",
+          ".env.*",
+          "package.json",
+          "tsconfig*.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "computation": "@beep/storybook#package-test-typecheck",
+      "command": "beep-cli quality test-tsgo-package",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [
+        "@beep/epistemic-ui#transit",
+        "@beep/graph-3d#transit",
+        "@beep/public-site#transit",
+        "@beep/ui#transit",
+        "@beep/utils#transit"
+      ],
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "!**/src-tauri/target/**",
+          "!../../package.json",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts",
+          "../../packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoSyntheticConfig.ts",
+          "../../standards/root-package.projection.generated.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json",
+          "package.json",
+          "scripts/**",
+          "server/**",
+          "src-tauri/**",
+          "src/**",
+          "test/**",
+          "tsconfig*.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [
+          ".turbo/package-test-typecheck-result.json"
+        ],
+        "dependsOn": [
+          "^transit"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "computation": "@beep/storybook#storybook",
+      "command": "portless storybook.beep sh -c 'storybook dev -p \"${PORT:-6006}\"'",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [],
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "!../../package.json",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../standards/root-package.projection.generated.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [
+          "PORTLESS",
+          "PORTLESS_URL"
+        ],
+        "outputs": [],
+        "dependsOn": [],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "computation": "@beep/storybook#storybook:build",
+      "command": "NODE_OPTIONS=--disable-warning=DEP0205 storybook build -o storybook-static",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [
+        "@beep/epistemic-ui#build",
+        "@beep/graph-3d#build",
+        "@beep/public-site#build",
+        "@beep/ui#build",
+        "@beep/utils#build"
+      ],
+      "configuration": {
+        "cache": true,
+        "inputs": [
+          "!../../package.json",
+          "!.beep/**",
+          "!.fallow/**",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../apps/storybook/.storybook/**",
+          "../../apps/storybook/vitest.storybook.config.ts",
+          "../../apps/storybook/vitest.storybook.setup.ts",
+          "../../packages/drivers/graph-3d/src/**",
+          "../../packages/drivers/graph-3d/stories/**",
+          "../../packages/foundation/ui-system/*/assets/**",
+          "../../packages/foundation/ui-system/*/src/**",
+          "../../packages/foundation/ui-system/*/stories/**",
+          "../../packages/foundation/ui-system/*/styles/**",
+          "../../standards/root-package.projection.generated.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json",
+          ".env",
+          ".env.*"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [
+          "storybook-static/**"
+        ],
+        "dependsOn": [
+          "^build"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "computation": "@beep/storybook#storybook:start",
+      "command": "portless storybook.beep sh -c 'vite preview --host 0.0.0.0 --port \"${PORT:-6006}\" --outDir storybook-static'",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [
+        "@beep/storybook#storybook:build"
+      ],
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "!../../package.json",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../standards/root-package.projection.generated.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "storybook:build"
+        ],
+        "persistent": true,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "computation": "@beep/storybook#test",
+      "command": "bun run beep:test",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [
+        "@beep/epistemic-ui#transit",
+        "@beep/graph-3d#transit",
+        "@beep/public-site#transit",
+        "@beep/ui#transit",
+        "@beep/utils#transit",
+        "@beep/utils#transit"
+      ],
+      "configuration": {
+        "cache": true,
+        "inputs": [
+          "!../../package.json",
+          "!.beep/**",
+          "!.fallow/**",
+          "!CHANGELOG.md",
+          "!LICENSE",
+          "!README.md",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../standards/root-package.projection.generated.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json",
+          "../../vite.shared.ts",
+          "../../vitest.aliases.generated.json",
+          "../../vitest.setup.ts",
+          "../../vitest.shared.ts",
+          ".env",
+          ".env.*"
+        ],
+        "env": [
+          "BEEP_COVERAGE_INVOCATION_ID",
+          "BEEP_COVERAGE_RUNTIME_RECEIPT",
+          "BEEP_FC_NUM_RUNS",
+          "BEEP_FC_SEED"
+        ],
+        "passThroughEnv": [
+          "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
+          "GITHUB_STEP_SUMMARY"
+        ],
+        "outputs": [],
+        "dependsOn": [
+          "@beep/utils#transit",
+          "^transit"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    },
+    {
+      "computation": "@beep/storybook#test:storybook",
+      "command": "bun run scripts/run-storybook-tests.mjs",
+      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "dependencies": [
+        "@beep/epistemic-ui#build",
+        "@beep/graph-3d#build",
+        "@beep/public-site#build",
+        "@beep/ui#build",
+        "@beep/utils#build"
+      ],
+      "configuration": {
+        "cache": false,
+        "inputs": [
+          "!../../package.json",
+          "!.beep/**",
+          "!.fallow/**",
+          "../../.bun-version",
+          "../../.nvmrc",
+          "../../apps/storybook/.storybook/**",
+          "../../apps/storybook/vitest.storybook.config.ts",
+          "../../apps/storybook/vitest.storybook.setup.ts",
+          "../../packages/drivers/graph-3d/src/**",
+          "../../packages/drivers/graph-3d/stories/**",
+          "../../packages/foundation/ui-system/*/src/**",
+          "../../packages/foundation/ui-system/*/stories/**",
+          "../../standards/root-package.projection.generated.json",
+          "../../tsconfig.base.json",
+          "../../tsconfig.json",
+          "../../tsconfig.packages.json"
+        ],
+        "env": [],
+        "passThroughEnv": [],
+        "outputs": [],
+        "dependsOn": [
+          "^build"
+        ],
+        "persistent": false,
+        "interactive": false,
+        "interruptible": false,
+        "outputLogs": "full"
+      }
+    }
+  ]
+}

@@ -3764,7 +3764,7 @@ const policyStateTasks = [
   ...policyTrackedDiscoveryTasks,
 ];
 // Changed scope splits the state phase by cache contract. The cached tasks' inputs are certified
-// (standards/cache-qualification-baseline.json), so Turbo's task-input selection skips them exactly
+// (standards/cache-baseline/), so Turbo's task-input selection skips them exactly
 // when a cache hit would replay them; they join the affected medium graph. The D2 git-delta and
 // clock checks and the uncertified binary walkers stay unfiltered (standards/turbo-remote-cache.md)
 // in a graph that runs abreast of the medium one, so its long poles overlap as they do in the

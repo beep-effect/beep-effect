@@ -25,6 +25,8 @@ import {
   CacheQualificationStore,
   CacheTaskConfiguration,
   CacheTaskContract,
+  cacheBaselineRootSubject,
+  cacheBaselineSubject,
   cacheLedgerFailures,
   cachePolicyBaselineFailures,
   isCacheTransitionAllowed,
@@ -54,8 +56,25 @@ import {
   projectCacheActivation,
   projectCacheSignedActivation,
 } from "./Cache.fingerprint.ts";
-import { CacheActivationPreview, CacheRemoteReadsRequest } from "./Cache.schemas.ts";
-import type { CachePolicyAuditReport, CachePolicyBaselineRecord } from "@beep/repo-configs/cache";
+import {
+  CacheActivationPreview,
+  CacheBaselineCommittedFile,
+  CacheBaselineFileText,
+  CacheBaselinePackageFile,
+  CacheBaselinePackageSubject,
+  CacheBaselinePreviousDigests,
+  CacheBaselineReplacement,
+  CacheBaselineRootFile,
+  CacheBaselineSubjectFile,
+  CacheRemoteReadsRequest,
+  cacheBaselineDirectory,
+} from "./Cache.schemas.ts";
+import type {
+  CacheBaselineSubject,
+  CachePolicyAuditReport,
+  CachePolicyBaselineRecord,
+  CacheReviewDecision,
+} from "@beep/repo-configs/cache";
 import type {
   CacheActivationRequest,
   CacheBaselineRequest,
@@ -68,56 +87,11 @@ import type {
 const CacheAcceptedReferenceJson = S.fromJsonString(CacheProducerAcceptanceReference);
 
 const $I = $RepoCliId.create("commands/Cache/Cache.service");
-const baselinePath = "standards/cache-qualification-baseline.json";
 const storePath = "standards/cache-qualification.json";
-const BaselineJson = JsonStringCodec(CachePolicyBaseline);
 const StoreJson = JsonStringCodec(CacheQualificationStore);
 const sameKey = S.toEquivalence(CacheQualificationKey);
 const sameContract = S.toEquivalence(CacheTaskContract);
-const sameOptionalDigest = S.toEquivalence(S.Option(CacheEvidenceReference.fields.sha256));
 const sameReference = S.toEquivalence(CacheEvidenceReference);
-const encodePrettyBaseline = S.encodeEffect(S.fromJsonString(CachePolicyBaseline, { space: 2 }));
-
-/**
- * Encode a reviewed baseline as the pretty-printed JSON text the repository commits.
- *
- * **Details**
- *
- * The file is indented so each node, review and source occupies its own
- * lines. Git merges line regions, so two re-records that stamp different
- * subjects change disjoint regions and merge without conflict; a single
- * minified line conflicts on every concurrent edit.
- *
- * **Example** (Encode a root-only baseline)
- *
- * ```ts
- * import { encodeCachePolicyBaselineText } from "@beep/repo-cli/commands/Cache"
- * import * as Cache from "@beep/repo-configs/cache"
- * import { Sha256Hex } from "@beep/schema"
- * import * as Effect from "effect/Effect"
- * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
- * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
- * const baseline = Cache.CachePolicyBaseline.make({
- *   profile: "fixture", epoch: "v1", scope: ["fixture#lint"], reviews: { "//": review },
- *   projection: Cache.CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] }),
- * })
- * console.assert(Effect.runSync(encodeCachePolicyBaselineText(baseline)).includes("\n  \"reviews\": {\n"))
- * ```
- *
- * @param baseline - The reviewed baseline to serialise.
- * @returns Indented JSON text ending in a newline.
- * @category encoding
- * @since 0.0.0
- */
-export const encodeCachePolicyBaselineText = Effect.fn("CacheQualification.encodeBaselineText")(function* (
-  baseline: CachePolicyBaseline
-) {
-  const encoded = yield* encodePrettyBaseline(baseline);
-  return `${encoded}\n`;
-});
-const hashBytes = S.decodeEffect(Sha256HexFromBytes);
-
-const hashText = (text: string) => hashBytes(new TextEncoder().encode(text));
 
 const decodeUtf8 = (bytes: Uint8Array) =>
   Effect.try({
@@ -170,8 +144,490 @@ const verifyReviewBases = Effect.fn("CacheQualification.verifyReviewBases")(func
   yield* Effect.forEach(bases, (basis) => verifyReference(root, basis), { discard: true });
 });
 
+const encodeSubjectFile = S.encodeEffect(S.fromJsonString(CacheBaselineSubjectFile, { space: 2 }));
+const decodeSubjectFile = S.decodeUnknownEffect(S.fromJsonString(CacheBaselineSubjectFile));
+const byComputation = Order.mapInput(Order.String, (node: CachePolicyProjection["nodes"][number]) => node.computation);
+const bySubject = Order.mapInput(Order.String, (file: CacheBaselineSubjectFile) => file.subject);
+const byPath = Order.mapInput(Order.String, (file: CacheBaselineFileText) => file.path);
+const isRootFile = S.is(CacheBaselineRootFile);
+const decodePackageSubject = S.decodeUnknownEffect(CacheBaselinePackageSubject);
+const isPackageSubject = S.is(CacheBaselinePackageSubject);
+const fileBytesLimit = S.Natural.make(8 * 1024 * 1024);
+const hashBytes = S.decodeEffect(Sha256HexFromBytes);
+const PreviousDigestsJson = JsonStringCodec(CacheBaselinePreviousDigests);
+
+/**
+ * Repository-relative path of one subject's baseline file.
+ *
+ * **Details**
+ *
+ * The root subject `//` lives at `_root.json`; a package subject lives at its
+ * package name plus `.json`, so `@beep/identity` is `@beep/identity.json`
+ * under {@link cacheBaselineDirectory}.
+ *
+ * **Example** (Place the root and a package subject)
+ *
+ * ```ts
+ * import { cacheBaselineSubjectPath } from "@beep/repo-cli/commands/Cache"
+ * console.log(cacheBaselineSubjectPath("//")) // "standards/cache-baseline/_root.json"
+ * console.log(cacheBaselineSubjectPath("@beep/identity")) // "standards/cache-baseline/@beep/identity.json"
+ * ```
+ *
+ * @param subject - A review subject.
+ * @returns The repository-relative file path.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const cacheBaselineSubjectPath = (subject: CacheBaselineSubject): string =>
+  subject === cacheBaselineRootSubject
+    ? `${cacheBaselineDirectory}/_root.json`
+    : `${cacheBaselineDirectory}/${subject}.json`;
+
+/**
+ * Review subject a baseline file path names, the inverse of {@link cacheBaselineSubjectPath}.
+ *
+ * **Example** (Recover subjects from their paths)
+ *
+ * ```ts
+ * import { cacheBaselineSubjectOfPath } from "@beep/repo-cli/commands/Cache"
+ * import * as O from "effect/Option"
+ * console.log(O.getOrNull(cacheBaselineSubjectOfPath("standards/cache-baseline/_root.json"))) // "//"
+ * console.log(O.getOrNull(cacheBaselineSubjectOfPath("standards/cache-baseline/@beep/md.json"))) // "@beep/md"
+ * console.log(O.isNone(cacheBaselineSubjectOfPath("standards/other.json"))) // true
+ * ```
+ *
+ * @param path - Repository-relative file path.
+ * @returns The subject whose canonical path this is, or `None`.
+ * @category mapping
+ * @since 0.0.0
+ */
+export const cacheBaselineSubjectOfPath = (path: string): O.Option<CacheBaselineSubject> => {
+  const prefix = `${cacheBaselineDirectory}/`;
+  if (!Str.startsWith(prefix)(path) || !Str.endsWith(".json")(path)) return O.none();
+  const name = Str.slice(prefix.length, -".json".length)(path);
+  const subject = name === "_root" ? cacheBaselineRootSubject : name;
+  return isPackageSubject(subject) || subject === cacheBaselineRootSubject
+    ? O.some(subject).pipe(O.filter((candidate) => cacheBaselineSubjectPath(candidate) === path))
+    : O.none();
+};
+
+const subjectNodes = (baseline: CachePolicyBaseline, subject: CacheBaselineSubject) =>
+  A.sort(
+    A.filter(baseline.projection.nodes, (node) => cacheBaselineSubject(node.computation) === subject),
+    byComputation
+  );
+
+const subjectFile = (
+  baseline: CachePolicyBaseline,
+  subject: CacheBaselineSubject,
+  review: CacheReviewDecision
+): Effect.Effect<CacheBaselineSubjectFile, CacheCommandError> =>
+  subject === cacheBaselineRootSubject
+    ? Effect.succeed(
+        CacheBaselineRootFile.make({
+          subject: "//",
+          profile: baseline.profile,
+          epoch: baseline.epoch,
+          scope: baseline.scope,
+          review,
+          globalConfiguration: baseline.projection.globalConfiguration,
+          sources: baseline.projection.sources,
+          nodes: subjectNodes(baseline, subject),
+        })
+      )
+    : decodePackageSubject(subject).pipe(
+        Effect.map((packageSubject) =>
+          CacheBaselinePackageFile.make({ subject: packageSubject, review, nodes: subjectNodes(baseline, subject) })
+        ),
+        CacheCommandError.mapError(`Baseline subject ${subject} is not a file-safe package name.`)
+      );
+
+/**
+ * Split a complete baseline into one file per review subject, sorted by subject.
+ *
+ * **Details**
+ *
+ * Each package file holds that subject's review and its nodes sorted by
+ * computation; the root file additionally holds scope, profile, epoch, the
+ * global configuration and the configuration sources. The split refuses a
+ * baseline that {@link cachePolicyBaselineFailures} rejects, because an
+ * unreviewed node would have no file to live in.
+ *
+ * **Example** (Split a root-only baseline)
+ *
+ * ```ts
+ * import { splitCachePolicyBaseline } from "@beep/repo-cli/commands/Cache"
+ * import * as Cache from "@beep/repo-configs/cache"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import * as Effect from "effect/Effect"
+ * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
+ * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
+ * const baseline = Cache.CachePolicyBaseline.make({
+ *   profile: "fixture", epoch: "v1", scope: ["fixture#lint"], reviews: { "//": review },
+ *   projection: Cache.CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] }),
+ * })
+ * console.assert(Effect.runSync(splitCachePolicyBaseline(baseline)).length === 1)
+ * ```
+ *
+ * @param baseline - A complete reviewed baseline.
+ * @returns One subject file per review, sorted by subject.
+ * @category encoding
+ * @since 0.0.0
+ */
+export const splitCachePolicyBaseline = Effect.fn("CacheBaseline.split")(function* (baseline: CachePolicyBaseline) {
+  const failures = cachePolicyBaselineFailures(baseline);
+  if (A.isReadonlyArrayNonEmpty(failures))
+    return yield* CacheCommandError.new(`Reviewed baseline is incomplete: ${A.join(failures, ", ")}.`);
+  const files = yield* Effect.forEach(Rec.toEntries(baseline.reviews), ([subject, review]) =>
+    subjectFile(baseline, subject, review)
+  );
+  return A.sort(files, bySubject);
+});
+
+/**
+ * Reassemble the baseline the per-subject files describe.
+ *
+ * **Details**
+ *
+ * Exactly one root file must be present, every subject must appear once and
+ * every node must belong to the subject of the file that holds it. Reviews
+ * are keyed by subject in sorted order and nodes are sorted by computation,
+ * so the result does not depend on the order the files were read in.
+ *
+ * **Example** (Round-trip a root-only baseline)
+ *
+ * ```ts
+ * import { assembleCachePolicyBaseline, splitCachePolicyBaseline } from "@beep/repo-cli/commands/Cache"
+ * import * as Cache from "@beep/repo-configs/cache"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import * as Effect from "effect/Effect"
+ * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
+ * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
+ * const baseline = Cache.CachePolicyBaseline.make({
+ *   profile: "fixture", epoch: "v1", scope: ["fixture#lint"], reviews: { "//": review },
+ *   projection: Cache.CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] }),
+ * })
+ * const back = Effect.runSync(Effect.flatMap(splitCachePolicyBaseline(baseline), assembleCachePolicyBaseline))
+ * console.assert(back.profile === "fixture")
+ * ```
+ *
+ * @param files - Decoded subject files in any order.
+ * @returns The baseline they describe.
+ * @category decoding
+ * @since 0.0.0
+ */
+export const assembleCachePolicyBaseline = Effect.fn("CacheBaseline.assemble")(function* (
+  files: ReadonlyArray<CacheBaselineSubjectFile>
+) {
+  const subjects = A.map(files, (file) => file.subject);
+  const duplicates = A.filter(A.dedupe(subjects), (subject) => A.length(A.filter(subjects, (s) => s === subject)) > 1);
+  if (A.isReadonlyArrayNonEmpty(duplicates))
+    return yield* CacheCommandError.new(`Baseline subjects appear in more than one file: ${A.join(duplicates, ", ")}.`);
+  const foreign = A.flatMap(files, (file) =>
+    A.map(
+      A.filter(file.nodes, (node) => cacheBaselineSubject(node.computation) !== file.subject),
+      (node) => node.computation
+    )
+  );
+  if (A.isReadonlyArrayNonEmpty(foreign))
+    return yield* CacheCommandError.new(`Baseline nodes sit in another subject's file: ${A.join(foreign, ", ")}.`);
+  const root = yield* A.findFirst(files, isRootFile).pipe(
+    Effect.fromOption(() => CacheCommandError.new("The baseline root subject file is missing."))
+  );
+  return CachePolicyBaseline.make({
+    profile: root.profile,
+    epoch: root.epoch,
+    scope: root.scope,
+    reviews: Rec.fromEntries(A.map(A.sort(files, bySubject), (file) => [file.subject, file.review] as const)),
+    projection: CachePolicyProjection.make({
+      globalConfiguration: root.globalConfiguration,
+      nodes: A.sort(
+        A.flatMap(files, (file) => file.nodes),
+        byComputation
+      ),
+      sources: root.sources,
+    }),
+  });
+});
+
+/**
+ * Encode a complete baseline as the per-subject file texts the repository commits.
+ *
+ * **Details**
+ *
+ * Every file is indented JSON ending in a newline, with keys in schema order
+ * and nodes sorted by computation. Two re-records of different subjects write
+ * different files, so neither changes the other's bytes or digest.
+ *
+ * **Example** (Encode a root-only baseline)
+ *
+ * ```ts
+ * import { encodeCachePolicyBaselineFiles } from "@beep/repo-cli/commands/Cache"
+ * import * as Cache from "@beep/repo-configs/cache"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import * as Effect from "effect/Effect"
+ * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
+ * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
+ * const baseline = Cache.CachePolicyBaseline.make({
+ *   profile: "fixture", epoch: "v1", scope: ["fixture#lint"], reviews: { "//": review },
+ *   projection: Cache.CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] }),
+ * })
+ * const [root] = Effect.runSync(encodeCachePolicyBaselineFiles(baseline))
+ * console.assert(root.path === "standards/cache-baseline/_root.json")
+ * ```
+ *
+ * @param baseline - A complete reviewed baseline.
+ * @returns One file text per subject, sorted by path.
+ * @category encoding
+ * @since 0.0.0
+ */
+export const encodeCachePolicyBaselineFiles = Effect.fn("CacheBaseline.encodeFiles")(function* (
+  baseline: CachePolicyBaseline
+) {
+  const files = yield* splitCachePolicyBaseline(baseline);
+  const texts = yield* Effect.forEach(files, (file) =>
+    encodeSubjectFile(file).pipe(
+      Effect.map((text) =>
+        CacheBaselineFileText.make({
+          subject: file.subject,
+          path: cacheBaselineSubjectPath(file.subject),
+          text: `${text}\n`,
+        })
+      ),
+      CacheCommandError.mapError(`Cannot encode the baseline file of ${file.subject}.`)
+    )
+  );
+  return A.sort(texts, byPath);
+});
+
+/**
+ * Decode committed subject file texts and reassemble their baseline.
+ *
+ * **Details**
+ *
+ * Each text must decode as a subject file and sit at the path its subject
+ * names, so a renamed or copied file fails instead of shadowing another
+ * subject.
+ *
+ * **Example** (Decode what the encoder wrote)
+ *
+ * ```ts
+ * import { decodeCachePolicyBaselineFiles, encodeCachePolicyBaselineFiles } from "@beep/repo-cli/commands/Cache"
+ * import * as Cache from "@beep/repo-configs/cache"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import * as Effect from "effect/Effect"
+ * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
+ * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
+ * const baseline = Cache.CachePolicyBaseline.make({
+ *   profile: "fixture", epoch: "v1", scope: ["fixture#lint"], reviews: { "//": review },
+ *   projection: Cache.CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] }),
+ * })
+ * const back = Effect.runSync(Effect.flatMap(encodeCachePolicyBaselineFiles(baseline), decodeCachePolicyBaselineFiles))
+ * console.assert(back.epoch === "v1")
+ * ```
+ *
+ * @param texts - Path and text of each committed file.
+ * @returns The baseline the files describe.
+ * @category decoding
+ * @since 0.0.0
+ */
+export const decodeCachePolicyBaselineFiles = Effect.fn("CacheBaseline.decodeFiles")(function* (
+  texts: ReadonlyArray<Pick<CacheBaselineFileText, "path" | "text">>
+) {
+  const files = yield* Effect.forEach(
+    texts,
+    Effect.fnUntraced(function* ({ path, text }) {
+      const file = yield* decodeSubjectFile(text).pipe(
+        CacheCommandError.mapError(`Baseline file ${path} does not decode as a subject file.`)
+      );
+      if (cacheBaselineSubjectPath(file.subject) !== path)
+        return yield* CacheCommandError.new(
+          `Baseline file ${path} holds subject ${file.subject}, which belongs at ${cacheBaselineSubjectPath(file.subject)}.`
+        );
+      return file;
+    })
+  );
+  return yield* assembleCachePolicyBaseline(files);
+});
+
+/**
+ * Read every committed subject file under {@link cacheBaselineDirectory}.
+ *
+ * **Details**
+ *
+ * Returns `None` when the directory does not exist. Every regular file in the
+ * tree must be a `.json` subject file, read without following symlinks and
+ * bounded to 8 MiB; anything else fails closed. Results are sorted by path.
+ *
+ * **Example** (Read the committed baseline files)
+ *
+ * ```ts
+ * import { readCachePolicyBaselineFileTexts } from "@beep/repo-cli/commands/Cache"
+ * console.assert(typeof readCachePolicyBaselineFileTexts === "function")
+ * ```
+ *
+ * @param root - Repository root.
+ * @returns The committed file texts, or `None` before the first record.
+ * @category queries
+ * @since 0.0.0
+ */
+export const readCachePolicyBaselineFileTexts = Effect.fn("CacheBaseline.readFileTexts")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const directory = path.join(root, cacheBaselineDirectory);
+  if (!(yield* fs.exists(directory))) return O.none<ReadonlyArray<Pick<CacheBaselineFileText, "path" | "text">>>();
+  const listed = yield* fs.readDirectory(directory, { recursive: true });
+  const entries = A.sort(listed, Order.String);
+  const texts = yield* Effect.forEach(
+    entries,
+    Effect.fnUntraced(function* (entry) {
+      const relative = `${cacheBaselineDirectory}/${A.join(Str.split(entry, path.sep), "/")}`;
+      const info = yield* fs.stat(path.join(directory, entry));
+      if (info.type === "Directory") return O.none();
+      if (!Str.endsWith(".json")(relative))
+        return yield* CacheCommandError.new(`Unexpected file in the baseline directory: ${relative}.`);
+      const bytes = yield* readContainedFileBytesNoFollow(root, relative, fileBytesLimit).pipe(
+        Effect.flatMap(({ contents }) =>
+          Effect.fromOption(contents, () => CacheCommandError.new(`Baseline file vanished: ${relative}.`))
+        )
+      );
+      const text = yield* decodeUtf8(bytes);
+      return O.some({ path: relative, text });
+    })
+  );
+  return O.some(A.getSomes(texts));
+}, CacheCommandError.mapError("Cannot read the reviewed cache baseline files."));
+
+/**
+ * Read, decode and digest the committed baseline files before a re-record.
+ *
+ * **Details**
+ *
+ * Returns `None` when no subject file is committed yet. Each file carries the
+ * sha256 of its exact text, which is what a request's `previous` must name.
+ *
+ * **Example** (Read the committed baseline before a re-record)
+ *
+ * ```ts
+ * import { readCommittedCachePolicyBaseline } from "@beep/repo-cli/commands/Cache"
+ * console.assert(typeof readCommittedCachePolicyBaseline === "function")
+ * ```
+ *
+ * @param root - Repository root.
+ * @returns The committed baseline and its digested files, or `None`.
+ * @category queries
+ * @since 0.0.0
+ */
+export const readCommittedCachePolicyBaseline = Effect.fn("CacheBaseline.readCommitted")(function* (root: string) {
+  const texts = yield* readCachePolicyBaselineFileTexts(root);
+  if (O.isNone(texts) || A.isReadonlyArrayEmpty(texts.value)) return O.none();
+  const baseline = yield* decodeCachePolicyBaselineFiles(texts.value).pipe(
+    CacheCommandError.mapError(
+      `The committed baseline files do not decode; repair ${cacheBaselineDirectory} before re-recording.`
+    )
+  );
+  const files = yield* Effect.forEach(
+    texts.value,
+    Effect.fnUntraced(function* ({ path, text }) {
+      const subject = yield* Effect.fromOption(cacheBaselineSubjectOfPath(path), () =>
+        CacheCommandError.new(`Baseline file ${path} is not a subject path.`)
+      );
+      const sha256 = yield* hashBytes(new TextEncoder().encode(text));
+      return CacheBaselineCommittedFile.make({ subject, path, text, sha256 });
+    })
+  );
+  return O.some({ baseline, files });
+});
+
+/**
+ * Plan a re-record's file writes and deletions and check its per-subject `previous` digests.
+ *
+ * **Details**
+ *
+ * A file is written when its bytes change and deleted when its subject left
+ * the baseline; every other committed file keeps its bytes. Every committed
+ * file the plan replaces or deletes must appear in `previous` with its current
+ * digest, and every entry in `previous` must still match a committed file.
+ * Files of other subjects are not consulted, so a merge that touched only
+ * other subjects leaves the request valid. The refusal prints the exact
+ * `previous` object the plan needs.
+ *
+ * **Example** (A first record needs no previous digests)
+ *
+ * ```ts
+ * import { encodeCachePolicyBaselineFiles, planCachePolicyBaselineReplacement } from "@beep/repo-cli/commands/Cache"
+ * import * as Cache from "@beep/repo-configs/cache"
+ * import { Sha256Hex } from "@beep/schema/Sha256"
+ * import * as Effect from "effect/Effect"
+ * const digest = Sha256Hex.make("0000000000000000000000000000000000000000000000000000000000000000")
+ * const review = Cache.CacheReviewDecision.make({ reviewer: "fixture", reason: "empty", basis: Cache.CacheEvidenceReference.make({ path: "review.md", sha256: digest }) })
+ * const baseline = Cache.CachePolicyBaseline.make({
+ *   profile: "fixture", epoch: "v1", scope: ["fixture#lint"], reviews: { "//": review },
+ *   projection: Cache.CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] }),
+ * })
+ * const next = Effect.runSync(encodeCachePolicyBaselineFiles(baseline))
+ * const plan = Effect.runSync(planCachePolicyBaselineReplacement([], next, {}))
+ * console.assert(plan.writes.length === 1 && plan.deletes.length === 0)
+ * ```
+ *
+ * @param committed - The committed files with their digests.
+ * @param next - The files the re-recorded baseline encodes to.
+ * @param previous - The request's expected digest per replaced subject.
+ * @returns The files to write and delete.
+ * @category policies
+ * @since 0.0.0
+ */
+export const planCachePolicyBaselineReplacement = Effect.fn("CacheBaseline.planReplacement")(function* (
+  committed: ReadonlyArray<CacheBaselineCommittedFile>,
+  next: ReadonlyArray<CacheBaselineFileText>,
+  previous: CacheBaselinePreviousDigests
+) {
+  const plan = CacheBaselineReplacement.make({
+    writes: A.filter(
+      next,
+      (file) => !A.some(committed, (prior) => prior.path === file.path && prior.text === file.text)
+    ),
+    deletes: A.filter(committed, (prior) => !A.some(next, (file) => file.path === prior.path)),
+  });
+  const committedFor = (subject: CacheBaselineSubject) => A.findFirst(committed, (file) => file.subject === subject);
+  const replaced = A.sort(
+    A.filter(
+      A.dedupe(
+        A.appendAll(
+          A.map(plan.writes, (file) => file.subject),
+          A.map(plan.deletes, (file) => file.subject)
+        )
+      ),
+      (subject) => O.isSome(committedFor(subject))
+    ),
+    Order.String
+  );
+  const stale = A.filter(
+    A.dedupe(A.appendAll(replaced, Rec.keys(previous))),
+    (subject) => !O.exists(committedFor(subject), (file) => O.contains(Rec.get(previous, subject), file.sha256))
+  );
+  if (A.isReadonlyArrayEmpty(stale)) return plan;
+  const expected = yield* PreviousDigestsJson.encode(
+    Rec.fromEntries(
+      A.flatMap(replaced, (subject) =>
+        O.toArray(O.map(committedFor(subject), (file) => [subject, file.sha256] as const))
+      )
+    )
+  ).pipe(CacheCommandError.mapError("Cannot encode the expected previous digests."));
+  return yield* CacheCommandError.new(
+    `Reviewed baseline subject files changed or are missing from previous: ${A.join(stale, ", ")}. Review the current files and set previous to ${expected}.`
+  );
+});
+
 const readBaseline = Effect.fn("CacheQualification.readBaseline")(function* (root: string) {
-  const baseline = yield* readRequired(root, baselinePath).pipe(Effect.flatMap(BaselineJson.decode));
+  const texts = yield* readCachePolicyBaselineFileTexts(root).pipe(
+    Effect.flatMap(
+      Effect.fromOption(() =>
+        CacheCommandError.new(`Required qualification directory is missing: ${cacheBaselineDirectory}`)
+      )
+    )
+  );
+  const baseline = yield* decodeCachePolicyBaselineFiles(texts);
   const failures = cachePolicyBaselineFailures(baseline);
   if (A.isReadonlyArrayNonEmpty(failures))
     return yield* CacheCommandError.new(`Reviewed baseline is incomplete: ${A.join(failures, ", ")}.`);
@@ -424,24 +880,7 @@ const writeBaseline = Effect.fn("CacheQualification.writeBaseline")(function* (
   return yield* withWriter(
     root,
     Effect.gen(function* () {
-      const prior = yield* readOptional(root, baselinePath);
-      const expected = yield* O.match(prior, {
-        onNone: () => Effect.succeedNone,
-        onSome: (text) => hashText(text).pipe(Effect.asSome),
-      });
-      if (!sameOptionalDigest(expected, request.previous)) {
-        return yield* CacheCommandError.new("Reviewed baseline changed; refresh its digest before replacing it.");
-      }
-      const previous = yield* O.match(prior, {
-        onNone: () => Effect.succeedNone,
-        onSome: (text) =>
-          BaselineJson.decode(text).pipe(
-            Effect.asSome,
-            CacheCommandError.mapError(
-              "The committed baseline does not decode; remove it and re-record without a previous digest."
-            )
-          ),
-      });
+      const prior = yield* readCommittedCachePolicyBaseline(root);
       yield* verifyReference(root, request.review.basis);
       const census = yield* collectCacheCensus(root);
       const projection = projectCensus(census);
@@ -453,7 +892,7 @@ const writeBaseline = Effect.fn("CacheQualification.writeBaseline")(function* (
       const record = yield* R.match(
         recordCachePolicyBaseline(
           CachePolicyBaselineRecordRequest.make({
-            prior: previous,
+            prior: O.map(prior, ({ baseline }) => baseline),
             projection,
             review: CachePolicyBaselineReview.make({
               review: request.review,
@@ -472,6 +911,9 @@ const writeBaseline = Effect.fn("CacheQualification.writeBaseline")(function* (
           onSuccess: Effect.succeed,
         }
       );
+      const next = yield* encodeCachePolicyBaselineFiles(record.baseline);
+      const committed = O.match(prior, { onNone: A.empty<CacheBaselineCommittedFile>, onSome: ({ files }) => files });
+      const plan = yield* planCachePolicyBaselineReplacement(committed, next, request.previous);
       const existingStore = yield* readOptional(root, storePath);
       if (O.isNone(existingStore)) {
         if (O.isSome(prior))
@@ -485,8 +927,12 @@ const writeBaseline = Effect.fn("CacheQualification.writeBaseline")(function* (
       } else {
         yield* readStore(root);
       }
-      const encoded = yield* encodeCachePolicyBaselineText(record.baseline);
-      yield* writeContainedFileString(root, baselinePath, encoded);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* Effect.forEach(plan.writes, (file) => writeContainedFileString(root, file.path, file.text), {
+        discard: true,
+      });
+      yield* Effect.forEach(plan.deletes, (file) => fs.remove(path.join(root, file.path)), { discard: true });
       return record;
     })
   );

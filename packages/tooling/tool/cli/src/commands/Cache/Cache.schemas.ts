@@ -8,9 +8,15 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import {
   CacheActivationProjection,
+  CacheBaselineSubject,
+  CachePolicyBaseline,
   CachePolicyBaselineReview,
+  CachePolicyNode,
+  CachePolicyProjection,
+  CachePolicySource,
   CacheQualificationEntry,
   CacheQualificationKey,
+  CacheReviewDecision,
   CacheTaskConfiguration,
 } from "@beep/repo-configs/cache";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
@@ -821,13 +827,272 @@ export class CacheLiveIdentity extends S.Opaque<CacheLiveIdentity, { readonly br
 ) {}
 
 /**
- * Reviewed baseline re-record with a digest compare-and-swap precondition.
+ * Repository directory that holds one baseline file per review subject.
+ *
+ * **Example** (Locate the baseline directory)
+ *
+ * ```ts
+ * import { cacheBaselineDirectory } from "@beep/repo-cli/commands/Cache"
+ * console.log(cacheBaselineDirectory) // "standards/cache-baseline"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const cacheBaselineDirectory = "standards/cache-baseline";
+
+/**
+ * Workspace package subject whose name is safe to use as a relative file path.
+ *
+ * **Details**
+ *
+ * A package subject is a scoped or unscoped npm package name. npm names never
+ * start with `_` or `.`, so the root file `_root.json` cannot collide with a
+ * package file, and the pattern admits no `..` segment or absolute path.
+ *
+ * **Example** (Accept a scoped package and reject the root subject)
+ *
+ * ```ts
+ * import { CacheBaselinePackageSubject } from "@beep/repo-cli/commands/Cache"
+ * import * as S from "effect/Schema"
+ * console.assert(S.is(CacheBaselinePackageSubject)("@beep/identity"))
+ * console.assert(!S.is(CacheBaselinePackageSubject)("//"))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CacheBaselinePackageSubject = CacheBaselineSubject.check(
+  S.isPattern(/^(?:@[a-z0-9][a-z0-9._~-]*\/)?[a-z0-9][a-z0-9._~-]*$/)
+).pipe(
+  $I.annoteSchema("CacheBaselinePackageSubject", {
+    description: "Workspace package subject whose name is safe to use as a relative file path.",
+  })
+);
+
+/**
+ * Root subject file: root tasks plus the global posture every package shares.
+ *
+ * **Details**
+ *
+ * The root file carries the baseline's scope, profile, epoch, global Turbo
+ * configuration and configuration-source digests, because a change to any of
+ * them stamps the root review. Nodes are the `//#task` computations, sorted
+ * by computation.
+ *
+ * **Example** (Inspect the root file contract)
+ *
+ * ```ts
+ * import { CacheBaselineRootFile } from "@beep/repo-cli/commands/Cache"
+ * console.assert("sources" in CacheBaselineRootFile.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheBaselineRootFile extends S.Opaque<CacheBaselineRootFile, { readonly brand: unique symbol }>()(
+  S.Struct({
+    schemaVersion: S.tag("cache-baseline-root/v1"),
+    subject: S.tag("//"),
+    profile: CachePolicyBaseline.fields.profile,
+    epoch: CachePolicyBaseline.fields.epoch,
+    scope: CachePolicyBaseline.fields.scope,
+    review: CacheReviewDecision,
+    globalConfiguration: CachePolicyProjection.fields.globalConfiguration,
+    sources: S.Array(CachePolicySource),
+    nodes: S.Array(CachePolicyNode),
+  }).pipe(
+    $I.annoteSchema("CacheBaselineRootFile", {
+      description: "Root subject file: root tasks plus the global posture every package shares.",
+    })
+  )
+) {}
+
+/**
+ * Package subject file: one package's review and its executable computations.
+ *
+ * **Example** (Inspect the package file contract)
+ *
+ * ```ts
+ * import { CacheBaselinePackageFile } from "@beep/repo-cli/commands/Cache"
+ * console.assert("nodes" in CacheBaselinePackageFile.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheBaselinePackageFile extends S.Opaque<CacheBaselinePackageFile, { readonly brand: unique symbol }>()(
+  S.Struct({
+    schemaVersion: S.tag("cache-baseline-package/v1"),
+    subject: CacheBaselinePackageSubject,
+    review: CacheReviewDecision,
+    nodes: S.Array(CachePolicyNode),
+  }).pipe(
+    $I.annoteSchema("CacheBaselinePackageFile", {
+      description: "Package subject file: one package's review and its executable computations.",
+    })
+  )
+) {}
+
+/**
+ * One committed baseline file, discriminated by its schema version.
+ *
+ * **Example** (Recognise a package file)
+ *
+ * ```ts
+ * import { CacheBaselineSubjectFile } from "@beep/repo-cli/commands/Cache"
+ * console.assert(CacheBaselineSubjectFile.guards["cache-baseline-package/v1"] !== undefined)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CacheBaselineSubjectFile = S.Union([CacheBaselineRootFile, CacheBaselinePackageFile]).pipe(
+  S.toTaggedUnion("schemaVersion"),
+  $I.annoteSchema("CacheBaselineSubjectFile", {
+    description: "One committed baseline file, discriminated by its schema version.",
+  })
+);
+
+/**
+ * Decoded committed baseline file.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheBaselineSubjectFile = typeof CacheBaselineSubjectFile.Type;
+
+/**
+ * Expected digests of the subject files a re-record replaces or deletes.
+ *
+ * **Details**
+ *
+ * Keys are review subjects; values are the sha256 of that subject's committed
+ * file. The writer requires an entry for every existing file it rewrites or
+ * deletes and rejects any entry that no longer matches, so two re-records of
+ * different packages never invalidate each other. A request that only adds
+ * new subjects needs no entry.
+ *
+ * **Example** (Default to no expected digests)
+ *
+ * ```ts
+ * import { CacheBaselinePreviousDigests } from "@beep/repo-cli/commands/Cache"
+ * import * as S from "effect/Schema"
+ * console.assert(S.is(CacheBaselinePreviousDigests)({}))
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CacheBaselinePreviousDigests = S.Record(CacheBaselineSubject, Sha256Hex).pipe(
+  $I.annoteSchema("CacheBaselinePreviousDigests", {
+    description: "Expected digests of the subject files a re-record replaces or deletes.",
+  })
+);
+
+/**
+ * Decoded expected subject-file digests.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CacheBaselinePreviousDigests = typeof CacheBaselinePreviousDigests.Type;
+
+/**
+ * Request field for {@link CacheBaselinePreviousDigests}, empty when omitted.
+ *
+ * **Example** (Read the request field)
+ *
+ * ```ts
+ * import { CacheBaselinePreviousField } from "@beep/repo-cli/commands/Cache"
+ * console.assert(CacheBaselinePreviousField !== undefined)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CacheBaselinePreviousField = CacheBaselinePreviousDigests.pipe(
+  S.withDecodingDefaultKey(Effect.succeed({})),
+  S.withConstructorDefault(Effect.succeed({}))
+);
+
+/**
+ * Encoded text of one subject file at its repository-relative path.
+ *
+ * **Example** (Inspect the file text contract)
+ *
+ * ```ts
+ * import { CacheBaselineFileText } from "@beep/repo-cli/commands/Cache"
+ * console.assert("text" in CacheBaselineFileText.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheBaselineFileText extends S.Opaque<CacheBaselineFileText, { readonly brand: unique symbol }>()(
+  S.Struct({ subject: CacheBaselineSubject, path: S.NonEmptyString, text: S.String }).pipe(
+    $I.annoteSchema("CacheBaselineFileText", {
+      description: "Encoded text of one subject file at its repository-relative path.",
+    })
+  )
+) {}
+
+/**
+ * A committed subject file with the digest a re-record request must name to replace it.
+ *
+ * **Example** (Inspect the committed file contract)
+ *
+ * ```ts
+ * import { CacheBaselineCommittedFile } from "@beep/repo-cli/commands/Cache"
+ * console.assert("sha256" in CacheBaselineCommittedFile.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheBaselineCommittedFile extends S.Opaque<
+  CacheBaselineCommittedFile,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({ ...CacheBaselineFileText.fields, sha256: Sha256Hex }).pipe(
+    $I.annoteSchema("CacheBaselineCommittedFile", {
+      description: "A committed subject file with the digest a re-record request must name to replace it.",
+    })
+  )
+) {}
+
+/**
+ * The files one re-record rewrites and the files of subjects it drops.
+ *
+ * **Example** (Inspect the replacement contract)
+ *
+ * ```ts
+ * import { CacheBaselineReplacement } from "@beep/repo-cli/commands/Cache"
+ * console.assert("deletes" in CacheBaselineReplacement.fields)
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class CacheBaselineReplacement extends S.Opaque<CacheBaselineReplacement, { readonly brand: unique symbol }>()(
+  S.Struct({ writes: S.Array(CacheBaselineFileText), deletes: S.Array(CacheBaselineCommittedFile) }).pipe(
+    $I.annoteSchema("CacheBaselineReplacement", {
+      description: "The files one re-record rewrites and the files of subjects it drops.",
+    })
+  )
+) {}
+
+/**
+ * Reviewed baseline re-record with a per-subject digest compare-and-swap precondition.
  *
  * **Details**
  *
  * `subjects` optionally names the packages (or `//`) the review covers; a
  * changed subject outside that list rejects the record. Without it, the review is
  * stamped on every subject whose posture changed and the command reports them.
+ * `previous` maps each subject whose committed file the record replaces or
+ * deletes to that file's sha256 (see `CacheBaselinePreviousDigests`), so a
+ * merge that touches only other subjects leaves the request valid.
  *
  * **Example** (Reject a baseline without review)
  *
@@ -843,9 +1108,11 @@ export class CacheLiveIdentity extends S.Opaque<CacheLiveIdentity, { readonly br
 export class CacheBaselineRequest extends S.Opaque<CacheBaselineRequest, { readonly brand: unique symbol }>()(
   S.Struct({
     ...CachePolicyBaselineReview.fields,
-    previous: S.OptionFromOptionalKey(Sha256Hex),
+    previous: CacheBaselinePreviousField,
   }).pipe(
-    $I.annoteSchema("CacheBaselineRequest", { description: "Explicit review and expected prior baseline digest." })
+    $I.annoteSchema("CacheBaselineRequest", {
+      description: "Explicit review and the expected digest of every committed subject file it replaces.",
+    })
   )
 ) {}
 

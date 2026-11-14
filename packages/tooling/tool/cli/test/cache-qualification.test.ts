@@ -30,6 +30,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Result";
 import * as S from "effect/Schema";
+import { writeCachePolicyBaselineFixture } from "./helpers/cache-baseline-files.ts";
 import { contractInput } from "./helpers/cache-producer-bundle-fixture.ts";
 import { NodeTestLayer } from "./support/CommandTest.ts";
 
@@ -44,8 +45,6 @@ const key = CacheQualificationKey.make({
   epoch: "v1",
 });
 const hashBytes = S.decodeEffect(Sha256HexFromBytes);
-
-const encodeCachePolicyBaselineJson = S.encodeEffect(S.fromJsonString(CachePolicyBaseline));
 
 const encodeCacheQualificationStoreJson = S.encodeEffect(S.fromJsonString(CacheQualificationStore));
 
@@ -69,8 +68,7 @@ const fixture = Effect.fn("CacheQualificationTest.fixture")(function* () {
     epoch: key.epoch,
     projection: CachePolicyProjection.make({ globalConfiguration: {}, nodes: [], sources: [] }),
   });
-  const text = yield* encodeCachePolicyBaselineJson(baseline);
-  yield* fs.writeFileString(path.join(root, "standards/cache-qualification-baseline.json"), text);
+  yield* writeCachePolicyBaselineFixture(root, baseline);
   const argument = path.join(root, "standards/cache-qualification.json");
   const encodedCacheQualificationStoreJson1 = yield* encodeCacheQualificationStoreJson(
     CacheQualificationStore.make({ revision: S.Natural.make(0), entries: [], history: [] })

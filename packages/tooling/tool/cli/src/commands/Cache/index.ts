@@ -384,10 +384,25 @@ export { resolveCacheSigningPosture, runCacheRuntimeTasks } from "./Cache.runtim
  * @category cli-commands
  * @since 0.0.0
  */
+/**
+ * Per-subject baseline files: schemas, paths, split, assembly and reading.
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export {
   CacheActivationPreview,
   CacheActivationRequest,
+  CacheBaselineCommittedFile,
+  CacheBaselineFileText,
+  CacheBaselinePackageFile,
+  CacheBaselinePackageSubject,
+  CacheBaselinePreviousDigests,
+  CacheBaselinePreviousField,
+  CacheBaselineReplacement,
   CacheBaselineRequest,
+  CacheBaselineRootFile,
+  CacheBaselineSubjectFile,
   CacheCensusDefinition,
   CacheCensusNode,
   CacheCensusReport,
@@ -416,6 +431,7 @@ export {
   CacheWarmLane,
   CacheWarmReceipt,
   CacheWarmReceiptJson,
+  cacheBaselineDirectory,
 } from "./Cache.schemas.ts";
 /**
  * Govern qualification lifecycle changes and cache policy queries.
@@ -423,10 +439,24 @@ export {
  * @category services
  * @since 0.0.0
  */
+/**
+ * Split, assemble, place and read the per-subject baseline files.
+ *
+ * @category services
+ * @since 0.0.0
+ */
 export {
+  assembleCachePolicyBaseline,
   CacheQualificationLive,
   CacheQualificationService,
   type CacheQualificationServiceShape,
-  encodeCachePolicyBaselineText,
+  cacheBaselineSubjectOfPath,
+  cacheBaselineSubjectPath,
+  decodeCachePolicyBaselineFiles,
+  encodeCachePolicyBaselineFiles,
+  planCachePolicyBaselineReplacement,
+  readCachePolicyBaselineFileTexts,
+  readCommittedCachePolicyBaseline,
+  splitCachePolicyBaseline,
 } from "./Cache.service.ts";
 export { CacheHostedProducerVerifier, CacheHostedProducerVerifierLive } from "./Cache.workflow.github.ts";
