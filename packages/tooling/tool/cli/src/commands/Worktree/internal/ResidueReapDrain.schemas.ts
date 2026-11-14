@@ -152,7 +152,8 @@ export class ResidueDrainCheckResult extends S.Opaque<ResidueDrainCheckResult, {
  * every observation since `drainingSince`, at the same HEAD, for at least
  * `graceDays`. `owningClone` is the clone whose `.git` holds a linked
  * worktree's state (`null` for a clone). `bundle` names the verified bundle an
- * applied drain wrote before removal.
+ * applied drain wrote before removal, and `preserved` the directory it copied
+ * the checkout's gitignored local-only files (`.env` and the like) into.
  *
  * **Example** (A lane inside its grace window)
  *
@@ -172,6 +173,7 @@ export class ResidueDrainCheckResult extends S.Opaque<ResidueDrainCheckResult, {
  *   drainable: true,
  *   eligible: false,
  *   bundle: null,
+ *   preserved: null,
  * })
  * console.log(assessment.eligible) // false
  * ```
@@ -193,6 +195,7 @@ export class ResidueDrainAssessment extends S.Opaque<ResidueDrainAssessment, { r
     drainable: S.Boolean,
     eligible: S.Boolean,
     bundle: S.NullOr(S.String),
+    preserved: S.NullOr(S.String),
   }).pipe(
     $I.annoteSchema("ResidueDrainAssessment", {
       description: "Per-checkout drain checks, whether the predicate holds now, and whether its grace window elapsed.",
@@ -373,6 +376,7 @@ export type ResidueDrainJournalOutcome = typeof ResidueDrainJournalOutcome.Type;
  *   reason: "drain-blocked",
  *   checks: [],
  *   bundle: null,
+ *   preserved: null,
  *   bytes: null,
  * })
  * console.log(entry.schemaVersion) // "residue-drain-journal/v1"
@@ -392,6 +396,7 @@ export class ResidueDrainJournalEntry extends S.Opaque<ResidueDrainJournalEntry,
     reason: S.NullOr(S.String),
     checks: S.Array(ResidueDrainCheckResult),
     bundle: S.NullOr(S.String),
+    preserved: S.NullOr(S.String),
     bytes: S.NullOr(S.Finite),
   }).pipe(
     $I.annoteSchema("ResidueDrainJournalEntry", {

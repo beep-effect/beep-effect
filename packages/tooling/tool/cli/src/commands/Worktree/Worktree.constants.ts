@@ -58,3 +58,31 @@ export const CLAUDE_WORKTREES_RELATIVE_ROOT = ".claude/worktrees";
  * @since 0.0.0
  */
 export const T3_WORKTREES_RELATIVE_ROOT = ".t3/worktrees";
+
+/**
+ * Local-only files copied from the main checkout into a fresh worktree.
+ *
+ * **Details**
+ *
+ * These are gitignored per-worktree files that a fresh `git worktree add` does
+ * not carry over; restoring them makes a new worktree immediately usable.
+ *
+ * **Example** (Inspect the bootstrap entries)
+ *
+ * ```ts
+ * import { WORKTREE_LOCAL_FILE_ENTRIES } from "@beep/repo-cli/commands/Worktree"
+ *
+ * console.log(WORKTREE_LOCAL_FILE_ENTRIES.includes(".env")) // true
+ * console.log(WORKTREE_LOCAL_FILE_ENTRIES.length) // 5
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const WORKTREE_LOCAL_FILE_ENTRIES = [
+  ".env",
+  ".claude/settings.local.json",
+  "CLAUDE.local.md",
+  ".idea/compiler.xml",
+  ".idea/effect.intellij.xml",
+] as const;

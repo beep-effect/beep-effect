@@ -98,7 +98,8 @@ const makeFleet = Effect.fn("ResidueDrainTest.makeFleet")(function* () {
   yield* run(projects, "git", ["init", "--quiet", "--bare", "-b", "main", "origin.git"]);
   const invoker = yield* cloneOrigin(projects, "beep-effect");
   yield* fs.writeFileString(path.join(invoker, "README.md"), "fleet\n");
-  yield* run(invoker, "git", ["add", "README.md"]);
+  yield* fs.writeFileString(path.join(invoker, ".gitignore"), ".env\n");
+  yield* run(invoker, "git", ["add", "README.md", ".gitignore"]);
   yield* run(invoker, "git", ["commit", "--quiet", "-m", "seed"]);
   yield* run(invoker, "git", ["push", "--quiet", "origin", "main"]);
   const clone = yield* cloneOrigin(projects, "beep-effect0");
@@ -109,6 +110,8 @@ const makeFleet = Effect.fn("ResidueDrainTest.makeFleet")(function* () {
   yield* fs.writeFileString(path.join(stray, "work.txt"), "local only\n");
   yield* run(stray, "git", ["add", "work.txt"]);
   yield* run(stray, "git", ["commit", "--quiet", "-m", "unpushed work"]);
+  // Ignored local-only file: clean to git status, carried by no bundle.
+  yield* fs.writeFileString(path.join(stray, ".env"), "API_KEY=op://vault/item/field\n");
   yield* fs.writeFileString(path.join(stray, "README.md"), "stashed edit\n");
   yield* run(stray, "git", ["stash", "push", "--quiet", "-m", "stashed edit"]);
   return { home, projects, state, invoker, clone, lane, stray };
@@ -315,6 +318,9 @@ describe("residue reap drainable class", () => {
         expect(removed.action).toBe("remove-dir");
         yield* expectExists(fleet.stray, false);
         const bundle = O.getOrThrow(O.fromNullishOr(removed.drain?.bundle));
+        const preserved = O.getOrThrow(O.fromNullishOr(removed.drain?.preserved));
+        const env = yield* fs.readFileString(path.join(preserved, ".env"));
+        expect(env).toBe("API_KEY=op://vault/item/field\n");
         yield* expectExists(bundle, true);
         yield* run(fleet.clone, "git", ["bundle", "verify", bundle]);
         const heads = yield* run(fleet.clone, "git", ["bundle", "list-heads", bundle]);

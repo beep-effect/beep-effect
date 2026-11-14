@@ -46,7 +46,7 @@ import { renderAttemptJournalExport } from "../Yeet/internal/AttemptJournalStore
 import { worktreeFleetCommand } from "./Fleet.command.ts";
 import { resolveWorktreeRemovalRoots, worktreeRemovalCandidates } from "./internal/RemovalRoots.ts";
 import { worktreeReapCommand } from "./Reap.command.ts";
-import { WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
+import { WORKTREE_LOCAL_FILE_ENTRIES, WORKTREES_ROOT_SUFFIX } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeExistsError } from "./Worktree.errors.ts";
 import {
   WorktreeInvokerExemption,
@@ -164,34 +164,6 @@ export const invokerExemption = Effect.fn("Worktree.invokerExemption")(function*
  */
 export const describeInotifyWatcher = (watcher: WorktreeInotifyWatcher): string =>
   `pid ${watcher.pid}${O.match(watcher.command, { onNone: () => "", onSome: (command) => ` (${command})` })}`;
-
-/**
- * Local-only files copied from the main checkout into a fresh worktree.
- *
- * **Details**
- *
- * These are gitignored per-worktree files that a fresh `git worktree add` does
- * not carry over; restoring them makes a new worktree immediately usable.
- *
- * **Example** (Inspect the bootstrap entries)
- *
- * ```ts
- * import { WORKTREE_LOCAL_FILE_ENTRIES } from "@beep/repo-cli/commands/Worktree"
- *
- * console.log(WORKTREE_LOCAL_FILE_ENTRIES.includes(".env")) // true
- * console.log(WORKTREE_LOCAL_FILE_ENTRIES.length) // 5
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const WORKTREE_LOCAL_FILE_ENTRIES = [
-  ".env",
-  ".claude/settings.local.json",
-  "CLAUDE.local.md",
-  ".idea/compiler.xml",
-  ".idea/effect.intellij.xml",
-] as const;
 
 /**
  * Default branch name created for a new worktree when `--branch` is omitted.

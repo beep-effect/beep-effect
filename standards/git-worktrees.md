@@ -431,7 +431,7 @@ A checkout is drainable only when all of these hold:
 | `owned-worktrees` | (clone) a worktree is still registered to it; lanes retire first |
 | `object-borrowers` | (clone) another clone reads its objects through `objects/info/alternates` |
 | `local-only-work` | never refuses; local-only branches, tags, stashes or a detached HEAD need a verified bundle first |
-| `clean-tree` | `git status` shows any change, untracked files included |
+| `clean-tree` | `git status` shows any change, untracked files included (gitignored local-only files are copied out at removal instead, see below) |
 | `grace-window` | it has not stayed drainable at one HEAD for `--drain-grace-days` (default 7) |
 
 Liveness reuses the fleet mirror's classifier with the reaper's process probe,
@@ -452,7 +452,11 @@ eligible are kept with reason `drain-opt-in`. An applied wave re-checks every
 eligible checkout immediately before removal, bundles its local-only work to
 `~/.local/state/beep/fleet/<repo-key>/drain-bundles/` (refused unless
 `git bundle verify` passes and every local-only commit is reachable from a
-bundled head), files its Yeet attempt journals, removes it (`git worktree
+bundled head), copies the gitignored local-only files `worktree new` seeds
+(`.env`, `.claude/settings.local.json`, `CLAUDE.local.md`, the machine-local
+`.idea` files) to `<bundle>.local/` beside it, reads the checkout once more
+(same HEAD, still clean and dormant, no local-only commit outside the bundle),
+files its Yeet attempt journals, removes it (`git worktree
 remove` from the owning clone for a lane, an inode-bound tree removal for a
 clone), and appends the decision with every check to `drain-journal.jsonl`
 beside the registry. The wave report lists the disk held by registered legacy

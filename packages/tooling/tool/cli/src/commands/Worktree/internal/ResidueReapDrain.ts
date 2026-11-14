@@ -26,6 +26,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { runRepoCommandCaptureRaw } from "../../../internal/repo-run/RepoRun.executor.ts";
 import { classifyFleetLiveness } from "../Fleet.service.ts";
+import { WORKTREE_LOCAL_FILE_ENTRIES } from "../Worktree.constants.ts";
 import { FleetLivenessReadings } from "../Worktree.schemas.ts";
 import { FleetDrainStatus, FleetRegistryRow, FleetSeatRole } from "./FleetRegistry.schemas.ts";
 import { fleetAdoptionRole } from "./FleetRegistry.ts";
@@ -608,6 +609,7 @@ const assessmentOf = (
     drainable: observation.drainable,
     eligible: observation.drainable && grace.outcome === "pass",
     bundle: null,
+    preserved: null,
   });
 };
 
@@ -701,7 +703,14 @@ type BundleSpec = LocalOnlySpec & { readonly tempRefs: ReadonlyArray<string> };
 const bundleFileName = (real: string, runId: string): string =>
   `${Str.replace(/^_+/u, "")(Str.replace(/[^A-Za-z0-9._-]+/gu, "_")(real))}-${runId}.bundle`;
 
-const writeBundle = Effect.fnUntraced(function* (layout: DrainLayout, spec: BundleSpec, file: string) {
+// A verified bundle and the head shas it carries.
+type BundleWritten = { readonly file: string; readonly heads: ReadonlyArray<string> };
+
+const writeBundle = Effect.fnUntraced(function* (
+  layout: DrainLayout,
+  spec: BundleSpec,
+  file: string
+): Effect.fn.Return<Result.Result<BundleWritten, string>, never, DrainRequirements> {
   const include = [...spec.include, ...spec.tempRefs];
   const created = yield* gitStdout(layout.real, ["bundle", "create", file, ...include, "--not", ...spec.exclude]);
   if (O.isNone(created)) return Result.fail("git bundle create failed");
@@ -715,16 +724,20 @@ const writeBundle = Effect.fnUntraced(function* (layout: DrainLayout, spec: Bund
   // Every local-only commit must be reachable from a bundled head.
   const residual = yield* countRevisions(layout, [...include, "--not", ...spec.exclude, ...shas]);
   return O.exists(residual, (count) => N.Equivalence(count, 0))
-    ? Result.succeed(file)
+    ? Result.succeed({ file, heads: shas })
     : Result.fail("the bundle does not cover every local-only commit");
 });
 
-const bundleLocalOnlyWork = Effect.fnUntraced(function* (layout: DrainLayout, stateDirectory: string, runId: string) {
+const bundleLocalOnlyWork = Effect.fnUntraced(function* (
+  layout: DrainLayout,
+  stateDirectory: string,
+  runId: string
+): Effect.fn.Return<Result.Result<BundleWritten, string>, never, DrainRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const spec = yield* localOnlySpec(layout);
   if (O.isNone(spec)) return Result.fail("git stash list failed");
-  const directory = path.join(stateDirectory, "drain-bundles");
+  const directory = path.join(stateDirectory, DRAIN_BUNDLES);
   const made = yield* fs.makeDirectory(directory, { recursive: true }).pipe(Effect.option);
   if (O.isNone(made)) return Result.fail(`could not create ${directory}`);
   const file = path.join(directory, bundleFileName(layout.real, runId));
@@ -743,6 +756,60 @@ const bundleLocalOnlyWork = Effect.fnUntraced(function* (layout: DrainLayout, st
   return yield* writeBundle(layout, { ...spec.value, tempRefs }, file).pipe(Effect.ensuring(release));
 });
 
+const DRAIN_BUNDLES = "drain-bundles";
+
+// Copy the gitignored local-only files a checkout holds (the ones `worktree new` seeds) beside its
+// bundle: `git status` never reports them and no bundle carries them.
+const preserveLocalFiles = Effect.fnUntraced(function* (layout: DrainLayout, stateDirectory: string, runId: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const present = yield* Effect.filter(WORKTREE_LOCAL_FILE_ENTRIES, (entry) =>
+    fs.exists(path.join(layout.real, entry)).pipe(Effect.orElseSucceed(() => true))
+  );
+  if (A.isReadonlyArrayEmpty(present)) return Result.succeed(O.none<string>());
+  const directory = path.join(stateDirectory, DRAIN_BUNDLES, `${bundleFileName(layout.real, runId)}.local`);
+  const copied = yield* Effect.forEach(present, (entry) => {
+    const target = path.join(directory, entry);
+    return fs
+      .makeDirectory(path.dirname(target), { recursive: true })
+      .pipe(Effect.andThen(fs.copyFile(path.join(layout.real, entry), target)), Effect.option);
+  });
+  return A.every(copied, O.isSome)
+    ? Result.succeed(O.some(directory))
+    : Result.fail(`could not copy the local-only files ${A.join(present, ", ")} to ${directory}`);
+});
+
+// After bundling and copying, the checkout must be exactly what was preserved: same HEAD, still
+// clean and dormant, and every local-only commit reachable from a bundled head (or a remote ref).
+const settledAfterPreservation = Effect.fnUntraced(function* (
+  context: ResidueDrainContext,
+  before: DrainLayout,
+  heads: ReadonlyArray<string>
+) {
+  const layout = yield* drainLayout(before.checkout);
+  if (O.isNone(layout)) return O.some("git layout unreadable");
+  const sameHead = O.exists(layout.value.head, (head) =>
+    O.exists(before.head, (recorded) => Str.Equivalence(head, recorded))
+  );
+  if (!sameHead) return O.some("HEAD moved while its work was being preserved");
+  const clean = yield* cleanTreeCheck(layout.value);
+  if (clean.outcome !== "pass") return O.some(`tree changed while its work was being preserved: ${clean.detail}`);
+  const liveness = yield* livenessCheck(context, layout.value);
+  if (liveness.outcome !== "pass") return O.some(`no longer dormant: ${liveness.detail}`);
+  const spec = yield* localOnlySpec(layout.value);
+  if (O.isNone(spec)) return O.some("git stash list failed");
+  const residual = yield* countRevisions(layout.value, [
+    ...spec.value.include,
+    ...spec.value.stashes,
+    "--not",
+    ...spec.value.exclude,
+    ...heads,
+  ]);
+  return O.exists(residual, (count) => N.Equivalence(count, 0))
+    ? O.none()
+    : O.some("local-only commits appeared that the bundle does not hold");
+});
+
 /**
  * Re-check one eligible checkout immediately before removal and preserve its
  * local-only work.
@@ -754,7 +821,12 @@ const bundleLocalOnlyWork = Effect.fnUntraced(function* (layout: DrainLayout, st
  * otherwise the result fails with `drain-blocked` and the fresh assessment.
  * Local-only work is then written to a bundle under the fleet state
  * directory's `drain-bundles/`, which must pass `git bundle verify` and cover
- * every local-only commit, or the result fails with `drain-bundle-failed`.
+ * every local-only commit, and the gitignored local-only files `worktree new`
+ * seeds (`.env`, `.claude/settings.local.json`, `CLAUDE.local.md`, the
+ * machine-local `.idea` files) are copied to `<bundle>.local/`; either failure
+ * fails the result with `drain-bundle-failed`. Last, the checkout is read again:
+ * a moved HEAD, a changed tree, a live process or a local-only commit no bundle
+ * holds fails it with `drain-blocked`.
  *
  * **Example** (Build the preparation effect)
  *
@@ -805,11 +877,29 @@ export const prepareResidueDrainRemoval = Effect.fnUntraced(function* (
     });
   }
   const needsBundle = A.some(fresh.checks, (result) => result.outcome === "bundle-required");
-  if (!needsBundle) return Result.succeed(fresh);
-  const bundled = yield* bundleLocalOnlyWork(layout.value, context.facts.stateDirectory, runId);
-  return Result.match(bundled, {
-    onFailure: (detail) => Result.fail({ reason: "drain-bundle-failed" as const, assessment: fresh, detail }),
-    onSuccess: (bundle) => Result.succeed(ResidueDrainAssessment.make({ ...fresh, bundle })),
+  const bundled = needsBundle
+    ? yield* Effect.map(bundleLocalOnlyWork(layout.value, context.facts.stateDirectory, runId), Result.map(O.some))
+    : Result.succeed(O.none<BundleWritten>());
+  if (Result.isFailure(bundled)) {
+    return Result.fail({ reason: "drain-bundle-failed" as const, assessment: fresh, detail: bundled.failure });
+  }
+  const preserved = yield* preserveLocalFiles(layout.value, context.facts.stateDirectory, runId);
+  if (Result.isFailure(preserved)) {
+    return Result.fail({ reason: "drain-bundle-failed" as const, assessment: fresh, detail: preserved.failure });
+  }
+  const kept = ResidueDrainAssessment.make({
+    ...fresh,
+    bundle: O.getOrNull(O.map(bundled.success, (bundle) => bundle.file)),
+    preserved: O.getOrNull(preserved.success),
+  });
+  const heads = O.getOrElse(
+    O.map(bundled.success, (bundle) => bundle.heads),
+    A.empty<string>
+  );
+  const unsettled = yield* settledAfterPreservation(context, layout.value, heads);
+  return O.match(unsettled, {
+    onNone: () => Result.succeed(kept),
+    onSome: (detail) => Result.fail({ reason: "drain-blocked" as const, assessment: kept, detail }),
   });
 });
 
@@ -857,6 +947,7 @@ export const recordResidueDrainOutcome = Effect.fnUntraced(function* (input: {
     reason: O.getOrNull(input.reason),
     checks: input.assessment.checks,
     bundle: input.assessment.bundle,
+    preserved: input.assessment.preserved,
     bytes: O.getOrNull(input.bytes),
   });
   const file = path.join(input.context.facts.stateDirectory, "drain-journal.jsonl");
