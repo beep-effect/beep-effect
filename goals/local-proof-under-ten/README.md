@@ -36,8 +36,9 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
-(`decisions/2026-11-10-p0-baseline.md`); slice 1 (PERIL-13) and slice 2 (PERIL-10 summary and archive) landed;
-slice 3 (SCHE-08) and slice 4 (the beep-heavy retirement) are next.
+(`decisions/2026-11-10-p0-baseline.md`). Slices 1 (PERIL-13), 2 (PERIL-10 summary and archive) and 4 (the
+beep-heavy retirement, which completes PERIL-10) are done. Slice 3 (SCHE-08) is open as PR #3308; slice 5
+(PERIL-02) is next, and slice 6 (the scheduler facade) follows slice 3.
 
 ## Latest Evidence
 
@@ -55,6 +56,10 @@ slice 3 (SCHE-08) and slice 4 (the beep-heavy retirement) are next.
   (`goals/yeet-async-merge-and-stacks`, merged 2026-11-12) adds `Yeet/internal/PatchIdentity.ts` and carries the review window
   across GitHub-made unchanged rewrites (cascade, restack); merges fail closed there, so PERIL-09 (a
   diff-preserving merge of main) stays open and should build on that classifier.
+- 2026-11-14: slice 4 (PERIL-10) retires the `beep-heavy` wrapper rule. The orchestrate skill's gate poller and
+  hand-off use `systemd-run --user` or a T3 scheduled task; its "Where to launch" section says Yeet's proofs take
+  quality-scheduler admission on their own and other commands run directly. The practice-contacts runbook and
+  `goals/design-figure-review-loop`'s plan drop the wrapper. PERIL-10 is complete.
 
 ## Notes
 

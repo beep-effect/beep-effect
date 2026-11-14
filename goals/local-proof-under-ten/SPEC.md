@@ -123,7 +123,7 @@ Higher sources outrank lower sources when they conflict.
   summary line since slice 2; `--json` keeps every path).
 - Simulation lab for backfill and fairness: `apps/labs/ciops`.
 - Docs: `.claude/skills/yeet/SKILL.md`, `.claude/skills/yeet/references/detached-jobs.md`,
-  `.claude/skills/orchestrate/SKILL.md` (the `beep-heavy` doctrine PERIL-10 retires), and the AGENTS.md
+  `.claude/skills/orchestrate/SKILL.md` (the `beep-heavy` doctrine PERIL-10 retired), and the AGENTS.md
   Quality Operator lines that D12 and D15 amend.
 - Gate-order handoff: a new handoff document under this packet's `research/` for the re-seed; the existing
   `goals/time-to-certainty/research/gate-order-handoff.json` is read, never edited.
@@ -162,7 +162,7 @@ every citation below was re-checked at c90929b1ff1). Ids are the rows in
 | PERIL-02 | One readiness monitor per PR in a checkout, reuse keyed on normalized readiness argv | open (publish already reuses through `pickReusableReadyMonitor`, `Handler.ts:1184`; `ReadyGate.ts:565` lacks the runner-liveness check) | Two submissions with the same PR and argv yield one job; stricter argv not reused; a dead-runner record skipped; `ReadyGate.ts:565` fixed in the same PR | none |
 | PERIL-03 | State-aware monitor cadence with a wake on a local ref change | partly landed (#3032, fda98a2c4bd: 90 s default at `MonitorLoop.ts:210`, rate-limit sleep in `MonitorRateLimit.ts`) | TestClock mutation fixtures: the first terminal after each mutation follows a full read taken after it; a dirty-file re-edit still flags stale gates; then a 7-day A/B of polls per monitor-hour | PERIL-02 |
 | PERIL-09 | Keep the review-window anchor across a diff-preserving merge of main | open (`ReviewWindow.ts` anchors on first check-suite receipt, a later force-push or the ready flip) | Ruling D12 (given); replay fixtures: clean merge keeps, conflict touching PR lines re-arms | none |
-| PERIL-10 | Summarize scheduler quarantine in status, archive-reap aged entries, retire the `beep-heavy` doctrine (merges SCHE-10) | partly landed (slice 2: `quality scheduler status` prints one quarantine summary line, and the reap pass archives entries older than 7 days to `<admission root>/quarantine-archive` before any delete; open: the `beep-heavy` retirement in `.claude/skills/orchestrate/SKILL.md`, slice 4) | Renderer and reaper age-gate tests, an archive-restore fixture; live lease count unchanged | none |
+| PERIL-10 | Summarize scheduler quarantine in status, archive-reap aged entries, retire the `beep-heavy` doctrine (merges SCHE-10) | landed (slice 2: `quality scheduler status` prints one quarantine summary line, and the reap pass archives entries older than 7 days to `<admission root>/quarantine-archive` before any delete; slice 4: the `beep-heavy` rule is retired from `.claude/skills/orchestrate/SKILL.md` and `docs/runbooks/practice-m365-contacts-seeding.md`) | Renderer and reaper age-gate tests, an archive-restore fixture; live lease count unchanged | none |
 | PERIL-13 | Mark merged-preview admission dormant | landed (dormancy note in `.claude/skills/yeet/references/gates-and-proof.md`) | Ruling D17 (given) | none |
 
 SCHE-09 (admission history retention) was listed under this goal in MAP.md's first draft; D23 assigns it to
@@ -279,9 +279,9 @@ certainty-scorecard and this goal consumes it.
 - [ ] PERIL-02: two submissions with the same PR and argv yield one job; then the PERIL-03 7-day A/B of polls per
       monitor-hour is recorded under `history/`.
 - [ ] PERIL-09 lands with its replay fixtures and the AGENTS.md amendment in the same PR.
-- [ ] PERIL-10: `quality scheduler status` renders the quarantine as one summary line, aged entries are archived
+- [x] PERIL-10: `quality scheduler status` renders the quarantine as one summary line, aged entries are archived
       before reaping, the live lease count is unchanged, and the `beep-heavy` doctrine is retired from the
-      orchestrate skill.
+      orchestrate skill (landed with PLAN.md slices 2 and 4).
 - [x] PERIL-13: the yeet skill documents merged-preview as supported and dormant (landed with PLAN.md slice 1).
 - [ ] TURB-05, TURB-10 and YEET-05 record shadow receipts and attribution only, while the R2 pause holds.
 - [ ] No unrelated refactors or formatting churn.
