@@ -7,6 +7,7 @@ import {
   program,
   SingletonIds,
 } from "@beep/infra-cost-controls/CostControls";
+import { checkPlan, LiveSettings, PlanEntry } from "@beep/infra-cost-controls/PlanCheck";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -14,8 +15,21 @@ import * as Effect from "effect/Effect";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as FakeAws from "./support/FakeAws.ts";
+
+const decodePlanEntries = S.decodeUnknownEffect(S.Array(PlanEntry));
+
+const liveAccountSettings = LiveSettings.make({
+  costAllocationTags: A.map(["App", "beep-ci", "DataClass", "ghr:environment", "ManagedBy", "Project"], (TagKey) => ({
+    TagKey,
+    Status: "Active",
+  })),
+  computeOptimizer: { status: "Active" },
+  costOptimizationHub: { items: [{ status: "Active" }] },
+  anomalyMonitors: [{ MonitorName: "beep-account-services", MonitorType: "DIMENSIONAL", MonitorDimension: "SERVICE" }],
+});
 
 const environmentOf = (values: Record<string, string>) =>
   Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(values));
@@ -68,28 +82,31 @@ describe("CostControls personal stage", () => {
 
 describe("CostControls prod stage", () => {
   const silent = FakeAws.harness({ seed: FakeAws.liveAccount, stage: "prod" });
-  silent.provider("adopts the services monitor, keeps the budget silent and retains both", (stack) =>
-    Effect.gen(function* () {
-      const { account } = silent;
-      const live = silent.monitor(PhysicalNames.servicesMonitor);
-      const output = yield* stack.deploy(program.pipe(environmentOf({ CI: "true" })));
+  silent.provider(
+    "in the silent phase adopts the services monitor, keeps the budget silent and retains both",
+    (stack) =>
+      Effect.gen(function* () {
+        const { account } = silent;
+        const live = silent.monitor(PhysicalNames.servicesMonitor);
+        const silentConfig = yield* decodeCostControlsConfig({ ...productionConfig, notifications: "silent" });
+        const output = yield* stack.deploy(declareCostControls(silentConfig, "prod").pipe(environmentOf({})));
 
-      expect(output.budgetName).toBe(PhysicalNames.budget);
-      expect(output.anomalyMonitorArn).toBe(live?.arn);
-      expect(output.anomalySubscriptionArn).toBeUndefined();
-      expect(MutableHashMap.size(account.monitors)).toBe(1);
-      expect(FakeAws.operations(account)).not.toContain("CreateAnomalyMonitor");
-      expect(silent.monitor(PhysicalNames.servicesMonitor)?.tags["alchemy::id"]).toBe("AccountServicesMonitor");
-      expect(silent.budget(PhysicalNames.budget)?.notifications).toEqual([]);
-      expect(MutableHashMap.size(account.subscriptions)).toBe(0);
+        expect(output.budgetName).toBe(PhysicalNames.budget);
+        expect(output.anomalyMonitorArn).toBe(live?.arn);
+        expect(output.anomalySubscriptionArn).toBeUndefined();
+        expect(MutableHashMap.size(account.monitors)).toBe(1);
+        expect(FakeAws.operations(account)).not.toContain("CreateAnomalyMonitor");
+        expect(silent.monitor(PhysicalNames.servicesMonitor)?.tags["alchemy::id"]).toBe("AccountServicesMonitor");
+        expect(silent.budget(PhysicalNames.budget)?.notifications).toEqual([]);
+        expect(MutableHashMap.size(account.subscriptions)).toBe(0);
 
-      account.calls.length = 0;
-      yield* stack.destroy();
-      expect(FakeAws.mutations(account)).toEqual([]);
-      expect(silent.budget(PhysicalNames.budget)).toBeDefined();
-      expect(silent.monitor(PhysicalNames.servicesMonitor)).toBeDefined();
-      expect(allTagsActive(account)).toBe(true);
-    })
+        account.calls.length = 0;
+        yield* stack.destroy();
+        expect(FakeAws.mutations(account)).toEqual([]);
+        expect(silent.budget(PhysicalNames.budget)).toBeDefined();
+        expect(silent.monitor(PhysicalNames.servicesMonitor)).toBeDefined();
+        expect(allTagsActive(account)).toBe(true);
+      })
   );
 
   const live = FakeAws.harness({ seed: FakeAws.liveAccount, stage: "prod" });
@@ -134,24 +151,63 @@ describe("CostControls prod stage", () => {
   );
 
   const removal = FakeAws.harness({ seed: FakeAws.liveAccount, stage: "prod" });
-  removal.provider("removing the singletons from the stack deletes nothing", (stack) =>
+  removal.provider("removing everything deletes only the stack's own subscription, no account setting", (stack) =>
     Effect.gen(function* () {
       const { account } = removal;
       const config = yield* decodeCostControlsConfig(productionConfig);
-      yield* stack.deploy(declareCostControls(config, "prod").pipe(environmentOf({})));
+      yield* stack.deploy(declareCostControls(config, "prod").pipe(environmentOf(recipientsVariable)));
 
       account.calls.length = 0;
       yield* stack.deploy(Effect.succeed({ removed: true }));
       for (const operation of singletonMutations) {
         expect(FakeAws.operations(account)).not.toContain(operation);
       }
-      expect(FakeAws.mutations(account)).toEqual([]);
+      expect(FakeAws.mutations(account)).toEqual(["DeleteAnomalySubscription"]);
       expect(tagStatus(account, "ghr:environment")).toBe("Active");
       expect(allTagsActive(account)).toBe(true);
       expect(account.computeOptimizer.status).toBe("Active");
       expect(account.costOptimizationHub.status).toBe("Active");
       expect(removal.monitor(PhysicalNames.servicesMonitor)).toBeDefined();
       expect(removal.budget(PhysicalNames.budget)).toBeDefined();
+    })
+  );
+});
+
+describe("CostControls prod is live", () => {
+  const graph = FakeAws.harness({ seed: FakeAws.liveAccount, stage: "prod" });
+  graph.provider("the prod program mails from the budget and declares AnomalyAlerts", (stack) =>
+    Effect.gen(function* () {
+      const { account } = graph;
+      const output = yield* stack.deploy(program.pipe(environmentOf({ CI: "true", ...recipientsVariable })));
+
+      expect(output.notifications).toBe("live");
+      expect(A.length(graph.budget(PhysicalNames.budget)?.notifications ?? [])).toBe(4);
+      expect(output.anomalySubscriptionArn).toBe(graph.subscription(PhysicalNames.anomalySubscription)?.arn);
+      expect(MutableHashMap.size(account.monitors)).toBe(1);
+      expect(FakeAws.operations(account)).not.toContain("CreateAnomalyMonitor");
+    })
+  );
+
+  // The first live deploy runs on the state the silent deploy (#3310) left: the
+  // gate must accept a budget update plus an AnomalyAlerts create while the
+  // nine singletons stay no-op.
+  const transition = FakeAws.harness({ seed: FakeAws.liveAccount, stage: "prod" });
+  transition.provider("the first live plan updates the budget, creates AnomalyAlerts and passes the gate", (stack) =>
+    Effect.gen(function* () {
+      const silentConfig = yield* decodeCostControlsConfig({ ...productionConfig, notifications: "silent" });
+      yield* stack.deploy(declareCostControls(silentConfig, "prod").pipe(environmentOf({})));
+
+      const plan = yield* stack.plan(program.pipe(environmentOf({ CI: "true", ...recipientsVariable })));
+      const actions = R.map(plan.resources, (item) => item?.action);
+      expect(actions.MonthlyBudget).toBe("update");
+      expect(actions.AnomalyAlerts).toBe("create");
+      for (const id of SingletonIds) expect(actions[id]).toBe("noop");
+
+      const planned = A.flatMap(R.toEntries(plan.resources), ([fqn, item]) =>
+        item === undefined ? [] : [{ fqn, action: item.action, changedProperties: [] }]
+      );
+      const entries = yield* decodePlanEntries(planned);
+      yield* checkPlan(entries, liveAccountSettings);
     })
   );
 });

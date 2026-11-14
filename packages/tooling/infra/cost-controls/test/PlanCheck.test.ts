@@ -75,6 +75,24 @@ describe("parsePlanLog", () => {
     ]);
   });
 
+  it("reports nested keys by name and a bare scalar as (value), so no address reaches the log", () => {
+    const entries = parsePlanLog(
+      A.join(
+        [
+          colored("MonthlyBudget", "update"),
+          line("  properties:"),
+          line("  - notifications: []"),
+          line("  + notifications:"),
+          line("  +   - address: ops@example.com"),
+          line("  +     - billing@example.com"),
+        ],
+        "\n"
+      )
+    );
+    expect(entries[0]?.changedProperties).toEqual(["notifications", "address", "(value)"]);
+    expect(A.join(entries[0]?.changedProperties ?? [], ",")).not.toContain("@");
+  });
+
   it("ignores action tasks and the summary line", () => {
     expect(parsePlanLog(A.join([line("Plan: no changes"), line("[Seed] run [action]")], "\n"))).toEqual([]);
   });
