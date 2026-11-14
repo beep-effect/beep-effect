@@ -1,8 +1,10 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { ownCitationConfiguration } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
 import {
   CitationRegexCapturedRange,
   makeCitationRegexResult,
 } from "@beep/law-practice-server/internal/Citation/RegexResult";
+import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -324,8 +326,12 @@ it.effect("rejects malformed native rows and overlapping whole matches during co
 it.effect("rejects malformed result context and per-call ceilings before decoding or pulling captures", () =>
   Effect.gen(function* () {
     const policy = yield* defaultCitationEnginePolicy;
+    // A malformed policy is refused where configuration crosses into the engine.
+    const malformed = yield* ownCitationConfiguration(CitationEngineLimits, null, () => ({
+      reason: "invalid-runtime",
+    })).pipe(Effect.flip);
+    expect(malformed).toMatchObject({ reason: "invalid-runtime" });
     for (const operation of [
-      makeCitationRegexResult(null, 0, 1),
       makeCitationRegexResult(policy.limits, -1, 1),
       makeCitationRegexResult(policy.limits, 0, 0.5),
     ]) {

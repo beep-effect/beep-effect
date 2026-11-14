@@ -3,7 +3,10 @@ import {
   CitationAdmissionSnapshot,
   CitationOperationAdmission,
 } from "@beep/law-practice-server/internal/Citation/Admission";
-import { makeCitationExtractorOrdering } from "@beep/law-practice-server/internal/Citation/ExtractorOrdering";
+import {
+  CitationExtractorOrderingBinding,
+  makeCitationExtractorOrdering as makeOwnedCitationExtractorOrdering,
+} from "@beep/law-practice-server/internal/Citation/ExtractorOrdering";
 import {
   CitationTokenizerConfiguration,
   makeCitationTokenizer as makeOwnedCitationTokenizer,
@@ -16,8 +19,10 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Order from "effect/Order";
+import * as S from "effect/Schema";
 import {
   installCitationOwnedTestStage,
+  ownCitationTestConfiguration,
   refuseCitationTestConfigurations,
 } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
@@ -34,6 +39,15 @@ import {
   setupCitationTokenizer,
 } from "./CitationTokenizer.fixtures.ts";
 import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationExtractorOrdering = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationExtractorOrdering>[0],
+  a1: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(S.Array(CitationExtractorOrderingBinding), a1);
+  return yield* makeOwnedCitationExtractorOrdering(a0, o1);
+});
 
 const makeCitationTokenizer = installCitationOwnedTestStage({
   schema: CitationTokenizerConfiguration,

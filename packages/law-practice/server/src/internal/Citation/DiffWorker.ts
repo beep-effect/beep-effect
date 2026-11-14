@@ -23,11 +23,12 @@ import { acquireCitationNativeLease, captureCitationNativeAdmission } from "./Na
 import {
   citationNativeProcessCommand,
   makeCitationNativeProcessOwner,
-  prepareCitationNativeRuntime,
   withCitationNativeProcess,
 } from "./NativeProcess.ts";
 import { CitationPythonSliceLayout, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationPythonUnicodeFailure, CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/DiffWorker");
@@ -51,15 +52,12 @@ const UnicodeValue = S.toType(CitationPythonUnicodeStorage).pipe(
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
   useDmp = true
 ) {
   const algorithm = yield* S.decodeUnknownEffect(S.Boolean)(useDmp).pipe(
     Effect.mapError(() => failure("invalid-runtime"))
-  );
-  const { limits, runtime } = yield* prepareCitationNativeRuntime(policy, runtimeInput, () =>
-    failure("invalid-runtime")
   );
   const {
     operation: engineOperation,

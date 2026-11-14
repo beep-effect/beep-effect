@@ -1,4 +1,9 @@
-import { makeCitationExtractorSelection } from "@beep/law-practice-server/internal/Citation/ExtractorSelection";
+import { ownCitationConfiguration } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
+import {
+  CitationExtractorSelectionBinding,
+  makeCitationExtractorSelection as makeOwnedCitationExtractorSelection,
+} from "@beep/law-practice-server/internal/Citation/ExtractorSelection";
+import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -9,8 +14,22 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
+import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationExtractorSelectionControls } from "./CitationExtractorSelection.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install;
+// malformed fixture configuration is refused there with the helper's closed reason.
+const makeCitationExtractorSelection = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationExtractorSelection>[0],
+  a1: unknown
+) {
+  const o1 = yield* ownCitationConfiguration(S.Array(CitationExtractorSelectionBinding), a1, () => ({
+    reason: "invalid-bindings",
+  }));
+  return yield* makeOwnedCitationExtractorSelection(a0, o1);
+});
 
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 
@@ -118,7 +137,12 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
 it.effect("rejects malformed policy with a closed failure before installing operations", () =>
   Effect.gen(function* () {
     for (const policy of [null, {}, { sourceUtf16: 0 }]) {
-      const failure = yield* makeCitationExtractorSelection(policy, []).pipe(Effect.flip);
+      // Refused where configuration crosses into the engine.
+      const failure = yield* refuseCitationTestConfiguration(
+        () => ({ reason: "invalid-policy" }),
+        CitationEngineLimits,
+        policy
+      );
       expect(failure).toMatchObject({ reason: "invalid-policy" });
       expect("cause" in failure).toBe(false);
     }

@@ -16,6 +16,7 @@ import {
   makeCitationOperationAdmission,
   prepareCitationAdmissionPolicy,
 } from "./Admission.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/NativeAdmission");
 // Native ownership is external to a caller's retryable work. Public operations
@@ -68,7 +69,7 @@ export class CitationNativeProcessAdmission extends Context.Service<
  * @internal @category operations @since 0.0.0
  */
 export const captureCitationNativeAdmission = Effect.fn("Citation.captureNativeAdmission")(function* <E>(
-  policy: unknown,
+  policy: CitationEngineLimits,
   invalid: () => E
 ) {
   const supplied = yield* Effect.serviceOption(CitationNativeProcessAdmission);
@@ -101,7 +102,7 @@ export const acquireCitationNativeLease = Effect.fn("Citation.acquireNativeLease
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNativeProcessAdmission")(function* (
-  policy: unknown
+  policy: CitationEngineLimits
 ) {
   const { limits, queueDeadline } = yield* prepareCitationAdmissionPolicy(policy);
   const clock = yield* Clock.Clock;
@@ -231,7 +232,9 @@ export const makeCitationNativeProcessAdmission = Effect.fn("Citation.makeNative
  * admission never acknowledges physical retirement on the native owner's behalf.
  * @internal @category constructors @since 0.0.0
  */
-export const makeCitationAdmissionOwners = Effect.fn("Citation.makeAdmissionOwners")(function* (policy: unknown) {
+export const makeCitationAdmissionOwners = Effect.fn("Citation.makeAdmissionOwners")(function* (
+  policy: CitationEngineLimits
+) {
   const operation = yield* makeCitationOperationAdmission(policy);
   const native = yield* makeCitationNativeProcessAdmission(policy);
   return Context.make(CitationOperationAdmission, operation).pipe(Context.add(CitationNativeProcessAdmission, native));

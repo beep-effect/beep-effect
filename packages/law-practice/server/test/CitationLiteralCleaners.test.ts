@@ -5,7 +5,11 @@ import {
 } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
 import { citationPythonTextData } from "@beep/law-practice-server/internal/Citation/PythonTextData";
 import { encodeCitationRuntimeString } from "@beep/law-practice-server/internal/Citation/RuntimeHashEncoding";
-import { CitationCleanerWorkSnapshot, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import {
+  CitationCleanerWorkSnapshot,
+  CitationEngineLimits,
+  CitationSafetyLimitExceeded,
+} from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -27,6 +31,7 @@ import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import type { CitationLiteralCleanerFailure } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
 import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
 
@@ -219,7 +224,12 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
 it.effect("rejects malformed policy with a closed failure before installing operations", () =>
   Effect.gen(function* () {
     for (const policy of [null, {}, { sourceUtf16: 0 }]) {
-      const failure = yield* makeCitationLiteralCleaners(policy).pipe(Effect.flip);
+      // Refused where configuration crosses into the engine.
+      const failure = yield* refuseCitationTestConfiguration(
+        () => ({ reason: "invalid-input" }),
+        CitationEngineLimits,
+        policy
+      );
       expect(failure).toMatchObject({ reason: "invalid-input" });
       expect("cause" in failure).toBe(false);
     }

@@ -17,7 +17,8 @@ import * as Num from "effect/Number";
 import * as S from "effect/Schema";
 import { CitationInvocation } from "./Invocation.ts";
 import { concatCitationPythonRanges, makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TokenContext");
 const Kind = LiteralKit(["Text", ...CitationTokenSeed.fields.kind.literals]);
@@ -123,8 +124,9 @@ const selectContextRanges = Effect.fn("Citation.selectContextRanges")(function* 
  * This built-in word profile does not implement regex matching or custom str protocols.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationTokenContext = Effect.fn("Citation.makeTokenContext")(function* (policy: unknown) {
-  const limits = yield* decodeCitationRegexPolicy(policy, invalid);
+export const makeCitationTokenContext = Effect.fn("Citation.makeTokenContext")(function* (
+  limits: CitationEngineLimits
+) {
   const timing = yield* makeCitationRegexTiming(limits, true);
   const native = yield* makeCitationPythonUnicode(limits);
   const plan = Effect.fn("Citation.planTokenContext")(function* (input: unknown) {

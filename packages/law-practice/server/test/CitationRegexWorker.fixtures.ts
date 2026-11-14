@@ -8,7 +8,8 @@ import {
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import { installCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
+import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
+import { installCitationRegexEvaluator as installOwnedCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
 import { CitationTokenContextInput } from "@beep/law-practice-server/internal/Citation/TokenContext";
 import {
   CitationEngineLimits,
@@ -31,7 +32,10 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
-import { refuseCitationTestConfigurations } from "./CitationConfigurationOwnership.fixtures.ts";
+import {
+  ownCitationTestConfiguration,
+  refuseCitationTestConfigurations,
+} from "./CitationConfigurationOwnership.fixtures.ts";
 import {
   CitationTestBudgetObservation,
   makeCitationTestBudgetObservation,
@@ -46,7 +50,20 @@ import {
 } from "./CitationNativeSpawner.fixtures.ts";
 import type { CitationPublicationMetadataConfiguration } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type { CitationRegexEngine } from "@beep/law-practice-server/internal/Citation/RegexEngine";
 import type { CitationNativeExitCounts } from "./CitationNativeSpawner.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const installCitationRegexEvaluator = Effect.fnUntraced(function* (
+  a0: Parameters<typeof installOwnedCitationRegexEvaluator>[0],
+  a1: unknown,
+  a2: unknown,
+  a3?: Parameters<typeof installOwnedCitationRegexEvaluator>[3]
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
+  const o2 = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), a2);
+  return yield* installOwnedCitationRegexEvaluator(a0, o1, o2, a3);
+});
 
 /** Authenticate committed native oracle bytes before any schema projection. */
 export const readCitationOracleFixture = Effect.fn("RegexWorkerTest.readOracleFixture")(function* (
@@ -189,7 +206,7 @@ export const assertCitationMetadataFailure = Effect.fn("RegexWorkerTest.metadata
 export const setupCitationRegexWorker = Effect.fn("RegexWorkerTest.setup")(function* (
   bindings: unknown,
   kind: CitationNativeRuntimeKind = "bun",
-  engineInput: unknown = "python-re",
+  engineInput: typeof CitationRegexEngine.Type = "python-re",
   patternUtf16?: number
 ) {
   const { limits, admission, observed, runtime, context } = yield* setupCitationRegexRuntime(

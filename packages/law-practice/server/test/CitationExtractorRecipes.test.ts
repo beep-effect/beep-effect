@@ -1,5 +1,11 @@
 import * as NodeURL from "node:url";
-import { makeCitationExtractorRecipes } from "@beep/law-practice-server/internal/Citation/ExtractorRecipes";
+import { ownCitationConfiguration } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
+import {
+  CitationExtractorEditionId,
+  CitationExtractorRecipe,
+  makeCitationExtractorRecipes as makeOwnedCitationExtractorRecipes,
+} from "@beep/law-practice-server/internal/Citation/ExtractorRecipes";
+import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -11,9 +17,27 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { decodeCitationExtractorRecipeCorpus } from "./CitationExtractorRecipes.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install;
+// malformed fixture configuration is refused there with the helper's closed reason.
+const makeCitationExtractorRecipes = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationExtractorRecipes>[0],
+  a1: unknown,
+  a2: unknown
+) {
+  const o1 = yield* ownCitationConfiguration(S.Array(CitationExtractorRecipe), a1, () => ({
+    reason: "invalid-bindings",
+  }));
+  const o2 = yield* ownCitationConfiguration(S.Array(CitationExtractorEditionId), a2, () => ({
+    reason: "invalid-bindings",
+  }));
+  return yield* makeOwnedCitationExtractorRecipes(a0, o1, o2);
+});
 
 // The registry checks descriptor identity, not regex semantics or family safety.
 const descriptor = (patternSha256: string, flags: number) => ({
@@ -123,7 +147,12 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
 it.effect("rejects malformed policy with a closed failure before installing operations", () =>
   Effect.gen(function* () {
     for (const policy of [null, {}, { sourceUtf16: 0 }]) {
-      const failure = yield* makeCitationExtractorRecipes(policy, [], []).pipe(Effect.flip);
+      // Refused where configuration crosses into the engine.
+      const failure = yield* refuseCitationTestConfiguration(
+        () => ({ reason: "invalid-bindings" }),
+        CitationEngineLimits,
+        policy
+      );
       expect(failure).toMatchObject({ reason: "invalid-bindings" });
       expect("cause" in failure).toBe(false);
     }

@@ -1,7 +1,9 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { makeCitationMetadataStrings } from "@beep/law-practice-server/internal/Citation/MetadataStrings";
+import { makeCitationMetadataStrings as makeOwnedCitationMetadataStrings } from "@beep/law-practice-server/internal/Citation/MetadataStrings";
+import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
+import { CitationEngineLimits, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -12,10 +14,27 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import {
+  ownCitationTestConfiguration,
+  refuseCitationTestConfiguration,
+} from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { assertCitationRegexRuntimeReleased, setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationMetadataStrings = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationMetadataStrings>[0],
+  a1: unknown,
+  a2: unknown,
+  a3: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
+  const o2 = yield* ownCitationTestConfiguration(CitationPythonUnicodeStorage, a2);
+  const o3 = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), a3);
+  return yield* makeOwnedCitationMetadataStrings(a0, o1, o2, o3);
+});
 
 const $I = $LawPracticeServerId.create("test/CitationMetadataStrings");
 const Native = S.Struct({ width: S.Literals([1, 2, 4]), bytes: S.Uint8ArrayFromHex });
@@ -102,17 +121,11 @@ export const replayCitationMetadataStrings = Effect.fn("MetadataStringsTest.repl
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 /** Additional retained copy refusal precedes matching; early source return is distinct. */
 export const assertCitationMetadataStringBudget = Effect.fn("MetadataStringsTest.budget")(function* () {
-  const invalidPolicy = yield* makeCitationMetadataStrings(null, null, null, null).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(null).pipe(
-        Effect.map((bind) => ({
-          ...stage,
-          cleanPinCite: bind(stage.cleanPinCite),
-          parenthetical: bind(stage.parenthetical),
-        }))
-      )
-    ),
-    Effect.flip
+  // Refused where configuration crosses into the engine.
+  const invalidPolicy = yield* refuseCitationTestConfiguration(
+    () => ({ reason: "invalid-policy" }),
+    CitationEngineLimits,
+    null
   );
   expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
 

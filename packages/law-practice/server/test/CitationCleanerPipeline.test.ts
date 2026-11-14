@@ -10,6 +10,7 @@ import {
   CitationCleanerObject,
   CitationCleanerProduced,
   CitationCleanerTextCharge,
+  CitationEngineLimits,
 } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -33,6 +34,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
+import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import type {
   CitationCleanerCursor,
@@ -665,14 +667,11 @@ it.effect("releases borrowed capacity after producer failure and interruption wi
 it.effect("rejects malformed policy, reservation amounts and nested plan names", () =>
   Effect.gen(function* () {
     const h = yield* harness;
-    const invalidPolicy = yield* makeCitationCleanerPipeline(null).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(null, "clean").pipe(
-          Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
-        )
-      ),
-      Effect.provideService(CitationCleaner, h.runtime),
-      Effect.flip
+    // Refused where configuration crosses into the engine.
+    const invalidPolicy = yield* refuseCitationTestConfiguration(
+      () => ({ reason: "invalid-input" }),
+      CitationEngineLimits,
+      null
     );
     expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
     const p = yield* pipeline(h);

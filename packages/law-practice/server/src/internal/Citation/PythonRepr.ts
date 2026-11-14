@@ -14,8 +14,8 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationInvocation } from "./Invocation.ts";
 import { citationPythonPointAt, makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import type { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/PythonRepr");
 const Reason = LiteralKit(["invalid-policy", "invalid-table"]);
@@ -125,8 +125,10 @@ const assembleRepr = Effect.fn("Citation.assemblePythonRepr")(function* (
  * Its environment is captured; subclass hooks and arbitrary object repr are separate.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationPythonRepr = Effect.fn("Citation.makePythonRepr")(function* (policy: unknown, table: unknown) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
+export const makeCitationPythonRepr = Effect.fn("Citation.makePythonRepr")(function* (
+  limits: CitationEngineLimits,
+  table: unknown
+) {
   const ranges = yield* readTable(table);
   const timing = yield* makeCitationRegexTiming(limits, true);
   const unicode = yield* makeCitationPythonUnicode(limits, timing.operation);

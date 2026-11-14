@@ -14,10 +14,11 @@ import { CitationHtmlDiscoveryConfiguration } from "./HtmlDiscovery.ts";
 import { CitationJournalMetadataConfiguration } from "./JournalMetadata.ts";
 import { CitationLawMetadataConfiguration } from "./LawMetadata.ts";
 import { CitationPublicationMetadataConfiguration } from "./MetadataComposition.ts";
-import { makeCitationMetadataYear } from "./MetadataYear.ts";
+import { CitationMetadataYearFailure, makeCitationMetadataYear } from "./MetadataYear.ts";
 import { CitationPostCaseMetadataConfiguration } from "./PostCaseMetadata.ts";
 import { CitationReferencePatternConfiguration } from "./ReferencePatterns.ts";
 import { CitationReferenceTokenConfiguration } from "./ReferenceTokenExtraction.ts";
+import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { CitationTokenDispatchBindings } from "./TokenDispatch.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HelperConfigurations");
@@ -88,7 +89,11 @@ export const makeCitationHelperConfigurations = Effect.fn("Citation.makeHelperCo
   const editions = yield* S.decodeUnknownEffect(CitationTokenDispatchBindings)(bindings).pipe(
     Effect.mapError(() => fail("invalid-data"))
   );
-  const { highestValidYear } = yield* makeCitationMetadataYear(policy);
+  // Default-engine asset assembly is a raw entry point (see the default-engine stop): decode its policy here.
+  const limits = yield* decodeCitationRegexPolicy(policy, () =>
+    CitationMetadataYearFailure.make({ reason: "invalid-policy" })
+  );
+  const { highestValidYear } = yield* makeCitationMetadataYear(limits);
   const names = asset.case.names;
   const loop = CitationExtractionLoopConfiguration.make({
     full: {

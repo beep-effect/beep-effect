@@ -1,4 +1,5 @@
-import { makeCitationTokenObjects } from "@beep/law-practice-server/internal/Citation/TokenObjects";
+import { CitationTokenEditionBinding } from "@beep/law-practice-server/internal/Citation/TokenEditions";
+import { makeCitationTokenObjects as makeOwnedCitationTokenObjects } from "@beep/law-practice-server/internal/Citation/TokenObjects";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -7,8 +8,19 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { readCitationTokenEquality } from "./CitationTokenEquality.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationTokenObjects = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationTokenObjects>[0],
+  a1: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(S.Array(CitationTokenEditionBinding), a1);
+  return yield* makeOwnedCitationTokenObjects(a0, o1);
+});
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("builtin retained token equality", (it) => {
   it.effect(

@@ -3,7 +3,7 @@ import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { makeCitationRendering } from "@beep/law-practice-server/internal/Citation/Rendering";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationEngineLimits, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
@@ -13,6 +13,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as S from "effect/Schema";
+import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { loadCitationRendering, replayCitationRendering } from "./CitationRendering.fixtures.ts";
@@ -25,12 +26,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
     withCitationTestInvocation(
       Effect.gen(function* () {
         const { owner, limits } = yield* loadCitationRendering();
-        const invalidPolicy = yield* makeCitationRendering(null).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(null).pipe(Effect.map((bind) => ({ ...stage, render: bind(stage.render) })))
-          ),
-          Effect.provideService(CitationFrozenEditions, owner),
-          Effect.flip
+        // Refused where configuration crosses into the engine.
+        const invalidPolicy = yield* refuseCitationTestConfiguration(
+          () => ({ reason: "invalid-policy" }),
+          CitationEngineLimits,
+          null
         );
         expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const renderer = yield* makeCitationRendering(limits).pipe(

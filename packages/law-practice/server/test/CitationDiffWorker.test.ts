@@ -1,10 +1,14 @@
-import { makeCitationDiffWorker } from "@beep/law-practice-server/internal/Citation/DiffWorker";
+import { ownCitationConfiguration } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
+import { makeCitationDiffWorker as makeOwnedCitationDiffWorker } from "@beep/law-practice-server/internal/Citation/DiffWorker";
 import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import {
+  CitationNativeProcessRuntime,
+  CitationNativeRuntimeKind,
+} from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
@@ -35,6 +39,20 @@ import {
   waitForCitationNativeTest,
 } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install;
+// malformed fixture configuration is refused there with the helper's closed reason.
+const makeCitationDiffWorker = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationDiffWorker>[0],
+  a1: unknown,
+  a2?: Parameters<typeof makeOwnedCitationDiffWorker>[2]
+) {
+  const o1 = yield* ownCitationConfiguration(CitationNativeProcessRuntime, a1, () => ({
+    _tag: "CitationDiffWorkerFailure",
+    reason: "invalid-runtime",
+  }));
+  return yield* makeOwnedCitationDiffWorker(a0, o1, a2);
+});
 
 const before = { width: 1, bytes: new Uint8Array([97]) };
 const after = { width: 1, bytes: new Uint8Array() };

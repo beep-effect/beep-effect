@@ -115,3 +115,22 @@ export const refuseCitationTestConfigurations = Effect.fn("ConfigurationOwnershi
 ) {
   return yield* Effect.forEach(cases, ([schema, raw]) => Effect.flip(ownCitationConfiguration(schema, raw, invalid)));
 });
+
+/** Run the real engine boundary over one malformed fixture value and return its
+ * refusal, mapped to the caller's closed failure.
+ *
+ * **Example** (Refuse a malformed policy)
+ * ```ts
+ * import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+ * import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
+ * const refusal = refuseCitationTestConfiguration(() => "invalid-policy", CitationEngineLimits, null);
+ * ```
+ * @internal @category testing @since 0.0.0
+ */
+export const refuseCitationTestConfiguration = Effect.fn("ConfigurationOwnershipTest.refuseOne")(function* <E>(
+  invalid: () => E,
+  schema: S.Codec<unknown, unknown>,
+  raw: unknown
+) {
+  return yield* Effect.flip(ownCitationConfiguration(schema, raw, invalid));
+});

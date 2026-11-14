@@ -10,7 +10,6 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationCleanerProduced,
   CitationEngineAbsoluteMaxima,
-  CitationEngineLimits,
   CitationPythonUnicodeStorage,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
@@ -28,9 +27,11 @@ import * as Str from "effect/String";
 import { CitationCleanerTextAllocation, CitationCleanerTextOutput } from "./CleanerTextIdentity.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import type { CitationCleanerTextCharge, CitationCleanerWork } from "@beep/law-practice-use-cases/server";
-
-const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+import type {
+  CitationCleanerTextCharge,
+  CitationCleanerWork,
+  CitationEngineLimits,
+} from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/LiteralCleaners");
 /**
@@ -253,8 +254,9 @@ const encodeSelection = Effect.fnUntraced(function* (
  * @category operations
  * @since 0.0.0
  */
-export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleaners")(function* (input: unknown) {
-  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(input).pipe(Effect.mapError(invalidInput));
+export const makeCitationLiteralCleaners = Effect.fn("Citation.makeLiteralCleaners")(function* (
+  limits: CitationEngineLimits
+) {
   const sourceCeiling = limits.sourceUtf16;
   const outputCeiling = limits.producedTextUtf16;
   const deadline = limits.cleanDeadline.pipe(Duration.toMillis, Duration.millis);

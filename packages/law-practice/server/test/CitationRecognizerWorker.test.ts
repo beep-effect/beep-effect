@@ -3,7 +3,10 @@ import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import {
+  CitationNativeProcessRuntime,
+  CitationNativeRuntimeKind,
+} from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import {
   CitationRecognizerFailure,
   makeCitationRecognizerWorker,
@@ -26,6 +29,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Tuple from "effect/Tuple";
 import * as TestClock from "effect/testing/TestClock";
+import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationBundledTestRuntime, makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
 import type { EyeciteRecognizeOutput } from "@beep/eyecite";
 import type { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
@@ -155,7 +159,12 @@ it.layer(BunServices.layer, { excludeTestServices: true })("actual pinned recogn
       const { runtime } = yield* fixture("bun");
       const { limits } = yield* defaultCitationEnginePolicy;
       const observed = yield* makeCitationObservedSpawner();
-      const invalid = yield* makeCitationRecognizerWorker(limits, {}).pipe(Effect.flip);
+      // Refused where configuration crosses into the engine.
+      const invalid = yield* refuseCitationTestConfiguration(
+        () => ({ _tag: "CitationRecognizerFailure", reason: "invalid-runtime" }),
+        CitationNativeProcessRuntime,
+        {}
+      );
       expect(invalid).toMatchObject({ _tag: "CitationRecognizerFailure", reason: "invalid-runtime" });
       const worker = yield* makeCitationRecognizerWorker(limits, runtime).pipe(
         Effect.provideService(ChildProcessSpawner, observed.spawner)

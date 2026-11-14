@@ -16,7 +16,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationPythonUnicode, measureCitationPythonSlice, sliceCitationPythonStorage } from "./PythonUnicode.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type {
   CitationPythonSliceLayout,
   CitationPythonUnicodeFailure,
@@ -24,8 +25,11 @@ import type {
 } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexInput");
-const Role = LiteralKit(["source", "pattern"]).pipe(
-  $I.annoteSchema("Role", {
+/** Server preparation purpose: request source text or a fixed pattern.
+ * @internal @category models @since 0.0.0
+ */
+export const CitationRegexInputRole = LiteralKit(["source", "pattern"]).pipe(
+  $I.annoteSchema("CitationRegexInputRole", {
     description: "Captured server preparation purpose selecting the schema-owned text budget.",
   })
 );
@@ -200,12 +204,10 @@ const boundary = (text: string, offset: number) =>
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationRegexInput = Effect.fn("Citation.makeRegexInput")(function* <R>(
-  policy: unknown,
+  limits: CitationEngineLimits,
   reservation: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded, R>,
-  roleInput: unknown = "source"
+  role: typeof CitationRegexInputRole.Type = "source"
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
-  const role = yield* S.decodeUnknownEffect(Role)(roleInput).pipe(Effect.mapError(() => fail("invalid-policy")));
   const reserve = role === "source" ? reservation : citationUnaccountedText;
   const sourceMaximum = role === "pattern" ? limits.patternUtf16 : limits.sourceUtf16;
   const producedMaximum = role === "pattern" ? limits.patternUtf16 : limits.producedTextUtf16;

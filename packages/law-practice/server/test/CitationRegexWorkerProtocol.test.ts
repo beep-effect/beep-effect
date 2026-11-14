@@ -19,6 +19,7 @@ import {
   CitationRegexWorkerStarted,
   encodeCitationRegexControl,
 } from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
+import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -33,6 +34,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 
 const encodeDelimiterMessage = S.encodeEffect(S.fromJsonString(S.Struct({ message: S.String })));
 const utf8 = new TextEncoder();
@@ -363,7 +365,12 @@ it.effect("maps stream failures without leaking their original payload", () =>
 
 it.effect("rejects malformed preparation inputs and closes platform stream failures", () =>
   Effect.gen(function* () {
-    const invalidPolicy = yield* makeCitationRegexJobPreparation(null, citationUnaccountedText).pipe(Effect.flip);
+    // Refused where configuration crosses into the engine.
+    const invalidPolicy = yield* refuseCitationTestConfiguration(
+      () => ({ reason: "invalid-runtime" }),
+      CitationEngineLimits,
+      null
+    );
     expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
     const limits = (yield* defaultCitationEnginePolicy).limits;
     const preparation = yield* makeCitationRegexJobPreparation(limits, citationUnaccountedText);

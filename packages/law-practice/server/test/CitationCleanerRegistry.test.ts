@@ -1,14 +1,9 @@
-import { CitationBuiltinCleaners } from "@beep/law-practice-server/internal/Citation/BuiltinCleaners";
-import {
-  CitationCleanerProtocols,
-  makeCitationCleanerRegistry,
-} from "@beep/law-practice-server/internal/Citation/CleanerRegistry";
-import { CitationCleanerValues } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import {
   CitationCleanerFailure,
   CitationCleanerObject,
   CitationCleanerProduced,
   CitationEngineAbsoluteMaxima,
+  CitationEngineLimits,
   CitationPythonUnicodeStorage,
 } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
@@ -19,10 +14,10 @@ import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
-import { constant } from "effect/Function";
 import * as O from "effect/Option";
 import * as TestClock from "effect/testing/TestClock";
 import { makeCitationCleanerRegistryHarness as setup } from "./CitationCleanerRegistry.fixtures.ts";
+import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 
 describe("live cleaner registry", () => {
   it.effect("rejects out-of-range host hashes and bounds stalled callbacks", () =>
@@ -296,21 +291,12 @@ describe("live cleaner registry", () => {
 
 it.effect("rejects malformed registry policy before invoking captured capabilities", () =>
   Effect.gen(function* () {
-    const h = yield* setup();
-    const unavailable = constant(Effect.die("invalid registry policy reached a capability"));
-    const protocols = CitationCleanerProtocols.of({
-      hash: unavailable,
-      equal: unavailable,
-      callable: unavailable,
-      invoke: unavailable,
-      open: unavailable,
-    });
     for (const policy of [null, {}, { sourceUtf16: 0 }]) {
-      const failure = yield* makeCitationCleanerRegistry(policy).pipe(
-        Effect.provideService(CitationCleanerValues, h.values),
-        Effect.provideService(CitationBuiltinCleaners, { invoke: unavailable }),
-        Effect.provideService(CitationCleanerProtocols, protocols),
-        Effect.flip
+      // Refused where configuration crosses into the engine.
+      const failure = yield* refuseCitationTestConfiguration(
+        () => ({ _tag: "CitationCleanerFailure", reason: "invalid-input" }),
+        CitationEngineLimits,
+        policy
       );
       expect(failure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "invalid-input" });
       expect("cause" in failure).toBe(false);

@@ -378,14 +378,6 @@ Lane perf/citation-owned-configuration
 
 Reverse: Carry fingerprints on the owned value through a fingerprinted pattern codec and compare them at each stage, if a later design wants it.
 
-### Keep leaf helper argument decoding and the per-request reference builder decode, 2026-11-14
-
-A4 removes every configuration detach below the boundary and every stage-level configuration decode: makeCitationMetadataStage, the publication operation, installCitationMetadataConfigurationStage and the four detachCitationMetadataConfiguration sites no longer decode or detach, and stage installers take CitationOwned configuration with typed limits and runtime. Leaf helpers below the stages (context matcher, metadata strings and year, regex input, evaluator install, token dispatch, edition inference, extractor ordering and recipes) keep their existing unknown-typed signatures and re-validate their scalar arguments; they are shared with many direct tests and copy nothing the probe counts. The per-request reference-pattern builder (kept per request by the A3 decision on generated references) still decodes its configuration argument each request. Both are argument validation, not ownership; typing them through is mechanical and left for a follow-on slice so this one stays reviewable.
-
-Lane perf/citation-owned-configuration
-
-Reverse: Type the leaf helper and reference builder arguments and delete their decodes in a follow-on slice.
-
 ### Stop the default engine at two owns: the tokenizer catalog is derived, not decoded, 2026-11-14
 
 Second stop, after the owner's round-2 ruling chose reshape (a): a sealed-text minting route whose input is an immutable string decoded through the schema's JSON codec, loaders and `makeCitationDefaultEngineConfiguration` returning owned parts assembled with `ownedStruct`, and `makeDefault` calling the internal owned install directly.
@@ -406,6 +398,22 @@ Proposed reshapes, owner's choice: (1) an owned encoding route for text-to-stora
 Lane perf/citation-owned-configuration
 
 Reverse: Delete this stop once the owner picks how engine-derived configuration is typed owned; until then the default engine owns its caller configuration and its assembled configuration.
+
+### Type the leaf helpers and drop their configuration decodes, 2026-11-14
+
+Owner ruling, round 2: acceptance criterion A4's "no installer below the boundary decodes configuration" covers the leaf helpers too, and leaving them for a later slice is not available. This replaces the earlier decision to keep them.
+
+Every helper whose policy comes from engine-held limits now takes typed `CitationEngineLimits` instead of `unknown` and no longer re-decodes it (32 modules, from `ContextMatcher`, `MetadataStrings`, `MetadataYear`, `RegexInput`, `TokenDispatch`, `EditionInference`, `ExtractorOrdering` and `ExtractorRecipes` to the token, regex, rendering, span-offset and resource-correction helpers). The same holds for the parent-side installers: `installCitationRegexEvaluator`, the Diff, Xml, Html and Recognizer worker clients, `makeCitationNativeProcessOwner`, both admissions, the text budget, the cleaner pipeline, registry, values and literal cleaners, the document cleaner protocols and document services. `prepareCitationNativeRuntime`, which decoded the limits and runtime and round-tripped the limits through their codec on every evaluator install and every Diff or Xml worker, is deleted. Configuration arguments are typed as well: runtimes, patterns, flags, descriptor bindings, dispatch, ordering, selection, recipe and edition bindings, the regex engine and input role, the court table text and the reference exclusions. The install-time copies that went with the decodes (descriptor copies in the registry, the selection-binding byte copies, edition-row copies, the exclusion-list copy) are dropped because the values are owned.
+
+Kept, because they are guards rather than decodes: the pattern-count ceiling, duplicate-id and duplicate-descriptor refusals, the selection string budgets, the court-table and exclusion-list SHA-256 authentication, the year-bound range check for the clock-computed ceiling (computed data, decoded where it is computed), and the HTML worker's millisecond normalization of deadlines. Per-request data arguments keep their decodes (token seeds, positions, raw source, regex result inputs). Worker programs decode their startup and job frames across the process boundary and keep those decodes. Separately callable raw entry points keep their own decode at entry: `makeCitationDump` and `makeCitationBuiltinDump` (and the `PythonRepr` table they pass), the default-engine asset assembly (`makeCitationDefaultEngineConfiguration`, `makeCitationHelperConfigurations`, `makeCitationParserCatalog`, `makeCitationCanonicalTokenizerCatalog`, see the default-engine stop), and the report snapshot `captureCitationOperationPolicy`.
+
+The per-request reference-pattern builder takes its configuration and limits at install (`installCitationReferencePatterns`, ruling 2) and decodes nothing per request.
+
+Direct tests that fed a malformed raw argument to a leaf helper now assert the same refusal at the boundary with `refuseCitationTestConfiguration` (the real `ownCitationConfiguration`), and tests that pass plain fixture objects own them through `ownCitationTestConfiguration` in a small per-file adapter. No test was deleted.
+
+Lane perf/citation-owned-configuration
+
+Reverse: Restore the unknown-typed helper signatures and their decodes; the boundary refusals in the direct tests would move back to the helpers.
 
 <!-- beep:decisions:end -->
 

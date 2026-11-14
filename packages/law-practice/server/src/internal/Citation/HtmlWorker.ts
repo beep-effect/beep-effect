@@ -30,10 +30,9 @@ import {
 } from "./HtmlWorkerProtocol.ts";
 import { CitationHtmlWorkerStartup, prepareCitationHtmlRpc } from "./HtmlWorkerRpc.ts";
 import { makeCitationMarkupWorker } from "./MarkupWorker.ts";
-import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
-const CitationEngineLimitsType = S.toType(CitationEngineLimits);
 const NativeStorage = S.toType(CitationPythonUnicodeStorage);
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorker");
@@ -78,12 +77,9 @@ const WorkerStartupJson = S.fromJsonString(CitationHtmlWorkerStartup).pipe(
  * @since 0.0.0
  */
 export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(function* (
-  policy: unknown,
-  runtimeInput: unknown
+  decodedLimits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime
 ) {
-  const decodedLimits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(policy).pipe(
-    Effect.mapError(invalidRuntime)
-  );
   const limits = CitationEngineLimits.make({
     ...decodedLimits,
     cleanDeadline: decodedLimits.cleanDeadline.pipe(Duration.toMillis, Duration.millis),
@@ -91,9 +87,6 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     queueDeadline: decodedLimits.queueDeadline.pipe(Duration.toMillis, Duration.millis),
     cleanupDeadline: decodedLimits.cleanupDeadline.pipe(Duration.toMillis, Duration.millis),
   });
-  const runtime = yield* S.decodeUnknownEffect(CitationNativeProcessRuntime)(runtimeInput).pipe(
-    Effect.mapError(invalidRuntime)
-  );
   const path = yield* Path.Path;
   const assetPath = yield* path
     .fromFileUrl(new URL("../../../assets/citation-html/kernel.wasm", import.meta.url))

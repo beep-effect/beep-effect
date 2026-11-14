@@ -14,7 +14,8 @@ import * as MutableList from "effect/MutableList";
 import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { CitationPythonUnicodeFailure, makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TokenText");
 const Span = S.Tuple([S.Natural, S.Natural]).pipe(
@@ -83,8 +84,7 @@ const collectSpans = Effect.fn("Citation.collectTextTokenSpans")(function* (
  * The caller retains whole-operation produced-text and mixed-output ownership.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationTokenText = Effect.fn("Citation.makeTokenText")(function* (policy: unknown) {
-  const limits = yield* decodeCitationRegexPolicy(policy, invalid);
+export const makeCitationTokenText = Effect.fn("Citation.makeTokenText")(function* (limits: CitationEngineLimits) {
   const unicode = yield* makeCitationPythonUnicode(limits);
   const timing = yield* makeCitationRegexTiming(limits, true);
   const prepare = Effect.fn("Citation.prepareTokenTextSource")(function* (input: unknown) {

@@ -21,7 +21,8 @@ import * as Str from "effect/String";
 import * as Trie from "effect/Trie";
 import { makeCitationPythonLower } from "./PythonCase.ts";
 import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ExtractorSelection");
 const maximum = CitationEngineAbsoluteMaxima;
@@ -46,13 +47,6 @@ export class CitationExtractorSelectionBinding extends S.Opaque<
     })
   )
 ) {}
-const Bindings = S.Array(CitationExtractorSelectionBinding)
-  .check(S.isMaxLength(maximum.patterns))
-  .pipe(
-    $I.annoteSchema("Bindings", {
-      description: "Bounded source-indexed selector installation, separate from raw requests.",
-    })
-  );
 const Reason = LiteralKit(["invalid-policy", "invalid-bindings", "invalid-input"]).pipe(
   $I.annoteSchema("Reason", { description: "Closed preparation errors without source words or cause payloads." })
 );
@@ -99,8 +93,9 @@ const eventOrder = Order.Struct({
   rank: Order.Number,
 });
 const fail = (reason: typeof Reason.Type) => CitationExtractorSelectionFailure.make({ reason });
+// Owned configuration: check the string budgets, retain the bindings as they are.
 const snapshotBindings = Effect.fn("Citation.snapshotSelectionBindings")(function* (
-  bindings: ReadonlyArray<CitationExtractorSelectionBinding>,
+  bindings: ReadonlyArray<Pick<CitationExtractorSelectionBinding, "id" | "flags" | "strings">>,
   maximumBytes: number,
   maximumPoints: number
 ) {
@@ -112,15 +107,7 @@ const snapshotBindings = Effect.fn("Citation.snapshotSelectionBindings")(functio
         return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternUtf16" });
     }
   }
-  return A.map(bindings, (binding) =>
-    CitationExtractorSelectionBinding.make({
-      id: binding.id,
-      flags: binding.flags,
-      strings: A.map(binding.strings, (storage) =>
-        CitationPythonUnicodeStorage.make({ width: storage.width, bytes: new Uint8Array(storage.bytes) })
-      ),
-    })
-  );
+  return bindings;
 });
 
 // Fixed two-unit words cannot collide with scalar/surrogate projections. The
@@ -144,14 +131,10 @@ const encode = Effect.fn("Citation.encodeSelectionWords")(function* (storage: Ci
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationExtractorSelection = Effect.fn("Citation.makeExtractorSelection")(function* (
-  policy: unknown,
-  input: unknown
+  limits: CitationEngineLimits,
+  decodedBindings: ReadonlyArray<Pick<CitationExtractorSelectionBinding, "id" | "flags" | "strings">>
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
   const timing = yield* makeCitationRegexTiming(limits, true);
-  const decodedBindings = yield* S.decodeUnknownEffect(Bindings)(input).pipe(
-    Effect.mapError(() => fail("invalid-bindings"))
-  );
   if (decodedBindings.length > limits.patterns)
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patterns" });
   const bindings = yield* snapshotBindings(
@@ -178,7 +161,9 @@ export const makeCitationExtractorSelection = Effect.fn("Citation.makeExtractorS
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternUtf16" });
     return yield* encode(flags === 2 ? yield* lowercase.lower(value.storage) : value.storage);
   });
-  const install = Effect.fn("Citation.installSelectionBinding")(function* (binding: CitationExtractorSelectionBinding) {
+  const install = Effect.fn("Citation.installSelectionBinding")(function* (
+    binding: Pick<CitationExtractorSelectionBinding, "id" | "flags" | "strings">
+  ) {
     if (HashSet.has(ids, binding.id)) return yield* fail("invalid-bindings");
     ids = HashSet.add(ids, binding.id);
     if (binding.strings.length === 0) unfiltered = HashSet.add(unfiltered, binding.id);

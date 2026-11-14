@@ -5,7 +5,7 @@ import {
   verifyCitationReferencePatternConfiguration,
 } from "@beep/law-practice-server/internal/Citation/ReferencePatterns";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationEngineLimits, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -17,7 +17,10 @@ import * as Num from "effect/Number";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
+import {
+  ownCitationTestConfiguration,
+  refuseCitationTestConfiguration,
+} from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationReferenceNameMetadata,
@@ -57,12 +60,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference p
     withCitationTestInvocation(
       Effect.gen(function* () {
         const { budget, names, limits } = yield* install();
-        const policy = yield* makeCitationReferenceNames({}, names).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({}).pipe(Effect.map((bind) => ({ ...stage, collect: bind(stage.collect) })))
-          ),
-          Effect.provideService(CitationTextBudget, budget),
-          Effect.flip
+        // Refused where configuration crosses into the engine.
+        const policy = yield* refuseCitationTestConfiguration(
+          () => ({ _tag: "CitationReferenceNamesFailure", reason: "invalid-policy" }),
+          CitationEngineLimits,
+          {}
         );
         expect(policy).toMatchObject({ _tag: "CitationReferenceNamesFailure", reason: "invalid-policy" });
         const altered = A.map(names, (name, index) => (index === 0 ? "different" : name));

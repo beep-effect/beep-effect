@@ -1,6 +1,6 @@
 import { makeCitationPythonRepr } from "@beep/law-practice-server/internal/Citation/PythonRepr";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationEngineLimits, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -12,6 +12,7 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   authenticateCitationRenderingProducer,
@@ -111,11 +112,11 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
       Effect.gen(function* () {
         const policy = yield* defaultCitationEnginePolicy;
         const raw = yield* table;
-        const refused = yield* makeCitationPythonRepr({}, raw).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({}).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
-          ),
-          Effect.flip
+        // Refused where configuration crosses into the engine.
+        const refused = yield* refuseCitationTestConfiguration(
+          () => ({ reason: "invalid-policy" }),
+          CitationEngineLimits,
+          {}
         );
         expect(refused).toMatchObject({ reason: "invalid-policy" });
         const repr = yield* makeCitationPythonRepr(policy.limits, raw).pipe(

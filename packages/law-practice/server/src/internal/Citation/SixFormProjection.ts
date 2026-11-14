@@ -19,10 +19,11 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { makeCitationMention } from "./Mention.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type { EyeciteRecognition } from "@beep/eyecite";
 import type { CitationMention } from "@beep/law-practice-domain/values";
 import type { CourtReporterArtifactVersion } from "@beep/law-practice-domain/values/CourtReporterVocabulary";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { VerifiedSourceText, VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import type { Sha256Hex } from "@beep/schema";
 
@@ -171,8 +172,9 @@ interface CitationSixFormProjection {
  * its identity. Pins and antecedents can lie outside the primary locator.
  * @internal @category constructors @since 0.0.0
  */
-export const makeCitationSixFormProjection = Effect.fn("Citation.makeSixFormProjection")(function* (policy: unknown) {
-  const limits = yield* decodeCitationRegexPolicy(policy, invalid);
+export const makeCitationSixFormProjection = Effect.fn("Citation.makeSixFormProjection")(function* (
+  limits: CitationEngineLimits
+) {
   const timing = yield* makeCitationRegexTiming(limits, true);
   const digest = yield* Digest.Digest;
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
