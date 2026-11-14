@@ -66,6 +66,7 @@ import {
 } from "./ArtifactPaths.ts";
 import {
   appendYeetAttemptJournalEvent,
+  currentYeetAttemptOrigin,
   generateYeetAttemptId,
   YeetAttemptFinished,
   YeetAttemptStarted,
@@ -2816,6 +2817,7 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
   const resolvedHeadSha = yield* currentCommitSha(context);
   const diffFingerprint = yield* collectDiffFingerprint(context);
   const ownerProcStart = yield* processStartIdentityForPid(process.pid);
+  const origin = yield* currentYeetAttemptOrigin;
   return YeetAttemptStarted.make({
     schemaVersion: "yeet-attempt-journal/v1",
     _tag: "attempt-started",
@@ -2836,6 +2838,8 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
     forceLocal: options.forceLocal ? O.some(true) : O.none(),
     stage: O.some(attemptStageFor(options)),
     turboForce,
+    host: origin.host,
+    seat: origin.seat,
   });
 });
 

@@ -1,0 +1,9 @@
+---
+title: "Slice 9: host and seat fields, read-only fleet read"
+date: 2026-11-14
+kind: checkpoint
+lane: "feat/certainty-fleet-host-fields"
+reversal: "Delete this checkpoint so the slice-5b checkpoint is the latest PLAN status note, and revert the slice-9 PR."
+---
+
+Slices 10b (MEAS-03 slice 2) and 5b (SCHE-09 slice 2) merged as #3342 and #3344. Slice 9 (PERIL-11 slice 3) is built: attempt-started rows carry optional `host` (the writer's short host label) and `seat` (`codex`, `claude-code` or `unknown`, the provenance footer's harness vocabulary), every attempt mix gains `hostMix` and `seatMix` (`unrecorded` for older rows), and `yeet economics --fleet-hosts` reads the hosts in the fleet's `hosts.json` over their existing ordinary SSH wrappers, one at a time, with one read-only `find`/`tail` command each, folding the printed journals in memory and reporting only per-host receipts in `scope.hosts` (decision `peril-11-slice-3-host-seat-fleet-hosts`). An unreachable host is a receipt with its reason (`timeout`, `connection-failed`, `route-failed`, `spawn-failed`, `output-truncated`, `refused-command`) and never fails the read. The admission gate is `packages/tooling/tool/cli/test/yeet-attempt-journal-host-seat.test.ts` (a mixed-revision fixture with rows from origin/main's encoder: both revisions decode, origin/main's reader reads the new rows, retention keeps their bytes) and `packages/tooling/tool/cli/test/yeet-economics-fleet-hosts.test.ts` (a fake SSH executor that dies on any command but the exact read, five hosts covering every status, the store dedupe, branch narrowing, and a report that holds no raw row). No live fleet read was run; the workstation has no `hosts.json` yet. With slice 9, all three PERIL-11 PR slices are built; the fleet census across a lane retirement is P2 evidence.

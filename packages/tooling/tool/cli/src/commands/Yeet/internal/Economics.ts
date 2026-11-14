@@ -6,7 +6,9 @@
  *
  * {@link YeetEconomicsSource} reads `.beep/yeet/runs/<runId>/attempts.ndjson`
  * and orphan `verdict.json` files into normalized journals (with `--fleet`,
- * also the workstation store of removed checkouts' journals); the pure fold
+ * also the workstation store of removed checkouts' journals, and with
+ * `--fleet-hosts` the configured fleet hosts' journals, read read-only over
+ * their SSH wrappers by {@link YeetFleetHostSource}); the pure fold
  * {@link buildYeetEconomicsReport} turns them into the `yeet-economics/v4`
  * document. Nothing is written to disk.
  *
@@ -45,6 +47,7 @@ import * as Str from "effect/String";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { repoRunArtifactId } from "../../../internal/repo-run/RepoRunArtifacts.ts";
 import {
+  fleetRepositoryKey,
   readCheckoutClone,
   readCloneFleetOrigin,
   readCloneFleetRepository,
@@ -77,6 +80,7 @@ import {
   EconomicsTerminations,
   EconomicsUnchangedFingerprint,
   economicsCountMix,
+  FleetHostsRead,
   YEET_ECONOMICS_OFFSET_METHOD,
   YEET_ECONOMICS_PERCENTILE_ESTIMATOR,
   YEET_ECONOMICS_ROUNDING,
@@ -87,12 +91,29 @@ import {
   YeetEconomicsReport,
   YeetEconomicsReportJson,
 } from "./Economics.schemas.ts";
+import {
+  classifyFleetHostJournalPath,
+  FleetHostShell,
+  fleetHostReadCommand,
+  parseFleetHostReadOutput,
+  readConfiguredFleetHosts,
+} from "./FleetHostRead.ts";
+import { FleetHostReadReceipt } from "./FleetHosts.schemas.ts";
 import { classifyYeetGithubRateLimit } from "./MonitorRateLimit.ts";
 import { YeetRunMode } from "./Planner.schemas.ts";
 import { buildYeetEconomicsReviewLane, readYeetReviewLaneLedger, renderYeetEconomicsReviewLane } from "./ReviewLane.ts";
 import { YeetFailureKind, YeetLaneStatus, YeetOutcome } from "./Verdict.ts";
 import type * as Digest from "effect/crypto/Digest";
+import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { EconomicsCountRow } from "./Economics.schemas.ts";
+import type {
+  FleetHostJournalPath,
+  FleetHostShellError,
+  FleetHostShellOutput,
+  FleetHostShellShape,
+} from "./FleetHostRead.ts";
+import type { FleetHostEntry, FleetHostReadStatus, FleetHostUnreachableReason } from "./FleetHosts.schemas.ts";
 import type { ReviewLaneLedger } from "./ReviewLane.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Economics");
@@ -104,6 +125,8 @@ const CHECKOUT_PREFIX = "beep-effect";
 const FLEET_READ_CONCURRENCY = 8;
 const COMPARABLE_EPISODE_CUT = Duration.hours(24);
 const UNKNOWN_KEY = "unknown";
+// The host and seat key of an attempt whose start row predates the fields (PERIL-11 slice 3).
+const UNRECORDED_KEY = "unrecorded";
 const VERDICT_V2 = "yeet-verdict/v2";
 const TOP_LANE_ROWS = 10;
 // The checkout label of the attempt-journal store's journals in a fleet read.
@@ -322,6 +345,9 @@ class EconomicsStartedRow extends S.Opaque<EconomicsStartedRow, { readonly brand
     branch: LenientString,
     mode: LenientString,
     diffFingerprint: LenientString,
+    // Read as plain strings, so a host or seat value a newer writer adds never invalidates the row.
+    host: LenientString,
+    seat: LenientString,
   }).pipe(
     $I.annoteSchema("EconomicsStartedRow", { description: "The attempt-started fields the economics fold consumes." })
   )
@@ -578,6 +604,8 @@ const attemptFromTerminal = (
       fromVerdict((verdict) => verdict.handlerErrorKind),
       isYeetHandlerErrorKind
     ),
+    host: fromStart((started) => started.host),
+    seat: fromStart((started) => started.seat),
     lanes: economicsLanes(
       O.getOrElse(
         O.map(terminal.verdict, (verdict) => verdict.lanes),
@@ -939,6 +967,17 @@ const readCheckoutJournals = Effect.fnUntraced(function* (
   return A.getSomes(forEach6);
 });
 
+// Every attempt id the live journals hold, by run: a retained copy of one of
+// them is dropped before the fold, so live rows win.
+const liveAttemptsByRun = (live: ReadonlyArray<FoldedJournal>): HashMap.HashMap<string, HashSet.HashSet<string>> =>
+  A.reduce(live, HashMap.empty<string, HashSet.HashSet<string>>(), (byRun, folded) =>
+    HashMap.set(
+      byRun,
+      folded.journal.runId,
+      HashSet.union(folded.attemptIds, orNoExcludedAttempts(HashMap.get(byRun, folded.journal.runId)))
+    )
+  );
+
 // The attempt-journal store's partition for the clone's repository, read as one
 // more checkout labelled `(retained)` (PERIL-11). Retained rows of an attempt a
 // live journal of the same run holds are dropped (`foldRunJournal`). A clone with
@@ -965,13 +1004,7 @@ const readRetainedJournals = Effect.fnUntraced(function* (
   if (O.isNone(runsDirectory)) {
     return A.empty<FoldedJournal>();
   }
-  const liveAttempts = A.reduce(live, HashMap.empty<string, HashSet.HashSet<string>>(), (byRun, folded) =>
-    HashMap.set(
-      byRun,
-      folded.journal.runId,
-      HashSet.union(folded.attemptIds, orNoExcludedAttempts(HashMap.get(byRun, folded.journal.runId)))
-    )
-  );
+  const liveAttempts = liveAttemptsByRun(live);
   return yield* readCheckoutJournals(
     { label: RETAINED_CHECKOUT_LABEL, runsDirectory: runsDirectory.value },
     runId,
@@ -979,6 +1012,15 @@ const readRetainedJournals = Effect.fnUntraced(function* (
     (id) => orNoExcludedAttempts(HashMap.get(liveAttempts, id))
   );
 });
+
+const branchRunId = (
+  request: EconomicsScopeRequest
+): Effect.Effect<O.Option<string>, YeetEconomicsError, Digest.Digest> =>
+  Effect.transposeOption(O.map(request.branch, repoRunArtifactId)).pipe(
+    Effect.mapError((cause) =>
+      YeetEconomicsError.make({ reason: "run-id", message: "Failed to derive the branch run id.", cause })
+    )
+  );
 
 const readEconomicsJournals = Effect.fn("Yeet.Economics.read")(function* (
   request: EconomicsScopeRequest
@@ -988,11 +1030,7 @@ const readEconomicsJournals = Effect.fn("Yeet.Economics.read")(function* (
   FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
   const checkouts = yield* resolveCheckouts(request);
-  const runId = yield* Effect.transposeOption(O.map(request.branch, repoRunArtifactId)).pipe(
-    Effect.mapError((cause) =>
-      YeetEconomicsError.make({ reason: "run-id", message: "Failed to derive the branch run id.", cause })
-    )
-  );
+  const runId = yield* branchRunId(request);
   const nested = yield* Effect.forEach(
     checkouts,
     (checkout) => readCheckoutJournals(checkout, runId, request.inFlightAttemptId),
@@ -1093,6 +1131,279 @@ export class YeetEconomicsSource extends Context.Service<YeetEconomicsSource, Ye
     Layer.effect(YeetEconomicsSource, YeetEconomicsSource.make);
 }
 
+// ---------------------------------------------------------------------------
+// Fleet hosts (PERIL-11 slice 3): read-only journal reads over SSH
+// ---------------------------------------------------------------------------
+
+const noFleetHostsRead = FleetHostsRead.make({ journals: A.empty(), receipts: A.empty() });
+const noVerdictRead = ContainedFileRead.make({ exists: false, contents: O.none() });
+
+interface FleetHostJournalFile {
+  readonly contents: string;
+  readonly location: FleetHostJournalPath;
+}
+
+interface FleetHostJournals {
+  readonly journals: ReadonlyArray<EconomicsJournal>;
+  readonly receipt: FleetHostReadReceipt;
+}
+
+type FleetHostExit =
+  | { readonly reached: true; readonly status: FleetHostReadStatus }
+  | { readonly reached: false; readonly reason: FleetHostUnreachableReason };
+
+// `find` exits 1 when a root is missing or unreadable and still prints the rest;
+// `ssh` exits 255 when it cannot connect; any other status is the wrapper's own refusal.
+const fleetHostExit = (output: FleetHostShellOutput): FleetHostExit =>
+  Match.value(output).pipe(
+    Match.when({ truncated: true }, (): FleetHostExit => ({ reached: false, reason: "output-truncated" })),
+    Match.when({ exitCode: 0 }, (): FleetHostExit => ({ reached: true, status: "read" })),
+    Match.when({ exitCode: 1 }, (): FleetHostExit => ({ reached: true, status: "partial" })),
+    Match.when({ exitCode: 255 }, (): FleetHostExit => ({ reached: false, reason: "connection-failed" })),
+    Match.orElse((): FleetHostExit => ({ reached: false, reason: "route-failed" }))
+  );
+
+const unreachableFleetHost = (
+  host: FleetHostEntry,
+  reason: FleetHostUnreachableReason,
+  exitCode: O.Option<number>
+): FleetHostJournals => ({
+  journals: A.empty(),
+  receipt: FleetHostReadReceipt.make({
+    host: host.host,
+    route: host.route,
+    status: "unreachable",
+    unreachableReason: O.some(reason),
+    exitCode,
+    journals: 0,
+    attempts: 0,
+    skippedFiles: 0,
+  }),
+});
+
+// A host's journal is labelled `<host>:<checkout>`, or `<host>:(retained)` for its own store.
+const foldFleetHostFile = (
+  host: FleetHostEntry,
+  file: FleetHostJournalFile,
+  excluded: HashSet.HashSet<string>
+): FoldedJournal =>
+  foldRunJournal(
+    {
+      checkout: `${host.host}:${O.getOrElse(file.location.checkout, () => RETAINED_CHECKOUT_LABEL)}`,
+      runId: file.location.runId,
+    },
+    O.none(),
+    ContainedFileRead.make({ exists: true, contents: O.some(file.contents) }),
+    noVerdictRead,
+    excluded
+  );
+
+const locateFleetHostFiles = (stdout: string, repositoryKey: string, runId: O.Option<string>) => {
+  const files = parseFleetHostReadOutput(stdout);
+  const located = A.getSomes(
+    A.map(files, (file) =>
+      O.map(
+        classifyFleetHostJournalPath(file.path, repositoryKey),
+        (location): FleetHostJournalFile => ({ location, contents: file.contents })
+      )
+    )
+  );
+  return {
+    skippedFiles: A.length(files) - A.length(located),
+    files: A.filter(located, (file) => O.isNone(runId) || O.contains(runId, file.location.runId)),
+  };
+};
+
+// The host's live journals fold first; its store's copy of an attempt a live journal of
+// the same run holds is dropped, as for the workstation's own store.
+const foldFleetHostOutput = (
+  host: FleetHostEntry,
+  output: FleetHostShellOutput,
+  status: FleetHostReadStatus,
+  repositoryKey: string,
+  runId: O.Option<string>
+): FleetHostJournals => {
+  const { files, skippedFiles } = locateFleetHostFiles(output.stdout, repositoryKey, runId);
+  const isLive = (file: FleetHostJournalFile): boolean => O.isSome(file.location.checkout);
+  const live = A.map(A.filter(files, isLive), (file) => foldFleetHostFile(host, file, HashSet.empty()));
+  const liveAttempts = liveAttemptsByRun(live);
+  const retained = A.map(A.filter(files, P.not(isLive)), (file) =>
+    foldFleetHostFile(host, file, orNoExcludedAttempts(HashMap.get(liveAttempts, file.location.runId)))
+  );
+  const journals = A.map(A.appendAll(live, retained), (folded) => folded.journal);
+  return {
+    journals,
+    receipt: FleetHostReadReceipt.make({
+      host: host.host,
+      route: host.route,
+      status,
+      unreachableReason: O.none(),
+      exitCode: O.some(output.exitCode),
+      journals: A.length(journals),
+      attempts: sumOf(journals, (journal) => A.length(journal.attempts)),
+      skippedFiles,
+    }),
+  };
+};
+
+const fleetHostJournals = (
+  host: FleetHostEntry,
+  output: FleetHostShellOutput,
+  repositoryKey: string,
+  runId: O.Option<string>
+): FleetHostJournals => {
+  const exit = fleetHostExit(output);
+  return exit.reached
+    ? foldFleetHostOutput(host, output, exit.status, repositoryKey, runId)
+    : unreachableFleetHost(host, exit.reason, O.some(output.exitCode));
+};
+
+const readFleetHost = (
+  shell: FleetHostShellShape,
+  host: FleetHostEntry,
+  repositoryKey: string,
+  runId: O.Option<string>
+): Effect.Effect<FleetHostJournals> =>
+  shell.run(host.route, fleetHostReadCommand(host.roots)).pipe(
+    Effect.match({
+      onFailure: (error: FleetHostShellError) => unreachableFleetHost(host, error.reason, O.none()),
+      onSuccess: (output) => fleetHostJournals(host, output, repositoryKey, runId),
+    })
+  );
+
+const warnNoFleetHosts = (detail: string) =>
+  Effect.as(
+    Effect.logWarning(`yeet economics --fleet-hosts: ${detail} No fleet host is read.`),
+    O.none<{ readonly hosts: ReadonlyArray<FleetHostEntry>; readonly repositoryKey: string }>()
+  );
+
+// The configured hosts and the fleet's key; a report never fails over its scope, so a clone
+// without a GitHub origin, a missing or an undecodable hosts.json warns and reads no host.
+const configuredFleetHosts = Effect.fnUntraced(function* (repoRoot: string) {
+  const path = yield* Path.Path;
+  const root = path.resolve(repoRoot);
+  const clone = yield* readCheckoutClone(root);
+  const repository = yield* readCloneFleetRepository(O.getOrElse(clone, () => root));
+  if (O.isNone(repository)) {
+    return yield* warnNoFleetHosts("the clone has no GitHub origin, so it has no hosts.json.");
+  }
+  const document = yield* readConfiguredFleetHosts(repository.value).pipe(
+    Effect.catchTag("WorktreeCommandError", (error) => warnNoFleetHosts(error.message).pipe(Effect.as(O.none())))
+  );
+  return O.isNone(document)
+    ? yield* warnNoFleetHosts("no hosts.json is configured.")
+    : O.some({ hosts: document.value.hosts, repositoryKey: fleetRepositoryKey(repository.value) });
+});
+
+const readFleetHostJournals = Effect.fn("Yeet.Economics.readFleetHosts")(function* (
+  request: EconomicsScopeRequest
+): Effect.fn.Return<
+  FleetHostsRead,
+  YeetEconomicsError,
+  FleetHostShell | FileSystem.FileSystem | Path.Path | Digest.Digest
+> {
+  if (!request.fleetHosts) {
+    return noFleetHostsRead;
+  }
+  const runId = yield* branchRunId(request);
+  const configured = yield* configuredFleetHosts(request.repoRoot);
+  if (O.isNone(configured)) {
+    return noFleetHostsRead;
+  }
+  const shell = yield* FleetHostShell;
+  // One host at a time: every route may ask for a touch of the same YubiKey.
+  const reads = yield* Effect.forEach(
+    configured.value.hosts,
+    (host) => readFleetHost(shell, host, configured.value.repositoryKey, runId),
+    { concurrency: 1 }
+  );
+  return FleetHostsRead.make({
+    journals: A.flatMap(reads, (read) => read.journals),
+    receipts: A.map(reads, (read) => read.receipt),
+  });
+});
+
+/**
+ * Operations the fleet-host source provides.
+ *
+ * **Example** (Describe a host read)
+ *
+ * ```ts
+ * import { EconomicsScopeRequest } from "@beep/repo-cli/test/Yeet"
+ * import type { YeetFleetHostSourceShape } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const request = EconomicsScopeRequest.make({ repoRoot: "/repo", branch: O.none(), fleet: true, fleetHosts: true })
+ * const readHosts = (source: YeetFleetHostSourceShape) => source.read(request)
+ * console.log(readHosts.length) // 1
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export interface YeetFleetHostSourceShape {
+  readonly read: (request: EconomicsScopeRequest) => Effect.Effect<FleetHostsRead, YeetEconomicsError>;
+}
+
+const makeYeetFleetHostSource: Effect.Effect<
+  YeetFleetHostSourceShape,
+  never,
+  FleetHostShell | Digest.Digest | FileSystem.FileSystem | Path.Path
+> = Effect.map(Effect.context<FleetHostShell | Digest.Digest | FileSystem.FileSystem | Path.Path>(), (context) => ({
+  read: (request: EconomicsScopeRequest) => readFleetHostJournals(request).pipe(Effect.provide(context)),
+}));
+
+/**
+ * Service boundary that reads the configured fleet hosts' attempt journals,
+ * read-only, over their existing SSH wrappers (PERIL-11 slice 3).
+ *
+ * **Details**
+ *
+ * Only a request with `fleetHosts` reads anything. The hosts come from
+ * `<state>/beep/fleet/<repo-key>/hosts.json`; each is read once, one at a
+ * time, by a single {@link FleetHostShell} call running the read-only
+ * `find`/`tail` command over its roots, and the printed journals are folded
+ * here in memory. A host's live checkout journals are labelled
+ * `<host>:<checkout>` and its own store's `<host>:(retained)`, a retained
+ * attempt a live journal of the same run holds counting once. A host that
+ * times out, cannot be reached, or whose wrapper refuses yields an
+ * `unreachable` receipt and no journals, and the other hosts are still read.
+ * Raw rows never leave the fold: the receipts carry counts only. A clone
+ * without a GitHub origin, a missing `hosts.json` or one that does not decode
+ * logs a warning and reads no host. `read` fails only with reason `run-id`
+ * when a branch's run id cannot be derived.
+ *
+ * **Example** (Read the configured hosts)
+ *
+ * ```ts
+ * import { EconomicsScopeRequest, YeetFleetHostSource } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const program = Effect.gen(function* () {
+ *   const source = yield* YeetFleetHostSource
+ *   return yield* source.read(
+ *     EconomicsScopeRequest.make({ repoRoot: "/repo", branch: O.none(), fleet: true, fleetHosts: true })
+ *   )
+ * })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export class YeetFleetHostSource extends Context.Service<YeetFleetHostSource, YeetFleetHostSourceShape>()(
+  $I`YeetFleetHostSource`,
+  { make: makeYeetFleetHostSource }
+) {
+  /** Live source over the fleet hosts' SSH wrappers; `Digest` derives a branch's run id. */
+  static readonly layer: Layer.Layer<
+    YeetFleetHostSource,
+    never,
+    FleetHostShell | Digest.Digest | FileSystem.FileSystem | Path.Path
+  > = Layer.effect(YeetFleetHostSource, YeetFleetHostSource.make);
+}
+
 const ledgerOrder = Order.mapInput(Order.String, (ledger: ReviewLaneLedger) => ledger.ledgerPath);
 
 // Sibling lanes of one clone share one ledger (ruling 71's location rule), so
@@ -1180,6 +1491,7 @@ export class YeetReviewLaneSource extends Context.Service<YeetReviewLaneSource, 
 // ---------------------------------------------------------------------------
 
 const orUnknown: (value: O.Option<string>) => string = O.getOrElse(() => UNKNOWN_KEY);
+const orUnrecorded: (value: O.Option<string>) => string = O.getOrElse(() => UNRECORDED_KEY);
 
 const asGreen = constant(EconomicsAttemptClass.Enum.green);
 const asRed = constant(EconomicsAttemptClass.Enum.red);
@@ -1353,6 +1665,8 @@ const attemptMix = (attempts: ReadonlyArray<EconomicsAttempt>): EconomicsAttempt
     classMix: economicsCountMix(A.map(attempts, economicsAttemptClass)),
     modeMix: economicsCountMix(A.map(attempts, (attempt) => orUnknown(attempt.mode))),
     failureKindMix: economicsCountMix(A.map(A.filter(attempts, isRed), (attempt) => orUnknown(attempt.failureKind))),
+    hostMix: economicsCountMix(A.map(attempts, (attempt) => orUnrecorded(attempt.host))),
+    seatMix: economicsCountMix(A.map(attempts, (attempt) => orUnrecorded(attempt.seat))),
   });
 
 const modeDurationOrder = Order.combine(
@@ -2102,6 +2416,20 @@ const scopeLine = (report: YeetEconomicsReport): string =>
     thunkEmptyStr
   )}: ${formatList(report.scope.checkouts, 3)}; as of ${report.measurementAsOf}`;
 
+const hostReceiptLine = (receipt: FleetHostReadReceipt): string =>
+  O.match(receipt.unreachableReason, {
+    onNone: () =>
+      `${receipt.host} ${receipt.status} (${receipt.journals} journal(s), ${receipt.attempts} attempt(s), ${receipt.skippedFiles} skipped file(s))`,
+    onSome: (reason) => `${receipt.host} unreachable (${reason})`,
+  });
+
+// PERIL-11 slice 3: one line for the fleet hosts a `--fleet-hosts` report read, none otherwise.
+const renderFleetHosts = (hosts: ReadonlyArray<FleetHostReadReceipt>): ReadonlyArray<string> =>
+  A.match(hosts, {
+    onEmpty: A.empty<string>,
+    onNonEmpty: (read) => A.of(`  fleet hosts: ${A.join(A.map(read, hostReceiptLine), ", ")}`),
+  });
+
 /**
  * Render the economics report for the terminal, one section per metric.
  *
@@ -2141,9 +2469,11 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
   return A.join(
     [
       scopeLine(report),
+      ...renderFleetHosts(report.scope.hosts),
       `attempts: ${totalCount(attempts.all.outcomeMix)} — ${formatMix(attempts.all.outcomeMix)}; comparable ${totalCount(attempts.comparable.outcomeMix)} — ${formatMix(attempts.comparable.outcomeMix)}`,
       `  classes (terminations and monitor-decided attempts apart from reds): ${formatMix(attempts.all.classMix)}; comparable ${formatMix(attempts.comparable.classMix)}`,
       `  modes: ${formatMix(attempts.all.modeMix)}`,
+      `  hosts: ${formatMix(attempts.all.hostMix)}; seats: ${formatMix(attempts.all.seatMix)}`,
       `  failure kinds (red attempts): ${formatMix(attempts.all.failureKindMix)}`,
       ...renderModeDurations(report.modeDurations),
       renderMonitorWait(report.monitorWait),
@@ -2229,19 +2559,25 @@ const scopeKind = Match.type<EconomicsScopeRequest>().pipe(
   Match.orElse(() => EconomicsScopeKind.Enum.checkout)
 );
 
-const scopeFor = (request: EconomicsScopeRequest, journals: ReadonlyArray<EconomicsJournal>): EconomicsScope =>
+const scopeFor = (
+  request: EconomicsScopeRequest,
+  journals: ReadonlyArray<EconomicsJournal>,
+  hosts: ReadonlyArray<FleetHostReadReceipt>
+): EconomicsScope =>
   EconomicsScope.make({
     kind: scopeKind(request),
     checkouts: A.sort(A.dedupe(A.map(journals, (journal) => journal.checkout)), Order.String),
     branch: request.branch,
+    hosts,
   });
 
 const reportFor = Effect.fnUntraced(function* (
   request: EconomicsScopeRequest,
   journals: ReadonlyArray<EconomicsJournal>,
-  ledgers: ReadonlyArray<ReviewLaneLedger>
+  ledgers: ReadonlyArray<ReviewLaneLedger>,
+  hosts: ReadonlyArray<FleetHostReadReceipt> = A.empty()
 ) {
-  const argument = scopeFor(request, journals);
+  const argument = scopeFor(request, journals, hosts);
   const now1 = yield* DateTime.now;
   return buildYeetEconomicsReport(journals, argument, now1, ledgers);
 });
@@ -2263,7 +2599,9 @@ const isNoRunsDirectory = (error: YeetEconomicsError): boolean =>
  * A checkout with no `<packetDir>/runs` prints an empty report rather than
  * failing, as `proof-report` does for an empty ledger. Every other
  * {@link YeetEconomicsError} cause (a failed run-id derivation, no repo root,
- * a failed encoding) fails the run.
+ * a failed encoding) fails the run. With `fleetHosts` (which implies `fleet`),
+ * the {@link YeetFleetHostSource} journals join the fold and its receipts the
+ * report's `scope.hosts`.
  *
  * **Example** (Build the runner effect)
  *
@@ -2285,20 +2623,29 @@ const isNoRunsDirectory = (error: YeetEconomicsError): boolean =>
 export const runYeetEconomics = Effect.fn("Yeet.runEconomics")(function* (
   options: YeetEconomicsOptions,
   repoRoot: Effect.Effect<string, YeetEconomicsError, FileSystem.FileSystem> = locateRepoRoot
-): Effect.fn.Return<void, YeetEconomicsError, FileSystem.FileSystem | YeetEconomicsSource | YeetReviewLaneSource> {
+): Effect.fn.Return<
+  void,
+  YeetEconomicsError,
+  FileSystem.FileSystem | YeetEconomicsSource | YeetReviewLaneSource | YeetFleetHostSource
+> {
   const source = yield* YeetEconomicsSource;
   const reviewLane = yield* YeetReviewLaneSource;
+  const fleetHosts = yield* YeetFleetHostSource;
+  const checkoutRoot = yield* repoRoot;
+  // `--fleet-hosts` adds the configured hosts to the fleet, so it implies `--fleet`.
   const request = EconomicsScopeRequest.make({
-    repoRoot: yield* repoRoot,
+    repoRoot: checkoutRoot,
     branch: options.branch,
-    fleet: options.fleet,
+    fleet: options.fleet || options.fleetHosts,
+    fleetHosts: options.fleetHosts,
     packetDir: options.packetDir,
   });
-  const journals = yield* source
+  const local = yield* source
     .read(request)
     .pipe(Effect.catchIf(isNoRunsDirectory, () => Effect.succeed(A.empty<EconomicsJournal>())));
+  const hosts = yield* fleetHosts.read(request);
   const ledgers = yield* reviewLane.read(request);
-  const report = yield* reportFor(request, journals, ledgers);
+  const report = yield* reportFor(request, A.appendAll(local, hosts.journals), ledgers, hosts.receipts);
   if (options.json) {
     const json = yield* YeetEconomicsReportJson.encode(report).pipe(
       Effect.mapError((cause) =>
@@ -2332,10 +2679,22 @@ export const runYeetEconomics = Effect.fn("Yeet.runEconomics")(function* (
  */
 export const runYeetEconomicsCommand = (
   options: Parameters<typeof YeetEconomicsOptions.make>[0]
-): Effect.Effect<void, YeetEconomicsError, FileSystem.FileSystem | Path.Path | Digest.Digest> =>
+): Effect.Effect<
+  void,
+  YeetEconomicsError,
+  | FileSystem.FileSystem
+  | Path.Path
+  | Digest.Digest
+  | ChildProcessSpawner.ChildProcessSpawner
+  | SecureRandom.SecureRandom
+> =>
   runYeetEconomics(YeetEconomicsOptions.make(options)).pipe(
     Effect.provideServiceEffect(YeetEconomicsSource, YeetEconomicsSource.make),
-    Effect.provideServiceEffect(YeetReviewLaneSource, YeetReviewLaneSource.make)
+    Effect.provideServiceEffect(YeetReviewLaneSource, YeetReviewLaneSource.make),
+    Effect.provideServiceEffect(
+      YeetFleetHostSource,
+      Effect.provideServiceEffect(YeetFleetHostSource.make, FleetHostShell, FleetHostShell.make)
+    )
   );
 
 const firstLine = (text: string): string => A.headNonEmpty(Str.split(text, "\n"));

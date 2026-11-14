@@ -11,7 +11,8 @@ Every path-dependent surface reads one ordered list of discovery roots:
 - `beep worktree fleet` (mirror, `--join`, `describe`, `register`)
 - `beep quality residue-reap --fleet` (it asks the fleet mirror for its
   checkouts)
-- `beep yeet economics --fleet`
+- `beep yeet economics --fleet` (and `--fleet-hosts`, which adds the
+  [fleet hosts](#fleet-hosts) read over SSH)
 
 Each root is a directory whose immediate children are candidates. Discovery
 reads one level, never recurses and never follows symlinks. A child counts when
@@ -116,6 +117,64 @@ projects directory.
   `beep worktree remove <name> --archive` once its thread is gone. A lane T3 removes itself with `git
   worktree remove` still skips the attempt-journal store, so retire T3 lanes
   through the fence to keep their journals.
+
+## Fleet hosts
+
+`beep yeet economics --fleet-hosts` (it implies `--fleet`) also reads the
+attempt journals of other machines, read-only, over the ordinary SSH wrappers
+the [host profiles](../../.claude/skills/remote-development-agents/references/hosts.md)
+already name. The hosts are listed in
+`<state>/beep/fleet/<repo-key>/hosts.json`, next to `roots.json`
+(`BEEP_FLEET_STATE_ROOT` relocates it):
+
+```json
+{
+  "schemaVersion": "fleet-hosts/v1",
+  "hosts": [
+    {
+      "host": "beep-worker",
+      "route": "ssh-beep-worker-yubi",
+      "roots": ["projects", ".local/state/beep/yeet/attempts"]
+    }
+  ]
+}
+```
+
+- `route` is one of `ssh-beep-worker-yubi`, `ssh-tbk-worker`,
+  `ssh-dankserver-worker`, `ssh-tom-pc-1-wsl` or `ssh-grok-bot`, always
+  without `--admin`. Any other value, a raw `ssh` or an administrative
+  wrapper does not decode, so the read never opens a new route or needs a new
+  credential.
+- `roots` are relative to the remote login's home directory, made of plain
+  segments (letters, digits, `.`, `_`, `-`) with no `.` or `..`. A
+  remote checkout is admitted by root, not by origin: reading a remote
+  `.git/config` would be a read beyond the journals, so list only
+  directories that hold this repository's checkouts. The host's own
+  attempt-journal store (`.local/state/beep/yeet/attempts`) is read only for
+  this fleet's `<repo-key>` partition.
+- Each host runs exactly one remote command (sent with every token
+  single-quoted, so the remote shell expands nothing):
+  `find <roots> -maxdepth 8 ( -name node_modules -o -name .git ) -prune -o
+  -type f -path */runs/*/attempts.ndjson -exec tail -v -c +1 -- {} +`.
+  It lists and prints run journals and creates nothing on the host: no
+  temporary file, directory or lock. The shell refuses any other command
+  line before starting the wrapper, and standard input is closed.
+- Hosts are read one at a time, because each wrapper may ask for a touch of
+  the same YubiKey; a read has two minutes. A host that times out, cannot be
+  reached (`ssh` exit 255), whose wrapper refuses (any other status), whose
+  wrapper is not installed, or whose output passes 64 MiB is reported as
+  `unreachable` with that reason, and the other hosts are still read. `find`
+  exiting 1 (a missing root) is `partial`: what it printed is still read.
+- The printed journals are folded in memory, labelled `<host>:<checkout>`
+  and `<host>:(retained)`, and dropped. The report gets one receipt per host
+  in `scope.hosts` (status, reason, exit code, journal, attempt and
+  skipped-file counts) and the attempts' `hostMix` and `seatMix`. No raw
+  row is written to disk, printed, or kept in any report.
+
+New attempt-started rows carry `host` (the writer's short host label) and
+`seat` (`codex`, `claude-code` or `unknown`, the harness whose shell
+started the attempt). Rows written before those keys decode with them absent
+and count as `unrecorded`; readers that predate them ignore them.
 
 ## Registry
 
