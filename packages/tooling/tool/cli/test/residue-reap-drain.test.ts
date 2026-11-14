@@ -17,6 +17,7 @@ import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -605,10 +606,15 @@ describe("residue reap drainable class", () => {
         expect(drainRow(wentLive, fleet.stray).skipReason).toBe("drain-blocked");
         expect(A.some(wentLive.warnings, Str.includes("no longer dormant"))).toBe(true);
         yield* expectExists(fleet.stray, true);
+        // The refusal ended the grace window: the stray clone needs a fresh one before it drains.
+        const afterLive = yield* Ref.get(registry);
+        expect(rowFor(afterLive, fleet.stray).drainingSince).toBeNull();
 
+        yield* Ref.set(armed, "off");
+        yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, classes: ["drainable"] });
         yield* Ref.set(strayCalls, 0);
         yield* Ref.set(armed, "move-head");
-        const moved = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
+        const moved = yield* reap(fleet, probe, { nowMillis: NOW + 16 * DAY, apply: true, classes: ["drainable"] });
         expect(drainRow(moved, fleet.stray).skipReason).toBe("drain-blocked");
         expect(A.some(moved.warnings, Str.includes("HEAD moved while its work was being preserved"))).toBe(true);
         yield* expectExists(fleet.stray, true);
@@ -619,6 +625,79 @@ describe("residue reap drainable class", () => {
           ["refused", "drain-blocked"],
           ["refused", "drain-blocked"],
         ]);
+      })
+    );
+
+    it.effect("needs a bundle for commits only a stale remote-tracking ref still covers", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* run(fleet.clone, "git", ["worktree", "remove", fleet.lane]);
+        yield* run(fleet.clone, "git", ["checkout", "--quiet", "-b", "gone"]);
+        yield* fs.writeFileString(path.join(fleet.clone, "gone.txt"), "deleted upstream\n");
+        yield* run(fleet.clone, "git", ["add", "gone.txt"]);
+        yield* run(fleet.clone, "git", ["commit", "--quiet", "-m", "pushed then deleted upstream"]);
+        yield* run(fleet.clone, "git", ["push", "--quiet", "origin", "gone"]);
+        // Deleted from another clone: this clone keeps a stale origin/gone.
+        yield* run(fleet.invoker, "git", ["push", "--quiet", "origin", "--delete", "gone"]);
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const report = yield* reap(fleet, fleetProbe(fleet, registry), { nowMillis: NOW, classes: ["drainable"] });
+        expect(outcomeOf(drainRow(report, fleet.clone), "local-only-work")).toBe("bundle-required");
+      })
+    );
+
+    it.effect("ends the grace window of a checkout whose layout becomes unreadable", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const probe = fleetProbe(fleet, registry);
+        yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+        const started = yield* Ref.get(registry);
+        expect(rowFor(started, fleet.lane).drainingSince).not.toBeNull();
+
+        yield* fs.rename(path.join(fleet.lane, ".git"), path.join(fleet.lane, ".git.away"));
+        const blind = yield* reap(fleet, probe, { nowMillis: NOW + DAY, classes: ["drainable"] });
+        expect(drainRow(blind, fleet.lane).skipReason).toBe("git-probe-failed");
+        const ended = yield* Ref.get(registry);
+        expect(rowFor(ended, fleet.lane).drainingSince).toBeNull();
+      })
+    );
+
+    it.effect("drains a checkout that sits directly under home", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const path = yield* Path.Path;
+        yield* run(fleet.home, "git", ["clone", "--quiet", path.join(fleet.projects, "origin.git"), "beep-effect5"]);
+        const atHome = path.join(fleet.home, "beep-effect5");
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const probe = fleetProbe(fleet, registry);
+        yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"], extraCheckouts: [atHome] });
+        const wave = yield* reap(fleet, probe, {
+          nowMillis: NOW + 8 * DAY,
+          apply: true,
+          classes: ["drainable"],
+          extraCheckouts: [atHome],
+        });
+        expect(drainRow(wave, atHome).action).toBe("remove-dir");
+        yield* expectExists(atHome, false);
+      })
+    );
+
+    it.effect("refuses to assess while a git repository-location variable is set", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const report = yield* reap(fleet, fleetProbe(fleet, registry), { nowMillis: NOW, classes: ["drainable"] }).pipe(
+          Effect.provideService(
+            ConfigProvider.ConfigProvider,
+            ConfigProvider.fromUnknown({ GIT_DIR: fleet.clone, HOME: fleet.home })
+          )
+        );
+        expect(A.filter(report.candidates, (candidate) => candidate.reapClass === "drainable")).toEqual([]);
+        expect(A.some(report.warnings, Str.includes("GIT_DIR"))).toBe(true);
       })
     );
   });

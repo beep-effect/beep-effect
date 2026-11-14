@@ -59,6 +59,9 @@ const makeHost = Effect.fn("ResidueDrainLiveTest.makeHost")(function* () {
   const repo = path.join(root, "beep-effect");
   const units = path.join(home, ".config", "systemd", "user");
   yield* fs.makeDirectory(path.join(units, "e.service.d"), { recursive: true });
+  const shared = path.join(home, ".local", "share", "systemd", "user");
+  yield* fs.makeDirectory(shared, { recursive: true });
+  yield* fs.writeFileString(path.join(shared, "g.service"), "[Service]\nWorkingDirectory=/srv/shared\n");
   yield* fs.makeDirectory(repo, { recursive: true });
   yield* fs.writeFileString(path.join(units, "a.service"), "[Service]\nWorkingDirectory=%h/projects/a\n");
   yield* fs.writeFileString(path.join(units, "b.service"), "[Service]\nWorkingDirectory=-~/projects/b\n");
@@ -69,7 +72,8 @@ const makeHost = Effect.fn("ResidueDrainLiveTest.makeHost")(function* () {
   yield* run(repo, "git", ["init", "--quiet", "-b", "main"]);
   yield* run(repo, "git", ["remote", "add", "origin", "https://github.com/acme/widgets.git"]);
   const config = ConfigProvider.fromUnknown({ HOME: home, BEEP_FLEET_STATE_ROOT: state });
-  return { root, home, state, repo, config };
+  const unitPaths = [units, shared, path.join(root, "absent-load-path")];
+  return { root, home, state, repo, config, unitPaths };
 });
 
 const mirrorFor = (root: string): FleetMirrorServiceShape => ({
@@ -86,7 +90,8 @@ describe("live residue drain probe", () => {
         const host = yield* makeHost();
         const probe = yield* makeResidueDrainProbe(
           () => Effect.succeedSome(["feat/lane"]),
-          () => Effect.succeedSome(PROOF_UNITS)
+          () => Effect.succeedSome(PROOF_UNITS),
+          () => Effect.succeedSome(host.unitPaths)
         ).pipe(Effect.provideService(FleetMirrorService, FleetMirrorService.of(mirrorFor(host.root))));
         const withConfig = Effect.provideService(ConfigProvider.ConfigProvider, host.config);
 
@@ -96,6 +101,7 @@ describe("live residue drain probe", () => {
           `${host.home}/projects/a`,
           `${host.home}/projects/b`,
           "/srv/e",
+          "/srv/shared",
         ]);
         expect(facts.proofUnitCheckouts).toEqual(["/p/beep-effect-worktrees/lane"]);
         expect(facts.openPullRequestHeads).toEqual(["feat/lane"]);
@@ -126,6 +132,7 @@ describe("live residue drain probe", () => {
         const path = yield* Path.Path;
         const probe = yield* makeResidueDrainProbe(
           () => Effect.succeedNone,
+          () => Effect.succeedNone,
           () => Effect.succeedNone
         ).pipe(Effect.provideService(FleetMirrorService, FleetMirrorService.of(mirrorFor(host.root))));
         const withConfig = Effect.provideService(ConfigProvider.ConfigProvider, host.config);
@@ -134,6 +141,7 @@ describe("live residue drain probe", () => {
         const facts = O.getOrThrow(read);
         expect(facts.openPullRequestHeads).toBeNull();
         expect(facts.proofUnitCheckouts).toBeNull();
+        expect(facts.timerDirectories).toBeNull();
 
         const orphan = path.join(host.root, "no-origin");
         yield* fs.makeDirectory(orphan, { recursive: true });

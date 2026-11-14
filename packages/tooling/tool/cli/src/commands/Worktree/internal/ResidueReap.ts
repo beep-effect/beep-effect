@@ -2637,7 +2637,7 @@ const drainContext = (settings: ResidueReapSettings) =>
   });
 
 const DRAIN_FACTS_UNREADABLE =
-  "Fleet drain facts (registry, roots or state directory) could not be read; drainable was not assessed.";
+  "Fleet drain facts (registry, roots or state directory) could not be read, or a git repository-location variable (GIT_DIR, GIT_WORK_TREE, ...) is set; drainable was not assessed.";
 
 // Why a drain candidate is kept: the predicate, then its grace window, then the run's opt-in.
 const drainSkipFor = (assessment: ResidueDrainAssessment, requested: boolean): O.Option<ResidueReapSkipReason> => {
@@ -2843,7 +2843,16 @@ const applyDrainCandidate = Effect.fnUntraced(function* (
   if (Result.isFailure(prepared)) return yield* refusedDrain(settings, context, assessed, prepared.failure);
   const assessment = prepared.success;
   const current = ResidueReapCandidate.make({ ...assessed, drain: assessment });
-  const resolved = yield* resolveApplyTarget(current, O.some(settings.policy.homeBoundary));
+  // A checkout directly under home has home as its root, so the boundary steps up one level; the
+  // checkout itself must still sit strictly inside home.
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const parent = yield* fs.realPath(current.root).pipe(Effect.option);
+  const atHome = O.exists(parent, (dir) => Str.Equivalence(dir, settings.policy.homeBoundary));
+  const resolved = yield* resolveApplyTarget(
+    current,
+    O.some(atHome ? path.dirname(settings.policy.homeBoundary) : settings.policy.homeBoundary)
+  );
   if (O.isNone(resolved)) {
     return yield* refusedDrain(settings, context, current, {
       reason: "path-changed",

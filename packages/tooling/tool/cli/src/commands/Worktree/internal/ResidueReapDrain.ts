@@ -12,6 +12,7 @@ import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { GitObjectId } from "@beep/schema/Conformance";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -154,6 +155,7 @@ type ResidueDrainContext = {
   readonly facts: ResidueDrainFleetFacts;
   readonly invoker: string;
   readonly borrowings: O.Option<ReadonlyArray<{ readonly borrower: string; readonly objects: string }>>;
+  readonly remoteHeads: ReadonlyArray<readonly [string, O.Option<ReadonlyArray<string>>]>;
   readonly nowMillis: number;
   readonly graceDays: number;
   readonly cwdProbe: CwdProbe;
@@ -287,16 +289,39 @@ export const loadResidueDrainContext = Effect.fnUntraced(function* (input: {
   readonly cwdProbe: CwdProbe;
 }): Effect.fn.Return<O.Option<ResidueDrainContext>, never, DrainRequirements | ResidueDrainProbe> {
   const fs = yield* FileSystem.FileSystem;
+  const git = yield* Git;
   const probe = yield* ResidueDrainProbe;
+  // git honours these over the cwd, so every check would read another repository.
+  const relocated = yield* Effect.filter(REPOSITORY_LOCATION_VARIABLES, (name) =>
+    Config.option(Config.String(name)).pipe(
+      Effect.map(O.exists(Str.isNonEmpty)),
+      Effect.orElseSucceed(() => true)
+    )
+  );
+  if (A.isReadonlyArrayNonEmpty(relocated)) return O.none();
   const facts = yield* probe.facts(input.repoRoot);
   if (O.isNone(facts)) return O.none();
   const invoker = yield* fs.realPath(input.repoRoot).pipe(Effect.orElseSucceed(() => input.repoRoot));
-  const layouts = yield* Effect.forEach(input.checkouts, drainLayout, { concurrency: 8 });
-  const borrowings = yield* borrowingsOf(A.getSomes(layouts));
+  const readLayouts = yield* Effect.forEach(input.checkouts, drainLayout, { concurrency: 8 });
+  const layouts = A.getSomes(readLayouts);
+  const borrowings = yield* borrowingsOf(layouts);
+  // What origin holds right now, once per `.git`: a stale remote-tracking ref is no backup.
+  const repositories = A.dedupeWith(layouts, (left, right) => Str.Equivalence(left.commonDir, right.commonDir));
+  const remoteHeads = yield* Effect.forEach(
+    repositories,
+    (layout) =>
+      git.lsRemote(layout.real, "origin", { heads: true, tags: true }).pipe(
+        Effect.map((entries) => A.dedupe(A.map(entries, (entry) => entry.sha))),
+        Effect.option,
+        Effect.map((shas) => [layout.commonDir, shas] as const)
+      ),
+    { concurrency: 4 }
+  );
   return O.some({
     facts: facts.value,
     invoker,
     borrowings,
+    remoteHeads,
     nowMillis: input.nowMillis,
     graceDays: input.graceDays,
     cwdProbe: input.cwdProbe,
@@ -403,9 +428,23 @@ type LocalOnlySpec = {
   readonly stashes: ReadonlyArray<string>;
 };
 
-const localOnlySpec = Effect.fnUntraced(function* (layout: DrainLayout) {
+// Local-only work is measured against the commits origin advertises now (`ls-remote`), never the
+// clone's remote-tracking refs, which can still cover commits deleted or force-pushed upstream.
+// A lane's branches stay in its clone, which bundles them when it drains in turn.
+const localOnlySpec = Effect.fnUntraced(function* (context: ResidueDrainContext, layout: DrainLayout) {
+  const remote = O.flatten(
+    O.map(
+      A.findFirst(context.remoteHeads, ([commonDir]) => Str.Equivalence(commonDir, layout.commonDir)),
+      ([, shas]) => shas
+    )
+  );
+  if (O.isNone(remote)) return O.none<LocalOnlySpec>();
   if (layout.kind !== "clone") {
-    return O.some<LocalOnlySpec>({ include: ["HEAD"], exclude: ["--remotes", "--branches", "--tags"], stashes: [] });
+    return O.some<LocalOnlySpec>({
+      include: ["HEAD"],
+      exclude: [...remote.value, "--branches", "--tags"],
+      stashes: [],
+    });
   }
   const git = yield* Git;
   const stashes = yield* git.stashList(layout.real).pipe(Effect.option);
@@ -413,20 +452,23 @@ const localOnlySpec = Effect.fnUntraced(function* (layout: DrainLayout) {
     stashes,
     (entries): LocalOnlySpec => ({
       include: ["--branches", "--tags", "HEAD"],
-      exclude: ["--remotes"],
+      exclude: remote.value,
       stashes: A.map(entries, (entry) => entry.sha),
     })
   );
 });
 
 const countRevisions = Effect.fnUntraced(function* (layout: DrainLayout, args: ReadonlyArray<string>) {
-  const counted = yield* rawGit(layout.real, ["rev-list", "--count", ...args]);
+  // `--ignore-missing`: an advertised remote sha this clone never fetched cannot cover anything here.
+  const counted = yield* rawGit(layout.real, ["rev-list", "--count", "--ignore-missing", ...args]);
   return O.flatMap(trimmedNonEmpty(counted), N.parse);
 });
 
-const localOnlyCheck = Effect.fnUntraced(function* (layout: DrainLayout) {
-  const spec = yield* localOnlySpec(layout);
-  if (O.isNone(spec)) return checkResult("local-only-work", "probe-failed", "git stash list failed");
+const localOnlyCheck = Effect.fnUntraced(function* (context: ResidueDrainContext, layout: DrainLayout) {
+  const spec = yield* localOnlySpec(context, layout);
+  if (O.isNone(spec)) {
+    return checkResult("local-only-work", "probe-failed", "origin's refs or the stash list could not be read");
+  }
   const commits = yield* countRevisions(layout, [
     ...spec.value.include,
     ...spec.value.stashes,
@@ -437,7 +479,7 @@ const localOnlyCheck = Effect.fnUntraced(function* (layout: DrainLayout) {
     onNone: () => checkResult("local-only-work", "probe-failed", "git rev-list failed"),
     onSome: (count) =>
       N.Equivalence(count, 0)
-        ? checkResult("local-only-work", "pass", "every local ref is reachable from a remote ref")
+        ? checkResult("local-only-work", "pass", "every local ref is reachable from a ref origin holds now")
         : checkResult(
             "local-only-work",
             "bundle-required",
@@ -519,7 +561,7 @@ const predicateChecks = Effect.fnUntraced(function* (context: ResidueDrainContex
   const borrowed = objectBorrowersCheck(context, layout);
   const early = [...cheap, liveness, owned, borrowed];
   if (A.some(early, refuses)) return A.appendAll(early, [notEvaluated("local-only-work"), notEvaluated("clean-tree")]);
-  const localOnly = yield* localOnlyCheck(layout);
+  const localOnly = yield* localOnlyCheck(context, layout);
   if (refuses(localOnly)) return A.appendAll(early, [localOnly, notEvaluated("clean-tree")]);
   const clean = yield* cleanTreeCheck(layout);
   return A.appendAll(early, [localOnly, clean]);
@@ -577,23 +619,27 @@ const observeRow = (row: FleetRegistryRow, observation: Observation, now: DateTi
       drainingHead: head.value,
     });
   }
-  return FleetRegistryRow.make({
+  return resetGrace(row);
+};
+
+// Record each observation on its registry row, adopting checkouts the registry does not list yet.
+// A failed observation ends a grace window as surely as a failing check does.
+const resetGrace = (row: FleetRegistryRow): FleetRegistryRow =>
+  FleetRegistryRow.make({
     ...row,
     drainStatus: FleetDrainStatus.is.retired(row.drainStatus) ? row.drainStatus : FleetDrainStatus.Enum.active,
     drainingSince: null,
     drainingHead: null,
   });
-};
 
-// Record each observation on its registry row, adopting checkouts the registry does not list yet.
 const observeRegistry =
-  (observations: ReadonlyArray<Observation>, now: DateTime.Utc) =>
+  (observations: ReadonlyArray<Observation>, unreadable: ReadonlyArray<string>, now: DateTime.Utc) =>
   (rows: ReadonlyArray<FleetRegistryRow>): ReadonlyArray<FleetRegistryRow> => {
     const observationFor = (checkout: string) =>
       A.findFirst(observations, (observation) => Str.Equivalence(observation.layout.checkout, checkout));
     const updated = A.map(rows, (row) =>
       O.match(observationFor(row.checkout), {
-        onNone: () => row,
+        onNone: () => (A.contains(unreadable, row.checkout) ? resetGrace(row) : row),
         onSome: (observation) => observeRow(row, observation, now),
       })
     );
@@ -707,7 +753,7 @@ export const assessResidueDrain = Effect.fnUntraced(function* (
     { concurrency: 4 }
   );
   const now = DateTime.makeUnsafe(context.nowMillis);
-  const written = yield* probe.updateRegistry(repoRoot, observeRegistry(observations, now));
+  const written = yield* probe.updateRegistry(repoRoot, observeRegistry(observations, unreadable, now));
   const rows = O.getOrElse(written, () => context.facts.registry);
   const assessments = A.map(observations, (observation) =>
     assessmentOf(
@@ -739,7 +785,15 @@ const writeBundle = Effect.fnUntraced(function* (
   file: string
 ): Effect.fn.Return<Result.Result<BundleWritten, string>, never, DrainRequirements> {
   const include = [...spec.include, ...spec.tempRefs];
-  const created = yield* rawGit(layout.real, ["bundle", "create", file, ...include, "--not", ...spec.exclude]);
+  const created = yield* rawGit(layout.real, [
+    "bundle",
+    "create",
+    file,
+    "--ignore-missing",
+    ...include,
+    "--not",
+    ...spec.exclude,
+  ]);
   if (O.isNone(created)) return Result.fail("git bundle create failed");
   const verified = yield* rawGit(layout.real, ["bundle", "verify", file]);
   if (O.isNone(verified)) return Result.fail("git bundle verify failed");
@@ -756,13 +810,14 @@ const writeBundle = Effect.fnUntraced(function* (
 });
 
 const bundleLocalOnlyWork = Effect.fnUntraced(function* (
+  context: ResidueDrainContext,
   layout: DrainLayout,
   stateDirectory: string,
   runId: string
 ): Effect.fn.Return<Result.Result<BundleWritten, string>, never, DrainRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const spec = yield* localOnlySpec(layout);
+  const spec = yield* localOnlySpec(context, layout);
   if (O.isNone(spec)) return Result.fail("git stash list failed");
   const directory = path.join(stateDirectory, DRAIN_BUNDLES);
   const made = yield* fs.makeDirectory(directory, { recursive: true }).pipe(Effect.option);
@@ -786,6 +841,16 @@ const bundleLocalOnlyWork = Effect.fnUntraced(function* (
 });
 
 const DRAIN_BUNDLES = "drain-bundles";
+
+// Environment variables that point git at another repository whatever the cwd.
+const REPOSITORY_LOCATION_VARIABLES = [
+  "GIT_DIR",
+  "GIT_WORK_TREE",
+  "GIT_COMMON_DIR",
+  "GIT_INDEX_FILE",
+  "GIT_OBJECT_DIRECTORY",
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+];
 
 // Ignored directories kept whole: secret stores and machine-local config directories. Every other
 // ignored directory (`node_modules/`, `dist/`, `.turbo/`, `.beep/`, tool caches) is regenerable.
@@ -889,7 +954,7 @@ const settledAfterPreservation = Effect.fnUntraced(function* (
   if (clean.outcome !== "pass") return O.some(`tree changed while its work was being preserved: ${clean.detail}`);
   const liveness = yield* livenessCheck(context, layout.value);
   if (liveness.outcome !== "pass") return O.some(`no longer dormant: ${liveness.detail}`);
-  const spec = yield* localOnlySpec(layout.value);
+  const spec = yield* localOnlySpec(context, layout.value);
   if (O.isNone(spec)) return O.some("git stash list failed");
   const residual = yield* countRevisions(layout.value, [
     ...spec.value.include,
@@ -971,7 +1036,10 @@ export const prepareResidueDrainRemoval = Effect.fnUntraced(function* (
   }
   const needsBundle = A.some(fresh.checks, (result) => result.outcome === "bundle-required");
   const bundled = needsBundle
-    ? yield* Effect.map(bundleLocalOnlyWork(layout.value, context.facts.stateDirectory, runId), Result.map(O.some))
+    ? yield* Effect.map(
+        bundleLocalOnlyWork(context, layout.value, context.facts.stateDirectory, runId),
+        Result.map(O.some)
+      )
     : Result.succeed(O.none<BundleWritten>());
   if (Result.isFailure(bundled)) {
     return Result.fail({ reason: "drain-bundle-failed" as const, assessment: fresh, detail: bundled.failure });
@@ -1052,6 +1120,13 @@ export const recordResidueDrainOutcome = Effect.fnUntraced(function* (input: {
     ),
     Effect.option
   );
+  // A refusal because the predicate stopped holding ends the grace window; preservation failures do not.
+  const graceEnded =
+    input.outcome === "refused" && O.exists(input.reason, (reason) => reason === "drain-blocked")
+      ? yield* probe.updateRegistry(input.repoRoot, (rows) =>
+          A.map(rows, (row) => (Str.Equivalence(row.checkout, input.assessment.checkout) ? resetGrace(row) : row))
+        )
+      : O.some(A.empty<FleetRegistryRow>());
   const retired =
     input.outcome === "removed"
       ? yield* probe.updateRegistry(input.repoRoot, (rows) =>
@@ -1070,6 +1145,9 @@ export const recordResidueDrainOutcome = Effect.fnUntraced(function* (input: {
   return A.getSomes([
     O.isNone(journaled) ? O.some(`Failed to append ${input.assessment.checkout} to ${file}.`) : O.none(),
     O.isNone(retired) ? O.some(`Failed to retire ${input.assessment.checkout} in the fleet registry.`) : O.none(),
+    O.isNone(graceEnded)
+      ? O.some(`Failed to reset the grace window of ${input.assessment.checkout} in the fleet registry.`)
+      : O.none(),
   ]);
 });
 

@@ -88,17 +88,35 @@ const proofUnitCheckoutsOf = (listing: string): ReadonlyArray<string> =>
 type OpenPullRequestHeads = (
   repoRoot: string
 ) => Effect.Effect<O.Option<ReadonlyArray<string>>, never, ChildProcessSpawner.ChildProcessSpawner>;
+type UnitPaths = (
+  home: string
+) => Effect.Effect<
+  O.Option<ReadonlyArray<string>>,
+  never,
+  ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
+>;
 type ProofUnitListing = (
   repoRoot: string
 ) => Effect.Effect<O.Option<string>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom>;
 
 const WORKING_DIRECTORY_LINE = /^\s*WorkingDirectory\s*=\s*-?(.+?)\s*$/u;
 
-// Every `WorkingDirectory=` of the user's systemd units and drop-ins, `%h` and `~` expanded.
-const timerDirectories = Effect.fnUntraced(function* (home: string) {
+// systemd's user-unit load paths, one per line; `None` when systemd cannot answer.
+const liveUnitPaths = (home: string) =>
+  successfulStdout({ command: "systemd-analyze", args: ["--user", "unit-paths"], cwd: home }).pipe(
+    Effect.map(O.map((text) => A.filter(A.map(Str.split("\n")(text), Str.trim), Str.isNonEmpty)))
+  );
+
+// Every `WorkingDirectory=` of the user's systemd units and drop-ins across every load path,
+// `%h` and `~` expanded.
+const timerDirectories = Effect.fnUntraced(function* (home: string, unitPaths: ReadonlyArray<string>) {
+  const perPath = yield* Effect.forEach(unitPaths, (unitDir) => unitDirectoryWorkingDirectories(home, unitDir));
+  return A.dedupe(A.flatten(perPath));
+});
+
+const unitDirectoryWorkingDirectories = Effect.fnUntraced(function* (home: string, unitDir: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const unitDir = path.join(home, ".config", "systemd", "user");
   if (!(yield* fs.exists(unitDir))) return A.empty<string>();
   const entries = yield* fs.readDirectory(unitDir);
   const units = A.filter(entries, Str.endsWith(".service"));
@@ -130,7 +148,8 @@ const timerDirectories = Effect.fnUntraced(function* (home: string) {
 const liveFacts = Effect.fnUntraced(function* (
   repoRoot: string,
   openPullRequestHeads: OpenPullRequestHeads,
-  proofUnitListing: ProofUnitListing
+  proofUnitListing: ProofUnitListing,
+  unitPaths: UnitPaths
 ) {
   const mirror = yield* FleetMirrorService;
   const store = yield* FleetRegistryStore;
@@ -142,7 +161,13 @@ const liveFacts = Effect.fnUntraced(function* (
   const home = yield* homeDirectory;
   const timers = yield* O.match(home, {
     onNone: () => Effect.succeedNone,
-    onSome: (dir) => timerDirectories(dir).pipe(Effect.option),
+    onSome: (dir) =>
+      Effect.flatMap(unitPaths(dir), (paths) =>
+        O.match(paths, {
+          onNone: () => Effect.succeedNone,
+          onSome: (list) => timerDirectories(dir, list).pipe(Effect.option),
+        })
+      ),
   });
   const sessions = yield* ledger.list(repository).pipe(Effect.option);
   const heads = yield* openPullRequestHeads(repoRoot);
@@ -183,8 +208,10 @@ const liveUpdateRegistry = Effect.fnUntraced(function* (
  * every checkout its check reads; an unreadable registry, root list,
  * repository or state directory answers `None`. `livenessReadings` reuses the
  * fleet mirror's transcript, tree-mtime and session-registry readings.
- * `openPullRequestHeads` and `proofUnitListing` default to GitHub REST and
- * `systemctl --user list-units`; tests substitute fixture sources. The probe
+ * `openPullRequestHeads`, `proofUnitListing` and `unitPaths` default to GitHub
+ * REST, `systemctl --user list-units` and `systemd-analyze --user unit-paths`
+ * (every user-unit load path, not only `~/.config/systemd/user`); tests
+ * substitute fixture sources. Unreadable load paths refuse every checkout. The probe
  * runs under the caller's `ConfigProvider`, which supplies `HOME` and the
  * fleet state root.
  *
@@ -199,13 +226,15 @@ const liveUpdateRegistry = Effect.fnUntraced(function* (
  *
  * @param openPullRequestHeads - Source of every open pull request's head branch name.
  * @param proofUnitListing - Source of the `systemctl --user list-units` text for active proof units.
+ * @param unitPaths - Source of systemd's user-unit load paths for a home directory.
  * @returns The probe service, capturing the services it reads.
  * @category constructors
  * @since 0.0.0
  */
 export const makeResidueDrainProbe = Effect.fnUntraced(function* (
   openPullRequestHeads: OpenPullRequestHeads = liveOpenPullRequestHeads,
-  proofUnitListing: ProofUnitListing = liveProofUnitListing
+  proofUnitListing: ProofUnitListing = liveProofUnitListing,
+  unitPaths: UnitPaths = liveUnitPaths
 ): Effect.fn.Return<ResidueDrainProbeShape, never, LiveRequirements> {
   // Only the services the probe reads: the caller's ConfigProvider (HOME, the fleet state root) stays in effect.
   const runtime = yield* Effect.context<LiveRequirements>();
@@ -221,7 +250,10 @@ export const makeResidueDrainProbe = Effect.fnUntraced(function* (
   )(runtime);
   return ResidueDrainProbe.of({
     facts: Effect.fn("ResidueDrainProbe.facts")((repoRoot: string) =>
-      liveFacts(repoRoot, openPullRequestHeads, proofUnitListing).pipe(Effect.option, Effect.provide(context))
+      liveFacts(repoRoot, openPullRequestHeads, proofUnitListing, unitPaths).pipe(
+        Effect.option,
+        Effect.provide(context)
+      )
     ),
     livenessReadings: Effect.fn("ResidueDrainProbe.livenessReadings")((checkout: string, nowMillis: number) =>
       homeDirectory.pipe(
