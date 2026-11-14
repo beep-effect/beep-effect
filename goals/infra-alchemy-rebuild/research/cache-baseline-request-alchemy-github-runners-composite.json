@@ -1,5 +1,5 @@
 {
-  "previous": "991d6fbd615ffd55d0361a13d374c541e045e9506b8a22d037c4d9d002ea7de0",
+  "previous": "6a5e77127ea95557aa44a8057fe81aa92f5516a5e4f7dd11ef24babd59435029",
   "review": {
     "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p2-github-runners-composite)",
     "reason": "Record the new workspace and catalog dependency edges of @beep/alchemy-github-runners (RunnerFleet composite); no command, output or environment changes, no qualification granted.",
