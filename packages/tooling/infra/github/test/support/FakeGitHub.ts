@@ -9,6 +9,7 @@ import * as GitHub from "@alchemy.run/github";
 import * as Provider from "alchemy/Provider";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
@@ -41,6 +42,54 @@ export interface Call {
   readonly method: string;
   readonly path: string;
 }
+
+/**
+ * GitHub Apps installed on the organization: GitHub Actions (15368), the
+ * runner fleet's orchestrator (5309624, a ruleset bypass actor) and
+ * beep-reviewer (5321138, a required check). A ruleset naming any other App,
+ * as a bypass actor or as a check binding, is refused, as the live rehearsal
+ * showed on a repository without those Apps.
+ */
+const installedApps = HashSet.make(15_368, 5_309_624, 5_321_138);
+
+const rulesetRefusal = (body: Json): O.Option<Reply> => {
+  const bypass = (body.bypass_actors as ReadonlyArray<Json> | undefined) ?? [];
+  const foreignBypass = A.findFirst(
+    bypass,
+    (actor) => actor.actor_type === "Integration" && !HashSet.has(installedApps, Number(actor.actor_id))
+  );
+  if (O.isSome(foreignBypass)) {
+    return O.some([
+      422,
+      {
+        message: "Validation Failed",
+        errors: [
+          `Actor ${String(foreignBypass.value.actor_id)} integration must be part of the ruleset source or owner organization`,
+        ],
+      },
+    ]);
+  }
+  const checks = A.flatMap((body.rules as ReadonlyArray<Json> | undefined) ?? [], (rule) =>
+    rule.type === "required_status_checks"
+      ? (((rule.parameters as Json | undefined)?.required_status_checks as ReadonlyArray<Json> | undefined) ?? [])
+      : []
+  );
+  const unbound = A.some(
+    checks,
+    (check) => check.integration_id !== undefined && !HashSet.has(installedApps, Number(check.integration_id))
+  );
+  return unbound
+    ? O.some([
+        422,
+        {
+          message: "Validation Failed",
+          errors: [
+            "Invalid rule 'required_status_checks': Invalid parameter required_status_checks: Invalid integration ids",
+          ],
+        },
+      ])
+    : O.none();
+};
 
 /** The live objects of one fake repository. */
 export class FakeRepository {
@@ -153,25 +202,32 @@ export class FakeRepository {
 
   private rulesetRoute(method: string, rest: ReadonlyArray<string>, body: Json): Reply {
     const [id] = rest;
-    if (id === undefined) {
-      if (method === "GET")
-        return [
-          200,
-          A.map(this.rulesets.pipe(MutableHashMap.values, A.fromIterable), ({ id, name }) => ({ id, name })),
-        ];
+    if (id === undefined) return this.rulesetCollectionRoute(method, body);
+    const key = Number(id);
+    return O.isNone(MutableHashMap.get(this.rulesets, key)) ? notFound : this.rulesetObjectRoute(method, key, body);
+  }
+
+  private rulesetCollectionRoute(method: string, body: Json): Reply {
+    if (method === "GET") {
+      return [200, A.map(this.rulesets.pipe(MutableHashMap.values, A.fromIterable), ({ id, name }) => ({ id, name }))];
+    }
+    return O.getOrElse(rulesetRefusal(body), (): Reply => {
       const created = { ...body, id: this.nextId++ };
       MutableHashMap.set(this.rulesets, created.id, created);
       return [201, created];
-    }
-    const key = Number(id);
-    const found = MutableHashMap.get(this.rulesets, key);
-    if (O.isNone(found)) return notFound;
-    if (method === "PUT") MutableHashMap.set(this.rulesets, key, { ...body, id: key });
+    });
+  }
+
+  private rulesetObjectRoute(method: string, key: number, body: Json): Reply {
     if (method === "DELETE") {
       MutableHashMap.remove(this.rulesets, key);
       return [204, undefined];
     }
-    return [200, this.ruleset(key)];
+    if (method !== "PUT") return [200, this.ruleset(key)];
+    return O.getOrElse(rulesetRefusal(body), (): Reply => {
+      MutableHashMap.set(this.rulesets, key, { ...body, id: key });
+      return [200, this.ruleset(key)];
+    });
   }
 
   private labelRoute(method: string, rest: ReadonlyArray<string>, body: Json): Reply {
