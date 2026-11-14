@@ -5,14 +5,21 @@
  * @since 0.0.0
  */
 
-export { makeFilesMatchPersonCommand } from "../commands/Files/Files.command.ts";
-export * from "../commands/Files/index.ts";
+export * from "@beep/repo-cli/commands/Files";
+export { makeFilesMatchPersonCommand } from "@beep/repo-cli/commands/Files/Files.command";
+export {
+  boundedPersonMatchDirectoryNamesForTesting,
+  defaultPersonMatchBackendForPlatform,
+  runMatchPerson,
+  selectPersonMatchCacheRoot,
+  validatePersonMatchBackendPlatform,
+} from "@beep/repo-cli/commands/Files/internal/MatchPerson";
 export {
   MatchPersonError,
   MatchPersonProtocolError,
   toFilesCommandError,
-} from "../commands/Files/internal/MatchPerson.errors.ts";
-export * from "../commands/Files/internal/MatchPerson.inference.ts";
+} from "@beep/repo-cli/commands/Files/internal/MatchPerson.errors";
+export * from "@beep/repo-cli/commands/Files/internal/MatchPerson.inference";
 export {
   acquirePinnedPersonMatchArtifactForTest,
   BuffaloArtifactPins,
@@ -23,19 +30,12 @@ export {
   preparePersonMatchOnnxModels,
   verifyPersonMatchModelArtifacts,
   writePersonMatchModelBytes,
-} from "../commands/Files/internal/MatchPerson.model-store.ts";
+} from "@beep/repo-cli/commands/Files/internal/MatchPerson.model-store";
 export {
   compileAdaFaceOnnx,
   decodeFaceSafetensors,
   RecognizerGraphDimensions,
-} from "../commands/Files/internal/MatchPerson.onnx.ts";
-export {
-  boundedPersonMatchDirectoryNamesForTesting,
-  defaultPersonMatchBackendForPlatform,
-  runMatchPerson,
-  selectPersonMatchCacheRoot,
-  validatePersonMatchBackendPlatform,
-} from "../commands/Files/internal/MatchPerson.ts";
+} from "@beep/repo-cli/commands/Files/internal/MatchPerson.onnx";
 export {
   CanonicalMatchPersonInputs,
   collectReferencesForTesting,
@@ -48,5 +48,5 @@ export {
   PersonMatchOnnxResources,
   PersonMatchWorkerService,
   PersonMatchWorkerServiceLayer,
-} from "../commands/Files/internal/MatchPerson.worker-service.ts";
-export { probeMediaCreationDate } from "../commands/Files/internal/MediaExec.ts";
+} from "@beep/repo-cli/commands/Files/internal/MatchPerson.worker-service";
+export { probeMediaCreationDate } from "@beep/repo-cli/commands/Files/internal/MediaExec";

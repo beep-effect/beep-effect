@@ -184,7 +184,8 @@ const runScanCore = Effect.fn("Test.runScan")(
     recursive: boolean,
     missingDirectory: boolean,
     runtimeVersion: string,
-    batchSize: number
+    batchSize: number,
+    compute: "auto" | "cpu" | "rocm"
   ) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -211,7 +212,9 @@ const runScanCore = Effect.fn("Test.runScan")(
       let closed = 0;
       const resources = PersonMatchOnnxResources.of({
         prepare: Effect.fn("Test.prepare")(() =>
-          batchSize === 1 ? Effect.succeed(prepared) : Effect.die("Model preparation ran before batch-size validation")
+          batchSize === 1 && compute === "cpu"
+            ? Effect.succeed(prepared)
+            : Effect.die("Model preparation ran before batch-size or compute validation")
         ),
         graph: Effect.fn("Test.graph")((source: string) => Effect.succeed(source)),
         version: Effect.fn("Test.version")(() => Effect.succeed(runtimeVersion)),
@@ -238,6 +241,7 @@ const runScanCore = Effect.fn("Test.runScan")(
         reviewThreshold: 0.3,
         minFaceAreaPct: 0.5,
         batchSize: PosInt.make(batchSize),
+        compute,
         acceptModelLicense: license,
         recursive,
       });
@@ -271,7 +275,8 @@ const runScan = (
   recursive = false,
   missingDirectory = false,
   runtimeVersion = "1.31.1",
-  batchSize = 1
+  batchSize = 1,
+  compute: "auto" | "cpu" | "rocm" = "cpu"
 ) =>
   runScanCore(
     frames,
@@ -283,7 +288,8 @@ const runScan = (
     recursive,
     missingDirectory,
     runtimeVersion,
-    batchSize
+    batchSize,
+    compute
   );
 it.layer(nativeLayer)((it) => {
   it.effect("classifies identity, group, quality and rejection evidence without model files", () =>
@@ -316,6 +322,32 @@ it.layer(nativeLayer)((it) => {
           workerCode: "invalid-arguments",
           message: "Native person matching supports only batch size 1.",
         });
+      }
+    })
+  );
+  it.effect("rejects non-CPU compute policies before model preparation", () =>
+    Effect.gen(function* () {
+      for (const compute of ["auto", "rocm"] as const) {
+        const result = yield* runScan(
+          [frame()],
+          "buffalo-l",
+          1,
+          false,
+          true,
+          false,
+          false,
+          false,
+          "1.31.1",
+          1,
+          compute
+        );
+        expect(result._tag).toBe("Failure");
+        if (result._tag === "Failure") {
+          expect(result.failure).toMatchObject({
+            workerCode: "invalid-arguments",
+            message: "Native person matching runs on CPU only; request compute policy cpu.",
+          });
+        }
       }
     })
   );

@@ -41,6 +41,11 @@ const nativeModelLayer = Layer.mergeAll(
   )
 );
 const fixtureDirectory = new URL("./fixtures/photo-face/", import.meta.url);
+// Native path for a fixture: URL.pathname keeps percent-escapes and a leading slash on Windows drives.
+const fixturePath = Effect.fnUntraced(function* (name: string) {
+  const path = yield* Path.Path;
+  return yield* path.fromFileUrl(new URL(name, fixtureDirectory));
+});
 const pins = [
   ["det_10g.onnx", "5838f7fe053675b1c7a08b633df49e7af5495cee0493c7dcf6697200b85b5b91"],
   ["w600k_r50.onnx", "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43"],
@@ -114,10 +119,7 @@ it.layer(nativeModelLayer)((it) => {
         }),
       };
       const result = yield* collectReferencesForTesting(
-        [
-          new URL("astronaut.png", fixtureDirectory).pathname,
-          new URL("astronaut-small.png", fixtureDirectory).pathname,
-        ],
+        [yield* fixturePath("astronaut.png"), yield* fixturePath("astronaut-small.png")],
         inference,
         options
       );
@@ -169,7 +171,8 @@ const compareBackendFixtures = Effect.fnUntraced(function* (
   const noFaces = yield* inference.detect(blank, 0.5);
   expect(noFaces).toEqual([]);
   for (const fixture of reference.fixtures) {
-    const image = yield* decodeFaceImage(new URL(fixture.image, fixtureDirectory).pathname).pipe(
+    const imagePath = yield* fixturePath(fixture.image);
+    const image = yield* decodeFaceImage(imagePath).pipe(
       Effect.flatMap(
         O.match({
           onNone: () => Effect.die(`Fixture cannot decode: ${fixture.image}`),
