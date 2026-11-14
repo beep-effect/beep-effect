@@ -20,7 +20,7 @@ import { isWithinRoot } from "@beep/repo-cli-kit/PathContainment";
 import { QualityTaskStep } from "@beep/repo-cli-kit/process/StepExec";
 import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { nearestRank } from "@beep/repo-cli-kit/stats/NearestRank";
-import { mentionsAnyToken, mentionsToken } from "@beep/repo-cli-kit/WholeToken";
+import { mentionsAnyToken, mentionsRepoPath, mentionsToken, shadowPrefixesFor } from "@beep/repo-cli-kit/WholeToken";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -303,6 +303,57 @@ describe("WholeToken", () => {
     expect(mentions("run with node")).toBe(true);
     expect(mentions("bundle nodes")).toBe(false);
     expect(mentionsAnyToken([])("anything")).toBe(false);
+  });
+
+  it("derives the prefixes under which another workspace's path ends in the target path", () => {
+    expect(
+      shadowPrefixesFor("deploy", [
+        "deploy",
+        "packages/tooling/deploy/budget",
+        "packages/tooling/deploy/deploy-hosts",
+        "packages/tooling/library/repo-cli-kit",
+        "apps/deploy-console",
+      ])
+    ).toEqual(["packages/tooling/"]);
+    expect(shadowPrefixesFor("packages/tooling/deploy/budget", ["deploy", "packages/tooling/deploy/budget"])).toEqual(
+      []
+    );
+  });
+
+  it("skips a repo-path occurrence that is part of a shadowing workspace path", () => {
+    const mentionsDeploy = mentionsRepoPath("deploy", ["packages/tooling/"]);
+    expect(mentionsDeploy('"directory": "packages/tooling/deploy/budget"')).toBe(false);
+    expect(
+      mentionsDeploy(
+        '"homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/tooling/deploy/budget"'
+      )
+    ).toBe(false);
+    expect(mentionsDeploy("deploy/package.json")).toBe(true);
+    expect(mentionsDeploy('"@beep/deploy": ["./deploy/src/index.ts"]')).toBe(true);
+    expect(mentionsDeploy("[spec](../../deploy/src/Stack.ts)")).toBe(true);
+    expect(mentionsDeploy('"workspaces": ["deploy"]')).toBe(true);
+    expect(mentionsDeploy("readFileString(`${root}/deploy/tools/pins.txt`)")).toBe(true);
+    expect(mentionsDeploy("packages/tooling/deploy/x and deploy/README.md")).toBe(true);
+  });
+
+  it("keeps the whole-token rule when no workspace shadows the path", () => {
+    const samples = [
+      "deploy/package.json",
+      "packages/tooling/deploy/x",
+      "deployment",
+      "deploy-hosts",
+      "product/deploy ability",
+      "",
+    ];
+    expect(A.map(samples, mentionsRepoPath("deploy", []))).toEqual(A.map(samples, mentionsToken("deploy")));
+  });
+
+  it("still finds a nested target that contains another workspace's name", () => {
+    const target = "packages/tooling/deploy/budget";
+    const mentionsTarget = mentionsRepoPath(target, shadowPrefixesFor(target, ["deploy", target]));
+    expect(mentionsTarget("working-directory: packages/tooling/deploy/budget")).toBe(true);
+    expect(mentionsTarget('"path": "./packages/tooling/deploy/budget"')).toBe(true);
+    expect(mentionsTarget("deploy/package.json")).toBe(false);
   });
 });
 
