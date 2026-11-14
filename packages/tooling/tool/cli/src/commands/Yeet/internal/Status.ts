@@ -670,8 +670,9 @@ export const summarizeRemoteChecksForTesting: {
 );
 
 // gh's answer to `gh pr checks --json` before that flag existed (2.46.0 prints
-// it with exit 1, followed by the usage text).
-const GH_PR_CHECKS_JSON_UNSUPPORTED = /unknown flag: --json/iu;
+// it with exit 1, followed by the usage text). Anchored: the captured output is
+// trimmed, an old gh's starts with this line, and a census starts with `[`.
+const GH_PR_CHECKS_JSON_UNSUPPORTED = /^unknown flag: --json/iu;
 
 /**
  * Read either check census, retaining an unreadable response as None.
@@ -728,22 +729,27 @@ export const collectRemoteChecks: {
     if (result.truncated) {
       return O.none();
     }
-    // An older gh has no `gh pr checks --json`. Its usage text decodes as neither
-    // a census nor "no checks reported", so name the cause instead of returning
-    // an unreadable census the caller can only report as incomplete.
-    if (result.exitCode !== 0 && GH_PR_CHECKS_JSON_UNSUPPORTED.test(result.output)) {
-      return yield* YeetCommandError.make({
-        message:
-          "This gh rejects `gh pr checks --json` (unknown flag), so yeet cannot read the pull request check census. Update gh; `gh --version` shows the one on PATH.",
-      });
-    }
     // gh answers a head with no (required) checks yet in text with exit 1; that
     // is a complete, empty census, not an unreadable one. JSON decodes first: a
-    // failing check also exits non-zero and its text may carry the same phrase.
+    // failing check also exits non-zero and its text may carry either phrase.
+    // An older gh has no `gh pr checks --json`: its output starts with the flag
+    // error and decodes as neither, so name the cause instead of returning an
+    // unreadable census the caller can only report as incomplete.
     return yield* decodeGhStatusChecks(result.output).pipe(
       Effect.asSome,
-      Effect.orElseSucceed(() =>
-        result.exitCode !== 0 && NO_CHECKS_REPORTED.test(result.output) ? O.some(A.empty<GhStatusCheck>()) : O.none()
+      Effect.catch(() =>
+        result.exitCode !== 0 && GH_PR_CHECKS_JSON_UNSUPPORTED.test(result.output)
+          ? Effect.fail(
+              YeetCommandError.make({
+                message:
+                  "This gh rejects `gh pr checks --json` (unknown flag), so yeet cannot read the pull request check census. Update gh; `gh --version` shows the one on PATH.",
+              })
+            )
+          : Effect.succeed(
+              result.exitCode !== 0 && NO_CHECKS_REPORTED.test(result.output)
+                ? O.some(A.empty<GhStatusCheck>())
+                : O.none()
+            )
       )
     );
   })

@@ -346,6 +346,35 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("--until-ready check fidelity
       );
       const census = yield* collectRemoteChecksForTesting(contextFor(root), false).pipe(withGh(noChecks));
       assertSome(census, []);
+
+      // A red check that quotes the flag error is still a census: JSON decodes
+      // first, and gh exits non-zero for any failing check.
+      const quotedJson = Result.getOrThrowWith(
+        S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+          {
+            bucket: "fail",
+            completedAt: "2026-09-25T11:53:05Z",
+            description: "unknown flag: --json",
+            link,
+            name: "unknown flag: --json",
+            startedAt: "2026-09-25T11:27:04Z",
+            state: "FAILURE",
+            workflow: "Check",
+          },
+        ]),
+        identity
+      );
+      const quoting = ScriptedSpawner.make((command, args) =>
+        command === "gh" && isPrChecks(args) ? { stdout: quotedJson, exit: 1 } : {}
+      );
+      const quoted = yield* collectRemoteChecksForTesting(contextFor(root), false).pipe(withGh(quoting));
+      assertSome(
+        O.map(
+          quoted,
+          A.map((row) => row.name)
+        ),
+        ["unknown flag: --json"]
+      );
     })
   );
 });
