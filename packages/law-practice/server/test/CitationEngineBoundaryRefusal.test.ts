@@ -22,6 +22,7 @@ const replaced = <A extends object>(make: (value: A) => A, value: A, field: keyo
 };
 
 const privateName = "private_source_name";
+const encodeFailureJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const incoherentDescriptor = (c: CitationEngineConfiguration) => {
   const discovery = c.annotation.geometry.discovery;
   const [first, ...rest] = discovery.bindings;
@@ -57,7 +58,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             ).pipe(Effect.flip);
             expect(failure).toMatchObject({ _tag: "CitationInputError", operation: "extract" });
             // The refusal is closed: no capture name, pattern or source text rides on it.
-            const encoded = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(failure);
+            const encoded = yield* encodeFailureJson(failure);
             expect(encoded).not.toContain(privateName);
             expect(String(failure)).not.toContain(privateName);
           }
