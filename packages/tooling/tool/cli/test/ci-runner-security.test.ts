@@ -2204,12 +2204,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
 
-  // goals/heavy-pool-diet PERIH-11 slice 2: a release this run published opens one reviewed pin-bump
-  // pull request on a fixed branch, with the knowledge-mint App token minted right before the
-  // pull-request step and read by it alone. A skipped closure, a byte-identical re-record, a
-  // verify_reproducible dispatch and any other ref open nothing; the main-only guard and the
-  // ref-keyed concurrency group stay as they were.
-  it.effect("opens the pin-bump pull request only for a release published on the default branch", () =>
+  // goals/heavy-pool-diet PERIH-11 slice 2: when main pins an older release than the newest
+  // `beep-ci-*` one, the job opens or updates one reviewed pin-bump pull request on a fixed branch,
+  // with the knowledge-mint App token minted right before the pull-request step and read by it
+  // alone. The decision reads release state, not this run's publish step: a re-run after a failed
+  // pull-request step takes the closure-unchanged skip path (the first attempt's release already
+  // records the digest) and must still reach it (#3299 review). A verify_reproducible dispatch and
+  // any other ref open nothing; the main-only guard and the ref-keyed concurrency group stay.
+  it.effect("opens the pin-bump pull request from release state on the default branch only", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const root = yield* findRepoRoot();
@@ -2228,33 +2230,47 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const stepId = (name: string) =>
         yamlAt(workflow, ["jobs", "publish", "steps", stepIndexByName(steps, name), "id"]);
       const publish = stepIndexByName(steps, "Publish the release asset");
-      expect(stepId("Publish the release asset")).toBe("publish");
       expect(stepByName(steps, "Publish the release asset").if).toBe(
         "steps.closure.outputs.changed == 'true' && steps.bytes.outputs.same != 'true'"
       );
-      expect(stepRun(steps, "Publish the release asset")).toContain('echo "published=true"');
       // The pin bump follows the publish step directly, in this order, and nothing follows it.
       const pinSteps = [
-        "Rewrite the pin to the new release",
+        "Rewrite the pin to the newest release",
         "Check the pin-bump App credential",
         "Create pin-bump App token",
         "Open or update the pin-bump pull request",
       ];
       expect(A.map(A.drop(steps, publish + 1), (step) => step.name)).toEqual(pinSteps);
-      expect(stepId("Rewrite the pin to the new release")).toBe("pin");
-      expect(stepByName(steps, "Rewrite the pin to the new release").if).toBe(
-        "steps.publish.outputs.published == 'true' && !inputs.verify_reproducible && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)"
+      expect(stepId("Rewrite the pin to the newest release")).toBe("pin");
+      const pinStep = stepByName(steps, "Rewrite the pin to the newest release");
+      // Re-run case: no condition on this attempt's closure, compile or publish outcome, so a re-run on
+      // the skip path still compares the newest release with the pin.
+      expect(pinStep.if).toBe(
+        "!inputs.verify_reproducible && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)"
       );
-      for (const name of A.drop(pinSteps, 1)) {
-        expect(stepByName(steps, name).if).toBe("steps.pin.outcome == 'success'");
+      const pinStepText = yield* encodeJobsFixture(pinStep);
+      for (const fragment of ["steps.publish", "steps.closure", "steps.bytes"]) {
+        expect(pinStepText).not.toContain(fragment);
       }
-      // The rewrite is the tested command, not a text edit in shell.
-      const rewrite = stepRun(steps, "Rewrite the pin to the new release");
-      expect(rewrite).toContain('bun run beep ci binary-pin --tag "$PIN_TAG" --sha256 "$PIN_SHA256" --write');
+      for (const name of A.drop(pinSteps, 1)) {
+        expect(stepByName(steps, name).if).toBe("steps.pin.outputs.changed == 'true'");
+      }
+      // The newest release is chosen exactly as the closure comparison chooses it, the rewrite is the
+      // tested command (not a text edit in shell), and the decision is whether it changed the pin.
+      const rewrite = stepRun(steps, "Rewrite the pin to the newest release");
+      expect(rewrite).toContain(
+        `--jq '[.[] | select(.tagName | startswith("beep-ci-"))] | sort_by(.createdAt) | last | .tagName // ""'`
+      );
+      expect(stepRun(steps, "Compare the closure digest with the latest release")).toContain(
+        `--jq '[.[] | select(.tagName | startswith("beep-ci-"))] | sort_by(.createdAt) | last | .tagName // ""'`
+      );
+      expect(rewrite).toContain('bun run beep ci binary-pin --tag "$tag" --sha256 "$sha256" --write');
+      expect(rewrite).toContain("git diff --quiet -- .github/actions/fetch-beep-ci/action.yml");
+      expect(rewrite).toContain('echo "changed=$changed"');
       expect(rewrite).not.toMatch(/\bsed\b/u);
-      expect(stepEnvironment(stepByName(steps, "Rewrite the pin to the new release"))).toEqual({
-        PIN_TAG: "${{ steps.publish.outputs.tag }}",
-        PIN_SHA256: "${{ steps.publish.outputs.sha256 }}",
+      expect(stepEnvironment(pinStep)).toEqual({
+        GH_TOKEN: "${{ github.token }}",
+        GH_REPO: "${{ github.repository }}",
         PIN_BRANCH: "ci/beep-ci-pin-bump",
       });
       expect(stepEnvironment(stepByName(steps, "Check the pin-bump App credential"))).toEqual({
@@ -2276,13 +2292,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(inputs.branch).toBe("ci/beep-ci-pin-bump");
       expect(inputs.token).toBe("${{ steps.app-token.outputs.token }}");
       expect(inputs["add-paths"]).toBe(".github/actions/fetch-beep-ci/action.yml");
-      expect(inputs.title).toBe("ci: bump the beep CI binary pin to ${{ steps.publish.outputs.tag }}");
+      expect(inputs.title).toBe("ci: bump the beep CI binary pin to ${{ steps.pin.outputs.tag }}");
       expect(inputs["commit-message"]).toBe(inputs.title);
       expect(inputs).not.toHaveProperty("auto-merge");
       for (const fragment of [
-        "${{ steps.publish.outputs.tag }}",
-        "${{ steps.closure.outputs.digest }}",
-        "${{ steps.publish.outputs.sha256 }}",
+        "${{ steps.pin.outputs.tag }}",
+        "${{ steps.pin.outputs.digest }}",
+        "${{ steps.pin.outputs.sha256 }}",
+        "${{ steps.pin.outputs.target }}",
         "${{ github.sha }}",
         "never auto-merged",
       ]) {

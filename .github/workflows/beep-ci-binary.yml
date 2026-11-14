@@ -5,8 +5,9 @@ name: Beep CI Binary
 # `beep-ci-<12-char sha>` with its sha256 checksum. Hosted jobs fetch a pinned
 # tag and verify the pinned checksum before `bun install`; a pin bump is its
 # own pull request (goals/scripts-to-beep-cli decision
-# 2026-11-07-ci-binary-release-asset), which a run that publishes a new release
-# opens on the fixed branch `ci/beep-ci-pin-bump` for review (PERIH-11 slice 2).
+# 2026-11-07-ci-binary-release-asset), which a main run opens on the fixed branch
+# `ci/beep-ci-pin-bump` for review whenever main pins an older release than the
+# newest one (PERIH-11 slice 2).
 # Only main commits publish: the binary that gates a pull request is never built
 # from that pull request's head.
 #
@@ -223,7 +224,6 @@ jobs:
           echo "Re-recorded closure digest ${CLOSURE_DIGEST} on ${LATEST_TAG}; no new release."
 
       - name: Publish the release asset
-        id: publish
         if: steps.closure.outputs.changed == 'true' && steps.bytes.outputs.same != 'true'
         shell: bash
         env:
@@ -232,63 +232,86 @@ jobs:
           TARGET_SHA: ${{ github.sha }}
           CLOSURE_DIGEST: ${{ steps.closure.outputs.digest }}
         run: |
-          set -euo pipefail
           tag="beep-ci-${TARGET_SHA:0:12}"
           if gh release view "$tag" >/dev/null 2>&1; then
-            # An earlier attempt of this run published it; pin what that release ships.
             echo "Release $tag already exists; nothing to publish."
-            gh release download "$tag" --pattern beep-linux-x64.sha256 --dir "${RUNNER_TEMP}/published" --clobber
-            sha256="$(cut -d' ' -f1 "${RUNNER_TEMP}/published/beep-linux-x64.sha256")"
-          else
-            gh release create "$tag" dist/beep-linux-x64 dist/beep-linux-x64.sha256 dist/beep-linux-x64.closure.json \
-              --target "$TARGET_SHA" \
-              --title "$tag" \
-              --notes "Pre-toolchain beep CI binary (linux-x64) compiled from ${TARGET_SHA}. Closure digest: ${CLOSURE_DIGEST} (beep ci binary-closure)." \
-              --latest=false
-            sha256="$(cut -d' ' -f1 dist/beep-linux-x64.sha256)"
+            exit 0
           fi
-          {
-            echo "published=true"
-            echo "tag=$tag"
-            echo "sha256=$sha256"
-          } >> "$GITHUB_OUTPUT"
+          gh release create "$tag" dist/beep-linux-x64 dist/beep-linux-x64.sha256 dist/beep-linux-x64.closure.json \
+            --target "$TARGET_SHA" \
+            --title "$tag" \
+            --notes "Pre-toolchain beep CI binary (linux-x64) compiled from ${TARGET_SHA}. Closure digest: ${CLOSURE_DIGEST} (beep ci binary-closure)." \
+            --latest=false
 
-      # PERIH-11 slice 2: a release published by this run opens one reviewed pull
-      # request that moves the pin in .github/actions/fetch-beep-ci/action.yml to
-      # it. Nothing here runs for a skipped closure, a byte-identical re-record, a
-      # verify_reproducible dispatch or another ref. The rewrite is the tested
-      # `beep ci binary-pin` command; the pull request is opened by the
-      # knowledge-mint App (its token is minted in the step right before the
-      # pull-request step and used there only), because a pull request opened
-      # with github.token starts no workflows and could never pass its own Check.
-      # The App needs no `workflows` permission: the pin is a composite action,
-      # not a workflow file. The pull request is never auto-merged.
-      - name: Rewrite the pin to the new release
+      # PERIH-11 slice 2: when the newest `beep-ci-*` release is not the one
+      # .github/actions/fetch-beep-ci/action.yml pins on main, open or update one
+      # reviewed pull request that moves the pin to it. The decision is read from
+      # state, not from this run's history, so a re-run after a failed
+      # pull-request step (which takes the closure-unchanged skip path, because
+      # the first attempt's release already records this digest) still opens it.
+      # Once a bump merges, the pin equals the newest release, and a skipped
+      # closure or a byte-identical re-record cuts no new release, so neither
+      # opens anything. Nothing runs on a verify_reproducible dispatch or off the
+      # default branch. The rewrite is the tested `beep ci binary-pin` command;
+      # the pull request is opened by the knowledge-mint App (its token is
+      # minted in the step right before the pull-request step and used there
+      # only), because a pull request opened with github.token starts no
+      # workflows and could never pass its own Check. The App needs no
+      # `workflows` permission: the pin is a composite action, not a workflow
+      # file. The pull request is never auto-merged.
+      - name: Rewrite the pin to the newest release
         id: pin
         if: >-
-          steps.publish.outputs.published == 'true'
-          && !inputs.verify_reproducible
+          !inputs.verify_reproducible
           && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         shell: bash
         env:
-          PIN_TAG: ${{ steps.publish.outputs.tag }}
-          PIN_SHA256: ${{ steps.publish.outputs.sha256 }}
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           PIN_BRANCH: ci/beep-ci-pin-bump
         run: |
           set -euo pipefail
-          bun run beep ci binary-pin --tag "$PIN_TAG" --sha256 "$PIN_SHA256" --write
+          tag="$(gh release list --limit 100 --json tagName,createdAt \
+            --jq '[.[] | select(.tagName | startswith("beep-ci-"))] | sort_by(.createdAt) | last | .tagName // ""')"
+          if [[ -z "$tag" ]]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "No beep-ci-* release exists; nothing to pin."
+            exit 0
+          fi
+          newest="${RUNNER_TEMP}/newest-release"
+          gh release download "$tag" --pattern beep-linux-x64.sha256 --dir "$newest" --clobber
+          sha256="$(cut -d' ' -f1 "$newest/beep-linux-x64.sha256")"
+          digest="none recorded"
+          if gh release download "$tag" --pattern beep-linux-x64.closure.json --dir "$newest" --clobber >/dev/null 2>&1; then
+            digest="$(jq -r .digest "$newest/beep-linux-x64.closure.json")"
+          fi
+          target="$(gh release view "$tag" --json targetCommitish --jq .targetCommitish)"
+          bun run beep ci binary-pin --tag "$tag" --sha256 "$sha256" --write
+          changed=false
+          if ! git diff --quiet -- .github/actions/fetch-beep-ci/action.yml; then changed=true; fi
           {
-            echo "### Beep CI binary pin bump"
+            echo "changed=$changed"
+            echo "tag=$tag"
+            echo "sha256=$sha256"
+            echo "digest=$digest"
+            echo "target=$target"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "### Beep CI binary pin"
             echo ""
-            echo "- new release: \`$PIN_TAG\` (sha256 \`$PIN_SHA256\`)"
-            echo "- pull request branch: \`$PIN_BRANCH\` (one open pin-bump pull request at a time)"
+            echo "- newest release: \`$tag\` (sha256 \`$sha256\`, closure digest \`$digest\`, built from \`$target\`)"
+            if [[ "$changed" != "true" ]]; then
+              echo "- main already pins it: no pin-bump pull request."
+              exit 0
+            fi
+            echo "- main pins an older release: open or update the pin-bump pull request on \`$PIN_BRANCH\`."
             echo ""
             echo "If no pull request was opened below, an agent opens it by hand from main:"
             echo ""
             echo '```bash'
             echo "git switch -c $PIN_BRANCH origin/main"
-            echo "bun run beep ci binary-pin --tag $PIN_TAG --sha256 $PIN_SHA256 --write"
-            echo "git commit -am 'ci: bump the beep CI binary pin to $PIN_TAG'"
+            echo "bun run beep ci binary-pin --tag $tag --sha256 $sha256 --write"
+            echo "git commit -am 'ci: bump the beep CI binary pin to $tag'"
             echo "bun run beep yeet open"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
@@ -296,7 +319,7 @@ jobs:
       # Fail closed: without the App credential the only token left is
       # github.token, whose pull request would start no Check run.
       - name: Check the pin-bump App credential
-        if: steps.pin.outcome == 'success'
+        if: steps.pin.outputs.changed == 'true'
         shell: bash
         env:
           APP_CLIENT_ID: ${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}
@@ -311,7 +334,7 @@ jobs:
 
       - name: Create pin-bump App token
         id: app-token
-        if: steps.pin.outcome == 'success'
+        if: steps.pin.outputs.changed == 'true'
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}
@@ -326,7 +349,7 @@ jobs:
       # title and body instead of opening a second one. The repo's lefthook
       # hooks are for people.
       - name: Open or update the pin-bump pull request
-        if: steps.pin.outcome == 'success'
+        if: steps.pin.outputs.changed == 'true'
         env:
           LEFTHOOK: "0"
         uses: peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8 # v8.1.2
@@ -337,15 +360,16 @@ jobs:
           delete-branch: true
           add-paths: .github/actions/fetch-beep-ci/action.yml
           labels: ready-for-heavy
-          commit-message: "ci: bump the beep CI binary pin to ${{ steps.publish.outputs.tag }}"
-          title: "ci: bump the beep CI binary pin to ${{ steps.publish.outputs.tag }}"
+          commit-message: "ci: bump the beep CI binary pin to ${{ steps.pin.outputs.tag }}"
+          title: "ci: bump the beep CI binary pin to ${{ steps.pin.outputs.tag }}"
           body: |
-            Opened by `.github/workflows/beep-ci-binary.yml` ([run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})) after it published a new CI binary release from main.
+            Opened by `.github/workflows/beep-ci-binary.yml` ([run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})) because main pins an older CI binary than the newest `beep-ci-*` release.
 
-            - release tag: `${{ steps.publish.outputs.tag }}`
-            - closure digest: `${{ steps.closure.outputs.digest }}`
-            - `beep-linux-x64` sha256: `${{ steps.publish.outputs.sha256 }}`
-            - main commit: `${{ github.sha }}`
+            - release tag: `${{ steps.pin.outputs.tag }}`
+            - closure digest: `${{ steps.pin.outputs.digest }}`
+            - `beep-linux-x64` sha256: `${{ steps.pin.outputs.sha256 }}`
+            - release built from main commit: `${{ steps.pin.outputs.target }}`
+            - opened at main commit: `${{ github.sha }}`
 
             The diff is the two pinned values in `.github/actions/fetch-beep-ci/action.yml`, written by
             `bun run beep ci binary-pin --write`. Every hosted job that fetches the CI binary runs the new

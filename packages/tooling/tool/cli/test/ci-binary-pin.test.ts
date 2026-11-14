@@ -86,6 +86,31 @@ describe("ci binary-pin", () => {
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    // The workflow decides from state: it rewrites main's pin to the newest release and opens the
+    // pull request only when that changed the file. A re-run after a failed pull-request step starts
+    // again from main's unchanged pin, so it must reach the same rewrite; once a bump has merged, the
+    // pin already names the newest release and the rewrite leaves the file byte-identical.
+    it.effect("a re-run from main's stale pin reaches the same rewrite; a merged pin writes nothing", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const main = actionText([OLD_TAG], [OLD_SHA]);
+        const firstAttempt = yield* withPinFile(main);
+        yield* runPin(pinArgs(firstAttempt, NEW_TAG, NEW_SHA, "--write"));
+        const firstText = yield* fs.readFileString(firstAttempt);
+        const rerun = yield* withPinFile(main);
+        yield* runPin(pinArgs(rerun, NEW_TAG, NEW_SHA, "--write"));
+        const rerunText = yield* fs.readFileString(rerun);
+        expect(rerunText).toBe(firstText);
+        expect(rerunText).not.toBe(main);
+        const merged = yield* withPinFile(firstText);
+        yield* runPin(pinArgs(merged, NEW_TAG, NEW_SHA, "--write"));
+        const mergedText = yield* fs.readFileString(merged);
+        expect(mergedText).toBe(firstText);
+        const lines = yield* TestConsole.logLines;
+        expect(A.drop(lines, 2)).toStrictEqual([`${merged} already pins ${NEW_TAG} (sha256 ${NEW_SHA}).`]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("checks by default and fails on a different pin without writing", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
