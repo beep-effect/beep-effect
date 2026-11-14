@@ -17,12 +17,10 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Str from "effect/String";
-import { runRepoCommandCaptureRaw } from "../../../internal/repo-run/RepoRun.executor.ts";
 import { openSessionRows } from "../../Session/Session.schemas.ts";
 import { layerSessionLedgerLive, SessionLedger } from "../../Session/SessionLedger.service.ts";
 import { detectPrRepository } from "../../Yeet/internal/ProvenanceFooter.ts";
@@ -33,7 +31,7 @@ import { FleetRegistryDocument } from "./FleetRegistry.schemas.ts";
 import { FleetRegistryStore, FleetRegistryStoreLive } from "./FleetRegistry.ts";
 import { fleetStateDirectory } from "./FleetRoots.ts";
 import { ResidueDrainFleetFacts, ResidueDrainLivenessReadings } from "./ResidueReapDrain.schemas.ts";
-import { ResidueDrainProbe } from "./ResidueReapDrain.ts";
+import { ResidueDrainProbe, successfulStdout } from "./ResidueReapDrain.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type { ResidueDrainProbeShape } from "./ResidueReapDrain.ts";
 
@@ -68,9 +66,9 @@ const liveOpenPullRequestHeads = (repoRoot: string) =>
 
 // `systemctl --user list-units` output for the active `beep-proof-*` units; `None` when systemd cannot answer.
 const liveProofUnitListing = (repoRoot: string) =>
-  runRepoCommandCaptureRaw(
-    "systemctl",
-    [
+  successfulStdout({
+    command: "systemctl",
+    args: [
       "--user",
       "list-units",
       "beep-proof-*",
@@ -80,11 +78,8 @@ const liveProofUnitListing = (repoRoot: string) =>
       "--plain",
       "--no-pager",
     ],
-    repoRoot
-  ).pipe(
-    Effect.option,
-    Effect.map(O.flatMap((capture) => (N.Equivalence(capture.exitCode, 0) ? O.some(capture.output) : O.none())))
-  );
+    cwd: repoRoot,
+  });
 
 // The `checkout=` each proof unit's description names.
 const proofUnitCheckoutsOf = (listing: string): ReadonlyArray<string> =>

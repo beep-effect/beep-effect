@@ -159,15 +159,39 @@ type ResidueDrainContext = {
   readonly cwdProbe: CwdProbe;
 };
 
-// Stdout of a successful git command; any failure or non-zero exit is `None`.
+/**
+ * Stdout of one captured command run, or `None` when it could not spawn or exited non-zero.
+ *
+ * **Example** (Build the capture)
+ *
+ * ```ts
+ * import { successfulStdout } from "@beep/repo-cli/test/Worktree"
+ * import * as Effect from "effect/Effect"
+ *
+ * const listing = successfulStdout({ command: "systemctl", args: ["--user", "list-units"], cwd: "/repo" })
+ * console.log(Effect.isEffect(listing)) // true
+ * ```
+ *
+ * @param invocation - The executable, its arguments and the working directory.
+ * @returns The untrimmed stdout of a zero exit, or `None`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const successfulStdout = (invocation: {
+  readonly command: string;
+  readonly args: ReadonlyArray<string>;
+  readonly cwd: string;
+}) =>
+  runRepoCommandCaptureRaw(invocation.command, invocation.args, invocation.cwd).pipe(
+    Effect.option,
+    Effect.map(O.flatMap((capture) => (N.Equivalence(capture.exitCode, 0) ? O.some(capture.output) : O.none())))
+  );
+
 // Only for the argv the Git kit does not cover: `rev-list --count` over pseudo-refs and `--not` sets,
 // `ls-files --others --ignored --directory`, and `bundle create|verify|list-heads`.
 const rawGit = (cwd: string, args: ReadonlyArray<string>) =>
   // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-23): the Git kit has no bundle member, its revListCount takes one range, and its lsFiles lists no ignored entries
-  runRepoCommandCaptureRaw("git", ["--no-optional-locks", ...args], cwd).pipe(
-    Effect.option,
-    Effect.map(O.flatMap((capture) => (N.Equivalence(capture.exitCode, 0) ? O.some(capture.output) : O.none())))
-  );
+  successfulStdout({ command: "git", args: ["--no-optional-locks", ...args], cwd });
 
 const nonEmptyLines = (text: string): ReadonlyArray<string> =>
   A.filter(A.map(Str.split("\n")(text), Str.trim), Str.isNonEmpty);
