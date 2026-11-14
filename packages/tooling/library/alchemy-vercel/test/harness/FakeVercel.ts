@@ -17,6 +17,7 @@ import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
@@ -101,7 +102,11 @@ const envsById = MutableHashMap.empty<string, EnvRecord>();
 const domainsByName = MutableHashMap.empty<string, DomainRecord>();
 const dnsFixed = MutableHashSet.empty<string>();
 const storedTypes = MutableHashMap.empty<string, string>();
-const requests: Array<string> = [];
+/**
+ * Requests the fake answered, each tagged with the id of the project it targeted. Tests in a
+ * file run concurrently, so assertions read one project's requests, never the whole log.
+ */
+const requests: Array<{ readonly projectId: string; readonly call: string }> = [];
 let sequence = 0;
 
 const nextId = (prefix: string): string => {
@@ -119,7 +124,12 @@ export const FakeVercel = {
       (env) => env.projectId === projectId
     ),
   domain: (name: string): O.Option<DomainRecord> => MutableHashMap.get(domainsByName, name),
-  requests: (): ReadonlyArray<string> => requests,
+  /** `METHOD Route` calls the fake answered for one project, in order. */
+  requestsFor: (projectId: string): ReadonlyArray<string> =>
+    A.map(
+      A.filter(requests, (entry) => entry.projectId === projectId),
+      (entry) => entry.call
+    ),
   seedProject: (name: string, repo?: string, repoType?: string): ProjectRecord => {
     const project: ProjectRecord = {
       id: nextId("prj"),
@@ -482,12 +492,17 @@ const handle = (method: string, route: Route, query: URLSearchParams, body: unkn
   );
 };
 
+const projectIdOf = (route: Route): string =>
+  P.hasProperty(route, "project") && P.isString(route.project)
+    ? O.match(findProject(route.project), { onNone: () => route.project, onSome: (project) => project.id })
+    : "";
+
 const client = HttpClient.make((request) =>
   Effect.gen(function* () {
     const url = new URL(request.url);
     const segments = A.filter(Str.split("/")(url.pathname), Str.isNonEmpty);
     const route = toRoute(segments);
-    requests.push(`${request.method} ${route._tag}`);
+    requests.push({ projectId: projectIdOf(route), call: `${request.method} ${route._tag}` });
     const text = request.body._tag === "Uint8Array" ? new TextDecoder().decode(request.body.body) : "";
     const body = Str.isEmpty(text) ? undefined : yield* decodeJson(text).pipe(Effect.orDie);
     const result = handle(request.method, route, url.searchParams, body);

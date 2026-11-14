@@ -227,11 +227,13 @@ describe("Vercel.EnvVar", () => {
       const env = { key: "TEAM_POLICY_VAR", value: Redacted.make("v"), targets: ["production"] } as const;
       const first = yield* stack.deploy(stackWith("vt-env-stronger", env));
       expect(first.type).toBe("sensitive");
-      const removesBefore = A.length(A.filter(FakeVercel.requests(), (request) => request === "DELETE Env"));
+      const before = A.length(FakeVercel.requestsFor(first.projectId));
       const second = yield* stack.deploy(stackWith("vt-env-stronger", env));
+      const secondDeploy = A.drop(FakeVercel.requestsFor(first.projectId), before);
       expect(second.envId).toBe(first.envId);
-      const removesAfter = A.length(A.filter(FakeVercel.requests(), (request) => request === "DELETE Env"));
-      expect(removesAfter).toBe(removesBefore);
+      expect(A.contains(secondDeploy, "DELETE Env")).toBe(false);
+      expect(A.contains(secondDeploy, "POST Envs")).toBe(false);
+      expect(O.getOrThrow(FakeVercel.env(first.envId)).type).toBe("sensitive");
       yield* stack.destroy();
     })
   );

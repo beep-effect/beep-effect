@@ -12,7 +12,7 @@
       "reason": "Record the new package @beep/alchemy-vercel with its generated scripts block, and the root subject for turbo.json input-list regeneration inherited from main (#3263, #3271, #3274, #3276); no command, output or environment changes, no qualification granted.",
       "basis": {
         "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-alchemy-vercel.md",
-        "sha256": "4825a99322014a5e0f49db363c88e0c38adc4853b0eb855e733ea1a679907b74"
+        "sha256": "4588513e9901e25c05dcd590539e60c04b5bfd02b18e2d86872f1689949fbc8b"
       }
     },
     "@beep/acp": {
@@ -108,7 +108,7 @@
       "reason": "Record the new package @beep/alchemy-vercel with its generated scripts block, and the root subject for turbo.json input-list regeneration inherited from main (#3263, #3271, #3274, #3276); no command, output or environment changes, no qualification granted.",
       "basis": {
         "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-alchemy-vercel.md",
-        "sha256": "4825a99322014a5e0f49db363c88e0c38adc4853b0eb855e733ea1a679907b74"
+        "sha256": "4588513e9901e25c05dcd590539e60c04b5bfd02b18e2d86872f1689949fbc8b"
       }
     },
     "@beep/anthropic": {

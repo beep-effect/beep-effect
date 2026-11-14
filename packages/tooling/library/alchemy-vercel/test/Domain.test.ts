@@ -76,7 +76,7 @@ describe("Vercel.Domain", () => {
       const onB = yield* stack.deploy(declare("B"));
       expect(onB.projectId).not.toBe(onA.projectId);
       expect(O.getOrThrow(FakeVercel.domain("move.test")).projectId).toBe(onB.projectId);
-      expect(A.contains(FakeVercel.requests(), "POST Move")).toBe(true);
+      expect(A.contains(FakeVercel.requestsFor(onA.projectId), "POST Move")).toBe(true);
       yield* stack.destroy();
     })
   );

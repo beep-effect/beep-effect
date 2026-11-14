@@ -1,6 +1,6 @@
 # Cache baseline review: new package @beep/alchemy-vercel (2026-11-13)
 
-Reviewer: Claude Opus 5.5 (`goals/infra-alchemy-rebuild-p2-vercel`). No qualification is granted.
+Reviewer: Claude Opus 5.5 (the infra-alchemy-rebuild P2 Vercel lane). No qualification is granted.
 
 `bun run beep create-package` added the tooling library `@beep/alchemy-vercel`, so
 `bun run beep quality cache-policy` reports `unreviewed-expansion` for each of its cached Turbo
