@@ -144,7 +144,7 @@ Drafted 2026-10-13 (`<corpus>/ops/patent-drawing-pipeline/matter/round-2/questio
 
 - Preserve unrelated worktree changes; never commit client material (spec, geometry, photos, markup text, renders).
 - `<corpus>` means `BEEP_OPPOLD_CORPUS_ROOT`; repo evidence is hashes and counts only.
-- Heavy local commands run through `beep-heavy`; `bun run beep quality package-verify <pkg>` for every touched package.
+- Heavy local commands need no wrapper (the `beep-heavy` wrapper is retired); Yeet's proofs wait for quality-scheduler admission on their own. Run `bun run beep quality package-verify <pkg>` for every touched package.
 - Planned commands are written `beep drawings intake` style (no `bun run` prefix) until they exist.
 - Record friction receipts in `research/OPPORTUNITIES.md` as they happen.
 

@@ -123,7 +123,7 @@ Higher sources outrank lower sources when they conflict.
   summary line since slice 2; `--json` keeps every path).
 - Simulation lab for backfill and fairness: `apps/labs/ciops`.
 - Docs: `.claude/skills/yeet/SKILL.md`, `.claude/skills/yeet/references/detached-jobs.md`,
-  `.claude/skills/orchestrate/SKILL.md` (the `beep-heavy` doctrine PERIL-10 retires), and the AGENTS.md
+  `.claude/skills/orchestrate/SKILL.md` (the `beep-heavy` doctrine PERIL-10 retired), and the AGENTS.md
   Quality Operator lines that D12 and D15 amend.
 - Gate-order handoff: a new handoff document under this packet's `research/` for the re-seed; the existing
   `goals/time-to-certainty/research/gate-order-handoff.json` is read, never edited.
@@ -162,7 +162,7 @@ every citation below was re-checked at c90929b1ff1). Ids are the rows in
 | PERIL-02 | One readiness monitor per PR in a checkout, reuse keyed on normalized readiness argv | open (publish already reuses through `pickReusableReadyMonitor`, `Handler.ts:1184`; `ReadyGate.ts:565` lacks the runner-liveness check) | Two submissions with the same PR and argv yield one job; stricter argv not reused; a dead-runner record skipped; `ReadyGate.ts:565` fixed in the same PR | none |
 | PERIL-03 | State-aware monitor cadence with a wake on a local ref change | partly landed (#3032, fda98a2c4bd: 90 s default at `MonitorLoop.ts:210`, rate-limit sleep in `MonitorRateLimit.ts`) | TestClock mutation fixtures: the first terminal after each mutation follows a full read taken after it; a dirty-file re-edit still flags stale gates; then a 7-day A/B of polls per monitor-hour | PERIL-02 |
 | PERIL-09 | Keep the review-window anchor across a diff-preserving merge of main | open (`ReviewWindow.ts` anchors on first check-suite receipt, a later force-push or the ready flip) | Ruling D12 (given); replay fixtures: clean merge keeps, conflict touching PR lines re-arms | none |
-| PERIL-10 | Summarize scheduler quarantine in status, archive-reap aged entries, retire the `beep-heavy` doctrine (merges SCHE-10) | partly landed (slice 2: `quality scheduler status` prints one quarantine summary line, and the reap pass archives entries older than 7 days to `<admission root>/quarantine-archive` before any delete; open: the `beep-heavy` retirement in `.claude/skills/orchestrate/SKILL.md`, slice 4) | Renderer and reaper age-gate tests, an archive-restore fixture; live lease count unchanged | none |
+| PERIL-10 | Summarize scheduler quarantine in status, archive-reap aged entries, retire the `beep-heavy` doctrine (merges SCHE-10) | landed (slice 2: `quality scheduler status` prints one quarantine summary line, and the reap pass archives entries older than 7 days to `<admission root>/quarantine-archive` before any delete; slice 4: the `beep-heavy` rule is retired from `.claude/skills/orchestrate/SKILL.md` and `docs/runbooks/practice-m365-contacts-seeding.md`) | Renderer and reaper age-gate tests, an archive-restore fixture; live lease count unchanged | none |
 | PERIL-13 | Mark merged-preview admission dormant | landed (dormancy note in `.claude/skills/yeet/references/gates-and-proof.md`) | Ruling D17 (given) | none |
 
 SCHE-09 (admission history retention) was listed under this goal in MAP.md's first draft; D23 assigns it to
@@ -279,9 +279,9 @@ certainty-scorecard and this goal consumes it.
 - [ ] PERIL-02: two submissions with the same PR and argv yield one job; then the PERIL-03 7-day A/B of polls per
       monitor-hour is recorded under `history/`.
 - [ ] PERIL-09 lands with its replay fixtures and the AGENTS.md amendment in the same PR.
-- [ ] PERIL-10: `quality scheduler status` renders the quarantine as one summary line, aged entries are archived
+- [x] PERIL-10: `quality scheduler status` renders the quarantine as one summary line, aged entries are archived
       before reaping, the live lease count is unchanged, and the `beep-heavy` doctrine is retired from the
-      orchestrate skill.
+      orchestrate skill (landed with PLAN.md slices 2 and 4).
 - [x] PERIL-13: the yeet skill documents merged-preview as supported and dormant (landed with PLAN.md slice 1).
 - [ ] TURB-05, TURB-10 and YEET-05 record shadow receipts and attribution only, while the R2 pause holds.
 - [ ] No unrelated refactors or formatting churn.
@@ -415,6 +415,22 @@ Reverse: Re-shape the sequence through the exploration's MAP.md and record the c
 Source: exploration `explorations/ten-minute-certainty/DECISIONS.md` (D13).
 
 Reverse: Un-pause goals/time-to-certainty by a new decision and move YEET-06, YEET-07 and the gate-order fixtures back to it.
+
+### SCHE-08 schema: unit, weight source and owner as optional keys behind a tolerant decoder, 2026-11-14
+
+Tickets, leases and the enqueue, admission, v3 release and withdrawal journal rows gain three optional keys, read as Options: `unit` (`AdmissionUnit`: `tier` for the whole work kind, `lane` for one `GateRouteId` gate family, `package` for one `ScopedPackageName` plus Turbo task name, whose Turbo task id is `<packageName>#<task>`), `weightSource` (`AdmissionWeightSource`: `static-seed`, `measured` with a positive `sampleCount`, `conservative-fallback`) and `owner` (`AdmissionOwner`: the owning proof's nonce, pid and process start, attempt, checkout, branch, origin and command). Eviction and routing rows are unchanged. An absent key is the legacy reading (a whole-tier unit, the static seed, the record's own process as owner), so `legacy` is absence rather than a variant. The decoder is tolerant in two ways: a present value this revision cannot decode (a newer unit variant, weight source or owner shape) reads as None through `Schema.catchDecoding` instead of failing the record, and the persisted `kind` is `RecordedAdmissionWorkKind` (a known `AdmissionWorkKind` or an `UnrecognizedAdmissionWorkKind` kept verbatim), so a lease from a newer writer stays live and charged by its `weightTokens` and sits outside the review-fix class cap. `AdmissionRequest.kind` stays closed; requests carry `unit` (default `tier`) and `weightSource` (default `static-seed`). Rejected: decoding defaults that fill `tier` and `legacy` (the keys would then be written whatever the gate says), a new lease or ticket `schemaVersion` (every pre-unit reader would quarantine every new file), keeping the closed kind (a newer kind quarantines the lease and drops its tokens from capacity, the failure behind the 2,068 quarantined files), and the scoped-or-unscoped `PackageName` (workspace packages are scoped and Turbo's root `//` task is not a package unit). Evidence: `packages/tooling/tool/cli/test/quality-scheduler-admission-unit.test.ts` (origin/main bytes decode and re-encode byte for byte; a pre-unit reader decodes gated records exactly as the pre-unit bytes; a newer kind and unit are charged, not quarantined) and the ciops frozen-journal replay at 41 of 41 with the keys on every row.
+
+Lane feat/local-proof-admission-unit
+
+Reverse: Revert the slice; records written with the units gate on still decode on older revisions, because pre-unit readers ignore the three keys.
+
+### Admission-unit fields are written only behind a units key on the v2 protocol marker, 2026-11-14
+
+The gate is an additive `units` key (`off` or `on`, default `off`) on the existing `yeet-admission-protocol/v2` marker in `protocol.json`, flipped with `bun run beep quality scheduler protocol --units on|off`. `withQualityAdmission` reads it once when it builds the ticket; the lease and the enqueue, admission, release and withdrawal rows copy the ticket, so one decision covers a whole lifecycle. With it off every ticket, lease and row is byte-identical to the pre-unit format (fixture captured from origin/main's encoder). Older readers ignore the key, and an older checkout that rewrites the marker drops it, which turns the fields off again (fail-safe). `writeAdmissionProtocol` now reads the current marker inside the journal lock and changes one gate, so flipping evictions keeps the units state and the reverse. The key means every live reader runs the SCHE-08 tolerant decoder; later slices (slice 6's Cache work kind, SCHE-02's gate units) write new work kinds and unit variants behind this same gate instead of adding another. There is no automatic census of live readers: no record carries a reader revision, so, as with the eviction gate, the operator turns it on once every live checkout runs this revision. Rejected: a v3 marker (older readers would fall back to the disabled default and turn eviction rows off), writing the fields unconditionally (safe for unit keys alone, but leaves no switch for the new kinds that pre-SCHE-08 readers quarantine), and a reader-revision census (needs a field nothing writes yet).
+
+Lane feat/local-proof-admission-unit
+
+Reverse: Run bun run beep quality scheduler protocol --units off; writers stop at once and records already written keep decoding.
 
 <!-- beep:decisions:end -->
 

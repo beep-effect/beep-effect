@@ -457,7 +457,7 @@ const verifySourceCoverage = Effect.fn("Library.verifySourceCoverage")(function*
         captureGood = false;
       }
       const object = cloneSafe
-        ? // KEEP (D-19): hardened untrusted-clone boundary (isolated config, hooks off, caps, timeout).
+        ? // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19): hardened untrusted-clone boundary (isolated config, hooks off, caps, timeout).
           yield* runLibraryCommand(
             root,
             "git",

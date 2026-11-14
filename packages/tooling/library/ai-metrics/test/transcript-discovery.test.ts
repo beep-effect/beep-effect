@@ -298,6 +298,9 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       const f = yield* fixture();
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const handles = yield* Ref.make<ReadonlyArray<ChildProcessSpawner.ChildProcessHandle>>([]);
+      // Own double (D-14): decorates the real platform spawner, which `ScriptedSpawner` replaces rather than
+      // wraps.
+      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
       const tracked = ChildProcessSpawner.make((command) =>
         spawner.spawn(command).pipe(Effect.tap((handle) => Ref.update(handles, A.append(handle))))
       );
@@ -354,6 +357,9 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const reading = yield* Deferred.make<void>();
       const handles = yield* Ref.make<ReadonlyArray<ChildProcessSpawner.ChildProcessHandle>>([]);
+      // Own double (D-14): decorates the real platform spawner, which `ScriptedSpawner` replaces rather than
+      // wraps.
+      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
       const stalled = ChildProcessSpawner.make((command) =>
         spawner.spawn(command).pipe(
           Effect.map((handle) => {

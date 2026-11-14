@@ -414,6 +414,7 @@ for (const scenario of [
         );
         // Own double: a scoped handle whose exit waits on the durable ACK it reads from stdin, counting
         // releases; per-spawn behaviour `ScriptedSpawner` cannot express.
+        // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
         const spawner = ChildProcessSpawner.make((command) =>
           Effect.gen(function* () {
             yield* Effect.acquireRelease(Effect.void, () =>
@@ -624,8 +625,9 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
             Stream.drain,
             Stream.concat(output)
           );
-          // Own double: reads the helper's stdin stream to release the scripted output only after the
-          // policy frame; `ScriptedSpawner` answers statically.
+          // Own double: reads the helper's stdin stream to release the scripted output only after the policy
+          // frame; `ScriptedSpawner` answers statically.
+          // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
           const synthetic = ChildProcessSpawner.make((command) =>
             Effect.gen(function* () {
               const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
@@ -786,6 +788,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
           );
           // Own double: a scoped handle that signals when its output is requested and counts its release;
           // `ScriptedSpawner` answers statically.
+          // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
           const spawner = ChildProcessSpawner.make(() =>
             Effect.acquireRelease(Effect.succeed(syntheticHandle(observedOutput, Sink.drain, false)), () =>
               Effect.sync(() => {

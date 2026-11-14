@@ -3,6 +3,181 @@
 Receipts recorded while the work happened. Secrets, home paths and machine
 identifiers are redacted.
 
+## 2026-11-13: the stack's Cloudflare token could not reach R2, found only at deploy time
+
+- **Doing:** P3 turbo cache, personal-stage deploy proof (lane goals/infra-alchemy-rebuild-p3-turbo-cache).
+- **Evidence:** `bunx alchemy plan --stage dev_<user>` fails in `plan.diff.resource` with
+  `Unauthorized: Authentication error` (Cloudflare code 10000); `GET /accounts/<id>/r2/buckets`
+  with the same token returns `Authentication error`. The token was minted for one Worker stack
+  (`mint-alchemy-token.sh`, 2026-10-28) and every later stack reuses it through each environment's
+  `CLOUDFLARE_API_TOKEN` secret.
+- **Would have prevented it:** a per-stack permission manifest checked before a lane starts
+  (`beep` command that verifies the token against the groups each stack's resources need), or
+  minting the stack token from IaC (`Cloudflare.ApiToken.AccountApiToken`, matrix row) so a new
+  resource type widens it in the same PR.
+
+## 2026-11-13: a stack's own `state` wins over `Test.make({ state })` for top-level deploys
+
+- **Doing:** stack test for `TurboCache` on the `@alchemy.run/test` harness.
+- **Evidence:** `deploy(Stack)` with `Test.make({ state: inMemoryState(), dev: true })` failed with
+  `AuthError: Provider 'AWS' is not configured in profile 'default'`: the stack effect provides its
+  declared `AWS.state(...)` inside, so the harness's state layer never applies.
+- **Would have prevented it:** a documented pattern in `docs/runbooks/alchemy-infra.md`: export the
+  stack program and deploy it on a `test.provider` scratch stack (what the package now does).
+
+## 2026-11-13: Worker fixtures bundled by Alchemy cannot import a package's `internal/` modules
+
+- **Doing:** moving the scratchpad handler into the package and its Worker fixtures into `test/`.
+- **Evidence:** the scaffold's exports map sets `"./internal/*": null`; vitest resolves
+  `@beep/<pkg>/internal/*` through aliases, but a fixture passed as a Worker `main` is bundled
+  with package resolution, which honours the exports map.
+- **Would have prevented it:** the `tooling/infra` file-role anchors saying that Worker runtime
+  modules are public package modules.
+
+## 2026-11-13: the `infra` scaffold's tsconfig does not own `alchemy.run.ts`
+
+- **Doing:** final-check for `@beep/infra-turbo-cache`.
+- **Evidence:** `lint deprecated-apis: TypeScript files have no tsconfig owner:` listing
+  `alchemy.run.ts`, `token.ts` and `test/fixtures/*.ts`. `create-package --kind infra` emits the
+  library tsconfig (`include: ["src"]`, `rootDir: "src"`), yet the kind's anchor puts
+  `alchemy.run.ts` at the package root. The package now sets `rootDir: "."` with the root files
+  included (declarations under `dist/src/`, `publishConfig.exports` pointed there) and gives
+  `test/fixtures/` its own `tsconfig.json`, as `@beep/palantiri` does.
+- **Would have prevented it:** the `infra` kind template emitting that tsconfig shape and a
+  fixtures tsconfig, so the next infra package starts owned.
+## 2026-11-13: Alchemy's provider shape trips two repo-wide Effect diagnostics
+
+- **Doing:** P2 `@beep/alchemy-vercel` (lane goals/infra-alchemy-rebuild-p2-vercel).
+- **Evidence:** `tsrs -p tsconfig.json` on the new package failed with
+  `effect(lazyEffect)` on every `XProvider = () => Provider.succeed(...)` and on
+  `providers = () => Layer...` (Alchemy's own convention), and with
+  `effect(missingPipeableSignature)` on `export const Project = Resource<Project>("Vercel.Project")`,
+  because Alchemy's resource constructor has an `(id, Effect<props>)` overload.
+  Both rules are `off` upstream and `error` in `tsconfig.base.json`, and
+  `@effect-diagnostics` directives are banned outside two root files. The
+  package exports constant layers and a narrowed `DeclaredResource<R>` type.
+- **Would have prevented it:** a documented repo pattern for exporting
+  third-party constructor shapes (Alchemy resources, platforms) that the
+  `missingPipeableSignature` rule cannot model, or a rule option that
+  ignores exported values typed by a dependency.
+
+## 2026-11-13: Vitest loads `alchemy` twice, so `Unowned` reads look owned
+
+- **Doing:** the adoption tests for the same package.
+- **Evidence:** `stack.deploy` over a seeded, never-deployed project
+  succeeded instead of failing with `OwnedBySomeoneElse`. The provider
+  (transformed by Vite) imported `alchemy/AdoptPolicy` through the `default`
+  export condition (`lib/*.js`), while the engine, loaded natively through
+  `@alchemy.run/test`, used the `bun` condition (`src/*.ts`); the `Unowned`
+  brand is a module-private symbol, so the engine never saw it. Fixed with
+  `server.deps.inline: [/alchemy/]` in the package's `vitest.config.ts`.
+- **Would have prevented it:** a shared vitest preset for packages that test
+  Alchemy providers (inline `alchemy` and `@alchemy.run/*`), or a note in the
+  alchemy-provider skill's testing section.
+
+## 2026-11-13: the test harness types every engine error as `any`
+
+- **Doing:** the same tests.
+- **Evidence:** `tsrs -p tsconfig.test.json` reported 29
+  `effect(anyUnknownInErrorContext)` errors on `stack.deploy(...)`,
+  `stack.destroy()` and `provider.read(...)`, whose error channels are `any`
+  in `@alchemy.run/test` and `alchemy/Provider`. The tests go through a typed
+  view (`test/harness/Harness.ts` `typed`, `test/harness/Readers.ts`).
+- **Would have prevented it:** a shared typed wrapper for the Alchemy test
+  harness in a test-kit package, reused by every `@beep/alchemy-*` library.
+
+## 2026-11-13: fallow ignores `test/fixtures/`, so test-only dependencies look unused
+
+- **Doing:** the same package's final-check.
+- **Evidence:** `fallow dead-code` reported `@alchemy.run/test` as an unused dev
+  dependency of `@beep/alchemy-vercel`; its only importer was
+  `test/fixtures/Harness.ts`, and `.fallowrc.jsonc` ignores `**/test/fixtures/**`.
+  The harness moved to `test/harness/`.
+- **Would have prevented it:** a note in the effect-vitest new-test-file
+  checklist that `test/fixtures/` is invisible to fallow, so shared harness
+  modules that import packages belong elsewhere.
+## 2026-11-13: `A.makeBy(0, f)` returns one element
+
+- **Doing:** P2 `@beep/alchemy-github-runners` scale-up tests (lane
+  goals/infra-alchemy-rebuild-p2-github-runners).
+- **Evidence:** the on-demand failover test failed with one `CreateFleet`
+  request instead of two. The fake EC2 launched `A.makeBy(count, f)` instances
+  and `A.makeBy(0, f)` returns `[f(0)]`: the result is a `NonEmptyArray`, so a
+  zero count is clamped to one. The fake reported a full launch and the
+  failover branch never ran.
+- **Would have prevented it:** a `Gotchas` line on `effect/Array.makeBy` in the
+  repo's Effect notes, or a lint that flags `makeBy` with a count that can be 0.
+
+## 2026-11-13: opaque schema classes do not satisfy `S.Codec<A, I>` inference
+
+- **Doing:** the same package, a generic Lambda-boundary helper that decodes a
+  runtime config with the schema it is given.
+- **Evidence:** typing the parameter `S.Codec<C, CI>` and passing an
+  `S.Opaque` class failed with `Property 'brand' is missing` (the inferred `C`
+  is the struct's type, not the opaque class). Typing it
+  `SC extends S.Codec<unknown, unknown, never, never>` and using `SC["Type"]`
+  works.
+- **Would have prevented it:** the schema-first skill showing the generic
+  signature for helpers that take an opaque schema.
+
+## 2026-11-13: distilled GitHub rc.18 has no App authentication
+
+- **Doing:** the GitHub App live layer of the same package.
+- **Evidence:** `@distilled.cloud/github@1.0.0-rc.18` exports `Credentials`
+  (bearer token only); the `App` module that mints JWTs and installation tokens
+  exists on distilled `main` but not in rc.18, so the package signs the RS256
+  JWT itself with WebCrypto, including a PKCS#1 to PKCS#8 key wrapper.
+- **Would have prevented it:** a distilled bump that ships the App module; the
+  package's `WebCrypto.signAppJwt` is then deleted (decision file
+  `2026-11-13-app-jwts-are-signed-with-webcrypto-...`).
+
+**Update, same day:** #3278 moved the distilled family to `1.0.0-rc.19`, which ships `@distilled.cloud/github/App`;
+the package now uses `App.appJwt` and the hand-rolled signer is gone. The receipt stands for the hours lost
+to the gap between the reference checkout (main) and the pinned release.
+
+## 2026-11-13: SAST flags a PEM template that wraps a test-generated key
+
+- **Doing:** PR #3291 hosted SAST.
+- **Evidence:** semgrep `beep-hardcoded-private-key` blocked on a test helper that formats a key generated at
+  test time (`crypto.subtle.generateKey`) into a PEM whose header and footer were string literals; no key
+  material was committed. Assembling the label at runtime clears it.
+- **Would have prevented it:** a local `sast` step in `package-verify`, or a note in the test checklist that PEM
+  header and footer literals trip the rule even around generated keys.
+## 2026-11-13: vitest loads two copies of Alchemy, so `Unowned` stops refusing
+
+- **Doing:** P2 aws-extras lane, the adopt test for `RunnerLaunchTemplate`
+  under `@alchemy.run/test` (`test.provider`, `inMemoryState()`).
+- **Evidence:** a same-name launch template without Alchemy's ownership tags
+  was adopted on a plain `stack.deploy`, with no `adopt(true)`. Instrumenting
+  `read` showed it returned `Unowned(attrs)` while `AdoptPolicy` resolved to
+  `false`. The planner checks the brand with `Unowned.is`, keyed by a
+  module-private symbol, and vitest had loaded the engine (through
+  `@alchemy.run/test`) separately from the package source that imports
+  `alchemy/AdoptPolicy`. Inlining `alchemy` and `@alchemy.run/*` with
+  `test.server.deps.inline` in the package `vitest.config.ts` fixed it: the
+  deploy then fails with `OwnedBySomeoneElse`.
+- **Would have prevented it:** a shared vitest preset for `@beep/alchemy-*`
+  packages that inlines Alchemy, or an upstream `Unowned` brand registered
+  with `Symbol.for`. Sibling lanes (vercel, github-runners) need the same
+  config, or their adopt tests pass for the wrong reason.
+
+## 2026-11-13: repo Effect diagnostics reject Alchemy's provider idioms
+
+- **Doing:** the same lane, typing the resources and providers.
+- **Evidence:** `tsrs -p tsconfig.json` reports
+  `effect(missingPipeableSignature)` on every exported `Resource(...)` value
+  (Alchemy's `(id, Effect<props>)` overload), `effect(lazyEffect)` on
+  `XProvider = () => Provider.succeed(...)` and `providers = () => Layer...`,
+  and `effect(anyUnknownInErrorContext)` on every `stack.deploy(...)` in
+  tests, because `ScratchStack` types failures as `any`. Diagnostic
+  directives are banned by the quality gate. The workarounds: export each
+  resource through a narrowed `ExtrasResource` interface, make providers
+  Layer constants, and give tests a `TypedStack` view of the scratch stack
+  (`test/support/FakeAws.ts`). About an hour went to this.
+- **Would have prevented it:** a short `@beep/alchemy-*` section in the
+  `alchemy-provider` skill naming these three shapes, or one shared
+  internal helper package the three P2 libraries import.
+
 ## 2026-11-13: a cache-baseline re-record has to review root drift inherited from `main`
 
 - **Doing:** P3 Storybook stack (lane `goals/infra-alchemy-rebuild-p3-storybook`); a new script in
