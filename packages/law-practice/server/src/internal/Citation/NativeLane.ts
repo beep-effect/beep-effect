@@ -103,6 +103,7 @@ export class CitationNativeLane extends Context.Service<
     ) => Effect.Effect<A, E, R>;
     readonly retire: Effect.Effect<void, CitationNativeLaneFailure | CitationSafetyLimitExceeded>;
     readonly reserve: Effect.Effect<void, CitationNativeLaneFailure | CitationSafetyLimitExceeded>;
+    readonly matchesRuntime: (spawner: ChildProcessSpawner["Service"], clock: Clock.Clock) => boolean;
     readonly ensureOpen: Effect.Effect<void, CitationNativeLaneFailure>;
     readonly snapshot: Effect.Effect<CitationNativeLaneSnapshot>;
     readonly yieldTo: <A, E, R>(
@@ -188,8 +189,9 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     )
   );
   const acquire = Effect.fn("Citation.claimLaneUnit")(function* () {
-    if (O.isNone(permit)) {
-      const lease = yield* acquireCitationNativeLease(admission, operation, false, (reason) =>
+    let lease = O.getOrUndefined(permit);
+    if (lease === undefined) {
+      lease = yield* acquireCitationNativeLease(admission, operation, false, (reason) =>
         CitationNativeLaneFailure.make({ reason })
       );
       permit = O.some(lease);
@@ -201,9 +203,7 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
       yield* release;
       return yield* CitationNativeLaneFailure.make({ reason: status.closed ? "closed" : "quarantined" });
     }
-    return yield* Effect.fromOption(permit).pipe(
-      Effect.mapError(() => CitationNativeLaneFailure.make({ reason: "closed" }))
-    );
+    return lease;
   });
   const availableOwner = Effect.gen(function* () {
     if (closed) return yield* CitationNativeLaneFailure.make({ reason: "closed" });
@@ -277,6 +277,7 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     ),
     retire: lock.withPermit(release.pipe(Effect.uninterruptible)),
     reserve,
+    matchesRuntime: (spawner, clock) => spawner === nativeSpawner && clock === nativeClock,
     ensureOpen: Effect.gen(function* () {
       if (closed) return yield* CitationNativeLaneFailure.make({ reason: "closed" });
       if (poisoned) return yield* CitationNativeLaneFailure.make({ reason: "quarantined" });

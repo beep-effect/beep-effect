@@ -1,0 +1,166 @@
+name: Deploy oip-web infrastructure
+
+# Deploys the `staging` and then the `prod` stage of the Alchemy stack in
+# apps/oip-web (alchemy.run.ts): the oip.law Vercel projects' settings,
+# environment variables and domains, the Cloudflare DNS records that point the
+# domains at Vercel, and the S3 assets buckets. It owns configuration only;
+# Vercel deployments stay with vercel-deploy.yml, which this workflow never
+# touches. State lives in the repo's shared AWS S3 state store
+# (goals/infra-alchemy-rebuild); its stage lease plus this concurrency group
+# serialize every deploy and never cancel one mid-apply.
+#
+# Each stage runs plan, the pre-deploy check, deploy, then a polling smoke
+# check. The pre-deploy check (apps/oip-web/stack/plan-guard.ts) fails on any
+# replace, delete or orphan of a project, domain, DNS record or bucket, and on
+# a plan log it cannot read; the stack's RemovalPolicy.protect refuses the
+# same plans inside the deploy itself. The plan step runs without `--yes` and
+# fails on a missing or outdated store, so the store stays
+# operator-bootstrapped. AWS credentials come from the GitHub OIDC deploy role
+# (vars.OIP_WEB_DEPLOY_ROLE_ARN on the oip-web-infra-prod environment: state
+# bucket plus the oip-law-web-assets-* buckets); provider credentials and the
+# HubSpot secret are that environment's secrets.
+#
+# The job runs only while the repository variable OIP_WEB_INFRA_DEPLOY is
+# `enabled`: merging this file deploys nothing. Setting the variable is a
+# deploy act done by the packet gate session, never by a workflow or a lane,
+# after telling the orchestrator the time (unset it to disarm).
+# Runbook: docs/runbooks/alchemy-infra.md.
+on:
+  push:
+    branches: [main]
+    paths:
+      - apps/oip-web/alchemy.run.ts
+      - apps/oip-web/stack/**
+      - apps/oip-web/package.json
+      - packages/tooling/library/alchemy-vercel/src/**
+      - bun.lock
+      - .github/workflows/deploy-oip-web-infra.yml
+  workflow_dispatch:
+
+concurrency:
+  group: alchemy-oip-web-infra
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy oip-web infrastructure (staging, prod)
+    if: vars.OIP_WEB_INFRA_DEPLOY == 'enabled'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: oip-web-infra-prod
+      url: https://oip.law
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      CI: "true"
+      ALCHEMY_TELEMETRY_DISABLED: "1"
+    # Provider secrets are step-level, on the four plan and deploy steps only: setup,
+    # the plan guard and the smoke checks never see them. One HubSpot token serves both
+    # stages (it equals the value each Pulumi stack held).
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+
+      - name: Configure AWS credentials (state store and assets buckets)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.OIP_WEB_DEPLOY_ROLE_ARN }}
+          role-session-name: alchemy-oip-web-infra
+          aws-region: us-east-1
+
+      # The plan log is the acceptance evidence and the pre-deploy check's input.
+      - name: Plan staging stage
+        working-directory: apps/oip-web
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CRM_HUBSPOT_SERVICE_KEY: ${{ secrets.CRM_HUBSPOT_SERVICE_KEY }}
+        run: |
+          set -euo pipefail
+          bunx alchemy plan --stage staging --env-file /dev/null 2>&1 | tee "$RUNNER_TEMP/plan-staging.log"
+
+      - name: Check staging plan
+        shell: bash
+        run: bun apps/oip-web/stack/plan-guard.ts "$RUNNER_TEMP/plan-staging.log"
+
+      - name: Deploy staging stage
+        working-directory: apps/oip-web
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CRM_HUBSPOT_SERVICE_KEY: ${{ secrets.CRM_HUBSPOT_SERVICE_KEY }}
+        run: bunx alchemy deploy --stage staging --yes --env-file /dev/null
+
+      - name: Smoke-check staging hostnames
+        shell: bash
+        run: |
+          set -euo pipefail
+          check() { # url expected-status expected-location
+            local got
+            for attempt in $(seq 1 20); do
+              got="$(curl -sS -o /dev/null -w '%{http_code} %{redirect_url}' --max-time 20 "$1" || true)"
+              if [[ "$got" == "$2 $3" ]]; then echo "ok $1 -> $got"; return 0; fi
+              echo "attempt $attempt: $1 -> $got (want $2 $3)"; sleep 15
+            done
+            return 1
+          }
+          check https://staging.oip.law/ 200 ""
+          check https://staging.opip.law/ 307 https://staging.oip.law/
+
+      - name: Plan prod stage
+        working-directory: apps/oip-web
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CRM_HUBSPOT_SERVICE_KEY: ${{ secrets.CRM_HUBSPOT_SERVICE_KEY }}
+        run: |
+          set -euo pipefail
+          bunx alchemy plan --stage prod --env-file /dev/null 2>&1 | tee "$RUNNER_TEMP/plan-prod.log"
+
+      - name: Check prod plan
+        shell: bash
+        run: bun apps/oip-web/stack/plan-guard.ts "$RUNNER_TEMP/plan-prod.log"
+
+      - name: Deploy prod stage
+        working-directory: apps/oip-web
+        shell: bash
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CRM_HUBSPOT_SERVICE_KEY: ${{ secrets.CRM_HUBSPOT_SERVICE_KEY }}
+        run: bunx alchemy deploy --stage prod --yes --env-file /dev/null
+
+      - name: Smoke-check prod hostnames
+        shell: bash
+        run: |
+          set -euo pipefail
+          check() { # url expected-status expected-location
+            local got
+            for attempt in $(seq 1 20); do
+              got="$(curl -sS -o /dev/null -w '%{http_code} %{redirect_url}' --max-time 20 "$1" || true)"
+              if [[ "$got" == "$2 $3" ]]; then echo "ok $1 -> $got"; return 0; fi
+              echo "attempt $attempt: $1 -> $got (want $2 $3)"; sleep 15
+            done
+            return 1
+          }
+          check https://oip.law/ 200 ""
+          check https://www.oip.law/ 308 https://oip.law/
+          check https://opip.law/ 308 https://oip.law/
+          check https://www.opip.law/ 308 https://oip.law/

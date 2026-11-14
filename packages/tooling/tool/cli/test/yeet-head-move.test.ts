@@ -38,9 +38,48 @@ const expectChange = (verdict: Awaited<Effect.Success<ReturnType<typeof classify
   if (verdict._tag === "changed") expect(verdict.change, verdict.detail).toBe(change);
 };
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+// One commit whose tree is its parent's with `vendor/lib` pointing at `pointer`, authored like the
+// stack fixtures; `committer` is the lane mailbox or a GitHub cascade mailbox.
+const gitlinkCommit = Effect.fn("HeadMoveTest.gitlinkCommit")(function* (
+  root: string,
+  parent: string,
+  pointer: string,
+  committer: string
+) {
+  yield* git(root, ["read-tree", parent]);
+  yield* git(root, ["update-index", "--add", "--cacheinfo", `160000,${pointer},vendor/lib`]);
+  const tree = yield* git(root, ["write-tree"]);
+  return yield* git(root, ["commit-tree", tree, "-p", parent, "-m", "chore: bump vendor/lib"], {
+    GIT_AUTHOR_NAME: "Stack Probe Author",
+    GIT_AUTHOR_EMAIL: "stack-probe@users.noreply.github.com",
+    GIT_AUTHOR_DATE: "2026-11-14T10:00:00Z",
+    GIT_COMMITTER_NAME: "Committer",
+    GIT_COMMITTER_EMAIL: committer,
+    GIT_COMMITTER_DATE: "2026-11-14T10:05:00Z",
+  });
+});
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "120 seconds" })(
   "head-move real Git",
   (it) => {
+    it.effect("keeps a moved gitlink in the patch identity under diff.ignoreSubmodules=all", () =>
+      Effect.gen(function* () {
+        const root = yield* init();
+        const main = yield* commit(root, [], { "main.md": O.some("main\n") }, "main");
+        const linked = yield* gitlinkCommit(root, main, `${Str.repeat(39)("0")}1`, "lane@example.invalid");
+        const lane = yield* gitlinkCommit(root, linked, Str.repeat(40)("1"), "lane@example.invalid");
+        const moved = yield* commit(root, [linked], { "main.md": O.some("main moved\n") }, "main moving");
+        const rewrite = yield* gitlinkCommit(
+          root,
+          moved,
+          Str.repeat(40)("2"),
+          "12345+octocat@users.noreply.github.com"
+        );
+        yield* git(root, ["config", "diff.ignoreSubmodules", "all"]);
+        const verdict = yield* classify(root, lane, rewrite, moved);
+        expectChange(verdict, "patch");
+        if (verdict._tag === "changed") expect(verdict.detail).toBe("Commit 0: vendor/lib differs.");
+      })
+    );
     it.effect("propagates interruption while failures and defects remain unknown", () =>
       Effect.gen(function* () {
         const s = yield* stack();

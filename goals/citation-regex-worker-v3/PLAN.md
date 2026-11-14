@@ -144,6 +144,59 @@ B2 implements the depth-4 and per-job-engine owner rulings; both stops are resol
 
 Reverse: Return B2 to in progress if review finds an introduced failure; retain both owner protocol rulings and rerun the focused proofs and final count gate after changes.
 
+### Record hosted round 1 repairs and the completed provider audit, 2026-11-14
+
+B1 remains in review as PR #3336. Hosted round 1 repairs preserve every expected
+child count, budget and refusal assertion. The evaluator checks the actual lane
+spawner/Clock, including its first call, and retains the base closed-installation
+refusal. Fixtures open invocations in their installed runtime Context.
+
+The serial provider audit passes 168 files / 772 tests; the requested full-law
+integration replay passes 768 observations with 936/936 confirmed children.
+CanonicalFullSpan ran last: 12/12, 291 children and 10 lane claims per ten calls,
+construction unchanged, 67.29 s at load 10.92 / 12.20 / 11.36. Total: 170 files,
+785 tests. Required server check, quick verification, laws, fallow, Effect Vitest,
+schema-first, Biome and decision projections pass. Full receipts and each file's
+pass count are in history/evidence/2026-11-14-b1-native-lane.md, Hosted round 1.
+
+No push, PR mutation, rebase or stash operation. The owner publishes local commits;
+hosted CI/review resolution is still outstanding on those commits.
+
+Lane feat/citation-native-lane · PR #3336
+
+Reverse: Rerun the same file-level proofs after any change; preserve the recorded counts and refusals.
+
+### Record quarantine overlap and coverage review follow-through, 2026-11-14
+
+B1 remains in review as PR #3336, with this local wave based on b749cd91e7e.
+Remove only Markup reap's aggregate quarantine reset; exact-record callbacks own
+settlement. A/B real-child regressions fail with the old reset and pass for Bun
+and Node children. The two-request composition proof forces both first children
+to exist before either request proceeds; its exact peak-two assertion remains.
+
+The owner-expanded coverage wave covers every reported reachable branch in six
+regressed sources plus new NativeLane. Single-file reports merged with hosted
+artifacts clear all reported floors; six typed invariant guards stay and are
+reported with source/line arguments and measured values. No coverage baseline
+edit, guard weakening, typed-refusal conversion or ignore directive.
+
+Current proof: 79 green Node consumer/coverage files / 369 tests; 55 touched cases
+also pass with a Bun parent. The three unchanged parent-runtime tests reproduce
+six passes / 26 failures under Node and pass 32/32 under Bun. Census passes 4/4.
+CanonicalFullSpan ran last: 12/12, 65.22 s, launch load 10.12 / 12.81 / 13.97;
+291 regex children / ten lane claims per ten calls, construction unchanged.
+
+Server check, quick verification, laws, scoped root oxlint, Biome, fallow,
+Effect Vitest, schema-first, docgen and decision projections pass. Evidence lists
+every file and coverage-path test. One EV003 per-request fixture exception is
+reviewed under the standing invocation policy; unrelated inventory rows match
+HEAD exactly. The owner publishes this local commit; no push, PR mutation,
+rebase or stash operation.
+
+Lane feat/citation-native-lane · PR #3336
+
+Reverse: Repeat these bounded proofs after changes; keep unchanged parent-runtime tests and all typed guards intact.
+
 ### Review round 1 closes preflight and session lifetime findings, 2026-11-14
 
 Review round 1 fixes all four accepted findings in local commits 4c11b6b65b5 and 8c8f819ed1f. Descriptor selection precedes exact full-frame preflight, receiving allocation and compilation; immutable captured fingerprints are rechecked. Preparation and dispatch share the lane handover transaction, with trusted already-locked capabilities across timer fibers. Every interrupted session fails closed, confirms child retirement and returns its lease exactly once, including preparation before spawn. The strengthened depth witness proves JSON parsing was not reached. Session tests pass 48/48 on both child runtimes, protocol 4/4, descriptors 8/8 and retained v2 worker/protocol 19/19 and 14/14. All 195 affected files and the final FullSpan gate ran serially, with 75 final-implementation reruns: 196 unique files, 808 passing tests and the same 23 fixture-authority failures across nine untouched files awaiting B1 alignment. FullSpan passes 12/12: 10 regex children for 291 evaluations, every other column unchanged, 38.18 seconds wall time. All required checks pass, Fallow introduces zero findings, and no safety guard was weakened. Evidence: history/evidence/2026-11-14-b2-regex-session.md, Review round 1. B2 stays in review. No push, merge, rebase or subagent.

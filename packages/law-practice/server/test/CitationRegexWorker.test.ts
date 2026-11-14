@@ -1,5 +1,6 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
@@ -46,6 +47,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Predicate from "effect/Predicate";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
@@ -541,7 +543,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
     );
   }
 
-  it.effect("refuses a later evaluator whose spawner is not the request owner's", () =>
+  it.effect("refuses first and later evaluators whose runtime differs from the lane's", () =>
     Effect.gen(function* () {
       const fixture = yield* makeCitationNativeWorkerFixture("busy", "regex", "bun");
       const limits = (yield* defaultCitationEnginePolicy).limits;
@@ -555,15 +557,30 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
         );
       const creator = yield* install(first.spawner);
       const stranger = yield* install(second.spawner);
+      const otherClock = yield* makeCitationNativeSleepClock(() => Effect.never);
+      const foreignClock = yield* install(first.spawner).pipe(Effect.provideService(Clock.Clock, otherClock));
+      const installation = yield* Scope.make();
+      const closedStranger = yield* install(second.spawner).pipe(Effect.provideService(Scope.Scope, installation));
+      yield* Scope.close(installation, Exit.void);
       yield* withCitationTestInvocation(
         Effect.gen(function* () {
+          const closedMismatch = yield* closedStranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
+          expect(closedMismatch).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "closed" });
+          const firstMismatch = yield* stranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
+          expect(firstMismatch).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
+          const clockMismatch = yield* foreignClock.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
+          expect(clockMismatch).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
           // An out-of-range quota fails after the request's owner exists, before any child.
           const invalidQuota = yield* creator.evaluate(pattern, native("b"), 0, -1).pipe(Effect.flip);
           expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
+          const invocation = yield* CitationInvocation;
+          const session = yield* invocation.regex.snapshot;
+          expect(session).toMatchObject({ state: "absent", jobs: 0 });
           const refused = yield* stranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
           expect(refused).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
-        })
-      );
+        }),
+        limits
+      ).pipe(Effect.provideService(ChildProcessSpawner, first.spawner));
       const firstExits = yield* first.snapshot;
       expect(firstExits).toEqual({ spawned: 0, confirmed: 0 });
       const secondExits = yield* second.snapshot;

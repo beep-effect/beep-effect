@@ -29,7 +29,6 @@ import {
 import { CitationRegexWorkerFailure, readCitationRegexFrames } from "./RegexWorkerProtocol.ts";
 import { CitationRegexExecutionFailure } from "./RegexWorkerRpc.ts";
 import type { CitationEngineLimits, CitationEngineOperation } from "@beep/law-practice-use-cases/server";
-import type { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import type { CitationNativeLane, CitationNativeStart } from "./NativeLane.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationRegexSessionJob } from "./RegexSessionProtocol.ts";
@@ -54,10 +53,6 @@ export class CitationRegexSessionSnapshot extends S.Opaque<
 export class CitationRegexSession extends Context.Service<
   CitationRegexSession,
   {
-    readonly checkRuntime: (
-      clock: Clock.Clock,
-      spawner: ChildProcessSpawner["Service"]
-    ) => Effect.Effect<void, CitationRegexWorkerFailure>;
     readonly evaluate: <A, E, R>(
       runtime: CitationNativeProcessRuntime,
       prepare: (
@@ -282,10 +277,6 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
   );
   return CitationRegexSession.of({
     evaluate,
-    checkRuntime: Effect.fn("Citation.checkRegexSessionRuntime")(function* (clock, spawner) {
-      if (clock !== lane.clock || spawner !== lane.spawner)
-        return yield* CitationRegexWorkerFailure.make({ reason: "invalid-runtime" });
-    }),
     snapshot: Effect.sync(() => CitationRegexSessionSnapshot.make({ jobs, sequence, state })),
   });
 });

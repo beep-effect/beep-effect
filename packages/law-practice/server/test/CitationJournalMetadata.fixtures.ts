@@ -133,7 +133,7 @@ const install = Effect.fn("JournalMetadataTest.install")(function* (
     Effect.provideContext(installed),
     DateTime.withCurrentZoneOffset(0)
   );
-  return { ...setup, corpus, configuration, metadata, reads, operation, text };
+  return { ...setup, corpus, configuration, metadata, reads, operation, text, installed };
 });
 /** Native source updates, superclass choices and ordered reads through actual processes. */
 export const replayCitationJournalMetadata = Effect.fn("JournalMetadataTest.replay")(function* (
@@ -193,7 +193,7 @@ export const assertCitationJournalMetadataBudget = Effect.fn("JournalMetadataTes
       expect(used).toBe(36);
     }),
     outer.limits
-  );
+  ).pipe(Effect.provideContext(outer.installed));
   const future = A.getUnsafe(exact.corpus.inputs, 63);
   const frozenYear = yield* exact.metadata.apply({ ...future.request, ...A.getUnsafe(exact.corpus.controls, 0) });
   const futurePatch = yield* Effect.fromOption(frozenYear.patch);

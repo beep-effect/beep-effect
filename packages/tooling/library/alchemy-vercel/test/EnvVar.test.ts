@@ -1,16 +1,25 @@
 import * as Vercel from "@beep/alchemy-vercel";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import { adopt, Unowned } from "alchemy/AdoptPolicy";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Redacted from "effect/Redacted";
+import * as Str from "effect/String";
 import { FakeVercel, TEAM_ID } from "./harness/FakeVercel.ts";
-import { failureTag, makeHarness, typed } from "./harness/Harness.ts";
+import { failureTag, makeHarness, persistedStrings, typed } from "./harness/Harness.ts";
 import { envVarRead } from "./harness/Readers.ts";
 
 const { test } = makeHarness();
+
+/** Run a deploy with these config values, as `op run` would export them. */
+const withConfig =
+  (values: Record<string, string>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
+    Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(values));
 
 const stackWith = Effect.fn("stackWith")(function* (
   projectName: string,
@@ -38,6 +47,10 @@ describe("Vercel.EnvVar", () => {
       expect(created.targets).toEqual(["production"]);
       expect(P.hasProperty(created, "value")).toBe(false);
       expect(O.getOrThrow(FakeVercel.env(created.envId)).value).toBe("secret-one");
+      // A literal `value` is persisted in state (Alchemy keeps a Redacted prop's plain text), which is why
+      // secrets use `valueFrom`; this also proves `persistedStrings` sees through the envelope.
+      const persisted = yield* persistedStrings;
+      expect(A.some(persisted, Str.includes("secret-one"))).toBe(true);
 
       const rotated = yield* stack.deploy(
         stackWith("vt-env-crud", {
@@ -234,6 +247,73 @@ describe("Vercel.EnvVar", () => {
       expect(A.contains(secondDeploy, "DELETE Env")).toBe(false);
       expect(A.contains(secondDeploy, "POST Envs")).toBe(false);
       expect(O.getOrThrow(FakeVercel.env(first.envId)).type).toBe("sensitive");
+      yield* stack.destroy();
+    })
+  );
+
+  test.provider("keeps a valueFrom secret out of state and plans a rotation from its digest", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      const declare = stackWith("vt-env-value-from", {
+        key: "HUBSPOT_TOKEN",
+        valueFrom: { config: "VT_HUBSPOT_TOKEN" },
+        targets: ["production"],
+        type: "sensitive",
+      });
+      const created = yield* stack.deploy(declare).pipe(withConfig({ VT_HUBSPOT_TOKEN: "secret-from-env-one" }));
+      expect(O.getOrThrow(FakeVercel.env(created.envId)).value).toBe("secret-from-env-one");
+      expect(created.valueDigest).toMatch(/^[0-9a-f]{64}$/);
+      const persisted = yield* persistedStrings;
+      expect(A.some(persisted, Str.includes("secret-from-env-one"))).toBe(false);
+      expect(A.contains(persisted, "VT_HUBSPOT_TOKEN")).toBe(true);
+
+      const before = A.length(FakeVercel.requestsFor(created.projectId));
+      const unchanged = yield* stack.deploy(declare).pipe(withConfig({ VT_HUBSPOT_TOKEN: "secret-from-env-one" }));
+      expect(unchanged.valueDigest).toBe(created.valueDigest);
+      expect(A.contains(A.drop(FakeVercel.requestsFor(created.projectId), before), "PATCH Env")).toBe(false);
+
+      const rotated = yield* stack.deploy(declare).pipe(withConfig({ VT_HUBSPOT_TOKEN: "secret-from-env-two" }));
+      expect(rotated.envId).toBe(created.envId);
+      expect(rotated.valueDigest).not.toBe(created.valueDigest);
+      expect(O.getOrThrow(FakeVercel.env(created.envId)).value).toBe("secret-from-env-two");
+      const afterRotation = yield* persistedStrings;
+      expect(A.some(afterRotation, Str.includes("secret-from-env-two"))).toBe(false);
+      yield* stack.destroy();
+    })
+  );
+
+  test.provider("fails a type change with a missing valueFrom key at diff, before deleting anything", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      const declare = (type: "encrypted" | "sensitive") =>
+        stackWith("vt-env-replace-missing-key", {
+          key: "HUBSPOT_TOKEN",
+          valueFrom: { config: "VT_REPLACE_TOKEN" },
+          targets: ["production"],
+          type,
+        });
+      const created = yield* stack.deploy(declare("encrypted")).pipe(withConfig({ VT_REPLACE_TOKEN: "kept-value" }));
+      const before = A.length(FakeVercel.requestsFor(created.projectId));
+      // A type change replaces the variable delete-first; without the key the plan must fail first.
+      const refused = yield* Effect.exit(stack.deploy(declare("sensitive")).pipe(withConfig({})));
+      assertSome(failureTag(refused), "ConfigError");
+      const afterwards = A.drop(FakeVercel.requestsFor(created.projectId), before);
+      expect(A.filter(afterwards, Str.startsWith("DELETE"))).toEqual([]);
+      expect(O.getOrThrow(FakeVercel.env(created.envId)).value).toBe("kept-value");
+      yield* stack.destroy().pipe(withConfig({ VT_REPLACE_TOKEN: "kept-value" }));
+    })
+  );
+
+  test.provider("fails when a variable declares neither value nor valueFrom", (scratch) =>
+    Effect.gen(function* () {
+      const stack = typed(scratch);
+      yield* stack.destroy();
+      const refused = yield* Effect.exit(
+        stack.deploy(stackWith("vt-env-no-value", { key: "EMPTY", targets: ["production"] }))
+      );
+      expect(failureTag(refused)).toEqual(O.some("EnvVarValueMissing"));
       yield* stack.destroy();
     })
   );

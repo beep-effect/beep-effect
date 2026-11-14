@@ -1771,6 +1771,14 @@
     },
     {
       "file": "packages/tooling/library/alchemy-vercel/src/EnvVar.ts",
+      "symbol": "EnvVarValueSource",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/alchemy-vercel",
+      "reason": "Nested EnvVar prop: stacks write `valueFrom: { config }` as a plain object literal inside EnvVarProps, so it stays structural for the same reason as EnvVarProps."
+    },
+    {
+      "file": "packages/tooling/library/alchemy-vercel/src/EnvVar.ts",
       "symbol": "EnvVar",
       "kind": "exported-interface",
       "status": "exception",

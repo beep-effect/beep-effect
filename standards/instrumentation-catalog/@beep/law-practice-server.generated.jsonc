@@ -156,7 +156,6 @@
     {"name":"Citation.checkExpandedAnnotationSpan","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.checkOccurrenceSource","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.checkRegexResultCounts","owner":"@beep/law-practice-server","family":"slice","conforms":true},
-    {"name":"Citation.checkRegexSessionRuntime","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.checkSelectionBindingBudgets","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.choosePythonReprQuote","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.claimLaneUnit","owner":"@beep/law-practice-server","family":"slice","conforms":true},

@@ -237,6 +237,14 @@ Lane fix/beep-effect-web-prod-worker-name
 
 Reverse: Remove productionWorkerName from apps/beep-effect-web/alchemy.run.ts once the S3 state holds a completed Website record; the generated name then stays authoritative.
 
+### AI metrics resource graph: SSH Docker context, owned network, looked-up data volume, Phoenix container, Command.Exec host steps, 2026-11-13
+
+The Pulumi program wrote a Compose file and a `systemd --user` unit over SSH and ran preflight, apply and health as remote commands. The `HostsAiMetrics` prod graph: `Docker.Context("Host")` with endpoint `host=ssh://<sshDestination>` and a pinned context name; `Docker.Network` (bridge, `beep-ai-metrics`), owned by the stack; the Phoenix data volume as `Docker.Volume.lookup` (read and mounted, never created, replaced or removed, so no plan can touch the data); `Docker.Container("Phoenix")` with the pinned image from configuration (the schema rejects `latest` and untagged images), `restart: unless-stopped`, `start: true`, `PHOENIX_WORKING_DIR=/data`, port `127.0.0.1:6006:6006` (loopback only, as in the Compose file) and a Docker healthcheck on `/healthz`; then `Command.Exec` steps over non-interactive SSH: Preflight (tools, engine, tailnet, data volume present), RetireCompose, TailscaleServe (the Pulumi apply script's port-switching logic unchanged, HTTPS 8447 to loopback 6006) and Health (Docker health is healthy, loopback answers, Serve fronts it, the public URL answers). Mapping: Compose service and `container_name` become the Container with the same name; the Compose project network becomes the stack's own network; the named Compose volume is the lookup; the systemd unit is retired, Docker's restart policy replaces it; the Tailscale Serve lines become their own step. `Docker.Service` is not used: it needs a swarm manager (D21 note). Ordering edges are Outputs (Exec `hash.input` in a later step's env, a constant container label mapped from RetireCompose), since Alchemy has no `dependsOn`. Each Exec hashes no files (`memo: { include: [], exclude: ["**"] }`), so it re-runs only when its rendered command or env changes. The two `op://` references (hash salt, raw archive key) are configuration fields the stack exports for clients; it never resolves them, and no resolved value is a prop, so none reaches state (tested).
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: alchemy destroy --stage prod, then run the saved rollbackToCompose command to re-enable the archived Compose unit; the Pulumi program (infra/src/AIMetrics.ts) stays on main until P6.
+
 ### App JWTs come from distilled GitHub App.appJwt; distilled pins follow main at rc.19, 2026-11-13
 
 The GitHub-facing Lambdas authenticate as the fleet's GitHub App: `GitHubAppAuth` reads the App id and base64 PEM key from SSM once, signs the App JWT with `@distilled.cloud/github/App` `appJwt` (RS256 over WebCrypto, PKCS#1 and PKCS#8 keys), and mints installation tokens through distilled `apps.createInstallationAccessToken`. A first draft signed the JWT itself because `@distilled.cloud/github@1.0.0-rc.18` had no App module; main moved the distilled family to `1.0.0-rc.19` with #3278 (Alchemy beta.86), which ships it, so the hand-rolled signer was deleted. Root catalog pins `@distilled.cloud/aws` and `@distilled.cloud/github` follow the version `bun.lock` resolves on main, `1.0.0-rc.19`. The webhook HMAC-SHA256 check stays on `crypto.subtle` with a constant-time compare: Effect ships no HMAC module.
@@ -293,6 +301,30 @@ Lane goals/infra-alchemy-rebuild-p2-github-runners
 
 Reverse: Fold the second PR's resources and composite into one PR if the first has not merged yet.
 
+### Host stack configuration is a schema-decoded JSON file per stack, named by an environment variable, 2026-11-13
+
+No tracked file carries a host address, login, path or port. `AiMetricsHostConfig` (`packages/tooling/infra/infra-hosts/src/AiMetricsConfig.ts`) and `OpenClawStackArgs` (`packages/tooling/infra/infra-hosts/src/OpenClawGeneration.ts`) are the stack configuration schemas; `loadHostConfigFile` (`packages/tooling/infra/infra-hosts/src/HostConfigFile.ts`) reads the file named by `BEEP_AI_METRICS_HOST_CONFIG` or `BEEP_OPENCLAW_HOST_CONFIG` and decodes it, turning a missing variable, an unreadable file, malformed JSON or a rejected value into a `ConfigError` before any resource is read (tested). Machine facts (SSH destination, tailnet name, legacy Compose root, workstation identity, backup target) are required fields; this stack's own conventions (container, network, volume and context names, ports 6006 and 8447, unit name) default to what the Compose deployment uses today. The files hold `op://` references only and live on the operator workstation outside the repo. The SSH agent socket is not a field: Docker's `ssh://` endpoint and the host steps both use the deploy process's `SSH_AUTH_SOCK`, which the runbook sets from the wrapped route.
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: Switch loadHostConfigFile to Config.schema over ConfigProvider.fromEnv with nested keys; the schemas stay the same.
+
+### No Pulumi state exists for AI metrics or OpenClaw; the host stacks adopt what is on the host, 2026-11-13
+
+Checked 2026-11-13 by the launching session: the Pulumi backend `s3://oip-law-pulumi-state` holds no stack for the AI metrics project and none for OpenClaw, so P4's cutover rule (export, then `pulumi destroy`) has nothing to act on for either; the programs describe deployments that exist on the hosts outside Pulumi state. Adoption therefore happens on the host, not in a state store. AI metrics: the data volume is looked up by name, the Compose container and unit are retired by the RetireCompose step, and the Tailscale Serve port state file is reused in place. OpenClaw: generations are content-addressed under the config root, so the first Alchemy apply writes a new generation directory beside any earlier ones and flips the `current` pointer through the same apply script; the snapshot and rollback paths are unchanged. The generation id changes once at this move, because the proof skill's recorded source path changed from `infra/src/OpenClawArtifacts.ts` to the new package. The Pulumi programs leave with `infra/` in P6; no `pulumi stack rm` is owed.
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: None needed: nothing is imported or destroyed in Pulumi. If a stack is later found in the backend, export it outside the repo and record it in a new decision before any pulumi destroy.
+
+### Host stacks: two Alchemy stacks, prod from the workstation only, every other stage a rehearsal, 2026-11-13
+
+`@beep/infra-hosts` holds two stacks, `HostsAiMetrics` (`packages/tooling/infra/infra-hosts/alchemy.run.ts`) and `HostsOpenClaw` (`packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts`): they target different machines (dankserver over SSH, the operator workstation under sudo), change on different cadences (a Phoenix image bump against an OpenClaw generation), and separate stacks keep separate S3 stage leases, so planning one never reads or locks the other. Stage `prod` is the only stage that mutates a real host. It runs from the operator workstation only (D21): both programs yield `WorkstationOnly` (`packages/tooling/infra/infra-hosts/src/HostsStage.ts`) before declaring a resource, a `Config` that fails with a `ConfigError` when `CI` is true, the inverse of the `Config.Literal("true", "CI")` guard the CI-deployed stacks use. The S3 store's stage lease is the overlap guard; there is no deploy workflow. Every other stage name is a rehearsal and may run anywhere: AI metrics deploys a throwaway Phoenix on stage-suffixed context, network, volume and container names on a separate loopback port, with no Compose retirement and no Tailscale Serve; OpenClaw renders the generation and declares no command. Tests: `packages/tooling/infra/infra-hosts/test/HostsStage.test.ts`, the CI cases in both stack tests.
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: Merge both programs into one stack in alchemy.run.ts, or drop the rehearsal branch so non-prod stages refuse; delete WorkstationOnly once a runner holds a scoped dankserver deploy key (Exception Ledger).
+
 ### One webhook per fleet routes jobs to every pool's build queue, 2026-11-13
 
 The live fleet runs one terraform module per pool, so the heavy and shard-overflow pools each have a webhook and a webhook secret. The port follows upstream's multi-runner design instead: one webhook Lambda per fleet holds a matcher per pool (labels, match mode, build-queue URL), tries strict matchers (bidirectional or all-of) before any-of ones and sends the job to the first match. Two pools therefore need one App webhook URL and one secret; the overflow pool's separate secret parameter is not carried over.
@@ -300,6 +332,22 @@ The live fleet runs one terraform module per pool, so the heavy and shard-overfl
 Lane goals/infra-alchemy-rebuild-p2-github-runners
 
 Reverse: Give each pool its own webhook Lambda and WebhookRuntimeConfig with a single matcher.
+
+### OpenClaw applicator steps become ordered Command.Exec resources; checks report by exit status, 2026-11-13
+
+The Pulumi program ran preflight, stage, apply, probe and an optional backup ship as `command.local.Command` resources with triggers, and exported the drift audit, live acceptance and rollback scripts as outputs plus each step's stdout as a secret output. `HostsOpenClaw` prod declares `Command.Exec` Preflight, Stage, Apply, Probe and (when `backup` is configured) BackupShip, in that order, each `shell: /bin/sh` over the rendered `/bin/bash --noprofile --norc -p -c '<program>'` script, with a 20-minute timeout on the long steps. Triggers map to the command text: every rendered script embeds what its Pulumi triggers listed (the generation id and tree for Stage, Apply, Probe and BackupShip; the declared identity for Preflight), and the memo hashes no files, so a step re-runs exactly when its rendered input changes. `Command.Exec` keeps no stdout and deletes nothing. That is not a gap here: every script fails closed with a non-zero exit (PREFLIGHT-FAIL, probe mismatches, BACKUP-FAIL receipts), which fails the deploy, and the step's stdout still streams to the deploy log. Nothing downstream consumed the stdout outputs. The drift audit, live acceptance and rollback stay operator commands, now stack outputs under `operatorCommands`, and the rollback command is the teardown, since `alchemy destroy` leaves the workstation untouched. `Command.Build` is not used: no step produces a file the stack consumes. The backup passphrase reaches the ship step only through the deploy process environment that `op run` builds, never through props or state (tested).
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: Replace each Exec with a repo-owned resource that captures stdout once a step's output must be kept; record the gap first (D16).
+
+### OpenClaw generation renderers move into @beep/infra-hosts; infra re-exports them until P6, 2026-11-13
+
+The pure generation model and every applicator script (about 2,300 lines from `infra/src/OpenClaw.ts`, plus `infra/src/OpenClawArtifacts.ts`) move to `@beep/infra-hosts/OpenClawGeneration` and `/OpenClawArtifacts`, so the Alchemy stack and the Pulumi program render from one copy. `infra/src/OpenClaw.ts` keeps only the Pulumi config mapping and component and re-exports the moved module; `infra/` gains a workspace dependency on `@beep/infra-hosts` and leaves in P6. Changes on the way: the backup target (`host`, `user`, `remoteDir`) loses its machine-specific defaults and is required wherever a backup is configured (the Pulumi mapping now requires the three config keys); messages that said `pulumi up` say `alchemy deploy`; doc examples decode the nested `OpenClawStackArgs` shape the stack's config file uses and name no real machine. The renderer tests moved with the code (`packages/tooling/infra/infra-hosts/test/OpenClawGeneration.test.ts`); the infra copy stays green until P6 deletes it.
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: Move src/OpenClawGeneration.ts and src/OpenClawArtifacts.ts back into infra/src and drop infra's @beep/infra-hosts dependency.
 
 ### Personal-stage live proof of the turbo cache, after the Cloudflare token gained R2 access, 2026-11-13
 
@@ -322,6 +370,14 @@ The hermetic equivalents run in CI: `bun run test:integration` in the package (w
 Lane goals/infra-alchemy-rebuild-p3-turbo-cache
 
 Reverse: n/a (evidence record; the stage was destroyed and verified gone).
+
+### Phoenix cutover: stop and replace the Compose container, keep and look up its data volume, 2026-11-13
+
+The live Phoenix container is Compose-managed, carries no Alchemy ownership labels, and `Docker.Container` recreates any adopted container whose config hash label is missing, so adopting it by name would replace it anyway. The stack therefore stops and replaces it and keeps the data. The RetireCompose step runs `systemctl --user disable --now ai-metrics-phoenix.service`; the unit's `ExecStop` is `docker compose down` without `-v`, which removes the container and the Compose network and keeps the named volume `beep-ai-metrics-dankserver_phoenix_data`. It moves the unit file into `<legacy config root>/retired-compose/`, reloads the user manager, refuses to continue if a Compose-labelled container named `beep-ai-metrics-phoenix` survived, and checks that the volume exists. The new container takes the same name and mounts the same volume at the same path, so Phoenix reads the same data. The volume is a `Docker.Volume.lookup`, not an adopted `Docker.Volume`: an adopted Compose volume carries Compose labels, `Volume`'s diff replaces (delete first) on any label difference, and the data is irreplaceable; a lookup is never deleted, and a missing volume fails the plan instead of mounting an empty one (tested). Downtime is the gap between `compose down` and the healthy container, about a minute. Rollback order matters because both containers share one name: save the `rollbackToCompose` operator command from the stack output, `alchemy destroy --stage prod` (removes the Alchemy container, network and context; the lookup leaves the volume alone), then run the saved command, which restores the archived unit and starts Compose against the same volume. Running it before the destroy would let the destroy delete the restored Compose container. Before the cutover the live session snapshots the volume with Phoenix stopped (runbook).
+
+Lane goals/infra-alchemy-rebuild-p4-hosts
+
+Reverse: Save operatorCommands.rollbackToCompose from the prod stack output, run alchemy destroy --stage prod (removes the Alchemy container, network and context; the looked-up volume stays), then run the saved command: it restores the archived unit and starts it, and docker compose up reattaches the same named volume.
 
 ### Pin @distilled.cloud/vercel at 1.0.0-rc.18, 2026-11-13
 
@@ -809,6 +865,133 @@ Lane goals/infra-alchemy-rebuild-p2-github-runners-fleet · PR #3314
 
 Reverse: Refuse jitConfig true on a non-ephemeral pool in the RunnerPool schema, with the default following ephemeral, and drop the user-data guard.
 
+### OipWeb adopts the live Vercel projects in place, 2026-11-14
+
+Ruled by the packet gate session, 2026-11-14: approved, a per-object exception to D12 in the spirit of D20, because it changes no setting, keeps ids, history and preview URLs, and leaves `vercel-deploy.yml` unedited, which the CI measurement window requires; every adopted object keeps `RemovalPolicy` protection, with a test that destroying a stage deletes none of them. The 2026-11-14 census found the live projects `oip-web` (prj_J5xqp5jg7POGvoIwOj7e1axpoPxb) and `oip-web-staging` (prj_orJn2nvxflBiJqPF0VWLOD0RFAzE) linked to `beep-effect/beep-effect` (Pulumi state still records the pre-transfer `kriegcloud/beep-effect`). A new project beside each (D12) would need a READY production build before the domain move, would put previews and history on new hostnames, and would force an edit of `vercel-deploy.yml`, whose `VERCEL_APPS` env names both project ids and which runs pull-request jobs. As built, `Vercel.Project` declares only `name` and `teamId`, so adoption sends no project setting at all (the window-5 decision lists what it can and cannot change). Every adopted object (project, three variables, domains, DNS records) carries `RemovalPolicy.protect()` on `prod` and `staging`; `test/stack/OipWebStack.test.ts` deploys each live stage over the seeded census, runs `destroy`, and asserts `ProtectedResource` with every adopted object and the bucket still present and no delete call made. Neither option costs anything on the Hobby team.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Declare a new project per stage (projectName oip-web-<stage>-new), add moveFrom with the live project id to each Vercel.Domain, edit the two projectId values in vercel-deploy.yml VERCEL_APPS, and forget the adopted project rows with alchemy state delete.
+
+### OipWeb assets buckets are new; the Pulumi buckets are empty and unread, 2026-11-14
+
+Ruled by the packet gate session, 2026-11-14: approved as built. `assets.oip.law` and `staging-assets.oip.law` hold 0 objects, 0 versions and 0 delete markers (census 2026-11-14), and no app, package or workflow reads or writes them. A new bucket therefore needs no copy and no reader switch, so D12's greenfield default applies at no cost: `oip-law-web-assets-prod` and `oip-law-web-assets-staging` (HeadBucket 404 on both names, so unclaimed), with the Pulumi baseline restated (versioning, AES256 with SSE-C blocked, full public-access block, BucketOwnerEnforced, DenyInsecureTransport policy) and `RemovalPolicy.protect()` on live stages; the deploy role also denies `s3:DeleteBucket` on both. S3 bills storage and requests only, so an empty bucket costs nothing. The Pulumi buckets are deleted empty at cutover after `pulumi state unprotect` on their five protected resources each.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Set assetsBucketName to assets.oip.law / staging-assets.oip.law in liveStageConfig (the S3 provider adopts silently by name), skip the Pulumi bucket destroy and pulumi state delete the five bucket resources instead.
+
+### OipWeb bootstrap: deploy role, environment, secrets and the Cloudflare grant, 2026-11-14
+
+Ruled by the packet gate session, 2026-11-14: it runs these commands itself when the PR is about to open; no lane runs them. `@beep/infra-github` adopts the environment, variable and secrets when it lands (D20). Run on the operator workstation with the aws-vault session alive; values are piped from 1Password and never printed.
+
+**1. Deploy role** (least privilege on the shared state store, matching the cost-controls deploy role: bucket-level reads only, object read, write and delete under the stack's own `OipWeb/` prefix; every action on the two assets buckets, `s3:DeleteBucket` denied on them). The packet gate session created it 2026-11-14 05:10Z with this policy. No bucket-config writes are needed because the plan step fails on a missing or outdated store; every object a deploy touches is `OipWeb/<stage>/...` (resource rows, `__stack_output__.json`, `__lease__.json`; the store version is a code constant, and bucket-policy calls exist only in `alchemy state migrate`):
+
+```sh
+export AWS_PROFILE=elpresidank-vault
+d="$HOME/.cache/beep/oip-web-bootstrap"; mkdir -p "$d"
+cat > "$d/trust.json" <<'JSON'
+{"Version":"2012-10-17","Statement":[{"Effect":"Allow","Principal":{"Federated":"arn:aws:iam::832907639880:oidc-provider/token.actions.githubusercontent.com"},"Action":"sts:AssumeRoleWithWebIdentity","Condition":{"StringEquals":{"token.actions.githubusercontent.com:aud":"sts.amazonaws.com","token.actions.githubusercontent.com:sub":"repo:beep-effect/beep-effect:environment:oip-web-infra-prod"}}}]}
+JSON
+cat > "$d/policy.json" <<'JSON'
+{"Version":"2012-10-17","Statement":[
+ {"Sid":"StateBucketRead","Effect":"Allow","Action":["s3:ListBucket","s3:GetBucketLocation","s3:GetBucketVersioning","s3:GetBucketOwnershipControls","s3:GetBucketPublicAccessBlock","s3:GetEncryptionConfiguration"],"Resource":"arn:aws:s3:::alchemy-state-832907639880-us-east-1-an"},
+ {"Sid":"StateObjects","Effect":"Allow","Action":["s3:GetObject","s3:PutObject","s3:DeleteObject"],"Resource":"arn:aws:s3:::alchemy-state-832907639880-us-east-1-an/OipWeb/*"},
+ {"Sid":"AssetsBuckets","Effect":"Allow","Action":"s3:*","Resource":["arn:aws:s3:::oip-law-web-assets-prod","arn:aws:s3:::oip-law-web-assets-prod/*","arn:aws:s3:::oip-law-web-assets-staging","arn:aws:s3:::oip-law-web-assets-staging/*"]},
+ {"Sid":"NeverDeleteAssetsBuckets","Effect":"Deny","Action":"s3:DeleteBucket","Resource":["arn:aws:s3:::oip-law-web-assets-prod","arn:aws:s3:::oip-law-web-assets-staging"]}
+]}
+JSON
+aws iam create-role --role-name beep-alchemy-oip-web-deploy \
+  --assume-role-policy-document "file://$d/trust.json" \
+  --tags Key=beep:owner,Value=infra-alchemy-rebuild Key=beep:stack,Value=OipWeb
+aws iam put-role-policy --role-name beep-alchemy-oip-web-deploy \
+  --policy-name oip-web-deploy --policy-document "file://$d/policy.json"
+aws iam get-role --role-name beep-alchemy-oip-web-deploy --query Role.Arn --output text
+```
+
+**2. Environment, branch policy, variable and secrets:**
+
+```sh
+R=beep-effect/beep-effect; E=oip-web-infra-prod
+gh api -X PUT "repos/$R/environments/$E" \
+  -F 'deployment_branch_policy[protected_branches]=false' \
+  -F 'deployment_branch_policy[custom_branch_policies]=true'
+gh api -X POST "repos/$R/environments/$E/deployment-branch-policies" -f name=main -f type=branch
+gh variable set OIP_WEB_DEPLOY_ROLE_ARN --env "$E" -R "$R" \
+  --body arn:aws:iam::832907639880:role/beep-alchemy-oip-web-deploy
+op read op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_VERCEL_TOKEN | gh secret set VERCEL_TOKEN --env "$E" -R "$R"
+op read op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ALCHEMY_TOKEN | gh secret set CLOUDFLARE_API_TOKEN --env "$E" -R "$R"
+op read op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ACCOUNT_ID | gh secret set CLOUDFLARE_ACCOUNT_ID --env "$E" -R "$R"
+op read op://BEEP_SECRETS/OIP_SECRETS/CRM_HUBSPOT_SERVICE_KEY | gh secret set CRM_HUBSPOT_SERVICE_KEY --env "$E" -R "$R"
+gh variable list --env "$E" -R "$R"; gh secret list --env "$E" -R "$R"
+```
+
+One `CRM_HUBSPOT_SERVICE_KEY` secret serves both stages: the packet gate session verified that the token equals the value both Pulumi stacks held. The repository variable `OIP_WEB_INFRA_DEPLOY` is not part of the bootstrap; arming is the separate deploy act in the window-5 decision (`gh variable set OIP_WEB_INFRA_DEPLOY -R beep-effect/beep-effect --body enabled`, after the token re-check and after telling the orchestrator the time).
+
+**3. Cloudflare grant on the Alchemy token** (`op://BEEP_SECRETS/BEEP_SECRETS/CLOUD_CLOUDFLARE_ALCHEMY_TOKEN`; never the account IaC token). The six records live in zones `oip.law` (id `144f81bdbe12b3a7530cdcc8d56b13cc`: `oip.law` A, `www.oip.law` CNAME, `staging.oip.law` CNAME) and `opip.law` (id `0d26e874202f4579081926dc38b3bf80`: `opip.law` A, `www.opip.law` CNAME, `staging.opip.law` CNAME). The token already reads both zones (`GET /zones/{zone_id}` returned 200) and is refused on their records (403). The first `prod` and `staging` deploys call, per record, `GET /zones/{zone_id}/dns_records?name.exact=<name>&type=<type>` at plan time and again in reconcile, and nothing else: content, TTL, proxy flag and the declared comment (`Managed by Pulumi for oip.law Vercel routing.`, the live text) all match, so the provider skips `PUT /zones/{zone_id}/dns_records/{id}`. `GET /zones/{zone_id}` is called only when a name lookup finds nothing. Needed now: **Zone · DNS · Read** (API permission group `DNS Read`) on both zones. Needed for any later record change (rewording the comment, a content change, a removal): **Zone · DNS · Edit** (API `DNS Write`) on the same zones. **Zone · Zone · Read** (API `Zone Read`) is already granted. Declaring no comment would not be a pure read: the provider then sends its default `Managed by Alchemy (<fqn>)`, which differs from the live comment and triggers the `PUT`.
+
+Checks after the bootstrap: the role ARN prints; the one variable and four secret names list; with the widened token, `GET /zones/{zone_id}/dns_records` returns 200 on both zones.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: gh variable delete OIP_WEB_INFRA_DEPLOY -R beep-effect/beep-effect; gh api -X DELETE repos/beep-effect/beep-effect/environments/oip-web-infra-prod; aws iam delete-role-policy --role-name beep-alchemy-oip-web-deploy --policy-name oip-web-deploy; aws iam delete-role --role-name beep-alchemy-oip-web-deploy; remove the oip.law and opip.law DNS grant from the Alchemy Cloudflare token.
+
+### OipWeb cutover procedure from Pulumi, 2026-11-14
+
+The procedure is the runbook's "Cutover from Pulumi" (`docs/runbooks/alchemy-infra.md`), executed by the packet gate session. Pulumi commands run from `infra/oip-web` as `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE op run -- pulumi <command>` with `AWS_PROFILE=elpresidank-vault` and `PULUMI_BACKEND_URL=s3://oip-law-pulumi-state` (the packet gate session found that this passphrase decrypts both stacks; the `BEEP_SECRETS` item's passphrase belongs to the runners stack). Steps: (1) read-only preconditions: the token at `op://BEEP_SECRETS/OIP_SECRETS/CRM_HUBSPOT_SERVICE_KEY` returns HTTP 200 and portal 246203876 from HubSpot's account-info endpoint (verified by the packet gate session 2026-11-14), and the Alchemy Cloudflare token lists the records of both zones; (2) `pulumi stack export` of both stacks archived under `~/.local/state/beep/infra-archives/pulumi-exports/` with size and sha256 in a decision file; (3) the bootstrap decision's commands; (4) Pulumi frozen; (5) immediately before arming, the account-info read repeated with the token the environment secret was set from, then the packet gate session tells the orchestrator the time and sets `OIP_WEB_INFRA_DEPLOY=enabled` itself; plans must match the expected-plan decision, smoke checks pass, a second dispatch plans no changes, drift exits 0; (6) `pulumi state delete` for every adopted object, then `pulumi state unprotect` and a targeted destroy of the empty old buckets, then `pulumi stack rm`. Expected visitor effect: none; no project, domain or DNS record changes, and the variables are rewritten with their current values, which reach new deployments only. Each step names its check and rollback in the runbook.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Before step 6: unset OIP_WEB_INFRA_DEPLOY and keep Pulumi as owner. After step 6, per stack: pulumi stack init <stack>; pulumi stack import --stack <stack> --file <archive>; pulumi refresh --stack <stack> --target <bucket urn> --target-dependents; pulumi up --stack <stack>.
+
+### OipWeb deploys from one armed workflow job; vercel-deploy.yml stays unedited, 2026-11-14
+
+`.github/workflows/deploy-oip-web-infra.yml`: push to `main` filtered to the stack, `apps/oip-web/package.json`, `bun.lock`, the Vercel provider source and the workflow itself, plus a bare `workflow_dispatch`; one GitHub-hosted job (`timeout-minutes: 30`), environment `oip-web-infra-prod`, concurrency `alchemy-oip-web-infra` (never cancelled). Per stage, `staging` then `prod`: plan teed to a log, `bun apps/oip-web/stack/plan-guard.ts` (refuses replace, delete or orphan of the project, a variable, a domain, a DNS record or a bucket, and fails closed on a log without a `Plan:` line, on an unreadable resource line and on summary counts that disagree with the listed lines, beep-reviewer round 1 on #3323; on `prod` and `staging` it also refuses every `create` outside an explicit allow-list, so a failed adoption of the project or a DNS record cannot create a second one, packet gate 2026-11-14), deploy, then a curl poll of every hostname against today's responses (200 apex, 308 or 307 redirects). The job runs only while the repository variable `OIP_WEB_INFRA_DEPLOY` is `enabled`, so merging deploys nothing; setting it is a deploy act the packet gate session performs after telling the orchestrator the time (window-5 decision). Provider secrets are step-level `env` on the four plan and deploy steps only (beep-reviewer round 1); setup, the plan guard and the smoke checks never see them. It uses a stack-scoped OIDC role (`OIP_WEB_DEPLOY_ROLE_ARN`) because the state role is state-only, the Alchemy Cloudflare token (never the account IaC token), and one `CRM_HUBSPOT_SERVICE_KEY` secret for both stages: the packet gate session verified 2026-11-14 that the token equals the value both Pulumi stacks held. No change to `check.yml`, `heavy.yml`, `setup-monorepo-ci`, runner labels or any pull-request job. Because the projects are adopted in place, `vercel-deploy.yml` keeps its project ids and is not edited.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Delete .github/workflows/deploy-oip-web-infra.yml and its ci-runner-security exemption line; unset the OIP_WEB_INFRA_DEPLOY repository variable.
+
+### OipWeb domains and DNS records are adopted per object and protected, 2026-11-14
+
+Ruled by the packet gate session, 2026-11-14: approved as built. Per D20 the six Vercel domains (`oip.law`, `www.oip.law`, `opip.law`, `www.opip.law` on prod; `staging.oip.law`, `staging.opip.law` on staging) and the six Cloudflare records Pulumi owns (ids matching state) carry `adopt(true)`. The records are adopted at plan time (their props are literals). The domains plan as `create`, because their `project` prop is the adopted project's output and is unresolved when the plan is made; at apply the engine still gates them on `adopt(true)` (without it the existing domain is refused with `OwnedBySomeoneElse`), and reconcile finds each domain already on the target project with equal routing and makes no mutating request (`packages/tooling/library/alchemy-vercel/test/CreatePath.test.ts`). With the project adopted in place the domains are already on the target project, so `moveFrom` is not needed. Redirect codes are kept (308 on prod, 307 on staging). Records declare their live content, `proxied: false`, automatic TTL and the live comment `Managed by Pulumi for oip.law Vercel routing.`: the Cloudflare provider writes a record only when a declared field differs, and an undeclared comment defaults to `Managed by Alchemy (<fqn>)`, so keeping the live text makes adoption a pure read (DNS Read only). Rewording the comment is a later, separate deploy that needs DNS Edit. Both kinds carry `RemovalPolicy.protect()` on live stages, and the plan guard refuses any replace, delete or orphan of either.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Remove adopt(true) and RemovalPolicy.protect from the Domain and DNS declarations and delete-then-create each record during a maintenance window instead.
+
+### OipWeb is not lane-affecting for CI window 5, on two binding conditions, 2026-11-14
+
+Ruled in advance by the CI window-5 owner, through the orchestrator, relayed by the packet gate session, 2026-11-14: the OIP web PR is not lane-affecting, on two binding conditions.
+
+**Condition 1: `vercel-deploy.yml` and the Vercel pull-request checks stay untouched, including after `OIP_WEB_INFRA_DEPLOY` is switched on.** The file is not edited by this PR or by the cutover. What the stack's adoption can change on the two projects (`oip-web`, `oip-web-staging`): on the project record itself, nothing. `Vercel.Project` declares only `name` and `teamId`, both equal to the live values, and the provider's `projectPatch` sends only declared fields that differ, so the adoption update sends an empty patch. Left undeclared, and therefore never sent: the git link (the project API cannot relink a repository anyway), the framework, the build and install commands, the root directory, the Node version, the system-variable exposure and deployment protection. `git.deploymentEnabled: false` lives in `apps/oip-web/vercel.json`, which no resource reads or writes. The project ids `vercel-deploy.yml` hard-codes (`VERCEL_ORG_ID` and the two `projectId` values in `VERCEL_APPS`) are kept: projects are adopted by name, `projectId` is a stable attribute, and a replace is refused twice, by `RemovalPolicy.protect()` in the engine and by the plan guard (`[Project] replace` fails `PlanRefused`). What the first deploy does change, under the projects: the three variables (planned `create`, because their `project` prop is the adopted project's output and unresolved at plan time; reconcile then edits the live variable in place, one write, no delete, no duplicate, `packages/tooling/library/alchemy-vercel/test/CreatePath.test.ts`) are rewritten with their current values (`NEXT_DISABLE_PWA` and `CRM_HUBSPOT_ACCOUNT_ID`, which preview builds read, were verified equal on both projects 2026-11-14 with booleans only; the production-only HubSpot token was verified equal by the packet gate session), and a variable write reaches new deployments only. Domains take the same create path and are left alone: each is already on the target project with equal routing, so reconcile makes no mutating request (same test file). DNS records are adopted at plan time and only read. The plan guard allows `create` on `prod` and `staging` only for an explicit allow-list (the assets bucket, the three variables and that stage's domains) and refuses a `create` of the project, a DNS record or any other resource, so a failed adoption of the project or a record can never become a second project or a duplicate record. After arming, the deploy workflow runs only on push to `main` (path-filtered) and dispatch, never on a pull request; it reads its own environment's secrets, not the repository `VERCEL_TOKEN`; and it shares no concurrency group with `vercel-deploy.yml`. Tests in `apps/oip-web/test/stack/OipWebStack.test.ts`: per live stage, adoption declares only `name` and `teamId`, every live project setting (framework, both commands, root directory, git link, protection, Node version, system variables) is unchanged afterwards, the adopted project id is the census id, and the DNS records are only read; a third test reads `.github/workflows/vercel-deploy.yml` and checks it hard-codes exactly those two project ids and the team id. `test/stack/PlanGuard.test.ts` covers the refusal of a project replace.
+
+**Condition 2: switching the variable on is a deploy act.** The runbook's arming step (`docs/runbooks/alchemy-infra.md`, "Cutover from Pulumi", step 5) says to tell the orchestrator the time beforehand; the packet gate session sets `OIP_WEB_INFRA_DEPLOY=enabled` itself, never a workflow or a lane. The workflow file states the same.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Re-declare any project field in OipWebStack.ts (and drop the pull-request-surface tests) only with a new ruling from the CI window-5 owner; arming stays the packet gate session's act.
+
+### OipWeb plans: the personal stage planned as designed; first prod and staging plans predicted, 2026-11-14
+
+Read-only `alchemy plan --stage dev_elpresidank --env-file /dev/null` from `apps/oip-web` (aws-vault credentials exported, provider tokens through `op run`), 2026-11-14, twice: first with the account IaC Cloudflare token, then, after the project and DNS declarations narrowed, with the Alchemy token the workflow uses. Both exited 0 with `Plan: 4 to create`: `[AssetsBucket]`, `[EnvHubSpotAccountId]`, `[EnvNextDisablePwa]` and `[Project]`, all stage-named (`oip-web-dev-elpresidank`, `oip-law-web-assets-dev-elpresidank`); nothing adopted, moved or modified; no deploy; the state bucket holds no `OipWeb/` object afterwards. CI-style plan lines carry a `[HH:MM:SS.mmm] INFO: ` prefix and a `Plan · <stage>` title line; the plan guard strips the prefix and reads the stage from the title (fixtures in `test/stack/PlanGuard.test.ts`).
+
+Corrected 2026-11-14 for the packet gate session (the first prediction of `1 to create, 12 to adopted` was wrong). The first plans, rendered by the engine itself against the seeded census in `apps/oip-web/test/stack/OipWebStack.test.ts` ("the first live plans pass the plan guard"), are `prod`: `Plan: 8 to create, 5 to adopted`, with `[Project]` and `[Dns-oip-law]`, `[Dns-opip-law]`, `[Dns-www-oip-law]`, `[Dns-www-opip-law]` adopted and `[AssetsBucket]`, `[Domain-oip-law]`, `[Domain-opip-law]`, `[Domain-www-oip-law]`, `[Domain-www-opip-law]`, `[EnvHubSpotAccountId]`, `[EnvHubSpotServiceKey]`, `[EnvNextDisablePwa]` create; `staging`: `Plan: 6 to create, 3 to adopted`, with `[Project]`, `[Dns-staging-oip-law]` and `[Dns-staging-opip-law]` adopted and `[AssetsBucket]`, `[Domain-staging-oip-law]`, `[Domain-staging-opip-law]` and the three variables create. Nothing is written while planning. The variables and domains plan as `create` because their `project` prop is the adopted project's output, which is unresolved when the plan is made, so the engine cannot read them for adoption; at apply it still gates each on `adopt(true)`. With the real providers over the in-memory Vercel API (`packages/tooling/library/alchemy-vercel/test/CreatePath.test.ts`): a domain already on the target project with equal routing gets no mutating request, and without `adopt(true)` it is refused with `OwnedBySomeoneElse`; an existing variable (literal `encrypted`, and sensitive `valueFrom`) gets exactly one `PATCH Env` on its own id, with the same key, type and targets, no `DELETE`, no `POST`, and stays the only variable with that key.
+
+Because the deploy job runs plan, guard and deploy unattended, the stop rule is code: on `prod` and `staging` the plan guard refuses every `create` outside an explicit allow-list (`prod`: `AssetsBucket`, `EnvNextDisablePwa`, `EnvHubSpotAccountId`, `EnvHubSpotServiceKey`, `Domain-oip-law`, `Domain-www-oip-law`, `Domain-opip-law`, `Domain-www-opip-law`; `staging`: the bucket, the three variables, `Domain-staging-oip-law`, `Domain-staging-opip-law`) with `PlanCreateRefused`, so a project or DNS record that fails to adopt can never be created a second time and a resource added to the stack later must be allow-listed deliberately. Personal stages create freely. `CRM_HUBSPOT_SERVICE_KEY` must be present at plan time: the stack reads it before declaring anything and `Vercel.EnvVar.diff` resolves it, so a missing key is a `ConfigError` before any write. Remaining stop signs for the reader of the run: any `replace`, `delete` or `orphaned` line (the guard and `RemovalPolicy.protect` both refuse it); `OwnedBySomeoneElse`, `EnvVarTypeNotApplied` or a Cloudflare 403; a `ConfigError` on `CI` or `CRM_HUBSPOT_SERVICE_KEY`; a second dispatch that plans anything but no changes.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: n/a (evidence record); a later plan that differs supersedes it with its own decision file.
+
+### OipWeb stages: prod and staging own the live objects, names are pinned, personal stages are fenced off, 2026-11-14
+
+`prod` and `staging` map to the Pulumi stacks `production` and `staging` and refuse to run without `CI=true`. Every physical name (project, bucket, hostnames, zone ids) is pinned in `apps/oip-web/stack/OipWebConfig.ts`; none is derived from a state-held instance id (the #3133 lesson). A personal stage (`dev_$USER`) gets `oip-web-<stage>` and `oip-law-web-assets-<stage>`, the two public variables, no domain, no DNS and no secret, and the `OipWebStackConfig` schema rejects a personal configuration that names a live project, a live or retiring bucket, a domain or the HubSpot secret source.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Collapse liveStageConfig into the Pulumi-style config file per stage and drop the schema fences; no live object depends on the shape.
+
 ### RunnerFleet declares each pool's RunnerLaunchTemplate from aws-extras, 2026-11-14
 
 With `@beep/alchemy-aws-extras` on `main` (#3292), `RunnerFleet` declares one `RunnerLaunchTemplate` per pool instead of taking a caller-built template id. The composite sets what it owns: the pool instance profile, the rendered user data, and metadata options that require IMDSv2 with instance metadata tags enabled (the user data reads `ghr:token_path` from them, hop limit 1 as upstream). The caller passes `launchTemplate`, a `Pick` of `RunnerLaunchTemplateProps` (`imageId`, `securityGroupIds`, `associatePublicIpAddress`, `blockDeviceMappings`, `ebsOptimized`, `tags`); instance types and Spot or on-demand capacity stay per launch in scale-up `CreateFleet`. Scale-up launches the template default version as a number, which the provider moves on every update, so a template change also rolls the scale-up runtime config. The earlier typed-input decision for this lane never merged and is replaced by this one.
@@ -816,6 +999,14 @@ With `@beep/alchemy-aws-extras` on `main` (#3292), `RunnerFleet` declares one `R
 Lane goals/infra-alchemy-rebuild-p2-github-runners-composite
 
 Reverse: Restore a caller-supplied launchTemplate(spec) effect returning a template id and version, built from a RunnerLaunchSpec the composite hands out.
+
+### Vercel.EnvVar gains valueFrom so a secret never enters Alchemy state, 2026-11-14
+
+Accepted by the packet gate session, 2026-11-14; the PR body says it changes a merged library and why. Alchemy writes a `Redacted` prop as `{ "__redacted__": <plain text> }` in state (`alchemy/src/State/StateEncoding.ts`), so `EnvVar.value` put any secret in the state bucket in clear JSON, protected only by SSE-KMS at rest. `EnvVarProps` now takes exactly one of `value` (non-secret) and `valueFrom: { config }`; the provider reads the config key inside `diff` and `reconcile` (`Config.Redacted`), sends it only to Vercel, and stores `valueDigest` (SHA-256 hex, `effect/crypto/Digest`) so a rotated value plans an update. Neither or both fails with `EnvVarValueMissing`. Package tests prove the secret is absent from persisted state, that a literal `value` is present (the control), and that rotation is detected. The digest is unsalted: fine for a high-entropy token, guessable for a short value. The OipWeb stack uses `valueFrom` for `CRM_HUBSPOT_SERVICE_KEY`.
+
+Lane goals/infra-alchemy-rebuild-p4-oip-web
+
+Reverse: Remove valueFrom and valueDigest from @beep/alchemy-vercel EnvVar and pass secrets as value again, accepting plain text in the KMS-encrypted state bucket.
 
 <!-- beep:decisions:end -->
 

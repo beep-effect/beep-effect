@@ -1,4 +1,4 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import {
   checkFinalCheckRefresh,
@@ -10,7 +10,9 @@ import {
   FinalCheckStatusDrift,
   finalCheckPatchIdentityDigest,
   finalCheckRefreshAllowance,
+  findFinalCheckRefreshReceipt,
   layerYeetHeadMoveClassifierTest,
+  PATCH_IDENTITY_DIFF_FLAGS,
   runGitFoldedStdout,
   YeetHeadMoveChanged,
   YeetHeadMoveClassifier,
@@ -838,6 +840,289 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         yield* writeFile(s.root, `${FINAL_CHECK_RECEIPT_DIR}/${s.l2}.json`, "broken");
         const result = yield* checkRewrite(s.root, s.squash, s.c2, s.squash);
         expect(O.getOrThrow(result)).toMatchObject({ _tag: "refused", receiptHead: s.l2, reason: "malformed-receipt" });
+      })
+    );
+  }
+);
+
+const initRepo = Effect.fn("FinalCheckRefreshTest.initRepo")(function* (prefix: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix });
+  const run = (args: ReadonlyArray<string>) => git(repoRoot, args);
+  yield* run(["init", "--quiet", "-b", "main"]);
+  yield* run(["config", "user.email", "final-check-refresh@example.invalid"]);
+  yield* run(["config", "user.name", "Final Check Refresh Test"]);
+  yield* run(["config", "commit.gpgsign", "false"]);
+  yield* writeFile(repoRoot, ".gitignore", ".beep/\n");
+  return repoRoot;
+});
+
+// Commits the index as it stands: `git add --all` would stage an unpopulated gitlink's deletion.
+const commitIndex = Effect.fn("FinalCheckRefreshTest.commitIndex")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
+) {
+  yield* git(repoRoot, ["commit", "--quiet", ...args]);
+  return yield* git(repoRoot, ["rev-parse", "HEAD"]);
+});
+
+const GITLINK = "sub";
+
+// Points the gitlink at a commit that need not exist: the superproject records only its sha.
+const moveGitlink = (repoRoot: string, digit: string) =>
+  git(repoRoot, ["update-index", "--add", "--cacheinfo", `160000,${Str.repeat(40)(digit)},${GITLINK}`]);
+
+// The two ways a checkout hides a moved gitlink from `git diff`.
+const gitlinkHiding = [
+  {
+    label: "diff.ignoreSubmodules=all in git config",
+    hide: (repoRoot: string) => git(repoRoot, ["config", "diff.ignoreSubmodules", "all"]),
+  },
+  {
+    label: "a checked-out .gitmodules entry with ignore = all",
+    hide: (repoRoot: string) =>
+      writeFile(
+        repoRoot,
+        ".gitmodules",
+        `[submodule "${GITLINK}"]\n\tpath = ${GITLINK}\n\turl = ./${GITLINK}\n\tignore = all\n`
+      ),
+  },
+];
+
+const makeGitlinkBase = Effect.fn("FinalCheckRefreshTest.makeGitlinkBase")(function* (
+  hide: (typeof gitlinkHiding)[number]["hide"]
+) {
+  const repoRoot = yield* initRepo("final-check-refresh-gitlink-");
+  yield* hide(repoRoot);
+  yield* git(repoRoot, ["add", "--all"]);
+  yield* moveGitlink(repoRoot, "1");
+  yield* commitIndex(repoRoot, ["-m", "main 0"]);
+  yield* git(repoRoot, ["switch", "--quiet", "-c", "lane"]);
+  return repoRoot;
+});
+
+// 300 numbered lines; the lane and main each retag one of them, keeping every line's length.
+const editedLines = (laneAt: number, mainAt: number, laneTag = "lane") =>
+  `${A.join(
+    A.map(A.range(100, 399), (n) => `line ${n} ${n === laneAt ? laneTag : n === mainAt ? "main" : "base"}`),
+    "\n"
+  )}\n`;
+
+const makeEditLane = Effect.fn("FinalCheckRefreshTest.makeEditLane")(function* (
+  file: string,
+  laneAt: number,
+  mainAt: number
+) {
+  const repoRoot = yield* initRepo("final-check-refresh-edit-");
+  const run = (args: ReadonlyArray<string>) => git(repoRoot, args);
+  yield* writeFile(repoRoot, file, editedLines(0, 0));
+  yield* commitAll(repoRoot, "main 0");
+  yield* run(["switch", "--quiet", "-c", "lane"]);
+  yield* writeFile(repoRoot, file, editedLines(laneAt, 0));
+  const receiptHead = yield* commitAll(repoRoot, "lane: edit");
+  yield* writeReceipt(repoRoot, receiptFor(receiptHead));
+  yield* run(["switch", "--quiet", "main"]);
+  yield* writeFile(repoRoot, file, editedLines(0, mainAt));
+  yield* commitAll(repoRoot, "main 1");
+  yield* run(["switch", "--quiet", "lane"]);
+  yield* run(["merge", "--quiet", "--no-ff", "--no-edit", "main"]);
+  const mergeHead = yield* run(["rev-parse", "HEAD"]);
+  return { repoRoot, receiptHead, mergeHead };
+});
+
+const HOSTILE_ATTRIBUTES = ".git/hostile.attributes";
+
+// Every setting here changes what an unpinned `git diff` prints. `diff.relative` is a no-op at the
+// top level and stays in to prove it; the `hostile` driver reaches every path through the
+// attributes file.
+const hostileConfig = (repoRoot: string): ReadonlyArray<readonly [string, string]> => [
+  ["color.ui", "always"],
+  ["color.diff", "always"],
+  ["diff.renames", "copies"],
+  ["diff.relative", "true"],
+  ["diff.ignoreSubmodules", "all"],
+  ["diff.submodule", "log"],
+  ["diff.external", "true"],
+  ["diff.noprefix", "true"],
+  ["diff.mnemonicPrefix", "true"],
+  ["diff.context", "0"],
+  ["diff.interHunkContext", "10"],
+  ["diff.algorithm", "histogram"],
+  ["diff.indentHeuristic", "false"],
+  ["core.abbrev", "4"],
+  ["core.attributesFile", `${repoRoot}/${HOSTILE_ATTRIBUTES}`],
+  ["diff.hostile.textconv", "cksum <"],
+  ["diff.hostile.binary", "true"],
+  ["diff.hostile.algorithm", "patience"],
+];
+
+const writeHostileAttributes = (repoRoot: string) => writeFile(repoRoot, HOSTILE_ATTRIBUTES, "* diff=hostile\n");
+
+const configureHostile = Effect.fn("FinalCheckRefreshTest.configureHostile")(function* (repoRoot: string) {
+  yield* writeHostileAttributes(repoRoot);
+  yield* Effect.forEach(hostileConfig(repoRoot), ([key, value]) => git(repoRoot, ["config", key, value]), {
+    discard: true,
+  });
+});
+
+const collectText = <E>(stdout: Stream.Stream<Uint8Array, E>) => stdout.pipe(Stream.decodeText, Stream.mkString);
+
+// Each fixture makes one pin visible: myers against histogram and patience, the indent heuristic,
+// and two hunks that `diff.interHunkContext=10` would join.
+const PATCH_FIXTURES = [
+  { path: "algo.txt", before: "x\ncommon\ny\ncommon\nz\n", after: "common\nx\ny\nz\ncommon\n" },
+  { path: "indent.txt", before: "f() {\nf() {\n  x\n", after: "f() {\nf() {\nf() {\n  x\n" },
+  {
+    path: "hunks.txt",
+    before: "a\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nn\n",
+    after: "A\nb\nc\nd\ne\nf\ng\nh\ni\nj\nk\nl\nm\nN\n",
+  },
+];
+
+it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "120 seconds" })(
+  "final-check refresh reads fail closed",
+  (it) => {
+    for (const { label, hide } of gitlinkHiding) {
+      it.effect(`refuses a gitlink the lane moved after the receipt under ${label}`, () =>
+        Effect.gen(function* () {
+          const repoRoot = yield* makeGitlinkBase(hide);
+          const receiptHead = yield* commitIndex(repoRoot, ["--allow-empty", "-m", "lane: receipt"]);
+          yield* writeReceipt(repoRoot, receiptFor(receiptHead));
+          yield* moveGitlink(repoRoot, "2");
+          const finalHead = yield* commitIndex(repoRoot, ["-m", "lane: move the gitlink"]);
+          const verdict = yield* refreshAt(repoRoot, finalHead);
+          assertTrue(verdict._tag === "refused");
+          expect(verdict.reason).toBe("own-change-outside-allowlist");
+          expect(ownPaths(verdict)).toEqual([GITLINK]);
+        })
+      );
+
+      it.effect(`refuses a lane gitlink patch that changed after main moved it under ${label}`, () =>
+        Effect.gen(function* () {
+          const repoRoot = yield* makeGitlinkBase(hide);
+          yield* moveGitlink(repoRoot, "2");
+          const receiptHead = yield* commitIndex(repoRoot, ["-m", "lane: move the gitlink"]);
+          yield* writeReceipt(repoRoot, receiptFor(receiptHead));
+          yield* git(repoRoot, ["switch", "--quiet", "main"]);
+          yield* moveGitlink(repoRoot, "3");
+          yield* commitIndex(repoRoot, ["-m", "main 1: move the gitlink"]);
+          yield* git(repoRoot, ["switch", "--quiet", "lane"]);
+          const merge = yield* runRepoCommandCapture("git", ["merge", "--no-ff", "--no-edit", "main"], repoRoot);
+          expect(merge.exitCode).toBe(1);
+          yield* moveGitlink(repoRoot, "4");
+          const finalHead = yield* commitIndex(repoRoot, ["--no-edit"]);
+          const verdict = yield* refreshAt(repoRoot, finalHead);
+          assertTrue(verdict._tag === "refused");
+          expect(verdict.reason).toBe("own-change-outside-allowlist");
+          expect(ownPaths(verdict)).toEqual([GITLINK]);
+        })
+      );
+    }
+
+    it.effect("carries an unchanged patch the same way under a hostile git config", () =>
+      Effect.gen(function* () {
+        const { repoRoot, receiptHead, mergeHead } = yield* makeEditLane("src/edited.ts", 110, 390);
+        const clean = yield* refreshAt(repoRoot, mergeHead);
+        assertTrue(clean._tag === "pass");
+        yield* configureHostile(repoRoot);
+        const hostile = yield* refreshAt(repoRoot, mergeHead);
+        assertTrue(hostile._tag === "pass");
+        expect(hostile.receipt.headSha).toBe(receiptHead);
+        expect(ownPaths(hostile)).toEqual([]);
+      })
+    );
+
+    it.effect("refuses a patch whose context main changed, under a hostile git config too", () =>
+      Effect.gen(function* () {
+        const { repoRoot, mergeHead } = yield* makeEditLane("src/edited.ts", 252, 250);
+        const clean = yield* refreshAt(repoRoot, mergeHead);
+        assertTrue(clean._tag === "refused");
+        yield* configureHostile(repoRoot);
+        const hostile = yield* refreshAt(repoRoot, mergeHead);
+        assertTrue(hostile._tag === "refused");
+        expect(hostile.reason).toBe("own-change-outside-allowlist");
+        expect(ownPaths(hostile)).toEqual(["src/edited.ts"]);
+      })
+    );
+
+    it.effect("reads a path shaped like pathspec magic literally", () =>
+      Effect.gen(function* () {
+        // Read as magic, `:(top)a` names the absent top-level `a`, so both patches would be empty.
+        const magic = ":(top)a";
+        const { repoRoot } = yield* makeEditLane(magic, 110, 390);
+        yield* writeFile(repoRoot, magic, editedLines(110, 390, "edit"));
+        const finalHead = yield* commitAll(repoRoot, "lane: edit after the receipt");
+        const verdict = yield* refreshAt(repoRoot, finalHead);
+        assertTrue(verdict._tag === "refused");
+        expect(ownPaths(verdict)).toEqual([magic]);
+      })
+    );
+
+    it.effect("prints the same patch bytes under a hostile git config as under a clean one", () =>
+      Effect.gen(function* () {
+        const repoRoot = yield* initRepo("final-check-refresh-bytes-");
+        yield* Effect.forEach(PATCH_FIXTURES, ({ path, before }) => writeFile(repoRoot, path, before), {
+          discard: true,
+        });
+        yield* git(repoRoot, ["add", "--all"]);
+        yield* moveGitlink(repoRoot, "1");
+        const from = yield* commitIndex(repoRoot, ["-m", "before"]);
+        yield* Effect.forEach(PATCH_FIXTURES, ({ path, after }) => writeFile(repoRoot, path, after), {
+          discard: true,
+        });
+        yield* git(repoRoot, ["add", "--", ...A.map(PATCH_FIXTURES, ({ path }) => path)]);
+        yield* moveGitlink(repoRoot, "2");
+        const to = yield* commitIndex(repoRoot, ["-m", "after"]);
+        yield* writeHostileAttributes(repoRoot);
+        const hostile = A.flatMap(hostileConfig(repoRoot), ([key, value]) => ["-c", `${key}=${value}`]);
+        const read = (config: ReadonlyArray<string>, path: string) =>
+          runGitFoldedStdout(
+            repoRoot,
+            [...config, "--literal-pathspecs", "diff", ...PATCH_IDENTITY_DIFF_FLAGS, from, to, "--", path],
+            collectText
+          );
+        yield* Effect.forEach(
+          [GITLINK, ...A.map(PATCH_FIXTURES, ({ path }) => path)],
+          Effect.fnUntraced(function* (path) {
+            const clean = yield* read([], path);
+            const underHostile = yield* read(hostile, path);
+            assertInclude(clean, `diff --git a/${path} b/${path}`);
+            expect(underHostile).toBe(clean);
+          }),
+          { discard: true }
+        );
+      })
+    );
+
+    it.effect("chooses no receipt when a nearer receipt's distance cannot be read", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "final-check-refresh-distance-" });
+        const [near, far, finalHead] = [Str.repeat(40)("a"), Str.repeat(40)("b"), Str.repeat(40)("f")];
+        yield* writeFile(repoRoot, `${FINAL_CHECK_RECEIPT_DIR}/${near}.json`, "{}");
+        yield* writeFile(repoRoot, `${FINAL_CHECK_RECEIPT_DIR}/${far}.json`, "{}");
+        const distances = (unreadable: string) =>
+          Git.layerTest({
+            isAncestor: () => Effect.succeed(true),
+            revListCount: (cwd, range) =>
+              range === `${unreadable}..${finalHead}`
+                ? Effect.fail(
+                    GitCommandError.make({
+                      kind: "failed",
+                      args: ["rev-list"],
+                      cwd,
+                      stderr: "",
+                      detail: "spawn EAGAIN",
+                    })
+                  )
+                : Effect.succeed(Str.startsWith(near)(range) ? 1 : 9),
+          });
+        const readable = yield* Layer.build(distances("none"));
+        const nearest = yield* findFinalCheckRefreshReceipt(repoRoot, finalHead).pipe(Effect.provideContext(readable));
+        assertSome(nearest, near);
+        const unreadable = yield* Layer.build(distances(near));
+        const chosen = yield* findFinalCheckRefreshReceipt(repoRoot, finalHead).pipe(Effect.provideContext(unreadable));
+        assertNone(chosen);
       })
     );
   }

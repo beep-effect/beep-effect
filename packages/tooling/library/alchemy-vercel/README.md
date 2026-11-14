@@ -11,7 +11,6 @@ conventions so it can go upstream.
 ```ts
 import * as Vercel from "@beep/alchemy-vercel"
 import { adopt } from "alchemy/AdoptPolicy"
-import * as Config from "effect/Config"
 import * as Effect from "effect/Effect"
 
 export const program = Effect.gen(function* () {
@@ -29,7 +28,8 @@ export const program = Effect.gen(function* () {
     project: project.projectId,
     teamId: "team_123",
     key: "API_KEY",
-    value: yield* Config.Redacted("API_KEY"),
+    // Read at deploy time (for example from `op run`); never written to state.
+    valueFrom: { config: "API_KEY" },
     targets: ["production"],
     type: "sensitive",
   })
@@ -57,9 +57,13 @@ profile; pass the token through `op run`.
   team. The API links a repository only at creation, so adopting a project
   linked to another repository (path or git provider) fails with
   `ProjectRepositoryMismatch`.
-- `EnvVar`: the value is `Redacted` and is never an attribute; every update
-  writes the declared value. A variable with the same key and branch on any
-  overlapping target counts as existing, because Vercel's upsert would
+- `EnvVar`: give `value` or `valueFrom`, never both. Alchemy persists a
+  `Redacted` prop's plain text in state, so `value` is for non-secret values
+  only; a secret uses `valueFrom: { config: "<KEY>" }`, which the provider
+  reads at deploy time. State then holds the key name and the value's SHA-256
+  (`valueDigest`), and a changed digest plans an update. The value is never an
+  attribute; every update writes the declared value. A variable with the same
+  key and branch on any overlapping target counts as existing, because Vercel's upsert would
   overwrite it. Storage types rank `plain` < `encrypted` <
   `sensitive`, and `type` is a minimum: a stored type that is equal or stronger
   satisfies it. Some teams store Production and Preview variables as

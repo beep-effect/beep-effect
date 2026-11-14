@@ -1,8 +1,16 @@
 # Vercel deploys
 
-The Vercel apps (`todox`, `oip-web` and the Pulumi-managed `oip-web-staging`)
-deploy from GitHub Actions, not from Vercel's Git integration. The workflow is
+The Vercel apps (`todox`, `oip-web` and `oip-web-staging`) deploy from GitHub
+Actions, not from Vercel's Git integration. The workflow is
 `.github/workflows/vercel-deploy.yml`.
+
+This workflow owns builds only. The configuration around the two oip.law
+projects (project settings, environment variables, domains, their Cloudflare DNS
+records and the assets buckets) moves from the Pulumi project `opip-web` to the
+`OipWeb` Alchemy stack (`apps/oip-web/alchemy.run.ts`; runbook
+[Alchemy infrastructure](alchemy-infra.md#oipweb-oiplaw)). The stack adopts the
+live projects in place, so the project ids in this workflow do not change and
+the cutover never edits it.
 
 ## Why Git-triggered deploys are off
 

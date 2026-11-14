@@ -15,8 +15,11 @@ import { isResolved } from "alchemy/Diff";
 import * as Provider from "alchemy/Provider";
 import { Resource } from "alchemy/Resource";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Equivalence from "effect/Equivalence";
+import { pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -127,15 +130,62 @@ export const EnvKey = S.String.check(
 export type EnvKey = typeof EnvKey.Type;
 
 /**
+ * Where a secret {@link EnvVar} value comes from at deploy time.
+ *
+ * **Details**
+ *
+ * `config` names an `effect/Config` key (an environment variable under the
+ * default provider, for example one `op run` resolves from an `op://`
+ * reference). The provider reads it inside `diff` and `reconcile`, so only the
+ * key name sits in props and state, never the value.
+ *
+ * **Example** (Read the value from the environment)
+ *
+ * ```ts
+ * import { EnvVarValueSource } from "@beep/alchemy-vercel/EnvVar"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(EnvVarValueSource)({ config: "HUBSPOT_TOKEN" })) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const EnvVarValueSource = S.Struct({
+  config: EnvKey.annotateKey({ description: "Config key read at deploy time; its value is never stored." }),
+}).pipe(
+  $I.annoteSchema("EnvVarValueSource", {
+    description: "Deploy-time source of an environment variable value that is kept out of Alchemy state.",
+  })
+);
+
+/**
+ * Type-level member of {@link EnvVarValueSource}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type EnvVarValueSource = typeof EnvVarValueSource.Type;
+
+/**
  * Props of {@link EnvVar}.
  *
  * **Details**
  *
- * `value` is `Redacted`: Alchemy keeps it wrapped in state and logs, and the
- * provider unwraps it only to build the request body. A `gitBranch` scopes
+ * Give exactly one of `value` and `valueFrom`. `value` is `Redacted` in logs,
+ * but Alchemy persists a `Redacted` prop's plain text in state (inside a
+ * `__redacted__` envelope), so use it only for values that are not secret.
+ * `valueFrom` names a config key the provider reads at deploy time; state
+ * holds the key name and, as the attribute `valueDigest`, the SHA-256 of the
+ * value, which is how a rotated value plans an update. A `gitBranch` scopes
  * the variable to one preview branch and requires `targets` to be exactly
  * `["preview"]`. Changing `project`, `teamId` or `type` replaces the
  * variable; everything else updates it in place.
+ *
+ * **Gotchas**
+ *
+ * The digest is unsalted. It is safe for a high-entropy token and can be
+ * brute-forced for a short or guessable value.
  *
  * **Example** (A sensitive production variable)
  *
@@ -161,7 +211,12 @@ export const EnvVarProps = S.Struct({
   project: S.NonEmptyString.annotateKey({ description: "Id or name of the project that holds the variable." }),
   teamId: S.optionalKey(S.NonEmptyString.annotateKey({ description: "Team that owns the project." })),
   key: EnvKey,
-  value: S.Redacted(S.String).annotateKey({ description: "Variable value, redacted in state and logs." }),
+  value: S.optionalKey(
+    S.Redacted(S.String).annotateKey({
+      description: "Variable value; redacted in logs, persisted in state. Not for secrets.",
+    })
+  ),
+  valueFrom: S.optionalKey(EnvVarValueSource),
   targets: S.NonEmptyArray(EnvTarget).annotateKey({ description: "Deployment environments that receive the value." }),
   type: S.optionalKey(EnvVarType.annotateKey({ description: "Storage type; defaults to `encrypted`." })),
   gitBranch: S.optionalKey(S.NonEmptyString.annotateKey({ description: "Preview branch the variable is scoped to." })),
@@ -247,6 +302,9 @@ export class EnvVarAttributes extends S.Opaque<EnvVarAttributes, { readonly bran
     type: S.String,
     targets: S.Array(S.String),
     gitBranch: S.optionalKey(S.String),
+    valueDigest: S.optionalKey(
+      S.String.annotateKey({ description: "SHA-256 (hex) of a `valueFrom` value; absent for literal values." })
+    ),
   }).pipe(
     $I.annoteSchema("EnvVarAttributes", {
       description: "Observed state of a Vercel environment variable, without its value.",
@@ -290,6 +348,33 @@ export class EnvVarTypeNotApplied extends S.TaggedError<EnvVarTypeNotApplied, { 
 ) {}
 
 /**
+ * Raised when an {@link EnvVar} declares neither or both of `value` and `valueFrom`.
+ *
+ * **Example** (Describe the failure)
+ *
+ * ```ts
+ * import { EnvVarValueMissing } from "@beep/alchemy-vercel/EnvVar"
+ *
+ * const error = EnvVarValueMissing.make({ key: "API_KEY" })
+ * console.log(error._tag) // "EnvVarValueMissing"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class EnvVarValueMissing extends S.TaggedError<EnvVarValueMissing, { readonly brand: unique symbol }>(
+  $I`EnvVarValueMissing`
+)(
+  "EnvVarValueMissing",
+  {
+    key: S.String.annotateKey({ description: "The variable's key." }),
+  },
+  $I.annoteError<EnvVarValueMissing>("EnvVarValueMissing", {
+    description: "An environment variable declared neither or both of value and valueFrom.",
+  })
+) {}
+
+/**
  * Resource type of {@link EnvVar}.
  *
  * @category resources
@@ -308,22 +393,21 @@ const EnvVarClass = Resource<EnvVar>("Vercel.EnvVar");
  * Variables carry no ownership marker, so one this stack did not create
  * reads as foreign and needs `adopt(true)`; adopting overwrites its value.
  * Sensitive values cannot be read back, so drift in a value made outside
- * the stack is not detected; every update writes the declared value.
+ * the stack is not detected; every update writes the declared value. A
+ * secret belongs in `valueFrom`, which keeps the value out of state.
  *
- * **Example** (Sensitive production variable from config)
+ * **Example** (Sensitive production variable read at deploy time)
  *
  * ```ts
  * import * as Vercel from "@beep/alchemy-vercel"
- * import * as Config from "effect/Config"
  * import * as Effect from "effect/Effect"
  *
  * export const program = Effect.gen(function* () {
  *   const project = yield* Vercel.Project("Web", { name: "web" })
- *   const token = yield* Config.Redacted("HUBSPOT_TOKEN")
  *   yield* Vercel.EnvVar("HubSpotToken", {
  *     project: project.projectId,
  *     key: "HUBSPOT_TOKEN",
- *     value: token,
+ *     valueFrom: { config: "HUBSPOT_TOKEN" },
  *     targets: ["production"],
  *     type: "sensitive"
  *   })
@@ -432,11 +516,53 @@ const isWeaker = (stored: string, declared: EnvVarType): boolean => strengthOf(s
 const storedTypeWeaker = (news: EnvVarProps, output: EnvVarAttributes | undefined): boolean =>
   output !== undefined && isWeaker(output.type, news.type ?? EnvVarType.Enum.encrypted);
 
-const requestBody = (news: EnvVarProps) =>
+/**
+ * The declared value: the literal `value`, or the config key `valueFrom` names, read now.
+ *
+ * @param news - The declared props.
+ * @returns The value, still redacted.
+ */
+const resolveValue = Effect.fn("Vercel.EnvVar.resolveValue")(function* (news: EnvVarProps) {
+  if (news.value !== undefined && news.valueFrom === undefined) return news.value;
+  if (news.value === undefined && news.valueFrom !== undefined) {
+    return yield* Config.Redacted(news.valueFrom.config);
+  }
+  return yield* EnvVarValueMissing.make({ key: news.key });
+});
+
+/**
+ * SHA-256 (lowercase hex) of a `valueFrom` value; `None` for a literal `value`, whose
+ * change the engine already sees as a prop change.
+ *
+ * @param news - The declared props.
+ * @param value - The resolved value.
+ * @returns The digest to keep as the `valueDigest` attribute.
+ */
+const valueDigestOf = Effect.fn("Vercel.EnvVar.valueDigest")(function* (
+  news: EnvVarProps,
+  value: Redacted.Redacted<string>
+) {
+  if (news.valueFrom === undefined) return O.none<string>();
+  const digest = yield* Digest.Digest;
+  const hex = yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(Redacted.value(value)));
+  return O.some(hex);
+});
+
+/**
+ * The observed attributes, carrying the stored `valueDigest` forward: a read never sees the value.
+ *
+ * @param state - The variable as Vercel lists it.
+ * @param digest - The digest to keep.
+ * @returns The attributes with the digest.
+ */
+const withDigest = (state: EnvVarAttributes, digest: O.Option<string>): EnvVarAttributes =>
+  EnvVarAttributes.make({ ...state, ...O.getSomesStruct({ valueDigest: digest }) });
+
+const requestBody = (news: EnvVarProps, value: Redacted.Redacted<string>) =>
   S.encodeEffect(EnvVarRequestBody)(
     EnvVarRequestBody.make({
       key: news.key,
-      value: Redacted.value(news.value),
+      value: Redacted.value(value),
       type: news.type ?? EnvVarType.Enum.encrypted,
       target: news.targets,
       ...O.getSomesStruct({
@@ -487,6 +613,62 @@ const writeEnv = Effect.fn("Vercel.EnvVar.write")(function* (
 });
 
 /**
+ * The declared or default storage type.
+ *
+ * @param props - Props of the variable.
+ * @returns Its storage type, `encrypted` when omitted.
+ */
+const storageTypeOf = (props: EnvVarProps): EnvVarType => props.type ?? EnvVarType.Enum.encrypted;
+
+/**
+ * Read the `valueFrom` config key of declared props whose other inputs may not be resolved yet.
+ *
+ * **Details**
+ *
+ * `valueFrom` is always a literal, so it is decoded from the raw props; the read fails with the
+ * config error when the key is missing, and does nothing for a literal `value`.
+ *
+ * @param news - The declared props, possibly holding unresolved outputs.
+ * @returns An effect that fails when the `valueFrom` key cannot be read.
+ */
+const readValueSourceWhilePlanning = Effect.fn("Vercel.EnvVar.readValueSourceWhilePlanning")(function* (news: unknown) {
+  const source = pipe(
+    O.liftPredicate(news, P.hasProperty("valueFrom")),
+    O.flatMap((props) => S.decodeUnknownOption(EnvVarValueSource)(props.valueFrom))
+  );
+  if (O.isSome(source)) yield* Config.Redacted(source.value.config);
+});
+
+/**
+ * Whether a change replaces the variable: another project, team or storage type.
+ *
+ * @param news - The declared props.
+ * @param olds - The props of the deployed generation.
+ * @returns `true` when the variable must be replaced.
+ */
+const replacesEnvVar = (news: EnvVarProps, olds: EnvVarProps): boolean =>
+  news.project !== olds.project || news.teamId !== olds.teamId || storageTypeOf(news) !== storageTypeOf(olds);
+
+/**
+ * Whether a `valueFrom` value changed since the last write. The value never reaches props,
+ * so a rotation shows only as a digest change; an adopted variable has no digest yet.
+ *
+ * @param news - The declared props.
+ * @param output - The stored attributes, when the variable is deployed or adopted.
+ * @param value - The value resolved for this plan.
+ * @returns `true` when the value must be written again.
+ */
+const valueFromRotated = Effect.fn("Vercel.EnvVar.valueFromRotated")(function* (
+  news: EnvVarProps,
+  output: EnvVarAttributes | undefined,
+  value: Redacted.Redacted<string>
+) {
+  if (news.valueFrom === undefined || output === undefined) return false;
+  const digest = yield* valueDigestOf(news, value);
+  return !O.contains(digest, output.valueDigest ?? "");
+});
+
+/**
  * Provider layer for {@link EnvVar}.
  *
  * **Example** (Register the provider)
@@ -514,27 +696,34 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
       }),
     });
     if (state === undefined) return undefined;
+    const observed = withDigest(state, O.fromUndefinedOr(output?.valueDigest));
     // Variables carry no ownership marker: without prior state the variable is foreign,
     // unless it is this resource's own previous generation (a delete-first replacement).
-    return output !== undefined || state.envId === previous?.envId ? state : Unowned(state);
+    return output !== undefined || state.envId === previous?.envId ? observed : Unowned(observed);
   }),
   diff: Effect.fn("Vercel.EnvVar.provider.diff")(function* ({ news, olds, output }) {
+    // A `valueFrom` key is read while planning, before any other input resolves, so a missing key
+    // fails the plan before anything (this variable or a sibling resource) is written.
+    yield* readValueSourceWhilePlanning(news);
     if (!isResolved(news)) return undefined;
-    if (
-      news.project !== olds.project ||
-      news.teamId !== olds.teamId ||
-      (news.type ?? EnvVarType.Enum.encrypted) !== (olds.type ?? EnvVarType.Enum.encrypted)
-    ) {
+    // Resolve the declared value before any outcome: a replacement deletes the old variable first and
+    // a weaker stored type is removed and recreated in reconcile, so a missing key or a value/valueFrom
+    // mix-up must fail the plan here, before anything is deleted. The value is only validated and
+    // digested, never kept.
+    const value = yield* resolveValue(news);
+    if (replacesEnvVar(news, olds)) {
       // A same-project replacement would collide with the old key and targets, so it deletes first.
       return { action: "replace", deleteFirst: news.project === olds.project } as const;
     }
-    // A stored type that differs from the declared one (an adopted variable) needs reconcile,
-    // which replaces it; anything else, the redacted value included, falls through to the
-    // engine's prop comparison.
-    return storedTypeWeaker(news, output) ? ({ action: "update" } as const) : undefined;
+    // A stored type weaker than declared (an adopted variable) needs reconcile, which replaces it;
+    // a rotated `valueFrom` value needs a write. A literal value, like every other prop, falls
+    // through to the engine's prop comparison.
+    const rotated = yield* valueFromRotated(news, output, value);
+    return storedTypeWeaker(news, output) || rotated ? ({ action: "update" } as const) : undefined;
   }),
   reconcile: Effect.fn("Vercel.EnvVar.provider.reconcile")(function* ({ news, output, session }) {
-    const body = yield* requestBody(news);
+    const value = yield* resolveValue(news);
+    const body = yield* requestBody(news, value);
     const existing =
       output === undefined
         ? yield* findEnv(news.project, news.teamId, {
@@ -557,7 +746,8 @@ export const EnvVarProvider = Provider.succeed(EnvVarClass, {
       return yield* EnvVarTypeNotApplied.make({ key: news.key, declared: body.type, stored: reconciled.type });
     }
     yield* session.note(`Vercel env var ${news.key} (${A.join(reconciled.targets, ", ")})`);
-    return reconciled;
+    const digest = yield* valueDigestOf(news, value);
+    return withDigest(reconciled, digest);
   }),
   delete: Effect.fn("Vercel.EnvVar.provider.delete")(function* ({ olds, output, session }) {
     yield* projects

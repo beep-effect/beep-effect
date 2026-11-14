@@ -18,9 +18,10 @@ const $I = $RepoCliId.create("commands/Yeet/internal/PatchIdentity");
 // The lane's patch for one file, verbatim: the per-file header block (blob
 // ids, `---`/`+++` names) is dropped and hunk headers lose their line numbers,
 // so the same edit on a moved base still matches. Content lines keep every
-// byte, whitespace and invalid UTF-8 included, and `--binary --full-index`
-// renders binary edits as their bytes rather than "Binary files differ"; a
-// binary delta on a different base therefore never matches, which fails closed.
+// byte, whitespace and invalid UTF-8 included. A `GIT binary patch` body is
+// kept byte for byte too, but its delta copies source bytes by offset, so it
+// cannot see a change to the bytes it copies; `PATCH_IDENTITY_DIFF_FLAGS`
+// diffs every file as text for that reason.
 const MarkerEncoder = new TextEncoder();
 const asciiBytes = (text: string): Uint8Array => MarkerEncoder.encode(text);
 
@@ -176,3 +177,60 @@ export const finalCheckPatchIdentityDigest = <E, R>(
       })
     );
   }).pipe(Effect.withSpan($I`finalCheckPatchIdentityDigest`));
+
+/**
+ * The `git diff` flags a patch-identity read pins, so the bytes
+ * {@link finalCheckPatchIdentityDigest} folds do not depend on local git config.
+ *
+ * **Details**
+ *
+ * Each flag overrides a default that config or attributes can change: colour,
+ * renames, submodule visibility (`diff.ignoreSubmodules`, a submodule's
+ * `ignore`) and format (`diff.submodule`), external diff and textconv, binary
+ * detection (a `-diff` attribute), the abbreviated index line (`core.abbrev`),
+ * the prefixes (`diff.noprefix`, `diff.mnemonicPrefix`), context and hunk
+ * joining (`diff.context`, `diff.interHunkContext`), and the algorithm and
+ * heuristic (`diff.algorithm`, a driver's `algorithm`, `diff.indentHeuristic`).
+ * Callers put the global `--literal-pathspecs` before `diff`, so a path is
+ * never read as a glob or as pathspec magic.
+ *
+ * **Example** (Read one path's patch identity)
+ *
+ * ```ts
+ * import {
+ *   finalCheckPatchIdentityDigest,
+ *   PATCH_IDENTITY_DIFF_FLAGS,
+ *   runGitFoldedStdout,
+ * } from "@beep/repo-cli/test/Yeet"
+ *
+ * const digest = runGitFoldedStdout(
+ *   ".",
+ *   ["--literal-pathspecs", "diff", ...PATCH_IDENTITY_DIFF_FLAGS, "HEAD~1", "HEAD", "--", "README.md"],
+ *   finalCheckPatchIdentityDigest
+ * )
+ * console.log(PATCH_IDENTITY_DIFF_FLAGS.includes("--no-textconv")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const PATCH_IDENTITY_DIFF_FLAGS: ReadonlyArray<string> = [
+  "--no-color",
+  "--no-renames",
+  "--ignore-submodules=none",
+  "--submodule=short",
+  "--no-ext-diff",
+  "--no-textconv",
+  "--text",
+  "--full-index",
+  "--src-prefix=a/",
+  "--dst-prefix=b/",
+  "--unified=3",
+  "--inter-hunk-context=0",
+  "--diff-algorithm=myers",
+  "--indent-heuristic",
+  // Left unpinned, because none of them can change the identity:
+  // `diff.relative` is a no-op, git running at the checkout's top level, where paths are top-level.
+  // `core.quotePath` respells only the per-file header lines the identity drops.
+  // `diff.suppressBlankEmpty` drops the space before an empty context line, one to one.
+];

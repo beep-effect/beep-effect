@@ -595,16 +595,18 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
         readonly base: string;
         readonly head: string;
         readonly relative?: boolean;
+        readonly ignoreSubmodules?: StatusIgnoreSubmodules;
         readonly twoDot?: boolean;
       }
     ) {
-      const { diffFilter, noRenames = false, pathspec = [], twoDot = false } = options;
+      const { diffFilter, ignoreSubmodules, noRenames = false, pathspec = [], twoDot = false } = options;
       const relative = options.relative ?? false;
       yield* Effect.annotateCurrentSpan({
         cwd,
         base: options.base,
         head: options.head,
         relative,
+        ignoreSubmodules: ignoreSubmodules ?? "(default)",
         twoDot,
         pathspec: pathspec.length,
       });
@@ -612,7 +614,10 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       yield* rejectDiffFilter(cwd, diffFilter);
       const classified = yield* runFor(
         GitCommand.changedFiles(options.base, options.head, relative, {
-          ...O.getSomesStruct({ diffFilter: O.fromUndefinedOr(diffFilter) }),
+          ...O.getSomesStruct({
+            diffFilter: O.fromUndefinedOr(diffFilter),
+            ignoreSubmodules: O.fromUndefinedOr(ignoreSubmodules),
+          }),
           noRenames,
           pathspec,
           twoDot,
@@ -2679,7 +2684,7 @@ export interface GitShape {
     ) => Effect.Effect<ReadonlyArray<BranchEntry>, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * `git diff --name-only -z [--relative] [--no-renames] [--diff-filter=<letters>] (<base>...<head> | <base> <head>) [-- <pathspec>...]`
+   * `git diff --name-only -z [--relative] [--no-renames] [--diff-filter=<letters>] [--ignore-submodules=<when>] (<base>...<head> | <base> <head>) [-- <pathspec>...]`
    * — the paths that differ. Pass `relative: true` to report paths relative
    * to `cwd` and exclude changes outside it (a workspace nested in a larger
    * repository).
@@ -2689,7 +2694,9 @@ export interface GitShape {
    * `diffFilter` keeps only the named status letters (`[ACDMRTUXB*]`, lower
    * case excludes them) and is refused typed outside that domain; `noRenames`
    * turns rename detection off so a moved file lists as both its old and new
-   * path; `pathspec` scopes the diff behind `--`, each entry passing the same
+   * path; `ignoreSubmodules` overrides `diff.ignoreSubmodules` and a
+   * submodule's `ignore` setting (`none` lists every moved gitlink);
+   * `pathspec` scopes the diff behind `--`, each entry passing the same
    * option-like guard as the refs; `twoDot` compares the two trees directly
    * (`<base> <head>`) instead of `head` against the merge base (`...`). With
    * no option passed the argv is unchanged from the range-only form.
@@ -2703,6 +2710,7 @@ export interface GitShape {
         readonly relative?: boolean;
         readonly diffFilter?: string;
         readonly noRenames?: boolean;
+        readonly ignoreSubmodules?: StatusIgnoreSubmodules;
         readonly pathspec?: ReadonlyArray<string>;
         readonly twoDot?: boolean;
       }
@@ -2713,6 +2721,7 @@ export interface GitShape {
       readonly relative?: boolean;
       readonly diffFilter?: string;
       readonly noRenames?: boolean;
+      readonly ignoreSubmodules?: StatusIgnoreSubmodules;
       readonly pathspec?: ReadonlyArray<string>;
       readonly twoDot?: boolean;
     }): (cwd: string) => Effect.Effect<ReadonlyArray<string>, GitCommandError | NotARepositoryError | UnknownRefError>;

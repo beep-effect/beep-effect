@@ -89,7 +89,6 @@ export const makeCitationMarkupWorker = Effect.fn("Citation.makeMarkupWorker")(f
         .pipe(Effect.mapError((error) => (error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error)));
       yield* forget(record);
     }
-    yield* Ref.set(quarantined, 0);
   });
   const run = Effect.fn("Citation.runMarkupWorker")(
     function* <A, E, P, R>(

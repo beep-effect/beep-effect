@@ -23,7 +23,8 @@ const decodeQuota = S.decodeUnknownEffect(CitationRegexWorkerJob.fields.maxMatch
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
 /** Install descriptor binding and job preparation once per call site. Each
  * evaluation reads the invocation's regex session and verifies its Clock/spawner
- * identity against the lane. Descriptor selection precedes the exact full-frame
+ * identity against the lane on every evaluation, including the first. A closed
+ * installation refuses with closed before runtime comparison. Descriptor selection precedes the exact full-frame
  * preflight; payload/map allocation and compilation follow it. The immutable
  * prepared pattern is fingerprinted again before execution. The session owns separate startup
  * and job timers, reuses the child across jobs, and confirms retirement on every
@@ -42,6 +43,12 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
   const clock = yield* Clock.Clock;
   const spawner = yield* ChildProcessSpawner;
   const digest = yield* Digest.Digest;
+  let closed = false;
+  yield* Effect.addFinalizer(() =>
+    Effect.sync(() => {
+      closed = true;
+    })
+  );
   const selected = yield* CitationRegexOperation;
   const makeRegistry = (descriptors: ReadonlyArray<CitationRegexPatternDescriptor>) =>
     makeCitationRegexDescriptorRegistry(limits, descriptors, engine).pipe(
@@ -62,7 +69,8 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
         mode: unknown = "finditer"
       ) {
         const { regex, lane } = yield* CitationInvocation;
-        yield* regex.checkRuntime(clock, spawner);
+        if (closed) return yield* failure("closed");
+        if (!lane.matchesRuntime(spawner, clock)) return yield* failure("invalid-runtime");
         yield* lane.ensureOpen.pipe(Effect.mapError((error) => failure(error.reason)));
         const quota = yield* decodeQuota(maximumMatches).pipe(Effect.mapError(() => failure("invalid-runtime")));
         if (quota > limits.patternMatches) return yield* safety("patternMatches");

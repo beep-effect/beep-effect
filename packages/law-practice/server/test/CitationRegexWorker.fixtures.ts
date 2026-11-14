@@ -283,10 +283,10 @@ export const makeCitationMetadataTestContext = Effect.fn("RegexWorkerTest.metada
   context: Effect.Success<ReturnType<typeof setupCitationRegexRuntime>>["context"],
   limits: CitationEngineLimits
 ) {
-  const operation = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideContext(context));
   const instant = yield* Effect.fromOption(DateTime.make("2026-11-03T00:00:00Z"));
   const epoch = DateTime.toEpochMillis(instant);
   const clock = yield* makeCitationNativeWallClock(epoch).pipe(Effect.provideContext(context));
+  const operation = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideService(Clock.Clock, clock));
   return {
     operation,
     context: context.pipe(Context.add(Clock.Clock, clock), Context.add(CitationOperationAdmission, operation)),

@@ -196,43 +196,45 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
   it.effect(
     "shares the counter through metadata, context and actual worker stages without partial success",
     () =>
-      withCitationTestTextBudget(
-        24,
-        Effect.gen(function* () {
-          const corpus = yield* loadCitationMetadataStrings();
-          const setup = yield* setupCitationRegexRuntime("bun", 24);
-          const budget = (yield* CitationInvocation).budget;
-          const helpers = yield* makeCitationMetadataStrings(
-            setup.limits,
-            setup.runtime,
-            corpus.yearPattern,
-            corpus.bindings
-          ).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(setup.limits).pipe(
-                Effect.map((bind) => ({
-                  ...stage,
-                  cleanPinCite: bind(stage.cleanPinCite),
-                  parenthetical: bind(stage.parenthetical),
-                }))
-              )
-            ),
-            Effect.provideContext(setup.context.pipe(Context.add(CitationTextBudget, budget)))
-          );
-          const pin = yield* helpers.cleanPinCite(native(" a "));
-          expect(pin).toEqual(native("a"));
-          const first = yield* helpers.parenthetical(native("abc"));
-          expect(first).toEqual(native("abc"));
-          const failure = yield* helpers.parenthetical(native("abc")).pipe(Effect.flip);
-          expect(failure).toMatchObject({ limit: "producedTextUtf16" });
-          const used = yield* budget.snapshot;
-          expect(used).toBe(22);
-          const observed = yield* setup.observed.snapshot;
-          expect(observed).toEqual({ spawned: 1, confirmed: 1 });
-          const admission = yield* setup.admission.snapshot;
-          expect(admission).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
-        })
-      ),
+      Effect.gen(function* () {
+        const setup = yield* setupCitationRegexRuntime("bun", 24);
+        yield* withCitationTestTextBudget(
+          24,
+          Effect.gen(function* () {
+            const corpus = yield* loadCitationMetadataStrings();
+            const budget = (yield* CitationInvocation).budget;
+            const helpers = yield* makeCitationMetadataStrings(
+              setup.limits,
+              setup.runtime,
+              corpus.yearPattern,
+              corpus.bindings
+            ).pipe(
+              Effect.flatMap((stage) =>
+                makeCitationTestScaffoldBinding(setup.limits).pipe(
+                  Effect.map((bind) => ({
+                    ...stage,
+                    cleanPinCite: bind(stage.cleanPinCite),
+                    parenthetical: bind(stage.parenthetical),
+                  }))
+                )
+              ),
+              Effect.provideContext(setup.context.pipe(Context.add(CitationTextBudget, budget)))
+            );
+            const pin = yield* helpers.cleanPinCite(native(" a "));
+            expect(pin).toEqual(native("a"));
+            const first = yield* helpers.parenthetical(native("abc"));
+            expect(first).toEqual(native("abc"));
+            const failure = yield* helpers.parenthetical(native("abc")).pipe(Effect.flip);
+            expect(failure).toMatchObject({ limit: "producedTextUtf16" });
+            const used = yield* budget.snapshot;
+            expect(used).toBe(22);
+            const observed = yield* setup.observed.snapshot;
+            expect(observed).toEqual({ spawned: 1, confirmed: 1 });
+          })
+        ).pipe(Effect.provideContext(setup.context));
+        const admission = yield* setup.admission.snapshot;
+        expect(admission).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
+      }),
     { timeout: 60000 }
   );
 });
