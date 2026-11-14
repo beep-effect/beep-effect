@@ -146,13 +146,13 @@ export type PrNumber = typeof PrNumber.Type;
  * ```ts
  * import { PrProvenanceHarness } from "@beep/repo-cli/test/Yeet"
  *
- * console.log(PrProvenanceHarness.literals) // ["claude-code", "codex", "unknown"]
+ * console.log(PrProvenanceHarness.literals) // ["claude-code", "codex", "cursor", "grok", "junie", "unknown"]
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const PrProvenanceHarness = LiteralKit(["claude-code", "codex", "unknown"]).pipe(
+export const PrProvenanceHarness = LiteralKit(["claude-code", "codex", "cursor", "grok", "junie", "unknown"]).pipe(
   $I.annoteSchema("PrProvenanceHarness", { description: "Harness owning a recorded agent session." })
 );
 /**
@@ -192,6 +192,7 @@ export const PrProvenanceEntrypoint = LiteralKit([
   "sdk-cli",
   "codex-exec",
   "codex-tui",
+  "t3-code",
   "unknown",
 ]).pipe($I.annoteSchema("PrProvenanceEntrypoint", { description: "Agent harness entrypoint." }));
 /**
@@ -961,6 +962,7 @@ const entrypointText = (entrypoint: PrProvenanceEntrypoint): string =>
     "sdk-cli": "sdk-cli",
     "codex-exec": "exec",
     "codex-tui": "tui",
+    "t3-code": "t3",
     unknown: "unknown",
   })[entrypoint];
 /**
