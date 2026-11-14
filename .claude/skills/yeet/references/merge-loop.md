@@ -145,9 +145,9 @@ own change when it is absent from `git diff MBR MBF` or when its lane patch
 headers and hunk line numbers) differs. It passes
 only when every own change is on the allowlist:
 
-- regenerated standards inventories: `jsdoc-documentation.inventory.{jsonc,md}`,
-  `effect-vitest.inventory.jsonc`, `schema-first.inventory.jsonc`,
-  `fallow.boundaries.generated.jsonc`, `effect-laws.allowlist.jsonc`;
+- regenerated standards inventories: `effect-vitest.inventory.jsonc`,
+  `schema-first.inventory.jsonc`, `fallow.boundaries.generated.jsonc`,
+  `effect-laws.allowlist.jsonc`;
 - goal-packet files: `goals/<slug>/SPEC.md`, `PLAN.md`, `README.md`,
   `ops/manifest.json`, and any `reuse-ledger.md` under the packet.
 

@@ -81,12 +81,12 @@ observability standard's generated section no longer carries span counts.
 
 ## Uncommitted scans (2026-11-14)
 
-Decision: `bun run beep quality jsdoc-inventory` writes
-`.beep/ci/jsdoc-documentation.inventory.{jsonc,md}` and
-`bun run beep lint effect-vitest --census` writes
-`.beep/effect-vitest/census.json`. Both paths are gitignored. The committed
-`standards/jsdoc-documentation.inventory.{jsonc,md}` and
-`standards/effect-vitest.census.json` are deleted.
+Decision: `bun run beep quality jsdoc-inventory` writes the JSDoc inventory
+JSONC and its Markdown report under .beep/ci/, and
+`bun run beep lint effect-vitest --census` writes the census under
+.beep/effect-vitest/. Both directories are gitignored. The committed copies
+that used to sit in standards/ (the JSDoc inventory pair and the effect-vitest
+census) are deleted.
 
 - Reason: no gate read the committed copies. Hosted `jsdoc-ratchet`
   regenerates into `.beep/ci/` and compares totals with the committed
