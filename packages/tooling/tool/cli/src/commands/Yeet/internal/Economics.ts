@@ -1264,7 +1264,7 @@ const readFleetHost = (
   repositoryKey: string,
   runId: O.Option<string>
 ): Effect.Effect<FleetHostJournals> =>
-  shell.run(host.route, fleetHostReadCommand(host.roots)).pipe(
+  shell.run(host.route, fleetHostReadCommand(host)).pipe(
     Effect.match({
       onFailure: (error: FleetHostShellError) => unreachableFleetHost(host, error.reason, O.none()),
       onSuccess: (output) => fleetHostJournals(host, output, repositoryKey, runId),

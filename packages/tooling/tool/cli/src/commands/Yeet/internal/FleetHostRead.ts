@@ -30,7 +30,7 @@ import { fleetStateDirectory, readOptionalFleetStateFile } from "../../Worktree/
 import { WorktreeCommandError } from "../../Worktree/Worktree.errors.ts";
 import { FleetHostRoot, FleetHostsDocument, FleetHostUnreachableReason } from "./FleetHosts.schemas.ts";
 import type * as FileSystem from "effect/FileSystem";
-import type { FleetHostRoute } from "./FleetHosts.schemas.ts";
+import type { FleetHostEntry, FleetHostRoute } from "./FleetHosts.schemas.ts";
 import type { PrRepository } from "./Provenance.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/FleetHostRead");
@@ -66,6 +66,15 @@ const READ_COMMAND_SUFFIX: ReadonlyArray<string> = [
 ];
 
 const quoteToken = (token: string): string => `'${token}'`;
+// Every start path is emitted as `./<root>`: a token that starts with `.` is never a `find`
+// expression primary, even if a root that starts with `-` were ever forged past the schema.
+const START_PATH_PREFIX = "./";
+// The host's own attempt-journal store, a fixed start path no `hosts.json` string reaches.
+const STORE_START_PATH = "./.local/state/beep/yeet/attempts";
+const startPath = (root: FleetHostRoot): string => `${START_PATH_PREFIX}${root}`;
+const isRootStartPath = (token: string): boolean =>
+  Str.startsWith(START_PATH_PREFIX)(token) && isFleetHostRoot(Str.slice(Str.length(START_PATH_PREFIX))(token));
+const isStartPath = (token: string): boolean => token === STORE_START_PATH || isRootStartPath(token);
 const isTokenRun = A.makeEquivalence(Str.Equivalence);
 const QUOTED_TOKEN = /^'([^']*)'$/u;
 const isFleetHostRoot = S.is(FleetHostRoot);
@@ -86,7 +95,7 @@ const isReadOnlyTokens = (tokens: ReadonlyArray<string>): boolean => {
   return (
     O.contains(A.head(tokens), READ_COMMAND_PROGRAM) &&
     A.isReadonlyArrayNonEmpty(roots) &&
-    A.every(roots, isFleetHostRoot) &&
+    A.every(roots, isStartPath) &&
     isTokenRun(A.takeRight(tokens, A.length(READ_COMMAND_SUFFIX)), READ_COMMAND_SUFFIX)
   );
 };
@@ -96,18 +105,24 @@ const isReadOnlyTokens = (tokens: ReadonlyArray<string>): boolean => {
  *
  * **Details**
  *
- * The line must be `find`, one or more {@link FleetHostRoot} roots, and the
- * fixed listing suffix, each a single-quoted word. Anything else (another
- * program, an extra `-exec`, `-delete`, a redirect, a root with a shell
- * metacharacter) is refused.
+ * The line must be `find`, one or more start paths, and the fixed listing
+ * suffix, each a single-quoted word. A start path is `./<root>` for a
+ * {@link FleetHostRoot}, or the fixed store path
+ * `./.local/state/beep/yeet/attempts`. Anything else (another program, an
+ * extra `-exec`, `-delete` in any position, a bare root, a redirect, a root
+ * with a shell metacharacter) is refused.
  *
  * **Example** (Accept the read, refuse a write)
  *
  * ```ts
- * import { fleetHostReadCommand, isReadOnlyFleetHostCommand } from "@beep/repo-cli/test/Yeet"
+ * import { FleetHostEntry, fleetHostReadCommand, isReadOnlyFleetHostCommand } from "@beep/repo-cli/test/Yeet"
+ * import * as S from "effect/Schema"
  *
- * console.log(isReadOnlyFleetHostCommand(fleetHostReadCommand(["YeeBois/projects"]))) // true
+ * const entry = S.decodeUnknownSync(FleetHostEntry)({ host: "tbk-worker", route: "ssh-tbk-worker", roots: ["YeeBois/projects"] })
+ * const read = fleetHostReadCommand(entry)
+ * console.log(isReadOnlyFleetHostCommand(read)) // true
  * console.log(isReadOnlyFleetHostCommand("'mkdir' '-p' 'x'")) // false
+ * console.log(isReadOnlyFleetHostCommand(read.replace("'./YeeBois/projects'", "'-delete'"))) // false
  * ```
  *
  * @param command - A remote command line.
@@ -163,25 +178,36 @@ export type FleetHostReadCommand = typeof FleetHostReadCommand.Type;
  * **Details**
  *
  * Each token is single-quoted, so the remote shell runs `find` with the
- * roots and the fixed suffix verbatim: no glob, group or redirect is
- * interpreted. The roots are relative to the login's home directory.
+ * start paths and the fixed suffix verbatim: no glob, group or redirect is
+ * interpreted. Each root is emitted as `./<root>`, relative to the login's
+ * home directory, so no start path can be read as an expression primary;
+ * `store` adds the fixed `./.local/state/beep/yeet/attempts`. No portable
+ * `find` has an option that ends the start-path list, so the `./` prefix is
+ * the guard.
  *
  * **Example** (Read two roots)
  *
  * ```ts
- * import { FleetHostRoot, fleetHostReadCommand } from "@beep/repo-cli/test/Yeet"
+ * import { FleetHostEntry, fleetHostReadCommand } from "@beep/repo-cli/test/Yeet"
+ * import * as S from "effect/Schema"
  *
- * const command = fleetHostReadCommand([FleetHostRoot.make("YeeBois/projects")])
- * console.log(command.startsWith("'find' 'YeeBois/projects' '-maxdepth' '8'")) // true
+ * const entry = S.decodeUnknownSync(FleetHostEntry)({ host: "tbk-worker", route: "ssh-tbk-worker", roots: ["YeeBois/projects"] })
+ * console.log(fleetHostReadCommand(entry).startsWith("'find' './YeeBois/projects' '-maxdepth' '8'")) // true
+ * const withStore = fleetHostReadCommand(FleetHostEntry.make({ ...entry, store: true }))
+ * console.log(withStore.includes("'./.local/state/beep/yeet/attempts'")) // true
  * ```
  *
- * @param roots - The host's home-relative roots.
+ * @param entry - The host: its home-relative `roots`, and `store` to also read its own attempt-journal store.
  * @returns The read-only command line.
  * @category constructors
  * @since 0.0.0
  */
-export const fleetHostReadCommand = (roots: A.NonEmptyReadonlyArray<FleetHostRoot>): FleetHostReadCommand =>
-  FleetHostReadCommand.make(A.join(A.map([READ_COMMAND_PROGRAM, ...roots, ...READ_COMMAND_SUFFIX], quoteToken), " "));
+export const fleetHostReadCommand = (entry: FleetHostEntry): FleetHostReadCommand => {
+  const starts = A.appendAll(A.map(entry.roots, startPath), entry.store ? A.of(STORE_START_PATH) : A.empty<string>());
+  return FleetHostReadCommand.make(
+    A.join(A.map([READ_COMMAND_PROGRAM, ...starts, ...READ_COMMAND_SUFFIX], quoteToken), " ")
+  );
+};
 
 /**
  * One file the remote read printed, held in memory only.
@@ -299,6 +325,9 @@ export class FleetHostJournalPath extends S.Opaque<FleetHostJournalPath, { reado
 ) {}
 
 const LIVE_PACKET_SEGMENTS: ReadonlyArray<string> = [".beep", "yeet"];
+// A remote file name becomes a checkout label the terminal prints: control characters and
+// anything outside printable ASCII are skipped, never echoed.
+const PRINTABLE_PATH = /^[\x20-\x7e]+$/u;
 const STORE_ATTEMPTS_SEGMENT = "attempts";
 
 /**
@@ -310,7 +339,10 @@ const STORE_ATTEMPTS_SEGMENT = "attempts";
  * A live journal is `<checkout>/.beep/yeet/runs/<runId>/attempts.ndjson`; a
  * store journal is `<…>/attempts/<repositoryKey>/runs/<runId>/attempts.ndjson`.
  * Any other path (another repository's partition, a deeper match of the
- * `find` pattern) is none, and economics counts it as a skipped file.
+ * `find` pattern, a name with a control or non-ASCII character, which would
+ * otherwise reach the terminal in a checkout label) is none, and economics
+ * counts it as a skipped file. A leading `./`, as `find` prints a path under
+ * a `./<root>` start path, is dropped.
  *
  * **Example** (A live checkout and a store partition)
  *
@@ -335,7 +367,9 @@ export const classifyFleetHostJournalPath: {
   (repositoryKey: string): (path: string) => O.Option<FleetHostJournalPath>;
   (path: string, repositoryKey: string): O.Option<FleetHostJournalPath>;
 } = dual(2, (path: string, repositoryKey: string): O.Option<FleetHostJournalPath> => {
-  const segments = Str.split(path, "/");
+  // `find` prints each path under the `./<root>` it was given; the label drops the `./`.
+  const relative = Str.startsWith(START_PATH_PREFIX)(path) ? Str.slice(Str.length(START_PATH_PREFIX))(path) : path;
+  const segments = Str.split(relative, "/");
   const count = A.length(segments);
   const base = A.take(segments, count - 3);
   const runId = O.getOrElse(A.get(segments, count - 2), () => "");
@@ -345,7 +379,7 @@ export const classifyFleetHostJournalPath: {
   const isStore =
     O.contains(A.last(base), repositoryKey) && O.contains(A.get(base, A.length(base) - 2), STORE_ATTEMPTS_SEGMENT);
   const checkout = isLive ? O.some(A.join(A.dropRight(base, 2), "/")) : O.none<string>();
-  return isRunJournal && Str.isNonEmpty(runId) && (isLive || isStore)
+  return isRunJournal && Str.isNonEmpty(runId) && (isLive || isStore) && PRINTABLE_PATH.test(relative)
     ? O.some(FleetHostJournalPath.make({ checkout: O.filter(checkout, Str.isNonEmpty), runId }))
     : O.none();
 });
@@ -444,11 +478,12 @@ export class FleetHostShellError extends S.TaggedError<FleetHostShellError, { re
  * **Example** (Describe a read)
  *
  * ```ts
- * import { FleetHostRoot, fleetHostReadCommand } from "@beep/repo-cli/test/Yeet"
+ * import { FleetHostEntry, fleetHostReadCommand } from "@beep/repo-cli/test/Yeet"
  * import type { FleetHostShellShape } from "@beep/repo-cli/test/Yeet"
+ * import * as S from "effect/Schema"
  *
- * const read = (shell: FleetHostShellShape) =>
- *   shell.run("ssh-tbk-worker", fleetHostReadCommand([FleetHostRoot.make("YeeBois/projects")]))
+ * const entry = S.decodeUnknownSync(FleetHostEntry)({ host: "tbk-worker", route: "ssh-tbk-worker", roots: ["YeeBois/projects"] })
+ * const read = (shell: FleetHostShellShape) => shell.run(entry.route, fleetHostReadCommand(entry))
  * console.log(read.length) // 1
  * ```
  *

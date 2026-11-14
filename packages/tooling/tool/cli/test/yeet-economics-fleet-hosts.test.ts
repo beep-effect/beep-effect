@@ -124,8 +124,12 @@ const writeHosts = Effect.fnUntraced(function* (hosts: ReadonlyArray<FleetHostEn
   yield* fs.writeFileString(`${FLEET_STATE}/${REPO_KEY}/hosts.json`, text);
 });
 
-const host = (label: string, route: FleetHostRoute, roots: A.NonEmptyReadonlyArray<string>): FleetHostEntry =>
-  FleetHostEntry.make({ host: HostLabel.make(label), route, roots: A.map(roots, root) });
+const host = (
+  label: string,
+  route: FleetHostRoute,
+  roots: A.NonEmptyReadonlyArray<string>,
+  store = false
+): FleetHostEntry => FleetHostEntry.make({ host: HostLabel.make(label), route, roots: A.map(roots, root), store });
 
 type ShellAnswer = Effect.Effect<FleetHostShellOutput, FleetHostShellError>;
 
@@ -142,7 +146,7 @@ const fakeShell = (
   answers: HashMap.HashMap<FleetHostRoute, ShellAnswer>,
   calls: Ref.Ref<ReadonlyArray<ShellCall>>
 ): FleetHostShellShape => {
-  const expected = HashMap.fromIterable(A.map(hosts, (entry) => [entry.route, fleetHostReadCommand(entry.roots)]));
+  const expected = HashMap.fromIterable(A.map(hosts, (entry) => [entry.route, fleetHostReadCommand(entry)]));
   return FleetHostShell.of({
     run: Effect.fn("FakeFleetHostShell.run")(function* (route: FleetHostRoute, command: FleetHostReadCommand) {
       yield* Ref.update(calls, A.append({ route, command }));
@@ -182,10 +186,7 @@ const readHosts = Effect.fnUntraced(function* (
   );
 });
 
-const BEEP_WORKER = host("beep-worker", "ssh-beep-worker-yubi", [
-  "YeeBois/projects",
-  ".local/state/beep/yeet/attempts",
-]);
+const BEEP_WORKER = host("beep-worker", "ssh-beep-worker-yubi", ["YeeBois/projects"], true);
 const TBK_WORKER = host("tbk-worker", "ssh-tbk-worker", ["YeeBois/projects"]);
 const DANKSERVER = host("dankserver", "ssh-dankserver-worker", ["YeeBois/projects"]);
 const TOM_PC = host("tom-pc-1-wsl", "ssh-tom-pc-1-wsl", ["YeeBois/projects"]);
@@ -208,14 +209,14 @@ const beepWorkerOutput = Effect.fnUntraced(function* () {
     [attemptId(4), O.some("beep-worker")],
   ]);
   const foreign = yield* journalText([[attemptId(5), O.none()]]);
-  const mainPath = `YeeBois/projects/beep-effect/.beep/yeet/runs/${mainRun}/attempts.ndjson`;
+  const mainPath = `./YeeBois/projects/beep-effect/.beep/yeet/runs/${mainRun}/attempts.ndjson`;
   return tailOutput([
     [mainPath, main],
-    [`YeeBois/projects/beep-effect-worktrees/lane/.beep/yeet/runs/${laneRun}/attempts.ndjson`, lane],
+    [`./YeeBois/projects/beep-effect-worktrees/lane/.beep/yeet/runs/${laneRun}/attempts.ndjson`, lane],
     [mainPath, main],
-    [`YeeBois/projects/junk/runs/${mainRun}/deeper/attempts.ndjson`, foreign],
-    [`.local/state/beep/yeet/attempts/${REPO_KEY}/runs/${mainRun}/attempts.ndjson`, stored],
-    [`.local/state/beep/yeet/attempts/github.com__acme__other/runs/${mainRun}/attempts.ndjson`, foreign],
+    [`./YeeBois/projects/junk/runs/${mainRun}/deeper/attempts.ndjson`, foreign],
+    [`./.local/state/beep/yeet/attempts/${REPO_KEY}/runs/${mainRun}/attempts.ndjson`, stored],
+    [`./.local/state/beep/yeet/attempts/github.com__acme__other/runs/${mainRun}/attempts.ndjson`, foreign],
   ]);
 });
 
@@ -229,7 +230,7 @@ const fleetAnswers = Effect.fnUntraced(function* () {
     answer("ssh-dankserver-worker", output(255, "")),
     answer(
       "ssh-tom-pc-1-wsl",
-      output(1, tailOutput([[`YeeBois/projects/beep-effect/.beep/yeet/runs/${tomRun}/attempts.ndjson`, tom]]))
+      output(1, tailOutput([[`./YeeBois/projects/beep-effect/.beep/yeet/runs/${tomRun}/attempts.ndjson`, tom]]))
     ),
     answer("ssh-grok-bot", output(0, "==> partial", true)),
   ]);
@@ -248,13 +249,13 @@ const receiptRows = (read: FleetHostsRead) =>
 
 describe("the read-only remote command", () => {
   it("is find over the roots and the fixed tail suffix, every token quoted", () => {
-    expect(fleetHostReadCommand([root("YeeBois/projects"), root(".local/state/beep/yeet/attempts")])).toBe(
-      "'find' 'YeeBois/projects' '.local/state/beep/yeet/attempts' '-maxdepth' '8' '(' '-name' 'node_modules' '-o' '-name' '.git' ')' '-prune' '-o' '-type' 'f' '-path' '*/runs/*/attempts.ndjson' '-exec' 'tail' '-v' '-c' '+1' '--' '{}' '+'"
+    expect(fleetHostReadCommand(host("probe", "ssh-tbk-worker", ["YeeBois/projects"], true))).toBe(
+      "'find' './YeeBois/projects' './.local/state/beep/yeet/attempts' '-maxdepth' '8' '(' '-name' 'node_modules' '-o' '-name' '.git' ')' '-prune' '-o' '-type' 'f' '-path' '*/runs/*/attempts.ndjson' '-exec' 'tail' '-v' '-c' '+1' '--' '{}' '+'"
     );
   });
 
   it("accepts only that command and refuses every write, extra program or unsafe root", () => {
-    const read = fleetHostReadCommand([root("YeeBois/projects")]);
+    const read = fleetHostReadCommand(host("probe", "ssh-tbk-worker", ["YeeBois/projects"]));
     expect(isReadOnlyFleetHostCommand(read)).toBe(true);
     const refused = [
       "'mkdir' '-p' '.cache'",
@@ -262,10 +263,17 @@ describe("the read-only remote command", () => {
       Str.replace("'tail' '-v'", "'tee' '-a'")(read),
       Str.replace("'+'", "'+' '-delete'")(read),
       `${read} > out`,
-      Str.replace("'YeeBois/projects'", "'YeeBois/../projects'")(read),
-      Str.replace("'YeeBois/projects'", "'/etc'")(read),
-      Str.replace("'YeeBois/projects' ", "")(read),
-      Str.replace("'YeeBois/projects'", "YeeBois/projects")(read),
+      Str.replace("'./YeeBois/projects'", "'./YeeBois/../projects'")(read),
+      Str.replace("'./YeeBois/projects'", "'/etc'")(read),
+      Str.replace("'./YeeBois/projects' ", "")(read),
+      Str.replace("'./YeeBois/projects'", "./YeeBois/projects")(read),
+      // A root in the start-path position that find would read as its expression.
+      Str.replace("'./YeeBois/projects'", "'-delete'")(read),
+      Str.replace("'./YeeBois/projects'", "'./-delete'")(read),
+      Str.replace("'./YeeBois/projects'", "'-fprint' 'x'")(read),
+      // A bare root without the `./` start-path prefix, and a hidden path other than the store.
+      Str.replace("'./YeeBois/projects'", "'YeeBois/projects'")(read),
+      Str.replace("'./YeeBois/projects'", "'./.ssh'")(read),
       "",
     ];
     deepStrictEqual(
@@ -289,6 +297,17 @@ describe("the read-only remote command", () => {
       decode({ schemaVersion: "fleet-hosts/v1", hosts: [entry("ssh-dankserver-yubi", ["YeeBois/projects"])] })
     );
     assertNone(decode({ schemaVersion: "fleet-hosts/v1", hosts: [entry("ssh-tbk-worker", ["~/projects"])] }));
+    assertNone(decode({ schemaVersion: "fleet-hosts/v1", hosts: [entry("ssh-tbk-worker", ["-delete"])] }));
+    assertNone(
+      decode({ schemaVersion: "fleet-hosts/v1", hosts: [entry("ssh-tbk-worker", [".local/state/beep/yeet/attempts"])] })
+    );
+    const isRoot = S.is(FleetHostRoot);
+    const notRoots = ["-delete", "-fprint x", "-newer", "+foo", ".hidden", "-", "projects/-delete", "projects/.git"];
+    deepStrictEqual(
+      A.map(notRoots, isRoot),
+      A.map(notRoots, () => false)
+    );
+    assertTrue(isRoot("projects/beep-effect-worktrees/lane.1"));
     assertNone(decode({ schemaVersion: "fleet-hosts/v1", hosts: [entry("ssh-tbk-worker", [])] }));
     assertNone(
       decode({
@@ -299,8 +318,8 @@ describe("the read-only remote command", () => {
   });
 });
 
-// A path segment that can never be `.` or `..`: it starts with a letter, digit, `_` or `-`.
-const PlainSegment = S.String.check(S.isPattern(/^[A-Za-z0-9_-][A-Za-z0-9._-]{0,11}$/u));
+// A path segment a root admits: it starts with a letter, digit or `_`.
+const PlainSegment = S.String.check(S.isPattern(/^[A-Za-z0-9_][A-Za-z0-9._-]{0,11}$/u));
 const decodeRoot = S.decodeUnknownOption(FleetHostRoot);
 const ReceiptJson = S.fromJsonString(FleetHostReadReceipt);
 const encodeReceipt = S.encodeResult(ReceiptJson);
@@ -314,7 +333,14 @@ describe("schema-derived fleet host properties", () => {
       const decoded = A.map(roots, (segments) => decodeRoot(A.join(segments, "/")));
       assertTrue(A.every(decoded, O.isSome));
       const valid = A.getSomes(decoded);
-      assertTrue(A.isReadonlyArrayNonEmpty(valid) && isReadOnlyFleetHostCommand(fleetHostReadCommand(valid)));
+      assertTrue(
+        A.isReadonlyArrayNonEmpty(valid) &&
+          isReadOnlyFleetHostCommand(
+            fleetHostReadCommand(
+              FleetHostEntry.make({ host: HostLabel.make("probe"), route: "ssh-tbk-worker", roots: valid })
+            )
+          )
+      );
     },
     { arbitrary: fcRuns(50) }
   );
@@ -372,7 +398,8 @@ describe("the remote output", () => {
 
   it("classifies live checkouts and this fleet's store partition, and nothing else", () => {
     const classify = classifyFleetHostJournalPath(REPO_KEY);
-    const live = classify("YeeBois/projects/beep-effect/.beep/yeet/runs/main-1/attempts.ndjson");
+    // As find prints it, under the ./<root> start path; the label drops the ./.
+    const live = classify("./YeeBois/projects/beep-effect/.beep/yeet/runs/main-1/attempts.ndjson");
     assertSome(
       O.flatMap(live, (entry) => entry.checkout),
       "YeeBois/projects/beep-effect"
@@ -390,6 +417,8 @@ describe("the remote output", () => {
     assertNone(classify(".local/state/beep/yeet/attempts/github.com__acme__other/runs/main-1/attempts.ndjson"));
     assertNone(classify("YeeBois/projects/junk/runs/main-1/deeper/attempts.ndjson"));
     assertNone(classify("YeeBois/projects/junk/runs/main-1/attempts.ndjson"));
+    // A remote name with a terminal escape is skipped, so it never reaches a printed label.
+    assertNone(classify("./YeeBois/projects/\u001b[2Jx/.beep/yeet/runs/main-1/attempts.ndjson"));
     assertNone(classify("runs//attempts.ndjson"));
     assertNone(classify("attempts.ndjson"));
   });
@@ -507,9 +536,11 @@ it.layer(Platform, { timeout: "30 seconds" })("fleet host source", (it) => {
       const shell = fakeShell([TBK_WORKER], HashMap.fromIterable([answer("ssh-tbk-worker", output(0, ""))]), calls);
       const forged = yield* Effect.exit(shell.run("ssh-tbk-worker", "'mkdir' '-p' 'x'" as FleetHostReadCommand));
       expect(Exit.hasDies(forged)).toBe(true);
-      const otherRoots = yield* Effect.exit(shell.run("ssh-tbk-worker", fleetHostReadCommand([root("elsewhere")])));
+      const otherRoots = yield* Effect.exit(
+        shell.run("ssh-tbk-worker", fleetHostReadCommand(host("tbk-worker", "ssh-tbk-worker", ["elsewhere"])))
+      );
       expect(Exit.hasDies(otherRoots)).toBe(true);
-      const read = yield* shell.run("ssh-tbk-worker", fleetHostReadCommand(TBK_WORKER.roots));
+      const read = yield* shell.run("ssh-tbk-worker", fleetHostReadCommand(TBK_WORKER));
       expect(read.exitCode).toBe(0);
     })
   );
@@ -578,7 +609,7 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("yeet economics --fleet-hosts"
 });
 
 it.layer(SecureRandom.layerWebCrypto)("the live fleet host shell", (it) => {
-  const READ = fleetHostReadCommand([root("YeeBois/projects")]);
+  const READ = fleetHostReadCommand(host("probe", "ssh-tbk-worker", ["YeeBois/projects"]));
   const liveShell = (spawner: ScriptedSpawner) => FleetHostShell.make.pipe(provideSpawner(spawner));
 
   it.effect("runs the wrapper with the one read command and standard input closed", () =>
@@ -604,6 +635,10 @@ it.layer(SecureRandom.layerWebCrypto)("the live fleet host shell", (it) => {
       const shell = yield* liveShell(spawner);
       const error = yield* shell.run("ssh-tbk-worker", "'rm' '-rf' 'x'" as FleetHostReadCommand).pipe(Effect.flip);
       expect(error.reason).toBe("refused-command");
+      // A `-delete` forged into the start-path position never reaches the wrapper.
+      const forgedRoot = Str.replace("'./YeeBois/projects'", "'-delete'")(READ) as FleetHostReadCommand;
+      const forged = yield* shell.run("ssh-tbk-worker", forgedRoot).pipe(Effect.flip);
+      expect(forged.reason).toBe("refused-command");
       deepStrictEqual(spawner.spawns, []);
     })
   );
@@ -624,7 +659,7 @@ describe("the live fleet host shell's deadline", () => {
   it.effect("times a read out after two minutes", () =>
     Effect.gen(function* () {
       const shell = yield* FleetHostShell.make.pipe(provideSpawner(ScriptedSpawner.make(() => ({ hang: true }))));
-      const read = fleetHostReadCommand([root("YeeBois/projects")]);
+      const read = fleetHostReadCommand(host("probe", "ssh-tbk-worker", ["YeeBois/projects"]));
       const fiber = yield* shell.run("ssh-dankserver-worker", read).pipe(Effect.flip, Effect.forkChild);
       yield* TestClock.adjust(Duration.minutes(2));
       const error = yield* Fiber.join(fiber);

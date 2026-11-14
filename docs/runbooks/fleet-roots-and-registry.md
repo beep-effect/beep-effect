@@ -134,7 +134,8 @@ already name. The hosts are listed in
     {
       "host": "beep-worker",
       "route": "ssh-beep-worker-yubi",
-      "roots": ["projects", ".local/state/beep/yeet/attempts"]
+      "roots": ["projects"],
+      "store": true
     }
   ]
 }
@@ -146,19 +147,28 @@ already name. The hosts are listed in
   wrapper does not decode, so the read never opens a new route or needs a new
   credential.
 - `roots` are relative to the remote login's home directory, made of plain
-  segments (letters, digits, `.`, `_`, `-`) with no `.` or `..`. A
+  segments (letters, digits, `.`, `_`, `-`), each starting with a letter,
+  digit or `_`. A root can therefore never start with `-` or `+` (which
+  `find` would read as its expression, such as `-delete`), name a hidden
+  directory, or use `.` or `..`; such a `hosts.json` does not decode. A
   remote checkout is admitted by root, not by origin: reading a remote
   `.git/config` would be a read beyond the journals, so list only
-  directories that hold this repository's checkouts. The host's own
-  attempt-journal store (`.local/state/beep/yeet/attempts`) is read only for
-  this fleet's `<repo-key>` partition.
+  directories that hold this repository's checkouts.
+- `store` (default `false`) also reads the host's own attempt-journal store
+  at the fixed `.local/state/beep/yeet/attempts`, only for this fleet's
+  `<repo-key>` partition. No `hosts.json` string names that path. A host
+  with `store` and no store reads as `partial`.
 - Each host runs exactly one remote command (sent with every token
   single-quoted, so the remote shell expands nothing):
-  `find <roots> -maxdepth 8 ( -name node_modules -o -name .git ) -prune -o
-  -type f -path */runs/*/attempts.ndjson -exec tail -v -c +1 -- {} +`.
-  It lists and prints run journals and creates nothing on the host: no
-  temporary file, directory or lock. The shell refuses any other command
-  line before starting the wrapper, and standard input is closed.
+  `find ./<root>… [./.local/state/beep/yeet/attempts] -maxdepth 8 ( -name
+  node_modules -o -name .git ) -prune -o -type f -path */runs/*/attempts.ndjson
+  -exec tail -v -c +1 -- {} +`. Every start path begins with `./`, so none
+  can be read as an expression primary; no portable `find` has an option
+  that ends the start-path list, so the prefix is the guard. It lists and
+  prints run journals and creates nothing on the host: no temporary file,
+  directory or lock. The shell refuses any other command line before starting
+  the wrapper (a start path must be `./<root>` or the fixed store path), and
+  standard input is closed.
 - Hosts are read one at a time, because each wrapper may ask for a touch of
   the same YubiKey; a read has two minutes. A host that times out, cannot be
   reached (`ssh` exit 255), whose wrapper refuses (any other status), whose
@@ -169,7 +179,9 @@ already name. The hosts are listed in
   and `<host>:(retained)`, and dropped. The report gets one receipt per host
   in `scope.hosts` (status, reason, exit code, journal, attempt and
   skipped-file counts) and the attempts' `hostMix` and `seatMix`. No raw
-  row is written to disk, printed, or kept in any report.
+  row is written to disk, printed, or kept in any report. A remote path with
+  a control or non-ASCII character is skipped, so a remote file name never
+  writes an escape sequence into the printed report.
 
 New attempt-started rows carry `host` (the writer's short host label) and
 `seat` (`codex`, `claude-code` or `unknown`, the harness whose shell

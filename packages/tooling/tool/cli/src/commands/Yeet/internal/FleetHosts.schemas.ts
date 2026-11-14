@@ -14,6 +14,7 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { HostLabel } from "../../../internal/github/GithubLedger.schemas.ts";
 
@@ -61,7 +62,9 @@ export const FleetHostRoute = LiteralKit([
  */
 export type FleetHostRoute = typeof FleetHostRoute.Type;
 
-const HOME_RELATIVE_ROOT = /^(?!\.{1,2}(?:\/|$))(?!.*\/\.{1,2}(?:\/|$))[A-Za-z0-9._-]+(?:\/[A-Za-z0-9._-]+)*$/u;
+// Every segment starts with a letter, digit or `_`: never `-` or `+` (which `find` would read as an
+// expression), never `.` (so no `.`, `..` or hidden segment).
+const HOME_RELATIVE_ROOT = /^[A-Za-z0-9_][A-Za-z0-9._-]*(?:\/[A-Za-z0-9_][A-Za-z0-9._-]*)*$/u;
 
 /**
  * A directory on a fleet host, relative to that host's home directory.
@@ -69,10 +72,13 @@ const HOME_RELATIVE_ROOT = /^(?!\.{1,2}(?:\/|$))(?!.*\/\.{1,2}(?:\/|$))[A-Za-z0-
  * **Details**
  *
  * A remote command starts in the login's home directory, so a root such as
- * `YeeBois/projects` or `.local/state/beep/yeet/attempts` names a remote
- * directory without any home path. Segments are limited to letters, digits,
- * `.`, `_` and `-`, and `.` and `..` segments are refused, so a root can
- * neither leave the home directory nor carry a shell metacharacter.
+ * `projects` names a remote directory without any home path. Segments are
+ * letters, digits, `.`, `_` and `-`, and each starts with a letter, digit or
+ * `_`. So a root can neither leave the home directory, name a hidden
+ * directory, carry a shell metacharacter, nor start with `-` or `+`, which
+ * `find` would read as the start of its expression (`-delete`, `-fprint`).
+ * The host's own attempt-journal store, a hidden directory, is read through
+ * {@link FleetHostEntry}'s `store` flag instead.
  *
  * **Example** (Check roots)
  *
@@ -81,7 +87,9 @@ const HOME_RELATIVE_ROOT = /^(?!\.{1,2}(?:\/|$))(?!.*\/\.{1,2}(?:\/|$))[A-Za-z0-
  * import * as S from "effect/Schema"
  *
  * const isRoot = S.is(FleetHostRoot)
- * console.log(isRoot(".local/state/beep/yeet/attempts")) // true
+ * console.log(isRoot("projects/beep-effect-worktrees")) // true
+ * console.log(isRoot("-delete")) // false
+ * console.log(isRoot(".local/state")) // false
  * console.log(isRoot("/srv/journals")) // false
  * console.log(isRoot("projects/../secrets")) // false
  * console.log(isRoot("projects;rm")) // false
@@ -94,8 +102,9 @@ export const FleetHostRoot = S.String.check(
   S.isPattern(HOME_RELATIVE_ROOT, {
     identifier: "FleetHostRootPattern",
     title: "Fleet host root",
-    description: "A home-relative directory of plain segments, with no `.` or `..` segment.",
-    message: "must be a home-relative path of letters, digits, '.', '_' and '-' segments",
+    description: "A home-relative directory of plain segments, each starting with a letter, digit or underscore.",
+    message:
+      "must be a home-relative path of letters, digits, '.', '_' and '-' segments, each starting with a letter, digit or '_' (no leading '-', '+' or '.')",
   })
 ).pipe(
   S.brand("FleetHostRoot"),
@@ -118,7 +127,9 @@ export type FleetHostRoot = typeof FleetHostRoot.Type;
  * `roots` are searched for `<checkout>/.beep/yeet/runs/<runId>/attempts.ndjson`
  * (a live checkout) and `<partition>/runs/<runId>/attempts.ndjson` (the host's
  * own attempt-journal store), at most eight levels deep, never through a
- * symbolic link.
+ * symbolic link. `store` (default `false`) also reads the host's own store at
+ * the fixed `.local/state/beep/yeet/attempts`; a host without one then reads
+ * `partial`.
  *
  * **Example** (A worker host)
  *
@@ -129,9 +140,10 @@ export type FleetHostRoot = typeof FleetHostRoot.Type;
  * const host = S.decodeUnknownSync(FleetHostEntry)({
  *   host: "tbk-worker",
  *   route: "ssh-tbk-worker",
- *   roots: ["YeeBois/projects", ".local/state/beep/yeet/attempts"],
+ *   roots: ["projects"],
+ *   store: true,
  * })
- * console.log(host.roots.length) // 2
+ * console.log(host.store) // true
  * ```
  *
  * @category models
@@ -142,9 +154,14 @@ export class FleetHostEntry extends S.Opaque<FleetHostEntry, { readonly brand: u
     host: HostLabel,
     route: FleetHostRoute,
     roots: S.NonEmptyArray(FleetHostRoot),
+    store: S.Boolean.pipe(
+      S.withDecodingDefaultKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false))
+    ),
   }).pipe(
     $I.annoteSchema("FleetHostEntry", {
-      description: "A fleet host's label, its existing SSH wrapper, and the home-relative roots holding its journals.",
+      description:
+        "A fleet host's label, its existing SSH wrapper, the home-relative roots holding its journals, and whether to read its own store.",
     })
   )
 ) {}
