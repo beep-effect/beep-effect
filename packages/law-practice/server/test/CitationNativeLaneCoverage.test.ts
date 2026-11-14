@@ -57,6 +57,54 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
       expect(result2).toMatchObject({ started: 0, unitsAcquired: 0 });
     })
   );
+  for (const kind of ["bun", "node"] as const) {
+    it.effect(`leaves the ${kind} handover holder untouched when a queued lane use is interrupted`, () =>
+      Effect.gen(function* () {
+        const { limits } = yield* defaultCitationEnginePolicy;
+        const admission = yield* makeCitationNativeProcessAdmission(limits);
+        const observed = yield* makeCitationObservedSpawner();
+        const scope = yield* Effect.acquireRelease(Scope.make(), (scope) => Scope.close(scope, Exit.void));
+        const lane = yield* makeCitationNativeLane(limits, "extract").pipe(
+          Effect.provideService(CitationNativeProcessAdmission, admission),
+          Effect.provideService(ChildProcessSpawner, observed.spawner),
+          Effect.provideService(Scope.Scope, scope)
+        );
+        const fixture = yield* makeCitationNativeWorkerFixture("busy", "html", kind);
+        const command = citationNativeProcessCommand(CitationNativeProcessRuntime.make(fixture), "");
+        const entered = yield* Deferred.make<void>();
+        const release = yield* Deferred.make<void>();
+        const holder = yield* lane
+          .withUse((start) =>
+            Effect.gen(function* () {
+              const started = yield* start("markup", command);
+              yield* started.child;
+              yield* Deferred.succeed(entered, undefined);
+              yield* Deferred.await(release);
+            })
+          )
+          .pipe(Effect.forkChild);
+        yield* Deferred.await(entered);
+        const before = yield* admission.snapshot;
+        const queued = yield* lane.withUse(() => Effect.void).pipe(Effect.forkChild);
+        yield* Effect.yieldNow;
+        yield* Fiber.interrupt(queued);
+        const after = yield* admission.snapshot;
+        expect(after).toEqual(before);
+        const counts = yield* observed.snapshot;
+        expect(counts).toEqual({ spawned: 1, confirmed: 0 });
+        yield* Deferred.succeed(release, undefined);
+        yield* Fiber.join(holder);
+        yield* lane.withUse(() => lane.ensureOpen);
+        const state = yield* lane.snapshot;
+        expect(state).toMatchObject({ started: 1, confirmed: 0, occupied: true });
+        yield* Scope.close(scope, Exit.void);
+        const retired = yield* observed.snapshot;
+        expect(retired).toEqual({ spawned: 1, confirmed: 1 });
+        const capacity = yield* admission.snapshot;
+        expect(capacity).toMatchObject({ active: 0, quarantined: 0 });
+      })
+    );
+  }
   for (const interrupt of [false, true]) {
     it.effect(
       `quarantines an unresolved admission on drain ${interrupt ? "interruption" : "deadline"} and closes Scope`,

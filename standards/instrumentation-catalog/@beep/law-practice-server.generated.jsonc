@@ -87,7 +87,6 @@
     {"name":"Citation.buildSpanOffsetIndex","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.callDiffRpc","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.callHtmlRpc","owner":"@beep/law-practice-server","family":"slice","conforms":true},
-    {"name":"Citation.callRegexRpc","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.callXmlRpc","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.callbackAllocate","owner":"@beep/law-practice-server","family":"slice","conforms":true},
     {"name":"Citation.callbackBeforeSet","owner":"@beep/law-practice-server","family":"slice","conforms":true},

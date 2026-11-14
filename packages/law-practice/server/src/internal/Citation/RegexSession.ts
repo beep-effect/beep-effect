@@ -212,77 +212,76 @@ export const makeCitationRegexSession = Effect.fn("Citation.makeRegexSession")(f
     function* (runtime, prepare) {
       return yield* lock
         .withPermit(
-          lane.withUse(
-            Effect.fnUntraced(function* (startNative, reserve, release) {
-              yield* ensureOpen;
-              if (state === "absent") transport = O.none();
-              const run = Effect.fnUntraced(function* (job: CitationRegexSessionJob, frame: Uint8Array) {
+          lane
+            .withUse(
+              Effect.fnUntraced(function* (startNative, reserve, release) {
+                yield* ensureOpen;
+                if (state === "absent") transport = O.none();
+                const run = Effect.fnUntraced(function* (job: CitationRegexSessionJob, frame: Uint8Array) {
+                  return yield* Effect.uninterruptibleMask(
+                    Effect.fnUntraced(function* (restore) {
+                      const work = Effect.gen(function* () {
+                        if (O.isNone(transport)) {
+                          const started = yield* timeout(start(runtime, startNative));
+                          transport = O.some(started);
+                        }
+                        const connection = yield* Effect.fromOption(transport).pipe(Effect.mapError(invalid));
+                        if (state !== "idle" || job.sequence !== sequence) return yield* invalid();
+                        return yield* Effect.gen(function* () {
+                          state = "sent";
+                          jobs++;
+                          const native = yield* makeCitationNativeRpcTransport(
+                            connection.child,
+                            frame,
+                            () => CitationRegexWorkerFailure.make({ reason: "channel-failed" }),
+                            sequence
+                          );
+                          const rpc = yield* RpcClient.makeNoSerialization(CitationRegexSessionRpcs, native.options);
+                          const deliver = makeCitationNativeRpcDelivery({
+                            sent: native.sent,
+                            write: rpc.write,
+                            requestId: native.requestId,
+                          });
+                          const receive = Effect.gen(function* () {
+                            yield* connection.take.pipe(Effect.flatMap(decodeStarted));
+                            const reply = yield* connection.take;
+                            if (CitationRegexSessionReply.guards.Failure(reply))
+                              return yield* reply.failure.pipe(Exit.fail, deliver);
+                            const complete = yield* decodeComplete(reply);
+                            const body = yield* citationRegexSessionResult(complete);
+                            yield* deliver(Exit.succeed(body));
+                          });
+                          const body = yield* Effect.zipWith(
+                            receive,
+                            rpc.client.Evaluate(job),
+                            (_received, value) => value,
+                            {
+                              concurrent: true,
+                            }
+                          );
+                          yield* ensureOpen;
+                          sequence++;
+                          return body;
+                        }).pipe(Effect.scoped, timeout);
+                      });
+                      const outcome = yield* Effect.exit(restore(work));
+                      return yield* settle(outcome, release);
+                    })
+                  );
+                });
                 return yield* Effect.uninterruptibleMask(
                   Effect.fnUntraced(function* (restore) {
-                    const work = Effect.gen(function* () {
-                      if (O.isNone(transport)) {
-                        const started = yield* timeout(start(runtime, startNative));
-                        transport = O.some(started);
-                      }
-                      const connection = yield* Effect.fromOption(transport).pipe(Effect.mapError(invalid));
-                      if (state !== "idle" || job.sequence !== sequence) return yield* invalid();
-                      return yield* Effect.gen(function* () {
-                        state = "sent";
-                        jobs++;
-                        const native = yield* makeCitationNativeRpcTransport(
-                          connection.child,
-                          frame,
-                          () => CitationRegexWorkerFailure.make({ reason: "channel-failed" }),
-                          sequence
-                        );
-                        const rpc = yield* RpcClient.makeNoSerialization(CitationRegexSessionRpcs, native.options);
-                        const deliver = makeCitationNativeRpcDelivery({
-                          sent: native.sent,
-                          write: rpc.write,
-                          requestId: native.requestId,
-                        });
-                        const receive = Effect.gen(function* () {
-                          yield* connection.take.pipe(Effect.flatMap(decodeStarted));
-                          const reply = yield* connection.take;
-                          if (CitationRegexSessionReply.guards.Failure(reply))
-                            return yield* reply.failure.pipe(Exit.fail, deliver);
-                          const complete = yield* decodeComplete(reply);
-                          const body = yield* citationRegexSessionResult(complete);
-                          yield* deliver(Exit.succeed(body));
-                        });
-                        const body = yield* Effect.zipWith(
-                          receive,
-                          rpc.client.Evaluate(job),
-                          (_received, value) => value,
-                          {
-                            concurrent: true,
-                          }
-                        );
-                        yield* ensureOpen;
-                        sequence++;
-                        return body;
-                      }).pipe(Effect.scoped, timeout);
-                    });
-                    const outcome = yield* Effect.exit(restore(work));
+                    const outcome = yield* Effect.exit(
+                      restore(prepare(sequence, run, reserve.pipe(Effect.mapError(mapLaneFailure))))
+                    );
                     return yield* settle(outcome, release);
                   })
                 );
-              });
-              return yield* Effect.uninterruptibleMask(
-                Effect.fnUntraced(function* (restore) {
-                  const outcome = yield* Effect.exit(
-                    restore(prepare(sequence, run, reserve.pipe(Effect.mapError(mapLaneFailure))))
-                  );
-                  return yield* settle(outcome, release);
-                })
-              );
-            })
-          )
+              })
+            )
+            .pipe(Effect.onInterrupt(() => terminate(closed())))
         )
-        .pipe(
-          Effect.mapError((error) => (isLaneFailure(error) ? mapLaneFailure(error) : error)),
-          Effect.onInterrupt(() => terminate(closed()))
-        );
+        .pipe(Effect.mapError((error) => (isLaneFailure(error) ? mapLaneFailure(error) : error)));
     }
   );
   return CitationRegexSession.of({

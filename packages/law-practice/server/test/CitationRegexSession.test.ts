@@ -621,7 +621,7 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
           })
         );
       }
-      it.effect(`poisons ${kind} when interrupted waiting for evaluation serialization`, () =>
+      it.effect(`leaves ${kind} preparation and its idle child untouched when a queued evaluation is interrupted`, () =>
         Effect.gen(function* () {
           const fixture = yield* setup(kind, "real");
           yield* fixture.evaluate;
@@ -633,16 +633,54 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
             )
             .pipe(Effect.forkChild);
           yield* Deferred.await(entered);
+          const before = yield* fixture.admission.snapshot;
           const queued = yield* fixture.evaluate.pipe(Effect.forkChild);
           yield* Effect.yieldNow;
-          const interrupted = yield* Fiber.interrupt(queued).pipe(Effect.forkChild);
-          yield* waitForCitationNativeTest(
-            fixture.session.snapshot.pipe(Effect.map((value) => value.state === "killed"))
-          );
+          yield* Fiber.interrupt(queued);
+          const state = yield* fixture.session.snapshot;
+          expect(state).toMatchObject({ state: "idle", jobs: 1, sequence: 1 });
+          const counts = yield* fixture.observed.snapshot;
+          expect(counts).toEqual({ spawned: 1, confirmed: 0 });
+          const after = yield* fixture.admission.snapshot;
+          expect(after).toEqual(before);
           yield* Deferred.succeed(release, undefined);
           yield* Fiber.join(first);
-          yield* Fiber.join(interrupted);
-          yield* assertClosed(fixture, 1);
+          yield* fixture.evaluate;
+          yield* Scope.close(fixture.scope, Exit.void);
+          yield* assertRetired(fixture);
+          const returns = yield* fixture.returns;
+          expect(returns).toBe(1);
+        })
+      );
+      it.effect(`keeps the active ${kind} job healthy and reuses its child after cancelling a queued evaluation`, () =>
+        Effect.gen(function* () {
+          const entered = yield* Deferred.make<void>();
+          const release = yield* Deferred.make<void>();
+          const fixture = yield* setup(kind, "real", { stage: "read", entered, release });
+          const first = yield* fixture.evaluate.pipe(Effect.forkChild);
+          yield* Deferred.await(entered);
+          const before = yield* fixture.admission.snapshot;
+          const queued = yield* fixture.evaluate.pipe(Effect.forkChild);
+          yield* Effect.yieldNow;
+          yield* Fiber.interrupt(queued);
+          const counts = yield* fixture.observed.snapshot;
+          expect(counts).toEqual({ spawned: 1, confirmed: 0 });
+          const after = yield* fixture.admission.snapshot;
+          expect(after).toEqual(before);
+          const kills = yield* fixture.liveSigkills;
+          expect(kills).toBe(0);
+          yield* Deferred.succeed(release, undefined);
+          const firstResult = yield* Fiber.join(first);
+          const idle = yield* fixture.session.snapshot;
+          expect(idle).toMatchObject({ state: "idle", jobs: 1, sequence: 1 });
+          const thirdResult = yield* fixture.evaluate;
+          expect(thirdResult).toEqual(firstResult);
+          const reused = yield* fixture.observed.snapshot;
+          expect(reused).toEqual({ spawned: 1, confirmed: 0 });
+          yield* Scope.close(fixture.scope, Exit.void);
+          yield* assertRetired(fixture);
+          const returns = yield* fixture.returns;
+          expect(returns).toBe(1);
         })
       );
       for (const handover of ["diff", "cleaner"]) {
