@@ -669,6 +669,10 @@ export const summarizeRemoteChecksForTesting: {
   }
 );
 
+// gh's answer to `gh pr checks --json` before that flag existed (2.46.0 prints
+// it with exit 1, followed by the usage text).
+const GH_PR_CHECKS_JSON_UNSUPPORTED = /unknown flag: --json/iu;
+
 /**
  * Read either check census, retaining an unreadable response as None.
  *
@@ -683,6 +687,7 @@ export const summarizeRemoteChecksForTesting: {
  * @param context - Repository context whose current branch identifies the pull request.
  * @param required - Restrict the read to required checks when true; otherwise read all checks.
  * @returns Decoded rows (empty when gh reports no checks), or None when the response is unreadable or truncated.
+ * @throws YeetCommandError when gh cannot run, or when it rejects `--json` on `gh pr checks` (a gh too old for yeet).
  * @category getters
  * @since 0.0.0
  */
@@ -722,6 +727,15 @@ export const collectRemoteChecks: {
     );
     if (result.truncated) {
       return O.none();
+    }
+    // An older gh has no `gh pr checks --json`. Its usage text decodes as neither
+    // a census nor "no checks reported", so name the cause instead of returning
+    // an unreadable census the caller can only report as incomplete.
+    if (result.exitCode !== 0 && GH_PR_CHECKS_JSON_UNSUPPORTED.test(result.output)) {
+      return yield* YeetCommandError.make({
+        message:
+          "This gh rejects `gh pr checks --json` (unknown flag), so yeet cannot read the pull request check census. Update gh; `gh --version` shows the one on PATH.",
+      });
     }
     // gh answers a head with no (required) checks yet in text with exit 1; that
     // is a complete, empty census, not an unreadable one. JSON decodes first: a

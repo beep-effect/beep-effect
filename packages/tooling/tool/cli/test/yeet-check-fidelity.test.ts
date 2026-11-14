@@ -325,4 +325,27 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("--until-ready check fidelity
       ]);
     })
   );
+
+  it.effect("names a gh that rejects --json instead of returning an unreadable census", () =>
+    Effect.gen(function* () {
+      const root = yield* tempRoot();
+      // gh 2.46.0's own answer: the flag error, then its usage text, exit 1.
+      const oldGh = ScriptedSpawner.make((command, args) =>
+        command === "gh" && isPrChecks(args)
+          ? { stderr: "unknown flag: --json\n\nUsage:  gh pr checks [<number> | <url> | <branch>] [flags]\n", exit: 1 }
+          : {}
+      );
+      const failure = yield* collectRemoteChecksForTesting(contextFor(root), true).pipe(withGh(oldGh), Effect.flip);
+      expect(failure.message).toContain("gh pr checks --json");
+
+      // A head with no checks yet is still a complete, empty census.
+      const noChecks = ScriptedSpawner.make((command, args) =>
+        command === "gh" && isPrChecks(args)
+          ? { stderr: "no checks reported on the 'feature/fidelity' branch", exit: 1 }
+          : {}
+      );
+      const census = yield* collectRemoteChecksForTesting(contextFor(root), false).pipe(withGh(noChecks));
+      assertSome(census, []);
+    })
+  );
 });
