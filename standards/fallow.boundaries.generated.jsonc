@@ -3886,6 +3886,7 @@
       {
         "from": "@beep/oip-web",
         "allow": [
+          "@beep/alchemy-vercel",
           "@beep/hubspot",
           "@beep/identity",
           "@beep/oip-web",
@@ -3899,6 +3900,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/alchemy-vercel",
           "@beep/hubspot",
           "@beep/identity",
           "@beep/oip-web",

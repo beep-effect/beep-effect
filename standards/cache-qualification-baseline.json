@@ -960,11 +960,11 @@
       }
     },
     "@beep/oip-web": {
-      "reviewer": "Claude Opus 5.5 (declaration-only-builds PR 2, feat/declaration-only-build)",
-      "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
+      "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p4-oip-web)",
+      "reason": "Re-record @beep/oip-web on main's baseline after merging origin/main at 6d366333e22 (#3325): the Alchemy stack adds stack sources, stack tests, the Alchemy dev dependencies and the @beep/alchemy-vercel edge; no command, output or environment changes, no qualification granted.",
       "basis": {
-        "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-        "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
+        "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-oip-web-alchemy-stack.md",
+        "sha256": "ced8760c628a97c755807815852b0732b18a23782a8eb97e1dcb815f72b0af23"
       }
     },
     "@beep/onepassword-cli": {
@@ -77385,6 +77385,7 @@
         "command": "bun run beep:build",
         "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
         "dependencies": [
+          "@beep/alchemy-vercel#build",
           "@beep/hubspot#build",
           "@beep/identity#build",
           "@beep/repo-configs#build",
@@ -77461,6 +77462,7 @@
         "command": "bun run beep:check",
         "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
         "dependencies": [
+          "@beep/alchemy-vercel#build",
           "@beep/hubspot#build",
           "@beep/identity#build",
           "@beep/repo-configs#build",
@@ -77510,6 +77512,7 @@
         "command": "bunx vitest run --coverage",
         "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
         "dependencies": [
+          "@beep/alchemy-vercel#build",
           "@beep/hubspot#build",
           "@beep/identity#build",
           "@beep/repo-configs#build",
@@ -77569,6 +77572,7 @@
         "command": "NEXT_DISABLE_PWA=1 portless oip-web.beep next dev --turbopack",
         "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
         "dependencies": [
+          "@beep/alchemy-vercel#build",
           "@beep/hubspot#build",
           "@beep/identity#build",
           "@beep/repo-configs#build",
@@ -77642,6 +77646,7 @@
         "command": "beep-cli lint deprecated-apis --package .",
         "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
         "dependencies": [
+          "@beep/alchemy-vercel#transit",
           "@beep/hubspot#transit",
           "@beep/identity#transit",
           "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -77848,6 +77853,7 @@
         "command": "beep-cli quality test-tsgo-package",
         "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
         "dependencies": [
+          "@beep/alchemy-vercel#transit",
           "@beep/hubspot#transit",
           "@beep/identity#transit",
           "@beep/repo-configs#transit",
@@ -77900,6 +77906,7 @@
         "command": "bun run beep:test",
         "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
         "dependencies": [
+          "@beep/alchemy-vercel#transit",
           "@beep/hubspot#transit",
           "@beep/identity#transit",
           "@beep/repo-configs#transit",
@@ -77960,6 +77967,7 @@
         "command": "bun run beep:test",
         "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
         "dependencies": [
+          "@beep/alchemy-vercel#transit",
           "@beep/hubspot#transit",
           "@beep/identity#transit",
           "@beep/repo-configs#transit",
