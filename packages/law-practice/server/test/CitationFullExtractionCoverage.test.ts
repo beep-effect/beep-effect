@@ -1,7 +1,6 @@
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
 import {
   CitationFullExtractionConfiguration,
-  CitationFullExtractionFailure,
   makeCitationFullExtraction as makeOwnedCitationFullExtraction,
 } from "@beep/law-practice-server/internal/Citation/FullExtraction";
 import { it } from "@beep/test-runner";
@@ -21,7 +20,6 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 const makeCitationFullExtraction = installCitationOwnedTestStage({
   schema: CitationFullExtractionConfiguration,
   install: makeOwnedCitationFullExtraction,
-  invalid: () => CitationFullExtractionFailure.make({ reason: "invalid-configuration" }),
 });
 
 const Bindings = S.fromJsonString(
@@ -51,8 +49,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("full-citati
             Effect.provideContext(setup.provided),
             DateTime.withCurrentZoneOffset(0)
           );
-        const malformed = yield* make({ editions: corpus.bindings }).pipe(Effect.flip);
-        expect(malformed).toMatchObject({ _tag: "CitationFullExtractionFailure", reason: "invalid-configuration" });
         const stage = yield* make({
           editions: corpus.bindings,
           case: cases,

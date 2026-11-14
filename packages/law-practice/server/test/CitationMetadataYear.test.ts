@@ -1,7 +1,6 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { makeCitationMetadataYear } from "@beep/law-practice-server/internal/Citation/MetadataYear";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -18,7 +17,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -134,20 +132,6 @@ it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
   it.layer(TestClock.layer())("native input refusal", (it) => {
     it.effect("refuses malformed or oversized native input and recovers", () =>
       Effect.gen(function* () {
-        // Refused where configuration crosses into the engine.
-        const invalidPolicy = yield* refuseCitationTestConfiguration(
-          () => ({ reason: "invalid-policy" }),
-          CitationEngineLimits,
-          null
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
-        // Refused where configuration crosses into the engine.
-        const invalidReinstall = yield* refuseCitationTestConfiguration(
-          () => ({ reason: "invalid-policy" }),
-          CitationEngineLimits,
-          null
-        );
-        expect(invalidReinstall).toMatchObject({ reason: "invalid-policy" });
         yield* setYear(2026);
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const parser = yield* makeCitationMetadataYear({ ...limits, producedTextUtf16: 4 }).pipe(

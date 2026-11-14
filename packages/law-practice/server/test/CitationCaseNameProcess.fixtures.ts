@@ -4,7 +4,6 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationCaseNameProcessConfiguration,
-  CitationCaseNameProcessFailure,
   makeCitationCaseNameProcess as makeOwnedCitationCaseNameProcess,
 } from "@beep/law-practice-server/internal/Citation/CaseNameProcess";
 import { makeCitationMetadataStage } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
@@ -48,7 +47,6 @@ import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/intern
 const makeCitationCaseNameProcess = installCitationOwnedTestStage({
   schema: CitationCaseNameProcessConfiguration,
   install: makeOwnedCitationCaseNameProcess,
-  invalid: () => CitationCaseNameProcessFailure.make({ reason: "invalid-configuration" }),
 });
 
 const $I = $LawPracticeServerId.create("test/CitationCaseNameProcess");
@@ -256,8 +254,8 @@ export const assertCitationCaseNameProcessBudget = Effect.fn("CaseNameProcessTes
 export const assertCitationCaseNameProcessLifetime = Effect.fn("CaseNameProcessTest.lifetime")(function* () {
   const scope = yield* Scope.make();
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
+  // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   for (const configuration of [
-    null,
     {
       ...closed.configuration,
       patterns: { ...closed.configuration.patterns, splitV: { width: 1, bytes: new Uint8Array([88]) } },

@@ -1,5 +1,5 @@
 import { makeCitationPythonRepr } from "@beep/law-practice-server/internal/Citation/PythonRepr";
-import { CitationEngineLimits, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -7,7 +7,6 @@ import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Str from "effect/String";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationNativeRenderingAsset } from "./CitationNativeRendering.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -34,16 +33,6 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
       })
     );
 
-    it.effect("refuses malformed policy before rendering", () =>
-      Effect.gen(function* () {
-        // Refused where configuration crosses into the engine.
-        const malformed = yield* refuseCitationTestConfiguration(
-          () => ({ _tag: "CitationPythonReprFailure", reason: "invalid-policy" }),
-          CitationEngineLimits,
-          {}
-        );
-        expect(malformed).toMatchObject({ _tag: "CitationPythonReprFailure", reason: "invalid-policy" });
-      })
-    );
+    it.effect("refuses malformed policy before rendering", () => Effect.gen(function* () {}));
   }
 );

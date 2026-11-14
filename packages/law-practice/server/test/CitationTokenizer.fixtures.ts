@@ -18,7 +18,6 @@ import {
   CitationTokenizerExtractor,
   makeCitationTokenizer as makeOwnedCitationTokenizer,
 } from "@beep/law-practice-server/internal/Citation/Tokenizer";
-import { CitationTokenizerFailure } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import * as BunChildProcessSpawner from "@effect/platform-bun/BunChildProcessSpawner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -45,7 +44,6 @@ import { CitationTokenSeedHex } from "./CitationTokenSeed.fixtures.ts";
 const makeCitationTokenizer = installCitationOwnedTestStage({
   schema: CitationTokenizerConfiguration,
   install: makeOwnedCitationTokenizer,
-  invalid: () => CitationTokenizerFailure.make({ reason: "invalid-configuration" }),
 });
 
 const $I = $LawPracticeServerId.create("test/CitationTokenizer");

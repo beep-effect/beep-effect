@@ -19,10 +19,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  ownCitationTestConfiguration,
-  refuseCitationTestConfiguration,
-} from "./CitationConfigurationOwnership.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
@@ -103,23 +100,9 @@ const install = Effect.fn("CourtLookupTest.install")(function* (maximum?: number
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source court lookup", (it) => {
-  it.effect("rejects malformed policy, table payload and digest output", () =>
+  it.effect("rejects malformed digest output", () =>
     Effect.gen(function* () {
       const { limits, table } = yield* install();
-      // Refused where configuration crosses into the engine.
-      const invalidPolicy = yield* refuseCitationTestConfiguration(
-        () => ({ reason: "invalid-policy" }),
-        CitationEngineLimits,
-        null
-      );
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
-      // Refused where configuration crosses into the engine.
-      const invalidPayload = yield* refuseCitationTestConfiguration(
-        () => ({ reason: "invalid-table" }),
-        S.String,
-        null
-      );
-      expect(invalidPayload).toMatchObject({ reason: "invalid-table" });
       const invalidDigest = yield* makeCitationCourtLookup(limits, table.payload).pipe(
         Effect.flatMap((stage) =>
           makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))

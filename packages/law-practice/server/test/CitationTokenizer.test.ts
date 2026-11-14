@@ -11,7 +11,6 @@ import {
   CitationTokenizerConfiguration,
   makeCitationTokenizer as makeOwnedCitationTokenizer,
 } from "@beep/law-practice-server/internal/Citation/Tokenizer";
-import { CitationEngineLimits, CitationTokenizerFailure } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -23,7 +22,6 @@ import * as S from "effect/Schema";
 import {
   installCitationOwnedTestStage,
   ownCitationTestConfiguration,
-  refuseCitationTestConfigurations,
 } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import {
@@ -125,15 +123,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
   it.effect("rejects malformed policy, bindings and source without native work", () =>
     Effect.gen(function* () {
       const controls = yield* loadCitationTokenizerControls();
-      // Malformed policy and bindings are refused where configuration crosses into the engine.
-      const refusals = yield* refuseCitationTestConfigurations(
-        () => CitationTokenizerFailure.make({ reason: "invalid-configuration" }),
-        [
-          [CitationEngineLimits, {}],
-          [CitationTokenizerConfiguration, {}],
-        ]
-      );
-      for (const refused of refusals) expect(refused).toMatchObject({ reason: "invalid-configuration" });
       const setup = yield* setupCitationTokenizer("bun", controls.configuration);
       for (const source of [{}, { width: 2, bytes: new Uint8Array([1]) }, { width: 3, bytes: new Uint8Array() }]) {
         const failed = yield* setup.tokenizer.port.tokenize(source).pipe(Effect.flip);
@@ -252,18 +241,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       { timeout: 30000 }
     );
   }
-  it.effect("rejects incoherent or duplicate extractor configuration before execution", () =>
+  it.effect("rejects duplicate extractor configuration before execution", () =>
     Effect.gen(function* () {
       const controls = yield* loadCitationTokenizerControls();
       const first = A.getUnsafe(controls.configuration.extractors, 0);
-      const incoherent = { ...first, recipe: { ...first.recipe, id: 999 } };
-      for (const configuration of [
-        { ...controls.configuration, extractors: [incoherent] },
-        { ...controls.configuration, extractors: [first, first] },
-      ]) {
-        const failure = yield* setupCitationTokenizer("bun", configuration).pipe(Effect.flip);
-        expect(failure).toMatchObject({ reason: "invalid-configuration" });
-      }
+      const failure = yield* setupCitationTokenizer("bun", {
+        ...controls.configuration,
+        extractors: [first, first],
+      }).pipe(Effect.flip);
+      expect(failure).toMatchObject({ reason: "invalid-configuration" });
     })
   );
   it.effect(

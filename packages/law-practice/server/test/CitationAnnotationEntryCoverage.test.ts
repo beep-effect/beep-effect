@@ -1,9 +1,4 @@
-import {
-  CitationAnnotationEntryConfiguration,
-  CitationAnnotationEntryFailure,
-  makeCitationAnnotationEntry,
-} from "@beep/law-practice-server/internal/Citation/AnnotationEntry";
-import { ownCitationConfiguration } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
+import { makeCitationAnnotationEntry } from "@beep/law-practice-server/internal/Citation/AnnotationEntry";
 import { CitationAnnotationReplacement, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { deepStrictEqual } from "@effect/vitest/utils";
@@ -35,14 +30,6 @@ const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimit
 });
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("annotation entry refusals", (it) => {
-  it.effect("refuses an installation configuration outside the entry schema at the engine boundary", () =>
-    Effect.gen(function* () {
-      const failure = yield* ownCitationConfiguration(CitationAnnotationEntryConfiguration, {}, () =>
-        CitationAnnotationEntryFailure.make({ reason: "invalid-configuration" })
-      ).pipe(Effect.flip);
-      deepStrictEqual(refusal(failure), { _tag: "CitationAnnotationEntryFailure", detail: "invalid-configuration" });
-    })
-  );
   it.effect("maps invalid native plain text and replacement words to closed invalid input", () =>
     Effect.gen(function* () {
       const entry = yield* install();

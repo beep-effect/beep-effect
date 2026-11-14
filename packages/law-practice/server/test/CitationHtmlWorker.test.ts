@@ -5,7 +5,6 @@ import {
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -24,10 +23,7 @@ import * as Path from "effect/Path";
 import { ChildProcessSpawner, make as makeSpawner } from "effect/process/ChildProcessSpawner";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
-import {
-  ownCitationTestConfiguration,
-  refuseCitationTestConfiguration,
-} from "./CitationConfigurationOwnership.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import type { CitationHtmlCompletionFailure } from "@beep/law-practice-server/internal/Citation/HtmlCompletion";
 import type { CitationHtmlInputFailure } from "@beep/law-practice-server/internal/Citation/HtmlInput";
 import type { CitationHtmlKernelFailure } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
@@ -60,20 +56,6 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
   it.effect("rejects malformed policy, runtime and input before starting a child", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
-      // Refused where configuration crosses into the engine.
-      const invalidPolicy = yield* refuseCitationTestConfiguration(
-        () => ({ reason: "invalid-runtime" }),
-        CitationEngineLimits,
-        null
-      );
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
-      // Refused where configuration crosses into the engine.
-      const invalidRuntime = yield* refuseCitationTestConfiguration(
-        () => ({ reason: "invalid-runtime" }),
-        CitationNativeProcessRuntime,
-        null
-      );
-      expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
       const f = yield* fixture("released");
       let spawns = 0;
       const worker = yield* makeCitationHtmlWorker(limits, f).pipe(

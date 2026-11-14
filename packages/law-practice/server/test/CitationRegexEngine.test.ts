@@ -21,7 +21,6 @@ import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { setupCitationRegexWorker } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -114,13 +113,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("pinned sour
           [9, 13],
           [32, 32],
         ]);
-        // Refused where configuration crosses into the engine.
-        const invalid = yield* refuseCitationTestConfiguration(
-          () => ({ reason: "unsupported-syntax" }),
-          CitationRegexEngine,
-          "unknown"
-        );
-        expect(invalid).toMatchObject({ reason: "unsupported-syntax" });
       }),
     { timeout: 60000 }
   );

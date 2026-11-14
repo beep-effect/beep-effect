@@ -27,7 +27,6 @@ import {
   decodeCitationRegexStartup,
   encodeCitationRegexStartup,
 } from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -50,10 +49,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
-import {
-  ownCitationTestConfiguration,
-  refuseCitationTestConfiguration,
-} from "./CitationConfigurationOwnership.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeAcknowledgementSpawner,
@@ -168,20 +164,6 @@ const assertModeCaptures = Effect.fn("RegexWorkerTest.assertModeCaptures")(funct
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices: true })("owned native regex", (it) => {
   it.effect("rejects malformed policy, runtime and match quotas before spawning", () =>
     Effect.gen(function* () {
-      // Refused where configuration crosses into the engine.
-      const invalidPolicy = yield* refuseCitationTestConfiguration(
-        () => ({ reason: "invalid-runtime" }),
-        CitationEngineLimits,
-        null
-      );
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
-      // Refused where configuration crosses into the engine.
-      const invalidRuntime = yield* refuseCitationTestConfiguration(
-        () => ({ reason: "invalid-runtime" }),
-        CitationNativeProcessRuntime,
-        null
-      );
-      expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
       const { worker, observed } = yield* setup([descriptor]);
       const invalidQuota = yield* worker.evaluate(pattern, native("b ab"), 0, -1).pipe(Effect.flip);
       expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });

@@ -7,7 +7,6 @@ import {
   makeCitationExtractorSelection as makeOwnedCitationExtractorSelection,
 } from "@beep/law-practice-server/internal/Citation/ExtractorSelection";
 import { makeCitationPythonHash } from "@beep/law-practice-server/internal/Citation/PythonHash";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -17,10 +16,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import {
-  ownCitationTestConfiguration,
-  refuseCitationTestConfiguration,
-} from "./CitationConfigurationOwnership.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationExtractorSelectionControls } from "./CitationExtractorSelection.fixtures.ts";
 
 // Own the fixture configuration through the engine boundary before the direct install.
@@ -71,20 +67,6 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         }
         const selector = yield* makeCitationExtractorSelection(limits, controls.ordering.bindings);
         const ordering = yield* makeCitationExtractorOrdering(limits, controls.ordering.bindings);
-        // Refused where configuration crosses into the engine.
-        const invalidPolicy = yield* refuseCitationTestConfiguration(
-          () => ({ reason: "invalid-policy" }),
-          CitationEngineLimits,
-          {}
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
-        // Refused where configuration crosses into the engine.
-        const invalidBindings = yield* refuseCitationTestConfiguration(
-          () => ({ reason: "invalid-bindings" }),
-          S.Array(CitationExtractorOrderingBinding),
-          {}
-        );
-        expect(invalidBindings).toMatchObject({ reason: "invalid-bindings" });
         let nonIndexOrders = 0;
         for (const row of controls.ordering.cases) {
           const citationResult2 = yield* selector.select(row.source);

@@ -8,14 +8,12 @@ import {
 import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
   CitationJournalMetadataConfiguration,
-  CitationJournalMetadataFailure,
   CitationJournalMetadataPatch,
   makeCitationJournalMetadata as makeOwnedCitationJournalMetadata,
 } from "@beep/law-practice-server/internal/Citation/JournalMetadata";
 import { CitationLawMetadataInput } from "@beep/law-practice-server/internal/Citation/LawMetadata";
-import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationEngineLimits, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -27,10 +25,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
-import {
-  installCitationOwnedTestStage,
-  refuseCitationTestConfigurations,
-} from "./CitationConfigurationOwnership.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
@@ -233,16 +228,6 @@ export const assertCitationJournalMetadataConfiguration = Effect.fn("JournalMeta
   const editions = yield* makeCitationFrozenEditions(bundle);
   const installed = Context.add(setup.provided, CitationFrozenEditions, editions);
   const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
-  // Malformed policy, configuration and runtime are refused where they cross into the engine.
-  const refusals = yield* refuseCitationTestConfigurations(
-    () => CitationJournalMetadataFailure.make({ reason: "invalid-configuration" }),
-    [
-      [CitationEngineLimits, {}],
-      [CitationJournalMetadataConfiguration, {}],
-      [CitationNativeProcessRuntime, {}],
-    ]
-  );
-  for (const refused of refusals) expect(refused).toMatchObject({ reason: "invalid-configuration" });
   // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   for (const [policy, runtime, configuration] of [
     [setup.limits, setup.runtime, { ...corpus.configuration, journalPattern: changedPattern }],

@@ -6,7 +6,6 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationPublicationMetadataConfiguration } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
 import { makeCitationPinCiteCleaner } from "@beep/law-practice-server/internal/Citation/MetadataStrings";
 import {
-  CitationPinExtractionFailure,
   CitationPinExtractionInput,
   CitationPinExtractionResult,
   makeCitationPinExtraction as makeOwnedCitationPinExtraction,
@@ -174,9 +173,7 @@ export const assertCitationPinExtractionConfiguration = Effect.fn("PinExtraction
         )
       ),
     setup,
-    corpus.configuration,
-    CitationPublicationMetadataConfiguration,
-    () => CitationPinExtractionFailure.make({ reason: "invalid-configuration" })
+    corpus.configuration
   );
   const valid = yield* install("bun");
   const request = A.getUnsafe(valid.corpus.cases, 22).request;

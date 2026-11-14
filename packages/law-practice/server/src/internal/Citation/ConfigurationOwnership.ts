@@ -34,6 +34,13 @@ const mint = <A>(value: A) => value as CitationOwned<A>;
  * keep the caller's `Uint8Array` buffers, because `S.Uint8Array` is an instance
  * check. Every failure maps to the caller's closed, source-free error.
  *
+ * **Gotchas**
+ *
+ * Precondition: every leaf of `schema` must have a JSON codec that copies. A
+ * leaf whose JSON codec passes the value through (`S.Unknown`, `S.Any` or a
+ * declaration without a copying codec) would be kept by reference, and the
+ * result would then alias the caller's value despite the brand.
+ *
  * **Example** (Own engine limits once)
  * ```ts
  * import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
@@ -86,34 +93,39 @@ export const ownedField: {
 export const ownedItems = <T>(owned: CitationOwned<ReadonlyArray<T>>): ReadonlyArray<CitationOwned<T>> =>
   A.map(owned, mint);
 
-/** Assemble an owned value from owned parts through a schema constructor.
+/** Assemble an owned value from owned parts with a schema's constructor.
  *
  * **Details**
  *
- * Every field passed in is already owned, and the constructor builds a fresh
- * container from them (a schema constructor may copy them as well), so the
- * result is owned as a whole. Stages use it to hand a child the configuration
- * they assemble from projections of their own. It cannot mint an owned value
- * from parts that are not already owned.
+ * `schema` is an `S.Struct` or `S.Opaque` class; its `make` builds a fresh
+ * container from the fields (and may copy them). Every field passed in must
+ * already be owned and the field record must not be empty, so the result is owned
+ * as a whole. It cannot mint from parts that are not owned. Stages use it to hand
+ * a child the configuration they assemble from projections of their own.
  *
  * **Example** (Assemble child configuration)
  * ```ts
+ * import * as S from "effect/Schema";
  * import { ownedStruct } from "./ConfigurationOwnership.ts";
  * import type { CitationOwned } from "./ConfigurationOwnership.ts";
  * declare const size: CitationOwned<number>;
- * const child = ownedStruct((fields: { readonly size: number }) => ({ ...fields }), { size });
+ * const Child = S.Struct({ size: S.Number });
+ * const child = ownedStruct(Child, { size });
  * ```
  *
  * @internal @category constructors @since 0.0.0
  */
 export const ownedStruct: {
-  <F>(fields: { readonly [K in keyof F]: CitationOwned<F[K]> }): <A>(make: (fields: F) => A) => CitationOwned<A>;
-  <F, A>(make: (fields: F) => A, fields: { readonly [K in keyof F]: CitationOwned<F[K]> }): CitationOwned<A>;
+  <F, A>(fields: OwnedFields<F>): (schema: OwnedConstructor<F, A>) => CitationOwned<A>;
+  <F, A>(schema: OwnedConstructor<F, A>, fields: OwnedFields<F>): CitationOwned<A>;
 } = dual(
   2,
-  <F, A>(make: (fields: F) => A, fields: { readonly [K in keyof F]: CitationOwned<F[K]> }): CitationOwned<A> =>
-    mint(make(fields))
+  <F, A>(schema: OwnedConstructor<F, A>, fields: OwnedFields<F>): CitationOwned<A> => mint(schema.make(fields))
 );
+// A schema constructor (`S.Struct` or `S.Opaque` class), never a free function.
+type OwnedConstructor<F, A> = { readonly fields: S.Struct.Fields; readonly make: (fields: F) => A };
+// Owned fields only, and at least one: an empty record would mint from nothing.
+type OwnedFields<F> = [keyof F] extends [never] ? never : { readonly [K in keyof F]: CitationOwned<F[K]> };
 
 /** Derive an owned value from an owned input by engine computation.
  *
@@ -121,11 +133,12 @@ export const ownedStruct: {
  *
  * The result is owned because the engine computes it from an already owned
  * input and from values the engine itself creates or reads (sealed asset files,
- * the clock). `derive` must not close over a caller-held value. It needs an
- * owned witness, so it cannot mint from caller input: it is the same discipline
- * as `ownedStruct`, not a public mint, and the brand constructor stays private.
- * The default engine uses it once, to derive its installed configuration from
- * the caller's configuration it owned with the engine's one detach.
+ * the clock). Its soundness rests entirely on `derive` not closing over a
+ * caller-held value: the types cannot check that. It needs an owned witness, so
+ * it cannot mint from caller input; it is the same discipline as `ownedStruct`,
+ * not a public mint, and the brand constructor stays private. It has exactly one
+ * production call site: the default engine derives its installed configuration
+ * from the caller's configuration it owned with the engine's one detach.
  *
  * **Example** (Derive configuration from owned input)
  * ```ts

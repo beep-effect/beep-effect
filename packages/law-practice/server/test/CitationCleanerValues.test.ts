@@ -8,12 +8,7 @@ import { makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citati
 import { makeCitationHtmlKernel } from "@beep/law-practice-server/internal/Citation/HtmlKernel";
 import { makeCitationLiteralCleaners } from "@beep/law-practice-server/internal/Citation/LiteralCleaners";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import {
-  CitationCleanerFailure,
-  CitationCleanerObject,
-  CitationEngineLimits,
-  CitationTextBudget,
-} from "@beep/law-practice-use-cases/server";
+import { CitationCleanerFailure, CitationCleanerObject, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -34,7 +29,6 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 
 const Relations = S.Struct({
   sameInput: S.Boolean,
@@ -273,21 +267,6 @@ it.effect("captures owner lifetime and clears all arena-held values and caches o
     ]) {
       const citationResult28 = yield* Effect.flip(read);
       expect(citationResult28).toMatchObject({ reason: "closed-owner" });
-    }
-  })
-);
-
-it.effect("rejects malformed policy with a closed failure before installing operations", () =>
-  Effect.gen(function* () {
-    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
-      // Refused where configuration crosses into the engine.
-      const failure = yield* refuseCitationTestConfiguration(
-        () => ({ reason: "invalid-input" }),
-        CitationEngineLimits,
-        policy
-      );
-      expect(failure).toMatchObject({ reason: "invalid-input" });
-      expect("cause" in failure).toBe(false);
     }
   })
 );

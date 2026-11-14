@@ -3,12 +3,11 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { convertTextOffsetRange, TextOffsetRange } from "@beep/langextract/VerifiedSpan";
 import {
   CitationRegexInputLayout,
-  CitationRegexInputRole,
   CitationRegexProjection,
   citationUnaccountedText,
   makeCitationRegexInput,
 } from "@beep/law-practice-server/internal/Citation/RegexInput";
-import { CitationEngineLimits, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -24,7 +23,6 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import type {
   CitationPreparedRegexInput,
   CitationRegexInputFailure,
@@ -217,13 +215,6 @@ it.effect("rejects malformed native layouts and invalid point ranges with closed
   Effect.gen(function* () {
     const citationResult13 = yield* defaultCitationEnginePolicy;
     const input = yield* makeCitationRegexInput(citationResult13.limits, citationUnaccountedText);
-    // The role is typed engine configuration; an unknown role is refused where it is owned.
-    const invalidRole = yield* refuseCitationTestConfiguration(
-      () => ({ reason: "invalid-policy" }),
-      CitationRegexInputRole,
-      "unknown-role"
-    );
-    expect(invalidRole).toMatchObject({ reason: "invalid-policy" });
     const invalidText = yield* input.prepareText(42, preflight).pipe(Effect.flip);
     expect(invalidText).toMatchObject({ reason: "invalid-input" });
     yield* Effect.forEach(
@@ -368,21 +359,6 @@ it.effect("captures policy and gives a shorter total deadline precedence during 
       operation: "extract",
       limit: "operationDeadline",
     });
-  })
-);
-
-it.effect("rejects malformed policy with a closed failure before installing operations", () =>
-  Effect.gen(function* () {
-    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
-      // Refused where configuration crosses into the engine.
-      const failure = yield* refuseCitationTestConfiguration(
-        () => ({ reason: "invalid-policy" }),
-        CitationEngineLimits,
-        policy
-      );
-      expect(failure).toMatchObject({ reason: "invalid-policy" });
-      expect("cause" in failure).toBe(false);
-    }
   })
 );
 

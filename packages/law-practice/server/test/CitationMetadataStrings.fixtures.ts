@@ -3,7 +3,7 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { makeCitationMetadataStrings as makeOwnedCitationMetadataStrings } from "@beep/law-practice-server/internal/Citation/MetadataStrings";
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
-import { CitationEngineLimits, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -14,10 +14,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  ownCitationTestConfiguration,
-  refuseCitationTestConfiguration,
-} from "./CitationConfigurationOwnership.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { assertCitationRegexRuntimeReleased, setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
@@ -121,14 +118,6 @@ export const replayCitationMetadataStrings = Effect.fn("MetadataStringsTest.repl
 const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 /** Additional retained copy refusal precedes matching; early source return is distinct. */
 export const assertCitationMetadataStringBudget = Effect.fn("MetadataStringsTest.budget")(function* () {
-  // Refused where configuration crosses into the engine.
-  const invalidPolicy = yield* refuseCitationTestConfiguration(
-    () => ({ reason: "invalid-policy" }),
-    CitationEngineLimits,
-    null
-  );
-  expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
-
   const corpus = yield* loadCitationMetadataStrings();
   const refused = yield* install(corpus, "bun", 11);
   const failure = yield* refused.helpers.parenthetical(native("abc")).pipe(Effect.flip);

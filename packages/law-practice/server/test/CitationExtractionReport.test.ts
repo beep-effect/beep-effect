@@ -1,9 +1,6 @@
 import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/SourceText";
 import { makeCitationSourceExtraction as makeOwnedCitationSourceExtraction } from "@beep/law-practice-server/internal/Citation/SourceExtraction";
-import {
-  CitationVerifiedExtractionConfiguration,
-  CitationVerifiedExtractionFailure,
-} from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
+import { CitationVerifiedExtractionConfiguration } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as Clock from "effect/Clock";
@@ -22,7 +19,6 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 const makeCitationSourceExtraction = installCitationOwnedTestStage({
   schema: CitationVerifiedExtractionConfiguration,
   install: makeOwnedCitationSourceExtraction,
-  invalid: () => CitationVerifiedExtractionFailure.make({ reason: "invalid-configuration" }),
 });
 
 it.layer(citationTokenizerTestLayer)("captured extraction report timing", (it) => {
@@ -74,21 +70,4 @@ it.layer(citationTokenizerTestLayer)("captured extraction report timing", (it) =
       { timeout: 60000 }
     );
   });
-  it.effect("refuses a malformed source extraction configuration at installation", () =>
-    Effect.gen(function* () {
-      const { setup, provided } = yield* installCitationDefaultConfigurationFixture("bun");
-      const unused = SourceTextResolver.of({
-        resolve: Effect.fn("ExtractionReportTest.unusedSource")(() => Effect.die("resolver is not reached")),
-      });
-      const refused = yield* makeCitationSourceExtraction(setup.limits, setup.runtime, { extraction: null }).pipe(
-        Effect.provideContext(provided),
-        Effect.provideService(SourceTextResolver, unused),
-        DateTime.withCurrentZoneOffset(0),
-        Effect.flip
-      );
-      expect(refused).toMatchObject({ _tag: "CitationVerifiedExtractionFailure", reason: "invalid-configuration" });
-      const workers = yield* setup.observed.snapshot;
-      expect(workers).toEqual({ spawned: 0, confirmed: 0 });
-    })
-  );
 });

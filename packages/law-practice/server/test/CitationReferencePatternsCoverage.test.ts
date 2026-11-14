@@ -5,7 +5,7 @@ import {
   verifyCitationReferencePatternConfiguration,
 } from "@beep/law-practice-server/internal/Citation/ReferencePatterns";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationEngineLimits, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -17,10 +17,7 @@ import * as Num from "effect/Number";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  ownCitationTestConfiguration,
-  refuseCitationTestConfiguration,
-} from "./CitationConfigurationOwnership.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationReferenceNameMetadata,
@@ -56,17 +53,10 @@ const plaintiffOnly = (plaintiff: Parameters<typeof makeCitationReferenceNameMet
   });
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference pattern refusals", (it) => {
-  it.effect("refuses an invalid policy and an altered exclusion list of the pinned length", () =>
+  it.effect("refuses an altered exclusion list of the pinned length", () =>
     withCitationTestInvocation(
       Effect.gen(function* () {
         const { budget, names, limits } = yield* install();
-        // Refused where configuration crosses into the engine.
-        const policy = yield* refuseCitationTestConfiguration(
-          () => ({ _tag: "CitationReferenceNamesFailure", reason: "invalid-policy" }),
-          CitationEngineLimits,
-          {}
-        );
-        expect(policy).toMatchObject({ _tag: "CitationReferenceNamesFailure", reason: "invalid-policy" });
         const altered = A.map(names, (name, index) => (index === 0 ? "different" : name));
         strictEqual(altered.length, 93);
         const mismatch = yield* makeCitationReferenceNames(limits, altered).pipe(
@@ -83,18 +73,15 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference p
     )
   );
 
-  it.effect("refuses invalid policy, configuration and unauthenticated templates", () =>
+  it.effect("refuses unauthenticated templates", () =>
     withCitationTestInvocation(
       Effect.gen(function* () {
-        const { budget, configuration, limits, tampered } = yield* install();
+        const { budget, limits, tampered } = yield* install();
         const run = (policy: unknown, input: unknown) =>
           makeCitationReferencePatternsAtBoundary(policy, input).pipe(
             Effect.provideService(CitationTextBudget, budget)
           );
-        const invalidPolicy = { _tag: "CitationReferencePatternFailure", reason: "invalid-policy" };
         const invalidConfiguration = { _tag: "CitationReferencePatternFailure", reason: "invalid-configuration" };
-        yield* refuses(run({}, configuration), invalidPolicy);
-        yield* refuses(run(limits, {}), invalidConfiguration);
         yield* refuses(run(limits, tampered), invalidConfiguration);
         const owned = yield* ownCitationTestConfiguration(CitationReferencePatternConfiguration, tampered);
         yield* refuses(verifyCitationReferencePatternConfiguration(limits, owned), invalidConfiguration);

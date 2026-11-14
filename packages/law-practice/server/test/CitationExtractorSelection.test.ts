@@ -1,9 +1,7 @@
-import { ownCitationConfiguration } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
 import {
   CitationExtractorSelectionBinding,
   makeCitationExtractorSelection as makeOwnedCitationExtractorSelection,
 } from "@beep/law-practice-server/internal/Citation/ExtractorSelection";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -15,19 +13,16 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationExtractorSelectionControls } from "./CitationExtractorSelection.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install;
-// malformed fixture configuration is refused there with the helper's closed reason.
+// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationExtractorSelection = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationExtractorSelection>[0],
   a1: unknown
 ) {
-  const o1 = yield* ownCitationConfiguration(S.Array(CitationExtractorSelectionBinding), a1, () => ({
-    reason: "invalid-bindings",
-  }));
+  const o1 = yield* ownCitationTestConfiguration(S.Array(CitationExtractorSelectionBinding), a1);
   return yield* makeOwnedCitationExtractorSelection(a0, o1);
 });
 
@@ -36,11 +31,11 @@ const native = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(te
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestServices: true })(
   "extractor selection",
   (it) => {
-    it.effect("refuses malformed bindings and native points before selection", () =>
+    it.effect("refuses unencodable binding points and native points before selection", () =>
       Effect.gen(function* () {
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const invalidPoint = { width: 4, bytes: new Uint8Array([0, 0, 17, 0]) };
-        for (const bindings of [{}, [{ id: 0, flags: 0, strings: [invalidPoint] }]]) {
+        for (const bindings of [[{ id: 0, flags: 0, strings: [invalidPoint] }]]) {
           const failed = yield* makeCitationExtractorSelection(limits, bindings).pipe(Effect.flip);
           expect(failed).toMatchObject({ reason: "invalid-bindings" });
         }
@@ -132,19 +127,4 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layerDigest), { excludeTestSer
       })
     );
   }
-);
-
-it.effect("rejects malformed policy with a closed failure before installing operations", () =>
-  Effect.gen(function* () {
-    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
-      // Refused where configuration crosses into the engine.
-      const failure = yield* refuseCitationTestConfiguration(
-        () => ({ reason: "invalid-policy" }),
-        CitationEngineLimits,
-        policy
-      );
-      expect(failure).toMatchObject({ reason: "invalid-policy" });
-      expect("cause" in failure).toBe(false);
-    }
-  })
 );

@@ -130,37 +130,29 @@ export const verifyCitationReferencePatternConfiguration = Effect.fn("Citation.v
   }
 );
 /** Literal-only expansion retains Python point identity, including surrogate words.
- * Install once per call site: fixed-pattern authentication and the rejection
- * fingerprint run here, and each request's `make` replays their outcome where it
- * used to compute them. `make` stays per request because it reserves its fixed
- * fragments on the request's text budget. The enclosing extraction owner supplies
- * the text authority; methods require R=never.
+ * Install once per call site from configuration the stage's `verify` step has
+ * already authenticated (`verifyCitationReferencePatternConfiguration`, once per
+ * engine): only the rejection fingerprint is computed here, and each request's
+ * `make` replays its outcome where it used to compute it. `make` stays per
+ * request because it reserves its fixed fragments on the request's text budget.
+ * The enclosing extraction owner supplies the text authority; methods require R=never.
  * @internal @category operations @since 0.0.0
  */
 export const installCitationReferencePatterns = Effect.fn("Citation.installReferencePatterns")(function* (
   limits: CitationEngineLimits,
-  config: CitationReferencePatternConfiguration
+  verified: CitationReferencePatternConfiguration
 ) {
-  // Fixed-pattern authentication and the rejection fingerprint depend only on
-  // installed configuration: run them once per installed call site and replay
-  // each outcome where every request used to compute it.
-  const authenticated = yield* Effect.exit(
-    Effect.gen(function* () {
-      const patterns = yield* copyCitationMetadataPatterns(limits, config.patterns, fingerprints, () =>
-        fail("invalid-configuration")
-      );
-      const rejectionSha256 = yield* Effect.exit(
-        fingerprintCitationMetadataPattern(patterns.rejection, () => fail("invalid-configuration"))
-      );
-      return { patterns, rejectionSha256 };
-    })
+  const patterns = verified.patterns;
+  // The rejection fingerprint depends only on installed configuration: compute it
+  // once per installed call site and replay it where every request computed it.
+  const rejectionSha256 = yield* Effect.exit(
+    fingerprintCitationMetadataPattern(patterns.rejection, () => fail("invalid-configuration"))
   );
   const make = Effect.fn("Citation.makeReferencePatterns")(function* () {
     const budget = yield* CitationTextBudget;
     if (budget.maximum > limits.producedTextUtf16) return yield* fail("invalid-policy");
-    const { patterns, rejectionSha256 } = yield* authenticated;
     const digest = yield* Digest.Digest;
-    const names = yield* makeCitationReferenceNames(limits, config.disallowedNames);
+    const names = yield* makeCitationReferenceNames(limits, verified.disallowedNames);
     const unicode = yield* makeCitationPythonUnicode(limits);
     const timing = yield* makeCitationRegexTiming(limits, true);
     const ascii = Effect.fnUntraced(function* (text: string) {

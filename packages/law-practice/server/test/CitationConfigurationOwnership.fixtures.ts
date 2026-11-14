@@ -51,14 +51,9 @@ export const ownCitationTestConfiguration = Effect.fn("ConfigurationOwnershipTes
 });
 
 /** Adapt a direct-stage installer so a test can keep passing fixture
- * configuration: the configuration is owned through the real boundary first.
- *
- * **Details**
- *
- * With `invalid`, a configuration the boundary refuses fails with that closed
- * error, so a test that used to assert a stage's own configuration refusal now
- * asserts the same refusal where configuration crosses into the engine. Without
- * it, a fixture configuration that does not decode dies.
+ * configuration: valid fixture configuration is owned through the real boundary
+ * first. An invalid fixture is a boundary test, not a stage test, so the adapter
+ * dies on it instead of mapping it to a stage reason.
  *
  * **Example** (Install a stage from fixture configuration)
  * ```ts
@@ -75,62 +70,13 @@ export const ownCitationTestConfiguration = Effect.fn("ConfigurationOwnershipTes
  * @internal @category testing @since 0.0.0
  */
 export const installCitationOwnedTestStage =
-  <Schema extends S.Codec<unknown, unknown>, A, E, R, Invalid = never>(stage: {
+  <Schema extends S.Codec<unknown, unknown>, A, E, R>(stage: {
     readonly schema: Schema;
     readonly install: (
       limits: CitationEngineLimits,
       runtime: CitationNativeProcessRuntime,
       configuration: CitationOwned<Schema["Type"]>
     ) => Effect.Effect<A, E, R>;
-    readonly invalid?: () => Invalid;
   }) =>
   (limits: CitationEngineLimits, runtime: CitationNativeProcessRuntime, raw: unknown) =>
-    Effect.flatMap(
-      stage.invalid === undefined
-        ? ownCitationTestConfiguration(stage.schema, raw)
-        : ownCitationConfiguration(stage.schema, raw, stage.invalid),
-      (owned) => stage.install(limits, runtime, owned)
-    );
-
-/** Run the real engine boundary over malformed fixture configuration and return
- * each refusal, mapped to the caller's closed failure.
- *
- * **Details**
- *
- * Stages below the boundary no longer decode configuration, so a refusal that a
- * stage used to raise for a malformed policy, runtime or configuration is now
- * raised where the configuration is owned.
- *
- * **Example** (Refuse malformed limits)
- * ```ts
- * import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
- * import { refuseCitationTestConfigurations } from "./CitationConfigurationOwnership.fixtures.ts";
- * const refusals = refuseCitationTestConfigurations(() => "invalid-configuration", [[CitationEngineLimits, {}]]);
- * ```
- * @internal @category testing @since 0.0.0
- */
-export const refuseCitationTestConfigurations = Effect.fn("ConfigurationOwnershipTest.refuse")(function* <E>(
-  invalid: () => E,
-  cases: ReadonlyArray<readonly [S.Codec<unknown, unknown>, unknown]>
-) {
-  return yield* Effect.forEach(cases, ([schema, raw]) => Effect.flip(ownCitationConfiguration(schema, raw, invalid)));
-});
-
-/** Run the real engine boundary over one malformed fixture value and return its
- * refusal, mapped to the caller's closed failure.
- *
- * **Example** (Refuse a malformed policy)
- * ```ts
- * import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
- * import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
- * const refusal = refuseCitationTestConfiguration(() => "invalid-policy", CitationEngineLimits, null);
- * ```
- * @internal @category testing @since 0.0.0
- */
-export const refuseCitationTestConfiguration = Effect.fn("ConfigurationOwnershipTest.refuseOne")(function* <E>(
-  invalid: () => E,
-  schema: S.Codec<unknown, unknown>,
-  raw: unknown
-) {
-  return yield* Effect.flip(ownCitationConfiguration(schema, raw, invalid));
-});
+    Effect.flatMap(ownCitationTestConfiguration(stage.schema, raw), (owned) => stage.install(limits, runtime, owned));

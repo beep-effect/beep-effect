@@ -94,7 +94,7 @@ const eventOrder = Order.Struct({
 });
 const fail = (reason: typeof Reason.Type) => CitationExtractorSelectionFailure.make({ reason });
 // Owned configuration: check the string budgets, retain the bindings as they are.
-const snapshotBindings = Effect.fn("Citation.snapshotSelectionBindings")(function* (
+const checkSelectionBindingBudgets = Effect.fn("Citation.checkSelectionBindingBudgets")(function* (
   bindings: ReadonlyArray<Pick<CitationExtractorSelectionBinding, "id" | "flags" | "strings">>,
   maximumBytes: number,
   maximumPoints: number
@@ -137,7 +137,7 @@ export const makeCitationExtractorSelection = Effect.fn("Citation.makeExtractorS
   const timing = yield* makeCitationRegexTiming(limits, true);
   if (decodedBindings.length > limits.patterns)
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patterns" });
-  const bindings = yield* snapshotBindings(
+  const bindings = yield* checkSelectionBindingBudgets(
     decodedBindings,
     4 * limits.patterns * limits.patternUtf16,
     limits.patternUtf16

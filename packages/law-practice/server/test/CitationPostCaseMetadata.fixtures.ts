@@ -6,7 +6,6 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import { makeCitationPinCiteCleaner } from "@beep/law-practice-server/internal/Citation/MetadataStrings";
 import {
   CitationPostCaseMetadataConfiguration,
-  CitationPostCaseMetadataFailure,
   CitationPostCaseMetadataInput,
   makeCitationPostCaseMetadata as makeOwnedCitationPostCaseMetadata,
 } from "@beep/law-practice-server/internal/Citation/PostCaseMetadata";
@@ -215,9 +214,7 @@ export const assertCitationPostCaseMetadataConfiguration = Effect.fn("PostCaseMe
           )
         ),
       setup,
-      corpus.configuration,
-      CitationPostCaseMetadataConfiguration,
-      () => CitationPostCaseMetadataFailure.make({ reason: "invalid-configuration" })
+      corpus.configuration
     );
     const observed = yield* setup.observed.snapshot;
     expect(observed).toEqual({ spawned: 0, confirmed: 0 });

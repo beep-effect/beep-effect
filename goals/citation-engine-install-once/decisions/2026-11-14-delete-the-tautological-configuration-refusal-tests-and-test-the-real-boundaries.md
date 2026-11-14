@@ -1,0 +1,19 @@
+---
+title: "Delete the tautological configuration refusal tests and test the real boundaries"
+date: 2026-11-14
+lane: "perf/citation-owned-configuration"
+reversal: "Restore the refuse helpers and adapter invalid thunks from the round-3 commit; the boundary tests can stay."
+---
+
+Review round 4 found that about 45 direct-stage refusal tests were tautologies. `refuseCitationTestConfiguration(s)` and the stage adapters' `invalid` thunks decoded a malformed value against a bare schema and returned the closed failure the test itself passed in. Each such assertion proved only that the schema rejects the value. It never reached a production refusal, and the stage below the boundary no longer decodes, so no stage-level refusal exists to test.
+
+Deleted: the refuse helpers, the adapter `invalid` thunks (`installCitationOwnedTestStage` now takes only `schema` and `install` and dies on a fixture that does not decode), and the `schema`/`invalid` parameters of the metadata installers. Removed refusal blocks, by file:
+
+- Whole tests deleted (14): CitationAnnotationEntryCoverage (boundary policy), CitationCleanerRegistry (malformed registry policy, including the strict excess-key decode the round-2 note kept), CitationCleanerValues, CitationExtractionEntryCoverage, CitationExtractionReport, CitationExtractorRecipes, CitationExtractorSelection, CitationLiteralCleaners, CitationOccurrenceProjectionCoverage, CitationRegexDescriptors (incoherent names), CitationRegexInput (malformed policy) and three in CitationTokenizedExtractionCoverage. Each fed `null`, `{}` or a wrong-typed field to a schema and asserted the failure it supplied.
+- Refusal blocks removed from tests that keep their other assertions: policy, runtime or payload refusals in CleanerPipeline, CourtLookup (policy and a `null` payload against `S.String`), EditionInference, ExtractorOrdering, HtmlWorker, MetadataStrings, MetadataYear, NativeProcess, PythonRepr, PythonReprCoverage, RecognizerWorker, ReferencePatternsCoverage, RegexAlphabet, RegexDescriptors, RegexEngine, RegexInput (role), RegexProgram, RegexWorker, RegexWorkerProtocol, Rendering, ResourceCorrection, SpanOffsets, TextBudget, TokenAssembly, TokenCapture, TokenDispatch, Tokenizer, the Journal, Law, Pin, Pre/PostCaseMetadata, StopWords and RegexWorker fixtures, HtmlDiscoveryCoverage, RegexResult, DiffWorker (malformed runtime), the CaseName, CaseNameProcess and CaseNameScan `null` cases, the ExtractionEntry fixture's `{}` and `{invalid: true}` cases, FullExtractionCoverage, ReferenceTokenExtractionCoverage (`editions: "none"`) and SemanticProjectionCoverage.
+
+Kept, because a stage guard refuses an owned value: court-table and exclusion-list SHA-256 authentication (the same-length table mutation test), fixed-pattern authentication (the tampered CaseName pattern), duplicate edition ids and pattern ids, the pattern-count ceiling, the selection string budgets, the patternUtf16 context refusal and the digest-output refusal.
+
+Added real boundary tests. CitationEngineBoundaryRefusal builds CitationEngineLive and the default engine from a valid configuration with one field replaced (limits `sourceUtf16: -1`, runtime kind `"unsupported"`, a non-digest `engineArtifact`, an empty `parserCatalog`) and asserts `CitationInputError` for `extract` with the spawner snapshot unchanged. CitationExtractorControls does the same for the extractor (limits, runtime, a numeric `vocabularyVersion`; no process spawned). CitationConfigurationOwnership checks that owning a valid CitationEngineConfiguration, CitationEngineDefaultConfiguration and CitationExtractorConfiguration shares no object or buffer with the caller's value, and that a pass-through `S.Unknown` leaf is kept by reference, which is the precondition `ownCitationConfiguration` documents.
+
+Test count across the touched files: 278 before, 270 after (14 deleted, 6 added).

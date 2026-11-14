@@ -2,10 +2,8 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { ownCitationConfiguration } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
 import {
   CitationStopWordsConfiguration,
-  CitationStopWordsFailure,
   makeCitationStopWords as makeOwnedCitationStopWords,
 } from "@beep/law-practice-server/internal/Citation/StopWords";
 import { expect } from "@effect/vitest";
@@ -141,11 +139,6 @@ export const assertCitationStopWordsBudget = Effect.fn("StopWordsTest.budget")(f
 export const assertCitationStopWordsLifetime = Effect.fn("StopWordsTest.lifetime")(function* () {
   const scope = yield* Scope.make();
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
-  // A configuration outside the schema is refused where it crosses into the engine.
-  const refused = yield* ownCitationConfiguration(CitationStopWordsConfiguration, null, () =>
-    CitationStopWordsFailure.make({ reason: "invalid-configuration" })
-  ).pipe(Effect.flip);
-  expect(refused).toMatchObject({ reason: "invalid-configuration" });
   // An owned configuration whose pattern fails authentication is refused by the stage.
   for (const configuration of [
     {

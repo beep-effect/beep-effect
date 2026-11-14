@@ -10,7 +10,6 @@ import {
   CitationCleanerObject,
   CitationCleanerProduced,
   CitationCleanerTextCharge,
-  CitationEngineLimits,
 } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -34,7 +33,6 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import type {
   CitationCleanerCursor,
@@ -667,13 +665,6 @@ it.effect("releases borrowed capacity after producer failure and interruption wi
 it.effect("rejects malformed policy, reservation amounts and nested plan names", () =>
   Effect.gen(function* () {
     const h = yield* harness;
-    // Refused where configuration crosses into the engine.
-    const invalidPolicy = yield* refuseCitationTestConfiguration(
-      () => ({ reason: "invalid-input" }),
-      CitationEngineLimits,
-      null
-    );
-    expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
     const p = yield* pipeline(h);
     const reserve = h.callback((value, work) =>
       work.reserveText(-1).pipe(Effect.map((charge) => CitationCleanerProduced.make({ value, charges: [charge] })))

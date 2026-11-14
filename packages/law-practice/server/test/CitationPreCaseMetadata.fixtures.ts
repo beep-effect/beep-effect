@@ -2,7 +2,6 @@ import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationPublicationMetadataConfiguration } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
 import {
-  CitationPreCaseMetadataFailure,
   CitationPreCaseMetadataInput,
   CitationPreCaseMetadataPatch,
   makeCitationPreCaseMetadata as makeOwnedCitationPreCaseMetadata,
@@ -159,9 +158,7 @@ export const assertCitationPreCaseMetadataConfiguration = Effect.fn("PreCaseMeta
         )
       ),
     setup,
-    corpus.configuration,
-    CitationPublicationMetadataConfiguration,
-    () => CitationPreCaseMetadataFailure.make({ reason: "invalid-configuration" })
+    corpus.configuration
   );
   const valid = yield* install("bun");
   const request = A.getUnsafe(valid.corpus.cases, 23).request;

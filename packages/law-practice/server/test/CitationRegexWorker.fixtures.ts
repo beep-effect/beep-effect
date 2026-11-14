@@ -11,11 +11,7 @@ import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { installCitationRegexEvaluator as installOwnedCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
 import { CitationTokenContextInput } from "@beep/law-practice-server/internal/Citation/TokenContext";
-import {
-  CitationEngineLimits,
-  CitationPythonUnicodeStorage,
-  CitationTextBudget,
-} from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -32,10 +28,7 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
-import {
-  ownCitationTestConfiguration,
-  refuseCitationTestConfigurations,
-} from "./CitationConfigurationOwnership.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import {
   CitationTestBudgetObservation,
   makeCitationTestBudgetObservation,
@@ -51,6 +44,7 @@ import {
 import type { CitationPublicationMetadataConfiguration } from "@beep/law-practice-server/internal/Citation/MetadataComposition";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationRegexEngine } from "@beep/law-practice-server/internal/Citation/RegexEngine";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationNativeExitCounts } from "./CitationNativeSpawner.fixtures.ts";
 
 // Own the fixture configuration through the engine boundary before the direct install.
@@ -364,7 +358,6 @@ export const assertCitationMetadataInstallControls = Effect.fn("MetadataTest.ins
   E,
   R,
   C extends object,
-  Invalid,
 >(
   install: (
     limits: CitationEngineLimits,
@@ -372,17 +365,8 @@ export const assertCitationMetadataInstallControls = Effect.fn("MetadataTest.ins
     configuration: unknown
   ) => Effect.Effect<A, E, R>,
   setup: Effect.Success<ReturnType<typeof setupCitationMetadataRuntime>>,
-  configuration: C,
-  schema: S.Codec<unknown, unknown>,
-  invalid: () => Invalid
+  configuration: C
 ) {
-  // Malformed policy, configuration and runtime are refused where they cross into the engine.
-  const refusals = yield* refuseCitationTestConfigurations(invalid, [
-    [CitationEngineLimits, {}],
-    [schema, {}],
-    [CitationNativeProcessRuntime, {}],
-  ]);
-  for (const refused of refusals) expect(refused).toMatchObject({ reason: "invalid-configuration" });
   // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
   const failed = yield* install(setup.limits, setup.runtime, { ...configuration, pattern: changedPattern }).pipe(

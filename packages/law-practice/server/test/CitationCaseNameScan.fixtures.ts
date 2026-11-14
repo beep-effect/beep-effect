@@ -5,7 +5,6 @@ import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationCaseNameScanConfiguration,
-  CitationCaseNameScanFailure,
   CitationCaseNameScanInput,
   CitationCaseNameScanState,
   makeCitationCaseNameScan as makeOwnedCitationCaseNameScan,
@@ -33,7 +32,6 @@ import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/intern
 const makeCitationCaseNameScan = installCitationOwnedTestStage({
   schema: CitationCaseNameScanConfiguration,
   install: makeOwnedCitationCaseNameScan,
-  invalid: () => CitationCaseNameScanFailure.make({ reason: "invalid-configuration" }),
 });
 
 const $I = $LawPracticeServerId.create("test/CitationCaseNameScan");
@@ -216,8 +214,8 @@ export const assertCitationCaseNameScanLifetime = Effect.fn("CaseNameScanTest.li
 export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTest.defaultPolicy")(function* () {
   const corpus = yield* readCitationCaseNameScanCorpus();
   const setup = yield* setupCitationMetadataRuntime("bun");
+  // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   for (const configuration of [
-    null,
     {
       ...corpus.configuration,
       patterns: { ...corpus.configuration.patterns, year: { width: 1, bytes: new Uint8Array([88]) } },

@@ -3,10 +3,7 @@ import {
   reserveCitationInvocationText,
 } from "@beep/law-practice-server/internal/Citation/Invocation";
 import { makeCitationMetadataStrings as makeOwnedCitationMetadataStrings } from "@beep/law-practice-server/internal/Citation/MetadataStrings";
-import {
-  CitationMetadataYearBound,
-  makeCitationMetadataYearFromBound,
-} from "@beep/law-practice-server/internal/Citation/MetadataYear";
+import { makeCitationMetadataYearFromBound } from "@beep/law-practice-server/internal/Citation/MetadataYear";
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
@@ -16,11 +13,7 @@ import {
 } from "@beep/law-practice-server/internal/Citation/RegexInput";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { makeCitationTokenContext } from "@beep/law-practice-server/internal/Citation/TokenContext";
-import {
-  CitationEngineLimits,
-  CitationPythonUnicodeStorage,
-  CitationTextBudget,
-} from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -30,10 +23,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as S from "effect/Schema";
-import {
-  ownCitationTestConfiguration,
-  refuseCitationTestConfiguration,
-} from "./CitationConfigurationOwnership.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import {
   makeCitationTestScaffoldBinding,
   withCitationTestInvocation,
@@ -62,13 +52,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
     withCitationTestInvocation(
       Effect.gen(function* () {
         const limits = (yield* defaultCitationEnginePolicy).limits;
-        // A malformed policy is refused where configuration crosses into the engine.
-        const invalidPolicy = yield* refuseCitationTestConfiguration(
-          () => ({ reason: "invalid-policy" }),
-          CitationEngineLimits,
-          { ...limits, producedTextUtf16: -1 }
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const budget = yield* makeCitationTextBudget({ ...limits, producedTextUtf16: 10 });
         const results = yield* Effect.forEach([6, 6], (units) => budget.reserve(units).pipe(Effect.exit), {
           concurrency: 2,
@@ -135,13 +118,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
         assertNone(rejected);
         const used = yield* budget.snapshot;
         expect(used).toBe(8);
-        // An out-of-range ceiling is refused where configuration crosses into the engine.
-        const invalid = yield* refuseCitationTestConfiguration(
-          () => ({ reason: "invalid-bound" }),
-          CitationMetadataYearBound,
-          10001
-        );
-        expect(invalid).toMatchObject({ reason: "invalid-bound" });
       })
     )
   );

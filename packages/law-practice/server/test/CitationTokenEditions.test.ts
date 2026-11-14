@@ -1,6 +1,5 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { ownCitationConfiguration } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
 import {
   CitationTokenEditionBinding,
   makeCitationTokenEditions as makeOwnedCitationTokenEditions,
@@ -19,16 +18,12 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install;
-// malformed fixture configuration is refused there with the helper's closed reason.
+// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationTokenEditions = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationTokenEditions>[0],
   a1: unknown
 ) {
-  const o1 = yield* ownCitationConfiguration(S.Array(CitationTokenEditionBinding), a1, () => ({
-    _tag: "CitationTokenAssemblyFailure",
-    reason: "host-failed",
-  }));
+  const o1 = yield* ownCitationTestConfiguration(S.Array(CitationTokenEditionBinding), a1);
   return yield* makeOwnedCitationTokenEditions(a0, o1);
 });
 

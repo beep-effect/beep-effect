@@ -8,7 +8,6 @@ import {
   makeCitationFrozenEditions,
 } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
 import { CitationRuntimeEdition } from "@beep/law-practice-server/internal/Citation/PublicationResourceHash";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -23,7 +22,6 @@ import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import * as TestClock from "effect/testing/TestClock";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 
@@ -122,13 +120,6 @@ export const replayCitationEditionGuesses = Effect.fn("EditionInferenceTest.gues
     .guess({ exact: [], variation: [], year: 2026.5, prior: null })
     .pipe(Effect.flip);
   expect(invalidGuessYear).toMatchObject({ reason: "invalid-input" });
-  // Refused where configuration crosses into the engine.
-  const invalidPolicy = yield* refuseCitationTestConfiguration(
-    () => ({ reason: "invalid-input" }),
-    CitationEngineLimits,
-    {}
-  );
-  expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
   for (const row of corpus.cases) yield* assertEditionChoice(inference, reads, ref, row);
   const forward = yield* inference.includesYear(ref(0), 2027);
   expect(forward).toBe(false);

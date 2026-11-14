@@ -105,7 +105,7 @@ const own = Effect.fn("Citation.ownVerifiedExtraction")(function* (
       makeCitationOccurrenceProjection(
         limits,
         runtime,
-        ownedStruct(CitationOccurrenceProjectionConfiguration.make, {
+        ownedStruct(CitationOccurrenceProjectionConfiguration, {
           engineArtifact: ownedField(configuration, "engineArtifact"),
         })
       )

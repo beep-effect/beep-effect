@@ -4,10 +4,7 @@
 
 import { CitationDocumentStepContainers } from "@beep/law-practice-server/internal/Citation/DocumentCleanerProtocols";
 import { CitationDocumentExtractionConfiguration } from "@beep/law-practice-server/internal/Citation/DocumentExtraction";
-import {
-  CitationExtractionEntryFailure,
-  makeCitationExtractionEntry as makeOwnedCitationExtractionEntry,
-} from "@beep/law-practice-server/internal/Citation/ExtractionEntry";
+import { makeCitationExtractionEntry as makeOwnedCitationExtractionEntry } from "@beep/law-practice-server/internal/Citation/ExtractionEntry";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -24,7 +21,6 @@ import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/intern
 const makeCitationExtractionEntry = installCitationOwnedTestStage({
   schema: CitationDocumentExtractionConfiguration,
   install: makeOwnedCitationExtractionEntry,
-  invalid: () => CitationExtractionEntryFailure.make({ reason: "invalid-configuration" }),
 });
 
 type SourceRow = Effect.Success<ReturnType<typeof installCitationDocumentExtractionFixture>>["corpus"]["cases"][number];
@@ -95,31 +91,6 @@ export const replayCitationExtractionEntry = Effect.fn("ExtractionEntryTest.repl
   expect(oversized).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "sourceUtf16" });
   const missingPlan = yield* stage.extract({ plain: "text", cleanSteps: { plan: "not-installed" } }).pipe(Effect.flip);
   expect(missingPlan).toMatchObject({ _tag: "CitationExtractionEntryFailure", reason: "invalid-input" });
-  const malformedConfiguration = yield* makeCitationExtractionEntry(setup.limits, setup.runtime, {}).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-      )
-    ),
-    Effect.provideContext(entryContext),
-    DateTime.withCurrentZoneOffset(0),
-    Effect.flip
-  );
-  expect(malformedConfiguration).toMatchObject({
-    _tag: "CitationExtractionEntryFailure",
-    reason: "invalid-configuration",
-  });
-  const unconfigured = yield* makeCitationExtractionEntry(setup.limits, setup.runtime, { invalid: true }).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-      )
-    ),
-    Effect.provideContext(entryContext),
-    DateTime.withCurrentZoneOffset(0),
-    Effect.flip
-  );
-  expect(unconfigured).toMatchObject({ _tag: "CitationExtractionEntryFailure", reason: "invalid-configuration" });
   const empty = yield* stage.extract({}).pipe(Effect.flip);
   expect(empty).toMatchObject({
     _tag: "CitationDocumentInputFailure",

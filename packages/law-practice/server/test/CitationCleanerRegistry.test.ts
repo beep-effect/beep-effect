@@ -3,7 +3,6 @@ import {
   CitationCleanerObject,
   CitationCleanerProduced,
   CitationEngineAbsoluteMaxima,
-  CitationEngineLimits,
   CitationPythonUnicodeStorage,
 } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
@@ -17,7 +16,6 @@ import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as TestClock from "effect/testing/TestClock";
 import { makeCitationCleanerRegistryHarness as setup } from "./CitationCleanerRegistry.fixtures.ts";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 
 describe("live cleaner registry", () => {
   it.effect("rejects out-of-range host hashes and bounds stalled callbacks", () =>
@@ -288,21 +286,6 @@ describe("live cleaner registry", () => {
     })
   );
 });
-
-it.effect("rejects malformed registry policy before invoking captured capabilities", () =>
-  Effect.gen(function* () {
-    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
-      // Refused where configuration crosses into the engine.
-      const failure = yield* refuseCitationTestConfiguration(
-        () => ({ _tag: "CitationCleanerFailure", reason: "invalid-input" }),
-        CitationEngineLimits,
-        policy
-      );
-      expect(failure).toMatchObject({ _tag: "CitationCleanerFailure", reason: "invalid-input" });
-      expect("cause" in failure).toBe(false);
-    }
-  })
-);
 
 it.effect("closes malformed native snapshots and oversized owned-byte hashing without altering registry entries", () =>
   Effect.gen(function* () {

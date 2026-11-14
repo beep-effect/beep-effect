@@ -13,7 +13,7 @@ import {
 } from "@beep/law-practice-server/internal/Citation/TokenCapture";
 import { CitationTokenEditionBinding } from "@beep/law-practice-server/internal/Citation/TokenEditions";
 import { makeCitationTokenObjects as makeOwnedCitationTokenObjects } from "@beep/law-practice-server/internal/Citation/TokenObjects";
-import { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -25,10 +25,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import {
-  ownCitationTestConfiguration,
-  refuseCitationTestConfiguration,
-} from "./CitationConfigurationOwnership.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
 import type { CitationTokenCaptureObservation } from "./CitationTokenObjects.fixtures.ts";
 
@@ -117,13 +114,6 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           construct: objects.constructFrom,
           beforeAllocate: allow,
         });
-        // Refused where configuration crosses into the engine.
-        const invalidPolicy = yield* refuseCitationTestConfiguration(
-          () => ({ reason: "invalid-input" }),
-          CitationEngineLimits,
-          null
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
         const invalidMetadata = yield* makeCitationTokenCapture(limits, row.bindings).pipe(
           Effect.provideService(CitationTokenCaptureRuntime, {
             ...runtime,

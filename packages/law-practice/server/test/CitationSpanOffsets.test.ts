@@ -1,12 +1,11 @@
 import { makeCitationHtmlTagGeometry } from "@beep/law-practice-server/internal/Citation/HtmlTagGeometry";
 import { makeCitationSpanOffsets } from "@beep/law-practice-server/internal/Citation/SpanOffsets";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationEngineLimits, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { readCitationSpanOffsetsCorpus as load } from "./CitationSpanOffsets.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -89,13 +88,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff
         expect(invalid).toMatchObject({ reason: "invalid-offset" });
         const invalidSide = yield* map.update(0, "middle").pipe(Effect.flip);
         expect(invalidSide).toMatchObject({ reason: "invalid-offset" });
-        // Refused where configuration crosses into the engine.
-        const invalidPolicy = yield* refuseCitationTestConfiguration(
-          () => ({ reason: "invalid-policy" }),
-          CitationEngineLimits,
-          {}
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const invalidPlan = yield* makeCitationSpanOffsets(limits, {}).pipe(Effect.flip);
         expect(invalidPlan).toMatchObject({ reason: "invalid-plan" });
       })
@@ -116,13 +108,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff
         const geometry = yield* makeCitationHtmlTagGeometry(limits, raw).pipe(
           Effect.provideService(CitationTextBudget, budget)
         );
-        // Refused where configuration crosses into the engine.
-        const invalidPolicy = yield* refuseCitationTestConfiguration(
-          () => ({ reason: "invalid-policy" }),
-          CitationEngineLimits,
-          null
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const invalidInput = yield* makeCitationHtmlTagGeometry(limits, null).pipe(
           Effect.provideService(CitationTextBudget, budget),
           Effect.flip

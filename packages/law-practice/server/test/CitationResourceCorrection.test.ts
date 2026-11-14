@@ -17,7 +17,7 @@ import {
   makeCitationResourceCorrection,
 } from "@beep/law-practice-server/internal/Citation/ResourceCorrection";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
-import { CitationEngineLimits, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -31,7 +31,6 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
@@ -152,13 +151,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
     withCitationTestInvocation(
       Effect.gen(function* () {
         const { owner, limits } = yield* load();
-        // Refused where configuration crosses into the engine.
-        const invalidPolicy = yield* refuseCitationTestConfiguration(
-          () => ({ reason: "invalid-policy" }),
-          CitationEngineLimits,
-          null
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const correction = yield* makeCitationResourceCorrection(limits).pipe(
           Effect.flatMap((stage) =>
             makeCitationTestScaffoldBinding(limits).pipe(

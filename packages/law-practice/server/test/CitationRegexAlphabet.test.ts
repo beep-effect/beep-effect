@@ -3,7 +3,6 @@ import {
   CitationRegexAtomSets,
   makeCitationRegexAlphabet,
 } from "@beep/law-practice-server/internal/Citation/RegexAlphabet";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -13,7 +12,6 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
 import * as S from "effect/Schema";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationRegexAlphabet");
 const Point = S.Natural.check(S.isLessThanOrEqualTo(0x10ffff)).pipe(
@@ -194,13 +192,6 @@ it.effect("preserves source continuity across the complete 4096-symbol encoding 
 it.effect("bounds empty predicate expansion and set metadata before reading source storage", () =>
   Effect.gen(function* () {
     const policy = yield* defaultCitationEnginePolicy;
-    // Refused where configuration crosses into the engine.
-    const invalidPolicy = yield* refuseCitationTestConfiguration(
-      () => ({ reason: "invalid-runtime" }),
-      CitationEngineLimits,
-      null
-    );
-    expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
     for (const { maximum, sets } of [
       { maximum: 6, sets: { atoms: 2, intervals: [] } },
       { maximum: 1, sets: { atoms: 2, intervals: [] } },

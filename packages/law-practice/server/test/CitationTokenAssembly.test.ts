@@ -9,7 +9,6 @@ import {
 import { CitationTokenEditionBinding } from "@beep/law-practice-server/internal/Citation/TokenEditions";
 import { makeCitationTokenObjects as makeOwnedCitationTokenObjects } from "@beep/law-practice-server/internal/Citation/TokenObjects";
 import { makeCitationTokenText } from "@beep/law-practice-server/internal/Citation/TokenText";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { LiteralKit } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -24,10 +23,7 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import {
-  ownCitationTestConfiguration,
-  refuseCitationTestConfiguration,
-} from "./CitationConfigurationOwnership.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { CitationTokenSeedHex } from "./CitationTokenSeed.fixtures.ts";
 
 // Own the fixture configuration through the engine boundary before the direct install.
@@ -171,13 +167,6 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const assembler = yield* makeCitationTokenAssembly(limits).pipe(
           Effect.provideService(CitationTokenAssemblyHost, host)
         );
-        // Refused where configuration crosses into the engine.
-        const invalidPolicy = yield* refuseCitationTestConfiguration(
-          () => ({ reason: "invalid-policy" }),
-          CitationEngineLimits,
-          null
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const invalidRequest = yield* assembler.assemble(null).pipe(Effect.flip);
         expect(invalidRequest).toMatchObject({ reason: "invalid-input" });
         const citationResult2 = yield* assembler.assemble({ length: 3, ids: [0, 0] }).pipe(Effect.flip);

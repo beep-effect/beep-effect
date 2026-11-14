@@ -2,12 +2,11 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { ownCitationConfiguration } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import {
   CitationReferencePatternConfiguration,
-  CitationReferencePatternFailure,
   installCitationReferencePatterns,
+  verifyCitationReferencePatternConfiguration,
 } from "@beep/law-practice-server/internal/Citation/ReferencePatterns";
 import {
   CitationRegexPatternDescriptor,
@@ -31,6 +30,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import {
   makeCitationReferenceNameMetadata,
   readCitationGeneratedReferenceSource,
@@ -117,22 +117,19 @@ export const citationReferenceMetadataFromSource = (m: CitationReferenceSourceNa
     resolvedCaseNameShort: ownName(m.resolved_case_name_short),
     resolvedCaseName: ownName(m.resolved_case_name),
   });
-/** Own fixture policy and configuration at the boundary, install the reference
- * patterns once and make one request's builder. A malformed policy or
- * configuration is refused by the boundary with the builder's closed failures.
+/** Own valid fixture policy and configuration, authenticate the configuration as
+ * the installed stage does (`verifyCitationReferencePatternConfiguration`), install
+ * the reference patterns once and make one request's builder.
  * @internal @category testing @since 0.0.0
  */
 export const makeCitationReferencePatternsAtBoundary = Effect.fn("ReferencePatternsTest.atBoundary")(function* (
   policy: unknown,
   configuration: unknown
 ) {
-  const limits = yield* ownCitationConfiguration(CitationEngineLimits, policy, () =>
-    CitationReferencePatternFailure.make({ reason: "invalid-policy" })
-  );
-  const owned = yield* ownCitationConfiguration(CitationReferencePatternConfiguration, configuration, () =>
-    CitationReferencePatternFailure.make({ reason: "invalid-configuration" })
-  );
-  const installed = yield* installCitationReferencePatterns(limits, owned);
+  const limits = yield* ownCitationTestConfiguration(CitationEngineLimits, policy);
+  const owned = yield* ownCitationTestConfiguration(CitationReferencePatternConfiguration, configuration);
+  const verified = yield* verifyCitationReferencePatternConfiguration(limits, owned);
+  const installed = yield* installCitationReferencePatterns(limits, verified);
   return yield* installed.make();
 });
 /** Compare every actually observed dynamic source pattern/profile and bind its compiler facts.

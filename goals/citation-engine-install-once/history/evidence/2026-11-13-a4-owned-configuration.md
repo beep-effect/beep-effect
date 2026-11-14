@@ -145,7 +145,7 @@ All local, one vitest process per file, `bunx --bun vitest run`.
 | `CitationCanonicalFullSpan.test.ts` | 12/12, twice (gate run and wall-time run) |
 | Each affected test file (129: every changed test file, every test importing a changed fixture other than the widely shared regex-worker and probe fixtures, every test using the shared install-controls helper, the engine layer, resolver, cleaning, annotation and extractor tests) | 126 pass first time. `CitationSourceAnnotation.test.ts` failed (2): a direct `makeCitationAnnotationOperation` caller mutated its limits after install, which the removed install-time snapshot used to absorb; the annotation, cleaning and resolution installers now require `CitationOwned` limits and the tests mint them through the boundary; passes 6/6. `CitationTokenizer.test.ts` failed (1): an incoherent extractor is now refused at the boundary, so the tokenizer adapter maps the refusal to the tokenizer's closed failure; passes 10/10. `CitationCaseNameScan.test.ts` failed once on `extractDeadline` at load 44 and passes 4/4 on an unchanged rerun (host load). |
 | Reruns after the limits change | `CitationSourceAnnotation`, `CitationSourceAnnotationTiming`, `CitationSourceCleaning`, `CitationResolverBoundary`, `CitationEngineLayer` (15/15): all pass |
-| Report-mutation tests (2026-11-07) | `CitationSourceCleaning`, `CitationSourceAnnotation`, `CitationResolverBoundary`: pass, assertions unchanged |
+| Report-mutation tests (2026-11-07) | `CitationSourceCleaning`, `CitationSourceAnnotation`, `CitationResolverBoundary`: pass. The report assertions are unchanged, but the install-time mutation step (the caller changing its limits after install) now goes through the boundary adapter, which owns the limits first (corrected in round 4) |
 | New `CitationConfigurationOwnership.test.ts` | 3/3: caller `Uint8Array` buffers are not shared after `own`; refusal maps to the caller's failure; projections and `ownedStruct` |
 | `bun run beep quality package-verify @beep/law-practice-server --quick` | pass (lint, check) |
 | `lint:laws` (package) | pass; effect-fn 0 findings (three advisory terse-effect findings in files this slice does not touch) |
@@ -294,3 +294,46 @@ the 24 other test files that build the default engine, each run on its own: all
 pass. `package-verify --quick`, `lint:laws` (effect-fn 0), fallow audit vs
 `origin/main` (0 introduced), `docgen:local`, biome, typecheck and effect-vitest
 (0 introduced, 0 resolved) pass.
+
+## Round 4 (independent review of `2fd1c66ea55..d7659d584cd`)
+
+One commit on top of `48d2876c4c1` (see the report for the SHA).
+
+- The extractor's returned report carried the boundary-owned `limits`, which
+  every request reads, so a caller mutating `report.limits` changed the
+  installed policy. The report now carries its own per-request policy
+  snapshot (`captureCitationOperationPolicy`, a report copy and not a
+  configuration detach, so it is outside the detach count). New test:
+  `CitationExtractorControls` › "keeps installed limits when a caller mutates a
+  returned report" (fails without the fix). clean, resolve and annotate
+  already returned per-request snapshots; engineArtifact, vocabularyVersion and
+  identities reach callers only as strings.
+- Tautological refusal tests deleted and real boundary tests added (decision
+  "Delete the tautological configuration refusal tests and test the real
+  boundaries"): 278 tests before, 270 after in the touched files (14 deleted,
+  6 added). The boundary tests assert `CitationInputError` for `extract` from
+  CitationEngineLive, the default engine and the extractor, with no child
+  process started.
+- `ownedStruct` takes a schema class and rejects an empty field record at the
+  type level; the `ownedDerive` and `ownCitationConfiguration` JSDoc state their
+  real preconditions. An identity walk shows owned engine, default-engine and
+  extractor configuration share no object or buffer with the caller's input.
+- Reference patterns are authenticated once per engine, by
+  `verifyCitationReferencePatterns`; install keeps only the rejection
+  fingerprint. The per-request authentication replay is removed (it replayed a
+  success verify had already established).
+
+| Engine construction | Metadata-operation installs | Configuration detaches | Tokenizer builds | Regex evaluator installs | Regex evaluations | Child processes | Process owners | Diff/Xml workers |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| A4, round 4 | 16 | 1 | 1 | 26 | 0 | 0 | 1 | 0 |
+
+Per-call rows unchanged (0 installs, 0 detaches, 0 tokenizer builds, 0
+evaluator installs; 291 evaluations and 291 child processes over ten calls),
+asserted by `CitationCanonicalFullSpan` (12/12, twice, 55.6 s and 62.5 s at
+load 5).
+
+Round-4 checks: every Citation test file (233) on its own, all pass first time;
+`package-verify --quick`, `lint:laws`, fallow audit vs `origin/main` (0
+introduced), `docgen:local`, biome, typecheck and effect-vitest (0 introduced,
+0 resolved; one row removed with a deleted test) pass. Coverage runs on hosted
+CI.

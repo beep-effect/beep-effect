@@ -1,4 +1,3 @@
-import { ownCitationConfiguration } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
 import { makeCitationDiffWorker as makeOwnedCitationDiffWorker } from "@beep/law-practice-server/internal/Citation/DiffWorker";
 import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
@@ -25,6 +24,7 @@ import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Str from "effect/String";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import {
   makeCitationDiffTestRuntime,
   makeCitationDiffWorkerFixture,
@@ -40,17 +40,13 @@ import {
 } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install;
-// malformed fixture configuration is refused there with the helper's closed reason.
+// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationDiffWorker = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationDiffWorker>[0],
   a1: unknown,
   a2?: Parameters<typeof makeOwnedCitationDiffWorker>[2]
 ) {
-  const o1 = yield* ownCitationConfiguration(CitationNativeProcessRuntime, a1, () => ({
-    _tag: "CitationDiffWorkerFailure",
-    reason: "invalid-runtime",
-  }));
+  const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
   return yield* makeOwnedCitationDiffWorker(a0, o1, a2);
 });
 
@@ -84,21 +80,11 @@ const controlled = Effect.fn("DiffWorkerTest.controlled")(function* (
 });
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned default-diff worker", (it) => {
-  it.effect("rejects malformed runtime and Unicode input before starting a child", () =>
+  it.effect("rejects malformed Unicode input before starting a child", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
       const fixture = yield* makeCitationNativeWorkerFixture("busy", "diff", "bun");
       const observed = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
-      const invalidRuntime = yield* makeCitationDiffWorker(limits, { ...fixture, kind: "unsupported" }).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(limits).pipe(
-            Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-          )
-        ),
-        Effect.provideService(ChildProcessSpawner, observed.spawner),
-        Effect.flip
-      );
-      expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
       const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
         Effect.flatMap((stage) =>
           makeCitationTestScaffoldBinding(limits).pipe(

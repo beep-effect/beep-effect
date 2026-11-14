@@ -34,6 +34,7 @@ import {
   makeCitationSixFormArtifact,
 } from "../internal/Citation/SixFormArtifact.ts";
 import { makeCitationSixFormProjection } from "../internal/Citation/SixFormProjection.ts";
+import { captureCitationOperationPolicy } from "../internal/Citation/Snapshot.ts";
 import { makeCitationSourceEvidence } from "../internal/Citation/SourceEvidence.ts";
 
 const decodeExtractorResult = S.decodeUnknownEffect(S.toType(CitationExtractorResult));
@@ -115,10 +116,14 @@ const make = Effect.fn("Citation.makeExtractor")(function* (raw: unknown) {
             : invalidObservation()
         )
       );
+      // A fresh copy of the installed policy goes into the returned report, so a
+      // caller mutating the report cannot change what the extractor installed
+      // (the per-request report snapshot the four engine operations take).
+      const reportPolicy = yield* captureCitationOperationPolicy(limits, engineArtifact, invalidObservation);
       const report = CitationExtractorReport.make({
         engineArtifact,
         vocabularyVersion: projection.vocabularyVersion,
-        limits,
+        limits: reportPolicy.limits,
         recognizedMentions: A.length(mentions),
         outsideProfile: output.outsideProfile,
       });

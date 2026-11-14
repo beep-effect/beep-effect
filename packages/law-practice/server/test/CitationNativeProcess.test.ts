@@ -1,7 +1,6 @@
 import { makeCitationNativeProcessAdmission } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
 import { makeCitationNativeProcessOwner } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexWorkerFailure } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -13,7 +12,6 @@ import * as PlatformError from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Scope from "effect/Scope";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { citationBunTestExecutable, makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
 
 const command = Effect.fn("NativeProcessTest.command")(function* () {
@@ -36,13 +34,6 @@ it.layer(BunServices.layer, { excludeTestServices: true })("shared native proces
   it.effect("quarantines uncertain liveness and recovers without releasing the permit early", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
-      // Refused where configuration crosses into the engine.
-      const malformed = yield* refuseCitationTestConfiguration(
-        () => ({ reason: "invalid-runtime" }),
-        CitationEngineLimits,
-        null
-      );
-      expect(malformed).toMatchObject({ reason: "invalid-runtime" });
       const admission = yield* makeCitationNativeProcessAdmission(limits);
       const observed = yield* makeCitationObservedSpawner();
       let uncertain = true;

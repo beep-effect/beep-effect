@@ -1,10 +1,7 @@
-import { ownCitationConfiguration } from "@beep/law-practice-server/internal/Citation/ConfigurationOwnership";
 import {
-  CitationRegexDescriptorFailure,
   CitationRegexPatternDescriptor,
   makeCitationRegexDescriptorRegistry as makeOwnedCitationRegexDescriptorRegistry,
 } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -16,23 +13,15 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as S from "effect/Schema";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 
-// Own the fixture configuration through the engine boundary before the direct install;
-// malformed fixture configuration is refused there with the helper's closed reason.
+// Own the fixture configuration through the engine boundary before the direct install.
 const makeCitationRegexDescriptorRegistry = Effect.fnUntraced(function* (
   a0: Parameters<typeof makeOwnedCitationRegexDescriptorRegistry>[0],
   a1: unknown,
   a2?: Parameters<typeof makeOwnedCitationRegexDescriptorRegistry>[2]
 ) {
-  // Direct registry callers were held to an exact decode (no unknown capture-name
-  // keys); keep that strictness for the raw fixture before owning it.
-  yield* S.decodeUnknownEffect(S.Array(CitationRegexPatternDescriptor), { onExcessProperty: "error" })(a1).pipe(
-    Effect.mapError(() => CitationRegexDescriptorFailure.make({ reason: "invalid-bindings" }))
-  );
-  const o1 = yield* ownCitationConfiguration(S.Array(CitationRegexPatternDescriptor), a1, () =>
-    CitationRegexDescriptorFailure.make({ reason: "invalid-bindings" })
-  );
+  const o1 = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), a1);
   return yield* makeOwnedCitationRegexDescriptorRegistry(a0, o1, a2);
 });
 
@@ -52,18 +41,6 @@ const descriptor = () => ({
 const pattern = () => ({ width: 1, bytes: new TextEncoder().encode("(?P<maybe>a)?(b)") });
 
 it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
-  it.effect("rejects incoherent capture names before installing a descriptor", () =>
-    Effect.gen(function* () {
-      const limits = (yield* defaultCitationEnginePolicy).limits;
-      for (const names of [{ "": 1 }, { a: 0 }, { a: 3 }, { a: 1, b: 1 }, { "private source": 1 }]) {
-        const failed = yield* makeCitationRegexDescriptorRegistry(limits, [
-          { ...descriptor(), profile: { ...descriptor().profile, names } },
-        ]).pipe(Effect.flip);
-        expect(failed).toMatchObject({ reason: "invalid-bindings" });
-        expect(failed.message).not.toContain("private source");
-      }
-    })
-  );
   it.effect("retains its captured Clock and total deadline precedence", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
@@ -110,13 +87,6 @@ it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
   );
   it.effect("binds native words, flags and fresh compiler facts against owned installed metadata", () =>
     Effect.gen(function* () {
-      // Refused where configuration crosses into the engine.
-      const invalidPolicy = yield* refuseCitationTestConfiguration(
-        () => ({ reason: "invalid-bindings" }),
-        CitationEngineLimits,
-        null
-      );
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-bindings" });
       const source = descriptor();
       const citationResult3 = yield* defaultCitationEnginePolicy;
       const registry = yield* makeCitationRegexDescriptorRegistry(citationResult3.limits, [source]);

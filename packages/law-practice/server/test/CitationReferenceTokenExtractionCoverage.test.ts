@@ -1,6 +1,5 @@
 import {
   CitationReferenceTokenConfiguration,
-  CitationReferenceTokenFailure,
   makeCitationReferenceTokenExtraction as makeOwnedCitationReferenceTokenExtraction,
 } from "@beep/law-practice-server/internal/Citation/ReferenceTokenExtraction";
 import { CitationTokenDispatchBindings } from "@beep/law-practice-server/internal/Citation/TokenDispatch";
@@ -22,7 +21,6 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 const makeCitationReferenceTokenExtraction = installCitationOwnedTestStage({
   schema: CitationReferenceTokenConfiguration,
   install: makeOwnedCitationReferenceTokenExtraction,
-  invalid: () => CitationReferenceTokenFailure.make({ reason: "invalid-configuration" }),
 });
 
 const install = Effect.fnUntraced(function* () {
@@ -78,11 +76,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference-t
   );
 
   it.effect(
-    "refuses malformed, unauthenticated and ambiguous installation data",
+    "refuses unauthenticated and ambiguous installation data",
     () =>
       Effect.gen(function* () {
         const { configuration, make } = yield* install();
-        yield* refuses(make({ ...configuration, editions: "none" }), invalidConfiguration);
         const pin = { ...configuration.pin, pattern: configuration.supra.pattern };
         yield* refuses(make({ ...configuration, pin }), invalidConfiguration);
         const supra = { ...configuration.supra, pattern: configuration.pin.pattern };

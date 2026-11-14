@@ -3,7 +3,6 @@ import { Citation, CitationEditionRef } from "@beep/law-practice-domain/values";
 import { getCitationExtractionShortcut } from "@beep/law-practice-server/internal/Citation/ExtractionShortcut";
 import {
   CitationSemanticProjectionConfiguration,
-  CitationSemanticProjectionFailure,
   makeCitationSemanticProjection as makeOwnedCitationSemanticProjection,
 } from "@beep/law-practice-server/internal/Citation/SemanticProjection";
 import { makeCitationSemanticVocabulary } from "@beep/law-practice-server/internal/Citation/SemanticVocabulary";
@@ -23,7 +22,6 @@ import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 const makeCitationSemanticProjection = installCitationOwnedTestStage({
   schema: CitationSemanticProjectionConfiguration,
   install: makeOwnedCitationSemanticProjection,
-  invalid: () => CitationSemanticProjectionFailure.make({ reason: "invalid-configuration" }),
 });
 
 const load = Effect.fnUntraced(function* () {
@@ -55,11 +53,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("semantic pr
     )
   );
 
-  it.effect("refuses malformed configuration and duplicate local edition ids", () =>
+  it.effect("refuses duplicate local edition ids", () =>
     withCitationTestInvocation(
       Effect.gen(function* () {
-        const malformed = yield* install({ editions: "none" }).pipe(Effect.flip);
-        expect(malformed).toMatchObject({ _tag: "CitationSemanticProjectionFailure", reason: "invalid-configuration" });
         const vocabulary = yield* load();
         const ref = yield* unknownEdition;
         const duplicate = yield* install({

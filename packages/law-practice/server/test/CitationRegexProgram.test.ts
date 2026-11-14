@@ -12,7 +12,6 @@ import {
   CitationRegexProgram,
   makeCitationRegexProgram,
 } from "@beep/law-practice-server/internal/Citation/RegexProgram";
-import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -23,7 +22,6 @@ import * as Effect from "effect/Effect";
 import * as RegExp from "effect/RegExp";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { refuseCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 
 const setup = Effect.fn("RegexProgramTest.setup")(function* () {
   const limits = (yield* defaultCitationEnginePolicy).limits;
@@ -76,13 +74,6 @@ it.effect("rejects expanded Unicode boundaries that exceed the rendered pattern 
 
 it.effect("rejects malformed policy, flags and native carriers before producing a program", () =>
   Effect.gen(function* () {
-    // Refused where configuration crosses into the engine.
-    const invalidPolicy = yield* refuseCitationTestConfiguration(
-      () => ({ reason: "invalid-policy" }),
-      CitationEngineLimits,
-      {}
-    );
-    expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
     const { compiler } = yield* setup();
     const invalidFlags = yield* compiler.compile({ width: 1, bytes: new Uint8Array(0) }, -1).pipe(Effect.flip);
     expect(invalidFlags).toMatchObject({ reason: "invalid-input" });
