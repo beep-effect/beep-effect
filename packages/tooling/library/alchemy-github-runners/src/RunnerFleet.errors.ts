@@ -151,3 +151,33 @@ export class WebhookRejected extends S.TaggedError<WebhookRejected, { readonly b
     description: "The webhook refused a delivery with an HTTP status.",
   })
 ) {}
+
+/**
+ * A destroy-time sweep terminated the fleet but could not deregister every runner.
+ *
+ * **Details**
+ *
+ * `instanceIds` names the instances whose GitHub runner registration is left
+ * behind: the GitHub call failed, or the runner stayed busy through every retry.
+ *
+ * **Example** (One runner left registered)
+ *
+ * ```ts
+ * import { RunnerSweepIncomplete } from "@beep/alchemy-github-runners/RunnerFleet.errors"
+ *
+ * const error = RunnerSweepIncomplete.make({ instanceIds: ["i-1"], message: "1 runner left registered" })
+ * console.log(error.instanceIds) // ["i-1"]
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class RunnerSweepIncomplete extends S.TaggedError<RunnerSweepIncomplete, { readonly brand: unique symbol }>(
+  $I`RunnerSweepIncomplete`
+)(
+  "RunnerSweepIncomplete",
+  { instanceIds: S.Array(S.String), message: S.String },
+  $I.annoteError<RunnerSweepIncomplete>("RunnerSweepIncomplete", {
+    description: "A destroy-time sweep could not deregister every runner.",
+  })
+) {}

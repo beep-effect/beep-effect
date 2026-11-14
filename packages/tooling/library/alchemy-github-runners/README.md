@@ -7,10 +7,10 @@ v7.10.1, the version `infra/ci-runners/Pulumi.yaml` pins for the live fleet.
 
 ## Status
 
-This release carries the schemas, service contracts, live layers and Lambda programs (with their
-entry points under `src/internal/lambda/`). The runner user data, `RunnerSweep` and the
-`RunnerFleet` composite described below follow in the next PR (packet decision
-`2026-11-13-github-runners-ships-as-two-sequential-prs-lambdas-first-composite-second`).
+The package carries the schemas, service contracts, live layers, Lambda programs (entry points under
+`src/internal/lambda/`), the runner user data, `RunnerSweep` and the `RunnerFleet` composite. Each pool launches from a
+`RunnerLaunchTemplate` (`@beep/alchemy-aws-extras`) that the composite declares; the caller supplies the AMI,
+network, disk and tag inputs.
 
 ## Attribution
 

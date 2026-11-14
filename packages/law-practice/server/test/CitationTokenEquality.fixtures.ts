@@ -2,11 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { CitationTokenEditionBinding } from "@beep/law-practice-server/internal/Citation/TokenEditions";
-import { Sha256HexFromBytes } from "@beep/schema";
-import { expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { readCitationOracleFixture } from "./CitationRegexWorker.fixtures.ts";
 import { CitationTokenSeedHex } from "./CitationTokenSeed.fixtures.ts";
@@ -42,13 +38,8 @@ export const readCitationTokenEquality = Effect.fn("TokenEqualityTest.read")(fun
   );
   const corpus = yield* S.decodeEffect(Corpus)(text);
   yield* readCitationOracleFixture("token-editions", corpus.editionProfileSha256);
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const location = yield* path.fromFileUrl(
-    new URL("../../../../goals/citation-extraction-engine/ops/probe-token-equality.py", import.meta.url)
-  );
-  const bytes = yield* fs.readFile(location);
-  const digest = yield* S.decodeEffect(Sha256HexFromBytes)(bytes);
-  expect(digest).toBe(corpus.producerSha256);
+  // The Python producer was removed with the repository's Python (goal python-free-repo). Its
+  // digest stays pinned in the corpus as `producerSha256`; recover the exact producer with
+  // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-token-equality.py`.
   return corpus;
 });

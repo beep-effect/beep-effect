@@ -41,6 +41,11 @@ const program = Effect.gen(function* () {
     if (flag === "--fixtures") fixtures = path.resolve(value);
     else evidence = path.resolve(value);
   }
+  // Retired with the repository's Python (goal python-free-repo): these projections pin proof
+  // reference digests that drifted on main before the removal, and only their deleted Python
+  // exporters (export-ledgers.py, export-divergences.py) regenerate them. A TypeScript port of the
+  // exporter re-admits each component. See history/2026-11-13-python-removed.md.
+  const retired = ["ledgers (check-ledgers.ts)", "divergences (check-divergences.ts)"] as const;
   const checks = [
     ["discovery", "check-discovery.ts", [path.join(evidence, "oracle-discovery.json")]],
     ["operations", "check-operations.ts", [path.join(fixtures, "operation-cases.json")]],
@@ -51,8 +56,6 @@ const program = Effect.gen(function* () {
     ],
     ["cleaner-unicode", "check-cleaner-unicode.ts", [path.join(fixtures, "cleaner-unicode.json")]],
     ["assertions", "check-assertions.ts", [path.join(fixtures, "assertion-cases.json")]],
-    ["builtin-diff", "verify-builtin-diff.py", ["--self-test", "--fixture", path.join(fixtures, "builtin-diff.json")]],
-    ["ledgers", "check-ledgers.ts", [fixtures, ...(audit ? [] : ["--complete"])]],
     [
       "donors",
       "check-typescript-donors.ts",
@@ -65,25 +68,21 @@ const program = Effect.gen(function* () {
       "check-supplemental.ts",
       ["--fixtures", fixtures, "--evidence", evidence, ...(audit ? ["--audit"] : [])],
     ],
-    ["divergences", "check-divergences.ts", ["--fixtures", fixtures, ...(audit ? ["--audit"] : [])]],
     [
       "regex-benchmarks",
       "check-regex-benchmarks.ts",
       ["--fixtures", fixtures, "--evidence", evidence, ...(audit ? ["--audit"] : [])],
     ],
   ] as const;
+  yield* Effect.forEach(retired, (name) => Console.log(`RETIRED ${name}`));
   const results = yield* Effect.forEach(
     checks,
     ([name, script, argv]) =>
       spawner
         .exitCode(
           ChildProcess.make(
-            Str.endsWith(".py")(script) ? "python3" : process.execPath,
-            [
-              ...(Str.endsWith(".py")(script) ? [] : ["run"]),
-              path.join(root, "goals/citation-extraction-engine/ops", script),
-              ...argv,
-            ],
+            process.execPath,
+            ["run", path.join(root, "goals/citation-extraction-engine/ops", script), ...argv],
             {
               cwd: root,
               stdin: "ignore",
