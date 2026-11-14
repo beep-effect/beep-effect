@@ -23,6 +23,7 @@ import * as Layer from "effect/Layer";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
+import { citationFixtureEngineBuild } from "./CitationEngineArtifact.fixtures.ts";
 import { buildCitationDefaultEngineFixture, buildCitationEngineFixture } from "./CitationEngineLayer.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
@@ -138,7 +139,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             runtime: installed.setup.runtime,
             installation: {
               implementation,
-              runtime: { kind: "bun", version: Bun.version },
+              runtime: citationFixtureEngineBuild("bun").runtime,
               limits: installed.setup.limits,
               vocabularyVersion: Result.getOrThrow(CourtReporterArtifact).artifactVersion,
             },

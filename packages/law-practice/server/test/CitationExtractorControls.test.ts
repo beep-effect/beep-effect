@@ -38,6 +38,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
+import { citationFixtureEngineBuild } from "./CitationEngineArtifact.fixtures.ts";
 import {
   makeCitationBundledTestRuntime,
   makeCitationNativeSleepClock,
@@ -91,7 +92,7 @@ const fixture = Effect.fnUntraced(function* (
     runtime,
     installation: {
       implementation,
-      runtime: { kind: options.wrongRuntime === true ? "node" : "bun", version: Bun.version },
+      runtime: { ...citationFixtureEngineBuild("bun").runtime, kind: options.wrongRuntime === true ? "node" : "bun" },
       limits,
       vocabularyVersion:
         options.wrongVocabulary === true

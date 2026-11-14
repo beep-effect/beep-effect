@@ -142,7 +142,6 @@ const makeReservationFixture = Effect.fn("NativeReservationTest.fixture")(functi
   };
   const operation = operationFor(family);
   const jobLimit = jobLimits[family];
-  const operations = yield* makeCitationOperationAdmission(limits);
   const observed = yield* makeCitationObservedSpawner();
   const spawned = yield* Deferred.make<void>();
   const returnSpawn = yield* Deferred.make<void>();
@@ -169,6 +168,7 @@ const makeReservationFixture = Effect.fn("NativeReservationTest.fixture")(functi
     }
     return timer.clock.sleep(duration);
   });
+  const operations = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideService(Clock.Clock, clock));
   // The shared admission has its own captured Clock, exactly as at installation.
   const admission = yield* makeCitationNativeProcessAdmission(limits).pipe(Effect.provideService(Clock.Clock, clock));
   const runtime = yield* family === "xml"

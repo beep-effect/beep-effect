@@ -34,11 +34,13 @@ Use this command for execution-capable sessions:
 B1 is locally verified and in review on `feat/citation-native-lane`. Owner ruling 3
 resolves the admission/deadline stop: explicit lane reservation now runs at the
 base acquisition points for regex, Diff and Xml. Both review race fixes remain.
-The owner controls publication and the later base update; no B1 PR exists.
+[PR #3336](https://github.com/beep-effect/beep-effect/pull/3336) is open after the
+owner merged A4 and main. Hosted round 1 repairs are being verified locally; the
+owner publishes the repair commits.
 
 ## Latest Evidence
 
-[Reservation, base timing comparison and real-process proofs](history/evidence/2026-11-14-b1-reservation.md).
+[Hosted round 1 repairs and file-by-file evidence](history/evidence/2026-11-14-b1-native-lane.md#hosted-round-1).
 
 ## Notes
 

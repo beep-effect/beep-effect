@@ -44,7 +44,7 @@ it.layer(
               concurrentRegexProcesses: concurrency,
             };
             const admission = yield* makeCitationNativeProcessAdmission(limits);
-            const operation = yield* makeCitationOperationAdmission(limits);
+            const operation = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideContext(setup.provided));
             const context = setup.provided.pipe(
               Context.add(CitationNativeProcessAdmission, admission),
               Context.add(CitationOperationAdmission, operation)

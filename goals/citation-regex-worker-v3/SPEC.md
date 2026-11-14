@@ -159,6 +159,12 @@ B1 does not require hoisting Diff or Xml to engine construction. Their preparati
 
 Reverse: Hoist these objects only with an explicit replacement for their per-owner lifecycle and queue state.
 
+### Keep the frozen six-form oracle in package test fixtures, 2026-11-14
+
+The required Node-parent provider audit exposed Bun.version assumptions in extractor fixture identities. Reuse the existing explicit fixture build identity instead of reading the parent runtime version. Touching the six-form test also exposed its inherited direct goal-packet data dependency, forbidden by the B1 test rules. Keep the original goal artifact, copy its JSON data unchanged into server/test/fixtures/citation-six-form-profile.json, format it with Biome and record the packaged bytes as SHA-256 304bc99c9219c1887ab6d9e2058010a00d8f950f6cf40c02e86a0f095c9cc3e2. The original bytes hash to 3cc6263c77bdb1f9d7b546b97dc0f503faf8644fcc2136ac5a1cbbebd4c8e65b; decoded data equality was checked independently. No expected output or child count changes.
+
+Reverse: Restore the old consumer only if tests are again permitted to depend on goal-packet paths.
+
 ### Record policy v2 as breaking in the packet; the private workspace takes no changeset, 2026-11-14
 
 The design asks for a major changeset with policy v2. `repo-sanity:changeset-graph` forbids a changeset for a private workspace, and `@beep/law-practice-use-cases` is private, so the changeset is removed. The breaking change is recorded here and in the PR body: policy tag `citation-engine-policy/v2`; a policy with fewer regex process slots than operation slots, and any v1 payload, is refused. No limit field or default value changes.

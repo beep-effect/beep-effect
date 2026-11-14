@@ -230,7 +230,8 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
                   );
                   expect(output).toEqual(row.result);
                 }
-              })
+              }),
+              setup.limits
             ).pipe(Effect.provideContext(setup.provided));
             yield* assertCitationWorkerCompositionReleased(
               setup.operation,

@@ -47,8 +47,9 @@ const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexW
  * open/quarantine check runs before job preparation (protocol v2: one child
  * per job). Full job preflight precedes
  * payload/map allocation and native acquisition. A native timer includes
- * spawn/startup/traffic/matching; confirmed retirement alone releases the shared
- * total/regex lease. This private component supplies no public engine Layer.
+ * spawn/startup/traffic/matching. Each job confirms retirement before publishing;
+ * invocation Scope closure or a cleaner yield returns the lane unit. This private
+ * component supplies no public engine Layer.
  * @internal @category operations @since 0.0.0
  */
 export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEvaluator")(function* (

@@ -222,3 +222,266 @@ The service search found 67 provider files. The unit audit follows provider
 fixtures to consumers, excludes platform-layer-only imports, and runs each file
 in a separate nice-19 process with a 285-second cap. CanonicalFullSpan is reserved
 for the final run after checks. Final per-file results are appended below.
+
+### Provider audit follow-through
+
+The transitive provider audit covers 168 individual unit files, 772 passing
+tests. It uses the requested `nice -n 19 bunx vitest run <file>`
+command, whose Vitest parent is Node; each file retains its own Bun/Node child
+runtime matrix. No file ran concurrently with another test file. Each process had
+a 285-second cap, and every launch's five-minute load was below 128.
+
+Additional failures found by this audit were fixed as follows:
+
+- Annotation assembly: pass the installed limits to the outer invocation so the
+  existing fixture binding opens it in the stage's spawner/Clock Context. The
+  twelve-child assertion is unchanged.
+- Case metadata: its fixed calendar Clock was installed after operation admission
+  had captured the manual Clock. Recreate operation admission under the fixed
+  Clock and provide that same Context to the explicit enclosing-budget invocation.
+  Preserve all eighteen-child receipts, calendar outputs and budget assertions.
+- Journal/law metadata: explicit outer-budget invocations now receive the installed
+  stage Context. The standalone full-law input fixture also uses the existing
+  stage binding; raw apply must not inherit the generic outer scaffold invocation.
+- Native-lane composition/reservation proofs: construct operation admission in the
+  same controlled Clock Context as the lane and evaluator. Preserve all contention,
+  timer, quarantine and confirmed-exit assertions; both files pass unchanged counts.
+- Configuration ownership, extractor controls and six-form projection: replace
+  parent-dependent Bun.version identities with the existing explicit fixture build
+  identity. Deliberate wrong-runtime negative controls remain. No production build
+  attestation is implied by these synthetic identities.
+- The touched six-form test had an inherited goal-packet data path. Keep the original
+  artifact and use a package-local copy with independently checked decoded equality;
+  record both hashes in its decision. Expected projection observations are unchanged.
+
+The first audit had six red files (annotation assembly, case metadata,
+configuration ownership, extractor controls, journal metadata and law metadata).
+All six pass their individual reruns. Six-form projection also passes a final
+rerun after its fixture-path repair. The table records the latest successful run
+of every audited file; it does not hide these earlier failures.
+
+### Per-file audit receipts
+
+| File (under server/) | Passed / total | File wall time |
+| --- | ---: | ---: |
+| `test/CitationAdmission.test.ts` | 7/7 | 2.25 s |
+| `test/CitationAnnotationAssembly.test.ts` | 5/5 | 8.11 s |
+| `test/CitationAnnotationCallback.test.ts` | 2/2 | 14.28 s |
+| `test/CitationAnnotationCallbackBoundary.test.ts` | 2/2 | 2.32 s |
+| `test/CitationAnnotationEntry.test.ts` | 5/5 | 5.15 s |
+| `test/CitationAnnotationEntryCoverage.test.ts` | 2/2 | 3.34 s |
+| `test/CitationAnnotationSkip.test.ts` | 1/1 | 10.56 s |
+| `test/CitationAnnotationWrap.test.ts` | 3/3 | 7.04 s |
+| `test/CitationBuiltinCleaners.test.ts` | 2/2 | 4.26 s |
+| `test/CitationBuiltinDiff.test.ts` | 6/6 | 21.06 s |
+| `test/CitationCanonicalAnnotation.test.ts` | 2/2 | 33.59 s |
+| `test/CitationCanonicalAnnotationWorkflow.test.ts` | 1/1 | 37.91 s |
+| `test/CitationCanonicalCourts.test.ts` | 1/1 | 41.67 s |
+| `test/CitationCanonicalDefaultFactory.test.ts` | 2/2 | 4.38 s |
+| `test/CitationCanonicalDump.test.ts` | 2/2 | 29.71 s |
+| `test/CitationCanonicalExtraction.test.ts` | 7/7 | 43.17 s |
+| `test/CitationCanonicalExtractionRanges.test.ts` | 6/6 | 2.76 s |
+| `test/CitationCanonicalFullRendering.test.ts` | 2/2 | 23.33 s |
+| `test/CitationCanonicalLongDiff.test.ts` | 2/2 | 17.83 s |
+| `test/CitationCanonicalMissingConversion.test.ts` | 2/2 | 13.46 s |
+| `test/CitationCanonicalPageCorrection.test.ts` | 2/2 | 27.14 s |
+| `test/CitationCanonicalParsedEquality.test.ts` | 2/2 | 23.92 s |
+| `test/CitationCanonicalParserOperations.test.ts` | 1/1 | 22.49 s |
+| `test/CitationCanonicalPinSpan.test.ts` | 2/2 | 40.40 s |
+| `test/CitationCanonicalRanges.test.ts` | 2/2 | 19.92 s |
+| `test/CitationCanonicalReferenceMarkup.test.ts` | 2/2 | 25.03 s |
+| `test/CitationCanonicalRemainingExtraction.test.ts` | 1/1 | 34.61 s |
+| `test/CitationCanonicalResourceComparison.test.ts` | 1/1 | 4.23 s |
+| `test/CitationCanonicalSource.test.ts` | 1/1 | 3.62 s |
+| `test/CitationCanonicalSourceCoverage.test.ts` | 2/2 | 3.43 s |
+| `test/CitationCapturedCleanerPlan.test.ts` | 2/2 | 25.90 s |
+| `test/CitationCaseMetadata.test.ts` | 2/2 | 36.24 s |
+| `test/CitationCaseName.test.ts` | 2/2 | 11.90 s |
+| `test/CitationCaseNameCoverage.test.ts` | 2/2 | 3.14 s |
+| `test/CitationCaseNameProcess.test.ts` | 5/5 | 17.36 s |
+| `test/CitationCaseNameScan.test.ts` | 4/4 | 26.23 s |
+| `test/CitationCaseNameSelection.test.ts` | 1/1 | 13.69 s |
+| `test/CitationCleanerCustomCorpus.test.ts` | 3/3 | 6.89 s |
+| `test/CitationCleanerNamedCorpus.test.ts` | 1/1 | 5.44 s |
+| `test/CitationCleanerOwnedInput.test.ts` | 4/4 | 3.88 s |
+| `test/CitationCleanerParentBudget.test.ts` | 5/5 | 7.39 s |
+| `test/CitationCleanerPipeline.test.ts` | 18/18 | 4.72 s |
+| `test/CitationCleanerPipelineCoverage.test.ts` | 6/6 | 5.11 s |
+| `test/CitationCleanerRegistry.test.ts` | 12/12 | 5.20 s |
+| `test/CitationCleanerUnicodeValues.test.ts` | 7/7 | 5.60 s |
+| `test/CitationCleanerValues.test.ts` | 8/8 | 3.53 s |
+| `test/CitationConfigurationOwnership.test.ts` | 6/6 | 18.09 s |
+| `test/CitationContextMatcher.test.ts` | 2/2 | 7.57 s |
+| `test/CitationCourtLookup.test.ts` | 8/8 | 13.75 s |
+| `test/CitationDefaultConfiguration.test.ts` | 3/3 | 10.93 s |
+| `test/CitationDiffWorker.input-admission.test.ts` | 1/1 | 2.44 s |
+| `test/CitationDiffWorker.test.ts` | 14/14 | 3.73 s |
+| `test/CitationDocumentCleanerProtocols.test.ts` | 10/10 | 3.30 s |
+| `test/CitationDocumentExtraction.test.ts` | 1/1 | 33.40 s |
+| `test/CitationDocumentExtractionCoverage.test.ts` | 1/1 | 7.93 s |
+| `test/CitationDocumentServices.test.ts` | 1/1 | 5.27 s |
+| `test/CitationDump.test.ts` | 9/9 | 5.93 s |
+| `test/CitationDumpCoverage.test.ts` | 4/4 | 2.93 s |
+| `test/CitationEditionInference.test.ts` | 3/3 | 2.96 s |
+| `test/CitationEngineBoundaryRefusal.test.ts` | 2/2 | 15.83 s |
+| `test/CitationEngineCorpus.test.ts` | 1/1 | 36.08 s |
+| `test/CitationEngineLayer.test.ts` | 15/15 | 98.99 s |
+| `test/CitationEngineResolution.test.ts` | 2/2 | 16.75 s |
+| `test/CitationExtractionEntry.test.ts` | 1/1 | 21.87 s |
+| `test/CitationExtractionEntryCoverage.test.ts` | 2/2 | 9.23 s |
+| `test/CitationExtractionLoop.test.ts` | 15/15 | 86.37 s |
+| `test/CitationExtractionReport.test.ts` | 1/1 | 7.75 s |
+| `test/CitationExtractionSelection.test.ts` | 1/1 | 2.57 s |
+| `test/CitationExtractorControls.test.ts` | 24/24 | 4.99 s |
+| `test/CitationExtractorSelection.test.ts` | 5/5 | 2.14 s |
+| `test/CitationFullExtraction.test.ts` | 2/2 | 13.37 s |
+| `test/CitationFullExtractionCoverage.test.ts` | 1/1 | 2.65 s |
+| `test/CitationFullLawMetadata.test.ts` | 2/2 | 4.43 s |
+| `test/CitationGeneratedReferences.test.ts` | 2/2 | 23.40 s |
+| `test/CitationHelperConfigurations.test.ts` | 3/3 | 3.02 s |
+| `test/CitationHtmlBytes.test.ts` | 2/2 | 28.84 s |
+| `test/CitationHtmlCaseName.test.ts` | 3/3 | 9.62 s |
+| `test/CitationHtmlCleanerStage.test.ts` | 3/3 | 3.72 s |
+| `test/CitationHtmlDiscovery.test.ts` | 2/2 | 6.96 s |
+| `test/CitationHtmlDiscoveryCoverage.test.ts` | 2/2 | 2.46 s |
+| `test/CitationHtmlGeometryPreparation.test.ts` | 3/3 | 3.75 s |
+| `test/CitationHtmlInput.test.ts` | 9/9 | 2.50 s |
+| `test/CitationHtmlNativeInput.test.ts` | 5/5 | 2.83 s |
+| `test/CitationHtmlWorker.test.ts` | 11/11 | 3.80 s |
+| `test/CitationHtmlWorkerCorpus.test.ts` | 3/3 | 41.26 s |
+| `test/CitationHtmlWorkerCoverage.test.ts` | 2/2 | 2.04 s |
+| `test/CitationInputDocument.test.ts` | 1/1 | 4.67 s |
+| `test/CitationInputDocumentCoverage.test.ts` | 2/2 | 8.00 s |
+| `test/CitationInvocation.test.ts` | 4/4 | 1.99 s |
+| `test/CitationJournalMetadata.test.ts` | 4/4 | 6.70 s |
+| `test/CitationLawMetadata.test.ts` | 6/6 | 5.48 s |
+| `test/CitationLiteralCleaners.test.ts` | 8/8 | 2.46 s |
+| `test/CitationLiteralUnicodeComposition.test.ts` | 4/4 | 5.83 s |
+| `test/CitationMetadataStrings.test.ts` | 3/3 | 5.40 s |
+| `test/CitationMetadataYear.test.ts` | 5/5 | 2.65 s |
+| `test/CitationNativeAdmission.test.ts` | 13/13 | 1.98 s |
+| `test/CitationNativeLane.test.ts` | 16/16 | 2.37 s |
+| `test/CitationNativeLaneCleaner.test.ts` | 2/2 | 13.95 s |
+| `test/CitationNativeLaneComposition.test.ts` | 4/4 | 4.72 s |
+| `test/CitationNativeLaneReservation.test.ts` | 32/32 | 4.34 s |
+| `test/CitationNativeLaneTransfer.test.ts` | 4/4 | 2.34 s |
+| `test/CitationNativeProcess.test.ts` | 4/4 | 2.32 s |
+| `test/CitationNativeProcessCoverage.test.ts` | 3/3 | 2.02 s |
+| `test/CitationNativeSlices.test.ts` | 3/3 | 2.11 s |
+| `test/CitationNativeSocket.test.ts` | 12/12 | 2.66 s |
+| `test/CitationOccurrenceProjectionCoverage.test.ts` | 4/4 | 2.74 s |
+| `test/CitationPairedSource.test.ts` | 2/2 | 30.44 s |
+| `test/CitationParserCatalog.test.ts` | 2/2 | 4.63 s |
+| `test/CitationPinExtraction.test.ts` | 4/4 | 5.96 s |
+| `test/CitationPostCaseMetadata.test.ts` | 5/5 | 8.65 s |
+| `test/CitationPreCaseMetadata.test.ts` | 4/4 | 4.83 s |
+| `test/CitationPythonCase.test.ts` | 4/4 | 2.22 s |
+| `test/CitationPythonCaseCoverage.test.ts` | 2/2 | 2.03 s |
+| `test/CitationPythonHash.test.ts` | 4/4 | 2.47 s |
+| `test/CitationPythonRepr.test.ts` | 5/5 | 3.35 s |
+| `test/CitationPythonReprCoverage.test.ts` | 2/2 | 2.11 s |
+| `test/CitationPythonUnicode.test.ts` | 7/7 | 2.74 s |
+| `test/CitationRecognizerWorker.test.ts` | 12/12 | 5.36 s |
+| `test/CitationReferenceNames.test.ts` | 1/1 | 2.32 s |
+| `test/CitationReferencePatterns.test.ts` | 1/1 | 5.25 s |
+| `test/CitationReferencePatternsCoverage.test.ts` | 4/4 | 2.43 s |
+| `test/CitationReferenceToken.test.ts` | 2/2 | 14.52 s |
+| `test/CitationReferenceTokenExtractionCoverage.test.ts` | 3/3 | 4.40 s |
+| `test/CitationRegexAlphabet.test.ts` | 8/8 | 2.14 s |
+| `test/CitationRegexBoundaries.test.ts` | 2/2 | 10.25 s |
+| `test/CitationRegexCaptureReuse.test.ts` | 2/2 | 9.99 s |
+| `test/CitationRegexCaseFlags.test.ts` | 2/2 | 7.35 s |
+| `test/CitationRegexDescriptors.test.ts` | 8/8 | 2.05 s |
+| `test/CitationRegexEngine.test.ts` | 4/4 | 3.69 s |
+| `test/CitationRegexInput.test.ts` | 11/11 | 2.24 s |
+| `test/CitationRegexLookahead.test.ts` | 2/2 | 5.90 s |
+| `test/CitationRegexNullable.test.ts` | 2/2 | 3.77 s |
+| `test/CitationRegexOperation.test.ts` | 3/3 | 2.29 s |
+| `test/CitationRegexProgram.test.ts` | 14/14 | 2.24 s |
+| `test/CitationRegexResult.test.ts` | 13/13 | 2.12 s |
+| `test/CitationRegexVerbose.test.ts` | 3/3 | 7.16 s |
+| `test/CitationRegexWorker.test.ts` | 19/19 | 3.82 s |
+| `test/CitationRegexWorkerProtocol.test.ts` | 14/14 | 2.17 s |
+| `test/CitationRendering.test.ts` | 5/5 | 18.77 s |
+| `test/CitationRenderingOperation.test.ts` | 1/1 | 2.42 s |
+| `test/CitationReplayBudget.test.ts` | 3/3 | 2.14 s |
+| `test/CitationResolverBoundary.test.ts` | 6/6 | 3.28 s |
+| `test/CitationResourceCorrection.test.ts` | 9/9 | 7.82 s |
+| `test/CitationSemanticExtraction.test.ts` | 1/1 | 34.04 s |
+| `test/CitationSemanticProjection.test.ts` | 6/6 | 2.80 s |
+| `test/CitationSemanticProjectionCoverage.test.ts` | 3/3 | 2.52 s |
+| `test/CitationShortMissingPage.test.ts` | 3/3 | 21.23 s |
+| `test/CitationSixFormProjection.test.ts` | 2/2 | 6.07 s |
+| `test/CitationSixFormProjectionControls.test.ts` | 7/7 | 2.63 s |
+| `test/CitationSourceAnnotation.test.ts` | 6/6 | 4.82 s |
+| `test/CitationSourceAnnotationTiming.test.ts` | 2/2 | 3.02 s |
+| `test/CitationSourceCleaning.test.ts` | 3/3 | 2.81 s |
+| `test/CitationSourceDocument.test.ts` | 4/4 | 23.10 s |
+| `test/CitationSourceEvidence.test.ts` | 3/3 | 3.52 s |
+| `test/CitationSourceRequest.test.ts` | 10/10 | 3.23 s |
+| `test/CitationSpanOffsets.test.ts` | 5/5 | 2.86 s |
+| `test/CitationStopWords.test.ts` | 3/3 | 13.96 s |
+| `test/CitationTextBudget.test.ts` | 6/6 | 4.49 s |
+| `test/CitationTokenContext.test.ts` | 3/3 | 5.80 s |
+| `test/CitationTokenObjects.test.ts` | 3/3 | 2.68 s |
+| `test/CitationTokenText.test.ts` | 4/4 | 2.84 s |
+| `test/CitationTokenizedExtraction.test.ts` | 1/1 | 35.91 s |
+| `test/CitationTokenizedExtractionCoverage.test.ts` | 1/1 | 5.39 s |
+| `test/CitationTokenizer.test.ts` | 11/11 | 3.87 s |
+| `test/CitationTokenizerCatalog.test.ts` | 3/3 | 7.04 s |
+| `test/CitationVerifiedExtraction.test.ts` | 1/1 | 39.26 s |
+| `test/CitationXmlWorker.test.ts` | 3/3 | 7.01 s |
+| `test/vitest-shards-plan.test.ts` | 2/2 | 4.41 s |
+
+The separately requested `test/integration/CitationFullLawMetadata.test.ts`
+passes 1/1 (768 observations, original 936 spawned / 936 confirmed), 133.29 s
+Vitest wall time, with the package's integration/native-wallclock project config.
+No other integration file was launched in this hosted repair round.
+
+### Required local gates
+
+| Check | Result |
+| --- | --- |
+| Server `bun run check` | Pass: source declarations and test typecheck |
+| Server quick package verification | Pass: lint 0.6 s, check 2.9 s |
+| Server `lint:laws` | Pass; three existing terse-effect advisories, no enforced findings |
+| Exact fallow audit against origin/main | Pass, zero introduced blocking findings; 15 inherited findings excluded, 19 clone groups advisory |
+| Effect Vitest | Pass: 3,927 files, 639 findings, introduced 0 / resolved 1 |
+| Schema-first | Pass: live/tracked 282/282, missing 0 / stale 0; no inventory changes |
+| Biome | Pass: 13 final touched source/test/data files; package lint covers the complete package |
+| Decisions projection | Pass, invalid 0 / drift 0 |
+| Additional root oxlint and local docgen | Pass |
+
+An import-order error introduced during fixture repair was corrected before the
+successful quick verification. A newly added redundant codec assertion on the
+copied six-form fixture triggered schema-first's advisory threshold; it was
+removed before the final scan, leaving every pre-existing assertion intact and
+no inventory growth. An accidentally started root check was cancelled; the
+requested server-only check completed successfully. No test process was
+cancelled or left running.
+
+No whole-package suite, whole-package coverage or other integration cohort was
+run. Hosted CI was read for attribution but has not been rerun or represented as
+green. The owner publishes the local commits and answers/resolves remote review
+threads. No push, PR mutation, rebase or stash operation was performed here.
+
+### Final count gate (last test process)
+
+CitationCanonicalFullSpan passes 12/12 in 67.29 s process wall time. Starting
+load (1/5/15 minutes) was 10.92 / 12.20 / 11.36. The existing fixture asserts
+all rows, including the construction row and the Node first-call parity leg.
+
+| Count | Published B1 head | Hosted repair head |
+| --- | ---: | ---: |
+| Regex children, ten plain-text calls | 291 | 291 |
+| Native lane unit claims, ten calls | 10 | 10 |
+| Construction metadata installs | 16 | 16 |
+| Construction configuration detaches | 1 | 1 |
+| Construction tokenizer builds | 1 | 1 |
+| Construction evaluator installs | 26 | 26 |
+| Construction native owners / lane claims / children | 1 / 0 / 0 | 1 / 0 / 0 |
+
+Together: 170 distinct test files, 785/785 tests (168 audit files / 772 tests,
+one integration file / one test, and the final canonical file / twelve tests).
+All test processes completed before commit/report. Local commits are for owner
+publication; PR #3336 remains at its previously published head until then.

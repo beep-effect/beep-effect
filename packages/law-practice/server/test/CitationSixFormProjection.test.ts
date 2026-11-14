@@ -19,6 +19,7 @@ import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { citationFixtureEngineBuild } from "./CitationEngineArtifact.fixtures.ts";
 import { makeCitationBundledTestRuntime } from "./CitationNativeSpawner.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import type { Citation, CitationDocument, CitationMention, CitationResolution } from "@beep/law-practice-domain/values";
@@ -173,7 +174,7 @@ const install = Effect.fnUntraced(function* (
     runtime,
     installation: {
       implementation,
-      runtime: { kind: runtime.kind, version: runtime.kind === "bun" ? Bun.version : process.versions.node },
+      runtime: citationFixtureEngineBuild(runtime.kind).runtime,
       limits,
       vocabularyVersion: Result.getOrThrow(CourtReporterArtifact).artifactVersion,
     },
@@ -203,12 +204,7 @@ it.layer(Layer.mergeAll(BunServices.layer, BunCrypto.layer, BunCrypto.layerDiges
               cwd
             );
             const raw = yield* fs.readFileString(
-              NodeURL.fileURLToPath(
-                new URL(
-                  "../../../../goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
-                  import.meta.url
-                )
-              )
+              NodeURL.fileURLToPath(new URL("./fixtures/citation-six-form-profile.json", import.meta.url))
             );
             const profile = yield* S.decodeEffect(Profile)(raw);
             const { limits } = yield* defaultCitationEnginePolicy;
