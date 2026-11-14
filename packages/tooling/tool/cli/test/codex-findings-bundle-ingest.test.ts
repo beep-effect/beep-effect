@@ -478,6 +478,9 @@ process.exit(args.includes("--dry-run") && args.includes("--path") ? 0 : 17);
       const provider = yield* pinnedRuntime(0, "setInterval(() => {}, 1000);\n");
       const childPid = yield* Ref.make(O.none<number>());
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      // Own double (D-14): decorates the real platform spawner, which `ScriptedSpawner` replaces rather than
+      // wraps.
+      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
       const recordingSpawner = ChildProcessSpawner.make((command) =>
         spawner.spawn(command).pipe(Effect.tap((handle) => Ref.set(childPid, O.some(handle.pid))))
       );

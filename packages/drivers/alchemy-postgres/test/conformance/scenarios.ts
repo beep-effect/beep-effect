@@ -6,8 +6,10 @@
  * Scenarios run with the live clock: the platforms fire scheduled commands and
  * drain deliveries on their own clocks, in background fibers the tests do not own.
  */
+
 import * as Domain from "@alchemy.run/domain";
 import { Internals } from "@alchemy.run/domain/Model";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import { describe, expect, layer } from "@effect/vitest";
 import { assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -184,12 +186,11 @@ const eventually = <A, E, R>(effect: Effect.Effect<A, E, R>, predicate: (value: 
     Effect.timeout(Duration.seconds(15))
   );
 
-/** Command ids that the wrapped kit rejects, standing in for a decide that refuses at fire time. */
-const refusedPrefix = "refused-";
+/** Structural command guard for the one account whose timer commit is refused. */
+const isRemind = S.is(S.Struct(Remind.fields));
 
 /**
- * Wrap a platform so every command whose id starts with {@link refusedPrefix}
- * is rejected by the kernel. Scheduled commands cannot declare rejections, so
+ * Wrap a platform so Remind on the refused account is rejected by the kernel. Scheduled commands cannot declare rejections, so
  * this is how a scenario reaches a scheduled command whose commit is rejected.
  */
 const refusing = <E, R>(platform: Layer.Layer<Domain.Platform, E, R>) =>
@@ -201,7 +202,7 @@ const refusing = <E, R>(platform: Layer.Layer<Domain.Platform, E, R>) =>
         ({
           ...kit,
           handle: (input) =>
-            Str.startsWith(refusedPrefix)(input.commandId)
+            Str.endsWith("-refused")(input.id) && isRemind(input.command)
               ? Effect.succeed({ _tag: "Rejected", rejection: { _tag: "Refused" } })
               : kit.handle(input),
         });
@@ -228,7 +229,8 @@ const elapse = (clock: ScenarioClock | undefined, millis: number) =>
 export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
   const hosted = Conformance.layer(LedgerProvisioningLive).pipe(
     Layer.provideMerge(refusing(target.platform)),
-    Layer.provideMerge(target.base)
+    Layer.provideMerge(target.base),
+    Layer.provideMerge(NodeCrypto.layer)
   );
   describe(`Platform conformance: ${target.name}`, () => {
     // Ids are scoped per target: the policy run counter is module state, and a runner that shares
@@ -249,7 +251,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
             A.map(receipt.events, (event) => event._tag),
             ["AccountOpened"]
           );
-          const state1 = yield* accounts.state(id);
+          const state1 = yield* accounts.get(id);
           deepStrictEqual(state1, { _tag: "Open", owner: "ada", balance: 0, reminders: 0 });
         })
       );
@@ -263,7 +265,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           const second = yield* accounts.send(id, Deposit.make({ amount: 5 }), { commandId: "dep-1" }).pipe(asUser);
           deepStrictEqual(second, first);
           strictEqual(first.version, 2);
-          const state2 = yield* accounts.state(id);
+          const state2 = yield* accounts.get(id);
           deepStrictEqual(state2, { _tag: "Open", owner: "bo", balance: 5, reminders: 0 });
         })
       );
@@ -274,7 +276,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           const id = accountId("rejected");
           const rejection = yield* accounts.send(id, Deposit.make({ amount: 1 })).pipe(asUser, Effect.flip);
           strictEqual(rejection._tag, "NotOpen");
-          const state3 = yield* accounts.state(id);
+          const state3 = yield* accounts.get(id);
           deepStrictEqual(state3, { _tag: "Unopened" });
           const opened = yield* accounts.send(id, OpenAccount.make({ owner: "cy" })).pipe(asUser);
           strictEqual(opened.version, 1);
@@ -298,7 +300,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
             ),
             A.range(2, 11)
           );
-          const state4 = yield* accounts.state(id);
+          const state4 = yield* accounts.get(id);
           deepStrictEqual(state4, { _tag: "Open", owner: "di", balance: 10, reminders: 0 });
         })
       );
@@ -309,7 +311,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           const ledgers = yield* Ledger;
           const id = accountId("policy");
           yield* accounts.send(id, OpenAccount.make({ owner: "eve" })).pipe(asUser);
-          const ledger = yield* eventually(ledgers.state(id), (state) => state._tag === "Created");
+          const ledger = yield* eventually(ledgers.get(id), (state) => state._tag === "Created");
           deepStrictEqual(ledger, { _tag: "Created", owner: "eve" });
         })
       );
@@ -325,17 +327,20 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           });
           strictEqual(scheduled.commandId, "remind-1");
           yield* elapse(target.clock, 150);
-          yield* eventually(accounts.state(id), (state) => state._tag === "Open" && state.reminders >= 1);
+          yield* eventually(accounts.get(id), (state) => state._tag === "Open" && state.reminders >= 1);
           yield* elapse(target.clock, 300);
-          const state5 = yield* accounts.state(id);
+          const state5 = yield* accounts.get(id);
           deepStrictEqual(state5, { _tag: "Open", owner: "fay", balance: 0, reminders: 1 });
 
           const executed = yield* accounts.unschedule(id, "remind-1").pipe(Effect.flip);
           strictEqual(executed._tag, "AlreadyExecuted");
-          const again = yield* accounts
-            .schedule(id, Remind.make({}), { after: "1 second", commandId: "remind-1" })
-            .pipe(Effect.flip);
-          strictEqual(again._tag, "AlreadyExecuted");
+          const again = yield* accounts.schedule(id, Remind.make({}), {
+            after: "1 second",
+            commandId: "remind-1",
+          });
+          strictEqual(again.commandId, "remind-1");
+          yield* elapse(target.clock, 1000);
+          yield* eventually(accounts.get(id), (state) => state._tag === "Open" && state.reminders === 2);
 
           yield* accounts.schedule(id, Remind.make({}), { after: "1 hour", commandId: "remind-2" });
           yield* accounts.unschedule(id, "remind-2");
@@ -349,14 +354,14 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           const soon = DateTime.add(now, { milliseconds: 100 });
           yield* accounts.schedule(id, Remind.make({}), { at: soon, commandId: "remind-at" });
           yield* elapse(target.clock, 100);
-          yield* eventually(accounts.state(id), (state) => state._tag === "Open" && state.reminders >= 2);
+          yield* eventually(accounts.get(id), (state) => state._tag === "Open" && state.reminders >= 3);
 
           // A wide delay: on a wall clock a loaded runner must still unschedule before the due time.
           yield* accounts.schedule(id, Remind.make({}), { after: "1 second", commandId: "remind-3" });
           yield* accounts.unschedule(id, "remind-3");
           yield* elapse(target.clock, 1300);
-          const state6 = yield* accounts.state(id);
-          deepStrictEqual(state6, { _tag: "Open", owner: "fay", balance: 0, reminders: 2 });
+          const state6 = yield* accounts.get(id);
+          deepStrictEqual(state6, { _tag: "Open", owner: "fay", balance: 0, reminders: 3 });
         })
       );
 
@@ -389,7 +394,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
                   Layer.provide(target.platform.pipe(refusing, Layer.fresh))
                 )
               );
-              return yield* Context.get(context, Account).state(id);
+              return yield* Context.get(context, Account).get(id);
             }).pipe(Effect.scoped);
             deepStrictEqual(
               rebuilt,
@@ -398,7 +403,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           })
       );
 
-      it.effect("a scheduled command sent early under its command id does not run again", () =>
+      it.effect("scheduled and directly sent commands have independent execution ids", () =>
         Effect.gen(function* () {
           const accounts = yield* Account;
           const id = accountId("sent-early");
@@ -406,18 +411,24 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           yield* accounts.schedule(id, Remind.make({}), { after: "100 millis", commandId: "early" });
           yield* accounts.send(id, Remind.make({}), { commandId: "early" }).pipe(asUser);
           yield* elapse(target.clock, 400);
-          const state = yield* accounts.state(id);
-          deepStrictEqual(state, { _tag: "Open", owner: "jay", balance: 0, reminders: 1 });
+          // Wait for the fire itself where the target can report it, so a loaded runner cannot race the asserts.
+          if (target.scheduleStatus !== undefined) {
+            const scheduleStatus = target.scheduleStatus;
+            const status = yield* eventually(scheduleStatus("Account", id, "early"), (value) => value === "executed");
+            strictEqual(status, "executed");
+          }
+          const state = yield* accounts.get(id);
+          deepStrictEqual(state, { _tag: "Open", owner: "jay", balance: 0, reminders: 2 });
           const executed = yield* accounts.unschedule(id, "early").pipe(Effect.flip);
           strictEqual(executed._tag, "AlreadyExecuted");
         })
       );
 
-      it.effect("a scheduled command whose commit is rejected frees its command id", () =>
+      it.effect("a refused arming remains cancellable and its name can be rearmed", () =>
         Effect.gen(function* () {
           const accounts = yield* Account;
           const id = accountId("refused");
-          const commandId = `${refusedPrefix}remind`;
+          const commandId = "refused-remind";
           yield* accounts.send(id, OpenAccount.make({ owner: "kim" })).pipe(asUser);
           yield* accounts.schedule(id, Remind.make({}), { after: "50 millis", commandId });
           yield* elapse(target.clock, 50);
@@ -429,11 +440,12 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           } else {
             yield* elapse(target.clock, 1000);
           }
-          const state = yield* accounts.state(id);
+          const state = yield* accounts.get(id);
           deepStrictEqual(state, { _tag: "Open", owner: "kim", balance: 0, reminders: 0 });
-          // No receipt was written: nothing to cancel, and the id can be scheduled again.
-          const nothing = yield* accounts.unschedule(id, commandId).pipe(Effect.flip);
-          strictEqual(nothing._tag, "NotScheduled");
+          // The failed arming has no receipt; its retained name can still be cancelled.
+          yield* accounts.unschedule(id, commandId);
+          const cancelled = yield* accounts.unschedule(id, commandId).pipe(Effect.flip);
+          strictEqual(cancelled._tag, "AlreadyCancelled");
           const again = yield* accounts.schedule(id, Remind.make({}), { after: "1 hour", commandId });
           strictEqual(again.commandId, commandId);
           yield* accounts.unschedule(id, commandId);
@@ -451,7 +463,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
             const id = accountId("flaky-ledger");
             yield* accounts.send(id, OpenAccount.make({ owner: "lee" })).pipe(asUser);
             if (target.redelivers) {
-              const ledger = yield* eventually(ledgers.state(id), (state) => state._tag === "Created");
+              const ledger = yield* eventually(ledgers.get(id), (state) => state._tag === "Created");
               deepStrictEqual(ledger, { _tag: "Created", owner: "lee" });
               yield* Effect.sleep(Duration.millis(200));
               strictEqual(runsOf(id), 2);
@@ -480,7 +492,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
               (id, n) => (n % 2 === 0 ? here : there).send(id, OpenAccount.make({ owner: "mo" })).pipe(asUser),
               { concurrency: "unbounded", discard: true }
             );
-            yield* Effect.forEach(ids, (id) => eventually(ledgers.state(id), (state) => state._tag === "Created"), {
+            yield* Effect.forEach(ids, (id) => eventually(ledgers.get(id), (state) => state._tag === "Created"), {
               discard: true,
             });
             yield* Effect.sleep(Duration.millis(300));
@@ -502,7 +514,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           const id = accountId("seeded");
           const opened = yield* internals.kernel.encodeEvent(AccountOpened.make({ owner: "nia" }));
           yield* seed(id, [opened]);
-          const state = yield* accounts.state(id);
+          const state = yield* accounts.get(id);
           deepStrictEqual(state, { _tag: "Open", owner: "nia", balance: 0, reminders: 0 });
           const events = yield* eventsOf(store, id);
           deepStrictEqual(
@@ -510,7 +522,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
             [[1, `seed:${id}:0`]]
           );
           yield* Effect.sleep(Duration.millis(200));
-          const ledger = yield* ledgers.state(id);
+          const ledger = yield* ledgers.get(id);
           deepStrictEqual(ledger, { _tag: "None" });
           strictEqual(runsOf(id), 0);
         })
@@ -571,7 +583,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
                 context: { "Conformance/CurrentActor": { principal: "sync", sourceKind: "system" } },
               },
             ]);
-            const final = yield* accounts.state(id);
+            const final = yield* accounts.get(id);
             assertTrue(isOpen(final));
           })
         );

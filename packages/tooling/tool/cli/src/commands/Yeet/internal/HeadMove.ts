@@ -12,8 +12,8 @@ import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
-import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
@@ -24,6 +24,7 @@ import { YeetCommandError } from "../Yeet.errors.ts";
 import { runGitFoldedStdout } from "./GitExec.ts";
 import { YeetHeadMoveChanged, YeetHeadMoveUnchanged, YeetHeadMoveUnknown } from "./HeadMove.schemas.ts";
 import { finalCheckPatchIdentityDigest } from "./PatchIdentity.ts";
+import type * as DateTime from "effect/DateTime";
 import type { YeetHeadMove, YeetHeadMoveChange, YeetHeadMoveRequest } from "./HeadMove.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/HeadMove");
@@ -97,11 +98,15 @@ const requireStep = Effect.fn("Yeet.headMoveRequireStep")(
     O.match(verdict, { onNone: () => Effect.void, onSome: Effect.fail })
 );
 
-// Preserve Git's configured transport; only OpenSSH accepts BatchMode.
+// Preserve Git's configured transport; only OpenSSH accepts BatchMode. The `core.sshCommand` read
+// runs on `Git.configGet` (W8, SPEC D-22); an unset key or a failed read is no configured command.
 const fetchSshEnvironment = Effect.fn("Yeet.headMoveFetchSshEnvironment")(function* (root: string) {
   const command = yield* Config.String("GIT_SSH_COMMAND").pipe(Config.option);
   const program = yield* Config.String("GIT_SSH").pipe(Config.option);
-  const configured = O.isSome(command) ? command : yield* read(root, ["config", "core.sshCommand"]).pipe(Effect.option);
+  const git = yield* Git;
+  const configured = O.isSome(command)
+    ? command
+    : yield* git.configGet(root, "core.sshCommand").pipe(Effect.option, Effect.map(O.flatten));
   if (O.isNone(configured) && O.isSome(program)) return {};
   const ssh = O.getOrElse(configured, () => "ssh");
   const executable = Str.replace(/^['"]|['"]$/g, "")(A.headNonEmpty(Str.split(ssh, /\s+/)));
@@ -109,17 +114,25 @@ const fetchSshEnvironment = Effect.fn("Yeet.headMoveFetchSshEnvironment")(functi
   return Str.startsWith("ssh")(programName) ? { GIT_SSH_COMMAND: `${ssh} -o BatchMode=yes` } : {};
 });
 
-// Step 10 runs first. The kit cannot express a multi-object, no-maintenance fetch
-// with this explicit noninteractive environment; only that missing primitive uses StepExec.
+// Step 10 runs first. The object probes run on `Git.refExists` (`cat-file -e`, W8, SPEC D-22); a
+// failed probe reads as missing, as the capture it replaces did.
 const ensureObjects = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: string, request: YeetHeadMoveRequest) {
+  const git = yield* Git;
   const refs = A.dedupe([request.before, request.after, request.base]);
   yield* Effect.forEach(refs, guardLiteralArg);
   const missing = yield* Effect.filter(refs, (sha) =>
-    read(root, ["cat-file", "-e", `${sha}^{commit}`]).pipe(Effect.option, Effect.map(O.isNone))
+    git.refExists(root, `${sha}^{commit}`).pipe(
+      Effect.orElseSucceed(() => false),
+      Effect.map((exists) => !exists)
+    )
   );
   if (A.isReadonlyArrayEmpty(missing)) return;
   const sshEnv = yield* fetchSshEnvironment(root);
   const args = ["fetch", "--no-tags", "--no-write-fetch-head", "--no-auto-maintenance", "origin", ...missing];
+  // KEEP (D-22): `Git.fetch` takes one ref and no `--no-auto-maintenance`, and the kit reads its environment
+  // once at `make`, so it cannot pass this fetch's per-call `GIT_TERMINAL_PROMPT` and BatchMode
+  // `GIT_SSH_COMMAND`.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
   const result = yield* runFoldedStdout({
     command: "git",
     args,
@@ -130,10 +143,23 @@ const ensureObjects = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: s
     fold: textFold,
   }).pipe(Effect.timeout("60 seconds"));
   if (result.exitCode !== 0) return yield* YeetCommandError.new("Head-move object fetch failed.")(result.stderr);
-  yield* Effect.forEach(missing, (sha) => read(root, ["cat-file", "-e", `${sha}^{commit}`]));
+  yield* Effect.forEach(missing, (sha) =>
+    git.refExists(root, `${sha}^{commit}`).pipe(
+      Effect.filterOrFail(
+        (exists) => exists,
+        () =>
+          YeetCommandError.make({
+            message: `Head-move object ${sha} is still missing after the fetch.`,
+            command: `git cat-file -e ${sha}^{commit}`,
+            exitCode: 1,
+          })
+      )
+    )
+  );
 });
 const readCommit = Effect.fn("Yeet.headMoveReadCommit")(function* (root: string, sha: string) {
   const git = yield* Git;
+  // KEEP (D-22): `Git.commitInfo` and `Git.log` carry no parent list; `%P` is read raw.
   const parentText = yield* read(root, ["show", "-s", "--format=%P", sha]);
   const parentShas = A.flatMap(lines(parentText), Str.split(" "));
   const tree = yield* git.revParse(root, `${sha}^{tree}`);
@@ -141,9 +167,13 @@ const readCommit = Effect.fn("Yeet.headMoveReadCommit")(function* (root: string,
     onNone: () => Effect.succeed(""),
     onSome: (parent) => git.revParse(root, `${parent}^{tree}`),
   });
+  // KEEP (D-22): no kit member reads the committer mailbox (`%ce`) or the author date with its
+  // original offset (`%aI`); the kit's commit models carry neither.
   const metadataText = yield* raw(root, ["show", "-s", "--format=format:%an%x00%ae%x00%aI%x00%ce", sha]);
   const values = Str.split(metadataText, "\0");
   const [authorName, authorEmail, authorDate, email] = yield* decodeMetadata(values);
+  // KEEP (D-22): the raw commit object (headers, `gpgsig`, the exact message) has no kit member
+  // (`cat-file` is single-consumer plumbing, D-03).
   const commitObject = yield* raw(root, ["cat-file", "commit", sha]);
   const message = A.join(A.drop(Str.split(commitObject, "\n\n"), 1), "\n\n");
   return Commit.make({
@@ -222,6 +252,8 @@ const oldTail = Effect.fn("Yeet.headMoveOldTail")(function* (
   return { tail: A.reverse(tail), base: at };
 });
 const rawEntries = Effect.fn("Yeet.headMoveRawEntries")(function* (root: string, commit: Commit) {
+  // KEEP (D-22): `Git.nameStatus` drops the old and new modes this comparison reads from
+  // `diff-tree --raw`.
   const entryText = yield* raw(root, [
     "diff-tree",
     "--no-commit-id",
@@ -245,6 +277,8 @@ const rawEntries = Effect.fn("Yeet.headMoveRawEntries")(function* (root: string,
   }
   return entries;
 });
+// KEEP (D-22): the per-path patch identity is a streamed byte fold that keeps invalid UTF-8 (the
+// Y33 reason, D-18); the kit buffers decoded text.
 const patchDigest = Effect.fn("Yeet.headMovePatchDigest")((root: string, commit: Commit, path: string) =>
   runGitFoldedStdout(
     root,
@@ -337,6 +371,7 @@ const replay = Effect.fn("Yeet.headMoveReplay")(function* (
 ) {
   const git = yield* Git;
   const actual = yield* git.revParse(root, `${request.after}^{tree}`);
+  // KEEP (D-22): `Git.mergeTree` has no `--merge-base` option.
   const expected = yield* read(root, [
     "merge-tree",
     "--write-tree",
@@ -416,17 +451,23 @@ export class YeetHeadMoveClassifier extends Context.Service<
       YeetHeadMoveClassifier,
       Effect.gen(function* () {
         const dependencies = yield* Effect.context<Effect.Services<ReturnType<typeof classifyKnown>>>();
-        const localEmail = yield* read(repoRoot, ["config", "user.email"]).pipe(
-          Effect.option,
-          Effect.map(O.filter(Str.isNonEmpty))
-        );
+        // `Git.configGet` (W8, SPEC D-22): an unset key or a failed read is no local mailbox.
+        const git = yield* Git;
+        const localEmail = yield* git
+          .configGet(repoRoot, "user.email")
+          .pipe(Effect.option, Effect.map(flow(O.flatten, O.filter(Str.isNonEmpty))));
         return YeetHeadMoveClassifier.of({
+          // `Git.log` (W8, SPEC D-22): `CommitLogEntry.committedAt` is the `%cI` instant `show -s` read;
+          // an unknown commit or a failed read is no instant.
           committerInstant: Effect.fn("Yeet.committerInstant")((sha: string) =>
-            read(repoRoot, ["show", "-s", "--format=%cI", sha]).pipe(
-              Effect.map(DateTime.make),
-              Effect.option,
-              Effect.map(O.flatten),
-              Effect.provideContext(dependencies)
+            git.log(repoRoot, { revisions: [sha], limit: 1, omitPaths: true }).pipe(
+              Effect.map(
+                flow(
+                  A.head,
+                  O.map((entry) => entry.committedAt)
+                )
+              ),
+              Effect.orElseSucceed(O.none<DateTime.Utc>)
             )
           ),
           classify: Effect.fn("Yeet.classifyHeadMove")((request: YeetHeadMoveRequest) =>

@@ -611,6 +611,7 @@ const readPullRequestAuthor = Effect.fn("Yeet.ReadyGate.readPullRequestAuthor")(
   prNumber: number
 ): Effect.fn.Return<O.Option<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   // KEEP (D-13): gh's GraphQL `author.login` comes without the `[bot]` suffix REST adds.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   return yield* ghOutput({
     args: ["pr", "view", `${prNumber}`, "--json", "author", "--jq", ".author.login"],
     cwd: context.repoRoot,
@@ -895,6 +896,8 @@ const decodeReviewerResponse = Effect.fnUntraced(function* <T, I>(schema: S.Code
 });
 
 const reviewerRequestOutput = Effect.fnUntraced(function* (context: RepoRunContext, args: ReadonlyArray<string>) {
+  // KEEP funnel: `reviewerRequestOutput` runs the KEEP (D-22) reads below; each call site records its reason.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP funnel, reason above
   return yield* ghOutput({
     args,
     cwd: context.repoRoot,
@@ -905,6 +908,8 @@ const reviewerRequestOutput = Effect.fnUntraced(function* (context: RepoRunConte
 });
 
 const readReviewerPull = Effect.fnUntraced(function* (context: RepoRunContext, prNumber: number) {
+  // KEEP (D-22): `GithubRest.pullRequest`'s record drops `base.repo.full_name`, which decides whether
+  // the comment routine covers this pull request.
   return yield* reviewerRequestOutput(context, ["api", `repos/{owner}/{repo}/pulls/${prNumber}`]).pipe(
     Effect.flatMap((value) => decodeReviewerResponse(ReviewerRequestPull, value))
   );
@@ -923,6 +928,8 @@ const readReviewerReadyAt = Effect.fnUntraced(function* (
   // Match ReviewWindow's latest ready_for_review event, or the open a ready
   // open passes in (`openedAt`; a flip passes none). A missing transition on one that was a draft
   // is unknown: an eventually consistent timeline must not validate a draft-era request.
+  // KEEP (D-22): `GithubRest.reviewTimeline` skips an undated event and folds the transitions to
+  // one `readyAt`, where this read refuses an undated ready event and checks every draft transition.
   const events = yield* reviewerRequestOutput(context, [
     "api",
     `repos/{owner}/{repo}/issues/${prNumber}/timeline?per_page=100`,
@@ -969,6 +976,8 @@ const requestReviewerComment = Effect.fnUntraced(function* (
   confirmedHead: string,
   openedAt: O.Option<DateTime.Utc>
 ) {
+  // KEEP (D-22): no kit member reads the authenticated login; `gh api user` names the gh login the
+  // comment below posts as.
   const login = yield* reviewerRequestOutput(context, ["api", "user", "--jq", ".login"]).pipe(Effect.map(Str.trim));
   if (login !== REVIEWER_COMMENT_AUTHOR) {
     return yield* YeetCommandError.make({
@@ -978,6 +987,7 @@ const requestReviewerComment = Effect.fnUntraced(function* (
   }
   const readyAt = yield* readReviewerReadyAt(context, prNumber, openedAt);
   const body = reviewerCommentBody(confirmedHead);
+  // KEEP (D-22): `GithubRest` has no issue-comment listing.
   const pages = yield* reviewerRequestOutput(context, [
     "api",
     `repos/{owner}/{repo}/issues/${prNumber}/comments?per_page=100`,
@@ -1001,14 +1011,15 @@ const requestReviewerComment = Effect.fnUntraced(function* (
       exitCode: 1,
     });
   }
-  yield* reviewerRequestOutput(context, [
-    "api",
-    `repos/{owner}/{repo}/issues/${prNumber}/comments`,
-    "--method",
-    "POST",
-    "--field",
-    `body=${body}`,
-  ]);
+  // `GithubRest.createIssueComment` (`POST /repos/{owner}/{repo}/issues/{n}/comments`, W8, SPEC
+  // D-22) on the same gh login the `gh api user` check above read.
+  yield* provideYeetGhLogin(context.repoRoot)(GithubRest.use((rest) => rest.createIssueComment(prNumber, body))).pipe(
+    Effect.mapError((failure) =>
+      failure._tag === "YeetCommandError"
+        ? failure
+        : YeetCommandError.make({ message: `gh reviewer request failed (${failure._tag})`, exitCode: 1 })
+    )
+  );
   return `[yeet] posted beep-reviewer request for #${prNumber} at ${confirmedHead}; checkout and head unchanged`;
 });
 

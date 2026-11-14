@@ -16,6 +16,7 @@ import {
   MemoryStats,
   processStartIdentityForPid,
   provideRuntimeRootForTesting,
+  QualitySchedulerLive,
   RuntimeRootChoice,
   reconcileAttemptJournal,
   reconcileAttemptJournalsForCheckout,
@@ -192,7 +193,7 @@ const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
 const encodeTerminated = S.encodeEffect(S.fromJsonString(YeetAttemptTerminated));
 
 const PlatformLayer = Layer.provideMerge(
-  Git.layer,
+  Layer.merge(Git.layer, QualitySchedulerLive),
   NodeChildProcessSpawner.layer.pipe(
     Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
   )

@@ -43,7 +43,8 @@ export class CitationSourceExtractionResult extends S.Opaque<
  */
 export const ownCitationSourceExtraction = Effect.fn("Citation.ownSourceExtraction")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationVerifiedExtractionConfiguration
+  configuration: CitationVerifiedExtractionConfiguration,
+  runtime: CitationNativeProcessRuntime
 ) {
   const source = yield* makeCitationSourceRequestAdapter(limits);
   const semantic = yield* ownCitationSemanticExtraction(limits, configuration.extraction);
@@ -51,31 +52,31 @@ export const ownCitationSourceExtraction = Effect.fn("Citation.ownSourceExtracti
     extraction: semantic.config,
     engineArtifact: configuration.engineArtifact,
   });
-  return { source, config, children: semantic.children };
+  // Installed once; an install failure surfaces where each request used to install it.
+  const extraction = yield* Effect.exit(
+    makeCitationVerifiedExtraction(limits, runtime, config).pipe(Effect.provideContext(semantic.children))
+  );
+  return { source, config, children: semantic.children, extraction };
 });
 const own = ownCitationSourceExtraction;
 const extractPrepared = Effect.fn("Citation.extractPreparedSource")(function* (
-  limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
   owned: Effect.Success<ReturnType<typeof own>>,
   request: Effect.Success<ReturnType<Effect.Success<ReturnType<typeof makeCitationSourceRequestAdapter>>["prepare"]>>
 ) {
-  return yield* Effect.gen(function* () {
-    const extraction = yield* makeCitationVerifiedExtraction(limits, runtime, owned.config);
-    return yield* extraction.extract(request);
-  }).pipe(Effect.provideContext(owned.children));
+  const extraction = yield* owned.extraction;
+  return yield* extraction.extract(request).pipe(Effect.provideContext(owned.children));
 });
 const prepareSource = (method: keyof Effect.Success<ReturnType<typeof makeCitationSourceRequestAdapter>>) =>
   Effect.fn("Citation.extractResolvedSource")(function* (
     limits: CitationEngineLimits,
-    runtime: CitationNativeProcessRuntime,
+    _runtime: CitationNativeProcessRuntime,
     owned: Effect.Success<ReturnType<typeof own>>,
     raw: unknown
   ) {
     const [workDuration, result] = yield* Effect.timed(
       Effect.gen(function* () {
         const request = yield* owned.source[method](raw);
-        return yield* extractPrepared(limits, runtime, owned, request);
+        return yield* extractPrepared(owned, request);
       })
     );
     const reportPolicy = yield* captureCitationOperationPolicy(limits, owned.config.engineArtifact, () =>

@@ -180,7 +180,12 @@ import {
   workspaceTaskFiltersForTesting,
   writeCoverageRegressionBaseline,
 } from "@beep/repo-cli/test/Quality";
-import { MemoryStats, provideRuntimeRootForTesting, RuntimeRootChoice } from "@beep/repo-cli/test/RepoRun";
+import {
+  MemoryStats,
+  provideRuntimeRootForTesting,
+  QualitySchedulerLive,
+  RuntimeRootChoice,
+} from "@beep/repo-cli/test/RepoRun";
 import {
   clearTurboCacheSecretSessionVerdictsForTesting,
   hasRemoteTurboCacheArgs,
@@ -11844,7 +11849,7 @@ describe("documentation input digest", () => {
   });
 });
 
-it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
+it.layer(Layer.merge(PlatformLayer, QualitySchedulerLive), { concurrent: false, timeout: "30 seconds" })((it) => {
   describe("quality concurrency plan service", () => {
     const fixedPlan = QualityConcurrencyPlan.make({
       profile: "current",
@@ -11902,7 +11907,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       })
     );
 
-    it.effect("scales by the live admission snapshot when MemoryStats is provided", () =>
+    it.effect("scales by the live admission snapshot when MemoryStats and the scheduler are provided", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;

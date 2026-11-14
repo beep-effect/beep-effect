@@ -43,7 +43,10 @@ import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.f
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 const word = (text: string) => CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(text) });
-it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true })(
+// One engine at a time: each case runs real extractions on real native workers against the
+// declared 50 s `operationDeadline` on a real clock. Four engines at once on a 4-vCPU hosted
+// runner pushed one extraction past it (`CitationSafetyLimitExceeded`, `operationDeadline`).
+it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTestServices: true, concurrent: false })(
   "four-operation engine Layer",
   (it) => {
     for (const [kind, assembly] of [

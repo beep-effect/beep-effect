@@ -74,6 +74,9 @@ const provideSpawnerWith =
       Effect.provideService(
         effect,
         ChildProcessSpawner.ChildProcessSpawner,
+        // Own double: decorates the `ScriptedSpawner` with a per-spawn side effect (writing the receipts a
+        // real child writes), which a script answer cannot express.
+        // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
         ChildProcessSpawner.make((command) =>
           (ChildProcess.isStandardCommand(command)
             ? before(command.command, A.map(command.args, String))

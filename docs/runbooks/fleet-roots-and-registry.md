@@ -93,15 +93,29 @@ projects directory.
   census: a sibling clone of another repository named `beep-effect*` (such as
   `beep-effect-private`), and an orphaned lane whose clone was deleted, since
   its `.git` file names a clone that no longer exists.
-- Removal does not know the T3 root. `beep worktree remove`, `beep yeet sweep
-  --retire` and `beep worktree reap` remove only lanes in the clone's sibling
-  `-worktrees` directory or in the worktrees Claude Code nests inside the
-  clone. For a T3 lane the removal service refuses ("Removal target must be an
-  exact registered worktree beneath the managed or nested worktrees root")
-  before it exports, fences or deletes anything. T3 removes its own lanes with `git worktree
-  remove`, which deletes the git-ignored `.beep/yeet/runs` without filing the
-  journals in the attempt-journal store, so economics counts a T3 lane's
-  attempts only while the lane exists.
+- Removal knows the T3 root. The removal fence behind `beep worktree remove`,
+  `beep yeet sweep --retire` and `beep worktree reap` admits a lane directly under any of its
+  clone's worktree roots: the sibling `-worktrees` directory, the worktrees
+  Claude Code nests inside the clone, `<home>/.t3/worktrees/<clone name>`
+  (from `HOME`, with or without a roots list), and each root that
+  `BEEP_FLEET_ROOTS` or `roots.json` lists, honoring its `namePrefix`. A root
+  only says where a lane may sit: the target must still be an exact
+  registered worktree of the same Git common directory and never the clone
+  itself, and archive export, residue capture, the holder refusal and the
+  invoker and `CLAUDE_PID` exemptions apply unchanged. A `roots.json` that
+  does not decode adds no roots to the fence and never widens it.
+  `beep worktree remove <name>` looks the name up under every root and refuses
+  a name registered under two of them. `beep worktree reap` archives merged
+  lanes through the same fence but only from the sibling and nested roots: a
+  T3 thread stays bound to its worktree with no process standing in it, so the
+  reap liveness probe cannot see it, and removing the lane kills the thread.
+  Reap therefore reports a lane under the T3 root or another fleet root as
+  `self-retire-only` instead of retiring it (before this change the fence
+  refused it and reap reported `retirement-failed`). Such a lane is retired by
+  its own session with `beep yeet sweep --retire`, or by an explicit
+  `beep worktree remove <name> --archive` once its thread is gone. A lane T3 removes itself with `git
+  worktree remove` still skips the attempt-journal store, so retire T3 lanes
+  through the fence to keep their journals.
 
 ## Registry
 

@@ -36,8 +36,10 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
-(`decisions/2026-11-10-p0-baseline.md`); slice 1 (PERIL-13) and slice 2 (PERIL-10 summary and archive) landed;
-slice 3 (SCHE-08) and slice 4 (the beep-heavy retirement) are next.
+(`decisions/2026-11-10-p0-baseline.md`). Slices 1 (PERIL-13), 2 (PERIL-10 summary and archive), 3 (SCHE-08, the
+admission unit schema, #3308) and 4 (the beep-heavy retirement, which completes PERIL-10) are done; slice 6
+(SCHE-08, the scheduler service facade and the Cache work kind) is implemented on
+`refactor/local-proof-scheduler-facade`; slice 5 (PERIL-02) is in progress in its own lane.
 
 ## Latest Evidence
 
@@ -55,6 +57,22 @@ slice 3 (SCHE-08) and slice 4 (the beep-heavy retirement) are next.
   (`goals/yeet-async-merge-and-stacks`, merged 2026-11-12) adds `Yeet/internal/PatchIdentity.ts` and carries the review window
   across GitHub-made unchanged rewrites (cascade, restack); merges fail closed there, so PERIL-09 (a
   diff-preserving merge of main) stays open and should build on that classifier.
+- 2026-11-13: slice 3 (SCHE-08) adds optional `unit`, `weightSource` and `owner` keys to tickets, leases and the
+  enqueue, admission, release and withdrawal rows, read by a tolerant decoder: a newer writer's work kind stays
+  charged instead of quarantined and an unreadable new key reads as absent. Writers add the keys only behind a
+  `units` key on `protocol.json` (`quality scheduler protocol --units on`), off by default; with it off the bytes
+  match origin/main's. The ciops frozen-journal replay stays 41 of 41, with and without the keys on every row.
+  SCHE-09 slice 1 (#3227) and MEAS-07 (#3228) landed on main.
+- 2026-11-14: slice 4 (PERIL-10) retires the `beep-heavy` wrapper rule. The orchestrate skill's gate poller and
+  hand-off use `systemd-run --user` or a T3 scheduled task; its "Where to launch" section says Yeet's proofs take
+  quality-scheduler admission on their own and other commands run directly. The practice-contacts runbook and
+  `goals/design-figure-review-loop`'s plan drop the wrapper. PERIL-10 is complete.
+- 2026-11-14: slice 6 (SCHE-08) puts the scheduler behind one `QualityScheduler` service (`admit`, `observe`,
+  `reap`, the protocol gates, history, archive, worker route rows) with a live Layer over the existing functions,
+  and moves Yeet, Cache, `quality scheduler`, Palantiri and the quality concurrency plan onto it. Cache commands
+  request their own `cache` kind at weight 1, kept in the review-fix class cap. With the units gate off a Cache
+  admission writes origin/main's `review-fix` bytes (fixture captured from its encoder); with it on, `cache`.
+  The scheduler suites pass on Node and Bun.
 
 ## Notes
 

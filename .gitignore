@@ -92,6 +92,7 @@ test-results/
 
 # Storybook build output
 storybook-static/
+apps/storybook/site/
 
 # Rust/Tauri local build output
 **/src-tauri/target/

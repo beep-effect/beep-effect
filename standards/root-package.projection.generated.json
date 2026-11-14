@@ -63,8 +63,7 @@
   },
   "packageManager": "bun@1.4.4",
   "patchedDependencies": {
-    "@alchemy.run/domain@2.0.0-beta.85": "patches/@alchemy.run%2Fdomain@2.0.0-beta.85.patch",
-    "alchemy@2.0.0-beta.85": "patches/alchemy@2.0.0-beta.85.patch"
+    "@alchemy.run/domain@2.0.0-beta.86": "patches/@alchemy.run%2Fdomain@2.0.0-beta.86.patch"
   },
   "private": true,
   "repository": {
@@ -211,6 +210,7 @@
     "packages/shared/use-cases",
     "packages/shared/tables",
     "packages/tooling/library/*",
+    "packages/tooling/infra/*",
     "packages/tooling/policy-pack/*",
     "packages/tooling/test-kit/*",
     "packages/tooling/tool/*",

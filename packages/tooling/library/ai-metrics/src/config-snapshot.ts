@@ -700,9 +700,10 @@ const assertIndexedGitBoundary = Effect.fnUntraced(function* (repoRoot: string) 
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  // KEEP (W2b, SPEC D-11): `Git.repoRoot` trims its answer, and a checkout whose name ends in
-  // whitespace (`checkout\r`) must keep it; only git's terminating newline is stripped here.
   const top = yield* spawner
+    // KEEP (W2b, SPEC D-11): `Git.repoRoot` trims its answer, and a checkout whose name ends in whitespace
+    // (`checkout\r`) must keep it; only git's terminating newline is stripped here.
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (W2b, SPEC D-11), reason above
     .string(ChildProcess.make("git", ["rev-parse", "--show-toplevel"], { cwd: repoRoot, stderr: "ignore" }))
     .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot resolve indexed checkout root.", cause)));
   const indexedTop = Str.replace(/\n$/u, "")(top);
@@ -758,6 +759,9 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
   const [gitCode, gitStderr] = yield* Effect.scoped(
     Effect.gen(function* () {
       const handle = yield* spawner.spawn(
+        // KEEP (D-21, X9): the exit code and the capped stderr are the evidence; the kit's
+        // `NotARepositoryError` drops git's own text.
+        // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-21, X9), reason above
         ChildProcess.make("git", ["rev-parse", "--git-dir"], {
           cwd: repoRoot,
           stdout: "ignore",

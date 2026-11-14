@@ -219,6 +219,7 @@ const hashBytes = S.decodeEffect(Sha256HexFromBytes);
  */
 export const collectCacheGitExclusions = Effect.fn("CacheFingerprint.gitExclusions")(function* (root: string) {
   // KEEP (D-19): scrubbed-env toolchain probe; an inherited GIT_DIR would redirect it under the kit.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
   const commonDirectory = yield* captureVersion(root, "git", [
     "rev-parse",
     "--path-format=absolute",
@@ -240,6 +241,10 @@ const captureCacheTrackedDiscovery = Effect.fn("CacheFingerprint.captureTrackedD
   const searchPath = yield* configStringOption("PATH").pipe(
     Effect.flatMap(Effect.fromOption(() => CacheCommandError.new(`${subject} requires PATH.`)))
   );
+  // KEEP (D-22): both tracked-discovery rows hash git's raw NUL-framed stdout under a scrubbed environment
+  // (`extendEnv: false`), the B126 producer-trust reason (D-19); the kit inherits the environment and returns
+  // parsed entries.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
   const result = yield* runCaptured({
     command: "git",
     args,

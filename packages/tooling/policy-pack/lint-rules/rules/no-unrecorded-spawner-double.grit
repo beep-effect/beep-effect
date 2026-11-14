@@ -1,0 +1,21 @@
+language js
+
+// goals/repo-cli-gh-git-consolidation (D-14, D-23): repo-cli and ai-metrics
+// tests script child processes with `@beep/commands` `ScriptedSpawner`. A
+// hand-rolled `ChildProcessSpawner.make(...)` double stays only where the
+// script cannot express the behaviour (a decorator over the real spawner, a
+// handle or spawn shape `ScriptCompletion` lacks, a filesystem effect inside
+// the spawn), and names that reason as an in-source
+// `biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double: <reason>`.
+//
+// A never-spawn guard, `ChildProcessSpawner.make(() => Effect.die(...))`, is
+// not a double (D-14 keeps it: `ScriptCompletion` has no defect outcome) and
+// does not match.
+//
+// The root biome.jsonc scopes it to `packages/tooling/tool/cli/test/**` and
+// `packages/tooling/library/ai-metrics/test/**`.
+
+`ChildProcessSpawner.make($...)` as $double where {
+  $double <: not `ChildProcessSpawner.make(() => Effect.die($message))`,
+  register_diagnostic(span=$double, message="Rule: hand-rolled ChildProcessSpawner test double. Why: tests script child processes with ScriptedSpawner from @beep/commands/ScriptedSpawner, the one shared double (goals/repo-cli-gh-git-consolidation, D-14, D-23). Fix: script the spawns with ScriptedSpawner; when the behaviour is one ScriptCompletion cannot express, keep the double with a `// biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double: <reason>` line directly above it.", severity="error")
+}

@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,13 +31,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P2 Verify. Implementation slices P0 (#2925), P1 (#2959, fix #2972) and P2 (#3226)
-are merged. The 2026-11-13 dankserver acceptance run (#3267) failed criterion 3;
-this lane fixes its findings. Repeat the worker-host run on dankserver before the goal's
-final PR with the reflection and closeout record.
+P4 Close. Every acceptance criterion in `SPEC.md` is met. Implementation: #2925, #2959
+(fix #2972), #3226. Worker-host acceptance: #3267 (failed criterion 3), #3276 (fixes),
+#3277 (repeat), #3281 (forced gates complete serially or refuse; own ready flip on
+beep-worker) and #3288 (forced coverage with `forceLocal: true` on dankserver). The final
+PR adds the reflection and keeps a subset `final-check` receipt apart from the head's.
 
 ## Latest Evidence
 
+- `history/reflections/2026-11-13-claude.md`: closeout reflection.
+- `research/2026-11-13-worker-host-acceptance-forced-gate.md`: forced coverage completes on dankserver with `forceLocal: true`; a forced gate over budget refuses with an `admission-routed` row; the lane's own `yeet ready` flip.
+- `research/2026-11-13-worker-host-acceptance-repeat.md`: criteria 1, 2a, 3 (except the lane's own ready flip) and 5 pass; forced fallow and coverage stopped by the slice-pressure watchdog.
 - `research/2026-11-13-worker-host-acceptance.md`: failed criterion 3, forced-gate and admission gaps; repeat on dankserver after these fixes.
 
 - `research/2026-11-08-p0-probe-evidence.md`: probe readings on DankStation and a capped scope.

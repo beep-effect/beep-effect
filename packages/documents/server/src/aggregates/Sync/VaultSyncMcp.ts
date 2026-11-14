@@ -11,14 +11,29 @@ import * as Layer from "effect/Layer";
 import { VaultSyncDeliveryClient } from "./VaultSyncApi.ts";
 
 // A fixed projection of the same API, not another Domain.Api. Ai.toToolkit
-// selects get/snapshot/list for these four View entries and never sees commands.
+// receives an explicit get/snapshot/list allowlist for these four View entries.
 const readSurface = {
   apiName: VaultSyncApi.apiName,
   serves: [V.VaultSyncStatus, V.OpenConflicts, V.DestinationList, V.OperationQueue],
   group: VaultSyncApi.group,
   clientInProcess: VaultSyncDeliveryClient,
 };
-const reads = Ai.toToolkit(readSurface);
+const reads = Ai.toToolkit(readSurface, {
+  expose: [
+    "VaultSyncStatus.get",
+    "VaultSyncStatus.snapshot",
+    "VaultSyncStatus.list",
+    "OpenConflicts.get",
+    "OpenConflicts.snapshot",
+    "OpenConflicts.list",
+    "DestinationList.get",
+    "DestinationList.snapshot",
+    "DestinationList.list",
+    "OperationQueue.get",
+    "OperationQueue.snapshot",
+    "OperationQueue.list",
+  ],
+});
 
 /**
  * Twelve read-only View tools, with sanitized registration and the original API schemas.

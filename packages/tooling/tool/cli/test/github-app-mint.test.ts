@@ -78,6 +78,8 @@ const harness = Effect.fn("GitHubAppMintTest.harness")(function* (app: App, opEx
   yield* fs.writeFileString(path.join(bin, "op-doctor"), `#!/bin/sh\necho ran >> "${doctorLog}"\n`);
   yield* fs.chmod(path.join(bin, "op-doctor"), 0o700);
   const base = yield* ChildProcessSpawner.ChildProcessSpawner;
+  // Own double: decorates the real platform spawner, putting the fixture `op` / `op-doctor` scripts on PATH.
+  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
   const spawner = ChildProcessSpawner.make((command) =>
     base.spawn(ChildProcess.setEnv(command, { PATH: `${bin}:${ambientPath}` }))
   );

@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo } from "@beep/github/Repo";
 import {
@@ -22,10 +23,10 @@ import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as PlatformError from "effect/PlatformError";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Stream from "effect/Stream";
 import { recordingFetch, scriptedSpawner, withLayer } from "./support/GithubLedgerFakes.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const key = await crypto.subtle.generateKey(
   { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
@@ -158,18 +159,9 @@ describe("GitHub credential context boundaries", () => {
 
 it.effect("reports credential spawn failures without exposing output and handles absent op references", () =>
   Effect.gen(function* () {
-    const spawner = ChildProcessSpawner.make(() =>
-      Effect.fail(
-        PlatformError.systemError({
-          _tag: "NotFound",
-          module: "ChildProcess",
-          method: "spawn",
-          pathOrDescriptor: "gh",
-        })
-      )
-    );
+    const spawner = ScriptedSpawner.make(() => ScriptedSpawner.notFound("gh"));
     const failed = yield* Layer.build(layerGithubClientFor(GithubClientRequest.make({ identity: gh, cwd: "." }))).pipe(
-      Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
+      provideSpawner(spawner),
       env({}),
       Effect.scoped,
       Effect.flip
@@ -183,6 +175,9 @@ it.effect("reports credential spawn failures without exposing output and handles
 it.effect("redacts credential output failures that have no exit status", () =>
   Effect.gen(function* () {
     const base = scriptedSpawner({ "gh auth token": { stdout: "fixture" } }).spawner;
+    // Own double: decorates the scripted `gh auth token` answer with a stdout past the 16 MiB bound, a
+    // per-spawn stream shape `ScriptedSpawner` cannot script.
+    // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
     const spawner = ChildProcessSpawner.make((command) =>
       base.spawn(command).pipe(
         Effect.map((handle) => ({
