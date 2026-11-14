@@ -225,6 +225,6 @@ Slice 8 (PERIL-11 slice 2) merged as #3273 and slice 14 (MEAS-05 slice 1) as #32
 
 Lane feat/certainty-admission-pressure-fields
 
-Reverse: Delete this checkpoint so the slice-8 checkpoint is the latest PLAN status note, and revert the slice-5b PR.
+Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-5b PR.
 
 <!-- beep:decisions:end -->
