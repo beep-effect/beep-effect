@@ -192,12 +192,26 @@ line numbers erased. The anchor then walks back across every such merge to the f
 push that changed the patch, and the status line ends `carried across N base merge(s)
 from <sha>`. Anything else re-arms the window: a conflict resolution, an edit inside the
 merge, a base change that moves a context line of a PR hunk, a force push, a shallow
-checkout, a missing object, a failed activity read and any `unknown` verdict. The merge
-probe runs only while the uncarried push still holds the window and the head is a local
-merge commit, so an elapsed window or an ordinary push costs no extra REST read. Every
-surface (the monitor and its inbox rows, `yeet status --remote`, `yeet merge-gate`,
-`yeet gate-table`, `yeet gh pr status`) reads this one anchor. A base merge carries only
-the window; the final-check receipt follows the refresh rule above.
+checkout, a missing object, a failed or timed-out fetch, a failed activity read and any
+`unknown` verdict.
+
+What it costs: nothing is spent on a base merge once the uncarried push no longer holds
+the window. While it does, the read first decides whether the head is a two-parent commit
+without any new request or fetch: the timeline it already reads lists pushed commits with
+their parents (`committed` events), and a head the timeline does not list is read from the
+local object store only (a head the checkout lacks counts as no merge). An ordinary
+one-parent head stops there: no GitHub read either way, and no git process for a head the
+timeline lists. A two-parent head adds the pull request read (when the caller has not read
+it already), the branch's ref activity read, the classifier's local git reads and, when
+the merge carries, the root commit's check-suite read. When the checkout lacks the head,
+the old head or the base, the classifier fetches them with `git fetch origin <sha...>`
+bounded at 60 seconds, each object at most once per head per checkout per process, so a
+fetch that failed or timed out is not retried by later polls of the same monitor: the
+object stays missing, the verdict stays `unknown` and the window counts from the merge
+push. A failed fetch never fails the read. Every surface (the monitor and its inbox rows,
+`yeet status --remote`, `yeet merge-gate`, `yeet gate-table`, `yeet gh pr status`) reads
+this one anchor. A base merge carries only the window; the final-check receipt follows the
+refresh rule above.
 
 The `beep-reviewer` check gates a merge only while `main`'s ruleset lists it as a
 required check: `yeet merge` and `yeet merge-gate` run `enforceReviewerGate`, which

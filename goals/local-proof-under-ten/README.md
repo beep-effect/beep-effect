@@ -86,9 +86,11 @@ merges the base, with the AGENTS.md mergeable amendment) is built on `feat/local
   #3130's `YeetHeadMoveClassifier` gains `classifyBaseMerge`: the head is one two-parent commit on the old head,
   the merged commit is on `base.sha`, the pushed tree is git's clean automatic merge, and the PR's three-dot patch
   has the same identity before and after. `ReviewWindow.ts` walks push rows back across such merges to the first
-  push that changed the patch, and probes only while the uncarried push still holds the window and the head is a
-  local merge commit, so ordinary pushes cost no extra GitHub read. A conflict resolution, an edited merge, a moved
-  hunk context, a force push, a shallow history, a failed read and any unknown verdict re-arm. AGENTS.md's
+  push that changed the patch. It learns whether the head is a merge commit from the timeline it already reads, or
+  else the local object store, so an ordinary push costs no new request and no fetch; only a two-parent head reads
+  the ref activity, and it is fetched when the checkout lacks it, once per head per process, within 60 seconds.
+  A conflict resolution, an edited merge, a moved hunk context, a force push, a shallow history, a failed read or
+  fetch and any unknown verdict re-arm. AGENTS.md's
   mergeable definition and the yeet and orchestrate skills state the rule. Replay fixtures recorded from git 2.56.1
   (`test/support/YeetBaseMergeReplay.ts`) run the real classifier through `Git.layerTest` and a scripted spawner,
   on Node and Bun.

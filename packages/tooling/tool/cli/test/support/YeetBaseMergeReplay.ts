@@ -12,7 +12,9 @@
  * plus an extra edit to `README.md` inside the merge commit. Every output
  * below is git's own, byte for byte; the Git kit members answer from the
  * same recording through `Git.layerTest`, and the argv-level reads (`show`,
- * `diff-tree`, `diff`) through the `ScriptedSpawner`.
+ * `diff-tree`, `diff`) through the `ScriptedSpawner`. A replayed checkout can
+ * lack commits until a `git fetch`, which it answers by bringing them all,
+ * failing, or hanging, and its spawner records every process it was asked to run.
  */
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git, GitCommandError, MergeTreeResult } from "@beep/git/Git";
@@ -21,8 +23,10 @@ import * as A from "effect/Array";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Str from "effect/String";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 /** The replay's checkout root; nothing reads it, every answer is recorded. */
@@ -183,43 +187,106 @@ const unrecorded = (args: ReadonlyArray<string>) =>
 const answer = <V>(table: Readonly<Record<string, V>>, key: string, args: ReadonlyArray<string>) =>
   Effect.fromOption(R.get(table, key)).pipe(Effect.mapError(() => unrecorded(args)));
 
-/** The Git kit members a base-merge proof reads, answered from a replay. */
-const replayGit = (replay: BaseMergeReplay) =>
-  Git.layerTest({
-    configGet: () => Effect.succeedNone,
-    refExists: () => Effect.succeed(true),
-    isShallow: () => Effect.succeed(replay.shallow),
-    isAncestor: (_cwd, ancestor, descendant) =>
-      Effect.succeed(A.contains(replay.ancestors, `${ancestor} ${descendant}`)),
-    mergeTree: (_cwd, ours, theirs) => answer(replay.mergeTrees, `${ours} ${theirs}`, ["merge-tree", ours, theirs]),
-    revParse: (_cwd, ref) => answer(replay.revisions, ref, ["rev-parse", ref]),
-    mergeBase: (_cwd, a, b) => answer(replay.mergeBases, `${a} ${b}`, ["merge-base", a, b]),
-  });
+/** What a replayed checkout answers from: the recording, its root, and what its object store lacks. */
+interface CheckoutState {
+  /** Commits not in the local object store; a fetch that succeeds brings them all. */
+  readonly absent: MutableHashSet.MutableHashSet<string>;
+  readonly fetchFails: boolean;
+  readonly fetchHangs: boolean;
+  readonly replay: BaseMergeReplay;
+  readonly root: string;
+}
 
-// `show -s --format=%P <sha>` prints the parents and a newline; `diff-tree ... <from> <to> --`
-// and `diff ... <from> <to> -- <path>` print exactly what was recorded.
-const rawRead = (replay: BaseMergeReplay, args: ReadonlyArray<string>): O.Option<string> => {
+/** One replayed checkout, with the scripted spawner whose `spawns` list every `git` process it ran. */
+export interface ReplayCheckout extends CheckoutState {
+  readonly spawner: ScriptedSpawner;
+}
+
+const isLocal = (state: CheckoutState, sha: string): boolean => !MutableHashSet.has(state.absent, sha);
+
+// `show -s --format=%P <sha>` prints the parents and a newline (and fails for an absent commit);
+// `diff-tree ... <from> <to> --` and `diff ... <from> <to> -- <path>` print exactly what was recorded.
+const rawRead = (state: CheckoutState, args: ReadonlyArray<string>): O.Option<string> => {
   if (A.contains(args, "show"))
     return O.map(
-      O.flatMap(A.last(args), (commit) => R.get(replay.parents, commit)),
+      O.flatMap(
+        O.filter(A.last(args), (commit) => isLocal(state, commit)),
+        (commit) => R.get(state.replay.parents, commit)
+      ),
       (parents) => `${parents}\n`
     );
   if (A.contains(args, "diff-tree")) {
     const [from, to] = A.takeRight(args, 3);
-    return R.get(replay.diffTrees, `${from} ${to}`);
+    return R.get(state.replay.diffTrees, `${from} ${to}`);
   }
   const [from, to, , path] = A.takeRight(args, 4);
-  return R.get(replay.diffs, `${from} ${to} ${path}`);
+  return R.get(state.replay.diffs, `${from} ${to} ${path}`);
 };
 
-/** The argv-level git reads of a base-merge proof, answered from a replay. */
-const replaySpawner = (replay: BaseMergeReplay) =>
-  ScriptedSpawner.make((_command, args) =>
-    O.match(rawRead(replay, args), {
-      onNone: () => ({ stderr: `fatal: not recorded: ${A.join(args, " ")}`, exit: 128 }),
-      onSome: (stdout) => ({ stdout }),
-    })
+// A fetch from origin hangs, fails, or brings every commit the checkout lacked.
+const fetchAnswer = (state: CheckoutState) => {
+  if (state.fetchHangs) return { hang: true };
+  if (state.fetchFails) return { stderr: "fatal: unable to access origin", exit: 128 };
+  MutableHashSet.clear(state.absent);
+  return {};
+};
+
+const scriptFor = (state: CheckoutState) => (_command: string, args: ReadonlyArray<string>) =>
+  O.contains(A.head(args), "fetch")
+    ? fetchAnswer(state)
+    : O.match(rawRead(state, args), {
+        onNone: () => ({ stderr: `fatal: not recorded: ${A.join(args, " ")}`, exit: 128 }),
+        onSome: (stdout) => ({ stdout }),
+      });
+
+/**
+ * A replayed checkout of the recording.
+ *
+ * **Details**
+ *
+ * By default it answers for {@link REPLAY_ROOT} with every recorded commit
+ * local. A suite that fetches passes a root of its own, because the classifier
+ * fetches an object at most once per head per checkout per process.
+ */
+export const replayCheckout = (
+  options: {
+    readonly replay?: BaseMergeReplay;
+    readonly root?: string;
+    readonly absent?: ReadonlyArray<string>;
+    readonly fetchFails?: boolean;
+    readonly fetchHangs?: boolean;
+  } = {}
+): ReplayCheckout => {
+  const state: CheckoutState = {
+    replay: options.replay ?? recordedReplay,
+    root: options.root ?? REPLAY_ROOT,
+    absent: MutableHashSet.fromIterable(options.absent ?? []),
+    fetchFails: options.fetchFails ?? false,
+    fetchHangs: options.fetchHangs ?? false,
+  };
+  return { ...state, spawner: ScriptedSpawner.make(scriptFor(state)) };
+};
+
+/** The `git fetch` argv lists a checkout ran, in order. */
+export const fetchesOf = (checkout: ReplayCheckout): ReadonlyArray<ReadonlyArray<string>> =>
+  A.filter(
+    A.map(checkout.spawner.spawns, (spawn) => spawn.args),
+    (args) => O.contains(A.head(args), "fetch")
   );
+
+/** The Git kit members a base-merge proof reads, answered from a replayed checkout. */
+const replayGit = (checkout: ReplayCheckout) =>
+  Git.layerTest({
+    configGet: () => Effect.succeedNone,
+    refExists: (_cwd, ref) => Effect.succeed(isLocal(checkout, A.headNonEmpty(Str.split(ref, "^")))),
+    isShallow: () => Effect.succeed(checkout.replay.shallow),
+    isAncestor: (_cwd, ancestor, descendant) =>
+      Effect.succeed(A.contains(checkout.replay.ancestors, `${ancestor} ${descendant}`)),
+    mergeTree: (_cwd, ours, theirs) =>
+      answer(checkout.replay.mergeTrees, `${ours} ${theirs}`, ["merge-tree", ours, theirs]),
+    revParse: (_cwd, ref) => answer(checkout.replay.revisions, ref, ["rev-parse", ref]),
+    mergeBase: (_cwd, a, b) => answer(checkout.replay.mergeBases, `${a} ${b}`, ["merge-base", a, b]),
+  });
 
 /** A deterministic `SecureRandom` for the scripted child processes. */
 const replaySecureRandom = Layer.succeed(
@@ -227,10 +294,10 @@ const replaySecureRandom = Layer.succeed(
   SecureRandom.make((size) => new Uint8Array(size))
 );
 
-/** The real classifier over a replay: no checkout, no network, no clock. */
-export const replayClassifier = (replay: BaseMergeReplay): Layer.Layer<YeetHeadMoveClassifier> =>
-  YeetHeadMoveClassifier.layer(REPLAY_ROOT).pipe(
-    Layer.provide(Layer.mergeAll(replayGit(replay), replaySpawner(replay).layer, replaySecureRandom))
+/** The real classifier over a replayed checkout: no repository, no network, no clock. */
+export const replayClassifier = (checkout: ReplayCheckout): Layer.Layer<YeetHeadMoveClassifier> =>
+  YeetHeadMoveClassifier.layer(checkout.root).pipe(
+    Layer.provide(Layer.mergeAll(replayGit(checkout), checkout.spawner.layer, replaySecureRandom))
   );
 
 /**

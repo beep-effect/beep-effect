@@ -15,6 +15,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { constFalse, constTrue, flow } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
@@ -119,21 +120,26 @@ const fetchSshEnvironment = Effect.fn("Yeet.headMoveFetchSshEnvironment")(functi
   return Str.startsWith("ssh")(programName) ? { GIT_SSH_COMMAND: `${ssh} -o BatchMode=yes` } : {};
 });
 
-// Step 10 runs first. The object probes run on `Git.refExists` (`cat-file -e`, W8, SPEC D-22); a
-// failed probe reads as missing, as the capture it replaces did.
-const ensureShas = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: string, shas: ReadonlyArray<string>) {
-  const git = yield* Git;
-  const refs = A.dedupe(shas);
-  yield* Effect.forEach(refs, guardLiteralArg);
-  const missing = yield* Effect.filter(refs, (sha) =>
-    git.refExists(root, `${sha}^{commit}`).pipe(
-      Effect.orElseSucceed(() => false),
-      Effect.map((exists) => !exists)
-    )
-  );
-  if (A.isReadonlyArrayEmpty(missing)) return;
+// The objects this process already asked origin for, by checkout, head and object. Each missing
+// object is fetched at most once per head per process, so a fetch that failed or timed out is not paid
+// again on every window read of a long-running monitor. The head in the key keeps two pull requests
+// that share a missing base from refusing each other's fetch, and a rewrite chain still fetches each
+// older head it walks to once.
+const FetchAttempts = Context.Reference<MutableHashSet.MutableHashSet<string>>($I`YeetHeadMoveFetchAttempts`, {
+  defaultValue: () => MutableHashSet.empty<string>(),
+});
+// Claim the missing objects not yet asked for on this head; the claim is taken before the fetch runs.
+const claimFetch = Effect.fnUntraced(function* (root: string, head: string, missing: ReadonlyArray<string>) {
+  const attempts = yield* FetchAttempts;
+  const keyOf = (sha: string) => `${root}\0${head}\0${sha}`;
+  const fresh = A.filter(missing, (sha) => !MutableHashSet.has(attempts, keyOf(sha)));
+  A.forEach(fresh, (sha) => MutableHashSet.add(attempts, keyOf(sha)));
+  return fresh;
+});
+// One `git fetch origin <sha...>`, bounded at 60 seconds.
+const fetchObjects = Effect.fn("Yeet.headMoveFetchObjects")(function* (root: string, shas: ReadonlyArray<string>) {
   const sshEnv = yield* fetchSshEnvironment(root);
-  const args = ["fetch", "--no-tags", "--no-write-fetch-head", "--no-auto-maintenance", "origin", ...missing];
+  const args = ["fetch", "--no-tags", "--no-write-fetch-head", "--no-auto-maintenance", "origin", ...shas];
   // KEEP (D-22): `Git.fetch` takes one ref and no `--no-auto-maintenance`, and the kit reads its environment
   // once at `make`, so it cannot pass this fetch's per-call `GIT_TERMINAL_PROMPT` and BatchMode
   // `GIT_SSH_COMMAND`.
@@ -148,6 +154,24 @@ const ensureShas = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: stri
     fold: textFold,
   }).pipe(Effect.timeout("60 seconds"));
   if (result.exitCode !== 0) return yield* YeetCommandError.new("Head-move object fetch failed.")(result.stderr);
+});
+// Step 10 runs first. The object probes run on `Git.refExists` (`cat-file -e`, W8, SPEC D-22); a
+// failed probe reads as missing, as the capture it replaces did. An object this process already tried
+// to fetch for the same head is not fetched again, so it stays missing and the verdict is unknown.
+const ensureObjects = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: string, request: YeetHeadMoveRequest) {
+  const shas = [request.before, request.after, request.base];
+  const git = yield* Git;
+  const refs = A.dedupe(shas);
+  yield* Effect.forEach(refs, guardLiteralArg);
+  const missing = yield* Effect.filter(refs, (sha) =>
+    git.refExists(root, `${sha}^{commit}`).pipe(
+      Effect.orElseSucceed(() => false),
+      Effect.map((exists) => !exists)
+    )
+  );
+  if (A.isReadonlyArrayEmpty(missing)) return;
+  const fresh = yield* claimFetch(root, request.after, missing);
+  if (A.isReadonlyArrayNonEmpty(fresh)) yield* fetchObjects(root, fresh);
   yield* Effect.forEach(missing, (sha) =>
     git.refExists(root, `${sha}^{commit}`).pipe(
       Effect.filterOrFail(
@@ -162,8 +186,6 @@ const ensureShas = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: stri
     )
   );
 });
-const ensureObjects = (root: string, request: YeetHeadMoveRequest) =>
-  ensureShas(root, [request.before, request.after, request.base]);
 // KEEP (D-22): `Git.commitInfo` and `Git.log` carry no parent list; `%P` is read raw.
 const readParents = Effect.fn("Yeet.headMoveReadParents")(function* (root: string, sha: string) {
   const parentText = yield* read(root, ["show", "-s", "--format=%P", sha]);
@@ -432,6 +454,15 @@ const classifyKnown = Effect.fn("Yeet.headMoveClassifyKnown")(function* (
   return YeetHeadMoveUnchanged.make({ ...request, commits: A.length(own) });
 });
 
+// The local-only merge probe: a commit missing from the object store is not fetched and reads false.
+const localMergeCommit = Effect.fn("Yeet.headMoveLocalMergeCommit")(function* (root: string, sha: string) {
+  const git = yield* Git;
+  yield* guardLiteralArg(sha);
+  const local = yield* git.refExists(root, `${sha}^{commit}`);
+  if (!local) return false;
+  const parents = yield* readParents(root, sha);
+  return A.length(parents) === 2;
+});
 // Base merge, step 1: exactly one two-parent merge whose first parent is the old head.
 const baseMergeShape = (request: YeetHeadMoveRequest, parents: ReadonlyArray<string>) =>
   A.length(parents) === 2 && O.contains(A.head(parents), request.before)
@@ -525,8 +556,15 @@ const unknownMove = (request: YeetHeadMoveRequest) =>
  * merged commit on the base, the tree equal to git's clean automatic merge,
  * and the same patch identity against the base before and after. A shallow
  * checkout, a missing object or any failed read is `unknown`, never
- * `unchanged`. `isMergeCommit` is the cheap local probe callers take before
- * spending GitHub reads on a base merge; an unreadable commit is not one.
+ * `unchanged`.
+ *
+ * Both proofs read the local object store and fetch what it lacks with one
+ * `git fetch origin <sha...>` bounded at 60 seconds. Each object is fetched at
+ * most once per head per checkout per process: a fetch that failed or timed
+ * out is not retried for that head, so the object stays missing and the
+ * verdict stays `unknown`.
+ * `isLocalMergeCommit` reads only the local object store and never fetches;
+ * a commit that is not local, or cannot be read, is not a merge commit.
  *
  * **Example** (Classify with deterministic evidence)
  *
@@ -546,7 +584,7 @@ export class YeetHeadMoveClassifier extends Context.Service<
     readonly committerInstant: (sha: string) => Effect.Effect<O.Option<DateTime.Utc>>;
     readonly classify: (request: YeetHeadMoveRequest) => Effect.Effect<YeetHeadMove>;
     readonly classifyBaseMerge: (request: YeetHeadMoveRequest) => Effect.Effect<YeetBaseMerge>;
-    readonly isMergeCommit: (sha: string) => Effect.Effect<boolean>;
+    readonly isLocalMergeCommit: (sha: string) => Effect.Effect<boolean>;
   }
 >()($I`YeetHeadMoveClassifier`) {
   /**
@@ -604,13 +642,8 @@ export class YeetHeadMoveClassifier extends Context.Service<
               Effect.provideContext(dependencies)
             )
           ),
-          isMergeCommit: Effect.fn("Yeet.isMergeCommit")((sha: string) =>
-            ensureShas(repoRoot, [sha]).pipe(
-              Effect.andThen(readParents(repoRoot, sha)),
-              Effect.map((parents) => A.length(parents) === 2),
-              recoverEvidence(() => false),
-              Effect.provideContext(dependencies)
-            )
+          isLocalMergeCommit: Effect.fn("Yeet.isLocalMergeCommit")((sha: string) =>
+            localMergeCommit(repoRoot, sha).pipe(recoverEvidence(constFalse), Effect.provideContext(dependencies))
           ),
         });
       })
@@ -620,7 +653,7 @@ export class YeetHeadMoveClassifier extends Context.Service<
 const testClassifier = (
   lookup: (request: YeetHeadMoveRequest) => YeetHeadMove,
   baseMerge: (request: YeetHeadMoveRequest) => YeetBaseMerge,
-  isMergeCommit: (sha: string) => boolean
+  isLocalMergeCommit: (sha: string) => boolean
 ) =>
   Layer.succeed(YeetHeadMoveClassifier, {
     committerInstant: Effect.fn("Yeet.testCommitterInstant")((_sha: string) => Effect.succeedNone),
@@ -628,7 +661,9 @@ const testClassifier = (
     classifyBaseMerge: Effect.fn("Yeet.testClassifyBaseMerge")((request: YeetHeadMoveRequest) =>
       Effect.succeed(baseMerge(request))
     ),
-    isMergeCommit: Effect.fn("Yeet.testIsMergeCommit")((sha: string) => Effect.succeed(isMergeCommit(sha))),
+    isLocalMergeCommit: Effect.fn("Yeet.testIsLocalMergeCommit")((sha: string) =>
+      Effect.succeed(isLocalMergeCommit(sha))
+    ),
   });
 
 const fixtureMissing =
@@ -641,8 +676,8 @@ const fixtureMissing =
  *
  * **Details**
  *
- * No commit is a merge commit and every base merge is `unknown`, so a rewrite
- * fixture never carries a base merge.
+ * No commit is a local merge commit and every base merge is `unknown`, so a
+ * rewrite fixture never carries a base merge.
  *
  * **Example** (Return unreadable evidence)
  *
@@ -663,8 +698,8 @@ export const layerYeetHeadMoveClassifierTest = (lookup: (request: YeetHeadMoveRe
  *
  * **Details**
  *
- * Every commit reads as a merge commit, so the lookup alone decides which
- * push rows carry; every rewrite is `unknown`.
+ * Every commit reads as a local merge commit, so the timeline and the lookup
+ * decide which push rows carry; every rewrite is `unknown`.
  *
  * **Example** (Refuse every base merge)
  *

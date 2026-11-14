@@ -601,23 +601,38 @@ class WindowCarryRead extends S.Opaque<WindowCarryRead, { readonly brand: unique
   )
 ) {}
 
-// What the window read already knows when it decides which carry evidence to spend reads on.
+// What the window read already knows when it decides which carry evidence to spend reads on:
+// `headParents` is the head's parent list when the timeline it read lists the head as pushed.
 class WindowCarryNeeds extends S.Opaque<WindowCarryNeeds, { readonly brand: unique symbol }>()(
-  S.Struct({ openedAt: S.Boolean, forcePushes: S.Boolean, pushHolds: S.Boolean }).pipe(
+  S.Struct({
+    openedAt: S.Boolean,
+    forcePushes: S.Boolean,
+    pushHolds: S.Boolean,
+    headParents: S.String.pipe(S.Array, S.Option),
+  }).pipe(
     $I.annoteSchema("WindowCarryNeeds", {
-      description: "Whether the read needs the creation time, saw force pushes, and is still held by the push.",
+      description:
+        "Whether the read needs the creation time, saw force pushes and is still held by the push, and the head's parents.",
     })
   )
 ) {}
 
-// The local merge-commit probe runs only while the uncarried push still holds the window, so a
-// window that elapsed, or a head that is not a merge, spends no GitHub read on a base merge.
+// Whether the head may be a base merge, decided without a fetch or another GitHub request, and only
+// while the uncarried push still holds the window. The timeline the read already took gives a listed
+// head's parents; a head it does not list is read from the local object store only (a commit that is
+// not local reads as no merge). Only a two-parent head goes on to the pull read (unless the caller
+// supplied the pull), the ref activity read and the proof, which fetches what the checkout lacks.
 const probeBaseMerge = (
   headSha: string,
   classifier: O.Option<YeetHeadMoveClassifier["Service"]>,
-  pushHolds: boolean
+  needs: WindowCarryNeeds
 ): Effect.Effect<boolean> =>
-  pushHolds && O.isSome(classifier) ? classifier.value.isMergeCommit(headSha) : Effect.succeed(false);
+  needs.pushHolds && O.isSome(classifier)
+    ? O.match(needs.headParents, {
+        onSome: (parents) => Effect.succeed(A.length(parents) === 2),
+        onNone: () => classifier.value.isLocalMergeCommit(headSha),
+      })
+    : Effect.succeed(false);
 
 const readWindowPull = (target: YeetReviewWindowTarget, wanted: boolean) =>
   target.pull !== undefined
@@ -631,7 +646,7 @@ const readWindowCarry = Effect.fn("Yeet.readWindowCarry")(function* (
   needs: WindowCarryNeeds
 ) {
   const classifier = yield* Effect.serviceOption(YeetHeadMoveClassifier);
-  const baseMerged = yield* probeBaseMerge(target.headSha, classifier, needs.pushHolds);
+  const baseMerged = yield* probeBaseMerge(target.headSha, classifier, needs);
   const carrier = O.filter(classifier, () => needs.forcePushes || baseMerged);
   const pull = yield* readWindowPull(target, O.isSome(carrier) || needs.openedAt);
   const carry = O.isSome(carrier)
@@ -667,11 +682,15 @@ const reviewWindowPushedAt = (
  * when supplied, otherwise read lazily for creation time or rewrite evidence.
  * With a classifier, bounded ref activity is walked across proven GitHub
  * rewrites whose committer instants match their activity rows. While the
- * uncarried push still holds the window and the head is a local merge
- * commit, the walk follows push rows instead, across merges the classifier
- * proves only merged the synchronized base with the pull request's own patch
- * unchanged; a conflict resolution, a changed patch, a shallow or unreadable
- * history and an unknown verdict all stop it. Every carry
+ * uncarried push still holds the window and the head is a two-parent commit
+ * (from the timeline's `committed` events, or else the local object store,
+ * never a fetch), the walk follows push rows instead, across merges the
+ * classifier proves only merged the synchronized base with the pull request's
+ * own patch unchanged; a conflict resolution, a changed patch, a shallow or
+ * unreadable history, a failed fetch and an unknown verdict all stop it. The
+ * proofs fetch objects the checkout lacks (one `git fetch` bounded at 60
+ * seconds, each object at most once per head per checkout per process); the probe
+ * never fetches. Every carry
  * terminates at a present root activity row and counts from the later of that
  * row and its optional first suite. Missing links never carry. Unmatched force
  * pushes restart the window, including pushes back to a known commit. Carry
@@ -726,6 +745,10 @@ export const readYeetReviewWindowEvidence = Effect.fn("Yeet.readYeetReviewWindow
     openedAt: O.isNone(flippedAt),
     forcePushes: A.isReadonlyArrayNonEmpty(timeline.value.forcePushes),
     pushHolds: DateTime.isLessThan(probedAt, DateTime.addDuration(uncarriedPushedAt, window.value)),
+    headParents: O.map(
+      A.findFirst(timeline.value.commits, (commit) => commit.sha === target.headSha),
+      (commit) => commit.parents
+    ),
   });
   const { pull, carry } = yield* readWindowCarry(target, needs);
   const pushedAt = reviewWindowPushedAt(timeline.value.forcePushes, carry, firstReceivedAt.value);

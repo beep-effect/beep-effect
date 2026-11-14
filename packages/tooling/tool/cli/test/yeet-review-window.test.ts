@@ -686,7 +686,7 @@ const timedClassifier = (instant: (sha: string) => O.Option<DateTime.Utc>) =>
     classifyBaseMerge: Effect.fn("WindowTest.classifyBaseMerge")((request: YeetHeadMoveRequest) =>
       Effect.succeed(YeetHeadMoveChanged.make({ ...request, change: "not-base-merge", detail: "rewrite fixture" }))
     ),
-    isMergeCommit: Effect.fn("WindowTest.isMergeCommit")((_sha: string) => Effect.succeed(false)),
+    isLocalMergeCommit: Effect.fn("WindowTest.isLocalMergeCommit")((_sha: string) => Effect.succeed(false)),
   });
 const unchangedClassifier = timedClassifier(recordedCommitterInstant);
 

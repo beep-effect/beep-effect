@@ -418,7 +418,7 @@ Reverse: Un-pause goals/time-to-certainty by a new decision and move YEET-06, YE
 
 ### PERIL-09: the base-merge proof is a second method on the #3130 head-move classifier, 2026-11-14
 
-PERIL-09 reuses the head-move classifier #3130 added (`YeetHeadMoveClassifier` in `Yeet/internal/HeadMove.ts`) instead of writing a second one. The service gains `classifyBaseMerge`, which shares the classifier's object fetch, parent read, raw-entry comparison and streamed patch-identity digest (`PatchIdentity.ts`), and `isMergeCommit`, a local probe. `classify` is unchanged and still refuses every merge, so a final-check receipt never carries across a base merge; only the review window does.
+PERIL-09 reuses the head-move classifier #3130 added (`YeetHeadMoveClassifier` in `Yeet/internal/HeadMove.ts`) instead of writing a second one. The service gains `classifyBaseMerge`, which shares the classifier's object fetch, parent read, raw-entry comparison and streamed patch-identity digest (`PatchIdentity.ts`), and `isLocalMergeCommit`, a probe that reads only the local object store and never fetches. `classify` is unchanged and still refuses every merge, so a final-check receipt never carries across a base merge; only the review window does.
 
 A base merge carries the window when four checks pass, in order: the new head is one two-parent commit whose first parent is the old head (`not-base-merge` otherwise); the merged commit is an ancestor of the synchronized base `base.sha` (`base-mismatch`); the pushed tree equals `git merge-tree`'s clean merge of the old head and the merged commit (`merge-conflict` when that merge conflicts, `replay-tree` when the merge commit was edited); and the pull request's patch against the base, GitHub's three-dot diff from `merge-base(base, head)`, has the same raw entries and per-file identity before and after (`patch`). A shallow checkout, a missing object or any failed read is `unknown`. SPEC states the rule as a conflict resolution that touches PR lines re-arming; the implementation re-arms on any conflicted automatic merge, which is SPEC's own parenthetical (a clean merge of origin/main keeps the anchor) and in practice the same set, because a resolved conflict always moves a removed or context line of a PR hunk.
 
@@ -426,7 +426,7 @@ The carry record `YeetReviewWindowCarry` gains `merges` (constructor and decodin
 
 Lane feat/local-proof-review-window-anchor
 
-Reverse: Remove classifyBaseMerge and isMergeCommit from YeetHeadMoveClassifier and the base-merge walk from ReviewWindow.ts; every merge push re-arms the window again.
+Reverse: Remove classifyBaseMerge and isLocalMergeCommit from YeetHeadMoveClassifier and the base-merge walk from ReviewWindow.ts; every merge push re-arms the window again.
 
 ### PERIL-09: base-merge carry stops at a GitHub rewrite and at a moved hunk context, 2026-11-14
 
@@ -436,13 +436,17 @@ Lane feat/local-proof-review-window-anchor
 
 Reverse: Compose the merge walk with the rewrite walk (merge-base of the root and base.sha as the rewrite base) or compare patches without context lines; both widen what carries.
 
-### PERIL-09: a base-merge carry spends GitHub reads only while the push holds the window, 2026-11-14
+### PERIL-09: a base-merge carry adds no request for an ordinary push and fetches only a two-parent head, once, 2026-11-14
 
-The window is read on every monitor poll once it is the last blocker, and the REST budget is shared by every monitor (D16), so the base-merge carry must not add a read to ordinary pushes. `readYeetReviewWindowEvidence` first computes the uncarried push instant; only while that push still holds the window (less than the window length ago) does it run the classifier's local `isMergeCommit` probe on the head, and only a two-parent head reads the pull (when no caller supplied it) and the branch's ref activity. An elapsed window and a plain commit cost no extra GitHub read, and a GitHub rewrite keeps #3130's path unchanged (force pushes in the timeline still trigger it). The probe fetches a missing head object from origin, as the classifier already did, so a merge GitHub made with Update branch is proven from any checkout. Rejected: always reading the activity when a classifier is present (one or two extra REST calls per window poll on every pull request) and probing only local objects without a fetch (the merge gate runs from checkouts that lack other lanes' heads).
+The window is read on every monitor poll once it is the last blocker, the REST budget is shared by every monitor (D16), and `yeet gate-table` and `yeet merge-gate` read other lanes' pull requests from a checkout that lacks their heads. So the base-merge carry must add no request, and no fetch, for an ordinary push. `readYeetReviewWindowEvidence` first computes the uncarried push instant. Only while that push still holds the window does it ask whether the head is a two-parent commit, and it answers without a new request or a fetch: the issue timeline the window already reads lists pushed commits with their parents (`committed` events, now decoded into `GithubRest.reviewTimeline`'s `commits`), and a head the timeline does not list is read from the local object store by the classifier's `isLocalMergeCommit`, which never fetches, so a head the checkout lacks reads as no merge.
+
+Only a two-parent head reads the pull (when no caller supplied it) and the branch's ref activity, and only the proofs fetch: `classifyBaseMerge`, like #3130's `classify`, fetches what the checkout lacks with `git fetch origin <sha...>` bounded at 60 seconds. Each object is fetched at most once per head per checkout per process (a process-wide `Context.Reference` set in `HeadMove.ts`, keyed by checkout, head and object, so two pull requests that share a missing base never refuse each other's fetch), so a fetch that failed or timed out is not paid again on every poll of a long-running monitor: the object stays missing, the verdict stays `unknown`, and the window re-arms without the read failing. The set also bounds the rewrite proof, which until now refetched a missing object on every read. A GitHub rewrite otherwise keeps #3130's path (force pushes in the timeline still trigger it).
+
+Rejected: always reading the activity when a classifier is present (one or two extra REST calls per window poll on every pull request); a probe that fetches every missing head (a fetch round trip per in-window pull request in `yeet gate-table`, the review finding on #3329 that replaced it); a local-only probe (the merge gate and the gate table would never carry another lane's merge); and a per-head commit read (`GET /commits/{sha}`), which the timeline makes unnecessary.
 
 Lane feat/local-proof-review-window-anchor
 
-Reverse: Drop the pushHolds and isMergeCommit gate in readWindowCarry so every window read with a classifier reads the pull and the ref activity.
+Reverse: Drop the pushHolds and two-parent gate in readWindowCarry so every window read with a classifier reads the pull and the ref activity, and drop the fetch-attempt set in HeadMove.ts so every proof fetches missing objects again.
 
 ### Readiness monitor reuse keys on the normalized replay argv; only an equal key is reused, 2026-11-14
 
