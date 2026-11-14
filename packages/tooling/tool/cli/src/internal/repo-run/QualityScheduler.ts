@@ -258,7 +258,32 @@ const encodeReapClaim = S.encodeUnknownEffect(S.fromJsonString(AdmissionReapClai
 const decodePromotionTransition = S.decodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
 const encodePromotionTransition = S.encodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
 
-const recoveryRecordSettlementWindow = Duration.seconds(5);
+/**
+ * How long a reaper that finds a reap claim or promotion locked waits for the
+ * owner to settle it before failing with a retryable "stayed busy" error.
+ *
+ * **Details**
+ *
+ * The wait is wall-clock time, so a CPU-starved but healthy owner can outlast
+ * it: the waiter then fails closed and never takes the claim over. A caller
+ * that must order itself after the owner, such as a test that holds the owner
+ * mid-sink, provides {@link Duration.infinity} instead of racing the window.
+ *
+ * **Example** (Read the default window)
+ *
+ * ```ts
+ * import { RecoveryRecordSettlementWindow } from "@beep/repo-cli/test/RepoRun"
+ * import * as Duration from "effect/Duration"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Duration.toMillis(Effect.runSync(RecoveryRecordSettlementWindow))) // 5000
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const RecoveryRecordSettlementWindow: Context.Reference<Duration.Duration> =
+  Context.Reference<Duration.Duration>($I`RecoveryRecordSettlementWindow`, { defaultValue: () => Duration.seconds(5) });
 const recoveryRecordSettlementPollInterval = Duration.millis(25);
 const textEncoder = new TextEncoder();
 
@@ -1220,10 +1245,11 @@ const recoveryRecordRemainsAfterSettlement = Effect.fnUntraced(function* (
 ): Effect.fn.Return<boolean, never, SecureRandom.SecureRandom | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   // A healthy owner may need several seconds to finish its sinks on a loaded runner.
+  const window = yield* RecoveryRecordSettlementWindow;
   return yield* Effect.repeat(fs.exists(recoveryPath).pipe(Effect.orElseSucceed(constant(true))), {
     until: Bool.not,
     schedule: Schedule.spaced(recoveryRecordSettlementPollInterval),
-  }).pipe(Effect.timeout(recoveryRecordSettlementWindow), Effect.orElseSucceed(constant(true)));
+  }).pipe(Effect.timeout(window), Effect.orElseSucceed(constant(true)));
 });
 
 const processAttemptJournalSink = Effect.fnUntraced(function* (
