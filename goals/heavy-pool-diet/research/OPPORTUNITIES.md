@@ -61,3 +61,14 @@ identifiers are redacted.
 - **Would have prevented it:** a rule for when a pending bump is replaced
   (for example only once the open pull request's Check has finished), decided
   before the automation went live.
+
+## 2026-11-14: a pull request labelled at creation runs its heavy lanes twice
+
+- **Doing:** reading the bot's second pin-bump pull request, #3334, after it merged.
+- **Evidence:** on head `53642ee055` the five heavy lanes ran in both `Check` run 43577694802 and
+  `Heavy Admit` run 43577695303, created in the same second: ten heavy jobs for one head, on a day
+  when heavy lanes waited 20 to 60 minutes for a runner. The App labels the pull request
+  `ready-for-heavy` two seconds after opening it. Heads labelled later (`yeet open`) ran the lanes
+  once. Tables: `history/2026-11-14-perih-11-slice-2-after-the-bump.md`.
+- **Would have prevented it:** one of the two admission paths standing down when the other has
+  admitted the same head.
