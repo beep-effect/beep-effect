@@ -21,6 +21,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Scheduler from "effect/Scheduler";
@@ -28,6 +29,7 @@ import * as Scope from "effect/Scope";
 import * as Tracer from "effect/Tracer";
 import {
   citationNativeNodeTestPlatform,
+  makeCitationNativeAcknowledgementSpawner,
   makeCitationNativeManualClock,
   makeCitationNativeWorkerFixture,
   makeCitationObservedSpawner,
@@ -35,6 +37,7 @@ import {
 } from "./CitationNativeSpawner.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import type { ChildProcessHandle } from "effect/process/ChildProcessSpawner";
 
 const makeOwnerPause = Effect.fn("LaneFenceTest.scheduler")(function* (
   stage: string,
@@ -204,13 +207,132 @@ const exerciseFence = Effect.fn("LaneFenceTest.exercise")(function* (
   return after;
 });
 
+const exerciseLazyHandoff = Effect.fn("LaneFenceTest.lazyHandoff")(function* (kind: CitationNativeRuntimeKind) {
+  const base = (yield* defaultCitationEnginePolicy).limits;
+  const limits = { ...base, queueDeadline: Duration.millis(100), cleanupDeadline: Duration.seconds(5) };
+  const bound = Duration.sum(limits.queueDeadline, Duration.times(limits.cleanupDeadline, 2));
+  const timer = yield* makeCitationNativeManualClock(bound);
+  const admission = yield* makeCitationNativeProcessAdmission(limits);
+  const fs = yield* FileSystem.FileSystem;
+  const entered = yield* Deferred.make<void>();
+  const resume = yield* Deferred.make<void>();
+  const killed = yield* Deferred.make<void>();
+  const confirm = yield* Deferred.make<void>();
+  const observed = yield* makeCitationNativeAcknowledgementSpawner(
+    Deferred.succeed(killed, undefined).pipe(Effect.andThen(Deferred.await(confirm)))
+  );
+  let handoffs = 0;
+  let returns = 0;
+  let kills = 0;
+  let pid = O.none<ChildProcessHandle["pid"]>();
+  const spawner = ChildProcessSpawner.of({
+    ...observed.spawner,
+    spawn: Effect.fn("LaneFenceTest.lazySpawn")((command) => {
+      handoffs++;
+      return Deferred.succeed(entered, undefined).pipe(
+        Effect.andThen(Deferred.await(resume)),
+        Effect.andThen(() => observed.spawner.spawn(command)),
+        Effect.map((child) => {
+          pid = O.some(child.pid);
+          return {
+            ...child,
+            kill: (options) =>
+              Effect.sync(() => {
+                expect(options?.killSignal).toBe("SIGKILL");
+                kills++;
+              }).pipe(Effect.andThen(child.kill(options))),
+          };
+        })
+      );
+    }),
+  });
+  const scope = yield* Effect.acquireRelease(Scope.make(), (scope) => Scope.close(scope, Exit.void));
+  const lane = yield* makeCitationNativeLane(limits, "extract").pipe(
+    Effect.provideService(Clock.Clock, timer.clock),
+    Effect.provideService(Scope.Scope, scope),
+    Effect.provideService(ChildProcessSpawner, spawner),
+    Effect.provideService(CitationNativeProcessAdmission, {
+      ...admission,
+      acquire: Effect.fnUntraced(function* (operation) {
+        const lease = yield* admission.acquire(operation);
+        return {
+          ...lease,
+          release: Effect.sync(() => {
+            returns++;
+          }).pipe(Effect.andThen(lease.release)),
+        };
+      }),
+    })
+  );
+  const fixture = yield* makeCitationNativeWorkerFixture("busy", "html", kind);
+  const command = citationNativeProcessCommand(CitationNativeProcessRuntime.make(fixture), "");
+  return yield* Effect.gen(function* () {
+    const pending = yield* lane
+      .withUse((start) =>
+        Effect.gen(function* () {
+          yield* start("regex", command).pipe(Effect.exit, Effect.forkChild);
+          yield* Deferred.await(entered);
+        })
+      )
+      .pipe(Effect.flip, Effect.forkChild);
+    yield* waitForCitationNativeTest(timer.sleeps.pipe(Effect.map((count) => count === 1)));
+    yield* timer.triggerSleep(0);
+    const failure = yield* Fiber.join(pending);
+    expect(failure).toMatchObject({ _tag: "CitationNativeLaneFailure", reason: "cleanup-unconfirmed" });
+    expect(handoffs).toBe(1);
+    const beforeBirth = yield* observed.snapshot;
+    expect(beforeBirth).toEqual({ spawned: 0, confirmed: 0 });
+    const held = yield* admission.snapshot;
+    expect(held).toMatchObject({ active: 1, quarantined: 1 });
+    expect(returns).toBe(0);
+    const denied = yield* lane.start("regex", command).pipe(Effect.flip);
+    expect(denied).toMatchObject({ reason: "quarantined" });
+    expect(handoffs).toBe(1);
+    yield* Deferred.succeed(resume, undefined);
+    yield* Deferred.await(killed);
+    expect(kills).toBe(1);
+    const awaitingConfirmation = yield* observed.snapshot;
+    expect(awaitingConfirmation).toEqual({ spawned: 1, confirmed: 0 });
+    const stillHeld = yield* admission.snapshot;
+    expect(stillHeld).toMatchObject({ active: 1, quarantined: 1 });
+    expect(returns).toBe(0);
+    const childPid = yield* Effect.fromOption(pid);
+    yield* waitForCitationNativeTest(fs.exists(`/proc/${childPid}`).pipe(Effect.map((exists) => !exists)));
+    yield* Deferred.succeed(confirm, undefined);
+    yield* waitForCitationNativeTest(admission.snapshot.pipe(Effect.map((state) => state.active === 0)));
+    const settled = yield* observed.snapshot;
+    expect(settled).toEqual({ spawned: 1, confirmed: 1 });
+    const receipt = yield* lane.snapshot;
+    expect(receipt).toMatchObject({ started: 1, confirmed: 1, acquired: false });
+    expect(returns).toBe(1);
+    const later = yield* lane.start("diff", command).pipe(Effect.flip);
+    expect(later).toMatchObject({ reason: "quarantined" });
+    const again = yield* lane.withUse(() => Effect.void).pipe(Effect.flip);
+    expect(again).toMatchObject({ reason: "quarantined" });
+    const noFurtherBirths = yield* observed.snapshot;
+    expect(noFurtherBirths).toEqual(settled);
+    expect(handoffs).toBe(1);
+    yield* Scope.close(scope, Exit.void);
+    expect(returns).toBe(1);
+    return settled;
+  }).pipe(
+    Effect.ensuring(Deferred.succeed(resume, undefined).pipe(Effect.andThen(Deferred.succeed(confirm, undefined))))
+  );
+});
+
 it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : citationTokenizerTestLayer, {
   excludeTestServices: true,
   timeout: "30 seconds",
-})("physical spawn fences", (it) => {
+})("spawner hand-off fences", (it) => {
   for (const kind of ["bun", "node"] as const) {
+    it.effect(`retires an already-handed-off ${kind} child born after drain expiry`, () =>
+      Effect.gen(function* () {
+        const physical = yield* exerciseLazyHandoff(kind);
+        expect(physical).toEqual({ spawned: 1, confirmed: 1 });
+      })
+    );
     for (const stage of ["snapshot", "owner"] as const) {
-      it.effect(`refuses a revoked ${kind} start after the ${stage} continuation`, () =>
+      it.effect(`refuses a ${kind} spawner hand-off after revocation at ${stage}`, () =>
         Effect.gen(function* () {
           if (stage === "snapshot") {
             yield* exerciseFence(kind, stage, 10, true);
@@ -224,7 +346,7 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
           }
         })
       );
-      it.effect(`refuses a ${kind} call revoked before the drain expires at ${stage}`, () =>
+      it.effect(`refuses a ${kind} hand-off when its call is revoked before drain expiry at ${stage}`, () =>
         Effect.gen(function* () {
           const physical = yield* exerciseFence(kind, stage, 10, false);
           expect(physical).toEqual({ spawned: 0, confirmed: 0 });
