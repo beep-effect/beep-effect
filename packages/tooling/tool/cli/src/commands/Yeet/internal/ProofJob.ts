@@ -1216,9 +1216,87 @@ export const readyMonitorArgvKey = (argv: ReadonlyArray<string>): ReadonlyArray<
 const readyMonitorArgvKeyEquivalence = A.makeEquivalence(Str.Equivalence);
 
 /**
+ * The runtime cap a detached job submission asks for with `--job-max-runtime`.
+ *
+ * **Details**
+ *
+ * `unspecified` is a submission without the flag, `capped` asks systemd to stop
+ * the job after `seconds` (`RuntimeMaxSec`), and `uncapped` is
+ * `--job-max-runtime none`, an explicit request for no cap. A new job runs
+ * without a cap in both the `unspecified` and `uncapped` cases; the difference
+ * matters only when a live readiness monitor would be reused instead
+ * ({@link isReusableReadyMonitorJob}).
+ *
+ * **Example** (A six-hour cap)
+ *
+ * ```ts
+ * import { ProofJobRuntimeCapRequest } from "@beep/repo-cli/test/Yeet"
+ *
+ * const cap = ProofJobRuntimeCapRequest.cases.capped.make({ seconds: 21600 })
+ * console.log(cap._tag) // "capped"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ProofJobRuntimeCapRequest = S.TaggedUnion({
+  unspecified: {},
+  capped: { seconds: S.Int },
+  uncapped: {},
+}).pipe(
+  $I.annoteSchema("ProofJobRuntimeCapRequest", {
+    description:
+      "The runtime cap a detached job submission asks for: none given, a cap in seconds, or explicitly no cap.",
+  })
+);
+
+/**
+ * Type represented by {@link ProofJobRuntimeCapRequest}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ProofJobRuntimeCapRequest = typeof ProofJobRuntimeCapRequest.Type;
+
+/**
+ * The `RuntimeMaxSec` a new job gets for a requested runtime cap.
+ *
+ * **Example** (Only a capped request sets a cap)
+ *
+ * ```ts
+ * import { ProofJobRuntimeCapRequest, proofJobRuntimeCapSeconds } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.getOrNull(proofJobRuntimeCapSeconds(ProofJobRuntimeCapRequest.cases.capped.make({ seconds: 3600 })))) // 3600
+ * console.log(O.isNone(proofJobRuntimeCapSeconds(ProofJobRuntimeCapRequest.cases.uncapped.make({})))) // true
+ * ```
+ *
+ * @param cap - The requested runtime cap.
+ * @returns The cap in seconds, or `None` for a job without one.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const proofJobRuntimeCapSeconds = (cap: ProofJobRuntimeCapRequest): O.Option<number> =>
+  ProofJobRuntimeCapRequest.match(cap, {
+    unspecified: () => O.none(),
+    capped: ({ seconds }) => O.some(seconds),
+    uncapped: () => O.none(),
+  });
+
+// A live job serves a request only if it may run at least as long: any cap
+// serves a request without one, a capped request needs no cap or one at least
+// as long, and an explicit `none` needs a job without a cap.
+const coversRuntimeCapRequest = (liveCap: O.Option<number>, request: ProofJobRuntimeCapRequest): boolean =>
+  ProofJobRuntimeCapRequest.match(request, {
+    unspecified: () => true,
+    capped: ({ seconds }) => !O.exists(liveCap, (live) => live < seconds),
+    uncapped: () => O.isNone(liveCap),
+  });
+
+/**
  * A readiness monitor a caller is about to submit: the branch it is submitted
- * from, the pull request when the caller already knows it, and its replay
- * words.
+ * from, the pull request when the caller already knows it, its replay words,
+ * and the runtime cap it asks for (none given by default).
  *
  * **Example** (The request `monitor --until-ready --detach` makes)
  *
@@ -1227,7 +1305,7 @@ const readyMonitorArgvKeyEquivalence = A.makeEquivalence(Str.Equivalence);
  * import * as O from "effect/Option"
  *
  * const request = ReadyMonitorRequest.make({ branch: "feat/x", argv: ["monitor", "--until-ready", "--detach"] })
- * console.log(O.isNone(request.prNumber)) // true
+ * console.log(O.isNone(request.prNumber), request.runtimeCap._tag) // true "unspecified"
  * ```
  *
  * @category models
@@ -1238,10 +1316,13 @@ export class ReadyMonitorRequest extends S.Opaque<ReadyMonitorRequest, { readonl
     branch: S.String,
     prNumber: S.Finite.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     argv: S.Array(S.String),
+    runtimeCap: ProofJobRuntimeCapRequest.pipe(
+      S.withConstructorDefault(Effect.sync(() => ProofJobRuntimeCapRequest.cases.unspecified.make({})))
+    ),
   }).pipe(
     $I.annoteSchema("ReadyMonitorRequest", {
       description:
-        "A readiness monitor about to be submitted: its branch, the pull request when known, and its replay words.",
+        "A readiness monitor about to be submitted: its branch, the pull request when known, its replay words, and the runtime cap it asks for.",
     })
   )
 ) {}
@@ -1257,41 +1338,61 @@ export class ReadyMonitorRequest extends S.Opaque<ReadyMonitorRequest, { readonl
  * the request knows its pull request number and the job bound one, the numbers
  * decide; otherwise the submitted branch does. Only an equal key is reused: a
  * request with an extra or different readiness flag is never satisfied by a
- * job without it, and a looser request does not take over a stricter job. The
- * record alone cannot prove the runner process is alive; callers check that
- * before reusing.
+ * job without it, and a looser request does not take over a stricter job.
+ * Beside the key, the job's runtime cap (`RuntimeMaxSec`) must be at least
+ * what the request asks for: a request without `--job-max-runtime` takes any
+ * cap, a capped request needs a job with no cap or one at least as long, and
+ * `--job-max-runtime none` needs a job with no cap. The cap is not part of the
+ * key, so a shorter or equal requested cap still reuses the job. The record
+ * alone cannot prove the runner process is alive; callers check that before
+ * reusing.
  *
- * **Example** (A stricter request is not satisfied by a looser job)
+ * **Example** (A stricter request or a longer cap is not satisfied)
  *
  * ```ts
- * import { isReusableReadyMonitorJob, ProofJobRequest, ReadyMonitorRequest } from "@beep/repo-cli/test/Yeet"
- * import type { LiveReadyMonitorCandidate } from "@beep/repo-cli/test/Yeet"
+ * import { isReusableReadyMonitorJob, ProofJobRequest, ProofJobRuntimeCapRequest, ReadyMonitorRequest } from "@beep/repo-cli/test/Yeet"
+ * import type { ReusableReadyMonitorCandidate } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
  *
  * const request = ProofJobRequest.make({ mode: "monitor", argv: ["monitor", "--until-ready"], checkout: "/repo", branch: "feat/x", base: "origin/main", head: "0123456789abcdef0123456789abcdef01234567", forwardedEnvNames: [] })
- * const job: LiveReadyMonitorCandidate = { phase: "running", systemd: O.none(), cancelRequestedAt: O.none(), request, prNumber: O.some(1427) }
- * const same = ReadyMonitorRequest.make({ branch: "feat/x", argv: ["monitor", "--until-ready", "--detach"] })
- * const stricter = ReadyMonitorRequest.make({ branch: "feat/x", argv: ["monitor", "--until-ready", "--settle-timeout", "2h"] })
+ * const job: ReusableReadyMonitorCandidate = { phase: "running", systemd: O.none(), cancelRequestedAt: O.none(), request, prNumber: O.some(1427), unit: { maxRuntimeSeconds: O.some(3600) } }
+ * const argv = ["monitor", "--until-ready", "--detach"]
+ * const same = ReadyMonitorRequest.make({ branch: "feat/x", argv })
+ * const stricter = ReadyMonitorRequest.make({ branch: "feat/x", argv: [...argv, "--settle-timeout", "2h"] })
+ * const longer = ReadyMonitorRequest.make({ branch: "feat/x", argv, runtimeCap: ProofJobRuntimeCapRequest.cases.capped.make({ seconds: 21600 }) })
  * console.log(isReusableReadyMonitorJob(job, same)) // true
  * console.log(isReusableReadyMonitorJob(job, stricter)) // false
+ * console.log(isReusableReadyMonitorJob(job, longer)) // false
  * ```
  *
- * @param record - Phase, finalization stamp, replayed request, and bound pull request of the job.
+ * @param record - Phase, finalization stamp, replayed request, bound pull request, and unit cap of the job.
  * @param request - The monitor the caller is about to submit.
  * @returns Whether the job can be handed back for the request. Data-last form takes `request` first.
  * @category predicates
  * @since 0.0.0
  */
 export const isReusableReadyMonitorJob: {
-  (request: ReadyMonitorRequest): (record: LiveReadyMonitorCandidate) => boolean;
-  (record: LiveReadyMonitorCandidate, request: ReadyMonitorRequest): boolean;
+  (request: ReadyMonitorRequest): (record: ReusableReadyMonitorCandidate) => boolean;
+  (record: ReusableReadyMonitorCandidate, request: ReadyMonitorRequest): boolean;
 } = dual(
   2,
-  (record: LiveReadyMonitorCandidate, request: ReadyMonitorRequest): boolean =>
+  (record: ReusableReadyMonitorCandidate, request: ReadyMonitorRequest): boolean =>
     isPollingReadyMonitor(record) &&
     followsReadyMonitorTarget(record, request.branch, request.prNumber) &&
-    readyMonitorArgvKeyEquivalence(readyMonitorArgvKey(record.request.argv), readyMonitorArgvKey(request.argv))
+    readyMonitorArgvKeyEquivalence(readyMonitorArgvKey(record.request.argv), readyMonitorArgvKey(request.argv)) &&
+    coversRuntimeCapRequest(record.unit.maxRuntimeSeconds, request.runtimeCap)
 );
+
+/**
+ * The job-record fields {@link isReusableReadyMonitorJob} reads: those of
+ * {@link LiveReadyMonitorCandidate} and the unit's runtime cap.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ReusableReadyMonitorCandidate = LiveReadyMonitorCandidate & {
+  readonly unit: Pick<ProofJobUnit, "maxRuntimeSeconds">;
+};
 
 /**
  * The job-record fields {@link isLiveReadyMonitorJob} reads.

@@ -3887,6 +3887,7 @@
     {"name":"Yeet.jobFinalize","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.jobList","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.jobLogs","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Yeet.jobRuntimeCap","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.jobStatus","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.jobWait","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Yeet.judgeRewriteReceipt","owner":"@beep/repo-cli","family":"tooling","conforms":true},

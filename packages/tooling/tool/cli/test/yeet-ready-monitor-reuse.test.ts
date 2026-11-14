@@ -9,10 +9,12 @@ import {
   ProofJobRecord,
   ProofJobRequest,
   ProofJobRunner,
+  ProofJobRuntimeCapRequest,
   ProofJobSubmission,
   ProofJobSubmitter,
   ProofJobUnit,
   pickLiveReadyMonitor,
+  proofJobRuntimeCapSeconds,
   ReadyMonitorRequest,
   RepoRunContext,
   readyMonitorArgvKey,
@@ -20,6 +22,7 @@ import {
   stripProofJobSubmitFlags,
   submitProofJobReusingReadyMonitor,
   TurboPlanSnapshot,
+  yeetJobRuntimeCap,
 } from "@beep/repo-cli/test/Yeet";
 import { describe, it } from "@effect/vitest";
 import { assertFalse, assertInclude, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
@@ -46,6 +49,10 @@ const FIRST_SUBMIT_ID = "ee5d6bd3-3333-4aaa-8bbb-000000000003";
 const SUBMIT_IDS = [FIRST_SUBMIT_ID, "ff5d6bd3-4444-4aaa-8bbb-000000000004"];
 const CLI_ARGV = ["monitor", "--until-ready", "--detach"];
 const STRICTER_ARGV = ["monitor", "--until-ready", "--settle-timeout", "2h", "--detach"];
+const HOUR = 3600;
+const ANY_CAP = ProofJobRuntimeCapRequest.cases.unspecified.make({});
+const NO_CAP = ProofJobRuntimeCapRequest.cases.uncapped.make({});
+const capOf = (seconds: number) => ProofJobRuntimeCapRequest.cases.capped.make({ seconds });
 
 const jobRequest = (argv: ReadonlyArray<string>, branch = BRANCH, mode: ProofJobRequest["mode"] = "monitor") =>
   ProofJobRequest.make({
@@ -61,7 +68,8 @@ const jobRequest = (argv: ReadonlyArray<string>, branch = BRANCH, mode: ProofJob
 const jobRecord = (
   jobId: string,
   request: ProofJobRequest,
-  fields: Partial<Pick<ProofJobRecord, "phase" | "prNumber" | "runner" | "cancelRequestedAt">> = {}
+  fields: Partial<Pick<ProofJobRecord, "phase" | "prNumber" | "runner" | "cancelRequestedAt">> = {},
+  maxRuntimeSeconds: O.Option<number> = O.none()
 ) =>
   ProofJobRecord.make({
     jobId,
@@ -76,18 +84,24 @@ const jobRecord = (
       logPath: `/repo/.beep/yeet/jobs/${jobId}.log`,
       execStart: ["/opt/bun"],
       execStopPost: ["/opt/bun"],
+      maxRuntimeSeconds,
     }),
     ...fields,
   });
 
 const runner = (pid: number) => O.some(ProofJobRunner.make({ pid, startedAt: "2026-11-14T10:00:01.000Z" }));
 
-const submission = (argv: ReadonlyArray<string>, mode: ProofJobRequest["mode"] = "monitor") =>
+const submission = (
+  argv: ReadonlyArray<string>,
+  mode: ProofJobRequest["mode"] = "monitor",
+  maxRuntimeSeconds: O.Option<number> = O.none()
+) =>
   ProofJobSubmission.make({
     request: jobRequest(argv, BRANCH, mode),
     submitter: ProofJobSubmitter.make({ pid: 5151, cwd: "/repo" }),
     execPath: "/opt/bun",
     entrypoint: "/repo/bin.ts",
+    maxRuntimeSeconds,
   });
 
 // A registry the fake submit appends to, newest first, as `launcher.list` returns it.
@@ -102,7 +116,8 @@ const fakeLauncher = Effect.fnUntraced(function* (initial: ReadonlyArray<ProofJo
       const record = jobRecord(
         O.getOrElse(A.get(SUBMIT_IDS, A.length(earlier)), () => FIRST_SUBMIT_ID),
         jobRequest(stripProofJobSubmitFlags(next.request.argv), next.request.branch, next.request.mode),
-        { phase: "submitted" }
+        { phase: "submitted" },
+        next.maxRuntimeSeconds
       );
       yield* Ref.update(submitted, A.append(next));
       yield* Ref.update(registry, A.prepend(record));
@@ -223,21 +238,69 @@ describe("reusable readiness monitor", () => {
   });
 });
 
+describe("readiness monitor runtime cap", () => {
+  // `--job-max-runtime` is a launch flag: it never enters the argv key, so a
+  // request that names one keys like one that does not.
+  const asking = (runtimeCap: ProofJobRuntimeCapRequest) =>
+    ReadyMonitorRequest.make({ branch: BRANCH, argv: [...CLI_ARGV, "--job-max-runtime", "6h"], runtimeCap });
+  const hourCapped = jobRecord(LIVE_ID, jobRequest(CLI_ARGV), {}, O.some(HOUR));
+  const uncapped = jobRecord(OLDER_ID, jobRequest(CLI_ARGV));
+
+  it("reuses a capped job for an equal, shorter or unspecified cap", () => {
+    deepStrictEqual(
+      A.map([capOf(HOUR), capOf(HOUR / 2), ANY_CAP], (cap) => isReusableReadyMonitorJob(hourCapped, asking(cap))),
+      [true, true, true]
+    );
+  });
+
+  it("does not reuse a capped job for a longer cap or an explicit none", () => {
+    deepStrictEqual(
+      A.map([capOf(6 * HOUR), NO_CAP], (cap) => isReusableReadyMonitorJob(hourCapped, asking(cap))),
+      [false, false]
+    );
+  });
+
+  it("reuses a job without a cap for any request", () => {
+    deepStrictEqual(
+      A.map([capOf(6 * HOUR), NO_CAP, ANY_CAP], (cap) => isReusableReadyMonitorJob(uncapped, asking(cap))),
+      [true, true, true]
+    );
+  });
+
+  it("gives a new job a RuntimeMaxSec only for a capped request", () => {
+    assertSome(proofJobRuntimeCapSeconds(capOf(HOUR)), HOUR);
+    assertNone(proofJobRuntimeCapSeconds(ANY_CAP));
+    assertNone(proofJobRuntimeCapSeconds(NO_CAP));
+  });
+});
+
+it.layer(reuseTestLayer, { timeout: "30 seconds" })("--job-max-runtime", (it) => {
+  it.effect(
+    "reads nothing, none and a duration as the three runtime cap requests",
+    Effect.fnUntraced(function* () {
+      const caps = yield* Effect.forEach(["", "none", "90m", "1h"], yeetJobRuntimeCap);
+      deepStrictEqual(caps, [ANY_CAP, NO_CAP, capOf(5400), capOf(HOUR)]);
+      const refused = yield* Effect.flip(yeetJobRuntimeCap("soon"));
+      deepStrictEqual(refused.message, "Expected a duration such as '30 seconds'.");
+    })
+  );
+});
+
 it.layer(reuseTestLayer, { timeout: "30 seconds" })("monitor --until-ready --detach reuse", (it) => {
   it.effect(
     "two submissions with the same pull request and argv yield one job",
     Effect.fnUntraced(function* () {
       const fake = yield* fakeLauncher([]);
-      const first = yield* submitProofJobReusingReadyMonitor(fake.launcher, submission(CLI_ARGV));
+      const first = yield* submitProofJobReusingReadyMonitor(fake.launcher, submission(CLI_ARGV), ANY_CAP);
       // The live probe: the first job has no runner yet, so its unit is still starting.
-      const second = yield* submitProofJobReusingReadyMonitor(fake.launcher, submission(CLI_ARGV));
+      const second = yield* submitProofJobReusingReadyMonitor(fake.launcher, submission(CLI_ARGV), ANY_CAP);
       deepStrictEqual([first.jobId, second.jobId], [FIRST_SUBMIT_ID, FIRST_SUBMIT_ID]);
       const submitted = yield* Ref.get(fake.submitted);
       deepStrictEqual(A.length(submitted), 1);
       const errors = yield* errorText;
       assertInclude(
         errors,
-        `readiness monitor job ${FIRST_SUBMIT_ID} is already submitted for ${BRANCH} with the same readiness flags; not re-submitted`
+        `readiness monitor job ${FIRST_SUBMIT_ID} is already submitted for ${BRANCH} with the same readiness flags and no runtime cap; not re-submitted`
       );
     })
   );
@@ -254,6 +317,7 @@ it.layer(reuseTestLayer, { timeout: "30 seconds" })("monitor --until-ready --det
       const record = yield* submitProofJobReusingReadyMonitor(
         fake.launcher,
         submission(CLI_ARGV),
+        ANY_CAP,
         probe("alive", probed)
       );
       const submitted = yield* Ref.get(fake.submitted);
@@ -267,7 +331,12 @@ it.layer(reuseTestLayer, { timeout: "30 seconds" })("monitor --until-ready --det
     "submits a new job when the request is stricter than the live monitor",
     Effect.fnUntraced(function* () {
       const fake = yield* fakeLauncher([jobRecord(LIVE_ID, jobRequest(["monitor", "--until-ready"]))]);
-      const record = yield* submitProofJobReusingReadyMonitor(fake.launcher, submission(STRICTER_ARGV), probe("alive"));
+      const record = yield* submitProofJobReusingReadyMonitor(
+        fake.launcher,
+        submission(STRICTER_ARGV),
+        ANY_CAP,
+        probe("alive")
+      );
       const submitted = yield* Ref.get(fake.submitted);
       deepStrictEqual(record.jobId, FIRST_SUBMIT_ID);
       deepStrictEqual(
@@ -281,7 +350,12 @@ it.layer(reuseTestLayer, { timeout: "30 seconds" })("monitor --until-ready --det
     "never reuses a monitor whose runner is dead",
     Effect.fnUntraced(function* () {
       const fake = yield* fakeLauncher([jobRecord(LIVE_ID, jobRequest(CLI_ARGV), { runner: runner(31337) })]);
-      const record = yield* submitProofJobReusingReadyMonitor(fake.launcher, submission(CLI_ARGV), probe("dead"));
+      const record = yield* submitProofJobReusingReadyMonitor(
+        fake.launcher,
+        submission(CLI_ARGV),
+        ANY_CAP,
+        probe("dead")
+      );
       const submitted = yield* Ref.get(fake.submitted);
       const errors = yield* errorText;
       deepStrictEqual([record.jobId, A.length(submitted)], [FIRST_SUBMIT_ID, 1]);
@@ -297,7 +371,7 @@ it.layer(reuseTestLayer, { timeout: "30 seconds" })("monitor --until-ready --det
     Effect.fnUntraced(function* () {
       const fake = yield* fakeLauncher([]);
       const launcher = { ...fake.launcher, list: YeetCommandError.make({ message: "jobs dir unreadable" }) };
-      const record = yield* submitProofJobReusingReadyMonitor(launcher, submission(CLI_ARGV), probe("alive"));
+      const record = yield* submitProofJobReusingReadyMonitor(launcher, submission(CLI_ARGV), ANY_CAP, probe("alive"));
       const errors = yield* errorText;
       deepStrictEqual(record.jobId, FIRST_SUBMIT_ID);
       assertInclude(errors, "could not read the job registry; submitting a new monitor: jobs dir unreadable");
@@ -308,11 +382,61 @@ it.layer(reuseTestLayer, { timeout: "30 seconds" })("monitor --until-ready --det
     "submits any other detached job without reading the registry",
     Effect.fnUntraced(function* () {
       const fake = yield* fakeLauncher([jobRecord(LIVE_ID, jobRequest(CLI_ARGV))]);
-      yield* submitProofJobReusingReadyMonitor(fake.launcher, submission(["verify", "--detach"], "verify"));
-      yield* submitProofJobReusingReadyMonitor(fake.launcher, submission(["monitor", "--until-merged", "--detach"]));
+      yield* submitProofJobReusingReadyMonitor(fake.launcher, submission(["verify", "--detach"], "verify"), ANY_CAP);
+      yield* submitProofJobReusingReadyMonitor(
+        fake.launcher,
+        submission(["monitor", "--until-merged", "--detach"]),
+        ANY_CAP
+      );
       const listed = yield* Ref.get(fake.listed);
       const submitted = yield* Ref.get(fake.submitted);
       deepStrictEqual([listed, A.length(submitted)], [0, 2]);
+    })
+  );
+
+  it.effect(
+    "hands back a capped monitor for a shorter cap and names its cap",
+    Effect.fnUntraced(function* () {
+      const fake = yield* fakeLauncher([jobRecord(LIVE_ID, jobRequest(CLI_ARGV), {}, O.some(HOUR))]);
+      const record = yield* submitProofJobReusingReadyMonitor(
+        fake.launcher,
+        submission([...CLI_ARGV, "--job-max-runtime", "30m"], "monitor", O.some(HOUR / 2)),
+        capOf(HOUR / 2),
+        probe("alive")
+      );
+      const submitted = yield* Ref.get(fake.submitted);
+      const errors = yield* errorText;
+      deepStrictEqual([record.jobId, A.length(submitted)], [LIVE_ID, 0]);
+      assertInclude(
+        errors,
+        `readiness monitor job ${LIVE_ID} is already running for ${BRANCH} with the same readiness flags and a runtime cap of 1h; not re-submitted`
+      );
+    })
+  );
+
+  it.effect(
+    "submits a new monitor for a longer cap, and again for an explicit none",
+    Effect.fnUntraced(function* () {
+      const fake = yield* fakeLauncher([jobRecord(LIVE_ID, jobRequest(CLI_ARGV), {}, O.some(HOUR))]);
+      const longer = yield* submitProofJobReusingReadyMonitor(
+        fake.launcher,
+        submission([...CLI_ARGV, "--job-max-runtime", "6h"], "monitor", O.some(6 * HOUR)),
+        capOf(6 * HOUR),
+        probe("alive")
+      );
+      // The six-hour job just submitted is capped too, so `none` reuses neither.
+      const none = yield* submitProofJobReusingReadyMonitor(
+        fake.launcher,
+        submission([...CLI_ARGV, "--job-max-runtime", "none"]),
+        NO_CAP,
+        probe("alive")
+      );
+      const submitted = yield* Ref.get(fake.submitted);
+      deepStrictEqual([longer.jobId, none.jobId], SUBMIT_IDS);
+      deepStrictEqual(
+        A.map(submitted, (next) => O.getOrNull(next.maxRuntimeSeconds)),
+        [6 * HOUR, null]
+      );
     })
   );
 

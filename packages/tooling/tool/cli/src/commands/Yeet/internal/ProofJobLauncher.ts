@@ -78,7 +78,12 @@ import {
 import type * as Digest from "effect/crypto/Digest";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RunScopeSupport } from "../../../internal/repo-run/RunScope.schemas.ts";
-import type { ProofJobOutcome, ProofJobSubmission, ProofJobWaitOptions } from "./ProofJob.ts";
+import type {
+  ProofJobOutcome,
+  ProofJobRuntimeCapRequest,
+  ProofJobSubmission,
+  ProofJobWaitOptions,
+} from "./ProofJob.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofJobLauncher");
 // A record transition holds its lock for one read-modify-write of a small JSON file; inbox and
@@ -1043,12 +1048,14 @@ export const findReusableReadyMonitor = Effect.fn("ProofJob.findReusableReadyMon
  * **Details**
  *
  * Only a readiness monitor request looks for a job to reuse: one submitted
- * from the same branch with the same `readyMonitorArgvKey` whose runner is
- * alive. It is returned with a stderr note and nothing is submitted. Any
- * other request, a stricter or looser readiness argv, or a monitor whose
- * runner is dead submits a new job. The lookup takes no submit lock:
- * `yeet publish` runs this command as its child while it holds that lock, and
- * has already looked for a monitor to reuse for its pull request.
+ * from the same branch with the same `readyMonitorArgvKey`, a runtime cap at
+ * least as long as `runtimeCap` asks for, and a runner that is alive. It is
+ * returned with a stderr note naming its cap, and nothing is submitted. Any
+ * other request, a stricter or looser readiness argv, a longer requested cap,
+ * or a monitor whose runner is dead submits a new job. The lookup takes no
+ * submit lock: `yeet publish` runs this command as its child while it holds
+ * that lock, and has already looked for a monitor to reuse for its pull
+ * request.
  *
  * **Example** (Build the submit)
  *
@@ -1060,6 +1067,7 @@ export const findReusableReadyMonitor = Effect.fn("ProofJob.findReusableReadyMon
  *
  * @param launcher - The checkout's job listing and submit.
  * @param submission - The job the command would submit.
+ * @param runtimeCap - The runtime cap `submission` was built from, as `--job-max-runtime` asked for it.
  * @param runnerStatus - The runner liveness probe.
  * @returns The submitted record, or the reused live monitor's record.
  * @category workflows
@@ -1068,13 +1076,14 @@ export const findReusableReadyMonitor = Effect.fn("ProofJob.findReusableReadyMon
 export const submitProofJobReusingReadyMonitor = Effect.fn("ProofJob.submitReusingReadyMonitor")(function* (
   launcher: Pick<ProofJobLauncherShape, "list" | "submit">,
   submission: ProofJobSubmission,
+  runtimeCap: ProofJobRuntimeCapRequest,
   runnerStatus: ReadyMonitorRunnerProbe = readyMonitorRunnerStatus
 ): Effect.fn.Return<ProofJobRecord, YeetCommandError, FileSystem.FileSystem> {
   const { request } = submission;
   const live = isReadyMonitorRequest(request)
     ? yield* findReusableReadyMonitor(
         launcher.list,
-        ReadyMonitorRequest.make({ branch: request.branch, argv: request.argv }),
+        ReadyMonitorRequest.make({ branch: request.branch, argv: request.argv, runtimeCap }),
         runnerStatus
       )
     : O.none<ProofJobRecord>();
@@ -1082,10 +1091,16 @@ export const submitProofJobReusingReadyMonitor = Effect.fn("ProofJob.submitReusi
     onNone: () => launcher.submit(submission),
     onSome: (record) =>
       Console.error(
-        `[yeet] readiness monitor job ${record.jobId} is already ${record.phase} for ${request.branch} with the same readiness flags; not re-submitted`
+        `[yeet] readiness monitor job ${record.jobId} is already ${record.phase} for ${request.branch} with the same readiness flags and ${renderRuntimeCap(record.unit.maxRuntimeSeconds)}; not re-submitted`
       ).pipe(Effect.as(record)),
   });
 });
+
+const renderRuntimeCap = (seconds: O.Option<number>): string =>
+  O.match(seconds, {
+    onNone: () => "no runtime cap",
+    onSome: (cap) => `a runtime cap of ${Duration.format(Duration.seconds(cap))}`,
+  });
 
 /**
  * Apply one bookkeeping transition to the detached proof job this process runs inside.
