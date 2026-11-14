@@ -1,6 +1,6 @@
 import { isLabsWorkspacePath } from "@beep/repo-cli-kit/cli/Labs/index";
 import { workspaceDirectories, workspacePackages } from "@beep/repo-cli-kit/RepoWorkspaces";
-import { mentionsAnyToken, mentionsToken } from "@beep/repo-cli-kit/WholeToken";
+import { mentionsAnyToken, mentionsRepoPath, mentionsToken, shadowPrefixesFor } from "@beep/repo-cli-kit/WholeToken";
 import { computeTransitiveClosure, decodePackageJsonEffect, toSortedRecord } from "@beep/repo-utils";
 import { ALL_DEPENDENCY_FIELDS } from "@beep/repo-workspaces/internal/dependencyFields";
 import { normalizePath } from "@beep/schema";
@@ -493,12 +493,19 @@ const collectWorkspaceEdges = Effect.fn("RegistrationGeometry.collectWorkspaceEd
   );
 });
 
+// The target is mentioned by its package name, or by its path anywhere except inside another
+// workspace's path that ends in it (`packages/tooling/deploy/x` does not name `deploy`).
+const targetMention = (target: RegistrationTarget, workspacePaths: ReadonlyArray<string>) => {
+  const mentionsName = mentionsToken(target.packageName);
+  const mentionsPath = mentionsRepoPath(target.packagePath, shadowPrefixesFor(target.packagePath, workspacePaths));
+  return (text: string): boolean => mentionsName(text) || mentionsPath(text);
+};
+
 const rootScriptHits = (
   scripts: Readonly<Record<string, string>>,
-  target: RegistrationTarget
-): ReadonlyArray<DependentHit> => {
-  const mentionsTarget = mentionsAnyToken([target.packageName, target.packagePath]);
-  return pipe(
+  mentionsTarget: (text: string) => boolean
+): ReadonlyArray<DependentHit> =>
+  pipe(
     R.toEntries(scripts),
     A.filter(([, command]) => mentionsTarget(command)),
     A.map(() =>
@@ -511,15 +518,13 @@ const rootScriptHits = (
       })
     )
   );
-};
 
 const rootPolicyFileHits = Effect.fn("RegistrationGeometry.rootPolicyFileHits")(function* (
   repoRoot: string,
-  target: RegistrationTarget
+  mentionsTarget: (text: string) => boolean
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const mentionsTarget = mentionsAnyToken([target.packageName, target.packagePath]);
   let hits = A.empty<DependentHit>();
   for (const rootPolicyFile of ["turbo.json", "lefthook.yml", "biome.jsonc"]) {
     const absoluteFile = path.join(repoRoot, rootPolicyFile);
@@ -659,7 +664,10 @@ export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAt
   const project = new Project({ skipAddingFilesFromTsConfig: true });
   const identitySurface = A.findFirst(surfacesForTarget(target), RegistrationSurface.guards["identity-segment"]);
   const identityAccessor = O.map(identitySurface, (surface) => surface.accessor);
-  const mentionsTarget = mentionsAnyToken([target.packageName, target.packagePath]);
+  const mentionsTarget = targetMention(
+    target,
+    A.map(workspaces, ([, directory]) => normalizePath(path.relative(repoRoot, directory)))
+  );
   const mentionsAccessor: (text: string) => boolean = O.match(identityAccessor, {
     onNone: () => thunkFalse,
     onSome: mentionsToken,
@@ -723,8 +731,8 @@ export const dependentsOfAtRoot = Effect.fn("RegistrationGeometry.dependentsOfAt
   }
 
   const rootManifest = yield* decodedRootManifest(repoRoot);
-  hits = A.appendAll(hits, rootScriptHits(toSortedRecord(rootManifest.scripts), target));
-  const rootPolicyFileHits5 = yield* rootPolicyFileHits(repoRoot, target);
+  hits = A.appendAll(hits, rootScriptHits(toSortedRecord(rootManifest.scripts), mentionsTarget));
+  const rootPolicyFileHits5 = yield* rootPolicyFileHits(repoRoot, mentionsTarget);
   hits = A.appendAll(hits, rootPolicyFileHits5);
 
   return DependentsReport.make({

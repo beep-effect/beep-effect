@@ -44,6 +44,48 @@ const temporaryDirectory = Effect.gen(function* () {
   return yield* fs.makeTempDirectoryScoped();
 });
 
+// A root `deploy` workspace beside `packages/tooling/deploy/x`, whose path ends in `deploy/x`: the
+// shape that made `delete-package @beep/deploy` count every `packages/tooling/deploy/**` line.
+const writeShadowedDeployFixture = Effect.gen(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const repoRoot = yield* fs.realPath(".");
+  yield* fs.writeFileString(
+    "package.json",
+    '{ "name": "fixture", "private": true, "workspaces": ["deploy", "packages/tooling/deploy/x", "packages/consumer"] }\n'
+  );
+  yield* fs.writeFileString("bun.lock", "");
+  yield* fs.makeDirectory("deploy", { recursive: true });
+  yield* fs.makeDirectory(path.join("packages", "tooling", "deploy", "x"), { recursive: true });
+  yield* fs.makeDirectory(path.join("packages", "consumer"), { recursive: true });
+  yield* fs.writeFileString(path.join("deploy", "package.json"), '{ "name": "@beep/deploy", "private": true }\n');
+  yield* fs.writeFileString(
+    path.join("packages", "tooling", "deploy", "x", "package.json"),
+    A.join(
+      [
+        "{",
+        '  "name": "@beep/deploy-x",',
+        '  "private": true,',
+        '  "homepage": "https://github.com/beep-effect/beep-effect/tree/main/packages/tooling/deploy/x",',
+        '  "repository": { "directory": "packages/tooling/deploy/x" }',
+        "}",
+        "",
+      ],
+      "\n"
+    )
+  );
+  yield* fs.writeFileString(
+    path.join("packages", "consumer", "package.json"),
+    '{ "name": "@beep/consumer", "private": true }\n'
+  );
+  yield* fs.writeFileString(path.join("packages", "consumer", "README.md"), "Reads `deploy/src/index.ts`.\n");
+  yield* fs.writeFileString(
+    path.join("packages", "consumer", "notes.md"),
+    "Deploys from `packages/tooling/deploy/x/src`.\n"
+  );
+  return repoRoot;
+});
+
 const target = RegistrationTarget.make({
   packageName: "@beep/courtlistener",
   packagePath: PosixPath.make("packages/drivers/courtlistener"),
@@ -247,6 +289,45 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
       )
+    );
+
+    it.effect("ignores a sibling workspace path that only ends in the target's path", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeShadowedDeployFixture;
+          const rootDeploy = RegistrationTarget.make({
+            packageName: "@beep/deploy",
+            packagePath: PosixPath.make("deploy"),
+            private: true,
+          });
+
+          const report = yield* dependentsOfAtRoot(repoRoot, rootDeploy);
+          const files = A.map(report.hits, (hit) => hit.file);
+          expect(files).toContain("packages/consumer/README.md");
+          expect(files).not.toContain("packages/tooling/deploy/x/package.json");
+          expect(files).not.toContain("packages/consumer/notes.md");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("still finds dependents of a nested target that contains a sibling workspace's path", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const repoRoot = yield* writeShadowedDeployFixture;
+          const nested = RegistrationTarget.make({
+            packageName: "@beep/deploy-x",
+            packagePath: PosixPath.make("packages/tooling/deploy/x"),
+            private: true,
+          });
+
+          const report = yield* dependentsOfAtRoot(repoRoot, nested);
+          const files = A.map(report.hits, (hit) => hit.file);
+          expect(files).toContain("packages/consumer/notes.md");
+          expect(files).not.toContain("packages/consumer/README.md");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("classifies packet history and ledger references as historical, not live packet claims", () =>
