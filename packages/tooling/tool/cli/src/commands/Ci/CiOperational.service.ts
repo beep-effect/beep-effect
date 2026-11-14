@@ -204,6 +204,10 @@ export const readPinnedPrDiff = Effect.fn("Ci.readPinnedPrDiff")(function* (
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   return yield* Effect.gen(function* () {
     const handle = yield* spawner.spawn(
+      // KEEP (D-22): the change profile reads git's C-quoted `--name-only` lines, so a path with a non-ASCII
+      // or special byte never matches a docs pattern and keeps every profile active (pinned by the `quoted
+      // path` golden in `ci-bootstrap-parity`); `Git.changedFiles`' `-z` paths are raw.
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
       ChildProcess.make("git", ["diff", "--name-only", "--no-renames", `${base}...${head}`], {
         stdin: "ignore",
         stdout: "pipe",
@@ -351,9 +355,6 @@ export const CiOperationalLive = Layer.effect(
         Effect.provideService(Path.Path, path)
       );
     });
-    // KEEP (D-22): the change profile reads git's C-quoted `--name-only` lines, so a path with a
-    // non-ASCII or special byte never matches a docs pattern and keeps every profile active (pinned by
-    // the `quoted path` golden in `ci-bootstrap-parity`); `Git.changedFiles`' `-z` paths are raw.
     const pinnedDiff = (base: string, head: string) =>
       readPinnedPrDiff(base, head, O.none()).pipe(
         Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)

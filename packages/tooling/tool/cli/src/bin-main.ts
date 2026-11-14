@@ -118,11 +118,13 @@ const applyHostTurboCacheDefaults = (defaults: Readonly<Record<string, string>>)
   for (const [name, value] of R.toEntries(defaults)) Bun.env[name] = value;
 };
 
-// KEEP (D-21, X7): read once while the runtime's layers are being assembled, before `Git.layer` exists.
 const currentGitOrigin = (): string =>
   Result.getOrElse(
     Result.map(
       Result.try(() =>
+        // KEEP (D-21, X7): read once while the runtime's layers are being assembled, before `Git.layer`
+        // exists.
+        // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-21, X7), reason above
         Bun.spawnSync({ cmd: ["git", "remote", "get-url", "origin"], stdout: "pipe", stderr: "ignore" })
       ),
       (result) => (result.success ? Str.trim(result.stdout.toString()) : "")

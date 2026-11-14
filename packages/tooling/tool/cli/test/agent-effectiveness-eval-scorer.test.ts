@@ -146,7 +146,6 @@ const readConfigArgument = (args: ReadonlyArray<string>): O.Option<string> =>
     )
   );
 
-// Own double: each spawn reads the scorer-generated config file it is pointed at, inside the spawn.
 /**
  * Spawner stand-in for the three law-lane tools: records each spawned command
  * name, snapshots the scorer-generated config a lane is pointed at, and answers
@@ -158,6 +157,8 @@ const fakeLawSpawner = Effect.fn("AgentEffectivenessEvalScorerTest.fakeLawSpawne
   responses: LaneResponses
 ) {
   const fs = yield* FileSystem.FileSystem;
+  // Own double: each spawn reads the scorer-generated config file it is pointed at, inside the spawn.
+  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
   return ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) {
       return Effect.die("unexpected piped law-lane command");

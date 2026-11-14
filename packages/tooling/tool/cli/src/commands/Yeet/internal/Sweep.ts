@@ -982,6 +982,7 @@ const observePullRequest = Effect.fn("Yeet.observeSweepPullRequest")(function* (
   branch: string
 ): Effect.fn.Return<O.Option<GhPrView>, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
   // KEEP (D-13): `gh pr view <branch>` finds the branch's pull request in any state.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   const output = yield* ghOutput({
     args: ["pr", "view", branch, "--json", "number,headRefName,state,headRefOid"],
     cwd: context.repoRoot,
@@ -1258,6 +1259,7 @@ const runRemoteDeletionStep = (
   action: string
 ): Effect.Effect<SweepStepOutcome, never, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
   // KEEP (W2b): `Git.push` has no `--force-with-lease=<ref>:<expected>` lease value.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (W2b), reason above
   captureCommand("git", leasedRemoteDeletionArgs(state), cwd).pipe(
     Effect.map((probe) => {
       if (probe.exitCode === 0) {
@@ -1678,7 +1680,7 @@ const performSweepStep = (
       ),
     "ff-main": () =>
       state.headBranch === state.mainBranch
-        ? // KEEP (D-03): no `merge` member, and the fast-forward has a single consumer.
+        ? // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-03): no `merge` member, and the fast-forward has a single consumer.
           runCommandStep(
             "git",
             ["merge", "--ff-only", `refs/remotes/origin/${state.mainBranch}`],
