@@ -52,7 +52,7 @@ identifiers are redacted.
 
 - **Doing:** watching #3326, the first pin-bump PR that #3299's automation
   opened.
-- **Evidence:** opened at 05:31Z for `beep-ci-ae70a0c0a3f8`; force-updated
+- **Evidence:** opened at 05:34Z for `beep-ci-ae70a0c0a3f8`; force-updated
   and retitled at 05:38Z for `beep-ci-00e2e35dbaee`, which restarted its
   Check and review window. `gh release list` counts 21 `beep-ci-*` releases
   on 2026-11-13 and 27 on 2026-11-09, so at that cadence the PR restarts

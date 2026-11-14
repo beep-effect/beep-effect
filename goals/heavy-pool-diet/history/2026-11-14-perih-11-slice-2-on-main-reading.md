@@ -20,7 +20,7 @@ Run [43561962054](https://github.com/beep-effect/beep-effect/actions/runs/435619
 | Check the pin-bump App credential, Create pin-bump App token | success |
 | Open or update the pin-bump pull request | success |
 
-No `beep-ci-c2de80d2a0*` release exists, so the run cut none. It opened #3326 from
+No `beep-ci-c2de80d2a0*` release exists, so the run cut none. At 05:33:57Z it opened #3326 from
 `ci/beep-ci-pin-bump`, authored by the knowledge-mint App, labelled `ready-for-heavy`, with one
 changed file: the `BEEP_CI_RELEASE_TAG` and `BEEP_CI_SHA256` values in
 `.github/actions/fetch-beep-ci/action.yml`, from `beep-ci-a56516d6d309` to `beep-ci-ae70a0c0a3f8`.
@@ -31,7 +31,7 @@ the commit the pull request was opened at.
 
 #3322 landed at 05:35Z as `00e2e35dba` and changed the closure. Run
 [43562275988](https://github.com/beep-effect/beep-effect/actions/runs/43562275988) published
-`beep-ci-00e2e35dbaee` at 05:35:28Z. At 05:38Z the App force-pushed `ci/beep-ci-pin-bump` and
+`beep-ci-00e2e35dbaee` at 05:37:51Z. At 05:38:05Z the App force-pushed `ci/beep-ci-pin-bump` and
 retitled #3326 for the new tag. No second pull request was opened.
 
 ## Reading 3: the pull request's own Check
