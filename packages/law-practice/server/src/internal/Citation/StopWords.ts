@@ -10,9 +10,9 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { reserveCitationInvocationText } from "./Invocation.ts";
 import {
-  copyCitationMetadataPatternConfiguration,
   makeCitationMetadataStage,
   ownCitationStageCall,
+  prepareCitationMetadataPatternConfiguration,
   substituteCitationMetadataMatches,
 } from "./MetadataComposition.ts";
 import { citationMetadataWhitespaceBoundary, trimCitationMetadataBoundary } from "./MetadataStrings.ts";
@@ -21,6 +21,7 @@ import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/StopWords");
@@ -69,7 +70,6 @@ export class CitationStopWordsResult extends S.Opaque<CitationStopWordsResult, {
     })
   )
 ) {}
-const Config = S.toType(CitationStopWordsConfiguration);
 const Native = S.toType(CitationPythonUnicodeStorage);
 const space = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array([32]) });
 const commaSpace = (point: number) => point === 44 || point === 32;
@@ -141,26 +141,25 @@ export const installCitationStopWordCleanup = Effect.fn("Citation.installStopWor
     return yield* trim(withoutCommas, citationMetadataWhitespaceBoundary);
   });
 });
-/** Capture trusted patterns, Clock, admission, process services and optional
- * cumulative text budget. Each call owns fresh scoped workers; methods are R=never.
+/** Authenticate the owned fixed cleanup patterns before the cleanup is installed.
+ * The configuration is already owned, so nothing is decoded or copied.
  * @internal @category operations @since 0.0.0
  */
-export const copyCitationStopWordsConfiguration = Effect.fn("Citation.copyStopWordsConfiguration")(function* (
+export const verifyCitationStopWordsConfiguration = Effect.fn("Citation.verifyStopWordsConfiguration")(function* (
   limits: CitationEngineLimits,
-  decoded: CitationStopWordsConfiguration
+  owned: CitationOwned<CitationStopWordsConfiguration>
 ) {
-  const owned = yield* copyCitationMetadataPatternConfiguration(
+  const verified = yield* prepareCitationMetadataPatternConfiguration(
     limits,
-    Patterns,
-    decoded.patterns,
-    decoded.bindings,
+    owned.patterns,
+    owned.bindings,
     fingerprints,
     () => fail("invalid-configuration")
   );
-  return CitationStopWordsConfiguration.make(owned);
+  return CitationStopWordsConfiguration.make(verified);
 });
 const ownCleanup = ownCitationStageCall({
-  copy: copyCitationStopWordsConfiguration,
+  verify: verifyCitationStopWordsConfiguration,
   install: installCitationStopWordCleanup,
 });
 /** Install the standalone admitted cleaner with captured services and timing.
@@ -168,8 +167,6 @@ const ownCleanup = ownCitationStageCall({
  */
 export const makeCitationStopWords = makeCitationMetadataStage({
   method: "clean",
-  schema: Config,
-  invalid: () => fail("invalid-configuration"),
   own: ownCleanup,
   prepare: (_limits, _runtime, clean: Effect.Success<ReturnType<typeof ownCleanup>>, raw) => clean(raw),
   project: (text, reservedUnits) => CitationStopWordsResult.make({ text, reservedUnits }),

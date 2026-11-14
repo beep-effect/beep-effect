@@ -4,9 +4,15 @@ import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import { CitationRegexPatternProfile } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
-import { installCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
+import {
+  CitationNativeProcessRuntime,
+  CitationNativeRuntimeKind,
+} from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import {
+  CitationRegexPatternDescriptor,
+  CitationRegexPatternProfile,
+} from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
+import { installCitationRegexEvaluator as installOwnedCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
 import { makeCitationRegexEvaluation } from "@beep/law-practice-server/internal/Citation/RegexWorkerEvaluation";
 import { citationRegexWorkerProgram } from "@beep/law-practice-server/internal/Citation/RegexWorkerProgram";
 import {
@@ -43,6 +49,7 @@ import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeAcknowledgementSpawner,
@@ -53,6 +60,18 @@ import {
 } from "./CitationNativeSpawner.fixtures.ts";
 import { setupCitationRegexWorker as setup } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationRegexWorkerReply } from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const installCitationRegexEvaluator = Effect.fnUntraced(function* (
+  a0: Parameters<typeof installOwnedCitationRegexEvaluator>[0],
+  a1: unknown,
+  a2: unknown,
+  a3?: Parameters<typeof installOwnedCitationRegexEvaluator>[3]
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
+  const o2 = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), a2);
+  return yield* installOwnedCitationRegexEvaluator(a0, o1, o2, a3);
+});
 
 const $I = $LawPracticeServerId.create("test/CitationRegexWorker");
 const ExpectedMatches = S.Array(S.Array(S.Tuple([S.Int, S.Int])).check(S.isMaxLength(3))).check(S.isMaxLength(2));
@@ -143,27 +162,26 @@ const assertModeCaptures = Effect.fn("RegexWorkerTest.assertModeCaptures")(funct
 });
 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices: true })("owned native regex", (it) => {
+  it.effect("refuses duplicate generated descriptor bindings before spawning", () =>
+    Effect.gen(function* () {
+      const { worker, observed } = yield* setup([descriptor]);
+      const bindings = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), [
+        descriptor,
+        descriptor,
+      ]);
+      const duplicate = yield* worker.bindDescriptors(bindings).pipe(Effect.flip);
+      expect(duplicate).toMatchObject({ reason: "invalid-bindings" });
+      const generated = yield* worker.bindDescriptors(A.take(bindings, 1));
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const bind = yield* makeCitationTestScaffoldBinding(limits);
+      const invalidQuota = yield* bind(generated.evaluate)(pattern, native("b ab"), 0, -1).pipe(Effect.flip);
+      expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
+      const exits = yield* observed.snapshot;
+      expect(exits).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
   it.effect("rejects malformed policy, runtime and match quotas before spawning", () =>
     Effect.gen(function* () {
-      const limits = (yield* defaultCitationEnginePolicy).limits;
-      const invalidPolicy = yield* installCitationRegexEvaluator(null, null, []).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(null).pipe(
-            Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-          )
-        ),
-        Effect.flip
-      );
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
-      const invalidRuntime = yield* installCitationRegexEvaluator(limits, null, []).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(limits).pipe(
-            Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-          )
-        ),
-        Effect.flip
-      );
-      expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
       const { worker, observed } = yield* setup([descriptor]);
       const invalidQuota = yield* worker.evaluate(pattern, native("b ab"), 0, -1).pipe(Effect.flip);
       expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });

@@ -18,7 +18,6 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationDocumentStepContainers } from "./DocumentCleanerProtocols.ts";
 import {
-  CitationDocumentExtractionConfiguration,
   CitationDocumentExtractionResult,
   makeCitationDocumentExtraction,
   ownCitationDocumentExtraction,
@@ -27,6 +26,8 @@ import { getCitationExtractionShortcut } from "./ExtractionShortcut.ts";
 import { CitationFullExtractionResult } from "./FullExtraction.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
+import type { CitationDocumentExtractionConfiguration } from "./DocumentExtraction.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ExtractionEntry");
@@ -90,7 +91,6 @@ export class CitationExtractionEntryResult extends S.Opaque<
   )
 ) {}
 const Input = CitationExtractionEntryInput;
-const Configuration = S.toType(CitationDocumentExtractionConfiguration);
 const isShortcutRequest = S.is(S.Struct({ plain: S.Literals(["eyecite"]) }));
 const shortcut = O.map(getCitationExtractionShortcut("eyecite"), (citations): CitationExtractionEntryOutcome => {
   const validated = CitationExtractionEntryOutcome.cases.Shortcut.make({ citations });
@@ -98,7 +98,7 @@ const shortcut = O.map(getCitationExtractionShortcut("eyecite"), (citations): Ci
 });
 const own = Effect.fn("Citation.ownExtractionEntry")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationDocumentExtractionConfiguration,
+  configuration: CitationOwned<CitationDocumentExtractionConfiguration>,
   runtime: CitationNativeProcessRuntime
 ) {
   const document = yield* ownCitationDocumentExtraction(limits, configuration);
@@ -164,8 +164,6 @@ const prepare = Effect.fn("Citation.extractRawPrimitiveRequest")(function* (
  */
 export const makeCitationExtractionEntry = makeCitationMetadataStage({
   method: "extract",
-  schema: Configuration,
-  invalid: () => fail("invalid-configuration"),
   own,
   prepare,
   project: (outcome, reservedUnits) => {

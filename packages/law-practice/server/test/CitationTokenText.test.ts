@@ -1,6 +1,7 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { makeCitationTokenText } from "@beep/law-practice-server/internal/Citation/TokenText";
+import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -14,6 +15,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 
 const $I = $LawPracticeServerId.create("test/CitationTokenText");
@@ -68,7 +70,9 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
   it.effect("captures ceilings, allows equality, rejects the next token and owns source bytes", () =>
     Effect.gen(function* () {
       const limits = { ...(yield* defaultCitationEnginePolicy).limits, tokens: 3, sourceUtf16: 4 };
-      const tokenizer = yield* makeCitationTokenText(limits);
+      // The limits cross into the engine here; mutating the caller's copy later changes nothing installed.
+      const owned = yield* ownCitationTestConfiguration(CitationEngineLimits, limits);
+      const tokenizer = yield* makeCitationTokenText(owned);
       limits.tokens = 100;
       limits.sourceUtf16 = 100;
       const input = native("a b");

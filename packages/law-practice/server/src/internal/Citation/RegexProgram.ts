@@ -29,8 +29,10 @@ import {
   makeCitationRegexPointSets,
   normalizeCitationRegexRanges,
 } from "./RegexPointSets.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationRegexTranslationFailure } from "./RegexTranslator.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationRegexEngine } from "./RegexEngine.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexProgram");
 const max = CitationEngineAbsoluteMaxima;
@@ -382,14 +384,11 @@ const renderToken = (
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(function* (
-  policy: unknown,
-  engineInput: unknown = "python-re"
+  limits: CitationEngineLimits,
+  engine: typeof CitationRegexEngine.Type = "python-re"
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () =>
-    CitationRegexTranslationFailure.make({ reason: "invalid-policy" })
-  );
   const patternInput = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern");
-  const categories = yield* makeCitationRegexPointSets(engineInput);
+  const categories = yield* makeCitationRegexPointSets(engine);
   const { timed } = yield* makeCitationRegexTiming(limits, false);
 
   const compile = Effect.fn("Citation.compileRegexProgram")(function* (nativePattern: unknown, flagsInput: unknown) {

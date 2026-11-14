@@ -2,20 +2,37 @@ import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationContextMatch,
-  makeCitationContextMatcher,
+  makeCitationContextMatcher as makeOwnedCitationContextMatcher,
 } from "@beep/law-practice-server/internal/Citation/ContextMatcher";
+import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { CitationRegexSourceFlags } from "@beep/law-practice-server/internal/Citation/RegexEngine";
 import { CitationTokenContextInput } from "@beep/law-practice-server/internal/Citation/TokenContext";
+import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationContextMatcher = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationContextMatcher>[0],
+  a1: unknown,
+  a2: unknown,
+  a3: Parameters<typeof makeOwnedCitationContextMatcher>[3],
+  a4: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
+  const o2 = yield* ownCitationTestConfiguration(CitationPythonUnicodeStorage, a2);
+  const o4 = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), a4);
+  return yield* makeOwnedCitationContextMatcher(a0, o1, o2, a3, o4);
+});
 
 const $I = $LawPracticeServerId.create("test/CitationContextMatcher");
 const Native = S.Struct({ width: S.Literals([1, 2, 4]), bytes: S.Uint8ArrayFromHex });

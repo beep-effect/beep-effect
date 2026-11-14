@@ -2,6 +2,7 @@
  * Free Law Project eyecite 2.7.6, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationAnnotationMode,
@@ -26,10 +27,11 @@ import { prepareCitationAnnotationSourceMap, prepareCitationAnnotations } from "
 import { makeCitationSkipAnnotationSpans } from "./AnnotationSkip.ts";
 import { CitationAnnotationSpanProcessor } from "./AnnotationSpan.ts";
 import { makeCitationAnnotationWrap, makeCitationWrapAnnotationSpans } from "./AnnotationWrap.ts";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import {
   CitationHtmlGeometryPreparationConfiguration,
-  copyCitationHtmlGeometryConfiguration,
   installCitationHtmlGeometry,
+  verifyCitationHtmlGeometryConfiguration,
 } from "./HtmlGeometryPreparation.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
@@ -37,6 +39,7 @@ import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { CitationRegexOperation } from "./RegexPolicy.ts";
 import { CitationXmlBalance, makeCitationXmlWorker } from "./XmlWorker.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { makeCitationSpanOffsets } from "./SpanOffsets.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/AnnotationEntry");
@@ -122,10 +125,10 @@ const nativeEqual = S.toEquivalence(S.toType(CitationPythonUnicodeStorage));
  */
 export const ownCitationAnnotationEntry = Effect.fn("Citation.ownAnnotationEntry")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationAnnotationEntryConfiguration,
+  configuration: CitationOwned<CitationAnnotationEntryConfiguration>,
   runtime: CitationNativeProcessRuntime
 ) {
-  const geometry = yield* copyCitationHtmlGeometryConfiguration(limits, configuration.geometry);
+  const geometry = yield* verifyCitationHtmlGeometryConfiguration(limits, ownedField(configuration, "geometry"));
   // Installed once; an install failure surfaces where each request used to install it.
   const html = yield* Effect.exit(installCitationHtmlGeometry(limits, runtime, geometry));
   const wrap = yield* Effect.exit(makeCitationAnnotationWrap(limits, runtime));
@@ -137,7 +140,7 @@ export const ownCitationAnnotationEntry = Effect.fn("Citation.ownAnnotationEntry
     wrap,
     callback,
     updater,
-    xmlRuntime: CitationNativeProcessRuntime.make({ ...configuration.xmlRuntime }),
+    xmlRuntime: configuration.xmlRuntime,
   };
 });
 const own = ownCitationAnnotationEntry;
@@ -255,8 +258,6 @@ export const prepareCitationAnnotationEntry = Effect.fn("Citation.annotateOwnedE
 );
 const install = makeCitationMetadataStage({
   method: "annotate",
-  schema: S.toType(CitationAnnotationEntryConfiguration),
-  invalid: configurationFailure,
   own,
   prepare: prepareCitationAnnotationEntry,
   project: (text: CitationPythonUnicodeStorage, reservedUnits: number) =>
@@ -270,6 +271,9 @@ const install = makeCitationMetadataStage({
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationAnnotationEntry = Effect.fn("Citation.makeAnnotationEntry")(
-  (policy: unknown, runtime: unknown, configuration: unknown) =>
-    install(policy, runtime, configuration).pipe(Effect.provideService(CitationRegexOperation, "annotate"))
+  (
+    limits: CitationEngineLimits,
+    runtime: CitationNativeProcessRuntime,
+    configuration: CitationOwned<CitationAnnotationEntryConfiguration>
+  ) => install(limits, runtime, configuration).pipe(Effect.provideService(CitationRegexOperation, "annotate"))
 );

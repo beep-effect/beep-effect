@@ -2,10 +2,17 @@
  * observed in the sealed 112-case document-input-mode corpus.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { ResolvedSourceText, SourceTextResolver, SourceTextResolverError } from "@beep/file-processing/SourceText";
-import { makeCitationSemanticExtraction } from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
-import { makeCitationSourcePairExtraction } from "@beep/law-practice-server/internal/Citation/SourceExtraction";
-import { makeCitationVerifiedExtraction } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
+import {
+  CitationSemanticExtractionConfiguration,
+  makeCitationSemanticExtraction as makeOwnedCitationSemanticExtraction,
+} from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
+import { makeCitationSourcePairExtraction as makeOwnedCitationSourcePairExtraction } from "@beep/law-practice-server/internal/Citation/SourceExtraction";
+import {
+  CitationVerifiedExtractionConfiguration,
+  makeCitationVerifiedExtraction as makeOwnedCitationVerifiedExtraction,
+} from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -13,6 +20,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
@@ -20,6 +28,19 @@ import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.f
 import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+
+const makeCitationSemanticExtraction = installCitationOwnedTestStage({
+  schema: CitationSemanticExtractionConfiguration,
+  install: makeOwnedCitationSemanticExtraction,
+});
+const makeCitationVerifiedExtraction = installCitationOwnedTestStage({
+  schema: CitationVerifiedExtractionConfiguration,
+  install: makeOwnedCitationVerifiedExtraction,
+});
+const makeCitationSourcePairExtraction = installCitationOwnedTestStage({
+  schema: CitationVerifiedExtractionConfiguration,
+  install: makeOwnedCitationSourcePairExtraction,
+});
 
 const sameSource = S.toEquivalence(SourceTextIdentity);
 type Installed = Effect.Success<ReturnType<typeof installCitationDefaultConfigurationFixture>>;

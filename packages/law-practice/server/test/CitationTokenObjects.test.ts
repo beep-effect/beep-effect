@@ -1,4 +1,5 @@
 import { makeCitationTokenObjects } from "@beep/law-practice-server/internal/Citation/TokenObjects";
+import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -10,6 +11,7 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationNativeManualClock, makeCitationNativeSleepClock } from "./CitationNativeSpawner.fixtures.ts";
 import { loadCitationTokenObjectsControls } from "./CitationTokenObjects.fixtures.ts";
 
@@ -55,7 +57,9 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
     it.effect("owns native inputs and snapshots and captures aggregate token-store ceilings", () =>
       Effect.gen(function* () {
         const limits = { ...(yield* defaultCitationEnginePolicy).limits, candidates: 2, producedTextUtf16: 2 };
-        const objects = yield* makeCitationTokenObjects(limits, []);
+        // The limits cross into the engine here; mutating the caller's copy later changes nothing installed.
+        const owned = yield* ownCitationTestConfiguration(CitationEngineLimits, limits);
+        const objects = yield* makeCitationTokenObjects(owned, []);
         limits.candidates = 100;
         limits.producedTextUtf16 = 100;
         const seed = {

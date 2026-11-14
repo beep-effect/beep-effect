@@ -13,6 +13,7 @@ import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { prepareCitationAdmissionPolicy } from "./Admission.ts";
 import { makeCitationTextCapacity } from "./TextCapacity.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TextBudget");
 const Amount = S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima.producedTextUtf16)).pipe(
@@ -23,7 +24,7 @@ const exhausted = () => CitationSafetyLimitExceeded.make({ operation: "extract",
  * charges leave the counter unchanged; methods require no caller services.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationTextBudget = Effect.fn("Citation.makeTextBudget")(function* (policy: unknown) {
+export const makeCitationTextBudget = Effect.fn("Citation.makeTextBudget")(function* (policy: CitationEngineLimits) {
   const { limits } = yield* prepareCitationAdmissionPolicy(policy);
   const used = yield* Ref.make(0);
   const capacity = yield* makeCitationTextCapacity(exhausted);

@@ -21,6 +21,7 @@ import { makeCitationLiteralCleaners } from "./LiteralCleaners.ts";
 import type {
   CitationCleanerObject,
   CitationCleanerWork,
+  CitationEngineLimits,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
 import type { CitationHtmlCompletionFailure } from "./HtmlCompletion.ts";
@@ -28,6 +29,7 @@ import type { CitationHtmlInputFailure } from "./HtmlInput.ts";
 import type { CitationHtmlKernelFailure } from "./HtmlKernel.ts";
 import type { CitationHtmlWorkerFailure } from "./HtmlWorkerProtocol.ts";
 import type { CitationLiteralCleanerFailure } from "./LiteralCleaners.ts";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/BuiltinCleaners");
 /**
@@ -81,8 +83,8 @@ const translate = (error: Failure): CitationCleanerFailure | CitationSafetyLimit
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationBuiltinCleaners = Effect.fn("Citation.makeBuiltinCleaners")(function* (
-  policy: unknown,
-  runtime: unknown
+  policy: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime
 ) {
   const values = yield* CitationCleanerValues;
   const literal = yield* makeCitationLiteralCleaners(policy);

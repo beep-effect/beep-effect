@@ -10,8 +10,9 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RegexAlphabet");
@@ -208,10 +209,9 @@ const encodeSource = Effect.fn("Citation.encodeRegexAlphabetSource")(function* (
  * and assertions must be lowered by the future reviewed program compiler.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationRegexAlphabet = Effect.fn("Citation.makeRegexAlphabet")(function* (policy: unknown) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () =>
-    CitationRegexWorkerFailure.make({ reason: "invalid-runtime" })
-  );
+export const makeCitationRegexAlphabet = Effect.fn("Citation.makeRegexAlphabet")(function* (
+  limits: CitationEngineLimits
+) {
   const input = yield* makeCitationRegexInput(limits, citationUnaccountedText);
   const { timed } = yield* makeCitationRegexTiming(limits, false);
   const prepare = Effect.fn("Citation.prepareRegexAlphabet")(function* (setsInput: unknown, sourceInput: unknown) {

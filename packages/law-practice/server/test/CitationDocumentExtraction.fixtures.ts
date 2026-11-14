@@ -16,6 +16,7 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { citationPrimitiveCleanerProtocols } from "./CitationDocumentServices.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
@@ -81,10 +82,10 @@ export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtra
   const { corpus, setup, configuration, translated, discovery } =
     yield* installCitationTokenizedExtractionFixture(kind);
   const { diffRuntime, provided, adapter, values } = yield* installCitationDocumentRuntimeFixture(kind, setup);
-  const documentConfiguration = CitationDocumentExtractionConfiguration.make({
-    document: { discovery, diffRuntime },
-    extraction: configuration,
-  });
+  const documentConfiguration = yield* ownCitationTestConfiguration(
+    CitationDocumentExtractionConfiguration,
+    CitationDocumentExtractionConfiguration.make({ document: { discovery, diffRuntime }, extraction: configuration })
+  );
   const stage = yield* makeCitationDocumentExtraction(setup.limits, setup.runtime, documentConfiguration).pipe(
     Effect.flatMap((stage) =>
       makeCitationTestScaffoldBinding(setup.limits).pipe(

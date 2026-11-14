@@ -3772,8 +3772,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       for (const [job, name] of pilotSteps) {
         const script = stepRun(jobSteps(jobs, job), name);
         // Observe the mask at the real shell's execution boundary, without running a pilot.
+        // `--norc`: bash reads ~/.bashrc when its stdin is a socket, as it is here, and
+        // a user file that writes to stderr would fail the empty-stderr assertion.
         const child = yield* spawner.spawn(
-          ChildProcess.make("/usr/bin/bash", ["-c", `umask 022\ntimeout() { umask; }\n${script}`], {
+          ChildProcess.make("/usr/bin/bash", ["--norc", "-c", `umask 022\ntimeout() { umask; }\n${script}`], {
             env: { BEEP_CACHE_PRODUCER_PRIVATE_ROOT: "/private-pilot-fixture" },
             stdout: "pipe",
             stderr: "pipe",
