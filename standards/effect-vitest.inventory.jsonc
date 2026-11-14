@@ -12219,6 +12219,50 @@
       "reason": "Real temporary filesystem behavior is the subject: ledger path overlap, persisted output, or SQLite reopen. Test scope cleans temporary directories. Owner: @beep/repo-cli. Exit: remove if these integration tests no longer exercise disk behavior."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/photo-face-parity.test.ts:13:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/photo-face-parity.test.ts",
+      "line": 13,
+      "endLine": 13,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The pinned external model files, committed image fixtures and generated ONNX files are the parity subject. onnxruntime-node opens model paths through native code, and sharp decodes actual fixture bytes; a memory filesystem cannot supply those native consumers. NodeServices is owned by it.layer and all sessions and temporary files are test-scoped. Owner: @beep/repo-cli. Exit: retire when the model parity test accepts in-memory native model and image inputs without filesystem paths."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/photo-face-worker.test.ts:28:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/photo-face-worker.test.ts",
+      "line": 28,
+      "endLine": 28,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "Native paths are the regression subject: the production scanner uses Bun.Glob, sharp opens generated PNG paths, and atomic model publication must be tested on the real filesystem. The harness owns all temporary paths and session lifetimes; a MemoryFileSystem cannot supply the native scanner or decoder. Owner: @beep/repo-cli. Exit: retire when the production scanner and image decoder accept an injected in-memory source."
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/process-attachment.test.ts:21:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
