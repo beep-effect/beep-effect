@@ -15,10 +15,49 @@ Method, so a later lane can re-run it:
   `packages/tooling/infra/` (614 lines in 150 files).
 - `bun run beep delete-package @beep/infra --dry-run --prune-catalog`. It exits 1 and prints the
   inverse registration plan this document's last PR has to satisfy (section 2, R7).
-- A census of backticked `infra/...` spans in the live (non-archival) Markdown that the knowledge
+- A census of backticked infra/... spans in the live (non-archival) Markdown that the knowledge
   gates read (section 2, "Knowledge gates").
 
 Line numbers are for the tree above. They drift, so re-run the search, not the line.
+
+Revision 2 (2026-11-14, same day) records the gate's rulings on Q1 to Q10 (section 4), the lab
+check (Q6, seven more read-only AWS calls), the changeset and coverage answers (Q7, Q8) and
+the new PR R6.5.
+
+## Checklist for an implementing lane
+
+Use this for any P6 deletion PR (R1, R2, R4, R5, R6, R6.5, R7). Section 2 lists each PR's files.
+
+1. **Wait for your PR's precondition** (summary table at the end of section 2). Merge `origin/main` first.
+2. **Delete the files** listed in your PR's entry. Prune `infra/src/index.ts` and the `infra/package.json`
+   dependencies they used. Remove each root catalog entry only when no other importer is left
+   (table 1.3). Then run `bun install`.
+3. **Edit the readers** named in your entry: code, tests, workflows, runbooks, READMEs and JSDoc.
+   R7 also removes "replaces the Pulumi ..." provenance prose from package source, JSDoc and
+   READMEs (Q10). Keep the DNS comment string (Q4).
+4. **Rewrite broken path references (Q3).** Recompute the live spans that name a path you delete
+   (the census command in "Knowledge gates", section 2). In every live doc, decision files and
+   closed packets included, replace the backticked path, or the Markdown link, with the same path
+   as plain text followed by "(removed in #N)", where N is your PR number. Change nothing else in
+   a dated record. Edit decision files through `bun run beep goals decisions write --slug <slug>`
+   so the generated SPEC and PLAN blocks follow.
+5. **Coverage.** In `standards/coverage.regression-baseline.jsonc`, delete the rows of the files you
+   removed. Keep every other byte, the `@beep/infra` totals included. Do not re-measure locally.
+   Check "Coverage" in section 2 for whether your PR's total rises (passes) or falls (sequence it,
+   or follow up with a rows-only PR).
+6. **Regenerate**, on a fresh merge of `main`: `bun run beep:preflight`, then
+   `bun run beep lint schema-catalog --write`, `bun run beep lint effect-vitest --census`,
+   `bun run beep lint effect-vitest --write`, `bun run fallow:health:baseline:write` (if a health
+   row's file left), `bun run beep cache audit`, then a request and review under
+   `goals/infra-alchemy-rebuild/research/` and `bun run beep cache baseline --request <request.json>`.
+7. **Verify**: `bun run beep quality package-verify <pkg>` for every package you edited. For a
+   repo-cli edit, run the touched tests on Node and on Bun. Commit, run
+   `bun run beep knowledge semantic-delta` (it must report `introduced (0)`), then
+   `bun run beep yeet final-check --skip coverage=<reason>`.
+8. **Changesets**: none. Every package P6 touches is private (Q7).
+9. **Open** with `bun run beep yeet open`. A PR that edits `.github/` is merged by the operator.
+   Tell the gate which external state your PR's precondition consumed, so the closeout's operator
+   list stays current.
 
 ## 1. Inventory
 
@@ -38,7 +77,8 @@ default backend URL) holds 507 objects:
 | `.pulumi/meta.yaml` | 1 | Backend metadata. |
 
 `beep-turbo-cache-lab/lab-c1023a` has no stack file, only a `.bak`, and no decision file in the
-packet records its removal (`rg lab-c1023a goals` finds nothing). See open question Q6.
+packet records its removal (`rg lab-c1023a goals` finds nothing). The lab was destroyed on
+2026-10-24 and nothing of it is live in AWS (checked 2026-11-14, Q6 in section 4).
 
 ### 1.2 `infra/` by stack
 
@@ -94,7 +134,7 @@ removal PR merges. Leaves with R6 (fleet) and R5/R6 (cache).
   `infra/src/internal/ci-runners-entry.ts` (composes all of them at lines 23-61)
 - `infra/src/AccountCostControls.ts` and its test: removed by the held cost-controls PR (branch
   goals/infra-alchemy-rebuild-p3-cost-controls-pulumi-removal at `0170e453e16`). That PR adds
-  `infra/src/NotificationRecipients.ts` and its test, because the AWS cache's throttle alarm still
+  infra/src/NotificationRecipients.ts and its test, because the AWS cache's throttle alarm still
   reads the recipients key. Both leave with R6.
 - Tests: `infra/test/CiFleetController.test.ts`, `CiRunners.test.ts`, `CiShardOverflowPool.test.ts`,
   `CiTurboCache.test.ts`
@@ -127,7 +167,7 @@ Python: none left (removed by #3296, python-free-repo). Shell: the eight `.sh` f
 the tracked-shell law allows only because `infra/` is an allowed root
 (`packages/tooling/tool/cli/src/commands/Laws/TrackedShellAllowlist.model.ts:51`).
 
-`scratchpad/turbo-cache-r2` is already gone from `main` (`ls` fails), so half of the "Infra gone"
+scratchpad/turbo-cache-r2 is already gone from `main` (`ls` fails), so half of the "Infra gone"
 row passes today.
 
 ### 1.3 Pulumi dependencies and the TypeScript 6 pin
@@ -236,7 +276,7 @@ turbo-cache stage 2 PR replaces them.
 | `.../Ci/CiLanePartitions.ts:405`, `:587`, `:640` | unit partition membership | R7 |
 | `.../Ci/CiLane.ts:2259` (`Str.startsWith("infra/")`), `CiOperational.schemas.ts:602` | change routing and the docs-only rule | R7 |
 | Scan roots naming `infra`: `Quality.command.ts:355`, `:358`, `:1521`, `:2555-2556`; `Quality/internal/TestTsgoPrograms.ts:30`, `:36`; `Lint/Lint.schemas.ts:56-58`; `Lint/LintDeprecatedApis.schemas.ts:24`, `:30`, `:84-85`, `:152`; `Lint/LintJsdoc.command.ts:81`; `Lint/TsconfigOverlay.ts:64`; `Lint/PackageTestTypecheck.ts:72`; `Lint/internal/SchemaFirstProject.ts:37`; `Lint/internal/SchemaFirstPolicy.ts:82`; `Lint/internal/EffectVitestScan.ts:588`; `Laws/Laws.command.ts:329`; `Laws/TerseEffect.ts:116`; `Laws/internal/LawScan.ts:60`; `Laws/EffectImports.ts:361`, `:404`; `Laws/NoNativeRuntime.ts:50`; `Laws/RetiredIriAuthorities.model.ts:250`; `Laws/TrackedShellAllowlist.model.ts:31`, `:51`; `Knowledge/Knowledge.refs.ts:1376`; `Docgen/internal/Workspace.ts:36`; `Goals/Harvest.schemas.ts:191`; `DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts:42`, `.plan.ts:183`; `repo-utils/src/schemas/TypeScriptSourceExclusions.ts:35`; `policy-pack/lint-rules/src/rules/no-manual-effect-runtime-in-tests.ts` and its `README.md:28` | every repo-cli scanner that treats `infra/` as a source root | R7. `delete-package` refuses while these are present (353 dependent hits; section 2, R7) |
-| Tests with `infra` fixtures: `ci-coverage.test.ts:562-628` (`@pulumi/gharunners` preparation), `repo-utils/test/schemas/PackageJson.test.ts:384-387` (`trustedDependencies: ["@pulumi/ghaRunners"]` as fixture data), `lint-command.test.ts:1357-1372` (a `pulumi.Input` fixture), `schema-first.test.ts:208` (`infra/pulumi/src/Foo.ts`), `effect-imports.test.ts`, `catalog-shard-scope.test.ts`, `create-package.test.ts`, `root-tasks-turbo-inputs.test.ts`, `lint-workers.test.ts`, `ci-runner-security.test.ts`, `delete-package.test.ts`, `Holds.inventory.test.ts`, `laws-*.test.ts`, `goal-data-consumer-census.test.ts`, `commands/Goals/Harvest.test.ts`, `fixtures/dependency-review/manifest-inventory.json`, `fixtures/goals-plan/bootstrap-*.json` | R7. The first two match the SPEC's "Pulumi gone" regex (`packages/**`); rename the fixture strings rather than allow residue |
+| Tests with `infra` fixtures: `ci-coverage.test.ts:562-628` (`@pulumi/gharunners` preparation), `repo-utils/test/schemas/PackageJson.test.ts:384-387` (`trustedDependencies: ["@pulumi/ghaRunners"]` as fixture data), `lint-command.test.ts:1357-1372` (a `pulumi.Input` fixture), `schema-first.test.ts:208` (infra/pulumi/src/Foo.ts), `effect-imports.test.ts`, `catalog-shard-scope.test.ts`, `create-package.test.ts`, `root-tasks-turbo-inputs.test.ts`, `lint-workers.test.ts`, `ci-runner-security.test.ts`, `delete-package.test.ts`, `Holds.inventory.test.ts`, `laws-*.test.ts`, `goal-data-consumer-census.test.ts`, `commands/Goals/Harvest.test.ts`, `fixtures/dependency-review/manifest-inventory.json`, `fixtures/goals-plan/bootstrap-*.json` | R7. The first two match the SPEC's "Pulumi gone" regex (`packages/**`); rename the fixture strings rather than allow residue |
 | `packages/foundation/capability/config-file/test/fixtures/codec-corpus/yaml/Pulumi.yaml:5-6` and `test/conformance/codec-corpus.test.ts:6` | a YAML codec fixture copied from an infra `Pulumi.yaml`. It contains `pulumi-typescript6.cjs`, so it **fails** the SPEC's `typescript6` match on `packages/**` | R7: re-key the fixture (a generic YAML with the same shape) |
 
 **Identity, catalogs, baselines and inventories (regenerated, never hand-edited)**
@@ -313,38 +353,57 @@ Nothing here was changed. "Who" is the actor with the authority; "First" is the 
 | State | Who | First |
 | --- | --- | --- |
 | Live stack `beep-ci-runners/production` (354 resources) | gate, operator workstation, YubiKey route | cost-controls removal PR merged (freeze lifted); P5 steps 0-6c (fresh export archived, size and sha256 in a decision); then step 6d's whole-stack or targeted destroy and `pulumi stack rm` |
-| Five `.bak` stack files, `.pulumi/history`, `.pulumi/backups`, `.pulumi-migration-archive`, `meta.yaml` in `s3://oip-law-pulumi-state` | gate (AWS) | the live stack destroyed and removed; every export the decisions name present in the out-of-repo archive with a matching sha256. Then either keep the bucket as a cold archive (it costs cents) or copy it into the archive directory and delete it. The bucket is versioned, so deleting it means deleting every version. See Q5 |
+| Five `.bak` stack files, `.pulumi/history`, `.pulumi/backups`, `.pulumi-migration-archive`, `meta.yaml` in `s3://oip-law-pulumi-state` | operator decides; the packet keeps it (Q5 ruling) | **Kept.** The bucket is what makes the archived exports restorable, and deleting it (every version, since it is versioned) is irreversible and the operator's call. P6 only requires that it holds no stack. It goes on the closeout's operator list |
 | Out-of-repo export archive: the workstation's beep state directory, `infra-archives/pulumi-exports/` (2026-11-14: `beep-ci-runners-production-2026-11-13.json`, the 0520Z/0524Z before/after pair, `beep-storybook-production-2026-11-13.json`, 19 `opip-web-*` exports and logs, two URN lists) | operator | never delete before the packet closes; it holds every `pulumi stack import` reversal the decision files promise |
-| 1Password field `PULUMI_ENCRYPTION_PASSPHRASE` in item `BEEP_SECRETS/BEEP_SECRETS` (backend passphrase for `beep-ci-runners`; slated for rename to `CLOUD_PULUMI_ENCRYPTION_PASSPHRASE`) | operator (human `op-human` lane) | live stack removed and its exports confirmed decryptable or no longer needed. The archived exports hold secrets encrypted with this passphrase, so deleting it makes them unreadable. Keep it as long as the archive is kept, or re-export without secrets first. See Q5 |
-| 1Password field `PULUMI_CONFIG_PASSPHRASE` in item `BEEP_SECRETS/OIP_SECRETS` (the `opip-web` stacks) | operator | the same reasoning for the `opip-web` exports; both stacks are already removed |
+| 1Password field `PULUMI_ENCRYPTION_PASSPHRASE` in item `BEEP_SECRETS/BEEP_SECRETS` (backend passphrase for `beep-ci-runners`; slated for rename to `CLOUD_PULUMI_ENCRYPTION_PASSPHRASE`) | operator decides; the packet keeps it (Q5 ruling) | **Kept.** The archived exports hold secrets encrypted with this passphrase, so deleting it makes them unreadable. It goes on the closeout's operator list |
+| 1Password field `PULUMI_CONFIG_PASSPHRASE` in item `BEEP_SECRETS/OIP_SECRETS` (the `opip-web` stacks) | operator decides; the packet keeps it (Q5 ruling) | **Kept**, for the `opip-web` exports. It goes on the closeout's operator list |
 | The rename row and code for that field: `docs/runbooks/onepassword-beep-secrets-layout.md:70`, `AccountsSecretsLayout.service.ts:52` | the R7 lane | delete the row once the field's fate is decided |
 | `secure:` values still only in Pulumi config: the cost-controls recipient list, already copied to a GitHub secret (decision `2026-11-14-cost-controls-deploy-role.md:59-71`); `notificationEmailAddresses` read by the AWS cache throttle alarm | gate | nothing new to copy. Confirm at P5 step 6c that no other `secure:` key in `infra/ci-runners/Pulumi.production.yaml` lacks a 1Password or GitHub home |
 | GitHub secrets and variables named for Pulumi | — | none exist |
 | R2 pilot: its Alchemy state (outside the repo, the workstation's beep state directory `r2-cache/alchemy`), the frozen tool workspace and source archive under the beep cache directory, the R2 bucket and its Cloudflare tokens, `TURBO_R2_*` GitHub secrets and variables, and the `beep-turbo-r2.service` user unit plus `r2-cache/` client config on the workstation and each enrolled worker | gate and operator (Cloudflare token revocation, worker hosts over their SSH route) | turbo-cache stage 2 merged and CI plus workstations proven on the Worker; the bucket inventoried and emptied (`destroy` refuses a non-empty bucket by design); then `alchemy destroy` from the pinned workspace, unit disable and config removal per host, token revocation, secret and variable deletion |
-| AWS cache (the `CiTurboCache` component: API Gateway, Lambdas, S3 bucket, SSM token parameters, throttle alarm) | gate | it lives in `beep-ci-runners/production`. Recommended: no separate Pulumi operation; P5 step 6d destroys it with the stack once stage 2 has moved every client. The `TURBO_TOKEN`/`TURBO_READ_TOKEN` secrets, the `TURBO_API` variable and the `turbo-cache-write` environment go after that |
+| AWS cache (the `CiTurboCache` component: API Gateway, Lambdas, S3 bucket, SSM token parameters, throttle alarm) | gate | it lives in `beep-ci-runners/production`. Ruled (Q1): no separate Pulumi operation; P5 step 6d destroys it with the stack once stage 2 has moved every client. Fallback: if P5 slips more than a week past the stage-2 repoint, the gate runs an attended targeted destroy of the component, following the cost-controls pattern. The `TURBO_TOKEN`/`TURBO_READ_TOKEN` secrets, the `TURBO_API` variable and the `turbo-cache-write` environment go after that |
 | Old fleet IAM and keys outside Pulumi: SSM `/github-action-runners/*`, the key behind `alias/beep-ci-github-app`, the hand-maintained boundary `beep-ci-fleet-boundary` | operator decides (P5 step 6f) | the old fleet destroyed |
 | IAM roles created for Pulumi deploys | — | none found. Pulumi always ran under the operator's `elpresidank-vault` credentials or the worker's approved AWS env file; every `beep-alchemy-*` role belongs to Alchemy |
 | Pulumi CLI and client state: the workstation's mise `pulumi = "latest"` entry and its Pulumi home directory; beep-worker's persisted backend selection (`pulumi login s3://oip-law-pulumi-state`) | operator | after the live stack is removed. Remove the mise entry and the backend login. Workstation config is outside the repo |
-| Cloudflare DNS record comments "Managed by Pulumi for oip.law Vercel routing." on the oip.law records | gate | `OipWeb` adopted them unchanged on purpose. Rewording is its own deploy (runbook 528-529). See Q4 |
-| Turbo-cache lab leftovers: the `lab-c1023a` `.bak` and backups | gate | confirm with the lab's `inventory` subcommand (read-only) before R1 deletes `infra/turbo-cache-lab/lab-aws.sh`, the only tool that lists the lab's tagged resources. See Q6 |
+| Cloudflare DNS record comments "Managed by Pulumi for oip.law Vercel routing." on the oip.law records | — | **Left as they are** (Q4 ruling). Changing them needs a DNS write the Alchemy token lacks, and a comment does not justify a record write on oip.law. They are corrected the next time those records change for a real reason. Allowed residue in section 3 |
+| Turbo-cache lab leftovers: the `lab-c1023a` `.bak` and four backups in the backend; nothing in AWS (checked 2026-11-14, Q6) | — | nothing live. The backend files stay with the bucket (Q5) |
 
 ## 2. Deletion plan
 
-Seven PRs. The packet allows three open at once, so R1 to R4 can overlap, and R5 to R7 run one
+Eight PRs (R3 is not a PR; R6.5 was added by the gate). The packet allows three open at once, so R1 to R4 can overlap, and R5 to R7 run one
 after another after the verdict. Every PR deletes code and rewrites the docs and live spans that
 named the deleted paths, in the same PR.
 
 ### Gates that react to every deletion PR
 
-- **Coverage Regression.** `standards/coverage.regression-baseline.jsonc` holds per-file rows and
-  `@beep/infra` package totals (`:15730+`). Removing a well-covered file lowers the package total,
-  and the ratchet then reports a regression against the old total (two lanes were caught by this).
-  Each PR removes the deleted files' rows and re-measures `@beep/infra` at the PR head. Expect
-  inherited new-file rows too, because touching `@beep/infra` re-measures the whole package (memory
-  coverage-ratchet-remeasures-touched-package). Do not measure locally across the package
-  (`final-check --skip coverage`, operator ruling 2026-11-13); take the totals from the hosted
-  Coverage Regression run. Q8 asks for the exact baseline writer: `coverage:baseline:write`
-  (`package.json:359`) rewrites the whole file, not one package.
+- **Coverage Regression** (read from the ratchet's source; Q8 in section 4 has the full answer).
+  `standards/coverage.regression-baseline.jsonc` holds per-file rows and `@beep/infra` package
+  totals (`:15730+`). How the hosted ratchet judges a deletion PR:
+  - A package that owns a changed file, or depends on one, is excluded from "self-judging"
+    (`planCoverageSelfJudgeScope`, `packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts:1352`).
+    Changing a global coverage input (for example `bun.lock`) withdraws self-judging from every
+    package. Every P6 PR does both. So a lowered `@beep/infra` row in the PR's own baseline is
+    "withheld" and judged at `main`'s floor (`CoverageRegression.ts:3740-3765`).
+  - A package metric fails when the measured percentage is below that floor and either the
+    uncovered count rose or the package's file set changed (`metricRegressed`,
+    `CoverageRegression.ts:3085-3094`). Deleting files always changes the file set, so a deletion
+    PR passes exactly when the package percentage does not fall.
+  - Removing the deleted files' rows is a delete-only edit and does not count as a global input.
+  - Measured from today's rows (lines; branches and functions move the same way): `@beep/infra` is
+    72.23% (231 uncovered of about 832 lines). R1 removes about 42 lines at 50%, R2 about 111 at
+    about 37%, R4 about 330 at about 65%. All are below the average, so each raises the total and
+    passes. **The cost-controls PR removes `infra/src/AccountCostControls.ts`, which is 100%
+    covered, so it lowers the total.** Merged before R1+R2 it reds Coverage Regression. Merged
+    after R1+R2 (with `main`'s floor still 72.23), the measured total stays near 76-77% and it
+    passes. Gate: merge R1+R2 first, or follow the cost-controls PR with a rows-only PR (below).
+  - R6 leaves only 100%-covered scaffolding, so the total rises. R7 deletes the package, and the
+    ratchet treats a package missing from the proposal and from the measurement as retired
+    (`retiredByProposal`, `CoverageRegression.ts:3868-3873`); `delete-package` subtracts its rows.
+  - Lowering a floor is legitimate only in a PR that changes nothing `@beep/infra` owns or depends
+    on: a rows-only PR that edits just the baseline file. Then the package self-judges and the
+    lowered row is accepted.
+  - Do not measure locally across the package (operator ruling 2026-11-13). Use
+    `final-check --skip coverage=<reason>`; hosted Coverage Regression is the proof.
 - **Cache qualification.** Any change to `infra/package.json`, root `package.json`, `turbo.json` or
   the lockfile re-keys the `@beep/infra` and root subjects. Run `bun run beep cache audit`, commit a
   request and a review under `goals/infra-alchemy-rebuild/research/` and record them with
@@ -385,11 +444,15 @@ named the deleted paths, in the same PR.
   `infra/test/Storybook.test.ts`, `infra/turbo-cache-lab/`, `infra/src/internal/turbo-cache-lab-entry.ts`,
   the lab-only exports `resolveTurboCacheLabBuckets` and `TurboCacheLabBucketsInput` of
   `infra/src/CiTurboCache.ts` and their test cases; prune `infra/src/index.ts`.
-- First: Q6 (lab inventory read).
-- Recommendation: fold R1 into the OIP web deletion lane's PR (R2). Storybook is the other importer
-  of `@pulumiverse/vercel`, so one PR can drop that pin, and both PRs would otherwise conflict on
-  `index.ts`, the coverage baseline and the inventories.
-- Regenerate: coverage rows and package totals, jsdoc inventory, effect-vitest, schema catalog, cache baseline.
+- First: nothing. The lab check (Q6) found no live AWS resource, so `infra/turbo-cache-lab/lab-aws.sh`
+  may go with the rest.
+- Ruled by the gate: R1 is folded into the OIP web deletion lane's PR (R2). Storybook is the other
+  importer of `@pulumiverse/vercel`, so that PR drops the pin.
+- The PR also records the lab's end in a short decision file
+  (`bun run beep goals decisions add infra-alchemy-rebuild --title "Turbo-cache lab lab-c1023a was destroyed on 2026-10-24; nothing is live" --reversal "n/a (record only)"`),
+  with the evidence in Q6.
+- Regenerate: coverage rows (delete-only; the total rises), jsdoc inventory, effect-vitest, schema
+  catalog, cache baseline.
 - Live spans to rewrite: 7.
 
 ### R2: OIP web program (in flight, other lane; can go now)
@@ -408,8 +471,10 @@ named the deleted paths, in the same PR.
 ### Cost-controls removal PR (P3, held; opens not before 2026-11-15T05:18Z)
 
 Not a P6 PR, but R5 and R6 wait for it: it lifts the freeze on `beep-ci-runners/production`. It
-deletes `infra/src/AccountCostControls.ts`, adds `infra/src/NotificationRecipients.ts`, and breaks
-the 2 live spans listed above. Its lane should rewrite them, or semantic-delta will be red.
+deletes `infra/src/AccountCostControls.ts`, adds infra/src/NotificationRecipients.ts, and breaks
+the 2 live spans listed above. Its lane should rewrite them per Q3, or semantic-delta will be red.
+It also lowers `@beep/infra` coverage (see "Coverage"). Merge it after R1+R2, or follow it with a
+rows-only PR.
 
 ### R3: (no PR) the GitHub stack, #3324
 
@@ -445,15 +510,68 @@ the 2 live spans listed above. Its lane should rewrite them, or semantic-delta w
   the other callers on the Worker; workstations enrolled). That PR is the turbo-cache lane's, not
   P6's, and it must also replace `EnvConfig.ts:891`'s R2 client-file inheritance with the Worker
   enrollment. Then the external R2 teardown in section 1.6.
-- Delete: `infra/r2-cache/` (after confirming that `cache-input-review.md` content is in
-  `packages/tooling/infra/turbo-cache/README.md`); the workflows `cache-producer-inspect.yml`,
-  `cache-producer-prepare.yml`, `cache-producer.yml` and `cache-local-observe.yml`, plus the
-  `heavy.yml` jobs `producer-inspect`, `producer-prepare`, `producer-execute` and
-  `local-pilot-observe`; the setup action's R2 step and `r2-*` inputs; every
-  `adapter.sh stop-ci` guard step (13 sites listed in 1.5); the `beep cache r2` command family,
-  `Cache.adapter.host.ts`, the producer and pilot code that drives the adapter, `infra/r2-cache` in
-  `Cache.workflow.ts:155`, and their tests (`cache-r2.test.ts`, `cache-producer-adapter.test.ts`,
-  the `ci-runner-security.test.ts` rows for the removed jobs).
+- Ruled by the gate (Q2): R5 retires the signed-producer, pilot and R2 command family under D7. It
+  stays tied to the stage-2 release, and the gate raises it with the orchestrator then.
+- Delete, tree: `infra/r2-cache/`, all of it. First confirm that the content of
+  `infra/r2-cache/cache-input-review.md` is in `packages/tooling/infra/turbo-cache/README.md`, as the
+  SPEC requires.
+- Delete, whole workflows (all `workflow_dispatch`, main-only):
+  - `.github/workflows/cache-producer-inspect.yml`
+  - `.github/workflows/cache-producer-prepare.yml`
+  - `.github/workflows/cache-producer.yml`
+  - `.github/workflows/cache-local-observe.yml`
+- Delete, `heavy.yml` jobs, with the inputs that only select them (`producer_inspection`,
+  `producer_preparation`, `producer_execution`, `producer_channel`, `local_pilot_observation`,
+  `local_pilot_computation`):
+  - `producer-inspect` (line 405)
+  - `producer-prepare` (506; its steps "Install pinned portable build tools" and "Build pinned
+    portable candidate" read `infra/r2-cache/policy-build-tools.txt`, `policy.sh` and `patches/`)
+  - `producer-execute` (733; "Verify selected candidate before issuer delivery" reads the same pins)
+  - `local-pilot-observe` (932)
+- Delete, steps in jobs that stay:
+  - `.github/actions/setup-monorepo-ci/action.yml:316` step "Start optional R2 cache adapter", and
+    the action inputs `r2-enabled`, `r2-endpoint`, `r2-bucket`, `r2-access-key-id`,
+    `r2-secret-access-key`.
+  - Step "Stop R2 cache adapter" in 12 jobs: `check.yml` jobs `labs` (636), `lint-shard` (748),
+    `test-unit-shard` (1099), `test-integration-shard` (1295), `property-laws-shard` (1783),
+    `fallow-advisory` (1952), `jsdoc-ratchet` (2033); `heavy.yml` `verify` (325); `storybook.yml`
+    `storybook` (210); `data-sync.yml` `sync-data` (96); `property-laws-nightly.yml`
+    `property-sweep` (123); `shard-overflow.yml` `test-unit-shard` (185).
+  - The `r2-*:` arguments that each of those jobs passes to "Setup monorepo CI" (for example
+    `check.yml:566-570`, `:695-699`), fed from `vars.TURBO_R2_*` and `secrets.TURBO_R2_*`.
+  - `cache-warm.yml` job `warm`: "Start optional R2 cache adapter" (63), "Qualify R2 credentials
+    and exact-hash reuse" (74; it runs `beep cache r2 probe`), "Upload sanitized R2 qualification
+    receipt" (100), "Stop R2 cache adapter" (109) and the `r2_probe` input.
+- Delete, repo-cli (`packages/tooling/tool/cli/src/commands/Cache/`): the subcommands the removed
+  workflows call, and their modules.
+  - `r2`: `Cache.r2.command.ts`, `Cache.r2.ts`, `Cache.r2.fleet.ts`, `Cache.r2.live.ts`,
+    `Cache.r2.schemas.ts`.
+  - `pilot`, `signed-pilot`: `Cache.pilot.ts`, `Cache.pilot.capture.ts`, `Cache.pilot.runner.ts`,
+    `Cache.pilot.schemas.ts`, `Cache.pilot.signed.ts`, `Cache.pilot.signed.schemas.ts`.
+  - `producer-run`, `producer-publish`, `producer-fetch`, `producer-cleanup`, `producer-inspect`,
+    `producer-diagnose`, `producer-provision`, `producer-install`: `Cache.producer.ts`,
+    `Cache.producer.schemas.ts`.
+  - The adapter: `Cache.adapter.ts`, `Cache.adapter.host.ts`, `Cache.adapter.schemas.ts`.
+  - Their registrations in `Cache.command.ts:1524-1560`, and `infra/r2-cache` in
+    `Cache.workflow.ts:155`.
+  - Unsure: `accept` (`Cache.acceptance*.ts`) and the `conformance-*` commands may serve only the
+    producer pipeline and the completed conformance goal. The R5 lane decides from the call graph
+    (`fallow dead-code --config .fallowrc.jsonc` after the deletions), not from names.
+- Delete, tests: `cache-r2.test.ts`, `cache-producer-adapter.test.ts`, the tests of every removed
+  module, and the `ci-runner-security.test.ts` expectations for the four removed `heavy.yml` jobs.
+  The P5 cutover decision lists those expectations as `producer-inspect`, `producer-prepare` and
+  `local-pilot-observe`. Remove `packages/tooling/library/repo-cli-kit/src/cli/EnvConfig.ts:891` and
+  `test/turbo-cache.test.ts` too, unless the stage-2 PR already replaced them.
+- Notice for the paused goal `turborepo-cache-trust-observability`: it was paused by operator ruling
+  (finish board, 2026-11-13) and has no owner lane, so the notice goes to the operator through the
+  orchestrator when the gate raises R5. Text: "R5 of `goals/infra-alchemy-rebuild` deletes the
+  R2 pilot (`infra/r2-cache`), the patched signed-policy adapter, the four cache-producer and
+  observe workflows, the `heavy.yml` producer jobs and the repo-cli `cache r2`, pilot and producer
+  commands (D7). The Worker cache (`@beep/infra-turbo-cache`) carries the signed-policy
+  semantics. Your SPEC links to `infra/src/CiTurboCache.ts` and `infra/lambda/turbo-cache/src`
+  (SPEC 52-53), which R6 deletes; they become plain text plus '(removed in #N)'. On resume, the
+  packet re-scopes its producer receipt contract to the Worker." No live backticked spans in that
+  packet point at R5 paths (census 2026-11-14); its two links break in R6.
 - Operator merges it (workflow edits; packet rule, decision 2026-11-13 turbo-cache stage 2).
 - Regenerate: coverage and catalogs for `@beep/repo-cli` and `@beep/repo-cli-kit`, policy
   fingerprint, cache baseline, `ci-runner-security` expectations.
@@ -468,7 +586,7 @@ the 2 live spans listed above. Its lane should rewrite them, or semantic-delta w
 - Delete (P5 decision list): `infra/ci-runners/` (`Pulumi.yaml`, `Pulumi.production.yaml`,
   `runner-image.json`, `sdks/`), `infra/src/CiRunners.ts`, `CiFleetController.ts`, `CiRunnerPool.ts`,
   `CiShardOverflowPool.ts`, `infra/src/internal/ci-runners-entry.ts` and their tests.
-  Add: `infra/src/CiTurboCache.ts`, `infra/src/NotificationRecipients.ts`, `infra/lambda/` and
+  Add: `infra/src/CiTurboCache.ts`, infra/src/NotificationRecipients.ts, `infra/lambda/` and
   their tests, plus `test:lambda` in `infra/package.json`. Remove dependencies `@pulumi/aws`,
   `@pulumi/gharunners`, catalog entry `package.json:101`. Change `postinstall` to
   `lefthook install` and delete `infra:prepare-gha-runners` (`package.json:380`, `:396`), because
@@ -486,6 +604,41 @@ the 2 live spans listed above. Its lane should rewrite them, or semantic-delta w
 - Live spans: 40 (`goals/infra-alchemy-rebuild/SPEC.md` and decisions, `goals/ci-lane-economics`,
   `explorations/pulumi-to-alchemy/DECISIONS.md`, runbooks).
 
+### R6.5: Fix `delete-package`'s path matcher (repo-cli; can go now; must merge before R7)
+
+Ruled by the gate (Q9): fix the matcher at its root, in its own small PR, not by working around it
+in R7.
+
+- Root cause: the dependent scan treats the package path as a whole token through
+  `mentionsToken`/`mentionsAnyToken` (`packages/tooling/library/repo-cli-kit/src/WholeToken.ts:48-50`).
+  The guard there is `(?<![\w$-])<needle>(?![\w$-])`, and its classes do not include `/` or `.`.
+  So the needle `infra` matches inside packages/tooling/infra/cost-controls/..., the homepage
+  and `srcLink` URLs of every `packages/tooling/infra/*` package, and any other path that only
+  contains `/infra/` as an inner segment. The callers pass `[target.packageName, target.packagePath]`
+  at `packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts:500`,
+  `:522` and `:662`. The authored and historical needle lists at `:111`, `:174` and `:254` should
+  be checked for the same case.
+- Fix: add a repo-path matcher beside `mentionsToken` in `WholeToken.ts` (for example
+  `mentionsRepoPath`). It matches the path needle only at a repository-root position: at the start
+  of the text, after a character that cannot continue a path, or after a run of `./` or `../`
+  segments. It refuses a match preceded by `<segment>/`. Use it for `target.packagePath` at the three
+  call sites. Leave `mentionsToken` unchanged for package names: its lookahead already keeps
+  `@beep/infra` from matching `@beep/infra-hosts`.
+- Tests, both failing today:
+  - `packages/tooling/library/repo-cli-kit/test/cli-helpers.test.ts` (the existing WholeToken
+    test): the matcher for `infra` is false for
+    `packages/tooling/infra/cost-controls/package.json` and for
+    `https://github.com/beep-effect/beep-effect/tree/main/packages/tooling/infra/cost-controls`.
+    It stays true for `infra/package.json`, `"./infra/src/index.ts"`, ../../infra/src/CiTurboCache.ts
+    and a bare `infra` in `"workspaces": ["infra"]`.
+  - `packages/tooling/tool/cli/test/delete-package.test.ts`: in a fixture repository holding a
+    root-level `infra` workspace and a packages/tooling/infra/x workspace, a dry-run deletion of
+    the root package reports no dependent hit in packages/tooling/infra/x/package.json.
+- repo-cli tests must pass on Node and on Bun (repo rule). Run both suites for the two files, then
+  `bun run beep quality package-verify @beep/repo-cli-kit` and `@beep/repo-cli`.
+- Check afterwards: `bun run beep delete-package @beep/infra --dry-run` on the new head lists no
+  `packages/tooling/infra/**` hit.
+
 ### R7: Remove the `@beep/infra` package (the P6 exit PR; the packet's final PR, section 5)
 
 Everything left: `infra/package.json`, `CHANGELOG.md`, `README.md`, `docgen.json`, `tsconfig.json`,
@@ -499,10 +652,10 @@ Everything left: `infra/package.json`, `CHANGELOG.md`, `README.md`, `docgen.json
   baseline, fallow health and dead-code baselines, the schema-first inventory, the schema catalog,
   the instrumentation catalog and the test-typecheck baseline; remove modeled authored references;
   no changeset (private); preserve historical records. It refuses today with three findings that R7
-  must clear: (1) 353 dependent hits; many are false matches on `packages/tooling/infra/` (Q9), the
-  rest are the R7 rows of section 1.5; (2) `--prune-catalog` needs proof that no survivor lists
+  must clear: (1) 353 dependent hits; R6.5 removes the false matches on `packages/tooling/infra/`, and
+  the rest are the R7 rows of section 1.5; (2) `--prune-catalog` needs proof that no survivor lists
   `@pulumi/pulumi`, so R2, R4 and R6 must have removed every other `@pulumi/*` user; (3) a packet
-  reference in `goals/_template/GOAL.md`, which needs `--rewrite-packets` or `--allow-stale-packets` (Q3).
+  reference in `goals/_template/GOAL.md`, which takes `--rewrite-packets` (Q3 ruling).
 - By hand, beside the tool: the `@pulumi/pulumi` catalog entry (`package.json:104`); the syncpack
   TS6 group (`syncpack.config.ts:165-173`) and source (`:7`), then `bun run beep holds lint --write`
   (tombstones `infra-typescript-6-pulumi`); the `PackageKind` literal `"infra"` and its rule and
@@ -514,7 +667,24 @@ Everything left: `infra/package.json`, `CHANGELOG.md`, `README.md`, `docgen.json
   `docs/runbooks/reference-workspace.md:3`; `standards/effect-laws-v1.md:72`;
   `Knowledge.refs.ts:1376`; the test fixtures that match the SPEC regex
   (`PackageJson.test.ts:384-387`, `ci-coverage.test.ts:562-628`, the config-file codec fixture
-  `Pulumi.yaml`); `AccountsSecretsLayout.service.ts:52` and the 1Password layout row, if Q5 is settled.
+  `Pulumi.yaml`); `AccountsSecretsLayout.service.ts:52` and the 1Password layout row: R7 does not rename the kept
+  passphrase field (Q5); it marks the row "kept for the Pulumi export archive" and drops the
+  rename proposal.
+- Provenance prose (Q10 ruling: not allowed residue): R7 removes "replaces the Pulumi ..." and
+  similar Pulumi provenance from package source, JSDoc and READMEs. Today that means
+  `packages/tooling/infra/cost-controls` (`README.md` 4, 22, 31, 58-63; `src/Config.ts` 101-104,
+  239-243, 295; `src/CostControls.ts` 30, 72, 193; `alchemy.run.ts` 20; `test/support/FakeAws.ts` 95),
+  `packages/tooling/infra/infra-hosts` (`README.md` 3, 57-61; `src/AiMetricsStack.ts` 6;
+  `src/OpenClawStack.ts` 7, 20; `src/OpenClawGeneration.ts` 14-16), `apps/oip-web` (`README.md`
+  46-119; `alchemy.run.ts` 4; `stack/OipWebStack.ts` 4-5, 140; `stack/OipWebConfig.ts` 42, 149, 170,
+  374-375; `test/stack/FakeCloud.ts` 397), `packages/tooling/library/alchemy-vercel/src/Project.ts` 66,
+  `packages/tooling/library/alchemy-github-runners/README.md` 6 and
+  `packages/tooling/library/alchemy-aws-extras/README.md` 5. Keep only the DNS comment string (Q4).
+  The `opip-web` bucket fakes (`FakeCloud.ts` 440 `ManagedBy: "pulumi"`) and the
+  `ReservedBucketName` entries for the Pulumi buckets should already have left with R2, because
+  those buckets were deleted.
+- Changesets: none. `@beep/infra`, `@beep/identity` and every other package R7 edits are
+  `private: true` (Q7).
 - Regenerate: `bun run beep:preflight`, `lint schema-catalog --write`, `lint effect-vitest --census`
   and `--write`, cache baseline, `bun run beep quality package-verify` for every package edited
   (`@beep/repo-cli`, `@beep/repo-cli-kit`, `@beep/repo-utils`, `@beep/config-file`, `@beep/lint-rules`,
@@ -528,13 +698,14 @@ edits (R6) apart from the large repo-cli edit (R7).
 
 | PR | Owner | Waits on |
 | --- | --- | --- |
-| R1 Storybook + lab | the OIP web deletion lane (folded into R2) or a new lane | Q6 only: can go now |
-| R2 OIP web | the OIP web deletion lane | nothing: can go now |
-| (cost-controls) | P3 cost-controls lane | not before 2026-11-15T05:18Z; gates R5 and R6 |
+| R1 Storybook + lab | the OIP web deletion lane (folded into R2, gate ruling) | nothing: can go now (Q6 found nothing live) |
+| R2 OIP web | the OIP web deletion lane | nothing: can go now. Merge before the cost-controls PR (coverage) |
+| (cost-controls) | P3 cost-controls lane | not before 2026-11-15T05:18Z, ideally after R1+R2 (coverage); gates R5 and R6 |
 | R4 hosts | hosts lane | the attended AI metrics cutover |
 | R5 R2 pilot | turbo-cache lane | the 2026-11-20T20:10Z verdict, the stage 2 PR, the R2 teardown |
 | R6 fleet + AWS cache + SDK | P5 lane (step 6e) | the verdict, the cost-controls PR, P5 steps 0-6d |
-| R7 package removal | P6/P7 final lane | R2, R4, R5, R6 merged |
+| R6.5 delete-package matcher | a repo-cli lane | nothing: can go now; must merge before R7 |
+| R7 package removal | P6/P7 final lane | R2, R4, R5, R6, R6.5 merged |
 
 ## 3. Verification matrix rows as exact commands
 
@@ -556,7 +727,8 @@ rg -n -i 'pulumi|typescript6|typescript@6' --hidden \
   -g '!.git' -g '!.repos' -g '!goals/**' -g '!explorations/**' -g '!research/**' \
   -g '!docs/history/**' -g '!docs/reports/**' -g '!hold-ledger/claims.jsonl' -g '!hold-ledger/runs.jsonl' \
   -g '!standards/architecture/DECISIONS.md' -g '!standards/cache-conformance/**' \
-  -g '!beep-effect.iml' -g '!docs/agent-memory-infra/**' .
+  -g '!beep-effect.iml' -g '!docs/agent-memory-infra/**' . \
+  | rg -v -F 'Managed by Pulumi for oip.law Vercel routing.'
 # No manifest pins TypeScript 6.
 rg -n '"typescript": "[~^]?6' -g 'package.json' .
 # The root postinstall is lefthook only, and the gha-runners script is gone.
@@ -577,9 +749,16 @@ Allowed residue in the wide search, and why:
 - `beep-effect.iml:277`: excludes the `explorations/pulumi-to-alchemy` folder.
 - `docs/agent-memory-infra/trustgraph-docs.md:25`: describes a third-party product's Pulumi option,
   unrelated to this repo.
-- Prose that says a stack "replaces the Pulumi project ..." in `apps/oip-web`, `packages/tooling/infra/*`
-  and `packages/tooling/library/alchemy-*` is accurate history. If the gate wants zero hits there
-  (Q10), add those paths as exclusions or reword them in R7.
+- The DNS comment string "Managed by Pulumi for oip.law Vercel routing." (filtered out by the
+  `rg -v -F` above). It is declared as `dnsRecordComment` at `apps/oip-web/stack/OipWebStack.ts:66`
+  and mirrored by the fake cloud at `apps/oip-web/test/stack/FakeCloud.ts:433`. It matches the six live
+  Cloudflare record comments the `OipWeb` stack adopted unchanged. Gate ruling (Q4): leave them.
+  Changing them needs a DNS write the Alchemy token lacks, and a comment is not worth a record write
+  on oip.law. Correct the string and the six comments the next time those records change for a real
+  reason. Only the exact string is allowed; any other Pulumi text in those two files is not.
+- Not allowed (Q10 ruling): "replaces the Pulumi ..." provenance prose in package source, JSDoc and
+  READMEs. R7 removes it; the history stays in the decision files and the exploration, which the
+  search excludes.
 
 The SPEC's "Infra gone" row, unchanged:
 
@@ -603,8 +782,8 @@ AWS_PROFILE=elpresidank-vault AWS_REGION=us-east-1 \
   --query 'Contents[?ends_with(Key, `.json`)].Key' --output text
 ```
 
-The last command must print `None` (no `.json` stack file; the `.bak` files end in `.json.bak`). If
-Q5 deletes the bucket, it fails with `NoSuchBucket` instead, which also passes. The `rg` probe for
+The last command must print `None` (no `.json` stack file; the `.bak` files end in `.json.bak`). The
+bucket itself stays (Q5 ruling): the row is "the backend holds no stack", not "the bucket is gone". The `rg` probe for
 `(^|[^a-zA-Z/_.-])infra/` still matches `.gitignore:71` (`/docs/infra/`, unrelated); the
 `[^a-zA-Z/_.-]` class excludes it only after a slash, so add `-g '!.gitignore'` if it shows.
 
@@ -612,7 +791,7 @@ Q5 deletes the bucket, it fails with `NoSuchBucket` instead, which also passes. 
 
 Capabilities that `infra/` provides and no Alchemy stack replaces:
 
-1. **The signed-producer cache pipeline** (the four `cache-*` dispatch workflows, the `heavy.yml`
+1. **The signed-producer cache pipeline** (ruled under Q2: retired in R5) (the four `cache-*` dispatch workflows, the `heavy.yml`
    producer jobs, `beep cache producer`/`pilot`/`r2`, the patched Rust `turbo-cache-server`
    adapter). D7 deletes the R2 pilot including "the patched Rust adapter", and the Worker carries
    the signed-policy semantics, so this is a planned loss. The paused goal
@@ -648,12 +827,22 @@ What to keep and what to rewrite:
 - Rewrite: the runbooks and standards in 1.5, package READMEs and JSDoc that point at deleted
   paths, and the live backticked spans.
 
-Open questions:
+Open questions, each ruled by the gate on 2026-11-14 (the question is kept as asked, with its ruling
+and any evidence gathered after it):
 
 - **Q1 (ordering of AWS cache removal):** destroy the `CiTurboCache` component with the whole stack
   at P5 step 6d (recommended: one Pulumi operation, after stage 2), or as a targeted destroy right
   after stage 2? The second means one more Pulumi operation on the frozen stack.
+  **Ruled by the gate, 2026-11-14:** with P5's whole-stack destroy. Fallback: if P5 slips more than
+  a week past the stage-2 repoint (for example the 11-20 verdict releases stage 2 but holds the fleet
+  for window 6), the gate runs an attended targeted destroy of the cache component then, following
+  the cost-controls pattern (fresh export archived and named in a decision first, then the destroy
+  by target).
 - **Q2:** see risk 1.
+  **Ruled by the gate, 2026-11-14:** yes, R5 retires the signed-producer, pilot and R2 command family
+  under D7. It is CI-affecting and the paused goal `turborepo-cache-trust-observability` links to
+  those paths, so R5 stays tied to the stage-2 release and the gate raises it with the orchestrator
+  then. R5's entry (section 2) lists the exact files and CI steps and the notice text for that goal.
 - **Q3 (historical records and the knowledge gate):** decision files and closed packets are live to
   `semantic-delta`. When a deletion breaks a backticked path in one, should the PR (a) rewrite the
   span to a commit-pinned GitHub permalink of the last commit that had the file, (b) un-backtick it
@@ -661,27 +850,114 @@ Open questions:
   closed packets as archival? (c) is a repo-cli change with wider effect. (b) is the smallest. The
   same answer settles `delete-package`'s `--rewrite-packets` versus `--allow-stale-packets` for
   `goals/_template/GOAL.md`.
+  **Ruled by the gate, 2026-11-14:** (b). In the PR that deletes the path, rewrite the span as plain
+  text followed by "(removed in #N)". No scanner change and no archival exemption. Decision files
+  are dated records, so the rewrite touches only the backticks and adds the removal note, never the
+  reasoning. For the template packet, use `--rewrite-packets`.
 - **Q4:** reword the live Cloudflare DNS comments "Managed by Pulumi for oip.law Vercel routing."
   (one `OipWeb` deploy, plus `OipWebStack.ts:66` and the fake cloud test), or keep them as inert text?
+  **Ruled by the gate, 2026-11-14:** leave them. Changing them needs a DNS write the Alchemy token
+  lacks, and a record write on oip.law is not worth making for a comment. The declared string in
+  `apps/oip-web` and the six live comments are allowed residue in the "Pulumi gone" check, with that
+  reason (section 3). They are corrected the next time those records change for a real reason.
 - **Q5 (backend and passphrases):** after R6, keep `oip-law-pulumi-state` as a cold archive and keep
   both passphrase fields, or copy the bucket into the out-of-repo archive and delete the bucket?
   Deleting a passphrase makes the encrypted secrets in every export unreadable, which weakens the
   `pulumi stack import` reversals the decision files promise.
+  **Ruled by the gate, 2026-11-14:** keep both. They are what make the archived exports restorable,
+  and deleting either is irreversible and the operator's to decide. The "Pulumi gone" row is "the
+  backend holds no stack", not "the bucket is gone". Both go on the closeout's operator list
+  (section 5, step 7).
 - **Q6:** `beep-turbo-cache-lab/lab-c1023a` has no stack file and no decision record. Run the lab's
   read-only inventory (or a tag query) to confirm nothing tagged for the lab survives before R1
   deletes the only script that lists it, and record a short decision.
+  **Ruled by the gate, 2026-11-14:** check it now, read-only, before R1 deletes the script.
+  **Result (2026-11-14, read-only, `AWS_PROFILE=elpresidank-vault`, `us-east-1`, each call once):**
+  - What it was: the disposable AWS conformance lab of the completed goal
+    `turborepo-cache-conformance`. Epoch `c1023a`, Pulumi stack `beep-turbo-cache-lab/lab-c1023a`.
+    The program (`infra/src/internal/turbo-cache-lab-entry.ts`) deployed two `CiTurboCache`
+    components, an incumbent and an "evolved" incumbent. Each had an S3 bucket
+    (`beep-tcl-c1023a-832907639880` and `beep-tcl-c1023a-evo-832907639880`), an HTTP API with its
+    authorizer, reader and writer Lambdas, their IAM roles and log groups. `lab-aws.sh bootstrap`
+    added one KMS key and three SecureStrings under `/beep-ci/cache-lab/c1023a/`. Every resource
+    carries the tags `beep:lab=turbo-cache-conformance` and `beep:lab-epoch=c1023a`.
+  - Lifetime, from the backend's four backups of that stack: first update 2026-10-24T01:12:05Z
+    (100 KB checkpoint), grown at 02:23:46Z (201 KB, both incumbents), last full checkpoint
+    03:21:10Z (191 KB), then 03:21:59Z at 392 bytes, an empty deployment. That fits `lab-aws.sh
+    destroy`: a targeted destroy of the bucket policies, bucket emptying, a full destroy and
+    `pulumi stack rm`, which leaves only the `.bak`.
+  - Live today: nothing.
+    - `resourcegroupstaggingapi get-resources` with `beep:lab-epoch=c1023a`: none.
+    - The same with `beep:lab=turbo-cache-conformance` (any epoch): none.
+    - `ssm describe-parameters` under `/beep-ci/cache-lab/`: none.
+    - `logs describe-log-groups` with prefix `/aws/lambda/beep-tcl-`, and with pattern `beep-tcl`: none.
+    - `iam list-roles` starting `beep-tcl`: none.
+    - `s3api list-buckets` starting `beep-tcl`: none.
+    - The 7-day KMS deletion window has long passed, and the key no longer shows in the tag query.
+  - Cost: nothing accrues. The only remnants are five small objects in the Pulumi backend (the
+    `.bak` and four backups, about 0.5 MB), which stay with the bucket (Q5).
+  - Consequence: no removal procedure is needed. R1 may delete `infra/turbo-cache-lab/lab-aws.sh`
+    with the program, and records this result in a short decision file (R1 entry). Note that
+    `lab-aws.sh` cites standards/cache-conformance/lab-deployment-preview.md (plain text: no such file) for the approved cost
+    ceiling, and that document is not in the tree.
 - **Q7:** is removing `$InfraId` from `@beep/identity` an identity-major change
   (`delete-package --identity-major`)? Nothing outside `infra/` imports it.
+  **Ruled by the gate, 2026-11-14:** follow the changeset gate. **Answer:** no changeset.
+  - `bun run beep quality changeset-status` checks only workspaces that are publish-enabled
+    (`publishEnabled: document.private !== true`,
+    `packages/tooling/tool/cli/src/commands/Quality/ChangesetStatus.ts:550`), versioned and not
+    ignored (`:360`).
+  - `@beep/identity` is `"private": true` (version 0.1.1; its `publishConfig` block is inert while
+    the package is private). `.changeset/config.json` has `privatePackages: { version: false, tag: false }`.
+  - Every package R7 edits is private too: `@beep/infra`, `@beep/repo-cli`, `@beep/repo-cli-kit`,
+    `@beep/repo-utils`, `@beep/config-file`, `@beep/lint-rules`, `@beep/repo-ai-metrics`.
+  - `delete-package --identity-major` only prints that the deletion note "remains empty until an
+    identity release policy writer is ratified" (`DeletePackage.command.ts:784-786`). R7 omits it.
 - **Q8 (coverage baseline writer):** which command rewrites only the `@beep/infra` totals and rows
   of `standards/coverage.regression-baseline.jsonc` from a hosted run? The cost-controls lane
   removed a file row by hand and left the totals. Unsure whether the hosted ratchet accepts that or
   needs re-measured totals.
+  **Ruled by the gate, 2026-11-14:** find the exact command and state what a deletion PR must do.
+  **Answer:**
+  - The writer: `bun run coverage:baseline:write` (`package.json:359`,
+    `beep-cli coverage -- --write-baseline --concurrency=3`; the ratchet names it as
+    `coverageRegressionRegenerationCommand`, `CoverageRegression.ts:80`). Unscoped, it re-measures
+    the workspace and rewrites the whole document.
+  - It can be limited to one package with exact selectors, `bun run coverage:baseline:write
+    --filter=@beep/infra`. The selectors must name exact workspace packages that define coverage
+    (`Tasks.ts:826-833`).
+  - A scoped write adopts the changed owners and their dependents. `--replace-all` is "the
+    deliberate re-measure path" that adopts every package the run measured (`Tasks.ts:1103-1110`).
+  - `--add-missing-files-only` with exact `--filter` selectors adds only new file rows
+    (`Tasks.ts:1032-1035`).
+  - Its input is a local measurement (it runs the selected packages' coverage tasks). It does not
+    read hosted artifacts. The local-coverage ruling of 2026-11-13 therefore applies.
+  - What a deletion PR must do: delete the removed files' rows by hand (delete-only, every other
+    byte unchanged) and leave the `@beep/infra` totals alone. The PR owns changed `@beep/infra`
+    files, so the ratchet judges it at `main`'s floor whatever totals the PR writes. A lowered
+    total in the PR is withheld, not accepted. The PR passes when the measured percentage does not
+    fall (section 2, "Coverage"). R1, R2, R4 and R6 raise it; the cost-controls PR lowers it.
+  - When a total must come down: a rows-only PR that edits just the baseline file (the one changed
+    path exempt from the global-input test). There `@beep/infra` self-judges and the lowered row is
+    accepted. Its values come from the hosted Coverage Regression report of `main` after the
+    deletion merged, or, for a package as small as `@beep/infra` (19 source files), from
+    `bun run coverage:baseline:write --filter=@beep/infra` under `nice -n 19 ionice -c3` if the
+    gate allows that one local run.
+  - That rows-only PR is the only case where the ratchet accepts a lowered row. R7
+    needs none of this: a deleted package is retired (`retiredByProposal`).
 - **Q9:** `delete-package`'s dependent scan counts `packages/tooling/infra/**` (for example
   `packages/tooling/infra/cost-controls/package.json:8`) as hits on the path `infra`. Fix the
   matcher in R7 or before it, or accept `--also`/manual removal? It refuses dependents regardless
   of `--force`.
+  **Ruled by the gate, 2026-11-14:** fix the matcher at the root, in its own small repo-cli PR before
+  R7, not as a workaround in R7. Added to the plan as R6.5 (section 2), with the root cause
+  (`WholeToken.ts:48-50`), the call sites, the two failing tests, and the rule that repo-cli tests
+  pass on Node and Bun.
 - **Q10:** should the "Pulumi gone" check also cover provenance prose in the Alchemy packages
   ("replaces the Pulumi ..."), or is that allowed residue?
+  **Ruled by the gate, 2026-11-14:** not allowed residue. R7 removes it from package source, JSDoc
+  and READMEs (the list is in R7's entry). The history lives in the decision files and the
+  exploration, which the check excludes.
 
 ## 5. What the final P7 PR contains
 
@@ -710,7 +986,7 @@ Runbook rewrite, section by section:
 | `docs/runbooks/aws-cost-operations.md` | runner image / AMI pin; state census row; stack table 627-628 | bake writes the stack config; the Pulumi state row becomes the archive row; the OIP and CI rows name the Alchemy stacks |
 | `docs/runbooks/typescript-toolchain.md` | intro (5), "infra/Pulumi" (625-637) | the TS6 paragraph is deleted; only ts-morph's bundled TS6 is mentioned |
 | `standards/turbo-remote-cache.md` | whole document | the Worker contract (if stage 2 did not already rewrite it) |
-| `docs/runbooks/onepassword-beep-secrets-layout.md:70` | rename table | row removed or marked "archive only", per Q5 |
+| `docs/runbooks/onepassword-beep-secrets-layout.md:70` | rename table | row kept and marked "kept for the Pulumi export archive"; the rename proposal is dropped (Q5) |
 | `docs/README.md:22`, `README.md:287`, `docs/runbooks/reference-workspace.md:3`, `docs/runbooks/turbo-cache-inputs.md:213`, `:390`, `standards/effect-laws-v1.md:72` | one-line mentions | `infra/` removed from the lists |
 | `standards/architecture/DECISIONS.md` | new dated entry | "the `infra/` workspace exception is closed", pointing at the 2512 entry |
 
@@ -729,5 +1005,10 @@ Packet closeout, in the same PR:
    verified. Name any red required check in a committed decision file (`redAttribution`). Then run
    `bun run beep yeet sweep --retire` from the lane.
 6. External cleanup that can only follow the merge, recorded as decisions as each one happens: the
-   backend per Q5, the Pulumi CLI mise entry and backend logins, and the old fleet's SSM, KMS and
-   boundary per P5 step 6f.
+   Pulumi CLI mise entry and backend logins, and the old fleet's SSM, KMS and boundary per P5 step 6f.
+7. Operator list, handed over in the closeout prompt and not acted on by agents (Q5 ruling): the
+   decision whether to keep or delete `s3://oip-law-pulumi-state` (versioned, so deletion removes
+   every version) and the two passphrase fields, `PULUMI_ENCRYPTION_PASSPHRASE` in
+   `BEEP_SECRETS/BEEP_SECRETS` and `PULUMI_CONFIG_PASSPHRASE` in `BEEP_SECRETS/OIP_SECRETS`. Both
+   are what make the archived exports restorable, and deleting either is irreversible. Also on the
+   list: the six oip.law DNS comments (Q4), to correct at their next real change.
