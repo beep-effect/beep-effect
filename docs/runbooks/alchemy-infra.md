@@ -183,7 +183,13 @@ The `prod` plan runs only in the workflow, never from a workstation.
 
 Cutover from Pulumi (decision "Cost controls cutover from Pulumi"), `live`
 first and the Pulumi destroy second (packet gate ruling, 2026-11-14), so the
-account, already over its budget, is never without alerts:
+account, already over its budget, is never without alerts. Steps 1 to 3 ran
+on 2026-11-14 (decision "Cost controls Pulumi cutover executed"): `live`
+deploy run 43560670140, the old budget and subscription destroyed, eleven
+state entries removed, `beep-ci-runners/production` down from 367 to 354
+resources with nothing else changed. From 2026-11-14T05:22:55Z until the
+component-removal PR merges, no `pulumi preview` or `pulumi up` runs on that
+stack: the program still declares the component and would plan it again.
 
 1. Merge the `live` PR. Its deploy adds the budget notifications and creates
    `AnomalyAlerts`; the gate accepts a budget update and an `AnomalyAlerts`
@@ -204,7 +210,11 @@ account, already over its budget, is never without alerts:
    runs the program and none needs `pulumi up`.
 4. The PR deleting the component from the program merges after `live` has
    been green for 24 hours, and before the next `pulumi preview` of that
-   stack.
+   stack. It keeps `accountCostControls:notificationEmailAddresses` and
+   `decodeNotificationRecipients` (now `infra/src/NotificationRecipients.ts`),
+   which the AWS turbo cache's throttle alarm reads. After it merges, the
+   first `pulumi preview --expect-no-changes` must be clean, and the
+   cutover's export archives may then be cleaned up.
 
 Rollback (decision "Cost controls cutover from Pulumi"):
 

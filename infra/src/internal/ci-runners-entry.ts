@@ -6,11 +6,6 @@
  */
 
 import * as pulumi from "@pulumi/pulumi";
-import {
-  AccountCostControls,
-  decodeNotificationRecipients,
-  loadAccountCostControlsConfig,
-} from "../AccountCostControls.ts";
 import { CiFleetController, loadCiFleetControllerConfig } from "../CiFleetController.ts";
 import { CiRunnersStack, loadCiRunnersStackArgs } from "../CiRunners.ts";
 import {
@@ -19,6 +14,7 @@ import {
   loadCiShardOverflowPoolConfig,
 } from "../CiShardOverflowPool.ts";
 import { CiTurboCache, CiTurboCacheRemediation, loadCiTurboCacheConfig } from "../CiTurboCache.ts";
+import { decodeNotificationRecipients } from "../NotificationRecipients.ts";
 
 const stack = new CiRunnersStack("ci-runners", loadCiRunnersStackArgs());
 const fleetNetwork = {
@@ -56,11 +52,6 @@ const turboCache = new CiTurboCache("ci-turbo-cache", {
     accountCostControlsConfig.requireObject<unknown>("notificationEmailAddresses")
   ),
 });
-new AccountCostControls(
-  "account-cost-controls",
-  loadAccountCostControlsConfig(),
-  accountCostControlsConfig.requireSecretObject<unknown>("notificationEmailAddresses")
-);
 
 /**
  * Dedicated fleet VPC identifier.
