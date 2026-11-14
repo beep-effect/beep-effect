@@ -2563,6 +2563,12 @@
       ],
       "@beep/infra-turbo-cache/internal/*": [
         "./packages/tooling/infra/turbo-cache/src/internal/*"
+      ],
+      "@beep/infra-cost-controls": [
+        "./packages/tooling/infra/cost-controls/src/index.ts"
+      ],
+      "@beep/infra-cost-controls/*": [
+        "./packages/tooling/infra/cost-controls/src/*"
       ]
     }
   }

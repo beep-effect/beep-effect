@@ -259,7 +259,8 @@ const generatedComposers = $I.compose(
   "infra-turbo-cache",
   "alchemy-github-runners",
   "alchemy-aws-extras",
-  "alchemy-vercel"
+  "alchemy-vercel",
+  "infra-cost-controls"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3879,3 +3880,21 @@ export const $AlchemyAwsExtrasId: Identity.IdentityComposer<"@beep/alchemy-aws-e
  * @since 0.0.0
  */
 export const $AlchemyVercelId: Identity.IdentityComposer<"@beep/alchemy-vercel"> = composers.$AlchemyVercelId;
+
+/**
+ * Identity composer for `@beep/infra-cost-controls`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $InfraCostControlsId } from "@beep/identity/packages"
+ *
+ * const id = $InfraCostControlsId.make("InfraCostControls")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $InfraCostControlsId: Identity.IdentityComposer<"@beep/infra-cost-controls"> =
+  composers.$InfraCostControlsId;

@@ -36,7 +36,7 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
-import { MemoryStatsLive } from "../../internal/repo-run/QualityScheduler.ts";
+import { MemoryStatsLive, QualitySchedulerLive } from "../../internal/repo-run/QualityScheduler.ts";
 import { CacheProducerAcceptanceReference, CacheProducerImportRequest } from "./Cache.acceptance.schemas.ts";
 import {
   cacheProducerImportMaxBytes,
@@ -896,7 +896,8 @@ const cacheDependenciesCommand = Command.make("dependencies", { output: outputFl
   }).pipe(renderCacheFailure)
 ).pipe(
   Command.withDescription("Copy and verify the installed dependency tree; retain the machine-local receipt privately"),
-  Command.provide(MemoryStatsLive)
+  Command.provide(MemoryStatsLive),
+  Command.provide(QualitySchedulerLive)
 );
 
 const cachePilotCommand = Command.make(
@@ -912,7 +913,8 @@ const cachePilotCommand = Command.make(
     }).pipe(renderCacheFailure)
 ).pipe(
   Command.withDescription("Compare the real lint pilot in bounded, network-isolated read-only worktree overlays"),
-  Command.provide(MemoryStatsLive)
+  Command.provide(MemoryStatsLive),
+  Command.provide(QualitySchedulerLive)
 );
 
 const cacheSignedPilotCommand = Command.make(
@@ -926,7 +928,8 @@ const cacheSignedPilotCommand = Command.make(
     }).pipe(renderCacheFailure)
 ).pipe(
   Command.withDescription("Compare signed real-pilot pairs in a supervised private network"),
-  Command.provide(MemoryStatsLive)
+  Command.provide(MemoryStatsLive),
+  Command.provide(QualitySchedulerLive)
 );
 
 const cacheAcceptCommand = Command.make(
@@ -1034,6 +1037,7 @@ const cacheProducerRunCommand = Command.make(
     "Execute and authenticate an owned producer using independently provisioned private approval"
   ),
   Command.provide(MemoryStatsLive),
+  Command.provide(QualitySchedulerLive),
   Command.provide(FetchHttpClient.layer)
 );
 
@@ -1247,7 +1251,8 @@ const cacheProtocolRunCommand = Command.make(
     }).pipe(renderCacheFailure)
 ).pipe(
   Command.withDescription("Execute pinned signed native fixtures in an isolated private network"),
-  Command.provide(MemoryStatsLive)
+  Command.provide(MemoryStatsLive),
+  Command.provide(QualitySchedulerLive)
 );
 
 const cacheProtocolReviewCommand = Command.make(
