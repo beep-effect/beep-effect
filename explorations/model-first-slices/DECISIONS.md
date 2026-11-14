@@ -1154,3 +1154,30 @@ case asserts exactly that. No library change.
 **Rationale:** The same reasoning as D42: the property that matters is no loss and no duplication
 within a stated bound. Rejected: changing the caller to resend a stuck write to the runner that
 holds the shard. Recommended answer accepted.
+
+## 2026-11-14 — Phase 12: the startup error, the frozen-runner case, and the upstream set made readable
+
+In process only: no swarm, deploy or container. Notes are in `research/20-rework-phase12-notes.md`.
+The Effect check has zero diagnostics, 196 tests pass and 109 of 109 declared outcomes run, re-run
+by the orchestrating session; Docker is unchanged.
+
+- **The startup error (D54).** A runner fails at start with `RunnerPoolUnnamed` when it has no
+  address or its pool is not named for it. The check reads the runner's configuration only and
+  never queries Postgres, because at start the lock session may not exist or hold a shard yet, and
+  a false alarm would stop a healthy runner. It cannot see a pooler that rewrites the session name;
+  behind one the runner starts and its commits are refused at the fence. It is saved as its own
+  upstream diff (`10`), marked as not run on a cluster, so `07` and `08` remain exactly what ran in
+  phase 11. The six earlier diffs are byte-identical to phase 11's, checked by hash.
+- **The frozen-runner case (D55).** Three in-process cases pass: the runner resumes within the
+  caller's 63.1 s retry budget and the write lands once; it stays frozen past the budget and the
+  call fails with nothing stored, then is stored once after the resume; the shard moves during the
+  freeze and each write is stored once. The budget is computed from the installed library and
+  pinned. The cluster case is rewritten to the same guarantee and has not been run; phase 11 saw
+  such a write wait over 60 s, so it may fail when it is.
+- **The upstream set** now reads for a maintainer: seven patches and three write-ups with one
+  header shape, an index in the order to take them, and no prototype-only wording. One stray design
+  reference remains in a code comment in `07`, kept so the diff matches what ran; `10` removes it.
+  Nothing is sent.
+
+Not exercised: the bootstrap declaring the pool name on a real runner, and a runner failing to
+start.

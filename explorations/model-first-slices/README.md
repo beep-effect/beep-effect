@@ -33,6 +33,9 @@ to D55 and have not been confirmed in words.
 
 ## Trail
 
+- 2026-11-14: phase 12, in process only: a startup error for an unnamed runner pool (its own
+  upstream diff, not run on a cluster), the frozen-runner case, and the upstream set rewritten for
+  a maintainer with an index. Nothing sent. Notes in `research/20`.
 - 2026-11-14: D53 to D55: the patched pass meets the D16 gate while D5's retirement waits on
   upstream; the operator reads the upstream set before anything is sent; a write to a frozen runner
   is covered by a stated guarantee.

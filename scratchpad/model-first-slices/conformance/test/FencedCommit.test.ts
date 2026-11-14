@@ -1,14 +1,12 @@
-import * as Domain from "@alchemy.run/domain";
 import * as DurableObjects from "@alchemy.run/domain/DurableObjects";
 import { expect, it } from "@effect/vitest";
-import * as A from "effect/Array";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
-import * as Schema from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import { makeSimHost, makeSimHostWith, type SimHost } from "./SimHost.ts";
+import { SLOT, Slot, Slots, Write } from "./SlotModel.ts";
 
 // Phase 10, patch 4 (D45): a commit is acknowledged only if its runner owned the instance for the
 // whole commit. Runner 0 decides on version 0 and holds; the instance moves to runner 1, which
@@ -18,28 +16,6 @@ import { makeSimHost, makeSimHostWith, type SimHost } from "./SimHost.ts";
 // serves the instance when it commits is rolled back and dies with `ShardLost`, which the library
 // turns into the call's failure; the caller's retry reaches runner 1.
 
-class Written extends Domain.Event("Written", { label: Schema.String }) {}
-class Write extends Domain.Command("Write", {
-  target: Schema.String,
-  input: { label: Schema.String, holdMs: Schema.Finite },
-  events: [Written],
-}) {}
-class Slot extends Domain.Aggregate("Slot", {
-  id: Schema.String,
-  state: Schema.Struct({ labels: Schema.Array(Schema.String) }),
-  initial: { labels: [] },
-  commands: [Write],
-  decide: {
-    Write: Effect.fn(function* (_, command) {
-      yield* Effect.sleep(command.holdMs);
-      return [Written.make({ label: command.label })];
-    }),
-  },
-  evolve: { Written: (state, event) => ({ labels: A.append(state.labels, event.label) }) },
-}) {}
-class Slots extends Domain.Model("Slots", { aggregates: [Slot] }) {}
-
-const SLOT = "Slots.SlotAggregate/s";
 /** How long runner 0's decide holds. */
 const HOLD_MS = 10_000;
 

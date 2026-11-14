@@ -1,58 +1,57 @@
 fix(domain): on a runner, route calls from background fibers through the cluster
 
-Against alchemy `packages/domain/src` at 33c10dd (2.0.0-beta.87). Apply from the
-repository root with `git apply`; the text above the first `---` line is ignored.
+Against alchemy `packages/domain/src` at 33c10dd (2.0.0-beta.87). Apply from the repository root
+with `git apply`; the text above the first `---` line is ignored.
 
 ## Problem
 
 On a runner, `DomainCluster.layerEntities` builds the platform's namespace as
-`makeNamespace(objects, { url: "", token: "", service: "" })`.
-`makeNamespace(...).getByName` (in `@alchemy.run/effect-cluster`) routes a call
-through Effect Cluster only when `Sharding` is in the calling fiber's context;
-otherwise it uses the gateway's HTTP client, here with an empty URL.
+`makeNamespace(objects, { url: "", token: "", service: "" })`. `makeNamespace(...).getByName` (in
+`@alchemy.run/effect-cluster`) routes a call through Effect Cluster only when `Sharding` is in the
+calling fiber's context; otherwise it uses the gateway's HTTP client, here with an empty URL.
 
-Entity handlers run with `Sharding`. Fibers that the model's Layer starts while
-it builds do not: the runner bootstrap builds the entrypoint Layer before the
-cluster Layer exists. So any call from such a fiber fails with
-`RpcClientError: HttpError: InvalidUrl (POST /rpc/)`. This covers a stream's
-`list`, a view's `get` and a command's `send` alike; it is not specific to
-reads.
+Entity handlers run with `Sharding`. Fibers that the model's Layer starts while it builds do not:
+the runner bootstrap builds the entrypoint Layer before the cluster Layer exists. So any call from
+such a fiber fails with `RpcClientError: HttpError: InvalidUrl (POST /rpc/)`. This covers a
+stream's `list`, a view's `get` and a command's `send` alike.
 
-Seen with a consumer that polls another context's fact stream from a Layer
-(`Effect.forkScoped`) on the runners: every read failed, the fact was
-published and never consumed, and a run waiting for an approval never
-concluded.
-
-## Change
+## Fix
 
 In runner mode only:
 
-- the Layer the runner launches inside the cluster (`runner.value.host(hosted,
-  ...)`, where the workflow engine is already captured) also captures the
-  runner's `Sharding` in a `Deferred`;
-- the namespace passed to `remote` gives a call whose fiber has no `Sharding`
-  that one, waiting until the runner has joined. A call that already has
-  `Sharding` goes through unchanged.
+- the Layer the runner launches inside the cluster (`runner.value.host(hosted, ...)`, where the
+  workflow engine is already captured) also captures the runner's `Sharding` in a `Deferred`;
+- the namespace passed to `remote` gives a call whose fiber has no `Sharding` that one, waiting
+  until the runner has joined. A call that already has `Sharding` goes through unchanged.
 
 ## Why it is safe
 
 - Calls from entity handlers are unchanged (they have `Sharding`).
-- A background call made before the runner has joined now waits for it
-  instead of failing, as workflow calls already wait for `started`.
-- No wire protocol change; one file. Callers (caller mode, through the
-  gateway) are untouched.
+- A background call made before the runner has joined now waits for it instead of failing, as
+  workflow calls already wait for `started`.
+- No wire protocol change; one file. Callers (caller mode, through the gateway) are untouched.
 
-An alternative is to make `makeNamespace` itself fall back to a runner-wide
-`Sharding` in `@alchemy.run/effect-cluster`; this change keeps the fix inside
-`@alchemy.run/domain`, where the empty URL is chosen.
+An alternative is to make `makeNamespace` itself fall back to a runner-wide `Sharding` in
+`@alchemy.run/effect-cluster`; this change keeps the fix inside `@alchemy.run/domain`, where the
+empty URL is chosen.
 
-## Tests
+## Failing case, and how it was reproduced
 
-On Effect Cluster with Postgres (two runners on a local swarm): a runs inbox
-polling Party's fact stream on the runners consumed the decision; a run
-waiting for approval completed after approval across a runner restart, and
-across a `pg_dump` and restore into a fresh stack. There is no in-memory test:
-reproducing it needs the runner bootstrap.
+On a cluster (two runners and a front on Effect Cluster with PostgreSQL 17, on a single-node Docker
+swarm on one workstation), a model whose Layer forks a poller (`Effect.forkScoped`) that reads another
+model's fact stream and sends a command for each fact. Before the change every read from the poller
+failed with `InvalidUrl`: the fact was published and never consumed, and a run waiting for it never
+concluded. After it, the poller consumed the fact, and the run completed, across a runner restart
+and across a `pg_dump` and restore into a fresh stack.
+
+## Where it ran
+
+- On a cluster: the case above, in several runs.
+- In process: nothing. Reproducing it needs the runner bootstrap.
+
+## Depends on
+
+Nothing. No hunk overlaps any other patch here.
 
 ---
 --- a/packages/domain/src/EffectCluster/index.ts

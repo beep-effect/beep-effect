@@ -3,7 +3,7 @@
 <!-- Generated from proofs/Proofs.data.ts by scripts/proofs.ts. Do not edit: `bun run proofs`
      rewrites it, and `bun run proofs --check` fails on drift. -->
 
-Every invariant this prototype enforces (D8): 40 entries. Mechanical laws run in
+Every invariant this prototype enforces (D8): 41 entries. Mechanical laws run in
 `bun run check`, `bun run test` and `bun run generated:check`; semantic questions stay with a
 reviewer who did not write the change.
 
@@ -273,12 +273,22 @@ A commit is acknowledged only on the version its decide read: when the stored ve
 
 No commit is acknowledged from a runner whose own lock session does not hold the instance's shard for the whole commit transaction: one whose runner lost the lock, or never had it, is refused with ShardLost and retried by its caller onto the owner (D45, D49; patches 4 and 6).
 
-- **Checker:** `conformance/test/FencedCommit.test.ts`, `conformance/test/Own.conformance.ts`, `conformance/test/ShardOwnership.ts`, `conformance/test/RecoveryBound.ts`, `conformance/test/RecoveryBound.test.ts`, `patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch`, `patches/@alchemy.run%2Feffect-cluster@2.0.0-beta.87.patch`
+- **Checker:** `conformance/test/FencedCommit.test.ts`, `conformance/test/RunnerPool.test.ts`, `conformance/test/Own.conformance.ts`, `conformance/test/ShardOwnership.ts`, `conformance/test/RecoveryBound.ts`, `conformance/test/RecoveryBound.test.ts`, `patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch`, `patches/@alchemy.run%2Feffect-cluster@2.0.0-beta.87.patch`
 - **Reads:** In process: two runners on one instance, the host refusing a transaction whose runner no longer serves the instance at commit. On the cluster: the shard lock's holder by session name in pg_locks and pg_stat_activity, sampled while paused and every half second after the unpause; the paused runner's open transaction; the stored events and the fence's log lines; every session holding a lock in the cluster's namespace.
-- **Assumes:** Effect Cluster holds each shard as a session-level advisory lock on one connection reserved from the runner's pool (SqlRunnerStorage.ts); the runner bootstrap names that pool effect-cluster:<host>:<port> from the runner address (patch 6), and the fence computes the same name. A pool that is not named has no session of its own, so every commit is refused.
-- **Gaps:** Phase 11, six attempts on one build: the invariant held in all six; four counted by the case's rule (a write queued at once reached the paused runner after the move) and the other two had a write sent after the move reach it. Refused writes landed once, the last 12.03 s after the unpause (bound 33 s, derived in RecoveryBound.ts). Holders after the unpause are sampled, not traced. The refusal on an unnamed pool follows from the SQL; no unnamed build was deployed to see it (notes/phase-11.md).
+- **Assumes:** Effect Cluster holds each shard as a session-level advisory lock on one connection reserved from the runner's pool (SqlRunnerStorage.ts); the runner bootstrap names that pool effect-cluster:<host>:<port> from the runner address (patch 6), and the fence computes the same name. Since phase 12 a runner checks at start, from its configuration, that it has an address and that its bootstrap declared that name (checkRunnerPool), and fails to start otherwise.
+- **Gaps:** Phase 11, six attempts on one build: the invariant held in all six; four counted by the case's rule (a write queued at once reached the paused runner after the move) and the other two had a write sent after the move reach it. Refused writes landed once, the last 12.03 s after the unpause (bound 33 s, derived in RecoveryBound.ts). Holders after the unpause are sampled, not traced. The start check ran in process only, against Effect's ShardingConfig; the bootstrap declaring the name and a runner failing to start were not exercised, and it cannot see a pooler that drops application_name (notes/phase-12.md).
 - **Left to a reviewer:** Whether to send patches 07 and 08 together, with a startup error for an unnamed pool.
 - **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
+
+### frozen-runner
+
+A write sent to a frozen runner completes or fails within the caller's retry budget, is never stored twice, and a retry under the same command id gets its receipt; after the runner resumes the state holds the write exactly once (D55). No library change.
+
+- **Checker:** `conformance/test/FrozenRunner.test.ts`, `conformance/test/SimHost.ts`, `conformance/test/SlotModel.ts`, `conformance/test/RecoveryBound.ts`, `conformance/test/RecoveryBound.test.ts`, `conformance/test/Own.conformance.ts`
+- **Reads:** In process: a runner frozen on the in-process host (calls routed to it fail in transit; its running work stops at its next storage operation), the caller's answer and the virtual time it took, the slot's commits by runner and its stored labels, and each retry's receipt. On the cluster (not run since): the same for a runner paused in decide, through the slot route with a command id.
+- **Assumes:** The budget is TRANSIT_RETRY's 35 delays, 63.1 s, pinned by the canary against the installed library; the cluster bound adds a 5 s allowance for the attempts themselves. In process a call to a frozen runner fails in transit, as a call to an unreachable runner does.
+- **Gaps:** Phase 11 saw a write sent to a paused runner wait for it for over 60 s on the cluster instead of failing in transit; whether the rewritten cluster case holds is unknown until it runs. The in-process freeze stops storage operations only, not the decide's own clock.
+- **Left to a reviewer:** Whether a call held by a frozen runner should time out in transit.
 
 ### call-arguments
 
@@ -390,7 +400,7 @@ Two runners never both commit to one instance (D38): a runner paused past its sh
 - **Checker:** `conformance/test/Own.conformance.ts`, `conformance/src/TwoRunners.model.ts`
 - **Reads:** The slot's stored events in alchemy_domain_objects before and after unpausing.
 - **Assumes:** `docker pause` freezes the runner's shard-lock refresh as a long GC pause or partition would; a row lock holds the stale runner inside its commit for the second timing.
-- **Gaps:** Two timings; not a model-checked proof. Phase 11: all six paused-inside-commit attempts took over (27.8 to 33.4 s) and held the commit-fence invariant. Paused in decide, the write it decided was refused at commit and never stored; a write sent during the pause waited for the paused runner and was committed once by it after it took its shard back (notes/phase-11.md).
+- **Gaps:** Two timings; not a model-checked proof. Phase 11: all six paused-inside-commit attempts took over (27.8 to 33.4 s) and held the commit-fence invariant. Paused in decide, the write it decided was refused at commit and never stored; a write sent during the pause waited for the paused runner and was committed once by it after it took its shard back (notes/phase-11.md). Since phase 12 the paused-in-decide case asserts frozen-runner's guarantee; it has not run on a cluster since.
 - **Left to a reviewer:** As commit-fence.
 - **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 

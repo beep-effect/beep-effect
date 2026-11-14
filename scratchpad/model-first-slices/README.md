@@ -1,7 +1,7 @@
 # model-first-slices
 
 A standalone prototype of the model-first slices design, reworked to
-`explorations/model-first-slices/DECISIONS.md` through phase 11 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster; phase 6 patched two library defects locally and ran it again; phase 7 put `bun run check` on the Effect build of the compiler and applied the owner's review; phase 8 ran the suite on the swarm against the phase 7 code; phase 9 built the rulings on its three failures, D41 to D43, and ran it again; phase 10 built D45 to D47 and ran it a fifth time; phase 11 built D49 to D51 and ran it a sixth time, with an upgrade from phase 8's code):
+`explorations/model-first-slices/DECISIONS.md` through phase 12 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster; phase 6 patched two library defects locally and ran it again; phase 7 put `bun run check` on the Effect build of the compiler and applied the owner's review; phase 8 ran the suite on the swarm against the phase 7 code; phase 9 built the rulings on its three failures, D41 to D43, and ran it again; phase 10 built D45 to D47 and ran it a fifth time; phase 11 built D49 to D51 and ran it a sixth time, with an upgrade from phase 8's code; phase 12, in process only, added the fence's start check and the frozen-runner case):
 file grammar, contract packages, the authority context, re-admission at each hop, the `runs`
 context, approval as an authenticated command, the Reasoner evaluation contract, an integration fact
 through an outbox and an inbox, a projection rebuild with no side effects, stored-format
@@ -24,7 +24,8 @@ conformance table beside phase 8, the D5 verdict), `notes/phase-10.md` (how Effe
 commit fence and where it falls short, the call-argument fix, the publisher-drain check, the table beside phase 9, each
 counting paused-runner run, the D5 verdict), `notes/phase-11.md` (the runner pool named and the fence made strict, the
 generic backlog reader, the generation-retirement check, the upgrade from phase 8's code, the table beside phase 10, every
-paused-runner attempt, the D5 verdict). Every invariant and its checker: `PROOFS.md`
+paused-runner attempt, the D5 verdict), `notes/phase-12.md` (the start check and what it verifies, the frozen-runner
+case, the upstream set made ready to read). Every invariant and its checker: `PROOFS.md`
 (generated).
 
 This directory is not part of the monorepo's bun workspace. It has its own `package.json` (with
@@ -187,6 +188,10 @@ at request, narrowed, and only while a human answers for it.
   behind, a fact is missing or differs, a pin moves or D34 refuses
   (`shared/tooling/test/GenerationRetirement.test.ts`), and after an allowed retirement the feed keeps
   every checkpoint's position and delivers no fact twice or never (`party/host/test/PartyFactsFeed.test.ts`).
+- Phase 12 (D54, D55): a runner whose commits could never be fenced fails its start check, and one
+  whose pool is named after it passes (`conformance/test/RunnerPool.test.ts`); a write sent to a frozen
+  runner is answered within the caller's retry budget, stored once, and its retry under the same
+  command id gets its receipt (`conformance/test/FrozenRunner.test.ts`).
 - `shared/tooling` and the root: every role file has one designated primary export; every declared
   command outcome is executed by some test, or listed with a reason (`bun run outcomes`); the stream-pin
   check fails on a bumped version, a changed source set, another writer, a reopened closed generation, an
@@ -281,12 +286,17 @@ vitest). Five fixes in `@alchemy.run/domain`:
 And one in `@alchemy.run/effect-cluster` (phase 11, D49): the runner bootstrap names the Postgres pool
 Effect reserves the shard-lock session from `effect-cluster:<host>:<port>` (`runnerPoolName`, with a
 hashed form for a name PostgreSQL would cut), so the fence can tell its runner's session apart.
+Phase 12 (D54) adds the fence's start check across both packages: the bootstrap declares the pool's
+name to the runner (`RunnerHost.poolName`), and a runner fails to start unless it has an address and
+that name is the one its address gives (`checkRunnerPool`). It is part of the fence, not a seventh
+fix.
 
 The same fixes as diffs against upstream at 33c10dd, with pull request text, are in
-`notes/upstream/` (`01`, `02`, `03`, `06`, `07`, `08`; `07` applies after `03` and compiles with
-`08`), with a proposal for leases that follow shard ownership (`04`), an issue for a rebuilt
+`notes/upstream/` (`01`, `02`, `03`, `06`, `07`, `08`, and `10`, the start check, which has run in
+process only), with a proposal for leases that follow shard ownership (`04`), an issue for a rebuilt
 projection's dropped stream appends (`05`), and a proposal for a projection's backlog as a library
-call (`09`); nothing is filed upstream (D52). `notes/phase-6.md`, `notes/phase-9.md`,
+call (`09`). `notes/upstream/README.md` lists them in the order to read them; nothing is filed
+upstream (D54). `notes/phase-6.md`, `notes/phase-9.md`,
 `notes/phase-10.md` and `notes/phase-11.md` have the details.
 
 ## Cluster stage and conformance (phases 5, 6, 8, 9, 10 and 11)

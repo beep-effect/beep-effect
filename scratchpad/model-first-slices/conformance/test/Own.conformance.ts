@@ -10,6 +10,8 @@ import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -44,7 +46,7 @@ import {
   runState,
   services,
 } from "./Stack.ts";
-import { RECOVERY_BOUND_MS, REFUSED_WRITE_BOUND_MS } from "./RecoveryBound.ts";
+import { FROZEN_WRITE_BOUND_MS, RECOVERY_BOUND_MS, REFUSED_WRITE_BOUND_MS } from "./RecoveryBound.ts";
 import {
   holderNameOf,
   lockSessions,
@@ -277,11 +279,23 @@ live("a run waiting for approval survives a runner restart and completes after a
   expect(run.outcome).toBe("accepted");
 }));
 
-live("two runners on one instance (D38): a runner paused past its shard lock commits after another took over", Effect.gen(function* () {
+// Phase 12 (D55), the stale runner paused in `decide` past its shard lock, judged by the guarantee
+// for a frozen runner: a write sent to it while it is paused is answered, with its receipt or a
+// failure, within FROZEN_WRITE_BOUND_MS (the caller's retry budget plus the attempts' time); no
+// write is stored twice; a retry under a write's command id after the resume gets its receipt, and
+// the state then holds each write exactly once. Phase 11 saw the write sent during the pause wait
+// for the paused runner for over 60 s; this case asserts the bound rather than recording it.
+live("two runners on one instance (D38, D55): a write sent to a frozen runner is answered within the retry budget, stored once, and its retry gets its receipt", Effect.gen(function* () {
   const slot = yield* fresh("slot");
-  const events = psql(`SELECT key, left(value::text, 160) FROM alchemy_domain_objects WHERE object LIKE '%${slot}%' ORDER BY key`);
+  const labels = psql(`SELECT value::jsonb->'event'->>'label' FROM alchemy_domain_objects WHERE object LIKE '%${slot}%' AND key LIKE 'event:%' ORDER BY key`);
+  const stored = (label: string) => Effect.map(labels, (out) => A.filter(Str.split(out, "\n"), (line) => line === label).length);
+  /** A write under its own command id, `<label>_<slot>`. */
+  const write = (label: string, hold: number) =>
+    get<{ readonly version: number; readonly stream: string; readonly ms: number }>(
+      `/tworunners/write?slot=${slot}&label=${label}&hold=${hold}&command=${label}_${slot}`,
+    );
   // A slow write: decide holds for 70 s on whichever runner owns the slot's shard.
-  const slow = yield* Effect.forkChild(get(`/tworunners/write?slot=${slot}&label=A&hold=70000`).pipe(Effect.exit));
+  const slow = yield* Effect.forkChild(write("A", 70_000).pipe(Effect.exit));
   const runners = yield* containersOf(runnerService);
   const owner = yield* eventually(
     Effect.forEach(runners, (id) => Effect.map(docker("logs", id), (out) => (pipe(out, Str.includes("deciding A")) && pipe(out, Str.includes(slot)) ? [id] : []))).pipe(
@@ -293,17 +307,34 @@ live("two runners on one instance (D38): a runner paused past its shard lock com
   const stale = owner[0]!;
   yield* docker("pause", stale);
   yield* log("paused", { stale, runners });
-  // Past the shard lock's 35 s expiry, the other runner takes the shard; a quick write commits there.
+  // Past the shard lock's 35 s expiry, a write sent while the runner is still paused.
   yield* Effect.sleep("45 seconds");
-  const quick = yield* get(`/tworunners/write?slot=${slot}&label=B&hold=0`).pipe(Effect.timeout("60 seconds"), Effect.exit);
-  const before = yield* events;
-  yield* log("before-unpause", { quick, events: before });
+  const sentAt = yield* Clock.currentTimeMillis;
+  const quick = yield* write("B", 0).pipe(Effect.timeout(`${FROZEN_WRITE_BOUND_MS + 30_000} millis`), Effect.exit);
+  const answeredAfterMs = (yield* Clock.currentTimeMillis) - sentAt;
+  const storedBefore = yield* Effect.all([stored("A"), stored("B")]);
   yield* docker("unpause", stale);
-  const slowResult = yield* Fiber.join(slow).pipe(Effect.timeout("120 seconds"), Effect.exit);
-  yield* Effect.sleep("3 seconds");
-  const after = yield* events;
+  const slowResult = yield* Fiber.join(slow).pipe(Effect.timeout("150 seconds"), Effect.exit);
+  // After the resume, each write is retried under its command id until it is answered.
+  const retried = (label: string) => eventually(write(label, 0).pipe(Effect.option), O.isSome, 120);
+  const retriedB = yield* retried("B");
+  const retriedA = yield* retried("A");
+  const storedAfter = yield* Effect.all([stored("A"), stored("B")]);
   const state = yield* get(`/tworunners/state?slot=${slot}`);
-  yield* log("after-unpause", { slow: slowResult, events: after, state });
+  yield* log("frozen-runner", { quick, answeredAfterMs, slow: slowResult, retriedA, retriedB, storedBefore, storedAfter, state });
+  // The write sent during the pause is answered within the bound, with its receipt or a failure.
+  expect(answeredAfterMs).toBeLessThanOrEqual(FROZEN_WRITE_BOUND_MS);
+  // Never stored twice, before or after the resume; each exactly once after its retry.
+  expect(A.every(storedBefore, (n) => n <= 1)).toBe(true);
+  expect(storedAfter).toEqual([1, 1]);
+  // A retry under the command id gets the receipt the first answer gave, when it gave one.
+  const receiptOf = ({ version, stream }: { readonly version: number; readonly stream: string }) => ({ version, stream });
+  const firstB = Exit.isSuccess(quick) ? O.some(receiptOf(quick.value)) : O.none();
+  const firstA = Exit.isSuccess(slowResult) && Exit.isSuccess(slowResult.value) ? O.some(receiptOf(slowResult.value.value)) : O.none();
+  const sameReceipt = (first: O.Option<ReturnType<typeof receiptOf>>, retry: O.Option<ReturnType<typeof receiptOf>>) =>
+    O.match(first, { onNone: () => true, onSome: (receipt) => Equal.equals(O.some(receipt), retry) });
+  expect(sameReceipt(firstB, O.map(retriedB, receiptOf))).toBe(true);
+  expect(sameReceipt(firstA, O.map(retriedA, receiptOf))).toBe(true);
 }));
 
 // Phase 11 (D49), the race with the stale runner stopped inside its commit, judged by the invariant:

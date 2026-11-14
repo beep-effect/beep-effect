@@ -111,3 +111,29 @@ export const TRANSIT_RETRY_BUDGET_MS = 100 + 200 + 400 + 800 + 1_600 + 30 * RETR
  */
 export const REFUSED_WRITE_BOUND_MS =
   SHARD_LOCK_REFRESH_MS + REFRESH_ASSIGNMENTS_MS + ENTITY_TERMINATION_MS + REFRESH_ASSIGNMENTS_MS + RETRY_SPACING_MS;
+
+/**
+ * What a cluster's attempts themselves add to the retry budget when a write is sent to a frozen
+ * runner: 36 attempts, each failing in transit. An allowance, not derived; in process the attempts
+ * take no time and the bound is the budget itself (phase 12, D55).
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const TRANSIT_ATTEMPT_ALLOWANCE_MS = 5_000;
+
+/**
+ * D55's bound on a cluster: a write sent to a frozen runner is answered, with its receipt or a
+ * failure, within the caller's retry budget plus the attempts' own time.
+ *
+ * **Example** (The latest a write sent at `sentAt` to a frozen runner may be answered)
+ * ```ts
+ * import { FROZEN_WRITE_BOUND_MS } from "./RecoveryBound.ts";
+ *
+ * const deadline = (sentAt: number) => sentAt + FROZEN_WRITE_BOUND_MS;
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const FROZEN_WRITE_BOUND_MS = TRANSIT_RETRY_BUDGET_MS + TRANSIT_ATTEMPT_ALLOWANCE_MS;

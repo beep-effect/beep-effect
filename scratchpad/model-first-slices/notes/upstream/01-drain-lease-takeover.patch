@@ -1,80 +1,77 @@
 fix(domain): a drain that finds its lease held comes back when the lease expires
 
-Against alchemy `packages/domain/src` at 33c10dd (2.0.0-beta.87). Apply from the
-repository root with `git apply`; the text above the first `---` line is ignored.
+Against alchemy `packages/domain/src` at 33c10dd (2.0.0-beta.87). Apply from the repository root
+with `git apply`; the text above the first `---` line is ignored.
 
 ## Problem
 
-A durable queue (an aggregate's or view's outbox, a policy's inbox) and a
-projection key's input log are each drained under a 60 s storage lease
-(`LEASE_MS`). A drain that finds the lease held returns without scheduling
-anything. The only other trigger is the one-shot backstop callback scheduled
-when rows are staged (10 s for a queue, `max(batch wait, 10 s)` for a
-projection).
+A durable queue (an aggregate's or view's outbox, a policy's inbox) and a projection key's input
+log are each drained under a 60 s storage lease (`LEASE_MS`). A drain that finds the lease held
+returns without scheduling anything. The only other trigger is the one-shot backstop callback
+scheduled when rows are staged (10 s for a queue, `max(batch wait, 10 s)` for a projection).
 
-When the instance holding the lease dies mid-drain (on Effect Cluster: a
-runner killed or OOM-killed while it delivers), the backstop fires on the new
-owner while the dead holder's lease is still live, returns, and is deleted as
-a success. The staged rows then wait until the instance commits again, which
-may be never:
+When the instance holding the lease dies mid-drain (on Effect Cluster: a runner killed or
+OOM-killed while it delivers), the backstop fires on the new owner while the dead holder's lease is
+still live, returns, and is deleted as a success. The staged rows then wait until the instance
+commits again, which may be never:
 
 - views never see the events, and `atLeast` reads time out;
 - policies never react;
 - a projection key stays at `processed < accepted`.
 
-Seen on Effect Cluster with Postgres: an outbox stranded with `outbox-lease`
-in the future and its backstop `Wake` already processed; a projection key with
-`accepted 1, processed 0` and no sink row.
+## Fix
 
-## Change
-
-`acquire` returns the expiry of the lease it found held (or `undefined` once
-it takes the lease). A drain that finds it held reschedules its own callback
-for just after that expiry, instead of returning:
+`acquire` returns the expiry of the lease it found held (or `undefined` once it takes the lease).
+A drain that finds it held reschedules its own callback for just after that expiry, instead of
+returning:
 
 - `queue`: `callback.schedule("drain", { at: held + 1, payload: {} })`;
 - projection: the existing `wake(held + 1)`.
 
-If the holder is alive, it releases the lease when it finishes, picks up rows
-staged meanwhile (its `more` check, or the projection's loop), and the
-rescheduled callback finds nothing to do. If the holder died, the callback
-takes the lease over once it has expired.
+If the holder is alive, it releases the lease when it finishes, picks up rows staged meanwhile (its
+`more` check, or the projection's loop), and the rescheduled callback finds nothing to do. If the
+holder died, the callback takes the lease over once it has expired.
 
 ## Why it is safe
 
-- One job per queue or projection key: the same callback id, so a schedule
-  replaces the pending one. No `progress` is passed, so the replay guard never
-  rejects it and the job keeps its progress.
-- Scheduling from inside a drain is already done by the projection (`wake`),
-  and `alarmCallbacks` keeps a job that was rescheduled while it ran (the token
-  check in `pass`).
-- No tight loop: a reschedule targets a time past the expiry of the lease it
-  saw, and the callback runs only once that time is reached, so one lease
-  causes at most one return. The extra callback runs are bounded by the number
-  of leases taken by drains that actually run. With a healthy drain holding the
-  lease, a kick that finds it moves the backstop to the lease's expiry, once.
-- `flush` keeps its documented behaviour (it does not wait when another drain
-  holds the lease).
+- One job per queue or projection key: the same callback id, so a schedule replaces the pending
+  one. No `progress` is passed, so the replay guard never rejects it and the job keeps its
+  progress.
+- Scheduling from inside a drain is already done by the projection (`wake`), and `alarmCallbacks`
+  keeps a job that was rescheduled while it ran (the token check in `pass`).
+- No tight loop: a reschedule targets a time past the expiry of the lease it saw, and the callback
+  runs only once that time is reached, so one lease causes at most one return. With a healthy
+  drain holding the lease, a kick that finds it moves the backstop to the lease's expiry, once.
+- `flush` keeps its documented behaviour (it does not wait when another drain holds the lease).
 
-## Cost and limits
+Recovery waits out what is left of the dead holder's lease (up to 60 s), plus the host's wake
+latency (on Effect Cluster, a persisted message read on the 10 s entity-message poll). Tying the
+lease to the instance's ownership would let a new owner take over at once; that is a larger change
+(see `04-leases-follow-shard-ownership.md`).
 
-Recovery waits out what is left of the dead holder's lease (up to 60 s), plus
-the host's wake latency (a few seconds on Effect Cluster). Tying the lease to
-the instance's ownership (on Effect Cluster, the shard lock) would let a new
-owner take over at once; that is a larger change and is not attempted here.
+## Failing case, and how it was reproduced
 
-## Tests
+- In process (an in-process host like the `simHost` in
+  `packages/integration-tests/test/Domain/DurableObjects.test.ts`, with a `TestClock`): a lease is
+  written into storage as a killed drain leaves it. Before the change, the outbox and projection
+  rows are never delivered after the lease expires; after it, they are. With successive live drains
+  holding the lease for five minutes, the backstop returns once per lease.
+- On a cluster (two runners and a front on Effect Cluster with PostgreSQL 17, on a single-node Docker
+swarm on one workstation): both runners killed right after a command commits. Before the change the
+  outbox stayed stranded, with `outbox-lease` in the future and its backstop `Wake` already
+  processed, and a projection key stayed at `accepted 1, processed 0` with no sink row. After it,
+  every reaction of the command happened once, finishing 66.8 s, 67.7 s and 67.0 s after the kill
+  in three runs (the lease plus two entity-message polls is 80 s).
 
-- In memory (an in-process host like the `simHost` in
-  `packages/integration-tests/test/Domain/DurableObjects.test.ts`, with a
-  `TestClock`): a lease written into storage as a killed drain leaves it.
-  Outbox and projection cases fail before the change (rows never delivered
-  after the lease) and pass after; with successive live drains holding the
-  lease for five minutes, the backstop returns once per lease.
-- On Effect Cluster with Postgres (two runners on a local swarm): after a kill
-  right after a commit, the outbox drains once the lease expires and every
-  reaction happens once; a projection crash forced between the sink write and
-  the checkpoint is redelivered and the sink ends correct.
+## Where it ran
+
+- On a cluster: the kill-after-commit case, and a projection crash forced between its sink write
+  and its checkpoint (redelivered; the sink ended correct), each in several runs.
+- In process: the stranded-drain cases above.
+
+## Depends on
+
+Nothing. No hunk overlaps any other patch here.
 
 ---
 --- a/packages/domain/src/DurableObjects.ts

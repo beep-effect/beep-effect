@@ -1,37 +1,36 @@
 fix(effect-cluster): name a runner's Postgres pool after the runner
 
 Against alchemy `packages/effect-cluster/src` at 33c10dd (2.0.0-beta.87). Apply from the
-repository root with `git apply`; the text above the first `---` line is ignored. It touches only
-`packages/effect-cluster`, so it applies in any order with 01 to 06; 07 imports `runnerPoolName`
-from it, so 07 needs it to compile.
+repository root with `git apply`; the text above the first `---` line is ignored.
 
 ## Problem
 
 Effect Cluster 4.1.4 holds every shard of a runner as a session-level advisory lock on one
 connection it reserves from the runner's SQL pool (`SqlRunnerStorage.ts`, `acquireLockConn`).
-Another connection can read in `pg_locks` which backend holds a shard's lock, but not whose
-backend it is: the bootstrap builds the runner's pool with `PgClient.layer({ url })`, so every
-session of every runner carries `@effect/sql-pg` as its `application_name`, and behind a proxy or
-a load balancer every session has the same `client_addr` too. On a Docker swarm overlay every
-session arrives from the network's load-balancer address.
+Another connection can read in `pg_locks` which backend holds a shard's lock, but not whose backend
+it is: the bootstrap builds the runner's pool with `PgClient.layer({ url })`, so every session of
+every runner carries `@effect/sql-pg` as its `application_name`, and behind a proxy or a load
+balancer every session has the same `client_addr` too. On a Docker swarm overlay every session
+arrives from the network's load-balancer address.
 
 So nothing that commits on its own connection can establish that its runner owns a shard, which is
 what the domain's commit fence (07) must establish before it lets a commit through.
 
-## Change
+## Fix
 
-- `Host.ts` exports `runnerPoolName(host, port)`: `effect-cluster:<host>:<port>`. PostgreSQL keeps
-  63 bytes of `application_name` and replaces characters outside printable ASCII; a name that
-  would be cut or changed becomes `effect-cluster:#` plus an FNV-1a hash of `host:port` (16 + 8
-  bytes), so two runners never share a cut name and both sides compute the same one.
+- `Host.ts` exports `runnerPoolName(host, port)`: `effect-cluster:<host>:<port>`. PostgreSQL keeps 63
+  bytes of `application_name` and replaces characters outside printable ASCII; a name that would be
+  cut or changed becomes `effect-cluster:#` plus an FNV-1a hash of `host:port` (16 + 8 bytes), so two
+  runners never share a cut name and both sides compute the same one.
 - The runner bootstrap (`internal/Bootstrap.ts`, `bootstrap`, the pool whose runners hold shards)
   builds that pool with `applicationName: runnerPoolName(host, RUNNER_PORT)`, from the same `host`
-  and port it gives Effect as `ShardingConfig.runnerAddress`. The lock session Effect reserves
-  from the pool carries the name, as do the pool's other sessions, which hold no locks.
+  and port it gives Effect as `ShardingConfig.runnerAddress`. The lock session Effect reserves from
+  the pool carries the name, as do the pool's other sessions, which hold no locks.
 - `runExternal` is left as it is: its pool serves a client-only gateway (`clientOnly: true`) that
   holds no shards; the external program it starts builds its own pool from `DATABASE_URL`.
 
-No change to Effect: `PgClient.layer` already accepts `applicationName` (`@effect/sql-pg` 4.1.4).
+No change to Effect: `PgClient.layer` already accepts `applicationName` (`@effect/sql-pg` 4.1.4,
+`PgClient.ts`).
 
 ## Why it is safe
 
@@ -40,9 +39,10 @@ No change to Effect: `PgClient.layer` already accepts `applicationName` (`@effec
 - One setting on a pool the bootstrap already builds; operators gain runner names in
   `pg_stat_activity`.
 
-## Failing case
+## Failing case, and how it was reproduced
 
-On Effect Cluster with PostgreSQL behind a load balancer (two runners on a local Docker swarm):
+On a cluster (two runners and a front on Effect Cluster with PostgreSQL 17, on a single-node Docker
+swarm on one workstation), the lock holders of the cluster's namespace:
 
 ```sql
 SELECT a.application_name, a.client_addr, count(*)
@@ -52,22 +52,29 @@ GROUP BY 1, 2;
 ```
 
 Without this patch it returns two rows that differ only by pid, both `@effect/sql-pg` from the
-load-balancer address: no connection can tell which runner holds a shard. In the prototype's
-phase 10, a fence that therefore matched sessions by address acknowledged, in three of five runs,
-a write from a runner whose shard had moved while it was paused. With this patch it returns
-`effect-cluster:10.0.1.6:34431` and `effect-cluster:10.0.1.7:34431`, 150 shards each; after the
-lock session is ended (`pg_terminate_backend`, or the 35 s `idle_session_timeout` of a paused
-runner), the session Effect rebuilds carries the same name and takes the shards back. With 07 and
-this patch, the invariant held in each of six runs of the same paused-runner case
-(`notes/phase-11.md`).
+load-balancer address: no connection can tell which runner holds a shard. With it, it returns
+`effect-cluster:10.0.1.6:34431` and `effect-cluster:10.0.1.7:34431`, 150 shards each. After the lock
+session is ended (`pg_terminate_backend`, or the 35 s `idle_session_timeout` of a paused runner),
+the session Effect rebuilds carries the same name and takes the shards back. With 07, the paused
+runner case held its invariant in each of six runs (07's description).
+
+## Where it ran
+
+- On a cluster: the deploys above, with and without this patch (the latter on an earlier version
+  of the application), and 07's cases.
+- In process: `runnerPoolName` itself (the cut-name form for a 70-character host).
+
+## Depends on
+
+Nothing; it touches only `packages/effect-cluster`. 07 imports `runnerPoolName` from it.
 
 ## The alternative, not taken
 
-Phase 10 proposed that Effect name the lock session itself: `SqlRunnerStorage`'s
-`acquireLockConn` would `set_config('application_name', 'effect-cluster:<runner address>', false)`
-in the statement that already sets the session's `idle_session_timeout`, or `RunnerStorage` would
-expose the lock session's pid. Either works from inside Effect for every host. This patch needs no
-change to Effect, because the pool the lock session is reserved from is the bootstrap's to build.
+Effect could name the lock session itself: `SqlRunnerStorage`'s `acquireLockConn` would
+`set_config('application_name', 'effect-cluster:<runner address>', false)` in the statement that
+already sets the session's `idle_session_timeout`, or `RunnerStorage` would expose the lock
+session's pid. Either works from inside Effect for every host. This patch needs no change to Effect,
+because the pool the lock session is reserved from is the bootstrap's to build.
 
 ---
 --- a/packages/effect-cluster/src/Host.ts

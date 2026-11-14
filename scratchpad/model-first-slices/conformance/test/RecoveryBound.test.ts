@@ -1,19 +1,23 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as Num from "effect/Number";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import {
   ENTITY_MESSAGE_POLL_MS,
   ENTITY_TERMINATION_MS,
+  FROZEN_WRITE_BOUND_MS,
   LEASE_MS,
   RECOVERY_BOUND_MS,
   REFRESH_ASSIGNMENTS_MS,
   REFUSED_WRITE_BOUND_MS,
   RETRY_SPACING_MS,
   SHARD_LOCK_REFRESH_MS,
+  TRANSIT_ATTEMPT_ALLOWANCE_MS,
   TRANSIT_RETRY_BUDGET_MS,
 } from "./RecoveryBound.ts";
 
@@ -58,6 +62,18 @@ it.layer(NodeServices.layer)((it) => {
       expect(REFUSED_WRITE_BOUND_MS).toBe(33_000);
       expect(TRANSIT_RETRY_BUDGET_MS).toBe(63_100);
       expect(REFUSED_WRITE_BOUND_MS).toBeLessThan(TRANSIT_RETRY_BUDGET_MS);
+    }),
+  );
+  // Phase 12 (D55): the frozen runner's bound is the retry budget, which is TRANSIT_RETRY's own delays.
+  it.effect("a write sent to a frozen runner is answered within the retry budget: TRANSIT_RETRY's 35 delays, plus the attempts' time on a cluster", () =>
+    Effect.gen(function* () {
+      const { library } = yield* sources;
+      expect(pipe(library, Str.includes('schedule: Schedule.min([Schedule.exponential("100 millis"), Schedule.spaced("2 seconds")]),'))).toBe(true);
+      expect(pipe(library, Str.includes("times: 35,"))).toBe(true);
+      // Each delay is the shorter of the exponential (100 ms, doubling) and the 2 s spacing.
+      const delays = A.makeBy(35, (n) => Num.min(100 * 2 ** n, RETRY_SPACING_MS));
+      expect(A.reduce(delays, 0, Num.sum)).toBe(TRANSIT_RETRY_BUDGET_MS);
+      expect(FROZEN_WRITE_BOUND_MS).toBe(TRANSIT_RETRY_BUDGET_MS + TRANSIT_ATTEMPT_ALLOWANCE_MS);
     }),
   );
 });

@@ -1,12 +1,11 @@
-# Proposal for Alchemy: a projection's backlog, from its platform
+# Proposal: a projection's backlog, from its platform
 
-A proposal for `@alchemy.run/domain` (2.0.0-beta.87), not a patch. Not filed (D52). It is the
-library call that would make the prototype's drain check (D47, D50) one line for any published
-stream.
+For alchemy `packages/domain` at 33c10dd (2.0.0-beta.87). A proposal, not a patch: the library call
+that would make a "has this publisher drained?" check one line for any published stream.
 
-## What the check needs
+## What happens
 
-Before a deploy closes a published stream's generation or gives it another writer, the outgoing
+Before a deploy closes a published stream's generation, or gives it another writer, the outgoing
 writer (a projection that lists the stream in `writes`) must have published everything it was
 given. What it has not published waits in four places:
 
@@ -16,36 +15,46 @@ given. What it has not published waits in four places:
 - inputs its keys accepted into their logs and have not handled;
 - its backfill run, while the run is not complete.
 
-## What a reader outside the library has to do today
-
-The prototype's reader, `shared/tooling/src/PublisherBacklog.ts` (`backlogOf`, `writerShapeOf`),
-counts those from the Durable Object platform's rows. Every rule it relies on is a private detail
-of `DurableObjects.ts` and `Kernel.ts`:
+The library exposes none of this. `Projection.Progress` (`Projection.ts`) has `history` and
+`caughtUp(receipt)`, which wait for a known write; neither says what is pending. A reader outside
+the library has to count it from the Durable Object platform's rows, and every rule it relies on is
+private to `DurableObjects.ts` and `Kernel.ts`:
 
 - an instance's outbox rows are `outbox:<12-digit seq>`, each a `Delivery` naming its target, key,
-  source, `seq` and tag (`queue`, line 396; the aggregate's outbox at 823, the view's at 1042), and a
-  row is deleted only after its delivery returns, so a delivery already taken in can still be
-  staged;
+  source, `seq` and tag (`queue`; the aggregate's outbox and the view's), and a row is deleted only
+  after its delivery returns, so a delivery already taken in can still be staged;
 - a projection key's progress is its `meta` row, `accepted`, `processed` and `intake` (the last
-  `seq` taken per source) (`ProjectionMeta`, line 1311), and a view key's is its `snapshot` row's
-  `checkpoints` (`Platform.ts`, `ViewSnapshot`, line 302);
-- a consumer's storage class is `consumerClass(kind, name, generation)` (line 345), except that a
-  view rebuilt in place keeps generation 0 (`Kernel.ts`, `classGenerationOf`, line 752) while its
-  deliveries carry its generation;
-- a backfill run keeps its phase at `<class>Run/~run` under `run:<encoded target>` (`RUN_ROOT`,
-  line 771; `Backfill.ts`, line 1986).
+  `seq` taken per source) (`ProjectionMeta`), and a view key's is its `snapshot` row's
+  `checkpoints` (`Platform.ts`, `ViewSnapshot`);
+- a consumer's storage class is `consumerClass(kind, name, generation)`, except that a view rebuilt
+  in place keeps generation 0 (`Kernel.ts`, `classGenerationOf`) while its deliveries carry its
+  generation;
+- a backfill run keeps its phase at `<class>Run/~run` under `run:<encoded target>` (`RUN_ROOT`;
+  `Backfill.ts`).
 
 Any release may change these. The in-memory platform keeps all of it out of reach: its queue is a
-closure-local array of effects with labels (`InMemory.ts`, line 137), its projection partitions are
-closures too, `Control` exposes `idle` and `drain` only, and `Model.Internals` exposes the
-aggregate, view and stream stores. So the reader cannot run in memory at all; the prototype's
-in-process comparison (`conformance/test/HandoverBacklog.test.ts`) runs it on the Durable Object
-platform over an in-process host instead.
+closure-local array of effects (`InMemory.ts`, `pending`), its projection partitions are closures
+too, `Control` exposes `idle` and `drain` only, and `Model.Internals` exposes the aggregate, view
+and stream stores. A reader cannot run there at all.
 
-## The change
+## Evidence
 
-Add the backlog to `Projection.Progress`, beside `history` and `caughtUp`
-(`Projection.ts`, line 107):
+A reader written against the rows above, for a projection that reads a view and publishes a fact per
+decision, agreed with a query specific to that model ("decided claims whose fact the stream lacks")
+in every comparison:
+
+| Where | Held or undelivered | Drained |
+| --- | --- | --- |
+| The Durable Object platform over an in-process host, the publisher held in its handler | 1 and 1 | 0 and 0 |
+| Effect Cluster with PostgreSQL, a dump restored with the runners stopped, a decision added with its delivery staged (never committed) | 1 and 1 | 0 and 0 |
+| Effect Cluster, the previous version of the model running, its review view held on a row lock while a claim was decided | 1 and 1 | 0 and 0 |
+
+It had to learn the in-place rule and the "already taken in" rule from the source, and it cannot be
+written for the in-memory platform.
+
+## Proposed change
+
+Add the backlog to `Projection.Progress`, beside `history` and `caughtUp`:
 
 ```ts
 export interface Backlog {
@@ -68,19 +77,17 @@ export interface Progress {
 
 Each platform implements it from what it already stores: the Durable Object platform from the rows
 above (on Effect Cluster one SQL query; on Cloudflare and Rivet through the instance index the
-backfill run already builds), the in-memory platform from its queue and partitions. The drain check
+backfill run already builds), the in-memory platform from its queue and partitions. A drain check
 then reads, for each handover:
 
 ```ts
 const backlog = yield* writer.Progress.pipe(Effect.flatMap((progress) => progress.backlog));
 ```
 
-## Why it is safe
+Read only; it adds a member to a service the platforms already provide, and it answers with counts,
+not rows, so no layout leaves the library.
 
-- Read only. It adds a member to a service the platforms already provide.
-- It answers with counts, not rows, so no layout leaves the library.
-
-## Tests it needs
+### Tests it needs
 
 - In memory and on each Durable Object host: a projection held in its handler, with a decision
   committed upstream of it, reports one pending; after the handler is released and the input
@@ -89,7 +96,3 @@ const backlog = yield* writer.Progress.pipe(Effect.flatMap((progress) => progres
 - A view rebuilt in place (version bumped, keyed by the one aggregate it reads) is read from the
   storage it kept.
 - A projection whose backfill run is not complete reports `runComplete: false`.
-
-The prototype's agreement with Party's own query: in process (held, one pending by both; drained,
-none by both) and on the cluster over phase 6's data (drained, and with a decision undelivered:
-`notes/phase-11.md`).

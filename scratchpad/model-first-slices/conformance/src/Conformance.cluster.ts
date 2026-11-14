@@ -13,8 +13,8 @@ import { Slot, SlotTally, TwoRunnersModel, Write } from "./TwoRunners.model.ts";
 /**
  * The conformance models on a cluster: upstream's conformance model (served
  * at the front's root by upstream's own `app`) and the two-runners slot
- * (`/tworunners/write?slot=&label=&hold=`, `/tworunners/state?slot=` and, since phase 10,
- * `/tworunners/tally`, every write counted).
+ * (`/tworunners/write?slot=&label=&hold=`, with `&command=` for a command id since phase 12,
+ * `/tworunners/state?slot=` and, since phase 10, `/tworunners/tally`, every write counted).
  *
  * @category cluster
  * @since 0.0.0
@@ -38,10 +38,15 @@ export const ConformanceCluster = <ROut, E, R>(platform: Layer.Layer<ROut, E, R>
         return yield* HttpServerResponse.json(state);
       }
       const started = yield* Clock.currentTimeMillis;
-      // An absent `hold` reads as 0, as `Number("")` does.
-      const receipt = yield* slot.send(param("slot"), Write.make({ label: param("label"), holdMs: Number(param("hold")) }));
+      // An absent `hold` reads as 0, as `Number("")` does; an absent `command` sends without an id.
+      const command = param("command");
+      const receipt = yield* slot.send(
+        param("slot"),
+        Write.make({ label: param("label"), holdMs: Number(param("hold")) }),
+        Str.isEmpty(command) ? undefined : { commandId: command },
+      );
       const ended = yield* Clock.currentTimeMillis;
-      return yield* HttpServerResponse.json({ version: receipt.version, ms: ended - started });
+      return yield* HttpServerResponse.json({ version: receipt.version, stream: receipt.stream, ms: ended - started });
     }),
   );
   return {

@@ -214,13 +214,13 @@ index ba7ba46be6cd3abc26b6d5ac3c8dfb185c4c44fd..744e1d5fb678517662e57e43f398fb83
              while (true) {
                  const meta = yield* readMeta;
 diff --git a/lib/EffectCluster/index.js b/lib/EffectCluster/index.js
-index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..7904eb9b61fb484ce1c7da74b5fdd5ef625f9697 100644
+index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..6524dff60d59f432417f66255a941ed7e881d111 100644
 --- a/lib/EffectCluster/index.js
 +++ b/lib/EffectCluster/index.js
 @@ -1,5 +1,5 @@
  import { Entity, PlatformDeclaration, } from "@alchemy.run/effect-cluster/Entity";
 -import { HasNoPool, InstanceStorage, makeNamespace, RunnerHost, } from "@alchemy.run/effect-cluster/Host";
-+import { HasNoPool, InstanceStorage, makeNamespace, RunnerHost, runnerPoolName, } from "@alchemy.run/effect-cluster/Host";
++import { checkRunnerPool, HasNoPool, InstanceStorage, makeNamespace, RunnerHost, runnerPoolName, } from "@alchemy.run/effect-cluster/Host";
  /**
   * Host a domain model (`@alchemy.run/domain`) on Effect Cluster entities.
   *
@@ -247,12 +247,12 @@ index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..7904eb9b61fb484ce1c7da74b5fdd5ef
  /**
   * Wake an instance at `at`: a persisted message delivered when it is due,
   * so it survives restarts and moves with the instance.
-@@ -122,11 +127,94 @@ const entity = (type) => EffectEntity.make(type, rpcs);
+@@ -122,11 +127,96 @@ const entity = (type) => EffectEntity.make(type, rpcs);
  const TABLE = "alchemy_domain_objects";
  const encode = (value) => JSON.stringify(value ?? null);
  const decode = (text) => JSON.parse(text);
 +/**
-+ * The commit fence (D45 in the prototype): a commit is acknowledged only if
++ * The commit fence: a commit is acknowledged only if
 + * its runner held the instance's shard lock for the whole commit transaction.
 + *
 + * Effect Cluster's SQL runner storage holds each shard as a session-level
@@ -276,7 +276,9 @@ index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..7904eb9b61fb484ce1c7da74b5fdd5ef
 + * address the runner gives Effect, so the lock session carries the name and
 + * the fence computes it the same way. There is no fallback: a runner whose
 + * pool is not named (another bootstrap) has no session of its own, and every
-+ * commit it makes is refused.
++ * commit it makes would be refused. A runner therefore checks at start that it
++ * has an address and that its bootstrap named its pool after it
++ * (`checkRunnerPool`), and fails to start otherwise.
 + *
 + * A takeover cannot complete only in the server's own commit, between the
 + * trigger and the commit record; even then the new owner cannot commit to the
@@ -344,7 +346,7 @@ index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..7904eb9b61fb484ce1c7da74b5fdd5ef
      const run = (effect) => gate.storage(Effect.orDie(effect));
      const putOne = (key, value) => sql `INSERT INTO ${sql(TABLE)} (object, key, value) VALUES (${object}, ${key}, ${encode(value)})
          ON CONFLICT (object, key) DO UPDATE SET value = excluded.value`;
-@@ -152,17 +240,51 @@ const objectStorage = (sql, object, gate) => {
+@@ -152,17 +242,51 @@ const objectStorage = (sql, object, gate) => {
            ${end !== undefined ? sql `AND key < ${end}` : sql ``}
            ${reverse ? sql `ORDER BY key DESC` : sql `ORDER BY key`}
            ${limit !== undefined ? sql `LIMIT ${Math.max(0, limit | 0)}` : sql ``}`.pipe(Effect.map((rows) => new Map(rows.map((row) => [row.key, decode(row.value)]))))),
@@ -401,7 +403,7 @@ index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..7904eb9b61fb484ce1c7da74b5fdd5ef
  /** A Domain host entity was asked for an object of a class it doesn't host. */
  export class DomainClassNotHosted extends Data.TaggedError("Cluster.DomainClassNotHosted") {
  }
-@@ -185,7 +307,7 @@ const remote = (namespace) => (cls) => ({
+@@ -185,7 +309,7 @@ const remote = (namespace) => (cls) => ({
          get: (_, method) => method === LIVE_METHOD
              ? (attachment) => Stream.unwrap(Effect.map(namespace.getByName(`${cls}/${key}`), (client) => client.Live({ attachment })))
              : (...args) => Effect.flatMap(namespace.getByName(`${cls}/${key}`), (client) => client
@@ -410,7 +412,7 @@ index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..7904eb9b61fb484ce1c7da74b5fdd5ef
                  .pipe(Effect.map((result) => JSON.parse(result)))),
      }),
  });
-@@ -401,7 +523,7 @@ Layer.unwrap(Effect.gen(function* () {
+@@ -401,7 +525,7 @@ Layer.unwrap(Effect.gen(function* () {
          // fiber of its own, which this gate would hold behind the transaction.
          const storage = Option.isSome(native)
              ? native.value
@@ -419,7 +421,7 @@ index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..7904eb9b61fb484ce1c7da74b5fdd5ef
          const instanceScope = yield* Scope.Scope;
          const wakes = yield* objects.client;
          const callbacks = alarmCallbacks(storage, {
-@@ -510,9 +632,11 @@ Layer.unwrap(Effect.gen(function* () {
+@@ -510,9 +634,14 @@ Layer.unwrap(Effect.gen(function* () {
              return yield* Effect.die(new HasNoPool({ message: `${name} did not finish its Construction phase.` }));
          }
          const registrations = yield* Ref.make([]);
@@ -427,11 +429,14 @@ index ebb35ed8879af1cebcb56bf4eaa1014074aad1b1..7904eb9b61fb484ce1c7da74b5fdd5ef
          // Sagas register while the model's Layer builds, before the runner
          // joins the cluster: hold them until then, then run every call on its engine.
          yield* runner.value.host(hosted, Effect.gen(function* () {
++            // Fenced commits need this runner's lock session to carry its name: fail at start
++            // where it cannot, instead of refusing every commit later.
++            yield* checkRunnerPool(runner.value.poolName).pipe(Effect.tapError((unnamed) => Effect.logError(`commit fence unavailable: ${unnamed.message} Every commit on this runner would be refused.`)), Effect.orDie);
 +            yield* Deferred.succeed(joined, yield* Sharding.Sharding);
              const clusterEngine = yield* WorkflowEngine.WorkflowEngine;
              for (const [workflow, execute] of yield* Ref.get(registrations))
                  yield* clusterEngine.register(workflow, execute);
-@@ -531,7 +655,16 @@ Layer.unwrap(Effect.gen(function* () {
+@@ -531,7 +660,16 @@ Layer.unwrap(Effect.gen(function* () {
              scheduleClock: (workflow, opts) => Effect.flatMap(started, (engine) => engine.scheduleClock(placed(workflow), opts)),
          });
          // Inside the cluster, calls route through Effect Cluster itself.
@@ -628,10 +633,15 @@ index 9ed59d4809d6a0e7aae0e6035f6c65b8090a99c9..44a2e19958120dc67f0b8f9f301029a7
          Effect.gen(function* () {
            while (true) {
 diff --git a/src/EffectCluster/index.ts b/src/EffectCluster/index.ts
-index a5de09720412654d192363a291658b6778a51b47..0bdf4b6bf4c052c8cecb0bcaff2fab7d5cfece30 100644
+index a5de09720412654d192363a291658b6778a51b47..c5592f54971df464877a2dd6066024127735d968 100644
 --- a/src/EffectCluster/index.ts
 +++ b/src/EffectCluster/index.ts
-@@ -9,6 +9,7 @@ import {
+@@ -5,10 +5,12 @@ import {
+   PlatformDeclaration,
+ } from "@alchemy.run/effect-cluster/Entity";
+ import {
++  checkRunnerPool,
+   HasNoPool,
    InstanceStorage,
    makeNamespace,
    RunnerHost,
@@ -639,7 +649,7 @@ index a5de09720412654d192363a291658b6778a51b47..0bdf4b6bf4c052c8cecb0bcaff2fab7d
  } from "@alchemy.run/effect-cluster/Host";
  import type { PoolLayer } from "@alchemy.run/effect-cluster/Pool";
  import type { Providers } from "@alchemy.run/effect-cluster/Providers";
-@@ -24,7 +25,7 @@ import { RuntimeContext } from "alchemy/RuntimeContext";
+@@ -24,7 +26,7 @@ import { RuntimeContext } from "alchemy/RuntimeContext";
  import { makeInputGate, type InputGateShape } from "alchemy/Workers/InputGate";
  import { decodeResult, encodeResult, payloadCodec } from "alchemy/WorkflowEncoding";
  import type * as Cause from "effect/Cause";
@@ -648,7 +658,7 @@ index a5de09720412654d192363a291658b6778a51b47..0bdf4b6bf4c052c8cecb0bcaff2fab7d
  import * as Config from "effect/Config";
  import * as Context from "effect/Context";
  import * as SecureRandom from "effect/crypto/SecureRandom";
-@@ -48,6 +49,8 @@ import * as Scope from "effect/Scope";
+@@ -48,6 +50,8 @@ import * as Scope from "effect/Scope";
  import * as Socket from "effect/socket/Socket";
  import { SqlClient } from "effect/sql/SqlClient";
  import * as Stream from "effect/Stream";
@@ -657,7 +667,7 @@ index a5de09720412654d192363a291658b6778a51b47..0bdf4b6bf4c052c8cecb0bcaff2fab7d
  import { DurableDeferred, Workflow, WorkflowEngine } from "effect/workflow";
  import {
    alarmCallbacks,
-@@ -66,6 +69,9 @@ import {
+@@ -66,6 +70,9 @@ import {
    SUBSCRIPTION_HEADER,
  } from "../DurableObjects.ts";
  import type { Platform, Subscription } from "../Platform.ts";
@@ -667,12 +677,12 @@ index a5de09720412654d192363a291658b6778a51b47..0bdf4b6bf4c052c8cecb0bcaff2fab7d
  
  /**
   * Wake an instance at `at`: a persisted message delivered when it is due,
-@@ -199,11 +205,119 @@ const TABLE = "alchemy_domain_objects";
+@@ -199,11 +206,121 @@ const TABLE = "alchemy_domain_objects";
  const encode = (value: unknown) => JSON.stringify(value ?? null);
  const decode = <T>(text: string) => JSON.parse(text) as T;
  
 +/**
-+ * The commit fence (D45 in the prototype): a commit is acknowledged only if
++ * The commit fence: a commit is acknowledged only if
 + * its runner held the instance's shard lock for the whole commit transaction.
 + *
 + * Effect Cluster's SQL runner storage holds each shard as a session-level
@@ -696,7 +706,9 @@ index a5de09720412654d192363a291658b6778a51b47..0bdf4b6bf4c052c8cecb0bcaff2fab7d
 + * address the runner gives Effect, so the lock session carries the name and
 + * the fence computes it the same way. There is no fallback: a runner whose
 + * pool is not named (another bootstrap) has no session of its own, and every
-+ * commit it makes is refused.
++ * commit it makes would be refused. A runner therefore checks at start that it
++ * has an address and that its bootstrap named its pool after it
++ * (`checkRunnerPool`), and fails to start otherwise.
 + *
 + * A takeover cannot complete only in the server's own commit, between the
 + * trigger and the commit record; even then the new owner cannot commit to the
@@ -789,7 +801,7 @@ index a5de09720412654d192363a291658b6778a51b47..0bdf4b6bf4c052c8cecb0bcaff2fab7d
    const run = <A>(effect: Effect.Effect<A, unknown>) => gate.storage(Effect.orDie(effect));
    const putOne = (key: string, value: unknown) =>
      sql`INSERT INTO ${sql(TABLE)} (object, key, value) VALUES (${object}, ${key}, ${encode(value)})
-@@ -252,20 +366,73 @@ const objectStorage = (sql: SqlClient, object: string, gate: InputGateShape): Ob
+@@ -252,20 +369,73 @@ const objectStorage = (sql: SqlClient, object: string, gate: InputGateShape): Ob
            Effect.map((rows) => new Map(rows.map((row) => [row.key, decode<T>(row.value)]))),
          ),
        ),
@@ -868,7 +880,7 @@ index a5de09720412654d192363a291658b6778a51b47..0bdf4b6bf4c052c8cecb0bcaff2fab7d
  
  /** A Domain host entity was asked for an object of a class it doesn't host. */
  export class DomainClassNotHosted extends Data.TaggedError("Cluster.DomainClassNotHosted")<{
-@@ -307,7 +474,7 @@ const remote =
+@@ -307,7 +477,7 @@ const remote =
                : (...args: ReadonlyArray<unknown>) =>
                    Effect.flatMap(namespace.getByName(`${cls}/${key}`), (client) =>
                      client
@@ -877,7 +889,7 @@ index a5de09720412654d192363a291658b6778a51b47..0bdf4b6bf4c052c8cecb0bcaff2fab7d
                        .pipe(Effect.map((result) => JSON.parse(result) as unknown)),
                    ),
          },
-@@ -612,7 +779,7 @@ export const layerEntities = <PoolReq>(
+@@ -612,7 +782,7 @@ export const layerEntities = <PoolReq>(
          // fiber of its own, which this gate would hold behind the transaction.
          const storage: ObjectStorage = Option.isSome(native)
            ? native.value
@@ -886,7 +898,7 @@ index a5de09720412654d192363a291658b6778a51b47..0bdf4b6bf4c052c8cecb0bcaff2fab7d
          const instanceScope = yield* Scope.Scope;
          const wakes = yield* objects.client;
          const callbacks = alarmCallbacks(storage, {
-@@ -760,11 +927,13 @@ export const layerEntities = <PoolReq>(
+@@ -760,11 +930,21 @@ export const layerEntities = <PoolReq>(
              readonly [Workflow.Any, (payload: any, id: string) => Effect.Effect<any, any, any>]
            >
          >([]);
@@ -896,11 +908,19 @@ index a5de09720412654d192363a291658b6778a51b47..0bdf4b6bf4c052c8cecb0bcaff2fab7d
          yield* runner.value.host(
            hosted,
            Effect.gen(function* () {
++            // Fenced commits need this runner's lock session to carry its name: fail at start
++            // where it cannot, instead of refusing every commit later.
++            yield* checkRunnerPool(runner.value.poolName).pipe(
++              Effect.tapError((unnamed) =>
++                Effect.logError(`commit fence unavailable: ${unnamed.message} Every commit on this runner would be refused.`),
++              ),
++              Effect.orDie,
++            );
 +            yield* Deferred.succeed(joined, yield* Sharding.Sharding);
              const clusterEngine = yield* WorkflowEngine.WorkflowEngine;
              for (const [workflow, execute] of yield* Ref.get(registrations))
                yield* clusterEngine.register(workflow as never, execute as never);
-@@ -802,9 +971,21 @@ export const layerEntities = <PoolReq>(
+@@ -802,9 +982,21 @@ export const layerEntities = <PoolReq>(
              Effect.flatMap(started, (engine) => engine.scheduleClock(placed(workflow), opts)),
          });
          // Inside the cluster, calls route through Effect Cluster itself.

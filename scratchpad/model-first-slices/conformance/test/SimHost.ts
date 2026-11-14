@@ -5,6 +5,7 @@ import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
+import * as Latch from "effect/Latch";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -22,7 +23,8 @@ import * as Str from "effect/String";
 // Calls cross a JSON boundary, as Workers RPC does. Phase 9: an instance can run on more than one
 // "runner" over one storage, as two cluster runners do while a shard moves (`serveFrom`).
 // Phase 10: the shard's ownership can fence commits (`fenced`), and calls can carry their
-// arguments as the Effect Cluster transport does (`args`).
+// arguments as the Effect Cluster transport does (`args`). Phase 12: a runner can be frozen, as a
+// paused process is (`freeze`, `thaw`).
 
 /** What a test reads back from the host: how often each instance read each lease key. */
 export interface SimHost {
@@ -45,7 +47,21 @@ export interface SimHost {
   readonly storageOf: (id: string) => O.Option<DurableObjects.ObjectStorage>;
   /** The runner of each transaction on an instance that completed, in order. */
   readonly committers: (id: string) => ReadonlyArray<number>;
+  /**
+   * Freeze a runner, as a paused process is: a call routed to it fails in transit, as a call to
+   * an unreachable runner does, so the caller retries; work already running on it stops at its
+   * next storage operation until it is thawed.
+   */
+  readonly freeze: (runner: number) => void;
+  /** Thaw a frozen runner: its stopped work goes on, and calls reach it again. */
+  readonly thaw: (runner: number) => void;
 }
+
+/** A call routed to a frozen runner: it fails in transit, and the caller retries it. */
+export class RunnerUnreachable extends Schema.TaggedError<RunnerUnreachable, { readonly brand: unique symbol }>()("RunnerUnreachable", {
+  runner: Schema.Int,
+  id: Schema.String,
+}) {}
 
 /**
  * How a host runs (phase 10). `fenced`: a transaction completes only if its runner still owns
@@ -180,7 +196,29 @@ export const makeSimHostWith = (options: SimHostOptions) => (seed: (id: string, 
   const scopes = MutableHashMap.empty<string, Scope.Closeable>();
   const storages = MutableHashMap.empty<string, DurableObjects.ObjectStorage>();
   const commits = MutableHashMap.empty<string, ReadonlyArray<number>>();
+  const thawed = MutableHashMap.empty<number, Latch.Latch>();
   let serving = 0;
+
+  /** A runner's latch: open unless the runner is frozen. */
+  const latchOf = (runner: number): Latch.Latch =>
+    O.getOrElse(MutableHashMap.get(thawed, runner), () => {
+      const latch = Latch.makeUnsafe(true);
+      MutableHashMap.set(thawed, runner, latch);
+      return latch;
+    });
+  /** Every storage operation a runner makes waits while it is frozen. */
+  const frozenStorage = (storage: DurableObjects.ObjectStorage, runner: number): DurableObjects.ObjectStorage => {
+    const wait = <A, E, R>(effect: Effect.Effect<A, E, R>) => Effect.andThen(latchOf(runner).await, effect);
+    return {
+      get: (key) => wait(storage.get(key)),
+      put: ((keyOrEntries: string | Readonly<Record<string, unknown>>, value?: unknown) =>
+        wait(typeof keyOrEntries === "string" ? storage.put(keyOrEntries, value) : storage.put(keyOrEntries))) as DurableObjects.ObjectStorage["put"],
+      delete: ((keyOrKeys: string | ReadonlyArray<string>) =>
+        typeof keyOrKeys === "string" ? wait(storage.delete(keyOrKeys)) : wait(storage.delete(keyOrKeys))) as DurableObjects.ObjectStorage["delete"],
+      list: (options) => wait(storage.list(options)),
+      transaction: (effect) => wait(storage.transaction(effect)),
+    };
+  };
 
   /** The storage a runner sees: its transactions are logged, and fenced when the host is. */
   const runnerStorage = (storage: DurableObjects.ObjectStorage, id: string, runner: number): DurableObjects.ObjectStorage => ({
@@ -236,7 +274,7 @@ export const makeSimHostWith = (options: SimHostOptions) => (seed: (id: string, 
         }),
       });
       const state = {
-        storage: runnerStorage(storage, id, runner),
+        storage: frozenStorage(runnerStorage(storage, id, runner), runner),
         exclusive: (effect) => gate.withPermits(1)(effect),
         waitUntil: (effect) => Effect.asVoid(Effect.forkIn(effect, scope)),
       } satisfies DurableObjects.ObjectStateShape;
@@ -289,7 +327,11 @@ export const makeSimHostWith = (options: SimHostOptions) => (seed: (id: string, 
             // Routed when the call runs, not when it is built: a retry reaches whichever runner
             // serves the instance then, as a cluster call does.
             Effect.flatMap(
-              Effect.suspend(() => instance(cls, name)),
+              Effect.suspend(() =>
+                Latch.isOpen(latchOf(serving))
+                  ? instance(cls, name)
+                  : Effect.die(RunnerUnreachable.make({ runner: serving, id: `${cls}/${name}` })),
+              ),
               (methods) =>
                 O.match(R.get(methods, method), {
                   onNone: () => Effect.die(`${cls}/${name} has no method ${method}`),
@@ -327,5 +369,11 @@ export const makeSimHostWith = (options: SimHostOptions) => (seed: (id: string, 
     },
     storageOf: (id) => MutableHashMap.get(storages, id),
     committers: (id) => O.getOrElse(MutableHashMap.get(commits, id), A.empty<number>),
+    freeze: (runner) => {
+      Latch.closeUnsafe(latchOf(runner));
+    },
+    thaw: (runner) => {
+      Latch.openUnsafe(latchOf(runner));
+    },
   };
 };
