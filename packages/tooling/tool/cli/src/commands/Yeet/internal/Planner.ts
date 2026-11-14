@@ -718,6 +718,28 @@ const monitorSteps = (context: RepoRunContext): ReadonlyArray<RepoPlanStep> => [
  */
 export const MONITOR_READY_SUBMIT_STEP_ID = "monitor:00-until-ready-submit" as const;
 
+/**
+ * The yeet words a publish submits its detached readiness monitor with.
+ *
+ * **Details**
+ *
+ * Publish reuses a live monitor only when that job's readiness argv keys the
+ * same as these words (`readyMonitorArgvKey`), so it never hands back a
+ * monitor started with other readiness flags.
+ *
+ * **Example** (The publish monitor's words)
+ *
+ * ```ts
+ * import { MONITOR_READY_SUBMIT_ARGV } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(MONITOR_READY_SUBMIT_ARGV) // ["monitor", "--until-ready", "--detach", "--json"]
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const MONITOR_READY_SUBMIT_ARGV: ReadonlyArray<string> = ["monitor", "--until-ready", "--detach", "--json"];
+
 // A publish that itself runs inside a proof job still submits the monitor as a
 // sibling job: the child would otherwise refuse a recursive --detach.
 const monitorReadySubmitStep = (context: RepoRunContext): RepoPlanStep =>
@@ -726,7 +748,7 @@ const monitorReadySubmitStep = (context: RepoRunContext): RepoPlanStep =>
     label: "monitor:until-ready:submit",
     phase: "monitor",
     command: "bun",
-    args: ["run", "beep", "yeet", "monitor", "--until-ready", "--detach", "--json"],
+    args: ["run", "beep", "yeet", ...MONITOR_READY_SUBMIT_ARGV],
     cwd: context.repoRoot,
     scope: "repo",
     mutability: "readonly",

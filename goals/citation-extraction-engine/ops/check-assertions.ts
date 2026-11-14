@@ -27,13 +27,14 @@ const program = Effect.gen(function* () {
     ).text()
   );
   const encoded = yield* S.decodeUnknownEffect(S.fromJsonString(S.toEncoded(CitationOracleAssertions)))(text);
-  for (const [name, expected] of [
-    ["export-assertions.py", encoded.exporterSha256],
-    ["export-operations.py", encoded.normalizerSha256],
-  ]) {
-    const bytes = yield* Effect.tryPromise(() => Bun.file(new URL(`./${name}`, import.meta.url)).bytes());
-    if (sha256(bytes) !== expected) return yield* reject("exporter hash mismatch");
-  }
+  // export-assertions.py and export-operations.py were removed with the repository's Python (goal
+  // python-free-repo). Their digests are pinned from the recovery commit:
+  // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/<name>`.
+  if (
+    encoded.exporterSha256 !== "1dd1d20a7566a7c97a086a3ba9589cd36316639e070ef176687e3f082572b9d6" ||
+    encoded.normalizerSha256 !== "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8"
+  )
+    return yield* reject("exporter hash mismatch");
   if (
     !A.every(encoded.events, (row) => sha256(row.payload) === row.normalizedSha256) ||
     !A.every(R.toEntries(encoded.artifacts), ([hash, row]) => sha256(row.payload) === hash)

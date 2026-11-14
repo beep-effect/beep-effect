@@ -62,13 +62,9 @@ const load = Effect.fn("HtmlBytesTest.load")(function* () {
   expect(data.nonTextCases).toHaveLength(45);
   expect(A.filter(data.nonTextCases, (r) => r.outcome.kind === "success")).toHaveLength(6);
   expect(A.every(data.nonTextCases, (r) => r.hooks.length === 0)).toBe(true);
-  const citationResult2 = yield* fs.readFile(
-    NodeURL.fileURLToPath(
-      new URL("../../../../goals/citation-extraction-engine/ops/probe-html-bytes.py", import.meta.url)
-    )
-  );
-  const citationResult3 = yield* S.decodeEffect(Sha256HexFromBytes)(citationResult2);
-  expect(citationResult3).toBe(data.producerSha256);
+  // The Python producer was removed with the repository's Python (goal python-free-repo). Its
+  // digest stays pinned in the corpus as `producerSha256`; recover the exact producer with
+  // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-html-bytes.py`.
   return { data, strings: HashMap.fromIterable(A.map(data.artifacts, (r) => [r.sha256, r.value] as const)) };
 });
 const verify = Effect.fn("HtmlBytesTest.verify")(function* (
