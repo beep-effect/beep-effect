@@ -290,12 +290,13 @@ const githubRoutes =
       "{repo}": repositorySettings(script),
     })[call.path];
 
-// Own double: decorates the real platform spawner so the real commitlint runs.
 const scriptedSpawner = (
   script: GhScript,
   calls: Ref.Ref<ReadonlyArray<string>>,
   real: ChildProcessSpawner.ChildProcessSpawner["Service"]
 ) =>
+  // Own double: decorates the real platform spawner so the real commitlint runs.
+  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
   ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) return Effect.die("the squash reader never spawns a piped command");
     const line = A.join([command.command, ...commandArgs(command)], " ");

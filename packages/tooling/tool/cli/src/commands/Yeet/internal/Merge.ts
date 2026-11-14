@@ -133,12 +133,13 @@ export class MergeOutcome extends S.Opaque<MergeOutcome, { readonly brand: uniqu
 
 const decodePullRequestView = S.decodeUnknownEffect(S.fromJsonString(GhPrView));
 
-// KEEP (W6): `gh pr view <branch>` resolves the branch's pull request in any
-// state, which no kit member does (the kit reads a pull request by number).
 const readPullRequest = Effect.fn("Yeet.readMergePullRequest")(function* (
   context: RepoRunContext,
   selector: string
 ): Effect.fn.Return<GhPrView, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> {
+  // KEEP (W6): `gh pr view <branch>` resolves the branch's pull request in any state, which no kit member
+  // does (the kit reads a pull request by number).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (W6), reason above
   const output = yield* ghOutput({
     args: ["pr", "view", selector, "--json", pullRequestViewFields],
     cwd: context.repoRoot,
