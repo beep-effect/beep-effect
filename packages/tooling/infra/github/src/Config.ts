@@ -10,6 +10,7 @@ import { $InfraGithubId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
@@ -485,4 +486,49 @@ export const requiredChecks: {
       A.filter(ruleset.checks, (check) => check.context !== reviewerContext),
       O.toArray(liveReviewer)
     )
+);
+
+/**
+ * The logical ids that may take the create path on `prod`: each one's
+ * provider converges an existing object by name rather than creating a
+ * second one.
+ *
+ * **Example** (Build an allow-list)
+ *
+ * ```ts
+ * import { CreateAllowList } from "@beep/infra-github/Config"
+ *
+ * const allow = CreateAllowList.make({ logicalIds: ["Repository", "Label-bug"] })
+ * console.log(allow.logicalIds.length) // 2
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CreateAllowList extends S.Opaque<CreateAllowList, { readonly brand: unique symbol }>()(
+  S.Struct({ logicalIds: S.Array(S.String) }).pipe(
+    $I.annoteSchema("CreateAllowList", { description: "Logical ids allowed to take the create path on prod." })
+  )
+) {}
+
+/**
+ * Whether `logicalId` is on the allow-list.
+ *
+ * **Example** (Check a logical id)
+ *
+ * ```ts
+ * import { CreateAllowList, isCreateAllowed } from "@beep/infra-github/Config"
+ *
+ * const allow = CreateAllowList.make({ logicalIds: ["Repository"] })
+ * console.log(isCreateAllowed(allow, "MainRuleset")) // false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isCreateAllowed: {
+  (logicalId: string): (allow: CreateAllowList) => boolean;
+  (allow: CreateAllowList, logicalId: string): boolean;
+} = dual(2, (allow: CreateAllowList, logicalId: string) =>
+  HashSet.has(HashSet.fromIterable(allow.logicalIds), logicalId)
 );

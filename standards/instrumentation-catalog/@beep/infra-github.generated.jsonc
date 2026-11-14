@@ -12,6 +12,10 @@
     {"name":"InfraGithub.guardAfterDeploy","owner":"@beep/infra-github","family":"tooling","conforms":true},
     {"name":"InfraGithub.guardRuleset","owner":"@beep/infra-github","family":"tooling","conforms":true},
     {"name":"InfraGithub.guardedRulesetReconcile","owner":"@beep/infra-github","family":"tooling","conforms":true},
+    {"name":"InfraGithub.prodGuardCreate","owner":"@beep/infra-github","family":"tooling","conforms":true},
+    {"name":"InfraGithub.prodGuardedDiff","owner":"@beep/infra-github","family":"tooling","conforms":true},
+    {"name":"InfraGithub.prodGuardedRead","owner":"@beep/infra-github","family":"tooling","conforms":true},
+    {"name":"InfraGithub.prodGuardedReconcile","owner":"@beep/infra-github","family":"tooling","conforms":true},
     {"name":"InfraGithub.verifyRulesetUnchanged","owner":"@beep/infra-github","family":"tooling","conforms":true}
   ]
 }

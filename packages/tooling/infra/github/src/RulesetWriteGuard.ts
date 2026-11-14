@@ -76,6 +76,35 @@ export class CaptureWithoutId extends S.TaggedError<CaptureWithoutId, { readonly
 ) {}
 
 /**
+ * Raised when the ruleset the provider would write is not the captured one:
+ * the reconcile has no prior output (its create path POSTs a new ruleset) or
+ * its state names a different ruleset id. Nothing is sent.
+ *
+ * **Example** (A write aimed at another ruleset)
+ *
+ * ```ts
+ * import { RulesetTargetIsNotTheCapture } from "@beep/infra-github/RulesetWriteGuard"
+ * import * as O from "effect/Option"
+ *
+ * const refused = RulesetTargetIsNotTheCapture.make({ rulesetName: "main", capturedId: 10240248, targetId: O.none() })
+ * console.log(refused._tag) // "RulesetTargetIsNotTheCapture"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class RulesetTargetIsNotTheCapture extends S.TaggedError<
+  RulesetTargetIsNotTheCapture,
+  { readonly brand: unique symbol }
+>($I`RulesetTargetIsNotTheCapture`)(
+  "RulesetTargetIsNotTheCapture",
+  { rulesetName: S.String, capturedId: S.Int, targetId: S.Option(S.Int) },
+  $I.annote("RulesetTargetIsNotTheCapture", {
+    description: "The ruleset write would create a ruleset or target another id than the capture; nothing was sent.",
+  })
+) {}
+
+/**
  * Every guarded field in which two strictly decoded readings of the same
  * ruleset differ, server-managed fields excluded.
  *
@@ -111,11 +140,16 @@ const RulesetProvider = ProviderModule.Provider<GitHub.Ruleset>("GitHub.Ruleset"
 const verifyUnchanged = Effect.fn("InfraGithub.verifyRulesetUnchanged")(function* (
   capture: LiveRuleset,
   owner: string,
-  repository: string
+  repository: string,
+  targetId: O.Option<number>
 ) {
   const rulesetId = yield* Effect.fromOption(O.fromNullishOr(capture.id)).pipe(
     Effect.mapError(() => CaptureWithoutId.make({ rulesetName: capture.name }))
   );
+  // Without a prior output the shipped reconcile POSTs a new ruleset; with another id it writes that one.
+  if (!O.contains(targetId, rulesetId)) {
+    return yield* RulesetTargetIsNotTheCapture.make({ rulesetName: capture.name, capturedId: rulesetId, targetId });
+  }
   const read = yield* Repos.getRepoRuleset({ owner, repo: repository, ruleset_id: rulesetId });
   // The same strict decode the guard uses: an unreadable live shape refuses the write too.
   const live = yield* decodeLiveRuleset(read);
@@ -125,7 +159,9 @@ const verifyUnchanged = Effect.fn("InfraGithub.verifyRulesetUnchanged")(function
 
 /**
  * The shipped `GitHub.Ruleset` provider with the write guard in its update
- * path. For the ruleset named like the capture, `reconcile` first re-reads the
+ * path. For the ruleset named like the capture, `reconcile` first refuses a
+ * write that is not aimed at the captured id ({@link RulesetTargetIsNotTheCapture}:
+ * the create path, or state naming another ruleset), then re-reads the
  * live ruleset and fails with {@link RulesetChangedSinceCapture} (sending no
  * PUT) unless it equals the capture; every other ruleset, and every other
  * lifecycle method, is the shipped provider unchanged. A provider registered
@@ -163,7 +199,12 @@ export const guardedRulesetProvider = (capture: LiveRuleset) =>
           input: Parameters<typeof base.reconcile>[0]
         ) {
           if (input.news.name === capture.name) {
-            yield* verifyUnchanged(capture, input.news.owner, input.news.repository);
+            yield* verifyUnchanged(
+              capture,
+              input.news.owner,
+              input.news.repository,
+              O.map(O.fromNullishOr(input.output), (output) => output.rulesetId)
+            );
           }
           return yield* base.reconcile(input);
         }),

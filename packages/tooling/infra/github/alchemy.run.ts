@@ -6,10 +6,10 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import { productionConfig, productionStage } from "./src/Production.ts";
+import { productionConfig, productionCreateAllowList, productionStage } from "./src/Production.ts";
+import { prodGitHubProviders } from "./src/ProdWriteGuard.ts";
 import { readOnlyGitHubProviders } from "./src/ReadOnlyProviders.ts";
 import { decodeLiveRulesetJson, liveReviewerCheck } from "./src/RulesetGuard.ts";
-import { guardedRulesetProvider } from "./src/RulesetWriteGuard.ts";
 import { declareStack } from "./src/Stack.ts";
 
 /**
@@ -32,8 +32,10 @@ const capture = Effect.gen(function* () {
 const liveReviewer = Effect.map(capture, liveReviewerCheck);
 
 /**
- * The GitHub providers for the stage. `prod` gets the shipped providers with
- * the guarded ruleset provider (re-read before the PUT). Every other stage gets
+ * The GitHub providers for the stage. `prod` gets the shipped providers behind
+ * the create guard (`prodGitHubProviders`: only allow-listed logical ids may
+ * take the create path, and no replace or delete) with the guarded ruleset
+ * provider (re-read before the PUT). Every other stage gets
  * read-only providers: plan works, while create, update and delete fail with
  * `PreviewStageIsReadOnly` before any request, so a preview stage cannot
  * write to the live repository whatever token is in the environment. Both are
@@ -44,7 +46,7 @@ const providers = Layer.unwrap(
     const stage = yield* Stage;
     if (stage !== productionStage) return readOnlyGitHubProviders(stage);
     const prodCapture = yield* capture;
-    return guardedRulesetProvider(prodCapture);
+    return prodGitHubProviders(productionCreateAllowList, prodCapture);
   })
 ).pipe(Layer.provideMerge(GitHub.providers()));
 

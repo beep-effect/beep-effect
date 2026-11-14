@@ -10,6 +10,7 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import {
   BypassActor,
+  CreateAllowList,
   EnvironmentSpec,
   LabelSpec,
   MainRuleset,
@@ -307,5 +308,66 @@ export const productionConfig: StackConfig = StackConfig.make({
       ["enabled", "allowed_actions", "sha_pinning_required", "default_workflow_permissions"],
       unmanaged("actions-permission", "No @alchemy.run/github resource (verified gap in the P0 matrix).")
     ),
+  ],
+});
+
+/**
+ * The logical ids that may take the create path on `prod`, written out:
+ * the repository and every environment, variable and label, whose providers
+ * converge an existing object by name. `MainRuleset` is not on it: the
+ * shipped ruleset create path POSTs a second ruleset, so a plan that cannot
+ * find ruleset 10240248 live fails instead. A new declaration takes the create
+ * path only once it is added here; the package tests fail until it is.
+ *
+ * **Example** (Check the main ruleset)
+ *
+ * ```ts
+ * import { isCreateAllowed } from "@beep/infra-github/Config"
+ * import { productionCreateAllowList } from "@beep/infra-github/Production"
+ *
+ * console.log(isCreateAllowed(productionCreateAllowList, "MainRuleset")) // false
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const productionCreateAllowList: CreateAllowList = CreateAllowList.make({
+  logicalIds: [
+    "Repository",
+    "Environment-beep-effect-web-prod",
+    "EnvironmentVariable-beep-effect-web-prod-ALCHEMY_STATE_ROLE_ARN",
+    "Environment-storybook-prod",
+    "EnvironmentVariable-storybook-prod-ALCHEMY_STATE_ROLE_ARN",
+    "Environment-turbo-cache-prod",
+    "EnvironmentVariable-turbo-cache-prod-ALCHEMY_STATE_ROLE_ARN",
+    "Environment-turbo-cache-write",
+    "Variable-KNOWLEDGE_MINT_APP_CLIENT_ID",
+    "Variable-KNOWLEDGE_MINT_APP_SLUG",
+    "Label-aardvark",
+    "Label-area-ast-kg",
+    "Label-bug",
+    "Label-codex",
+    "Label-compute-profile-worker",
+    "Label-dependencies",
+    "Label-documentation",
+    "Label-duplicate",
+    "Label-enhancement",
+    "Label-github-actions",
+    "Label-good-first-issue",
+    "Label-help-wanted",
+    "Label-invalid",
+    "Label-owner-merge-hold",
+    "Label-phase-P7",
+    "Label-priority-P0",
+    "Label-priority-P1",
+    "Label-property-laws-nightly",
+    "Label-question",
+    "Label-ready-for-heavy",
+    "Label-size-L",
+    "Label-size-M",
+    "Label-size-S",
+    "Label-size-XL",
+    "Label-unblocks-main",
+    "Label-wontfix",
   ],
 });

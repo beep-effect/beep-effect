@@ -250,6 +250,32 @@ probe in beta.86 or beta.87, and their reconcile observes the live object by nam
 place (the stack tests prove a first deploy issues no POST). Ownership, secrets and the
 beep-reviewer switch: `packages/tooling/infra/github/README.md`.
 
+### The prod create guard
+
+On `prod` a planned `create` is safe only where the provider converges an existing object
+by name. That holds for the repository (GET, then PATCH), environments (PUT by name),
+variables and labels (GET, then PATCH; POST only on a 404). It does not hold for the
+`main` ruleset: the shipped `GitHub.Ruleset` create path POSTs a new ruleset. So every
+`prod` provider is wrapped (`src/ProdWriteGuard.ts`, explicit list
+`productionCreateAllowList` in `src/Production.ts`):
+
+- Only the 36 listed logical ids may take the create path. `MainRuleset` is not listed, so
+  a plan whose name-based read cannot find ruleset 10240248 fails with `ProdChangeRefused`
+  instead of planning a second ruleset. The ruleset write guard also refuses any write not
+  aimed at the captured id (`RulesetTargetIsNotTheCapture`).
+- The repository's create path must find the live repository, so the plan fails instead
+  of reaching `POST /orgs/beep-effect/repos`.
+- A planned `replace` fails the plan. `precreate` and `delete` always fail.
+- Plan-time refusals (the ruleset, the repository, every `replace`) run in both the
+  `Plan prod stage` step and the plan inside `alchemy deploy`, before anything is written.
+  Kinds with no `read` (environments, variables, labels) are refused at their create path,
+  before that resource's request. The package tests, which run first in the deploy job,
+  fail unless the first plan's `create` set equals the allow-list exactly. A new
+  declaration is therefore refused before a token is minted until it is added to the list.
+- A removed declaration plans `orphaned` (every resource is retained). That writes
+  nothing live and only forgets the state row; the guard does not refuse it. Refusing it
+  would mean checking the plan log, which needs a workflow change.
+
 ### Ruleset 10240248 guard and the pre-arming evidence
 
 Ruleset 10240248 defines the 15 required merge checks, and the deploy rewrites it as a

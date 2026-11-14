@@ -114,6 +114,17 @@ deploy. `--diff-only` prints the same field-by-field diff without failing: the r
 pre-arming evidence (runbook, InfraGithub section). On 2026-11-14 the diff against live was
 empty.
 
+### The prod create guard
+
+`src/ProdWriteGuard.ts` wraps every `prod` provider. Only the logical ids on
+`productionCreateAllowList` (`src/Production.ts`) may take the create path, and those are
+the ids whose providers converge an existing object by name. `MainRuleset` is not on it,
+because the shipped ruleset create path POSTs a second ruleset: a plan that cannot find the
+live one fails. The repository's create path must find the live repository. A planned
+`replace` fails the plan, and `precreate` and `delete` always fail. The tests prove the
+first prod plan on the seeded fake is `{"create":36,"adopted":1}` with no deletions and no
+writes, and that the deploy sends no POST and no DELETE. Runbook: "The prod create guard".
+
 ## Commands
 
 ```sh

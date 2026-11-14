@@ -159,3 +159,21 @@ scenario(
     })
   );
 }
+
+// A name-based read that misses plans a create, whose shipped path POSTs a second ruleset: refused, nothing sent.
+{
+  const fake = FakeRepository.fromCensus();
+  const capture = Effect.runSync(decodeLiveRuleset(fake.ruleset(MAIN)));
+  const providers = guardedRulesetProvider(capture).pipe(Layer.provideMerge(fakeProviders(fake)));
+  const { test } = Test.make({ providers, stage: "test" });
+  test.provider("a write on the create path, not aimed at the captured id, is refused", (scratch) =>
+    Effect.gen(function* () {
+      MutableHashMap.set(fake.rulesets, MAIN, { ...fake.ruleset(MAIN), name: "main-renamed" });
+      fake.calls.length = 0;
+      const exit = yield* deploy(typed(scratch), liveReviewerCheck(capture));
+      const message = Exit.match(exit, { onSuccess: () => "deployed", onFailure: Cause.pretty });
+      expect(Str.includes("RulesetTargetIsNotTheCapture")(message)).toBe(true);
+      expect(A.filter(fake.writes(), (call) => Str.includes("/rulesets")(call.path))).toEqual([]);
+    })
+  );
+}
