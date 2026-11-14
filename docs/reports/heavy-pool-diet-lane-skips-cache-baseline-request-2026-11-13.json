@@ -1,5 +1,5 @@
 {
-  "previous": "864483404cc6034c7d173a3b6c637df08a2f925c289fddfcfcbbac3d42cf982f",
+  "previous": "ea38560a763479df4cabe32642c76f1618f2dc063335aba793df2cc5dfe97359",
   "review": {
     "reviewer": "Claude Opus 5.5 (heavy-pool-diet slice 3, perf/heavy-pool-diet-lanes-first)",
     "reason": "Record the policy-fingerprint input drift from Heavy Admission importing the change profile readers: the root task gains CiOperational.service.ts and @beep/github-reporting source as generated inputs. No command, output, environment or cache flag changed; no qualification is granted.",

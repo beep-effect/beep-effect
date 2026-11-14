@@ -13,7 +13,7 @@ import { CitationFrozenEditions } from "./FrozenEditions.ts";
 import { CitationInvocation } from "./Invocation.ts";
 import { CitationMetadataStringFields } from "./MetadataComposition.ts";
 import { concatCitationPythonRanges, makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationResourceCitationCorrectionInput, makeCitationResourceCorrection } from "./ResourceCorrection.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
@@ -178,8 +178,7 @@ const makeParts = Effect.fn("Citation.makeRenderingParts")(function* (
  * edition or resource group. Only a complete owned native result is returned.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationRendering = Effect.fn("Citation.makeRendering")(function* (policy: unknown) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
+export const makeCitationRendering = Effect.fn("Citation.makeRendering")(function* (limits: CitationEngineLimits) {
   const owner = yield* CitationFrozenEditions;
   const timing = yield* makeCitationRegexTiming(limits, true);
   const render = Effect.fn("Citation.renderBuiltInCitation")(function* (raw: unknown) {

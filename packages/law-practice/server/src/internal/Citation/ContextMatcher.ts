@@ -10,12 +10,15 @@ import { identity } from "effect/Function";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { concatCitationPythonRanges } from "./PythonUnicode.ts";
-import { CitationRegexSourceFlags } from "./RegexEngine.ts";
 import { citationUnaccountedText, makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationRegexCapture } from "./RegexResult.ts";
 import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import { makeCitationTokenContext } from "./TokenContext.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
+import type { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
+import type { CitationRegexSourceFlags } from "./RegexEngine.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ContextMatcher");
 const Reason = LiteralKit(["invalid-configuration"]).pipe(
@@ -48,7 +51,6 @@ export class CitationContextMatch extends S.Opaque<CitationContextMatch, { reado
     })
   )
 ) {}
-const invalid = () => CitationContextMatcherFailure.make({ reason: "invalid-configuration" });
 const budget = (limit: "patternUtf16" | "producedTextUtf16") =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
 const ascii = (text: string) => CitationPythonUnicodeStorage.make({ width: 1, bytes: new TextEncoder().encode(text) });
@@ -59,14 +61,12 @@ const ascii = (text: string) => CitationPythonUnicodeStorage.make({ width: 1, by
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationContextMatcher = Effect.fn("Citation.makeContextMatcher")(function* (
-  policy: unknown,
-  runtime: unknown,
-  patternInput: unknown,
-  flagsInput: unknown,
-  bindings: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  patternInput: CitationPythonUnicodeStorage,
+  flags: typeof CitationRegexSourceFlags.Type,
+  bindings: ReadonlyArray<CitationRegexPatternDescriptor>
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, invalid);
-  const flags = yield* S.decodeUnknownEffect(CitationRegexSourceFlags)(flagsInput).pipe(Effect.mapError(invalid));
   const timing = yield* makeCitationRegexTiming(limits, true);
   const input = yield* makeCitationRegexInput(limits, citationUnaccountedText, "pattern");
   const pattern = (yield* input.prepareUnicode(patternInput, () => Effect.void)).value;

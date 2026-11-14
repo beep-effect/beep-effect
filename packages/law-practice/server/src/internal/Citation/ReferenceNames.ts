@@ -16,7 +16,8 @@ import { makeCitationPythonCharacters } from "./PythonCharacters.ts";
 import { citationPythonTextData } from "./PythonTextData.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationCaseMetadataFields } from "./CaseMetadata.ts";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
@@ -71,11 +72,8 @@ const onlyDigits = Effect.fn("Citation.referenceNameIsDigit")(function* (source:
  * @internal @category operations @since 0.0.0
  */
 export const copyCitationReferenceExclusions = Effect.fn("Citation.copyReferenceExclusions")(function* (
-  namesInput: unknown
+  names: ReadonlyArray<string>
 ) {
-  const names = yield* S.decodeUnknownEffect(Names)(namesInput).pipe(
-    Effect.mapError(() => fail("invalid-configuration"))
-  );
   const encoded = yield* S.encodeEffect(NamesJson)(names).pipe(Effect.mapError(() => fail("invalid-configuration")));
   const digest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(encoded)).pipe(
     Effect.mapError(() => fail("invalid-configuration")),
@@ -83,7 +81,7 @@ export const copyCitationReferenceExclusions = Effect.fn("Citation.copyReference
   );
   if (digest !== "4a6957a33e8862f93f0c45d8a73a27548205b7363ae8524781bbe89a887165c9")
     return yield* fail("invalid-configuration");
-  return A.copy(names);
+  return names;
 });
 /** Capture source-authenticated name data and existing Python primitives.
  * Invoke inside the enclosing extraction operation so native copies/lowercase
@@ -92,10 +90,9 @@ export const copyCitationReferenceExclusions = Effect.fn("Citation.copyReference
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationReferenceNames = Effect.fn("Citation.makeReferenceNames")(function* (
-  policy: unknown,
-  namesInput: unknown
+  limits: CitationEngineLimits,
+  namesInput: ReadonlyArray<string>
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
   const names = yield* copyCitationReferenceExclusions(namesInput);
   const disallowed = HashSet.fromIterable(names);
   const characters = yield* makeCitationPythonCharacters();

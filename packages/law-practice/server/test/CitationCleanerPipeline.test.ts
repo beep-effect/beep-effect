@@ -665,16 +665,6 @@ it.effect("releases borrowed capacity after producer failure and interruption wi
 it.effect("rejects malformed policy, reservation amounts and nested plan names", () =>
   Effect.gen(function* () {
     const h = yield* harness;
-    const invalidPolicy = yield* makeCitationCleanerPipeline(null).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(null, "clean").pipe(
-          Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
-        )
-      ),
-      Effect.provideService(CitationCleaner, h.runtime),
-      Effect.flip
-    );
-    expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
     const p = yield* pipeline(h);
     const reserve = h.callback((value, work) =>
       work.reserveText(-1).pipe(Effect.map((charge) => CitationCleanerProduced.make({ value, charges: [charge] })))

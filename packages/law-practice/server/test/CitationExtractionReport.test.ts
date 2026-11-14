@@ -1,5 +1,6 @@
 import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/SourceText";
-import { makeCitationSourceExtraction } from "@beep/law-practice-server/internal/Citation/SourceExtraction";
+import { makeCitationSourceExtraction as makeOwnedCitationSourceExtraction } from "@beep/law-practice-server/internal/Citation/SourceExtraction";
+import { CitationVerifiedExtractionConfiguration } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as Clock from "effect/Clock";
@@ -9,10 +10,16 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as TestClock from "effect/testing/TestClock";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+const makeCitationSourceExtraction = installCitationOwnedTestStage({
+  schema: CitationVerifiedExtractionConfiguration,
+  install: makeOwnedCitationSourceExtraction,
+});
 
 it.layer(citationTokenizerTestLayer)("captured extraction report timing", (it) => {
   it.layer(TestClock.layer())("work duration", (it) => {
@@ -63,21 +70,4 @@ it.layer(citationTokenizerTestLayer)("captured extraction report timing", (it) =
       { timeout: 60000 }
     );
   });
-  it.effect("refuses a malformed source extraction configuration at installation", () =>
-    Effect.gen(function* () {
-      const { setup, provided } = yield* installCitationDefaultConfigurationFixture("bun");
-      const unused = SourceTextResolver.of({
-        resolve: Effect.fn("ExtractionReportTest.unusedSource")(() => Effect.die("resolver is not reached")),
-      });
-      const refused = yield* makeCitationSourceExtraction(setup.limits, setup.runtime, { extraction: null }).pipe(
-        Effect.provideContext(provided),
-        Effect.provideService(SourceTextResolver, unused),
-        DateTime.withCurrentZoneOffset(0),
-        Effect.flip
-      );
-      expect(refused).toMatchObject({ _tag: "CitationVerifiedExtractionFailure", reason: "invalid-configuration" });
-      const workers = yield* setup.observed.snapshot;
-      expect(workers).toEqual({ spawned: 0, confirmed: 0 });
-    })
-  );
 });

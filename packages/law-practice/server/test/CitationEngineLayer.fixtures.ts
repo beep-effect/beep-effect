@@ -66,7 +66,9 @@ export const citationFixtureMissingPageIdentityFactory = CitationMissingPageIden
  */
 export const buildCitationEngineFixture = Effect.fn("EngineLayerTest.build")(function* (
   installed: Effect.Success<ReturnType<typeof installCitationDefaultConfigurationFixture>>,
-  resolver: SourceTextResolver["Service"]
+  resolver: SourceTextResolver["Service"],
+  // Boundary tests replace a field of a fresh copy with a malformed value.
+  tamper: (configuration: CitationEngineConfiguration) => CitationEngineConfiguration = (configuration) => configuration
 ) {
   const { setup, provided, defaultConfiguration, engineArtifact } = installed;
   const xmlRuntime = yield* makeCitationXmlTestRuntime(setup.runtime.kind);
@@ -76,7 +78,7 @@ export const buildCitationEngineFixture = Effect.fn("EngineLayerTest.build")(fun
     extraction: { extraction: defaultConfiguration, engineArtifact },
     annotation: { geometry: defaultConfiguration.extraction.document, xmlRuntime },
   });
-  const built = yield* Layer.build(CitationEngineLive(configuration)).pipe(
+  const built = yield* Layer.build(CitationEngineLive(tamper(configuration))).pipe(
     Effect.provideContext(provided),
     Effect.provideService(SourceTextResolver, resolver),
     // Controlled identity inputs qualify grouping conditionally. They do not

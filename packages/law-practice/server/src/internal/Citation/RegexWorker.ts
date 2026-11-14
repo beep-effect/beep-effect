@@ -17,7 +17,6 @@ import { acquireCitationNativeLease, captureCitationNativeAdmission } from "./Na
 import {
   citationNativeProcessCommand,
   makeCitationNativeProcessOwner,
-  prepareCitationNativeRuntime,
   withCitationNativeProcess,
 } from "./NativeProcess.ts";
 import { makeCitationRegexDescriptorRegistry } from "./RegexDescriptors.ts";
@@ -34,9 +33,12 @@ import {
   encodeCitationRegexStartup,
   preflightCitationRegexControlFrames,
 } from "./RegexWorkerRpc.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
+import type { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
+import type { CitationRegexEngine } from "./RegexEngine.ts";
 
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
-const invalidRuntime = () => failure("invalid-runtime");
 /** Install the engine-constant half of the regex supervisor once per call site
  * and operation: snapshot limits and runtime, the descriptor registry, job
  * preparation, control-frame preflight, Clock, spawner and the shared native
@@ -54,22 +56,21 @@ const invalidRuntime = () => failure("invalid-runtime");
  * @internal @category operations @since 0.0.0
  */
 export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEvaluator")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  bindings: unknown,
-  engineInput: unknown = "python-re"
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  bindings: ReadonlyArray<CitationRegexPatternDescriptor>,
+  engine: typeof CitationRegexEngine.Type = "python-re"
 ) {
-  const { limits, runtime } = yield* prepareCitationNativeRuntime(policy, runtimeInput, invalidRuntime);
   const { operation: engineOperation, timed, failSafety } = yield* makeCitationRegexTiming(limits, false);
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation: engineOperation, limit });
-  const admission = yield* captureCitationNativeAdmission(limits, invalidRuntime);
+  const admission = yield* captureCitationNativeAdmission(limits);
   const clock = yield* Clock.Clock;
   const spawner = yield* ChildProcessSpawner;
   const digest = yield* Digest.Digest;
   const selected = yield* CitationRegexOperation;
-  const makeRegistry = (descriptors: unknown) =>
-    makeCitationRegexDescriptorRegistry(limits, descriptors, engineInput).pipe(
+  const makeRegistry = (descriptors: ReadonlyArray<CitationRegexPatternDescriptor>) =>
+    makeCitationRegexDescriptorRegistry(limits, descriptors, engine).pipe(
       Effect.provideService(Clock.Clock, clock),
       Effect.provideService(Digest.Digest, digest),
       Effect.provideService(CitationRegexOperation, selected)
@@ -146,7 +147,9 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
     );
   // Request-generated patterns (generated references) bind their own descriptors
   // per call; the registry is request state, every other constant is shared.
-  const bindDescriptors = Effect.fn("Citation.bindRegexDescriptors")(function* (descriptors: unknown) {
+  const bindDescriptors = Effect.fn("Citation.bindRegexDescriptors")(function* (
+    descriptors: ReadonlyArray<CitationRegexPatternDescriptor>
+  ) {
     const generated = yield* makeRegistry(descriptors);
     return { evaluate: evaluateWith(generated) };
   });

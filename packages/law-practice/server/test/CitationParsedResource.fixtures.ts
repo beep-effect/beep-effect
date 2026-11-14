@@ -15,7 +15,7 @@ import * as Str from "effect/String";
 import { makeCitationCanonicalExtractionReplay } from "./CitationCanonicalExtractionRuntime.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import type { CitationEngineExtractionResult } from "@beep/law-practice-use-cases/server";
+import type { CitationEngineExtractionResult, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 type Unicode = Effect.Success<ReturnType<typeof makeCitationPythonUnicode>>;
 const nativeGroup = Effect.fn("CanonicalParsedResourceTest.group")(function* (
@@ -53,7 +53,7 @@ export const prepareCitationParsedResource = Effect.fn("CanonicalParsedResourceT
  */
 export const installCitationParsedResourceReplay = Effect.fn("CanonicalParsedResourceTest.install")(function* <A, E>(
   kind: CitationNativeRuntimeKind,
-  makeService: (policy: unknown) => Effect.Effect<A, E, CitationFrozenEditions>
+  makeService: (policy: CitationEngineLimits) => Effect.Effect<A, E, CitationFrozenEditions>
 ) {
   const replay = yield* makeCitationCanonicalExtractionReplay(kind);
   const { bundle } = yield* loadCitationFrozenEditionFixtures();

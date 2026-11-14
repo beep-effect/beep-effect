@@ -215,12 +215,6 @@ it.effect("rejects malformed native layouts and invalid point ranges with closed
   Effect.gen(function* () {
     const citationResult13 = yield* defaultCitationEnginePolicy;
     const input = yield* makeCitationRegexInput(citationResult13.limits, citationUnaccountedText);
-    const invalidRole = yield* makeCitationRegexInput(
-      citationResult13.limits,
-      citationUnaccountedText,
-      "unknown-role"
-    ).pipe(Effect.flip);
-    expect(invalidRole).toMatchObject({ reason: "invalid-policy" });
     const invalidText = yield* input.prepareText(42, preflight).pipe(Effect.flip);
     expect(invalidText).toMatchObject({ reason: "invalid-input" });
     yield* Effect.forEach(
@@ -365,16 +359,6 @@ it.effect("captures policy and gives a shorter total deadline precedence during 
       operation: "extract",
       limit: "operationDeadline",
     });
-  })
-);
-
-it.effect("rejects malformed policy with a closed failure before installing operations", () =>
-  Effect.gen(function* () {
-    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
-      const failure = yield* makeCitationRegexInput(policy, citationUnaccountedText).pipe(Effect.flip);
-      expect(failure).toMatchObject({ reason: "invalid-policy" });
-      expect("cause" in failure).toBe(false);
-    }
   })
 );
 

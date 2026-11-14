@@ -13,8 +13,8 @@ import {
   CitationLawMetadataConfiguration,
   CitationLawMetadataInput,
   CitationLawMetadataPatch,
-  makeCitationFullLawMetadata,
-  makeCitationLawMetadata,
+  makeCitationFullLawMetadata as makeOwnedCitationFullLawMetadata,
+  makeCitationLawMetadata as makeOwnedCitationLawMetadata,
 } from "@beep/law-practice-server/internal/Citation/LawMetadata";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
@@ -30,6 +30,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeTestCitationDigest } from "./CitationDigest.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
@@ -41,6 +42,15 @@ import {
   setupCitationRegexRuntime,
 } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationLawMetadata = installCitationOwnedTestStage({
+  schema: CitationLawMetadataConfiguration,
+  install: makeOwnedCitationLawMetadata,
+});
+const makeCitationFullLawMetadata = installCitationOwnedTestStage({
+  schema: CitationLawMetadataConfiguration,
+  install: makeOwnedCitationFullLawMetadata,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationLawMetadata");
 const Native = S.Struct({ width: S.Literals([1, 2, 4]), bytes: S.Uint8ArrayFromHex });
@@ -210,12 +220,10 @@ export const assertCitationLawMetadataConfiguration = Effect.fn("LawMetadataTest
   const corpus = yield* loadCitationLawMetadataFixtures();
   const setup = yield* setupCitationMetadataRuntime("bun");
   const changedPattern = { width: 1, bytes: new TextEncoder().encode("altered fixed pattern") };
+  // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   for (const [policy, runtime, configuration] of [
-    [{}, setup.runtime, corpus.configuration],
-    [setup.limits, setup.runtime, {}],
-    [setup.limits, {}, corpus.configuration],
     [setup.limits, setup.runtime, { ...corpus.configuration, lawPattern: changedPattern }],
-  ]) {
+  ] as const) {
     const failed = yield* makeCitationLawMetadata(policy, runtime, configuration).pipe(
       Effect.flatMap((stage) =>
         makeCitationTestScaffoldBinding(policy).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))

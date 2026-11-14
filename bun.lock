@@ -696,6 +696,7 @@
       "version": "0.0.4",
       "dependencies": {
         "@beep/identity": "workspace:^",
+        "@beep/infra-hosts": "workspace:^",
         "@beep/openclaw": "workspace:^",
         "@beep/repo-ai-metrics": "workspace:^",
         "@beep/schema": "workspace:^",
@@ -3940,6 +3941,31 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/infra/infra-hosts": {
+      "name": "@beep/infra-hosts",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/aws": "catalog:",
+        "@alchemy.run/docker": "catalog:",
+        "@beep/identity": "workspace:^",
+        "@beep/openclaw": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "alchemy": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@alchemy.run/test": "catalog:",
+        "@beep/memfs": "workspace:^",
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "@effect/platform-node-shared": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/tooling/infra/turbo-cache": {
       "name": "@beep/infra-turbo-cache",
       "version": "0.0.0",
@@ -4724,6 +4750,7 @@
   "catalog": {
     "@alchemy.run/aws": "2.0.0-beta.87",
     "@alchemy.run/cloudflare": "2.0.0-beta.87",
+    "@alchemy.run/docker": "2.0.0-beta.87",
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@alchemy.run/test": "2.0.0-beta.87",
     "@arizeai/phoenix-client": "8.0.0",
@@ -5303,6 +5330,8 @@
     "@beep/infra": ["@beep/infra@workspace:infra"],
 
     "@beep/infra-cost-controls": ["@beep/infra-cost-controls@workspace:packages/tooling/infra/cost-controls"],
+
+    "@beep/infra-hosts": ["@beep/infra-hosts@workspace:packages/tooling/infra/infra-hosts"],
 
     "@beep/infra-turbo-cache": ["@beep/infra-turbo-cache@workspace:packages/tooling/infra/turbo-cache"],
 

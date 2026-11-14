@@ -1,4 +1,11 @@
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
+
+const makeCitationTokenizedExtraction = installCitationOwnedTestStage({
+  schema: CitationTokenizedExtractionConfiguration,
+  install: makeOwnedCitationTokenizedExtraction,
+});
+
 /** Native text to original get_citations outcomes through the complete catalog.
  * @internal @packageDocumentation @since 0.0.0
  */
@@ -10,7 +17,7 @@ import { makeCitationParserCatalog } from "@beep/law-practice-server/internal/Ci
 import { CitationTokenDispatchBindings } from "@beep/law-practice-server/internal/Citation/TokenDispatch";
 import {
   CitationTokenizedExtractionConfiguration,
-  makeCitationTokenizedExtraction,
+  makeCitationTokenizedExtraction as makeOwnedCitationTokenizedExtraction,
 } from "@beep/law-practice-server/internal/Citation/TokenizedExtraction";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";

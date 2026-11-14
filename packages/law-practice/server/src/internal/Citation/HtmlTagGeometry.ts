@@ -18,8 +18,8 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { reserveCitationInvocationText } from "./Invocation.ts";
 import { CitationRegexInputLayout, makeCitationRegexInput } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import { CitationSpanOffsetsPlan, makeCitationSpanOffsets } from "./SpanOffsets.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlTagGeometry");
 const max = CitationEngineAbsoluteMaxima;
@@ -90,11 +90,10 @@ const contains = (tag: CitationHtmlEmphasis, position: number) => tag.start <= p
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationHtmlTagGeometry = Effect.fn("Citation.makeHtmlTagGeometry")(function* (
-  policy: unknown,
+  limits: CitationEngineLimits,
   raw: unknown
 ) {
   yield* CitationTextBudget;
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
   const decoded = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
   if (decoded.tags.length > limits.tokens)
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });

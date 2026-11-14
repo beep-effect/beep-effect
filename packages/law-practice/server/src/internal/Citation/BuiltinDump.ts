@@ -18,6 +18,7 @@ import { CitationDumpFailure, CitationDumpField, CitationDumpRow, CitationDumpSc
 import { CitationExtractionLoopModel } from "./ExtractionLoop.ts";
 import { projectCitationExtractionSelection } from "./ExtractionSelection.ts";
 import { makeCitationNativeRendering } from "./NativeRendering.ts";
+import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import type { CitationTokenSeed } from "@beep/law-practice-use-cases/server";
 import type { CitationInvocation } from "./Invocation.ts";
 
@@ -50,9 +51,9 @@ export const makeCitationBuiltinDump = Effect.fn("Citation.makeBuiltinDump")(fun
   );
   if (digest !== "9054c6bfa1d5095991daf5c5644858db3715e1cedfef96a931c561e9e88e7944") return yield* configuration();
   const profile = yield* S.decodeEffect(Profile)(text).pipe(Effect.mapError(configuration));
-  const context = yield* makeCitationNativeRendering(policy, () =>
-    CitationDumpFailure.make({ reason: "invalid-policy" })
-  );
+  // A separately callable raw entry point: decode its policy here.
+  const limits = yield* decodeCitationRegexPolicy(policy, () => CitationDumpFailure.make({ reason: "invalid-policy" }));
+  const context = yield* makeCitationNativeRendering(limits);
   const { timing, unicode } = context;
 
   const classes = HashMap.fromIterable(A.map(profile.classes, (row) => Tuple.make(row.kind, row)));

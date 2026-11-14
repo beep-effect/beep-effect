@@ -88,8 +88,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff
         expect(invalid).toMatchObject({ reason: "invalid-offset" });
         const invalidSide = yield* map.update(0, "middle").pipe(Effect.flip);
         expect(invalidSide).toMatchObject({ reason: "invalid-offset" });
-        const invalidPolicy = yield* makeCitationSpanOffsets({}, source).pipe(Effect.flip);
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const invalidPlan = yield* makeCitationSpanOffsets(limits, {}).pipe(Effect.flip);
         expect(invalidPlan).toMatchObject({ reason: "invalid-plan" });
       })
@@ -110,11 +108,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source diff
         const geometry = yield* makeCitationHtmlTagGeometry(limits, raw).pipe(
           Effect.provideService(CitationTextBudget, budget)
         );
-        const invalidPolicy = yield* makeCitationHtmlTagGeometry(null, raw).pipe(
-          Effect.provideService(CitationTextBudget, budget),
-          Effect.flip
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const invalidInput = yield* makeCitationHtmlTagGeometry(limits, null).pipe(
           Effect.provideService(CitationTextBudget, budget),
           Effect.flip

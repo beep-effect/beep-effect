@@ -271,16 +271,6 @@ it.effect("captures owner lifetime and clears all arena-held values and caches o
   })
 );
 
-it.effect("rejects malformed policy with a closed failure before installing operations", () =>
-  Effect.gen(function* () {
-    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
-      const failure = yield* makeCitationCleanerValues(policy).pipe(Effect.flip);
-      expect(failure).toMatchObject({ reason: "invalid-input" });
-      expect("cause" in failure).toBe(false);
-    }
-  })
-);
-
 it.effect("rejects malformed bytes and native text without issuing references", () =>
   Effect.gen(function* () {
     const limits = (yield* defaultCitationEnginePolicy).limits;

@@ -16,6 +16,7 @@ import {
 import { makeCitationMetadataStrings } from "./MetadataStrings.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationPublicationMetadataConfiguration } from "./MetadataComposition.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
@@ -129,14 +130,14 @@ export const installCitationPinCiteExtraction = Effect.fn("Citation.installPinEx
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationPinExtraction = Effect.fn("Citation.makePinExtraction")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  configuration: CitationOwned<CitationPublicationMetadataConfiguration>
 ) {
   const installed = yield* makeCitationPublicationMetadataOperation(
-    policy,
-    runtimeInput,
-    configurationInput,
+    limits,
+    runtime,
+    configuration,
     "3d1b06d98647ef244e02b08aee15ff80a0fb3971528a8a9c97854dd35916bb3d",
     installCitationPinCiteExtraction,
     () => fail("invalid-configuration")

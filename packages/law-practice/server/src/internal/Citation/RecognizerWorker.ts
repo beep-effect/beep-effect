@@ -27,11 +27,12 @@ import {
   CitationNativeProcessFailureReason,
   citationNativeProcessCommand,
   makeCitationNativeProcessOwner,
-  prepareCitationNativeRuntime,
   withCitationNativeProcess,
 } from "./NativeProcess.ts";
 import { makeCitationNativeSocket } from "./NativeSocket.ts";
 import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/RecognizerWorker");
 const Reason = LiteralKit([
@@ -67,14 +68,13 @@ const isDriverFailure = S.is(EyeciteFailure);
  * @internal @category constructors @since 0.0.0
  */
 export const makeCitationRecognizerWorker = Effect.fn("Citation.makeRecognizerWorker")(function* (
-  policy: unknown,
-  runtimeInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime
 ) {
-  const { limits, runtime } = yield* prepareCitationNativeRuntime(policy, runtimeInput, invalid);
   const timing = yield* makeCitationRegexTiming(limits, false);
   const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
     CitationSafetyLimitExceeded.make({ operation: timing.operation, limit });
-  const admission = yield* captureCitationNativeAdmission(limits, invalid);
+  const admission = yield* captureCitationNativeAdmission(limits);
   const owner = yield* makeCitationNativeProcessOwner<CitationRecognizerFailure | CitationSafetyLimitExceeded>(
     limits,
     timing.operation,
