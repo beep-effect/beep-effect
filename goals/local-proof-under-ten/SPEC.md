@@ -239,7 +239,7 @@ certainty-scorecard and this goal consumes it.
   censored until PERIL-11 lands. None of them is a target; each lever is judged on its own gate.
 - **Hosted workflow rules.** `.github/workflows/heavy.yml` is called at `@main`, so any change to a hosted heavy
   lane's inputs is two PRs. Any `turbo.json`, `bun.lock` or workflow change freezes coverage rows and needs a
-  cache-policy baseline re-record (`standards/cache-qualification-baseline.json`,
+  cache-policy baseline re-record (`standards/cache-baseline/`,
   `docs/runbooks/turbo-cache-inputs.md`) in the same PR; the three paused cache levers must not need one.
 - **Compute profile.** `goals/compute-profile-gate-routing` owns the worker-host refusal in the scheduler; new
   admission kinds keep that refusal and the `--force-local` receipt field.
