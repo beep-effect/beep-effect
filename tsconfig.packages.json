@@ -526,6 +526,9 @@
       "path": "packages/tooling/infra/cost-controls"
     },
     {
+      "path": "packages/tooling/infra/turbo-cache"
+    },
+    {
       "path": "packages/tooling/library/agent-memory-store"
     },
     {

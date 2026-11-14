@@ -36,9 +36,9 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
-(`decisions/2026-11-10-p0-baseline.md`); slice 1 (PERIL-13) and slice 2 (PERIL-10 summary and archive) landed;
-slice 3 (SCHE-08, the admission unit schema) is implemented on `feat/local-proof-admission-unit`; slice 4 (the
-beep-heavy retirement) and slice 5 (PERIL-02) are next.
+(`decisions/2026-11-10-p0-baseline.md`). Slices 1 (PERIL-13), 2 (PERIL-10 summary and archive), 3 (SCHE-08, the
+admission unit schema, #3308) and 4 (the beep-heavy retirement, which completes PERIL-10) are done; slice 5
+(PERIL-02) and slice 6 (the scheduler facade) are next.
 
 ## Latest Evidence
 
@@ -62,6 +62,10 @@ beep-heavy retirement) and slice 5 (PERIL-02) are next.
   `units` key on `protocol.json` (`quality scheduler protocol --units on`), off by default; with it off the bytes
   match origin/main's. The ciops frozen-journal replay stays 41 of 41, with and without the keys on every row.
   SCHE-09 slice 1 (#3227) and MEAS-07 (#3228) landed on main.
+- 2026-11-14: slice 4 (PERIL-10) retires the `beep-heavy` wrapper rule. The orchestrate skill's gate poller and
+  hand-off use `systemd-run --user` or a T3 scheduled task; its "Where to launch" section says Yeet's proofs take
+  quality-scheduler admission on their own and other commands run directly. The practice-contacts runbook and
+  `goals/design-figure-review-loop`'s plan drop the wrapper. PERIL-10 is complete.
 
 ## Notes
 

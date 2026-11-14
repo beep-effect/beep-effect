@@ -522,6 +522,12 @@
         ]
       },
       {
+        "name": "@beep/infra-turbo-cache",
+        "patterns": [
+          "packages/tooling/infra/turbo-cache/src/**"
+        ]
+      },
+      {
         "name": "@beep/jsonc",
         "patterns": [
           "packages/foundation/modeling/jsonc/src/**"
@@ -3108,6 +3114,21 @@
           "@beep/alchemy-aws-extras",
           "@beep/identity",
           "@beep/infra-cost-controls",
+          "@beep/schema"
+        ]
+      },
+      {
+        "from": "@beep/infra-turbo-cache",
+        "allow": [
+          "@beep/identity",
+          "@beep/infra-turbo-cache",
+          "@beep/memfs",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/infra-turbo-cache",
+          "@beep/memfs",
           "@beep/schema"
         ]
       },

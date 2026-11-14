@@ -471,6 +471,7 @@
     "packages/shared/use-cases",
     "packages/shared/tables",
     "packages/tooling/library/*",
+    "packages/tooling/infra/*",
     "packages/tooling/policy-pack/*",
     "packages/tooling/test-kit/*",
     "packages/tooling/tool/*",
@@ -590,7 +591,6 @@
     "packages/drivers/alchemy-postgres",
     "packages/drivers/firecrawl",
     "packages/drivers/eyecite",
-    "packages/drivers/sqlite",
-    "packages/tooling/infra/cost-controls"
+    "packages/drivers/sqlite"
   ]
 }
