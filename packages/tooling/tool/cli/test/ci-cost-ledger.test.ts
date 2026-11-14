@@ -137,8 +137,8 @@ describe("ci ledger reference runs", () => {
       const integration = A.filter(full.rows, (row) => row.lane === "test-integration");
       // The aggregates (`Heavy / Test Integration`, `Test Unit`, `Property Laws`, `Lint`) skip on success.
       deepStrictEqual(
-        A.map(integration, (row) => [row.grain, row.jobs]),
-        A.replicate(["partition", 1], 20)
+        A.map(integration, (row) => `${row.grain}:${row.jobs}`),
+        A.replicate("partition:1", 20)
       );
       strictEqual(full.skippedJobs, 11);
     })
@@ -225,13 +225,17 @@ describe("ci ledger fold", () => {
     strictEqual(row.totalMs, row.laneMs + row.supportMs + row.unknownMs);
     deepStrictEqual(row.unknownNames, ["Knip"]);
     deepStrictEqual(
-      A.map(row.rows, (entry) => [entry.lane, entry.grain, O.getOrNull(entry.partition), entry.ms, entry.legTasks]),
+      A.map(
+        row.rows,
+        (entry) =>
+          `${entry.lane} ${entry.grain} ${O.getOrElse(entry.partition, () => "-")} ${entry.ms} ${O.getOrElse(entry.legTasks, () => "-")}`
+      ),
       [
-        ["security", "lane", null, 0, O.none()],
-        ["test-integration", "lane", null, 10_000, O.none()],
-        ["test-integration", "partition", "int-rest", 120_000, O.some("selected")],
-        ["test-integration", "partition", "lps-int-1", 300_000, O.some("selected")],
-        ["test-unit", "partition", "unit-a", 360_000, O.some("selected")],
+        "security lane - 0 -",
+        "test-integration lane - 10000 -",
+        "test-integration partition int-rest 120000 selected",
+        "test-integration partition lps-int-1 300000 selected",
+        "test-unit partition unit-a 360000 selected",
       ]
     );
     assertSome(row.emptyLegMs, 0);
@@ -330,12 +334,15 @@ describe("ci ledger fold", () => {
 
 describe("ci ledger log lines", () => {
   it("reads a pull-request plan with its step counts and a push plan without them", () => {
-    const pullRequest = [
-      "2026-11-14T14:32:20.1Z [ci] test-unit plan: 1 partition(s) for 3 selected task(s) of 201: unit-a",
-      "2026-11-14T14:32:20.2Z [ci] test-integration plan: 1 partition(s) for 0 selected task(s) of 24: int-rest",
-      "2026-11-14T14:32:21.0Z test_unit: 1 of 24 partitions: unit-a",
-      "2026-11-14T14:32:21.1Z test_integration: 1 of 20 partitions: int-rest",
-    ].join("\n");
+    const pullRequest = A.join(
+      [
+        "2026-11-14T14:32:20.1Z [ci] test-unit plan: 1 partition(s) for 3 selected task(s) of 201: unit-a",
+        "2026-11-14T14:32:20.2Z [ci] test-integration plan: 1 partition(s) for 0 selected task(s) of 24: int-rest",
+        "2026-11-14T14:32:21.0Z test_unit: 1 of 24 partitions: unit-a",
+        "2026-11-14T14:32:21.1Z test_integration: 1 of 20 partitions: int-rest",
+      ],
+      "\n"
+    );
     assertSome(
       parseCiLedgerTestPlan(pullRequest),
       CiLedgerTestPlan.make({
@@ -382,7 +389,8 @@ describe("ci ledger log lines", () => {
 describe("ci ledger markdown", () => {
   it.effect("renders the source table and one census line per run", () =>
     Effect.gen(function* () {
-      const markdown = renderCiLedgerMarkdown(yield* referenceLedger);
+      const report = yield* referenceLedger;
+      const markdown = renderCiLedgerMarkdown(report);
       expect(markdown).toContain("| turbo-tasks | absent | 0 |");
       expect(markdown).toContain(
         "| 43605277972 | pull_request | 1 | 63 | 203.7 | 200 | 3.7 | 0 | 100% | 98.19% | 2 | |"
@@ -527,6 +535,8 @@ const CommandLayer = Layer.mergeAll(
 );
 
 const decodeReportJson = S.decodeUnknownEffect(S.fromJsonString(CiLedgerReport));
+const encodeReferenceRuns = S.encodeUnknownEffect(S.fromJsonString(S.Unknown))(referenceRuns);
+const refusingSpawner = provideSpawner(ScriptedSpawner.make(() => ({ exit: 1, stderr: "a replay spawns nothing" })));
 
 const runLedgerCommand = Command.runWith(ciLedgerCommand, { version: "0.0.0" });
 
@@ -540,25 +550,26 @@ describe("ci ledger command", () => {
     it.effect("replays a capture file as Markdown and as JSON", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* fs.writeFileString("/capture.json", JSON.stringify(referenceRuns));
+        yield* encodeReferenceRuns.pipe(Effect.flatMap((text) => fs.writeFileString("/capture.json", text)));
         yield* runLedgerCommand(["--capture", "/capture.json"]);
-        expect(yield* lastLog).toContain("| 43604442987 | push | 1 | 82 | 307.1 |");
+        const markdown = yield* lastLog;
+        expect(markdown).toContain("| 43604442987 | push | 1 | 82 | 307.1 |");
         yield* runLedgerCommand(["--capture", "/capture.json", "--json"]);
         const json = yield* lastLog;
         const report = yield* decodeReportJson(json);
         strictEqual(report.runs.length, 3);
-      })
+      }).pipe(refusingSpawner)
     );
 
     it.effect("refuses --capture with --run, and a call with neither", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
-        yield* fs.writeFileString("/capture.json", JSON.stringify(referenceRuns));
+        yield* encodeReferenceRuns.pipe(Effect.flatMap((text) => fs.writeFileString("/capture.json", text)));
         const combined = yield* runLedgerCommand(["--capture", "/capture.json", "--run", "1"]).pipe(Effect.flip);
         expect(combined).toMatchObject({ message: expect.stringContaining("cannot be combined with --run") });
         const neither = yield* runLedgerCommand([]).pipe(Effect.flip);
         expect(neither).toMatchObject({ message: expect.stringContaining("Pass at least one --run <id>") });
-      })
+      }).pipe(withLiveGithub(A.empty()))
     );
 
     it.effect("captures runs live, joins the Test Plan and catch-all logs, and writes the capture", () => {
@@ -591,7 +602,8 @@ describe("ci ledger command", () => {
         assertSome(runRow(report, LIVE_RUN).emptyLegMs, 120_000);
         strictEqual(runRow(report, LIVE_RUN).rerunCopies, 2);
         strictEqual(runRow(report, LIVE_RUN_WITHOUT_PLAN).undeterminedLegs, 1);
-        expect(yield* lastLog).toContain("| test-plan | partial | 1 |");
+        const markdown = yield* lastLog;
+        expect(markdown).toContain("| test-plan | partial | 1 |");
         // The re-executed Test Plan is read, not the attempt it replaced.
         const paths = A.map(calls, (call) => call.url.pathname);
         expect(paths).toContain("/repos/beep-effect/beep-effect/actions/jobs/5/logs");
