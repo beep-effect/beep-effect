@@ -122,8 +122,9 @@ No new workspace package is planned.
 
 ### Levers
 
-Status is from the live checkout at `origin/main` 25452087e73 for PERIH-11 and PERIH-01; the other rows were last
-re-verified at c90929b1ff1 (after the rebase from 6eb2e0588e2) and against the open PR heads named.
+Status is from the live checkout at `origin/main` 76b653230c (2026-11-14) for PERIH-11 and 25452087e73 for PERIH-01;
+the other rows were last re-verified at c90929b1ff1 (after the rebase from 6eb2e0588e2) and against the open PR
+heads named.
 
 | Lever | What | Status | Admission gate before landing | Depends on |
 | --- | --- | --- | --- | --- |
