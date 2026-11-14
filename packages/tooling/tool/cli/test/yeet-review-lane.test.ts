@@ -4,6 +4,7 @@ import {
   classifyYeetReviewer,
   EconomicsReviewLanePrecisionRow,
   EconomicsScopeRequest,
+  FleetHostsRead,
   planReplyActions,
   ReplyDraft,
   ReplyDraftOutcome,
@@ -33,6 +34,7 @@ import {
   YeetEconomicsOptions,
   YeetEconomicsReportJson,
   YeetEconomicsSource,
+  YeetFleetHostSource,
   YeetReviewDisposition,
   YeetReviewerIdentity,
   YeetReviewerKind,
@@ -716,7 +718,19 @@ it.layer(Layer.mergeAll(Platform, TestConsole.layer), { timeout: "30 seconds" })
   );
 });
 
-const Sources = Layer.provideMerge(Layer.mergeAll(YeetEconomicsSource.layer, YeetReviewLaneSource.layer), Platform);
+// No test here reads fleet hosts; their source is `test/yeet-economics-fleet-hosts.test.ts`'s.
+const NoFleetHosts = Layer.succeed(
+  YeetFleetHostSource,
+  YeetFleetHostSource.of({
+    read: Effect.fn("YeetFleetHostSource.read")(() =>
+      Effect.succeed(FleetHostsRead.make({ journals: [], receipts: [] }))
+    ),
+  })
+);
+const Sources = Layer.provideMerge(
+  Layer.mergeAll(YeetEconomicsSource.layer, YeetReviewLaneSource.layer, NoFleetHosts),
+  Platform
+);
 
 it.layer(Layer.mergeAll(Sources, TestConsole.layer), { timeout: "30 seconds" })(
   "yeet economics review lane",
