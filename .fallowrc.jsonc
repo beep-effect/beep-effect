@@ -20,6 +20,9 @@
     "packages/tooling/infra/*/alchemy.run.ts",
     "packages/tooling/infra/turbo-cache/token.ts",
     "packages/tooling/infra/cost-controls/plan-check.ts",
+    // A second Alchemy entry file the CLI loads by path (`alchemy deploy <file>`),
+    // e.g. the OpenClaw stack in @beep/infra-hosts.
+    "packages/tooling/infra/*/*.alchemy.run.ts",
     // Preloaded by every infra Pulumi.yaml (runtime.options.nodeargs).
     "infra/pulumi-typescript6.cjs",
     "apps/*/src/main.tsx",

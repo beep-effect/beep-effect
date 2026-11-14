@@ -683,6 +683,10 @@ const timedClassifier = (instant: (sha: string) => O.Option<DateTime.Utc>) =>
       Effect.succeed(YeetHeadMoveUnchanged.make({ ...request, commits: 1 }))
     ),
     committerInstant: Effect.fn("WindowTest.committerInstant")((sha: string) => Effect.succeed(instant(sha))),
+    classifyBaseMerge: Effect.fn("WindowTest.classifyBaseMerge")((request: YeetHeadMoveRequest) =>
+      Effect.succeed(YeetHeadMoveChanged.make({ ...request, change: "not-base-merge", detail: "rewrite fixture" }))
+    ),
+    isLocalMergeCommit: Effect.fn("WindowTest.isLocalMergeCommit")((_sha: string) => Effect.succeed(false)),
   });
 const unchangedClassifier = timedClassifier(recordedCommitterInstant);
 
@@ -793,7 +797,7 @@ it.layer(yeetRealGitTestLayer, {
         }).pipe(github.provide, Effect.provideContext(classifier), noOverride);
         expect(result).toMatchObject({ _tag: "elapsed", anchor: "ready-for-review", anchoredAt: fixture.ready });
         if (result._tag !== "unknown") {
-          expect(O.getOrThrow(result.carried)).toEqual({ rewrites: 2, rootSha: fixture.root });
+          expect(O.getOrThrow(result.carried)).toEqual({ rewrites: 2, merges: 0, rootSha: fixture.root });
           expect(DateTime.formatIso(DateTime.add(instant(result.anchoredAt), { minutes: 20 }))).toBe(fixture.elapsed);
         }
       })

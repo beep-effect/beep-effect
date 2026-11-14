@@ -7,6 +7,7 @@
 
 import * as Credentials from "@distilled.cloud/vercel/Credentials";
 import * as Provider from "alchemy/Provider";
+import * as Digest from "effect/crypto/Digest";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import { Domain, DomainProvider } from "./Domain.ts";
@@ -57,7 +58,10 @@ export class Providers extends Provider.ProviderCollection<Providers>()("Vercel"
  * @since 0.0.0
  */
 export const resources = Layer.effect(Providers, Provider.collection([Project, EnvVar, Domain])).pipe(
-  Layer.provide(Layer.mergeAll(ProjectProvider, EnvVarProvider, DomainProvider))
+  Layer.provide(Layer.mergeAll(ProjectProvider, EnvVarProvider, DomainProvider)),
+  // `EnvVar` digests `valueFrom` values while it plans and reconciles; the engine runs those
+  // lifecycle calls in the stack context, so the service is merged into it.
+  Layer.provideMerge(Digest.layerWebCrypto)
 );
 
 /**

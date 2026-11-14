@@ -5,6 +5,8 @@
     "next-env.d.ts",
     "src",
     "test",
+    "stack",
+    "alchemy.run.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "next.config.ts"
@@ -269,6 +271,9 @@
     },
     {
       "path": "../../packages/foundation/ui-system/ui/tsconfig.json"
+    },
+    {
+      "path": "../../packages/tooling/library/alchemy-vercel/tsconfig.json"
     },
     {
       "path": "../../packages/tooling/library/repo-utils/tsconfig.json"

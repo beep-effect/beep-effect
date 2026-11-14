@@ -1,0 +1,8 @@
+---
+title: "Host stacks: two Alchemy stacks, prod from the workstation only, every other stage a rehearsal"
+date: 2026-11-13
+lane: "goals/infra-alchemy-rebuild-p4-hosts"
+reversal: "Merge both programs into one stack in alchemy.run.ts, or drop the rehearsal branch so non-prod stages refuse; delete WorkstationOnly once a runner holds a scoped dankserver deploy key (Exception Ledger)."
+---
+
+`@beep/infra-hosts` holds two stacks, `HostsAiMetrics` (`packages/tooling/infra/infra-hosts/alchemy.run.ts`) and `HostsOpenClaw` (`packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts`): they target different machines (dankserver over SSH, the operator workstation under sudo), change on different cadences (a Phoenix image bump against an OpenClaw generation), and separate stacks keep separate S3 stage leases, so planning one never reads or locks the other. Stage `prod` is the only stage that mutates a real host. It runs from the operator workstation only (D21): both programs yield `WorkstationOnly` (`packages/tooling/infra/infra-hosts/src/HostsStage.ts`) before declaring a resource, a `Config` that fails with a `ConfigError` when `CI` is true, the inverse of the `Config.Literal("true", "CI")` guard the CI-deployed stacks use. The S3 store's stage lease is the overlap guard; there is no deploy workflow. Every other stage name is a rehearsal and may run anywhere: AI metrics deploys a throwaway Phoenix on stage-suffixed context, network, volume and container names on a separate loopback port, with no Compose retirement and no Tailscale Serve; OpenClaw renders the generation and declares no command. Tests: `packages/tooling/infra/infra-hosts/test/HostsStage.test.ts`, the CI cases in both stack tests.

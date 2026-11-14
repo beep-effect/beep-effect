@@ -7,9 +7,11 @@
  * A pull request leaves draft when its content is final, and hosted heavy CI
  * runs while reviewers read it (review-window ruling, 2026-10-06). The merge
  * gate waits after the later of readiness and the head push. A proven GitHub
- * rewrite can preserve the root push instant; lane pushes restart it. The
- * uncarried rule uses the most recent "marked ready for review" event and
- * the most recent push to the head.
+ * rewrite, or a push that only merges the base and leaves the pull request's
+ * own patch identity unchanged (PERIL-09, ruling D12), preserves the earlier
+ * push instant; every other push restarts it, and so does a head move whose
+ * identity cannot be proven. The uncarried rule uses the most recent "marked
+ * ready for review" event and the most recent push to the head.
  * No reviewer is required to post; only the elapsed time and review threads
  * gate. Both instants are read over GitHub REST, and a read that fails yields
  * an `unknown` window, which never satisfies the gate.
@@ -34,7 +36,11 @@ import { GithubPullRequestRecord, GithubRest } from "../../../internal/github/in
 import { YeetHeadMoveRequest } from "./HeadMove.schemas.ts";
 import { YeetHeadMoveClassifier } from "./HeadMove.ts";
 import { mergeReadyCriterionHolds, YeetMergeReadyCriterion } from "./Verdict.ts";
-import type { GithubForcePushRecord, GithubRefActivityRecord } from "../../../internal/github/GithubRest.ts";
+import type {
+  GithubForcePushRecord,
+  GithubRefActivityRecord,
+  GithubRefActivityType,
+} from "../../../internal/github/GithubRest.ts";
 import type { YeetMergeReadyCriteria } from "./Verdict.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ReviewWindow");
@@ -110,8 +116,8 @@ export const YeetReviewWindowDuration: Config.Config<Duration.Duration> = Config
  *
  * `ready-for-review` is the latest "marked ready for review" event, `pr-opened`
  * stands in for it on a pull request that was never a draft, and `head-push` is
- * the push that produced the current head. The window counts from whichever is
- * later.
+ * the push that produced the current head, or the earlier push a proven GitHub
+ * rewrite or base merge carries. The window counts from whichever is later.
  *
  * **Example** (List the anchors)
  *
@@ -138,20 +144,42 @@ export const YeetReviewWindowAnchor = LiteralKit(["ready-for-review", "pr-opened
  */
 export type YeetReviewWindowAnchor = typeof YeetReviewWindowAnchor.Type;
 
+const CarryStepPresenceCheck = S.makeFilter(
+  (carry: { readonly rewrites: number; readonly merges: number }) =>
+    carry.rewrites + carry.merges > 0 || { path: ["rewrites"], issue: "A carry links at least one head move." },
+  $I.annote("CarryStepPresenceCheck", {
+    title: "Carry step presence",
+    description: "A review-window carry links at least one GitHub rewrite or base merge.",
+  })
+);
+
 /**
  * Evidence that the current head preserves earlier reviewed patches.
+ *
+ * **Details**
+ *
+ * `rewrites` counts linked GitHub rewrites (cascade, restack) and `merges`
+ * linked pushes that only merged the base; at least one is positive. A carry
+ * built or decoded without `merges` counts none.
  *
  * **Example** (Describe one carried rewrite)
  * ```ts
  * import { YeetReviewWindowCarry } from "@beep/repo-cli/test/Yeet"
- * console.log(YeetReviewWindowCarry.make({ rewrites: 1, rootSha: "root" }).rewrites) // 1
+ * console.log(YeetReviewWindowCarry.make({ rewrites: 1, rootSha: "root" }).merges) // 0
  * ```
  * @category models
  * @since 0.0.0
  */
 export class YeetReviewWindowCarry extends S.Opaque<YeetReviewWindowCarry, { readonly brand: unique symbol }>()(
-  S.Struct({ rewrites: S.Int.check(S.isGreaterThan(0)), rootSha: S.NonEmptyString }).pipe(
-    $I.annoteSchema("YeetReviewWindowCarry", { description: "Linked GitHub rewrites preserving the review window." })
+  S.Struct({
+    rewrites: S.Natural,
+    merges: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(0)), S.withDecodingDefaultKey(Effect.succeed(0))),
+    rootSha: S.NonEmptyString,
+  }).pipe(
+    S.check(CarryStepPresenceCheck),
+    $I.annoteSchema("YeetReviewWindowCarry", {
+      description: "Linked GitHub rewrites or base merges preserving the review window.",
+    })
   )
 ) {}
 
@@ -387,9 +415,15 @@ const anchorLabel = (anchor: YeetReviewWindowAnchor): string =>
 
 const wholeMinutes = (millis: number): number => Math.ceil(millis / Duration.toMillis(Duration.minutes(1)));
 
+const carryPart = (count: number, label: string): O.Option<string> =>
+  O.liftPredicate(`${count} ${label}`, () => count > 0);
+
 const renderCarry = (carried: O.Option<YeetReviewWindowCarry>): string =>
   O.getOrElse(
-    O.map(carried, ({ rewrites, rootSha }) => `; carried across ${rewrites} GitHub rewrite(s) from ${rootSha}`),
+    O.map(carried, ({ rewrites, merges, rootSha }) => {
+      const steps = A.getSomes([carryPart(rewrites, "GitHub rewrite(s)"), carryPart(merges, "base merge(s)")]);
+      return `; carried across ${A.join(steps, " and ")} from ${rootSha}`;
+    }),
     () => ""
   );
 
@@ -478,18 +512,55 @@ const carriesWindowRow = Effect.fn("Yeet.carriesWindowRow")(function* (
   return O.exists(committedAt, (at) => matchesRewriteTime(at, activity));
 });
 
-const walkWindowRewrites = Effect.fn("Yeet.walkWindowRewrites")(function* (
-  rows: ReadonlyArray<GithubRefActivityRecord>,
+// A base merge carries when its push row moved the branch from the old head and the classifier
+// proves the merge left the pull request's own patch unchanged; an unknown verdict never does.
+const carriesBaseMergeRow = Effect.fn("Yeet.carriesBaseMergeRow")(function* (
+  activity: GithubRefActivityRecord,
+  current: string,
+  base: string,
+  classifier: YeetHeadMoveClassifier["Service"]
+) {
+  const move = yield* classifier.classifyBaseMerge(
+    YeetHeadMoveRequest.make({ before: activity.before, after: current, base })
+  );
+  return move._tag === "unchanged";
+});
+
+// One kind of carried head move: the activity rows it follows, the proof each row needs, and
+// how the linked steps are counted.
+interface WindowCarryWalk {
+  readonly activityType: GithubRefActivityType;
+  readonly carries: (activity: GithubRefActivityRecord, current: string) => Effect.Effect<boolean>;
+  readonly carryOf: (steps: number, rootSha: string) => YeetReviewWindowCarry;
+}
+
+const rewriteWalk = (
   headSha: string,
   base: string,
   classifier: YeetHeadMoveClassifier["Service"]
+): WindowCarryWalk => ({
+  activityType: "force_push",
+  carries: (activity) => carriesWindowRow(activity, headSha, base, classifier),
+  carryOf: (rewrites, rootSha) => YeetReviewWindowCarry.make({ rewrites, rootSha }),
+});
+
+const baseMergeWalk = (base: string, classifier: YeetHeadMoveClassifier["Service"]): WindowCarryWalk => ({
+  activityType: "push",
+  carries: (activity, current) => carriesBaseMergeRow(activity, current, base, classifier),
+  carryOf: (merges, rootSha) => YeetReviewWindowCarry.make({ rewrites: 0, merges, rootSha }),
+});
+
+const walkWindowCarry = Effect.fn("Yeet.walkWindowRewrites")(function* (
+  rows: ReadonlyArray<GithubRefActivityRecord>,
+  headSha: string,
+  walk: WindowCarryWalk
 ) {
   let current = headSha;
   let carriedAfters = HashSet.empty<string>();
   let row = A.findFirst(rows, (value) => value.after === current);
-  while (O.isSome(row) && row.value.activityType === "force_push") {
+  while (O.isSome(row) && row.value.activityType === walk.activityType) {
     if (HashSet.has(carriedAfters, current)) return O.none();
-    const carries = yield* carriesWindowRow(row.value, headSha, base, classifier);
+    const carries = yield* walk.carries(row.value, current);
     if (!carries) break;
     carriedAfters = HashSet.add(carriedAfters, current);
     current = row.value.before;
@@ -498,7 +569,7 @@ const walkWindowRewrites = Effect.fn("Yeet.walkWindowRewrites")(function* (
   if (HashSet.size(carriedAfters) === 0 || O.isNone(row)) return O.none();
   return O.some(
     WindowCarryTrail.make({
-      carry: YeetReviewWindowCarry.make({ rewrites: HashSet.size(carriedAfters), rootSha: current }),
+      carry: walk.carryOf(HashSet.size(carriedAfters), current),
       carriedAfters,
       rootPushedAt: row.value.timestamp,
     })
@@ -508,14 +579,17 @@ const walkWindowRewrites = Effect.fn("Yeet.walkWindowRewrites")(function* (
 const readYeetReviewWindowCarry = Effect.fn("Yeet.readYeetReviewWindowCarry")(function* (
   target: YeetReviewWindowTarget,
   pull: O.Option<GithubPullRequestRecord>,
-  classifier: YeetHeadMoveClassifier["Service"]
+  classifier: YeetHeadMoveClassifier["Service"],
+  baseMerged: boolean
 ) {
   if (O.isNone(pull) || pull.value.headSha !== target.headSha) return O.none();
   const rest = yield* GithubRest;
   // base.sha is the base at the head's last synchronization, not the local main ref.
   const rows = yield* rest.refActivity(pull.value.headRef).pipe(Effect.option);
   if (O.isNone(rows)) return O.none();
-  const walked = yield* walkWindowRewrites(rows.value, target.headSha, pull.value.baseSha, classifier);
+  const base = pull.value.baseSha;
+  const walk = baseMerged ? baseMergeWalk(base, classifier) : rewriteWalk(target.headSha, base, classifier);
+  const walked = yield* walkWindowCarry(rows.value, target.headSha, walk);
   if (O.isNone(walked)) return O.none();
   const suite = yield* rest.headFirstReceivedAt(walked.value.carry.rootSha).pipe(Effect.option, Effect.map(O.flatten));
   return O.some(WindowCarryEvidence.make({ ...walked.value, rootFirstSuite: suite }));
@@ -527,24 +601,57 @@ class WindowCarryRead extends S.Opaque<WindowCarryRead, { readonly brand: unique
   )
 ) {}
 
+// What the window read already knows when it decides which carry evidence to spend reads on:
+// `headParents` is the head's parent list when the timeline it read lists the head as pushed.
+class WindowCarryNeeds extends S.Opaque<WindowCarryNeeds, { readonly brand: unique symbol }>()(
+  S.Struct({
+    openedAt: S.Boolean,
+    forcePushes: S.Boolean,
+    pushHolds: S.Boolean,
+    headParents: S.String.pipe(S.Array, S.Option),
+  }).pipe(
+    $I.annoteSchema("WindowCarryNeeds", {
+      description:
+        "Whether the read needs the creation time, saw force pushes and is still held by the push, and the head's parents.",
+    })
+  )
+) {}
+
+// Whether the head may be a base merge, decided without a fetch or another GitHub request, and only
+// while the uncarried push still holds the window. The timeline the read already took gives a listed
+// head's parents; a head it does not list is read from the local object store only (a commit that is
+// not local reads as no merge). Only a two-parent head goes on to the pull read (unless the caller
+// supplied the pull), the ref activity read and the proof, which fetches what the checkout lacks.
+const probeBaseMerge = (
+  headSha: string,
+  classifier: O.Option<YeetHeadMoveClassifier["Service"]>,
+  needs: WindowCarryNeeds
+): Effect.Effect<boolean> =>
+  needs.pushHolds && O.isSome(classifier)
+    ? O.match(needs.headParents, {
+        onSome: (parents) => Effect.succeed(A.length(parents) === 2),
+        onNone: () => classifier.value.isLocalMergeCommit(headSha),
+      })
+    : Effect.succeed(false);
+
+const readWindowPull = (target: YeetReviewWindowTarget, wanted: boolean) =>
+  target.pull !== undefined
+    ? Effect.succeedSome(target.pull)
+    : wanted
+      ? GithubRest.use((rest) => rest.pullRequest(target.prNumber)).pipe(Effect.option)
+      : Effect.succeedNone;
+
 const readWindowCarry = Effect.fn("Yeet.readWindowCarry")(function* (
   target: YeetReviewWindowTarget,
-  needsOpenedAt: boolean,
-  hasForcePushes: boolean
+  needs: WindowCarryNeeds
 ) {
-  const rest = yield* GithubRest;
   const classifier = yield* Effect.serviceOption(YeetHeadMoveClassifier);
-  const shouldCarry = O.isSome(classifier) && hasForcePushes;
-  const pull =
-    target.pull !== undefined
-      ? O.some(target.pull)
-      : shouldCarry || needsOpenedAt
-        ? yield* rest.pullRequest(target.prNumber).pipe(Effect.option)
-        : O.none<GithubPullRequestRecord>();
-  const carry =
-    shouldCarry && O.isSome(classifier)
-      ? yield* readYeetReviewWindowCarry(target, pull, classifier.value)
-      : O.none<WindowCarryEvidence>();
+  const baseMerged = yield* probeBaseMerge(target.headSha, classifier, needs);
+  const carrier = O.filter(classifier, () => needs.forcePushes || baseMerged);
+  const pull = yield* readWindowPull(target, O.isSome(carrier) || needs.openedAt);
+  const carry = O.isSome(carrier)
+    ? yield* readYeetReviewWindowCarry(target, pull, carrier.value, baseMerged)
+    : O.none<WindowCarryEvidence>();
   return WindowCarryRead.make({ pull, carry });
 });
 
@@ -574,7 +681,18 @@ const reviewWindowPushedAt = (
  * Reads the timeline and current head's first check suite. The pull is reused
  * when supplied, otherwise read lazily for creation time or rewrite evidence.
  * With a classifier, bounded ref activity is walked across proven GitHub
- * rewrites whose committer instants match their activity rows. Every carry
+ * rewrites whose committer instants match their activity rows. While the
+ * uncarried push still holds the window and the head is a two-parent commit
+ * (from the timeline's `committed` events, or else the local object store,
+ * never a fetch), the walk follows push rows instead, across merges the
+ * classifier proves only merged the synchronized base with the pull request's
+ * own patch unchanged; a conflict resolution, a changed patch, a shallow or
+ * unreadable history, a failed fetch and an unknown verdict all stop it, and
+ * so does a force-push row, whose rewrite then anchors the window even when it
+ * was an unchanged GitHub rewrite. A force-pushed merge head carries nothing. The
+ * proofs fetch objects the checkout lacks (one `git fetch` bounded at 60
+ * seconds, each object at most once per head per checkout per process); the probe
+ * never fetches. Every carry
  * terminates at a present root activity row and counts from the later of that
  * row and its optional first suite. Missing links never carry. Unmatched force
  * pushes restart the window, including pushes back to a known commit. Carry
@@ -623,11 +741,18 @@ export const readYeetReviewWindowEvidence = Effect.fn("Yeet.readYeetReviewWindow
     return unknownWindow(`head ${target.headSha} has no check suite yet, so its push time is not known`);
   }
   const flippedAt = timeline.value.readyAt;
-  const { pull, carry } = yield* readWindowCarry(
-    target,
-    O.isNone(flippedAt),
-    A.isReadonlyArrayNonEmpty(timeline.value.forcePushes)
-  );
+  const uncarriedPushedAt = reviewWindowPushedAt(timeline.value.forcePushes, O.none(), firstReceivedAt.value);
+  const probedAt = yield* DateTime.now;
+  const needs = WindowCarryNeeds.make({
+    openedAt: O.isNone(flippedAt),
+    forcePushes: A.isReadonlyArrayNonEmpty(timeline.value.forcePushes),
+    pushHolds: DateTime.isLessThan(probedAt, DateTime.addDuration(uncarriedPushedAt, window.value)),
+    headParents: O.map(
+      A.findFirst(timeline.value.commits, (commit) => commit.sha === target.headSha),
+      (commit) => commit.parents
+    ),
+  });
+  const { pull, carry } = yield* readWindowCarry(target, needs);
   const pushedAt = reviewWindowPushedAt(timeline.value.forcePushes, carry, firstReceivedAt.value);
   const openedAt = O.map(pull, (value) => value.createdAt);
   const ready = pipe(
@@ -638,12 +763,9 @@ export const readYeetReviewWindowEvidence = Effect.fn("Yeet.readYeetReviewWindow
     return unknownWindow(`the creation time of pull request #${target.prNumber} could not be read`);
   }
   const result = decideYeetReviewWindow({
-    carried: O.filter(
-      carry,
-      () =>
-        DateTime.toEpochMillis(pushedAt) <
-        DateTime.toEpochMillis(reviewWindowPushedAt(timeline.value.forcePushes, O.none(), firstReceivedAt.value))
-    ).pipe(O.map((value) => value.carry)),
+    carried: O.filter(carry, () => DateTime.isLessThan(pushedAt, uncarriedPushedAt)).pipe(
+      O.map((value) => value.carry)
+    ),
     now: yield* DateTime.now,
     pushedAt,
     readyAt: ready.value.at,

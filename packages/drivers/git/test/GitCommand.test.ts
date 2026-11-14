@@ -475,6 +475,13 @@ describe("GitCommand", () => {
       );
     });
 
+    it("changedFiles renders --ignore-submodules after the selection flags and before the range", () => {
+      assertGitCommand(
+        GitCommand.changedFiles("main", "HEAD", false, { noRenames: true, ignoreSubmodules: "none", twoDot: true }),
+        ["diff", "--name-only", "-z", "--no-relative", "--no-renames", "--ignore-submodules=none", "main", "HEAD"]
+      );
+    });
+
     it("changedFiles twoDot emits the plain `<base> <head>` pair as two argv entries", () => {
       assertGitCommand(GitCommand.changedFiles("main", "HEAD", true, { twoDot: true }), [
         "diff",

@@ -522,6 +522,12 @@
         ]
       },
       {
+        "name": "@beep/infra-hosts",
+        "patterns": [
+          "packages/tooling/infra/infra-hosts/src/**"
+        ]
+      },
+      {
         "name": "@beep/infra-turbo-cache",
         "patterns": [
           "packages/tooling/infra/turbo-cache/src/**"
@@ -3086,6 +3092,7 @@
         "allow": [
           "@beep/identity",
           "@beep/infra",
+          "@beep/infra-hosts",
           "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
@@ -3096,6 +3103,7 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/infra",
+          "@beep/infra-hosts",
           "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
@@ -3117,6 +3125,29 @@
           "@beep/identity",
           "@beep/infra-cost-controls",
           "@beep/schema"
+        ]
+      },
+      {
+        "from": "@beep/infra-hosts",
+        "allow": [
+          "@beep/identity",
+          "@beep/infra-hosts",
+          "@beep/memfs",
+          "@beep/openclaw",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/infra-hosts",
+          "@beep/memfs",
+          "@beep/openclaw",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
         ]
       },
       {
@@ -3836,6 +3867,7 @@
       {
         "from": "@beep/oip-web",
         "allow": [
+          "@beep/alchemy-vercel",
           "@beep/hubspot",
           "@beep/identity",
           "@beep/oip-web",
@@ -3849,6 +3881,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/alchemy-vercel",
           "@beep/hubspot",
           "@beep/identity",
           "@beep/oip-web",
