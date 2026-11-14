@@ -20,7 +20,7 @@ Method, so a later lane can re-run it:
 
 Line numbers are for the tree above. They drift, so re-run the search, not the line.
 
-Revision 2 (2026-11-14, same day) records the gate's rulings on Q1 to Q10 (section 4), the lab
+Revision 3 (2026-11-14) adds section 6: what `delete-package` offers for acknowledged residue, the 330 remaining dependents classified by PR, the true residue, and the R6.6 design. Revision 2 (2026-11-14, same day) records the gate's rulings on Q1 to Q10 (section 4), the lab
 check (Q6, seven more read-only AWS calls), the changeset and coverage answers (Q7, Q8) and
 the new PR R6.5.
 
@@ -39,7 +39,9 @@ Use this for any P6 deletion PR (R1, R2, R4, R5, R6, R6.5, R7). Section 2 lists 
    (the census command in "Knowledge gates", section 2). In every live doc, decision files and
    closed packets included, replace the backticked path, or the Markdown link, with the same path
    as plain text followed by "(removed in #N)", where N is your PR number. Change nothing else in
-   a dated record. Edit decision files through `bun run beep goals decisions write --slug <slug>`
+   a dated record. Exception: in a file `delete-package` scans as a hard dependent (anything under
+   `packages/`, `apps/`, `.github/`, or a root policy file), drop the reference instead. The
+   plain-text path still matches and stays a dependent of R7 (section 6.2). Edit decision files through `bun run beep goals decisions write --slug <slug>`
    so the generated SPEC and PLAN blocks follow.
 5. **Coverage.** In `standards/coverage.regression-baseline.jsonc`, delete the rows of the files you
    removed. Keep every other byte, the `@beep/infra` totals included. Do not re-measure locally.
@@ -704,8 +706,9 @@ edits (R6) apart from the large repo-cli edit (R7).
 | R4 hosts | hosts lane | the attended AI metrics cutover |
 | R5 R2 pilot | turbo-cache lane | the 2026-11-20T20:10Z verdict, the stage 2 PR, the R2 teardown |
 | R6 fleet + AWS cache + SDK | P5 lane (step 6e) | the verdict, the cost-controls PR, P5 steps 0-6d |
-| R6.5 delete-package matcher | a repo-cli lane | nothing: can go now; must merge before R7 |
-| R7 package removal | P6/P7 final lane | R2, R4, R5, R6, R6.5 merged |
+| R6.5 delete-package matcher | this lane (#3343) | open; the gate posts the final |
+| R6.6 delete-package acknowledgements + tracked-file scan | a repo-cli lane | #3343 merged (section 6) |
+| R7 package removal | P6/P7 final lane | R2, R4, R5, R6, R6.5, R6.6 merged |
 
 ## 3. Verification matrix rows as exact commands
 
@@ -1012,3 +1015,359 @@ Packet closeout, in the same PR:
    `BEEP_SECRETS/BEEP_SECRETS` and `PULUMI_CONFIG_PASSPHRASE` in `BEEP_SECRETS/OIP_SECRETS`. Both
    are what make the archived exports restorable, and deleting either is irreversible. Also on the
    list: the six oip.law DNS comments (Q4), to correct at their next real change.
+
+## 6. Revision 3: dependents residue and the R6.6 design
+
+Read-only, 2026-11-14. Measured with `bun run beep delete-package @beep/infra --dry-run` at #3343's
+head `4810cc93ccc`, on a tree with gitignored local build output removed. Result: 330 hard dependent
+hits (329 `file-path` and 1 `script`). Nothing was applied.
+
+### 6.1 What `delete-package` offers for acknowledged residue today
+
+Nothing that accepts named hits. Read from
+`packages/tooling/tool/cli/src/commands/DeletePackage/DeletePackage.command.ts:867-889` and
+`DeletePackage.policy.ts`:
+
+- The refusal rule for hard dependents (`DeletePackage.policy.ts:79-85`) refuses whenever any hit
+  of a hard kind (`manifest-*`, `import-prod`, `import-test`, `script`, `file-path`) exists. No
+  flag, input or plan file filters that list.
+- Every refusal, hard or soft, fails the run before dry-run, check or apply
+  (`DeletePackage.command.ts:845-848`).
+- `--force` is decorative. It is parsed (`:883`) and copied into `DeletePackagePolicy.force`
+  (`:701`), but no refusal rule reads it. The refusal text says so: "--force never overrides
+  dependents".
+- `--also` is dead. It is parsed (`:878`) and typed (`:671`), and nothing reads it.
+- `--rewrite-packets` and `--allow-stale-packets` do the same thing. Each only suppresses the soft
+  `packet-claim` refusal (`DeletePackage.policy.ts:136`). Neither rewrites anything. For the Q3
+  ruling, the template packet (`goals/_template/GOAL.md`) still has to be edited by hand, and the
+  flag only stops the refusal.
+- `--cascade`, `--allow-published`, `--prune-catalog`, `--drop-data` and `--allow-non-local-data`
+  gate other refusals, not dependents.
+- No human-edited plan file exists. The printed inverse plan is output only.
+
+### 6.2 The 330 hits, by the PR that removes them
+
+| Removed by | Hits | Notes |
+| --- | --- | --- |
+| R1 + R2 (#3341) | 0 | #3341 rewrites the three `apps/oip-web` lines to plain text plus "(removed in #3341)". The path text stays, so they still match; they leave in R7 (Q10). It does not touch `no-manual-effect-runtime-in-tests.ts:61-62`, which list `infra/test/OipWeb.test.ts` and `infra/test/Storybook.test.ts`, two files #3341 deletes. Those entries are stale once #3341 merges; that PR should drop them. |
+| Cost-controls removal | 0 | No hit is in a file it changes. |
+| R4 (hosts) | 8 | AI metrics installer and tests, `infra-hosts` provenance, the AIMetrics allowlist entry. |
+| R5 (R2 pilot) | 57 | `Cache.r2*`, adapter, producer tests, every `r2-cache` CI line, the tracked-shell test fixture. |
+| R6 (fleet) | 25 | `beep runners bake`, overflow preflight, SDK and Lambda exclusions, `check.yml:421`. |
+| R7 (package removal) | 212 | Scan roots, globs, the `infra` package kind, coverage and partition rows, the root policy files, and Q10 provenance prose. Four of these only borrow the word as fixture text (6.3). |
+| True residue | 28 | Listed in 6.3. |
+
+If every earlier PR merges, the command sees **240** hits when R7 starts (212 + 28). After R7's own
+edits it sees **32**: the 28 residue lines plus the 4 borrowed fixture lines, or 28 if R7 renames
+those four. Lines that R4 to R6 or other lanes add before R7 are not predicted. One case is
+predictable: a Q3 rewrite in a hard-scanned file (anything under `packages/`, `apps/`, `.github/`, or
+a root policy file) keeps the `infra/...` text and stays a dependent. In those files a PR should
+drop the reference (Q10), not rewrite it. Q3 rewrites under `goals/`, `explorations/` and
+`research/` are classed as `packet`, `historical-doc` or `baseline`, which do not block.
+
+Per-file detail (line numbers at `4810cc93ccc`):
+
+R4:
+
+| File | Hits | Lines |
+| --- | --- | --- |
+| `packages/tooling/infra/infra-hosts/README.md` | 1 | 89 |
+| `packages/tooling/infra/infra-hosts/src/OpenClawGeneration.ts` | 2 | 14, 16 |
+| `packages/tooling/library/ai-metrics/README.md` | 1 | 27 |
+| `packages/tooling/library/ai-metrics/src/install.ts` | 1 | 1034 |
+| `packages/tooling/library/ai-metrics/test/ingest.test.ts` | 1 | 1895 |
+| `packages/tooling/policy-pack/lint-rules/src/rules/no-manual-effect-runtime-in-tests.ts` | 1 | 60 |
+| `packages/tooling/tool/cli/test/ai-metrics-command.test.ts` | 1 | 788 |
+
+R5:
+
+| File | Hits | Lines |
+| --- | --- | --- |
+| `.github/actions/setup-monorepo-ci/action.yml` | 2 | 331, 332 |
+| `.github/workflows/cache-warm.yml` | 2 | 112, 72 |
+| `.github/workflows/check.yml` | 14 | 1103, 1104, 1299, 1300, 1787, 1788, 1956, 1957, 2037, 2038, 640, 641, 752, 753 |
+| `.github/workflows/data-sync.yml` | 2 | 100, 101 |
+| `.github/workflows/heavy.yml` | 11 | 329, 330, 598, 600, 638, 640, 664, 665, 691, 849, 850 |
+| `.github/workflows/property-laws-nightly.yml` | 2 | 127, 128 |
+| `.github/workflows/shard-overflow.yml` | 2 | 189, 190 |
+| `.github/workflows/storybook.yml` | 2 | 214, 215 |
+| `packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.host.ts` | 1 | 5 |
+| `packages/tooling/tool/cli/src/commands/Cache/Cache.r2.command.ts` | 2 | 108, 120 |
+| `packages/tooling/tool/cli/src/commands/Cache/Cache.r2.fleet.ts` | 2 | 143, 5 |
+| `packages/tooling/tool/cli/src/commands/Cache/Cache.r2.live.ts` | 2 | 207, 284 |
+| `packages/tooling/tool/cli/src/commands/Cache/Cache.r2.schemas.ts` | 2 | 430, 5 |
+| `packages/tooling/tool/cli/src/commands/Cache/Cache.r2.ts` | 1 | 5 |
+| `packages/tooling/tool/cli/src/commands/Cache/Cache.workflow.ts` | 1 | 155 |
+| `packages/tooling/tool/cli/test/cache-producer-adapter.test.ts` | 2 | 106, 397 |
+| `packages/tooling/tool/cli/test/cache-r2.test.ts` | 2 | 572, 730 |
+| `packages/tooling/tool/cli/test/ci-runner-security.test.ts` | 4 | 194, 3118, 3121, 3122 |
+| `packages/tooling/tool/cli/test/laws-tracked-shell-allowlist.test.ts` | 1 | 51 |
+
+R6:
+
+| File | Hits | Lines |
+| --- | --- | --- |
+| `.github/workflows/check.yml` | 1 | 421 |
+| `packages/tooling/library/alchemy-github-runners/README.md` | 1 | 6 |
+| `packages/tooling/library/repo-utils/src/schemas/TypeScriptSourceExclusions.ts` | 1 | 35 |
+| `packages/tooling/tool/cli/src/commands/Ci/CiShardOverflow.ts` | 1 | 81 |
+| `packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts` | 1 | 404 |
+| `packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts` | 1 | 56 |
+| `packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoPrograms.ts` | 2 | 30, 32 |
+| `packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts` | 3 | 1521, 2555, 2556 |
+| `packages/tooling/tool/cli/src/commands/Quality/Quality.plan.ts` | 1 | 87 |
+| `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts` | 2 | 851, 892 |
+| `packages/tooling/tool/cli/test/ci-route-classify.test.ts` | 1 | 362 |
+| `packages/tooling/tool/cli/test/effect-imports.test.ts` | 1 | 228 |
+| `packages/tooling/tool/cli/test/fixtures/dependency-review/manifest-inventory.json` | 3 | 1148, 193, 198 |
+| `packages/tooling/tool/cli/test/quality-tsgo-profile.test.ts` | 2 | 213, 214 |
+| `packages/tooling/tool/cli/test/runners-bake.test.ts` | 3 | 314, 454, 79 |
+| `packages/tooling/tool/cli/test/schema-first.test.ts` | 1 | 134 |
+
+R7:
+
+| File | Hits | Lines |
+| --- | --- | --- |
+| `apps/oip-web/README.md` | 1 | 117 |
+| `apps/oip-web/stack/OipWebConfig.ts` | 1 | 375 |
+| `apps/oip-web/stack/OipWebStack.ts` | 1 | 5 |
+| `apps/todox/vercel.json` | 1 | 7 |
+| `biome.jsonc` | 1 | whole file |
+| `.github/workflows/catalog-regeneration.yml` | 1 | 75 |
+| `.github/workflows/check.yml` | 1 | 1065 |
+| `.github/workflows/heavy.yml` | 1 | 176 |
+| `.github/workflows/shard-overflow.yml` | 1 | 151 |
+| `lefthook.yml` | 1 | whole file |
+| `package.json` | 1 | whole file |
+| `packages/foundation/capability/config-file/test/fixtures/codec-corpus/yaml/Pulumi.yaml` | 1 | 5 |
+| `packages/foundation/capability/walker/test/Descend.test.ts` | 1 | 604 |
+| `packages/tooling/infra/turbo-cache/README.md` | 2 | 50, 6 |
+| `packages/tooling/library/repo-cli-kit/src/package-scripts/PackageScriptsPolicy.ts` | 1 | 146 |
+| `packages/tooling/library/repo-cli-kit/src/package-scripts/PackageScripts.schemas.ts` | 28 | 1001, 1045, 1082, 1119, 1156, 1193, 1230, 1272, 1314, 1346, 1383, 1420, 1462, 1499, 1541, 1578, 1615, 1741, 1743, 1747, 1748, 1750, 1755, 1760, 1765, 1766, 266, 62 |
+| `packages/tooling/library/repo-cli-kit/test/package-scripts.policy.test.ts` | 14 | 104, 107, 122, 123, 126, 166, 176, 177, 178, 184, 186, 187, 203, 40 |
+| `packages/tooling/library/repo-cli-kit/test/package-scripts.schemas.test.ts` | 3 | 121, 123, 192 |
+| `packages/tooling/library/repo-utils/test/schemas/PackageJson.test.ts` | 1 | 383 |
+| `packages/tooling/policy-pack/lint-rules/README.md` | 2 | 28, 74 |
+| `packages/tooling/policy-pack/lint-rules/src/rules/no-manual-effect-runtime-in-tests.ts` | 3 | 53, 61, 62 |
+| `packages/tooling/tool/cli/src/commands/Ci/CiLanePartitions.ts` | 3 | 405, 587, 640 |
+| `packages/tooling/tool/cli/src/commands/Ci/CiLane.ts` | 1 | 2259 |
+| `packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json` | 1 | 5 |
+| `packages/tooling/tool/cli/src/commands/Ci/CiOperational.schemas.ts` | 2 | 529, 602 |
+| `packages/tooling/tool/cli/src/commands/Ci/CiPartitions.service.ts` | 1 | 76 |
+| `packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.plan.ts` | 1 | 183 |
+| `packages/tooling/tool/cli/src/commands/DeletePackage/internal/RegistrationGeometry/RegistrationGeometry.probes.ts` | 1 | 42 |
+| `packages/tooling/tool/cli/src/commands/Docgen/internal/Workspace.ts` | 1 | 36 |
+| `packages/tooling/tool/cli/src/commands/Goals/Harvest.schemas.ts` | 1 | 191 |
+| `packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.refs.ts` | 1 | 1376 |
+| `packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts` | 1 | 361 |
+| `packages/tooling/tool/cli/src/commands/Laws/internal/LawScan.ts` | 1 | 60 |
+| `packages/tooling/tool/cli/src/commands/Laws/Laws.command.ts` | 1 | 329 |
+| `packages/tooling/tool/cli/src/commands/Laws/NoNativeRuntime.ts` | 1 | 50 |
+| `packages/tooling/tool/cli/src/commands/Laws/RetiredIriAuthorities.model.ts` | 1 | 250 |
+| `packages/tooling/tool/cli/src/commands/Laws/TerseEffect.ts` | 1 | 116 |
+| `packages/tooling/tool/cli/src/commands/Laws/TrackedShellAllowlist.model.ts` | 2 | 31, 51 |
+| `packages/tooling/tool/cli/src/commands/Lint/internal/EffectVitestScan.ts` | 1 | 588 |
+| `packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstPolicy.ts` | 1 | 82 |
+| `packages/tooling/tool/cli/src/commands/Lint/internal/SchemaFirstProject.ts` | 1 | 37 |
+| `packages/tooling/tool/cli/src/commands/Lint/LintDeprecatedApis.schemas.ts` | 6 | 112, 152, 24, 30, 84, 85 |
+| `packages/tooling/tool/cli/src/commands/Lint/LintJsdoc.command.ts` | 1 | 81 |
+| `packages/tooling/tool/cli/src/commands/Lint/Lint.schemas.ts` | 8 | 1747, 1754, 1755, 1756, 1757, 1807, 1814, 58 |
+| `packages/tooling/tool/cli/src/commands/Lint/PackageTestTypecheck.ts` | 1 | 72 |
+| `packages/tooling/tool/cli/src/commands/Lint/TsconfigOverlay.ts` | 1 | 64 |
+| `packages/tooling/tool/cli/src/commands/Quality/internal/CoverageScope.ts` | 3 | 156, 167, 373 |
+| `packages/tooling/tool/cli/src/commands/Quality/internal/TestTsgoPrograms.ts` | 1 | 36 |
+| `packages/tooling/tool/cli/src/commands/Quality/Quality.command.ts` | 4 | 3174, 355, 358, 459 |
+| `packages/tooling/tool/cli/test/build-turbo-outputs.test.ts` | 1 | 83 |
+| `packages/tooling/tool/cli/test/catalog-shard-scope.test.ts` | 10 | 160, 210, 216, 45, 46, 74, 88, 89, 91, 92 |
+| `packages/tooling/tool/cli/test/ci-coverage.test.ts` | 20 | 1035, 1041, 1046, 1048, 507, 509, 521, 552, 557, 569, 603, 606, 611, 614, 620, 639, 641, 691, 694, 999 |
+| `packages/tooling/tool/cli/test/ci-docs-policy.test.ts` | 1 | 121 |
+| `packages/tooling/tool/cli/test/ci-runner-security.test.ts` | 2 | 1809, 498 |
+| `packages/tooling/tool/cli/test/commands/Goals/Harvest.test.ts` | 4 | 175, 318, 320, 321 |
+| `packages/tooling/tool/cli/test/coverage-scope-tooling-input-owners.test.ts` | 3 | 193, 23, 30 |
+| `packages/tooling/tool/cli/test/delete-package.test.ts` | 3 | 383, 385, 391 |
+| `packages/tooling/tool/cli/test/doctest-lane.test.ts` | 1 | 37 |
+| `packages/tooling/tool/cli/test/effect-fn.test.ts` | 1 | 51 |
+| `packages/tooling/tool/cli/test/effect-imports.test.ts` | 11 | 1055, 1062, 1071, 1449, 1456, 1468, 1514, 1520, 1532, 1572, 1575 |
+| `packages/tooling/tool/cli/test/effect-vitest-files.test.ts` | 1 | 56 |
+| `packages/tooling/tool/cli/test/fixtures/dependency-review/manifest-inventory.json` | 1 | 203 |
+| `packages/tooling/tool/cli/test/frozen-grant-set.test.ts` | 1 | 44 |
+| `packages/tooling/tool/cli/test/goal-data-consumer-census.test.ts` | 4 | 281, 45, 47, 52 |
+| `packages/tooling/tool/cli/test/Holds.inventory.test.ts` | 3 | 222, 239, 269 |
+| `packages/tooling/tool/cli/test/laws-package.test.ts` | 1 | 137 |
+| `packages/tooling/tool/cli/test/laws-retired-iri-authorities.test.ts` | 1 | 399 |
+| `packages/tooling/tool/cli/test/lint-command.test.ts` | 9 | 104, 301, 302, 347, 349, 358, 407, 470, 650 |
+| `packages/tooling/tool/cli/test/lint-workers.test.ts` | 7 | 227, 276, 297, 592, 752, 767, 775 |
+| `packages/tooling/tool/cli/test/policy-fingerprint-turbo-inputs.test.ts` | 2 | 493, 536 |
+| `packages/tooling/tool/cli/test/root-tasks-turbo-inputs.test.ts` | 7 | 1014, 217, 58, 68, 77, 958, 984 |
+| `packages/tooling/tool/cli/test/schema-first.test.ts` | 1 | 208 |
+| `turbo.json` | 1 | whole file |
+
+### 6.3 True residue: hits that survive every PR
+
+Each line names `infra` as a word, not as the root package or path. None of them will be deleted.
+
+| Path:line | Text (abridged) | Why it matches |
+| --- | --- | --- |
+| `packages/tooling/infra/cost-controls/package.json:16` | `"kind": "infra"` | tooling kind value |
+| `packages/tooling/infra/infra-hosts/package.json:16` | `"kind": "infra"` | tooling kind value |
+| `packages/tooling/infra/turbo-cache/package.json:16` | `"kind": "infra"` | tooling kind value |
+| `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:150` | `VALID_TOOLING_KINDS = [..., "infra"]` | tooling kind list |
+| `packages/tooling/tool/cli/src/commands/CreatePackage/CreatePackage.command.ts:1162` | "Tooling supports: library, tool, policy-pack, test-kit, infra" | tooling kind help text |
+| `packages/tooling/library/repo-utils/src/schemas/PackageJson.ts:299` | `BeepToolingKind = S.Literals([..., "infra"])` | tooling kind schema |
+| `packages/tooling/tool/cli/test/create-package.test.ts:107` | `kind: S.Literals([..., "infra"])` | tooling kind test |
+| `packages/tooling/tool/cli/test/create-package.test.ts:1401` | "creates infra packages under packages/tooling/infra with the infra kind" | tooling kind test |
+| `packages/tooling/tool/cli/test/create-package.test.ts:1422` | `"infra",` (create-package argv) | tooling kind test |
+| `packages/tooling/tool/cli/test/create-package.test.ts:1435` | `path.join(rootDir, "packages", "tooling", "infra", ...)` | a sibling path split into `path.join` arguments, which no prefix rule can see |
+| `packages/tooling/tool/cli/test/create-package.test.ts:1440` | `kind: "infra"` | tooling kind test |
+| `packages/drivers/git/test/integration/Git.int.test.ts:451` | "...runCollected's generic infra..." | prose |
+| `packages/drivers/runpod/AGENTS.md:7` | "...infra consumers depend on..." | prose |
+| `packages/drivers/runpod/CLAUDE.md:7` | the same line (`CLAUDE.md` mirrors `AGENTS.md`) | prose |
+| `packages/tooling/tool/cli/src/commands/Goals/Goals.schemas.ts:1848` | "a durable product/infra ability" | prose |
+| `packages/tooling/tool/cli/src/commands/Goals/Bootstrap.ts:325` | "Decide changes to public API, schema, data migration, auth, infra, security" | packet template prose |
+| `packages/tooling/tool/cli/test/fixtures/goals-plan/bootstrap-full.json:25` | the rendered template | template fixture |
+| `packages/tooling/tool/cli/test/fixtures/goals-plan/bootstrap-minimal.json:25` | the rendered template | template fixture |
+| `packages/tooling/tool/cli/test/fixtures/goals-plan/bootstrap-report-first.json:25` | the rendered template | template fixture |
+| `packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts:833` | "infra failures" | runner-infrastructure prose |
+| `packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts:834` | "managed-runner infra success" | runner-infrastructure prose |
+| `packages/tooling/tool/cli/test/ci-lane-timings.test.ts:726` | "is an infra failure" | prose |
+| `packages/tooling/tool/cli/test/ci-lane-timings.test.ts:727` | `const infra = job({` | local variable name |
+| `packages/tooling/tool/cli/test/ci-lane-timings.test.ts:732` | `ciLaneTimingRow(infra).infraFailure` | local variable name |
+| `packages/tooling/tool/cli/src/commands/Yeet/internal/Ack.ts:179` | `reason: "flaky infra lane, rerun queued"` | example text |
+| `packages/tooling/tool/cli/test/yeet-ack.test.ts:53` | `reason: "flaky infra lane"` | example text |
+| `packages/tooling/tool/cli/test/yeet-ack.test.ts:54` | `"wontfix: flaky infra lane"` | example text |
+| `packages/tooling/tool/cli/test/yeet-base-conflict.test.ts:1103` | `reason: "flaky infra lane"` | example text |
+
+The four borrowed fixture lines (counted in R7's 212; they survive unless R7 renames them):
+`packages/tooling/tool/cli/test/Holds.inventory.test.ts:222`, `:239` and `:269` (the retired hold
+label "infra keeps TypeScript 6" used as fixture data), and
+`packages/foundation/capability/walker/test/Descend.test.ts:604` (`{apps,packages,infra}/**` as a
+glob example). Renaming them costs nothing and changes no behaviour.
+
+### 6.4 Mechanism for the residue: recommendation
+
+**(a) rejected: it is not correct.** The residue matches only because the needle is the bare
+package path `infra`. Matching the name `@beep/infra` plus a root-anchored `infra/` segment, and
+never the bare word, would clear the 28 residue lines. But it would also hide 117 real dependents
+(106 of R7's 212, plus 11 in R4 to R6) that name the root directory without a slash, for example:
+
+- scan-root lists: `["apps", "packages", "infra"]` in `Quality.command.ts:358`,
+  `TestTsgoPrograms.ts:36`, `PackageTestTypecheck.ts:72` and `TsconfigOverlay.ts:64`;
+  `deprecatedApiSweepRoots` in `LintDeprecatedApis.schemas.ts:30`;
+- `Laws.command.ts:329`, `Knowledge.refs.ts:1376` and the probes' own `SCAN_ROOTS`;
+- brace globs such as `{apps,packages,infra}/**` in `Lint.schemas.ts:1754-1814`, `lefthook.yml:53`
+  and about 40 `turbo.json` inputs;
+- regex alternations such as `(packages|apps|infra)/` in `CiOperational.schemas.ts:529` and
+  `CiOperational.patterns.json:5`;
+- the `biome lint apps packages infra` root script and `apps/todox/vercel.json:7`'s `find ... infra ...`.
+
+Those are exactly what the scan exists to find; each keeps scanning a directory that no longer
+exists. Renaming the tooling kind away from `infra` would remove 11 of the 28. That is a breaking
+rename of a public kind (`"kind": "infra"` in three manifests, `create-package --kind infra`), done
+only to satisfy a matcher, and it would leave the 17 prose lines. Not recommended.
+
+**(b) recommended: an explicit acknowledgement input, in R6.6.** Proposed shape (schema-first, in
+`DeletePackage.schemas.ts`):
+
+- `DeletePackageAcknowledgements`, a JSONC file passed as `--acknowledge <path>`, committed in the
+  deleting PR. Recommended home: `goals/infra-alchemy-rebuild/ops/delete-infra.acknowledgements.jsonc`.
+  Fields: `schemaVersion: "delete-package-acknowledgements/v1"`, `target` (package name; must equal
+  the resolved target) and `entries`.
+- Each entry is `{ path, text, reason }`: `path` repository-relative, `text` the exact trimmed line
+  content, `reason` non-empty. It is matched by path and text, not line number, so unrelated edits
+  above it do not break it. An optional `occurrences` (default 1) covers a line that repeats in one
+  file.
+- Behaviour:
+  - Only `file-path` and `script` hits can be acknowledged. A `manifest-*` or `import-*` hit is a
+    real code edge and is never accepted.
+  - The command prints every acknowledged hit under its reason, as a "[delete-package] ACK" block
+    in the plan.
+  - It refuses (hard) when an entry matches no current hit (stale acknowledgement), when an entry's
+    occurrence count differs, when the file names another target, and, as today, when any hard hit
+    is left unacknowledged.
+- The doctor honours the same file. The `authored-reference` surface records evidence per file
+  today; to apply line-level acknowledgements it must record the matching lines, and a file whose
+  only matches are acknowledged lines reads `clean`. Otherwise the post-apply doctor would report
+  the three manifests as residue after the tree is gone, the same failure as #3343's round-1 finding.
+- `--force` and `--also` are inert today (6.1). R6.6 should delete both, or give `--force` a
+  defined meaning, so no caller believes they bypass anything. Fix-where-found applies.
+- Tests (repo-cli, Node and Bun):
+  1. An acknowledged `file-path` hit is accepted and printed with its reason.
+  2. A stale entry (no matching hit) refuses.
+  3. A new unacknowledged hit beside acknowledged ones refuses.
+  4. An entry that tries to acknowledge an `import-prod` hit refuses.
+  5. An entry still matches after a line moves (same text, different line number); a changed text
+     refuses.
+  6. A file whose `target` differs refuses.
+  7. After a simulated apply, an acknowledged line keeps `authored-reference` clean and
+     `doctorIsClean` true; an unacknowledged real reference still makes it residue.
+  8. The decode rejects an empty `reason` and an absolute or `..` path.
+
+**(c) nothing else.** With (b) in place, R7's file acknowledges the 28 (or 32) lines explicitly.
+The gate reviews them as a list, and any new collision fails loudly.
+
+### 6.5 Tracked files only: the scan's file enumeration
+
+Today the dependents scan and the doctor enumerate files by walking the filesystem.
+`collectFiles` (`RegistrationGeometry.probes.ts:73-98`) recurses from each root and skips only the
+directory names in `EXCLUDED_DIRECTORIES` (`.git`, `node_modules`, `dist`, `coverage`, `.turbo`,
+`.beep`, at `:53`). It never consults git, so gitignored output is read. Callers:
+
+- the dependents scan over `SCAN_ROOTS` (`:761`);
+- the `authored-reference` surface over the whole repository (`:212`);
+- the `historical-record` surface (`:292`);
+- `pending-changeset` over `.changeset` (`:234`);
+- `runtime-artifact` over `.beep/ci` (`:265`).
+
+Measured on 2026-11-14: after `package-verify` ran docgen, the scan read
+`packages/tooling/tool/cli/docs/modules/**` and `packages/tooling/library/repo-cli-kit/docs/modules/**`
+(gitignored by `.gitignore:56` `**/docs`). It also read the docs-lint bundle under
+`packages/tooling/policy-pack/lint-rules/.prebuilt/` (`.gitignore:52`). That added 23 phantom
+dependents: 353 instead of 330.
+
+Smallest correct change, in R6.6:
+
+- Enumerate the candidate files once per run through git, through the existing `@beep/git` service
+  (`Git.lsFiles`, `packages/drivers/git/src/Git.ts:2447`; `GitCommand.lsFiles` at
+  `packages/drivers/git/src/GitCommand.ts:1222`). It needs one new option: untracked files that are
+  not ignored, rendering `git ls-files -z --cached --others --exclude-standard`. Today it renders
+  only `ls-files --stage -z`, the index. That lists tracked files plus new files a lane has not yet
+  `git add`ed, and honours every `.gitignore`, so local docgen, bundles and caches can never appear.
+  The index alone ("tracked only") would miss a dependent in a new uncommitted file, which is exactly
+  when a lane runs `delete-package`.
+- Filter that list by root prefix and suffix in place of `collectFiles` for the dependents scan,
+  `authored-reference` and `historical-record`. Skip entries that no longer exist on disk: after
+  apply, the deleted tree is still in the index until it is staged.
+- Keep the filesystem walk for `runtime-artifact` (`.beep/ci` is gitignored on purpose: it is the
+  machine-local state that probe looks for) and for `owned-tree`, which checks existence.
+  `.changeset` is tracked, so `pending-changeset` can take the git list too.
+- When `repoRoot` is not a git work tree, fail with a typed error naming it. Do not fall back to
+  the walk, which would bring the phantoms back silently.
+- Tests:
+  1. A gitignored `packages/consumer/docs/modules/X.md` that names the target yields no dependent
+     and no `authored-reference` evidence.
+  2. An untracked but not-ignored new file that names the target is still a dependent.
+  3. A tracked file deleted from disk but still in the index yields nothing.
+  4. `runtime-artifact` still finds a file under `.beep/ci`.
+  5. A non-git root fails with the typed error.
+  6. `@beep/git`: `GitCommand.lsFiles` renders the new flags, and its parser reads mixed output.
+  Every delete-package fixture becomes a git repository (one test helper: `git init`, a local
+  `user.email`/`user.name`, `git add -A`). That touches about 15 existing tests, and each runs on
+  Node and Bun.
+
+### 6.6 R6.6 entry (built after #3343 merges, its own small PR)
+
+- Files:
+  - `packages/drivers/git/src/GitCommand.ts` and `Git.ts` (the untracked option), with their tests;
+  - `RegistrationGeometry.probes.ts` (git-backed enumeration; line-level authored evidence;
+    acknowledgements in the doctor);
+  - `DeletePackage.schemas.ts` (`DeletePackageAcknowledgements`), `DeletePackage.policy.ts` (the
+    acknowledgement-aware dependent rule), `DeletePackage.command.ts` (`--acknowledge`; drop `--also`;
+    decide `--force`);
+  - `delete-package.test.ts` (fixtures as git repositories; the tests above).
+- Gates as for #3343: `package-verify` for `@beep/git` and `@beep/repo-cli`; tests on Node and Bun;
+  100% on touched files without a baseline row; docs oxlint; Fallow audit; knowledge gates.
+- Check afterwards: `delete-package @beep/infra --dry-run` on a checkout with local docgen output
+  reports the same count as on a clean one.
+- R7 then commits the acknowledgement file for the 28 (or 32) lines from 6.3 and runs
+  `delete-package @beep/infra --acknowledge <file> --prune-catalog --rewrite-packets` (the last flag
+  only waives the packet refusal; the template packet is edited by hand).
