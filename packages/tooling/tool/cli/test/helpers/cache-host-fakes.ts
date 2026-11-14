@@ -58,8 +58,18 @@ export type FakeScript = (
 
 /**
  * A spawner whose every standard command is answered by `script`; piped commands die.
+ *
+ * **Details**
+ *
+ * Use `ScriptedSpawner` from `@beep/commands/ScriptedSpawner` wherever its
+ * `ScriptCompletion` covers the child. This double exists only for the three
+ * shapes it lacks: a filesystem effect inside the spawn (the Turbo run writes
+ * its summaries), a handle whose `isRunning` the test flips (the owned
+ * adapter unit), and binary stdout split into several pulls (synthetic tar
+ * streams carry bytes that are not UTF-8).
  */
 export const fakeSpawner = (script: FakeScript) =>
+  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
   ChildProcessSpawner.make((command) =>
     ChildProcess.isStandardCommand(command)
       ? Effect.map(script(command), fakeChildHandle)

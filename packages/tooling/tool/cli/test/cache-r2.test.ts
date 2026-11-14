@@ -1,4 +1,5 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
+import { Git, NotARepositoryError, WorktreeEntry } from "@beep/git/Git";
 import {
   CacheR2FleetRequest,
   CacheR2ProbeIo,
@@ -43,17 +44,16 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Sink from "effect/Sink";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
-import { fakeFileInfo, fakeSpawner, fakeSpawnerLayer } from "./helpers/cache-host-fakes.ts";
+import { fakeFileInfo, fakeSpawnerLayer } from "./helpers/cache-host-fakes.ts";
+import { NodeTestLayer } from "./support/CommandTest.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type * as HttpClientRequest from "effect/http/HttpClientRequest";
-import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcess from "effect/process/ChildProcess";
-import type { FakeChild, FakeScript } from "./helpers/cache-host-fakes.ts";
 
 const hashHex = S.decodeEffect(Sha256HexFromBytes);
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -364,7 +364,7 @@ const fleetFixture = Effect.fnUntraced(function* (exitCode: number) {
 });
 
 describe.skipIf(currentHostPlatform !== "linux")("R2 fleet enrollment", () => {
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 seconds" })("fleet", (it) => {
+  it.layer(NodeTestLayer, { timeout: "60 seconds" })("fleet", (it) => {
     it.effect("plans canonical clones and their worktrees without changing them", () =>
       Effect.gen(function* () {
         const f = yield* fleetFixture(0);
@@ -646,94 +646,107 @@ const acceptingFetch = (calls: Array<string>): typeof globalThis.fetch =>
     { preconnect: () => {} }
   );
 
-const fleetScript =
-  (orphan: string, workstation: string, main: string): FakeScript =>
-  (command) =>
-    Effect.suspend((): Effect.Effect<FakeChild, PlatformError.PlatformError> => {
-      if (command.command === workstation) return Effect.fail(ScriptedSpawner.notFound(workstation));
-      const words = A.filter(command.args, P.isString);
-      if (A.contains(words, "get-url"))
-        return Effect.succeed(A.contains(words, orphan) ? { exitCode: 2 } : { stdout: `${canonical}\n` });
-      if (A.contains(words, "worktree")) return Effect.succeed({ stdout: `worktree ${main}\n` });
-      return Effect.succeed({ stdout: `${Str.repeat(40)("a")}\n` });
-    });
+// Git reads of the fleet: the orphan clone's origin read fails, the local clone has no origin,
+// and the canonical clone lists itself as its one worktree.
+const fleetGit = (clones: { readonly main: string; readonly orphan: string }) =>
+  Git.makeTest({
+    remoteUrl: (cwd) =>
+      cwd === clones.orphan
+        ? Effect.fail(NotARepositoryError.make({ cwd }))
+        : Effect.succeed(cwd === clones.main ? O.some(canonical) : O.none()),
+    worktreeList: () =>
+      Effect.succeed([WorktreeEntry.make({ path: clones.main, detached: false, bare: false, prunable: false })]),
+    revParse: () => Effect.succeed(Str.repeat(40)("a")),
+  });
 
 describe("R2 command surface", () => {
-  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 seconds" })("commands", (it) => {
-    it.effect("lists its subcommands and refuses a probe without the Turbo tuple or a valid marker", () =>
-      Effect.gen(function* () {
-        const missing = yield* runR2(["probe", "seed", "--marker", marker]).pipe(withTurboEnvironment({}), Effect.exit);
-        missing.pipe(Exit.isFailure, assertTrue);
-        const malformed = yield* runR2(["probe", "seed", "--marker", "not-hex"]).pipe(
-          withTurboEnvironment(turboTuple),
-          Effect.exit
-        );
-        malformed.pipe(Exit.isFailure, assertTrue);
-        const errors = yield* errorLines;
-        expect(errors).toContain("A resolved Turbo API/token/team tuple is required");
-        expect(errors).toContain("Marker must be sixteen hexadecimal characters");
-        yield* runR2([]);
-        const listed = yield* consoleLines;
-        expect(listed).toContain("cache r2 commands: probe, fleet");
-      })
-    );
+  it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, Git.layerTest()), { timeout: "60 seconds" })(
+    "commands",
+    (it) => {
+      it.effect("lists its subcommands and refuses a probe without the Turbo tuple or a valid marker", () =>
+        Effect.gen(function* () {
+          const missing = yield* runR2(["probe", "seed", "--marker", marker]).pipe(
+            withTurboEnvironment({}),
+            Effect.exit
+          );
+          missing.pipe(Exit.isFailure, assertTrue);
+          const malformed = yield* runR2(["probe", "seed", "--marker", "not-hex"]).pipe(
+            withTurboEnvironment(turboTuple),
+            Effect.exit
+          );
+          malformed.pipe(Exit.isFailure, assertTrue);
+          const errors = yield* errorLines;
+          expect(errors).toContain("A resolved Turbo API/token/team tuple is required");
+          expect(errors).toContain("Marker must be sixteen hexadecimal characters");
+          yield* runR2([]);
+          const listed = yield* consoleLines;
+          expect(listed).toContain("cache r2 commands: probe, fleet");
+        })
+      );
 
-    it.effect("seeds through the live layer and prints the sanitized receipt", () =>
-      Effect.gen(function* () {
-        const state = { ran: false };
-        const calls: Array<string> = [];
-        const summary = yield* encodeJson({
-          tasks: [{ task: "lint:effect-imports", hash: "seedhash", cache: { status: "MISS" } }],
-        });
-        const spawner = fakeSpawner(() =>
-          Effect.sync(() => {
+      it.effect("seeds through the live layer and prints the sanitized receipt", () =>
+        Effect.gen(function* () {
+          const state = { ran: false };
+          const calls: Array<string> = [];
+          const summary = yield* encodeJson({
+            tasks: [{ task: "lint:effect-imports", hash: "seedhash", cache: { status: "MISS" } }],
+          });
+          const spawner = ScriptedSpawner.make(() => {
             state.ran = true;
             return { stdout: "private turbo output" };
-          })
-        );
-        yield* runR2(["probe", "seed", "--marker", marker]).pipe(
-          withTurboEnvironment(turboTuple),
-          Effect.provideService(FileSystem.FileSystem, probeFileSystem(state, summary)),
-          Effect.provideService(FetchHttpClient.Fetch, acceptingFetch(calls)),
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-        );
-        const printed = yield* consoleLines;
-        expect(printed).toContain('"status": "success"');
-        expect(printed).not.toContain("synthetic-token");
-        expect(calls).toHaveLength(3);
-        expect(calls[2]).toBe(`http://artifacts.invalid/v8/artifacts/${marker}?teamId=team_x`);
-      })
-    );
+          });
+          yield* runR2(["probe", "seed", "--marker", marker]).pipe(
+            withTurboEnvironment(turboTuple),
+            Effect.provideService(FileSystem.FileSystem, probeFileSystem(state, summary)),
+            Effect.provideService(FetchHttpClient.Fetch, acceptingFetch(calls)),
+            provideSpawner(spawner)
+          );
+          const printed = yield* consoleLines;
+          expect(printed).toContain('"status": "success"');
+          expect(printed).not.toContain("synthetic-token");
+          expect(calls).toHaveLength(3);
+          expect(calls[2]).toBe(`http://artifacts.invalid/v8/artifacts/${marker}?teamId=team_x`);
+          expect(A.map(spawner.spawns, (spawn) => spawn.command)).toEqual(["bun"]);
+        })
+      );
 
-    it.effect("plans and enrolls fleet checkouts, failing when one is blocked", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "cache-r2-fleet-cli-" });
-        const parent = yield* fs.realPath(temporary);
-        const main = path.join(parent, "beep-effect-main");
-        const orphan = path.join(parent, "beep-effect-orphan");
-        for (const clone of [main, orphan]) yield* fs.makeDirectory(path.join(clone, ".git"), { recursive: true });
-        const policy = path.join(main, "packages/tooling/library/repo-cli-kit/src/cli/TurboCache.ts");
-        yield* fs.makeDirectory(path.dirname(policy), { recursive: true });
-        yield* fs.writeFileString(policy, 'const mode = "local:rw,remote:r"; // BEEP_TURBO_TRUSTED_WRITER\n');
-        const workstation = path.join(process.cwd(), "infra/r2-cache/workstation.sh");
-        const spawner = fakeSpawner(fleetScript(orphan, workstation, main));
-        const missing = path.join(parent, "missing");
-        yield* runR2(["fleet", parent, missing]).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
-        );
-        const planned = yield* consoleLines;
-        expect(planned).toContain("planned: 1");
-        const applied = yield* runR2(["fleet", "--apply", parent, missing]).pipe(
-          Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner),
-          Effect.exit
-        );
-        applied.pipe(Exit.isFailure, assertTrue);
-        const enrolled = yield* consoleLines;
-        expect(enrolled).toContain("blocked: 1");
-        expect(enrolled).toContain("Read-write capable: 1");
-      })
-    );
-  });
+      it.effect("plans and enrolls fleet checkouts, failing when one is blocked", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const temporary = yield* fs.makeTempDirectoryScoped({ prefix: "cache-r2-fleet-cli-" });
+          const parent = yield* fs.realPath(temporary);
+          const main = path.join(parent, "beep-effect-main");
+          const orphan = path.join(parent, "beep-effect-orphan");
+          const local = path.join(parent, "beep-effect-local");
+          for (const clone of [main, orphan, local])
+            yield* fs.makeDirectory(path.join(clone, ".git"), { recursive: true });
+          const policy = path.join(main, "packages/tooling/library/repo-cli-kit/src/cli/TurboCache.ts");
+          yield* fs.makeDirectory(path.dirname(policy), { recursive: true });
+          yield* fs.writeFileString(policy, 'const mode = "local:rw,remote:r"; // BEEP_TURBO_TRUSTED_WRITER\n');
+          const workstation = path.join(process.cwd(), "infra/r2-cache/workstation.sh");
+          const spawner = ScriptedSpawner.make((command) =>
+            command === workstation ? ScriptedSpawner.notFound(workstation) : { exit: 0 }
+          );
+          const git = fleetGit({ main, orphan });
+          const missing = path.join(parent, "missing");
+          yield* runR2(["fleet", parent, missing]).pipe(Effect.provideService(Git, git), provideSpawner(spawner));
+          const planned = yield* consoleLines;
+          expect(planned).toContain("planned: 1");
+          const applied = yield* runR2(["fleet", "--apply", parent, missing]).pipe(
+            Effect.provideService(Git, git),
+            provideSpawner(spawner),
+            Effect.exit
+          );
+          applied.pipe(Exit.isFailure, assertTrue);
+          const enrolled = yield* consoleLines;
+          expect(enrolled).toContain("blocked: 1");
+          expect(enrolled).toContain("Read-write capable: 1");
+          expect(A.map(spawner.spawns, (spawn) => [spawn.command, ...spawn.args])).toEqual([
+            [workstation, "enable", main, "local:rw,remote:rw"],
+          ]);
+        })
+      );
+    }
+  );
 });

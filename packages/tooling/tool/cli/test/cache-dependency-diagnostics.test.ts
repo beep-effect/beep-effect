@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
   CacheDependencyDiagnosticLimits,
   CacheDependencyDiagnosticRefusalReport,
@@ -28,13 +29,13 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
-import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { fakeSpawner } from "./helpers/cache-host-fakes.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { CacheDependencyDiagnosticCode } from "@beep/repo-cli/commands/Cache";
 
 const revision = A.join(A.replicate("a", 40), "");
@@ -780,20 +781,19 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))("synthetic depend
 
   it.effect("refuses a failing archive command and a spawn failure", () =>
     Effect.gen(function* () {
-      const failed = yield* refusalCode(snapshotTar(tarArchive([]), defaults, 2));
       const root = yield* tarRoot();
       const deadline = yield* deadlineIn(10_000);
+      // An empty archive is two NUL blocks, plain text a scripted completion can carry.
+      const failing = ScriptedSpawner.make(() => ({ stdout: Str.repeat(1024)("\0"), exit: 2 }));
+      const unspawnable = ScriptedSpawner.make(ScriptedSpawner.notFound);
+      const failed = yield* refusalCode(
+        snapshotCacheDependencies(root, deadline, defaults).pipe(provideSpawner(failing))
+      );
       const unspawned = yield* refusalCode(
-        snapshotCacheDependencies(root, deadline, defaults).pipe(
-          Effect.provideService(
-            ChildProcessSpawner.ChildProcessSpawner,
-            fakeSpawner(() =>
-              Effect.fail(PlatformError.systemError({ _tag: "NotFound", module: "ChildProcess", method: "spawn" }))
-            )
-          )
-        )
+        snapshotCacheDependencies(root, deadline, defaults).pipe(provideSpawner(unspawnable))
       );
       expect([failed, unspawned]).toEqual(["archive-command-failed", "filesystem-or-process-failed"]);
+      expect(A.map(failing.spawns, (spawn) => spawn.command)).toEqual(["/usr/bin/bash"]);
     })
   );
 

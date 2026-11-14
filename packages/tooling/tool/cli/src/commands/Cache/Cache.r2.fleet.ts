@@ -9,6 +9,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { runCapturedStreams } from "@beep/repo-cli-kit/process/index";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -34,12 +35,14 @@ const PathOrder = Order.mapInput(A.makeOrder(Str.Order), (path: string) => Str.s
 const encodeReceipt = S.encodeEffect(S.fromJsonString(CacheR2FleetReceipt, { space: 2 }));
 const failedCapture = (exitCode: number) => () => ({ exitCode, stdout: "", stderr: "", truncated: false });
 
-const git = Effect.fnUntraced(function* (root: string, ...words: ReadonlyArray<string>) {
-  const result = yield* runCapturedStreams({ command: "git", args: ["-C", root, ...words] }).pipe(
-    Effect.orElseSucceed(failedCapture(1))
-  );
-  return result.exitCode === 0 ? Str.trim(result.stdout) : "";
-});
+// Any git failure reads as an empty answer, as the retired script's captured calls did.
+const gitText = <E>(read: Effect.Effect<string, E>) => read.pipe(Effect.orElseSucceed(() => ""));
+
+const originUrl = (git: Git["Service"], clone: string) =>
+  git.remoteUrl(clone).pipe(Effect.map(O.getOrElse(() => "")), gitText);
+
+const listedWorktrees = (git: Git["Service"], clone: string) =>
+  git.worktreeList(clone).pipe(Effect.map(A.map((entry) => entry.path)), Effect.orElseSucceed(A.empty<string>));
 
 const isType = (fs: FileSystem.FileSystem, type: "File" | "Directory") => (candidate: string) =>
   fs.stat(candidate).pipe(
@@ -61,10 +64,10 @@ const clonesUnder = Effect.fnUntraced(function* (root: string) {
 
 const worktreesOf = Effect.fnUntraced(function* (clone: string) {
   const fs = yield* FileSystem.FileSystem;
-  const origin = yield* git(clone, "remote", "get-url", "origin");
+  const git = yield* Git;
+  const origin = yield* originUrl(git, clone);
   if (!CanonicalOrigin.test(origin)) return A.empty<string>();
-  const porcelain = yield* git(clone, "worktree", "list", "--porcelain");
-  const listed = pipe(Str.split(porcelain, "\n"), A.filter(Str.startsWith("worktree ")), A.map(Str.slice(9)));
+  const listed = yield* listedWorktrees(git, clone);
   const existing = yield* Effect.filter(listed, (checkout) => isType(fs, "Directory")(checkout));
   return yield* Effect.forEach(existing, fs.realPath, { concurrency: 1 });
 });
@@ -81,7 +84,8 @@ const planCheckout = Effect.fnUntraced(function* (checkout: string) {
     ? ("local:rw,remote:rw" as const)
     : ("local:rw,remote:r" as const);
   const supported = pipe(text, Str.includes("local:rw,remote:r"));
-  const head = yield* git(checkout, "rev-parse", "HEAD");
+  const git = yield* Git;
+  const head = yield* git.revParse(checkout, "HEAD").pipe(gitText);
   return CacheR2FleetRow.make({ checkout, head, mode, status: supported ? "planned" : "legacy-use-beep-turbo" });
 });
 
@@ -124,7 +128,8 @@ const summaryLines = (rows: ReadonlyArray<CacheR2FleetRow>) => {
  * planned read/write, an older one read-only, and one without the resolver is
  * reported as `legacy-use-beep-turbo`. With `apply`, supported checkouts are
  * enrolled through `workstation.sh enable`; enrollment output is not retained.
- * The default is a read-only plan.
+ * The default is a read-only plan. Origin, worktree and HEAD reads go through
+ * the `Git` service; a failed read counts as an empty answer.
  *
  * **Example** (Plan enrollment for a projects directory)
  * ```ts
