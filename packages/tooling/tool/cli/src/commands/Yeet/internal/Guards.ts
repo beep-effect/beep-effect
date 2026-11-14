@@ -10,7 +10,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { resolveLocalRepoBinary, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
-import { YeetCommandError } from "../Yeet.errors.ts";
+import { YeetCommandError, YeetHandlerErrorKind } from "../Yeet.errors.ts";
 import { writeTextFile } from "./ArtifactPaths.ts";
 import { provideYeetGhLogin } from "./GhOps.ts";
 import { optionFromNonEmpty } from "./GitExec.ts";
@@ -313,6 +313,7 @@ export const validateCommitMessage = Effect.fn("Yeet.validateCommitMessage")(fun
       message: `commit message failed commitlint:\n${result.output}`,
       command: `${commitlint} --edit ${messagePath}`,
       exitCode: result.exitCode,
+      handlerErrorKind: YeetHandlerErrorKind.Enum["publish-input"],
     });
   }
 });

@@ -51,6 +51,7 @@ import {
   readConfiguredFleetRoots,
 } from "../../Worktree/internal/FleetRoots.ts";
 import { CLAUDE_WORKTREES_RELATIVE_ROOT, WORKTREES_ROOT_SUFFIX } from "../../Worktree/Worktree.constants.ts";
+import { YeetHandlerErrorKind } from "../Yeet.errors.ts";
 import { attemptJournalStoreRunsDirectory } from "./AttemptJournalStore.ts";
 import {
   EconomicsAttempt,
@@ -86,6 +87,7 @@ import {
   YeetEconomicsReport,
   YeetEconomicsReportJson,
 } from "./Economics.schemas.ts";
+import { classifyYeetGithubRateLimit } from "./MonitorRateLimit.ts";
 import { YeetRunMode } from "./Planner.schemas.ts";
 import { buildYeetEconomicsReviewLane, readYeetReviewLaneLedger, renderYeetEconomicsReviewLane } from "./ReviewLane.ts";
 import { YeetFailureKind, YeetLaneStatus, YeetOutcome } from "./Verdict.ts";
@@ -133,15 +135,21 @@ const isComparableMode = S.is(EconomicsComparableMode);
 
 // MEAS-02 and MEAS-03: the non-lane rows of `actionableLaneMix`. Refusals are
 // classified before any lane or step id, and stay rows of the same mix so its
-// total equals `redAttempts`; `unrecorded` is a red with no verdict (its
-// writer stamped `unrecorded-failure`), `unexecuted` a handler-error red that
-// ran no lane, `unlocated` any other red with no failed lane and no step-exit
-// step.
+// total equals `redAttempts`. A handler error no lane locates is named by its
+// kind (MEAS-03 slice 2): a publish input or review-thread refusal, a GitHub
+// rate limit or another failed GitHub call. `unrecorded` is a red with no
+// verdict (its writer stamped `unrecorded-failure`), `unexecuted` a
+// handler-error red that ran no lane, and `unlocated` the unknown bucket: any
+// other red with no failed lane, no step-exit step and no kind.
 const EconomicsActionableClass = LiteralKit([
   "refusal:lock-bounce",
   "refusal:stale-base",
   "refusal:moved-tree",
   "refusal:closeout",
+  "refusal:publish-input",
+  "refusal:review-threads",
+  "github:rate-limit",
+  "github:transport",
   "unrecorded",
   "unexecuted",
   "unlocated",
@@ -158,6 +166,7 @@ const EconomicsExecutedLaneStatus = YeetLaneStatus.pick(["passed", "reused", "fa
   })
 );
 const isExecutedLaneStatus = S.is(EconomicsExecutedLaneStatus);
+const isYeetHandlerErrorKind = S.is(YeetHandlerErrorKind);
 
 // The publish stale-base refusal (`PublishScope.ts`), matched lowercased.
 const STALE_BASE_REFUSAL = /refuses a stale base/u;
@@ -165,6 +174,44 @@ const STALE_BASE_REFUSAL = /refuses a stale base/u;
 // The final-check moved-tree refusal (`FinalCheck.ts` `refuseMovedTree`): the
 // gates ran, but the checkout changed under them, so no receipt was written.
 const MOVED_TREE_SENTENCE = "the checkout changed while the gates ran";
+
+// MEAS-03 slice 2: a verdict written before `handlerErrorKind` existed names
+// its kind only in the message. These are the raise sites' opening sentences
+// (`PublishScope.ts`, `Handler.ts`, `Guards.ts`, `PullRequest.ts`,
+// `MonitorComments.ts`), with the retired ones live journals still hold: the
+// review-thread refusal that said "unresolved", and `gh pr create failed:`
+// from before pull requests were opened through REST.
+const PUBLISH_INPUT_SENTENCES = [
+  "yeet publish requires reviewed staged changes or a clean local commit",
+  "yeet publish refuses unstaged tracked changes",
+  "yeet publish refuses untracked files",
+  "yeet publish --staged-only refuses files that are both staged and modified",
+  "yeet publish requires --message with a conventional commit message",
+  "yeet publish has no staged changes after reviewed staging",
+  "commit message failed commitlint",
+] as const;
+const REVIEW_THREADS_REFUSAL = /^Yeet merge readiness requires zero (?:unresolved|outstanding) review threads/u;
+const GITHUB_CALL_SENTENCES = [
+  "Failed to inspect current branch pull request through GitHub REST",
+  "GitHub REST default branch read failed",
+  "GitHub REST pull request creation failed",
+  "gh pr create failed",
+  "Failed to poll pull request comments during yeet monitor",
+] as const;
+const opensWithAny =
+  (sentences: ReadonlyArray<string>) =>
+  (message: string): boolean =>
+    A.some(sentences, (sentence) => Str.startsWith(sentence)(message));
+
+// Match order: the refusal sentences first, so a commit message that quotes
+// GitHub's rate-limit words stays a publish input refusal; then GitHub's own
+// rate-limit text, from any handler error; then the other GitHub call failures.
+const RECOGNISED_HANDLER_ERRORS: ReadonlyArray<readonly [YeetHandlerErrorKind, (message: string) => boolean]> = [
+  [YeetHandlerErrorKind.Enum["publish-input"], opensWithAny(PUBLISH_INPUT_SENTENCES)],
+  [YeetHandlerErrorKind.Enum["review-threads"], (message) => REVIEW_THREADS_REFUSAL.test(message)],
+  [YeetHandlerErrorKind.Enum["github-rate-limit"], flow(classifyYeetGithubRateLimit, O.isSome)],
+  [YeetHandlerErrorKind.Enum["github-transport"], opensWithAny(GITHUB_CALL_SENTENCES)],
+];
 
 // PERIL-11 slice 2: the monitor lanes that wait on hosted state, as verdicts
 // record them: the checks watch (`Planner.ts`, `gh pr checks --watch`), and the
@@ -248,6 +295,7 @@ class EconomicsVerdictRow extends S.Opaque<EconomicsVerdictRow, { readonly brand
     outcome: S.OptionFromOptionalNullOr(YeetOutcome),
     failureKind: S.OptionFromOptionalNullOr(YeetFailureKind),
     failedStepId: LenientString,
+    handlerErrorKind: LenientString,
     message: LenientString,
     startedAt: LenientString,
     endedAt: LenientString,
@@ -525,6 +573,11 @@ const attemptFromTerminal = (
     diffFingerprint: O.orElse(terminal.diffFingerprint, () => fromStart((started) => started.diffFingerprint)),
     terminationReason: terminal.reason,
     verdictSchemaVersion: fromVerdict((verdict) => verdict.schemaVersion),
+    // A kind this reader does not know stays none, so the row still counts.
+    handlerErrorKind: O.filter(
+      fromVerdict((verdict) => verdict.handlerErrorKind),
+      isYeetHandlerErrorKind
+    ),
     lanes: economicsLanes(
       O.getOrElse(
         O.map(terminal.verdict, (verdict) => verdict.lanes),
@@ -1523,6 +1576,26 @@ const refusalClass = (attempt: EconomicsAttempt): O.Option<typeof EconomicsActio
     ([refusal]) => refusal
   );
 
+// MEAS-03 slice 2: the row a handler error's kind names.
+const handlerErrorRow = YeetHandlerErrorKind.match({
+  "publish-input": constant(EconomicsActionableClass.Enum["refusal:publish-input"]),
+  "review-threads": constant(EconomicsActionableClass.Enum["refusal:review-threads"]),
+  "github-rate-limit": constant(EconomicsActionableClass.Enum["github:rate-limit"]),
+  "github-transport": constant(EconomicsActionableClass.Enum["github:transport"]),
+});
+
+// The kind the verdict recorded, else the kind a handler error's message names.
+const handlerErrorKind = (attempt: EconomicsAttempt): O.Option<YeetHandlerErrorKind> =>
+  O.orElse(attempt.handlerErrorKind, () =>
+    pipe(
+      O.liftPredicate(attempt, isHandlerError),
+      O.flatMap((handlerError) =>
+        A.findFirst(RECOGNISED_HANDLER_ERRORS, ([, recognises]) => recognises(handlerError.message))
+      ),
+      O.map(([kind]) => kind)
+    )
+  );
+
 // A red no lane locates: a verdict-less one (its writer stamped a failure) is
 // `unrecorded`, a handler error that ran no lane `unexecuted`, any other red
 // `unlocated`.
@@ -1537,7 +1610,9 @@ const unlocatedClass = Match.type<EconomicsAttempt>().pipe(
 );
 
 // A handler-error verdict names the first unexecuted planned step as its
-// failed step (`Handler.ts`), so only a step-exit failed step is a lane.
+// failed step (`Handler.ts`), so only a step-exit failed step is a lane. A
+// handler error's kind is read only once no lane or step locates the red, so
+// a row a lane located keeps it.
 const actionableLane = (attempt: EconomicsAttempt): string =>
   pipe(
     refusalClass(attempt),
@@ -1551,6 +1626,7 @@ const actionableLane = (attempt: EconomicsAttempt): string =>
       O.filter(attempt.failedStepId, () => O.exists(attempt.failureKind, YeetFailureKind.is["step-exit"]))
     ),
     O.orElse(() => O.map(A.findFirst(attempt.lanes, isFailedLane), (lane) => lane.id)),
+    O.orElse(() => O.map(handlerErrorKind(attempt), handlerErrorRow)),
     O.getOrElse(() => unlocatedClass(attempt))
   );
 

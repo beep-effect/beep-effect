@@ -62,7 +62,10 @@ The nightly is live; its first run (2026-11-12, dispatched by hand, certified) i
 In short, slices 1 to 7, 10 and 11 have merged. Slice 8 (PERIL-11 slice 2) is in review: the T3 Code worktree
 root joins the intended `roots.json` list in the fleet-roots runbook, `yeet economics --fleet` reads a checkout
 reachable through two roots once, and monitor waits are reported apart from local work in `yeet-economics/v4`
-(decision `peril-11-slice-2-t3-root-and-monitor-waits`). Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
+(decision `peril-11-slice-2-t3-root-and-monitor-waits`). Slice 10b (MEAS-03 slice 2) is in review: the handler
+errors slice 10 left `unlocated` carry a typed `handlerErrorKind` from the raise site into the verdict, and economics
+locates them as `refusal:publish-input`, `refusal:review-threads`, `github:rate-limit` and `github:transport`, with
+`unlocated` kept as the unknown bucket (decision `handler-errors-typed-and-located`). Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
 declaration-only builds) are not comparable with later readings (checkpoint
 `baselines-before-d8326d5593-not-comparable`), nor are check-lane baselines taken before 3e822c71c5 (#3242).
 
@@ -83,6 +86,10 @@ declaration-only builds) are not comparable with later readings (checkpoint
 - Slice 4's cost reading: the 2026-11-12 UTC day, run locally through the nightly workflow's own scripts, took
   83 GitHub reads and 99 s for 43 heads and was certified. The day predates both baseline breaks, so it is not a
   baseline; the first dispatched run on main measures the hosted runner-minutes.
+- Slice 10b on the workstation fleet (3052 attempts, 1201 red, aggregates only): `unlocated` falls from 160 to
+  27. The 133 located are `refusal:publish-input` 57, `refusal:review-threads` 42, `github:rate-limit` 33 and
+  `github:transport` 1; every other row, `redAttempts` and the mix total (1201) are unchanged. The largest
+  residue is a since-fixed pull request number decode (8 rows, 5.0%).
 
 ## Notes
 
