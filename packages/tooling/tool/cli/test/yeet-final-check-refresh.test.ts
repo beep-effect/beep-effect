@@ -155,7 +155,7 @@ const ownPaths = (verdict: { readonly ownChanges: ReadonlyArray<{ readonly path:
 
 describe("finalCheckRefreshAllowance", () => {
   it("admits the regenerated inventories and goal-packet files, nothing else", () => {
-    assertSome(finalCheckRefreshAllowance("standards/jsdoc-documentation.inventory.md"), "standards-inventory");
+    assertSome(finalCheckRefreshAllowance("standards/fallow.boundaries.generated.jsonc"), "standards-inventory");
     assertSome(finalCheckRefreshAllowance("standards/effect-laws.allowlist.jsonc"), "standards-inventory");
     assertSome(finalCheckRefreshAllowance("goals/demo/PLAN.md"), "goal-packet");
     assertSome(finalCheckRefreshAllowance("goals/demo/ops/manifest.json"), "goal-packet");
