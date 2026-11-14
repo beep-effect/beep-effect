@@ -23,8 +23,8 @@
  * judge a path needle the same way. {@link mentionsToken} stays for every
  * needle that cannot be a package path: package names, the identity slug and
  * accessor, the membership keys of the name-keyed inventories
- * (`jsdoc-inventory`, `coverage-baseline`, `instrumentation-catalog`,
- * `test-typecheck-baseline`) and the quoted workspace literal.
+ * (`coverage-baseline`, `instrumentation-catalog`, `test-typecheck-baseline`)
+ * and the quoted workspace literal.
  *
  * **Gotchas**
  *
