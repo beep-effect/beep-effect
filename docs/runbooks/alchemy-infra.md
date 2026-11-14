@@ -159,11 +159,15 @@ account setting untouched.
 
 Phases. `prod` starts `silent`: the new budget has no notifications and there
 is no new anomaly subscription, so recipients are not mailed twice while the
-Pulumi budget and subscription still exist. After the cutover, one PR sets
-`notifications: "live"` in `src/Config.ts` and the environment secret
-`COST_CONTROLS_NOTIFICATION_EMAILS` (comma-separated, from 1Password, never
-printed); its deploy adds the four budget notifications and the daily anomaly
-subscription.
+Pulumi budget and subscription still exist. The environment secret
+`COST_CONTROLS_NOTIFICATION_EMAILS` (comma-separated) is set at bootstrap,
+piped from the encrypted Pulumi config key `accountCostControls:notificationEmailAddresses`
+without printing it (deploy-role decision). After the cutover, one PR sets
+`notifications: "live"` in `src/Config.ts`; its deploy adds the four budget
+notifications and the daily anomaly subscription. Pulumi commands take the
+passphrase only as
+`PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run -- pulumi ...`.
+The first `prod` plan runs only in the workflow, never from a workstation.
 
 Cutover from Pulumi (decision "Cost controls cutover from Pulumi"): export the
 `beep-ci-runners/production` stack to

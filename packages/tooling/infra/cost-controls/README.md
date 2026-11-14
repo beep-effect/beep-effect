@@ -27,8 +27,9 @@ before any AWS read. Recipient addresses are personal data and never tracked:
 `NotificationRecipients` decodes the comma-separated environment variable
 `COST_CONTROLS_NOTIFICATION_EMAILS` into normalized, deduplicated addresses,
 and the stack reads it only in the `live` phase. In CI it is a secret on the
-`cost-controls-prod` GitHub environment; on a workstation an `op://`
-reference under `op run`.
+`cost-controls-prod` GitHub environment, set at bootstrap from the encrypted
+Pulumi config key without printing it; personal stages are always silent and
+never need it.
 
 ### Guards (`src/Guards.ts`)
 

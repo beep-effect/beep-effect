@@ -282,7 +282,8 @@ const splitRecipients = flow(Str.split(","), A.map(Str.trim), A.filter(Str.isNon
  * The addresses are personal data in a public repository, so they reach the
  * stack only through the environment variable
  * {@link notificationRecipientsVariable}: a GitHub environment secret in CI,
- * an `op://` reference under `op run` on a workstation.
+ * set from the encrypted Pulumi config without printing it. Personal stages
+ * are always silent and never need it.
  *
  * **Example** (Decode a recipient list)
  *

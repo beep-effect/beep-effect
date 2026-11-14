@@ -2,10 +2,10 @@
 title: "Cost controls deploys through a stack-scoped OIDC role, beep-alchemy-cost-controls-deploy (proposed)"
 date: 2026-11-14
 lane: "goals/infra-alchemy-rebuild-p3-cost-controls"
-reversal: "aws iam delete-role-policy --role-name beep-alchemy-cost-controls-deploy --policy-name cost-controls-deploy; aws iam delete-role --role-name beep-alchemy-cost-controls-deploy; gh api -X DELETE repos/beep-effect/beep-effect/environments/cost-controls-prod."
+reversal: "gh secret delete COST_CONTROLS_NOTIFICATION_EMAILS --env cost-controls-prod --repo beep-effect/beep-effect; aws iam delete-role-policy --role-name beep-alchemy-cost-controls-deploy --policy-name cost-controls-deploy; aws iam delete-role --role-name beep-alchemy-cost-controls-deploy; gh api -X DELETE repos/beep-effect/beep-effect/environments/cost-controls-prod."
 ---
 
-Proposal, not created by this lane. The shared role `beep-alchemy-state-rw` stays state-only; the `CostControls` stack takes its own GitHub OIDC deploy role, `beep-alchemy-cost-controls-deploy`, and its workflow assumes only that role (state access included), as `vars.COST_CONTROLS_DEPLOY_ROLE_ARN` on the `cost-controls-prod` environment.
+Proposal, not created by this lane. Ruling (packet gate session, 2026-11-14): the gate creates the role, the environment, its variable and the recipient secret itself from the commands below, when this lane's PR is about to open, so the first deploy after the merge has credentials. The shared role `beep-alchemy-state-rw` stays state-only; the `CostControls` stack takes its own GitHub OIDC deploy role, `beep-alchemy-cost-controls-deploy`, and its workflow assumes only that role (state access included), as `vars.COST_CONTROLS_DEPLOY_ROLE_ARN` on the `cost-controls-prod` environment.
 
 Trust: the existing provider `token.actions.githubusercontent.com`, audience `sts.amazonaws.com`, subject exactly `repo:beep-effect/beep-effect:environment:cost-controls-prod`. Session length one hour.
 
@@ -56,4 +56,18 @@ gh variable set COST_CONTROLS_DEPLOY_ROLE_ARN --env cost-controls-prod \
   --body arn:aws:iam::832907639880:role/beep-alchemy-cost-controls-deploy
 ```
 
-The recipient secret is set only before the `live` phase (previous decision): `op read <reference> | gh secret set COST_CONTROLS_NOTIFICATION_EMAILS --env cost-controls-prod`, the reference being the 1Password field that holds the comma-separated list (to be created from the Pulumi stack's decrypted `notificationEmailAddresses`; the value never printed). Checks after creation: `aws iam simulate-principal-policy` for `budgets:ModifyBudget` on `budget/Monthly Budget` must say `implicitDeny`, and on `budget/beep-account-monthly-cost` `allowed`. Like the state role, the role and environment are bootstrap singletons until `@beep/infra-ci-runners` and `@beep/infra-github` adopt them (D20).
+Recipient secret, same bootstrap step, before the switch to `live` (ruling, packet gate session, 2026-11-14: no new 1Password field; the list already lives encrypted in the Pulumi stack config, and the gate verified on 2026-11-14 that it decrypts to a one-recipient list). From `infra/ci-runners`, without printing it:
+
+```sh
+cd infra/ci-runners
+AWS_PROFILE=elpresidank-vault PULUMI_BACKEND_URL=s3://oip-law-pulumi-state \
+PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run -- \
+  pulumi config get accountCostControls:notificationEmailAddresses --stack production \
+  | jq -r 'join(",")' | tr -d '\n' \
+  | gh secret set COST_CONTROLS_NOTIFICATION_EMAILS --env cost-controls-prod --repo beep-effect/beep-effect
+gh secret list --env cost-controls-prod --repo beep-effect/beep-effect   # names only
+```
+
+After the Pulumi component leaves the program (cutover step 5), this GitHub secret is the only copy of the list besides the Pulumi config key the turbo-cache throttle alarm keeps.
+
+Checks after creation: `aws iam simulate-principal-policy` for `budgets:ModifyBudget` on `budget/Monthly Budget` must say `implicitDeny`, and on `budget/beep-account-monthly-cost` `allowed`. Like the state role, the role and environment are bootstrap singletons until `@beep/infra-ci-runners` and `@beep/infra-github` adopt them (D20).
