@@ -134,7 +134,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           const citationResult9 = yield* fs.makeTempDirectoryScoped({ prefix: "citation-html-bytes-" });
           const workerRuntime = yield* citationHtmlWorkerTestRuntime();
           const worker = yield* makeCitationHtmlWorker(
-            { ...limits, concurrentOperations: 2 },
+            { ...limits, concurrentOperations: 2, concurrentRegexProcesses: 2 },
             { ...workerRuntime, cwd: citationResult9 }
           ).pipe(
             Effect.provideService(ChildProcessSpawner, {

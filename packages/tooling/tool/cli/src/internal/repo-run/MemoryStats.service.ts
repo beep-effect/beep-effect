@@ -1,10 +1,12 @@
 /**
- * Live host and cgroup memory budgets for repository admission.
+ * Live host and cgroup memory budgets for repository admission, and the host
+ * pressure readings stamped on admission rows.
  * @packageDocumentation
  * @since 0.0.0
  */
 import * as NodeOS from "node:os";
 import { $RepoCliId } from "@beep/identity/packages";
+import { parsePressureFile } from "@beep/palantiri/HostPressure";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -22,14 +24,18 @@ import { CgroupBytes, CgroupMemoryBudget } from "./MemoryStats.schemas.ts";
 import { processIdentityStatus } from "./ProcessIdentity.ts";
 import { QualitySchedulerError } from "./QualityScheduler.schemas.ts";
 import { RunScopeCgroupPath } from "./RunScope.schemas.ts";
+import type { PressureResource } from "@beep/palantiri/HostPressure.models";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type { ComputeMemorySource } from "./ComputeProfile.ts";
-import type { AdmissionConfig, YeetAdmissionLease } from "./QualityScheduler.schemas.ts";
+import type { AdmissionConfig, AdmissionPressureStamp, YeetAdmissionLease } from "./QualityScheduler.schemas.ts";
 
 // Preserve the existing Context key while its implementation gains an owner.
 const $legacyServiceId = $RepoCliId.create("internal/repo-run/QualityScheduler");
 const GIB = 1024 * 1024 * 1024;
 const MEMINFO_PATH = "/proc/meminfo";
+const MOUNTINFO_PATH = "/proc/self/mountinfo";
+const PRESSURE_DIRECTORY = "/proc/pressure";
+const AGENT_RUNS_SLICE_SUFFIX = "/agent-runs.slice";
 
 /**
  * Shape of the {@link MemoryStats} service.
@@ -197,27 +203,43 @@ const readControllerBudget = Effect.fnUntraced(function* (ancestor: string, dire
   );
 });
 
+const parentCgroupOf = (cgroup: string): string => {
+  const rawParent = pipe(Str.split(cgroup, "/"), A.dropRight(1), A.join("/"));
+  return Str.isEmpty(rawParent) ? "/" : rawParent;
+};
+
+// The controller directory of a cgroup path below the cgroup v2 mount.
+const cgroupDirectoryFor = (mountRoot: string, mountPoint: string, cgroup: string): string => {
+  const suffix = mountRoot === "/" ? cgroup : Str.slice(mountRoot.length)(cgroup);
+  return `${mountPoint}${suffix === "/" ? "" : suffix}`;
+};
+
 const readAncestorBudgets = Effect.fnUntraced(function* (target: string, mountRoot: string, mountPoint: string) {
   const ancestors = A.unfold<O.Option<string>, string>(O.some(target), (current) =>
     pipe(
       current,
-      O.map((ancestor) => {
-        const rawParent = pipe(Str.split(ancestor, "/"), A.dropRight(1), A.join("/"));
-        const parent = Str.isEmpty(rawParent) ? "/" : rawParent;
-        return Tuple.make(ancestor, ancestor === mountRoot ? O.none<string>() : O.some(parent));
-      })
+      O.map((ancestor) =>
+        Tuple.make(ancestor, ancestor === mountRoot ? O.none<string>() : O.some(parentCgroupOf(ancestor)))
+      )
     )
   );
   return yield* Effect.forEach(
     ancestors,
-    Effect.fnUntraced(function* (ancestor) {
-      const suffix = mountRoot === "/" ? ancestor : Str.slice(mountRoot.length)(ancestor);
-      const directory = `${mountPoint}${suffix === "/" ? "" : suffix}`;
-      return yield* readControllerBudget(ancestor, directory, ancestor === mountRoot);
-    }),
+    (ancestor) =>
+      readControllerBudget(ancestor, cgroupDirectoryFor(mountRoot, mountPoint, ancestor), ancestor === mountRoot),
     { concurrency: 1 }
   ).pipe(Effect.map(A.getSomes));
 });
+
+// The cgroup v2 mount in `/proc/self/mountinfo`: its root in this namespace and where it is mounted.
+const cgroupMountOf = (mounts: string): O.Option<{ readonly root: string; readonly point: string }> =>
+  pipe(
+    Str.split(mounts, "\n"),
+    A.findFirst((line) => pipe(line, Str.includes(" - cgroup2 "))),
+    O.map((line) => Str.split(line, " ")),
+    O.flatMap((fields) => O.all({ root: A.get(fields, 3), point: A.get(fields, 4) })),
+    O.filter(({ point, root }) => S.is(RunScopeCgroupPath)(point) && S.is(RunScopeCgroupPath)(root))
+  );
 
 const makeReservationCapacity = (
   fs: FileSystem.FileSystem,
@@ -242,20 +264,9 @@ const makeReservationCapacity = (
       );
       const callerOption = O.liftPredicate(S.is(RunScopeCgroupPath))(budgetPath);
       const caller = yield* requireBudgetMetadata(callerOption);
-      const mounts = yield* fs.readFileString("/proc/self/mountinfo");
-      const mountOption = pipe(
-        Str.split(mounts, "\n"),
-        A.findFirst((line) => pipe(line, Str.includes(" - cgroup2 "))),
-        O.map((line) => Str.split(line, " "))
-      );
-      const mount = yield* requireBudgetMetadata(mountOption);
-      const mountRoot = yield* requireBudgetMetadata(A.get(mount, 3));
-      const mountPoint = yield* requireBudgetMetadata(A.get(mount, 4));
-      if (
-        !S.is(RunScopeCgroupPath)(mountPoint) ||
-        !S.is(RunScopeCgroupPath)(mountRoot) ||
-        !cgroupContains(mountRoot, caller)
-      ) {
+      const mounts = yield* fs.readFileString(MOUNTINFO_PATH);
+      const { point: mountPoint, root: mountRoot } = yield* requireBudgetMetadata(cgroupMountOf(mounts));
+      if (!cgroupContains(mountRoot, caller)) {
         return yield* invalidBudget();
       }
       const memberships = yield* Effect.forEach(leases, readLeaseMembership, { concurrency: 1 });
@@ -292,6 +303,92 @@ const makeReservationCapacity = (
       Effect.catch(() => fallback)
     );
   });
+
+// `some avg10` of one `/proc/pressure/<resource>` file, parsed by the host-pressure parcel's parser.
+const readPressureSome10 = (fs: FileSystem.FileSystem, resource: PressureResource) =>
+  fs.readFileString(`${PRESSURE_DIRECTORY}/${resource}`).pipe(
+    Effect.map((text) => O.map(parsePressureFile(text).some, (stats) => stats.avg10)),
+    Effect.orElseSucceed(O.none<number>)
+  );
+
+const readCgroupMemoryBytes = Effect.fnUntraced(function* (directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const text = yield* fs.readFileString(`${directory}/memory.current`);
+  return yield* requireBudgetMetadata(decodeCgroupBytes(Str.trim(text)));
+});
+
+// The writer's own cgroup is its lease's run scope (or detached proof unit), so its parent is
+// `agent-runs.slice` exactly when run scopes are active. Lease owners are read by pid: the
+// scan that listed them has just verified each one alive. A lease whose membership cannot be
+// read (its owner exited since the scan) makes the remainder unknown rather than overstated,
+// so every membership must read; readable memberships outside the slice are left out.
+const readUnadmittedSliceBytes = Effect.fnUntraced(function* (leases: ReadonlyArray<YeetAdmissionLease>) {
+  const fs = yield* FileSystem.FileSystem;
+  const ownMembership = yield* readCgroupMembership(process.pid);
+  const slice = yield* requireBudgetMetadata(
+    pipe(ownMembership, O.map(parentCgroupOf), O.filter(Str.endsWith(AGENT_RUNS_SLICE_SUFFIX)))
+  );
+  const mounts = yield* fs.readFileString(MOUNTINFO_PATH);
+  const mount = yield* requireBudgetMetadata(cgroupMountOf(mounts));
+  const memberships = yield* Effect.forEach(leases, (lease) => readCgroupMembership(lease.pid), { concurrency: 1 });
+  const everyMembership = yield* requireBudgetMetadata(O.all(memberships));
+  const leaseCgroups = A.dedupe(A.filter(everyMembership, Str.startsWith(`${slice}/`)));
+  const sliceBytes = yield* readCgroupMemoryBytes(cgroupDirectoryFor(mount.root, mount.point, slice));
+  const leaseBytes = yield* Effect.forEach(
+    leaseCgroups,
+    (cgroup) => readCgroupMemoryBytes(cgroupDirectoryFor(mount.root, mount.point, cgroup)),
+    { concurrency: 1 }
+  );
+  return Math.max(0, sliceBytes - Num.sumAll(leaseBytes));
+});
+
+/**
+ * Read the host-pressure part of an admission row's pressure stamp (SCHE-09 slice 2).
+ *
+ * **Details**
+ *
+ * The three `psi*Some10` readings are the `some avg10` share of
+ * `/proc/pressure/{cpu,memory,io}`, parsed with the host-pressure parcel's
+ * parser. `unadmittedSliceGib` is `agent-runs.slice` `memory.current` minus
+ * the `memory.current` of each live lease owner's cgroup inside the slice,
+ * rounded to 0.001 GiB. Every reading is best effort: a missing or malformed
+ * pressure file, a writer outside the slice, a lease owner whose cgroup
+ * membership cannot be read, or an unreadable cgroup file reads `None`, so a
+ * partial reading is never reported as a number. Nothing here fails or feeds
+ * an admission decision.
+ *
+ * **Example** (Build the reading effect)
+ *
+ * ```ts
+ * import { readAdmissionHostPressure } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readAdmissionHostPressure([]))) // true
+ * ```
+ *
+ * @param leases - The live leases whose cgroups are subtracted from the slice.
+ * @returns The PSI readings and the unadmitted slice memory, each `None` when unreadable.
+ * @category admission
+ * @since 0.0.0
+ */
+export const readAdmissionHostPressure = Effect.fn("MemoryStats.readAdmissionHostPressure")(function* (
+  leases: ReadonlyArray<YeetAdmissionLease>
+): Effect.fn.Return<
+  Pick<AdmissionPressureStamp, "psiCpuSome10" | "psiMemorySome10" | "psiIoSome10" | "unadmittedSliceGib">,
+  never,
+  FileSystem.FileSystem
+> {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* Effect.all({
+    psiCpuSome10: readPressureSome10(fs, "cpu"),
+    psiMemorySome10: readPressureSome10(fs, "memory"),
+    psiIoSome10: readPressureSome10(fs, "io"),
+    unadmittedSliceGib: readUnadmittedSliceBytes(leases).pipe(
+      Effect.map((bytes) => Num.round(bytes / GIB, 3)),
+      Effect.option
+    ),
+  });
+});
 
 const makeMemoryStats = Effect.fnUntraced(function* (
   source: ComputeMemorySource

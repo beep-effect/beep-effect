@@ -5,6 +5,10 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEditionRef } from "@beep/law-practice-domain/values";
 import {
+  CitationOperationAdmission,
+  makeCitationOperationAdmission,
+} from "@beep/law-practice-server/internal/Citation/Admission";
+import {
   CitationCaseMetadataConfiguration,
   CitationCaseMetadataFields,
   makeCitationCaseMetadata as makeOwnedCitationCaseMetadata,
@@ -140,17 +144,30 @@ const install = Effect.fn("CaseMetadataTest.install")(function* (
   ).pipe(Effect.flatMap(S.decodeEffect(Corpus)));
   const { bundle } = yield* loadCitationFrozenEditionFixtures();
   const owner = yield* makeCitationFrozenEditions(bundle);
-  const setup = yield* setupCitationMetadataRuntime(kind, maximum, enclosing, true, 8192);
+  const original = yield* setupCitationMetadataRuntime(kind, maximum, enclosing, true, 8192);
   const instant = yield* Effect.fromOption(DateTime.make("2026-11-06T00:00:00Z"));
   const millis = DateTime.toEpochMillis(instant);
   const clock = {
-    ...setup.timer.clock,
+    ...original.timer.clock,
     currentTimeMillisUnsafe: () => millis,
     currentTimeMillis: Effect.succeed(millis),
     currentTimeNanosUnsafe: () => BigInt(millis) * BigInt(1000000),
     currentTimeNanos: Effect.succeed(BigInt(millis) * BigInt(1000000)),
   };
-  const provided = setup.provided.pipe(Context.add(Clock.Clock, clock), Context.add(CitationFrozenEditions, owner));
+  const operation = yield* makeCitationOperationAdmission(original.limits).pipe(
+    Effect.provideService(Clock.Clock, clock)
+  );
+  const provided = original.provided.pipe(
+    Context.add(Clock.Clock, clock),
+    Context.add(CitationOperationAdmission, operation),
+    Context.add(CitationFrozenEditions, owner)
+  );
+  const setup = {
+    ...original,
+    operation,
+    provided,
+    context: original.context.pipe(Context.add(Clock.Clock, clock), Context.add(CitationOperationAdmission, operation)),
+  };
   const prepare = yield* installCitationHtmlGeometryFixture(kind, { ...setup, provided });
   const stage = yield* makeCitationCaseMetadata(setup.limits, setup.runtime, configuration).pipe(
     Effect.flatMap((stage) =>
@@ -265,7 +282,7 @@ export const assertCitationCaseMetadataBudget = Effect.fn("CaseMetadataTest.shar
       expect(budget.maximum - used).toBe(total - 1 - spent);
     }),
     outer.setup.limits
-  ).pipe(Effect.provideService(Clock.Clock, outer.setup.timer.clock));
+  ).pipe(Effect.provideContext(outer.setup.provided));
   yield* assertCitationWorkerCompositionReleased(
     tight.setup.operation,
     tight.setup.admission,

@@ -7,18 +7,18 @@
 
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import * as O from "@beep/utils/Option";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
-import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
 import { adaptGitKitError, gitPathListFromNulOutput, sortedUniquePaths } from "../../../internal/repo-run/index.ts";
-import { YeetCommandError } from "../Yeet.errors.ts";
+import { YeetCommandError, YeetHandlerErrorKind } from "../Yeet.errors.ts";
 import {
   QualityIssue,
   QualityIssueRouting,
@@ -226,7 +226,9 @@ const overlappingBasePaths = (
  *
  * @param context - Repo context that determines where quality packets are
  * written.
- * @param scope - Refused path set plus remediation text for the publish gate.
+ * @param scope - Refused path set plus remediation text for the publish gate,
+ * and the handler error kind the error carries when the refusal is one (a
+ * publish input refusal).
  * @returns A failing Effect containing the publish-scope Yeet command error.
  * @category diagnostics
  * @since 0.0.0
@@ -238,6 +240,7 @@ export const failPublishScopeWithPacket = Effect.fn("Yeet.failPublishScopeWithPa
     readonly paths: ReadonlyArray<string>;
     readonly remediation: string;
     readonly subCategory: string;
+    readonly handlerErrorKind?: YeetHandlerErrorKind;
   }
 ): Effect.fn.Return<never, YeetCommandError, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   const summary = `${scope.message}\n${summarizePublishPaths(scope.paths)}\nRemedy: ${scope.remediation}`;
@@ -264,6 +267,7 @@ export const failPublishScopeWithPacket = Effect.fn("Yeet.failPublishScopeWithPa
     message: summary,
     command: "git status --short",
     exitCode: 1,
+    ...O.getSomesStruct({ handlerErrorKind: O.fromUndefinedOr(scope.handlerErrorKind) }),
   });
 });
 
@@ -987,6 +991,7 @@ const emptyIndexPublishIntent = Effect.fn("Yeet.emptyIndexPublishIntent")(functi
     message: "yeet publish requires reviewed staged changes or a clean local commit ahead of the publish remote/base.",
     command: "git diff --cached --name-only",
     exitCode: 1,
+    handlerErrorKind: YeetHandlerErrorKind.Enum["publish-input"],
   });
 });
 
@@ -1007,6 +1012,7 @@ const stagedOnlyPublishIntent = Effect.fn("Yeet.stagedOnlyPublishIntent")(functi
       paths: splitPaths,
       remediation: "Stage the remaining hunks with git add, or stash them manually, then rerun.",
       subCategory: "partially-staged",
+      handlerErrorKind: YeetHandlerErrorKind.Enum["publish-input"],
     });
   }
 
@@ -1031,6 +1037,7 @@ const wholeWorktreePublishIntent = Effect.fn("Yeet.wholeWorktreePublishIntent")(
       remediation:
         "Stage the intended files, remove leftovers, or rerun with --staged-only to park the residue in a stash automatically.",
       subCategory: "untracked",
+      handlerErrorKind: YeetHandlerErrorKind.Enum["publish-input"],
     });
   }
 
@@ -1041,6 +1048,7 @@ const wholeWorktreePublishIntent = Effect.fn("Yeet.wholeWorktreePublishIntent")(
       remediation:
         "Stage the reviewed files, or rerun with --staged-only to park the residue in a stash automatically.",
       subCategory: "unstaged",
+      handlerErrorKind: YeetHandlerErrorKind.Enum["publish-input"],
     });
   }
 
@@ -1285,6 +1293,7 @@ export const stageReviewedPublishIntent = Effect.fn("Yeet.stageReviewedPublishIn
       message: "yeet publish has no staged changes after reviewed staging.",
       command: "git diff --cached --name-only",
       exitCode: 1,
+      handlerErrorKind: YeetHandlerErrorKind.Enum["publish-input"],
     });
   }
 });

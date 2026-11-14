@@ -35,6 +35,29 @@ describe("schema-owned citation safety budgets", () => {
         expect(decoded.sourceUtf16).toBeLessThanOrEqual(MAX_SOURCE_TEXT_LENGTH);
       })
   );
+  it.effect("requires regex capacity for every admitted operation in policy v2", () =>
+    Effect.gen(function* () {
+      const policy = yield* defaultCitationEnginePolicy;
+      const encoded = yield* S.encodeEffect(CitationEngineLimits)(policy.limits);
+      for (const concurrency of [1, 2]) {
+        const decoded = yield* S.decodeEffect(CitationEngineLimits)({
+          ...encoded,
+          concurrentOperations: concurrency,
+          concurrentRegexProcesses: concurrency,
+        });
+        expect(decoded.concurrentOperations).toBe(concurrency);
+      }
+      const insufficient = yield* rejects({ ...encoded, concurrentOperations: 2, concurrentRegexProcesses: 1 });
+      expect(insufficient).toBe(true);
+      const published = yield* S.encodeEffect(CitationEngineEffectivePolicy)(policy);
+      expect(published.version).toBe("citation-engine-policy/v2");
+      const old = yield* S.decodeUnknownEffect(CitationEngineEffectivePolicy)({
+        ...published,
+        version: "citation-engine-policy/v1",
+      }).pipe(Effect.exit);
+      old.pipe(Exit.isFailure, assertTrue);
+    })
+  );
   it.effect("decodes explicit fixtures with Duration values and exact millisecond round trips", () =>
     Effect.gen(function* () {
       const policy = yield* defaultCitationEnginePolicy;
@@ -60,7 +83,7 @@ describe("schema-owned citation safety budgets", () => {
       const encoded = yield* S.encodeEffect(CitationEngineLimits)(policy.limits);
       for (const [key, maximum] of R.toEntries(CitationEngineAbsoluteMaxima)) {
         if (Str.endsWith("Millis")(key)) continue;
-        yield* S.decodeEffect(CitationEngineLimits)({ ...encoded, [key]: maximum });
+        yield* S.decodeEffect(CitationEngineLimits)({ ...encoded, concurrentRegexProcesses: 2, [key]: maximum });
         const aboveMaximum = yield* rejects({ ...encoded, [key]: maximum + 1 });
         expect(aboveMaximum).toBe(true);
         for (const invalid of [0, -1, 1.5, Number.POSITIVE_INFINITY, Number.NaN]) {
@@ -87,7 +110,11 @@ describe("schema-owned citation safety budgets", () => {
       ] as const;
       for (const key of names) {
         const maximum = CitationEngineAbsoluteMaxima[`${key}Millis`];
-        const atMaximum = yield* S.decodeEffect(CitationEngineLimits)({ ...encoded, [key]: maximum });
+        const atMaximum = yield* S.decodeEffect(CitationEngineLimits)({
+          ...encoded,
+          concurrentRegexProcesses: 2,
+          [key]: maximum,
+        });
         expect(Duration.toMillis(atMaximum[key])).toBe(maximum);
         for (const invalid of [0, -1, 0.5, maximum + 1, Number.POSITIVE_INFINITY, Number.NaN]) {
           const rejected = yield* rejects({ ...encoded, [key]: invalid });
@@ -112,7 +139,11 @@ describe("schema-owned citation safety budgets", () => {
       for (const [key, value] of R.toEntries(encoded)) {
         const reduced = yield* S.decodeEffect(CitationEngineLimits)({ ...encoded, [key]: 1 });
         expect(guard({ effective: policy, requested: reduced })).toBe(true);
-        const increased = yield* S.decodeEffect(CitationEngineLimits)({ ...encoded, [key]: value + 1 });
+        const increased = yield* S.decodeEffect(CitationEngineLimits)({
+          ...encoded,
+          concurrentRegexProcesses: key === "concurrentOperations" ? 2 : encoded.concurrentRegexProcesses,
+          [key]: value + 1,
+        });
         expect(guard({ effective: policy, requested: increased })).toBe(false);
       }
     })

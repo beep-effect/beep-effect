@@ -22,6 +22,7 @@ import {
   AdmissionJournalTicketEvictedV3,
   AdmissionJournalWithdrawn,
   AdmissionLeaseReapClaim,
+  AdmissionPressureStamp,
   AdmissionPromotionTransition,
   AdmissionReapClaim,
   AdmissionRequest,
@@ -2125,6 +2126,26 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             expect(A.map(A.drop(routedText, A.length(jsonLines)), String)).toContain(
               "- worker routes: 2 (1 bypass, 1 refusal; 1 forced)"
             );
+            expect(A.map(routedText, String)).not.toContainEqual(expect.stringContaining("- pressure stamps:"));
+
+            // Rows that carry the SCHE-09 pressure stamp are counted beside the rows that do not.
+            const stamp = AdmissionPressureStamp.make({
+              capacityTokens: 8,
+              activeTokens: 3,
+              queuedTokens: 0,
+              queuedTickets: 0,
+              memAvailableGib: 50,
+              psiCpuSome10: O.some(2.13),
+            });
+            const stampedLines = yield* encodeLines([
+              AdmissionJournalAdmitted.make({ ...today, nonce: "stamped-admission", pressure: O.some(stamp) }),
+            ]);
+            yield* writeJournal(tempRoot, [...liveLines, ...stampedLines]);
+            yield* runQualityCommand(["scheduler", "history"]);
+            const stampedText = yield* TestConsole.logLines;
+            expect(A.map(A.drop(stampedText, A.length(routedText)), String)).toContain(
+              "- pressure stamps: 1 of 4 admitted, 0 of 1 v3 released rows (--json lists them)"
+            );
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
       );
@@ -3852,6 +3873,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               expect((yield* admissionProtocolStatus()).eviction).toBe("on");
               yield* expectCommandSuccess(["scheduler", "protocol", "--disable-evictions"]);
               expect((yield* admissionProtocolStatus()).eviction).toBe("off");
+              yield* expectCommandSuccess(["scheduler", "protocol", "--pressure", "on"]);
+              const pressureOn = yield* admissionProtocolStatus();
+              expect(pressureOn.pressure).toBe("on");
+              yield* expectCommandSuccess(["scheduler", "protocol", "--pressure", "off"]);
+              const pressureOff = yield* admissionProtocolStatus();
+              expect(pressureOff.pressure).toBe("off");
               yield* expectCommandSuccess(["scheduler", "reconcile-attempts"]);
               const conflict = yield* Effect.exit(
                 runQualityCommand(["scheduler", "protocol", "--enable-evictions", "--disable-evictions"])

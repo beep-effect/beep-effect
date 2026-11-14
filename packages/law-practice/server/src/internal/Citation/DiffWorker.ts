@@ -3,7 +3,9 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationPythonUnicodeStorage, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
@@ -18,17 +20,17 @@ import {
   preflightCitationDiffJob,
 } from "./DiffWorkerProtocol.ts";
 import { CitationDiffWorkerStartup, callCitationDiffRpc, encodeCitationDiffStartup } from "./DiffWorkerRpc.ts";
-import { CitationInvocation } from "./Invocation.ts";
-import { acquireCitationNativeLease, captureCitationNativeAdmission } from "./NativeAdmission.ts";
+import { citationNativeJobReservation } from "./NativeLane.ts";
 import {
+  CitationNativeProcessOwnerSnapshot,
   citationNativeProcessCommand,
-  makeCitationNativeProcessOwner,
   withCitationNativeProcess,
 } from "./NativeProcess.ts";
 import { CitationPythonSliceLayout, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
+import type { CitationNativeLane, CitationNativeStart } from "./NativeLane.ts";
+import type { CitationNativeProcessRuntime, CitationOwnedNativeProcess } from "./NativeProcess.ts";
 import type { CitationPythonUnicodeFailure, CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/DiffWorker");
@@ -77,8 +79,44 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
     },
     engineOperation
   );
-  const admission = yield* captureCitationNativeAdmission(limits);
-  const owner = yield* makeCitationNativeProcessOwner(limits, engineOperation, failure);
+  let closed = false;
+  let pending = A.empty<CitationOwnedNativeProcess<CitationDiffWorkerFailure>>();
+  let failed = A.empty<CitationOwnedNativeProcess<CitationDiffWorkerFailure>>();
+  yield* Effect.addFinalizer(() =>
+    Effect.sync(() => {
+      closed = true;
+    })
+  );
+  const ensureOpen = Effect.suspend(() =>
+    closed ? Effect.fail(failure("closed")) : failed.length > 0 ? Effect.fail(failure("quarantined")) : Effect.void
+  );
+  const track = Effect.fn("Citation.trackDiffJob")(function* (record: Effect.Success<ReturnType<CitationNativeStart>>) {
+    let acknowledged = false;
+    const process: CitationOwnedNativeProcess<CitationDiffWorkerFailure> = {
+      retire: Effect.fn("Citation.retireDiffJob")(function* (retry) {
+        yield* record.process.retire(retry).pipe(
+          Effect.tapError(() =>
+            Effect.sync(() => {
+              if (!acknowledged && !A.contains(failed, process)) failed = A.append(failed, process);
+            })
+          ),
+          Effect.mapError((error) => (error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error))
+        );
+      }),
+    };
+    pending = A.append(pending, process);
+    yield* record.onRetired(
+      Effect.sync(() => {
+        acknowledged = true;
+        pending = A.filter(pending, (entry) => entry !== process);
+        failed = A.filter(failed, (entry) => entry !== process);
+      })
+    );
+    return { child: Exit.mapError(record.child, (error) => failure(error.reason)), process };
+  });
+  const reap = Effect.fn("Citation.reapDiffJobs")(function* () {
+    for (const record of pending) yield* record.retire(true);
+  });
   const path = yield* Path.Path;
   const assetPath = yield* path
     .fromFileUrl(new URL("../../../assets/citation-diff/kernel.wasm", import.meta.url))
@@ -94,14 +132,27 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
         ? safety("diffInputUtf16")
         : invalidInput();
   const evaluate = Effect.fn("Citation.evaluateDiffProcess")(
-    (beforeInput: unknown, afterInput: unknown, maximumSteps: unknown = limits.diffSteps) =>
+    (
+      start: CitationNativeStart,
+      reserveNative: CitationNativeLane["Service"]["reserve"],
+      reserve: (units: number) => Effect.Effect<void, CitationSafetyLimitExceeded>,
+      beforeInput: unknown,
+      afterInput: unknown,
+      maximumSteps: unknown = limits.diffSteps
+    ) =>
       withCitationNativeProcess(
-        owner,
-        acquireCitationNativeLease(admission, engineOperation, false, failure),
+        {
+          ensureOpen,
+          start: (command) =>
+            start("diff", command).pipe(
+              Effect.mapError((error) => (error._tag === "CitationNativeLaneFailure" ? failure(error.reason) : error)),
+              Effect.flatMap(track)
+            ),
+        },
+        reserveNative.pipe(citationNativeJobReservation(failure)),
         () => failure("invalid-runtime"),
         (operation) =>
           Effect.gen(function* () {
-            const { reserve } = (yield* CitationInvocation).budget;
             const quota = yield* S.decodeUnknownEffect(CitationDiffWorkerJob.fields.maximumSteps)(maximumSteps).pipe(
               Effect.mapError(() => failure("invalid-runtime"))
             );
@@ -161,5 +212,11 @@ export const makeCitationDiffWorker = Effect.fn("Citation.makeDiffWorker")(funct
           }).pipe(timed)
       ).pipe(operationTimed, Effect.catchTag("CitationSafetyLimitExceeded", failSafety))
   );
-  return { evaluate, snapshot: owner.snapshot, reap: owner.reap };
+  return {
+    evaluate,
+    snapshot: Effect.sync(() =>
+      CitationNativeProcessOwnerSnapshot.make({ processes: pending.length, quarantined: failed.length, closed })
+    ),
+    reap,
+  };
 });

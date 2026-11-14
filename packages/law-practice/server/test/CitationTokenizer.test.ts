@@ -16,9 +16,11 @@ import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Order from "effect/Order";
+import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -197,7 +199,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       const refused = yield* withCitationTestTextBudget(
         maximum,
         setup.tokenizer.port.tokenize({ width: 1, bytes: new TextEncoder().encode("Id. x") })
-      ).pipe(Effect.flip);
+      ).pipe(
+        Effect.provideService(Clock.Clock, setup.clock),
+        Effect.provideService(ChildProcessSpawner, setup.observed.spawner),
+        Effect.flip
+      );
       expect(refused).toMatchObject({
         _tag: "CitationSafetyLimitExceeded",
         operation: "extract",

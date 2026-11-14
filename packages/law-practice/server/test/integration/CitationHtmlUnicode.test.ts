@@ -51,6 +51,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           const limits = {
             ...(yield* defaultCitationEnginePolicy).limits,
             concurrentOperations: 2,
+            concurrentRegexProcesses: 2,
             cleanDeadline: Duration.seconds(30),
             operationDeadline: Duration.seconds(60),
           };
@@ -68,7 +69,10 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
                 openCitationInvocation(
                   CitationInvocationPolicy.make({ limits, operation: "clean", deadlineStarts: "before-admission" }),
                   pipeline.run(input)
-                ).pipe(Effect.provideService(CitationOperationAdmission, admission))
+                ).pipe(
+                  Effect.provideService(CitationOperationAdmission, admission),
+                  Effect.provideService(CitationNativeProcessAdmission, nativeAdmission)
+                )
               ),
             };
             const citationResult1 = yield* defaultCitationEnginePolicy;
