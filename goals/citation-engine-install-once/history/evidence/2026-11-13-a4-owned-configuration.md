@@ -299,13 +299,17 @@ pass. `package-verify --quick`, `lint:laws` (effect-fn 0), fallow audit vs
 
 One commit on top of `48d2876c4c1` (see the report for the SHA).
 
-- The extractor's returned report carried the boundary-owned `limits`, which
-  every request reads, so a caller mutating `report.limits` changed the
-  installed policy. The report now carries its own per-request policy
+- The extractor's returned report shared the installed deadlines. Its
+  `limits` object was already a fresh one, but the `Duration` instances inside
+  it were the boundary-owned ones every request reads, so a caller mutating
+  `report.limits.extractDeadline.value.millis` changed the installed policy
+  (corrected in round 5). The report now carries its own per-request policy
   snapshot (`captureCitationOperationPolicy`, a report copy and not a
   configuration detach, so it is outside the detach count). New test:
   `CitationExtractorControls` › "keeps installed limits when a caller mutates a
-  returned report" (fails without the fix). clean, resolve and annotate
+  returned report". Only its `extractDeadline.value.millis` half detects the
+  leak; the `tokens` half mutates a number on the already-fresh object and
+  passes with or without the fix. clean, resolve and annotate
   already returned per-request snapshots; engineArtifact, vocabularyVersion and
   identities reach callers only as strings.
 - Tautological refusal tests deleted and real boundary tests added (decision
@@ -318,9 +322,11 @@ One commit on top of `48d2876c4c1` (see the report for the SHA).
   type level; the `ownedDerive` and `ownCitationConfiguration` JSDoc state their
   real preconditions. An identity walk shows owned engine, default-engine and
   extractor configuration share no object or buffer with the caller's input.
-- Reference patterns are authenticated once per engine, by
-  `verifyCitationReferencePatterns`; install keeps only the rejection
-  fingerprint. The per-request authentication replay is removed (it replayed a
+- Reference patterns are authenticated once per installed call site, by
+  `verifyCitationReferencePatternConfiguration`; install keeps only the
+  rejection fingerprint. Install relies on a verified input: true for every
+  production caller (both go through `ownCitationStageCall` with this verify
+  step), not enforced by the type. The per-request authentication replay is removed (it replayed a
   success verify had already established).
 
 | Engine construction | Metadata-operation installs | Configuration detaches | Tokenizer builds | Regex evaluator installs | Regex evaluations | Child processes | Process owners | Diff/Xml workers |
@@ -337,3 +343,42 @@ Round-4 checks: every Citation test file (233) on its own, all pass first time;
 introduced), `docgen:local`, biome, typecheck and effect-vitest (0 introduced,
 0 resolved; one row removed with a deleted test) pass. Coverage runs on hosted
 CI.
+
+## Round 5 (review pass 2 of `d0935d28279`)
+
+- Rule coverage after the round-4 deletions: four custom schema rules had lost
+  their only tests and now have schema-level tests (`ProfileNames`,
+  `ExtractorIdentity`, `CitationMetadataYearBound`, and the `GroupIdentifier`
+  key rule, which a v4 `S.Record` applies by dropping the key, not by
+  refusing). The engine boundary test gains an incoherent descriptor case:
+  `CitationInputError` for `extract`, no capture name in the encoded or
+  printed error, no child process. Table in decision "Delete the tautological
+  configuration refusal tests and test the real boundaries".
+- Default path order: the base ran own, backend-kind check, admission owners,
+  asset assembly, document services, then `make`, which decoded the
+  assembled `CitationEngineConfiguration`. Round 3 had moved the
+  configuration's validation ahead of the document services and used the
+  throwing `CitationEngineConfiguration.make`, which turns an invalid
+  assembly into a defect where the base returned `CitationInputError`. The
+  one `ownedDerive` now runs assets, services, then
+  `CitationEngineConfiguration.makeEffect` mapped to `CitationInputError`,
+  the base's order and failure.
+- Instrumentation: on the default path the install no longer runs under a
+  nested `Citation.makeEngine` span. `makeDefault` calls the internal
+  `install` directly, so the engine stages run under
+  `Citation.makeDefaultEngine` › `Citation.installEngine`; `make` keeps
+  `Citation.makeEngine` › `Citation.installEngine`. The generated
+  instrumentation catalog (`standards/instrumentation-catalog`) records the
+  span set: A4 removed the per-stage copy and decode spans and adds
+  `Citation.ownConfiguration`, `Citation.installEngine`,
+  `Citation.installOwnedStage`, `Citation.installReferencePatterns`, the
+  per-stage `verify*Configuration` spans and
+  `Citation.checkSelectionBindingBudgets`.
+
+Round-5 checks: the four touched test files, the ownership and engine layer
+tests and the 21 other test files that build the default engine, each run on
+its own: 28/28 pass, including `CitationCanonicalFullSpan` (12/12, counts
+unchanged) and `CitationEngineLayer` (15/15). `package-verify --quick`,
+`lint:laws` (effect-fn 0), fallow audit vs `origin/main` (0 introduced),
+`docgen:local`, biome, typecheck and effect-vitest (0 introduced, 0
+resolved) pass.

@@ -249,32 +249,32 @@ const makeDefault = Effect.fn("Citation.makeDefaultEngine")(function* (raw: unkn
   const owners = yield* makeCitationAdmissionOwners(limits).pipe(Effect.mapError(invalid));
   // The installed configuration is derived from the owned caller configuration
   // and the engine-read sealed assets: owned by derivation, no second detach.
+  // The order of observable failures is the base's: assets, document services,
+  // then validation of the assembled engine configuration.
   const installed = yield* ownedDerive(
     configuration,
     Effect.fnUntraced(function* (owned: CitationEngineDefaultConfiguration) {
       const assembled = yield* makeCitationDefaultEngineConfiguration(owned.limits, owned.assets, owned.build).pipe(
         Effect.mapError(invalid)
       );
-      return {
-        editions: assembled.editions,
-        engine: CitationEngineConfiguration.make({
-          limits: owned.limits,
-          runtime: owned.runtime,
-          extraction: { extraction: assembled.configuration, engineArtifact: assembled.engineArtifact },
-          annotation: { geometry: assembled.configuration.extraction.document, xmlRuntime: owned.xmlRuntime },
-        }),
-      };
+      const services = yield* makeCitationDocumentServices(owned.limits, owned.htmlRuntime).pipe(
+        Effect.provideContext(owners),
+        Effect.mapError((error) =>
+          S.is(CitationSafetyLimitExceeded)(error)
+            ? CitationSafetyLimitExceeded.make({ operation: "extract", limit: error.limit })
+            : invalid()
+        )
+      );
+      const engine = yield* CitationEngineConfiguration.makeEffect({
+        limits: owned.limits,
+        runtime: owned.runtime,
+        extraction: { extraction: assembled.configuration, engineArtifact: assembled.engineArtifact },
+        annotation: { geometry: assembled.configuration.extraction.document, xmlRuntime: owned.xmlRuntime },
+      }).pipe(Effect.mapError(invalid));
+      return { editions: assembled.editions, services: services.context, engine };
     })
   );
-  const services = yield* makeCitationDocumentServices(limits, htmlRuntime).pipe(
-    Effect.provideContext(owners),
-    Effect.mapError((error) =>
-      S.is(CitationSafetyLimitExceeded)(error)
-        ? CitationSafetyLimitExceeded.make({ operation: "extract", limit: error.limit })
-        : invalid()
-    )
-  );
-  const captured = Context.merge(owners, services.context).pipe(
+  const captured = Context.merge(owners, installed.services).pipe(
     Context.add(CitationFrozenEditions, installed.editions)
   );
   const engine = yield* install(ownedField(installed, "engine")).pipe(Effect.provideContext(captured));

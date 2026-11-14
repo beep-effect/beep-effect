@@ -98,10 +98,15 @@ export const ownedItems = <T>(owned: CitationOwned<ReadonlyArray<T>>): ReadonlyA
  * **Details**
  *
  * `schema` is an `S.Struct` or `S.Opaque` class; its `make` builds a fresh
- * container from the fields (and may copy them). Every field passed in must
- * already be owned and the field record must not be empty, so the result is owned
- * as a whole. It cannot mint from parts that are not owned. Stages use it to hand
- * a child the configuration they assemble from projections of their own.
+ * container from the fields (and may copy them). The types require every field
+ * passed in to be `CitationOwned` and the field record to be non-empty.
+ *
+ * **Gotchas**
+ *
+ * The result is sound only if the constructor builds it from those owned fields
+ * (and values the engine creates) and keeps nothing a caller holds. The types do
+ * not enforce that; it is a discipline for the call site. Production call
+ * sites: one, VerifiedExtraction's OccurrenceProjection configuration.
  *
  * **Example** (Assemble child configuration)
  * ```ts
@@ -122,8 +127,8 @@ export const ownedStruct: {
   2,
   <F, A>(schema: OwnedConstructor<F, A>, fields: OwnedFields<F>): CitationOwned<A> => mint(schema.make(fields))
 );
-// A schema constructor (`S.Struct` or `S.Opaque` class), never a free function.
-type OwnedConstructor<F, A> = { readonly fields: S.Struct.Fields; readonly make: (fields: F) => A };
+// A schema (`S.Struct` or `S.Opaque` class) and its constructor, never a free function.
+type OwnedConstructor<F, A> = { readonly fields: S.Struct.Fields; readonly make: (fields: F) => A } & S.Top;
 // Owned fields only, and at least one: an empty record would mint from nothing.
 type OwnedFields<F> = [keyof F] extends [never] ? never : { readonly [K in keyof F]: CitationOwned<F[K]> };
 
@@ -131,14 +136,17 @@ type OwnedFields<F> = [keyof F] extends [never] ? never : { readonly [K in keyof
  *
  * **Details**
  *
- * The result is owned because the engine computes it from an already owned
- * input and from values the engine itself creates or reads (sealed asset files,
- * the clock). Its soundness rests entirely on `derive` not closing over a
- * caller-held value: the types cannot check that. It needs an owned witness, so
- * it cannot mint from caller input; it is the same discipline as `ownedStruct`,
- * not a public mint, and the brand constructor stays private. It has exactly one
- * production call site: the default engine derives its installed configuration
- * from the caller's configuration it owned with the engine's one detach.
+ * The result is branded owned when `derive` succeeds. The brand constructor
+ * stays private; this is not a public mint.
+ *
+ * **Gotchas**
+ *
+ * The result is sound only if `derive` builds it from the owned input and from
+ * values the engine itself creates or reads (sealed asset files, the clock) and
+ * closes over nothing a caller holds. The types do not enforce that; it is a
+ * discipline for the call site. Production call sites: one, the default engine,
+ * which derives its installed configuration from the caller's configuration it
+ * owned with the engine's one detach.
  *
  * **Example** (Derive configuration from owned input)
  * ```ts

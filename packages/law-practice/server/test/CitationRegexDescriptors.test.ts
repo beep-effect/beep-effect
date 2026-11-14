@@ -1,5 +1,6 @@
 import {
   CitationRegexPatternDescriptor,
+  CitationRegexPatternProfile,
   makeCitationRegexDescriptorRegistry as makeOwnedCitationRegexDescriptorRegistry,
 } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
@@ -39,6 +40,26 @@ const descriptor = () => ({
   },
 });
 const pattern = () => ({ width: 1, bytes: new TextEncoder().encode("(?P<maybe>a)?(b)") });
+
+// The ProfileNames rule guards the boundary decode and per-request descriptors.
+it.effect("refuses capture names that are empty, out of range or shared, and drops non-identifier keys", () =>
+  Effect.gen(function* () {
+    const isProfile = S.is(CitationRegexPatternProfile);
+    const profile = descriptor().profile;
+    for (const names of [{ "": 1 }, { a: 0 }, { a: 3 }, { a: 1, b: 1 }]) {
+      expect(isProfile({ ...profile, names })).toBe(false);
+    }
+    expect(isProfile(profile)).toBe(true);
+    expect(isProfile({ ...profile, names: { a: 1, b: 2 } })).toBe(true);
+    // The GroupIdentifier key rule does not refuse: a v4 Record drops a key that
+    // fails its key schema, so the name never reaches the owned profile.
+    const dropped = yield* S.decodeEffect(CitationRegexPatternProfile)({
+      ...profile,
+      names: { "private source": 1 },
+    });
+    expect(dropped.names).toEqual({});
+  })
+);
 
 it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
   it.effect("retains its captured Clock and total deadline precedence", () =>

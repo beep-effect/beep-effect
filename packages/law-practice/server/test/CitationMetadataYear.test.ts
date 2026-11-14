@@ -1,6 +1,9 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { makeCitationMetadataYear } from "@beep/law-practice-server/internal/Citation/MetadataYear";
+import {
+  CitationMetadataYearBound,
+  makeCitationMetadataYear,
+} from "@beep/law-practice-server/internal/Citation/MetadataYear";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -50,6 +53,14 @@ const setYear = Effect.fn("MetadataYearTest.setYear")(function* (year: number) {
   const epoch = DateTime.toEpochMillis(date);
   yield* TestClock.setTime(epoch);
 });
+// The clock-computed year ceiling is decoded where it is computed; the range is the guard.
+it.effect("bounds the computed year ceiling to 2 through 10000", () =>
+  Effect.sync(() => {
+    const isBound = S.is(CitationMetadataYearBound);
+    for (const bound of [1, 10001, 2.5]) expect(isBound(bound)).toBe(false);
+    for (const bound of [2, 2027, 10000]) expect(isBound(bound)).toBe(true);
+  })
+);
 it.layer(citationTokenizerTestLayer)("source metadata year", (it) => {
   it.layer(TestClock.layer())("source integer observations", (it) => {
     it.effect(

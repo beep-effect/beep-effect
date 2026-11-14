@@ -9,6 +9,7 @@ import {
 } from "@beep/law-practice-server/internal/Citation/ExtractorOrdering";
 import {
   CitationTokenizerConfiguration,
+  CitationTokenizerExtractor,
   makeCitationTokenizer as makeOwnedCitationTokenizer,
 } from "@beep/law-practice-server/internal/Citation/Tokenizer";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
@@ -19,6 +20,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import {
   installCitationOwnedTestStage,
   ownCitationTestConfiguration,
@@ -241,6 +243,23 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       { timeout: 30000 }
     );
   }
+  // The ExtractorIdentity rule ties ordering, recipe and descriptor identity together.
+  it.effect("refuses an extractor whose ordering, recipe and descriptor identities disagree", () =>
+    Effect.gen(function* () {
+      const controls = yield* loadCitationTokenizerControls();
+      const first = A.getUnsafe(controls.configuration.extractors, 0);
+      const isExtractor = S.is(CitationTokenizerExtractor);
+      expect(isExtractor(first)).toBe(true);
+      const recipe = first.recipe;
+      // Each mismatch is shape-valid on its own, so only the cross-field rule refuses it.
+      for (const row of [
+        { ...first, recipe: { ...recipe, id: recipe.id + 1 } },
+        { ...first, descriptor: { ...first.descriptor, patternSha256: Str.repeat(64)("0") } },
+      ]) {
+        expect(isExtractor(row)).toBe(false);
+      }
+    })
+  );
   it.effect("rejects duplicate extractor configuration before execution", () =>
     Effect.gen(function* () {
       const controls = yield* loadCitationTokenizerControls();
