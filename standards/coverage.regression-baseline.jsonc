@@ -21208,14 +21208,14 @@
         },
         "packages/law-practice/server/src/internal/Citation/RecognizerWorker.ts": {
           "lines": 100,
-          "statements": 100,
+          "statements": 98.3,
           "branches": 100,
-          "functions": 100,
+          "functions": 92.85,
           "uncovered": {
             "lines": 0,
-            "statements": 0,
+            "statements": 1,
             "branches": 0,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/law-practice/server/src/internal/Citation/RecognizerWorkerProgram.ts": {

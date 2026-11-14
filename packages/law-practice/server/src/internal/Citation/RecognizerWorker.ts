@@ -57,7 +57,8 @@ export class CitationRecognizerFailure extends S.TaggedError<
     description: "Source-free isolated recognition refusal.",
   })
 ) {}
-const fail = (reason: typeof Reason.Type = "invalid-runtime") => CitationRecognizerFailure.make({ reason });
+const fail = (reason: typeof Reason.Type) => CitationRecognizerFailure.make({ reason });
+const invalid = () => fail("invalid-runtime");
 const isFailure = S.is(CitationRecognizerFailure);
 const isSafety = S.is(CitationSafetyLimitExceeded);
 const isDriverFailure = S.is(EyeciteFailure);
@@ -113,7 +114,7 @@ export const makeCitationRecognizerWorker = Effect.fn("Citation.makeRecognizerWo
         return yield* withCitationNativeProcess(
           owner,
           acquireCitationNativeLease(admission, timing.operation, true, fail),
-          fail,
+          invalid,
           Effect.fnUntraced(function* (operation) {
             yield* operation.acquire;
             const child = yield* operation.start(command);

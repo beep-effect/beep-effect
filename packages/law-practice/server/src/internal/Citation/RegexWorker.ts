@@ -38,8 +38,7 @@ import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import type { CitationRegexEngine } from "./RegexEngine.ts";
 
-const failure = (reason: CitationRegexWorkerFailure["reason"] = "invalid-runtime") =>
-  CitationRegexWorkerFailure.make({ reason });
+const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
 /** Install the engine-constant half of the regex supervisor once per call site
  * and operation: snapshot limits and runtime, the descriptor registry, job
  * preparation, control-frame preflight, Clock, spawner and the shared native
@@ -110,7 +109,7 @@ export const installCitationRegexEvaluator = Effect.fn("Citation.installRegexEva
           withCitationNativeProcess(
             owner,
             acquireCitationNativeLease(admission, engineOperation, true, failure),
-            failure,
+            () => failure("invalid-runtime"),
             Effect.fnUntraced(function* (operation) {
               const quota = yield* S.decodeUnknownEffect(CitationRegexWorkerJob.fields.maxMatches)(maximumMatches).pipe(
                 Effect.mapError(() => failure("invalid-runtime"))
