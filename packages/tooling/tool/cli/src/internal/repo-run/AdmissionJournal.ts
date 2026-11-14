@@ -52,6 +52,7 @@ import {
 import {
   AdmissionPriority,
   AdmissionRoute,
+  admissionPressureFields,
   admissionUnitFields,
   QualitySchedulerError,
   RecordedAdmissionWorkKind,
@@ -243,6 +244,42 @@ export const AdmissionUnitEmission = LiteralKit(["off", "on"]).pipe(
 export type AdmissionUnitEmission = typeof AdmissionUnitEmission.Type;
 
 /**
+ * Whether scheduler writers stamp capacity and host pressure on admission rows (SCHE-09 slice 2).
+ *
+ * **Details**
+ *
+ * `on` lets writers add the `pressure` stamp to promotion transitions and to
+ * the admitted and released journal rows, which costs a few procfs and cgroup
+ * reads per transition. Every reader revision ignores the key and every locked
+ * rewrite keeps a row's bytes, so it can go on at any time; `off` keeps every
+ * record in the format before the stamp.
+ *
+ * **Example** (Recognize the default)
+ *
+ * ```ts
+ * import { AdmissionPressureEmission } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionPressureEmission.is.off("off")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionPressureEmission = LiteralKit(["off", "on"]).pipe(
+  $I.annoteSchema("AdmissionPressureEmission", {
+    description: "Whether current scheduler writers stamp capacity and host pressure on admitted and released rows.",
+  })
+);
+
+/**
+ * Whether current scheduler writers stamp capacity and host pressure on admission rows.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionPressureEmission = typeof AdmissionPressureEmission.Type;
+
+/**
  * Versioned mixed-checkout protocol marker stored in the admission root.
  *
  * **Details**
@@ -253,7 +290,8 @@ export type AdmissionUnitEmission = typeof AdmissionUnitEmission.Type;
  *
  * `units` gates the admission-unit fields. It is an additive key: a marker
  * without it reads `off`, older readers ignore it, and an older writer that
- * rewrites the marker drops it, which turns the fields off again.
+ * rewrites the marker drops it, which turns the fields off again. `pressure`
+ * gates the capacity and host-pressure stamp the same way.
  *
  * **Example** (Construct the disabled protocol)
  *
@@ -265,6 +303,7 @@ export type AdmissionUnitEmission = typeof AdmissionUnitEmission.Type;
  *   eviction: "off",
  * })
  * console.log(protocol.units) // "off"
+ * console.log(protocol.pressure) // "off"
  * ```
  *
  * @category models
@@ -278,9 +317,14 @@ export class AdmissionProtocol extends S.Opaque<AdmissionProtocol, { readonly br
       S.withConstructorDefault(Effect.succeed(AdmissionUnitEmission.Enum.off)),
       S.withDecodingDefaultKey(Effect.succeed(AdmissionUnitEmission.Enum.off))
     ),
+    pressure: AdmissionPressureEmission.pipe(
+      S.withConstructorDefault(Effect.succeed(AdmissionPressureEmission.Enum.off)),
+      S.withDecodingDefaultKey(Effect.succeed(AdmissionPressureEmission.Enum.off))
+    ),
   }).pipe(
     $I.annoteSchema("AdmissionProtocol", {
-      description: "Versioned rollout marker gating admission-journal eviction events and admission-unit fields.",
+      description:
+        "Versioned rollout marker gating admission-journal eviction events, admission-unit fields and pressure stamps.",
     })
   )
 ) {}
@@ -361,7 +405,9 @@ class AdmissionJournalLockReapAdopter extends S.Opaque<
  * **Details**
  *
  * The row copies the ticket's admission-unit fields ({@link admissionUnitFields}),
- * which are optional keys, and reads a newer writer's kind as unrecognized.
+ * which are optional keys, and reads a newer writer's kind as unrecognized. It
+ * copies the promotion transition's pressure stamp ({@link admissionPressureFields}),
+ * taken where the admission was checked against capacity, when there is one.
  *
  * **Example** (Reference an admitted transition)
  *
@@ -389,6 +435,7 @@ export class AdmissionJournalAdmitted extends S.Opaque<AdmissionJournalAdmitted,
     admittedAtMillis: S.Finite,
     attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     ...admissionUnitFields,
+    ...admissionPressureFields,
   }).pipe(
     $I.annoteSchema("AdmissionJournalAdmitted", {
       description: "Durable transition recorded when a queued ticket becomes an active admission lease.",
@@ -654,6 +701,12 @@ class AdmissionJournalCheckoutIdentity extends S.Class<
 /**
  * Version-three release retaining the lease's checkout and branch.
  *
+ * **Details**
+ *
+ * Besides the lease's admission-unit fields, the row carries the pressure
+ * stamp ({@link admissionPressureFields}) read just before the release is
+ * journaled, while the protocol's `pressure` gate is on.
+ *
  * **Example** (Read the release version)
  *
  * ```ts
@@ -668,7 +721,12 @@ class AdmissionJournalCheckoutIdentity extends S.Class<
 export class AdmissionJournalReleasedV3 extends AdmissionJournalCheckoutIdentity.extend<AdmissionJournalReleasedV3>(
   $I`AdmissionJournalReleasedV3`
 )(
-  { ...AdmissionJournalReleased.fields, schemaVersion: S.tag("yeet-admission-journal/v3"), ...admissionUnitFields },
+  {
+    ...AdmissionJournalReleased.fields,
+    schemaVersion: S.tag("yeet-admission-journal/v3"),
+    ...admissionUnitFields,
+    ...admissionPressureFields,
+  },
   $I.annote("AdmissionJournalReleasedV3", { description: "A released lease with direct checkout attribution." })
 ) {}
 

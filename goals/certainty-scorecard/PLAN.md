@@ -211,4 +211,12 @@ Lane chore/certainty-peril-11-fleet-roots
 
 Reverse: Delete this checkpoint so the slice-7 checkpoint is the latest PLAN status note, and revert the slice-8 PR.
 
+### Slice 5b: capacity and host pressure on admission rows, 2026-11-14
+
+Slice 8 (PERIL-11 slice 2) merged as #3273. Slice 5b (SCHE-09 slice 2) is in review: admitted and v3 released rows carry an optional `pressure` stamp (capacity, active and queued tokens, MemAvailable, PSI some avg10 for cpu, memory and io, and unadmitted agent-runs.slice memory), written only while the admission protocol's new `pressure` key is on (`bun run beep quality scheduler protocol --pressure on`). `quality scheduler history` counts the stamped rows and `--json` lists them (decision `sche-09-pressure-stamps`). The key needs no reader census, because every revision ignores it and keeps the row's bytes, so it can go on once this slice merges. From then on local-proof-under-ten's scheduler levers (SCHE-01, SCHE-02, SCHE-04, SCHE-07) can read capacity at admit and release from the retained history. With 5b merged, both SCHE-09 PR slices have landed.
+
+Lane feat/certainty-admission-pressure-fields
+
+Reverse: Delete this checkpoint so the slice-8 checkpoint is the latest PLAN status note, and revert the slice-5b PR.
+
 <!-- beep:decisions:end -->

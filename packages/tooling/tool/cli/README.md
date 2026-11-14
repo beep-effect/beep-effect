@@ -632,6 +632,24 @@ seed, read a value they cannot decode as absent instead of failing the record,
 and read a work kind from a newer writer as an unrecognized kind that stays
 charged by its `weightTokens`.
 
+The admission and v3 release rows may also carry one optional `pressure` key
+(SCHE-09 slice 2), the scheduler's capacity and the host's pressure at that
+transition: `capacityTokens`, `activeTokens` (every live lease, the row's own
+included), `queuedTokens` and `queuedTickets` (the other tickets waiting),
+`memAvailableGib`, the `some avg10` share of `/proc/pressure/{cpu,memory,io}`
+(`psiCpuSome10`, `psiMemorySome10`, `psiIoSome10`) and `unadmittedSliceGib`
+(`agent-runs.slice` `memory.current` minus the leases' cgroups in it). An
+admission's stamp comes from the scan and capacity its admission was checked
+against and rides the promotion transition, so recovery journals the same
+values; a release's stamp is read just before the release row. A reading the
+host cannot give (no pressure files, a writer outside the slice) is left out.
+Writers add the key only when `protocol.json` carries `pressure: "on"`
+(`bun run beep quality scheduler protocol --pressure on`). Every reader
+revision ignores the key and every locked rewrite keeps each row's bytes, so
+it can go on at any time; with it off every record keeps its earlier bytes.
+`bun run beep quality scheduler history` counts the stamped rows and `--json`
+lists them. No admission decision reads the stamp.
+
 Preservation-era v1/v2 readers treat v3 rows as opaque: locked rewrites keep
 their original bytes and relative source order, including across ring trimming.
 The new reader decodes every supported version. Versioned releases and evictions
