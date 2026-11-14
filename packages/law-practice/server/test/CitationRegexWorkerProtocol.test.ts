@@ -4,7 +4,6 @@ import {
   citationUnaccountedText,
   makeCitationRegexInput,
 } from "@beep/law-practice-server/internal/Citation/RegexInput";
-import { callCitationRegexRpc } from "@beep/law-practice-server/internal/Citation/RegexWorkerClient";
 import {
   CitationRegexMatchMode,
   CitationRegexWorkerFailure,
@@ -31,7 +30,6 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
@@ -383,44 +381,6 @@ it.effect("rejects malformed preparation inputs and closes platform stream failu
     ).pipe(Effect.flip);
     expect(broken).toMatchObject({ reason: "channel-failed" });
     expect("cause" in broken).toBe(false);
-  })
-);
-
-it.effect("rejects out-of-order RPC controls and does not retry failed writes", () =>
-  Effect.gen(function* () {
-    const limits = (yield* defaultCitationEnginePolicy).limits;
-    const preparation = yield* makeCitationRegexJobPreparation(limits, citationUnaccountedText);
-    const native = { width: 1, bytes: utf8.encode("a") };
-    const { job, frame } = yield* preparation.prepare(native, native, 0, 1, nothing);
-    const wrongOrder = yield* encodeCitationRegexControl(
-      CitationRegexWorkerStarted.make({}),
-      limits.processMessageBytes
-    );
-    const invalid = yield* callCitationRegexRpc(
-      { stdin: Sink.drain, stdout: Stream.make(wrongOrder) },
-      job,
-      frame,
-      limits.processMessageBytes
-    ).pipe(Effect.flip);
-    expect(invalid).toMatchObject({ reason: "invalid-frame" });
-    let sends = 0;
-    const failed = yield* callCitationRegexRpc(
-      {
-        stdout: Stream.never,
-        stdin: Sink.forEach(() =>
-          Effect.gen(function* () {
-            sends++;
-            return yield* PlatformError.badArgument({ module: "test", method: "stdin", description: "private-source" });
-          })
-        ),
-      },
-      job,
-      frame,
-      limits.processMessageBytes
-    ).pipe(Effect.flip);
-    expect(failed).toMatchObject({ reason: "channel-failed" });
-    expect("cause" in failed).toBe(false);
-    expect(sends).toBe(1);
   })
 );
 

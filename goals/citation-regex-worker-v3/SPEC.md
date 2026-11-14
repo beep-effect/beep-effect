@@ -153,6 +153,12 @@ Lane explore/citation-engine-install-and-worker-reuse
 
 Reverse: Restore policy v1 and protocol v2.
 
+### A cancelled waiter leaves the regex session untouched, 2026-11-14
+
+An evaluation interrupted before acquiring the session permit owns no job or child and leaves the session, process and capacity untouched. Interruption cleanup encloses only the permit-held lane transaction; all holder awaits still poison, SIGKILL and confirm retirement before acknowledging interruption. This narrows round 1 to awaits owned by the evaluation. The lane handover wait already has its cleanup inside its permit and remains side-effect free on cancellation. Real-process regressions on both child runtimes prove a cancelled waiter leaves the holder successful and a later job reuses the same child. The never-respawn rule is unchanged.
+
+Reverse: Restore whole-evaluation interruption cleanup only if queued evaluations acquire ownership before waiting, with matching isolation proofs
+
 ### Bound revoked lane drains while retaining unresolved native ownership, 2026-11-14
 
 Each withUse call retains admitted operations independently of caller cancellation. After callback revocation, reserve gets queueDeadline, release gets cleanupDeadline, and start gets queueDeadline plus two cleanupDeadline windows for prior-occupant retirement, admission and spawn transfer. These are conservative post-revocation completion budgets from existing policy fields, not new limits. Expiry poisons the lane and quarantines an acquired lease; the outer semaphore is released with typed cleanup-unconfirmed, while the retained operation and its private owner Scope keep unresolved resources. Invocation closure skips unresolved ownership, and late completion releases an unspawned lease or confirms the exact child through NativeProcess before returning capacity. Public retirement cannot release a pending spawn's lease. Interruption during masked drain is acknowledged within the same finite timer window. Callback context carries revocable call frames to reject nesting before lock acquisition, including nested child fibers, without fiber identity. No new start is handed to the spawner after poisoning. A previously authorized hand-off may still produce a child during lazy platform preparation; its retained owner must SIGKILL and confirm that child before returning capacity, as clarified by the round-5 owner ruling.
@@ -166,6 +172,14 @@ Owner ruling on the second B2 stop. One invocation uses two dialects: the tokeni
 Lane feat/citation-regex-session
 
 Reverse: Return the engine to startup only if every evaluator in an invocation is proved to use one dialect.
+
+### Delete the v2 regex RPC client once no evaluator calls it, 2026-11-14
+
+Owner ruling for PR 3352: RegexWorkerClient.ts has no production importer after evaluator migration to CitationRegexSession. Delete it and the client-only out-of-order-control and failed-write test blocks, whose shared test can no longer exercise a production caller. Retain all other v2 tests, program, protocol and RPC schemas. Hosted coverage lost its old evaluator-driven reachability; adding coverage for this unused client would preserve dead production code. The remaining v2 program importers and coverage-baseline deletion handling are recorded in the PR review round 1 evidence.
+
+Remove only its coverage baseline file row: CoverageRegression.perFileDroppedMetrics fails closed for vanished covered paths, as for the earlier CleanerOperation.ts deletion (2026-11-13 decision). Preserve package aggregates and all surviving file floors. RegexWorkerProgram.ts has only CitationRegexWorker.test.ts as a runtime importer and is retained for B3; RegexWorkerProtocol.ts and RegexWorkerRpc.ts remain imported by production session modules.
+
+Reverse: Restore RegexWorkerClient.ts from main if a v2 evaluator returns
 
 ### Fence lane authority at the spawner hand-off, not at OS process birth, 2026-11-14
 
