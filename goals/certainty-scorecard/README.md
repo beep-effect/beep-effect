@@ -62,7 +62,9 @@ The nightly is live; its first run (2026-11-12, dispatched by hand, certified) i
 Slice 8 (PERIL-11 slice 2) merged as #3273: the T3 Code worktree root joins the intended `roots.json` list in
 the fleet-roots runbook, `yeet economics --fleet` reads a checkout reachable through two roots once, and monitor
 waits are reported apart from local work in `yeet-economics/v4` (decision
-`peril-11-slice-2-t3-root-and-monitor-waits`). In short, slices 1 to 8, 10 and 11 have merged. Slice 5b (SCHE-09
+`peril-11-slice-2-t3-root-and-monitor-waits`). Slice 14 (MEAS-05 slice 1) merged as #3274: `CI_LANE_DESCRIPTORS`
+is the one job-name map every census, scorecard and admission join reads (decision `lane-job-map`). In short,
+slices 1 to 8, 10, 11 and 14 have merged. Slice 5b (SCHE-09
 slice 2) is in review: admitted and v3 released admission rows carry an optional `pressure` stamp (capacity,
 active and queued tokens, MemAvailable, PSI some avg10 for cpu, memory and io, unadmitted `agent-runs.slice`
 memory), written only while the admission protocol's new `pressure` key is on
@@ -101,7 +103,8 @@ declaration-only builds) are not comparable with later readings (checkpoint
   #3227); MEAS-07 (final-check attempt journals, slice 6, #3228); ROUT-05 slice 2 (failed-job steps and
   uncharged reds, slice 11, #3257); MEAS-03 (terminations apart from reds, slice 10, #3262); the nightly
   workflow (slice 4, #3266, first run recorded by #3270); PERIL-11 slice 1 (journal retention, slice 7,
-  #3263); PERIL-11 slice 2 (T3 root row and monitor waits apart, slice 8, #3273). In review: SCHE-09 slice 2
+  #3263); PERIL-11 slice 2 (T3 root row and monitor waits apart, slice 8, #3273); MEAS-05 slice 1 (one lane map, slice 14,
+  #3274). In review: SCHE-09 slice 2
   (capacity and host-pressure stamps on admission rows, slice 5b).
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
@@ -109,7 +112,7 @@ declaration-only builds) are not comparable with later readings (checkpoint
   `github-budget-ledger`'s reserve signal (D27).
 - Landed: MEAS-02 (slice 3) and MEAS-07 (slice 6). Partly landed: MEAS-01, MEAS-04, MEAS-03 (terminations
   apart from reds; slice 10b types the remaining `unlocated` reds), ROUT-05, SCHE-09 (slice 5; 5b, in review, adds the
-  pressure fields) and PERIL-11 (slices 1 and 2; host and seat fields are slice 9). The
+  pressure fields), PERIL-11 (slices 1 and 2; host and seat fields are slice 9) and MEAS-05 (slice 14; the ledger fold is slice 15). The
   #3007 and #3030 edits to `LaneTimings.ts` are shard-layout census upkeep owned by
   [`ci-lane-economics`](../ci-lane-economics/README.md), not MEAS-04.
 - The fixture corpora the plan's MEAS-01 gate names are not in the repository; slice 1 commits its own
