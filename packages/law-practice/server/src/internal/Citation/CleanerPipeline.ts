@@ -90,7 +90,8 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
       })
     );
   const makeWork = Effect.gen(function* () {
-    const parent = (yield* CitationInvocation).budget;
+    const invocation = yield* CitationInvocation;
+    const parent = invocation.budget;
     const state = yield* Ref.make(CitationCleanerWorkSnapshot.make({ producedTextUtf16: 0, closed: false }));
     const issued = new WeakMap<CitationCleanerTextCharge, number>();
     const capacity = yield* makeCitationTextCapacity(() => fail("invalid-reservation"));
@@ -233,7 +234,9 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
         yield* runtime.assertOwned(next.value);
         const callable = yield* lookupCallable(next.value);
         yield* runtime.assertOwned(callable);
-        const produced = yield* runtime.invoke(callable, value, work);
+        const produced = yield* invocation.lane
+          .yieldTo(runtime.invoke(callable, value, work))
+          .pipe(Effect.catchTag("CitationNativeLaneFailure", () => Effect.fail(fail("runtime-failed"))));
         yield* runtime.assertOwned(produced.value);
         const units = yield* runtime.textUnits(produced.value);
         yield* consume(

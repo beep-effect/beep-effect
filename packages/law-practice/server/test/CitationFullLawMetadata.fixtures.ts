@@ -21,7 +21,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as S from "effect/Schema";
 import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { loadCitationLawMetadataFixtures } from "./CitationLawMetadata.fixtures.ts";
 import {
   assertCitationWorkerCompositionReleased,
@@ -93,6 +93,9 @@ const install = Effect.fn("FullLawMetadataTest.install")(function* (
   const { operation, context: base } = yield* makeCitationMetadataTestContext(setup.context, limits);
   const context = Context.add(base, CitationFrozenEditions, observedOwner);
   const metadata = yield* makeCitationFullLawMetadata(limits, setup.runtime, law.configuration).pipe(
+    Effect.flatMap((stage) =>
+      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
+    ),
     Effect.provideContext(context),
     DateTime.withCurrentZoneOffset(0)
   );

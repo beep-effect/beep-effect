@@ -272,6 +272,34 @@ it.effect("does not fall back from a matched non-callable and stops before fetch
     expect(citationResult13).toEqual(["fromText", "open:invalid", "next", "contains", "get", "invoke"]);
   })
 );
+it.effect("allows host cleaners to await forked and concurrent nested plans", () =>
+  Effect.gen(function* () {
+    const h = yield* harness;
+    const inner = h.callback((_, work) => h.emit(work, 1, () => "Y"));
+    const forked = h.callback((value, work) =>
+      work.nested("inner", value).pipe(
+        Effect.forkChild,
+        Effect.flatMap(Fiber.join),
+        Effect.flatMap(() => h.emit(work, 1, () => "Y"))
+      )
+    );
+    const concurrent = h.callback((value, work) =>
+      Effect.all([work.nested("inner", value), work.nested("inner", value)], { concurrency: 2 }).pipe(
+        Effect.flatMap(() => h.emit(work, 1, () => "Y"))
+      )
+    );
+    h.plans.set("inner", () => h.sequence([inner]));
+    h.plans.set("forked", () => h.sequence([forked]));
+    h.plans.set("concurrent", () => h.sequence([concurrent]));
+    const p = yield* pipeline(h);
+    for (const plan of ["forked", "concurrent"]) {
+      const result = yield* p.run({ text: "x", plan });
+      const text = yield* h.raw(result.value);
+      expect(text).toBe("Y");
+      expect(result.producedTextUtf16).toBe(plan === "forked" ? 2 : 3);
+    }
+  })
+);
 it.effect("shares nested reservations and permits intermediate values larger than the original source allowance", () =>
   Effect.gen(function* () {
     const h = yield* harness;
