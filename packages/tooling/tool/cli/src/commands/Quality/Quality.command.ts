@@ -4182,7 +4182,7 @@ const schedulerProtocolCommand = Command.make(
     units: Flag.Literals("units", AdmissionUnitEmission.literals).pipe(
       Flag.optional,
       Flag.withDescription(
-        "Turn admission-unit fields (unit, weight source, owner) on once every live checkout reads them, or off"
+        "Turn admission-unit fields (unit, weight source, owner) and the cache work kind on, or off; on only once every live checkout runs SCHE-08 slice 6 or later"
       )
     ),
   },

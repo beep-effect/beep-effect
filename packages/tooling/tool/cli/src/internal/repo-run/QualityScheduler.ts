@@ -495,8 +495,11 @@ export const setAdmissionEvictionProtocol = Effect.fn("QualityScheduler.setAdmis
  *
  * **Details**
  *
- * Turn it on only once every live checkout runs a revision that reads the unit,
- * weight source and owner keys. The eviction gate keeps its state.
+ * Turn it on only once every live checkout runs SCHE-08 slice 6 or later. With
+ * the gate on, Cache tickets record the `cache` kind. A slice 3 checkout reads the
+ * unit, weight source and owner keys but not that kind: it keeps the lease charged
+ * yet leaves it out of its review-fix class cap, so it can admit one review-fix
+ * run too many. The eviction gate keeps its state.
  *
  * **Example** (Reference the unit-gate writer)
  *
@@ -2471,9 +2474,11 @@ const workerProfileRefusal = (
   );
 };
 
-// A reader older than SCHE-08 decodes a closed kind literal and quarantines a
-// kind it does not know, so with the units gate off Cache work records the
-// `review-fix` kind it borrowed before.
+// With the units gate off Cache work records the `review-fix` kind it borrowed
+// before, because no earlier reader counts `cache` correctly. A reader older than
+// SCHE-08 decodes a closed kind literal and quarantines a kind it does not know.
+// A slice 3 reader keeps the lease charged but leaves it out of its review-fix
+// class cap. So the gate goes on only once every live checkout runs slice 6.
 const preUnitAdmissionWorkKind = (kind: AdmissionWorkKind): AdmissionWorkKind =>
   AdmissionWorkKind.is.cache(kind) ? AdmissionWorkKind.Enum["review-fix"] : kind;
 
