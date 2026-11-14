@@ -45,7 +45,6 @@ identifiers are redacted.
   workstation sweep (`~/.local/bin`, `~/.config/systemd`, `environment.d`, shell
   rc, `~/.ssh/config`) for the old path in the same change that renames a
   script, or a `beep` check that greps those locations for deleted repo paths.
-# Execution friction
 
 ## 2026-11-13: photo-face lane inherited unrelated unpublished work
 
