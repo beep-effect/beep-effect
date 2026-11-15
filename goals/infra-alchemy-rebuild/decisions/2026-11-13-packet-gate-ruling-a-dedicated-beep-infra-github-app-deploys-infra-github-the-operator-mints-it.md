@@ -1,0 +1,8 @@
+---
+title: "Packet gate ruling: a dedicated beep-infra-github App deploys infra-github; the operator mints it"
+date: 2026-11-13
+lane: "goals/infra-alchemy-rebuild-p3-github"
+reversal: "Remove beep-infra-github from GitHubAppName and the mint profile, delete its manifest, and choose another deploy credential in a new decision."
+---
+
+Ruling by the packet gate session, 2026-11-13, on the open question about the deploy credential. The proposal in the decision 'infra-github deploys with a new beep-infra-github App, proposed and not minted' is accepted as the design: a dedicated App `beep-infra-github`, installed on `beep-effect/beep-effect` only, repository permissions administration, environments, variables (`actions_variables`) and issues at write and metadata at read, no secrets permission while no secret is managed; its id (`INFRA_GITHUB_APP_ID`) and private key (`INFRA_GITHUB_APP_PRIVATE_KEY`) live on the `infra-github-prod` environment, and the deploy job mints a one-hour installation token. The mint itself is the operator's (`beep github app mint` is a browser handoff). Done in this lane: the manifest is checked in under the repo-configs policy data next to the two existing ones, `GitHubAppName` lists it and the mint command has its profile, so the mint is `bun run beep github app mint beep-infra-github`; the runbook's InfraGithub section carries the exact operator steps (mint, install, id and key, environment and its `ALCHEMY_STATE_ROLE_ARN` variable, the trust-policy subject). The permission key `actions_variables` is GitHub's name for the Variables repository permission; the operator confirms the registration page lists Variables before submitting. Nothing in the lane waits on the mint except arming.

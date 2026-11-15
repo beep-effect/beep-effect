@@ -4,6 +4,7 @@
     "@alchemy.run/cloudflare": "2.0.0-beta.87",
     "@alchemy.run/docker": "2.0.0-beta.87",
     "@alchemy.run/domain": "2.0.0-beta.87",
+    "@alchemy.run/github": "2.0.0-beta.87",
     "@alchemy.run/test": "2.0.0-beta.87",
     "@arizeai/phoenix-client": "8.0.0",
     "@azure/core-http-compat": "2.5.0",
