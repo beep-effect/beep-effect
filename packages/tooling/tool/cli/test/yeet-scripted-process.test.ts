@@ -286,7 +286,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
         [{ hostedProof: true, stagedOnly: true }, "yeet open pushes the committed HEAD without a local proof"],
         [{ bodyFile: "body.md", mode: "verify" }, "yeet --body-file is only valid for publish and open."],
       ];
-      const messages = yield* Effect.forEach(cases, ([options]) => guardFailure(options));
+      const messages = yield* Effect.forEach(cases, ([options]) => guardFailure(options), { concurrency: 1 });
       A.forEach(A.zip(messages, cases), ([message, [, expected]]) => expect(message).toContain(expected));
     })
   );
@@ -305,7 +305,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
           defaultYeetRunOptions({ monitor: true }),
         ],
         (options) => validateMonitorGuards(contextAt("/repo"), options),
-        { discard: true }
+        { concurrency: 1, discard: true }
       ).pipe(withProcesses([], commands));
       expect(commandLines(commands)).toEqual([]);
     })
@@ -318,7 +318,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet guards", (it) 
       yield* Effect.forEach(
         [defaultYeetRunOptions({ mode: "monitor" }), defaultYeetRunOptions({ monitor: true, pr: false })],
         (options) => validateMonitorGuards(context, options),
-        { discard: true }
+        { concurrency: 1, discard: true }
       ).pipe(
         withProcesses(
           [
@@ -1264,7 +1264,7 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
               changedPaths: () => Effect.succeed(["docs/runbooks/ci.md", "README.md"]),
             }),
           ],
-          { discard: true }
+          { concurrency: 1, discard: true }
         ).pipe(withProcesses([], commands));
         expect(commandLines(commands)).toEqual([]);
         const recorderValue21 = yield* Ref.get(recorder);

@@ -70,15 +70,19 @@ const makeClone = Effect.fn("WorktreeRemoveT3RootTest.makeClone")(function* (tmp
   yield* fs.makeDirectory(origin, { recursive: true });
   yield* runGitText(origin, ["init", "--bare", "-b", "main"]);
   yield* runGitText(clone, ["init", "-b", "main"]);
-  yield* Effect.forEach([origin, clone], (root) =>
-    Effect.forEach(
-      [
-        ["config", "user.email", "worktree-remove-t3-root-test@example.com"],
-        ["config", "user.name", "Worktree Remove T3 Root Test"],
-        ["config", "commit.gpgsign", "false"],
-      ],
-      (args) => runGitText(root, args)
-    )
+  yield* Effect.forEach(
+    [origin, clone],
+    (root) =>
+      Effect.forEach(
+        [
+          ["config", "user.email", "worktree-remove-t3-root-test@example.com"],
+          ["config", "user.name", "Worktree Remove T3 Root Test"],
+          ["config", "commit.gpgsign", "false"],
+        ],
+        (args) => runGitText(root, args),
+        { concurrency: 1 }
+      ),
+    { concurrency: 1 }
   );
   yield* fs.writeFileString(path.join(clone, "README.md"), "# scratch\n");
   yield* runGitText(clone, ["add", "README.md"]);

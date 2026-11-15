@@ -512,7 +512,7 @@ describe("Lexical.model", { concurrent: false }, () => {
           expect(encodeUnknownEditorStateFromJsonResult(invalid)._tag).toBe("Failure");
           expect((yield* Effect.exit(decodeEditorStateLossless(invalid)))._tag).toBe("Failure");
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     })
   );
@@ -560,7 +560,7 @@ describe("Lexical.model", { concurrent: false }, () => {
           const decodedEditorStateWireFromJson = yield* decodeEditorStateWireFromJson(jsonWithExtension);
           expect(decodedEditorStateWireFromJson).toEqual(stateWithExtension);
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     })
   );
@@ -691,7 +691,7 @@ describe("Lexical.model", { concurrent: false }, () => {
           const decodedEditorStateWireFromJson3 = yield* decodeEditorStateWireFromJson(source);
           expect(decodedEditorStateWireFromJson3).toEqual(state);
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     })
   );
@@ -755,7 +755,7 @@ describe("Lexical.model", { concurrent: false }, () => {
 
           expect(editor.parseEditorState(source).toJSON().root.children[0]).toMatchObject({ listType, tag });
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     })
   );

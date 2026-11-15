@@ -557,29 +557,33 @@ export const readPacketSiblings = Effect.fn("Yeet.readPacketSiblings")(function*
         )
       )
     : O.none<GithubPullRequestRecord>();
-  const siblings = yield* Effect.forEach(sharing, ({ pull, shared }) => {
-    const place = siblingPlace(subject, stacked && O.isNone(subject), pull);
-    // Only a sibling that will merge something is probed: GitHub replays a cascading layer's
-    // commits onto the squash commit, and a probe of the head it is leaving predicts conflicts
-    // the cascade removes.
-    const probed =
-      place._tag === "Trunk" || place._tag === "Layer"
-        ? probeSibling(context, { prNumber: pull.number, headSha: pull.headSha })
-        : Effect.succeed<ProbeOutcome>({ probe: "unavailable", conflicts: [] });
-    return probed.pipe(
-      Effect.map(({ probe, conflicts }) =>
-        PacketSibling.make({
-          prNumber: pull.number,
-          headRef: pull.headRef,
-          headSha: pull.headSha,
-          slugs: shared,
-          probe,
-          conflicts,
-          place,
-        })
-      )
-    );
-  });
+  const siblings = yield* Effect.forEach(
+    sharing,
+    ({ pull, shared }) => {
+      const place = siblingPlace(subject, stacked && O.isNone(subject), pull);
+      // Only a sibling that will merge something is probed: GitHub replays a cascading layer's
+      // commits onto the squash commit, and a probe of the head it is leaving predicts conflicts
+      // the cascade removes.
+      const probed =
+        place._tag === "Trunk" || place._tag === "Layer"
+          ? probeSibling(context, { prNumber: pull.number, headSha: pull.headSha })
+          : Effect.succeed<ProbeOutcome>({ probe: "unavailable", conflicts: [] });
+      return probed.pipe(
+        Effect.map(({ probe, conflicts }) =>
+          PacketSibling.make({
+            prNumber: pull.number,
+            headRef: pull.headRef,
+            headSha: pull.headSha,
+            slugs: shared,
+            probe,
+            conflicts,
+            place,
+          })
+        )
+      );
+    },
+    { concurrency: 1 }
+  );
   return PacketSiblingsReport.make({ prNumber, base: context.base, baseSha, slugs, siblings });
 });
 
@@ -654,7 +658,7 @@ export const broadcastPacketSiblings = Effect.fn("Yeet.broadcastPacketSiblings")
   yield* Effect.forEach(
     failed,
     (error) => Console.error(`[yeet] warning: a sibling broadcast failed; continuing: ${error.message}`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Console.log(
     `[yeet] told ${A.length(posted)} of ${A.length(report.siblings)} open sibling PR(s) on ${listOf(report.slugs)} to catch up (${renderSiblingAsks(report.siblings)})`

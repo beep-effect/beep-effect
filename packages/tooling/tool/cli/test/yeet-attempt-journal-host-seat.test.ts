@@ -87,7 +87,9 @@ const startedAt = Effect.fnUntraced(function* (index: number) {
 describe("attempt-started host and seat keys", () => {
   it.effect("the new decoder reads origin/main rows with both keys absent and new rows with both set", () =>
     Effect.gen(function* () {
-      const decoded = yield* Effect.forEach(fixtureLines, (line) => decodeYeetAttemptJournalEvent(line));
+      const decoded = yield* Effect.forEach(fixtureLines, (line) => decodeYeetAttemptJournalEvent(line), {
+        concurrency: 1,
+      });
       expect(A.map(decoded, (event) => event._tag)).toEqual([
         "attempt-started",
         "attempt-terminated",

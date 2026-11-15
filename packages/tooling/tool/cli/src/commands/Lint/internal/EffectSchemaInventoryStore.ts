@@ -76,11 +76,14 @@ export const readEffectSchemaInventoryFixture = Effect.fn("EffectSchemaInventory
   const path = yield* Path.Path;
   const directory = path.join(root, EffectSchemaInventoryFixturePath);
   const names = yield* listFixtureDirectory(directory);
-  const entries = yield* Effect.forEach(A.filter(names, isOwnedName), (name) =>
-    fs.readFileString(path.join(directory, name)).pipe(
-      Effect.map((content) => [name, content] as const),
-      EffectSchemaInventoryError.mapError(`Unable to read ${EffectSchemaInventoryFixturePath}/${name}`)
-    )
+  const entries = yield* Effect.forEach(
+    A.filter(names, isOwnedName),
+    (name) =>
+      fs.readFileString(path.join(directory, name)).pipe(
+        Effect.map((content) => [name, content] as const),
+        EffectSchemaInventoryError.mapError(`Unable to read ${EffectSchemaInventoryFixturePath}/${name}`)
+      ),
+    { concurrency: 1 }
   );
   return HashMap.fromIterable(entries);
 });
@@ -110,10 +113,13 @@ export const readEffectSchemaInventoryModuleRows = Effect.fn("EffectSchemaInvent
   const content = yield* fs
     .readFileString(path.join(root, EffectSchemaInventoryFixturePath, name))
     .pipe(EffectSchemaInventoryError.mapError(`Unable to read ${EffectSchemaInventoryFixturePath}/${name}`));
-  return yield* Effect.forEach(jsonlLines(content), (line, index) =>
-    decodeEffectSchemaInventoryRowJson(line).pipe(
-      EffectSchemaInventoryError.mapError(`Unable to decode ${name} line ${index + 1}`)
-    )
+  return yield* Effect.forEach(
+    jsonlLines(content),
+    (line, index) =>
+      decodeEffectSchemaInventoryRowJson(line).pipe(
+        EffectSchemaInventoryError.mapError(`Unable to decode ${name} line ${index + 1}`)
+      ),
+    { concurrency: 1 }
   );
 });
 

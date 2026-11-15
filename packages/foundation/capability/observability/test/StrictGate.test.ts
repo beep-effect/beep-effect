@@ -48,7 +48,7 @@ const SpanBody = S.Struct({
 const decodeSpanBody = S.decodeUnknownEffect(SpanBody);
 const decodeShapeOnlySpan = S.decodeUnknownEffect(ShapeOnlySpan);
 const decodeSpans = (spans: ReadonlyArray<unknown>) =>
-  Effect.forEach(spans, (span) => decodeShapeOnlySpan(span, { onExcessProperty: "error" }));
+  Effect.forEach(spans, (span) => decodeShapeOnlySpan(span, { onExcessProperty: "error" }), { concurrency: 1 });
 
 type Gate = Effect.Success<ReturnType<typeof makeStrictGate>>;
 

@@ -517,7 +517,7 @@ const corpusSalvageCommand = Command.make(
     source: salvageSourceFlag,
   },
   Effect.fn(function* ({ corpusRoot, dedupe, runLabel, sampleStride, source }) {
-    const sources = yield* Effect.forEach(source, parseSalvageSourceSpec);
+    const sources = yield* Effect.forEach(source, parseSalvageSourceSpec, { concurrency: 1 });
     const options = CorpusSalvageOptions.make({
       corpusRoot,
       dedupe,

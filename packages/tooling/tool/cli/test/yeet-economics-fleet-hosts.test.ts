@@ -97,11 +97,11 @@ const attemptLines = Effect.fnUntraced(function* (id: UUID, origin: O.Option<str
     recordedAt: "2026-11-14T00:03:00.000Z",
     reason: "interrupted",
   });
-  return yield* Effect.forEach([started, terminated], (event) => encodeEvent(event));
+  return yield* Effect.forEach([started, terminated], (event) => encodeEvent(event), { concurrency: 1 });
 });
 
 const journalText = Effect.fnUntraced(function* (attempts: ReadonlyArray<readonly [UUID, O.Option<string>]>) {
-  const lines = yield* Effect.forEach(attempts, ([id, origin]) => attemptLines(id, origin));
+  const lines = yield* Effect.forEach(attempts, ([id, origin]) => attemptLines(id, origin), { concurrency: 1 });
   return `${A.join(A.flatten(lines), "\n")}\n`;
 });
 

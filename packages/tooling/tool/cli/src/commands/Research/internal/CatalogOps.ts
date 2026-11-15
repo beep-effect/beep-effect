@@ -125,8 +125,10 @@ export const persistCards = Effect.fn("Research.persistCards")(function* (
     const renderCard2 = yield* renderCard(card.frontmatter, card.body);
     yield* writeCard(vaultRoot, card.relativePath, renderCard2);
   }
-  const hashedCards = yield* Effect.forEach(cards, (card) =>
-    Effect.map(sha256HexOf(card.body), (contentHash) => ({ card, contentHash }))
+  const hashedCards = yield* Effect.forEach(
+    cards,
+    (card) => Effect.map(sha256HexOf(card.body), (contentHash) => ({ card, contentHash })),
+    { concurrency: 1 }
   );
   yield* runWithResearchDb(
     Effect.gen(function* () {

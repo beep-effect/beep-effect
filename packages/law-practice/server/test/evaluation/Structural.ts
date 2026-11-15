@@ -66,7 +66,8 @@ const nodesOf = Effect.fn("Structural.nodes")(function* (trees: ReadonlyArray<Cl
         const key = yield* json([claimNumber, element.kind, anchorKey(element.anchor)]);
         const terms = yield* json(A.map(element.terms, (term) => [anchorKey(term.anchor), term.determiner, term.head]));
         return EvaluationNode.make({ path: element.path, key, terms, claimNumber });
-      })
+      }),
+    { concurrency: 1 }
   );
   if (A.dedupe(A.map(nodes, (node) => node.key)).length !== nodes.length) {
     return yield* StructuralEvaluationError.make({
@@ -83,43 +84,46 @@ const edgeKeys = Effect.fn("Structural.edges")(function* (
 ) {
   const node = (path: string) => O.getOrElse(HashMap.get(index, path), () => `${side}:unmapped:${path}`);
   const term = (ref: Pick<ClaimTermRef, "path" | "anchor">) => [node(ref.path), anchorKey(ref.anchor)];
-  return yield* Effect.forEach(edges, (edge) =>
-    Effect.gen(function* () {
-      const endpoints = ClaimElementEdge.match(edge, {
-        "part-of": (value) => [value.child, value.parent],
-        "depends-on-element": (value) => [value.dependent, value.ancestor],
-        antecedent: (value) => [value.referring.path, value.introducing.path],
-        functional: (value) =>
-          A.prepend(
-            A.flatMap(value.parts, (part) =>
-              ClaimFunctionalPart.match(part, { term: (value) => [value.term.path], text: () => [] })
+  return yield* Effect.forEach(
+    edges,
+    (edge) =>
+      Effect.gen(function* () {
+        const endpoints = ClaimElementEdge.match(edge, {
+          "part-of": (value) => [value.child, value.parent],
+          "depends-on-element": (value) => [value.dependent, value.ancestor],
+          antecedent: (value) => [value.referring.path, value.introducing.path],
+          functional: (value) =>
+            A.prepend(
+              A.flatMap(value.parts, (part) =>
+                ClaimFunctionalPart.match(part, { term: (value) => [value.term.path], text: () => [] })
+              ),
+              value.element
             ),
-            value.element
-          ),
-      });
-      if (side === "reference" && A.some(endpoints, (path) => !HashMap.has(index, path))) {
-        return yield* StructuralEvaluationError.make({
-          message: "A reference edge has no labelled source node in the supplied family.",
         });
-      }
-      return yield* json(
-        ClaimElementEdge.match(edge, {
-          "part-of": (value) => [value.kind, node(value.child), node(value.parent)],
-          "depends-on-element": (value) => [value.kind, node(value.dependent), node(value.ancestor)],
-          antecedent: (value) => [value.kind, term(value.referring), term(value.introducing)],
-          functional: (value) => [
-            value.kind,
-            node(value.element),
-            A.map(value.parts, (part) =>
-              ClaimFunctionalPart.match(part, {
-                term: (value) => ["term", term(value.term)],
-                text: (value) => ["text", anchorKey(value.anchor)],
-              })
-            ),
-          ],
-        })
-      );
-    })
+        if (side === "reference" && A.some(endpoints, (path) => !HashMap.has(index, path))) {
+          return yield* StructuralEvaluationError.make({
+            message: "A reference edge has no labelled source node in the supplied family.",
+          });
+        }
+        return yield* json(
+          ClaimElementEdge.match(edge, {
+            "part-of": (value) => [value.kind, node(value.child), node(value.parent)],
+            "depends-on-element": (value) => [value.kind, node(value.dependent), node(value.ancestor)],
+            antecedent: (value) => [value.kind, term(value.referring), term(value.introducing)],
+            functional: (value) => [
+              value.kind,
+              node(value.element),
+              A.map(value.parts, (part) =>
+                ClaimFunctionalPart.match(part, {
+                  term: (value) => ["term", term(value.term)],
+                  text: (value) => ["text", anchorKey(value.anchor)],
+                })
+              ),
+            ],
+          })
+        );
+      }),
+    { concurrency: 1 }
   );
 });
 
@@ -146,39 +150,42 @@ export const compareStructuralFamily = Effect.fn("Structural.compareFamily")(fun
   const actual = yield* nodesOf(predicted, "prediction");
   const goldIndex = HashMap.fromIterable(A.map(gold, (node) => Tuple.make(node.path, node.key)));
   const actualIndex = HashMap.fromIterable(A.map(actual, (node) => Tuple.make(node.path, node.key)));
-  return yield* Effect.forEach(reference, (tree) =>
-    Effect.gen(function* () {
-      const prediction = A.findFirst(predicted, (candidate) => candidate.claimNumber === tree.claimNumber);
-      const goldNodes = A.filter(gold, (node) => node.claimNumber === tree.claimNumber);
-      const actualNodes = A.filter(actual, (node) => node.claimNumber === tree.claimNumber);
-      const matchedElements = A.length(
-        A.filter(goldNodes, (node) =>
-          A.some(actualNodes, (candidate) => node.key === candidate.key && node.terms === candidate.terms)
-        )
-      );
-      const goldEdges = yield* edgeKeys(tree.edges, goldIndex, "reference");
-      const actualEdges = yield* edgeKeys(
-        O.match(prediction, { onNone: () => [], onSome: (value) => value.edges }),
-        actualIndex,
-        "prediction"
-      );
-      const matchedEdges = intersectionCount(goldEdges, actualEdges);
-      return StructuralClaimScore.make({
-        claimNumber: tree.claimNumber,
-        predictionMissing: O.isNone(prediction),
-        strict:
-          O.isSome(prediction) &&
-          matchedElements === goldNodes.length &&
-          matchedElements === actualNodes.length &&
-          matchedEdges === goldEdges.length &&
-          matchedEdges === actualEdges.length,
-        goldElements: goldNodes.length,
-        predictedElements: actualNodes.length,
-        matchedElements,
-        goldEdges: goldEdges.length,
-        predictedEdges: actualEdges.length,
-        matchedEdges,
-      });
-    })
+  return yield* Effect.forEach(
+    reference,
+    (tree) =>
+      Effect.gen(function* () {
+        const prediction = A.findFirst(predicted, (candidate) => candidate.claimNumber === tree.claimNumber);
+        const goldNodes = A.filter(gold, (node) => node.claimNumber === tree.claimNumber);
+        const actualNodes = A.filter(actual, (node) => node.claimNumber === tree.claimNumber);
+        const matchedElements = A.length(
+          A.filter(goldNodes, (node) =>
+            A.some(actualNodes, (candidate) => node.key === candidate.key && node.terms === candidate.terms)
+          )
+        );
+        const goldEdges = yield* edgeKeys(tree.edges, goldIndex, "reference");
+        const actualEdges = yield* edgeKeys(
+          O.match(prediction, { onNone: () => [], onSome: (value) => value.edges }),
+          actualIndex,
+          "prediction"
+        );
+        const matchedEdges = intersectionCount(goldEdges, actualEdges);
+        return StructuralClaimScore.make({
+          claimNumber: tree.claimNumber,
+          predictionMissing: O.isNone(prediction),
+          strict:
+            O.isSome(prediction) &&
+            matchedElements === goldNodes.length &&
+            matchedElements === actualNodes.length &&
+            matchedEdges === goldEdges.length &&
+            matchedEdges === actualEdges.length,
+          goldElements: goldNodes.length,
+          predictedElements: actualNodes.length,
+          matchedElements,
+          goldEdges: goldEdges.length,
+          predictedEdges: actualEdges.length,
+          matchedEdges,
+        });
+      }),
+    { concurrency: 1 }
   );
 });

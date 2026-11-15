@@ -148,7 +148,8 @@ export const makeCitationTokenContext = Effect.fn("Citation.makeTokenContext")(f
           ? native.fromTextReserved("None", retain)
           : native.fromStorageReserved(word.data, retain);
         return { kind: word.kind, source: value.storage, start: 0, end: value.pythonLength };
-      })
+      }),
+      { concurrency: 1 }
     );
     const ranges = yield* selectContextRanges(request, words, {
       source: prefix.storage,

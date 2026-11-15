@@ -95,8 +95,10 @@ const fileSystemLayer = (bootId: O.Option<string>) =>
       yield* addProcess(memory, OWN_PID, OWN_START);
       yield* memory.symlink(OWN_PID, "/proc/self");
       yield* memory.makeDirectory("/proc/sys/kernel/random", { recursive: true });
-      yield* Effect.forEach(O.toArray(bootId), (id) =>
-        memory.writeFileString("/proc/sys/kernel/random/boot_id", `${id}\n`)
+      yield* Effect.forEach(
+        O.toArray(bootId),
+        (id) => memory.writeFileString("/proc/sys/kernel/random/boot_id", `${id}\n`),
+        { concurrency: 1 }
       );
       return {
         ...memory,

@@ -225,7 +225,8 @@ it.layer(platformLayer, { timeout: "30 seconds" })("writeRunVerdict", (it) => {
       const journalText = yield* fs.readFileString(attemptJournalPath1);
       const journalEvents = yield* Effect.forEach(
         pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)),
-        (line) => decodeYeetAttemptJournalEvent(line)
+        (line) => decodeYeetAttemptJournalEvent(line),
+        { concurrency: 1 }
       );
       const terminal = pipe(
         journalEvents,
@@ -266,8 +267,10 @@ it.layer(platformLayer, { timeout: "30 seconds" })("writeRunVerdict", (it) => {
       assertNone(decoded.mergeReady);
       const attemptJournalPath2 = yield* attemptJournalPath(context);
       const journalText = yield* fs.readFileString(attemptJournalPath2);
-      const events = yield* Effect.forEach(pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-        decodeYeetAttemptJournalEvent(line)
+      const events = yield* Effect.forEach(
+        pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)),
+        (line) => decodeYeetAttemptJournalEvent(line),
+        { concurrency: 1 }
       );
       expect(
         pipe(events, A.findFirst(YeetAttemptJournalEvent.guards["attempt-finished"]), O.getOrThrow).verdict.outcome
@@ -288,8 +291,10 @@ it.layer(platformLayer, { timeout: "30 seconds" })("writeRunVerdict", (it) => {
 
       const attemptJournalPath3 = yield* attemptJournalPath(context);
       const journalText = yield* fs.readFileString(attemptJournalPath3);
-      const events = yield* Effect.forEach(pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-        decodeYeetAttemptJournalEvent(line)
+      const events = yield* Effect.forEach(
+        pipe(journalText, Str.split("\n"), A.filter(Str.isNonEmpty)),
+        (line) => decodeYeetAttemptJournalEvent(line),
+        { concurrency: 1 }
       );
       const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
       expect(terminals).toHaveLength(1);

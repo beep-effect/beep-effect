@@ -66,7 +66,8 @@ export const parseCacheLinkerOutput = Effect.fn("CacheLinker.parse")(function* (
       );
       const [, file] = yield* decodeLinkedFileParts(match);
       return O.some(file);
-    })
+    }),
+    { concurrency: 1 }
   ).pipe(Effect.map(A.getSomes));
   if (paths.length === 0 || paths.length > 256 || A.dedupe(paths).length !== paths.length)
     return yield* CacheCommandError.new("Library listing is empty, duplicated or exceeds its file bound.");

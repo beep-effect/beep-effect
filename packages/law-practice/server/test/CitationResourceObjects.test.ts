@@ -122,17 +122,20 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("live case-resource 
               outcome: { status: "value", groups: [] },
             })
           );
-          const mentions = yield* Effect.forEach(input.mentions, (mention, index) =>
-            Effect.gen(function* () {
-              const wire = yield* S.encodeEffect(Citation)(mention.citation);
-              if (wire.type !== "case") return yield* modelFailure();
-              const citation = yield* S.decodeEffect(FullCaseCitation)({
-                ...wire,
-                components: A.getUnsafe(row.initial, index),
-                publication: { ...wire.publication, selectedEdition: null },
-              });
-              return CitationMention.make({ ...mention, citation });
-            })
+          const mentions = yield* Effect.forEach(
+            input.mentions,
+            (mention, index) =>
+              Effect.gen(function* () {
+                const wire = yield* S.encodeEffect(Citation)(mention.citation);
+                if (wire.type !== "case") return yield* modelFailure();
+                const citation = yield* S.decodeEffect(FullCaseCitation)({
+                  ...wire,
+                  components: A.getUnsafe(row.initial, index),
+                  publication: { ...wire.publication, selectedEdition: null },
+                });
+                return CitationMention.make({ ...mention, citation });
+              }),
+            { concurrency: 1 }
           );
           const prepared = yield* prepareCitationResolution({ ...input, mentions });
           const work = yield* makeCitationResolutionWork(prepared.limits);

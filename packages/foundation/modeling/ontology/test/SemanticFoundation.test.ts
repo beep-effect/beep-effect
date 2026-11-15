@@ -109,7 +109,9 @@ it.layer(Layer.merge(TaxonomyLoader.layer, BunFileSystem.layer), { timeout: "30 
         const path = "../../../../explorations/legal-ontology-landscape/assets/manifest.jsonl";
         const content = yield* fs.readFileString(path);
         const lines = A.filter(Str.split(content, "\n"), Str.isNonEmpty);
-        const entries = yield* Effect.forEach(lines, (line, index) => decodeLoadManifestEntry(path, line, index));
+        const entries = yield* Effect.forEach(lines, (line, index) => decodeLoadManifestEntry(path, line, index), {
+          concurrency: 1,
+        });
         const admitted = A.getSomes(entries);
         expect(admitted).toHaveLength(1);
         expect(admitted[0]).toMatchObject({ id: "folio-email-communication", loadKind: "concept-alignment" });
@@ -329,8 +331,10 @@ it.layer(Layer.merge(TaxonomyLoader.layer, BunFileSystem.layer), { timeout: "30 
           `{"conceptIri":"${folioEmailCommunicationIri}","fetchUrl":"https://example.com/email.jsonld","format":"jsonld","id":"wrong-source-authority","loadKind":"concept-alignment","loadStatus":"VETTED","localConceptIri":"${emailMessageIri}","mappingKind":"closeMatch","namespaceIri":"https://folio.openlegalstandard.org/","path":"folio-email-communication.jsonld","verified":true}`,
           `{"conceptIri":"${folioEmailCommunicationIri}","fetchUrl":"${folioEmailCommunicationSourceIri}","format":"jsonld","id":"wrong-local-authority","loadKind":"concept-alignment","loadStatus":"VETTED","localConceptIri":"https://example.com/email","mappingKind":"closeMatch","namespaceIri":"https://folio.openlegalstandard.org/","path":"folio-email-communication.jsonld","verified":true}`,
         ];
-        const errors = yield* Effect.forEach(manifests, (manifest) =>
-          loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip)
+        const errors = yield* Effect.forEach(
+          manifests,
+          (manifest) => loadWith(() => Effect.succeed(manifest)).pipe(Effect.flip),
+          { concurrency: 1 }
         );
 
         pipe(A.every(errors, isTaxonomyManifestParseError), assertTrue);

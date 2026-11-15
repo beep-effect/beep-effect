@@ -654,8 +654,11 @@ const isLocalEvent = (event: ChangeEventRow): boolean => A.contains(event.tiers,
 const withAdoption =
   (classify: ReturnType<typeof adoptionClass>, events: ReadonlyArray<ChangeEventRow>) =>
   (folded: FoldedEpisode): Effect.Effect<FoldedEpisode, KpiInputDecodeError> =>
-    Effect.forEach(events, (event) =>
-      Effect.map(classify(folded, event), (adoption) => EpisodeAdoption.make({ changeEventId: event.id, adoption }))
+    Effect.forEach(
+      events,
+      (event) =>
+        Effect.map(classify(folded, event), (adoption) => EpisodeAdoption.make({ changeEventId: event.id, adoption })),
+      { concurrency: 1 }
     ).pipe(
       Effect.map((adoption) =>
         FoldedEpisode.make({ ...folded, episode: KpiEpisode.make({ ...folded.episode, adoption }) })
@@ -963,7 +966,9 @@ export const foldKpiReading = Effect.fn("KpiFold.foldKpiReading")(function* (
   const folded = yield* foldEpisodes(input.journals, input.admissions);
   const inWindow = A.filter(folded, (entry) => inSlice(windowW, entry.episode.openedAt));
   const classify = adoptionClass(ancestryIndex(input.adoption), adoptionPath);
-  const adopted = yield* Effect.forEach(inWindow, withAdoption(classify, A.filter(input.changeEvents, isLocalEvent)));
+  const adopted = yield* Effect.forEach(inWindow, withAdoption(classify, A.filter(input.changeEvents, isLocalEvent)), {
+    concurrency: 1,
+  });
   const episodes = A.map(folded, (entry) => entry.episode);
   const windowEpisodes = A.map(adopted, (entry) => entry.episode);
   return KpiReading.make({

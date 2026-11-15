@@ -142,7 +142,7 @@ export const appendLedgerRows = Effect.fn("Yeet.LedgerFile.appendRows")(function
     onNone: () => Str.empty,
     onSome: (contents) => (Str.isNonEmpty(contents) && !Str.endsWith("\n")(contents) ? "\n" : Str.empty),
   });
-  const lines = yield* Effect.forEach(rows, encodeRow);
+  const lines = yield* Effect.forEach(rows, encodeRow, { concurrency: 1 });
   const text = A.join(
     A.map(lines, (line) => `${line}\n`),
     Str.empty

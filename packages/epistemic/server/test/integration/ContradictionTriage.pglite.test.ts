@@ -552,20 +552,23 @@ const restartSnapshot = Effect.fnUntraced(function* (
         O.getOrNull
       )
     );
-  return yield* Effect.all({
-    allAfter: page("all", 2_500),
-    amountAfter: amount(2_500),
-    amountBefore: amount(1_500),
-    openAfter: page("open", 2_500),
-    openBefore: page("open", 1_500),
-    openDetailAfter: detail(ids.open, 2_500),
-    rejectedAfter: page("rejected", 2_500),
-    rejectedDetailAfter: detail(ids.rejected, 2_500),
-    rejectedDetailBefore: detail(ids.rejected, 1_500),
-    supersededAfter: page("superseded", 2_500),
-    supersededDetailAfter: detail(ids.superseded, 2_500),
-    supersededDetailBefore: detail(ids.superseded, 1_500),
-  });
+  return yield* Effect.all(
+    {
+      allAfter: page("all", 2_500),
+      amountAfter: amount(2_500),
+      amountBefore: amount(1_500),
+      openAfter: page("open", 2_500),
+      openBefore: page("open", 1_500),
+      openDetailAfter: detail(ids.open, 2_500),
+      rejectedAfter: page("rejected", 2_500),
+      rejectedDetailAfter: detail(ids.rejected, 2_500),
+      rejectedDetailBefore: detail(ids.rejected, 1_500),
+      supersededAfter: page("superseded", 2_500),
+      supersededDetailAfter: detail(ids.superseded, 2_500),
+      supersededDetailBefore: detail(ids.superseded, 1_500),
+    },
+    { concurrency: 1 }
+  );
 });
 
 if (!shouldRunPgliteIntegration) {

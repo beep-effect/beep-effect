@@ -124,11 +124,14 @@ const validateRustPartitionEvidence = Effect.fn("Lint.validateRustPartitionEvide
   const [full, selections] = yield* Effect.all(
     [
       deprecatedApiInventory(root, [...options, ...deprecatedApiSweepRoots]),
-      Effect.forEach(partitions, (partition) =>
-        Effect.map(deprecatedApiInventory(root, [...options, ...deprecatedApiPartitionArgs(partition)]), (files) => ({
-          name: partition.name,
-          files,
-        }))
+      Effect.forEach(
+        partitions,
+        (partition) =>
+          Effect.map(deprecatedApiInventory(root, [...options, ...deprecatedApiPartitionArgs(partition)]), (files) => ({
+            name: partition.name,
+            files,
+          })),
+        { concurrency: 1 }
       ),
     ],
     { concurrency: "unbounded" }
@@ -233,6 +236,7 @@ const runDeprecatedApiInvocations = Effect.fn("Lint.deprecatedApiWorker")(functi
   const [results] = yield* Effect.all([sweep, proof], { concurrency: 2 });
   if (useGo) {
     yield* Effect.forEach(results, ({ result }) => validateAssignmentEvidence(root, result.output, result.truncated), {
+      concurrency: 1,
       discard: true,
     });
   }
@@ -278,7 +282,7 @@ const runDeprecatedApiLintTargets = Effect.fn("Lint.deprecatedApiTargets")(funct
     return yield* failWithReportedExit("lint deprecated-apis: --target cannot be combined with --package or --full.");
   }
   const root = yield* findRepoRoot();
-  const resolved = yield* Effect.forEach(targets, (entry) => resolveLintPackage(root, entry));
+  const resolved = yield* Effect.forEach(targets, (entry) => resolveLintPackage(root, entry), { concurrency: 1 });
   return yield* runDeprecatedApiLint(root, A.dedupe(resolved));
 });
 

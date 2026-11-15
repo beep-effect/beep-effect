@@ -570,10 +570,13 @@ const decodeCorpus = Effect.fnUntraced(function* (
   file: string
 ): Effect.fn.Return<ReadonlyArray<HostedRun>, RouteError> {
   const lines = yield* gunzipText(bytes, file).pipe(Effect.flatMap((text) => corpusLines(text, file)));
-  return yield* Effect.forEach(lines, (line, index) =>
-    decodeHostedRunLine(line).pipe(
-      Effect.mapError(RouteError.mapError("corpus-pin", `${file} line ${index + 1} is not a HostedRun.`))
-    )
+  return yield* Effect.forEach(
+    lines,
+    (line, index) =>
+      decodeHostedRunLine(line).pipe(
+        Effect.mapError(RouteError.mapError("corpus-pin", `${file} line ${index + 1} is not a HostedRun.`))
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -581,10 +584,13 @@ const encodeCorpus = Effect.fnUntraced(function* (
   runs: ReadonlyArray<HostedRun>,
   file: string
 ): Effect.fn.Return<Uint8Array, RouteError> {
-  const lines = yield* Effect.forEach(runs, (run) =>
-    encodeHostedRunLine(run).pipe(
-      Effect.mapError(RouteError.mapError("corpus-pin", `Failed to encode run ${run.runId} for ${file}.`))
-    )
+  const lines = yield* Effect.forEach(
+    runs,
+    (run) =>
+      encodeHostedRunLine(run).pipe(
+        Effect.mapError(RouteError.mapError("corpus-pin", `Failed to encode run ${run.runId} for ${file}.`))
+      ),
+    { concurrency: 1 }
   );
   const text = A.match(lines, { onEmpty: () => "", onNonEmpty: (nonEmpty) => `${A.join(nonEmpty, "\n")}\n` });
   return yield* gzipText(text, file);

@@ -105,8 +105,10 @@ export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocu
     const decoded = yield* S.decodeEffect(names)(configured.names).pipe(Effect.mapError(invalid));
     const selected = A.copy(decoded);
     yield* charge(selected.length + 1);
-    const items = yield* Effect.forEach(selected, (name) =>
-      ensureOpen.pipe(Effect.andThen(Effect.yieldNow), Effect.andThen(values.builtinName(name)))
+    const items = yield* Effect.forEach(
+      selected,
+      (name) => ensureOpen.pipe(Effect.andThen(Effect.yieldNow), Effect.andThen(values.builtinName(name))),
+      { concurrency: 1 }
     );
     yield* ensureOpen;
     const value = yield* values.retainHost(Symbol("citation-named-cleaner-container"));

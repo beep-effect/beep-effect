@@ -252,7 +252,8 @@ describe("F1 fixtures", () => {
 
             pipe(fixtureRejected, assertTrue);
             pipe(indexRejected, assertTrue);
-          })
+          }),
+          { concurrency: 1 }
         );
       })
     );
@@ -349,7 +350,8 @@ describe("F1 fixtures", () => {
             expect(hashBytes5).toBe(committedHash);
             const hashBytes6 = yield* hashBytes(second);
             expect(hashBytes6).toBe(committedHash);
-          })
+          }),
+          { concurrency: 1 }
         );
         const truncated = yield* fs.readFile(path.join("fixtures/f1/documents", "pdf-truncated.pdf"));
         pipe(Str.includes("xref")(new TextDecoder().decode(truncated)), assertFalse);

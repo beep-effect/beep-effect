@@ -1281,7 +1281,7 @@ const migrationHasRequiredColumns: (migration: DerivedStorageMigration) => Effec
       return true;
     }
 
-    const columnResults = yield* Effect.forEach(migration.requiredColumns, migrationColumnExists);
+    const columnResults = yield* Effect.forEach(migration.requiredColumns, migrationColumnExists, { concurrency: 1 });
     return A.every(columnResults, (exists) => exists);
   });
 
@@ -1337,8 +1337,8 @@ const runDerivedStorageMigrationOnce: (migration: DerivedStorageMigration) => Ef
 const ensureAiMetricsDerivedStorageRaw = Effect.fn("AiMetrics.derivedStorage.ensureRaw")(function* () {
   const duckdb = yield* DuckDb;
   yield* duckdb.runMany(createTableStatements);
-  yield* Effect.forEach(migrationColumns, addColumnIfMissing, { discard: true });
-  yield* Effect.forEach(derivedStorageMigrations, runDerivedStorageMigrationOnce, { discard: true });
+  yield* Effect.forEach(migrationColumns, addColumnIfMissing, { concurrency: 1, discard: true });
+  yield* Effect.forEach(derivedStorageMigrations, runDerivedStorageMigrationOnce, { concurrency: 1, discard: true });
 });
 
 /**
@@ -1471,7 +1471,7 @@ const exportDerivedTablesToParquet = Effect.fn("AiMetrics.derivedStorage.exportD
           tableName,
         })
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   ).pipe(Effect.mapError((cause) => derivedFailure("Failed to export AI metrics derived tables to Parquet.", cause)));
 });
 
@@ -1913,7 +1913,7 @@ const upsertSessionAndTurns = Effect.fn("AiMetrics.derivedStorage.upsertSessionA
         }
       );
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -1937,7 +1937,7 @@ const writeDerivedRows = Effect.fn("AiMetrics.derivedStorage.writeRows")(functio
       yield* upsertArchiveObject(input, record);
       yield* upsertSessionAndTurns(input, agentTaskId, record);
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 

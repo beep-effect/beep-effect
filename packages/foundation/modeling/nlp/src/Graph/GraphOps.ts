@@ -815,9 +815,7 @@ export const traverseNodes: {
     Effect.forEach(
       A.fromIterable(Graph.entries(createWalker(graph, options.start, options.order))),
       ([index, node]) => f(node, index),
-      {
-        discard: true,
-      }
+      { concurrency: 1, discard: true }
     )
 );
 
@@ -858,8 +856,10 @@ export const traverseNodesCollect: {
     options: TraversalStart,
     f: (node: A, index: NodeIndex) => Effect.Effect<B, Err, R>
   ): Effect.Effect<ReadonlyArray<B>, Err, R> =>
-    Effect.forEach(A.fromIterable(Graph.entries(createWalker(graph, options.start, options.order))), ([index, node]) =>
-      f(node, index)
+    Effect.forEach(
+      A.fromIterable(Graph.entries(createWalker(graph, options.start, options.order))),
+      ([index, node]) => f(node, index),
+      { concurrency: 1 }
     )
 );
 
@@ -902,8 +902,10 @@ export const mapNodesEffect: {
     graph: DirectedGraph<A, E>,
     f: (node: A, index: NodeIndex) => Effect.Effect<B, Err, R>
   ): Effect.fn.Return<DirectedGraph<B, E>, Err, R> {
-    const pairs = yield* Effect.forEach(A.fromIterable(graph.pipe(Graph.nodes, Graph.entries)), ([index, node]) =>
-      Effect.map(f(node, index), (transformed) => [index, transformed] as const)
+    const pairs = yield* Effect.forEach(
+      A.fromIterable(graph.pipe(Graph.nodes, Graph.entries)),
+      ([index, node]) => Effect.map(f(node, index), (transformed) => [index, transformed] as const),
+      { concurrency: 1 }
     );
     const indexMap = MutableHashMap.empty<NodeIndex, NodeIndex>();
     return Graph.directed<B, E>((mutable) => {

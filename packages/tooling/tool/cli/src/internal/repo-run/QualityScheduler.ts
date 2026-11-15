@@ -433,7 +433,7 @@ const ensureAdmissionDirectories = Effect.fnUntraced(function* (): Effect.fn.Ret
       fs
         .makeDirectory(directory, { recursive: true, mode: 0o700 })
         .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to create admission directory ${directory}.`))),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* validateAdmissionDirectory(directories.root);
   return directories;
@@ -776,10 +776,12 @@ const collectStaleStagingFiles = Effect.fnUntraced(function* (
         ({ name, owner }) =>
           Effect.map(isProcessIdentityAlive(owner), (alive) =>
             alive ? O.none<string>() : O.some(path.join(directory, name))
-          )
+          ),
+        { concurrency: 1 }
       );
       return A.getSomes(forEach10);
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.flatten(forEach1);
 });
@@ -972,7 +974,8 @@ const archiveAgedQuarantine = Effect.fnUntraced(function* (
           return yield* fs
             .rename(path.join(directories.quarantine, name), destination)
             .pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
-        })
+        }),
+        { concurrency: 1 }
       );
       const count = A.length(A.filter(moved, identity));
       yield* count > 0
@@ -1035,16 +1038,20 @@ const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>
   const names = yield* fs
     .readDirectory(directory)
     .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission state in ${directory}.`)));
-  const classified = yield* Effect.forEach(A.filter(names, Str.endsWith(".json")), (name) => {
-    const entryPath = path.join(directory, name);
-    return Effect.map(classifyAdmissionEntry(entryPath, codec), (outcome) => ({ entryPath, outcome }));
-  });
+  const classified = yield* Effect.forEach(
+    A.filter(names, Str.endsWith(".json")),
+    (name) => {
+      const entryPath = path.join(directory, name);
+      return Effect.map(classifyAdmissionEntry(entryPath, codec), (outcome) => ({ entryPath, outcome }));
+    },
+    { concurrency: 1 }
+  );
   yield* repair
     ? Effect.forEach(
         classified,
         ({ entryPath, outcome }) =>
           outcome.kind === "malformed" ? quarantineEntry(directories, entryPath, "undecodable") : Effect.void,
-        { discard: true }
+        { concurrency: 1, discard: true }
       )
     : Effect.void;
   return {
@@ -1093,7 +1100,8 @@ const readReapClaims = Effect.fnUntraced(function* (
         return O.none<{ readonly claimPath: string; readonly claim: AdmissionReapClaim }>();
       }
       return O.some({ claimPath, claim: claim.value });
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.getSomes(forEach2);
 });
@@ -1476,7 +1484,7 @@ const coalesceOverlappingAdmissionState = Effect.fnUntraced(function* (
             QualitySchedulerError.new(`Failed to coalesce promoted admission ticket ${ticketPath} with its lease.`)
           )
         ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const duplicatePaths = pipe(
     duplicateTickets,
@@ -1504,15 +1512,16 @@ const repairDeadAdmissionState = Effect.fnUntraced(function* (
   yield* Effect.forEach(
     A.filter(coalesced.deadLeases, ({ path }) => !A.contains(retainedDeadLeasePaths, path)),
     ({ lease, path: sourcePath }) => claimDeadLease(directories, sourcePath, lease),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     coalesced.deadTickets,
     ({ ticket, path: sourcePath }) => claimDeadTicket(directories, sourcePath, ticket),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const readReapClaims5 = yield* readReapClaims(directories);
   yield* Effect.forEach(readReapClaims5, ({ claimPath, claim }) => processReapClaim(directories, claimPath, claim), {
+    concurrency: 1,
     discard: true,
   });
   yield* archiveAgedQuarantine(directories);
@@ -1705,7 +1714,7 @@ const recoverPromotionTransitions = Effect.fnUntraced(function* (
       }
       yield* processPromotionTransition(directories, transitionPath, transition.value.nonce);
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -1720,7 +1729,7 @@ const scanAdmissionState = Effect.fnUntraced(function* (
 > {
   yield* repair ? recoverPromotionTransitions(directories) : Effect.void;
   const staleStaging = yield* collectStaleStagingFiles(directories);
-  yield* repair ? Effect.forEach(staleStaging, removeStagingFile, { discard: true }) : Effect.void;
+  yield* repair ? Effect.forEach(staleStaging, removeStagingFile, { concurrency: 1, discard: true }) : Effect.void;
   const leases = yield* collectAdmissionEntries(
     directories,
     directories.leases,
@@ -3104,7 +3113,7 @@ const stopLeakedRunScopes = Effect.fnUntraced(function* (
     retained,
     (plan) =>
       Console.error(`[yeet] retaining dead admission lease ${plan.leasePath}: run-scope authority ${plan.reason}.`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const stopGroups = pipe(
     A.filter(plans, isStoppedDeadLeaseScopePlan),

@@ -106,7 +106,7 @@ const compileIgnores = Effect.fnUntraced(function* (ignores: ReadonlyArray<strin
     const base = Str.replace(/\/+$/, "")(normalizeSource(ignore));
     return [base, `${base}/**`];
   });
-  return yield* Effect.forEach(sources, (source) => GlobPattern.compile(source, ignoreDialect));
+  return yield* Effect.forEach(sources, (source) => GlobPattern.compile(source, ignoreDialect), { concurrency: 1 });
 });
 
 // Where one include pattern walks from, and the prefix its walk-relative matches are reported under.
@@ -346,7 +346,7 @@ export const FsUtilsLive: Layer.Layer<FsUtils, never, FileSystem.FileSystem | Pa
           );
         });
 
-        const pipe1 = yield* Effect.forEach(includes, expandOne).pipe(Effect.provide(platform));
+        const pipe1 = yield* Effect.forEach(includes, expandOne, { concurrency: 1 }).pipe(Effect.provide(platform));
         const matched = A.flatten(pipe1);
         const resolved = options.absolute === true ? A.map(matched, (match) => path.resolve(cwd, match)) : matched;
         return pipe(resolved, A.dedupe, A.sort(Order.String));

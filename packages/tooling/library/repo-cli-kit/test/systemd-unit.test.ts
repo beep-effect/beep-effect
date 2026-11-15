@@ -55,7 +55,7 @@ layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })(
       // Neither candidate: the running executable is the fallback.
       const resolved2 = yield* resolveSystemdBunPath(home);
       expect(resolved2).toBe(process.execPath);
-      yield* Effect.forEach([shim, standalone], touch);
+      yield* Effect.forEach([shim, standalone], touch, { concurrency: 1 });
       // Both executable: the shim wins because it follows the repo's pinned Bun.
       const resolved3 = yield* resolveSystemdBunPath(home);
       expect(resolved3).toBe(shim);

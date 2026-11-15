@@ -1016,7 +1016,9 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
   it.effect("attempts registration once per owner while expiring a larger un-enrollable batch", () =>
     Effect.gen(function* () {
       const f = yield* fixture(1, 2, true, 64, 4096, 16777216, 1);
-      const batches = yield* Effect.forEach(A.range(1, 32), (n) => f.batch(Str.padStart(16, "0")(n.toString(16))));
+      const batches = yield* Effect.forEach(A.range(1, 32), (n) => f.batch(Str.padStart(16, "0")(n.toString(16))), {
+        concurrency: 1,
+      });
       const first = O.getOrThrow(A.head(batches));
       const receipt = yield* f.native.acceptBatch(
         NativeTraceBatch.make({ ...first, spans: A.flatMap(batches, (b) => b.spans) })

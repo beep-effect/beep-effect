@@ -341,7 +341,7 @@ it.layer(reuseTestLayer, { timeout: "30 seconds" })("--job-max-runtime", (it) =>
   it.effect(
     "reads nothing, none and a duration as the three runtime cap requests",
     Effect.fnUntraced(function* () {
-      const caps = yield* Effect.forEach(["", "none", "90m", "1h"], yeetJobRuntimeCap);
+      const caps = yield* Effect.forEach(["", "none", "90m", "1h"], yeetJobRuntimeCap, { concurrency: 1 });
       deepStrictEqual(caps, [ANY_CAP, NO_CAP, capOf(5400), capOf(HOUR)]);
       const refused = yield* Effect.flip(yeetJobRuntimeCap("soon"));
       deepStrictEqual(refused.message, "Expected a duration such as '30 seconds'.");
@@ -597,7 +597,8 @@ it.layer(reuseTestLayer, { timeout: "30 seconds" })("monitor --until-ready --det
           jobRecord(LIVE_ID, jobRequest(CLI_ARGV)),
           jobRecord(LIVE_ID, jobRequest(CLI_ARGV), { runner: runner(process.pid) }),
         ],
-        readyMonitorRunnerStatus
+        readyMonitorRunnerStatus,
+        { concurrency: 1 }
       );
       deepStrictEqual(statuses, ["alive", "alive"]);
     })

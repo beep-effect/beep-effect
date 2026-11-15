@@ -299,225 +299,228 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
       });
       const tarballUrl = Output.interpolate`s3://${binaries.bucketName}/${runnerTarballKey}`;
 
-      const pools = yield* Effect.forEach(props.pools, (pool) =>
-        Namespace.push(
-          `Pool${pool.name}`,
-          Effect.gen(function* () {
-            const environment = `${props.name}-${pool.name}`;
-            const tokenPath = poolTokenPath(props.ssmRoot, pool.name);
-            const configPath = poolConfigPath(props.ssmRoot, pool.name);
-            const tokenArn = ssmArn`arn:aws:ssm:*:*:parameter${tokenPath}`;
-            const configArn = ssmArn`arn:aws:ssm:*:*:parameter${configPath}`;
+      const pools = yield* Effect.forEach(
+        props.pools,
+        (pool) =>
+          Namespace.push(
+            `Pool${pool.name}`,
+            Effect.gen(function* () {
+              const environment = `${props.name}-${pool.name}`;
+              const tokenPath = poolTokenPath(props.ssmRoot, pool.name);
+              const configPath = poolConfigPath(props.ssmRoot, pool.name);
+              const tokenArn = ssmArn`arn:aws:ssm:*:*:parameter${tokenPath}`;
+              const configArn = ssmArn`arn:aws:ssm:*:*:parameter${configPath}`;
 
-            const runnerRole = yield* IAM.Role("RunnerRole", {
-              assumeRolePolicyDocument: {
-                Version: "2012-10-17",
-                Statement: [
-                  { Effect: "Allow", Principal: { Service: "ec2.amazonaws.com" }, Action: ["sts:AssumeRole"] },
-                ],
-              },
-              ...(props.runnerPermissionsBoundaryArn === undefined
-                ? {}
-                : { permissionsBoundary: props.runnerPermissionsBoundaryArn }),
-              ...(props.runnerManagedPolicyArns === undefined
-                ? {}
-                : { managedPolicyArns: A.copy(props.runnerManagedPolicyArns) }),
-              inlinePolicies: {
-                runner: {
+              const runnerRole = yield* IAM.Role("RunnerRole", {
+                assumeRolePolicyDocument: {
                   Version: "2012-10-17",
                   Statement: [
-                    allow({
-                      actions: ["ssm:GetParameter", "ssm:DeleteParameter"],
-                      resources: [Output.interpolate`${tokenArn}/*`],
-                      condition: { StringLike: { "ec2:SourceInstanceARN": "*/${aws:ResourceTag/InstanceId}" } },
-                    }),
-                    allow({
-                      actions: ["kms:Decrypt"],
-                      resources: ["*"],
-                      condition: { StringLike: { "kms:ViaService": "ssm.*.amazonaws.com" } },
-                    }),
-                    allow({
-                      actions: ["s3:GetObject"],
-                      resources: [Output.interpolate`${binaries.bucketArn}/${runnerTarballKey}`],
-                    }),
-                    allow({
-                      actions: ["ec2:TerminateInstances", "ec2:CreateTags"],
-                      resources: ["arn:aws:ec2:*:*:instance/*"],
-                      condition: { StringEquals: { "aws:ARN": "${ec2:SourceInstanceARN}" } },
-                    }),
-                    allow({ actions: ["ec2:DescribeTags"], resources: ["*"] }),
+                    { Effect: "Allow", Principal: { Service: "ec2.amazonaws.com" }, Action: ["sts:AssumeRole"] },
                   ],
                 },
-              },
-            });
-            const instanceProfile = yield* IAM.InstanceProfile("RunnerInstanceProfile", {
-              roleName: runnerRole.roleName,
-            });
-            const template = yield* RunnerLaunchTemplate("LaunchTemplate", {
-              ...props.launchTemplate,
-              instanceProfileArn: instanceProfile.instanceProfileArn,
-              // A runner that powers itself off must not leak as a stopped instance (upstream does the same).
-              instanceInitiatedShutdownBehavior: "terminate",
-              metadataOptions: {
-                httpEndpoint: "enabled",
-                httpTokens: "required",
-                httpPutResponseHopLimit: 1,
-                instanceMetadataTags: "enabled",
-              },
-              userData: tarballUrl.pipe(
-                Output.map((runnerTarballS3Url) =>
-                  renderRunnerUserData(
-                    RunnerUserDataInput.make({
-                      runnerTarballS3Url,
-                      ephemeral: pool.ephemeral,
-                      jitConfig: pool.jitConfig,
-                      ...(props.runAs === undefined ? {} : { runAs: props.runAs }),
-                      ...(props.preInstall === undefined ? {} : { preInstall: props.preInstall }),
-                      ...(props.postInstall === undefined ? {} : { postInstall: props.postInstall }),
+                ...(props.runnerPermissionsBoundaryArn === undefined
+                  ? {}
+                  : { permissionsBoundary: props.runnerPermissionsBoundaryArn }),
+                ...(props.runnerManagedPolicyArns === undefined
+                  ? {}
+                  : { managedPolicyArns: A.copy(props.runnerManagedPolicyArns) }),
+                inlinePolicies: {
+                  runner: {
+                    Version: "2012-10-17",
+                    Statement: [
+                      allow({
+                        actions: ["ssm:GetParameter", "ssm:DeleteParameter"],
+                        resources: [Output.interpolate`${tokenArn}/*`],
+                        condition: { StringLike: { "ec2:SourceInstanceARN": "*/${aws:ResourceTag/InstanceId}" } },
+                      }),
+                      allow({
+                        actions: ["kms:Decrypt"],
+                        resources: ["*"],
+                        condition: { StringLike: { "kms:ViaService": "ssm.*.amazonaws.com" } },
+                      }),
+                      allow({
+                        actions: ["s3:GetObject"],
+                        resources: [Output.interpolate`${binaries.bucketArn}/${runnerTarballKey}`],
+                      }),
+                      allow({
+                        actions: ["ec2:TerminateInstances", "ec2:CreateTags"],
+                        resources: ["arn:aws:ec2:*:*:instance/*"],
+                        condition: { StringEquals: { "aws:ARN": "${ec2:SourceInstanceARN}" } },
+                      }),
+                      allow({ actions: ["ec2:DescribeTags"], resources: ["*"] }),
+                    ],
+                  },
+                },
+              });
+              const instanceProfile = yield* IAM.InstanceProfile("RunnerInstanceProfile", {
+                roleName: runnerRole.roleName,
+              });
+              const template = yield* RunnerLaunchTemplate("LaunchTemplate", {
+                ...props.launchTemplate,
+                instanceProfileArn: instanceProfile.instanceProfileArn,
+                // A runner that powers itself off must not leak as a stopped instance (upstream does the same).
+                instanceInitiatedShutdownBehavior: "terminate",
+                metadataOptions: {
+                  httpEndpoint: "enabled",
+                  httpTokens: "required",
+                  httpPutResponseHopLimit: 1,
+                  instanceMetadataTags: "enabled",
+                },
+                userData: tarballUrl.pipe(
+                  Output.map((runnerTarballS3Url) =>
+                    renderRunnerUserData(
+                      RunnerUserDataInput.make({
+                        runnerTarballS3Url,
+                        ephemeral: pool.ephemeral,
+                        jitConfig: pool.jitConfig,
+                        ...(props.runAs === undefined ? {} : { runAs: props.runAs }),
+                        ...(props.preInstall === undefined ? {} : { preInstall: props.preInstall }),
+                        ...(props.postInstall === undefined ? {} : { postInstall: props.postInstall }),
+                      })
+                    )
+                  )
+                ),
+              });
+
+              const buildQueue = yield* queueWithDlq({
+                id: "BuildQueue",
+                visibilityTimeout: "2 minutes",
+                maxReceiveCount: 5,
+              });
+              const jobRetryQueue = O.isSome(pool.jobRetry)
+                ? yield* queueWithDlq({ id: "JobRetryQueue", visibilityTimeout: "2 minutes", maxReceiveCount: 3 }).pipe(
+                    Effect.asSome
+                  )
+                : O.none<SQS.Queue>();
+
+              const runtimeConfig = Output.all(
+                collect(props.subnetIds),
+                template.launchTemplateId,
+                template.defaultVersionNumber.pipe(Output.map(String)),
+                buildQueue.queueUrl,
+                jobRetryQueue.pipe(
+                  O.map((queue) => queue.queueUrl),
+                  O.toArray,
+                  collect
+                )
+              ).pipe(
+                Output.mapEffect(([subnetIds, launchTemplateId, version, buildQueueUrl, jobRetryQueueUrl]) =>
+                  encodePool(
+                    PoolRuntimeConfig.make({
+                      pool,
+                      environment,
+                      runnerType: props.runnerType,
+                      subnetIds: A.isReadonlyArrayNonEmpty(subnetIds) ? subnetIds : [""],
+                      launchTemplate: LaunchTemplateRef.make({ launchTemplateId, version }),
+                      tokenPath,
+                      configPath,
+                      buildQueueUrl,
+                      jobRetryQueueUrl: A.head(jobRetryQueueUrl),
+                      app: appNames,
                     })
                   )
                 )
-              ),
-            });
+              );
+              const poolFunction = (logicalId: string, file: string, extra: Partial<Lambda.FunctionProps> = {}) =>
+                Lambda.Function(logicalId, {
+                  main: `${lambdaDir}/${file}`,
+                  handler: "handler",
+                  functionUrl: false,
+                  timeout: Duration.seconds(60),
+                  memorySize: 512,
+                  logging,
+                  env: { [runtimeConfigEnvName]: runtimeConfig },
+                  ...extra,
+                } as Lambda.FunctionZipProps);
 
-            const buildQueue = yield* queueWithDlq({
-              id: "BuildQueue",
-              visibilityTimeout: "2 minutes",
-              maxReceiveCount: 5,
-            });
-            const jobRetryQueue = O.isSome(pool.jobRetry)
-              ? yield* queueWithDlq({ id: "JobRetryQueue", visibilityTimeout: "2 minutes", maxReceiveCount: 3 }).pipe(
-                  Effect.asSome
-                )
-              : O.none<SQS.Queue>();
-
-            const runtimeConfig = Output.all(
-              collect(props.subnetIds),
-              template.launchTemplateId,
-              template.defaultVersionNumber.pipe(Output.map(String)),
-              buildQueue.queueUrl,
-              jobRetryQueue.pipe(
-                O.map((queue) => queue.queueUrl),
-                O.toArray,
-                collect
-              )
-            ).pipe(
-              Output.mapEffect(([subnetIds, launchTemplateId, version, buildQueueUrl, jobRetryQueueUrl]) =>
-                encodePool(
-                  PoolRuntimeConfig.make({
-                    pool,
-                    environment,
-                    runnerType: props.runnerType,
-                    subnetIds: A.isReadonlyArrayNonEmpty(subnetIds) ? subnetIds : [""],
-                    launchTemplate: LaunchTemplateRef.make({ launchTemplateId, version }),
-                    tokenPath,
-                    configPath,
-                    buildQueueUrl,
-                    jobRetryQueueUrl: A.head(jobRetryQueueUrl),
-                    app: appNames,
-                  })
-                )
-              )
-            );
-            const poolFunction = (logicalId: string, file: string, extra: Partial<Lambda.FunctionProps> = {}) =>
-              Lambda.Function(logicalId, {
-                main: `${lambdaDir}/${file}`,
-                handler: "handler",
-                functionUrl: false,
-                timeout: Duration.seconds(60),
-                memorySize: 512,
-                logging,
-                env: { [runtimeConfigEnvName]: runtimeConfig },
-                ...extra,
-              } as Lambda.FunctionZipProps);
-
-            const scaleUp = yield* poolFunction("ScaleUp", "scale-up.ts", { reservedConcurrentExecutions: 1 });
-            yield* Lambda.EventSourceMapping("ScaleUpSource", {
-              functionName: scaleUp.functionName,
-              eventSourceArn: buildQueue.queueArn,
-              batchSize: 10,
-              functionResponseTypes: ["ReportBatchItemFailures"],
-            });
-            yield* scaleUp.bind(
-              "ScaleUp",
-              lambdaRole([
-                queueConsumer(buildQueue),
-                allow({
-                  actions: [
-                    "ec2:CreateFleet",
-                    "ec2:RunInstances",
-                    "ec2:CreateTags",
-                    "ec2:DescribeInstances",
-                    "ec2:DescribeLaunchTemplateVersions",
-                  ],
-                  resources: ["*"],
-                }),
-                allow({
-                  actions: ["ec2:TerminateInstances"],
-                  resources: ["*"],
-                  condition: { StringEquals: { "ec2:ResourceTag/ghr:environment": environment } },
-                }),
-                allow({ actions: ["iam:PassRole"], resources: [runnerRole.roleArn] }),
-                allow({
-                  actions: ["ssm:PutParameter", "ssm:AddTagsToResource", "ssm:GetParameter"],
-                  resources: [Output.interpolate`${tokenArn}/*`, Output.interpolate`${configArn}/*`],
-                }),
-                ...readAppSecrets,
-                ...O.match(jobRetryQueue, {
-                  onNone: () => [],
-                  onSome: (queue) => [allow({ actions: ["sqs:SendMessage"], resources: [queue.queueArn] })],
-                }),
-              ])
-            );
-
-            if (O.isSome(jobRetryQueue)) {
-              const jobRetry = yield* poolFunction("JobRetry", "job-retry.ts");
-              yield* Lambda.EventSourceMapping("JobRetrySource", {
-                functionName: jobRetry.functionName,
-                eventSourceArn: jobRetryQueue.value.queueArn,
+              const scaleUp = yield* poolFunction("ScaleUp", "scale-up.ts", { reservedConcurrentExecutions: 1 });
+              yield* Lambda.EventSourceMapping("ScaleUpSource", {
+                functionName: scaleUp.functionName,
+                eventSourceArn: buildQueue.queueArn,
                 batchSize: 10,
                 functionResponseTypes: ["ReportBatchItemFailures"],
               });
-              yield* jobRetry.bind(
-                "JobRetry",
+              yield* scaleUp.bind(
+                "ScaleUp",
                 lambdaRole([
-                  queueConsumer(jobRetryQueue.value),
-                  allow({ actions: ["sqs:SendMessage"], resources: [buildQueue.queueArn] }),
+                  queueConsumer(buildQueue),
+                  allow({
+                    actions: [
+                      "ec2:CreateFleet",
+                      "ec2:RunInstances",
+                      "ec2:CreateTags",
+                      "ec2:DescribeInstances",
+                      "ec2:DescribeLaunchTemplateVersions",
+                    ],
+                    resources: ["*"],
+                  }),
+                  allow({
+                    actions: ["ec2:TerminateInstances"],
+                    resources: ["*"],
+                    condition: { StringEquals: { "ec2:ResourceTag/ghr:environment": environment } },
+                  }),
+                  allow({ actions: ["iam:PassRole"], resources: [runnerRole.roleArn] }),
+                  allow({
+                    actions: ["ssm:PutParameter", "ssm:AddTagsToResource", "ssm:GetParameter"],
+                    resources: [Output.interpolate`${tokenArn}/*`, Output.interpolate`${configArn}/*`],
+                  }),
+                  ...readAppSecrets,
+                  ...O.match(jobRetryQueue, {
+                    onNone: () => [],
+                    onSome: (queue) => [allow({ actions: ["sqs:SendMessage"], resources: [queue.queueArn] })],
+                  }),
+                ])
+              );
+
+              if (O.isSome(jobRetryQueue)) {
+                const jobRetry = yield* poolFunction("JobRetry", "job-retry.ts");
+                yield* Lambda.EventSourceMapping("JobRetrySource", {
+                  functionName: jobRetry.functionName,
+                  eventSourceArn: jobRetryQueue.value.queueArn,
+                  batchSize: 10,
+                  functionResponseTypes: ["ReportBatchItemFailures"],
+                });
+                yield* jobRetry.bind(
+                  "JobRetry",
+                  lambdaRole([
+                    queueConsumer(jobRetryQueue.value),
+                    allow({ actions: ["sqs:SendMessage"], resources: [buildQueue.queueArn] }),
+                    ...readAppSecrets,
+                  ])
+                );
+              }
+
+              const scaleDown = yield* poolFunction("ScaleDown", "scale-down.ts");
+              yield* scheduledFunction({ id: "ScaleDown", fn: scaleDown, scheduleExpression: "cron(* * * * ? *)" });
+              yield* scaleDown.bind(
+                "ScaleDown",
+                lambdaRole([
+                  allow({ actions: ["ec2:DescribeInstances", "ec2:DescribeTags"], resources: ["*"] }),
+                  allow({
+                    actions: ["ec2:TerminateInstances", "ec2:CreateTags", "ec2:DeleteTags"],
+                    resources: ["*"],
+                    condition: { StringEquals: { "ec2:ResourceTag/ghr:environment": environment } },
+                  }),
                   ...readAppSecrets,
                 ])
               );
-            }
 
-            const scaleDown = yield* poolFunction("ScaleDown", "scale-down.ts");
-            yield* scheduledFunction({ id: "ScaleDown", fn: scaleDown, scheduleExpression: "cron(* * * * ? *)" });
-            yield* scaleDown.bind(
-              "ScaleDown",
-              lambdaRole([
-                allow({ actions: ["ec2:DescribeInstances", "ec2:DescribeTags"], resources: ["*"] }),
-                allow({
-                  actions: ["ec2:TerminateInstances", "ec2:CreateTags", "ec2:DeleteTags"],
-                  resources: ["*"],
-                  condition: { StringEquals: { "ec2:ResourceTag/ghr:environment": environment } },
-                }),
-                ...readAppSecrets,
-              ])
-            );
-
-            return {
-              pool,
-              environment,
-              tokenPath,
-              buildQueue,
-              scaleUp,
-              instanceProfileArn: instanceProfile.instanceProfileArn,
-              matcher: buildQueue.queueUrl.pipe(
-                Output.map((queueUrl) =>
-                  PoolMatcher.make({ pool: pool.name, queueUrl, labels: pool.labels, labelMatch: pool.labelMatch })
-                )
-              ),
-            };
-          })
-        )
+              return {
+                pool,
+                environment,
+                tokenPath,
+                buildQueue,
+                scaleUp,
+                instanceProfileArn: instanceProfile.instanceProfileArn,
+                matcher: buildQueue.queueUrl.pipe(
+                  Output.map((queueUrl) =>
+                    PoolMatcher.make({ pool: pool.name, queueUrl, labels: pool.labels, labelMatch: pool.labelMatch })
+                  )
+                ),
+              };
+            })
+          ),
+        { concurrency: 1 }
       );
 
       const webhookConfig = collect(A.map(pools, (pool) => pool.matcher)).pipe(
@@ -673,7 +676,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
             sourceArn: rule.ruleArn,
           });
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       yield* watcher.bind(
         "TerminationWatcher",

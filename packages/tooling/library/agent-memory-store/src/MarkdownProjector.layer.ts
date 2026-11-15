@@ -334,7 +334,7 @@ const make = Effect.gen(function* () {
               A.map(rows, (file) => ({ root: key, file_path: file.path, file_digest: file.digest }))
             )}
             ON CONFLICT DO NOTHING`,
-          { discard: true }
+          { concurrency: 1, discard: true }
         )
       )
       .pipe(Effect.mapError(failure(operation, O.none())));
@@ -366,7 +366,7 @@ const make = Effect.gen(function* () {
     return { path, nodes, bytes, digest: fileDigest } satisfies BuiltFile;
   });
 
-  const buildAll = Effect.suspend(() => Effect.forEach(filePaths(projection), buildFile));
+  const buildAll = Effect.suspend(() => Effect.forEach(filePaths(projection), buildFile, { concurrency: 1 }));
 
   const baseOf = Effect.fnUntraced(function* (operation: string, built: ReadonlyArray<BuiltFile>) {
     const folderDigest = yield* folderDigestOf(operation, listingOf(built));

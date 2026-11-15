@@ -186,7 +186,8 @@ const replayEntry = Effect.fn("SkillsRelock.replayEntry")(function* (
     series,
     Effect.fnUntraced(function* (patch) {
       return { path: patch.path, text: yield* decodePatchText(skill, patch) };
-    })
+    }),
+    { concurrency: 1 }
   );
   const strict = yield* Effect.result(strictReplay(patches)(content.files));
   const classified = yield* classifySeries(patches, content.files);
@@ -305,10 +306,13 @@ const planDigestOf = Effect.fn("SkillsRelock.planDigestOf")(function* (
   snapshot: SkillSnapshot,
   effective: SkillEffective
 ): Effect.fn.Return<SkillRelockReceipt["planDigest"], SkillsCommandError, Digest.Digest> {
-  const encoded = yield* Effect.all({
-    snapshot: encodeSnapshot(snapshot),
-    effective: encodeEffective(effective),
-  }).pipe(SkillsCommandError.mapError(`Failed to encode the ${skill} relock plan.`, SKILLS_LOCK_PATH, skill));
+  const encoded = yield* Effect.all(
+    {
+      snapshot: encodeSnapshot(snapshot),
+      effective: encodeEffective(effective),
+    },
+    { concurrency: 1 }
+  ).pipe(SkillsCommandError.mapError(`Failed to encode the ${skill} relock plan.`, SKILLS_LOCK_PATH, skill));
   const preimage = yield* Effect.fromResult(
     canonicalJsonTextResult({
       schemaVersion: RELOCK_PLAN_SCHEMA_VERSION,
@@ -416,8 +420,11 @@ const replaySkills = Effect.fn("SkillsRelock.replaySkills")(function* (
     onSome: (name) => Effect.map(requireVendored(lock.document.skills, name), (entry) => A.of([name, entry] as const)),
   });
   const ledger = yield* readHunkLedger(repoRoot);
-  const reports = yield* Effect.forEach(selected, ([name, entry]) =>
-    Effect.map(replayEntry(repoRoot, name, entry), (replayed) => withPromoteCandidates(replayed.report, ledger))
+  const reports = yield* Effect.forEach(
+    selected,
+    ([name, entry]) =>
+      Effect.map(replayEntry(repoRoot, name, entry), (replayed) => withPromoteCandidates(replayed.report, ledger)),
+    { concurrency: 1 }
   );
   return SkillReplayBatch.make({ reports });
 });

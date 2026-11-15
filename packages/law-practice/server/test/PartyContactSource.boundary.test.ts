@@ -108,12 +108,15 @@ layer(nativeLayer, { timeout: "30 seconds" })("exact law-practice party boundary
       const resolved2 = yield* fs.readDirectory("src", { recursive: true });
       const files = A.filter(resolved2, (file) => /\.(?:[cm]?ts|tsx)$/u.test(file));
       expect(files).toContain("PartyContactSource/PartyContactSource.layer.ts");
-      const violations = yield* Effect.forEach(files, (file) =>
-        Effect.gen(function* () {
-          const resolved3 = yield* fs.readFileString(`src/${file}`);
-          const specifiers = yield* moduleSpecifiers(resolved3);
-          return A.map(A.filter(specifiers, forbiddenModule), (specifier) => ({ file, specifier }));
-        })
+      const violations = yield* Effect.forEach(
+        files,
+        (file) =>
+          Effect.gen(function* () {
+            const resolved3 = yield* fs.readFileString(`src/${file}`);
+            const specifiers = yield* moduleSpecifiers(resolved3);
+            return A.map(A.filter(specifiers, forbiddenModule), (specifier) => ({ file, specifier }));
+          }),
+        { concurrency: 1 }
       );
       expect(A.flatten(violations)).toEqual([]);
     })

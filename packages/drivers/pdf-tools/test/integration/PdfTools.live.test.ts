@@ -141,7 +141,7 @@ describe("@beep/pdf-tools live tools", () => {
         const pdfB = path.join(dir, "b.pdf");
         yield* tools.svgToPdf(SvgToPdfRequest.make({ svgPaths: [svg, svg], outputPath: pdfA }));
         yield* tools.svgToPdf(SvgToPdfRequest.make({ svgPaths: [svg, svg], outputPath: pdfB }));
-        const [bytesA, bytesB] = yield* Effect.all([fs.readFile(pdfA), fs.readFile(pdfB)]);
+        const [bytesA, bytesB] = yield* Effect.all([fs.readFile(pdfA), fs.readFile(pdfB)], { concurrency: 1 });
         expect(Buffer.from(bytesA).equals(Buffer.from(bytesB))).toBe(true);
 
         const structure = yield* tools.inspect(pdfA);
@@ -228,15 +228,19 @@ describe("@beep/pdf-tools live tools", () => {
         const dir = yield* fs.makeTempDirectoryScoped();
         const svgPaths = yield* writeTwoSheets(dir);
         // The pipeline svgToPdf replaced: one PDF 1.6 conversion per page, merged and re-serialised by pdf-lib.
-        const pages = yield* Effect.forEach(svgPaths, (svg, index) => {
-          const pagePath = path.join(dir, `page-${index + 1}.pdf`);
-          return tools
-            .svgToPdf(SvgToPdfRequest.make({ svgPaths: [svg], outputPath: pagePath }))
-            .pipe(Effect.andThen(fs.readFile(pagePath)));
-        });
+        const pages = yield* Effect.forEach(
+          svgPaths,
+          (svg, index) => {
+            const pagePath = path.join(dir, `page-${index + 1}.pdf`);
+            return tools
+              .svgToPdf(SvgToPdfRequest.make({ svgPaths: [svg], outputPath: pagePath }))
+              .pipe(Effect.andThen(fs.readFile(pagePath)));
+          },
+          { concurrency: 1 }
+        );
         // pdf-lib cuts a stream whose /Length is indirect at the EOL before `endstream`, so only a stream whose
         // data ends in 0x0D comes out short; whether cairo writes one depends on its build and the host's fonts.
-        const forEach2 = yield* Effect.forEach(pages, shortenedFlateStreams);
+        const forEach2 = yield* Effect.forEach(pages, shortenedFlateStreams, { concurrency: 1 });
         const shortened = A.reduce(forEach2, 0, (total, count) => total + count);
         if (shortened === 0) {
           context.skip(
@@ -245,11 +249,14 @@ describe("@beep/pdf-tools live tools", () => {
           return;
         }
         const mergedDoc = yield* Effect.promise(() => PDFDocument.create({ updateMetadata: false }));
-        yield* Effect.forEach(pages, (bytes) =>
-          Effect.promise(() => PDFDocument.load(bytes, { updateMetadata: false })).pipe(
-            Effect.flatMap((source) => Effect.promise(() => mergedDoc.copyPages(source, source.getPageIndices()))),
-            Effect.map(A.forEach((page) => mergedDoc.addPage(page)))
-          )
+        yield* Effect.forEach(
+          pages,
+          (bytes) =>
+            Effect.promise(() => PDFDocument.load(bytes, { updateMetadata: false })).pipe(
+              Effect.flatMap((source) => Effect.promise(() => mergedDoc.copyPages(source, source.getPageIndices()))),
+              Effect.map(A.forEach((page) => mergedDoc.addPage(page)))
+            ),
+          { concurrency: 1 }
         );
         const merged = yield* Effect.promise(() =>
           mergedDoc.save({ useObjectStreams: false, updateFieldAppearances: false })

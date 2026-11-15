@@ -254,14 +254,17 @@ const runCheck = Effect.fnUntraced(function* (flags: ModelsCommandFlags) {
     );
     yield* Console.log(formatJsonValue(encoded));
   } else {
-    yield* Effect.forEach(report.findings, (entry) => Console.log(renderFinding(entry)), { discard: true });
+    yield* Effect.forEach(report.findings, (entry) => Console.log(renderFinding(entry)), {
+      concurrency: 1,
+      discard: true,
+    });
     yield* Effect.forEach(
       report.manual,
       (entry) =>
         Console.log(
           `models: ${entry.targetId} [${entry.locator._tag}] manual verification required; hint=${O.getOrElse(entry.current, () => "<absent>")}`
         ),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     yield* Console.log(
       `models: ${A.length(A.dedupe(A.map(report.manual, (entry) => entry.targetId)))} manual target(s); ${A.length(report.findings)} finding(s) across ${report.catalog.modelCount} catalog model(s) ` +
@@ -271,7 +274,7 @@ const runCheck = Effect.fnUntraced(function* (flags: ModelsCommandFlags) {
     yield* Effect.forEach(
       report.candidates,
       (id) => Console.log(`models: candidate ${id} (routable Codex model without a manifest binding; propose only)`),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   }
 
@@ -304,7 +307,7 @@ const runCatalog = Effect.fnUntraced(function* (flags: ModelsCommandFlags) {
           `proxy=${model.availability.proxy} codex=${model.availability.codexCli} ` +
           `grok=${model.availability.grokCli} cursor=${model.availability.cursor}`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Console.log(`models: ${snapshot.summary.modelCount} model(s) from ${A.join(snapshot.summary.sources, ", ")}`);
 });
@@ -661,7 +664,10 @@ const recoverCommand = Command.make(
       report.result._tag === "skipped" && report.result.reason === "legacy";
     const legacy = A.filter(reports, isLegacy);
     const decided = A.filter(reports, (report) => !isLegacy(report));
-    yield* Effect.forEach(decided, (report) => Console.log(describeRecovery(report)), { discard: true });
+    yield* Effect.forEach(decided, (report) => Console.log(describeRecovery(report)), {
+      concurrency: 1,
+      discard: true,
+    });
     yield* Console.log(
       `models: recover reconciled ${A.length(decided)} publication(s); ${A.length(legacy)} legacy journal(s) left for restore --journal`
     );

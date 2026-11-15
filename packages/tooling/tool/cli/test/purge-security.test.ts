@@ -215,7 +215,7 @@ it.layer(testLayer, { timeout: "5 seconds" })("purge security", (it) => {
               const exists6 = yield* fs.exists(directory);
               expect(exists6).toBe(index === failedReleaseIndex);
             }),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
         }
       })

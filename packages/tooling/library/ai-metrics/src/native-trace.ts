@@ -389,24 +389,30 @@ const attributeValues = (attributes: typeof Attributes.Type, keys: ReadonlyArray
     (attribute) => attribute.value
   );
 const textAttribute = Effect.fnUntraced(function* (attributes: typeof Attributes.Type, keys: ReadonlyArray<string>) {
-  const decoded = yield* Effect.forEach(attributeValues(attributes, keys), (value) =>
-    S.decodeUnknownEffect(OneValue)(value).pipe(
-      Effect.flatMap(S.decodeUnknownEffect(TextValue)),
-      Effect.map((value) => value.stringValue)
-    )
+  const decoded = yield* Effect.forEach(
+    attributeValues(attributes, keys),
+    (value) =>
+      S.decodeUnknownEffect(OneValue)(value).pipe(
+        Effect.flatMap(S.decodeUnknownEffect(TextValue)),
+        Effect.map((value) => value.stringValue)
+      ),
+    { concurrency: 1 }
   );
   const distinct = A.dedupe(decoded);
   if (distinct.length > 1) return yield* failure("invalid-envelope");
   return A.head(distinct);
 });
 const countAttribute = Effect.fnUntraced(function* (attributes: typeof Attributes.Type, key: string) {
-  const decoded = yield* Effect.forEach(attributeValues(attributes, [key]), (value) =>
-    S.decodeUnknownEffect(OneValue)(value).pipe(
-      Effect.flatMap(S.decodeUnknownEffect(NumberValue)),
-      Effect.flatMap((value) =>
-        S.decodeEffect(TokenCount)("intValue" in value ? Number(value.intValue) : value.doubleValue)
-      )
-    )
+  const decoded = yield* Effect.forEach(
+    attributeValues(attributes, [key]),
+    (value) =>
+      S.decodeUnknownEffect(OneValue)(value).pipe(
+        Effect.flatMap(S.decodeUnknownEffect(NumberValue)),
+        Effect.flatMap((value) =>
+          S.decodeEffect(TokenCount)("intValue" in value ? Number(value.intValue) : value.doubleValue)
+        )
+      ),
+    { concurrency: 1 }
   );
   const distinct = A.dedupe(decoded);
   if (distinct.length > 1) return yield* failure("invalid-envelope");
@@ -663,8 +669,10 @@ export const projectNativeTraceRequest = Effect.fn("AiMetrics.projectNativeTrace
   );
   if (entries.length > 1024) return yield* failure("too-many-spans");
   const namespaceId = yield* hash("ai-metrics-hash-salt-namespace/v1");
-  const results = yield* Effect.forEach(entries, (entry) =>
-    Effect.result(projectSpan(entry, input, namespaceId, hash, protobuf))
+  const results = yield* Effect.forEach(
+    entries,
+    (entry) => Effect.result(projectSpan(entry, input, namespaceId, hash, protobuf)),
+    { concurrency: 1 }
   );
   if (
     A.some(

@@ -141,7 +141,7 @@ const verifyReviewBases = Effect.fn("CacheQualification.verifyReviewBases")(func
     A.map(Rec.values(baseline.reviews), (review) => review.basis),
     sameReference
   );
-  yield* Effect.forEach(bases, (basis) => verifyReference(root, basis), { discard: true });
+  yield* Effect.forEach(bases, (basis) => verifyReference(root, basis), { concurrency: 1, discard: true });
 });
 
 const encodeSubjectFile = S.encodeEffect(S.fromJsonString(CacheBaselineSubjectFile, { space: 2 }));
@@ -278,8 +278,10 @@ export const splitCachePolicyBaseline = Effect.fn("CacheBaseline.split")(functio
   const failures = cachePolicyBaselineFailures(baseline);
   if (A.isReadonlyArrayNonEmpty(failures))
     return yield* CacheCommandError.new(`Reviewed baseline is incomplete: ${A.join(failures, ", ")}.`);
-  const files = yield* Effect.forEach(Rec.toEntries(baseline.reviews), ([subject, review]) =>
-    subjectFile(baseline, subject, review)
+  const files = yield* Effect.forEach(
+    Rec.toEntries(baseline.reviews),
+    ([subject, review]) => subjectFile(baseline, subject, review),
+    { concurrency: 1 }
   );
   return A.sort(files, bySubject);
 });
@@ -385,17 +387,20 @@ export const encodeCachePolicyBaselineFiles = Effect.fn("CacheBaseline.encodeFil
   baseline: CachePolicyBaseline
 ) {
   const files = yield* splitCachePolicyBaseline(baseline);
-  const texts = yield* Effect.forEach(files, (file) =>
-    encodeSubjectFile(file).pipe(
-      Effect.map((text) =>
-        CacheBaselineFileText.make({
-          subject: file.subject,
-          path: cacheBaselineSubjectPath(file.subject),
-          text: `${text}\n`,
-        })
+  const texts = yield* Effect.forEach(
+    files,
+    (file) =>
+      encodeSubjectFile(file).pipe(
+        Effect.map((text) =>
+          CacheBaselineFileText.make({
+            subject: file.subject,
+            path: cacheBaselineSubjectPath(file.subject),
+            text: `${text}\n`,
+          })
+        ),
+        CacheCommandError.mapError(`Cannot encode the baseline file of ${file.subject}.`)
       ),
-      CacheCommandError.mapError(`Cannot encode the baseline file of ${file.subject}.`)
-    )
+    { concurrency: 1 }
   );
   return A.sort(texts, byPath);
 });
@@ -445,7 +450,8 @@ export const decodeCachePolicyBaselineFiles = Effect.fn("CacheBaseline.decodeFil
           `Baseline file ${path} holds subject ${file.subject}, which belongs at ${cacheBaselineSubjectPath(file.subject)}.`
         );
       return file;
-    })
+    }),
+    { concurrency: 1 }
   );
   return yield* assembleCachePolicyBaseline(files);
 });
@@ -493,7 +499,8 @@ export const readCachePolicyBaselineFileTexts = Effect.fn("CacheBaseline.readFil
       );
       const text = yield* decodeUtf8(bytes);
       return O.some({ path: relative, text });
-    })
+    }),
+    { concurrency: 1 }
   );
   return O.some(A.getSomes(texts));
 }, CacheCommandError.mapError("Cannot read the reviewed cache baseline files."));
@@ -534,7 +541,8 @@ export const readCommittedCachePolicyBaseline = Effect.fn("CacheBaseline.readCom
       );
       const sha256 = yield* hashBytes(new TextEncoder().encode(text));
       return CacheBaselineCommittedFile.make({ subject, path, text, sha256 });
-    })
+    }),
+    { concurrency: 1 }
   );
   return O.some({ baseline, files });
 });
@@ -661,7 +669,10 @@ const verifyHistoryEntry = Effect.fn("CacheQualification.verifyHistoryEntry")(fu
   if (entry.status.state === "unassessed") return;
   yield* verifyReference(root, entry.status.review.basis);
   if (entry.status.state === "shadow" || entry.status.state === "qualified") {
-    yield* Effect.forEach(entry.status.receipts, (reference) => verifyReference(root, reference), { discard: true });
+    yield* Effect.forEach(entry.status.receipts, (reference) => verifyReference(root, reference), {
+      concurrency: 1,
+      discard: true,
+    });
   }
 });
 
@@ -688,12 +699,18 @@ const verifyQualifiedEvidence = Effect.fn("CacheQualification.verifyQualifiedEvi
 const audit = Effect.fn("CacheQualification.audit")(function* (root: string) {
   const baseline = yield* readBaseline(root);
   const store = yield* readStore(root);
-  yield* Effect.forEach(store.history, ({ entry }) => verifyHistoryEntry(root, entry), { discard: true });
-  yield* Effect.forEach(store.entries, (entry) => verifyQualifiedEvidence(root, entry), { discard: true });
+  yield* Effect.forEach(store.history, ({ entry }) => verifyHistoryEntry(root, entry), {
+    concurrency: 1,
+    discard: true,
+  });
+  yield* Effect.forEach(store.entries, (entry) => verifyQualifiedEvidence(root, entry), {
+    concurrency: 1,
+    discard: true,
+  });
   yield* Effect.forEach(
     A.filter(store.entries, (entry) => entry.status.state === "qualified"),
     (entry) => validateTransitionScope(entry.key, baseline),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const census = yield* collectCacheCensus(root);
   if (
@@ -709,7 +726,7 @@ const audit = Effect.fn("CacheQualification.audit")(function* (root: string) {
         const contractIdentity1 = yield* contractIdentity(root, entry.status.contract, census, toolchain);
         yield* validateLiveContract(entry.status.contract, contractIdentity1);
       }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   }
   return auditCachePolicy(
@@ -930,9 +947,13 @@ const writeBaseline = Effect.fn("CacheQualification.writeBaseline")(function* (
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       yield* Effect.forEach(plan.writes, (file) => writeContainedFileString(root, file.path, file.text), {
+        concurrency: 1,
         discard: true,
       });
-      yield* Effect.forEach(plan.deletes, (file) => fs.remove(path.join(root, file.path)), { discard: true });
+      yield* Effect.forEach(plan.deletes, (file) => fs.remove(path.join(root, file.path)), {
+        concurrency: 1,
+        discard: true,
+      });
       return record;
     })
   );
@@ -981,7 +1002,10 @@ const validateTransitionContract = Effect.fn("CacheQualification.validateTransit
   if (status.state === "shadow") {
     // Shadow preserves fresh execution authority. Bytes are retained as observations;
     // they are not interpreted as passing qualification evidence here.
-    yield* Effect.forEach(status.receipts, (reference) => verifyReference(root, reference), { discard: true });
+    yield* Effect.forEach(status.receipts, (reference) => verifyReference(root, reference), {
+      concurrency: 1,
+      discard: true,
+    });
   }
   if (status.state === "qualified") yield* verifyQualifiedEvidence(root, request.entry);
 });
@@ -1163,35 +1187,39 @@ const makeService = Effect.fn("CacheQualificationService.make")(function* () {
             const pattern = new RegExp(`^[ \t]*(?:export[ \t]+)?${name}[ \t]*=[ \t]*(.*)$`, "u");
             if (A.length(A.filter(lines, (line) => Str.match(pattern)(line).pipe(O.isSome))) > 1)
               return yield* CacheCommandError.new(`duplicate ${name} assignments in .env; refusing to modify it`);
-          })
+          }),
+          { concurrency: 1 }
         );
-        yield* Effect.forEach(TurboCacheEnvName.literals, (name) =>
-          Effect.sync(() => {
-            const pattern = new RegExp(`^[ \t]*(?:export[ \t]+)?${name}[ \t]*=[ \t]*(.*)$`, "u");
-            const index = A.findFirstIndex(lines, (line) => Str.match(pattern)(line).pipe(O.isSome));
-            const current = O.flatMap(index, (i) => A.get(lines, i)).pipe(
-              O.flatMap(Str.match(pattern)),
-              O.flatMap((match) => A.get(match, 1)),
-              O.map(Str.trim),
-              O.map(Str.replace(/^(["'])(.*)\1$/u, "$2")),
-              O.map(Str.trim),
-              O.getOrElse(() => "")
-            );
-            const replace = name === "TURBO_TOKEN" && input.replaceToken && current !== input.tokenRef;
-            if (Str.isNonEmpty(current) && !replace) {
-              reports = A.append(reports, `${name} already present in .env — leaving it unchanged`);
-              return;
-            }
-            const assignment = `${name}=${values[name]}`;
-            lines = O.match(index, {
-              onNone: () => [...lines, assignment],
-              onSome: (i) => A.map(lines, (line, at) => (at === i ? assignment : line)),
-            });
-            reports = A.append(
-              reports,
-              `${replace ? "replaced" : O.isSome(index) ? "repaired blank" : "wrote"} ${name}${name === "TURBO_TEAM" ? `=${input.team}` : ""}`
-            );
-          })
+        yield* Effect.forEach(
+          TurboCacheEnvName.literals,
+          (name) =>
+            Effect.sync(() => {
+              const pattern = new RegExp(`^[ \t]*(?:export[ \t]+)?${name}[ \t]*=[ \t]*(.*)$`, "u");
+              const index = A.findFirstIndex(lines, (line) => Str.match(pattern)(line).pipe(O.isSome));
+              const current = O.flatMap(index, (i) => A.get(lines, i)).pipe(
+                O.flatMap(Str.match(pattern)),
+                O.flatMap((match) => A.get(match, 1)),
+                O.map(Str.trim),
+                O.map(Str.replace(/^(["'])(.*)\1$/u, "$2")),
+                O.map(Str.trim),
+                O.getOrElse(() => "")
+              );
+              const replace = name === "TURBO_TOKEN" && input.replaceToken && current !== input.tokenRef;
+              if (Str.isNonEmpty(current) && !replace) {
+                reports = A.append(reports, `${name} already present in .env — leaving it unchanged`);
+                return;
+              }
+              const assignment = `${name}=${values[name]}`;
+              lines = O.match(index, {
+                onNone: () => [...lines, assignment],
+                onSome: (i) => A.map(lines, (line, at) => (at === i ? assignment : line)),
+              });
+              reports = A.append(
+                reports,
+                `${replace ? "replaced" : O.isSome(index) ? "repaired blank" : "wrote"} ${name}${name === "TURBO_TEAM" ? `=${input.team}` : ""}`
+              );
+            }),
+          { concurrency: 1 }
         );
         const next = `${Str.replace(/\n*$/u, "")(A.join(lines, "\n"))}\n`;
         if (next !== original) {

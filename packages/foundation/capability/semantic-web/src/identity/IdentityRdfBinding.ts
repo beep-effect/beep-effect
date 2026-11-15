@@ -396,23 +396,27 @@ const decodeSubject = Effect.fn("IdentityRdfBinding.decodeSubject")(function* (
     quads,
     "Expected exactly one identity CURIE literal."
   );
-  const decodedFibers = yield* Effect.forEach(R.toEntries(binding.fiberPaths), ([fiber, path]) => {
-    const matching = pipe(
-      quads,
-      A.filter(P.Struct({ predicate: (predicate: NamedNode) => sameNamedNode(predicate, path) }))
-    );
+  const decodedFibers = yield* Effect.forEach(
+    R.toEntries(binding.fiberPaths),
+    ([fiber, path]) => {
+      const matching = pipe(
+        quads,
+        A.filter(P.Struct({ predicate: (predicate: NamedNode) => sameNamedNode(predicate, path) }))
+      );
 
-    return A.match(matching, {
-      onEmpty: () => Effect.succeed(O.none<[string, string]>()),
-      onNonEmpty: () =>
-        literalAt(
-          subjectValue,
-          path,
-          quads,
-          "Expected at most one plain string literal for a mapped identity fiber."
-        ).pipe(Effect.map((value) => O.some(Tuple.make(fiber, value)))),
-    });
-  });
+      return A.match(matching, {
+        onEmpty: () => Effect.succeed(O.none<[string, string]>()),
+        onNonEmpty: () =>
+          literalAt(
+            subjectValue,
+            path,
+            quads,
+            "Expected at most one plain string literal for a mapped identity fiber."
+          ).pipe(Effect.map((value) => O.some(Tuple.make(fiber, value)))),
+      });
+    },
+    { concurrency: 1 }
+  );
 
   return IdentityEntry.make({
     identity,
@@ -450,14 +454,17 @@ export const entriesToDataset = (binding: IdentityRdfBinding) =>
       Effect.fnUntraced(function* (entry) {
         const subject = yield* decodeEntrySubject(entry);
 
-        return yield* Effect.forEach(R.toEntries(entry.fibers), ([fiber, value]) =>
-          pipe(
-            R.get(binding.fiberPaths, fiber),
-            O.match({
-              onNone: () => Effect.fail(IdentityFiberPathError.make({ fiber })),
-              onSome: (path) => Effect.succeed(makeQuad(subject, path, makeLiteral(value, XSD_STRING.value))),
-            })
-          )
+        return yield* Effect.forEach(
+          R.toEntries(entry.fibers),
+          ([fiber, value]) =>
+            pipe(
+              R.get(binding.fiberPaths, fiber),
+              O.match({
+                onNone: () => Effect.fail(IdentityFiberPathError.make({ fiber })),
+                onSome: (path) => Effect.succeed(makeQuad(subject, path, makeLiteral(value, XSD_STRING.value))),
+              })
+            ),
+          { concurrency: 1 }
         ).pipe(
           Effect.map((fiberQuads) =>
             pipe(
@@ -469,7 +476,8 @@ export const entriesToDataset = (binding: IdentityRdfBinding) =>
             )
           )
         );
-      })
+      }),
+      { concurrency: 1 }
     );
 
     return makeDataset(A.flatten(encoded));
@@ -505,5 +513,5 @@ export const datasetToEntries = (binding: IdentityRdfBinding) =>
       A.dedupeWith(sameSubject)
     );
 
-    return yield* Effect.forEach(subjects, (subject) => decodeSubject(binding, dataset, subject));
+    return yield* Effect.forEach(subjects, (subject) => decodeSubject(binding, dataset, subject), { concurrency: 1 });
   });

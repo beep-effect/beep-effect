@@ -129,7 +129,8 @@ const fixture = Effect.gen(function* () {
           warnings: [],
           evidenceConfidence: O.none(),
         });
-      })
+      }),
+    { concurrency: 1 }
   );
   const first = A.getUnsafe(mentions, 0);
   const second = A.getUnsafe(mentions, 1);

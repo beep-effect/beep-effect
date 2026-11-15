@@ -454,8 +454,10 @@ const runLintToolingSchemaFirst = Effect.fn("runLintToolingSchemaFirst")(functio
   const fileViolations = yield* Effect.forEach(files, (file) => inspectLintFile(file, fs, path), {
     concurrency: "unbounded",
   });
-  const requiredUnionViolations = yield* Effect.forEach(REQUIRED_TAGGED_UNIONS, (schemaName) =>
-    taggedUnionViolation(schemaName, toolingFiles, fs, path)
+  const requiredUnionViolations = yield* Effect.forEach(
+    REQUIRED_TAGGED_UNIONS,
+    (schemaName) => taggedUnionViolation(schemaName, toolingFiles, fs, path),
+    { concurrency: 1 }
   );
   const violations = pipe(fileViolations, A.appendAll(requiredUnionViolations), A.flatten);
 

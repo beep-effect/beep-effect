@@ -130,29 +130,32 @@ const prepareRuntimeFixtures = Effect.fnUntraced(function* (directory: string, m
   const source = yield* fs.readFileString(fixtureSource);
   yield* fs.writeFileString(path.join(directory, "runtime.test.ts"), source);
   if (mode !== "trace-matrix") return [];
-  const projects = yield* Effect.forEach(traceCases, (entry) =>
-    Effect.gen(function* () {
-      const projectDirectory = path.join(directory, entry.name);
-      yield* fs.makeDirectory(projectDirectory);
-      const fixture = path.join(projectDirectory, "runtime.test.ts");
-      yield* fs.writeFileString(fixture, source);
-      return {
-        extends: true,
-        test: {
-          name: entry.name,
-          root: projectDirectory,
-          include: [fixture],
-          isolate: true,
-          maxWorkers: 1,
-          env: {
-            BEEP_INSTRUMENTED_IT_FIXTURE: entry.mode,
-            CI: entry.ci,
-            BEEP_TEST_TRACE: entry.trace,
-            BEEP_TRACE_CASE: entry.name,
+  const projects = yield* Effect.forEach(
+    traceCases,
+    (entry) =>
+      Effect.gen(function* () {
+        const projectDirectory = path.join(directory, entry.name);
+        yield* fs.makeDirectory(projectDirectory);
+        const fixture = path.join(projectDirectory, "runtime.test.ts");
+        yield* fs.writeFileString(fixture, source);
+        return {
+          extends: true,
+          test: {
+            name: entry.name,
+            root: projectDirectory,
+            include: [fixture],
+            isolate: true,
+            maxWorkers: 1,
+            env: {
+              BEEP_INSTRUMENTED_IT_FIXTURE: entry.mode,
+              CI: entry.ci,
+              BEEP_TEST_TRACE: entry.trace,
+              BEEP_TRACE_CASE: entry.name,
+            },
           },
-        },
-      };
-    })
+        };
+      }),
+    { concurrency: 1 }
   );
   const config = yield* encodeConfig({ test: { maxWorkers: 1, projects } });
   const base = yield* encodeConfig(path.join(packageRoot, "vitest.config.ts"));
@@ -255,7 +258,8 @@ const runFixture = (
       yield* recordProcessPhase("exit");
       const cleanup = yield* Effect.forEach(
         Arr.filter(Str.split("\n")(output), Str.startsWith("BEEP_VITEST_CLEANUP ")),
-        (line) => decodeCleanup(Str.slice(20)(line))
+        (line) => decodeCleanup(Str.slice(20)(line)),
+        { concurrency: 1 }
       ).pipe(Effect.map(Arr.join("")));
       const phases = Arr.join(
         Arr.map(Arr.filter(Str.split("\n")(output), Str.startsWith("BEEP_VITEST_PHASE ")), Str.slice(18)),
@@ -311,7 +315,8 @@ const runTraceMatrix = Effect.fnUntraced(function* () {
   const result = yield* runFixture("trace-matrix");
   const observations = yield* Effect.forEach(
     Arr.filter(Str.split("\n")(result.output), Str.startsWith("BEEP_TRACE_OBSERVATION ")),
-    (line) => decodeTraceObservation(Str.slice(23)(line))
+    (line) => decodeTraceObservation(Str.slice(23)(line)),
+    { concurrency: 1 }
   );
   const report = yield* decodeTraceReport(result.report);
   expect(report.numTotalTests).toBe(4);
@@ -333,12 +338,15 @@ const runTraceMatrix = Effect.fnUntraced(function* () {
       exitCode: ChildProcessSpawner.ExitCode(assertion.status === "passed" ? 0 : 1),
     };
   });
-  return yield* Effect.all({
-    traceOff: observationFor("trace-off"),
-    traceOn: observationFor("trace-on"),
-    ciOn: observationFor("trace-ci"),
-    failure: observationFor("trace-failure"),
-  });
+  return yield* Effect.all(
+    {
+      traceOff: observationFor("trace-off"),
+      traceOn: observationFor("trace-on"),
+      ciOn: observationFor("trace-ci"),
+      failure: observationFor("trace-failure"),
+    },
+    { concurrency: 1 }
+  );
 });
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest runtime", (layerIt) => {
@@ -533,8 +541,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("instrumented Vitest run
       expect(result.cleanup).toContain("setup-40-body-");
       expect(result.cleanup).not.toContain("setup-40-completed");
       expect(result.cleanup).not.toContain("setup-155-body-");
-      const records = yield* Effect.forEach(Str.split("\n")(Str.trim(result.diagnostics)), (line) =>
-        decodeDiagnosticErrors(line)
+      const records = yield* Effect.forEach(
+        Str.split("\n")(Str.trim(result.diagnostics)),
+        (line) => decodeDiagnosticErrors(line),
+        { concurrency: 1 }
       );
       expect(records).toHaveLength(2);
       for (const record of records) {

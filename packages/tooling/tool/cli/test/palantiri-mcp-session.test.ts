@@ -228,7 +228,7 @@ describe("beep palantiri mcp", () => {
             expect(mcp).toBe(cli);
             expect(pipe(mcp, Str.includes("@"))).toBe(false);
           }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       })
     );
@@ -381,8 +381,10 @@ describe("beep session open hot parcels", () => {
         const withLaneRedsTimedOut = A.map(staged.lines, (line) => (line.parcel === "lane-reds" ? timedOut : line));
         const laneRedsLine = (lines: ReadonlyArray<HotParcelLine>) =>
           A.filter(renderHotBlock(Result.succeed(lines)), (line) => pipe(line, Str.startsWith("- lane-reds: ")));
-        const carried = yield* Effect.forEach(A.range(1, MAX_HOT_LINE_CARRIES), () =>
-          stageHotParcels(withLaneRedsTimedOut)
+        const carried = yield* Effect.forEach(
+          A.range(1, MAX_HOT_LINE_CARRIES),
+          () => stageHotParcels(withLaneRedsTimedOut),
+          { concurrency: 1 }
         );
         A.forEach(carried, (lines, index) => {
           const line = A.findFirst(lines, (entry) => entry.parcel === "lane-reds");

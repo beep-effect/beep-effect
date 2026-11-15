@@ -702,7 +702,9 @@ const runIdsWithStatus = (status: string) =>
     ".workflow_runs[].id",
   ]).pipe(
     Effect.flatMap((lines) =>
-      Effect.forEach(lines, (line) => Effect.fromOption(decodeRunIdLine(line), () => `unexpected run id ${line}`))
+      Effect.forEach(lines, (line) => Effect.fromOption(decodeRunIdLine(line), () => `unexpected run id ${line}`), {
+        concurrency: 1,
+      })
     )
   );
 
@@ -721,7 +723,9 @@ const runJobs = (runId: number) =>
     ".jobs[] | {status, labels}",
   ]).pipe(
     Effect.flatMap((lines) =>
-      Effect.forEach(lines, (line) => Effect.fromOption(decodeJobLine(line), () => `unexpected job ${line}`))
+      Effect.forEach(lines, (line) => Effect.fromOption(decodeJobLine(line), () => `unexpected job ${line}`), {
+        concurrency: 1,
+      })
     )
   );
 

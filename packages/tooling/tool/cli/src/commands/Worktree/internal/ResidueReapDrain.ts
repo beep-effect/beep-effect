@@ -234,20 +234,24 @@ const borrowingsOf = Effect.fnUntraced(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const clones = A.filter(layouts, (layout) => layout.kind === "clone");
-  const readings = yield* Effect.forEach(clones, (clone) => {
-    const objects = path.join(clone.commonDir, "objects");
-    const file = path.join(objects, "info", "alternates");
-    return fs.exists(file).pipe(
-      Effect.flatMap((exists) => (exists ? fs.readFileString(file) : Effect.succeed(""))),
-      Effect.map((text) =>
-        A.map(
-          A.filter(nonEmptyLines(text), (line) => !Str.startsWith("#")(line)),
-          (line): Borrowing => ({ borrower: clone.checkout, objects: path.resolve(objects, line) })
-        )
-      ),
-      Effect.option
-    );
-  });
+  const readings = yield* Effect.forEach(
+    clones,
+    (clone) => {
+      const objects = path.join(clone.commonDir, "objects");
+      const file = path.join(objects, "info", "alternates");
+      return fs.exists(file).pipe(
+        Effect.flatMap((exists) => (exists ? fs.readFileString(file) : Effect.succeed(""))),
+        Effect.map((text) =>
+          A.map(
+            A.filter(nonEmptyLines(text), (line) => !Str.startsWith("#")(line)),
+            (line): Borrowing => ({ borrower: clone.checkout, objects: path.resolve(objects, line) })
+          )
+        ),
+        Effect.option
+      );
+    },
+    { concurrency: 1 }
+  );
   return A.every(readings, O.isSome) ? O.some(A.flatten(A.getSomes(readings))) : O.none();
 });
 
@@ -825,13 +829,15 @@ const bundleLocalOnlyWork = Effect.fnUntraced(function* (
   const file = path.join(directory, bundleFileName(layout.real, runId));
   // Stash entries are reflog entries, not refs: name each under a temporary ref for the bundle.
   const tempRefs = A.map(spec.value.stashes, (_, index) => `refs/beep-drain/stash-${index}`);
-  const named = yield* Effect.forEach(A.zip(tempRefs, spec.value.stashes), ([ref, sha]) =>
-    Effect.flatMap(Git, (git) => git.updateRef(layout.real, ref, { create: sha })).pipe(Effect.option)
+  const named = yield* Effect.forEach(
+    A.zip(tempRefs, spec.value.stashes),
+    ([ref, sha]) => Effect.flatMap(Git, (git) => git.updateRef(layout.real, ref, { create: sha })).pipe(Effect.option),
+    { concurrency: 1 }
   );
   const release = Effect.forEach(
     A.zip(tempRefs, spec.value.stashes),
     ([ref, sha]) => Effect.flatMap(Git, (git) => git.updateRef(layout.real, ref, { delete: sha })).pipe(Effect.option),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   if (!A.every(named, O.isSome)) {
     yield* release;
@@ -907,11 +913,14 @@ const preserveLocalFiles = Effect.fnUntraced(function* (layout: DrainLayout, sta
   ]);
   if (O.isNone(listing)) return Result.fail("git ls-files could not list the ignored files");
   const entries = A.filter(Str.split("\u0000")(listing.value), Str.isNonEmpty);
-  const sized = yield* Effect.forEach(entries, (entry) =>
-    Effect.map(
-      preservedBytes(layout.real, entry),
-      O.map((bytes) => [entry, bytes] as const)
-    )
+  const sized = yield* Effect.forEach(
+    entries,
+    (entry) =>
+      Effect.map(
+        preservedBytes(layout.real, entry),
+        O.map((bytes) => [entry, bytes] as const)
+      ),
+    { concurrency: 1 }
   );
   const present = A.getSomes(sized);
   if (A.isReadonlyArrayEmpty(present)) return Result.succeed(O.none<string>());
@@ -925,13 +934,17 @@ const preserveLocalFiles = Effect.fnUntraced(function* (layout: DrainLayout, sta
     );
   }
   const directory = path.join(stateDirectory, DRAIN_BUNDLES, `${bundleFileName(layout.real, runId)}.local`);
-  const copied = yield* Effect.forEach(present, ([entry]) => {
-    const relative = Str.replace(/\/$/u, "")(entry);
-    const target = path.join(directory, relative);
-    return fs
-      .makeDirectory(path.dirname(target), { recursive: true })
-      .pipe(Effect.andThen(fs.copy(path.join(layout.real, relative), target)), Effect.option);
-  });
+  const copied = yield* Effect.forEach(
+    present,
+    ([entry]) => {
+      const relative = Str.replace(/\/$/u, "")(entry);
+      const target = path.join(directory, relative);
+      return fs
+        .makeDirectory(path.dirname(target), { recursive: true })
+        .pipe(Effect.andThen(fs.copy(path.join(layout.real, relative), target)), Effect.option);
+    },
+    { concurrency: 1 }
+  );
   return A.every(copied, O.isSome)
     ? Result.succeed(O.some(directory))
     : Result.fail(`could not copy the ignored local files to ${directory}`);

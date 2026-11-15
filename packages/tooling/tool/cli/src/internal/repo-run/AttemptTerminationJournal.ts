@@ -232,11 +232,14 @@ interface JournalLine {
 }
 
 const decodeJournalLines = (lines: ReadonlyArray<string>) =>
-  Effect.forEach(lines, (line) =>
-    decodeRetentionEvent(line).pipe(
-      Effect.option,
-      Effect.map((event): JournalLine => ({ event, line }))
-    )
+  Effect.forEach(
+    lines,
+    (line) =>
+      decodeRetentionEvent(line).pipe(
+        Effect.option,
+        Effect.map((event): JournalLine => ({ event, line }))
+      ),
+    { concurrency: 1 }
   );
 
 const knownJournalEvents = (rows: ReadonlyArray<JournalLine>): ReadonlyArray<AttemptJournalRetentionEvent> =>
@@ -504,34 +507,37 @@ const reconcileJournalLocked = Effect.fn("AttemptTerminationJournal.reconcileLoc
     (event) => !A.contains(terminalIds, event.attemptId)
   );
   const recordedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
-  const forEach2 = yield* Effect.forEach(unfinishedStarts, (started) =>
-    pipe(
-      unfinishedStartTerminationReason(started),
-      Effect.flatMap(
-        O.match({
-          onNone: () => Effect.succeedNone,
-          onSome: (reason) =>
-            encodeSchedulerTermination({
-              schemaVersion: "yeet-attempt-journal/v1",
-              _tag: "attempt-terminated",
-              attemptId: started.attemptId,
-              recordedAt,
-              reason,
-              resolvedHeadSha: started.resolvedHeadSha,
-              diffFingerprint: started.diffFingerprint,
-              proofTier: started.proofTier,
-              envProfile: started.envProfile,
-              computeProfile: started.computeProfile,
-              stage: started.stage,
-            }).pipe(
-              Effect.mapBoth({
-                onFailure: QualitySchedulerError.new("Failed to encode reconciled attempt terminal event."),
-                onSuccess: (line) => O.some({ attemptId: started.attemptId, line }),
-              })
-            ),
-        })
-      )
-    )
+  const forEach2 = yield* Effect.forEach(
+    unfinishedStarts,
+    (started) =>
+      pipe(
+        unfinishedStartTerminationReason(started),
+        Effect.flatMap(
+          O.match({
+            onNone: () => Effect.succeedNone,
+            onSome: (reason) =>
+              encodeSchedulerTermination({
+                schemaVersion: "yeet-attempt-journal/v1",
+                _tag: "attempt-terminated",
+                attemptId: started.attemptId,
+                recordedAt,
+                reason,
+                resolvedHeadSha: started.resolvedHeadSha,
+                diffFingerprint: started.diffFingerprint,
+                proofTier: started.proofTier,
+                envProfile: started.envProfile,
+                computeProfile: started.computeProfile,
+                stage: started.stage,
+              }).pipe(
+                Effect.mapBoth({
+                  onFailure: QualitySchedulerError.new("Failed to encode reconciled attempt terminal event."),
+                  onSuccess: (line) => O.some({ attemptId: started.attemptId, line }),
+                })
+              ),
+          })
+        )
+      ),
+    { concurrency: 1 }
   );
   const terminalRows = A.getSomes(forEach2);
   yield* appendLinesLocked(

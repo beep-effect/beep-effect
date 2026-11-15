@@ -408,5 +408,8 @@ export const dropStalePublicationPartials = Effect.fn("PublicationLedger.dropSta
     readDirectory4,
     (entry) => Str.startsWith(`${id}.json.`)(entry) && Str.endsWith(".partial")(entry)
   );
-  yield* Effect.forEach(stale, (entry) => fs.remove(path.join(directory, entry), { force: true }), { discard: true });
+  yield* Effect.forEach(stale, (entry) => fs.remove(path.join(directory, entry), { force: true }), {
+    concurrency: 1,
+    discard: true,
+  });
 });

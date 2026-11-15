@@ -49,13 +49,16 @@ describe("Admission models", () => {
   it.effect(
     "round-trips every admission outcome variant",
     Effect.fnUntraced(function* () {
-      const kinds = yield* Effect.forEach(outcomes, (outcome) =>
-        Effect.gen(function* () {
-          const encoded = yield* encodeOutcome(outcome);
-          const decoded = yield* decodeOutcome(encoded);
-          expect(decoded).toEqual(outcome);
-          return decoded.outcome;
-        })
+      const kinds = yield* Effect.forEach(
+        outcomes,
+        (outcome) =>
+          Effect.gen(function* () {
+            const encoded = yield* encodeOutcome(outcome);
+            const decoded = yield* decodeOutcome(encoded);
+            expect(decoded).toEqual(outcome);
+            return decoded.outcome;
+          }),
+        { concurrency: 1 }
       );
       expect(kinds).toEqual(["landed", "deferred", "held", "rejected"]);
     })

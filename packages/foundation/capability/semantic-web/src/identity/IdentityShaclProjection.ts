@@ -132,20 +132,23 @@ export const projectShapes: {
         entries,
         Effect.fnUntraced(function* (entry) {
           const targetNode = yield* decodeEntrySubject(entry);
-          const fiberProperties = yield* Effect.forEach(policy.requiredFibers, (fiber) =>
-            pipe(
-              R.get(binding.fiberPaths, fiber),
-              O.match({
-                onNone: () => Effect.fail(IdentityFiberPathError.make({ fiber })),
-                onSome: (path) =>
-                  Effect.succeed(
-                    ShaclPropertyShape.make({
-                      path,
-                      minCount: O.some(S.Natural.make(1)),
-                    })
-                  ),
-              })
-            )
+          const fiberProperties = yield* Effect.forEach(
+            policy.requiredFibers,
+            (fiber) =>
+              pipe(
+                R.get(binding.fiberPaths, fiber),
+                O.match({
+                  onNone: () => Effect.fail(IdentityFiberPathError.make({ fiber })),
+                  onSome: (path) =>
+                    Effect.succeed(
+                      ShaclPropertyShape.make({
+                        path,
+                        minCount: O.some(S.Natural.make(1)),
+                      })
+                    ),
+                })
+              ),
+            { concurrency: 1 }
           );
 
           return ShaclNodeShape.make({
@@ -156,7 +159,8 @@ export const projectShapes: {
               A.appendAll(fiberProperties)
             ),
           });
-        })
+        }),
+        { concurrency: 1 }
       );
     })
 );

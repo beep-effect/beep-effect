@@ -107,16 +107,19 @@ const normalizeReportOnlyDeclaration = Effect.fn("normalizeReportOnlyDeclaration
 ) {
   if (!isSealId(id)) return raw;
   const task = yield* decodeDeclarationRecord(raw);
-  const classified = yield* Effect.forEach(inputs, (input) =>
-    GlobPattern.compile(input).pipe(
-      Effect.map((pattern) => {
-        const kind = pattern.literalPath.pipe(
-          O.filter((literal) => isGeneratedSourceInput(literal) || isGeneratedWorkspaceManifestInput(literal)),
-          O.map((literal) => (isGeneratedSourceInput(literal) ? "source" : "workspace-manifest"))
-        );
-        return Tuple.make(input, kind);
-      })
-    )
+  const classified = yield* Effect.forEach(
+    inputs,
+    (input) =>
+      GlobPattern.compile(input).pipe(
+        Effect.map((pattern) => {
+          const kind = pattern.literalPath.pipe(
+            O.filter((literal) => isGeneratedSourceInput(literal) || isGeneratedWorkspaceManifestInput(literal)),
+            O.map((literal) => (isGeneratedSourceInput(literal) ? "source" : "workspace-manifest"))
+          );
+          return Tuple.make(input, kind);
+        })
+      ),
+    { concurrency: 1 }
   );
   return {
     task: {
@@ -336,7 +339,8 @@ const fixture = Effect.fn("RootTasksFixture.make")(function* () {
     Effect.fnUntraced(function* ([id, raw]) {
       const decodedTask3 = yield* decodeTask(raw);
       return Tuple.make(id, decodedTask3);
-    })
+    }),
+    { concurrency: 1 }
   );
   const seals = R.fromEntries(A.filter(R.toEntries(configuration.tasks), ([id]) => isSealId(id)));
   const forEach4 = yield* Effect.forEach(
@@ -344,7 +348,8 @@ const fixture = Effect.fn("RootTasksFixture.make")(function* () {
     Effect.fnUntraced(function* ([id, raw]) {
       const decodedSeal = yield* decodeSeal(raw);
       return Tuple.make(id, decodedSeal);
-    })
+    }),
+    { concurrency: 1 }
   );
   const decodedSeals = R.fromEntries(forEach4);
   const tasks = R.fromEntries(rootEntries);
@@ -363,11 +368,13 @@ const fixture = Effect.fn("RootTasksFixture.make")(function* () {
   });
   // The seals belong to the CLI workspace; a manifest is all Turbo needs to host them.
   yield* writeJson(root, "packages/tooling/tool/cli/package.json", { name: "@beep/repo-cli", private: true });
-  yield* Effect.forEach(A.dedupe([...R.values(directInputs), nonInput]), (file) => writeFile(root, file, "{}\n"));
+  yield* Effect.forEach(A.dedupe([...R.values(directInputs), nonInput]), (file) => writeFile(root, file, "{}\n"), {
+    concurrency: 1,
+  });
   yield* writeJson(root, "packages/fixture/package.json", { name: "@fixture/member" });
   // Candidate tool reads omitted from many direct row inputs, but carried by D15.
   // All are real entries in the production fingerprint declaration.
-  yield* Effect.forEach(closureInputs, (file) => writeFile(root, file, "{}\n"));
+  yield* Effect.forEach(closureInputs, (file) => writeFile(root, file, "{}\n"), { concurrency: 1 });
   yield* writeJson(root, "turbo.json", { ...configuration, tasks: { ...tasks, ...seals } });
   return { root, tasks, seals: decodedSeals, binary: path.join(repo, "node_modules/.bin/turbo") };
 });
@@ -781,7 +788,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           "apps/fixture/.next/package.json",
           "apps/fixture/storybook-static/preview.js",
         ];
-        yield* Effect.forEach(artifacts, (file) => writeFile(root, file, "{}\n"));
+        yield* Effect.forEach(artifacts, (file) => writeFile(root, file, "{}\n"), { concurrency: 1 });
         const changed = yield* dryRun(root, binary, ids, false);
         for (const id of ids) {
           expect(rowFor(changed, id).hash, id).toBe(rowFor(baseline, id).hash);
@@ -807,7 +814,9 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           A.filter(EffectImportsPrunedDirectoryNames, (name) => name !== ".git"),
           (name) => [`packages/fixture/${name}/c3-pruned.ts`, `scratchpad/${name}/c3-pruned.md`]
         );
-        yield* Effect.forEach(pruned, (file) => writeFile(root, file, "export const pruned = 1;\n"));
+        yield* Effect.forEach(pruned, (file) => writeFile(root, file, "export const pruned = 1;\n"), {
+          concurrency: 1,
+        });
         const withPruned = yield* dryRun(root, binary, ids, false);
         for (const id of ids) {
           expect(rowFor(withPruned, id).hash, id).toBe(rowFor(baseline, id).hash);
@@ -877,7 +886,9 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ["runtime.test.ts", "diagnostic-reporter.ts", "result.json"],
           (name) => `${residueRoot}/.runtime-probe-killed/${name}`
         );
-        yield* Effect.forEach(residue, (file) => writeFile(root, file, "export const residue = 1;\n"));
+        yield* Effect.forEach(residue, (file) => writeFile(root, file, "export const residue = 1;\n"), {
+          concurrency: 1,
+        });
         const changed = yield* dryRun(root, binary, ids, false);
         for (const id of negated) {
           expect(rowFor(changed, id).hash, id).toBe(rowFor(baseline, id).hash);
@@ -912,7 +923,9 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           "packages/fixture/dist/internal/test/c3-probe.d.ts",
           "apps/fixture/dist/c3-probe.test.js",
         ];
-        yield* Effect.forEach(built, (file) => writeFile(root, file, "export declare const built: 1;\n"));
+        yield* Effect.forEach(built, (file) => writeFile(root, file, "export declare const built: 1;\n"), {
+          concurrency: 1,
+        });
         const withBuild = yield* dryRun(root, binary, [id], false);
         expect(rowFor(withBuild, id).hash).toBe(rowFor(baseline, id).hash);
         for (const file of built) expect(R.has(rowFor(withBuild, id).inputs, file), file).toBe(false);
@@ -934,7 +947,9 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         const id = "//#lint:typos";
         const control = "packages/fixture/c3-typos-probe.md";
         const planted = ["packages/fixture/.turbo/x.md", ".turbo/x.md"];
-        yield* Effect.forEach([control, ...planted], (file) => writeFile(root, file, "typo probe\n"));
+        yield* Effect.forEach([control, ...planted], (file) => writeFile(root, file, "typo probe\n"), {
+          concurrency: 1,
+        });
         const rows = yield* dryRun(root, binary, [id], false);
         const row = rowFor(rows, id);
         expect(R.has(row.inputs, control)).toBe(true);
@@ -958,7 +973,9 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           "infra/standalone/check.tsx",
           "apps/probe/check.js",
         ];
-        yield* Effect.forEach(excludedSources, (file) => writeFile(root, file, "export const value = 1;\n"));
+        yield* Effect.forEach(excludedSources, (file) => writeFile(root, file, "export const value = 1;\n"), {
+          concurrency: 1,
+        });
         const changed = yield* dryRun(root, binary, [id], false);
         expect(rowFor(changed, id).hash).toBe(rowFor(baseline, id).hash);
         for (const file of excludedSources) {
@@ -1254,7 +1271,8 @@ describe("Root-reaching task inputs", () => {
                 ? [`${file} ${id}`]
                 : []
             );
-          })
+          }),
+          { concurrency: 1 }
         );
         expect(A.flatten(offenders)).toEqual([]);
       })

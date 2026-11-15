@@ -327,7 +327,9 @@ const invalidInheritedReference = Effect.fn("PreambleOwnershipTest.invalidInheri
 const inspectRouteTexts = Effect.fn("PreambleOwnershipTest.inspectRoutes")(function* (
   texts: A.NonEmptyReadonlyArray<string>
 ) {
-  const witnesses = yield* Effect.forEach(A.take(fixtures.fixtures, 4), (raw) => S.decodeUnknownEffect(fixture)(raw));
+  const witnesses = yield* Effect.forEach(A.take(fixtures.fixtures, 4), (raw) => S.decodeUnknownEffect(fixture)(raw), {
+    concurrency: 1,
+  });
   const lexical = HashMap.fromIterable(
     A.flatMap(witnesses, (f) => A.map(f.lexicalEvidence.tokens, (t) => [Str.toLowerCase(t.anchor.quote), t] as const))
   );

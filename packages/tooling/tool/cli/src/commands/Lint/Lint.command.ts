@@ -97,7 +97,7 @@ export const lintCommand = Command.make(
   "lint",
   {},
   Effect.fn(function* () {
-    yield* Effect.forEach(bareLintLines, (line) => Console.error(line), { discard: true });
+    yield* Effect.forEach(bareLintLines, (line) => Console.error(line), { concurrency: 1, discard: true });
     return yield* failWithReportedExit(BARE_LINT_SUMMARY, 1);
   })
 ).pipe(Command.withDescription("Repository lint policy checks"), Command.withSubcommands(lintSubcommands));

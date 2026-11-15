@@ -122,13 +122,18 @@ describe("professional desktop execution authority observable-state recording", 
           `SELECT DISTINCT run_key FROM ${decisionTable}`
         );
         const runKeys = A.map(runKeyRows, (row) => ExecutionRunKey.make(row.run_key));
-        const chains = yield* Effect.forEach(runKeys, (runKey) =>
-          Effect.map(ledger.readDecisions(runKey), (records) => ({
-            verdicts: A.map(records, (record) => (record.verdict === "denied" ? `denied:${record.reason}` : "allowed")),
-            chain: verifyExecutionDecisionChain(records, runKey).result,
-          }))
+        const chains = yield* Effect.forEach(
+          runKeys,
+          (runKey) =>
+            Effect.map(ledger.readDecisions(runKey), (records) => ({
+              verdicts: A.map(records, (record) =>
+                record.verdict === "denied" ? `denied:${record.reason}` : "allowed"
+              ),
+              chain: verifyExecutionDecisionChain(records, runKey).result,
+            })),
+          { concurrency: 1 }
         );
-        const outcomesByRun = yield* Effect.forEach(runKeys, ledger.readOutcomes);
+        const outcomesByRun = yield* Effect.forEach(runKeys, ledger.readOutcomes, { concurrency: 1 });
         const outcomes = A.flatten(outcomesByRun);
         const columns = yield* sql.unsafe<{
           readonly table_name: string;

@@ -551,7 +551,7 @@ export const resolveLiveQualityConcurrencyPlan = Effect.fn("QualityPlan.resolveL
             ),
         });
     const plan = resolveQualityConcurrencyPlan(detection, Bun.env, admission);
-    yield* Effect.forEach(plan.notes, Console.warn, { discard: true });
+    yield* Effect.forEach(plan.notes, Console.warn, { concurrency: 1, discard: true });
     return plan;
   }
 );

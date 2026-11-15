@@ -101,7 +101,7 @@ const pnpmRuns = Effect.gen(function* () {
   if (!(yield* fs.exists(pnpmLog))) return A.empty<typeof PnpmRun.Type>();
   const readFileString1 = yield* fs.readFileString(pnpmLog);
   const lines = A.filter(Str.split(readFileString1, "\n"), Str.isNonEmpty);
-  return yield* Effect.forEach(lines, (line) => S.decodeEffect(PnpmRunLine)(line));
+  return yield* Effect.forEach(lines, (line) => S.decodeEffect(PnpmRunLine)(line), { concurrency: 1 });
 });
 
 const setUp = Effect.gen(function* () {

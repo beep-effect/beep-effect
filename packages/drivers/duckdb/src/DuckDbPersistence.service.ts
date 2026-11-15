@@ -109,18 +109,21 @@ export const layerBackingSql: Layer.Layer<Persistence.BackingPersistence, never,
           );
         });
         const setMany: Persistence.BackingPersistenceStore["setMany"] = Effect.fnUntraced(function* (entries) {
-          const rows = yield* Effect.forEach(entries, ([id, value, ttl]) =>
-            encode(value).pipe(
-              Effect.mapBoth({
-                onFailure: persistenceError("Failed to serialize values into backing store"),
-                onSuccess: (value) => ({
-                  store_id: storeId,
-                  id,
-                  value,
-                  expires: Persistence.unsafeTtlToExpires(clock, ttl),
-                }),
-              })
-            )
+          const rows = yield* Effect.forEach(
+            entries,
+            ([id, value, ttl]) =>
+              encode(value).pipe(
+                Effect.mapBoth({
+                  onFailure: persistenceError("Failed to serialize values into backing store"),
+                  onSuccess: (value) => ({
+                    store_id: storeId,
+                    id,
+                    value,
+                    expires: Persistence.unsafeTtlToExpires(clock, ttl),
+                  }),
+                })
+              ),
+            { concurrency: 1 }
           );
           yield* sql`INSERT INTO ${table} ${sql.insert(rows)} ON CONFLICT (store_id, id)
             DO UPDATE SET value = excluded.value, expires = excluded.expires`.unprepared.pipe(

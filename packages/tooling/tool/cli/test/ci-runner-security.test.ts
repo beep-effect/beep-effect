@@ -242,8 +242,10 @@ const stepsReferencing = Effect.fnUntraced(function* (jobs: WorkflowJobs, needle
   const labelled = A.flatMap(R.toEntries(jobs), ([jobId, job]) =>
     A.map(job.steps ?? [], (step) => [`${jobId}/${step.name ?? ""}`, step] as const)
   );
-  const encoded = yield* Effect.forEach(labelled, ([label, step]) =>
-    Effect.map(encodeJobsFixture(step), (text) => [label, text] as const)
+  const encoded = yield* Effect.forEach(
+    labelled,
+    ([label, step]) => Effect.map(encodeJobsFixture(step), (text) => [label, text] as const),
+    { concurrency: 1 }
   );
   return A.map(
     A.filter(encoded, ([, text]) => Str.includes(needle)(text)),

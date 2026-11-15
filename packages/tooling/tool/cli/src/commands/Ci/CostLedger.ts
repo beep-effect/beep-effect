@@ -699,8 +699,10 @@ const readRun = Effect.fn("CiLedgerReader.readRun")(function* (runId: number) {
     .pipe(Effect.flatMap(flow(decodeRun, CiCommandError.mapError(`Cannot decode run ${runId}.`))));
   const read = yield* collectCiWorkflowRunAttemptJobs(run.id, run.run_attempt);
   const planLog = yield* readOptionalLog(latestJobNamed(read.jobs, CiSupportJobName.Enum["Test Plan"]));
-  const catchAllLogs = yield* Effect.forEach(CATCH_ALL_PARTITIONS, ([lane, partition]) =>
-    readOptionalLog(latestJobNamed(read.jobs, ciLaneShardJobName(partition, lane)))
+  const catchAllLogs = yield* Effect.forEach(
+    CATCH_ALL_PARTITIONS,
+    ([lane, partition]) => readOptionalLog(latestJobNamed(read.jobs, ciLaneShardJobName(partition, lane))),
+    { concurrency: 1 }
   );
   return CiLedgerRun.make({
     jobs: read.jobs,

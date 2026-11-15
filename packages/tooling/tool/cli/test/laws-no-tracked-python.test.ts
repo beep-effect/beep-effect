@@ -62,7 +62,7 @@ const makeFixtureCheckout = Effect.fn("NoTrackedPythonTest.makeFixtureCheckout")
     yield* fs.writeFileString(path.join(root, file), "print('hello')\n");
   });
   yield* fs.writeFileString(path.join(root, "bun.lock"), "");
-  yield* Effect.forEach([...cleanFixtures, ...extra, "scripts/removed.py"], write, { discard: true });
+  yield* Effect.forEach([...cleanFixtures, ...extra, "scripts/removed.py"], write, { concurrency: 1, discard: true });
   yield* runGit(root, ["init", "--quiet"]);
   yield* runGit(root, ["add", "."]);
   yield* runGit(root, ["rm", "--cached", "--quiet", "scripts/removed.py"]);

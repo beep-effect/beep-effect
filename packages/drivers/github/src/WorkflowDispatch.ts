@@ -441,17 +441,20 @@ const make = (client: GitHubClient["Service"]): WorkflowDispatchShape => {
       owner,
       repo,
     });
-    return yield* Effect.forEach(workflows, (workflow) =>
-      S.decodeEffect(WorkflowInfo)({
-        id: workflow.id,
-        name: workflow.name,
-        path: workflow.path,
-        state: workflow.state,
-      }).pipe(
-        Effect.mapError((error) =>
-          GitHubError.decode("WorkflowDispatch.list", "GitHub returned an unexpected workflow", error)
-        )
-      )
+    return yield* Effect.forEach(
+      workflows,
+      (workflow) =>
+        S.decodeEffect(WorkflowInfo)({
+          id: workflow.id,
+          name: workflow.name,
+          path: workflow.path,
+          state: workflow.state,
+        }).pipe(
+          Effect.mapError((error) =>
+            GitHubError.decode("WorkflowDispatch.list", "GitHub returned an unexpected workflow", error)
+          )
+        ),
+      { concurrency: 1 }
     );
   });
 

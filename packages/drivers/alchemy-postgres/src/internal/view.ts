@@ -43,7 +43,7 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
           sql`DELETE FROM ${sql(tables.viewEntry)} WHERE model = ${modelName} AND view = ${name}`,
           sql`DELETE FROM ${sql(tables.consumerInput)} WHERE model = ${modelName} AND consumer = ${consumerId}`,
         ],
-        { discard: true }
+        { concurrency: 1, discard: true }
       )
     );
     const target = kit.target;
@@ -97,7 +97,7 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
                     VALUES (${modelName}, ${consumerId}, ${key}, ${last + index + 1}, ${delivery.source},
                       ${delivery.seq}, ${json}::jsonb, ${at})`
                 ),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
             yield* Effect.forEach(
               result.entries,
@@ -109,7 +109,7 @@ export const makeViewStore = (ctx: HostContext) => (_definition: View.Any, kit: 
                     VALUES (${modelName}, ${name}, ${key}, ${entry.seq}, ${event}::jsonb, ${envelope}::jsonb,
                       ${state}::jsonb)`;
               }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
             const live = yield* Backfill.routeCommit(
               sourceRole(key),

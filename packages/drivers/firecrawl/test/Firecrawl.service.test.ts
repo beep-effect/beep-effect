@@ -143,7 +143,9 @@ describe("Firecrawl", () => {
 
     it.effect("maps provider statuses and unsuccessful scrapes to typed reasons", () =>
       Effect.gen(function* () {
-        const reasons = yield* Effect.forEach(["unauthorized", "limited", "failed", "malformed"], failureReason);
+        const reasons = yield* Effect.forEach(["unauthorized", "limited", "failed", "malformed"], failureReason, {
+          concurrency: 1,
+        });
         expect(reasons).toEqual(["unauthorized", "rate-limited", "scrape-failed", "response-decoding"]);
       })
     );

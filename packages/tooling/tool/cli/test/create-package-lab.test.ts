@@ -446,7 +446,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             const decodedUnknownJson3 = yield* decodeUnknownJson(encodedLabManifestFromJsonStringEffect34);
             expect(decodedUnknownJson3).toEqual(encoded);
           }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
         yield* Effect.forEach(
           [
@@ -469,7 +469,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             );
             assertFailure(result, { issues: [{ path: ["created"], message }] });
           }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       })
     );

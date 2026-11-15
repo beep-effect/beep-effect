@@ -134,7 +134,7 @@ const renderCalibration = (row: CalibrationRow): string =>
   )} cost=${row.graphqlCost} span=${row.spanMillis}ms`;
 
 const printLines = (lines: ReadonlyArray<string>) =>
-  Effect.forEach(lines, (line) => Console.log(line), { discard: true });
+  Effect.forEach(lines, (line) => Console.log(line), { concurrency: 1, discard: true });
 
 const pruneQuietly = (ledger: GithubBudgetLedger["Service"]) =>
   ledger.prune.pipe(Effect.catch((error) => Effect.logWarning(`github ledger: prune failed: ${error.detail}`)));

@@ -32,10 +32,13 @@ const censusInputs = Effect.fn("VitestIsolationCensus.inputs")(function* (packag
     readDirectory1,
     (entry) => /\.test\.tsx?$/.test(entry) && !Str.startsWith("fixtures/")(entry)
   );
-  const leaking = yield* Effect.forEach(testFiles, (entry) =>
-    Effect.map(fs.readFileString(path.join(testRoot, entry)), (source) =>
-      A.some(leakPatterns, (pattern) => pattern.test(source)) ? [`test/${entry}`] : []
-    )
+  const leaking = yield* Effect.forEach(
+    testFiles,
+    (entry) =>
+      Effect.map(fs.readFileString(path.join(testRoot, entry)), (source) =>
+        A.some(leakPatterns, (pattern) => pattern.test(source)) ? [`test/${entry}`] : []
+      ),
+    { concurrency: 1 }
   );
   const config = yield* fs.readFileString(path.join(packageRoot, "vitest.config.ts"));
   const listed = Str.split(config, "const isolatedSuites = [")[1] ?? "";

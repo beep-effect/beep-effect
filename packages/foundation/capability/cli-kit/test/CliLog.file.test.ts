@@ -96,7 +96,7 @@ const harness = Effect.fn("harness")(function* (options: {
 const ndjson = (lines: ReadonlyArray<string>) => A.filter(lines, (line) => Str.startsWith("{")(line));
 /** The sink's one error line. CliLogger's plain lines share stderr, so it is picked out by its prefix. */
 const plain = (lines: ReadonlyArray<string>) => A.filter(lines, (line) => Str.startsWith("diagnostics log file")(line));
-const settle = Effect.forEach(Array.from({ length: 50 }), () => Effect.yieldNow);
+const settle = Effect.forEach(Array.from({ length: 50 }), () => Effect.yieldNow, { concurrency: 1 });
 
 const program = Effect.gen(function* () {
   yield* Effect.logDebug("dbg");

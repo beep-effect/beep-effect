@@ -223,7 +223,7 @@ export const installSyncWriterFence = Effect.gen(function* () {
             FOR EACH STATEMENT EXECUTE FUNCTION documents_sync_writer_fence();
         END IF;
       END $install$`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 }).pipe(Effect.withSpan("SyncWriterEpoch.installFence"));
 

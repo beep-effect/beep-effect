@@ -383,10 +383,13 @@ export const loadYeetInboxView = Effect.fn("Yeet.loadYeetInboxView")(function* (
   );
   const deduped = dedupeRowsById(wellFormed);
   const wave = yield* loadYeetRemediationWave(repoRoot);
-  const entries = yield* Effect.forEach(deduped, (row) =>
-    readYeetAckState(repoRoot, row.id).pipe(
-      Effect.map((ack) => YeetInboxEntry.make({ ack, liveness: yeetInboxRowLiveness(row, wave), row }))
-    )
+  const entries = yield* Effect.forEach(
+    deduped,
+    (row) =>
+      readYeetAckState(repoRoot, row.id).pipe(
+        Effect.map((ack) => YeetInboxEntry.make({ ack, liveness: yeetInboxRowLiveness(row, wave), row }))
+      ),
+    { concurrency: 1 }
   );
   return YeetInboxView.make({
     entries,
@@ -588,10 +591,13 @@ export const loadYeetPrWave = Effect.fn("Yeet.loadYeetPrWave")(function* (
       ),
     { concurrency: 1 }
   );
-  const entries = yield* Effect.forEach(dedupeRowsById(wellFormed), (row) =>
-    readYeetAckState(repoRoot, row.id).pipe(
-      Effect.map((ack) => YeetInboxEntry.make({ ack, liveness: yeetInboxRowLiveness(row, wave), row }))
-    )
+  const entries = yield* Effect.forEach(
+    dedupeRowsById(wellFormed),
+    (row) =>
+      readYeetAckState(repoRoot, row.id).pipe(
+        Effect.map((ack) => YeetInboxEntry.make({ ack, liveness: yeetInboxRowLiveness(row, wave), row }))
+      ),
+    { concurrency: 1 }
   );
   return O.map(selectYeetPrWave(entries, prNumber, pending), (selected) => YeetPrWave.make({ ...selected, redSetKey }));
 });
@@ -853,7 +859,8 @@ export const loadYeetHookFirstSeen = Effect.fn("Yeet.loadYeetHookFirstSeen")(fun
     (name) =>
       fs
         .readFileString(path.join(dir, name))
-        .pipe(Effect.map(YeetHookSessionStateJson.decodeOption), Effect.orElseSucceed(O.none<YeetHookSessionState>))
+        .pipe(Effect.map(YeetHookSessionStateJson.decodeOption), Effect.orElseSucceed(O.none<YeetHookSessionState>)),
+    { concurrency: 1 }
   );
   return A.reduce(A.getSomes(states), HashMap.empty<string, string>(), keepEarliestFirstSeen);
 });

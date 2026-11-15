@@ -1552,7 +1552,7 @@ describe("PackageManagerInstaller", () => {
           programs.push((yield* attempt("1.1.3", "pin-right")).run);
           programs.push((yield* attempt("1.1.4", "option-right")).run);
 
-          return { run: Effect.forEach(programs, identity, { discard: true }) };
+          return { run: Effect.forEach(programs, identity, { concurrency: 1, discard: true }) };
         })
       ),
       { timeout: "30 seconds" }
@@ -1842,7 +1842,7 @@ describe("PackageManagerInstaller", () => {
               })
             )).run
           );
-          return { run: Effect.forEach(programs, identity, { discard: true }) };
+          return { run: Effect.forEach(programs, identity, { concurrency: 1, discard: true }) };
         })
       ),
       { timeout: "30 seconds" }
@@ -2080,7 +2080,7 @@ describe("PackageManagerInstaller", () => {
               })
             )).run
           );
-          return { run: Effect.forEach(programs, identity, { discard: true }) };
+          return { run: Effect.forEach(programs, identity, { concurrency: 1, discard: true }) };
         })
       ),
       { timeout: "30 seconds" }
@@ -2205,7 +2205,7 @@ describe("PackageManagerInstaller", () => {
           programs.push((yield* attempt(jsonResponse({ dist: { integrity: "md5-AAAA" } }))).run); // no usable algorithm
           programs.push((yield* attempt(() => new Response("<html>not json</html>", { status: 200 }))).run);
 
-          return { run: Effect.forEach(programs, identity, { discard: true }) };
+          return { run: Effect.forEach(programs, identity, { concurrency: 1, discard: true }) };
         })
       ),
       { timeout: "30 seconds" }
@@ -2341,7 +2341,7 @@ describe("PackageManagerInstaller", () => {
             Object.setPrototypeOf(inherited, { "@pnpm/exe.darwin-arm64": wrongSri });
             programs.push((yield* attempt(inherited)).run);
 
-            return { run: Effect.forEach(programs, identity, { discard: true }) };
+            return { run: Effect.forEach(programs, identity, { concurrency: 1, discard: true }) };
           })
         ),
         { timeout: "30 seconds" }
@@ -2613,7 +2613,7 @@ describe("PackageManagerInstaller", () => {
             );
           }
 
-          return { run: Effect.forEach(programs, identity, { discard: true }) };
+          return { run: Effect.forEach(programs, identity, { concurrency: 1, discard: true }) };
         })
       ),
       { timeout: "30 seconds" }
@@ -2955,7 +2955,7 @@ describe("PackageManagerInstaller", () => {
             }
           }
 
-          return { run: Effect.forEach(programs, identity, { discard: true }) };
+          return { run: Effect.forEach(programs, identity, { concurrency: 1, discard: true }) };
         })
       ),
       { timeout: "30 seconds" }

@@ -346,7 +346,7 @@ const make = Effect.fn("TsNativeApi.layer")(function* (config: TsNativeConfig) {
         ...current.getSyntacticDiagnostics(),
         ...current.getSemanticDiagnostics(),
       ]);
-      return yield* Effect.forEach(diagnostics, decodeDiagnostic);
+      return yield* Effect.forEach(diagnostics, decodeDiagnostic, { concurrency: 1 });
     }),
   });
 });

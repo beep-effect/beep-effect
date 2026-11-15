@@ -260,8 +260,10 @@ const writeJournal = Effect.fn("EconomicsTest.writeJournal")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const directory = yield* runDirectory(checkoutRoot, runId, packetDir);
-  const lines = yield* Effect.forEach(rows, (row) =>
-    Str.isString(row) ? Effect.succeed(row) : JournalEventJson.encode(row)
+  const lines = yield* Effect.forEach(
+    rows,
+    (row) => (Str.isString(row) ? Effect.succeed(row) : JournalEventJson.encode(row)),
+    { concurrency: 1 }
   );
   yield* fs.writeFileString(path.join(directory, "attempts.ndjson"), `${A.join(lines, "\n")}${trailer}`);
 });

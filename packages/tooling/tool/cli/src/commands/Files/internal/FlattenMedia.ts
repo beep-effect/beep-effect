@@ -492,6 +492,7 @@ const applyFlattenMediaPlan = Effect.fn("Files.applyFlattenMediaPlan")(function*
 
 const logFlattenMediaPlan = Effect.fn("Files.logFlattenMediaPlan")(function* (plan: FlattenMediaPlan) {
   yield* Effect.forEach(plan.entries, (entry) => Console.log(`${entry.sourceRelativePath} -> ${entry.targetName}`), {
+    concurrency: 1,
     discard: true,
   });
 });

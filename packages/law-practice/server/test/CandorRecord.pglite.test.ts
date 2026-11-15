@@ -274,9 +274,9 @@ const seedRepresentativePlannerVolume = Effect.fnUntraced(function* (seedRows: R
   yield* Effect.forEach(
     A.zip(representativeInsertStatements, seedRows),
     ([statement, seedId]) => sql.unsafe(statement, [seedId, representativeRowsPerTable]),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
-  yield* Effect.forEach(candorTableNames, (table) => sql.unsafe(`ANALYZE ${table}`), { discard: true });
+  yield* Effect.forEach(candorTableNames, (table) => sql.unsafe(`ANALYZE ${table}`), { concurrency: 1, discard: true });
 });
 
 const explainFilingRead = Effect.fnUntraced(function* (table: string) {
@@ -306,9 +306,7 @@ const setNextRowId = Effect.fnUntraced(function* (nextId: number) {
   yield* Effect.forEach(
     candorTableNames,
     (table) => sql`SELECT setval(pg_get_serial_sequence(${table}, 'id'), ${nextId}, false)`,
-    {
-      discard: true,
-    }
+    { concurrency: 1, discard: true }
   );
 });
 

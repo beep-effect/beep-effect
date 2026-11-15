@@ -232,7 +232,9 @@ export const observeAiMetricsGitRoot = Effect.fn("AiMetrics.observeGitRoot")(fun
     const lines = Str.split(Str.replace(/\r?\n$/u, "")(output), "\n");
     const parsed = decodeArgumentsOption(lines);
     if (O.isNone(parsed)) return unknown("probe-failed");
-    const [top, gitDir, commonDir] = yield* Effect.forEach(parsed.value, (value) => fs.realPath(value));
+    const [top, gitDir, commonDir] = yield* Effect.forEach(parsed.value, (value) => fs.realPath(value), {
+      concurrency: 1,
+    });
     if (top !== root) return unknown("not-a-checkout-root");
     if (gitDir === undefined || commonDir === undefined) return unknown("probe-failed");
     return yield* observeIdentity(gitDir, commonDir);

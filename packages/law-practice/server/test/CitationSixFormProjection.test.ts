@@ -160,7 +160,9 @@ const install = Effect.fnUntraced(function* (
   const implementation = yield* S.decodeEffect(Sha256HexFromBytes)(
     new TextEncoder().encode("six-form-projection-test")
   );
-  const sources = yield* Effect.forEach(profile.cases, (row) => citationFixtureSourceProof(row.text));
+  const sources = yield* Effect.forEach(profile.cases, (row) => citationFixtureSourceProof(row.text), {
+    concurrency: 1,
+  });
   const resolver = SourceTextResolver.of({
     resolve: Effect.fnUntraced(function* (request) {
       const source = A.findFirst(sources, (source) =>

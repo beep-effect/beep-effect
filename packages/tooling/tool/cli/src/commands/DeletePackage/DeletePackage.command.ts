@@ -767,7 +767,7 @@ const reportResidueObservations = (observations: ReadonlyArray<RegistrationObser
   Effect.forEach(
     A.filter(observations, (item) => !Str.equivalence(item.status, "clean")),
     (item) => Console.error(`[delete-package] residue ${item.surfaceId}: ${A.join(item.evidence, ", ")}`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
 // The accepted consent-required lab data-resource observation carries the
@@ -776,7 +776,7 @@ const reportConsentRequiredObservations = (observations: ReadonlyArray<Registrat
   Effect.forEach(
     A.filter(observations, (item) => Str.equivalence(item.status, "consent-required")),
     (item) => Console.log(`[delete-package] data-resource ${item.surfaceId}: ${A.join(item.evidence, ", ")}`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
 const runApplyMode = Effect.fn("DeletePackage.runApplyMode")(function* (

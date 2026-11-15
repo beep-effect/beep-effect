@@ -219,13 +219,19 @@ export const installGithubLedgerTimer = Effect.fn("GithubLedgerTimer.install")(f
         GithubCommandError.make({ path: unitDir, message: "Cannot create the systemd user unit directory.", cause })
       )
     );
-  const written = yield* Effect.forEach(renderGithubLedgerTimerUnits(options), (unit) => {
-    const file = path.join(unitDir, unit.fileName);
-    return fs.writeFileString(file, unit.text).pipe(
-      Effect.as(file),
-      Effect.mapError((cause) => GithubCommandError.make({ path: file, message: "Cannot write the unit file.", cause }))
-    );
-  });
+  const written = yield* Effect.forEach(
+    renderGithubLedgerTimerUnits(options),
+    (unit) => {
+      const file = path.join(unitDir, unit.fileName);
+      return fs.writeFileString(file, unit.text).pipe(
+        Effect.as(file),
+        Effect.mapError((cause) =>
+          GithubCommandError.make({ path: file, message: "Cannot write the unit file.", cause })
+        )
+      );
+    },
+    { concurrency: 1 }
+  );
   yield* runSystemctl(["daemon-reload"]);
   yield* runSystemctl(["enable", "--now", `${GITHUB_LEDGER_TIMER_UNIT}.timer`]);
   return written;
@@ -255,8 +261,10 @@ export const uninstallGithubLedgerTimer = Effect.fn("GithubLedgerTimer.uninstall
   const path = yield* Path.Path;
   const unitDir = systemdUserUnitDir(path, home);
   yield* runSystemctl(["disable", "--now", `${GITHUB_LEDGER_TIMER_UNIT}.timer`]).pipe(Effect.ignore);
-  yield* Effect.forEach(["timer", "service"], (suffix) =>
-    fs.remove(path.join(unitDir, `${GITHUB_LEDGER_TIMER_UNIT}.${suffix}`)).pipe(Effect.ignore)
+  yield* Effect.forEach(
+    ["timer", "service"],
+    (suffix) => fs.remove(path.join(unitDir, `${GITHUB_LEDGER_TIMER_UNIT}.${suffix}`)).pipe(Effect.ignore),
+    { concurrency: 1 }
   );
   yield* runSystemctl(["daemon-reload"]);
 });

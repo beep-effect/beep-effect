@@ -238,8 +238,11 @@ const deriveOperations = Effect.fn("CacheConformance.deriveOperations")(function
         Effect.fromOption(() => CacheCommandError.new(`OpenAPI blob has no ${method} ${path} operation.`))
       );
       const operation = yield* decodeOperation(raw);
-      const resolved = yield* Effect.forEach(R.toEntries(operation.responses), ([status, response]) =>
-        resolveResponse(components, response).pipe(Effect.map((shape) => [status, shape] as const))
+      const resolved = yield* Effect.forEach(
+        R.toEntries(operation.responses),
+        ([status, response]) =>
+          resolveResponse(components, response).pipe(Effect.map((shape) => [status, shape] as const)),
+        { concurrency: 1 }
       );
       const responses = A.sort(
         A.getSomes(
@@ -263,7 +266,8 @@ const deriveOperations = Effect.fn("CacheConformance.deriveOperations")(function
           Effect.mapError(() => CacheCommandError.new(`OpenAPI ${operation.operationId} documents no responses.`))
         ),
       });
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 
@@ -271,11 +275,14 @@ const originFor = Effect.fn("CacheConformance.originFor")(function* (
   routes: CaseRule["routes"],
   operations: ReadonlyArray<CacheConformanceOperation>
 ) {
-  const ids = yield* Effect.forEach(routes, ([method, path]) =>
-    A.findFirst(operations, (operation) => operation.method === method && operation.route === `/v8${path}`).pipe(
-      Effect.fromOption(() => CacheCommandError.new(`Case route ${method} ${path} is not a derived operation.`)),
-      Effect.map((operation) => operation.operationId)
-    )
+  const ids = yield* Effect.forEach(
+    routes,
+    ([method, path]) =>
+      A.findFirst(operations, (operation) => operation.method === method && operation.route === `/v8${path}`).pipe(
+        Effect.fromOption(() => CacheCommandError.new(`Case route ${method} ${path} is not a derived operation.`)),
+        Effect.map((operation) => operation.operationId)
+      ),
+    { concurrency: 1 }
   );
   return yield* A.match(ids, {
     onEmpty: () => CacheCommandError.new("Generated cases must reference at least one OpenAPI operation."),
@@ -332,7 +339,8 @@ export const buildCacheConformanceCorpus = Effect.fn("CacheConformance.buildCorp
         dimensions: entry.dimensions,
         reason: entry.reason,
       });
-    })
+    }),
+    { concurrency: 1 }
   );
   // Validate through the type side so a plan drift is a typed failure, not a thrown make.
   return yield* decodeCorpusType({

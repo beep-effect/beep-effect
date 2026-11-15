@@ -1178,7 +1178,9 @@ const spanCounterfactuals = Effect.fn("KnowledgeDoctor.spanCounterfactuals")(fun
   return yield* KnowledgeEvaluationOutcome.match(outcome, {
     Failed: () => Effect.succeed(A.empty<KnowledgeCounterfactualVerdict>()),
     Resolved: (resolved) =>
-      Effect.forEach(resolved.witnesses, (witness) => witnessVerdict(tree, span, evaluator, witness)),
+      Effect.forEach(resolved.witnesses, (witness) => witnessVerdict(tree, span, evaluator, witness), {
+        concurrency: 1,
+      }),
   });
 });
 
@@ -1218,11 +1220,14 @@ export const knowledgeCounterfactualVerdicts = Effect.fn("KnowledgeDoctor.counte
   spans: ReadonlyArray<KnowledgeSpan>,
   evaluators: ReadonlyArray<KnowledgeEvaluator> = KNOWLEDGE_DOCTOR_EVALUATORS
 ) {
-  const perSpan = yield* Effect.forEach(spans, (span) =>
-    O.match(evaluatorFor(evaluators, span), {
-      onNone: () => Effect.succeed(A.empty<KnowledgeCounterfactualVerdict>()),
-      onSome: (evaluator) => spanCounterfactuals(tree, span, evaluator),
-    })
+  const perSpan = yield* Effect.forEach(
+    spans,
+    (span) =>
+      O.match(evaluatorFor(evaluators, span), {
+        onNone: () => Effect.succeed(A.empty<KnowledgeCounterfactualVerdict>()),
+        onSome: (evaluator) => spanCounterfactuals(tree, span, evaluator),
+      }),
+    { concurrency: 1 }
   );
   return A.flatten(perSpan);
 });
@@ -1416,8 +1421,10 @@ const citationAncestry = Effect.fn("KnowledgeDoctor.citationAncestry")(function*
   commits: ReadonlyArray<string>
 ) {
   const unique = A.dedupe(commits);
-  const verdicts = yield* Effect.forEach(unique, (commit) =>
-    Effect.map(tree.isAncestor(commit), (ancestor) => [commit, ancestor] as const)
+  const verdicts = yield* Effect.forEach(
+    unique,
+    (commit) => Effect.map(tree.isAncestor(commit), (ancestor) => [commit, ancestor] as const),
+    { concurrency: 1 }
   );
   return HashMap.fromIterable(verdicts);
 });
@@ -1467,19 +1474,25 @@ export const scanKnowledgeDoctorTree = Effect.fn("KnowledgeDoctor.scanTree")(fun
 ) {
   const documents = A.sort(A.filter(tree.trackedEntries, isDoctorDocument), entryOrder);
   const packages = yield* tree.domain.packages;
-  const extractions = yield* Effect.forEach(documents, (entry) =>
-    tree.readBytes(entry.path).pipe(
-      Effect.flatMap((bytes) =>
-        decodeKnowledgeUtf8(bytes, `Malformed UTF-8 in tracked Markdown file "${entry.path}".`)
+  const extractions = yield* Effect.forEach(
+    documents,
+    (entry) =>
+      tree.readBytes(entry.path).pipe(
+        Effect.flatMap((bytes) =>
+          decodeKnowledgeUtf8(bytes, `Malformed UTF-8 in tracked Markdown file "${entry.path}".`)
+        ),
+        Effect.map((text) => ({
+          documentPath: entry.path,
+          extraction: extractDocumentSpans(entry.path, text, tree.gitRefNames, packages, tree.trackedEntries),
+        }))
       ),
-      Effect.map((text) => ({
-        documentPath: entry.path,
-        extraction: extractDocumentSpans(entry.path, text, tree.gitRefNames, packages, tree.trackedEntries),
-      }))
-    )
+    { concurrency: 1 }
   );
-  const treeSpans = yield* Effect.forEach(evaluators, (evaluator) =>
-    P.isUndefined(evaluator.treeSpans) ? Effect.succeed(A.empty<KnowledgeSpan>()) : evaluator.treeSpans(tree)
+  const treeSpans = yield* Effect.forEach(
+    evaluators,
+    (evaluator) =>
+      P.isUndefined(evaluator.treeSpans) ? Effect.succeed(A.empty<KnowledgeSpan>()) : evaluator.treeSpans(tree),
+    { concurrency: 1 }
   );
   const synthesized = A.map(A.flatten(treeSpans), (span) => ({
     documentPath: span.documentPath,

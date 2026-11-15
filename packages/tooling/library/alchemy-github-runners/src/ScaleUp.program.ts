@@ -313,23 +313,26 @@ export const configureRunners = Effect.fn("ScaleUp.configureRunners")(function* 
     if (groupId._tag === "Failure") {
       return input.instanceIds;
     }
-    const configured = yield* Effect.forEach(input.instanceIds, (instanceId) =>
-      Effect.gen(function* () {
-        const jit = yield* github.generateJitConfig(
-          token,
-          JitConfigRequest.make({
-            owner,
-            name: `${config.pool.runnerNamePrefix}${instanceId}`,
-            runnerGroupId: groupId.success,
-            labels: config.pool.labels,
-          })
-        );
-        yield* ec2.tag(instanceId, { [RunnerTag.githubRunnerId]: String(jit.runnerId) }).pipe(Effect.ignore);
-        yield* putToken(instanceId, jit.encodedJitConfig);
-      }).pipe(
-        Effect.as(O.none<string>()),
-        Effect.orElseSucceed(() => O.some(instanceId))
-      )
+    const configured = yield* Effect.forEach(
+      input.instanceIds,
+      (instanceId) =>
+        Effect.gen(function* () {
+          const jit = yield* github.generateJitConfig(
+            token,
+            JitConfigRequest.make({
+              owner,
+              name: `${config.pool.runnerNamePrefix}${instanceId}`,
+              runnerGroupId: groupId.success,
+              labels: config.pool.labels,
+            })
+          );
+          yield* ec2.tag(instanceId, { [RunnerTag.githubRunnerId]: String(jit.runnerId) }).pipe(Effect.ignore);
+          yield* putToken(instanceId, jit.encodedJitConfig);
+        }).pipe(
+          Effect.as(O.none<string>()),
+          Effect.orElseSucceed(() => O.some(instanceId))
+        ),
+      { concurrency: 1 }
     );
     return A.getSomes(configured);
   }
@@ -348,11 +351,14 @@ export const configureRunners = Effect.fn("ScaleUp.configureRunners")(function* 
     ]),
     " "
   );
-  const configured = yield* Effect.forEach(input.instanceIds, (instanceId) =>
-    putToken(instanceId, Redacted.make(args)).pipe(
-      Effect.as(O.none<string>()),
-      Effect.orElseSucceed(() => O.some(instanceId))
-    )
+  const configured = yield* Effect.forEach(
+    input.instanceIds,
+    (instanceId) =>
+      putToken(instanceId, Redacted.make(args)).pipe(
+        Effect.as(O.none<string>()),
+        Effect.orElseSucceed(() => O.some(instanceId))
+      ),
+    { concurrency: 1 }
   );
   return A.getSomes(configured);
 });
@@ -448,7 +454,7 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
     Effect.forEach(
       A.filter(stillQueued, ({ messageId }) => !A.contains(retrying, messageId)),
       ({ message }) => publishJobRetry({ config, message }).pipe(Effect.ignore),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
 
   if (allowed <= 0) {
@@ -477,6 +483,7 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
     ? yield* configureRunners({ config, token, owner, instanceIds: launched.instanceIds })
     : [];
   yield* Effect.forEach(failedConfig, (instanceId) => ec2.terminate(instanceId).pipe(Effect.ignore), {
+    concurrency: 1,
     discard: true,
   });
 
@@ -535,10 +542,13 @@ export const handleScaleUp = Effect.fn("ScaleUp.handle")(function* (input: {
     eligible,
     ({ message }) => ownerOf({ runnerType: config.runnerType, message: message }).owner
   );
-  const retried = yield* Effect.forEach(R.values(groups), (group) =>
-    scaleUpGroup(config, ownerOf({ runnerType: config.runnerType, message: group[0].message }), group).pipe(
-      Effect.orElseSucceed(() => A.map(group, ({ messageId }) => messageId))
-    )
+  const retried = yield* Effect.forEach(
+    R.values(groups),
+    (group) =>
+      scaleUpGroup(config, ownerOf({ runnerType: config.runnerType, message: group[0].message }), group).pipe(
+        Effect.orElseSucceed(() => A.map(group, ({ messageId }) => messageId))
+      ),
+    { concurrency: 1 }
   );
   return A.dedupe(
     A.appendAll(

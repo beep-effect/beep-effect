@@ -30,6 +30,7 @@ const repositoryLaws = Effect.gen(function* () {
     `lint laws: tracked-shell-allowlist; tracked_shell_files=${shell.trackedShellFiles}; findings=${shell.findings.length}`
   );
   yield* Effect.forEach(shell.findings, (finding) => Console.log(`lint laws: ${formatTrackedShellFinding(finding)}`), {
+    concurrency: 1,
     discard: true,
   });
   const python = yield* runNoTrackedPython(NoTrackedPythonOptions.make({ cwd: process.cwd(), strictCheck: true }));
@@ -39,9 +40,7 @@ const repositoryLaws = Effect.gen(function* () {
   yield* Effect.forEach(
     python.findings,
     (finding) => Console.log(`lint laws: ${formatNoTrackedPythonFinding(finding)}`),
-    {
-      discard: true,
-    }
+    { concurrency: 1, discard: true }
   );
   const failed = A.getSomes([
     O.liftPredicate("tracked-shell-allowlist", () => shell.strictFailure),

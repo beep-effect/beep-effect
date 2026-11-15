@@ -817,16 +817,20 @@ const fleetCandidates = Effect.fnUntraced(function* (
 ) {
   const path = yield* Path.Path;
   const names = yield* realDirectoryNames(projectsRoot, keep);
-  const nested = yield* Effect.forEach(names, (name) => {
-    const directory = path.join(projectsRoot, name);
-    const isWorktreesRoot = Str.endsWith(WORKTREES_ROOT_SUFFIX)(name);
-    const lanesRoot = isWorktreesRoot ? directory : path.join(directory, CLAUDE_WORKTREES_RELATIVE_ROOT);
-    const lanes = Effect.map(
-      realDirectoryNames(lanesRoot, constTrue),
-      A.map((lane) => path.join(lanesRoot, lane))
-    );
-    return isWorktreesRoot ? lanes : Effect.map(lanes, A.prepend(directory));
-  });
+  const nested = yield* Effect.forEach(
+    names,
+    (name) => {
+      const directory = path.join(projectsRoot, name);
+      const isWorktreesRoot = Str.endsWith(WORKTREES_ROOT_SUFFIX)(name);
+      const lanesRoot = isWorktreesRoot ? directory : path.join(directory, CLAUDE_WORKTREES_RELATIVE_ROOT);
+      const lanes = Effect.map(
+        realDirectoryNames(lanesRoot, constTrue),
+        A.map((lane) => path.join(lanesRoot, lane))
+      );
+      return isWorktreesRoot ? lanes : Effect.map(lanes, A.prepend(directory));
+    },
+    { concurrency: 1 }
+  );
   return A.flatten(nested);
 });
 
@@ -848,8 +852,10 @@ const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, proj
   if (O.isNone(configured)) {
     return yield* fleetCandidates(projectsRoot);
   }
-  const nested = yield* Effect.forEach(configured.value.roots, (root) =>
-    fleetCandidates(root.path, root.namePrefix === undefined ? constTrue : Str.startsWith(root.namePrefix))
+  const nested = yield* Effect.forEach(
+    configured.value.roots,
+    (root) => fleetCandidates(root.path, root.namePrefix === undefined ? constTrue : Str.startsWith(root.namePrefix)),
+    { concurrency: 1 }
   );
   // Configured roots may hold other repositories: admit only candidates whose owning clone shares our origin,
   // the rule the fleet mirror applies. Without a readable origin of our own, nothing else is admitted.
@@ -868,8 +874,11 @@ const fleetScopeCandidates = Effect.fnUntraced(function* (repoRoot: string, proj
 // cannot be read is its own key.
 const dedupeByRealPath = Effect.fnUntraced(function* (checkouts: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
-  const keyed = yield* Effect.forEach(checkouts, (checkout) =>
-    Effect.map(fs.realPath(checkout).pipe(Effect.orElseSucceed(constant(checkout))), (real) => ({ checkout, real }))
+  const keyed = yield* Effect.forEach(
+    checkouts,
+    (checkout) =>
+      Effect.map(fs.realPath(checkout).pipe(Effect.orElseSucceed(constant(checkout))), (real) => ({ checkout, real })),
+    { concurrency: 1 }
   );
   return A.map(
     A.dedupeWith(keyed, (self, that) => Str.Equivalence(self.real, that.real)),
@@ -962,8 +971,10 @@ const readCheckoutJournals = Effect.fnUntraced(function* (
     checkout.runsDirectory,
     (name) => O.isNone(runId) || O.contains(runId, name)
   );
-  const forEach6 = yield* Effect.forEach(runIds, (id) =>
-    readRunJournal(checkout, id, inFlightAttemptId, excludedFor(id))
+  const forEach6 = yield* Effect.forEach(
+    runIds,
+    (id) => readRunJournal(checkout, id, inFlightAttemptId, excludedFor(id)),
+    { concurrency: 1 }
   );
   return A.getSomes(forEach6);
 });
@@ -2766,5 +2777,5 @@ export const printYeetEconomicsCloseoutSummary = Effect.fn("Yeet.printEconomicsC
       Effect.succeed(A.of(`economics: ${Cause.die(defect).pipe(Cause.pretty, firstLine)}`))
     )
   );
-  yield* Effect.forEach(lines, (line) => Console.log(`[yeet] ${line}`), { discard: true });
+  yield* Effect.forEach(lines, (line) => Console.log(`[yeet] ${line}`), { concurrency: 1, discard: true });
 });

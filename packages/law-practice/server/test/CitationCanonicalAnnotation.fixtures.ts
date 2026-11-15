@@ -75,6 +75,7 @@ export const readCitationCanonicalAnnotations = Effect.fn("CanonicalAnnotationTe
         input: payload.context.values,
         expected: payload.operands[1].value,
       };
-    })
+    }),
+    { concurrency: 1 }
   );
 });

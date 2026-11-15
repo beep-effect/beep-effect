@@ -166,11 +166,14 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
       const fsUtils = yield* FsUtils;
       const output = yield* fs.makeTempDirectoryScoped({ prefix: "effect-vitest-write-contract-" });
       const inputs = A.map(["z.test.ts", "a.test.ts"], (name) => path.join(output, name));
-      yield* Effect.forEach(inputs, (input) =>
-        fs.writeFileString(
-          input,
-          'import { it } from "@effect/vitest"; import { Effect } from "effect"; it("fixture", () => Effect.runSync(Effect.void));\n'
-        )
+      yield* Effect.forEach(
+        inputs,
+        (input) =>
+          fs.writeFileString(
+            input,
+            'import { it } from "@effect/vitest"; import { Effect } from "effect"; it("fixture", () => Effect.runSync(Effect.void));\n'
+          ),
+        { concurrency: 1 }
       );
       const timing = yield* runEffectVitestLint(EffectVitestLintOptions.make({ census: true, write: true })).pipe(
         Effect.provideService(FsUtils, withDiscoveredSources(fsUtils, inputs)),

@@ -108,7 +108,7 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("cache pilot host comma
           const target = yield* toolPath(name);
           yield* fs.symlink(target, path.join(tools, name));
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       const sudo = process.geteuid?.() !== 0;
       const sudoLine = (command: string) => (sudo ? `sudo -n ${command}\n` : "");
@@ -190,30 +190,35 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("cache pilot host comma
         const apt = path.join(fixture, "apt");
         yield* fs.makeDirectory(bin, { recursive: true });
         yield* fs.makeDirectory(apt);
-        yield* Effect.forEach(["a.list", "ubuntu.sources", "b.sources", "keep.txt"], (name) =>
-          fs.writeFileString(path.join(apt, name), "")
+        yield* Effect.forEach(
+          ["a.list", "ubuntu.sources", "b.sources", "keep.txt"],
+          (name) => fs.writeFileString(path.join(apt, name), ""),
+          { concurrency: 1 }
         );
         const bwrap = path.join(fixture, "bwrap");
         const bwrapScript = '#!/bin/bash\necho "bubblewrap 0.11.0"\n';
         yield* fs.writeFileString(path.join(bin, "sudo"), '#!/bin/bash\necho "sudo $*"\nshift\nexec "$@"\n');
-        yield* Effect.forEach(managers, (manager) =>
-          fs.writeFileString(
-            path.join(bin, manager),
-            A.join(
-              [
-                "#!/bin/bash",
-                `echo "${manager} $*"`,
-                `if [[ "$*" == *install* && "\${FAKE_CREATE:-1}" == 1 ]]; then printf '%s' '${bwrapScript}' > '${bwrap}'; chmod +x '${bwrap}'; fi`,
-                'exit "${FAKE_STATUS:-0}"',
-                "",
-              ],
-              "\n"
-            )
-          )
+        yield* Effect.forEach(
+          managers,
+          (manager) =>
+            fs.writeFileString(
+              path.join(bin, manager),
+              A.join(
+                [
+                  "#!/bin/bash",
+                  `echo "${manager} $*"`,
+                  `if [[ "$*" == *install* && "\${FAKE_CREATE:-1}" == 1 ]]; then printf '%s' '${bwrapScript}' > '${bwrap}'; chmod +x '${bwrap}'; fi`,
+                  'exit "${FAKE_STATUS:-0}"',
+                  "",
+                ],
+                "\n"
+              )
+            ),
+          { concurrency: 1 }
         );
         if (present) yield* fs.writeFileString(bwrap, bwrapScript);
         const scripts = yield* fs.readDirectory(bin);
-        yield* Effect.forEach(scripts, (name) => fs.chmod(path.join(bin, name), 0o755));
+        yield* Effect.forEach(scripts, (name) => fs.chmod(path.join(bin, name), 0o755), { concurrency: 1 });
         if (present) yield* fs.chmod(bwrap, 0o755);
         const result = run(
           [
@@ -683,7 +688,7 @@ it.layer(stageLayer, { timeout: "60 seconds" })("cache pilot input stages", (it)
   });
 
   it.effect("writes both request layouts with the adapter's JSON framing, modes and output lines", () =>
-    Effect.forEach(layouts, checkLayout, { discard: true })
+    Effect.forEach(layouts, checkLayout, { concurrency: 1, discard: true })
   );
 
   it.effect(

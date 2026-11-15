@@ -282,9 +282,9 @@ const effectVitestDrift = Effect.fn("Yeet.finalCheckRefreshEffectVitestDrift")(f
     statusCounts(repoRoot, revision).pipe(
       Effect.flatMap(O.match({ onNone: () => Effect.fail(revision), onSome: Effect.succeed }))
     );
-  const all = yield* Effect.all([read(revisions.mbr), read(revisions.r), read(revisions.mbf), read(revisions.f)]).pipe(
-    Effect.result
-  );
+  const all = yield* Effect.all([read(revisions.mbr), read(revisions.r), read(revisions.mbf), read(revisions.f)], {
+    concurrency: 1,
+  }).pipe(Effect.result);
   if (Result.isFailure(all)) return { drift: A.empty<FinalCheckStatusDrift>(), unreadable: O.some(all.failure) };
   const [mbr, r, mbf, f] = all.success;
   const statuses = A.sort(
@@ -406,8 +406,10 @@ export const findFinalCheckRefreshReceipt = Effect.fn("Yeet.findFinalCheckRefres
     (head) => isAncestor(repoRoot, head, finalHead)
   );
   // An unread distance may be the nearest receipt's, so the whole choice fails closed to none.
-  const distances = yield* Effect.forEach(ancestors, (head) =>
-    countYeetRevisions(repoRoot, `${head}..${finalHead}`).pipe(Effect.map((count) => [count, head] as const))
+  const distances = yield* Effect.forEach(
+    ancestors,
+    (head) => countYeetRevisions(repoRoot, `${head}..${finalHead}`).pipe(Effect.map((count) => [count, head] as const)),
+    { concurrency: 1 }
   ).pipe(Effect.option);
   return O.flatMap(distances, (rows) =>
     A.head(
@@ -552,7 +554,8 @@ const rewriteReceiptCandidates = Effect.fn("Yeet.rewriteReceiptCandidates")(func
       const stat = yield* fs.stat(path.join(directory, entry));
       const mtime = yield* Effect.fromOption(stat.mtime);
       return O.some(RewriteReceiptCandidate.make({ head, mtime: DateTime.toEpochMillis(DateTime.makeUnsafe(mtime)) }));
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.sort(
     A.getSomes(candidates),

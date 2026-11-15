@@ -321,7 +321,7 @@ describe("yeet merge-loop command wiring", () => {
               ),
               Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
             ),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       })
     );
@@ -2208,8 +2208,10 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
       .pipe(Effect.flatMap(YeetVerdictJson.decode), Effect.option);
     const attemptJournalPath30 = yield* attemptJournalPath(context);
     const journal = yield* fs.readFileString(attemptJournalPath30);
-    const events = yield* Effect.forEach(pipe(journal, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-      decodeYeetAttemptJournalEvent(line)
+    const events = yield* Effect.forEach(
+      pipe(journal, Str.split("\n"), A.filter(Str.isNonEmpty)),
+      (line) => decodeYeetAttemptJournalEvent(line),
+      { concurrency: 1 }
     );
     const proofLedgerPathForCheckout31 = yield* proofLedgerPathForCheckout(root);
     const ledgerHeads = yield* fs.readFileString(proofLedgerPathForCheckout31).pipe(

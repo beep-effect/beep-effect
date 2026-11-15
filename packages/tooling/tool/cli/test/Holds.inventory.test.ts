@@ -191,7 +191,7 @@ const platformFor = (files: Readonly<Record<string, string>>) =>
               fs
                 .makeDirectory(path.dirname(path.join(root, name)), { recursive: true })
                 .pipe(Effect.andThen(fs.writeFileString(path.join(root, name), content))),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
         })
       ),

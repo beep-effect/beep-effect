@@ -215,7 +215,7 @@ const importResult = Command.make(
     const research = yield* ResearchLibrary;
     const root = yield* resolveLibraryRoot(library);
     // One process imports the batch so every catalog write after the first reuses the decoded catalog.
-    yield* Effect.forEach(results, (result) => research.importResult(root, result), { discard: true });
+    yield* Effect.forEach(results, (result) => research.importResult(root, result), { concurrency: 1, discard: true });
     yield* Console.log(`Imported ${results.length} source-bound result(s) into ${root}.`);
   })
 ).pipe(

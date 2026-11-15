@@ -147,7 +147,9 @@ export const makeDocketQuestionPublisherLayer = (
       return DocketQuestionPublisher.of({
         publish: Effect.fn("DocketIntakeApp.publishQuestions")(
           function* (state: DocketIntakeState) {
-            const raised = yield* Effect.forEach(R.values(state.ledger), flow(questionInput, questions.raise));
+            const raised = yield* Effect.forEach(R.values(state.ledger), flow(questionInput, questions.raise), {
+              concurrency: 1,
+            });
             yield* store.upsert(A.getSomes(raised));
           },
           Effect.catchTags({

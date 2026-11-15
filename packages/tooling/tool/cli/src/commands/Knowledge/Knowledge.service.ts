@@ -2387,8 +2387,10 @@ export const rewriteKnowledgeReferences = Effect.fn("Knowledge.rewriteReferences
           rule,
         ])
     );
-    const reports = yield* Effect.forEach(grouped, ([relative, rules]) =>
-      rewriteKnowledgeReferenceFile(root, relative, rules, dryRun)
+    const reports = yield* Effect.forEach(
+      grouped,
+      ([relative, rules]) => rewriteKnowledgeReferenceFile(root, relative, rules, dryRun),
+      { concurrency: 1 }
     );
     return KnowledgeRewriteReport.make({
       applied: A.reduce(reports, 0, (total, report) => total + report.applied),

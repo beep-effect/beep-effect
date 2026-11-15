@@ -276,10 +276,10 @@ if (externalUrl.length === 0) {
                 FOR UPDATE
               `;
               yield* Deferred.succeed(lockHeld, undefined);
-              const [firstWriterPid, secondWriterPid] = yield* Effect.all([
-                Deferred.await(firstPid),
-                Deferred.await(secondPid),
-              ]);
+              const [firstWriterPid, secondWriterPid] = yield* Effect.all(
+                [Deferred.await(firstPid), Deferred.await(secondPid)],
+                { concurrency: 1 }
+              );
               expect(firstWriterPid).not.toBe(secondWriterPid);
               yield* expectBothWritersWaiting(sql, firstWriterPid, secondWriterPid);
             })

@@ -103,12 +103,15 @@ describe("@beep/file-processing SourceText", () => {
     "rejects a negative or fractional page index and offset",
     Effect.fnUntraced(function* () {
       const source = ResolvedSourceText.make({ identity, text: "abc" });
-      const failures = yield* Effect.all([
-        Effect.flip(pageSourceText(source, -1)),
-        Effect.flip(pageSourceText(source, 1.5)),
-        Effect.flip(pageSourceTextContainingOffset(source, -1)),
-        Effect.flip(pageSourceTextContainingOffset(source, 1.5)),
-      ]);
+      const failures = yield* Effect.all(
+        [
+          Effect.flip(pageSourceText(source, -1)),
+          Effect.flip(pageSourceText(source, 1.5)),
+          Effect.flip(pageSourceTextContainingOffset(source, -1)),
+          Effect.flip(pageSourceTextContainingOffset(source, 1.5)),
+        ],
+        { concurrency: 1 }
+      );
 
       expect(failures).toMatchObject([
         { message: "Source-text page -1 is not a non-negative integer.", reason: "page-out-of-range" },

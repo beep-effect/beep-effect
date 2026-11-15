@@ -1277,12 +1277,15 @@ const hookPulsePrivateReferences = Effect.fnUntraced(function* (input: {
       onSome: (present) => privateReference(present, hashSalt).pipe(Effect.asSome),
     });
 
-  return yield* Effect.all({
-    sessionId: privateReference(input.sessionId, hashSalt),
-    cwd: privateReference(input.cwd, hashSalt),
-    transcriptPath: optionalReference(input.transcriptPath),
-    agentId: optionalReference(input.agentId),
-  });
+  return yield* Effect.all(
+    {
+      sessionId: privateReference(input.sessionId, hashSalt),
+      cwd: privateReference(input.cwd, hashSalt),
+      transcriptPath: optionalReference(input.transcriptPath),
+      agentId: optionalReference(input.agentId),
+    },
+    { concurrency: 1 }
+  );
 });
 
 // Only fields semantically bound to exactly one event belong here. `toolName`,
@@ -1763,22 +1766,25 @@ export const HookPulseV1FromRawEvent = HookPulseRawEventInput.pipe(
     HookPulseV1,
     SchemaTransformation.transformEffect<typeof HookPulseV1.Encoded, HookPulseRawEventInput>({
       decode: (input) =>
-        Effect.all({
-          privateRefs: hookPulsePrivateReferences({
-            cwd: input.event.cwd,
-            sessionId: input.event.session_id,
-            transcriptPath: O.some(input.event.transcript_path),
-            agentId: O.filter(input.event.agent_id, Str.isNonEmpty),
-          }).pipe(
-            Effect.mapError(
-              () =>
-                new SchemaIssue.InvalidValue({
-                  message: "Failed to hash private hook-pulse identifiers",
-                })
-            )
-          ),
-          surface: hookPulseSurfaceReference(input),
-        }).pipe(
+        Effect.all(
+          {
+            privateRefs: hookPulsePrivateReferences({
+              cwd: input.event.cwd,
+              sessionId: input.event.session_id,
+              transcriptPath: O.some(input.event.transcript_path),
+              agentId: O.filter(input.event.agent_id, Str.isNonEmpty),
+            }).pipe(
+              Effect.mapError(
+                () =>
+                  new SchemaIssue.InvalidValue({
+                    message: "Failed to hash private hook-pulse identifiers",
+                  })
+              )
+            ),
+            surface: hookPulseSurfaceReference(input),
+          },
+          { concurrency: 1 }
+        ).pipe(
           Effect.map(({ privateRefs, surface }) => ({
             schemaVersion: HookPulseSchemaVersion.Enum["hook-pulse/v1"],
             ts: input.ts,

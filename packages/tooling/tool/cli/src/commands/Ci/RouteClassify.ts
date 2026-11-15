@@ -691,16 +691,19 @@ const ownerOf = Effect.fnUntraced(function* <R>(
   const candidates = A.filter(ancestorDirectories(path), (directory) =>
     O.exists(workspace.globs, (globs) => globs.matches(directory))
   );
-  const members = yield* Effect.forEach(candidates, (directory) =>
-    read(workspace.ref, `${directory}/${MANIFEST_NAME}`).pipe(
-      Effect.map(
-        flow(
-          O.flatMap(decodeManifestText),
-          O.flatMap(packageNameOf),
-          O.map((name): WorkspaceOwner => ({ directory, name }))
+  const members = yield* Effect.forEach(
+    candidates,
+    (directory) =>
+      read(workspace.ref, `${directory}/${MANIFEST_NAME}`).pipe(
+        Effect.map(
+          flow(
+            O.flatMap(decodeManifestText),
+            O.flatMap(packageNameOf),
+            O.map((name): WorkspaceOwner => ({ directory, name }))
+          )
         )
-      )
-    )
+      ),
+    { concurrency: 1 }
   );
   return pipe(
     A.getSomes(members),
@@ -736,12 +739,15 @@ const classifyEntry = Effect.fnUntraced(function* <R>(
             detail: O.none<string>(),
           },
         ];
-  return yield* Effect.forEach(specs, (spec) =>
-    makeAtom(
-      entry.path,
-      O.map(owner, (found) => found.name),
-      spec
-    )
+  return yield* Effect.forEach(
+    specs,
+    (spec) =>
+      makeAtom(
+        entry.path,
+        O.map(owner, (found) => found.name),
+        spec
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -837,11 +843,14 @@ export const classifyChangedPaths = Effect.fn("RouteClassify.classifyChangedPath
     (entry) => classifyEntry(read, diff, ChangedPathStatus.is.D(entry.status) ? base : head, entry),
     { concurrency: CLASSIFY_CONCURRENCY }
   );
-  const commitAtoms = yield* Effect.forEach(O.toArray(O.liftPredicate(diff.commits, isPositive)), (count) =>
-    makeAtom(COMMITS_PATH, O.none(), {
-      kind: "commits",
-      detail: O.some(`${count} commit(s) ${shortSha(diff.base)}..${shortSha(diff.head)}`),
-    })
+  const commitAtoms = yield* Effect.forEach(
+    O.toArray(O.liftPredicate(diff.commits, isPositive)),
+    (count) =>
+      makeAtom(COMMITS_PATH, O.none(), {
+        kind: "commits",
+        detail: O.some(`${count} commit(s) ${shortSha(diff.base)}..${shortSha(diff.head)}`),
+      }),
+    { concurrency: 1 }
   );
   const changeSet = ChangeSet.make({
     base: diff.base,

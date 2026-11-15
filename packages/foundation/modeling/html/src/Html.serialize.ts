@@ -364,8 +364,10 @@ const serializeDataset = (
 ): Effect.Effect<ReadonlyArray<string>, HtmlSerializeError> => {
   /* istanbul ignore else -- HtmlRoot encoding emits dataset only from its generated record schema. Owner: @beep/html. Exit: serializeDataset takes the encoded dataset record type. */
   if (P.isObject(value)) {
-    return Effect.forEach(pipe(Struct.entries(value), A.sort(byEntryName)), ([key, entry]) =>
-      serializeAttribute(`data-${key}`, entry, path)
+    return Effect.forEach(
+      pipe(Struct.entries(value), A.sort(byEntryName)),
+      ([key, entry]) => serializeAttribute(`data-${key}`, entry, path),
+      { concurrency: 1 }
     );
   }
   return Effect.fail(
@@ -385,7 +387,8 @@ const serializeAttributes = Effect.fn("Html.serializeAttributes")(function* (
       A.sort(byEntryName)
     ),
     ([name, value]) =>
-      name === "dataset" ? serializeDataset(value, path) : serializeAttribute(name, value, path).pipe(Effect.map(A.of))
+      name === "dataset" ? serializeDataset(value, path) : serializeAttribute(name, value, path).pipe(Effect.map(A.of)),
+    { concurrency: 1 }
   );
   return pipe(chunks, A.flatten, A.join(""));
 });
@@ -409,7 +412,7 @@ const serializeForeignAttributes = (
               )
             )
           : serializeAttribute(name, entry, path),
-      { discard: false }
+      { concurrency: 1, discard: false }
     ).pipe(Effect.map(A.join("")));
   }
   return Effect.fail(
@@ -421,8 +424,10 @@ const serializeChildren = Effect.fn("Html.serializeChildren")(function* (
   children: ReadonlyArray<RuntimeNode>,
   path: ReadonlyArray<string>
 ) {
-  const output = yield* Effect.forEach(children, (child, index) =>
-    serializeRuntimeNode(child, A.append(path, `children.${index}`))
+  const output = yield* Effect.forEach(
+    children,
+    (child, index) => serializeRuntimeNode(child, A.append(path, `children.${index}`)),
+    { concurrency: 1 }
   );
   return pipe(output, A.join(""));
 });
@@ -432,37 +437,41 @@ const serializeForeignChildren = Effect.fn("Html.serializeForeignChildren")(func
   path: ReadonlyArray<string>
 ) {
   const parentAttributes = runtimeForeignAttributeEntries(parent);
-  const output = yield* Effect.forEach(runtimeChildren(parent), (child, index) => {
-    const childPath = A.append(path, `children.${index}`);
+  const output = yield* Effect.forEach(
+    runtimeChildren(parent),
+    (child, index) => {
+      const childPath = A.append(path, `children.${index}`);
 
-    if (isRuntimeTextOrCommentNode(child)) {
-      return serializeRuntimeNode(child, childPath);
-    }
-    if (isRuntimeForeignNode(child)) {
-      return isForeignChildAtForeignBoundary(
-        { attributes: parentAttributes, name: parent.name, namespace: parent.namespace },
-        { attributes: runtimeForeignAttributeEntries(child), name: child.name, namespace: child.namespace }
-      )
+      if (isRuntimeTextOrCommentNode(child)) {
+        return serializeRuntimeNode(child, childPath);
+      }
+      if (isRuntimeForeignNode(child)) {
+        return isForeignChildAtForeignBoundary(
+          { attributes: parentAttributes, name: parent.name, namespace: parent.namespace },
+          { attributes: runtimeForeignAttributeEntries(child), name: child.name, namespace: child.namespace }
+        )
+          ? serializeRuntimeNode(child, childPath)
+          : Effect.fail(
+              makeError(
+                childPath,
+                "invalidNode",
+                "The foreign child would change namespace or escape its opaque parent during HTML parsing"
+              )
+            );
+      }
+      return isHtmlTag(child._tag) &&
+        isHtmlChildAtForeignBoundary({ attributes: parentAttributes, name: parent.name, namespace: parent.namespace })
         ? serializeRuntimeNode(child, childPath)
         : Effect.fail(
             makeError(
               childPath,
               "invalidNode",
-              "The foreign child would change namespace or escape its opaque parent during HTML parsing"
+              "HTML elements can occur inside opaque foreign content only at a modeled integration point"
             )
           );
-    }
-    return isHtmlTag(child._tag) &&
-      isHtmlChildAtForeignBoundary({ attributes: parentAttributes, name: parent.name, namespace: parent.namespace })
-      ? serializeRuntimeNode(child, childPath)
-      : Effect.fail(
-          makeError(
-            childPath,
-            "invalidNode",
-            "HTML elements can occur inside opaque foreign content only at a modeled integration point"
-          )
-        );
-  });
+    },
+    { concurrency: 1 }
+  );
   return pipe(output, A.join(""));
 });
 
@@ -542,13 +551,16 @@ const serializeForeignNode = (
   const attributes = P.isUndefined(node.attributes)
     ? Effect.succeed("")
     : serializeForeignAttributes(node.attributes, node.namespace, A.append(path, "attributes"));
-  return Effect.all([
-    Effect.succeed(`<${node.name}`),
-    attributes,
-    Effect.succeed(">"),
-    serializeForeignChildren(node, path),
-    Effect.succeed(`</${node.name}>`),
-  ]).pipe(Effect.map(A.join("")));
+  return Effect.all(
+    [
+      Effect.succeed(`<${node.name}`),
+      attributes,
+      Effect.succeed(">"),
+      serializeForeignChildren(node, path),
+      Effect.succeed(`</${node.name}>`),
+    ],
+    { concurrency: 1 }
+  ).pipe(Effect.map(A.join("")));
 };
 
 const serializeRuntimeNode = (
@@ -568,7 +580,9 @@ const serializeRuntimeNode = (
   }
   if (node._tag === "#document") {
     const doctype = node.doctype === undefined ? Effect.succeed("") : serializeCanonicalDoctype(node.doctype, path);
-    return Effect.all([doctype, serializeChildren(runtimeChildren(node), path)]).pipe(Effect.map(A.join("")));
+    return Effect.all([doctype, serializeChildren(runtimeChildren(node), path)], { concurrency: 1 }).pipe(
+      Effect.map(A.join(""))
+    );
   }
   if (isRuntimeForeignNode(node)) return serializeForeignNode(node, path);
   return isHtmlTag(node._tag)

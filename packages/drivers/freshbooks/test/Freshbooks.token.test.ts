@@ -186,6 +186,7 @@ describe("@beep/freshbooks token rotation", () => {
         }).pipe(
           Effect.ensuring(
             Effect.all([Deferred.succeed(responseReady, undefined), Deferred.succeed(persistenceReady, undefined)], {
+              concurrency: 1,
               discard: true,
             })
           )

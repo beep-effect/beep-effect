@@ -52,7 +52,8 @@ const fixture = Effect.fn("CacheEntrypointsTest.fixture")(function* () {
       const encodedJsonObjectJson1 = yield* encodeJsonObjectJson(document);
       const reference = yield* write(argument, encodedJsonObjectJson1);
       return CacheEntrypointArtifactReference.make({ format, reference });
-    })
+    }),
+    { concurrency: 1 }
   );
   const census = CacheCensusReport.make({
     revision: "fixture",

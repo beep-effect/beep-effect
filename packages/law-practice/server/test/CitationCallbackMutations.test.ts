@@ -167,16 +167,19 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
           })
         );
         if (row.family === "detached-prior-full") {
-          const mentions = yield* Effect.forEach(input.mentions, (mention) =>
-            Effect.gen(function* () {
-              const wire = yield* S.encodeEffect(Citation)(mention.citation);
-              if (wire.type !== "supra") return mention;
-              const citation = yield* S.decodeEffect(Citation)({
-                ...wire,
-                metadata: { ...wire.metadata, antecedentGuess: "Detached" },
-              });
-              return CitationMention.make({ ...mention, citation });
-            })
+          const mentions = yield* Effect.forEach(
+            input.mentions,
+            (mention) =>
+              Effect.gen(function* () {
+                const wire = yield* S.encodeEffect(Citation)(mention.citation);
+                if (wire.type !== "supra") return mention;
+                const citation = yield* S.decodeEffect(Citation)({
+                  ...wire,
+                  metadata: { ...wire.metadata, antecedentGuess: "Detached" },
+                });
+                return CitationMention.make({ ...mention, citation });
+              }),
+            { concurrency: 1 }
           );
           input = { ...input, mentions };
         }
@@ -403,21 +406,24 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
         );
         expect(groupView(result.groups), row.name).toEqual(row.outcome.groups);
         expect(events, row.name).toEqual(row.events);
-        const detachedObjects = yield* Effect.forEach(result.detachedCitations, (object) =>
-          Effect.gen(function* () {
-            const reference = CitationGroupMember.cases.Detached.make({ detachedId: object.id });
-            const view = memberView(reference);
-            const wire = yield* S.encodeEffect(Citation)(object.citation);
-            expect(wire.type).toBe("case");
-            expect("anchor" in object).toBe(false);
-            expect("mentionId" in object).toBe(false);
-            return {
-              slot: "slot" in view ? view.slot : -1,
-              citationType: "FullCaseCitation",
-              groups: wire.components,
-              metadata: { plaintiff: "plaintiff" in wire.metadata ? wire.metadata.plaintiff : null },
-            };
-          })
+        const detachedObjects = yield* Effect.forEach(
+          result.detachedCitations,
+          (object) =>
+            Effect.gen(function* () {
+              const reference = CitationGroupMember.cases.Detached.make({ detachedId: object.id });
+              const view = memberView(reference);
+              const wire = yield* S.encodeEffect(Citation)(object.citation);
+              expect(wire.type).toBe("case");
+              expect("anchor" in object).toBe(false);
+              expect("mentionId" in object).toBe(false);
+              return {
+                slot: "slot" in view ? view.slot : -1,
+                citationType: "FullCaseCitation",
+                groups: wire.components,
+                metadata: { plaintiff: "plaintiff" in wire.metadata ? wire.metadata.plaintiff : null },
+              };
+            }),
+          { concurrency: 1 }
         );
         expect(detachedObjects, row.name).toEqual(row.detachedObjects);
       }
@@ -456,42 +462,48 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback mutatio
                 CitationGroupMember.cases.Mention.make({ mentionId: A.getUnsafe(prepared.mentions, value.index).id }),
               detached: (value) => CitationGroupMember.cases.Detached.make({ detachedId: detachedId(value.slot) }),
             });
-          const detachedCitations = yield* Effect.forEach(row.detachedObjects, (object) =>
-            Effect.gen(function* () {
-              const wire = yield* S.encodeEffect(Citation)(A.getUnsafe(prepared.mentions, 0).citation);
-              if (wire.type !== "case") return yield* invalid();
-              const citation = yield* S.decodeEffect(Citation)({
-                ...wire,
-                components: object.groups,
-                metadata: { ...wire.metadata, plaintiff: object.metadata.plaintiff },
-              });
-              return CitationDetached.make({ id: detachedId(object.slot), citation });
-            })
+          const detachedCitations = yield* Effect.forEach(
+            row.detachedObjects,
+            (object) =>
+              Effect.gen(function* () {
+                const wire = yield* S.encodeEffect(Citation)(A.getUnsafe(prepared.mentions, 0).citation);
+                if (wire.type !== "case") return yield* invalid();
+                const citation = yield* S.decodeEffect(Citation)({
+                  ...wire,
+                  components: object.groups,
+                  metadata: { ...wire.metadata, plaintiff: object.metadata.plaintiff },
+                });
+                return CitationDetached.make({ id: detachedId(object.slot), citation });
+              }),
+            { concurrency: 1 }
           );
-          const nodes = yield* Effect.forEach(row.outcome.groups, (group, index) =>
-            Effect.gen(function* () {
-              const key = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(`${row.name}:${index}`));
-              const identity = CitationResourceIdentity.cases.External.make({ scope: prepared.engineArtifact, key });
-              const id = yield* makeCitationResourceAuthorityId(identity);
-              const list = CitationMemberList.make({
-                id: listId(group.listSlot),
-                members: A.map(group.members, toMember),
-              });
-              return {
-                authority: CitationAuthority.make({ id, representative: O.none() }),
-                group: CitationResourceGroup.make({
-                  id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(id)}`),
-                  authorityId: id,
-                  memberListId: list.id,
-                }),
-                list,
-                binding: CitationResourceBinding.make({
-                  identity,
-                  decisions: [],
-                  groups: [{ position: index, id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(id)}`), list }],
-                }),
-              };
-            })
+          const nodes = yield* Effect.forEach(
+            row.outcome.groups,
+            (group, index) =>
+              Effect.gen(function* () {
+                const key = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(`${row.name}:${index}`));
+                const identity = CitationResourceIdentity.cases.External.make({ scope: prepared.engineArtifact, key });
+                const id = yield* makeCitationResourceAuthorityId(identity);
+                const list = CitationMemberList.make({
+                  id: listId(group.listSlot),
+                  members: A.map(group.members, toMember),
+                });
+                return {
+                  authority: CitationAuthority.make({ id, representative: O.none() }),
+                  group: CitationResourceGroup.make({
+                    id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(id)}`),
+                    authorityId: id,
+                    memberListId: list.id,
+                  }),
+                  list,
+                  binding: CitationResourceBinding.make({
+                    identity,
+                    decisions: [],
+                    groups: [{ position: index, id: CitationResourceGroupId.make(`cg1:${Str.slice(4)(id)}`), list }],
+                  }),
+                };
+              }),
+            { concurrency: 1 }
           );
           const document = CitationDocument.make({
             source: prepared.source,

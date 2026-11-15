@@ -176,7 +176,9 @@ export const installCitationCaseNameProcess = Effect.fn("Citation.installCaseNam
     if (request.words.length > limits.tokens)
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
     const input = yield* installedInput;
-    const words = yield* Effect.forEach(request.words, (word) => input.prepareUnicode(word, () => Effect.void));
+    const words = yield* Effect.forEach(request.words, (word) => input.prepareUnicode(word, () => Effect.void), {
+      concurrency: 1,
+    });
     const candidate = (yield* input.prepareUnicode(request.candidateCaseName, () => Effect.void)).value.storage;
     const worker = yield* installedWorker;
     const split = Effect.fn("Citation.splitCaseNameOnce")(function* () {

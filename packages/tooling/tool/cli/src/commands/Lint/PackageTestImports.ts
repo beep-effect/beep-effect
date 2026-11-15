@@ -117,7 +117,7 @@ const underPackagesRoot = <Item>(
     path: Path.Path
   ) => Effect.Effect<ReadonlyArray<Item>, never, FileSystem.FileSystem | Path.Path>
 ): Effect.Effect<ReadonlyArray<Item>, never, FileSystem.FileSystem | Path.Path> =>
-  Effect.flatMap(Effect.all([FileSystem.FileSystem, Path.Path]), ([fs, path]) =>
+  Effect.flatMap(Effect.all([FileSystem.FileSystem, Path.Path], { concurrency: 1 }), ([fs, path]) =>
     Effect.flatMap(exists(fs, packagesRoot), (present) => (present ? walk(fs, path) : Effect.succeed(A.empty<Item>())))
   );
 
@@ -190,8 +190,10 @@ const collectPackageSourceRoots = Effect.fn(WORKSPACE_MANIFEST_WALK)((packagesRo
       const entries = yield* fs
         .readDirectoryEntries(currentPath)
         .pipe(Effect.orElseSucceed(A.empty<FileSystem.DirectoryEntry>));
-      const nested = yield* Effect.forEach(A.filter(entries, isWalkedDirectory), (entry) =>
-        walk(path.join(currentPath, entry.name))
+      const nested = yield* Effect.forEach(
+        A.filter(entries, isWalkedDirectory),
+        (entry) => walk(path.join(currentPath, entry.name)),
+        { concurrency: 1 }
       );
       const own = pipe(
         packageName,
@@ -338,12 +340,15 @@ const collectPackageTestImportViolations = Effect.fn("PackageTestImports.collect
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const project = new Project({ skipAddingFilesFromTsConfig: true });
-  const violations = yield* Effect.forEach(files, (file) =>
-    fs.readFileString(file).pipe(
-      Effect.orElseSucceed(() => Str.empty),
-      Effect.map((content) => collectModuleSpecifierUses(project, file, content)),
-      Effect.map((uses) => A.getSomes(A.map(uses, (use) => resolveViolation(path, sources, file, use))))
-    )
+  const violations = yield* Effect.forEach(
+    files,
+    (file) =>
+      fs.readFileString(file).pipe(
+        Effect.orElseSucceed(() => Str.empty),
+        Effect.map((content) => collectModuleSpecifierUses(project, file, content)),
+        Effect.map((uses) => A.getSomes(A.map(uses, (use) => resolveViolation(path, sources, file, use))))
+      ),
+    { concurrency: 1 }
   );
   return A.flatten(violations);
 });

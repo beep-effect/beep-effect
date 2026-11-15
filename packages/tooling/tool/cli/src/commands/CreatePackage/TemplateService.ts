@@ -243,7 +243,8 @@ export const createTemplateService = (): TemplateServiceShape => {
           outputPath,
           content: compile(request.context),
         });
-      })
+      }),
+      { concurrency: 1 }
     );
   });
 

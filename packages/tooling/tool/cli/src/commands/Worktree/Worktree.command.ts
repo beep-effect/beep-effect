@@ -715,7 +715,7 @@ export const worktreeDoctorReportForContext = Effect.fn("Worktree.worktreeDoctor
   const pruneOutput = yield* pruneDryRunOutput(context.currentRoot);
   const pruneDryRun = A.filter(Str.split(pruneOutput, "\n"), Str.isNonEmpty);
   const managed = A.filter(context.entries, (entry) => isUnderWorktreesRoot(path, context.worktreesRoot, entry.path));
-  const entries = yield* Effect.forEach(managed, inspectWorktreeEntry);
+  const entries = yield* Effect.forEach(managed, inspectWorktreeEntry, { concurrency: 1 });
   return WorktreeDoctorReport.make({
     mainCheckout: context.mainCheckout,
     worktreesRoot: context.worktreesRoot,
@@ -1052,7 +1052,7 @@ const renderRemovalReceipt = Effect.fn("Worktree.renderRemovalReceipt")(function
       Console.log(
         `  note: the idle Claude Desktop Terminal panel shell (pid ${pid}) stood in the worktree and was left running; the worktree was removed under it, so run \`cd ~\` in that Terminal tab before using it`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     receipt.inotifyWatchers,
@@ -1060,7 +1060,7 @@ const renderRemovalReceipt = Effect.fn("Worktree.renderRemovalReceipt")(function
       Console.log(
         `  warning: ${describeInotifyWatcher(watcher)} held only an inotify watch on the worktree, which cannot write into it, so the worktree was removed under it; an editor watching the clone (WebStorm's fsnotifier, for one) stops doing this once the worktree root is excluded from its project`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   if (receipt.branchDeleted) {
     yield* Console.log(`  branch deleted: ${O.getOrElse(receipt.branch, () => "(detached HEAD)")}`);

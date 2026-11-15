@@ -200,12 +200,13 @@ export const runGoalsManifest = Effect.fn("Goals.runGoalsManifest")(function* (
   }
   if (!options.write) {
     yield* Console.error(`[goals:manifest] ${A.length(rows)} manifest(s) drift from research/:`);
-    yield* Effect.forEach(rows, (row) => Console.error(driftLine(row)), { discard: true });
+    yield* Effect.forEach(rows, (row) => Console.error(driftLine(row)), { concurrency: 1, discard: true });
     return yield* failWithReportedExit(
       "goals manifest: researchReports drift; run bun run beep goals manifest --write."
     );
   }
   yield* Effect.forEach(rows, (row) => writeContainedFileString(repoRoot, row.manifestPath, row.nextText), {
+    concurrency: 1,
     discard: true,
   });
   const formatter = yield* Effect.serviceOption(GoalManifestFormatter);
@@ -213,7 +214,7 @@ export const runGoalsManifest = Effect.fn("Goals.runGoalsManifest")(function* (
     repoRoot,
     A.map(rows, (row) => row.manifestPath)
   );
-  yield* Effect.forEach(rows, (row) => Console.log(driftLine(row)), { discard: true });
+  yield* Effect.forEach(rows, (row) => Console.log(driftLine(row)), { concurrency: 1, discard: true });
   yield* Console.log(`[goals:manifest] wrote ${A.length(rows)} manifest(s).`);
 });
 

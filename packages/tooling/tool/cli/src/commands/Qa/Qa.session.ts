@@ -503,7 +503,9 @@ export const readEventLog = Effect.fn("QaSession.readEventLog")(function* (
     A.map(Str.trim),
     A.filter((line) => !Str.isEmpty(line))
   );
-  const decoded = yield* Effect.forEach(lines, (line) => Effect.option(decodeActionEventJson(line)));
+  const decoded = yield* Effect.forEach(lines, (line) => Effect.option(decodeActionEventJson(line)), {
+    concurrency: 1,
+  });
   return QaEventLog.make({
     events: A.getSomes(decoded),
     rejectedCount: A.length(A.filter(decoded, O.isNone)),

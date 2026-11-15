@@ -198,7 +198,7 @@ export const sessionRulingListCommand = Command.make(
           Console.log(
             `- ${row.date} ${row.id} [${row.state}${O.match(row.supersededBy, { onNone: () => "", onSome: (by) => ` by ${by}` })}] "${row.verbatim}" (${row.source})`
           ),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     });
     yield* reportSessionFailure(program);

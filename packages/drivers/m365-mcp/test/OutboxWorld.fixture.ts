@@ -451,22 +451,25 @@ const StubAttachmentSourceLayer = Layer.effect(
     const crypto = yield* Digest.Digest;
     return OutboxAttachmentSource.of({
       resolve: Effect.fn("StubAttachmentSource.resolve")(function* (paths) {
-        return yield* Effect.forEach(paths, (path, index) =>
-          sha256Of(sourceContent(index)).pipe(
-            Effect.provideService(Digest.Digest, crypto),
-            Effect.map((sha256) =>
-              OutboxAttachment.make({
-                content: sourceContent(index),
-                contentType: "application/pdf",
-                name: pipe(
-                  A.last(Str.split("/")(path)),
-                  O.getOrElse(() => path)
-                ),
-                sha256,
-                size: 16,
-              })
-            )
-          )
+        return yield* Effect.forEach(
+          paths,
+          (path, index) =>
+            sha256Of(sourceContent(index)).pipe(
+              Effect.provideService(Digest.Digest, crypto),
+              Effect.map((sha256) =>
+                OutboxAttachment.make({
+                  content: sourceContent(index),
+                  contentType: "application/pdf",
+                  name: pipe(
+                    A.last(Str.split("/")(path)),
+                    O.getOrElse(() => path)
+                  ),
+                  sha256,
+                  size: 16,
+                })
+              )
+            ),
+          { concurrency: 1 }
         );
       }),
     });

@@ -174,6 +174,9 @@ export const runCacheR2Fleet = Effect.fn("CacheR2.fleet")(function* (request: Ca
     applied: request.apply,
     checkouts: rows,
   });
-  yield* Effect.forEach(O.toArray(request.output), (output) => writePrivateReceipt(output, receipt), { discard: true });
+  yield* Effect.forEach(O.toArray(request.output), (output) => writePrivateReceipt(output, receipt), {
+    concurrency: 1,
+    discard: true,
+  });
   return { receipt, lines: summaryLines(rows), blocked: A.some(rows, (row) => row.status === "blocked") };
 }, CacheCommandError.mapError("Fleet enrollment failed."));

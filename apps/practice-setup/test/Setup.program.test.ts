@@ -478,10 +478,13 @@ const probe = Effect.fnUntraced(function* <A>(
     )
   );
   const fs = Context.get(context, FileSystem.FileSystem);
-  yield* Effect.forEach(options.files ?? [], ([file, text]) =>
-    fs
-      .makeDirectory(Str.slice(0, Str.lastIndexOf("/")(file).pipe(O.getOrElse(() => 0)))(file), { recursive: true })
-      .pipe(Effect.andThen(fs.writeFileString(file, text)))
+  yield* Effect.forEach(
+    options.files ?? [],
+    ([file, text]) =>
+      fs
+        .makeDirectory(Str.slice(0, Str.lastIndexOf("/")(file).pipe(O.getOrElse(() => 0)))(file), { recursive: true })
+        .pipe(Effect.andThen(fs.writeFileString(file, text))),
+    { concurrency: 1 }
   );
   // Probes read Config when they run, so they run inside the built context.
   return yield* use(Context.get(context, ClaudeState)).pipe(Effect.provideContext(context));

@@ -387,7 +387,8 @@ export const collectCacheToolchain = Effect.fn("CacheFingerprint.toolchain")(fun
           CacheCommandError.new("Cannot hash a required toolchain declaration.", cause)
         ),
       });
-    })
+    }),
+    { concurrency: 1 }
   );
   return CacheToolchainSnapshot.make({
     profile,

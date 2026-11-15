@@ -173,8 +173,10 @@ export const DeclaredResourceTypes: ReadonlyArray<string> = [
  * from the stack, or destroying the stack, leaves the account setting alone.
  */
 const accountSingletons = Effect.fn("CostControls.accountSingletons")(function* () {
-  const tags = yield* Effect.forEach(CostAllocationTagKey.literals, (tagKey) =>
-    AwsExtras.CostAllocationTag.CostAllocationTag(tagLogicalId(tagKey), { tagKey })
+  const tags = yield* Effect.forEach(
+    CostAllocationTagKey.literals,
+    (tagKey) => AwsExtras.CostAllocationTag.CostAllocationTag(tagLogicalId(tagKey), { tagKey }),
+    { concurrency: 1 }
   );
   const computeOptimizer = yield* AwsExtras.ComputeOptimizerEnrollment.ComputeOptimizerEnrollment("ComputeOptimizer", {
     status: "Active",

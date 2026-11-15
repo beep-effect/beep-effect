@@ -509,9 +509,11 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
               O.map(receipt.requiredChecks, (snapshot) => snapshot.sources),
               ["repos/{owner}/{repo}/rulesets/42/history/1"]
             );
-          })
+          }),
+          { concurrency: 1 }
         );
-      })
+      }),
+      { concurrency: 1 }
     )
   );
   it.effect("unresolved non-main default-branch include and exclude tokens fail closed", () =>
@@ -543,7 +545,8 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
           O.map(receipt.requiredChecks, (snapshot) => snapshot.rulesetReadsComplete),
           true
         );
-      })
+      }),
+      { concurrency: 1 }
     )
   );
   it.effect("an absent or refused local manifest uses the typed hosted fallback", () =>
@@ -821,7 +824,8 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
             Effect.provideService(GoalCompletionIo, io)
           );
           assertSome(pipe10, latest);
-        })
+        }),
+        { concurrency: 1 }
       );
     })
   );
@@ -855,7 +859,8 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
             Effect.provideService(GoalCompletionIo, io)
           );
           assertSome(pipe12, keepsRed ? stale : degraded);
-        })
+        }),
+        { concurrency: 1 }
       );
     })
   );
@@ -1108,7 +1113,7 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
         const shared = yield* fs.exists(path.join(directory, "github.com__example__repo.jsonl"));
         expect(shared).toBe(false);
       }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     )
   );
   it.effect("refresh refuses a requested invalid manifest or missing final declaration", () =>
@@ -1193,7 +1198,8 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal completion obse
           encode({ completionGate: { pullRequests: [{ number: 7, role: "supporting" }] } }),
           "not json",
         ],
-        outcomeFor
+        outcomeFor,
+        { concurrency: 1 }
       );
       expect(outcomes).toEqual(["verified", "verified", "unsatisfied", "unknown"]);
     })

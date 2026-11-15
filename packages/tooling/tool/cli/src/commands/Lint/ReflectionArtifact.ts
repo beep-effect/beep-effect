@@ -422,12 +422,12 @@ const reportReflectionFindings = Effect.fnUntraced(function* (
 
   if (A.isReadonlyArrayNonEmpty(advisories)) {
     yield* Console.error("[reflection] advisories (non-fatal):");
-    yield* Effect.forEach(advisories, logPolicyFinding, { discard: true });
+    yield* Effect.forEach(advisories, logPolicyFinding, { concurrency: 1, discard: true });
   }
 
   if (A.isReadonlyArrayNonEmpty(blocking)) {
     yield* Console.error("[reflection] blocking findings:");
-    yield* Effect.forEach(blocking, logPolicyFinding, { discard: true });
+    yield* Effect.forEach(blocking, logPolicyFinding, { concurrency: 1, discard: true });
     return yield* failWithReportedExit("reflection: required closeout reflection missing or invalid.");
   }
 });

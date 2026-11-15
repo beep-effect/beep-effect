@@ -511,9 +511,11 @@ describe("Envelope codec fidelity over a registry", () => {
     [S.Array(RegisteredInput).check(S.isMaxLength(8))],
     ([inputs]) =>
       Effect.gen(function* () {
-        const texts = yield* Effect.forEach(inputs, Envelope.encode(registry));
+        const texts = yield* Effect.forEach(inputs, Envelope.encode(registry), { concurrency: 1 });
         const journal = A.join(texts, "");
-        const decoded = yield* Effect.forEach(Envelope.decodeAllResult(journal, registry), Effect.fromResult);
+        const decoded = yield* Effect.forEach(Envelope.decodeAllResult(journal, registry), Effect.fromResult, {
+          concurrency: 1,
+        });
         const ends = pipe(
           texts,
           A.scan(0, (offset, text) => offset + byteLength(text)),

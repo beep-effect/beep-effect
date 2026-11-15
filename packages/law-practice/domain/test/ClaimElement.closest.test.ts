@@ -18,7 +18,7 @@ describe("closest-match structural gaps", () => {
           ["1", `A controller comprising ${body}`],
           ["2", "The controller of claim 1 wherein the IR channel is active."],
         ]);
-        const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+        const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
         const child = O.getOrThrow(A.last(trees));
         assert.strictEqual(
           A.some(child.edges, (edge) => edge.kind === "antecedent" && edge.referring.anchor.quote === "the IR channel"),
@@ -148,7 +148,7 @@ describe("closest-match structural gaps", () => {
         ["1", "A tester comprising the axial path is straight."],
         ["2", "The tester of claim 1 wherein the axial path is curved."],
       ]);
-      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
       assert.isTrue(
         A.some(
           O.getOrThrow(A.last(trees)).edges,

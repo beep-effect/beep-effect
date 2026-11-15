@@ -281,8 +281,10 @@ export const makeVerdictLog = Effect.gen(function* () {
 
   const exportUnserialized = Effect.gen(function* () {
     const rows = yield* readRows();
-    const lines = yield* Effect.forEach(rows, (row) =>
-      S.encodeEffect(RowLine)(row).pipe(Effect.mapError(unreadable(RowsKey)))
+    const lines = yield* Effect.forEach(
+      rows,
+      (row) => S.encodeEffect(RowLine)(row).pipe(Effect.mapError(unreadable(RowsKey))),
+      { concurrency: 1 }
     );
     return A.join(lines, "\n") + (lines.length > 0 ? "\n" : "");
   });

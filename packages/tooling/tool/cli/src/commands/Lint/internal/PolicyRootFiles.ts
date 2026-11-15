@@ -220,13 +220,16 @@ export const makeRootFileReader = (tree: PolicySourceTree) => {
         }),
     });
   return Effect.fnUntraced(function* (closure: PolicyClosure) {
-    const opaque = yield* Effect.forEach(A.fromIterable(closure.opaqueWorkspaces), (directory) =>
-      tree.files(`${directory}/src`)
+    const opaque = yield* Effect.forEach(
+      A.fromIterable(closure.opaqueWorkspaces),
+      (directory) => tree.files(`${directory}/src`),
+      { concurrency: 1 }
     );
     const modules = [...closure.modules, ...A.flatten(opaque)];
     const files = yield* Effect.forEach(
       A.filter(modules, (file) => TYPESCRIPT_SOURCE.test(file)),
-      reads
+      reads,
+      { concurrency: 1 }
     );
     return A.sort(A.dedupe(A.flatten(files)), Order.String);
   });

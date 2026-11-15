@@ -110,7 +110,9 @@ const liveUnitPaths = (home: string) =>
 // Every `WorkingDirectory=` of the user's systemd units and drop-ins across every load path,
 // `%h` and `~` expanded.
 const timerDirectories = Effect.fnUntraced(function* (home: string, unitPaths: ReadonlyArray<string>) {
-  const perPath = yield* Effect.forEach(unitPaths, (unitDir) => unitDirectoryWorkingDirectories(home, unitDir));
+  const perPath = yield* Effect.forEach(unitPaths, (unitDir) => unitDirectoryWorkingDirectories(home, unitDir), {
+    concurrency: 1,
+  });
   return A.dedupe(A.flatten(perPath));
 });
 
@@ -125,13 +127,14 @@ const unitDirectoryWorkingDirectories = Effect.fnUntraced(function* (home: strin
     Effect.fnUntraced(function* (dir) {
       const confs = yield* fs.readDirectory(path.join(unitDir, dir));
       return A.map(A.filter(confs, Str.endsWith(".conf")), (conf) => path.join(dir, conf));
-    })
+    }),
+    { concurrency: 1 }
   );
   // A dangling unit link names no unit systemd can load; a masked unit links to /dev/null and reads empty.
   const files = yield* Effect.filter(A.appendAll(units, A.flatten(dropIns)), (file) =>
     fs.exists(path.join(unitDir, file))
   );
-  const texts = yield* Effect.forEach(files, (file) => fs.readFileString(path.join(unitDir, file)));
+  const texts = yield* Effect.forEach(files, (file) => fs.readFileString(path.join(unitDir, file)), { concurrency: 1 });
   const expand = (dir: string) =>
     Str.startsWith("~/")(dir) ? path.join(home, Str.slice(2)(dir)) : Str.replaceAll("%h", home)(dir);
   return A.dedupe(

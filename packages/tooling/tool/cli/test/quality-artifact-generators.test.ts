@@ -444,7 +444,9 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
         })
       );
 
-      const written = yield* Effect.forEach([outputJsonPath, outputMarkdownPath], (file) => fs.exists(file));
+      const written = yield* Effect.forEach([outputJsonPath, outputMarkdownPath], (file) => fs.exists(file), {
+        concurrency: 1,
+      });
       expect(written).toEqual([true, true]);
       const markdown = yield* fs.readFileString(outputMarkdownPath);
       expect(markdown).toContain("# JSDoc Documentation Compliance Inventory");
@@ -501,10 +503,13 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
         path.join(repoRoot, ".beep", "ci", "jsdoc.inventory.jsonc"),
         path.join(repoRoot, ".beep", "ci", "jsdoc.inventory.md"),
       ] as const;
-      yield* Effect.forEach(targets, (target) =>
-        fs
-          .makeDirectory(path.dirname(target), { recursive: true })
-          .pipe(Effect.andThen(fs.writeFileString(target, previous)))
+      yield* Effect.forEach(
+        targets,
+        (target) =>
+          fs
+            .makeDirectory(path.dirname(target), { recursive: true })
+            .pipe(Effect.andThen(fs.writeFileString(target, previous))),
+        { concurrency: 1 }
       );
       const written = yield* Ref.make(A.empty<string>());
       const renames = yield* Ref.make(A.empty<readonly [string, string, string]>());
@@ -546,7 +551,7 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
         const current = yield* fs.readFileString(to);
         expect(current).not.toBe(previous);
       }
-      const leftovers = yield* Effect.forEach(published, ([from]) => fs.exists(from));
+      const leftovers = yield* Effect.forEach(published, ([from]) => fs.exists(from), { concurrency: 1 });
       expect(leftovers).toEqual(A.map(published, () => false));
     })
   );
@@ -594,7 +599,7 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
       expect(current).toBe(previous);
       const stagingFiles = yield* Ref.get(staged);
       expect(A.length(stagingFiles)).toBe(1);
-      const stagingLeft = yield* Effect.forEach(stagingFiles, (file) => fs.exists(file));
+      const stagingLeft = yield* Effect.forEach(stagingFiles, (file) => fs.exists(file), { concurrency: 1 });
       expect(stagingLeft).toEqual([false]);
     })
   );

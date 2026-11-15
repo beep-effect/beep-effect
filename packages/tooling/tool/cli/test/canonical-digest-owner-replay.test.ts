@@ -115,7 +115,7 @@ const replay = Effect.fnUntraced(function* (file: StoredEventFile) {
 type ReplayRow = Effect.Success<ReturnType<typeof replay>>;
 
 const replayAll = Effect.fnUntraced(function* (files: ReadonlyArray<StoredEventFile>) {
-  return yield* Effect.forEach(files, replay);
+  return yield* Effect.forEach(files, replay, { concurrency: 1 });
 });
 
 const mismatchPaths = (rows: ReadonlyArray<ReplayRow>): ReadonlyArray<string> =>
@@ -127,7 +127,7 @@ const mismatchPaths = (rows: ReadonlyArray<ReplayRow>): ReadonlyArray<string> =>
 
 const readSnapshot = Effect.gen(function* () {
   const lines = A.flatMap(R.values(snapshotFiles), (text) => A.filter(Str.split(text, "\n"), Str.isNonEmpty));
-  return yield* Effect.forEach(lines, (line) => decodeStoredEventLine(line));
+  return yield* Effect.forEach(lines, (line) => decodeStoredEventLine(line), { concurrency: 1 });
 });
 
 const sourceCount = (rows: ReadonlyArray<ReplayRow>, prefix: string): number =>

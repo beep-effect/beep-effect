@@ -117,10 +117,13 @@ const isString = S.is(S.String);
 // Tests in one `it.layer` block share a console and may overlap, so each
 // printing effect runs against a console of its own.
 const printed = <A, E, R>(self: Effect.Effect<A, E, R>) =>
-  Effect.all({
-    value: self,
-    lines: TestConsole.logLines.pipe(Effect.map(A.filter(isString))),
-  }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
+  Effect.all(
+    {
+      value: self,
+      lines: TestConsole.logLines.pipe(Effect.map(A.filter(isString))),
+    },
+    { concurrency: 1 }
+  ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
 
 // Runs a failing self-check and returns the one refusal line it printed.
 const refusalLine = Effect.fnUntraced(function* (bundleDir: string) {
@@ -405,11 +408,14 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
               stdout: "pipe",
               stderr: "pipe",
             });
-            const startup = yield* Effect.all({
-              exitCode: Effect.promise(() => child.exited),
-              stdout: Effect.promise(() => new Response(child.stdout).text()),
-              stderr: Effect.promise(() => new Response(child.stderr).text()),
-            });
+            const startup = yield* Effect.all(
+              {
+                exitCode: Effect.promise(() => child.exited),
+                stdout: Effect.promise(() => new Response(child.stdout).text()),
+                stderr: Effect.promise(() => new Response(child.stderr).text()),
+              },
+              { concurrency: 1 }
+            );
             expect(startup.exitCode).not.toBe(0);
             expect(startup.stdout).toBe("");
             // Claude Desktop keeps stderr: the startup refusal is one shape-only
@@ -476,16 +482,19 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
 
   // Raw, lowercased, URL-encoded, base64, JSON-escaped, 8-character prefix and
   // unsalted SHA-256 forms of every canary.
-  const canaryForms = Effect.forEach(R.values(canaries), (token) =>
-    Effect.map(encodeUnknownJson(token), (json) => [
-      token,
-      Str.toLowerCase(token),
-      encodeURIComponent(token),
-      Base64.encode(token),
-      Str.slice(1, -1)(json),
-      Str.slice(0, 8)(token),
-      sha256Hex(token),
-    ])
+  const canaryForms = Effect.forEach(
+    R.values(canaries),
+    (token) =>
+      Effect.map(encodeUnknownJson(token), (json) => [
+        token,
+        Str.toLowerCase(token),
+        encodeURIComponent(token),
+        Base64.encode(token),
+        Str.slice(1, -1)(json),
+        Str.slice(0, 8)(token),
+        sha256Hex(token),
+      ]),
+    { concurrency: 1 }
   ).pipe(Effect.map(A.flatten));
 
   const countCanaries = (text: string, forms: ReadonlyArray<string>): number =>
@@ -701,11 +710,14 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
     return yield* withStdioServer(host)((io) =>
       Effect.gen(function* () {
         const { rpc } = yield* connectStdio(io);
-        return yield* Effect.forEach(calls, ([name, args]) =>
-          rpc["tools/call"]({ name, arguments: args }).pipe(
-            Effect.result,
-            Effect.flatMap(Result.match({ onFailure: encodeUnknownJson, onSuccess: encodeUnknownJson }))
-          )
+        return yield* Effect.forEach(
+          calls,
+          ([name, args]) =>
+            rpc["tools/call"]({ name, arguments: args }).pipe(
+              Effect.result,
+              Effect.flatMap(Result.match({ onFailure: encodeUnknownJson, onSuccess: encodeUnknownJson }))
+            ),
+          { concurrency: 1 }
         );
       })
     );
@@ -749,16 +761,19 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
 
           const spoolDir = path.join(root, "spool");
 
-          const { results, stderr, replay } = yield* Effect.all({
-            results: Effect.all([
-              runStrictHost(healthyBundle, healthyCalls),
-              runStrictHost(brokenBundle, brokenStoreCalls),
-            ]),
-            stderr: TestConsole.errorLines,
-            replay: Effect.gen(function* () {
-              return yield* (yield* StrictSpool).replay;
-            }),
-          }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), withCanarySpool(spoolDir));
+          const { results, stderr, replay } = yield* Effect.all(
+            {
+              results: Effect.all(
+                [runStrictHost(healthyBundle, healthyCalls), runStrictHost(brokenBundle, brokenStoreCalls)],
+                { concurrency: 1 }
+              ),
+              stderr: TestConsole.errorLines,
+              replay: Effect.gen(function* () {
+                return yield* (yield* StrictSpool).replay;
+              }),
+            },
+            { concurrency: 1 }
+          ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make), withCanarySpool(spoolDir));
           const records = replay.records;
 
           const forms = yield* canaryForms;
@@ -766,8 +781,11 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
           expect(HashMap.size(replay.refused)).toBe(0);
           const segments = yield* fs.readDirectory(spoolDir);
           expect(A.length(segments)).toBeGreaterThan(0);
-          const atRest = yield* Effect.forEach(segments, (segment) =>
-            fs.readFile(path.join(spoolDir, segment)).pipe(Effect.map((bytes) => textDecoder.decode(bytes)))
+          const atRest = yield* Effect.forEach(
+            segments,
+            (segment) =>
+              fs.readFile(path.join(spoolDir, segment)).pipe(Effect.map((bytes) => textDecoder.decode(bytes))),
+            { concurrency: 1 }
           );
           expect(countCanaries(A.join(atRest, "\n"), forms)).toBe(0);
           const exported = A.join(
@@ -785,7 +803,8 @@ it.layer(smokeTemplateLayer, { timeout: "2 minutes" })("shared smoke bundle", (i
           expect(countCanaries(A.join(A.flatten(results), "\n"), forms)).toBeGreaterThan(0);
           const spans = yield* Effect.forEach(
             A.filter(records, (record) => record.signal === "traces"),
-            (record) => decodeExportedSpans(record.body)
+            (record) => decodeExportedSpans(record.body),
+            { concurrency: 1 }
           ).pipe(
             Effect.map(
               A.flatMap((body) =>

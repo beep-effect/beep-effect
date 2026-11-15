@@ -198,7 +198,8 @@ export const handleTerminationEvent = Effect.fn("TerminationWatcher.handleEvent"
         })
       );
       return "retry-queued" as const;
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 

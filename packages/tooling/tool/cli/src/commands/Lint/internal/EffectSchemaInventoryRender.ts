@@ -98,7 +98,7 @@ export const effectSchemaInventoryByteLength = (text: string): number => encoder
 export const renderEffectSchemaInventoryJsonl = Effect.fn("EffectSchemaInventoryRender.jsonl")(function* (
   rows: ReadonlyArray<EffectSchemaInventoryRow>
 ) {
-  const lines = yield* Effect.forEach(rows, (row) => encodeEffectSchemaInventoryRowJson(row)).pipe(
+  const lines = yield* Effect.forEach(rows, (row) => encodeEffectSchemaInventoryRowJson(row), { concurrency: 1 }).pipe(
     EffectSchemaInventoryError.mapError("Unable to encode schema inventory rows")
   );
   return A.match(lines, { onEmpty: () => "", onNonEmpty: (nonEmpty) => `${A.join(nonEmpty, "\n")}\n` });
@@ -269,7 +269,9 @@ export const renderEffectSchemaInventory = Effect.fn("EffectSchemaInventoryRende
   pin: EffectSchemaInventoryPin,
   extraction: EffectSchemaInventoryExtraction
 ) {
-  const bodies = yield* Effect.forEach(extraction.modules, (entry) => renderEffectSchemaInventoryJsonl(entry.rows));
+  const bodies = yield* Effect.forEach(extraction.modules, (entry) => renderEffectSchemaInventoryJsonl(entry.rows), {
+    concurrency: 1,
+  });
   const digest = yield* digestEffectSchemaInventoryJsonl(bodies);
   const modules = A.zip(extraction.modules, A.map(bodies, effectSchemaInventoryByteLength));
   const rows = A.flatMap(extraction.modules, (entry) => entry.rows);

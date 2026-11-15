@@ -1435,6 +1435,7 @@ const acceptHostedDeferrals = Effect.fn("Yeet.acceptHostedDeferrals")(function* 
   const judged = judgeHostedDeferrals(receipt, runs);
   if (O.isSome(judged.refusal)) return yield* refuseFinalCheck(judged.refusal.value);
   yield* Effect.forEach(judged.accepted, (gate) => Console.log(`[yeet] hosted green stands in for ${gate}`), {
+    concurrency: 1,
     discard: true,
   });
   return judged.accepted;
@@ -1662,7 +1663,7 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       Console.log(
         `[yeet] note: --inherited ${red.check} is not a failing required check on this head; ignored (optional reds never hold the flip)`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* YeetReadyGateDecision.match(decision, {
     blocked: (blocked) =>

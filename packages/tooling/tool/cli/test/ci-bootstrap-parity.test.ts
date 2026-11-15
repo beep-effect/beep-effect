@@ -58,7 +58,7 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("CI bootstrap command g
       });
       const branch = Effect.fnUntraced(function* (name: string, files: ReadonlyArray<string>) {
         git(["checkout", "-q", "-b", name, base]);
-        yield* Effect.forEach(files, write, { discard: true });
+        yield* Effect.forEach(files, write, { concurrency: 1, discard: true });
         git(["add", "."]);
         git(["commit", "-q", "--allow-empty", "-m", name]);
         return git(["rev-parse", "HEAD"]);

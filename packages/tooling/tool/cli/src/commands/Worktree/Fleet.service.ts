@@ -587,9 +587,11 @@ const enumerateFleet = Effect.fn("Fleet.enumerateFleet")(function* (
   FleetMirrorServiceRequirements
 > {
   const configured = roots.source !== "derived";
-  const perRoot = yield* Effect.forEach(roots.roots, (root) => discoverClones(root, normalizedOrigin, configured));
+  const perRoot = yield* Effect.forEach(roots.roots, (root) => discoverClones(root, normalizedOrigin, configured), {
+    concurrency: 1,
+  });
   const clones = A.dedupe(A.flatten(perRoot));
-  const forEach2 = yield* Effect.forEach(clones, cloneStubs);
+  const forEach2 = yield* Effect.forEach(clones, cloneStubs, { concurrency: 1 });
   const stubs = dedupeStubs(A.flatten(forEach2));
   return { clones, stubs: A.sortWith(stubs, (stub) => stub.path, Order.String) };
 });
@@ -643,7 +645,7 @@ const scanProcesses = Effect.fn("Fleet.scanProcesses")(function* (
     return { counts, scanned: 0, unreadable: 0, complete: false };
   }
   const pids = A.filter(names.value, (name) => PID_DIRECTORY_NAME.test(name));
-  const readings = yield* Effect.forEach(pids, processCwdReading);
+  const readings = yield* Effect.forEach(pids, processCwdReading, { concurrency: 1 });
   for (const cwd of A.getSomes(A.map(readings, (reading) => reading.cwd))) {
     attributeProcessCwd(counts, byLengthDesc, cwd);
   }
@@ -709,7 +711,7 @@ const scanSessionRegistry = Effect.fn("Fleet.scanSessionRegistry")(function* (
     Order.mapInput(Order.Number, (candidate: string) => -candidate.length)
   );
   const files = A.filter(names.value, (name) => O.isSome(Str.match(SESSION_REGISTRY_FILE)(name)));
-  const cwds = yield* Effect.forEach(files, (name) => confirmedSessionCwd(registryDir, name));
+  const cwds = yield* Effect.forEach(files, (name) => confirmedSessionCwd(registryDir, name), { concurrency: 1 });
   for (const cwd of A.getSomes(cwds)) {
     attributeProcessCwd(counts, byLengthDesc, cwd);
   }
@@ -767,7 +769,7 @@ const childMillis = Effect.fn("Fleet.childMillis")(function* (
   if (O.isNone(children)) {
     return A.empty();
   }
-  const forEach3 = yield* Effect.forEach(children.value, entryReading);
+  const forEach3 = yield* Effect.forEach(children.value, entryReading, { concurrency: 1 });
   return entryMillis(forEach3);
 });
 
@@ -775,12 +777,12 @@ const childMillis = Effect.fn("Fleet.childMillis")(function* (
 const treeMillis = Effect.fn("Fleet.treeMillis")(function* (
   entryPaths: ReadonlyArray<string>
 ): Effect.fn.Return<ReadonlyArray<number>, never, FleetMirrorServiceRequirements> {
-  const readings = yield* Effect.forEach(entryPaths, entryReading);
+  const readings = yield* Effect.forEach(entryPaths, entryReading, { concurrency: 1 });
   const directories = A.map(
     A.filter(A.zip(entryPaths, readings), ([, reading]) => reading.directory),
     ([entryPath]) => entryPath
   );
-  const nested = yield* Effect.forEach(directories, childMillis);
+  const nested = yield* Effect.forEach(directories, childMillis, { concurrency: 1 });
   return A.appendAll(entryMillis(readings), A.flatten(nested));
 });
 
@@ -818,7 +820,7 @@ const transcriptReading = Effect.fn("Fleet.transcriptReading")(function* (
   if (transcripts.length === 0) {
     return PROBE_ABSENT;
   }
-  const readings = yield* Effect.forEach(transcripts, (name) => entryReading(path.join(dir, name)));
+  const readings = yield* Effect.forEach(transcripts, (name) => entryReading(path.join(dir, name)), { concurrency: 1 });
   return measuredSince(entryMillis(readings), nowMillis);
 });
 

@@ -893,7 +893,7 @@ export const runTurnAtom = ChatClient.runtime.fn<TurnRequest>()(
     const client = yield* ChatClient;
     const reactivity = yield* Reactivity.Reactivity;
     const registry = yield* AtomRegistry.AtomRegistry;
-    const all1 = yield* Effect.all(A.replicate(Random.nextInt, 4));
+    const all1 = yield* Effect.all(A.replicate(Random.nextInt, 4), { concurrency: 1 });
     const requestId = A.join(
       A.map(all1, (value) => `${value}`),
       ":"

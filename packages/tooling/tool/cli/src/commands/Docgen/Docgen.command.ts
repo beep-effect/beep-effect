@@ -288,7 +288,7 @@ const docgenStatusCommand = Command.make(
         return;
       }
 
-      yield* Effect.forEach(packages, renderVerboseDocgenStatus, { discard: true });
+      yield* Effect.forEach(packages, renderVerboseDocgenStatus, { concurrency: 1, discard: true });
     },
     Effect.catchTags({
       DomainError: reportDocgenCommandError,
@@ -523,7 +523,7 @@ const writeAllAnalyses = Effect.fn("Docgen.writeAllAnalyses")(function* (
       yield* fs.writeFileString(destination, generateAnalysisReport(analysis, fixMode));
       yield* Console.log(`docgen: wrote ${destination}`);
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -591,7 +591,7 @@ const renderDocgenCheckAnalysis = Effect.fn("Docgen.renderCheckAnalysis")(functi
       Console.error(
         `  ${issue.filePath}:${issue.line} ${issue.name} ${renderDocgenIssueText(issue.missingTags, issue.categoryIssues)}`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -649,7 +649,7 @@ const docgenCheckCommand = Command.make(
         yield* Console.log(`docgen: skipped ${skippedByProofManifest} package(s) with current proof manifests`);
       }
 
-      yield* Effect.forEach(analyses, renderDocgenCheckAnalysis, { discard: true });
+      yield* Effect.forEach(analyses, renderDocgenCheckAnalysis, { concurrency: 1, discard: true });
 
       if (failures.length > 0) {
         return yield* failWithReportedExit("docgen: check found missing documentation.");

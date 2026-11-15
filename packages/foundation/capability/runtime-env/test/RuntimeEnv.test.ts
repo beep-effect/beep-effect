@@ -396,10 +396,13 @@ describe("CurrentRuntimeEnv.layerFrom", () => {
   it.layer(
     Layer.effect(
       Snapshots,
-      Effect.forEach(RECORDS, (record) =>
-        Layer.build(CurrentRuntimeEnv.layerFrom(record)).pipe(
-          Effect.map((context) => Context.get(context, CurrentRuntimeEnv))
-        )
+      Effect.forEach(
+        RECORDS,
+        (record) =>
+          Layer.build(CurrentRuntimeEnv.layerFrom(record)).pipe(
+            Effect.map((context) => Context.get(context, CurrentRuntimeEnv))
+          ),
+        { concurrency: 1 }
       )
     ),
     { timeout: "30 seconds" }

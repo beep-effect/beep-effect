@@ -66,7 +66,9 @@ describe("@beep/law-practice-use-cases QuestionQueue schemas", () => {
   it.effect(
     "decodes and round-trips a submitted answer in every state",
     Effect.fnUntraced(function* () {
-      const answers = yield* Effect.forEach(encodedAnswers, (answer) => roundTrips(RecordAnswerInput, answer));
+      const answers = yield* Effect.forEach(encodedAnswers, (answer) => roundTrips(RecordAnswerInput, answer), {
+        concurrency: 1,
+      });
 
       expect(A.map(answers, ({ state }) => state)).toStrictEqual(AnswerState.literals);
       assertTrue(A.every(answers, ({ itemId: answered }) => answered === itemId));
@@ -77,11 +79,14 @@ describe("@beep/law-practice-use-cases QuestionQueue schemas", () => {
     "requires each state's own field and leaves revision and timestamp to the queue",
     Effect.fnUntraced(function* () {
       const decode = S.decodeUnknownEffect(RecordAnswerInput);
-      const failures = yield* Effect.all([
-        Effect.flip(decode({ state: "decided", itemId })),
-        Effect.flip(decode({ state: "pending-on-client", itemId })),
-        Effect.flip(decode({ state: "snoozed", itemId })),
-      ]);
+      const failures = yield* Effect.all(
+        [
+          Effect.flip(decode({ state: "decided", itemId })),
+          Effect.flip(decode({ state: "pending-on-client", itemId })),
+          Effect.flip(decode({ state: "snoozed", itemId })),
+        ],
+        { concurrency: 1 }
+      );
       expect(A.map(failures, ({ _tag }) => _tag)).toStrictEqual(A.replicate("SchemaError", 3));
 
       const decided = yield* decode({ state: "decided", itemId, optionId: "keep-date", revision: 1, recordedAt: 0 });

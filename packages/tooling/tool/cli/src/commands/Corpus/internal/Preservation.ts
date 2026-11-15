@@ -334,8 +334,10 @@ const readManifest = Effect.fn("Preservation.readManifest")(function* (
   }
   const text = yield* fs.readFileString(manifestPath).pipe(Effect.mapError(ioError("manifest-read", manifestPath)));
   const lines = pipe(Str.split(/\r?\n/u)(text), A.filter(Str.isNonEmpty));
-  return yield* Effect.forEach(lines, (line) =>
-    PreservationManifestRowJson.decode(line).pipe(Effect.mapError(ioError("manifest-decode", manifestPath)))
+  return yield* Effect.forEach(
+    lines,
+    (line) => PreservationManifestRowJson.decode(line).pipe(Effect.mapError(ioError("manifest-decode", manifestPath))),
+    { concurrency: 1 }
   );
 });
 
@@ -942,8 +944,13 @@ const readCollectorManifest = Effect.fn("Preservation.readCollectorManifest")(fu
     .readFileString(manifestPath)
     .pipe(Effect.mapError(ioError("collector-manifest-read", manifestPath)));
   const lines = pipe(Str.split(/\r?\n/u)(text), A.filter(Str.isNonEmpty));
-  return yield* Effect.forEach(lines, (line) =>
-    CollectorManifestRecordJson.decode(line).pipe(Effect.mapError(ioError("collector-manifest-decode", manifestPath)))
+  return yield* Effect.forEach(
+    lines,
+    (line) =>
+      CollectorManifestRecordJson.decode(line).pipe(
+        Effect.mapError(ioError("collector-manifest-decode", manifestPath))
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -1001,8 +1008,10 @@ const collectorTerminalEvidence = Effect.fn("Preservation.collectorTerminalEvide
       path: manifestPath,
     });
   }
-  const terminalEntries = yield* Effect.forEach(successfulRows, (row) =>
-    collectorSuccessCoordinates(row, manifestPath)
+  const terminalEntries = yield* Effect.forEach(
+    successfulRows,
+    (row) => collectorSuccessCoordinates(row, manifestPath),
+    { concurrency: 1 }
   );
   return {
     collectorErrors: A.length(A.filter(rows, (row) => row.status === "error")),
@@ -1045,8 +1054,10 @@ const reconcileCollectorDestinations = Effect.fn("Preservation.reconcileCollecto
   PreservationArchiveIoError,
   FileSystem.FileSystem | Path.Path
 > {
-  return yield* Effect.forEach(terminalSuccesses, ([relative, expectedSize]) =>
-    reconcileCollectorDestination(salvageRoot, manifestPath, relative, expectedSize)
+  return yield* Effect.forEach(
+    terminalSuccesses,
+    ([relative, expectedSize]) => reconcileCollectorDestination(salvageRoot, manifestPath, relative, expectedSize),
+    { concurrency: 1 }
   );
 });
 
@@ -1112,8 +1123,10 @@ const readInheritedLossRows = Effect.fn("Preservation.readInheritedLossRows")(fu
   }
   const text = yield* fs.readFileString(ledgerPath).pipe(Effect.mapError(ioError("inherited-loss-read", ledgerPath)));
   const lines = pipe(Str.split(/\r?\n/u)(text), A.filter(Str.isNonEmpty));
-  return yield* Effect.forEach(lines, (line) =>
-    InheritedLossRowJson.decode(line).pipe(Effect.mapError(ioError("inherited-loss-decode", ledgerPath)))
+  return yield* Effect.forEach(
+    lines,
+    (line) => InheritedLossRowJson.decode(line).pipe(Effect.mapError(ioError("inherited-loss-decode", ledgerPath))),
+    { concurrency: 1 }
   );
 });
 
@@ -1137,7 +1150,7 @@ const seedInheritedLossLedger = Effect.fn("Preservation.seedInheritedLossLedger"
     }
     return;
   }
-  const encoded = yield* Effect.forEach(expected, InheritedLossRowJson.encode).pipe(
+  const encoded = yield* Effect.forEach(expected, InheritedLossRowJson.encode, { concurrency: 1 }).pipe(
     Effect.mapError(ioError("inherited-loss-encode", ledgerPath))
   );
   yield* writeFileDurably(ledgerPath, `${A.join(encoded, "\n")}\n`);
@@ -1439,8 +1452,10 @@ const readCorpusLedger = Effect.fn("Preservation.readCorpusLedger")(function* (
   }
   const text = yield* fs.readFileString(ledgerPath).pipe(Effect.mapError(ioError("provenance-read", ledgerPath)));
   const lines = pipe(Str.split(/\r?\n/u)(text), A.filter(Str.isNonEmpty));
-  return yield* Effect.forEach(lines, (line) =>
-    CorpusLedgerRecordJson.decode(line).pipe(Effect.mapError(ioError("provenance-decode", ledgerPath)))
+  return yield* Effect.forEach(
+    lines,
+    (line) => CorpusLedgerRecordJson.decode(line).pipe(Effect.mapError(ioError("provenance-decode", ledgerPath))),
+    { concurrency: 1 }
   );
 });
 

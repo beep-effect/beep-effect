@@ -1070,9 +1070,9 @@ const commandSourceFiles = Effect.fn("Knowledge.commandSourceFiles")(function* (
       );
     return O.some([path.relative(checkoutRoot, filePath), text] as const);
   });
-  return yield* Effect.forEach(A.appendAll(sourceNames, sharedFlagSources), readCommandSourceFile).pipe(
-    Effect.map(A.getSomes)
-  );
+  return yield* Effect.forEach(A.appendAll(sourceNames, sharedFlagSources), readCommandSourceFile, {
+    concurrency: 1,
+  }).pipe(Effect.map(A.getSomes));
 });
 
 const buildStaticCommandTree = Effect.fn("Knowledge.buildStaticCommandTree")(function* (checkoutRoot: string) {

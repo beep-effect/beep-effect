@@ -231,67 +231,75 @@ export const applyEffectVitestPrimitiveGraph: {
     graph: EffectVitestPrimitiveGraphDocument
   ) {
     const primitives = indexEffectVitestPrimitives(graph.entries);
-    yield* Effect.forEach(entries, ([ruleId, policy]) => {
-      const candidates = A.filter(graph.entries, (primitive) => A.contains(primitive.replaces, ruleId));
-      return O.match(HashMap.get(primitives, policy.primitive), {
-        onNone: () =>
-          Effect.fail(
-            EffectVitestPrimitiveGraphError.new(`Policy ${ruleId} references missing primitive ${policy.primitive}.`)
-          ),
-        onSome: (preferred) =>
-          A.contains(preferred.replaces, ruleId) &&
-          !A.isReadonlyArrayEmpty(candidates) &&
-          A.every(candidates, (candidate) => Str.includes(policy.className)(candidate.whenToUse))
-            ? Effect.void
-            : Effect.fail(
-                EffectVitestPrimitiveGraphError.new(
-                  `Graph replacements for ${ruleId} must include preferred primitive ${preferred.id} and name candidate class ${policy.className}.`
-                )
-              ),
-      });
-    });
-    return yield* Effect.forEach(findings, (finding) => {
-      if (!isEffectVitestRuleId(finding.ruleId)) {
-        return Effect.fail(
-          EffectVitestPrimitiveGraphError.new(`Finding ${finding.id} uses unknown policy ID ${finding.ruleId}.`)
-        );
-      }
-      return O.match(HashMap.get(EffectVitestRulePolicies, finding.ruleId), {
-        onNone: () =>
-          Effect.fail(
-            EffectVitestPrimitiveGraphError.new(`Finding ${finding.id} uses unknown policy ID ${finding.ruleId}.`)
-          ),
-        onSome: (policy) => {
-          const candidates = A.filter(graph.entries, (primitive) => A.contains(primitive.replaces, finding.ruleId));
-          const preferred = finding.ruleId === "EV006" ? finding.replacement.primitive : policy.primitive;
-          if (!A.some(candidates, (candidate) => candidate.id === preferred))
-            return Effect.fail(
-              EffectVitestPrimitiveGraphError.new(
-                `Finding ${finding.id} selects primitive ${preferred} without a ${finding.ruleId} graph edge.`
-              )
-            );
-          const contextual =
-            finding.ruleId === "EV006" ||
-            finding.ruleId === "EV012" ||
-            finding.class === "deferred-clock-wait-review" ||
-            finding.class === "platform-resource-provenance-review";
-          return Effect.succeed(
-            EffectVitestFinding.make({
-              ...finding,
-              replacement: EffectVitestReplacement.make({
-                primitive: preferred,
-                sketch: A.join(
-                  [
-                    ...(contextual ? [finding.replacement.sketch] : []),
-                    ...A.map(candidates, (candidate) => `${candidate.id}: ${candidate.whenToUse}`),
-                  ],
-                  " "
+    yield* Effect.forEach(
+      entries,
+      ([ruleId, policy]) => {
+        const candidates = A.filter(graph.entries, (primitive) => A.contains(primitive.replaces, ruleId));
+        return O.match(HashMap.get(primitives, policy.primitive), {
+          onNone: () =>
+            Effect.fail(
+              EffectVitestPrimitiveGraphError.new(`Policy ${ruleId} references missing primitive ${policy.primitive}.`)
+            ),
+          onSome: (preferred) =>
+            A.contains(preferred.replaces, ruleId) &&
+            !A.isReadonlyArrayEmpty(candidates) &&
+            A.every(candidates, (candidate) => Str.includes(policy.className)(candidate.whenToUse))
+              ? Effect.void
+              : Effect.fail(
+                  EffectVitestPrimitiveGraphError.new(
+                    `Graph replacements for ${ruleId} must include preferred primitive ${preferred.id} and name candidate class ${policy.className}.`
+                  )
                 ),
-              }),
-            })
+        });
+      },
+      { concurrency: 1 }
+    );
+    return yield* Effect.forEach(
+      findings,
+      (finding) => {
+        if (!isEffectVitestRuleId(finding.ruleId)) {
+          return Effect.fail(
+            EffectVitestPrimitiveGraphError.new(`Finding ${finding.id} uses unknown policy ID ${finding.ruleId}.`)
           );
-        },
-      });
-    });
+        }
+        return O.match(HashMap.get(EffectVitestRulePolicies, finding.ruleId), {
+          onNone: () =>
+            Effect.fail(
+              EffectVitestPrimitiveGraphError.new(`Finding ${finding.id} uses unknown policy ID ${finding.ruleId}.`)
+            ),
+          onSome: (policy) => {
+            const candidates = A.filter(graph.entries, (primitive) => A.contains(primitive.replaces, finding.ruleId));
+            const preferred = finding.ruleId === "EV006" ? finding.replacement.primitive : policy.primitive;
+            if (!A.some(candidates, (candidate) => candidate.id === preferred))
+              return Effect.fail(
+                EffectVitestPrimitiveGraphError.new(
+                  `Finding ${finding.id} selects primitive ${preferred} without a ${finding.ruleId} graph edge.`
+                )
+              );
+            const contextual =
+              finding.ruleId === "EV006" ||
+              finding.ruleId === "EV012" ||
+              finding.class === "deferred-clock-wait-review" ||
+              finding.class === "platform-resource-provenance-review";
+            return Effect.succeed(
+              EffectVitestFinding.make({
+                ...finding,
+                replacement: EffectVitestReplacement.make({
+                  primitive: preferred,
+                  sketch: A.join(
+                    [
+                      ...(contextual ? [finding.replacement.sketch] : []),
+                      ...A.map(candidates, (candidate) => `${candidate.id}: ${candidate.whenToUse}`),
+                    ],
+                    " "
+                  ),
+                }),
+              })
+            );
+          },
+        });
+      },
+      { concurrency: 1 }
+    );
   })
 );

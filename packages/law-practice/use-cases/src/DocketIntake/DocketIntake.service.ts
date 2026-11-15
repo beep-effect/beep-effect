@@ -954,8 +954,10 @@ const enterDocketItem = Effect.fnUntraced(function* (
       tentative: true,
     })
   );
-  const reminders = yield* Effect.forEach(ladder.rungs, (rung) =>
-    reminderEntry(ports, message, entry.title, dueDate.date, rung)
+  const reminders = yield* Effect.forEach(
+    ladder.rungs,
+    (rung) => reminderEntry(ports, message, entry.title, dueDate.date, rung),
+    { concurrency: 1 }
   );
   yield* Effect.ignore(ports.mailbox.markEntered(message));
   return DocketEntered.make({

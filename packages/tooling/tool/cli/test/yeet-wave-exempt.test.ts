@@ -145,6 +145,7 @@ it.layer(platform, { timeout: "30 seconds" })("wave-exempt row kinds", (test) =>
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-wave-exempt-" });
       const { conflict, drift, failed, thread } = yield* oldHeadRows();
       yield* Effect.forEach([failed, thread, drift, conflict], (row) => appendYeetInboxRow(root, row), {
+        concurrency: 1,
         discard: true,
       });
       const paths = yield* yeetInboxPaths(root);

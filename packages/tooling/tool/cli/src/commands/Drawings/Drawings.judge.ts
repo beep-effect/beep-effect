@@ -130,10 +130,13 @@ const copyPhotos = Effect.fn("DrawingsJudge.copyPhotos")(function* (photosDir: s
   yield* fs
     .makeDirectory(path.join(packDir, "photos"), { recursive: true })
     .pipe(Effect.mapError(fail("Could not create photos/.")));
-  yield* Effect.forEach(photos, (name) =>
-    fs
-      .copyFile(path.join(photosDir, name), path.join(packDir, "photos", name))
-      .pipe(Effect.mapError(fail(`Could not copy "${name}".`)))
+  yield* Effect.forEach(
+    photos,
+    (name) =>
+      fs
+        .copyFile(path.join(photosDir, name), path.join(packDir, "photos", name))
+        .pipe(Effect.mapError(fail(`Could not copy "${name}".`))),
+    { concurrency: 1 }
   );
   return A.map(photos, (name) => DrawingJudgeFile.make({ kind: "screenshot", path: `photos/${name}` }));
 });
@@ -205,20 +208,23 @@ export const buildDrawingJudgePack = Effect.fn("DrawingsJudge.buildPack")(functi
   yield* fs
     .makeDirectory(path.join(packDir, "sheets"), { recursive: true })
     .pipe(Effect.mapError(fail("Could not create the pack.")));
-  const sheets = yield* Effect.forEach(manifest.figures, (figure) =>
-    tools
-      .renderPng(
-        PngRequest.make({
-          pdfPath: path.join(manifestDir, manifest.pdfFile),
-          page: figure.figure,
-          dpi: SHEET_DPI,
-          outputPath: path.join(packDir, "sheets", `fig-${figure.figure}.png`),
-        })
-      )
-      .pipe(
-        Effect.mapError(fail(`Could not render FIG. ${figure.figure}.`)),
-        Effect.as(DrawingJudgeFile.make({ kind: "sheet", path: `sheets/fig-${figure.figure}.png` }))
-      )
+  const sheets = yield* Effect.forEach(
+    manifest.figures,
+    (figure) =>
+      tools
+        .renderPng(
+          PngRequest.make({
+            pdfPath: path.join(manifestDir, manifest.pdfFile),
+            page: figure.figure,
+            dpi: SHEET_DPI,
+            outputPath: path.join(packDir, "sheets", `fig-${figure.figure}.png`),
+          })
+        )
+        .pipe(
+          Effect.mapError(fail(`Could not render FIG. ${figure.figure}.`)),
+          Effect.as(DrawingJudgeFile.make({ kind: "sheet", path: `sheets/fig-${figure.figure}.png` }))
+        ),
+    { concurrency: 1 }
   );
   const photos = yield* O.match(input.photosDir, {
     onNone: () => Effect.succeed(A.empty<DrawingJudgeFile>()),
@@ -275,14 +281,18 @@ const inventoryProblems = Effect.fn("DrawingsJudge.inventoryProblems")(function*
   const evidence = A.flatMap(inventory.findings, (finding) =>
     A.map(finding.evidence, (ref) => ({ id: finding.id, ref }))
   );
-  const pathProblems = yield* Effect.forEach(evidence, ({ id, ref }) => {
-    const resolved = path.resolve(packDir, ref.path);
-    const inside = !Str.startsWith("..")(path.relative(packDir, resolved));
-    return (inside ? fs.exists(resolved) : Effect.succeed(false)).pipe(
-      Effect.orElseSucceed(() => false),
-      Effect.map((exists) => (exists ? O.none() : O.some(`${id}: evidence "${ref.path}" is not a file in the pack`)))
-    );
-  });
+  const pathProblems = yield* Effect.forEach(
+    evidence,
+    ({ id, ref }) => {
+      const resolved = path.resolve(packDir, ref.path);
+      const inside = !Str.startsWith("..")(path.relative(packDir, resolved));
+      return (inside ? fs.exists(resolved) : Effect.succeed(false)).pipe(
+        Effect.orElseSucceed(() => false),
+        Effect.map((exists) => (exists ? O.none() : O.some(`${id}: evidence "${ref.path}" is not a file in the pack`)))
+      );
+    },
+    { concurrency: 1 }
+  );
   return [...lensProblems, ...A.getSomes(pathProblems)];
 });
 

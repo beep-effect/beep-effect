@@ -377,7 +377,7 @@ export const reverseSyncCutover = Effect.fn($I`reverseSyncCutover`)(function* (m
           yield* sql`DROP TABLE IF EXISTS ${sql(`${table}_reversal_backup`)}`;
           yield* sql`CREATE TABLE ${sql(`${table}_reversal_backup`)} AS TABLE ${sql(table)}`;
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       const differences = yield* diffSyncCutoverSnapshot("reversal_backup");
       if (A.isReadonlyArrayNonEmpty(differences))
@@ -395,7 +395,7 @@ export const reverseSyncCutover = Effect.fn($I`reverseSyncCutover`)(function* (m
             (SELECT COALESCE(MAX(id), 0) FROM documents_sync_legacy_identity WHERE entity = ${entity}),
             (SELECT last_value FROM ${sql(`${table}_id_seq`)})), true)`;
         },
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       const ids = A.map(leased, (row) => row.id);
       const encoded = yield* encodeRequeuedIds(ids);

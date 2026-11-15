@@ -80,7 +80,7 @@ const program = Effect.gen(function* () {
               limit: 1,
             })
           )
-          .pipe(Effect.tap((ids) => Effect.forEach(ids, journal.recordAttempt)))
+          .pipe(Effect.tap((ids) => Effect.forEach(ids, journal.recordAttempt, { concurrency: 1 })))
       : [];
   const page = yield* readTranscriptPage(
     TranscriptPageInput.make({

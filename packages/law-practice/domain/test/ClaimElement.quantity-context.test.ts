@@ -42,7 +42,7 @@ describe("quantity wrappers and relational predicate context", () => {
         ["1", "A method comprising receiving a specified number of packets."],
         ["2", "The method of claim 1 wherein checking the packets responsive to a signal."],
       ]);
-      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
       const child = O.getOrThrow(A.last(trees));
       assert.isTrue(
         A.some(
@@ -64,7 +64,7 @@ describe("quantity wrappers and relational predicate context", () => {
           ["1", `A method comprising receiving ${body}.`],
           ["2", "The method of claim 1 wherein checking the packets."],
         ]);
-        const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+        const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
         const child = O.getOrThrow(A.last(trees));
         assert.isFalse(
           A.some(child.edges, (e) => e.kind === "antecedent" && e.referring.anchor.quote === "the packets")

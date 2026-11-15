@@ -89,7 +89,9 @@ export const readVerifiedPatchSeries = Effect.fn("SkillsMaterialize.readVerified
   SkillsCommandError | SkillMaterializeRefusal,
   FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
-  const patches = yield* Effect.forEach(entry.patches.series, (patch) => readPatch(repoRoot, skill, patch));
+  const patches = yield* Effect.forEach(entry.patches.series, (patch) => readPatch(repoRoot, skill, patch), {
+    concurrency: 1,
+  });
   const patchSetHash = yield* patchSetHashOf(patches, skill);
   if (!Str.Equivalence(patchSetHash, entry.patches.patchSetHash)) {
     return yield* refuseDigest(

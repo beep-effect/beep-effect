@@ -205,7 +205,7 @@ const makeStore = Effect.fn("Oxigraph.makeStore")(function* (
         try: () => store.add(toOxigraphQuad(quad)),
         catch: driverError("datasetLoadFailed", "Failed to load a quad into Oxigraph."),
       }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   MutableHashMap.clear(stores);

@@ -632,21 +632,24 @@ const roundTrip = (size: number): WireCase =>
   });
 
 const status: WireCase = (context, recorder) =>
-  Effect.forEach(["writer", "reader"] as const, (role) =>
-    sendTracked(
-      context,
-      recorder
-    )({ label: `${role}-status`, role, method: "GET", route: "/v8/artifacts/status" }).pipe(
-      Effect.map((reply) => {
-        expectStrict(recorder, `status-200-${role}`, O.contains(reply.status, 200), statusText(reply));
-        expectStrict(
-          recorder,
-          `status-schema-${role}`,
-          O.isSome(decodeStatusBody(text(reply))),
-          "body decodes as CachingStatusResponse"
-        );
-      })
-    )
+  Effect.forEach(
+    ["writer", "reader"] as const,
+    (role) =>
+      sendTracked(
+        context,
+        recorder
+      )({ label: `${role}-status`, role, method: "GET", route: "/v8/artifacts/status" }).pipe(
+        Effect.map((reply) => {
+          expectStrict(recorder, `status-200-${role}`, O.contains(reply.status, 200), statusText(reply));
+          expectStrict(
+            recorder,
+            `status-schema-${role}`,
+            O.isSome(decodeStatusBody(text(reply))),
+            "body decodes as CachingStatusResponse"
+          );
+        })
+      ),
+    { concurrency: 1 }
   );
 
 const contentTypes: WireCase = Effect.fnUntraced(function* (context: WireContext, recorder: Recorder) {
@@ -1103,9 +1106,10 @@ const concurrentWrites: WireCase = Effect.fnUntraced(function* (context: WireCon
   const conflicting = yield* freshHash;
   const bodies = yield* Effect.forEach(
     A.makeBy(4, (index) => 16 * 1024 + index * 1024),
-    randomBytes
+    randomBytes,
+    { concurrency: 1 }
   );
-  const digests = yield* Effect.forEach(bodies, (body) => hashBytes(body));
+  const digests = yield* Effect.forEach(bodies, (body) => hashBytes(body), { concurrency: 1 });
   const writes = yield* Effect.forEach(
     A.map(bodies, (body, index) => putStep(`writer-put-conflicting-${index + 1}`, "writer", valid(conflicting), body)),
     (step) => send(context, step),
@@ -1427,7 +1431,8 @@ const freshArtifact = Effect.fnUntraced(function* (size: number) {
 const freshArtifacts = (count: number, size: number) =>
   Effect.forEach(
     A.makeBy(count, () => size),
-    freshArtifact
+    freshArtifact,
+    { concurrency: 1 }
   );
 
 /** Concurrent rounds per concurrency step. */

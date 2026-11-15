@@ -277,10 +277,13 @@ export const planSchemaParityCodemodFile: {
 const resolveRules = Effect.fn("SchemaParityCodemod.resolveRules")(function* (
   ids: ReadonlyArray<SchemaParityCodemodRuleId>
 ): Effect.fn.Return<ReadonlyArray<SchemaParityCodemodRule>, SchemaParityCodemodError> {
-  return yield* Effect.forEach(A.dedupe(ids), (id) =>
-    Effect.fromOption(HashMap.get(SchemaParityCodemodRules, id), () =>
-      SchemaParityCodemodError.new(`No codemod rule is registered under ${id}.`)
-    )
+  return yield* Effect.forEach(
+    A.dedupe(ids),
+    (id) =>
+      Effect.fromOption(HashMap.get(SchemaParityCodemodRules, id), () =>
+        SchemaParityCodemodError.new(`No codemod rule is registered under ${id}.`)
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -373,7 +376,8 @@ const applyPlannedWrites = Effect.fn("SchemaParityCodemod.applyPlannedWrites")(f
       const stem = Str.slice(0, write.filePath.length - extension.length)(write.filePath);
       const nonce = yield* crypto.uuidV4();
       return { ...write, stagedPath: `${stem}${STAGED_SUFFIX}-${nonce}${extension}` };
-    })
+    }),
+    { concurrency: 1 }
   );
   const created = yield* Ref.make<ReadonlyArray<string>>([]);
   const removeStaged = Ref.get(created).pipe(

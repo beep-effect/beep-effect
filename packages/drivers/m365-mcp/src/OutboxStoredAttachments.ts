@@ -267,24 +267,29 @@ export const readStoredAttachments = Effect.fn("OutboxStoredAttachments.read")(f
     );
   }
 
-  return yield* Effect.forEach(attachments, (attachment) =>
-    Effect.gen(function* () {
-      const content = yield* m365.downloadMessageAttachment(
-        M365DownloadMessageAttachmentRequest.make({
-          attachmentId: attachment.id,
-          messageId: request.draftId,
-          userId,
-        })
-      );
-      const digest = yield* crypto.digest(Digest.sha256, content.bytes);
-      return OutboxAttachmentDigest.make({
-        name: pipe(
-          attachment.name,
-          O.getOrElse(() => "")
-        ),
-        sha256: Sha256Hex.make(Hex.encode(digest)),
-        size: content.bytes.byteLength,
-      });
-    }).pipe(Effect.mapError(() => failure("unreadable", 1, "A stored attachment could not be downloaded and hashed.")))
+  return yield* Effect.forEach(
+    attachments,
+    (attachment) =>
+      Effect.gen(function* () {
+        const content = yield* m365.downloadMessageAttachment(
+          M365DownloadMessageAttachmentRequest.make({
+            attachmentId: attachment.id,
+            messageId: request.draftId,
+            userId,
+          })
+        );
+        const digest = yield* crypto.digest(Digest.sha256, content.bytes);
+        return OutboxAttachmentDigest.make({
+          name: pipe(
+            attachment.name,
+            O.getOrElse(() => "")
+          ),
+          sha256: Sha256Hex.make(Hex.encode(digest)),
+          size: content.bytes.byteLength,
+        });
+      }).pipe(
+        Effect.mapError(() => failure("unreadable", 1, "A stored attachment could not be downloaded and hashed."))
+      ),
+    { concurrency: 1 }
   );
 });

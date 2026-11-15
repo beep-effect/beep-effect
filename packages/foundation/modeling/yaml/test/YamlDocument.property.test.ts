@@ -54,7 +54,7 @@ describe("document properties", () => {
           A.map(stream, (entry) => entry.toValue()),
           [value, value]
         );
-        const forEach3 = yield* Effect.forEach(stream, (entry) => entry.stringify());
+        const forEach3 = yield* Effect.forEach(stream, (entry) => entry.stringify(), { concurrency: 1 });
         const rendered = A.join(forEach3, "");
         const parsedAll = yield* YamlDocument.parseAll(rendered);
         assert.deepStrictEqual(

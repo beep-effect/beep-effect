@@ -302,7 +302,9 @@ describe("skills command", () => {
           const backupRoot = path.join(root, ".beep/skills-backups");
           const readDirectory3 = yield* fs.readDirectory(backupRoot);
           const backups = A.filter(readDirectory3, (entry) => Str.startsWith(`${path.basename(relative)}.`)(entry));
-          const contents = yield* Effect.forEach(backups, (name) => fs.readFileString(path.join(backupRoot, name)));
+          const contents = yield* Effect.forEach(backups, (name) => fs.readFileString(path.join(backupRoot, name)), {
+            concurrency: 1,
+          });
           expect(contents).toContain(before);
         }
         const readLink4 = yield* fs.readLink(skillLink);

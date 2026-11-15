@@ -146,7 +146,10 @@ const logSchemaFirstSummary = Effect.fn("logSchemaFirstSummary")(function* (summ
   yield* Console.log(`[schema-first] sfv4_normalization_advisories=${summary.normalizationAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_null_return_advisories=${summary.nullReturnAdvisories}`);
   yield* Console.log(`[schema-first] sfv4_getsomes_struct_advisories=${summary.getsomesStructAdvisories}`);
-  yield* Effect.forEach(summary.parityRules, flow(renderParityRuleSummaryLine, Console.log), { discard: true });
+  yield* Effect.forEach(summary.parityRules, flow(renderParityRuleSummaryLine, Console.log), {
+    concurrency: 1,
+    discard: true,
+  });
   yield* Console.log(`[schema-first] crispening_policy_exempt=${summary.crispeningPolicyExempt}`);
   if (summary.wroteInventory) {
     yield* Console.log(`[schema-first] wrote ${SchemaFirstInventoryPath}`);
@@ -283,7 +286,7 @@ const parityRatchetInput = Effect.fn("parityRatchetInput")(function* (
   parity: SchemaFirstParityFindings,
   options: SchemaFirstLintOptions
 ) {
-  const forEach3 = yield* Effect.forEach(parity.introduced, parityIntroducedLines);
+  const forEach3 = yield* Effect.forEach(parity.introduced, parityIntroducedLines, { concurrency: 1 });
   const introducedLines = A.flatten(forEach3);
   const resolvedOccurrences = A.flatMap(parity.resolved, (row) =>
     A.map(row.occurrences, (occurrence) => `  - ${row.file} :: ${occurrence} [${row.ruleId}]`)

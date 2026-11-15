@@ -1224,10 +1224,10 @@ const makeService = (
     reviewedPlanInput: unknown,
     options: BoxContentMigrationOptions = defaultOptions()
   ) {
-    const [map, reviewedPlan] = yield* Effect.all([
-      decodeMap(mapInput),
-      decodeBoxContentMigrationPlan(reviewedPlanInput),
-    ]);
+    const [map, reviewedPlan] = yield* Effect.all(
+      [decodeMap(mapInput), decodeBoxContentMigrationPlan(reviewedPlanInput)],
+      { concurrency: 1 }
+    );
     if (!(yield* hashed(hasValidBoxContentMigrationPlanDigest(reviewedPlan)))) {
       return yield* BoxProvisioningInvariantError.make({ code: "invalid-plan-digest" });
     }
@@ -1361,14 +1361,10 @@ export class BoxContentMigration extends Context.Service<BoxContentMigration, Bo
     B.Box | BoxContentMigrationJournal | FileSystem.FileSystem | Path.Path
   > = Layer.effect(
     BoxContentMigration,
-    Effect.all([
-      B.Box,
-      BoxContentMigrationJournal,
-      FileSystem.FileSystem,
-      Path.Path,
-      Digest.Digest,
-      SecureRandom.SecureRandom,
-    ]).pipe(
+    Effect.all(
+      [B.Box, BoxContentMigrationJournal, FileSystem.FileSystem, Path.Path, Digest.Digest, SecureRandom.SecureRandom],
+      { concurrency: 1 }
+    ).pipe(
       Effect.map(([box, journal, fs, sourcePaths, digest, secureRandom]) =>
         BoxContentMigration.of(makeService(box, journal, fs, sourcePaths, digest, secureRandom))
       )

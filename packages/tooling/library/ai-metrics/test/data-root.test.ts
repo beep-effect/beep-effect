@@ -238,7 +238,7 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
           expect(failure).toBeInstanceOf(AiMetricsDataRootError);
           expect(failure.message).toContain("non-root");
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       yield* Effect.forEach(
         accepted,
@@ -246,7 +246,7 @@ describe("@beep/repo-ai-metrics data-root precedence", () => {
           const requireAbsoluteAiMetricsDataRoot4 = yield* requireAbsoluteAiMetricsDataRoot(path);
           expect(requireAbsoluteAiMetricsDataRoot4).toBe(path);
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     })
   );

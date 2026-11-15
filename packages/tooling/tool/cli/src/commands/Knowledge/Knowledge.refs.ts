@@ -3237,7 +3237,7 @@ export const scanKnowledgeRefsTree = Effect.fn("Knowledge.scanRefsTree")(functio
   });
   // Sequential forEach allocates the observation list once; per-observation `A.append` re-copies
   // the whole accumulator and dominated the census runtime at corpus scale.
-  const observations = yield* Effect.forEach(A.sort(candidates, candidateOrder), toObservation);
+  const observations = yield* Effect.forEach(A.sort(candidates, candidateOrder), toObservation, { concurrency: 1 });
 
   return KnowledgeRefsReport.make({
     treeish: oracle.treeish,

@@ -74,11 +74,14 @@ it.layer(NodeServices.layer)("Bun.Glob shim parity", (it) => {
       const path = yield* Path.Path;
       const madeTempDirectoryScoped = yield* fs.makeTempDirectoryScoped();
       const cwd = yield* fs.realPath(madeTempDirectoryScoped);
-      yield* Effect.forEach(fixtureFiles, (file) =>
-        Effect.gen(function* () {
-          yield* fs.makeDirectory(path.dirname(path.join(cwd, file)), { recursive: true });
-          yield* fs.writeFileString(path.join(cwd, file), "");
-        })
+      yield* Effect.forEach(
+        fixtureFiles,
+        (file) =>
+          Effect.gen(function* () {
+            yield* fs.makeDirectory(path.dirname(path.join(cwd, file)), { recursive: true });
+            yield* fs.writeFileString(path.join(cwd, file), "");
+          }),
+        { concurrency: 1 }
       );
 
       deepStrictEqual(scan("**/*.ts", { cwd }), ["a.ts", "src/index.ts", "src/nested/deep.ts", "test/a.test.ts"]);

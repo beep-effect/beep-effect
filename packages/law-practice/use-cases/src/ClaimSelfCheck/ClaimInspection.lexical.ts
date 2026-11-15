@@ -202,7 +202,8 @@ export const claimInspectionWithLexicalEvidence = (identity: ClaimLexicalProvide
               ),
               Effect.catchTag("TokenizationError", () => Effect.succeed(unavailable("tokenization-failed")))
             );
-          }
+          },
+          { concurrency: 1 }
         );
         return yield* inspectPreparedClaimRoles(prepared, A.getSomes(evidence));
       });

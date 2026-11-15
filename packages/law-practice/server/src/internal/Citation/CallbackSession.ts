@@ -361,7 +361,8 @@ export const readCapturedCitationSession = Effect.fn("Citation.readCapturedSessi
         components,
         footnote,
       });
-    })
+    }),
+    { concurrency: 1 }
   ).pipe(Effect.mapError(identityFailed));
   return yield* S.decodeEffect(SessionStateType)({ ...data, mentions }).pipe(Effect.mapError(identityFailed));
 });
@@ -1290,7 +1291,8 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
         const mention = CitationMention.make({ ...original, citation });
         const observation = yield* dispatch(mention);
         const groups = yield* dictionary.read;
-        if (mention.citation.type === "id") yield* Effect.forEach(groups, () => step, { discard: true });
+        if (mention.citation.type === "id")
+          yield* Effect.forEach(groups, () => step, { concurrency: 1, discard: true });
 
         last = yield* dictionary.currentResource(last);
         yield* dictionary.validateResource(last);
@@ -1311,7 +1313,9 @@ export const runPreparedCitationCallbackSession = Effect.fn("Citation.runPrepare
             O.isSome(decision.observation) && decision.observation.value._tag === "Ambiguous"
               ? O.some({
                   ...decision.observation.value,
-                  resources: yield* Effect.forEach(decision.observation.value.resources, dictionary.currentResource),
+                  resources: yield* Effect.forEach(decision.observation.value.resources, dictionary.currentResource, {
+                    concurrency: 1,
+                  }),
                 })
               : decision.observation;
           return { ...decision, resource, assignment, observation };

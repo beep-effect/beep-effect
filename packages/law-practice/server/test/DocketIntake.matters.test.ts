@@ -476,8 +476,10 @@ const bundleDirectory = Effect.fnUntraced(function* (options: {
       }).pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })));
     }
   }
-  yield* Effect.forEach(A.fromOption(options.manifest), (text) =>
-    writeFile(path.join(directory, "bundle.manifest.json"), text)
+  yield* Effect.forEach(
+    A.fromOption(options.manifest),
+    (text) => writeFile(path.join(directory, "bundle.manifest.json"), text),
+    { concurrency: 1 }
   );
   return directory;
 });
@@ -575,7 +577,8 @@ describe("@beep/law-practice-server DocketIntake live matter lookup", () => {
 
         const messages = yield* Effect.forEach(
           [path.join(noManifest, "absent"), noManifest, garbage, older, noFormat, partial, noDatabase],
-          bundleFailure
+          bundleFailure,
+          { concurrency: 1 }
         );
 
         expect(A.map(messages, Str.replaceAll(/"[^"]*"/gu, "<path>"))).toStrictEqual([

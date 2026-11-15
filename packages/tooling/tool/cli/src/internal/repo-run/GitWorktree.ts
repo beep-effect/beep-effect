@@ -65,7 +65,7 @@ export const isRegisteredWorktree = Effect.fn("GitWorktree.isRegisteredWorktree"
     return O.none();
   }
   const target = yield* resolvedPath(worktreePath);
-  const listed = yield* Effect.forEach(entries.value, (entry) => resolvedPath(entry.path));
+  const listed = yield* Effect.forEach(entries.value, (entry) => resolvedPath(entry.path), { concurrency: 1 });
   return O.some(A.contains(listed, target));
 });
 

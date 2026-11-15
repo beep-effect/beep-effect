@@ -332,11 +332,14 @@ const filesUnder = Effect.fn("SkillProbe.filesUnder")(function* (root: string) {
 const fileDigests = Effect.fn("SkillProbe.fileDigests")(function* (root: string) {
   const path = yield* Path.Path;
   const files = yield* filesUnder(root);
-  return yield* Effect.forEach(files, (file) =>
-    readText(path.join(root, file)).pipe(
-      Effect.flatMap(sha256Hex),
-      Effect.map((sha256) => ({ path: file, sha256: Sha256Hex.make(sha256) }))
-    )
+  return yield* Effect.forEach(
+    files,
+    (file) =>
+      readText(path.join(root, file)).pipe(
+        Effect.flatMap(sha256Hex),
+        Effect.map((sha256) => ({ path: file, sha256: Sha256Hex.make(sha256) }))
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -360,16 +363,20 @@ const readTasks = Effect.fn("SkillProbe.readTasks")(function* (archiveRoot: stri
     .readDirectory(tasksDir)
     .pipe(Effect.mapError(mapFail(`Cannot list ${tasksDir}.`, tasksDir)));
   const files = pipe(entries, A.filter(Str.endsWith(".json")), A.sort(Order.String));
-  return yield* Effect.forEach(files, (file) => {
-    const taskPath = path.join(CORPUS_DIR, "tasks", file);
-    return readText(path.join(archiveRoot, taskPath)).pipe(
-      Effect.flatMap(decodeTaskManifestJson),
-      Effect.mapBoth({
-        onFailure: mapFail(`Task manifest is not valid: ${taskPath}.`, taskPath),
-        onSuccess: (task) => ({ task, taskPath }),
-      })
-    );
-  });
+  return yield* Effect.forEach(
+    files,
+    (file) => {
+      const taskPath = path.join(CORPUS_DIR, "tasks", file);
+      return readText(path.join(archiveRoot, taskPath)).pipe(
+        Effect.flatMap(decodeTaskManifestJson),
+        Effect.mapBoth({
+          onFailure: mapFail(`Task manifest is not valid: ${taskPath}.`, taskPath),
+          onSuccess: (task) => ({ task, taskPath }),
+        })
+      );
+    },
+    { concurrency: 1 }
+  );
 });
 
 /**
@@ -655,7 +662,8 @@ export const preflightSkillProbe = Effect.fn("SkillProbe.preflight")(function* (
         passed,
         reason,
       });
-    })
+    }),
+    { concurrency: 1 }
   );
   const preflight = SkillProbePreflight.make({
     schemaVersion: "skill-probe-preflight/v1",
@@ -856,20 +864,27 @@ const assignSlots = (
       A.sort(Order.mapInput(Order.String, (record: SkillProbeRunRecord) => record.slot))
     );
   const groups = R.values(A.groupBy(jobs, (job): string => `${job.task.id}#${job.cell}`));
-  return Effect.forEach(groups, (group) => {
-    const first = A.headNonEmpty(group);
-    const slots = openSlots(first.task.id, first.cell);
-    if (A.length(group) > A.length(slots)) {
-      return fail(
-        `Rerun has ${A.length(group)} runs for ${first.task.id} cell ${first.cell} but only ${A.length(slots)} excluded slots.`
+  return Effect.forEach(
+    groups,
+    (group) => {
+      const first = A.headNonEmpty(group);
+      const slots = openSlots(first.task.id, first.cell);
+      if (A.length(group) > A.length(slots)) {
+        return fail(
+          `Rerun has ${A.length(group)} runs for ${first.task.id} cell ${first.cell} but only ${A.length(slots)} excluded slots.`
+        );
+      }
+      return Effect.forEach(
+        A.zip(group, slots),
+        ([job, slot]) =>
+          slot.attempt + 1 > 3
+            ? fail(`Slot ${slot.slot} would reach attempt ${slot.attempt + 1}; at most two reruns are allowed.`)
+            : Effect.succeed({ ...job, slot: slot.slot, attempt: slot.attempt + 1 }),
+        { concurrency: 1 }
       );
-    }
-    return Effect.forEach(A.zip(group, slots), ([job, slot]) =>
-      slot.attempt + 1 > 3
-        ? fail(`Slot ${slot.slot} would reach attempt ${slot.attempt + 1}; at most two reruns are allowed.`)
-        : Effect.succeed({ ...job, slot: slot.slot, attempt: slot.attempt + 1 })
-    );
-  }).pipe(Effect.map(A.flatten));
+    },
+    { concurrency: 1 }
+  ).pipe(Effect.map(A.flatten));
 };
 
 /**
@@ -976,7 +991,7 @@ export const scoreSkillProbeRuns = Effect.fn("SkillProbe.score")(function* (
       }),
     { concurrency: 2 }
   );
-  const lines = yield* Effect.forEach(records, (record) => encodeRecord(record));
+  const lines = yield* Effect.forEach(records, (record) => encodeRecord(record), { concurrency: 1 });
   yield* writeText(
     options.out,
     pipe(
@@ -1008,12 +1023,17 @@ export const scoreSkillProbeRuns = Effect.fn("SkillProbe.score")(function* (
 export const readSkillProbeRecords = Effect.fn("SkillProbe.readRecords")(function* (
   files: ReadonlyArray<string>
 ): Effect.fn.Return<ReadonlyArray<SkillProbeRunRecord>, AgentEffectivenessEvalScorerError | S.SchemaError, ProbeEnv> {
-  const perFile = yield* Effect.forEach(files, (file) =>
-    readText(file).pipe(
-      Effect.flatMap((text) =>
-        Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) => decodeRecord(line))
-      )
-    )
+  const perFile = yield* Effect.forEach(
+    files,
+    (file) =>
+      readText(file).pipe(
+        Effect.flatMap((text) =>
+          Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) => decodeRecord(line), {
+            concurrency: 1,
+          })
+        )
+      ),
+    { concurrency: 1 }
   );
   return A.flatten(perFile);
 });

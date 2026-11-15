@@ -46,8 +46,6 @@ export const topoSortCommand = Command.make(
       })
     );
 
-    yield* Effect.forEach(sorted, (name) => Console.log(name), {
-      discard: true,
-    });
+    yield* Effect.forEach(sorted, (name) => Console.log(name), { concurrency: 1, discard: true });
   })
 ).pipe(Command.withDescription("Output workspace packages in topological dependency order"));

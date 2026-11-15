@@ -655,11 +655,14 @@ const runReviewIngest = Effect.fn("DrawingsCommand.reviewIngest")(function* (opt
   readonly figure: ReadonlyArray<string>;
 }) {
   const review = yield* DrawingReview;
-  const overrides = yield* Effect.forEach(options.figure, (text) =>
-    Result.match(parseFigureOverride(text), {
-      onFailure: (reason) => Effect.fail(DrawingsCommandError.make({ message: reason })),
-      onSuccess: Effect.succeed,
-    })
+  const overrides = yield* Effect.forEach(
+    options.figure,
+    (text) =>
+      Result.match(parseFigureOverride(text), {
+        onFailure: (reason) => Effect.fail(DrawingsCommandError.make({ message: reason })),
+        onSuccess: Effect.succeed,
+      }),
+    { concurrency: 1 }
   );
   const [first, ...rest] = options.pdf;
   if (first === undefined) {
@@ -848,7 +851,7 @@ const runCriticsPack = Effect.fn("DrawingsCommand.criticsPack")(function* (optio
   readonly zoom: ReadonlyArray<string>;
 }) {
   const critics = yield* DrawingCritics;
-  const zooms = yield* Effect.forEach(options.zoom, parseZoomFlag);
+  const zooms = yield* Effect.forEach(options.zoom, parseZoomFlag, { concurrency: 1 });
   const request = yield* CriticPackRequest.makeEffect({
     manifestPath: options.manifest,
     outDir: options.out,
@@ -890,7 +893,7 @@ const runCriticsRun = Effect.fn("DrawingsCommand.criticsRun")(function* (options
     )
   );
   const record = yield* critics.runSequence(request);
-  yield* Effect.forEach(record.runs, flow(criticRunLine, say));
+  yield* Effect.forEach(record.runs, flow(criticRunLine, say), { concurrency: 1 });
   yield* say(
     `loop ${record.loop} on ${record.sheetSetSha256}: ${A.length(record.runs)} run(s); ALL-FINDINGS.md written`
   );

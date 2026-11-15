@@ -112,17 +112,22 @@ const removeRunner = Effect.fn("ScaleDown.removeRunner")(function* (input: {
 }) {
   const github = yield* GitHubRunners;
   const ec2 = yield* Ec2Fleet;
-  const states = yield* Effect.forEach(input.githubRunners, (runner) =>
-    github.getRunner(input.token, input.owner, runner.id).pipe(Effect.map(O.exists((state) => state.busy)))
+  const states = yield* Effect.forEach(
+    input.githubRunners,
+    (runner) => github.getRunner(input.token, input.owner, runner.id).pipe(Effect.map(O.exists((state) => state.busy))),
+    { concurrency: 1 }
   );
   if (A.some(states, (busy) => busy)) {
     return "busy" as const;
   }
-  const deleted = yield* Effect.forEach(input.githubRunners, (runner) =>
-    github.deleteRunner(input.token, input.owner, runner.id).pipe(
-      Effect.as(true),
-      Effect.orElseSucceed(() => false)
-    )
+  const deleted = yield* Effect.forEach(
+    input.githubRunners,
+    (runner) =>
+      github.deleteRunner(input.token, input.owner, runner.id).pipe(
+        Effect.as(true),
+        Effect.orElseSucceed(() => false)
+      ),
+    { concurrency: 1 }
   );
   if (!A.every(deleted, (ok) => ok)) {
     return "skipped" as const;
@@ -135,26 +140,29 @@ const sweepOrphans = Effect.fn("ScaleDown.sweepOrphans")(function* (config: Pool
   const ec2 = yield* Ec2Fleet;
   const github = yield* GitHubRunners;
   const orphans = yield* ec2.listRunners(RunnerFilter.make({ environment: O.some(config.environment), orphan: true }));
-  return yield* Effect.forEach(orphans, (runner) =>
-    Effect.gen(function* () {
-      if (runner.bypassRemoval) {
-        return decide(runner.instanceId, "skipped");
-      }
-      const registered = O.all({ owner: ownerOfRunner(runner), runnerId: runner.githubRunnerId });
-      if (O.isNone(registered)) {
-        yield* ec2.terminate(runner.instanceId);
-        return decide(runner.instanceId, "terminated");
-      }
-      const token = yield* installationTokenFor(registered.value.owner, 0);
-      const state = yield* github.getRunner(token, registered.value.owner, Number(registered.value.runnerId));
-      const orphaned = O.match(state, { onNone: () => true, onSome: (s) => s.status === "offline" && s.busy });
-      if (orphaned) {
-        yield* ec2.terminate(runner.instanceId);
-        return decide(runner.instanceId, "terminated");
-      }
-      yield* ec2.untag(runner.instanceId, [RunnerTag.orphan]);
-      return decide(runner.instanceId, "unorphaned");
-    }).pipe(Effect.orElseSucceed(() => decide(runner.instanceId, "skipped")))
+  return yield* Effect.forEach(
+    orphans,
+    (runner) =>
+      Effect.gen(function* () {
+        if (runner.bypassRemoval) {
+          return decide(runner.instanceId, "skipped");
+        }
+        const registered = O.all({ owner: ownerOfRunner(runner), runnerId: runner.githubRunnerId });
+        if (O.isNone(registered)) {
+          yield* ec2.terminate(runner.instanceId);
+          return decide(runner.instanceId, "terminated");
+        }
+        const token = yield* installationTokenFor(registered.value.owner, 0);
+        const state = yield* github.getRunner(token, registered.value.owner, Number(registered.value.runnerId));
+        const orphaned = O.match(state, { onNone: () => true, onSome: (s) => s.status === "offline" && s.busy });
+        if (orphaned) {
+          yield* ec2.terminate(runner.instanceId);
+          return decide(runner.instanceId, "terminated");
+        }
+        yield* ec2.untag(runner.instanceId, [RunnerTag.orphan]);
+        return decide(runner.instanceId, "unorphaned");
+      }).pipe(Effect.orElseSucceed(() => decide(runner.instanceId, "skipped"))),
+    { concurrency: 1 }
   );
 });
 
@@ -246,11 +254,14 @@ export const handleScaleDown = Effect.fn("ScaleDown.handle")(function* (config: 
       if (O.isNone(registry)) {
         return [];
       }
-      const evaluated = yield* Effect.forEach(A.sort(group, evictionOrder), (runner) =>
-        evaluateRunner({ config, runner, owner, now, idleBudget, ...registry.value })
+      const evaluated = yield* Effect.forEach(
+        A.sort(group, evictionOrder),
+        (runner) => evaluateRunner({ config, runner, owner, now, idleBudget, ...registry.value }),
+        { concurrency: 1 }
       );
       return A.getSomes(evaluated);
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.appendAll(orphanDecisions, A.flatten(decisions));
 });

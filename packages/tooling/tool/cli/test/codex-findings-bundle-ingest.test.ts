@@ -89,7 +89,8 @@ const sealedBundle = Effect.fn("BundleIngestTest.sealedBundle")(function* () {
         sha256: yield* hash(new TextEncoder().encode(text)),
         mediaType: "application/json",
       };
-    })
+    }),
+    { concurrency: 1 }
   );
   const manifest = {
     documentType: "codex-security.scan-manifest",

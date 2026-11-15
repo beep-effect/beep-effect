@@ -719,42 +719,45 @@ export const compileMaterializationPlan: {
 
     const argument1 = `${packetPath}/ops/manifest.json`;
     const manifestPayload1 = yield* manifestPayload(input);
-    const all1 = yield* Effect.all([
-      createRow(argument1, "generated", "Every byte derives from the input and the archetype.", manifestPayload1),
-      createRow(
-        `${packetPath}/README.md`,
-        "generated-seed",
-        "Written once from input; human-owned immediately after.",
-        readmePayload(input)
-      ),
-      createRow(
-        `${packetPath}/GOAL.md`,
-        "generated-seed",
-        "Written once from mission and scope inputs; human-owned immediately after.",
-        goalMdPayload(input)
-      ),
-      createRow(
-        `${packetPath}/SPEC.md`,
-        "generated-seed",
-        "Written once from input; human-owned immediately after.",
-        specPayload(input)
-      ),
-      createRow(
-        `${packetPath}/PLAN.md`,
-        "generated-seed",
-        "Written once from the archetype phase table; human-owned immediately after.",
-        planPayload(input)
-      ),
-      createRow(
-        `${packetPath}/research/SOURCES.md`,
-        "generated-seed",
-        "Written once from provenance inputs; human-owned immediately after.",
-        sourcesPayload(input)
-      ),
-      createRow(`${packetPath}/research/.gitkeep`, "generated", "Directory marker.", "\n"),
-      createRow(`${packetPath}/history/.gitkeep`, "generated", "Directory marker.", "\n"),
-      createRow(`${packetPath}/history/reflections/.gitkeep`, "generated", "Directory marker.", ""),
-    ]);
+    const all1 = yield* Effect.all(
+      [
+        createRow(argument1, "generated", "Every byte derives from the input and the archetype.", manifestPayload1),
+        createRow(
+          `${packetPath}/README.md`,
+          "generated-seed",
+          "Written once from input; human-owned immediately after.",
+          readmePayload(input)
+        ),
+        createRow(
+          `${packetPath}/GOAL.md`,
+          "generated-seed",
+          "Written once from mission and scope inputs; human-owned immediately after.",
+          goalMdPayload(input)
+        ),
+        createRow(
+          `${packetPath}/SPEC.md`,
+          "generated-seed",
+          "Written once from input; human-owned immediately after.",
+          specPayload(input)
+        ),
+        createRow(
+          `${packetPath}/PLAN.md`,
+          "generated-seed",
+          "Written once from the archetype phase table; human-owned immediately after.",
+          planPayload(input)
+        ),
+        createRow(
+          `${packetPath}/research/SOURCES.md`,
+          "generated-seed",
+          "Written once from provenance inputs; human-owned immediately after.",
+          sourcesPayload(input)
+        ),
+        createRow(`${packetPath}/research/.gitkeep`, "generated", "Directory marker.", "\n"),
+        createRow(`${packetPath}/history/.gitkeep`, "generated", "Directory marker.", "\n"),
+        createRow(`${packetPath}/history/reflections/.gitkeep`, "generated", "Directory marker.", ""),
+      ],
+      { concurrency: 1 }
+    );
     const entries = A.appendAll(all1, [
       {
         path: "goals/INDEX.md",
@@ -924,7 +927,8 @@ const parseCapabilityList = (label: string, raw: O.Option<string>) =>
         ? Effect.succeed<CapabilitySlug>(candidate)
         : Effect.fail(
             GoalPlanInputError.new(`--${label} entry "${candidate}" is not a namespace/name capability slug.`)
-          )
+          ),
+    { concurrency: 1 }
   );
 
 /**

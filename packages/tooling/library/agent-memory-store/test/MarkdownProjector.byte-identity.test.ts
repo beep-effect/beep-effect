@@ -332,7 +332,8 @@ const editRound = Effect.fnUntraced(function* (
 ) {
   const edits = yield* Effect.forEach(
     A.map(paths, (path, index) => [index, path] as const),
-    ([fileIndex, path]) => editFile(run, model, path, round + fileIndex)
+    ([fileIndex, path]) => editFile(run, model, path, round + fileIndex),
+    { concurrency: 1 }
   );
   const events = A.map(edits, (edit) => edit.event);
   yield* A.match(events, { onEmpty: () => Effect.void, onNonEmpty: store.log.appendMany });
@@ -342,7 +343,7 @@ const editRound = Effect.fnUntraced(function* (
   yield* Effect.forEach(
     A.map(edits, (edit, index) => [index, edit.touched] as const),
     ([touchedIndex, touched]) => checkEdit(run, store, model, diskText, touched, round + touchedIndex),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 

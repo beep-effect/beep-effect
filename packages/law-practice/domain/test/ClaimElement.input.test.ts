@@ -361,7 +361,7 @@ describe("partial source structural decomposition", () => {
         ["2", "The fixture of claim 1 wherein the panel is metallic."],
       ] as const;
       const claims = yield* normalizePatentClaims(texts);
-      const strict = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+      const strict = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
       const outcomes = yield* decomposeClaimInput(numberedInput(texts));
       const actual = A.getSomes(
         A.map(outcomes, (outcome) => (outcome.status === "decomposed" ? O.some(outcome.tree) : O.none()))

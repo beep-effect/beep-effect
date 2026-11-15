@@ -1293,7 +1293,10 @@ done
 exec "$@"
 `
         );
-        yield* Effect.forEach([bwrapPath, systemdRunPath], (file) => fs.chmod(file, 0o755), { discard: true });
+        yield* Effect.forEach([bwrapPath, systemdRunPath], (file) => fs.chmod(file, 0o755), {
+          concurrency: 1,
+          discard: true,
+        });
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({
             bwrapPath: O.some(bwrapPath),
@@ -1354,7 +1357,10 @@ done
 exec "$@"
 `
         );
-        yield* Effect.forEach([bwrapPath, systemdRunPath], (file) => fs.chmod(file, 0o755), { discard: true });
+        yield* Effect.forEach([bwrapPath, systemdRunPath], (file) => fs.chmod(file, 0o755), {
+          concurrency: 1,
+          discard: true,
+        });
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({
             bwrapPath: O.some(bwrapPath),
@@ -1412,7 +1418,10 @@ done
 exec "$@"
 `
         );
-        yield* Effect.forEach([bwrapPath, systemdRunPath], (file) => fs.chmod(file, 0o755), { discard: true });
+        yield* Effect.forEach([bwrapPath, systemdRunPath], (file) => fs.chmod(file, 0o755), {
+          concurrency: 1,
+          discard: true,
+        });
         const engine = yield* makePffexportFileProcessingEngine(
           PffexportEngineConfig.make({
             bwrapPath: O.some(bwrapPath),

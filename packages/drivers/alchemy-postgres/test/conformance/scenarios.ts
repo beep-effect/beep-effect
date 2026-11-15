@@ -493,6 +493,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
               { concurrency: "unbounded", discard: true }
             );
             yield* Effect.forEach(ids, (id) => eventually(ledgers.get(id), (state) => state._tag === "Created"), {
+              concurrency: 1,
               discard: true,
             });
             yield* Effect.sleep(Duration.millis(300));

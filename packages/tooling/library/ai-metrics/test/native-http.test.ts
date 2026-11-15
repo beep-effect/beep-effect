@@ -632,7 +632,8 @@ for (const domain of ["managed-controller-trace/v1:", "managed-controller-canary
               ObservationLaunchFact.cases.Finished.make({ launchId: source.launchId, outcome: "succeeded" }),
               0
             );
-          })
+          }),
+          { concurrency: 1 }
         );
         const first = yield* encodeManagedControllerObservation(observed);
         const second = yield* encodeManagedControllerObservation(other);
