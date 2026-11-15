@@ -240,6 +240,9 @@ const createWalker = <A, E>(
   });
 };
 
+const walkEntries = <A, E>(graph: DirectedGraph<A, E>, options: TraversalStart) =>
+  A.fromIterable(Graph.entries(createWalker(graph, options.start, options.order)));
+
 // =============================================================================
 // Functorial Operations (Structure-Preserving Transformations)
 // =============================================================================
@@ -493,12 +496,7 @@ export const foldTraversal: {
     graph: DirectedGraph<A, E>,
     options: TraversalStart & { readonly initial: B },
     f: (acc: B, node: A, index: NodeIndex) => B
-  ): B =>
-    A.reduce(
-      A.fromIterable(Graph.entries(createWalker(graph, options.start, options.order))),
-      options.initial,
-      (acc, [index, node]) => f(acc, node, index)
-    )
+  ): B => A.reduce(walkEntries(graph, options), options.initial, (acc, [index, node]) => f(acc, node, index))
 );
 
 /**
@@ -812,11 +810,7 @@ export const traverseNodes: {
     options: TraversalStart,
     f: (node: A, index: NodeIndex) => Effect.Effect<void, Err, R>
   ): Effect.Effect<void, Err, R> =>
-    Effect.forEach(
-      A.fromIterable(Graph.entries(createWalker(graph, options.start, options.order))),
-      ([index, node]) => f(node, index),
-      { concurrency: 1, discard: true }
-    )
+    Effect.forEach(walkEntries(graph, options), ([index, node]) => f(node, index), { concurrency: 1, discard: true })
 );
 
 /**
@@ -856,11 +850,7 @@ export const traverseNodesCollect: {
     options: TraversalStart,
     f: (node: A, index: NodeIndex) => Effect.Effect<B, Err, R>
   ): Effect.Effect<ReadonlyArray<B>, Err, R> =>
-    Effect.forEach(
-      A.fromIterable(Graph.entries(createWalker(graph, options.start, options.order))),
-      ([index, node]) => f(node, index),
-      { concurrency: 1 }
-    )
+    Effect.forEach(walkEntries(graph, options), ([index, node]) => f(node, index), { concurrency: 1 })
 );
 
 /**

@@ -116,18 +116,35 @@ const optionalNonEmpty = (value: string): O.Option<string> => (value.length === 
 
 const appendIndex = (path: JsonPath, key: string, index: number): JsonPath => [...path, key, index];
 
+// Projects each value in order under `path[key][index]`, merging every issue.
+const projectEach = <Input, Output>(
+  values: ReadonlyArray<Input>,
+  path: JsonPath,
+  key: string,
+  project: (value: Input, path: JsonPath) => Effect.Effect<Projection<Output>, S.SchemaError>
+): Effect.Effect<Projection<ReadonlyArray<Output>>, S.SchemaError> =>
+  Effect.map(
+    Effect.forEach(values, (value, index) => project(value, appendIndex(path, key, index)), { concurrency: 1 }),
+    (projected) => ({
+      issues: mergeIssues(projected),
+      value: A.map(projected, (item) => item.value),
+    })
+  );
+
+const projectEachFlat = <Input, Output>(
+  values: ReadonlyArray<Input>,
+  path: JsonPath,
+  key: string,
+  project: (value: Input, path: JsonPath) => Effect.Effect<Projection<ReadonlyArray<Output>>, S.SchemaError>
+): Effect.Effect<Projection<ReadonlyArray<Output>>, S.SchemaError> =>
+  Effect.map(projectEach(values, path, key, project), ({ issues, value }) => ({ issues, value: A.flatten(value) }));
+
 const projectChildValues = <Input, Output>(
   values: ReadonlyArray<Input>,
   path: JsonPath,
   project: (value: Input, path: JsonPath) => Effect.Effect<Projection<ReadonlyArray<Output>>, S.SchemaError>
 ): Effect.Effect<Projection<ReadonlyArray<Output>>, S.SchemaError> =>
-  Effect.map(
-    Effect.forEach(values, (value, index) => project(value, appendIndex(path, "children", index)), { concurrency: 1 }),
-    (projected) => ({
-      issues: mergeIssues(projected),
-      value: A.flatten(A.map(projected, (item) => item.value)),
-    })
-  );
+  projectEachFlat(values, path, "children", project);
 
 const mdText = (value: string): Md.Text => Md.Text.make({ value });
 
@@ -615,17 +632,7 @@ const pandocListItemBlocksToMdChildren = (
         ],
         value,
       }))
-    : Effect.map(
-        Effect.forEach(
-          item,
-          (block, index) => pandocListItemBlockToMdChildBlocks(block, appendIndex(path, "blocks", index)),
-          { concurrency: 1 }
-        ),
-        (blocks) => ({
-          issues: mergeIssues(blocks),
-          value: A.flatten(A.map(blocks, (block) => block.value)),
-        })
-      );
+    : projectEachFlat(item, path, "blocks", pandocListItemBlockToMdChildBlocks);
 };
 
 const mdListItemChildrenText = (children: ReadonlyArray<Md.ListItemChild>): string => {
@@ -753,29 +760,13 @@ const pandocChildBlocksToMd = (
   children: ReadonlyArray<PandocBlock.Type>,
   path: JsonPath
 ): Effect.Effect<Projection<ReadonlyArray<Md.Block>>, S.SchemaError> =>
-  Effect.map(
-    Effect.forEach(children, (child, index) => pandocBlockToMd(child, appendIndex(path, "children", index)), {
-      concurrency: 1,
-    }),
-    (values) => ({
-      issues: mergeIssues(values),
-      value: A.map(values, (child) => child.value),
-    })
-  );
+  projectEach(children, path, "children", pandocBlockToMd);
 
 const pandocListItemsToMd = (
   items: ReadonlyArray<ReadonlyArray<PandocBlock.Type>>,
   path: JsonPath
 ): Effect.Effect<Projection<ReadonlyArray<Md.Li>>, S.SchemaError> =>
-  Effect.map(
-    Effect.forEach(items, (item, index) => pandocListItemToMd(item, appendIndex(path, "items", index)), {
-      concurrency: 1,
-    }),
-    (values) => ({
-      issues: mergeIssues(values),
-      value: A.map(values, (item) => item.value),
-    })
-  );
+  projectEach(items, path, "items", pandocListItemToMd);
 
 const pandocParagraphToMd = (
   node: Plain.Type | Para.Type,
@@ -796,31 +787,21 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
     Match.tag("plain", (node) => pandocParagraphToMd(node, path)),
     Match.tag("para", (node) => pandocParagraphToMd(node, path)),
     Match.tag("lineBlock", (node) =>
-      Effect.map(
-        Effect.forEach(node.lines, (line, index) => pandocInlinesToMd(line, appendIndex(path, "lines", index)), {
-          concurrency: 1,
-        }),
-        (lines) => ({
-          issues: [
-            ...mergeIssues(lines),
-            issue({
-              construct: "LineBlock",
-              direction: "pandoc-to-md",
-              message: "Pandoc non-breaking line groups are represented with hard breaks in one Md paragraph.",
-              path,
-              severity: "lossy",
-            }),
-          ],
-          value: Md.P.make({
-            children: A.flatten(
-              A.intersperse(
-                A.map(lines, (line) => line.value),
-                [Md.Br.make({})]
-              )
-            ),
+      Effect.map(projectEach(node.lines, path, "lines", pandocInlinesToMd), ({ issues, value: lines }) => ({
+        issues: [
+          ...issues,
+          issue({
+            construct: "LineBlock",
+            direction: "pandoc-to-md",
+            message: "Pandoc non-breaking line groups are represented with hard breaks in one Md paragraph.",
+            path,
+            severity: "lossy",
           }),
-        })
-      )
+        ],
+        value: Md.P.make({
+          children: A.flatten(A.intersperse(lines, [Md.Br.make({})])),
+        }),
+      }))
     ),
     Match.tag("header", (node) =>
       Effect.map(pandocInlinesToMd(node.children, path), ({ issues, value }) => {
@@ -932,20 +913,11 @@ const pandocBlockToMd = (block: PandocBlock.Type, path: JsonPath): Effect.Effect
             Effect.all(
               [
                 pandocInlinesToMd(term, appendIndex(path, "items", itemIndex)),
-                Effect.map(
-                  Effect.forEach(
-                    definitions,
-                    (definition, definitionIndex) =>
-                      pandocChildBlocksToMd(
-                        definition,
-                        appendIndex(appendIndex(path, "items", itemIndex), "definitions", definitionIndex)
-                      ),
-                    { concurrency: 1 }
-                  ),
-                  (projected) => ({
-                    issues: mergeIssues(projected),
-                    value: A.flatten(A.map(projected, (entry) => entry.value)),
-                  })
+                projectEachFlat(
+                  definitions,
+                  appendIndex(path, "items", itemIndex),
+                  "definitions",
+                  pandocChildBlocksToMd
                 ),
               ],
               { concurrency: 1 }
@@ -1163,15 +1135,13 @@ const mdListItemsToPandocBlocks = (
   items: ReadonlyArray<Md.Li | Md.TaskItem>,
   path: JsonPath
 ): Effect.Effect<Projection<ReadonlyArray<ReadonlyArray<PandocBlock.Type>>>, S.SchemaError> =>
-  Effect.map(
-    Effect.forEach(items, (item, index) => mdListItemToPandocBlocks(item, appendIndex(path, "children", index)), {
-      concurrency: 1,
-    }),
-    (values) => ({
-      issues: mergeIssues(values),
-      value: A.map(values, (item) => item.value),
-    })
-  );
+  projectEach(items, path, "children", mdListItemToPandocBlocks);
+
+const mdChildBlocksToPandoc = (
+  children: ReadonlyArray<Md.Block>,
+  path: JsonPath
+): Effect.Effect<Projection<ReadonlyArray<PandocBlock.Type>>, S.SchemaError> =>
+  projectEach(children, path, "children", mdBlockToPandoc);
 
 const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Projection<PandocBlock.Type>, S.SchemaError> =>
   Match.value(block).pipe(
@@ -1183,15 +1153,10 @@ const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Project
       }))
     ),
     Match.tag("blockquote", (node) =>
-      Effect.map(
-        Effect.forEach(node.children, (child, index) => mdBlockToPandoc(child, appendIndex(path, "children", index)), {
-          concurrency: 1,
-        }),
-        (children) => ({
-          issues: mergeIssues(children),
-          value: BlockQuote.make({ children: A.map(children, (child) => child.value) }),
-        })
-      )
+      Effect.map(mdChildBlocksToPandoc(node.children, path), ({ issues, value }) => ({
+        issues,
+        value: BlockQuote.make({ children: value }),
+      }))
     ),
     Match.tag("pre", (node) =>
       Effect.succeed(
@@ -1287,54 +1252,44 @@ const mdBlockToPandoc = (block: Md.Block, path: JsonPath): Effect.Effect<Project
       )
     ),
     Match.tag("footnoteDefinition", (node) =>
-      Effect.map(
-        Effect.forEach(node.children, (child, index) => mdBlockToPandoc(child, appendIndex(path, "children", index)), {
-          concurrency: 1,
-        }),
-        (children) => ({
-          issues: [
-            issue({
-              construct: "FootnoteDefinition",
-              direction: "md-to-pandoc",
-              message: "Named Md footnote definitions are emitted as anonymous Pandoc notes.",
-              path,
-              severity: "lossy",
-            }),
-            ...mergeIssues(children),
-          ],
-          value: Para.make({ children: [Note.make({ blocks: A.map(children, (child) => child.value) })] }),
-        })
-      )
+      Effect.map(mdChildBlocksToPandoc(node.children, path), ({ issues: childIssues, value: children }) => ({
+        issues: [
+          issue({
+            construct: "FootnoteDefinition",
+            direction: "md-to-pandoc",
+            message: "Named Md footnote definitions are emitted as anonymous Pandoc notes.",
+            path,
+            severity: "lossy",
+          }),
+          ...childIssues,
+        ],
+        value: Para.make({ children: [Note.make({ blocks: children })] }),
+      }))
     ),
     Match.tag("admonition", (node) =>
-      Effect.map(
-        Effect.forEach(node.children, (child, index) => mdBlockToPandoc(child, appendIndex(path, "children", index)), {
-          concurrency: 1,
-        }),
-        (children) => ({
-          issues: [
-            issue({
-              construct: "Admonition",
-              direction: "md-to-pandoc",
-              message: "Md admonitions are emitted as attributed Pandoc divs.",
-              path,
-              severity: "lossy",
-            }),
-            ...mergeIssues(children),
-          ],
-          value: Div.make({
-            attr: PandocAttr.make({
-              classes: ["admonition", node.kind],
-              id: "",
-              keyValues: O.match({
-                onNone: () => [],
-                onSome: (title: string) => [["title", title] as const],
-              })(node.title),
-            }),
-            children: A.map(children, (child) => child.value),
+      Effect.map(mdChildBlocksToPandoc(node.children, path), ({ issues: childIssues, value: children }) => ({
+        issues: [
+          issue({
+            construct: "Admonition",
+            direction: "md-to-pandoc",
+            message: "Md admonitions are emitted as attributed Pandoc divs.",
+            path,
+            severity: "lossy",
           }),
-        })
-      )
+          ...childIssues,
+        ],
+        value: Div.make({
+          attr: PandocAttr.make({
+            classes: ["admonition", node.kind],
+            id: "",
+            keyValues: O.match({
+              onNone: () => [],
+              onSome: (title: string) => [["title", title] as const],
+            })(node.title),
+          }),
+          children,
+        }),
+      }))
     ),
     Match.tag("embed", (node) => {
       const title = O.match({ onNone: () => "", onSome: (value: string) => value })(node.title);

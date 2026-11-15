@@ -2257,6 +2257,40 @@ const fileMtimeFields = (info: FileSystem.File.Info): { readonly mtimeEpoch: num
   };
 };
 
+// Walks `root` depth-first in sorted entry order: each regular file goes through
+// `makeFile`, each directory recurses, and every other entry kind is skipped.
+const collectSortedSourceFiles = Effect.fn("CorpusCommandService.collectSortedSourceFiles")(function* <Row, E>(
+  root: string,
+  label: string,
+  makeFile: (filePath: string, info: FileSystem.File.Info) => Effect.Effect<Row, E>
+): Effect.fn.Return<ReadonlyArray<Row>, CorpusCommandError | E, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const collectAt: (currentPath: string) => Effect.Effect<ReadonlyArray<Row>, CorpusCommandError | E> = Effect.fn(
+    "CorpusCommandService.collectSortedSourceFiles.collectAt"
+  )(function* (currentPath) {
+    const info = yield* fs
+      .stat(currentPath)
+      .pipe(CorpusCommandError.mapError(`Failed inspecting ${label} entry "${currentPath}".`));
+    if (info.type === "File") {
+      return [yield* makeFile(currentPath, info)];
+    }
+    if (info.type !== "Directory") {
+      return A.empty<Row>();
+    }
+    const entries = yield* fs
+      .readDirectory(currentPath)
+      .pipe(CorpusCommandError.mapError(`Failed reading ${label} directory "${currentPath}".`));
+    const childFiles = yield* Effect.forEach(
+      A.sort(entries, Order.String),
+      (entry) => collectAt(path.join(currentPath, entry)),
+      { concurrency: 1 }
+    );
+    return A.flatten(childFiles);
+  });
+  return yield* collectAt(root);
+});
+
 const collectSalvageSourceFiles = Effect.fn("CorpusCommandService.collectSalvageSourceFiles")(function* (
   spec: CorpusSalvageSourceSpec
 ): Effect.fn.Return<ReadonlyArray<CorpusSalvageOriginFile>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
@@ -2290,31 +2324,7 @@ const collectSalvageSourceFiles = Effect.fn("CorpusCommandService.collectSalvage
     });
   });
 
-  const collectAt: (
-    currentPath: string
-  ) => Effect.Effect<ReadonlyArray<CorpusSalvageOriginFile>, CorpusCommandError, FileSystem.FileSystem | Path.Path> =
-    Effect.fn("CorpusCommandService.collectSalvageSourceFiles.collectAt")(function* (currentPath) {
-      const info = yield* fs
-        .stat(currentPath)
-        .pipe(CorpusCommandError.mapError(`Failed inspecting salvage source entry "${currentPath}".`));
-      if (info.type === "File") {
-        return [yield* makeFile(currentPath, info)];
-      }
-      if (info.type !== "Directory") {
-        return A.empty<CorpusSalvageOriginFile>();
-      }
-      const entries = yield* fs
-        .readDirectory(currentPath)
-        .pipe(CorpusCommandError.mapError(`Failed reading salvage source directory "${currentPath}".`));
-      const childFiles = yield* Effect.forEach(
-        A.sort(entries, Order.String),
-        (entry) => collectAt(path.join(currentPath, entry)),
-        { concurrency: 1 }
-      );
-      return A.flatten(childFiles);
-    });
-
-  return yield* collectAt(sourceRoot);
+  return yield* collectSortedSourceFiles(sourceRoot, "salvage source", makeFile);
 });
 
 const addDigestRows = (
@@ -2652,38 +2662,12 @@ const referencedRawPathForArchive = (record: CorpusProvenanceRecord): string =>
 const collectArchiveSourceFiles = Effect.fn("CorpusCommandService.collectArchiveSourceFiles")(function* (
   sourcePath: string
 ): Effect.fn.Return<ReadonlyArray<string>, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const absoluteSource = path.resolve(sourcePath);
-
-  const collectAt: (
-    currentPath: string
-  ) => Effect.Effect<ReadonlyArray<string>, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> = Effect.fn(
-    "CorpusCommandService.collectArchiveSourceFiles.collectAt"
-  )(function* (currentPath) {
-    const info = yield* fs
-      .stat(currentPath)
-      .pipe(CorpusCommandError.mapError(`Failed inspecting archive-move source entry "${currentPath}".`));
-    if (info.type === "File") {
-      // Keep source filenames opaque: Bun's realpath can reject otherwise valid
-      // POSIX names such as paths containing literal backslashes.
-      return [path.resolve(currentPath)];
-    }
-    if (info.type !== "Directory") {
-      return A.empty<string>();
-    }
-    const entries = yield* fs
-      .readDirectory(currentPath)
-      .pipe(CorpusCommandError.mapError(`Failed reading archive-move source directory "${currentPath}".`));
-    const childFiles = yield* Effect.forEach(
-      A.sort(entries, Order.String),
-      (entry) => collectAt(path.join(currentPath, entry)),
-      { concurrency: 1 }
-    );
-    return A.flatten(childFiles);
-  });
-
-  return yield* collectAt(absoluteSource);
+  // Keep source filenames opaque: Bun's realpath can reject otherwise valid
+  // POSIX names such as paths containing literal backslashes.
+  return yield* collectSortedSourceFiles(path.resolve(sourcePath), "archive-move source", (filePath) =>
+    Effect.succeed(path.resolve(filePath))
+  );
 });
 
 const loadArchiveProvenanceIndex = Effect.fn("CorpusCommandService.loadArchiveProvenanceIndex")(function* (

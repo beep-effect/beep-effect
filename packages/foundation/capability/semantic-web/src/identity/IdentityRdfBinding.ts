@@ -11,7 +11,7 @@ import { makeDataset, makeLiteral, makeNamedNode, makeQuad, NamedNode, ObjectTer
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -273,6 +273,48 @@ export const decodeEntrySubject = Effect.fn("IdentityRdfBinding.decodeEntrySubje
   );
 });
 
+/**
+ * Resolve the predicate a binding assigns to one identity fiber.
+ *
+ * **Details**
+ *
+ * The dataset codec and the SHACL projection both need a fiber's predicate and
+ * both fail with `IdentityFiberPathError` when the binding names none, so the
+ * lookup lives here once. Dual: data-first `resolveFiberPath(binding, fiber)`
+ * or data-last `resolveFiberPath(fiber)(binding)`.
+ *
+ * **Example** (Resolve a bound fiber)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect";
+ * import { IdentityRdfBinding, resolveFiberPath } from "@beep/semantic-web/identity/IdentityRdfBinding"
+ * import { makeNamedNode } from "@beep/rdf/Rdf"
+ *
+ * const binding = IdentityRdfBinding.make({
+ *   identifierPath: makeNamedNode("https://example.com/identity"),
+ *   curiePath: makeNamedNode("https://example.com/curie"),
+ *   fiberPaths: { label: makeNamedNode("https://example.com/label") }
+ * })
+ * console.log(Effect.runSync(resolveFiberPath(binding, "label")).value) // "https://example.com/label"
+ * ```
+ *
+ * @param binding - Predicate binding that maps fibers to predicates.
+ * @param fiber - Fiber name to resolve.
+ * @returns The fiber's predicate, or `IdentityFiberPathError` when it is unbound.
+ * @category codecs
+ * @since 0.0.0
+ */
+export const resolveFiberPath: {
+  (fiber: string): (binding: IdentityRdfBinding) => Effect.Effect<NamedNode, IdentityFiberPathError>;
+  (binding: IdentityRdfBinding, fiber: string): Effect.Effect<NamedNode, IdentityFiberPathError>;
+} = dual(
+  2,
+  (binding: IdentityRdfBinding, fiber: string): Effect.Effect<NamedNode, IdentityFiberPathError> =>
+    Effect.fromOption(R.get(binding.fiberPaths, fiber)).pipe(
+      Effect.mapError(() => IdentityFiberPathError.make({ fiber }))
+    )
+);
+
 const literalAt = Effect.fn("IdentityRdfBinding.literalAt")(function* (
   subject: string,
   path: NamedNode,
@@ -457,12 +499,8 @@ export const entriesToDataset = (binding: IdentityRdfBinding) =>
         return yield* Effect.forEach(
           R.toEntries(entry.fibers),
           ([fiber, value]) =>
-            pipe(
-              R.get(binding.fiberPaths, fiber),
-              O.match({
-                onNone: () => Effect.fail(IdentityFiberPathError.make({ fiber })),
-                onSome: (path) => Effect.succeed(makeQuad(subject, path, makeLiteral(value, XSD_STRING.value))),
-              })
+            Effect.map(resolveFiberPath(binding, fiber), (path) =>
+              makeQuad(subject, path, makeLiteral(value, XSD_STRING.value))
             ),
           { concurrency: 1 }
         ).pipe(

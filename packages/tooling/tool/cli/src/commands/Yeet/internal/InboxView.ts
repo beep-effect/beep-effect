@@ -313,6 +313,33 @@ const dedupeRowsById = (rows: ReadonlyArray<YeetInboxRow>): ReadonlyArray<YeetIn
   });
 };
 
+// Keeps the rows whose id is the id their own payload derives; a row whose id
+// cannot be derived is dropped as malformed.
+const keepWellFormedRows = (rows: ReadonlyArray<YeetInboxRow>) =>
+  Effect.filter(
+    rows,
+    (row) =>
+      yeetInboxExpectedRowId(row).pipe(
+        Effect.map((expected) => row.id === expected),
+        Effect.orElseSucceed(thunkFalse)
+      ),
+    { concurrency: 1 }
+  );
+
+const toInboxEntries = (
+  repoRoot: string,
+  rows: ReadonlyArray<YeetInboxRow>,
+  wave: O.Option<YeetRemediationWave>
+): Effect.Effect<ReadonlyArray<YeetInboxEntry>, never, FileSystem.FileSystem | Path.Path> =>
+  Effect.forEach(
+    rows,
+    (row) =>
+      readYeetAckState(repoRoot, row.id).pipe(
+        Effect.map((ack) => YeetInboxEntry.make({ ack, liveness: yeetInboxRowLiveness(row, wave), row }))
+      ),
+    { concurrency: 1 }
+  );
+
 // Appends write one whole `line\n` per call, so an unterminated tail is an
 // in-flight append the next read will see whole — provisional, not garbage.
 // Only newline-terminated content is complete evidence.
@@ -372,25 +399,9 @@ export const loadYeetInboxView = Effect.fn("Yeet.loadYeetInboxView")(function* (
   }
   const lines = A.filter(Str.split(terminatedPortion(text.value), "\n"), Str.isNonEmpty);
   const rows = A.getSomes(A.map(lines, YeetInboxRowJson.decodeOption));
-  const wellFormed = yield* Effect.filter(
-    rows,
-    (row) =>
-      yeetInboxExpectedRowId(row).pipe(
-        Effect.map((expected) => row.id === expected),
-        Effect.orElseSucceed(thunkFalse)
-      ),
-    { concurrency: 1 }
-  );
-  const deduped = dedupeRowsById(wellFormed);
+  const wellFormed = yield* keepWellFormedRows(rows);
   const wave = yield* loadYeetRemediationWave(repoRoot);
-  const entries = yield* Effect.forEach(
-    deduped,
-    (row) =>
-      readYeetAckState(repoRoot, row.id).pipe(
-        Effect.map((ack) => YeetInboxEntry.make({ ack, liveness: yeetInboxRowLiveness(row, wave), row }))
-      ),
-    { concurrency: 1 }
-  );
+  const entries = yield* toInboxEntries(repoRoot, dedupeRowsById(wellFormed), wave);
   return YeetInboxView.make({
     entries,
     skippedLines: A.length(lines) - A.length(wellFormed),
@@ -582,23 +593,8 @@ export const loadYeetPrWave = Effect.fn("Yeet.loadYeetPrWave")(function* (
   if (A.isReadonlyArrayEmpty(candidates)) {
     return O.none<YeetPrWave>();
   }
-  const wellFormed = yield* Effect.filter(
-    candidates,
-    (row) =>
-      yeetInboxExpectedRowId(row).pipe(
-        Effect.map((expected) => row.id === expected),
-        Effect.orElseSucceed(thunkFalse)
-      ),
-    { concurrency: 1 }
-  );
-  const entries = yield* Effect.forEach(
-    dedupeRowsById(wellFormed),
-    (row) =>
-      readYeetAckState(repoRoot, row.id).pipe(
-        Effect.map((ack) => YeetInboxEntry.make({ ack, liveness: yeetInboxRowLiveness(row, wave), row }))
-      ),
-    { concurrency: 1 }
-  );
+  const wellFormed = yield* keepWellFormedRows(candidates);
+  const entries = yield* toInboxEntries(repoRoot, dedupeRowsById(wellFormed), wave);
   return O.map(selectYeetPrWave(entries, prNumber, pending), (selected) => YeetPrWave.make({ ...selected, redSetKey }));
 });
 

@@ -1025,6 +1025,19 @@ type ShardDrift = { readonly path: string; readonly line: string };
 
 const drift = (path: string, status: string): ShardDrift => ({ path, line: `[schema-catalog] ${status} ${path}` });
 
+// Syncs every generated shard, then retires every listed file, in that order;
+// returns the drift each step reported.
+const syncShardsAndRetire = Effect.fn("SchemaCatalog.syncShardsAndRetire")(function* (
+  write: boolean,
+  repoRoot: string,
+  shards: ReadonlyArray<{ readonly path: string; readonly content: string }>,
+  retired: ReadonlyArray<string>
+) {
+  const synced = yield* Effect.forEach(shards, (shard) => syncShard(write, repoRoot, shard), { concurrency: 1 });
+  const retiredDrift = yield* Effect.forEach(retired, (file) => retireFile(write, repoRoot, file), { concurrency: 1 });
+  return A.getSomes(A.appendAll(synced, retiredDrift));
+});
+
 const reportDrift = Effect.fn("SchemaCatalog.reportDrift")(function* (
   write: boolean,
   drifted: ReadonlyArray<ShardDrift>,
@@ -1129,10 +1142,7 @@ const runScopedSchemaCatalog = Effect.fn("SchemaCatalog.runScoped")(function* (
     A.filter(A.map(owners, schemaCatalogShardPath), (file) => !A.some(shards, (shard) => shard.path === file)),
     (file) => fs.exists(path.join(repoRoot, file))
   );
-  const drifted = A.getSomes([
-    ...(yield* Effect.forEach(shards, (shard) => syncShard(options.write, repoRoot, shard), { concurrency: 1 })),
-    ...(yield* Effect.forEach(emptied, (file) => retireFile(options.write, repoRoot, file), { concurrency: 1 })),
-  ]);
+  const drifted = yield* syncShardsAndRetire(options.write, repoRoot, shards, emptied);
   yield* reportDrift(options.write, drifted, A.join(owners, ", "));
   return yield* finishSchemaCatalogRun(options, repoRoot, document, shards, drifted);
 });
@@ -1172,10 +1182,7 @@ export const runSchemaCatalog = Effect.fn("SchemaCatalog.run")(function* (option
     const expected = A.map(shards, (shard) => shard.path);
     const existingCatalogFiles3 = yield* existingCatalogFiles(repoRoot);
     const orphans = A.filter(existingCatalogFiles3, (file) => !A.contains(expected, file));
-    const drifted = A.getSomes([
-      ...(yield* Effect.forEach(shards, (shard) => syncShard(options.write, repoRoot, shard), { concurrency: 1 })),
-      ...(yield* Effect.forEach(orphans, (file) => retireFile(options.write, repoRoot, file), { concurrency: 1 })),
-    ]);
+    const drifted = yield* syncShardsAndRetire(options.write, repoRoot, shards, orphans);
     yield* reportDrift(options.write, drifted, SCHEMA_CATALOG_DIR);
     return yield* finishSchemaCatalogRun(options, repoRoot, document, shards, drifted);
   }).pipe(Effect.withSpan("SchemaCatalog.run"));

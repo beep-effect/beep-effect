@@ -269,6 +269,25 @@ const resolveRunnerGroupId = Effect.fn("ScaleUp.resolveRunnerGroupId")(function*
   return groupId;
 });
 
+// Configures each instance in order and returns the ids whose configuration
+// failed; one failure never stops the others.
+const failedInstanceIds = <E, R>(
+  instanceIds: ReadonlyArray<string>,
+  configure: (instanceId: string) => Effect.Effect<unknown, E, R>
+): Effect.Effect<ReadonlyArray<string>, never, R> =>
+  Effect.map(
+    Effect.forEach(
+      instanceIds,
+      (instanceId) =>
+        configure(instanceId).pipe(
+          Effect.as(O.none<string>()),
+          Effect.orElseSucceed(() => O.some(instanceId))
+        ),
+      { concurrency: 1 }
+    ),
+    A.getSomes
+  );
+
 /**
  * Writes the start configuration of each launched instance into SSM and
  * returns the instances that could not be configured.
@@ -313,28 +332,22 @@ export const configureRunners = Effect.fn("ScaleUp.configureRunners")(function* 
     if (groupId._tag === "Failure") {
       return input.instanceIds;
     }
-    const configured = yield* Effect.forEach(
+    return yield* failedInstanceIds(
       input.instanceIds,
-      (instanceId) =>
-        Effect.gen(function* () {
-          const jit = yield* github.generateJitConfig(
-            token,
-            JitConfigRequest.make({
-              owner,
-              name: `${config.pool.runnerNamePrefix}${instanceId}`,
-              runnerGroupId: groupId.success,
-              labels: config.pool.labels,
-            })
-          );
-          yield* ec2.tag(instanceId, { [RunnerTag.githubRunnerId]: String(jit.runnerId) }).pipe(Effect.ignore);
-          yield* putToken(instanceId, jit.encodedJitConfig);
-        }).pipe(
-          Effect.as(O.none<string>()),
-          Effect.orElseSucceed(() => O.some(instanceId))
-        ),
-      { concurrency: 1 }
+      Effect.fnUntraced(function* (instanceId: string) {
+        const jit = yield* github.generateJitConfig(
+          token,
+          JitConfigRequest.make({
+            owner,
+            name: `${config.pool.runnerNamePrefix}${instanceId}`,
+            runnerGroupId: groupId.success,
+            labels: config.pool.labels,
+          })
+        );
+        yield* ec2.tag(instanceId, { [RunnerTag.githubRunnerId]: String(jit.runnerId) }).pipe(Effect.ignore);
+        yield* putToken(instanceId, jit.encodedJitConfig);
+      })
     );
-    return A.getSomes(configured);
   }
 
   const registration = yield* github.registrationToken(token, owner).pipe(Effect.result);
@@ -351,16 +364,7 @@ export const configureRunners = Effect.fn("ScaleUp.configureRunners")(function* 
     ]),
     " "
   );
-  const configured = yield* Effect.forEach(
-    input.instanceIds,
-    (instanceId) =>
-      putToken(instanceId, Redacted.make(args)).pipe(
-        Effect.as(O.none<string>()),
-        Effect.orElseSucceed(() => O.some(instanceId))
-      ),
-    { concurrency: 1 }
-  );
-  return A.getSomes(configured);
+  return yield* failedInstanceIds(input.instanceIds, (instanceId) => putToken(instanceId, Redacted.make(args)));
 });
 
 /**

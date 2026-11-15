@@ -539,7 +539,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
-            "79365873c3aa467a84ba0801b91806f71fda7e2698b22c34b6c04f32802ed5ff"
+            "9138af0a1d46b36b519484967e66199f095bc4a0212f1c33550054c8519e7a22"
           ),
           Tuple.make(
             "packages/tooling/library/repo-cli-kit/src/tsmorph/ProjectFactory.ts",
@@ -551,7 +551,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/library/repo-utils/src/FsUtils.ts",
-            "137344232f545cdd140c568803cd367b8723fdeb1f47c468e7577ebaeda3161e"
+            "58c11bd61d5397e2ab5de74ce5445098f5a5dbcbdd3bc55989559da40c4ee674"
           ),
           Tuple.make(
             "packages/tooling/library/repo-workspaces/src/WorkspacePatterns.ts",
