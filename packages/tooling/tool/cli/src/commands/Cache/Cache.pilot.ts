@@ -33,8 +33,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
-import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
+import { AdmissionRequest, admissionTokenWeight } from "../../internal/repo-run/QualityScheduler.schemas.ts";
+import { QualityScheduler } from "../../internal/repo-run/QualityScheduler.service.ts";
+import { noAdmissionOriginGate } from "../../internal/repo-run/QualityScheduler.ts";
 import { resolveWorktreeContext } from "../Worktree/index.ts";
 import { collectCacheCensus, collectCacheTaskSelection, joinCacheCensusPlan } from "./Cache.census.ts";
 import { CacheConformanceProxyOptions, makeCacheConformanceFaultProxy } from "./Cache.conformance.proxy.ts";
@@ -2516,10 +2517,11 @@ export const runCachePilotExperiment = Effect.fn("Cache.runPilotExperiment")(fun
   root: string,
   request: CachePilotRequest
 ) {
-  return yield* withQualityAdmission(
+  const scheduler = yield* QualityScheduler;
+  return yield* scheduler.admit(
     AdmissionRequest.make({
-      kind: "review-fix",
-      weightTokens: 1,
+      kind: "cache",
+      weightTokens: admissionTokenWeight("cache"),
       priority: "verify",
       originKey: "",
       checkoutRoot: root,

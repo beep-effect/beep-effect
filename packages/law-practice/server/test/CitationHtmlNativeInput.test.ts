@@ -1,6 +1,6 @@
 import * as NodeURL from "node:url";
 import { CitationHtmlInputLayout, makeCitationHtmlInput } from "@beep/law-practice-server/internal/Citation/HtmlInput";
-import { makeCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
+import { makeCitationHtmlWorker as makeOwnedCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
 import {
   CitationHtmlWorkerJob,
   decodeCitationHtmlJob,
@@ -8,6 +8,7 @@ import {
   preflightCitationHtmlControlFrames,
   preflightCitationHtmlJob,
 } from "@beep/law-practice-server/internal/Citation/HtmlWorkerProtocol";
+import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
@@ -23,8 +24,18 @@ import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { citationBunTestExecutable } from "./CitationNativeSpawner.fixtures.ts";
 import { loadCitationUnicodeHistories } from "./CitationUnicodePipeline.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationHtmlWorker = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationHtmlWorker>[0],
+  a1: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
+  return yield* makeOwnedCitationHtmlWorker(a0, o1);
+});
 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("native HTML preparation and framing", (it) => {
   it.effect("preserves all native snapshots through exact preparation and closed worker frames", () =>

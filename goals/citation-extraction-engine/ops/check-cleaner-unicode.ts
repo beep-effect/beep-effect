@@ -82,7 +82,9 @@ const program = Effect.gen(function* () {
   );
   yield* require(sha(raw) === "0c314524ff16f1a8689b8aaf50d235a5c2439187f1e168c84b84d700160aead0");
   const report = yield* S.decodeEffect(CorpusJson)(raw);
-  yield* require(report.producerSha256 === sha(yield* read(new URL("./probe-cleaner-unicode.py", import.meta.url))));
+  // probe-cleaner-unicode.py was removed with the repository's Python (goal python-free-repo). Its digest
+  // is pinned from the recovery commit: `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-cleaner-unicode.py`.
+  yield* require(report.producerSha256 === "4eab63a3bb64ccd3ac77c37b3d257ea8cc8f382ff01d39c6fc4a37fb28588817");
   yield* require(report.cases.length === 2016);
   yield* require(A.filter(report.cases, (row) => Str.startsWith("composition-")(row.name)).length === 1872);
   yield* require(A.filter(report.cases, (row) => Str.startsWith("width-")(row.name)).length === 144);

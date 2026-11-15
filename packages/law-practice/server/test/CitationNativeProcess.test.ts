@@ -1,5 +1,8 @@
 import { makeCitationNativeProcessAdmission } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import { makeCitationNativeProcessOwner } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import {
+  makeCitationNativeProcessOwner,
+  withCitationNativeProcess,
+} from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexWorkerFailure } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
@@ -13,6 +16,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Scope from "effect/Scope";
 import { citationBunTestExecutable, makeCitationObservedSpawner } from "./CitationNativeSpawner.fixtures.ts";
+import type { CitationNativeProcessStarter } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 
 const command = Effect.fn("NativeProcessTest.command")(function* () {
   const executable = yield* citationBunTestExecutable;
@@ -28,14 +32,45 @@ const command = Effect.fn("NativeProcessTest.command")(function* () {
     forceKillAfter: Duration.zero,
   });
 });
+
 const failure = (reason: CitationRegexWorkerFailure["reason"]) => CitationRegexWorkerFailure.make({ reason });
 
 it.layer(BunServices.layer, { excludeTestServices: true })("shared native process ownership", (it) => {
+  it.effect("finishes unused native ownership without acquiring or releasing capacity", () =>
+    Effect.gen(function* () {
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const admission = yield* makeCitationNativeProcessAdmission(limits);
+      const observed = yield* makeCitationObservedSpawner();
+      const owner = yield* makeCitationNativeProcessOwner(limits, "extract", failure).pipe(
+        Effect.provideService(ChildProcessSpawner, observed.spawner)
+      );
+      const starter: CitationNativeProcessStarter<
+        CitationRegexWorkerFailure | Effect.Error<ReturnType<typeof admission.acquireRegex>>
+      > = owner;
+      let acquired = 0;
+      const value = yield* withCitationNativeProcess(
+        starter,
+        admission.acquireRegex("extract").pipe(
+          Effect.tap(() =>
+            Effect.sync(() => {
+              acquired++;
+            })
+          )
+        ),
+        () => failure("invalid-frame"),
+        () => Effect.succeed("unused")
+      );
+      expect(value).toBe("unused");
+      expect(acquired).toBe(0);
+      const counts = yield* observed.snapshot;
+      expect(counts).toEqual({ spawned: 0, confirmed: 0 });
+      const capacity = yield* admission.snapshot;
+      expect(capacity.active).toBe(0);
+    })
+  );
   it.effect("quarantines uncertain liveness and recovers without releasing the permit early", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
-      const malformed = yield* makeCitationNativeProcessOwner(null, "extract", failure).pipe(Effect.flip);
-      expect(malformed).toMatchObject({ reason: "invalid-runtime" });
       const admission = yield* makeCitationNativeProcessAdmission(limits);
       const observed = yield* makeCitationObservedSpawner();
       let uncertain = true;

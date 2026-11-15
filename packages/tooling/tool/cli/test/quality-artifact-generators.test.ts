@@ -3,8 +3,11 @@ import { Git } from "@beep/git/Git";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import {
   buildJSDocDocumentationInventory,
+  defaultJSDocInventoryPath,
   JSDocDocumentationInventoryOptions,
   listSourceFiles,
+  RunJSDocRatchetOptions,
+  runJSDocRatchet,
   runTurboConfigProof,
   summarizeTurboDryRunOutput,
   summarizeTurboQueryAffectedOutput,
@@ -422,6 +425,33 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
   );
 
   it.effect(
+    "creates the missing parent directory of each output, Markdown included",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* acquireFixtureRepo();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      // Separate, absent directories: a fresh clone has no ignored .beep/ci/,
+      // and the Markdown report may live apart from the JSONC inventory.
+      const outputJsonPath = path.join(repoRoot, "fresh", "json", "jsdoc.inventory.jsonc");
+      const outputMarkdownPath = path.join(repoRoot, "fresh", "markdown", "nested", "jsdoc.inventory.md");
+
+      yield* writeJSDocDocumentationInventory(
+        JSDocDocumentationInventoryOptions.make({
+          rootDir: repoRoot,
+          outputJsonPath,
+          outputMarkdownPath,
+          generatedAt: fixedGeneratedAt,
+        })
+      );
+
+      const written = yield* Effect.forEach([outputJsonPath, outputMarkdownPath], (file) => fs.exists(file));
+      expect(written).toEqual([true, true]);
+      const markdown = yield* fs.readFileString(outputMarkdownPath);
+      expect(markdown).toContain("# JSDoc Documentation Compliance Inventory");
+    })
+  );
+
+  it.effect(
     "mirrors the JSDoc inventory into the CI output paths from the same scan",
     Effect.fnUntraced(function* () {
       const repoRoot = yield* acquireFixtureRepo();
@@ -453,6 +483,155 @@ export class FieldOnly extends S.TaggedError<FieldOnly>()("FieldOnly", { descrip
       const expectation1 = expect(readFileString7);
       const readFileString3 = yield* fs.readFileString(outputMarkdownPath);
       expectation1.toBe(readFileString3);
+    })
+  );
+
+  // A concurrent ratchet read the `.beep/ci/` inventory mid-rewrite (2026-11-14). Every output,
+  // mirrors included, must change only by a same-directory rename of a fully written sibling.
+  it.effect(
+    "replaces every inventory output by renaming a complete sibling, never writing the target in place",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* acquireFixtureRepo();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const previous = "previous complete inventory\n";
+      const targets = [
+        path.join(repoRoot, "out", "jsdoc.inventory.jsonc"),
+        path.join(repoRoot, "out", "jsdoc.inventory.md"),
+        path.join(repoRoot, ".beep", "ci", "jsdoc.inventory.jsonc"),
+        path.join(repoRoot, ".beep", "ci", "jsdoc.inventory.md"),
+      ] as const;
+      yield* Effect.forEach(targets, (target) =>
+        fs
+          .makeDirectory(path.dirname(target), { recursive: true })
+          .pipe(Effect.andThen(fs.writeFileString(target, previous)))
+      );
+      const written = yield* Ref.make(A.empty<string>());
+      const renames = yield* Ref.make(A.empty<readonly [string, string, string]>());
+      const recordingFs = FileSystem.FileSystem.of({
+        ...fs,
+        writeFileString: Effect.fn("FileSystem.FileSystem.writeFileString")((target, data, options) =>
+          Ref.update(written, A.append(target)).pipe(Effect.andThen(fs.writeFileString(target, data, options)))
+        ),
+        // What a reader of the target sees at the instant before the rename publishes the sibling.
+        rename: Effect.fn("FileSystem.FileSystem.rename")(function* (from, to) {
+          const visible = yield* fs.readFileString(to);
+          yield* Ref.update(renames, A.append([from, to, visible] as const));
+          return yield* fs.rename(from, to);
+        }),
+      });
+
+      yield* writeJSDocDocumentationInventory(
+        JSDocDocumentationInventoryOptions.make({
+          rootDir: repoRoot,
+          outputJsonPath: targets[0],
+          outputMarkdownPath: targets[1],
+          ciOutputJsonPath: targets[2],
+          ciOutputMarkdownPath: targets[3],
+          generatedAt: fixedGeneratedAt,
+        })
+      ).pipe(Effect.provideService(FileSystem.FileSystem, recordingFs));
+
+      const writes = yield* Ref.get(written);
+      const published = yield* Ref.get(renames);
+      expect(A.filter(writes, (target) => A.contains(targets, target))).toEqual([]);
+      expect(A.map(published, ([, to]) => to)).toEqual([...targets]);
+      for (const [from, to, visible] of published) {
+        expect(path.dirname(from)).toBe(path.dirname(to));
+        // Dot-prefixed: a staging file a killed run strands stays outside Turbo's outputs glob.
+        assertTrue(Str.startsWith(".")(path.basename(from)));
+        assertTrue(A.contains(writes, from));
+        // Mid-write, the target still held the previous complete file.
+        expect(visible).toBe(previous);
+        const current = yield* fs.readFileString(to);
+        expect(current).not.toBe(previous);
+      }
+      const leftovers = yield* Effect.forEach(published, ([from]) => fs.exists(from));
+      expect(leftovers).toEqual(A.map(published, () => false));
+    })
+  );
+
+  it.effect(
+    "keeps the previous inventory and removes the staging file when publishing fails",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* acquireFixtureRepo();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const previous = "previous complete inventory\n";
+      const outputJsonPath = path.join(repoRoot, "out", "jsdoc.inventory.jsonc");
+      const outputMarkdownPath = path.join(repoRoot, "out", "jsdoc.inventory.md");
+      yield* fs.makeDirectory(path.dirname(outputJsonPath), { recursive: true });
+      yield* fs.writeFileString(outputJsonPath, previous);
+      const staged = yield* Ref.make(A.empty<string>());
+      const failure = PlatformError.systemError({
+        _tag: "Unknown",
+        module: "FileSystem",
+        method: "rename",
+        pathOrDescriptor: outputJsonPath,
+        description: "injected rename failure",
+      });
+      const failingFs = FileSystem.FileSystem.of({
+        ...fs,
+        rename: Effect.fn("FileSystem.FileSystem.rename")((from, to) =>
+          to === outputJsonPath
+            ? Ref.update(staged, A.append(from)).pipe(Effect.andThen(Effect.fail(failure)))
+            : fs.rename(from, to)
+        ),
+      });
+
+      const error = yield* writeJSDocDocumentationInventory(
+        JSDocDocumentationInventoryOptions.make({
+          rootDir: repoRoot,
+          outputJsonPath,
+          outputMarkdownPath,
+          generatedAt: fixedGeneratedAt,
+        })
+      ).pipe(Effect.provideService(FileSystem.FileSystem, failingFs), Effect.flip);
+
+      expect(error._tag).toBe("QualityArtifactGeneratorError");
+      expect(error.message).toBe(`Failed to write ${outputJsonPath}.`);
+      const current = yield* fs.readFileString(outputJsonPath);
+      expect(current).toBe(previous);
+      const stagingFiles = yield* Ref.get(staged);
+      expect(A.length(stagingFiles)).toBe(1);
+      const stagingLeft = yield* Effect.forEach(stagingFiles, (file) => fs.exists(file));
+      expect(stagingLeft).toEqual([false]);
+    })
+  );
+
+  it.effect(
+    "ratchets an introduced finding red from the ignored .beep/ci/ inventory with no committed standards copy",
+    Effect.fnUntraced(function* () {
+      const repoRoot = yield* acquireFixtureRepo();
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const inventoryPath = path.join(repoRoot, defaultJSDocInventoryPath);
+      const baselinePath = path.join(repoRoot, "standards", "jsdoc-totals.regression-baseline.jsonc");
+      const scan = writeJSDocDocumentationInventory(
+        JSDocDocumentationInventoryOptions.make({ rootDir: repoRoot, generatedAt: fixedGeneratedAt })
+      );
+      const ratchet = (writeBaseline: boolean) =>
+        runJSDocRatchet(RunJSDocRatchetOptions.make({ baselinePath, inventoryPath, writeBaseline }));
+
+      // Default outputs land in the ignored .beep/ci/ root; the totals baseline is
+      // the only committed ratchet input.
+      const clean = yield* scan;
+      expect(clean.outputJsonPath).toBe(inventoryPath);
+      yield* ratchet(true);
+
+      // Introduce one finding: drop the @since tag from an exported constant.
+      const indexPath = path.join(repoRoot, "packages", "demo", "src", "index.ts");
+      yield* fs.writeFileString(
+        indexPath,
+        Str.replace(" * @category constants\n * @since 0.0.0\n", " * @category constants\n")(packageSource)
+      );
+      const dirty = yield* scan;
+      expect([clean.totals.missingExportSince, dirty.totals.missingExportSince]).toEqual([0, 1]);
+
+      const failure = yield* Effect.flip(ratchet(false));
+      expect(failure.message).toBe("JSDoc totals regression baseline grew.");
+      const committedCopy = yield* fs.exists(path.join(repoRoot, "standards", "jsdoc-documentation.inventory.jsonc"));
+      expect(committedCopy).toBe(false);
     })
   );
 

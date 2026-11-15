@@ -218,6 +218,7 @@ describe("lint policy plan stages", () => {
       "lint:retired-iri-authorities",
       "lint:private-home-paths",
       "lint:tracked-shell-allowlist",
+      "lint:no-tracked-python",
       "lint:opaque-roundtrips",
       "lint:schema-tag-idioms",
       "lint:jsdoc-module-tags",

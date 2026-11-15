@@ -1,0 +1,15 @@
+{
+  "previous": "6a5e77127ea95557aa44a8057fe81aa92f5516a5e4f7dd11ef24babd59435029",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p3-cost-controls)",
+    "reason": "Record the new @beep/infra-cost-controls package at its generated scripts and its manifest joining the //#lint:policy-fingerprint inputs in turbo.json; no command, output or environment changes, no qualification granted.",
+    "basis": {
+      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-cost-controls.md",
+      "sha256": "aacb56f51774f9a5517434a2831671a8f9509e72965a95a963b3e4772b61c0a0"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/infra-cost-controls"]
+}

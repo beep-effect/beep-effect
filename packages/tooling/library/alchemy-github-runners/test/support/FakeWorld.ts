@@ -57,6 +57,9 @@ export class World {
   githubRunners: Array<SelfHostedRunner> = [];
   deletedRunners: Array<number> = [];
   busyOnDelete: Array<number> = [];
+  busyDeletesLeft: Record<number, number> = {};
+  failOnDelete: Array<number> = [];
+  onTerminate: (instanceId: string) => void = () => undefined;
   jobQueued = true;
   startedJobs: Array<number> = [];
   jitFailures: Array<string> = [];
@@ -138,6 +141,7 @@ export const worldContext = (world: World) =>
           );
         }),
         terminate: Effect.fn("FakeEc2.terminate")(function* (instanceId) {
+          world.onTerminate(instanceId);
           world.terminated.push(instanceId);
           for (const instance of O.toArray(world.instance(instanceId))) {
             instance.state = "terminated";
@@ -227,6 +231,14 @@ export const worldContext = (world: World) =>
           return world.githubRunners;
         }),
         deleteRunner: Effect.fn("FakeGitHub.deleteRunner")(function* (_token, _owner, runnerId) {
+          if (A.contains(world.failOnDelete, runnerId)) {
+            return yield* GitHubApiError.make({ operation: "delete", status: O.some(502), message: "bad gateway" });
+          }
+          const busyLeft = world.busyDeletesLeft[runnerId] ?? 0;
+          if (busyLeft > 0) {
+            world.busyDeletesLeft[runnerId] = busyLeft - 1;
+            return yield* GitHubApiError.make({ operation: "delete", status: O.some(422), message: "busy" });
+          }
           if (A.contains(world.busyOnDelete, runnerId)) {
             return yield* GitHubApiError.make({ operation: "delete", status: O.some(422), message: "busy" });
           }

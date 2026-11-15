@@ -3,6 +3,48 @@
 Receipts recorded while the work happened. Secrets, home paths and machine
 identifiers are redacted.
 
+## 2026-11-13: the stack's Cloudflare token could not reach R2, found only at deploy time
+
+- **Doing:** P3 turbo cache, personal-stage deploy proof (lane goals/infra-alchemy-rebuild-p3-turbo-cache).
+- **Evidence:** `bunx alchemy plan --stage dev_<user>` fails in `plan.diff.resource` with
+  `Unauthorized: Authentication error` (Cloudflare code 10000); `GET /accounts/<id>/r2/buckets`
+  with the same token returns `Authentication error`. The token was minted for one Worker stack
+  (`mint-alchemy-token.sh`, 2026-10-28) and every later stack reuses it through each environment's
+  `CLOUDFLARE_API_TOKEN` secret.
+- **Would have prevented it:** a per-stack permission manifest checked before a lane starts
+  (`beep` command that verifies the token against the groups each stack's resources need), or
+  minting the stack token from IaC (`Cloudflare.ApiToken.AccountApiToken`, matrix row) so a new
+  resource type widens it in the same PR.
+
+## 2026-11-13: a stack's own `state` wins over `Test.make({ state })` for top-level deploys
+
+- **Doing:** stack test for `TurboCache` on the `@alchemy.run/test` harness.
+- **Evidence:** `deploy(Stack)` with `Test.make({ state: inMemoryState(), dev: true })` failed with
+  `AuthError: Provider 'AWS' is not configured in profile 'default'`: the stack effect provides its
+  declared `AWS.state(...)` inside, so the harness's state layer never applies.
+- **Would have prevented it:** a documented pattern in `docs/runbooks/alchemy-infra.md`: export the
+  stack program and deploy it on a `test.provider` scratch stack (what the package now does).
+
+## 2026-11-13: Worker fixtures bundled by Alchemy cannot import a package's `internal/` modules
+
+- **Doing:** moving the scratchpad handler into the package and its Worker fixtures into `test/`.
+- **Evidence:** the scaffold's exports map sets `"./internal/*": null`; vitest resolves
+  `@beep/<pkg>/internal/*` through aliases, but a fixture passed as a Worker `main` is bundled
+  with package resolution, which honours the exports map.
+- **Would have prevented it:** the `tooling/infra` file-role anchors saying that Worker runtime
+  modules are public package modules.
+
+## 2026-11-13: the `infra` scaffold's tsconfig does not own `alchemy.run.ts`
+
+- **Doing:** final-check for `@beep/infra-turbo-cache`.
+- **Evidence:** `lint deprecated-apis: TypeScript files have no tsconfig owner:` listing
+  `alchemy.run.ts`, `token.ts` and `test/fixtures/*.ts`. `create-package --kind infra` emits the
+  library tsconfig (`include: ["src"]`, `rootDir: "src"`), yet the kind's anchor puts
+  `alchemy.run.ts` at the package root. The package now sets `rootDir: "."` with the root files
+  included (declarations under `dist/src/`, `publishConfig.exports` pointed there) and gives
+  `test/fixtures/` its own `tsconfig.json`, as `@beep/palantiri` does.
+- **Would have prevented it:** the `infra` kind template emitting that tsconfig shape and a
+  fixtures tsconfig, so the next infra package starts owned.
 ## 2026-11-13: Alchemy's provider shape trips two repo-wide Effect diagnostics
 
 - **Doing:** P2 `@beep/alchemy-vercel` (lane goals/infra-alchemy-rebuild-p2-vercel).
@@ -157,3 +199,308 @@ to the gap between the reference checkout (main) and the pinned release.
   the pushed head records the gate as skipped and hosted CI measures it.
 - **Would have prevented it:** scope the coverage replay by the workspaces whose resolved dependencies
   changed in the lockfile diff, not by the lockfile path alone.
+
+## 2026-11-14: the Pulumi passphrase in 1Password does not decrypt the oip-web stacks
+
+- **Doing:** P4 oip-web census (lane goals/infra-alchemy-rebuild-p4-oip-web), reading where the HubSpot
+  service key lives today.
+- **Evidence:** `pulumi config get oipWeb:hubSpotServiceKey --stack production` (and `staging`) under
+  `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run --` exits 1 with
+  `error: incorrect passphrase`; plain config reads on the same stacks work. The value is also stored in
+  Vercel as `sensitive`, which the API never returns, so no recorded copy of the live key is readable.
+- **Would have prevented it:** a check that every Pulumi project's `encryptionsalt` decrypts with the
+  1Password passphrase (run when the passphrase or a stack changes), and a 1Password field per runtime secret
+  so the IaC copy is never the only one.
+- **Correction (packet gate session, 2026-11-14):** the oip-web stacks decrypt with
+  `op://BEEP_SECRETS/OIP_SECRETS/PULUMI_CONFIG_PASSPHRASE`; the `BEEP_SECRETS` item's passphrase belongs to
+  the runners stack. The live HubSpot token is `op://BEEP_SECRETS/OIP_SECRETS/CRM_HUBSPOT_SERVICE_KEY` and equals
+  the value both stacks held. The receipt stands as friction: the lane had no pointer from the Pulumi project to its
+  1Password item.
+
+## 2026-11-14: Alchemy persists a `Redacted` prop's plain text in state
+
+- **Doing:** the same lane, designing how the HubSpot key reaches Vercel without entering state.
+- **Evidence:** `alchemy/src/State/StateEncoding.ts` writes `Redacted<T>` as `{ "__redacted__": <inner> }`
+  "so the actual string is persisted rather than the `<redacted>` placeholder"; `@beep/alchemy-vercel`'s
+  `EnvVar.value` prop was documented as "redacted in state and logs". Any secret passed as `value` lands in
+  the state bucket in clear JSON (SSE-KMS at rest only). The lane added `valueFrom: { config }`, resolved in
+  `diff` and `reconcile`, with only a SHA-256 kept in state.
+- **Would have prevented it:** an Alchemy-level deferred secret input (resolved at apply time, digest in
+  state) so every provider gets the property, and a harness assertion in provider tests that no `Redacted`
+  value appears in persisted state.
+
+## 2026-11-14: `alchemy plan` lines in CI carry a logger prefix
+
+- **Doing:** the same lane, writing the pre-deploy plan check.
+- **Evidence:** the `dev_$USER` plan printed `[20:33:03.096] INFO: [Project] create`, not the bare
+  `[Project] create` that `formatPlanLines` renders; a parser anchored at line start found no `Plan:` summary
+  and failed closed. Only a real plan run showed it.
+- **Would have prevented it:** a machine-readable plan output (`alchemy plan --json`, or a documented
+  changes-pending exit code, open question 9 of the P0 matrix).
+
+## 2026-11-14: the Alchemy Cloudflare token cannot read the oip.law zones' DNS records
+
+- **Doing:** the same lane, census of the Pulumi-owned DNS records.
+- **Evidence:** with `CLOUD_CLOUDFLARE_ALCHEMY_TOKEN`, `GET /zones/<id>` succeeds for both zones and
+  `GET /zones/<id>/dns_records` returns 403; `CLOUD_CLOUDFLARE_ACCOUNT_IAC_TOKEN` reads them. Of the two
+  Vercel fields, `CLOUD_VERCEL_TOKEN` reads the team and `CLOUD_VERCEL_API_TOKEN` returns 403 on every call.
+- **Would have prevented it:** a token inventory naming each 1Password field's scope, checked by a
+  read-only probe per stack before a lane starts.
+## 2026-11-13: `@alchemy.run/test` `test(name, effect)` takes an Effect, not a thunk
+
+- **Doing:** P4 hosts stacks (lane `goals/infra-alchemy-rebuild-p4-hosts`), first hermetic stack tests on
+  `Test.make(...)` from `@alchemy.run/test/Vitest`.
+- **Evidence:** written in the `@effect/vitest` shape `test("…", () => Effect.gen(…))`, every test failed with
+  `TypeError: (testDev ? provideTestServices(body) : body).pipe is not a function` from
+  `@alchemy.run/test/src/Core.ts:575`. The harness's `TestFn` is `(name, eff: TestEffect<void>)`: the second
+  argument is the Effect itself. The type checker did not flag the thunk because the call was not yet checked.
+- **Would have prevented it:** a worked stack-test example in `docs/runbooks/alchemy-infra.md` ("Adding an
+  infra package") showing `test("…", Effect.gen(…))`, fake providers and `inMemoryState`, or an upstream
+  `Test.make` overload that rejects a function.
+
+## 2026-11-13: adopting a Compose-managed Docker volume would replace it
+
+- **Doing:** the same lane, mapping the AI metrics Compose volume onto `Docker.Volume`.
+- **Evidence:** `@alchemy.run/docker` `Volume.diff` returns `replace` with `deleteFirst: true` whenever the
+  observed user labels differ from the declared ones (`node_modules/@alchemy.run/docker/src/Volume.ts`, diff),
+  and a Compose volume carries `com.docker.compose.*` labels, so `adopt(true)` on the Phoenix data volume
+  would plan a delete of the data. `Docker.Volume.lookup` (read, never created or removed) is the safe
+  primitive; the stack uses it.
+- **Would have prevented it:** a note in the P0 matrix row for `@beep/infra-hosts` that named data volumes
+  are looked up, not adopted.
+
+## 2026-11-13: Fallow does not know a second Alchemy entry file
+
+- **Doing:** the same lane; the OpenClaw stack is a second entry, `openclaw.alchemy.run.ts`, beside the
+  package's `alchemy.run.ts`.
+- **Evidence:** `fallow dead-code --config .fallowrc.jsonc` reported
+  `unused-file packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts` (the CLI loads it by path,
+  `alchemy deploy <file>`); fixed with an entry glob `packages/tooling/infra/*/*.alchemy.run.ts`.
+- **Would have prevented it:** the `infra` package kind registering `*.alchemy.run.ts` entries with Fallow
+  when it registers `alchemy.run.ts`.
+
+## 2026-11-13: code moved out of `infra/` meets the docs lint and JSDoc ratchet for the first time
+
+- **Doing:** P4 hosts lane, moving the OpenClaw renderers from `infra/src/OpenClaw.ts` into
+  `@beep/infra-hosts`.
+- **Evidence:** the root docs lint (`oxlint . --config .oxlintrc.docs.json --max-warnings=0`) reported about
+  30 functions without `@param`/`@returns`, and `jsdoc:ratchet:check` reported
+  `multiple-description-paragraphs: 167 > 157`; the same doc blocks had passed while they lived under `infra/`.
+  Fixed by adding the tags and a `**Details**` section (the ratchet then read 137).
+- **Would have prevented it:** `package-verify` running the docs oxlint rules and the package-scoped JSDoc
+  ratchet, so a move into `packages/` fails before hosted CI.
+
+## 2026-11-14: the plan cannot show that an AWS services anomaly monitor is an account singleton
+
+- **Doing:** P3 cost controls stack (lane `goals/infra-alchemy-rebuild-p3-cost-controls`); the brief and the
+  matrix treated the anomaly monitor as a greenfield named resource to run beside the Pulumi one.
+- **Evidence:** AWS allows one `DIMENSIONAL`/`SERVICE` anomaly monitor per account (Cost Management quotas
+  page); the account has one, `beep-account-services`. `alchemy plan` never calls `CreateAnomalyMonitor`, so
+  a second monitor plans as a clean create and would fail only at deploy. The stack adopts the live monitor
+  in `prod` instead (`adopt(true)`).
+- **Would have prevented it:** a quota column in the "use this, never roll that" matrix for every resource
+  planned as greenfield beside a live one, filled from the service's quotas page.
+
+## 2026-11-14: `create-package --kind infra` names the directory after the package, unlike its sibling
+
+- **Doing:** the same lane, bootstrapping `@beep/infra-cost-controls`.
+- **Evidence:** `bun run beep create-package infra-cost-controls --family tooling --kind infra` wrote
+  `packages/tooling/infra/infra-cost-controls`; the turbo-cache lane's package lives at
+  `packages/tooling/infra/turbo-cache`. Reverted and re-ran with `--dir-name cost-controls`. The scaffold also
+  gives `alchemy.run.ts` no tsconfig owner; it was added to `tsconfig.test.json` by hand.
+- **Would have prevented it:** the infra kind strips the `infra-` prefix for the directory, and its tsconfig
+  template includes `alchemy.run.ts`.
+
+## 2026-11-14: `AWS.Region.of` has no effect beside `AWS.providers()`
+
+- **Doing:** the same lane, pinning the stack to `us-east-1` as the matrix row says.
+- **Evidence:** `AWS.providers()` and `@beep/alchemy-aws-extras`' `providers` both `provideMerge` a fresh
+  `Region.fromEnvironment` inside their own layer, so a `Region.of(...)` provided from outside is shadowed
+  and the region still comes from `AWS_REGION`. The stack builds its own collection of the five providers it
+  uses with `Region.of("us-east-1")` in that chain, and the account guard also checks the region.
+- **Would have prevented it:** a `region` option on `AWS.providers()` and the extras layer, or the matrix row
+  naming where `Region.of` must sit.
+
+## 2026-11-14: every Alchemy package grows its own copy of the fake-AWS test harness
+
+- **Doing:** P3 cost controls stack (lane `goals/infra-alchemy-rebuild-p3-cost-controls`), pushing the
+  round-2 review fixes for #3310.
+- **Evidence:** cheap-gates `fallow:audit` refused the push with `audit-introduced-duplication-1`: the
+  package's `test/support/FakeAws.ts` repeated the generic parts of `@beep/alchemy-aws-extras`'
+  fake (operation log, failure-tag walk, deploy-failure helper, typed `test.provider` wrapper, the
+  awsJson `HttpClient`), seven clone groups. The PR shrank its fake to what its tests need instead of
+  adding a package mid-review.
+- **Would have prevented it:** a small shared test-kit for `@alchemy.run/test` suites (fake AWS
+  environment layer, awsJson `HttpClient` from a route table, typed scratch-stack view, failure
+  helpers) that every `@beep/alchemy-*` and `@beep/infra-*` package imports.
+
+## 2026-11-14: hosted Commitlint lints every commit in the PR range
+
+- **Doing:** P2 runner composite lane (`@beep/alchemy-github-runners`), recorded here for that retired lane.
+- **Evidence:** pushed `wip(...)` commits failed hosted Commitlint, which checks every commit in the range; a
+  pushed commit cannot be fixed without a force push, so #3313 was replaced by the squashed #3314.
+- **Would have prevented it:** a lane-local commit-type check before push, or `yeet open` refusing a range that
+  holds a disallowed type.
+
+## 2026-11-14: skipped repo-wide gates hide package-scoped law reds until hosted CI
+
+- **Doing:** the same runner lane, with the repo-wide `final-check` gates skipped under the disk-load rule.
+- **Evidence:** each of these cost a push: schema-first D1 (plain-data `S.Class` must be a branded
+  `S.Opaque`; an untracked advisory row also exits 1), the JSDoc ratchet (a titled Example on each new exported
+  schema; module docs with more than one paragraph), `semantic-delta` reading a backticked goal branch name as a
+  missing path, and oxlint `beep(no-inline-schema-compile)` in test code (#3320).
+- **Would have prevented it:** a cheap package-scoped law-check bundle that the constrained-compute rule allows.
+
+## 2026-11-14: two gates look green while checking nothing
+
+- **Doing:** the same runner lane.
+- **Evidence:** `bunx turbo run lint:schema-first --filter=<pkg>` runs zero tasks and exits 0, because the task is
+  root-declared; `jsdoc:ratchet:check` reads an untracked `.beep/ci` inventory that stays stale until it is
+  regenerated, so it passes or fails on old findings.
+- **Would have prevented it:** both commands refusing to report success when they evaluated nothing or read an
+  inventory older than the working tree.
+
+## 2026-11-14: `yeet open` took a sibling PR's title
+
+- **Doing:** the same runner lane, opening #3313.
+- **Evidence:** `yeet open` titled the PR from the first non-merge commit in the range, which belonged to a
+  sibling PR (#3313 got the title of #3291).
+- **Would have prevented it:** titling from the first commit unique to the head, not reachable from the base or
+  an open sibling.
+
+## 2026-11-14: an orphaned test fixture blocked `sweep --retire`
+
+- **Doing:** retiring the runner lane.
+- **Evidence:** a repo-cli test fixture process (`exchange-crash-writer.ts`) ignored SIGTERM, kept the lane
+  checkout busy and blocked `yeet sweep --retire`.
+- **Would have prevented it:** the fixture exiting on SIGTERM, or the retire fence naming the holding process.
+
+## 2026-11-14: `yeet publish` cannot push a fix wave while an inherited cheap gate is red
+
+- **Doing:** P4 hosts lane, pushing review-round-1 fixes and a main merge to the open #3325 while
+  `observability:catalog-check` was red from #3314 (the runners instrumentation catalog, fixed by #3327).
+- **Evidence:** `yeet publish --push-only` answered `requires --reuse-verified unless HEAD is a reproducible
+  merge of the base`; `--reuse-verified` answered `No reusable Yeet proof state found`; `publish --amend
+  --no-edit` re-runs cheap-gates, which has no `--skip` for an attributed inherited lane. The head had a passing
+  `final-check` receipt recording that skip. A plain `git push` went through instead, losing nothing (the
+  readiness monitor followed the new head and the body kept its provenance footer), but outside Yeet.
+- **Would have prevented it:** `yeet publish` naming `yeet open` as the route for a committed head with a
+  passing receipt on an already open PR, or accepting the receipt's recorded skips for its own cheap-gates run.
+
+## 2026-11-14: a fake more permissive than Vercel cleared the first OipWeb arm
+
+- **Doing:** P4 OipWeb, first armed deploy (workflow_dispatch run 43585534113).
+- **Evidence:** staging applied 8 of 9 resources. Then `[EnvHubSpotServiceKey] fail — BadRequest: You cannot
+  change the key of a Sensitive Environment Variable.` The provider's in-place edit sent `key`. The test
+  that cleared arming (`CreatePath.test.ts`, "one `PATCH Env`, no delete, no duplicate") ran against an
+  in-memory Vercel API that accepted the body.
+- **Would have prevented it:** a live write rehearsal on a scratch personal stage before the first arm,
+  covering create, adoption over existing objects and an in-place edit of each variable type (now the rule,
+  decision `2026-11-14-first-armed-oipweb-deploy-failed-on-a-sensitive-variable-edit`), and fakes that pin
+  each documented refusal of the real API with a test.
+
+## 2026-11-14: one cache-qualification baseline file put three open PRs into base conflict
+
+- **Doing:** packet gate, running three packet PRs at once (#3323, #3324, #3325).
+- **Evidence:** at 05:35Z two unrelated merges (#3322, #3299) rewrote `standards/cache-qualification-baseline.json`,
+  and all three open PRs went into base conflict on that file alone. Each needed a merge of `main`, a reviewed
+  re-record of its subject, a fresh hosted run and a new review window.
+- **Would have prevented it:** per-subject baseline files (one file per package, like the schema and instrumentation
+  catalogs), or a merge driver that unions disjoint subjects.
+
+## 2026-11-14: root law tasks that package-scoped checks miss, caught only by hosted CI
+
+- **Doing:** packet gate, driving #3320, #3323 and #3324 with the repo-wide `final-check` gates skipped.
+- **Evidence:** one push each, found only by hosted Lint Policy, Repo Sanity or Fallow: `lint:effect-vitest`
+  (15 findings, #3323), `laws schema-tag-idioms` (6, #3324), `lint:shadcn` reading a bracketed log timestamp in a
+  test string as a Tailwind arbitrary value (#3323), Fallow introduced complexity (2, #3323) and
+  `beep(no-inline-schema-compile)` (#3320).
+- **Would have prevented it:** a `package-verify` mode that runs every root law task filtered to the changed files.
+
+## 2026-11-14: an edit to a workflow file invalidates the operator's approval of it
+
+- **Doing:** packet gate, #3323 and #3324, each adding a deploy workflow that the operator merges.
+- **Evidence:** the approval was given for one blob of the workflow file; a review-driven edit to that file
+  changed the blob, so both PRs needed a second ask.
+- **Would have prevented it:** asking for the approval after the first review round, not at open.
+
+## 2026-11-14: `yeet open` refused a docs-only push as stale-base over a generated file
+
+- **Doing:** P4 OipWeb, pushing a docs-only fix.
+- **Evidence:** `yeet open` refused the push as stale-base because `main` had touched an overlapping generated
+  file (`standards/schema-first.inventory.jsonc`). The forced merge of `main` restarted the review window.
+- **Would have prevented it:** a stale-base check that ignores a generated file the PR's own diff does not touch.
+
+## 2026-11-14: whole-file writers pull unrelated drift into a deletion PR
+
+- **Doing:** P4 OipWeb deletion PR (#3341), and again for the P6 housekeeping PR.
+- **Evidence:** `lint schema-first --write`, the Fallow health baseline write and `bun run jsdoc:inventory` rewrite
+  their whole files. The JSDoc inventory alone changed by +38k/-19k lines for a PR that removed three source
+  files, so deletion PRs hand-remove single rows instead.
+- **Would have prevented it:** row-scoped regeneration (a writer that updates only the rows of the paths a PR
+  touches).
+
+## 2026-11-14: the committed effect-vitest census and JSDoc inventory have drifted far from `main`
+
+- **Doing:** P6 housekeeping PR, removing the rows of files #3341 deleted.
+- **Evidence:** on a tree at `main` `e051bd152f3` (2026-11-14T13:35Z), `bun run beep lint effect-vitest --census`
+  rewrote `standards/effect-vitest.census.json` by +10,816/-4,124 lines (14,940 changed). Of those, 14 lines were the
+  two rows the PR needed. `bun run jsdoc:inventory` rewrote `standards/jsdoc-documentation.inventory.jsonc` by
+  +38,528/-19,324 lines, of which the PR needed 572 deleted lines. The rest is drift that `main` carries:
+  for example the `@beep/infra` entry lacks `infra/src/CiRunnerPool.ts` and `infra/src/CiShardOverflowPool.ts`, and
+  its line numbers are stale. The PR committed only the hand-removed rows. A separate lane refreshes both files
+  from `main`.
+- **Would have prevented it:** a row-scoped writer (above), or a gate that fails when the committed census or
+  inventory differs from a fresh one, so drift cannot accumulate unseen.
+
+## 2026-11-14: `knowledge semantic-delta` reads only the committed head
+
+- **Doing:** P4 OipWeb, fixing a broken backticked path in a goal document.
+- **Evidence:** the fix in the working tree was invisible to `bun run beep knowledge semantic-delta` until
+  committed, so each attempt was an amend and a re-run.
+- **Would have prevented it:** a `--worktree` mode that scans uncommitted files, or a note in the command's help.
+
+## 2026-11-14: the "(removed in #N)" rewrite needs the PR number before the PR exists
+
+- **Doing:** P4 OipWeb deletion PR (#3341), applying the Q3 ruling to paths it deleted.
+- **Evidence:** the rewrite names the deleting PR, which has no number until it is opened, so the PR is opened as
+  a draft and the rewrite goes in a second push.
+- **Would have prevented it:** a placeholder (for example `#PENDING`) that `yeet open` replaces with the new number.
+
+## 2026-11-14: Alchemy's failed-create semantics are not written down in the repo
+
+- **Doing:** P4 OipWeb, predicting the plan after the first armed deploy failed half-way.
+- **Evidence:** a failed create leaves a `creating` checkpoint, which plans as `create` and is adopted at apply time.
+  A probe that modelled it as a missing row predicted the wrong label (`adopted`).
+- **Would have prevented it:** the checkpoint states and their plan labels in `docs/runbooks/alchemy-infra.md`
+  (now noted in the live write rehearsal, step 4).
+
+## 2026-11-14: zsh does not word-split an unquoted variable, so a lint looked clean
+
+- **Doing:** P4 OipWeb, running oxlint on a list of changed files.
+- **Evidence:** with `files="a.ts b.ts"`, `bunx oxlint $files` passes one path containing a space. oxlint prints
+  "No files found" and exits 0.
+- **Would have prevented it:** `${=files}` or an array in every recipe, and a non-zero exit from the lint wrappers
+  when no file is linted.
+
+## 2026-11-14: a brief cited a local-only commit in a tracked record
+
+- **Doing:** P4 OipWeb, writing a decision file from a gate brief.
+- **Evidence:** the brief named a commit that existed only in another checkout. The reviewer caught the dangling
+  reference in the tracked file.
+- **Would have prevented it:** briefs cite only pushed commits for anything that lands in a tracked file.
+
+## 2026-11-14: a long `yeet job wait` died at the shell's background limit
+
+- **Doing:** P4 OipWeb, waiting on a readiness monitor.
+- **Evidence:** `bun run beep yeet job wait <id>` was killed by the 30-minute default limit for background shell
+  commands. The job itself kept running.
+- **Would have prevented it:** a 2-hour timeout on monitor waits in the recipes.
+
+## 2026-11-14: an unattended deploy job needs a create allow-list on adopting stages
+
+- **Doing:** P4 OipWeb, arming the deploy workflow on stages that adopt live objects.
+- **Evidence:** an object that failed to adopt would plan as a create and be created a second time. The
+  `adopted` predictions came from reading the code, not from a plan probe against seeded state.
+- **Would have prevented it:** a create allow-list in the plan guard (now in `plan-guard.ts`), and adoption
+  predictions taken from a plan against seeded state.

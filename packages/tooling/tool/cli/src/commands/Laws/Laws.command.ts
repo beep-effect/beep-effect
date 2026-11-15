@@ -32,6 +32,8 @@ import {
   NoNativeRuntimeRulesOptions,
   runNoNativeRuntimeRules,
 } from "./NoNativeRuntime.ts";
+import { NoTrackedPythonOptions } from "./NoTrackedPython.model.ts";
+import { formatNoTrackedPythonFinding, runNoTrackedPython } from "./NoTrackedPython.ts";
 import { PrivateHomePathsOptions } from "./PrivateHomePaths.model.ts";
 import { formatPrivateHomePathFinding, runPrivateHomePaths } from "./PrivateHomePaths.ts";
 import { RetiredEffectPathsOptions } from "./RetiredEffectPaths.model.ts";
@@ -575,7 +577,8 @@ const reportLawSummary = Effect.fn("reportLawSummary")(function* (options: {
     discard: true,
   });
   yield* Console.log(`[${options.prefix}] findings=${options.findings.length}`);
-  yield* Effect.forEach(options.findings, Console.log, { discard: true });
+  // Not a bare `Console.log`: `Effect.forEach` passes the index too, which it would print.
+  yield* Effect.forEach(options.findings, (line) => Console.log(line), { discard: true });
 });
 
 /**
@@ -896,6 +899,39 @@ const lawsTrackedShellAllowlistCommand = Command.make(
 ).pipe(Command.withDescription("Check that every git-tracked shell script is on the reviewed allowlist"));
 
 /**
+ * CLI command for the no-tracked-python law.
+ *
+ * **Example** (Reference the no-tracked-python subcommand)
+ *
+ * ```ts
+ * console.log("lawsNoTrackedPythonCommand")
+ * ```
+ *
+ * @category utilities
+ * @since 0.0.0
+ */
+const lawsNoTrackedPythonCommand = Command.make(
+  "no-tracked-python",
+  lawCheckFlags("Fail when the git index holds a .py, .pyi, .pyw or .ipynb file"),
+  Effect.fn(function* ({ check, json }) {
+    const summary = yield* runNoTrackedPython(NoTrackedPythonOptions.make({ cwd: process.cwd(), strictCheck: check }));
+
+    yield* reportLawSummary({
+      prefix: "effect-governance-no-tracked-python",
+      check,
+      json,
+      summary,
+      counters: [["tracked_python_files", summary.trackedPythonFiles]],
+      findings: A.map(summary.findings, formatNoTrackedPythonFinding),
+    });
+
+    if (summary.strictFailure) {
+      return yield* failWithReportedExit("effect-governance-no-tracked-python: check failed.");
+    }
+  })
+).pipe(Command.withDescription("Check that the git index holds no Python source, stub or notebook"));
+
+/**
  * CLI command for repo-local native runtime governance checks.
  *
  * **Example** (Reference the native-runtime subcommand)
@@ -1010,6 +1046,7 @@ export const lawsCommand = Command.make("laws", {}, () =>
     "- bun run beep laws entity-kit-freeze --write",
     "- bun run beep laws frozen-grant-set --check",
     "- bun run beep laws markdown-fences --check",
+    "- bun run beep laws no-tracked-python --check",
     "- bun run beep laws private-home-paths --check",
     "- bun run beep laws retired-effect-paths --check",
     "- bun run beep laws retired-iri-authorities --check",
@@ -1028,6 +1065,7 @@ export const lawsCommand = Command.make("laws", {}, () =>
     lawsEntityKitFreezeCommand,
     lawsFrozenGrantSetCommand,
     lawsMarkdownFencesCommand,
+    lawsNoTrackedPythonCommand,
     lawsPrivateHomePathsCommand,
     lawsRetiredEffectPathsCommand,
     lawsRetiredIriAuthoritiesCommand,

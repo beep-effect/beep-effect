@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `pending`
+Status: `completed-retained`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | pending | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
-| P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P0 Research | completed | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
+| P1 Implement | completed | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P2 Verify | completed | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | completed | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | completed | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Slices
 
@@ -20,9 +20,9 @@ Each slice is one PR and runs the phases above. They land in order.
 
 | Slice | Status | Content | Count that must move |
 | --- | --- | --- | --- |
-| B1 | pending | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
-| B2 | pending | Protocol v3 messages, looping worker, `CitationRegexSession`, sleep-counting clock, the real-process proofs; every regex call site switches. | regex processes 291 to 10 |
-| B3 | pending | Delete v2; rewrite spawn-count assertions; re-record shard timings; append isolation evidence. | none |
+| B1 | merged (#3336) | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
+| B2 | merged (#3352) | Protocol v3 messages, looping worker, `CitationRegexSession`, sleep-counting clock, the real-process proofs; every regex call site switches. | regex processes 291 to 10 |
+| B3 | merged (#3355) | Delete v2; retain exact spawn-count assertions; re-record shard timings; append isolation evidence. | none |
 
 First slice: B1, the native lane, once slice A2 of `citation-engine-install-once` has merged.
 
@@ -69,6 +69,192 @@ git diff --check -- goals/citation-regex-worker-v3
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug citation-regex-worker-v3`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### All three slices merged; the packet is in closeout, 2026-11-14
+
+B1 merged as #3336, B2 as #3352 (bbf67b946b) and B3 as #3355 (34964a3fdc). Ten plain-text calls start 10 regex child processes instead of 291 with 291 evaluations unchanged. The ep103 red that #3352 put on main (a test fixture race) was fixed by #3353 the same hour. The five serial replays finish under 20% of their watchdog on hosted CI (2% to 18%) and at 10% to 20% on beep-worker (history/evidence/2026-11-14-replay-acceptance.md). Reflection: history/reflections/2026-11-14-claude.md.
+
+Lane docs/citation-regex-worker-v3-closeout
+
+Reverse: Return the packet to in progress if a merged slice is reverted.
+
+### B1 explicit reservation verified and in review, 2026-11-14
+
+Owner ruling 3 resolves the admission/deadline stop. B1 is in review locally on
+feat/citation-native-lane. Explicit lane.reserve runs at the base's regex, Diff
+and Xml acquisition points; standalone HTML keeps its own placement. Both review
+race fixes remain. No public cleaner contract, limit value or protocol change.
+
+The new contention proof passes 32/32 under each parent (Bun and Node), covering
+all four kinds with both real child runtimes: queue-full, queue-expiry, quarantine
+before reservation and job deadline after reservation. The regex queue proof
+observes that regexDeadline has not started. Reservation/start counts one claim;
+unused reservations return on Scope close. NativeLane now passes 16/16 per parent,
+and the prior handover/interruption/cleaner/1-and-1/2-and-2 proofs remain green.
+
+The final full-span count replay passes 12/12 in 58.86 seconds, launch load
+24.72 / 19.30 / 18.52. Ten plain-text Bun calls remain 291 regex children and
+291 evaluations, zero per-call installs/detaches/tokenizer/evaluator builds, ten
+physical lane owners and ten lane unit claims. Construction remains metadata
+16, detach 1, tokenizer 1, evaluators 26, physical owner 1, children/lane claims 0.
+
+Both quick package verifications/typechecks, both laws, root Oxlint, Biome,
+docgen:local, Effect Vitest and Fallow audit vs origin/main pass. Fallow has zero
+introduced findings; Effect Vitest has zero introduced findings and no inventory
+churn. Detailed base/head source references, exact refusals, file receipts and
+proof limits are in history/evidence/2026-11-14-b1-reservation.md.
+
+No stop remains. No push, PR, rebase, subagent, shared-stash operation, whole suite
+or whole-package coverage. The owner publishes and directs the later base update.
+
+Review round 2 qualifies base refusal equivalence to matching admission state and
+records the intentional external contention from lifetime-held idle units. The
+combined two-entrant unconfirmed-retirement proof passes on both parent runtimes,
+with neither cleaner body running, depth zero and late-confirmation release.
+
+Reverse: Return B1 to in progress if review finds an ownership, admission, timer or counting regression.
+
+### B1 locally verified with policy v2 and cleaner-boundary yield, 2026-11-14
+
+Both owner-ruling stops are resolved. B1 is in review locally; no push or PR.
+Policy v2 and its major changeset are in df7dbe7f5dc. Invocation lanes route
+regex v2, Diff and Xml; the closed HTML cleaner uses the named standalone starter
+only after lane.yieldTo returns capacity. The public cleaner contracts and the
+physical SIGKILL/isRunning/Scope-close sequence are unchanged.
+
+Two full-span runs pass 12/12. The ten Bun calls remain 291 evaluations and 291
+children, with zero per-call installs/detaches/tokenizer/evaluator installs.
+Construction remains 16 metadata installs, 1 detach, 1 tokenizer, 26 evaluators,
+1 physical owner and zero children. New lane-unit counts are zero at construction
+and ten across the calls. File wall times are 61.72 s and 64.59 s; the latter's
+launch-adjacent load is 20.27 / 22.31 / 18.30. File timings include the Node parity
+leg and do not claim a latency improvement over the historical A4 cohort timing.
+
+All new real-process proofs pass under Bun and Node parent runners, each testing
+Bun and Node children. Markup completes under 1/1 and concurrently under 2/2 with
+max-alive 1 and 2. Cleaner proofs cover engine HTML clean, a direct host call,
+regex before HTML, acquisition/start quarantine, interrupted transfer, terminal
+unconfirmed yield and late acknowledgement, and nested/concurrent yields within
+caller transactions. Exact process and release assertions remain.
+
+Both quick package checks/typechecks, both law checks, root Oxlint, local docgen,
+Biome and whitespace pass. Fallow against origin/main has zero introduced
+findings. Effect Vitest passes with explicit resource-hook deadlines; generated
+inventory churn is restored. No full suite, coverage, hosted CI or remote timing
+was run. Full file-by-file receipts and proof details are in
+history/evidence/2026-11-14-b1-native-lane.md. Owner publishes after the predecessor
+merges and directs the base update; this lane was not rebased.
+
+Reverse: Return B1 to in progress if owner review finds an ownership, refusal or counting regression.
+
+### B2 has a green merged tree and complete session coverage, 2026-11-14
+
+Completed the owner-requested B1 merge b9089f34c6b in 078eb202de8. Commits 90713a80a86 and 98124b81fd6 align the remaining exact spawn counts, preserve installation-closed and runtime-identity guards on every evaluation, and complete focused session coverage. All 276 Citation files pass serially: 1299 passing tests, zero failing or skipped tests, including all formerly reserved or mismatched fixtures and the three Bun.version files under a Bun parent. Four new B2 sources reach 100 percent lines, statements, branches and functions with Bun/Istanbul; every changed existing file meets its committed floor. FullSpan ran last and passes 12/12: ten plain-text Bun calls start 10 regex processes for 291 evaluations, every other count column unchanged. Full-file wall time is 35.98 seconds and gates nothing. All required checks pass; Fallow has zero introduced findings against the exact merged B1 head after its remote branch was deleted. Evidence: history/evidence/2026-11-14-b2-regex-session.md, B1 merge and green run. B2 stays in review. No push, rebase, additional merge or subagent.
+
+Reverse: Return B2 to in progress if second review finds an introduced defect; preserve both protocol rulings and rerun affected files with FullSpan last.
+
+### B2 is in review with ten regex processes per ten calls, 2026-11-14
+
+B2 implements the depth-4 and per-job-engine owner rulings; both stops are resolved. The eight real-process obligations pass on Bun and Node, as do mixed-engine, invalid-engine and live-stdout-EOF regressions. CitationRegexSession passes 24/24 and protocol tests 4/4. All 263 eligible Citation files ran serially, with FullSpan last: 254 files pass, 1145 tests pass, and 23 tests across nine files still fail at captured Clock/spawner fixture boundaries for B1 alignment. AnnotationAssembly is proven to open its lane with the scaffold Clock while installing its evaluator with the caller Clock. No identity guard was weakened. The count gate passes 12/12: ten Bun calls start 10 regex processes for 291 evaluations, with every other column unchanged; full file wall time is 34.81 seconds at load 9.64 / 10.17 / 10.95. Required check, quick package verification, laws, docgen, effect-vitest, schema-first, root Oxlint and Fallow pass, with zero introduced Fallow findings. Evidence: history/evidence/2026-11-14-b2-regex-session.md. PLAN B2 is in review. Commits remain local; no push, PR opening, merge or rebase.
+
+Reverse: Return B2 to in progress if review finds an introduced failure; retain both owner protocol rulings and rerun the focused proofs and final count gate after changes.
+
+### B2 round 2 fixes retain ten regex processes per ten calls, 2026-11-14
+
+Accepted round 2 fixes revoke and drain unlocked lane capabilities and avoid proportional descriptor fingerprint allocation before exact frame refusal. Paired real-pipe regressions cover prompt EPIPE and deadline-interrupted backpressure on both child runtimes. B2 remains in review; final test, coverage, checks and count receipts are recorded in the Review round 2 evidence section. No publication is authorized.
+
+Reverse: Return B2 to in progress if the independent review finds a lifecycle or preflight defect.
+
+### B2 round 3 is in review with bounded drains and a full green Citation run, 2026-11-14
+
+Round 3 fixes the unbounded revoked-capability drain, refuses nested withUse per call context, and adds 36 cross-implementation fingerprint vectors. All 276 Citation files pass serially: 1315 tests, zero failures or skips, including all integration corpora; the three Bun.version files run with a Bun parent. Thirty files were replayed after final source/assertion tightening. Eighteen single-file coverage runs pass; NativeLane and all four session files are 100 percent on lines, statements, functions and branches. Root beep lint, cache profile, quick package verification, check, laws, Fallow against origin/main with zero introduced, full local docgen, effect-vitest, schema-first and root Oxlint pass. FullSpan ran last and passes 12/12: ten regex children, 291 evaluations, every other column unchanged; wall 31.66 seconds at load 5.66/6.18/7.38. Evidence: history/evidence/2026-11-14-b2-regex-session.md, Review round 3. B2 remains in review. No push, merge, rebase or subagents.
+
+Reverse: Return B2 to in progress if independent review finds a remaining ownership or preflight defect.
+
+### B2 round 4 is in review with spawner hand-off fences and a full green run, 2026-11-14
+
+Round 4 fences the physical owner hand-off after every owner-side wait, revalidates lane and call authority after admission awaits, and proves zero spawner hand-offs and zero physical starts plus one lease return when revocation precedes the hand-off. Four core regressions failed on fe714d0ecdb with a real child; all eight final cases pass, including every measured pre-hand-off owner scheduler boundary and revocation before drain expiry. All 277 Citation files pass serially: 1323 tests, zero failures or skips. Twenty-five distinct single-file coverage measurements reach 100 percent on every metric for NativeLane, NativeProcess and all four session files. Required checks pass, with zero introduced Fallow findings against origin/main. FullSpan ran last and passed 12/12: 10 regex processes, 291 evaluations, all other columns unchanged; 30.59 seconds wall at load 1.86/2.98/3.94. Explicit accepted limit: never-resolving work retains its private Scope and quarantined capacity indefinitely; caller wait is bounded, eventual settlement is not guaranteed. Evidence: history/evidence/2026-11-14-b2-regex-session.md, Review round 4. B2 remains in review. No push, merge, rebase or subagents.
+
+The guarantee is at hand-off, as clarified by the round-5 owner ruling. A start already handed to the lazy platform Effect may be born after revocation; it retains its quarantined lease until SIGKILL and confirmed retirement.
+
+Reverse: Return B2 to in progress if independent review finds a remaining ownership or preflight defect.
+
+### B2 round 5 is in review with owned lazy spawner hand-offs, 2026-11-14
+
+Applied owner ruling a7b55238cda: no start is handed to the spawner after revocation, closure or poisoning. A prior authorized hand-off may produce an OS child later; registration retains its quarantined lease until existing SIGKILL and confirmed retirement, then returns it once. Updated comments, names, earlier current-claim wording and evidence without changing executable production code or cwd. The new real Bun/Node cases pause inside the returned platform Effect and before confirmation, proving bounded typed caller failure, held capacity, confirmed death, single return and refusal of later starts; before-fence cases prove zero hand-offs. Nineteen focused files pass 204 tests; FullSpan ran last and passes 12/12. With five additional coverage-only contributors, 25 unique files and 256 tests pass without skips. All 25 single-file coverage measurements pass; NativeLane, NativeProcess and all four session files are 100 percent on all four metrics. Required checks pass, Fallow introduces zero against origin/main. Count remains 10 regex processes and 291 evaluations, every other column unchanged; wall 30.41 seconds at load 3.26/5.44/4.19. Whole-directory rerun omitted per owner scope because only comments/JSDoc and tests changed. Evidence: history/evidence/2026-11-14-b2-regex-session.md, Review round 5. B2 remains in review; no push, merge, rebase or subagents.
+
+Reverse: Return B2 to in progress if review finds an ownership or retirement defect under the hand-off ruling.
+
+### B3 is in review with protocol v2 deleted, 2026-11-14
+
+Protocol v2 deletion and v3 test migration are implemented locally. B3 evidence records verification, isolation changes, deletion reasons and count gates. No publication is authorized in this implementation lane. Shard timing re-record and hosted replay acceptance remain held for the CI driver; B3 is in review, not accepted.
+
+Reverse: Return B3 to pending and restore v2 from the B2 parent
+
+### B3 is open as #3355 and B2 merged as #3352, 2026-11-14
+
+B2 merged as #3352 (bbf67b946b) and the ep103 unblocker as #3353 (4e27e01463). B3 is open as #3355: protocol v2 deleted, five v2-only test cases removed with reasons, reply-stage failure coverage moved to the v3 session-program test. The CI goals driver ruled on 2026-11-14 that the law-practice unit shard plan and its weightSeconds are re-recorded from #3355's own first green hosted run in one commit; not lane-affecting for window 5.
+
+Lane feat/citation-remove-regex-v2 · PR #3355
+
+Reverse: Return B3 to in progress if hosted CI or review finds a v3 path that depended on deleted v2 code.
+
+### Record hosted round 1 repairs and the completed provider audit, 2026-11-14
+
+B1 remains in review as PR #3336. Hosted round 1 repairs preserve every expected
+child count, budget and refusal assertion. The evaluator checks the actual lane
+spawner/Clock, including its first call, and retains the base closed-installation
+refusal. Fixtures open invocations in their installed runtime Context.
+
+The serial provider audit passes 168 files / 772 tests; the requested full-law
+integration replay passes 768 observations with 936/936 confirmed children.
+CanonicalFullSpan ran last: 12/12, 291 children and 10 lane claims per ten calls,
+construction unchanged, 67.29 s at load 10.92 / 12.20 / 11.36. Total: 170 files,
+785 tests. Required server check, quick verification, laws, fallow, Effect Vitest,
+schema-first, Biome and decision projections pass. Full receipts and each file's
+pass count are in history/evidence/2026-11-14-b1-native-lane.md, Hosted round 1.
+
+No push, PR mutation, rebase or stash operation. The owner publishes local commits;
+hosted CI/review resolution is still outstanding on those commits.
+
+Lane feat/citation-native-lane · PR #3336
+
+Reverse: Rerun the same file-level proofs after any change; preserve the recorded counts and refusals.
+
+### Record quarantine overlap and coverage review follow-through, 2026-11-14
+
+B1 remains in review as PR #3336, with this local wave based on b749cd91e7e.
+Remove only Markup reap's aggregate quarantine reset; exact-record callbacks own
+settlement. A/B real-child regressions fail with the old reset and pass for Bun
+and Node children. The two-request composition proof forces both first children
+to exist before either request proceeds; its exact peak-two assertion remains.
+
+The owner-expanded coverage wave covers every reported reachable branch in six
+regressed sources plus new NativeLane. Single-file reports merged with hosted
+artifacts clear all reported floors; six typed invariant guards stay and are
+reported with source/line arguments and measured values. No coverage baseline
+edit, guard weakening, typed-refusal conversion or ignore directive.
+
+Current proof: 79 green Node consumer/coverage files / 369 tests; 55 touched cases
+also pass with a Bun parent. The three unchanged parent-runtime tests reproduce
+six passes / 26 failures under Node and pass 32/32 under Bun. Census passes 4/4.
+CanonicalFullSpan ran last: 12/12, 65.22 s, launch load 10.12 / 12.81 / 13.97;
+291 regex children / ten lane claims per ten calls, construction unchanged.
+
+Server check, quick verification, laws, scoped root oxlint, Biome, fallow,
+Effect Vitest, schema-first, docgen and decision projections pass. Evidence lists
+every file and coverage-path test. One EV003 per-request fixture exception is
+reviewed under the standing invocation policy; unrelated inventory rows match
+HEAD exactly. The owner publishes this local commit; no push, PR mutation,
+rebase or stash operation.
+
+Lane feat/citation-native-lane · PR #3336
+
+Reverse: Repeat these bounded proofs after changes; keep unchanged parent-runtime tests and all typed guards intact.
+
+### Review round 1 closes preflight and session lifetime findings, 2026-11-14
+
+Review round 1 fixes all four accepted findings in local commits 4c11b6b65b5 and 8c8f819ed1f. Descriptor selection precedes exact full-frame preflight, receiving allocation and compilation; immutable captured fingerprints are rechecked. Preparation and dispatch share the lane handover transaction, with trusted already-locked capabilities across timer fibers. Every interruption after the evaluation acquires its session permit fails closed, confirms child retirement and returns its lease exactly once, including preparation before spawn. The later PR review round 1 ruling excludes callers still waiting for that permit; the original queued-cancellation expectation recorded in the historical evidence is superseded. The strengthened depth witness proves JSON parsing was not reached. Session tests pass 48/48 on both child runtimes, protocol 4/4, descriptors 8/8 and retained v2 worker/protocol 19/19 and 14/14. All 195 affected files and the final FullSpan gate ran serially, with 75 final-implementation reruns: 196 unique files, 808 passing tests and the same 23 fixture-authority failures across nine untouched files awaiting B1 alignment. FullSpan passes 12/12: 10 regex children for 291 evaluations, every other column unchanged, 38.18 seconds wall time. All required checks pass, Fallow introduces zero findings, and no safety guard was weakened. Evidence: history/evidence/2026-11-14-b2-regex-session.md, Review round 1. B2 stays in review. No push, merge, rebase or subagent.
+
+Reverse: Reopen B2 implementation if a regression disproves the allocation, interruption or handover ordering; preserve the owner protocol rulings and repeat the affected files with FullSpan last.
 
 <!-- beep:decisions:end -->

@@ -3,6 +3,7 @@
  * import-time joke shortcut are separate entry-point duties.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationEngineAbsoluteMaxima,
@@ -16,6 +17,7 @@ import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import { captureCitationExtractionChildren } from "./ExtractionChildren.ts";
 import { CitationTokenExtractionInput } from "./ExtractionContext.ts";
 import {
@@ -30,12 +32,7 @@ import {
   makeCitationFullExtraction,
 } from "./FullExtraction.ts";
 import { CitationGeneratedReference, makeCitationGeneratedCombinedReferences } from "./GeneratedReferences.ts";
-import {
-  decodeCitationMetadataRuntimeConfiguration,
-  detachCitationMetadataConfiguration,
-  makeCitationMetadataOperation,
-  provideCitationStageAdmission,
-} from "./MetadataComposition.ts";
+import { makeCitationMetadataOperation, provideCitationStageAdmission } from "./MetadataComposition.ts";
 import { CitationReferencePatternConfiguration } from "./ReferencePatterns.ts";
 import {
   CitationReferenceTokenConfiguration,
@@ -44,6 +41,7 @@ import {
 } from "./ReferenceTokenExtraction.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type * as Exit from "effect/Exit";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ExtractionLoop");
@@ -144,10 +142,6 @@ export class CitationExtractionLoopResult extends S.Opaque<
   )
 ) {}
 const Input = S.toType(CitationExtractionLoopInput);
-const Configuration = S.toType(CitationExtractionLoopConfiguration);
-// Upstream Schema owns native byte representation and fresh decoding; no custom
-// recursive configuration clone or JSON string parser is introduced.
-const ConfigurationJson = Configuration.pipe(S.toCodecJson);
 const isFull = S.is(CitationFullExtractionResult);
 const referenceToken = (token: CitationTokenSeed) =>
   token.kind === "IdToken" ||
@@ -160,11 +154,11 @@ const referenceToken = (token: CitationTokenSeed) =>
 const installChildren = Effect.fn("Citation.installExtractionLoopChildren")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationExtractionLoopConfiguration
+  config: CitationOwned<CitationExtractionLoopConfiguration>
 ) {
-  const full = yield* makeCitationFullExtraction(limits, runtime, config.full);
-  const reference = yield* makeCitationReferenceTokenExtraction(limits, runtime, config.reference);
-  const generated = yield* makeCitationGeneratedCombinedReferences(limits, runtime, config.generated);
+  const full = yield* makeCitationFullExtraction(limits, runtime, ownedField(config, "full"));
+  const reference = yield* makeCitationReferenceTokenExtraction(limits, runtime, ownedField(config, "reference"));
+  const generated = yield* makeCitationGeneratedCombinedReferences(limits, runtime, ownedField(config, "generated"));
   const selection = yield* makeCitationExtractionSelection(limits);
   return { full, reference, generated, selection };
 });
@@ -235,23 +229,13 @@ const prepare = Effect.fn("Citation.extractPreparedDocument")(function* (
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationExtractionLoop = Effect.fn("Citation.makeExtractionLoop")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  config: CitationOwned<CitationExtractionLoopConfiguration>
 ) {
-  const { limits, runtime, configuration } = yield* decodeCitationMetadataRuntimeConfiguration(
-    policy,
-    runtimeInput,
-    configurationInput,
-    Configuration,
-    () => fail("invalid-configuration")
-  );
   return yield* provideCitationStageAdmission(
     limits,
     Effect.gen(function* () {
-      const config = yield* detachCitationMetadataConfiguration(ConfigurationJson, configuration, () =>
-        fail("invalid-configuration")
-      );
       const children = yield* captureCitationExtractionChildren();
       // Installed once; an install failure surfaces where each request used to install it.
       const stages = yield* Effect.exit(installChildren(limits, runtime, config).pipe(Effect.provideContext(children)));

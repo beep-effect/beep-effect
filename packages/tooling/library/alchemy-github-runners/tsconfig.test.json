@@ -19,6 +19,9 @@
     },
     {
       "path": "../../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../alchemy-aws-extras/tsconfig.json"
     }
   ]
 }

@@ -2,6 +2,7 @@
   "catalog": {
     "@alchemy.run/aws": "2.0.0-beta.87",
     "@alchemy.run/cloudflare": "2.0.0-beta.87",
+    "@alchemy.run/docker": "2.0.0-beta.87",
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@alchemy.run/test": "2.0.0-beta.87",
     "@arizeai/phoenix-client": "8.0.0",
@@ -98,10 +99,8 @@
     "@pnpm/catalogs.resolver": "1100.1.2",
     "@pnpm/catalogs.types": "1100.0.1",
     "@pulumi/aws": "^7.54.0",
-    "@pulumi/cloudflare": "^6.24.0",
     "@pulumi/command": "^4.5.0",
     "@pulumi/pulumi": "3.276.0",
-    "@pulumiverse/vercel": "^5.26.1",
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
     "@rdfjs/data-model": "^2.1.2",
@@ -444,6 +443,7 @@
     "lint:private-home-paths": "bun run beep laws private-home-paths --check",
     "lint:schema-tag-idioms": "bun run beep laws schema-tag-idioms --check",
     "lint:tracked-shell-allowlist": "bun run beep laws tracked-shell-allowlist --check",
+    "lint:no-tracked-python": "bun run beep laws no-tracked-python --check",
     "lint:holds": "bun run beep holds lint",
     "lint:ecosystem-polarity": "bun run beep lint ecosystem-polarity",
     "goals:index-check": "bun run beep goals index --check",
@@ -471,6 +471,7 @@
     "packages/shared/use-cases",
     "packages/shared/tables",
     "packages/tooling/library/*",
+    "packages/tooling/infra/*",
     "packages/tooling/policy-pack/*",
     "packages/tooling/test-kit/*",
     "packages/tooling/tool/*",
@@ -590,6 +591,7 @@
     "packages/drivers/alchemy-postgres",
     "packages/drivers/firecrawl",
     "packages/drivers/eyecite",
-    "packages/drivers/sqlite"
+    "packages/drivers/sqlite",
+    "packages/tooling/infra/infra-hosts"
   ]
 }

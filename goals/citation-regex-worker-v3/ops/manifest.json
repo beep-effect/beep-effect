@@ -4,15 +4,15 @@
     "id": "citation-regex-worker-v3",
     "packetId": "goal-packet/v1:149d3027f12d327ba0e310310b3bc2748e8e70ddbc638b5ed2b61d168b46282c",
     "title": "Citation Regex Worker V3",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-12",
-    "updated": "2026-11-12",
+    "updated": "2026-11-14",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/citation-regex-worker-v3",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Serve a request's regex jobs from one child process at a time in a per-invocation native lane, under a parent timer per job, keeping SIGKILL retirement and capacity release only on confirmed death.",
-  "statusNote": "Graduated 2026-11-12, not started. Waits on slice A2 of citation-engine-install-once; first slice B1, the native lane.",
+  "statusNote": "All three slices merged: B1 #3336, B2 #3352, B3 #3355. Ten plain-text calls start 10 regex child processes instead of 291 with 291 evaluations unchanged; protocol v2 is deleted; the five serial replays finish under 20% of their watchdog on hosted CI (2% to 18%) and at 10% to 20% on beep-worker. Reflection: history/reflections/2026-11-14-claude.md.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {
@@ -24,7 +24,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3358,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -37,7 +43,7 @@
     "explorations/citation-engine-install-and-worker-reuse/research/design-2026-11-12.md",
     "explorations/citation-engine-install-and-worker-reuse/research/design-review-2026-11-12.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -53,27 +59,27 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -87,5 +93,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3358
+  }
 }

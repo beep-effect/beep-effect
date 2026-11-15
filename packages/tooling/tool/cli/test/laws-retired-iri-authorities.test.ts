@@ -6,6 +6,7 @@ import {
   RetiredIriAuthorityFinding,
   retiredIriAuthorities,
   retiredIriAuthoritiesScope,
+  retiredIriAuthorityPrefilter,
   scanPublicOriginLiterals,
   scanRetiredIriAuthorityFile,
   scanRetiredIriAuthorityText,
@@ -188,6 +189,99 @@ describe("retired IRI authority law", () => {
           DEV_HOST,
           APEX_SH,
         ]);
+      })
+    );
+  });
+
+  // LINT-04 S2 parity gate (goals/heavy-pool-diet): the pre-filter is generated from the rows, and it
+  // never drops a file the rule would report.
+  describe("rule 1 pre-filter", () => {
+    // The two pre-filters it replaced, kept here to show the findings did not move:
+    // #3019's hand-written host shape and the `beep` substring before it.
+    const HAND_WRITTEN_PREFILTER = /beep(?:-effect)?\.(?:dev|sh)/iu;
+    const SUBSTRING_PREFILTER = /beep/iu;
+    const rowHosts = A.map(retiredIriAuthorities, (row) => A.join(row.labels, "."));
+    const IRI_SUGGESTION = `${ORIGIN}/ns/<path> (derive with $I from @beep/identity)`;
+    const EMAIL_SUGGESTION = "use an RFC 2606 example.com address";
+    const proseSuggestion = (match: string) =>
+      `defang the host in prose (${pipe(match, Str.replaceAll(".", "[.]"))}) or derive the IRI with $I from @beep/identity`;
+    const finding = (column: number, match: string, suggestion: string) =>
+      RetiredIriAuthorityFinding.make({
+        file: "fixture.md",
+        line: 1,
+        column,
+        match,
+        rule: "retired-authority",
+        suggestion,
+      });
+
+    it.effect("is the alternation of the escaped row hosts under the rule's flags", () =>
+      Effect.sync(() => {
+        expect(retiredIriAuthorityPrefilter.source).toBe(
+          A.join(
+            A.map(rowHosts, (retired) => pipe(retired, Str.replaceAll(".", String.raw`\.`))),
+            "|"
+          )
+        );
+        expect(retiredIriAuthorityPrefilter.flags).toBe("iu");
+      })
+    );
+
+    it.effect("matches every retired-host row in every case", () =>
+      Effect.sync(() => {
+        expect(rowHosts).toEqual([EFFECT_DEV_HOST, NS_HOST, DEV_HOST, APEX_SH]);
+        for (const retired of rowHosts) {
+          for (const spelling of [retired, Str.toUpperCase(retired), `docs.${retired}`]) {
+            expect(retiredIriAuthorityPrefilter.test(spelling), spelling).toBe(true);
+          }
+        }
+      })
+    );
+
+    it.effect("keeps the exact findings for each host in every authority form", () =>
+      Effect.sync(() => {
+        const cases = A.flatMap(rowHosts, (retired) => {
+          const upper = Str.toUpperCase(retired);
+          return [
+            [`see https://${retired}/a`, [finding(5, `https://${retired}`, IRI_SUGGESTION)]],
+            [`x HTTPS%3A%2F%2F${upper}/a`, [finding(3, `HTTPS%3A%2F%2F${upper}`, IRI_SUGGESTION)]],
+            [`{"id":"https:\\/\\/${retired}\\/a"}`, [finding(8, `https:\\/\\/${retired}`, IRI_SUGGESTION)]],
+            [`mail me@docs.${retired}`, [finding(8, `@docs.${retired}`, EMAIL_SUGGESTION)]],
+            [`we never owned ${retired}.`, [finding(16, retired, proseSuggestion(retired))]],
+          ] as const;
+        });
+        expect(cases).toHaveLength(20);
+        for (const [content, expected] of cases) {
+          expect(scanRetiredIriAuthorityText("fixture.md", content), content).toEqual(expected);
+          // Both earlier pre-filters admit the same text, so they reached the same rule and findings.
+          expect(HAND_WRITTEN_PREFILTER.test(content), content).toBe(true);
+          expect(SUBSTRING_PREFILTER.test(content), content).toBe(true);
+        }
+      })
+    );
+
+    it.effect("shares the rule's Unicode case folding", () =>
+      Effect.sync(() => {
+        // U+017F LATIN SMALL LETTER LONG S folds to `s` under `iu`, so the rule reports it.
+        const content = `see ${host("beep", "ſh")} now`;
+        expect(retiredIriAuthorityPrefilter.test(content)).toBe(true);
+        expect(scanRetiredIriAuthorityText("fixture.md", content)).toEqual([
+          finding(5, host("beep", "ſh"), proseSuggestion(host("beep", "ſh"))),
+        ]);
+      })
+    );
+
+    it.effect("rejects text that names no retired host, which the rule never reports", () =>
+      Effect.sync(() => {
+        const negative = `the ${host("beep-effect", "sh")} mirror, beep_dev, beep-dev and the beep CLI`;
+        expect(retiredIriAuthorityPrefilter.test(negative)).toBe(false);
+        // The hand-written shape admitted this text; the rule found nothing in it either way.
+        expect(HAND_WRITTEN_PREFILTER.test(negative)).toBe(true);
+        expect(scanRetiredIriAuthorityText("fixture.md", negative)).toEqual([]);
+        // A longer DNS name passes the pre-filter, and the rule still reports nothing.
+        const longer = `see ${host("beep", "devtools")}`;
+        expect(retiredIriAuthorityPrefilter.test(longer)).toBe(true);
+        expect(scanRetiredIriAuthorityText("fixture.md", longer)).toEqual([]);
       })
     );
   });

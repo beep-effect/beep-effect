@@ -14,9 +14,9 @@
 
 ## What this is
 
-Two JSON fixtures, both extracted with upstream's own `test/spec_tests.py`
-(never hand-transcribed), reshaped to the same `{ markdown, html, example,
-start_line, end_line, section }` shape as
+Two JSON fixtures, both extracted with a port of upstream's own
+`test/spec_tests.py` scanner (never hand-transcribed), reshaped to the same
+`{ markdown, html, example, start_line, end_line, section }` shape as
 `data/conformance/commonmark/spec.json`:
 
 - `spec-extensions.json` — the examples embedded in
@@ -33,27 +33,34 @@ start_line, end_line, section }` shape as
 
 ## Extraction method
 
-`packages/foundation/modeling/markdown/scripts/extract-gfm-corpora.py` (python3, no
-dependencies beyond the standard library and the vendored `spec_tests.py` it
-shells out to). Invoked from the repository root:
+`packages/foundation/modeling/markdown/scripts/extract-gfm-corpora.ts`
+(TypeScript, run with Bun; no Python). Invoked from this package:
 
 ```sh
-PYTHONDONTWRITEBYTECODE=1 python3 \
-  packages/foundation/modeling/markdown/scripts/extract-gfm-corpora.py
+bun run scripts/extract-gfm-corpora.ts
 ```
 
-The script runs upstream's own `.repos/cmark-gfm/test/spec_tests.py
---dump-tests` twice — once against `spec.txt` with
-`--pattern '\(extension\)$'` (upstream's own section-regex filter, matched
-against each example's already-parsed `section` field), once against
-`extensions.txt` with no pattern — and reshapes the output to drop the
-per-example `extensions` flag array upstream also emits (empty for every
-example that survives extraction here). `PYTHONDONTWRITEBYTECODE=1` keeps
-`.repos/cmark-gfm/test/__pycache__/` from appearing as submodule dirt,
-mirroring the `commonmark-spec` vendoring note in `.repos/config.json`.
-`--dump-tests` returns before `spec_tests.py` ever constructs a `CMark`
-converter, so no compiled `cmark`/`libcmark-gfm` binary is required to run
-the extraction.
+It reads the pinned `.repos/cmark-gfm/test/` checkout (pass
+`--cmark-gfm <dir>` to read another checkout of the same ref). Its example
+scanner is a line-for-line port of upstream `test/spec_tests.py`'s
+`get_tests` and `--dump-tests` path, applied twice — once to `spec.txt`
+with the case-insensitive section filter `\(extension\)$` (upstream's own
+`--pattern`, matched against each example's already-parsed `section` field),
+once to `extensions.txt` with no filter — and drops the per-example
+`extensions` flag array upstream also emits (empty for every example that
+survives extraction here). Output keeps upstream's `json.dumps(indent=2)`
+form, including `\uXXXX` escapes for non-ASCII text. No compiled
+`cmark`/`libcmark-gfm` binary is involved.
+
+The script replaced a Python extractor that shelled out to
+`spec_tests.py`. Both were run against `587a12bb` and produced byte-identical
+`spec-extensions.json`, `extensions.json` and summary output; the scanner
+also matched `spec_tests.py --dump-tests` byte for byte on every other spec
+file in that checkout's `test/` directory (`spec.txt` unfiltered,
+`regression.txt`, `smart_punct.txt` and both extension variants).
+`test/extract-gfm-corpora.test.ts` replays a synthetic spec against
+recorded upstream output and re-renders both committed corpora byte for
+byte.
 
 ## Discrepancy against the P2 plan
 
@@ -63,7 +70,7 @@ Disallowed Raw HTML (1). Actual extraction yields **22**, not 24: the
 "Task list items (extension)" section's two examples
 (`.repos/cmark-gfm/test/spec.txt` lines 5084–5137) are marked
 `` example disabled `` in the spec source. Upstream's own
-`spec_tests.py:get_tests` drops any example whose marker line includes
+`spec_tests.py:get_tests` (and its TypeScript port) drops any example whose marker line includes
 `disabled` unconditionally — before the section-pattern filter this
 extraction applies ever sees it — so those two illustrative blocks are not
 part of the conformance corpus upstream tests against, and are excluded here

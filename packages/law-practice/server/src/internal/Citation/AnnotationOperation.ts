@@ -9,6 +9,11 @@ import {
 import * as Effect from "effect/Effect";
 import { captureCitationOperationPolicy } from "./Snapshot.ts";
 import { makeCitationSourceAnnotation } from "./SourceAnnotation.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { Sha256Hex } from "@beep/schema";
+import type { CitationAnnotationEntryConfiguration } from "./AnnotationEntry.ts";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 /** Capture installation policy/artifact, then reuse source annotation admission,
  * timing, native transport and callback ownership. Project the completed native
@@ -17,13 +22,12 @@ import { makeCitationSourceAnnotation } from "./SourceAnnotation.ts";
  * @internal @category constructors @since 0.0.0
  */
 export const makeCitationAnnotationOperation = Effect.fn("Citation.makeAnnotationOperation")(function* (
-  policy: unknown,
-  runtime: unknown,
-  configuration: unknown,
-  artifact: unknown
+  limits: CitationOwned<CitationEngineLimits>,
+  runtime: CitationNativeProcessRuntime,
+  configuration: CitationOwned<CitationAnnotationEntryConfiguration>,
+  engineArtifact: Sha256Hex
 ) {
   const invalid = () => CitationInputError.make({ operation: "annotate" });
-  const { limits, engineArtifact } = yield* captureCitationOperationPolicy(policy, artifact, invalid);
   const stage = yield* makeCitationSourceAnnotation(limits, runtime, configuration);
   return {
     annotate: Effect.fn("Citation.annotateReported")(function* (raw: unknown) {

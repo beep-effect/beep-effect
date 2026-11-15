@@ -14,7 +14,7 @@
  */
 
 import { Git } from "@beep/git/Git";
-import { GitCommand } from "@beep/git/GitCommand";
+import { GitCommand, StatusIgnoreSubmodules } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { guardLiteralArg } from "@beep/repo-utils";
 import * as A from "effect/Array";
@@ -222,7 +222,8 @@ export const countYeetRevisions = Effect.fn("Yeet.countYeetRevisions")(function*
 
 /**
  * The tree-to-tree diff {@link changedYeetPaths} lists: `base` and `head` as a plain pair unless
- * `mergeBaseRange` asks for `base...head`, plus the kit's `diffFilter`, `noRenames` and `pathspec`.
+ * `mergeBaseRange` asks for `base...head`, plus the kit's `diffFilter`, `noRenames`,
+ * `ignoreSubmodules` and `pathspec`.
  *
  * **Example** (Describe a modified-files diff)
  *
@@ -243,6 +244,7 @@ export class YeetChangedPathsQuery extends S.Opaque<YeetChangedPathsQuery, { rea
     mergeBaseRange: S.optionalKey(S.Boolean),
     diffFilter: S.optionalKey(S.String),
     noRenames: S.optionalKey(S.Boolean),
+    ignoreSubmodules: S.optionalKey(StatusIgnoreSubmodules),
     pathspec: S.String.pipe(S.Array, S.optionalKey),
   }).pipe(
     $I.annoteSchema("YeetChangedPathsQuery", {

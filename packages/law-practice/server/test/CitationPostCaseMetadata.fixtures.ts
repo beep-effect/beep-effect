@@ -7,7 +7,7 @@ import { makeCitationPinCiteCleaner } from "@beep/law-practice-server/internal/C
 import {
   CitationPostCaseMetadataConfiguration,
   CitationPostCaseMetadataInput,
-  makeCitationPostCaseMetadata,
+  makeCitationPostCaseMetadata as makeOwnedCitationPostCaseMetadata,
 } from "@beep/law-practice-server/internal/Citation/PostCaseMetadata";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { Sha256HexFromBytes } from "@beep/schema";
@@ -17,6 +17,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFixtureLifetime,
@@ -29,6 +30,11 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationPostCaseMetadata = installCitationOwnedTestStage({
+  schema: CitationPostCaseMetadataConfiguration,
+  install: makeOwnedCitationPostCaseMetadata,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationPostCaseMetadata");
 const Value = S.NullOr(CitationNativeUnicodeHex);
@@ -137,9 +143,15 @@ export const replayCitationPostCaseMetadata = Effect.fn("PostCaseMetadataTest.re
     expect(observed, `source post-case ${row.id}`).toEqual(row.observed);
   }
   expect(rows).toHaveLength(full ? 184 : 28);
+  const processCount = A.filter(rows, (row) => row.calls > 0).length;
   const calls = A.reduce(rows, 0, (total, row) => total + row.calls);
   expect(calls).toBe(full ? 220 : 36);
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
+  yield* assertCitationWorkerCompositionReleased(
+    setup.operation,
+    setup.admission,
+    setup.observed.snapshot,
+    processCount
+  );
 });
 
 /** Exact preflight and captured configuration with one shared invocation owner. */

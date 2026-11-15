@@ -7,7 +7,7 @@ import {
   CitationCaseNameScanConfiguration,
   CitationCaseNameScanInput,
   CitationCaseNameScanState,
-  makeCitationCaseNameScan,
+  makeCitationCaseNameScan as makeOwnedCitationCaseNameScan,
 } from "@beep/law-practice-server/internal/Citation/CaseNameScan";
 import { Sha256HexFromBytes } from "@beep/schema";
 import { expect } from "@effect/vitest";
@@ -16,6 +16,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFailure,
@@ -27,6 +28,11 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationCaseNameScan = installCitationOwnedTestStage({
+  schema: CitationCaseNameScanConfiguration,
+  install: makeOwnedCitationCaseNameScan,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationCaseNameScan");
 const Value = S.NullOr(CitationNativeUnicodeHex);
@@ -158,9 +164,15 @@ export const replayCitationCaseNameScan = Effect.fn("CaseNameScanTest.replay")(f
   );
   yield* Effect.forEach(rows, (row) => assertScanRow(setup.stage, row), { discard: true });
   expect(rows).toHaveLength(full ? 64 : 54);
+  const processCount = A.filter(rows, (row) => row.calls.length > 0).length;
   const calls = A.reduce(rows, 0, (sum, row) => sum + row.calls.length);
   expect(calls).toBe(full ? 313 : 198);
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
+  yield* assertCitationWorkerCompositionReleased(
+    setup.operation,
+    setup.admission,
+    setup.observed.snapshot,
+    processCount
+  );
 });
 
 /** Exact invocation reservations precede native allocation and preserve installed patterns. */
@@ -194,7 +206,7 @@ export const assertCitationCaseNameScanBudget = Effect.fn("CaseNameScanTest.budg
     tight.operation,
     tight.admission,
     tight.observed.snapshot,
-    3
+    1
   );
 });
 /** Closed parent lifetime and captured timing refuse before creating a child. */
@@ -208,8 +220,8 @@ export const assertCitationCaseNameScanLifetime = Effect.fn("CaseNameScanTest.li
 export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTest.defaultPolicy")(function* () {
   const corpus = yield* readCitationCaseNameScanCorpus();
   const setup = yield* setupCitationMetadataRuntime("bun");
+  // An owned configuration whose fixed pattern fails authentication is refused by the stage.
   for (const configuration of [
-    null,
     {
       ...corpus.configuration,
       patterns: { ...corpus.configuration.patterns, year: { width: 1, bytes: new Uint8Array([88]) } },
@@ -232,5 +244,5 @@ export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTe
   );
   const failure = yield* scanner.scan(A.getUnsafe(corpus.cases, 4).request).pipe(Effect.flip);
   expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternUtf16" });
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 4);
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 1);
 });

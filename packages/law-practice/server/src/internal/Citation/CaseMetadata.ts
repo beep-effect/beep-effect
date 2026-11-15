@@ -11,9 +11,10 @@ import * as S from "effect/Schema";
 import {
   CitationCaseNameSelectionConfiguration,
   CitationCaseNameSelectionInput,
-  copyCitationCaseNameSelectionConfiguration,
   installCitationCaseNameSelection,
+  verifyCitationCaseNameSelectionConfiguration,
 } from "./CaseNameSelection.ts";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import { makeCitationCourtLookup } from "./CourtLookup.ts";
 import {
   CitationEditionInferenceInput,
@@ -24,7 +25,6 @@ import { CitationFrozenEditions, readCitationFrozenEdition } from "./FrozenEditi
 import { reserveCitationInvocationText } from "./Invocation.ts";
 import {
   CitationPublicationMetadataConfiguration,
-  decodeCitationMetadataRuntimeConfiguration,
   decodeCitationMetadataWordRequest,
   makeCitationMetadataOperation,
   prepareCitationPublicationMetadata,
@@ -39,6 +39,7 @@ import { installCitationPreCaseMetadataExtraction } from "./PreCaseMetadata.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationCaseNameProcessPatch } from "./CaseNameProcess.ts";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseMetadata");
@@ -260,43 +261,30 @@ const installPrepare = Effect.fn("Citation.installFullCaseMetadata")(function* (
  * @internal @category constructors @since 0.0.0
  */
 export const makeCitationCaseMetadata = Effect.fn("Citation.makeFullCaseMetadata")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  decoded: CitationOwned<CitationCaseMetadataConfiguration>
 ) {
-  const {
-    limits,
-    runtime,
-    configuration: decoded,
-  } = yield* decodeCitationMetadataRuntimeConfiguration(
-    policy,
-    runtimeInput,
-    configurationInput,
-    S.toType(CitationCaseMetadataConfiguration),
-    invalid
-  );
   return yield* provideCitationStageAdmission(
     limits,
     Effect.gen(function* () {
       yield* makeCitationCourtLookup(limits, decoded.post.courtTable);
       const post = yield* prepareCitationPublicationMetadata(
         limits,
-        runtime,
-        decoded.post,
+        ownedField(decoded, "post"),
         "173f538b2d3f8f2522eeb298388114e59bca173d00e03ac7f7b844f02c1be040",
         invalid
       );
       const pre = yield* prepareCitationPublicationMetadata(
         limits,
-        runtime,
-        decoded.pre,
+        ownedField(decoded, "pre"),
         "d151b7a02a061593bb44bd881eee2dc174fff7f1b5449512f25cc2b98fb315b0",
         invalid
       );
-      const names = yield* copyCitationCaseNameSelectionConfiguration(limits, decoded.names);
+      const names = yield* verifyCitationCaseNameSelectionConfiguration(limits, ownedField(decoded, "names"));
       const config = CitationCaseMetadataConfiguration.make({
-        post: { ...post.config, courtTable: decoded.post.courtTable },
-        pre: pre.config,
+        post: { ...post, courtTable: decoded.post.courtTable },
+        pre,
         names,
       });
       const owner = yield* CitationFrozenEditions;

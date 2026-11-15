@@ -57,6 +57,10 @@
     "serwist": "catalog:"
   },
   "devDependencies": {
+    "@alchemy.run/aws": "catalog:",
+    "@alchemy.run/cloudflare": "catalog:",
+    "@alchemy.run/test": "catalog:",
+    "@beep/alchemy-vercel": "workspace:^",
     "@beep/repo-utils": "workspace:^",
     "@beep/test-runner": "workspace:^",
     "@beep/test-utils": "workspace:^",
@@ -69,6 +73,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "alchemy": "catalog:",
     "babel-plugin-react-compiler": "catalog:",
     "jsdom": "catalog:",
     "tailwindcss": "catalog:",

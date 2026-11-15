@@ -9,6 +9,7 @@ import { makeCitationSourceAnnotation } from "@beep/law-practice-server/internal
 import {
   CitationAnnotationReplacement,
   CitationEngineAnnotationResult,
+  CitationEngineLimits,
   CitationPythonUnicodeStorage,
 } from "@beep/law-practice-use-cases/server";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
@@ -21,6 +22,7 @@ import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { installCitationAnnotationEntryFixture } from "./CitationAnnotationEntry.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -103,8 +105,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
             });
             const artifact = Sha256Hex.make(Str.repeat(64)("a"));
             const policy = { ...setup.limits };
+            // The limits cross into the engine here; mutating the caller's copy later changes nothing installed.
+            const owned = yield* ownCitationTestConfiguration(CitationEngineLimits, policy);
             const entry = yield* makeCitationAnnotationOperation(
-              policy,
+              owned,
               setup.runtime,
               setup.configuration,
               artifact

@@ -21,8 +21,9 @@ const MeasuredSequencer = makeMeasuredSequencer(shardPlan);
  *
  * The list is a census, not a guess: `test/vitest-isolation-census.test.ts` scans every test file
  * for the hazards below and fails when a match is missing here or an entry no longer matches.
- * - process state: `process.chdir`, directly or through `temporaryWorkingDirectory` /
- *   `withTempWorkingDirectory` from `test/support/CommandTest.ts`; any `process.<name> =`
+ * - process state: `process.chdir`, directly or through `temporaryWorkingDirectory`,
+ *   `temporaryGitWorkingDirectory` or `withTempWorkingDirectory` from
+ *   `test/support/CommandTest.ts`; any `process.<name> =`
  *   reassignment (`cwd`, `argv`, ...); `vi.spyOn(process, ...)`;
  *   `Object.defineProperty(process | globalThis, ...)`
  * - module mocks: `vi.mock`, `vi.doMock`
@@ -94,6 +95,7 @@ const isolatedSuites = [
   "test/lab-identity-segment.test.ts",
   "test/labs-list.test.ts",
   "test/laws-markdown-fences-command.test.ts",
+  "test/laws-no-tracked-python.test.ts",
   "test/laws-schema-tag-idioms-command.test.ts",
   "test/laws-tracked-shell-allowlist.test.ts",
   "test/lint-command.test.ts",

@@ -1477,7 +1477,7 @@ Eleven sit outside `goals/` and `explorations/` (`.gitleaks.toml`, `.gitignore`,
 `.fallowrc.jsonc`, `biome.jsonc`, `biome.identity.jsonc`, three `apps/labs/ciops` files, a
 repo-cli quality test, and two `.claude/skills` files); the other 23 sit under `goals/**`
 and `explorations/turborepo-quality-cache`, including the executable consumer
-`goals/time-to-certainty/research/scripts/economics.py` (`DEFAULT_CORPUS` → `run2-fleet`).
+goals/time-to-certainty/research/scripts/economics.py (removed; see `goals/time-to-certainty/history/2026-11-13-python-removed.md`) (`DEFAULT_CORPUS` → `run2-fleet`).
 The validator-enforced prior-index chain is ONT-relative too. Moving the tree into
 `packages/ontology` would be a promotion and waits on the S8 gate (Ruling 2). Rejected:
 moving the tree under the goal (it rewrites thousands of frozen paths and every coupled

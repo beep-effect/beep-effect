@@ -120,12 +120,6 @@ export const replayCitationEditionGuesses = Effect.fn("EditionInferenceTest.gues
     .guess({ exact: [], variation: [], year: 2026.5, prior: null })
     .pipe(Effect.flip);
   expect(invalidGuessYear).toMatchObject({ reason: "invalid-input" });
-  const invalidPolicy = yield* makeCitationEditionInference({}).pipe(
-    Effect.provideService(CitationFrozenEditions, owner),
-    DateTime.withCurrentZoneOffset(0),
-    Effect.flip
-  );
-  expect(invalidPolicy).toMatchObject({ reason: "invalid-input" });
   for (const row of corpus.cases) yield* assertEditionChoice(inference, reads, ref, row);
   const forward = yield* inference.includesYear(ref(0), 2027);
   expect(forward).toBe(false);

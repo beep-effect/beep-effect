@@ -12,7 +12,7 @@ import {
   catalogUsageReport,
   runCatalogUsageCheck,
 } from "@beep/repo-cli/test/Quality";
-import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
+import { MemoryStats, QualitySchedulerLive } from "@beep/repo-cli/test/RepoRun";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -99,7 +99,8 @@ const QualityCommandTestLayer = Layer.mergeAll(
   Layer.succeed(
     MemoryStats,
     MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(128), ceilingGib: Effect.succeed(128) })
-  )
+  ),
+  QualitySchedulerLive
 );
 
 const findingKeys = (snapshot: CatalogUsageSnapshot): ReadonlyArray<string> =>

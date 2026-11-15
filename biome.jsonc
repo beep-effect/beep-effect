@@ -63,7 +63,6 @@
       "!standards/instrumentation-catalog",
       "!standards/schema-catalog",
       "!standards/fallow.dead-code.regression-baseline.jsonc",
-      "!standards/jsdoc-documentation.inventory.jsonc",
       "!standards/repo-exports.catalog.jsonc",
       // Only the CI knowledge mint writes the sealed baseline bytes.
       "!goals/knowledge-doctor.baseline.jsonc",
@@ -83,13 +82,13 @@
       "!packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json",
       // Sealed generated diff corpus; dedicated schema/hash verification owns its bytes.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/diff-kernel.json",
-      // Complete compact source rows are sealed by ops/verify-builtin-diff.py.
+      // Complete compact source rows, sealed by ops/verify-builtin-diff.py (removed, goal python-free-repo).
       "!packages/law-practice/use-cases/test/fixtures/eyecite/builtin-diff.json",
       // Complete source traces; ops/check-cleaner-pipeline.ts seals their bytes.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-pipeline.json",
-      // Complete byte-source outcomes sealed by ops/verify-html-bytes.py.
+      // Complete byte-source outcomes; CitationHtmlBytes.test.ts pins their digest.
       "!packages/law-practice/use-cases/test/fixtures/eyecite/html-bytes.json",
-      // Complete source identity relations sealed by ops/verify-cleaner-identities.py.
+      // Complete source identity relations, sealed by ops/verify-cleaner-identities.py (removed, goal python-free-repo).
       "!packages/law-practice/use-cases/test/fixtures/eyecite/cleaner-identities.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/unicode-dictionary.json",
       "!packages/law-practice/use-cases/test/fixtures/eyecite/python-hashes.json",
@@ -350,16 +349,12 @@
         "goals/ciops-ontology-pipeline/research/kpi-reading.json",
         "goals/ciops-ontology-pipeline/research/kpi-adoption-table.json",
         "standards/cache-qualification.json",
-        "standards/cache-qualification-baseline.json",
+        "standards/cache-baseline/**",
         // Sealed knowledge-doctor mint: `verify-mint` compares the exact
         // JSON.stringify(..., 2) bytes, which Biome collapses.
         "goals/knowledge-doctor.baseline.jsonc"
       ],
       "formatter": { "enabled": false }
-    },
-    {
-      "includes": ["standards/cache-qualification-baseline.json"],
-      "files": { "maxSize": 8388608 }
     },
     {
       "includes": ["standards/coverage.regression-baseline.jsonc"],

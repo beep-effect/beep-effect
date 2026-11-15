@@ -10,6 +10,7 @@ import {
 } from "@beep/repo-cli/commands/Worktree";
 import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
+  layerResidueDrainProbeTest,
   layerResidueTerminalLaneProbeTest,
   ResidueTerminalLaneAuthority,
   ResidueTerminalLaneProbe,
@@ -328,6 +329,11 @@ const TestLayer = Layer.provideMerge(
     AttemptJournalStore.layer,
     YeetEconomicsSource.layer,
     layerResidueTerminalLaneProbeTest(() => Effect.succeedNone),
+    layerResidueDrainProbeTest({
+      facts: () => Effect.succeedNone,
+      livenessReadings: () => Effect.die("attempt-journal tests read no drain liveness"),
+      updateRegistry: () => Effect.succeedNone,
+    }),
     TestConsole.layer
   ),
   NodeCommandTestLayer

@@ -2,7 +2,10 @@ import {
   CitationFrozenEditions,
   makeCitationFrozenEditions,
 } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
-import { makeCitationTokenDispatch } from "@beep/law-practice-server/internal/Citation/TokenDispatch";
+import {
+  CitationTokenDispatchBindings,
+  makeCitationTokenDispatch as makeOwnedCitationTokenDispatch,
+} from "@beep/law-practice-server/internal/Citation/TokenDispatch";
 import { makeCitationCanonicalTokenizerCatalog } from "@beep/law-practice-server/internal/Citation/TokenizerCatalog";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
@@ -10,12 +13,22 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { loadCitationCanonicalTokenizerControls } from "./CitationCanonicalTokenizer.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
 import {
   assertCitationTokenizerCase,
   citationTokenizerTestLayer,
   setupCitationTokenizer,
 } from "./CitationTokenizer.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationTokenDispatch = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationTokenDispatch>[0],
+  a1: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationTokenDispatchBindings, a1);
+  return yield* makeOwnedCitationTokenDispatch(a0, o1);
+});
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("canonical tokenizer catalog", (it) => {
   it.effect("rejects duplicate descriptor keys and source recipe identity mismatches", () =>
@@ -113,7 +126,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("canonical t
           A.map(output.assembly.citations, ([index, id]) => ({ index, id, action: "FullCaseCitation" }))
         );
         const snapshot = yield* setup.observed.snapshot;
-        expect(snapshot).toEqual({ spawned: 11, confirmed: 11 });
+        expect(snapshot).toEqual({ spawned: 1, confirmed: 1 });
         const changed = yield* makeCitationCanonicalTokenizerCatalog(
           limits,
           `${controls.payload} `,

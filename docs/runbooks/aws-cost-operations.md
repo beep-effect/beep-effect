@@ -251,6 +251,15 @@ not an idle-resource cleanup.
 
 ## Implementation boundaries
 
+Successor: the Alchemy stack `CostControls` in
+`packages/tooling/infra/cost-controls` (`@beep/infra-cost-controls`) takes
+over these controls under the cutover in
+[Alchemy infrastructure](./alchemy-infra.md#cost-controls): same account
+guard, $200 budget, $10 anomaly threshold, six tags and both enrollments, a
+new budget and subscription name, the services monitor adopted. Until that
+cutover runs, the Pulumi component below remains the owner; the paragraphs
+that follow are its history.
+
 Use `AccountCostControls` in the existing infra package, composed beside the
 fleet and cache with a dedicated `us-east-1` provider restricted to the intended
 account. The installed provider supports budgets, allocation tags, both
@@ -616,7 +625,7 @@ alone does not establish that production uses the new image.
 | Stack | Ownership | Cost treatment |
 | --- | --- | --- |
 | CI production, `infra/ci-runners` | AWS fleet, network, cache; account controls composed alongside them. | Preserve reliability; account controls are protected against stack deletion. |
-| OIP staging/production, `infra/oip-web` | Vercel hosting, Cloudflare DNS, AWS S3 assets/state. | Current resources retained; `opip-web` is a historical state namespace, not proof of abandonment. |
+| OIP staging/production, `apps/oip-web/alchemy.run.ts` (the `OipWeb` Alchemy stack; the Pulumi `opip-web` stacks were removed 2026-11-14) | Vercel hosting, Cloudflare DNS, AWS S3 assets bucket `oip-law-web-assets-<stage>`. | Current resources retained; the old `assets.oip.law` and `staging-assets.oip.law` buckets were deleted empty. |
 | Storybook | Vercel deployment and shared CI/cache usage. | No dedicated AWS compute service found. |
 | OpenClaw workstation | Local generation applicator and managed workstation services. | Outside AWS workload retirement. |
 

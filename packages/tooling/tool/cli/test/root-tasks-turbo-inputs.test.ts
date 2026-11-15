@@ -193,6 +193,7 @@ const trackedDiscoveryTasks = LiteralKit([
   "lint:retired-iri-authorities",
   "lint:private-home-paths",
   "lint:tracked-shell-allowlist",
+  "lint:no-tracked-python",
   "lint:markdown-fences",
   "lint:schema-tag-idioms",
   "lint:jsdoc-module-tags",
@@ -230,6 +231,7 @@ const directInputs: Readonly<Record<string, string>> = {
   "lint:retired-iri-authorities": "goals/fixture/c3-probe.ttl",
   "lint:private-home-paths": "apps/fixture/c3-probe.log",
   "lint:tracked-shell-allowlist": "tools/fixture/c3-probe.sh",
+  "lint:no-tracked-python": "tools/fixture/c3-probe.py",
   "lint:schema-tag-idioms": "scratchpad/fixture/c3-probe.cts",
   "lint:holds": "hold-ledger/claims.jsonl",
   "lint:tsgo-rules": "tooling/c3-probe.cts",
@@ -518,7 +520,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
-            "f7810a616fa82ad1dcd58733a28885aaa25aa1f0ba6a1a5619d22176310557fd"
+            "425978eb4ba243dab83125442e4c871065464455c310dcab5373d42493158227"
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
@@ -526,7 +528,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
-            "a233fd811b0d00f98032c13ba5a2346fc57b72e80c5656dc033ff6df063a137a"
+            "4afd585ac7a7494f692d4e5a941957c8130ba49ae7d0c4c73a481025fee35d96"
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",

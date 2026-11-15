@@ -120,15 +120,6 @@ export const surfacesForTarget = (target: RegistrationTarget): ReadonlyArray<Reg
       ),
     }),
     GeneratedInventorySurface.make({
-      id: "jsdoc-inventory",
-      writer: "jsdoc-inventory",
-      outputs: A.map(
-        ["standards/jsdoc-documentation.inventory.jsonc", "standards/jsdoc-documentation.inventory.md"],
-        (value) => PosixPath.make(value)
-      ),
-      membershipKey: target.packageName,
-    }),
-    GeneratedInventorySurface.make({
       id: "coverage-baseline",
       writer: "coverage-baseline-replacement",
       outputs: [PosixPath.make("standards/coverage.regression-baseline.jsonc")],

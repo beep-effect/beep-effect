@@ -8,6 +8,7 @@ import {
 } from "@beep/repo-cli/test/RepoRun";
 import { PrRepository, SessionLedger, SessionLedgerRow } from "@beep/repo-cli/test/Session";
 import {
+  layerResidueDrainProbeTest,
   layerResidueTerminalLaneProbeTest,
   makeResidueTerminalLaneProbe,
   ResidueReapAction,
@@ -52,10 +53,15 @@ const noLiveCwd = () => Effect.succeedSome(false);
 const pidAlive = (alive: HashSet.HashSet<string>) => (pid: string) => Effect.succeedSome(HashSet.has(alive, pid));
 const noLivePid = pidAlive(HashSet.empty());
 
-// Every suite runs without a terminal-lane authority unless a test provides one.
+// Every suite runs without a terminal-lane authority, and without fleet drain facts, unless a test provides one.
 const ResidueReapTestLayer = Layer.provideMerge(
   Layer.mergeAll(
     layerResidueTerminalLaneProbeTest(() => Effect.succeedNone),
+    layerResidueDrainProbeTest({
+      facts: () => Effect.succeedNone,
+      livenessReadings: () => Effect.die("residue-reap tests read no drain liveness"),
+      updateRegistry: () => Effect.succeedNone,
+    }),
     AttemptJournalStore.layer
   ),
   Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))
@@ -232,6 +238,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             "checkout-ledgers",
             "checkout-pids",
             "checkout-material",
+            "drainable",
           ]);
         }),
       removeTempDirectory

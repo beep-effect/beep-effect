@@ -100,6 +100,8 @@ const identityConfigValues = {
   telegramBotTokenRef: "op://beep-openclaw/telegram/bot-token",
 };
 
+const backupTarget = { host: "backup-host", remoteDir: "/srv/backups/openclaw", user: "backup-user" };
+
 const deploymentConfig = OpenClawDeploymentConfig.make({
   hostedProvider: {
     apiKeyRef: OpenclawSecretReference.make("op://beep-openclaw/hosted/api-key"),
@@ -397,7 +399,7 @@ describe("@beep/infra OpenClaw", () => {
         OpenClawWorkstationPaths.make({ unitName: "beep.service" })
       );
       const encodedBackup = yield* encodeUnknownOpenClawBackupConfig(
-        OpenClawBackupConfig.make({ passphraseSecretRef: "op://beep-openclaw/backup/passphrase" })
+        OpenClawBackupConfig.make({ ...backupTarget, passphraseSecretRef: "op://beep-openclaw/backup/passphrase" })
       );
 
       expect(encodedPaths).toEqual({
@@ -407,10 +409,10 @@ describe("@beep/infra OpenClaw", () => {
         unitName: "beep.service",
       });
       expect(encodedBackup).toEqual({
-        host: "dankserver",
+        host: "backup-host",
         passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
-        remoteDir: "/srv/data/beep-openclaw-backups",
-        user: "elpresidank",
+        remoteDir: "/srv/backups/openclaw",
+        user: "backup-user",
       });
     })
   );
@@ -472,6 +474,7 @@ describe("@beep/infra OpenClaw", () => {
     Effect.gen(function* () {
       const defaultGeneration = yield* defaultGenerationEffect;
       const backup = OpenClawBackupConfig.make({
+        ...backupTarget,
         passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
       });
       const generationIdentityInput = OpenClawGenerationIdentityScriptInput.make({
@@ -669,7 +672,10 @@ describe("@beep/infra OpenClaw", () => {
         renderOpenClawLiveAcceptanceScript(defaultGeneration),
         renderOpenClawBackupShipScript(
           OpenClawBackupShipScriptInput.make({
-            backup: OpenClawBackupConfig.make({ passphraseSecretRef: "op://beep-openclaw/backup/passphrase" }),
+            backup: OpenClawBackupConfig.make({
+              ...backupTarget,
+              passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
+            }),
             generation: defaultGeneration,
           })
         ),
@@ -987,6 +993,7 @@ describe("@beep/infra OpenClaw", () => {
         renderOpenClawBackupShipScript(
           OpenClawBackupShipScriptInput.make({
             backup: OpenClawBackupConfig.make({
+              ...backupTarget,
               agentSocketPath: O.some("/run/user/1000/gcr/ssh"),
               passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
             }),
@@ -1001,7 +1008,7 @@ describe("@beep/infra OpenClaw", () => {
       expect(script).toContain("gpg --batch --yes --symmetric --cipher-algo AES256");
       // dankserver is dumb storage: mkdir, scp, and a sha256 read-back, nothing else.
       expect(script).toContain("scp -q");
-      expect(script).toContain("mkdir -p /srv/data/beep-openclaw-backups");
+      expect(script).toContain("mkdir -p /srv/backups/openclaw");
       expect(script).toContain("BACKUP-FAIL: receipt sha256 mismatch");
       expect(script).toContain("BACKUP-OK");
       // The passphrase reference travels; the material never does.
@@ -1015,7 +1022,10 @@ describe("@beep/infra OpenClaw", () => {
       const script = scriptBody(
         renderOpenClawBackupShipScript(
           OpenClawBackupShipScriptInput.make({
-            backup: OpenClawBackupConfig.make({ passphraseSecretRef: "op://beep-openclaw/backup/passphrase" }),
+            backup: OpenClawBackupConfig.make({
+              ...backupTarget,
+              passphraseSecretRef: "op://beep-openclaw/backup/passphrase",
+            }),
             generation: defaultGeneration,
           })
         )

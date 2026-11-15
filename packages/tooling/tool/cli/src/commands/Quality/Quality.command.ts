@@ -48,24 +48,20 @@ import {
   AdmissionConfig,
   AdmissionJournalEvent,
   AdmissionJournalHistory,
+  AdmissionJournalReleasedV3,
+  AdmissionPressureEmission,
   AdmissionUnitEmission,
   adaptGitKitError,
-  admissionJournalArchiveStatus,
-  admissionJournalHistory,
-  admissionProtocolStatus,
-  admissionStatus,
   GITHUB_CHECK_MODE_VALUES,
   installAgentRunsSlice,
   isAgedAdmissionJournalArchiveSegment,
   isAgedQuarantineEntry,
   QUARANTINE_ARCHIVE_DIRECTORY_NAME,
   QUARANTINE_ARCHIVE_MIN_AGE_MILLIS,
+  QualityScheduler,
   quarantinedAtMillisOf,
-  reapAdmissionState,
   reconcileAttemptJournalsForCheckout,
   renderAgentRunsSliceListing,
-  setAdmissionEvictionProtocol,
-  setAdmissionUnitProtocol,
 } from "../../internal/repo-run/index.ts";
 import { cachePolicyCommand } from "../Cache/CachePolicy.command.ts";
 import { residueReapCommand, tmpfsReapCommand } from "../Worktree/Janitor.command.ts";
@@ -3649,15 +3645,15 @@ const jsdocInventoryCommand = Command.make(
   "jsdoc-inventory",
   {
     outputJson: Flag.String("output-json").pipe(
-      Flag.withDescription("JSONC inventory output path; defaults to the tracked standards artifact"),
+      Flag.withDescription("JSONC inventory output path; defaults to the ignored .beep/ci/ copy the ratchet reads"),
       Flag.optional
     ),
     outputMarkdown: Flag.String("output-markdown").pipe(
-      Flag.withDescription("Markdown inventory output path; defaults to the tracked standards artifact"),
+      Flag.withDescription("Markdown inventory output path; defaults to the ignored .beep/ci/ copy"),
       Flag.optional
     ),
     ciOutputJson: Flag.String("ci-output-json").pipe(
-      Flag.withDescription("Extra JSONC path written from the same scan (the .beep/ci/ copy the ratchet lane reads)"),
+      Flag.withDescription("Extra JSONC path written from the same scan"),
       Flag.optional
     ),
     ciOutputMarkdown: Flag.String("ci-output-markdown").pipe(
@@ -4004,6 +4000,17 @@ const renderAdmissionRouteLines = (events: AdmissionJournalHistory["events"]): R
     ],
   });
 
+// Admitted and released rows that carry the SCHE-09 pressure stamp; absent when none does.
+const renderAdmissionPressureLines = (events: AdmissionJournalHistory["events"]): ReadonlyArray<string> => {
+  const stamped = (rows: ReadonlyArray<{ readonly pressure: O.Option<unknown> }>) =>
+    `${A.length(A.filter(rows, (row) => O.isSome(row.pressure)))} of ${A.length(rows)}`;
+  const admitted = A.filter(events, AdmissionJournalEvent.guards["admission-admitted"]);
+  const released = A.filter(events, S.is(AdmissionJournalReleasedV3));
+  return A.some([...admitted, ...released], (row) => O.isSome(row.pressure))
+    ? [`- pressure stamps: ${stamped(admitted)} admitted, ${stamped(released)} v3 released rows (--json lists them)`]
+    : [];
+};
+
 // Aggregates only; `--json` carries every row for the scheduler goals' own folds.
 const renderAdmissionJournalHistoryLines = (history: AdmissionJournalHistory): ReadonlyArray<string> => [
   `admission history: ${A.length(history.events)} rows from ${A.match(history.archive.segments, {
@@ -4013,6 +4020,7 @@ const renderAdmissionJournalHistoryLines = (history: AdmissionJournalHistory): R
   `- rows read: ${history.archivedRows} archived, ${history.liveRows} live; ${history.duplicateRows} duplicate(s) dropped, ${history.opaqueRows} undecodable`,
   renderAdmissionWaitLine(history.events),
   ...renderAdmissionRouteLines(history.events),
+  ...renderAdmissionPressureLines(history.events),
   `- archive: ${history.archive.directory} (the reap pass prunes segments older than ${formatQuarantineAge(ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS)}; --json lists every row)`,
 ];
 
@@ -4084,7 +4092,8 @@ const schedulerStatusCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ json }) {
-    const snapshot = yield* admissionStatus();
+    const scheduler = yield* QualityScheduler;
+    const snapshot = yield* scheduler.observe();
     if (json) {
       const rendered = yield* jsonStringifyPretty(snapshot);
       yield* printLines([rendered]);
@@ -4111,14 +4120,15 @@ const schedulerReapCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ apply }) {
+    const scheduler = yield* QualityScheduler;
     // Read-only pre-scan: the aged set the reap pass is about to archive.
-    const before = apply ? yield* Effect.asSome(admissionStatus()) : O.none<AdmissionSnapshot>();
-    const archiveBefore = yield* Effect.result(admissionJournalArchiveStatus());
+    const before = apply ? yield* Effect.asSome(scheduler.observe()) : O.none<AdmissionSnapshot>();
+    const archiveBefore = yield* Effect.result(scheduler.archive);
     const beforeMillis = yield* Clock.currentTimeMillis;
-    const snapshot = yield* reapAdmissionState({ apply });
+    const snapshot = yield* scheduler.reap({ apply });
     const nowMillis = yield* Clock.currentTimeMillis;
     const archiveRemaining = apply
-      ? yield* Effect.result(Effect.map(admissionJournalArchiveStatus(), (archive) => archive.segments))
+      ? yield* Effect.result(Effect.map(scheduler.archive, (archive) => archive.segments))
       : Result.succeed(A.empty<string>());
     const pruneLine = renderAdmissionArchivePruneOutcome(apply, beforeMillis, archiveBefore, archiveRemaining);
     const reconciledAttempts = apply ? yield* reconcileCurrentCheckoutAttemptJournals() : 0;
@@ -4158,7 +4168,8 @@ const schedulerHistoryCommand = Command.make(
     ),
   },
   Effect.fn(function* ({ json }) {
-    const history = yield* admissionJournalHistory();
+    const scheduler = yield* QualityScheduler;
+    const history = yield* scheduler.history;
     if (json) {
       const encoded = yield* encodeAdmissionJournalHistory(history).pipe(
         QualityScriptCommandError.mapError("Failed to encode the admission history.")
@@ -4185,11 +4196,17 @@ const schedulerProtocolCommand = Command.make(
     units: Flag.Literals("units", AdmissionUnitEmission.literals).pipe(
       Flag.optional,
       Flag.withDescription(
-        "Turn admission-unit fields (unit, weight source, owner) on once every live checkout reads them, or off"
+        "Turn admission-unit fields (unit, weight source, owner) and the cache work kind on, or off; on only once every live checkout runs SCHE-08 slice 6 or later"
+      )
+    ),
+    pressure: Flag.Literals("pressure", AdmissionPressureEmission.literals).pipe(
+      Flag.optional,
+      Flag.withDescription(
+        "Turn the capacity and host-pressure stamp on admitted and released journal rows on, or off; every reader ignores it, so it can go on at any time"
       )
     ),
   },
-  Effect.fn(function* ({ disableEvictions, enableEvictions, units }) {
+  Effect.fn(function* ({ disableEvictions, enableEvictions, pressure, units }) {
     if (disableEvictions && enableEvictions) {
       return yield* QualityScriptCommandError.make({
         message: "Choose only one of --enable-evictions or --disable-evictions.",
@@ -4197,23 +4214,34 @@ const schedulerProtocolCommand = Command.make(
         exitCode: 1,
       });
     }
+    const scheduler = yield* QualityScheduler;
     const evictionProtocol = enableEvictions
-      ? yield* setAdmissionEvictionProtocol("on")
+      ? yield* scheduler.setEvictionProtocol("on")
       : disableEvictions
-        ? yield* setAdmissionEvictionProtocol("off")
-        : yield* admissionProtocolStatus();
-    const protocol = yield* O.match(units, {
+        ? yield* scheduler.setEvictionProtocol("off")
+        : yield* scheduler.protocol;
+    const unitProtocol = yield* O.match(units, {
       onNone: () => Effect.succeed(evictionProtocol),
-      onSome: setAdmissionUnitProtocol,
+      onSome: scheduler.setUnitProtocol,
+    });
+    const protocol = yield* O.match(pressure, {
+      onNone: () => Effect.succeed(unitProtocol),
+      onSome: scheduler.setPressureProtocol,
     });
     yield* printLines([
       `admission eviction rows: ${protocol.eviction}`,
       "Enable only after every live checkout runs the preservation release.",
       `admission unit fields: ${protocol.units}`,
       "Turn on only after every live checkout runs a revision that reads them (SCHE-08).",
+      `admission pressure stamps: ${protocol.pressure}`,
+      "Readers of every revision ignore them; each promotion and release reads procfs and cgroup files (SCHE-09).",
     ]);
   })
-).pipe(Command.withDescription("Inspect or change the mixed-checkout eviction-row and unit-field protocol gates"));
+).pipe(
+  Command.withDescription(
+    "Inspect or change the mixed-checkout eviction-row, unit-field and pressure-stamp protocol gates"
+  )
+);
 
 const schedulerReconcileAttemptsCommand = Command.make(
   "reconcile-attempts",
@@ -4266,11 +4294,14 @@ const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
     "- bun run beep quality scheduler protocol --disable-evictions",
     "- bun run beep quality scheduler protocol --units on",
     "- bun run beep quality scheduler protocol --units off",
+    "- bun run beep quality scheduler protocol --pressure on",
+    "- bun run beep quality scheduler protocol --pressure off",
     "- bun run beep quality scheduler reconcile-attempts",
     "- bun run beep quality scheduler slice",
     "- bun run beep quality scheduler slice --install",
     "Eviction rows default off; enable only after every live checkout runs the preservation release.",
     "Unit fields default off; turn on only after every live checkout reads them.",
+    "Pressure stamps default off; every reader ignores them.",
   ])
 ).pipe(
   Command.withDescription("Inspect and repair machine-wide quality admission"),

@@ -34,6 +34,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { constant, dual, flow, identity, pipe } from "effect/Function";
 import * as HS from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -52,6 +53,7 @@ import {
   AdmissionJournalRouted,
   AdmissionJournalTicketEvictedV3,
   AdmissionJournalWithdrawn,
+  AdmissionPressureEmission,
   AdmissionProtocol,
   AdmissionUnitEmission,
   acquireJournalFileLock,
@@ -68,7 +70,12 @@ import {
 import { appendSchedulerAttemptTerminated } from "./AttemptTerminationJournal.ts";
 import { computeEnvelopeGib, resolveComputeProfileForCeiling } from "./ComputeProfile.ts";
 import { gateRouteFor } from "./GateRoute.schemas.ts";
-import { admissionCapacityTokensFor, MemoryStats, parseMeminfoFieldGib } from "./MemoryStats.service.ts";
+import {
+  admissionCapacityTokensFor,
+  MemoryStats,
+  parseMeminfoFieldGib,
+  readAdmissionHostPressure,
+} from "./MemoryStats.service.ts";
 import { isProcessIdentityAlive, processStartIdentityForPid } from "./ProcessIdentity.ts";
 import {
   AdmissionClaimSinkState,
@@ -76,6 +83,7 @@ import {
   AdmissionCoordinationProtocol,
   AdmissionLeaseReapClaim,
   AdmissionOwner,
+  AdmissionPressureStamp,
   AdmissionPromotionPhase,
   AdmissionPromotionTransition,
   AdmissionReapClaim,
@@ -83,12 +91,14 @@ import {
   AdmissionRoute,
   AdmissionSnapshot,
   AdmissionTicketReapClaim,
+  AdmissionWorkKind,
   ComputeProfileRefusal,
   DeadLeaseScopePlan,
   QualitySchedulerError,
   YeetAdmissionLease,
   YeetAdmissionTicket,
 } from "./QualityScheduler.schemas.ts";
+import { QualityScheduler } from "./QualityScheduler.service.ts";
 import {
   isProofJobUnitName,
   RunScopeRecord,
@@ -107,6 +117,7 @@ import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AdmissionJournalLeaseEvicted, AdmissionJournalTicketEvicted } from "./AdmissionJournal.ts";
+import type { MemoryStatsShape } from "./MemoryStats.service.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
 
@@ -247,7 +258,32 @@ const encodeReapClaim = S.encodeUnknownEffect(S.fromJsonString(AdmissionReapClai
 const decodePromotionTransition = S.decodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
 const encodePromotionTransition = S.encodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
 
-const recoveryRecordSettlementWindow = Duration.seconds(5);
+/**
+ * How long a reaper that finds a reap claim or promotion locked waits for the
+ * owner to settle it before failing with a retryable "stayed busy" error.
+ *
+ * **Details**
+ *
+ * The wait is wall-clock time, so a CPU-starved but healthy owner can outlast
+ * it: the waiter then fails closed and never takes the claim over. A caller
+ * that must order itself after the owner, such as a test that holds the owner
+ * mid-sink, provides {@link Duration.infinity} instead of racing the window.
+ *
+ * **Example** (Read the default window)
+ *
+ * ```ts
+ * import { RecoveryRecordSettlementWindow } from "@beep/repo-cli/test/RepoRun"
+ * import * as Duration from "effect/Duration"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Duration.toMillis(Effect.runSync(RecoveryRecordSettlementWindow))) // 5000
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const RecoveryRecordSettlementWindow: Context.Reference<Duration.Duration> =
+  Context.Reference<Duration.Duration>($I`RecoveryRecordSettlementWindow`, { defaultValue: () => Duration.seconds(5) });
 const recoveryRecordSettlementPollInterval = Duration.millis(25);
 const textEncoder = new TextEncoder();
 
@@ -258,6 +294,7 @@ export {
   MemoryStats,
   MemoryStatsLive,
   memoryStatsLayerFor,
+  readAdmissionHostPressure,
 } from "./MemoryStats.service.ts";
 export type { MemoryStatsShape } from "./MemoryStats.service.ts";
 
@@ -492,8 +529,11 @@ export const setAdmissionEvictionProtocol = Effect.fn("QualityScheduler.setAdmis
  *
  * **Details**
  *
- * Turn it on only once every live checkout runs a revision that reads the unit,
- * weight source and owner keys. The eviction gate keeps its state.
+ * Turn it on only once every live checkout runs SCHE-08 slice 6 or later. With
+ * the gate on, Cache tickets record the `cache` kind. A slice 3 checkout reads the
+ * unit, weight source and owner keys but not that kind: it keeps the lease charged
+ * yet leaves it out of its review-fix class cap, so it can admit one review-fix
+ * run too many. The eviction gate keeps its state.
  *
  * **Example** (Reference the unit-gate writer)
  *
@@ -513,6 +553,39 @@ export const setAdmissionUnitProtocol = Effect.fn("QualityScheduler.setAdmission
 ) {
   const directories = yield* ensureAdmissionDirectories();
   return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, units }));
+});
+
+/**
+ * Atomically change whether writers stamp capacity and host pressure on admission rows (SCHE-09 slice 2).
+ *
+ * **Details**
+ *
+ * Every reader revision ignores the stamp, so the gate can go on at any time;
+ * it costs a few procfs and cgroup reads per promotion and release. Each
+ * admission and release reads the gate when it samples, so the change applies
+ * to requests already queued or running; recovery still journals a stamp an
+ * admission took before the change. The eviction and unit gates keep their
+ * state, and an older checkout that rewrites the marker drops the key, which
+ * turns the stamps off again.
+ *
+ * **Example** (Reference the pressure-gate writer)
+ *
+ * ```ts
+ * import { setAdmissionPressureProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof setAdmissionPressureProtocol) // "function"
+ * ```
+ *
+ * @param pressure - Desired pressure-stamp emission state.
+ * @returns The protocol marker that was published.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const setAdmissionPressureProtocol = Effect.fn("QualityScheduler.setAdmissionPressureProtocol")(function* (
+  pressure: AdmissionPressureEmission
+) {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, pressure }));
 });
 
 // Staging siblings are named `<target>.tmp-<pid>[-<start identity>]-<uuid>`.
@@ -1172,10 +1245,11 @@ const recoveryRecordRemainsAfterSettlement = Effect.fnUntraced(function* (
 ): Effect.fn.Return<boolean, never, SecureRandom.SecureRandom | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   // A healthy owner may need several seconds to finish its sinks on a loaded runner.
+  const window = yield* RecoveryRecordSettlementWindow;
   return yield* Effect.repeat(fs.exists(recoveryPath).pipe(Effect.orElseSucceed(constant(true))), {
     until: Bool.not,
     schedule: Schedule.spaced(recoveryRecordSettlementPollInterval),
-  }).pipe(Effect.timeout(recoveryRecordSettlementWindow), Effect.orElseSucceed(constant(true)));
+  }).pipe(Effect.timeout(window), Effect.orElseSucceed(constant(true)));
 });
 
 const processAttemptJournalSink = Effect.fnUntraced(function* (
@@ -1475,6 +1549,7 @@ const promotionAdmissionEvent = (transition: AdmissionPromotionTransition): Admi
     unit: transition.ticket.unit,
     weightSource: transition.ticket.weightSource,
     owner: transition.ticket.owner,
+    pressure: transition.pressure,
   });
 
 const readPromotionLease = Effect.fnUntraced(function* (
@@ -1725,6 +1800,90 @@ export const orderAdmissionTicketsForTesting: {
 const activeTokenTotal = (state: LiveAdmissionState): number =>
   A.reduce(state.leases, 0, (total, { lease }) => total + lease.weightTokens);
 
+// The capacity the scheduler admits against: the provider's cgroup-scoped reservation capacity,
+// or the chartered formula over the reading for a provider without one.
+const capacityTokensFor = (
+  stats: MemoryStatsShape,
+  availableGib: number,
+  leases: ReadonlyArray<YeetAdmissionLease>,
+  config: AdmissionConfig,
+  destination: O.Option<string>
+): Effect.Effect<number> =>
+  stats.reservationCapacity === undefined
+    ? Effect.succeed(admissionCapacityTokensFor(availableGib, config))
+    : stats.reservationCapacity(leases, config, destination);
+
+// One pressure stamp from a scan: every live lease counts as active, and the
+// tickets other than the stamped admission's own count as queued.
+const readAdmissionPressureStamp = Effect.fnUntraced(function* (
+  state: LiveAdmissionState,
+  capacityTokens: number,
+  availableGib: number,
+  nonce: string
+): Effect.fn.Return<AdmissionPressureStamp, never, FileSystem.FileSystem> {
+  const queued = A.filter(state.tickets, ({ ticket }) => ticket.nonce !== nonce);
+  const host = yield* readAdmissionHostPressure(A.map(state.leases, ({ lease }) => lease));
+  return AdmissionPressureStamp.make({
+    capacityTokens,
+    activeTokens: activeTokenTotal(state),
+    queuedTokens: A.reduce(queued, 0, (total, { ticket }) => total + ticket.weightTokens),
+    queuedTickets: A.length(queued),
+    memAvailableGib: Num.round(availableGib, 3),
+    ...host,
+  });
+});
+
+// Each transition reads the pressure gate at its own instant, so turning it off stops the
+// next admission and release sampling, and turning it on starts it, even for a running request.
+// The admitted stamp reuses the scan, capacity and memory reading the admission was checked against.
+const stampAdmittedPressure = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  state: LiveAdmissionState,
+  capacityTokens: number,
+  availableGib: number,
+  nonce: string
+): Effect.fn.Return<O.Option<AdmissionPressureStamp>, never, FileSystem.FileSystem | Path.Path> {
+  const protocol = yield* readAdmissionProtocol(directories.root);
+  return yield* AdmissionPressureEmission.match(protocol.pressure, {
+    off: () => Effect.succeedNone,
+    on: () => Effect.asSome(readAdmissionPressureStamp(state, capacityTokens, availableGib, nonce)),
+  });
+});
+
+// The released stamp scans afresh, read-only; a scan that fails leaves the row unstamped.
+const readReleasedPressureStamp = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  config: AdmissionConfig,
+  nonce: string
+): Effect.fn.Return<
+  AdmissionPressureStamp,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | MemoryStats | Digest.Digest
+> {
+  const state = yield* scanAdmissionState(directories, false);
+  const stats = yield* MemoryStats;
+  const availableGib = yield* stats.availableGib;
+  const leases = A.map(state.leases, ({ lease }) => lease);
+  const capacityTokens = yield* capacityTokensFor(stats, availableGib, leases, config, O.none());
+  return yield* readAdmissionPressureStamp(state, capacityTokens, availableGib, nonce);
+});
+
+const stampReleasedPressure = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  config: AdmissionConfig,
+  nonce: string
+): Effect.fn.Return<
+  O.Option<AdmissionPressureStamp>,
+  never,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | MemoryStats | Digest.Digest
+> {
+  const protocol = yield* readAdmissionProtocol(directories.root);
+  return yield* AdmissionPressureEmission.match(protocol.pressure, {
+    off: () => Effect.succeedNone,
+    on: () => Effect.option(readReleasedPressureStamp(directories, config, nonce)),
+  });
+});
+
 const hasLegacySameOriginLease = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
   A.some(
     state.leases,
@@ -1750,6 +1909,10 @@ const hasLegacySameOriginOwner = (state: LiveAdmissionState, ticket: YeetAdmissi
 const hasSameCheckoutLease = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
   A.some(state.leases, ({ lease }) => lease.checkoutRoot === ticket.checkoutRoot);
 
+// Cache work stays in the review-fix class it borrowed before SCHE-08, so the
+// class cap admits exactly as it did while Cache commands requested `review-fix`.
+const isReviewFixClassKind = S.is(AdmissionWorkKind.pick(["review-fix", "cache"]));
+
 // A ticket is skippable (stays queued without blocking later tickets) when it
 // targets a checkout that already has admitted work, recently reported its
 // origin migration gate busy (held by a process on the previous Yeet release),
@@ -1772,8 +1935,8 @@ const isTicketSkippable = (
   if (!ignoreOriginStamp && stampFresh) {
     return true;
   }
-  if (ticket.kind === "review-fix") {
-    const activeReviewFix = A.length(A.filter(state.leases, ({ lease }) => lease.kind === "review-fix"));
+  if (isReviewFixClassKind(ticket.kind)) {
+    const activeReviewFix = A.length(A.filter(state.leases, ({ lease }) => isReviewFixClassKind(lease.kind)));
     return activeReviewFix >= config.reviewFixClassCap;
   }
   return false;
@@ -2120,13 +2283,11 @@ const stageSelfLease = Effect.fnUntraced(function* (
   const rescanned = yield* scanAdmissionState(directories, false);
   const stats = yield* MemoryStats;
   const availableGib7 = yield* stats.availableGib;
-  const capacityNow = admissionCapacityTokensFor(availableGib7, config);
   const prefix = A.filter(
     A.map(rescanned.leases, ({ lease }) => lease),
     (candidate) => admissionInstantOrder(candidate, lease) < 0
   );
-  const scopedCapacity =
-    stats.reservationCapacity === undefined ? capacityNow : yield* stats.reservationCapacity(prefix, config);
+  const scopedCapacity = yield* capacityTokensFor(stats, availableGib7, prefix, config, O.none());
   if (A.reduce(prefix, lease.weightTokens, (total, candidate) => total + candidate.weightTokens) > scopedCapacity) {
     const fs = yield* FileSystem.FileSystem;
     yield* fs.remove(leasePath, { force: true }).pipe(Effect.ignore);
@@ -2135,9 +2296,11 @@ const stageSelfLease = Effect.fnUntraced(function* (
   }
   const encodedLeaseText = yield* encodeLeaseText(scopedLease);
   yield* refreshHeartbeat(leasePath, encodedLeaseText);
+  // Read only once the admission holds, from the scan and capacity it was checked against.
+  const stamp = yield* stampAdmittedPressure(directories, rescanned, scopedCapacity, availableGib7, ticket.nonce);
   yield* persistPromotionTransition(
     promotionPath,
-    AdmissionPromotionTransition.make({ ...prepared, lease: scopedLease, phase: "lease-published" })
+    AdmissionPromotionTransition.make({ ...prepared, lease: scopedLease, phase: "lease-published", pressure: stamp })
   );
   return [O.some({ lease: scopedLease, leasePath, promotionPath }), scopeUnavailable];
 });
@@ -2198,14 +2361,13 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   const state = yield* scanAdmissionState(directories, true);
   const stats = yield* MemoryStats;
   const availableGib = yield* stats.availableGib;
-  const capacityTokens =
-    stats.reservationCapacity === undefined
-      ? admissionCapacityTokensFor(availableGib, config)
-      : yield* stats.reservationCapacity(
-          A.map(state.leases, ({ lease }) => lease),
-          config,
-          destination
-        );
+  const capacityTokens = yield* capacityTokensFor(
+    stats,
+    availableGib,
+    A.map(state.leases, ({ lease }) => lease),
+    config,
+    destination
+  );
   const info: PromotionTickInfo = { availableGib, capacityTokens, nowMillis, state };
   if (!selfMayAttempt(state, capacityTokens, nowMillis, config, ticket)) {
     return { admitted: O.none(), info, originBusy: hasLegacySameOriginOwner(state, ticket), scopeUnavailable: false };
@@ -2373,6 +2535,7 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
   | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
+  | MemoryStats
   | ChildProcessSpawner.ChildProcessSpawner
   | GateRequirements
   | Digest.Digest
@@ -2387,6 +2550,7 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
       );
       const releasedAtMillis = yield* Clock.currentTimeMillis;
       const telemetry = yield* readLeaseRunScopeTelemetry(admitted.lease);
+      const stamp = yield* stampReleasedPressure(directories, config, admitted.lease.nonce);
       yield* appendAdmissionJournalEvent(
         directories.root,
         AdmissionJournalReleasedV3.make({
@@ -2401,6 +2565,7 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
           unit: admitted.lease.unit,
           weightSource: admitted.lease.weightSource,
           owner: admitted.lease.owner,
+          pressure: stamp,
           ...OptionUtils.getSomesStruct({
             memoryPeakBytes: O.fromUndefinedOr(telemetry.memoryPeakBytes),
           }),
@@ -2464,13 +2629,31 @@ const workerProfileRefusal = (
   );
 };
 
-// The admission-unit fields a new ticket carries (SCHE-08). They are recorded
-// only while the protocol's units gate is on; with it off every ticket, lease
+// With the units gate off Cache work records the `review-fix` kind it borrowed
+// before, because no earlier reader counts `cache` correctly. A reader older than
+// SCHE-08 decodes a closed kind literal and quarantines a kind it does not know.
+// A slice 3 reader keeps the lease charged but leaves it out of its review-fix
+// class cap. So the gate goes on only once every live checkout runs slice 6.
+const preUnitAdmissionWorkKind = (kind: AdmissionWorkKind): AdmissionWorkKind =>
+  AdmissionWorkKind.is.cache(kind) ? AdmissionWorkKind.Enum["review-fix"] : kind;
+
+// The ticket fields the protocol's units gate decides (SCHE-08): the work kind
+// and the unit, weight source and owner. With the gate off every ticket, lease
 // and journal row keeps the pre-unit bytes. The lease and rows copy the ticket.
-const admissionUnitFieldsFor = (units: AdmissionUnitEmission, request: AdmissionRequest, owner: AdmissionOwner) =>
+const unitGatedTicketFieldsFor = (units: AdmissionUnitEmission, request: AdmissionRequest, owner: AdmissionOwner) =>
   AdmissionUnitEmission.match(units, {
-    off: () => ({ unit: O.none(), weightSource: O.none(), owner: O.none() }),
-    on: () => ({ unit: O.some(request.unit), weightSource: O.some(request.weightSource), owner: O.some(owner) }),
+    off: () => ({
+      kind: preUnitAdmissionWorkKind(request.kind),
+      unit: O.none(),
+      weightSource: O.none(),
+      owner: O.none(),
+    }),
+    on: () => ({
+      kind: request.kind,
+      unit: O.some(request.unit),
+      weightSource: O.some(request.weightSource),
+      owner: O.some(owner),
+    }),
   });
 
 const workerBypassLine = (request: AdmissionRequest): string =>
@@ -2677,7 +2860,6 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     schemaVersion: "yeet-admission-ticket/v1",
     pid: process.pid,
     procStart,
-    kind: admittedRequest.kind,
     weightTokens: admittedRequest.weightTokens,
     priority: admittedRequest.priority,
     originKey: admittedRequest.originKey,
@@ -2695,7 +2877,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     computeProfile: O.some(computeProfile.profile),
     stage: admittedRequest.stage,
     forceLocal: admittedRequest.forceLocal,
-    ...admissionUnitFieldsFor(protocol.units, admittedRequest, owner),
+    ...unitGatedTicketFieldsFor(protocol.units, admittedRequest, owner),
   });
   const ticketPath = path.join(directories.queue, `${ticket.nonce}-${ticket.pid}.ticket.json`);
   return yield* Effect.uninterruptibleMask((restore) =>
@@ -2847,13 +3029,13 @@ const snapshotAdmissionState = Effect.fnUntraced(function* (
   const persistedQuarantine = yield* fs
     .readDirectory(directories.quarantine)
     .pipe(Effect.map(A.map((name) => path.join(directories.quarantine, name))), Effect.orElseSucceed(A.empty<string>));
-  const capacityTokens =
-    stats.reservationCapacity === undefined
-      ? admissionCapacityTokensFor(availableGib, config)
-      : yield* stats.reservationCapacity(
-          A.map(state.leases, ({ lease }) => lease),
-          config
-        );
+  const capacityTokens = yield* capacityTokensFor(
+    stats,
+    availableGib,
+    A.map(state.leases, ({ lease }) => lease),
+    config,
+    O.none()
+  );
   return AdmissionSnapshot.make({
     capacityTokens,
     activeTokens: activeTokenTotal(state),
@@ -2988,3 +3170,54 @@ export const reapAdmissionState = Effect.fn("QualityScheduler.reapAdmissionState
     : A.empty<string>();
   return yield* snapshotAdmissionState(directories, AdmissionConfig.make({}), options.apply, retainedDeadLeasePaths);
 });
+
+/**
+ * Production {@link QualityScheduler} Layer over this module's scheduler.
+ *
+ * **Details**
+ *
+ * Each operation is the existing implementation: `admit` is
+ * {@link withQualityAdmission}, `observe` is {@link admissionStatus}, `reap` is
+ * {@link reapAdmissionState}, and the protocol, history, archive and route
+ * operations are their module functions. The Layer needs nothing; each
+ * operation reads its platform services and `MemoryStats` from the caller.
+ *
+ * **Example** (Admit work through the live scheduler)
+ *
+ * ```ts
+ * import { AdmissionRequest, noAdmissionOriginGate, QualityScheduler, QualitySchedulerLive } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ *
+ * const request = AdmissionRequest.make({
+ *   kind: "cache",
+ *   weightTokens: 1,
+ *   priority: "verify",
+ *   originKey: "",
+ *   checkoutRoot: "/repo",
+ *   branch: "",
+ *   command: "bun run beep cache pilot"
+ * })
+ * const admitted = QualityScheduler.use((scheduler) =>
+ *   scheduler.admit(request, noAdmissionOriginGate, Effect.succeed("ran"))
+ * ).pipe(Effect.provide(QualitySchedulerLive))
+ * console.log(Effect.isEffect(admitted)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const QualitySchedulerLive: Layer.Layer<QualityScheduler> = Layer.succeed(
+  QualityScheduler,
+  QualityScheduler.of({
+    admit: withQualityAdmission,
+    observe: admissionStatus,
+    reap: reapAdmissionState,
+    protocol: admissionProtocolStatus(),
+    setEvictionProtocol: setAdmissionEvictionProtocol,
+    setUnitProtocol: setAdmissionUnitProtocol,
+    setPressureProtocol: setAdmissionPressureProtocol,
+    history: admissionJournalHistory(),
+    archive: admissionJournalArchiveStatus(),
+    recordRoute: recordAdmissionRoute,
+  })
+);

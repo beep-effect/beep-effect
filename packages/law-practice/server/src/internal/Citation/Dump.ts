@@ -27,7 +27,7 @@ import {
   makeCitationPythonUnicode,
   normalizeCitationPythonSlice,
 } from "./PythonUnicode.ts";
-import { CitationRegexOperation } from "./RegexPolicy.ts";
+import { CitationRegexOperation, decodeCitationRegexPolicy } from "./RegexPolicy.ts";
 import type { CitationEngineLimits, CitationEngineOperation } from "@beep/law-practice-use-cases/server";
 import type { CitationInvocation } from "./Invocation.ts";
 
@@ -249,8 +249,10 @@ const renderFields = Effect.fn("Citation.dumpFields")(function* (
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationDump = Effect.fn("Citation.makeDump")(function* (policy: unknown, printability: unknown) {
-  const context = yield* makeCitationNativeRendering(policy, () => fail("invalid-policy"));
-  const { limits, timing, unicode } = context;
+  // A separately callable raw entry point: decode its policy here.
+  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
+  const context = yield* makeCitationNativeRendering(limits);
+  const { timing, unicode } = context;
   const table = yield* S.decodeUnknownEffect(S.String)(printability).pipe(
     Effect.mapError(() => fail("invalid-configuration"))
   );

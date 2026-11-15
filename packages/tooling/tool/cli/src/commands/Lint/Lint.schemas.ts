@@ -1685,18 +1685,24 @@ export const EffectVitestPrimitiveGraphPath = "standards/effect-vitest.primitive
 /**
  * Repository-relative path replaced by the authoritative D9 census mode.
  *
+ * **Details**
+ *
+ * The census is a local measurement under the gitignored `.beep/` root, not a
+ * committed artifact: no gate reads it, and every test edit changes its byte
+ * and line counts, so a committed copy drifted on every PR.
+ *
  * **Example** (Inspect the census target)
  *
  * ```ts
  * import { EffectVitestCensusPath } from "@beep/repo-cli/commands/Lint"
  *
- * console.log(EffectVitestCensusPath) // "standards/effect-vitest.census.json"
+ * console.log(EffectVitestCensusPath) // ".beep/effect-vitest/census.json"
  * ```
  *
  * @category configuration
  * @since 0.0.0
  */
-export const EffectVitestCensusPath = "standards/effect-vitest.census.json";
+export const EffectVitestCensusPath = ".beep/effect-vitest/census.json";
 
 const EffectVitestTestFilePath = S.String.check(
   S.isPattern(/\.(?:test|spec)\.(?:ts|tsx|js|jsx|mts|cts|mjs|cjs)$/u)

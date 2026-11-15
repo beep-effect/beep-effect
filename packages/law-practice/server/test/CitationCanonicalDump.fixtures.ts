@@ -1,13 +1,20 @@
 /** Original dump_citations workflow, eyecite 2.7.6 BSD-2-Clause.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { makeCitationBuiltinDump } from "@beep/law-practice-server/internal/Citation/BuiltinDump";
 import { copyCitationCleanerUnicode } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { CitationDumpFailure, makeCitationDump } from "@beep/law-practice-server/internal/Citation/Dump";
 import { CitationGeneratedReference } from "@beep/law-practice-server/internal/Citation/GeneratedReferences";
-import { makeCitationOccurrenceProjection } from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
+import {
+  CitationOccurrenceProjectionConfiguration,
+  makeCitationOccurrenceProjection as makeOwnedCitationOccurrenceProjection,
+} from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
-import { makeCitationSemanticExtraction } from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
+import {
+  CitationSemanticExtractionConfiguration,
+  makeCitationSemanticExtraction as makeOwnedCitationSemanticExtraction,
+} from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { expect } from "@effect/vitest";
@@ -21,12 +28,22 @@ import * as Str from "effect/String";
 import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtures.ts";
 import { readCitationCanonicalPlainExtraction } from "./CitationCanonicalCriteria.fixtures.ts";
 import { compareCitationCanonicalModel } from "./CitationCanonicalModel.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationNativeRenderingAsset } from "./CitationNativeRendering.fixtures.ts";
 import { assertCitationMentionRanges, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationSemanticExtraction = installCitationOwnedTestStage({
+  schema: CitationSemanticExtractionConfiguration,
+  install: makeOwnedCitationSemanticExtraction,
+});
+const makeCitationOccurrenceProjection = installCitationOwnedTestStage({
+  schema: CitationOccurrenceProjectionConfiguration,
+  install: makeOwnedCitationOccurrenceProjection,
+});
 
 const prefix = "tests.test_UtilsTest.UtilsTest.test_dump_citations::tests/test_UtilsTest.py:";
 const StringValue = S.Struct({ kind: S.tag("value"), value: S.String });

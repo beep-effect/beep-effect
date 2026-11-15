@@ -297,6 +297,32 @@ export const EnabledState = LiteralKit(["enabled", "disabled"]).pipe(
 export type EnabledState = typeof EnabledState.Type;
 
 /**
+ * What EC2 does when the instance shuts itself down from the guest OS.
+ *
+ * **Example** (Read the terminate literal)
+ *
+ * ```ts
+ * import { ShutdownBehavior } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate"
+ *
+ * console.log(ShutdownBehavior.Enum.terminate) // "terminate"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ShutdownBehavior = LiteralKit(["stop", "terminate"]).pipe(
+  $I.annoteSchema("ShutdownBehavior", { description: "Instance-initiated shutdown behavior of a launch template." })
+);
+
+/**
+ * Decoded {@link ShutdownBehavior}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ShutdownBehavior = typeof ShutdownBehavior.Type;
+
+/**
  * Whether IMDS requires session tokens (IMDSv2).
  *
  * **Example** (Read one literal)
@@ -487,6 +513,7 @@ export class RunnerLaunchTemplateProps extends S.Opaque<RunnerLaunchTemplateProp
     associatePublicIpAddress: S.optionalKey(S.Boolean),
     userData: S.optionalKey(S.String),
     ebsOptimized: S.optionalKey(S.Boolean),
+    instanceInitiatedShutdownBehavior: S.optionalKey(ShutdownBehavior),
     blockDeviceMappings: LaunchTemplateBlockDevice.pipe(S.Array, S.optionalKey),
     instanceMarketOptions: S.optionalKey(LaunchTemplateMarketOptions),
     metadataOptions: S.optionalKey(LaunchTemplateMetadataOptions),
@@ -763,6 +790,7 @@ export const toLaunchTemplateData = (props: RunnerLaunchTemplateProps.Encoded): 
   ...O.getSomesStruct({
     InstanceType: O.fromUndefinedOr(props.instanceType),
     EbsOptimized: O.fromUndefinedOr(props.ebsOptimized),
+    InstanceInitiatedShutdownBehavior: O.fromUndefinedOr(props.instanceInitiatedShutdownBehavior),
     UserData: O.map(O.fromUndefinedOr(props.userData), Base64.encode),
     BlockDeviceMappings: O.map(O.fromUndefinedOr(props.blockDeviceMappings), A.map(toBlockDevice)),
     InstanceMarketOptions: O.map(O.fromUndefinedOr(props.instanceMarketOptions), toMarketOptions),

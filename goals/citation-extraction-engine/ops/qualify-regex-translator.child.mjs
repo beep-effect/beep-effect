@@ -18,8 +18,7 @@ import { makeCitationRegexProgram } from "../../../packages/law-practice/server/
 import { makeCitationRegexResult } from "../../../packages/law-practice/server/src/internal/Citation/RegexResult.ts";
 import { makeCitationRegexTranslator } from "../../../packages/law-practice/server/src/internal/Citation/RegexTranslator.ts";
 import { makeCitationRegexEvaluation } from "../../../packages/law-practice/server/src/internal/Citation/RegexWorkerEvaluation.ts";
-import { CitationRegexWorkerJob } from "../../../packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts";
-import { CitationRegexWorkerStartup } from "../../../packages/law-practice/server/src/internal/Citation/RegexWorkerRpc.ts";
+import { CitationRegexPayload } from "../../../packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts";
 
 const option = process.argv[2];
 const translateOnly = option === "--translate-only";
@@ -38,7 +37,7 @@ assert.ok(
 );
 
 // The bundled Node subject receives the original trusted source location so
-// digest-bound fixtures and producer files resolve identically under both runtimes.
+// digest-bound fixtures resolve identically under both runtimes.
 const sourceLocation = new URL(process.argv[3] ?? import.meta.url);
 assert.equal(sourceLocation.protocol, "file:");
 const runtime = versions.bun ? "bun" : "node";
@@ -73,18 +72,11 @@ assert.deepEqual(
   inventory.extractorInstances.map((row) => row.id)
 );
 assert.equal(createHash("sha256").update(JSON.stringify(witnesses.cases)).digest("hex"), witnesses.vectorSha256);
-assert.equal(
-  createHash("sha256")
-    .update(readFileSync(new URL("./probe-regex-match-witnesses.py", sourceLocation)))
-    .digest("hex"),
-  witnesses.producerSha256
-);
-assert.equal(
-  createHash("sha256")
-    .update(readFileSync(new URL("./probe-regex-compatibility.py", sourceLocation)))
-    .digest("hex"),
-  witnesses.sourceReaderSha256
-);
+// The Python producer and source reader were removed with the repository's Python (goal
+// python-free-repo). Their digests stay pinned in the fixture as `producerSha256` and
+// `sourceReaderSha256`; recover them with
+// `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-regex-match-witnesses.py`
+// and `...:goals/citation-extraction-engine/ops/probe-regex-compatibility.py`.
 const witnessesById = new Map(witnesses.cases.map((row) => [row.id, row]));
 let phase = "setup";
 let instance = 0;
@@ -201,11 +193,13 @@ await Effect.runPromise(
         const preparedSource = yield* sourceInput.prepareUnicode({ width: 4, bytes: sourceBytes }, () => Effect.void);
         assert.equal(preparedSource.layout.pythonLength, witness.sourcePoints);
         assert.equal(preparedSource.layout.utf16Units, witness.sourceUtf16);
-        const evaluator = yield* makeCitationRegexEvaluation(
-          CitationRegexWorkerStartup.make({ limits, descriptor: bound.descriptor, engine: registry.engine })
-        );
+        const evaluator = yield* makeCitationRegexEvaluation({
+          limits,
+          descriptor: bound.descriptor,
+          engine: registry.engine,
+        });
         const body = yield* evaluator.evaluate(
-          CitationRegexWorkerJob.make({
+          CitationRegexPayload.make({
             mode: "finditer",
             patternWidth: native.width,
             patternBytes: native.bytes,
@@ -225,7 +219,7 @@ await Effect.runPromise(
           }
         }
         const emptyBody = yield* evaluator.evaluate(
-          CitationRegexWorkerJob.make({
+          CitationRegexPayload.make({
             mode: "finditer",
             patternWidth: native.width,
             patternBytes: native.bytes,

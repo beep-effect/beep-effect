@@ -114,7 +114,7 @@ Higher sources outrank lower sources when they conflict.
   on a change to the binary's closure (PERIH-11).
 - `.github/actions/fetch-beep-ci/action.yml`: the pin `beep-ci-d15ecf4ca610` (lines 20 and 21), unchanged since
   #2906 on 2026-11-07; bumped only by reviewed pin-bump PRs.
-- `standards/cache-qualification-baseline.json`: re-recorded in any slice that touches `turbo.json`, `bun.lock`
+- `standards/cache-baseline/`: re-recorded in any slice that touches `turbo.json`, `bun.lock`
   or a workflow file.
 - This packet (`goals/heavy-pool-diet/`).
 
@@ -122,18 +122,19 @@ No new workspace package is planned.
 
 ### Levers
 
-Status is from the live checkout at `origin/main` 25452087e73 for PERIH-11 and PERIH-01; the other rows were last
-re-verified at c90929b1ff1 (after the rebase from 6eb2e0588e2) and against the open PR heads named.
+Status is from the live checkout at `origin/main` b7d3c9d99a (2026-11-14) for PERIH-11 and 25452087e73 for PERIH-01;
+the other rows were last re-verified at c90929b1ff1 (after the rebase from 6eb2e0588e2) and against the open PR
+heads named.
 
 | Lever | What | Status | Admission gate before landing | Depends on |
 | --- | --- | --- | --- | --- |
 | LINT-01 | JSDoc inventory programs built with `noResolve` | Landed, #3019 (027664ba178): `JSDocDocumentationInventory.ts:1342`. Existing fixtures in `jsdoc-inventory-detector-fixes.test.ts`: star export (lines 388, 1084), local named re-export (line 842), overload groups (lines 643, 700, 762). Residual open (#3301): merged-namespace and module-augmentation fixtures plus a noResolve parity assertion over all five shapes; whole-repo byte parity minus `generatedAt` across 196 packages (`history/2026-11-13-lint-01-noresolve-parity.md`); one hosted JSDoc Ratchet timing pending; scorecard reading. | Inventory jsonc and md byte-identical minus `generatedAt` across 194 packages; fixtures for a local re-export, a star export, a merged namespace, an overload and a module augmentation of an imported package (three exist; the gate is unpaid for the other two and for parity); one hosted JSDoc Ratchet timing. | none |
 | LINT-05 | Drop the duplicate JSDoc inventory and ratchet from the hosted Lint Policy plan | Slice 5 (P1): the hosted plan reads `standards/branch-protection-contexts.json` (`Tasks.ts:3875` `readRequiredContexts`) and drops the pair from full scope (`fullScopeStateTasks`, `:3735`) and the changed-scope medium graph (`:4015`) while `JSDoc Ratchet` is required; plan test `quality-tasks.test.ts:5803`. Seeded-red proof on #3135: JSDoc Ratchet red on the seeded head, neither task in either Lint Policy log. Scorecard reading open. | A plan test shows the hosted plan omits both tasks only while JSDoc Ratchet is a required context; on a seeded-red draft PR, JSDoc Ratchet fails and the Lint Policy log shows neither task. | LINT-01; #3041 merged (same task lists) |
 | LINT-02 | Knowledge doctor abreast of medium; changed-scope state width derived from the remaining slots | Slice 1 landed in #3041 (e8c9a47971b); its hosted A/B is unpaid. Slice 2 open: `Tasks.ts:3727`, `:3970`. | Plan-shape test: doctor present in both scopes with unchanged argv, summed width at most `policyLint`, medium at least 2 for every profile; a red doctor fails the lane; hosted A/B of at least 10 runs per arm with p50 and p95 each at least 90 s better and memory.peak under 24 GB. | LINT-01, LINT-05 |
-| LINT-04 | PR C checker algorithms: P55, S4, P12/P11, P28, S2 | Landed, #3019 (027664ba178), all five families. Residual: the unpaid per-family gate items (S2 prefilter generated from the retired-host rows (#3019 ships a hand-written regex); P55 planted fixtures; S4 findings diff; P12/P11 814-assertion digest, diagnostics sha 44b7c59c9033de74 and aliased-assertion fixture; P28 census and WORKSPACE_MANIFEST_WALK re-key probe) and the scorecard reading. | Those per-family items (the #3019 commit message asserts byte-for-byte output but records none of them); per-file coverage floors hold. | LINT-01, LINT-05 (credit order only) |
+| LINT-04 | PR C checker algorithms: P55, S4, P12/P11, P28, S2 | Landed, #3019 (027664ba178), all five families. Residual gate items paid by slice 4b (history/2026-11-13-lint-04-parity-gates.md): S2 prefilter generated from the rows, P55 planted fixtures, S4 findings diff, P12/P11 aliased-assertion fixture and a bounded pre/post digest (the whole-repo pre-#3019 digest is not paid: the old scanner exceeds the 8 GiB cap), P28 census and WORKSPACE_MANIFEST_WALK re-key probe. Open: the whole-repo pre-#3019 P12/P11 digest (the old scanner needs a host with more than 21 GB free; #3019's 814 assertions and sha 44b7c59c9033de74 are unreproducible as recorded) and the scorecard reading | Those per-family items (the #3019 commit message asserts byte-for-byte output but records none of them); per-file coverage floors hold. | LINT-01, LINT-05 (credit order only) |
 | ORDER (D11) | Required heavy lanes (Check, Docgen, Doctest) first; Lint Policy `needs:` them with `if: !cancelled()` | Open: `heavy.yml` has no `needs:` on `verify`. | On the same heads, push-to-start of Check, Docgen and Doctest on the cap-2 pool is no slower and Lint Policy still runs and reports when Check is red; two-PR `heavy.yml@main` rollout. | none |
 | HOST-06 | Route skips, goals-only and Docgen decisions hoisted to job-level `if` before Spot boot | Open: decided in the lane-gate step, `heavy.yml:137` onward. | Route replay plus mutation fixtures (docs, goals, no-diff, unreadable base); hosted ruleset parity ledger (every required `Heavy / *` context still reports); two-PR `heavy.yml@main` rollout. | none (decision outputs computed in Heavy Admission) |
-| PERIH-11 | Closure-digest binary releases and reviewed pin-bump PRs (merges PERIH-08) | Slice 1 landed (PLAN slice 2): `beep ci binary-closure` digests the static import closure of `bin-ci.ts` plus its build inputs, and `beep-ci-binary.yml` compiles and publishes only when that digest differs from the latest `beep-ci-*` release's recorded digest (the path list stays as a prefilter). Open: slice 2 (PLAN slice 7), the reviewed pin-bump PR; the pin at `.github/actions/fetch-beep-ci/action.yml` line 20 is unchanged since #2906. | Closure mutation fixtures; the pin-bump PR proves itself through its own Check. | none |
+| PERIH-11 | Closure-digest binary releases and reviewed pin-bump PRs (merges PERIH-08) | Slice 1 landed (PLAN slice 2): `beep ci binary-closure` digests the static import closure of `bin-ci.ts` plus its build inputs, and `beep-ci-binary.yml` compiles and publishes only when that digest differs from the latest `beep-ci-*` release's recorded digest (the path list stays as a prefilter). Slice 2 (PLAN slice 7) landed (#3299): whenever main pins an older release than the newest `beep-ci-*` one, the release job opens or updates one reviewed pin-bump PR on `ci/beep-ci-pin-bump`, the pin rewritten by `beep ci binary-pin`. Read on main: the first pin-bump PR (#3326) passed its own Check and merged as 76238b4c11, and two later main pushes with an unchanged closure opened none (history/2026-11-14-perih-11-slice-2-after-the-bump.md). The next closure change after that merge opened a new PR (#3334), which passed its own Check and merged as b7d3c9d99a. | Closure mutation fixtures; the pin-bump PR proves itself through its own Check. | none |
 | PERIH-01 | Heavy Admission from the pinned CI binary with a closure-digest fallback; delete the dead coverage-rollout probe (absorbs DEPS-02 admission half) | Slice 1 (probe deletion) landed before COVE-08: probe, `legacy_integration`, the Test Integration name conditional and the LEGACY_COVERAGE env line and assertion removed; `legacy_coverage` set to 'false' for COVE-08 to delete. Open: the `admission` job's `Setup monorepo CI` step installs, admission not in `ciBootstrapCommands`. | Replay of recorded events (draft, label, fork, docs, push, error) through binary and source gives byte-identical `verdict`, `route_skips` and `route_receipt`; a closure-digest mismatch fixture forces the head-install fallback; slice 1 removes the probe, the `legacy_integration` output and its Test Integration name conditional, and the `LEGACY_COVERAGE` env line and assertion together, and sets `legacy_coverage` to 'false' if it lands before COVE-08 (COVE-08 then deletes it) or removes it outright if COVE-08 landed first. | PERIH-11, PERIH-10 (route-soundness-repair); slice 1 coordinates with COVE-08 |
 | HOST-08 | Queue-aware Test Unit leg-width A/B | Open; the Test Unit layout changed again in #3043 and #3046, so it is not yet at steady state. | Hosted A/B: push-to-Test-Unit p95 at most 9.5 min per run from lane timings, runner-minutes beside it, no queued-job growth at the ceiling. | MEAS-04 (certainty-scorecard), Test Unit steady state; ROUT-01 already met (landed in #3030; hosted-setup-tax) |
 
@@ -189,7 +190,7 @@ re-verified at c90929b1ff1 (after the rebase from 6eb2e0588e2) and against the o
   layout owned by `ci-lane-economics` is at steady state.
 - **Cache-policy baseline:** any PR touching `turbo.json`, `bun.lock`, root `package.json` or a workflow file
   freezes coverage floors at base, escalates to a full matrix and re-records
-  `standards/cache-qualification-baseline.json` in the same PR. Batch workflow edits to keep full-matrix runs few.
+  `standards/cache-baseline/` in the same PR. Batch workflow edits to keep full-matrix runs few.
 - **Workflow PR merges:** the orchestrator's App token cannot merge workflow PRs, so slices that edit
   `.github/workflows/` plan a merge by an identity that can.
 - **Rollback:** every workflow slice names a tested revert in its PR body (PLAN, "Missing from the plan").
@@ -223,6 +224,11 @@ lever lands, against its baseline window before the first one; superseded heads 
 - [ ] LINT-04 residual: the per-family gate items (S2 generated prefilter, P55 planted fixtures, S4 findings
       diff, P12/P11 digest, diagnostics sha and aliased-assertion fixture, P28 census and re-key probe) committed
       and green, with per-file coverage floors held.
+      Status (slice 4b, #3311): S2, P55, S4 and P28 paid. P12/P11 paid in part: the aliased-assertion fixture
+      (`lint-opaque-roundtrips.test.ts`) and a pre/post digest over four sampled packages (154 assertions,
+      identical). NOT paid, and this item stays open: the whole-repo pre-#3019 P12/P11 digest. The pre-change
+      checker reached 14 GiB after 47 minutes on the 31 GiB worker and was stopped. A run on a host with more
+      than 21 GB free pays it.
 - [ ] LINT-05 landed behind its gate: the plan test and the seeded-red draft PR evidence are recorded.
 - [ ] LINT-02 landed: #3041 (or its replacement) merged, slice 2 merged, and the hosted A/B (at least 10 runs per
       arm, p50 and p95 each at least 90 s better, memory.peak under 24 GB) recorded under `history/`.
@@ -230,7 +236,7 @@ lever lands, against its baseline window before the first one; superseded heads 
       seeded Check red still produces a Lint Policy verdict.
 - [ ] HOST-06 landed in two PRs with its route replay, mutation fixtures and ruleset parity ledger recorded; every
       required `Heavy / *` context still reports on docs, goals-only and code heads.
-- [ ] PERIH-11: binary releases trigger on a closure-digest change only, and a closure change opens a reviewed
+- [x] PERIH-11: binary releases trigger on a closure-digest change only, and a closure change opens a reviewed
       pin-bump PR that passes its own Check; closure mutation fixtures are committed.
 - [ ] PERIH-01: one PR removes the probe step, the `legacy_integration` output with its Test Integration name
       conditional, and the LEGACY_COVERAGE env line and assertion, and either removes `legacy_coverage`

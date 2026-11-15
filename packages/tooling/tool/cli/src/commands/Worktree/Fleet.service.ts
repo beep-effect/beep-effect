@@ -840,6 +840,53 @@ const worktreeMtimeReading = Effect.fn("Fleet.worktreeMtimeReading")(function* (
   return measuredSince(A.appendAll(rootMillis, treeMillis4), nowMillis);
 });
 
+/**
+ * Measure one checkout's non-process liveness readings the way the mirror scan does.
+ *
+ * **Details**
+ *
+ * Returns the transcript reading, the tree-mtime reading and the confirmed
+ * Claude session-registry count for `checkoutPath`. The process probe is left
+ * to the caller, so a consumer with its own process policy (residue reap's
+ * drain) can feed all four into {@link classifyFleetLiveness}.
+ *
+ * **Example** (Build the readings effect)
+ *
+ * ```ts
+ * import { checkoutLivenessReadings } from "@beep/repo-cli/commands/Worktree"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(Effect.isEffect(checkoutLivenessReadings("/p/beep-effect0", O.some("/home/me"), 0))) // true
+ * ```
+ *
+ * @param checkoutPath - Absolute checkout path.
+ * @param homeDir - Home directory holding `.claude`; `None` fails the transcript reading.
+ * @param nowMillis - Clock reading the ages are measured against.
+ * @returns The transcript and tree-mtime readings and the session-registry match count.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const checkoutLivenessReadings = Effect.fn("Fleet.checkoutLivenessReadings")(function* (
+  checkoutPath: string,
+  homeDir: O.Option<string>,
+  nowMillis: number
+): Effect.fn.Return<
+  {
+    readonly transcript: FleetProbeReading;
+    readonly worktreeMtime: FleetProbeReading;
+    readonly sessionMatches: number;
+  },
+  never,
+  FleetMirrorServiceRequirements
+> {
+  const transcript = yield* transcriptReading(homeDir, checkoutPath, nowMillis);
+  const worktreeMtime = yield* worktreeMtimeReading(checkoutPath, nowMillis);
+  const sessions = yield* scanSessionRegistry(homeDir, [checkoutPath]);
+  const sessionMatches = O.getOrElse(MutableHashMap.get(sessions, checkoutPath), () => 0);
+  return { transcript, worktreeMtime, sessionMatches };
+});
+
 const ensureScanner = Effect.fn("Fleet.ensureScanner")(function* (
   scannerDir: string,
   clones: ReadonlyArray<string>

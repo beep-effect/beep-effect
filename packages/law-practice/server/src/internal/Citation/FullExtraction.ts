@@ -1,6 +1,7 @@
 /** _extract_full_citation from eyecite 2.7.6 find.py, Free Law Project, BSD-2-Clause.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationTokenSeed } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
@@ -17,6 +18,7 @@ import {
   CitationCaseMetadataResult,
   makeCitationCaseMetadata,
 } from "./CaseMetadata.ts";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import {
   CitationTokenExtractionInput,
   normalizeCitationModelPage,
@@ -29,13 +31,13 @@ import {
   CitationLawMetadataPatch,
   makeCitationFullLawMetadata,
 } from "./LawMetadata.ts";
-import {
-  decodeCitationMetadataRuntimeConfiguration,
-  decodeCitationMetadataWordRequest,
-} from "./MetadataComposition.ts";
+import { decodeCitationMetadataWordRequest } from "./MetadataComposition.ts";
 import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { CitationTokenDispatchBindings, makeCitationTokenDispatch } from "./TokenDispatch.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationJournalMetadataPatch, CitationJournalMetadataResult } from "./JournalMetadata.ts";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/FullExtraction");
 const Reason = LiteralKit(["invalid-input", "invalid-configuration", "missing-edition", "not-full-citation"]).pipe(
@@ -218,26 +220,15 @@ export const makeCitationEmptyCaseMetadata = () =>
  * @internal @category constructors @since 0.0.0
  */
 export const makeCitationFullExtraction = Effect.fn("Citation.makeFullExtraction")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  config: CitationOwned<CitationFullExtractionConfiguration>
 ) {
-  const {
-    limits,
-    runtime,
-    configuration: config,
-  } = yield* decodeCitationMetadataRuntimeConfiguration(
-    policy,
-    runtimeInput,
-    configurationInput,
-    S.toType(CitationFullExtractionConfiguration),
-    () => fail("invalid-configuration")
-  );
   const refs = HashMap.fromIterable(A.map(config.editions, (row) => Tuple.make(row.id, row.ref)));
   const dispatch = yield* makeCitationTokenDispatch(limits, config.editions);
-  const cases = yield* makeCitationCaseMetadata(limits, runtime, config.case);
-  const laws = yield* makeCitationFullLawMetadata(limits, runtime, config.law);
-  const journals = yield* makeCitationJournalMetadata(limits, runtime, config.journal);
+  const cases = yield* makeCitationCaseMetadata(limits, runtime, ownedField(config, "case"));
+  const laws = yield* makeCitationFullLawMetadata(limits, runtime, ownedField(config, "law"));
+  const journals = yield* makeCitationJournalMetadata(limits, runtime, ownedField(config, "journal"));
   const timing = yield* makeCitationRegexTiming(limits, true);
   const resolve = Effect.fn("Citation.fullExtractionEditions")((ids: ReadonlyArray<number>) =>
     Effect.forEach(ids, (id) => Effect.fromOption(HashMap.get(refs, id), () => fail("missing-edition")), {

@@ -36,13 +36,14 @@ const program = Effect.gen(function* () {
         );
   const text = yield* Effect.tryPromise(() => Bun.file(path).text());
   const report = yield* S.decodeUnknownEffect(S.fromJsonString(CitationTypescriptDonors))(text);
-  for (const [file, expected] of [
-    ["export-typescript-donors.py", report.exporterSha256],
-    ["inventory-typescript-donors.mjs", report.staticExporterSha256],
-  ]) {
-    const bytes = yield* Effect.tryPromise(() => Bun.file(new URL(`./${file}`, import.meta.url)).bytes());
-    if (hash(bytes) !== expected) return yield* reject("donor generator hash mismatch");
-  }
+  // export-typescript-donors.py was removed with the repository's Python (goal python-free-repo). Its
+  // digest is pinned from the recovery commit: `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/export-typescript-donors.py`.
+  if (report.exporterSha256 !== "2a4abe359277555f6379504ab2f859e0fc5f8b77f9ccd2618cd034c54e6caa86")
+    return yield* reject("donor generator hash mismatch");
+  const staticExporter = yield* Effect.tryPromise(() =>
+    Bun.file(new URL("./inventory-typescript-donors.mjs", import.meta.url)).bytes()
+  );
+  if (hash(staticExporter) !== report.staticExporterSha256) return yield* reject("donor generator hash mismatch");
   if (
     !sameIds(
       A.map(report.donors, (donor) => donor.id),

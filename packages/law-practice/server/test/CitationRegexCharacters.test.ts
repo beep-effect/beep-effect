@@ -87,13 +87,9 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("frozen tokenizer rege
       expect(citationResult1).toBe("9dec7f6a29162fd6b479cf083546bf07655c23437a362f034d4ff72a1adb59c0");
       const facts = yield* S.decodeEffect(Facts)(raw);
       expect(citationPythonRegexData).toEqual({ unicodeVersion: "14.0.0", ...facts.classBodies });
-      const producer = yield* fs.readFile(
-        NodeURL.fileURLToPath(
-          new URL("../../../../goals/citation-extraction-engine/ops/probe-regex-characters.py", import.meta.url)
-        )
-      );
-      const citationResult2 = yield* S.decodeEffect(Sha256HexFromBytes)(producer);
-      expect(citationResult2).toBe(facts.producerSha256);
+      // The Python producer was removed with the repository's Python (goal python-free-repo). Its
+      // digest stays pinned as `producerSha256`; recover the exact producer with
+      // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-regex-characters.py`.
       for (const [name, body] of R.toEntries(facts.classBodies)) {
         const observed = facts.observations[name];
         const intervals = facts.intervals[name];
@@ -146,16 +142,10 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("frozen tokenizer rege
         SUBPATTERN: 67814,
         "SUBPATTERN/flags/0/0": 67814,
       });
-      for (const [file, digest] of [
-        ["probe-regex-program.py", facts.producerSha256],
-        ["probe-regex-compatibility.py", facts.sourceReaderSha256],
-      ]) {
-        const bytes = yield* fs.readFile(
-          NodeURL.fileURLToPath(new URL(`../../../../goals/citation-extraction-engine/ops/${file}`, import.meta.url))
-        );
-        const citationResult4 = yield* S.decodeEffect(Sha256HexFromBytes)(bytes);
-        expect(citationResult4).toBe(digest);
-      }
+      // The Python producer and source reader were removed with the repository's Python (goal
+      // python-free-repo). Their digests stay pinned as `producerSha256` and `sourceReaderSha256`;
+      // recover them with `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/<file>`
+      // for probe-regex-program.py and probe-regex-compatibility.py.
     })
   );
 });

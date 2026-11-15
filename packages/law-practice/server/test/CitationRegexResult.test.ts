@@ -325,7 +325,6 @@ it.effect("rejects malformed result context and per-call ceilings before decodin
   Effect.gen(function* () {
     const policy = yield* defaultCitationEnginePolicy;
     for (const operation of [
-      makeCitationRegexResult(null, 0, 1),
       makeCitationRegexResult(policy.limits, -1, 1),
       makeCitationRegexResult(policy.limits, 0, 0.5),
     ]) {

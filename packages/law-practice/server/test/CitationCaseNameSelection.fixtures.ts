@@ -1,8 +1,12 @@
 /** Actual original caller decisions through shared HTML/plain operation ownership.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { makeCitationCaseNameSelection } from "@beep/law-practice-server/internal/Citation/CaseNameSelection";
+import {
+  CitationCaseNameSelectionConfiguration,
+  makeCitationCaseNameSelection as makeOwnedCitationCaseNameSelection,
+} from "@beep/law-practice-server/internal/Citation/CaseNameSelection";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -11,6 +15,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { readCitationCaseNameCorpus } from "./CitationCaseName.fixtures.ts";
 import { assertCitationCaseNamePatch, CitationCaseNameSnapshot } from "./CitationCaseNameProcess.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { readCitationHtmlCaseNameCorpus } from "./CitationHtmlCaseName.fixtures.ts";
 import {
   installCitationHtmlGeometryFixture,
@@ -25,6 +30,11 @@ import {
 import { CitationCaseNameDocument } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationCaseNameSelection = installCitationOwnedTestStage({
+  schema: CitationCaseNameSelectionConfiguration,
+  install: makeOwnedCitationCaseNameSelection,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationCaseNameSelection");
 const Snapshot = S.Struct({
@@ -112,7 +122,7 @@ const assertRow = Effect.fn("CaseNameSelectionTest.row")(function* (
   ]);
   expect(result.usedHtml).toBe(A.contains(row.trace, "html"));
   expect(result.usedPlain).toBe(A.contains(row.trace, "plain"));
-  return row.regexCalls.length + (row.hasMarkup ? 4 : 0);
+  return (row.regexCalls.length > 0 ? 1 : 0) + (row.hasMarkup ? 4 : 0);
 });
 /** Empty assignments and retained empty fields suppress fallback; plain-only calls still scan. */
 export const replayCitationCaseNameSelection = Effect.fn("CaseNameSelectionTest.replay")(function* (

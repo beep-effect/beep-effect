@@ -115,10 +115,11 @@ export const citationNativeRpcFailure =
 export const makeCitationNativeRpcTransport = Effect.fn("Citation.makeNativeRpcTransport")(function* <E>(
   child: Pick<ChildProcessHandle, "stdin">,
   frame: Uint8Array,
-  failed: () => E
+  failed: () => E,
+  sequence = 0
 ) {
   const sent = yield* Deferred.make<void>();
-  const requestId = RpcMessage.RequestId(0);
+  const requestId = RpcMessage.RequestId(sequence);
   const options = {
     supportsAck: false,
     spanPrefix: "Citation.native",

@@ -463,9 +463,9 @@ jobs:
           test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           diagnostic="${SOURCE_REPORT%/report.json}/dependencies.json"
           printf 'report=%s\n' "$diagnostic" >> "$GITHUB_OUTPUT"
-          # The helper enforces 4 MiB for source plus diagnostics together,
+          # The command enforces 4 MiB for source plus diagnostics together,
           # two streaming passes / 300 seconds, and never executes task bodies.
-          /usr/bin/python3 -I -S goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py \
+          bun --no-env-file run beep cache producer-diagnose \
             --source-report "$SOURCE_REPORT" --output "$diagnostic" --revision "$GITHUB_SHA"
 
       - name: Bound inspection artifact publication
@@ -479,7 +479,7 @@ jobs:
           set -euo pipefail
           # Metadata only: never read payloads or repeat an archive pass.
           # A refusal still selects any report that fits the combined cap.
-          /usr/bin/python3 -I -S goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py \
+          bun --no-env-file run beep cache producer-diagnose \
             --publication-only --source-report "$SOURCE_REPORT" --output "$DIAGNOSTIC_REPORT" \
             --revision "$GITHUB_SHA" >> "$GITHUB_OUTPUT"
 
@@ -594,16 +594,38 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 -m venv "$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools"
-          "$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools/bin/python" -m pip install \
-            --disable-pip-version-check --no-cache-dir --only-binary=:all: --require-hashes \
-            -r infra/r2-cache/policy-build-requirements.txt
-          # ziglang distributes the binary inside its module, without a PATH entry.
-          zig_binary="$("$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools/bin/python" -c \
-            'import pathlib,ziglang; print(pathlib.Path(ziglang.__file__).parent/"zig")')"
-          ln -s "$zig_binary" "$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools/bin/zig"
-          test "$("$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools/bin/zig" version)" = "0.14.1"
-          test "$("$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools/bin/cargo-zigbuild" --version)" = "cargo-zigbuild 0.20.1"
+          # The official Zig release tarball and the reviewed cargo-zigbuild wheel, each
+          # pinned (URL, sha256, version) in infra/r2-cache/policy-build-tools.txt and
+          # verified against its sha256 before extraction. No Python interpreter is involved.
+          pins=infra/r2-cache/policy-build-tools.txt
+          pin() {
+            local value
+            value="$(sed -n "s/^$1=//p" "$pins")"
+            [[ -n "$value" && "$value" != *$'\n'* ]] || { echo "::error::Missing or repeated pin $1 in $pins" >&2; exit 1; }
+            printf '%s' "$value"
+          }
+          zig_version="$(pin ZIG_VERSION)"
+          zig_url="$(pin ZIG_URL)"
+          zig_sha256="$(pin ZIG_SHA256)"
+          zigbuild_version="$(pin CARGO_ZIGBUILD_VERSION)"
+          zigbuild_url="$(pin CARGO_ZIGBUILD_URL)"
+          zigbuild_sha256="$(pin CARGO_ZIGBUILD_SHA256)"
+          tools="$BEEP_CACHE_PRODUCER_BUILD_ROOT/tools"
+          mkdir -p "$tools/bin" "$tools/zig" "$tools/downloads"
+          fetch() { curl --fail --silent --show-error --location --retry 3 --max-time 300 --output "$tools/downloads/$1" "$2"; }
+          fetch zig.tar.xz "$zig_url"
+          fetch cargo-zigbuild.whl "$zigbuild_url"
+          printf '%s  %s\n' \
+            "$zig_sha256" "$tools/downloads/zig.tar.xz" \
+            "$zigbuild_sha256" "$tools/downloads/cargo-zigbuild.whl" |
+            sha256sum --check --strict --quiet
+          tar -xJf "$tools/downloads/zig.tar.xz" -C "$tools/zig" --strip-components=1 --no-same-owner
+          unzip -q -j "$tools/downloads/cargo-zigbuild.whl" "cargo_zigbuild-$zigbuild_version.data/scripts/cargo-zigbuild" -d "$tools/bin"
+          chmod 0755 "$tools/bin/cargo-zigbuild"
+          ln -s "$tools/zig/zig" "$tools/bin/zig"
+          rm -rf -- "$tools/downloads"
+          test "$("$tools/bin/zig" version)" = "$zig_version"
+          test "$("$tools/bin/cargo-zigbuild" --version)" = "cargo-zigbuild $zigbuild_version"
           printf '%s/tools/bin\n' "$BEEP_CACHE_PRODUCER_BUILD_ROOT" >> "$GITHUB_PATH"
 
       - name: Build pinned portable candidate
@@ -623,62 +645,66 @@ jobs:
             echo "::error::Candidate still needs a host ELF interpreter."
             exit 1
           fi
-          python3 - <<'PY'
-          import hashlib,json,os,pathlib,shutil,struct,subprocess
-          root=pathlib.Path(os.environ['BEEP_CACHE_PRODUCER_BUILD_ROOT'])
-          candidate=pathlib.Path(os.environ['CARGO_TARGET_DIR'])/'x86_64-unknown-linux-musl/release/decay'
-          size=candidate.stat().st_size
-          if not 0<size<=16*1024*1024:
-              raise SystemExit('Candidate exceeds the sixteen-MiB artifact bound.')
-          with candidate.open('rb') as handle:
-              header=handle.read(64)
-          if len(header)!=64 or header[:6]!=b'\x7fELF\x02\x01' or struct.unpack_from('<H',header,18)[0]!=62:
-              raise SystemExit('Candidate is not a little-endian ELF64 x86-64 executable.')
-          artifact=root/'artifact'
-          binary=artifact/'decay'
-          shutil.copyfile(candidate,binary)
-          binary.chmod(0o500)
-          pins=json.loads(pathlib.Path('infra/r2-cache/patches/4.0.20-signed-policy.json').read_text())
-          inputs=['infra/r2-cache/policy.sh','infra/r2-cache/policy-build-requirements.txt',
-                  'infra/r2-cache/patches/4.0.20-signed-policy.patch',
-                  'infra/r2-cache/patches/4.0.20-signed-policy.json']
-          def executable_digest(path):
-              executable=pathlib.Path(path).resolve(strict=True)
-              digest=hashlib.sha256()
-              with executable.open('rb') as handle:
-                  for block in iter(lambda:handle.read(1024*1024),b''):
-                      digest.update(block)
-              return {'sha256':digest.hexdigest(),'bytes':executable.stat().st_size}
-          tool_paths={
-              'rustc':subprocess.check_output(['rustup','which','rustc'],text=True).strip(),
-              'cargoZigbuild':shutil.which('cargo-zigbuild'),
-              'zig':shutil.which('zig'),
-              'hostCc':shutil.which('cc'),
-              'hostLinker':shutil.which('ld'),
-              'readelf':shutil.which('readelf')
-          }
-          report={
-              'schemaVersion':'cache-producer-adapter-build/v1',
-              'authority':'Candidate build only; independent approval and runtime qualification are required.',
-              'repository':os.environ['GITHUB_REPOSITORY'],
-              'sourceCommit':os.environ['GITHUB_SHA'],
-              'workflowRef':os.environ['GITHUB_WORKFLOW_REF'],
-              'workflowCommit':os.environ['GITHUB_WORKFLOW_SHA'],
-              'runId':os.environ['GITHUB_RUN_ID'],'runAttempt':os.environ['GITHUB_RUN_ATTEMPT'],
-              'upstreamCommit':pins['upstreamCommit'],'patchSha256':pins['patchSha256'],
-              'target':'x86_64-unknown-linux-musl',
-              'binary':{'file':'decay','bytes':size,'sha256':hashlib.sha256(binary.read_bytes()).hexdigest()},
-              'sourceInputs':{p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in inputs},
-              'toolExecutables':{name:executable_digest(path) for name,path in tool_paths.items()},
-              'tools':{name:subprocess.check_output(args,text=True).strip() for name,args in [
-                  ('rustc',['rustc','-vV']),('cargoZigbuild',['cargo-zigbuild','--version']),('zig',['zig','version']),
-                  ('hostCc',['cc','--version']),('hostLinker',['ld','--version']),('readelf',['readelf','--version'])]}
-          }
-          encoded=(json.dumps(report,indent=2)+'\n').encode()
-          if len(encoded)>64*1024 or size+len(encoded)>16*1024*1024:
-              raise SystemExit('Candidate manifest or complete artifact exceeds its bound.')
-          (artifact/'build.json').write_bytes(encoded)
-          PY
+          shopt -s inherit_errexit
+          fail() { echo "$1" >&2; exit 1; }
+          sha() { local line; line="$(sha256sum -- "$1")"; printf '%s' "${line%% *}"; }
+          root="$BEEP_CACHE_PRODUCER_BUILD_ROOT"
+          size="$(stat -L -c %s -- "$candidate")"
+          (( size > 0 && size <= 16*1024*1024 )) || fail 'Candidate exceeds the sixteen-MiB artifact bound.'
+          # ELF64 little-endian magic, then e_machine 62 (x86-64) at byte 18.
+          header="$(head -c 20 -- "$candidate" | od -An -v -tx1 | tr -d ' \n')"
+          if (( size < 64 )) || [[ "$header" != 7f454c460201* || "${header:36:4}" != 3e00 ]]; then
+            fail 'Candidate is not a little-endian ELF64 x86-64 executable.'
+          fi
+          binary="$root/artifact/decay"
+          cp -- "$candidate" "$binary"
+          chmod 0500 "$binary"
+          # Every value is captured by its own assignment, so any failing command fails the step.
+          inputs='{}'
+          for input in infra/r2-cache/policy.sh infra/r2-cache/policy-build-tools.txt \
+            infra/r2-cache/patches/4.0.20-signed-policy.patch infra/r2-cache/patches/4.0.20-signed-policy.json; do
+            digest="$(sha "$input")"
+            inputs="$(jq -c --arg path "$input" --arg sha256 "$digest" '. + {($path): $sha256}' <<< "$inputs")"
+          done
+          # Tool paths resolve like shutil.which, then through symlinks to the executable file.
+          rustc_path="$(rustup which rustc)"
+          executables='{}'
+          versions='{}'
+          for tool in "rustc:$rustc_path:rustc -vV" "cargoZigbuild:cargo-zigbuild:cargo-zigbuild --version" \
+            "zig:zig:zig version" "hostCc:cc:cc --version" "hostLinker:ld:ld --version" "readelf:readelf:readelf --version"; do
+            IFS=: read -r name program version_command <<< "$tool"
+            found="$(command -v "$program")"
+            resolved="$(readlink -e -- "$found")"
+            digest="$(sha "$resolved")"
+            bytes="$(stat -c %s -- "$resolved")"
+            read -r -a version_argv <<< "$version_command"
+            version="$("${version_argv[@]}")"
+            executables="$(jq -c --arg name "$name" --arg sha256 "$digest" --argjson bytes "$bytes" \
+              '. + {($name): {sha256: $sha256, bytes: $bytes}}' <<< "$executables")"
+            versions="$(jq -c --arg name "$name" --arg version "$version" \
+              '. + {($name): ($version | sub("\\A\\s+"; "") | sub("\\s+\\z"; ""))}' <<< "$versions")"
+          done
+          binary_sha256="$(sha "$binary")"
+          jq -n -a --arg repository "$GITHUB_REPOSITORY" --arg sourceCommit "$GITHUB_SHA" \
+            --arg workflowRef "$GITHUB_WORKFLOW_REF" --arg workflowCommit "$GITHUB_WORKFLOW_SHA" \
+            --arg runId "$GITHUB_RUN_ID" --arg runAttempt "$GITHUB_RUN_ATTEMPT" \
+            --slurpfile pins infra/r2-cache/patches/4.0.20-signed-policy.json \
+            --argjson size "$size" --arg binarySha256 "$binary_sha256" --argjson sourceInputs "$inputs" \
+            --argjson toolExecutables "$executables" --argjson tools "$versions" '
+            $pins[0] as $pin | if ($pin | has("upstreamCommit") and has("patchSha256")) then . else error("missing pins") end |
+            {schemaVersion: "cache-producer-adapter-build/v1",
+             authority: "Candidate build only; independent approval and runtime qualification are required.",
+             repository: $repository, sourceCommit: $sourceCommit, workflowRef: $workflowRef,
+             workflowCommit: $workflowCommit, runId: $runId, runAttempt: $runAttempt,
+             upstreamCommit: $pin.upstreamCommit, patchSha256: $pin.patchSha256,
+             target: "x86_64-unknown-linux-musl",
+             binary: {file: "decay", bytes: $size, sha256: $binarySha256},
+             sourceInputs: $sourceInputs, toolExecutables: $toolExecutables, tools: $tools}' > "$root/build.json"
+          manifest="$(stat -c %s -- "$root/build.json")"
+          if (( manifest > 64*1024 || size + manifest > 16*1024*1024 )); then
+            fail 'Candidate manifest or complete artifact exceeds its bound.'
+          fi
+          mv -- "$root/build.json" "$root/artifact/build.json"
           git diff --quiet HEAD
 
       - name: Retain candidate for at most one day
@@ -796,29 +822,38 @@ jobs:
           EXPECTED_ADAPTER_SHA256: ${{ steps.selection.outputs.sha256 }}
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import hashlib,json,os,pathlib,stat
-          root=pathlib.Path(os.environ['BEEP_CACHE_PRODUCER_PRIVATE_ROOT'])/'adapter'
-          files=list(root.iterdir())
-          if {p.name for p in files}!={'decay','build.json'} or len(files)!=2:
-              raise SystemExit('Candidate must contain exactly the approved executable and manifest.')
-          if any(not stat.S_ISREG(p.lstat().st_mode) for p in files):
-              raise SystemExit('Candidate members must be regular files.')
-          binary=root/'decay';manifest=root/'build.json'
-          if not 0<binary.stat().st_size<=16*1024*1024 or manifest.stat().st_size>64*1024 or sum(p.stat().st_size for p in files)>16*1024*1024:
-              raise SystemExit('Candidate exceeds its reviewed artifact bounds.')
-          digest=hashlib.sha256(binary.read_bytes()).hexdigest()
-          if digest!=os.environ['EXPECTED_ADAPTER_SHA256']:
-              raise SystemExit('Candidate differs from independent executable selection.')
-          report=json.loads(manifest.read_text())
-          if report['binary']!={'file':'decay','bytes':binary.stat().st_size,'sha256':digest}:
-              raise SystemExit('Candidate manifest does not describe the selected executable.')
-          inputs=['infra/r2-cache/policy.sh','infra/r2-cache/policy-build-requirements.txt',
-                  'infra/r2-cache/patches/4.0.20-signed-policy.patch','infra/r2-cache/patches/4.0.20-signed-policy.json']
-          if report['sourceInputs']!={p:hashlib.sha256(pathlib.Path(p).read_bytes()).hexdigest() for p in inputs}:
-              raise SystemExit('Candidate source inputs differ from the approved checkout.')
-          binary.chmod(0o500)
-          PY
+          shopt -s inherit_errexit
+          fail() { echo "$1" >&2; exit 1; }
+          sha() { local line; line="$(sha256sum -- "$1")"; printf '%s' "${line%% *}"; }
+          root="$BEEP_CACHE_PRODUCER_PRIVATE_ROOT/adapter"
+          mapfile -d '' members < <(find "$root" -mindepth 1 -maxdepth 1 -printf '%f\0' | LC_ALL=C sort -z)
+          if [[ "${#members[@]}" -ne 2 || "${members[0]}" != build.json || "${members[1]}" != decay ]]; then
+            fail 'Candidate must contain exactly the approved executable and manifest.'
+          fi
+          special="$(find "$root" -mindepth 1 -maxdepth 1 ! -type f -printf x)"
+          [[ -z "$special" ]] || fail 'Candidate members must be regular files.'
+          binary="$root/decay"
+          manifest="$root/build.json"
+          binary_bytes="$(stat -c %s -- "$binary")"
+          manifest_bytes="$(stat -c %s -- "$manifest")"
+          if (( binary_bytes <= 0 || binary_bytes > 16*1024*1024 || manifest_bytes > 64*1024 ||
+                binary_bytes + manifest_bytes > 16*1024*1024 )); then
+            fail 'Candidate exceeds its reviewed artifact bounds.'
+          fi
+          digest="$(sha "$binary")"
+          [[ "$digest" == "$EXPECTED_ADAPTER_SHA256" ]] || fail 'Candidate differs from independent executable selection.'
+          jq -e --arg sha256 "$digest" --argjson bytes "$binary_bytes" \
+            '.binary == {file: "decay", bytes: $bytes, sha256: $sha256}' "$manifest" > /dev/null ||
+            fail 'Candidate manifest does not describe the selected executable.'
+          inputs='{}'
+          for input in infra/r2-cache/policy.sh infra/r2-cache/policy-build-tools.txt \
+            infra/r2-cache/patches/4.0.20-signed-policy.patch infra/r2-cache/patches/4.0.20-signed-policy.json; do
+            input_sha256="$(sha "$input")"
+            inputs="$(jq -c --arg path "$input" --arg sha256 "$input_sha256" '. + {($path): $sha256}' <<< "$inputs")"
+          done
+          jq -e --argjson expected "$inputs" '.sourceInputs == $expected' "$manifest" > /dev/null ||
+            fail 'Candidate source inputs differ from the approved checkout.'
+          chmod 0500 "$binary"
 
       - name: Prepare fixed full-pilot inputs without credentials
         id: inputs
@@ -863,13 +898,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 - <<'PY'
-          import os,pathlib,stat
-          folder=pathlib.Path(os.environ['BEEP_CACHE_PRODUCER_PRIVATE_ROOT'])/'publication'
-          files=list(folder.iterdir())
-          if len(files)!=1 or files[0].name!='cache-producer.json' or not stat.S_ISREG(files[0].lstat().st_mode) or not 0<files[0].stat().st_size<=64*1024:
-              raise SystemExit('Only the bounded producer digest report may be published.')
-          PY
+          folder="$BEEP_CACHE_PRODUCER_PRIVATE_ROOT/publication"
+          report="$folder/cache-producer.json"
+          mapfile -d '' members < <(find "$folder" -mindepth 1 -maxdepth 1 -printf '%f\0')
+          size=0
+          if [[ "${#members[@]}" -eq 1 && "${members[0]}" == cache-producer.json && ! -L "$report" && -f "$report" ]]; then
+            size="$(stat -c %s -- "$report")"
+          fi
+          if (( size <= 0 || size > 64*1024 )); then
+            echo 'Only the bounded producer digest report may be published.' >&2
+            exit 1
+          fi
 
       - name: Retain only digest publication for one day
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

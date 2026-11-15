@@ -10,6 +10,7 @@ import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { GitObjectId } from "@beep/schema/Conformance";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
+import { ResidueDrainAssessment, ResidueDrainDisk } from "./ResidueReapDrain.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Worktree/internal/ResidueReap.schemas");
 const ResidueTerminalState = LiteralKit([
@@ -27,6 +28,12 @@ const ResidueArchivePhase = LiteralKit(["intent", "moved", "restored", "fenced-l
 
 /**
  * Home-residue families owned by the janitor's closed policy.
+ *
+ * **Details**
+ *
+ * `drainable` is the one fleet-level class: whole clones and linked
+ * worktrees that meet the drain predicate. It is assessed only by `--fleet`
+ * runs and removes only when a run names it explicitly.
  *
  * **Example** (Recognize a cleanup class)
  *
@@ -55,6 +62,7 @@ export const ResidueReapClass = LiteralKit([
   "checkout-ledgers",
   "checkout-pids",
   "checkout-material",
+  "drainable",
 ]).pipe(
   $I.annoteSchema("ResidueReapClass", {
     description: "Home-residue family recognized by the janitor's closed discovery policy.",
@@ -112,6 +120,13 @@ export type ResidueReapAction = typeof ResidueReapAction.Type;
  * journals could not be filed in the workstation attempt-journal store,
  * including journals whose clone names no store partition.
  *
+ * The `drain-*` reasons belong to the `drainable` class: `drain-blocked`
+ * (a drain check failed or could not be read; the candidate's `drain.checks`
+ * name which), `drain-grace` (the predicate holds but its grace window has not
+ * elapsed), `drain-opt-in` (eligible, but the applying run did not name
+ * `drainable` in its classes) and `drain-bundle-failed` (local-only work could
+ * not be bundled and verified, so the checkout was kept).
+ *
  * **Example** (Recognize a liveness refusal)
  *
  * ```ts
@@ -148,6 +163,10 @@ export const ResidueReapSkipReason = LiteralKit([
   "draft-unresolved",
   "checkout-recent-write",
   "journal-export-failed",
+  "drain-blocked",
+  "drain-grace",
+  "drain-opt-in",
+  "drain-bundle-failed",
 ]).pipe(
   $I.annoteSchema("ResidueReapSkipReason", {
     description: "Precise missing or negative safety evidence that prevented residue removal.",
@@ -341,6 +360,7 @@ export type ResidueReapHomeRoot = typeof ResidueReapHomeRoot.Type;
  * `embeddedCheckouts` names the git checkouts the census found inside a
  * directory removal, the set its clean-tree gate checked; their Yeet attempt
  * journals are filed in the workstation store before the directory is removed.
+ * `drain` carries a `drainable` candidate's per-check assessment.
  *
  * **Example** (Describe an eligible session file)
  *
@@ -379,6 +399,7 @@ export class ResidueReapCandidate extends S.Opaque<ResidueReapCandidate, { reado
     retentionReason: S.optionalKey(S.String),
     bytesExclusive: S.optionalKey(ResidueReapByteCap),
     embeddedCheckouts: S.String.pipe(S.Array, S.optionalKey),
+    drain: S.optionalKey(ResidueDrainAssessment),
   }).pipe(
     $I.annoteSchema("ResidueReapCandidate", {
       description: "One home-residue candidate with age, census, action, and fail-closed skip evidence.",
@@ -394,6 +415,11 @@ export class ResidueReapCandidate extends S.Opaque<ResidueReapCandidate, { reado
  * Version 3 adds persisted archive runs, ownership and terminal-state metadata,
  * recovery destinations, and checkout retention classes. Earlier version
  * decoders reject the new tag instead of treating archive moves as deletions.
+ *
+ * Fleet runs that assess `drainable` add `drainGraceDays`; a run that names
+ * `drainable` explicitly adds `drainDiskBefore` and, when applied,
+ * `drainDiskAfter`: the apparent bytes across registered legacy clones on
+ * either side of the wave.
  *
  * **Example** (Construct an empty dry-run report)
  *
@@ -450,6 +476,9 @@ export class ResidueReapReport extends S.Opaque<ResidueReapReport, { readonly br
     reapedCount: S.Int,
     reclaimedBytes: S.Finite,
     warnings: S.Array(S.String),
+    drainGraceDays: S.optionalKey(ResidueReapAgeDays),
+    drainDiskBefore: S.optionalKey(ResidueDrainDisk),
+    drainDiskAfter: S.optionalKey(ResidueDrainDisk),
   }).pipe(
     $I.annoteSchema("ResidueReapReport", {
       description: "Versioned report for a dry-run or applied home-residue cleanup pass.",

@@ -30,21 +30,6 @@ const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimit
 });
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("annotation entry refusals", (it) => {
-  it.effect("refuses an installation configuration outside the entry schema", () =>
-    Effect.gen(function* () {
-      const setup = yield* installCitationAnnotationEntryFixture();
-      const failure = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, {}).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-            Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
-          )
-        ),
-        Effect.provideContext(setup.provided),
-        Effect.flip
-      );
-      deepStrictEqual(refusal(failure), { _tag: "CitationAnnotationEntryFailure", detail: "invalid-configuration" });
-    })
-  );
   it.effect("maps invalid native plain text and replacement words to closed invalid input", () =>
     Effect.gen(function* () {
       const entry = yield* install();

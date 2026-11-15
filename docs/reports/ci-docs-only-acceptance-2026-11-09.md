@@ -11,11 +11,10 @@ caused PR #2993 to be classified as product work.
 ## Regenerate the diagram
 
 Install [Graphviz 10.0.1 or later](https://graphviz.org/docs/outputs/svg/) for
-`svg_inline`, [Python 3.9 or later](https://docs.python.org/3/library/xml.etree.elementtree.html#xml.etree.ElementTree.indent)
-for `ElementTree.indent`, and the repository dependencies, then run:
+`svg_inline` and the repository dependencies, then run:
 
 ```sh
-python goals/compute-profile-gate-routing/assets/render-ci-docs-only-routing.py
+bun goals/compute-profile-gate-routing/assets/render-ci-docs-only-routing.ts
 ```
 
 The helper uses inline SVG output, adds an accessible root title and applies the

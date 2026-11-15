@@ -12,6 +12,7 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { ScopedPackageName } from "@beep/package-json/PackageName";
+import { PressureStats } from "@beep/palantiri/HostPressure.models";
 import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { LiteralKit } from "@beep/schema";
@@ -31,18 +32,27 @@ const $I = $RepoCliId.create("internal/repo-run/QualityScheduler.schemas");
 /**
  * Kind of heavy repository work admitted through the machine-wide scheduler.
  *
+ * **Details**
+ *
+ * `cache` is the work `beep cache` admits: dependency materialization, the
+ * pilot, signed-pilot and protocol experiments, and producer workflow
+ * verification. Before SCHE-08 those commands requested `review-fix`; a ticket
+ * records `cache` only while the admission protocol's `units` gate is on,
+ * because a reader older than SCHE-08 quarantines a kind it does not know.
+ *
  * **Example** (Match on an admission kind)
  *
  * ```ts
  * import { AdmissionWorkKind } from "@beep/repo-cli/test/RepoRun"
  *
  * console.log(AdmissionWorkKind.is["full-proof"]("full-proof")) // true
+ * console.log(AdmissionWorkKind.is.cache("cache")) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const AdmissionWorkKind = LiteralKit(["full-proof", "merged-preview", "review-fix", "publish"]).pipe(
+export const AdmissionWorkKind = LiteralKit(["full-proof", "merged-preview", "review-fix", "publish", "cache"]).pipe(
   $I.annoteSchema("AdmissionWorkKind", {
     description: "Class of heavyweight repository work admitted through the machine-wide scheduler.",
   })
@@ -337,13 +347,16 @@ export const attemptInputFactFields = {
  * embedded full proof is requested as `full-proof` with publish priority, so
  * no caller requests the `publish` kind yet (reserved with `hotPaths` for the
  * chartered follow-ups; see goals/ship-velocity/research/d1-admission-scheduler.md).
+ * The `cache` weight is the review-fix weight Cache commands paid while they
+ * borrowed that kind.
  *
- * **Example** (Read the full-proof weight)
+ * **Example** (Read the full-proof and cache weights)
  *
  * ```ts
  * import { admissionTokenWeight } from "@beep/repo-cli/test/RepoRun"
  *
  * console.log(admissionTokenWeight("full-proof")) // 3
+ * console.log(admissionTokenWeight("cache")) // 1
  * ```
  *
  * @param kind - Admission work kind to weigh.
@@ -357,6 +370,7 @@ export const admissionTokenWeight = (kind: AdmissionWorkKind): number =>
     "merged-preview": () => 5,
     "review-fix": () => 1,
     publish: () => 1,
+    cache: () => 1,
   });
 
 const admissionOwnerFields = {
@@ -562,6 +576,127 @@ export const admissionUnitFields = {
     S.withConstructorDefault(Effect.succeedNone)
   ),
   owner: AdmissionOwner.pipe(
+    S.OptionFromOptionalKey,
+    S.catchDecoding(unrecognizedAsNone),
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
+};
+
+// A pressure stall share in percent, as the host-pressure parcel decodes it.
+const PressureSome10 = PressureStats.fields.avg10.pipe(
+  S.OptionFromOptionalKey,
+  S.withConstructorDefault(Effect.succeedNone)
+);
+
+/**
+ * The scheduler's capacity and the host's pressure at one admission transition (SCHE-09 slice 2).
+ *
+ * **Details**
+ *
+ * An admitted row's stamp is taken where the admission was checked against
+ * capacity: `capacityTokens` is the capacity it was checked against,
+ * `activeTokens` the weight of every live lease at that check (its own
+ * included), and `queuedTokens` and `queuedTickets` the other tickets still
+ * waiting. A released row's stamp is read just before the release is
+ * journaled, while the lease still counts as active. `memAvailableGib` is the
+ * `MemoryStats` reading the capacity came from, rounded to 0.001 GiB.
+ *
+ * The `psi*Some10` fields are the `some avg10` share (percent of the last 10
+ * seconds with some task stalled) of `/proc/pressure/{cpu,memory,io}`, absent
+ * on a host without pressure stall information. `unadmittedSliceGib` is
+ * `agent-runs.slice` `memory.current` minus the `memory.current` of every
+ * live lease's cgroup in the slice: memory the slice holds for work no lease
+ * accounts for. It is absent when the writer does not run inside the slice
+ * (run scopes off or unsupported), when a lease owner's cgroup membership
+ * cannot be read, or when a cgroup file cannot be read, so it is never a sum
+ * over only some of the leases.
+ *
+ * Each admission and release reads the protocol's `pressure` gate when it
+ * samples, so turning the gate off or on applies to requests already queued
+ * or running. The stamp is telemetry: no admission decision reads it.
+ *
+ * **Example** (Stamp an admission on a host without pressure files)
+ *
+ * ```ts
+ * import { AdmissionPressureStamp } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const stamp = AdmissionPressureStamp.make({
+ *   capacityTokens: 8,
+ *   activeTokens: 3,
+ *   queuedTokens: 0,
+ *   queuedTickets: 0,
+ *   memAvailableGib: 50
+ * })
+ * console.log(stamp.activeTokens) // 3
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionPressureStamp extends S.Opaque<AdmissionPressureStamp, { readonly brand: unique symbol }>()(
+  S.Struct({
+    // The same scalar types as the scheduler's snapshot: a stamp never refuses what the scan read.
+    capacityTokens: S.Finite,
+    activeTokens: S.Finite,
+    queuedTokens: S.Finite,
+    queuedTickets: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    memAvailableGib: S.Finite,
+    psiCpuSome10: PressureSome10,
+    psiMemorySome10: PressureSome10,
+    psiIoSome10: PressureSome10,
+    unadmittedSliceGib: S.Finite.check(S.isGreaterThanOrEqualTo(0)).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+  }).pipe(
+    $I.annoteSchema("AdmissionPressureStamp", {
+      description:
+        "Scheduler capacity, active and queued tokens, MemAvailable, PSI some avg10 and unadmitted slice memory at one admission transition.",
+    })
+  )
+) {}
+
+/**
+ * Encoded form of {@link AdmissionPressureStamp}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace AdmissionPressureStamp {
+  /**
+   * Encoded form of {@link AdmissionPressureStamp}.
+   *
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AdmissionPressureStamp.Encoded;
+}
+
+/**
+ * Pressure-stamp field carried by promotion transitions and the admitted and released journal rows.
+ *
+ * **Details**
+ *
+ * `pressure` is an optional key read as an `Option`, written only when the
+ * admission protocol's `pressure` gate is on at the moment the transition
+ * samples (read afresh at each admission and release); with it off every record is
+ * byte-identical to the format before the stamp. A row without the key, or
+ * with a stamp shape this revision cannot decode, reads `None`, and the row
+ * itself still decodes. Readers older than the stamp ignore the key, and a
+ * locked journal rewrite keeps every row's bytes, so the key survives them.
+ *
+ * **Example** (Reuse the stamp field group)
+ *
+ * ```ts
+ * import { admissionPressureFields } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(Object.keys(admissionPressureFields)) // ["pressure"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const admissionPressureFields = {
+  pressure: AdmissionPressureStamp.pipe(
     S.OptionFromOptionalKey,
     S.catchDecoding(unrecognizedAsNone),
     S.withConstructorDefault(Effect.succeedNone)
@@ -895,6 +1030,14 @@ export type AdmissionPromotionPhase = typeof AdmissionPromotionPhase.Type;
 /**
  * Recoverable transition tying one queue ticket to its active lease.
  *
+ * **Details**
+ *
+ * A transition published with its lease carries the admission's pressure stamp
+ * ({@link admissionPressureFields}) when the protocol's `pressure` gate was on
+ * as the admission sampled, so the admitted row recovery journals later still
+ * records the instant of admission, whatever the gate says by then. A transition recovered from the `prepared` phase has no stamp,
+ * and neither has its admitted row.
+ *
  * **Example** (Reference the promotion transition class)
  *
  * ```ts
@@ -919,6 +1062,7 @@ export class AdmissionPromotionTransition extends S.Opaque<
     lease: YeetAdmissionLease,
     phase: AdmissionPromotionPhase,
     createdAtMillis: S.Finite,
+    ...admissionPressureFields,
   }).pipe(
     $I.annoteSchema("AdmissionPromotionTransition", {
       description: "Recoverable nonce-keyed transition tying one admission ticket to its promoted lease.",

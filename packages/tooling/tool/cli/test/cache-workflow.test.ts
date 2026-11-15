@@ -31,7 +31,6 @@ import {
   CacheProducerUploadApproval,
   CacheProducerUploadRuntime,
   CacheProducerWorkflow,
-  CacheRuntimeAdmission,
   collectCacheProducerWorkflowFiles,
   hashCacheProducerContract,
   hashCacheProducerUploadKey,
@@ -74,9 +73,12 @@ import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { bearers, targetFor } from "./cache-conformance-server.ts";
 import { input as bundleInput, contractInput } from "./helpers/cache-producer-bundle-fixture.ts";
+import { makeAdmissionRecorder } from "./support/AdmissionRecorder.ts";
 import { NodeTestLayer } from "./support/CommandTest.ts";
 
 afterEach(() => vi.restoreAllMocks());
+// Admission runs through a recording QualityScheduler; each fixture resets it.
+const admissionRecorder = makeAdmissionRecorder();
 const activationJson = JsonStringCodec(CacheActivationPreview);
 
 const fixture = Effect.fn("WorkflowTest.fixture")(function* () {
@@ -250,15 +252,7 @@ const supervisedFixture = Effect.fn("WorkflowTest.supervisedFixture")(function* 
       selection: "full",
     }),
   });
-  const admission = vi
-    .spyOn(CacheRuntimeAdmission, "withQualityAdmission")
-    .mockImplementation(
-      <Success, Error, Requirements>(
-        _request: unknown,
-        _gate: unknown,
-        use: Effect.Effect<Success, Error, Requirements>
-      ) => use
-    );
+  const admission = admissionRecorder.admitted.mockReset();
   const signed = vi.spyOn(SignedRunner, "runCacheSignedPilotExperiment").mockReturnValue(Effect.succeed(bundle.pilot));
   const protocol = vi
     .spyOn(ProtocolRunner, "runCacheProtocolExperiment")
@@ -335,7 +329,8 @@ it.layer(
     Layer.succeed(
       MemoryStats,
       MemoryStats.of({ availableGib: Effect.succeed(64), totalGib: Effect.succeed(64), ceilingGib: Effect.succeed(64) })
-    )
+    ),
+    admissionRecorder.layer
   ),
   { timeout: "30 seconds" }
 )("producer workflow source identity", (it) => {
@@ -711,7 +706,10 @@ it.layer(
       expect(result.observation).toEqual(bundle);
       expect(signed).toHaveBeenCalledOnce();
       expect(protocol).toHaveBeenCalledOnce();
-      expect(admission).toHaveBeenCalledOnce();
+      // Each of the three identity checks runs under its own admission.
+      expect(
+        A.map(admission.mock.calls, ([admitted]) => [admitted.kind, admitted.weightTokens, admitted.command])
+      ).toEqual(A.replicate(["cache", 1, "cache producer workflow identity verification"], 3));
       expect(tools).toHaveBeenCalledTimes(4);
       expect(signed.mock.calls[0]?.[0]).toBe(root);
       assertSome(

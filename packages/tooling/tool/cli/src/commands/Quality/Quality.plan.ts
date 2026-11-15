@@ -17,7 +17,8 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { invokerAncestryPids } from "../../internal/repo-run/ProcessAttachment.ts";
-import { admissionStatus, MemoryStats } from "../../internal/repo-run/QualityScheduler.ts";
+import { QualityScheduler } from "../../internal/repo-run/QualityScheduler.service.ts";
+import { MemoryStats } from "../../internal/repo-run/QualityScheduler.ts";
 import {
   QualityAdmissionLoad,
   QualityCheckConcurrency,
@@ -520,15 +521,17 @@ export const resolveLiveQualityConcurrencyPlan = Effect.fn("QualityPlan.resolveL
   > {
     const detection = detectQualityProfile();
     // Admission is read only off CI and only where the entry point provided
-    // MemoryStats (every `beep` command group that declares `memory-stats`, and
-    // the root quality-task route); elsewhere the plan stays unscaled.
+    // MemoryStats and the QualityScheduler service (every `beep` command group
+    // that declares `memory-stats`, and the root quality-task route); elsewhere
+    // the plan stays unscaled.
     const stats = yield* Effect.serviceOption(MemoryStats);
+    const scheduler = yield* Effect.serviceOption(QualityScheduler);
     const admission = QualityHardwareProfile.is.ci(detection.profile)
       ? O.none<QualityAdmissionLoad>()
-      : yield* O.match(stats, {
+      : yield* O.match(O.all([stats, scheduler]), {
           onNone: () => Effect.succeedNone,
-          onSome: (memoryStats) =>
-            Effect.asSome(admissionStatus()).pipe(
+          onSome: ([memoryStats, admissionScheduler]) =>
+            Effect.asSome(admissionScheduler.observe()).pipe(
               Effect.provideService(MemoryStats, memoryStats),
               Effect.catch((error) =>
                 Effect.as(

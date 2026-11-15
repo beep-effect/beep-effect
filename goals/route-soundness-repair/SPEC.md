@@ -108,7 +108,7 @@ Higher sources outrank lower sources when they conflict.
   `apps/labs/semantica/turbo.json` and `apps/labs/ciops/turbo.json` (both declare only a build task today; add a
   test task), and a new turbo.json in the `packages/law-practice/server` directory, which has none. The same slice
   registers the cross-package fixture read the ROUT-09 audit found (`packages/law-practice/use-cases/test/fixtures`).
-- Root `turbo.json` (`test`, `test:property`, `doctest` `dependsOn`) `standards/cache-qualification-baseline.json`
+- Root `turbo.json` (`test`, `test:property`, `doctest` `dependsOn`) `standards/cache-baseline/`
   and `standards/policy-tools.fingerprint.json` (TEST-10).
 - `.github/workflows/check.yml`: the docs-policy job (ROUT-02), the fixed name of the `coverage-regression` job
   (COVE-08), every `beep ci change-profile` call site (PERIH-10): in check.yml the

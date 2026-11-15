@@ -27,6 +27,7 @@ import { ciCertaintyCommand } from "./Certainty.ts";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { ciAdmissionCommand } from "./CiAdmission.ts";
 import { ciBinaryClosureCommand } from "./CiBinaryClosure.ts";
+import { ciBinaryPinCommand } from "./CiBinaryPin.ts";
 import { ciBootstrapCommands } from "./CiBootstrap.command.ts";
 import { writeCacheLocalSummary } from "./CiCacheLocalSummary.ts";
 import { runCachePilotInputs } from "./CiCachePilotInputs.ts";
@@ -37,6 +38,7 @@ import { ciPartitionsCommand } from "./CiPartitions.command.ts";
 import { ciRerunRunnerLossCommand } from "./CiRerunRunnerLoss.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import { ciShardOverflowPreflightCommand } from "./CiShardOverflowPreflight.ts";
+import { ciLedgerCommand } from "./CostLedger.ts";
 import { ciDependencyReviewCommand } from "./DependencyReviewCommand.ts";
 import { ciLaneTimingsCommand } from "./LaneTimings.ts";
 import { ciRouteCommand } from "./Route.command.ts";
@@ -399,6 +401,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci append-turbo-summary",
     "- bun run beep ci change-profile [base] [head] (BEEP_CI_PR_BASE_SHA/BEEP_CI_PR_HEAD_SHA win)",
     "- bun run beep ci binary-closure [--out <path>] [--list]",
+    "- bun run beep ci binary-pin --tag <beep-ci-...> --sha256 <hex> [--check|--write] [--file <path>]",
     "- bun run beep ci compile-binary --outfile <path> [--target bun-linux-x64]",
     "- bun run beep ci dependency-review --base <sha> --head <sha>",
     "- bun run beep ci ruleset [--capture|--check]",
@@ -415,6 +418,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci workflow-lint",
     "- bun run beep ci lane <id> [flags] (or --list)",
     "- bun run beep ci lane-timings [--runs n] [--tsv] or --window --since ISO --until ISO [--preview] [filters]",
+    "- bun run beep ci ledger --run <id> [--run <id>...] [--write-capture <file>] or --capture <file> [--json]",
     "- bun run beep ci local [--lanes ids] [--fast] [--affected]",
     "- bun run beep ci rerun-runner-loss --run-id <id> [--attempt n] [--max-attempt n] [--dry-run]",
     "- bun run beep ci route plan|capture|census|replay [flags]",
@@ -426,6 +430,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     cacheLocalSummaryCommand,
     cachePilotInputsCommand,
     ciBinaryClosureCommand,
+    ciBinaryPinCommand,
     ciCompileBinaryCommand,
     ...ciGovernanceCommands,
     ciAdmissionCommand,
@@ -434,6 +439,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     ciLaneCommand,
     ciLaneTimingsCommand,
     ciCertaintyCommand,
+    ciLedgerCommand,
     ciLocalCommand,
     ciPartitionsCommand,
     ciRerunRunnerLossCommand,

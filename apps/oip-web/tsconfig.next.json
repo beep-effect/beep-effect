@@ -1,6 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
+  // The Alchemy stack (alchemy.run.ts, stack/) is deploy tooling, not app code: the
+  // Next build type-checks through this file and must not depend on it.
+  "exclude": ["src/app/sw.ts", "public/sw.js", "alchemy.run.ts", "stack"],
   "compilerOptions": {
     "composite": false
   }

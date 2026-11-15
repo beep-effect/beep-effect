@@ -15,7 +15,6 @@ import {
   CitationCleanerWorkSnapshot,
   CitationEngineAbsoluteMaxima,
   CitationEngineCleanInput,
-  CitationEngineLimits,
   CitationLiveCleanerObject,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
@@ -30,9 +29,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CitationInvocation } from "./Invocation.ts";
 import { makeCitationTextCapacity } from "./TextCapacity.ts";
-import type { CitationCleanerObject, CitationCleanerWork } from "@beep/law-practice-use-cases/server";
-
-const CitationEngineLimitsType = S.toType(CitationEngineLimits);
+import type {
+  CitationCleanerObject,
+  CitationCleanerWork,
+  CitationEngineLimits,
+} from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CleanerPipeline");
 const Plan = CitationEngineCleanInput.fields.plan;
@@ -65,10 +66,9 @@ const Units = S.Natural.check(S.isLessThanOrEqualTo(CitationEngineAbsoluteMaxima
  * @category operations
  * @since 0.0.0
  */
-export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeline")(function* (policy: unknown) {
-  const limits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(policy).pipe(
-    Effect.mapError(() => fail("invalid-input"))
-  );
+export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeline")(function* (
+  limits: CitationEngineLimits
+) {
   const clock = yield* Clock.Clock;
   const runtime = yield* CitationCleaner;
   const sanitize = <A, R>(body: Effect.Effect<A, Failure, R>): Effect.Effect<A, Failure, R> =>
@@ -90,7 +90,8 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
       })
     );
   const makeWork = Effect.gen(function* () {
-    const parent = (yield* CitationInvocation).budget;
+    const invocation = yield* CitationInvocation;
+    const parent = invocation.budget;
     const state = yield* Ref.make(CitationCleanerWorkSnapshot.make({ producedTextUtf16: 0, closed: false }));
     const issued = new WeakMap<CitationCleanerTextCharge, number>();
     const capacity = yield* makeCitationTextCapacity(() => fail("invalid-reservation"));
@@ -233,7 +234,9 @@ export const makeCitationCleanerPipeline = Effect.fn("Citation.makeCleanerPipeli
         yield* runtime.assertOwned(next.value);
         const callable = yield* lookupCallable(next.value);
         yield* runtime.assertOwned(callable);
-        const produced = yield* runtime.invoke(callable, value, work);
+        const produced = yield* invocation.lane
+          .yieldTo(runtime.invoke(callable, value, work))
+          .pipe(Effect.catchTag("CitationNativeLaneFailure", () => Effect.fail(fail("runtime-failed"))));
         yield* runtime.assertOwned(produced.value);
         const units = yield* runtime.textUnits(produced.value);
         yield* consume(

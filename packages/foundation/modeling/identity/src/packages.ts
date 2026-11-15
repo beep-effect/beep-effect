@@ -256,9 +256,12 @@ const generatedComposers = $I.compose(
   "eyecite",
   "agent-memory-store",
   "sqlite",
+  "infra-turbo-cache",
   "alchemy-github-runners",
   "alchemy-aws-extras",
-  "alchemy-vercel"
+  "alchemy-vercel",
+  "infra-cost-controls",
+  "infra-hosts"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3811,6 +3814,23 @@ export const $AgentMemoryStoreId: Identity.IdentityComposer<"@beep/agent-memory-
 export const $SqliteId: Identity.IdentityComposer<"@beep/sqlite"> = composers.$SqliteId;
 
 /**
+ * Identity composer for `@beep/infra-turbo-cache`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $InfraTurboCacheId } from "@beep/identity/packages"
+ *
+ * const id = $InfraTurboCacheId.make("InfraTurboCache")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $InfraTurboCacheId: Identity.IdentityComposer<"@beep/infra-turbo-cache"> = composers.$InfraTurboCacheId;
+
+/**
  * Identity composer for `@beep/alchemy-github-runners`.
  *
  * **Example** (Make package ID)
@@ -3861,3 +3881,38 @@ export const $AlchemyAwsExtrasId: Identity.IdentityComposer<"@beep/alchemy-aws-e
  * @since 0.0.0
  */
 export const $AlchemyVercelId: Identity.IdentityComposer<"@beep/alchemy-vercel"> = composers.$AlchemyVercelId;
+
+/**
+ * Identity composer for `@beep/infra-cost-controls`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $InfraCostControlsId } from "@beep/identity/packages"
+ *
+ * const id = $InfraCostControlsId.make("InfraCostControls")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $InfraCostControlsId: Identity.IdentityComposer<"@beep/infra-cost-controls"> =
+  composers.$InfraCostControlsId;
+
+/**
+ * Identity composer for `@beep/infra-hosts`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $InfraHostsId } from "@beep/identity/packages"
+ *
+ * const id = $InfraHostsId.make("InfraHosts")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $InfraHostsId: Identity.IdentityComposer<"@beep/infra-hosts"> = composers.$InfraHostsId;

@@ -49,7 +49,6 @@ const sourcePaths = A.sort(
   A.dedupe([
     ...A.map(census.sources, (row) => row.path),
     ...A.flatMap(historicalSources, (checkpoint) => A.map(checkpoint.sources, (row) => row.path)),
-    `${packet}/refresh-command-groups.py`,
     `${packet}/refresh-entrypoint-review.ts`,
     ...A.fromIterable(new Bun.Glob("packages/tooling/tool/cli/src/commands/Cache/*.ts").scanSync()),
     "packages/tooling/tool/cli/src/test/Cache.test-kit.ts",

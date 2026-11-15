@@ -30,13 +30,12 @@ import * as Fingerprint from "@beep/repo-cli/commands/Cache/Cache.fingerprint";
 import * as Linker from "@beep/repo-cli/commands/Cache/Cache.linker";
 import * as Worktree from "@beep/repo-cli/commands/Worktree";
 import {
-  CacheRuntimeAdmission,
   renderCacheIdentityLintProfile,
   runCachePilotForTesting,
   runCacheSignedPilotUploadWorker,
   writeCacheIdentityLintProfile,
 } from "@beep/repo-cli/test/Cache";
-import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
+import { MemoryStats, QualitySchedulerError } from "@beep/repo-cli/test/RepoRun";
 import {
   CacheActivationProjection,
   CacheClientPin,
@@ -87,15 +86,19 @@ import * as Struct from "effect/Struct";
 import { Header } from "tar";
 import { vi } from "vitest";
 import { secrets, targetFor } from "./cache-conformance-server.ts";
+import { makeAdmissionRecorder } from "./support/AdmissionRecorder.ts";
 import { commandArgs } from "./support/commandArgs.ts";
 
 vi.mock("@effect/platform-node/NodeHttpClient", { spy: true });
 
+// Admitted runs go through a recording QualityScheduler; the admission test resets it.
+const admissionRecorder = makeAdmissionRecorder();
 const platform = Layer.mergeAll(
   NodeServices.layer,
   NodeCrypto.layer,
   FetchHttpClient.layer,
-  FsUtilsLive.pipe(Layer.provide(NodeServices.layer))
+  FsUtilsLive.pipe(Layer.provide(NodeServices.layer)),
+  admissionRecorder.layer
 );
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 const RemoteConfigJson = S.fromJsonString(S.Struct({ teamId: S.String }));
@@ -1102,21 +1105,20 @@ it.layer(platform, { timeout: "10 seconds" })("pilot orchestration process bound
   it.effect("submits the local experiment to admission and preserves a rejected admission", () =>
     Effect.gen(function* () {
       const { root, runAdmitted } = yield* fixture();
-      const admission = vi
-        .spyOn(CacheRuntimeAdmission, "withQualityAdmission")
-        .mockImplementation(
-          <Success, Error, Requirements>(
-            _request: unknown,
-            _gate: unknown,
-            use: Effect.Effect<Success, Error, Requirements>
-          ) => use
-        );
+      const admission = admissionRecorder.admitted.mockReset();
       yield* runAdmitted();
       expect(admission).toHaveBeenCalledOnce();
-      expect(admission.mock.calls[0]?.[0]).toMatchObject({ checkoutRoot: root, command: "bun run beep cache pilot" });
-      admission.mockReturnValue(Effect.fail(CacheCommandError.new("Controlled admission refusal.")));
+      expect(admission.mock.calls[0]?.[0]).toMatchObject({
+        kind: "cache",
+        weightTokens: 1,
+        checkoutRoot: root,
+        command: "bun run beep cache pilot",
+      });
+      const refusal = QualitySchedulerError.make({ message: "Controlled admission refusal." });
+      admission.mockReturnValue(Effect.fail(refusal));
       const error = yield* runAdmitted().pipe(Effect.flip);
-      expect(error.message).toBe("Controlled admission refusal.");
+      expect(error.message).toBe("Real pilot admission or execution failed.");
+      expect(error.cause).toBe(refusal);
     })
   );
   it.effect("executes the owned upload with write-only cache access and a complete fresh task closure", () =>

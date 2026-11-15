@@ -1,0 +1,8 @@
+---
+title: "Fence lane authority at the spawner hand-off, not at OS process birth"
+date: 2026-11-14
+lane: "feat/citation-regex-session"
+reversal: "Fence at OS birth only by owning a spawner implementation that checks authority synchronously inside its spawn callback."
+---
+
+Owner ruling on review round 5. The physical owner checks lane authority synchronously and then calls `ChildProcessSpawner.spawn(command)`, which returns an Effect. In Effect v4 the platform spawner (`NodeChildProcessSpawner`, re-exported by Bun) yields `fs.access(cwd)` before it calls `NodeChildProcess.spawn` inside a later callback, and the citation commands supply `cwd`. So a revocation or drain expiry that lands during that preparation can still be followed by an OS birth; no check placed around a generic `ChildProcessSpawner` call can close that window under its Effect-returning contract. The guarantee is therefore stated at the hand-off: no start is handed to the spawner after revocation, closure or poisoning. A start handed off before that point is owned from its registration: its lease stays held (quarantined, so the concurrency ceiling is never exceeded), the post-start authority check retires the child at once through the existing SIGKILL and confirmed-retirement path, the lease is returned exactly once after confirmation, and the lane refuses every later start. Rejected: a repository-owned spawner implementation that re-checks authority inside its spawn callback (a second platform spawner to maintain for a window bounded by one directory check, with no capacity or ownership exposure) and removing `cwd` from the command (the worker needs its per-request directory). The regression parks inside the returned spawner Effect and asserts the hand-off outcome above.

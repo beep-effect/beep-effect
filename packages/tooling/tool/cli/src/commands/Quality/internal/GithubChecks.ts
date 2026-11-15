@@ -938,6 +938,13 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     rootTaskLane(repoRoot, "lint:tracked-shell-allowlist", "lint:tracked-shell-allowlist")
   ),
   githubCheckLane(
+    "lint:no-tracked-python",
+    "cheap-gates",
+    "repo-quality",
+    "preflight",
+    rootTaskLane(repoRoot, "lint:no-tracked-python", "lint:no-tracked-python")
+  ),
+  githubCheckLane(
     "lint:schema-tag-idioms",
     "cheap-gates",
     "repo-quality",
@@ -1002,14 +1009,10 @@ export const githubCheckCheapGateLanes = (repoRoot: string): ReadonlyArray<Githu
     // replaces an in-process `jsdoc-ratchet --regenerate` scan that never hit a cache
     // (p50 344 s). The pre-push `quality:jsdoc-ratchet` lane restores the same inventory
     // output by content hash, so a full verify scans once (perf audit M7, 2026-11-02).
+    // It is the tier's only JSDoc ratchet. The former `quality:jsdoc-ratchet:committed`
+    // lane scored the committed standards/ inventory; once #3346 retired that copy it read
+    // this lane's ignored .beep/ci/ output while this lane rewrote it, abreast in one wave.
     rootTaskLane(repoRoot, "quality:jsdoc-ratchet:regenerated", "jsdoc:ratchet:check")
-  ),
-  githubCheckLane(
-    "quality:jsdoc-ratchet:committed",
-    "cheap-gates",
-    "repo-quality",
-    "preflight",
-    repoCliLane(repoRoot, "quality:jsdoc-ratchet:committed", ["jsdoc-ratchet"])
   ),
   ...A.map(githubCheckFallowLanes(repoRoot), githubCheckLaneInTier("cheap-gates")),
 ];

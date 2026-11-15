@@ -2,7 +2,7 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { fcRuns } from "@beep/fc-runs";
 import { Git } from "@beep/git/Git";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
-import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
+import { MemoryStats, QualitySchedulerLive } from "@beep/repo-cli/test/RepoRun";
 import { JsonStringCodec } from "@beep/repo-cli/test/SharedInternals";
 import {
   isClaudeSessionLive,
@@ -50,7 +50,8 @@ const TestLayer = Layer.provideMerge(
         totalGib: Effect.succeed(128),
         ceilingGib: Effect.succeed(128),
       })
-    )
+    ),
+    QualitySchedulerLive
   )
 );
 const HostileProvenanceJson = JsonStringCodec(

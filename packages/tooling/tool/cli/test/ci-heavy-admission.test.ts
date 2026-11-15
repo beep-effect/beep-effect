@@ -363,8 +363,6 @@ describe("B8 heavy admission contracts", () => {
       ["goals/time-to-certainty/research/economics.json", false],
       ["goals/time-to-certainty/research/gate-order-handoff.json", false],
       ["goals/time-to-certainty/research/other.json", true],
-      ["goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.py", false],
-      ["goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.test.py", false],
       ["goals/turborepo-cache-trust-observability/research/native-dependency-diagnostics.md", true],
       ["goals/x/ops/check.ts", false],
       ["goals/x/ops/codemod/rewrite.ts", false],

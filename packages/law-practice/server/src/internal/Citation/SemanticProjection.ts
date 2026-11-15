@@ -22,6 +22,7 @@ import { makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { makeCitationSemanticVocabulary } from "./SemanticVocabulary.ts";
 import { CitationTokenDispatchBindings } from "./TokenDispatch.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SemanticProjection");
@@ -53,14 +54,13 @@ export class CitationSemanticProjectionConfiguration extends S.Opaque<
     })
   )
 ) {}
-const Configuration = S.toType(CitationSemanticProjectionConfiguration);
 const Input = S.toType(CitationExtractionLoopModel);
 const NativeFields = S.Record(S.String, S.NullOr(CitationPythonUnicodeStorage)).pipe(S.toType);
 const isGenerated = S.is(CitationGeneratedReference);
 const isCourtId = S.is(CourtId);
 const own = Effect.fn("Citation.ownSemanticProjection")(function* (
   _limits: CitationEngineLimits,
-  config: CitationSemanticProjectionConfiguration
+  config: CitationOwned<CitationSemanticProjectionConfiguration>
 ) {
   const vocabulary = yield* makeCitationSemanticVocabulary(config.vocabulary);
   const editions = HashMap.fromIterable(A.map(config.editions, (row) => Tuple.make(row.id, row.ref)));
@@ -209,8 +209,6 @@ const prepare = Effect.fn("Citation.projectBuiltinMeaning")(function* (
  */
 export const makeCitationSemanticProjection = makeCitationMetadataStage({
   method: "project",
-  schema: Configuration,
-  invalid: () => fail("invalid-configuration"),
   own,
   prepare,
   project: (citation) => citation,

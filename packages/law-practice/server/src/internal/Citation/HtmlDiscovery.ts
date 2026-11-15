@@ -18,9 +18,9 @@ import * as S from "effect/Schema";
 import { CitationHtmlEmphasis } from "./HtmlTagGeometry.ts";
 import { CitationInvocation } from "./Invocation.ts";
 import {
-  copyCitationMetadataPatternConfiguration,
   makeCitationMetadataStage,
   ownCitationStageCall,
+  prepareCitationMetadataPatternConfiguration,
 } from "./MetadataComposition.ts";
 import { citationMetadataWhitespaceBoundary, trimCitationMetadataBoundary } from "./MetadataStrings.ts";
 import { citationPythonPointAt, concatCitationPythonRanges } from "./PythonUnicode.ts";
@@ -28,6 +28,7 @@ import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type * as Exit from "effect/Exit";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 import type { CitationRegexCapturedRange } from "./RegexResult.ts";
 
@@ -187,14 +188,14 @@ const discover = Effect.fn("Citation.prepareHtmlDiscovery")(function* (
 /** Authenticate and own installation data before any enclosing invocation.
  * @internal @category operations @since 0.0.0
  */
-export const copyCitationHtmlDiscoveryConfiguration = Effect.fn("Citation.copyHtmlDiscoveryConfiguration")(
-  (limits: CitationEngineLimits, config: CitationHtmlDiscoveryConfiguration) =>
-    copyCitationMetadataPatternConfiguration(limits, Patterns, config.patterns, config.bindings, fingerprints, () =>
+export const verifyCitationHtmlDiscoveryConfiguration = Effect.fn("Citation.verifyHtmlDiscoveryConfiguration")(
+  (limits: CitationEngineLimits, config: CitationOwned<CitationHtmlDiscoveryConfiguration>) =>
+    prepareCitationMetadataPatternConfiguration(limits, config.patterns, config.bindings, fingerprints, () =>
       fail("invalid-configuration")
     ).pipe(Effect.map(CitationHtmlDiscoveryConfiguration.make))
 );
 const ownDiscovery = ownCitationStageCall({
-  copy: copyCitationHtmlDiscoveryConfiguration,
+  verify: verifyCitationHtmlDiscoveryConfiguration,
   install: (
     limits: CitationEngineLimits,
     runtime: CitationNativeProcessRuntime,
@@ -209,8 +210,6 @@ const ownDiscovery = ownCitationStageCall({
  */
 export const makeCitationHtmlDiscovery = makeCitationMetadataStage({
   method: "discover",
-  schema: S.toType(CitationHtmlDiscoveryConfiguration),
-  invalid: () => fail("invalid-configuration"),
   own: ownDiscovery,
   prepare: (_limits, _runtime, installedRunner: Effect.Success<ReturnType<typeof ownDiscovery>>, raw) =>
     discover(installedRunner, raw),

@@ -48,6 +48,7 @@ export const DOCS_POLICY_ROOT_TASKS = [
   "lint:jsdoc-module-tags",
   "lint:judge-rubric",
   "lint:markdown-fences",
+  "lint:no-tracked-python",
   "lint:reflection-artifacts",
   "lint:retired-effect-paths",
   "lint:retired-iri-authorities",

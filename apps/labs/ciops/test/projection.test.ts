@@ -364,6 +364,40 @@ it.layer(TestPolicyLive, { timeout: "5 seconds" })("@beep/ciops S7 projection", 
     })
   );
 
+  it.effect("property 5c: the frozen journal still replays 41 of 41 with SCHE-09 pressure stamps", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const policy = yield* TestPolicy;
+      const journalSource = yield* fs
+        .readFileString(journalPath)
+        .pipe(Effect.mapError(() => PolicyDecodeError.make({ message: "Unable to read the frozen journal." })));
+      // The optional key a scheduler adds to admitted and released rows once its protocol's `pressure` gate is on.
+      const stamp =
+        '"pressure":{"capacityTokens":8,"activeTokens":3,"queuedTokens":2,"queuedTickets":1,"memAvailableGib":41.738,"psiCpuSome10":2.13,"psiMemorySome10":0.5,"psiIoSome10":0.31,"unadmittedSliceGib":1.25}';
+      const stamped = A.join(
+        A.map(Str.split("\n")(journalSource), (line) =>
+          O.isSome(Str.match(/"_tag":"admission-(admitted|released)"/u)(line))
+            ? Str.replace(/\}$/u, `,${stamp}}`)(line)
+            : line
+        ),
+        "\n"
+      );
+      expect(Str.includes('"pressure"')(stamped)).toBe(true);
+      const plainEvents = yield* decodeAdmissionJournal(journalSource);
+      const stampedEvents = yield* decodeAdmissionJournal(stamped);
+      const plainReport = yield* replayAdmissionJournal(policy, plainEvents, "frozen-policy", "frozen-journal");
+      const stampedReport = yield* replayAdmissionJournal(
+        policy,
+        stampedEvents,
+        "frozen-policy",
+        "frozen-journal"
+      ).pipe(Effect.flatMap(requireReplayMatch));
+
+      expect([stampedReport.admittedCount, A.length(stampedReport.mismatches)]).toStrictEqual([41, 0]);
+      expect(stampedReport).toStrictEqual(plainReport);
+    })
+  );
+
   it.effect("decodes a v2 lease eviction fixture and folds it as a release", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;

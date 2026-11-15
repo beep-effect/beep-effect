@@ -1,7 +1,12 @@
 import { Git, GitCommandError } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { yeetCommand } from "@beep/repo-cli/commands/Yeet";
-import { acquireJournalFileLock, MemoryStats, releaseJournalFileLock } from "@beep/repo-cli/test/RepoRun";
+import {
+  acquireJournalFileLock,
+  MemoryStats,
+  QualitySchedulerLive,
+  releaseJournalFileLock,
+} from "@beep/repo-cli/test/RepoRun";
 import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import * as Job from "@beep/repo-cli/test/Yeet";
 import {
@@ -1524,7 +1529,7 @@ const commandCheckoutLayer = Layer.effectContext(
   })
 ).pipe(
   Layer.provideMerge(
-    Layer.merge(
+    Layer.mergeAll(
       Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer),
       Layer.succeed(
         MemoryStats,
@@ -1533,7 +1538,8 @@ const commandCheckoutLayer = Layer.effectContext(
           totalGib: Effect.succeed(128),
           ceilingGib: Effect.succeed(128),
         })
-      )
+      ),
+      QualitySchedulerLive
     )
   )
 );
