@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,18 +31,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-B1 is locally verified and in review on `feat/citation-native-lane`. Owner ruling 3
-resolves the admission/deadline stop: explicit lane reservation now runs at the
-base acquisition points for regex, Diff and Xml. Both review race fixes remain.
-[PR #3336](https://github.com/beep-effect/beep-effect/pull/3336) is open after the
-owner merged A4 and main and published hosted round 1 repairs. The current local
-review follow-through fixes record-local quarantine and synchronizes the overlap
-proof, and adds the owner-requested bounded coverage tests. Six typed invariant
-guards remain documented with measured rows. Owner publication remains separate.
+All three slices are merged: B1 #3336 (one native lane per invocation, limits policy v2), B2
+#3352 (protocol v3 and `CitationRegexSession`, one regex child process per invocation) and B3
+#3355 (protocol v2 deleted, law-practice shard plan re-recorded). Ten plain-text calls start 10
+regex child processes instead of 291, with 291 evaluations unchanged. The packet is closed; the
+reflection is [history/reflections/2026-11-14-claude.md](history/reflections/2026-11-14-claude.md).
 
 ## Latest Evidence
 
-[Review follow-through and file-by-file evidence](history/evidence/2026-11-14-b1-native-lane.md#review-follow-through-after-owner-head-b749cd91e7e).
+[Replay acceptance](history/evidence/2026-11-14-replay-acceptance.md): the five serial replays
+finish under 20% of their watchdog on hosted CI (2% to 18%) and at 10% to 20% on beep-worker, with identical asserted
+results.
 
 ## Notes
 

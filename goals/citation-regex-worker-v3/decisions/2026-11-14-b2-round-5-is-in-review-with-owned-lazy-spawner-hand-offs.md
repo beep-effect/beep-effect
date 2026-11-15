@@ -1,0 +1,8 @@
+---
+title: "B2 round 5 is in review with owned lazy spawner hand-offs"
+date: 2026-11-14
+kind: checkpoint
+reversal: "Return B2 to in progress if review finds an ownership or retirement defect under the hand-off ruling."
+---
+
+Applied owner ruling a7b55238cda: no start is handed to the spawner after revocation, closure or poisoning. A prior authorized hand-off may produce an OS child later; registration retains its quarantined lease until existing SIGKILL and confirmed retirement, then returns it once. Updated comments, names, earlier current-claim wording and evidence without changing executable production code or cwd. The new real Bun/Node cases pause inside the returned platform Effect and before confirmation, proving bounded typed caller failure, held capacity, confirmed death, single return and refusal of later starts; before-fence cases prove zero hand-offs. Nineteen focused files pass 204 tests; FullSpan ran last and passes 12/12. With five additional coverage-only contributors, 25 unique files and 256 tests pass without skips. All 25 single-file coverage measurements pass; NativeLane, NativeProcess and all four session files are 100 percent on all four metrics. Required checks pass, Fallow introduces zero against origin/main. Count remains 10 regex processes and 291 evaluations, every other column unchanged; wall 30.41 seconds at load 3.26/5.44/4.19. Whole-directory rerun omitted per owner scope because only comments/JSDoc and tests changed. Evidence: history/evidence/2026-11-14-b2-regex-session.md, Review round 5. B2 remains in review; no push, merge, rebase or subagents.

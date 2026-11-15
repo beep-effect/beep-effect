@@ -200,6 +200,34 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** scope the coverage replay by the workspaces whose resolved dependencies
   changed in the lockfile diff, not by the lockfile path alone.
 
+## 2026-11-13: `create-package github --kind infra` leaves a half-written `@beep/github` that config-sync then wires in
+
+- **Doing:** P3 GitHub stack (the P3 GitHub lane), trying to match the sibling
+  turbo-cache layout (directory turbo-cache under the tooling infra family, package `@beep/infra-turbo-cache`).
+- **Evidence:** `bun run beep create-package github --family tooling --kind infra` wrote
+  `packages/tooling/infra/github/package.json` with name `@beep/github` (the drivers package already owns
+  it), then failed with `Workspace name "@beep/github" already exists`. The partial directory stayed, and the
+  next config-sync rewired three packages' tsconfig references from `packages/drivers/github` to it.
+  The working form is `create-package infra-github --dir-name github`.
+- **Would have prevented it:** check the workspace name before writing any file; and for `--kind infra`,
+  default the package name to `@beep/infra-<name>` (or say in the help that the prefix is the caller's job).
+
+## 2026-11-13: `@alchemy.run/github` beta.86 plans adopted singletons as `create`
+
+- **Doing:** the same lane; the read-only `alchemy plan` of `InfraGithub` against the live repository.
+- **Evidence:** `Plan: 36 to create, 1 to adopted`. Only `GitHub.Ruleset` has a `read` adoption probe;
+  `Repository`, `Environment`, `Variable` and `Label` return nothing without prior state, so an empty stage
+  shows `create` for objects whose reconcile only updates (stack tests assert zero POST). A reviewer reading
+  the plan cannot tell a real create from a converge-by-name.
+- **File evidence (installed `@alchemy.run/github@2.0.0-beta.86`, same on Alchemy `main` at `33c10dd55f`):**
+  the engine probes adoption only through `provider.read` when a resource has no state
+  (`alchemy/src/Plan.ts:1749`). `src/Repository.ts:592` returns `undefined` from `read` whenever
+  `output` is undefined, so an empty stage never sees the live repository; `src/Label.ts`,
+  `src/Environment.ts` and `src/Variable.ts` define no `read` at all. `src/Ruleset.ts:651` is the
+  model to copy: it lists by name and returns `Unowned(attrs)`.
+- **Would have prevented it:** a name-based `read` in those four providers (upstream contribution); until
+  then the decision file explains each `create`. Packet gate ruling 2026-11-13: accepted as is, not held
+  on the upstream change.
 ## 2026-11-14: the Pulumi passphrase in 1Password does not decrypt the oip-web stacks
 
 - **Doing:** P4 oip-web census (lane goals/infra-alchemy-rebuild-p4-oip-web), reading where the HubSpot
@@ -334,6 +362,28 @@ to the gap between the reference checkout (main) and the pinned release.
   environment layer, awsJson `HttpClient` from a route table, typed scratch-stack view, failure
   helpers) that every `@beep/alchemy-*` and `@beep/infra-*` package imports.
 
+## 2026-11-14: no conditional update on GitHub rulesets leaves one GET-to-PUT round-trip open
+
+- **Doing:** P3 GitHub stack, review round 2 on #3324: the write guard re-reads ruleset 10240248 just before the
+  provider's PUT, but a `beep reviewer ruleset release|require --apply` landing between that GET and the PUT is
+  overwritten and not detected.
+- **Evidence:** the REST API description for `PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}` lists only `owner`,
+  `repo` and `ruleset_id`, with no `If-Match` or precondition parameter; the ruleset GET returns a weak `ETag`, which
+  GitHub documents for conditional GETs (`If-None-Match`, 304) only. The window-5 owner ruled the write guard plus the
+  runbook practice sufficient for arming.
+- **Would have prevented it:** a precondition (`If-Match` on the ETag, or an expected `updated_at`) on the ruleset
+  PUT. If GitHub adds one, the wrapped `GitHub.Ruleset` provider in `@beep/infra-github` can send it.
+
+## 2026-11-14: a stray root `coverage/` turns local fallow health red repo-wide
+
+- **Doing:** P3 GitHub stack, pushing the create guard to #3324 with `yeet publish`.
+- **Evidence:** cheap-gates failed `fallow:health` with "46 blocking finding(s) in an ok envelope", all
+  `not-applicable` and none in the PR's files. The cause was an ignored root `coverage/` directory left by an earlier
+  `vitest run --coverage` from the repository root, whose `coverage-final.json` was `{}`. Fallow read it as zero
+  coverage and the CRAP scores crossed their thresholds across the repo. With the directory removed, the same check
+  reported 0 findings.
+- **Would have prevented it:** fallow health ignoring a coverage report that covers no files, or naming the coverage
+  source it used in the failure message.
 ## 2026-11-14: hosted Commitlint lints every commit in the PR range
 
 - **Doing:** P2 runner composite lane (`@beep/alchemy-github-runners`), recorded here for that retired lane.

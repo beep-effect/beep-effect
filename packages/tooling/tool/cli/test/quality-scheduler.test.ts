@@ -63,6 +63,7 @@ import {
   QualitySchedulerLive,
   qualitySchedulerForTesting,
   quarantinedAtMillisOf,
+  RecoveryRecordSettlementWindow,
   RunScopeRecord,
   RuntimeRootChoice,
   readAdmissionJournalArchive,
@@ -4824,9 +4825,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               reapAdmissionState({ apply: true }).pipe(Effect.provideService(AdmissionEvictionJournal, heldJournal))
             );
             yield* Deferred.await(sinkEntered);
+            // The settlement window is wall-clock time: a CPU-starved owner once outlasted the
+            // 5 s default after `finishSinks` and failed this observer with "stayed busy". The
+            // observer here must order itself after the owner, so it waits without a deadline.
             const observer = yield* Effect.forkChild(
               reapAdmissionState({ apply: true }).pipe(
-                Effect.provideService(FileSystem.FileSystem, observingFileSystem)
+                Effect.provideService(FileSystem.FileSystem, observingFileSystem),
+                Effect.provideService(RecoveryRecordSettlementWindow, Duration.infinity)
               )
             );
 

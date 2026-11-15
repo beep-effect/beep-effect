@@ -15,8 +15,9 @@ import { makeCitationRegexResult } from "./RegexResult.ts";
 import { CitationRegexWorkerFailure } from "./RegexWorkerProtocol.ts";
 import { CitationRegexEvaluationFailure } from "./RegexWorkerRpc.ts";
 import type { CitationRegexCapturePlan } from "./RegexProgram.ts";
-import type { CitationRegexWorkerJob } from "./RegexWorkerProtocol.ts";
-import type { CitationRegexWorkerStartup } from "./RegexWorkerRpc.ts";
+import type { CitationRegexSessionJob } from "./RegexSessionProtocol.ts";
+import type { CitationRegexSessionStartup } from "./RegexSessionRpc.ts";
+import type { CitationRegexPayload } from "./RegexWorkerProtocol.ts";
 
 const nativeFailure = () => CitationRegexEvaluationFailure.make({ reason: "native-failed" });
 const projectNativeCaptures = Effect.fn("Citation.projectNativeCaptures")(function* (
@@ -40,7 +41,7 @@ const projectNativeCaptures = Effect.fn("Citation.projectNativeCaptures")(functi
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationRegexEvaluation = Effect.fn("Citation.makeRegexEvaluation")(function* (
-  startup: CitationRegexWorkerStartup
+  startup: Pick<CitationRegexSessionStartup, "limits"> & Pick<CitationRegexSessionJob, "descriptor" | "engine">
 ) {
   const { limits, descriptor, engine } = startup;
   const registry = yield* makeCitationRegexDescriptorRegistry(limits, [descriptor], engine);
@@ -48,7 +49,7 @@ export const makeCitationRegexEvaluation = Effect.fn("Citation.makeRegexEvaluati
   const compiler = yield* makeCitationRegexProgram(limits, engine);
   const sourceInput = yield* makeCitationRegexInput(limits, citationUnaccountedText);
   const evaluate = Effect.fn("Citation.evaluateNativeRegex")(
-    function* (job: CitationRegexWorkerJob) {
+    function* (job: CitationRegexPayload) {
       if (job.maxMatches > limits.patternMatches)
         return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternMatches" });
       const bound = yield* registry.bind({ width: job.patternWidth, bytes: job.patternBytes }, job.flags);

@@ -18,8 +18,7 @@ import { makeCitationRegexProgram } from "../../../packages/law-practice/server/
 import { makeCitationRegexResult } from "../../../packages/law-practice/server/src/internal/Citation/RegexResult.ts";
 import { makeCitationRegexTranslator } from "../../../packages/law-practice/server/src/internal/Citation/RegexTranslator.ts";
 import { makeCitationRegexEvaluation } from "../../../packages/law-practice/server/src/internal/Citation/RegexWorkerEvaluation.ts";
-import { CitationRegexWorkerJob } from "../../../packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts";
-import { CitationRegexWorkerStartup } from "../../../packages/law-practice/server/src/internal/Citation/RegexWorkerRpc.ts";
+import { CitationRegexPayload } from "../../../packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts";
 
 const option = process.argv[2];
 const translateOnly = option === "--translate-only";
@@ -194,11 +193,13 @@ await Effect.runPromise(
         const preparedSource = yield* sourceInput.prepareUnicode({ width: 4, bytes: sourceBytes }, () => Effect.void);
         assert.equal(preparedSource.layout.pythonLength, witness.sourcePoints);
         assert.equal(preparedSource.layout.utf16Units, witness.sourceUtf16);
-        const evaluator = yield* makeCitationRegexEvaluation(
-          CitationRegexWorkerStartup.make({ limits, descriptor: bound.descriptor, engine: registry.engine })
-        );
+        const evaluator = yield* makeCitationRegexEvaluation({
+          limits,
+          descriptor: bound.descriptor,
+          engine: registry.engine,
+        });
         const body = yield* evaluator.evaluate(
-          CitationRegexWorkerJob.make({
+          CitationRegexPayload.make({
             mode: "finditer",
             patternWidth: native.width,
             patternBytes: native.bytes,
@@ -218,7 +219,7 @@ await Effect.runPromise(
           }
         }
         const emptyBody = yield* evaluator.evaluate(
-          CitationRegexWorkerJob.make({
+          CitationRegexPayload.make({
             mode: "finditer",
             patternWidth: native.width,
             patternBytes: native.bytes,

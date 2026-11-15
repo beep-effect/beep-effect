@@ -188,7 +188,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "d726966784441d4e756ee6f5677b83d12e1cf886dfc070c2a6353f49aceaed67"
+      "sha256": "274f4e55e3668b04d24edb74c803f5c24f9e27a63a22fbb2649422ab9fe69477"
     }
   ],
   "nodes": [
@@ -2196,6 +2196,7 @@
           "packages/shared/tables/package.json",
           "packages/shared/use-cases/package.json",
           "packages/tooling/infra/cost-controls/package.json",
+          "packages/tooling/infra/github/package.json",
           "packages/tooling/infra/infra-hosts/package.json",
           "packages/tooling/infra/turbo-cache/package.json",
           "packages/tooling/library/agent-memory-store/package.json",

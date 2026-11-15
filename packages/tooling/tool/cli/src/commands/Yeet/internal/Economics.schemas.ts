@@ -20,6 +20,7 @@ import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
 import { YeetAttemptTerminationReason } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
 import { YeetHandlerErrorKind } from "../Yeet.errors.ts";
+import { EconomicsPressure } from "./EconomicsPressure.schemas.ts";
 import { FleetHostReadReceipt } from "./FleetHosts.schemas.ts";
 import { DEFAULT_YEET_PACKET_DIR } from "./Planner.schemas.ts";
 import { YeetReviewerKind } from "./ReviewLane.schemas.ts";
@@ -1382,8 +1383,11 @@ export class EconomicsReviewLane extends S.Opaque<EconomicsReviewLane, { readonl
  * hosted-CI waiting apart. Wrapper and inner lanes are separate populations
  * with separate denominators (ruling 74); the review lane is a
  * third section with its own denominators and is never summed with them.
- * Nothing here is written to disk; the committed A1 `economics.json` stays
- * owned by the script.
+ * `pressure` (MEAS-08, additive within v4) joins PSI recorder samples and
+ * admission-journal stamps onto each attempt; a report built without reading
+ * them (the closeout summary) lists no attempts there and marks both sources
+ * absent. Nothing here is written to disk; the committed A1 `economics.json`
+ * stays owned by the script.
  *
  * **Example** (Check the schema version)
  *
@@ -1412,10 +1416,11 @@ export class YeetEconomicsReport extends S.Opaque<YeetEconomicsReport, { readonl
     terminations: EconomicsTerminations,
     unchangedFingerprint: EconomicsUnchangedFingerprint,
     dataQuality: EconomicsDataQuality,
+    pressure: EconomicsPressure.pipe(S.withConstructorDefault(Effect.sync(() => EconomicsPressure.make({})))),
   }).pipe(
     $I.annoteSchema("YeetEconomicsReport", {
       description:
-        "Checkout economics over live attempt journals: attempt mixes with terminations and monitor-decided attempts apart from reds, per-mode local-work durations, monitor waits, wrapper and inner lane populations, the review lane (rounds to ready, reviewer precision), first failure (M2), red-to-green episodes (M1), unchanged fingerprint (M4), terminations (M5), and data quality.",
+        "Checkout economics over live attempt journals: attempt mixes with terminations and monitor-decided attempts apart from reds, per-mode local-work durations, monitor waits, wrapper and inner lane populations, the review lane (rounds to ready, reviewer precision), first failure (M2), red-to-green episodes (M1), unchanged fingerprint (M4), terminations (M5), data quality, and the pressure join (MEAS-08).",
     })
   )
 ) {}

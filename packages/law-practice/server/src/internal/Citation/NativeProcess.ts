@@ -200,7 +200,13 @@ export class CitationNativeProcessOwnerSnapshot extends S.Opaque<
 /**
  * Capture Clock, spawner and owner Scope for exact-process retirement. Start
  * registers ownership before OS spawn and returns its Exit alongside the owned
- * resource even on spawn failure. Call it in a masked transfer and retain that
+ * resource even on spawn failure. The concrete start's optional synchronous
+ * fence runs after owner-side waits, immediately before calling the spawner;
+ * its typed refusal is returned in the child's Exit and still requires retirement.
+ * This fences the hand-off, not OS birth: the returned platform Effect can yield
+ * while preparing cwd. An authorized hand-off retains ownership through late
+ * resolution and the lane's post-start authority check retires a revoked child.
+ * Call it in a masked transfer and retain that
  * resource before inspecting the Exit. Acknowledged retirement alone invokes
  * the binding's release; timeout/cancellation retain it under quarantine.
  * Only retirement tasks detach, bounded by outstanding native leases. Methods
@@ -285,7 +291,7 @@ export const makeCitationNativeProcessOwner = Effect.fn("Citation.makeNativeProc
     })
   );
   const start = Effect.fn("Citation.startOwnedNativeProcess")(
-    (command: ChildProcess.Command, binding: CitationNativeProcessLease) =>
+    (command: ChildProcess.Command, binding: CitationNativeProcessLease, fence: () => O.Option<E> = O.none) =>
       birthLock
         .withPermit(
           Effect.gen(function* () {
@@ -319,17 +325,20 @@ export const makeCitationNativeProcessOwner = Effect.fn("Citation.makeNativeProc
               }).pipe(Effect.withSpan("Citation.retireNativeProcess")),
             };
             yield* Ref.update(owned, (records) => A.append(records, resource));
-            const child = yield* spawner.spawn(command).pipe(
-              Effect.provideService(Scope.Scope, scope),
-              Effect.mapError(() => fail("spawn-failed")),
-              Effect.exit
-            );
+            // Owner-side waits precede this synchronous check and method hand-off.
+            // The platform's returned Effect may still yield before OS birth.
+            const child = yield* Effect.suspend(() =>
+              O.match(fence(), {
+                onNone: () => spawner.spawn(command).pipe(Effect.mapError(() => fail("spawn-failed"))),
+                onSome: Effect.fail,
+              })
+            ).pipe(Effect.provideService(Scope.Scope, scope), Effect.exit);
             if (Exit.isSuccess(child)) {
               yield* Ref.set(handle, O.some(child.value));
               yield* Ref.set(phase, "running");
             }
             const process: CitationOwnedNativeProcess<E> = { retire: (retry) => retire(resource, retry) };
-            return { process, child };
+            return { process, child, scope };
           })
         )
         .pipe(Effect.uninterruptible, Effect.provideService(Clock.Clock, clock))

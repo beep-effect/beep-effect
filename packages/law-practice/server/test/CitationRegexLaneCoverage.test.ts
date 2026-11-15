@@ -12,6 +12,7 @@ import {
   citationNativeProcessCommand,
 } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { CitationRegexPatternDescriptor } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
+import { makeCitationRegexSession } from "@beep/law-practice-server/internal/Citation/RegexSession";
 import { installCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
@@ -19,18 +20,24 @@ import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
+import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Scope from "effect/Scope";
 import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { holdCitationNativeQueue } from "./CitationNativeQueue.fixtures.ts";
-import { makeCitationNativeSleepClock, makeCitationNativeWorkerFixture } from "./CitationNativeSpawner.fixtures.ts";
+import {
+  makeCitationNativeSleepClock,
+  makeCitationNativeWorkerFixture,
+  waitForCitationNativeTest,
+} from "./CitationNativeSpawner.fixtures.ts";
 import { setupCitationRegexRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+import type { CitationNativeLane } from "@beep/law-practice-server/internal/Citation/NativeLane";
 
 const word = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
 const descriptor = CitationRegexPatternDescriptor.make({
@@ -43,38 +50,66 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), {
   timeout: "30 seconds",
 })("regex lane refusal adapters", (it) => {
   for (const point of ["before evaluation", "after reservation"] as const) {
-    it.effect(`translates a lane closed ${point} without spawning`, () =>
-      Effect.gen(function* () {
-        const setup = yield* setupCitationRegexRuntime("bun");
-        const worker = yield* installCitationRegexEvaluator(setup.limits, setup.runtime, [descriptor]).pipe(
-          Effect.provideContext(setup.context)
-        );
-        yield* withCitationTestInvocation(
-          Effect.gen(function* () {
-            const invocation = yield* CitationInvocation;
-            const scope = yield* Scope.make();
-            const lane = yield* makeCitationNativeLane(setup.limits, "extract").pipe(
-              Effect.provideService(Scope.Scope, scope)
-            );
-            if (point === "before evaluation") yield* Scope.close(scope, Exit.void);
-            const selected =
-              point === "after reservation"
-                ? { ...lane, reserve: lane.reserve.pipe(Effect.tap(() => Scope.close(scope, Exit.void))) }
-                : lane;
-            const refused = yield* worker
-              .evaluate(word("a"), word("a"), 0)
-              .pipe(Effect.provideService(CitationInvocation, { ...invocation, lane: selected }), Effect.flip);
-            expect(refused).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "closed" });
-            const receipt = yield* lane.snapshot;
-            expect(receipt).toMatchObject({ started: 0, confirmed: 0, acquired: false });
-            const counts = yield* setup.observed.snapshot;
-            expect(counts).toEqual({ spawned: 0, confirmed: 0 });
-          }),
-          setup.limits
-        ).pipe(Effect.provideContext(setup.context));
-        const state = yield* setup.admission.snapshot;
-        expect(state.active).toBe(0);
-      })
+    it.effect(
+      point === "before evaluation"
+        ? "translates a lane closed before evaluation without spawning"
+        : "poisons interruption after reservation without spawning",
+      () =>
+        Effect.gen(function* () {
+          const setup = yield* setupCitationRegexRuntime("bun");
+          const worker = yield* installCitationRegexEvaluator(setup.limits, setup.runtime, [descriptor]).pipe(
+            Effect.provideContext(setup.context)
+          );
+          yield* withCitationTestInvocation(
+            Effect.gen(function* () {
+              const invocation = yield* CitationInvocation;
+              const scope = yield* Scope.make();
+              const lane = yield* makeCitationNativeLane(setup.limits, "extract").pipe(
+                Effect.provideService(Scope.Scope, scope)
+              );
+              if (point === "before evaluation") yield* Scope.close(scope, Exit.void);
+              const entered = yield* Deferred.make<void>();
+              const selected: CitationNativeLane["Service"] =
+                point === "after reservation"
+                  ? {
+                      ...lane,
+                      withUse: (body) =>
+                        lane.withUse((start, reserve, release) =>
+                          body(
+                            start,
+                            reserve.pipe(
+                              Effect.andThen(Deferred.succeed(entered, undefined)),
+                              Effect.andThen(Effect.never)
+                            ),
+                            release
+                          )
+                        ),
+                    }
+                  : lane;
+              const regex = yield* makeCitationRegexSession(setup.limits, "extract", selected).pipe(
+                Effect.provideService(Scope.Scope, scope)
+              );
+              const evaluate = worker
+                .evaluate(word("a"), word("a"), 0)
+                .pipe(Effect.provideService(CitationInvocation, { ...invocation, lane: selected, regex }));
+              if (point === "after reservation") {
+                const pending = yield* evaluate.pipe(Effect.forkChild);
+                yield* Deferred.await(entered);
+                yield* Fiber.interrupt(pending);
+              }
+              const refused = yield* evaluate.pipe(Effect.flip);
+              expect(refused).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "closed" });
+              yield* Scope.close(scope, Exit.void);
+              const receipt = yield* lane.snapshot;
+              expect(receipt).toMatchObject({ started: 0, confirmed: 0, acquired: false });
+              const counts = yield* setup.observed.snapshot;
+              expect(counts).toEqual({ spawned: 0, confirmed: 0 });
+            }),
+            setup.limits
+          ).pipe(Effect.provideContext(setup.context));
+          const state = yield* setup.admission.snapshot;
+          expect(state.active).toBe(0);
+        })
     );
   }
   it.effect("translates an actual failed OS spawn and confirms the empty process record", () =>
@@ -143,9 +178,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), {
         }),
       });
       const context = setup.context.pipe(Context.add(ChildProcessSpawner, spawner));
-      const worker = yield* installCitationRegexEvaluator(setup.limits, setup.runtime, [descriptor]).pipe(
-        Effect.provideContext(context)
-      );
+      const legacy = yield* makeCitationNativeWorkerFixture("busy", "regex", "bun");
+      const worker = yield* installCitationRegexEvaluator(setup.limits, CitationNativeProcessRuntime.make(legacy), [
+        descriptor,
+      ]).pipe(Effect.provideContext(context));
       yield* withCitationTestInvocation(
         Effect.gen(function* () {
           const invocation = yield* CitationInvocation;
@@ -153,9 +189,19 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), {
           const lane = yield* makeCitationNativeLane(setup.limits, "extract").pipe(
             Effect.provideService(Scope.Scope, ownerScope)
           );
-          const failed = yield* worker
+          const regex = yield* makeCitationRegexSession(setup.limits, "extract", lane).pipe(
+            Effect.provideService(Scope.Scope, ownerScope)
+          );
+          const pending = yield* worker
             .evaluate(word("a"), word("a"), 0)
-            .pipe(Effect.provideService(CitationInvocation, { ...invocation, lane }), Effect.flip);
+            .pipe(
+              Effect.provideService(CitationInvocation, { ...invocation, lane, regex }),
+              Effect.flip,
+              Effect.forkChild
+            );
+          yield* waitForCitationNativeTest(legacy.fs.exists(legacy.marker));
+          yield* setup.timer.trigger;
+          const failed = yield* Fiber.join(pending);
           expect(failed).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "cleanup-unconfirmed" });
           const retained = yield* setup.admission.snapshot;
           expect(retained).toMatchObject({ active: 1, quarantined: 1 });
@@ -210,31 +256,14 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), {
       yield* withCitationTestInvocation(
         Effect.gen(function* () {
           const invocation = yield* CitationInvocation;
-          const queueScope = yield* Scope.Scope;
-          let held = O.none<Effect.Success<ReturnType<typeof holdCitationNativeQueue>>>();
-          const reserve = invocation.lane.reserve.pipe(
-            Effect.andThen(invocation.lane.yieldTo(Effect.void)),
-            Effect.andThen(
-              holdCitationNativeQueue(
-                admission,
-                standalone.start,
-                citationNativeProcessCommand(CitationNativeProcessRuntime.make(idle), "")
-              )
-            ),
-            Effect.tap((blocker) =>
-              Effect.sync(() => {
-                held = O.some(blocker);
-              })
-            ),
-            Effect.asVoid,
-            Effect.provideService(Scope.Scope, queueScope)
+          yield* invocation.lane.reserve;
+          yield* invocation.lane.yieldTo(Effect.void);
+          const blocker = yield* holdCitationNativeQueue(
+            admission,
+            standalone.start,
+            citationNativeProcessCommand(CitationNativeProcessRuntime.make(idle), "")
           );
-          const refused = yield* worker
-            .evaluate(word("a"), word("a"), 0)
-            .pipe(
-              Effect.provideService(CitationInvocation, { ...invocation, lane: { ...invocation.lane, reserve } }),
-              Effect.flip
-            );
+          const refused = yield* worker.evaluate(word("a"), word("a"), 0).pipe(Effect.flip);
           expect(refused).toMatchObject({
             _tag: "CitationSafetyLimitExceeded",
             operation: "extract",
@@ -242,7 +271,6 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), {
           });
           const receipt = yield* invocation.lane.snapshot;
           expect(receipt).toMatchObject({ unitsAcquired: 1, acquired: false, started: 0 });
-          const blocker = yield* Effect.fromOption(held);
           yield* blocker.release;
         }),
         limits

@@ -91,6 +91,7 @@ import {
   YeetEconomicsReport,
   YeetEconomicsReportJson,
 } from "./Economics.schemas.ts";
+import { joinEconomicsPressure, renderEconomicsPressure, YeetPressureSource } from "./EconomicsPressure.ts";
 import {
   classifyFleetHostJournalPath,
   FleetHostShell,
@@ -2492,6 +2493,7 @@ export const renderYeetEconomicsReport = (report: YeetEconomicsReport): string =
       `data quality: window ${O.getOrElse(quality.attemptWindowStartUtc, () => "n/a")} .. ${O.getOrElse(quality.attemptWindowEndUtc, () => "n/a")}; journals ${diagnostics.journalsObserved} read, ${diagnostics.unreadableJournals} unreadable; invalid rows ${diagnostics.invalidRows}; compaction receipts ${diagnostics.compactionReceipts} (${diagnostics.leftCensoredJournals} left-censored journal(s))`,
       `  duplicates ${diagnostics.duplicateStartedRowsDeduplicated} start / ${diagnostics.duplicateFinishedRowsDeduplicated} terminal; orphan verdicts ${diagnostics.orphanVerdictFilesAdded} added, ${diagnostics.unkeyedVerdictFiles} unkeyed; verdicts without start ${diagnostics.verdictsWithoutStart}; verdicts v2 ${diagnostics.verdictV2Attempts}, other ${diagnostics.verdictOtherAttempts}`,
       `  estimator: ${quality.percentileEstimator}, rounding ${quality.rounding}`,
+      ...renderEconomicsPressure(report.pressure),
     ],
     "\n"
   );
@@ -2601,7 +2603,9 @@ const isNoRunsDirectory = (error: YeetEconomicsError): boolean =>
  * {@link YeetEconomicsError} cause (a failed run-id derivation, no repo root,
  * a failed encoding) fails the run. With `fleetHosts` (which implies `fleet`),
  * the {@link YeetFleetHostSource} journals join the fold and its receipts the
- * report's `scope.hosts`.
+ * report's `scope.hosts`. The {@link YeetPressureSource} read is joined onto
+ * every attempt in the report's `pressure` section (MEAS-08), the fleet
+ * hosts' attempts marked `remote-host`.
  *
  * **Example** (Build the runner effect)
  *
@@ -2626,11 +2630,12 @@ export const runYeetEconomics = Effect.fn("Yeet.runEconomics")(function* (
 ): Effect.fn.Return<
   void,
   YeetEconomicsError,
-  FileSystem.FileSystem | YeetEconomicsSource | YeetReviewLaneSource | YeetFleetHostSource
+  FileSystem.FileSystem | YeetEconomicsSource | YeetReviewLaneSource | YeetFleetHostSource | YeetPressureSource
 > {
   const source = yield* YeetEconomicsSource;
   const reviewLane = yield* YeetReviewLaneSource;
   const fleetHosts = yield* YeetFleetHostSource;
+  const pressureSource = yield* YeetPressureSource;
   const checkoutRoot = yield* repoRoot;
   // `--fleet-hosts` adds the configured hosts to the fleet, so it implies `--fleet`.
   const request = EconomicsScopeRequest.make({
@@ -2645,7 +2650,12 @@ export const runYeetEconomics = Effect.fn("Yeet.runEconomics")(function* (
     .pipe(Effect.catchIf(isNoRunsDirectory, () => Effect.succeed(A.empty<EconomicsJournal>())));
   const hosts = yield* fleetHosts.read(request);
   const ledgers = yield* reviewLane.read(request);
-  const report = yield* reportFor(request, A.appendAll(local, hosts.journals), ledgers, hosts.receipts);
+  const pressure = yield* pressureSource.read;
+  const folded = yield* reportFor(request, A.appendAll(local, hosts.journals), ledgers, hosts.receipts);
+  const report = YeetEconomicsReport.make({
+    ...folded,
+    pressure: joinEconomicsPressure(pressure, local, hosts.journals),
+  });
   if (options.json) {
     const json = yield* YeetEconomicsReportJson.encode(report).pipe(
       Effect.mapError((cause) =>
@@ -2691,6 +2701,7 @@ export const runYeetEconomicsCommand = (
   runYeetEconomics(YeetEconomicsOptions.make(options)).pipe(
     Effect.provideServiceEffect(YeetEconomicsSource, YeetEconomicsSource.make),
     Effect.provideServiceEffect(YeetReviewLaneSource, YeetReviewLaneSource.make),
+    Effect.provideServiceEffect(YeetPressureSource, YeetPressureSource.make),
     Effect.provideServiceEffect(
       YeetFleetHostSource,
       Effect.provideServiceEffect(YeetFleetHostSource.make, FleetHostShell, FleetHostShell.make)

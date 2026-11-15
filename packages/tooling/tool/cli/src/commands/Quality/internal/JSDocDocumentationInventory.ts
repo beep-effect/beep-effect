@@ -12,6 +12,7 @@ import {
 } from "@beep/repo-utils/JSDoc/JSDocSections";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str, thunkFalse } from "@beep/utils";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -46,7 +47,6 @@ import {
 } from "./QualityArtifactSupport.ts";
 import type { Git } from "@beep/git/Git";
 import type { JSDocSectionName } from "@beep/repo-utils/JSDoc/JSDocSections";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { SourceFile } from "ts-morph";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
@@ -1803,21 +1803,39 @@ export const writeJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   });
 });
 
+// Publish by rename: the text goes to a uniquely named sibling, then a rename
+// within the one directory replaces the target, so a concurrent reader (the
+// ratchet, or another gate that reads the `.beep/ci/` copy) sees the previous
+// complete file or the new one, never a truncated write. A failed write
+// removes its staging file and leaves the target untouched. The staging name
+// is dot-prefixed so a file a killed run leaves behind falls outside Turbo's
+// `.beep/ci/jsdoc-documentation.inventory.*` outputs glob and is never cached.
 const writeJSDocInventoryOutput = Effect.fn("JSDocDocumentationInventory.writeOutput")(function* (
   outputPath: string | undefined,
   content: string
-): Effect.fn.Return<void, QualityArtifactGeneratorError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  void,
+  QualityArtifactGeneratorError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
+> {
   if (outputPath === undefined) {
     return;
   }
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const random = yield* SecureRandom.SecureRandom;
   yield* fs.makeDirectory(path.dirname(outputPath), { recursive: true }).pipe(
     QualityArtifactGeneratorError.mapError(`Failed to create artifact directory for ${outputPath}.`, {
       filePath: outputPath,
     })
   );
-  yield* fs
-    .writeFileString(outputPath, content)
-    .pipe(QualityArtifactGeneratorError.mapError(`Failed to write ${outputPath}.`, { filePath: outputPath }));
+  const stagingPath = path.join(
+    path.dirname(outputPath),
+    `.${path.basename(outputPath)}.${yield* random.uuidV4()}.tmp`
+  );
+  yield* fs.writeFileString(stagingPath, content).pipe(
+    Effect.flatMap(() => fs.rename(stagingPath, outputPath)),
+    Effect.onError(() => fs.remove(stagingPath, { force: true }).pipe(Effect.ignore)),
+    QualityArtifactGeneratorError.mapError(`Failed to write ${outputPath}.`, { filePath: outputPath })
+  );
 });

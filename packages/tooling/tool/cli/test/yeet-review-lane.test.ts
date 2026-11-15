@@ -54,6 +54,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { NoPressure } from "./support/EconomicsPressure.ts";
 import type { YeetThreadDisposition } from "@beep/repo-cli/test/Yeet";
 
 const BRANCH = "feat/review-lane";
@@ -728,7 +729,7 @@ const NoFleetHosts = Layer.succeed(
   })
 );
 const Sources = Layer.provideMerge(
-  Layer.mergeAll(YeetEconomicsSource.layer, YeetReviewLaneSource.layer, NoFleetHosts),
+  Layer.mergeAll(YeetEconomicsSource.layer, YeetReviewLaneSource.layer, NoFleetHosts, NoPressure),
   Platform
 );
 

@@ -61,7 +61,54 @@ it.effect("refuses capture names that are empty, out of range or shared, and dro
   })
 );
 
+const digestStorageBytes = (width: number, length: number) => {
+  const bytes = new Uint8Array(length * width);
+  for (let i = 0; i < length; i++) {
+    const point = width === 1 ? i % 256 : width === 2 ? (i * 3571) % 65536 : (i * 65537) % 0x110000;
+    for (let j = 0; j < width; j++) bytes[i * width + j] = (point >>> (j * 8)) & 255;
+  }
+  return bytes;
+};
+
 it.layer(BunCrypto.layer)("source-bound regex descriptors", (it) => {
+  it.effect("selects the authoritative Digest fingerprint for 36 width and SHA-256 boundary cases", () =>
+    Effect.gen(function* () {
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const digest = yield* Digest.Digest;
+      let cases = 0;
+      for (const width of [1, 2, 4] as const) {
+        for (const length of [0, 1, 15, 16, 31, 32, 63, 64, 65, 127, 128, 1024]) {
+          const bytes = digestStorageBytes(width, length);
+          const words = new Uint8Array(1 + bytes.byteLength);
+          words[0] = width;
+          words.set(bytes, 1);
+          const expected = yield* digest.digestHex(Digest.sha256, words);
+          const registry = yield* makeCitationRegexDescriptorRegistry(limits, [
+            { ...descriptor(), patternSha256: expected },
+          ]);
+          const selected = yield* registry.select({ width, bytes }, 0);
+          expect(selected.patternSha256).toBe(expected);
+          cases++;
+        }
+      }
+      expect(cases).toBe(36);
+    })
+  );
+  it.effect("checks native layout and both pattern ceilings during descriptor selection", () =>
+    Effect.gen(function* () {
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const registry = yield* makeCitationRegexDescriptorRegistry({ ...limits, processMessageBytes: 1024 }, [
+        descriptor(),
+      ]);
+      const invalid = yield* registry.select({ width: 3, bytes: new Uint8Array([97]) }, 0).pipe(Effect.flip);
+      expect(invalid).toMatchObject({ reason: "unknown-pattern" });
+      const oversized = yield* registry.select({ width: 1, bytes: new Uint8Array(1025) }, 0).pipe(Effect.flip);
+      expect(oversized).toMatchObject({ limit: "processMessageBytes" });
+      const short = yield* makeCitationRegexDescriptorRegistry({ ...limits, patternUtf16: 1 }, [descriptor()]);
+      const tooLong = yield* short.select(pattern(), 0).pipe(Effect.flip);
+      expect(tooLong).toMatchObject({ limit: "patternUtf16" });
+    })
+  );
   it.effect("retains its captured Clock and total deadline precedence", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;

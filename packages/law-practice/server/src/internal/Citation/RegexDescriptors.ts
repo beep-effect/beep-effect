@@ -2,12 +2,14 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationPythonUnicodeStorage, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { sha256 } from "@noble/hashes/sha2.js";
 import * as A from "effect/Array";
 import * as Bytes from "effect/Bytes";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
+import * as Hex from "effect/encoding/Hex";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -85,8 +87,12 @@ export class CitationRegexPatternDescriptor extends S.Opaque<
   )
 ) {}
 const ProfileType = S.toType(CitationRegexPatternProfile);
+const decodeFlags = S.decodeUnknownEffect(CitationRegexProgram.fields.sourceFlags);
+const decodeProfile = S.decodeUnknownEffect(ProfileType);
+const decodeNative = S.decodeUnknownEffect(CitationPythonUnicodeStorage);
 const sameProfile = S.toEquivalence(CitationRegexPatternProfile);
 const fail = (reason: CitationRegexDescriptorFailure["reason"]) => CitationRegexDescriptorFailure.make({ reason });
+const fingerprintUnavailable = () => fail("fingerprint-unavailable");
 const key = (digest: string, flags: number) => `${flags}:${digest}`;
 /** Copy descriptor data without sharing the mutable name record.
  * @internal @category operations @since 0.0.0
@@ -122,27 +128,56 @@ export const makeCitationRegexDescriptorRegistry = Effect.fn("Citation.makeRegex
     if (MutableHashMap.has(installed, identity)) return yield* fail("invalid-bindings");
     MutableHashMap.set(installed, identity, descriptor);
   }
-  const bind = Effect.fn("Citation.bindRegexDescriptor")(function* (nativePattern: unknown, flagsInput: unknown) {
-    const flags = yield* S.decodeUnknownEffect(CitationRegexProgram.fields.sourceFlags)(flagsInput).pipe(
-      Effect.mapError(() => fail("unknown-pattern"))
-    );
-    const prepared = yield* input
-      .prepareUnicode(nativePattern, () => Effect.void)
-      .pipe(Effect.catchTag("CitationRegexInputFailure", () => Effect.fail(fail("unknown-pattern"))));
-    const storage = prepared.value.storage;
+  const fingerprint = Effect.fn("Citation.fingerprintRegexDescriptor")(function* (
+    storage: CitationPythonUnicodeStorage
+  ) {
     const words = Bytes.concat([new Uint8Array([storage.width]), storage.bytes]);
-    const digest = yield* crypto
+    return yield* crypto
       .digestHex(Digest.sha256, words)
-      .pipe(Effect.catchDefect(() => Effect.fail(fail("fingerprint-unavailable"))));
+      .pipe(Effect.catchDefect(() => Effect.fail(fingerprintUnavailable())));
+  });
+  const select = Effect.fn("Citation.selectRegexDescriptor")(function* (nativePattern: unknown, flagsInput: unknown) {
+    const flags = yield* decodeFlags(flagsInput).pipe(Effect.mapError(() => fail("unknown-pattern")));
+    const storage = yield* decodeNative(nativePattern).pipe(Effect.mapError(() => fail("unknown-pattern")));
+    if (storage.bytes.byteLength > limits.processMessageBytes)
+      return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "processMessageBytes" });
+    if (storage.bytes.byteLength / storage.width > limits.patternUtf16)
+      return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patternUtf16" });
+    // Routing only: authoritative verification still uses the captured Digest
+    // after preparation. Incremental hashing borrows input without a sized copy.
+    const digest = yield* Effect.try({
+      try: () =>
+        Hex.encode(
+          sha256
+            .create()
+            .update(new Uint8Array([storage.width]))
+            .update(storage.bytes)
+            .digest()
+        ),
+      catch: fingerprintUnavailable,
+    });
     const descriptor = yield* Effect.fromOption(MutableHashMap.get(installed, key(digest, flags))).pipe(
       Effect.mapError(() => fail("unknown-pattern"))
     );
-    const program = yield* compiler.compile(storage, flags);
-    const profile = yield* S.decodeUnknownEffect(ProfileType)(program).pipe(
-      Effect.mapError(() => fail("profile-mismatch"))
-    );
+    return copyCitationRegexDescriptor(descriptor);
+  }, timed);
+  const verify = Effect.fn("Citation.verifyRegexDescriptor")(function* (
+    descriptor: CitationRegexPatternDescriptor,
+    prepared: Effect.Success<ReturnType<typeof input.prepareUnicode>>
+  ) {
+    const digest = yield* fingerprint(prepared.value.storage);
+    if (digest !== descriptor.patternSha256) return yield* fail("unknown-pattern");
+    const program = yield* compiler.compile(prepared.value.storage, descriptor.flags);
+    const profile = yield* decodeProfile(program).pipe(Effect.mapError(() => fail("profile-mismatch")));
     if (!sameProfile(profile, descriptor.profile)) return yield* fail("profile-mismatch");
     return { descriptor: copyCitationRegexDescriptor(descriptor), program, prepared };
   }, timed);
-  return { engine: compiler.engine, bind };
+  const bind = Effect.fn("Citation.bindRegexDescriptor")(function* (nativePattern: unknown, flags: unknown) {
+    const prepared = yield* input
+      .prepareUnicode(nativePattern, () => Effect.void)
+      .pipe(Effect.catchTag("CitationRegexInputFailure", () => Effect.fail(fail("unknown-pattern"))));
+    const descriptor = yield* select(prepared.value.storage, flags);
+    return yield* verify(descriptor, prepared);
+  }, timed);
+  return { engine: compiler.engine, select, verify, bind };
 });

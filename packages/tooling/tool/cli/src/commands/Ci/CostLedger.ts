@@ -53,6 +53,7 @@ import {
   CiLedgerRunRow,
   CiLedgerSourceRow,
   CiLedgerTestPlan,
+  ciLedgerSourceStatus,
 } from "./CostLedger.schemas.ts";
 import {
   CiLaneTimingGithubClient,
@@ -462,13 +463,6 @@ export const foldCiLedgerRun = (run: CiLedgerRun): CiLedgerRunRow => {
   });
 };
 
-const readStatus = (read: number, total: number): CiLedgerSourceStatus =>
-  Match.value({ none: read === 0, all: read === total }).pipe(
-    Match.when({ none: true }, (): CiLedgerSourceStatus => "absent"),
-    Match.when({ all: true }, (): CiLedgerSourceStatus => "present"),
-    Match.orElse((): CiLedgerSourceStatus => "partial")
-  );
-
 // The parts of a run's Test Plan join: its Test Plan output, then the selection line of each catch-all
 // partition job the run executed. Each part names itself, so a source row can say which one is missing.
 const testPlanParts = (run: CiLedgerRun): ReadonlyArray<readonly [string, boolean]> => [
@@ -486,7 +480,7 @@ const readParts = (parts: ReadonlyArray<readonly [string, boolean]>): number =>
 
 const testPlanStatus = (run: CiLedgerRun): CiLedgerSourceStatus => {
   const parts = testPlanParts(run);
-  return readStatus(readParts(parts), parts.length);
+  return ciLedgerSourceStatus(readParts(parts), parts.length);
 };
 
 // A run read every attempt it had, or names each attempt whose jobs read failed.
@@ -512,7 +506,10 @@ const UNJOINED_SOURCES: ReadonlyArray<readonly [CiLedgerSourceKind, string]> = [
   ["turbo-tasks", "per-task hosted Turbo rows are MEAS-06, still open: unit-results.json is uploaded only on failure"],
   ["final-check", "local final-check attempts (MEAS-07 journals) are not joined by this fold"],
   ["economics", "local Yeet attempt lanes are not joined by this fold"],
-  ["psi", "pressure samples are MEAS-08, which depends on this ledger and is still open"],
+  [
+    "psi",
+    "PSI samples are this workstation's pressure, and hosted jobs run on runners it never samples; yeet economics joins them onto local attempts (MEAS-08)",
+  ],
 ];
 
 const sourceRows = (runs: ReadonlyArray<CiLedgerRun>): ReadonlyArray<CiLedgerSourceRow> => {
@@ -527,13 +524,13 @@ const sourceRows = (runs: ReadonlyArray<CiLedgerRun>): ReadonlyArray<CiLedgerSou
       ),
       runs: A.filter(runs, (run) => A.isReadonlyArrayEmpty(run.partialReads)).length,
       source: "hosted-jobs",
-      status: readStatus(read, attempts),
+      status: ciLedgerSourceStatus(read, attempts),
     }),
     CiLedgerSourceRow.make({
       note: withMissing("Test Plan output and the catch-all partition's selection line", missingParts(runs)),
       runs: A.filter(runs, (run) => testPlanStatus(run) === "present").length,
       source: "test-plan",
-      status: readStatus(readParts(parts), parts.length),
+      status: ciLedgerSourceStatus(readParts(parts), parts.length),
     }),
     ...A.map(UNJOINED_SOURCES, ([source, note]) => CiLedgerSourceRow.make({ note, runs: 0, source, status: "absent" })),
   ];
