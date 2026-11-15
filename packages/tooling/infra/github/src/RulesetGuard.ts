@@ -498,10 +498,14 @@ const guardedNames = [
 export const diffFields = Effect.fn("InfraGithub.diffFields")(function* (planned: GuardedFields, live: GuardedFields) {
   const plannedEncoded = yield* encodeFields(planned);
   const liveEncoded = yield* encodeFields(live);
-  const compared = yield* Effect.forEach(guardedNames, (field) =>
-    Effect.all({ planned: encodeJson(plannedEncoded[field]), live: encodeJson(liveEncoded[field]) }).pipe(
-      Effect.map((values) => (values.planned === values.live ? [] : [FieldDiff.make({ field, ...values })]))
-    )
+  const compared = yield* Effect.forEach(
+    guardedNames,
+    (field) =>
+      Effect.all(
+        { planned: encodeJson(plannedEncoded[field]), live: encodeJson(liveEncoded[field]) },
+        { concurrency: 1 }
+      ).pipe(Effect.map((values) => (values.planned === values.live ? [] : [FieldDiff.make({ field, ...values })]))),
+    { concurrency: 1 }
   );
   return A.flatten(compared);
   // Encoding these field schemas to JSON is total; a failure here is a defect, not a drift.
