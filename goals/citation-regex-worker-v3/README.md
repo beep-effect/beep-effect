@@ -40,7 +40,7 @@ reflection is [history/reflections/2026-11-14-claude.md](history/reflections/202
 ## Latest Evidence
 
 [Replay acceptance](history/evidence/2026-11-14-replay-acceptance.md): the five serial replays
-finish at 10% to 20% of their watchdog on hosted CI and on beep-worker, with identical asserted
+finish under 20% of their watchdog on hosted CI (2% to 18%) and at 10% to 20% on beep-worker, with identical asserted
 results.
 
 ## Notes

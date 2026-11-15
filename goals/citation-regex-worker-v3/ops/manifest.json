@@ -12,7 +12,7 @@
   "packetPath": "goals/citation-regex-worker-v3",
   "lifecycle": "completed-retained",
   "mission": "Serve a request's regex jobs from one child process at a time in a per-invocation native lane, under a parent timer per job, keeping SIGKILL retirement and capacity release only on confirmed death.",
-  "statusNote": "All three slices merged: B1 #3336, B2 #3352, B3 #3355. Ten plain-text calls start 10 regex child processes instead of 291 with 291 evaluations unchanged; protocol v2 is deleted; the five serial replays finish at 10% to 20% of their watchdog on hosted CI and on beep-worker. Reflection: history/reflections/2026-11-14-claude.md.",
+  "statusNote": "All three slices merged: B1 #3336, B2 #3352, B3 #3355. Ten plain-text calls start 10 regex child processes instead of 291 with 291 evaluations unchanged; protocol v2 is deleted; the five serial replays finish under 20% of their watchdog on hosted CI (2% to 18%) and at 10% to 20% on beep-worker. Reflection: history/reflections/2026-11-14-claude.md.",
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

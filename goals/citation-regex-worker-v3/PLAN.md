@@ -71,7 +71,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 ### All three slices merged; the packet is in closeout, 2026-11-14
 
-B1 merged as #3336, B2 as #3352 (bbf67b946b) and B3 as #3355 (34964a3fdc). Ten plain-text calls start 10 regex child processes instead of 291 with 291 evaluations unchanged. The ep103 red that #3352 put on main (a test fixture race) was fixed by #3353 the same hour. The five serial replays finish at 10% to 20% of their watchdog on hosted CI and on beep-worker (history/evidence/2026-11-14-replay-acceptance.md). Reflection: history/reflections/2026-11-14-claude.md.
+B1 merged as #3336, B2 as #3352 (bbf67b946b) and B3 as #3355 (34964a3fdc). Ten plain-text calls start 10 regex child processes instead of 291 with 291 evaluations unchanged. The ep103 red that #3352 put on main (a test fixture race) was fixed by #3353 the same hour. The five serial replays finish under 20% of their watchdog on hosted CI (2% to 18%) and at 10% to 20% on beep-worker (history/evidence/2026-11-14-replay-acceptance.md). Reflection: history/reflections/2026-11-14-claude.md.
 
 Lane docs/citation-regex-worker-v3-closeout
 
