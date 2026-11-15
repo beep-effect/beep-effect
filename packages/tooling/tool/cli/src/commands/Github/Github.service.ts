@@ -114,44 +114,61 @@ const mintTitle = "beep-knowledge-mint GitHub App";
 const constEmpty = constant(Str.empty);
 const slugOf = (slug: O.Option<string>) => O.getOrElse(slug, constEmpty);
 
-const knowledgeMintProfile: AppProfile = {
-  itemTitle: mintTitle,
+// One profile for every App whose vault item records its slug: only the log tag, the item title
+// and the Stored line's closing instruction differ between them.
+const sluggedProfile = (tag: string, itemTitle: string, storedNext: string): AppProfile => ({
+  itemTitle,
   recordsSlug: true,
   diagnoseBeforeReport: true,
-  listening: `[knowledge-mint] Listening. Open http://localhost:${PORT} in Chrome as kriegcloud. The callback never displays credentials. Ctrl-C stops the server.`,
+  listening: `[${tag}] Listening. Open http://localhost:${PORT} in Chrome as kriegcloud. The callback never displays credentials. Ctrl-C stops the server.`,
   report: GitHubAppRegistrationOutcome.match({
     Stored: (stored) => ({
       line: Console.log(
-        `[knowledge-mint] Stored "${mintTitle}" in BEEP_SECRETS for App ${slugOf(stored.slug)} (app_id ${stored.appId}). Install it, record installation_id, then press Ctrl-C.`
+        `[${tag}] Stored "${itemTitle}" in BEEP_SECRETS for App ${slugOf(stored.slug)} (app_id ${stored.appId}). ${storedNext}`
       ),
-      body: `Stored in 1Password as "${mintTitle}" (App ${slugOf(stored.slug)}). Install it on beep-effect/beep-effect only, record installation_id, then stop the launcher with Ctrl-C.`,
+      body: `Stored in 1Password as "${itemTitle}" (App ${slugOf(stored.slug)}). Install it on beep-effect/beep-effect only, record installation_id, then stop the launcher with Ctrl-C.`,
       status: 200,
     }),
     ConversionFailed: (failed) => ({
-      line: Console.error(`[knowledge-mint] Manifest conversion returned HTTP ${failed.status}; nothing was stored.`),
+      line: Console.error(`[${tag}] Manifest conversion returned HTTP ${failed.status}; nothing was stored.`),
       body: `Manifest conversion returned HTTP ${failed.status}. Nothing was stored. Check the App registration page before starting over.`,
       status: 500,
     }),
     StoreFailed: (failed) => ({
       line: Console.error(
-        `[knowledge-mint] App ${slugOf(failed.slug)} was registered, but 1Password item creation exited ${failed.exitCode}; secret diagnostics suppressed. Do not reload the callback.`
+        `[${tag}] App ${slugOf(failed.slug)} was registered, but 1Password item creation exited ${failed.exitCode}; secret diagnostics suppressed. Do not reload the callback.`
       ),
       body: `App ${slugOf(failed.slug)} was registered, but storing it in 1Password failed (exit ${failed.exitCode}). Do not reload this page: the code is single-use. Revoke the new App's generated private key, delete the uninstalled registration, then start the launcher again.`,
       status: 500,
     }),
     Failed: () => ({
       line: Console.error(
-        "[knowledge-mint] Conversion or vault write failed; diagnostics suppressed. Do not reload the callback."
+        `[${tag}] Conversion or vault write failed; diagnostics suppressed. Do not reload the callback.`
       ),
       body: "Conversion or vault write failed. No secret was printed or saved locally. Do not reload this page. Inspect the App settings, revoke any generated key, and delete an uninstalled new registration before retrying.",
       status: 500,
     }),
   }),
-};
+});
+
+const knowledgeMintProfile = sluggedProfile(
+  "knowledge-mint",
+  mintTitle,
+  "Install it, record installation_id, then press Ctrl-C."
+);
+
+// The InfraGithub deploy identity (goals/infra-alchemy-rebuild). After the mint, the operator follows the
+// "InfraGithub" section of docs/runbooks/alchemy-infra.md: install, then the infra-github-prod environment.
+const infraGithubProfile = sluggedProfile(
+  "infra-github",
+  "beep-infra-github GitHub App",
+  "Install it on beep-effect/beep-effect only, record installation_id, then press Ctrl-C and continue with the InfraGithub runbook section."
+);
 
 const profileOf = GitHubAppName.match({
   "beep-reviewer": () => reviewerProfile,
   "beep-knowledge-mint": () => knowledgeMintProfile,
+  "beep-infra-github": () => infraGithubProfile,
 });
 
 const vaultTemplate = (profile: AppProfile, converted: GitHubAppManifestConversion, slug: O.Option<string>) =>
