@@ -741,20 +741,57 @@ const deriveSkills = Effect.fn("KnowledgeDoctorDomain.skills")(function* (
  *
  * @param oracle - Tree whose bytes the facts come from.
  * @returns Lookups for packets, packages, path aliases, file exports, goals-doctor findings, and skills.
+ * @see {@link deriveKnowledgeDoctorDomainFromPaths} when the tracked-path set is already in hand.
  * @category constructors
  * @since 0.0.0
  */
-export const deriveKnowledgeDoctorDomain = (oracle: KnowledgeTreeOracle): KnowledgeDoctorDomain => {
-  const paths = trackedPaths(oracle);
-  return {
+export const deriveKnowledgeDoctorDomain = (oracle: KnowledgeTreeOracle): KnowledgeDoctorDomain =>
+  deriveKnowledgeDoctorDomainFromPaths(oracle, trackedPaths(oracle));
+
+/**
+ * Derives the knowledge facts of one tree from its oracle and its already-built tracked-path set.
+ *
+ * **Details**
+ *
+ * The same lookups as {@link deriveKnowledgeDoctorDomain}, which builds `paths` from the oracle's
+ * entries. A caller that already holds the set, such as a counterfactual overlay that removed one
+ * path from it, passes it here instead of re-hashing every tracked path.
+ *
+ * **Example** (Derive the facts of an empty tree with its path set)
+ *
+ * ```ts
+ * import { deriveKnowledgeDoctorDomainFromPaths } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.domain"
+ * import * as Effect from "effect/Effect"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * const domain = deriveKnowledgeDoctorDomainFromPaths(
+ *   { commit: "HEAD", treeish: "HEAD", trackedEntries: [], readBytes: () => Effect.succeed(new Uint8Array()) },
+ *   HashSet.empty()
+ * )
+ *
+ * console.log(Effect.isEffect(domain.packets)) // true
+ * ```
+ *
+ * @param oracle - Tree whose bytes the facts come from.
+ * @param paths - Exactly the oracle's tracked entry paths.
+ * @returns Lookups for packets, packages, path aliases, file exports, goals-doctor findings, and skills.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const deriveKnowledgeDoctorDomainFromPaths: {
+  (paths: HashSet.HashSet<string>): (oracle: KnowledgeTreeOracle) => KnowledgeDoctorDomain;
+  (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<string>): KnowledgeDoctorDomain;
+} = dual(
+  2,
+  (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<string>): KnowledgeDoctorDomain => ({
     packets: derivePackets(oracle),
     packages: deriveKnowledgePackages(oracle, paths),
     pathAliases: derivePathAliases(oracle, paths),
     fileExports: (file) => deriveFileExports(oracle, paths, file),
     goalsDoctorFindings: readKnowledgeGoalsDoctorFindings(oracle),
     skills: deriveSkills(oracle, paths),
-  };
-};
+  })
+);
 
 /**
  * Memoizes every lookup of a domain for the lifetime of one scan.
