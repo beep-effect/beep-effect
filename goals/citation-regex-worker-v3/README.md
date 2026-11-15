@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,16 +31,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-B1 merged as #3336 (`fa8f0f0757`): one native lane per invocation and limits policy v2.
-B2 merged as #3352 (`bbf67b946b`): protocol v3 and `CitationRegexSession`, one regex child
-process per invocation, taking ten plain-text calls from 291 regex children to 10. B3 is in review
-on [PR #3355](https://github.com/beep-effect/beep-effect/pull/3355): protocol v2 deleted and the
-law-practice unit shard plan re-recorded from its own hosted run.
+All three slices are merged: B1 #3336 (one native lane per invocation, limits policy v2), B2
+#3352 (protocol v3 and `CitationRegexSession`, one regex child process per invocation) and B3
+#3355 (protocol v2 deleted, law-practice shard plan re-recorded). Ten plain-text calls start 10
+regex child processes instead of 291, with 291 evaluations unchanged. The packet is closed; the
+reflection is [history/reflections/2026-11-14-claude.md](history/reflections/2026-11-14-claude.md).
 
 ## Latest Evidence
 
-[B3 evidence](history/evidence/2026-11-14-b3-remove-v2.md) (deletions, test migration, isolation
-contract); B2 evidence in [history/evidence/2026-11-14-b2-regex-session.md](history/evidence/2026-11-14-b2-regex-session.md).
+[Replay acceptance](history/evidence/2026-11-14-replay-acceptance.md): the five serial replays
+finish under 20% of their watchdog on hosted CI (2% to 18%) and at 10% to 20% on beep-worker, with identical asserted
+results.
 
 ## Notes
 

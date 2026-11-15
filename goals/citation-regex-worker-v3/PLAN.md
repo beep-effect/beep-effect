@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `in progress`
+Status: `completed-retained`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | completed | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | in progress | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
-| P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P1 Implement | completed | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P2 Verify | completed | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | completed | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | completed | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Slices
 
@@ -22,7 +22,7 @@ Each slice is one PR and runs the phases above. They land in order.
 | --- | --- | --- | --- |
 | B1 | merged (#3336) | `CitationNativeLane`; regex v2, Diff and Markup start through it; limits cross-field check; policy v2. | none; adds the markup interleave proofs |
 | B2 | merged (#3352) | Protocol v3 messages, looping worker, `CitationRegexSession`, sleep-counting clock, the real-process proofs; every regex call site switches. | regex processes 291 to 10 |
-| B3 | in review (#3355) | Delete v2; retain exact spawn-count assertions; re-record shard timings; append isolation evidence. | none |
+| B3 | merged (#3355) | Delete v2; retain exact spawn-count assertions; re-record shard timings; append isolation evidence. | none |
 
 First slice: B1, the native lane, once slice A2 of `citation-engine-install-once` has merged.
 
@@ -68,6 +68,14 @@ git diff --check -- goals/citation-regex-worker-v3
 
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug citation-regex-worker-v3`; add a `kind: checkpoint` file there, never edit this block._
+
+### All three slices merged; the packet is in closeout, 2026-11-14
+
+B1 merged as #3336, B2 as #3352 (bbf67b946b) and B3 as #3355 (34964a3fdc). Ten plain-text calls start 10 regex child processes instead of 291 with 291 evaluations unchanged. The ep103 red that #3352 put on main (a test fixture race) was fixed by #3353 the same hour. The five serial replays finish under 20% of their watchdog on hosted CI (2% to 18%) and at 10% to 20% on beep-worker (history/evidence/2026-11-14-replay-acceptance.md). Reflection: history/reflections/2026-11-14-claude.md.
+
+Lane docs/citation-regex-worker-v3-closeout
+
+Reverse: Return the packet to in progress if a merged slice is reverted.
 
 ### B1 explicit reservation verified and in review, 2026-11-14
 
