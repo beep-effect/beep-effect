@@ -424,12 +424,15 @@ const isLiveLaneJob = (record: ProofJobRecord): boolean => !isSettledProofJob(re
 export const stopLaneJobs = Effect.fn("Yeet.stopLaneJobs")(function* (plan: YeetRetirePlan) {
   const launcher = yield* ProofJobLauncher.make(plan.worktreePath);
   const records = yield* launcher.list.pipe(Effect.orElseSucceed(A.empty<ProofJobRecord>));
-  return yield* Effect.forEach(A.filter(records, isLiveLaneJob), (record) =>
-    // A cancel stamp would overwrite a finished job's outcome, so its unit is
-    // only stopped; anything still running is cancelled.
-    (isTerminalProofJobPhase(record.phase) ? launcher.stopUnit(record.jobId) : launcher.cancel(record.jobId)).pipe(
-      Effect.map((outcome) => StoppedLaneJob.make({ jobId: record.jobId, outcome }))
-    )
+  return yield* Effect.forEach(
+    A.filter(records, isLiveLaneJob),
+    (record) =>
+      // A cancel stamp would overwrite a finished job's outcome, so its unit is
+      // only stopped; anything still running is cancelled.
+      (isTerminalProofJobPhase(record.phase) ? launcher.stopUnit(record.jobId) : launcher.cancel(record.jobId)).pipe(
+        Effect.map((outcome) => StoppedLaneJob.make({ jobId: record.jobId, outcome }))
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -784,11 +787,14 @@ export const checkTouchedCloseouts = Effect.fn("Yeet.checkTouchedCloseouts")(fun
 ) {
   const headSha = yield* Effect.flatMap(Git, (git) => git.revParse(cloneRoot, mainRef)).pipe(Effect.option);
   if (O.isNone(headSha)) return A.empty<GoalCloseoutCheck>();
-  const candidates = yield* Effect.forEach(slugs, (slug) =>
-    Effect.map(
-      mainManifest(cloneRoot, mainRef, slug),
-      O.map((manifest) => [slug, manifest] as const)
-    )
+  const candidates = yield* Effect.forEach(
+    slugs,
+    (slug) =>
+      Effect.map(
+        mainManifest(cloneRoot, mainRef, slug),
+        O.map((manifest) => [slug, manifest] as const)
+      ),
+    { concurrency: 1 }
   );
   const decoded = A.getSomes(candidates);
   const committed = A.filter(decoded, ([, manifest]) => manifest.closeout !== undefined);
@@ -813,7 +819,7 @@ export const checkTouchedCloseouts = Effect.fn("Yeet.checkTouchedCloseouts")(fun
         manifest,
         A.findFirst(checks, (check) => check.packet === slug)
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   return checks;
 });

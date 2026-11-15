@@ -262,24 +262,30 @@ const readWarmGitIdentity = Effect.fn("Cache.readWarmGitIdentity")(function* (re
   const tracked = { untrackedFiles: "normal" } as const;
   const revision = (ref: string) =>
     git.revParse(repoRoot, ref).pipe(Effect.mapError(adaptGitKitError(GitCommand.revParse(ref), cacheGitErrors)));
-  const [status, head, base, tree] = yield* Effect.all([
-    git.status(repoRoot, tracked).pipe(Effect.mapError(adaptGitKitError(GitCommand.status(tracked), cacheGitErrors))),
-    revision("HEAD"),
-    revision("origin/main"),
-    revision("HEAD^{tree}"),
-  ]);
+  const [status, head, base, tree] = yield* Effect.all(
+    [
+      git.status(repoRoot, tracked).pipe(Effect.mapError(adaptGitKitError(GitCommand.status(tracked), cacheGitErrors))),
+      revision("HEAD"),
+      revision("origin/main"),
+      revision("HEAD^{tree}"),
+    ],
+    { concurrency: 1 }
+  );
   return { clean: A.isReadonlyArrayEmpty(status), head, base, tree };
 });
 
 const assertWarmPreconditions = Effect.fn("Cache.assertWarmPreconditions")(function* (repoRoot: string) {
-  const [identity, actualBun, pinnedBun] = yield* Effect.all([
-    readWarmGitIdentity(repoRoot),
-    runText(["bun", "--version"], repoRoot),
-    Effect.tryPromise({
-      try: () => Bun.file(`${repoRoot}/.bun-version`).text().then(Str.trim),
-      catch: (cause) => CacheCommandError.new("Failed to read .bun-version.", cause),
-    }),
-  ]);
+  const [identity, actualBun, pinnedBun] = yield* Effect.all(
+    [
+      readWarmGitIdentity(repoRoot),
+      runText(["bun", "--version"], repoRoot),
+      Effect.tryPromise({
+        try: () => Bun.file(`${repoRoot}/.bun-version`).text().then(Str.trim),
+        catch: (cause) => CacheCommandError.new("Failed to read .bun-version.", cause),
+      }),
+    ],
+    { concurrency: 1 }
+  );
   if (!identity.clean) return yield* CacheCommandError.new("cache warm requires a clean checkout.");
   if (identity.head !== identity.base) {
     return yield* CacheCommandError.new("cache warm requires HEAD to equal origin/main exactly.");
@@ -483,7 +489,8 @@ const readRunFiles = Effect.fn("Cache.readRunFiles")(function* (runsDir: string)
       }).pipe(
         Effect.flatMap(decodeUnknownTurboRunSummary),
         Effect.mapError((cause) => CacheCommandError.new(`Invalid Turbo summary ${filePath}.`, cause))
-      )
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -768,7 +775,7 @@ export const runCachePolicyAudit = Effect.fn("Cache.runPolicyAudit")(function* (
     yield* Effect.forEach(
       report.findings,
       (finding) => Console.log(`${finding.blocking ? "BLOCK" : "REVIEW"} ${finding.kind}: ${finding.subject}`),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   }
   if (A.isReadonlyArrayNonEmpty(blocking))
@@ -1451,15 +1458,21 @@ const cacheConformanceCompareCommand = Command.make(
   },
   ({ runs, evidence, output }) =>
     Effect.gen(function* () {
-      const reports = yield* Effect.forEach(runs, (run) =>
-        readCacheRequest(run, CacheConformanceRun, S.Natural.make(32 * 1024 * 1024)).pipe(
-          Effect.map(CacheConformanceRun.make)
-        )
+      const reports = yield* Effect.forEach(
+        runs,
+        (run) =>
+          readCacheRequest(run, CacheConformanceRun, S.Natural.make(32 * 1024 * 1024)).pipe(
+            Effect.map(CacheConformanceRun.make)
+          ),
+        { concurrency: 1 }
       );
-      const documents = yield* Effect.forEach(evidence, (file) =>
-        readCacheRequest(file, CacheConformanceEvidence, S.Natural.make(4 * 1024 * 1024)).pipe(
-          Effect.map(CacheConformanceEvidence.make)
-        )
+      const documents = yield* Effect.forEach(
+        evidence,
+        (file) =>
+          readCacheRequest(file, CacheConformanceEvidence, S.Natural.make(4 * 1024 * 1024)).pipe(
+            Effect.map(CacheConformanceEvidence.make)
+          ),
+        { concurrency: 1 }
       );
       const comparison = yield* A.match(reports, {
         onEmpty: () => Effect.fail(CacheCommandError.new("Pass at least one --runs report.")),

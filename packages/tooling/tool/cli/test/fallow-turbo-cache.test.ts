@@ -140,7 +140,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Fallow Turbo cache restore",
       // unchanged key, so it is the one Fallow row that must stay uncached.
       const uncached = A.filter(fallowEntries, ([id]) => !A.some(cached, ([cachedId]) => cachedId === id));
       expect(A.map(uncached, ([id]) => id)).toEqual(["//#fallow:audit:check"]);
-      const rows = yield* Effect.forEach(cached, ([id]) => fallowRow(id, manifest.scripts));
+      const rows = yield* Effect.forEach(cached, ([id]) => fallowRow(id, manifest.scripts), { concurrency: 1 });
       expect(A.length(rows)).toBe(8);
 
       const root = yield* fs.makeTempDirectoryScoped({ prefix: "fallow-turbo-cache-" });
@@ -214,16 +214,26 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("Fallow Turbo cache restore",
         });
       });
       const runCounts = Effect.fnUntraced(function* () {
-        return yield* Effect.forEach(rows, (row) =>
-          fs.readFileString(path.join(root, ".stub/runs", runKey(row.script))).pipe(
-            Effect.map((text) => A.length(A.filter(Str.split(text, "\n"), Str.isNonEmpty))),
-            Effect.orElseSucceed(() => 0)
-          )
+        return yield* Effect.forEach(
+          rows,
+          (row) =>
+            fs.readFileString(path.join(root, ".stub/runs", runKey(row.script))).pipe(
+              Effect.map((text) => A.length(A.filter(Str.split(text, "\n"), Str.isNonEmpty))),
+              Effect.orElseSucceed(() => 0)
+            ),
+          { concurrency: 1 }
         );
       });
       const evidence = Effect.fnUntraced(function* () {
-        return yield* Effect.forEach(rows, (row) =>
-          Effect.forEach(A.getSomes([row.reportPath, row.rawPath]), (file) => fs.readFileString(path.join(root, file)))
+        return yield* Effect.forEach(
+          rows,
+          (row) =>
+            Effect.forEach(
+              A.getSomes([row.reportPath, row.rawPath]),
+              (file) => fs.readFileString(path.join(root, file)),
+              { concurrency: 1 }
+            ),
+          { concurrency: 1 }
         );
       });
       const counts = (n: number) => A.map(rows, () => n);

@@ -864,25 +864,28 @@ export const discoverChangedDoctestFilesForTesting = Effect.fn("Doctest.discover
 ) {
   const git = yield* Git;
   const pathspec = DOCTEST_PATHSPEC;
-  const [committed, dirty, untracked] = yield* Effect.all([
-    git
-      .changedFiles(repoRoot, { base: "origin/main", head: "HEAD", pathspec })
-      .pipe(
-        Effect.mapError(
-          adaptGitKitError(GitCommand.changedFiles("origin/main", "HEAD", false, { pathspec }), gitErrorAdapter)
-        )
-      ),
-    git
-      .unstagedChanges(repoRoot, { head: "HEAD", pathspec })
-      .pipe(
-        Effect.mapError(
-          adaptGitKitError(GitCommand.unstagedChanges(false, { head: "HEAD", pathspec }), gitErrorAdapter)
-        )
-      ),
-    git
-      .untrackedFiles(repoRoot, { pathspec })
-      .pipe(Effect.mapError(adaptGitKitError(GitCommand.untrackedFiles(false, pathspec), gitErrorAdapter))),
-  ]);
+  const [committed, dirty, untracked] = yield* Effect.all(
+    [
+      git
+        .changedFiles(repoRoot, { base: "origin/main", head: "HEAD", pathspec })
+        .pipe(
+          Effect.mapError(
+            adaptGitKitError(GitCommand.changedFiles("origin/main", "HEAD", false, { pathspec }), gitErrorAdapter)
+          )
+        ),
+      git
+        .unstagedChanges(repoRoot, { head: "HEAD", pathspec })
+        .pipe(
+          Effect.mapError(
+            adaptGitKitError(GitCommand.unstagedChanges(false, { head: "HEAD", pathspec }), gitErrorAdapter)
+          )
+        ),
+      git
+        .untrackedFiles(repoRoot, { pathspec })
+        .pipe(Effect.mapError(adaptGitKitError(GitCommand.untrackedFiles(false, pathspec), gitErrorAdapter))),
+    ],
+    { concurrency: 1 }
+  );
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const candidates = pipe(
@@ -1180,7 +1183,8 @@ const rewriteWithServices = Effect.fn("Doctest.rewrite")(function* (plans: Reado
           Effect.mapError(() => DoctestRewriteError.make({ message: "Failed to read planned source file.", file }))
         );
       return [file, absolute, yield* rewriteSource(file, source, filePlans)] as const;
-    })
+    }),
+    { concurrency: 1 }
   );
   if (write) {
     yield* Effect.forEach(
@@ -1191,7 +1195,8 @@ const rewriteWithServices = Effect.fn("Doctest.rewrite")(function* (plans: Reado
           .pipe(
             Effect.mapError(() => DoctestRewriteError.make({ message: "Failed to write rewritten source file.", file }))
           );
-      })
+      }),
+      { concurrency: 1 }
     );
   }
   return A.map(transformed, ([file]) => file);

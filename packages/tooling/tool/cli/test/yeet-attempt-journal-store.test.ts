@@ -113,7 +113,7 @@ const appendJournal = Effect.fnUntraced(function* (
   const path = yield* Path.Path;
   const directory = path.join(checkout, ".beep", "yeet", "runs", runId);
   yield* fs.makeDirectory(directory, { recursive: true });
-  const lines = yield* Effect.forEach(events, (event) => encodeEvent(event));
+  const lines = yield* Effect.forEach(events, (event) => encodeEvent(event), { concurrency: 1 });
   yield* fs.writeFileString(path.join(directory, "attempts.ndjson"), `${A.join(lines, "\n")}\n`, { flag: "a" });
 });
 

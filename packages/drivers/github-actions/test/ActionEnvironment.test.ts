@@ -355,7 +355,7 @@ describe("ActionEnvironment", () => {
           const env = yield* ActionEnvironment;
           const [a, b] = yield* env.withEnv(
             { A: "1" },
-            env.withEnv({ B: "2" }, Effect.all([env.get("A"), env.get("B")]))
+            env.withEnv({ B: "2" }, Effect.all([env.get("A"), env.get("B")], { concurrency: 1 }))
           );
           assert.strictEqual(a, "1");
           assert.strictEqual(b, "2");

@@ -138,9 +138,7 @@ const makeFixture = Effect.fn("SessionRouteResolverTest.makeFixture")(function* 
       (Predicate.isString(entry.content) ? Effect.succeed(entry.content) : encodeJson(entry.content)).pipe(
         Effect.flatMap((content) => fs.writeFileString(path.join(sessions, entry.file), content))
       ),
-    {
-      discard: true,
-    }
+    { concurrency: 1, discard: true }
   );
   const t3 = path.join(root, "t3");
   yield* fs.makeDirectory(path.join(t3, "userdata"), { recursive: true });
@@ -149,20 +147,23 @@ const makeFixture = Effect.fn("SessionRouteResolverTest.makeFixture")(function* 
   const environmentsFile = path.join(t3, "environments.json");
   const environments = yield* encodeJson(options.environments ?? []);
   yield* fs.writeFileString(environmentsFile, environments);
-  const cases = yield* Effect.forEach(options.threads ?? [], (thread, index) =>
-    Effect.gen(function* () {
-      const file = path.join(t3, "threads", `${index}.json`);
-      const show = yield* encodeJson({
-        thread: {
-          threadId: thread.id,
-          status: thread.status,
-          archived: thread.archived,
-          parentThreadId: thread.parent ?? null,
-        },
-      });
-      yield* fs.writeFileString(file, show);
-      return `  '${thread.id}') cat '${file}' ;;`;
-    })
+  const cases = yield* Effect.forEach(
+    options.threads ?? [],
+    (thread, index) =>
+      Effect.gen(function* () {
+        const file = path.join(t3, "threads", `${index}.json`);
+        const show = yield* encodeJson({
+          thread: {
+            threadId: thread.id,
+            status: thread.status,
+            archived: thread.archived,
+            parentThreadId: thread.parent ?? null,
+          },
+        });
+        yield* fs.writeFileString(file, show);
+        return `  '${thread.id}') cat '${file}' ;;`;
+      }),
+    { concurrency: 1 }
   );
   const malformed = O.match(O.fromUndefinedOr(options.malformedThread), {
     onNone: () => "",
@@ -247,8 +248,8 @@ const resolveWith = Effect.fn("SessionRouteResolverTest.resolveWith")(function* 
   return yield* Effect.gen(function* () {
     const ledger = yield* SessionLedger;
     const presence = yield* SessionPresenceStore;
-    yield* Effect.forEach(input.rows, ledger.append, { discard: true });
-    yield* Effect.forEach(input.presence ?? [], presence.append, { discard: true });
+    yield* Effect.forEach(input.rows, ledger.append, { concurrency: 1, discard: true });
+    yield* Effect.forEach(input.presence ?? [], presence.append, { concurrency: 1, discard: true });
     const resolver = yield* SessionResolver;
     return yield* resolver.resolve(
       SessionResolveInput.make({ repository, query: input.query, cwd: input.cwd ?? "/work" })
@@ -775,7 +776,8 @@ describe("session resolve", () => {
                   onSome: (owner) => `${owner.checkout} ${O.getOrElse(owner.sessionId, () => "no session")}`,
                 })
               )
-            )
+            ),
+          { concurrency: 1 }
         );
         expect(A.dedupe(owners)).toStrictEqual(["/work/outbox-draft-basis desk-1"]);
       })

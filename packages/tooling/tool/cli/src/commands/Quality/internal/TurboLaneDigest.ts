@@ -655,7 +655,11 @@ export const closeTurboLaneLedger = Effect.fn("QualityTasks.closeTurboLaneLedger
 export const readTurboLaneLedger = Effect.fn("QualityTasks.readTurboLaneLedger")(function* (ledgerPath: string) {
   const fs = yield* FileSystem.FileSystem;
   const text = yield* fs.readFileString(ledgerPath).pipe(Effect.orElseSucceed(() => ""));
-  const rows = yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) => decodeLedgerLine(line));
+  const rows = yield* Effect.forEach(
+    A.filter(Str.split(text, "\n"), Str.isNonEmpty),
+    (line) => decodeLedgerLine(line),
+    { concurrency: 1 }
+  );
   const declared = A.map(A.filter(rows, isDeclaredRow), (row) => row.digest);
   const closes = A.filter(rows, isClosedRow);
   const attempted = A.reduce(closes, 0, (sum, row) => sum + row.attempted);

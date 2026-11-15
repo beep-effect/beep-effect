@@ -98,7 +98,8 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
               expect(row.search.pattern).toBe(row.forward ? "^(?:CONTROL)" : "(?:CONTROL)$");
               expect(row.search.flags).toBe(64);
               return true;
-            })
+            }),
+            { concurrency: 1 }
           );
           const successes = A.filter(outcomes, (value) => value).length;
           const failures = outcomes.length - successes;

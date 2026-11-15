@@ -832,16 +832,19 @@ it.layer(TestLayer, { timeout: "30 seconds" })("skill probe scoring", (it) => {
       expect(noModel.message).toBe("The harness result names no --model override.");
 
       const priors = path.join(root, "priors.jsonl");
-      const priorLines = yield* Effect.forEach([1, 2, 3], (attempt) =>
-        encodeJson(
-          record("t-1", "fam", "C", false, {
-            excluded: true,
-            invocation: `attempt-${attempt}`,
-            slot: "t-1#C#0",
-            attempt,
-            keptDir: `claude-eval-p${attempt}`,
-          })
-        )
+      const priorLines = yield* Effect.forEach(
+        [1, 2, 3],
+        (attempt) =>
+          encodeJson(
+            record("t-1", "fam", "C", false, {
+              excluded: true,
+              invocation: `attempt-${attempt}`,
+              slot: "t-1#C#0",
+              attempt,
+              keptDir: `claude-eval-p${attempt}`,
+            })
+          ),
+        { concurrency: 1 }
       );
       yield* fs.writeFileString(priors, `${A.join(priorLines, "\n")}\n`);
       const rerun = yield* result("capped", [{ name: "t-1", arms: { with: [run("", "scaffold failed", true)] } }]);

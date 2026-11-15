@@ -158,7 +158,8 @@ export const installCitationHtmlCaseName = Effect.fn("Citation.installHtmlCaseNa
         const stopWord =
           word.stopWord === null ? null : (yield* input.prepareUnicode(word.stopWord, () => Effect.void)).value.storage;
         return { ...word, stopWord, prepared };
-      })
+      }),
+      { concurrency: 1 }
     );
     const geometry = yield* makeCitationHtmlTagGeometry(limits, request.geometry);
     const length = (first: number, last: number) => {

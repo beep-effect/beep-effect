@@ -14,7 +14,7 @@ describe("source-defined bare action results", () => {
         ["2", "The method of claim 1 wherein the distinct patterns include a narrow pattern."],
         ["3", "The method of claim 2 wherein the distinct patterns include a broad pattern."],
       ]);
-      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
       for (const [number, parent] of [
         [2, 1],
         [3, 2],

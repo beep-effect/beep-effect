@@ -17,7 +17,7 @@ describe("collective references retain their lexical source heads", () => {
           ["1", `A fixture comprising ${introduced}.`],
           ["2", `The fixture of claim 1 wherein ${referred} are metallic.`],
         ]);
-        const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+        const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
         const child = O.getOrThrow(A.last(trees));
         const element = O.getOrThrow(A.last(child.elements));
         assert.strictEqual(O.getOrThrow(A.head(element.terms)).head, head);
@@ -47,7 +47,7 @@ describe("collective references retain their lexical source heads", () => {
         ["1", "A fixture comprising a plurality of pins; and a plurality of pins."],
         ["2", "The fixture of claim 1 wherein said plurality of pins are metallic."],
       ]);
-      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
       const child = O.getOrThrow(A.last(trees));
       assert.isFalse(
         A.some(
@@ -75,7 +75,7 @@ describe("collective references retain their lexical source heads", () => {
           ["2", "A second fixture comprising a plurality of pins."],
           ["3", "The fixture of claim 1 wherein said plurality of pins are metallic."],
         ]);
-        const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+        const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
         const finding = O.getOrThrow(
           A.findFirst(
             antecedentPolicy(trees, claims),

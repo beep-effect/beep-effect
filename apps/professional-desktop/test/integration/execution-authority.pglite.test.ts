@@ -100,15 +100,21 @@ const readNewChains = Effect.fnUntraced(function* (before: ReadonlyArray<string>
   const ledger = yield* ExecutionLedger;
   const after = yield* readRunKeys();
   const fresh = A.filter(after, (runKey) => !A.contains(before, runKey));
-  return yield* Effect.forEach(fresh, (runKey) => ledger.readDecisions(ExecutionRunKey.make(runKey)));
+  return yield* Effect.forEach(fresh, (runKey) => ledger.readDecisions(ExecutionRunKey.make(runKey)), {
+    concurrency: 1,
+  });
 });
 
 const readLedgerSnapshot = Effect.fnUntraced(function* () {
   const ledger = yield* ExecutionLedger;
   const runKeys = yield* readRunKeys();
-  const forEach1 = yield* Effect.forEach(runKeys, (runKey) => ledger.readDecisions(ExecutionRunKey.make(runKey)));
+  const forEach1 = yield* Effect.forEach(runKeys, (runKey) => ledger.readDecisions(ExecutionRunKey.make(runKey)), {
+    concurrency: 1,
+  });
   const argument = A.flatten(forEach1);
-  const forEach2 = yield* Effect.forEach(runKeys, (runKey) => ledger.readOutcomes(ExecutionRunKey.make(runKey)));
+  const forEach2 = yield* Effect.forEach(runKeys, (runKey) => ledger.readOutcomes(ExecutionRunKey.make(runKey)), {
+    concurrency: 1,
+  });
   return {
     decisions: argument,
     outcomes: A.flatten(forEach2),

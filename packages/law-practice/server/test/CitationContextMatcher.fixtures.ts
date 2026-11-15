@@ -122,8 +122,10 @@ export const replayCitationContextMatches = Effect.fn("ContextMatcherTest.replay
     const setup = yield* install(row, kind);
     const cases = full
       ? row.cases
-      : yield* Effect.forEach([0, 2, 5, 10, 12, 16], (index) => Effect.fromOption(A.get(row.cases, index)));
-    yield* Effect.forEach(cases, (observation) => assertObservation(setup, observation));
+      : yield* Effect.forEach([0, 2, 5, 10, 12, 16], (index) => Effect.fromOption(A.get(row.cases, index)), {
+          concurrency: 1,
+        });
+    yield* Effect.forEach(cases, (observation) => assertObservation(setup, observation), { concurrency: 1 });
     const calls = full ? 17 : 5;
     const observed = yield* setup.observed.snapshot;
     expect(observed).toEqual({ spawned: calls, confirmed: calls });

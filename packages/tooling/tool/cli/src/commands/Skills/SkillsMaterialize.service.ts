@@ -108,16 +108,19 @@ const requireSafeTargets = Effect.fn("SkillsMaterialize.requireSafeTargets")(fun
   skill: string,
   targets: ReadonlyArray<string>
 ): Effect.fn.Return<ReadonlyArray<string>, SkillMaterializeRefusal> {
-  return yield* Effect.forEach(targets, (target) =>
-    validateRelativePath(target, skill).pipe(
-      Effect.catchTag("SkillsCommandError", () =>
-        refuse(skill, "unsafe-target", `Install target ${target} of ${skill} is not a contained repo-relative path.`)
+  return yield* Effect.forEach(
+    targets,
+    (target) =>
+      validateRelativePath(target, skill).pipe(
+        Effect.catchTag("SkillsCommandError", () =>
+          refuse(skill, "unsafe-target", `Install target ${target} of ${skill} is not a contained repo-relative path.`)
+        ),
+        Effect.filterOrElse(
+          (normalized) => A.contains(skillDirectories(skill), normalized),
+          () => refuse(skill, "unsafe-target", `Install target ${target} of ${skill} is not that skill's directory.`)
+        )
       ),
-      Effect.filterOrElse(
-        (normalized) => A.contains(skillDirectories(skill), normalized),
-        () => refuse(skill, "unsafe-target", `Install target ${target} of ${skill} is not that skill's directory.`)
-      )
-    )
+    { concurrency: 1 }
   );
 });
 
@@ -130,11 +133,14 @@ const readTargets = Effect.fn("SkillsMaterialize.readTargets")(function* (
   SkillsCommandError,
   FileSystem.FileSystem | Path.Path | Digest.Digest
 > {
-  return yield* Effect.forEach(targets, (target) =>
-    Effect.map(readTargetTree(repoRoot, target, skill), (tree) => ({
-      target,
-      treeHash: O.map(tree, (value) => value.treeHash),
-    }))
+  return yield* Effect.forEach(
+    targets,
+    (target) =>
+      Effect.map(readTargetTree(repoRoot, target, skill), (tree) => ({
+        target,
+        treeHash: O.map(tree, (value) => value.treeHash),
+      })),
+    { concurrency: 1 }
   );
 });
 
@@ -373,10 +379,13 @@ const makeSkillMaterializer = Effect.gen(function* () {
     materialize: Effect.fn("SkillMaterializer.materialize")(function* (repoRoot, mode, skill) {
       const lock = yield* readLock(repoRoot);
       const entries = yield* selectEntries(lock.skills, skill);
-      const rows = yield* Effect.forEach(entries, ([name, entry]) =>
-        entry._tag === "vendored"
-          ? materializeVendored(repoRoot, mode, name, entry)
-          : verifyLocal(repoRoot, name, entry)
+      const rows = yield* Effect.forEach(
+        entries,
+        ([name, entry]) =>
+          entry._tag === "vendored"
+            ? materializeVendored(repoRoot, mode, name, entry)
+            : verifyLocal(repoRoot, name, entry),
+        { concurrency: 1 }
       );
       return SkillMaterializeReport.make({ mode, rows });
     }, Effect.provide(runtimeContext)),

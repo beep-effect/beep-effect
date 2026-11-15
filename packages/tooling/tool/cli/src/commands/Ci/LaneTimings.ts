@@ -2560,8 +2560,10 @@ const collectCiWorkflowWindowRunPages = Effect.fn("Ci.collectCiWorkflowWindowRun
       CiLaneTimingWindowOptions.make({ ...options, until: midpoint }),
       CiLaneTimingWindowOptions.make({ ...options, since: midpoint }),
     ];
-    const collectedHalves = yield* Effect.forEach(halves, (half) =>
-      collectCiWorkflowWindowRunPages(half, event, 1, 0, A.empty())
+    const collectedHalves = yield* Effect.forEach(
+      halves,
+      (half) => collectCiWorkflowWindowRunPages(half, event, 1, 0, A.empty()),
+      { concurrency: 1 }
     );
     return A.appendAll(collected, A.flatten(collectedHalves));
   }
@@ -2680,15 +2682,18 @@ export const collectCiWorkflowRunAttemptJobs = Effect.fn("Ci.collectCiWorkflowRu
       runId,
       perPage
     );
-  const reads = yield* Effect.forEach(attempts, (attempt) =>
-    readAttempt(attempt, CI_WORKFLOW_JOBS_PAGE_SIZE).pipe(
-      // A page of 100 jobs with their steps is the payload GitHub 502s on; smaller pages of the same attempt succeed.
-      Effect.catch(() => readAttempt(attempt, CI_WORKFLOW_JOBS_FALLBACK_PAGE_SIZE)),
-      Effect.map((jobs) => ({ attempt, jobs, failure: O.none<string>() })),
-      Effect.catch((error: CiCommandError) =>
-        Effect.succeed({ attempt, jobs: A.empty<CiWorkflowJob>(), failure: O.some(error.message) })
-      )
-    )
+  const reads = yield* Effect.forEach(
+    attempts,
+    (attempt) =>
+      readAttempt(attempt, CI_WORKFLOW_JOBS_PAGE_SIZE).pipe(
+        // A page of 100 jobs with their steps is the payload GitHub 502s on; smaller pages of the same attempt succeed.
+        Effect.catch(() => readAttempt(attempt, CI_WORKFLOW_JOBS_FALLBACK_PAGE_SIZE)),
+        Effect.map((jobs) => ({ attempt, jobs, failure: O.none<string>() })),
+        Effect.catch((error: CiCommandError) =>
+          Effect.succeed({ attempt, jobs: A.empty<CiWorkflowJob>(), failure: O.some(error.message) })
+        )
+      ),
+    { concurrency: 1 }
   );
   const union = A.reduce(
     A.flatMap(reads, (read) => read.jobs),
@@ -2750,7 +2755,8 @@ export const collectRequiredContexts = Effect.fn("Ci.collectRequiredContexts")(f
       Effect.flatMap((snapshot) =>
         Effect.forEach(
           A.filter(snapshot.state.rules, (rule) => Str.equivalence(rule.type, "required_status_checks")),
-          (rule) => decodeCiBranchRuleParameters(O.getOrUndefined(rule.parameters))
+          (rule) => decodeCiBranchRuleParameters(O.getOrUndefined(rule.parameters)),
+          { concurrency: 1 }
         )
       ),
       CiCommandError.mapError(`Failed to decode the ruleset snapshot returned by ${endpoint}.`)
@@ -2879,8 +2885,10 @@ const resolveWindowPopulation = Effect.fn("Ci.resolveWindowPopulation")(function
     history,
     (entry) => !isEffectiveAtOrBefore(options.since)(entry) && isEffectiveBefore(options.until)(entry)
   );
-  const populations = yield* Effect.forEach(A.appendAll(O.toArray(baseline), inWindow), (version) =>
-    rulesetVersionPopulation(version)
+  const populations = yield* Effect.forEach(
+    A.appendAll(O.toArray(baseline), inWindow),
+    (version) => rulesetVersionPopulation(version),
+    { concurrency: 1 }
   );
   const windowEnd = yield* O.match(A.last(populations), {
     onNone: () =>

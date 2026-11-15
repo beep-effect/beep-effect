@@ -628,7 +628,7 @@ export const persistLaneProofs = Effect.fn("LaneProofReuse.persist")(function* (
     A.getSomes(A.map(identified, ({ original, refreshed: current }) => laneProofRefusal(original, current))),
     (refusal) =>
       Console.log(`[lane-proof] not recording ${refusal.laneId}: ${renderRefusalReasons(refusal)} while it ran`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const replacements = A.map(
     A.filter(identified, ({ original, refreshed: current }) => identityMatchesIdentity(original, current)),

@@ -251,7 +251,7 @@ const queueAndWithdraw = Effect.fn("AdmissionPressureTest.queueAndWithdraw")(fun
 });
 
 const decodeRows = (journal: ReadonlyArray<string>) =>
-  Effect.forEach(journal, (line) => decodeAdmissionJournalEvent(line));
+  Effect.forEach(journal, (line) => decodeAdmissionJournalEvent(line), { concurrency: 1 });
 
 const stampOf = (fields: Partial<Parameters<typeof AdmissionPressureStamp.make>[0]> = {}) =>
   AdmissionPressureStamp.make({
@@ -279,7 +279,7 @@ describe("admission pressure stamp schema (SCHE-09 slice 2)", () => {
     Effect.gen(function* () {
       const rows = yield* decodeRows(plainRows);
       deepStrictEqual(A.map(rows, pressureOf), [O.none(), O.none()]);
-      const reencoded = yield* Effect.forEach(rows, (row) => encodeEvent(row));
+      const reencoded = yield* Effect.forEach(rows, (row) => encodeEvent(row), { concurrency: 1 });
       deepStrictEqual(reencoded, plainRows);
       const transitionText = Str.replaceAll(
         "@TICKET@",
@@ -296,7 +296,7 @@ describe("admission pressure stamp schema (SCHE-09 slice 2)", () => {
     Effect.gen(function* () {
       const rows = yield* decodeRows(stampedRows);
       deepStrictEqual(A.map(rows, pressureOf), [O.some(stampOf()), O.some(stampOf())]);
-      const reencoded = yield* Effect.forEach(rows, (row) => encodeEvent(row));
+      const reencoded = yield* Effect.forEach(rows, (row) => encodeEvent(row), { concurrency: 1 });
       deepStrictEqual(reencoded, stampedRows);
     })
   );
@@ -305,11 +305,11 @@ describe("admission pressure stamp schema (SCHE-09 slice 2)", () => {
     Effect.forEach(
       olderReaders,
       Effect.fnUntraced(function* ({ decode, revision }) {
-        const stamped = yield* Effect.forEach(stampedRows, (line) => decode(line));
-        const plain = yield* Effect.forEach(plainRows, (line) => decode(line));
+        const stamped = yield* Effect.forEach(stampedRows, (line) => decode(line), { concurrency: 1 });
+        const plain = yield* Effect.forEach(plainRows, (line) => decode(line), { concurrency: 1 });
         expect(stamped, revision).toStrictEqual(plain);
       }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     )
   );
 
@@ -447,9 +447,11 @@ it.layer(SchedulerTestLayer, { concurrent: false, timeout: "20 seconds" })("pres
       deepStrictEqual(A.map(rows, pressureOf), [O.none(), O.some(stampOf()), O.some(stampOf())]);
       // Every older reader still reads the stamped lifecycle as the plain one.
       for (const { decode, revision } of olderReaders) {
-        const stamped = yield* Effect.forEach(A.drop(journal, 1), (line) => decode(line));
-        const plain = yield* Effect.forEach([originMainText.admitted, originMainText.released], (line) =>
-          decode(fill(line))
+        const stamped = yield* Effect.forEach(A.drop(journal, 1), (line) => decode(line), { concurrency: 1 });
+        const plain = yield* Effect.forEach(
+          [originMainText.admitted, originMainText.released],
+          (line) => decode(fill(line)),
+          { concurrency: 1 }
         );
         expect(stamped, revision).toStrictEqual(plain);
       }
@@ -700,7 +702,7 @@ it.layer(SchedulerTestLayer, { concurrent: false, timeout: "20 seconds" })("pres
         assertTrue(A.every(history.events, (row) => O.isSome(pressureOf(row))));
         strictEqual(A.length(history.events), 202);
       }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     )
   );
 });

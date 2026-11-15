@@ -27,10 +27,13 @@ describe("bigint columns", () => {
     [Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0)))],
     ([position]) =>
       Effect.gen(function* () {
-        const positions = yield* Effect.forEach([position, `${position}`, BigInt(position)], (shape) =>
-          S.decodeUnknownEffect(DeliveryRow)({ position: shape, producer: "Account", delivery }).pipe(
-            Effect.map((row) => row.position)
-          )
+        const positions = yield* Effect.forEach(
+          [position, `${position}`, BigInt(position)],
+          (shape) =>
+            S.decodeUnknownEffect(DeliveryRow)({ position: shape, producer: "Account", delivery }).pipe(
+              Effect.map((row) => row.position)
+            ),
+          { concurrency: 1 }
         );
         deepStrictEqual(positions, [position, position, position]);
       })
@@ -41,15 +44,18 @@ describe("bigint columns", () => {
     [Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0)))],
     ([deadline]) =>
       Effect.gen(function* () {
-        const deadlines = yield* Effect.forEach([deadline, `${deadline}`, BigInt(deadline)], (due_at) =>
-          S.decodeEffect(ScheduleRow)({
-            id: "a-1",
-            command_id: "reminder",
-            command: { _tag: "Remind" },
-            meta: { commandId: "arming-1", context: {} },
-            status: "pending",
-            due_at,
-          }).pipe(Effect.map((row) => row.due_at))
+        const deadlines = yield* Effect.forEach(
+          [deadline, `${deadline}`, BigInt(deadline)],
+          (due_at) =>
+            S.decodeEffect(ScheduleRow)({
+              id: "a-1",
+              command_id: "reminder",
+              command: { _tag: "Remind" },
+              meta: { commandId: "arming-1", context: {} },
+              status: "pending",
+              due_at,
+            }).pipe(Effect.map((row) => row.due_at)),
+          { concurrency: 1 }
         );
         deepStrictEqual(deadlines, [deadline, deadline, deadline]);
       })
@@ -64,11 +70,14 @@ describe("bigint columns", () => {
 
   it.effect("a value that is no integer in any shape is refused", () =>
     Effect.gen(function* () {
-      const refused = yield* Effect.forEach(["seven", 7.5], (position) =>
-        S.decodeUnknownEffect(DeliveryRow)({ position, producer: "Account", delivery }).pipe(
-          Effect.flip,
-          Effect.map(S.isSchemaError)
-        )
+      const refused = yield* Effect.forEach(
+        ["seven", 7.5],
+        (position) =>
+          S.decodeUnknownEffect(DeliveryRow)({ position, producer: "Account", delivery }).pipe(
+            Effect.flip,
+            Effect.map(S.isSchemaError)
+          ),
+        { concurrency: 1 }
       );
       deepStrictEqual(refused, [true, true]);
     })

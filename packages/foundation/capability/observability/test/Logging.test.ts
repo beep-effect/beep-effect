@@ -174,7 +174,7 @@ describe("Logging", () => {
           const levels = yield* CapturedLevels;
           yield* Effect.all(
             [Effect.logDebug("debug"), Effect.logInfo("info"), Effect.logWarning("warn"), Effect.logError("error")],
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
 
           expect(levels).toStrictEqual(["Info", "Warn", "Error"]);

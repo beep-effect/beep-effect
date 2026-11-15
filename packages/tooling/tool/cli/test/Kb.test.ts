@@ -122,7 +122,7 @@ const withLedger = Effect.fnUntraced(function* (options: { readonly public?: boo
   yield* fs.makeDirectory(root);
   const f = yield* fixture(options);
   yield* fs.writeFileString(`${root}/claims.jsonl`, `${yield* encodeClaim(f.claim)}\n`);
-  const lines = yield* Effect.forEach(f.assertions, (assertion) => encodeAssertion(assertion));
+  const lines = yield* Effect.forEach(f.assertions, (assertion) => encodeAssertion(assertion), { concurrency: 1 });
   yield* fs.writeFileString(`${root}/assertions.jsonl`, `${A.join(lines, "\n")}\n`);
   return { ...f, root, out: `${dir}/out` };
 });
@@ -459,8 +459,10 @@ const writeGraphRows = Effect.fnUntraced(function* (
   assertions: ReadonlyArray<Assertion>
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const claimLines = yield* Effect.forEach(claims, (claim) => encodeClaim(claim));
-  const assertionLines = yield* Effect.forEach(assertions, (assertion) => encodeAssertion(assertion));
+  const claimLines = yield* Effect.forEach(claims, (claim) => encodeClaim(claim), { concurrency: 1 });
+  const assertionLines = yield* Effect.forEach(assertions, (assertion) => encodeAssertion(assertion), {
+    concurrency: 1,
+  });
   yield* fs.writeFileString(`${root}/claims.jsonl`, A.join(claimLines, "\n"));
   yield* fs.writeFileString(`${root}/assertions.jsonl`, A.join(assertionLines, "\n"));
 });
@@ -663,7 +665,7 @@ layer(graphLive)("knowledge JSON graph", (it) => {
         ...f.assertions[1]!,
         sourceRef: { ...f.assertions[1]!.sourceRef, locator: "captures/web/guide.md" },
       });
-      const lines = yield* Effect.forEach([f.internal, local], (a) => encodeAssertion(a));
+      const lines = yield* Effect.forEach([f.internal, local], (a) => encodeAssertion(a), { concurrency: 1 });
       yield* fs.writeFileString(`${f.root}/assertions.jsonl`, `${A.join(lines, "\n")}\n`);
       const outward = yield* exporter.write(f.root, "outward", `${f.out}-outward.json`, false);
       expect(outward.claims["claim/1"]?.assertions[0]).toMatchObject({

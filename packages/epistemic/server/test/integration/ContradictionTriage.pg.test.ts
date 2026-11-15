@@ -331,7 +331,9 @@ if (Str.isEmpty(externalUrl)) {
             Effect.gen(function* () {
               const first = yield* openStack();
               const second = yield* openStack();
-              const [firstPid, secondPid] = yield* Effect.all([readBackendPid(first.sql), readBackendPid(second.sql)]);
+              const [firstPid, secondPid] = yield* Effect.all([readBackendPid(first.sql), readBackendPid(second.sql)], {
+                concurrency: 1,
+              });
               expect(firstPid).not.toBe(secondPid);
 
               const lockHeld = yield* Deferred.make<void>();
@@ -502,7 +504,9 @@ if (Str.isEmpty(externalUrl)) {
             Effect.gen(function* () {
               const first = yield* openStack();
               const second = yield* openStack();
-              const [firstPid, secondPid] = yield* Effect.all([readBackendPid(first.sql), readBackendPid(second.sql)]);
+              const [firstPid, secondPid] = yield* Effect.all([readBackendPid(first.sql), readBackendPid(second.sql)], {
+                concurrency: 1,
+              });
               expect(firstPid).not.toBe(secondPid);
 
               const lockHeld = yield* Deferred.make<void>();
@@ -576,26 +580,29 @@ if (Str.isEmpty(externalUrl)) {
           const recovered = yield* Effect.scoped(
             Effect.gen(function* () {
               const restarted = yield* openStack();
-              const candidates = yield* Effect.all([
-                restarted.repository.get(
-                  GetExpandedContradictionCandidate.make({
-                    candidateId: firstId,
-                    knownAt: DateTime.makeUnsafe(2_000),
-                    orgId: firstCandidate.orgId,
-                    sourceScopeRef: "workspace:postgres-supersession-race",
-                    validAt: DateTime.makeUnsafe(2_000),
-                  })
-                ),
-                restarted.repository.get(
-                  GetExpandedContradictionCandidate.make({
-                    candidateId: secondId,
-                    knownAt: DateTime.makeUnsafe(2_000),
-                    orgId: secondCandidate.orgId,
-                    sourceScopeRef: "workspace:postgres-supersession-race",
-                    validAt: DateTime.makeUnsafe(2_000),
-                  })
-                ),
-              ]);
+              const candidates = yield* Effect.all(
+                [
+                  restarted.repository.get(
+                    GetExpandedContradictionCandidate.make({
+                      candidateId: firstId,
+                      knownAt: DateTime.makeUnsafe(2_000),
+                      orgId: firstCandidate.orgId,
+                      sourceScopeRef: "workspace:postgres-supersession-race",
+                      validAt: DateTime.makeUnsafe(2_000),
+                    })
+                  ),
+                  restarted.repository.get(
+                    GetExpandedContradictionCandidate.make({
+                      candidateId: secondId,
+                      knownAt: DateTime.makeUnsafe(2_000),
+                      orgId: secondCandidate.orgId,
+                      sourceScopeRef: "workspace:postgres-supersession-race",
+                      validAt: DateTime.makeUnsafe(2_000),
+                    })
+                  ),
+                ],
+                { concurrency: 1 }
+              );
               const latest = yield* restarted.edges.readLatest(shared.logicalKey);
               const edgeCounts = yield* restarted.sql<{
                 readonly count: number;

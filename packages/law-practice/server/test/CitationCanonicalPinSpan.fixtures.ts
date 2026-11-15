@@ -77,10 +77,12 @@ const readRows = Effect.fn("CanonicalPinSpanTest.read")(function* () {
           expect(expected.operands[0].value, id).toBe(expected.operands[1].value);
           expect(context.pin_cite_span, id).toBe(expected.operands[1].value);
           return { id, context, expected: expected.operands[1].value };
-        })
+        }),
+        { concurrency: 1 }
       );
       return { id: row.id, raw: clean.input.text, plain: body.input.plain_text, steps, models, targets };
-    })
+    }),
+    { concurrency: 1 }
   ).pipe(Effect.tap(() => Effect.sync(() => expect(offset).toBe(9))));
 });
 

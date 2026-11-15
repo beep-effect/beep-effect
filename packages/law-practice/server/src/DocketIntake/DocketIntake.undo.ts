@@ -382,22 +382,28 @@ export const planDocketUndo: (input: {
         : []
     )
   );
-  const events = yield* Effect.forEach(eventIds, (eventId) =>
-    HashSet.has(undoneEvents, eventId)
-      ? Effect.succeed(DocketUndoEvent.make({ action: "undone", eventId }))
-      : HashSet.has(keptEvents, eventId)
-        ? Effect.succeed(DocketUndoEvent.make({ action: "keep", eventId }))
-        : planEvent(m365, userId, eventId)
+  const events = yield* Effect.forEach(
+    eventIds,
+    (eventId) =>
+      HashSet.has(undoneEvents, eventId)
+        ? Effect.succeed(DocketUndoEvent.make({ action: "undone", eventId }))
+        : HashSet.has(keptEvents, eventId)
+          ? Effect.succeed(DocketUndoEvent.make({ action: "keep", eventId }))
+          : planEvent(m365, userId, eventId),
+    { concurrency: 1 }
   );
-  const messages = yield* Effect.forEach(marked, (line) =>
-    O.match(markedLaterBy(line.messageId), {
-      onNone: () =>
-        HashSet.has(undoneMessages, line.messageId)
-          ? Effect.succeed(DocketUndoMessage.make({ ...line, action: "undone" }))
-          : planMessage(m365, userId, line),
-      onSome: (laterRun) =>
-        Effect.succeed(DocketUndoMessage.make({ ...line, action: "keep", markedLaterBy: O.some(laterRun) })),
-    })
+  const messages = yield* Effect.forEach(
+    marked,
+    (line) =>
+      O.match(markedLaterBy(line.messageId), {
+        onNone: () =>
+          HashSet.has(undoneMessages, line.messageId)
+            ? Effect.succeed(DocketUndoMessage.make({ ...line, action: "undone" }))
+            : planMessage(m365, userId, line),
+        onSome: (laterRun) =>
+          Effect.succeed(DocketUndoMessage.make({ ...line, action: "keep", markedLaterBy: O.some(laterRun) })),
+      }),
+    { concurrency: 1 }
   );
   return DocketUndoPlan.make({ events, messages, runId: input.runId });
 });
@@ -635,7 +641,8 @@ export const applyDocketUndo: (input: {
       const action = target.action === "delete" ? yield* deleteIfStillProvisional(target.eventId) : target.action;
       yield* record(eventLineKind(action), { eventId: O.some(target.eventId) });
       return action;
-    })
+    }),
+    { concurrency: 1 }
   );
   const messageActions = yield* Effect.forEach(
     plan.messages,
@@ -655,7 +662,8 @@ export const applyDocketUndo: (input: {
           : target.action;
       yield* record(messageLineKind(action), { messageId: O.some(target.messageId) });
       return action;
-    })
+    }),
+    { concurrency: 1 }
   );
 
   const loaded = yield* store.load;

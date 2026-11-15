@@ -275,7 +275,9 @@ export const makeObservationLaunchFacts = Effect.fn("AiMetrics.makeObservationLa
             Effect.flatMap(decodePhasePayloadRecordRows)
           );
         if (rows.length > 4) return yield* failure("storage");
-        const receipts = yield* Effect.forEach(rows, (row) => decodeStoredReceipt(row, launchId, epoch));
+        const receipts = yield* Effect.forEach(rows, (row) => decodeStoredReceipt(row, launchId, epoch), {
+          concurrency: 1,
+        });
         if (receipts.length > 0) {
           const started = A.some(receipts, (value) => value.fact._tag === "Started");
           if (

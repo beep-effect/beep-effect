@@ -268,7 +268,10 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
         after.version,
         after.deliveries
       );
-      yield* Effect.forEach(after.events, (stored) => insertEvent(id, stored, context), { discard: true });
+      yield* Effect.forEach(after.events, (stored) => insertEvent(id, stored, context), {
+        concurrency: 1,
+        discard: true,
+      });
       const state = yield* encodeJson(after.state);
       const routed = yield* encodeJson(live.routed);
       yield* sql`UPDATE ${sql(tables.aggregateInstance)}
@@ -425,7 +428,7 @@ export const makeAggregateStore = (ctx: HostContext) => (definition: Aggregate.A
       const rows = yield* sql`SELECT id, command_id FROM ${sql(tables.aggregateSchedule)}
         WHERE model = ${modelName} AND aggregate = ${name} AND status = 'pending' AND due_at <= ${at}
         ORDER BY due_at`.pipe(Effect.flatMap(decodeScheduleRefs));
-      yield* Effect.forEach(rows, (row) => fire(row.id, row.command_id), { discard: true });
+      yield* Effect.forEach(rows, (row) => fire(row.id, row.command_id), { concurrency: 1, discard: true });
     }).pipe(orDieAs("schedule")(tables.aggregateSchedule));
 
     ctx.workers.push(

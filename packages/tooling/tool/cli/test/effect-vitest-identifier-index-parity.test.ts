@@ -22,11 +22,13 @@ layer(BunCrypto.layer, { timeout: "30 seconds" })((it) => {
   it.effect("pins the detector rows over the committed parity fixture set", () =>
     Effect.gen(function* () {
       const project = new Project({ useInMemoryFileSystem: true, skipAddingFilesFromTsConfig: true });
-      const findings = yield* Effect.forEach(effectVitestParityFixtures, ([file, text]) =>
-        detectEffectVitestFindings(project.createSourceFile(file, text), file, "@beep/example")
+      const findings = yield* Effect.forEach(
+        effectVitestParityFixtures,
+        ([file, text]) => detectEffectVitestFindings(project.createSourceFile(file, text), file, "@beep/example"),
+        { concurrency: 1 }
       );
       const flat = A.flatten(findings);
-      const encoded = yield* Effect.forEach(flat, (finding) => encodeFinding(finding));
+      const encoded = yield* Effect.forEach(flat, (finding) => encodeFinding(finding), { concurrency: 1 });
       const rows = A.sort(encoded, Order.String);
       const crypto = yield* Digest.Digest;
       const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(A.join(rows, "\n")));

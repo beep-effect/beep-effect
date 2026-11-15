@@ -96,7 +96,8 @@ export const attachCacheEntrypointReview = Effect.fn("CacheEntrypoints.attachRev
       if (envelope.schemaVersion !== artifact.format)
         return yield* CacheCommandError.new("Entrypoint artifact format differs from its reviewed reference.");
       return CacheEntrypointArtifact.make({ ...artifact, document });
-    })
+    }),
+    { concurrency: 1 }
   );
   return CacheCensusReport.make({
     ...census,

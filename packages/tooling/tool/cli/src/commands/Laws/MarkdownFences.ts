@@ -541,7 +541,7 @@ const typecheckStaged = Effect.fnUntraced(function* (
           fs
             .writeFileString(path.join(directory, file), `${fence.body}\n`)
             .pipe(MarkdownFencesExecutionError.mapError(`Failed to stage ${fence.path}:${fence.line}`)),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       const config = yield* FenceProjectConfigJson.encode(
         FenceProjectConfig.make({

@@ -684,7 +684,7 @@ describe("@beep/m365 service", () => {
               "request encoding"
             );
           }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
 
         const captures = yield* testHttp.captures;

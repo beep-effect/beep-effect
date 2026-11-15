@@ -376,15 +376,18 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
       const report = yield* sealC2EvalReport(base.report, reasoning).pipe(Effect.provideService(Digest.Digest, crypto));
       const reportDigest = report.reportDigest;
       const coldStartMs = yield* measureBundleColdStart(processSpawner, runtimeProbeEntry);
-      const timings = yield* Effect.forEach(A.replicate(C2_INTERACTIVE_QUERY, 20), () =>
-        Clock.currentTimeMillis.pipe(
-          Effect.flatMap((queryStarted) =>
-            rdf.query(projection, C2_INTERACTIVE_QUERY).pipe(
-              Effect.andThen(Clock.currentTimeMillis),
-              Effect.map((ended) => ended - queryStarted)
+      const timings = yield* Effect.forEach(
+        A.replicate(C2_INTERACTIVE_QUERY, 20),
+        () =>
+          Clock.currentTimeMillis.pipe(
+            Effect.flatMap((queryStarted) =>
+              rdf.query(projection, C2_INTERACTIVE_QUERY).pipe(
+                Effect.andThen(Clock.currentTimeMillis),
+                Effect.map((ended) => ended - queryStarted)
+              )
             )
-          )
-        )
+          ),
+        { concurrency: 1 }
       );
       const queryP95 = p95(timings);
       if (coldStartMs >= 5_000 || queryP95 >= 100) {

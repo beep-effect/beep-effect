@@ -72,7 +72,8 @@ const registeredOpsScripts = Effect.forEach(
     Effect.map(decodeOpsManifest(text), (manifest) => {
       const slug = O.getOrElse(A.head(Str.split(goalsRelative(key), "/")), () => "");
       return A.map(manifest.opsScripts ?? A.empty(), (script) => `${slug}/${script.path}`);
-    })
+    }),
+  { concurrency: 1 }
 ).pipe(Effect.map((perGoal) => A.filter(A.flatten(perGoal), Str.endsWith(".ts"))));
 
 // Every TypeScript file under a goals/*/ops directory. Dot-leading segments are scratch space

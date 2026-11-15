@@ -143,7 +143,7 @@ const makeFixture = Effect.fn("ResidueReapTest.makeFixture")(function* (root: st
   yield* Effect.forEach(
     [sessionsRoot, archivedRoot, oldWorktree, disposable, durable, worktreeResidue, turboCacheRoot],
     (directory) => fs.makeDirectory(directory, { recursive: true }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     [
@@ -157,7 +157,7 @@ const makeFixture = Effect.fn("ResidueReapTest.makeFixture")(function* (root: st
       turboEntry,
     ],
     (file) => fs.writeFileString(file, `fixture:${path.basename(file)}\n`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     [
@@ -170,7 +170,7 @@ const makeFixture = Effect.fn("ResidueReapTest.makeFixture")(function* (root: st
       turboEntry,
     ],
     (file) => touchDaysAgo(root, file, 45),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* touchDaysAgo(root, youngSession, 2);
 
@@ -1042,6 +1042,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             yield* fs.makeDirectory(homeRoot, { recursive: true });
             yield* fs.makeDirectory(runsRoot, { recursive: true });
             yield* Effect.forEach([oldRun, newRun, notes], (file) => fs.writeFileString(file, "{}\n"), {
+              concurrency: 1,
               discard: true,
             });
             yield* touchDaysAgo(root, oldRun, 2);
@@ -1116,7 +1117,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             yield* touchDaysAgo(root, member, group.daysAgo);
           }
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       const orphan = path.join(cacheRoot, "X-meta.json");
       yield* fs.writeFileString(orphan, "{}");
@@ -1231,7 +1232,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
             yield* Effect.forEach(
               durable,
               (name) => fs.makeDirectory(path.join(beepCacheRoot, name), { recursive: true }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
             yield* touchTreeDaysAgo(root, beepCacheRoot, 90);
             const disposable = yield* runResidueReap({
@@ -1273,7 +1274,7 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("residue reap", (it) =
           }
           yield* touchDaysAgo(root, directory, daysAgo);
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       yield* fs.makeDirectory(path.join(evidenceRoot, "e1"), { recursive: true });
       yield* fs.writeFileString(
@@ -1711,8 +1712,10 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               yield* runFixtureCommand(fixture.repoRoot, "git", ["commit", "--quiet", "-m", "second fixture"]);
               const oldArchive = path.join(fixture.repoRoot, ".beep", "residue-reap", "old", "archive");
               yield* fs.makeDirectory(oldArchive, { recursive: true });
-              yield* Effect.forEach(A.range(1, 30), (i) =>
-                fs.writeFileString(path.join(oldArchive, `${i}`), "preserved")
+              yield* Effect.forEach(
+                A.range(1, 30),
+                (i) => fs.writeFileString(path.join(oldArchive, `${i}`), "preserved"),
+                { concurrency: 1 }
               );
               yield* runFixtureCommand(fixture.repoRoot, "find", [
                 path.join(fixture.repoRoot, ".beep"),
@@ -1873,7 +1876,11 @@ it.layer(ResidueReapTestLayer, { timeout: "30 seconds" })("checkout retention ar
               yield* makeEmbeddedRepo(preview);
               const deps = path.join(fixture.repoRoot, ".beep", "node_modules");
               yield* fs.makeDirectory(deps, { recursive: true });
-              yield* Effect.forEach(A.range(1, 40), (i) => fs.writeFileString(path.join(deps, `${i}.pid`), "vendored"));
+              yield* Effect.forEach(
+                A.range(1, 40),
+                (i) => fs.writeFileString(path.join(deps, `${i}.pid`), "vendored"),
+                { concurrency: 1 }
+              );
               yield* fs.symlink(
                 path.join(fixture.homeRoot, "absent"),
                 path.join(fixture.repoRoot, ".beep", "dangling")
@@ -2633,9 +2640,7 @@ const terminalLaneFixture = Effect.fn("ResidueReapTest.terminalLaneFixture")(fun
   yield* Effect.forEach(
     [target, material, primaryTarget],
     (directory) => fs.makeDirectory(directory, { recursive: true }),
-    {
-      discard: true,
-    }
+    { concurrency: 1, discard: true }
   );
   yield* fs.writeFileString(path.join(target, "payload.txt"), "lane residue");
   yield* fs.writeFileString(path.join(material, "cache.json"), "owner material");

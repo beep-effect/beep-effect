@@ -728,7 +728,7 @@ describe("@beep/repo-ai-metrics identity registry", () => {
         const dataRoot = pathApi.join(tmpDir, "store");
         const homeDir = pathApi.join(tmpDir, "home");
         const clonePaths = A.map(A.range(1, 5), (index) => pathApi.join(tmpDir, `clone-${index}`));
-        yield* Effect.forEach(clonePaths, (clonePath) => makeClone(clonePath), { discard: true });
+        yield* Effect.forEach(clonePaths, (clonePath) => makeClone(clonePath), { concurrency: 1, discard: true });
 
         // Seed the first clone alone so it has a firstSeen predating the burst.
         const seeded = yield* upsertRoot(dataRoot, clonePaths[0] ?? "", homeDir);
@@ -768,11 +768,10 @@ describe("@beep/repo-ai-metrics identity registry", () => {
           const homeDir = pathApi.join(tmpDir, "home");
           const writesRef = yield* Ref.make<ReadonlyArray<string>>(A.empty());
           const clonePaths = A.map(A.range(1, 3), (index) => pathApi.join(tmpDir, `clone-${index}`));
-          yield* Effect.forEach(clonePaths, (clonePath) => makeClone(clonePath), {
-            discard: true,
-          });
+          yield* Effect.forEach(clonePaths, (clonePath) => makeClone(clonePath), { concurrency: 1, discard: true });
 
           yield* Effect.forEach(clonePaths, (clonePath) => upsertRoot(dataRoot, clonePath, homeDir), {
+            concurrency: 1,
             discard: true,
           }).pipe(provideScopedLayer(recordingFileSystem(writesRef)));
 

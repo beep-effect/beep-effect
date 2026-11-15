@@ -442,7 +442,7 @@ const fixtureStamp = Sha256Hex.make(Str.repeat(64)("b"));
 const fixtureOtherStamp = Sha256Hex.make(Str.repeat(64)("c"));
 const decodeHookPulse = S.decodeEffect(HookPulseV1FromRawEvent);
 const encodeHookPulseRows = Effect.fnUntraced(function* (rows: ReadonlyArray<HookPulseV1>) {
-  const forEach2 = yield* Effect.forEach(rows, (row) => HookPulseV1.encodeJsonEffect(row));
+  const forEach2 = yield* Effect.forEach(rows, (row) => HookPulseV1.encodeJsonEffect(row), { concurrency: 1 });
   return A.join(forEach2, "\n");
 });
 // Scenarios whose stamp survives the join; every other scenario stores no stamp.
@@ -2790,7 +2790,7 @@ volumes:
                   run
                 );
               }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
             yield* Effect.forEach(
               [
@@ -2805,7 +2805,7 @@ volumes:
                   turn
                 );
               }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
 
             yield* ensureAiMetricsDerivedStorage;
@@ -3063,7 +3063,7 @@ volumes:
                   run
                 );
               }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
             yield* duckdb.run(
               `INSERT INTO ai_metrics_sessions (
@@ -3091,7 +3091,7 @@ volumes:
                   turn
                 );
               }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
           }).pipe(provideScopedLayer(DuckDb.makeNodeLayer(DuckDbConnectionOptions.make({ databasePath: duckDbPath }))));
 
@@ -3202,7 +3202,7 @@ volumes:
                   row
                 );
               }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
             yield* duckdb.run(
               `DELETE FROM ai_metrics_schema_migrations
@@ -3287,7 +3287,7 @@ volumes:
                   }
                 );
               }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
             // A different transcript must be left alone.
             yield* duckdb.run(
@@ -3355,7 +3355,7 @@ volumes:
                   run
                 );
               }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
             // Both already marked with the backfill sentinel, exactly as the shipped v1
             // would have left them.
@@ -3377,7 +3377,7 @@ volumes:
                   turn
                 );
               }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
             // v1 stays on the ledger and v2 comes off it: a store upgraded from the
             // release that shipped v1 alone. v1 is skipped by id from here on no matter
@@ -3551,7 +3551,7 @@ volumes:
                   row
                 );
               }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
 
             const installSpec = yield* makeAiMetricsInstallSpec(

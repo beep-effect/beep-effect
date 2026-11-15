@@ -297,10 +297,13 @@ describe("contact seeding", () => {
             root,
             empty,
             ContactSeeding.use((job) =>
-              Effect.all([
-                job.undo(O.none(), false, false, true).pipe(Effect.flip),
-                job.undo(O.some("synthetic-run"), false, false, false).pipe(Effect.flip),
-              ])
+              Effect.all(
+                [
+                  job.undo(O.none(), false, false, true).pipe(Effect.flip),
+                  job.undo(O.some("synthetic-run"), false, false, false).pipe(Effect.flip),
+                ],
+                { concurrency: 1 }
+              )
             )
           );
           expect(run.result).toMatchObject([{ reason: "input" }, { reason: "confirmation" }]);

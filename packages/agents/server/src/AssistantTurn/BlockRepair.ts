@@ -516,19 +516,22 @@ const requestRepairEnvelope = (
     ),
     Effect.mapError((error) => toBlockRepairFailed(`Block repair call failed: ${error.message}`)),
     Effect.flatMap((response) =>
-      Effect.all([
-        decodeEnvelopeJson(response.paramsJson).pipe(
-          Effect.mapError((error) => toBlockRepairFailed(`Block repair envelope failed validation: ${error.message}`))
-        ),
-        decodeRepairUsage({
-          inputTokens: response.usage.inputTokens.total,
-          outputTokens: response.usage.outputTokens.total,
-        }).pipe(
-          Effect.mapError((error) =>
-            toBlockRepairFailed(`Block repair call returned invalid usage metadata: ${error.message}`)
-          )
-        ),
-      ])
+      Effect.all(
+        [
+          decodeEnvelopeJson(response.paramsJson).pipe(
+            Effect.mapError((error) => toBlockRepairFailed(`Block repair envelope failed validation: ${error.message}`))
+          ),
+          decodeRepairUsage({
+            inputTokens: response.usage.inputTokens.total,
+            outputTokens: response.usage.outputTokens.total,
+          }).pipe(
+            Effect.mapError((error) =>
+              toBlockRepairFailed(`Block repair call returned invalid usage metadata: ${error.message}`)
+            )
+          ),
+        ],
+        { concurrency: 1 }
+      )
     )
   );
 
@@ -645,7 +648,7 @@ const runRepairAttempts = Effect.fn("runRepairAttempts")(function* (
     Effect.tapError(() =>
       Effect.all(
         [trackRepairOutcome("repaired", A.length(repaired)), trackRepairOutcome("call_failed", A.length(pending))],
-        { discard: true }
+        { concurrency: 1, discard: true }
       )
     )
   );

@@ -56,7 +56,8 @@ const readRows = Effect.fn("CanonicalRemainingTest.read")(function* () {
       const profile = yield* S.encodeEffect(Profile)(Tuple.make(mode, input.clean_steps));
       const models = yield* S.decodeEffect(Models)(body.outcome.value);
       return { id: row.id, input, mode, profile, models, plainText: body.stages.document.plainText };
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 /** Execute exact original cleaner choices through real default owners. The

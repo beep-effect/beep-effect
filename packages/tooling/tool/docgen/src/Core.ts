@@ -204,7 +204,7 @@ const writeFileToOutDir = Effect.fn("writeFileToOutDir")(function* (file: Domain
 });
 
 const writeFilesToOutDir = (files: ReadonlyArray<Domain.File>) =>
-  Effect.forEach(files, writeFileToOutDir, { discard: true });
+  Effect.forEach(files, writeFileToOutDir, { concurrency: 1, discard: true });
 
 const parseModules = (files: ReadonlyArray<Domain.File>) =>
   Parser.parseFiles(files).pipe(
@@ -818,7 +818,8 @@ ${toc}
       );
       const prettified = yield* Printer.prettify(content);
       return Domain.File.new(outputPath, prettified, { isOverwritable: true });
-    })
+    }),
+    { concurrency: 1 }
   );
 
 const writeMarkdown = Effect.fn("writeMarkdown")(function* (files: ReadonlyArray<Domain.File>) {

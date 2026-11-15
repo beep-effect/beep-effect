@@ -115,8 +115,10 @@ const readCheckoutJournals = Effect.fnUntraced(function* (checkout: string) {
     Effect.catchIf(holdsNoJournals, () => Effect.succeed(A.empty<string>())),
     Effect.mapError(storeError(`Could not list the attempt journals under ${runsDirectory}.`, runsDirectory))
   );
-  const journals = yield* Effect.forEach(A.sort(names, Order.String), (runId) =>
-    readCheckoutJournal(runsDirectory, runId)
+  const journals = yield* Effect.forEach(
+    A.sort(names, Order.String),
+    (runId) => readCheckoutJournal(runsDirectory, runId),
+    { concurrency: 1 }
   );
   return A.getSomes(journals);
 });
@@ -269,7 +271,9 @@ const fileCheckoutJournals = Effect.fnUntraced(function* (
   if (AttemptJournalStoreLocation.guards.unpartitioned(location)) {
     return AttemptJournalExportUnpartitioned.make({ journals: A.length(journals) });
   }
-  const filed = yield* Effect.forEach(journals, (journal) => fileJournal(location.runsDirectory, journal));
+  const filed = yield* Effect.forEach(journals, (journal) => fileJournal(location.runsDirectory, journal), {
+    concurrency: 1,
+  });
   return AttemptJournalExported.make({
     runsDirectory: location.runsDirectory,
     journals: A.length(journals),

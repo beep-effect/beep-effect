@@ -256,7 +256,8 @@ export const makeCitationSessionDocumentProjector = Effect.fn("Citation.makeSess
               candidates: A.fromIterable(citationResult4),
               groups: A.fromIterable(expected),
             });
-          })
+          }),
+          { concurrency: 1 }
         );
         const document = yield* S.decodeUnknownEffect(CitationDocumentType)({
           source: state.source,

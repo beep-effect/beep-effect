@@ -310,13 +310,16 @@ const pidAttachments = (
   probe: ProcessAttachmentProbe,
   kinds: ReadonlyArray<ProcessAttachmentKind>
 ): Effect.Effect<ReadonlyArray<ProcessAttachment>, never, FileSystem.FileSystem> =>
-  Effect.forEach(kinds, (kind) =>
-    Match.value(kind).pipe(
-      Match.when("cwd", () => cwdAttachments(table, pid, probe)),
-      Match.when("descriptor", () => descriptorAttachments(table, pid, probe)),
-      Match.when("watch", () => watchAttachments(table, pid, probe)),
-      Match.exhaustive
-    )
+  Effect.forEach(
+    kinds,
+    (kind) =>
+      Match.value(kind).pipe(
+        Match.when("cwd", () => cwdAttachments(table, pid, probe)),
+        Match.when("descriptor", () => descriptorAttachments(table, pid, probe)),
+        Match.when("watch", () => watchAttachments(table, pid, probe)),
+        Match.exhaustive
+      ),
+    { concurrency: 1 }
   ).pipe(Effect.map(A.flatten));
 
 /**

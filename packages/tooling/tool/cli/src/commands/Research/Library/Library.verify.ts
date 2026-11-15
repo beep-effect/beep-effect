@@ -301,18 +301,21 @@ const verifyDocumentCitations = Effect.fn("Library.verifyDocumentCitations")(fun
       const actual = A.filter(catalog.occurrences, (item) => item.documentId === document.id);
       if (expected.length !== document.expectedOccurrences || actual.length !== expected.length)
         issue(`${document.id}: citation census mismatch`);
-      yield* Effect.forEach(expected, (reference) =>
-        Effect.sync(() => {
-          const matches = A.filter(
-            actual,
-            (item) =>
-              citationSpanMatches(item, reference) &&
-              citationSyntaxMatches(item, reference) &&
-              citationDefinitionMatches(item, reference)
-          );
-          if (matches.length !== 1)
-            issue(`${document.id}:${reference.line}:${reference.column}: missing or ambiguous citation occurrence`);
-        })
+      yield* Effect.forEach(
+        expected,
+        (reference) =>
+          Effect.sync(() => {
+            const matches = A.filter(
+              actual,
+              (item) =>
+                citationSpanMatches(item, reference) &&
+                citationSyntaxMatches(item, reference) &&
+                citationDefinitionMatches(item, reference)
+            );
+            if (matches.length !== 1)
+              issue(`${document.id}:${reference.line}:${reference.column}: missing or ambiguous citation occurrence`);
+          }),
+        { concurrency: 1 }
       );
     }),
     { concurrency: 1 }

@@ -295,10 +295,13 @@ it.layer(pdfAdapterFixture, { timeout: "10 seconds" })((it) => {
         PageTextRequest.make({ pdfPath: "fixture.pdf", page: 2 }),
         SvgToPdfRequest.make({ svgPaths: ["sheet.svg"], outputPath: "out.pdf", fonts: O.none() }),
       ]);
-      const failures = yield* Effect.all([
-        Effect.flip(backend.pageText("missing.pdf", 1)),
-        Effect.flip(backend.measurePage({ pdfPath: "missing.pdf", page: 1, dpi: 72, antiAlias: true })),
-      ]);
+      const failures = yield* Effect.all(
+        [
+          Effect.flip(backend.pageText("missing.pdf", 1)),
+          Effect.flip(backend.measurePage({ pdfPath: "missing.pdf", page: 1, dpi: 72, antiAlias: true })),
+        ],
+        { concurrency: 1 }
+      );
       expect(A.map(failures, (error) => [error.reason, error.message])).toEqual([
         ["pdf", "The PDF backend failed."],
         ["pdf", "The PDF backend failed."],
@@ -765,7 +768,8 @@ describe("beep drawings command routes", () => {
             ["review", "plan", ...round, "--dispositions", dispositions],
             ["review", "ingest", ...round, "--manifest", set.manifest, "--pdf", set.pdf],
           ],
-          failureMessage
+          failureMessage,
+          { concurrency: 1 }
         );
         deepStrictEqual(refusals, A.replicate("Round 0 is not a valid round.", 3));
 

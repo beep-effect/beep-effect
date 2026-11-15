@@ -339,7 +339,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
                   Deferred.succeed(finishFirst, undefined),
                   Deferred.succeed(lateConfirmation, undefined),
                 ],
-                { discard: true }
+                { concurrency: 1, discard: true }
               )
             )
           );

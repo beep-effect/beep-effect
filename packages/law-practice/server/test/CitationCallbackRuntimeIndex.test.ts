@@ -225,24 +225,27 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
               outcome: { status: "value", groups: [] },
             })
           );
-          const mentions = yield* Effect.forEach(input.mentions, (mention, index) =>
-            Effect.gen(function* () {
-              const wire = yield* S.encodeEffect(Citation)(mention.citation);
-              const source = A.getUnsafe(row.initialObjects, index);
-              const citation = yield* S.decodeUnknownEffect(Citation)({
-                ...wire,
-                components: source.groups,
-                metadata: {
-                  ...wire.metadata,
-                  ...(wire.type === "case" ? { plaintiff: source.metadata.plaintiff } : {}),
-                  ...(wire.type === "supra" || wire.type === "shortFormCase"
-                    ? { antecedentGuess: source.metadata.antecedent_guess }
-                    : {}),
-                  pinCite: source.metadata.pin_cite,
-                },
-              });
-              return CitationMention.make({ ...mention, citation });
-            })
+          const mentions = yield* Effect.forEach(
+            input.mentions,
+            (mention, index) =>
+              Effect.gen(function* () {
+                const wire = yield* S.encodeEffect(Citation)(mention.citation);
+                const source = A.getUnsafe(row.initialObjects, index);
+                const citation = yield* S.decodeUnknownEffect(Citation)({
+                  ...wire,
+                  components: source.groups,
+                  metadata: {
+                    ...wire.metadata,
+                    ...(wire.type === "case" ? { plaintiff: source.metadata.plaintiff } : {}),
+                    ...(wire.type === "supra" || wire.type === "shortFormCase"
+                      ? { antecedentGuess: source.metadata.antecedent_guess }
+                      : {}),
+                    pinCite: source.metadata.pin_cite,
+                  },
+                });
+                return CitationMention.make({ ...mention, citation });
+              }),
+            { concurrency: 1 }
           );
           const prepared = yield* prepareCitationResolution({ ...input, mentions });
           const work = yield* makeCitationResolutionWork(prepared.limits);
@@ -383,14 +386,19 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered callback
             Effect.provideService(CitationResolutionCallbacks, callbacks)
           );
           expect(events, row.name).toEqual(row.events);
-          const groups = yield* Effect.forEach(result.groups, (group) =>
-            present(group.resource, result.mentions).pipe(
-              Effect.map((resource) => ({ resource, members: A.map(group.members, referenceView) }))
-            )
+          const groups = yield* Effect.forEach(
+            result.groups,
+            (group) =>
+              present(group.resource, result.mentions).pipe(
+                Effect.map((resource) => ({ resource, members: A.map(group.members, referenceView) }))
+              ),
+            { concurrency: 1 }
           );
           expect({ status: "value", groups }, row.name).toEqual(row.outcome);
-          const citationResult16 = yield* Effect.forEach(result.mentions, (mention) =>
-            semanticView(ref(mention), mention.citation)
+          const citationResult16 = yield* Effect.forEach(
+            result.mentions,
+            (mention) => semanticView(ref(mention), mention.citation),
+            { concurrency: 1 }
           );
           expect(citationResult16, row.name).toEqual(row.objects);
           const descriptors = yield* makeCitationRegisteredSessionDescriptors(result).pipe(

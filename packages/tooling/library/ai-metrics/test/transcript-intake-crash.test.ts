@@ -119,7 +119,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds", excludeTestServices: true 
   it.effect("persists fair reservations across independent processes without advancing source acceptance", () =>
     Effect.gen(function* () {
       const { run } = yield* scenario();
-      const results = yield* Effect.forEach(A.range(1, 4), () => run("reserve"));
+      const results = yield* Effect.forEach(A.range(1, 4), () => run("reserve"), { concurrency: 1 });
       const selected = A.map(results, (result) => result?.selected[0]);
       expect(A.dedupe(selected).length).toBe(3);
       expect(selected[3]).toBe(selected[0]);

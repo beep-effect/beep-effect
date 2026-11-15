@@ -158,11 +158,14 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("mixed live resource
             if (wire.type === "case") {
               const initial = A.getUnsafe(row.initial, operation.reference).citation;
               if (initial.type !== "case") return yield* modelFailure();
-              const editions = yield* Effect.forEach(operation.values, (ref) =>
-                Effect.fromOption(
-                  A.findFirst(initial.publication.editions, (edition) => edition.edition === ref),
-                  modelFailure
-                )
+              const editions = yield* Effect.forEach(
+                operation.values,
+                (ref) =>
+                  Effect.fromOption(
+                    A.findFirst(initial.publication.editions, (edition) => edition.edition === ref),
+                    modelFailure
+                  ),
+                { concurrency: 1 }
               );
               return yield* S.decodeEffect(Citation)({ ...wire, publication: { ...wire.publication, editions } });
             }

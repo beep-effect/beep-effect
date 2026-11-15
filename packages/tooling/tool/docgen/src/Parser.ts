@@ -223,7 +223,8 @@ const parseInterfaceDeclaration = Effect.fn("parseInterfaceDeclaration")(functio
 const parseInterfaceDeclarations = (interfaces: ReadonlyArray<ast.InterfaceDeclaration>) =>
   Effect.forEach(
     A.filter(interfaces, (declaration) => declaration.isExported()),
-    parseInterfaceDeclaration
+    parseInterfaceDeclaration,
+    { concurrency: 1 }
   ).pipe(Effect.map(A.flatten));
 
 /**
@@ -372,10 +373,12 @@ const getFunctionDeclarations = Effect.gen(function* () {
  */
 export const parseFunctions = Effect.gen(function* () {
   const { arrows, functions } = yield* getFunctionDeclarations;
-  const functionDeclarations = yield* Effect.forEach(functions, parseFunctionDeclaration).pipe(Effect.map(A.flatten));
-  const functionVariableDeclarations = yield* Effect.forEach(arrows, parseFunctionVariableDeclaration).pipe(
+  const functionDeclarations = yield* Effect.forEach(functions, parseFunctionDeclaration, { concurrency: 1 }).pipe(
     Effect.map(A.flatten)
   );
+  const functionVariableDeclarations = yield* Effect.forEach(arrows, parseFunctionVariableDeclaration, {
+    concurrency: 1,
+  }).pipe(Effect.map(A.flatten));
   return [...functionDeclarations, ...functionVariableDeclarations];
 });
 
@@ -396,7 +399,8 @@ const parseTypeAliasDeclaration = Effect.fn("parseTypeAliasDeclaration")(functio
 const parseTypeAliasDeclarations = (typeAliases: ReadonlyArray<ast.TypeAliasDeclaration>) =>
   Effect.forEach(
     A.filter(typeAliases, (declaration) => declaration.isExported()),
-    parseTypeAliasDeclaration
+    parseTypeAliasDeclaration,
+    { concurrency: 1 }
   ).pipe(Effect.map(A.flatten));
 
 /**
@@ -488,7 +492,9 @@ export const parseConstants = Effect.gen(function* () {
     );
   });
 
-  return yield* Effect.forEach(declarations, parseConstantVariableDeclaration).pipe(Effect.map(A.flatten));
+  return yield* Effect.forEach(declarations, parseConstantVariableDeclaration, { concurrency: 1 }).pipe(
+    Effect.map(A.flatten)
+  );
 });
 
 const parseExportSpecifier = Effect.fn("parseExportSpecifier")(function* (
@@ -544,9 +550,9 @@ const parseNamedExports = (ed: ast.ExportDeclaration): Effect.Effect<Array<Domai
         O.getOrElse((): Effect.Effect<Array<Domain.Export>, never, Source> => Effect.succeed([]))
       ),
     onNonEmpty: (specifiers) =>
-      Effect.forEach(specifiers, (specifier) => parseExportSpecifier(specifier, declarationDocComment)).pipe(
-        Effect.map(A.fromIterable)
-      ),
+      Effect.forEach(specifiers, (specifier) => parseExportSpecifier(specifier, declarationDocComment), {
+        concurrency: 1,
+      }).pipe(Effect.map(A.fromIterable)),
   });
 };
 
@@ -574,7 +580,9 @@ const parseNamedExports = (ed: ast.ExportDeclaration): Effect.Effect<Array<Domai
  */
 export const parseExports = Effect.gen(function* () {
   const source = yield* Source;
-  const exports = yield* Effect.forEach(source.sourceFile.getExportDeclarations(), parseNamedExports);
+  const exports = yield* Effect.forEach(source.sourceFile.getExportDeclarations(), parseNamedExports, {
+    concurrency: 1,
+  });
   return A.flatten(exports);
 });
 
@@ -609,7 +617,8 @@ const parseModuleDeclaration = Effect.fn("parseModuleDeclaration")(function* (
 const parseModuleDeclarations = (namespaces: ReadonlyArray<ast.ModuleDeclaration>) =>
   Effect.forEach(
     A.filter(namespaces, (namespace) => namespace.isExported()),
-    parseModuleDeclaration
+    parseModuleDeclaration,
+    { concurrency: 1 }
   ).pipe(Effect.map(A.flatten));
 
 /**
@@ -727,7 +736,8 @@ const parseProperties = (c: ast.ClassDeclaration) =>
             !property.isStatic() &&
             pipe(property.getFirstModifierByKind(ast.ts.SyntaxKind.PrivateKeyword), O.fromNullishOr, O.isNone)
         ),
-        parseProperty
+        parseProperty,
+        { concurrency: 1 }
       ),
       Effect.forEach(
         A.filter(
@@ -736,7 +746,8 @@ const parseProperties = (c: ast.ClassDeclaration) =>
             !accessor.isStatic() &&
             pipe(accessor.getFirstModifierByKind(ast.ts.SyntaxKind.PrivateKeyword), O.fromNullishOr, O.isNone)
         ),
-        parseGetAccessor
+        parseGetAccessor,
+        { concurrency: 1 }
       ),
     ],
     { concurrency: 2 }
@@ -795,8 +806,12 @@ const parseClass = Effect.fn("parseClass")(function* (c: ast.ClassDeclaration) {
 
   const name = c.getName() ?? "";
   const signature = yield* getClassDeclarationSignature(c);
-  const methods = yield* Effect.forEach(c.getInstanceMethods(), parseMethod).pipe(Effect.map(A.getSomes));
-  const staticMethods = yield* Effect.forEach(c.getStaticMethods(), parseMethod).pipe(Effect.map(A.getSomes));
+  const methods = yield* Effect.forEach(c.getInstanceMethods(), parseMethod, { concurrency: 1 }).pipe(
+    Effect.map(A.getSomes)
+  );
+  const staticMethods = yield* Effect.forEach(c.getStaticMethods(), parseMethod, { concurrency: 1 }).pipe(
+    Effect.map(A.getSomes)
+  );
   const properties = yield* parseProperties(c);
   const position = yield* parsePosition(c);
   return [
@@ -838,7 +853,7 @@ const parseClass = Effect.fn("parseClass")(function* (c: ast.ClassDeclaration) {
  */
 export const parseClasses = Source.pipe(
   Effect.map((source) => A.filter(source.sourceFile.getClasses(), (declaration) => declaration.isExported())),
-  Effect.flatMap(Effect.forEach(parseClass)),
+  Effect.flatMap(Effect.forEach(parseClass, { concurrency: 1 })),
   Effect.map(A.flatten)
 );
 

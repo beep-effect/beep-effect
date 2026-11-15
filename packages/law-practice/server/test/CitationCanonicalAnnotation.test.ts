@@ -86,7 +86,8 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
                   const first = yield* unicode.fromText(before);
                   const last = yield* unicode.fromText(after);
                   return CitationAnnotationReplacement.make({ start, end, before: first.storage, after: last.storage });
-                })
+                }),
+                { concurrency: 1 }
               );
               const input = CitationEngineAnnotationInput.make({
                 plain: { source: plain.source, sourceText: plain.sourceText },

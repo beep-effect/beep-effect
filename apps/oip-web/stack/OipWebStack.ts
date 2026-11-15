@@ -209,7 +209,7 @@ export const oipWebResources = Effect.fn("OipWeb.resources")(function* (config: 
     })
   );
 
-  const domains = yield* Effect.forEach(config.domains, declareDomain(config, project.projectId));
+  const domains = yield* Effect.forEach(config.domains, declareDomain(config, project.projectId), { concurrency: 1 });
 
   const bucket = yield* AWS.S3.Bucket(assetsBucketId, {
     bucketName: config.assetsBucketName,

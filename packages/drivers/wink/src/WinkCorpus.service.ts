@@ -506,18 +506,21 @@ const makeWinkCorpusManager = Effect.gen(function* () {
       )
     );
 
-    const documentVectors = yield* Effect.forEach(state.documents, (_document, index) =>
-      Effect.try({
-        try: () => vectorizer.doc(index).out(its.vector),
-        catch: (cause) =>
-          CorpusManagerError.fromCause(cause, "Failed to compute document vector", { corpusId: state.corpusId }),
-      }).pipe(
-        Effect.flatMap(
-          Effect.fnUntraced(function* (raw) {
-            return yield* decodeNumberArray(raw, "document vector output", state.corpusId);
-          })
-        )
-      )
+    const documentVectors = yield* Effect.forEach(
+      state.documents,
+      (_document, index) =>
+        Effect.try({
+          try: () => vectorizer.doc(index).out(its.vector),
+          catch: (cause) =>
+            CorpusManagerError.fromCause(cause, "Failed to compute document vector", { corpusId: state.corpusId }),
+        }).pipe(
+          Effect.flatMap(
+            Effect.fnUntraced(function* (raw) {
+              return yield* decodeNumberArray(raw, "document vector output", state.corpusId);
+            })
+          )
+        ),
+      { concurrency: 1 }
     );
 
     return {
@@ -670,8 +673,10 @@ const makeWinkCorpusManager = Effect.gen(function* () {
             return yield* CorpusManagerError.fromMessage("Invalid document-term matrix output", params.corpusId);
           }
 
-          return yield* Effect.forEach(raw, (row) =>
-            decodeNumberArray(row, "document-term matrix row", params.corpusId)
+          return yield* Effect.forEach(
+            raw,
+            (row) => decodeNumberArray(row, "document-term matrix row", params.corpusId),
+            { concurrency: 1 }
           );
         }),
       });
@@ -826,7 +831,8 @@ const makeWinkCorpusManager = Effect.gen(function* () {
                 text: document.text,
               }),
           });
-        })
+        }),
+        { concurrency: 1 }
       );
 
       const ranked = pipe(

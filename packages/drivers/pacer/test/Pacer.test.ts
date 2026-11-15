@@ -62,7 +62,7 @@ const assertRoundTrips = Effect.fn("PacerTest.assertRoundTrips")(function* <Sche
   schema: Schema,
   values: ReadonlyArray<Schema["Type"]>
 ) {
-  yield* Effect.forEach(values, (value) => roundTrips(schema, value), { discard: true });
+  yield* Effect.forEach(values, (value) => roundTrips(schema, value), { concurrency: 1, discard: true });
 });
 
 const findFirstCasesPage = Effect.fnUntraced(function* () {

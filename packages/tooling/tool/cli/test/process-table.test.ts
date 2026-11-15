@@ -215,8 +215,10 @@ describe("desktopTerminalShellState", () => {
         // A shell on a pty below the agent session rather than the app itself.
         ProcessTableEntry.make({ pid: 340, parent: 60, command: "zsh", terminal: 34826, foregroundGroup: 340 }),
       ]);
-      const states = yield* Effect.forEach([55, 60, 70, 320, 330, 340, 510, 999], (pid) =>
-        terminalStateIn(entries, pid)
+      const states = yield* Effect.forEach(
+        [55, 60, 70, 320, 330, 340, 510, 999],
+        (pid) => terminalStateIn(entries, pid),
+        { concurrency: 1 }
       );
       assertTrue(A.every(states, O.isNone));
     })

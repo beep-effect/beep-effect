@@ -1204,7 +1204,7 @@ const removePlanPaths = Effect.fn("AiMetrics.retention.removePlanPaths")(functio
           recursive: true,
         })
         .pipe(Effect.mapError((cause) => retentionFailure("Failed to remove an AI metrics retained file.", cause))),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -1294,7 +1294,7 @@ const removeRawArchivePaths = Effect.fn("AiMetrics.retention.removeRawArchivePat
           Effect.mapError((cause) => retentionFailure("Failed to remove an AI metrics raw archive object.", cause))
         );
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -1613,7 +1613,8 @@ export const runAiMetricsRetentionRestoreDrill = Effect.fn("AiMetrics.runAiMetri
         archiveObject,
         privacy,
       });
-    })
+    }),
+    { concurrency: 1 }
   );
 
   yield* withAiMetricsDuckDb(

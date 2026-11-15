@@ -898,7 +898,7 @@ describe("Yaml", () => {
               const parsed50 = yield* Yaml.parse(emitted);
               assert.deepStrictEqual(parsed50, { k: value });
             }),
-            { discard: true }
+            { concurrency: 1, discard: true }
           )
         );
 

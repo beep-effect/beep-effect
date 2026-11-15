@@ -98,7 +98,8 @@ export const makeIdentificationStages = <E>(lookups: Layer.Layer<UsptoRecordLook
         (line) =>
           S.decodeEffect(S.fromJsonString(schema))(line).pipe(
             Effect.mapError(() => failure("decode-line", "invalid-input"))
-          )
+          ),
+        { concurrency: 1 }
       );
     });
     const ancestors = (dir: string): ReadonlyArray<string> => {
@@ -141,8 +142,13 @@ export const makeIdentificationStages = <E>(lookups: Layer.Layer<UsptoRecordLook
       schema: T,
       values: ReadonlyArray<T["Type"]>
     ) {
-      const encoded = yield* Effect.forEach(values, (v) =>
-        S.encodeEffect(S.fromJsonString(schema))(v).pipe(Effect.mapError(() => failure("encode-line", "invalid-input")))
+      const encoded = yield* Effect.forEach(
+        values,
+        (v) =>
+          S.encodeEffect(S.fromJsonString(schema))(v).pipe(
+            Effect.mapError(() => failure("encode-line", "invalid-input"))
+          ),
+        { concurrency: 1 }
       );
       yield* writeText(file, encoded.length > 0 ? `${A.join(encoded, "\n")}\n` : "");
     });
@@ -226,7 +232,8 @@ export const makeIdentificationStages = <E>(lookups: Layer.Layer<UsptoRecordLook
                 ? lookup.byApplication(query.number)
                 : lookup.byPatent(query.number);
               return UsptoLookupResult.make({ query, facts });
-            })
+            }),
+            { concurrency: 1 }
           );
         })
       ).pipe(
@@ -266,7 +273,8 @@ export const makeIdentificationStages = <E>(lookups: Layer.Layer<UsptoRecordLook
                 contentHash: document.contentHash,
                 resolution: resolve(bundle, context, filter),
               });
-            })
+            }),
+            { concurrency: 1 }
           );
         })
       );

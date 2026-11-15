@@ -21,14 +21,14 @@ describe("HostsStage", () => {
 
   it.effect("the workstation guard refuses a true CI flag in every spelling", () =>
     Effect.gen(function* () {
-      const refused = yield* Effect.forEach(["true", "1", "yes", "on"], (CI) => guardIn({ CI }));
+      const refused = yield* Effect.forEach(["true", "1", "yes", "on"], (CI) => guardIn({ CI }), { concurrency: 1 });
       assertTrue(A.every(refused, Exit.isFailure));
     })
   );
 
   it.effect("the workstation guard admits an unset or false CI flag", () =>
     Effect.gen(function* () {
-      const admitted = yield* Effect.forEach([{}, { CI: "false" }, { CI: "0" }], guardIn);
+      const admitted = yield* Effect.forEach([{}, { CI: "false" }, { CI: "0" }], guardIn, { concurrency: 1 });
       assertTrue(A.every(admitted, Exit.isSuccess));
     })
   );

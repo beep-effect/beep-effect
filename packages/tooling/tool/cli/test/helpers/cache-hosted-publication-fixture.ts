@@ -243,10 +243,13 @@ export const makePublishedAcceptanceFixture = Effect.fn("PublishedAcceptanceTest
     | SecureRandom.SecureRandom
     | ChildProcessSpawner.ChildProcessSpawner
   >();
-  const channels = yield* Effect.all({
-    stable: prepareChannel(trust.stable, stable, stableBinding, contract, 11),
-    canary: prepareChannel(trust.canary, canary, canaryBinding, contract, 12),
-  });
+  const channels = yield* Effect.all(
+    {
+      stable: prepareChannel(trust.stable, stable, stableBinding, contract, 11),
+      canary: prepareChannel(trust.canary, canary, canaryBinding, contract, 12),
+    },
+    { concurrency: 1 }
+  );
   const rows = [channels.stable, channels.canary];
   const reads = yield* Ref.make(0);
   const contentClient = yield* GitHubClient;

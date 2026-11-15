@@ -338,7 +338,7 @@ const checkMembership = (
   O.match(resolved.membership, {
     onNone: () => Effect.succeed(resolved.answer),
     onSome: ({ forms, unique }) =>
-      Effect.map(Effect.forEach(forms, mentions.familiesMentioning), (mentioned) =>
+      Effect.map(Effect.forEach(forms, mentions.familiesMentioning, { concurrency: 1 }), (mentioned) =>
         A.some(A.flatten(mentioned), (familyKey) => familyKey !== unique.familyKey)
           ? MatterUnique.make({ ...unique, verified: false })
           : unique
@@ -350,22 +350,25 @@ const lookupFailed = () => DocketIntakeError.make({ cause: "practice-kg-lookup",
 const makeLookup = (kg: typeof PracticeKgMatterLookup.Service, mentions: DocketMatterMentionsShape) =>
   Effect.fn("DocketMatterLookup.lookup")(function* (references: ReadonlyArray<string>) {
     const forms = A.dedupe(A.flatMap(A.map(references, Str.trim), lookupForms));
-    const results = yield* Effect.forEach(forms, (form) =>
-      kg.lookup(PracticeKgMatterLookupRequest.make({ reference: form })).pipe(
-        Effect.mapBoth({
-          onFailure: lookupFailed,
-          onSuccess: (result: PracticeKgMatterLookupResult): FormResult => ({
-            form,
-            matters: A.filter(result.matters, namesMatter),
-          }),
-        })
-      )
+    const results = yield* Effect.forEach(
+      forms,
+      (form) =>
+        kg.lookup(PracticeKgMatterLookupRequest.make({ reference: form })).pipe(
+          Effect.mapBoth({
+            onFailure: lookupFailed,
+            onSuccess: (result: PracticeKgMatterLookupResult): FormResult => ({
+              form,
+              matters: A.filter(result.matters, namesMatter),
+            }),
+          })
+        ),
+      { concurrency: 1 }
     );
     // Only when no reference names a matter are the documents searched for mentions: a number
     // that no matter owns is offered with the matters that cite it, never as an answer.
     const answer = yield* O.match(combine(results), {
       onNone: () =>
-        Effect.forEach(forms, mentions.familiesMentioning).pipe(
+        Effect.forEach(forms, mentions.familiesMentioning, { concurrency: 1 }).pipe(
           Effect.map(
             (mentioned): MatterLookupResult =>
               A.match(sortedKeys(A.flatten(mentioned)), {

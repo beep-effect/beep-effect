@@ -59,7 +59,9 @@ export const RetentionAuthorityReaderDrizzle = Layer.effect(
                     or(isNull(edge.expiredAt), gt(edge.expiredAt, knownAt))
                   )
                 );
-              const edges = yield* Effect.forEach(rows, (row) => Effect.fromResult(fromEdgeVersionRow(row)));
+              const edges = yield* Effect.forEach(rows, (row) => Effect.fromResult(fromEdgeVersionRow(row)), {
+                concurrency: 1,
+              });
               const claimIds = A.dedupe(
                 A.flatMap(edges, (version) => A.getSomes([version.sourceClaimId, version.targetClaimId]))
               );
@@ -78,7 +80,9 @@ export const RetentionAuthorityReaderDrizzle = Layer.effect(
                     )
                     .pipe(
                       Effect.flatMap((results) =>
-                        Effect.forEach(results, (row) => Effect.fromResult(fromClaimDispositionRow(row)))
+                        Effect.forEach(results, (row) => Effect.fromResult(fromClaimDispositionRow(row)), {
+                          concurrency: 1,
+                        })
                       )
                     ),
               });

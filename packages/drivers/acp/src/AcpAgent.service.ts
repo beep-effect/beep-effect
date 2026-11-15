@@ -367,12 +367,15 @@ export const make = Effect.fn($I`AcpAgent_make`)(function* (
   const runCancelHandlers = (notification: AcpSchema.CancelSessionNotification) =>
     Ref.get(cancelHandlers).pipe(
       Effect.flatMap((handlers) =>
-        Effect.forEach(handlers, (handler) => isolateNotificationHandler(handler(notification)), { discard: true })
+        Effect.forEach(handlers, (handler) => isolateNotificationHandler(handler(notification)), {
+          concurrency: 1,
+          discard: true,
+        })
       )
     );
 
   const runExtNotification = (method: string, params: unknown) =>
-    Effect.all([Ref.get(extNotificationHandlers), Ref.get(unknownExtNotificationHandler)]).pipe(
+    Effect.all([Ref.get(extNotificationHandlers), Ref.get(unknownExtNotificationHandler)], { concurrency: 1 }).pipe(
       Effect.flatMap(([handlers, unknownHandler]) =>
         pipe(
           HashMap.get(handlers, method),

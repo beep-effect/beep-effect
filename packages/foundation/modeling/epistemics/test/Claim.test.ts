@@ -192,7 +192,8 @@ describe("Claim envelope", () => {
           encoded("cv-new", { _tag: "Interval", validFrom: 0, validTo: null }, 200, null),
           encoded("cv-unknown", { _tag: "Unknown" }, 10, null),
         ],
-        (row) => decode(row)
+        (row) => decode(row),
+        { concurrency: 1 }
       );
       const ids = (asOf: number) =>
         A.map(versionsAt(ledger, { asOf: at(asOf), validAt: at(50), states: ["Proposed"] }), (v) => v.id);

@@ -220,7 +220,9 @@ describe("StepExec capture pipe lifecycle", () => {
           tee: true,
         });
         expect(captured.output).toContain("teed-line");
-        const chunks = yield* Effect.forEach(stdout.mock.calls, ([chunk]) => decodeStdoutChunk(chunk));
+        const chunks = yield* Effect.forEach(stdout.mock.calls, ([chunk]) => decodeStdoutChunk(chunk), {
+          concurrency: 1,
+        });
         expect(A.join(chunks, "")).toContain("teed-line\n");
       })
     );
@@ -244,7 +246,9 @@ describe("StepExec capture pipe lifecycle", () => {
         });
         expect(captured.truncated).toBe(true);
         expect(captured.output).toContain("[clipped]");
-        const chunks = yield* Effect.forEach(stdout.mock.calls, ([chunk]) => decodeStdoutChunk(chunk));
+        const chunks = yield* Effect.forEach(stdout.mock.calls, ([chunk]) => decodeStdoutChunk(chunk), {
+          concurrency: 1,
+        });
         expect(A.join(chunks, "")).toContain("bounded-teed-line\n");
       })
     );

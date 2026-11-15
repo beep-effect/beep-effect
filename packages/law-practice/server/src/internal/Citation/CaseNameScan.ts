@@ -176,7 +176,8 @@ export const installCitationCaseNameScan = Effect.fn("Citation.installCaseNameSc
               .pipe(Effect.map((prepared) => O.some(prepared.value.text)))
           : Effect.succeed(O.map(stop, () => null));
         return { ...word, source, stopWord };
-      })
+      }),
+      { concurrency: 1 }
     );
     const state = yield* Ref.make(
       CitationCaseNameScanState.make({

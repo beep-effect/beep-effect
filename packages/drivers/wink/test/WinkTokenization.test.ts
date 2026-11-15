@@ -29,11 +29,14 @@ describe("WinkTokenization", () => {
     (it) => {
       it.effect("builds sentences and documents from the live layer", () =>
         Effect.gen(function* () {
-          const program = Effect.all([
-            sentences("Ada wrote code. Grace debugged it."),
-            tokenCount("Ada wrote code. Grace debugged it."),
-            tokenizeToDocument("Ada wrote code. Grace debugged it.", "history"),
-          ]);
+          const program = Effect.all(
+            [
+              sentences("Ada wrote code. Grace debugged it."),
+              tokenCount("Ada wrote code. Grace debugged it."),
+              tokenizeToDocument("Ada wrote code. Grace debugged it.", "history"),
+            ],
+            { concurrency: 1 }
+          );
           const [sentenceList, count, document] = yield* program;
 
           expect(sentenceList).toHaveLength(2);

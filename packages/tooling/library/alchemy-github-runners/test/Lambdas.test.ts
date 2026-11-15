@@ -34,10 +34,13 @@ const encodeMessage = S.encodeEffect(S.fromJsonString(S.Unknown));
 const encodePool = S.encodeEffect(S.fromJsonString(PoolRuntimeConfig));
 
 const sqsEvent = Effect.fn("sqsEvent")(function* (bodies: ReadonlyArray<unknown>) {
-  const records = yield* Effect.forEach(bodies, (body, index) =>
-    (typeof body === "string" ? Effect.succeed(body) : encodeMessage(body)).pipe(
-      Effect.map((encoded) => ({ messageId: `m-${index}`, body: encoded, eventSource: "aws:sqs" }))
-    )
+  const records = yield* Effect.forEach(
+    bodies,
+    (body, index) =>
+      (typeof body === "string" ? Effect.succeed(body) : encodeMessage(body)).pipe(
+        Effect.map((encoded) => ({ messageId: `m-${index}`, body: encoded, eventSource: "aws:sqs" }))
+      ),
+    { concurrency: 1 }
   );
   return { Records: records };
 });

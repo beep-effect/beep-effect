@@ -117,7 +117,8 @@ export const makeCitationCanonicalExtractionReplay = Effect.fn("CanonicalExtract
           before: before.storage,
           after: after.storage,
         });
-      })
+      }),
+      { concurrency: 1 }
     );
     const result = yield* engine.annotate(
       CitationEngineAnnotationInput.make({

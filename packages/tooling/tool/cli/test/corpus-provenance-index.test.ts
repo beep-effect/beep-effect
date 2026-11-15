@@ -185,7 +185,7 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
         attachmentBytes: 2 * new TextEncoder().encode(pdf).length + jpeg.length + 21 + 8,
       });
       const readFileString1 = yield* fs.readFileString(path.join(root, "staging/provenance/messages-extract.jsonl"));
-      const rows = yield* Effect.forEach(lines(readFileString1), MailMessageIndexRecordJson.decode);
+      const rows = yield* Effect.forEach(lines(readFileString1), MailMessageIndexRecordJson.decode, { concurrency: 1 });
       const parent = O.getOrThrow(A.findFirst(rows, (row) => row.internet !== undefined));
       expect(parent).toMatchObject({
         folderPath: "Inbox",
@@ -269,7 +269,7 @@ it.layer(Services, { timeout: "30 seconds" })((it) => {
       expect(summary.fileCount).toBe(5);
       expect(summary.engineVersion).not.toBe("");
       const readFileString5 = yield* fs.readFileString(path.join(root, "staging/provenance/metadata.jsonl"));
-      const rows = yield* Effect.forEach(lines(readFileString5), MetadataCensusRecordJson.decode);
+      const rows = yield* Effect.forEach(lines(readFileString5), MetadataCensusRecordJson.decode, { concurrency: 1 });
       expect(
         O.getOrThrow(A.findFirst(rows, (row) => Str.endsWith("1_report.p")(row.relativePath))).fields.fileType
       ).toBe("PDF");
@@ -416,7 +416,7 @@ it.layer(CommandServices, { timeout: "60 seconds" })((it) => {
         withAuthor: 1,
       });
       const readFileString16 = yield* fs.readFileString(path.join(root, "staging/provenance/metadata.jsonl"));
-      const rows = yield* Effect.forEach(lines(readFileString16), MetadataCensusRecordJson.decode);
+      const rows = yield* Effect.forEach(lines(readFileString16), MetadataCensusRecordJson.decode, { concurrency: 1 });
       expect(rows).toHaveLength(1);
       expect(rows[0]).toMatchObject({
         engineVersion: "fixture13",

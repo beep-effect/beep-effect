@@ -86,8 +86,11 @@ export const syncKpiArtifacts = Effect.fn("KpiScript.syncKpiArtifacts")(function
 ): Effect.fn.Return<void, KpiArtifactError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   if (EvidenceMode.is.write(mode)) {
-    yield* Effect.forEach(outputs, ([path, rendered]) =>
-      fs.writeFileString(`${repoRoot}/${path}`, rendered).pipe(Effect.mapError(() => ioFailure("write", path)))
+    yield* Effect.forEach(
+      outputs,
+      ([path, rendered]) =>
+        fs.writeFileString(`${repoRoot}/${path}`, rendered).pipe(Effect.mapError(() => ioFailure("write", path))),
+      { concurrency: 1 }
     );
     return;
   }

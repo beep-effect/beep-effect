@@ -291,10 +291,13 @@ export const runView = Effect.fn("Library.runView")(function* <T, I>(
     .pipe(Effect.mapError((cause) => LibraryError.make({ message: "Cannot execute library view", cause })));
   if (result.profile !== "select")
     return yield* LibraryError.make({ message: "Library view requires SELECT rows", cause: result.profile });
-  return yield* Effect.forEach(result.rows, (binding) =>
-    S.decodeUnknownEffect(row)(R.map(binding, (term) => term.value)).pipe(
-      Effect.mapError((cause) => LibraryError.make({ message: "Cannot decode library view row", cause }))
-    )
+  return yield* Effect.forEach(
+    result.rows,
+    (binding) =>
+      S.decodeUnknownEffect(row)(R.map(binding, (term) => term.value)).pipe(
+        Effect.mapError((cause) => LibraryError.make({ message: "Cannot decode library view row", cause }))
+      ),
+    { concurrency: 1 }
   );
 });
 /**
@@ -314,10 +317,13 @@ export const viewRecords = Effect.fn("Library.viewRecords")(function* <T, I>(
   includePrivate = false
 ) {
   const rows = yield* runView(dataset, query, LibraryViewRow, includePrivate);
-  return yield* Effect.forEach(rows, (row) =>
-    S.decodeEffect(S.fromJsonString(schema))(row.payload).pipe(
-      Effect.mapError((cause) => LibraryError.make({ message: "Cannot decode selected library record", cause }))
-    )
+  return yield* Effect.forEach(
+    rows,
+    (row) =>
+      S.decodeEffect(S.fromJsonString(schema))(row.payload).pipe(
+        Effect.mapError((cause) => LibraryError.make({ message: "Cannot decode selected library record", cause }))
+      ),
+    { concurrency: 1 }
   );
 });
 const captureDisplayCategory = Effect.fnUntraced(function* (
@@ -375,7 +381,7 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
       if (claim.category === "readable" && claim.capture !== null) readable = HashSet.add(readable, claim.capture.id);
     });
   });
-  yield* Effect.forEach(catalog.sources, sourceEvidence);
+  yield* Effect.forEach(catalog.sources, sourceEvidence, { concurrency: 1 });
   const repoRoot = yield* findRepoRoot().pipe(
     Effect.mapError((cause) => LibraryError.make({ message: "Cannot resolve library topic repository", cause }))
   );
@@ -431,7 +437,8 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
         );
         const { nodeId: _nodeId, order: _order, ...annotations } = meta;
         addMetadata(node, { payload, private: "false", ...annotations });
-      })
+      }),
+      { concurrency: 1 }
     );
   yield* add("Report", catalog.documents, LibraryDocument, (d) => ({
     id: d.id,

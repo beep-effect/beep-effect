@@ -975,7 +975,8 @@ export const RunnerLaunchTemplateProvider = Provider.effect(
           Effect.flatMap((pages) =>
             Effect.forEach(
               A.flatMap(A.fromIterable(pages), (page) => page.LaunchTemplates ?? []),
-              toAttributes
+              toAttributes,
+              { concurrency: 1 }
             )
           )
         ),

@@ -120,10 +120,13 @@ const generate = Effect.gen(function* () {
     Effect.fail(`Merge commits absent from the object store: ${A.join(missingMerges, ", ")}`),
     Effect.succeed(A.isReadonlyArrayNonEmpty(missingMerges))
   );
-  const rows = yield* Effect.forEach(probes, (entry) =>
-    Effect.flatMap(present(entry.resolvedHeadSha), (found) =>
-      found ? ancestry(entry) : Effect.succeed<AncestryVerdict>("head-missing")
-    ).pipe(Effect.map((verdict) => AdoptionTableRow.make({ ...entry, ancestry: verdict })))
+  const rows = yield* Effect.forEach(
+    probes,
+    (entry) =>
+      Effect.flatMap(present(entry.resolvedHeadSha), (found) =>
+        found ? ancestry(entry) : Effect.succeed<AncestryVerdict>("head-missing")
+      ).pipe(Effect.map((verdict) => AdoptionTableRow.make({ ...entry, ancestry: verdict }))),
+    { concurrency: 1 }
   );
   const [windowW] = kpiWindows;
   const table = AdoptionTable.make({

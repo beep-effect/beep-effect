@@ -78,7 +78,7 @@ const makeClassificationFixture = Effect.fn("TmpfsReapTest.makeClassificationFix
   yield* Effect.forEach(
     [tmpRoot, cacheRoot, fakeParent, fallow, youngScoped, oldSemanticDelta, headInstall],
     (directory) => fs.makeDirectory(directory, { recursive: true }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* runCommand("git", ["init", "-q"], fakeParent);
   yield* fs.writeFileString(path.join(fakeParent, "tracked.txt"), "tracked bytes\n");
@@ -193,7 +193,7 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
       unclassifiedWorktree,
     ],
     (directory) => fs.makeDirectory(directory, { recursive: true }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* fs.writeFileString(path.join(stubEligible, ".git"), `gitdir: ${missingRepo}/.git/worktrees/eligible\n`);
   yield* fs.writeFileString(path.join(stubYoung, ".git"), `gitdir: ${missingRepo}/.git/worktrees/young\n`);
@@ -218,7 +218,7 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
         path.join(candidate, ".git"),
         `gitdir: ${missingRepo}/.git/worktrees/${path.basename(candidate)}\n`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* fs.writeFileString(path.join(stubTrackedContent, "tracked.txt"), "small tracked bytes\n");
   yield* fs.writeFileString(path.join(stubUntrackedContent, "untracked.txt"), "small untracked bytes\n");
@@ -254,22 +254,22 @@ const makeNewClassFixtures = Effect.fn("TmpfsReapTest.makeNewClassFixtures")(fun
       vitestWrongShape,
     ],
     (candidate) => runCommand("touch", ["-d", fixtureTimestamp(3), candidate], root),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     [vitestEligible, path.join(vitestEligible, "ssr"), path.join(vitestEligible, "client")],
     (candidate) => runCommand("touch", ["-d", fixtureTimestamp(30), candidate], root),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     [vitestYoung, vitestLive, path.join(vitestLive, "ssr")],
     (candidate) => runCommand("touch", ["-d", fixtureTimestamp(30), candidate], root),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     [path.join(vitestYoung, "client"), stubYoung],
     (candidate) => runCommand("touch", ["-d", fixtureTimestamp(1), candidate], root),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   return {
@@ -856,12 +856,13 @@ describe("tmpfs reap", () => {
           const candidatePath = path.join(tmpRoot, "4567890123abcdefghijk");
           const ssr = path.join(candidatePath, "ssr");
           yield* Effect.forEach([ssr, cacheRoot], (directory) => fs.makeDirectory(directory, { recursive: true }), {
+            concurrency: 1,
             discard: true,
           });
           yield* Effect.forEach(
             [candidatePath, ssr],
             (candidate) => runCommand("touch", ["-d", fixtureTimestamp(30), candidate], root),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
 
           const report = yield* runTmpfsReap({
@@ -893,9 +894,7 @@ describe("tmpfs reap", () => {
             yield* Effect.forEach(
               [candidatePath, cacheRoot],
               (directory) => fs.makeDirectory(directory, { recursive: true }),
-              {
-                discard: true,
-              }
+              { concurrency: 1, discard: true }
             );
             yield* fs.writeFileString(payloadPath, "held open\n");
             yield* runCommand("touch", ["-d", fixtureTimestamp(3), candidatePath], root);
@@ -935,9 +934,7 @@ describe("tmpfs reap", () => {
             yield* Effect.forEach(
               [candidatePath, cacheRoot],
               (directory) => fs.makeDirectory(directory, { recursive: true }),
-              {
-                discard: true,
-              }
+              { concurrency: 1, discard: true }
             );
             yield* fs.writeFileString(path.join(candidatePath, "payload.txt"), "cached\n");
             yield* runCommand("touch", ["-d", fixtureTimestamp(8), candidatePath], root);
@@ -983,7 +980,7 @@ describe("tmpfs reap", () => {
           yield* Effect.forEach(
             [safeWorktreesRoot, escapedRootTarget, escapedChildTarget, cacheRoot],
             (directory) => fs.makeDirectory(directory, { recursive: true }),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
           yield* fs.writeFileString(
             path.join(escapedChildTarget, ".git"),
@@ -1026,12 +1023,12 @@ describe("tmpfs reap", () => {
           yield* Effect.forEach(
             [systemCandidate, configuredCandidate, cacheRoot, homeRoot],
             (directory) => fs.makeDirectory(directory, { recursive: true }),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
           yield* Effect.forEach(
             [systemCandidate, configuredCandidate],
             (candidate) => runCommand("touch", ["-d", fixtureTimestamp(3), candidate], root),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
 
           const configuredReport = yield* runTmpfsReap({
@@ -1176,7 +1173,7 @@ describe("tmpfs reap", () => {
           yield* Effect.forEach(
             [homeRoot, systemTmpRoot],
             (directory) => fs.makeDirectory(directory, { recursive: true }),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
 
           const configProvider = ConfigProvider.make((configPath) => {
@@ -1218,9 +1215,7 @@ describe("tmpfs reap", () => {
           yield* Effect.forEach(
             [candidatePath, cacheRoot],
             (directory) => fs.makeDirectory(directory, { recursive: true }),
-            {
-              discard: true,
-            }
+            { concurrency: 1, discard: true }
           );
           yield* runCommand("touch", ["-d", fixtureTimestamp(3), candidatePath], root);
           const report = yield* runTmpfsReap({ cacheRoot, nowMillis: FIXTURE_NOW_MILLIS, tmpRoot });
@@ -1303,6 +1298,7 @@ describe("tmpfs reap", () => {
           const releasedCheckout = path.join(releasedInstall, "checkout");
           const lockedCheckout = path.join(lockedInstall, "checkout");
           yield* Effect.forEach([tmpRoot, repo], (directory) => fs.makeDirectory(directory, { recursive: true }), {
+            concurrency: 1,
             discard: true,
           });
           yield* runCommand("git", ["init", "--quiet"], repo);
@@ -1318,7 +1314,7 @@ describe("tmpfs reap", () => {
           yield* Effect.forEach(
             [releasedInstall, lockedInstall],
             (candidate) => runCommand("touch", ["-d", fixtureTimestamp(2), candidate], root),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
 
           const report = yield* runTmpfsReap({
@@ -1353,7 +1349,7 @@ describe("tmpfs reap", () => {
           yield* Effect.forEach(
             [tmpRoot, repo, install],
             (directory) => fs.makeDirectory(directory, { recursive: true }),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
           yield* runCommand("git", ["init", "--quiet"], repo);
           yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
@@ -1401,9 +1397,7 @@ describe("tmpfs reap", () => {
           yield* Effect.forEach(
             [tmpRoot, cacheRoot, repo],
             (directory) => fs.makeDirectory(directory, { recursive: true }),
-            {
-              discard: true,
-            }
+            { concurrency: 1, discard: true }
           );
           yield* runCommand("git", ["init", "--quiet"], repo);
           yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
@@ -1445,9 +1439,7 @@ describe("tmpfs reap", () => {
           yield* Effect.forEach(
             [tmpRoot, cacheRoot, repo],
             (directory) => fs.makeDirectory(directory, { recursive: true }),
-            {
-              discard: true,
-            }
+            { concurrency: 1, discard: true }
           );
           yield* runCommand("git", ["init", "--quiet"], repo);
           yield* runCommand("git", ["config", "user.email", "tmpfs-reap@example.invalid"], repo);
@@ -1500,7 +1492,7 @@ describe("tmpfs reap", () => {
           yield* Effect.forEach(
             [candidate, cacheRoot, outside],
             (directory) => fs.makeDirectory(directory, { recursive: true }),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
           yield* fs.writeFileString(path.join(candidate, "old.txt"), "old candidate\n");
           yield* fs.writeFileString(path.join(outside, "preserve.txt"), "do not delete\n");
@@ -1546,7 +1538,7 @@ describe("tmpfs reap", () => {
           yield* Effect.forEach(
             [tmpRoot, configuredBeepRoot, outsideInstall],
             (directory) => fs.makeDirectory(directory, { recursive: true }),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
           yield* fs.writeFileString(path.join(outsideInstall, "preserve.txt"), "do not delete\n");
           yield* fs.symlink(outsideHeadInstallRoot, path.join(configuredBeepRoot, "head-install"));
@@ -1574,6 +1566,7 @@ describe("tmpfs reap", () => {
           const cacheRoot = path.join(root, "cache");
           const fallow = path.join(tmpRoot, "fallow-audit-base-cache-sidecars");
           yield* Effect.forEach([fallow, cacheRoot], (directory) => fs.makeDirectory(directory, { recursive: true }), {
+            concurrency: 1,
             discard: true,
           });
           yield* runCommand("mkfifo", [path.join(fallow, "fifo.last-used")], root);
@@ -1597,6 +1590,7 @@ describe("tmpfs reap", () => {
           const fallow = path.join(tmpRoot, "fallow-audit-base-cache-no-last-used");
           const explicitFile = path.join(tmpRoot, "explicit-file");
           yield* Effect.forEach([fallow, cacheRoot], (directory) => fs.makeDirectory(directory, { recursive: true }), {
+            concurrency: 1,
             discard: true,
           });
           yield* fs.writeFileString(explicitFile, "not a directory\n");
@@ -1638,7 +1632,7 @@ describe("tmpfs reap", () => {
             yield* Effect.forEach(
               [tmpRoot, liveOwner, abandoned, held],
               (directory) => fs.makeDirectory(directory, { recursive: true }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
             yield* fs.writeFileString(path.join(abandoned, "payload.txt"), "stale bytes\n");
             yield* fs.writeFileString(`${abandoned}.last-used`, `${goneOwner}\n`);
@@ -1694,6 +1688,7 @@ describe("tmpfs reap", () => {
           const repo = path.join(root, "sweep-repo");
           const worktree = path.join(tmpRoot, "sweep-worktree");
           yield* Effect.forEach([tmpRoot, repo], (directory) => fs.makeDirectory(directory, { recursive: true }), {
+            concurrency: 1,
             discard: true,
           });
           yield* runCommand("git", ["init", "--quiet"], repo);
@@ -1725,6 +1720,7 @@ describe("tmpfs reap", () => {
           const repo = path.join(root, "sweep-repo");
           const diskWorktree = path.join(root, "disk-worktree");
           yield* Effect.forEach([tmpRoot, repo], (directory) => fs.makeDirectory(directory, { recursive: true }), {
+            concurrency: 1,
             discard: true,
           });
           yield* runCommand("git", ["init", "--quiet"], repo);

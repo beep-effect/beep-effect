@@ -270,7 +270,8 @@ export const makeKbLedger = Effect.gen(function* () {
             KbError.make({ message: `Invalid row in ${path.basename(file)} at byte ${line.offset}` })
           )
         );
-      })
+      }),
+      { concurrency: 1 }
     );
   });
   return KbLedger.of({

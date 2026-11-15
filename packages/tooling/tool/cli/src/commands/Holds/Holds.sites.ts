@@ -204,7 +204,7 @@ export const makeHoldSites = Effect.fn("HoldSites.make")(function* (repoRoot: st
         })
       )
     );
-    const manifestAnchors = yield* Effect.forEach(A.dedupe(manifests), manifestSites);
+    const manifestAnchors = yield* Effect.forEach(A.dedupe(manifests), manifestSites, { concurrency: 1 });
     const required = [
       ...A.map(keysOf(root.overrides), (packageName) => HoldAnchor.cases.RootOverride.make({ packageName })),
       ...A.map(keysOf(root.patchedDependencies), (key) => HoldAnchor.cases.PatchedDependency.make({ key })),

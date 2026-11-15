@@ -113,7 +113,7 @@ const makeHost = (deps: Parameters<typeof makeContext>[0]): DomainPlatform.Model
                   : Effect.void
               ),
           }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     }),
     history: (target) => Effect.map(ctx.net.run.phase(target), (phase) => ({ complete: phase === "complete" })),

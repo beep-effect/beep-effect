@@ -412,7 +412,7 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
     yield* Effect.forEach(
       A.filter(entries, ([key]) => !A.contains(keys, key)),
       ([key]) => removeIfPresent(path.join(latest, `${TRANSPORT_PREFIX}${key}.json`), "remove a superseded instance"),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   });
 
@@ -547,7 +547,7 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
       (row) => isCalibrationRow(row) && DateTime.toEpochMillis(row.at) >= DateTime.toEpochMillis(limit)
     );
     if (A.length(kept) === A.length(read.rows) && read.corruptLineCount === 0) return;
-    const lines = yield* Effect.forEach(kept, encodeLine);
+    const lines = yield* Effect.forEach(kept, encodeLine, { concurrency: 1 });
     yield* writePrivate(
       file,
       A.join(
@@ -568,13 +568,16 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
     };
     const removeRows = (hour: DateTime.Utc) => removeIfPresent(rowFile(rows, hour), "remove a ledger hour");
     const expired = before(cutoffs.rowsBefore);
-    yield* Effect.forEach(A.filter(hours, expired), removeRows, { discard: true });
+    yield* Effect.forEach(A.filter(hours, expired), removeRows, { concurrency: 1, discard: true });
     const kept = A.filter(hours, (hour) => !expired(hour));
-    const sizes = yield* Effect.forEach(kept, (hour) =>
-      fs.stat(rowFile(rows, hour)).pipe(
-        Effect.map((info) => Number(info.size)),
-        Effect.orElseSucceed(() => 0)
-      )
+    const sizes = yield* Effect.forEach(
+      kept,
+      (hour) =>
+        fs.stat(rowFile(rows, hour)).pipe(
+          Effect.map((info) => Number(info.size)),
+          Effect.orElseSucceed(() => 0)
+        ),
+      { concurrency: 1 }
     );
     // Over the byte cap, drop the oldest hours older than rowsKeepAfter until it fits.
     const total = A.reduce(sizes, 0, (sum, size) => sum + size);
@@ -584,13 +587,13 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
         ? { remaining: state.remaining - size, hours: A.append(state.hours, hour) }
         : state
     );
-    yield* Effect.forEach(evict.hours, removeRows, { discard: true });
+    yield* Effect.forEach(evict.hours, removeRows, { concurrency: 1, discard: true });
     const rollupNames = yield* listNames(rollups, "list rollups");
     const rollupHours = A.getSomes(A.map(rollupNames, hourOfFileName));
     yield* Effect.forEach(
       A.filter(rollupHours, before(cutoffs.rollupsBefore)),
       (hour) => removeIfPresent(path.join(rollups, `${hourFileKey(hour)}.json`), "remove a rollup"),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     yield* removeLatestBefore(cutoffs.latestBefore);
     yield* removeCalibrationsBefore(cutoffs.calibrationsBefore);
@@ -606,10 +609,10 @@ export const makeGithubLedgerStoreLive = Effect.gen(function* () {
     latestSamples: readLatestEntries("sample-", decodeSample).pipe(Effect.map(A.map(([, value]) => value))),
     writeLatestTransport,
     latestTransport: Effect.map(
-      Effect.all([
-        readLatestEntries(TRANSPORT_PREFIX, decodeReading),
-        readLatestEntries(LEGACY_TRANSPORT_PREFIX, decodeReading),
-      ]),
+      Effect.all(
+        [readLatestEntries(TRANSPORT_PREFIX, decodeReading), readLatestEntries(LEGACY_TRANSPORT_PREFIX, decodeReading)],
+        { concurrency: 1 }
+      ),
       ([current, legacy]) => A.map(A.appendAll(current, legacy), ([, value]) => value)
     ),
     readAliases,

@@ -454,7 +454,7 @@ const makeWriter: Socket.Socket["writer"] = Effect.gen(function* () {
         );
   return {
     write,
-    writeAll: (chunks) => Effect.forEach(chunks, write, { discard: true }),
+    writeAll: (chunks) => Effect.forEach(chunks, write, { concurrency: 1, discard: true }),
   };
 });
 

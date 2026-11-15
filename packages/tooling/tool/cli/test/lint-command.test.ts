@@ -1966,7 +1966,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           path.join(input.directory, config.fileName),
           `${encodeJson({ include: config.include })}\n`
         );
-      })
+      }),
+      { concurrency: 1 }
     );
   });
 

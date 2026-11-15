@@ -341,7 +341,7 @@ export const cleanupCachePilot = Effect.fn("Ci.cleanupCachePilot")(function* (mo
   const workspace = yield* variable("GITHUB_WORKSPACE");
   const expectedInputs = `${workspace}/.beep/cache/${mode === "signed" ? "protected-producer-trial" : "local-pilot-observation"}`;
   const trees = [yield* variable("TRIAL_WORKTREE_A"), yield* variable("TRIAL_WORKTREE_B")];
-  const treeFailures = yield* Effect.forEach(trees, (tree) => cleanupWorktree(workspace, tree));
+  const treeFailures = yield* Effect.forEach(trees, (tree) => cleanupWorktree(workspace, tree), { concurrency: 1 });
   const inputs = yield* variable("TRIAL_INPUTS");
   const inputsFailed = yield* cleanupInputs(inputs, expectedInputs);
   const trialRoot = yield* variable("TRIAL_ROOT");

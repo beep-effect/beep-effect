@@ -177,7 +177,7 @@ export const makeProviderInstanceRepository = Effect.fn("Agents.ProviderInstance
       .pipe(
         unavailable("list ProviderInstance"),
         Effect.flatMap((rows) =>
-          Effect.forEach(rows, (row) => Effect.fromResult(fromProviderInstanceRow(row))).pipe(
+          Effect.forEach(rows, (row) => Effect.fromResult(fromProviderInstanceRow(row)), { concurrency: 1 }).pipe(
             unavailable("decode ProviderInstance")
           )
         )

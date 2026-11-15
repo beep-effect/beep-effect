@@ -739,7 +739,7 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
   ) {
     const syntax = yield* requireSyntax(item.module);
     if (syntax.opaqueDynamicImport && !HashSet.has(exempt, item.module)) recordOpaque(state, item.module);
-    const targets = yield* Effect.forEach(syntax.edges, (edge) => followed(item, edge));
+    const targets = yield* Effect.forEach(syntax.edges, (edge) => followed(item, edge), { concurrency: 1 });
     return A.map(A.getSomes(targets), (module): WalkItem => ({ module, follow: transitive, transitive: true }));
   });
 
@@ -807,15 +807,18 @@ export const makePolicyGraph = ({ tree, workspaces }: PolicyGraphOptions) => {
 
   // The closure of one command path, without the shell.
   const commandClosure = Effect.fnUntraced(function* (nodes: ReadonlyArray<PolicyCommandNode>) {
-    const entries = yield* Effect.forEach(nodes, (node) =>
-      Effect.map(
-        subcommandSpecifiers(node),
-        (specifiers): WalkItem => ({
-          module: node.module,
-          follow: (_from, edge) => Effect.succeed(!HashSet.has(specifiers, edge.specifier)),
-          transitive: false,
-        })
-      )
+    const entries = yield* Effect.forEach(
+      nodes,
+      (node) =>
+        Effect.map(
+          subcommandSpecifiers(node),
+          (specifiers): WalkItem => ({
+            module: node.module,
+            follow: (_from, edge) => Effect.succeed(!HashSet.has(specifiers, edge.specifier)),
+            transitive: false,
+          })
+        ),
+      { concurrency: 1 }
     );
     return yield* walk(entries, followAll);
   });
@@ -889,8 +892,10 @@ export const renderClosureInputs = Effect.fnUntraced(function* (
     ),
     Order.String
   );
-  const perWorkspace = yield* Effect.forEach(directories, (directory) =>
-    workspaceInputs(tree, directory, HashSet.has(reached.opaqueWorkspaces, directory))
+  const perWorkspace = yield* Effect.forEach(
+    directories,
+    (directory) => workspaceInputs(tree, directory, HashSet.has(reached.opaqueWorkspaces, directory)),
+    { concurrency: 1 }
   );
   const opaque = A.map(A.fromIterable(reached.opaqueWorkspaces), (directory) => `${directory}/src/`);
   const insideOpaque = (input: string) =>

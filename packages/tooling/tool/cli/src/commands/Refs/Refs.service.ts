@@ -226,7 +226,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
             : `clone ${member.url} --branch ${member.branch} -> ${memberRoot}`,
           `link ${path.join(owner, ".repos", member.name)} -> ${memberRoot}`,
         ];
-      })
+      }),
+      { concurrency: 1 }
     );
     return [
       `Reference workspace: ${root}`,
@@ -268,7 +269,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           }
           yield* fs.symlink(target, link);
           return `${relative} -> ${target}`;
-        })
+        }),
+        { concurrency: 1 }
       );
     },
     Effect.mapError((cause) =>
@@ -305,7 +307,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
             memberRoot,
           ]);
           return `cloned ${member.name}`;
-        })
+        }),
+        { concurrency: 1 }
       );
       return [...reports, ...(yield* linkInto(checkoutRoot, canonicalRoot))];
     },
@@ -460,7 +463,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           const file = path.join(directory, unit.fileName);
           yield* fs.writeFileString(file, unit.text);
           return file;
-        })
+        }),
+        { concurrency: 1 }
       );
       yield* mustRun(options.home, options.home, "systemctl", ["--user", "daemon-reload"]);
       yield* mustRun(options.home, options.home, "systemctl", ["--user", "enable", "--now", `${unitBase}.timer`]);
@@ -523,7 +527,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           const target = path.join(directory, file);
           yield* fs.remove(target);
           return target;
-        })
+        }),
+        { concurrency: 1 }
       );
       yield* mustRun(home, home, "systemctl", ["--user", "daemon-reload"]);
       return removed;

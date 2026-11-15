@@ -306,7 +306,8 @@ const readPullRequestHead = Effect.fn("Ci.rerunRunnerLoss.readPullRequestHead")(
         Effect.map(pullRequestOf),
         CiCommandError.mapError(`Failed to decode pull request #${number}.`)
       );
-    })
+    }),
+    { concurrency: 1 }
   );
   // Only the pull requests the run belongs to decide: the ones whose head is
   // the run's own branch. Another pull request on the same commit has its own

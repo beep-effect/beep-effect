@@ -101,7 +101,7 @@ const lastLogLine = Effect.gen(function* () {
 });
 
 const planFor = Effect.fn(function* (goals: ReadonlyArray<string>) {
-  const children = yield* Effect.forEach(goals, parseGraduationGoal);
+  const children = yield* Effect.forEach(goals, parseGraduationGoal, { concurrency: 1 });
   const snapshot = yield* readExplorationSnapshot(EXPLORATION);
   return yield* compileGraduationPlan(snapshot, GraduationRequest.make({ children, today: TODAY }));
 });

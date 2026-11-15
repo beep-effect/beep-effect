@@ -604,13 +604,16 @@ describe("knowledge doctor sealed baseline", () => {
           yield* lease({ key: key("3"), issued: "2026-10-03T00:00:00Z" }),
         ]);
         assert.deepStrictEqual(violationsOf(third), [[], [], ["lease-quota-exceeded"]]);
-        const forEach12 = yield* Effect.forEach(A.range(1, 21), (index) =>
-          lease({
-            key: `knowledge-doctor/v1:${Str.padStart(64, "0")(`${index}`)}`,
-            document: `docs/doc-${index}.md`,
-            issued: "2026-10-01T00:00:00Z",
-            expires: "2026-10-30T00:00:00Z",
-          })
+        const forEach12 = yield* Effect.forEach(
+          A.range(1, 21),
+          (index) =>
+            lease({
+              key: `knowledge-doctor/v1:${Str.padStart(64, "0")(`${index}`)}`,
+              document: `docs/doc-${index}.md`,
+              issued: "2026-10-01T00:00:00Z",
+              expires: "2026-10-30T00:00:00Z",
+            }),
+          { concurrency: 1 }
         );
         const repoWide = yield* evaluate(forEach12);
         assert.strictEqual(A.length(A.filter(repoWide, (row) => A.isReadonlyArrayNonEmpty(row.violations))), 1);
@@ -775,7 +778,7 @@ describe("knowledge doctor sealed baseline", () => {
             ["branch", "fixture-base"],
           ],
           (args) => StepExec.runCapturedStreams({ command: "git", args, cwd: root, extendEnv: true }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
         const doctor = yield* KnowledgeDoctor;
         const missing = yield* doctor
@@ -909,7 +912,7 @@ describe("knowledge doctor sealed baseline", () => {
             ],
           ],
           (args) => StepExec.runCapturedStreams({ command: "git", args, cwd: root, extendEnv: true }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
         const full = yield* materializeKnowledgeTree("HEAD");
         const selected = yield* materializeKnowledgeTreePaths("HEAD", [
@@ -921,7 +924,9 @@ describe("knowledge doctor sealed baseline", () => {
         const path = yield* Path.Path;
         // The narrowing is on disk: the selected archive root holds the seal input and nothing else.
         const extracted = (root: string) =>
-          Effect.forEach([KNOWLEDGE_CODEOWNERS_PATH, "docs/a.md"], (repoPath) => fs.exists(path.join(root, repoPath)));
+          Effect.forEach([KNOWLEDGE_CODEOWNERS_PATH, "docs/a.md"], (repoPath) => fs.exists(path.join(root, repoPath)), {
+            concurrency: 1,
+          });
         const fullOnDisk = yield* extracted(full.archiveRoot);
         const selectedOnDisk = yield* extracted(selected.archiveRoot);
         assert.deepStrictEqual(fullOnDisk, [true, true]);

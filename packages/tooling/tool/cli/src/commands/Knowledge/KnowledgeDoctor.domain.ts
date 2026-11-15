@@ -189,28 +189,35 @@ export const readKnowledgeGoalPacketRecords = Effect.fn("KnowledgeDoctorDomain.g
     A.dedupe(A.getSomes(A.map(oracle.trackedEntries, (entry) => packetSlug(entry.path)))),
     Order.String
   );
-  return yield* Effect.forEach(slugs, (slug) => {
-    const packetPath = `${GOALS_DIR}/${slug}`;
-    const manifestPath = `${packetPath}/ops/manifest.json`;
-    const readmePath = `${packetPath}/README.md`;
-    return Effect.map(
-      Effect.all({
-        manifestText: knowledgeTreeFacts.readTextIfTracked(oracle, paths, manifestPath),
-        readmeText: knowledgeTreeFacts.readTextIfTracked(oracle, paths, readmePath),
-        goalMd: knowledgeTreeFacts.readTextIfTracked(oracle, paths, `${packetPath}/GOAL.md`),
-      }),
-      ({ manifestText, readmeText, goalMd }) =>
-        GoalPacketRecord.make({
-          slug,
-          packetPath,
-          manifestPath,
-          readmePath,
-          ...optionalProp("manifestText", manifestText),
-          ...optionalProp("readmeText", readmeText),
-          ...optionalProp("goalMdChars", O.map(goalMd, Str.length)),
-        })
-    );
-  });
+  return yield* Effect.forEach(
+    slugs,
+    (slug) => {
+      const packetPath = `${GOALS_DIR}/${slug}`;
+      const manifestPath = `${packetPath}/ops/manifest.json`;
+      const readmePath = `${packetPath}/README.md`;
+      return Effect.map(
+        Effect.all(
+          {
+            manifestText: knowledgeTreeFacts.readTextIfTracked(oracle, paths, manifestPath),
+            readmeText: knowledgeTreeFacts.readTextIfTracked(oracle, paths, readmePath),
+            goalMd: knowledgeTreeFacts.readTextIfTracked(oracle, paths, `${packetPath}/GOAL.md`),
+          },
+          { concurrency: 1 }
+        ),
+        ({ manifestText, readmeText, goalMd }) =>
+          GoalPacketRecord.make({
+            slug,
+            packetPath,
+            manifestPath,
+            readmePath,
+            ...optionalProp("manifestText", manifestText),
+            ...optionalProp("readmeText", readmeText),
+            ...optionalProp("goalMdChars", O.map(goalMd, Str.length)),
+          })
+      );
+    },
+    { concurrency: 1 }
+  );
 });
 
 const packetFacts = (
@@ -253,7 +260,9 @@ const recordFacts = Effect.fn("KnowledgeDoctorDomain.recordFacts")(function* (re
 });
 
 const derivePackets = (oracle: KnowledgeTreeOracle) =>
-  Effect.flatMap(readKnowledgeGoalPacketRecords(oracle), (records) => Effect.forEach(records, recordFacts));
+  Effect.flatMap(readKnowledgeGoalPacketRecords(oracle), (records) =>
+    Effect.forEach(records, recordFacts, { concurrency: 1 })
+  );
 
 const REFLECTIONS_DIR = "history/reflections";
 const DECISIONS_DIR = "decisions";
@@ -417,7 +426,7 @@ export const readKnowledgeGoalsDoctorFindings = Effect.fn("KnowledgeDoctorDomain
 ) {
   const records = yield* readKnowledgeGoalPacketRecords(oracle);
   const reader = makeKnowledgeGoalPacketReader(oracle);
-  const results = yield* Effect.forEach(records, (record) => goalPacketFindings(record, reader));
+  const results = yield* Effect.forEach(records, (record) => goalPacketFindings(record, reader), { concurrency: 1 });
   const capability = capabilityPacketFindings(
     A.zipWith(records, results, (record, result) => ({ slug: record.slug, manifest: result.manifest }))
   );

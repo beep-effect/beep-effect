@@ -229,7 +229,8 @@ export const turboCache = Effect.fn("TurboCache.turboCache")(function* (options:
         // `text` resolves to the runtime accessor of the bound Worker secret.
         const token = yield* secret.text;
         return Credential.make({ team, principal: principal.name, access: principal.access, token });
-      })
+      }),
+      { concurrency: 1 }
     );
     const handle = artifactHandler({ bucket: storage, credentials });
     return {

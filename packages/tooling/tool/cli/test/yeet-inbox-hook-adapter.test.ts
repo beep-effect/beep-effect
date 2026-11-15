@@ -150,7 +150,7 @@ const withInbox = Effect.fn("YeetInboxHookAdapterTest.withInbox")(function* <Val
     },
   ];
 
-  const encodedRows = yield* Effect.forEach(rows, (row) => encodeUnknown(row));
+  const encodedRows = yield* Effect.forEach(rows, (row) => encodeUnknown(row), { concurrency: 1 });
   yield* fs.writeFileString(path.join(inbox, "failures.ndjson"), `${A.join(encodedRows, "\n")}\n`);
   const encodedDispatch = yield* encodeUnknown({
     schemaVersion: "yeet-dispatch/v1",
@@ -585,7 +585,7 @@ it.layer(NodeServices.layer, { timeout: "15 seconds" })((it) => {
             capsule: { jobId: "red" },
           },
         ];
-        const encoded = yield* Effect.forEach(rows, (row) => encodeUnknown(row));
+        const encoded = yield* Effect.forEach(rows, (row) => encodeUnknown(row), { concurrency: 1 });
         yield* fs.writeFileString(`${root}/.beep/inbox/failures.ndjson`, `${A.join(encoded, "\n")}\n`);
         const start = yield* runHook(root, "claude", {
           cwd: root,
@@ -831,7 +831,7 @@ describe("Yeet inbox hook wave-exempt kinds", () => {
             row("base-conflict", "conflict-old", "P0", conflict("old111")),
             row("base-conflict", "conflict-new", "P0", conflict("new222")),
           ];
-          const encodedRows = yield* Effect.forEach(rows, (value) => encodeUnknown(value));
+          const encodedRows = yield* Effect.forEach(rows, (value) => encodeUnknown(value), { concurrency: 1 });
           yield* fs.writeFileString(path.join(inbox, "failures.ndjson"), `${A.join(encodedRows, "\n")}\n`);
           const argument = path.join(inbox, "dispatch.json");
           const encodedUnknown = yield* encodeUnknown({

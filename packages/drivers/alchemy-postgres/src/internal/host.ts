@@ -196,7 +196,9 @@ export const makeContext = (deps: HostDeps) => {
           orDie
         ),
       put: (entries) =>
-        Effect.forEach(R.toEntries(entries), ([key, value]) => put(key, value), { discard: true }).pipe(orDie),
+        Effect.forEach(R.toEntries(entries), ([key, value]) => put(key, value), { concurrency: 1, discard: true }).pipe(
+          orDie
+        ),
       delete: (keys) =>
         A.match(keys, {
           onEmpty: () => Effect.void,
@@ -417,7 +419,7 @@ export const makeContext = (deps: HostDeps) => {
         yield* sql`UPDATE ${sql(tables.backfillJob)} SET locked_until = 0, due_at = ${later + jobRetryMillis}
             WHERE ${where}`;
       }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     return A.isReadonlyArrayNonEmpty(claimed);
   }).pipe(orDieAs("backfill")(tables.backfillJob));
@@ -515,7 +517,7 @@ export const makeContext = (deps: HostDeps) => {
             VALUES (${modelName}, ${producer}, ${delivery.source}, ${delivery.seq}, ${delivery.target.kind},
               ${delivery.target.name}, ${delivery.key}, ${json}::jsonb, 'pending', ${at})`
         ),
-      { discard: true }
+      { concurrency: 1, discard: true }
     ).pipe(Effect.andThen(sql.afterCommit(signalDeliveries)));
 
   /**
@@ -659,7 +661,7 @@ export const makeContext = (deps: HostDeps) => {
     Effect.forEach(
       [worker("delivery", wakeDeliveries, deliveryPass), worker("backfill job", wakeJobs, jobPass), ...workers],
       (work) => Effect.forkIn(work, scope),
-      { discard: true }
+      { concurrency: 1, discard: true }
     )
   );
 

@@ -299,7 +299,7 @@ const parseTurtle = Effect.fn("N3.parseTurtle")(function* (request: N3ParseTurtl
     },
     catch: parseFailure,
   });
-  const decoded = yield* Effect.forEach(quads, fromN3Quad);
+  const decoded = yield* Effect.forEach(quads, fromN3Quad, { concurrency: 1 });
   const decodedPrefixes = yield* decodeRdfPrefixMap(prefixes).pipe(Effect.mapError(parseFailure));
 
   return N3ParseTurtleResult.make({
@@ -309,7 +309,7 @@ const parseTurtle = Effect.fn("N3.parseTurtle")(function* (request: N3ParseTurtl
 });
 
 const serializeTurtle = Effect.fn("N3.serializeTurtle")(function* (request: N3SerializeTurtleRequest) {
-  const quads = yield* Effect.forEach(request.dataset.quads, toN3Quad);
+  const quads = yield* Effect.forEach(request.dataset.quads, toN3Quad, { concurrency: 1 });
   const output = yield* Effect.try({
     try: () => {
       let source = "";

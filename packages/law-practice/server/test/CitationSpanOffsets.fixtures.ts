@@ -78,7 +78,8 @@ export const readCitationSpanOffsetsCorpus = Effect.fn("SpanOffsetsTest.load")(f
       const before = yield* input.prepareUnicode(row.before, () => Effect.void);
       const after = yield* input.prepareUnicode(row.after, () => Effect.void);
       return { before: before.layout, after: after.layout, steps: row.steps };
-    })
+    }),
+    { concurrency: 1 }
   );
   return { corpus, limits, plans };
 });

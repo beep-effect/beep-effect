@@ -928,7 +928,8 @@ const makeApp: {
               });
             },
             Effect.mapError(decodeFailure("installation"))
-          )
+          ),
+          { concurrency: 1 }
         );
       });
 

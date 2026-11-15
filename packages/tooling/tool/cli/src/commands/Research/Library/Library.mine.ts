@@ -340,7 +340,8 @@ export const planLibraryMine = Effect.fn("Library.mine.plan")(function* (root: s
           })
         );
       });
-    })
+    }),
+    { concurrency: 1 }
   );
   const pdfFiles = A.filter(intake.files, isPdfIntakeFile);
   const allSourceJobs = A.flatten(jobs);
@@ -384,7 +385,8 @@ export const planLibraryMine = Effect.fn("Library.mine.plan")(function* (root: s
       const accessClass = HashSet.has(privatePdfs, file.sha256) ? "private" : file.accessClass;
       const document = yield* pdfDocument(catalog, file, accessClass);
       return documentJob(document, { accessClass }, O.some(document));
-    })
+    }),
+    { concurrency: 1 }
   );
   return [...sourceJobs, ...textDocumentJobs, ...pdfJobs];
 });
@@ -409,10 +411,13 @@ const readJsonFiles = Effect.fn("Library.mine.readJsonFiles")(function* <A>(
   if (!(yield* fs.exists(directory).pipe(mapFailure("Cannot inspect mining records.")))) return [];
   const listed = yield* fs.readDirectory(directory).pipe(mapFailure("Cannot list mining records."));
   const entries = A.sort(A.filter(listed, Str.endsWith(".json")), Str.Order);
-  return yield* Effect.forEach(entries, (entry) =>
-    fs
-      .readFileString(path.join(directory, entry))
-      .pipe(Effect.flatMap(decode), mapFailure(`Invalid mining record ${relative}/${entry}.`))
+  return yield* Effect.forEach(
+    entries,
+    (entry) =>
+      fs
+        .readFileString(path.join(directory, entry))
+        .pipe(Effect.flatMap(decode), mapFailure(`Invalid mining record ${relative}/${entry}.`)),
+    { concurrency: 1 }
   );
 });
 
@@ -1079,9 +1084,7 @@ const runTier = Effect.fn("Library.mine.runTier")(function* (
         Console.log(
           `${job.artifactId} ${job.kind === "document" ? `document=${job.documentId}` : `source=${job.sourceId}`} access=${job.accessClass}${job.textSource === "pdf" ? ` text=pdf path=${job.artifact.path}` : ""}`
         ),
-      {
-        discard: true,
-      }
+      { concurrency: 1, discard: true }
     );
     return { completed: 0, failed: 0, paused: 0, skippedUnreadable: 0 };
   }
@@ -1231,7 +1234,8 @@ export const mineLibrarySynthesize = Effect.fn("Library.mine.synthesize")(functi
           ? [`${sourceId}\u0000${claim.capture.id}`]
           : []
       );
-    })
+    }),
+    { concurrency: 1 }
   ).pipe(Effect.map((ids) => HashSet.fromIterable(A.flatten(ids))));
   const topics = yield* loadTopics(repoRoot);
   const known = topicIdsOf(topics);
@@ -1282,7 +1286,8 @@ export const mineLibrarySynthesize = Effect.fn("Library.mine.synthesize")(functi
         modelRunId: runId,
         recordedAt: startedAt,
       });
-    })
+    }),
+    { concurrency: 1 }
   );
   const dropped = A.flatMap(synthesis.findings, (finding) => partitionTopics(known, finding.topicIds).dropped);
   yield* Console.log(

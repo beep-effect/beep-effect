@@ -51,9 +51,7 @@ const printDiffs = (diffs: ReadonlyArray<FieldDiff>) =>
   Effect.forEach(
     diffs,
     (diff) => Console.log(`DIFF ${diff.field}\n  planned: ${diff.planned}\n  live:    ${diff.live}`),
-    {
-      discard: true,
-    }
+    { concurrency: 1, discard: true }
   );
 
 const rulesetGuard = Command.make(

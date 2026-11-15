@@ -121,8 +121,10 @@ const threeSubjects = fixtureBaseline([
 
 const committedFiles = Effect.fn("CacheBaselineFilesTest.committedFiles")(function* (baseline: CachePolicyBaseline) {
   const files = yield* encodeCachePolicyBaselineFiles(baseline);
-  return yield* Effect.forEach(files, (file) =>
-    hashText(file.text).pipe(Effect.map((sha256) => CacheBaselineCommittedFile.make({ ...file, sha256 })))
+  return yield* Effect.forEach(
+    files,
+    (file) => hashText(file.text).pipe(Effect.map((sha256) => CacheBaselineCommittedFile.make({ ...file, sha256 }))),
+    { concurrency: 1 }
   );
 });
 

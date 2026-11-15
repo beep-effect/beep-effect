@@ -81,21 +81,24 @@ describe("@beep/docket-intake configuration", () => {
       const { DOCKET_INTAKE_TIME_ZONE: _zone, ...withoutZone } = required;
       const { DOCKET_INTAKE_MAILBOX: _mailbox, ...withoutMailbox } = required;
 
-      const results = yield* Effect.all([
-        Effect.exit(load(withoutZone)),
-        Effect.exit(load(withoutMailbox)),
-        Effect.exit(load({ ...required, DOCKET_INTAKE_TIME_ZONE: "Fixture/Nowhere" })),
-        Effect.exit(load({ ...required, DOCKET_INTAKE_START_AT: "next Tuesday" })),
-        Effect.exit(load({ ...required, DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "0" })),
-        Effect.exit(load({ ...required, DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "2.5" })),
-        Effect.exit(load({ ...required, DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "often" })),
-        Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_MAX_ROUNDS: "0" })),
-        Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_MAX_ROUNDS: "11" })),
-        Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_MAX_ROUNDS: "2.5" })),
-        Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD: "1.2" })),
-        Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD: "-0.1" })),
-        Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD: "high" })),
-      ]);
+      const results = yield* Effect.all(
+        [
+          Effect.exit(load(withoutZone)),
+          Effect.exit(load(withoutMailbox)),
+          Effect.exit(load({ ...required, DOCKET_INTAKE_TIME_ZONE: "Fixture/Nowhere" })),
+          Effect.exit(load({ ...required, DOCKET_INTAKE_START_AT: "next Tuesday" })),
+          Effect.exit(load({ ...required, DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "0" })),
+          Effect.exit(load({ ...required, DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "2.5" })),
+          Effect.exit(load({ ...required, DOCKET_INTAKE_MAX_CONSECUTIVE_FAILURES: "often" })),
+          Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_MAX_ROUNDS: "0" })),
+          Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_MAX_ROUNDS: "11" })),
+          Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_MAX_ROUNDS: "2.5" })),
+          Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD: "1.2" })),
+          Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD: "-0.1" })),
+          Effect.exit(load({ ...required, DOCKET_INTAKE_REVIEW_ACCEPT_THRESHOLD: "high" })),
+        ],
+        { concurrency: 1 }
+      );
 
       for (const result of results) {
         result.pipe(Exit.isFailure, assertTrue);

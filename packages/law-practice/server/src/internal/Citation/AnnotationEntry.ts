@@ -175,7 +175,8 @@ export const ownCitationAnnotationReplacements = Effect.fn("Citation.ownAnnotati
           )
         );
       return CitationAnnotationReplacement.make({ ...row, before: before.storage, after: after.storage });
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 const prepare = Effect.fn("Citation.prepareAnnotationEntry")(function* (

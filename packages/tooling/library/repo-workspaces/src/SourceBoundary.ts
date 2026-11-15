@@ -789,10 +789,14 @@ const listDirectory = Effect.fnUntraced(function* (directory: string, extensions
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const names = yield* fs.readDirectory(directory);
-  const entries = yield* Effect.forEach(names, (name) => {
-    const full = path.join(directory, name);
-    return Effect.map(entryType(fs, full), (type) => ({ name, full, type }));
-  });
+  const entries = yield* Effect.forEach(
+    names,
+    (name) => {
+      const full = path.join(directory, name);
+      return Effect.map(entryType(fs, full), (type) => ({ name, full, type }));
+    },
+    { concurrency: 1 }
+  );
   return {
     directories: A.map(
       A.filter(entries, ({ name, type }) => type === "Directory" && name !== "node_modules"),
@@ -1323,8 +1327,11 @@ export class SourceBoundary {
       file: relative(full),
     }));
     const checked = A.filter(files, ({ file }) => !allow.matches(file));
-    const forEach3 = yield* Effect.forEach(checked, ({ full, file }) =>
-      Effect.map(fs.readFileString(full), (text) => SourceBoundary.check(file, text, options.rules, options))
+    const forEach3 = yield* Effect.forEach(
+      checked,
+      ({ full, file }) =>
+        Effect.map(fs.readFileString(full), (text) => SourceBoundary.check(file, text, options.rules, options)),
+      { concurrency: 1 }
     );
     const found = A.flatten(forEach3);
     const isWaived = (offence: Offence): boolean =>

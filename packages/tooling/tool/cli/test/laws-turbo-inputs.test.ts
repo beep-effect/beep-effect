@@ -199,7 +199,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
         "packages/tooling/policy-pack/repo-configs/src/laws/NoNativeRuntimeHotspots.ts",
         "packages/tooling/policy-pack/repo-configs/src/internal/laws/generated/EffectLawsAllowlistSnapshot.ts",
       ];
-      yield* Effect.forEach(sourceFiles, (file) => writeFile(root, file, "export const value = 1;\n"));
+      yield* Effect.forEach(sourceFiles, (file) => writeFile(root, file, "export const value = 1;\n"), {
+        concurrency: 1,
+      });
       yield* Effect.forEach(
         [
           "standards/effect-laws.allowlist.jsonc",
@@ -208,7 +210,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
           "biome.jsonc",
           "_typos.toml",
         ],
-        (file) => writeFile(root, file, "{}\n")
+        (file) => writeFile(root, file, "{}\n"),
+        { concurrency: 1 }
       );
       yield* writeJson(root, "turbo.json", {
         futureFlags: { affectedUsingTaskInputs: true, filterUsingTasks: true, globalConfiguration: true },
@@ -239,13 +242,15 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
           "packages/consumer/tsconfig.test.json",
           "tsconfig.proof.json",
         ],
-        (file) => assertMutation(file, [true, false, false])
+        (file) => assertMutation(file, [true, false, false]),
+        { concurrency: 1 }
       );
       // Workspace manifests reach every law task through the seal, which expands the glob once
       // instead of once per package task.
       yield* Effect.forEach(
         ["packages/consumer/package.json", "packages/upstream/package.json", "packages/unrelated/package.json"],
-        (file) => assertMutation(file, [true, false, true])
+        (file) => assertMutation(file, [true, false, true]),
+        { concurrency: 1 }
       );
       // LINT-04 P28 re-key probe (goals/heavy-pool-diet): a manifest eight directories below packages/
       // re-keys the WORKSPACE_MANIFEST_WALK seal like a shallow edit, and so does renaming the
@@ -267,7 +272,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
       expect(restored, `${deepDirectory}: removed`).toEqual(baseline);
       yield* Effect.forEach(
         ["scratchpad/example.tsx", "packages/_internal/db-admin/effect-ontology/example.ts"],
-        (file) => assertMutation(file, [false, true, false])
+        (file) => assertMutation(file, [false, true, false]),
+        { concurrency: 1 }
       );
       yield* Effect.forEach(
         [
@@ -276,7 +282,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
           "packages/tooling/policy-pack/repo-configs/src/laws/NoNativeRuntimeHotspots.ts",
           "packages/tooling/policy-pack/repo-configs/src/internal/laws/generated/EffectLawsAllowlistSnapshot.ts",
         ],
-        (file) => assertMutation(file, [true, true, false])
+        (file) => assertMutation(file, [true, true, false]),
+        { concurrency: 1 }
       );
       yield* assertMutation("packages/helper/src/index.ts", [true, true, true]);
       // Quality audit M9: Turbo hashes the root `turbo.json` into every root task, so a root seal
@@ -284,7 +291,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
       // only the root law task, which hashes `turbo.json` itself, replays.
       yield* assertMutation("turbo.json", [false, true, false]);
       // Checker configuration the law commands' closures never name is no seal input.
-      yield* Effect.forEach(["biome.jsonc", "_typos.toml"], (file) => assertMutation(file, [false, false, false]));
+      yield* Effect.forEach(["biome.jsonc", "_typos.toml"], (file) => assertMutation(file, [false, false, false]), {
+        concurrency: 1,
+      });
       for (const directory of ["dist", "build", ".turbo", "coverage", "node_modules"]) {
         const file = `packages/consumer/${directory}/generated.ts`;
         yield* writeFile(root, file, "export const generated = 1;\n");
@@ -325,7 +334,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("Stage B l
       }
       yield* Effect.forEach(
         ["packages/upstream/src/index.ts", "packages/unrelated/src/index.ts", "scripts/unrelated.ts"],
-        (file) => assertMutation(file, [false, false, false])
+        (file) => assertMutation(file, [false, false, false]),
+        { concurrency: 1 }
       );
     }),
     { timeout: 180_000 }

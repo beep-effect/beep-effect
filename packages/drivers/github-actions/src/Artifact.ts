@@ -586,7 +586,7 @@ const make = Effect.fn("make")(function* (
     }
     const rows = field(answer, "artifacts");
     return A.isArray(rows)
-      ? yield* Effect.forEach(rows, toItem).pipe(
+      ? yield* Effect.forEach(rows, toItem, { concurrency: 1 }).pipe(
           Effect.mapError((cause) =>
             ArtifactError.make({
               ...twirpFailureFields({ method: "ListArtifacts", kind: "malformed", cause }),

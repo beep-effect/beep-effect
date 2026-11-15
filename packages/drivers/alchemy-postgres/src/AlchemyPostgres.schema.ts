@@ -845,7 +845,7 @@ export const migrate = Effect.fn("AlchemyPostgres.migrate")(
     yield* sql.withTransaction(
       Effect.gen(function* () {
         yield* sql`SELECT pg_advisory_xact_lock(hashtext(${`${config.tablePrefix}migrate`}))`;
-        yield* Effect.forEach(ddl(sql, tables, config.tablePrefix), Effect.asVoid, { discard: true });
+        yield* Effect.forEach(ddl(sql, tables, config.tablePrefix), Effect.asVoid, { concurrency: 1, discard: true });
       })
     );
   },

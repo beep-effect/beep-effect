@@ -202,7 +202,10 @@ export const reportEffectSchemaInventoryCheck = (
     onEmpty: () =>
       Console.log(`${LOG_PREFIX} fixture and prompts are byte-identical; ${describeReceipt(report.receipt)}`),
     onNonEmpty: (drift) =>
-      Effect.forEach(drift, (entry) => Console.error(formatEffectSchemaInventoryDrift(entry)), { discard: true }).pipe(
+      Effect.forEach(drift, (entry) => Console.error(formatEffectSchemaInventoryDrift(entry)), {
+        concurrency: 1,
+        discard: true,
+      }).pipe(
         Effect.andThen(
           Effect.fail(
             EffectSchemaInventoryDriftError.make({

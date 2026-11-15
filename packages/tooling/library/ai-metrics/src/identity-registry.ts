@@ -1015,16 +1015,19 @@ export const upsertAiMetricsIdentityRegistry: (
     const homeDir = pathApi.resolve(input.homeDir);
     const homeDirHash = yield* hashPrivate(homeDir, input.hashSalt);
     const rootPath = pathApi.resolve(input.rootPath);
-    const instances = yield* Effect.forEach(input.sourceKinds, (sourceKind) =>
-      Effect.map(hashPrivate(`${homeDir} ${rootPath} ${sourceKind}`, input.hashSalt), (instanceIdHash) =>
-        AiMetricsSourceInstance.make({
-          homeDirHash,
-          instanceIdHash,
-          lastSeenAtEpochMillis: nowEpochMillis,
-          rootId: root.rootId,
-          sourceKind,
-        })
-      )
+    const instances = yield* Effect.forEach(
+      input.sourceKinds,
+      (sourceKind) =>
+        Effect.map(hashPrivate(`${homeDir} ${rootPath} ${sourceKind}`, input.hashSalt), (instanceIdHash) =>
+          AiMetricsSourceInstance.make({
+            homeDirHash,
+            instanceIdHash,
+            lastSeenAtEpochMillis: nowEpochMillis,
+            rootId: root.rootId,
+            sourceKind,
+          })
+        ),
+      { concurrency: 1 }
     );
 
     // Read, merge, and promote under the lock. The read has to be inside it: two

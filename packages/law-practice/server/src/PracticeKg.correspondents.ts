@@ -685,7 +685,7 @@ export const readPracticeKgEmailMessages = Effect.fn("PracticeKg.readEmailMessag
     const db = yield* DuckDb;
     return yield* db.query(emailSourcesSql(sources)).pipe(Effect.flatMap(decodeEmailSourceRows));
   }).pipe(PracticeKgProjectionError.mapError("Failed listing email documents."));
-  const read = yield* Effect.forEach(emailSources, readMessage);
+  const read = yield* Effect.forEach(emailSources, readMessage, { concurrency: 1 });
   const missing = A.length(read) - A.length(A.getSomes(read));
   if (missing > 0) {
     yield* Effect.logWarning(`${missing} email document(s) had no readable header metadata and were skipped.`);
@@ -988,7 +988,10 @@ export const writePracticeKgCorrespondentTables = Effect.fn("PracticeKg.writeCor
 ) {
   return yield* Effect.gen(function* () {
     const db = yield* DuckDb;
-    yield* Effect.forEach(createCorrespondentTables, (statement) => db.run(statement), { discard: true });
+    yield* Effect.forEach(createCorrespondentTables, (statement) => db.run(statement), {
+      concurrency: 1,
+      discard: true,
+    });
     yield* Effect.forEach(
       tables.correspondents,
       (row) =>
@@ -1007,12 +1010,12 @@ export const writePracticeKgCorrespondentTables = Effect.fn("PracticeKg.writeCor
           row.lastAt,
           row.epistemicStatus,
         ]),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     yield* Effect.forEach(
       tables.links,
       (row) => db.run(insertLink, [row.contactId, row.clientNumber, row.familyKey, row.source, row.evidence]),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     yield* Effect.forEach(
       tables.addresses,
@@ -1025,7 +1028,7 @@ export const writePracticeKgCorrespondentTables = Effect.fn("PracticeKg.writeCor
           row.roleAddress,
           row.isPracticeAddress,
         ]),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   }).pipe(PracticeKgProjectionError.mapError("Failed writing correspondent tables."));
 });

@@ -680,7 +680,7 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
             );
             assert.include(unsafeClaude.message, `unapproved auto-approved permission: ${permission}`);
           }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
 
         yield* Effect.forEach(
@@ -717,7 +717,7 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
             );
             assert.include(unsafeClaude.message, permission);
           }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
 
         yield* Effect.forEach(
@@ -735,7 +735,7 @@ it.layer(Layer.merge(MemoryFileSystem.layer, Path.layer), { timeout: "30 seconds
             );
             assert.include(unsafeClaudeMode.message, `permissions.defaultMode must be "default"`);
           }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
 
         yield* writeText(codexPath, "[features]\napps = false\n");

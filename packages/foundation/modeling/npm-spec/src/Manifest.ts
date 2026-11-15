@@ -490,7 +490,8 @@ const resolveManifest = Effect.fn("Manifest.resolve")(function* (manifest: Manif
           return [dependency, DependencySpecifier.resolveWorkspace(specifier, version.value)] as const;
         }
         return [dependency, specifier] as const;
-      })
+      }),
+      { concurrency: 1 }
     );
     output[field] = R.fromEntries(resolved);
   }

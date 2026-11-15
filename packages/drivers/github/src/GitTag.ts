@@ -433,11 +433,14 @@ const make = (client: GitHubClient["Service"]): GitTagShape => {
     // filter is client-side by necessity — which is exactly why latestSemver
     // exists rather than leaving callers to list-then-sort.
     const prefix = options?.prefix;
-    const refs = yield* Effect.forEach(tags, (entry) =>
-      S.decodeEffect(TagEntry)(entry).pipe(
-        Effect.flatMap((validated) => S.decodeEffect(TagRef)({ tag: validated.name, sha: validated.commit.sha })),
-        Effect.mapError((error) => GitHubError.decode("GitTag.list", "GitHub returned an unexpected tag", error))
-      )
+    const refs = yield* Effect.forEach(
+      tags,
+      (entry) =>
+        S.decodeEffect(TagEntry)(entry).pipe(
+          Effect.flatMap((validated) => S.decodeEffect(TagRef)({ tag: validated.name, sha: validated.commit.sha })),
+          Effect.mapError((error) => GitHubError.decode("GitTag.list", "GitHub returned an unexpected tag", error))
+        ),
+      { concurrency: 1 }
     );
     return A.filter(refs, (entry) => prefix === undefined || Str.startsWith(prefix)(entry.tag));
   });

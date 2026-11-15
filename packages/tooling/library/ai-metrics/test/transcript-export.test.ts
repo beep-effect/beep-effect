@@ -373,7 +373,7 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
                   expect(state).toMatchObject({ value: { state: "accepted-unverified", attempts: 1 } })
                 )
               ),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       })
   )

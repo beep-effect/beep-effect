@@ -345,7 +345,7 @@ const makeSource = Effect.fnUntraced(function* (policy: OutboxAttachmentPolicy) 
       : yield* refuse("not-a-file", `Attachment root is not a directory: ${root}`);
   });
 
-  const roots = yield* Effect.forEach(policy.roots, realRoot);
+  const roots = yield* Effect.forEach(policy.roots, realRoot, { concurrency: 1 });
 
   // Segment-wise containment: a sibling such as `/staging-evil` is not under `/staging`.
   const isUnderRoot =
@@ -419,7 +419,7 @@ const makeSource = Effect.fnUntraced(function* (policy: OutboxAttachmentPolicy) 
           `${A.length(paths)} attachments were named; the limit is ${policy.maxAttachments}.`
         );
       }
-      const located = yield* Effect.forEach(paths, locate);
+      const located = yield* Effect.forEach(paths, locate, { concurrency: 1 });
       const total = sum(A.map(located, (file) => file.size));
       yield* Effect.annotateCurrentSpan({ m365_outbox_attachment_total_bytes: total });
       if (total > policy.maxMessageAttachmentBytes) {
@@ -428,7 +428,7 @@ const makeSource = Effect.fnUntraced(function* (policy: OutboxAttachmentPolicy) 
           `Attachments total ${total} bytes, over the ${policy.maxMessageAttachmentBytes}-byte message limit.`
         );
       }
-      const attachments = yield* Effect.forEach(located, read);
+      const attachments = yield* Effect.forEach(located, read, { concurrency: 1 });
       const readTotal = sum(A.map(attachments, (attachment) => attachment.size));
       return readTotal > policy.maxMessageAttachmentBytes
         ? yield* refuse("total-too-large", "Attachments changed size while they were read.")

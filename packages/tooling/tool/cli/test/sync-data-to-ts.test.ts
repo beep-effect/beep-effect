@@ -1104,7 +1104,9 @@ it.layer(CommandTestLayer)("IANA timezone archive projection", (it) => {
         "factory",
         "southamerica",
       ];
-      yield* Effect.forEach(emptyRegions, (region) => fs.writeFileString(path.join(root, region), ""));
+      yield* Effect.forEach(emptyRegions, (region) => fs.writeFileString(path.join(root, region), ""), {
+        concurrency: 1,
+      });
       yield* Effect.sync(() =>
         createTar({ cwd: root, file: archive, sync: true }, [
           "version",

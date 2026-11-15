@@ -645,9 +645,9 @@ export class ActionInput {
       const pair = pairLine(name, options?.requireValue ?? false);
       return Config.String(inputVariable(name)).pipe(
         Config.mapEffect((raw) =>
-          Effect.forEach(A.filter(A.map(Str.split(raw, "\n"), stripComment), Str.isNonEmpty), pair(raw)).pipe(
-            Effect.map(R.fromEntries)
-          )
+          Effect.forEach(A.filter(A.map(Str.split(raw, "\n"), stripComment), Str.isNonEmpty), pair(raw), {
+            concurrency: 1,
+          }).pipe(Effect.map(R.fromEntries))
         )
       );
     }

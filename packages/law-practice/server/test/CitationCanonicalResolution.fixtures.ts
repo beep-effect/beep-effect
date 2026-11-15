@@ -74,7 +74,8 @@ const readAssertions = Effect.fn("CanonicalResolutionTest.readAssertions")(funct
       expect(criterion.operands[1].value, row.id).toEqual(criterion.context.values.actual_indices);
       expect(criterion.operands[0].value, row.id).toEqual(criterion.operands[1].value);
       return { kind: "indices" as const, id: row.id, criterion };
-    })
+    }),
+    { concurrency: 1 }
   );
   expect(A.filter(decoded, (row) => row.kind === "formatted")).toHaveLength(23);
   expect(A.filter(decoded, (row) => row.kind === "indices")).toHaveLength(7);
@@ -87,12 +88,15 @@ const formatDocument = Effect.fn("CanonicalResolutionTest.formatDocument")(funct
   const entries = yield* Effect.forEach(
     document.authorities,
     Effect.fnUntraced(function* (authority) {
-      const members = yield* Effect.forEach(citationAuthorityMentionIds(document, authority.id), (id) =>
-        Effect.fromOption(HashMap.get(quotes, id))
+      const members = yield* Effect.forEach(
+        citationAuthorityMentionIds(document, authority.id),
+        (id) => Effect.fromOption(HashMap.get(quotes, id)),
+        { concurrency: 1 }
       );
       const key = yield* Effect.fromOption(A.get(members, 0));
       return Tuple.make(key, members);
-    })
+    }),
+    { concurrency: 1 }
   );
   // Python dict-comprehension overwrites duplicate matched-text keys. The source
   // assertion compares this view; exact group membership is checked separately.
@@ -110,8 +114,10 @@ const referenceIndices = Effect.fn("CanonicalResolutionTest.referenceIndices")(f
   expect(labels, id).toEqual(A.map(views, (model) => model.correctedCitation));
   expect(A.dedupe(labels), id).toHaveLength(labels.length);
   const indices = R.fromEntries(A.map(labels, (label, index) => Tuple.make(label, index)));
-  return yield* Effect.forEach(R.values(formatted), (members) =>
-    Effect.forEach(members, (member) => Effect.fromOption(R.get(indices, member)))
+  return yield* Effect.forEach(
+    R.values(formatted),
+    (members) => Effect.forEach(members, (member) => Effect.fromOption(R.get(indices, member)), { concurrency: 1 }),
+    { concurrency: 1 }
   );
 });
 /** Bind every original resolve operation to its exact assertion and input models.

@@ -308,10 +308,13 @@ const seal: {
 
 /** Decode one page walk of secrets, blaming `operation` for a payload that does not fit. */
 const decodeSecrets = (items: ReadonlyArray<{ readonly name: string }>, operation: string) =>
-  Effect.forEach(items, (secret) =>
-    S.decodeEffect(SecretInfo)({ name: secret.name }).pipe(
-      Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected secret", error))
-    )
+  Effect.forEach(
+    items,
+    (secret) =>
+      S.decodeEffect(SecretInfo)({ name: secret.name }).pipe(
+        Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected secret", error))
+      ),
+    { concurrency: 1 }
   );
 
 const make = (client: GitHubClient["Service"]): RepositorySecretShape => {

@@ -272,14 +272,17 @@ const fixture = Effect.fn("CursorLifecycleTest.fixture")(function* (maxPages = 3
   const namespaceId = yield* hashPrivateIdentifier("ai-metrics-hash-salt-namespace/v1", O.some(salt));
   const sourceRoot = yield* fs.makeTempDirectoryScoped({ prefix: "cursor-source-fixture-" });
   const sources = [`${sourceRoot}/dispatcher.js`, `${sourceRoot}/envelope.js`];
-  yield* Effect.forEach(sources, (path) =>
-    fs.writeFileString(path, "// synthetic public source fixture; no native code\n", { mode: 0o600 })
+  yield* Effect.forEach(
+    sources,
+    (path) => fs.writeFileString(path, "// synthetic public source fixture; no native code\n", { mode: 0o600 }),
+    { concurrency: 1 }
   );
   const sourcePins = yield* Effect.forEach(
     sources,
     Effect.fnUntraced(function* (path) {
       return { path, sha256: yield* sha(path) };
-    })
+    }),
+    { concurrency: 1 }
   );
   const policy = CursorLifecyclePolicy.make({
     workspace: process.cwd(),
@@ -324,7 +327,7 @@ const fixture = Effect.fn("CursorLifecycleTest.fixture")(function* (maxPages = 3
 });
 
 const syntheticHelperFrames = Effect.fnUntraced(function* (fault: string, policy: CursorLifecyclePolicy) {
-  const ready = yield* encode({ ready: fault === "ready" ? false : true });
+  const ready = yield* encode({ ready: fault !== "ready" });
   const observed = yield* encode({
     peer: {
       peerPid: 1,

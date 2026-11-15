@@ -291,33 +291,37 @@ const goldFilePath = (path: Path.Path, directory: string, job: GoldJob): string 
 const readWrittenGold = Effect.fn("Gold.readWrittenGold")(function* (directory: string, jobs: ReadonlyArray<GoldJob>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const entries = yield* Effect.forEach(jobs, (job) => {
-    const filePath = goldFilePath(path, directory, job);
-    return fs.exists(filePath).pipe(
-      Effect.flatMap((exists) =>
-        exists
-          ? fs.readFileString(filePath).pipe(
-              Effect.flatMap(S.decodeEffect(GoldFileEncodedJson)),
-              Effect.flatMap((file) =>
-                Str.Equivalence(file.paperId, job.paperId) && Str.Equivalence(file.subset, job.subset)
-                  ? Effect.succeed(Tuple.make(job, O.some(file)))
-                  : Effect.fail(
-                      unavailable(
-                        "job-mismatch",
-                        `Gold file ${filePath} does not match its expected paper and subset identity.`
+  const entries = yield* Effect.forEach(
+    jobs,
+    (job) => {
+      const filePath = goldFilePath(path, directory, job);
+      return fs.exists(filePath).pipe(
+        Effect.flatMap((exists) =>
+          exists
+            ? fs.readFileString(filePath).pipe(
+                Effect.flatMap(S.decodeEffect(GoldFileEncodedJson)),
+                Effect.flatMap((file) =>
+                  Str.Equivalence(file.paperId, job.paperId) && Str.Equivalence(file.subset, job.subset)
+                    ? Effect.succeed(Tuple.make(job, O.some(file)))
+                    : Effect.fail(
+                        unavailable(
+                          "job-mismatch",
+                          `Gold file ${filePath} does not match its expected paper and subset identity.`
+                        )
                       )
-                    )
+                )
               )
-            )
-          : Effect.succeed(Tuple.make(job, O.none<GoldFileEncoded>()))
-      ),
-      Effect.mapError((error) =>
-        isGoldUnavailable(error)
-          ? error
-          : unavailable("read-failed", "An existing gold-v1 file could not be read or decoded.")
-      )
-    );
-  });
+            : Effect.succeed(Tuple.make(job, O.none<GoldFileEncoded>()))
+        ),
+        Effect.mapError((error) =>
+          isGoldUnavailable(error)
+            ? error
+            : unavailable("read-failed", "An existing gold-v1 file could not be read or decoded.")
+        )
+      );
+    },
+    { concurrency: 1 }
+  );
   return {
     files: A.sort(A.getSomes(A.map(entries, (entry) => entry[1])), GoldArtifactSemantics.fileOrder),
     missingJobs: A.getSomes(A.map(entries, ([job, file]) => (O.isNone(file) ? O.some(job) : O.none()))),
@@ -330,13 +334,16 @@ const entityLabelsFor = Effect.fn("Gold.entityLabelsFor")(function* (
   text: string
 ) {
   const inventory = yield* readWrittenGold(directory, [GoldJob.make({ paperId, subset: "entity" })]);
-  const files = yield* Effect.forEach(inventory.files, (file) =>
-    S.decodeEffect(GoldFile)(file).pipe(
-      Effect.provideService(CurrentGoldDocumentText, text),
-      Effect.mapError(() =>
-        unavailable("digest-failed", "An entity gold label digest does not match its canonical document slice.")
-      )
-    )
+  const files = yield* Effect.forEach(
+    inventory.files,
+    (file) =>
+      S.decodeEffect(GoldFile)(file).pipe(
+        Effect.provideService(CurrentGoldDocumentText, text),
+        Effect.mapError(() =>
+          unavailable("digest-failed", "An entity gold label digest does not match its canonical document slice.")
+        )
+      ),
+    { concurrency: 1 }
   );
   return A.flatMap(files, (file) => (file.subset === "entity" ? file.labels : []));
 });
@@ -676,7 +683,8 @@ const writeJobProposal = Effect.fn("Gold.writeJobProposal")(function* (
       }
       const endpoints = relationEndpointsFor(label, entityLabels, anchor.success);
       return yield* makeVerifiedGoldLabel(label, anchor.success, endpoints);
-    })
+    }),
+    { concurrency: 1 }
   );
   const labels = A.getSomes(verified);
   const file = yield* (

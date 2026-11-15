@@ -22,12 +22,15 @@ describe("readEnv", () => {
 
   it.effect("the control is live: the same provider really does carry the empty strings", () =>
     Effect.map(
-      Effect.all([
-        Effect.gen(function* () {
-          const provider = yield* ConfigProvider.ConfigProvider;
-          return yield* provider.load(["FORCE_COLOR"]);
-        }),
-      ]).pipe(
+      Effect.all(
+        [
+          Effect.gen(function* () {
+            const provider = yield* ConfigProvider.ConfigProvider;
+            return yield* provider.load(["FORCE_COLOR"]);
+          }),
+        ],
+        { concurrency: 1 }
+      ).pipe(
         Effect.provideService(
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromUnknown({ FORCE_COLOR: "" }, { preserveEmptyStrings: true })

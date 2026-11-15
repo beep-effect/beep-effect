@@ -673,7 +673,7 @@ export const compareCacheConformanceRuns = Effect.fn("CacheConformance.compareRu
       `${labelOf(foreign.value)} was scored against a different corpus; regenerate it before comparing targets.`
     );
   const groups = A.groupBy(runs, labelOf);
-  const merged = yield* Effect.forEach(R.values(groups), mergeCacheConformanceRuns);
+  const merged = yield* Effect.forEach(R.values(groups), mergeCacheConformanceRuns, { concurrency: 1 });
   const externalFor = (run: CacheConformanceRun): ExternalEvidence => {
     const matching = A.filter(
       evidence,

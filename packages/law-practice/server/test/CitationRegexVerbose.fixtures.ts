@@ -115,14 +115,18 @@ const assertCitationRegexProgramCase = Effect.fn("RegexProgramTest.case")(functi
     const spans = source.modes[mode];
     const result = yield* setup.worker.evaluate(row.pattern, source.source, row.flags, spans.length, mode);
     expect(result.result.matches).toBe(spans.length);
-    yield* Effect.forEach(spans, (captures, match) =>
-      Effect.forEach(
-        captures,
-        Effect.fn("VerboseTest.capture")(function* ([start, end], group) {
-          const actual = yield* result.result.capture(match, group);
-          expect(actual).toEqual(start < 0 ? { _tag: "Unmatched" } : { _tag: "Range", start, end });
-        })
-      )
+    yield* Effect.forEach(
+      spans,
+      (captures, match) =>
+        Effect.forEach(
+          captures,
+          Effect.fn("VerboseTest.capture")(function* ([start, end], group) {
+            const actual = yield* result.result.capture(match, group);
+            expect(actual).toEqual(start < 0 ? { _tag: "Unmatched" } : { _tag: "Range", start, end });
+          }),
+          { concurrency: 1 }
+        ),
+      { concurrency: 1 }
     );
   }
   return modes.length;
@@ -134,8 +138,10 @@ export const replayCitationRegexProgramRow = Effect.fn("RegexProgramTest.row")(f
   expected: typeof Outcome.Type,
   full: boolean
 ) {
-  const counts = yield* Effect.forEach(full ? expected.cases : A.take(expected.cases, 1), (source) =>
-    assertCitationRegexProgramCase(setup, row, expected, source)
+  const counts = yield* Effect.forEach(
+    full ? expected.cases : A.take(expected.cases, 1),
+    (source) => assertCitationRegexProgramCase(setup, row, expected, source),
+    { concurrency: 1 }
   );
   return A.reduce(counts, 0, (total, count) => total + count);
 });
@@ -167,8 +173,10 @@ const replayEngine = Effect.fn("VerboseTest.engine")(function* (
       ? [{ patternSha256: fuzzy.patternSha256, flags: fuzzy.flags, profile: fuzzy.engines["python-re"].profile }]
       : [];
   const setup = yield* setupCitationRegexWorker([...bindings, ...additional], kind, engine);
-  const counts = yield* Effect.forEach(rows, (row) =>
-    replayCitationRegexProgramRow(setup, row, row.engines[engine], full)
+  const counts = yield* Effect.forEach(
+    rows,
+    (row) => replayCitationRegexProgramRow(setup, row, row.engines[engine], full),
+    { concurrency: 1 }
   );
   const count = A.reduce(counts, 0, (total, n) => total + n);
   expect(count).toBe(wanted.calls);
@@ -190,7 +198,9 @@ export const replayCitationRegexVerbose = Effect.fn("VerboseTest.replay")(functi
   full: boolean
 ) {
   const corpus = yield* loadCitationRegexVerbose();
-  yield* Effect.forEach(CitationRegexEngine.literals, (engine) => replayEngine(kind, full, corpus, engine));
+  yield* Effect.forEach(CitationRegexEngine.literals, (engine) => replayEngine(kind, full, corpus, engine), {
+    concurrency: 1,
+  });
 });
 
 /** Sixteen disjoint source-case partitions keep each real-worker replay bounded.

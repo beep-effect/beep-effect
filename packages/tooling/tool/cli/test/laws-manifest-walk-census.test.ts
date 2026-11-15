@@ -66,7 +66,8 @@ const unprunedManifests = Effect.fn("unprunedManifests")(function* (root: string
         : [];
       const nested = yield* Effect.forEach(
         A.filter(entries, (entry) => entry.type === "Directory"),
-        (entry) => walk(path.join(directory, entry.name))
+        (entry) => walk(path.join(directory, entry.name)),
+        { concurrency: 1 }
       );
       return A.appendAll(own, A.flatten(nested));
     });
@@ -92,12 +93,17 @@ describe("lint:laws manifest walk census", () => {
           "node_modules",
           "storybook-static",
         ]);
-        yield* Effect.forEach(visibleManifests, (directory, index) =>
-          writeManifest(root, directory, directory === "packages/plain" ? "plain" : `@beep/visible-${index}`)
+        yield* Effect.forEach(
+          visibleManifests,
+          (directory, index) =>
+            writeManifest(root, directory, directory === "packages/plain" ? "plain" : `@beep/visible-${index}`),
+          { concurrency: 1 }
         );
         // One manifest under every directory the seal negates, nested below a real package.
-        yield* Effect.forEach(negatedDirectories, (directory) =>
-          writeManifest(root, `packages/a/${directory}/inner`, `@beep/pruned-${directory}`)
+        yield* Effect.forEach(
+          negatedDirectories,
+          (directory) => writeManifest(root, `packages/a/${directory}/inner`, `@beep/pruned-${directory}`),
+          { concurrency: 1 }
         );
 
         const read = A.empty<string>();

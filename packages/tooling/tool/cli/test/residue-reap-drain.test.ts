@@ -230,7 +230,9 @@ const journal = Effect.fn("ResidueDrainTest.journal")(function* (fleet: Fleet) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const text = yield* fs.readFileString(path.join(fleet.state, "drain-journal.jsonl"));
-  return yield* Effect.forEach(A.filter(Str.split("\n")(text), Str.isNonEmpty), (line) => decodeJournalLine(line));
+  return yield* Effect.forEach(A.filter(Str.split("\n")(text), Str.isNonEmpty), (line) => decodeJournalLine(line), {
+    concurrency: 1,
+  });
 });
 
 describe("residue reap drainable class", () => {

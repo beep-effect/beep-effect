@@ -107,7 +107,7 @@ const replayLayer = Layer.effect(
     const fixture = buildAdversarialFixture(sample.files);
     const workspace = yield* tempDirectory("beep-ac2-ac3-");
     const prepared = yield* prepareReplay(fixture, workspace, { fields: fixtureStatusFields, lifecycle: phaseStatus });
-    const replayed = yield* Effect.forEach(A.range(1, runs), (seed) => replayOnce(prepared, seed));
+    const replayed = yield* Effect.forEach(A.range(1, runs), (seed) => replayOnce(prepared, seed), { concurrency: 1 });
     const firstRun = yield* Effect.fromOption(A.head(replayed));
     return AdversarialReplay.of({
       baseNodes: A.reduce(prepared.base.files, 0, (total, file) => total + file.nodes.length),

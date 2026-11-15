@@ -70,7 +70,8 @@ const fixture = Effect.fn("SecurityTest.fixture")(function* (coverage = "complet
         sha256: yield* hash(new TextEncoder().encode(text)),
         mediaType: "application/json",
       };
-    })
+    }),
+    { concurrency: 1 }
   );
   const manifest = {
     documentType: "codex-security.scan-manifest",
@@ -206,7 +207,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
           const filename = `${name}.bin`;
           yield* fs.writeFile(path.join(root, filename), large);
           return { path: filename, sha256: digest, mediaType: "application/octet-stream" };
-        })
+        }),
+        { concurrency: 1 }
       );
       yield* writeJson(root, "scan-manifest.json", {
         ...manifest,
@@ -528,7 +530,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("sealed local security findings",
           const name = `large-${n}.bin`;
           yield* fs.writeFile(path.join(root, name), large);
           return { path: name, sha256: digest, mediaType: "application/octet-stream" };
-        })
+        }),
+        { concurrency: 1 }
       );
       yield* writeJson(root, "scan-manifest.json", {
         ...manifest,

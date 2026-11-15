@@ -177,7 +177,7 @@ export const runGoalsDecisionsCheck = Effect.fn("Goals.runDecisionsCheck")(funct
 }) {
   const service = yield* GoalDecisionLog;
   const records = yield* selectPackets(options.slug);
-  const reports = yield* Effect.forEach(records, service.report);
+  const reports = yield* Effect.forEach(records, service.report, { concurrency: 1 });
   if (options.json) {
     // Reports are built through `GoalDecisionLogReport.make`, so encoding cannot fail.
     const rendered = yield* encodeReports(reports).pipe(Effect.orDie, Effect.map(canonicalJsonTextPretty));
@@ -214,7 +214,7 @@ export const runGoalsDecisionsWrite = Effect.fn("Goals.runDecisionsWrite")(funct
 }) {
   const service = yield* GoalDecisionLog;
   const records = yield* selectPackets(options.slug);
-  const reports = yield* Effect.forEach(records, service.write);
+  const reports = yield* Effect.forEach(records, service.write, { concurrency: 1 });
   const totals = yield* printSummary(reports, "drift_remaining");
   if (totals.invalid > 0) {
     return yield* failWithReportedExit("goals decisions: invalid decision files block the projection; fix them first.");
@@ -364,7 +364,7 @@ const completionClaims = Effect.fn("Goals.decisionCompletionClaims")(function* (
   finalPullRequest: O.Option<number>,
   input: GoalDecisionAddInput
 ) {
-  const reds = yield* Effect.forEach(input.attributeRed, parseAttributeRed);
+  const reds = yield* Effect.forEach(input.attributeRed, parseAttributeRed, { concurrency: 1 });
   yield* checkClaimFlags(kind, finalPullRequest, A.isReadonlyArrayNonEmpty(reds) || input.operatorRuling);
   if (O.isNone(finalPullRequest)) {
     return { redAttribution: O.none<GoalRedAttributionBlock>(), operatorRuling: O.none<number>() };

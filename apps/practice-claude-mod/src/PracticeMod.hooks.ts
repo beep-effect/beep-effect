@@ -184,6 +184,7 @@ export const configure = (options: PluginOptions): void => {
 export const registerCommands = ($: Engine) => (): Promise<void> =>
   Effect.runPromise(
     Effect.forEach(PracticeCommands, (command) => Effect.promise(() => $.command.register(command)), {
+      concurrency: 1,
       discard: true,
     })
   );

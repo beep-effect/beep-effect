@@ -299,7 +299,6 @@ export class PlanCheckFailed extends S.TaggedError<PlanCheckFailed, { readonly b
   })
 ) {}
 
-// biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI escape sequences are control characters by definition.
 const ansi = /\u001b\[[0-9;]*m/gu;
 const logPrefix = /^\[\d{2}:\d{2}:\d{2}\.\d{3}\] [A-Z]+: ?/u;
 const resourceLine = /^\[([^\]]+)\] ([a-z]+)\b(?! \[action\])/u;

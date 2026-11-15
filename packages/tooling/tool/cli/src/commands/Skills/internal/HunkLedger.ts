@@ -189,13 +189,16 @@ export const readHunkLedger = Effect.fn("HunkLedger.read")(function* (
     A.map(Str.split("\n")(text), (line, index) => [index + 1, Str.trim(line)] as const),
     ([, line]) => Str.isNonEmpty(line)
   );
-  return yield* Effect.forEach(lines, ([lineNumber, line]) =>
-    decodeLedgerRow(line).pipe(
-      SkillsCommandError.mapError(
-        `${HUNK_LEDGER_PATH}:${lineNumber} is not a skills-hunk-ledger/v1 row.`,
-        HUNK_LEDGER_PATH
-      )
-    )
+  return yield* Effect.forEach(
+    lines,
+    ([lineNumber, line]) =>
+      decodeLedgerRow(line).pipe(
+        SkillsCommandError.mapError(
+          `${HUNK_LEDGER_PATH}:${lineNumber} is not a skills-hunk-ledger/v1 row.`,
+          HUNK_LEDGER_PATH
+        )
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -213,10 +216,13 @@ export const appendHunkLedgerRows = Effect.fn("HunkLedger.append")(function* (
   if (A.isReadonlyArrayEmpty(rows)) {
     return;
   }
-  const lines = yield* Effect.forEach(rows, (row) =>
-    encodeLedgerRow(row).pipe(
-      SkillsCommandError.mapError(`Failed to encode a ${HUNK_LEDGER_PATH} row.`, HUNK_LEDGER_PATH)
-    )
+  const lines = yield* Effect.forEach(
+    rows,
+    (row) =>
+      encodeLedgerRow(row).pipe(
+        SkillsCommandError.mapError(`Failed to encode a ${HUNK_LEDGER_PATH} row.`, HUNK_LEDGER_PATH)
+      ),
+    { concurrency: 1 }
   );
   yield* appendLedgerText(repoRoot, `${A.join(lines, "\n")}\n`);
 });

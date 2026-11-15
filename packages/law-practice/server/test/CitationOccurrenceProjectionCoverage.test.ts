@@ -52,7 +52,7 @@ const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimit
     vocabulary,
   }).pipe(Effect.provideContext(setup.provided));
   const models = yield* Effect.fromOption(getCitationExtractionShortcut("eyecite"));
-  const citations = yield* Effect.forEach(models, semantic.project);
+  const citations = yield* Effect.forEach(models, semantic.project, { concurrency: 1 });
   const stage = yield* makeCitationOccurrenceProjection({ ...setup.limits, ...narrow }, setup.runtime, {
     engineArtifact: artifact,
   }).pipe(Effect.provideContext(setup.provided));

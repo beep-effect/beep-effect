@@ -248,10 +248,13 @@ export class RepositoryVariable extends Context.Service<RepositoryVariable, Repo
 
 /** Decode one page walk of variables, blaming `operation` for a payload that does not fit. */
 const decodeVariables = (items: ReadonlyArray<{ readonly name: string; readonly value: string }>, operation: string) =>
-  Effect.forEach(items, (variable) =>
-    S.decodeEffect(VariableInfo)({ name: variable.name, value: variable.value }).pipe(
-      Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected variable", error))
-    )
+  Effect.forEach(
+    items,
+    (variable) =>
+      S.decodeEffect(VariableInfo)({ name: variable.name, value: variable.value }).pipe(
+        Effect.mapError((error) => GitHubError.decode(operation, "GitHub returned an unexpected variable", error))
+      ),
+    { concurrency: 1 }
   );
 
 const make = (client: GitHubClient["Service"]): RepositoryVariableShape => {

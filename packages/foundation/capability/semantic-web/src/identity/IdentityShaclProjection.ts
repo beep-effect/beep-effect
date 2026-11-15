@@ -13,13 +13,12 @@ import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { ShaclNodeShape, ShaclPropertyShape } from "../services/shacl-validation.ts";
-import { decodeEntrySubject, IdentityFiberPathError } from "./IdentityRdfBinding.ts";
+import { decodeEntrySubject, resolveFiberPath } from "./IdentityRdfBinding.ts";
 import type { IdentityEntry } from "@beep/identity";
 import type { NamedNode } from "@beep/rdf/Rdf";
-import type { IdentityEntryIriError, IdentityRdfBinding } from "./IdentityRdfBinding.ts";
+import type { IdentityEntryIriError, IdentityFiberPathError, IdentityRdfBinding } from "./IdentityRdfBinding.ts";
 
 const $I = $SemanticWebId.create("identity/IdentityShaclProjection");
 
@@ -132,20 +131,13 @@ export const projectShapes: {
         entries,
         Effect.fnUntraced(function* (entry) {
           const targetNode = yield* decodeEntrySubject(entry);
-          const fiberProperties = yield* Effect.forEach(policy.requiredFibers, (fiber) =>
-            pipe(
-              R.get(binding.fiberPaths, fiber),
-              O.match({
-                onNone: () => Effect.fail(IdentityFiberPathError.make({ fiber })),
-                onSome: (path) =>
-                  Effect.succeed(
-                    ShaclPropertyShape.make({
-                      path,
-                      minCount: O.some(S.Natural.make(1)),
-                    })
-                  ),
-              })
-            )
+          const fiberProperties = yield* Effect.forEach(
+            policy.requiredFibers,
+            (fiber) =>
+              Effect.map(resolveFiberPath(binding, fiber), (path) =>
+                ShaclPropertyShape.make({ path, minCount: O.some(S.Natural.make(1)) })
+              ),
+            { concurrency: 1 }
           );
 
           return ShaclNodeShape.make({
@@ -156,7 +148,8 @@ export const projectShapes: {
               A.appendAll(fiberProperties)
             ),
           });
-        })
+        }),
+        { concurrency: 1 }
       );
     })
 );

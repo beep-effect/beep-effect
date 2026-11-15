@@ -132,7 +132,8 @@ layer(VersionCache.layer, { timeout: "30 seconds" })("VersionCache", (it) => {
         ] as const) {
           const versions = yield* Effect.forEach(
             ["0.9.9", `${tuple}-0`, `${tuple}-alpha`, `${tuple}-beta`, tuple, "2.0.0"],
-            SemVer.parse
+            SemVer.parse,
+            { concurrency: 1 }
           );
           yield* cache.load(versions);
           const error = yield* Effect.flip(cache.resolveString(`>=${tuple}-alpha <${upper}`));

@@ -1322,18 +1322,14 @@ const sweepOrphanJournalLockClaims = Effect.fnUntraced(function* (
     }
   }
   const tombstones = A.filter(sidecars, isJournalLockReapTombstone);
-  yield* Effect.forEach(tombstones, discardOrphanJournalLockReapTombstone, {
-    discard: true,
-  });
+  yield* Effect.forEach(tombstones, discardOrphanJournalLockReapTombstone, { concurrency: 1, discard: true });
   if (yield* fs.exists(lockPath).pipe(Effect.orElseSucceed(constant(true)))) {
     return;
   }
   yield* Effect.forEach(
     A.filter(sidecars, (sidecar) => !isJournalLockReapTombstone(sidecar)),
     (sidecar) => fs.remove(sidecar, { force: true, recursive: true }).pipe(Effect.ignore),
-    {
-      discard: true,
-    }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -2021,11 +2017,14 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
   // newer protocol event before all checkouts have rolled forward.
   const serviceOption6 = yield* Effect.serviceOption(AdmissionJournalReader);
   const reader = O.getOrElse(serviceOption6, constant(currentAdmissionJournalReader));
-  const retained = yield* Effect.forEach(rawLines, (raw) =>
-    reader.decode(raw).pipe(
-      Effect.option,
-      Effect.map((decoded) => ({ event: decoded, line: raw }))
-    )
+  const retained = yield* Effect.forEach(
+    rawLines,
+    (raw) =>
+      reader.decode(raw).pipe(
+        Effect.option,
+        Effect.map((decoded) => ({ event: decoded, line: raw }))
+      ),
+    { concurrency: 1 }
   );
   const alreadyRecorded = A.some(retained, ({ event: recorded }) =>
     O.exists(
@@ -2342,8 +2341,10 @@ export const readAdmissionJournalHistory = Effect.fn("AdmissionJournal.readHisto
 ): Effect.fn.Return<AdmissionJournalHistory, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
   const path = yield* Path.Path;
   const archive = yield* readAdmissionJournalArchive(root);
-  const segmentLines = yield* Effect.forEach(archive.segments, (name) =>
-    readJournalLines(path.join(archive.directory, name), "admission journal archive segment")
+  const segmentLines = yield* Effect.forEach(
+    archive.segments,
+    (name) => readJournalLines(path.join(archive.directory, name), "admission journal archive segment"),
+    { concurrency: 1 }
   );
   const archivedLines = A.flatten(segmentLines);
   const liveLines = yield* readJournalLines(path.join(root, JOURNAL_FILE_NAME), "admission journal");
@@ -2354,7 +2355,7 @@ export const readAdmissionJournalHistory = Effect.fn("AdmissionJournal.readHisto
   const unique = A.filter(lines, (line, index) => O.contains(HashMap.get(firstIndexByLine, line), index));
   const providedReader = yield* Effect.serviceOption(AdmissionJournalReader);
   const reader = O.getOrElse(providedReader, constant(currentAdmissionJournalReader));
-  const decoded = yield* Effect.forEach(unique, flow(reader.decode, Effect.option));
+  const decoded = yield* Effect.forEach(unique, flow(reader.decode, Effect.option), { concurrency: 1 });
   const events = A.getSomes(decoded);
   return AdmissionJournalHistory.make({
     archive,
@@ -2399,8 +2400,10 @@ export const pruneAgedAdmissionJournalArchive = Effect.fn("AdmissionJournal.prun
   const nowMillis = yield* Clock.currentTimeMillis;
   const directory = path.join(root, ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME);
   const segments = yield* listArchiveSegmentNames(directory).pipe(Effect.orElseSucceed(A.empty<string>));
-  const removed = yield* Effect.forEach(A.filter(segments, isAgedAdmissionJournalArchiveSegment(nowMillis)), (name) =>
-    fs.remove(path.join(directory, name)).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)))
+  const removed = yield* Effect.forEach(
+    A.filter(segments, isAgedAdmissionJournalArchiveSegment(nowMillis)),
+    (name) => fs.remove(path.join(directory, name)).pipe(Effect.as(true), Effect.orElseSucceed(constant(false))),
+    { concurrency: 1 }
   );
   const count = A.length(A.filter(removed, identity));
   yield* count > 0

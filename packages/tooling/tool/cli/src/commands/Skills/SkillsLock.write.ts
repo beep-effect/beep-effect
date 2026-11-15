@@ -284,7 +284,8 @@ const readPatchTreeDigests = Effect.fn("SkillsLock.readPatchTreeDigests")(functi
         .readFile(absolute)
         .pipe(SkillsCommandError.mapError(`Failed to read ${absolute}.`, absolute));
       return A.of([`${PATCH_ROOT}/${Str.replaceAll("\\", "/")(entry)}`, yield* sha256Of(bytes, absolute)] as const);
-    })
+    }),
+    { concurrency: 1 }
   );
   return HashMap.fromIterable(A.flatten(files));
 });
@@ -367,7 +368,7 @@ const stagePatches = Effect.fn("SkillsLock.stagePatches")(function* (
         .writeFile(absolute, file.bytes, { flag: "wx" })
         .pipe(SkillsCommandError.mapError(`Failed to stage ${file.path}.`, absolute));
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const ledger = path.join(paths.target, HUNK_LEDGER_FILE);
   const hasLedger = yield* fs
@@ -447,7 +448,8 @@ const writtenPatches = (patchFiles: ReadonlyArray<SkillPatchFile>) =>
     patchFiles,
     Effect.fnUntraced(function* (file) {
       return SkillsLockWrittenFile.make({ path: file.path, sha256: yield* sha256Of(file.bytes, file.path) });
-    })
+    }),
+    { concurrency: 1 }
   );
 
 const makeReceipt = (

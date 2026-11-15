@@ -263,9 +263,9 @@ const printProperty = (model: Domain.DocEntry) =>
 
 const printClass = Effect.fn("printClass")(function* (model: Domain.Class) {
   const header = yield* printEntry(DocEntry.make(model), { postfix: "(class)" });
-  const staticMethods = yield* Effect.forEach(model.staticMethods, printStaticMethod);
-  const methods = yield* Effect.forEach(model.methods, printMethod);
-  const properties = yield* Effect.forEach(model.properties, printProperty);
+  const staticMethods = yield* Effect.forEach(model.staticMethods, printStaticMethod, { concurrency: 1 });
+  const methods = yield* Effect.forEach(model.methods, printMethod, { concurrency: 1 });
+  const properties = yield* Effect.forEach(model.properties, printProperty, { concurrency: 1 });
 
   return A.flatten([header, A.flatten(staticMethods), A.flatten(methods), A.flatten(properties)]);
 });
@@ -334,11 +334,15 @@ const printNamespace: {
       indentation,
       postfix: "(namespace)",
     });
-    const interfaces = yield* Effect.forEach(model.interfaces, (inter) => printInterface(inter, indentation + 1));
-    const typeAliases = yield* Effect.forEach(model.typeAliases, (typeAlias) =>
-      printTypeAlias(typeAlias, indentation + 1)
+    const interfaces = yield* Effect.forEach(model.interfaces, (inter) => printInterface(inter, indentation + 1), {
+      concurrency: 1,
+    });
+    const typeAliases = yield* Effect.forEach(
+      model.typeAliases,
+      (typeAlias) => printTypeAlias(typeAlias, indentation + 1),
+      { concurrency: 1 }
     );
-    const namespaces = yield* Effect.forEach(model.namespaces, printNamespace(indentation + 1));
+    const namespaces = yield* Effect.forEach(model.namespaces, printNamespace(indentation + 1), { concurrency: 1 });
 
     return A.flatten([header, A.flatten(interfaces), A.flatten(typeAliases), A.flatten(namespaces)]);
   })
@@ -551,9 +555,10 @@ export const printModule = (module: Domain.Module) =>
           const categories = yield* Effect.forEach(
             printables,
             Effect.fnUntraced(function* ([category, categoryPrintables]) {
-              const values = yield* Effect.forEach(sortByName(categoryPrintables), printBlocks);
+              const values = yield* Effect.forEach(sortByName(categoryPrintables), printBlocks, { concurrency: 1 });
               return A.prepend(A.flatten(values), Md.h1(raw(category)));
-            })
+            }),
+            { concurrency: 1 }
           );
 
           return renderMarkdownBlocks(A.flatten([description, [rawBlock("<!-- toc -->")], A.flatten(categories)]));

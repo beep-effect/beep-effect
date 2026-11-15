@@ -398,7 +398,9 @@ const alphaxivReferences = Effect.fn("Library.importMethods.alphaxivReferences")
 ) {
   const parentDepth = O.getOrElse(librarySourceHopDepth(catalog, source.id), () => 1);
   const locators = parentDepth < 2 ? A.filter(A.map(payload.references, referenceLocator), Str.isNonEmpty) : [];
-  const classified = yield* Effect.forEach(locators, (locator) => classifyLibraryReference(locator, source.id));
+  const classified = yield* Effect.forEach(locators, (locator) => classifyLibraryReference(locator, source.id), {
+    concurrency: 1,
+  });
   const unique = A.dedupeWith(
     A.filter(classified, (child) => child.ownership === "external" && child.id !== source.id),
     (a: LibrarySource, b: LibrarySource) => a.id === b.id
@@ -412,20 +414,23 @@ const alphaxivReferences = Effect.fn("Library.importMethods.alphaxivReferences")
     O.map(parentEdge, (edge) => edge.rootId),
     () => ""
   );
-  const edges = yield* Effect.forEach(unique, (child) =>
-    hashBytes(new TextEncoder().encode(`${intakeId}\n${parentDepth + 1}\n${source.id}\n${child.id}`)).pipe(
-      Effect.map((id) =>
-        LibraryDerivation.make({
-          id,
-          derivedId: child.id,
-          sourceId: source.id,
-          intakeId,
-          rootId,
-          hopDepth: parentDepth + 1,
-          recordedAt,
-        })
-      )
-    )
+  const edges = yield* Effect.forEach(
+    unique,
+    (child) =>
+      hashBytes(new TextEncoder().encode(`${intakeId}\n${parentDepth + 1}\n${source.id}\n${child.id}`)).pipe(
+        Effect.map((id) =>
+          LibraryDerivation.make({
+            id,
+            derivedId: child.id,
+            sourceId: source.id,
+            intakeId,
+            rootId,
+            hopDepth: parentDepth + 1,
+            recordedAt,
+          })
+        )
+      ),
+    { concurrency: 1 }
   );
   return { parentDepth, unique, edges };
 });

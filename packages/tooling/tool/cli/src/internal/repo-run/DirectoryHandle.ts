@@ -318,7 +318,7 @@ const emptyHeldDirectory: (fd: number) => Effect.Effect<void, DirectoryHandleErr
   fd: number
 ) {
   const names = yield* attempt("list", heldPath(fd), () => nodeFs().readdirSync(heldPath(fd)));
-  yield* Effect.forEach(names, (name) => removeHeldEntry(fd, name), { discard: true });
+  yield* Effect.forEach(names, (name) => removeHeldEntry(fd, name), { concurrency: 1, discard: true });
 });
 
 /**

@@ -186,6 +186,7 @@ describe("makeGithubHeadroomSource", () => {
       const uncalibrated = yield* snapshotOf(store);
       expect(graphqlBuckets(uncalibrated)).toStrictEqual([]);
       yield* Effect.forEach(A.range(1, 6), (index) => store.appendCalibration(calibrationPair(index * 10)), {
+        concurrency: 1,
         discard: true,
       });
       const calibrated = yield* snapshotOf(store);

@@ -203,7 +203,7 @@ describe("layerCatalogEnrichment", () => {
     "stamps package and family on a catalogued span and leaves an unknown span unstamped",
     Effect.fnUntraced(function* () {
       const { spans, run } = enriched(workstation, "standard");
-      yield* run(Effect.all([tracedSpan("Parcels.read"), tracedSpan("Unknown.read")]));
+      yield* run(Effect.all([tracedSpan("Parcels.read"), tracedSpan("Unknown.read")], { concurrency: 1 }));
 
       const known = attributesOf(spans, 0);
       const unknown = attributesOf(spans, 1);
@@ -221,18 +221,25 @@ describe("layerCatalogEnrichment", () => {
   it.effect(
     "stamps the effective tier and identity source for every emitter context",
     Effect.fnUntraced(function* () {
-      const observed = yield* Effect.forEach(contexts, (context) =>
-        Effect.forEach(TelemetryTier.literals, (requestedTier) => {
-          const { spans, run } = enriched(context, requestedTier);
-          return run(tracedSpan("Parcels.read")).pipe(
-            Effect.map(() =>
-              O.map(attributesOf(spans, 0), (attributes) => ({
-                tier: attributes.get("beep.privacy_tier"),
-                identity: attributes.get("beep.identity_source"),
-              }))
-            )
-          );
-        })
+      const observed = yield* Effect.forEach(
+        contexts,
+        (context) =>
+          Effect.forEach(
+            TelemetryTier.literals,
+            (requestedTier) => {
+              const { spans, run } = enriched(context, requestedTier);
+              return run(tracedSpan("Parcels.read")).pipe(
+                Effect.map(() =>
+                  O.map(attributesOf(spans, 0), (attributes) => ({
+                    tier: attributes.get("beep.privacy_tier"),
+                    identity: attributes.get("beep.identity_source"),
+                  }))
+                )
+              );
+            },
+            { concurrency: 1 }
+          ),
+        { concurrency: 1 }
       );
 
       deepStrictEqual(

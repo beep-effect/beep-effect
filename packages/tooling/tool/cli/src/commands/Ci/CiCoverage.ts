@@ -144,7 +144,9 @@ const coverageTestCommands = Effect.fn("CiCoverage.testCommands")(function* (
         (match) => match[0]
       );
       const [assignments, tokens] = A.span(words, isEnvironmentAssignment);
-      const forEach1 = yield* Effect.forEach(A.drop(tokens, 1), (word) => expandCanonicalWord(word, cwd));
+      const forEach1 = yield* Effect.forEach(A.drop(tokens, 1), (word) => expandCanonicalWord(word, cwd), {
+        concurrency: 1,
+      });
       const args = A.flatten(forEach1);
       const env = A.reduce(assignments, R.empty<string, string>(), (values, assignment) => {
         const name = A.headNonEmpty(Str.split("=")(assignment));
@@ -159,7 +161,8 @@ const coverageTestCommands = Effect.fn("CiCoverage.testCommands")(function* (
         continuationScripts:
           index === prefix.length - 1 ? A.map(continuations, (value) => Str.replace(/^bun\s+run\s+/, "")(value)) : [],
       });
-    })
+    }),
+    { concurrency: 1 }
   );
   return yield* decodeInvocations(commands).pipe(
     CiCommandError.mapError(`Invalid canonical invocation list for ${packageName}.`)
@@ -304,7 +307,8 @@ const configuredInvocations = Effect.fn("CiCoverage.configuredInvocations")(func
     coverage,
     Effect.fnUntraced(function* (command) {
       return { command, files: yield* coverageTestInventory(command, packageName), testOnly: false };
-    })
+    }),
+    { concurrency: 1 }
   );
   let seen = A.flatMap(invocations, (invocation) => invocation.files);
   if (A.length(seen) !== A.length(A.dedupe(seen)))
@@ -378,7 +382,8 @@ const discoverCoveragePackages = Effect.fn("CiCoverage.discoverCoveragePackages"
             testReportPath: `${reportDirectory}/unit-results.json`,
             ...(shard === undefined ? {} : { shard }),
           });
-        })
+        }),
+        { concurrency: 1 }
       );
     }),
     // Discovery is one `vitest list` boot per invocation (about 1.4 s each on a hosted 4-vCPU

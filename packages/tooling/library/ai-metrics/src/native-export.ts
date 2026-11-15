@@ -272,7 +272,8 @@ export const encodeNativeTraceBatch = Effect.fn("AiMetrics.encodeNativeTraceBatc
         status: { code: span.status === "ok" ? 1 : span.status === "error" ? 2 : 0 },
         attributes: metadataAttributes(span, input.evidenceEpoch),
       };
-    })
+    }),
+    { concurrency: 1 }
   ).pipe(Effect.mapError(() => NativeExportError.make({ reason: "encoding" })));
   const body = yield* encodeObservationTraceWire(
     input.project,

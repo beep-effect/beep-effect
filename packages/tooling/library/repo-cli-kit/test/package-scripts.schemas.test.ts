@@ -242,7 +242,7 @@ describe("canonical package scripts schemas", () => {
     "decodes every rule row and matches the ratified presence matrix literally",
     Effect.fnUntraced(function* () {
       expect(taskScriptRules).toHaveLength(112);
-      yield* Effect.forEach(taskScriptRules, (rule) => decodeRule(rule));
+      yield* Effect.forEach(taskScriptRules, (rule) => decodeRule(rule), { concurrency: 1 });
       for (const [name, expected] of presenceRows) {
         const actual = A.map(PackageKind.literals, (kind) =>
           A.findFirst(taskScriptRules, (row) => row.kind === kind && row.name === name)

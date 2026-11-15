@@ -1593,8 +1593,10 @@ const retainEmbeddedAttemptJournals = Effect.fnUntraced(function* (
     ? A.of(candidate.path)
     : O.getOrElse(O.fromUndefinedOr(candidate.embeddedCheckouts), A.empty<string>);
   const store = yield* AttemptJournalStore;
-  return yield* Effect.forEach(checkouts, (checkout) =>
-    Effect.map(store.retain(checkout), unpartitionedRefusal(checkout))
+  return yield* Effect.forEach(
+    checkouts,
+    (checkout) => Effect.map(store.retain(checkout), unpartitionedRefusal(checkout)),
+    { concurrency: 1 }
   ).pipe(
     Effect.map(flow(A.getSomes, A.head)),
     Effect.catchTag("AttemptJournalStoreError", (error) => Effect.succeedSome(error.message))
@@ -1671,7 +1673,8 @@ const distinctCheckoutRoots = Effect.fnUntraced(function* (
     A.map(roots, (root) => path.resolve(root)),
     Effect.fnUntraced(function* (lexical): Effect.fn.Return<CheckoutRoot, never, FileSystem.FileSystem | Path.Path> {
       return { lexical, real: yield* resolvedOrLexical(lexical) };
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.sort(
     A.map(
@@ -1762,7 +1765,7 @@ const ensureArchiveDirectories = Effect.fnUntraced(function* (checkout: string, 
       yield* syncDirectory(dir);
       yield* syncDirectory(path.dirname(dir));
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -2522,8 +2525,10 @@ const resolveSettings = Effect.fnUntraced(function* (options: ResidueReapOptions
   const homeRoot = yield* resolveHomeRoot(options);
   const repoRoot = yield* resolveRepoRoot(options);
   const checkoutRoots = yield* distinctCheckoutRoots(nonEmptyOr(options.checkoutRoots, [repoRoot]));
-  const checkoutBoundaries = yield* Effect.forEach(checkoutRoots, (checkout) =>
-    Effect.map(fs.realPath(checkout).pipe(Effect.option), (canonical) => [checkout, canonical] as const)
+  const checkoutBoundaries = yield* Effect.forEach(
+    checkoutRoots,
+    (checkout) => Effect.map(fs.realPath(checkout).pipe(Effect.option), (canonical) => [checkout, canonical] as const),
+    { concurrency: 1 }
   );
   const beepCacheRoot = path.join(homeRoot, ".cache", "beep");
   const now = yield* Clock.currentTimeMillis;
@@ -2684,7 +2689,9 @@ const drainDiscovery = Effect.fnUntraced(function* (
   const context = yield* drainContext(settings);
   if (O.isNone(context)) return { candidates: A.empty(), warnings: [DRAIN_FACTS_UNREADABLE] };
   const assessed = yield* assessResidueDrain(context.value, settings.repoRoot, settings.checkoutRoots);
-  const candidates = yield* Effect.forEach(assessed.assessments, (assessment) => drainCandidate(settings, assessment));
+  const candidates = yield* Effect.forEach(assessed.assessments, (assessment) => drainCandidate(settings, assessment), {
+    concurrency: 1,
+  });
   const unreadable = A.map(assessed.unreadable, (checkout) =>
     candidate(path.dirname(checkout), checkout, "drainable", "skip", { skipReason: "git-probe-failed" })
   );
@@ -2696,32 +2703,35 @@ const drainDiscovery = Effect.fnUntraced(function* (
 const discoverResidue = Effect.fnUntraced(function* (settings: ResidueReapSettings) {
   const path = yield* Path.Path;
   const includes = (reapClass: ResidueReapClass): boolean => A.contains(settings.classes, reapClass);
-  const parts = yield* Effect.all([
-    whenIncluded(settings, "codex-sessions", () => sessionCandidates(settings).pipe(Effect.map(discovered))),
-    topLevelDiscovery(settings, path.join(settings.codexRoot, "worktrees"), "codex-worktrees"),
-    Effect.forEach(
-      settings.checkoutRoots,
-      (checkoutRoot) => repoScopedCandidates(checkoutRoot, includes, settings.policy),
-      { concurrency: 2 }
-    ).pipe(Effect.map(flow(A.flatten, discovered))),
-    topLevelDiscovery(settings, settings.beepCacheRoot, "beep-cache-disposable"),
-    whenIncluded(settings, "shared-turbo-cache", () =>
-      sharedTurboCacheCandidates(
-        settings.sharedTurboCacheRoot,
-        settings.policy,
-        settings.sharedTurboMaxAgeDays,
-        settings.sharedTurboMaxBytes
-      )
-    ),
-    whenIncluded(settings, "qualification-views", () =>
-      assessQualificationViews(
-        path.join(settings.beepCacheRoot, "turbo-qualification"),
-        settings.policy,
-        () => true
-      ).pipe(Effect.map(discovered))
-    ),
-    whenIncluded(settings, "drainable", () => drainDiscovery(settings)),
-  ]);
+  const parts = yield* Effect.all(
+    [
+      whenIncluded(settings, "codex-sessions", () => sessionCandidates(settings).pipe(Effect.map(discovered))),
+      topLevelDiscovery(settings, path.join(settings.codexRoot, "worktrees"), "codex-worktrees"),
+      Effect.forEach(
+        settings.checkoutRoots,
+        (checkoutRoot) => repoScopedCandidates(checkoutRoot, includes, settings.policy),
+        { concurrency: 2 }
+      ).pipe(Effect.map(flow(A.flatten, discovered))),
+      topLevelDiscovery(settings, settings.beepCacheRoot, "beep-cache-disposable"),
+      whenIncluded(settings, "shared-turbo-cache", () =>
+        sharedTurboCacheCandidates(
+          settings.sharedTurboCacheRoot,
+          settings.policy,
+          settings.sharedTurboMaxAgeDays,
+          settings.sharedTurboMaxBytes
+        )
+      ),
+      whenIncluded(settings, "qualification-views", () =>
+        assessQualificationViews(
+          path.join(settings.beepCacheRoot, "turbo-qualification"),
+          settings.policy,
+          () => true
+        ).pipe(Effect.map(discovered))
+      ),
+      whenIncluded(settings, "drainable", () => drainDiscovery(settings)),
+    ],
+    { concurrency: 1 }
+  );
   return {
     candidates: A.flatMap(parts, (part) => part.candidates),
     warnings: A.flatMap(parts, (part) => part.warnings),
@@ -3266,7 +3276,8 @@ const executeResidueReap = Effect.fnUntraced(function* (settings: ResidueReapSet
           retentionReason: "fleet observation only; archive from the owning checkout",
         });
       return ResidueReapCandidate.make({ ...entry, recoveryDestination: path.join(runRoot, "archive", `${index}`) });
-    })
+    }),
+    { concurrency: 1 }
   );
   const scannedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   const drainDiskBefore = yield* drainDisk(settings);

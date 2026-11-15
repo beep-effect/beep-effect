@@ -532,10 +532,13 @@ export const validateDogfoodConfig = Effect.fn("AiSync.validateDogfoodConfig")(f
  * @since 0.0.0
  */
 export const validateDogfoodConfigs = Effect.fn("AiSync.validateDogfoodConfigs")(function* (repoRoot: string) {
-  return yield* Effect.all([
-    validateRepoConfigWithSafetyPolicy({ repoRoot, config: ".codex/config.toml" }),
-    validateRepoConfigWithSafetyPolicy({ repoRoot, config: ".claude/settings.json" }),
-  ]);
+  return yield* Effect.all(
+    [
+      validateRepoConfigWithSafetyPolicy({ repoRoot, config: ".codex/config.toml" }),
+      validateRepoConfigWithSafetyPolicy({ repoRoot, config: ".claude/settings.json" }),
+    ],
+    { concurrency: 1 }
+  );
 });
 
 /**

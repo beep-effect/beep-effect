@@ -27,8 +27,10 @@ const stage = Effect.gen(function* () {
   const root = path.join(base, "root");
   const outside = path.join(base, "outside");
   const sibling = path.join(base, "root-evil");
-  yield* Effect.forEach([root, outside, sibling, path.join(root, "folder")], (directory) =>
-    fs.makeDirectory(directory, { recursive: true })
+  yield* Effect.forEach(
+    [root, outside, sibling, path.join(root, "folder")],
+    (directory) => fs.makeDirectory(directory, { recursive: true }),
+    { concurrency: 1 }
   );
   yield* fs.writeFile(path.join(root, "abc.txt"), encoder.encode("abc"));
   yield* fs.writeFile(path.join(root, "big.bin"), new Uint8Array(64).fill(7));

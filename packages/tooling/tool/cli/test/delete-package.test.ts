@@ -120,8 +120,11 @@ const writeDeletedDeployLayout = Effect.fn("writeDeletedDeployLayout")(function*
     path.join("packages", "consumer", "package.json"),
     '{ "name": "@beep/consumer", "private": true }\n'
   );
-  yield* Effect.forEach(files, ([file, content]) =>
-    Effect.andThen(fs.makeDirectory(path.dirname(file), { recursive: true }), fs.writeFileString(file, content))
+  yield* Effect.forEach(
+    files,
+    ([file, content]) =>
+      Effect.andThen(fs.makeDirectory(path.dirname(file), { recursive: true }), fs.writeFileString(file, content)),
+    { concurrency: 1 }
   );
   return repoRoot;
 });
@@ -1581,8 +1584,11 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         '{ "name": "@beep/consumer", "private": true }\n'
       );
       yield* fs.writeFileString(path.join("packages", "consumer", "README.md"), `${README_LINE}\n`);
-      yield* Effect.forEach(files, ([file, content]) =>
-        Effect.andThen(fs.makeDirectory(path.dirname(file), { recursive: true }), fs.writeFileString(file, content))
+      yield* Effect.forEach(
+        files,
+        ([file, content]) =>
+          Effect.andThen(fs.makeDirectory(path.dirname(file), { recursive: true }), fs.writeFileString(file, content)),
+        { concurrency: 1 }
       );
       yield* gitFixture(repoRoot);
       return repoRoot;
@@ -2196,8 +2202,11 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         )}] }\n`
       );
       yield* fs.writeFileString("bun.lock", "");
-      yield* Effect.forEach(files, ([file, content]) =>
-        Effect.andThen(fs.makeDirectory(path.dirname(file), { recursive: true }), fs.writeFileString(file, content))
+      yield* Effect.forEach(
+        files,
+        ([file, content]) =>
+          Effect.andThen(fs.makeDirectory(path.dirname(file), { recursive: true }), fs.writeFileString(file, content)),
+        { concurrency: 1 }
       );
       yield* gitFixture(repoRoot);
       return repoRoot;

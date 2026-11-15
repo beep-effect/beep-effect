@@ -126,25 +126,28 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
               outcome: { status: "value", groups: [] },
             })
           );
-          const mentions = yield* Effect.forEach(input.mentions, (mention, index) =>
-            Effect.gen(function* () {
-              const source = A.getUnsafe(row.initialObjects, index);
-              const wire = yield* S.encodeEffect(Citation)(mention.citation);
-              const patched: S.Json = {
-                ...wire,
-                components: source.groups,
-                metadata: {
-                  ...wire.metadata,
-                  ...(wire.type === "case" ? { plaintiff: source.metadata.plaintiff } : {}),
-                  ...(wire.type === "supra" || wire.type === "shortFormCase"
-                    ? { antecedentGuess: source.metadata.antecedent_guess }
-                    : {}),
-                  pinCite: source.metadata.pin_cite,
-                },
-              };
-              const citation = yield* S.decodeUnknownEffect(Citation)(patched);
-              return CitationMention.make({ ...mention, citation });
-            })
+          const mentions = yield* Effect.forEach(
+            input.mentions,
+            (mention, index) =>
+              Effect.gen(function* () {
+                const source = A.getUnsafe(row.initialObjects, index);
+                const wire = yield* S.encodeEffect(Citation)(mention.citation);
+                const patched: S.Json = {
+                  ...wire,
+                  components: source.groups,
+                  metadata: {
+                    ...wire.metadata,
+                    ...(wire.type === "case" ? { plaintiff: source.metadata.plaintiff } : {}),
+                    ...(wire.type === "supra" || wire.type === "shortFormCase"
+                      ? { antecedentGuess: source.metadata.antecedent_guess }
+                      : {}),
+                    pinCite: source.metadata.pin_cite,
+                  },
+                };
+                const citation = yield* S.decodeUnknownEffect(Citation)(patched);
+                return CitationMention.make({ ...mention, citation });
+              }),
+            { concurrency: 1 }
           );
           const prepared = yield* prepareCitationResolution({ ...input, mentions });
           const work = yield* makeCitationResolutionWork(prepared.limits);
@@ -345,12 +348,16 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("callback semanti
               },
             };
           });
-          const citationResult17 = yield* Effect.forEach(result.mentions, (mention) =>
-            finalView(mentionRef(mention), mention.citation)
+          const citationResult17 = yield* Effect.forEach(
+            result.mentions,
+            (mention) => finalView(mentionRef(mention), mention.citation),
+            { concurrency: 1 }
           );
           expect(citationResult17, row.name).toEqual(row.objects);
-          const citationResult18 = yield* Effect.forEach(result.detachedCitations, (object) =>
-            finalView(CitationGroupMember.cases.Detached.make({ detachedId: object.id }), object.citation)
+          const citationResult18 = yield* Effect.forEach(
+            result.detachedCitations,
+            (object) => finalView(CitationGroupMember.cases.Detached.make({ detachedId: object.id }), object.citation),
+            { concurrency: 1 }
           );
           expect(citationResult18, row.name).toEqual(row.detachedObjects);
           yield* Effect.forEach(

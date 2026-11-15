@@ -367,7 +367,10 @@ export const palantiriParcelsCommand = Command.make(
   "parcels",
   {},
   Effect.fn("PalantiriCommand.parcels")(function* () {
-    yield* Effect.forEach(parcelSpecs, (spec) => Console.log(renderParcelSpec(spec)), { discard: true });
+    yield* Effect.forEach(parcelSpecs, (spec) => Console.log(renderParcelSpec(spec)), {
+      concurrency: 1,
+      discard: true,
+    });
   })
 ).pipe(Command.withDescription("List every parcel with its key, freshness bound and sources"));
 

@@ -99,8 +99,10 @@ export const makeCitationContextMatcher = Effect.fn("Citation.makeContextMatcher
     );
     if (matched.result.matches === 0)
       return CitationContextMatch.make({ context: matched.source.value.storage, match: null });
-    const captures = yield* Effect.forEach(A.range(0, matched.descriptor.profile.groups), (group) =>
-      matched.result.capture(0, group)
+    const captures = yield* Effect.forEach(
+      A.range(0, matched.descriptor.profile.groups),
+      (group) => matched.result.capture(0, group),
+      { concurrency: 1 }
     );
     return CitationContextMatch.make({
       context: matched.source.value.storage,
