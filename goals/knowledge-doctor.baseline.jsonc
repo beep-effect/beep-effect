@@ -1,6 +1,6 @@
 {
   "schemaVersion": "knowledge-doctor-baseline/v1",
-  "mintedAt": "7a31078ddd3620643d935267f6f94259096d0a0d",
+  "mintedAt": "21c2670283d39de39db72201d65440064e3570ff",
   "note": "Sealed knowledge-doctor baseline. Only the CI mint writes it, and a re-mint at mintedAt reproduces it byte for byte. A branch may only delete entries; any other edit is baseline-tamper.",
   "entries": [
     {
@@ -680,17 +680,6 @@
       "kind": "broken-tracked-path",
       "document": "goals/effect-v4-workflow-engine-spike/SPEC.md",
       "subject": "repo-path:packages/drivers/workflow",
-      "spanClass": "verified",
-      "owners": [
-        "@kriegcloud"
-      ]
-    },
-    {
-      "key": "knowledge-doctor/v1:4339468e94d779ef4ad5b5ddd36d9827780b812c0aa75a5cd2369b0cb8691c98",
-      "group": "unresolved-reference",
-      "kind": "broken-tracked-path",
-      "document": "goals/openclaw-workstation-agent/README.md",
-      "subject": "repo-path:goals/openclaw-p2-generation",
       "spanClass": "verified",
       "owners": [
         "@kriegcloud"
@@ -2176,17 +2165,6 @@
       "kind": "unknown-beep-symbol",
       "document": "explorations/_gold-intake/GOLD_SYNTHESIS.md",
       "subject": "beep-package:@beep/courtlistener",
-      "spanClass": "verified",
-      "owners": [
-        "@kriegcloud"
-      ]
-    },
-    {
-      "key": "knowledge-doctor/v1:dc17a93fbe3b1fbd700fcf826f041a8e3313a7ea0e862b1cbcdf267ec343acff",
-      "group": "unresolved-reference",
-      "kind": "broken-tracked-path",
-      "document": "goals/openclaw-workstation-agent/ops/handoffs/p2-slice-proof-runbook.md",
-      "subject": "repo-path:goals/openclaw-p2-generation",
       "spanClass": "verified",
       "owners": [
         "@kriegcloud"
