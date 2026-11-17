@@ -73,3 +73,22 @@ ecosystem = "npm"
 ignore = true
 effectiveUntil = 2027-01-14T00:00:00Z
 reason = "GHSA-gcqx-w48m-w2h4: no fixed npm release at the 2026-10-27 recheck (TehShrike/deepmerge#273 open; latest 4.3.1 is affected). Consumer/owner: @beep/storybook; the only lockfile parents are shadcn 4.22.1 and @shadcn/registry 0.2.0 (the shadcn CLI; 4.23.0 and 0.2.1 still require ^4.3.1). Inputs are the local components.json and registry items from developer-configured registries, merged only when a developer runs the CLI; no runtime path. Exit: fixed deepmerge passes install and OSV, or the shadcn path is removed. Recheck by 2027-01-14; receipt: goals/repository-simplification-residue/history/receipts/hold-register.md."
+
+# GHSA-fc5q-39xc-vjpf (picomatch ReDoS through single-branch repeated extglobs
+# such as `+(*)`) covers every picomatch release, `<= 4.0.7`, and has no patched
+# version as of the 2026-11-17 recheck: npm latest is 4.0.7 and
+# micromatch/picomatch#194 is open. The lock resolves two artifacts, 4.0.7
+# (hoisted) and 2.3.2 (under micromatch 4.0.8), so an exact PackageOverrides
+# match cannot cover the advisory: the local Bun audit wrapper mirrors an exact
+# override only while every resolution matches its one reviewed version. This
+# one is therefore advisory-wide. Every parent is build, test or deploy tooling
+# (vite, vitest, unplugin, @rollup/pluginutils, the TanStack Start plugin,
+# alchemy, @changesets, @dotenvx/dotenvx, tinyglobby/fdir, fast-glob via
+# micromatch). Each compiles glob patterns that developers write into config
+# files or CLI arguments. No workspace depends on or imports picomatch or a glob
+# wrapper directly. The attack needs an attacker-supplied pattern, and no
+# application path compiles request input as a glob.
+[[IgnoredVulns]]
+id = "GHSA-fc5q-39xc-vjpf"
+ignoreUntil = 2027-01-14T00:00:00Z
+reason = "GHSA-fc5q-39xc-vjpf (CVE-2026-112366): no fixed npm release at the 2026-11-17 recheck (micromatch/picomatch#194 open; latest 4.0.7 is affected). Advisory-wide because the lock holds picomatch 4.0.7 and 2.3.2 (micromatch). Consumer/owner: repository build, test and deploy tooling (vite, vitest, alchemy, changesets, dotenvx, TanStack Start); patterns are developer-authored config and CLI globs, never request input. Exit: a fixed picomatch release passes install and OSV. Recheck by 2027-01-14; receipt: goals/repository-simplification-residue/history/receipts/hold-register.md."
