@@ -610,6 +610,10 @@ const defaultHeader = (config: GenerateConfig): string =>
     A.join("\n")
   );
 
+// The schemas format renders its own module, so it applies the same pipeable
+// normalization `normalizeModule` gives the other formats: an optional array or
+// record field leaves as `S.Array(X).pipe(S.optionalKey)`, never the nested
+// `S.optionalKey(S.Array(X))` that `missedPipeableOpportunity` rejects.
 const renderSchemas = (source: string, config: GenerateConfig): string =>
   pipe(
     [
@@ -629,7 +633,8 @@ const renderSchemas = (source: string, config: GenerateConfig): string =>
       ),
       "",
     ],
-    A.join("\n")
+    A.join("\n"),
+    normalizePipeableSchemas
   );
 
 const namedStatementName = (statement: ts.NamedDeclaration): O.Option<string> =>
