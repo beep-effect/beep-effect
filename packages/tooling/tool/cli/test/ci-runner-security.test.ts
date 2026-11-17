@@ -2367,7 +2367,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "permission-issues": "write",
       });
       const open = stepByName(steps, "Open or update the pin-bump pull request");
-      expect(open.uses).toBe("peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8");
+      expect(open.uses).toBe("peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1");
       const inputs = stepInputs(open);
       expect(inputs.branch).toBe("ci/beep-ci-pin-bump");
       expect(inputs.token).toBe("${{ steps.app-token.outputs.token }}");
