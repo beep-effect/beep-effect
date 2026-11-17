@@ -23,7 +23,9 @@ Patches apply in two steps, in this order:
   `/v2/openapi.json` operation the published document does not list.
 - `scripts/openapi.lowering.ts` derives the rest from the source: every
   `unevaluatedProperties: false` closure becomes a flattened closed object, so
-  a v1 field name sent to v2 is a type error rather than a 422.
+  a v1 field name sent to v2 is a type error rather than a 422. At runtime the
+  driver encodes requests with `onExcessProperty: "error"`, so an untyped
+  caller gets a `request encoding` RunpodError before anything is sent.
 
 `scripts/operations.renderer.ts` strips the `/v2` prefix from every path,
 derives authentication from `security`, and fails generation on an unlowered

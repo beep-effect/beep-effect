@@ -42,7 +42,9 @@ Every operation in the checked-in Runpod OpenAPI document is a method on
 also gets a `<method>Stream` member, and the Pod and Serverless worker log
 operations return a `Stream` of Server-Sent Events. Failures are typed
 `RunpodError` values; a rejected request carries the RFC 9457 `problem` with
-its validation `errors`. `Runpod.raw(...)` reaches ahead-of-spec paths relative
+its validation `errors`. Request bodies are closed: an unknown field, such as a
+v1 name, fails as a `request encoding` error before anything is sent, instead
+of being dropped. `Runpod.raw(...)` reaches ahead-of-spec paths relative
 to the v2 base URL, and `RunpodDocs.fetchIndex` reads
 `https://docs.runpod.io/llms.txt`.
 

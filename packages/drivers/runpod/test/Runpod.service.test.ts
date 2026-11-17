@@ -52,7 +52,6 @@ import openApi from "../openapi.json" with { type: "json" };
 
 const decodeUnknownJsonEffect = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeUnknownCreatePodRequest = S.decodeUnknownEffect(CreatePodRequest);
-const encodeUnknownCreatePodRequest = S.encodeUnknownEffect(CreatePodRequest);
 
 const $TestI = $RunpodId.create("Runpod.service.test");
 
@@ -498,7 +497,7 @@ describe("@beep/runpod", () => {
   );
 
   it.effect(
-    "keeps v2 request bodies closed and their enums strict while GPU ids stay open",
+    "keeps v2 request body enums strict while GPU ids stay open",
     Effect.fnUntraced(function* () {
       const decoded = yield* decodeUnknownCreatePodRequest({
         cloud: "COMMUNITY",
@@ -506,17 +505,50 @@ describe("@beep/runpod", () => {
         image: "runpod/pytorch",
         name: "demo",
       });
-      const encoded = yield* encodeUnknownCreatePodRequest({
-        dataCenterId: "US-KS-2",
-        image: "runpod/pytorch",
-        name: "demo",
-      });
       const error = yield* decodeUnknownCreatePodRequest({ cloud: "ALL", name: "demo" }).pipe(Effect.flip);
 
       expect(decoded).toMatchObject({ cloud: "COMMUNITY", gpu: { id: "dynamic-gpu-id" } });
-      expect(encoded).toEqual({ image: "runpod/pytorch", name: "demo" });
       expect(error._tag).toBe("SchemaError");
     })
+  );
+
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
+    it.effect(
+      "refuses a v1 body field before sending while record fields keep any key",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* RunpodTestHttp;
+        const runpod = yield* Runpod;
+        // A JavaScript caller, or one behind a cast, can still send a v1 field
+        // name; the closed v2 body must refuse it rather than strip it.
+        const v1Request: unknown = {
+          body: { dataCenterId: "US-KS-2", image: "runpod/pytorch", name: "demo" },
+        };
+
+        yield* testHttp.reset;
+        const failure = yield* runpod.createPod(v1Request as CreatePodParams).pipe(Effect.flip);
+        const refusedCaptures = yield* testHttp.captures;
+        yield* runpod.createPod(
+          CreatePodParams.make({
+            body: { env: { ANY_NAME: "1", HF_HOME: "/models" }, image: "runpod/pytorch", name: "demo" },
+          })
+        );
+        const createCapture = yield* pipe(
+          testHttp.captures,
+          Effect.flatMap((captures) => captureAt(captures, 0, "create pod capture"))
+        );
+        const sentBody = yield* pipe(
+          bodyTextFromCapture(createCapture, "create pod body"),
+          Effect.flatMap(decodeUnknownJsonEffect)
+        );
+
+        assertSome(failure.operationId, "createPod");
+        expect(failure.reason).toBe("request encoding");
+        // Driver causes are labels: the schema issue would print the rejected value.
+        assertSome(failure.cause, "SchemaError");
+        expect(refusedCaptures).toEqual([]);
+        expect(sentBody).toMatchObject({ env: { ANY_NAME: "1", HF_HOME: "/models" } });
+      })
+    )
   );
 
   it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>

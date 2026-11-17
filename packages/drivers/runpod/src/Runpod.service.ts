@@ -35,6 +35,7 @@ import {
 import type * as HttpClientError from "effect/http/HttpClientError";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type * as Redacted from "effect/Redacted";
+import type * as SchemaAST from "effect/SchemaAST";
 import type * as Models from "./_generated/Runpod.models.gen.ts";
 import type { RunpodErrorReason } from "./Runpod.errors.ts";
 
@@ -326,12 +327,22 @@ const encodingError =
   (cause?: unknown): RunpodError =>
     RunpodError.fromDescriptor(descriptor, "request encoding", RunpodErrorOptionsInput.make({ cause }));
 
+// Every v2 request body is closed (`unevaluatedProperties: false`, lowered to a
+// closed struct), so an unknown key fails encoding instead of being stripped.
+// An untyped caller that sends a v1 field name then gets a typed encoding
+// error, where Runpod would answer 422, not a request that silently lacks
+// the field. Index-signature fields such as `env` still accept any key.
+const requestEncodeOptions: SchemaAST.ParseOptions = { onExcessProperty: "error" };
+
 const encodeRequest = Effect.fnUntraced(function* <Request>(
   descriptor: G.RunpodOperationDescriptor,
   requestSchema: S.ConstraintCodec<Request, unknown>,
   request: unknown
 ): Effect.fn.Return<unknown, RunpodError> {
-  return yield* pipe(S.encodeUnknownEffect(requestSchema)(request), Effect.mapError(encodingError(descriptor)));
+  return yield* pipe(
+    S.encodeUnknownEffect(requestSchema)(request, requestEncodeOptions),
+    Effect.mapError(encodingError(descriptor))
+  );
 });
 
 const applyPathParams = Effect.fn("Runpod.applyPathParams")(function* (
