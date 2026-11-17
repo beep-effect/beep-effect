@@ -51,6 +51,7 @@ const anchorJson = (anchor: HoldAnchor): string =>
     RootOverride: ({ packageName }) => `{"_tag":"RootOverride","packageName":"${packageName}"}`,
     PatchedDependency: ({ key }) => `{"_tag":"PatchedDependency","key":"${key}"}`,
     OsvPackageOverride: ({ packageName }) => `{"_tag":"OsvPackageOverride","packageName":"${packageName}"}`,
+    OsvIgnoredVuln: ({ id }) => `{"_tag":"OsvIgnoredVuln","id":"${id}"}`,
   });
 
 // One encoded ledger line; JSON text keeps the fixture identical to what the ledger file holds.
@@ -94,6 +95,7 @@ describe("hold inventory rules", () => {
         HoldAnchor.cases.RootOverride.make({ packageName: "a" }),
         HoldAnchor.cases.PatchedDependency.make({ key: "a" }),
         HoldAnchor.cases.OsvPackageOverride.make({ packageName: "a" }),
+        HoldAnchor.cases.OsvIgnoredVuln.make({ id: "a" }),
       ],
       anchorKey
     );
@@ -105,6 +107,7 @@ describe("hold inventory rules", () => {
       "override:a",
       "patch:a",
       "osv:a",
+      "osv-ignore:a",
     ]);
   });
 
@@ -283,6 +286,71 @@ layer(layerFor(checkout), { timeout: "30 seconds" })("a checkout whose ledger co
   it.effect("passes through the real command", () =>
     Effect.map(Effect.exit(Command.runWith(holdsCommand, { version: "test" })(["lint"])), (exit) =>
       expect(exit._tag).toBe("Success")
+    )
+  );
+});
+
+// An advisory-wide ignore is a required site like a package override; a repeated id is one site.
+const ignoredVulnBlock =
+  '[[IgnoredVulns]]\nid = "GHSA-fc5q-39xc-vjpf"\nignoreUntil = 2027-01-14T00:00:00Z\nreason = "Held for a reason."\n';
+const ignoredVulnToml = `${osvToml}\n${ignoredVulnBlock}\n${ignoredVulnBlock}`;
+const picomatchIgnore = HoldAnchor.cases.OsvIgnoredVuln.make({ id: "GHSA-fc5q-39xc-vjpf" });
+
+layer(layerFor({ ...checkout, "osv-scanner.toml": ignoredVulnToml }), { timeout: "30 seconds" })(
+  "a checkout with an unrecorded OSV advisory ignore",
+  (it) => {
+    it.effect("requires the ignored advisory id as a site", () =>
+      Effect.gen(function* () {
+        const sites = yield* HoldSites;
+        const snapshot = yield* sites.snapshot([]);
+        expect(A.map(snapshot.required, anchorKey)).toEqual([
+          "override:glob",
+          "patch:effect@4.1.0",
+          "osv:braces",
+          "osv-ignore:GHSA-fc5q-39xc-vjpf",
+        ]);
+      })
+    );
+
+    it.effect("fails the lint", () =>
+      Effect.map(Effect.flip(runHoldsLint(false)), (error) =>
+        expect(error.message).toBe("unrecorded: osv-ignore:GHSA-fc5q-39xc-vjpf has no live hold record")
+      )
+    );
+  }
+);
+
+layer(
+  layerFor({
+    ...checkout,
+    "osv-scanner.toml": ignoredVulnToml,
+    "hold-ledger/claims.jsonl": `${A.join(
+      [...coveringHolds, claim({ holdId: "picomatch-osv", anchors: [picomatchIgnore] })],
+      "\n"
+    )}\n`,
+  }),
+  { timeout: "30 seconds" }
+)("a checkout whose ledger records the OSV advisory ignore", (it) => {
+  it.effect("passes the lint", () =>
+    Effect.map(runHoldsLint(false), (lines) =>
+      expect(lines).toEqual(["[holds] lint ok: 7 live hold(s) cover every site."])
+    )
+  );
+});
+
+layer(
+  layerFor({
+    ...checkout,
+    "hold-ledger/claims.jsonl": `${A.join(
+      [...coveringHolds, claim({ holdId: "picomatch-osv", anchors: [picomatchIgnore] })],
+      "\n"
+    )}\n`,
+  }),
+  { timeout: "30 seconds" }
+)("a checkout whose OSV advisory ignore was removed", (it) => {
+  it.effect("reports the hold as orphaned", () =>
+    Effect.map(Effect.flip(runHoldsLint(false)), (error) =>
+      expect(error.message).toBe("orphaned: picomatch-osv anchors osv-ignore:GHSA-fc5q-39xc-vjpf, which is gone")
     )
   );
 });
