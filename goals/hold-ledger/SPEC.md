@@ -157,6 +157,19 @@ them and record each in the Decision Log.
 | 2026-10-31 | `@beep/repo-cli` depends on `@beep/epistemics` for the claim envelope. | Tooling may depend on foundation; the envelope is reused, not copied. | Drop the dependency and inline a hold-only version schema. |
 | 2026-10-31 | The unit is a hold on `makeClaimEnvelope`; the ledger lives in the repo; wave 1 is dependency-shaped holds; renewal needs evidence plus a 180-day maximum; probes need a control and two passes; the `Holds` command group lives in the repo CLI; `deps:update` re-checks holds; the first slice is jsdom. | Settled in the exploration align and shape rounds, [`DECISIONS.md`](../../explorations/expiring-repo-facts/DECISIONS.md). | Reopen the exploration at `align`. |
 
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug hold-ledger`; add a `kind: decision` file there, never edit this block._
+
+### OSV advisory-wide ignores are required hold sites, 2026-11-17
+
+An `[[IgnoredVulns]]` id in `osv-scanner.toml` is now a required site, anchored by `OsvIgnoredVuln { id }`, alongside root overrides, patches and `[[PackageOverrides]]`. An advisory that covers every release of a package resolved at two versions cannot be an exact package override, because the local Bun audit wrapper mirrors an exact override only while every resolution matches its one version. Without this site, such a hold had no ledger record and `holds lint` could not see it (#3364 review, GHSA-fc5q-39xc-vjpf on picomatch 4.0.7 and 2.3.2). This is the reversal path the 2026-10-31 required-sites decision names.
+
+Lane fix/osv-picomatch-ghsa-fc5q · PR #3364
+
+Reverse: Remove the OsvIgnoredVuln HoldAnchor case and its HoldSites.snapshot site; tombstone holds anchored on it
+
+<!-- beep:decisions:end -->
+
 ## Exception Ledger
 
 | Exception | Scope | Owner | Rationale | Removal condition |
