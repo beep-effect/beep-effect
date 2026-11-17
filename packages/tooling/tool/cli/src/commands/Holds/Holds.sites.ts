@@ -12,7 +12,7 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -41,10 +41,27 @@ const WorkspaceManifest = S.Struct({
 });
 
 const OsvPackageOverride = S.Struct({ name: S.optionalKey(S.String) });
+const OsvIgnoredVuln = S.Struct({ id: S.optionalKey(S.String) });
 
 const OsvConfig = S.Struct({
   PackageOverrides: S.optionalKey(OsvPackageOverride.pipe(S.Array)),
+  IgnoredVulns: S.optionalKey(OsvIgnoredVuln.pipe(S.Array)),
 });
+type OsvConfig = typeof OsvConfig.Type;
+
+// The distinct named keys of one OSV exception table: package names or advisory ids.
+const osvSiteKeys = <Entry>(
+  osv: O.Option<OsvConfig>,
+  entries: (config: OsvConfig) => ReadonlyArray<Entry> | undefined,
+  key: (entry: Entry) => string | undefined
+): ReadonlyArray<string> =>
+  pipe(
+    O.flatMap(osv, flow(entries, O.fromUndefinedOr)),
+    O.match({ onNone: A.empty<Entry>, onSome: A.fromIterable }),
+    A.map(flow(key, O.fromUndefinedOr)),
+    A.getSomes,
+    A.dedupe
+  );
 
 const decodeRootManifest = S.decodeUnknownEffect(S.fromJsonString(RootManifest));
 const decodeWorkspaceManifest = S.decodeUnknownEffect(S.fromJsonString(WorkspaceManifest));
@@ -208,13 +225,21 @@ export const makeHoldSites = Effect.fn("HoldSites.make")(function* (repoRoot: st
     const required = [
       ...A.map(keysOf(root.overrides), (packageName) => HoldAnchor.cases.RootOverride.make({ packageName })),
       ...A.map(keysOf(root.patchedDependencies), (key) => HoldAnchor.cases.PatchedDependency.make({ key })),
-      ...pipe(
-        O.flatMap(osv, (config) => O.fromUndefinedOr(config.PackageOverrides)),
-        O.match({ onNone: A.empty<typeof OsvPackageOverride.Type>, onSome: A.fromIterable }),
-        A.map((entry) => O.fromUndefinedOr(entry.name)),
-        A.getSomes,
-        A.dedupe,
-        A.map((packageName) => HoldAnchor.cases.OsvPackageOverride.make({ packageName }))
+      ...A.map(
+        osvSiteKeys(
+          osv,
+          (config) => config.PackageOverrides,
+          (entry) => entry.name
+        ),
+        (packageName) => HoldAnchor.cases.OsvPackageOverride.make({ packageName })
+      ),
+      ...A.map(
+        osvSiteKeys(
+          osv,
+          (config) => config.IgnoredVulns,
+          (entry) => entry.id
+        ),
+        (id) => HoldAnchor.cases.OsvIgnoredVuln.make({ id })
       ),
     ];
     const versionGroups = pipe(
