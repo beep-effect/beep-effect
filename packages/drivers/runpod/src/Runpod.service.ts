@@ -543,10 +543,21 @@ const isJsonContentType = (response: HttpClientResponse.HttpClientResponse): boo
     O.exists((contentType) => pipe(contentType, Str.includes("json")))
   );
 
+// The problem body is optional detail on a failure the status already names, so
+// a body that stays open (a proxy holding a 503) cannot delay the error.
+const PROBLEM_READ_TIMEOUT = "5 seconds";
+
 // Runpod v2 answers failures with RFC 9457 problem details. A body that is not
-// a readable problem leaves the error with its status only.
+// a readable problem, or not read in time, leaves the error with its status only.
 const readProblem = (response: HttpClientResponse.HttpClientResponse) =>
-  isJsonContentType(response) ? response.json.pipe(Effect.flatMap(decodeProblem), Effect.option) : Effect.succeedNone;
+  isJsonContentType(response)
+    ? response.json.pipe(
+        Effect.flatMap(decodeProblem),
+        Effect.option,
+        Effect.timeoutOption(PROBLEM_READ_TIMEOUT),
+        Effect.map(O.flatten)
+      )
+    : Effect.succeedNone;
 
 const ensureSuccessStatus = Effect.fnUntraced(function* (
   descriptor: G.RunpodOperationDescriptor,
@@ -632,18 +643,31 @@ const executeOperation = Effect.fn("Runpod.executeOperation")(function* <Request
   return yield* executeEncoded(client, config, spec, encoded);
 });
 
+const withCursor = (encoded: unknown, cursor: string): O.Option<unknown> =>
+  pipe(
+    encoded,
+    O.liftPredicate(P.isObject),
+    O.map((request) => ({ ...request, [PAGINATION_CURSOR_FIELD]: cursor }))
+  );
+
 // The encoded request for the page after `pagination`, or none on the last page.
-const nextPageRequest = (encoded: unknown, pagination: Models.Pagination): O.Option<unknown> =>
+// A page that hands back the cursor it was requested with would be requested
+// again forever, so the stream fails instead of replaying it.
+const nextPageRequest = (
+  descriptor: G.RunpodOperationDescriptor,
+  encoded: unknown,
+  pagination: Models.Pagination
+): Effect.Effect<O.Option<unknown>, RunpodError> =>
   pipe(
     O.fromNullOr(pagination.nextCursor),
     O.filter(() => pagination.hasNextPage),
-    O.flatMap((cursor) =>
-      pipe(
-        encoded,
-        O.liftPredicate(P.isObject),
-        O.map((request) => ({ ...request, [PAGINATION_CURSOR_FIELD]: cursor }))
-      )
-    )
+    O.match({
+      onNone: () => Effect.succeedNone,
+      onSome: (cursor) =>
+        O.contains(readProperty(encoded, PAGINATION_CURSOR_FIELD), cursor)
+          ? Effect.fail(RunpodError.fromDescriptor(descriptor, "pagination"))
+          : Effect.succeed(withCursor(encoded, cursor)),
+    })
   );
 
 const paginateOperation = <Request, Page extends { readonly pagination: Models.Pagination }, Item>(
@@ -660,7 +684,12 @@ const paginateOperation = <Request, Page extends { readonly pagination: Models.P
         Stream.paginate(first, (encoded) =>
           pipe(
             executeEncoded(client, config, spec, encoded),
-            Effect.map((page) => [items(page), nextPageRequest(encoded, page.pagination)] as const)
+            Effect.flatMap((page) =>
+              Effect.map(
+                nextPageRequest(spec.descriptor, encoded, page.pagination),
+                (next) => [items(page), next] as const
+              )
+            )
           )
         )
       )

@@ -21,6 +21,7 @@ import { RunpodHttpMethod, RunpodOperationDescriptor, RunpodOperationId } from "
 const $I = $RunpodId.create("Runpod.errors");
 const RunpodErrorReasonBase = LiteralKit([
   "config",
+  "pagination",
   "request encoding",
   "response decoding",
   "response status",

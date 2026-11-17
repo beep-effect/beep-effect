@@ -34,6 +34,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import * as Fiber from "effect/Fiber";
 import { flow, pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
@@ -48,6 +49,7 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import * as TestClock from "effect/testing/TestClock";
 import openApi from "../openapi.json" with { type: "json" };
 
 const decodeUnknownJsonEffect = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
@@ -646,6 +648,62 @@ describe("@beep/runpod", () => {
         expect(captures).toHaveLength(2);
         expect(new URL(secondPage.url).searchParams.get("cursor")).toBe("page-2");
         expect(new URL(secondPage.url).searchParams.get("limit")).toBe("1");
+      })
+    )
+  );
+
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
+    it.effect(
+      "fails a paginated stream whose page repeats the cursor it was requested with",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* RunpodTestHttp;
+        const runpod = yield* Runpod;
+        const [firstPod] = documentedPodList.pods;
+
+        yield* testHttp.reset;
+        yield* testHttp.respondWith(() =>
+          Effect.succeed(
+            makeJsonResponse({
+              pagination: { hasNextPage: true, nextCursor: "page-2" },
+              pods: [{ ...firstPod, id: "pod-a" }],
+            })
+          )
+        );
+
+        const failure = yield* Stream.runCollect(runpod.listPodsStream()).pipe(Effect.flip);
+        const captures = yield* testHttp.captures;
+
+        expect(failure.reason).toBe("pagination");
+        assertSome(failure.operationId, "listPods");
+        expect(captures).toHaveLength(2);
+      })
+    )
+  );
+
+  it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
+    it.effect(
+      "keeps the status-only error when a problem body never finishes",
+      Effect.fnUntraced(function* () {
+        const testHttp = yield* RunpodTestHttp;
+        const runpod = yield* Runpod;
+
+        yield* testHttp.reset;
+        yield* testHttp.respondWith(() =>
+          Effect.succeed(
+            new Response(new ReadableStream<Uint8Array>(), {
+              headers: { "content-type": "application/problem+json" },
+              status: 503,
+            })
+          )
+        );
+
+        const fiber = yield* runpod.listPods().pipe(Effect.flip, Effect.forkChild);
+        yield* TestClock.adjust("5 seconds");
+        const failure = yield* Fiber.join(fiber);
+
+        expect(failure.reason).toBe("response status");
+        assertSome(failure.status, 503);
+        assertNone(failure.problem);
       })
     )
   );
