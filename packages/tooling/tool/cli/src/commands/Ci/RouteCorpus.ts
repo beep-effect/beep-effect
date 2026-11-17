@@ -31,6 +31,7 @@ import { GitHubError } from "@beep/github/GitHubError";
 import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -57,10 +58,12 @@ import { GithubRest, layerGithubRest } from "../../internal/github/GithubRest.ts
 import { sha256HexBytes } from "../Goals/PacketCore/PacketDigest.ts";
 import { HostedJob, HostedRun, HostedStep, RouteCorpusReceipt, RouteError } from "./Route.schemas.ts";
 import { RouteCorpus, RouteCorpusLoaded } from "./Route.service.ts";
+import { makeRouteReadBudget, RouteReadBudget } from "./RouteBudget.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RouteCorpusCaptureOptions, RouteCorpusShape } from "./Route.service.ts";
+import type { RouteReadBudgetShape } from "./RouteBudget.ts";
 
 const $I = $RepoCliId.create("commands/Ci/RouteCorpus");
 
@@ -534,7 +537,9 @@ const routeGhRunner = Effect.gen(function* () {
         )
     ).pipe(
       Effect.scoped,
-      Effect.provideContext(context),
+      // The build-time context fills in only what the call's own context lacks, so a sink the
+      // caller provides (the read budget's request counter) reaches the transport.
+      Effect.updateContext((current: Context.Context<never>) => Context.merge(context, current)),
       Effect.mapError((error): RouteError | RouteGhRateLimited =>
         S.is(RouteError)(error) || S.is(RouteGhRateLimited)(error)
           ? error
@@ -636,6 +641,11 @@ type CapturePlan = {
  * workflows starts the window again; a later `since` that would leave a gap
  * fails, because the receipt could not describe it.
  *
+ * Capture is a background reader: before each call it waits while the
+ * capture identity's `core` bucket is below `github-budget-ledger`'s 15%
+ * reserve, and it counts every response (see {@link RouteReadBudgetShape};
+ * without `budget` the calls are counted but never held).
+ *
  * When GitHub refuses a call for its rate limit, capture reads the reset
  * instant from `gh api rate_limit`, waits for it once (at most 60 minutes) and
  * retries. Otherwise it fails with a `corpus-fetch` error naming the reset.
@@ -656,12 +666,14 @@ type CapturePlan = {
  * ```
  *
  * @param runGh - Runs one `gh` argument vector in a checkout and yields stdout.
+ * @param budget - The read budget that admits and counts each call; unmetered when absent.
  * @returns The {@link RouteCorpusShape} implementation, closed over the file system, path and crypto services.
  * @category constructors
  * @since 0.0.0
  */
 export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
-  runGh: RouteGhRunner
+  runGh: RouteGhRunner,
+  budget?: RouteReadBudgetShape
 ): Effect.fn.Return<
   RouteCorpusShape,
   never,
@@ -670,6 +682,9 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const context = yield* Effect.context<Digest.Digest | SecureRandom.SecureRandom>();
+  const meter = budget ?? (yield* makeRouteReadBudget(O.none()));
+  // Every GitHub call is counted; `callGh` also waits on the reserve before it.
+  const gh: RouteGhRunner = (args, repoRoot) => meter.metered(runGh(args, repoRoot));
 
   const digest = (bytes: Uint8Array, file: string) =>
     sha256HexBytes(bytes).pipe(
@@ -717,7 +732,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
   });
 
   const rateLimitReset = (repoRoot: string): Effect.Effect<O.Option<DateTime.Utc>> =>
-    runGh(["api", "rate_limit"], repoRoot).pipe(
+    gh(["api", "rate_limit"], repoRoot).pipe(
       Effect.flatMap(decodeGhRateLimit),
       Effect.map((limit) => DateTime.makeUnsafe(limit.resources.core.reset * 1000)),
       Effect.option
@@ -762,8 +777,9 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
   });
 
   const callGh = (label: string, args: ReadonlyArray<string>, repoRoot: string) =>
-    runGh(args, repoRoot).pipe(
-      Effect.catchTag("RouteGhRateLimited", () => waitForReset(label, repoRoot, runGh(args, repoRoot)))
+    meter.admit(label).pipe(
+      Effect.andThen(gh(args, repoRoot)),
+      Effect.catchTag("RouteGhRateLimited", () => waitForReset(label, repoRoot, gh(args, repoRoot)))
     );
 
   const listDay = Effect.fn("RouteCorpus.listDay")(function* (
@@ -1057,4 +1073,11 @@ export const RouteCorpusLive: Layer.Layer<
   | Digest.Digest
   | SecureRandom.SecureRandom
   | ChildProcessSpawner.ChildProcessSpawner
-> = Layer.effect(RouteCorpus, Effect.flatMap(routeGhRunner, makeRouteCorpus));
+> = Layer.effect(
+  RouteCorpus,
+  Effect.gen(function* () {
+    const runner = yield* routeGhRunner;
+    const budget = yield* Effect.serviceOption(RouteReadBudget);
+    return yield* makeRouteCorpus(runner, O.getOrUndefined(budget));
+  })
+);
