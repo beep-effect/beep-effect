@@ -1218,22 +1218,26 @@ const makeGithubRest = Effect.gen(function* () {
     client.paginate("GET /repos/{owner}/{repo}/issues/{issue_number}/timeline", { ...at, issue_number: number }).pipe(
       Effect.flatMap(decodeWith(S.Array(TimelineEventWire), timelineOperation)),
       Effect.flatMap((events) =>
-        Effect.all({
-          readyAt: datedEvents(events, "ready_for_review"),
-          forcedAt: datedEvents(events, "head_ref_force_pushed"),
-          forcePushes: Effect.forEach(
-            A.filter(events, (event) => event.event === "head_ref_force_pushed"),
-            (event) =>
-              Effect.fromOption(utcFromIso(event.created_at)).pipe(
-                Effect.mapBoth({
-                  onSuccess: (at) => GithubForcePushRecord.make({ at, commitId: O.fromNullishOr(event.commit_id) }),
-                  onFailure: () =>
-                    GitHubError.decode(timelineOperation, "a head_ref_force_pushed event has no instant", event),
-                })
-              )
-          ),
-          commits: Effect.succeed(timelineCommits(events)),
-        })
+        Effect.all(
+          {
+            readyAt: datedEvents(events, "ready_for_review"),
+            forcedAt: datedEvents(events, "head_ref_force_pushed"),
+            forcePushes: Effect.forEach(
+              A.filter(events, (event) => event.event === "head_ref_force_pushed"),
+              (event) =>
+                Effect.fromOption(utcFromIso(event.created_at)).pipe(
+                  Effect.mapBoth({
+                    onSuccess: (at) => GithubForcePushRecord.make({ at, commitId: O.fromNullishOr(event.commit_id) }),
+                    onFailure: () =>
+                      GitHubError.decode(timelineOperation, "a head_ref_force_pushed event has no instant", event),
+                  })
+                ),
+              { concurrency: 1 }
+            ),
+            commits: Effect.succeed(timelineCommits(events)),
+          },
+          { concurrency: 1 }
+        )
       )
     );
 

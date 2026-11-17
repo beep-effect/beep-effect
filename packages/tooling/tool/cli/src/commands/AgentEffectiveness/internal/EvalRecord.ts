@@ -102,13 +102,17 @@ const candidateSkillDigest = Effect.fn("AgentEffectivenessEvalScorer.candidateSk
       const files = yield* Effect.filter(names, (name) =>
         fs.stat(path.join(skillsDir, name)).pipe(Effect.map((info) => info.type === "File"))
       );
-      return yield* Effect.forEach(A.sort(files, Order.String), (name) =>
-        fs.readFileString(path.join(skillsDir, name)).pipe(
-          Effect.flatMap(hashPublicTextSha256),
-          Effect.map((digest) => [normalizeRelativePath(`${root}/skills/${name}`), digest] as const)
-        )
+      return yield* Effect.forEach(
+        A.sort(files, Order.String),
+        (name) =>
+          fs.readFileString(path.join(skillsDir, name)).pipe(
+            Effect.flatMap(hashPublicTextSha256),
+            Effect.map((digest) => [normalizeRelativePath(`${root}/skills/${name}`), digest] as const)
+          ),
+        { concurrency: 1 }
       );
-    })
+    }),
+    { concurrency: 1 }
   );
   const listing = A.flatten(perRoot);
   if (A.isReadonlyArrayEmpty(listing)) {

@@ -167,15 +167,18 @@ export const processRecords = Effect.fn("LambdaRuntime.processRecords")(function
   event: SqsEvent,
   handle: (body: string) => Effect.Effect<unknown, E, R>
 ) {
-  const failed = yield* Effect.forEach(event.Records, (record) =>
-    handle(record.body).pipe(
-      Effect.as(O.none<string>()),
-      Effect.catchCause((cause) =>
-        Effect.logWarning("record failed; SQS will redeliver it", record.messageId, cause).pipe(
-          Effect.as(O.some(record.messageId))
+  const failed = yield* Effect.forEach(
+    event.Records,
+    (record) =>
+      handle(record.body).pipe(
+        Effect.as(O.none<string>()),
+        Effect.catchCause((cause) =>
+          Effect.logWarning("record failed; SQS will redeliver it", record.messageId, cause).pipe(
+            Effect.as(O.some(record.messageId))
+          )
         )
-      )
-    )
+      ),
+    { concurrency: 1 }
   );
   return batchItemFailures(A.getSomes(failed));
 });

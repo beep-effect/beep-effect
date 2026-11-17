@@ -2769,7 +2769,9 @@ describe("worktree git operations", () => {
             .pipe(Effect.map(A.filter(Str.startsWith("sticky-demo.retiring-"))));
           const unseal = fencedCopies.pipe(
             Effect.flatMap((copies) =>
-              Effect.forEach(copies, (copy) => fs.chmod(path.join(context.worktreesRoot, copy, "sealed"), 0o755))
+              Effect.forEach(copies, (copy) => fs.chmod(path.join(context.worktreesRoot, copy, "sealed"), 0o755), {
+                concurrency: 1,
+              })
             ),
             Effect.ignore
           );

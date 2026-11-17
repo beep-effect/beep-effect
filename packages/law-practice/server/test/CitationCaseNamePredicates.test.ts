@@ -97,7 +97,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, timeout: "30 s
         const policy = yield* defaultCitationEnginePolicy;
         const unicode = yield* makeCitationPythonUnicode(policy.limits);
         const predicates = yield* makeCitationCaseNamePredicates();
-        const words = yield* Effect.forEach(corpus.words, ([width, bytes]) => unicode.fromStorage({ width, bytes }));
+        const words = yield* Effect.forEach(corpus.words, ([width, bytes]) => unicode.fromStorage({ width, bytes }), {
+          concurrency: 1,
+        });
         for (const [index, hasV, length, afterV, capitalized, withoutV] of corpus.cases) {
           const word = A.getUnsafe(words, index);
           yield* assertOutcome(predicates.isLowercaseAfterV(word, hasV), afterV);

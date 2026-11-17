@@ -266,10 +266,13 @@ describe("C0 gold proposer", () => {
         const pipe1 = yield* Effect.forEach(
           GOLD_SUBSETS,
           (subset) =>
-            Effect.forEach(reference.subsets[subset], (paperId) =>
-              fs
-                .readFileString(`fixtures/gold/v1/${paperId}.${subset}.json`)
-                .pipe(Effect.flatMap(decodeGoldFileEncodedJson))
+            Effect.forEach(
+              reference.subsets[subset],
+              (paperId) =>
+                fs
+                  .readFileString(`fixtures/gold/v1/${paperId}.${subset}.json`)
+                  .pipe(Effect.flatMap(decodeGoldFileEncodedJson)),
+              { concurrency: 1 }
             ),
           { concurrency: 1 }
         ).pipe(Effect.map(A.flatten));
@@ -318,10 +321,13 @@ describe("C0 gold proposer", () => {
         const files = yield* Effect.forEach(
           GOLD_SUBSETS,
           (subset) =>
-            Effect.forEach(reference.subsets[subset], (paperId) =>
-              fs
-                .readFileString(`fixtures/gold/v1/${paperId}.${subset}.json`)
-                .pipe(Effect.flatMap(decodeGoldFileEncodedJson))
+            Effect.forEach(
+              reference.subsets[subset],
+              (paperId) =>
+                fs
+                  .readFileString(`fixtures/gold/v1/${paperId}.${subset}.json`)
+                  .pipe(Effect.flatMap(decodeGoldFileEncodedJson)),
+              { concurrency: 1 }
             ),
           { concurrency: 1 }
         ).pipe(Effect.map(A.flatten));
@@ -435,10 +441,13 @@ describe("C0 gold proposer", () => {
           assertTrue
         );
 
-        const decodedFiles = yield* Effect.forEach(["structure", "entity", "relation"] as const, (subset) =>
-          fs
-            .readFileString(path.join(outputDirectory, `${paperId}.${subset}.json`))
-            .pipe(Effect.flatMap(decodeGoldFileJson), Effect.provideService(CurrentGoldDocumentText, sourceText))
+        const decodedFiles = yield* Effect.forEach(
+          ["structure", "entity", "relation"] as const,
+          (subset) =>
+            fs
+              .readFileString(path.join(outputDirectory, `${paperId}.${subset}.json`))
+              .pipe(Effect.flatMap(decodeGoldFileJson), Effect.provideService(CurrentGoldDocumentText, sourceText)),
+          { concurrency: 1 }
         );
         const structureFile = A.findFirst(decodedFiles, (file) => file.subset === "structure");
         assertSome(

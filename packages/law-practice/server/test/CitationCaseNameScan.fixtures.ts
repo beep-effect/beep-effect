@@ -162,11 +162,17 @@ export const replayCitationCaseNameScan = Effect.fn("CaseNameScanTest.replay")(f
     setup.corpus.cases,
     (row) => full || row.smoke || A.contains(smokeBoundaryRows, row.id) || row.error !== null || row.calls.length === 0
   );
-  yield* Effect.forEach(rows, (row) => assertScanRow(setup.stage, row), { discard: true });
+  yield* Effect.forEach(rows, (row) => assertScanRow(setup.stage, row), { concurrency: 1, discard: true });
   expect(rows).toHaveLength(full ? 64 : 54);
+  const processCount = A.filter(rows, (row) => row.calls.length > 0).length;
   const calls = A.reduce(rows, 0, (sum, row) => sum + row.calls.length);
   expect(calls).toBe(full ? 313 : 198);
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
+  yield* assertCitationWorkerCompositionReleased(
+    setup.operation,
+    setup.admission,
+    setup.observed.snapshot,
+    processCount
+  );
 });
 
 /** Exact invocation reservations precede native allocation and preserve installed patterns. */
@@ -200,7 +206,7 @@ export const assertCitationCaseNameScanBudget = Effect.fn("CaseNameScanTest.budg
     tight.operation,
     tight.admission,
     tight.observed.snapshot,
-    3
+    1
   );
 });
 /** Closed parent lifetime and captured timing refuse before creating a child. */
@@ -238,5 +244,5 @@ export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTe
   );
   const failure = yield* scanner.scan(A.getUnsafe(corpus.cases, 4).request).pipe(Effect.flip);
   expect(failure).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "patternUtf16" });
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 4);
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 1);
 });

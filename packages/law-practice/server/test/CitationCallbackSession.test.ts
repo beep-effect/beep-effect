@@ -172,7 +172,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
             publication: { ...wire.publication, selectedEdition: reference },
           });
           return CitationMention.make({ ...mention, citation });
-        })
+        }),
+        { concurrency: 1 }
       );
       const prepared = yield* prepareCitationResolution({ ...input, mentions, editions: [] });
       const work = yield* makeCitationResolutionWork(prepared.limits);
@@ -213,7 +214,8 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("private callback
             components: { ...wire.components, reporter: "U.S.", page: index === 0 ? "1" : "2" },
           });
           return CitationMention.make({ ...mention, citation });
-        })
+        }),
+        { concurrency: 1 }
       );
       const { bundle } = yield* loadCitationFrozenEditionFixtures();
       const frozen = yield* makeCitationFrozenEditions(bundle);

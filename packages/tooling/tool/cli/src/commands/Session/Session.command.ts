@@ -240,7 +240,7 @@ export const sessionOpenCommand = Command.make(
       yield* Effect.forEach(
         goalCloseouts,
         (view) => Console.log(`[session:goal] ${view.packet}: ${renderGoalCloseoutView(view)}`),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       if (!A.isReadonlyArrayNonEmpty(rows)) {
         yield* Console.log(
@@ -252,7 +252,7 @@ export const sessionOpenCommand = Command.make(
         `[session] ${A.length(rows)} live session(s) for ${facts.repository.owner}/${facts.repository.name}:`
       );
       yield* sessionOrchestrator(rows).pipe(renderSessionOrchestrator, Console.log);
-      yield* Effect.forEach(rows, (row) => Console.log(renderSessionRow(row)), { discard: true });
+      yield* Effect.forEach(rows, (row) => Console.log(renderSessionRow(row)), { concurrency: 1, discard: true });
     });
     yield* reportSessionFailure(program);
     // The hot parcels follow the ledger rows in text mode; the block is

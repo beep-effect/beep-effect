@@ -299,11 +299,14 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
           if (Str.startsWith("native:")(rows[0].sourceKey)) {
             const events = yield* native.readNewEvents(receiptId);
             if (O.isNone(events)) return yield* failure("storage");
-            return yield* Effect.forEach(events.value, (span) =>
-              encodeNativeTraceMetadataJson(span).pipe(
-                Effect.flatMap(hashPublicTextSha256),
-                Effect.map((digest) => ({ eventId: span.eventId, digest }))
-              )
+            return yield* Effect.forEach(
+              events.value,
+              (span) =>
+                encodeNativeTraceMetadataJson(span).pipe(
+                  Effect.flatMap(hashPublicTextSha256),
+                  Effect.map((digest) => ({ eventId: span.eventId, digest }))
+                ),
+              { concurrency: 1 }
             );
           }
           if (
@@ -322,7 +325,8 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
               encodeTranscriptFrameJson(frame).pipe(
                 Effect.flatMap(hashPublicTextSha256),
                 Effect.map((digest) => ({ eventId: frame.occurrenceId, digest }))
-              )
+              ),
+            { concurrency: 1 }
           );
         });
         const registerCandidate = Effect.fnUntraced(function* (

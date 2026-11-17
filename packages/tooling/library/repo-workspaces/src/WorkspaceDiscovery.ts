@@ -1069,7 +1069,10 @@ export class WorkspaceDiscovery extends Context.Service<WorkspaceDiscovery, Work
 
       refresh: Effect.suspend(() =>
         Effect.flatMap(
-          Effect.forEach([...MutableHashMap.values(rootMemos)], (cell) => cell.invalidate, { discard: true }),
+          Effect.forEach([...MutableHashMap.values(rootMemos)], (cell) => cell.invalidate, {
+            concurrency: 1,
+            discard: true,
+          }),
           () => {
             MutableHashMap.clear(rootMemos);
             return Effect.tap(invalidate, () =>

@@ -249,8 +249,10 @@ const makeMailbox = Effect.gen(function* () {
   const options = yield* MailboxM365Options;
   const userId = options.userId;
   // Resolved once per layer build; a failed lookup fails the build, so nothing is scanned with an unknown exclusion set.
-  const resolved = yield* Effect.forEach(outOfScopeFolders, (folder) =>
-    Effect.flatMap(encoded(decodeFolderRequest)({ userId, folder }), m365.getMailFolder)
+  const resolved = yield* Effect.forEach(
+    outOfScopeFolders,
+    (folder) => Effect.flatMap(encoded(decodeFolderRequest)({ userId, folder }), m365.getMailFolder),
+    { concurrency: 1 }
   ).pipe(Effect.mapError(portFailure("resolveExcludedFolders")));
   const inScope = isInScope(
     HashSet.fromIterable(

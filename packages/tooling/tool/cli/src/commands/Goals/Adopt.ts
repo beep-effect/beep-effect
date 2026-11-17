@@ -367,7 +367,8 @@ export const compileAdoptionPlan: {
         (templateFile) =>
           !A.contains(packetPaths, templateFile.path) && !isOptionalTemplateConvention(templateFile.path)
       ),
-      (templateFile) => missingTemplateRow(snapshot, archetype, templateFile)
+      (templateFile) => missingTemplateRow(snapshot, archetype, templateFile),
+      { concurrency: 1 }
     );
 
     const validations: ReadonlyArray<ValidationRequirement> = A.some(snapshot.files, (file) =>

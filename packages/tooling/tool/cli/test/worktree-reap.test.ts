@@ -80,7 +80,7 @@ const makeScratchRepo = Effect.gen(function* () {
     Effect.fn("WorktreeReapTest.makeFixtureDirectory")(function* (directory) {
       yield* fs.makeDirectory(directory, { recursive: true });
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* runCommand("git", ["init", "--quiet", "--bare"], originRoot);
   yield* runCommand("git", ["init", "--quiet", "-b", "main"], repoRoot);

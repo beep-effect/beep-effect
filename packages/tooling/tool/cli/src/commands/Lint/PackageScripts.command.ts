@@ -46,7 +46,7 @@ const printScriptsReport = Effect.fnUntraced(function* (
         )
       )
     : [];
-  yield* Effect.forEach([...violations, ...advisories], Console.log, { discard: true });
+  yield* Effect.forEach([...violations, ...advisories], Console.log, { concurrency: 1, discard: true });
 });
 
 /**

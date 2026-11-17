@@ -933,7 +933,7 @@ const logDocumentationFailure = Effect.fn("DocgenLocal.logDocumentationFailure")
         yield* Console.error(`  ${issue.filePath}:${issue.line} ${issue.name} ${issueText}`);
       }
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -946,7 +946,7 @@ const checkPackageDocumentation = Effect.fn("DocgenLocal.checkPackageDocumentati
   });
   const failures = A.filter(analyses, (analysis) => analysis.summary.missingDocumentation > 0);
 
-  yield* Effect.forEach(failures, logDocumentationFailure, { discard: true });
+  yield* Effect.forEach(failures, logDocumentationFailure, { concurrency: 1, discard: true });
 
   if (A.isReadonlyArrayNonEmpty(failures)) {
     return yield* DomainError.make({
@@ -1065,7 +1065,7 @@ export const filterDocgenMetadataCheckPackagesForTesting = Effect.fn("DocgenLoca
   function* (packages: ReadonlyArray<DocgenWorkspacePackage>, parallel: number) {
     const configured = yield* Effect.forEach(packages, loadConfiguredPackage, { concurrency: localParallel(parallel) });
     const [checked, skipped] = A.partition(configured, canonicalConfigResult);
-    yield* Effect.forEach(skipped, logSkippedMetadataCheck, { discard: true });
+    yield* Effect.forEach(skipped, logSkippedMetadataCheck, { concurrency: 1, discard: true });
     return checked;
   }
 );

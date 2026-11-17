@@ -234,7 +234,8 @@ const rewriteReviewerChecks = Effect.fnUntraced(function* (
           required_status_checks: [...others, ...reviewer],
         },
       };
-    })
+    }),
+    { concurrency: 1 }
   );
   return yield* decodeObject({ ...original, rules: updated });
 });
@@ -454,7 +455,8 @@ const requiredReviewerApp = Effect.fn("Reviewer.requiredApp")(function* (base: s
   const rules = yield* api(`${ROOT}/rules/branches/${encodeURIComponent(base)}`).pipe(Effect.flatMap(decodeRules));
   const required = yield* Effect.forEach(
     A.filter(rules, (rule) => rule.type === "required_status_checks"),
-    (rule) => decodeRequired(rule.parameters?.required_status_checks)
+    (rule) => decodeRequired(rule.parameters?.required_status_checks),
+    { concurrency: 1 }
   );
   const reviewers = A.filter(A.flatten(required), (check) => check.context === "beep-reviewer");
   if (reviewers.length === 0) return O.none<number>();

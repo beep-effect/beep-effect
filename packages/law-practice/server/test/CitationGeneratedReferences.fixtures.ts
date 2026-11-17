@@ -220,5 +220,5 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
   expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "candidates" });
   const malformed = yield* stage.pincited(null).pipe(Effect.flip);
   expect(malformed).toMatchObject({ _tag: "CitationGeneratedReferenceFailure", reason: "invalid-input" });
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 173);
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 146);
 });

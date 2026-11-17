@@ -72,7 +72,7 @@ export const replaceGaugeSeries = Effect.fnUntraced(function* (
   yield* Effect.forEach(
     readings,
     ([attributes, value]) => Metric.update(Metric.withAttributes(gauge, attributes), value),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const ambient = yield* Metric.CurrentMetricAttributes;
   const kept = HashSet.fromIterable(

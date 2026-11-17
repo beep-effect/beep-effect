@@ -339,7 +339,7 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
                   Deferred.succeed(finishFirst, undefined),
                   Deferred.succeed(lateConfirmation, undefined),
                 ],
-                { discard: true }
+                { concurrency: 1, discard: true }
               )
             )
           );
@@ -540,7 +540,8 @@ it.layer(BunServices.layer, { excludeTestServices: true })("owned HTML processes
         yield* waitFor(f.fs.exists(f.marker));
         const second = yield* Effect.forkChild(worker.clean("second"));
         yield* waitFor(worker.snapshot.pipe(Effect.map((state) => state.queued === 1)));
-        yield* timer.trigger;
+        yield* timer.triggerSleep(0);
+        yield* timer.triggerSleep(1);
         for (const task of [first, second]) {
           const failed = yield* Fiber.join(task).pipe(Effect.flip);
           expect(failed._tag).toBe("CitationSafetyLimitExceeded");

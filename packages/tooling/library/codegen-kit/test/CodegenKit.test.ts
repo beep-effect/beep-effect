@@ -1710,22 +1710,25 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       const kit = yield* CodegenKit;
       const formats: ReadonlyArray<GenerateConfig["format"]> = ["httpclient", "httpapi", "type-only"];
       yield* Effect.logInfo("Codegen stage: generate");
-      const failures = yield* Effect.forEach(formats, (format) =>
-        kit
-          .generate(
-            closedOpenApi,
-            GenerateConfig.make({
-              packageName: "@beep/codegen-kit-fixture",
-              name: "ClosedApi",
-              identity: { composer: "$CodegenKitId", moduleId: "fixture/ClosedApi.gen" },
-              source: { _tag: "file", path: "closed.json" },
-              dialect: "openapi-3.1",
-              transforms: ["unevaluatedPropertiesOpen"],
-              format,
-              output: { path: "ClosedApi.gen.ts" },
-            })
-          )
-          .pipe(Effect.flip)
+      const failures = yield* Effect.forEach(
+        formats,
+        (format) =>
+          kit
+            .generate(
+              closedOpenApi,
+              GenerateConfig.make({
+                packageName: "@beep/codegen-kit-fixture",
+                name: "ClosedApi",
+                identity: { composer: "$CodegenKitId", moduleId: "fixture/ClosedApi.gen" },
+                source: { _tag: "file", path: "closed.json" },
+                dialect: "openapi-3.1",
+                transforms: ["unevaluatedPropertiesOpen"],
+                format,
+                output: { path: "ClosedApi.gen.ts" },
+              })
+            )
+            .pipe(Effect.flip),
+        { concurrency: 1 }
       );
 
       expect(A.map(failures, (failure) => failure._tag)).toEqual([

@@ -638,13 +638,16 @@ describe("@beep/m365-mcp outbox handlers", () => {
           ["m365_outbox_delete_draft", failed(toolkit.handle("m365_outbox_delete_draft", { draftId: DRAFT_ID }))],
         ] as const;
 
-        const observed = yield* Effect.forEach(invocations, ([name, invocation]) =>
-          Effect.gen(function* () {
-            const before = yield* sendCalls;
-            const invocation26 = yield* invocation;
-            assert.isFalse(invocation26, name);
-            return [name, (yield* sendCalls) - before] as const;
-          })
+        const observed = yield* Effect.forEach(
+          invocations,
+          ([name, invocation]) =>
+            Effect.gen(function* () {
+              const before = yield* sendCalls;
+              const invocation26 = yield* invocation;
+              assert.isFalse(invocation26, name);
+              return [name, (yield* sendCalls) - before] as const;
+            }),
+          { concurrency: 1 }
         );
 
         assert.deepStrictEqual(

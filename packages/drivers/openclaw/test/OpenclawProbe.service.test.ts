@@ -103,16 +103,19 @@ describe("@beep/openclaw live acceptance probes", () => {
         )
       )
     );
-    return Effect.all([
-      probeOpenclawLocalModels({
-        baseUrl: "http://127.0.0.1:11434/v1",
-        modelId: "local-model",
-      }),
-      probeOpenclawLocalModels({
-        baseUrl: "http://127.0.0.1:11434/v1",
-        modelId: "missing",
-      }),
-    ]).pipe(
+    return Effect.all(
+      [
+        probeOpenclawLocalModels({
+          baseUrl: "http://127.0.0.1:11434/v1",
+          modelId: "local-model",
+        }),
+        probeOpenclawLocalModels({
+          baseUrl: "http://127.0.0.1:11434/v1",
+          modelId: "missing",
+        }),
+      ],
+      { concurrency: 1 }
+    ).pipe(
       Effect.provideService(HttpClient.HttpClient, client),
       Effect.tap(([present, missing]) =>
         Effect.sync(() => {

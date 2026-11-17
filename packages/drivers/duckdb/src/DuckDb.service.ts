@@ -371,7 +371,7 @@ const makeConnectionClient = (
 
   const runMany = Effect.fn("DuckDb.runMany")(
     (statements: ReadonlyArray<string>): Effect.Effect<void, DuckDbError> =>
-      Effect.forEach(statements, (statement) => run(statement), { discard: true }).pipe(
+      Effect.forEach(statements, (statement) => run(statement), { concurrency: 1, discard: true }).pipe(
         Effect.withSpan("db.query", {
           attributes: {
             "db.operation": "run_many",

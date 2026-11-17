@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-13",
+  "generatedOn": "2026-11-15",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -54,6 +54,36 @@
       "line": 28,
       "owner": "@beep/professional-desktop",
       "reason": "Sidecar registration regression decodes fixed RPC payload/result envelopes to prove wiring; schema-derived arbitrary coverage belongs with the use-case schemas."
+    },
+    {
+      "file": "infra/src/CiRunnerPool.ts",
+      "symbol": "ciSpotVcpuBudget",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 306,
+      "owner": "@beep/infra",
+      "reason": "Exported function \"ciSpotVcpuBudget\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
+    },
+    {
+      "file": "infra/src/CiShardOverflowPool.ts",
+      "symbol": "ciShardOverflowWebhook",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-null-return",
+      "line": 295,
+      "owner": "@beep/infra",
+      "reason": "Exported helper \"ciShardOverflowWebhook\" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions)."
+    },
+    {
+      "file": "infra/src/CiShardOverflowPool.ts",
+      "symbol": "declareCiShardOverflowController",
+      "kind": "schema-policy-advisory",
+      "status": "advisory",
+      "ruleId": "SFV4-fn-schema",
+      "line": 263,
+      "owner": "@beep/infra",
+      "reason": "Exported function \"declareCiShardOverflowController\" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable."
     },
     {
       "file": "packages/_internal/db-admin/test/integration/DocumentsSyncMigration.pglite.test.ts",
@@ -147,7 +177,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 920,
+      "line": 923,
       "owner": "@beep/duckdb",
       "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
     },
@@ -157,7 +187,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 955,
+      "line": 958,
       "owner": "@beep/duckdb",
       "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
     },
@@ -167,7 +197,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-fn-schema",
-      "line": 986,
+      "line": 989,
       "owner": "@beep/duckdb",
       "reason": "Drop-in replacement for the effect 4.0.6 effect/cluster/SqlMessageStorage export of the same name: the option bag (table prefixes, shard groups, migration hooks) mirrors the upstream signature verbatim so a consumer swaps one import (D63/D64, #2084). It configures DDL and layer wiring in memory and never crosses a decode or persistence boundary."
     },
@@ -1382,16 +1412,6 @@
       "reason": "Authenticates exhaustive source character facts and the complete parsed-feature/descriptor vectors, including producer hashes. These pinned oracle receipts must remain fixed; generated native-point membership is covered in CitationRegexAlphabet.test.ts. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-ci-repair-pass.md. No parity or coverage obligation is waived."
     },
     {
-      "file": "packages/law-practice/server/test/CitationRegexEngine.test.ts",
-      "symbol": "schema-codec-tests",
-      "kind": "schema-policy-advisory",
-      "status": "exception",
-      "ruleId": "SFV4-arbitrary-tests",
-      "line": 70,
-      "owner": "@beep/law-practice-server",
-      "reason": "Authenticates fixed source character/range observations and exhaustively checks both source-engine startup identities, including missing/unknown rejection. Randomly generating the same two literals adds no codec coverage; the source corpus must remain pinned. Owner: @beep/law-practice-server. Exit: detector recognizes exhaustive finite-domain consumer codec laws or the startup codec gains a larger generated input domain. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-03-source-regex-engine-identity.md. No parity or source-proof obligation is waived."
-    },
-    {
       "file": "packages/law-practice/server/test/CitationResolve.test.ts",
       "symbol": "schema-codec-tests",
       "kind": "schema-policy-advisory",
@@ -1457,7 +1477,7 @@
       "kind": "schema-policy-advisory",
       "status": "exception",
       "ruleId": "SFV4-arbitrary-tests",
-      "line": 113,
+      "line": 117,
       "owner": "@beep/law-practice-server",
       "reason": "Read-only integrity audit of frozen public reference fixtures: selected claim ownership, exact source spans and cross-claim endpoints are the subjects. Generated arbitrary claims cannot establish the immutable source corpus. Owner: @beep/law-practice-server. Exit: retire when the detector distinguishes frozen-source integrity tests from schema-law tests."
     },
@@ -1763,14 +1783,6 @@
     },
     {
       "file": "packages/tooling/library/alchemy-vercel/src/EnvVar.ts",
-      "symbol": "EnvVarValueSource",
-      "kind": "object-struct-schema",
-      "status": "exception",
-      "owner": "@beep/alchemy-vercel",
-      "reason": "Nested EnvVar prop: stacks write `valueFrom: { config }` as a plain object literal inside EnvVarProps, so it stays structural for the same reason as EnvVarProps."
-    },
-    {
-      "file": "packages/tooling/library/alchemy-vercel/src/EnvVar.ts",
       "symbol": "EnvVar",
       "kind": "exported-interface",
       "status": "exception",
@@ -1784,6 +1796,14 @@
       "status": "exception",
       "owner": "@beep/alchemy-vercel",
       "reason": "Alchemy resource props are structural: stacks pass plain object literals whose fields may be Input<> outputs, and the engine round-trips them through state as JSON, so a branded S.Opaque would force every caller through .make and break Alchemy's provider convention (D14). The annotated struct is the schema of record."
+    },
+    {
+      "file": "packages/tooling/library/alchemy-vercel/src/EnvVar.ts",
+      "symbol": "EnvVarValueSource",
+      "kind": "object-struct-schema",
+      "status": "exception",
+      "owner": "@beep/alchemy-vercel",
+      "reason": "Nested EnvVar prop: stacks write `valueFrom: { config }` as a plain object literal inside EnvVarProps, so it stays structural for the same reason as EnvVarProps."
     },
     {
       "file": "packages/tooling/library/alchemy-vercel/src/Project.ts",

@@ -90,7 +90,7 @@ it.layer(Layer.merge(NodeFileSystem.layer, Path.layer), { timeout: "30 seconds" 
       yield* write("package/base.json", '{"include":["src"]}');
       yield* write("package/tsconfig.json", '{"extends":"./base.json"}');
       const files = ["package/src/a.ts", "package/src/b.tsx", "package/src/c.mts", "package/src/d.cts"];
-      yield* Effect.forEach(files, (file) => write(file, "export {};\n"));
+      yield* Effect.forEach(files, (file) => write(file, "export {};\n"), { concurrency: 1 });
       yield* validateLintProgramAssignment(root, files);
       yield* write("package/scripts/orphan.ts", "export {};\n");
       const error = yield* validateLintProgramAssignment(root, [...files, "package/scripts/orphan.ts"]).pipe(

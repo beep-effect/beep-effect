@@ -389,8 +389,10 @@ describe("gov-legal MCP frozen contract", () => {
           const server = yield* McpServer.McpServer;
           const tools = listedTools(server);
 
-          yield* Effect.forEach(tools, (tool) =>
-            encodeMcpSchemaTool(tool).pipe(Effect.flatMap(decodeUnknownMcpSchemaTool))
+          yield* Effect.forEach(
+            tools,
+            (tool) => encodeMcpSchemaTool(tool).pipe(Effect.flatMap(decodeUnknownMcpSchemaTool)),
+            { concurrency: 1 }
           );
           const listing = McpSchema.ListToolsResult.make({ tools });
           const encodedMcpSchemaListToolsResult = yield* encodeMcpSchemaListToolsResult(listing);
@@ -415,14 +417,19 @@ describe("gov-legal MCP frozen contract", () => {
             { name: "ecfr_get_structure", arguments: ecfrStructureArguments },
             { name: "govinfo_search", arguments: govinfoArguments },
           ];
-          yield* Effect.forEach(requests, (request) => decodeMcpSchemaCallToolPayloadSchema(request));
+          yield* Effect.forEach(requests, (request) => decodeMcpSchemaCallToolPayloadSchema(request), {
+            concurrency: 1,
+          });
 
           const titles = yield* server.callTool(A.getUnsafe(requests, 0));
           const search = yield* server.callTool(A.getUnsafe(requests, 1));
           const structure = yield* server.callTool(A.getUnsafe(requests, 2));
           const govinfo = yield* server.callTool(A.getUnsafe(requests, 3));
-          yield* Effect.forEach([titles, search, structure, govinfo], (result) =>
-            encodeMcpSchemaCallToolResult(result).pipe(Effect.flatMap(decodeUnknownMcpSchemaCallToolResult))
+          yield* Effect.forEach(
+            [titles, search, structure, govinfo],
+            (result) =>
+              encodeMcpSchemaCallToolResult(result).pipe(Effect.flatMap(decodeUnknownMcpSchemaCallToolResult)),
+            { concurrency: 1 }
           );
 
           const titlesResult = yield* decodeUnknownTitlesResponse(titles.structuredContent);
@@ -447,12 +454,15 @@ describe("gov-legal MCP frozen contract", () => {
           const { completed, tracer } = makeRecordingTracer();
 
           yield* Effect.withTracer(
-            Effect.all([
-              server.callTool({ name: "ecfr_list_titles", arguments: { sentinel: SENTINEL } }),
-              server.callTool({ name: "ecfr_search_results", arguments: ecfrSearchArguments }),
-              server.callTool({ name: "ecfr_get_structure", arguments: ecfrStructureArguments }),
-              server.callTool({ name: "govinfo_search", arguments: govinfoArguments }),
-            ]),
+            Effect.all(
+              [
+                server.callTool({ name: "ecfr_list_titles", arguments: { sentinel: SENTINEL } }),
+                server.callTool({ name: "ecfr_search_results", arguments: ecfrSearchArguments }),
+                server.callTool({ name: "ecfr_get_structure", arguments: ecfrStructureArguments }),
+                server.callTool({ name: "govinfo_search", arguments: govinfoArguments }),
+              ],
+              { concurrency: 1 }
+            ),
             tracer
           );
 
@@ -487,17 +497,20 @@ describe("gov-legal MCP frozen contract", () => {
         "encodes all four explicit read-only hint booleans",
         Effect.fnUntraced(function* () {
           const server = yield* McpServer.McpServer;
-          yield* Effect.forEach(listedTools(server), (tool) =>
-            decodeUnknownMcpSchemaToolAnnotations(tool.annotations).pipe(
-              Effect.tap((annotations) =>
-                Effect.sync(() => {
-                  assert.strictEqual(annotations.readOnlyHint, true);
-                  assert.strictEqual(annotations.destructiveHint, false);
-                  assert.strictEqual(annotations.idempotentHint, true);
-                  assert.strictEqual(annotations.openWorldHint, true);
-                })
-              )
-            )
+          yield* Effect.forEach(
+            listedTools(server),
+            (tool) =>
+              decodeUnknownMcpSchemaToolAnnotations(tool.annotations).pipe(
+                Effect.tap((annotations) =>
+                  Effect.sync(() => {
+                    assert.strictEqual(annotations.readOnlyHint, true);
+                    assert.strictEqual(annotations.destructiveHint, false);
+                    assert.strictEqual(annotations.idempotentHint, true);
+                    assert.strictEqual(annotations.openWorldHint, true);
+                  })
+                )
+              ),
+            { concurrency: 1 }
           );
         })
       );

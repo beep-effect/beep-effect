@@ -270,11 +270,14 @@ const makeProxyCapture = Effect.fnUntraced(function* (options: CacheConformanceP
     }),
     invalidate: Ref.set(invalid, true),
     events: Effect.gen(function* () {
-      const state = yield* Effect.all({
-        captured: Ref.get(events),
-        requests: Ref.get(requests),
-        invalid: Ref.get(invalid),
-      }).pipe(
+      const state = yield* Effect.all(
+        {
+          captured: Ref.get(events),
+          requests: Ref.get(requests),
+          invalid: Ref.get(invalid),
+        },
+        { concurrency: 1 }
+      ).pipe(
         Effect.repeat({
           until: (state) => state.invalid || state.captured.length === state.requests,
           schedule: Schedule.spaced(Duration.millis(10)),

@@ -31,7 +31,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as TestConsole from "effect/testing/TestConsole";
-import { expectReportedExit, temporaryWorkingDirectory } from "./support/CommandTest.ts";
+import { expectReportedExit, gitFixture, NodeTestLayer, temporaryGitWorkingDirectory } from "./support/CommandTest.ts";
 import type { DeletePackageRefusal } from "@beep/repo-cli/test/DeletePackage";
 
 const temporaryDirectory = Effect.gen(function* () {
@@ -40,6 +40,7 @@ const temporaryDirectory = Effect.gen(function* () {
     fs.remove(directory, { recursive: true, force: true }).pipe(Effect.orDie)
   );
 });
+const temporaryGitDirectory = Effect.tap(temporaryDirectory, gitFixture);
 const labFacts = (postgresSchema: O.Option<string>): LabTargetFacts =>
   LabTargetFacts.make({
     manifestFile: PosixPath.make("apps/labs/probe/lab.manifest.json"),
@@ -86,8 +87,7 @@ const operationById = (target: RegistrationTarget, surfaceId: string) =>
   A.findFirst(planInverseForTarget(target).operations, (operation) => Str.equivalence(operation.surfaceId, surfaceId));
 
 const commandLayer = Layer.mergeAll(
-  NodeServices.layer,
-  NodeCrypto.layer,
+  NodeTestLayer,
   FsUtilsLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer))),
   TSMorphServiceLive.pipe(Layer.provide(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)))
 );
@@ -237,7 +237,6 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       allowPublished: false,
       allowStalePackets: true,
       cascade: false,
-      force: false,
       pruneCatalog: false,
       rewritePackets: false,
       skipBaselines: false,
@@ -298,7 +297,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
   describe("delete-package labs doctor semantics", () => {
     it.effect("accepts the consent-required lab data-resource observation with actionable DROP evidence", () =>
-      Effect.flatMap(temporaryDirectory, (repoRoot) =>
+      Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const observations = yield* inspectTargetAtRoot(repoRoot, labTarget);
           const dataResource = O.getOrThrow(
@@ -312,7 +311,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     );
 
     it.effect("renders an unowned manifest resource as non-actionable residue", () =>
-      Effect.flatMap(temporaryDirectory, (repoRoot) =>
+      Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const staleTarget = RegistrationTarget.make({
             ...labTarget,
@@ -347,7 +346,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     });
 
     it.effect("reports labs identity residue from a generatedLabComposers fixture", () =>
-      Effect.flatMap(temporaryDirectory, (repoRoot) =>
+      Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -368,7 +367,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     );
 
     it.effect("upgrades a labs root TS solution reference from drift to residue", () =>
-      Effect.flatMap(temporaryDirectory, (repoRoot) =>
+      Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -417,7 +416,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("warns and proceeds when the lab manifest is missing (P2-D18)", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           yield* seedLabWorkspace();
           yield* runDeletePackage(["probe", "--dry-run"]);
@@ -429,7 +428,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("warns and proceeds when the lab manifest is corrupt (P2-D18)", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -444,7 +443,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("plans the consent-gated data resource from a decoded manifest", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
@@ -478,7 +477,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
 
     it.effect("refuses an unowned manifest resource without printing a database command", () =>
       Effect.andThen(
-        temporaryWorkingDirectory,
+        temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;

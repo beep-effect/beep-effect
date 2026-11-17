@@ -358,7 +358,7 @@ const insertRows: {
     rows: ReadonlyArray<Row>,
     toParameters: (row: Row) => Array<string | number | boolean | null>
   ): Effect.Effect<void, DuckDbError> =>
-    Effect.forEach(rows, (row) => db.run(statement, toParameters(row)), { discard: true })
+    Effect.forEach(rows, (row) => db.run(statement, toParameters(row)), { concurrency: 1, discard: true })
 );
 
 const singleRow: {
@@ -428,10 +428,13 @@ const decodeProvenanceLines = Effect.fn("CorpusCommandService.decodeProvenanceLi
   manifestText: string
 ): Effect.fn.Return<ReadonlyArray<CorpusProvenanceRecord>, CorpusCommandError> {
   const lines = A.filter(Str.split(manifestText, "\n"), Str.isNonEmpty);
-  const records = yield* Effect.forEach(lines, (line, index) =>
-    CorpusLedgerRecordJson.decode(line).pipe(
-      CorpusCommandError.mapError(`Provenance manifest line ${index + 1} failed schema validation.`)
-    )
+  const records = yield* Effect.forEach(
+    lines,
+    (line, index) =>
+      CorpusLedgerRecordJson.decode(line).pipe(
+        CorpusCommandError.mapError(`Provenance manifest line ${index + 1} failed schema validation.`)
+      ),
+    { concurrency: 1 }
   );
   return retainCorpusProvenanceRecords(records);
 });
@@ -486,24 +489,28 @@ const discoverCatalogManifests = Effect.fn("CorpusCommandService.discoverCatalog
   const entries = yield* fs
     .readDirectory(rawRoot)
     .pipe(CorpusCommandError.mapError(`Failed reading raw catalog root "${rawRoot}".`));
-  const runManifestOptions = yield* Effect.forEach(A.sort(entries, Order.String), (entry) => {
-    const entryPath = path.join(rawRoot, entry);
-    return fs.stat(entryPath).pipe(
-      Effect.flatMap((info) => {
-        if (info.type !== "Directory") {
-          return Effect.succeed(O.none<CatalogManifest>());
-        }
-        const manifestPath = path.join(entryPath, "provenance.jsonl");
-        return fs.exists(manifestPath).pipe(
-          CorpusCommandError.mapError(`Failed checking run provenance manifest "${manifestPath}".`),
-          Effect.map((exists) =>
-            exists ? O.some(CatalogManifest.make({ manifestPath, runLabel: entry })) : O.none<CatalogManifest>()
-          )
-        );
-      }),
-      Effect.catchTag("PlatformError", () => Effect.succeed(O.none<CatalogManifest>()))
-    );
-  });
+  const runManifestOptions = yield* Effect.forEach(
+    A.sort(entries, Order.String),
+    (entry) => {
+      const entryPath = path.join(rawRoot, entry);
+      return fs.stat(entryPath).pipe(
+        Effect.flatMap((info) => {
+          if (info.type !== "Directory") {
+            return Effect.succeed(O.none<CatalogManifest>());
+          }
+          const manifestPath = path.join(entryPath, "provenance.jsonl");
+          return fs.exists(manifestPath).pipe(
+            CorpusCommandError.mapError(`Failed checking run provenance manifest "${manifestPath}".`),
+            Effect.map((exists) =>
+              exists ? O.some(CatalogManifest.make({ manifestPath, runLabel: entry })) : O.none<CatalogManifest>()
+            )
+          );
+        }),
+        Effect.catchTag("PlatformError", () => Effect.succeed(O.none<CatalogManifest>()))
+      );
+    },
+    { concurrency: 1 }
+  );
 
   return [...baseManifests, ...A.getSomes(runManifestOptions)];
 });
@@ -589,32 +596,38 @@ const buildRestorationRecords = Effect.fn("CorpusCommandService.buildRestoration
     [...groups.values()],
     Effect.fnUntraced(function* (group) {
       const pairing = pairRecycleBinEntries(group.entries);
-      const matched = yield* Effect.forEach(pairing.matched, (pair) =>
-        parseMetadataAt(group.sourceLabel, pair.metadataRelativePath).pipe(
-          Effect.map((original) =>
-            MatchedRestorationRecord.make({
-              contentRelativePath: pair.contentRelativePath,
-              matchStatus: "matched",
-              metadataRelativePath: pair.metadataRelativePath,
-              original,
-              pairKey: pair.pairKey,
-              sourceLabel: group.sourceLabel,
-            })
-          )
-        )
+      const matched = yield* Effect.forEach(
+        pairing.matched,
+        (pair) =>
+          parseMetadataAt(group.sourceLabel, pair.metadataRelativePath).pipe(
+            Effect.map((original) =>
+              MatchedRestorationRecord.make({
+                contentRelativePath: pair.contentRelativePath,
+                matchStatus: "matched",
+                metadataRelativePath: pair.metadataRelativePath,
+                original,
+                pairKey: pair.pairKey,
+                sourceLabel: group.sourceLabel,
+              })
+            )
+          ),
+        { concurrency: 1 }
       );
-      const unmatchedMetadata = yield* Effect.forEach(pairing.unmatchedMetadata, (entry) =>
-        parseMetadataAt(group.sourceLabel, entry.relativePath).pipe(
-          Effect.map((original) =>
-            UnmatchedMetadataRestorationRecord.make({
-              matchStatus: "unmatched-metadata",
-              metadataRelativePath: entry.relativePath,
-              original,
-              pairKey: entry.pairKey,
-              sourceLabel: group.sourceLabel,
-            })
-          )
-        )
+      const unmatchedMetadata = yield* Effect.forEach(
+        pairing.unmatchedMetadata,
+        (entry) =>
+          parseMetadataAt(group.sourceLabel, entry.relativePath).pipe(
+            Effect.map((original) =>
+              UnmatchedMetadataRestorationRecord.make({
+                matchStatus: "unmatched-metadata",
+                metadataRelativePath: entry.relativePath,
+                original,
+                pairKey: entry.pairKey,
+                sourceLabel: group.sourceLabel,
+              })
+            )
+          ),
+        { concurrency: 1 }
       );
       const unmatchedContent = A.map(pairing.unmatchedContent, (entry) =>
         UnmatchedContentRestorationRecord.make({
@@ -625,7 +638,8 @@ const buildRestorationRecords = Effect.fn("CorpusCommandService.buildRestoration
         })
       );
       return [...matched, ...unmatchedMetadata, ...unmatchedContent];
-    })
+    }),
+    { concurrency: 1 }
   );
 
   return A.flatten(groupResults);
@@ -665,7 +679,8 @@ const catalogCorpusImpl = Effect.fn("CorpusCommandService.catalogCorpus")(functi
         .pipe(CorpusCommandError.mapError(`Failed reading provenance manifest "${manifest.manifestPath}".`));
       const records = yield* decodeProvenanceLines(manifestText);
       return A.map(records, (record) => ({ manifest, record }));
-    })
+    }),
+    { concurrency: 1 }
   );
   const manifestRecords = A.flatten(manifestRecordGroups);
   const copiedDigestPaths = MutableHashSet.empty<string>();
@@ -710,12 +725,16 @@ const catalogCorpusImpl = Effect.fn("CorpusCommandService.catalogCorpus")(functi
         sourceLabel: record.sourceLabel,
         ...(O.isSome(dedupeOfPath) ? { dedupeOfPath: dedupeOfPath.value } : {}),
       });
-    })
+    }),
+    { concurrency: 1 }
   );
-  const catalogRecordLines = yield* Effect.forEach(catalogRecords, (record) =>
-    encodeCorpusCatalogSourceFileRecordJson(record).pipe(
-      CorpusCommandError.mapError("Catalog source-file occurrence failed JSONL encoding.")
-    )
+  const catalogRecordLines = yield* Effect.forEach(
+    catalogRecords,
+    (record) =>
+      encodeCorpusCatalogSourceFileRecordJson(record).pipe(
+        CorpusCommandError.mapError("Catalog source-file occurrence failed JSONL encoding.")
+      ),
+    { concurrency: 1 }
   );
   yield* fs
     .writeFileString(catalogSourceManifestPath, jsonlContent(catalogRecordLines))
@@ -731,7 +750,7 @@ const catalogCorpusImpl = Effect.fn("CorpusCommandService.catalogCorpus")(functi
       Console.log(
         `corpus catalog: run=${run.runLabel} records=${run.recordCount} distinctDigests=${run.distinctDigests} newDistinctDigests=${run.newDistinctDigests}`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   const restorations = yield* buildRestorationRecords(rawRoot, catalogRecords);
@@ -752,6 +771,7 @@ const catalogCorpusImpl = Effect.fn("CorpusCommandService.catalogCorpus")(functi
     yield* db.run(createDuplicateSetsView);
     yield* db.run(createRestorationsTable);
     yield* Effect.forEach(restorations, (record) => db.run(insertRestorationStatement, restorationToRow(record)), {
+      concurrency: 1,
       discard: true,
     });
     const sourceTotalsRows = yield* db.query(sourceTotalsStatement);
@@ -783,10 +803,13 @@ const catalogCorpusImpl = Effect.fn("CorpusCommandService.catalogCorpus")(functi
     .writeFileString(duplicateReportPath, `${duplicateReportJson}\n`)
     .pipe(CorpusCommandError.mapError(`Failed writing duplicate-set report "${duplicateReportPath}".`));
 
-  const restorationLines = yield* Effect.forEach(restorations, (record) =>
-    encodeCorpusRestorationRecordJson(record).pipe(
-      CorpusCommandError.mapError("Restoration record failed JSONL encoding.")
-    )
+  const restorationLines = yield* Effect.forEach(
+    restorations,
+    (record) =>
+      encodeCorpusRestorationRecordJson(record).pipe(
+        CorpusCommandError.mapError("Restoration record failed JSONL encoding.")
+      ),
+    { concurrency: 1 }
   );
   yield* fs
     .writeFileString(restorationManifestPath, jsonlContent(restorationLines))
@@ -1540,12 +1563,16 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
       Effect.fnUntraced(function* (pageNumber) {
         const image = pageNumber === 1 ? firstImage : yield* Effect.result(pages.render(pageNumber));
         return yield* readPage(input.ids, pages, plan.selected, image, pageNumber);
-      })
+      }),
+      { concurrency: 1 }
     );
-    const rowLines = yield* Effect.forEach(pageResults, ([row]) =>
-      CorpusPageReadingRecordJson.encode(row).pipe(
-        CorpusCommandError.mapError("Page reading row failed JSONL encoding.")
-      )
+    const rowLines = yield* Effect.forEach(
+      pageResults,
+      ([row]) =>
+        CorpusPageReadingRecordJson.encode(row).pipe(
+          CorpusCommandError.mapError("Page reading row failed JSONL encoding.")
+        ),
+      { concurrency: 1 }
     );
     yield* writeExtractArtifact(
       path.join(outDir, "ocr", "pages", `${input.ids.operationId}.jsonl`),
@@ -1693,13 +1720,16 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
   const extractOcr = yield* makeExtractOcr(options, outDir, writeExtractArtifact);
 
   const manifests = yield* discoverCatalogManifests(rawRoot);
-  const recordBatches = yield* Effect.forEach(manifests, (manifest) =>
-    fs
-      .readFileString(manifest.manifestPath)
-      .pipe(
-        CorpusCommandError.mapError(`Failed reading provenance manifest "${manifest.manifestPath}".`),
-        Effect.flatMap(decodeProvenanceLines)
-      )
+  const recordBatches = yield* Effect.forEach(
+    manifests,
+    (manifest) =>
+      fs
+        .readFileString(manifest.manifestPath)
+        .pipe(
+          CorpusCommandError.mapError(`Failed reading provenance manifest "${manifest.manifestPath}".`),
+          Effect.flatMap(decodeProvenanceLines)
+        ),
+    { concurrency: 1 }
   );
   const allRecords = A.flatten(recordBatches);
   const { duplicatesSkipped, selected } = selectExtractRecords(allRecords, options);
@@ -1810,8 +1840,10 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
         ? O.some(path.join(childrenRoot, ids.artifactId, "artifacts.jsonl"))
         : O.none(),
     ]);
-    const evidencePresent = yield* Effect.forEach(evidencePaths, (evidencePath) =>
-      fs.exists(evidencePath).pipe(Effect.orElseSucceed(() => false))
+    const evidencePresent = yield* Effect.forEach(
+      evidencePaths,
+      (evidencePath) => fs.exists(evidencePath).pipe(Effect.orElseSucceed(() => false)),
+      { concurrency: 1 }
     );
     return A.every(evidencePresent, (present) => present) ? O.some(marker.value) : O.none();
   });
@@ -1924,10 +1956,13 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
               Effect.fn("CorpusCommandService.archiveExportedOutcome")(function* (
                 archive: ArchiveExportProcessFileResult
               ) {
-                const childLines = yield* Effect.forEach(archive.archiveExport.children, (child) =>
-                  encodeChildArtifactRecordJson(
-                    ChildArtifactRecord.make({ child, sourceArtifactId: archive.sourceArtifactId })
-                  ).pipe(CorpusCommandError.mapError("Child artifact record failed JSONL encoding."))
+                const childLines = yield* Effect.forEach(
+                  archive.archiveExport.children,
+                  (child) =>
+                    encodeChildArtifactRecordJson(
+                      ChildArtifactRecord.make({ child, sourceArtifactId: archive.sourceArtifactId })
+                    ).pipe(CorpusCommandError.mapError("Child artifact record failed JSONL encoding.")),
+                  { concurrency: 1 }
                 );
                 yield* writeExtractArtifact(
                   path.join(outDir, "children", archive.sourceArtifactId, "artifacts.jsonl"),
@@ -2123,15 +2158,21 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
   const coverageJson = yield* encodeFileProcessingCoverageSummaryJson(coverage).pipe(
     CorpusCommandError.mapError("Coverage summary failed JSON encoding.")
   );
-  const sourceLines = yield* Effect.forEach(sourceRecords, (record) =>
-    encodeSourceProcessingRecordJson(record).pipe(
-      CorpusCommandError.mapError("Source processing record failed JSONL encoding.")
-    )
+  const sourceLines = yield* Effect.forEach(
+    sourceRecords,
+    (record) =>
+      encodeSourceProcessingRecordJson(record).pipe(
+        CorpusCommandError.mapError("Source processing record failed JSONL encoding.")
+      ),
+    { concurrency: 1 }
   );
-  const failureLines = yield* Effect.forEach(failureRecords, (record) =>
-    encodeFileProcessingFailureRecordJson(record).pipe(
-      CorpusCommandError.mapError("Failure record failed JSONL encoding.")
-    )
+  const failureLines = yield* Effect.forEach(
+    failureRecords,
+    (record) =>
+      encodeFileProcessingFailureRecordJson(record).pipe(
+        CorpusCommandError.mapError("Failure record failed JSONL encoding.")
+      ),
+    { concurrency: 1 }
   );
 
   yield* writeExtractArtifact(path.join(outDir, "run.json"), `${runJson}\n`);
@@ -2216,6 +2257,40 @@ const fileMtimeFields = (info: FileSystem.File.Info): { readonly mtimeEpoch: num
   };
 };
 
+// Walks `root` depth-first in sorted entry order: each regular file goes through
+// `makeFile`, each directory recurses, and every other entry kind is skipped.
+const collectSortedSourceFiles = Effect.fn("CorpusCommandService.collectSortedSourceFiles")(function* <Row, E>(
+  root: string,
+  label: string,
+  makeFile: (filePath: string, info: FileSystem.File.Info) => Effect.Effect<Row, E>
+): Effect.fn.Return<ReadonlyArray<Row>, CorpusCommandError | E, FileSystem.FileSystem | Path.Path> {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const collectAt: (currentPath: string) => Effect.Effect<ReadonlyArray<Row>, CorpusCommandError | E> = Effect.fn(
+    "CorpusCommandService.collectSortedSourceFiles.collectAt"
+  )(function* (currentPath) {
+    const info = yield* fs
+      .stat(currentPath)
+      .pipe(CorpusCommandError.mapError(`Failed inspecting ${label} entry "${currentPath}".`));
+    if (info.type === "File") {
+      return [yield* makeFile(currentPath, info)];
+    }
+    if (info.type !== "Directory") {
+      return A.empty<Row>();
+    }
+    const entries = yield* fs
+      .readDirectory(currentPath)
+      .pipe(CorpusCommandError.mapError(`Failed reading ${label} directory "${currentPath}".`));
+    const childFiles = yield* Effect.forEach(
+      A.sort(entries, Order.String),
+      (entry) => collectAt(path.join(currentPath, entry)),
+      { concurrency: 1 }
+    );
+    return A.flatten(childFiles);
+  });
+  return yield* collectAt(root);
+});
+
 const collectSalvageSourceFiles = Effect.fn("CorpusCommandService.collectSalvageSourceFiles")(function* (
   spec: CorpusSalvageSourceSpec
 ): Effect.fn.Return<ReadonlyArray<CorpusSalvageOriginFile>, CorpusCommandError, FileSystem.FileSystem | Path.Path> {
@@ -2249,29 +2324,7 @@ const collectSalvageSourceFiles = Effect.fn("CorpusCommandService.collectSalvage
     });
   });
 
-  const collectAt: (
-    currentPath: string
-  ) => Effect.Effect<ReadonlyArray<CorpusSalvageOriginFile>, CorpusCommandError, FileSystem.FileSystem | Path.Path> =
-    Effect.fn("CorpusCommandService.collectSalvageSourceFiles.collectAt")(function* (currentPath) {
-      const info = yield* fs
-        .stat(currentPath)
-        .pipe(CorpusCommandError.mapError(`Failed inspecting salvage source entry "${currentPath}".`));
-      if (info.type === "File") {
-        return [yield* makeFile(currentPath, info)];
-      }
-      if (info.type !== "Directory") {
-        return A.empty<CorpusSalvageOriginFile>();
-      }
-      const entries = yield* fs
-        .readDirectory(currentPath)
-        .pipe(CorpusCommandError.mapError(`Failed reading salvage source directory "${currentPath}".`));
-      const childFiles = yield* Effect.forEach(A.sort(entries, Order.String), (entry) =>
-        collectAt(path.join(currentPath, entry))
-      );
-      return A.flatten(childFiles);
-    });
-
-  return yield* collectAt(sourceRoot);
+  return yield* collectSortedSourceFiles(sourceRoot, "salvage source", makeFile);
 });
 
 const addDigestRows = (
@@ -2324,21 +2377,25 @@ const findRawProvenanceManifests = Effect.fn("CorpusCommandService.findRawProven
     const entries = yield* fs
       .readDirectory(directory)
       .pipe(CorpusCommandError.mapError(`Failed reading raw manifest directory "${directory}".`));
-    const manifests = yield* Effect.forEach(A.sort(entries, Order.String), (entry) => {
-      const entryPath = path.join(directory, entry);
-      return fs.stat(entryPath).pipe(
-        Effect.flatMap((info) => {
-          if (info.type === "File" && entry === "provenance.jsonl") {
-            return Effect.succeed([entryPath]);
-          }
-          if (info.type === "Directory") {
-            return collectAt(entryPath);
-          }
-          return Effect.succeed(A.empty<string>());
-        }),
-        Effect.catchTag("PlatformError", () => Effect.succeed(A.empty<string>()))
-      );
-    });
+    const manifests = yield* Effect.forEach(
+      A.sort(entries, Order.String),
+      (entry) => {
+        const entryPath = path.join(directory, entry);
+        return fs.stat(entryPath).pipe(
+          Effect.flatMap((info) => {
+            if (info.type === "File" && entry === "provenance.jsonl") {
+              return Effect.succeed([entryPath]);
+            }
+            if (info.type === "Directory") {
+              return collectAt(entryPath);
+            }
+            return Effect.succeed(A.empty<string>());
+          }),
+          Effect.catchTag("PlatformError", () => Effect.succeed(A.empty<string>()))
+        );
+      },
+      { concurrency: 1 }
+    );
     return A.flatten(manifests);
   });
 
@@ -2376,7 +2433,7 @@ const loadSalvageDigestIndex = Effect.fn("CorpusCommandService.loadSalvageDigest
   }
 
   const manifestPaths = yield* findRawProvenanceManifests(rawRoot);
-  const manifestRows = yield* Effect.forEach(manifestPaths, loadManifestDigestRows);
+  const manifestRows = yield* Effect.forEach(manifestPaths, loadManifestDigestRows, { concurrency: 1 });
   addDigestRows(index, A.flatten(manifestRows));
   yield* Console.log(
     `corpus salvage: loaded ${MutableHashMap.size(index)} digest entries from raw provenance manifests`
@@ -2409,7 +2466,7 @@ const salvageCorpusImpl = Effect.fn("CorpusCommandService.salvageCorpus")(functi
     .makeDirectory(safeRunRoot, { recursive: true })
     .pipe(CorpusCommandError.mapError(`Failed creating salvage run root "${safeRunRoot}".`));
 
-  const forEach5 = yield* Effect.forEach(sources, collectSalvageSourceFiles);
+  const forEach5 = yield* Effect.forEach(sources, collectSalvageSourceFiles, { concurrency: 1 });
   const sourceFiles = A.flatten(forEach5);
   const digestIndex =
     options.dedupe === true
@@ -2485,10 +2542,13 @@ const salvageCorpusImpl = Effect.fn("CorpusCommandService.salvageCorpus")(functi
     { concurrency: 1 }
   );
 
-  const manifestLines = yield* Effect.forEach(records, (record) =>
-    encodeCorpusProvenanceRecordJson(record).pipe(
-      CorpusCommandError.mapError("Provenance record failed JSONL encoding.")
-    )
+  const manifestLines = yield* Effect.forEach(
+    records,
+    (record) =>
+      encodeCorpusProvenanceRecordJson(record).pipe(
+        CorpusCommandError.mapError("Provenance record failed JSONL encoding.")
+      ),
+    { concurrency: 1 }
   );
   yield* appendCorpusJsonLines(manifestPath, manifestLines);
 
@@ -2602,36 +2662,12 @@ const referencedRawPathForArchive = (record: CorpusProvenanceRecord): string =>
 const collectArchiveSourceFiles = Effect.fn("CorpusCommandService.collectArchiveSourceFiles")(function* (
   sourcePath: string
 ): Effect.fn.Return<ReadonlyArray<string>, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const absoluteSource = path.resolve(sourcePath);
-
-  const collectAt: (
-    currentPath: string
-  ) => Effect.Effect<ReadonlyArray<string>, CorpusArchiveMoveError, FileSystem.FileSystem | Path.Path> = Effect.fn(
-    "CorpusCommandService.collectArchiveSourceFiles.collectAt"
-  )(function* (currentPath) {
-    const info = yield* fs
-      .stat(currentPath)
-      .pipe(CorpusCommandError.mapError(`Failed inspecting archive-move source entry "${currentPath}".`));
-    if (info.type === "File") {
-      // Keep source filenames opaque: Bun's realpath can reject otherwise valid
-      // POSIX names such as paths containing literal backslashes.
-      return [path.resolve(currentPath)];
-    }
-    if (info.type !== "Directory") {
-      return A.empty<string>();
-    }
-    const entries = yield* fs
-      .readDirectory(currentPath)
-      .pipe(CorpusCommandError.mapError(`Failed reading archive-move source directory "${currentPath}".`));
-    const childFiles = yield* Effect.forEach(A.sort(entries, Order.String), (entry) =>
-      collectAt(path.join(currentPath, entry))
-    );
-    return A.flatten(childFiles);
-  });
-
-  return yield* collectAt(absoluteSource);
+  // Keep source filenames opaque: Bun's realpath can reject otherwise valid
+  // POSIX names such as paths containing literal backslashes.
+  return yield* collectSortedSourceFiles(path.resolve(sourcePath), "archive-move source", (filePath) =>
+    Effect.succeed(path.resolve(filePath))
+  );
 });
 
 const loadArchiveProvenanceIndex = Effect.fn("CorpusCommandService.loadArchiveProvenanceIndex")(function* (
@@ -2658,10 +2694,10 @@ const loadArchiveProvenanceIndex = Effect.fn("CorpusCommandService.loadArchivePr
         Effect.fn("CorpusCommandService.loadArchiveProvenanceIndex.record")(function* (record) {
           MutableHashMap.set(index, path.resolve(record.originPath), { provenancePath, rawRoot, record });
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   return index;
@@ -2849,8 +2885,10 @@ const archiveMoveImpl = Effect.fn("CorpusCommandService.archiveMove")(function* 
         });
       }
       const sourceFiles = yield* collectArchiveSourceFiles(sourcePath);
-      const validatedFiles = yield* Effect.forEach(sourceFiles, (originPath) =>
-        validateArchiveFile(sourcePath, originPath, provenanceByOrigin)
+      const validatedFiles = yield* Effect.forEach(
+        sourceFiles,
+        (originPath) => validateArchiveFile(sourcePath, originPath, provenanceByOrigin),
+        { concurrency: 1 }
       );
       return {
         archivePath,
@@ -2883,10 +2921,13 @@ const archiveMoveImpl = Effect.fn("CorpusCommandService.archiveMove")(function* 
       provenanceOnlyCount: S.Natural.make(plan.provenanceOnlyCount),
     })
   );
-  const manifestLines = yield* Effect.forEach(records, (record) =>
-    encodeCorpusArchiveMoveManifestRecordJson(record).pipe(
-      CorpusCommandError.mapError("Archive move manifest record failed JSONL encoding.")
-    )
+  const manifestLines = yield* Effect.forEach(
+    records,
+    (record) =>
+      encodeCorpusArchiveMoveManifestRecordJson(record).pipe(
+        CorpusCommandError.mapError("Archive move manifest record failed JSONL encoding.")
+      ),
+    { concurrency: 1 }
   );
   const manifestPath = path.join(path.dirname(O.getOrThrow(A.head(options.provenancePaths))), "move-manifest.jsonl");
   yield* fs
@@ -3037,10 +3078,13 @@ const loadMatchedRestorations = Effect.fn("CorpusCommandService.loadMatchedResto
   const restorationText = yield* fs
     .readFileString(restorationPath)
     .pipe(CorpusCommandError.mapError(`Failed reading restoration manifest "${restorationPath}"; run catalog first.`));
-  const restorations = yield* Effect.forEach(A.filter(Str.split(restorationText, "\n"), Str.isNonEmpty), (line) =>
-    decodeRestorationRecordJson(line).pipe(
-      CorpusCommandError.mapError("Restoration manifest line failed schema validation.")
-    )
+  const restorations = yield* Effect.forEach(
+    A.filter(Str.split(restorationText, "\n"), Str.isNonEmpty),
+    (line) =>
+      decodeRestorationRecordJson(line).pipe(
+        CorpusCommandError.mapError("Restoration manifest line failed schema validation.")
+      ),
+    { concurrency: 1 }
   );
   const restoredByLabelPath = new Map<string, MatchedRestorationRecord>();
   for (const record of restorations) {
@@ -3365,10 +3409,13 @@ const organizeCorpusImpl = Effect.fn("CorpusCommandService.organizeCorpus")(func
     records.push(organizeRecordFor(row, organizedRelative, versionIndex, organizedRelative !== undefined));
   }
 
-  const manifestLines = yield* Effect.forEach(records, (record) =>
-    encodeCorpusOrganizeRecordJson(record).pipe(
-      CorpusCommandError.mapError("Organize manifest record failed JSONL encoding.")
-    )
+  const manifestLines = yield* Effect.forEach(
+    records,
+    (record) =>
+      encodeCorpusOrganizeRecordJson(record).pipe(
+        CorpusCommandError.mapError("Organize manifest record failed JSONL encoding.")
+      ),
+    { concurrency: 1 }
   );
   yield* writeCorpusStringFile(organizeManifestPath, jsonlContent(manifestLines));
   yield* writeOrganizedTable(databasePath, records);
@@ -3479,10 +3526,13 @@ const loadEnrichOrganizeRecords = Effect.fn("CorpusCommandService.loadEnrichOrga
     .pipe(
       CorpusCommandError.mapError(`Failed reading organize manifest "${organizeManifestPath}"; run organize first.`)
     );
-  return yield* Effect.forEach(A.filter(Str.split(organizeText, "\n"), Str.isNonEmpty), (line) =>
-    decodeCorpusOrganizeRecordJson(line).pipe(
-      CorpusCommandError.mapError("Organize manifest line failed schema validation.")
-    )
+  return yield* Effect.forEach(
+    A.filter(Str.split(organizeText, "\n"), Str.isNonEmpty),
+    (line) =>
+      decodeCorpusOrganizeRecordJson(line).pipe(
+        CorpusCommandError.mapError("Organize manifest line failed schema validation.")
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -3530,10 +3580,13 @@ const buildFamilyByTextName = Effect.fn("CorpusCommandService.buildFamilyByTextN
   const sourcesText = yield* fs
     .readFileString(sourcesPath)
     .pipe(CorpusCommandError.mapError(`Failed reading extraction sources "${sourcesPath}".`));
-  const sourceRows = yield* Effect.forEach(A.filter(Str.split(sourcesText, "\n"), Str.isNonEmpty), (line) =>
-    decodeSourceProcessingRecordJson(line).pipe(
-      CorpusCommandError.mapError("Extraction sources line failed schema validation.")
-    )
+  const sourceRows = yield* Effect.forEach(
+    A.filter(Str.split(sourcesText, "\n"), Str.isNonEmpty),
+    (line) =>
+      decodeSourceProcessingRecordJson(line).pipe(
+        CorpusCommandError.mapError("Extraction sources line failed schema validation.")
+      ),
+    { concurrency: 1 }
   );
   return indexFamiliesByTextName(sourceRows, familyByDigest);
 });
@@ -3667,10 +3720,13 @@ const enrichCorpusImpl = Effect.fn("CorpusCommandService.enrichCorpus")(function
     )
   );
 
-  const manifestLines = yield* Effect.forEach(records, (record) =>
-    encodeCorpusEnrichmentRecordJson(record).pipe(
-      CorpusCommandError.mapError("Enrichment record failed JSONL encoding.")
-    )
+  const manifestLines = yield* Effect.forEach(
+    records,
+    (record) =>
+      encodeCorpusEnrichmentRecordJson(record).pipe(
+        CorpusCommandError.mapError("Enrichment record failed JSONL encoding.")
+      ),
+    { concurrency: 1 }
   );
   yield* writeCorpusStringFile(enrichmentManifestPath, jsonlContent(manifestLines));
 

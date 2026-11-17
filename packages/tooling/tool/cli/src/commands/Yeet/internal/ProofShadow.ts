@@ -990,8 +990,10 @@ export const recordProofShadowForAttempt = Effect.fn("Yeet.recordProofShadowForA
   const epoch = yield* collectProofEpoch(repoRoot);
   const ledger = yield* ProofLedger.make(repoRoot, changedPackageTripwireFor(reports, changed));
   const now = yield* DateTime.now;
-  const keys = yield* Effect.forEach(candidates, (candidate) =>
-    shadowInputDigest(candidate, facts, epoch, environmentDigests)
+  const keys = yield* Effect.forEach(
+    candidates,
+    (candidate) => shadowInputDigest(candidate, facts, epoch, environmentDigests),
+    { concurrency: 1 }
   );
   const decisions = yield* ledger.lookupAll(keys, now);
   const rows = A.map(A.zip(A.zip(candidates, keys), decisions), ([[candidate, key], decision]) => ({

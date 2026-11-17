@@ -82,7 +82,10 @@ export const commit = Effect.fn("HeadMoveTest.commit")(function* (
 ) {
   const first = A.head(parents);
   yield* git(root, O.isSome(first) ? ["read-tree", first.value] : ["read-tree", "--empty"]);
-  yield* Effect.forEach(R.toEntries(files), ([file, contents]) => stageFile(root, file, contents), { discard: true });
+  yield* Effect.forEach(R.toEntries(files), ([file, contents]) => stageFile(root, file, contents), {
+    concurrency: 1,
+    discard: true,
+  });
   const tree = yield* git(root, ["write-tree"]);
   const unsigned = yield* git(
     root,
@@ -260,6 +263,7 @@ export const writeHostileGitAttributes = Effect.fn("HeadMoveTest.writeHostileGit
 export const configureHostileGit = Effect.fn("HeadMoveTest.configureHostileGit")(function* (root: string) {
   yield* writeHostileGitAttributes(root);
   yield* Effect.forEach(hostileGitConfig(root), ([key, value]) => git(root, ["config", key, value]), {
+    concurrency: 1,
     discard: true,
   });
 });

@@ -66,6 +66,7 @@ import {
 } from "./ArtifactPaths.ts";
 import {
   appendYeetAttemptJournalEvent,
+  currentYeetAttemptOrigin,
   generateYeetAttemptId,
   YeetAttemptFinished,
   YeetAttemptStarted,
@@ -456,7 +457,10 @@ const decideCiParityReuse = Effect.fn("Yeet.decideCiParityReuse")(function* (
     proven,
     parity
   );
-  yield* Effect.forEach(A.getSomes(A.map(decisions, renderParityLaneDecision)), Console.log, { discard: true });
+  yield* Effect.forEach(A.getSomes(A.map(decisions, renderParityLaneDecision)), Console.log, {
+    concurrency: 1,
+    discard: true,
+  });
   return decisions;
 });
 
@@ -514,7 +518,7 @@ const recordProofStepEnvironments = Effect.fn("Yeet.recordProofStepEnvironments"
       collectProofEnvironment(step.id, context.repoRoot, effectiveStepEnvironment(step), baseSha).pipe(
         Effect.flatMap((environment) => recordProofEnvironment(context, environment))
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -2816,6 +2820,7 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
   const resolvedHeadSha = yield* currentCommitSha(context);
   const diffFingerprint = yield* collectDiffFingerprint(context);
   const ownerProcStart = yield* processStartIdentityForPid(process.pid);
+  const origin = yield* currentYeetAttemptOrigin;
   return YeetAttemptStarted.make({
     schemaVersion: "yeet-attempt-journal/v1",
     _tag: "attempt-started",
@@ -2836,6 +2841,8 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
     forceLocal: options.forceLocal ? O.some(true) : O.none(),
     stage: O.some(attemptStageFor(options)),
     turboForce,
+    host: origin.host,
+    seat: origin.seat,
   });
 });
 

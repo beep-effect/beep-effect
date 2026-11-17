@@ -88,6 +88,7 @@ import { readLintPolicySweeps, resolveAffectedCoverageScope } from "../../Qualit
 import { YeetCommandError } from "../Yeet.errors.ts";
 import {
   appendYeetAttemptJournalEventForCheckout,
+  currentYeetAttemptOrigin,
   generateYeetAttemptId,
   YeetAttemptFinished,
   YeetAttemptStarted,
@@ -615,19 +616,23 @@ export const parseFinalCheckGates = Effect.fn("Yeet.parseFinalCheckGates")(funct
  * @since 0.0.0
  */
 export const parseFinalCheckSkips = Effect.fn("Yeet.parseFinalCheckSkips")(function* (values: ReadonlyArray<string>) {
-  return yield* Effect.forEach(values, (value) => {
-    const separator = Str.indexOf("=")(value);
-    const gate = O.match(separator, { onNone: () => value, onSome: (index) => Str.trim(Str.slice(0, index)(value)) });
-    const reason = O.match(separator, { onNone: () => "", onSome: (index) => Str.trim(Str.slice(index + 1)(value)) });
-    return isFinalCheckGate(gate) && Str.isNonEmpty(reason)
-      ? Effect.succeed(FinalCheckSkip.make({ gate, reason }))
-      : Effect.fail(
-          YeetCommandError.make({
-            message: `--skip must be "<gate>=<reason>" with a known gate and a non-empty reason; got "${value}". Valid gates: ${A.join(FinalCheckGate.literals, ", ")}.`,
-            exitCode: 2,
-          })
-        );
-  });
+  return yield* Effect.forEach(
+    values,
+    (value) => {
+      const separator = Str.indexOf("=")(value);
+      const gate = O.match(separator, { onNone: () => value, onSome: (index) => Str.trim(Str.slice(0, index)(value)) });
+      const reason = O.match(separator, { onNone: () => "", onSome: (index) => Str.trim(Str.slice(index + 1)(value)) });
+      return isFinalCheckGate(gate) && Str.isNonEmpty(reason)
+        ? Effect.succeed(FinalCheckSkip.make({ gate, reason }))
+        : Effect.fail(
+            YeetCommandError.make({
+              message: `--skip must be "<gate>=<reason>" with a known gate and a non-empty reason; got "${value}". Valid gates: ${A.join(FinalCheckGate.literals, ", ")}.`,
+              exitCode: 2,
+            })
+          );
+    },
+    { concurrency: 1 }
+  );
 });
 
 // The requested gates the profile routes to hosted CI, less those an operator skip already names.
@@ -1268,7 +1273,7 @@ const runExpectationRewriteGate = Effect.fn("Yeet.runExpectationRewriteGate")(fu
       Console.log(
         `[yeet] final-check expectation-rewrite ${verdict.testFile}: ${verdict.classification} (${verdict.detail})`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const step = FinalCheckStepResult.make({
     gate: "expectation-rewrite",
@@ -1385,6 +1390,7 @@ const printGatePlan = (run: FinalCheckRun, gate: FinalCheckGate) =>
         ),
         Match.orElse(() =>
           Effect.forEach(plannedFor(run, gate), (entry) => Console.log(`  ${gate}: ${renderCommand(entry.step)}`), {
+            concurrency: 1,
             discard: true,
           })
         )
@@ -1422,7 +1428,7 @@ const runGate = (run: FinalCheckRun, gate: FinalCheckGate, runner: ReturnType<ty
         ),
         Match.orElse(() =>
           Effect.map(
-            Effect.forEach(plannedFor(run, gate), runner.execute),
+            Effect.forEach(plannedFor(run, gate), runner.execute, { concurrency: 1 }),
             (steps): GateOutcome => ({
               steps,
               verdicts: [],
@@ -1482,6 +1488,7 @@ const runGates = Effect.fn("Yeet.runFinalCheckGates")(function* (
       O.filter((entry) => entry.decision === "shadow-skipped" && hasFailure(next.steps))
     );
     yield* Effect.forEach(O.toArray(miss), (entry) => reportShadowMiss(run, gate, entry.refinements), {
+      concurrency: 1,
       discard: true,
     });
     outcome = {
@@ -1727,6 +1734,7 @@ const openFinalCheckAttempt = Effect.fn("Yeet.openFinalCheckAttempt")(
   function* (repoRoot: string, options: YeetFinalCheckOptions, headSha: string, computeProfile: ComputeProfile) {
     const branch = yield* currentYeetBranch(repoRoot);
     const now = yield* DateTime.now;
+    const origin = yield* currentYeetAttemptOrigin;
     const attempt = YeetAttemptStarted.make({
       schemaVersion: "yeet-attempt-journal/v1",
       _tag: "attempt-started",
@@ -1743,6 +1751,8 @@ const openFinalCheckAttempt = Effect.fn("Yeet.openFinalCheckAttempt")(
       envProfile: O.some("local"),
       computeProfile: O.some(computeProfile),
       forceLocal: options.forceLocal ? O.some(true) : O.none(),
+      host: origin.host,
+      seat: origin.seat,
     });
     yield* appendYeetAttemptJournalEventForCheckout(repoRoot, branch, attempt);
     return O.some<OpenFinalCheckAttempt>({ attempt, branch, startedMillis: DateTime.toEpochMillis(now) });
@@ -1876,7 +1886,7 @@ const recordWorkerFinalCheckRoutes = (
               outcome,
             })
           ),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     }),
   });
@@ -1990,9 +2000,9 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
     yield* Console.log(
       `[yeet] final-check plan for ${Str.slice(0, 12)(headSha)} (merge base ${Str.slice(0, 12)(mergeBase)}):`
     );
-    yield* Effect.forEach(gates, (gate) => printGatePlan(run, gate), { discard: true });
+    yield* Effect.forEach(gates, (gate) => printGatePlan(run, gate), { concurrency: 1, discard: true });
     yield* printProfileSkips(routedSkips);
-    yield* Effect.forEach(forcedLines, (line) => Console.log(line), { discard: true });
+    yield* Effect.forEach(forcedLines, (line) => Console.log(line), { concurrency: 1, discard: true });
     return O.none();
   }
 
@@ -2000,7 +2010,7 @@ export const runYeetFinalCheck = Effect.fn("Yeet.runYeetFinalCheck")(function* (
   const ran = yield* Ref.make<FinalCheckRan>({ steps: [], receipt: O.none() });
   const execute = Effect.gen(function* () {
     const startedAt = yield* nowIso;
-    yield* Effect.forEach(forcedLines, (line) => Console.log(line), { discard: true });
+    yield* Effect.forEach(forcedLines, (line) => Console.log(line), { concurrency: 1, discard: true });
     const { steps, verdicts, shadowMisses } = yield* runGates(run, gates, options.failFast);
     yield* Ref.set(ran, { steps, receipt: O.none() });
     yield* refuseMovedTree(repoRoot, headSha);

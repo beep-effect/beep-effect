@@ -83,8 +83,10 @@ const makeLongKeyRequest = (id: string) =>
   makeRequest({ rpc: LongKeyRpc, payload: LongKeyRpc.payloadSchema.make({ id }) });
 const saveRequestsFor = Effect.fnUntraced(function* (ids: ReadonlyArray<number>) {
   const storage = yield* MessageStorage.MessageStorage;
-  yield* Effect.forEach(ids, (id) =>
-    Effect.flatMap(makeRequest({ payload: { id }, entityId: String(id) }), storage.saveRequest)
+  yield* Effect.forEach(
+    ids,
+    (id) => Effect.flatMap(makeRequest({ payload: { id }, entityId: String(id) }), storage.saveRequest),
+    { concurrency: 1 }
   );
   return storage;
 });
@@ -346,7 +348,7 @@ describe("SqlMessageStorage", () => {
         const reset = yield* request(3);
         const otherType = yield* request(4, "other");
         // beep: Effect.forEach replaces the upstream for loops.
-        yield* Effect.forEach([expired, recent, reset, otherType], storage.saveRequest);
+        yield* Effect.forEach([expired, recent, reset, otherType], storage.saveRequest, { concurrency: 1 });
         const chunk = yield* makeChunkReply(expired);
         yield* storage.saveReply(chunk);
         const ack = yield* makeAckChunk(expired, chunk);
@@ -377,7 +379,8 @@ describe("SqlMessageStorage", () => {
           ([id, kept]) =>
             Effect.flatMap(request(id, kept.envelope.address.entityType), storage.saveRequest).pipe(
               Effect.map((result) => expect(result._tag).toEqual("Duplicate"))
-            )
+            ),
+          { concurrency: 1 }
         );
         const keptReplies = yield* storage.repliesForUnfiltered([
           recent.envelope.requestId,
@@ -418,12 +421,15 @@ describe("SqlMessageStorage", () => {
         const storage = yield* MessageStorage.MessageStorage;
         const completedAt = cutoff;
         // beep: Effect.forEach replaces the upstream for loop.
-        yield* Effect.forEach(A.range(1, 6), (id) =>
-          Effect.gen(function* () {
-            const request = yield* makeRequest({ payload: { id } });
-            yield* storage.saveRequest(request);
-            yield* completeAt(request, completedAt + id - 1);
-          })
+        yield* Effect.forEach(
+          A.range(1, 6),
+          (id) =>
+            Effect.gen(function* () {
+              const request = yield* makeRequest({ payload: { id } });
+              yield* storage.saveRequest(request);
+              yield* completeAt(request, completedAt + id - 1);
+            }),
+          { concurrency: 1 }
         );
         // completed before the Snowflake epoch, so its reply id is negative
         const preEpoch = yield* makeRequest({ payload: { id: 0 } });
@@ -445,7 +451,8 @@ describe("SqlMessageStorage", () => {
             Number.POSITIVE_INFINITY,
             Number.POSITIVE_INFINITY,
           ],
-          (completedBefore) => deleteProcessedBefore(completedBefore, 2)
+          (completedBefore) => deleteProcessedBefore(completedBefore, 2),
+          { concurrency: 1 }
         );
         expect(deletedCounts).toEqual([0, 0, 1, 1, 2, 2, 1]);
         const running = yield* Effect.flatMap(makeRunning, storage.saveRequest);
@@ -461,8 +468,10 @@ describe("SqlMessageStorage", () => {
         expect(result._tag).toEqual("Success");
 
         // beep: Effect.forEach replaces the upstream for loops.
-        yield* Effect.forEach(A.range(2, 5), (id) =>
-          Effect.flatMap(makeRequest({ payload: { id } }), storage.saveRequest)
+        yield* Effect.forEach(
+          A.range(2, 5),
+          (id) => Effect.flatMap(makeRequest({ payload: { id } }), storage.saveRequest),
+          { concurrency: 1 }
         );
 
         const madeReply18 = yield* makeReply(request);
@@ -472,8 +481,10 @@ describe("SqlMessageStorage", () => {
         expect(messages).toHaveLength(4);
         expect(payloadIds(messages)).toEqual([2, 3, 4, 5]);
 
-        yield* Effect.forEach(A.range(6, 10), (id) =>
-          Effect.flatMap(makeRequest({ payload: { id } }), storage.saveRequest)
+        yield* Effect.forEach(
+          A.range(6, 10),
+          (id) => Effect.flatMap(makeRequest({ payload: { id } }), storage.saveRequest),
+          { concurrency: 1 }
         );
         messages = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
         expect(messages).toHaveLength(5);

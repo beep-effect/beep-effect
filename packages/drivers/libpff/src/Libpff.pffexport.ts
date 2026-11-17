@@ -1242,7 +1242,7 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         yield* Effect.forEach(
           published,
           (publishedPath) => fs.remove(publishedPath, { recursive: true }).pipe(Effect.ignore),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
         return yield* makeLibpffError("process", LibpffErrorOptions.make({ cause: "quota handoff publish failed" }));
       }
@@ -1609,8 +1609,11 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
           )
         ),
     });
-    const attachments = yield* Effect.forEach(item.attachments, (entry) =>
-      readItemBytes(entry.absolutePath).pipe(Effect.map((bytes) => ({ bytes, fileName: entry.originalName })))
+    const attachments = yield* Effect.forEach(
+      item.attachments,
+      (entry) =>
+        readItemBytes(entry.absolutePath).pipe(Effect.map((bytes) => ({ bytes, fileName: entry.originalName }))),
+      { concurrency: 1 }
     );
     const boundaryId = yield* deriveArtifactId([operation.source.id, item.directoryPath, "boundary"]).pipe(
       Effect.mapError(() =>
@@ -1710,7 +1713,9 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     if (!A.isReadonlyArrayNonEmpty(records)) {
       return O.none<ArtifactReference>();
     }
-    const lines = yield* Effect.forEach(records, (record) => PffexportMessageRecord.encodeJson(record)).pipe(
+    const lines = yield* Effect.forEach(records, (record) => PffexportMessageRecord.encodeJson(record), {
+      concurrency: 1,
+    }).pipe(
       Effect.mapError(() =>
         makeLibpffError("process", LibpffErrorOptions.make({ cause: "message record encoding failed" }))
       )
@@ -1867,8 +1872,10 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
     const state: EmlBudgetState = { materializedBytes: 0 };
     const records: Array<PffexportMessageRecord> = [];
 
-    const resolvedMessages = yield* Effect.forEach(classifyExportedItems(entries, treeRootNames), (item) =>
-      resolveExportedMessage({ budget: emlBudget, entryPathIndex, item, operation, state, warnings })
+    const resolvedMessages = yield* Effect.forEach(
+      classifyExportedItems(entries, treeRootNames),
+      (item) => resolveExportedMessage({ budget: emlBudget, entryPathIndex, item, operation, state, warnings }),
+      { concurrency: 1 }
     );
     for (const resolved of A.getSomes(resolvedMessages)) {
       if (O.isSome(resolved.emlRef)) {

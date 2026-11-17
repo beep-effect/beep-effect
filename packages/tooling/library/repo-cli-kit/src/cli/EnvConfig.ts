@@ -435,17 +435,20 @@ const envFileSecretReferenceEntries = Effect.fn("EnvConfig.envFileSecretReferenc
 ) {
   const provider = ConfigProvider.fromDotEnvContents(contents, { preserveEmptyStrings: true });
   const variableNames = pipe(Str.split(contents, "\n"), A.map(envFileAssignmentName), A.getSomes, A.dedupe);
-  const entries = yield* Effect.forEach(variableNames, (variableName) =>
-    provider.load([variableName]).pipe(
-      Effect.orDie,
-      Effect.map((node) =>
-        O.fromUndefinedOr(node).pipe(
-          O.flatMap((loaded) => O.fromUndefinedOr(loaded.value)),
-          O.filter(isUnresolvedSecretReference),
-          O.map((value) => Tuple.make(variableName, value))
+  const entries = yield* Effect.forEach(
+    variableNames,
+    (variableName) =>
+      provider.load([variableName]).pipe(
+        Effect.orDie,
+        Effect.map((node) =>
+          O.fromUndefinedOr(node).pipe(
+            O.flatMap((loaded) => O.fromUndefinedOr(loaded.value)),
+            O.filter(isUnresolvedSecretReference),
+            O.map((value) => Tuple.make(variableName, value))
+          )
         )
-      )
-    )
+      ),
+    { concurrency: 1 }
   );
   return A.getSomes(entries);
 });
@@ -891,10 +894,13 @@ export const loadHostTurboCacheDefaults = Effect.fn("EnvConfig.loadHostTurboCach
   const contents = yield* fs.readFileString(path.join(configRoot, "beep/r2-cache/client.env")).pipe(Effect.option);
   if (O.isNone(contents)) return R.empty<string, string>();
   const provider = ConfigProvider.fromDotEnvContents(contents.value);
-  const entries = yield* Effect.forEach(names, (name) =>
-    Config.option(Config.String(name))
-      .parse(provider)
-      .pipe(Effect.option, Effect.map(O.flatten), Effect.map(O.map((value) => Tuple.make(name, value))))
+  const entries = yield* Effect.forEach(
+    names,
+    (name) =>
+      Config.option(Config.String(name))
+        .parse(provider)
+        .pipe(Effect.option, Effect.map(O.flatten), Effect.map(O.map((value) => Tuple.make(name, value)))),
+    { concurrency: 1 }
   );
   const defaults = R.fromEntries(A.getSomes(entries));
   if (managedReader && !managedHostCacheReferencesMatch(environment, defaults)) return R.empty<string, string>();

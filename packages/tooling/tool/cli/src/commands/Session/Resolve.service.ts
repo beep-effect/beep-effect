@@ -466,7 +466,7 @@ export const makeSessionResolver = Effect.fn("SessionResolver.make")(function* (
       onNone: A.empty<SessionRoute>,
       onSome: (sessionId) => ownerRoutes(presenceRows, owner.value, sessionId),
     });
-    const perRoute = yield* Effect.forEach(routes, (route) => readRoute(probe, route));
+    const perRoute = yield* Effect.forEach(routes, (route) => readRoute(probe, route), { concurrency: 1 });
     const readings = A.flatten(perRoute);
     return SessionResolution.make({
       schemaVersion: "session-resolution/v1",

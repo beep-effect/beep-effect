@@ -69,9 +69,10 @@ const profilePath = Effect.gen(function* () {
 });
 
 const printed = <A, E, R>(self: Effect.Effect<A, E, R>) =>
-  Effect.all({ value: self, lines: TestConsole.logLines.pipe(Effect.map(A.filter(isString))) }).pipe(
-    Effect.provideServiceEffect(Console.Console, TestConsole.make)
-  );
+  Effect.all(
+    { value: self, lines: TestConsole.logLines.pipe(Effect.map(A.filter(isString))) },
+    { concurrency: 1 }
+  ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
 
 describe("ProfileStore", () => {
   it.layer(GatewayServices, { timeout: layerTimeout })("on an empty data directory", (it) => {

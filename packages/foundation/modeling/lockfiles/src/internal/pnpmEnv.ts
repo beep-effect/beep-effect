@@ -296,8 +296,10 @@ const packageManagerLock = Effect.fnUntraced(function* (raw: PnpmEnvRawType, dec
   const key = `${PNPM}@${declared.version}`;
   const snapshot = own(raw.snapshots, key);
   if (O.isNone(snapshot)) return yield* Effect.fail(unaccounted(`snapshots[${yield* quoted(key)}] is missing`));
-  const natives = yield* Effect.forEach(R.toEntries(snapshot.value.optionalDependencies ?? {}), ([name, version]) =>
-    Effect.map(integrityOf(raw, `${name}@${version}`), (sri) => [name, sri] as const)
+  const natives = yield* Effect.forEach(
+    R.toEntries(snapshot.value.optionalDependencies ?? {}),
+    ([name, version]) => Effect.map(integrityOf(raw, `${name}@${version}`), (sri) => [name, sri] as const),
+    { concurrency: 1 }
   );
   return PackageManagerLock.make({
     name: PNPM,
@@ -346,17 +348,20 @@ export const readPnpmConfigDependencies = Effect.fn("PnpmEnvLockfile.readConfigD
   );
   if (O.isNone(declared)) return HashMap.empty();
   const [preamble, entries] = declared.value;
-  const locks = yield* Effect.forEach(R.toEntries(entries), ([name, entry]) =>
-    Effect.flatMap(quoted(name), (quotedName) =>
-      Effect.map(
-        recordedIntegrity(preamble, `config dependency ${quotedName}`, name, entry.version),
-        (integrity) =>
-          [
-            name,
-            ConfigDependencyLock.make({ name, specifier: entry.specifier, version: entry.version, integrity }),
-          ] as const
-      )
-    )
+  const locks = yield* Effect.forEach(
+    R.toEntries(entries),
+    ([name, entry]) =>
+      Effect.flatMap(quoted(name), (quotedName) =>
+        Effect.map(
+          recordedIntegrity(preamble, `config dependency ${quotedName}`, name, entry.version),
+          (integrity) =>
+            [
+              name,
+              ConfigDependencyLock.make({ name, specifier: entry.specifier, version: entry.version, integrity }),
+            ] as const
+        )
+      ),
+    { concurrency: 1 }
   );
   return HashMap.fromIterable(locks);
 });

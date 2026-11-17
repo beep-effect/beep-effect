@@ -236,7 +236,7 @@ const inlinesToLexical = (
   insideLink = false
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   Effect.map(
-    Effect.forEach(inlines, (inline) => inlineToLexical(inline, format, insideLink)),
+    Effect.forEach(inlines, (inline) => inlineToLexical(inline, format, insideLink), { concurrency: 1 }),
     A.flatten
   );
 
@@ -313,16 +313,19 @@ const listItemsToLexical = (
     readonly checked?: boolean;
   }> = A.isReadonlyArrayNonEmpty(items) ? items : [{ children: A.emptyReadonly<Md.ListItemChild>() }];
 
-  return Effect.forEach(runtimeItems, (item, index) =>
-    Effect.flatMap(listItemChildrenToLexical(item.children), (children) =>
-      asSchemaError(
-        ListItemNode.makeEffect({
-          checked: O.fromUndefinedOr(item.checked),
-          value: PosInt.make(index + start),
-          children,
-        })
-      )
-    )
+  return Effect.forEach(
+    runtimeItems,
+    (item, index) =>
+      Effect.flatMap(listItemChildrenToLexical(item.children), (children) =>
+        asSchemaError(
+          ListItemNode.makeEffect({
+            checked: O.fromUndefinedOr(item.checked),
+            value: PosInt.make(index + start),
+            children,
+          })
+        )
+      ),
+    { concurrency: 1 }
   );
 };
 
@@ -330,12 +333,15 @@ const listItemChildrenToLexical = (
   children: ReadonlyArray<Md.ListItemChild>
 ): Effect.Effect<ReadonlyArray<LexicalNode>, S.SchemaError> =>
   Effect.map(
-    Effect.forEach(children, (child) =>
-      S.is(Md.Inline)(child)
-        ? inlineToLexical(child, emptyTextFormat)
-        : P.isTagged("ul")(child) || P.isTagged("ol")(child) || P.isTagged("taskList")(child)
-          ? Effect.map(asSchemaError(blockToLexical(child)), A.of<LexicalNode>)
-          : Effect.map(textLeaf(mdBlockText(child), emptyTextFormat), A.of<LexicalNode>)
+    Effect.forEach(
+      children,
+      (child) =>
+        S.is(Md.Inline)(child)
+          ? inlineToLexical(child, emptyTextFormat)
+          : P.isTagged("ul")(child) || P.isTagged("ol")(child) || P.isTagged("taskList")(child)
+            ? Effect.map(asSchemaError(blockToLexical(child)), A.of<LexicalNode>)
+            : Effect.map(textLeaf(mdBlockText(child), emptyTextFormat), A.of<LexicalNode>),
+      { concurrency: 1 }
     ),
     A.flatten
   );
@@ -415,12 +421,14 @@ export const blockToLexical = Match.typeTags<Md.Block>()({
       onSome: (ref) => ArtifactRefNode.makeEffect({ artifactId: ref.artifactId, label: ref.label }),
     }),
   blockquote: Effect.fn(function* (node: Md.BlockQuote) {
-    const runs = yield* Effect.forEach(node.children, quoteChildToInlines);
+    const runs = yield* Effect.forEach(node.children, quoteChildToInlines, { concurrency: 1 });
     const brk = yield* lineBreak();
     return yield* QuoteNode.makeEffect({ children: A.flatten(A.intersperse(runs, [brk])) });
   }),
   pre: Effect.fn(function* (node: Md.Pre) {
-    const texts = yield* Effect.forEach(Str.split(node.value, "\n"), (line) => textLeaf(line, emptyTextFormat));
+    const texts = yield* Effect.forEach(Str.split(node.value, "\n"), (line) => textLeaf(line, emptyTextFormat), {
+      concurrency: 1,
+    });
     const brk = yield* lineBreak();
     return yield* CodeNode.makeEffect({
       language: O.flatMap(node.language, S.decodeOption(Md.CodeFenceLanguage)),
@@ -449,11 +457,13 @@ export const blockToLexical = Match.typeTags<Md.Block>()({
                 sourceColumnCount > 0 && node.headerRow && rowIndex === 0 ? rowTableCellHeader : noTableCellHeader,
               children: [paragraph],
             });
-          })
+          }),
+          { concurrency: 1 }
         );
 
         return yield* TableRowNode.makeEffect({ children: cells });
-      })
+      }),
+      { concurrency: 1 }
     );
 
     return yield* TableNode.makeEffect({ children: rows });
@@ -509,7 +519,7 @@ export const blockToLexical = Match.typeTags<Md.Block>()({
 export const documentToEditorState = Effect.fn("Lexical.codec.documentToEditorState")(function* (
   document: Md.Document
 ) {
-  const children = yield* Effect.forEach(document.children, blockToLexical);
+  const children = yield* Effect.forEach(document.children, blockToLexical, { concurrency: 1 });
   const runtimeChildren = A.isReadonlyArrayNonEmpty(children)
     ? children
     : [yield* ParagraphNode.makeEffect({ children: [] })];

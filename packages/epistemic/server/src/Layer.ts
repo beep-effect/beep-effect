@@ -60,8 +60,9 @@ const ClaimTransitionLayer = Layer.succeed(ClaimTransition, ClaimTransition.of(m
 
 const ClaimGateOutcomeResolverLayer = Layer.effect(
   ClaimGateOutcomeResolver,
-  Effect.map(Effect.all([ClaimDispositionRepository, ClaimTransition]), ([dispositions, transition]) =>
-    ClaimGateOutcomeResolver.of(makeClaimGateOutcomeResolver(dispositions, transition))
+  Effect.map(
+    Effect.all([ClaimDispositionRepository, ClaimTransition], { concurrency: 1 }),
+    ([dispositions, transition]) => ClaimGateOutcomeResolver.of(makeClaimGateOutcomeResolver(dispositions, transition))
   )
 );
 

@@ -262,7 +262,7 @@ const makeService = Effect.fnUntraced(function* () {
             })
           )
         ),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     yield* Effect.forEach(
       [layout.root, layout.clipsDir, layout.framesDir, layout.sheetsDir, layout.videoDir],
@@ -275,7 +275,7 @@ const makeService = Effect.fnUntraced(function* () {
             })
           )
         ),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     return layout;
   });

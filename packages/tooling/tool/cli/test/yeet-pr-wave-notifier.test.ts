@@ -76,7 +76,7 @@ const LedgerRow = S.Struct({
 const decodeLedgerRow = S.decodeUnknownEffect(S.fromJsonString(LedgerRow));
 const isPrNumber = S.is(PrNumber);
 const ledgerRows = (text: string) =>
-  Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) => decodeLedgerRow(line));
+  Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) => decodeLedgerRow(line), { concurrency: 1 });
 
 const record = (harness: "claude-code" | "codex", sessionId: string, recordedAt = at) =>
   PrSessionRecord.make({
@@ -108,30 +108,33 @@ const record = (harness: "claude-code" | "codex", sessionId: string, recordedAt 
   });
 
 const waveFor = Effect.fn("prWaveTest.wave")(function* (checkout: string, lanes: ReadonlyArray<string> = ["Lint"]) {
-  const entries = yield* Effect.forEach(lanes, (lane) =>
-    Effect.gen(function* () {
-      const capsule = YeetFailureCapsule.make({
-        bucket: "fail",
-        headSha: head,
-        lane,
-        link: null,
-        observedAt: at,
-        prNumber: 7,
-        state: "FAILURE",
-        workflow: null,
-      });
-      return YeetInboxEntry.make({
-        ack: YeetAckState.make({ acked: false, receipt: null }),
-        liveness: "live",
-        row: YeetCheckFailedRow.make({
-          capsule,
-          checkout,
-          id: yield* yeetInboxRowId(capsule),
-          severity: "P0",
-          ts: at,
-        }),
-      });
-    })
+  const entries = yield* Effect.forEach(
+    lanes,
+    (lane) =>
+      Effect.gen(function* () {
+        const capsule = YeetFailureCapsule.make({
+          bucket: "fail",
+          headSha: head,
+          lane,
+          link: null,
+          observedAt: at,
+          prNumber: 7,
+          state: "FAILURE",
+          workflow: null,
+        });
+        return YeetInboxEntry.make({
+          ack: YeetAckState.make({ acked: false, receipt: null }),
+          liveness: "live",
+          row: YeetCheckFailedRow.make({
+            capsule,
+            checkout,
+            id: yield* yeetInboxRowId(capsule),
+            severity: "P0",
+            ts: at,
+          }),
+        });
+      }),
+    { concurrency: 1 }
   );
   return YeetPrWave.make({
     prNumber: 7,
@@ -461,8 +464,10 @@ const runWorker = Effect.fn("prWaveTest.runWorker")(function* (acked: boolean) {
   const encoded9 = yield* YeetPrWaveDescriptorJson.encode(descriptor);
   yield* fs.writeFileString(descriptorPath, encoded9);
   if (acked) {
-    yield* Effect.forEach(descriptor.rowIds, (id) =>
-      fs.writeFileString(path.join(checkout, ".beep", "inbox", "acks", id), "{}")
+    yield* Effect.forEach(
+      descriptor.rowIds,
+      (id) => fs.writeFileString(path.join(checkout, ".beep", "inbox", "acks", id), "{}"),
+      { concurrency: 1 }
     );
   }
   const worker = yield* ChildProcess.make("bash", [workerPath, descriptorPath], {
@@ -485,7 +490,7 @@ const runWorker = Effect.fn("prWaveTest.runWorker")(function* (acked: boolean) {
   const exitCode = yield* worker.exitCode;
   const ledgerDir = path.join(evidence, YEET_PR_WAVE_LEDGER_NAMESPACE);
   const ledgerFiles = yield* fs.readDirectory(ledgerDir).pipe(Effect.orElseSucceed(A.empty));
-  const ledger = yield* Effect.forEach(ledgerFiles, (name) => readText(path.join(ledgerDir, name)));
+  const ledger = yield* Effect.forEach(ledgerFiles, (name) => readText(path.join(ledgerDir, name)), { concurrency: 1 });
   return {
     exitCode,
     descriptor,

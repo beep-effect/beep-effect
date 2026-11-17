@@ -42,7 +42,7 @@ const dependent = (claimNumber: number, claimReferences: A.NonEmptyReadonlyArray
   });
 };
 const treesOf = Effect.fn("PolicyWorkTest.treesOf")((claims: PatentClaims) =>
-  Effect.forEach(claims, (claim) => decomposeClaim(claim, claims))
+  Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 })
 );
 
 const deepClaims = (referenceCount: number, depth = 64): PatentClaims =>
@@ -165,7 +165,7 @@ describe("bounded antecedent policy preparation", () => {
       // 120-claim chain. Earlier successful chains can instead leave less
       // than the next chain's lookup reservation while enumeration still fits.
       for (const depths of [[120], [20, 21, 95, 50]]) {
-        const trees = yield* Effect.forEach(depths, sparseTree);
+        const trees = yield* Effect.forEach(depths, sparseTree, { concurrency: 1 });
         const findings = antecedentPolicy(trees, claims);
         assert.isTrue(A.some(findings, ({ rule }) => rule === "chain-work-limit"));
         assert.deepStrictEqual(antecedentPolicy(trees, claims), findings);
@@ -227,20 +227,23 @@ describe("bounded antecedent policy preparation", () => {
         const last = yield* decomposeClaim(A.lastNonEmpty(claims), claims);
         // Valid policy inputs can contain decomposed source-owned elements with
         // no recognized terms. They still participate in the completeness scan.
-        const middle = yield* Effect.forEach(A.dropRight(A.drop(claims, 1), 1), (claim) =>
-          S.decodeEffect(ClaimElementTree)({
-            claimNumber: claim.claimNumber,
-            producer: "rule",
-            elements: [
-              {
-                path: `${claim.claimNumber}`,
-                kind: "preamble-subject",
-                anchor: { startChar: 0, endChar: claim.claimText.length, quote: claim.claimText },
-                terms: [],
-              },
-            ],
-            edges: [],
-          })
+        const middle = yield* Effect.forEach(
+          A.dropRight(A.drop(claims, 1), 1),
+          (claim) =>
+            S.decodeEffect(ClaimElementTree)({
+              claimNumber: claim.claimNumber,
+              producer: "rule",
+              elements: [
+                {
+                  path: `${claim.claimNumber}`,
+                  kind: "preamble-subject",
+                  anchor: { startChar: 0, endChar: claim.claimText.length, quote: claim.claimText },
+                  terms: [],
+                },
+              ],
+              edges: [],
+            }),
+          { concurrency: 1 }
         );
         const trees = A.append(A.prepend(middle, first), last);
         const findings = antecedentPolicy(trees, claims);

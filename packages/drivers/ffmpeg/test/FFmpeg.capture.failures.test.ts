@@ -166,10 +166,13 @@ const makeScriptedSpawnerLayer = (
             const target = A.last(args);
             if (O.isSome(target) && script.produceOutput && script.ffmpegExitCode === 0) {
               yield* Str.includes("%0")(target.value)
-                ? Effect.all([
-                    fs.writeFileString(renderPatternPath(target.value, 0), "frame zero"),
-                    fs.writeFileString(renderPatternPath(target.value, 1), "frame one"),
-                  ])
+                ? Effect.all(
+                    [
+                      fs.writeFileString(renderPatternPath(target.value, 0), "frame zero"),
+                      fs.writeFileString(renderPatternPath(target.value, 1), "frame one"),
+                    ],
+                    { concurrency: 1 }
+                  )
                 : fs.writeFileString(target.value, "fake output");
             }
 

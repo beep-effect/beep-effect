@@ -128,7 +128,7 @@ export const replayCitationFullLawMetadata = Effect.fn("FullLawMetadataTest.repl
       expect(patch).toEqual(law.patch);
       expect(actual.editionGuess).toBe(row.guess);
       expect(setup.reads).toEqual(patch.year !== null && patch.year <= 2026 ? row.checks : []);
-      calls += law.calls.length;
+      calls += law.calls.length > 0 ? 1 : 0;
     }
     expect(rows).toHaveLength(full ? 768 : 11);
     yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);

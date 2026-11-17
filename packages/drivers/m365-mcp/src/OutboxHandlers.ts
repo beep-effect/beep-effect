@@ -564,7 +564,7 @@ export const makeOutboxToolkitHandlers = (
             onSome: (internetMessageId) => Effect.ignore(appendIdentified(draftId, internetMessageId)),
           });
         }
-        const statuses = yield* Effect.forEach(basis, reader.recheck);
+        const statuses = yield* Effect.forEach(basis, reader.recheck, { concurrency: 1 });
         const report = makeBasisReport(basis, statuses);
         const plan = planMark(
           report.verdict,
@@ -589,7 +589,7 @@ export const makeOutboxToolkitHandlers = (
             // Every path is checked and read before Graph is touched.
             const attachments = yield* source.resolve(params.attachmentPaths);
             // Every pin is read before the draft exists: an unreadable pin creates nothing.
-            const basis = yield* Effect.forEach(params.basis, reader.observe);
+            const basis = yield* Effect.forEach(params.basis, reader.observe, { concurrency: 1 });
             yield* Effect.annotateCurrentSpan({
               m365_outbox_attachment_count: A.length(attachments),
               m365_outbox_basis_count: A.length(basis),
@@ -640,7 +640,7 @@ export const makeOutboxToolkitHandlers = (
                       userId,
                     })
                   ),
-                { discard: true }
+                { concurrency: 1, discard: true }
               );
               // Prove the upload round-trip: what Graph stores must be the local files, byte for byte,
               // so the digests returned here are exactly what send_draft will compute later.
@@ -736,7 +736,7 @@ export const makeOutboxToolkitHandlers = (
             // A draft this server did not record creating has no pins and reports unpinned.
             const created = yield* audit.createdDraft(params.draftId);
             const pins = O.match(created, { onNone: A.empty, onSome: (record) => record.basis });
-            const statuses = yield* Effect.forEach(pins, reader.recheck);
+            const statuses = yield* Effect.forEach(pins, reader.recheck, { concurrency: 1 });
             const basis = makeBasisReport(pins, statuses);
             yield* Effect.annotateCurrentSpan({
               m365_outbox_attachment_count: A.length(stored),
@@ -832,7 +832,9 @@ export const makeOutboxToolkitHandlers = (
                 .getMailFolder(M365GetMailFolderRequest.make({ folder: DELETED_ITEMS_FOLDER, userId }))
                 .pipe(Effect.mapBoth({ onFailure: (error) => error.reason, onSuccess: (folder) => folder.id }))
             );
-            const outcomes = yield* Effect.forEach(open, (draft) => checkOpenDraft(draft, deletedItemsId));
+            const outcomes = yield* Effect.forEach(open, (draft) => checkOpenDraft(draft, deletedItemsId), {
+              concurrency: 1,
+            });
             const drafts = A.map(A.filter(outcomes, DraftOutcome.guards.Checked), entryOf);
             const closed = A.map(A.filter(outcomes, DraftOutcome.guards.Closed), entryOf);
             const unreadable = A.map(A.filter(outcomes, DraftOutcome.guards.Unreadable), entryOf);

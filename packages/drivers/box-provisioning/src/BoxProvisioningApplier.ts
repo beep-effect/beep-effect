@@ -976,7 +976,7 @@ export class BoxProvisioningApplier extends Context.Service<BoxProvisioningAppli
   $I`BoxProvisioningApplier`
 ) {
   static readonly layerWithJournal = Layer.unwrap(
-    Effect.all([B.Box, BoxProvisioningApplyJournal, Digest.Digest, SecureRandom.SecureRandom]).pipe(
+    Effect.all([B.Box, BoxProvisioningApplyJournal, Digest.Digest, SecureRandom.SecureRandom], { concurrency: 1 }).pipe(
       Effect.map(([box, journal, digest, secureRandom]) =>
         Layer.succeed(
           BoxProvisioningApplier,
@@ -1013,7 +1013,7 @@ export class BoxProvisioningApplier extends Context.Service<BoxProvisioningAppli
     journal: BoxProvisioningApplyJournal["Service"]
   ): Layer.Layer<BoxProvisioningApplier> =>
     Layer.unwrap(
-      Effect.map(Effect.all([Digest.Digest, SecureRandom.SecureRandom]), ([digest, secureRandom]) =>
+      Effect.map(Effect.all([Digest.Digest, SecureRandom.SecureRandom], { concurrency: 1 }), ([digest, secureRandom]) =>
         Layer.succeed(
           BoxProvisioningApplier,
           BoxProvisioningApplier.of(makeService(box, journal, digest, secureRandom))

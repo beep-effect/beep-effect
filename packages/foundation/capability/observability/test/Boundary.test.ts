@@ -118,7 +118,8 @@ describe("Boundary", () => {
             "src/strict/StrictTier.behavior.ts",
             "src/strict/StrictTier.schemas.ts",
           ],
-          readText
+          readText,
+          { concurrency: 1 }
         );
 
         for (const source of strictSources) {

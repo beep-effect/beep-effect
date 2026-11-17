@@ -591,7 +591,7 @@ describe("C0 provider cache and language-model boundary", () => {
         expect(reclaimedPaths).toEqual(
           expect.arrayContaining([`${lock}.reclaim-${process.pid}-1`, `${lock}.reclaim-${process.pid}-2`])
         );
-        const forEach11 = yield* Effect.forEach(reclaimedPaths, fs.exists);
+        const forEach11 = yield* Effect.forEach(reclaimedPaths, fs.exists, { concurrency: 1 });
         expect(forEach11).toEqual([false, false]);
         const exists12 = yield* fs.exists(lock);
         pipe(exists12, assertFalse);
@@ -695,7 +695,7 @@ describe("C0 provider cache and language-model boundary", () => {
         expect(got18).toBe(0);
         const readFileString19 = yield* fs.readFileString(ownerPath);
         expect(readFileString19).toBe(blockRenameBack ? newerOwner : displacedOwner);
-        const forEach20 = yield* Effect.forEach(reclaimedPaths, fs.exists);
+        const forEach20 = yield* Effect.forEach(reclaimedPaths, fs.exists, { concurrency: 1 });
         expect(forEach20).toEqual([false]);
         const readFileString21 = yield* fs.readFileString(target);
         expect(readFileString21).toBe(`${json}\n`);

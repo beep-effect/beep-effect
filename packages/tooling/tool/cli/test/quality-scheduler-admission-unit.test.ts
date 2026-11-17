@@ -221,10 +221,10 @@ describe("admission unit schema (SCHE-08)", () => {
       const leaseText = yield* encodeLease(lease);
       const ticketText = yield* encodeTicket(ticket);
       deepStrictEqual([leaseText, ticketText], [preUnitText.lease, preUnitText.ticket]);
-      const rows = yield* Effect.forEach(preUnitRows, (line) => decodeAdmissionJournalEvent(line));
-      const reencoded = yield* Effect.forEach(rows, (row) => encodeEvent(row));
+      const rows = yield* Effect.forEach(preUnitRows, (line) => decodeAdmissionJournalEvent(line), { concurrency: 1 });
+      const reencoded = yield* Effect.forEach(rows, (row) => encodeEvent(row), { concurrency: 1 });
       deepStrictEqual(reencoded, preUnitRows);
-      const keys = yield* Effect.forEach(preUnitRows, unitKeysOf);
+      const keys = yield* Effect.forEach(preUnitRows, unitKeysOf, { concurrency: 1 });
       deepStrictEqual(keys, [[], [], [], []]);
     })
   );
@@ -234,7 +234,7 @@ describe("admission unit schema (SCHE-08)", () => {
       const leaseText = yield* encodeLease(leaseOf());
       const ticketText = yield* encodeTicket(ticketOf());
       deepStrictEqual([leaseText, ticketText], [preUnitText.lease, preUnitText.ticket]);
-      const rows = yield* Effect.forEach(rowsOf(ticketOf()), (row) => encodeEvent(row));
+      const rows = yield* Effect.forEach(rowsOf(ticketOf()), (row) => encodeEvent(row), { concurrency: 1 });
       deepStrictEqual(rows, preUnitRows);
     })
   );
@@ -251,11 +251,13 @@ describe("admission unit schema (SCHE-08)", () => {
       const gatedTicket = yield* decodePreUnitTicket(ticketText);
       const plainTicket = yield* decodePreUnitTicket(preUnitText.ticket);
       deepStrictEqual(gatedTicket, plainTicket);
-      const rowTexts = yield* Effect.forEach(rowsOf(ticketOf(unitFields)), (row) => encodeEvent(row));
-      const rowKeys = yield* Effect.forEach(rowTexts, unitKeysOf);
+      const rowTexts = yield* Effect.forEach(rowsOf(ticketOf(unitFields)), (row) => encodeEvent(row), {
+        concurrency: 1,
+      });
+      const rowKeys = yield* Effect.forEach(rowTexts, unitKeysOf, { concurrency: 1 });
       deepStrictEqual(rowKeys, A.replicate([...unitKeys], 4));
-      const gatedRows = yield* Effect.forEach(rowTexts, (line) => decodePreUnitRow(line));
-      const plainRows = yield* Effect.forEach(preUnitRows, (line) => decodePreUnitRow(line));
+      const gatedRows = yield* Effect.forEach(rowTexts, (line) => decodePreUnitRow(line), { concurrency: 1 });
+      const plainRows = yield* Effect.forEach(preUnitRows, (line) => decodePreUnitRow(line), { concurrency: 1 });
       deepStrictEqual(gatedRows, plainRows);
     })
   );
@@ -275,8 +277,8 @@ describe("admission unit schema (SCHE-08)", () => {
       const leases = A.map(A.zip(units, sources), ([unit, weightSource]) =>
         leaseOf({ unit: O.some(unit), weightSource: O.some(weightSource), owner: O.some(owner) })
       );
-      const texts = yield* Effect.forEach(leases, (lease) => encodeLease(lease));
-      const decoded = yield* Effect.forEach(texts, (text) => decodeLease(text));
+      const texts = yield* Effect.forEach(leases, (lease) => encodeLease(lease), { concurrency: 1 });
+      const decoded = yield* Effect.forEach(texts, (text) => decodeLease(text), { concurrency: 1 });
       deepStrictEqual(decoded, leases);
     })
   );
@@ -399,7 +401,7 @@ const admitOnce = Effect.fn("AdmissionUnitTest.admitOnce")(function* (root: stri
 });
 
 const decodeRows = (journal: ReadonlyArray<string>) =>
-  Effect.forEach(journal, (line) => decodeAdmissionJournalEvent(line));
+  Effect.forEach(journal, (line) => decodeAdmissionJournalEvent(line), { concurrency: 1 });
 
 const verifyRequest = (unit: AdmissionUnit) =>
   AdmissionRequest.make({
@@ -457,7 +459,7 @@ it.layer(SchedulerTestLayer, { concurrent: false, timeout: "20 seconds" })("admi
         A.map(rows, (row) => row._tag),
         ["admission-enqueued", "admission-admitted", "admission-released"]
       );
-      const rowKeys = yield* Effect.forEach(journal, unitKeysOf);
+      const rowKeys = yield* Effect.forEach(journal, unitKeysOf, { concurrency: 1 });
       deepStrictEqual(rowKeys, [[], [], []]);
       strictEqual(A.length(spawner.spawns), 0);
     })
@@ -488,7 +490,7 @@ it.layer(SchedulerTestLayer, { concurrent: false, timeout: "20 seconds" })("admi
       deepStrictEqual(stamped, A.replicate(O.some(expected), 3));
       const preUnitLease = yield* decodePreUnitLease(leaseText);
       strictEqual(preUnitLease.weightTokens, 3);
-      const preUnitRows = yield* Effect.forEach(journal, (line) => decodePreUnitRow(line));
+      const preUnitRows = yield* Effect.forEach(journal, (line) => decodePreUnitRow(line), { concurrency: 1 });
       strictEqual(A.length(preUnitRows), 3);
     })
   );
@@ -681,7 +683,8 @@ it.layer(SchedulerTestLayer, { concurrent: false, timeout: "20 seconds" })("Cach
             const leasePath = path.join(leases, `${holder.nonce}-${process.pid}.lease.json`);
             yield* fs.writeFileString(leasePath, `${text}\n`);
             return leasePath;
-          })
+          }),
+          { concurrency: 1 }
         );
         // The first availableGib read follows the first scan of the queue, which saw all three holders.
         const scanned = yield* Deferred.make<void>();

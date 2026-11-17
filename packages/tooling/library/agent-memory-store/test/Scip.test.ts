@@ -40,8 +40,11 @@ describe("SymbolResolution", () => {
   it.effect(
     "round-trips every resolution and keeps the definition of a resolved symbol",
     Effect.fnUntraced(function* () {
-      const decoded = yield* Effect.forEach(resolutions, (resolution) =>
-        Effect.flatMap(S.encodeEffect(SymbolResolution)(resolution), S.decodeUnknownEffect(SymbolResolution))
+      const decoded = yield* Effect.forEach(
+        resolutions,
+        (resolution) =>
+          Effect.flatMap(S.encodeEffect(SymbolResolution)(resolution), S.decodeUnknownEffect(SymbolResolution)),
+        { concurrency: 1 }
       );
       expect(decoded).toEqual(resolutions);
       expect(A.map(decoded, (resolution) => resolution.liveness)).toEqual(["live", "reverify", "unresolved"]);

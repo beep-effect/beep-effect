@@ -445,14 +445,18 @@ describe("clean-HEAD install receipt reuse (A4)", () => {
         yield* git("rm", "--quiet", "bun.lock");
         yield* git("commit", "--quiet", "--no-verify", "-m", "drop lockfile");
         const installed = yield* git("rev-parse", "HEAD");
-        const clean = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step));
+        const clean = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step), {
+          concurrency: 1,
+        });
         expect(A.map(clean, (result) => result.exitCode)).toEqual([0]);
         const loadedHeadInstallReceipt10 = yield* loadHeadInstallReceipt(context, installed);
         assertSome(
           O.map(loadedHeadInstallReceipt10, (receipt) => receipt.inputs.lockfileDigest),
           "absent"
         );
-        const repeated = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step));
+        const repeated = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step), {
+          concurrency: 1,
+        });
         expect(
           A.every(
             repeated,
@@ -464,7 +468,9 @@ describe("clean-HEAD install receipt reuse (A4)", () => {
         expect(retained).toEqual(loadedHeadInstallReceipt10);
         // An unparseable lockfile fails the frozen install and drops the receipt.
         const broken = yield* commit("bun.lock", "not a lockfile\n");
-        const failed = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step));
+        const failed = yield* Effect.forEach(preflight, (step) => executeStepWithArtifacts(context, step), {
+          concurrency: 1,
+        });
         expect(A.map(failed, (result) => result.exitCode === 0)).toEqual([false]);
         const loadedHeadInstallReceipt11 = yield* loadHeadInstallReceipt(context, broken);
         assertNone(loadedHeadInstallReceipt11);

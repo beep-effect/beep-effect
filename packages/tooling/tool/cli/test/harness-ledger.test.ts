@@ -111,7 +111,7 @@ const readLedgerLines = Effect.fn("test.readLedgerLines")(function* (root: strin
   const path = yield* Path.Path;
   const dir = path.join(root, "harness-ledger", "rows");
   const files = yield* fs.readDirectory(dir);
-  const texts = yield* Effect.forEach(files, (name) => fs.readFileString(path.join(dir, name)));
+  const texts = yield* Effect.forEach(files, (name) => fs.readFileString(path.join(dir, name)), { concurrency: 1 });
   return pipe(texts, A.join(""), Str.split("\n"), A.filter(Str.isNonEmpty));
 });
 
@@ -192,7 +192,9 @@ const seedProposalRows = Effect.fn("test.seedProposalRows")(function* (
   const month = pipe(DateTime.formatIso(first.createdAt), Str.slice(0, 7));
   const file = path.join(dir, `${month}.jsonl`);
   const existing = (yield* fs.exists(file)) ? yield* fs.readFileString(file) : "";
-  const lines = yield* Effect.forEach(report.proposals, (proposal) => HarnessLedgerRow.encodeJsonEffect(proposal.row));
+  const lines = yield* Effect.forEach(report.proposals, (proposal) => HarnessLedgerRow.encodeJsonEffect(proposal.row), {
+    concurrency: 1,
+  });
   yield* fs.writeFileString(file, `${existing}${A.join(lines, "\n")}\n`);
 });
 
@@ -1366,7 +1368,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
           return yield* HookPulseV1.encodeJsonEffect(
             HookPulseV1.make({ ...row, transcriptPath: O.some(transcriptPath) })
           );
-        })
+        }),
+        { concurrency: 1 }
       );
       yield* writeShard(stateDir, "2026-10-09", identity, hookRows);
       const ledger = yield* HarnessLedgerService;
@@ -1843,7 +1846,8 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger prune window diagnos
             yield* pulseRow(sessionId, "2026-10-09T10:00:30Z", "UserPromptSubmit", O.none(), O.none(), role),
             yield* pulseRow(sessionId, "2026-10-09T10:01:00Z", "PostToolUse", O.none(), O.none(), role),
           ],
-          (encoded) => asKind(encoded, agentKind)
+          (encoded) => asKind(encoded, agentKind),
+          { concurrency: 1 }
         );
       });
       const codexRows = yield* rows(sessionA, "codex-cli", O.some("primary"));

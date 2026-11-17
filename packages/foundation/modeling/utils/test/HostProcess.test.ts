@@ -37,7 +37,7 @@ describe("HostProcess", () => {
   it.effect(
     "lets tests pin the platform and architecture via provideService",
     Effect.fnUntraced(function* () {
-      const pinned = yield* Effect.all([HostProcessPlatform, HostProcessArchitecture]).pipe(
+      const pinned = yield* Effect.all([HostProcessPlatform, HostProcessArchitecture], { concurrency: 1 }).pipe(
         Effect.provideService(HostProcessPlatform, "win32"),
         Effect.provideService(HostProcessArchitecture, "arm64")
       );

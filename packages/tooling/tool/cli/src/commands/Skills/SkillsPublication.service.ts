@@ -443,12 +443,15 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
       ...O.toArray(publication.partial),
       ...O.toArray(publication.backup),
     ];
-    const canonical = yield* Effect.forEach(artifacts, (candidate) =>
-      resolvePathWithinRoot({ root, candidate }).pipe(
-        Effect.provideService(FileSystem.FileSystem, fs),
-        Effect.provideService(Path.Path, path),
-        Effect.option
-      )
+    const canonical = yield* Effect.forEach(
+      artifacts,
+      (candidate) =>
+        resolvePathWithinRoot({ root, candidate }).pipe(
+          Effect.provideService(FileSystem.FileSystem, fs),
+          Effect.provideService(Path.Path, path),
+          Effect.option
+        ),
+      { concurrency: 1 }
     );
     if (A.some(canonical, O.isNone)) return false;
     const resolved = (directory: string) => fs.realPath(directory).pipe(Effect.option);
@@ -540,7 +543,10 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
       return refuse("foreign-artifact", "Recorded recovery paths are not this journal's own artifacts.");
     const target = yield* observe(publication.target, publication.kind);
     if (yield* createLost(publication, target)) {
-      yield* Effect.forEach([publication.staging, ...O.toArray(publication.partial)], discard, { discard: true });
+      yield* Effect.forEach([publication.staging, ...O.toArray(publication.partial)], discard, {
+        concurrency: 1,
+        discard: true,
+      });
       return SkillRecoveryResult.cases.abandoned.make({
         detail: "Another writer created the target before this publication moved its stage into place.",
       });
@@ -558,7 +564,7 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
     }
     if (!known(staging)) return refuse("foreign-artifact", "The stage holds foreign content.");
     yield* discard(publication.staging);
-    yield* Effect.forEach(O.toArray(publication.partial), discard, { discard: true });
+    yield* Effect.forEach(O.toArray(publication.partial), discard, { concurrency: 1, discard: true });
     return SkillRecoveryResult.cases.recovered.make({ outcome: live.success });
   });
 
@@ -650,9 +656,11 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
       return A.empty<SkillRecoveryReport>();
     const pipe4 = yield* fs.readDirectory(journals).pipe(io("Cannot list skill publication journals.", journals));
     const entries = A.sort(A.filter(pipe4, Str.endsWith(".json")), Order.String);
-    const forEach5 = yield* Effect.forEach(entries, (entry) => readJournal(root, entry));
+    const forEach5 = yield* Effect.forEach(entries, (entry) => readJournal(root, entry), { concurrency: 1 });
     const decoded = A.getSomes(forEach5);
-    const forEach6 = yield* Effect.forEach(decoded, (journal) => recoverJournal(root, journal, scope));
+    const forEach6 = yield* Effect.forEach(decoded, (journal) => recoverJournal(root, journal, scope), {
+      concurrency: 1,
+    });
     return A.getSomes(forEach6);
   });
 
@@ -681,7 +689,10 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
     from: ModelsPublicationStep,
     error: SkillPublicationError
   ) =>
-    Effect.forEach([publication.staging, ...O.toArray(publication.partial)], discard, { discard: true }).pipe(
+    Effect.forEach([publication.staging, ...O.toArray(publication.partial)], discard, {
+      concurrency: 1,
+      discard: true,
+    }).pipe(
       Effect.andThen(advance(ModelsPublicationState.cases.abandoned.make({ from, detail: error.message }))),
       Effect.ignore
     );
@@ -937,7 +948,7 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
 
   const publishDirectory: SkillPublisherShape["publishDirectory"] = Effect.fn("SkillPublisher.publishDirectory")(
     function* (root, target, files) {
-      const digests = yield* Effect.forEach(files, (file) => sha256(file.bytes));
+      const digests = yield* Effect.forEach(files, (file) => sha256(file.bytes), { concurrency: 1 });
       const staged = yield* treeDigest(plannedEntries(files, digests));
       const planned = yield* planPreimage(target, "directory", staged);
       if (O.isNone(planned)) return;

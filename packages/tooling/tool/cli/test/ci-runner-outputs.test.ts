@@ -62,7 +62,10 @@ describe("ci runner outputs", () => {
         const fs = yield* FileSystem.FileSystem;
         const outputs = yield* ActionOutputs;
         yield* fs.makeDirectory("/runner", { recursive: true });
-        yield* Effect.forEach(ENVIRONMENT, ([name, value]) => outputs.exportVariable(name, value), { discard: true });
+        yield* Effect.forEach(ENVIRONMENT, ([name, value]) => outputs.exportVariable(name, value), {
+          concurrency: 1,
+          discard: true,
+        });
         const readFileString1 = yield* fs.readFileString(GITHUB_ENV);
         const written = parseRunnerFile(readFileString1);
         expect(written).toEqual(ENVIRONMENT);

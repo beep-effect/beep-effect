@@ -106,7 +106,7 @@ Higher sources outrank lower sources when they conflict.
   `vitest.property-runner.ts` and `vitest.shared.ts` at the root (TEST-01 census and residual file split).
 - Root `package.json` (`trustedDependencies`, DEPS-01) and `scripts/cloud/bootstrap.sh` (its trust-list comment).
 - `standards/policy-tools.fingerprint.json` (reseal when `CoverageScope.ts` or another fingerprinted file
-  changes) and `standards/cache-qualification-baseline.json` (re-record on any global-input PR).
+  changes) and `standards/cache-baseline/` (re-record on any global-input PR).
 - This packet (`goals/hosted-setup-tax/`).
 
 No new workspace package is planned.
@@ -183,7 +183,7 @@ Status is from the lever check of 2026-11-09 against `origin/main` 6eb2e0588e2, 
   unadmitted disagreements for the classifiers they read.
 - **Global inputs freeze coverage rows.** Any PR touching `turbo.json`, `bun.lock`, root `package.json` or a
   workflow file freezes coverage floors at base and escalates to a full matrix; re-record
-  `standards/cache-qualification-baseline.json` in the same PR, plan the S11 path, and batch such changes so
+  `standards/cache-baseline/` in the same PR, plan the S11 path, and batch such changes so
   the packet pays for as few full-matrix runs as possible. DEPS-01 and every `check.yml` slice are global-input
   PRs.
 - **`heavy.yml` is called at `@main`.** A change to a hosted heavy-lane input is two PRs: the first additive
@@ -381,7 +381,7 @@ PERIH-02 places `lint:shadcn` as the `ci:repo-sanity:shadcn` step of the CiLane 
 
 PERIL-04 removes the `ci:repo-sanity:changeset-graph` body step. The body's `audit:github repo-sanity` step runs `githubCheckRepoSanityLanes`, whose first lane is `repo-sanity:changeset-graph` (`bun run beep quality changeset-graph`), so that lane is the single execution on hosted CI and the only local graph check. Its corrupt `.changeset` cases stay red in `changeset-graph.test.ts`.
 
-Gates: `ci-repo-sanity-owners.test.ts` asserts exactly one hosted owner (`check.yml#verify` on pull requests and pushes) across every `check.yml` job's lane body and `run:` scripts and the hosted Lint Policy plan in full and changed scope, replays the real body with every earlier step red and proves the shadcn step still ran, and plans `changeset-graph` once. A planted `bg-zinc-100` in `packages/foundation/ui-system/ui/src` turned `turbo run lint:shadcn` red (no-raw-colors) and green once removed; the PR's first push carries the same plant for the hosted red. This is a global-input PR (workflow file): the full matrix runs and coverage rows freeze at base. `standards/cache-qualification-baseline.json` records task configuration, which this diff does not change (`beep quality cache-policy`: 0 blocking findings), so its re-record writes nothing. Merge identity: the orchestrator App token cannot merge workflow PRs, so this lane merges with the operator's `gh` identity.
+Gates: `ci-repo-sanity-owners.test.ts` asserts exactly one hosted owner (`check.yml#verify` on pull requests and pushes) across every `check.yml` job's lane body and `run:` scripts and the hosted Lint Policy plan in full and changed scope, replays the real body with every earlier step red and proves the shadcn step still ran, and plans `changeset-graph` once. A planted `bg-zinc-100` in `packages/foundation/ui-system/ui/src` turned `turbo run lint:shadcn` red (no-raw-colors) and green once removed; the PR's first push carries the same plant for the hosted red. This is a global-input PR (workflow file): the full matrix runs and coverage rows freeze at base. `standards/cache-baseline/` records task configuration, which this diff does not change (`beep quality cache-policy`: 0 blocking findings), so its re-record writes nothing. Merge identity: the orchestrator App token cannot merge workflow PRs, so this lane merges with the operator's `gh` identity.
 
 Lane claude/relaxed-wu-e85a5e
 

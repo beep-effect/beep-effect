@@ -36,7 +36,7 @@ export const replayCitationCanonicalMissingConversion = Effect.fn("CanonicalMiss
     assertions,
     A.map([168, 169], (line) => `${prefix}${line}:8:caseDeclaration::1`)
   );
-  const criteria = yield* Effect.forEach(payloads, (payload) => S.decodeEffect(Criterion)(payload));
+  const criteria = yield* Effect.forEach(payloads, (payload) => S.decodeEffect(Criterion)(payload), { concurrency: 1 });
   const factory = yield* installCitationCanonicalFactory();
   const profile = { family: "case", reporter: "U.S.", factory: "case_citation", line: 48 } as const;
   const defaultModel = yield* factory.create(profile);

@@ -262,7 +262,7 @@ const fixture = Effect.fn("PilotOrchestrationTest.fixture")(function* (
       );
     }
   });
-  yield* Effect.forEach([root, ...sourceRoots], writeSourceRoot, { discard: true });
+  yield* Effect.forEach([root, ...sourceRoots], writeSourceRoot, { concurrency: 1, discard: true });
   yield* write(root, "tool", "fixture");
   const reference = Effect.fnUntraced(function* (relative: string, text: string) {
     yield* write(root, relative, text);

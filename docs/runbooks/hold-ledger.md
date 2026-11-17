@@ -19,10 +19,11 @@ bun run beep holds lint                    # cheap gate: config and ledger agree
 ## Admit a hold
 
 You need a hold when you add a root override, a patched dependency, an OSV
-package override, a package to the syncpack held list, or a syncpack version
-group that pins a version. The cheap gate (`//#lint:holds`) fails on a root
-override, patch or OSV override that no live hold names, so the record lands
-in the same PR as the config entry.
+package override or advisory-wide ignore (`[[IgnoredVulns]]`), a package to the
+syncpack held list, or a syncpack version group that pins a version. The cheap
+gate (`//#lint:holds`) fails on a root override, patch, OSV package override or
+ignored advisory id that no live hold names, so the record lands in the same PR
+as the config entry.
 
 1. Pick a kebab-case `holdId` that names the reason, not just the package
    (`xml-validator-module-scope-buffer`, not `fast-xml-validator`).

@@ -143,12 +143,14 @@ const reserveFixturePorts = Effect.fnUntraced(function* (owners: ReadonlyArray<n
             )
           );
         },
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       return first;
     }).pipe(
       Effect.onError(() =>
-        Effect.forEach(liveMarkers, (port) => writeLock(port, exitedPid, true), { discard: true }).pipe(Effect.orDie)
+        Effect.forEach(liveMarkers, (port) => writeLock(port, exitedPid, true), { concurrency: 1, discard: true }).pipe(
+          Effect.orDie
+        )
       )
     );
   }).pipe(
@@ -163,7 +165,7 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
   it.effect.skipIf(!shimActive)("serves every port-0 server on its own reserved port below the ephemeral range", () =>
     Effect.gen(function* () {
       const names = A.map(A.range(1, 40), (index) => `server-${index}`);
-      const servers = yield* Effect.forEach(names, serveText);
+      const servers = yield* Effect.forEach(names, serveText, { concurrency: 1 });
       const ports = A.map(servers, portOf);
       yield* Effect.gen(function* () {
         assert.strictEqual(HashSet.size(HashSet.fromIterable(ports)), names.length);
@@ -175,7 +177,7 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
         }
         const replies = yield* Effect.forEach(ports, fetchText, { concurrency: "unbounded" });
         assert.deepStrictEqual(replies, names);
-      }).pipe(Effect.ensuring(Effect.forEach(servers, stop, { discard: true })));
+      }).pipe(Effect.ensuring(Effect.forEach(servers, stop, { concurrency: 1, discard: true })));
     })
   );
 
@@ -239,7 +241,7 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
             NodeModule.syncBuiltinESMExports();
           })
         ),
-        Effect.ensuring(Effect.forEach(servers, stop, { discard: true }))
+        Effect.ensuring(Effect.forEach(servers, stop, { concurrency: 1, discard: true }))
       );
     })
   );

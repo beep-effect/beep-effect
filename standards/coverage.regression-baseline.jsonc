@@ -21338,18 +21338,6 @@
             "functions": 1
           }
         },
-        "packages/law-practice/server/src/internal/Citation/RegexWorkerClient.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/law-practice/server/src/internal/Citation/RegexWorkerEvaluation.ts": {
           "lines": 95.74,
           "statements": 90.9,
@@ -21360,18 +21348,6 @@
             "statements": 5,
             "branches": 5,
             "functions": 2
-          }
-        },
-        "packages/law-practice/server/src/internal/Citation/RegexWorkerProgram.ts": {
-          "lines": 96.87,
-          "statements": 91.42,
-          "branches": 83.33,
-          "functions": 75,
-          "uncovered": {
-            "lines": 1,
-            "statements": 3,
-            "branches": 1,
-            "functions": 3
           }
         },
         "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts": {

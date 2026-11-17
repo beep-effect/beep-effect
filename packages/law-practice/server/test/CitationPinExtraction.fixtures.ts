@@ -125,9 +125,15 @@ export const replayCitationPinExtraction = Effect.fn("PinExtractionTest.replay")
     }
   }
   expect(rows).toHaveLength(full ? 432 : 25);
+  const processCount = A.filter(rows, (row) => row.calls > 0).length;
   const calls = A.reduce(rows, 0, (total, row) => total + row.calls);
   expect(calls).toBe(full ? 453 : 26);
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, calls);
+  yield* assertCitationWorkerCompositionReleased(
+    setup.operation,
+    setup.admission,
+    setup.observed.snapshot,
+    processCount
+  );
 });
 /** Exact receiving allocation and immutable installation with shared budget authority. */
 export const assertCitationPinExtractionBudget = Effect.fn("PinExtractionTest.budget")(function* () {

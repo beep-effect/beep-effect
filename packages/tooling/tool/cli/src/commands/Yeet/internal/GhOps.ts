@@ -1482,7 +1482,10 @@ const renderVerdictLines = (facts: YeetGhGateFacts, verdict: YeetGhGateVerdict):
 // Decide the gate from one read and print its verdict lines.
 const decideAndRenderGate = Effect.fn("YeetGh.decideAndRenderGate")(function* (facts: YeetGhGateFacts) {
   const verdict = decideYeetGhMergeGate(facts);
-  yield* Effect.forEach(renderVerdictLines(facts, verdict), (line) => Console.log(line), { discard: true });
+  yield* Effect.forEach(renderVerdictLines(facts, verdict), (line) => Console.log(line), {
+    concurrency: 1,
+    discard: true,
+  });
   return verdict;
 });
 
@@ -1900,7 +1903,7 @@ export const runYeetGhChecks = (
           (options.action === "rerun-failed" ? rest.rerunFailedJobs(run.id) : rest.cancelWorkflowRun(run.id)).pipe(
             Effect.andThen(Console.log(`[gh] ${options.action} run ${run.id} (${run.name})`))
           ),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     })
   );

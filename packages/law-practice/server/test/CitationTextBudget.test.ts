@@ -198,8 +198,8 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
     () =>
       Effect.gen(function* () {
         const setup = yield* setupCitationRegexRuntime("bun", 24);
-        yield* withCitationTestTextBudget(
-          24,
+        // Retain the fixture's controlled regex deadline in the shared invocation.
+        yield* withCitationTestInvocation(
           Effect.gen(function* () {
             const corpus = yield* loadCitationMetadataStrings();
             const budget = (yield* CitationInvocation).budget;
@@ -229,9 +229,12 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
             const used = yield* budget.snapshot;
             expect(used).toBe(22);
             const observed = yield* setup.observed.snapshot;
-            expect(observed).toEqual({ spawned: 1, confirmed: 1 });
-          })
+            expect(observed).toEqual({ spawned: 1, confirmed: 0 });
+          }),
+          setup.limits
         ).pipe(Effect.provideContext(setup.context));
+        const retired = yield* setup.observed.snapshot;
+        expect(retired).toEqual({ spawned: 1, confirmed: 1 });
         const admission = yield* setup.admission.snapshot;
         expect(admission).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
       }),

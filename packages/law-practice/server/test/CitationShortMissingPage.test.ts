@@ -93,7 +93,7 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
               short: true,
             });
           }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       })
     );

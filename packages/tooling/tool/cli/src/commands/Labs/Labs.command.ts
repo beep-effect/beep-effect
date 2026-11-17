@@ -157,8 +157,10 @@ const labsListHandler = Effect.fn("Labs.list")(function* (options: { readonly js
     return;
   }
 
-  const rows = yield* Effect.forEach(sortedEntries, ([name, repoRelativeDir, absoluteDir]) =>
-    manifestRow(name, repoRelativeDir, absoluteDir)
+  const rows = yield* Effect.forEach(
+    sortedEntries,
+    ([name, repoRelativeDir, absoluteDir]) => manifestRow(name, repoRelativeDir, absoluteDir),
+    { concurrency: 1 }
   );
   const encodedRows = yield* encodeLabsListRows(rows);
   yield* printJsonOrLines(options.json, encodedRows, A.map(rows, renderRowLine));

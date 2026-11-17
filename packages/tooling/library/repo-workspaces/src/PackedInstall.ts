@@ -1616,7 +1616,8 @@ const planClosure: {
                 { package: name }
               )
             )
-          : resolveReplacement(name, O.getOrThrow(MutableHashMap.get(wanted, name)), root)
+          : resolveReplacement(name, O.getOrThrow(MutableHashMap.get(wanted, name)), root),
+      { concurrency: 1 }
     );
     return { closure, replacements } satisfies ClosurePlan;
   })
@@ -1925,7 +1926,7 @@ const installConsumer = Effect.fnUntraced(function* (
       context.fs
         .writeFileString(context.path.join(directory, file), content)
         .pipe(Effect.mapError(io(`could not write ${file}`))),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* installIn(context, available, directory, options.installTimeout ?? DEFAULT_INSTALL_TIMEOUT);
   const consumer = InstalledConsumer.make({
@@ -1936,6 +1937,7 @@ const installConsumer = Effect.fnUntraced(function* (
     carrier: carrier.name,
   });
   yield* Effect.forEach(options.bins, (bin) => requireExecutableBin(context, consumer, bin, options.carrier), {
+    concurrency: 1,
     discard: true,
   });
   return consumer;
@@ -2255,15 +2257,19 @@ export class PackedInstall {
     const plan = yield* planClosure(options.carrier, options);
     const source = options.packFrom ?? DEFAULT_PACK_FROM;
     if (source === "source") return PackedInstallPreflight.make({ ready: true, missing: [] });
-    const absent = yield* Effect.forEach(plan.closure, (pkg) => {
-      const manifest = path.join(pkg.path, source.directory, "package.json");
-      return fs.exists(manifest).pipe(
-        Effect.mapBoth({
-          onFailure: (cause) => failure("Io", `could not inspect ${manifest}`, { cause }),
-          onSuccess: (present) => (present ? O.none<string>() : O.some(manifest)),
-        })
-      );
-    });
+    const absent = yield* Effect.forEach(
+      plan.closure,
+      (pkg) => {
+        const manifest = path.join(pkg.path, source.directory, "package.json");
+        return fs.exists(manifest).pipe(
+          Effect.mapBoth({
+            onFailure: (cause) => failure("Io", `could not inspect ${manifest}`, { cause }),
+            onSuccess: (present) => (present ? O.none<string>() : O.some(manifest)),
+          })
+        );
+      },
+      { concurrency: 1 }
+    );
     const missing = A.getSomes(absent);
     return PackedInstallPreflight.make({ ready: A.isReadonlyArrayEmpty(missing), missing });
   });
@@ -2365,7 +2371,7 @@ export class PackedInstall {
     );
     const context: RunContext = { fs, path, env: scrubEnv(options.env), scratch };
 
-    const probes = yield* Effect.forEach(managers, (manager) => probeManager(context, manager));
+    const probes = yield* Effect.forEach(managers, (manager) => probeManager(context, manager), { concurrency: 1 });
     const available = A.getSomes(
       A.map(probes, ({ manager, version }) =>
         O.map(version, (reported): AvailableManager => ({ manager, version: reported }))
@@ -2391,11 +2397,15 @@ export class PackedInstall {
     const plan = yield* planClosure(options.carrier, options);
     const packTimeout = options.packTimeout ?? DEFAULT_PACK_TIMEOUT;
     const source = options.packFrom ?? DEFAULT_PACK_FROM;
-    const workspacePacked = yield* Effect.forEach(plan.closure, (pkg, index) =>
-      packWorkspacePackage(context, pkg, index, source, packTimeout)
+    const workspacePacked = yield* Effect.forEach(
+      plan.closure,
+      (pkg, index) => packWorkspacePackage(context, pkg, index, source, packTimeout),
+      { concurrency: 1 }
     );
-    const replacementPacked = yield* Effect.forEach(plan.replacements, (replacement, offset) =>
-      packReplacement(context, replacement, plan.closure.length + offset, packTimeout)
+    const replacementPacked = yield* Effect.forEach(
+      plan.replacements,
+      (replacement, offset) => packReplacement(context, replacement, plan.closure.length + offset, packTimeout),
+      { concurrency: 1 }
     );
     const packed = A.appendAll(workspacePacked, replacementPacked);
     const carrier = O.getOrThrow(A.head(packed));
@@ -2405,8 +2415,10 @@ export class PackedInstall {
     }
     const overrides = R.fromEntries(A.map(rest, ({ name, tarball }) => [name, tarball]));
 
-    const consumers = yield* Effect.forEach(available, (manager) =>
-      installConsumer(context, options, manager, carrier, overrides)
+    const consumers = yield* Effect.forEach(
+      available,
+      (manager) => installConsumer(context, options, manager, carrier, overrides),
+      { concurrency: 1 }
     );
     return PackedInstallResult.make({
       consumers,

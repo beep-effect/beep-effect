@@ -240,7 +240,7 @@ export const guardLiteralArgs: (
 ) => Effect.Effect<ReadonlyArray<string>, OptionInjectionError> = Effect.fn("ProcessArgs.guardLiteralArgs")(function* (
   values: ReadonlyArray<string>
 ) {
-  yield* Effect.forEach(values, guardLiteralArg, { discard: true });
+  yield* Effect.forEach(values, guardLiteralArg, { concurrency: 1, discard: true });
   return values;
 });
 

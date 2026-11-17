@@ -224,7 +224,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
           const corpus = yield* loadCitationCorpus();
           const { limits } = yield* load();
           const unicode = yield* makeCitationPythonUnicode(limits);
-          const words = yield* Effect.forEach(corpus.replacementWords, (word) => unicode.fromStorage(word));
+          const words = yield* Effect.forEach(corpus.replacementWords, (word) => unicode.fromStorage(word), {
+            concurrency: 1,
+          });
           for (const [source, old, replacement, result] of corpus.replacements) {
             const input = yield* at(words, source);
             const needle = yield* at(words, old);

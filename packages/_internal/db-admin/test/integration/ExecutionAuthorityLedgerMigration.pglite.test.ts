@@ -189,8 +189,10 @@ const copyFoldersBeforeRename = Effect.fnUntraced(function* () {
   const entries = A.sort(listed, Order.String);
   const earlier = A.takeWhile(entries, (entry) => entry < renameMigration);
   expect(A.contains(entries, renameMigration)).toBe(true);
-  yield* Effect.forEach(earlier, (entry) =>
-    fileSystem.copy(path.join(migrationsFolder, entry), path.join(target, entry))
+  yield* Effect.forEach(
+    earlier,
+    (entry) => fileSystem.copy(path.join(migrationsFolder, entry), path.join(target, entry)),
+    { concurrency: 1 }
   );
   return target;
 });
@@ -202,7 +204,8 @@ const runDownMigration = Effect.fnUntraced(function* () {
   const down = yield* fileSystem.readFileString(path.join(migrationsFolder, renameMigration, "down.sql"));
   yield* Effect.forEach(
     A.filter(A.map(Str.split("--> statement-breakpoint")(down), Str.trim), Str.isNonEmpty),
-    (statement) => sql.unsafe(statement)
+    (statement) => sql.unsafe(statement),
+    { concurrency: 1 }
   );
 });
 

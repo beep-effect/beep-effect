@@ -155,14 +155,17 @@ const fixture = Effect.fn("CoworkLifecycleTest.fixture")(function* (maxPages = 3
   const namespaceId = yield* hashPrivateIdentifier("ai-metrics-hash-salt-namespace/v1", O.some(salt));
   const sourceRoot = yield* fs.makeTempDirectoryScoped({ prefix: "cowork-source-fixture-" });
   const sources = [`${sourceRoot}/dispatcher.js`, `${sourceRoot}/envelope.js`];
-  yield* Effect.forEach(sources, (path) =>
-    fs.writeFileString(path, "// synthetic public source fixture; no native code\n", { mode: 0o600 })
+  yield* Effect.forEach(
+    sources,
+    (path) => fs.writeFileString(path, "// synthetic public source fixture; no native code\n", { mode: 0o600 }),
+    { concurrency: 1 }
   );
   const sourcePins = yield* Effect.forEach(
     sources,
     Effect.fnUntraced(function* (path) {
       return { path, sha256: yield* sha(path) };
-    })
+    }),
+    { concurrency: 1 }
   );
   const policy = CoworkLifecyclePolicy.make({
     workspace: process.cwd(),
@@ -609,11 +612,14 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), 
         assertTrue(ancestor.appPid !== process.pid && ancestor.peerPid !== ancestor.appPid);
         yield* ancestor.close;
         yield* ancestor.closed;
-        const remains = yield* Effect.all({
-          app: fs.exists(`/proc/${ancestor.appPid}`),
-          peer: fs.exists(`/proc/${ancestor.peerPid}`),
-          copy: fs.exists(ancestor.runtime.executable),
-        });
+        const remains = yield* Effect.all(
+          {
+            app: fs.exists(`/proc/${ancestor.appPid}`),
+            peer: fs.exists(`/proc/${ancestor.peerPid}`),
+            copy: fs.exists(ancestor.runtime.executable),
+          },
+          { concurrency: 1 }
+        );
         expect(remains).toEqual({ app: false, peer: false, copy: false });
         const source = yield* fs.realPath(process.execPath);
         const sourceStat = yield* fs.stat(source);
@@ -633,11 +639,14 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), 
         if (outcome._tag !== "Failure") return yield* Effect.die("unexpected-cowork-peer-success");
         outcome.cause.pipe(Cause.hasInterruptsOnly, assertTrue);
         yield* ancestor.closed;
-        const remains = yield* Effect.all({
-          app: fs.exists(`/proc/${ancestor.appPid}`),
-          peer: fs.exists(`/proc/${ancestor.peerPid}`),
-          copy: fs.exists(ancestor.runtime.executable),
-        });
+        const remains = yield* Effect.all(
+          {
+            app: fs.exists(`/proc/${ancestor.appPid}`),
+            peer: fs.exists(`/proc/${ancestor.peerPid}`),
+            copy: fs.exists(ancestor.runtime.executable),
+          },
+          { concurrency: 1 }
+        );
         expect(remains).toEqual({ app: false, peer: false, copy: false });
       })
     );

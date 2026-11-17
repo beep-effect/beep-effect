@@ -81,7 +81,8 @@ export const installCitationCanonicalFactory = Effect.fn("CanonicalDefaultFactor
     Effect.fnUntraced(function* (row) {
       const value = yield* S.decodeEffect(EditionName)(row.payload);
       return { reference: CitationEditionRef.make(row.ref), name: value.fields.short_name };
-    })
+    }),
+    { concurrency: 1 }
   );
   const create = Effect.fn("CanonicalDefaultFactoryTest.create")(function* (
     profile: (typeof profiles)[number],
@@ -169,7 +170,8 @@ const integerOperands = Effect.fn("CanonicalDefaultFactoryTest.integers")(functi
     criterion.operands,
     Effect.fnUntraced(function* (operand) {
       return (yield* S.decodeUnknownEffect(Integer)(operand.value)).integer;
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 
@@ -193,12 +195,14 @@ export const replayCitationCanonicalDefaultFactory = Effect.fn("CanonicalDefault
     const context = yield* S.decodeUnknownEffect(FactoryContext)(equality.context.values);
     expect(context.factory.callable).toBe(`eyecite.test_factories.${profile.factory}`);
     expect(context.factory.line).toBe(profile.line);
-    const models = yield* Effect.forEach([0, 1], () => factory.create(profile));
-    yield* Effect.forEach(models, (model, i) =>
-      compareCitationCanonicalModel(model, A.getUnsafe(context.citations, i), profile.family)
+    const models = yield* Effect.forEach([0, 1], () => factory.create(profile), { concurrency: 1 });
+    yield* Effect.forEach(
+      models,
+      (model, i) => compareCitationCanonicalModel(model, A.getUnsafe(context.citations, i), profile.family),
+      { concurrency: 1 }
     );
     expect(A.map(equality.operands, (value) => value.value)).toEqual(context.citations);
-    const hashes = yield* Effect.forEach(models, factory.hash);
+    const hashes = yield* Effect.forEach(models, factory.hash, { concurrency: 1 });
     expect(A.getUnsafe(hashes, 0).citationHash === A.getUnsafe(hashes, 1).citationHash).toBe(true);
     const comparison = yield* read(`${prefix}25:12:caseDeclaration::${index + 1}`);
     expect(comparison.context.values.citations).toEqual(context.citations);
@@ -247,7 +251,8 @@ export const replayCitationCanonicalFactoryReporters = Effect.fn("CanonicalDefau
       Effect.fnUntraced(function* (line) {
         const event = yield* Effect.fromOption(HashMap.get(assertions, `${prefix}${line}:8:caseDeclaration::1`));
         return yield* S.decodeEffect(Criterion)(event.payload);
-      })
+      }),
+      { concurrency: 1 }
     );
     const equality = A.getUnsafe(events, 0);
     const context = yield* S.decodeUnknownEffect(OriginalSchema3)(equality.context.values);
@@ -259,13 +264,16 @@ export const replayCitationCanonicalFactoryReporters = Effect.fn("CanonicalDefau
         // Preserve source lookup order and select [0], including duplicate aliases.
         const reference = A.getUnsafe(A.getUnsafe(choices, 0).editions, 0);
         return yield* factory.create(profiles[0], { reporter, reference, volume: "2", page: "4" });
-      })
+      }),
+      { concurrency: 1 }
     );
-    yield* Effect.forEach(models, (model, i) =>
-      compareCitationCanonicalModel(model, A.getUnsafe(context.citations, i), cohort.name)
+    yield* Effect.forEach(
+      models,
+      (model, i) => compareCitationCanonicalModel(model, A.getUnsafe(context.citations, i), cohort.name),
+      { concurrency: 1 }
     );
     expect(A.map(equality.operands, (operand) => operand.value)).toEqual(context.citations);
-    const hashes = yield* Effect.forEach(models, factory.hash);
+    const hashes = yield* Effect.forEach(models, factory.hash, { concurrency: 1 });
     expect(equality.relation.equal).toBe(cohort.equal);
     expect(A.getUnsafe(hashes, 0).citationHash === A.getUnsafe(hashes, 1).citationHash).toBe(cohort.equal);
     const hashEvent = A.getUnsafe(events, 1);

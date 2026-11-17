@@ -77,7 +77,9 @@ const assertReferenceEdge = Effect.fn("ReferenceIntegrity.assertEdge")(function*
 ) {
   if (edge.kind === "functional") assertFunctionalParts(edge, text);
   if (edge.kind === "antecedent") {
-    yield* Effect.forEach([edge.referring, edge.introducing], (ref) => assertEndpoint(ref, source, trees));
+    yield* Effect.forEach([edge.referring, edge.introducing], (ref) => assertEndpoint(ref, source, trees), {
+      concurrency: 1,
+    });
   }
 });
 
@@ -87,7 +89,7 @@ const assertReferenceTree = Effect.fn("ReferenceIntegrity.assertTree")(function*
   trees: ReadonlyArray<ClaimElementTree>
 ) {
   assert.strictEqual(tree.producer, "llm");
-  const edgeValues = yield* Effect.forEach(tree.edges, (edge) => encodeReferenceEdge(edge));
+  const edgeValues = yield* Effect.forEach(tree.edges, (edge) => encodeReferenceEdge(edge), { concurrency: 1 });
   assert.strictEqual(A.dedupe(edgeValues).length, tree.edges.length);
   const claimOption = A.findFirst(source.claims, (c) => c.claimNumber === tree.claimNumber);
   if (O.isNone(claimOption)) {
@@ -98,7 +100,9 @@ const assertReferenceTree = Effect.fn("ReferenceIntegrity.assertTree")(function*
     ...A.map(element.terms, (t) => t.anchor),
   ]))
     assertAnchor(claimOption.value.claimText, anchor);
-  yield* Effect.forEach(tree.edges, (edge) => assertReferenceEdge(edge, claimOption.value.claimText, source, trees));
+  yield* Effect.forEach(tree.edges, (edge) => assertReferenceEdge(edge, claimOption.value.claimText, source, trees), {
+    concurrency: 1,
+  });
 });
 
 describe("Independent semantic reference integrity", () => {
@@ -143,7 +147,7 @@ describe("Independent semantic reference integrity", () => {
             ),
             A.sort(source.labelClaimNumbers, N.Order)
           );
-          yield* Effect.forEach(trees, (tree) => assertReferenceTree(tree, source, trees));
+          yield* Effect.forEach(trees, (tree) => assertReferenceTree(tree, source, trees), { concurrency: 1 });
         }
         assert.strictEqual(referenceFamilies, manifest.families.length);
       })

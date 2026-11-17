@@ -809,11 +809,14 @@ export const makeHostPressureSource = Effect.fnUntraced(function* <R>(readers: H
         detail: "no /proc/pressure on this host (non-Linux, container, vendor cloud VM, or a kernel without PSI)",
       });
     }
-    const files = yield* Effect.forEach(PressureResource.literals, (resource) =>
-      fs.readFileString(path.join(pressureDir, resource)).pipe(
-        Effect.map((text) => PressureFile.make({ resource, text })),
-        Effect.option
-      )
+    const files = yield* Effect.forEach(
+      PressureResource.literals,
+      (resource) =>
+        fs.readFileString(path.join(pressureDir, resource)).pipe(
+          Effect.map((text) => PressureFile.make({ resource, text })),
+          Effect.option
+        ),
+      { concurrency: 1 }
     );
     return PressureSourceInput.cases.Read.make({ files: A.getSomes(files) });
   });
@@ -1093,12 +1096,15 @@ export const makeGithubHeadroomSource = Effect.gen(function* () {
   const snapshot = Effect.gen(function* () {
     const signals = yield* ledger.reserves;
     const summary = yield* ledger.summary;
-    const readings = yield* Effect.forEach(signals, (signal) =>
-      // The reading the verdict rests on, so a bucket's numbers and its reserve agree.
-      Effect.map(
-        ledger.latestUsable(signal.key),
-        O.map((reading) => [signal, reading] as const)
-      )
+    const readings = yield* Effect.forEach(
+      signals,
+      (signal) =>
+        // The reading the verdict rests on, so a bucket's numbers and its reserve agree.
+        Effect.map(
+          ledger.latestUsable(signal.key),
+          O.map((reading) => [signal, reading] as const)
+        ),
+      { concurrency: 1 }
     );
     const buckets = A.getSomes(A.map(A.getSomes(readings), bucketInputOf(summary)));
     if (A.isArrayEmpty(buckets) && O.isNone(summary)) {

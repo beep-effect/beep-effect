@@ -42,7 +42,7 @@ it.effect.prop(
       const text = `${yield* Yaml.stringify(preamble)}---\n${yield* Yaml.stringify(main)}`;
       const render = Effect.fnUntraced(function* (content: string) {
         const docs = yield* Yaml.parseAll(content);
-        const forEach1 = yield* Effect.forEach(docs, (doc) => Yaml.stringify(doc));
+        const forEach1 = yield* Effect.forEach(docs, (doc) => Yaml.stringify(doc), { concurrency: 1 });
         return A.join(forEach1, "---\n");
       });
       const canonical = yield* render(text);

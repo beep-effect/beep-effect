@@ -167,8 +167,10 @@ const readRows = Effect.fn("checkFidelityTest.readRows")(function* (root: string
   const fs = yield* FileSystem.FileSystem;
   const paths = yield* yeetInboxPaths(root);
   const text = yield* fs.readFileString(paths.failuresPath);
-  return yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) =>
-    YeetInboxRowJson.decode(line)
+  return yield* Effect.forEach(
+    A.filter(Str.split(text, "\n"), Str.isNonEmpty),
+    (line) => YeetInboxRowJson.decode(line),
+    { concurrency: 1 }
   );
 });
 
@@ -300,25 +302,32 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("--until-ready check fidelity
   it.effect("writes a check-failed capsule equal, field for field, to the one --watch writes", () =>
     Effect.gen(function* () {
       const gh = withGh(fidelitySpawner());
-      const [watchRows, statusRows] = yield* Effect.all([
-        Effect.gen(function* () {
-          const root = yield* tempRoot();
-          const watch = yield* collectYeetWatchSnapshot(contextFor(root)).pipe(gh);
-          const failing = A.filter(watch.checks, (check) => check.outcome === "fail");
-          yield* Effect.forEach(failing, (check) => dispatchYeetCheckFailure(root, watch, check, at));
-          return yield* readRows(root);
-        }),
-        Effect.gen(function* () {
-          const root = yield* tempRoot();
-          // The capsule's PR coordinates come from the snapshot argument and
-          // are the same in both loops; the check record is what differs.
-          const watch = yield* collectYeetWatchSnapshot(contextFor(root)).pipe(gh);
-          const status = yield* collectYeetStatus(contextFor(root), true).pipe(gh);
-          const failing = A.filter(status.remote.checks, (check) => check.outcome === "fail");
-          yield* Effect.forEach(failing, (check) => dispatchYeetCheckFailure(root, watch, check, at));
-          return yield* readRows(root);
-        }),
-      ]);
+      const [watchRows, statusRows] = yield* Effect.all(
+        [
+          Effect.gen(function* () {
+            const root = yield* tempRoot();
+            const watch = yield* collectYeetWatchSnapshot(contextFor(root)).pipe(gh);
+            const failing = A.filter(watch.checks, (check) => check.outcome === "fail");
+            yield* Effect.forEach(failing, (check) => dispatchYeetCheckFailure(root, watch, check, at), {
+              concurrency: 1,
+            });
+            return yield* readRows(root);
+          }),
+          Effect.gen(function* () {
+            const root = yield* tempRoot();
+            // The capsule's PR coordinates come from the snapshot argument and
+            // are the same in both loops; the check record is what differs.
+            const watch = yield* collectYeetWatchSnapshot(contextFor(root)).pipe(gh);
+            const status = yield* collectYeetStatus(contextFor(root), true).pipe(gh);
+            const failing = A.filter(status.remote.checks, (check) => check.outcome === "fail");
+            yield* Effect.forEach(failing, (check) => dispatchYeetCheckFailure(root, watch, check, at), {
+              concurrency: 1,
+            });
+            return yield* readRows(root);
+          }),
+        ],
+        { concurrency: 1 }
+      );
 
       const capsulesOf = (rows: typeof watchRows) =>
         A.filterMap(rows, (row) => (row.kind === "check-failed" ? Result.succeed(row.capsule) : Result.failVoid));

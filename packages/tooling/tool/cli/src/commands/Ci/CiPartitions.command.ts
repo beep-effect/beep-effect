@@ -352,8 +352,10 @@ export const checkCiPartitions = Effect.fn("CiPartitions.check")(function* (
   repoRoot: string,
   table: ReadonlyArray<CiLanePartition> = CI_LANE_PARTITIONS
 ) {
-  const sharded = yield* Effect.forEach(CI_SHARDED_PARTITION_SOURCES, (source) =>
-    shardedSourceReport(repoRoot, table, source)
+  const sharded = yield* Effect.forEach(
+    CI_SHARDED_PARTITION_SOURCES,
+    (source) => shardedSourceReport(repoRoot, table, source),
+    { concurrency: 1 }
   );
   return CiPartitionRebalanceReport.make({
     rows: A.appendAll(
@@ -587,8 +589,10 @@ export const pruneCiPartitionPlans = Effect.fn("CiPartitions.prune")(function* (
   repoRoot: string,
   table: ReadonlyArray<CiLanePartition> = CI_LANE_PARTITIONS
 ) {
-  const lines = yield* Effect.forEach(CI_SHARDED_PARTITION_SOURCES, (source) =>
-    pruneFamilyPlan(repoRoot, table, source)
+  const lines = yield* Effect.forEach(
+    CI_SHARDED_PARTITION_SOURCES,
+    (source) => pruneFamilyPlan(repoRoot, table, source),
+    { concurrency: 1 }
   );
   return A.flatten(lines);
 });
@@ -661,14 +665,16 @@ export const rebalanceCiPartitions = Effect.fn("CiPartitions.rebalance")(functio
   table: ReadonlyArray<CiLanePartition> = CI_LANE_PARTITIONS
 ) {
   const source = yield* CiPartitionTimingSource;
-  const collected = yield* Effect.forEach(runIds, source.collect);
+  const collected = yield* Effect.forEach(runIds, source.collect, { concurrency: 1 });
   const timings = worstCaseRunTimings(collected);
   const provenance =
     A.length(runIds) > 1
       ? [`worst measurement per file and package over runs ${A.join(A.map(runIds, String), ", ")}`]
       : [];
-  const planLines = yield* Effect.forEach(CI_SHARDED_PARTITION_SOURCES, (shardSource) =>
-    writeFamilyPlan(repoRoot, table, timings, shardSource)
+  const planLines = yield* Effect.forEach(
+    CI_SHARDED_PARTITION_SOURCES,
+    (shardSource) => writeFamilyPlan(repoRoot, table, timings, shardSource),
+    { concurrency: 1 }
   );
   const binLines = yield* binProposalLines(repoRoot, table, timings);
   return A.appendAll(provenance, A.appendAll(A.flatten(planLines), binLines));

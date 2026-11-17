@@ -388,10 +388,13 @@ const makeHome = (fs: FileSystem.FileSystem, path: Path.Path): AiProviderCliHome
     yield* Effect.forEach(
       AiProviderCliCodexPrivateEntry.pick(["models_cache.json"]).literals,
       (entryName) => removePrivateSymlink({ context, entryName }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
 
-    yield* Effect.forEach(linkedEntries, (entryName) => ensureSymlink({ context, entryName }), { discard: true });
+    yield* Effect.forEach(linkedEntries, (entryName) => ensureSymlink({ context, entryName }), {
+      concurrency: 1,
+      discard: true,
+    });
 
     yield* ensureShadowAuthIsPrivate(context);
   });

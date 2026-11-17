@@ -763,11 +763,14 @@ export const readGateTable = Effect.fn("Yeet.readGateTable")(function* (): Effec
   const open = yield* rest.openPullRequests.pipe(Effect.mapError(yeetGithubFailure("gh api open pulls")));
   // A stack layer is gated on its trunk's rules, which GitHub evaluates at merge.
   const bases = A.dedupe(A.map(open, yeetStackRulesBranch));
-  const rules = yield* Effect.forEach(bases, (base) =>
-    rest.requiredStatusContexts(base).pipe(
-      Effect.option,
-      Effect.map((contexts) => [base, contexts] as const)
-    )
+  const rules = yield* Effect.forEach(
+    bases,
+    (base) =>
+      rest.requiredStatusContexts(base).pipe(
+        Effect.option,
+        Effect.map((contexts) => [base, contexts] as const)
+      ),
+    { concurrency: 1 }
   ).pipe(Effect.map(HashMap.fromIterable));
   const entries = yield* Effect.forEach(A.sort(open, byNumber), (pull) => readRow(pull, rules), { concurrency: 4 });
   return GateTableReport.make({ schemaVersion: "yeet-gate-table/v1", readAt: yield* DateTime.now, entries });

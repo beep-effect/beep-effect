@@ -286,10 +286,13 @@ const makeWorkbench = Effect.gen(function* () {
   const resolverCommandPath = path.join(trustedDir, "op-resolver.sh");
   yield* Effect.forEach(
     [configDir, homeDir, path.join(stateDir, "log"), path.join(trustedDir, "bin"), workspaceDir],
-    (directory) => fs.makeDirectory(directory, { recursive: true })
+    (directory) => fs.makeDirectory(directory, { recursive: true }),
+    { concurrency: 1 }
   );
-  yield* Effect.forEach([opBinaryPath, resolverCommandPath], (stubPath) =>
-    Effect.flatMap(fs.writeFileString(stubPath, stubScript), () => fs.chmod(stubPath, 0o755))
+  yield* Effect.forEach(
+    [opBinaryPath, resolverCommandPath],
+    (stubPath) => Effect.flatMap(fs.writeFileString(stubPath, stubScript), () => fs.chmod(stubPath, 0o755)),
+    { concurrency: 1 }
   );
 
   yield* Effect.logInfo("OpenClaw acquisition workbench:ready").pipe(Effect.when(acquisitionTraceEnabled));
@@ -388,7 +391,8 @@ describe("@beep/openclaw pinned-binary acceptance", () => {
             const validation = yield* cli.configValidate(workbenchContext(bench, O.some(configPath)));
 
             expect({ fixture: fixtureName, tag: validation._tag }).toEqual({ fixture: fixtureName, tag: "Invalid" });
-          })
+          }),
+          { concurrency: 1 }
         );
       }),
       240_000

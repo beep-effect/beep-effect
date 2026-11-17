@@ -555,7 +555,9 @@ const encodeImplementation = S.encodeEffect(McpSchema.Implementation);
  */
 export const requestMetadata = (options: McpClientOptions): Effect.Effect<JsonObject, S.SchemaError> =>
   Effect.map(
-    Effect.all([encodeClientCapabilities(options.clientCapabilities), encodeImplementation(options.clientInfo)]),
+    Effect.all([encodeClientCapabilities(options.clientCapabilities), encodeImplementation(options.clientInfo)], {
+      concurrency: 1,
+    }),
     ([clientCapabilities, clientInfo]) => ({
       [PROTOCOL_VERSION_META_KEY]: options.protocolVersion,
       [CLIENT_CAPABILITIES_META_KEY]: clientCapabilities,
@@ -718,7 +720,7 @@ export const decodeHttpMessages: {
       ? Effect.succeed([])
       : Effect.flatMap(
           Str.startsWith("text/event-stream")(contentType)
-            ? Effect.forEach(parseServerSentEvents(body), decodeJsonText)
+            ? Effect.forEach(parseServerSentEvents(body), decodeJsonText, { concurrency: 1 })
             : Effect.map(decodeJsonText(body), (parsed) => (A.isArray(parsed) ? parsed : [parsed])),
           decodeJsonRpcMessages
         )

@@ -242,8 +242,10 @@ const stepsReferencing = Effect.fnUntraced(function* (jobs: WorkflowJobs, needle
   const labelled = A.flatMap(R.toEntries(jobs), ([jobId, job]) =>
     A.map(job.steps ?? [], (step) => [`${jobId}/${step.name ?? ""}`, step] as const)
   );
-  const encoded = yield* Effect.forEach(labelled, ([label, step]) =>
-    Effect.map(encodeJobsFixture(step), (text) => [label, text] as const)
+  const encoded = yield* Effect.forEach(
+    labelled,
+    ([label, step]) => Effect.map(encodeJobsFixture(step), (text) => [label, text] as const),
+    { concurrency: 1 }
   );
   return A.map(
     A.filter(encoded, ([, text]) => Str.includes(needle)(text)),
@@ -2141,6 +2143,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         // Staging and prod deploy of the oip-web Alchemy stack; environment-gated, not a local lane.
         "deploy-oip-web-infra.yml:Deploy oip-web infrastructure (staging, prod)",
         "deploy-turbo-cache.yml:Deploy turbo cache (prod)",
+        // Prod deploy of the InfraGithub Alchemy stack; environment-gated and armed by a variable.
+        "deploy-infra-github.yml:Deploy infra-github (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
         "fleet-shadow-check.yml:Shadow Probe",
         "heavy-admit.yml:Heavy Admission",
@@ -2363,7 +2367,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "permission-issues": "write",
       });
       const open = stepByName(steps, "Open or update the pin-bump pull request");
-      expect(open.uses).toBe("peter-evans/create-pull-request@15733dbdfeedb4f7fdb73d13c6f5ac83b710fab8");
+      expect(open.uses).toBe("peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1");
       const inputs = stepInputs(open);
       expect(inputs.branch).toBe("ci/beep-ci-pin-bump");
       expect(inputs.token).toBe("${{ steps.app-token.outputs.token }}");

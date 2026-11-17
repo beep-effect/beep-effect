@@ -82,7 +82,7 @@ const question = (index: number) =>
   });
 
 const run = Effect.fnUntraced(function* (count: number, today: LocalDate) {
-  const digest = yield* Effect.forEach(A.take(A.range(1, 10), count), question);
+  const digest = yield* Effect.forEach(A.take(A.range(1, 10), count), question, { concurrency: 1 });
   return yield* (yield* DailyNotice).sendIfDue({ digest, today });
 });
 
@@ -160,7 +160,7 @@ describe("@beep/law-practice-use-cases daily notice", () => {
   it.effect(
     "says only how many questions wait, never what they ask",
     Effect.fnUntraced(function* () {
-      const items = yield* Effect.forEach(A.range(1, 4), question);
+      const items = yield* Effect.forEach(A.range(1, 4), question, { concurrency: 1 });
       const message = noticeMessage(A.length(items));
 
       expect(message.subject).toBe("Claude: 4 questions waiting");

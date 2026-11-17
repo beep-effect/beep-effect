@@ -22,6 +22,7 @@ import {
   AdmissionJournalTicketEvictedV3,
   AdmissionJournalWithdrawn,
   AdmissionLeaseReapClaim,
+  AdmissionPressureStamp,
   AdmissionPromotionTransition,
   AdmissionReapClaim,
   AdmissionRequest,
@@ -62,6 +63,7 @@ import {
   QualitySchedulerLive,
   qualitySchedulerForTesting,
   quarantinedAtMillisOf,
+  RecoveryRecordSettlementWindow,
   RunScopeRecord,
   RuntimeRootChoice,
   readAdmissionJournalArchive,
@@ -341,15 +343,17 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       )
     );
     const lines = pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty));
-    return yield* Effect.forEach(lines, (line) => decodeAdmissionJournalEvent(line));
+    return yield* Effect.forEach(lines, (line) => decodeAdmissionJournalEvent(line), { concurrency: 1 });
   });
 
   const readAttemptJournalEvents = Effect.fnUntraced(function* (checkoutRoot: string, branch: string) {
     const fs = yield* FileSystem.FileSystem;
     const attemptJournalPathForCheckout5 = yield* attemptJournalPathForCheckout(checkoutRoot, branch);
     const text = yield* fs.readFileString(attemptJournalPathForCheckout5);
-    return yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-      decodeYeetAttemptJournalEvent(line)
+    return yield* Effect.forEach(
+      pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)),
+      (line) => decodeYeetAttemptJournalEvent(line),
+      { concurrency: 1 }
     );
   });
 
@@ -1563,7 +1567,9 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 reason: "queued-submitter-death",
               }),
             ];
-            const lines = yield* Effect.forEach(events, (event) => encodeUnknownAdmissionJournalEventJson(event));
+            const lines = yield* Effect.forEach(events, (event) => encodeUnknownAdmissionJournalEventJson(event), {
+              concurrency: 1,
+            });
             const content = `${A.join(lines, "\n")}\n`;
             const journalPath = yield* admissionJournalPath(tempRoot.root);
             yield* fs.writeFileString(journalPath, content);
@@ -1593,11 +1599,15 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           return yield* Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             yield* admissionStatus(fastConfig);
-            const unknownRows = yield* Effect.forEach(journalV3Events(), (event) =>
-              encodeUnknownAdmissionJournalEventJson(event).pipe(Effect.map((line) => ` \t${line}  `))
+            const unknownRows = yield* Effect.forEach(
+              journalV3Events(),
+              (event) => encodeUnknownAdmissionJournalEventJson(event).pipe(Effect.map((line) => ` \t${line}  `)),
+              { concurrency: 1 }
             );
-            const admittedRows = yield* Effect.forEach(A.makeBy(201, journalAdmitted), (event) =>
-              encodeUnknownAdmissionJournalEventJson(event)
+            const admittedRows = yield* Effect.forEach(
+              A.makeBy(201, journalAdmitted),
+              (event) => encodeUnknownAdmissionJournalEventJson(event),
+              { concurrency: 1 }
             );
             const evictionRow = yield* encodeUnknownAdmissionJournalEventJson(journalLeaseEvicted);
             const journalPath = yield* admissionJournalPath(tempRoot.root);
@@ -1690,7 +1700,8 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               };
               const seeded = yield* Effect.forEach(
                 [...admissions, ...A.flatMap(A.range(0, 1299), queuedPair)],
-                (event) => encodeUnknownAdmissionJournalEventJson(event)
+                (event) => encodeUnknownAdmissionJournalEventJson(event),
+                { concurrency: 1 }
               );
               const opaque = ' \t{"schemaVersion":"future","opaque":"preserve  bytes"}  ';
               const journalPath = yield* admissionJournalPath(tempRoot.root);
@@ -1702,16 +1713,21 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                 const lines = pipe(readFileString37, Str.split("\n"), A.filter(Str.isNonEmpty));
                 assertSome(A.head(lines), opaque);
                 expect(lines).toHaveLength(2401);
-                const decoded = yield* Effect.forEach(A.drop(lines, 1), (line) => decodeAdmissionJournalEvent(line));
+                const decoded = yield* Effect.forEach(A.drop(lines, 1), (line) => decodeAdmissionJournalEvent(line), {
+                  concurrency: 1,
+                });
                 expect(A.filter(decoded, AdmissionJournalEvent.guards["admission-admitted"])).toStrictEqual(admissions);
                 assertSome(A.last(decoded), event);
               }
               const expectedTail = yield* Effect.forEach(
                 A.takeRight(A.flatMap(A.range(0, 1302), queuedPair), 2400 - admittedCount),
-                (event) => encodeUnknownAdmissionJournalEventJson(event)
+                (event) => encodeUnknownAdmissionJournalEventJson(event),
+                { concurrency: 1 }
               );
-              const admittedLines = yield* Effect.forEach(admissions, (event) =>
-                encodeUnknownAdmissionJournalEventJson(event)
+              const admittedLines = yield* Effect.forEach(
+                admissions,
+                (event) => encodeUnknownAdmissionJournalEventJson(event),
+                { concurrency: 1 }
               );
               const readFileString38 = yield* fs.readFileString(journalPath);
               expect(readFileString38).toBe(`${A.join([opaque, ...admittedLines, ...expectedTail], "\n")}\n`);
@@ -1743,7 +1759,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
       });
 
       const encodeLines = (events: ReadonlyArray<AdmissionJournalEvent>) =>
-        Effect.forEach(events, (event) => encodeUnknownAdmissionJournalEventJson(event));
+        Effect.forEach(events, (event) => encodeUnknownAdmissionJournalEventJson(event), { concurrency: 1 });
 
       const writeLines = Effect.fnUntraced(function* (filePath: string, lines: ReadonlyArray<string>) {
         const fs = yield* FileSystem.FileSystem;
@@ -2124,6 +2140,26 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const routedText = yield* TestConsole.logLines;
             expect(A.map(A.drop(routedText, A.length(jsonLines)), String)).toContain(
               "- worker routes: 2 (1 bypass, 1 refusal; 1 forced)"
+            );
+            expect(A.map(routedText, String)).not.toContainEqual(expect.stringContaining("- pressure stamps:"));
+
+            // Rows that carry the SCHE-09 pressure stamp are counted beside the rows that do not.
+            const stamp = AdmissionPressureStamp.make({
+              capacityTokens: 8,
+              activeTokens: 3,
+              queuedTokens: 0,
+              queuedTickets: 0,
+              memAvailableGib: 50,
+              psiCpuSome10: O.some(2.13),
+            });
+            const stampedLines = yield* encodeLines([
+              AdmissionJournalAdmitted.make({ ...today, nonce: "stamped-admission", pressure: O.some(stamp) }),
+            ]);
+            yield* writeJournal(tempRoot, [...liveLines, ...stampedLines]);
+            yield* runQualityCommand(["scheduler", "history"]);
+            const stampedText = yield* TestConsole.logLines;
+            expect(A.map(A.drop(stampedText, A.length(routedText)), String)).toContain(
+              "- pressure stamps: 1 of 4 admitted, 0 of 1 v3 released rows (--json lists them)"
             );
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -3852,6 +3888,12 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               expect((yield* admissionProtocolStatus()).eviction).toBe("on");
               yield* expectCommandSuccess(["scheduler", "protocol", "--disable-evictions"]);
               expect((yield* admissionProtocolStatus()).eviction).toBe("off");
+              yield* expectCommandSuccess(["scheduler", "protocol", "--pressure", "on"]);
+              const pressureOn = yield* admissionProtocolStatus();
+              expect(pressureOn.pressure).toBe("on");
+              yield* expectCommandSuccess(["scheduler", "protocol", "--pressure", "off"]);
+              const pressureOff = yield* admissionProtocolStatus();
+              expect(pressureOff.pressure).toBe("off");
               yield* expectCommandSuccess(["scheduler", "reconcile-attempts"]);
               const conflict = yield* Effect.exit(
                 runQualityCommand(["scheduler", "protocol", "--enable-evictions", "--disable-evictions"])
@@ -3896,8 +3938,11 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             expect(failure.message).toContain("Failed to create Yeet attempt journal directory");
             const queued = yield* listDirectory(tempRoot.queue);
             const listDirectory149 = yield* listDirectory(tempRoot.claims);
-            const claims = yield* Effect.forEach(listDirectory149, (name) =>
-              fs.readFileString(path.join(tempRoot.claims, name)).pipe(Effect.flatMap(decodeAdmissionReapClaim))
+            const claims = yield* Effect.forEach(
+              listDirectory149,
+              (name) =>
+                fs.readFileString(path.join(tempRoot.claims, name)).pipe(Effect.flatMap(decodeAdmissionReapClaim)),
+              { concurrency: 1 }
             );
             expect(queued).not.toContain("dead-unwritable-attempt.ticket.json");
             expect(A.some(claims, ({ nonce }) => nonce === "dead-unwritable-attempt")).toBe(true);
@@ -4010,8 +4055,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           return yield* Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
-            yield* Effect.forEach([tempRoot.leases, tempRoot.queue], (directory) =>
-              fs.makeDirectory(directory, { recursive: true, mode: 0o700 })
+            yield* Effect.forEach(
+              [tempRoot.leases, tempRoot.queue],
+              (directory) => fs.makeDirectory(directory, { recursive: true, mode: 0o700 }),
+              { concurrency: 1 }
             );
             const processStartIdentityForPid155 = yield* processStartIdentityForPid(process.pid);
             const ownIdentity = O.getOrElse(processStartIdentityForPid155, () => "");
@@ -4036,8 +4083,10 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               tempRoot.queue,
               `nonce-${process.pid}.ticket.json.tmp-${process.pid}-${Hex.encode(ownIdentity)}-${yield* crypto.uuidV4()}`
             );
-            yield* Effect.forEach([staleLegacy, liveLegacy, reusedPid, current], (file) =>
-              fs.writeFileString(file, "")
+            yield* Effect.forEach(
+              [staleLegacy, liveLegacy, reusedPid, current],
+              (file) => fs.writeFileString(file, ""),
+              { concurrency: 1 }
             );
 
             // The dry run previews exactly the staging files apply removes.
@@ -4427,12 +4476,15 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           const { runtimeDir, tempRoot } = yield* admissionTemporaryRoot;
           return yield* Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
-            const capLeases = yield* Effect.forEach(A.range(1, 3), (index) =>
-              writeFakeLease(tempRoot, {
-                kind: "review-fix",
-                weightTokens: 1,
-                originKey: `origin-rf-${index}`,
-              })
+            const capLeases = yield* Effect.forEach(
+              A.range(1, 3),
+              (index) =>
+                writeFakeLease(tempRoot, {
+                  kind: "review-fix",
+                  weightTokens: 1,
+                  originKey: `origin-rf-${index}`,
+                }),
+              { concurrency: 1 }
             );
             const fiber = yield* Effect.forkChild(
               withQualityAdmission(
@@ -4797,9 +4849,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               reapAdmissionState({ apply: true }).pipe(Effect.provideService(AdmissionEvictionJournal, heldJournal))
             );
             yield* Deferred.await(sinkEntered);
+            // The settlement window is wall-clock time: a CPU-starved owner once outlasted the
+            // 5 s default after `finishSinks` and failed this observer with "stayed busy". The
+            // observer here must order itself after the owner, so it waits without a deadline.
             const observer = yield* Effect.forkChild(
               reapAdmissionState({ apply: true }).pipe(
-                Effect.provideService(FileSystem.FileSystem, observingFileSystem)
+                Effect.provideService(FileSystem.FileSystem, observingFileSystem),
+                Effect.provideService(RecoveryRecordSettlementWindow, Duration.infinity)
               )
             );
 
@@ -4855,13 +4911,16 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
                   });
                   const attemptJournalPath182 = yield* attemptJournalPath(context);
                   const text = yield* fs.readFileString(attemptJournalPath182);
-                  const rows = yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-                    decodeYeetAttemptJournalEvent(line)
+                  const rows = yield* Effect.forEach(
+                    pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)),
+                    (line) => decodeYeetAttemptJournalEvent(line),
+                    { concurrency: 1 }
                   );
                   expect(rows).toHaveLength(1);
                   expect(rows[0]).toMatchObject({ _tag: "attempt-terminated", reason });
                   return rows[0];
-                })
+                }),
+              { concurrency: 1 }
             );
             expect(attemptEvents).toHaveLength(2);
             {

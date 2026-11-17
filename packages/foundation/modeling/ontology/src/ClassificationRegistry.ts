@@ -163,9 +163,11 @@ const validateSnapshot = Effect.fn("ClassificationRegistry.validateSnapshot")(fu
             (value) => value.depth < concept.depth,
             () => failure("hierarchy-invalid", `Reversed broader link at ${concept.notation}`)
           );
-        })
+        }),
+        { concurrency: 1 }
       );
-    })
+    }),
+    { concurrency: 1 }
   );
   return index;
 });
@@ -259,12 +261,15 @@ const load = Effect.fn("ClassificationRegistry.load")(function* (
     A.isArrayNonEmpty<ClassificationAsset>,
     () => failure("edition-unpinned", `${pin.kind} ${pin.edition}`)
   );
-  yield* Effect.forEach(assets, (asset) =>
-    Effect.filterOrFail(
-      Effect.succeed(asset),
-      (row) => row.verified && VendorLoadStatus.is.VETTED(row.loadStatus),
-      () => failure("unvetted", asset.id)
-    )
+  yield* Effect.forEach(
+    assets,
+    (asset) =>
+      Effect.filterOrFail(
+        Effect.succeed(asset),
+        (row) => row.verified && VendorLoadStatus.is.VETTED(row.loadStatus),
+        () => failure("unvetted", asset.id)
+      ),
+    { concurrency: 1 }
   );
   const concepts = yield* ClassificationSchemeKind.match(pin.kind, {
     ipc: Effect.fnUntraced(function* () {
@@ -320,12 +325,15 @@ const load = Effect.fn("ClassificationRegistry.load")(function* (
     concepts,
     () => HashMap.empty<string, ClassificationConcept>(),
     Effect.fnUntraced(function* (index, concept) {
-      yield* Effect.forEach(O.toArray(HashMap.get(index, concept.iri)), (previous) =>
-        Effect.filterOrFail(
-          Effect.succeed(previous),
-          (value) => value.depth === concept.depth && broaderEquivalence(value.broader, concept.broader),
-          () => failure("hierarchy-invalid", `Conflicting parents for ${concept.notation}`)
-        )
+      yield* Effect.forEach(
+        O.toArray(HashMap.get(index, concept.iri)),
+        (previous) =>
+          Effect.filterOrFail(
+            Effect.succeed(previous),
+            (value) => value.depth === concept.depth && broaderEquivalence(value.broader, concept.broader),
+            () => failure("hierarchy-invalid", `Conflicting parents for ${concept.notation}`)
+          ),
+        { concurrency: 1 }
       );
       return HashMap.set(index, concept.iri, concept);
     })

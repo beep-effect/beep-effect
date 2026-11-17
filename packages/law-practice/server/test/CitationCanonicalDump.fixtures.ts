@@ -91,8 +91,10 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
     removeAmbiguous: false,
   });
   expect(actual.citations).toHaveLength(modelsExpected.length);
-  yield* Effect.forEach(actual.citations, (citation, i) =>
-    compareCitationCanonicalModel(citation, A.getUnsafe(modelsExpected, i), call.id)
+  yield* Effect.forEach(
+    actual.citations,
+    (citation, i) => compareCitationCanonicalModel(citation, A.getUnsafe(modelsExpected, i), call.id),
+    { concurrency: 1 }
   );
   if (actual.raw.outcome._tag !== "Document") return yield* Effect.die("Expected real original Document branch");
   const models = A.map(actual.raw.outcome.result.extraction.extraction.citations, (entry) => entry.model);
@@ -121,7 +123,7 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
     ),
     Effect.provideService(CitationTextBudget, utilityBudget)
   );
-  const rows = yield* Effect.forEach(models, adapter.project);
+  const rows = yield* Effect.forEach(models, adapter.project, { concurrency: 1 });
   // References carry no year field, a generated reference has no constructor outcome, and a citation
   // with no parsed year still reports the field as None.
   const references = yield* stage.extract({
@@ -132,7 +134,7 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
   });
   if (references.raw.outcome._tag !== "Document") return yield* Effect.die("Expected real original Document branch");
   const referenceModels = A.map(references.raw.outcome.result.extraction.extraction.citations, (entry) => entry.model);
-  const referenceRows = yield* Effect.forEach(referenceModels, adapter.project);
+  const referenceRows = yield* Effect.forEach(referenceModels, adapter.project, { concurrency: 1 });
   expect(A.map(referenceRows, (row) => row.kind)).toContain("IdCitation");
   const dated = A.findFirst(referenceModels, (model) => "outcome" in model && "year" in model.outcome);
   if (dated._tag === "None" || !("outcome" in dated.value)) return yield* Effect.die("Expected a dated citation");
@@ -171,7 +173,8 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
       const expected = yield* S.decodeEffect(Ranges)(A.getUnsafe(modelsExpected, i));
       expect(row.span).toEqual(expected.span);
       yield* assertCitationMentionRanges(source.sourceText, A.getUnsafe(occurrences.mentions, i), expected);
-    })
+    }),
+    { concurrency: 1 }
   );
   const printability = yield* readCitationNativeRenderingAsset("python-printability");
   const dump = yield* makeCitationDump(setup.limits, printability).pipe(

@@ -108,7 +108,7 @@ export const replayCitationCaseName = Effect.fn("CaseNameTest.replay")(function*
   let children = 0;
   for (const row of rows) {
     yield* assertRow(setup, row, kind);
-    children += row.regexCalls.length;
+    children += row.regexCalls.length > 0 ? 1 : 0;
   }
   expect(rows).toHaveLength(full ? 256 : 10);
   yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, children);
@@ -123,25 +123,12 @@ export const assertCitationCaseNameSharedBudget = Effect.fn("CaseNameTest.shared
   const result = yield* regular.stage.extract(request);
   const total = yield* regular.budget.snapshot;
   expect(total).toBe(result.reservedUnits);
-  yield* assertCitationWorkerCompositionReleased(
-    regular.operation,
-    regular.admission,
-    regular.observed.snapshot,
-    row.regexCalls.length
-  );
+  yield* assertCitationWorkerCompositionReleased(regular.operation, regular.admission, regular.observed.snapshot, 1);
   const tight = yield* install("bun", total - 1, true);
   const refused = yield* tight.stage.extract(request).pipe(Effect.flip);
   expect(refused).toMatchObject({ _tag: "CitationSafetyLimitExceeded", limit: "producedTextUtf16" });
   const used = yield* tight.budget.snapshot;
   expect(used).toBeGreaterThan(0);
   expect(used).toBeLessThanOrEqual(total - 1);
-  const children = yield* tight.observed.snapshot;
-  expect(children.spawned).toBeGreaterThan(source.calls.length);
-  expect(children.spawned).toBeLessThanOrEqual(row.regexCalls.length);
-  yield* assertCitationWorkerCompositionReleased(
-    tight.operation,
-    tight.admission,
-    tight.observed.snapshot,
-    children.spawned
-  );
+  yield* assertCitationWorkerCompositionReleased(tight.operation, tight.admission, tight.observed.snapshot, 1);
 });

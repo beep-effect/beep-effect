@@ -884,14 +884,16 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
         Str.split("\n"),
         A.filter((line) => line.length > 0)
       );
-      const sourceRecords = yield* Effect.forEach(sourceLines, decodeSourceProcessingRecordLine);
+      const sourceRecords = yield* Effect.forEach(sourceLines, decodeSourceProcessingRecordLine, { concurrency: 1 });
       const readFileString14 = yield* fs.readFileString(path.join(outDir, "failures.jsonl"));
       const failureLines = pipe(
         readFileString14,
         Str.split("\n"),
         A.filter((line) => line.length > 0)
       );
-      const failureRecords = yield* Effect.forEach(failureLines, decodeFileProcessingFailureRecordLine);
+      const failureRecords = yield* Effect.forEach(failureLines, decodeFileProcessingFailureRecordLine, {
+        concurrency: 1,
+      });
       const textRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "note.txt"));
       const pstRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "mailbox.pst"));
       const xlsRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "table.xls"));
@@ -904,7 +906,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeChildArtifactRecordLine
+        decodeChildArtifactRecordLine,
+        { concurrency: 1 }
       );
       expect(runManifest.manifestVersion).toBe("beep.file-processing.run.v1");
       expect(runManifest.outputRoot).toBe(".");
@@ -969,7 +972,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeSourceProcessingRecordLine
+        decodeSourceProcessingRecordLine,
+        { concurrency: 1 }
       );
       const readFileString20 = yield* fs.readFileString(path.join(outDir, "failures.jsonl"));
       const failureRecords = yield* Effect.forEach(
@@ -978,7 +982,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeFileProcessingFailureRecordLine
+        decodeFileProcessingFailureRecordLine,
+        { concurrency: 1 }
       );
       const pstRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "mailbox.pst"));
       const pstFailure = O.getOrThrow(A.findFirst(failureRecords, (record) => record.relativePath === "mailbox.pst"));
@@ -1039,7 +1044,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeSourceProcessingRecordLine
+        decodeSourceProcessingRecordLine,
+        { concurrency: 1 }
       );
       const textRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "note.txt"));
       const pstRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "mailbox.pst"));
@@ -1053,7 +1059,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeChildArtifactRecordLine
+        decodeChildArtifactRecordLine,
+        { concurrency: 1 }
       );
       expect(runManifest.manifestVersion).toBe("beep.file-processing.run.v1");
       expect(coverage.sourceCount).toBe(3);
@@ -1108,7 +1115,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeSourceProcessingRecordLine
+        decodeSourceProcessingRecordLine,
+        { concurrency: 1 }
       );
       const readFileString29 = yield* fs.readFileString(path.join(outDir, "failures.jsonl"));
       const failureRecords = yield* Effect.forEach(
@@ -1117,7 +1125,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeFileProcessingFailureRecordLine
+        decodeFileProcessingFailureRecordLine,
+        { concurrency: 1 }
       );
       const representativePst = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "a.pst"));
       const duplicatePst = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "b.pst"));
@@ -1146,8 +1155,11 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
       const path = yield* Path.Path;
       const datasetDir = yield* makeDatasetDir(tmpDir);
       const outDir = path.join(tmpDir, "proof");
-      yield* Effect.forEach(A.range(0, 15), (index) =>
-        fs.writeFileString(path.join(datasetDir, `${Str.padStart(2, "0")(`${index}`)}.txt`), `source-${index}`)
+      yield* Effect.forEach(
+        A.range(0, 15),
+        (index) =>
+          fs.writeFileString(path.join(datasetDir, `${Str.padStart(2, "0")(`${index}`)}.txt`), `source-${index}`),
+        { concurrency: 1 }
       );
       yield* fs.writeFileString(path.join(datasetDir, "16.txt"), "source-0");
       yield* runFilesCommand([
@@ -1164,7 +1176,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
       const readFileString30 = yield* fs.readFileString(path.join(outDir, "sources.jsonl"));
       const sourceRecords = yield* Effect.forEach(
         pipe(readFileString30, Str.split("\n"), A.filter(Str.isNonEmpty)),
-        decodeSourceProcessingRecordLine
+        decodeSourceProcessingRecordLine,
+        { concurrency: 1 }
       );
       const representative = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "00.txt"));
       const duplicate = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "16.txt"));
@@ -1220,7 +1233,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeSourceProcessingRecordLine
+        decodeSourceProcessingRecordLine,
+        { concurrency: 1 }
       );
       const readFileString32 = yield* fs.readFileString(path.join(outDir, "failures.jsonl"));
       const failureRecords = yield* Effect.forEach(
@@ -1229,7 +1243,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeFileProcessingFailureRecordLine
+        decodeFileProcessingFailureRecordLine,
+        { concurrency: 1 }
       );
       const textRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "note.txt"));
       const textFailure = O.getOrThrow(A.findFirst(failureRecords, (record) => record.relativePath === "note.txt"));
@@ -1271,7 +1286,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeSourceProcessingRecordLine
+        decodeSourceProcessingRecordLine,
+        { concurrency: 1 }
       );
       const pstRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "mailbox.pst"));
       expect(pstRecord.status).toBe("skipped");
@@ -1366,7 +1382,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeSourceProcessingRecordLine
+        decodeSourceProcessingRecordLine,
+        { concurrency: 1 }
       );
       const pstRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "mailbox.pst"));
       expect(pstRecord.status).toBe("succeeded");
@@ -1406,7 +1423,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeSourceProcessingRecordLine
+        decodeSourceProcessingRecordLine,
+        { concurrency: 1 }
       );
       const pstRecord = O.getOrThrow(A.findFirst(sourceRecords, (record) => record.relativePath === "mailbox.pst"));
       const readFileString37 = yield* fs.readFileString(
@@ -1418,7 +1436,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeChildArtifactRecordLine
+        decodeChildArtifactRecordLine,
+        { concurrency: 1 }
       );
       const logLines38 = yield* TestConsole.logLines;
       const logLines = A.filter(logLines38, isString);
@@ -1500,7 +1519,8 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })("files command"
           Str.split("\n"),
           A.filter((line) => line.length > 0)
         ),
-        decodeSourceProcessingRecordLine
+        decodeSourceProcessingRecordLine,
+        { concurrency: 1 }
       );
       expect(coverage.sourceCount).toBe(1);
       expect(A.map(sourceRecords, (record) => record.relativePath)).toEqual(["note.txt"]);

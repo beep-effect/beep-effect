@@ -552,8 +552,10 @@ describe("@beep/professional-desktop chat contract", () => {
         const firstAssistantText = documentToPlainText(
           assistantContentToDocument(fixtureBlocksFor([UserTurnHistoryItem.make({ role: "user", text: "first" })]))
         );
-        const wireHistory = yield* Effect.forEach(history, (item) => encodeTurnHistoryItem(item));
-        const decodedHistory = yield* Effect.forEach(wireHistory, (item) => decodeTurnHistoryItem(item));
+        const wireHistory = yield* Effect.forEach(history, (item) => encodeTurnHistoryItem(item), { concurrency: 1 });
+        const decodedHistory = yield* Effect.forEach(wireHistory, (item) => decodeTurnHistoryItem(item), {
+          concurrency: 1,
+        });
 
         expect(A.map(history, (item) => item.role)).toEqual(["user", "assistant", "user"]);
         expect(A.map(history, (item) => item.text)).toEqual(["first", firstAssistantText, "second"]);

@@ -386,7 +386,8 @@ const checkGraphMembers = Effect.fn("BuildTurboOutputsTest.checkGraphMembers")(f
         ),
       };
       return row;
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 
@@ -548,7 +549,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "90 seconds" })("check onc
           const hasCheckConfig = yield* fs.exists(`${member.dir}/tsconfig.check.json`);
           const additions = hasCheckConfig ? yield* additionsToBuildProgram(member.dir) : [];
           return { member, additions };
-        })
+        }),
+        { concurrency: 1 }
       );
       const wider = A.filter(rows, (row) => A.isReadonlyArrayNonEmpty(row.additions));
       expect(

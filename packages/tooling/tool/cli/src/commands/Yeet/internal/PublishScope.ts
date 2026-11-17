@@ -963,10 +963,13 @@ const collectExistingCommitPublishIntent = Effect.fn("Yeet.collectExistingCommit
     return O.none();
   }
 
-  const [commitSha, paths] = yield* Effect.all([
-    currentCommitSha(context),
-    changedYeetPaths(context.repoRoot, YeetChangedPathsQuery.make({ base: comparisonRef, head: "HEAD" })),
-  ]);
+  const [commitSha, paths] = yield* Effect.all(
+    [
+      currentCommitSha(context),
+      changedYeetPaths(context.repoRoot, YeetChangedPathsQuery.make({ base: comparisonRef, head: "HEAD" })),
+    ],
+    { concurrency: 1 }
+  );
   return O.some(YeetExistingCommitPublishIntent.make({ commitSha, paths }));
 });
 
@@ -1192,12 +1195,15 @@ const collectExistingPublishIntentPaths = Effect.fn("Yeet.collectExistingPublish
 ): Effect.fn.Return<ReadonlyArray<string>, never, SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const existingPaths = yield* Effect.forEach(intent.paths, (filePath) =>
-    pipe(
-      fs.exists(path.join(context.repoRoot, filePath)),
-      Effect.orElseSucceed(() => false),
-      Effect.map((exists) => (exists ? O.some(filePath) : O.none()))
-    )
+  const existingPaths = yield* Effect.forEach(
+    intent.paths,
+    (filePath) =>
+      pipe(
+        fs.exists(path.join(context.repoRoot, filePath)),
+        Effect.orElseSucceed(() => false),
+        Effect.map((exists) => (exists ? O.some(filePath) : O.none()))
+      ),
+    { concurrency: 1 }
   );
   return pipe(existingPaths, A.getSomes, sortedUniquePaths);
 });

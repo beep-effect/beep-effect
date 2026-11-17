@@ -58,13 +58,16 @@ it.effect("passes safety limits through and translates admission reasons to quar
       Effect.flip
     );
     deepStrictEqual(passed === limit, true);
-    const outcomes = yield* Effect.forEach(["quarantined", "closed", "invalid-policy"] as const, (reason) =>
-      acquireCitationNativeLease(
-        refusing(CitationAdmissionFailure.make({ reason }), calls),
-        "annotate",
-        false,
-        translate
-      ).pipe(Effect.flip)
+    const outcomes = yield* Effect.forEach(
+      ["quarantined", "closed", "invalid-policy"] as const,
+      (reason) =>
+        acquireCitationNativeLease(
+          refusing(CitationAdmissionFailure.make({ reason }), calls),
+          "annotate",
+          false,
+          translate
+        ).pipe(Effect.flip),
+      { concurrency: 1 }
     );
     deepStrictEqual(
       A.map(outcomes, (error) => error._tag === "Translated" && error.reason),

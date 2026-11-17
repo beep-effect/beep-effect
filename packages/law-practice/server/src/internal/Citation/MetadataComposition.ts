@@ -119,7 +119,8 @@ export const copyCitationMetadataPatterns = Effect.fn("Citation.copyMetadataPatt
       const hash = yield* fingerprintCitationMetadataPattern(pattern, invalid);
       if (hash !== fingerprints[name]) return yield* Effect.fail(invalid());
       prepared[name] = pattern;
-    })
+    }),
+    { concurrency: 1 }
   );
   return prepared;
 });

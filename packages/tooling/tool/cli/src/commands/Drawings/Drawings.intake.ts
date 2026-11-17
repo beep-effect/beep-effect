@@ -402,7 +402,7 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
           MutableHashMap.set(byHash, sha256, name);
         }
       }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     return { byHash, taken: MutableHashSet.fromIterable(names) };
   });
@@ -498,7 +498,7 @@ const makeService = Effect.fn("DrawingIntake.makeService")(function* () {
           ),
       });
 
-    const attachments = yield* Effect.forEach(listed.value, take);
+    const attachments = yield* Effect.forEach(listed.value, take, { concurrency: 1 });
     const now4 = yield* DateTime.now;
     const record = IntakeRecord.make({
       schemaVersion: "drawing-intake/v1",

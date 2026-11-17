@@ -426,8 +426,10 @@ export const fromDocumentAnnotated = Effect.fn("fromDocumentAnnotated")(function
       type: "document",
       operation: "root",
     });
-    const sentenceNodes = yield* Effect.forEach(sentences, (sentence) =>
-      makeTextNode({ text: sentence, type: "sentence", operation: "sentencize" })
+    const sentenceNodes = yield* Effect.forEach(
+      sentences,
+      (sentence) => makeTextNode({ text: sentence, type: "sentence", operation: "sentencize" }),
+      { concurrency: 1 }
     );
 
     let graph: AnnotatedTextGraph = Graph.directed<AnnotatedNode, TextEdge>((mutable) => {

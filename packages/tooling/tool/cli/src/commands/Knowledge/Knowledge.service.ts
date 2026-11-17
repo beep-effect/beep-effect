@@ -2134,7 +2134,7 @@ export interface KnowledgeMaterializedTree {
 // reads only; resolution, the archive itself, the ls-tree entry list and their order never change.
 const materializeTreeWith = Effect.fnUntraced(function* (
   treeish: string,
-  selection: O.Option<HashSet.HashSet<string>>
+  selection: O.Option<(repoPath: string) => boolean>
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -2156,10 +2156,7 @@ const materializeTreeWith = Effect.fnUntraced(function* (
   yield* extractArchive(
     archivePath,
     archiveRoot,
-    O.match(selection, {
-      onNone: () => constTrue,
-      onSome: (paths) => (repoPath: string) => HashSet.has(paths, repoPath),
-    })
+    O.getOrElse(selection, () => constTrue)
   );
   yield* fs
     .remove(archivePath)
@@ -2168,7 +2165,7 @@ const materializeTreeWith = Effect.fnUntraced(function* (
     KnowledgeOperationalError.make({ message: "Malformed NUL-delimited census ls-tree output." })
   );
   const readBytes = Effect.fn("Knowledge.treeReadBytes")(function* (repoPath: string) {
-    if (O.exists(selection, (paths) => !HashSet.has(paths, repoPath))) {
+    if (O.exists(selection, (admits) => !admits(repoPath))) {
       return yield* KnowledgeOperationalError.make({
         message: `Tracked file "${repoPath}" is outside the paths materialized from ${commit}.`,
       });
@@ -2256,7 +2253,52 @@ export const materializeKnowledgeTree = Effect.fn("Knowledge.materializeTree")((
  * @since 0.0.0
  */
 export const materializeKnowledgeTreePaths = Effect.fn("Knowledge.materializeTreePaths")(
-  (treeish: string, paths: ReadonlyArray<string>) => materializeTreeWith(treeish, O.some(HashSet.fromIterable(paths)))
+  (treeish: string, paths: ReadonlyArray<string>) => {
+    const selected = HashSet.fromIterable(paths);
+    return materializeTreeWith(
+      treeish,
+      O.some((repoPath: string) => HashSet.has(selected, repoPath))
+    );
+  }
+);
+
+/**
+ * Materializes the paths of one commit-ish that a predicate admits and returns an oracle over them.
+ *
+ * **Details**
+ *
+ * The predicate form of {@link materializeKnowledgeTreePaths}: the same guard, commit resolution, full
+ * `git archive` and whole-tree `git ls-tree` entry list, with extraction and `readBytes` narrowed to
+ * the repository paths `admits` accepts. A predicate is what a caller needs when the selection is a
+ * subtree, such as the command source root, whose file list is only known once the archive is read.
+ *
+ * **Gotchas**
+ *
+ * `readBytes` of a path the predicate rejects fails loudly with an operational error. Directories are
+ * offered to the predicate too, and a rejected directory is still created when an admitted file
+ * beneath it is extracted.
+ *
+ * **Example** (Materialize the Markdown files of the working commit)
+ *
+ * ```ts
+ * import { materializeKnowledgeTreeWhere } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
+ * import * as Effect from "effect/Effect"
+ * import * as Str from "effect/String"
+ *
+ * const markdown = materializeKnowledgeTreeWhere("HEAD", Str.endsWith(".md"))
+ *
+ * console.log(Effect.isEffect(Effect.scoped(markdown))) // true
+ * ```
+ *
+ * @param treeish - Any commit-ish; no fetch ever occurs.
+ * @param admits - Decides, per repository path, whether its bytes are extracted.
+ * @returns The oracle over the whole tracked tree whose bytes cover the admitted paths only, its
+ * archive root, and the repository root.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const materializeKnowledgeTreeWhere = Effect.fn("Knowledge.materializeTreeWhere")(
+  (treeish: string, admits: (repoPath: string) => boolean) => materializeTreeWith(treeish, O.some(admits))
 );
 
 const refsTreeLive = (treeish: string) =>
@@ -2345,8 +2387,10 @@ export const rewriteKnowledgeReferences = Effect.fn("Knowledge.rewriteReferences
           rule,
         ])
     );
-    const reports = yield* Effect.forEach(grouped, ([relative, rules]) =>
-      rewriteKnowledgeReferenceFile(root, relative, rules, dryRun)
+    const reports = yield* Effect.forEach(
+      grouped,
+      ([relative, rules]) => rewriteKnowledgeReferenceFile(root, relative, rules, dryRun),
+      { concurrency: 1 }
     );
     return KnowledgeRewriteReport.make({
       applied: A.reduce(reports, 0, (total, report) => total + report.applied),

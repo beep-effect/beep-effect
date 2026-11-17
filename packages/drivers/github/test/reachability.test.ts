@@ -82,7 +82,7 @@ const visit = (
         Str.startsWith(".")(specifier)
           ? visit(path.resolve(path.dirname(file), Str.replace(/\.js$/, ".ts")(specifier)), seen, bare)
           : Effect.sync(() => MutableHashSet.add(bare, packageOf(specifier))),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   });
 

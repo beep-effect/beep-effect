@@ -106,7 +106,9 @@ const buildCompilesTests = Effect.fnUntraced(function* (directory: string) {
     ),
     ...(Str.includes("next build")(script) ? ["tsconfig.json"] : []),
   ];
-  const includes = yield* Effect.forEach(configs, (config) => tsconfigInclude(path.join(directory, config)));
+  const includes = yield* Effect.forEach(configs, (config) => tsconfigInclude(path.join(directory, config)), {
+    concurrency: 1,
+  });
   return A.some(A.flatten(includes), (entry) => entry === "test" || Str.startsWith("test/")(entry));
 });
 
@@ -163,7 +165,8 @@ describe("package role task inputs", () => {
             const compiles = yield* buildCompilesTests(directory);
             const effectiveBuildInputs5 = yield* effectiveBuildInputs(directory, config.tasks.build.inputs);
             return Tuple.make(directory, compiles, effectiveBuildInputs5);
-          })
+          }),
+          { concurrency: 1 }
         );
         const compiling = A.filter(rows, ([, compiles]) => compiles);
         // The noEmit apps typecheck `tsconfig.check.json`, which includes tests; the Next apps typecheck theirs.
@@ -223,7 +226,7 @@ describe("package role task inputs", () => {
           "packages/downstream/test/downstream.test.ts",
           "packages/downstream/README.md",
         ];
-        yield* Effect.forEach(files, (file) => write(file, "initial\n"));
+        yield* Effect.forEach(files, (file) => write(file, "initial\n"), { concurrency: 1 });
         // The shared utils edge names a workspace this fixture does not have.
         const tasks = R.fromEntries(
           A.map(R.toEntries(config.tasks), ([name, task]) =>

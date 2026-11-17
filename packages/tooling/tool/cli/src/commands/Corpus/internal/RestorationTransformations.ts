@@ -360,10 +360,13 @@ const currentPreservationEvidence = Effect.fn("CorpusRestoration.currentPreserva
     .readFileString(manifestPath)
     .pipe(CorpusCommandError.mapError("Failed reading the sealed preservation ledger for transformation."));
   const lines = A.filter(Str.split(/\r?\n/u)(text), Str.isNonEmpty);
-  const records = yield* Effect.forEach(lines, (line) =>
-    decodeArchiveLedgerRecordJson(line).pipe(
-      CorpusCommandError.mapError("Preservation ledger failed transformation-gate decoding.")
-    )
+  const records = yield* Effect.forEach(
+    lines,
+    (line) =>
+      decodeArchiveLedgerRecordJson(line).pipe(
+        CorpusCommandError.mapError("Preservation ledger failed transformation-gate decoding.")
+      ),
+    { concurrency: 1 }
   );
   const seal = O.getOrElse(A.last(records), () => undefined);
   if (seal === undefined || seal.recordType !== "archive-manifest-seal") {
@@ -1647,10 +1650,13 @@ const decodeTransformationLedger = Effect.fn("CorpusRestoration.decodeTransforma
   if (A.some(lines, Str.isEmpty)) {
     return yield* transformationError(`${context.family} transformation ledger has a blank evidence row.`);
   }
-  const records = yield* Effect.forEach(lines, (line) =>
-    decodeTransformationLedgerRecordJson(line).pipe(
-      CorpusCommandError.mapError(`${context.family} transformation ledger failed decoding.`)
-    )
+  const records = yield* Effect.forEach(
+    lines,
+    (line) =>
+      decodeTransformationLedgerRecordJson(line).pipe(
+        CorpusCommandError.mapError(`${context.family} transformation ledger failed decoding.`)
+      ),
+    { concurrency: 1 }
   );
   if (!A.every(records, (record) => recordIdentityMatches(record, context))) {
     return yield* transformationError(`${context.family} transformation ledger identity or scope does not match.`);
@@ -2403,11 +2409,14 @@ const mailResumeState = Effect.fn("CorpusRestoration.mailResumeState")(function*
           A.map(exceptions, (record) => record.objectId)
         )
       );
-      const exceptionCandidates = yield* Effect.forEach(exceptions, (record) =>
-        Effect.fromOption(
-          A.findFirst(candidates, (candidate) => candidate.objectId === record.objectId),
-          () => transformationError(`Prior mail exception references unknown candidate ${record.objectId}.`)
-        )
+      const exceptionCandidates = yield* Effect.forEach(
+        exceptions,
+        (record) =>
+          Effect.fromOption(
+            A.findFirst(candidates, (candidate) => candidate.objectId === record.objectId),
+            () => transformationError(`Prior mail exception references unknown candidate ${record.objectId}.`)
+          ),
+        { concurrency: 1 }
       );
       const exceptionInputBytes = A.reduce(exceptionCandidates, 0, (total, candidate) =>
         O.match(candidate.pass, { onNone: () => total, onSome: (pass) => total + Math.trunc(pass.sizeBytes) })

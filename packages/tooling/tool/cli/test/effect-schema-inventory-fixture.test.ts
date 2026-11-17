@@ -34,12 +34,15 @@ const loadFixture = Effect.fnUntraced(function* () {
   const names = yield* fs.readDirectory(directory);
   const index = yield* fs.readFileString(path.join(directory, "INDEX.md"));
   const manifest = yield* fs.readFileString(path.join(repositoryRoot, "package.json"));
-  const modules = yield* Effect.forEach(EffectSchemaInventoryModules, (module) =>
-    Effect.map(fs.readFileString(path.join(directory, effectSchemaInventoryJsonlName(module.slug))), (body) => ({
-      module,
-      body,
-      lines: A.filter(Str.split(body, "\n"), Str.isNonEmpty),
-    }))
+  const modules = yield* Effect.forEach(
+    EffectSchemaInventoryModules,
+    (module) =>
+      Effect.map(fs.readFileString(path.join(directory, effectSchemaInventoryJsonlName(module.slug))), (body) => ({
+        module,
+        body,
+        lines: A.filter(Str.split(body, "\n"), Str.isNonEmpty),
+      })),
+    { concurrency: 1 }
   );
   return { names, index, manifest, modules };
 });
@@ -70,8 +73,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         const fixture = yield* loadFixture();
         for (const { module, body, lines } of fixture.modules) {
           assertTrue(Str.isEmpty(body) || Str.endsWith("\n")(body), `${module.slug} ends with a newline`);
-          const rows = yield* Effect.forEach(lines, (line) => decodeEffectSchemaInventoryRowJson(line));
-          const reencoded = yield* Effect.forEach(rows, (row) => encodeEffectSchemaInventoryRowJson(row));
+          const rows = yield* Effect.forEach(lines, (line) => decodeEffectSchemaInventoryRowJson(line), {
+            concurrency: 1,
+          });
+          const reencoded = yield* Effect.forEach(rows, (row) => encodeEffectSchemaInventoryRowJson(row), {
+            concurrency: 1,
+          });
           deepStrictEqual(reencoded, lines, `${module.slug} rows round-trip byte for byte`);
           for (const row of rows) {
             strictEqual(row.module, module.module);
@@ -90,7 +97,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         const fixture = yield* loadFixture();
         const rows = yield* Effect.forEach(
           A.flatMap(fixture.modules, ({ lines }) => lines),
-          (line) => decodeEffectSchemaInventoryRowJson(line)
+          (line) => decodeEffectSchemaInventoryRowJson(line),
+          { concurrency: 1 }
         );
         const identities = HashSet.fromIterable(
           A.map(rows, (row) => `${row.module}\u0000${row.symbol}\u0000${row.kind}`)
@@ -112,7 +120,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         );
         const rows = yield* Effect.forEach(
           A.flatMap(fixture.modules, ({ lines }) => lines),
-          (line) => decodeEffectSchemaInventoryRowJson(line)
+          (line) => decodeEffectSchemaInventoryRowJson(line),
+          { concurrency: 1 }
         );
         assertTrue(A.isReadonlyArrayNonEmpty(rows), "The fixture carries rows");
         for (const row of rows) strictEqual(row.sha, catalogPin, `${row.module} ${row.symbol} is at the catalog pin`);
@@ -126,12 +135,15 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
         const header = yield* readEffectSchemaInventoryIndexHeader(fixture.index);
         const digest = yield* digestEffectSchemaInventoryJsonl(A.map(fixture.modules, ({ body }) => body));
         strictEqual(digest, header.digest);
-        const modules = yield* Effect.forEach(fixture.modules, ({ module, body, lines }) =>
-          Effect.map(
-            Effect.forEach(lines, (line) => decodeEffectSchemaInventoryRowJson(line)),
-            (rows) =>
-              [EffectSchemaInventoryModuleRows.make({ module, rows }), effectSchemaInventoryByteLength(body)] as const
-          )
+        const modules = yield* Effect.forEach(
+          fixture.modules,
+          ({ module, body, lines }) =>
+            Effect.map(
+              Effect.forEach(lines, (line) => decodeEffectSchemaInventoryRowJson(line), { concurrency: 1 }),
+              (rows) =>
+                [EffectSchemaInventoryModuleRows.make({ module, rows }), effectSchemaInventoryByteLength(body)] as const
+            ),
+          { concurrency: 1 }
         );
         const rendered = renderEffectSchemaInventoryIndex({ pin: header.pin, parser: header.parser, digest, modules });
         strictEqual(rendered, fixture.index);

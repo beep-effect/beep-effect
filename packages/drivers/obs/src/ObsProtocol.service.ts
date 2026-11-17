@@ -282,6 +282,7 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
     Ref.getAndSet(pending, HashMap.empty()).pipe(
       Effect.flatMap((map) =>
         Effect.forEach(HashMap.values(map), (deferred) => Deferred.fail(deferred, error), {
+          concurrency: 1,
           discard: true,
         })
       )
@@ -444,7 +445,7 @@ const connectWith = Effect.fn($I`connectWith`)(function* (
 
   const reader = yield* Socket.readerString(socket).pipe(Effect.mapError(normalizeSocketFailure));
   yield* reader.pipe(
-    Effect.flatMap((messages) => Effect.forEach(messages, onMessage, { discard: true })),
+    Effect.flatMap((messages) => Effect.forEach(messages, onMessage, { concurrency: 1, discard: true })),
     Effect.forever,
     Effect.catch(flow(normalizeSocketFailure, handleDisconnect)),
     Effect.catchCause((cause) =>

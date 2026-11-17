@@ -99,15 +99,18 @@ describe("@beep/law-practice-domain question ReviewItem", () => {
     "rejects bad option lists and option writes",
     Effect.fnUntraced(function* () {
       const item = rejects(ReviewItem);
-      const results = yield* Effect.all([
-        item(questionWith([keepDate])),
-        item(questionWith(A.map(A.range(1, 6), optionOf))),
-        item(questionWith([keepDate, { ...askClient, optionId: "keep-date" }])),
-        item(questionWith([keepDate, { ...askClient, optionId: "Ask Client" }])),
-        item(questionWith([keepDate, { ...moveDate, write: { ...moveDate.write, kind: "docket-entry" } }])),
-        item(questionWith([keepDate, { ...moveDate, write: { ...moveDate.write, dueOn: "2026-02-30" } }])),
-        item({ ...encodedQuestion, options: undefined }),
-      ]);
+      const results = yield* Effect.all(
+        [
+          item(questionWith([keepDate])),
+          item(questionWith(A.map(A.range(1, 6), optionOf))),
+          item(questionWith([keepDate, { ...askClient, optionId: "keep-date" }])),
+          item(questionWith([keepDate, { ...askClient, optionId: "Ask Client" }])),
+          item(questionWith([keepDate, { ...moveDate, write: { ...moveDate.write, kind: "docket-entry" } }])),
+          item(questionWith([keepDate, { ...moveDate, write: { ...moveDate.write, dueOn: "2026-02-30" } }])),
+          item({ ...encodedQuestion, options: undefined }),
+        ],
+        { concurrency: 1 }
+      );
 
       expect(results).toStrictEqual(A.replicate("SchemaError", results.length));
     })
@@ -126,7 +129,7 @@ describe("@beep/law-practice-domain AnswerRow", () => {
   it.effect(
     "decodes and round-trips every answer state",
     Effect.fnUntraced(function* () {
-      const rows = yield* Effect.forEach(encodedAnswers, (row) => roundTrips(AnswerRow, row));
+      const rows = yield* Effect.forEach(encodedAnswers, (row) => roundTrips(AnswerRow, row), { concurrency: 1 });
 
       expect(A.map(rows, ({ state }) => state)).toStrictEqual(AnswerState.literals);
       const [decided, pending] = rows;
@@ -145,15 +148,18 @@ describe("@beep/law-practice-domain AnswerRow", () => {
       const answer = rejects(AnswerRow);
       const { optionId: _optionId, ...decidedWithoutOption } = decidedAnswer;
       const { resurfaceOn: _resurfaceOn, ...pendingWithoutDate } = pendingAnswer;
-      const results = yield* Effect.all([
-        answer(decidedWithoutOption),
-        answer(pendingWithoutDate),
-        answer({ ...pendingAnswer, resurfaceOn: "2026-02-30" }),
-        answer({ ...decidedAnswer, optionId: "Keep Date" }),
-        answer({ ...keepRemindingAnswer, state: "snoozed" }),
-        answer({ ...keepRemindingAnswer, revision: 0 }),
-        answer({ ...keepRemindingAnswer, note: "" }),
-      ]);
+      const results = yield* Effect.all(
+        [
+          answer(decidedWithoutOption),
+          answer(pendingWithoutDate),
+          answer({ ...pendingAnswer, resurfaceOn: "2026-02-30" }),
+          answer({ ...decidedAnswer, optionId: "Keep Date" }),
+          answer({ ...keepRemindingAnswer, state: "snoozed" }),
+          answer({ ...keepRemindingAnswer, revision: 0 }),
+          answer({ ...keepRemindingAnswer, note: "" }),
+        ],
+        { concurrency: 1 }
+      );
 
       expect(results).toStrictEqual(A.replicate("SchemaError", results.length));
     })

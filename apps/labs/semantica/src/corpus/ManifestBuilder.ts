@@ -282,7 +282,8 @@ const makeCorpusManifestBuilder = Effect.gen(function* () {
           A.findFirst(manifest.rows, (candidate) => Str.Equivalence(candidate.relativePath, drift.relativePath))
         ).pipe(Effect.orDie);
         return toManifestDiff(row, drift);
-      })
+      }),
+      { concurrency: 1 }
     );
     if (A.isReadonlyArrayNonEmpty(diffs)) {
       return yield* ManifestDrift.make({

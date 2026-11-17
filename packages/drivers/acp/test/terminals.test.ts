@@ -248,10 +248,13 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => 
         defaultCwd: cwd,
         limits: AcpClientTerminalLimits.make({ maxUnreleasedTerminals: 3 }),
       });
-      const ids = yield* Effect.forEach(A.range(0, 2), (index) =>
-        terminals
-          .create({ sessionId: "session", ...script(`process.stdout.write('${index}');`) })
-          .pipe(Effect.tap((created) => terminals.waitForExit({ sessionId: "session", ...created })))
+      const ids = yield* Effect.forEach(
+        A.range(0, 2),
+        (index) =>
+          terminals
+            .create({ sessionId: "session", ...script(`process.stdout.write('${index}');`) })
+            .pipe(Effect.tap((created) => terminals.waitForExit({ sessionId: "session", ...created }))),
+        { concurrency: 1 }
       );
 
       const rejected = yield* terminals.create({ sessionId: "session", ...script("") }).pipe(Effect.flip);
@@ -272,10 +275,13 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => 
         defaultCwd: cwd,
         limits: AcpClientTerminalLimits.make({ maxRetainedOutputBytes: 1024, maxRetainedReleasedTerminals: 1 }),
       });
-      const ids = yield* Effect.forEach(A.range(0, 2), () =>
-        terminals
-          .create({ sessionId: "session", ...script("process.stdout.write('x'.repeat(1000));") })
-          .pipe(Effect.tap((created) => terminals.waitForExit({ sessionId: "session", ...created })))
+      const ids = yield* Effect.forEach(
+        A.range(0, 2),
+        () =>
+          terminals
+            .create({ sessionId: "session", ...script("process.stdout.write('x'.repeat(1000));") })
+            .pipe(Effect.tap((created) => terminals.waitForExit({ sessionId: "session", ...created }))),
+        { concurrency: 1 }
       );
       const retained = A.reduce(
         A.filterMap(ids, ({ terminalId }) =>
@@ -286,7 +292,9 @@ it.layer(SpawnerLayer, { timeout: "30 seconds" })("AcpClientTerminals", (it) => 
       );
       assert.isAtMost(retained, 1024);
 
-      yield* Effect.forEach(ids, ({ terminalId }) => terminals.release({ sessionId: "session", terminalId }));
+      yield* Effect.forEach(ids, ({ terminalId }) => terminals.release({ sessionId: "session", terminalId }), {
+        concurrency: 1,
+      });
       assertNone(terminals.readOutputSnapshot("session", ids[0]?.terminalId ?? ""));
       // Trimming takes the oldest output first, so the newest terminal keeps all of its output.
       assertSome(terminals.readOutputSnapshot("session", ids[2]?.terminalId ?? ""), {

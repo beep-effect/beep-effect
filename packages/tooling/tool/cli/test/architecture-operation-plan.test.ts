@@ -348,8 +348,10 @@ describe("architecture operation plan", () => {
             A.map((operation) => operation.path),
             A.sort(Order.String)
           );
-          const generatedComparisons = yield* Effect.forEach(acceptedFiles, (acceptedPath) =>
-            readGeneratedComparison(tempRoot, acceptedPath)
+          const generatedComparisons = yield* Effect.forEach(
+            acceptedFiles,
+            (acceptedPath) => readGeneratedComparison(tempRoot, acceptedPath),
+            { concurrency: 1 }
           );
 
           return {
@@ -658,7 +660,7 @@ describe("architecture operation plan", () => {
             expect(testLayerOperation.content).not.toContain('from "effect"');
           }
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     })
   );

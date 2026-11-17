@@ -14,7 +14,7 @@ describe("quantified predicate objects and infinitive results", () => {
           ["1", `A lamp projecting ${quantity} beam comprising a source.`],
           ["2", "The lamp of claim 1 wherein the source is covered."],
         ]);
-        const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+        const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
         const root = O.getOrThrow(A.head(trees));
         assert.deepStrictEqual(
           A.map(O.getOrThrow(A.head(root.elements)).terms, (t) => t.anchor.quote),

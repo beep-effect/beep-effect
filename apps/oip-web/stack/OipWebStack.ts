@@ -2,7 +2,7 @@
  * Resources of the `OipWeb` Alchemy stack: the Vercel project, its
  * environment variables and domains, the Cloudflare DNS records that point
  * the domains at Vercel, and the S3 assets bucket. Replaces the Pulumi
- * program infra/src/OipWeb.ts (removed in #3341) (stacks `production` and `staging`).
+ * program for the stacks `production` and `staging`.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -209,7 +209,7 @@ export const oipWebResources = Effect.fn("OipWeb.resources")(function* (config: 
     })
   );
 
-  const domains = yield* Effect.forEach(config.domains, declareDomain(config, project.projectId));
+  const domains = yield* Effect.forEach(config.domains, declareDomain(config, project.projectId), { concurrency: 1 });
 
   const bucket = yield* AWS.S3.Bucket(assetsBucketId, {
     bucketName: config.assetsBucketName,

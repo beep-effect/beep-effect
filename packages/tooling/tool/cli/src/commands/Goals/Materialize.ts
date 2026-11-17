@@ -142,13 +142,17 @@ const sweepStaleStages = Effect.fn("Goals.sweepStaleStages")(function* (goalsDir
   }
   const entries = yield* fs.readDirectory(goalsDir).pipe(Effect.orElseSucceed(A.empty<string>));
   // Every removal is attempted; the failures are reported together by path.
-  const outcomes = yield* Effect.forEach(A.filter(entries, Str.startsWith(".staging-")), (entry) => {
-    const stage = path.join(goalsDir, entry);
-    return fs.remove(stage, { recursive: true, force: true }).pipe(
-      Effect.as(O.none<string>()),
-      Effect.orElseSucceed(() => O.some(stage))
-    );
-  });
+  const outcomes = yield* Effect.forEach(
+    A.filter(entries, Str.startsWith(".staging-")),
+    (entry) => {
+      const stage = path.join(goalsDir, entry);
+      return fs.remove(stage, { recursive: true, force: true }).pipe(
+        Effect.as(O.none<string>()),
+        Effect.orElseSucceed(() => O.some(stage))
+      );
+    },
+    { concurrency: 1 }
+  );
   const failed = A.getSomes(outcomes);
   if (A.isReadonlyArrayNonEmpty(failed)) {
     return yield* GoalPlanOperationalError.new(
@@ -212,7 +216,7 @@ export const publishBootstrapPlan = Effect.fn("Goals.publishBootstrapPlan")(func
           path.resolve(stage, path.relative(plan.packetPath, entry.path)),
           entry.payload
         ),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     const validations = yield* validateStage(stage);
     // E11: an empty slug directory is an abandoned claim from a crashed attempt.
@@ -229,7 +233,7 @@ export const publishBootstrapPlan = Effect.fn("Goals.publishBootstrapPlan")(func
   const validations = yield* run.pipe(
     Effect.onError(() => Effect.andThen(removeQuietly(stage), removeIfEmpty(target)))
   );
-  const written = yield* Effect.forEach(creates, receiptFile);
+  const written = yield* Effect.forEach(creates, receiptFile, { concurrency: 1 });
   return MaterializationReceipt.make({
     planId: plan.planId,
     mode: plan.mode,
@@ -434,17 +438,15 @@ export const applyAdoptionPlan = Effect.fn("Goals.applyAdoptionPlan")(function* 
   yield* Effect.forEach(
     plan.preservations,
     (preservation) => readPinnedFile(preservation.path, preservation.preImageDigest, repoRoot),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const creates = writtenCreates(plan);
   yield* Effect.forEach(
     creates,
     (entry) => writeExclusive(path.resolve(repoRoot), path.resolve(repoRoot, entry.path), entry.payload),
-    {
-      discard: true,
-    }
+    { concurrency: 1, discard: true }
   );
-  const written = yield* Effect.forEach(creates, receiptFile);
+  const written = yield* Effect.forEach(creates, receiptFile, { concurrency: 1 });
   return MaterializationReceipt.make({
     planId: plan.planId,
     mode: plan.mode,

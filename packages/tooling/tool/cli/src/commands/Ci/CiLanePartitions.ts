@@ -518,59 +518,62 @@ export const CI_LANE_PARTITIONS: ReadonlyArray<CiLanePartition> = [
   // twelve shards finished 4,512 planned seconds in 2,421 s of Vitest (0.54 of the plan) and
   // ran 3.8-5.5 min, so eight shards of 564 planned seconds hold about 303 s of Vitest each:
   // 8.8 min on a p95 runner (1.28x the median) with 10 percent of plan imbalance.
+  // 2026-11-14: the plan was re-recorded from PR #3355's run 43646904138 after the regex session
+  // (#3352) cut regex child processes per ten citation calls from 291 to 10; each shard plans 364 s.
+  // The CI goals driver ruled it not lane-affecting for window 5.
   CiLanePartition.make({
     id: "law-practice-1",
     lane: "test-unit",
-    weightSeconds: 564,
+    weightSeconds: 364,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 1, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-2",
     lane: "test-unit",
-    weightSeconds: 564,
+    weightSeconds: 364,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 2, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-3",
     lane: "test-unit",
-    weightSeconds: 564,
+    weightSeconds: 364,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 3, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-4",
     lane: "test-unit",
-    weightSeconds: 564,
+    weightSeconds: 364,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 4, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-5",
     lane: "test-unit",
-    weightSeconds: 564,
+    weightSeconds: 364,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 5, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-6",
     lane: "test-unit",
-    weightSeconds: 564,
+    weightSeconds: 364,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 6, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-7",
     lane: "test-unit",
-    weightSeconds: 564,
+    weightSeconds: 364,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 7, total: 8 }),
   }),
   CiLanePartition.make({
     id: "law-practice-8",
     lane: "test-unit",
-    weightSeconds: 564,
+    weightSeconds: 364,
     packages: ["@beep/law-practice-server"],
     shard: CiLanePartitionShard.make({ index: 8, total: 8 }),
   }),

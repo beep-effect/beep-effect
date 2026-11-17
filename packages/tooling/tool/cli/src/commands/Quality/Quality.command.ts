@@ -48,6 +48,8 @@ import {
   AdmissionConfig,
   AdmissionJournalEvent,
   AdmissionJournalHistory,
+  AdmissionJournalReleasedV3,
+  AdmissionPressureEmission,
   AdmissionUnitEmission,
   adaptGitKitError,
   GITHUB_CHECK_MODE_VALUES,
@@ -3105,7 +3107,10 @@ const reportTestTsgoResults = Effect.fn("QualityScriptCommands.reportTestTsgoRes
     yield* Console.error(A.join(effectDiagnosticLines, "\n"));
   }
 
-  yield* Effect.forEach(failures, (failure) => reportTestTsgoFailure(repoRoot, failure), { discard: true });
+  yield* Effect.forEach(failures, (failure) => reportTestTsgoFailure(repoRoot, failure), {
+    concurrency: 1,
+    discard: true,
+  });
 
   return A.isReadonlyArrayNonEmpty(effectDiagnosticLines) || A.isReadonlyArrayNonEmpty(failures);
 });
@@ -3476,8 +3481,10 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 
   yield* Console.log(`wrote ${repoRelative(result.outputJsonPath, repoRoot, path)}`);
   yield* Console.log(`wrote ${repoRelative(result.outputMarkdownPath, repoRoot, path)}`);
-  yield* Effect.forEach(A.getSomes([ciOutputJsonPath, ciOutputMarkdownPath]), (mirrorPath) =>
-    Console.log(`wrote ${repoRelative(mirrorPath, repoRoot, path)} (mirror)`)
+  yield* Effect.forEach(
+    A.getSomes([ciOutputJsonPath, ciOutputMarkdownPath]),
+    (mirrorPath) => Console.log(`wrote ${repoRelative(mirrorPath, repoRoot, path)} (mirror)`),
+    { concurrency: 1 }
   );
   yield* Console.log(
     `packages=${result.totals.packages} openPackages=${result.totals.packagesNeedingRemediation} openExports=${result.totals.openExports} openModules=${result.totals.openModules} rootPolicyOpen=${result.totals.rootPolicyOpen}`
@@ -3643,15 +3650,15 @@ const jsdocInventoryCommand = Command.make(
   "jsdoc-inventory",
   {
     outputJson: Flag.String("output-json").pipe(
-      Flag.withDescription("JSONC inventory output path; defaults to the tracked standards artifact"),
+      Flag.withDescription("JSONC inventory output path; defaults to the ignored .beep/ci/ copy the ratchet reads"),
       Flag.optional
     ),
     outputMarkdown: Flag.String("output-markdown").pipe(
-      Flag.withDescription("Markdown inventory output path; defaults to the tracked standards artifact"),
+      Flag.withDescription("Markdown inventory output path; defaults to the ignored .beep/ci/ copy"),
       Flag.optional
     ),
     ciOutputJson: Flag.String("ci-output-json").pipe(
-      Flag.withDescription("Extra JSONC path written from the same scan (the .beep/ci/ copy the ratchet lane reads)"),
+      Flag.withDescription("Extra JSONC path written from the same scan"),
       Flag.optional
     ),
     ciOutputMarkdown: Flag.String("ci-output-markdown").pipe(
@@ -3998,6 +4005,17 @@ const renderAdmissionRouteLines = (events: AdmissionJournalHistory["events"]): R
     ],
   });
 
+// Admitted and released rows that carry the SCHE-09 pressure stamp; absent when none does.
+const renderAdmissionPressureLines = (events: AdmissionJournalHistory["events"]): ReadonlyArray<string> => {
+  const stamped = (rows: ReadonlyArray<{ readonly pressure: O.Option<unknown> }>) =>
+    `${A.length(A.filter(rows, (row) => O.isSome(row.pressure)))} of ${A.length(rows)}`;
+  const admitted = A.filter(events, AdmissionJournalEvent.guards["admission-admitted"]);
+  const released = A.filter(events, S.is(AdmissionJournalReleasedV3));
+  return A.some([...admitted, ...released], (row) => O.isSome(row.pressure))
+    ? [`- pressure stamps: ${stamped(admitted)} admitted, ${stamped(released)} v3 released rows (--json lists them)`]
+    : [];
+};
+
 // Aggregates only; `--json` carries every row for the scheduler goals' own folds.
 const renderAdmissionJournalHistoryLines = (history: AdmissionJournalHistory): ReadonlyArray<string> => [
   `admission history: ${A.length(history.events)} rows from ${A.match(history.archive.segments, {
@@ -4007,6 +4025,7 @@ const renderAdmissionJournalHistoryLines = (history: AdmissionJournalHistory): R
   `- rows read: ${history.archivedRows} archived, ${history.liveRows} live; ${history.duplicateRows} duplicate(s) dropped, ${history.opaqueRows} undecodable`,
   renderAdmissionWaitLine(history.events),
   ...renderAdmissionRouteLines(history.events),
+  ...renderAdmissionPressureLines(history.events),
   `- archive: ${history.archive.directory} (the reap pass prunes segments older than ${formatQuarantineAge(ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS)}; --json lists every row)`,
 ];
 
@@ -4185,8 +4204,14 @@ const schedulerProtocolCommand = Command.make(
         "Turn admission-unit fields (unit, weight source, owner) and the cache work kind on, or off; on only once every live checkout runs SCHE-08 slice 6 or later"
       )
     ),
+    pressure: Flag.Literals("pressure", AdmissionPressureEmission.literals).pipe(
+      Flag.optional,
+      Flag.withDescription(
+        "Turn the capacity and host-pressure stamp on admitted and released journal rows on, or off; every reader ignores it, so it can go on at any time"
+      )
+    ),
   },
-  Effect.fn(function* ({ disableEvictions, enableEvictions, units }) {
+  Effect.fn(function* ({ disableEvictions, enableEvictions, pressure, units }) {
     if (disableEvictions && enableEvictions) {
       return yield* QualityScriptCommandError.make({
         message: "Choose only one of --enable-evictions or --disable-evictions.",
@@ -4200,18 +4225,28 @@ const schedulerProtocolCommand = Command.make(
       : disableEvictions
         ? yield* scheduler.setEvictionProtocol("off")
         : yield* scheduler.protocol;
-    const protocol = yield* O.match(units, {
+    const unitProtocol = yield* O.match(units, {
       onNone: () => Effect.succeed(evictionProtocol),
       onSome: scheduler.setUnitProtocol,
+    });
+    const protocol = yield* O.match(pressure, {
+      onNone: () => Effect.succeed(unitProtocol),
+      onSome: scheduler.setPressureProtocol,
     });
     yield* printLines([
       `admission eviction rows: ${protocol.eviction}`,
       "Enable only after every live checkout runs the preservation release.",
       `admission unit fields: ${protocol.units}`,
       "Turn on only after every live checkout runs a revision that reads them (SCHE-08).",
+      `admission pressure stamps: ${protocol.pressure}`,
+      "Readers of every revision ignore them; each promotion and release reads procfs and cgroup files (SCHE-09).",
     ]);
   })
-).pipe(Command.withDescription("Inspect or change the mixed-checkout eviction-row and unit-field protocol gates"));
+).pipe(
+  Command.withDescription(
+    "Inspect or change the mixed-checkout eviction-row, unit-field and pressure-stamp protocol gates"
+  )
+);
 
 const schedulerReconcileAttemptsCommand = Command.make(
   "reconcile-attempts",
@@ -4264,11 +4299,14 @@ const qualitySchedulerCommand = Command.make("scheduler", {}, () =>
     "- bun run beep quality scheduler protocol --disable-evictions",
     "- bun run beep quality scheduler protocol --units on",
     "- bun run beep quality scheduler protocol --units off",
+    "- bun run beep quality scheduler protocol --pressure on",
+    "- bun run beep quality scheduler protocol --pressure off",
     "- bun run beep quality scheduler reconcile-attempts",
     "- bun run beep quality scheduler slice",
     "- bun run beep quality scheduler slice --install",
     "Eviction rows default off; enable only after every live checkout runs the preservation release.",
     "Unit fields default off; turn on only after every live checkout reads them.",
+    "Pressure stamps default off; every reader ignores them.",
   ])
 ).pipe(
   Command.withDescription("Inspect and repair machine-wide quality admission"),

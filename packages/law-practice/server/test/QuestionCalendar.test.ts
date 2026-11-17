@@ -347,12 +347,15 @@ describe("@beep/law-practice-server QuestionCalendar", () => {
           const calendar = yield* QuestionCalendar;
           const verified = write(day(11, 2), "Response due", O.some("evt-docket-1"));
           const missing = write(day(11, 2), "Response due", O.some("evt-missing"));
-          const reasons = yield* Effect.all([
-            Effect.flip(calendar.upsert({ key: questionWriteKey(verified), write: verified.write })),
-            Effect.flip(calendar.upsert({ key: questionWriteKey(missing), write: missing.write })),
-            Effect.flip(calendar.restore(AppliedWrite.make({ proposal: verified, eventId: "evt-docket-1" }))),
-            Effect.flip(calendar.restore(AppliedWrite.make({ proposal: missing, eventId: "evt-missing" }))),
-          ]);
+          const reasons = yield* Effect.all(
+            [
+              Effect.flip(calendar.upsert({ key: questionWriteKey(verified), write: verified.write })),
+              Effect.flip(calendar.upsert({ key: questionWriteKey(missing), write: missing.write })),
+              Effect.flip(calendar.restore(AppliedWrite.make({ proposal: verified, eventId: "evt-docket-1" }))),
+              Effect.flip(calendar.restore(AppliedWrite.make({ proposal: missing, eventId: "evt-missing" }))),
+            ],
+            { concurrency: 1 }
+          );
 
           expect(A.map(reasons, ({ reason }) => reason)).toStrictEqual([
             "event-verified",

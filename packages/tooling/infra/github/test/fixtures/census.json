@@ -1,0 +1,652 @@
+{
+  "capturedAt": "2026-11-13",
+  "repository": {
+    "full_name": "beep-effect/beep-effect",
+    "homepage": "https://www.oip.law",
+    "default_branch": "main",
+    "has_issues": true,
+    "has_projects": true,
+    "has_wiki": true,
+    "has_discussions": false,
+    "is_template": false,
+    "allow_squash_merge": true,
+    "allow_merge_commit": true,
+    "allow_rebase_merge": true,
+    "allow_auto_merge": true,
+    "delete_branch_on_merge": true,
+    "topics": [
+      "base-ui",
+      "biomejs",
+      "docker-compose",
+      "domain-driven-design",
+      "drizzle-orm",
+      "effect",
+      "effect-ts",
+      "feature-sliced",
+      "lexical-editor",
+      "postgresql",
+      "shadcn-ui",
+      "turborepo",
+      "typescript",
+      "vertical-slice-architecture"
+    ]
+  },
+  "rulesets": [
+    {
+      "name": "main",
+      "target": "branch",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": ["~DEFAULT_BRANCH"]
+        }
+      },
+      "rules": [
+        {
+          "type": "deletion"
+        },
+        {
+          "type": "non_fast_forward"
+        },
+        {
+          "type": "pull_request",
+          "parameters": {
+            "required_approving_review_count": 0,
+            "dismiss_stale_reviews_on_push": false,
+            "required_reviewers": [],
+            "require_code_owner_review": false,
+            "dismissal_restriction": {
+              "enabled": false,
+              "allowed_actors": []
+            },
+            "require_last_push_approval": false,
+            "required_review_thread_resolution": true,
+            "require_extra_approval_for_unattributed_changes": true,
+            "allowed_merge_methods": ["merge", "squash", "rebase"]
+          }
+        },
+        {
+          "type": "required_status_checks",
+          "parameters": {
+            "strict_required_status_checks_policy": false,
+            "do_not_enforce_on_create": false,
+            "required_status_checks": [
+              {
+                "context": "Lint",
+                "integration_id": 15368
+              },
+              {
+                "context": "Heavy / Check",
+                "integration_id": 15368
+              },
+              {
+                "context": "Test Unit",
+                "integration_id": 15368
+              },
+              {
+                "context": "Heavy / Test Integration",
+                "integration_id": 15368
+              },
+              {
+                "context": "Heavy / Docgen",
+                "integration_id": 15368
+              },
+              {
+                "context": "Codegen Drift",
+                "integration_id": 15368
+              },
+              {
+                "context": "Repo Sanity",
+                "integration_id": 15368
+              },
+              {
+                "context": "Commitlint",
+                "integration_id": 15368
+              },
+              {
+                "context": "Secret Scanning",
+                "integration_id": 15368
+              },
+              {
+                "context": "Security",
+                "integration_id": 15368
+              },
+              {
+                "context": "SAST",
+                "integration_id": 15368
+              },
+              {
+                "context": "Nix Shell",
+                "integration_id": 15368
+              },
+              {
+                "context": "Professional Desktop IPC Stdio",
+                "integration_id": 15368
+              },
+              {
+                "context": "Heavy / Doctest",
+                "integration_id": 15368
+              },
+              {
+                "context": "JSDoc Ratchet",
+                "integration_id": 15368
+              }
+            ]
+          }
+        }
+      ],
+      "bypass_actors": [
+        {
+          "actor_id": 5,
+          "actor_type": "RepositoryRole",
+          "bypass_mode": "always"
+        },
+        {
+          "actor_id": 5309624,
+          "actor_type": "Integration",
+          "bypass_mode": "always"
+        }
+      ]
+    },
+    {
+      "name": "queue-lab",
+      "target": "branch",
+      "enforcement": "active",
+      "conditions": {
+        "ref_name": {
+          "exclude": [],
+          "include": ["refs/heads/queue-lab"]
+        }
+      },
+      "rules": [
+        {
+          "type": "required_status_checks",
+          "parameters": {
+            "strict_required_status_checks_policy": false,
+            "do_not_enforce_on_create": false,
+            "required_status_checks": [
+              {
+                "context": "queue-lab-gate",
+                "integration_id": 15368
+              }
+            ]
+          }
+        },
+        {
+          "type": "merge_queue",
+          "parameters": {
+            "merge_method": "SQUASH",
+            "max_entries_to_build": 0,
+            "min_entries_to_merge": 1,
+            "max_entries_to_merge": 1,
+            "min_entries_to_merge_wait_minutes": 0,
+            "grouping_strategy": "ALLGREEN",
+            "check_response_timeout_minutes": 10
+          }
+        }
+      ],
+      "bypass_actors": []
+    }
+  ],
+  "environments": [
+    {
+      "name": "beep-effect-web-prod",
+      "deployment_branch_policy": {
+        "protected_branches": false,
+        "custom_branch_policies": true
+      },
+      "protection_rule_types": ["branch_policy"],
+      "branch_policies": [
+        {
+          "name": "main",
+          "type": "branch"
+        }
+      ],
+      "variables": [
+        {
+          "name": "ALCHEMY_STATE_ROLE_ARN",
+          "value": "arn:aws:iam::832907639880:role/beep-alchemy-state-rw"
+        }
+      ],
+      "secret_names": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"]
+    },
+    {
+      "name": "Preview",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Preview – beep-dev",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Preview – beep-effect-web",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Preview – oip-web",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Preview – oip-web-staging",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Preview – todox",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Preview – todox-marketing",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Production",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Production – beep-dev",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Production – beep-effect-infra",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Production – beep-effect-marketing",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Production – beep-effect-marketing-jbbs",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Production – beep-effect-marketing-jbbs-1765233294724-vLlH",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Production – beep-effect-web",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Production – oip-web",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Production – oip-web-staging",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Production – todox",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "Production – todox-marketing",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "professional-desktop-release",
+      "deployment_branch_policy": {
+        "protected_branches": false,
+        "custom_branch_policies": true
+      },
+      "protection_rule_types": ["required_reviewers", "branch_policy"],
+      "branch_policies": [
+        {
+          "name": "professional-desktop-v*",
+          "type": "tag"
+        }
+      ],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "storybook-prod",
+      "deployment_branch_policy": {
+        "protected_branches": false,
+        "custom_branch_policies": true
+      },
+      "protection_rule_types": ["branch_policy"],
+      "branch_policies": [
+        {
+          "name": "main",
+          "type": "branch"
+        }
+      ],
+      "variables": [
+        {
+          "name": "ALCHEMY_STATE_ROLE_ARN",
+          "value": "arn:aws:iam::832907639880:role/beep-alchemy-state-rw"
+        }
+      ],
+      "secret_names": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"]
+    },
+    {
+      "name": "turbo-cache-prod",
+      "deployment_branch_policy": {
+        "protected_branches": false,
+        "custom_branch_policies": true
+      },
+      "protection_rule_types": ["branch_policy"],
+      "branch_policies": [
+        {
+          "name": "main",
+          "type": "branch"
+        }
+      ],
+      "variables": [
+        {
+          "name": "ALCHEMY_STATE_ROLE_ARN",
+          "value": "arn:aws:iam::832907639880:role/beep-alchemy-state-rw"
+        }
+      ],
+      "secret_names": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN"]
+    },
+    {
+      "name": "turbo-cache-write",
+      "deployment_branch_policy": {
+        "protected_branches": false,
+        "custom_branch_policies": true
+      },
+      "protection_rule_types": ["branch_policy"],
+      "branch_policies": [
+        {
+          "name": "main",
+          "type": "branch"
+        }
+      ],
+      "variables": [],
+      "secret_names": [
+        "TURBO_R2_WRITE_ACCESS_KEY_ID",
+        "TURBO_R2_WRITE_SECRET_ACCESS_KEY",
+        "TURBO_TOKEN"
+      ]
+    },
+    {
+      "name": "vercel-oip-web-preview",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "vercel-oip-web-production",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "vercel-todox-preview",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    },
+    {
+      "name": "vercel-todox-production",
+      "deployment_branch_policy": null,
+      "protection_rule_types": [],
+      "branch_policies": [],
+      "variables": [],
+      "secret_names": []
+    }
+  ],
+  "variable_names": [
+    "BEEP_SHARD_OVERFLOW",
+    "KNOWLEDGE_MINT_APP_CLIENT_ID",
+    "KNOWLEDGE_MINT_APP_SLUG",
+    "TURBO_API",
+    "TURBO_R2_BUCKET",
+    "TURBO_R2_ENABLED",
+    "TURBO_R2_ENDPOINT",
+    "TURBO_TEAM"
+  ],
+  "variables_owned_values": [
+    {
+      "name": "KNOWLEDGE_MINT_APP_CLIENT_ID",
+      "value": "Iv23liz4xPSwPCH0qfJR"
+    },
+    {
+      "name": "KNOWLEDGE_MINT_APP_SLUG",
+      "value": "beep-knowledge-mint"
+    }
+  ],
+  "secret_names": [
+    "APP_ENV",
+    "APP_LOG_FORMAT",
+    "APP_LOG_LEVEL",
+    "APP_NAME",
+    "KNOWLEDGE_MINT_APP_PRIVATE_KEY",
+    "NEXT_PUBLIC_ENV",
+    "TURBO_R2_READ_ACCESS_KEY_ID",
+    "TURBO_R2_READ_SECRET_ACCESS_KEY",
+    "TURBO_READ_TOKEN",
+    "TURBO_TEAM",
+    "VERCEL_TOKEN"
+  ],
+  "labels": [
+    {
+      "color": "ededed",
+      "description": null,
+      "name": "aardvark"
+    },
+    {
+      "color": "5319e7",
+      "description": "AST KG indexing and dual-write",
+      "name": "area/ast-kg"
+    },
+    {
+      "color": "d73a4a",
+      "description": "Something isn't working",
+      "name": "bug"
+    },
+    {
+      "color": "ededed",
+      "description": null,
+      "name": "codex"
+    },
+    {
+      "color": "ededed",
+      "description": null,
+      "name": "compute-profile-worker"
+    },
+    {
+      "color": "0366d6",
+      "description": "Pull requests that update a dependency file",
+      "name": "dependencies"
+    },
+    {
+      "color": "0075ca",
+      "description": "Improvements or additions to documentation",
+      "name": "documentation"
+    },
+    {
+      "color": "cfd3d7",
+      "description": "This issue or pull request already exists",
+      "name": "duplicate"
+    },
+    {
+      "color": "a2eeef",
+      "description": "New feature or request",
+      "name": "enhancement"
+    },
+    {
+      "color": "000000",
+      "description": "Pull requests that update GitHub Actions code",
+      "name": "github_actions"
+    },
+    {
+      "color": "7057ff",
+      "description": "Good for newcomers",
+      "name": "good first issue"
+    },
+    {
+      "color": "008672",
+      "description": "Extra attention is needed",
+      "name": "help wanted"
+    },
+    {
+      "color": "e4e669",
+      "description": "This doesn't seem right",
+      "name": "invalid"
+    },
+    {
+      "color": "ededed",
+      "description": "Owner merges this PR itself once its condition is met. Do not merge by hand.",
+      "name": "owner-merge-hold"
+    },
+    {
+      "color": "5319e7",
+      "description": "P7 KG excellence work",
+      "name": "phase/P7"
+    },
+    {
+      "color": "5319e7",
+      "description": "Critical priority",
+      "name": "priority/P0"
+    },
+    {
+      "color": "5319e7",
+      "description": "High priority",
+      "name": "priority/P1"
+    },
+    {
+      "color": "ededed",
+      "description": null,
+      "name": "property-laws-nightly"
+    },
+    {
+      "color": "d876e3",
+      "description": "Further information is requested",
+      "name": "question"
+    },
+    {
+      "color": "0E8A16",
+      "description": "Admits the heavy CI matrix (Heavy / *) for this pull request; time-to-certainty B8",
+      "name": "ready-for-heavy"
+    },
+    {
+      "color": "ededed",
+      "description": null,
+      "name": "size/L"
+    },
+    {
+      "color": "ededed",
+      "description": null,
+      "name": "size/M"
+    },
+    {
+      "color": "ededed",
+      "description": null,
+      "name": "size/S"
+    },
+    {
+      "color": "ededed",
+      "description": null,
+      "name": "size/XL"
+    },
+    {
+      "color": "B60205",
+      "description": "Declared unblocker for a red-main episode; orchestrator applies, one PR per episode",
+      "name": "unblocks-main"
+    },
+    {
+      "color": "ffffff",
+      "description": "This will not be worked on",
+      "name": "wontfix"
+    }
+  ],
+  "webhooks": [
+    {
+      "name": "hook-663255260",
+      "events": ["workflow_job"],
+      "active": true
+    },
+    {
+      "name": "hook-711445970",
+      "events": ["workflow_job"],
+      "active": true
+    }
+  ],
+  "actions_permissions": {
+    "enabled": true,
+    "allowed_actions": "selected",
+    "sha_pinning_required": true,
+    "default_workflow_permissions": "read"
+  }
+}

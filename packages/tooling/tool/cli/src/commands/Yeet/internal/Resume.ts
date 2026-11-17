@@ -527,7 +527,7 @@ const renderResumeRows = Effect.fn("HarnessResumer.renderRows")(function* (
       Console.log(
         `${item.sequence}. ${item.harness} · ${item.workspace} · ${item.status} · ${O.getOrElse(item.command, () => "no resume command")} · cwd ${item.cwd}`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 

@@ -838,7 +838,8 @@ export const observeGoalMergeTimeEvidence = Effect.fn("Goals.CompletionEvidence.
         Effect.option
       );
       return { ruleset, read };
-    })
+    }),
+    { concurrency: 1 }
   );
   const lookup = yield* readMergeRuleSuite(root, base, mergeCommit, mergedAt).pipe(
     Effect.orElseSucceed(() => SuiteLookup.make({ found: O.none(), gap: O.some("network-failure") }))
@@ -937,7 +938,8 @@ export const observeGoalMergeTimeEvidence = Effect.fn("Goals.CompletionEvidence.
             : O.none<{ readonly source: string; readonly contexts: ReadonlyArray<string> }>(),
         }),
       });
-    })
+    }),
+    { concurrency: 1 }
   );
   const evaluatedRulesets = A.getSomes(
     A.map(

@@ -371,11 +371,14 @@ export const makeGithubIdentityRegistryLive = Effect.fn("GithubIdentityRegistry.
     const fileEntries = yield* readGithubIdentityConfig.pipe(Effect.provideContext(services));
     const env = yield* envEntry(fileEntries);
     const all = A.append(A.appendAll(fileEntries, O.toArray(env)), GH_CLI_ENTRY);
-    const keyed = yield* Effect.forEach(all, (entry, index) =>
-      labelOf(entry).pipe(
-        Effect.orElseSucceed(() => `unlabelled:${index}`),
-        Effect.map((key) => [key, entry] as const)
-      )
+    const keyed = yield* Effect.forEach(
+      all,
+      (entry, index) =>
+        labelOf(entry).pipe(
+          Effect.orElseSucceed(() => `unlabelled:${index}`),
+          Effect.map((key) => [key, entry] as const)
+        ),
+      { concurrency: 1 }
     );
     const unique = pipe(
       A.dedupeWith(keyed, ([self], [that]) => self === that),
@@ -666,19 +669,22 @@ export const makeGithubRateLimitSampler = Effect.fn("GithubRateLimitSampler.make
           Effect.as(Effect.logWarning(`github ledger: ${error.detail}; sampling the gh login only`), A.of(GH_CLI_ENTRY))
         )
       );
-      return yield* Effect.forEach(entries, (entry) =>
-        sampleEntry(entry, trigger).pipe(
-          Effect.timeoutOption(SAMPLE_ENTRY_TIMEOUT),
-          Effect.map(
-            O.getOrElse(() =>
-              SampleOutcome.cases.Failed.make({
-                entry: entry._tag,
-                identity: configuredLabelOf(entry),
-                detail: `the sample did not finish within ${Duration.format(SAMPLE_ENTRY_TIMEOUT)}`,
-              })
+      return yield* Effect.forEach(
+        entries,
+        (entry) =>
+          sampleEntry(entry, trigger).pipe(
+            Effect.timeoutOption(SAMPLE_ENTRY_TIMEOUT),
+            Effect.map(
+              O.getOrElse(() =>
+                SampleOutcome.cases.Failed.make({
+                  entry: entry._tag,
+                  identity: configuredLabelOf(entry),
+                  detail: `the sample did not finish within ${Duration.format(SAMPLE_ENTRY_TIMEOUT)}`,
+                })
+              )
             )
-          )
-        )
+          ),
+        { concurrency: 1 }
       );
     }).pipe(Effect.withSpan("GithubRateLimitSampler.sampleAll"));
 
@@ -725,11 +731,14 @@ export const makeGithubRateLimitSampler = Effect.fn("GithubRateLimitSampler.make
     const context = yield* Layer.build(registry.clientFor(GH_CLI_ENTRY)).pipe(
       Effect.provideService(GithubBudgetLedger, ledger)
     );
-    return yield* Effect.forEach(A.range(1, Math.max(1, calibration.pairs)), (index) =>
-      (index === 1 ? Effect.void : Effect.sleep(calibration.spacing)).pipe(
-        Effect.andThen(calibrationPair(identity)),
-        Effect.provideContext(context)
-      )
+    return yield* Effect.forEach(
+      A.range(1, Math.max(1, calibration.pairs)),
+      (index) =>
+        (index === 1 ? Effect.void : Effect.sleep(calibration.spacing)).pipe(
+          Effect.andThen(calibrationPair(identity)),
+          Effect.provideContext(context)
+        ),
+      { concurrency: 1 }
     );
   }, Effect.scoped);
 

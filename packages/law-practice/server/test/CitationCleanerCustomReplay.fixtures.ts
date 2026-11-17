@@ -149,8 +149,10 @@ export const replayControlledCleanerScenes = Effect.fn("CleanerCustomCorpusTest.
       expect(citationResult5).toEqual({ active: 0, queued: 0, closed: false });
       runs++;
     }
-    const decoded = yield* Effect.forEach(A.filter(row.events, S.is(ObservableEvent)), (value) =>
-      S.decodeEffect(ObservableEvent)(value)
+    const decoded = yield* Effect.forEach(
+      A.filter(row.events, S.is(ObservableEvent)),
+      (value) => S.decodeEffect(ObservableEvent)(value),
+      { concurrency: 1 }
     );
     const expected = A.map(decoded, expand);
     const observed = yield* owned.events;

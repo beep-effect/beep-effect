@@ -59,7 +59,7 @@ describe("AtUri", () => {
           const decodedAtUri = yield* decodeAtUri(candidate);
           expect(decodedAtUri).toBe(candidate);
         }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     )
   );
 
@@ -72,7 +72,7 @@ describe("AtUri", () => {
 
           expect(error.message).toContain("AT URI");
         }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     )
   );
 

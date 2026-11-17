@@ -147,7 +147,8 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
     Effect.fnUntraced(function* (source) {
       const related = yield* viewRecords(dataset, relatedRepositories(source.id), LibrarySource, includePrivate);
       return [source.id, A.head(related)] as const;
-    })
+    }),
+    { concurrency: 1 }
   );
   const repositoryBySource = HashMap.fromIterable(repositories);
   const relatedRepository = (sourceId: string) => O.flatten(HashMap.get(repositoryBySource, sourceId));
@@ -228,7 +229,8 @@ const renderProjection = Effect.fn("Research.Library.renderProjection")(function
         Effect.fnUntraced(function* (capture) {
           const artifacts = yield* viewRecords(dataset, captureArtifacts(capture.id), LibraryArtifact, includePrivate);
           return LibraryCapture.make({ ...capture, artifacts });
-        })
+        }),
+        { concurrency: 1 }
       );
       const categories = HashMap.fromIterable(
         A.map(

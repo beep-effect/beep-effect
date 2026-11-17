@@ -117,7 +117,7 @@ it.layer(platform, { timeout: "60 seconds" })("cache pilot host commands in proc
         yield* fs.writeFileString(path.join(bin, name), "#!/bin/sh\n");
         yield* fs.chmod(path.join(bin, name), 0o755);
       }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     return { root, bin, apt, bwrap: path.join(root, "bwrap") };
   });
@@ -229,8 +229,10 @@ it.layer(platform, { timeout: "60 seconds" })("cache pilot host commands in proc
         "apt-get install -y --no-install-recommends bubblewrap",
         `${bwrap} --version`,
       ]);
-      const kept = yield* Effect.forEach(["third-party.list", "ubuntu.sources"], (name) =>
-        fs.exists(path.join(apt, name))
+      const kept = yield* Effect.forEach(
+        ["third-party.list", "ubuntu.sources"],
+        (name) => fs.exists(path.join(apt, name)),
+        { concurrency: 1 }
       );
       expect(kept).toEqual([false, true]);
     }, freshConsole)
@@ -268,6 +270,7 @@ it.layer(platform, { timeout: "60 seconds" })("cache pilot host commands in proc
     const workspace = path.join(base, "ws");
     const trees = A.map(["a", "b"], (suffix) => `${workspace}-worktrees/cache-producer-11-1-${suffix}`);
     yield* Effect.forEach([workspace, ...trees], (directory) => fs.makeDirectory(directory, { recursive: true }), {
+      concurrency: 1,
       discard: true,
     });
     return { base, workspace, trees };
@@ -297,7 +300,7 @@ it.layer(platform, { timeout: "60 seconds" })("cache pilot host commands in proc
         provideSpawner(spawner)
       );
       expect(spawnLines(spawner)).toEqual(A.map(trees, (tree) => `git worktree remove -- ${tree}`));
-      const remaining = yield* Effect.forEach([inputs, trialRoot], (target) => fs.exists(target));
+      const remaining = yield* Effect.forEach([inputs, trialRoot], (target) => fs.exists(target), { concurrency: 1 });
       expect(remaining).toEqual([false, false]);
     }, freshConsole)
   );
@@ -333,7 +336,9 @@ it.layer(platform, { timeout: "60 seconds" })("cache pilot host commands in proc
         "::error::Refusing unexpected producer worktree.",
         "::error::Refusing unexpected producer input directory.",
       ]);
-      const cleaned = yield* Effect.forEach([trialRoot, foreignTree], (target) => fs.exists(target));
+      const cleaned = yield* Effect.forEach([trialRoot, foreignTree], (target) => fs.exists(target), {
+        concurrency: 1,
+      });
       expect(cleaned).toEqual([false, true]);
 
       // Empty worktree and input variables are skipped; an unmarked private root is refused.
@@ -587,7 +592,8 @@ it.layer(platform, { timeout: "60 seconds" })("cache pilot inputs in process", (
           ["cache-pilot-inputs", "", "@beep/types#lint"],
         ],
         (argv) =>
-          runCi(argv).pipe(registry(new Uint8Array()), provideSpawner(spawner), Effect.flip, Effect.map(reportedExit))
+          runCi(argv).pipe(registry(new Uint8Array()), provideSpawner(spawner), Effect.flip, Effect.map(reportedExit)),
+        { concurrency: 1 }
       );
       expect(refusals).toEqual([
         { exitCode: 64, message: "Unsupported pilot input mode." },
@@ -619,7 +625,7 @@ it.layer(platform, { timeout: "60 seconds" })("cache pilot inputs in process", (
       yield* Effect.forEach(
         ["dependencies.json", "activation.json"],
         (name) => fs.writeFileString(`${root}/${INPUTS}/${name}`, "{}\n"),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       const worktree = yield* prepareCachePilotRequest(root, "local").pipe(
         withStep(step),
@@ -636,16 +642,19 @@ it.layer(platform, { timeout: "60 seconds" })("cache pilot inputs in process", (
       );
       expect(noNode).toEqual({ exitCode: 1, message: "ci cache-pilot-inputs: node is not on PATH" });
 
-      const noLint = yield* Effect.forEach(['{"tasks": {"build": {}}}', '{"tasks": []}', "[]"], (profile) =>
-        Effect.gen(function* () {
-          const untasked = yield* makeRoot(profile, stablePins);
-          return yield* prepareCachePilotSources(untasked.root, "local", "@beep/types#lint").pipe(
-            withStep(untasked.step),
-            registry(new Uint8Array()),
-            Effect.flip,
-            Effect.map(reportedExit)
-          );
-        })
+      const noLint = yield* Effect.forEach(
+        ['{"tasks": {"build": {}}}', '{"tasks": []}', "[]"],
+        (profile) =>
+          Effect.gen(function* () {
+            const untasked = yield* makeRoot(profile, stablePins);
+            return yield* prepareCachePilotSources(untasked.root, "local", "@beep/types#lint").pipe(
+              withStep(untasked.step),
+              registry(new Uint8Array()),
+              Effect.flip,
+              Effect.map(reportedExit)
+            );
+          }),
+        { concurrency: 1 }
       );
       expect(noLint).toEqual(
         A.replicate({ exitCode: 1, message: `ci cache-pilot-inputs: ${PROFILE_PATH} has no tasks.lint object` }, 3)
@@ -704,7 +713,8 @@ it.layer(platform, { timeout: "60 seconds" })("cache pilot inputs in process", (
         Effect.fnUntraced(function* ([overrides, archive, unreachable]) {
           const integrity = yield* integrityOf(archive);
           return yield* prepare(canary({ integrity, ...overrides }), unreachable ? offline : registryClient(archive));
-        })
+        }),
+        { concurrency: 1 }
       );
       expect(refusals).toEqual([
         "Native canary must use its reviewed public registry source.",

@@ -184,7 +184,10 @@ const flush = (state: BufferState): Effect.Effect<void> =>
     ];
     state.entries.length = 0;
     // The transcript is the program's own log text and the label a step name: neutralized, as the live lines were.
-    return Effect.forEach(body, (line) => Console.log(CommandNeutralizer.text(line)), { discard: true });
+    return Effect.forEach(body, (line) => Console.log(CommandNeutralizer.text(line)), {
+      concurrency: 1,
+      discard: true,
+    });
   });
 
 const BufferSuccessPolicy = LiteralKit(["flush", "discard"]).pipe(

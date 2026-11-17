@@ -172,6 +172,7 @@ export const syncTsconfigAtRoot: {
 
     if (tsconfigSyncModeEquivalence(options.mode, "sync")) {
       yield* Effect.forEach(sortedPlannedChanges, (change) => writeFileString(change.filePath, change.content), {
+        concurrency: 1,
         discard: true,
       });
     }

@@ -60,12 +60,15 @@ export const runHoldsList = Effect.gen(function* () {
   if (A.isReadonlyArrayEmpty(versions)) {
     return ["[holds] no hold records yet."];
   }
-  return yield* Effect.forEach(versions, (version) =>
-    Effect.map(
-      ledger.runsFor(version),
-      (runs) =>
-        `[holds] ${version.proposition.holdId} (${version.proposition.kind}, ${A.join(version.proposition.subject.packages, ", ")}): ${confirmHoldRuns(runs)} after ${A.length(runs)} run(s)`
-    )
+  return yield* Effect.forEach(
+    versions,
+    (version) =>
+      Effect.map(
+        ledger.runsFor(version),
+        (runs) =>
+          `[holds] ${version.proposition.holdId} (${version.proposition.kind}, ${A.join(version.proposition.subject.packages, ", ")}): ${confirmHoldRuns(runs)} after ${A.length(runs)} run(s)`
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -392,8 +395,10 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
   const ledger = yield* HoldLedger;
   const now = yield* DateTime.now;
   const live = yield* ledger.currentVersions;
-  const stored = yield* Effect.forEach(live, (version) =>
-    Effect.map(ledger.runsFor(version), (runs) => [version, runs] as const)
+  const stored = yield* Effect.forEach(
+    live,
+    (version) => Effect.map(ledger.runsFor(version), (runs) => [version, runs] as const),
+    { concurrency: 1 }
   );
   // A flipped hold is probed again, so its retirement rests on a run against the version the bump will install.
   const toProbe = A.filter(
@@ -402,8 +407,10 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
       version.proposition.falsifier._tag === "Scripted" &&
       (isProbeDue(version, now) || confirmHoldRuns(runs) === "Flipped")
   );
-  const probed = yield* Effect.forEach(toProbe, ([version, runs]) =>
-    Effect.map(probeNow(version, input.commitSha), (result) => ({ version, runs, ...result }))
+  const probed = yield* Effect.forEach(
+    toProbe,
+    ([version, runs]) => Effect.map(probeNow(version, input.commitSha), (result) => ({ version, runs, ...result })),
+    { concurrency: 1 }
   );
   // Plan on the fresh runs in memory, so a dry run previews what a real run would do.
   const verdicts = A.map(stored, ([version, runs]) => {
@@ -421,7 +428,10 @@ export const runHoldsUpdate = Effect.fn("Holds.updateProgram")(function* (input:
     (entry) => O.isSome(entry.freshRun) && isUnpinnedByCatalogBump(entry.version) && O.isNone(escalate(entry.version))
   );
   if (!input.dryRun) {
-    yield* Effect.forEach(A.getSomes(A.map(probed, (entry) => entry.run)), ledger.appendRun, { discard: true });
+    yield* Effect.forEach(A.getSomes(A.map(probed, (entry) => entry.run)), ledger.appendRun, {
+      concurrency: 1,
+      discard: true,
+    });
     const allVersions8 = yield* ledger.allVersions;
     const tombstone = retract(allVersions8, now);
     yield* ledger.appendVersions(
@@ -512,8 +522,10 @@ export const runHoldsWhy = Effect.fn("Holds.whyProgram")(function* (packageName:
   if (A.isReadonlyArrayEmpty(heads)) {
     return [`[holds] no hold record governs ${packageName}.`];
   }
-  const blocks = yield* Effect.forEach(heads, (head) =>
-    whyLines(head, A.length(A.filter(all, (row) => row.logicalKey === head.logicalKey)))
+  const blocks = yield* Effect.forEach(
+    heads,
+    (head) => whyLines(head, A.length(A.filter(all, (row) => row.logicalKey === head.logicalKey))),
+    { concurrency: 1 }
   );
   return A.flatten(blocks);
 });

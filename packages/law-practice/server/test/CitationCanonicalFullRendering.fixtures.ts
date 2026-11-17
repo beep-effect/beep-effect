@@ -69,7 +69,8 @@ const readRows = Effect.fn("CanonicalFullRenderingTest.read")(function* () {
         A.getUnsafe(models, 0)
       );
       return { id, raw: body.input.plain_text, models, expected: criterion.operands[1].value };
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 const renderingMetadata = Effect.fn("CanonicalFullRenderingTest.metadata")(function* (citation: Citation) {
@@ -121,7 +122,8 @@ export const replayCitationCanonicalFullRendering = Effect.fn("CanonicalFullRend
       Effect.fnUntraced(function* ([key, value]) {
         const text = value === null ? null : (yield* unicode.fromText(value)).storage;
         return Tuple.make(key, text);
-      })
+      }),
+      { concurrency: 1 }
     );
     const input = yield* S.decodeUnknownEffect(RenderingInputType)({
       ...resource,

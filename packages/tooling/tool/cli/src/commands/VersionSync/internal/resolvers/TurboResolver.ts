@@ -226,9 +226,9 @@ export const resolveTurboSchema = Effect.fn("resolveTurboSchema")(function* (
     repoRoot
   );
 
-  const files = yield* Effect.forEach(directories, (directory) => readTurboConfigFile(repoRoot, directory)).pipe(
-    Effect.map(A.getSomes)
-  );
+  const files = yield* Effect.forEach(directories, (directory) => readTurboConfigFile(repoRoot, directory), {
+    concurrency: 1,
+  }).pipe(Effect.map(A.getSomes));
 
   return TurboSchemaState.make({
     installedVersion,

@@ -26,14 +26,31 @@ export interface CitationNativeJsonDecoder<Codec extends S.ConstraintDecoder<unk
  */
 export const makeCitationNativeJsonDecoder = <Codec extends S.ConstraintDecoder<unknown>, E>(
   definition: CitationNativeJsonDecoder<Codec, E>
-) =>
-  Effect.fn("Citation.decodeNativeJson")(function* (bytes: Uint8Array) {
+) => {
+  const decode = S.decodeEffect(definition.codec, { onExcessProperty: "error" });
+  return Effect.fn("Citation.decodeNativeJson")(function* (bytes: Uint8Array) {
     yield* preflightCitationNativeJson(bytes, definition.propertyCeiling, definition.invalid, definition.maximumDepth);
     const text = yield* Effect.try({ try: () => decoder.decode(bytes), catch: definition.invalid });
-    return yield* S.decodeEffect(definition.codec, { onExcessProperty: "error" })(text).pipe(
-      Effect.mapError(definition.invalid)
-    );
+    return yield* decode(text).pipe(Effect.mapError(definition.invalid));
   });
+};
+/** Compile one bounded startup argument encoder for a closed worker family.
+ * The encoded-size guard also applies to schemas with variable fields.
+ * @internal @category constructors @since 0.0.0
+ */
+export const makeCitationNativeArgumentEncoder = <Codec extends S.ConstraintEncoder<string>, E>(definition: {
+  readonly codec: Codec;
+  readonly maximum: number;
+  readonly invalid: () => E;
+}) => {
+  const { codec, maximum, invalid } = definition;
+  const encode = S.encodeEffect(codec);
+  return Effect.fn("Citation.encodeNativeArgument")(function* (value: Codec["Type"]) {
+    const text = yield* encode(value).pipe(Effect.mapError(invalid));
+    if (text.length > maximum) return yield* Effect.fail(invalid());
+    return text;
+  });
+};
 /** Exact padded base64 payload size, excluding its schema-owned JSON header.
  * @internal @category operations @since 0.0.0
  */

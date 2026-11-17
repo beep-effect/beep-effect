@@ -28,11 +28,7 @@ import {
   ownCitationTestConfiguration,
 } from "./CitationConfigurationOwnership.fixtures.ts";
 import { loadCitationFrozenEditionFixtures } from "./CitationFrozenEditions.fixtures.ts";
-import {
-  makeCitationTestScaffoldBinding,
-  withCitationTestInvocation,
-  withCitationTestTextBudget,
-} from "./CitationInvocation.fixtures.ts";
+import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import {
   assertCitationTokenizerCase,
@@ -196,9 +192,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
       const controls = yield* loadCitationTokenizerControls();
       const setup = yield* setupCitationTokenizer("bun", controls.configuration, { producedTextUtf16: 13 });
       const maximum = (yield* defaultCitationEnginePolicy).limits.producedTextUtf16;
-      const refused = yield* withCitationTestTextBudget(
-        maximum,
-        setup.tokenizer.port.tokenize({ width: 1, bytes: new TextEncoder().encode("Id. x") })
+      // The session takes its deadline from the invocation policy. Keep the
+      // fixture's 997 ms controlled deadline when enlarging only the text budget.
+      const refused = yield* withCitationTestInvocation(
+        setup.tokenizer.port.tokenize({ width: 1, bytes: new TextEncoder().encode("Id. x") }),
+        { ...setup.limits, producedTextUtf16: maximum }
       ).pipe(
         Effect.provideService(Clock.Clock, setup.clock),
         Effect.provideService(ChildProcessSpawner, setup.observed.spawner),
@@ -244,7 +242,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
           for (const key of original.ordering.strings) key.bytes.fill(0);
           yield* assertCitationTokenizerCase(setup, A.getUnsafe(controls.cases, 2));
           const snapshot = yield* setup.observed.snapshot;
-          expect(snapshot).toEqual({ spawned: 7, confirmed: 7 });
+          expect(snapshot).toEqual({ spawned: 3, confirmed: 3 });
         }),
       { timeout: 30000 }
     );

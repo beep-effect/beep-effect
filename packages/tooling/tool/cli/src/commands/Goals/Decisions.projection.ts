@@ -449,8 +449,10 @@ export const goalDecisionLogReport = Effect.fn("Goals.decisionLogReport")(functi
 ) {
   const listed = yield* reader.decisionFiles(record.packetPath);
   const files = A.sort(listed, Order.String);
-  const parsed = yield* Effect.forEach(files, (file) =>
-    Effect.flatMap(reader.readDecision(record.packetPath, file), (raw) => parseGoalDecision(file, raw))
+  const parsed = yield* Effect.forEach(
+    files,
+    (file) => Effect.flatMap(reader.readDecision(record.packetPath, file), (raw) => parseGoalDecision(file, raw)),
+    { concurrency: 1 }
   );
   const [decisions, rejected] = A.separate(parsed);
   let invalidFiles: ReadonlyArray<GoalDecisionFileInvalid> = rejected;

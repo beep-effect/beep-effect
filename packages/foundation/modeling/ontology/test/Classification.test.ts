@@ -69,7 +69,8 @@ const fixtureLayer = Layer.effect(
           catch: (cause) => ClassificationTestOperationError.make({ cause }),
         }).pipe(Effect.orDie);
         yield* fs.writeFileString(file, content);
-      })
+      }),
+      { concurrency: 1 }
     );
     return fs;
   })
@@ -178,7 +179,8 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
             expect((yield* registry.resolve(corrupted, ipcPin, "A").pipe(Effect.flip)).reason).toBe(
               "hierarchy-invalid"
             );
-          })
+          }),
+          { concurrency: 1 }
         );
         expect((yield* registry.broader(snapshot, ipcPin, "A01B999/00").pipe(Effect.flip)).reason).toBe(
           "symbol-not-found"
@@ -224,7 +226,8 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
             );
             expect(S.is(ClassificationError)(error)).toBe(true);
             expect(error.reason).toBe("source-parse");
-          })
+          }),
+          { concurrency: 1 }
         );
       })
     );
@@ -256,7 +259,8 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
               );
             expect(S.is(ClassificationError)(error)).toBe(true);
             expect(error.reason).toBe(expected);
-          })
+          }),
+          { concurrency: 1 }
         );
         const escaped = yield* registry.load(manifest, vendor, ipcPin).pipe(
           Effect.provideService(
@@ -313,7 +317,8 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
               Effect.flip
             );
             expect(error.reason).toBe("source-parse");
-          })
+          }),
+          { concurrency: 1 }
         );
       })
     );
@@ -591,7 +596,8 @@ it.layer(Layer.merge(ClassificationRegistry.layer, fixtureLayer), { timeout: "30
               })
             );
             expect((yield* registry.resolve(snapshot, pin, notation)).prefLabel).toBe(expected);
-          })
+          }),
+          { concurrency: 1 }
         );
       })
     );

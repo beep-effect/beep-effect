@@ -158,7 +158,7 @@ const threadRowOpen = Effect.fn("Yeet.convergeThreadRowOpen")(function* (
   thread: YeetWatchThread
 ) {
   const ids = yield* yeetInboxReviewThreadRowIds(repoRoot, observation.prNumber, thread.id);
-  const acks = yield* Effect.forEach(ids, (id) => readYeetAckState(repoRoot, id));
+  const acks = yield* Effect.forEach(ids, (id) => readYeetAckState(repoRoot, id), { concurrency: 1 });
   return A.some(acks, (ack) => !ack.acked);
 });
 
@@ -244,7 +244,7 @@ export const convergeYeetInbox = Effect.fn("Yeet.convergeInbox")(function* (
   yield* Effect.forEach(
     A.filter(observation.checks, (check) => YeetCheckOutcome.is.fail(check.outcome)),
     (check) => dispatchYeetCheckFailure(context.repoRoot, observation, check, at),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     A.filter(observation.threads, yeetWatchThreadOutstanding),
@@ -254,7 +254,7 @@ export const convergeYeetInbox = Effect.fn("Yeet.convergeInbox")(function* (
           Console.error(`[yeet] failed to append review-thread inbox row ${thread.id}: ${error.message}`)
         )
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   if (Str.toUpperCase(observation.mergeStateStatus) === "BEHIND") {
     yield* appendBaseDriftRow(context, observation, at).pipe(
@@ -597,7 +597,8 @@ export const convergeYeetPrComments = Effect.fn("Yeet.convergePrComments")(funct
         ts: at,
       });
       return (yield* appendYeetInboxRowOnce(repoRoot, row)) ? O.some(row) : O.none<YeetPrCommentRow>();
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.getSomes(appended);
 });

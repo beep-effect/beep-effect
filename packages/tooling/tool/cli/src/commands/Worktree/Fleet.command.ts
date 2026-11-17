@@ -357,13 +357,13 @@ const printLine = (line: string) => Console.log(line);
  * @since 0.0.0
  */
 export const renderFleetSnapshot = Effect.fn("Fleet.renderFleetSnapshot")(function* (snapshot: FleetSnapshot) {
-  yield* Effect.forEach(snapshotHeaderLines(snapshot), printLine);
+  yield* Effect.forEach(snapshotHeaderLines(snapshot), printLine, { concurrency: 1 });
   if (snapshot.checkouts.length === 0) {
     yield* Console.log("No checkouts sharing this origin were found under the fleet root.");
     return;
   }
-  yield* Effect.forEach(A.flatMap(snapshot.checkouts, fleetCheckoutLines), printLine);
-  yield* Effect.forEach(contestedLines(snapshot.contestedPaths, snapshot.checkouts), printLine);
+  yield* Effect.forEach(A.flatMap(snapshot.checkouts, fleetCheckoutLines), printLine, { concurrency: 1 });
+  yield* Effect.forEach(contestedLines(snapshot.contestedPaths, snapshot.checkouts), printLine, { concurrency: 1 });
 });
 
 const valueOrDash = (value: string | number | null): string => (value === null ? "-" : `${value}`);

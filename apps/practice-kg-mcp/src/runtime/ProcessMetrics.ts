@@ -375,10 +375,13 @@ export const processRssGauge = Metric.gauge(PracticeKgProcessRss.name, {
 });
 
 const recordWindow = (window: ProcessWindow): Effect.Effect<void> =>
-  Effect.all([
-    Metric.update(processCpuGauge, coarsenCpuPercent(window.cpuPercent)),
-    Metric.update(processRssGauge, coarsenRssBytes(window.rssBytes)),
-  ]).pipe(Effect.asVoid);
+  Effect.all(
+    [
+      Metric.update(processCpuGauge, coarsenCpuPercent(window.cpuPercent)),
+      Metric.update(processRssGauge, coarsenRssBytes(window.rssBytes)),
+    ],
+    { concurrency: 1 }
+  ).pipe(Effect.asVoid);
 
 /**
  * Samples the host every 10 seconds for as long as the layer lives and

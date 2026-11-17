@@ -43,7 +43,9 @@ describe("live cleaner registry", () => {
   it.effect("dispatches native hashed names through real builtins without host hooks", () =>
     Effect.gen(function* () {
       const h = yield* setup();
-      const citationResult1 = yield* Effect.forEach(["underscores", "all_whitespace"], h.values.text);
+      const citationResult1 = yield* Effect.forEach(["underscores", "all_whitespace"], h.values.text, {
+        concurrency: 1,
+      });
       h.select(citationResult1);
       const result = yield* h.pipeline.run({ text: "  a__   b  ", plan: "registered" });
       const citationResult2 = yield* h.values.getText(result.value);

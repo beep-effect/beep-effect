@@ -107,7 +107,8 @@ describe("review hub configuration", () => {
     Effect.gen(function* () {
       const folders = yield* Effect.forEach(
         [O.some("C:\\Users\\attorney\\Review"), O.some("C:/Users/attorney/Review"), O.none()],
-        noticeConfig
+        noticeConfig,
+        { concurrency: 1 }
       );
       expect(A.map(folders, ({ claudeFolder }) => O.getOrElse(claudeFolder, () => "none"))).toStrictEqual([
         "C:\\Users\\attorney\\Review",
@@ -128,7 +129,9 @@ describe("review hub configuration", () => {
         "C:/Users/./Review",
         "C:/Users/attorney/Review\u202E",
       ];
-      const results = yield* Effect.forEach(folders, (folder) => O.some(folder).pipe(noticeConfig, Effect.result));
+      const results = yield* Effect.forEach(folders, (folder) => O.some(folder).pipe(noticeConfig, Effect.result), {
+        concurrency: 1,
+      });
       expect(A.map(results, ({ _tag }) => _tag)).toStrictEqual(A.map(folders, () => "Failure"));
     })
   );

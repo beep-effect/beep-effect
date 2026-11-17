@@ -102,7 +102,7 @@ export const replayCitationHtmlDiscovery = Effect.fn("HtmlDiscoveryTest.replay")
     setup.operation,
     setup.admission,
     setup.observed.snapshot,
-    rows.length * 2
+    rows.length
   );
 });
 /** Installed configuration is owned; effective input refusal spawns no child. */
@@ -114,7 +114,7 @@ export const assertCitationHtmlDiscoveryOwnership = Effect.fn("HtmlDiscoveryTest
   const result = yield* setup.stage.discover(row.markup);
   expect(result.placeholder).toEqual(row.placeholder);
   expect(result.tags).toEqual(row.tags);
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 2);
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 1);
   const tight = yield* install("bun", 1);
   yield* assertCitationMetadataRefusal(
     tight.stage.discover(row.markup),

@@ -296,7 +296,7 @@ export const goalCompletionClaims = Effect.fn("Goals.goalCompletionClaims")(func
     A.sort(strongestSourcedDecision),
     A.dedupeWith((self, that) => self.path === that.path && self.text === that.text)
   );
-  const results = yield* Effect.forEach(distinct, parseSourced);
+  const results = yield* Effect.forEach(distinct, parseSourced, { concurrency: 1 });
   const parsed = A.getSomes(results);
   return GoalCompletionClaims.make({
     committed: claimSet(
@@ -361,10 +361,13 @@ const makeGoalCompletionClaimsReader = Effect.gen(function* () {
         A.filter(entries, (entry) => entry.type === "blob" && isDirectChild(directory, entry.path))
       ),
       Effect.flatMap((entries) =>
-        Effect.forEach(entries, (entry) =>
-          git
-            .show(root, ref, entry.path)
-            .pipe(Effect.map(O.map((text) => GoalSourcedDecision.make({ path: entry.path, source, text }))))
+        Effect.forEach(
+          entries,
+          (entry) =>
+            git
+              .show(root, ref, entry.path)
+              .pipe(Effect.map(O.map((text) => GoalSourcedDecision.make({ path: entry.path, source, text })))),
+          { concurrency: 1 }
         )
       ),
       Effect.map(A.getSomes),
@@ -384,13 +387,16 @@ const makeGoalCompletionClaimsReader = Effect.gen(function* () {
         Effect.orElseSucceed(constFalse)
       )
     );
-    const read = yield* Effect.forEach(files, (file) =>
-      fs.readFileString(path.join(absolute, file)).pipe(
-        Effect.map((text) =>
-          O.some(GoalSourcedDecision.make({ path: `${directory}/${file}`, source: "working-tree", text }))
+    const read = yield* Effect.forEach(
+      files,
+      (file) =>
+        fs.readFileString(path.join(absolute, file)).pipe(
+          Effect.map((text) =>
+            O.some(GoalSourcedDecision.make({ path: `${directory}/${file}`, source: "working-tree", text }))
+          ),
+          Effect.orElseSucceed(O.none<GoalSourcedDecision>)
         ),
-        Effect.orElseSucceed(O.none<GoalSourcedDecision>)
-      )
+      { concurrency: 1 }
     );
     return A.getSomes(read);
   });

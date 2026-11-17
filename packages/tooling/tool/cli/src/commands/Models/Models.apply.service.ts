@@ -1098,7 +1098,7 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
     yield* discard(publication.staging);
     yield* discard(publication.retained);
     if (outcome === "preimage") {
-      yield* Effect.forEach(O.toArray(publication.backup), discard, { discard: true });
+      yield* Effect.forEach(O.toArray(publication.backup), discard, { concurrency: 1, discard: true });
     }
     return ModelsRecoveryResult.cases.recovered.make({ outcome });
   });
@@ -1164,7 +1164,10 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
       pipe13,
       (entry) => Str.startsWith(`${journal.id}.json.`)(entry) && Str.endsWith(".partial")(entry)
     );
-    yield* Effect.forEach(stale, (entry) => discard(path.join(backupDirectory, entry)), { discard: true });
+    yield* Effect.forEach(stale, (entry) => discard(path.join(backupDirectory, entry)), {
+      concurrency: 1,
+      discard: true,
+    });
     return { journal: ledger.journal(), result };
   });
 
@@ -1226,7 +1229,7 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
             ),
           }),
         ];
-      yield* Effect.forEach(O.toArray(initial.publication.backup), discard, { discard: true });
+      yield* Effect.forEach(O.toArray(initial.publication.backup), discard, { concurrency: 1, discard: true });
     }
     let journal = initial;
     const reports: Array<ModelsRecoveryReport> = [];
@@ -1243,9 +1246,13 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
     if (!(yield* fs.exists(backupDirectory).pipe(io))) return A.empty<ModelsRecoveryReport>();
     const pipe15 = yield* fs.readDirectory(backupDirectory).pipe(io);
     const entries = A.sort(A.filter(pipe15, Str.endsWith(".json")), Order.String);
-    const forEach16 = yield* Effect.forEach(entries, (entry) => readJournalEntry(backupDirectory, entry));
+    const forEach16 = yield* Effect.forEach(entries, (entry) => readJournalEntry(backupDirectory, entry), {
+      concurrency: 1,
+    });
     const journals = A.filter(A.getSomes(forEach16), (journal) => O.isNone(target) || journal.file === target.value);
-    const forEach17 = yield* Effect.forEach(journals, (journal) => reconcileJournal(backupDirectory, journal));
+    const forEach17 = yield* Effect.forEach(journals, (journal) => reconcileJournal(backupDirectory, journal), {
+      concurrency: 1,
+    });
     return A.flatten(forEach17);
   });
 
@@ -1339,7 +1346,10 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
             .advance(
               ModelsPublicationState.cases.abandoned.make({ from: fromStep(ledger.state()), detail: error.message })
             )
-            .pipe(Effect.andThen(Effect.forEach(O.toArray(backup), discard, { discard: true })), Effect.ignore);
+            .pipe(
+              Effect.andThen(Effect.forEach(O.toArray(backup), discard, { concurrency: 1, discard: true })),
+              Effect.ignore
+            );
 
   // Automatic recovery: reconcile this target's interrupted publications before
   // reading the bytes a write is planned from. A refusal keeps its artifacts and
@@ -1352,7 +1362,7 @@ const makeApply = Effect.fn("ModelsApply.make")(function* () {
     yield* Effect.forEach(
       A.filter(reports, (entry) => entry.result._tag === "refused"),
       (entry) => Effect.logWarning(`models: recovery refused ${entry.journal} (${entry.role}); artifacts kept`),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   });
 

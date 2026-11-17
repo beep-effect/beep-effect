@@ -200,6 +200,34 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** scope the coverage replay by the workspaces whose resolved dependencies
   changed in the lockfile diff, not by the lockfile path alone.
 
+## 2026-11-13: `create-package github --kind infra` leaves a half-written `@beep/github` that config-sync then wires in
+
+- **Doing:** P3 GitHub stack (the P3 GitHub lane), trying to match the sibling
+  turbo-cache layout (directory turbo-cache under the tooling infra family, package `@beep/infra-turbo-cache`).
+- **Evidence:** `bun run beep create-package github --family tooling --kind infra` wrote
+  `packages/tooling/infra/github/package.json` with name `@beep/github` (the drivers package already owns
+  it), then failed with `Workspace name "@beep/github" already exists`. The partial directory stayed, and the
+  next config-sync rewired three packages' tsconfig references from `packages/drivers/github` to it.
+  The working form is `create-package infra-github --dir-name github`.
+- **Would have prevented it:** check the workspace name before writing any file; and for `--kind infra`,
+  default the package name to `@beep/infra-<name>` (or say in the help that the prefix is the caller's job).
+
+## 2026-11-13: `@alchemy.run/github` beta.86 plans adopted singletons as `create`
+
+- **Doing:** the same lane; the read-only `alchemy plan` of `InfraGithub` against the live repository.
+- **Evidence:** `Plan: 36 to create, 1 to adopted`. Only `GitHub.Ruleset` has a `read` adoption probe;
+  `Repository`, `Environment`, `Variable` and `Label` return nothing without prior state, so an empty stage
+  shows `create` for objects whose reconcile only updates (stack tests assert zero POST). A reviewer reading
+  the plan cannot tell a real create from a converge-by-name.
+- **File evidence (installed `@alchemy.run/github@2.0.0-beta.86`, same on Alchemy `main` at `33c10dd55f`):**
+  the engine probes adoption only through `provider.read` when a resource has no state
+  (`alchemy/src/Plan.ts:1749`). `src/Repository.ts:592` returns `undefined` from `read` whenever
+  `output` is undefined, so an empty stage never sees the live repository; `src/Label.ts`,
+  `src/Environment.ts` and `src/Variable.ts` define no `read` at all. `src/Ruleset.ts:651` is the
+  model to copy: it lists by name and returns `Unowned(attrs)`.
+- **Would have prevented it:** a name-based `read` in those four providers (upstream contribution); until
+  then the decision file explains each `create`. Packet gate ruling 2026-11-13: accepted as is, not held
+  on the upstream change.
 ## 2026-11-14: the Pulumi passphrase in 1Password does not decrypt the oip-web stacks
 
 - **Doing:** P4 oip-web census (lane goals/infra-alchemy-rebuild-p4-oip-web), reading where the HubSpot
@@ -334,6 +362,28 @@ to the gap between the reference checkout (main) and the pinned release.
   environment layer, awsJson `HttpClient` from a route table, typed scratch-stack view, failure
   helpers) that every `@beep/alchemy-*` and `@beep/infra-*` package imports.
 
+## 2026-11-14: no conditional update on GitHub rulesets leaves one GET-to-PUT round-trip open
+
+- **Doing:** P3 GitHub stack, review round 2 on #3324: the write guard re-reads ruleset 10240248 just before the
+  provider's PUT, but a `beep reviewer ruleset release|require --apply` landing between that GET and the PUT is
+  overwritten and not detected.
+- **Evidence:** the REST API description for `PUT /repos/{owner}/{repo}/rulesets/{ruleset_id}` lists only `owner`,
+  `repo` and `ruleset_id`, with no `If-Match` or precondition parameter; the ruleset GET returns a weak `ETag`, which
+  GitHub documents for conditional GETs (`If-None-Match`, 304) only. The window-5 owner ruled the write guard plus the
+  runbook practice sufficient for arming.
+- **Would have prevented it:** a precondition (`If-Match` on the ETag, or an expected `updated_at`) on the ruleset
+  PUT. If GitHub adds one, the wrapped `GitHub.Ruleset` provider in `@beep/infra-github` can send it.
+
+## 2026-11-14: a stray root `coverage/` turns local fallow health red repo-wide
+
+- **Doing:** P3 GitHub stack, pushing the create guard to #3324 with `yeet publish`.
+- **Evidence:** cheap-gates failed `fallow:health` with "46 blocking finding(s) in an ok envelope", all
+  `not-applicable` and none in the PR's files. The cause was an ignored root `coverage/` directory left by an earlier
+  `vitest run --coverage` from the repository root, whose `coverage-final.json` was `{}`. Fallow read it as zero
+  coverage and the CRAP scores crossed their thresholds across the repo. With the directory removed, the same check
+  reported 0 findings.
+- **Would have prevented it:** fallow health ignoring a coverage report that covers no files, or naming the coverage
+  source it used in the failure message.
 ## 2026-11-14: hosted Commitlint lints every commit in the PR range
 
 - **Doing:** P2 runner composite lane (`@beep/alchemy-github-runners`), recorded here for that retired lane.
@@ -398,3 +448,109 @@ to the gap between the reference checkout (main) and the pinned release.
   covering create, adoption over existing objects and an in-place edit of each variable type (now the rule,
   decision `2026-11-14-first-armed-oipweb-deploy-failed-on-a-sensitive-variable-edit`), and fakes that pin
   each documented refusal of the real API with a test.
+
+## 2026-11-14: one cache-qualification baseline file put three open PRs into base conflict
+
+- **Doing:** packet gate, running three packet PRs at once (#3323, #3324, #3325).
+- **Evidence:** at 05:35Z two unrelated merges (#3322, #3299) rewrote `standards/cache-qualification-baseline.json`,
+  and all three open PRs went into base conflict on that file alone. Each needed a merge of `main`, a reviewed
+  re-record of its subject, a fresh hosted run and a new review window.
+- **Would have prevented it:** per-subject baseline files (one file per package, like the schema and instrumentation
+  catalogs), or a merge driver that unions disjoint subjects.
+
+## 2026-11-14: root law tasks that package-scoped checks miss, caught only by hosted CI
+
+- **Doing:** packet gate, driving #3320, #3323 and #3324 with the repo-wide `final-check` gates skipped.
+- **Evidence:** one push each, found only by hosted Lint Policy, Repo Sanity or Fallow: `lint:effect-vitest`
+  (15 findings, #3323), `laws schema-tag-idioms` (6, #3324), `lint:shadcn` reading a bracketed log timestamp in a
+  test string as a Tailwind arbitrary value (#3323), Fallow introduced complexity (2, #3323) and
+  `beep(no-inline-schema-compile)` (#3320).
+- **Would have prevented it:** a `package-verify` mode that runs every root law task filtered to the changed files.
+
+## 2026-11-14: an edit to a workflow file invalidates the operator's approval of it
+
+- **Doing:** packet gate, #3323 and #3324, each adding a deploy workflow that the operator merges.
+- **Evidence:** the approval was given for one blob of the workflow file; a review-driven edit to that file
+  changed the blob, so both PRs needed a second ask.
+- **Would have prevented it:** asking for the approval after the first review round, not at open.
+
+## 2026-11-14: `yeet open` refused a docs-only push as stale-base over a generated file
+
+- **Doing:** P4 OipWeb, pushing a docs-only fix.
+- **Evidence:** `yeet open` refused the push as stale-base because `main` had touched an overlapping generated
+  file (`standards/schema-first.inventory.jsonc`). The forced merge of `main` restarted the review window.
+- **Would have prevented it:** a stale-base check that ignores a generated file the PR's own diff does not touch.
+
+## 2026-11-14: whole-file writers pull unrelated drift into a deletion PR
+
+- **Doing:** P4 OipWeb deletion PR (#3341), and again for the P6 housekeeping PR.
+- **Evidence:** `lint schema-first --write`, the Fallow health baseline write and `bun run jsdoc:inventory` rewrite
+  their whole files. The JSDoc inventory alone changed by +38k/-19k lines for a PR that removed three source
+  files, so deletion PRs hand-remove single rows instead.
+- **Would have prevented it:** row-scoped regeneration (a writer that updates only the rows of the paths a PR
+  touches).
+
+## 2026-11-14: the committed effect-vitest census and JSDoc inventory have drifted far from `main`
+
+- **Doing:** P6 housekeeping PR, removing the rows of files #3341 deleted.
+- **Evidence:** on a tree at `main` `e051bd152f3` (2026-11-14T13:35Z), `bun run beep lint effect-vitest --census`
+  rewrote `standards/effect-vitest.census.json` by +10,816/-4,124 lines (14,940 changed). Of those, 14 lines were the
+  two rows the PR needed. `bun run jsdoc:inventory` rewrote `standards/jsdoc-documentation.inventory.jsonc` by
+  +38,528/-19,324 lines, of which the PR needed 572 deleted lines. The rest is drift that `main` carries:
+  for example the `@beep/infra` entry lacks `infra/src/CiRunnerPool.ts` and `infra/src/CiShardOverflowPool.ts`, and
+  its line numbers are stale. The PR committed only the hand-removed rows. A separate lane refreshes both files
+  from `main`.
+- **Would have prevented it:** a row-scoped writer (above), or a gate that fails when the committed census or
+  inventory differs from a fresh one, so drift cannot accumulate unseen.
+
+## 2026-11-14: `knowledge semantic-delta` reads only the committed head
+
+- **Doing:** P4 OipWeb, fixing a broken backticked path in a goal document.
+- **Evidence:** the fix in the working tree was invisible to `bun run beep knowledge semantic-delta` until
+  committed, so each attempt was an amend and a re-run.
+- **Would have prevented it:** a `--worktree` mode that scans uncommitted files, or a note in the command's help.
+
+## 2026-11-14: the "(removed in #N)" rewrite needs the PR number before the PR exists
+
+- **Doing:** P4 OipWeb deletion PR (#3341), applying the Q3 ruling to paths it deleted.
+- **Evidence:** the rewrite names the deleting PR, which has no number until it is opened, so the PR is opened as
+  a draft and the rewrite goes in a second push.
+- **Would have prevented it:** a placeholder (for example `#PENDING`) that `yeet open` replaces with the new number.
+
+## 2026-11-14: Alchemy's failed-create semantics are not written down in the repo
+
+- **Doing:** P4 OipWeb, predicting the plan after the first armed deploy failed half-way.
+- **Evidence:** a failed create leaves a `creating` checkpoint, which plans as `create` and is adopted at apply time.
+  A probe that modelled it as a missing row predicted the wrong label (`adopted`).
+- **Would have prevented it:** the checkpoint states and their plan labels in `docs/runbooks/alchemy-infra.md`
+  (now noted in the live write rehearsal, step 4).
+
+## 2026-11-14: zsh does not word-split an unquoted variable, so a lint looked clean
+
+- **Doing:** P4 OipWeb, running oxlint on a list of changed files.
+- **Evidence:** with `files="a.ts b.ts"`, `bunx oxlint $files` passes one path containing a space. oxlint prints
+  "No files found" and exits 0.
+- **Would have prevented it:** `${=files}` or an array in every recipe, and a non-zero exit from the lint wrappers
+  when no file is linted.
+
+## 2026-11-14: a brief cited a local-only commit in a tracked record
+
+- **Doing:** P4 OipWeb, writing a decision file from a gate brief.
+- **Evidence:** the brief named a commit that existed only in another checkout. The reviewer caught the dangling
+  reference in the tracked file.
+- **Would have prevented it:** briefs cite only pushed commits for anything that lands in a tracked file.
+
+## 2026-11-14: a long `yeet job wait` died at the shell's background limit
+
+- **Doing:** P4 OipWeb, waiting on a readiness monitor.
+- **Evidence:** `bun run beep yeet job wait <id>` was killed by the 30-minute default limit for background shell
+  commands. The job itself kept running.
+- **Would have prevented it:** a 2-hour timeout on monitor waits in the recipes.
+
+## 2026-11-14: an unattended deploy job needs a create allow-list on adopting stages
+
+- **Doing:** P4 OipWeb, arming the deploy workflow on stages that adopt live objects.
+- **Evidence:** an object that failed to adopt would plan as a create and be created a second time. The
+  `adopted` predictions came from reading the code, not from a plan probe against seeded state.
+- **Would have prevented it:** a create allow-list in the plan guard (now in `plan-guard.ts`), and adoption
+  predictions taken from a plan against seeded state.

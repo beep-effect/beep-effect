@@ -1890,7 +1890,7 @@ const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(f
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const globOptions = GlobPatternOptions.make({ dot });
-  const excluded = yield* Effect.forEach(exclusions, GlobPattern.compile(globOptions)).pipe(
+  const excluded = yield* Effect.forEach(exclusions, GlobPattern.compile(globOptions), { concurrency: 1 }).pipe(
     Effect.mapError(() => EffectImportRulesConfigurationError.new(failure))
   );
   const files = yield* Effect.forEach(
@@ -1901,7 +1901,8 @@ const discoverFilesWithGlob = Effect.fn("EffectImports.discoverFilesWithGlob")(f
       prune: EffectImportsPrunedDirectoryNames,
       followSymlinks: false,
       onUnreadable: "skip",
-    })
+    }),
+    { concurrency: 1 }
   ).pipe(Effect.mapError(() => EffectImportRulesConfigurationError.new(failure)));
   const candidates = pipe(
     A.flatten(files),
@@ -1932,13 +1933,16 @@ const listGitVisiblePaths = Effect.fn("EffectImports.listGitVisiblePaths")(funct
   const git = yield* Git;
   const adapter = messageGitErrorAdapter((message) => message);
   const cwd = process.cwd();
-  return yield* Effect.all([
-    git.lsFiles(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.lsFiles([]), adapter))),
-    // `relative: true` keeps the untracked half cwd-relative, as `lsFiles` and the Markdown filter are.
-    git
-      .untrackedFiles(cwd, { relative: true })
-      .pipe(Effect.mapError(adaptGitKitError(GitCommand.untrackedFiles(true), adapter))),
-  ]).pipe(
+  return yield* Effect.all(
+    [
+      git.lsFiles(cwd).pipe(Effect.mapError(adaptGitKitError(GitCommand.lsFiles([]), adapter))),
+      // `relative: true` keeps the untracked half cwd-relative, as `lsFiles` and the Markdown filter are.
+      git
+        .untrackedFiles(cwd, { relative: true })
+        .pipe(Effect.mapError(adaptGitKitError(GitCommand.untrackedFiles(true), adapter))),
+    ],
+    { concurrency: 1 }
+  ).pipe(
     Effect.map(([tracked, untracked]) =>
       O.some(
         HashSet.fromIterable(

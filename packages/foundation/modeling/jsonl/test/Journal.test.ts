@@ -529,7 +529,10 @@ describe("Journal — the terminal Exit never overtakes a completed append", () 
       yield* Effect.yieldNow;
 
       // Draining makes room, letting the queued publishers through in turn.
-      const takes = yield* Effect.all(A.makeBy(4, () => PubSub.take(subscription)));
+      const takes = yield* Effect.all(
+        A.makeBy(4, () => PubSub.take(subscription)),
+        { concurrency: 1 }
+      );
       yield* Fiber.join(second);
       yield* Fiber.join(third);
       yield* Fiber.join(closing);

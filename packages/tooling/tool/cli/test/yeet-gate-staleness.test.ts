@@ -149,7 +149,7 @@ describe("gate staleness reporting", () => {
   it("preserves an absent artifact as unproven in operator output", () => {
     const verdict = GateUnproven.make({
       gateId: "jsdoc-documentation-inventory",
-      detail: "standards/jsdoc-documentation.inventory.jsonc does not exist",
+      detail: ".beep/ci/jsdoc-documentation.inventory.jsonc does not exist",
     });
 
     expect(unprovenGateVerdicts([verdict])).toStrictEqual([verdict]);
@@ -192,12 +192,12 @@ describe("gate staleness reporting", () => {
     ).toMatchObject({
       _tag: "Some",
       value: {
-        artifactPath: "standards/jsdoc-documentation.inventory.jsonc",
+        artifactPath: ".beep/ci/jsdoc-documentation.inventory.jsonc",
         regenerateCommand: "bun run beep quality jsdoc-inventory",
       },
     });
     expect(A.every(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand.length > 0)).toBe(true);
-    expect(YEET_GATE_AUXILIARY_ARTIFACT_PATHS).toStrictEqual(["standards/jsdoc-documentation.inventory.md"]);
+    expect(YEET_GATE_AUXILIARY_ARTIFACT_PATHS).toStrictEqual([".beep/ci/jsdoc-documentation.inventory.md"]);
     expect(A.map(YEET_GATE_ARTIFACT_DESCRIPTORS, (entry) => entry.regenerateCommand)).toStrictEqual([
       // Every descriptor command is pasted into a report inside backticks, so it
       // has to run as written: no placeholder package names here.

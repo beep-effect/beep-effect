@@ -202,7 +202,7 @@ it.layer(
     Effect.forEach(
       A.cartesian(["linux", "win32"] as const, [undefined, "", ROOT] as const),
       ([platform, value]) => storeRootsCase(platform, value),
-      { discard: true }
+      { concurrency: 1, discard: true }
     )
   );
 });

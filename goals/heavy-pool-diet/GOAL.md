@@ -30,7 +30,7 @@ Scope:
   tests, Ci admission and binary commands); `.github/workflows/heavy.yml`,
   `.github/workflows/check.yml`, `.github/workflows/beep-ci-binary.yml`,
   `.github/workflows/heavy-admit.yml`, `.github/actions/fetch-beep-ci`,
-  `standards/cache-qualification-baseline.json`; a HOST-08 A/B harness;
+  `standards/cache-baseline/`; a HOST-08 A/B harness;
   this packet.
 - Out: moving Lint Policy off the heavy pool; capacity (money, operator);
   `lint:shadcn` (hosted-setup-tax); PERIH-10 and the Coverage Regression job

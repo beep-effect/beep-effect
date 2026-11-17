@@ -59,13 +59,31 @@ Slice 4 (MEAS-01 slice 2) merged as #3266: `.github/workflows/certainty-nightly.
 each night from main's code and turns red when the report is not certified (decision `certainty-nightly-workflow`).
 The nightly is live; its first run (2026-11-12, dispatched by hand, certified) is recorded by #3270 in
 [`history/certainty-nightly.md`](./history/certainty-nightly.md), and P2's seven nights start at 2026-11-14.
-In short, slices 1 to 7, 10 and 11 have merged. Slice 8 (PERIL-11 slice 2) is in review: the T3 Code worktree
-root joins the intended `roots.json` list in the fleet-roots runbook, `yeet economics --fleet` reads a checkout
-reachable through two roots once, and monitor waits are reported apart from local work in `yeet-economics/v4`
-(decision `peril-11-slice-2-t3-root-and-monitor-waits`). Slice 10b (MEAS-03 slice 2) is in review: the handler
-errors slice 10 left `unlocated` carry a typed `handlerErrorKind` from the raise site into the verdict, and economics
-locates them as `refusal:publish-input`, `refusal:review-threads`, `github:rate-limit` and `github:transport`, with
-`unlocated` kept as the unknown bucket (decision `handler-errors-typed-and-located`). Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
+Slice 8 (PERIL-11 slice 2) merged as #3273: the T3 Code worktree root joins the intended `roots.json` list in
+the fleet-roots runbook, `yeet economics --fleet` reads a checkout reachable through two roots once, and monitor
+waits are reported apart from local work in `yeet-economics/v4` (decision
+`peril-11-slice-2-t3-root-and-monitor-waits`). Slice 14 (MEAS-05 slice 1) merged as #3274: `CI_LANE_DESCRIPTORS`
+is the one job-name map every census, scorecard and admission join reads (decision `lane-job-map`). Slice 10b
+(MEAS-03 slice 2) merged as #3342: the handler errors slice 10 left `unlocated` carry a typed `handlerErrorKind`
+from the raise site into the verdict, and economics locates them as `refusal:publish-input`,
+`refusal:review-threads`, `github:rate-limit` and `github:transport`, with `unlocated` kept as the unknown bucket
+(decision `handler-errors-typed-and-located`). Slice 5b
+(SCHE-09 slice 2) merged as #3344: admitted and v3 released admission rows carry an optional `pressure` stamp
+(capacity, active and queued tokens, MemAvailable, PSI some avg10 for cpu, memory and io, unadmitted
+`agent-runs.slice` memory), written only while the admission protocol's new `pressure` key is on
+(`bun run beep quality scheduler protocol --pressure on`; decision `sche-09-pressure-stamps`). Slice 15 (MEAS-05
+slice 2) merged as #3347: `beep ci ledger` folds named workflow runs into rows at (lane, partition) grain over the
+slice-14 lane map, joins every Test Unit and Test Integration partition job to the run's Test Plan output for
+the empty-leg row, and reports the turbo-task, final-check, economics and PSI sources as absent rows (decision
+`ledger-fold-absent-sources`). Slice 9 (PERIL-11 slice 3) merged as #3349: attempt-started rows carry optional
+`host` and `seat` keys, every attempt mix gains `hostMix` and `seatMix`, and `yeet economics --fleet-hosts` reads
+the hosts in the fleet's `hosts.json` read-only over their existing SSH wrappers, reporting only per-host
+receipts (decision `peril-11-slice-3-host-seat-fleet-hosts`). In short, slices 1 to 11, 5b, 10b, 14 and 15 have
+merged. Slice 16 (MEAS-08) is built, PR pending: `yeet economics` gains a `pressure` section that joins the PSI
+recorder samples onto each local attempt by time window and the admission rows' SCHE-09 stamps by attempt id,
+every missing field absent with its reason and both source rows `present` only when every line or row decoded;
+it samples and writes nothing, and the ledger's `psi` row stays `absent` because hosted runners are not the
+sampled host (decision `psi-join-onto-attempts`). Wall-time, cache and dist baselines taken before d8326d55935 (#3208,
 declaration-only builds) are not comparable with later readings (checkpoint
 `baselines-before-d8326d5593-not-comparable`), nor are check-lane baselines taken before 3e822c71c5 (#3242).
 
@@ -83,6 +101,13 @@ declaration-only builds) are not comparable with later readings (checkpoint
 - Slice 11 keeps the old route receipt's verdict: the 2026-09-01..10-30 corpus (sha256 e840ea6d…), copied to a
   scratch `--corpus` directory, replays to 5,083 heads, 242 skipped lane runs, 0 skipped reds and recall 1, with
   0 unknown-red heads.
+- Slice 5b's overhead, one sequential run per mode of 100 admissions over a 600-row journal on a busy host
+  (`ops/admission-stamp-overhead.ts`): promotion p50 and p95 64.7 and 172.6 ms on origin/main; on the final
+  revision, which reads the gate at each transition, 58.1 and 157.5 ms with the gate off and 88.9 and 157.9 ms
+  with it on; release 16.0 and 33.7, 15.1 and 31.4, 20.9 and 40.4 ms. The same mode moved by up to 33 ms at p50
+  between two runs, so host load dominates (decision `sche-09-pressure-stamps` has both runs). A stamp adds about
+  165 bytes to each admitted and released row. With every gate off, every record matches the bytes captured
+  from origin/main's encoder.
 - Slice 4's cost reading: the 2026-11-12 UTC day, run locally through the nightly workflow's own scripts, took
   83 GitHub reads and 99 s for 43 heads and was certified. The day predates both baseline breaks, so it is not a
   baseline; the first dispatched run on main measures the hosted runner-minutes.
@@ -90,6 +115,26 @@ declaration-only builds) are not comparable with later readings (checkpoint
   27. The 133 located are `refusal:publish-input` 57, `refusal:review-threads` 42, `github:rate-limit` 33 and
   `github:transport` 1; every other row, `redAttempts` and the mix total (1201) are unchanged. The largest
   residue is a since-fixed pull request number decode (8 rows, 5.0%).
+- Slice 9 is proved on fixtures only, with no live fleet read: a mixed-revision journal (two rows from
+  origin/main's encoder, two with `host` and `seat`) decodes under both revisions' readers and folds to
+  `hostMix` and `seatMix` with the older rows `unrecorded`; a fake SSH executor that dies on any command
+  but the exact `find`/`tail` read serves five hosts, one per status (read, timeout, connection failure,
+  partial, truncated output), and the report holds their receipts and no raw row.
+- Slice 15 on three Check runs read 2026-11-14
+  (`packages/tooling/tool/cli/test/fixtures/ci-cost-ledger/reference-runs.json`): 43604442987 (push, full
+  matrix) 307.1 job-minutes, 43585338714 (documentation only) 7.1 and 43605277972 (an empty
+  `int-rest` leg) 203.7 each map 100% of their job-minutes to a lane or a named support job, with lane shares of
+  99.4%, 78.2% and 98.2% and no unknown minute. Empty-leg runner-minutes per run: 0, 0 and 1.97 (the catch-all
+  partition the plan allocated with 0 of 24 integration tasks selected). Every aggregate skipped on success on
+  those runs; the umbrella, wrapper and rerun fixture in
+  `packages/tooling/tool/cli/test/ci-cost-ledger.test.ts` shows no double count.
+- Slice 16 (`packages/tooling/tool/cli/test/yeet-economics-pressure.test.ts`, fixtures only, Node and Bun):
+  four recorder samples across two boots and eight attempts give one three-sample window (cpu mean 2 max 3,
+  io mean 5 max 6, MemAvailable min 79.5 GiB), one single-sample window whose io and MemAvailable figures are
+  absent because that sample lacks them, and one attempt per gap (no samples, outside the recorder span, two
+  untimed, a start row naming another host, a fleet-host attempt counted but not listed). A recorder with one of
+  five lines undecodable reads `partial`; an admission history whose rows all decode reads `present`; a missing,
+  unreadable or skipped source reads `absent` with the reason in its note.
 
 ## Notes
 
@@ -99,14 +144,18 @@ declaration-only builds) are not comparable with later readings (checkpoint
   #3227); MEAS-07 (final-check attempt journals, slice 6, #3228); ROUT-05 slice 2 (failed-job steps and
   uncharged reds, slice 11, #3257); MEAS-03 (terminations apart from reds, slice 10, #3262); the nightly
   workflow (slice 4, #3266, first run recorded by #3270); PERIL-11 slice 1 (journal retention, slice 7,
-  #3263). In review: PERIL-11 slice 2 (T3 root row and monitor waits apart, slice 8).
+  #3263); PERIL-11 slice 2 (T3 root row and monitor waits apart, slice 8, #3273); MEAS-05 slice 1 (one lane map, slice 14,
+  #3274); MEAS-03 slice 2 (residual handler errors typed and located, slice 10b, #3342); SCHE-09 slice 2
+  (capacity and host-pressure stamps on admission rows, slice 5b, #3344); MEAS-05 slice 2 (the ledger fold with
+  absent-source rows, slice 15, #3347); PERIL-11 slice 3 (host and seat fields, read-only fleet-host reads,
+  slice 9, #3349). Built: MEAS-08 (PSI samples and admission stamps joined onto attempts, slice 16).
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
   before journal retention (PERIL-11); SCHE-09 is owned here and consumed by `local-proof-under-ten` (D23); nightly reads are budgeted against
   `github-budget-ledger`'s reserve signal (D27).
-- Landed: MEAS-02 (slice 3) and MEAS-07 (slice 6). Partly landed: MEAS-01, MEAS-04, MEAS-03 (terminations
-  apart from reds; slice 10b types the remaining `unlocated` reds), ROUT-05, SCHE-09 (slice 5; 5b adds the
-  pressure fields) and PERIL-11 (slices 1 and 2; host and seat fields are slice 9). The
+- Landed: MEAS-02 (slice 3), MEAS-07 (slice 6) and MEAS-03 (terminations apart from reds, slice 10, and the
+  remaining `unlocated` reds typed, slice 10b, #3342). Partly landed: MEAS-01, MEAS-04, ROUT-05, SCHE-09 (slice 5; 5b, #3344, adds the
+  pressure fields), PERIL-11 (slices 1 and 2; slice 9, host and seat fields with the read-only fleet-host read, is open as #3349) and MEAS-05 (slices 14 and 15, #3347). The
   #3007 and #3030 edits to `LaneTimings.ts` are shard-layout census upkeep owned by
   [`ci-lane-economics`](../ci-lane-economics/README.md), not MEAS-04.
 - The fixture corpora the plan's MEAS-01 gate names are not in the repository; slice 1 commits its own

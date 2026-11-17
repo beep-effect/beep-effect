@@ -69,14 +69,17 @@ const TestPlatformLive = Layer.mergeAll(NodeCrypto.layer, MemoryFileSystem.layer
 
 const databaseSnapshot = Effect.fn("ContradictionQaSeedTest.databaseSnapshot")(function* () {
   const db = yield* PostgresDrizzle;
-  const [candidates, dispositions, edges, evidence, receipts, verifications] = yield* Effect.all([
-    db.select().from(DbSchema.contradictionCandidate),
-    db.select().from(DbSchema.contradictionDisposition),
-    db.select().from(DbSchema.edgeVersion),
-    db.select().from(DbSchema.evidence),
-    db.select().from(DbSchema.contradictionReceipt),
-    db.select().from(DbSchema.evidenceVerification),
-  ]);
+  const [candidates, dispositions, edges, evidence, receipts, verifications] = yield* Effect.all(
+    [
+      db.select().from(DbSchema.contradictionCandidate),
+      db.select().from(DbSchema.contradictionDisposition),
+      db.select().from(DbSchema.edgeVersion),
+      db.select().from(DbSchema.evidence),
+      db.select().from(DbSchema.contradictionReceipt),
+      db.select().from(DbSchema.evidenceVerification),
+    ],
+    { concurrency: 1 }
+  );
   return {
     candidates: A.length(candidates),
     dispositions: A.length(dispositions),

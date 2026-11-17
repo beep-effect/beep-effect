@@ -372,8 +372,7 @@ const redirecting = (domain: OipDomainInput, to: OipHostname, status: OipRedirec
 
 /**
  * Raw configuration of each live stage, as recorded in the Pulumi stacks it
- * replaces (infra/oip-web/Pulumi.<stack>.yaml (removed in #3341) and infra/src/OipWeb.ts (removed in #3341))
- * and confirmed against the live census of 2026-11-14.
+ * replaces and confirmed against the live census of 2026-11-14.
  *
  * @category constants
  * @since 0.0.0

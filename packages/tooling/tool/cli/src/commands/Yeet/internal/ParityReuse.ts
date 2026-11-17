@@ -324,8 +324,10 @@ export const decideParityLaneReuse = Effect.fn("Yeet.decideParityLaneReuse")(fun
   proven: ReadonlyArray<ProvenLane>,
   parity: ProofEnvironment
 ): Effect.fn.Return<ReadonlyArray<ParityLaneDecision>, YeetCommandError, Digest.Digest> {
-  const provenDigests = yield* Effect.forEach(proven, (lane) =>
-    Effect.map(proofCommandDigest(lane.commandText), (commandDigest) => ({ lane, commandDigest }))
+  const provenDigests = yield* Effect.forEach(
+    proven,
+    (lane) => Effect.map(proofCommandDigest(lane.commandText), (commandDigest) => ({ lane, commandDigest })),
+    { concurrency: 1 }
   );
   return yield* Effect.forEach(
     candidates,
@@ -348,7 +350,8 @@ export const decideParityLaneReuse = Effect.fn("Yeet.decideParityLaneReuse")(fun
             differences: proofEnvironmentDifferences(lane.environment, parity),
           }),
       });
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 

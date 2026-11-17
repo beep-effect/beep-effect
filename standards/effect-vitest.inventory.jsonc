@@ -165,13 +165,13 @@
       "reason": "The runtime depends on a scoped temporary corpus or an intercepted manifest read, and the direct service and the command reuse one built context so both drift oracles and the finalization order hold. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/labs/semantica/test/Fixtures.test.ts:289:provideScopedLayer@29#1",
+      "id": "EV002:apps/labs/semantica/test/Fixtures.test.ts:290:provideScopedLayer@29#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/semantica",
       "file": "apps/labs/semantica/test/Fixtures.test.ts",
-      "line": 289,
-      "endLine": 289,
+      "line": 290,
+      "endLine": 290,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:0f12d0e9ca56187a800e790b4736e0236d0511508d2ed3ea69510648f8c833a6",
       "class": "unresolved-layer-provide",
@@ -187,13 +187,13 @@
       "reason": "The runtime depends on a scoped temporary corpus or an intercepted manifest read, and the direct service and the command reuse one built context so both drift oracles and the finalization order hold. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/labs/semantica/test/Gold.test.ts:380:provideScopedLayer@29#1",
+      "id": "EV002:apps/labs/semantica/test/Gold.test.ts:386:provideScopedLayer@29#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/semantica",
       "file": "apps/labs/semantica/test/Gold.test.ts",
-      "line": 380,
-      "endLine": 380,
+      "line": 386,
+      "endLine": 386,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:884b78ed1fb912ae6a1532867b8fe03ecfad0793ab3d8519b53c4f65124ed40f",
       "class": "unresolved-layer-provide",
@@ -209,13 +209,13 @@
       "reason": "The layer depends on test-local manifests, fixture directories and explicit proposer and cache variants; separate scoped invocations keep rerun and mixed-proposer behaviour and the zero-duration timeout subject. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/labs/semantica/test/Gold.test.ts:409:provideScopedLayer@30#1",
+      "id": "EV002:apps/labs/semantica/test/Gold.test.ts:415:provideScopedLayer@30#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/semantica",
       "file": "apps/labs/semantica/test/Gold.test.ts",
-      "line": 409,
-      "endLine": 409,
+      "line": 415,
+      "endLine": 415,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:d3684341761ddc7cc6618e3c0cfff4d5c5810c3611ec282fed26261acbdccc8e",
       "class": "unresolved-layer-provide",
@@ -231,13 +231,13 @@
       "reason": "The layer depends on test-local manifests, fixture directories and explicit proposer and cache variants; separate scoped invocations keep rerun and mixed-proposer behaviour and the zero-duration timeout subject. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/labs/semantica/test/Gold.test.ts:481:provideScopedLayer@30#1",
+      "id": "EV002:apps/labs/semantica/test/Gold.test.ts:490:provideScopedLayer@30#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/semantica",
       "file": "apps/labs/semantica/test/Gold.test.ts",
-      "line": 481,
-      "endLine": 481,
+      "line": 490,
+      "endLine": 490,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:53e91e871912724335ec22d3145f622cc38b9a99c8442fe6264e32be60303078",
       "class": "unresolved-layer-provide",
@@ -253,13 +253,13 @@
       "reason": "The layer depends on test-local manifests, fixture directories and explicit proposer and cache variants; separate scoped invocations keep rerun and mixed-proposer behaviour and the zero-duration timeout subject. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/labs/semantica/test/GoldSource.test.ts:131:provideScopedLayer@10#1",
+      "id": "EV002:apps/labs/semantica/test/GoldSource.test.ts:135:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/semantica",
       "file": "apps/labs/semantica/test/GoldSource.test.ts",
-      "line": 131,
-      "endLine": 131,
+      "line": 135,
+      "endLine": 135,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:d366f5bc29215166a3bf4208088b76f1924c0e6dd761968e9f0f1b706773125f",
       "class": "unresolved-layer-provide",
@@ -275,13 +275,13 @@
       "reason": "The GoldSource layer needs a freshly created test-local directory and closes within its test; file tampering and exact failure reasons stay inside the case. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/labs/semantica/test/GoldSource.test.ts:151:provideScopedLayer@10#1",
+      "id": "EV002:apps/labs/semantica/test/GoldSource.test.ts:155:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/semantica",
       "file": "apps/labs/semantica/test/GoldSource.test.ts",
-      "line": 151,
-      "endLine": 151,
+      "line": 155,
+      "endLine": 155,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:b989af650525ede122a3a13bdff9e377dc6e2ab0e2962991d36ece80421b4fd3",
       "class": "unresolved-layer-provide",
@@ -297,13 +297,13 @@
       "reason": "The GoldSource layer needs a freshly created test-local directory and closes within its test; file tampering and exact failure reasons stay inside the case. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/labs/semantica/test/GoldSource.test.ts:190:provideScopedLayer@10#1",
+      "id": "EV002:apps/labs/semantica/test/GoldSource.test.ts:194:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/semantica",
       "file": "apps/labs/semantica/test/GoldSource.test.ts",
-      "line": 190,
-      "endLine": 190,
+      "line": 194,
+      "endLine": 194,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:dec140c6888070794d78f9069465612121e49fda24633032a909eac586caaa46",
       "class": "unresolved-layer-provide",
@@ -319,13 +319,13 @@
       "reason": "The GoldSource layer needs a freshly created test-local directory and closes within its test; file tampering and exact failure reasons stay inside the case. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/labs/semantica/test/GoldSource.test.ts:278:provideScopedLayer@10#1",
+      "id": "EV002:apps/labs/semantica/test/GoldSource.test.ts:282:provideScopedLayer@10#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/semantica",
       "file": "apps/labs/semantica/test/GoldSource.test.ts",
-      "line": 278,
-      "endLine": 278,
+      "line": 282,
+      "endLine": 282,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:7dbf544078d3b6b4cf92d0b472e1e4f07cecb17d8752c7589376917c8c3cd30e",
       "class": "unresolved-layer-provide",
@@ -385,13 +385,13 @@
       "reason": "The Ledger layer needs the test-local native ledgerRoot and run identity, and its scoped helper closes PGlite before the outer scope removes the temporary directory. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/labs/semantica/test/Projection.test.ts:234:provideScopedLayer@31#1",
+      "id": "EV002:apps/labs/semantica/test/Projection.test.ts:237:provideScopedLayer@31#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/semantica",
       "file": "apps/labs/semantica/test/Projection.test.ts",
-      "line": 234,
-      "endLine": 234,
+      "line": 237,
+      "endLine": 237,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:6b50c5cfdfc1686675f5500b9e578c68f43b4b031209b3e4be6b5dbc07223b78",
       "class": "unresolved-layer-provide",
@@ -407,13 +407,13 @@
       "reason": "The live and replay providers are built from this test's mutable cache and call-count refs; separate invocations keep the poison replay provider, exact vectors and model-isolation oracles. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/labs/semantica/test/Projection.test.ts:244:provideScopedLayer@33#1",
+      "id": "EV002:apps/labs/semantica/test/Projection.test.ts:247:provideScopedLayer@33#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/semantica",
       "file": "apps/labs/semantica/test/Projection.test.ts",
-      "line": 244,
-      "endLine": 244,
+      "line": 247,
+      "endLine": 247,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:5048e32555d912d37ddf7e6ee8f89d0646df5d614976dade249711f6feb83a22",
       "class": "unresolved-layer-provide",
@@ -671,13 +671,13 @@
       "reason": "Model-identity layer acquisition is the subject: rows supply their exact model and environment, and invalid revisions must fail inside the test so the typed acquisition error can be asserted. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/practice-kg-mcp/test/Host.test.ts:346:provideScopedLayer@12#1",
+      "id": "EV002:apps/practice-kg-mcp/test/Host.test.ts:349:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/practice-kg-mcp",
       "file": "apps/practice-kg-mcp/test/Host.test.ts",
-      "line": 346,
-      "endLine": 350,
+      "line": 349,
+      "endLine": 353,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:3b3e54576ebec84208bd2ff6e038a8fe0063a99395f4cf2da82a2bffdcc15aba",
       "class": "unresolved-layer-provide",
@@ -715,13 +715,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:277:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:283:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "line": 277,
-      "endLine": 277,
+      "line": 283,
+      "endLine": 283,
       "symbol": "provide",
       "occurrence": "v2:d2e3886d55f705547645559a834e5a41d062b04a09307c7cd8649c78e494d96b",
       "class": "unresolved-layer-provide",
@@ -737,13 +737,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:415:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:421:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "line": 415,
-      "endLine": 415,
+      "line": 421,
+      "endLine": 421,
       "symbol": "provide",
       "occurrence": "v2:d70146d769b56ee0dc0cab08e99951fd8d463572499637f2673e21f8befedc14",
       "class": "unresolved-layer-provide",
@@ -759,13 +759,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:523:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:529:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "line": 523,
-      "endLine": 523,
+      "line": 529,
+      "endLine": 529,
       "symbol": "provide",
       "occurrence": "v2:8917e86eb503b527e007a367dd9ec750a82697729db1c5a7869455d89ac79573",
       "class": "unresolved-layer-provide",
@@ -781,13 +781,13 @@
       "reason": "The provided value is the Context from Layer.build(makeHttpServerLayer(...)) inside an explicit inner scope; the server consumes test-local state or returns a distinct execution window before later ledger assertions (goals/effect-vitest-canon/research/desktop-http-layer-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV002 recognises a Context built by Layer.build inside an explicit shorter scope (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:577:provide@18#1",
+      "id": "EV002:apps/professional-desktop/test/integration/execution-authority.pglite.test.ts:583:provide@18#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/execution-authority.pglite.test.ts",
-      "line": 577,
-      "endLine": 577,
+      "line": 583,
+      "endLine": 583,
       "symbol": "provide",
       "occurrence": "v2:ecbe85535d9e397910a296749b979b544e1e4c4089ee92e1bc80a49a584ae1f2",
       "class": "unresolved-layer-provide",
@@ -932,7 +932,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "A body-owned malformed remote-root response exercises the real schema decoding path in an isolated scoped adapter. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
+      "reason": "The failing folders callback is built in this body, and its adapter yields an exact disconnected probe without a live provider. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:1078:provideScopedLayer@14#1",
@@ -954,7 +954,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The callback owns a mutable invocation counter, and the three probe and refresh operations share one cache within this scoped program, keeping the identity and refresh-count assertions. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
+      "reason": "The failing folders callback is built in this body, and its adapter yields an exact disconnected probe without a live provider. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:466:provideScopedLayer@14#1",
@@ -976,7 +976,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The pagination callback captures the body-owned markers array and root identity, and the scoped adapter keeps the exact two-page order and zero writes. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
+      "reason": "The failing folders callback is built in this body, and its adapter yields an exact disconnected probe without a live provider. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:504:provideScopedLayer@14#1",
@@ -998,7 +998,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The callback captures rootVisible and the lookup and create counters to simulate a competing creator, and a fresh scoped adapter observes that invocation state. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
+      "reason": "The failing folders callback is built in this body, and its adapter yields an exact disconnected probe without a live provider. Owner: @beep/documents-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/documents/server/test/DmsMirrorBox.test.ts:941:provideScopedLayer@14#1",
@@ -1573,13 +1573,13 @@
       "reason": "Each malformed configuration is acquired inside Effect.exit so its typed failure and the absence of defects can be asserted; suite-hook acquisition would fail first. Owner: @beep/execution-authority-config. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1214:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1227:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1214,
-      "endLine": 1214,
+      "line": 1227,
+      "endLine": 1227,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:9651c7b57d8e4cfbf0dde5d0ff0257dd9a3f56b488af9ec28f81f152d1b14c28",
       "class": "unresolved-layer-provide",
@@ -1592,16 +1592,16 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Owner: @beep/law-practice-server. The body builds the bundle into firstOut, closes the build, and then reopens firstOut's kg.pglite to dump its rows; PGlite locks its data directory, so one it.layer connection cannot be open while the build writes it. Exit: retire when the build exposes its store as a provided service the test can read in place, or when EV002 recognises a provision over a store the earlier body subject wrote and closed (#1855 wave 4 register)."
+      "reason": "Owner: @beep/law-practice-server. The body runs two bundle builds into bundleOut, reads practice.duckdb through the same-file withDuckDb wrapper, and only then provides the MCP host over both stores in bundleOut; each earlier step closes its connection before the host reopens the files (PGlite and DuckDB lock them). it.layer would build the host before the bundle exists. Exit: retire when the builds move into a nested it.layer(Layer.unwrap(...)) without losing the base-run assertions, or when EV002 also counts same-file wrapper provisions as earlier lifecycles (#1855 wave 4 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2013:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2032:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2013,
-      "endLine": 2013,
+      "line": 2032,
+      "endLine": 2032,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:e246edbc3d044db8f8107010a23467e0fa1f9f09a387be7d954e692a678909b6",
       "class": "unresolved-layer-provide",
@@ -1617,13 +1617,13 @@
       "reason": "Owner: @beep/law-practice-server. The body runs two bundle builds into bundleOut, reads practice.duckdb through the same-file withDuckDb wrapper, and only then provides the MCP host over both stores in bundleOut; each earlier step closes its connection before the host reopens the files (PGlite and DuckDB lock them). it.layer would build the host before the bundle exists. Exit: retire when the builds move into a nested it.layer(Layer.unwrap(...)) without losing the base-run assertions, or when EV002 also counts same-file wrapper provisions as earlier lifecycles (#1855 wave 4 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2585:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2607:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2585,
-      "endLine": 2585,
+      "line": 2607,
+      "endLine": 2607,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:4f8fedf4796dc2cab3e9bcadd1d5905235544ba020d962468eb6e4efc2f1e689",
       "class": "per-test-layer-provide",
@@ -1639,13 +1639,13 @@
       "reason": "A separate empty-input bundle is built within the case; its body-derived PGlite directory and fixture model open for the zero-claims failure and close independently of the populated bundle. Owner: @beep/law-practice-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2709:provideScopedLayer@12#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2732:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2709,
-      "endLine": 2709,
+      "line": 2732,
+      "endLine": 2732,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:841798a4fc3b5088d955a7afd686ca3de17bb80ce4cb20aeff486bad9233a6b2",
       "class": "unresolved-layer-provide",
@@ -1680,7 +1680,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
+      "reason": "The test exercises makePgliteSqlTestLayer environment precedence and invalid URL selection with a per-operation ConfigProvider, which bounds that input to one provision. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision paired with a per-operation ConfigProvider layer (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts:132:provideScopedLayer@10#1",
@@ -1702,7 +1702,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "A typed hook, config, extension or provision failure must be captured inside the test's Effect.exit; suite-layer acquisition would fail before the driver, phase and cause could be inspected. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
+      "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts:143:provideScopedLayer@10#1",
@@ -1724,7 +1724,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "A typed hook, config, extension or provision failure must be captured inside the test's Effect.exit; suite-layer acquisition would fail before the driver, phase and cause could be inspected. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
+      "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts:178:provideScopedLayer@8#1",
@@ -1790,7 +1790,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The test exercises makePgliteSqlTestLayer environment precedence and invalid URL selection with a per-operation ConfigProvider, which bounds that input to one provision. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision paired with a per-operation ConfigProvider layer (#1855 wave 8 register)."
+      "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts:194:provideScopedLayer@10#1",
@@ -1812,7 +1812,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The test exercises makePgliteSqlTestLayer environment precedence and invalid URL selection with a per-operation ConfigProvider, which bounds that input to one provision. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision paired with a per-operation ConfigProvider layer (#1855 wave 8 register)."
+      "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts:220:provideScopedLayer@10#1",
@@ -1834,7 +1834,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "A typed hook, config, extension or provision failure must be captured inside the test's Effect.exit; suite-layer acquisition would fail before the driver, phase and cause could be inspected. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
+      "reason": "Scoped SQL provision is the subject: per-call freshness, hooks, driver selection or a post-close reconnect must complete inside the test body with the real driver. Owner: @beep/test-utils. Exit: retire when EV002 recognises a provision whose per-call freshness or post-close reconnect the test asserts (#1855 wave 8 register)."
     },
     {
       "id": "EV002:packages/tooling/test-kit/test-utils/test/SqlTest.offline.test.ts:347:provideScopedLayer@10#1",
@@ -2189,13 +2189,13 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationAnnotationAssembly.test.ts:246:withCitationTestInvocation@6#1",
+      "id": "EV003:packages/law-practice/server/test/CitationAnnotationAssembly.test.ts:247:withCitationTestInvocation@6#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationAnnotationAssembly.test.ts",
-      "line": 246,
-      "endLine": 278,
+      "line": 247,
+      "endLine": 279,
       "symbol": "withCitationTestInvocation",
       "occurrence": "v2:c5f92ee85ae0884534ffb1e70b5ed1866bd6d8504a977d43f5c92e29206a989c",
       "class": "unresolved-resource-wrapper",
@@ -2211,13 +2211,13 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationAnnotationAssembly.test.ts:290:withCitationTestInvocation@4#1",
+      "id": "EV003:packages/law-practice/server/test/CitationAnnotationAssembly.test.ts:291:withCitationTestInvocation@4#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationAnnotationAssembly.test.ts",
-      "line": 290,
-      "endLine": 296,
+      "line": 291,
+      "endLine": 297,
       "symbol": "withCitationTestInvocation",
       "occurrence": "v2:9376f80dc58b07c8136583327c3931ea3a2ac909753b25f8c7a61e41203d3e46",
       "class": "unresolved-resource-wrapper",
@@ -2692,7 +2692,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Owner: @beep/law-practice-server. This test needs one production CitationInvocation budget and an independently closed lane Scope to verify refusal translation before host invocation. Moving the request lifetime into a shared it.layer would merge or close the authority being tested. Platform services remain layered. Exit: retire with a harness that preserves independent per-request admission/budget/Scope lifetimes. Uses the existing direct-invocation fixture policy; reviewed in goals/citation-regex-worker-v3/decisions/2026-11-14-prove-reachable-coverage-paths-and-retain-typed-native-invariants.md."
+      "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
       "id": "EV003:packages/law-practice/server/test/CitationCleanerPipelineCoverage.test.ts:41:withCitationTestTextBudget@2#1",
@@ -2717,13 +2717,13 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationDiffWorker.test.ts:104:withCitationTestTextBudget@4#1",
+      "id": "EV003:packages/law-practice/server/test/CitationDiffWorker.test.ts:118:withCitationTestTextBudget@4#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationDiffWorker.test.ts",
-      "line": 104,
-      "endLine": 135,
+      "line": 118,
+      "endLine": 149,
       "symbol": "withCitationTestTextBudget",
       "occurrence": "v2:8ae04a80e450bed59b4f55e89280f2b3c7b411fe6b3d036abfc2a2530399692a",
       "class": "unresolved-resource-wrapper",
@@ -3889,9 +3889,9 @@
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationResourceCorrection.test.ts",
       "line": 222,
-      "endLine": 240,
+      "endLine": 242,
       "symbol": "withCitationTestInvocation",
-      "occurrence": "v2:ad272269cc3a9a36304ec712eb727b99c4ddc3fce927cfeb6133f6d523192f87",
+      "occurrence": "v2:d6579752cc9c7d09169186229291518f85aa20b4b2c0e8e097dc6f3e8c2b8c8a",
       "class": "unresolved-resource-wrapper",
       "evidence": "withCitationTestInvocation( Effect.gen(function* () { const corpus = yield* loadCitationCorpus(); const { limits } = yield* load(); const unicode = yield* makeCitationPythonUnicode(limits); const word",
       "replacement": {
@@ -3901,17 +3901,17 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
+      "status": "open",
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationResourceCorrection.test.ts:246:withCitationTestInvocation@6#1",
+      "id": "EV003:packages/law-practice/server/test/CitationResourceCorrection.test.ts:248:withCitationTestInvocation@6#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationResourceCorrection.test.ts",
-      "line": 246,
-      "endLine": 291,
+      "line": 248,
+      "endLine": 293,
       "symbol": "withCitationTestInvocation",
       "occurrence": "v2:ceda674bbc749924fefdd19bf29ec787652a63903b8a66119102804fb5b7112a",
       "class": "unresolved-resource-wrapper",
@@ -3927,13 +3927,13 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationResourceCorrection.test.ts:295:withCitationTestInvocation@4#1",
+      "id": "EV003:packages/law-practice/server/test/CitationResourceCorrection.test.ts:297:withCitationTestInvocation@4#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationResourceCorrection.test.ts",
-      "line": 295,
-      "endLine": 360,
+      "line": 297,
+      "endLine": 362,
       "symbol": "withCitationTestInvocation",
       "occurrence": "v2:5921ac84406859b5d2c18b00c8d2cdafa9c3daed1378ca62af1a708bf378b7b7",
       "class": "unresolved-resource-wrapper",
@@ -3949,13 +3949,13 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationResourceCorrection.test.ts:365:withCitationTestInvocation@6#1",
+      "id": "EV003:packages/law-practice/server/test/CitationResourceCorrection.test.ts:367:withCitationTestInvocation@6#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationResourceCorrection.test.ts",
-      "line": 365,
-      "endLine": 400,
+      "line": 367,
+      "endLine": 402,
       "symbol": "withCitationTestInvocation",
       "occurrence": "v2:06aec0368f297a6951591ce3ff243cb7beb677cb9cd3d536e0ec9907043a59e5",
       "class": "unresolved-resource-wrapper",
@@ -3971,13 +3971,13 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationResourceCorrection.test.ts:404:withCitationTestInvocation@4#1",
+      "id": "EV003:packages/law-practice/server/test/CitationResourceCorrection.test.ts:406:withCitationTestInvocation@4#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationResourceCorrection.test.ts",
-      "line": 404,
-      "endLine": 473,
+      "line": 406,
+      "endLine": 475,
       "symbol": "withCitationTestInvocation",
       "occurrence": "v2:789e07e185d10a9c8ffb711d657312af37a0ce6a4638b2b0de2fd58afcd65a90",
       "class": "unresolved-resource-wrapper",
@@ -3993,13 +3993,13 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationResourceCorrection.test.ts:478:withCitationTestInvocation@6#1",
+      "id": "EV003:packages/law-practice/server/test/CitationResourceCorrection.test.ts:480:withCitationTestInvocation@6#1",
       "lens": "resource",
       "ruleId": "EV003",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationResourceCorrection.test.ts",
-      "line": 478,
-      "endLine": 543,
+      "line": 480,
+      "endLine": 545,
       "symbol": "withCitationTestInvocation",
       "occurrence": "v2:7c8c67ec693406cbdfc58adc62e89df15b0c8ba6ee9740ef5a2781d8554ea92d",
       "class": "unresolved-resource-wrapper",
@@ -4477,28 +4477,6 @@
       "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
     },
     {
-      "id": "EV003:packages/law-practice/server/test/CitationTextBudget.test.ts:199:withCitationTestTextBudget@6#1",
-      "lens": "resource",
-      "ruleId": "EV003",
-      "package": "@beep/law-practice-server",
-      "file": "packages/law-practice/server/test/CitationTextBudget.test.ts",
-      "line": 199,
-      "endLine": 235,
-      "symbol": "withCitationTestTextBudget",
-      "occurrence": "v2:2b977c49eb9bc4d9610c022608ff4453a72be63d1491cd3fb54cc6f0c9415ed1",
-      "class": "unresolved-resource-wrapper",
-      "evidence": "withCitationTestTextBudget( 24, Effect.gen(function* () { const corpus = yield* loadCitationMetadataStrings(); const setup = yield* setupCitationRegexRuntime(\"bun\", 24); const budget = (yield* Citatio",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "major",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "Owner: @beep/law-practice-server. This shared fixture opens one request-scoped CitationInvocation through the production constructor. Sharing it with it.layer would merge independent request admission, budget, deadline and cleanup lifetimes and invalidate queue/ledger tests. Platform services remain in it.layer. Exit: retire when the harness can preserve per-call invocation ownership through a Layer. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-keep-direct-invocation-fixtures-scoped-to-each-request.md."
-    },
-    {
       "id": "EV003:packages/law-practice/server/test/CitationTextBudget.test.ts:52:withCitationTestInvocation@4#1",
       "lens": "resource",
       "ruleId": "EV003",
@@ -4609,13 +4587,13 @@
       "reason": "Sets and restores one Bun.env key around a CI lane call. CiLane reads BEEP_CACHE_TOOLCHAIN_DIGEST, BEEP_QUALITY_CHECK_CONCURRENCY and the TURBO_* names from Bun.env directly and passes the ambient environment to native children; withPartitionShim also uses it for PATH and the CI_LANE_TEST_* inputs its shim reads. Process environment is global, and it.layer would leak it across the block. Owner: @beep/repo-cli. Exit: CiLane reads its ambient environment through Config or an injected environment service and hands spawned children an explicit env, so the test provides both. #1855 wave 5 register."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:2596:withEnvVarEffect@6#1",
+      "id": "EV003:packages/tooling/tool/cli/test/ci-lane.test.ts:2598:withEnvVarEffect@6#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/ci-lane.test.ts",
-      "line": 2596,
-      "endLine": 2605,
+      "line": 2598,
+      "endLine": 2607,
       "symbol": "withEnvVarEffect",
       "occurrence": "v2:22ab9b8e9a72bdaabc0a13aa41228277902d21a8b3e1eda9a9d6f689b5e23f2c",
       "class": "resource-wrapper",
@@ -4697,13 +4675,13 @@
       "reason": "Prepends a bin directory of ffmpeg and ffprobe shims to PATH for one image command call; the command builds FFmpeg.makeLayer() with the default bare `ffmpeg`/`ffprobe` names. The real ChildProcessSpawner resolves those executables through the inherited process PATH, and it.layer would leak the PATH change across the block. Owner: @beep/repo-cli. Exit: the image command reads its ffmpeg and ffprobe paths through Config (BEEP_FFMPEG_PATH/BEEP_FFPROBE_PATH, as Files' MediaExec already does), so the test provides a ConfigProvider. #1855 wave 5 register."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts:149:withPrependedPath@26#1",
+      "id": "EV003:packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts:153:withPrependedPath@26#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/quality-scheduler-synthetic-scenario.test.ts",
-      "line": 149,
-      "endLine": 168,
+      "line": 153,
+      "endLine": 172,
       "symbol": "withPrependedPath",
       "occurrence": "v2:aac05a9c1b995ae10e60366f9fc1b5638172b1896f1a5db7e54241c239990945",
       "class": "resource-wrapper",
@@ -4719,13 +4697,13 @@
       "reason": "Retain the deliberately SHORT PATH acquireUseRelease bracket: prepend only the disposable systemctl shim during fixture-owner reaping, restore the exact previous/unset PATH before later journal/export assertions. Root ownership is already per-test and outer native services runner-owned. Broadening PATH to the entire layer/test or deleting restoration changes global state/isolation. Sequential fixture scope and synchronous final restoration are required. Source and import provenance: research/cli-continuation-nine-lineage.json; reviewed scope: research/cli-continuation-nine-proof.md. Owner: @beep/repo-cli. Exit: the fixture-owner reaper resolves systemctl through Config or an injected executable path. #1855 wave 5 register."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/quality-tasks.test.ts:422:withEnvVarEffect@25#1",
+      "id": "EV003:packages/tooling/tool/cli/test/quality-tasks.test.ts:427:withEnvVarEffect@25#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
-      "line": 422,
-      "endLine": 446,
+      "line": 427,
+      "endLine": 451,
       "symbol": "withEnvVarEffect",
       "occurrence": "v2:7a4f71fe20382ddc1c39e6fb461768ddeb358a00ea78878e97d203874b0453bf",
       "class": "resource-wrapper",
@@ -4939,13 +4917,13 @@
       "reason": "Changes the OS-level working directory: the archive fence reads /proc/<pid>/cwd, so only process.chdir exercises it. A cwd override is process state, and it.layer would leak it across the block. Owner: @beep/repo-cli. Exit: the fence takes the invoking process's working directory as an injected input instead of reading its own /proc entry. #1855 wave 5 register."
     },
     {
-      "id": "EV003:packages/tooling/tool/cli/test/yeet.test.ts:306:withEnvVarEffect@25#1",
+      "id": "EV003:packages/tooling/tool/cli/test/yeet.test.ts:315:withEnvVarEffect@25#1",
       "lens": "detector",
       "ruleId": "EV003",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet.test.ts",
-      "line": 306,
-      "endLine": 324,
+      "line": 315,
+      "endLine": 333,
       "symbol": "withEnvVarEffect",
       "occurrence": "v2:9de6cbb26ee2cc4269eebbc213519cc12670f526f85838a1fd4843bf89bed741",
       "class": "resource-wrapper",
@@ -5002,7 +4980,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The scoped child must close on interruption before the parent asserts mode restoration and root deletion; a dropped-restoration mutation fails the mode-before-cleanup assertion (0 instead of 448). Owner: @beep/professional-desktop. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
+      "reason": "The database lifetime is deliberately shorter than the test: create/close/reopen persistence, production boot closure before verification, or extension cleanup before its assertion; the platform services stay in it.layer, and removing the extension scope makes its check fail (goals/effect-vitest-canon/research/desktop-pglite-lifetimes-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
       "id": "EV004:apps/professional-desktop/test/integration/PgliteDataDirCompatibility.test.ts:389:scoped@18#1",
@@ -5049,13 +5027,13 @@
       "reason": "The database lifetime is deliberately shorter than the test: create/close/reopen persistence, production boot closure before verification, or extension cleanup before its assertion; the platform services stay in it.layer, and removing the extension scope makes its check fail (goals/effect-vitest-canon/research/desktop-pglite-lifetimes-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:infra/test/OpenClaw.test.ts:128:scoped@16#1",
+      "id": "EV004:infra/test/OpenClaw.test.ts:130:scoped@16#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/infra",
       "file": "infra/test/OpenClaw.test.ts",
-      "line": 128,
-      "endLine": 135,
+      "line": 130,
+      "endLine": 137,
       "symbol": "scoped",
       "occurrence": "v2:e65164bbdfd81dc82efa258cb86a905dd90a2bbafb130f7b1f755f79eb5eb564",
       "class": "inner-helper-scope-lifetime-review",
@@ -5467,13 +5445,13 @@
       "reason": "The helper closes each native compiler child after its stdout, stderr and exit drain, before the enclosing test releases the project directory; that cleanup order is the subject. Owner: @beep/repo-configs. Exit: retire when EV004 recognises a helper scope whose close the caller observes before returning (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/test-kit/test-utils/test/ConformanceLedger.test.ts:241:scoped@48#1",
+      "id": "EV004:packages/tooling/test-kit/test-utils/test/ConformanceLedger.test.ts:244:scoped@48#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/test-utils",
       "file": "packages/tooling/test-kit/test-utils/test/ConformanceLedger.test.ts",
-      "line": 241,
-      "endLine": 241,
+      "line": 244,
+      "endLine": 244,
       "symbol": "scoped",
       "occurrence": "v2:3e7eb18198762c7ace6b81044ef4fc98787bfa67e2e99675ed02d0baf6402ec5",
       "class": "helper-scope-lifetime-review",
@@ -5489,15 +5467,15 @@
       "reason": "The shorter scope closes a descriptor, temp root, native database, container or assertion helper before post-close assertions, or keeps native worker evidence until before fixture cleanup. Owner: @beep/test-utils. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts:180:scoped@2#1",
+      "id": "EV004:packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts:183:scoped@2#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/test-utils",
       "file": "packages/tooling/test-kit/test-utils/test/Vitest.runtime.test.ts",
-      "line": 180,
-      "endLine": 280,
+      "line": 183,
+      "endLine": 284,
       "symbol": "scoped",
-      "occurrence": "v2:567954052d5ef6268b363709d10028f095b661c261c189df8f304a9813e3b1d4",
+      "occurrence": "v2:eed99682e12a9cf05b485024be851c3a8f899166abeb89839abbb83ade43c92e",
       "class": "shared-helper-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const directory = yield* fs.makeTempDirectoryScoped({ directory: fixtureDirectory, pref",
       "replacement": {
@@ -5507,7 +5485,7 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
+      "status": "open",
       "reason": "The shorter scope closes a descriptor, temp root, native database, container or assertion helper before post-close assertions, or keeps native worker evidence until before fixture cleanup. Owner: @beep/test-utils. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
@@ -5517,9 +5495,9 @@
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/agent-effectiveness-eval-scorer.test.ts",
       "line": 211,
-      "endLine": 223,
+      "endLine": 225,
       "symbol": "scoped",
-      "occurrence": "v2:9155e38b0b29c2bad1b5db54bf8b2d75cdbd498219d03101feb2ab52841af2b8",
+      "occurrence": "v2:a6f4a48b82c9b09baa08c30ebd733abf52c3674a0db7a05c6a75055ac5b40bbc",
       "class": "inner-helper-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const fixtureDir = yield* fs.makeTempDirectoryScoped(); const repoRoot = yield* fs.make",
       "replacement": {
@@ -5529,7 +5507,7 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
+      "status": "open",
       "reason": "Per-invocation fixture and repository directories close before the captured commands and configs are returned (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises a helper scope whose close the caller observes before returning (#1855 wave 8 register)."
     },
     {
@@ -5555,13 +5533,13 @@
       "reason": "The per-sink NodeHttpServer.layerTest scope shuts its ephemeral server down before returning, and cleanup probes verify all five listeners are unreachable afterwards (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises a helper scope whose close the caller observes before returning (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/github-ledger.test.ts:759:scoped@10#1",
+      "id": "EV004:packages/tooling/tool/cli/test/github-ledger.test.ts:757:scoped@10#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/github-ledger.test.ts",
-      "line": 759,
-      "endLine": 767,
+      "line": 757,
+      "endLine": 765,
       "symbol": "scoped",
       "occurrence": "v2:87d99e498d91ec6c276b80d8b745ed01c15ca51ee8d6f40a2d42ce8c5ab99225",
       "class": "shorter-scope-lifetime-review",
@@ -5709,15 +5687,15 @@
       "reason": "The inner scope releases child processes that hold cwd, open-file or flock references before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:885:scoped@8#1",
+      "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:886:scoped@8#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
-      "line": 885,
-      "endLine": 922,
+      "line": 886,
+      "endLine": 921,
       "symbol": "scoped",
-      "occurrence": "v2:b26233526fd68978d25b7f1d39e792538f8eb412303af942b7a51ff0172da182",
+      "occurrence": "v2:c77dfad7908988b9462a472e71980f3a58a20b2a7597f341bb345f1dba2a217a",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpRoot = path.join(root, \"tmp\"); const cacheRoot = path.join(root, \"cache\"); con",
       "replacement": {
@@ -5727,19 +5705,19 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
+      "status": "open",
       "reason": "The inner scope releases child processes that hold cwd, open-file or flock references before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:927:scoped@8#1",
+      "id": "EV004:packages/tooling/tool/cli/test/tmpfs-reap.test.ts:926:scoped@8#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/tmpfs-reap.test.ts",
-      "line": 927,
-      "endLine": 969,
+      "line": 926,
+      "endLine": 966,
       "symbol": "scoped",
-      "occurrence": "v2:d5fc679aa2ef97dfa7a3b204aa135e6f58529a8d2170723b37460c1737428531",
+      "occurrence": "v2:0e31ae038b7a11af7ea1c6a31766cd32c83c83bbd35a4fdd4ae4b25fbc13e983",
       "class": "shorter-scope-lifetime-review",
       "evidence": "Effect.scoped( Effect.gen(function* () { const fs = yield* FileSystem.FileSystem; const path = yield* Path.Path; const tmpRoot = path.join(root, \"tmp\"); const cacheRoot = path.join(root, \"cache\"); con",
       "replacement": {
@@ -5749,7 +5727,7 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
+      "status": "open",
       "reason": "The inner scope releases child processes that hold cwd, open-file or flock references before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
@@ -5797,13 +5775,13 @@
       "reason": "A descriptor's close is the subject: retirement must refuse while the descriptor is open and succeed once the scope has closed it. Trial without the scope (#1855 wave 8): \"refuses archive retirement while a process holds the checkout\" fails (Refusing to retire instead of retired). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV005:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:326:result@32#1",
+      "id": "EV005:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:329:result@32#1",
       "lens": "resource",
       "ruleId": "EV005",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 326,
-      "endLine": 326,
+      "line": 329,
+      "endLine": 329,
       "symbol": "result",
       "occurrence": "v2:199274b912aca460f07c104edea0d620644cc62bdbb16f070a36a5e5065d958c",
       "class": "result-outcome-assertion",
@@ -5819,13 +5797,13 @@
       "reason": "The failed Result is the subject: both cases assert failure polarity, the ContradictionQaSeedError family and the exact conflict reason, then verify preserved user files and unchanged database rows, which only a captured failure allows (goals/effect-vitest-canon/research/desktop-residual-judgments-proof.md). Owner: @beep/professional-desktop. Exit: retire when EV005 recognises a Result capture followed by post-failure state reads (#1855 wave 8 register)."
     },
     {
-      "id": "EV005:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:355:result@32#1",
+      "id": "EV005:apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts:358:result@32#1",
       "lens": "resource",
       "ruleId": "EV005",
       "package": "@beep/professional-desktop",
       "file": "apps/professional-desktop/test/integration/contradiction-qa-seed.pglite.test.ts",
-      "line": 355,
-      "endLine": 355,
+      "line": 358,
+      "endLine": 358,
       "symbol": "result",
       "occurrence": "v2:358f7cf1fa7a4783de51292aaeea5c30478a01d2c5ffe1d722606fc855a5c6dd",
       "class": "result-outcome-assertion",
@@ -6058,7 +6036,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The test waits for state in an independently built AtomRegistry runtime that TestClock cannot drive; the wait subscribes through AtomRegistry.toStream with the original predicate and a three-second live timeoutOrElse watchdog (goals/effect-vitest-canon/research/desktop-subscription-waits-proof.md). Owner: @beep/professional-desktop. Exit: retire when AtomRegistry runtimes built in a test can be driven by the test's TestClock (#1855 wave 8 register)."
+      "reason": "Production dispatchTurnWithConfirm starts a detached Effect.runFork with a real 50 ms confirmation sleep; the test joins that fiber under its 200 ms live timeout, which the TestClock cannot drive (goals/effect-vitest-canon/research/desktop-final-clock-proof.md). Owner: @beep/professional-desktop. Exit: retire when dispatchTurnWithConfirm runs its confirmation wait on the caller's Clock instead of a detached runFork (#1855 wave 8 register)."
     },
     {
       "id": "EV009:apps/professional-desktop/test/composer-dispatch-confirm.test.ts:76:it.live@2#1",
@@ -6369,13 +6347,13 @@
       "reason": "Real Chromium ResizeObserver, DOM, native frame scheduling and Cosmos/3D rendering are the subjects, and TestClock cannot drive those callbacks; the body timeout stays and two fixed sleeps became renderer acknowledgements. Owner: @beep/ontology-client. Exit: retire when EV009 recognises it.live tests in browser-mode suites whose subject is a native renderer (#1855 wave 8 register)."
     },
     {
-      "id": "EV009:packages/ontology/client/test/inspector-actions.test.ts:104:it.live@2#1",
+      "id": "EV009:packages/ontology/client/test/inspector-actions.test.ts:107:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/ontology-client",
       "file": "packages/ontology/client/test/inspector-actions.test.ts",
-      "line": 104,
-      "endLine": 177,
+      "line": 107,
+      "endLine": 180,
       "symbol": "it.live",
       "occurrence": "v2:50b11d9f655ff7e156ca0926bdeebe5db428ad2104a61bc4baa25460425e63c9",
       "class": "unjustified-live-test",
@@ -6397,9 +6375,9 @@
       "package": "@beep/ontology-client",
       "file": "packages/ontology/client/test/inspector-actions.test.ts",
       "line": 52,
-      "endLine": 102,
+      "endLine": 105,
       "symbol": "it.live",
-      "occurrence": "v2:7ecc2d5dfee393cde37cce935b8c505203cbf23ac72a0b026b70ad489f9ff46a",
+      "occurrence": "v2:2681294ae595a5a511af3c163c8599cfe735be8b58f8e570bdf13f94b87c641c",
       "class": "unjustified-live-test",
       "evidence": "it.live( \"derives validation state and decodes object-kind select values in the ontology runtime\", Effect.fnUntraced(function* () { const registry = yield* Effect.acquireRelease( Effect.sync(() => Ato",
       "replacement": {
@@ -6409,7 +6387,7 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
+      "status": "open",
       "reason": "Real registry runtime scheduling and native worker, watchdog or action acknowledgements need live time; the bounded retry waits and assertions are unchanged, and only the two cases that share the Worker global are serialized. Owner: @beep/ontology-client. Exit: retire when the session atoms run their worker watchdog and retries on the test's TestClock (#1855 wave 8 register)."
     },
     {
@@ -6465,7 +6443,7 @@
       "line": 724,
       "endLine": 757,
       "symbol": "it.live",
-      "occurrence": "v2:4f8b754c78d6c67336d06b8685deb51802d7767f5e9d79494e6b4b95352aab9b",
+      "occurrence": "v2:5740ab99433b015f58bb5a2e4c2503b0a4b3276cc330830e26bafa545d9422ef",
       "class": "unjustified-live-test",
       "evidence": "it.live(\"keeps every concurrent writer's root instead of letting the last rename win\", () => withTempDirectory( Effect.fnUntraced(function* (tmpDir) { const pathApi = yield* Path.Path; const dataRoot",
       "replacement": {
@@ -6475,17 +6453,17 @@
       "severity": "info",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "exception",
+      "status": "open",
       "reason": "This is the native filesystem atomic-lock test: it keeps real concurrent-writer backoff or the bounded stale-lock failure with the original deadlines, and virtual time would change the external-resource subject. Owner: @beep/repo-ai-metrics. Exit: retire when the registry lock takes its backoff schedule from the caller's Clock, so the test can drive it with TestClock (#1855 wave 8 register)."
     },
     {
-      "id": "EV009:packages/tooling/library/ai-metrics/test/identity-registry.test.ts:796:it.live@2#1",
+      "id": "EV009:packages/tooling/library/ai-metrics/test/identity-registry.test.ts:795:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/repo-ai-metrics",
       "file": "packages/tooling/library/ai-metrics/test/identity-registry.test.ts",
-      "line": 796,
-      "endLine": 817,
+      "line": 795,
+      "endLine": 816,
       "symbol": "it.live",
       "occurrence": "v2:74947d8eba127b91406203e737ffa366735c50202790798949800265730a7f13",
       "class": "unjustified-live-test",
@@ -8899,13 +8877,13 @@
       "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md. Owner: @beep/law-practice-server (goals/citation-extraction-engine). Exit: retire when committed-artifact verification moves to a separately enforced source-bound loader gate (history/evidence/2026-11-02-platform-lint-review.md)."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/CitationHtmlWorker.test.ts:10:@effect/platform-bun/BunServices@0#1",
+      "id": "EV010:packages/law-practice/server/test/CitationHtmlWorker.test.ts:13:@effect/platform-bun/BunServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationHtmlWorker.test.ts",
-      "line": 10,
-      "endLine": 10,
+      "line": 13,
+      "endLine": 13,
       "symbol": "@effect/platform-bun/BunServices",
       "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
       "class": "platform-resource-provenance-review",
@@ -9031,13 +9009,13 @@
       "reason": "Replays committed source-observation/kernel bytes through the real fixture loader; an independently seeded memory filesystem would remove the repository-artifact check. Reviewed in goals/citation-extraction-engine/history/evidence/2026-11-02-platform-lint-review.md. Owner: @beep/law-practice-server (goals/citation-extraction-engine). Exit: retire when committed-artifact verification moves to a separately enforced source-bound loader gate (history/evidence/2026-11-02-platform-lint-review.md)."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/CitationNativeProcess.test.ts:6:@effect/platform-bun/BunServices@0#1",
+      "id": "EV010:packages/law-practice/server/test/CitationNativeProcess.test.ts:9:@effect/platform-bun/BunServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationNativeProcess.test.ts",
-      "line": 6,
-      "endLine": 6,
+      "line": 9,
+      "endLine": 9,
       "symbol": "@effect/platform-bun/BunServices",
       "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
       "class": "platform-resource-provenance-review",
@@ -9251,13 +9229,13 @@
       "reason": "Authenticates committed source-observation bytes and maintainer producer hashes through the real repository fixture loader. Seeding a memory filesystem would remove the artifact integrity check. Owner: @beep/law-practice-server. Exit: detector recognizes authenticated repository corpus replay."
     },
     {
-      "id": "EV010:packages/law-practice/server/test/CitationRegexWorker.test.ts:33:@effect/platform-bun/BunServices@0#1",
+      "id": "EV010:packages/law-practice/server/test/CitationRegexWorker.test.ts:27:@effect/platform-bun/BunServices@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/CitationRegexWorker.test.ts",
-      "line": 33,
-      "endLine": 33,
+      "line": 27,
+      "endLine": 27,
       "symbol": "@effect/platform-bun/BunServices",
       "occurrence": "v2:30f5ad27b3466e9087faebe94dfc83f5ea9ae5070b9af25a085792eb5bd68f2c",
       "class": "platform-resource-provenance-review",
@@ -10834,28 +10812,6 @@
       "reason": "Physical owner-only issuer and publication files, unsafe permissions, replacement, links, persistence and revocation are the subject; real ZIPs also cross the verifier process boundary. Controlled metadata does not replace those filesystem semantics. The 222-case combined suite passes under Node and Bun, including final approval and issuer source-removal controls (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when native provenance is understood by the detector or an equally strict memory volume proves these native boundaries."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-baseline-merge.test.ts:18:@effect/platform-node@0#1",
-      "lens": "resource",
-      "ruleId": "EV010",
-      "package": "@beep/repo-cli",
-      "file": "packages/tooling/tool/cli/test/cache-baseline-merge.test.ts",
-      "line": 18,
-      "endLine": 18,
-      "symbol": "@effect/platform-node",
-      "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
-      "class": "platform-resource-provenance-review",
-      "evidence": "import { NodeServices } from \"@effect/platform-node\";",
-      "replacement": {
-        "primitive": "it.layer",
-        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
-      },
-      "severity": "info",
-      "confidence": 0.55,
-      "mechanization": "judgment",
-      "status": "exception",
-      "reason": "The test runs git merge-file through ChildProcess.make on real temp files. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the merge driver is exercised with a scripted spawner."
-    },
-    {
       "id": "EV010:packages/tooling/tool/cli/test/cache-conformance-lab.test.ts:27:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -10900,13 +10856,13 @@
       "reason": "buildCacheConformanceCorpus(repoRoot) walks the real checkout to build the corpus under test. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the corpus builder takes a seeded root instead of the checkout."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-dependencies.test.ts:6:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-dependencies.test.ts:13:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-dependencies.test.ts",
-      "line": 6,
-      "endLine": 6,
+      "line": 13,
+      "endLine": 13,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:2da961143fe305526d2b9544dcf389d12e43a188b48000414339b7d7e9e52c90",
       "class": "platform-resource-provenance-review",
@@ -10988,13 +10944,13 @@
       "reason": "The strict hosted verifier consumes real ZIP files through a bounded native parser, including malformed members, symlinks, size and deadline controls. Metadata is controlled; filesystem/parser behavior remains real. All 32 hosted cases pass under Node and Bun in the 222-case combined suite (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when platform provenance is understood by the detector or these native parser subjects move to another retained test."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:51:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts:50:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-pilot-orchestration.test.ts",
-      "line": 51,
-      "endLine": 51,
+      "line": 50,
+      "endLine": 50,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -11142,13 +11098,13 @@
       "reason": "Real scoped filesystem roots and the local HTTP fixture check bounded capture traversal, native-summary selection and output containment; native process execution fails closed (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when the protocol worker cases run over a seeded memory volume with the HTTP fixture in process."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:35:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/cache-signed-runner.test.ts:34:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/cache-signed-runner.test.ts",
-      "line": 35,
-      "endLine": 35,
+      "line": 34,
+      "endLine": 34,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:3979a7ff75193389220ecf0dc6571697ec9b901ad59fdb1ea873151254956f3d",
       "class": "platform-filesystem-candidate",
@@ -11977,13 +11933,13 @@
       "reason": "listGoalPackets(findRepoRoot()) groups the checkout's real goal packets. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the grouping runs over a seeded packet tree."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/knowledge-doctor.test.ts:28:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/knowledge-doctor.test.ts:32:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/knowledge-doctor.test.ts",
-      "line": 28,
-      "endLine": 28,
+      "line": 32,
+      "endLine": 32,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -12395,13 +12351,13 @@
       "reason": "The digest is computed over the committed fixtures/proof-epoch tree under import.meta.dirname. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the proof-epoch fixture is seeded into a MemoryFileSystem volume."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/proof-job.test.ts:15:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/proof-job.test.ts:20:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/proof-job.test.ts",
-      "line": 15,
-      "endLine": 15,
+      "line": 20,
+      "endLine": 20,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -12483,13 +12439,13 @@
       "reason": "Real scheduler lease publication, link behavior and queue state need the native filesystem; the two procfs cases already use MemoryFileSystem (research/cli-scheduler-drift-package-proof.json). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models link-based lease publication and the drift cases move to it."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/quality-tasks.test.ts:201:@effect/platform-node/NodeFileSystem@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/quality-tasks.test.ts:206:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/quality-tasks.test.ts",
-      "line": 201,
-      "endLine": 201,
+      "line": 206,
+      "endLine": 206,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -13076,13 +13032,13 @@
       "reason": "The check-fidelity monitor appends inbox rows, and the inbox active projection runs flock, sh and jq through Bun.spawnSync in the real inbox directory. A live child process sees only the real filesystem (#1875 wave 7 trial: posix_spawn or ChildProcessSpawner failures on a memory directory). Owner: @beep/repo-cli. Exit: retire when the inbox projection runs in process or behind an injected lock service."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:54:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-command-wiring.test.ts:58:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-command-wiring.test.ts",
-      "line": 54,
-      "endLine": 54,
+      "line": 58,
+      "endLine": 58,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -13450,13 +13406,13 @@
       "reason": "The committed fixtures/pr-review-bodies files are read through import.meta.url. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the review bodies are imported as text fixtures."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:22:@effect/platform-node/NodeFileSystem@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/yeet-review-fixes.test.ts:23:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/yeet-review-fixes.test.ts",
-      "line": 22,
-      "endLine": 22,
+      "line": 23,
+      "endLine": 23,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -13842,7 +13798,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The hoisted mock controls the plain findRepoRoot module function that command dispatch calls; it is not a Context.Service, and the selection resets and real-child cases keep both boundaries (goals/effect-vitest-canon/research/cli-lint-workers-package-proof.json). Owner: @beep/repo-cli. Exit: retire when lint dispatch resolves the repository root through an injected service (#1855 wave 8 register)."
+      "reason": "The hoisted mock stubs the ambient Turbo secret-session and environment-health probes so dispatch tests own process execution without reading the operator's 1Password or Turbo environment. Owner: @beep/repo-cli (goals/beep-cli-composition D29 W3). Exit: retire when EV012 resolves relative-path module mocks, or lint dispatch takes the runner and the Turbo/1Password probes as injected services."
     },
     {
       "id": "EV012:packages/tooling/tool/cli/test/lint-workers.test.ts:46:vi.mock@0#1",
@@ -13864,7 +13820,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The hoisted mock replaces runToExit and the oxlint branch of runCaptured so lint dispatch tests assert the worker command lines without spawning oxlint; every other capture runs the original implementation. Owner: @beep/repo-cli (goals/beep-cli-composition D29 W3). Exit: retire when EV012 resolves relative-path module mocks, or lint dispatch takes the runner and the Turbo/1Password probes as injected services."
+      "reason": "The hoisted mock stubs the ambient Turbo secret-session and environment-health probes so dispatch tests own process execution without reading the operator's 1Password or Turbo environment. Owner: @beep/repo-cli (goals/beep-cli-composition D29 W3). Exit: retire when EV012 resolves relative-path module mocks, or lint dispatch takes the runner and the Turbo/1Password probes as injected services."
     },
     {
       "id": "EV012:packages/tooling/tool/cli/test/lint-workers.test.ts:55:vi.mock@0#1",

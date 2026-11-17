@@ -38,6 +38,7 @@ import { ciPartitionsCommand } from "./CiPartitions.command.ts";
 import { ciRerunRunnerLossCommand } from "./CiRerunRunnerLoss.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import { ciShardOverflowPreflightCommand } from "./CiShardOverflowPreflight.ts";
+import { ciLedgerCommand } from "./CostLedger.ts";
 import { ciDependencyReviewCommand } from "./DependencyReviewCommand.ts";
 import { ciLaneTimingsCommand } from "./LaneTimings.ts";
 import { ciRouteCommand } from "./Route.command.ts";
@@ -324,7 +325,8 @@ export const appendTurboSummary = Effect.fn("Ci.appendTurboSummary")(function* (
         .pipe(CiCommandError.mapError(`Failed to read ${summaryPath}.`));
       const run = yield* decodeTurboSummary(content).pipe(CiCommandError.mapError(`Failed to parse ${summaryPath}.`));
       return O.some(renderTurboSummary(repoRoot, summaryPath, run, path));
-    })
+    }),
+    { concurrency: 1 }
   ).pipe(Effect.map(A.getSomes));
 
   if (A.isReadonlyArrayEmpty(rendered)) {
@@ -417,6 +419,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci workflow-lint",
     "- bun run beep ci lane <id> [flags] (or --list)",
     "- bun run beep ci lane-timings [--runs n] [--tsv] or --window --since ISO --until ISO [--preview] [filters]",
+    "- bun run beep ci ledger --run <id> [--run <id>...] [--write-capture <file>] or --capture <file> [--json]",
     "- bun run beep ci local [--lanes ids] [--fast] [--affected]",
     "- bun run beep ci rerun-runner-loss --run-id <id> [--attempt n] [--max-attempt n] [--dry-run]",
     "- bun run beep ci route plan|capture|census|replay [flags]",
@@ -437,6 +440,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     ciLaneCommand,
     ciLaneTimingsCommand,
     ciCertaintyCommand,
+    ciLedgerCommand,
     ciLocalCommand,
     ciPartitionsCommand,
     ciRerunRunnerLossCommand,

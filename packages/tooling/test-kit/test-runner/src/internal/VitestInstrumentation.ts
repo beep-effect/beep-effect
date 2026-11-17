@@ -289,7 +289,7 @@ const finishPropertyRuns = (execution: TestExecutionState): Promise<void> =>
         onNone: () => Effect.void,
         onSome: (finish) => Effect.promise(finish),
       }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   ).pipe(Effect.runPromise);
 
 // Coverage reuses this module across files, while hooks belong to the current suite.

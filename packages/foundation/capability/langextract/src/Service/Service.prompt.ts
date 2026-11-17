@@ -53,7 +53,10 @@ const renderExamples = (examples: LangExtractRequest["examples"]): Effect.Effect
   A.match(examples, {
     onEmpty: () => Effect.succeed(""),
     onNonEmpty: (examples) =>
-      Effect.map(Effect.forEach(examples, renderExample), (rendered) => `\nExamples:\n${A.join(rendered, "\n\n")}`),
+      Effect.map(
+        Effect.forEach(examples, renderExample, { concurrency: 1 }),
+        (rendered) => `\nExamples:\n${A.join(rendered, "\n\n")}`
+      ),
   });
 
 /**

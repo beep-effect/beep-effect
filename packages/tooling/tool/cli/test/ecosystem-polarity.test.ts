@@ -209,15 +209,18 @@ it.layer(NodeTestLayer, { timeout: "10 seconds" })((it) => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const sourceRoots = yield* liveMemberSourceRoots;
-        const declarations = yield* Effect.forEach(sourceRoots, (sourceRoot) =>
-          fs.readDirectory(sourceRoot, { recursive: true }).pipe(
-            Effect.map(
-              flow(
-                A.filter((entry) => DECLARATION_FILE.test(entry)),
-                A.map((entry) => path.join(sourceRoot, entry))
+        const declarations = yield* Effect.forEach(
+          sourceRoots,
+          (sourceRoot) =>
+            fs.readDirectory(sourceRoot, { recursive: true }).pipe(
+              Effect.map(
+                flow(
+                  A.filter((entry) => DECLARATION_FILE.test(entry)),
+                  A.map((entry) => path.join(sourceRoot, entry))
+                )
               )
-            )
-          )
+            ),
+          { concurrency: 1 }
         );
         expect(A.flatten(declarations)).toEqual([]);
       })
@@ -281,20 +284,23 @@ it.layer(NodeTestLayer, { timeout: "10 seconds" })((it) => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const sourceRoots = yield* liveMemberSourceRoots;
-        const offenders = yield* Effect.forEach(sourceRoots, (sourceRoot) =>
-          Effect.gen(function* () {
-            const scan = yield* SourceBoundary.scan({
-              root: sourceRoot,
-              rules: [],
-              extensions: [".ts", ".tsx", ".mts", ".cts"],
-            });
-            assertTrue(A.isReadonlyArrayNonEmpty(scan.files));
-            return yield* Effect.filter(scan.files, (file) =>
-              fs
-                .readFileString(path.join(sourceRoot, file))
-                .pipe(Effect.map((text) => TEMPLATE_SUBSTITUTION_IMPORT.test(SourceBoundary.stripComments(text))))
-            );
-          })
+        const offenders = yield* Effect.forEach(
+          sourceRoots,
+          (sourceRoot) =>
+            Effect.gen(function* () {
+              const scan = yield* SourceBoundary.scan({
+                root: sourceRoot,
+                rules: [],
+                extensions: [".ts", ".tsx", ".mts", ".cts"],
+              });
+              assertTrue(A.isReadonlyArrayNonEmpty(scan.files));
+              return yield* Effect.filter(scan.files, (file) =>
+                fs
+                  .readFileString(path.join(sourceRoot, file))
+                  .pipe(Effect.map((text) => TEMPLATE_SUBSTITUTION_IMPORT.test(SourceBoundary.stripComments(text))))
+              );
+            }),
+          { concurrency: 1 }
         );
         expect(A.flatten(offenders)).toEqual([]);
       })

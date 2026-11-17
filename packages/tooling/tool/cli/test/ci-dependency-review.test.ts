@@ -150,7 +150,7 @@ const RecordedGithub = Layer.effect(
         : pages;
       // A lambda, not `encodePage` itself: `forEach` passes the index as a
       // second argument, which the codec reads as parse options.
-      const bodies = yield* Effect.forEach(served, (rows) => encodePage(rows));
+      const bodies = yield* Effect.forEach(served, (rows) => encodePage(rows), { concurrency: 1 });
       return A.map(bodies, (body, index) => ok(httpPage(index + 1, last, body)));
     });
     const byManifest = (rows: ReadonlyArray<DependencyChange>): ReadonlyArray<ReadonlyArray<DependencyChange>> =>

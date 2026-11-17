@@ -464,37 +464,43 @@ const make = Effect.fn("make")(function* (base: Readonly<Record<string, string |
     isDebug: Effect.map(lookup("RUNNER_DEBUG"), (value) => O.isSome(value) && value.value === "1"),
 
     github: Effect.map(
-      Effect.all({
-        repository: get("GITHUB_REPOSITORY"),
-        repositoryOwner: get("GITHUB_REPOSITORY_OWNER"),
-        ref: get("GITHUB_REF"),
-        refName: get("GITHUB_REF_NAME"),
-        // GITHUB_HEAD_REF is absent outside pull requests — and the runner may
-        // write it as the empty string, which `lookup` already reads as absent.
-        headRef: lookup("GITHUB_HEAD_REF"),
-        sha: get("GITHUB_SHA"),
-        workflow: get("GITHUB_WORKFLOW"),
-        job: get("GITHUB_JOB"),
-        runId: Effect.flatMap(get("GITHUB_RUN_ID"), numeric("GITHUB_RUN_ID")),
-        runAttempt: Effect.flatMap(get("GITHUB_RUN_ATTEMPT"), numeric("GITHUB_RUN_ATTEMPT")),
-        eventName: get("GITHUB_EVENT_NAME"),
-        actor: get("GITHUB_ACTOR"),
-        serverUrl: get("GITHUB_SERVER_URL"),
-        apiUrl: get("GITHUB_API_URL"),
-        graphqlUrl: get("GITHUB_GRAPHQL_URL"),
-        workspace: get("GITHUB_WORKSPACE"),
-      }),
+      Effect.all(
+        {
+          repository: get("GITHUB_REPOSITORY"),
+          repositoryOwner: get("GITHUB_REPOSITORY_OWNER"),
+          ref: get("GITHUB_REF"),
+          refName: get("GITHUB_REF_NAME"),
+          // GITHUB_HEAD_REF is absent outside pull requests — and the runner may
+          // write it as the empty string, which `lookup` already reads as absent.
+          headRef: lookup("GITHUB_HEAD_REF"),
+          sha: get("GITHUB_SHA"),
+          workflow: get("GITHUB_WORKFLOW"),
+          job: get("GITHUB_JOB"),
+          runId: Effect.flatMap(get("GITHUB_RUN_ID"), numeric("GITHUB_RUN_ID")),
+          runAttempt: Effect.flatMap(get("GITHUB_RUN_ATTEMPT"), numeric("GITHUB_RUN_ATTEMPT")),
+          eventName: get("GITHUB_EVENT_NAME"),
+          actor: get("GITHUB_ACTOR"),
+          serverUrl: get("GITHUB_SERVER_URL"),
+          apiUrl: get("GITHUB_API_URL"),
+          graphqlUrl: get("GITHUB_GRAPHQL_URL"),
+          workspace: get("GITHUB_WORKSPACE"),
+        },
+        { concurrency: 1 }
+      ),
       (fields) => GitHubContext.make(fields)
     ),
 
     runner: Effect.map(
-      Effect.all({
-        os: get("RUNNER_OS"),
-        arch: get("RUNNER_ARCH"),
-        name: get("RUNNER_NAME"),
-        temp: get("RUNNER_TEMP"),
-        toolCache: get("RUNNER_TOOL_CACHE"),
-      }),
+      Effect.all(
+        {
+          os: get("RUNNER_OS"),
+          arch: get("RUNNER_ARCH"),
+          name: get("RUNNER_NAME"),
+          temp: get("RUNNER_TEMP"),
+          toolCache: get("RUNNER_TOOL_CACHE"),
+        },
+        { concurrency: 1 }
+      ),
       (fields) => RunnerContext.make(fields)
     ),
 

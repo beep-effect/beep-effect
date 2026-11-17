@@ -406,7 +406,7 @@ describe("GithubLedger rollup versions", () => {
               laneARow(HOUR + 5 * MINUTE, 3, HOUR + RESET_A),
               laneBRow(HOUR + 6 * MINUTE, 5, HOUR + RESET_B),
             ];
-            yield* Effect.forEach(A.appendAll(interleaved, later), store.append, { discard: true });
+            yield* Effect.forEach(A.appendAll(interleaved, later), store.append, { concurrency: 1, discard: true });
             const stored = yield* store.readRollup(at(0));
             assertTrue(O.exists(stored, (rollup) => rollup.schemaVersion === version));
             const read = yield* ledger.hours(LedgerRange.make({ from: at(0), to: at(30 * MINUTE) }));

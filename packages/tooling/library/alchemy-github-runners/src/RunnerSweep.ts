@@ -122,26 +122,32 @@ export const sweepRunners = Effect.fn("RunnerSweep.sweep")(function* (input: {
 }) {
   const ec2 = yield* Ec2Fleet;
   const ssm = yield* SsmStore;
-  const listed = yield* Effect.forEach(input.environments, (environment) =>
-    ec2.listRunners(RunnerFilter.make({ environment: O.some(environment), states: sweptInstanceStates }))
+  const listed = yield* Effect.forEach(
+    input.environments,
+    (environment) =>
+      ec2.listRunners(RunnerFilter.make({ environment: O.some(environment), states: sweptInstanceStates })),
+    { concurrency: 1 }
   );
   const runners = A.flatten(listed);
-  yield* Effect.forEach(runners, (runner) => ec2.terminate(runner.instanceId), { discard: true });
-  const outcomes = yield* Effect.forEach(runners, (runner) =>
-    O.match(O.all({ owner: runner.owner, type: O.filter(runner.type, isRunnerType) }), {
-      onNone: () => Effect.succeed("skipped" as const),
-      onSome: ({ owner, type }) =>
-        deregisterIdle({ instanceId: runner.instanceId, owner: RunnerOwner.make({ type, owner }) }).pipe(
-          Effect.match({
-            onFailure: () => "failed" as const,
-            onSuccess: (outcome) => (outcome === "deregistered" ? ("deregistered" as const) : ("skipped" as const)),
-          })
-        ),
-    })
+  yield* Effect.forEach(runners, (runner) => ec2.terminate(runner.instanceId), { concurrency: 1, discard: true });
+  const outcomes = yield* Effect.forEach(
+    runners,
+    (runner) =>
+      O.match(O.all({ owner: runner.owner, type: O.filter(runner.type, isRunnerType) }), {
+        onNone: () => Effect.succeed("skipped" as const),
+        onSome: ({ owner, type }) =>
+          deregisterIdle({ instanceId: runner.instanceId, owner: RunnerOwner.make({ type, owner }) }).pipe(
+            Effect.match({
+              onFailure: () => "failed" as const,
+              onSuccess: (outcome) => (outcome === "deregistered" ? ("deregistered" as const) : ("skipped" as const)),
+            })
+          ),
+      }),
+    { concurrency: 1 }
   );
-  const tokens = yield* Effect.forEach(input.tokenPaths, ssm.listByPath);
+  const tokens = yield* Effect.forEach(input.tokenPaths, ssm.listByPath, { concurrency: 1 });
   const tokenNames = A.map(A.flatten(tokens), (entry) => entry.name);
-  yield* Effect.forEach(tokenNames, ssm.delete, { discard: true });
+  yield* Effect.forEach(tokenNames, ssm.delete, { concurrency: 1, discard: true });
   const failed = A.flatMap(A.zip(runners, outcomes), ([runner, outcome]) =>
     outcome === "failed" ? [runner.instanceId] : []
   );

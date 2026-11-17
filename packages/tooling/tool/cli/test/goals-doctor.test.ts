@@ -408,7 +408,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         for (const text of row.expected) expect(output).toContain(text);
         for (const text of row.absent) expect(output).not.toContain(text);
       }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     )
   );
   it.effect("an unverified closeout blocks under the key carrying its final, and the baseline ratchets it", () =>
@@ -549,7 +549,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         else exit.pipe(Exit.isSuccess, assertTrue);
         expect(output).toContain(row.expected);
       }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     )
   );
   it.effect("online legacy rows read only the pull request when the final merged before the window", () =>
@@ -724,7 +724,8 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           expect(output).toContain("typed [completion-gate-unknown]");
           expect(output).toContain(row.expect);
         }
-      })
+      }),
+      { concurrency: 1 }
     )
   );
   it.effect("stored receipts name a known red and unreadable merge facts plainly", () =>
@@ -819,7 +820,8 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         );
         expect(output).toContain(`typed [${row.kind}]`);
         expect(output).toContain(row.text);
-      })
+      }),
+      { concurrency: 1 }
     )
   );
   it.effect.prop(

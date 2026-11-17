@@ -55,12 +55,15 @@ const planCheck = Command.make(
     const fs = yield* FileSystem.FileSystem;
     const readJson = (path: string) => fs.readFileString(path).pipe(Effect.flatMap(decodeJson));
     const planLog = yield* fs.readFileString(plan);
-    const outputs = yield* Effect.all({
-      costAllocationTags: readJson(tags),
-      computeOptimizer: readJson(computeOptimizer),
-      costOptimizationHub: readJson(hub),
-      anomalyMonitors: readJson(monitors),
-    });
+    const outputs = yield* Effect.all(
+      {
+        costAllocationTags: readJson(tags),
+        computeOptimizer: readJson(computeOptimizer),
+        costOptimizationHub: readJson(hub),
+        anomalyMonitors: readJson(monitors),
+      },
+      { concurrency: 1 }
+    );
     const raw = yield* decodeOutputs(outputs);
     const log = parsePlanLog(planLog);
     const settings = liveSettingsFromAws(raw);

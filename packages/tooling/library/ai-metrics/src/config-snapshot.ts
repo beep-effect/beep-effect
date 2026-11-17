@@ -918,7 +918,10 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       .readDirectory(currentPath)
       .pipe(Effect.mapError((cause) => configSnapshotFailure("Cannot read fallback snapshot directory.", cause)));
     const entries = pipe(pipe3, A.sort(Order.String));
-    yield* Effect.forEach(entries, (entry) => walkEntry(currentPath, entry, depth, includeFile), { discard: true });
+    yield* Effect.forEach(entries, (entry) => walkEntry(currentPath, entry, depth, includeFile), {
+      concurrency: 1,
+      discard: true,
+    });
   });
 
   // Split out of `walk` so the per-entry decision — excluded name, nested repo root, or
@@ -973,7 +976,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       );
       if (O.exists(info, (value) => value.type === "File")) yield* walk(file, A.length(parts), () => true);
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* walk(repoRoot, 0, isAgentDocName);
   yield* Effect.forEach(
@@ -987,7 +990,7 @@ const enumerateSnapshotPaths = Effect.fn("AiMetrics.enumerateConfigSnapshotPaths
       }
       return yield* walk(dirPath, 0, () => true);
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   const walked = yield* Ref.get(pathsRef);

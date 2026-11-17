@@ -760,19 +760,23 @@ const keyedRows = Effect.fn("KnowledgeDoctor.keyedRows")(function* (
   findings: ReadonlyArray<KnowledgeDoctorFinding>,
   identity: HashMap.HashMap<string, string>
 ) {
-  return yield* Effect.forEach(A.filter(findings, isKnowledgeBaselineable), (row) => {
-    const path = knowledgeFindingDocumentPath(row);
-    const durable = O.getOrElse(HashMap.get(identity, path), () => path);
-    return Effect.map(
-      makeKnowledgeBaselineKey(
-        row.finding.kind,
-        knowledgeDoctorDocumentId(durable),
-        row.finding.subject,
-        row.finding.occurrence
-      ),
-      (key): KeyedRow => ({ row, entry: KnowledgeRatchetEntry.make({ findingId: row.finding.findingId, key }) })
-    );
-  });
+  return yield* Effect.forEach(
+    A.filter(findings, isKnowledgeBaselineable),
+    (row) => {
+      const path = knowledgeFindingDocumentPath(row);
+      const durable = O.getOrElse(HashMap.get(identity, path), () => path);
+      return Effect.map(
+        makeKnowledgeBaselineKey(
+          row.finding.kind,
+          knowledgeDoctorDocumentId(durable),
+          row.finding.subject,
+          row.finding.occurrence
+        ),
+        (key): KeyedRow => ({ row, entry: KnowledgeRatchetEntry.make({ findingId: row.finding.findingId, key }) })
+      );
+    },
+    { concurrency: 1 }
+  );
 });
 
 /**

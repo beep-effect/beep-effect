@@ -118,7 +118,9 @@ export const pureOperation: {
 } = dual(
   2,
   <A, B>(name: string, f: (data: A) => ReadonlyArray<B>): TextOperation<A, B> =>
-    makeOperation(name, (node) => Effect.forEach(f(node.data), (b) => makeNode(b, O.some(node.id), O.some(name))))
+    makeOperation(name, (node) =>
+      Effect.forEach(f(node.data), (b) => makeNode(b, O.some(node.id), O.some(name)), { concurrency: 1 })
+    )
 );
 
 // =============================================================================
@@ -620,7 +622,8 @@ const makeEffectfulMapBody =
               ...n,
               data: newData,
             }))
-          )
+          ),
+          { concurrency: 1 }
         )
       )
     );
@@ -723,12 +726,15 @@ export const ap: {
         // valNode would reuse valNode.id across function-node branches and
         // corrupt the graph's id-to-index mapping on insertion.
         const pairs = A.flatMap(fnNodes, (fnNode) => A.map(valNodes, (valNode) => [fnNode, valNode] as const));
-        return yield* Effect.forEach(pairs, ([fnNode, valNode]) =>
-          Effect.map(generateNodeId, (id) => ({
-            ...valNode,
-            id,
-            data: fnNode.data(valNode.data),
-          }))
+        return yield* Effect.forEach(
+          pairs,
+          ([fnNode, valNode]) =>
+            Effect.map(generateNodeId, (id) => ({
+              ...valNode,
+              id,
+              data: fnNode.data(valNode.data),
+            })),
+          { concurrency: 1 }
         );
       })
     )

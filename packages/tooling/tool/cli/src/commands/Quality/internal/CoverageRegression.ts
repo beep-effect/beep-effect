@@ -1275,7 +1275,8 @@ const coverageFiles = Effect.fn("CoverageRegression.coverageFiles")(function* (
 
         yield* Effect.sync(() => MutableHashMap.set(seenNormalizedPaths, normalizedPath, rawPath));
         return Tuple.make(normalizedPath, toCoverageFileBaseline(metrics));
-      })
+      }),
+      { concurrency: 1 }
     )
   );
 
@@ -1337,11 +1338,14 @@ const isExistingCounterlessCoverageSource = Effect.fn("CoverageRegression.isExis
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const absolute = path.resolve(repoRoot, filePath);
-  const resolved = yield* Effect.all({
-    repo: fs.realPath(repoRoot),
-    package: fs.realPath(packageRoot),
-    file: fs.realPath(absolute),
-  }).pipe(Effect.option);
+  const resolved = yield* Effect.all(
+    {
+      repo: fs.realPath(repoRoot),
+      package: fs.realPath(packageRoot),
+      file: fs.realPath(absolute),
+    },
+    { concurrency: 1 }
+  ).pipe(Effect.option);
   if (O.isNone(resolved)) return false;
   if (
     (resolved.value.package !== resolved.value.repo &&

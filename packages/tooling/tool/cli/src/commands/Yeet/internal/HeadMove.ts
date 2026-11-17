@@ -162,7 +162,7 @@ const ensureObjects = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: s
   const shas = [request.before, request.after, request.base];
   const git = yield* Git;
   const refs = A.dedupe(shas);
-  yield* Effect.forEach(refs, guardLiteralArg);
+  yield* Effect.forEach(refs, guardLiteralArg, { concurrency: 1 });
   const missing = yield* Effect.filter(refs, (sha) =>
     git.refExists(root, `${sha}^{commit}`).pipe(
       Effect.orElseSucceed(() => false),
@@ -172,18 +172,21 @@ const ensureObjects = Effect.fn("Yeet.headMoveEnsureObjects")(function* (root: s
   if (A.isReadonlyArrayEmpty(missing)) return;
   const fresh = yield* claimFetch(root, request.after, missing);
   if (A.isReadonlyArrayNonEmpty(fresh)) yield* fetchObjects(root, fresh);
-  yield* Effect.forEach(missing, (sha) =>
-    git.refExists(root, `${sha}^{commit}`).pipe(
-      Effect.filterOrFail(
-        (exists) => exists,
-        () =>
-          YeetCommandError.make({
-            message: `Head-move object ${sha} is still missing after the fetch.`,
-            command: `git cat-file -e ${sha}^{commit}`,
-            exitCode: 1,
-          })
-      )
-    )
+  yield* Effect.forEach(
+    missing,
+    (sha) =>
+      git.refExists(root, `${sha}^{commit}`).pipe(
+        Effect.filterOrFail(
+          (exists) => exists,
+          () =>
+            YeetCommandError.make({
+              message: `Head-move object ${sha} is still missing after the fetch.`,
+              command: `git cat-file -e ${sha}^{commit}`,
+              exitCode: 1,
+            })
+        )
+      ),
+    { concurrency: 1 }
   );
 });
 // KEEP (D-22): `Git.commitInfo` and `Git.log` carry no parent list; `%P` is read raw. Every `show`
@@ -440,7 +443,7 @@ const classifyKnown = Effect.fn("Yeet.headMoveClassifyKnown")(function* (
   yield* requireStep(ff);
   const first = yield* git.revList(root, `${request.base}..${request.after}`, { firstParent: true });
   const all = yield* git.revList(root, `${request.base}..${request.after}`);
-  const commits = yield* Effect.forEach(first, (sha) => readCommit(root, sha));
+  const commits = yield* Effect.forEach(first, (sha) => readCommit(root, sha), { concurrency: 1 });
   yield* requireStep(ownRange(request, first, all, commits));
   const actualBase = yield* git.revParse(root, `${request.after}~${A.length(first)}`);
   yield* requireStep(linearBase(request, actualBase));

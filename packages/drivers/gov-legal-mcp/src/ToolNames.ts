@@ -579,7 +579,7 @@ const collisionReportFromRows = (
 export const buildToolNameCollisionReport = Effect.fn("GovLegalMcp.buildToolNameCollisionReport")(function* (
   candidates: ReadonlyArray<ToolNameCandidate>
 ) {
-  const projected = yield* Effect.forEach(candidates, projectToolNameCandidate);
+  const projected = yield* Effect.forEach(candidates, projectToolNameCandidate, { concurrency: 1 });
   return yield* Effect.fromResult(collisionReportFromRows(projected));
 });
 

@@ -71,7 +71,9 @@ const observeCollaborations = (box: B.Box["Service"], folders: ReadonlyArray<Box
     (folder) =>
       listFolderCollaborations(box, folder.providerId).pipe(
         Effect.flatMap((collaborations) =>
-          Effect.forEach(collaborations, (collaboration) => toObservedCollaboration(collaboration, folder.providerId))
+          Effect.forEach(collaborations, (collaboration) => toObservedCollaboration(collaboration, folder.providerId), {
+            concurrency: 1,
+          })
         )
       ),
     { concurrency: 1 }

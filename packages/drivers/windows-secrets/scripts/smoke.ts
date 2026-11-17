@@ -65,56 +65,59 @@ const program = Effect.gen(function* () {
   const second = `smoke-value-${now}-second`;
   const plaintext = new TextEncoder().encode(`dpapi-payload-${nonce}`);
 
-  const results = yield* Effect.all([
-    step("get before set is none", Effect.map(store.get(target), O.isNone)),
-    step(
-      "set then get round-trips",
-      Effect.andThen(store.set(target, Redacted.make(first)), store.get(target)).pipe(
-        Effect.map((value) => holds(value, first))
-      )
-    ),
-    step(
-      "set overwrites",
-      Effect.andThen(store.set(target, Redacted.make(second)), store.get(target)).pipe(
-        Effect.map((value) => holds(value, second))
-      )
-    ),
-    step(
-      "value at the cap is accepted",
-      Effect.andThen(
-        store.set(target, Redacted.make(Str.repeat(CredentialBlobMaxBytes / 2)("c"))),
-        Effect.map(store.get(target), O.isSome)
-      )
-    ),
-    step(
-      "value past the cap fails with SecretTooLarge",
-      store.set(target, Redacted.make(Str.repeat(CredentialBlobMaxBytes / 2 + 1)("c"))).pipe(
-        Effect.as(false),
-        Effect.catchTag("SecretTooLarge", (error) => Effect.succeed(error.bytes === CredentialBlobMaxBytes + 2))
-      )
-    ),
-    step(
-      "remove deletes the credential",
-      Effect.andThen(store.remove(target), Effect.map(store.get(target), O.isNone))
-    ),
-    step("remove of a missing credential succeeds", Effect.as(store.remove(target), true)),
-    step(
-      "DPAPI protect changes the bytes and unprotect restores them",
-      Effect.gen(function* () {
-        const sealed = yield* store.protect(plaintext);
-        const opened = yield* store.unprotect(sealed);
-        return !sameBytes(sealed, plaintext) && sameBytes(opened, plaintext);
-      })
-    ),
-    step(
-      "DPAPI round-trips empty input",
-      Effect.gen(function* () {
-        const protect1 = yield* store.protect(new Uint8Array(0));
-        const opened = yield* store.unprotect(protect1);
-        return opened.byteLength === 0;
-      })
-    ),
-  ]).pipe(Effect.ensuring(Effect.ignore(store.remove(target))));
+  const results = yield* Effect.all(
+    [
+      step("get before set is none", Effect.map(store.get(target), O.isNone)),
+      step(
+        "set then get round-trips",
+        Effect.andThen(store.set(target, Redacted.make(first)), store.get(target)).pipe(
+          Effect.map((value) => holds(value, first))
+        )
+      ),
+      step(
+        "set overwrites",
+        Effect.andThen(store.set(target, Redacted.make(second)), store.get(target)).pipe(
+          Effect.map((value) => holds(value, second))
+        )
+      ),
+      step(
+        "value at the cap is accepted",
+        Effect.andThen(
+          store.set(target, Redacted.make(Str.repeat(CredentialBlobMaxBytes / 2)("c"))),
+          Effect.map(store.get(target), O.isSome)
+        )
+      ),
+      step(
+        "value past the cap fails with SecretTooLarge",
+        store.set(target, Redacted.make(Str.repeat(CredentialBlobMaxBytes / 2 + 1)("c"))).pipe(
+          Effect.as(false),
+          Effect.catchTag("SecretTooLarge", (error) => Effect.succeed(error.bytes === CredentialBlobMaxBytes + 2))
+        )
+      ),
+      step(
+        "remove deletes the credential",
+        Effect.andThen(store.remove(target), Effect.map(store.get(target), O.isNone))
+      ),
+      step("remove of a missing credential succeeds", Effect.as(store.remove(target), true)),
+      step(
+        "DPAPI protect changes the bytes and unprotect restores them",
+        Effect.gen(function* () {
+          const sealed = yield* store.protect(plaintext);
+          const opened = yield* store.unprotect(sealed);
+          return !sameBytes(sealed, plaintext) && sameBytes(opened, plaintext);
+        })
+      ),
+      step(
+        "DPAPI round-trips empty input",
+        Effect.gen(function* () {
+          const protect1 = yield* store.protect(new Uint8Array(0));
+          const opened = yield* store.unprotect(protect1);
+          return opened.byteLength === 0;
+        })
+      ),
+    ],
+    { concurrency: 1 }
+  ).pipe(Effect.ensuring(Effect.ignore(store.remove(target))));
 
   const failedSteps = A.length(A.filter(results, (passed) => !passed));
   yield* Console.log(failedSteps === 0 ? "PASS windows-secrets smoke" : "FAIL windows-secrets smoke");

@@ -353,21 +353,28 @@ describe("practice KG correspondents", () => {
           ["e", { "Message-From": "pat@example.com" }],
           ["f", { "Message-From": "pat@example.com", "Message:Raw-Header:Message-ID": ["", " ", "<f@example.com>"] }],
         ];
-        yield* Effect.forEach(metadata, ([name, fields]) =>
-          Effect.flatMap(encodeJson(fields), (json) =>
-            fs.writeFileString(path.join(extractRoot, "metadata", `operation:op-${name}.json`), json)
-          )
+        yield* Effect.forEach(
+          metadata,
+          ([name, fields]) =>
+            Effect.flatMap(encodeJson(fields), (json) =>
+              fs.writeFileString(path.join(extractRoot, "metadata", `operation:op-${name}.json`), json)
+            ),
+          { concurrency: 1 }
         );
-        const sourceLines = yield* Effect.forEach(metadata, ([name]) =>
-          encodeJson({ digest: `sha256:${name}`, operationId: `operation:op-${name}` })
+        const sourceLines = yield* Effect.forEach(
+          metadata,
+          ([name]) => encodeJson({ digest: `sha256:${name}`, operationId: `operation:op-${name}` }),
+          { concurrency: 1 }
         );
         const sourcesPath = path.join(extractRoot, "sources.jsonl");
         yield* fs.writeFileString(sourcesPath, `${A.join(sourceLines, "\n")}\n`);
         yield* Effect.gen(function* () {
           const db = yield* DuckDb;
           yield* db.run("CREATE TABLE documents (digest VARCHAR PRIMARY KEY, effective_name VARCHAR NOT NULL)");
-          yield* Effect.forEach(metadata, ([name]) =>
-            db.run("INSERT INTO documents VALUES ($1, $2)", [`sha256:${name}`, `${name}.eml`])
+          yield* Effect.forEach(
+            metadata,
+            ([name]) => db.run("INSERT INTO documents VALUES ($1, $2)", [`sha256:${name}`, `${name}.eml`]),
+            { concurrency: 1 }
           );
         }).pipe(withDuckDb(DuckDbConnectionOptions.make({ databasePath })));
 

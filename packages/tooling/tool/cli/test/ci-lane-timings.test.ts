@@ -187,7 +187,7 @@ const collectWithRetries = Effect.fn("TestCiLaneTimings.collectWithRetries")(fun
   fetch: typeof globalThis.fetch
 ) {
   const fiber = yield* forkCollect(fetch);
-  yield* Effect.forEach(A.range(1, 1_200), () => TestClock.adjust("1 second"));
+  yield* Effect.forEach(A.range(1, 1_200), () => TestClock.adjust("1 second"), { concurrency: 1 });
   return yield* Fiber.join(fiber);
 });
 
@@ -453,8 +453,10 @@ describe("ci lane timings attempt filter", () => {
   it.effect("rejects recent-run limits outside the API bounds", () =>
     Effect.gen(function* () {
       const github = scriptedGithub();
-      const exits = yield* Effect.forEach([0, 101], (limit) =>
-        Effect.exit(collectCiLaneTimings(limit).pipe(provideGithub(github.fetch)))
+      const exits = yield* Effect.forEach(
+        [0, 101],
+        (limit) => Effect.exit(collectCiLaneTimings(limit).pipe(provideGithub(github.fetch))),
+        { concurrency: 1 }
       );
 
       pipe(exits, A.every(Exit.isFailure), assertTrue);
@@ -651,11 +653,11 @@ describe("ci lane timings GitHub API retry", () => {
       const scripted = scriptedGithub([SECONDARY_RATE_LIMIT]);
       const fiber = yield* forkCollect(scripted.fetch);
 
-      yield* Effect.forEach(A.range(1, 59), () => TestClock.adjust("1 second"));
+      yield* Effect.forEach(A.range(1, 59), () => TestClock.adjust("1 second"), { concurrency: 1 });
       expect(scripted.state.requests).toBe(1);
-      yield* Effect.forEach(A.range(1, 14), () => TestClock.adjust("1 second"));
+      yield* Effect.forEach(A.range(1, 14), () => TestClock.adjust("1 second"), { concurrency: 1 });
       expect(scripted.state.requests).toBeGreaterThanOrEqual(2);
-      yield* Effect.forEach(A.range(1, 180), () => TestClock.adjust("1 second"));
+      yield* Effect.forEach(A.range(1, 180), () => TestClock.adjust("1 second"), { concurrency: 1 });
       const exit = yield* Fiber.join(fiber);
 
       exit.pipe(Exit.isSuccess, assertTrue);

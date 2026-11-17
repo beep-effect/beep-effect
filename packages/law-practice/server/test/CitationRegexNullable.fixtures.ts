@@ -63,14 +63,18 @@ const checkCase = Effect.fn("NullableTest.checkCase")(function* (
     const expected = row.engines.re[mode];
     const completed = yield* setup.worker.evaluate(pattern.pattern, row.source, pattern.flags, expected.length, mode);
     expect(completed.result.matches).toBe(expected.length);
-    yield* Effect.forEach(expected, (captures, match) =>
-      Effect.forEach(
-        captures,
-        Effect.fn("NullableTest.checkCapture")(function* ([start, end], group) {
-          const actual = yield* completed.result.capture(match, group);
-          expect(actual).toEqual(start < 0 ? { _tag: "Unmatched" } : { _tag: "Range", start, end });
-        })
-      )
+    yield* Effect.forEach(
+      expected,
+      (captures, match) =>
+        Effect.forEach(
+          captures,
+          Effect.fn("NullableTest.checkCapture")(function* ([start, end], group) {
+            const actual = yield* completed.result.capture(match, group);
+            expect(actual).toEqual(start < 0 ? { _tag: "Unmatched" } : { _tag: "Range", start, end });
+          }),
+          { concurrency: 1 }
+        ),
+      { concurrency: 1 }
     );
   }
 });
