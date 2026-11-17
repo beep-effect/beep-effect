@@ -1,5 +1,5 @@
 /**
- * Effect service for Runpod REST API v1 operations.
+ * Effect service for Runpod REST API v2 operations.
  *
  * @packageDocumentation
  * @since 0.1.0
@@ -10,7 +10,8 @@ import { A, O, Str } from "@beep/utils";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import * as Sse from "effect/encoding/Sse";
+import { pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
@@ -21,11 +22,21 @@ import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
+import * as Stream from "effect/Stream";
 import * as G from "./_generated/Runpod.operations.gen.ts";
 import { RUNPOD_API_URL, RunpodConfigInput, RunpodConfigUrl } from "./Runpod.config.ts";
-import { RunpodError, RunpodErrorOptionsInput, RunpodHttpStatusCode, RunpodRawErrorOptions } from "./Runpod.errors.ts";
+import {
+  RunpodError,
+  RunpodErrorOptionsInput,
+  RunpodHttpStatusCode,
+  RunpodProblemFromProblemDetails,
+  RunpodRawErrorOptions,
+} from "./Runpod.errors.ts";
+import type * as HttpClientError from "effect/http/HttpClientError";
 import type * as HttpClientResponse from "effect/http/HttpClientResponse";
 import type * as Redacted from "effect/Redacted";
+import type * as Models from "./_generated/Runpod.models.gen.ts";
+import type { RunpodErrorReason } from "./Runpod.errors.ts";
 
 const $I = $RunpodId.create("Runpod.service");
 const normalizeRawPath = (path: string): string => (Str.startsWith("/")(path) ? path : `/${path}`);
@@ -120,6 +131,11 @@ const runpodRawRequestQueryDefault = R.empty();
 /**
  * Raw Runpod HTTP request escape hatch for endpoints ahead of the checked-in OpenAPI document.
  *
+ * **Details**
+ *
+ * `path` is relative to the configured base URL (`https://api.runpod.io/v2`
+ * by default), so `/pods` addresses `https://api.runpod.io/v2/pods`.
+ *
  * **Example** (Make raw GET request)
  *
  * ```ts
@@ -127,7 +143,7 @@ const runpodRawRequestQueryDefault = R.empty();
  *
  * const request = RunpodRawRequest.make({
  *   method: "GET",
- *   path: "/health"
+ *   path: "/catalog/gpus"
  * })
  * console.log(request.path)
  * ```
@@ -195,6 +211,15 @@ export class RunpodRawResponse extends S.Opaque<RunpodRawResponse, { readonly br
 /**
  * Public service shape for generated Runpod operations plus the raw request escape hatch.
  *
+ * **Details**
+ *
+ * Every generated operation takes its `<Operation>Params` request and fails
+ * with {@link RunpodError}. Cursor-paginated lists also expose a
+ * `<method>Stream` member that follows `pagination.nextCursor` and emits the
+ * items of every page. Log operations return a `Stream` of Server-Sent Events;
+ * a server `retry:` directive ends that stream with a `transport` error, and
+ * the caller resumes from the last event with the `lastEventId` request field.
+ *
  * **Example** (Type raw request parameter)
  *
  * ```ts
@@ -203,7 +228,7 @@ export class RunpodRawResponse extends S.Opaque<RunpodRawResponse, { readonly br
  *
  * type RawRequest = Parameters<RunpodShape["raw"]>[0]
  *
- * const request: RawRequest = RunpodRawRequest.make({ method: "GET", path: "/health" })
+ * const request: RawRequest = RunpodRawRequest.make({ method: "GET", path: "/catalog/gpus" })
  * console.log(request.path)
  * ```
  *
@@ -242,14 +267,16 @@ const RunpodUrlParams = S.Record(S.String, RunpodUrlParamValue).pipe(
 
 type RunpodUrlParams = typeof RunpodUrlParams.Type;
 
-interface JsonOperationSpec<Request, Response> extends VoidOperationSpec<Request> {
-  readonly response: S.ConstraintDecoder<Response>;
-}
+// One JSON-encoded query value, used by `content: application/json` parameters
+// such as the list `filters`.
+const RunpodJsonQueryValue = S.fromJsonString(S.Unknown);
+const encodeJsonQueryValue = S.encodeUnknownEffect(RunpodJsonQueryValue);
+const decodeQueryScalar = S.decodeUnknownOption(RunpodQueryScalar);
+const decodeQueryValue = S.decodeUnknownOption(RunpodQueryValue);
+const decodeProblem = S.decodeUnknownEffect(RunpodProblemFromProblemDetails);
 
-interface VoidOperationSpec<Request> {
-  readonly descriptor: G.RunpodOperationDescriptor;
-  readonly request: S.ConstraintDecoder<Request>;
-}
+// Request field that carries the page cursor of a cursor-paginated list.
+const PAGINATION_CURSOR_FIELD = "cursor";
 
 const resolveConfig = (config: RunpodConfigInput): ResolvedRunpodConfig =>
   ResolvedRunpodConfig.make({
@@ -274,6 +301,9 @@ const queryValueToStrings = (value: RunpodQueryValue): ReadonlyArray<string> => 
   return A.make(queryScalarToString(value));
 };
 
+const singleOrMany = (values: A.NonEmptyReadonlyArray<string>): RunpodUrlParamValue =>
+  A.isReadonlyArrayEmpty(A.tailNonEmpty(values)) ? A.headNonEmpty(values) : values;
+
 const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   if (!P.isObject(value)) {
     return O.none();
@@ -287,27 +317,33 @@ const readProperty = (value: unknown, key: PropertyKey): O.Option<unknown> => {
   );
 };
 
-const requireStringField = Effect.fnUntraced(function* (
+// Scalar wire value of an encoded request field, rendered for a URL or header.
+const scalarField = (encoded: unknown, field: string): O.Option<string> =>
+  pipe(readProperty(encoded, field), O.flatMap(decodeQueryScalar), O.map(queryScalarToString));
+
+const encodingError =
+  (descriptor: G.RunpodOperationDescriptor) =>
+  (cause?: unknown): RunpodError =>
+    RunpodError.fromDescriptor(descriptor, "request encoding", RunpodErrorOptionsInput.make({ cause }));
+
+const encodeRequest = Effect.fnUntraced(function* <Request>(
   descriptor: G.RunpodOperationDescriptor,
-  request: unknown,
-  key: string
-): Effect.fn.Return<string, RunpodError> {
-  return yield* pipe(
-    readProperty(request, key),
-    O.filter(P.isString),
-    Effect.fromOption(() => RunpodError.fromDescriptor(descriptor, "request encoding"))
-  );
+  requestSchema: S.ConstraintCodec<Request, unknown>,
+  request: unknown
+): Effect.fn.Return<unknown, RunpodError> {
+  return yield* pipe(S.encodeUnknownEffect(requestSchema)(request), Effect.mapError(encodingError(descriptor)));
 });
 
 const applyPathParams = Effect.fn("Runpod.applyPathParams")(function* (
   descriptor: G.RunpodOperationDescriptor,
-  request: unknown
+  encoded: unknown
 ) {
   const params = yield* Effect.forEach(
     descriptor.pathParams,
     (param) =>
       pipe(
-        requireStringField(descriptor, request, param),
+        scalarField(encoded, param),
+        Effect.fromOption(() => encodingError(descriptor)()),
         Effect.map((value) => [param, value] as const)
       ),
     { concurrency: 1 }
@@ -321,44 +357,77 @@ const applyPathParams = Effect.fn("Runpod.applyPathParams")(function* (
   );
 
   if (Str.includes("{")(path)) {
-    return yield* RunpodError.fromDescriptor(descriptor, "request encoding");
+    return yield* encodingError(descriptor)();
   }
 
   return path;
 });
 
-const decodeRequest = Effect.fnUntraced(function* <Request>(
+type RunpodQueryEntry = readonly [string, RunpodUrlParamValue];
+
+const queryStrings = (value: unknown): O.Option<A.NonEmptyReadonlyArray<string>> =>
+  pipe(decodeQueryValue(value), O.map(queryValueToStrings), O.filter(A.isReadonlyArrayNonEmpty));
+
+// `repeat` sends one key per value, `comma` joins the values into one key
+// (OpenAPI `explode: false`), and `json` sends one JSON-encoded value.
+const queryEntryValue = (
   descriptor: G.RunpodOperationDescriptor,
-  requestSchema: S.ConstraintDecoder<Request>,
-  request: Request
-): Effect.fn.Return<Request, RunpodError> {
-  return yield* pipe(
-    S.decodeUnknownEffect(requestSchema)(request),
-    Effect.mapError((cause) =>
-      RunpodError.fromDescriptor(descriptor, "request encoding", RunpodErrorOptionsInput.make({ cause }))
-    )
+  parameter: G.RunpodQueryParameter,
+  value: unknown
+): Effect.Effect<O.Option<RunpodQueryEntry>, RunpodError> =>
+  Match.value(parameter.encoding).pipe(
+    Match.when("json", () =>
+      encodeJsonQueryValue(value).pipe(
+        Effect.mapBoth({
+          onFailure: encodingError(descriptor),
+          onSuccess: (json): O.Option<RunpodQueryEntry> => O.some([parameter.name, json]),
+        })
+      )
+    ),
+    Match.when("comma", () =>
+      Effect.succeed(O.map(queryStrings(value), (values): RunpodQueryEntry => [parameter.name, A.join(values, ",")]))
+    ),
+    Match.when("repeat", () =>
+      Effect.succeed(O.map(queryStrings(value), (values): RunpodQueryEntry => [parameter.name, singleOrMany(values)]))
+    ),
+    Match.exhaustive
   );
+
+const queryEntry = (
+  descriptor: G.RunpodOperationDescriptor,
+  encoded: unknown,
+  parameter: G.RunpodQueryParameter
+): Effect.Effect<O.Option<RunpodQueryEntry>, RunpodError> =>
+  pipe(
+    readProperty(encoded, parameter.field),
+    O.match({
+      onNone: () => Effect.succeedNone,
+      onSome: (value) => queryEntryValue(descriptor, parameter, value),
+    })
+  );
+
+const requestQuery = Effect.fnUntraced(function* (
+  descriptor: G.RunpodOperationDescriptor,
+  encoded: unknown
+): Effect.fn.Return<RunpodUrlParams, RunpodError> {
+  const entries = yield* Effect.forEach(
+    descriptor.queryParams,
+    (parameter) => queryEntry(descriptor, encoded, parameter),
+    { concurrency: 1 }
+  );
+
+  return R.fromEntries(A.getSomes(entries));
 });
 
-const queryEntry: {
-  (request: unknown, key: string): O.Option<readonly [string, string | ReadonlyArray<string>]>;
-  (key: string): (request: unknown) => O.Option<readonly [string, string | ReadonlyArray<string>]>;
-} = dual(
-  2,
-  (request: unknown, key: string): O.Option<readonly [string, string | ReadonlyArray<string>]> =>
-    pipe(
-      readProperty(request, key),
-      O.flatMap(S.decodeUnknownOption(RunpodQueryValue)),
-      O.map(queryValueToStrings),
-      O.filter(A.isReadonlyArrayNonEmpty),
-      O.map((values) => [key, A.length(values) === 1 ? values[0] : values] as const)
-    )
-);
-
-const requestQuery = (descriptor: G.RunpodOperationDescriptor, request: unknown): RunpodUrlParams =>
+const requestHeaders = (descriptor: G.RunpodOperationDescriptor, encoded: unknown): Readonly<Record<string, string>> =>
   pipe(
-    descriptor.queryParams,
-    A.map((key) => queryEntry(request, key)),
+    descriptor.headerParams,
+    A.map((parameter) =>
+      pipe(
+        scalarField(encoded, parameter.field),
+        O.map((value) => [parameter.name, value] as const)
+      )
+    ),
     A.getSomes,
     R.fromEntries
   );
@@ -375,92 +444,76 @@ const selectToken = Effect.fnUntraced(function* (
     config.apiKey,
     O.match({
       onNone: () => Effect.fail(RunpodError.fromDescriptor(descriptor, "config")),
-      onSome: (token) => Effect.succeedSome(token),
+      onSome: Effect.succeedSome,
     })
   );
 });
 
-const defaultAcceptHeader = (descriptor: G.RunpodOperationDescriptor): string => {
-  if (descriptor.responseBody === "text") {
-    // Runpod currently marks only `/docs` as text and serves rendered HTML there.
-    return "text/html";
-  }
+const hasResponseBody =
+  (body: G.RunpodResponseBodyKind) =>
+  (descriptor: G.RunpodOperationDescriptor): boolean =>
+    A.some(descriptor.responses, (response) => response.body === body);
 
-  return descriptor.responseBody === "json" ? "application/json" : "*/*";
-};
-
-const addHeaders = (
-  request: HttpClientRequest.HttpClientRequest,
-  config: ResolvedRunpodConfig,
-  descriptor: G.RunpodOperationDescriptor,
-  token: O.Option<Redacted.Redacted>,
-  headers: Readonly<Record<string, string>> = {}
-): HttpClientRequest.HttpClientRequest =>
-  pipe(
-    request,
-    HttpClientRequest.accept(defaultAcceptHeader(descriptor)),
-    HttpClientRequest.setHeaders(config.headers),
-    HttpClientRequest.setHeaders(headers),
-    (currentRequest) =>
-      pipe(
-        token,
-        O.match({
-          onNone: () => currentRequest,
-          onSome: (value) => pipe(currentRequest, HttpClientRequest.bearerToken(value)),
-        })
-      )
+const defaultAcceptHeader = (descriptor: G.RunpodOperationDescriptor): string =>
+  Match.value(descriptor).pipe(
+    Match.when(hasResponseBody("json"), () => "application/json"),
+    Match.when(hasResponseBody("event-stream"), () => "text/event-stream"),
+    Match.when(hasResponseBody("text"), () => "text/plain"),
+    Match.orElse(() => "*/*")
   );
+
+const withToken =
+  (token: O.Option<Redacted.Redacted>) =>
+  (request: HttpClientRequest.HttpClientRequest): HttpClientRequest.HttpClientRequest =>
+    pipe(
+      token,
+      O.match({
+        onNone: () => request,
+        onSome: (value) => pipe(request, HttpClientRequest.bearerToken(value)),
+      })
+    );
 
 const addJsonBody = Effect.fnUntraced(function* (
   descriptor: G.RunpodOperationDescriptor,
   request: HttpClientRequest.HttpClientRequest,
-  decodedRequest: unknown
+  encoded: unknown
 ): Effect.fn.Return<HttpClientRequest.HttpClientRequest, RunpodError> {
   if (descriptor.requestBody === "none") {
     return request;
   }
 
   return yield* pipe(
-    readProperty(decodedRequest, "body"),
+    readProperty(encoded, "body"),
     O.match({
       onNone: () =>
-        descriptor.requestBodyRequired
-          ? Effect.fail(RunpodError.fromDescriptor(descriptor, "request encoding"))
-          : Effect.succeed(request),
-      onSome: (body) =>
-        pipe(
-          HttpClientRequest.bodyJson(request, body),
-          Effect.mapError((cause) =>
-            RunpodError.fromDescriptor(descriptor, "request encoding", RunpodErrorOptionsInput.make({ cause }))
-          )
-        ),
+        descriptor.requestBodyRequired ? Effect.fail(encodingError(descriptor)()) : Effect.succeed(request),
+      onSome: (body) => pipe(HttpClientRequest.bodyJson(request, body), Effect.mapError(encodingError(descriptor))),
     })
   );
 });
 
-const buildRequest = Effect.fn("Runpod.buildRequest")(function* <Request>(
+// Builds the HTTP request from the encoded (wire) form of an operation request.
+const buildRequest = Effect.fn("Runpod.buildRequest")(function* (
   config: ResolvedRunpodConfig,
   descriptor: G.RunpodOperationDescriptor,
-  requestSchema: S.ConstraintDecoder<Request>,
-  request: Request
+  encoded: unknown
 ) {
-  const decodedRequest = yield* decodeRequest(descriptor, requestSchema, request);
-  const path = yield* applyPathParams(descriptor, decodedRequest);
+  const path = yield* applyPathParams(descriptor, encoded);
+  const urlParams = yield* requestQuery(descriptor, encoded);
   const token = yield* selectToken(config, descriptor);
 
-  const baseRequest = addHeaders(
-    HttpClientRequest.make(descriptor.method)(`${config.apiUrl}${path}`, {
-      urlParams: requestQuery(descriptor, decodedRequest),
-    }),
-    config,
-    descriptor,
-    token
+  const baseRequest = pipe(
+    HttpClientRequest.make(descriptor.method)(`${config.apiUrl}${path}`, { urlParams }),
+    HttpClientRequest.accept(defaultAcceptHeader(descriptor)),
+    HttpClientRequest.setHeaders(config.headers),
+    HttpClientRequest.setHeaders(requestHeaders(descriptor, encoded)),
+    withToken(token)
   );
 
-  return yield* addJsonBody(descriptor, baseRequest, decodedRequest);
+  return yield* addJsonBody(descriptor, baseRequest, encoded);
 });
 
-const executeRawResponse = Effect.fn("Runpod.executeRawResponse")(function* (
+const executeHttp = Effect.fn("Runpod.executeHttp")(function* (
   client: HttpClient.HttpClient,
   descriptor: G.RunpodOperationDescriptor,
   request: HttpClientRequest.HttpClientRequest
@@ -473,6 +526,17 @@ const executeRawResponse = Effect.fn("Runpod.executeRawResponse")(function* (
   );
 });
 
+const isJsonContentType = (response: HttpClientResponse.HttpClientResponse): boolean =>
+  pipe(
+    O.fromUndefinedOr(response.headers["content-type"]),
+    O.exists((contentType) => pipe(contentType, Str.includes("json")))
+  );
+
+// Runpod v2 answers failures with RFC 9457 problem details. A body that is not
+// a readable problem leaves the error with its status only.
+const readProblem = (response: HttpClientResponse.HttpClientResponse) =>
+  isJsonContentType(response) ? response.json.pipe(Effect.flatMap(decodeProblem), Effect.option) : Effect.succeedNone;
+
 const ensureSuccessStatus = Effect.fnUntraced(function* (
   descriptor: G.RunpodOperationDescriptor,
   response: HttpClientResponse.HttpClientResponse
@@ -481,142 +545,209 @@ const ensureSuccessStatus = Effect.fnUntraced(function* (
     return response;
   }
 
+  const problem = yield* readProblem(response);
   const error = RunpodError.fromDescriptor(
     descriptor,
     "response status",
-    RunpodErrorOptionsInput.make({ status: response.status })
+    RunpodErrorOptionsInput.make({ status: response.status, ...O.getSomesStruct({ problem }) })
   );
   yield* logStatusFailure(error);
   return yield* error;
 });
 
-const decodeJsonResponse = Effect.fnUntraced(function* <Response>(
-  descriptor: G.RunpodOperationDescriptor,
-  responseSchema: S.ConstraintDecoder<Response>,
+const decodingError =
+  (descriptor: G.RunpodOperationDescriptor) =>
+  (cause?: unknown): RunpodError =>
+    RunpodError.fromDescriptor(descriptor, "response decoding", RunpodErrorOptionsInput.make({ cause }));
+
+// The declared response for the returned status; an undeclared success status
+// decodes with the first declared one.
+const responseFor = (descriptor: G.RunpodOperationDescriptor, status: number): O.Option<G.RunpodOperationResponse> =>
+  pipe(
+    descriptor.responses,
+    A.findFirst((response) => response.status === `${status}`),
+    O.orElse(() => A.head(descriptor.responses))
+  );
+
+const readResponseBody = (
+  declared: G.RunpodOperationResponse,
+  response: HttpClientResponse.HttpClientResponse
+): Effect.Effect<unknown, HttpClientError.HttpClientError> =>
+  Match.value(declared.body).pipe(
+    Match.when("json", () => response.json),
+    Match.when("text", () => response.text),
+    Match.when("event-stream", () => response.text),
+    Match.when("none", () => Effect.undefined),
+    Match.exhaustive
+  );
+
+const decodeOperationResponse = Effect.fnUntraced(function* <Request, Response>(
+  spec: G.RunpodOperationSpec<Request, Response>,
   response: HttpClientResponse.HttpClientResponse
 ): Effect.fn.Return<Response, RunpodError> {
-  const body = yield* response.json.pipe(
-    Effect.mapError((cause) =>
-      RunpodError.fromDescriptor(descriptor, "response decoding", RunpodErrorOptionsInput.make({ cause }))
-    )
+  const declared = yield* pipe(
+    responseFor(spec.descriptor, response.status),
+    Effect.fromOption(() => decodingError(spec.descriptor)())
   );
+  const decoder = yield* pipe(
+    R.get(spec.responses, declared.status),
+    Effect.fromOption(() => decodingError(spec.descriptor)())
+  );
+  const body = yield* pipe(readResponseBody(declared, response), Effect.mapError(decodingError(spec.descriptor)));
 
-  return yield* pipe(
-    S.decodeEffect(responseSchema)(body),
-    Effect.mapError((cause) =>
-      RunpodError.fromDescriptor(descriptor, "response decoding", RunpodErrorOptionsInput.make({ cause }))
-    )
-  );
+  return yield* pipe(S.decodeUnknownEffect(decoder)(body), Effect.mapError(decodingError(spec.descriptor)));
 });
 
-const decodeTextResponse = Effect.fnUntraced(function* (
-  descriptor: G.RunpodOperationDescriptor,
-  response: HttpClientResponse.HttpClientResponse
-): Effect.fn.Return<string, RunpodError> {
-  return yield* response.text.pipe(
-    Effect.mapError((cause) =>
-      RunpodError.fromDescriptor(descriptor, "response decoding", RunpodErrorOptionsInput.make({ cause }))
-    )
-  );
-});
-
-const executeOperationResponse = Effect.fnUntraced(function* <Request>(
+// Runs one operation from the encoded (wire) form of its request.
+const executeEncoded = Effect.fnUntraced(function* <Request, Response>(
   client: HttpClient.HttpClient,
   config: ResolvedRunpodConfig,
-  spec: VoidOperationSpec<Request>,
-  request: Request
-): Effect.fn.Return<HttpClientResponse.HttpClientResponse, RunpodError> {
-  const httpRequest = yield* buildRequest(config, spec.descriptor, spec.request, request);
-  const response = yield* executeRawResponse(client, spec.descriptor, httpRequest);
-  return yield* ensureSuccessStatus(spec.descriptor, response);
-});
-
-const executeJsonOperation = Effect.fn("Runpod.executeJsonOperation")(function* <Request, Response>(
-  client: HttpClient.HttpClient,
-  config: ResolvedRunpodConfig,
-  spec: JsonOperationSpec<Request, Response>,
-  request: Request
+  spec: G.RunpodOperationSpec<Request, Response>,
+  encoded: unknown
 ): Effect.fn.Return<Response, RunpodError> {
-  const successfulResponse = yield* executeOperationResponse(client, config, spec, request);
-  return yield* decodeJsonResponse(spec.descriptor, spec.response, successfulResponse);
+  const httpRequest = yield* buildRequest(config, spec.descriptor, encoded);
+  const response = yield* executeHttp(client, spec.descriptor, httpRequest);
+  const successfulResponse = yield* ensureSuccessStatus(spec.descriptor, response);
+  return yield* decodeOperationResponse(spec, successfulResponse);
 });
 
-const executeTextOperation = Effect.fn("Runpod.executeTextOperation")(function* <Request>(
+const executeOperation = Effect.fn("Runpod.executeOperation")(function* <Request, Response>(
   client: HttpClient.HttpClient,
   config: ResolvedRunpodConfig,
-  spec: JsonOperationSpec<Request, string>,
-  request: Request
-): Effect.fn.Return<string, RunpodError> {
-  const successfulResponse = yield* executeOperationResponse(client, config, spec, request);
-  return yield* decodeTextResponse(spec.descriptor, successfulResponse);
+  spec: G.RunpodOperationSpec<Request, Response>,
+  request: unknown
+): Effect.fn.Return<Response, RunpodError> {
+  const encoded = yield* encodeRequest(spec.descriptor, spec.request, request);
+  return yield* executeEncoded(client, config, spec, encoded);
 });
 
-const executeVoidOperation = Effect.fn("Runpod.executeVoidOperation")(function* <Request>(
+// The encoded request for the page after `pagination`, or none on the last page.
+const nextPageRequest = (encoded: unknown, pagination: Models.Pagination): O.Option<unknown> =>
+  pipe(
+    O.fromNullOr(pagination.nextCursor),
+    O.filter(() => pagination.hasNextPage),
+    O.flatMap((cursor) =>
+      pipe(
+        encoded,
+        O.liftPredicate(P.isObject),
+        O.map((request) => ({ ...request, [PAGINATION_CURSOR_FIELD]: cursor }))
+      )
+    )
+  );
+
+const paginateOperation = <Request, Page extends { readonly pagination: Models.Pagination }, Item>(
   client: HttpClient.HttpClient,
   config: ResolvedRunpodConfig,
-  spec: VoidOperationSpec<Request>,
-  request: Request
-): Effect.fn.Return<void, RunpodError> {
-  yield* executeOperationResponse(client, config, spec, request);
+  spec: G.RunpodOperationSpec<Request, Page>,
+  items: (page: Page) => ReadonlyArray<Item>,
+  request: unknown
+): Stream.Stream<Item, RunpodError> =>
+  Stream.unwrap(
+    pipe(
+      encodeRequest(spec.descriptor, spec.request, request),
+      Effect.map((first) =>
+        Stream.paginate(first, (encoded) =>
+          pipe(
+            executeEncoded(client, config, spec, encoded),
+            Effect.map((page) => [items(page), nextPageRequest(encoded, page.pagination)] as const)
+          )
+        )
+      )
+    )
+  );
+
+// A server `retry:` directive or a broken connection is a transport failure;
+// an unparseable event is a decoding failure.
+const eventStreamReason = Match.type<HttpClientError.HttpClientError | Sse.Retry | Sse.SseError>().pipe(
+  Match.tag("SseError", (): RunpodErrorReason => "response decoding"),
+  Match.orElse((): RunpodErrorReason => "transport")
+);
+
+const eventStreamOperation = <Request>(
+  client: HttpClient.HttpClient,
+  config: ResolvedRunpodConfig,
+  spec: G.RunpodOperationSpec<Request, unknown>,
+  request: unknown
+): Stream.Stream<Sse.Event, RunpodError> =>
+  Stream.unwrap(
+    Effect.gen(function* () {
+      const encoded = yield* encodeRequest(spec.descriptor, spec.request, request);
+      const httpRequest = yield* buildRequest(config, spec.descriptor, encoded);
+      const response = yield* executeHttp(client, spec.descriptor, httpRequest);
+      const successfulResponse = yield* ensureSuccessStatus(spec.descriptor, response);
+
+      return successfulResponse.stream.pipe(
+        Stream.decodeText(),
+        Stream.pipeThroughChannel(Sse.decode()),
+        Stream.mapError((cause) =>
+          RunpodError.fromDescriptor(spec.descriptor, eventStreamReason(cause), RunpodErrorOptionsInput.make({ cause }))
+        )
+      );
+    })
+  );
+
+const requestOrDefault = <Request>(
+  request: Request | undefined,
+  defaultRequest: (() => Request) | undefined
+): O.Option<Request> =>
+  pipe(
+    O.fromUndefinedOr(request),
+    O.orElse(() => O.map(O.fromUndefinedOr(defaultRequest), (make) => make()))
+  );
+
+const operationAttributes = (descriptor: G.RunpodOperationDescriptor) => ({
+  method: descriptor.method,
+  methodName: descriptor.methodName,
+  operationId: descriptor.operationId,
+  path: descriptor.path,
+  provider: "runpod",
 });
-
-const requiredJsonOperation = <Request, Response>(
-  client: HttpClient.HttpClient,
-  config: ResolvedRunpodConfig,
-  spec: JsonOperationSpec<Request, Response>
-) =>
-  Effect.fnUntraced(function* (request: Request): Effect.fn.Return<Response, RunpodError> {
-    return yield* executeJsonOperation(client, config, spec, request).pipe(operationSpan(spec.descriptor));
-  });
-
-const optionalJsonOperation = <Request, Response>(
-  client: HttpClient.HttpClient,
-  config: ResolvedRunpodConfig,
-  spec: JsonOperationSpec<Request, Response>,
-  defaultRequest: () => Request
-) =>
-  Effect.fnUntraced(function* (request?: Request): Effect.fn.Return<Response, RunpodError> {
-    return yield* executeJsonOperation(client, config, spec, request ?? defaultRequest()).pipe(
-      operationSpan(spec.descriptor)
-    );
-  });
-
-const optionalTextOperation = <Request>(
-  client: HttpClient.HttpClient,
-  config: ResolvedRunpodConfig,
-  spec: JsonOperationSpec<Request, string>,
-  defaultRequest: () => Request
-) =>
-  Effect.fnUntraced(function* (request?: Request): Effect.fn.Return<string, RunpodError> {
-    return yield* executeTextOperation(client, config, spec, request ?? defaultRequest()).pipe(
-      operationSpan(spec.descriptor)
-    );
-  });
-
-const requiredVoidOperation = <Request>(
-  client: HttpClient.HttpClient,
-  config: ResolvedRunpodConfig,
-  spec: VoidOperationSpec<Request>
-) =>
-  Effect.fnUntraced(function* (request: Request): Effect.fn.Return<void, RunpodError> {
-    return yield* executeVoidOperation(client, config, spec, request).pipe(operationSpan(spec.descriptor));
-  });
 
 const operationSpan =
   (descriptor: G.RunpodOperationDescriptor) =>
   <A, E>(effect: Effect.Effect<A, E>): Effect.Effect<A, E> =>
     effect.pipe(
       Effect.tapError((error) => (RunpodError.is(error) ? logDriverFailure("operation")(error) : Effect.void)),
-      Effect.withSpan("Runpod.operation", {
-        attributes: {
-          method: descriptor.method,
-          methodName: descriptor.methodName,
-          operationId: descriptor.operationId,
-          path: descriptor.path,
-          provider: "runpod",
-        },
-      })
+      Effect.withSpan("Runpod.operation", { attributes: operationAttributes(descriptor) })
     );
+
+const streamSpan =
+  (descriptor: G.RunpodOperationDescriptor) =>
+  <A>(stream: Stream.Stream<A, RunpodError>): Stream.Stream<A, RunpodError> =>
+    stream.pipe(
+      Stream.tapError(logDriverFailure("operation")),
+      Stream.withSpan("Runpod.stream", { attributes: operationAttributes(descriptor) })
+    );
+
+// A missing request on an operation without a default fails to encode, the same
+// as any other invalid request.
+const makeFactory = (
+  client: HttpClient.HttpClient,
+  config: ResolvedRunpodConfig
+): G.RunpodOperationFactory<RunpodError> => ({
+  effect:
+    <Request, Response>(spec: G.RunpodOperationSpec<Request, Response>, defaultRequest?: () => Request) =>
+    (request?: Request): Effect.Effect<Response, RunpodError> =>
+      executeOperation(client, config, spec, O.getOrUndefined(requestOrDefault(request, defaultRequest))).pipe(
+        operationSpan(spec.descriptor)
+      ),
+  eventStream:
+    <Request>(spec: G.RunpodOperationSpec<Request, unknown>, defaultRequest?: () => Request) =>
+    (request?: Request): Stream.Stream<Sse.Event, RunpodError> =>
+      eventStreamOperation(client, config, spec, O.getOrUndefined(requestOrDefault(request, defaultRequest))).pipe(
+        streamSpan(spec.descriptor)
+      ),
+  paginate:
+    <Request, Page extends { readonly pagination: Models.Pagination }, Item>(
+      spec: G.RunpodOperationSpec<Request, Page>,
+      items: (page: Page) => ReadonlyArray<Item>,
+      defaultRequest?: () => Request
+    ) =>
+    (request?: Request): Stream.Stream<Item, RunpodError> =>
+      paginateOperation(client, config, spec, items, O.getOrUndefined(requestOrDefault(request, defaultRequest))).pipe(
+        streamSpan(spec.descriptor)
+      ),
+});
 
 const diagnosticsFor = (event: string, error: RunpodError): Readonly<Record<string, unknown>> => ({
   event,
@@ -628,6 +759,8 @@ const diagnosticsFor = (event: string, error: RunpodError): Readonly<Record<stri
     methodName: error.methodName,
     operationId: error.operationId,
     path: error.path,
+    problemDetail: O.flatMap(error.problem, (problem) => problem.detail),
+    problemTitle: O.flatMap(error.problem, (problem) => problem.title),
     status: error.status,
   }),
 });
@@ -650,9 +783,7 @@ const rawUrlParams = (request: RunpodRawRequest): RunpodUrlParams =>
         [
           key,
           pipe(value, queryValueToStrings, (values) =>
-            A.isReadonlyArrayNonEmpty(values) && A.isReadonlyArrayEmpty(A.tailNonEmpty(values))
-              ? A.headNonEmpty(values)
-              : values
+            A.isReadonlyArrayNonEmpty(values) ? singleOrMany(values) : values
           ),
         ] as const
     ),
@@ -709,20 +840,20 @@ const rawResponseBody = Effect.fnUntraced(function* (
   request: RunpodRawRequest,
   response: HttpClientResponse.HttpClientResponse
 ): Effect.fn.Return<RunpodRawResponse, RunpodError> {
-  const contentType = response.headers["content-type"] ?? "";
+  const rawDecodingError = (cause: unknown): RunpodError =>
+    RunpodError.raw(
+      RunpodRawErrorOptions.make({
+        cause,
+        method: request.method,
+        path: request.path,
+        reason: "response decoding",
+      })
+    );
 
-  if (Str.includes("application/json")(contentType)) {
+  if (isJsonContentType(response)) {
     return yield* response.json.pipe(
       Effect.mapBoth({
-        onFailure: (cause) =>
-          RunpodError.raw(
-            RunpodRawErrorOptions.make({
-              cause,
-              method: request.method,
-              path: request.path,
-              reason: "response decoding",
-            })
-          ),
+        onFailure: rawDecodingError,
         onSuccess: (body) =>
           RunpodRawResponse.make({
             body,
@@ -735,15 +866,7 @@ const rawResponseBody = Effect.fnUntraced(function* (
 
   return yield* response.text.pipe(
     Effect.mapBoth({
-      onFailure: (cause) =>
-        RunpodError.raw(
-          RunpodRawErrorOptions.make({
-            cause,
-            method: request.method,
-            path: request.path,
-            reason: "response decoding",
-          })
-        ),
+      onFailure: rawDecodingError,
       onSuccess: (text) =>
         RunpodRawResponse.make({
           body: text,
@@ -780,14 +903,7 @@ const executeRawRequest = Effect.fn("Runpod.raw")(function* (
     }),
     HttpClientRequest.setHeaders(config.headers),
     HttpClientRequest.setHeaders(decodedRequest.headers),
-    (request) =>
-      pipe(
-        token,
-        O.match({
-          onNone: () => request,
-          onSome: (value) => pipe(request, HttpClientRequest.bearerToken(value)),
-        })
-      )
+    withToken(token)
   );
   const httpRequest = yield* addRawBody(requestWithHeaders, decodedRequest);
   const response = yield* client.execute(httpRequest).pipe(
@@ -808,58 +924,7 @@ const executeRawRequest = Effect.fn("Runpod.raw")(function* (
 });
 
 const makeService = (client: HttpClient.HttpClient, config: ResolvedRunpodConfig): RunpodShape => ({
-  createContainerRegistryAuth: requiredJsonOperation(
-    client,
-    config,
-    G.RUNPOD_OPERATION_SPECS.createContainerRegistryAuth
-  ),
-  createEndpoint: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.createEndpoint),
-  createNetworkVolume: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.createNetworkVolume),
-  createPod: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.createPod),
-  createTemplate: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.createTemplate),
-  deleteContainerRegistryAuth: requiredVoidOperation(
-    client,
-    config,
-    G.RUNPOD_OPERATION_SPECS.deleteContainerRegistryAuth
-  ),
-  deleteEndpoint: requiredVoidOperation(client, config, G.RUNPOD_OPERATION_SPECS.deleteEndpoint),
-  deleteNetworkVolume: requiredVoidOperation(client, config, G.RUNPOD_OPERATION_SPECS.deleteNetworkVolume),
-  deletePod: requiredVoidOperation(client, config, G.RUNPOD_OPERATION_SPECS.deletePod),
-  deleteTemplate: requiredVoidOperation(client, config, G.RUNPOD_OPERATION_SPECS.deleteTemplate),
-  endpointBilling: optionalJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.endpointBilling, () =>
-    G.EndpointBillingRequest.make({})
-  ),
-  getContainerRegistryAuth: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.getContainerRegistryAuth),
-  getDocs: optionalTextOperation(client, config, G.RUNPOD_OPERATION_SPECS.getDocs, () => G.GetDocsRequest.make({})),
-  getEndpoint: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.getEndpoint),
-  getNetworkVolume: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.getNetworkVolume),
-  getOpenAPI: optionalJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.getOpenAPI, () =>
-    G.GetOpenAPIRequest.make({})
-  ),
-  getPod: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.getPod),
-  getTemplate: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.getTemplate),
-  listContainerRegistryAuths: optionalJsonOperation(
-    client,
-    config,
-    G.RUNPOD_OPERATION_SPECS.listContainerRegistryAuths,
-    () => G.ListContainerRegistryAuthsRequest.make({})
-  ),
-  listEndpoints: optionalJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.listEndpoints, () =>
-    G.ListEndpointsRequest.make({})
-  ),
-  listNetworkVolumes: optionalJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.listNetworkVolumes, () =>
-    G.ListNetworkVolumesRequest.make({})
-  ),
-  listPods: optionalJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.listPods, () => G.ListPodsRequest.make({})),
-  listTemplates: optionalJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.listTemplates, () =>
-    G.ListTemplatesRequest.make({})
-  ),
-  networkVolumeBilling: optionalJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.networkVolumeBilling, () =>
-    G.NetworkVolumeBillingRequest.make({})
-  ),
-  podBilling: optionalJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.podBilling, () =>
-    G.PodBillingRequest.make({})
-  ),
+  ...G.makeRunpodOperations(makeFactory(client, config)),
   raw: Effect.fnUntraced(function* (request): Effect.fn.Return<RunpodRawResponse, RunpodError> {
     return yield* executeRawRequest(client, config, request).pipe(
       Effect.withSpan("Runpod.raw", {
@@ -871,22 +936,6 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedRunpodConfig
       })
     );
   }),
-  resetPod: requiredVoidOperation(client, config, G.RUNPOD_OPERATION_SPECS.resetPod),
-  restartPod: requiredVoidOperation(client, config, G.RUNPOD_OPERATION_SPECS.restartPod),
-  startPod: requiredVoidOperation(client, config, G.RUNPOD_OPERATION_SPECS.startPod),
-  stopPod: requiredVoidOperation(client, config, G.RUNPOD_OPERATION_SPECS.stopPod),
-  updateEndpoint: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.updateEndpoint),
-  updateEndpointViaPost: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.updateEndpointViaPost),
-  updateNetworkVolume: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.updateNetworkVolume),
-  updateNetworkVolumeViaPost: requiredJsonOperation(
-    client,
-    config,
-    G.RUNPOD_OPERATION_SPECS.updateNetworkVolumeViaPost
-  ),
-  updatePod: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.updatePod),
-  updatePodViaPost: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.updatePodViaPost),
-  updateTemplate: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.updateTemplate),
-  updateTemplateViaPost: requiredJsonOperation(client, config, G.RUNPOD_OPERATION_SPECS.updateTemplateViaPost),
 });
 
 const makeRunpodFromConfig = Effect.fn("Runpod.makeRunpodFromConfig")(function* (
@@ -911,7 +960,7 @@ const makeRunpodFromEnvironment = Effect.fn("Runpod.makeRunpodFromEnvironment")(
 });
 
 /**
- * Effect service for all documented Runpod REST API v1 operations.
+ * Effect service for every documented Runpod REST API v2 operation.
  *
  * **Example** (Create Runpod service layer)
  *
@@ -919,9 +968,23 @@ const makeRunpodFromEnvironment = Effect.fn("Runpod.makeRunpodFromEnvironment")(
  * import { Runpod, RunpodConfigInput } from "@beep/runpod"
  *
  * const layer = Runpod.makeLayer(
- *   RunpodConfigInput.make({ apiUrl: "https://rest.runpod.io/v1" })
+ *   RunpodConfigInput.make({ apiUrl: "https://api.runpod.io/v2" })
  * )
  * console.log(layer)
+ * ```
+ *
+ * **Example** (Read every pod across pages)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as Stream from "effect/Stream"
+ * import { Runpod } from "@beep/runpod"
+ *
+ * const program = Effect.gen(function* () {
+ *   const runpod = yield* Runpod
+ *   return yield* Stream.runCollect(runpod.listPodsStream())
+ * })
+ * console.log(program)
  * ```
  *
  * @category services
