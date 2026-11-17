@@ -631,12 +631,22 @@ const queryEncoding = (parameter: OpenApiParameter): OperationQueryEncoding =>
     })
   );
 
+// Path parameters are interpolated by field name, so they must already be
+// valid identifiers; other locations camel-case a non-identifier wire name.
+const requestFieldName = (name: string): string => (isJsIdentifier(name) ? name : Str.camelCase(name));
+
+const isUnnamablePathParameter = (location: RequestFieldLocation, parameter: OpenApiParameter): boolean =>
+  location === RequestFieldLocation.Enum.path && !isJsIdentifier(parameter.name);
+
+const isRequiredRequestField = (location: RequestFieldLocation, parameter: OpenApiParameter): boolean =>
+  location === RequestFieldLocation.Enum.path || parameter.required === true;
+
 const parameterField = (methodName: string, parameter: OpenApiParameter) =>
   pipe(
     parameterLocation(parameter.in),
     O.map(
       (location): Effect.Effect<RequestField, CodegenPostProcessError> =>
-        location === RequestFieldLocation.Enum.path && !isJsIdentifier(parameter.name)
+        isUnnamablePathParameter(location, parameter)
           ? Effect.fail(
               postProcessError(
                 `Path parameter ${parameter.name} of ${methodName} is not a valid field name`,
@@ -645,9 +655,9 @@ const parameterField = (methodName: string, parameter: OpenApiParameter) =>
             )
           : Effect.succeed({
               location,
-              name: isJsIdentifier(parameter.name) ? parameter.name : Str.camelCase(parameter.name),
+              name: requestFieldName(parameter.name),
               queryEncoding: queryEncoding(parameter),
-              required: location === RequestFieldLocation.Enum.path || parameter.required === true,
+              required: isRequiredRequestField(location, parameter),
               schemaExpression: schemaExpression(parameterSchema(parameter), parameter.name),
               wireName: parameter.name,
             })
