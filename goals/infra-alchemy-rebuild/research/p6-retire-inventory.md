@@ -135,7 +135,7 @@ removal PR merges. Leaves with R6 (fleet) and R5/R6 (cache).
 - `infra/src/CiRunners.ts` (1,659), `CiFleetController.ts` (1,169; the only `@pulumi/gharunners`
   importer), `CiRunnerPool.ts`, `CiShardOverflowPool.ts`, `CiTurboCache.ts` (896),
   `infra/src/internal/ci-runners-entry.ts` (composes all of them at lines 23-61)
-- `infra/src/AccountCostControls.ts` and its test: removed by the held cost-controls PR (branch
+- infra/src/AccountCostControls.ts (removed in #3366) and its test: removed by the held cost-controls PR (branch
   goals/infra-alchemy-rebuild-p3-cost-controls-pulumi-removal at `0170e453e16`). That PR adds
   infra/src/NotificationRecipients.ts and its test, because the AWS cache's throttle alarm still
   reads the recipients key. Both leave with R6.
@@ -395,7 +395,7 @@ named the deleted paths, in the same PR.
   - Measured from today's rows (lines; branches and functions move the same way): `@beep/infra` is
     72.23% (231 uncovered of about 832 lines). R1 removes about 42 lines at 50%, R2 about 111 at
     about 37%, R4 about 330 at about 65%. All are below the average, so each raises the total and
-    passes. **The cost-controls PR removes `infra/src/AccountCostControls.ts`, which is 100%
+    passes. **The cost-controls PR removes infra/src/AccountCostControls.ts (removed in #3366), which is 100%
     covered, so it lowers the total.** Merged before R1+R2 it reds Coverage Regression. Merged
     after R1+R2 (with `main`'s floor still 72.23), the measured total stays near 76-77% and it
     passes. Gate: merge R1+R2 first, or follow the cost-controls PR with a rows-only PR (below).
@@ -430,7 +430,7 @@ named the deleted paths, in the same PR.
   holds even when the PR never touched the document. On `main` today, 125 backticked spans in 41
   live documents name a tracked `infra/` path. By the PR that breaks them: R1 7, R2 9, R4 21, R5 4,
   R6 40, R7 44 (41 of those are bare `infra/`). The held cost-controls PR breaks 2 more
-  (`infra/src/AccountCostControls.ts` in `goals/infra-alchemy-rebuild/SPEC.md:804` and
+  (infra/src/AccountCostControls.ts (removed in #3366) in `goals/infra-alchemy-rebuild/SPEC.md:804` and
   `goals/infra-alchemy-rebuild/decisions/2026-11-14-cost-controls-pulumi-cutover.md:84`). Decision files count as live.
   Recompute a PR's list with the census command in the method note above. A decision file's body is
   edited through `bun run beep goals decisions write`, and generated SPEC/PLAN blocks follow it.
@@ -488,7 +488,7 @@ The same PR drops its three "(removed in #3341)" rewrites in `apps/oip-web` (gat
 ### Cost-controls removal PR (P3, held; opens not before 2026-11-15T05:18Z)
 
 Not a P6 PR, but R5 and R6 wait for it: it lifts the freeze on `beep-ci-runners/production`. It
-deletes `infra/src/AccountCostControls.ts`, adds infra/src/NotificationRecipients.ts, and breaks
+deletes infra/src/AccountCostControls.ts (removed in #3366), adds infra/src/NotificationRecipients.ts, and breaks
 the 2 live spans listed above. Its lane should rewrite them per Q3, or semantic-delta will be red.
 It also lowers `@beep/infra` coverage (see "Coverage"). Merge it after R1+R2, or follow it with a
 rows-only PR.
