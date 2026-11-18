@@ -124,8 +124,10 @@ Built in payoff order, one PR each (`PLAN.md` tracks status).
    - **Leaf migration modules** (`src/migrations/<Leaf>*.ts`) and the
      `test/**` and `test/integration/**` files that import them or a leaf's
      tables move into the owning slice (its `tables` package), so deleting the
-     leaf deletes them; db-admin keeps only slice-neutral modules and the
-     generated registry.
+     leaf deletes them. db-admin keeps the kept slices' modules (epistemic,
+     execution-authority) and their tests, the slice-neutral modules and the
+     generated registry; seam 4 may move every slice's modules the same way,
+     and records that choice as a decision.
    - **Generated migration SQL** (`drizzle/`). The generator rebuilds the
      aggregate from the present slices' migration sources, or each slice owns
      its own migration folder that the registry aggregates; seam 4 records the
