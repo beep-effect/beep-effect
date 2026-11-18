@@ -275,10 +275,12 @@ describe("CiRunners checked-plan reading", () => {
       const again = yield* readWith(withSecret("secret-a"));
       const b = yield* readWith(withSecret("secret-b"));
       const resalted = yield* readWith(withSecret("secret-a"), { salt: Str.repeat(32)("11") });
-      expect(a.resources[0]?.propsDigest).toBe(b.resources[0]?.propsDigest);
-      expect(a.resources[0]?.secretsDigest).toBe(again.resources[0]?.secretsDigest);
-      expect(a.resources[0]?.secretsDigest).not.toBe(b.resources[0]?.secretsDigest);
-      expect(a.resources[0]?.secretsDigest).not.toBe(resalted.resources[0]?.secretsDigest);
+      const props = (plan: CheckedPlan) => A.map(plan.resources, (row) => row.propsDigest);
+      const secrets = (plan: CheckedPlan) => A.map(plan.resources, (row) => row.secretsDigest);
+      expect(props(a)).toStrictEqual(props(b));
+      expect(secrets(a)).toStrictEqual(secrets(again));
+      expect(secrets(a)).not.toStrictEqual(secrets(b));
+      expect(secrets(a)).not.toStrictEqual(secrets(resalted));
       const text = yield* S.encodeEffect(CheckedPlanJson)(a);
       assertFalse(Str.includes("secret-a")(text));
       const written = yield* Ref.make(false);
@@ -287,7 +289,7 @@ describe("CiRunners checked-plan reading", () => {
       const wrote = yield* Ref.get(written);
       assertFalse(wrote);
       const plain = yield* readWith(single({ action: "create", props: { name: "plain" } }));
-      expect(plain.resources[0]?.secretsDigest).toBe("");
+      expect(secrets(plain)).toStrictEqual([""]);
     })
   );
 
