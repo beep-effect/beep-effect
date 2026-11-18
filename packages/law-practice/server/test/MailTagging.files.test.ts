@@ -58,7 +58,7 @@ const acme = MatterKey.make("acme.10001");
 const applied = TagLedgerEntry.make({
   runId,
   messageId,
-  conversationId: O.some(MailConversationId.make("conv-0001")),
+  conversationId: MailConversationId.makeOption("conv-0001"),
   addedCategories: ["P: USPTO"],
   decision: summarizeDecision(MatterUnmatched.make({ reason: "no-signal", practiceCategories: ["P: USPTO"] })),
   recordedAt,

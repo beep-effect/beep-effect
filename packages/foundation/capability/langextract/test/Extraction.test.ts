@@ -87,7 +87,7 @@ describe("parseModelOutput", () => {
       const unaligned = GroundedExtraction.cases.unaligned.make({ label: "person", text: "Ada Lovelace" });
       const aligned = GroundedExtraction.cases.match_exact.make({
         attributes: O.some({ source: "fixture" }),
-        confidence: O.some(UnitInterval.make(0.9)),
+        confidence: UnitInterval.makeOption(0.9),
         label: "person",
         matchedText: "Ada Lovelace",
         span: Contract.Span.make({ end: S.Natural.make(12), start: S.Natural.make(0) }),

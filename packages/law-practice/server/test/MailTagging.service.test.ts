@@ -111,9 +111,9 @@ const officeAction = (outlook: Outlook) =>
     id: "msg-1",
     receivedDateTime: O.some("2026-07-02T09:00:00Z"),
     subject: O.some("Office action in 1234.10001US01"),
-    from: O.some(
-      GraphRecipient.make({ emailAddress: O.some(GraphEmailAddress.make({ address: O.some("notices@uspto.gov") })) })
-    ),
+    from: GraphRecipient.makeOption({
+      emailAddress: GraphEmailAddress.makeOption({ address: O.some("notices@uspto.gov") }),
+    }),
     categories: O.some(outlook.categories),
     changeKey: O.some(`ck-${outlook.version}`),
     hasAttachments: O.some(true),

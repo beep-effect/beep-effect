@@ -1102,12 +1102,10 @@ describe("ci lane timing admission window", () => {
       const ratified = yield* buildCiLaneTimingWindowReport(REQUIRED_CONTEXTS, []);
       const report = CiLaneTimingWindowReport.make({
         ...ratified,
-        rulesetVersion: O.some(
-          CiRulesetHistoryVersion.make({
-            updated_at: DateTime.makeUnsafe("2026-09-15T00:00:00Z"),
-            version_id: 50000000,
-          })
-        ),
+        rulesetVersion: CiRulesetHistoryVersion.makeOption({
+          updated_at: DateTime.makeUnsafe("2026-09-15T00:00:00Z"),
+          version_id: 50000000,
+        }),
       });
 
       expect(renderCiLaneTimingWindowMarkdown(report)).toContain(

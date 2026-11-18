@@ -1085,7 +1085,7 @@ describe.skipIf(!isBunRuntime)("Admission layer (Bun runtime)", () => {
           missingHold,
           ConflictResolution.cases.merged.make({
             text: "- At the top.\n",
-            placement: O.some(InsertPlacement.make({ afterNodeId: O.none() })),
+            placement: InsertPlacement.makeOption({ afterNodeId: O.none() }),
           })
         );
 

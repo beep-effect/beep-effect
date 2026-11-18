@@ -403,45 +403,38 @@ const updatePanel = Effect.fn("DockReducer.updatePanel")(function* (
     Bool.match(Eq.equals(panel.title, updated.title), {
       onTrue: O.none,
       onFalse: () =>
-        O.some(PanelTitleChangedEvent.make({ panelId: panel.id, groupId: tabs.groupId, title: updated.title })),
+        PanelTitleChangedEvent.makeOption({ panelId: panel.id, groupId: tabs.groupId, title: updated.title }),
     }),
     Bool.match(Eq.equals(panel.view, updated.view), {
       onTrue: O.none,
-      onFalse: () =>
-        O.some(PanelViewChangedEvent.make({ panelId: panel.id, groupId: tabs.groupId, view: updated.view })),
+      onFalse: () => PanelViewChangedEvent.makeOption({ panelId: panel.id, groupId: tabs.groupId, view: updated.view }),
     }),
     Bool.match(Eq.equals(panel.renderMode, updated.renderMode), {
       onTrue: O.none,
       onFalse: () =>
-        O.some(
-          PanelRenderModeChangedEvent.make({
-            panelId: panel.id,
-            groupId: tabs.groupId,
-            renderMode: updated.renderMode,
-          })
-        ),
+        PanelRenderModeChangedEvent.makeOption({
+          panelId: panel.id,
+          groupId: tabs.groupId,
+          renderMode: updated.renderMode,
+        }),
     }),
     Bool.match(Eq.equals(panel.tabComponent, updated.tabComponent), {
       onTrue: O.none,
       onFalse: () =>
-        O.some(
-          PanelTabComponentChangedEvent.make({
-            panelId: panel.id,
-            groupId: tabs.groupId,
-            tabComponent: updated.tabComponent,
-          })
-        ),
+        PanelTabComponentChangedEvent.makeOption({
+          panelId: panel.id,
+          groupId: tabs.groupId,
+          tabComponent: updated.tabComponent,
+        }),
     }),
     Bool.match(Eq.equals(panel.constraints, updated.constraints), {
       onTrue: O.none,
       onFalse: () =>
-        O.some(
-          PanelConstraintsChangedEvent.make({
-            panelId: panel.id,
-            groupId: tabs.groupId,
-            constraints: updated.constraints,
-          })
-        ),
+        PanelConstraintsChangedEvent.makeOption({
+          panelId: panel.id,
+          groupId: tabs.groupId,
+          constraints: updated.constraints,
+        }),
     }),
   ]);
   return yield* A.match(events, {

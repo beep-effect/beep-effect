@@ -81,7 +81,7 @@ const isSet = (value: string | undefined): boolean => value !== undefined && val
  * @since 0.0.0
  */
 export const detectWrapper = (env: Env): O.Option<WrapperInfo> => {
-  if (isSet(env.TMUX)) return O.some(WrapperInfo.make({ name: "tmux", passesThrough: false }));
-  if (isSet(env.STY)) return O.some(WrapperInfo.make({ name: "screen", passesThrough: false }));
+  if (isSet(env.TMUX)) return WrapperInfo.makeOption({ name: "tmux", passesThrough: false });
+  if (isSet(env.STY)) return WrapperInfo.makeOption({ name: "screen", passesThrough: false });
   return O.none();
 };

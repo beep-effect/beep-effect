@@ -636,18 +636,17 @@ export const makeSkillPublisher = Effect.fn("SkillPublisher.make")(function* () 
   ) {
     const { publication } = journal;
     if (!isTracked(publication))
-      return O.some(
-        SkillRecoveryReport.make({
-          journal: journal.id,
-          result: SkillRecoveryResult.cases.skipped.make({ reason: "legacy" }),
-        })
-      );
+      return SkillRecoveryReport.makeOption({
+        journal: journal.id,
+        result: SkillRecoveryResult.cases.skipped.make({ reason: "legacy" }),
+      });
     const eligible = (state: ModelsPublicationState) =>
       pendingState(state) || (scope === "retry" && state._tag === "refused");
     if (!eligible(publication.state)) return O.none<SkillRecoveryReport>();
-    return O.some(
-      SkillRecoveryReport.make({ journal: journal.id, result: yield* reconcile(root, journal.id, eligible) })
-    );
+    return SkillRecoveryReport.makeOption({
+      journal: journal.id,
+      result: yield* reconcile(root, journal.id, eligible),
+    });
   });
 
   const recover: SkillPublisherShape["recover"] = Effect.fn("SkillPublisher.recover")(function* (root, scope) {

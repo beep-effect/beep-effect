@@ -239,7 +239,7 @@ export type CandidateRouting = typeof CandidateRouting.Type;
  * import * as O from "effect/Option"
  *
  * const finding = ValidatorFinding.make({
- *   element: O.some(ActFrameElementRef.make({ label: "lessee", part: "slot" })),
+ *   element: ActFrameElementRef.makeOption({ label: "lessee", part: "slot" }),
  *   message: "slot has no source reference into the cited clause",
  *   severity: "hard",
  * })

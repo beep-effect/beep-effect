@@ -53,13 +53,11 @@ export const makeProducerUploadRuntimeFixture = Effect.fn("ProducerUploadRuntime
     target,
     bearers,
     signing: Redacted.make("synthetic-upload-key"),
-    adapter: O.some(
-      CacheProducerAdapterLaunch.make({
-        executable: "/fixture/adapter",
-        accessKey: Redacted.make("synthetic-storage-id"),
-        secretKey: Redacted.make("synthetic-storage-secret"),
-      })
-    ),
+    adapter: CacheProducerAdapterLaunch.makeOption({
+      executable: "/fixture/adapter",
+      accessKey: Redacted.make("synthetic-storage-id"),
+      secretKey: Redacted.make("synthetic-storage-secret"),
+    }),
   });
   const binding = yield* S.decodeUnknownEffect(CacheProducerBinding)({
     ...bundleInput.pilot,
@@ -125,22 +123,18 @@ export const makeIssuedProducerObservationFixture = Effect.fn("PrivateProducerOb
   const bundle = CacheProducerBundle.make({
     ...original,
     pilot: CacheSignedPilotReceipt.make({ ...original.pilot, client: base.binding.client }),
-    upload: O.some(
-      CacheHostedProducerUpload.make({
-        taskHash: "0123456789abcdef",
-        archiveSha256: Sha256Hex.make(Str.repeat(64)("d")),
-        archiveBytes: 17,
-        status: 200,
-      })
-    ),
-    adapterRuntime: O.some(
-      CacheProducerAdapterReceipt.make({
-        backendSha256: Sha256Hex.make(Str.repeat(64)("d")),
-        targetSha256: O.getOrThrow(base.binding.uploadApproval).targetSha256,
-        ready: { ...runtime, role: "writer", phase: "ready" },
-        afterLoad: { ...runtime, role: "writer", phase: "after-load" },
-      })
-    ),
+    upload: CacheHostedProducerUpload.makeOption({
+      taskHash: "0123456789abcdef",
+      archiveSha256: Sha256Hex.make(Str.repeat(64)("d")),
+      archiveBytes: 17,
+      status: 200,
+    }),
+    adapterRuntime: CacheProducerAdapterReceipt.makeOption({
+      backendSha256: Sha256Hex.make(Str.repeat(64)("d")),
+      targetSha256: O.getOrThrow(base.binding.uploadApproval).targetSha256,
+      ready: { ...runtime, role: "writer", phase: "ready" },
+      afterLoad: { ...runtime, role: "writer", phase: "after-load" },
+    }),
   });
   const issuer = yield* openCacheProducerIssuer(base.directory, base.binding);
   const observation = CacheProducerObservation.make({ observation: bundle, envelope: yield* issuer.issue(bundle) });

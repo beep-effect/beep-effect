@@ -446,9 +446,9 @@ const HeaderStop = S.TaggedStruct("HeaderStop", {
 const isHeaderStop = S.is(HeaderStop);
 
 const headerStop = (block: Uint8Array): O.Option<typeof HeaderStop.Type> => {
-  if (block.length === 0) return O.some(HeaderStop.make({ reason: "empty" }));
-  if (block.length !== blockSize) return O.some(HeaderStop.make({ reason: "truncated" }));
-  return everyByte(block, (byte) => byte === 0) ? O.some(HeaderStop.make({ reason: "end" })) : O.none();
+  if (block.length === 0) return HeaderStop.makeOption({ reason: "empty" });
+  if (block.length !== blockSize) return HeaderStop.makeOption({ reason: "truncated" });
+  return everyByte(block, (byte) => byte === 0) ? HeaderStop.makeOption({ reason: "end" }) : O.none();
 };
 
 const headerFields = (block: Uint8Array) =>

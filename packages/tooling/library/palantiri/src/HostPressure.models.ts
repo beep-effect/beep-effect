@@ -366,7 +366,7 @@ export class HostPressureInput extends S.Opaque<HostPressureInput, { readonly br
  * const at = DateTime.makeUnsafe("2026-10-15T12:00:00Z")
  * const item = PressureStall.make({
  *   resource: "cpu",
- *   some: O.some(PressureStats.make({ avg10: 2, avg60: 1, avg300: 0.5, total: 10 })),
+ *   some: PressureStats.makeOption({ avg10: 2, avg60: 1, avg300: 0.5, total: 10 }),
  *   full: O.none(),
  *   asOf: at,
  *   freshness: Freshness.cases.Fresh.make({ asOf: at })

@@ -54,7 +54,7 @@ const $I = $LawPracticeDomainId.create("entities/LegalPositionRelator/LegalPosit
  * import * as O from "effect/Option"
  *
  * const grounding = LegalPositionGrounding.make({
- *   foundingExercise: O.some(LawPractice.PowerExerciseId.make(7)),
+ *   foundingExercise: LawPractice.PowerExerciseId.makeOption(7),
  *   producingExercise: LawPractice.PowerExerciseId.make(12),
  * })
  * console.log(O.isSome(grounding.foundingExercise)) // true

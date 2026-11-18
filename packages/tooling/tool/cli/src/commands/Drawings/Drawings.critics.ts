@@ -302,7 +302,7 @@ const timeLimitSeat = (minutes: number): CriticSeatUnavailable =>
   CriticSeatUnavailable.make({
     reason: "time-limit",
     path: O.none(),
-    limit: O.some(CriticSeatLimit.make({ amount: minutes, unit: "minutes" })),
+    limit: CriticSeatLimit.makeOption({ amount: minutes, unit: "minutes" }),
     detail: `the seat ran past its ${minutes}-minute limit and was stopped`,
   });
 
@@ -342,7 +342,7 @@ const missingSeatLines = (runs: ReadonlyArray<CriticRunRecord>): ReadonlyArray<s
  *     CriticSeatUnavailable.make({
  *       reason: "time-limit",
  *       path: O.none(),
- *       limit: O.some(CriticSeatLimit.make({ amount: 90, unit: "minutes" })),
+ *       limit: CriticSeatLimit.makeOption({ amount: 90, unit: "minutes" }),
  *       detail: "the seat ran past its 90-minute limit and was stopped",
  *     })
  *   ),

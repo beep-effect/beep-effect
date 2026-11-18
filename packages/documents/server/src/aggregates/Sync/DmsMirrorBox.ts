@@ -444,17 +444,15 @@ const remoteEventFromEntry = (entry: BoxEventModel): Effect.Effect<O.Option<DmsR
         Effect.map((payload) => {
           const info = sourceInfoFromEvent(entry.source);
 
-          return O.some(
-            DmsRemoteEvent.make({
-              eventId,
-              eventType: dmsEventTypeFromBox(entry.eventType),
-              itemKind: info.itemKind,
-              name: O.flatMap(info.name, nonEmptyStringOption),
-              parentRemoteId: O.flatMap(info.parentRemoteId, remoteItemIdOption),
-              payload,
-              remoteId: O.flatMap(info.remoteId, remoteItemIdOption),
-            })
-          );
+          return DmsRemoteEvent.makeOption({
+            eventId,
+            eventType: dmsEventTypeFromBox(entry.eventType),
+            itemKind: info.itemKind,
+            name: O.flatMap(info.name, nonEmptyStringOption),
+            parentRemoteId: O.flatMap(info.parentRemoteId, remoteItemIdOption),
+            payload,
+            remoteId: O.flatMap(info.remoteId, remoteItemIdOption),
+          });
         })
       ),
   });

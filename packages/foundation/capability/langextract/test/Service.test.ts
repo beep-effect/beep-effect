@@ -145,7 +145,7 @@ describe("LangExtractService", () => {
       Effect.fnUntraced(function* () {
         const request = LangExtractRequest.make({
           documentId: DocumentId.make("doc-1"),
-          options: LangExtractOptions.make({ maxExtractions: O.some(S.Natural.make(1)) }),
+          options: LangExtractOptions.make({ maxExtractions: S.Natural.makeOption(1) }),
           targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
           text: "Alice founded Acme.",
         });

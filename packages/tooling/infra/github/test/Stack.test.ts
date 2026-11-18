@@ -298,7 +298,7 @@ scenario("required checks list beep-reviewer last and only once", () =>
         RequiredCheck.make({ context: "beep-reviewer", integrationId: 1 }),
       ],
     });
-    const live = O.some(RequiredCheck.make({ context: "beep-reviewer", integrationId: 5_321_138 }));
+    const live = RequiredCheck.makeOption({ context: "beep-reviewer", integrationId: 5_321_138 });
     const contexts = A.map(
       requiredChecks(doubled, live),
       ({ context, integrationId }) => `${context}@${integrationId}`

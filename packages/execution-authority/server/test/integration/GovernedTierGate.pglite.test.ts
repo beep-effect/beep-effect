@@ -76,7 +76,7 @@ const ungrantedTool = Tool.make("ontology_unlisted_mutation");
 // The session id keys the run; clientId varies per request in production, so
 // the harness pins the session and lets the client id drift.
 const callerOf = (sessionId: string, clientId = 1) =>
-  O.some(McpCallerIdentity.make({ clientId: S.Natural.make(clientId), sessionId: O.some(sessionId) }));
+  McpCallerIdentity.makeOption({ clientId: S.Natural.make(clientId), sessionId: O.some(sessionId) });
 
 const makeGate = () =>
   makeGovernedTierGate(gateOptions).pipe(Effect.provideService(ExecutionAuthorityConfig, testExecutionAuthorityConfig));

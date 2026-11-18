@@ -634,13 +634,11 @@ const snapshot = (root: string, checks: ReadonlyArray<YeetWatchCheck>, state = "
       state,
       failingCheckCount: A.filter(checks, (value) => value.outcome === "fail").length,
     }),
-    mergeReady: O.some(
-      YeetMergeReady.make({
-        ready: criteria.prOpen && green,
-        criteria,
-        failing: green ? O.none() : O.some("required-checks-green"),
-      })
-    ),
+    mergeReady: YeetMergeReady.makeOption({
+      ready: criteria.prOpen && green,
+      criteria,
+      failing: green ? O.none() : O.some("required-checks-green"),
+    }),
   });
 };
 

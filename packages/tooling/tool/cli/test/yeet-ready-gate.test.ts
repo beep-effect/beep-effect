@@ -201,7 +201,7 @@ describe("yeet ready gate decision (push-first-publish D11: ready at content-fin
           available: false,
           checked: true,
           detail: reason,
-          readFailure: O.some(YeetCommandError.make({ message: reason })),
+          readFailure: YeetCommandError.makeOption({ message: reason }),
         }),
         mergeReady: O.none(),
       });
@@ -891,7 +891,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           ...base,
           refresh: (_context, head) =>
             Effect.map(legacyV1Receipt(receiptHead), (receipt) =>
-              O.some(FinalCheckRefreshPass.make({ receipt, finalHead: head, ownChanges: [] }))
+              FinalCheckRefreshPass.makeOption({ receipt, finalHead: head, ownChanges: [] })
             ),
         }).pipe(Effect.flip);
         expect(ancestor).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });
@@ -903,18 +903,16 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
           ...base,
           rewriteCarry: (_context, _pr, head) =>
             Effect.map(legacyV1Receipt(receiptHead), (receipt) =>
-              O.some(
-                FinalCheckRefreshRewrite.make({
-                  receipt,
-                  finalHead: head,
-                  move: YeetHeadMoveUnchanged.make({
-                    before: receiptHead,
-                    after: head,
-                    base: "synchronized-base",
-                    commits: 1,
-                  }),
-                })
-              )
+              FinalCheckRefreshRewrite.makeOption({
+                receipt,
+                finalHead: head,
+                move: YeetHeadMoveUnchanged.make({
+                  before: receiptHead,
+                  after: head,
+                  base: "synchronized-base",
+                  commits: 1,
+                }),
+              })
             ),
         }).pipe(Effect.flip);
         expect(rewrite).toMatchObject({ _tag: "YeetReadyGateRefused", blocker: "final-check" });

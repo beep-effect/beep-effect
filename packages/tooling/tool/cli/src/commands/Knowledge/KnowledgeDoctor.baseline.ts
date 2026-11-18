@@ -1898,26 +1898,24 @@ export const checkKnowledgeDoctorReport = Effect.fn("KnowledgeDoctor.check")(fun
     mode: "check",
     findings,
     groups: groupKnowledgeDoctorFindings(findings, input.removals),
-    ratchet: O.some(
-      KnowledgeDoctorRatchet.make({
-        baseRef: input.baseRef,
-        mergeBase: input.mergeBase,
-        mintedAt: baseline.mintedAt,
-        promotedKinds: A.sort(A.fromIterable(promoted), Order.String),
-        introduced: bucket("introduced"),
-        pending: bucket("pending"),
-        inherited: bucket("inherited"),
-        leased: bucket("leased"),
-        resolved: A.sort(
-          A.filter(
-            A.map(baseline.entries, (entry) => entry.key),
-            (key) => !HashSet.has(currentKeys, key)
-          ),
-          Order.String
+    ratchet: KnowledgeDoctorRatchet.makeOption({
+      baseRef: input.baseRef,
+      mergeBase: input.mergeBase,
+      mintedAt: baseline.mintedAt,
+      promotedKinds: A.sort(A.fromIterable(promoted), Order.String),
+      introduced: bucket("introduced"),
+      pending: bucket("pending"),
+      inherited: bucket("inherited"),
+      leased: bucket("leased"),
+      resolved: A.sort(
+        A.filter(
+          A.map(baseline.entries, (entry) => entry.key),
+          (key) => !HashSet.has(currentKeys, key)
         ),
-        identityRejected: resolution.rejected,
-      })
-    ),
+        Order.String
+      ),
+      identityRejected: resolution.rejected,
+    }),
   });
 });
 
@@ -1956,7 +1954,8 @@ export const knowledgeDoctorGateFailure = (report: KnowledgeDoctorReport): O.Opt
   const governance = A.length(A.filter(report.findings, (row) => isKnowledgeGovernanceKind(row.finding.kind)));
   return introduced + governance === 0
     ? O.none()
-    : O.some(
+    : // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+      O.some(
         KnowledgeDoctorGateError.make({
           message: `knowledge doctor: ${introduced} introduced and ${governance} governance blocking finding(s).`,
           introducedCount: S.Natural.make(introduced),

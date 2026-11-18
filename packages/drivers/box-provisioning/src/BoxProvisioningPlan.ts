@@ -204,7 +204,7 @@ const commonActionFields = {
 
 const actionExampleFields = {
   actionKey: Sha256Hex.make(pipe("a", Str.repeat(64))),
-  afterDigest: O.some(Sha256Hex.make(pipe("b", Str.repeat(64)))),
+  afterDigest: Sha256Hex.makeOption(pipe("b", Str.repeat(64))),
   beforeDigest: O.none<Sha256Hex>(),
   dependencies: [],
   destructive: false,

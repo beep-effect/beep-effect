@@ -485,7 +485,7 @@ export const runCacheProducerUploadExperiment = Effect.fn("CachePilot.producerUp
             request,
             JsonStringCodec(CacheSignedPilotRun).decode,
             O.some(protectedIssuerMaterial),
-            O.some(UploadSupervisor.make({ address: proxy.address, runtime }))
+            UploadSupervisor.makeOption({ address: proxy.address, runtime })
           );
           const summary = yield* report.nativeSummary.pipe(
             Effect.fromOption(() => CacheCommandError.new("Owned upload omitted its complete native summary."))

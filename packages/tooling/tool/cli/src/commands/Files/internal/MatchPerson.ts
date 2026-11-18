@@ -1485,7 +1485,7 @@ const resolveCopyPlanEntry = Effect.fn("Files.resolvePersonMatchCopyPlanEntry")(
       message: `Refusing symlinked or aliased person-match output: "${requestedTargetPath}"`,
     });
   }
-  return O.some(PersonMatchCopyPlanEntry.make({ sourcePath, targetPath }));
+  return PersonMatchCopyPlanEntry.makeOption({ sourcePath, targetPath });
 });
 
 const preflightCopyPlanEntry = Effect.fn("Files.preflightPersonMatchCopyPlanEntry")(function* (

@@ -521,13 +521,11 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
         (row) => Effect.fromResult(fromContradictionReceiptRow(row)),
         { concurrency: 1 }
       ).pipe(repositoryUnavailable("get"));
-      return O.some(
-        ContradictionCandidateDetail.make({
-          candidate,
-          disposition,
-          receipts: decodedReceipts,
-        })
-      );
+      return ContradictionCandidateDetail.makeOption({
+        candidate,
+        disposition,
+        receipts: decodedReceipts,
+      });
     }),
 
     getExpanded: Effect.fn("ContradictionTriageRepository.getExpanded")(function* (query) {
@@ -675,20 +673,18 @@ export const makeDrizzleContradictionTriageRepository = Effect.fnUntraced(functi
         Effect.transposeOption,
         repositoryUnavailable("get")
       );
-      return O.some(
-        ContradictionCandidateExpandedDetail.make({
-          candidate,
-          disposition,
-          left: ContradictionBeliefDetail.make({
-            belief: projectEdgeVersionAtKnownAt(left.value, query.knownAt),
-            evidence: leftEvidence,
-          }),
-          right: ContradictionBeliefDetail.make({
-            belief: projectEdgeVersionAtKnownAt(right.value, query.knownAt),
-            evidence: rightEvidence,
-          }),
-        })
-      );
+      return ContradictionCandidateExpandedDetail.makeOption({
+        candidate,
+        disposition,
+        left: ContradictionBeliefDetail.make({
+          belief: projectEdgeVersionAtKnownAt(left.value, query.knownAt),
+          evidence: leftEvidence,
+        }),
+        right: ContradictionBeliefDetail.make({
+          belief: projectEdgeVersionAtKnownAt(right.value, query.knownAt),
+          evidence: rightEvidence,
+        }),
+      });
     }),
 
     list: Effect.fn("ContradictionTriageRepository.list")(function* (query) {

@@ -181,9 +181,11 @@ export const makePublicationLedger = Effect.fn("PublicationLedger.make")(functio
     const boot = yield* bootId;
     const stat = yield* processStat("self");
     return O.isSome(boot) && O.isSome(stat) && Str.isNonEmpty(boot.value)
-      ? O.some(
-          ModelsPublicationOwner.make({ bootId: boot.value, pid: stat.value.pid, startTicks: stat.value.startTicks })
-        )
+      ? ModelsPublicationOwner.makeOption({
+          bootId: boot.value,
+          pid: stat.value.pid,
+          startTicks: stat.value.startTicks,
+        })
       : O.none<ModelsPublicationOwner>();
   });
   const ownerAlive: PublicationLedgerPrimitives["ownerAlive"] = Effect.fnUntraced(function* (owner) {

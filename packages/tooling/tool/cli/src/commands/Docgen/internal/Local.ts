@@ -394,6 +394,7 @@ const isPackageLocalDocgenInput = (relativePath: string): boolean =>
 
 const fullReasonForFile = (filePath: string): O.Option<DocgenLocalFullReason> => {
   if (isExactFile(DOCGEN_LOCAL_FULL_INPUT_FILES, filePath)) {
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
     return O.some(
       DocgenLocalFullReason.make({
         filePath,
@@ -403,6 +404,7 @@ const fullReasonForFile = (filePath: string): O.Option<DocgenLocalFullReason> =>
   }
 
   if (hasPrefix(DOCGEN_LOCAL_FULL_INPUT_PREFIXES, filePath)) {
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
     return O.some(
       DocgenLocalFullReason.make({
         filePath,
@@ -436,13 +438,11 @@ const selectPackage = (
     return O.none();
   }
 
-  return O.some(
-    DocgenLocalSelectedPackage.make({
-      name: pkg.name,
-      path: pkg.relativePath,
-      reasons,
-    })
-  );
+  return DocgenLocalSelectedPackage.makeOption({
+    name: pkg.name,
+    path: pkg.relativePath,
+    reasons,
+  });
 };
 
 const selectedPackageFromWorkspacePackage = (
@@ -821,14 +821,12 @@ const summarizeTurboTasks = (output: TurboDryRunDocument): ReadonlyArray<DocgenL
         return O.none();
       }
 
-      return O.some(
-        DocgenLocalTurboTask.make({
-          packageName: task.package,
-          taskId: task.taskId ?? `${task.package}#docgen`,
-          ...(P.isUndefined(task.cache?.source) ? {} : { cacheSource: task.cache.source }),
-          ...(P.isUndefined(task.cache?.status) ? {} : { cacheStatus: task.cache.status }),
-        })
-      );
+      return DocgenLocalTurboTask.makeOption({
+        packageName: task.package,
+        taskId: task.taskId ?? `${task.package}#docgen`,
+        ...(P.isUndefined(task.cache?.source) ? {} : { cacheSource: task.cache.source }),
+        ...(P.isUndefined(task.cache?.status) ? {} : { cacheStatus: task.cache.status }),
+      });
     }),
     collectOptions,
     A.dedupeWith((left, right) => left.packageName === right.packageName && left.taskId === right.taskId),

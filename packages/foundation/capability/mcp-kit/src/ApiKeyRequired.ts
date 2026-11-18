@@ -221,18 +221,16 @@ export class ToolHandlerPayload extends S.Opaque<ToolHandlerPayload, { readonly 
  */
 export const translateApiKeyRequired = (payload: ToolHandlerPayload): O.Option<CallToolResult> =>
   isApiKeyRequiredFailure(payload.result)
-    ? O.some(
-        // The envelope travels in `content[].text` only: `structuredContent`
-        // must conform to the tool's advertised `outputSchema`, which describes
-        // the success value, not this failure.
-        CallToolResult.make({
-          isError: false,
-          content: [
-            {
-              type: "text",
-              text: Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(payload.encodedResult), identity),
-            },
-          ],
-        })
-      )
+    ? // The envelope travels in `content[].text` only: `structuredContent`
+      // must conform to the tool's advertised `outputSchema`, which describes
+      // the success value, not this failure.
+      CallToolResult.makeOption({
+        isError: false,
+        content: [
+          {
+            type: "text",
+            text: Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(payload.encodedResult), identity),
+          },
+        ],
+      })
     : O.none();

@@ -522,15 +522,13 @@ const settleFullLengthDestination = Effect.fn("Preservation.settleFullLengthDest
   if (O.isSome(afterFailure)) return afterFailure;
   if (!hashesProveAlreadyComplete(firstSourceHash, secondSourceHash, destHash, statBefore.sizeBytes, destBytes))
     return O.none();
-  return O.some(
-    PreservationAttemptOutcome.cases["already-complete"].make({
-      kind: "already-complete",
-      bytesReused: S.Natural.make(destBytes),
-      sha256: firstSourceHash.sha256,
-      statAfter: O.getOrThrow(statAfter),
-      statBefore,
-    })
-  );
+  return PreservationAttemptOutcome.cases["already-complete"].makeOption({
+    kind: "already-complete",
+    bytesReused: S.Natural.make(destBytes),
+    sha256: firstSourceHash.sha256,
+    statAfter: O.getOrThrow(statAfter),
+    statBefore,
+  });
 });
 
 const settleExistingDestination = Effect.fn("Preservation.settleExistingDestination")(function* (

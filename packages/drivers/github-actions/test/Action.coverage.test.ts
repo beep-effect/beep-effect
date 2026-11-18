@@ -4,7 +4,6 @@ import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import * as O from "effect/Option";
 import * as Runtime from "effect/Runtime";
 
 /** `it.effect` installs a `TestConsole`; these tests spy on the real one. */
@@ -39,7 +38,7 @@ it.effect("a broken failure console still fails the step", () =>
           assert.strictEqual(exitCodeOf(exit), 1);
           assert.deepStrictEqual(
             Exit.findErrorOption(exit),
-            O.some(ActionFailedError.make({ summary: "the failure could not be rendered" }))
+            ActionFailedError.makeOption({ summary: "the failure could not be rendered" })
           );
           assert.isAbove(spy.mock.calls.length, 0);
         }),

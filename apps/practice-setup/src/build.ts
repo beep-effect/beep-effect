@@ -62,11 +62,10 @@ export const embeddedEntrySource: {
   A.join(
     [
       `import bundle from "./${BESIDE_BUNDLE_FILE}" with { type: "file" };`,
-      `import * as O from "effect/Option";`,
       `import { main } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(`${srcImport}/bin.ts`), identity)};`,
       `import { EmbeddedGateway } from ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(`${srcImport}/Setup.models.ts`), identity)};`,
       "",
-      `main(O.some(EmbeddedGateway.make({ bundle, version: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(version), identity)} })));`,
+      `main(EmbeddedGateway.makeOption({ bundle, version: ${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(version), identity)} }));`,
       "",
     ],
     "\n"

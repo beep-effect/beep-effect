@@ -310,7 +310,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
               fileMs: 1,
               executedTestFiles: executed,
               expectedTestFiles: O.some(10),
-              shard: O.some(UnitTimingShard.make({ index, total: 2 })),
+              shard: UnitTimingShard.makeOption({ index, total: 2 }),
               files: [],
             }),
           ],

@@ -379,7 +379,7 @@ const selectedRawTransitionAnchor = (
   if (!selectedTransitionFieldsMatch(claim, match, index, bodyStart)) return O.none();
   if (!rawScopeUnprotected(claim.claimText, start, end, charge)) return O.none();
   if (!charge(8)) return O.none();
-  return O.some(TextAnchor.make({ startChar: start, endChar: end, quote: raw }));
+  return TextAnchor.makeOption({ startChar: start, endChar: end, quote: raw });
 };
 
 /**

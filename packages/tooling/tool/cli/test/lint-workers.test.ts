@@ -516,6 +516,92 @@ describe("thin lint workers", { concurrent: false }, () => {
       })
     );
   });
+  // goals/prunable-product-leaves, seam 1b: committed inputs and tasks that name a workspace the
+  // checkout pruned or owns are not drift; every other difference still is.
+  it.layer(platform, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "ignores fingerprint drift on a pruned or owned workspace, and on nothing else",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "fingerprint-pruned-" });
+        yield* writeFixtureFiles(root, {
+          ...policyCliFixtureFiles([
+            { group: "foo", imports: ["@beep/helper"] },
+            { group: "bar", imports: ["@beep/other"] },
+            { group: "baz", imports: ["@beep/box"] },
+          ]),
+          ...fixturePackageFiles("helper"),
+          ...fixturePackageFiles("other"),
+          // @beep/box is a product leaf (@beep/repo-cli-kit/ProductLeaves) at its declared directory.
+          "packages/drivers/box/package.json": '{ "name": "@beep/box", "exports": { ".": "./src/index.ts" } }\n',
+          "packages/drivers/box/src/index.ts": "export const value = 1;\n",
+          "package.json":
+            '{\n  "name": "fixture",\n  "workspaces": ["packages/*", "packages/drivers/*"],\n  "scripts": {\n    "foo:check": "beep-cli foo --check",\n    "bar:check": "beep-cli bar --check",\n    "baz:check": "beep-cli baz --check",\n    "lint:policy-fingerprint": "beep-cli lint policy-fingerprint --check"\n  }\n}\n',
+          "turbo.json":
+            '{\n  "tasks": {\n    "//#lint:policy-fingerprint": { "cache": true, "outputs": [], "inputs": [] },\n    "//#foo:check": { "dependsOn": ["//#lint:policy-fingerprint"] },\n    "//#bar:check": { "dependsOn": ["//#lint:policy-fingerprint"] },\n    "//#baz:check": { "dependsOn": ["//#lint:policy-fingerprint"] }\n  }\n}\n',
+        });
+        const declare = (declaration: string) =>
+          writeFixtureFiles(root, { "standards/checkout-prune.jsonc": `${declaration}\n` });
+        // Fails the test unless the drift check's verdict is `expected`.
+        const expectPasses = Effect.fnUntraced(function* (expected: boolean) {
+          const passed = yield* run(["policy-fingerprint", "--check"]).pipe(Effect.isSuccess);
+          expect(passed).toBe(expected);
+        });
+        yield* Effect.gen(function* () {
+          selection.root = root;
+          yield* run(["policy-fingerprint", "--write"]);
+          yield* expectPasses(true);
+
+          // A product leaf whose directory is gone is pruned: its inputs are not drift.
+          yield* fs.remove(`${root}/packages/drivers/box`, { recursive: true });
+          yield* expectPasses(true);
+          // Under a keep entry the same missing leaf is drift again.
+          yield* declare(
+            '{ "version": 1, "keep": [{ "path": "packages/drivers/box", "why": "kept", "packageName": "@beep/box" }] }'
+          );
+          yield* expectPasses(false);
+
+          // An undeclared missing workspace is drift; declared pruned, it is not.
+          yield* declare('{ "version": 1 }');
+          yield* fs.remove(`${root}/packages/other`, { recursive: true });
+          yield* expectPasses(false);
+          yield* declare(
+            '{ "version": 1, "prune": [{ "path": "packages/other", "why": "not shipped", "packageName": "@beep/other" }] }'
+          );
+          yield* expectPasses(true);
+          yield* declare(
+            '{ "version": 1, "prune": [{ "path": "packages/other", "why": "not shipped", "packageName": "@beep/other" }], "keep": [{ "path": "packages/other", "why": "the keep wins" }] }'
+          );
+          yield* expectPasses(false);
+
+          // A live workspace the checkout replaced: its widened closure is drift unless it is owned.
+          yield* writeFixtureFiles(root, {
+            ...fixturePackageFiles("other"),
+            "packages/other/src/index.ts": 'export { extra } from "./Extra.ts";\n',
+            "packages/other/src/Extra.ts": "export const extra = 1;\n",
+          });
+          yield* declare('{ "version": 1 }');
+          yield* expectPasses(false);
+          yield* declare(
+            '{ "version": 1, "owned": [{ "path": "packages/other", "why": "replaced", "packageName": "@beep/other" }] }'
+          );
+          yield* expectPasses(true);
+          // A difference outside every pruned or owned workspace is still drift.
+          yield* writeFixtureFiles(root, {
+            "packages/helper/src/index.ts": 'export { more as value } from "./More.ts";\n',
+            "packages/helper/src/More.ts": "export const more = 1;\n",
+          });
+          yield* expectPasses(false);
+        }).pipe(
+          Effect.ensuring(
+            Effect.sync(() => {
+              selection.root = "";
+            })
+          )
+        );
+      })
+    );
+  });
   it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect(
       "runs package deprecated APIs through one bounded type-aware Oxlint process",

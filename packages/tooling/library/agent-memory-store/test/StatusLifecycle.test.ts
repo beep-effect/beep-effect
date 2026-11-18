@@ -32,7 +32,7 @@ describe("StatusLifecycle", () => {
       expect(lifecycleAllows(lifecycle, move(O.some(completed), active))).toBe(false);
       expect(lifecycleAllows(lifecycle, move(O.some(active), draft))).toBe(false);
       expect(lifecycleAllows(lifecycle, move(O.some(active), StatusValue.make("archived")))).toBe(false);
-      expect(lifecycleAllows(lifecycle, move(O.some(StatusValue.make("archived")), completed))).toBe(false);
+      expect(lifecycleAllows(lifecycle, move(StatusValue.makeOption("archived"), completed))).toBe(false);
       expect(lifecycleAllows(lifecycle, move(O.some(draft), active, "phase"))).toBe(false);
     })
   );

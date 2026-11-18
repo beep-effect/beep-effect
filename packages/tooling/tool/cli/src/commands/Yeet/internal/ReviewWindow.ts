@@ -567,13 +567,11 @@ const walkWindowCarry = Effect.fn("Yeet.walkWindowRewrites")(function* (
     row = A.findFirst(rows, (value) => value.after === current);
   }
   if (HashSet.size(carriedAfters) === 0 || O.isNone(row)) return O.none();
-  return O.some(
-    WindowCarryTrail.make({
-      carry: walk.carryOf(HashSet.size(carriedAfters), current),
-      carriedAfters,
-      rootPushedAt: row.value.timestamp,
-    })
-  );
+  return WindowCarryTrail.makeOption({
+    carry: walk.carryOf(HashSet.size(carriedAfters), current),
+    carriedAfters,
+    rootPushedAt: row.value.timestamp,
+  });
 });
 
 const readYeetReviewWindowCarry = Effect.fn("Yeet.readYeetReviewWindowCarry")(function* (
@@ -592,7 +590,7 @@ const readYeetReviewWindowCarry = Effect.fn("Yeet.readYeetReviewWindowCarry")(fu
   const walked = yield* walkWindowCarry(rows.value, target.headSha, walk);
   if (O.isNone(walked)) return O.none();
   const suite = yield* rest.headFirstReceivedAt(walked.value.carry.rootSha).pipe(Effect.option, Effect.map(O.flatten));
-  return O.some(WindowCarryEvidence.make({ ...walked.value, rootFirstSuite: suite }));
+  return WindowCarryEvidence.makeOption({ ...walked.value, rootFirstSuite: suite });
 });
 
 class WindowCarryRead extends S.Opaque<WindowCarryRead, { readonly brand: unique symbol }>()(

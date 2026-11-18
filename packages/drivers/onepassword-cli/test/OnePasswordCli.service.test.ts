@@ -85,13 +85,13 @@ describe("@beep/onepassword-cli", () => {
     });
     const errorOptions = OnePasswordCliErrorOptions.make({
       command: O.some("op"),
-      exitCode: O.some(OnePasswordCliExitCode.make(1)),
+      exitCode: OnePasswordCliExitCode.makeOption(1),
       stderr: S.decodeResult(OnePasswordCliDiagnosticText)(" secret not found\n").pipe(Result.getOrThrow, O.some),
       stdout: S.decodeResult(OnePasswordCliDiagnosticText)("").pipe(Result.getOrThrow, O.some),
     });
     const error = OnePasswordCliError.make({
       command: O.some("op"),
-      exitCode: O.some(OnePasswordCliExitCode.make(1)),
+      exitCode: OnePasswordCliExitCode.makeOption(1),
       message: "1Password CLI could not resolve the secret reference.",
       operation: "read",
       stderr: S.decodeResult(OnePasswordCliDiagnosticText)("secret not found").pipe(Result.getOrThrow, O.some),

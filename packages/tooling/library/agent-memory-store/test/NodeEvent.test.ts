@@ -285,7 +285,7 @@ describe("NodeEvent events", () => {
         text: "status: active",
         transition: StatusTransition.make({
           field: "status",
-          from: O.some(StatusValue.make("draft")),
+          from: StatusValue.makeOption("draft"),
           to: StatusValue.make("active"),
         }),
         author,

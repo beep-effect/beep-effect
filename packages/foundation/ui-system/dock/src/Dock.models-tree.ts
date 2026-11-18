@@ -580,15 +580,13 @@ export class TabsNode extends S.Opaque<TabsNode, { readonly brand: unique symbol
       return A.match(fromMatch, {
         onEmpty: O.none,
         onNonEmpty: (activeAndAfter) =>
-          O.some(
-            TabsNode.make({
-              groupId: tabs.groupId,
-              before,
-              active: A.headNonEmpty(activeAndAfter),
-              after: A.tailNonEmpty(activeAndAfter),
-              metadata: tabs.metadata,
-            })
-          ),
+          TabsNode.makeOption({
+            groupId: tabs.groupId,
+            before,
+            active: A.headNonEmpty(activeAndAfter),
+            after: A.tailNonEmpty(activeAndAfter),
+            metadata: tabs.metadata,
+          }),
       });
     }
   );
@@ -625,39 +623,33 @@ export class TabsNode extends S.Opaque<TabsNode, { readonly brand: unique symbol
         onTrue: () =>
           A.match(tabs.after, {
             onNonEmpty: (after) =>
-              O.some(
-                TabsNode.make({
-                  groupId: tabs.groupId,
-                  before: tabs.before,
-                  active: A.headNonEmpty(after),
-                  after: A.tailNonEmpty(after),
-                  metadata: tabs.metadata,
-                })
-              ),
+              TabsNode.makeOption({
+                groupId: tabs.groupId,
+                before: tabs.before,
+                active: A.headNonEmpty(after),
+                after: A.tailNonEmpty(after),
+                metadata: tabs.metadata,
+              }),
             onEmpty: () =>
               A.match(tabs.before, {
                 onEmpty: O.none,
                 onNonEmpty: (before) =>
-                  O.some(
-                    TabsNode.make({
-                      groupId: tabs.groupId,
-                      before: A.dropRight(before, 1),
-                      active: A.lastNonEmpty(before),
-                      metadata: tabs.metadata,
-                    })
-                  ),
+                  TabsNode.makeOption({
+                    groupId: tabs.groupId,
+                    before: A.dropRight(before, 1),
+                    active: A.lastNonEmpty(before),
+                    metadata: tabs.metadata,
+                  }),
               }),
           }),
         onFalse: () =>
-          O.some(
-            TabsNode.make({
-              groupId: tabs.groupId,
-              before: A.filter(tabs.before, (panel) => Bool.not(S.toEquivalence(PanelId)(panel.id, panelId))),
-              active: tabs.active,
-              after: A.filter(tabs.after, (panel) => Bool.not(S.toEquivalence(PanelId)(panel.id, panelId))),
-              metadata: tabs.metadata,
-            })
-          ),
+          TabsNode.makeOption({
+            groupId: tabs.groupId,
+            before: A.filter(tabs.before, (panel) => Bool.not(S.toEquivalence(PanelId)(panel.id, panelId))),
+            active: tabs.active,
+            after: A.filter(tabs.after, (panel) => Bool.not(S.toEquivalence(PanelId)(panel.id, panelId))),
+            metadata: tabs.metadata,
+          }),
       })
   );
 }
@@ -1029,23 +1021,19 @@ export const DockNode = DockNodeBase.pipe(
                 O.match(removeTabs(first, groupId), {
                   onNone: () => O.some(second),
                   onSome: (nextFirst) =>
-                    O.some(
-                      SplitNode.make({
-                        splitId: split.splitId,
-                        layout: SplitLayout.withChildren(split.layout, nextFirst, second),
-                      })
-                    ),
+                    SplitNode.makeOption({
+                      splitId: split.splitId,
+                      layout: SplitLayout.withChildren(split.layout, nextFirst, second),
+                    }),
                 }),
               onFalse: () =>
                 O.match(removeTabs(second, groupId), {
                   onNone: () => O.some(first),
                   onSome: (nextSecond) =>
-                    O.some(
-                      SplitNode.make({
-                        splitId: split.splitId,
-                        layout: SplitLayout.withChildren(split.layout, first, nextSecond),
-                      })
-                    ),
+                    SplitNode.makeOption({
+                      splitId: split.splitId,
+                      layout: SplitLayout.withChildren(split.layout, first, nextSecond),
+                    }),
                 }),
             });
           },

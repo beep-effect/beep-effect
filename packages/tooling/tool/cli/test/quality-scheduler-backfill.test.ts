@@ -498,9 +498,10 @@ describe("SCHE-06 modes off equal the deployed self-selection", () => {
         expect(
           selfMayAttemptForTesting({
             ...scan,
-            context: O.some(
-              AdmissionBackfillContext.make({ policy: policyOf({ backfill: "off", capacityTokens }), finished: [] })
-            ),
+            context: AdmissionBackfillContext.makeOption({
+              policy: policyOf({ backfill: "off", capacityTokens }),
+              finished: [],
+            }),
           }),
           `round ${round} ${self.nonce}`
         ).toBe(selfMayAttemptForTesting({ ...scan, context: O.none() }));

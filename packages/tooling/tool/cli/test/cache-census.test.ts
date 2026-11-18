@@ -486,7 +486,7 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("computation configuration
         census,
         CacheToolchainSnapshot.make({
           ...toolchain,
-          installedDependencies: O.some(CacheDependencyTree.make({ ...tree, sha256: changedDigest })),
+          installedDependencies: CacheDependencyTree.makeOption({ ...tree, sha256: changedDigest }),
         })
       );
       expect(first.configurationDigest).toBe(second.configurationDigest);

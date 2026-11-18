@@ -284,20 +284,18 @@ const schemaClassDeclaration = (
   const kind = callee.name.text;
   if (!isSchemaClassKind(kind)) return O.none();
   const line = lineOf(sourceFile, declaration.getStart(sourceFile));
-  return O.some(
-    SchemaClassDeclaration.make({
-      symbol: declaration.name?.text ?? `<anonymous>@${line}`,
-      kind,
-      brandState: brandOf(inner.typeArguments ?? []),
-      line,
-      offset: callee.getStart(sourceFile),
-      hasInstanceMembers: A.some(declaration.members, isInstanceMember),
-      hasIdentityTemplate: isIdentityTemplate(inner.arguments[0]),
-      hasIdentityAnnotation: IDENTITY_ANNOTATION_PATTERN.test(heritage.getText(sourceFile)),
-      hasInlineSource: !isReferenceArgument(heritage.arguments[0]),
-      hasDeclarationHooks: hasDeclarationHooks(kind, heritage),
-    })
-  );
+  return SchemaClassDeclaration.makeOption({
+    symbol: declaration.name?.text ?? `<anonymous>@${line}`,
+    kind,
+    brandState: brandOf(inner.typeArguments ?? []),
+    line,
+    offset: callee.getStart(sourceFile),
+    hasInstanceMembers: A.some(declaration.members, isInstanceMember),
+    hasIdentityTemplate: isIdentityTemplate(inner.arguments[0]),
+    hasIdentityAnnotation: IDENTITY_ANNOTATION_PATTERN.test(heritage.getText(sourceFile)),
+    hasInlineSource: !isReferenceArgument(heritage.arguments[0]),
+    hasDeclarationHooks: hasDeclarationHooks(kind, heritage),
+  });
 };
 
 // `class Y extends X` subclasses X; `class Y extends X.extend<Y>(...)(...)` is collected from the `.extend` access.
@@ -432,19 +430,17 @@ const unbrandedEntry = (
 ): O.Option<SchemaFirstInventoryEntry> =>
   declaration.brandState === "nominal"
     ? O.none()
-    : O.some(
-        SchemaFirstInventoryEntry.make({
-          file,
-          symbol: declaration.symbol,
-          kind: "unbranded-schema-class",
-          status: "candidate",
-          reason:
-            declaration.brandState === "missing"
-              ? `S.${declaration.kind} declaration has no brand type argument; add { readonly brand: unique symbol } (D4).`
-              : `S.${declaration.kind} declaration carries the structural {} brand; use { readonly brand: unique symbol } or record a schema-first exception (D4).`,
-          owner,
-        })
-      );
+    : SchemaFirstInventoryEntry.makeOption({
+        file,
+        symbol: declaration.symbol,
+        kind: "unbranded-schema-class",
+        status: "candidate",
+        reason:
+          declaration.brandState === "missing"
+            ? `S.${declaration.kind} declaration has no brand type argument; add { readonly brand: unique symbol } (D4).`
+            : `S.${declaration.kind} declaration carries the structural {} brand; use { readonly brand: unique symbol } or record a schema-first exception (D4).`,
+        owner,
+      });
 
 // Plain-data heuristic (D1, D3): in-file facts plus a project-wide name index. A declaration is a candidate when it
 // is an S.Class or S.TaggedClass (errors use S.Error/S.TaggedError and entities their own kits, so neither matches),
@@ -464,16 +460,14 @@ const plainDataEntry = (
   !declaration.hasInstanceMembers &&
   !declaration.hasDeclarationHooks &&
   !HashSet.has(referencedNames, declaration.symbol)
-    ? O.some(
-        SchemaFirstInventoryEntry.make({
-          file,
-          symbol: declaration.symbol,
-          kind: "plain-data-schema-class",
-          status: "candidate",
-          reason: `Plain-data S.${declaration.kind} should be a branded S.Opaque over S.${declaration.kind === "TaggedClass" ? "TaggedStruct" : "Struct"} (D1).`,
-          owner,
-        })
-      )
+    ? SchemaFirstInventoryEntry.makeOption({
+        file,
+        symbol: declaration.symbol,
+        kind: "plain-data-schema-class",
+        status: "candidate",
+        reason: `Plain-data S.${declaration.kind} should be a branded S.Opaque over S.${declaration.kind === "TaggedClass" ? "TaggedStruct" : "Struct"} (D1).`,
+        owner,
+      })
     : O.none();
 
 // Tooling identity rule: an `S.Class<...>(...)(...)` declaration with a `$I` template identity must pass

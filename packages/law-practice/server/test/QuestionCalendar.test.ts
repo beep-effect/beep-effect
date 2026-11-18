@@ -42,9 +42,7 @@ const graphEvent = (id: string, date: string, subject: string, categories: Reado
   GraphEvent.make({
     id,
     subject: O.some(subject),
-    start: O.some(
-      GraphDateTimeTimeZone.make({ dateTime: O.some(`${date}T00:00:00.0000000`), timeZone: O.some("UTC") })
-    ),
+    start: GraphDateTimeTimeZone.makeOption({ dateTime: O.some(`${date}T00:00:00.0000000`), timeZone: O.some("UTC") }),
     categories: O.some(categories),
   });
 

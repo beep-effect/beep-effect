@@ -320,6 +320,7 @@ const referenceViolationOf = (
   const extra = HashSet.size(HashSet.difference(actualSet, expectedSet));
   const reordered = missing === 0 && extra === 0 ? ", reordered" : "";
 
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
   return O.some(
     TsconfigOverlayViolation.make({
       file,

@@ -281,7 +281,7 @@ const githubCheckLaneWaves = (lanes: ReadonlyArray<GithubCheckLaneSpec>): Readon
       const waveLanes = A.filter(lanes, (lane) => lane.wave === wave);
       return A.isReadonlyArrayEmpty(waveLanes)
         ? O.none()
-        : O.some(GithubCheckLaneWaveSpec.make({ lanes: waveLanes, wave }));
+        : GithubCheckLaneWaveSpec.makeOption({ lanes: waveLanes, wave });
     }),
     A.getSomes
   );

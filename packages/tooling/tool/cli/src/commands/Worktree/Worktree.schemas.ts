@@ -489,7 +489,7 @@ export class WorktreeSessionMarker extends S.Opaque<WorktreeSessionMarker, { rea
  * import * as O from "effect/Option"
  *
  * const exemption = WorktreeInvokerExemption.make({
- *   sessionMarker: O.some(WorktreeSessionMarker.make({ name: "CLAUDE_PID", pid: 4242 })),
+ *   sessionMarker: WorktreeSessionMarker.makeOption({ name: "CLAUDE_PID", pid: 4242 }),
  *   selfRetirement: true,
  * })
  * console.log(O.isSome(exemption.sessionMarker)) // true

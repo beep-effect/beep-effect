@@ -467,7 +467,7 @@ export const reviewerContext = "beep-reviewer";
  * import { productionConfig } from "@beep/infra-github/Production"
  * import * as O from "effect/Option"
  *
- * const live = O.some(RequiredCheck.make({ context: "beep-reviewer", integrationId: 5321138 }))
+ * const live = RequiredCheck.makeOption({ context: "beep-reviewer", integrationId: 5321138 })
  * console.log(requiredChecks(productionConfig.mainRuleset, live).at(-1)?.context) // "beep-reviewer"
  * ```
  *

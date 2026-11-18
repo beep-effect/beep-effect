@@ -231,7 +231,7 @@ const ownedUploadFixture = Effect.fn("SignedRunnerTest.uploadFixture")(function*
   const binding = CacheProducerBinding.make({
     ...captured.binding,
     client: f.request.pilot.client,
-    uploadApproval: O.some(CacheProducerUploadApproval.make({ targetSha256: digest, artifactKeySha256: digest })),
+    uploadApproval: CacheProducerUploadApproval.makeOption({ targetSha256: digest, artifactKeySha256: digest }),
   });
   const observed = CacheAdapterRuntimeObservation.make({
     role: "writer",

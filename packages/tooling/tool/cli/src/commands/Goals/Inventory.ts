@@ -150,17 +150,15 @@ const scanGoalPacket = Effect.fn("Goals.scanGoalPacket")(function* (
   const manifestText = yield* readOptionalFile(manifestPath, mode);
   const readmeText = yield* readOptionalFile(readmePath, mode);
   const goalMdText = yield* readOptionalFile(path.join(packetPath, "GOAL.md"), mode);
-  return O.some(
-    GoalPacketRecord.make({
-      slug,
-      packetPath,
-      manifestPath,
-      readmePath,
-      ...optionalProp("manifestText", manifestText),
-      ...optionalProp("readmeText", readmeText),
-      ...optionalProp("goalMdChars", O.map(goalMdText, Str.length)),
-    })
-  );
+  return GoalPacketRecord.makeOption({
+    slug,
+    packetPath,
+    manifestPath,
+    readmePath,
+    ...optionalProp("manifestText", manifestText),
+    ...optionalProp("readmeText", readmeText),
+    ...optionalProp("goalMdChars", O.map(goalMdText, Str.length)),
+  });
 });
 
 const scanGoalPackets = Effect.fn("Goals.scanGoalPackets")(function* (repoRoot: string, mode: InventoryScanMode) {

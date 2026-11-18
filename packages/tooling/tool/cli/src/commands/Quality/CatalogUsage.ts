@@ -11,20 +11,29 @@
 
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
+import { ImporterDependency } from "@beep/lockfiles/ImporterDependency";
 import { Lockfile } from "@beep/lockfiles/Lockfile";
+import {
+  isCheckoutSubjectPruned,
+  loadCheckoutInventoryWith,
+  workspaceSubject,
+} from "@beep/repo-cli-kit/CheckoutSubject";
 import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
+import { productLeaves } from "@beep/repo-cli-kit/ProductLeaves";
 import { A, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import {
@@ -38,6 +47,7 @@ import {
 import { CatalogUsageSource } from "./CatalogUsage.service.ts";
 import { collectWorkspacePackageJsonFiles } from "./ChangesetGraph.ts";
 import { CatalogUsageError } from "./Quality.errors.ts";
+import type { LockfileImporter } from "@beep/lockfiles/LockfileImporter";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
@@ -161,6 +171,11 @@ const manifestDependencyEntries = (manifest: CatalogUsageManifest): ReadonlyArra
     R.toEntries
   );
 
+const dependencyCatalogKeys = (entries: ReadonlyArray<readonly [string, string]>): ReadonlyArray<string> =>
+  A.flatMap(entries, ([packageName, spec]) =>
+    A.fromOption(O.map(catalogNameFromSpec(spec), (catalog) => catalogKey(catalog, packageName)))
+  );
+
 const overrideCatalogKeys = (overrides: R.ReadonlyRecord<string, S.Json>): ReadonlyArray<string> =>
   A.flatMap(R.toEntries(overrides), ([key, value]) =>
     P.isString(value)
@@ -210,10 +225,9 @@ const byFindingKey: Order.Order<CatalogUsageFinding> = Order.mapInput(
  */
 export const catalogUsageReport = (snapshot: CatalogUsageSnapshot): CatalogUsageReport => {
   const dependencyEntries = A.flatMap(snapshot.manifests, manifestDependencyEntries);
+  const prunedEntries = A.flatMap(snapshot.prunedManifests, manifestDependencyEntries);
   const consumedCatalogKeys = HashSet.fromIterable([
-    ...A.flatMap(dependencyEntries, ([packageName, spec]) =>
-      A.fromOption(O.map(catalogNameFromSpec(spec), (catalog) => catalogKey(catalog, packageName)))
-    ),
+    ...dependencyCatalogKeys(dependencyEntries),
     ...overrideCatalogKeys(snapshot.root.overrides),
     ...A.map(snapshot.templateReferences, (reference) => catalogKey(reference.catalog, reference.packageName)),
   ]);
@@ -221,6 +235,8 @@ export const catalogUsageReport = (snapshot: CatalogUsageSnapshot): CatalogUsage
     ...A.map(dependencyEntries, ([packageName]) => packageName),
     ...snapshot.lockfilePackages,
   ]);
+  const prunedCatalogKeys = HashSet.fromIterable(dependencyCatalogKeys(prunedEntries));
+  const prunedOverrideConsumers = HashSet.fromIterable(A.map(prunedEntries, ([packageName]) => packageName));
 
   const catalogEntries = [
     ...A.map(R.keys(snapshot.root.catalog), (key) => [defaultCatalogName, key] as const),
@@ -230,28 +246,50 @@ export const catalogUsageReport = (snapshot: CatalogUsageSnapshot): CatalogUsage
   ];
   const overrideKeys = R.keys(snapshot.root.overrides);
 
-  const findings = A.sort(
-    [
-      ...pipe(
-        catalogEntries,
-        A.filter(([catalog, key]) => !HashSet.has(consumedCatalogKeys, catalogKey(catalog, key))),
-        A.map(([catalog, key]) => CatalogUsageFinding.make({ subject: "catalog-entry", key, catalog }))
-      ),
-      ...pipe(
-        overrideKeys,
-        A.filter((key) => !HashSet.has(overrideConsumers, packageNameFromSpecifier(key))),
-        A.map((key) => CatalogUsageFinding.make({ subject: "root-override", key }))
-      ),
-    ],
-    byFindingKey
-  );
+  const unconsumed = [
+    ...pipe(
+      catalogEntries,
+      A.filter(([catalog, key]) => !HashSet.has(consumedCatalogKeys, catalogKey(catalog, key))),
+      A.map(
+        ([catalog, key]) =>
+          [
+            CatalogUsageFinding.make({ subject: "catalog-entry", key, catalog }),
+            HashSet.has(prunedCatalogKeys, catalogKey(catalog, key)),
+          ] as const
+      )
+    ),
+    ...pipe(
+      overrideKeys,
+      A.filter((key) => !HashSet.has(overrideConsumers, packageNameFromSpecifier(key))),
+      A.map(
+        (key) =>
+          [
+            CatalogUsageFinding.make({ subject: "root-override", key }),
+            HashSet.has(prunedOverrideConsumers, packageNameFromSpecifier(key)),
+          ] as const
+      )
+    ),
+  ];
 
   return CatalogUsageReport.make({
     catalogEntries: A.length(catalogEntries),
     rootOverrides: A.length(overrideKeys),
     manifests: A.length(snapshot.manifests),
     templateReferences: A.length(snapshot.templateReferences),
-    findings,
+    findings: A.sort(
+      A.map(
+        A.filter(unconsumed, ([, pruned]) => !pruned),
+        ([finding]) => finding
+      ),
+      byFindingKey
+    ),
+    prunedConsumers: A.sort(
+      A.map(
+        A.filter(unconsumed, ([, pruned]) => pruned),
+        ([finding]) => finding
+      ),
+      byFindingKey
+    ),
   });
 };
 
@@ -343,18 +381,76 @@ export const readCatalogUsageManifest = Effect.fn("CatalogUsage.readCatalogUsage
   });
 });
 
+const parseManifestName = manifestParser(["name"]);
+
+// One manifest's dependency buckets, and its package name when it declares one.
 const readManifest = Effect.fn("CatalogUsage.readManifest")(function* (repoRoot: string, file: string) {
   const readText1 = yield* readText(repoRoot, file);
-  return yield* readCatalogUsageManifest(readText1, file);
+  const manifest = yield* readCatalogUsageManifest(readText1, file);
+  const named = yield* parseManifestName(readText1).pipe(
+    CatalogUsageError.mapError(`Failed to parse package manifest ${file}.`, file)
+  );
+  return { manifest, name: O.fromUndefinedOr(named.name) } as const;
 });
 
-const readLockfilePackages = Effect.fn("CatalogUsage.readLockfilePackages")(function* (repoRoot: string) {
-  const lockfile = yield* readText(repoRoot, "bun.lock").pipe(
+const readLockfile = Effect.fn("CatalogUsage.readLockfile")(function* (repoRoot: string) {
+  return yield* readText(repoRoot, "bun.lock").pipe(
     Effect.flatMap(Lockfile.parse({ format: "bun" })),
     CatalogUsageError.mapError("Failed to parse bun.lock.", "bun.lock")
   );
-  // An aliased install answers to both its alias and its real package name.
-  return A.dedupe(A.flatMap(lockfile.packages, (pkg) => [pkg.installName, pkg.name]));
+});
+
+// An aliased install answers to both its alias and its real package name.
+const lockfilePackageNames = (lockfile: Lockfile): ReadonlyArray<string> =>
+  A.dedupe(A.flatMap(lockfile.packages, (pkg) => [pkg.installName, pkg.name]));
+
+const encodeImporterDependency = S.encodeEffect(ImporterDependency);
+
+// One pruned workspace's lockfile record as the dependency spellings its manifest declared.
+const prunedImporterManifest = Effect.fn("CatalogUsage.prunedImporterManifest")(function* (
+  directory: string,
+  importer: LockfileImporter
+) {
+  const dependencies = yield* Effect.forEach(
+    importer.dependencies,
+    (dependency) =>
+      Effect.map(encodeImporterDependency(dependency), (encoded) => [encoded.name, encoded.specifier] as const),
+    { concurrency: 1 }
+  );
+  return CatalogUsageManifest.make({
+    file: `bun.lock#${directory}`,
+    dependencies: R.fromEntries(dependencies),
+    devDependencies: R.empty(),
+    peerDependencies: R.empty(),
+    optionalDependencies: R.empty(),
+  });
+});
+
+// goals/prunable-product-leaves, seam 1b: the lockfile still records a pruned workspace's declared
+// dependencies under its last-known directory until the lockfile is regenerated. Those records are
+// what the pruned workspace consumed; a record of an undeclared missing workspace is not read.
+const prunedLockfileManifests = Effect.fn("CatalogUsage.prunedLockfileManifests")(function* (
+  repoRoot: string,
+  lockfile: Lockfile,
+  workspaces: HashMap.HashMap<string, string>
+) {
+  const inventory = yield* loadCheckoutInventoryWith(repoRoot, productLeaves, workspaces).pipe(
+    CatalogUsageError.mapError("Failed to read the checkout inventory.")
+  );
+  // A workspace the checkout owns replaced upstream's content, so upstream's record excuses it too.
+  const owned = A.filterMap(inventory.declaration.owned, (entry) =>
+    entry.packageName !== undefined && isCheckoutSubjectPruned(inventory, workspaceSubject(entry.packageName))
+      ? Result.succeed(entry.path)
+      : Result.failVoid
+  );
+  const records = A.getSomes(
+    A.map(A.dedupe([...HashMap.values(inventory.prunedWorkspaces), ...owned]), (directory) =>
+      O.map(lockfile.importer(directory), (importer) => [directory, importer] as const)
+    )
+  );
+  return yield* Effect.forEach(records, ([directory, importer]) => prunedImporterManifest(directory, importer), {
+    concurrency: 1,
+  }).pipe(CatalogUsageError.mapError("Failed to read a pruned workspace's bun.lock record.", "bun.lock"));
 });
 
 const collectTemplateFiles = Effect.fn("CatalogUsage.collectTemplateFiles")(function* (repoRoot: string) {
@@ -385,10 +481,20 @@ const readCatalogUsageSnapshot = Effect.fn("CatalogUsage.readCatalogUsageSnapsho
   const workspaceFiles = yield* collectWorkspacePackageJsonFiles(repoRoot).pipe(
     CatalogUsageError.mapError("Failed to list workspace package manifests.")
   );
-  const manifests = yield* Effect.forEach(["package.json", ...workspaceFiles], (file) => readManifest(repoRoot, file), {
+  const rootManifest = yield* readManifest(repoRoot, "package.json");
+  const workspaceManifests = yield* Effect.forEach(workspaceFiles, (file) => readManifest(repoRoot, file), {
     concurrency: 1,
   });
-  const lockfilePackages = yield* readLockfilePackages(repoRoot);
+  const manifests = A.map([rootManifest, ...workspaceManifests], (read) => read.manifest);
+  const lockfile = yield* readLockfile(repoRoot);
+  const workspaces = HashMap.fromIterable(
+    A.getSomes(
+      A.map(workspaceManifests, (read) =>
+        O.map(read.name, (name) => [name, Str.replace(/\/?package\.json$/u, "")(read.manifest.file)] as const)
+      )
+    )
+  );
+  const prunedManifests = yield* prunedLockfileManifests(repoRoot, lockfile, workspaces);
   const templateFiles = yield* collectTemplateFiles(repoRoot);
   const templateReferences = yield* Effect.forEach(
     templateFiles,
@@ -399,8 +505,9 @@ const readCatalogUsageSnapshot = Effect.fn("CatalogUsage.readCatalogUsageSnapsho
   return CatalogUsageSnapshot.make({
     root,
     manifests,
-    lockfilePackages,
+    lockfilePackages: lockfilePackageNames(lockfile),
     templateReferences: A.flatten(templateReferences),
+    prunedManifests,
   });
 });
 
@@ -470,6 +577,15 @@ export const runCatalogUsageCheck = Effect.fn("CatalogUsage.runCatalogUsageCheck
   yield* Console.log(
     `[catalog-usage] catalog_entries=${report.catalogEntries} root_overrides=${report.rootOverrides} manifests=${report.manifests} template_references=${report.templateReferences} findings=${A.length(report.findings)}`
   );
+  if (A.isReadonlyArrayNonEmpty(report.prunedConsumers)) {
+    yield* Console.log(
+      `[catalog-usage] skipped_pruned=${A.length(report.prunedConsumers)}: consumed only by workspaces pruned from this checkout:`
+    );
+    yield* Effect.forEach(report.prunedConsumers, (finding) => Console.log(renderFinding(finding)), {
+      concurrency: 1,
+      discard: true,
+    });
+  }
   if (A.isReadonlyArrayNonEmpty(report.findings)) {
     yield* Console.error("[catalog-usage] root catalog entries and overrides without a consumer:");
     yield* Effect.forEach(report.findings, (finding) => Console.error(renderFinding(finding)), {

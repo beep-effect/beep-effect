@@ -492,7 +492,7 @@ const BASELINE_WRITER_STEPS: ReadonlyArray<BaselineWriterStep> = [
     label: "fallow health baseline",
     args: ["run", "fallow:health:baseline:write"],
     exitPolicy: "tolerate-finding-exit",
-    verifiedOutput: O.some(PosixPath.make("standards/fallow.health.regression-baseline.jsonc")),
+    verifiedOutput: PosixPath.makeOption("standards/fallow.health.regression-baseline.jsonc"),
   }),
   BaselineWriterStep.make({ label: "fallow dead-code baseline", args: ["run", "fallow:dead-code:baseline:write"] }),
   BaselineWriterStep.make({

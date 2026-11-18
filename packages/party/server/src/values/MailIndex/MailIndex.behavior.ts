@@ -47,9 +47,12 @@ export const identifierOfAddress = Effect.fn("PartyMail.identifierOfAddress")(fu
   const value = yield* Effect.option(normalized);
   if (O.isNone(value)) return O.none<IngestIdentifier>();
   const key = yield* partyKeyOf(value.value);
-  return O.some(
-    IngestIdentifier.make({ id: IdentifierId.make(`party-ident:${key}`), value: value.value, key, represents: false })
-  );
+  return IngestIdentifier.makeOption({
+    id: IdentifierId.make(`party-ident:${key}`),
+    value: value.value,
+    key,
+    represents: false,
+  });
 });
 
 /**
@@ -123,7 +126,7 @@ const withName = Effect.fn("PartyMail.withName")(function* (address: string | un
   if (address === undefined || !Str.isNonEmpty(Str.trim(address))) return O.none<ParsedMailbox>();
   const parsed = yield* parseMailbox(address);
   const displayName = O.orElse(parsed.displayName, () => O.filter(O.fromNullishOr(name), Str.isNonEmpty));
-  return O.some(ParsedMailbox.make({ ...parsed, displayName }));
+  return ParsedMailbox.makeOption({ ...parsed, displayName });
 });
 
 const selectFrom = (
@@ -132,16 +135,14 @@ const selectFrom = (
   sender: O.Option<ParsedMailbox>
 ) => {
   if (O.isSome(from))
-    return O.some(HeaderSlot.make({ role: "from", field: "From", namespace: "rfc5322", parsed: from.value }));
+    return HeaderSlot.makeOption({ role: "from", field: "From", namespace: "rfc5322", parsed: from.value });
   if (O.isSome(representing))
-    return O.some(
-      HeaderSlot.make({
-        role: "from",
-        field: "PR_SENT_REPRESENTING_EMAIL_ADDRESS",
-        namespace: "mapi",
-        parsed: representing.value,
-      })
-    );
+    return HeaderSlot.makeOption({
+      role: "from",
+      field: "PR_SENT_REPRESENTING_EMAIL_ADDRESS",
+      namespace: "mapi",
+      parsed: representing.value,
+    });
   return O.map(sender, (parsed) =>
     HeaderSlot.make({ role: "from", field: "PR_SENDER_EMAIL_ADDRESS", namespace: "mapi", parsed })
   );
@@ -238,7 +239,7 @@ const matchHeaders = (left: HeaderSlot, right: HeaderSlot): O.Option<PairedHeade
   if (!S.is(ExchangeDn)(dn.value) || !S.is(EmailAddress)(smtp.value)) return O.none();
   if (left.parsed.displayName.value !== right.parsed.displayName.value) return O.none();
   if (!compatibleRoles(left.role, right.role)) return O.none();
-  return O.some(PairedHeaders.make({ left, right, dn, smtp, displayName: left.parsed.displayName.value }));
+  return PairedHeaders.makeOption({ left, right, dn, smtp, displayName: left.parsed.displayName.value });
 };
 const compatibleRoles = (left: ParticipantRole, right: ParticipantRole) =>
   left === right || (right === "from" && (left === "sender" || left === "sent-representing"));
@@ -329,17 +330,15 @@ export const adaptMailRecord = Effect.fn("PartyMail.adaptMailRecord")(function* 
   );
   const event =
     hasFrom && A.isArrayNonEmpty(participants)
-      ? O.some(
-          CommunicationEvent.make({
-            id: eventId,
-            occurrence: occurrenceId,
-            channel: "email",
-            sentAt,
-            messageId: O.fromNullishOr(record.internet?.messageId),
-            conversationKey: O.fromNullishOr(record.conversationIndexHex),
-            participants,
-          })
-        )
+      ? CommunicationEvent.makeOption({
+          id: eventId,
+          occurrence: occurrenceId,
+          channel: "email",
+          sentAt,
+          messageId: O.fromNullishOr(record.internet?.messageId),
+          conversationKey: O.fromNullishOr(record.conversationIndexHex),
+          participants,
+        })
       : O.none();
   return MailIngest.make({
     occurrence: ArtifactOccurrence.make({

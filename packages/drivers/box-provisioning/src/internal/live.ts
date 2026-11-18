@@ -180,7 +180,7 @@ export const toObservedFolderFromFull = (
           BoxObservedFolder.make({
             etag: pipe(O.fromNullishOr(folder.etag), O.map(BoxProviderRevision.make)),
             name,
-            parentProviderId: O.some(BoxProviderId.make(parentProviderId)),
+            parentProviderId: BoxProviderId.makeOption(parentProviderId),
             providerId: BoxProviderId.make(folder.id),
           })
         ),

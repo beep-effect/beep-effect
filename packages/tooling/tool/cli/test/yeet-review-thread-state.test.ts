@@ -13,13 +13,11 @@ import * as O from "effect/Option";
 const AUTHOR = "kriegcloud";
 
 const comment = (authorLogin: string, authorKind: "user" | "bot", createdAt?: string) =>
-  O.some(
-    YeetReviewThreadNewestComment.make({
-      authorLogin,
-      authorKind,
-      createdAt: createdAt === undefined ? O.none() : O.some(createdAt),
-    })
-  );
+  YeetReviewThreadNewestComment.makeOption({
+    authorLogin,
+    authorKind,
+    createdAt: createdAt === undefined ? O.none() : O.some(createdAt),
+  });
 
 const input = (overrides: Partial<Parameters<typeof YeetReviewThreadStateInput.make>[0]>) =>
   YeetReviewThreadStateInput.make({

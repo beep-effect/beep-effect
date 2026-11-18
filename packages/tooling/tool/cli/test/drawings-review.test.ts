@@ -375,7 +375,7 @@ describe("drawing review rules", () => {
         ReviewFinding.make({
           ...first,
           status: "clarify",
-          disposition: O.some(Disposition.cases.clarify.make({ kind: "clarify", question: "Which point?" })),
+          disposition: Disposition.cases.clarify.makeOption({ kind: "clarify", question: "Which point?" }),
         }),
         ReviewFinding.make({ ...first, status: "declined", disposition: O.some(declined) }),
       ],

@@ -154,9 +154,11 @@ export const makeCitationDocumentCleanerProtocols = Effect.fn("Citation.makeDocu
     const generator = O.isSome(entry.value.generator)
       ? yield* Ref.get(entry.value.generator.value).pipe(Effect.asSome)
       : O.none();
-    return O.some(
-      CitationDocumentCleanerContainerState.make({ kind: entry.value.kind, size: entry.value.names.length, generator })
-    );
+    return CitationDocumentCleanerContainerState.makeOption({
+      kind: entry.value.kind,
+      size: entry.value.names.length,
+      generator,
+    });
   });
   const document = CitationDocumentInputProtocols.of({
     truth: Effect.fn("Citation.documentDefaultTruth")(function* (value) {

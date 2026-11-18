@@ -16,7 +16,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
 const span = (first: number, last: number) =>
-  O.some(ObservedSpan.make({ first: DateTime.makeUnsafe(first), last: DateTime.makeUnsafe(last) }));
+  ObservedSpan.makeOption({ first: DateTime.makeUnsafe(first), last: DateTime.makeUnsafe(last) });
 const box = (domains: ReadonlyArray<string>, span: O.Option<ObservedSpan>) =>
   MailboxEvidence.make({ domains: HashSet.fromIterable(domains), span });
 describe("organization-domain leads", () => {

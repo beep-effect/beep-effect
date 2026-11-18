@@ -216,6 +216,40 @@ const writeBaseline = (keys: ReadonlyArray<string>) =>
     `${encodeJson({ schemaVersion: "goals-doctor-baseline/v1", findings: keys })}\n`
   );
 
+// goals/prunable-product-leaves, seam 1b: findings of a packet the checkout pruned or owns, and link
+// findings whose target it pruned, are skipped and counted. A packet whose directory remains is
+// present, so a prune entry cannot hide it; only an owned entry skips a present packet.
+// The product-leaf exploration packet (@beep/repo-cli-kit/ProductLeaves); this fixture never has it.
+const productExploration = "explorations/legal-ontology-landscape";
+const declare = (declaration: unknown) =>
+  writeProjectFile("standards/checkout-prune.jsonc", `${encodeJson(declaration)}\n`);
+const runDoctor = Effect.fnUntraced(function* () {
+  let exit: Exit.Exit<void, unknown> = Exit.void;
+  const output = yield* captureOutput(
+    runGoalsCommand(["doctor"]).pipe(
+      Effect.exit,
+      Effect.map((value) => {
+        exit = value;
+      })
+    )
+  );
+  return { exit, output };
+});
+// An active packet whose manifest points its exploration back-link at `exploration`.
+const writeLinkedPacket = Effect.fnUntraced(function* (slug: string, exploration: string) {
+  yield* writeActivePacket(slug);
+  yield* writeProjectFile(
+    `goals/${slug}/ops/manifest.json`,
+    `${encodeJson({
+      schemaVersion: "initiative-manifest/v2",
+      initiative: { id: slug, title: slug, status: "active" },
+      lifecycle: "active",
+      completionGate: COMPLETION_GATE,
+      provenance: { exploration },
+    })}\n`
+  );
+});
+
 it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", (it) => {
   it.effect("offline legacy citations remain the fallback while typed declarations are unknown", () =>
     Effect.gen(function* () {
@@ -490,7 +524,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
       const checker = GoalCloseoutChecker.of({
         check: Effect.fn("GoalsDoctorTest.countingChecker")(function* () {
           consulted += 1;
-          return O.some(GoalCloseoutCheck.make({ packet: "closed", finalPullRequest: 7, outcome: "unverified" }));
+          return GoalCloseoutCheck.makeOption({ packet: "closed", finalPullRequest: 7, outcome: "unverified" });
         }),
       });
       let exit: Exit.Exit<unknown, unknown> = Exit.void;
@@ -633,35 +667,31 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           declarationDigest: digest,
           // The accepted-head digest no longer gates (DN-12).
           acceptedDeclarationDigest: O.none(),
-          requiredChecks: O.some(
-            GoalRequiredCheckSnapshot.make({
-              contexts: ["Lint"],
-              sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
-              effectiveAt: time,
-              inventoryComplete: true,
-              mergeTimeInventory: O.some(
-                GoalMergeTimeInventory.make({
-                  source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
-                  ruleSuiteId: 1,
-                  ref: "refs/heads/main",
-                  afterSha: "merge-result",
-                  pushedAt: time,
-                  result: "pass",
-                  ruleSources: [
-                    GoalMergeTimeRuleSource.make({
-                      sourceType: "ruleset",
-                      rulesetId: O.some(42),
-                      name: O.some("main"),
-                      enforcement: "active",
-                      requiredStatusChecks: O.some("pass"),
-                      survives: true,
-                      version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
-                    }),
-                  ],
-                })
-              ),
-            })
-          ),
+          requiredChecks: GoalRequiredCheckSnapshot.makeOption({
+            contexts: ["Lint"],
+            sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
+            effectiveAt: time,
+            inventoryComplete: true,
+            mergeTimeInventory: GoalMergeTimeInventory.makeOption({
+              source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
+              ruleSuiteId: 1,
+              ref: "refs/heads/main",
+              afterSha: "merge-result",
+              pushedAt: time,
+              result: "pass",
+              ruleSources: [
+                GoalMergeTimeRuleSource.make({
+                  sourceType: "ruleset",
+                  rulesetId: O.some(42),
+                  name: O.some("main"),
+                  enforcement: "active",
+                  requiredStatusChecks: O.some("pass"),
+                  survives: true,
+                  version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
+                }),
+              ],
+            }),
+          }),
           requiredCheckFacts: [
             GoalRequiredCheckFact.make({
               context: "Lint",
@@ -674,15 +704,13 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           ],
           finalPullRequest: 7,
           acceptedHead: O.some("accepted-head"),
-          merge: O.some(
-            GoalMergeResult.make({
-              mergeCommit: "merge-result",
-              tree: "merge-tree",
-              mergedAt: time,
-              method: O.none(),
-              baseRef: "main",
-            })
-          ),
+          merge: GoalMergeResult.makeOption({
+            mergeCommit: "merge-result",
+            tree: "merge-tree",
+            mergedAt: time,
+            method: O.none(),
+            baseRef: "main",
+          }),
           evidence: row.extraUnknown
             ? [
                 ...hostedEvidence,
@@ -777,15 +805,13 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           finalPullRequest: 7,
           acceptedHead: O.some("accepted-head"),
           merge: row.merged
-            ? O.some(
-                GoalMergeResult.make({
-                  mergeCommit: "merge-result",
-                  tree: "merge-tree",
-                  mergedAt: time,
-                  method: O.none(),
-                  baseRef: "main",
-                })
-              )
+            ? GoalMergeResult.makeOption({
+                mergeCommit: "merge-result",
+                tree: "merge-tree",
+                mergedAt: time,
+                method: O.none(),
+                baseRef: "main",
+              })
             : O.none(),
           evidence: [
             GoalEvidenceCheck.make({
@@ -846,25 +872,21 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         packet: "typed",
         declarationDigest: digest,
         acceptedDeclarationDigest: O.some(digest),
-        requiredChecks: O.some(
-          GoalRequiredCheckSnapshot.make({
-            contexts: ["Lint"],
-            sources: ["surviving-ruleset-history"],
-            effectiveAt: time,
-            inventoryComplete: false,
-          })
-        ),
+        requiredChecks: GoalRequiredCheckSnapshot.makeOption({
+          contexts: ["Lint"],
+          sources: ["surviving-ruleset-history"],
+          effectiveAt: time,
+          inventoryComplete: false,
+        }),
         finalPullRequest: 7,
         acceptedHead: O.some("accepted-head"),
-        merge: O.some(
-          GoalMergeResult.make({
-            mergeCommit: "merge-result",
-            tree: "merge-tree",
-            mergedAt: time,
-            method: O.none(),
-            baseRef: "main",
-          })
-        ),
+        merge: GoalMergeResult.makeOption({
+          mergeCommit: "merge-result",
+          tree: "merge-tree",
+          mergedAt: time,
+          method: O.none(),
+          baseRef: "main",
+        }),
         evidence: [
           GoalEvidenceCheck.make({
             ref: GoalAcceptanceEvidenceRef.make({ kind: "hosted-required-checks", ref: "required", gating: true }),
@@ -1101,6 +1123,138 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
       }),
     20_000
   );
+
+  it.effect(
+    "skips and counts every finding of an owned packet, and checks it in full without the owned entry",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* writeDriftedPacket("replaced");
+        // A graduated exploration without an archive decision: one advisory finding.
+        yield* writeProjectFile(
+          "explorations/replaced-idea/ops/manifest.json",
+          `${encodeJson({
+            schemaVersion: "exploration-manifest/v1",
+            exploration: {
+              slug: "replaced-idea",
+              title: "replaced-idea",
+              status: "graduated",
+              stage: "graduate",
+              updated: "2026-11-06",
+            },
+          })}\n`
+        );
+        yield* writeBaseline([]);
+
+        const strict = yield* runDoctor();
+        expectReportedFailure(strict.exit);
+        expect(strict.output).toContain("replaced [lifecycle-mismatch]");
+        expect(strict.output).toContain("explorations/replaced-idea [archive-decision-missing]");
+
+        yield* declare({
+          version: 1,
+          owned: [
+            { path: "goals/replaced", why: "this checkout replaced the packet" },
+            { path: "explorations/replaced-idea", why: "this checkout replaced the exploration" },
+          ],
+        });
+        const owned = yield* runDoctor();
+        owned.exit.pipe(Exit.isSuccess, assertTrue);
+        // The drifted packet has two findings, the blocking lifecycle mismatch and an advisory.
+        expect(owned.output).toContain("[goals:doctor] skipped_pruned=3");
+        expect(owned.output).toContain("[goals:doctor] skipped replaced lifecycle-mismatch: pruned from this checkout");
+        expect(owned.output).toContain(
+          "[goals:doctor] skipped explorations/replaced-idea archive-decision-missing: pruned from this checkout"
+        );
+      }),
+    20_000
+  );
+
+  it.effect(
+    "skips a back-link into a pruned exploration, and reports an undeclared or kept one",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        // The back-link check resolves an exploration from the repository root, which a checkout
+        // marks with bun.lock; without it the doctor stops at "Could not find repository root".
+        yield* writeProjectFile("bun.lock", "{}\n");
+        // A product-leaf exploration packet this fixture never had.
+        yield* writeLinkedPacket("product-link", productExploration);
+        yield* writeLinkedPacket("declared-link", "explorations/demo-gone");
+        yield* writeLinkedPacket("typo-link", "explorations/typo");
+        yield* writeLinkedPacket("kept-link", "explorations/demo-kept");
+        yield* writeBaseline([]);
+        yield* declare({
+          version: 1,
+          prune: [{ path: "explorations/demo-*", why: "the demo explorations are not shipped" }],
+          keep: [{ path: "explorations/demo-kept", why: "kept tooling reads it" }],
+        });
+
+        const declared = yield* runDoctor();
+        declared.exit.pipe(Exit.isSuccess, assertTrue);
+        expect(declared.output).toContain("[goals:doctor] skipped_pruned=2");
+        expect(declared.output).toContain(
+          "[goals:doctor] skipped product-link exploration-backlink-missing: pruned from this checkout"
+        );
+        expect(declared.output).toContain(
+          "[goals:doctor] skipped declared-link exploration-backlink-missing: pruned from this checkout"
+        );
+        expect(declared.output).toContain("typo-link [exploration-backlink-missing]");
+        expect(declared.output).toContain("kept-link [exploration-backlink-missing]");
+
+        // A missing product-leaf packet under a keep entry is reported like any missing target.
+        yield* declare({
+          version: 1,
+          keep: [{ path: productExploration, why: "this checkout keeps it" }],
+        });
+        const kept = yield* runDoctor();
+        expect(kept.output).toContain("product-link [exploration-backlink-missing]");
+        expect(kept.output).not.toContain("[goals:doctor] skipped product-link");
+      }),
+    20_000
+  );
+
+  it.effect(
+    "keeps a pruned packet whose directory survives through a kept file strict, whichever prune form names it",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* writeProjectFile("goals/half/research/kept.md", "# kept\n");
+        yield* writeBaseline([]);
+
+        // A prune entry naming the packet root claims a packet the checkout still holds: refused.
+        yield* declare({
+          version: 1,
+          prune: [{ path: "goals/half", why: "dropped" }],
+          keep: [{ path: "goals/half/research/kept.md", why: "a kept tool reads it" }],
+        });
+        const named = yield* runDoctor();
+        named.exit.pipe(Exit.isFailure, assertTrue);
+        const refusal = Exit.isFailure(named.exit) ? Cause.pretty(named.exit.cause) : "";
+        expect(refusal).toContain("CheckoutPruneFindingsError");
+
+        // Pruning only its contents leaves a present packet, checked in full.
+        yield* declare({
+          version: 1,
+          prune: [{ path: "goals/half/**", why: "dropped" }],
+          keep: [{ path: "goals/half/research/kept.md", why: "a kept tool reads it" }],
+        });
+        const contents = yield* runDoctor();
+        expectReportedFailure(contents.exit);
+        expect(contents.output).toContain("half [manifest-missing]");
+
+        // Owning the packet is how a checkout keeps one file of a packet it replaced.
+        yield* declare({
+          version: 1,
+          owned: [{ path: "goals/half", why: "this checkout keeps only its own notes" }],
+          keep: [{ path: "goals/half/research/kept.md", why: "a kept tool reads it" }],
+        });
+        const owned = yield* runDoctor();
+        owned.exit.pipe(Exit.isSuccess, assertTrue);
+        expect(owned.output).toContain("[goals:doctor] skipped half manifest-missing: pruned from this checkout");
+      }),
+    20_000
+  );
 });
 
 describe("classifyGoalDoctorFindings", () => {
@@ -1198,12 +1352,10 @@ describe("capabilityDoctorFindings", () => {
       { slug: "renamed", manifest: O.some(manifest("old-name", [])) },
       {
         slug: "docs",
-        manifest: O.some(
-          GoalManifest.make({
-            ...manifest("docs", ["kg/lookup"]),
-            initiative: { id: "docs", status: "reference", title: "Docs" },
-          })
-        ),
+        manifest: GoalManifest.makeOption({
+          ...manifest("docs", ["kg/lookup"]),
+          initiative: { id: "docs", status: "reference", title: "Docs" },
+        }),
       },
       { slug: "broken", manifest: O.none() },
     ]);

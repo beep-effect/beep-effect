@@ -385,7 +385,7 @@ describe("@beep/epistemic-client contradiction atoms", () => {
 
       registry.set(contradictionKnownAtAtom, DateTime.makeUnsafe(2_000));
       registry.set(contradictionValidAtAtom, DateTime.makeUnsafe(1_500));
-      registry.set(selectedContradictionCandidateIdAtom, O.some(GetContradictionCandidate.fields.candidateId.make(7)));
+      registry.set(selectedContradictionCandidateIdAtom, GetContradictionCandidate.fields.candidateId.makeOption(7));
       yield* Effect.exit(
         AtomRegistry.getResult(registry, selectedContradictionCandidateAtom, { suspendOnWaiting: true })
       );

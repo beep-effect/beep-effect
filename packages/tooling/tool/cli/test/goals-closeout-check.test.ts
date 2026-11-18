@@ -148,21 +148,19 @@ const observation = (patch: Partial<GoalCompletionObservation> = {}) =>
     finalPullRequest: FINAL,
     acceptedHead: O.some("accepted-head"),
     merged: O.some(true),
-    merge: O.some(
-      GoalMergeResult.make({
-        mergeCommit: "merge-result",
-        tree: "merge-tree",
-        mergedAt: RECENT,
-        method: O.none(),
-        baseRef: "main",
-      })
-    ),
+    merge: GoalMergeResult.makeOption({
+      mergeCommit: "merge-result",
+      tree: "merge-tree",
+      mergedAt: RECENT,
+      method: O.none(),
+      baseRef: "main",
+    }),
     grandfathered: false,
     evidence: [
       evidence("hosted-required-checks", "required", "verified"),
       evidence("hosted-review-threads", "outstanding", "verified"),
     ],
-    reviewThreads: O.some(GoalReviewThreadTally.make({ total: 0, outstanding: 0 })),
+    reviewThreads: GoalReviewThreadTally.makeOption({ total: 0, outstanding: 0 }),
     nonRequiredReds: [],
     subClaims: [],
     verifiedAt: RECENT,
@@ -333,7 +331,7 @@ describe("classifyGoalCloseout", () => {
       const red = yield* resolve({ requiredCheckFacts: [lint({ conclusion: "failure", outcome: "unsatisfied" })] });
       expect(classify({ receipt: O.some(red) }).reasons).toEqual(["unattributed red: Lint"]);
       const threads = yield* resolve({
-        reviewThreads: O.some(GoalReviewThreadTally.make({ total: 2, outstanding: 1 })),
+        reviewThreads: GoalReviewThreadTally.makeOption({ total: 2, outstanding: 1 }),
         evidence: [
           evidence("hosted-required-checks", "required", "verified"),
           evidence("hosted-review-threads", "outstanding", "unsatisfied"),
@@ -480,7 +478,7 @@ describe("goalCompletionTransient", () => {
       expect(goalCompletionTransient(absent)).toBe(false);
       // A pending run beside an absent one is still structural.
       const mixed = yield* resolve({
-        requiredChecks: O.some(GoalRequiredCheckSnapshot.make({ ...snapshot(), contexts: ["Lint", "Docs"] })),
+        requiredChecks: GoalRequiredCheckSnapshot.makeOption({ ...snapshot(), contexts: ["Lint", "Docs"] }),
         requiredCheckFacts: [
           lint({ conclusion: "pending", outcome: "unknown" }),
           GoalRequiredCheckFact.make({
@@ -492,7 +490,7 @@ describe("goalCompletionTransient", () => {
       expect(goalCompletionTransient(mixed)).toBe(false);
       // An attributed missing context is covered, so the pending one alone decides.
       const covered = yield* resolve({
-        requiredChecks: O.some(GoalRequiredCheckSnapshot.make({ ...snapshot(), contexts: ["Lint", "Docs"] })),
+        requiredChecks: GoalRequiredCheckSnapshot.makeOption({ ...snapshot(), contexts: ["Lint", "Docs"] }),
         requiredCheckFacts: [
           lint({ conclusion: "pending", outcome: "unknown" }),
           GoalRequiredCheckFact.make({

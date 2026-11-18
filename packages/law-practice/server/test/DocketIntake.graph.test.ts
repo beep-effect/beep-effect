@@ -821,11 +821,9 @@ describe("@beep/law-practice-server DocketIntake Graph adapters", () => {
     const chicago = DateTime.zoneMakeNamedUnsafe("America/Chicago");
     const email = docketQuestionEmailOf(chicago)(
       GraphMessage.make({
-        from: O.some(
-          GraphRecipient.make({
-            emailAddress: O.some(GraphEmailAddress.make({ address: O.some("sender@fixture.invalid") })),
-          })
-        ),
+        from: GraphRecipient.makeOption({
+          emailAddress: GraphEmailAddress.makeOption({ address: O.some("sender@fixture.invalid") }),
+        }),
         id: "message-1",
         // Late on 9 January in Chicago, already 10 January in UTC.
         receivedDateTime: O.some("2030-01-10T03:30:00Z"),

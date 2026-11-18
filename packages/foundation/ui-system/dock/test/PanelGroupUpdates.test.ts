@@ -95,7 +95,7 @@ describe("panel and group updates", () => {
           updatePanel(
             "update-title-view",
             panelOne.id,
-            PanelPatch.make({ title: O.some("Combined"), view: O.some(TextPanelView.make({ text: "changed" })) })
+            PanelPatch.make({ title: O.some("Combined"), view: TextPanelView.makeOption({ text: "changed" }) })
           )
         );
         const changed = yield* requireChanged(transition4);
@@ -116,7 +116,7 @@ describe("panel and group updates", () => {
             panelOne.id,
             PanelPatch.make({
               renderMode: O.some("always"),
-              tabComponent: O.some(O.some(RendererKey.make("custom-tab"))),
+              tabComponent: O.some(RendererKey.makeOption("custom-tab")),
             })
           )
         );
@@ -238,7 +238,7 @@ describe("panel and group updates", () => {
             "reorder-source",
             MovePanelCommand.make({
               panelId: panelOne.id,
-              target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(1)) }),
+              target: TabPlacement.make({ groupId: groupOne, index: S.Natural.makeOption(1) }),
             })
           )
         );

@@ -203,7 +203,7 @@ const causalEta = (
   );
   return A.length(prior) < estimator.minSamples
     ? O.none()
-    : O.some(PosInt.make(N.max(nearestRank(prior, estimator.quantilePermille), 1)));
+    : PosInt.makeOption(N.max(nearestRank(prior, estimator.quantilePermille), 1));
 };
 
 /**

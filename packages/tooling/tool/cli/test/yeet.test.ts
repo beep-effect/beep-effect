@@ -1404,16 +1404,14 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const parentHead = yield* runGitCapture(tmpDir, ["rev-parse", "parent"]).pipe(Effect.map(Str.trim));
         yield* assertMergeOnlyPublish(
           layerContext,
-          O.some(
-            YeetStackPublishDecision.cases.Layer.make({
-              parentNumber: 41,
-              parentHeadRef: "parent",
-              parentHeadSha: parentHead,
-              trunk: "main",
-              stackNumber: O.some(43),
-              parentMoved: false,
-            })
-          )
+          YeetStackPublishDecision.cases.Layer.makeOption({
+            parentNumber: 41,
+            parentHeadRef: "parent",
+            parentHeadSha: parentHead,
+            trunk: "main",
+            stackNumber: O.some(43),
+            parentMoved: false,
+          })
         );
       }).pipe(TestClock.withLive)
     );
@@ -5059,17 +5057,15 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
     });
 
     it("classifies proof lock disposition by readability and owner liveness", () => {
-      const state = O.some(
-        YeetProofLockStateForTesting.make({
-          schemaVersion: "yeet-proof-lock/v3",
-          branch: "feature",
-          checkoutRoot: "/repo/checkout-a",
-          command: "bun run beep quality github-checks pre-push",
-          pid: 12345,
-          proofTier: "full",
-          startedAt: "2026-06-11T00:00:00.000Z",
-        })
-      );
+      const state = YeetProofLockStateForTesting.makeOption({
+        schemaVersion: "yeet-proof-lock/v3",
+        branch: "feature",
+        checkoutRoot: "/repo/checkout-a",
+        command: "bun run beep quality github-checks pre-push",
+        pid: 12345,
+        proofTier: "full",
+        startedAt: "2026-06-11T00:00:00.000Z",
+      });
       expect(proofLockDispositionForTesting(O.none(), "dead", false)).toBe("refuse-unreadable");
       expect(proofLockDispositionForTesting(O.none(), "alive", false)).toBe("refuse-unreadable");
       expect(proofLockDispositionForTesting(state, "alive", false)).toBe("refuse-active");

@@ -307,7 +307,7 @@ export class ShardOverflowQueue extends S.Opaque<ShardOverflowQueue, { readonly 
  *   repository: "beep-effect/beep-effect",
  *   headRepository: "",
  *   partitions: ["repo-cli-1", "unit-a"],
- *   queue: O.some(ShardOverflowQueue.make({ queuedHostedJobs: 120, overflowJobs: 0, runsRead: 9 })),
+ *   queue: ShardOverflowQueue.makeOption({ queuedHostedJobs: 120, overflowJobs: 0, runsRead: 9 }),
  *   waitLimitSeconds: O.some(600),
  *   poolSize: O.some(48),
  * })
@@ -571,7 +571,7 @@ const routeIntoFreeVms = (
  *     repository: "beep-effect/beep-effect",
  *     headRepository: "",
  *     partitions: ["repo-cli-1", "repo-cli-2", "unit-a"],
- *     queue: O.some(ShardOverflowQueue.make({ queuedHostedJobs: 130, overflowJobs: 46, runsRead: 12 })),
+ *     queue: ShardOverflowQueue.makeOption({ queuedHostedJobs: 130, overflowJobs: 46, runsRead: 12 }),
  *     waitLimitSeconds: O.some(600),
  *     poolSize: O.some(48),
  *   })

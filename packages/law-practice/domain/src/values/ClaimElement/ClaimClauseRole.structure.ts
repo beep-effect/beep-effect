@@ -1667,9 +1667,10 @@ class SourcePlanner {
       )
         return O.none();
       if (O.exists(parent, (p) => A.some(p.nominals, (n) => this.sameCore(n, subject.value))))
-        inheritedSubject = O.some(
-          ClaimFrameSubjectInheritance.make({ fromFrame: frame.parent.value, nominal: subject.value })
-        );
+        inheritedSubject = ClaimFrameSubjectInheritance.makeOption({
+          fromFrame: frame.parent.value,
+          nominal: subject.value,
+        });
     }
     return inheritedSubject;
   }
@@ -2531,13 +2532,11 @@ class SourcePlanner {
     });
     const gap =
       citation.extent.startChar > nominal.anchor.endChar
-        ? O.some(
-            TextAnchor.make({
-              startChar: nominal.anchor.endChar,
-              endChar: citation.extent.startChar,
-              quote: Str.slice(nominal.anchor.endChar, citation.extent.startChar)(this.claim.claimText),
-            })
-          )
+        ? TextAnchor.makeOption({
+            startChar: nominal.anchor.endChar,
+            endChar: citation.extent.startChar,
+            quote: Str.slice(nominal.anchor.endChar, citation.extent.startChar)(this.claim.claimText),
+          })
         : O.none();
     certificates.push(
       ClaimFiniteSourceProof.cases.closure.make({
@@ -2786,13 +2785,11 @@ class SourcePlanner {
   ): O.Option<ClaimTermOwnerCertificate> => {
     const fields = { element: element.ordinal, roleNominal: core };
     if (inside(element.lexicalHeader, nominal.anchor))
-      return O.some(
-        ClaimTermOwnerCertificate.cases["existing-element-nominal"].make({
-          ...fields,
-          production: element.grouping,
-          lexicalRegion: element.lexicalHeader,
-        })
-      );
+      return ClaimTermOwnerCertificate.cases["existing-element-nominal"].makeOption({
+        ...fields,
+        production: element.grouping,
+        lexicalRegion: element.lexicalHeader,
+      });
     const clause = this.preambleCandidate(nominal);
     return element.grouping === "preamble"
       ? O.map(clause, (sourceClause) =>
@@ -2815,15 +2812,13 @@ class SourcePlanner {
     if (O.isNone(core)) return O.none();
     const certificate = this.ownerCertificate(element, nominal, core.value + 1);
     if (O.isNone(certificate) || !this.charge(nominal.anchor.quote.length + 8)) return O.none();
-    return O.some(
-      ClaimOwnedTermRegion.make({
-        ordinal,
-        ownerElement: element.ordinal,
-        core: core.value + 1,
-        extent: nominal.anchor,
-        certificate: certificate.value,
-      })
-    );
+    return ClaimOwnedTermRegion.makeOption({
+      ordinal,
+      ownerElement: element.ordinal,
+      core: core.value + 1,
+      extent: nominal.anchor,
+      certificate: certificate.value,
+    });
   };
   private ownerRegions = (element: ClaimPlannedElement): O.Option<ReadonlyArray<ClaimOwnedTermRegion>> => {
     if (!this.charge(element.nominals.length + 1)) return O.none();
@@ -3192,13 +3187,11 @@ class SourcePlanner {
     if (O.isNone(tokenOwnership)) return O.none();
     plan = ClaimSourceElementPlan.make({ ...plan, tokenOwnership: tokenOwnership.value });
     if (!validateClaimSourceOwnership(plan, this.charge) || !this.charge(1)) return O.none();
-    return O.some(
-      ClaimSourceElementPlan.make({
-        ...plan,
-        remainingWork: this.remaining,
-        roles: ClaimClauseRolePlan.make({ ...plan.roles, stage: "committed", remainingWork: this.remaining }),
-      })
-    );
+    return ClaimSourceElementPlan.makeOption({
+      ...plan,
+      remainingWork: this.remaining,
+      roles: ClaimClauseRolePlan.make({ ...plan.roles, stage: "committed", remainingWork: this.remaining }),
+    });
   };
   run = (): O.Option<ClaimSourceElementPlan> => {
     if (!this.charge(this.tokens.length * 32 + this.claim.claimText.length) || !this.protectedSource()) return O.none();

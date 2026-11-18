@@ -903,22 +903,20 @@ const finishQualifiedHeaderMembership = (
   const candidates = qualifiedHeaderArguments(frame, core);
   if (candidates.length !== 1 || !charge(12)) return O.none();
   const [argument, ordinal] = O.getOrThrow(A.head(candidates));
-  return O.some(
-    ClaimQualifiedHeaderMembership.make({
-      qualifiedText: plan.qualifiedText,
-      frame: frame.ordinal,
-      owner: element.ordinal,
-      scope: ClaimSourceProofRef.make({ ordinal: scope.ordinal, slot: "scope" }),
-      proof: state.value.proof,
-      core: core.core,
-      head: core.head,
-      header: frame.lexicalHeader,
-      region: region.value.ordinal,
-      construction: region.value.certificate,
-      rawOrdinal: ordinal,
-      argument,
-    })
-  );
+  return ClaimQualifiedHeaderMembership.makeOption({
+    qualifiedText: plan.qualifiedText,
+    frame: frame.ordinal,
+    owner: element.ordinal,
+    scope: ClaimSourceProofRef.make({ ordinal: scope.ordinal, slot: "scope" }),
+    proof: state.value.proof,
+    core: core.core,
+    head: core.head,
+    header: frame.lexicalHeader,
+    region: region.value.ordinal,
+    construction: region.value.certificate,
+    rawOrdinal: ordinal,
+    argument,
+  });
 };
 const qualifiedHeaderMembership = (
   plan: ClaimSourceElementPlan,
@@ -1097,16 +1095,14 @@ const frameLexicalView = (
   if (!charge(frame.privateArguments.length * (bindings.length + 4))) return O.none();
   const privateArguments: Array<ClaimPrivateFrameArgument> = [];
   if (!frameLexicalPrivateArguments(plan, frame, bindings, privateArguments)) return O.none();
-  return O.some(
-    ClaimFrameLexicalView.make({
-      frame: frame.ordinal,
-      predicates,
-      arguments: arguments_,
-      privateArguments,
-      sourceArgumentOrdinals,
-      headerMembership,
-    })
-  );
+  return ClaimFrameLexicalView.makeOption({
+    frame: frame.ordinal,
+    predicates,
+    arguments: arguments_,
+    privateArguments,
+    sourceArgumentOrdinals,
+    headerMembership,
+  });
 };
 const completeCitationWitness = (
   plan: ClaimSourceElementPlan,
@@ -2028,14 +2024,12 @@ class SourceTokenOwnershipBuilder {
       !tokenControlArgumentIntro(this.plan, intro.value, actual, this.reserve)
     )
       return O.none();
-    return O.some(
-      ClaimSourceControlEvidence.cases["pp-operator-coordinate"].make({
-        left: left + 1,
-        right: right + 1,
-        argument: argument.value + 1,
-        introducer: ClaimSourceProofRef.make({ ordinal: intro.value.ordinal, slot: "token" }),
-      })
-    );
+    return ClaimSourceControlEvidence.cases["pp-operator-coordinate"].makeOption({
+      left: left + 1,
+      right: right + 1,
+      argument: argument.value + 1,
+      introducer: ClaimSourceProofRef.make({ ordinal: intro.value.ordinal, slot: "token" }),
+    });
   }
   private operatorCoordinate(index: number, right: ClaimSourceOperatorBinding): boolean {
     if (!this.reserve(4)) return false;
@@ -2304,14 +2298,12 @@ class SourceTokenOwnershipBuilder {
   ): O.Option<ClaimSourceTokenOwnership> {
     const owner = HashMap.get(this.owners, this.publicCursor + 1);
     if (O.isNone(owner) || HashMap.has(this.predicates, token.ordinal)) return O.none();
-    return O.some(
-      ClaimSourceTokenOwnership.cases["public-core"].make({
-        token: ref,
-        extent: token.token.anchor,
-        core: this.publicCursor + 1,
-        owner: owner.value,
-      })
-    );
+    return ClaimSourceTokenOwnership.cases["public-core"].makeOption({
+      token: ref,
+      extent: token.token.anchor,
+      core: this.publicCursor + 1,
+      owner: owner.value,
+    });
   }
   private controlRow(
     token: Extract<ClaimFiniteSourceProof, { readonly kind: "token" }>,
@@ -2325,15 +2317,17 @@ class SourceTokenOwnershipBuilder {
       token.token.pos === "PUNCT" &&
       HashSet.has(HashSet.make(".", ",", ";", ":", "(", ")", "[", "]"), token.token.anchor.quote)
     )
-      evidence = O.some(ClaimSourceControlEvidence.cases.punctuation.make({}));
+      evidence = ClaimSourceControlEvidence.cases.punctuation.makeOption({});
     if (
       O.isNone(evidence) ||
       !tokenControlMatches(this.plan, token, evidence.value, this.positiveExclusion, this.reserve)
     )
       return O.none();
-    return O.some(
-      ClaimSourceTokenOwnership.cases.control.make({ token: ref, extent: token.token.anchor, evidence: evidence.value })
-    );
+    return ClaimSourceTokenOwnership.cases.control.makeOption({
+      token: ref,
+      extent: token.token.anchor,
+      evidence: evidence.value,
+    });
   }
   private privateOrControlRow(
     token: Extract<ClaimFiniteSourceProof, { readonly kind: "token" }>,
@@ -2347,14 +2341,12 @@ class SourceTokenOwnershipBuilder {
       contains(candidate.value.core, token.token.anchor)
     ) {
       if (candidate.value.origin !== "description" || HashMap.has(this.predicates, token.ordinal)) return O.none();
-      return O.some(
-        ClaimSourceTokenOwnership.cases["private-value"].make({
-          token: ref,
-          extent: token.token.anchor,
-          candidate: candidate.value.seed,
-          certificate: candidate.value.certificate,
-        })
-      );
+      return ClaimSourceTokenOwnership.cases["private-value"].makeOption({
+        token: ref,
+        extent: token.token.anchor,
+        candidate: candidate.value.seed,
+        certificate: candidate.value.certificate,
+      });
     }
     return this.controlRow(token, ref);
   }

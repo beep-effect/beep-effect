@@ -506,7 +506,7 @@ export const selectYeetPrWave: {
       ),
       A.match({
         onEmpty: O.none,
-        onNonEmpty: (waveEntries) => O.some(YeetPrWave.make({ prNumber, entries: waveEntries })),
+        onNonEmpty: (waveEntries) => YeetPrWave.makeOption({ prNumber, entries: waveEntries }),
       })
     )
 );

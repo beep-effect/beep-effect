@@ -71,7 +71,7 @@ describe("detect — wrappers", () => {
     const r = detect(snapshot({ ...envFor.iterm(), TMUX: "x" }));
     assert.strictEqual(r.supported, false);
     assert.strictEqual(r.reason, "wrapper-strips");
-    assert.deepStrictEqual(r.wrapper, O.some(WrapperInfo.make({ name: "tmux", passesThrough: false })));
+    assert.deepStrictEqual(r.wrapper, WrapperInfo.makeOption({ name: "tmux", passesThrough: false }));
   });
 });
 

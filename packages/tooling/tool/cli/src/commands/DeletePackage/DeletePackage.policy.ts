@@ -245,6 +245,7 @@ const ownedTreeRefusal = (
   workspacePaths: ReadonlyArray<string>
 ): O.Option<DeletePackageRefusal> => {
   if (isRepositoryRootTarget(target)) {
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
     return O.some(
       DeletePackageRefusal.cases.hard.make({
         kind: "dependent",

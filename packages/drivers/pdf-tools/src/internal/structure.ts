@@ -423,14 +423,12 @@ const rectOf = (
     return O.none();
   }
   const top = box.y + box.height;
-  return O.some(
-    PdfRect.make({
-      xMin: Math.min(x1, x2) - box.x,
-      yMin: top - Math.max(y1, y2),
-      xMax: Math.max(x1, x2) - box.x,
-      yMax: top - Math.min(y1, y2),
-    })
-  );
+  return PdfRect.makeOption({
+    xMin: Math.min(x1, x2) - box.x,
+    yMin: top - Math.max(y1, y2),
+    xMax: Math.max(x1, x2) - box.x,
+    yMax: top - Math.min(y1, y2),
+  });
 };
 
 /**

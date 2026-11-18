@@ -2032,7 +2032,7 @@ const runPilot = Effect.fn("CachePilot.run")(
               fresh = freshChange.fixture;
               producerRoot = producerChange.fixture;
               readerRoot = readerChange.fixture;
-              return O.some(SignedMutationSeed.make({ seed, change: producerChange }));
+              return SignedMutationSeed.makeOption({ seed, change: producerChange });
             }),
           });
           const authoritative = yield* execute(fresh, `signed-${pair}-authority`, false, false, scenario.guest, env);
@@ -2060,7 +2060,7 @@ const runPilot = Effect.fn("CachePilot.run")(
             true,
             "/fixture",
             env,
-            O.some(PilotTransport.make({ ...transport, bearer: reader }))
+            PilotTransport.makeOption({ ...transport, bearer: reader })
           ).pipe(Effect.flatMap(decodeSignedPilotRun));
           const protectedPaths = yield* S.String.pipe(S.Array, JsonStringCodec).encode([
             protectedKeyPath,
@@ -2082,7 +2082,7 @@ console.log(JSON.stringify({protectedFiles:paths.length,readsDenied:paths.every(
             "/fixture",
             ["/tools/bun", "-e", probeScript],
             env,
-            O.some(PilotTransport.make({ ...transport, bearer: reader }))
+            PilotTransport.makeOption({ ...transport, bearer: reader })
           );
           yield* validateSignedProtectionProbe(protectionProbe);
           const protectionResult = yield* JsonStringCodec(S.JsonObject).decode(protectionProbe.stdout);
@@ -2619,15 +2619,13 @@ export const runCacheSignedPilotUploadWorker = Effect.fn("CachePilot.runUploadWo
     request,
     "signed",
     protectedIssuerMaterial,
-    O.some(
-      PilotTransport.make({
-        endpoint: proxy.url,
-        namespace: target.namespace.teamId,
-        bearer,
-        signing,
-        secrets: [bearer, signing],
-        cacheAccess: "w",
-      })
-    )
+    PilotTransport.makeOption({
+      endpoint: proxy.url,
+      namespace: target.namespace.teamId,
+      bearer,
+      signing,
+      secrets: [bearer, signing],
+      cacheAccess: "w",
+    })
   ).pipe(Effect.filterOrFail(S.is(CacheSignedPilotRun), () => CacheCommandError.new("Expected an owned upload run.")));
 });
