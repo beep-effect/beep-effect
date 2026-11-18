@@ -50,7 +50,9 @@ const DAY = "2026-11-17";
 const HEAD = Str.repeat(40)("c");
 
 // The production REST runner over a recorded fetch, as in ci-route-corpus.test.ts.
-const restRunner = (fetch: typeof globalThis.fetch) =>
+type RecordedFetch = typeof globalThis.fetch;
+
+const restRunner = (fetch: RecordedFetch) =>
   makeRouteGithubRunner.pipe(
     provideScopedLayer(
       layerGithubRest.pipe(
@@ -128,8 +130,6 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       const path = yield* Path.Path;
       const temp = yield* fs.makeTempDirectoryScoped({ prefix: "beep-ci-task-outcomes-" });
       const root = yield* fs.realPath(temp);
-      yield* fs.makeDirectory(path.join(root, ".git"), { recursive: true });
-      yield* fs.writeFileString(path.join(root, ".git", "HEAD"), "ref: refs/heads/main\n");
       const manifest = yield* encode({ name: "fixture", private: true, workspaces: [] });
       yield* fs.writeFileString(path.join(root, "package.json"), manifest);
       yield* fs.makeDirectory(path.join(root, ".turbo", "runs"), { recursive: true });
@@ -137,13 +137,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       const second = yield* encode({ tasks: [{ taskId: "@beep/b#test", execution: { exitCode: 1 } }] });
       yield* fs.writeFileString(path.join(root, ".turbo", "runs", "1.json"), first);
       yield* fs.writeFileString(path.join(root, ".turbo", "runs", "2.json"), second);
-      const previous = process.cwd();
-      yield* Effect.acquireRelease(
-        Effect.sync(() => process.chdir(root)),
-        () => Effect.sync(() => process.chdir(previous))
-      );
       const out = ".beep/ci-task-outcomes/record.json";
-      yield* writeTaskOutcomes("Test Unit (unit-a)", out).pipe(
+      yield* writeTaskOutcomes(root, "Test Unit (unit-a)", out).pipe(
         Effect.provideService(
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromEnvRecord({ GITHUB_RUN_ID: `${RUN}`, GITHUB_RUN_ATTEMPT: "1" })
@@ -173,7 +168,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       };
       const listing = yield* encode(artifacts);
       const downloads: Array<string> = [];
-      const fetch: typeof globalThis.fetch = Object.assign(
+      const fetch: RecordedFetch = Object.assign(
         (input: string | URL | Request): Promise<Response> => {
           const url = new URL(input instanceof Request ? input.url : input);
           const zip = Str.endsWith("/zip")(url.pathname);

@@ -199,16 +199,20 @@ const RunIdentity = Config.all({ runId: optionalInt("GITHUB_RUN_ID"), runAttempt
  * console.log(typeof writeTaskOutcomes) // "function"
  * ```
  *
+ * @param repoRoot - The job's checkout, whose `.turbo/runs/` is read; `out` resolves against it.
  * @param job - The job's name as GitHub lists it.
  * @param out - Where to write the record.
  * @returns The record it wrote.
  * @category use-cases
  * @since 0.0.0
  */
-export const writeTaskOutcomes = Effect.fn("CiTaskOutcomes.write")(function* (job: string, out: string) {
+export const writeTaskOutcomes = Effect.fn("CiTaskOutcomes.write")(function* (
+  repoRoot: string,
+  job: string,
+  out: string
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(CiCommandError.mapError("Failed to locate repository root."));
   const runs = path.join(repoRoot, ".turbo", "runs");
   const present = yield* fs.exists(runs).pipe(CiCommandError.mapError("Failed to stat .turbo/runs."));
   const names = present
@@ -267,5 +271,10 @@ export const ciTaskOutcomesCommand = Command.make(
     out: Flag.String("out").pipe(Flag.withDescription("Where to write the task-outcomes/v1 record")),
   },
   ({ jobName, out }) =>
-    writeTaskOutcomes(jobName, out).pipe(Effect.asVoid, Effect.catchTag("CiCommandError", reportCiCommandError))
+    findRepoRoot().pipe(
+      CiCommandError.mapError("Failed to locate repository root."),
+      Effect.flatMap((repoRoot) => writeTaskOutcomes(repoRoot, jobName, out)),
+      Effect.asVoid,
+      Effect.catchTag("CiCommandError", reportCiCommandError)
+    )
 ).pipe(Command.withDescription("Record one {task, outcome} row per Turbo task this job ran, from its run summaries"));
