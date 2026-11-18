@@ -639,6 +639,19 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** a create allow-list in the plan guard (now in `plan-guard.ts`), and adoption
   predictions taken from a plan against seeded state.
 
+## 2026-11-18: new packages land with no coverage baseline row
+
+- **Doing:** packet gate, reading Heavy / Coverage Regression on PR #3367 (job 134497133455) and PR #3369
+  (job 134501277702).
+- **Evidence:** seven packages this packet added had no row in `standards/coverage.regression-baseline.jsonc`.
+  The ratchet only warns ("package(s) without baseline entry (warning only)"), and only on a full-matrix run,
+  because an affected run never measures a package that did not change. The packages merged without anyone
+  seeing it. Seeding the rows from hosted artifacts took a checkout of the tested SHA, a real install and the
+  producer's exact Node pin, because a local whole-package `--coverage` run is ruled out on this workstation.
+- **Would have prevented it:** `bun run beep create-package` writes a seed row, or the package-scoped ratchet
+  fails a PR that adds a coverage-owning package without a row. A writer mode that adopts rows from downloaded
+  hosted artifacts (`--coverage-input` with `--write-baseline`) would make the repair one command.
+
 ## 2026-11-15: `beep github app mint` registered an App and lost its private key
 
 - **Doing:** arming InfraGithub, minting `beep-infra-github` with `bun run beep github app mint beep-infra-github`.

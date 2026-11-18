@@ -188,7 +188,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "80d4226c1620aa2a4731dc9d4ba7b2d6b7d6beed3a26d858f02b40b4e9438386"
+      "sha256": "5e405235ea08868f184c56ef36295cf3f55f2d4a526405006dc702627ef90892"
     }
   ],
   "nodes": [
@@ -2125,6 +2125,7 @@
           "packages/foundation/modeling/github-commands/src/**",
           "packages/foundation/modeling/github-references/package.json",
           "packages/foundation/modeling/github-reporting/package.json",
+          "packages/foundation/modeling/github-reporting/src/**",
           "packages/foundation/modeling/glob/package.json",
           "packages/foundation/modeling/glob/src/**",
           "packages/foundation/modeling/html/package.json",

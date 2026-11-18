@@ -1892,6 +1892,35 @@ Lane goals/infra-alchemy-rebuild-p5-ci-runners
 
 Reverse: Relabel the pools to the live names (beep-ec2-heavy, beep-shard-overflow) in a later PR once the old fleet is gone, and revert the workflow runs-on edits.
 
+### Seed coverage baseline rows for the seven packages the packet added, 2026-11-18
+
+`standards/coverage.regression-baseline.jsonc` had no rows for seven packages this packet added: `@beep/alchemy-aws-extras`, `@beep/alchemy-github-runners`, `@beep/alchemy-vercel`, `@beep/infra-cost-controls`, `@beep/infra-github`, `@beep/infra-hosts` and `@beep/infra-turbo-cache`. The hosted Heavy / Coverage Regression job reported them as missing only on full-matrix runs (PR #3367 job 134497133455, PR #3369 job 134501277702).
+
+The rows come from hosted measurement, not a local run. Each source run's unit coverage artifacts were downloaded, and the repo's own `collectCoverageProducerArtifacts` ran over them in a checkout of that run's tested SHA, on the producer runtime pins (Node 22.23.4, Bun 1.4.4). The resulting rows were inserted unchanged.
+
+- Six rows come from workflow run 44212040109 (the run behind job 134497133455, execution SHA `169fdd16cdf`, all 25 partitions): `@beep/alchemy-aws-extras`, `@beep/alchemy-github-runners`, `@beep/alchemy-vercel`, `@beep/infra-github`, `@beep/infra-hosts` and `@beep/infra-turbo-cache`. `git diff --stat 169fdd16cdf b430fa98ee` is empty for each of their package directories.
+- The `@beep/infra-cost-controls` row comes from #3373's own Check run 44219059468 (execution SHA `e576e8298f6`, the merge of `b430fa98ee` into `3199097213`), which contains #3366. #3366 rewrote `cost-controls/src/PlanCheck.ts` (4 files, +233/-44 since `169fdd16cdf`), so the first draft's row from run 44212040109 described the old file. The beep-reviewer caught it (thread r4608264233).
+- Run 44219059468 also measured the six other packages. Their rows came out deep-equal to the rows taken from run 44212040109.
+- #3370 (`5120c157e3`), merged into this lane afterwards, touched `@beep/infra-github`. In `src/` it changed only a JSDoc comment in `Config.ts`; the rest was a test and its fixture. The row is 100/100/100/100 with no uncovered counter, so it stands. Hosted Coverage Regression on this PR's head re-judges it.
+
+Against `origin/main`, the diff adds 1137 lines and removes none. Decoded through the `CoverageRegressionBaseline` schema, it adds 7 rows and changes no existing row or document field.
+
+| Package | Lines | Statements | Branches | Functions |
+| --- | --- | --- | --- | --- |
+| `@beep/alchemy-aws-extras` | 92.71 | 91.51 | 73.01 | 83.78 |
+| `@beep/alchemy-github-runners` | 94.69 | 93.72 | 74.62 | 87.24 |
+| `@beep/alchemy-vercel` | 92.99 | 91.73 | 87.79 | 82.05 |
+| `@beep/infra-cost-controls` | 99.37 | 99.42 | 92.94 | 98.36 |
+| `@beep/infra-github` | 100 | 100 | 100 | 100 |
+| `@beep/infra-hosts` | 99.61 | 99.63 | 100 | 98.75 |
+| `@beep/infra-turbo-cache` | 72.9 | 74.1 | 58.62 | 72.28 |
+
+All seven rows clear the tiered minimum, so none needs a `follow_ups` entry. This packet owns the seven rows: each package's owning phase lane, and the packet gate until closeout.
+
+Lane goals/infra-alchemy-rebuild-coverage-baseline-rows
+
+Reverse: remove the 7 rows from standards/coverage.regression-baseline.jsonc
+
 ### fleet-shadow-check is repointed for the overlap and deleted at the Pulumi cleanup, 2026-11-18
 
 Packet gate ruling, 2026-11-18. During the overlap `fleet-shadow-check.yml` is repointed to the new fleet (`runs-on: beep-fleet-heavy`, and its App-secret denial probe reads `/beep-fleet/prod/app/<parameter>` instead of `/github-action-runners/app/<parameter>`), as extra per-pool proof in cutover step 3 that a runner cannot read the App key or webhook secret. It is deleted in the cutover step-6 cleanup PR together with the Pulumi program, `fleet-lane-probe.yml` and the other old-fleet readers. Both edits are `.github/` changes and ride the lane PRs the operator merges.
@@ -1943,6 +1972,14 @@ Packet gate ruling, 2026-11-18, recorded as a binding precondition of cutover st
 Lane goals/infra-alchemy-rebuild-p5-ci-runners
 
 Reverse: Lift the cap once the old fleet is destroyed (cutover step 6), or lower the new fleet's overlap caps to 0 if a larger live burst is needed earlier.
+
+### Turbo-cache stage 2: every Turbo-backed CI job reads the Worker cache under new names, 2026-11-18
+
+Released by the operator's 2026-11-18 ruling on the window-5 holds. The workflows that call the setup-monorepo-ci action with the remote cache move together (heavy, check, shard-overflow and storybook; data-sync and property-laws-nightly are covered below), not only heavy and check: the ci-runner-security test pins one allowlist of secret lines across every caller, and a split would also give the overflow shards a different cache from the lanes they stand in for. Each passes `vars.TURBO_CACHE_API` and `vars.TURBO_CACHE_TEAM` (new repository variables: the Worker origin and team `beep`), `secrets.TURBO_CACHE_WRITE_TOKEN` on pushes (`turbo-cache-write` environment, principal ci-main) and `secrets.TURBO_CACHE_READ_TOKEN` (repository, principal ci-pr), and drops its `r2-*` inputs, because the R2 pilot's adapter would otherwise start and override `TURBO_API`. The action and `beep ci job-env` keep their input and policy slot names. Review round 1 on #3380 found two gaps. `cache-warm.yml` warmed the AWS cache: it now warms the Worker cache with the write token and starts the R2 adapter only for its explicit `r2_probe` qualification dispatch. And `job-env` gives a remote read only to same-repository pull requests, so the schedule- and dispatch-only callers (`data-sync.yml`, `property-laws-nightly.yml`) were passing dead cache inputs: the packet gate ruled to drop those inputs here, so both run local-only, and to fix the root as a follow-on chain that lands one PR at a time and does not gate window 6: `job-env` grants `local:rw,remote:r` to `schedule` and `workflow_dispatch` on `refs/heads/main` (push and pull-request output byte-identical), a `beep-ci` pin bump ships it, and a third PR restores the two callers' inputs. Both secrets were issued 2026-11-18 with the package's token.ts from prod state through `gh secret set` on stdin (values never printed); `@beep/infra-github` lists the two variables and two secrets as unmanaged and its census fixture records them. The AWS Lambda cache and the R2 pilot keep serving under their old names until P6. Dry proof against the prod Worker with the same two tokens, from a scratch workspace: write token remote miss, read token remote hit (`"source": "REMOTE"`), read token upload refused (`read_only`), and the write token still missing that hash afterwards.
+
+Lane goals/infra-alchemy-rebuild-p3-turbo-cache-stage-2
+
+Reverse: Revert the stage-2 PR: the callers and cache-warm go back to vars.TURBO_API/TURBO_TEAM, secrets.TURBO_TOKEN/TURBO_READ_TOKEN and the R2 inputs, all still live. Then, one name per command: gh variable delete TURBO_CACHE_API -R beep-effect/beep-effect; gh variable delete TURBO_CACHE_TEAM -R beep-effect/beep-effect; gh secret delete TURBO_CACHE_READ_TOKEN -R beep-effect/beep-effect; gh secret delete TURBO_CACHE_WRITE_TOKEN --env turbo-cache-write -R beep-effect/beep-effect.
 
 <!-- beep:decisions:end -->
 

@@ -47,6 +47,7 @@ import {
   RouteCorpusCaptureOptions,
   VerificationRoute,
 } from "./Route.service.ts";
+import { RouteReadBudget, RouteReadBudgetLive } from "./RouteBudget.ts";
 import { makeRouteGit, RouteCensusReaderLive, RouteGit, VerificationRouteLive } from "./RouteCensus.ts";
 import { ChangeClassifierLive } from "./RouteClassify.ts";
 import { ROUTE_CORPUS_RECEIPT_FILE, RouteCorpusLive } from "./RouteCorpus.ts";
@@ -57,6 +58,7 @@ import type * as FileSystem from "effect/FileSystem";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RouteCensus, RouteCorpusReceipt, RoutePlan, RouteReplay } from "./Route.schemas.ts";
 import type { RouteCensusShape, RouteCorpusLoaded } from "./Route.service.ts";
+import type { RouteReadSpend } from "./RouteBudget.ts";
 
 const encodePrettyJson = S.encodeUnknownResult(S.fromJsonString(S.Unknown, { space: 2 }));
 
@@ -115,7 +117,16 @@ const RouteGitFromRepo: Layer.Layer<
 const routeLayers = Layer.mergeAll(
   VerificationRouteLive.pipe(Layer.provide(Layer.mergeAll(WaveOrder.Default, Workspaces.layerWithGit()))),
   RouteCensusReaderLive
-).pipe(Layer.provideMerge(Layer.mergeAll(ChangeClassifierLive, RouteGitFromRepo, RouteCorpusLive)));
+).pipe(
+  Layer.provideMerge(
+    Layer.mergeAll(
+      ChangeClassifierLive,
+      RouteGitFromRepo,
+      // The budget is merged out too, so the capture command can print what the corpus spent.
+      RouteCorpusLive.pipe(Layer.provideMerge(RouteReadBudgetLive))
+    )
+  )
+);
 
 const routeFailure = <A, R>(effect: Effect.Effect<A, RouteError, R>) =>
   effect.pipe(
@@ -125,6 +136,16 @@ const routeFailure = <A, R>(effect: Effect.Effect<A, RouteError, R>) =>
       )
     )
   );
+
+const renderSpend = (spend: RouteReadSpend): string =>
+  `[ci route] capture metered ${spend.requests} GitHub response(s)${O.match(spend.identity, {
+    onNone: () => "",
+    onSome: (identity) => ` as ${identity}`,
+  })}; ${
+    spend.metered
+      ? `waited ${spend.reserveWaits} time(s) for the core reserve`
+      : "unmetered: no GitHub budget ledger, the reserve was not read"
+  }`;
 
 const minutes = (ms: number): string => `${(ms / 60000).toFixed(1)} min`;
 
@@ -268,7 +289,16 @@ const captureCommand = Command.make(
       const lines = json ? [yield* encodeJson(RouteCorpusReceiptSchema, receipt)] : renderReceipt(receipt);
       yield* printLines(lines);
     });
-    yield* routeFailure(program);
+    // On stderr, so `--json` stays one document; printed on failure too, so a held capture reports its spend.
+    const reportSpend = Effect.serviceOption(RouteReadBudget).pipe(
+      Effect.flatMap(
+        O.match({
+          onNone: () => Effect.void,
+          onSome: (budget) => Effect.flatMap(budget.spend, (spend) => Console.error(renderSpend(spend))),
+        })
+      )
+    );
+    yield* routeFailure(program.pipe(Effect.ensuring(reportSpend)));
   })
 ).pipe(Command.withDescription("Capture (or extend) the digest-pinned corpus of hosted runs"));
 

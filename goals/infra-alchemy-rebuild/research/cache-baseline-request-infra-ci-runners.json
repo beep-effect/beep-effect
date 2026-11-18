@@ -1,7 +1,7 @@
 {
   "previous": {
-    "//": "40ea44759cecdb4f775d0ba3583b91193e86e880d92f8a6bdb3cee0e837e297a",
-    "@beep/infra-ci-runners": "9bb4d87c2b7ca58b1fafc69aa677adecb26eb54fe4c038ab27fb3655e03df7fc"
+    "//": "0f6bf02d514da1ab6d3667112264a12bb5ba5809c1212c5b01c5928e65367fca",
+    "@beep/infra-ci-runners": "a344e9664c85a37e84b46e5a78b9a8fd07c25f4afcc2fd248685d3b745a5715b"
   },
   "review": {
     "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p5-ci-runners)",

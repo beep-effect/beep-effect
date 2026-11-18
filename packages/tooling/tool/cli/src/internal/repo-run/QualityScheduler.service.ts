@@ -30,7 +30,9 @@ import type {
 } from "./AdmissionJournal.ts";
 import type { MemoryStats } from "./MemoryStats.service.ts";
 import type {
+  AdmissionBackfillMode,
   AdmissionConfig,
+  AdmissionFairnessMode,
   AdmissionRequest,
   AdmissionRoute,
   AdmissionSnapshot,
@@ -79,7 +81,7 @@ export interface QualitySchedulerShape {
   readonly observe: (
     config?: AdmissionConfig
   ) => Effect.Effect<AdmissionSnapshot, QualitySchedulerError, AdmissionStateServices>;
-  /** Read the admission protocol marker (eviction, unit and pressure gates). */
+  /** Read the admission protocol marker (eviction, unit, pressure, backfill and fairness gates). */
   readonly protocol: Effect.Effect<AdmissionProtocol, QualitySchedulerError, AdmissionDirectoryServices>;
   /** Reap dead admission state; a dry run unless `apply` is set. */
   readonly reap: (options: {
@@ -87,9 +89,17 @@ export interface QualitySchedulerShape {
   }) => Effect.Effect<AdmissionSnapshot, QualitySchedulerError, AdmissionStateServices>;
   /** Journal one routing decision a `worker` host made without the queue, best effort. */
   readonly recordRoute: (route: AdmissionRoute) => Effect.Effect<void, never, AdmissionJournalServices>;
+  /** Turn the SCHE-06 EASY backfill verdict on (`easy`) or off; the other gates keep their state. */
+  readonly setBackfillProtocol: (
+    backfill: AdmissionBackfillMode
+  ) => Effect.Effect<AdmissionProtocol, QualitySchedulerError, AdmissionJournalServices>;
   /** Turn eviction rows on or off; the unit gate keeps its state. */
   readonly setEvictionProtocol: (
     eviction: AdmissionEvictionEmission
+  ) => Effect.Effect<AdmissionProtocol, QualitySchedulerError, AdmissionJournalServices>;
+  /** Turn the SCHE-06 origin-then-checkout fairness order on or off; the other gates keep their state. */
+  readonly setFairnessProtocol: (
+    fairness: AdmissionFairnessMode
   ) => Effect.Effect<AdmissionProtocol, QualitySchedulerError, AdmissionJournalServices>;
   /** Turn the capacity and host-pressure stamp on admitted and released rows on or off. */
   readonly setPressureProtocol: (
@@ -136,6 +146,8 @@ export interface QualitySchedulerShape {
  *     setEvictionProtocol: () => Effect.die("unused"),
  *     setUnitProtocol: () => Effect.die("unused"),
  *     setPressureProtocol: () => Effect.die("unused"),
+ *     setBackfillProtocol: () => Effect.die("unused"),
+ *     setFairnessProtocol: () => Effect.die("unused"),
  *     history: Effect.die("unused"),
  *     archive: Effect.die("unused"),
  *     recordRoute: () => Effect.void

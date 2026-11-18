@@ -310,8 +310,18 @@ const stringAt = (record: Readonly<Record<string, unknown>>, key: string): strin
     O.getOrElse(() => "")
   );
 const recordOption = S.decodeUnknownOption(textRecord);
+// Both references that carry the Turbo write token: the Worker cache's own secret
+// (turbo-cache stage 2) and the AWS cache's, which P6 retires. The writer-isolation
+// rules hold for either until then.
+const TurboWriteTokenSecret = LiteralKit(["secrets.TURBO_TOKEN", "secrets.TURBO_CACHE_WRITE_TOKEN"]).pipe(
+  $I.annoteSchema("TurboWriteTokenSecret", {
+    description: "A workflow secret reference that carries the Turbo remote-cache write token.",
+  })
+);
+const mentionsWriteToken = (text: string): boolean =>
+  A.some(TurboWriteTokenSecret.literals, (reference) => Str.includes(reference)(text));
 const hasWriteToken = (record: Readonly<Record<string, unknown>>): boolean =>
-  A.some(R.values(record), (value) => O.exists(strings(value), Str.includes("secrets.TURBO_TOKEN")));
+  A.some(R.values(record), (value) => O.exists(strings(value), mentionsWriteToken));
 const jobsFor = (workflow: WorkflowDocument) => R.toEntries(workflow.jobs);
 const environmentName = (job: WorkflowJob): string =>
   S.is(S.String)(job.environment) ? job.environment : (job.environment?.name ?? "");
@@ -334,10 +344,7 @@ const jobCredentialRecords = (job: WorkflowJob) => [
 ];
 const callerGuardDiagnostics = (id: string, step: WorkflowStep) =>
   A.flatMap([...R.values(step.with ?? emptyRecord), ...R.values(step.env ?? emptyRecord)], (value) =>
-    O.exists(
-      strings(value),
-      (text) => Str.includes("secrets.TURBO_TOKEN")(text) && !Str.includes("github.event_name == 'push'")(text)
-    )
+    O.exists(strings(value), (text) => mentionsWriteToken(text) && !Str.includes("github.event_name == 'push'")(text))
       ? [`${id}: writer input must stay guarded in the caller workflow`]
       : []
   );
@@ -631,9 +638,7 @@ const withClient = Effect.fn("CiGovernance.withClient")(function* <V, E, R>(
   effect: Effect.Effect<V, E, R | GithubPolicyClient>
 ) {
   const root = yield* findRepoRoot();
-  return yield* Effect.scoped(
-    Effect.flatMap(makeClient(root), (client) => effect.pipe(Effect.provideService(GithubPolicyClient, client)))
-  );
+  return yield* Effect.scoped(effect.pipe(Effect.provideServiceEffect(GithubPolicyClient, makeClient(root))));
 });
 const snapshotPath = "standards/branch-protection-contexts.json";
 const ciRulesetCommand = Command.make(
