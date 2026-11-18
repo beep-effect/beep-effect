@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 
 const $I = $RepoCliId.create("commands/Github/Github.schemas");
@@ -181,3 +182,63 @@ export const GitHubAppRegistrationOutcome = S.TaggedUnion({
  * @since 0.0.0
  */
 export type GitHubAppRegistrationOutcome = typeof GitHubAppRegistrationOutcome.Type;
+
+/**
+ * Where the 1Password CLI that stores a minted App's credentials came from.
+ *
+ * **Details**
+ *
+ * `override` is the operator's `--op-cli` flag, `op-human` is the operator's
+ * desktop-approved CLI found on `PATH`, and `op` is the bare fallback. On agent
+ * workstations `op` is a service-account shim that cannot create items.
+ *
+ * **Example** (Recognize the desktop-approved CLI)
+ *
+ * ```ts
+ * import { GitHubAppVaultWriterSource } from "@beep/repo-cli/commands/Github"
+ *
+ * console.log(GitHubAppVaultWriterSource.is["op-human"]("op-human")) // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const GitHubAppVaultWriterSource = LiteralKit(["override", "op-human", "op"]).pipe(
+  $I.annoteSchema("GitHubAppVaultWriterSource", {
+    description: "Where the 1Password CLI that stores a minted App's credentials came from.",
+  })
+);
+
+/**
+ * Where the 1Password CLI that stores a minted App's credentials came from.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GitHubAppVaultWriterSource = typeof GitHubAppVaultWriterSource.Type;
+
+/**
+ * The 1Password CLI the mint writes credentials with, and why it was chosen.
+ *
+ * **Example** (Name an explicit writer)
+ *
+ * ```ts
+ * import { GitHubAppVaultWriter } from "@beep/repo-cli/commands/Github"
+ *
+ * const writer = GitHubAppVaultWriter.make({ command: "op-human", source: "override" })
+ * console.log(writer.command) // "op-human"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class GitHubAppVaultWriter extends S.Opaque<GitHubAppVaultWriter, { readonly brand: unique symbol }>()(
+  S.Struct({
+    command: S.NonEmptyString,
+    source: GitHubAppVaultWriterSource,
+  }).pipe(
+    $I.annoteSchema("GitHubAppVaultWriter", {
+      description: "The 1Password CLI the mint writes credentials with, and why it was chosen.",
+    })
+  )
+) {}

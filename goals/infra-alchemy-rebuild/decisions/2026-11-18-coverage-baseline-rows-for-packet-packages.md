@@ -12,6 +12,7 @@ The rows come from hosted measurement, not a local run. Each source run's unit c
 - Six rows come from workflow run 44212040109 (the run behind job 134497133455, execution SHA `169fdd16cdf`, all 25 partitions): `@beep/alchemy-aws-extras`, `@beep/alchemy-github-runners`, `@beep/alchemy-vercel`, `@beep/infra-github`, `@beep/infra-hosts` and `@beep/infra-turbo-cache`. `git diff --stat 169fdd16cdf b430fa98ee` is empty for each of their package directories.
 - The `@beep/infra-cost-controls` row comes from #3373's own Check run 44219059468 (execution SHA `e576e8298f6`, the merge of `b430fa98ee` into `3199097213`), which contains #3366. #3366 rewrote `cost-controls/src/PlanCheck.ts` (4 files, +233/-44 since `169fdd16cdf`), so the first draft's row from run 44212040109 described the old file. The beep-reviewer caught it (thread r4608264233).
 - Run 44219059468 also measured the six other packages. Their rows came out deep-equal to the rows taken from run 44212040109.
+- #3370 (`5120c157e3`), merged into this lane afterwards, touched `@beep/infra-github`. In `src/` it changed only a JSDoc comment in `Config.ts`; the rest was a test and its fixture. The row is 100/100/100/100 with no uncovered counter, so it stands. Hosted Coverage Regression on this PR's head re-judges it.
 
 Against `origin/main`, the diff adds 1137 lines and removes none. Decoded through the `CoverageRegressionBaseline` schema, it adds 7 rows and changes no existing row or document field.
 
