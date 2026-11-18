@@ -1,0 +1,101 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "agent-output-census",
+    "packetId": "goal-packet/v1:8da5f1c0f77d0081681a9e5ed6069de09ac7454252c5ef87fcb3f0591df7db38",
+    "title": "Agent Output Census",
+    "status": "active",
+    "created": "2026-11-18",
+    "updated": "2026-11-18",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/agent-output-census",
+  "lifecycle": "active",
+  "mission": "Make the transcript census a repeatable command so every other goal is judged with the instrument that set the baseline",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-verification-output",
+    "graduated": "2026-11-18"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/agent-output-census/README.md",
+    "goals/agent-output-census/SPEC.md",
+    "goals/agent-output-census/PLAN.md",
+    "goals/agent-output-census/GOAL.md",
+    "goals/agent-output-census/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/agent-output-census/GOAL.md"
+    }
+  ],
+  "provides": [
+    "verification-output/agent-output-census",
+    "verification-output/census-baseline"
+  ],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Schema",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Census service",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Command",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Reproduce",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/agent-output-census/GOAL.md)\" -le 4000",
+    "jq . goals/agent-output-census/ops/manifest.json",
+    "rg -n \"agent-output-census|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/agent-output-census",
+    "git diff --check -- goals/agent-output-census",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
