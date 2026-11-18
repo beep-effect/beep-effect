@@ -1,10 +1,10 @@
 import { RunnerUserDataInput, renderRunnerUserData } from "@beep/alchemy-github-runners/RunnerUserData";
 import { packPostInstall, runnerPostInstall, userDataLimitBytes } from "@beep/infra-ci-runners/RunnerBootstrap";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
-import * as O from "effect/Option";
 import * as Str from "effect/String";
 
 const userData = (postInstall: string) =>
@@ -40,7 +40,7 @@ describe("CiRunners runner bootstrap", () => {
       const packed = yield* Effect.fromResult(Base64.decode(payload));
       const unpacked = yield* gunzip(packed);
       expect(unpacked).toBe(runnerPostInstall);
-      expect(A.get(lines, 5)).toStrictEqual(O.some('. "$beep_post_install"'));
+      assertSome(A.get(lines, 5), '. "$beep_post_install"');
       const again = yield* packPostInstall(runnerPostInstall);
       expect(again).toBe(loader);
     })
