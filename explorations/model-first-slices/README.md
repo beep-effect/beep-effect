@@ -17,22 +17,28 @@ system alongside people?
 
 ## Next Open Question
 
-The graduation gate is met (D53): every conformance case passes on the Postgres swarm host, on six
-local patches. Retiring the repo-owned platform (D5) waits on an upstream release. Next for the
-operator: read the upstream set under the prototype's `notes/upstream/` and say whether any of it
-is sent (D54). After that the shape review: [`BRIEF.md`](./BRIEF.md) and the artifact predate D24
-to D55 and have not been confirmed in words.
+The shape review. [`BRIEF.md`](./BRIEF.md) and the fifth draft of the artifact (text in
+`research/21`) are current to D58 and await the operator's confirmation in words (D56). The
+appetite is still unset. After that: decompose into `MAP.md`, create the goal packets, and send the
+branch to one pull request (D57). The upstream set has been checked against Alchemy's main (D58);
+what is sent, and where, is the operator's call. Retiring the repo-owned platform (D5) waits on an
+upstream release.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
 2. [`CAPTURE.md`](./CAPTURE.md) - the operator's brief and ground rules.
 3. [`RESEARCH.md`](./RESEARCH.md) - the proposal, the prototype, the outside reviews.
-4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D55.
+4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D58.
 5. [`BRIEF.md`](./BRIEF.md) - shaped pitch, awaiting the operator's confirmation.
 
 ## Trail
 
+- 2026-11-17: D56 to D58: update the brief and artifact, then graduate; one pull request after the
+  brief update; check the upstream set against Alchemy's main. `BRIEF.md` rewritten to D58 and the
+  artifact's fifth draft published at a new address (the earlier one no longer opens) and filed as
+  text in `research/21`. The read-only upstream check found no release since beta.87, every defect
+  still present on main, and open upstream threads for most of the set. Nothing sent.
 - 2026-11-14: phase 12, in process only: a startup error for an unnamed runner pool (its own
   upstream diff, not run on a cluster), the frozen-runner case, and the upstream set rewritten for
   a maintainer with an index. Nothing sent. Notes in `research/20`.

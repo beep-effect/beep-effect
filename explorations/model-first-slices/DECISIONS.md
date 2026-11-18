@@ -1181,3 +1181,40 @@ by the orchestrating session; Docker is unchanged.
 
 Not exercised: the bootstrap declaring the pool name on a real runner, and a runner failing to
 start.
+
+## 2026-11-17 — D56 the shape review comes before the goal packet
+
+**Question:** The graduation gate is met (D53) and no goal packet exists. `BRIEF.md` and the
+published artifact describe the design as of D23. How does the packet get to a goal packet?
+
+**Answer:** Update the brief, then graduate. `BRIEF.md` and the artifact are brought up to D55, the
+operator confirms the shape, and the packet is then decomposed and the goal packets created.
+
+**Rationale:** A goal packet's spec is seeded from the brief, and thirty-two rulings and twelve
+build phases have landed since the brief was written. Rejected: decomposing straight from this log
+with no separate shape review; leaving the packet at shape. Recommended answer accepted.
+
+## 2026-11-17 — D57 the packet goes to a pull request
+
+**Question:** The packet and the prototype exist only as local commits on
+`explore/model-first-slices` in one worktree. Should the branch go to a pull request?
+
+**Answer:** Yes, one pull request through Yeet once the brief is current, carrying the packet, the
+prototype and any goal packet created by then.
+
+**Rationale:** The work is on one machine and invisible from `main`. One pull request after the
+brief update lands a packet that describes itself correctly. Rejected: a pull request on the
+current head with the brief following later; keeping the work local. Recommended answer accepted.
+
+## 2026-11-17 — D58 the upstream set is checked against Alchemy's main (follows D54)
+
+**Question:** The upstream set (seven patches, three write-ups) was written against
+2.0.0-beta.87 and nothing is posted. What next for it?
+
+**Answer:** A read-only check against Alchemy's current main and its open issues and pull
+requests. The patches are rebased where main has moved and the final texts come back to the
+operator. Nothing is posted; the operator is asked again before anything goes out.
+
+**Rationale:** A patch that no longer applies, or a defect upstream has already fixed another way,
+changes what is worth sending. Rejected: holding the set as written; dropping the upstream work.
+Recommended answer accepted.

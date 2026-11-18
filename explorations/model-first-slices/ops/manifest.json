@@ -6,11 +6,11 @@
     "status": "active",
     "stage": "shape",
     "openQuestions": [
-      "Operator: read the upstream set under the prototype's notes/upstream/ and say whether any of it is sent (D54). None is posted.",
-      "D16 gate met (D53). Next: bring BRIEF.md and the artifact up to D55 for the shape review, then decompose toward goal packets.",
-      "WAITING on upstream: retiring @beep/alchemy-postgres (D5) needs the six fixes in an Alchemy release.",
-      "DEFERRED: browser session credentials, tenant and cache clearing (outside the D16 gate).",
-      "Shape review: BRIEF.md and the artifact have not been confirmed in words by the operator."
+      "Shape review: the operator confirms BRIEF.md and the fifth-draft artifact (research/21) in words, and sets the appetite (D56).",
+      "Upstream set: checked against Alchemy's main (D58); the operator says what is sent and where. None is posted.",
+      "After confirmation: decompose into MAP.md, create the goal packets, one pull request (D56, D57).",
+      "WAITING on upstream: retiring @beep/alchemy-postgres (D5) needs the fixes in an Alchemy release.",
+      "DEFERRED: browser session credentials, tenant and cache clearing (outside the D16 gate)."
     ],
     "sources": ["research/SOURCES.md"],
     "links": {
@@ -22,6 +22,6 @@
       "supersededBy": null
     },
     "created": "2026-11-13",
-    "updated": "2026-11-14"
+    "updated": "2026-11-17"
   }
 }
