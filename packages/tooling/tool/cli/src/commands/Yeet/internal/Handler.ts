@@ -52,6 +52,7 @@ import {
   FlakeQuarantineArtifactJson,
 } from "../../Quality/internal/FlakeQuarantine.ts";
 import {
+  GITHUB_CHECK_RUN_REPORT_FILE_NAME,
   GithubCheckLaneRunStatus,
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
@@ -2916,6 +2917,9 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   const fs = yield* FileSystem.FileSystem;
   const innerLaneReportPath = yield* runOutputPathForContext(plan.context, INNER_LANE_REPORT_FILE_NAME);
   yield* fs.remove(innerLaneReportPath, { force: true }).pipe(Effect.ignore);
+  // The GitHub-check batteries write their run reports beside it; start this attempt with neither.
+  const githubCheckReportPath = yield* runOutputPathForContext(plan.context, GITHUB_CHECK_RUN_REPORT_FILE_NAME);
+  yield* fs.remove(githubCheckReportPath, { force: true }).pipe(Effect.ignore);
   yield* clearProofEnvironments(plan.context);
   const executionSteps = A.map(plan.steps, (originalStep) =>
     attachInnerLaneReportSideChannel(
