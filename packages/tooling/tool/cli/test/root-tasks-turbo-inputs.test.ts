@@ -18,6 +18,7 @@ import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { isPackageSourceFile, TurboConfigProofTaskName } from "@beep/repo-cli/test/Quality";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
+import { AgentEnvKey } from "@beep/runtime-env/RuntimeEnv";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -699,7 +700,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
         });
         const digest = yield* Digest.Digest;
         const bytes = yield* digest.digest(Digest.sha256, new TextEncoder().encode(encoded));
-        expect(Hex.encode(bytes)).toBe("cd5f5c2fa66d7255480d6d17fb30fbbb01243d71a7abcd6b241ad425a0c11f46");
+        expect(Hex.encode(bytes)).toBe("b4a060fdf3b0728eca6cadd1f0e8ba3c329993a6695cfd8e94ed1414ac899bd2");
       })
     );
   });
@@ -1293,6 +1294,30 @@ describe("Root-reaching task inputs", () => {
       expect(excludesNestedLanes("lint")("!.claude/worktrees/**")).toBe(false);
       expect(excludesNestedLanes("lint")("$TURBO_ROOT$/.claude/worktrees/**")).toBe(false);
     });
+  });
+});
+
+// Turbo's strict env mode hides every variable a task does not declare, so a tool under Turbo
+// sees the agent only through the global pass-through list. The list follows the one agent table
+// in @beep/runtime-env, plus `AI_AGENT` (the explicit override), `EDITOR` (the `devin` pattern
+// row; `PATH` always reaches tasks) and `AGENT` (the repo CLI exports it for Bun's quiet mode).
+const GlobalPassThrough = S.Struct({ global: S.Struct({ passThroughEnv: S.Array(S.String) }) });
+const decodeGlobalPassThrough = S.decodeEffect(S.fromJsonString(GlobalPassThrough));
+
+describe("Agent signal through Turbo", () => {
+  it.layer(PlatformLayer)("tracked root configuration", (it) => {
+    it.effect(
+      "passes every agent key of @beep/runtime-env through to tasks",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repo = yield* findRepoRoot();
+        const turboJson = yield* fs.readFileString(path.join(repo, "turbo.json"));
+        const { global } = yield* decodeGlobalPassThrough(turboJson);
+        const required = [...AgentEnvKey.literals, "AI_AGENT", "AGENT", "EDITOR"];
+        expect(A.filter(required, (key) => !A.contains(global.passThroughEnv, key))).toEqual([]);
+      })
+    );
   });
 });
 
