@@ -394,17 +394,23 @@ const isPackageLocalDocgenInput = (relativePath: string): boolean =>
 
 const fullReasonForFile = (filePath: string): O.Option<DocgenLocalFullReason> => {
   if (isExactFile(DOCGEN_LOCAL_FULL_INPUT_FILES, filePath)) {
-    return DocgenLocalFullReason.makeOption({
-      filePath,
-      message: "Global docgen or Turbo input changed.",
-    });
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+    return O.some(
+      DocgenLocalFullReason.make({
+        filePath,
+        message: "Global docgen or Turbo input changed.",
+      })
+    );
   }
 
   if (hasPrefix(DOCGEN_LOCAL_FULL_INPUT_PREFIXES, filePath)) {
-    return DocgenLocalFullReason.makeOption({
-      filePath,
-      message: "Docgen tooling changed.",
-    });
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+    return O.some(
+      DocgenLocalFullReason.make({
+        filePath,
+        message: "Docgen tooling changed.",
+      })
+    );
   }
 
   return O.none();

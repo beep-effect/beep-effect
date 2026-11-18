@@ -410,10 +410,13 @@ const checkLocator = Effect.fnUntraced(function* (
   if (O.isSome(upstreamProblem)) {
     // Catalog availability and file drift are independent observations. Keep
     // the actual target value visible even when a live overlay drops a model.
-    return DriftFinding.makeOption({
-      ...upstreamProblem.value,
-      current,
-    });
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+    return O.some(
+      DriftFinding.make({
+        ...upstreamProblem.value,
+        current,
+      })
+    );
   }
 
   if (O.isNone(expected)) {

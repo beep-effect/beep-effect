@@ -261,16 +261,19 @@ const diagnosticIssueFromLine = (
     O.flatMap((path) => packageNameForFile(context, path))
   );
 
-  return QualityIssue.makeOption({
-    ...issueBase(context, step, result, category, message, inferredPackageName),
-    id: issueId(step, category, message, inferredPackageName, file, linePosition(startLine)),
-    severity: severityForLine(match.groups.severity ?? "error"),
-    confidence: "structured",
-    evidence: [line],
-    ...optionalProp("file", file),
-    ...optionalProp("line", startLine),
-    ...optionalProp("column", startColumn),
-  });
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+  return O.some(
+    QualityIssue.make({
+      ...issueBase(context, step, result, category, message, inferredPackageName),
+      id: issueId(step, category, message, inferredPackageName, file, linePosition(startLine)),
+      severity: severityForLine(match.groups.severity ?? "error"),
+      confidence: "structured",
+      evidence: [line],
+      ...optionalProp("file", file),
+      ...optionalProp("line", startLine),
+      ...optionalProp("column", startColumn),
+    })
+  );
 };
 
 const schemaFirstPolicyFindingSeverity = (

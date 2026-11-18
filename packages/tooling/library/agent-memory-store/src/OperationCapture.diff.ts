@@ -202,7 +202,8 @@ const emitFile = (
       Insert: ({ edited }) => {
         const nodeId = mintNodeId();
         if (MutableHashSet.has(taken, nodeId)) {
-          return MintedNodeIdCollisionError.makeOption({ nodeId });
+          // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          return O.some(MintedNodeIdCollisionError.make({ nodeId }));
         }
         MutableHashSet.add(taken, nodeId);
         operations.push(

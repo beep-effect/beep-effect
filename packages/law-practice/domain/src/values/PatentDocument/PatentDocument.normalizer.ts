@@ -568,19 +568,22 @@ export const qualifyClaimInput = Effect.fn("PatentDocument.qualifyClaimInput")(f
                     Num.Equivalence(known.claimNumber, parentClaimNumber)
                   );
                   if (A.isReadonlyArrayEmpty(source))
-                    return ClaimInputContextIssue.cases["missing-parent"].makeOption({ parentClaimNumber });
+                    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+                    return O.some(ClaimInputContextIssue.cases["missing-parent"].make({ parentClaimNumber }));
                   const parent = A.findFirst(normalized, (known) =>
                     Num.Equivalence(known.claim.claimNumber, parentClaimNumber)
                   );
                   if (O.isNone(parent))
-                    return ClaimInputContextIssue.cases["unnormalized-parent"].makeOption({ parentClaimNumber });
+                    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+                    return O.some(ClaimInputContextIssue.cases["unnormalized-parent"].make({ parentClaimNumber }));
                   const ready = O.exists(
                     HashMap.get(qualified, parent.value.record.sourceOrdinal),
                     ClaimInputQualification.guards["context-ready"]
                   );
                   return ready
                     ? O.none()
-                    : ClaimInputContextIssue.cases["affected-ancestor"].makeOption({ parentClaimNumber });
+                    : // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+                      O.some(ClaimInputContextIssue.cases["affected-ancestor"].make({ parentClaimNumber }));
                 })
               ),
           });

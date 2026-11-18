@@ -453,9 +453,12 @@ const admitFrame = (
     return O.none();
   }
   if (A.some(ancestors, (ancestor) => ancestor === value)) {
-    return MdastDecodeError.makeOption({
-      issue: new SchemaIssue.InvalidValue({ message: "A foreign mdast node cannot contain an ancestor as a child." }),
-    });
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+    return O.some(
+      MdastDecodeError.make({
+        issue: new SchemaIssue.InvalidValue({ message: "A foreign mdast node cannot contain an ancestor as a child." }),
+      })
+    );
   }
   if (followsChildren(value.type) && A.isArray(value.children)) {
     const stack = A.append(ancestors, value);

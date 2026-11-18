@@ -15,6 +15,11 @@ language js
 //     than `effect/Schema` (`Redacted.make`, `Tuple.make`, `HashMap.make`);
 //   - any other non-schema receiver, suppressed at the site with
 //     `// biome-ignore lint/plugin/prefer-schema-make-option: <why make has no makeOption here>`.
+//
+// A site whose Option carries a refusal, error or finding, where `None` is the
+// pass path (a send guard, a safety refusal, a CI gate), keeps
+// `O.some(X.make(...))` under the same suppression with a "Fail closed" reason:
+// there a refused input must throw, not turn into a silent pass.
 
 // The leading identifier of a receiver such as `S.Natural` or `X.cases.Y`.
 pattern receiver_root($root) { r"^([A-Za-z_$][A-Za-z0-9_$]*)(?:[^A-Za-z0-9_$][\s\S]*)?$"($root) }
@@ -38,5 +43,5 @@ or {
   $inner <: `$receiver.make($...)`,
   $receiver <: receiver_root($root),
   not $call <: non_schema_effect_namespace($root),
-  register_diagnostic(span=$call, message="Rule: build an Option of a schema value with the schema's own `makeOption` (EF-35b). Why: `O.some(X.make(...))` throws on input the schema refuses; `X.makeOption(...)` returns `O.none()` instead. Fix: write `X.makeOption(...)` (`X.cases.Y.makeOption(...)` on a tagged union case); keep a typed failure with `X.makeEffect(...)` or a decode where a refusal must fail. A receiver with no `makeOption` (not an effect/Schema schema) takes `// biome-ignore lint/plugin/prefer-schema-make-option: <reason>`.", severity="error")
+  register_diagnostic(span=$call, message="Rule: build an Option of a schema value with the schema's own `makeOption` (EF-35b). Why: `O.some(X.make(...))` throws on input the schema refuses; `X.makeOption(...)` returns `O.none()` instead. Fix: write `X.makeOption(...)` (`X.cases.Y.makeOption(...)` on a tagged union case); keep a typed failure with `X.makeEffect(...)` or a decode where a refusal must fail. A receiver with no `makeOption` (not an effect/Schema schema), or a fail-closed site whose `None` reads as a pass, takes `// biome-ignore lint/plugin/prefer-schema-make-option: <reason>`.", severity="error")
 }

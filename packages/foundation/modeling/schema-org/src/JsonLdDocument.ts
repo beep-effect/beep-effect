@@ -275,8 +275,10 @@ type BuildError = InvalidNodeIdError | DuplicateNodeIdError | ConflictingTermErr
 /** Checks a node's own `@id` is well formed and unclaimed, recording it in `seen` when it is. */
 const nodeIdentityError = (node: JsonLdNode, seen: MutableHashSet.MutableHashSet<string>): O.Option<BuildError> => {
   const id = node["@id"];
-  if (!NodeRef.isValidId(id)) return InvalidNodeIdError.makeOption({ input: id });
-  if (MutableHashSet.has(seen, id)) return DuplicateNodeIdError.makeOption({ id });
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+  if (!NodeRef.isValidId(id)) return O.some(InvalidNodeIdError.make({ input: id }));
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+  if (MutableHashSet.has(seen, id)) return O.some(DuplicateNodeIdError.make({ id }));
   MutableHashSet.add(seen, id);
   return O.none();
 };

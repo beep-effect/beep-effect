@@ -233,12 +233,15 @@ const keybindingConflict = (
       return A.match(collisions, {
         onEmpty: O.none,
         onNonEmpty: (nonEmpty) =>
-          KeybindingConflictError.makeOption({
-            profileId: profile.id,
-            platform: binding.keybinding.platform,
-            chord: binding.keybinding.chord,
-            commandIds: A.map(nonEmpty, ({ commandId }) => commandId),
-          }),
+          // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          O.some(
+            KeybindingConflictError.make({
+              profileId: profile.id,
+              platform: binding.keybinding.platform,
+              chord: binding.keybinding.chord,
+              commandIds: A.map(nonEmpty, ({ commandId }) => commandId),
+            })
+          ),
       });
     }
   }

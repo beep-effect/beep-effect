@@ -1954,9 +1954,12 @@ export const knowledgeDoctorGateFailure = (report: KnowledgeDoctorReport): O.Opt
   const governance = A.length(A.filter(report.findings, (row) => isKnowledgeGovernanceKind(row.finding.kind)));
   return introduced + governance === 0
     ? O.none()
-    : KnowledgeDoctorGateError.makeOption({
-        message: `knowledge doctor: ${introduced} introduced and ${governance} governance blocking finding(s).`,
-        introducedCount: S.Natural.make(introduced),
-        governanceCount: S.Natural.make(governance),
-      });
+    : // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+      O.some(
+        KnowledgeDoctorGateError.make({
+          message: `knowledge doctor: ${introduced} introduced and ${governance} governance blocking finding(s).`,
+          introducedCount: S.Natural.make(introduced),
+          governanceCount: S.Natural.make(governance),
+        })
+      );
 };

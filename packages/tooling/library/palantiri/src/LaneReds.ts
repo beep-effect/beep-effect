@@ -62,16 +62,19 @@ const rowRed =
     const severity = row.severity;
     return row.acked || row.superseded || severity === "P2" || !isLaneRedKind(kind)
       ? O.none()
-      : LaneRed.makeOption({
-          kind,
-          severity,
-          prNumber: row.prNumber,
-          lane: checkout.lane,
-          branch: checkout.branch,
-          summary: redactText(row.summary),
-          observedAt: row.observedAt,
-          freshness: itemFreshness(now, row.observedAt),
-        });
+      : // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+        O.some(
+          LaneRed.make({
+            kind,
+            severity,
+            prNumber: row.prNumber,
+            lane: checkout.lane,
+            branch: checkout.branch,
+            summary: redactText(row.summary),
+            observedAt: row.observedAt,
+            freshness: itemFreshness(now, row.observedAt),
+          })
+        );
   };
 
 const bySubmitted: Order.Order<ProofJobInput> = Order.mapInput(DateTime.Order, (job) => job.submittedAt);
@@ -81,16 +84,19 @@ const jobRed =
   (job: ProofJobInput): O.Option<LaneRed> => {
     const observedAt = O.orElse(job.endedAt, () => O.some(job.submittedAt));
     return job.failed
-      ? LaneRed.makeOption({
-          kind: "proof-job-failed",
-          severity: "P1",
-          prNumber: job.prNumber,
-          lane: checkout.lane,
-          branch: O.some(job.branch),
-          summary: redactText(`proof job on ${job.branch}: ${job.reason}`),
-          observedAt,
-          freshness: itemFreshness(now, observedAt),
-        })
+      ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+        O.some(
+          LaneRed.make({
+            kind: "proof-job-failed",
+            severity: "P1",
+            prNumber: job.prNumber,
+            lane: checkout.lane,
+            branch: O.some(job.branch),
+            summary: redactText(`proof job on ${job.branch}: ${job.reason}`),
+            observedAt,
+            freshness: itemFreshness(now, observedAt),
+          })
+        )
       : O.none();
   };
 

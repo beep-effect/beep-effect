@@ -434,11 +434,14 @@ const makeConnectionClient = (
                   Effect.onInterrupt(() =>
                     Effect.sync(() => {
                       failed = O.orElse(failed, () =>
-                        DuckDbError.makeOption({
-                          databasePath: O.some(options.databasePath),
-                          message: "DuckDB statement interrupted inside a transaction",
-                          operation,
-                        })
+                        // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+                        O.some(
+                          DuckDbError.make({
+                            databasePath: O.some(options.databasePath),
+                            message: "DuckDB statement interrupted inside a transaction",
+                            operation,
+                          })
+                        )
                       );
                     })
                   )

@@ -748,14 +748,17 @@ const indexCandidate = Effect.fn("Knowledge.indexCandidate")(function* (
   }
   const expectedDigest = yield* sha256(bytes.expected);
   const archivedDigest = yield* sha256(bytes.archived);
-  return KnowledgeFindingCandidate.makeOption({
-    kind: "index-drift",
-    documentId,
-    subject: `producer://goals/index:${expectedDigest}:${archivedDigest}`,
-    location: KnowledgeFindingLocation.make({ path: INDEX_PATH }),
-    message: "goals/INDEX.md differs from the current-checkout projection of the archive data.",
-    remediation: "Run `bun run beep goals index --write` and commit the regenerated index.",
-  });
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+  return O.some(
+    KnowledgeFindingCandidate.make({
+      kind: "index-drift",
+      documentId,
+      subject: `producer://goals/index:${expectedDigest}:${archivedDigest}`,
+      location: KnowledgeFindingLocation.make({ path: INDEX_PATH }),
+      message: "goals/INDEX.md differs from the current-checkout projection of the archive data.",
+      remediation: "Run `bun run beep goals index --write` and commit the regenerated index.",
+    })
+  );
 });
 
 const documentCandidatesForSide = Effect.fn("Knowledge.documentCandidatesForSide")(function* (

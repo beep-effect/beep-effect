@@ -770,12 +770,15 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
             const conclusionFinal = conclusion(final.value, false);
             if (conclusionFinal === "success" || conclusionFinal === "neutral" || conclusionFinal === "skipped")
               return O.none<GoalNonRequiredRed>();
-            return GoalNonRequiredRed.makeOption({
-              lane: name,
-              conclusionAtMerge: O.isSome(atMerge) ? conclusion(atMerge.value, true) : "unknown",
-              conclusionFinal,
-              attribution: "unknown",
-            });
+            // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+            return O.some(
+              GoalNonRequiredRed.make({
+                lane: name,
+                conclusionAtMerge: O.isSome(atMerge) ? conclusion(atMerge.value, true) : "unknown",
+                conclusionFinal,
+                attribution: "unknown",
+              })
+            );
           })
         ),
     });

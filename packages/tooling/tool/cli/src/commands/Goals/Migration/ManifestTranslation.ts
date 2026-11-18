@@ -84,13 +84,16 @@ const cycleFinding = (
   const key = A.join(A.sort(A.dedupe(cycle), Order.String), "|");
   if (MutableHashSet.has(reported, key)) return O.none();
   MutableHashSet.add(reported, key);
-  return FleetLintFinding.makeOption({
-    slug,
-    kind: "dependency-cycle",
-    severity: "violation",
-    related: cycle,
-    message: `blockedBy dependency cycle: ${A.join(cycle, " -> ")}`,
-  });
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+  return O.some(
+    FleetLintFinding.make({
+      slug,
+      kind: "dependency-cycle",
+      severity: "violation",
+      related: cycle,
+      message: `blockedBy dependency cycle: ${A.join(cycle, " -> ")}`,
+    })
+  );
 };
 
 const knownDependencies = (
@@ -148,13 +151,16 @@ const duplicateIdentityFindings = (nodes: ReadonlyArray<PacketNode>): ReadonlyAr
         MutableHashMap.get(declared, id),
         O.flatMap((slugs) =>
           A.length(slugs) > 1
-            ? FleetLintFinding.makeOption({
-                slug: id,
-                kind: "duplicate-slug",
-                severity: "violation",
-                related: A.sort(slugs, Order.String),
-                message: `initiative.id "${id}" is declared by ${A.join(A.sort(slugs, Order.String), ", ")}`,
-              })
+            ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+              O.some(
+                FleetLintFinding.make({
+                  slug: id,
+                  kind: "duplicate-slug",
+                  severity: "violation",
+                  related: A.sort(slugs, Order.String),
+                  message: `initiative.id "${id}" is declared by ${A.join(A.sort(slugs, Order.String), ", ")}`,
+                })
+              )
             : O.none<FleetLintFinding>()
         )
       )
@@ -172,13 +178,16 @@ const packetReferenceFinding = (
     packetReference(reference),
     O.flatMap((related) => {
       if (!MutableHashSet.has(known, related)) {
-        return FleetLintFinding.makeOption({
-          slug: node.slug,
-          kind: "unreachable-packet",
-          severity: "violation",
-          related: [related],
-          message: `packet reference "${reference}" does not resolve to a goal manifest`,
-        });
+        // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+        return O.some(
+          FleetLintFinding.make({
+            slug: node.slug,
+            kind: "unreachable-packet",
+            severity: "violation",
+            related: [related],
+            message: `packet reference "${reference}" does not resolve to a goal manifest`,
+          })
+        );
       }
       const version = pipe(
         MutableHashMap.get(bySlug, related),
@@ -186,13 +195,16 @@ const packetReferenceFinding = (
       );
       return O.contains(version, "initiative-manifest/v2")
         ? O.none()
-        : FleetLintFinding.makeOption({
-            slug: node.slug,
-            kind: "unmigrated-reference",
-            severity: "warning",
-            related: [related],
-            message: `packet reference "${reference}" resolves, but its target is not yet v2`,
-          });
+        : // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          O.some(
+            FleetLintFinding.make({
+              slug: node.slug,
+              kind: "unmigrated-reference",
+              severity: "warning",
+              related: [related],
+              message: `packet reference "${reference}" resolves, but its target is not yet v2`,
+            })
+          );
     })
   );
 

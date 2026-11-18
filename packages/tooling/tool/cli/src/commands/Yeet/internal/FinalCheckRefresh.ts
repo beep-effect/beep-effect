@@ -484,13 +484,16 @@ export const checkFinalCheckRefresh = Effect.fn("Yeet.checkFinalCheckRefresh")(f
   FileSystem.FileSystem | Path.Path | GitServices | SecureRandom.SecureRandom
 > {
   const malformed = (receiptHead: string, which: string) =>
-    FinalCheckRefreshRefused.makeOption({
-      receiptHead,
-      finalHead,
-      reason: "malformed-receipt",
-      ownChanges: [],
-      detail: `the final-check receipt for ${which} ${Str.slice(0, 12)(receiptHead)} exists but does not decode; re-run \`${YEET_FINAL_CHECK_COMMAND}\` instead of falling back to an older receipt`,
-    });
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+    O.some(
+      FinalCheckRefreshRefused.make({
+        receiptHead,
+        finalHead,
+        reason: "malformed-receipt",
+        ownChanges: [],
+        detail: `the final-check receipt for ${which} ${Str.slice(0, 12)(receiptHead)} exists but does not decode; re-run \`${YEET_FINAL_CHECK_COMMAND}\` instead of falling back to an older receipt`,
+      })
+    );
   // The rule covers only a head with no receipt of its own. A decodable one
   // is judged on its own (none here); a file that is there but unreadable must
   // refuse, never fall through to an ancestor.
@@ -510,13 +513,16 @@ export const checkFinalCheckRefresh = Effect.fn("Yeet.checkFinalCheckRefresh")(f
   // record: a receipt copied or renamed under another sha is refused here.
   const notPassing = finalCheckRefusal(receipt, receiptHead.value);
   if (O.isSome(notPassing)) {
-    return FinalCheckRefreshRefused.makeOption({
-      receiptHead: receiptHead.value,
-      finalHead,
-      reason: "ancestor-receipt-not-passing",
-      ownChanges: [],
-      detail: `the nearest ancestor receipt does not pass (${notPassing.value}); an older passing receipt never stands in for it`,
-    });
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+    return O.some(
+      FinalCheckRefreshRefused.make({
+        receiptHead: receiptHead.value,
+        finalHead,
+        reason: "ancestor-receipt-not-passing",
+        ownChanges: [],
+        detail: `the nearest ancestor receipt does not pass (${notPassing.value}); an older passing receipt never stands in for it`,
+      })
+    );
   }
   const facts = yield* collectFinalCheckRefreshFacts(repoRoot, base, receipt.value, finalHead);
   return O.some(decideFinalCheckRefresh(facts));

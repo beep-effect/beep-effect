@@ -419,13 +419,16 @@ const vulnerabilityFinding = (thresholds: DependencyReviewThresholds) => (change
     (advisory) => severityRank(advisory.severity) <= severityRank(thresholds.failOnSeverity)
   );
   return A.isReadonlyArrayNonEmpty(advisories)
-    ? DependencyReviewFinding.cases.vulnerability.makeOption({
-        manifest: change.manifest,
-        ecosystem: change.ecosystem,
-        name: change.name,
-        version: change.version,
-        advisories,
-      })
+    ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+      O.some(
+        DependencyReviewFinding.cases.vulnerability.make({
+          manifest: change.manifest,
+          ecosystem: change.ecosystem,
+          name: change.name,
+          version: change.version,
+          advisories,
+        })
+      )
     : O.none<DependencyReviewFinding>();
 };
 
@@ -438,8 +441,10 @@ const licenseFinding = (change: DependencyChange, license: string | null, decisi
     license: license ?? "",
   };
   return Match.value(decision).pipe(
-    Match.when("denied", () => DependencyReviewFinding.cases["denied-license"].makeOption(target)),
-    Match.when("unresolved", () => DependencyReviewFinding.cases["unresolved-license"].makeOption(target)),
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+    Match.when("denied", () => O.some(DependencyReviewFinding.cases["denied-license"].make(target))),
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+    Match.when("unresolved", () => O.some(DependencyReviewFinding.cases["unresolved-license"].make(target))),
     Match.orElse(O.none<DependencyReviewFinding>)
   );
 };

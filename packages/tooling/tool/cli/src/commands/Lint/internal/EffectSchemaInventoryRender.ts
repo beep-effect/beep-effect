@@ -416,7 +416,8 @@ export const diffEffectSchemaInventoryFiles: {
     const changed = A.getSomes(
       A.map(expected, (file) =>
         O.match(HashMap.get(actual, file.name), {
-          onNone: () => EffectSchemaInventoryDrift.cases.missing.makeOption({ file: file.name }),
+          // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          onNone: () => O.some(EffectSchemaInventoryDrift.cases.missing.make({ file: file.name })),
           onSome: (content) =>
             content === file.content ? O.none() : O.some(staleDrift(file.name, file.content, content)),
         })

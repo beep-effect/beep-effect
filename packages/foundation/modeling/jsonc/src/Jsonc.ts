@@ -395,7 +395,8 @@ const aggregate: {
   2,
   (text: string, errors: ReadonlyArray<RawParseError>): O.Option<JsoncParseError> =>
     A.isReadonlyArrayNonEmpty(errors)
-      ? JsoncParseError.makeOption({ errors: toDetails(text, errors), input: text })
+      ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+        O.some(JsoncParseError.make({ errors: toDetails(text, errors), input: text }))
       : O.none()
 );
 

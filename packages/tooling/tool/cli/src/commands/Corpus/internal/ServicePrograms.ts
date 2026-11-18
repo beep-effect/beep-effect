@@ -980,15 +980,18 @@ const failedOutcome = (
   childArtifactCount: 0,
   ocr: O.none(),
   routingKey,
-  failure: FailedFileProcessingFailureRecord.makeOption({
-    artifactId: ids.artifactId,
-    format: "unknown",
-    message,
-    operationId: ids.operationId,
-    reason,
-    relativePath: ids.relativePath,
-    status: "failed",
-  }),
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+  failure: O.some(
+    FailedFileProcessingFailureRecord.make({
+      artifactId: ids.artifactId,
+      format: "unknown",
+      message,
+      operationId: ids.operationId,
+      reason,
+      relativePath: ids.relativePath,
+      status: "failed",
+    })
+  ),
   sourceRecord: FailedSourceProcessingRecord.make({
     artifactId: ids.artifactId,
     digest: ids.digest,
@@ -2034,16 +2037,19 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
             Match.discriminator("resultKind")("skipped", (skipped) =>
               Effect.succeed({
                 childArtifactCount: 0,
-                failure: SkippedFileProcessingFailureRecord.makeOption({
-                  artifactId: ids.artifactId,
-                  engine: skipped.engine,
-                  format: skipped.format,
-                  message: A.join(skipped.warnings, " ") || `Skipped: ${skipped.skipReason}.`,
-                  operationId: ids.operationId,
-                  reason: skipped.skipReason,
-                  relativePath: ids.relativePath,
-                  status: "skipped",
-                }),
+                // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+                failure: O.some(
+                  SkippedFileProcessingFailureRecord.make({
+                    artifactId: ids.artifactId,
+                    engine: skipped.engine,
+                    format: skipped.format,
+                    message: A.join(skipped.warnings, " ") || `Skipped: ${skipped.skipReason}.`,
+                    operationId: ids.operationId,
+                    reason: skipped.skipReason,
+                    relativePath: ids.relativePath,
+                    status: "skipped",
+                  })
+                ),
                 sourceRecord: SkippedSourceProcessingRecord.make({
                   artifactId: ids.artifactId,
                   digest: ids.digest,

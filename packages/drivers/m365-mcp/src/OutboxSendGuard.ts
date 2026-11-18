@@ -336,5 +336,6 @@ export const checkSendExpectation = (check: OutboxSendCheck): O.Option<OutboxSen
     A.map(([field]) => field)
   );
 
-  return A.isReadonlyArrayNonEmpty(fields) ? OutboxSendMismatch.makeOption({ fields }) : O.none();
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+  return A.isReadonlyArrayNonEmpty(fields) ? O.some(OutboxSendMismatch.make({ fields })) : O.none();
 };

@@ -3286,18 +3286,21 @@ const raisedFileRowJudgements = (
     A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
     A.map((metric) =>
       fileMetricRegressed(metric, proposed, actual, epsilon)
-        ? CoverageRaisedRowFailure.makeOption({
-            packageName,
-            packagePath,
-            filePath: O.some(filePath),
-            metric,
-            base: base[metric],
-            proposed: proposed[metric],
-            actual: actual[metric],
-            baseUncovered: base.uncovered[metric],
-            proposedUncovered: proposed.uncovered[metric],
-            actualUncovered: actual.uncovered[metric],
-          })
+        ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          O.some(
+            CoverageRaisedRowFailure.make({
+              packageName,
+              packagePath,
+              filePath: O.some(filePath),
+              metric,
+              base: base[metric],
+              proposed: proposed[metric],
+              actual: actual[metric],
+              baseUncovered: base.uncovered[metric],
+              proposedUncovered: proposed.uncovered[metric],
+              actualUncovered: actual.uncovered[metric],
+            })
+          )
         : O.none()
     )
   );
@@ -3314,18 +3317,21 @@ const raisedPackageRowJudgements = (
     A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
     A.map((metric) =>
       metricRegressed(metric, proposed, actual, epsilon)
-        ? CoverageRaisedRowFailure.makeOption({
-            packageName,
-            packagePath: proposed.path,
-            filePath: O.none(),
-            metric,
-            base: base[metric],
-            proposed: proposed[metric],
-            actual: actual[metric],
-            baseUncovered: base.uncovered[metric],
-            proposedUncovered: proposed.uncovered[metric],
-            actualUncovered: actual.uncovered[metric],
-          })
+        ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          O.some(
+            CoverageRaisedRowFailure.make({
+              packageName,
+              packagePath: proposed.path,
+              filePath: O.none(),
+              metric,
+              base: base[metric],
+              proposed: proposed[metric],
+              actual: actual[metric],
+              baseUncovered: base.uncovered[metric],
+              proposedUncovered: proposed.uncovered[metric],
+              actualUncovered: actual.uncovered[metric],
+            })
+          )
         : O.none()
     )
   );
@@ -3348,18 +3354,21 @@ const raisedVanishedFileRowJudgements = (
     A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
     A.map((metric) =>
       proposed[metric] > ZERO_PERCENTAGE
-        ? CoverageRaisedRowFailure.makeOption({
-            packageName,
-            packagePath,
-            filePath: O.some(filePath),
-            metric,
-            base: base[metric],
-            proposed: proposed[metric],
-            actual: ZERO_PERCENTAGE,
-            baseUncovered: base.uncovered[metric],
-            proposedUncovered: proposed.uncovered[metric],
-            actualUncovered: S.Natural.make(0),
-          })
+        ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          O.some(
+            CoverageRaisedRowFailure.make({
+              packageName,
+              packagePath,
+              filePath: O.some(filePath),
+              metric,
+              base: base[metric],
+              proposed: proposed[metric],
+              actual: ZERO_PERCENTAGE,
+              baseUncovered: base.uncovered[metric],
+              proposedUncovered: proposed.uncovered[metric],
+              actualUncovered: S.Natural.make(0),
+            })
+          )
         : O.none()
     )
   );
@@ -3558,10 +3567,13 @@ const coveragePackageRowRemoval = (
   proposedPackage: O.Option<CoveragePackageBaseline>
 ): O.Option<CoveragePackageRowRemovedFailure> =>
   O.isSome(context.baselines.proposed) && O.isSome(measured) && O.isNone(proposedPackage)
-    ? CoveragePackageRowRemovedFailure.makeOption({
-        packageName: context.packageName,
-        packagePath: context.basePath,
-      })
+    ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+      O.some(
+        CoveragePackageRowRemovedFailure.make({
+          packageName: context.packageName,
+          packagePath: context.basePath,
+        })
+      )
     : O.none();
 
 // A lowered metric is either a floor this run judges — the package judges
