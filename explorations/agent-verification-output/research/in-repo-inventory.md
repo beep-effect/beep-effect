@@ -424,7 +424,7 @@ Candidate homes (not decided):
   fold a failed check's TS6305 lines into one count line.
 
 **(b) Global-flag boilerplate on every `--help`.**
-- The module is now `effect/cli` (`node_modules/effect/src/cli/`), not `effect/unstable/cli`. Its
+- The module is now `effect/cli` (`node_modules/effect/src/cli/`), not the former unstable CLI path. Its
   five built-ins (`Help, Version, Wizard, Completions, LogLevel`,
   `node_modules/effect/src/cli/GlobalFlag.ts:323-330`) render on every subcommand's help, as
   `yeet --help` and `yeet monitor --help` show.

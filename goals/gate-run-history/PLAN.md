@@ -26,9 +26,9 @@ model and the gate-run library from `goals/gate-report-core`.
 
 ### P0 Research
 
-1. Read upstream `packages/sdk/src/utils/classify-test.ts`,
-   `packages/engine/src/layers/HistoryTrackerLive.ts`,
-   `packages/engine/src/utils/persist-transaction.ts` and `okf/limitations/concurrent-first-open-wal-switch.md` in `.repos/vitest-agent`.
+1. Read upstream `.repos/vitest-agent/packages/sdk/src/utils/classify-test.ts`,
+   `.repos/vitest-agent/packages/engine/src/layers/HistoryTrackerLive.ts`,
+   `.repos/vitest-agent/packages/engine/src/utils/persist-transaction.ts` and `.repos/vitest-agent/okf/limitations/concurrent-first-open-wal-switch.md` in `.repos/vitest-agent`.
 2. Read `packages/tooling/library/agent-memory-store/src/MemoryLog.layer.ts` for how a tooling
    library opens `@beep/sqlite` and commits one transaction.
 3. Confirm the repository key, the default `W = 10`, the 250 ms read deadline and the retry

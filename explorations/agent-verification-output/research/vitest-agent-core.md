@@ -1,6 +1,6 @@
 # vitest-agent core: source study for the port
 
-Reference checkout: `~/YeeBois/references/effect/vitest-agent` at `1cf1ab94` (2026-11-17).
+Reference checkout: `.repos/vitest-agent` at `1cf1ab94` (2026-11-17).
 Every `path:line` is relative to that repo root; `node_modules/...` points at an installed
 dependency. LOC are `wc -l` of `*.ts`/`*.tsx` (comments included) outside `__test__/`, `dist/`
 and `node_modules/`.

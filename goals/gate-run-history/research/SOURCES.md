@@ -15,15 +15,15 @@ upstream citations. Locations are relative to the upstream repository root.
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| `va-classify-test` | History label for one series | vitest-agent | `packages/sdk/src/utils/classify-test.ts:11-26` | history | port, rules changed per `SPEC.md` |
-| `va-history` | Ten-run window tracker | vitest-agent | `packages/engine/src/layers/HistoryTrackerLive.ts:13-41` | history | port, branch partition added, window as configuration |
-| `va-persist` | Persist transaction invariant | vitest-agent | `packages/engine/src/utils/persist-transaction.ts:175` | storage | port the invariant |
-| `va-migrations` | SQLite schema | vitest-agent | `packages/engine/src/migrations/` (`0003_run_retention.ts:92-155`) | storage | reference; result tables only |
-| `va-history-key` | Series key | vitest-agent | `packages/engine/src/services/HistoryTracker.ts:26` | history | port; key becomes gate, subject, item key, branch |
-| `va-history-store` | History write, prune and reads | vitest-agent | `packages/engine/src/layers/DataStoreLive.ts:217,458`, `DataReaderLive.ts:498` | storage | reference |
-| `va-flaky-query` | The MCP flaky rule | vitest-agent | `packages/engine/src/layers/DataReaderLive.ts:711-730` | history | reference; replaced by the one flaky rule |
-| `va-first-open` | Concurrent first open at the WAL switch | vitest-agent | `okf/limitations/concurrent-first-open-wal-switch.md:28-52` | storage | reference; becomes a typed retry |
-| `va-path` | Data path and shared worktree history | vitest-agent | `packages/engine/src/utils/resolve-data-path.ts:69-113`, `resolve-project-key-from-cwd.ts:17-38`, `okf/decisions/31-deterministic-xdg-path-resolution.md:117-125` | storage | reference; one file per repository kept, the shared window replaced |
+| `va-classify-test` | History label for one series | vitest-agent | `.repos/vitest-agent/packages/sdk/src/utils/classify-test.ts:11-26` | history | port, rules changed per `SPEC.md` |
+| `va-history` | Ten-run window tracker | vitest-agent | `.repos/vitest-agent/packages/engine/src/layers/HistoryTrackerLive.ts:13-41` | history | port, branch partition added, window as configuration |
+| `va-persist` | Persist transaction invariant | vitest-agent | `.repos/vitest-agent/packages/engine/src/utils/persist-transaction.ts:175` | storage | port the invariant |
+| `va-migrations` | SQLite schema | vitest-agent | `.repos/vitest-agent/packages/engine/src/migrations/` (`0003_run_retention.ts:92-155`) | storage | reference; result tables only |
+| `va-history-key` | Series key | vitest-agent | `.repos/vitest-agent/packages/engine/src/services/HistoryTracker.ts:26` | history | port; key becomes gate, subject, item key, branch |
+| `va-history-store` | History write, prune and reads | vitest-agent | `.repos/vitest-agent/packages/engine/src/layers/DataStoreLive.ts:217,458`, `DataReaderLive.ts:498` | storage | reference |
+| `va-flaky-query` | The MCP flaky rule | vitest-agent | `.repos/vitest-agent/packages/engine/src/layers/DataReaderLive.ts:711-730` | history | reference; replaced by the one flaky rule |
+| `va-first-open` | Concurrent first open at the WAL switch | vitest-agent | `.repos/vitest-agent/okf/limitations/concurrent-first-open-wal-switch.md:28-52` | storage | reference; becomes a typed retry |
+| `va-path` | Data path and shared worktree history | vitest-agent | `.repos/vitest-agent/packages/engine/src/utils/resolve-data-path.ts:69-113`, `resolve-project-key-from-cwd.ts:17-38`, `.repos/vitest-agent/okf/decisions/31-deterministic-xdg-path-resolution.md:117-125` | storage | reference; one file per repository kept, the shared window replaced |
 
 `va-history-key`, `va-history-store`, `va-flaky-query`, `va-first-open` and `va-path` are rows this
 goal adds; the exploration's ledger carries the first four rows above.

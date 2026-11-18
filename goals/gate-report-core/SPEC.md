@@ -57,9 +57,9 @@ the result as a decision file.
 
 | Working name | Family / kind | Path | Holds |
 | --- | --- | --- | --- |
-| `@beep/gate-report` | foundation / modeling | `packages/foundation/modeling/gate-report` | Report schemas, the event union, the reducer, shape and outcome classifiers, honest-count rules, failure signature, cause-folding table, the dispatch table and its cells producing a neutral console document |
-| `@beep/repo-gate-run` | tooling / library | `packages/tooling/library/repo-gate-run` | Recorder, console service (agent and terminal projections), audience selection, the type-checker text adapter, the `gate` query services |
-| `@beep/repo-gate-vitest`, or a module of `@beep/test-runner` | tooling / test-kit | `packages/tooling/test-kit/repo-gate-vitest`, or `packages/tooling/test-kit/test-runner` | The Vitest reporter that emits gate events |
+| `@beep/gate-report` | foundation / modeling | `foundation/modeling/gate-report` | Report schemas, the event union, the reducer, shape and outcome classifiers, honest-count rules, failure signature, cause-folding table, the dispatch table and its cells producing a neutral console document |
+| `@beep/repo-gate-run` | tooling / library | `tooling/library/repo-gate-run` | Recorder, console service (agent and terminal projections), audience selection, the type-checker text adapter, the `gate` query services |
+| `@beep/repo-gate-vitest`, or a module of `@beep/test-runner` | tooling / test-kit | `tooling/test-kit/repo-gate-vitest`, or `packages/tooling/test-kit/test-runner` | The Vitest reporter that emits gate events |
 
 Existing surfaces this goal changes:
 
@@ -128,9 +128,9 @@ Closed sets, each a `LiteralKit` from `@beep/schema`:
 
 | Set | Members | Upstream source |
 | --- | --- | --- |
-| Item outcome | `passed`, `failed`, `warned`, `skipped` | `TestState` (`packages/sdk/src/schemas/Common.ts:37`); upstream `pending` maps to `skipped` |
+| Item outcome | `passed`, `failed`, `warned`, `skipped` | `TestState` (`.repos/vitest-agent/packages/sdk/src/schemas/Common.ts:37`); upstream `pending` maps to `skipped` |
 | Run reason | `passed`, `failed`, `errored`, `cancelled` | `TestRunReason` (`Common.ts:47`); upstream `interrupted` maps to `cancelled` |
-| Run outcome | `all-pass`, `some-fail`, `warnings-only`, `policy-violation`, `interrupted` | `RunOutcome` (`packages/sdk/src/contracts/dispatcher.ts:27`) |
+| Run outcome | `all-pass`, `some-fail`, `warnings-only`, `policy-violation`, `interrupted` | `RunOutcome` (`.repos/vitest-agent/packages/sdk/src/contracts/dispatcher.ts:27`) |
 | Run shape | `item`, `unit`, `package`, `workspace` | `RunShape` (`dispatcher.ts:17`) |
 | Failure kind | `assertion`, `timeout`, `load`, `hook`, `unhandled` | `FailureRecord.timedOut`, `failedFiles`, `unhandledErrors` |
 | Label | `introduced-on-lane`, `red-on-main`, `persistent`, `flaky`, `recovered` | `TestClassification` (`Common.ts:57-63`) |
@@ -147,7 +147,7 @@ relative to `.repos/vitest-agent`.
 
 | Upstream type -> our type | Change |
 | --- | --- |
-| `TestState` (`packages/sdk/src/schemas/Common.ts:37`) -> `ItemOutcome` | adds `warned`; `pending` folds into `skipped` |
+| `TestState` (`.repos/vitest-agent/packages/sdk/src/schemas/Common.ts:37`) -> `ItemOutcome` | adds `warned`; `pending` folds into `skipped` |
 | `TestRunReason` (`Common.ts:47`) -> `RunReason` | adds `errored`; `interrupted` becomes `cancelled` |
 | `ReportError` (`Common.ts:180`) -> `ItemDetail` | adds `location { file, line, column }`, `code`, `rule`, `severity` |
 | `AgentReport` > `ModuleReport` > `TestReport` (`AgentReport.ts:33-88`) -> `GateReport` > `Unit` > `Item` | project > file > test becomes gate > unit (package, file, job) > item (test, diagnostic, step) |
@@ -157,8 +157,8 @@ relative to `.repos/vitest-agent`.
 | `RunShape` (`dispatcher.ts:17`) -> `RunShape` | `single-test`, `single-file`, `single-project`, `workspace` become `item`, `unit`, `package`, `workspace` |
 | `RunOutcome` (`dispatcher.ts:27`) -> `RunOutcome` | adds `warnings-only`, `interrupted`; `threshold-violation` becomes `policy-violation` |
 | `CoverageRenderState` (`RenderState.ts:77`) -> `PolicyRenderState` | coverage, error budget and maximum warnings as one policy slot |
-| footer strings (`packages/ui/src/dispatcher/footer.ts:24-28`) -> `PointerTable` | MCP tool names become a per-gate table of repo CLI commands |
-| `test_history` key (`packages/engine/src/migrations/0003_run_retention.ts:93-106`) -> series key | project, module path, full name become gate, subject, item key, branch; the store is `goals/gate-run-history` |
+| footer strings (`.repos/vitest-agent/packages/ui/src/dispatcher/footer.ts:24-28`) -> `PointerTable` | MCP tool names become a per-gate table of repo CLI commands |
+| `test_history` key (`.repos/vitest-agent/packages/engine/src/migrations/0003_run_retention.ts:93-106`) -> series key | project, module path, full name become gate, subject, item key, branch; the store is `goals/gate-run-history` |
 
 The dispatch table is a total `Record<RunShape, Record<RunOutcome, Cell>>` built from the two
 `LiteralKit` domains, so adding a member fails to compile until every cell exists. This closes the
@@ -211,7 +211,7 @@ and is overridden by the `--agent`, `--human` and `--ci` flags of `@beep/cli-kit
   `onHook*`, `onTestRunEnd`) and emits gate events. It reads reporter events and builds a report.
 - It does not manage the reporter chain: it strips no reporter, patches no logger stream, zeroes
   no coverage reporter and mutates no Vitest config. It is one entry appended in
-  `vitest.shared.ts`. Upstream's 3,141-line `packages/plugin/src/reporter.ts` is read for its
+  `vitest.shared.ts`. Upstream's 3,141-line `.repos/vitest-agent/packages/plugin/src/reporter.ts` is read for its
   invariants and rebuilt small.
 - A reporter runs in the Vitest main process, which is Bun under the generated
   `bunx --bun vitest run` script and Node under the Node coverage commands
@@ -250,46 +250,46 @@ Ported, widened along the seams above:
 
 | Upstream | Into | Note |
 | --- | --- | --- |
-| `packages/sdk/src/schemas/AgentReport.ts`, `Common.ts`, `RunEvent.ts`, `RenderState.ts`, `RunReportFile.ts`, `StrayOutput.ts` | model | Result, event, render-state and record-file schemas only |
-| `packages/sdk/src/contracts/dispatcher.ts` | model | Shape, outcome and cell contract |
-| `packages/sdk/src/utils/build-report.ts:324-371` | model and adapter | Honest-count rules to the model; Vitest `TestModule` duck typing to the adapter |
-| `packages/sdk/src/utils/stray-output.ts:62-184` | model and adapter | Summary schema and note text to the model; the recorder's install point to the adapter |
-| `packages/ui/src/reducer.ts` | model | Events reduce to a report |
-| `packages/ui/src/dispatcher/classify.ts:34-94` | model | Shape and outcome classifiers, widened |
-| `packages/ui/src/dispatcher/dispatch.ts:41-145`, `cells/`, `helpers.ts`, `cell-types.ts` | model | Twelve cells grow to twenty (four shapes by five outcomes) |
-| `packages/ui/src/dispatcher/footer.ts:24-82` | model | Dominance order kept; pointers become repo CLI commands |
-| `packages/ui/src/counts.ts`, `format-duration.ts` | model | Count and duration formatting |
-| `packages/engine/src/utils/failure-signature.ts:11-45` | model | Signature over error name, assertion shape, top frame and location bucket |
-| `packages/plugin/src/utils/process-failure.ts` | adapter | Top-frame selection |
-| `packages/ui/src/synthesize.ts` | adapter | Vitest task tree to events |
-| `packages/sdk/src/utils/classify-test.ts:11-26` | `goals/gate-run-history` | Listed here so the inventory is whole |
+| `.repos/vitest-agent/packages/sdk/src/schemas/AgentReport.ts`, `Common.ts`, `RunEvent.ts`, `RenderState.ts`, `RunReportFile.ts`, `StrayOutput.ts` | model | Result, event, render-state and record-file schemas only |
+| `.repos/vitest-agent/packages/sdk/src/contracts/dispatcher.ts` | model | Shape, outcome and cell contract |
+| `.repos/vitest-agent/packages/sdk/src/utils/build-report.ts:324-371` | model and adapter | Honest-count rules to the model; Vitest `TestModule` duck typing to the adapter |
+| `.repos/vitest-agent/packages/sdk/src/utils/stray-output.ts:62-184` | model and adapter | Summary schema and note text to the model; the recorder's install point to the adapter |
+| `.repos/vitest-agent/packages/ui/src/reducer.ts` | model | Events reduce to a report |
+| `.repos/vitest-agent/packages/ui/src/dispatcher/classify.ts:34-94` | model | Shape and outcome classifiers, widened |
+| `.repos/vitest-agent/packages/ui/src/dispatcher/dispatch.ts:41-145`, `cells/`, `helpers.ts`, `cell-types.ts` | model | Twelve cells grow to twenty (four shapes by five outcomes) |
+| `.repos/vitest-agent/packages/ui/src/dispatcher/footer.ts:24-82` | model | Dominance order kept; pointers become repo CLI commands |
+| `.repos/vitest-agent/packages/ui/src/counts.ts`, `format-duration.ts` | model | Count and duration formatting |
+| `.repos/vitest-agent/packages/engine/src/utils/failure-signature.ts:11-45` | model | Signature over error name, assertion shape, top frame and location bucket |
+| `.repos/vitest-agent/packages/plugin/src/utils/process-failure.ts` | adapter | Top-frame selection |
+| `.repos/vitest-agent/packages/ui/src/synthesize.ts` | adapter | Vitest task tree to events |
+| `.repos/vitest-agent/packages/sdk/src/utils/classify-test.ts:11-26` | `goals/gate-run-history` | Listed here so the inventory is whole |
 
 Read for invariants only, not copied:
 
-- `packages/plugin/src/reporter.ts` and `packages/plugin/src/plugin.ts`: render before persist
+- `.repos/vitest-agent/packages/plugin/src/reporter.ts` and `.repos/vitest-agent/packages/plugin/src/plugin.ts`: render before persist
   (`reporter.ts:1948-1957`), one reporter per Vitest instance, fallback reports.
-- `packages/plugin/src/utils/strip-console-reporters.ts`: what the adapter must not do.
-- `packages/engine/src/layers/EnvironmentDetectorLive.ts`, `ExecutorResolverLive.ts`,
+- `.repos/vitest-agent/packages/plugin/src/utils/strip-console-reporters.ts`: what the adapter must not do.
+- `.repos/vitest-agent/packages/engine/src/layers/EnvironmentDetectorLive.ts`, `ExecutorResolverLive.ts`,
   `DetailResolverLive.ts`: `@beep/runtime-env` owns detection.
-- `packages/reporter/src/defaultReporter.ts:359-523` and `githubLog.ts:89-127`: the record file
+- `.repos/vitest-agent/packages/reporter/src/defaultReporter.ts:359-523` and `githubLog.ts:89-127`: the record file
   and summary layout; the CI projection itself is `goals/ci-gate-reports`.
-- `okf/decisions/45-suite-load-failures-count-as-failures.md`,
+- `.repos/vitest-agent/okf/decisions/45-suite-load-failures-count-as-failures.md`,
   `48-honest-run-reporting.md`, `47-rendering-never-depends-on-persistence.md`,
-  `okf/models/dispatcher-matrix.md`.
-- `packages/plugin/src/utils/vitest-diagnostics.ts` and `collect-performance-hints.ts`, copied by
+  `.repos/vitest-agent/okf/models/dispatcher-matrix.md`.
+- `.repos/vitest-agent/packages/plugin/src/utils/vitest-diagnostics.ts` and `collect-performance-hints.ts`, copied by
   upstream from Vitest 5.0.5. Not ported by this goal. A file later derived from them carries the
   Vitest notice as well (attribution below).
 
 Not ported (decisions `port-breadth`, `tdd-workflow-no-go`):
 
-- `packages/ui/src/ink/`, `packages/reporter/src/liveView.ts`, `streamView.ts`: the Ink and live
+- `.repos/vitest-agent/packages/ui/src/ink/`, `.repos/vitest-agent/packages/reporter/src/liveView.ts`, `streamView.ts`: the Ink and live
   views.
-- `packages/mcp/`: the MCP server and its 30 tools.
-- `packages/cli/`, `packages/sidecar` and the `sidecar-*` packages.
-- `plugin/`: Claude Code and Copilot hooks, skills and `plugin/agents/tdd-task.md`.
-- `packages/sdk/src/schemas/Tdd.ts`, `Agent.ts`, `turns/`, `utils/validate-phase-transition.ts`,
+- `.repos/vitest-agent/packages/mcp/`: the MCP server and its 30 tools.
+- `.repos/vitest-agent/packages/cli/`, `.repos/vitest-agent/packages/sidecar` and the `sidecar-*` packages.
+- `.repos/vitest-agent/plugin/`: Claude Code and Copilot hooks, skills and `.repos/vitest-agent/plugin/agents/tdd-task.md`.
+- `.repos/vitest-agent/packages/sdk/src/schemas/Tdd.ts`, `Agent.ts`, `turns/`, `utils/validate-phase-transition.ts`,
   `internal-inject-env.ts`, `sidecar-dispatch.ts`, `utils/match-vitest-command.ts`.
-- The session, turn, agent and TDD tables of `packages/engine/src/migrations/0001_initial.ts`.
+- The session, turn, agent and TDD tables of `.repos/vitest-agent/packages/engine/src/migrations/0001_initial.ts`.
 - The acorn function-boundary refinement of the signature (`utils/function-boundary.ts`): the model
   takes no parser dependency.
 

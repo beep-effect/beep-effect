@@ -9,13 +9,16 @@ dated heading at the bottom.
 
 ## 2026-11-18
 
+Host paths in the quotes below are replaced with their repo-relative reference
+names; the repository is public. Nothing else is altered.
+
 Operator, opening the session:
 
 > For a while now I've been wondering about the agent friendliness of our test, check, lint, build outputs both for local development & in github actions. I often see agents consume large chunks of what seems to me to be pretty useless outputs from these places.
 >
-> I'm wondering if we could audit the last few session running in ~/YeeBois/projects/beep-effect & worktrees & see just how much those types of outputs consume in tokens.
+> I'm wondering if we could audit the last few session running in [the beep-effect checkout] & worktrees & see just how much those types of outputs consume in tokens.
 >
-> For a while now I've been poking around `~/YeeBois/references/effect/vitest-agent` which to me seems to capture & solve the exact problem I'm speaking of. What do you think?
+> For a while now I've been poking around `.repos/vitest-agent` which to me seems to capture & solve the exact problem I'm speaking of. What do you think?
 
 Operator, after the audit and the first read of vitest-agent (the agent had
 recommended taking the reporter as a dependency and porting only the idea):
@@ -26,7 +29,7 @@ recommended taking the reporter as a dependency and porting only the idea):
 
 Operator, while the packet was being scaffolded:
 
-> this was done for a similar set of packages earlier from ~/YeeBois/references/effect/effected creating many new @beep/ packages If you'd find that useful to plan this out.
+> this was done for a similar set of packages earlier from `.repos/effected` creating many new @beep/ packages If you'd find that useful to plan this out.
 
 Agent's audit headline, same session (full numbers in
 `research/transcript-audit.md`): over seven days verification output (test,

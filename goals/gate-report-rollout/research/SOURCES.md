@@ -12,9 +12,9 @@ in `explorations/agent-verification-output/research/vitest-agent-core.md`.
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| `va-build-report` | Honest-count report builder | vitest-agent | `packages/sdk/src/utils/build-report.ts:324-371` | honest counts | rules reused through core for aggregates and adapters |
-| `va-dispatch` | Run-shape by outcome dispatch table | vitest-agent | `packages/ui/src/dispatcher/dispatch.ts:41-62` | output contract | consumed through core's renderer |
-| `va-footer` | Next-step footer rules | vitest-agent | `packages/ui/src/dispatcher/footer.ts:24-82` | output contract | per-gate pointer table gains lint, build and Yeet rows |
+| `va-build-report` | Honest-count report builder | vitest-agent | `.repos/vitest-agent/packages/sdk/src/utils/build-report.ts:324-371` | honest counts | rules reused through core for aggregates and adapters |
+| `va-dispatch` | Run-shape by outcome dispatch table | vitest-agent | `.repos/vitest-agent/packages/ui/src/dispatcher/dispatch.ts:41-62` | output contract | consumed through core's renderer |
+| `va-footer` | Next-step footer rules | vitest-agent | `.repos/vitest-agent/packages/ui/src/dispatcher/footer.ts:24-82` | output contract | per-gate pointer table gains lint, build and Yeet rows |
 
 ## 2. Upstream repositories & licenses
 

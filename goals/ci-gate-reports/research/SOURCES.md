@@ -14,9 +14,9 @@ sections 2.6 and 7.
 
 | Source | Title | Upstream (repo) | Location (`file:line`) | Theme | Disposition |
 |--------|-------|-----------------|------------------------|-------|-------------|
-| `va-gfm` | GitHub summary and grouped log output | vitest-agent | `packages/reporter/src/defaultReporter.ts:359-426` | CI | port onto `@beep/cli-kit` `Render.markdown` and `Render.githubLog` |
-| `va-gfm` (grouped log) | Collapsed `::group::` block | vitest-agent | `packages/reporter/src/githubLog.ts:89-127` | CI | port; one group per unit |
-| `va-classify-test` | History label for one series | vitest-agent | `packages/sdk/src/utils/classify-test.ts:11-26` | history | not ported here; the CI series key `(workflow, job, step)` feeds it through `gate-run-history` |
+| `va-gfm` | GitHub summary and grouped log output | vitest-agent | `.repos/vitest-agent/packages/reporter/src/defaultReporter.ts:359-426` | CI | port onto `@beep/cli-kit` `Render.markdown` and `Render.githubLog` |
+| `va-gfm` (grouped log) | Collapsed `::group::` block | vitest-agent | `.repos/vitest-agent/packages/reporter/src/githubLog.ts:89-127` | CI | port; one group per unit |
+| `va-classify-test` | History label for one series | vitest-agent | `.repos/vitest-agent/packages/sdk/src/utils/classify-test.ts:11-26` | history | not ported here; the CI series key `(workflow, job, step)` feeds it through `gate-run-history` |
 
 ## 2. Upstream repositories & licenses
 

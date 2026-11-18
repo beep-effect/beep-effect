@@ -74,7 +74,7 @@ Other surfaces:
   (`YEET_ECONOMICS_SCHEMA_VERSION`): reference for a census-shaped report command.
 - `@beep/jsonl` (`packages/foundation/modeling/jsonl/src/Line.ts`): line reading, reused.
 - The tracked baseline directory, one file per run. P0 settles its location; the default is
-  `standards/agent-output-census/`.
+  the `agent-output-census` directory under the standards root.
 
 ## Constraints
 
@@ -117,7 +117,7 @@ Other surfaces:
   string field is not a literal domain, a date or the version.
 - [ ] **AC2 Privacy.** A synthetic corpus plants canary strings in prompt text, command text, tool
   output, file paths under a fake home directory and session identifiers. The text output, the
-  `--json` output and the written baseline file contain none of them, and contain no `/home/` or
+  `--json` output and the written baseline file contain none of them, and contain no home-directory prefix or
   `/Users/` path.
 - [ ] **AC3 The tables.** The text output prints, in the audit's order: corpus and totals by harness
   (API calls, context tokens read, tool output characters); where tool output goes (characters,

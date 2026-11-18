@@ -44,10 +44,10 @@ Higher sources outrank lower sources when they conflict.
 ## Target Surfaces
 
 - The gate-run library `goals/gate-report-core` creates (working name `@beep/repo-gate-run`,
-  `packages/tooling/library/repo-gate-run`): the history store module, its layer and the
+  `tooling/library/repo-gate-run`): the history store module, its layer and the
   baseline import. The store module is a separate entry that the Vitest adapter never imports.
 - The gate-report model (working name `@beep/gate-report`,
-  `packages/foundation/modeling/gate-report`): the series and observation schemas, the label
+  `foundation/modeling/gate-report`): the series and observation schemas, the label
   classifier and the delta, as pure functions.
 - `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts`: the task path ingests each rendered
   record into history after the console is flushed.
@@ -95,7 +95,7 @@ same driver.
 
 ### Labels
 
-Upstream's `classifyTest` (`packages/sdk/src/utils/classify-test.ts:11-26`, study section 3.3) is
+Upstream's `classifyTest` (`.repos/vitest-agent/packages/sdk/src/utils/classify-test.ts:11-26`, study section 3.3) is
 the starting point:
 
 | Current | Prior runs in window | Upstream result |
@@ -167,12 +167,12 @@ the one verdict line, `(F fixed since last run)`.
 - One transaction per run: the run row, its checked units and its observations commit together,
   with the retention prune. The connection is synchronous, so the transaction body never yields
   to the scheduler mid-transaction, the invariant upstream holds with
-  `References.PreventSchedulerYield` (`packages/engine/src/utils/persist-transaction.ts:175`).
+  `References.PreventSchedulerYield` (`.repos/vitest-agent/packages/engine/src/utils/persist-transaction.ts:175`).
 - A concurrent first open is a typed failure. `SqliteError` never crosses the store's port; the
   store translates it into a `GateHistoryError` whose reason is a `LiteralKit` domain
   (`open-busy`, `open-failed`, `migrate-failed`, `write-failed`, `read-deadline`). `open-busy` and
   migration contention retry on a bounded, jittered exponential schedule (5 attempts from 50 ms).
-  Upstream dies untyped at the WAL switch (`okf/limitations/concurrent-first-open-wal-switch.md`).
+  Upstream dies untyped at the WAL switch (`.repos/vitest-agent/okf/limitations/concurrent-first-open-wal-switch.md`).
 - Migrations are versioned and idempotent and run inside a transaction, so two first openers
   converge on one schema.
 
@@ -211,14 +211,14 @@ Paths are relative to `.repos/vitest-agent` at `1cf1ab94`.
 
 | Upstream | Disposition |
 | --- | --- |
-| `packages/sdk/src/utils/classify-test.ts:11-26` | port into the model, rules as above |
-| `packages/engine/src/layers/HistoryTrackerLive.ts:13-41` | port; window becomes configuration |
-| `packages/engine/src/services/HistoryTracker.ts:26` | port; key becomes the series key |
-| `packages/engine/src/utils/persist-transaction.ts:175`, `okf/invariants/persist-transaction-no-yield.md` | port the invariant |
-| `packages/engine/src/layers/DataStoreLive.ts:217,458`, `DataReaderLive.ts:498,711-730` | read for invariants; the second flaky rule is replaced |
-| `packages/engine/src/migrations/0003_run_retention.ts:92-155` | read for the retention invariant; result tables only |
-| `packages/engine/src/utils/resolve-project-key-from-cwd.ts:17-38` | read for the repository-key canonicalization |
-| `okf/decisions/31-deterministic-xdg-path-resolution.md:117-125` | read; one file shared by worktrees is kept, the shared window is not |
+| `.repos/vitest-agent/packages/sdk/src/utils/classify-test.ts:11-26` | port into the model, rules as above |
+| `.repos/vitest-agent/packages/engine/src/layers/HistoryTrackerLive.ts:13-41` | port; window becomes configuration |
+| `.repos/vitest-agent/packages/engine/src/services/HistoryTracker.ts:26` | port; key becomes the series key |
+| `.repos/vitest-agent/packages/engine/src/utils/persist-transaction.ts:175`, `.repos/vitest-agent/okf/invariants/persist-transaction-no-yield.md` | port the invariant |
+| `.repos/vitest-agent/packages/engine/src/layers/DataStoreLive.ts:217,458`, `DataReaderLive.ts:498,711-730` | read for invariants; the second flaky rule is replaced |
+| `.repos/vitest-agent/packages/engine/src/migrations/0003_run_retention.ts:92-155` | read for the retention invariant; result tables only |
+| `.repos/vitest-agent/packages/engine/src/utils/resolve-project-key-from-cwd.ts:17-38` | read for the repository-key canonicalization |
+| `.repos/vitest-agent/okf/decisions/31-deterministic-xdg-path-resolution.md:117-125` | read; one file shared by worktrees is kept, the shared window is not |
 
 The ported code lands in packages core creates, which already carry the dual-copyright MIT
 `LICENSE` (beep-effect and C. Spencer Beggs) and the README `Provenance` and `Attribution`
