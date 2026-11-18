@@ -99,6 +99,8 @@ it.effect("maps exit codes to outcomes and keeps the strongest evidence across s
           { taskId: "@beep/c#test", execution: { exitCode: 0 } },
           { taskId: "@beep/a#test", execution: { exitCode: 2 } },
           { taskId: "@beep/b#test" },
+          // Turbo writes a killed task, or a failure with no code, as `exitCode: null`.
+          { taskId: "@beep/d#test", execution: { exitCode: null } },
         ],
       },
       {
@@ -109,7 +111,12 @@ it.effect("maps exit codes to outcomes and keeps the strongest evidence across s
       },
       {},
     ]);
-    deepStrictEqual(outcomeRows(rows), ["@beep/a#test=fail", "@beep/b#test=not-run", "@beep/c#test=pass"]);
+    deepStrictEqual(outcomeRows(rows), [
+      "@beep/a#test=fail",
+      "@beep/b#test=not-run",
+      "@beep/c#test=pass",
+      "@beep/d#test=unknown",
+    ]);
     strictEqual(taskOutcomeArtifactPrefix(RUN, 2), `task-outcomes-${RUN}-2-`);
   })
 );

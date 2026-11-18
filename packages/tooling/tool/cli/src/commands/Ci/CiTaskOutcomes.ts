@@ -26,6 +26,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -106,7 +107,7 @@ const encodeTaskOutcomeRecord = S.encodeEffect(S.fromJsonString(TaskOutcomeRecor
 
 const SummaryTask = S.Struct({
   taskId: S.NonEmptyString,
-  execution: S.optionalKey(S.Struct({ exitCode: S.optionalKey(S.Finite) })),
+  execution: S.optionalKey(S.Struct({ exitCode: S.Finite.pipe(S.NullOr, S.optionalKey) })),
 }).pipe($I.annoteSchema("SummaryTask", { description: "The task id and exit code of one Turbo run summary task." }));
 const SummaryView = S.Struct({
   tasks: SummaryTask.pipe(S.Array, S.optionalKey),
@@ -122,11 +123,15 @@ export type TurboSummaryView = typeof SummaryView.Type;
 
 const decodeSummary = S.decodeUnknownEffect(S.fromJsonString(SummaryView));
 
+// Turbo writes `exitCode: null` for a task that started and has no exit code (killed, or a build failure with no
+// code), which the record cannot tell apart, so it is `unknown`; a task with no exit code key never ran.
 const outcomeOf = (task: typeof SummaryTask.Type): RouteTaskOutcome =>
-  O.match(O.fromUndefinedOr(task.execution?.exitCode), {
-    onNone: () => RouteTaskOutcome.Enum["not-run"],
-    onSome: (code) => (code === 0 ? RouteTaskOutcome.Enum.pass : RouteTaskOutcome.Enum.fail),
-  });
+  Match.value(task.execution?.exitCode).pipe(
+    Match.when(Match.undefined, () => RouteTaskOutcome.Enum["not-run"]),
+    Match.when(Match.null, () => RouteTaskOutcome.Enum.unknown),
+    Match.when(0, () => RouteTaskOutcome.Enum.pass),
+    Match.orElse(() => RouteTaskOutcome.Enum.fail)
+  );
 
 // A task several invocations list keeps its strongest evidence: a failure anywhere is a failure, a pass beats a
 // task that never ran.
@@ -138,8 +143,9 @@ const OUTCOME_RANK: Readonly<Record<RouteTaskOutcome, number>> = { fail: 3, pass
  * **Details**
  *
  * Exit code 0 (a run or a cache replay) is `pass`, any other exit code is
- * `fail`, and a task with no exit code (planned, never executed) is
- * `not-run`. A task several summaries list keeps `fail` over `pass` over
+ * `fail`, a task with no exit code (planned, never executed) is `not-run`,
+ * and a task Turbo wrote with `exitCode: null` (killed, or failed with no
+ * code) is `unknown`. A task several summaries list keeps `fail` over `pass` over
  * `not-run`. Rows sort by task id.
  *
  * **Example** (Two invocations)
