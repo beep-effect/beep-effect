@@ -1529,3 +1529,360 @@ export class QualitySchedulerError extends S.TaggedError<QualitySchedulerError, 
       })
   );
 }
+
+/**
+ * Whether a waiting ticket may pass a capacity-blocked head (SCHE-06).
+ *
+ * **Details**
+ *
+ * `off` keeps the deployed head-of-line rule. `easy` lets a non-head ticket
+ * attempt when its declared ETA ends no later than the head's projected start,
+ * and stamps a conditional deadline on each ticket entering protected
+ * ordering. Every reader ignores the ticket keys it adds, and a revision
+ * without it keeps the head-of-line rule, so mixed checkouts stay capacity
+ * safe; only checkouts at this revision or later backfill.
+ *
+ * **Example** (Recognize the default)
+ *
+ * ```ts
+ * import { AdmissionBackfillMode } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionBackfillMode.is.off("off")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionBackfillMode = LiteralKit(["off", "easy"]).pipe(
+  $I.annoteSchema("AdmissionBackfillMode", {
+    description: "Whether a waiting admission ticket may pass a capacity-blocked head (EASY backfill) or not.",
+  })
+);
+
+/**
+ * Whether a waiting ticket may pass a capacity-blocked head.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionBackfillMode = typeof AdmissionBackfillMode.Type;
+
+/**
+ * Whether unprotected tickets are ordered by recent origin, then checkout, usage (SCHE-06).
+ *
+ * **Details**
+ *
+ * `origin-checkout` orders tickets that have not yet waited the protection
+ * window by the token-milliseconds their origin, then their checkout, held in
+ * the last 30 minutes, after the deployed priority rank. Protected tickets
+ * keep enqueue order. `off` keeps the deployed order.
+ *
+ * **Example** (Recognize the fair order)
+ *
+ * ```ts
+ * import { AdmissionFairnessMode } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionFairnessMode.is["origin-checkout"]("origin-checkout")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionFairnessMode = LiteralKit(["off", "origin-checkout"]).pipe(
+  $I.annoteSchema("AdmissionFairnessMode", {
+    description: "Whether unprotected admission tickets are ordered by recent origin, then checkout, usage.",
+  })
+);
+
+/**
+ * Whether unprotected tickets are ordered by recent origin, then checkout, usage.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionFairnessMode = typeof AdmissionFairnessMode.Type;
+
+const PositiveMillis = S.Int.check(S.isGreaterThan(0));
+
+/**
+ * The policy the SCHE-06 verdict applies on one scan.
+ *
+ * **Details**
+ *
+ * `capacityTokens` is the scan's live capacity. `publishAgingMillis` is the
+ * deployed aging of `verify` work; `protectAfterMillis` is the wait after
+ * which a ticket keeps enqueue order and stamps its bound (120 s, the same
+ * instant, so with both modes off the order is the deployed one).
+ * `promotionOverheadMillis` is the polling slack the bound adds per ticket,
+ * the heartbeat.
+ *
+ * **Example** (The deployed timing with both modes off)
+ *
+ * ```ts
+ * import { AdmissionBackfillPolicy } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const policy = AdmissionBackfillPolicy.make({
+ *   capacityTokens: 10,
+ *   publishAgingMillis: 120_000,
+ *   protectAfterMillis: 120_000,
+ *   fairnessWindowMillis: 1_800_000,
+ *   promotionOverheadMillis: 5_000,
+ *   backfill: "off",
+ *   fairness: "off"
+ * })
+ * console.log(policy.backfill) // "off"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionBackfillPolicy extends S.Opaque<AdmissionBackfillPolicy, { readonly brand: unique symbol }>()(
+  S.Struct({
+    capacityTokens: S.Finite,
+    publishAgingMillis: S.Finite,
+    protectAfterMillis: S.Finite,
+    fairnessWindowMillis: PositiveMillis,
+    promotionOverheadMillis: S.Finite,
+    backfill: AdmissionBackfillMode,
+    fairness: AdmissionFairnessMode,
+  }).pipe(
+    $I.annoteSchema("AdmissionBackfillPolicy", {
+      description: "Capacity, aging, protection, fairness window, overhead and modes of one SCHE-06 verdict.",
+    })
+  )
+) {}
+
+/**
+ * One released lease interval the fairness window counts.
+ *
+ * **Example** (A one-token interval)
+ *
+ * ```ts
+ * import { AdmissionUsageInterval } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const interval = AdmissionUsageInterval.make({
+ *   originKey: "aaaabbbbcccc",
+ *   checkoutRoot: "/repo",
+ *   weightTokens: 1,
+ *   admittedAtMillis: 0,
+ *   releasedAtMillis: 60_000
+ * })
+ * console.log(interval.weightTokens) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionUsageInterval extends S.Opaque<AdmissionUsageInterval, { readonly brand: unique symbol }>()(
+  S.Struct({
+    originKey: S.String,
+    checkoutRoot: S.String,
+    weightTokens: S.Finite,
+    admittedAtMillis: S.Finite,
+    releasedAtMillis: S.Finite,
+  }).pipe(
+    $I.annoteSchema("AdmissionUsageInterval", {
+      description: "A released admission lease interval counted by the SCHE-06 fairness window.",
+    })
+  )
+) {}
+
+/**
+ * What one SCHE-06 verdict reads: the queue and leases of one scan and the windowed released leases.
+ *
+ * **Details**
+ *
+ * `tickets` holds only the tickets the deployed skippable checks leave in
+ * line (same-checkout lease, legacy origin owner, origin stamp, review-fix
+ * class cap): the verdict runs after those checks, unchanged.
+ *
+ * **Example** (An idle machine)
+ *
+ * ```ts
+ * import { AdmissionBackfillView } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const view = AdmissionBackfillView.make({ nowMillis: 0, tickets: [], leases: [], finished: [] })
+ * console.log(view.tickets.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionBackfillView extends S.Opaque<AdmissionBackfillView, { readonly brand: unique symbol }>()(
+  S.Struct({
+    nowMillis: S.Finite,
+    tickets: S.Array(YeetAdmissionTicket),
+    leases: S.Array(YeetAdmissionLease),
+    finished: S.Array(AdmissionUsageInterval),
+  }).pipe(
+    $I.annoteSchema("AdmissionBackfillView", {
+      description: "In-line tickets, live leases and windowed released leases one SCHE-06 verdict reads.",
+    })
+  )
+) {}
+
+/**
+ * How a contender was let through: as the queue head or by passing a blocked head.
+ *
+ * **Example** (Recognize a backfill)
+ *
+ * ```ts
+ * import { AdmissionAttemptRoute } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionAttemptRoute.is.backfill("backfill")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionAttemptRoute = LiteralKit(["head", "backfill"]).pipe(
+  $I.annoteSchema("AdmissionAttemptRoute", {
+    description: "Whether a contender attempts as the queue head or by passing a capacity-blocked head.",
+  })
+);
+
+/**
+ * How a contender was let through.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionAttemptRoute = typeof AdmissionAttemptRoute.Type;
+
+/**
+ * Why a contender stays queued on one scan.
+ *
+ * **Example** (Recognize an unknown ETA)
+ *
+ * ```ts
+ * import { AdmissionWaitReason } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionWaitReason.is["eta-unknown"]("eta-unknown")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionWaitReason = LiteralKit([
+  "capacity",
+  "behind-head",
+  "behind-backfill",
+  "backfill-disabled",
+  "eta-unknown",
+  "ends-after-head-start",
+  "not-queued",
+]).pipe(
+  $I.annoteSchema("AdmissionWaitReason", {
+    description: "Why an admission contender stays queued on one scheduler scan.",
+  })
+);
+
+/**
+ * Why a contender stays queued on one scan.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionWaitReason = typeof AdmissionWaitReason.Type;
+
+/**
+ * Whether one contender may attempt admission now, and by which route, or why it waits.
+ *
+ * **Example** (A head attempt)
+ *
+ * ```ts
+ * import { AdmissionAttemptVerdict } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const verdict = AdmissionAttemptVerdict.cases.Attempt.make({ route: "head" })
+ * console.log(AdmissionAttemptVerdict.guards.Attempt(verdict)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionAttemptVerdict = S.TaggedUnion({
+  Attempt: { route: AdmissionAttemptRoute },
+  Wait: { reason: AdmissionWaitReason },
+}).pipe(
+  $I.annoteSchema("AdmissionAttemptVerdict", {
+    description: "Whether one admission contender may attempt now, and by which route, or why it waits.",
+  })
+);
+
+/**
+ * Whether one contender may attempt admission now.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionAttemptVerdict = typeof AdmissionAttemptVerdict.Type;
+
+/**
+ * How a contender declares its ETA from the admission journal.
+ *
+ * **Details**
+ *
+ * The ETA is the nearest-rank `quantilePermille` quantile of the last
+ * `historyLimit` holds (release minus admission) of the same work kind; a
+ * kind with fewer than `minSamples` holds declares none and never backfills.
+ *
+ * **Example** (The p90 estimator)
+ *
+ * ```ts
+ * import { AdmissionEtaEstimator } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const estimator = AdmissionEtaEstimator.make({ quantilePermille: 900, minSamples: 5, historyLimit: 200 })
+ * console.log(estimator.minSamples) // 5
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionEtaEstimator extends S.Opaque<AdmissionEtaEstimator, { readonly brand: unique symbol }>()(
+  S.Struct({
+    quantilePermille: S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 })),
+    minSamples: PositiveMillis,
+    historyLimit: PositiveMillis,
+  }).pipe(
+    $I.annoteSchema("AdmissionEtaEstimator", {
+      description: "Per-kind hold quantile a contender declares as its ETA under the SCHE-06 backfill gate.",
+    })
+  )
+) {}
+
+/**
+ * What one scan's SCHE-06 verdict reads beyond the scan: its policy and the windowed released leases.
+ *
+ * **Example** (A context with nothing in the window)
+ *
+ * ```ts
+ * import { AdmissionBackfillContext, AdmissionBackfillPolicy } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const context = AdmissionBackfillContext.make({
+ *   policy: AdmissionBackfillPolicy.make({
+ *     capacityTokens: 10,
+ *     publishAgingMillis: 120_000,
+ *     protectAfterMillis: 120_000,
+ *     fairnessWindowMillis: 1_800_000,
+ *     promotionOverheadMillis: 5_000,
+ *     backfill: "easy",
+ *     fairness: "off"
+ *   }),
+ *   finished: []
+ * })
+ * console.log(context.finished.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionBackfillContext extends S.Opaque<AdmissionBackfillContext, { readonly brand: unique symbol }>()(
+  S.Struct({
+    policy: AdmissionBackfillPolicy,
+    finished: S.Array(AdmissionUsageInterval),
+  }).pipe(
+    $I.annoteSchema("AdmissionBackfillContext", {
+      description: "The policy and windowed released leases one SCHE-06 verdict reads beyond its scan.",
+    })
+  )
+) {}

@@ -804,3 +804,72 @@ export class ReplayReport extends S.Opaque<ReplayReport, { readonly brand: uniqu
     })
   )
 ) {}
+
+/**
+ * One journal's replay stream: its arrivals, recorded waits, skipped nonces and enqueue span.
+ *
+ * **Example** (An empty stream)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ReplayStream } from "@/backfill/Schemas"
+ *
+ * const stream = ReplayStream.make({
+ *   arrivals: [],
+ *   recordedWaits: [],
+ *   skipped: S.Natural.make(0),
+ *   spanMillis: S.Natural.make(0)
+ * })
+ * console.log(stream.arrivals.length) // 0
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class ReplayStream extends S.Opaque<ReplayStream, { readonly brand: unique symbol }>()(
+  S.Struct({
+    arrivals: S.Array(UnitArrival),
+    recordedWaits: S.Array(S.Finite),
+    skipped: S.Natural,
+    spanMillis: S.Natural,
+  }).pipe(
+    $I.annoteSchema("ReplayStream", {
+      description: "Arrivals, recorded waits, skipped nonces and enqueue span of one replayed admission journal.",
+    })
+  )
+) {}
+
+/**
+ * Timing every A/B arm shares: publish aging, protection, the fairness window and promotion overhead.
+ *
+ * **Example** (The deployed timing)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ReplayTiming } from "@/backfill/Schemas"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
+ * const timing = ReplayTiming.make({
+ *   publishAgingMillis: PosInt.make(120_000),
+ *   protectAfterMillis: PosInt.make(120_000),
+ *   fairnessWindowMillis: PosInt.make(1_800_000),
+ *   promotionOverheadMillis: S.Natural.make(5_000)
+ * })
+ * console.log(timing.protectAfterMillis) // 120000
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class ReplayTiming extends S.Opaque<ReplayTiming, { readonly brand: unique symbol }>()(
+  S.Struct({
+    publishAgingMillis: PosInt,
+    protectAfterMillis: PosInt,
+    fairnessWindowMillis: PosInt,
+    promotionOverheadMillis: S.Natural,
+  }).pipe(
+    $I.annoteSchema("ReplayTiming", {
+      description: "Publish aging, protection, fairness window and promotion overhead shared by every A/B arm.",
+    })
+  )
+) {}

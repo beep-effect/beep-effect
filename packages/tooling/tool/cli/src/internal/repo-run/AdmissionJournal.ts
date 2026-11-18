@@ -50,6 +50,8 @@ import {
   processStartIdentityForPid,
 } from "./ProcessIdentity.ts";
 import {
+  AdmissionBackfillMode,
+  AdmissionFairnessMode,
   AdmissionPriority,
   AdmissionRoute,
   admissionPressureFields,
@@ -278,78 +280,6 @@ export const AdmissionPressureEmission = LiteralKit(["off", "on"]).pipe(
  * @since 0.0.0
  */
 export type AdmissionPressureEmission = typeof AdmissionPressureEmission.Type;
-
-/**
- * Whether a waiting ticket may pass a capacity-blocked head (SCHE-06).
- *
- * **Details**
- *
- * `off` keeps the deployed head-of-line rule. `easy` lets a non-head ticket
- * attempt when its declared ETA ends no later than the head's projected start,
- * and stamps a conditional deadline on each ticket entering protected
- * ordering. Every reader ignores the ticket keys it adds, and a revision
- * without it keeps the head-of-line rule, so mixed checkouts stay capacity
- * safe; only checkouts at this revision or later backfill.
- *
- * **Example** (Recognize the default)
- *
- * ```ts
- * import { AdmissionBackfillMode } from "@beep/repo-cli/test/RepoRun"
- *
- * console.log(AdmissionBackfillMode.is.off("off")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const AdmissionBackfillMode = LiteralKit(["off", "easy"]).pipe(
-  $I.annoteSchema("AdmissionBackfillMode", {
-    description: "Whether a waiting admission ticket may pass a capacity-blocked head (EASY backfill) or not.",
-  })
-);
-
-/**
- * Whether a waiting ticket may pass a capacity-blocked head.
- *
- * @category models
- * @since 0.0.0
- */
-export type AdmissionBackfillMode = typeof AdmissionBackfillMode.Type;
-
-/**
- * Whether unprotected tickets are ordered by recent origin, then checkout, usage (SCHE-06).
- *
- * **Details**
- *
- * `origin-checkout` orders tickets that have not yet waited the protection
- * window by the token-milliseconds their origin, then their checkout, held in
- * the last 30 minutes, after the deployed priority rank. Protected tickets
- * keep enqueue order. `off` keeps the deployed order.
- *
- * **Example** (Recognize the fair order)
- *
- * ```ts
- * import { AdmissionFairnessMode } from "@beep/repo-cli/test/RepoRun"
- *
- * console.log(AdmissionFairnessMode.is["origin-checkout"]("origin-checkout")) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const AdmissionFairnessMode = LiteralKit(["off", "origin-checkout"]).pipe(
-  $I.annoteSchema("AdmissionFairnessMode", {
-    description: "Whether unprotected admission tickets are ordered by recent origin, then checkout, usage.",
-  })
-);
-
-/**
- * Whether unprotected tickets are ordered by recent origin, then checkout, usage.
- *
- * @category models
- * @since 0.0.0
- */
-export type AdmissionFairnessMode = typeof AdmissionFairnessMode.Type;
 
 /**
  * Versioned mixed-checkout protocol marker stored in the admission root.

@@ -5,8 +5,6 @@
  * @since 0.0.0
  */
 
-export * from "./AdmissionBackfill.schemas.ts";
-export * from "./AdmissionBackfill.ts";
 export * from "./AdmissionJournal.ts";
 export * from "./AgentRunsSlice.ts";
 export * from "./AttemptTerminationJournal.ts";

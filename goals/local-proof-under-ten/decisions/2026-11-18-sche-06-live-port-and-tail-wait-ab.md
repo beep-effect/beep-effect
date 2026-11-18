@@ -2,12 +2,12 @@
 title: "SCHE-06 live port behind default-off backfill and fairness gates; journal A/B finds no tail-wait gain on today's uniform workload"
 date: 2026-11-18
 lane: "t3/local-proof-backfill-self-may-attempt"
-reversal: "Leave both protocol keys off (the default) or run `quality scheduler protocol --backfill off --fairness off`; delete AdmissionBackfill*.ts and the gated branch of selfMayAttempt to remove the code."
+reversal: "Leave both protocol keys off (the default) or run `quality scheduler protocol --backfill off --fairness off`; delete the SCHE-06 section of QualityScheduler.ts and QualityScheduler.schemas.ts and the gated branch of selfMayAttempt to remove the code."
 ---
 
 Slice 12 ports the slice 11 verdict into the live scheduler and measures it on the recorded admission journal. Recommendation: keep both gates off. On the recorded workload backfill never fires, and fairness alone lengthens the tail.
 
-**The port.** `packages/tooling/tool/cli/src/internal/repo-run/AdmissionBackfill.ts` is `attemptVerdict`, the protected order, the projected head start and the conditional bound, written against the live ticket and lease records. The schemas are in `AdmissionBackfill.schemas.ts`. `selfMayAttempt` calls the verdict only while the admission protocol's new `backfill` (`off | easy`) or `fairness` (`off | origin-checkout`) key is on. Both keys are additive and default `off`, like `units` and `pressure`. With both off, the scheduler runs its deployed loop unchanged. The verdict runs after the deployed skippable checks (same-checkout lease, legacy origin owner, origin stamp, review-fix class cap): a skippable ticket leaves the line before the verdict reads it. The QualityScheduler contract gains `setBackfillProtocol` and `setFairnessProtocol`, and `quality scheduler protocol` gains `--backfill` and `--fairness`.
+**The port.** The SCHE-06 section of `packages/tooling/tool/cli/src/internal/repo-run/QualityScheduler.ts` (`admissionAttemptVerdict`, `admissionBackfillOrder`, `admissionConditionalDeadline`) is `attemptVerdict`, the protected order, the projected head start and the conditional bound, written against the live ticket and lease records. The schemas (`AdmissionBackfillPolicy`, `AdmissionBackfillView`, `AdmissionAttemptVerdict`, the two mode kits) are in `QualityScheduler.schemas.ts`. The port lives in existing files on purpose: a new module in the repo-run closure changes the policy-tools fingerprint, whose regeneration rewrites `turbo.json`, which this lane may not touch during window 5. The lab model and the port are deliberately mirrored, so `Policy.ts` and `JournalReplay.ts` in the lab carry a file-level `fallow-ignore-file code-duplication` with an exit: import the live verdict once a shared scheduler-policy module exists that both packages depend on. `selfMayAttempt` calls the verdict only while the admission protocol's new `backfill` (`off | easy`) or `fairness` (`off | origin-checkout`) key is on. Both keys are additive and default `off`, like `units` and `pressure`. With both off, the scheduler runs its deployed loop unchanged. The verdict runs after the deployed skippable checks (same-checkout lease, legacy origin owner, origin stamp, review-fix class cap): a skippable ticket leaves the line before the verdict reads it. The QualityScheduler contract gains `setBackfillProtocol` and `setFairnessProtocol`, and `quality scheduler protocol` gains `--backfill` and `--fairness`.
 
 Under `easy`:
 - A new ticket declares `etaMillis`: the p90 of its kind's last 200 recorded holds, once five exist. Its lease copies the value.
@@ -28,7 +28,7 @@ Under `origin-checkout`, each scan folds the journal history into the released i
 - 400 seeded queues on which the gated rule with both modes off equals the deployed rule for every contender;
 - gate independence, ETA declaration only under the gate, and the 125 s bound stamped once on a waiting ticket under TestClock.
 
-New files are at 100% line, branch and function coverage.
+The SCHE-06 section of `QualityScheduler.ts` and the lab's `JournalReplay.ts` are at 100% line, branch and function coverage.
 
 **The A/B harness.** `apps/labs/ciops/src/backfill/JournalReplay.ts` and `scripts/backfill-ab.ts` replay a journal root (archive day segments, then the live file). The replay:
 - joins each nonce's admitted and released rows into an arrival with its recorded enqueue instant, weight, priority, origin, checkout and true hold;

@@ -21,9 +21,7 @@ import type * as FileSystem from "effect/FileSystem";
 import type * as Path from "effect/Path";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type {
-  AdmissionBackfillMode,
   AdmissionEvictionEmission,
-  AdmissionFairnessMode,
   AdmissionJournalArchive,
   AdmissionJournalHistory,
   AdmissionPressureEmission,
@@ -32,7 +30,9 @@ import type {
 } from "./AdmissionJournal.ts";
 import type { MemoryStats } from "./MemoryStats.service.ts";
 import type {
+  AdmissionBackfillMode,
   AdmissionConfig,
+  AdmissionFairnessMode,
   AdmissionRequest,
   AdmissionRoute,
   AdmissionSnapshot,

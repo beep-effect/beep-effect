@@ -2,6 +2,7 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import {
   AdmissionAttemptVerdict,
+  AdmissionBackfillContext,
   AdmissionBackfillPolicy,
   AdmissionBackfillView,
   AdmissionConfig,
@@ -382,7 +383,9 @@ describe("SCHE-06 modes off equal the deployed self-selection", () => {
         expect(
           selfMayAttemptForTesting({
             ...scan,
-            context: O.some({ policy: policyOf({ backfill: "off", capacityTokens }), finished: [] }),
+            context: O.some(
+              AdmissionBackfillContext.make({ policy: policyOf({ backfill: "off", capacityTokens }), finished: [] })
+            ),
           }),
           `round ${round} ${self.nonce}`
         ).toBe(selfMayAttemptForTesting({ ...scan, context: O.none() }));
@@ -505,39 +508,45 @@ it.layer(SchedulerTestLayer, { concurrent: false, timeout: "20 seconds" })("back
       }).pipe(provideRuntimeRootForTesting(choice));
     })
   );
-
-  it.effect("stamps the bound on the waiting ticket once it is protected", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const scheduler = yield* QualityScheduler;
-      const { choice, root } = yield* prepareRoot("deadline");
-      yield* Effect.gen(function* () {
-        yield* scheduler.setBackfillProtocol("easy");
-        const reached = yield* Deferred.make<void>();
-        const busyGate = {
-          tryAcquire: Deferred.succeed(reached, undefined).pipe(Effect.as(O.none<string>())),
-          tryAcquireFallback: Effect.succeedNone,
-          release: () => Effect.void,
-        };
-        const fiber = yield* scheduler.admit(request, busyGate, Effect.void).pipe(Effect.forkChild);
-        yield* Deferred.await(reached);
-        const queue = path.join(root, "queue");
-        const readTicket = fs.readDirectory(queue).pipe(
-          Effect.flatMap((names) => fs.readFileString(path.join(queue, A.join(A.take(names, 1), "")))),
-          Effect.flatMap((text) => decodeTicket(Str.trim(text)))
-        );
-        const early = yield* readTicket;
-        assertNone(early.deadlineMillis);
-        yield* TestClock.adjust("130 seconds");
-        const stamped = yield* readTicket;
-        // Protected at 120 s on an idle machine: the bound is one heartbeat of overhead later.
-        assertSome(stamped.deadlineMillis, 125_000);
-        yield* TestClock.adjust("10 seconds");
-        const kept = yield* readTicket;
-        assertSome(kept.deadlineMillis, 125_000);
-        yield* Fiber.interrupt(fiber);
-      }).pipe(provideRuntimeRootForTesting(choice));
-    })
-  );
 });
+
+// Its own block, so the TestClock it adjusts is not shared with another case.
+it.layer(SchedulerTestLayer, { concurrent: false, timeout: "20 seconds" })(
+  "backfill deadline stamp (SCHE-06)",
+  (it) => {
+    it.effect("stamps the bound on the waiting ticket once it is protected", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const scheduler = yield* QualityScheduler;
+        const { choice, root } = yield* prepareRoot("deadline");
+        yield* Effect.gen(function* () {
+          yield* scheduler.setBackfillProtocol("easy");
+          const reached = yield* Deferred.make<void>();
+          const busyGate = {
+            tryAcquire: Deferred.succeed(reached, undefined).pipe(Effect.as(O.none<string>())),
+            tryAcquireFallback: Effect.succeedNone,
+            release: () => Effect.void,
+          };
+          const fiber = yield* scheduler.admit(request, busyGate, Effect.void).pipe(Effect.forkChild);
+          yield* Deferred.await(reached);
+          const queue = path.join(root, "queue");
+          const readTicket = fs.readDirectory(queue).pipe(
+            Effect.flatMap((names) => fs.readFileString(path.join(queue, A.join(A.take(names, 1), "")))),
+            Effect.flatMap((text) => decodeTicket(Str.trim(text)))
+          );
+          const early = yield* readTicket;
+          assertNone(early.deadlineMillis);
+          yield* TestClock.adjust("130 seconds");
+          const stamped = yield* readTicket;
+          // Protected at 120 s on an idle machine: the bound is one heartbeat of overhead later.
+          assertSome(stamped.deadlineMillis, 125_000);
+          yield* TestClock.adjust("10 seconds");
+          const kept = yield* readTicket;
+          assertSome(kept.deadlineMillis, 125_000);
+          yield* Fiber.interrupt(fiber);
+        }).pipe(provideRuntimeRootForTesting(choice));
+      })
+    );
+  }
+);

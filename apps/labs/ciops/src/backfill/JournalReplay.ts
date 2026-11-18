@@ -23,17 +23,29 @@
  * @since 0.0.0
  */
 
+// fallow-ignore-file code-duplication -- the SCHE-06 lab model and its live port in @beep/repo-cli (QualityScheduler.ts) are deliberately mirrored: the property laws and the tail-wait A/B read this copy, and a lab app cannot be a dependency of the CLI. Owner: @beep/ciops. Exit: delete the mirrored functions here and import the live verdict once a shared scheduler-policy module exists that both packages depend on.
+
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PosInt } from "../projection/PosInt.ts";
-import { BackfillPolicy, ReplayArmResult, ReplayReport, SimulationEvent, UnitArrival, WaitSummary } from "./Schemas.ts";
+import {
+  BackfillPolicy,
+  ReplayArmResult,
+  ReplayReport,
+  ReplayStream,
+  ReplayTiming,
+  SimulationEvent,
+  UnitArrival,
+  WaitSummary,
+} from "./Schemas.ts";
 import { simulateStream } from "./Simulation.ts";
 import type { AdmissionJournalEvent, AdmissionPriority, AdmissionWorkKind } from "../projection/Schemas.ts";
 import type { ReplayArmSpec, ReplayEtaEstimator, SimulationInputError } from "./Schemas.ts";
@@ -71,22 +83,23 @@ const nonEmptyCheckout = (event: object): O.Option<string> =>
     ? O.filter(event.checkoutRoot as O.Option<string>, Str.isNonEmpty)
     : O.none();
 
-const foldRow = (rows: ChainRows, event: AdmissionJournalEvent): ChainRows => {
-  switch (event._tag) {
-    case "admission-admitted":
-      return { ...rows, admitted: O.some(event) };
-    case "admission-released":
-      return {
+const foldRow = (rows: ChainRows, event: AdmissionJournalEvent): ChainRows =>
+  Match.value(event).pipe(
+    Match.tag("admission-admitted", (admitted): ChainRows => ({ ...rows, admitted: O.some(admitted) })),
+    Match.tag(
+      "admission-released",
+      (released): ChainRows => ({
         ...rows,
-        releasedAtMillis: O.some(event.releasedAtMillis),
-        checkoutKey: O.orElse(rows.checkoutKey, () => nonEmptyCheckout(event)),
-      };
-    case "admission-enqueued":
-      return { ...rows, checkoutKey: O.orElse(rows.checkoutKey, () => nonEmptyCheckout(event)) };
-    default:
-      return rows;
-  }
-};
+        releasedAtMillis: O.some(released.releasedAtMillis),
+        checkoutKey: O.orElse(rows.checkoutKey, () => nonEmptyCheckout(released)),
+      })
+    ),
+    Match.tag(
+      "admission-enqueued",
+      (enqueued): ChainRows => ({ ...rows, checkoutKey: O.orElse(rows.checkoutKey, () => nonEmptyCheckout(enqueued)) })
+    ),
+    Match.orElse(() => rows)
+  );
 
 const chainOrder: Order.Order<RecordedChain> = pipe(
   Order.mapInput(Order.Number, (chain: RecordedChain) => chain.enqueuedAtMillis),
@@ -192,19 +205,6 @@ const causalEta = (
 };
 
 /**
- * One journal's replay stream, its recorded waits, the skipped nonces and the enqueue span.
- *
- * @category models
- * @since 0.0.0
- */
-export interface ReplayStream {
-  readonly arrivals: ReadonlyArray<UnitArrival>;
-  readonly recordedWaits: ReadonlyArray<number>;
-  readonly skipped: number;
-  readonly spanMillis: number;
-}
-
-/**
  * The replay stream of one journal: recorded arrivals with causal ETAs, rebased to the first enqueue.
  *
  * **Example** (An empty journal replays nothing)
@@ -252,26 +252,13 @@ export const arrivalsFromJournal: {
       holdMillis: PosInt.make(Math.round(chain.holdMillis)),
     })
   );
-  return {
+  return ReplayStream.make({
     arrivals,
     recordedWaits: A.map(chains, (chain) => chain.admittedAtMillis - chain.enqueuedAtMillis),
-    skipped,
-    spanMillis: last - origin,
-  };
+    skipped: S.Natural.make(skipped),
+    spanMillis: S.Natural.make(last - origin),
+  });
 });
-
-/**
- * Policy knobs every A/B arm shares: the deployed aging and the slice 11 defaults.
- *
- * @category models
- * @since 0.0.0
- */
-export interface ReplayTiming {
-  readonly fairnessWindowMillis: PosInt;
-  readonly promotionOverheadMillis: number;
-  readonly protectAfterMillis: PosInt;
-  readonly publishAgingMillis: PosInt;
-}
 
 /**
  * The deployed timing: 120 s publish aging and protection, a 30-minute
@@ -280,12 +267,12 @@ export interface ReplayTiming {
  * @category models
  * @since 0.0.0
  */
-export const deployedReplayTiming: ReplayTiming = {
+export const deployedReplayTiming: ReplayTiming = ReplayTiming.make({
   publishAgingMillis: PosInt.make(120_000),
   protectAfterMillis: PosInt.make(120_000),
   fairnessWindowMillis: PosInt.make(1_800_000),
-  promotionOverheadMillis: 5_000,
-};
+  promotionOverheadMillis: S.Natural.make(5_000),
+});
 
 const runArm = Effect.fnUntraced(function* (
   timing: ReplayTiming,
