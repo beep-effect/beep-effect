@@ -4778,7 +4778,7 @@
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@alchemy.run/github": "2.0.0-beta.87",
     "@alchemy.run/test": "2.0.0-beta.87",
-    "@arizeai/phoenix-client": "8.0.0",
+    "@arizeai/phoenix-client": "8.0.1",
     "@azure/core-http-compat": "2.5.0",
     "@azure/core-rest-pipeline": "1.25.1",
     "@azure/msal-node": "^7.2.2",
@@ -4881,7 +4881,7 @@
     "@serwist/next": "^9.5.15",
     "@shadcn/lint": "0.2.5",
     "@standard-schema/spec": "^1.1.0",
-    "@statelyai/sdk": "0.48.0",
+    "@statelyai/sdk": "0.49.3",
     "@storybook/addon-a11y": "^10.6.7",
     "@storybook/addon-docs": "^10.6.7",
     "@storybook/addon-themes": "^10.6.7",
@@ -5001,7 +5001,7 @@
     "sigma": "4.0.6",
     "sonner": "^2.0.8",
     "sql-formatter": "^15.9.0",
-    "statelyai": "0.21.5",
+    "statelyai": "0.21.14",
     "storybook": "^10.6.7",
     "string-width": "9.0.0",
     "syncpack": "15.3.3",
@@ -5017,7 +5017,7 @@
     "turbo": "^2.11.11",
     "tw-animate-css": "^1.4.0",
     "tweetnacl": "1.0.3",
-    "type-fest": "^6.0.0",
+    "type-fest": "^6.0.1",
     "typescript": "^7.0.2",
     "universal-github-app-jwt": "^2.2.2",
     "unpdf": "^2.2.1",
@@ -5076,15 +5076,15 @@
 
     "@arizeai/openinference-genai": ["@arizeai/openinference-genai@0.4.3", "", { "dependencies": { "@arizeai/openinference-semantic-conventions": "2.17.0" }, "peerDependencies": { "@opentelemetry/api": ">=1.9.0", "@opentelemetry/semantic-conventions": ">=1.41.1" } }, "sha512-yDW+BlTOEQg1xXgbYFU9u1C+tbq2W2lTYmSHegucMeZwX0wdAStT6i/Sb77v5Qjrq36WPbVVsgO/flOwuv07qA=="],
 
-    "@arizeai/openinference-semantic-conventions": ["@arizeai/openinference-semantic-conventions@2.15.0", "", {}, "sha512-apIjbl1CqPEXPfvft5rNn7VpxjbktkvAwOJMhhrl6OMsSBwiOK7uf5qFFz0RI3IePa3xldn7TmiAkJMiRN2hug=="],
+    "@arizeai/openinference-semantic-conventions": ["@arizeai/openinference-semantic-conventions@2.17.0", "", {}, "sha512-W/0V8e1iFIqr6iK10BWhCzbAUZ5Rf9NY2bsfCfrH3vFk0W5HaeGHAj58frJZJ24bu7Y5aJOxq4+hF6hiRWtEbQ=="],
 
     "@arizeai/openinference-vercel": ["@arizeai/openinference-vercel@3.3.3", "", { "dependencies": { "@arizeai/openinference-core": "2.8.3", "@arizeai/openinference-genai": "0.4.3", "@arizeai/openinference-semantic-conventions": "2.17.0", "@opentelemetry/core": "^2.8.0", "@opentelemetry/sdk-trace-base": "^2.0.0", "@opentelemetry/semantic-conventions": ">=1.41.1 <2.0.0" }, "peerDependencies": { "@ai-sdk/otel": "^1.0.0", "@opentelemetry/api": ">=1.7.0 <2.0.0", "ai": "^7.0.0" } }, "sha512-tGXOVOt+lrlqEGQpi7B5tEYR5P5Epg2XhK07babtkx3BT/mruRGDfFyMJjRTRmxnHj1XdnvCWnONXcMOhFaVaQ=="],
 
-    "@arizeai/phoenix-client": ["@arizeai/phoenix-client@8.0.0", "", { "dependencies": { "@arizeai/openinference-semantic-conventions": "^2.15.0", "@arizeai/phoenix-config": "0.5.1", "@arizeai/phoenix-otel": "3.0.0", "async": "^3.2.6", "openapi-fetch": "^0.17.0", "tiny-invariant": "^1.3.3", "zod": "^4.6.7" }, "peerDependencies": { "@anthropic-ai/sdk": "^0.35.0", "ai": "^7.0.0", "jest": ">=27", "openai": "^6.10.0 || ^7.0.0", "vitest": ">=1" }, "optionalPeers": ["@anthropic-ai/sdk", "ai", "jest", "openai", "vitest"] }, "sha512-Ekn+tpCW1XvYX3fGPjWNkp0lPZ4BHEBDWTzglBAYNtZQl1KsTYwqzLGF45+G5qeT325m50bnrR1jL/0sfRRYIQ=="],
+    "@arizeai/phoenix-client": ["@arizeai/phoenix-client@8.0.1", "", { "dependencies": { "@arizeai/openinference-semantic-conventions": "^2.17.0", "@arizeai/phoenix-config": "0.5.1", "@arizeai/phoenix-otel": "3.1.0", "async": "^3.2.6", "openapi-fetch": "^0.17.0", "tiny-invariant": "^1.3.3", "zod": "^4.6.7" }, "peerDependencies": { "@anthropic-ai/sdk": "^0.35.0", "ai": "^7.0.0", "jest": ">=27", "openai": "^6.10.0 || ^7.0.0", "vitest": ">=1" }, "optionalPeers": ["@anthropic-ai/sdk", "ai", "jest", "openai", "vitest"] }, "sha512-KdE1L54DYZW6ZyfyAfVDwEvQB8rv5MllBSva7trI5Gs2wDbAOfgNE2fk4313cSrajOQiBuTO9aK+aQEPGwdOMA=="],
 
     "@arizeai/phoenix-config": ["@arizeai/phoenix-config@0.5.1", "", {}, "sha512-h+suTkGdWLlHlcgx/Mz9dKMBP1y3dAAqbPTMGhqOIEuNz05v7UZtb8AYfrbBE5mUQKhmz103ni6Hc2GLG0G6xQ=="],
 
-    "@arizeai/phoenix-otel": ["@arizeai/phoenix-otel@3.0.0", "", { "dependencies": { "@arizeai/openinference-core": "^2.8.1", "@arizeai/openinference-semantic-conventions": "^2.15.0", "@arizeai/openinference-vercel": "^3.3.1", "@arizeai/phoenix-config": "0.5.1", "@opentelemetry/api": "^1.10.0", "@opentelemetry/context-async-hooks": "^3.1.0", "@opentelemetry/core": "^3.1.0", "@opentelemetry/exporter-trace-otlp-proto": "^0.301.0", "@opentelemetry/instrumentation": "^0.301.0", "@opentelemetry/resources": "^3.1.0", "@opentelemetry/sdk-trace": "^3.1.0" } }, "sha512-l+nFku56Lhkb6muydQ5bXEuiUJU/H3J3jxsjeV+5yOVdRS2CCSKDrnWit+ok9QZW8C6P6G9iZ2M3hzXb4N92KA=="],
+    "@arizeai/phoenix-otel": ["@arizeai/phoenix-otel@3.1.0", "", { "dependencies": { "@arizeai/openinference-core": "^2.8.3", "@arizeai/openinference-semantic-conventions": "^2.17.0", "@arizeai/openinference-vercel": "^3.3.3", "@arizeai/phoenix-config": "0.5.1", "@opentelemetry/api": "^1.10.0", "@opentelemetry/context-async-hooks": "^3.1.1", "@opentelemetry/core": "^3.1.1", "@opentelemetry/exporter-trace-otlp-proto": "^0.301.1", "@opentelemetry/instrumentation": "^0.301.1", "@opentelemetry/resources": "^3.1.1", "@opentelemetry/sdk-trace": "^3.1.1" } }, "sha512-+zW1I0ahIr8BhC690ivFGwncxfydg0iqAvwNxOFDSS2cRjTr+3RzHVC4q6MMeDUxL9/VQcqTY36AEAMYBpklCA=="],
 
     "@asteasolutions/zod-to-openapi": ["@asteasolutions/zod-to-openapi@8.5.0", "", { "dependencies": { "openapi3-ts": "^4.1.2" }, "peerDependencies": { "zod": "^4.0.0" } }, "sha512-SABbKiObg5dLRiTFnqiW1WWwGcg1BJfmHtT2asIBnBHg6Smy/Ms2KHc650+JI4Hw7lSkdiNebEGXpwoxfben8Q=="],
 
@@ -7116,9 +7116,9 @@
 
     "@statelyai/graph": ["@statelyai/graph@2.4.0", "", { "peerDependencies": { "@dagrejs/dagre": "^3.0.0 || ^4.0.0", "@hpcc-js/wasm-graphviz": "^1.0.0", "cytoscape": "^3.0.0", "d3-force": "^3.0.0", "d3-hierarchy": "^3.0.0", "dotparser": "^1.0.0", "elkjs": "^0.9.0 || ^0.10.0 || ^0.11.0", "fast-xml-parser": "^5.0.0", "graphology": "^0.26.0", "graphology-layout-forceatlas2": "^0.10.0", "webcola": "^3.4.0", "zod": "^4.0.0" }, "optionalPeers": ["@dagrejs/dagre", "@hpcc-js/wasm-graphviz", "cytoscape", "d3-force", "d3-hierarchy", "dotparser", "elkjs", "fast-xml-parser", "graphology", "graphology-layout-forceatlas2", "webcola", "zod"] }, "sha512-bJfR7s7q2s/0fyM17qJl3QBVBnYj38OzmWYkpXstkD8DVTuFNvwfpGXtkOAbHWqDmdLerRGmcRRS+mUsJYC7gQ=="],
 
-    "@statelyai/mcp": ["@statelyai/mcp@0.28.1", "", { "dependencies": { "@asteasolutions/zod-to-openapi": "8.5.0", "@modelcontextprotocol/client": "2.0.0", "@modelcontextprotocol/ext-apps": "2.0.0", "@modelcontextprotocol/server": "2.0.0", "zod": "^4.4.1" }, "bin": { "stately-mcp": "dist/index.mjs" } }, "sha512-ly0OvEdFI4nPEhACnmcYg2xR6CljEzu2vPACPSpB0xgIAjtyZK7CCp89aWw3HAKg84XV3+BoX0O/KzE7Ktda4Q=="],
+    "@statelyai/mcp": ["@statelyai/mcp@0.29.6", "", { "dependencies": { "@asteasolutions/zod-to-openapi": "8.5.0", "@modelcontextprotocol/client": "2.0.0", "@modelcontextprotocol/ext-apps": "2.0.0", "@modelcontextprotocol/server": "2.0.0", "zod": "^4.4.1" }, "bin": { "stately-mcp": "dist/index.mjs" } }, "sha512-GeapH3ruAqpj4pX+9S0OQVTu41d6yCv2ihURyzWIA8TI1f1K5IdOitHcfFbnYJ5Fl4JG7d6hYkDLQTTn30Fr4w=="],
 
-    "@statelyai/sdk": ["@statelyai/sdk@0.48.0", "", { "dependencies": { "@statelyai/graph": "^2.1.0", "xstate": "^5.0.0" }, "peerDependencies": { "ws": "^8.19.0" }, "optionalPeers": ["ws"], "bin": { "stately-sdk": "./dist/bin.mjs" } }, "sha512-/sKMnOAm9ebMTWwHFMvA6J9m5wSuE+83GakZ5pPD3YRks2Ish35N+hhCNgvqPChY4fkYxiFKQNuA8/RW9S8smg=="],
+    "@statelyai/sdk": ["@statelyai/sdk@0.49.3", "", { "dependencies": { "@statelyai/graph": "^2.1.0", "xstate": "^5.0.0" }, "peerDependencies": { "ws": "^8.19.0" }, "optionalPeers": ["ws"], "bin": { "stately-sdk": "./dist/bin.mjs" } }, "sha512-pi+u8o6lTQzhESdCJc9PVqjtdEg0yioBtANVS0TPi5ICE5/zxFo0ENE0FWZMj6wXSCpTH9/K5QAUs4AxKRFkyw=="],
 
     "@storybook/addon-a11y": ["@storybook/addon-a11y@10.6.7", "", { "dependencies": { "@storybook/global": "^5.0.0", "axe-core": "^4.2.0" }, "peerDependencies": { "storybook": "^10.6.7" } }, "sha512-ARd+bjfOYoICe00+svRgFsCVqV7RbN+wgi8yfRhk31kESR7NnTMBGiZD8vWv/r3xqul/Ddr1uR6mUK4lpH7sqw=="],
 
@@ -9302,7 +9302,7 @@
 
     "stack-trace": ["stack-trace@0.0.10", "", {}, "sha512-KGzahc7puUKkzyMt+IqAep+TVNbKP+k2Lmwhub39m1AsTSkaDutx56aDCo+HLDzf/D26BIHTJWNiTG1KAJiQCg=="],
 
-    "statelyai": ["statelyai@0.21.5", "", { "dependencies": { "@oclif/core": "^4.10.3", "@statelyai/mcp": "0.28.1", "@statelyai/sdk": "0.48.0", "tsx": "^4.23.13", "typescript": "^5.9.3", "ws": "^8.21.0", "zod": "^4.4.1" }, "bin": { "statelyai": "./dist/bin.mjs" } }, "sha512-tXX7N+DCt02RykF7XvlZCWa+TeT49S15w1CzXKVw78BLZtzjEYO8Fzv97GJQrV+I3dn6PA1fAE2es2fhKeK00w=="],
+    "statelyai": ["statelyai@0.21.14", "", { "dependencies": { "@oclif/core": "^4.10.3", "@statelyai/mcp": "0.29.6", "@statelyai/sdk": "0.49.3", "tsx": "^4.23.13", "typescript": "^5.9.3", "ws": "^8.21.0", "zod": "^4.4.1" }, "bin": { "statelyai": "./dist/bin.mjs" } }, "sha512-VG7gcwe/UIqbyfV5myAdfpdNsrC02CXs3uBwkxEnfsn+TOmjHAgAnG5+1ZBD7gYe85PbJYz6GQQCwki/jhBvKg=="],
 
     "stats-gl": ["stats-gl@2.4.2", "", { "dependencies": { "@types/three": "*", "three": "^0.170.0" } }, "sha512-g5O9B0hm9CvnM36+v7SFl39T7hmAlv541tU81ME8YeSb3i1CIP5/QdDeSB3A0la0bKNHpxpwxOVRo2wFTYEosQ=="],
 
@@ -9682,13 +9682,7 @@
 
     "@antfu/install-pkg/tinyexec": ["tinyexec@1.3.0", "", {}, "sha512-QKAl9m8gWWGHV8jZcPeym6j+XULi6tOf1mT83WYJ4Lk2ytW/uwAWkrP0uFsdoYMdueVJ0qs26wZ+23xeB4ibNQ=="],
 
-    "@arizeai/openinference-core/@arizeai/openinference-semantic-conventions": ["@arizeai/openinference-semantic-conventions@2.17.0", "", {}, "sha512-W/0V8e1iFIqr6iK10BWhCzbAUZ5Rf9NY2bsfCfrH3vFk0W5HaeGHAj58frJZJ24bu7Y5aJOxq4+hF6hiRWtEbQ=="],
-
     "@arizeai/openinference-core/@opentelemetry/core": ["@opentelemetry/core@2.12.0", "", { "dependencies": { "@opentelemetry/semantic-conventions": "^1.29.0" }, "peerDependencies": { "@opentelemetry/api": ">=1.0.0 <1.10.0" } }, "sha512-1HsSAuvT4/my0QrXWsyXFdWjKaPeCHsismKZgEEIb8NK13LP6DrMRlsUbvD/0F9mDWK3xDom9AMv3IscxgOnOQ=="],
-
-    "@arizeai/openinference-genai/@arizeai/openinference-semantic-conventions": ["@arizeai/openinference-semantic-conventions@2.17.0", "", {}, "sha512-W/0V8e1iFIqr6iK10BWhCzbAUZ5Rf9NY2bsfCfrH3vFk0W5HaeGHAj58frJZJ24bu7Y5aJOxq4+hF6hiRWtEbQ=="],
-
-    "@arizeai/openinference-vercel/@arizeai/openinference-semantic-conventions": ["@arizeai/openinference-semantic-conventions@2.17.0", "", {}, "sha512-W/0V8e1iFIqr6iK10BWhCzbAUZ5Rf9NY2bsfCfrH3vFk0W5HaeGHAj58frJZJ24bu7Y5aJOxq4+hF6hiRWtEbQ=="],
 
     "@arizeai/openinference-vercel/@opentelemetry/core": ["@opentelemetry/core@2.12.0", "", { "dependencies": { "@opentelemetry/semantic-conventions": "^1.29.0" }, "peerDependencies": { "@opentelemetry/api": ">=1.0.0 <1.10.0" } }, "sha512-1HsSAuvT4/my0QrXWsyXFdWjKaPeCHsismKZgEEIb8NK13LP6DrMRlsUbvD/0F9mDWK3xDom9AMv3IscxgOnOQ=="],
 
