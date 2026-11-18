@@ -1213,6 +1213,7 @@
     {"name":"CreatePackage.generateEcosystemPackageJson","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CreatePackage.readLanguageServicePluginProfiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CreatePackage.refreshBunLockfile","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CreatePackage.registerScaffoldedWorkspaces","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CreatePackage.removeRetiredPackageName","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DeletePackage.assembleDeletePolicy","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DeletePackage.decodeManifest","owner":"@beep/repo-cli","family":"tooling","conforms":true},

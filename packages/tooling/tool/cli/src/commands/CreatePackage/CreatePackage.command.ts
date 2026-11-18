@@ -62,6 +62,7 @@ import {
   PlannedFile,
   PlannedSymlink,
 } from "./FileGenerationPlanService.ts";
+import { registerMissingWorkspaceIdentityPackages } from "./internal/IdentityBulkRegistration.ts";
 import { CreatePackageIdentityRegistration } from "./internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "./internal/LabIdentitySegment.ts";
 import * as RetiredNameRegistry from "./internal/RetiredNameRegistry.ts";
@@ -1104,6 +1105,57 @@ const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(functio
       message: `bun ${A.join(args, " ")} failed with exit code ${exitCode}. Fix package metadata and rerun the command.`,
     });
   }
+});
+
+/**
+ * Register package directories another scaffolder already wrote, the way
+ * `create-package` registers its own: root workspace entries, identity
+ * composers, the shared tsconfig and alias sync, and a `bun.lock` refresh.
+ *
+ * **Details**
+ *
+ * `beep architecture create context` writes its packages through an operation
+ * plan and then calls this, so every package it creates carries the same
+ * registration as one `create-package` bootstraps.
+ *
+ * **Example** (Register a generated context)
+ *
+ * ```ts
+ * import { registerScaffoldedWorkspaces } from "@beep/repo-cli/commands/CreatePackage"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = registerScaffoldedWorkspaces("/repo", ["packages/notes/contract"])
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - Absolute repository root.
+ * @param packagePaths - Repo-relative package directories to register.
+ * @returns The workspace paths added and the identity slugs registered.
+ * @effects Edits the root manifest, the identity registry, root tsconfig and alias files, and `bun.lock`.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const registerScaffoldedWorkspaces = Effect.fn("CreatePackage.registerScaffoldedWorkspaces")(function* (
+  repoRoot: string,
+  packagePaths: ReadonlyArray<string>
+) {
+  const addedWorkspaces: Array<string> = [];
+  for (const packagePath of packagePaths) {
+    const added = yield* ensureRootWorkspaceEntry(repoRoot, packagePath);
+    if (added) A.appendInPlace(addedWorkspaces, packagePath);
+  }
+  const registeredSlugs = yield* registerMissingWorkspaceIdentityPackages(repoRoot);
+  yield* syncTsconfigAtRoot(
+    repoRoot,
+    TsconfigSyncRunOptionsSync.make({
+      mode: "sync",
+      filter: undefined,
+      verbose: false,
+    })
+  );
+  yield* refreshBunLockfile(repoRoot);
+  return { addedWorkspaces, registeredSlugs } as const;
 });
 
 // ── Command ───────────────────────────────────────────────────────────────────

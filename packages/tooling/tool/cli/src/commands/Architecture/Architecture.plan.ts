@@ -13,7 +13,9 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import {
+  ArchitectureContextRole,
   ArchitecturePlanTarget,
   CanonicalSliceOperationPlan,
   defaultArchitecturePlanTarget,
@@ -23,6 +25,8 @@ import {
   WritePackageJsonOperation,
 } from "./Architecture.schemas.ts";
 import { acceptedProofFiles, legacyFixturePaths } from "./internal/AcceptedProofManifest.ts";
+import { modelFirstOperationsFor, modelFirstRolePlansFor, modelFirstTargetFor } from "./internal/ModelFirstContext.ts";
+import { modelFirstContextNamesFor } from "./internal/ModelFirstTemplates.ts";
 import {
   packageShellFileOperationsFor,
   packageShellRolePlanFor,
@@ -43,6 +47,7 @@ import type {
   ArchitectureOperationSource,
   ArchitectureOperationWriteMode,
   ArchitecturePackageRole,
+  ArchitectureShape,
   ArchitectureSliceRole,
   ArchitectureSliceRolePlan,
 } from "./Architecture.schemas.ts";
@@ -348,5 +353,85 @@ export const makeArchitecturePackageOperationPlan = Effect.fn(function* (input: 
         A.map((operation) => withOperationMetadata(operation, "package-shell"))
       ),
     ],
+  });
+});
+
+const isContextRole = S.is(ArchitectureContextRole);
+const isContextSlug = S.is(S.String.check(S.isPattern(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u)));
+const isModuleName = S.is(S.String.check(S.isPattern(/^[A-Z][A-Za-z0-9]*$/u)));
+
+/**
+ * The slice shape a decoded operation plan describes, read from its roles: a
+ * plan whose every role is a context role is model-first.
+ *
+ * **Example** (A legacy plan's shape)
+ *
+ * ```ts
+ * import { makeCanonicalSliceOperationPlan, shapeOfOperationPlan } from "@beep/repo-cli/commands/Architecture"
+ *
+ * console.log(shapeOfOperationPlan(makeCanonicalSliceOperationPlan())) // "legacy"
+ * ```
+ *
+ * @param plan - The decoded operation plan.
+ * @returns The plan's slice shape.
+ * @category getters
+ * @since 0.0.0
+ */
+export const shapeOfOperationPlan = (plan: CanonicalSliceOperationPlan): ArchitectureShape =>
+  A.isReadonlyArrayNonEmpty(plan.roles) && A.every(plan.roles, (rolePlan) => isContextRole(rolePlan.role))
+    ? "model-first"
+    : "legacy";
+
+/**
+ * Build the operation plan of a model-first bounded context: the `contract`,
+ * `model` and `host` packages, each with the manifest, tsconfig overlays and
+ * shell `beep create-package` emits, and the context's first Module rendered
+ * from inline templates.
+ *
+ * **Details**
+ *
+ * The context is a kebab-case slug and the Module a PascalCase name. The
+ * plan's packages have exact exports, one per `src/` file. `web` is not
+ * generated until the bindings generator lands.
+ *
+ * **Example** (Plan the notes context)
+ *
+ * ```ts
+ * import { makeModelFirstContextOperationPlan } from "@beep/repo-cli/commands/Architecture"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.map(
+ *   makeModelFirstContextOperationPlan({ context: "notes", module: "Note" }),
+ *   (plan) => plan.roles.map((role) => role.packageName)
+ * )
+ * Effect.runPromise(program).then(console.log)
+ * ```
+ *
+ * @effects Builds the plan in memory; filesystem writes happen only when the plan is applied.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const makeModelFirstContextOperationPlan = Effect.fn(function* (input: {
+  readonly context: string;
+  readonly module: string;
+}) {
+  if (!isContextSlug(input.context)) {
+    return yield* DomainError.newMessage(
+      `Invalid context "${input.context}": a context is a kebab-case slug such as "notes" or "case-files".`
+    );
+  }
+  if (!isModuleName(input.module)) {
+    return yield* DomainError.newMessage(
+      `Invalid Module "${input.module}": a Module is a PascalCase name such as "Note".`
+    );
+  }
+  const names = modelFirstContextNamesFor(input);
+  return CanonicalSliceOperationPlan.make({
+    schemaVersion: "architecture-operation-plan/v1",
+    target: modelFirstTargetFor(names),
+    roles: modelFirstRolePlansFor(names),
+    operations: A.map(modelFirstOperationsFor(names), (operation) =>
+      withOperationMetadata(operation, "model-first-template")
+    ),
   });
 });
