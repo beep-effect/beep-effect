@@ -1187,6 +1187,9 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
     () =>
       Effect.gen(function* () {
         yield* temporaryWorkingDirectory;
+        // The back-link check resolves an exploration from the repository root, which a checkout
+        // marks with bun.lock; without it the doctor stops at "Could not find repository root".
+        yield* writeProjectFile("bun.lock", "{}\n");
         // A product-leaf exploration packet this fixture never had.
         yield* writeLinkedPacket("product-link", productExploration);
         yield* writeLinkedPacket("declared-link", "explorations/demo-gone");
