@@ -1,28 +1,19 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import {
-  GitHubAppMint,
   GitHubAppVaultWriter,
-  gitHubAppMintLayer,
   preflightGitHubAppVaultWriter,
   resolveGitHubAppVaultWriter,
 } from "@beep/repo-cli/commands/Github";
-import { it } from "@beep/test-runner";
-import { NodeServices } from "@effect/platform-node";
-import { expect } from "@effect/vitest";
+import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
-import * as Context from "effect/Context";
-import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
-import * as HttpClient from "effect/http/HttpClient";
-import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as Path from "effect/Path";
-import * as TestConsole from "effect/testing/TestConsole";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { SpawnScript } from "@beep/commands/ScriptedSpawner";
 
 // The vault writer the mint stores credentials with, and the create-then-delete preflight that runs
-// before the loopback server listens. Every process is scripted; no vault is touched.
+// before the loopback server listens. Every process is scripted; no vault is touched. The command-level
+// refusal before the server binds is in github-app-mint-serve.test.ts, which replaces the Bun server.
 
 const PREFLIGHT_TITLE = "beep github app mint preflight fixture-nonce";
 const opHuman = GitHubAppVaultWriter.make({ command: "op-human", source: "op-human" });
@@ -43,7 +34,7 @@ const preflightWith = (createExit: number, deleteExit: number) => {
   );
 };
 
-it.layer(NodeServices.layer, { timeout: "30 seconds" })("github app mint vault writer", (it) => {
+describe("github app mint vault writer", () => {
   it.effect(
     "an explicit override wins without probing PATH",
     Effect.fnUntraced(function* () {
@@ -117,40 +108,3 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("github app mint vault w
     })
   );
 });
-
-// The checkout itself is the owner, so serve reads the committed manifest before the preflight runs.
-const refusingOwner = Layer.unwrap(
-  Effect.map(
-    Path.Path.use((path) => path.fromFileUrl(new URL("../../../../../", import.meta.url))),
-    gitHubAppMintLayer
-  )
-).pipe(
-  Layer.provide(
-    Layer.mergeAll(
-      SecureRandom.layerWebCrypto,
-      // op-human is absent and the fallback op cannot create items: the service-account shim case.
-      ScriptedSpawner.make(() => ({ exit: 1 })).layer,
-      Layer.succeed(
-        HttpClient.HttpClient,
-        HttpClient.make(() => Effect.never)
-      )
-    )
-  )
-);
-
-it.layer(Layer.mergeAll(NodeServices.layer, TestConsole.layer), { timeout: "30 seconds" })(
-  "github app mint serve preflight",
-  (it) => {
-    it.effect(
-      "refuses to serve before listening when the vault is not writable",
-      Effect.fnUntraced(function* () {
-        const mint = yield* Layer.build(refusingOwner).pipe(Effect.map(Context.get(GitHubAppMint)));
-        const refused = yield* Effect.flip(mint.serve("beep-infra-github", O.none()));
-        expect(refused).toMatchObject({ _tag: "GithubCommandError", path: "op (op) -> BEEP_SECRETS" });
-        expect(refused.message).toContain("op cannot create items in BEEP_SECRETS");
-        const logs = yield* TestConsole.logLines;
-        expect(A.join(A.map(logs, String), "\n")).not.toContain("Listening");
-      })
-    );
-  }
-);

@@ -20,6 +20,7 @@ import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import * as TestConsole from "effect/testing/TestConsole";
 import { vi } from "vitest";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 // `beep github app mint` through its command value, with the Bun loopback server replaced: the
 // suite never binds port 8787. `server.fail` selects a refused bind or a server that accepts.
@@ -104,6 +105,39 @@ it.layer(services, { timeout: "30 seconds" })("github app mint command", (it) =>
         message: "Cannot start the registration server.",
       });
       expect(server.options).toContainEqual({ hostname: "127.0.0.1", port: 8787 });
+    })
+  );
+
+  it.effect(
+    "refuses before binding when the vault writer cannot create items",
+    Effect.fnUntraced(function* () {
+      server.fail = false;
+      const bindsBefore = server.options.length;
+      // The op-human probe and the preflight create both exit 1: the service-account `op` case.
+      const failure = yield* runGithub(["app", "mint", "beep-infra-github"]).pipe(
+        provideSpawner(ScriptedSpawner.make(() => ({ exit: 1 }))),
+        Effect.flip
+      );
+      expect(failure).toMatchObject({ _tag: "GithubCommandError", path: "op (op) -> BEEP_SECRETS" });
+      expect(failure.message).toContain("op cannot create items in BEEP_SECRETS (exit 1); refusing to start");
+      expect(server.options.length).toBe(bindsBefore);
+    })
+  );
+
+  it.effect(
+    "stores through the --op-cli override after its preflight passes",
+    Effect.fnUntraced(function* () {
+      server.fail = false;
+      const store = ScriptedSpawner.make(() => ({ exit: 0 }));
+      const fiber = yield* runGithub(["app", "mint", "beep-reviewer", "--op-cli", "/opt/op-human"]).pipe(
+        provideSpawner(store),
+        Effect.forkChild
+      );
+      const ready = "Vault writer /opt/op-human (override) can create and delete items in BEEP_SECRETS.";
+      const announced = TestConsole.logLines.pipe(Effect.map((lines) => A.contains(A.map(lines, String), ready)));
+      yield* Effect.yieldNow.pipe(Effect.andThen(announced), Effect.repeat({ until: (seen) => seen }));
+      yield* Fiber.interrupt(fiber);
+      expect(A.map(store.spawns, (spawn) => spawn.command)).toEqual(["bash", "/opt/op-human"]);
     })
   );
 
