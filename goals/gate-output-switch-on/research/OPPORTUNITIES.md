@@ -11,7 +11,9 @@ Recorded while landing the six fixes (2026-11-18).
 2. **Changing one generated script re-keyed 207 cache baselines.** Doing: leading the generated
    `check` with the probe. Evidence: `bun run beep cache audit` reported `configuration-drift` on
    every task of every rewritten package; the reviewed request carries 207 package-keyed SHA-256
-   digests, six of which matched secret-scanner token rules and needed ignore fingerprints.
+   digests, six of which matched secret-scanner token rules. Ignore fingerprints added in the same PR had
+   no effect, because the hosted scan pins its configuration and ignore list to the base; a separate
+   allowlist PR had to merge first.
    Prevention: the baseline request accepts a rule ("every subject whose only drift is the scripts
    digest of this generated command") and computes the digests itself.
 3. **The root cache baseline conflicts on every base merge that touches the root Turbo config.**
