@@ -365,7 +365,7 @@ export type RuleSet = typeof RuleSet.Type;
 const makeExtractionRule = (input: typeof ExtractionRule.Encoded): ExtractionRule =>
   ExtractionRule.make({
     ...input,
-    counterExample: O.fromUndefinedOr(input.counterExample),
+    counterExample: O.map(O.fromUndefinedOr(input.counterExample), RuleExample.make),
   });
 
 const previewValues = <Value>(values: ReadonlyArray<Value>, render: (value: Value) => string): string =>

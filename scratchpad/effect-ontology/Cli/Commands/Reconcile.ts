@@ -205,8 +205,8 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   }> = [];
   for (let i = 0; i < allEntities.length; i++) {
     for (let j = i + 1; j < allEntities.length; j++) {
-      const e1 = allEntities[i];
-      const e2 = allEntities[j];
+      const e1 = A.getUnsafe(allEntities, i);
+      const e2 = A.getUnsafe(allEntities, j);
       if (e1.iri === e2.iri) continue;
       const similarity = stringSimilarity(e1.label, e2.label);
       if (similarity >= threshold) {

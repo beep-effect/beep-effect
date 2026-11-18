@@ -559,7 +559,7 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
   for (const typeIri of entity.types) {
     const claimId = generateClaimId(subjectIri, RDF_TYPE.value, typeIri, documentId);
 
-    claims.push({
+    claims.push(ClaimData.make({
       claimId,
       subjectIri,
       predicateIri: RDF_TYPE.value,
@@ -569,7 +569,7 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
       ontologyId,
       confidence,
       ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
-    });
+    }));
   }
 
   // 2. Create claims for each attribute
@@ -583,7 +583,7 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
 
     const claimId = generateClaimId(subjectIri, predicateIri, objectValue, documentId);
 
-    claims.push({
+    claims.push(ClaimData.make({
       claimId,
       subjectIri,
       predicateIri,
@@ -593,7 +593,7 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
       ontologyId,
       confidence,
       ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
-    });
+    }));
   }
 
   return claims;
@@ -671,7 +671,7 @@ export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryO
 
   const claimId = generateClaimId(subjectIri, relation.predicate, objectValue, documentId);
 
-  return {
+  return ClaimData.make({
     claimId,
     subjectIri,
     predicateIri: relation.predicate,
@@ -681,7 +681,7 @@ export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryO
     ontologyId,
     confidence,
     ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
-  };
+  });
 });
 
 // =============================================================================

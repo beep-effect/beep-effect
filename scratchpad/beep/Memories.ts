@@ -11,7 +11,7 @@
  *
  * @since 0.0.0
  */
-import { createHash } from "node:crypto";
+import { sha256 as sha256Bytes } from "@noble/hashes/sha2.js";
 import { sql } from "drizzle-orm";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -940,7 +940,7 @@ export declare namespace ShortTermMemory {
   export type Encoded = typeof ShortTermMemory.Encoded;
 }
 
-const sha256 = (value: string): Uint8Array => new Uint8Array(createHash("sha256").update(value, "utf8").digest());
+const sha256 = (value: string): Uint8Array => sha256Bytes(new TextEncoder().encode(value));
 
 /**
  * Stable document id for a natural-key seed.
@@ -968,8 +968,8 @@ export const documentIdFromSeed = (seed: string): string => {
   const eighth = bytes[8] ?? 0;
   bytes[6] = (sixth & 0x0f) | 0x40;
   bytes[8] = (eighth & 0x3f) | 0x80;
-  const hex = A.join("")(A.map(A.fromIterable(bytes), (byte) => byte.toString(16).padStart(2, "0")));
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  const hex = A.join("")(A.map(A.fromIterable(bytes), (byte) => Str.padStart(2, "0")(byte.toString(16))));
+  return `${Str.slice(0, 8)(hex)}-${Str.slice(8, 12)(hex)}-${Str.slice(12, 16)(hex)}-${Str.slice(16, 20)(hex)}-${Str.slice(20)(hex)}`;
 };
 
 const pyLiteral = (value: unknown): string => {
@@ -1356,7 +1356,7 @@ export const propositionize = (input: {
   const [pattern, predicate, slot] = matched.value;
   const groups = pattern.exec(lower)?.groups;
   const raw = groups?.[slot] ?? "";
-  const value = slot === "years" ? Number.parseInt(raw, 10) : textValue.slice(textValue.length - raw.length);
+  const value = slot === "years" ? Number.parseInt(raw, 10) : Str.slice(textValue.length - raw.length)(textValue);
   return { predicate: O.some(predicate), arguments: { [slot]: value }, subjectEntityId: defaultSubject(input.category) };
 };
 
@@ -1857,6 +1857,6 @@ export const getMemoriesAsStr = (memories: ReadonlyArray<object>): string =>
       const when = DateTime.isDateTime(stamp) ? stamp : DateTime.isDateTime(created) ? created : undefined;
       if (when === undefined) return `- ${content}\n`;
       const iso = DateTime.formatIso(when);
-      return `- ${content} (${iso.slice(0, 10)} ${iso.slice(11, 19)} UTC)\n`;
+      return `- ${content} (${Str.slice(0, 10)(iso)} ${Str.slice(11, 19)(iso)} UTC)\n`;
     }),
   );

@@ -113,8 +113,7 @@ export const tokenizeMentionForBlocking = (mention: string): Array<string> =>
  * @since 0.0.0
  */
 export const splitCamelCase = (text: string): string =>
-  Str.replace(/([a-z])([A-Z])/g, "$1 $2")(text) // Insert space before capital letters
-    .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2") // Handle consecutive capitals
+  Str.replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")(Str.replace(/([a-z])([A-Z])/g, "$1 $2")(text)) // Handle consecutive capitals
     .trim();
 
 // =============================================================================
@@ -188,8 +187,7 @@ export const enhanceTextForSearch = dual2((text: string, ngramSize: number): str
   const camelCaseSplit = splitCamelCase(text);
 
   // Tokenize (split on whitespace and normalize)
-  const tokens = Str.toLowerCase(camelCaseSplit)
-    .split(/\s+/)
+  const tokens = Str.split(/\s+/)(Str.toLowerCase(camelCaseSplit))
     .filter((t) => t.length > 0);
 
   // Generate n-grams

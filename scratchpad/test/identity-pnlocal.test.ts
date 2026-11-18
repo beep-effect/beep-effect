@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Effect from "effect/Effect";
 import * as Arbitrary from "effect/Arbitrary";
@@ -45,21 +46,21 @@ describe("PnLocal", () => {
           Arbitrary.all([
             Arbitrary.map(
               Arbitrary.schema(
-                S.Array(S.Literals(escapableLocalCharacters)).check(S.isMinLength(1), S.isMaxLength(40))
+                S.Array(S.Literals(escapableLocalCharacters)).check(S.isMinLength(1), S.isMaxLength(40)),
               ),
-              (characters) => characters.join("")
+              (characters) => A.join(characters, ""),
             ),
           ]),
           ([local]) => {
-          const escaped = escapeLocal(local);
+            const escaped = escapeLocal(local);
 
-          expect(unescapeLocal(escaped)).toBe(local);
-          expect(acceptsEscapedLocal(escaped)).toBe(true);
+            expect(unescapeLocal(escaped)).toBe(local);
+            expect(acceptsEscapedLocal(escaped)).toBe(true);
 
             return true;
-        }
-      )
-      )._tag
+          },
+        ),
+      )._tag,
     ).toBe("Passed");
   });
 
@@ -68,7 +69,7 @@ describe("PnLocal", () => {
       prefixedNameOrIri("Ontology.models/HttpUrl", {
         prefix: "beep",
         fullIri: "https://beep-effect.com/ns/ontology/Ontology.models/HttpUrl",
-      })
+      }),
     ).toBe("<https://beep-effect.com/ns/ontology/Ontology.models/HttpUrl>");
   });
 });

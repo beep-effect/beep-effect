@@ -313,7 +313,7 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
           entities,
           (entity, idx) =>
             Effect.gen(function* () {
-              const entityEmbedding = embeddings[idx];
+              const entityEmbedding = A.getUnsafe(embeddings, idx);
               const tokens = tokenize(entity.mention);
 
               // Token-based blocking
@@ -371,8 +371,8 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         let candidatesEvaluated = 0;
 
         for (let i = 0; i < entities.length; i++) {
-          const entity = entities[i];
-          const embedding = embeddings[i];
+          const entity = A.getUnsafe(entities, i);
+          const embedding = A.getUnsafe(embeddings, i);
           const candidates = HashMap.get(candidateMap, entity.id).pipe(O.getOrElse(() => []));
 
           candidatesEvaluated += candidates.length;

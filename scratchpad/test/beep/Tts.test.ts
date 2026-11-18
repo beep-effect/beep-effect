@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
@@ -26,9 +27,18 @@ describe("Tts", () => {
       style: 0.1,
       use_speaker_boost: true,
     });
-    assert.strictEqual(O.getOrElse(decoded.stability, () => 0), 0.4);
-    assert.strictEqual(O.getOrElse(decoded.similarityBoost, () => 0), 0.5);
-    assert.strictEqual(O.getOrElse(decoded.useSpeakerBoost, () => false), true);
+    assert.strictEqual(
+      O.getOrElse(decoded.stability, () => 0),
+      0.4,
+    );
+    assert.strictEqual(
+      O.getOrElse(decoded.similarityBoost, () => 0),
+      0.5,
+    );
+    assert.strictEqual(
+      O.getOrElse(decoded.useSpeakerBoost, () => false),
+      true,
+    );
     const missing = decode(toWire(TtsVoiceSettings), {});
     assert.strictEqual(O.isNone(missing.stability), true);
     assert.strictEqual(O.isNone(missing.style), true);
@@ -63,12 +73,9 @@ describe("Tts", () => {
       voiceSettings: O.some(TtsVoiceSettings.make({ stability: O.none(), similarityBoost: O.some(0.4) })),
     });
     assert.strictEqual(O.isSome(nested.voiceSettings), true);
-    assert.strictEqual(
-      O.isNone(O.getOrElse(nested.voiceSettings, () => TtsVoiceSettings.make({})).stability),
-      true,
-    );
+    assert.strictEqual(O.isNone(O.getOrElse(nested.voiceSettings, () => TtsVoiceSettings.make({})).stability), true);
     assert.strictEqual(fails(toWire(TtsSynthesizeRequest), { text: "" }), true);
-    assert.strictEqual(fails(toWire(TtsSynthesizeRequest), { text: "x".repeat(5001) }), true);
+    assert.strictEqual(fails(toWire(TtsSynthesizeRequest), { text: Str.repeat(5001)("x") }), true);
   });
 
   it("derives an arbitrary for every exported model", () => {

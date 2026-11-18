@@ -258,9 +258,8 @@ export const makeLoggingMiddleware = Effect.sync(() =>
       const request = yield* HttpServerRequest.HttpServerRequest;
       const start = yield* Clock.currentTimeMillis;
       const yielded1 = yield* Random.nextInt;
-const requestId = Math.abs(yielded1)
-        .toString(16)
-        .slice(0, 8);
+const requestId = Str.slice(0, 8)(Math.abs(yielded1)
+        .toString(16));
 
       const path = request.url;
       const method = request.method;

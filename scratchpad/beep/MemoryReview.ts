@@ -8,6 +8,7 @@
  *
  * @since 0.0.0
  */
+import * as Result from "effect/Result";
 import { $ScratchpadId } from "@beep/identity";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -42,7 +43,7 @@ const veracityText = (fact: { readonly [key: string]: S.Json }): O.Option<string
   const value = fact.veracity;
   if (value === null) return O.none();
   if (P.isString(value)) return O.some(value);
-  return O.some(JSON.stringify(value));
+  return O.some(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value).pipe(Result.getOrThrow));
 };
 
 /**

@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 // @effect-diagnostics nodeBuiltinImport:skip-file -- nodeBuiltinImport because Node's real createHash is the digest oracle the module is checked against. Owner: @beep/scratchpad. Exit: the beep lab graduates and its sources and tests move their digests to Effect Crypto.
 import { createHash } from "node:crypto";
 import { assert, describe, it } from "@effect/vitest";
@@ -52,7 +53,7 @@ describe("RecurrenceEvidenceRef", () => {
       ...refWire,
       version: "v2",
       deviceId: "device-1",
-      excerptHash: "a".repeat(64),
+      excerptHash: Str.repeat(64)("a"),
       startSeconds: 1.5,
       endSeconds: 2.5,
     });
@@ -78,9 +79,9 @@ describe("RecurrenceEvidenceRef", () => {
   it("rejects each violated bound", () => {
     assert.strictEqual(decodeFails(RecurrenceEvidenceRef, { ...refWire, kind: "device" }), true);
     assert.strictEqual(decodeFails(RecurrenceEvidenceRef, { ...refWire, scope: "device_local" }), true);
-    assert.strictEqual(decodeFails(RecurrenceEvidenceRef, { ...refWire, version: "v".repeat(129) }), true);
-    assert.strictEqual(decodeFails(RecurrenceEvidenceRef, { ...refWire, excerptHash: "A".repeat(64) }), true);
-    assert.strictEqual(decodeFails(RecurrenceEvidenceRef, { ...refWire, excerptHash: "a".repeat(63) }), true);
+    assert.strictEqual(decodeFails(RecurrenceEvidenceRef, { ...refWire, version: Str.repeat(129)("v") }), true);
+    assert.strictEqual(decodeFails(RecurrenceEvidenceRef, { ...refWire, excerptHash: Str.repeat(64)("A") }), true);
+    assert.strictEqual(decodeFails(RecurrenceEvidenceRef, { ...refWire, excerptHash: Str.repeat(63)("a") }), true);
     assert.strictEqual(decodeFails(RecurrenceEvidenceRef, { ...refWire, startSeconds: -1 }), true);
     assert.strictEqual(decodeFails(RecurrenceEvidenceRef, { ...refWire, endSeconds: -0.5 }), true);
   });
@@ -97,15 +98,21 @@ describe("CanonicalRecurrenceSignal", () => {
 
   it("rejects out-of-range fields", () => {
     assert.strictEqual(decodeFails(CanonicalRecurrenceSignal, { ...signalWire, title: "" }), true);
-    assert.strictEqual(decodeFails(CanonicalRecurrenceSignal, { ...signalWire, objective: "o".repeat(2049) }), true);
     assert.strictEqual(
-      decodeFails(CanonicalRecurrenceSignal, { ...signalWire, anchorTaskDescription: "a".repeat(2001) }),
+      decodeFails(CanonicalRecurrenceSignal, { ...signalWire, objective: Str.repeat(2049)("o") }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(CanonicalRecurrenceSignal, { ...signalWire, anchorTaskDescription: Str.repeat(2001)("a") }),
       true,
     );
     assert.strictEqual(decodeFails(CanonicalRecurrenceSignal, { ...signalWire, occurrenceCount: 0 }), true);
     assert.strictEqual(decodeFails(CanonicalRecurrenceSignal, { ...signalWire, distinctDayCount: 0 }), true);
     assert.strictEqual(decodeFails(CanonicalRecurrenceSignal, { ...signalWire, confidence: 1.2 }), true);
-    assert.strictEqual(decodeFails(CanonicalRecurrenceSignal, { ...signalWire, firstSeenAt: "2026-09-01T10:00:00" }), true);
+    assert.strictEqual(
+      decodeFails(CanonicalRecurrenceSignal, { ...signalWire, firstSeenAt: "2026-09-01T10:00:00" }),
+      true,
+    );
     assert.strictEqual(decodeFails(CanonicalRecurrenceSignal, { ...signalWire, evidenceRefs: [] }), true);
     assert.strictEqual(
       decodeFails(CanonicalRecurrenceSignal, { ...signalWire, evidenceRefs: A.makeBy(51, () => refWire) }),
@@ -122,7 +129,9 @@ describe("assertCanonicalRecurrenceSignal", () => {
 
   it("rejects device-local evidence", () => {
     assert.strictEqual(
-      rejectionReason(assertCanonicalRecurrenceSignal(signal({ evidenceRefs: [{ ...refWire, deviceId: "device-1" }] }))),
+      rejectionReason(
+        assertCanonicalRecurrenceSignal(signal({ evidenceRefs: [{ ...refWire, deviceId: "device-1" }] })),
+      ),
       "canonical evidence cannot carry device_id",
     );
   });
@@ -169,8 +178,10 @@ describe("stableLoopKey", () => {
     Effect.gen(function* () {
       const key = yield* stableLoopKey(signal());
       assert.match(key, /^recurrence_loop_[a-f0-9]{40}$/);
-      assert.strictEqual(yield* stableLoopKey(signal({ title: "Other" })), key);
-      assert.notStrictEqual(yield* stableLoopKey(signal({ evidenceRefs: [{ ...refWire, id: "memory-2" }] })), key);
+      const result1 = yield* stableLoopKey(signal({ title: "Other" }));
+      assert.strictEqual(result1, key);
+      const result2 = yield* stableLoopKey(signal({ evidenceRefs: [{ ...refWire, id: "memory-2" }] }));
+      assert.notStrictEqual(result2, key);
     }),
   );
 
@@ -178,7 +189,7 @@ describe("stableLoopKey", () => {
     Effect.gen(function* () {
       const key = yield* stableLoopKey(signal({ evidenceRefs: [refWire] }));
       const digest = createHash("sha256").update("canonical:memory_item:memory-1", "utf8").digest("hex");
-      assert.strictEqual(key, `recurrence_loop_${digest.slice(0, 40)}`);
+      assert.strictEqual(key, `recurrence_loop_${Str.slice(0, 40)(digest)}`);
     }),
   );
 });

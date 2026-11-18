@@ -1,3 +1,4 @@
+import { IngestionActivityInput } from "../../Domain/Schema/Batch.ts";
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { IRI } from "@beep/rdf";
 import { ObjectRef } from "@beep/rdf/Prov";
@@ -105,16 +106,16 @@ describe("durable activity boundaries", () => {
 
         yield* Effect.all(
           [
-            makeIngestionActivity({
+            makeIngestionActivity(IngestionActivityInput.make({
               batchId: BatchA,
               validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${firstPath}`)),
               targetNamespace: namespace,
-            }).execute,
-            makeIngestionActivity({
+            })).execute,
+            makeIngestionActivity(IngestionActivityInput.make({
               batchId: BatchB,
               validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${secondPath}`)),
               targetNamespace: namespace,
-            }).execute,
+            })).execute,
           ],
           { concurrency: "unbounded" }
         );
@@ -291,11 +292,11 @@ assert.strictEqual(yielded2, 1);
       "stops interruption retries at the configured bound",
       Effect.fnUntraced(function* () {
         const attempts = yield* InterruptAttempts;
-        const fiber = yield* makeIngestionActivity({
+        const fiber = yield* makeIngestionActivity(IngestionActivityInput.make({
           batchId: BatchA,
           validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/interrupted.ttl")),
           targetNamespace: Namespace.make("interrupt-retry"),
-        }).execute.pipe(Effect.forkChild);
+        })).execute.pipe(Effect.forkChild);
 
         yield* TestClock.adjust(Duration.seconds(30));
 

@@ -83,8 +83,7 @@ export const mergeEntityFields = (entities: A.NonEmptyReadonlyArray<Entity>) => 
   }
 
   const threshold = Math.ceil(entities.length / 2);
-  const mergedTypes = A.filter(A.fromIterable(typeFrequency), ([_, count]) => count >= threshold)
-    .map(([type]) => type);
+  const mergedTypes = A.map(A.filter(A.fromIterable(typeFrequency), ([_, count]) => count >= threshold), ([type]) => type);
   const types = A.match(mergedTypes, {
     onEmpty: () => canonical.types,
     onNonEmpty: (values) => A.prepend(values, canonical.types[0]),

@@ -373,14 +373,17 @@ describe("PrimaryKeyValue", () => {
     "decodes a JSON scalar to itself: a date or a long key is the text it travels as",
     Effect.fnUntraced(function* () {
       const decode = S.decodeUnknownEffect(PrimaryKeyValue);
-      const keys = yield* Effect.all([
-        decode("EMP1234"),
-        decode(10033123),
-        decode(false),
-        decode("58319870951433"),
-        decode("2021-05-01"),
-        decode("2021-01-04T05:00:00Z"),
-      ], { concurrency: 1 });
+      const keys = yield* Effect.all(
+        [
+          decode("EMP1234"),
+          decode(10033123),
+          decode(false),
+          decode("58319870951433"),
+          decode("2021-05-01"),
+          decode("2021-01-04T05:00:00Z"),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(keys, ["EMP1234", 10033123, false, "58319870951433", "2021-05-01", "2021-01-04T05:00:00Z"]);
     })
   );
@@ -397,13 +400,15 @@ describe("PrimaryKeyValue", () => {
       const messages = yield* Effect.all(
         A.map([null, ["EMP1234"], { value: 1 }, Number.NaN, Number.POSITIVE_INFINITY, ...rich], (input) =>
           failureOf(decode(input))
-        )
-      , { concurrency: 1 });
+        ),
+        { concurrency: 1 }
+      );
       strictEqual(messages.length, 8);
       deepStrictEqual(A.map(rich, S.is(PrimaryKeyValue)), [false, false, false]);
       const refused = yield* Effect.all(
-        A.map(rich, (key) => Effect.isFailure(S.encodeUnknownEffect(PrimaryKeyValue)(key)))
-      , { concurrency: 1 });
+        A.map(rich, (key) => Effect.isFailure(S.encodeUnknownEffect(PrimaryKeyValue)(key))),
+        { concurrency: 1 }
+      );
       deepStrictEqual(refused, [true, true, true]);
       // @ts-expect-error a 64-bit key is the text it travels as: a locator does not take the bigint
       throws(() => ObjectLocator.make({ objectType: employeeType, primaryKey: BigInt("58319870951433") }));
@@ -620,8 +625,9 @@ describe("TypedPrimaryKeyValue", () => {
             { type: "stringValue" },
           ],
           (input) => failureOf(decode(input))
-        )
-      , { concurrency: 1 });
+        ),
+        { concurrency: 1 }
+      );
       strictEqual(messages.length, 7);
     })
   );
@@ -706,8 +712,9 @@ describe("ObjectSpecifier", () => {
       const instant = yield* S.encodeEffect(TimestampValue)(DateTime.makeUnsafe("2021-01-04T05:00:00.000Z"));
       const keys: ReadonlyArray<PrimaryKeyValue> = [50030, "NYC", true, long, date, instant];
       const specifiers = yield* Effect.all(
-        A.map(keys, (primaryKey) => encode(ObjectLocator.make({ objectType: employeeType, primaryKey })))
-      , { concurrency: 1 });
+        A.map(keys, (primaryKey) => encode(ObjectLocator.make({ objectType: employeeType, primaryKey }))),
+        { concurrency: 1 }
+      );
       deepStrictEqual(specifiers, [
         "Employee:50030",
         "Employee:NYC",
@@ -835,9 +842,11 @@ describe("ObjectRecord", () => {
   it.effect(
     "passes each stub object through untouched, in both directions",
     Effect.fnUntraced(function* () {
-      const rows = yield* Effect.forEach([employee1, nycOffice, travisPlayer], (stub) =>
-        S.decodeEffect(ObjectRecord)(stub)
-      , { concurrency: 1 });
+      const rows = yield* Effect.forEach(
+        [employee1, nycOffice, travisPlayer],
+        (stub) => S.decodeEffect(ObjectRecord)(stub),
+        { concurrency: 1 }
+      );
       deepStrictEqual<unknown>(rows, [employee1, nycOffice, travisPlayer]);
       const written = yield* Effect.forEach(rows, (row) => S.encodeEffect(ObjectRecord)(row), { concurrency: 1 });
       deepStrictEqual<unknown>(written, [employee1, nycOffice, travisPlayer]);
@@ -1201,14 +1210,17 @@ describe("instanceCodec", () => {
       const Employee = yield* EmployeeInstance;
       const Office = yield* OfficeInstance;
       const Player = yield* PlayerInstance;
-      const verdicts = yield* Effect.all([
-        reDecodes(Employee, Struct.omit(employee1, ["employeeLocation"])),
-        reDecodes(Office, nycOffice),
-        reDecodes(Player, travisPlayer),
-        reDecodes(OntologyObject, employee1),
-        reDecodes(OntologyObject, nycOffice),
-        reDecodes(OntologyObject, travisPlayer),
-      ], { concurrency: 1 });
+      const verdicts = yield* Effect.all(
+        [
+          reDecodes(Employee, Struct.omit(employee1, ["employeeLocation"])),
+          reDecodes(Office, nycOffice),
+          reDecodes(Player, travisPlayer),
+          reDecodes(OntologyObject, employee1),
+          reDecodes(OntologyObject, nycOffice),
+          reDecodes(OntologyObject, travisPlayer),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(verdicts, [true, true, true, true, true, true]);
     })
   );
@@ -1408,7 +1420,9 @@ describe("instanceCodec", () => {
   it.effect(
     "generates instances of each stub object type whose two keys agree, and they survive encoding and decoding",
     Effect.fnUntraced(function* () {
-      const codecs = yield* Effect.all([EmployeeInstance, OfficeInstance, PlayerInstance, TimestampKeyedInstance], { concurrency: 1 });
+      const codecs = yield* Effect.all([EmployeeInstance, OfficeInstance, PlayerInstance, TimestampKeyedInstance], {
+        concurrency: 1,
+      });
       const verdicts = yield* Effect.forEach(
         codecs,
         Effect.fnUntraced(function* (codec) {
@@ -1426,11 +1440,13 @@ describe("instanceCodec", () => {
                 sameInstance(decoded, instance) &&
                 S.toEquivalence(ObjectLocator)(generic.locator, instance.locator)
               );
-            })
-          , { concurrency: 1 });
+            }),
+            { concurrency: 1 }
+          );
           return A.length(instances) === 25 && A.every(survived, identity);
-        })
-      , { concurrency: 1 });
+        }),
+        { concurrency: 1 }
+      );
       deepStrictEqual(verdicts, [true, true, true, true]);
     })
   );

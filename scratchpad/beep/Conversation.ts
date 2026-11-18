@@ -877,7 +877,7 @@ const backfillSegmentIds = (
     const id = segment.id;
     if (P.isString(id) && id.length > 0) return Effect.succeed(segment);
     return Effect.map(legacyConversationSegmentId(conversationId, index), (legacyId) => ({ ...segment, id: legacyId }));
-  });
+  }, { concurrency: 1 });
 
 /**
  * Fills missing transcript ids and rewrites the plugin and memory mirrors.
@@ -930,9 +930,8 @@ export const initializeConversation = (
     Effect.map((decoded) =>
       Conversation.make({
         ...decoded,
-        pluginsResults: decoded.appsResults.map((app) =>
-          PluginResult.make({ pluginId: app.appId, content: app.content }),
-        ),
+        pluginsResults: Arr.map(decoded.appsResults, (app) =>
+          PluginResult.make({ pluginId: app.appId, content: app.content })),
         processingMemoryId: decoded.processingConversationId,
       }),
     ),
@@ -995,7 +994,7 @@ export const getTranscript: {
       conversation.transcriptSegments,
       includeTimestamps,
       userName,
-      people?.map((person) => ({ id: person.id, name: person.name })),
+      O.fromNullishOr(people).pipe(O.map(Arr.map((person) => ({ id: person.id, name: person.name }))), O.getOrUndefined),
     ),
 );
 
@@ -1057,9 +1056,8 @@ export const getPhotosDescription: {
  */
 export const getPersonIds = (conversation: Conversation): ReadonlyArray<string> => {
   const ids = HashSet.fromIterable(
-    conversation.transcriptSegments.flatMap((segment) =>
-      O.isSome(segment.personId) && segment.personId.value.length > 0 ? [segment.personId.value] : [],
-    ),
+    Arr.flatMap(conversation.transcriptSegments, (segment) =>
+      O.isSome(segment.personId) && segment.personId.value.length > 0 ? [segment.personId.value] : []),
   );
   return Arr.fromIterable(ids);
 };
@@ -1169,28 +1167,25 @@ export const projectSharedConversation: {
       overview: conversation.structured.overview,
       emoji: conversation.structured.emoji,
       category: conversation.structured.category,
-      actionItems: conversation.structured.actionItems.map((item) =>
-        SharedActionItem.make({ description: item.description, completed: item.completed }),
-      ),
-      events: conversation.structured.events.map((event) =>
+      actionItems: Arr.map(conversation.structured.actionItems, (item) =>
+        SharedActionItem.make({ description: item.description, completed: item.completed })),
+      events: Arr.map(conversation.structured.events, (event) =>
         SharedEvent.make({
           title: event.title,
           description: event.description,
           start: event.start,
           duration: event.duration,
           created: event.created,
-        }),
-      ),
+        })),
     }),
     geolocation: conversation.geolocation,
     photos: conversation.photos,
     audioFiles: conversation.audioFiles,
-    appResults: conversation.appsResults.map((app) => SharedAppResult.make({ appId: app.appId, content: app.content })),
-    pluginsResults: conversation.pluginsResults.map((plugin) =>
-      SharedPluginResult.make({ pluginId: plugin.pluginId, content: plugin.content }),
-    ),
+    appResults: Arr.map(conversation.appsResults, (app) => SharedAppResult.make({ appId: app.appId, content: app.content })),
+    pluginsResults: Arr.map(conversation.pluginsResults, (plugin) =>
+      SharedPluginResult.make({ pluginId: plugin.pluginId, content: plugin.content })),
     calendarEvents: conversation.calendarEvents,
-    people: people.map((person) => SharedPerson.make({ id: person.id, name: person.name })),
+    people: Arr.map(people, (person) => SharedPerson.make({ id: person.id, name: person.name })),
   }),
 );
 

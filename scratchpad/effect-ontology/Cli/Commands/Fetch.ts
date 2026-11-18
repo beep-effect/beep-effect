@@ -1,3 +1,6 @@
+import { BulkIngestOptions } from "../../Service/LinkIngestionService.ts";
+import { IngestedLinkFilter } from "../../Service/LinkIngestionService.ts";
+import { IngestOptions } from "../../Service/LinkIngestionService.ts";
 /**
  * CLI: Fetch and Link Ingestion Commands
  *
@@ -206,12 +209,12 @@ const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
 
   yield* Console.log(`Ingesting: ${url} (ontology: ${ontologyId})`);
 
-  const result = yield* ingestion.ingestUrl(url, {
+  const result = yield* ingestion.ingestUrl(url, IngestOptions.make({
     ontologyId,
     enrich: !skipEnrich,
     ...getSomesStruct({ sourceType }),
     skipDuplicates: !allowDuplicates,
-  });
+  }));
 
   const outputLines = result.duplicate
     ? ["Content already exists (duplicate)", `  ID: ${result.id}`, `  Hash: ${result.contentHash}`]
@@ -305,11 +308,11 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
     onNone: () => Effect.succeedNone,
     onSome: flow(decodeUnknownLinkStatus, Effect.map(O.some)),
   });
-  const documents = yield* ingestion.list({
+  const documents = yield* ingestion.list(IngestedLinkFilter.make({
     ...getSomesStruct({ status: canonicalStatus, sourceType }),
     limit,
     offset,
-  });
+  }));
   if (jsonOutput) {
     const output = A.map(documents, (doc) => ({
       id: doc.id,
@@ -408,12 +411,12 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
     A.filter(P.and(Str.isNonEmpty, P.not(Str.startsWith("#"))))
   );
   yield* Console.log(`Ingesting ${urls.length} URLs with concurrency ${concurrency} (ontology: ${ontologyId})\n`);
-  const results = yield* ingestion.ingestUrls(urls, {
+  const results = yield* ingestion.ingestUrls(urls, BulkIngestOptions.make({
     ontologyId,
     concurrency,
     enrich: !skipEnrich,
     continueOnError: true,
-  });
+  }));
   const resultLines = yield* Effect.forEach(results, (result) => {
     if (LinkIngestionError.is(result)) {
       return Effect.succeed(`[ERROR] ${result.url ?? "unknown"}: ${result.message}`);

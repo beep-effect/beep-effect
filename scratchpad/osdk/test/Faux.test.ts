@@ -709,9 +709,7 @@ it.layer(FauxLive)("the typed facade over the in-memory transport", (it) => {
       const isActive = Model.eq(Employee.property("active"), true);
       yield* equals(matching(plain(Filter.every([wellPaid.filter, isActive.filter]))), [1, 2, 5, 7, 8]);
       yield* equals(
-        matching(
-          plain(Filter.some([Model.lt(Employee.property("salary"), 155).filter, Filter.not(isActive.filter)]))
-        ),
+        matching(plain(Filter.some([Model.lt(Employee.property("salary"), 155).filter, Filter.not(isActive.filter)]))),
         [3, 4, 6, 9]
       );
       yield* equals(matching(plain(Filter.not(Filter.some([wellPaid.filter, isActive.filter])))), [3, 9]);
@@ -800,14 +798,12 @@ it.layer(FauxLive)("the typed facade over the in-memory transport", (it) => {
       const answer = yield* transport.loadObjects(
         LoadObjectsRequest.make({ objectSet: employees.objectSet, includeRid: true })
       );
-      const written = yield* Effect.forEach(stored, (object) => S.encodeEffect(OntologyObject)(object), { concurrency: 1 });
+      const written = yield* Effect.forEach(stored, (object) => S.encodeEffect(OntologyObject)(object), {
+        concurrency: 1,
+      });
       deepStrictEqual<unknown>(answer.data, written);
       // Read through the same function with the codec that needs no ontology, the rows are the stored objects.
-      const plain = yield* pipe(
-        employees.objectSet,
-        untyped,
-        fetchPage(FetchOptions.make({ includeRid: true }))
-      );
+      const plain = yield* pipe(employees.objectSet, untyped, fetchPage(FetchOptions.make({ includeRid: true })));
       deepStrictEqual(plain.data, stored);
       // And the typed read of the same set names the same objects, in the same order.
       const typed = yield* fetchPage(employees, defaults);
@@ -817,10 +813,7 @@ it.layer(FauxLive)("the typed facade over the in-memory transport", (it) => {
       );
       // An untyped read spans object types: an interface set holds objects of every type that implements it.
       const located = yield* fetchPage(untyped(ObjectSets.interfaceType("Located")), defaults);
-      same(
-        A.dedupe(A.map(located.data, (object) => `${object.locator.objectType}`)),
-        ["Office", "Employee"]
-      );
+      same(A.dedupe(A.map(located.data, (object) => `${object.locator.objectType}`)), ["Office", "Employee"]);
       strictEqual(located.data.length, 12);
     })
   );
@@ -1069,9 +1062,7 @@ it.layer(FauxLive)("the typed facade over the in-memory transport", (it) => {
       );
       const selector = Filter.toSelector("title");
       yield* equals(
-        refusalOf(
-          matching(plain(ContainsAnyTerm.make({ property: selector, value: "enginer", fuzzy: O.some(true) })))
-        ),
+        refusalOf(matching(plain(ContainsAnyTerm.make({ property: selector, value: "enginer", fuzzy: O.some(true) })))),
         unsupported("filter.containsAnyTerm.fuzzy")
       );
       yield* equals(
@@ -1095,9 +1086,7 @@ it.layer(FauxLive)("the typed facade over the in-memory transport", (it) => {
       );
       // A refused operator fails the filter even where another branch would decide it.
       yield* equals(
-        refusalOf(
-          matching(plain(Filter.some([Filter.every([]), Model.matchesRegex(title, "eng.*").filter])))
-        ),
+        refusalOf(matching(plain(Filter.some([Filter.every([]), Model.matchesRegex(title, "eng.*").filter])))),
         unsupported("filter.regex")
       );
       yield* equals(
@@ -1266,7 +1255,11 @@ describe("the evaluators", () => {
       yield* equals(Effect.forEach(rows, isLarge, { concurrency: 1 }), [true, false, true]);
       // The title and primary key selectors resolve through the object type.
       const byTitle = Filter.eq(TitleProperty.make({}), "London");
-      yield* equals(Effect.forEach(rows, matchesFilter(definition.objectType, byTitle), { concurrency: 1 }), [false, true, false]);
+      yield* equals(Effect.forEach(rows, matchesFilter(definition.objectType, byTitle), { concurrency: 1 }), [
+        false,
+        true,
+        false,
+      ]);
     })
   );
 

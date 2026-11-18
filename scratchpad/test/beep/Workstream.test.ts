@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
@@ -166,13 +167,20 @@ describe("WorkstreamCreate", () => {
   });
 
   it("enforces the text bounds", () => {
-    assert.strictEqual(decodeFails(WorkstreamCreate, { title: "", objective: "Ship v2", currentStateSummary: "" }), true);
     assert.strictEqual(
-      decodeFails(WorkstreamCreate, { title: "Launch", objective: "x".repeat(2049), currentStateSummary: "" }),
+      decodeFails(WorkstreamCreate, { title: "", objective: "Ship v2", currentStateSummary: "" }),
       true,
     );
     assert.strictEqual(
-      decodeFails(WorkstreamCreate, { title: "Launch", objective: "Ship v2", currentStateSummary: "x".repeat(4001) }),
+      decodeFails(WorkstreamCreate, { title: "Launch", objective: Str.repeat(2049)("x"), currentStateSummary: "" }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(WorkstreamCreate, {
+        title: "Launch",
+        objective: "Ship v2",
+        currentStateSummary: Str.repeat(4001)("x"),
+      }),
       true,
     );
   });
@@ -199,7 +207,7 @@ describe("WorkstreamUpdate", () => {
     assert.strictEqual(decodeFails(WorkstreamUpdate, { status: null }), true);
     assert.strictEqual(decodeFails(WorkstreamUpdate, { currentStateSummary: null }), true);
     assert.strictEqual(decodeFails(WorkstreamUpdate, { title: "" }), true);
-    assert.strictEqual(decodeFails(WorkstreamUpdate, { currentStateSummary: "x".repeat(4001) }), true);
+    assert.strictEqual(decodeFails(WorkstreamUpdate, { currentStateSummary: Str.repeat(4001)("x") }), true);
   });
 
   it("requires at least one field through the checked schema and the effect", () => {
@@ -244,7 +252,10 @@ describe("Workstream and journal events", () => {
     assert.strictEqual(decoded.evidenceRefs[0]?.kind, "conversation");
     assert.strictEqual(decodeFails(WorkstreamEvent, { ...event, sequence: 0 }), true);
     assert.strictEqual(decodeFails(WorkstreamEvent, { ...event, summary: "" }), true);
-    assert.strictEqual(decodeFails(WorkstreamEvent, { ...event, evidenceRefs: Array.from({ length: 51 }, () => evidence) }), true);
+    assert.strictEqual(
+      decodeFails(WorkstreamEvent, { ...event, evidenceRefs: Array.from({ length: 51 }, () => evidence) }),
+      true,
+    );
     const create = WorkstreamEventCreate.make({ kind: "decision", summary: "Go" });
     assert.strictEqual(create.sensitivity, "normal");
     assert.deepStrictEqual(create.evidenceRefs, []);
@@ -258,12 +269,16 @@ describe("Workstream and journal events", () => {
 
 describe("artifacts and checkpoints", () => {
   it("decode the create and stored shapes with their bounds", () => {
-    const create = decode(ArtifactDescriptorCreate, { ...artifactCreate, supersedesArtifactId: "art-0", sourceRunId: null });
+    const create = decode(ArtifactDescriptorCreate, {
+      ...artifactCreate,
+      supersedesArtifactId: "art-0",
+      sourceRunId: null,
+    });
     assert.strictEqual(O.getOrNull(create.supersedesArtifactId), "art-0");
     assert.strictEqual(O.isNone(create.sourceRunId), true);
     assert.strictEqual(decodeFails(ArtifactDescriptorCreate, { ...artifactCreate, version: 0 }), true);
     assert.strictEqual(decodeFails(ArtifactDescriptorCreate, { ...artifactCreate, contentHash: "short" }), true);
-    assert.strictEqual(decodeFails(ArtifactDescriptorCreate, { ...artifactCreate, kind: "x".repeat(65) }), true);
+    assert.strictEqual(decodeFails(ArtifactDescriptorCreate, { ...artifactCreate, kind: Str.repeat(65)("x") }), true);
     assert.strictEqual(
       decodeFails(ArtifactDescriptorCreate, {
         ...artifactCreate,
@@ -282,7 +297,10 @@ describe("artifacts and checkpoints", () => {
     const stored = decode(ArtifactDescriptor, artifact);
     assert.strictEqual(stored.status, "approved");
     assert.strictEqual(O.isNone(stored.supersedesArtifactId), true);
-    assert.strictEqual(ArtifactDescriptor.make({ ...made, artifactId: "art-1", workstreamId: "ws-1", createdAt: now }).status, "draft");
+    assert.strictEqual(
+      ArtifactDescriptor.make({ ...made, artifactId: "art-1", workstreamId: "ws-1", createdAt: now }).status,
+      "draft",
+    );
     assert.strictEqual(decode(ArtifactStatusTransitionRequest, { status: "delivered" }).status, "delivered");
     assert.strictEqual(decodeFails(ArtifactStatusTransitionRequest, { status: "done" }), true);
   });
@@ -292,10 +310,14 @@ describe("artifacts and checkpoints", () => {
     assert.strictEqual(upsert.evidenceRefs.length, 1);
     assert.strictEqual(decodeFails(ContinuationCheckpointUpsert, { ...checkpointUpsert, lastEventSequence: -1 }), true);
     assert.strictEqual(
-      decodeFails(ContinuationCheckpointUpsert, { ...checkpointUpsert, contextSummary: "x".repeat(4001) }),
+      decodeFails(ContinuationCheckpointUpsert, { ...checkpointUpsert, contextSummary: Str.repeat(4001)("x") }),
       true,
     );
-    assert.strictEqual(ContinuationCheckpointUpsert.make({ runtimeId: "rt-1", lastEventSequence: 0, contextSummary: "" }).evidenceRefs.length, 0);
+    assert.strictEqual(
+      ContinuationCheckpointUpsert.make({ runtimeId: "rt-1", lastEventSequence: 0, contextSummary: "" }).evidenceRefs
+        .length,
+      0,
+    );
     assert.strictEqual(decode(ContinuationCheckpoint, checkpoint).checkpointId, "cp-1");
     assert.strictEqual(decodeFails(ContinuationCheckpoint, { ...checkpoint, checkpointId: "" }), true);
   });
@@ -310,10 +332,18 @@ describe("WorkIntentRequest", () => {
       assert.strictEqual(O.isNone(decoded.title), true);
       assert.strictEqual(O.isNone(decoded.objective), true);
     }
-    const titled = decode(TaskOriginWorkIntent, { origin: "task", taskId: "task-1", title: "Launch", objective: "Ship" });
+    const titled = decode(TaskOriginWorkIntent, {
+      origin: "task",
+      taskId: "task-1",
+      title: "Launch",
+      objective: "Ship",
+    });
     assert.strictEqual(O.getOrNull(titled.title), "Launch");
     assert.strictEqual(decodeFails(TaskOriginWorkIntent, { origin: "task", taskId: "task-1", title: null }), true);
-    assert.strictEqual(decodeFails(TaskOriginWorkIntent, { origin: "task", taskId: "task-1", title: "x".repeat(257) }), true);
+    assert.strictEqual(
+      decodeFails(TaskOriginWorkIntent, { origin: "task", taskId: "task-1", title: Str.repeat(257)("x") }),
+      true,
+    );
     assert.strictEqual(TaskOriginWorkIntent.make({ taskId: "task-1" }).origin, "task");
   });
 
@@ -368,7 +398,10 @@ describe("projections and imports", () => {
     assert.strictEqual(detail.recentEvents[0]?.eventId, "evt-1");
     assert.strictEqual(detail.artifacts[0]?.artifactId, "art-1");
     assert.strictEqual(detail.checkpoints[0]?.checkpointId, "cp-1");
-    assert.strictEqual(decodeFails(WorkstreamDetailProjection, { workstream, recentEvents: [], tasks: [], artifacts: [] }), true);
+    assert.strictEqual(
+      decodeFails(WorkstreamDetailProjection, { workstream, recentEvents: [], tasks: [], artifacts: [] }),
+      true,
+    );
   });
 
   it("decode the link import request and report", () => {

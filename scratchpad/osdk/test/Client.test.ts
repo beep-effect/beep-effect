@@ -686,7 +686,9 @@ describe("LoadObjectsResponseOf", () => {
       deepStrictEqual(Struct.omit(typed, ["data"]), Struct.omit(rows, ["data"]));
       deepStrictEqual(Struct.omit(plain, ["data"]), Struct.omit(rows, ["data"]));
       // Decoding the port's rows one by one with the model's codec is the same as reading the answer whole.
-      const oneByOne = yield* Effect.forEach(rows.data, (row) => S.decodeEffect(Employee.Instance)(row), { concurrency: 1 });
+      const oneByOne = yield* Effect.forEach(rows.data, (row) => S.decodeEffect(Employee.Instance)(row), {
+        concurrency: 1,
+      });
       deepStrictEqual(oneByOne, typed.data);
     })
   );
@@ -932,10 +934,7 @@ describe("errors", () => {
     // A read of an untyped set was typed by no object type, and its errors name none.
     assertNone(ObjectNotFound.make({}).objectType);
     strictEqual(ObjectNotFound.make({}).message, "Expected exactly one object but the object set holds none");
-    strictEqual(
-      MultipleObjectsFound.make({}).message,
-      "Expected exactly one object but the object set holds several"
-    );
+    strictEqual(MultipleObjectsFound.make({}).message, "Expected exactly one object but the object set holds several");
   });
 });
 
@@ -1163,9 +1162,7 @@ it.layer(StubTransport)("the typed facade", (it) => {
       assertTrue(sameType<(typeof page.data)[number], typeof Named.Instance.Type>(true));
       assertTrue(sameType<(typeof first)[number], typeof Named.Instance.Type>(true));
       assertTrue(sameType<typeof one, typeof Employee.Instance.Type>(true));
-      assertTrue(
-        sameType<Effect.Success<ReturnType<typeof fetchOneOfLeads>>, typeof Employee.Instance.Type>(true)
-      );
+      assertTrue(sameType<Effect.Success<ReturnType<typeof fetchOneOfLeads>>, typeof Employee.Instance.Type>(true));
     })
   );
 

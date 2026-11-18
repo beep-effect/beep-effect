@@ -565,20 +565,21 @@ export const normalizeLegacyMetric = Effect.fn("GoalCreate.normalizeLegacyMetric
   }
   const successCriteria = trimmedCriteria(create.successCriteria);
   const synthesize = O.isNone(create.metric) && (O.isSome(create.targetValue) || O.isSome(create.goalType));
-  const metric = synthesize
-    ? O.some(
-        yield* validateMetricBounds(
-          GoalMetric.make({
-            type: yield* decodeGoalType(O.getOrElse(create.goalType, () => scaleType)),
-            current: O.getOrElse(create.currentValue, () => 0),
-            target: O.getOrElse(create.targetValue, () => 0),
-            min: create.minValue,
-            max: create.maxValue,
-            unit: create.unit,
-          }),
-        ),
-      )
-    : create.metric;
+  let metric = create.metric;
+  if (synthesize) {
+    const type = yield* decodeGoalType(O.getOrElse(create.goalType, () => scaleType));
+    const validated = yield* validateMetricBounds(
+      GoalMetric.make({
+        type,
+        current: O.getOrElse(create.currentValue, () => 0),
+        target: O.getOrElse(create.targetValue, () => 0),
+        min: create.minValue,
+        max: create.maxValue,
+        unit: create.unit,
+      }),
+    );
+    metric = O.some(validated);
+  }
   if (O.isSome(metric)) yield* validateMetricBounds(metric.value);
   return GoalCreate.make({
     ...create,

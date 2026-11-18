@@ -1,4 +1,3 @@
-import * as Result from "effect/Result";
 /**
  * FCM, people, and voice-readiness requests that do not belong to a larger domain.
  *
@@ -9,6 +8,7 @@ import * as Result from "effect/Result";
  *
  * @since 0.0.0
  */
+import * as Result from "effect/Result";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";

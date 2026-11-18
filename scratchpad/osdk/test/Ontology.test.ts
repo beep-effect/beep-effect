@@ -966,8 +966,9 @@ describe("OntologyDefinition", () => {
           const decoded = yield* decodeOntology(Struct.omit(ontologyWire, [collection]));
           const encoded = yield* encodeOntology(decoded);
           deepStrictEqual(encoded, { ...ontologyWire, [collection]: {} });
-        })
-      , { concurrency: 1 });
+        }),
+        { concurrency: 1 }
+      );
     })
   );
 
@@ -1477,9 +1478,11 @@ describe("lookups", () => {
     "every key of the fixture parses as a versioned query name that selects its own entry",
     Effect.fnUntraced(function* () {
       const ontology = yield* decodeOntology(ontologyWire);
-      const selectors = yield* Effect.forEach(R.keys(ontology.queryTypes), (key) =>
-        S.decodeEffect(QuerySelectorFromVersionedApiName)(key)
-      , { concurrency: 1 });
+      const selectors = yield* Effect.forEach(
+        R.keys(ontology.queryTypes),
+        (key) => S.decodeEffect(QuerySelectorFromVersionedApiName)(key),
+        { concurrency: 1 }
+      );
       deepStrictEqual(
         A.map(selectors, (selector) =>
           O.getOrNull(O.map(getQueryType(ontology, selector), (found) => `${found.apiName}`))
@@ -2409,9 +2412,7 @@ describe("fields that hold another class", () => {
   // Law: a field whose schema is a class is typed as that class, so its value can be handed to anything that asks
   // for the class. Annotating the key of a class would silently type the field as the class's un-branded record.
   it("are typed as the class and never as its un-branded record", () => {
-    const facts: readonly [
-      SameType<OntologyDefinition["identity"], OntologyIdentity>,
-    ] = [true];
+    const facts: readonly [SameType<OntologyDefinition["identity"], OntologyIdentity>] = [true];
     assertTrue(A.every(facts, (fact) => fact));
   });
 });

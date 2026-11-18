@@ -458,11 +458,15 @@ describe("InterfaceLinkCardinality", () => {
         ["ONE", "one"],
         ["MANY", "many"],
       ]);
-      const decoded = yield* Effect.forEach(["ONE", "MANY"], (wire) =>
-        S.decodeUnknownEffect(InterfaceLinkCardinality)(wire)
-      , { concurrency: 1 });
+      const decoded = yield* Effect.forEach(
+        ["ONE", "MANY"],
+        (wire) => S.decodeUnknownEffect(InterfaceLinkCardinality)(wire),
+        { concurrency: 1 }
+      );
       deepStrictEqual(decoded, ["one", "many"]);
-      const encoded = yield* Effect.forEach(decoded, (domain) => S.encodeEffect(InterfaceLinkCardinality)(domain), { concurrency: 1 });
+      const encoded = yield* Effect.forEach(decoded, (domain) => S.encodeEffect(InterfaceLinkCardinality)(domain), {
+        concurrency: 1,
+      });
       deepStrictEqual(encoded, ["ONE", "MANY"]);
     })
   );
@@ -824,16 +828,18 @@ describe("InterfaceType", () => {
           const decoded = yield* S.decodeEffect(InterfaceType)(Struct.omit(fooInterfaceWire, [collection]));
           const encoded = yield* S.encodeEffect(InterfaceType)(decoded);
           deepStrictEqual(encoded, { ...fooInterfaceWire, [collection]: {} });
-        })
-      , { concurrency: 1 });
+        }),
+        { concurrency: 1 }
+      );
       yield* Effect.forEach(
         arrays,
         Effect.fnUntraced(function* (collection) {
           const decoded = yield* S.decodeEffect(InterfaceType)(Struct.omit(fooInterfaceWire, [collection]));
           const encoded = yield* S.encodeEffect(InterfaceType)(decoded);
           deepStrictEqual(encoded, { ...fooInterfaceWire, [collection]: [] });
-        })
-      , { concurrency: 1 });
+        }),
+        { concurrency: 1 }
+      );
       const bare = yield* S.decodeEffect(InterfaceType)({
         rid: "ri.interface.main.interface.9",
         apiName: "Bare",

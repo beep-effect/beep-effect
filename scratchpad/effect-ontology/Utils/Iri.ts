@@ -341,11 +341,11 @@ export const buildLocalNameToIriMapSafe = (iris: ReadonlyArray<IRI>): LocalNameM
     }
   }
 
-  return {
+  return LocalNameMapResult.make({
     map,
     collisions,
     hasCollisions: MutableHashMap.size(collisions) > 0,
-  };
+  });
 };
 
 /**

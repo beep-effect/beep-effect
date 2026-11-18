@@ -385,7 +385,8 @@ export const validateAssociationJudgment = Effect.fn("AssociationJudgment.valida
  * @since 0.0.0
  */
 export const decodeAssociationJudgment = Effect.fn("AssociationJudgment.decode")(function* (input: unknown) {
-  return yield* validateAssociationJudgment(yield* decodeUnknownEffectAssociationJudgment(input));
+  const judgment = yield* decodeUnknownEffectAssociationJudgment(input);
+  return yield* validateAssociationJudgment(judgment);
 });
 
 /**

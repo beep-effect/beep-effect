@@ -17,6 +17,7 @@ import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as P from "effect/Predicate";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
@@ -47,7 +48,7 @@ const jsonbMaxCheck = (name: string, maximum: number) => (column: ExtraConfigCol
 const intBetween = (minimum: number, maximum: number) => S.Int.check(S.isBetween({ minimum, maximum }));
 
 const codePointWidth = (value: string, index: number): number => {
-  const point = value.codePointAt(index);
+  const point = O.getOrElse(Str.codePointAt(index)(value), () => undefined);
   if (point === undefined) return 1;
   return point > 0xffff ? 2 : 1;
 };
@@ -74,7 +75,7 @@ const takeCodePoints = (value: string, count: number): string => {
 
 const lastCodePointWidth = (value: string): number => {
   if (Str.isEmpty(value)) return 0;
-  const last = value.charCodeAt(value.length - 1);
+  const last = O.getOrElse(Str.charCodeAt(value.length - 1)(value), () => NaN);
   return last >= 0xdc00 && last <= 0xdfff ? 2 : 1;
 };
 

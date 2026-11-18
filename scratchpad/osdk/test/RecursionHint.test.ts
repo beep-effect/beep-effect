@@ -27,7 +27,9 @@ const Tree = S.Struct({
 });
 
 const widestFanOut = (tree: Tree): number =>
-  A.reduce(tree.children, A.length(tree.children), (widest, child) => Order.max(Order.Number)(widest, widestFanOut(child)));
+  A.reduce(tree.children, A.length(tree.children), (widest, child) =>
+    Order.max(Order.Number)(widest, widestFanOut(child))
+  );
 
 const nodeCount = (tree: Tree): number => A.reduce(tree.children, 1, (count, child) => count + nodeCount(child));
 
@@ -48,27 +50,35 @@ describe("RecursiveArraySizeHint", () => {
     Effect.fnUntraced(function* () {
       const sizes = [0, 1, 2, 3, 10, 1000, 20_000];
       // `A.makeBy` never builds an empty array, so the empty case is spelled out.
-      const arrays = A.map(sizes, (size) => (size === 0 ? A.empty<string>() : A.makeBy(size, (index) => `item-${index}`)));
+      const arrays = A.map(sizes, (size) =>
+        size === 0 ? A.empty<string>() : A.makeBy(size, (index) => `item-${index}`)
+      );
       const decoded = yield* Effect.forEach(arrays, (strings) => S.decodeEffect(Hinted)(strings), { concurrency: 1 });
       const encoded = yield* Effect.forEach(decoded, (strings) => S.encodeEffect(Hinted)(strings), { concurrency: 1 });
       deepStrictEqual(A.map(decoded, A.length), sizes);
       deepStrictEqual(encoded, arrays);
-      deepStrictEqual(A.map(arrays, S.is(Hinted)), A.map(sizes, () => true));
+      deepStrictEqual(
+        A.map(arrays, S.is(Hinted)),
+        A.map(sizes, () => true)
+      );
     })
   );
 
   it.effect(
     "never rejects by itself: only the array's own element and length checks still refuse a value",
     Effect.fnUntraced(function* () {
-      const exits = yield* Effect.all([
-        Effect.exit(S.decodeEffect(Hinted)(["a", "b", "c", "d"])),
-        Effect.exit(S.decodeEffect(HintedNonEmpty)(["a", "b", "c", "d"])),
-        // Refused by the element schema, not by the hint.
-        Effect.exit(S.decodeUnknownEffect(Hinted)(["a", 2])),
-        Effect.exit(S.decodeUnknownEffect(Hinted)("abc")),
-        // Refused by the real minimum-length check that sits beside the hint.
-        Effect.exit(S.decodeEffect(HintedNonEmpty)([])),
-      ], { concurrency: 1 });
+      const exits = yield* Effect.all(
+        [
+          Effect.exit(S.decodeEffect(Hinted)(["a", "b", "c", "d"])),
+          Effect.exit(S.decodeEffect(HintedNonEmpty)(["a", "b", "c", "d"])),
+          // Refused by the element schema, not by the hint.
+          Effect.exit(S.decodeUnknownEffect(Hinted)(["a", 2])),
+          Effect.exit(S.decodeUnknownEffect(Hinted)("abc")),
+          // Refused by the real minimum-length check that sits beside the hint.
+          Effect.exit(S.decodeEffect(HintedNonEmpty)([])),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(A.map(exits, Exit.isSuccess), [true, true, false, false, false]);
       assertFalse(S.is(HintedNonEmpty)([]));
       assertTrue(S.is(HintedNonEmpty)(A.makeBy(50, () => "x")));
@@ -99,9 +109,11 @@ describe("RecursiveArraySizeHint", () => {
   it.effect(
     "generates every length from zero through two, and nothing longer, across seeds",
     Effect.fnUntraced(function* () {
-      const samples = yield* Effect.forEach([1, 2, 3, 4, 5], (seed) =>
-        Arbitrary.sampleEffect(Arbitrary.schema(Hinted), { count: 200, seed })
-      , { concurrency: 1 });
+      const samples = yield* Effect.forEach(
+        [1, 2, 3, 4, 5],
+        (seed) => Arbitrary.sampleEffect(Arbitrary.schema(Hinted), { count: 200, seed }),
+        { concurrency: 1 }
+      );
       const all = A.flatten(samples);
       strictEqual(A.length(all), 1000);
       deepStrictEqual(lengths(all), [0, 1, 2]);
@@ -144,8 +156,9 @@ describe("RecursiveArraySizeHint", () => {
           const encoded = yield* S.encodeEffect(Tree)(tree);
           const decoded = yield* S.decodeEffect(Tree)(encoded);
           return S.toEquivalence(Tree)(decoded, tree);
-        })
-      , { concurrency: 1 });
+        }),
+        { concurrency: 1 }
+      );
       assertTrue(A.every(returned, identity));
     })
   );

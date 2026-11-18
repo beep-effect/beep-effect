@@ -829,7 +829,10 @@ describe("DatetimeFormat", () => {
     assertTrue(DatetimeFormat.guards.stringFormat(pattern));
     assertTrue(DatetimeFormat.guards.localizedFormat(preset));
     assertFalse(DatetimeFormat.guards.localizedFormat(pattern));
-    deepStrictEqual([describeFormat(pattern), describeFormat(preset)], ["pattern MMM d", "preset dateFormatIsoInstant"]);
+    deepStrictEqual(
+      [describeFormat(pattern), describeFormat(preset)],
+      ["pattern MMM d", "preset dateFormatIsoInstant"]
+    );
   });
 
   it("rejects the domain key on the wire, an unknown preset and an unknown format", () => {
@@ -952,7 +955,9 @@ describe("ValueFormat", () => {
     "date",
     ValueFormat,
     { type: "date", format: { type: "localizedFormat", format: "DATE_FORMAT_YEAR_AND_MONTH" } },
-    ValueFormat.cases.date.make({ format: DatetimeFormat.cases.localizedFormat.make({ preset: "dateFormatYearAndMonth" }) })
+    ValueFormat.cases.date.make({
+      format: DatetimeFormat.cases.localizedFormat.make({ preset: "dateFormatYearAndMonth" }),
+    })
   );
 
   wireFixture(

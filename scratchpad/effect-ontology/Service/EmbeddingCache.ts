@@ -69,7 +69,7 @@ export type Embedding = typeof Embedding.Type;
  */
 interface CacheEntry {
   readonly embedding: Embedding;
-  readonly createdAt: S.Natural;
+  readonly createdAt: number;
   readonly lastAccessedAt: number;
 }
 

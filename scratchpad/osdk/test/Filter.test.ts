@@ -734,7 +734,11 @@ describe("ObjectFilter wire fixtures", () => {
     {
       name: "startsWith with the phonetic analyzer",
       wire: { type: "startsWith", field: "fullName", analyzerSelection: "PHONETIC_ANALYZER", value: "jon" },
-      domain: StartsWith.make({ property: named("fullName"), value: "jon", analyzerSelection: O.some("phoneticAnalyzer") }),
+      domain: StartsWith.make({
+        property: named("fullName"),
+        value: "jon",
+        analyzerSelection: O.some("phoneticAnalyzer"),
+      }),
     },
     {
       name: "containsAnyTerm with fuzzy written out as false",
@@ -1514,8 +1518,9 @@ describe("the operand table and operandCodec", () => {
             admitted: operandsOf(type),
             strangers: A.filter(operands, (operand) => !A.contains(operandsOf(type), operandFamily(operand))),
           };
-        })
-      , { concurrency: 1 });
+        }),
+        { concurrency: 1 }
+      );
       strictEqual(A.length(rows), 22);
       deepStrictEqual(
         A.filter(rows, (row) => A.isReadonlyArrayNonEmpty(row.strangers)),
@@ -1560,8 +1565,9 @@ describe("the operand table and operandCodec", () => {
             missing: A.difference(allowedOperands[kind], readable),
             extra: A.difference(readable, allowedOperands[kind]),
           };
-        })
-      , { concurrency: 1 });
+        }),
+        { concurrency: 1 }
+      );
       strictEqual(A.length(rows), 12);
       deepStrictEqual(
         A.filter(rows, (row) => A.isReadonlyArrayNonEmpty(row.missing)),
@@ -1607,9 +1613,13 @@ describe("the operand table and operandCodec", () => {
               )
             )
           );
-        })
-      , { concurrency: 1 });
-      deepStrictEqual(verdicts, A.map(EquatableKind.literals, () => true));
+        }),
+        { concurrency: 1 }
+      );
+      deepStrictEqual(
+        verdicts,
+        A.map(EquatableKind.literals, () => true)
+      );
     })
   );
 });

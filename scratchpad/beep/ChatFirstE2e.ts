@@ -15,7 +15,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as S from "effect/Schema";
 import { atLeastCheck, betweenCheck, intAtLeast, intBetween, Model, pg } from "./Port.ts";
 
 const $I = $ScratchpadId.create("beep/ChatFirstE2e");

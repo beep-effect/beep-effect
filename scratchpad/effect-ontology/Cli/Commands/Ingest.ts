@@ -36,7 +36,7 @@ import {
   OntologyName,
   OntologyVersion,
 } from "../../Domain/Identity.ts";
-import type { ManifestDocument } from "../../Domain/Schema/Batch.ts";
+import { ManifestDocument } from "../../Domain/Schema/Batch.ts";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { ConfigService } from "../../Service/Config.ts";
 import { StorageService } from "../../Service/Storage.ts";
@@ -143,12 +143,12 @@ const docId = DocumentId.fromContentHash(ContentHash.make(yielded1));
           ? "text/markdown"
           : "text/plain";
     const sourceUri = yield* S.decodeUnknownEffect(GcsUri)(`gs://${bucket}/${storageKey}`);
-    documents.push({
+    documents.push(ManifestDocument.make({
       documentId: docId,
       sourceUri,
       contentType,
       sizeBytes: S.Natural.make(Number(stat.size)),
-    });
+    }));
     yield* Console.log(`  Uploaded: ${file} -> ${storageKey}`);
   }
   const ontologyContent = yield* fs.readFileString(ontology);

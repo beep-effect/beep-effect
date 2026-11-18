@@ -1,3 +1,4 @@
+import { ProviderMetadata } from "../Service/EmbeddingProvider.ts";
 /**
  * Composes a test runtime with mock extraction and language-model layers.
  *
@@ -232,7 +233,7 @@ return yield* S.decodeEffect(ShaclValidationReport)({
  *
  * @since 0.0.0
  */
-const MockEmbeddingProvider = Layer.succeed(EmbeddingProvider, {
+const MockEmbeddingProvider = Layer.succeed(EmbeddingProvider, ProviderMetadata.make({
   metadata: {
     providerId: "nomic",
     modelId: "test-model",
@@ -242,7 +243,7 @@ const MockEmbeddingProvider = Layer.succeed(EmbeddingProvider, {
     Effect.succeed(A.map(_requests, () => A.replicate(0, 768)))
   ),
   cosineSimilarity: (_a, _b) => 0,
-});
+}));
 
 /**
  * Test Layers

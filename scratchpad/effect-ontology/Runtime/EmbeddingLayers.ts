@@ -1,3 +1,4 @@
+import { EmbeddingRateLimiterConfig } from "../Service/EmbeddingRateLimiter.ts";
 /**
  * Embedding Layer Composition
  *
@@ -112,11 +113,11 @@ export const EmbeddingRateLimiterFromConfig: Layer.Layer<EmbeddingRateLimiter, n
     const { maxConcurrent, provider, rateLimitRpm } = config.embedding;
 
     // Use config values to create rate limiter
-    return makeEmbeddingRateLimiter({
+    return makeEmbeddingRateLimiter(EmbeddingRateLimiterConfig.make({
       provider,
       requestsPerMinute: rateLimitRpm,
       maxConcurrent,
-    });
+    }));
   })
 );
 

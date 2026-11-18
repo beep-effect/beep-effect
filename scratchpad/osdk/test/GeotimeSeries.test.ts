@@ -158,16 +158,22 @@ describe("GeotimeSeriesId and GeotimeSeriesIntegrationRid", () => {
     Effect.fnUntraced(function* () {
       // Wire brands are loose (C10): an identifier is non-empty text, whatever it looks like.
       const loose = yield* Effect.all(
-        A.map(["GeotimeSeriesReferencePlaceholder", " ", "a b", "ri.x"], (text) => S.decodeEffect(GeotimeSeriesId)(text))
-      , { concurrency: 1 });
+        A.map(["GeotimeSeriesReferencePlaceholder", " ", "a b", "ri.x"], (text) =>
+          S.decodeEffect(GeotimeSeriesId)(text)
+        ),
+        { concurrency: 1 }
+      );
       deepStrictEqual<ReadonlyArray<string>>(loose, ["GeotimeSeriesReferencePlaceholder", " ", "a b", "ri.x"]);
-      const verdicts = yield* Effect.all([
-        rejects(GeotimeSeriesId)(""),
-        rejects(GeotimeSeriesId)(7),
-        rejects(GeotimeSeriesId)(null),
-        rejects(GeotimeSeriesIntegrationRid)(""),
-        rejects(GeotimeSeriesIntegrationRid)({ rid: integrationText }),
-      ], { concurrency: 1 });
+      const verdicts = yield* Effect.all(
+        [
+          rejects(GeotimeSeriesId)(""),
+          rejects(GeotimeSeriesId)(7),
+          rejects(GeotimeSeriesId)(null),
+          rejects(GeotimeSeriesIntegrationRid)(""),
+          rejects(GeotimeSeriesIntegrationRid)({ rid: integrationText }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       assertNone(GeotimeSeriesId.makeOption(""));
       assertNone(GeotimeSeriesIntegrationRid.makeOption(""));
@@ -199,21 +205,27 @@ describe("GeotimeSeriesById", () => {
   it.effect(
     "rejects the empty string, non-strings and the domain record on the wire, and refuses to encode an empty id",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(GeotimeSeriesById)(""),
-        rejects(GeotimeSeriesById)(50030),
-        rejects(GeotimeSeriesById)(null),
-        rejects(GeotimeSeriesById)([seriesIdText]),
-        // The tagged record is the domain form; on the wire the reference is the bare string.
-        rejects(GeotimeSeriesById)({ type: "series", geotimeSeriesId: seriesIdText }),
-        rejects(GeotimeSeriesById)(integratedWire),
-        refusesToEncode(GeotimeSeriesById)({ type: "series", geotimeSeriesId: "" }),
-        refusesToEncode(GeotimeSeriesById)(seriesIdText),
-        refusesToEncode(GeotimeSeriesById)({ type: "integratedSeries", geotimeSeriesId: seriesIdText }),
-      ], { concurrency: 1 });
+      const verdicts = yield* Effect.all(
+        [
+          rejects(GeotimeSeriesById)(""),
+          rejects(GeotimeSeriesById)(50030),
+          rejects(GeotimeSeriesById)(null),
+          rejects(GeotimeSeriesById)([seriesIdText]),
+          // The tagged record is the domain form; on the wire the reference is the bare string.
+          rejects(GeotimeSeriesById)({ type: "series", geotimeSeriesId: seriesIdText }),
+          rejects(GeotimeSeriesById)(integratedWire),
+          refusesToEncode(GeotimeSeriesById)({ type: "series", geotimeSeriesId: "" }),
+          refusesToEncode(GeotimeSeriesById)(seriesIdText),
+          refusesToEncode(GeotimeSeriesById)({ type: "integratedSeries", geotimeSeriesId: seriesIdText }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       const isById = S.is(GeotimeSeriesById);
-      deepStrictEqual([isById(byId), isById(seriesIdText), isById(integrated), isById(resolved)], [true, false, false, false]);
+      deepStrictEqual(
+        [isById(byId), isById(seriesIdText), isById(integrated), isById(resolved)],
+        [true, false, false, false]
+      );
     })
   );
 });
@@ -249,26 +261,29 @@ describe("IntegratedGeotimeSeries", () => {
   it.effect(
     "rejects a missing or empty id or integration, the domain key on the wire and non-records",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(IntegratedGeotimeSeries)({ geotimeSeriesId: seriesIdText }),
-        rejects(IntegratedGeotimeSeries)({ geotimeSeriesIntegrationRid: integrationText }),
-        rejects(IntegratedGeotimeSeries)({ geotimeSeriesId: "", geotimeSeriesIntegrationRid: integrationText }),
-        rejects(IntegratedGeotimeSeries)({ geotimeSeriesId: seriesIdText, geotimeSeriesIntegrationRid: "" }),
-        rejects(IntegratedGeotimeSeries)({ geotimeSeriesId: seriesIdText, geotimeSeriesIntegrationRid: null }),
-        rejects(IntegratedGeotimeSeries)({ geotimeSeriesId: 50030, geotimeSeriesIntegrationRid: integrationText }),
-        // `sourceRid` is the domain key, not a wire key.
-        rejects(IntegratedGeotimeSeries)({ geotimeSeriesId: seriesIdText, sourceRid: integrationText }),
-        rejects(IntegratedGeotimeSeries)(seriesIdText),
-        rejects(IntegratedGeotimeSeries)(null),
-        rejects(IntegratedGeotimeSeries)([seriesIdText, integrationText]),
-        refusesToEncode(IntegratedGeotimeSeries)({ type: "integratedSeries", geotimeSeriesId: seriesIdText }),
-        refusesToEncode(IntegratedGeotimeSeries)({
-          type: "integratedSeries",
-          geotimeSeriesId: seriesIdText,
-          sourceRid: "",
-        }),
-        refusesToEncode(IntegratedGeotimeSeries)(integratedWire),
-      ], { concurrency: 1 });
+      const verdicts = yield* Effect.all(
+        [
+          rejects(IntegratedGeotimeSeries)({ geotimeSeriesId: seriesIdText }),
+          rejects(IntegratedGeotimeSeries)({ geotimeSeriesIntegrationRid: integrationText }),
+          rejects(IntegratedGeotimeSeries)({ geotimeSeriesId: "", geotimeSeriesIntegrationRid: integrationText }),
+          rejects(IntegratedGeotimeSeries)({ geotimeSeriesId: seriesIdText, geotimeSeriesIntegrationRid: "" }),
+          rejects(IntegratedGeotimeSeries)({ geotimeSeriesId: seriesIdText, geotimeSeriesIntegrationRid: null }),
+          rejects(IntegratedGeotimeSeries)({ geotimeSeriesId: 50030, geotimeSeriesIntegrationRid: integrationText }),
+          // `sourceRid` is the domain key, not a wire key.
+          rejects(IntegratedGeotimeSeries)({ geotimeSeriesId: seriesIdText, sourceRid: integrationText }),
+          rejects(IntegratedGeotimeSeries)(seriesIdText),
+          rejects(IntegratedGeotimeSeries)(null),
+          rejects(IntegratedGeotimeSeries)([seriesIdText, integrationText]),
+          refusesToEncode(IntegratedGeotimeSeries)({ type: "integratedSeries", geotimeSeriesId: seriesIdText }),
+          refusesToEncode(IntegratedGeotimeSeries)({
+            type: "integratedSeries",
+            geotimeSeriesId: seriesIdText,
+            sourceRid: "",
+          }),
+          refusesToEncode(IntegratedGeotimeSeries)(integratedWire),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -282,7 +297,12 @@ describe("GeotimeSeriesReference", () => {
   lawful("GeotimeSeriesReference", GeotimeSeriesReference);
 
   wireFixture("GeotimeSeriesReference by series id", GeotimeSeriesReference, byIdWire, byId);
-  wireFixture("GeotimeSeriesReference by series id and integration", GeotimeSeriesReference, integratedWire, integrated);
+  wireFixture(
+    "GeotimeSeriesReference by series id and integration",
+    GeotimeSeriesReference,
+    integratedWire,
+    integrated
+  );
   wireFixture("GeotimeSeriesReference resolved to its latest value", GeotimeSeriesReference, resolvedWire, resolved);
   wireFixture(
     "GeotimeSeriesReference resolved to a position with an altitude",
@@ -295,8 +315,9 @@ describe("GeotimeSeriesReference", () => {
     "decodes each wire shape to its own tagged case",
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.all(
-        A.map([byIdWire, integratedWire, resolvedWire], (wire) => S.decodeEffect(GeotimeSeriesReference)(wire))
-      , { concurrency: 1 });
+        A.map([byIdWire, integratedWire, resolvedWire], (wire) => S.decodeEffect(GeotimeSeriesReference)(wire)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(
         A.map(decoded, (reference) => reference.type),
         ["series", "integratedSeries", "geotimeSeriesValue"]
@@ -305,7 +326,10 @@ describe("GeotimeSeriesReference", () => {
         { type: "series", geotimeSeriesId: seriesIdText },
         { type: "integratedSeries", geotimeSeriesId: seriesIdText, sourceRid: integrationText },
       ]);
-      const encoded = yield* Effect.all(A.map(decoded, (reference) => S.encodeEffect(GeotimeSeriesReference)(reference)), { concurrency: 1 });
+      const encoded = yield* Effect.all(
+        A.map(decoded, (reference) => S.encodeEffect(GeotimeSeriesReference)(reference)),
+        { concurrency: 1 }
+      );
       deepStrictEqual<unknown>(encoded, [byIdWire, integratedWire, resolvedWire]);
     })
   );
@@ -322,7 +346,11 @@ describe("GeotimeSeriesReference", () => {
     const describeReference = GeotimeSeriesReference.match({
       series: ({ geotimeSeriesId }) => `series ${geotimeSeriesId}`,
       integratedSeries: ({ geotimeSeriesId, sourceRid: source }) => `series ${geotimeSeriesId} from ${source}`,
-      geotimeSeriesValue: ({ position, timestamp }) => `at ${A.join(A.map(position, (degrees) => `${degrees}`), ",")} on ${DateTime.formatIso(timestamp)}`,
+      geotimeSeriesValue: ({ position, timestamp }) =>
+        `at ${A.join(
+          A.map(position, (degrees) => `${degrees}`),
+          ","
+        )} on ${DateTime.formatIso(timestamp)}`,
     });
     deepStrictEqual(
       [
@@ -366,28 +394,43 @@ describe("GeotimeSeriesReference", () => {
   it.effect(
     "rejects whatever is none of the three wire shapes",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(GeotimeSeriesReference)(""),
-        rejects(GeotimeSeriesReference)(50030),
-        rejects(GeotimeSeriesReference)(true),
-        rejects(GeotimeSeriesReference)(null),
-        rejects(GeotimeSeriesReference)(undefined),
-        rejects(GeotimeSeriesReference)([seriesIdText]),
-        rejects(GeotimeSeriesReference)({}),
-        rejects(GeotimeSeriesReference)({ geotimeSeriesId: seriesIdText }),
-        rejects(GeotimeSeriesReference)({ geotimeSeriesId: "", geotimeSeriesIntegrationRid: integrationText }),
-        // The domain's tagged records are not wire shapes.
-        rejects(GeotimeSeriesReference)({ type: "series", geotimeSeriesId: seriesIdText }),
-        rejects(GeotimeSeriesReference)({ type: "integratedSeries", geotimeSeriesId: seriesIdText, sourceRid: integrationText }),
-        // A resolved value needs both its position and its timestamp.
-        rejects(GeotimeSeriesReference)({ type: "geotimeSeriesValue", position: [102.0, 0.5] }),
-        rejects(GeotimeSeriesReference)({ type: "geotimeSeriesValue", timestamp: "2021-01-04T05:00:00Z" }),
-        rejects(GeotimeSeriesReference)({ type: "geotimeSeriesValue", position: [102.0], timestamp: "2021-01-04T05:00:00Z" }),
-        rejects(GeotimeSeriesReference)({ type: "geotimeSeriesValue", position: [102.0, 0.5], timestamp: 1609736400000 }),
-        refusesToEncode(GeotimeSeriesReference)(byIdWire),
-        refusesToEncode(GeotimeSeriesReference)({ type: "series", geotimeSeriesId: "" }),
-        refusesToEncode(GeotimeSeriesReference)({ type: "seriesReference", geotimeSeriesId: seriesIdText }),
-      ], { concurrency: 1 });
+      const verdicts = yield* Effect.all(
+        [
+          rejects(GeotimeSeriesReference)(""),
+          rejects(GeotimeSeriesReference)(50030),
+          rejects(GeotimeSeriesReference)(true),
+          rejects(GeotimeSeriesReference)(null),
+          rejects(GeotimeSeriesReference)(undefined),
+          rejects(GeotimeSeriesReference)([seriesIdText]),
+          rejects(GeotimeSeriesReference)({}),
+          rejects(GeotimeSeriesReference)({ geotimeSeriesId: seriesIdText }),
+          rejects(GeotimeSeriesReference)({ geotimeSeriesId: "", geotimeSeriesIntegrationRid: integrationText }),
+          // The domain's tagged records are not wire shapes.
+          rejects(GeotimeSeriesReference)({ type: "series", geotimeSeriesId: seriesIdText }),
+          rejects(GeotimeSeriesReference)({
+            type: "integratedSeries",
+            geotimeSeriesId: seriesIdText,
+            sourceRid: integrationText,
+          }),
+          // A resolved value needs both its position and its timestamp.
+          rejects(GeotimeSeriesReference)({ type: "geotimeSeriesValue", position: [102.0, 0.5] }),
+          rejects(GeotimeSeriesReference)({ type: "geotimeSeriesValue", timestamp: "2021-01-04T05:00:00Z" }),
+          rejects(GeotimeSeriesReference)({
+            type: "geotimeSeriesValue",
+            position: [102.0],
+            timestamp: "2021-01-04T05:00:00Z",
+          }),
+          rejects(GeotimeSeriesReference)({
+            type: "geotimeSeriesValue",
+            position: [102.0, 0.5],
+            timestamp: 1609736400000,
+          }),
+          refusesToEncode(GeotimeSeriesReference)(byIdWire),
+          refusesToEncode(GeotimeSeriesReference)({ type: "series", geotimeSeriesId: "" }),
+          refusesToEncode(GeotimeSeriesReference)({ type: "seriesReference", geotimeSeriesId: seriesIdText }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -397,10 +440,21 @@ describe("GeotimeSeriesReference", () => {
   it.effect(
     "GeotimeSeriesReference: a resolved value rejects a timestamp that is not an ISO 8601 date-time",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(GeotimeSeriesReference)({ type: "geotimeSeriesValue", position: [102.0, 0.5], timestamp: "Jan 4 2021" }),
-        rejects(GeotimeSeriesReference)({ type: "geotimeSeriesValue", position: [102.0, 0.5], timestamp: "2021-01-04" }),
-      ], { concurrency: 1 });
+      const verdicts = yield* Effect.all(
+        [
+          rejects(GeotimeSeriesReference)({
+            type: "geotimeSeriesValue",
+            position: [102.0, 0.5],
+            timestamp: "Jan 4 2021",
+          }),
+          rejects(GeotimeSeriesReference)({
+            type: "geotimeSeriesValue",
+            position: [102.0, 0.5],
+            timestamp: "2021-01-04",
+          }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -433,8 +487,9 @@ describe("a geotimeSeriesReference property", () => {
           const encoded = yield* S.encodeUnknownEffect(codec)(projected);
           deepStrictEqual<unknown>(encoded, wire);
           return isReference(projected) && referenceEquivalence(projected, direct);
-        })
-      , { concurrency: 1 });
+        }),
+        { concurrency: 1 }
+      );
       deepStrictEqual(verdicts, [true, true, true, true]);
     })
   );
@@ -443,8 +498,9 @@ describe("a geotimeSeriesReference property", () => {
     "decodes to the tagged cases, so a caller can tell a reference from a resolved value",
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.all(
-        A.map([byIdWire, integratedWire, resolvedWire], (wire) => S.decodeEffect(codec)(wire))
-      , { concurrency: 1 });
+        A.map([byIdWire, integratedWire, resolvedWire], (wire) => S.decodeEffect(codec)(wire)),
+        { concurrency: 1 }
+      );
       const references = A.filter(decoded, isReference);
       strictEqual(A.length(references), 3);
       deepStrictEqual(
@@ -453,7 +509,11 @@ describe("a geotimeSeriesReference property", () => {
           GeotimeSeriesReference.match({
             series: () => "no latest value yet",
             integratedSeries: () => "no latest value yet",
-            geotimeSeriesValue: ({ position }) => `latest at ${A.join(A.map(position, (degrees) => `${degrees}`), ",")}`,
+            geotimeSeriesValue: ({ position }) =>
+              `latest at ${A.join(
+                A.map(position, (degrees) => `${degrees}`),
+                ","
+              )}`,
           })
         ),
         ["no latest value yet", "no latest value yet", "latest at 102,0.5"]
@@ -472,8 +532,9 @@ describe("a geotimeSeriesReference property", () => {
           const encoded = yield* S.encodeUnknownEffect(codec)(sample);
           const decoded = yield* S.decodeUnknownEffect(codec)(encoded);
           return S.toEquivalence(codec)(decoded, sample);
-        })
-      , { concurrency: 1 });
+        }),
+        { concurrency: 1 }
+      );
       assertTrue(A.every(returned, identity));
     })
   );
@@ -481,15 +542,18 @@ describe("a geotimeSeriesReference property", () => {
   it.effect(
     "rejects what is none of the three wire shapes, through valueCodec too",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(codec)(""),
-        rejects(codec)(7),
-        rejects(codec)(null),
-        rejects(codec)([seriesIdText]),
-        rejects(codec)({ geotimeSeriesId: seriesIdText }),
-        rejects(codec)({ type: "geotimeSeriesValue", position: [102.0, 0.5] }),
-        rejects(codec)({ type: "series", geotimeSeriesId: seriesIdText }),
-      ], { concurrency: 1 });
+      const verdicts = yield* Effect.all(
+        [
+          rejects(codec)(""),
+          rejects(codec)(7),
+          rejects(codec)(null),
+          rejects(codec)([seriesIdText]),
+          rejects(codec)({ geotimeSeriesId: seriesIdText }),
+          rejects(codec)({ type: "geotimeSeriesValue", position: [102.0, 0.5] }),
+          rejects(codec)({ type: "series", geotimeSeriesId: seriesIdText }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -518,8 +582,9 @@ describe("a geotimeSeriesReference property", () => {
         ]
       );
       const encoded = yield* Effect.all(
-        A.map([absent, present, presentIntegrated], (row) => S.encodeUnknownEffect(Row)(row))
-      , { concurrency: 1 });
+        A.map([absent, present, presentIntegrated], (row) => S.encodeUnknownEffect(Row)(row)),
+        { concurrency: 1 }
+      );
       deepStrictEqual<unknown>(encoded, [{}, { employeeLocation: byIdWire }, { employeeLocation: integratedWire }]);
       const refused = yield* rejects(Row)({ employeeLocation: "" });
       assertTrue(refused);

@@ -13,7 +13,9 @@
  *
  * @since 0.0.0
  */
-import { createHash } from "node:crypto";
+import * as Hex from "effect/encoding/Hex";
+import * as Result from "effect/Result";
+import { sha256 as sha256Bytes } from "@noble/hashes/sha2.js";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Arr from "effect/Array";
@@ -450,9 +452,9 @@ export declare namespace QuestionCardSpec {
  * @since 0.0.0
  */
 export const questionCardIssue = (spec: QuestionCardSpec): O.Option<string> => {
-  const ids = spec.options.map((option) => option.optionId);
+  const ids = Arr.map(spec.options, (option) => option.optionId);
   if (HashSet.size(HashSet.fromIterable(ids)) !== ids.length) return O.some("question option ids must be unique");
-  const deferCount = spec.options.filter((option) => option.defer).length;
+  const deferCount = Arr.filter(spec.options, (option) => option.defer).length;
   if (deferCount > 1) return O.some("at most one question option may defer");
   const cold = spec.subject.kind === "cold_start";
   if (cold !== O.isSome(spec.coldStartSequence)) {
@@ -873,7 +875,7 @@ export const ChatFirstLegacyBlockSpec = ChatFirstLegacyBlockKind.mapMembers(
 ).pipe(S.toTaggedUnion("type"), $I.annoteSchema("ChatFirstLegacyBlockSpec", { description: "Legacy chat-first block." }));
 
 const stripNulls = (value: unknown): unknown => {
-  if (Arr.isArray(value)) return value.map(stripNulls);
+  if (Arr.isArray(value)) return Arr.map(value, stripNulls);
   if (!isRecord(value)) return value;
   const out: { [key: string]: unknown } = {};
   for (const key of R.keys(value)) {
@@ -910,10 +912,7 @@ export const stableBlockId = (input: {
   readonly block: typeof ChatFirstJournalBlockSpec.Type;
 }): string => {
   const encoded = stripNulls(input.block);
-  const digest = createHash("sha256")
-    .update(`${input.uid}:${input.generation}:${JSON.stringify(encoded)}`)
-    .digest("hex")
-    .slice(0, 24);
+  const digest = Str.slice(0, 24)(Hex.encode(sha256Bytes(new TextEncoder().encode(`${input.uid}:${input.generation}:${S.encodeUnknownResult(S.fromJsonString(S.Unknown))(encoded).pipe(Result.getOrThrow)}`))));
   return `cfb_${digest}`;
 };
 
@@ -1133,7 +1132,7 @@ export declare namespace ChatFirstReceiptsRequest {
  * @since 0.0.0
  */
 export const receiptsRequestIssue = (request: ChatFirstReceiptsRequest): O.Option<string> => {
-  const ids = request.receipts.map((receipt) => receipt.blockId);
+  const ids = Arr.map(request.receipts, (receipt) => receipt.blockId);
   if (HashSet.size(HashSet.fromIterable(ids)) !== ids.length) return O.some("receipt block ids must be unique");
   return Arr.findFirst(request.receipts, (receipt) => O.isSome(receiptRequestIssue(receipt))).pipe(
     O.flatMap(receiptRequestIssue),
@@ -1544,9 +1543,8 @@ export declare namespace MaterializePromptsResponse {
  */
 export const narrowInternalIntentsForWire = (response: MaterializePromptsResponse): MaterializePromptsResponse =>
   MaterializePromptsResponse.make({
-    intents: response.intents.map((intent) =>
-      ProactiveIntent.make({ ...intent, firstDeferredAt: O.none(), lastDeferralAt: O.none() }),
-    ),
+    intents: Arr.map(response.intents, (intent) =>
+      ProactiveIntent.make({ ...intent, firstDeferredAt: O.none(), lastDeferralAt: O.none() })),
   });
 
 /**

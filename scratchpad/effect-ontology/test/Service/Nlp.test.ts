@@ -72,7 +72,7 @@ describe("NlpService canonical Wink adapter", () => {
         });
 
         assert.deepEqual(
-          chunks.map((chunk) => Str.slice(chunk.startOffset, chunk.endOffset)(text)),
+          A.map(chunks, (chunk) => Str.slice(chunk.startOffset, chunk.endOffset)(text)),
           A.map(chunks, (chunk) => chunk.text)
         );
         assert.isTrue(A.every(chunks, (chunk) => chunk.text.length <= 9));

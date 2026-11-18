@@ -24,6 +24,7 @@ const program = Effect.fn("renderPandocJson")(function* () {
   yield* Effect.log(`pandoc mapping profile: ${report.profile} (${report.issues.length} issues)`);
   yield* Effect.forEach(report.issues, (issue) => Effect.logWarning(`${issue.severity}: ${issue.message}`), {
     discard: true,
+    concurrency: 1,
   });
   yield* Effect.log(`pandoc document has ${A.length(pandoc.blocks)} blocks`);
   const json = yield* serializePandoc(pandoc);

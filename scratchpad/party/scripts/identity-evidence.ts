@@ -87,7 +87,6 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
-import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -118,23 +117,25 @@ const WorkflowInput = S.Struct({
 }).pipe(
   $I.annoteSchema("WorkflowInput", {
     description: "Explicit files and review validity for the local identity workflow.",
-  })
+  }),
 );
 type WorkflowInput = typeof WorkflowInput.Type;
 class WorkflowError extends S.TaggedError<WorkflowError, { readonly brand: unique symbol }>($I`WorkflowError`)(
   "WorkflowError",
   { reason: S.NonEmptyString },
-  $I.annoteError<WorkflowError>("WorkflowError", { description: "Invalid workflow options without source payload." })
+  $I.annoteError<WorkflowError>("WorkflowError", { description: "Invalid workflow options without source payload." }),
 ) {}
 const countBy = <Value>(values: ReadonlyArray<Value>, key: (value: Value) => string) =>
   R.map(A.groupBy(values, key), A.length);
 const readJsonl = Effect.fn("identity-evidence.readJsonl")(function* <Value>(
   fs: FileSystem.FileSystem,
   path: string,
-  decode: (line: string) => Effect.Effect<Value, S.SchemaError>
+  decode: (line: string) => Effect.Effect<Value, S.SchemaError>,
 ) {
   const text = yield* fs.readFileString(path);
-  return yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) => Effect.option(decode(line)));
+  return yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) => Effect.option(decode(line)), {
+    concurrency: 1,
+  });
 });
 
 const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
@@ -143,7 +144,13 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
   const now = yield* DateTime.now;
   const scope = ResolutionScope.make({ asOf: now, validAt: now });
   const country = yield* S.decodeUnknownEffect(S.toType(PhoneNumberInput.fields.country))(args.country);
-  const filter = args.filter === "-" ? O.none() : O.some(yield* Effect.try(() => new RegExp(args.filter, "i")));
+  const filter =
+    args.filter === "-"
+      ? O.none()
+      : yield* Effect.try({
+          try: () => new RegExp(args.filter, "i"),
+          catch: () => WorkflowError.make({ reason: "invalid filter regular expression" }),
+        }).pipe(Effect.asSome);
   if (O.isSome(args.reviewValidTo) && O.isNone(args.reviewValidFrom))
     return yield* WorkflowError.make({ reason: "review-valid-to requires review-valid-from" });
   const pageValidity = yield* O.match(args.reviewValidFrom, {
@@ -163,7 +170,7 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
       Stream.splitLines,
       Stream.filter(
         (line) =>
-          Str.isNonEmpty(line) && O.match(filter, { onNone: () => true, onSome: (pattern) => pattern.test(line) })
+          Str.isNonEmpty(line) && O.match(filter, { onNone: () => true, onSome: (pattern) => pattern.test(line) }),
       ),
       Stream.runForEach((line) =>
         decodeMail(line).pipe(
@@ -180,7 +187,7 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
                   side: "client-file",
                   producedBy: mailActivity,
                   observedAt: now,
-                })
+                }),
               );
               census = observe(census, ingest);
               A.forEach(ingest.identifiers, (value) => {
@@ -190,9 +197,9 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
                 mailAssertions = HashMap.set(mailAssertions, value.id, value);
               });
             }),
-          })
-        )
-      )
+          }),
+        ),
+      ),
     );
   }
   const supports = pairingSupport(census);
@@ -201,17 +208,17 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
   const linkCards = yield* readJsonl(
     fs,
     args.practiceLinks,
-    S.decodeUnknownEffect(S.fromJsonString(LegacyContactKgRow))
+    S.decodeUnknownEffect(S.fromJsonString(LegacyContactKgRow)),
   );
   const cards = [
     ...A.map(A.getSomes(graphCards), (contact) =>
-      adaptGraphContact(GraphContactInput.make({ contact, sourceNamespace: "graph-export", country }))
+      adaptGraphContact(GraphContactInput.make({ contact, sourceNamespace: "graph-export", country })),
     ),
     ...A.map(A.getSomes(practiceCards), (contact) =>
-      adaptPracticeContact(PracticeContactInput.make({ contact, sourceNamespace: "practice-contacts" }))
+      adaptPracticeContact(PracticeContactInput.make({ contact, sourceNamespace: "practice-contacts" })),
     ),
     ...A.map(A.getSomes(linkCards), (contact) =>
-      adaptPracticeContact(PracticeContactInput.make({ contact, sourceNamespace: "contacts-kg-legacy" }))
+      adaptPracticeContact(PracticeContactInput.make({ contact, sourceNamespace: "contacts-kg-legacy" })),
     ),
   ];
   const sourced = yield* Effect.forEach(
@@ -221,7 +228,8 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
         source: card.sourceNamespace,
         ingest: yield* ingestContact(ContactIngestInput.make({ card, activity: contactActivity, recordedAt: now })),
       };
-    })
+    }),
+    { concurrency: 1 },
   );
   const ingests = A.map(sourced, (row) => row.ingest);
   const assertions = A.flatMap(ingests, (ingest) => ingest.assertions);
@@ -234,18 +242,18 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
           onNone: (): CardIdentifier["kind"] => "other",
           onSome: (row): CardIdentifier["kind"] =>
             row.value._tag === "EmailAddress" || row.value._tag === "PhoneNumber" ? row.value._tag : "other",
-        }
+        },
       );
       return [CardIdentifier.make({ identifier: proposition.identifier, card: proposition.party, source, kind })];
-    })
+    }),
   );
   const sharedIdentifiers = HashSet.fromIterable(
     A.flatMap(ingests, (ingest) =>
       A.map(
         A.filter(ingest.identifiers, (row) => row.represents),
-        (row) => row.id
-      )
-    )
+        (row) => row.id,
+      ),
+    ),
   );
   const proposals = cardMergeProposals(A.filter(cardRows, (row) => !HashSet.has(sharedIdentifiers, row.identifier)));
   const absent = EvidenceSignals.fields.sourceTrust.cases.Absent.make({ reason: "not-assessed" });
@@ -263,9 +271,9 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
         (assertion) =>
           Proposition.guards.IdentifierOf(assertion.proposition) &&
           assertion.proposition.identifier === identifier &&
-          (assertion.proposition.party === left || assertion.proposition.party === right)
+          (assertion.proposition.party === left || assertion.proposition.party === right),
       ),
-      (assertion) => assertion.id
+      (assertion) => assertion.id,
     );
     if (!A.isArrayNonEmpty(supportedBy)) return [];
     const proposition = Proposition.cases.SameParty.make({ left, right });
@@ -273,7 +281,7 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
     return [
       ClaimVersion.make({
         id: ClaimVersionId.make(
-          `party-cv:same-card:${encodeURIComponent(identifier)}:${encodeURIComponent(key)}:${DateTime.toEpochMillis(now)}`
+          `party-cv:same-card:${encodeURIComponent(identifier)}:${encodeURIComponent(key)}:${DateTime.toEpochMillis(now)}`,
         ),
         proposition,
         logicalKey: key,
@@ -295,24 +303,24 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
       {
         onNone: () => party,
         onSome: (row) => row.survivor,
-      }
+      },
     );
   const contactsOf = A.reduce(cardRows, HashMap.empty<IdentifierId, HashSet.HashSet<PartyId>>(), (map, row) =>
     HashMap.set(
       map,
       row.identifier,
-      HashSet.add(O.getOrElse(HashMap.get(map, row.identifier), HashSet.empty<PartyId>), representative(row.card))
-    )
+      HashSet.add(O.getOrElse(HashMap.get(map, row.identifier), HashSet.empty<PartyId>), representative(row.card)),
+    ),
   );
   const mailIdentifiers = pipe(census.identifierKinds, HashMap.keys, A.fromIterable);
   const clusters = mailboxClusters(MailboxClusterInput.make({ identifiers: mailIdentifiers, supports }));
   const collisions = resolveCollisions(
-    CollisionInput.make({ identifiersByName: identifiersByName(census), clusters, contactsOf })
+    CollisionInput.make({ identifiersByName: identifiersByName(census), clusters, contactsOf }),
   );
   const queue = A.filter(
     collisions,
     (row) =>
-      row.outcome === "unresolved" || row.outcome === "partially-resolved" || row.outcome === "conflicting-contacts"
+      row.outcome === "unresolved" || row.outcome === "partially-resolved" || row.outcome === "conflicting-contacts",
   );
   const mailboxEvidence = Effect.fn("identity-evidence.mailboxEvidence")(function* (ids: ReadonlyArray<IdentifierId>) {
     const domains = yield* Effect.forEach(
@@ -322,24 +330,26 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
         return O.isSome(row) && S.is(EmailAddress)(row.value.value)
           ? yield* organizationDomain(row.value.value.normalized)
           : O.none();
-      })
+      }),
+      { concurrency: 1 },
     );
     const spans = A.flatMap(ids, (id) => O.toArray(HashMap.get(census.identifierSpans, id)));
     const bounds = A.sort(
       A.flatMap(spans, (span) => [DateTime.toEpochMillis(span.first), DateTime.toEpochMillis(span.last)]),
-      Order.Number
+      Order.Number,
     );
     const span = O.map(O.all([A.head(bounds), A.last(bounds)]), ([first, last]) =>
-      ObservedSpan.make({ first: DateTime.makeUnsafe(first), last: DateTime.makeUnsafe(last) })
+      ObservedSpan.make({ first: DateTime.makeUnsafe(first), last: DateTime.makeUnsafe(last) }),
     );
     return MailboxEvidence.make({ domains: HashSet.fromIterable(A.getSomes(domains)), span });
   });
   const leads = yield* Effect.forEach(
     queue,
     Effect.fn("identity-evidence.lead")(function* (collision) {
-      const evidence = yield* Effect.forEach(collision.mailboxes, mailboxEvidence);
+      const evidence = yield* Effect.forEach(collision.mailboxes, mailboxEvidence, { concurrency: 1 });
       return { collision, shape: nameShape(collision.name), orgLead: classifyByOrganization(evidence) };
-    })
+    }),
+    { concurrency: 1 },
   );
   const cases = yield* Effect.forEach(
     A.filter(leads, (lead) => lead.shape === "full-name"),
@@ -354,7 +364,8 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
             domains: A.sort(A.fromIterable(evidence.domains), Order.String),
             span: evidence.span,
           });
-        })
+        }),
+        { concurrency: 1 },
       );
       const evidence = yield* S.decodeUnknownEffect(S.toType(CaseEvidence))({
         name: lead.collision.name,
@@ -364,7 +375,8 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
         mailboxes,
       });
       return yield* sealCase(evidence);
-    })
+    }),
+    { concurrency: 1 },
   );
   const decisionsPath = `${args.outDir}/review-decisions.jsonl`;
   const rawDecisions = (yield* fs.exists(decisionsPath))
@@ -392,10 +404,11 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
               occurrence: OccurrenceId.make(`party-occ:review-export:${encodeURIComponent(decisionsPath)}`),
               rowKey: `record:${index + 1}`,
             }),
-          })
-        )
+          }),
+        ),
       );
-    })
+    }),
+    { concurrency: 1 },
   );
   const decisions = A.getSomes(decisionOptions);
   const reviewed = yield* applyReviews(ReviewInput.make({ cases, decisions, scope }));
@@ -405,16 +418,18 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
   const reviewAssertions = A.flatMap(reviewed, (row) => row.evidence.assertions);
   const allAssertions = A.dedupeWith(
     A.appendAll(A.appendAll(pipe(mailAssertions, HashMap.values, A.fromIterable), assertions), reviewAssertions),
-    (left: SourceAssertion, right: SourceAssertion) => left.id === right.id
+    (left: SourceAssertion, right: SourceAssertion) => left.id === right.id,
   );
   const writeClaims = Effect.fn("identity-evidence.writeClaims")(function* (
     name: string,
-    values: ReadonlyArray<ClaimVersion>
+    values: ReadonlyArray<ClaimVersion>,
   ) {
-    const lines = yield* Effect.forEach(values, (value) => S.encodeEffect(S.fromJsonString(ClaimVersion))(value));
+    const lines = yield* Effect.forEach(values, (value) => S.encodeEffect(S.fromJsonString(ClaimVersion))(value), {
+      concurrency: 1,
+    });
     yield* fs.writeFileString(
       `${args.outDir}/${name}`,
-      A.isReadonlyArrayEmpty(lines) ? "" : `${A.join(lines, "\n")}\n`
+      A.isReadonlyArrayEmpty(lines) ? "" : `${A.join(lines, "\n")}\n`,
     );
   });
   yield* fs.makeDirectory(args.outDir, { recursive: true });
@@ -422,23 +437,27 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
   yield* writeClaims("contact-claims.jsonl", snapshot.versions);
   yield* writeClaims("card-merge-proposals.jsonl", sameCardProposals);
   yield* writeClaims("review-claims.jsonl", reviewClaims);
-  const assertionLines = yield* Effect.forEach(allAssertions, (value) =>
-    S.encodeEffect(S.fromJsonString(SourceAssertion))(value)
+  const assertionLines = yield* Effect.forEach(
+    allAssertions,
+    (value) => S.encodeEffect(S.fromJsonString(SourceAssertion))(value),
+    { concurrency: 1 },
   );
   yield* fs.writeFileString(
     `${args.outDir}/source-assertions.jsonl`,
-    A.isReadonlyArrayEmpty(assertionLines) ? "" : `${A.join(assertionLines, "\n")}\n`
+    A.isReadonlyArrayEmpty(assertionLines) ? "" : `${A.join(assertionLines, "\n")}\n`,
   );
-  const caseLines = yield* Effect.forEach(cases, (value) => S.encodeEffect(S.fromJsonString(CollisionCase))(value));
+  const caseLines = yield* Effect.forEach(cases, (value) => S.encodeEffect(S.fromJsonString(CollisionCase))(value), {
+    concurrency: 1,
+  });
   yield* fs.writeFileString(
     `${args.outDir}/review-cases.jsonl`,
-    A.isReadonlyArrayEmpty(caseLines) ? "" : `${A.join(caseLines, "\n")}\n`
+    A.isReadonlyArrayEmpty(caseLines) ? "" : `${A.join(caseLines, "\n")}\n`,
   );
   const pageJson = yield* encodeReviewPageCases(
     ReviewPageInput.make({
       cases: A.map(open, (row) => row.case),
       identifiers: pipe(mailValues, HashMap.values, A.fromIterable),
-    })
+    }),
   );
   yield* fs.writeFileString(`${args.outDir}/review.html`, renderReviewPage(pageJson));
   const mailIdentifierSet = HashSet.fromIterable(mailIdentifiers);
@@ -449,7 +468,7 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
     pairingClaims: {
       claims: A.length(claims),
       messagesPerPair: countBy(supports, (support) =>
-        support.messages === 1 ? "1" : support.messages < 5 ? "2-4" : support.messages < 20 ? "5-19" : "20+"
+        support.messages === 1 ? "1" : support.messages < 5 ? "2-4" : support.messages < 20 ? "5-19" : "20+",
       ),
       observedSpan: countBy(supports, (support) => observedSpan(support)._tag),
     },
@@ -465,23 +484,23 @@ const program = Effect.fn("identity-evidence")(function* (args: WorkflowInput) {
         A.groupBy(parties, (party): string => `${representative(party.id)}`),
         R.values,
         A.map(A.length),
-        (sizes) => countBy(sizes, (size) => (size === 1 ? "1" : size === 2 ? "2" : size === 3 ? "3" : "4+"))
+        (sizes) => countBy(sizes, (size) => (size === 1 ? "1" : size === 2 ? "2" : size === 3 ? "3" : "4+")),
       ),
       clientContactRoles: countBy(
         A.flatMap(assertions, (assertion) =>
           Proposition.guards.ContextRole(assertion.proposition)
             ? A.flatMap(assertion.anchors, (anchor) =>
-                S.is(RecordRow)(anchor) ? [Str.split(anchor.rowKey, "#link:")[1] ?? "unknown"] : []
+                S.is(RecordRow)(anchor) ? [Str.split(anchor.rowKey, "#link:")[1] ?? "unknown"] : [],
               )
-            : []
+            : [],
         ),
-        (value) => value
+        (value) => value,
       ),
       partiesByKind: countBy(parties, (party) => party._tag),
       assertions: countBy(assertions, (assertion) =>
         Proposition.guards.IdentifierOf(assertion.proposition)
           ? `IdentifierOf:${assertion.proposition.relation}`
-          : assertion.proposition._tag
+          : assertion.proposition._tag,
       ),
       sameCardProposals: A.length(sameCardProposals),
       cardClustersAfterReconciliation: A.length(A.dedupe(A.map(parties, (party) => representative(party.id)))),
@@ -519,10 +538,9 @@ const command = Command.make(
     reviewValidFrom: Flag.Int("review-valid-from").pipe(Flag.optional),
     reviewValidTo: Flag.Int("review-valid-to").pipe(Flag.optional),
   },
-  (args) => program(args)
+  (args) => program(args),
 );
 Command.run(command, { version: "0.0.0" }).pipe(
-  // @effect-diagnostics-next-line strictEffectProvide:off -- platform and memory ledger are provided once at the script entry point. Owner: @beep/scratchpad. Exit: never while this is a Bun entry script.
-  Effect.provide(Layer.mergeAll(BunServices.layer, PartyLedgerMemory)),
-  BunRuntime.runMain
+  Effect.provide([BunServices.layer, PartyLedgerMemory]),
+  BunRuntime.runMain,
 );

@@ -9,7 +9,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as S from "effect/Schema";
 import { Model, optionalText, optionalTimestamp, optionalUserId, pg, text, timestamp } from "./Kit.ts";
 
 const $I = $ScratchpadId.create("beep/Task");

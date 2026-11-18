@@ -460,7 +460,7 @@ return yield* decodeClaimRows(yielded2);
      */
     const getClaimsByArticle: ClaimRepositoryShape["getClaimsByArticle"] = dual(
       2,
-      (articleId: ArticleId, ontologyId: string) => getClaims({ articleId, ontologyId, includeDeprecated: false })
+      (articleId: ArticleId, ontologyId: string) => getClaims(ClaimFilter.make({ articleId, ontologyId, includeDeprecated: false }))
     );
 
     /**
@@ -468,7 +468,7 @@ return yield* decodeClaimRows(yielded2);
      */
     const getClaimsBySubject: ClaimRepositoryShape["getClaimsBySubject"] = dual(
       2,
-      (subjectIri: string, ontologyId: string) => getClaims({ subjectIri, ontologyId, includeDeprecated: false })
+      (subjectIri: string, ontologyId: string) => getClaims(ClaimFilter.make({ subjectIri, ontologyId, includeDeprecated: false }))
     );
 
     /**
@@ -477,7 +477,7 @@ return yield* decodeClaimRows(yielded2);
     const getPreferredClaims: ClaimRepositoryShape["getPreferredClaims"] = dual(
       (args) => args.length >= 2,
       (subjectIri: string, predicateIri: string, ontologyId: string) =>
-        getClaims({ subjectIri, predicateIri, ontologyId, rank: "preferred" })
+        getClaims(ClaimFilter.make({ subjectIri, predicateIri, ontologyId, rank: "preferred" }))
     );
 
     /**
@@ -486,7 +486,7 @@ return yield* decodeClaimRows(yielded2);
     const getClaimHistory: ClaimRepositoryShape["getClaimHistory"] = dual(
       3,
       (subjectIri: string, predicateIri: string, ontologyId: string) =>
-        getClaims({ subjectIri, predicateIri, ontologyId, includeDeprecated: true })
+        getClaims(ClaimFilter.make({ subjectIri, predicateIri, ontologyId, includeDeprecated: true }))
     );
 
     // -------------------------------------------------------------------------

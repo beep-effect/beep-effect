@@ -9,7 +9,8 @@
  *
  * @since 0.0.0
  */
-import { createHash } from "node:crypto";
+import * as Hex from "effect/encoding/Hex";
+import { sha256 as sha256Bytes } from "@noble/hashes/sha2.js";
 import { sql } from "drizzle-orm";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -109,7 +110,7 @@ const jsonString = (value: string): string => {
   const codes: Array<number> = [];
   let index = 0;
   while (index < value.length) {
-    const code = value.codePointAt(index);
+    const code = O.getOrElse(Str.codePointAt(index)(value), () => undefined);
     if (Predicate.isUndefined(code)) break;
     codes.push(code);
     index = index + (code > 65535 ? 2 : 1);
@@ -848,7 +849,7 @@ export const deterministicContractId: {
 } = dual(
   2,
   (namespace: string, payload: S.JsonObject): string =>
-    createHash("sha256").update(`${namespace}|${canonicalJson(payload)}`, "utf8").digest("hex"),
+    Hex.encode(sha256Bytes(new TextEncoder().encode(`${namespace}|${canonicalJson(payload)}`))),
 );
 
 /**

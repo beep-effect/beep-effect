@@ -27,7 +27,7 @@ const PageMailbox = S.Struct({
   firstSeen: S.OptionFromNullOr(S.DateTimeUtcFromString),
   lastSeen: S.OptionFromNullOr(S.DateTimeUtcFromString),
 }).pipe(
-  $I.annoteSchema("PageMailbox", { description: "Presentation-only mailbox with readable addresses and ISO dates." })
+  $I.annoteSchema("PageMailbox", { description: "Presentation-only mailbox with readable addresses and ISO dates." }),
 );
 const PageCase = S.Struct({
   name: S.String,
@@ -37,7 +37,7 @@ const PageCase = S.Struct({
   mailboxes: S.Array(PageMailbox),
   basis: Digest,
 }).pipe(
-  $I.annoteSchema("PageCase", { description: "Existing review-page JSON shape bound to a graduated evidence basis." })
+  $I.annoteSchema("PageCase", { description: "Existing review-page JSON shape bound to a graduated evidence basis." }),
 );
 
 /**
@@ -53,8 +53,8 @@ const PageCase = S.Struct({
  */
 export class ReviewPageInput extends S.Opaque<ReviewPageInput, { readonly brand: unique symbol }>()(
   S.Struct({ cases: S.Array(CollisionCase), identifiers: S.Array(IngestIdentifier) }).pipe(
-    $I.annoteSchema("ReviewPageInput", { description: "Cases and validated display-identifier evidence." })
-  )
+    $I.annoteSchema("ReviewPageInput", { description: "Cases and validated display-identifier evidence." }),
+  ),
 ) {}
 
 /**
@@ -68,13 +68,13 @@ export class ReviewPageInput extends S.Opaque<ReviewPageInput, { readonly brand:
  * @since 0.0.0
  */
 export class ReviewPageBindingError extends S.TaggedError<ReviewPageBindingError, { readonly brand: unique symbol }>(
-  $I`ReviewPageBindingError`
+  $I`ReviewPageBindingError`,
 )(
   "ReviewPageBindingError",
   { reason: S.Literals(["missing-identifier", "mismatched-identifier"]) },
   $I.annoteError<ReviewPageBindingError>("ReviewPageBindingError", {
     description: "Readable identifier does not match the sealed canonical reference.",
-  })
+  }),
 ) {}
 
 /**
@@ -101,19 +101,23 @@ export const encodeReviewPageCases = Effect.fn("ReviewPageAdapter.encode")(funct
           ? `ident:x500:${encodeURIComponent(row.value.normalized)}`
           : encodeURIComponent(row.id);
       labels = HashMap.set(labels, row.id, label);
-    })
-  , { concurrency: 1 });
+    }),
+    { concurrency: 1 },
+  );
   const cases = yield* Effect.forEach(
     input.cases,
     Effect.fn("ReviewPageAdapter.case")(function* (current) {
       const mailboxes = yield* Effect.forEach(
         current.evidence.mailboxes,
         Effect.fn("ReviewPageAdapter.mailbox")(function* (mailbox) {
-          const identifiers = yield* Effect.forEach(mailbox.identifiers, (id) =>
-            Effect.fromOption(HashMap.get(labels, id)).pipe(
-              Effect.mapError(() => ReviewPageBindingError.make({ reason: "missing-identifier" }))
-            )
-          , { concurrency: 1 });
+          const identifiers = yield* Effect.forEach(
+            mailbox.identifiers,
+            (id) =>
+              Effect.fromOption(HashMap.get(labels, id)).pipe(
+                Effect.mapError(() => ReviewPageBindingError.make({ reason: "missing-identifier" })),
+              ),
+            { concurrency: 1 },
+          );
           return PageMailbox.make({
             party: mailbox.party,
             identifiers,
@@ -121,11 +125,13 @@ export const encodeReviewPageCases = Effect.fn("ReviewPageAdapter.encode")(funct
             firstSeen: O.map(mailbox.span, (span) => span.first),
             lastSeen: O.map(mailbox.span, (span) => span.last),
           });
-        })
-      , { concurrency: 1 });
+        }),
+        { concurrency: 1 },
+      );
       return PageCase.make({ ...current.evidence, mailboxes, basis: current.basis });
-    })
-  , { concurrency: 1 });
+    }),
+    { concurrency: 1 },
+  );
   return yield* S.encodeEffect(PageCase.pipe(S.Array, S.fromJsonString))(cases);
 });
 
@@ -151,8 +157,8 @@ export class PageDecision extends S.Opaque<PageDecision, { readonly brand: uniqu
   }).pipe(
     $I.annoteSchema("PageDecision", {
       description: "Page decision before explicit validity and provenance enrichment.",
-    })
-  )
+    }),
+  ),
 ) {}
 
 /**
@@ -168,8 +174,8 @@ export class PageDecision extends S.Opaque<PageDecision, { readonly brand: uniqu
  */
 export class PageDecisionInput extends S.Opaque<PageDecisionInput, { readonly brand: unique symbol }>()(
   S.Struct({ decision: PageDecision, validity: ValidInterval, producedBy: ActivityId, anchor: EvidenceAnchor }).pipe(
-    $I.annoteSchema("PageDecisionInput", { description: "Page export plus explicit temporal and source context." })
-  )
+    $I.annoteSchema("PageDecisionInput", { description: "Page export plus explicit temporal and source context." }),
+  ),
 ) {}
 
 /**

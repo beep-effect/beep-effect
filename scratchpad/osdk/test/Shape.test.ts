@@ -999,8 +999,9 @@ describe("canonicalJson", () => {
           pipe(shape("Employee"), deriveLink("far", linkSet(["lead", "peers"]), nameOnly)),
           pipe(shape("Employee"), deriveLink("far", linkSet(["peers", "lead"]), nameOnly)),
         ],
-        textOf
-      , { concurrency: 1 });
+        textOf,
+        { concurrency: 1 }
+      );
       strictEqual(A.length(A.dedupe(texts)), 2);
     })
   );
@@ -1060,7 +1061,9 @@ describe("shapeId", () => {
       "key order does not matter: properties, links and default-value fields",
       Effect.fnUntraced(function* () {
         const ids = yield* Effect.forEach([reordered.one, reordered.other], idOf, { concurrency: 1 });
-        const cardIds = yield* Effect.forEach([reversed(card.definition), card.definition], shapeId, { concurrency: 1 });
+        const cardIds = yield* Effect.forEach([reversed(card.definition), card.definition], shapeId, {
+          concurrency: 1,
+        });
         strictEqual(A.length(A.dedupe(ids)), 1);
         strictEqual(A.length(A.dedupe(cardIds)), 1);
       })

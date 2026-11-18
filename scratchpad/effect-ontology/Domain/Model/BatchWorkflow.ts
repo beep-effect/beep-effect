@@ -332,18 +332,18 @@ const progressPercent = (state: BatchStateValue): O.Option<number> =>
     Validating: () => O.some(65),
     Ingesting: (value) => O.some(progressRatio(value.triplesIngested, value.triplesTotal, 25, 75)),
     Complete: () => O.some(100),
-    Failed: O.none,
+    Failed: () => O.none<number>(),
   });
 
 const getError = (state: BatchStateValue): O.Option<BatchFailure> =>
   BatchStateDefinition.match(state, {
-    Pending: O.none,
-    Preprocessing: O.none,
-    Extracting: O.none,
-    Resolving: O.none,
-    Validating: O.none,
-    Ingesting: O.none,
-    Complete: O.none,
+    Pending: () => O.none<BatchFailure>(),
+    Preprocessing: () => O.none<BatchFailure>(),
+    Extracting: () => O.none<BatchFailure>(),
+    Resolving: () => O.none<BatchFailure>(),
+    Validating: () => O.none<BatchFailure>(),
+    Ingesting: () => O.none<BatchFailure>(),
+    Complete: () => O.none<BatchFailure>(),
     Failed: ({ error }) => O.some(error),
   });
 
@@ -352,7 +352,7 @@ const isValidTransition = (from: BatchStage, to: BatchStage): boolean =>
 
 const validateTransition = (from: BatchStage, to: BatchStage): O.Option<string> =>
   Bool.match(isValidTransition(from, to), {
-    onTrue: O.none,
+    onTrue: () => O.none<BatchFailure>(),
     onFalse: () =>
       pipe(
         validTransitions[from],

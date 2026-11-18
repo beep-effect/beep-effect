@@ -187,11 +187,14 @@ const locatorOf = (row: ObjectRecord): O.Option<ObjectLocator> =>
 // A row that does not fit leaves as a `DecodeError` that names it.
 const decodeRows = Effect.fnUntraced(function* <A>(model: InstanceModel<A>, rows: ReadonlyArray<ObjectRecord>) {
   const decodeRow = S.decodeEffect(model.Instance);
-  return yield* Effect.forEach(rows, (row, index) =>
-    Effect.mapError(decodeRow(row), (cause) =>
-      DecodeError.make({ message: cause.message, cause, index: O.some(index), locator: locatorOf(row) })
-    )
-  , { concurrency: 1 });
+  return yield* Effect.forEach(
+    rows,
+    (row, index) =>
+      Effect.mapError(decodeRow(row), (cause) =>
+        DecodeError.make({ message: cause.message, cause, index: O.some(index), locator: locatorOf(row) })
+      ),
+    { concurrency: 1 }
+  );
 });
 
 // The ordering a read sends: the one the set carries, which the typed layer checked against the set's

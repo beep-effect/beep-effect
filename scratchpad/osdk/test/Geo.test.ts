@@ -430,11 +430,7 @@ describe("Geo wire fixtures", () => {
   it.effect(
     "Feature: a feature without a location omits geometry",
     Effect.fnUntraced(function* () {
-      yield* expectWireRoundTrip(
-        Feature,
-        { type: "Feature", id: 7, properties: {} },
-        Feature.make({ id: O.some(7) })
-      );
+      yield* expectWireRoundTrip(Feature, { type: "Feature", id: 7, properties: {} }, Feature.make({ id: O.some(7) }));
     })
   );
 
@@ -523,9 +519,7 @@ describe("Geo wire fixtures", () => {
     Effect.fnUntraced(function* () {
       const box = BoundingBox.make([-122.52, 37.7, -122.35, 37.83]);
       const topLeft = yield* S.encodeEffect(GeoPoint)(GeoPoint.make({ coordinates: BoundingBox.topLeft(box) }));
-      const bottomRight = yield* S.encodeEffect(GeoPoint)(
-        GeoPoint.make({ coordinates: BoundingBox.bottomRight(box) })
-      );
+      const bottomRight = yield* S.encodeEffect(GeoPoint)(GeoPoint.make({ coordinates: BoundingBox.bottomRight(box) }));
       expect({ topLeft, bottomRight }).toEqual({
         topLeft: { type: "Point", coordinates: [-122.52, 37.83] },
         bottomRight: { type: "Point", coordinates: [-122.35, 37.7] },
@@ -754,7 +748,12 @@ describe("Geo unions", () => {
   it("isAnyOf separates features from bare geometries", () => {
     const carriesProperties = GeoJsonObject.isAnyOf(["Feature", "FeatureCollection"]);
     expect(A.map(objects, carriesProperties)).toEqual([false, false, false, false, false, false, false, true, true]);
-    expect(A.every(A.filter(objects, (object) => !carriesProperties(object)), S.is(Geometry))).toBe(true);
+    expect(
+      A.every(
+        A.filter(objects, (object) => !carriesProperties(object)),
+        S.is(Geometry)
+      )
+    ).toBe(true);
   });
 
   it("the geometry tags are the GeoJSON tags without the feature tags", () => {
@@ -806,15 +805,7 @@ describe("Geo invariants", () => {
 
   it("a bounding box has exactly four or six in-range numbers", () => {
     const rejected = A.map(
-      [
-        [],
-        [0, 0],
-        [0, 0, 1, 1, 2],
-        [0, 0, 0, 1, 1, 1, 2],
-        [0, -91, 1, 1],
-        [-181, 0, 1, 1],
-        [0, 0, 0, 181, 1, 0],
-      ],
+      [[], [0, 0], [0, 0, 1, 1, 2], [0, 0, 0, 1, 1, 1, 2], [0, -91, 1, 1], [-181, 0, 1, 1], [0, 0, 0, 181, 1, 0]],
       rejects(BoundingBox)
     );
     expect(rejected).toEqual([true, true, true, true, true, true, true]);

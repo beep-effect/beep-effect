@@ -1,3 +1,6 @@
+import { RunStats } from "../Domain/Model/ExtractionRun.ts";
+import { LlmConfig } from "../Domain/Model/ExtractionRun.ts";
+import { ChunkingConfig } from "../Domain/Model/ExtractionRun.ts";
 import * as Digest from "effect/crypto/Digest";
 /**
  * Extraction Entity Handler
@@ -260,17 +263,17 @@ return Stream.make(
       yield* runService.createRun(
         text,
         {
-          chunking: {
+          chunking: ChunkingConfig.make({
             maxChunkSize: PosInt.make(500),
             preserveSentences: true,
             overlapSentences: S.Natural.make(0),
-          },
-          llm: {
+          }),
+          llm: LlmConfig.make({
             model: config.llm.model,
             temperature: config.llm.temperature,
             maxTokens: PosInt.make(config.llm.maxTokens),
             timeout: config.llm.retryPolicy.attemptTimeout,
-          },
+          }),
           concurrency: PosInt.make(config.runtime.concurrency),
           ontology: ontologyRef,
           grounding: config.grounder.enabled
@@ -362,7 +365,7 @@ events.push(
       const stats = yield* Ref.get(statsRef);
       const yielded6 = yield* DateTime.now;
 const totalDuration = DateTime.distance(startTime, yielded6).pipe(Duration.toMillis);
-      yield* runService.updateStats(runId, {
+      yield* runService.updateStats(runId, RunStats.make({
         chunkCount: S.Natural.make(chunks.length),
         entityCount: S.Natural.make(stats.totalEntities),
         relationCount: S.Natural.make(stats.verifiedRelations),
@@ -370,7 +373,7 @@ const totalDuration = DateTime.distance(startTime, yielded6).pipe(Duration.toMil
         clusterCount: S.Natural.make(0),
         tokensUsed: S.Natural.make(stats.tokensUsed),
         duration: Duration.millis(totalDuration),
-      });
+      }));
       yield* runService.completeRun(runId);
 
       const completion = yield* makeEvent(runId, "extraction_complete", 100, {

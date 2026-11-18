@@ -180,7 +180,7 @@ const request = S.decodeUnknownOption(CreateBatchFromLinksBody)(yielded1);
         return yield* HttpServerResponse.json(
           {
             error: "VALIDATION_ERROR",
-            message: `Links do not belong to ontology "${ontologyId}": ${A.map(invalidLinks, (link) => link.id).join(", ")}`,
+            message: `Links do not belong to ontology "${ontologyId}": ${A.join(A.map(invalidLinks, (link) => link.id), ", ")}`,
           },
           { status: 400 }
         );

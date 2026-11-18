@@ -1,3 +1,4 @@
+import { ExtractionActivityInput } from "../../Domain/Schema/Batch.ts";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, expect, it } from "@effect/vitest";
 import * as Duration from "effect/Duration";
@@ -51,7 +52,7 @@ describe("streaming extraction activity boundaries", () => {
     it.effect(
       "preserves the typed failure without applying interruption retries",
       Effect.fnUntraced(function* () {
-        const fiber = yield* makeStreamingExtractionActivity({
+        const fiber = yield* makeStreamingExtractionActivity(ExtractionActivityInput.make({
           batchId: BatchId.make("batch-00000000000a"),
           documentId: DocumentId.make("doc-00000000000a"),
           sourceUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/missing.txt")),
@@ -64,7 +65,7 @@ describe("streaming extraction activity boundaries", () => {
           publishedAt: O.none(),
           title: O.none(),
           language: O.none(),
-        }).execute.pipe(Effect.flip, Effect.forkChild);
+        })).execute.pipe(Effect.flip, Effect.forkChild);
 
         yield* TestClock.adjust(Duration.zero);
 

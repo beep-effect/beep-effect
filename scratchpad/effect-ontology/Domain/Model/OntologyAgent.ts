@@ -178,7 +178,7 @@ export class ExtractionMetrics extends S.Class<ExtractionMetrics, { readonly bra
     return ProviderTokenUsage.match(this.usage, {
       Complete: ({ inputTokens, outputTokens }) => O.some(S.Natural.make(Num.sum(inputTokens, outputTokens))),
       Partial: ({ inputTokens, outputTokens }) => O.some(S.Natural.make(Num.sum(inputTokens, outputTokens))),
-      Unavailable: O.none,
+      Unavailable: () => O.none<number>(),
     });
   }
 }

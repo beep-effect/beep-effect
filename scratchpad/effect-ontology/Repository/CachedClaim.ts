@@ -224,10 +224,10 @@ export class CachedClaimRepository extends Context.Service<CachedClaimRepository
           Effect.tap(() => Cache.invalidateAll(subjectCache)),
           Effect.withSpan("CachedClaimRepository.invalidateAll")
         ),
-        cacheStats: Effect.all({ concurrency: 1,
+        cacheStats: Effect.all({
           claimCacheSize: Cache.size(claimCache),
           subjectCacheSize: Cache.size(subjectCache),
-        }).pipe(Effect.withSpan("CachedClaimRepository.cacheStats")),
+        }, { concurrency: 1, concurrency: 1 }).pipe(Effect.withSpan("CachedClaimRepository.cacheStats")),
       };
     }),
   }

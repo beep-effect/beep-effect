@@ -277,22 +277,16 @@ const [result] = yield* decodeArticleRows(
           ontologyId: string,
           updates: Omit<Partial<ArticleInsertRow>, "ontologyId">
         ) {
-          const yielded4 = yield* normalizeQueryError(
-              drizzle
-                .update(articles)
-                .set({ ...updates, updatedAt: DateTime.toDateUtc(yield* DateTime.now) })
-                .where(and(eq(articles.id, id), eq(articles.ontologyId, ontologyId)))
-                .returning()
-            );
-const yielded5 = yield* DateTime.now;
-const [result] = yield* decodeArticleRows(
-            yield* normalizeQueryError(
+          const yielded5 = yield* DateTime.now;
+const yielded101 = yield* normalizeQueryError(
               drizzle
                 .update(articles)
                 .set({ ...updates, updatedAt: DateTime.toDateUtc(yielded5) })
                 .where(and(eq(articles.id, id), eq(articles.ontologyId, ontologyId)))
                 .returning()
-            )
+            );
+const [result] = yield* decodeArticleRows(
+            yielded101
           );
           return O.fromNullishOr(result);
         })
