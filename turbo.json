@@ -5914,6 +5914,28 @@
         "!packages/tooling/test-kit/test-utils/test/fixtures/vitest-instrumentation/.runtime-*/**"
       ]
     },
+    "//#check:model-first-slices": {
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        "package.json",
+        "bun.lock",
+        "tsconfig.base.json",
+        "scratchpad/model-first-slices/**/*.{cts,mts,ts,tsx,cjs,mjs,js,json}",
+        "scratchpad/model-first-slices/bun.lock",
+        "scratchpad/model-first-slices/bunfig.toml",
+        "scratchpad/model-first-slices/patches/*.patch",
+        "packages/foundation/modeling/identity/package.json",
+        "packages/foundation/modeling/identity/src/**",
+        "packages/foundation/modeling/schema/package.json",
+        "packages/foundation/modeling/schema/src/**",
+        "packages/foundation/modeling/utils/package.json",
+        "packages/foundation/modeling/utils/src/**",
+        "packages/foundation/primitive/types/package.json",
+        "packages/foundation/primitive/types/src/**",
+        "!**/node_modules/**"
+      ]
+    },
     "//#lint:oxlint": {
       "cache": false,
       "outputs": [],
