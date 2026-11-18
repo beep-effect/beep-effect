@@ -1,10 +1,12 @@
-import { groupShape, shapeOf } from "@beep/contract-kit/Parity";
+import { groupShape, schemaShapeOf, shapeOf } from "@beep/contract-kit/Parity";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as RpcMiddleware from "effect/rpc/RpcMiddleware";
 import * as S from "effect/Schema";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Str from "effect/String";
 
 // Two middlewares with the same key whose failures disagree on the wire.
 class RateLimitedText extends RpcMiddleware.Service<RateLimitedText>()("RateLimited", {
@@ -22,6 +24,34 @@ describe("Parity.shapeOf", () => {
     const narrowed = Rpc.make("Publish", { payload: { status: Draft } });
     expect(S.toJsonSchemaDocument(open.payloadSchema)).toEqual(S.toJsonSchemaDocument(narrowed.payloadSchema));
     expect(shapeOf(open).payload).not.toEqual(shapeOf(narrowed).payload);
+  });
+
+  it("tells apart two string-to-number codecs that decode to S.Number and S.Finite", () => {
+    const lenient = Rpc.make("Count", {
+      // The lenient side is the point of the case: it accepts "Infinity".
+      // @effect-diagnostics-next-line schemaNumber:off
+      payload: { n: S.String.pipe(S.decodeTo(S.Number, SchemaTransformation.numberFromString)) },
+    });
+    const finite = Rpc.make("Count", {
+      payload: { n: S.String.pipe(S.decodeTo(S.Finite, SchemaTransformation.numberFromString)) },
+    });
+    expect(shapeOf(lenient).payload.encoded).toEqual(shapeOf(finite).payload.encoded);
+    expect(shapeOf(lenient).payload.decoded).not.toEqual(shapeOf(finite).payload.decoded);
+    expect(shapeOf(lenient)).not.toEqual(shapeOf(finite));
+  });
+
+  it("requires the same transformation, not only the same two sides", () => {
+    const toNumber = SchemaTransformation.transform({
+      decode: (s: string) => s.length,
+      encode: (n: number) => Str.repeat(n)("x"),
+    });
+    const shared = S.String.pipe(S.decodeTo(S.Finite, SchemaTransformation.numberFromString));
+    const other = S.String.pipe(S.decodeTo(S.Finite, toNumber));
+    expect(schemaShapeOf(shared)).toEqual(
+      schemaShapeOf(S.String.pipe(S.decodeTo(S.Finite, SchemaTransformation.numberFromString)))
+    );
+    expect(schemaShapeOf(shared).decoded).toEqual(schemaShapeOf(other).decoded);
+    expect(schemaShapeOf(shared).codecs).not.toEqual(schemaShapeOf(other).codecs);
   });
 
   it("compares middleware failures through the reply exit codec", () => {
