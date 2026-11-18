@@ -575,4 +575,129 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       LINT_TIMEOUT
     );
   });
+
+  // goals/prunable-product-leaves, seam 1b: a registration whose workspace the checkout pruned or
+  // owns is skipped and counted; every other ownerless registration still fails.
+  describe("identity-registry lint in a trimmed checkout", { concurrent: false }, () => {
+    const declare = Effect.fnUntraced(function* (declaration: unknown) {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.makeDirectory("standards", { recursive: true });
+      yield* fs.writeFileString("standards/checkout-prune.jsonc", `${encodeJson(declaration)}\n`);
+    });
+    const lintOutcome = Effect.gen(function* () {
+      const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+      const logLines = yield* TestConsole.logLines;
+      const errorLines = yield* TestConsole.errorLines;
+      return {
+        passed: exit._tag === "Success",
+        logLines: A.filter(logLines, P.isString),
+        errorLines: A.filter(errorLines, P.isString),
+      };
+    });
+    const orphanReported = (lines: ReadonlyArray<string>, slug: string) =>
+      A.some(lines, (line) => Str.startsWith(`@beep/${slug} [orphan-registration]`)(line));
+
+    it.effect(
+      "skips and counts a registration whose declared workspace is gone, and a product leaf's",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            // `box` is a product leaf (@beep/repo-cli-kit/ProductLeaves) this fixture never had.
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget", "retired-widget", "box"] });
+            yield* declare({
+              version: 1,
+              prune: [{ path: "packages/retired-widget", why: "not shipped", packageName: "@beep/retired-widget" }],
+            });
+
+            const outcome = yield* lintOutcome;
+
+            expect(outcome.passed).toBe(true);
+            expect(outcome.logLines).toContain(
+              "[lint:identity-registry] skipped 2 registration row(s) whose workspace is pruned from this checkout: workspace @beep/box, workspace @beep/retired-widget"
+            );
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "still reports an ownerless registration nobody declared, or one a keep entry carves out",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget", "retired-widget", "typo-widget", "box"],
+            });
+            yield* declare({
+              version: 1,
+              prune: [{ path: "packages/retired-widget", why: "not shipped", packageName: "@beep/retired-widget" }],
+              keep: [
+                { path: "packages/retired-widget", why: "the keep wins" },
+                { path: "packages/drivers/box", why: "this checkout keeps box", packageName: "@beep/box" },
+              ],
+            });
+
+            const outcome = yield* lintOutcome;
+
+            expect(outcome.passed).toBe(false);
+            expect(orphanReported(outcome.errorLines, "retired-widget")).toBe(true);
+            expect(orphanReported(outcome.errorLines, "typo-widget")).toBe(true);
+            // A missing product leaf under a keep entry fails like any missing workspace.
+            expect(orphanReported(outcome.errorLines, "box")).toBe(true);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "skips an owned workspace's registration although its directory remains, and only while it is owned",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            // The checkout replaced @beep/replaced with its own package in the same directory.
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget", "own", "replaced"],
+              extraPackages: ["widget", "own"],
+            });
+            yield* fs.makeDirectory("packages/replaced/src", { recursive: true });
+
+            const strict = yield* lintOutcome;
+            expect(strict.passed).toBe(false);
+            expect(orphanReported(strict.errorLines, "replaced")).toBe(true);
+
+            yield* declare({
+              version: 1,
+              owned: [{ path: "packages/replaced", why: "replaced by this checkout", packageName: "@beep/replaced" }],
+            });
+            const owned = yield* lintOutcome;
+            expect(owned.passed).toBe(true);
+            expect(owned.logLines).toContain(
+              "[lint:identity-registry] skipped 1 registration row(s) whose workspace is pruned from this checkout: workspace @beep/replaced"
+            );
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "fails on an invalid declaration instead of reading it as empty",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget"] });
+            yield* declare({ version: 1, prunes: [] });
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expect(exit._tag).toBe("Failure");
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+  });
 });

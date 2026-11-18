@@ -30,6 +30,7 @@ import {
   PacketEventStoreLive,
 } from "@beep/repo-cli/test/Goals";
 import { YeetCommandError } from "@beep/repo-cli/test/Yeet";
+import { productLeaves } from "@beep/repo-cli-kit/ProductLeaves";
 import { FsUtilsLive, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -1215,4 +1216,172 @@ describe("capabilityDoctorFindings", () => {
       "blocking docs capability-reference-provides kg/lookup",
     ]);
   });
+});
+
+// goals/prunable-product-leaves, seam 1b: findings of a packet the checkout pruned or owns, and link
+// findings whose target it pruned, are skipped and counted. A packet whose directory remains is
+// present, so a prune entry cannot hide it; only an owned entry skips a present packet.
+it.layer(testLayer, { timeout: "20 seconds" })("goals doctor in a trimmed checkout", (it) => {
+  // Read from the declaration so no test source names a real packet path.
+  const productExploration = O.getOrThrow(
+    A.findFirst(productLeaves.packets, (root) => Str.startsWith("explorations/")(root))
+  );
+  const declare = (declaration: unknown) =>
+    writeProjectFile("standards/checkout-prune.jsonc", `${encodeJson(declaration)}\n`);
+  const runDoctor = Effect.fnUntraced(function* () {
+    let exit: Exit.Exit<void, unknown> = Exit.void;
+    const output = yield* captureOutput(
+      runGoalsCommand(["doctor"]).pipe(
+        Effect.exit,
+        Effect.map((value) => {
+          exit = value;
+        })
+      )
+    );
+    return { exit, output };
+  });
+  // An active packet whose manifest points its exploration back-link at `exploration`.
+  const writeLinkedPacket = Effect.fnUntraced(function* (slug: string, exploration: string) {
+    yield* writeActivePacket(slug);
+    yield* writeProjectFile(
+      `goals/${slug}/ops/manifest.json`,
+      `${encodeJson({
+        schemaVersion: "initiative-manifest/v2",
+        initiative: { id: slug, title: slug, status: "active" },
+        lifecycle: "active",
+        completionGate: COMPLETION_GATE,
+        provenance: { exploration },
+      })}\n`
+    );
+  });
+
+  it.effect(
+    "skips and counts every finding of an owned packet, and checks it in full without the owned entry",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* writeDriftedPacket("replaced");
+        // A graduated exploration without an archive decision: one advisory finding.
+        yield* writeProjectFile(
+          "explorations/replaced-idea/ops/manifest.json",
+          `${encodeJson({
+            schemaVersion: "exploration-manifest/v1",
+            exploration: {
+              slug: "replaced-idea",
+              title: "replaced-idea",
+              status: "graduated",
+              stage: "graduate",
+              updated: "2026-11-06",
+            },
+          })}\n`
+        );
+        yield* writeBaseline([]);
+
+        const strict = yield* runDoctor();
+        expectReportedFailure(strict.exit);
+        expect(strict.output).toContain("replaced [lifecycle-mismatch]");
+        expect(strict.output).toContain("explorations/replaced-idea [archive-decision-missing]");
+
+        yield* declare({
+          version: 1,
+          owned: [
+            { path: "goals/replaced", why: "this checkout replaced the packet" },
+            { path: "explorations/replaced-idea", why: "this checkout replaced the exploration" },
+          ],
+        });
+        const owned = yield* runDoctor();
+        owned.exit.pipe(Exit.isSuccess, assertTrue);
+        // The drifted packet has two findings, the blocking lifecycle mismatch and an advisory.
+        expect(owned.output).toContain("[goals:doctor] skipped_pruned=3");
+        expect(owned.output).toContain("[goals:doctor] skipped replaced lifecycle-mismatch: pruned from this checkout");
+        expect(owned.output).toContain(
+          "[goals:doctor] skipped explorations/replaced-idea archive-decision-missing: pruned from this checkout"
+        );
+      }),
+    20_000
+  );
+
+  it.effect(
+    "skips a back-link into a pruned exploration, and reports an undeclared or kept one",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        // A product-leaf exploration packet this fixture never had.
+        yield* writeLinkedPacket("product-link", productExploration);
+        yield* writeLinkedPacket("declared-link", "explorations/demo-gone");
+        yield* writeLinkedPacket("typo-link", "explorations/typo");
+        yield* writeLinkedPacket("kept-link", "explorations/demo-kept");
+        yield* writeBaseline([]);
+        yield* declare({
+          version: 1,
+          prune: [{ path: "explorations/demo-*", why: "the demo explorations are not shipped" }],
+          keep: [{ path: "explorations/demo-kept", why: "kept tooling reads it" }],
+        });
+
+        const declared = yield* runDoctor();
+        declared.exit.pipe(Exit.isSuccess, assertTrue);
+        expect(declared.output).toContain("[goals:doctor] skipped_pruned=2");
+        expect(declared.output).toContain(
+          "[goals:doctor] skipped product-link exploration-backlink-missing: pruned from this checkout"
+        );
+        expect(declared.output).toContain(
+          "[goals:doctor] skipped declared-link exploration-backlink-missing: pruned from this checkout"
+        );
+        expect(declared.output).toContain("typo-link [exploration-backlink-missing]");
+        expect(declared.output).toContain("kept-link [exploration-backlink-missing]");
+
+        // A missing product-leaf packet under a keep entry is reported like any missing target.
+        yield* declare({
+          version: 1,
+          keep: [{ path: productExploration, why: "this checkout keeps it" }],
+        });
+        const kept = yield* runDoctor();
+        expect(kept.output).toContain("product-link [exploration-backlink-missing]");
+        expect(kept.output).not.toContain("[goals:doctor] skipped product-link");
+      }),
+    20_000
+  );
+
+  it.effect(
+    "keeps a pruned packet whose directory survives through a kept file strict, whichever prune form names it",
+    () =>
+      Effect.gen(function* () {
+        yield* temporaryWorkingDirectory;
+        yield* writeProjectFile("goals/half/research/kept.md", "# kept\n");
+        yield* writeBaseline([]);
+
+        // A prune entry naming the packet root claims a packet the checkout still holds: refused.
+        yield* declare({
+          version: 1,
+          prune: [{ path: "goals/half", why: "dropped" }],
+          keep: [{ path: "goals/half/research/kept.md", why: "a kept tool reads it" }],
+        });
+        const named = yield* runDoctor();
+        named.exit.pipe(Exit.isFailure, assertTrue);
+        expect(
+          Exit.isFailure(named.exit) && named.exit.cause.pipe(Cause.pretty, Str.includes("CheckoutPruneFindingsError"))
+        ).toBe(true);
+
+        // Pruning only its contents leaves a present packet, checked in full.
+        yield* declare({
+          version: 1,
+          prune: [{ path: "goals/half/**", why: "dropped" }],
+          keep: [{ path: "goals/half/research/kept.md", why: "a kept tool reads it" }],
+        });
+        const contents = yield* runDoctor();
+        expectReportedFailure(contents.exit);
+        expect(contents.output).toContain("half [manifest-missing]");
+
+        // Owning the packet is how a checkout keeps one file of a packet it replaced.
+        yield* declare({
+          version: 1,
+          owned: [{ path: "goals/half", why: "this checkout keeps only its own notes" }],
+          keep: [{ path: "goals/half/research/kept.md", why: "a kept tool reads it" }],
+        });
+        const owned = yield* runDoctor();
+        owned.exit.pipe(Exit.isSuccess, assertTrue);
+        expect(owned.output).toContain("[goals:doctor] skipped half manifest-missing: pruned from this checkout");
+      }),
+    20_000
+  );
 });

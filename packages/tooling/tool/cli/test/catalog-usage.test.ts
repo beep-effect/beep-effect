@@ -6,6 +6,7 @@ import {
   CatalogUsageManifest,
   CatalogUsageRootManifest,
   CatalogUsageSnapshot,
+  CatalogUsageSource,
   CatalogUsageSourceLive,
   CatalogUsageTemplateReference,
   catalogTemplateReferencesFromText,
@@ -24,6 +25,7 @@ import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Result from "effect/Result";
@@ -397,7 +399,94 @@ describe("catalog usage", () => {
           const report = yield* runCatalogUsageCheck(repoRoot);
 
           expect(report.findings).toEqual([]);
+          // The full checkout prunes nothing, so nothing is excused.
+          expect(report.prunedConsumers).toEqual([]);
           expect(report.catalogEntries).toBeGreaterThan(0);
+        }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+      );
+
+      // goals/prunable-product-leaves, seam 1b: an entry whose only consumers are workspaces the
+      // checkout pruned or owns, as the lockfile still records them, is skipped and counted; an
+      // entry only an undeclared missing workspace or a kept one consumed is still unused.
+      it.effect("skips entries consumed only by pruned or owned workspaces, and reports every other", () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const tmpDir = yield* fs.makeTempDirectoryScoped({ prefix: "catalog-usage-test-" });
+          yield* writeFixtureRepo(
+            tmpDir,
+            {
+              catalog: {
+                effect: "4.0.4",
+                "template-only": "^1.0.0",
+                "box-only": "^1.0.0",
+                "gone-only": "^1.0.0",
+                "typo-only": "^1.0.0",
+                "replaced-only": "^1.0.0",
+              },
+              catalogs: { tools: { "named-dep": "^1.0.0" } },
+            },
+            fixtureLockfile
+          );
+          // @beep/replaced is live; the checkout replaced its manifest, which no longer names its entry.
+          yield* writeJson(tmpDir, "packages/replaced/package.json", { name: "@beep/replaced" });
+          const record = (name: string, dependency: string) => ({ name, dependencies: { [dependency]: "catalog:" } });
+          yield* writeJson(tmpDir, "bun.lock", {
+            lockfileVersion: 1,
+            workspaces: {
+              "": { name: "fixture" },
+              "packages/demo": {
+                name: "@beep/demo",
+                dependencies: { effect: "catalog:", "named-dep": "catalog:tools" },
+              },
+              // @beep/box is a product leaf at this directory (@beep/repo-cli-kit/ProductLeaves).
+              "packages/drivers/box": record("@beep/box", "box-only"),
+              "packages/gone": record("@beep/gone", "gone-only"),
+              "packages/typo": record("@beep/typo", "typo-only"),
+              "packages/replaced": record("@beep/replaced", "replaced-only"),
+            },
+            packages: fixtureLockfile,
+          });
+          const declare = (declaration: unknown) => writeJson(tmpDir, "standards/checkout-prune.jsonc", declaration);
+          const keysOf = (findings: ReadonlyArray<{ readonly catalog?: string; readonly key: string }>) =>
+            A.map(findings, (finding) => `${finding.catalog ?? ""}:${finding.key}`);
+
+          // Without a declaration only the product leaf is excused: the other three are unused.
+          const strict = yield* Effect.flip(runCatalogUsageCheck(tmpDir));
+          expect(strict.message).toBe("3 root catalog entr(ies) or override(s) have no consumer.");
+
+          yield* declare({
+            version: 1,
+            prune: [{ path: "packages/gone", why: "not shipped", packageName: "@beep/gone" }],
+            owned: [{ path: "packages/replaced", why: "replaced", packageName: "@beep/replaced" }],
+          });
+          const declared = yield* Effect.flip(runCatalogUsageCheck(tmpDir));
+          expect(declared.message).toBe("1 root catalog entr(ies) or override(s) have no consumer.");
+          const errorLines = yield* TestConsole.errorLines;
+          const errors = A.filter(errorLines, P.isString);
+          expect(errors).toContain("  - catalog-entry default:typo-only");
+          const logLines = yield* TestConsole.logLines;
+          const logs = A.filter(logLines, P.isString);
+          expect(logs).toContain(
+            "[catalog-usage] skipped_pruned=3: consumed only by workspaces pruned from this checkout:"
+          );
+
+          // The pure report names what each rule excused.
+          yield* declare({
+            version: 1,
+            prune: [{ path: "packages/gone", why: "not shipped", packageName: "@beep/gone" }],
+            keep: [{ path: "packages/drivers/box", why: "this checkout keeps box", packageName: "@beep/box" }],
+          });
+          const kept = yield* Effect.flip(runCatalogUsageCheck(tmpDir));
+          // A missing product leaf under keep, and the replaced workspace without its owned entry, are strict.
+          expect(kept.message).toBe("3 root catalog entr(ies) or override(s) have no consumer.");
+          const source = yield* CatalogUsageSource;
+          const snapshot = yield* source.snapshot(tmpDir);
+          expect(keysOf(catalogUsageReport(snapshot).prunedConsumers)).toEqual(["default:gone-only"]);
+          expect(keysOf(catalogUsageReport(snapshot).findings)).toEqual([
+            "default:box-only",
+            "default:replaced-only",
+            "default:typo-only",
+          ]);
         }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
       );
     }

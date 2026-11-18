@@ -35,8 +35,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import {
+  isCheckoutPathPruned,
+  isCheckoutSubjectPruned,
+  loadCheckoutInventory,
+  workspaceSubject,
+} from "@beep/repo-cli-kit/CheckoutSubject";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { LINT_POLICY_SUBCOMMANDS } from "@beep/repo-cli-kit/cli/LintRouting";
+import { productLeaves } from "@beep/repo-cli-kit/ProductLeaves";
 import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { FsUtils, findRepoRoot, GlobOptions } from "@beep/repo-utils";
 import { normalizePath } from "@beep/schema";
@@ -67,6 +74,7 @@ import {
   PolicyToolsFingerprint,
   PolicyWorkspace,
 } from "./PolicyFingerprint.schemas.ts";
+import type { CheckoutInventory } from "@beep/repo-cli-kit/CheckoutSubject";
 import type { PolicyGraph, PolicySourceTree } from "./internal/PolicyFingerprintGraph.ts";
 
 const $I = $RepoCliId.create("commands/Lint/PolicyFingerprint");
@@ -740,13 +748,72 @@ const materializeRootManifest = (text: string, scripts: Readonly<Record<string, 
     modifyJson({ text: next, path: ["scripts", name], value: undefined })
   );
 
+/**
+ * What the drift comparison leaves out: the inputs and tasks of subjects the checkout pruned or owns
+ * (goals/prunable-product-leaves, seam 1b). The committed files still name a pruned workspace's
+ * files, the checkout no longer holds them, so they are not drift. The full checkout prunes nothing,
+ * which is `keepEverything`.
+ */
+interface DriftScope {
+  readonly keepInput: (input: string) => boolean;
+  readonly keepTask: (task: string) => boolean;
+}
+
+const keepEverything: DriftScope = { keepInput: () => true, keepTask: () => true };
+
+// A declared input as a repository path: its negation and its Turbo root prefix removed.
+const inputPath = (input: string): string => {
+  const positive = Str.startsWith("!")(input) ? Str.slice(1)(input) : input;
+  return Str.startsWith(TURBO_ROOT)(positive) ? Str.slice(TURBO_ROOT.length)(positive) : positive;
+};
+
+// A package task id names its workspace before the `#`: `@beep/demo#lint:laws`.
+const TASK_WORKSPACE = /^(@[^#]+)#/u;
+
+const prunedDriftScope = (inventory: CheckoutInventory): DriftScope => ({
+  keepInput: (input) => !isCheckoutPathPruned(inventory, inputPath(input)),
+  keepTask: (task) =>
+    !O.exists(
+      O.flatMap(Str.match(TASK_WORKSPACE)(task), (match) => O.fromUndefinedOr(match[1])),
+      (owner) => isCheckoutSubjectPruned(inventory, workspaceSubject(owner))
+    ),
+});
+
+const scopedFingerprint = (fingerprint: PolicyToolsFingerprint, scope: DriftScope): PolicyToolsFingerprint =>
+  PolicyToolsFingerprint.make({
+    ...fingerprint,
+    shared: A.filter(fingerprint.shared, scope.keepInput),
+    sharedTasks: A.filter(fingerprint.sharedTasks, scope.keepTask),
+    check: A.filter(fingerprint.check, scope.keepInput),
+    entries: A.map(fingerprint.entries, (entry) =>
+      PolicyFingerprintEntry.make({
+        ...entry,
+        inputs: A.filter(entry.inputs, scope.keepInput),
+        tasks: A.filter(entry.tasks, scope.keepTask),
+      })
+    ),
+  });
+
+const scopedTasks = (
+  tasks: Readonly<Record<string, TurboTask>>,
+  scope: DriftScope
+): Readonly<Record<string, TurboTask>> =>
+  R.map(tasks, (task) =>
+    task.inputs === undefined ? task : TurboTask.make({ ...task, inputs: A.filter(task.inputs, scope.keepInput) })
+  );
+
 const declarationDrift = Effect.fnUntraced(function* (
   declarationText: O.Option<string>,
-  fingerprint: PolicyToolsFingerprint
+  fingerprint: PolicyToolsFingerprint,
+  scope: DriftScope
 ) {
   if (O.isNone(declarationText)) return [FINGERPRINT_PATH];
   const declared = yield* Effect.option(decodeDeclaration(declarationText.value));
-  return O.exists(declared, (value) => declarationEquivalent(value, fingerprint)) ? [] : [FINGERPRINT_PATH];
+  return O.exists(declared, (value) =>
+    declarationEquivalent(scopedFingerprint(value, scope), scopedFingerprint(fingerprint, scope))
+  )
+    ? []
+    : [FINGERPRINT_PATH];
 });
 
 const sealMatches = (actual: TurboTask | undefined, expected: SealTaskValue) =>
@@ -786,15 +853,16 @@ const turboDrift = (tasks: Readonly<Record<string, TurboTask>>, fingerprint: Pol
 const scriptDrift = (rootScripts: Readonly<Record<string, string>>) =>
   A.map(A.filter(R.keys(rootScripts), isSealScript), (name) => `package.json scripts["${name}"] (stale)`);
 
-// The drift between a repository's generated files and a fingerprint.
+// The drift between a repository's generated files and a fingerprint, outside what `scope` leaves out.
 const driftOf = Effect.fnUntraced(function* (
   sources: FingerprintSources,
   declarationText: O.Option<string>,
-  fingerprint: PolicyToolsFingerprint
+  fingerprint: PolicyToolsFingerprint,
+  scope: DriftScope
 ) {
   return [
-    ...(yield* declarationDrift(declarationText, fingerprint)),
-    ...turboDrift(sources.turbo.tasks, fingerprint),
+    ...(yield* declarationDrift(declarationText, fingerprint, scope)),
+    ...turboDrift(scopedTasks(sources.turbo.tasks, scope), scopedFingerprint(fingerprint, scope)),
     ...scriptDrift(sources.rootScripts),
   ];
 });
@@ -846,10 +914,30 @@ export class PolicyToolsFingerprintPolicy extends Context.Service<
         return { sources, fingerprint: yield* fingerprintFromSources(sources, tree) } as const;
       })
     );
+    // Drift that only names subjects the checkout pruned or owns is no drift. The inventory is read
+    // only when there is drift, so a current checkout reads nothing more.
+    const residualDrift = Effect.fnUntraced(function* (
+      sources: FingerprintSources,
+      declarationText: O.Option<string>,
+      fingerprint: PolicyToolsFingerprint
+    ) {
+      const drift = yield* driftOf(sources, declarationText, fingerprint, keepEverything);
+      if (A.isReadonlyArrayEmpty(drift)) return drift;
+      const inventory = yield* provide(loadCheckoutInventory(root, productLeaves)).pipe(
+        Effect.mapError((cause) => PolicyFingerprintError.make({ message: cause.message, cause }))
+      );
+      const residual = yield* driftOf(sources, declarationText, fingerprint, prunedDriftScope(inventory));
+      if (A.isReadonlyArrayEmpty(residual)) {
+        yield* Console.log(
+          `policy-fingerprint: ${A.length(drift)} drift row(s) name only files or tasks pruned from this checkout: ${A.join(drift, "; ")}`
+        );
+      }
+      return residual;
+    });
     const check = Effect.gen(function* () {
       const { sources, fingerprint } = yield* compute;
       const readDeclaration4 = yield* readDeclaration;
-      const drift = yield* driftOf(sources, readDeclaration4, fingerprint);
+      const drift = yield* residualDrift(sources, readDeclaration4, fingerprint);
       if (A.isReadonlyArrayNonEmpty(drift)) {
         return yield* PolicyFingerprintError.make({
           message: `Policy fingerprint drift: ${A.join(drift, "; ")}; run bun run beep lint policy-fingerprint --write.`,

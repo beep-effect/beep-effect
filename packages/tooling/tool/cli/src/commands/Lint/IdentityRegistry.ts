@@ -10,12 +10,25 @@
  * outside `@beep/identity` constructs a local root composer via the
  * identity `make(...)` export.
  *
+ * A registration whose workspace the checkout pruned (a product leaf or a
+ * package the checkout's prune declaration names, its directory gone) or owns
+ * is not an orphan: the orphan and stale-labs rows for it are skipped and
+ * counted on the summary line instead (goals/prunable-product-leaves, seam
+ * 1b). Every other registration is checked exactly as before.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import {
+  isCheckoutSubjectPruned,
+  loadCheckoutInventory,
+  prunedCheckoutSubjectsNote,
+  workspaceSubject,
+} from "@beep/repo-cli-kit/CheckoutSubject";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { productLeaves } from "@beep/repo-cli-kit/ProductLeaves";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit, normalizePath } from "@beep/schema";
 import { A, Str, thunkFalse } from "@beep/utils";
@@ -362,6 +375,20 @@ const reportViolations = Effect.fn("IdentityRegistry.reportViolations")(function
 const identityRegistryOkLine = (workspaceCount: number, labCount: number): string =>
   `[lint:identity-registry] OK: ${workspaceCount} workspace packages registered; ${labCount} lab(s) in the generated labs segment; no orphan or local root composers.`;
 
+// The rows that say a registration has no live workspace: an orphan, or a stale generated lab.
+const OwnerlessViolationKind = LiteralKit(["orphan-registration", "labs-segment-extra"]).pipe(
+  $I.annoteSchema("OwnerlessViolationKind", {
+    description: "Identity-registry violation kinds that report a registration with no live workspace owner.",
+  })
+);
+const isOwnerlessViolationKind = S.is(OwnerlessViolationKind);
+
+// The skipped rows' line: how many, and which pruned workspaces they name.
+const skippedRegistrationsLine = (skipped: A.NonEmptyReadonlyArray<IdentityRegistryViolation>): string =>
+  `[lint:identity-registry] skipped ${A.length(skipped)} registration row(s) whose workspace is ${prunedCheckoutSubjectsNote(
+    A.map(A.dedupe(A.map(skipped, (violation) => violation.subject)), workspaceSubject)
+  )}`;
+
 const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryLint")(function* (options: {
   readonly fix: boolean;
 }) {
@@ -389,7 +416,16 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
     labsSegmentViolations(labsState, identityPackagesFilePath)
   );
   const collectLocalRootViolations1 = yield* collectLocalRootViolations(repoRoot, slugsToDirs);
-  const violations = A.appendAll(argument, collectLocalRootViolations1);
+  const found = A.appendAll(argument, collectLocalRootViolations1);
+  const inventory = yield* loadCheckoutInventory(repoRoot, productLeaves);
+  const isPrunedOwner = (violation: IdentityRegistryViolation): boolean =>
+    isOwnerlessViolationKind(violation.kind) && isCheckoutSubjectPruned(inventory, workspaceSubject(violation.subject));
+  const skipped = A.filter(found, isPrunedOwner);
+  const violations = A.filter(found, (violation) => !isPrunedOwner(violation));
+
+  if (A.isReadonlyArrayNonEmpty(skipped)) {
+    yield* Console.log(skippedRegistrationsLine(skipped));
+  }
 
   if (A.isReadonlyArrayNonEmpty(violations)) {
     return yield* reportViolations(violations);

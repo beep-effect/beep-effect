@@ -80,10 +80,13 @@ guard that keeps it holding.
      `standards/entity-kit-freeze.baseline.jsonc` through
      `bun run beep laws entity-kit-freeze --write`, and the policy fingerprint
      seals through `bun run beep lint policy-fingerprint --write`); they may
-     only shrink. Drop the root `package.json` catalog entries that
-     `bun run beep quality catalog-usage` reports without a consumer.
+     only shrink.
   5. `bun install` again, so the lockfile and workspace links name no removed
-     package.
+     package. Then drop the root `package.json` catalog entries that
+     `bun run beep quality catalog-usage` reports without a consumer: before
+     the reinstall the lockfile still records what the pruned workspaces
+     consumed, and catalog-usage skips those entries
+     (`decisions/2026-11-18-catalog-usage-lockfile-evidence.md`).
   6. Check, lint and test every remaining workspace.
 
   Hand edits to kept packages are not part of the rehearsal.
@@ -311,6 +314,14 @@ Lane feat/prunable-product-leaves
 
 Reverse: Delete the rule and its allowlist; the seams stay merged.
 
+### catalog-usage reads a pruned workspace's consumption from its bun.lock record, 2026-11-18
+
+A pruned workspace's package.json is gone, so the only record of the catalog: dependencies it consumed is the workspace entry bun.lock keeps under its last-known directory. Measured with bun 1.4.4: after a workspace directory is deleted, a frozen install prints that it skipped one workspace listed in bun.lock but not on disk and exits 0, keeping the entry; a plain install drops it. catalog-usage now reads that record for each pruned workspace (and each workspace an owned entry names by packageName) and counts it as a consumer that excuses an entry, never as a live one: an entry or root override consumed only there is skipped and counted (skipped_pruned), not reported. A record of an undeclared missing workspace is not read, and once a regenerated lockfile drops a record its entries are reported again. A checkout that keeps upstream's bun.lock therefore keeps its root catalog unedited. The prune rehearsal regenerates the lockfile, so its catalog step moves after the reinstall (SPEC.md, Prune rehearsal).
+
+Lane feat/prunable-seam-1b
+
+Reverse: Stop reading bun.lock workspace records; entries of pruned workspaces are reported until the checkout drops them.
+
 ### A trimmed checkout declares its own prunes in a standards file, 2026-11-18
 
 Extends the declared-prune rule in 2026-11-17-absent-subject-skipped-present-strict.md, which stays in force with its present-strict, subject-keying and one-helper rules, and extends the ProductLeaves catalog that #3379 shipped with a second source of declarations. The review of #3379 showed that a skip keyed on absence turns a stale or misspelled name into a silent skip, and #3379 now skips only for subjects listed in @beep/repo-cli-kit/ProductLeaves whose directory is gone. A code catalog has a limit: a trimmed checkout or fork can drop only what that kept file lists, and it cannot add its own drops without editing a kept package. Agent call: a checkout may carry one optional tracked declaration at checkout-prune.jsonc under standards/. This repository ships none, so every assertion here stays as strict as #3379 left it. Its schema is CheckoutPruneDeclaration, in a new @beep/repo-cli-kit/CheckoutPrune module: { version: 1, prune: [CheckoutPruneEntry], keep: [CheckoutPruneEntry], owned: [CheckoutPruneEntry] }, where CheckoutPruneEntry is { path, why, packageName? }, and path is a repository-relative git :(glob) pathspec (** crosses segments, * does not). An entry resolves to a subject this way: a workspace subject is declared by an entry whose packageName names it, and that entry's path is the workspace's last-known directory, the one "its directory is gone" checks, just as ProductLeaves lists workspaces by name and directory; a packet subject is declared by an entry whose path matches its packet root; and a repository path outside every packet and workspace, normally an always-present subject, becomes a subject of its own when a prune or owned entry matches it: seam 1b adds a RepositoryPathSubject { path } variant to CheckoutSubject for it. A prune entry makes it pruned once the file is gone; an owned entry skips its upstream checks whether or not the file exists, as owned does everywhere. That last case is the one exception to the subject-keying rule, just as owned is the one exception to the present-strict rule. A prune entry names a path the checkout removed. An owned entry names a path the checkout replaced with its own content, so upstream checks of that path do not apply to it. A keep entry carves a path out of a broader prune or owned glob, or out of a ProductLeaves entry. A path is declared pruned when it matches a prune or owned entry and no keep entry. loadCheckoutInventory reads the declaration. A subject skips when it is in productLeaves or matched by a prune entry, no keep entry covers it, and its directory is gone; or when it is declared pruned by an owned entry, which already excludes keep. A keep entry therefore protects a subject on every route, ProductLeaves included: a kept path that is missing fails. Owned is the one exception to the present-strict rule: an owned subject skips although its directory exists, because the checkout replaced what upstream checks assert. An absent subject that is not declared still fails. A prune entry that matches a live path outside every keep entry is a finding, so a declaration cannot hide a live path; owned and keep entries match live paths by design. Each tolerant surface class gets these tests: absent and declared skips with the note; absent and undeclared fails; a live owned subject skips while the same path without an owned entry stays strict; a subject carved out by keep stays strict; a missing product leaf under a keep entry fails.
@@ -318,6 +329,62 @@ Extends the declared-prune rule in 2026-11-17-absent-subject-skipped-present-str
 Lane feat/prunable-prune-declaration
 
 Reverse: Delete the CheckoutPrune module and the RepositoryPathSubject variant of CheckoutSubject and stop reading the file; ProductLeaves alone decides what may be pruned again.
+
+### Checkout prune pathspecs are git globs without escapes or trailing slashes, 2026-11-18
+
+The contract makes each entry path a repository-relative git :(glob) pathspec. CheckoutPrunePathspec accepts the subset whose meaning is unambiguous: no leading slash and no pathspec magic prefix; forward slashes and no backslash escapes; no empty, . or .. segment and no trailing slash (a directory is named without its slash and covers everything under it); and ** only as a whole segment, which is the only form git's glob magic gives a meaning. Matching uses @beep/glob with git's options (wildcards match dot files; braces, extglobs, a leading ! and a leading # are ordinary characters) plus git's literal-prefix rule. Each row of the table in packages/tooling/library/repo-cli-kit/test/checkout-prune.test.ts was checked against git ls-files with the same pathspec. An entry with packageName must name a literal directory, because it is the workspace's last-known directory. An unknown key in the file or in an entry fails the decode, so a misspelled list never reads as an empty one.
+
+Lane feat/prunable-seam-1b
+
+Reverse: Widen CheckoutPrunePathspec to accept backslash escapes and trailing slashes, each read as git reads it.
+
+### Seam 5 owns beep delete-package dropping a product leaf, 2026-11-18
+
+beep delete-package cannot drop a product leaf today: a dry run on packages/drivers/box refuses on 195 unacknowledged production, test, script or path dependent hits and on packet references. Most of those hits are the kept-package edges seams 2 to 4 remove; the rest name the leaf from other leaves (what --cascade covers) or from the CI tables seam 5 derives from the present workspaces. Agent call: seam 5, the last code seam, owns the proof. Its PR runs delete-package --dry-run --cascade over the product leaves, fixes any registration delete-package still refuses on for a reason no earlier seam owned, and records the result, so the prune rehearsal (P2 Verify) can delete the leaves with the tool instead of by hand. Seam 1b does not change delete-package.
+
+Lane feat/prunable-seam-1b
+
+Reverse: Move the delete-package proof to another seam with a new decision file.
+
+### Entries in .fallowrc.jsonc need no declared-prune tolerance, 2026-11-18
+
+PLAN listed .fallowrc.jsonc entries whose targets are declared pruned among the seam 1b surfaces. Nothing reads those entries against the checkout. fallow 3.34.1, run on a scratch project whose entry glob and ignoreExports file name missing paths, reports zero issues and zero stale suppressions, and no repo-cli law or test asserts that a .fallowrc.jsonc target exists. A pruned checkout therefore keeps .fallowrc.jsonc unedited without a failure, so seam 1b changes nothing there. The generated boundary zones are regenerated by the prune rehearsal as before.
+
+Lane feat/prunable-seam-1b
+
+Reverse: Add a check that .fallowrc.jsonc entry and ignoreExports targets exist, with the declared-prune skip.
+
+### A prune entry that names a live path makes the checkout inventory read fail, 2026-11-18
+
+The checkout prune declaration decision makes a prune entry that matches a live path outside every keep entry a finding. Agent call on where it surfaces: loadCheckoutInventory refuses such a declaration with CheckoutPruneFindingsError, naming each entry and the first live path it matches, so no tolerant surface consults a declaration that claims what the checkout still holds. Live paths are the working-tree files a prune entry matches (each entry expanded with the git glob rules, files only, without following symbolic links or descending into node_modules or .git), the roots of present packets and the directories of discovered workspaces; a prune entry whose packageName workspace discovery finds is a finding too. The knowledge doctor resolves the same rule over the tracked files and directories of the tree it checks. Because of the refusal, a repository path a prune entry matches is gone whenever an inventory exists, which is what lets RepositoryPathSubject be judged without reading the file again. Owned and keep entries match live paths by design and are never findings. A present file at the declaration path that does not decode, an unknown key included, fails the read the same way (CheckoutPruneDeclarationError).
+
+Lane feat/prunable-seam-1b
+
+Reverse: Record the findings on the inventory and report them from one dedicated check instead of failing the read.
+
+### A pruned packet whose directory survives through a kept file stays present, 2026-11-18
+
+Seam 1b, the partial case of 2026-11-18-checkout-prune-declaration.md. Agent call: a packet whose directory still exists is present, even when the only file left in it is one a keep entry carves out of a prune, so the goals doctor and the knowledge doctor check it in full (manifest-missing, research-reports-drift and every other packet finding), as for any present packet. Owned stays the one exception to the present-strict rule. A prune entry that names such a packet's root names a live path, so the inventory read refuses it (see 2026-11-18-live-prune-entry-refused.md); a prune of only the packet's contents (its root followed by /**) leaves a present packet that is checked in full. A checkout that keeps one file of a packet it otherwise dropped declares the packet owned, with a keep entry for the file so a link to that file stays strict. packages/tooling/tool/cli/test/goals-doctor.test.ts proves all three forms.
+
+Lane feat/prunable-seam-1b
+
+Reverse: Treat a packet whose directory holds only kept files as pruned and skip its packet-level findings.
+
+### Seam 4 owns extending merge=regenerate to the remaining generated projections, 2026-11-18
+
+A trimmed checkout or downstream fork regenerates vitest.aliases.generated.json, standards/root-package.projection.generated.json and the source array in syncpack.config.ts after it prunes, and those regenerated files then conflict with every upstream change to them. The repository's merge=regenerate driver already resolves the projections .gitattributes names by rerunning their generators. Agent call: seam 4 owns extending it to these three, because seam 4 turns the db-admin aggregation into a generated projection of the present slices and must register that projection with the same driver; the four land together with their generator proofs. Seam 1b does not change .gitattributes.
+
+Lane feat/prunable-seam-1b
+
+Reverse: Move the merge driver extension to another seam with a new decision file.
+
+### Seam 1b ships in two pull requests, the rule and its tools first, 2026-11-18
+
+PLAN allows splitting seam 1b when one pull request is too large to review. Agent call: the first carries the kit module (@beep/repo-cli-kit/CheckoutPrune), the RepositoryPathSubject variant and the declaration-aware inventory, and the source surfaces that load it: lint identity-registry, lint policy-fingerprint, quality catalog-usage, lint roadmap-refs, goals doctor, knowledge doctor and the PrivateHomePaths law. The second carries the test-reader surfaces PLAN lists for seam 1b (the repo-root fixture reads, the pilot-packet readers, the runner-burst packet read and the census exclusion rows) and closes the seam. The second opens only after the first merges.
+
+Lane feat/prunable-seam-1b
+
+Reverse: Fold the second pull request's surfaces into one follow-up of either half; nothing merged changes.
 
 <!-- beep:decisions:end -->
 

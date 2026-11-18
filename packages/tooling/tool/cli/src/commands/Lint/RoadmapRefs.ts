@@ -4,6 +4,9 @@
  * Verifies that goal and exploration links in `docs/ROADMAP.md` resolve to
  * existing files or directories. Goal phase snapshots are compared with the
  * linked packet manifest when phase data is available, but drift is advisory.
+ * A missing target in a packet the checkout pruned or owns (see
+ * `@beep/repo-cli-kit/CheckoutSubject`) is skipped and counted instead of
+ * blocking; every other missing target still blocks.
  *
  * Link extraction rides the shared knowledge link parser (`knowledgeDocumentLines`
  * + `knowledgeLinkDestinations`), so what counts as a link — and which lines are
@@ -17,8 +20,10 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { isCheckoutPathPruned, loadCheckoutInventory } from "@beep/repo-cli-kit/CheckoutSubject";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { makePolicyFindingLogger } from "@beep/repo-cli-kit/cli/PolicyFindingLogger";
+import { productLeaves } from "@beep/repo-cli-kit/ProductLeaves";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { LiteralKit } from "@beep/schema";
 import { A, thunkEmptyStr } from "@beep/utils";
@@ -313,12 +318,21 @@ export const runRoadmapRefsLint = Effect.fn(function* (repoRootOverride: O.Optio
   const raw = yield* fs.readFileString(roadmapPath);
   const blocking = A.empty<RoadmapPolicyFinding>();
   const advisories = A.empty<RoadmapPolicyFinding>();
+  const skipped = A.empty<string>();
+  // Read only when a target is missing: a link into a packet the checkout pruned is skipped and
+  // counted, not blocking (goals/prunable-product-leaves, seam 1b).
+  const inventory = yield* Effect.cached(loadCheckoutInventory(repoRoot, productLeaves));
 
   for (const reference of parseRoadmapReferences(raw)) {
     const resolvedTarget = path.resolve(path.dirname(roadmapPath), targetPath(reference.target));
     const repoPath = path.relative(repoRoot, resolvedTarget);
     const isDerivedProjection = HashSet.has(DERIVED_PROJECTION_PATHS, repoPath);
     if (!(yield* fs.exists(resolvedTarget)) && !isDerivedProjection) {
+      const checkout = yield* inventory;
+      if (isCheckoutPathPruned(checkout, repoPath)) {
+        skipped.push(reference.target);
+        continue;
+      }
       blocking.push(
         makeFinding(
           "error",
@@ -338,6 +352,13 @@ export const runRoadmapRefsLint = Effect.fn(function* (repoRootOverride: O.Optio
 
   yield* Console.log(`[roadmap] blocking_findings=${A.length(blocking)}`);
   yield* Console.log(`[roadmap] advisory_findings=${A.length(advisories)}`);
+
+  if (A.isReadonlyArrayNonEmpty(skipped)) {
+    yield* Console.log(`[roadmap] skipped_pruned=${A.length(skipped)}`);
+    for (const target of skipped) {
+      yield* Console.log(`[roadmap] skipped ${target}: its packet is pruned from this checkout`);
+    }
+  }
 
   if (A.isReadonlyArrayNonEmpty(advisories)) {
     yield* Console.error("[roadmap] advisories (non-fatal):");

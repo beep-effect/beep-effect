@@ -579,6 +579,57 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
       })
     );
 
+    // goals/prunable-product-leaves, seam 1b: the checkout's own prune declaration skips the rows of
+    // what it pruned or owns; an undeclared, kept or present subject keeps its rows stale.
+    it.effect(
+      "skips the rows of subjects the checkout's declaration prunes or owns, and no other",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "private-home-paths-" });
+        yield* fs.writeFileString(path.join(root, "bun.lock"), "");
+        const initExit = yield* git(root, ["init", "--quiet"]);
+        expect(initExit).toBe(0);
+        yield* fs.makeDirectory(path.join(root, "goals/owned"), { recursive: true });
+        yield* fs.writeFileString(path.join(root, "goals/owned/README.md"), "# replaced by this checkout\n");
+        const addExit = yield* git(root, ["add", "--", "goals/owned/README.md"]);
+        expect(addExit).toBe(0);
+        const row = (file: string) => PrivateHomePathExemption.make({ file, count: 1, reason: "capture" });
+        const exemptions = [
+          row("goals/demo-gone/history/sealed.txt"),
+          row("goals/demo-kept/history/sealed.txt"),
+          row("goals/owned/history/sealed.txt"),
+          row("goals/pruned/history/sealed.txt"),
+          row("docs/removed.txt"),
+        ];
+        const prunablePackets = [PacketRoot.make("goals/pruned")];
+        const skippedWith = Effect.fnUntraced(function* (declaration: string) {
+          yield* fs.makeDirectory(path.join(root, "standards"), { recursive: true });
+          yield* fs.writeFileString(path.join(root, "standards/checkout-prune.jsonc"), declaration);
+          const summary = yield* runPrivateHomePaths(
+            PrivateHomePathsOptions.make({ cwd: root, strictCheck: true, exemptions, prunablePackets })
+          );
+          return summary.skippedExemptions;
+        });
+
+        // Only the declared product-leaf packet skips without a declaration.
+        const undeclared = yield* skippedWith('{ "version": 1 }');
+        expect(undeclared).toEqual(["goals/pruned/history/sealed.txt"]);
+        const declared = yield* skippedWith(
+          '{ "version": 1, "prune": [{ "path": "goals/demo-*", "why": "not shipped" }, { "path": "docs/removed.txt", "why": "not shipped" }], "keep": [{ "path": "goals/demo-kept", "why": "kept" }], "owned": [{ "path": "goals/owned", "why": "replaced" }] }'
+        );
+        expect(declared).toEqual([
+          "goals/demo-gone/history/sealed.txt",
+          "goals/owned/history/sealed.txt",
+          "goals/pruned/history/sealed.txt",
+          "docs/removed.txt",
+        ]);
+        // A missing product-leaf packet under a keep entry keeps its row stale.
+        const kept = yield* skippedWith('{ "version": 1, "keep": [{ "path": "goals/pruned", "why": "kept" }] }');
+        expect(kept).toEqual([]);
+      })
+    );
+
     it.effect(
       "fails with the law's execution error when the directory is not a git checkout",
       Effect.fnUntraced(function* () {

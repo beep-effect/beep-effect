@@ -760,6 +760,9 @@ export const renderKnowledgeDoctorHumanReport = (report: KnowledgeDoctorReport):
       ),
       verifiedNote(report),
       `unchecked options: ${report.uncheckedOptionCount}`,
+      ...(report.skippedPrunedCount === undefined
+        ? []
+        : [`skipped as pruned from this checkout: ${report.skippedPrunedCount}`]),
       `findings (${A.length(report.findings)}):`,
       ...doctorKindCounts(report),
       rootSummary(report),
