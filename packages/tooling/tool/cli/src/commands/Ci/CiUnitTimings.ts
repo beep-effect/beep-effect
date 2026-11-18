@@ -46,7 +46,8 @@ import {
 const $I = $RepoCliId.create("commands/Ci/CiUnitTimings");
 
 const REPORT_FILE = "unit-results.json";
-const INVOCATION_DIR = /^invocation-(\d+)$/u;
+const INVOCATION_PREFIX = "invocation-";
+const isInvocationDir = S.is(S.String.check(S.isPattern(/^invocation-\d+$/u)));
 
 const VitestFileResult = S.Struct({
   name: S.NonEmptyString,
@@ -164,14 +165,10 @@ const workspaceReports = Effect.fnUntraced(function* (
     .pipe(CiCommandError.mapError(`Failed to list ${path.relative(repoRoot, coverage)}.`));
   const candidates = A.appendAll(
     [{ invocationId: "0", file: path.join(coverage, REPORT_FILE) }],
-    A.getSomes(
-      A.map(A.sort(entries, Order.String), (entry) =>
-        O.map(O.fromNullishOr(INVOCATION_DIR.exec(entry)), (match) => ({
-          invocationId: match[1] ?? "0",
-          file: path.join(coverage, entry, REPORT_FILE),
-        }))
-      )
-    )
+    A.map(A.filter(A.sort(entries, Order.String), isInvocationDir), (entry) => ({
+      invocationId: Str.slice(INVOCATION_PREFIX.length)(entry),
+      file: path.join(coverage, entry, REPORT_FILE),
+    }))
   );
   const writtenThisAttempt = Effect.fnUntraced(function* (file: string) {
     if (!(yield* exists(file))) {
@@ -180,8 +177,8 @@ const workspaceReports = Effect.fnUntraced(function* (
     const info = yield* fs.stat(file).pipe(CiCommandError.mapError(`Failed to stat ${path.relative(repoRoot, file)}.`));
     return O.match(writtenSince, {
       onNone: () => true,
-      onSome: (since) =>
-        O.match(info.mtime, { onNone: () => true, onSome: (mtime) => mtime.getTime() >= since * 1000 }),
+      // A file system that records no modification time keeps the report.
+      onSome: (since) => !O.exists(info.mtime, (mtime) => mtime.getTime() < since * 1000),
     });
   });
   const present = yield* Effect.filter(candidates, (candidate) => writtenThisAttempt(candidate.file), {
@@ -197,7 +194,7 @@ const workspaceReports = Effect.fnUntraced(function* (
 
 const fileRow = (repoRoot: string, path: Path.Path, result: typeof VitestFileResult.Type) =>
   UnitTimingFile.make({
-    path: path.isAbsolute(result.name) ? path.relative(repoRoot, result.name) : result.name,
+    path: path.relative(repoRoot, path.resolve(repoRoot, result.name)),
     status: result.status,
     durationMs: Math.max(0, result.endTime - result.startTime),
     tests: A.length(result.assertionResults),
@@ -459,40 +456,46 @@ export const unitTimingCensus = (
   pipe(
     A.groupBy(projections, (projection) => projection.event),
     (byEvent) =>
-      A.map(A.sort(R.keys(byEvent), Order.String), (event) => {
-        const rows = latestAttempts(byEvent[event] ?? []);
-        const groups = A.reduce(rows, HashMap.empty<string, CensusGroup>(), (acc, projection) =>
-          A.reduce(projection.packages, acc, (inner, row) => {
-            const key = `${runKey(projection)}:${row.packageName}:${row.invocationId}`;
-            const previous = HashMap.get(inner, key);
-            return HashMap.set(inner, key, {
-              executed:
-                O.match(previous, { onNone: () => 0, onSome: (group) => group.executed }) + row.executedTestFiles,
-              expected: O.orElse(
-                O.flatMap(previous, (group) => group.expected),
-                () => row.expectedTestFiles
-              ),
-            });
-          })
-        );
-        const entries = A.sort(
-          HashMap.toEntries(groups),
-          Order.mapInput(Order.String, ([key]: readonly [string, unknown]) => key)
-        );
-        return UnitTimingEventCensus.make({
-          event,
-          projections: A.length(rows),
-          packages: A.length(entries),
-          executedTestFiles: A.reduce(entries, 0, (total, [, group]) => total + group.executed),
-          expectedTestFiles: A.reduce(entries, 0, (total, [, group]) => total + O.getOrElse(group.expected, () => 0)),
-          unmatched: A.getSomes(
-            A.map(entries, ([key, group]) =>
-              O.flatMap(group.expected, (expected) => (expected === group.executed ? O.none() : O.some(key)))
-            )
-          ),
-          unsealed: A.getSomes(A.map(entries, ([key, group]) => (O.isNone(group.expected) ? O.some(key) : O.none()))),
-        });
-      })
+      A.map(
+        A.sort(
+          R.toEntries(byEvent),
+          Order.mapInput(Order.String, ([event]: readonly [string, unknown]) => event)
+        ),
+        ([event, projected]) => {
+          const rows = latestAttempts(projected);
+          const groups = A.reduce(rows, HashMap.empty<string, CensusGroup>(), (acc, projection) =>
+            A.reduce(projection.packages, acc, (inner, row) => {
+              const key = `${runKey(projection)}:${row.packageName}:${row.invocationId}`;
+              const previous = HashMap.get(inner, key);
+              return HashMap.set(inner, key, {
+                executed:
+                  O.match(previous, { onNone: () => 0, onSome: (group) => group.executed }) + row.executedTestFiles,
+                expected: O.orElse(
+                  O.flatMap(previous, (group) => group.expected),
+                  () => row.expectedTestFiles
+                ),
+              });
+            })
+          );
+          const entries = A.sort(
+            HashMap.toEntries(groups),
+            Order.mapInput(Order.String, ([key]: readonly [string, unknown]) => key)
+          );
+          return UnitTimingEventCensus.make({
+            event,
+            projections: A.length(rows),
+            packages: A.length(entries),
+            executedTestFiles: A.reduce(entries, 0, (total, [, group]) => total + group.executed),
+            expectedTestFiles: A.reduce(entries, 0, (total, [, group]) => total + O.getOrElse(group.expected, () => 0)),
+            unmatched: A.getSomes(
+              A.map(entries, ([key, group]) =>
+                O.flatMap(group.expected, (expected) => (expected === group.executed ? O.none() : O.some(key)))
+              )
+            ),
+            unsealed: A.getSomes(A.map(entries, ([key, group]) => (O.isNone(group.expected) ? O.some(key) : O.none()))),
+          });
+        }
+      )
   );
 
 const optionalInt = (name: string) =>

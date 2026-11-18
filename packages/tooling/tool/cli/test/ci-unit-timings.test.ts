@@ -4,6 +4,7 @@
 // equal the selection per event.
 
 import {
+  ciUnitTimingsCommand,
   projectUnitTimings,
   UnitTimingOptions,
   UnitTimingPackage,
@@ -17,13 +18,18 @@ import { it } from "@effect/vitest";
 import { assertNone, assertSome, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
 import * as Str from "effect/String";
+import * as Terminal from "effect/Terminal";
+import * as TestConsole from "effect/testing/TestConsole";
 
 const encode = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeProjection = S.decodeUnknownEffect(S.fromJsonString(UnitTimingProjection));
@@ -296,8 +302,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
         shard("pull_request", 2, 2, 3),
         // "Re-run failed jobs": shard 2 failed on attempt 1 and passed on attempt 2; shard 1 stays on attempt 1.
         shard("merge_group", 3, 1, 6),
-        shard("merge_group", 3, 2, 1),
         shard("merge_group", 3, 2, 4, 2),
+        shard("merge_group", 3, 2, 1),
+        // A local projection carries no run identity; both shards ran in it.
+        UnitTimingProjection.make({ ...shard("local", 0, 1, 6), runId: O.none(), runAttempt: O.none() }),
+        UnitTimingProjection.make({ ...shard("local", 0, 2, 4), runId: O.none(), runAttempt: O.none() }),
+        UnitTimingProjection.make({ ...shard("local", 0, 2, 4), runId: O.none(), runAttempt: O.none() }),
       ]);
       deepStrictEqual(
         A.map(census, (row) => [
@@ -309,9 +319,52 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
           row.unmatched,
         ]),
         [
+          ["local", 2, 1, 10, 10, []],
           ["merge_group", 2, 1, 10, 10, []],
           ["pull_request", 2, 1, 9, 10, ["2:@beep/repo-cli:0"]],
           ["push", 2, 1, 10, 10, []],
+        ]
+      );
+    })
+  );
+
+  it.effect("reads invocation-only, empty and relative-path reports and a sharded selection", () =>
+    Effect.gen(function* () {
+      const { root, write } = yield* workspace([
+        ["@beep/c", "packages/c"],
+        ["@beep/d", "packages/d"],
+      ]);
+      // Package c ran only its second invocation, and its report names files relative to the checkout.
+      yield* write("packages/c/coverage/invocation-1/unit-results.json", {
+        success: true,
+        testResults: [
+          { name: "packages/c/test/one.test.ts", status: "passed", startTime: 0, endTime: 4, assertionResults: [] },
+        ],
+      });
+      // Package d ran no test file.
+      yield* write("packages/d/coverage/unit-results.json", report(root, true, []));
+      yield* write(".beep/ci-coverage/repo-cli-1/manifest.json", {
+        schemaVersion: "coverage-producer/v1",
+        identity: { runId: "7", runAttempt: 1 },
+        packages: [
+          selection("@beep/c", "packages/c", ["packages/c/test/one.test.ts", "packages/c/test/two.test.ts"], "1", {
+            index: 1,
+            total: 2,
+          }),
+        ],
+      });
+      const projection = yield* projectUnitTimings(root, options("repo-cli-1"));
+      deepStrictEqual(
+        A.map(projection.packages, (row) => [
+          row.reportPath,
+          row.executedTestFiles,
+          row.wallMs,
+          O.getOrNull(O.map(row.shard, (shard) => `${shard.index}/${shard.total}`)),
+          A.map(row.files, (file) => file.path),
+        ]),
+        [
+          ["packages/c/coverage/invocation-1/unit-results.json", 1, 4, "1/2", ["packages/c/test/one.test.ts"]],
+          ["packages/d/coverage/unit-results.json", 0, 0, null, []],
         ]
       );
     })
@@ -344,6 +397,58 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
         [written.event, written.runId, written.runAttempt, written.sealed, A.length(written.packages)],
         ["merge_group", O.some(99), O.some(2), false, 1]
       );
+      // Outside Actions the event is `local` and no attempt filters the manifest, so the shard seals.
+      yield* write(".beep/ci-coverage/unit-a/manifest.json", {
+        schemaVersion: "coverage-producer/v1",
+        identity: { runId: "7", runAttempt: 1 },
+        packages: [selection("@beep/a", "packages/a", ["packages/a/test/one.test.ts"])],
+      });
+      const local = yield* writeUnitTimings(root, "unit-a", ".beep/ci-coverage/unit-a", out).pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord({}))
+      );
+      deepStrictEqual([local.event, local.sealed, local.runId], ["local", true, O.none()]);
+    })
+  );
+});
+
+// The command resolves the checkout it runs in, so it projects this repository's own workspaces (whatever
+// reports they hold) and writes only to the scratch path it is given.
+const CommandLayer = Layer.mergeAll(
+  NodeServices.layer,
+  Stdio.layerTest({ stdinIsTerminal: Effect.succeed(false), stdoutIsTerminal: Effect.succeed(false) }),
+  Layer.succeed(
+    Terminal.Terminal,
+    Terminal.make({
+      columns: Effect.succeed(80),
+      rows: Effect.succeed(24),
+      size: Effect.die("unused"),
+      readInput: Effect.die("unused"),
+      readLine: Effect.die("unused"),
+      display: () => Effect.void,
+    })
+  ),
+  TestConsole.layer
+);
+const runUnitTimingsCommand = Command.runWith(ciUnitTimingsCommand, { version: "0.0.0" });
+
+it.layer(CommandLayer, { timeout: "60 seconds" })("ci unit-timings command", (it) => {
+  it.effect("writes a decodable projection for the checkout it runs in", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const temp = yield* fs.makeTempDirectoryScoped({ prefix: "beep-ci-unit-timings-command-" });
+      const out = path.join(temp, "out", "unit-a.json");
+      yield* runUnitTimingsCommand([
+        "--partition",
+        "unit-a",
+        "--coverage-output",
+        path.join(temp, "no-coverage"),
+        "--out",
+        out,
+      ]);
+      const text = yield* fs.readFileString(out);
+      const written = yield* decodeProjection(text);
+      deepStrictEqual([written.partition, written.sealed], ["unit-a", false]);
     })
   );
 });
