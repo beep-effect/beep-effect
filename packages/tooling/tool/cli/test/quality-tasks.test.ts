@@ -91,6 +91,7 @@ import {
   foldTurboLaneDigests,
   GateOrderSeed,
   GateOrderSeedRow,
+  GITHUB_CHECK_RUN_REPORT_FILE_NAME,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
   GithubCheckLaneSpec,
@@ -247,7 +248,7 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 const decodeQualityTaskLaneRun = S.decodeEffect(QualityTaskLaneRun);
 const decodeQualityTaskLaneRunReportJson = S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
 const encodeQualityTaskLaneRunReport = S.encodeEffect(QualityTaskLaneRunReport);
-const encodeQualityTaskLaneRunReportJson = S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
+const decodeGithubCheckRunReportJson = S.decodeEffect(S.fromJsonString(GithubCheckRunReport));
 
 const decodeCoverageComparisonFailure = S.decodeEffect(CoverageComparisonFailure);
 const decodeGithubCheckFailurePolicy = S.decodeEffect(GithubCheckFailurePolicy);
@@ -2720,17 +2721,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         expect(report.schemaVersion).toBe("quality-task-lane-run/v1");
         assertSome(report.parentLaneId, "full:02-ci-parity");
         expect(A.map(report.lanes, (lane) => lane.id)).toEqual(["check"]);
+        // AC6 (gate-output-switch-on): the file is the record, so stdout carries no copy of the envelope.
         const logLines14 = yield* TestConsole.logLines;
-        const emitted = pipe(
-          logLines14,
-          A.filter(isString),
-          A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
-          O.getOrThrow
-        );
-        const emittedReport = yield* decodeQualityTaskLaneRunReportJson(
-          Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
-        );
-        expect(A.map(emittedReport.lanes, (lane) => lane.id)).toEqual(["check"]);
+        expect(
+          A.filter(A.filter(logLines14, isString), Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX))
+        ).toStrictEqual([]);
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -2738,50 +2733,52 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
-    it.effect("rebuilds an unscoped lane report from an unscoped artifact", () =>
+    // AC6 (gate-output-switch-on): with the side channel set, both envelopes stay in their durable files.
+    it.effect("writes both GitHub-check envelopes to durable files and none to stdout under the side channel", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const tempDir = yield* fs.makeTempDirectoryScoped();
-        const artifactPath = path.join(tempDir, "unscoped-inner-lanes.ndjson");
-        const durableReport = yield* encodeQualityTaskLaneRunReportJson(
-          QualityTaskLaneRunReport.make({
-            schemaVersion: "quality-task-lane-run/v1",
-            parentLaneId: O.none(),
-            lanes: [
-              QualityTaskLaneRun.make({
-                id: "check",
-                label: "ci:check",
-                status: "passed",
-                inputDigest: O.none(),
-              }),
-            ],
-          })
-        );
-        yield* fs.writeFileString(artifactPath, `${durableReport}\n`);
-
+        const artifactPath = path.join(tempDir, "inner-lanes.ndjson");
+        const waves = [
+          GithubCheckLaneWaveSpec.make({
+            wave: "preflight",
+            lanes: [githubCheckTestLane("quality:green", "preflight", "process.exit(0)")],
+          }),
+        ];
         yield* withEnvVarEffect(
           QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
           artifactPath,
           withEnvVarEffect(
             QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
-            undefined,
-            runQualityTaskStreamingLaneGroup("ci:local", [])
+            "full:02-ci-parity",
+            runQualityTaskGithubCheckLaneWaves("pre-push", waves, "fail-fast")
           )
         );
 
         const logLines15 = yield* TestConsole.logLines;
-        const emitted = pipe(
-          logLines15,
-          A.filter(isString),
-          A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
-          O.getOrThrow
+        const envelopes = A.filter(
+          A.filter(logLines15, isString),
+          (line) =>
+            Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)(line) ||
+            Str.startsWith(GITHUB_CHECK_RUN_REPORT_PREFIX)(line)
         );
-        const emittedReport = yield* decodeQualityTaskLaneRunReportJson(
-          Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
-        );
-        assertNone(emittedReport.parentLaneId);
-        expect(A.map(emittedReport.lanes, (lane) => lane.id)).toEqual(["check"]);
+        expect(envelopes).toStrictEqual([]);
+
+        const laneText = yield* fs.readFileString(artifactPath);
+        const laneLines = pipe(laneText, Str.split("\n"), A.filter(Str.isNonEmpty));
+        const laneReports = yield* Effect.forEach(laneLines, (line) => decodeQualityTaskLaneRunReportJson(line), {
+          concurrency: 1,
+        });
+        expect(A.flatMap(laneReports, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual(["quality:green"]);
+
+        const checkText = yield* fs.readFileString(path.join(tempDir, GITHUB_CHECK_RUN_REPORT_FILE_NAME));
+        const checkLines = pipe(checkText, Str.split("\n"), A.filter(Str.isNonEmpty));
+        expect(checkLines).toHaveLength(1);
+        const checkReport = yield* A.head(checkLines).pipe(O.getOrThrow, decodeGithubCheckRunReportJson);
+        assertSome(checkReport.parentLaneId, "full:02-ci-parity");
+        expect(checkReport.failurePolicy).toBe("fail-fast");
+        expect(A.map(checkReport.lanes, (lane) => [lane.id, lane.status])).toEqual([["quality:green", "passed"]]);
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -2789,55 +2786,29 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
-    it.effect("falls back when a lane artifact is missing or belongs to another parent", () =>
+    // AC6 (gate-output-switch-on): a bare terminal run keeps both envelopes on stdout, as before.
+    it.effect("prints both envelopes to stdout unchanged without the side channel", () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectoryScoped();
-        const missingPath = path.join(tempDir, "missing.ndjson");
-        const foreignPath = path.join(tempDir, "foreign.ndjson");
-        const foreignReport = yield* encodeQualityTaskLaneRunReportJson(
-          QualityTaskLaneRunReport.make({
-            schemaVersion: "quality-task-lane-run/v1",
-            parentLaneId: O.some("full:foreign-parent"),
-            lanes: [],
-          })
-        );
-        yield* fs.writeFileString(foreignPath, `${foreignReport}\n`);
-
-        yield* Effect.forEach(
-          [missingPath, foreignPath],
-          (artifactPath) =>
-            withEnvVarEffect(
-              QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
-              artifactPath,
-              withEnvVarEffect(
-                QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
-                "full:current-parent",
-                runQualityTaskGithubCheckLaneWaves("pre-push", [], "fail-fast")
-              )
-            ),
-          { concurrency: 1, discard: true }
+        yield* withEnvVarEffect(
+          QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+          undefined,
+          withEnvVarEffect(
+            QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+            undefined,
+            runQualityTaskGithubCheckLaneWaves("pre-push", [], "fail-fast")
+          )
         );
 
         const logLines16 = yield* TestConsole.logLines;
-        const reportLines = pipe(
-          logLines16,
-          A.filter(isString),
-          A.filter(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX))
-        );
-        expect(reportLines).toHaveLength(2);
-        const reports = yield* Effect.forEach(
-          reportLines,
-          (line) => decodeQualityTaskLaneRunReportJson(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)),
-          { concurrency: 1 }
-        );
-        expect(A.every(reports, (report) => A.isReadonlyArrayEmpty(report.lanes))).toBe(true);
-        pipe(
-          reports,
-          A.every((report) => O.contains(report.parentLaneId, "full:current-parent")),
-          assertTrue
-        );
+        const lines = A.filter(logLines16, isString);
+        const checkLines = A.filter(lines, Str.startsWith(GITHUB_CHECK_RUN_REPORT_PREFIX));
+        expect(checkLines).toStrictEqual([
+          `${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[],"skippedAfterRed":0}`,
+        ]);
+        const laneLines = A.filter(lines, Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX));
+        expect(laneLines).toStrictEqual([
+          `${QUALITY_TASK_LANE_RUN_REPORT_PREFIX}{"schemaVersion":"quality-task-lane-run/v1","lanes":[]}`,
+        ]);
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),

@@ -20,7 +20,7 @@ import { YeetRunResult } from "../Yeet.schemas.ts";
 import { artifactDirForContext, safeArtifactName, writeTextFile } from "./ArtifactPaths.ts";
 import { executeHeadInstallPreflight, HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
 import { laneRunsForWrapper, readInnerLaneReports } from "./InnerLaneReports.ts";
-import { MONITOR_CONTEXT_STEP_ID } from "./Planner.ts";
+import { MONITOR_CONTEXT_STEP_ID, MONITOR_READY_SUBMIT_STEP_ID } from "./Planner.ts";
 import { buildQualityIssueIndex, qualityIssuesFromStepResult } from "./QualityIssueIndex.ts";
 import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
@@ -30,6 +30,11 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RepoPlanStep, RepoRunContext, RepoStepRunResult } from "../../../internal/repo-run/index.ts";
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { PackageQualityReport, QualityIssue, QualityIssueIndex } from "../Yeet.schemas.ts";
+
+// The publish submit step running `monitor --until-ready --detach`. The attached fallback reuses the
+// step id with `--detach` removed and must keep streaming the live monitor.
+const isDetachedReadyMonitorSubmit = (step: RepoPlanStep): boolean =>
+  step.id === MONITOR_READY_SUBMIT_STEP_ID && A.contains(step.args, "--detach");
 
 const commandFailure = (result: RepoStepRunResult, message: string): YeetCommandError =>
   YeetCommandError.make({
@@ -119,6 +124,14 @@ export const rawOutputPathForStep = Effect.fn("Yeet.rawOutputPathForStep")(funct
 /**
  * Execute a planned repo step while streaming output into its Yeet log artifact.
  *
+ * **Details**
+ *
+ * Two steps are parsed rather than read, so they run split and silent: the
+ * monitor's pull request context read and the detached readiness-monitor
+ * submit (`monitor --until-ready --detach`), whose job-record JSON lands in
+ * the step log and the result's `output` but never on the console. Every
+ * other step streams its merged output live.
+ *
  * **Example** (Execute step with log)
  *
  * ```ts
@@ -175,8 +188,13 @@ export const executeStepWithArtifacts = Effect.fn("Yeet.executeStepWithArtifacts
     return yield* executeHeadInstallPreflight(context, step, O.some(rawOutputPath));
   }
   // The monitor decodes its pull request context as JSON, so that read takes gh's stdout apart from the
-  // advice gh prints on stderr; every other step streams its merged output live.
-  const execute = step.id === MONITOR_CONTEXT_STEP_ID ? executeRepoPlanStepSplit : executeRepoPlanStepStreaming;
+  // advice gh prints on stderr. The detached readiness-monitor submit prints only the job record the
+  // parent decodes, so it stays in the step log; the parent prints the job id. Every other step,
+  // the attached monitor fallback (its `--detach` dropped) included, streams its merged output live.
+  const execute =
+    step.id === MONITOR_CONTEXT_STEP_ID || isDetachedReadyMonitorSubmit(step)
+      ? executeRepoPlanStepSplit
+      : executeRepoPlanStepStreaming;
   return yield* execute(step, O.some(rawOutputPath)).pipe(
     Effect.mapError(YeetCommandError.new(`Failed to execute ${step.label}.`))
   );

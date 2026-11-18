@@ -239,7 +239,9 @@ const runtimeLayerFor = Effect.fnUntraced(function* (services: HashSetType.HashS
 const commandProgram = (target: DispatchTarget) =>
   Effect.scoped(
     Effect.flatMap(Dispatch.dispatchRuntimeServices(target).pipe(runtimeLayerFor), (layer) =>
-      Layer.build(layer).pipe(
+      // The help formatter rides in the built context: subcommand help prints one pointer line in
+      // place of the global-flag block, and root help keeps the block.
+      Layer.build(Layer.provideMerge(Dispatch.rootHelpFormatterLayer, layer)).pipe(
         Effect.flatMap(
           Effect.fnUntraced(function* (context) {
             const commands = yield* Dispatch.loadDispatchTarget(target);

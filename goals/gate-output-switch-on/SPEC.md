@@ -209,11 +209,27 @@ Lane fix/gate-output-switch-on
 
 Reverse: Add the three extra variables to the export, or pass the audience in from the task entry point.
 
+### The GitHub-check report's durable file sits beside the inner-lane report, 2026-11-18
+
+Settles the open P0 point for fix 4. The report is appended to `github-check-runs.ndjson` in the directory that `BEEP_YEET_INNER_LANE_REPORT_PATH` names: no new environment variable, the same append-only one-line-per-battery format as the lane report, and each line carries `parentLaneId` so the writing proof step is known. Yeet deletes it with the lane report at the start of each attempt. No production code read either envelope from stdout; the issue classifier only filtered them out. The helper that rebuilt the stdout lane envelope from the file had no remaining caller and was removed with its two tests.
+
+Lane fix/gate-output-quiet-surfaces
+
+Reverse: Print the envelope to stdout again and drop the file-name constant and its delete in the Yeet handler.
+
 ### The durable file is the record; stdout does not repeat it, 2026-11-18
 
 Where a gate already writes a durable record, its stdout carries no copy: the lane-run and GitHub-check envelopes stay in their files when the artifact path is set, and the readiness-monitor submit line stays in its step log. The GitHub-check report gains a durable file first, because only the lane-run report has one today. Ruling: explorations/agent-verification-output/DECISIONS.md, entry record-is-the-source.
 
 Reverse: Print the lane and GitHub-check envelopes and the monitor submit line to stdout again
+
+### Global flags print on root help through a formatter layer in the dispatch context, 2026-11-18
+
+The CLI entry does not pass an environment to the runtime's main, so `globalFlags: "summary"` is provided as a formatter layer merged into the context the command program builds. Help colour now follows the shared colour decision in `@beep/cli-kit` instead of the core TTY check. The quality-task names (`check`, `test`, `lint`, `build`) are not commands, so their `--help` still shows root help with the full list.
+
+Lane fix/gate-output-quiet-surfaces
+
+Reverse: Remove the formatter layer from the dispatch context; every help page prints the five global flags again.
 
 ### Gates only: the fixes touch output of gates the repo owns, 2026-11-18
 
