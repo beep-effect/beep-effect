@@ -28,13 +28,6 @@
 export const infraProjectName = "beep-effect";
 
 /**
- * Account cost visibility and protected budget ownership.
- *
- * @category resources
- * @since 0.0.0
- */
-export * from "./AccountCostControls.ts";
-/**
  * AI metrics Pulumi orchestration exports.
  *
  * @example
@@ -115,6 +108,14 @@ export * from "./CiShardOverflowPool.ts";
  * @since 0.0.0
  */
 export * from "./CiTurboCache.ts";
+/**
+ * The account notification recipient list the AWS turbo cache's throttle
+ * alarm reads.
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export * from "./NotificationRecipients.ts";
 /**
  * OpenClaw workstation Pulumi orchestration exports.
  *
