@@ -25,6 +25,7 @@ import {
 } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates";
 import { registerScaffoldedWorkspaceEntries } from "@beep/repo-cli/commands/CreatePackage";
 import { TsconfigSyncPlan } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan";
+import { withJournalFileLock } from "@beep/repo-cli/test/RepoRun";
 import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import { workspaceDependencyGraph } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { FsUtilsLive, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
@@ -45,6 +46,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 
 const isWriteFileOperation = S.is(WriteFileOperation);
@@ -451,6 +453,23 @@ describe("beep architecture: model-first context", () => {
         const again = yield* registerScaffoldedWorkspaceEntries(checkout, packagePaths);
         expect(again.addedWorkspaces).toEqual([]);
         expect(again.registeredSlugs).toEqual([]);
+      })
+    );
+
+    it.effect(
+      "refuses to register while another process holds the root-manifest lock",
+      Effect.fnUntraced(function* () {
+        const path = yield* Path.Path;
+        const checkout = yield* makeCheckout("model-first-busy-");
+        const lockPath = path.join(checkout, ".beep", "locks", "root-workspaces.lock");
+        yield* (yield* FileSystem.FileSystem).makeDirectory(path.dirname(lockPath), { recursive: true });
+        // Live clock: the lock's acquire retries sleep between attempts.
+        const busy = yield* TestClock.withLive(
+          withJournalFileLock(lockPath, () =>
+            Effect.flip(registerScaffoldedWorkspaceEntries(checkout, ["packages/notes/contract"]))
+          )
+        );
+        expect(busy.message).toContain("Another process is registering workspaces in this checkout");
       })
     );
   });

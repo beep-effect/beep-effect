@@ -130,16 +130,13 @@ const planFromFlags = Effect.fn(function* (flags: {
       O.isNone(flags.slice) ? O.some("--slice") : O.none(),
       O.isNone(flags.concept) ? O.some("--concept") : O.none(),
     ]);
-    if (A.isReadonlyArrayNonEmpty(missing)) {
-      return yield* DomainError.newMessage(
-        `--shape model-first needs the context and its Module: missing ${A.join(missing, " and ")}.`
-      );
-    }
-    const repoRoot = yield* findRepoRoot();
-    return yield* makeModelFirstContextOperationPlan({
-      repoRoot,
-      context: O.getOrElse(flags.slice, () => ""),
-      module: O.getOrElse(flags.concept, () => ""),
+    return yield* O.match(O.all({ context: flags.slice, module: flags.concept }), {
+      onNone: () =>
+        DomainError.newMessage(
+          `--shape model-first needs the context and its Module: missing ${A.join(missing, " and ")}.`
+        ),
+      onSome: (names) =>
+        Effect.flatMap(findRepoRoot(), (repoRoot) => makeModelFirstContextOperationPlan({ repoRoot, ...names })),
     });
   });
   return yield* ArchitectureShape.match(resolved, { "model-first": modelFirst, legacy });

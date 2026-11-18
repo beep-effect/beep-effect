@@ -120,7 +120,11 @@ const signatureOf = (ast: SchemaAST.AST, path: ReadonlyArray<SchemaAST.AST>): un
       BigInt: () => common,
       Symbol: () => common,
       ObjectKeyword: () => common,
-      Literal: (node) => ({ ...common, literal: P.isBigInt(node.literal) ? `${node.literal}n` : node.literal }),
+      // A bigint keeps its kind, so `1n` and the string `"1n"` sign apart.
+      Literal: (node) => ({
+        ...common,
+        literal: P.isBigInt(node.literal) ? { bigint: String(node.literal) } : node.literal,
+      }),
       UniqueSymbol: (node) => ({ ...common, symbol: identityOf(node.symbol) }),
       Enum: (node) => ({ ...common, enums: node.enums }),
       TemplateLiteral: (node) => ({ ...common, parts: A.map(node.parts, sign) }),

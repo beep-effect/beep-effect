@@ -6,6 +6,7 @@ import * as Rpc from "effect/rpc/Rpc";
 import * as RpcGroup from "effect/rpc/RpcGroup";
 import * as RpcMiddleware from "effect/rpc/RpcMiddleware";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 
@@ -64,11 +65,10 @@ describe("Parity.schemaSignatureOf", () => {
   });
 
   it("tells apart string-to-number codecs decoding to S.Number and to S.Finite", () => {
-    const lenient = S.String.pipe(
-      // The lenient side is the point of the case: it accepts "Infinity".
-      // @effect-diagnostics-next-line schemaNumber:off
-      S.decodeTo(S.Number, SchemaTransformation.numberFromString)
-    );
+    // The lenient side is the point of the case: its target is the bare number
+    // AST, which accepts "Infinity".
+    const lenientNumber = S.make<S.Codec<number>>(SchemaAST.number);
+    const lenient = S.String.pipe(S.decodeTo(lenientNumber, SchemaTransformation.numberFromString));
     expect(same(lenient, toFinite)).toBe(false);
   });
 
@@ -147,6 +147,12 @@ describe("Parity.shapeOf", () => {
     });
     expect(same(schema, schema)).toBe(true);
     expect(same(schema, S.Struct({ literals: S.Literals([1n, 3n]) }))).toBe(false);
+  });
+
+  it("signs a bigint literal apart from the string of its digits", () => {
+    expect(same(S.Literal(1n), S.Literal(1n))).toBe(true);
+    expect(same(S.Literal(1n), S.Literal("1n"))).toBe(false);
+    expect(same(S.Literal(1n), S.Literal("1"))).toBe(false);
   });
 });
 
