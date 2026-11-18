@@ -69,7 +69,7 @@ export class McpApiKey extends Model<McpApiKey>("McpApiKey")(
  * @since 0.0.0
  */
 export declare namespace McpApiKey {
-  export type Encoded = S.Codec.Encoded<typeof McpApiKey>;
+  export type Encoded = typeof McpApiKey.Encoded;
 }
 
 /**
@@ -127,7 +127,7 @@ export class McpApiKeyDB extends Model<McpApiKeyDB>("McpApiKeyDB")(
  * @since 0.0.0
  */
 export declare namespace McpApiKeyDB {
-  export type Encoded = S.Codec.Encoded<typeof McpApiKeyDB>;
+  export type Encoded = typeof McpApiKeyDB.Encoded;
 }
 
 /**
@@ -162,7 +162,7 @@ export class McpApiKeyCreate extends Model<McpApiKeyCreate>("McpApiKeyCreate")(
  * @since 0.0.0
  */
 export declare namespace McpApiKeyCreate {
-  export type Encoded = S.Codec.Encoded<typeof McpApiKeyCreate>;
+  export type Encoded = typeof McpApiKeyCreate.Encoded;
 }
 
 /**
@@ -213,5 +213,5 @@ export class McpApiKeyCreated extends Model<McpApiKeyCreated>("McpApiKeyCreated"
  * @since 0.0.0
  */
 export declare namespace McpApiKeyCreated {
-  export type Encoded = S.Codec.Encoded<typeof McpApiKeyCreated>;
+  export type Encoded = typeof McpApiKeyCreated.Encoded;
 }

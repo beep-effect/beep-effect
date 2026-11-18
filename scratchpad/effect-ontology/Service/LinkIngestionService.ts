@@ -23,18 +23,15 @@ import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Hex from "effect/encoding/Hex";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
-import * as Hex from "effect/encoding/Hex";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { EnrichedContent } from "../Domain/Model/EnrichedContent.ts";
 import { LinkStatus } from "../Domain/Schema/LinkIngestion.ts";
-import type {
-    IngestedLinkInsertRow,
-    IngestedLinkRow
-} from "../Repository/schema.ts";
+import type { IngestedLinkInsertRow, IngestedLinkRow } from "../Repository/schema.ts";
 import { IngestedLinks, ingestedLinks } from "../Repository/schema.ts";
 import { normalizeDrizzleError } from "../Utils/Sql.ts";
 import { ContentEnrichmentAgent } from "./ContentEnrichmentAgent.ts";
@@ -77,7 +74,9 @@ const decodeIngestedLinkRows = (rows: unknown) =>
  * @category errors
  * @since 0.0.0
  */
-export class LinkIngestionError extends S.TaggedError<LinkIngestionError, { readonly brand: unique symbol }>($I`LinkIngestionError`)(
+export class LinkIngestionError extends S.TaggedError<LinkIngestionError, { readonly brand: unique symbol }>(
+  $I`LinkIngestionError`
+)(
   "LinkIngestionError",
   {
     message: S.String,
@@ -111,7 +110,8 @@ export class LinkIngestionError extends S.TaggedError<LinkIngestionError, { read
  * @category configuration
  * @since 0.0.0
  */
-export class IngestOptions extends S.Opaque<IngestOptions, { readonly brand: unique symbol }>()(S.Struct({
+export class IngestOptions extends S.Opaque<IngestOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
     ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology identifier used for namespace scoping." }),
     enrich: S.Boolean.pipe(S.optionalKey).annotateKey({ description: "Whether to run AI enrichment." }),
     extractImages: S.Boolean.pipe(S.optionalKey).annotateKey({ description: "Whether to extract and store images." }),
@@ -122,9 +122,12 @@ export class IngestOptions extends S.Opaque<IngestOptions, { readonly brand: uni
     skipDuplicates: S.Boolean.pipe(S.optionalKey).annotateKey({
       description: "Whether content hashes already present in the ontology are skipped.",
     }),
-  }).pipe($I.annoteSchema("IngestOptions", {
-    description: "Ontology scope, enrichment, image extraction, metadata, and duplicate handling for URL ingestion.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("IngestOptions", {
+      description: "Ontology scope, enrichment, image extraction, metadata, and duplicate handling for URL ingestion.",
+    })
+  )
+) {}
 
 /**
  * Result of ingesting a URL
@@ -146,7 +149,8 @@ export class IngestOptions extends S.Opaque<IngestOptions, { readonly brand: uni
  * @category models
  * @since 0.0.0
  */
-export class IngestResult extends S.Opaque<IngestResult, { readonly brand: unique symbol }>()(S.Struct({
+export class IngestResult extends S.Opaque<IngestResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: S.NonEmptyString.annotateKey({ description: "Database identifier of the ingested link." }),
     contentHash: S.NonEmptyString.annotateKey({ description: "SHA-256 content hash." }),
     storageUri: S.NonEmptyString.annotateKey({ description: "Storage URI of the persisted content." }),
@@ -154,9 +158,12 @@ export class IngestResult extends S.Opaque<IngestResult, { readonly brand: uniqu
     duplicate: S.Boolean.annotateKey({ description: "Whether ingestion skipped an existing content hash." }),
     wordCount: S.Natural.pipe(S.optionalKey).annotateKey({ description: "Content word count when available." }),
     imageCount: S.Natural.pipe(S.optionalKey).annotateKey({ description: "Number of extracted images stored." }),
-  }).pipe($I.annoteSchema("IngestResult", {
-    description: "Stored link identity, content location, enrichment metadata, and duplicate outcome.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("IngestResult", {
+      description: "Stored link identity, content location, enrichment metadata, and duplicate outcome.",
+    })
+  )
+) {}
 
 /**
  * Options for bulk ingestion
@@ -173,7 +180,8 @@ export class IngestResult extends S.Opaque<IngestResult, { readonly brand: uniqu
  * @category configuration
  * @since 0.0.0
  */
-export class BulkIngestOptions extends S.Opaque<BulkIngestOptions, { readonly brand: unique symbol }>()(S.Struct({
+export class BulkIngestOptions extends S.Opaque<BulkIngestOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
     ...IngestOptions.fields,
     concurrency: S.Int.check(S.isGreaterThan(0)).pipe(S.optionalKey).annotateKey({
       description: "Maximum concurrent URL ingestions.",
@@ -181,9 +189,12 @@ export class BulkIngestOptions extends S.Opaque<BulkIngestOptions, { readonly br
     continueOnError: S.Boolean.pipe(S.optionalKey).annotateKey({
       description: "Whether individual failures are retained while remaining URLs continue.",
     }),
-  }).pipe($I.annoteSchema("BulkIngestOptions", {
-    description: "URL-ingestion options extended with concurrency and failure-continuation controls.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("BulkIngestOptions", {
+      description: "URL-ingestion options extended with concurrency and failure-continuation controls.",
+    })
+  )
+) {}
 
 /**
  * Filter for listing ingested links
@@ -200,16 +211,20 @@ export class BulkIngestOptions extends S.Opaque<BulkIngestOptions, { readonly br
  * @category configuration
  * @since 0.0.0
  */
-export class IngestedLinkFilter extends S.Opaque<IngestedLinkFilter, { readonly brand: unique symbol }>()(S.Struct({
+export class IngestedLinkFilter extends S.Opaque<IngestedLinkFilter, { readonly brand: unique symbol }>()(
+  S.Struct({
     ontologyId: S.NonEmptyString.pipe(S.optionalKey),
     status: LinkStatus.pipe(S.optionalKey),
     sourceType: S.NonEmptyString.pipe(S.optionalKey),
     organization: S.NonEmptyString.pipe(S.optionalKey),
     limit: S.Natural.pipe(S.optionalKey),
     offset: S.Natural.pipe(S.optionalKey),
-  }).pipe($I.annoteSchema("IngestedLinkFilter", {
-    description: "Ontology, lifecycle, source, organization, limit, and offset filters for ingested links.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("IngestedLinkFilter", {
+      description: "Ontology, lifecycle, source, organization, limit, and offset filters for ingested links.",
+    })
+  )
+) {}
 
 // =============================================================================
 // Helpers
@@ -231,10 +246,12 @@ const buildStoragePath = (contentHash: string): string => `documents/${contentHa
 const CONTENT_HASH_CACHE_CAPACITY = 50_000;
 const CONTENT_HASH_CACHE_TTL = Duration.days(7); // Content hashes are immutable
 
-class ContentHashCacheKey extends S.Opaque<ContentHashCacheKey, { readonly brand: unique symbol }>()(S.Struct({
-  ontologyId: S.NonEmptyString,
-  hash: S.NonEmptyString,
-}).pipe($I.annoteSchema("ContentHashCacheKey"))) {}
+class ContentHashCacheKey extends S.Opaque<ContentHashCacheKey, { readonly brand: unique symbol }>()(
+  S.Struct({
+    ontologyId: S.NonEmptyString,
+    hash: S.NonEmptyString,
+  }).pipe($I.annoteSchema("ContentHashCacheKey"))
+) {}
 
 /**
  * Provides the link ingestion service service capability.
@@ -425,8 +442,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       // 5. Optionally enrich metadata
       let enrichedContent: EnrichedContent | undefined;
       if (enrich) {
-
-        enrichedContent = yield * enricher.enrichFromJina(content).pipe(
+        enrichedContent = yield* enricher.enrichFromJina(content).pipe(
           Effect.catch((error) =>
             Effect.gen(function* () {
               yield* Effect.logWarning("Enrichment failed, continuing without metadata", {
@@ -498,10 +514,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       Effect.gen(function* () {
         const { concurrency = 5, continueOnError = true, ...ingestOptions } = options;
 
-
-
-
-        return yield * Effect.forEach(
+        return yield* Effect.forEach(
           urls,
           (url) =>
             ingestUrl(url, ingestOptions).pipe(
@@ -511,7 +524,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
                   continueOnError ? Effect.succeed(error) : Effect.fail(error)
               )
             ),
-          {concurrency}
+          { concurrency }
         );
       });
 

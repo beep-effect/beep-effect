@@ -207,9 +207,9 @@ const mappedDomain = <T extends string, I extends string>(
         strictEqual(A.length(A.dedupe(domainLiterals)), A.length(expected));
         assertTrue(A.every(wireLiterals, isUpperSnake));
         assertTrue(A.every(domainLiterals, isLowerCamel));
-        const decoded = yield* Effect.forEach(wireLiterals, (wire) => S.decodeEffect(kit)(wire));
+        const decoded = yield* Effect.forEach(wireLiterals, (wire) => S.decodeEffect(kit)(wire), { concurrency: 1 });
         deepStrictEqual(decoded, domainLiterals);
-        const encoded = yield* Effect.forEach(domainLiterals, (domain) => S.encodeEffect(kit)(domain));
+        const encoded = yield* Effect.forEach(domainLiterals, (domain) => S.encodeEffect(kit)(domain), { concurrency: 1 });
         deepStrictEqual(encoded, wireLiterals);
       })
     ),

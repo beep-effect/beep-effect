@@ -21,10 +21,10 @@ import { URLStr } from "@beep/schema";
 import { AnthropicClient, AnthropicLanguageModel } from "@effect/ai-anthropic";
 import { OpenAiClient, OpenAiLanguageModel } from "@effect/ai-openai";
 import * as Effect from "effect/Effect";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
-import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import type { AppConfig } from "../Service/Config.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { EntityExtractor, MentionExtractor, RelationExtractor } from "../Service/Extraction.ts";
@@ -77,9 +77,10 @@ export {
  * @category errors
  * @since 0.0.0
  */
-export class UnsupportedLlmProviderError extends S.TaggedError<UnsupportedLlmProviderError, { readonly brand: unique symbol }>(
-  $I`UnsupportedLlmProviderError`
-)(
+export class UnsupportedLlmProviderError extends S.TaggedError<
+  UnsupportedLlmProviderError,
+  { readonly brand: unique symbol }
+>($I`UnsupportedLlmProviderError`)(
   "UnsupportedLlmProviderError",
   {
     provider: S.tag("google").annotateKey({

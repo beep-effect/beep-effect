@@ -16,7 +16,9 @@ import { $ScratchpadId } from "@beep/identity";
 import { Percentage } from "@beep/schema/Percentage";
 import type { UnitInterval } from "@beep/schema/UnitInterval";
 import { thunk0 } from "@beep/utils/thunk";
+import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
+import type * as ClusterEntity from "effect/cluster/Entity";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -24,20 +26,19 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
-import * as Random from "effect/Random";
-import * as Ref from "effect/Ref";
-import * as Stream from "effect/Stream";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import type * as ClusterEntity from "effect/cluster/Entity";
 import { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { ContentHash, IdempotencyKey, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { GroundingPolicy, RunStatus } from "../Domain/Model/ExtractionRun.ts";
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { EntityExtractor, RelationExtractor } from "../Service/Extraction.ts";
 import { ExtractionRunService, getRunIdFromText } from "../Service/ExtractionRun.ts";
@@ -54,27 +55,23 @@ import type {
   KnowledgeGraphResult,
 } from "./ExtractionEntity.ts";
 import { ExtractionStatus, KnowledgeGraphExtractor } from "./ExtractionEntity.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cluster/ExtractionEntityHandler");
 
-class ExtractionStats extends S.Opaque<ExtractionStats, { readonly brand: unique symbol }>()(S.Struct({
+class ExtractionStats extends S.Opaque<ExtractionStats, { readonly brand: unique symbol }>()(
+  S.Struct({
     totalEntities: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Total entities extracted across completed chunks.",
     }),
     totalRelations: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Total relations extracted across completed chunks.",
     }),
-    verifiedRelations: S.Natural.pipe(
-      S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))
-    ).annotateKey({
+    verifiedRelations: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Extracted relations accepted by grounding.",
     }),
-    successfulChunks: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey(
-      {
-        description: "Chunks that completed extraction successfully.",
-      }
-    ),
+    successfulChunks: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
+      description: "Chunks that completed extraction successfully.",
+    }),
     failedChunks: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Chunks whose extraction failed.",
     }),
@@ -86,9 +83,12 @@ class ExtractionStats extends S.Opaque<ExtractionStats, { readonly brand: unique
     tokensUsed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Estimated language-model tokens consumed.",
     }),
-  }).pipe($I.annoteSchema("ExtractionStats", {
-    description: "Running extraction counters with schema-owned empty defaults.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExtractionStats", {
+      description: "Running extraction counters with schema-owned empty defaults.",
+    })
+  )
+) {}
 
 const emptyStats = ExtractionStats.make({});
 

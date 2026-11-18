@@ -9,10 +9,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
 import { ConfigService } from "./Config.ts";

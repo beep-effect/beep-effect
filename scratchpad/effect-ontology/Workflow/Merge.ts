@@ -16,13 +16,13 @@ import type { IRI } from "@beep/rdf";
 import { ProvBundle } from "@beep/rdf/Prov";
 import * as A from "@beep/utils/Array";
 import * as DateTime from "effect/DateTime";
+import * as Eq from "effect/Equal";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
 import * as MutableHashMap from "effect/MutableHashMap";
-import * as Order from "effect/Order";
-import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -65,16 +65,20 @@ const $I = $ScratchpadId.create("effect-ontology/Workflow/Merge");
  * @category models
  * @since 0.0.0
  */
-export class MergeConflict extends S.Opaque<MergeConflict, { readonly brand: unique symbol }>()(S.Struct({
+export class MergeConflict extends S.Opaque<MergeConflict, { readonly brand: unique symbol }>()(
+  S.Struct({
     entityId: EntityId.annotateKey({ description: "Entity whose attributes conflict." }),
     property: S.NonEmptyString.annotateKey({ description: "Entity property with conflicting values." }),
     values: S.Array(S.Unknown).annotateKey({ description: "Conflicting values observed for the property." }),
     chunkIndexes: S.Array(S.Natural).annotateKey({
       description: "Source chunk indexes that contributed conflicting values.",
     }),
-  }).pipe($I.annoteSchema("MergeConflict", {
-    description: "Conflicting entity-property values and the source chunks that produced them.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("MergeConflict", {
+      description: "Conflicting entity-property values and the source chunks that produced them.",
+    })
+  )
+) {}
 
 /**
  * Order instance for Entity (by id)
@@ -103,11 +107,13 @@ const RelationOrder: Order.Order<Relation> = Order.combine(
   )
 );
 
-class RelationSignature extends S.Opaque<RelationSignature, { readonly brand: unique symbol }>()(S.Struct({
-  subjectId: EntityId,
-  predicate: S.String,
-  object: RelationObject,
-}).pipe($I.annoteSchema("RelationSignature"))) {}
+class RelationSignature extends S.Opaque<RelationSignature, { readonly brand: unique symbol }>()(
+  S.Struct({
+    subjectId: EntityId,
+    predicate: S.String,
+    object: RelationObject,
+  }).pipe($I.annoteSchema("RelationSignature"))
+) {}
 
 const relationSignature = (relation: Relation): RelationSignature =>
   RelationSignature.make({

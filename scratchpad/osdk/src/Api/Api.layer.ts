@@ -229,7 +229,7 @@ const refuseErrorAnswer = Effect.fnUntraced(function* (response: HttpClientRespo
   if (response.status >= 200 && response.status < 300) {
     return response;
   }
-  const [status, body] = yield* Effect.all([decodeStatus(response.status), decodeErrorBody(response)]).pipe(
+  const [status, body] = yield* Effect.all([decodeStatus(response.status), decodeErrorBody(response)], { concurrency: 1 }).pipe(
     Effect.mapError((error) =>
       TransportError.make({
         message: `The platform answered HTTP ${response.status} without an error body`,

@@ -341,7 +341,7 @@ describe("Subscription: identifiers and literal domains", () => {
         domainLinkStateOnTheWire: rejects(LinkState)("added"),
         unknownStatus: rejects(SubscriptionStatus)("closed"),
         nonJsonKeyValue: rejects(PrimaryKeyRecord)({ employeeId: BigInt(1) }),
-      });
+      }, { concurrency: 1 });
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -443,7 +443,7 @@ describe("Subscription: subscribe message", () => {
         }),
         ridsFlagAsText: rejects(ObjectLoadingOptions)({ shouldLoadObjectRids: "true" }),
         noId: rejects(ObjectSetSubscribeRequests)({ requests: [] }),
-      });
+      }, { concurrency: 1 });
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -544,7 +544,7 @@ describe("Subscription: answers to a subscribe message", () => {
         }),
         failureArgumentWithoutValue: rejects(StreamFailure)({ error: "ObjectTypeNotFound", args: [{ name: "x" }] }),
         responsesWithoutId: rejects(SubscribeResponses)({ type: "subscribeResponses", responses: [] }),
-      });
+      }, { concurrency: 1 });
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -700,7 +700,7 @@ describe("Subscription: updates to a watched object set", () => {
           value: { type: "geotimeSeriesValue", position: [100, 20], timestamp: "yesterday" },
         }),
         updatesWithoutSubscription: rejects(ObjectSetUpdates)({ type: "objectSetChanged", updates: [] }),
-      });
+      }, { concurrency: 1 });
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -803,7 +803,7 @@ describe("Subscription: refresh and closure", () => {
         unknownCause: rejects(SubscriptionClosureCause)({ type: "timeout" }),
         unknownReason: rejects(SubscriptionClosureCause)({ type: "reason", reason: "SERVER_CLOSED" }),
         failureWithoutArgs: rejects(SubscriptionClosureCause)({ type: "error", error: "ObjectSetNotFound" }),
-      });
+      }, { concurrency: 1 });
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -987,7 +987,7 @@ describe("Link: the paged listing", () => {
         ]),
         pageWithoutData: rejects(LinkPage)({ nextPageToken: "v1.next" }),
         pageWithEmptyCursor: rejects(LinkPage)({ data: [], nextPageToken: "" }),
-      });
+      }, { concurrency: 1 });
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -1067,7 +1067,7 @@ describe("Link: the bulk listing", () => {
         withoutObject: rejects(BulkLink)({ linkApiName: "officeLink", otherObjectPk: 7 }),
         withoutFarKey: rejects(BulkLink)({ object: base.object, linkApiName: "officeLink" }),
         domainKeys: rejects(BulkLink)({ source: base.object, linkType: "officeLink", targetPrimaryKey: 7 }),
-      });
+      }, { concurrency: 1 });
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -1256,7 +1256,7 @@ describe("Link: the link stream", () => {
         locatorWithoutObjectType: rejects(KeyedObjectLocator)({ primaryKey: { employeeId: 1 } }),
         requestWithoutLinkTypes: rejects(LinkSubscribeRequest)({ selectedObjects: [selected] }),
         requestsWithoutId: rejects(LinkSubscribeRequests)({ requests: [] }),
-      });
+      }, { concurrency: 1 });
       deepStrictEqual(accepted(verdicts), []);
     })
   );

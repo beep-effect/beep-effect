@@ -95,7 +95,7 @@ export class UpdateConversation extends Model<UpdateConversation>("UpdateConvers
  * @since 0.0.0
  */
 export declare namespace UpdateConversation {
-  export type Encoded = S.Codec.Encoded<typeof UpdateConversation>;
+  export type Encoded = typeof UpdateConversation.Encoded;
 }
 
 /**
@@ -140,7 +140,7 @@ export class SharedConversationChatHistoryMessage extends Model<SharedConversati
  * @since 0.0.0
  */
 export declare namespace SharedConversationChatHistoryMessage {
-  export type Encoded = S.Codec.Encoded<typeof SharedConversationChatHistoryMessage>;
+  export type Encoded = typeof SharedConversationChatHistoryMessage.Encoded;
 }
 
 /**
@@ -195,7 +195,7 @@ export class SharedConversationChatRequest extends Model<SharedConversationChatR
  * @since 0.0.0
  */
 export declare namespace SharedConversationChatRequest {
-  export type Encoded = S.Codec.Encoded<typeof SharedConversationChatRequest>;
+  export type Encoded = typeof SharedConversationChatRequest.Encoded;
 }
 
 /**
@@ -229,7 +229,7 @@ export class SharedConversationChatResponse extends Model<SharedConversationChat
  * @since 0.0.0
  */
 export declare namespace SharedConversationChatResponse {
-  export type Encoded = S.Codec.Encoded<typeof SharedConversationChatResponse>;
+  export type Encoded = typeof SharedConversationChatResponse.Encoded;
 }
 
 /**
@@ -260,7 +260,7 @@ export class SharedActionItem extends Model<SharedActionItem>("SharedActionItem"
  * @since 0.0.0
  */
 export declare namespace SharedActionItem {
-  export type Encoded = S.Codec.Encoded<typeof SharedActionItem>;
+  export type Encoded = typeof SharedActionItem.Encoded;
 }
 
 /**
@@ -303,7 +303,7 @@ export class SharedEvent extends Model<SharedEvent>("SharedEvent")(
  * @since 0.0.0
  */
 export declare namespace SharedEvent {
-  export type Encoded = S.Codec.Encoded<typeof SharedEvent>;
+  export type Encoded = typeof SharedEvent.Encoded;
 }
 
 /**
@@ -347,7 +347,7 @@ export class SharedStructured extends Model<SharedStructured>("SharedStructured"
  * @since 0.0.0
  */
 export declare namespace SharedStructured {
-  export type Encoded = S.Codec.Encoded<typeof SharedStructured>;
+  export type Encoded = typeof SharedStructured.Encoded;
 }
 
 /**
@@ -404,7 +404,7 @@ export class SharedTranscriptSegment extends Model<SharedTranscriptSegment>("Sha
  * @since 0.0.0
  */
 export declare namespace SharedTranscriptSegment {
-  export type Encoded = S.Codec.Encoded<typeof SharedTranscriptSegment>;
+  export type Encoded = typeof SharedTranscriptSegment.Encoded;
 }
 
 /**
@@ -436,7 +436,7 @@ export class SharedAppResult extends Model<SharedAppResult>("SharedAppResult")(
  * @since 0.0.0
  */
 export declare namespace SharedAppResult {
-  export type Encoded = S.Codec.Encoded<typeof SharedAppResult>;
+  export type Encoded = typeof SharedAppResult.Encoded;
 }
 
 /**
@@ -472,7 +472,7 @@ export class SharedPluginResult extends Model<SharedPluginResult>("SharedPluginR
  * @since 0.0.0
  */
 export declare namespace SharedPluginResult {
-  export type Encoded = S.Codec.Encoded<typeof SharedPluginResult>;
+  export type Encoded = typeof SharedPluginResult.Encoded;
 }
 
 /**
@@ -504,7 +504,7 @@ export class SharedPerson extends Model<SharedPerson>("SharedPerson")(
  * @since 0.0.0
  */
 export declare namespace SharedPerson {
-  export type Encoded = S.Codec.Encoded<typeof SharedPerson>;
+  export type Encoded = typeof SharedPerson.Encoded;
 }
 
 /**
@@ -543,7 +543,7 @@ export class PluginResult extends Model<PluginResult>("PluginResult")(
  * @since 0.0.0
  */
 export declare namespace PluginResult {
-  export type Encoded = S.Codec.Encoded<typeof PluginResult>;
+  export type Encoded = typeof PluginResult.Encoded;
 }
 
 /**
@@ -576,7 +576,7 @@ export class AppResult extends Model<AppResult>("AppResult")(
  * @since 0.0.0
  */
 export declare namespace AppResult {
-  export type Encoded = S.Codec.Encoded<typeof AppResult>;
+  export type Encoded = typeof AppResult.Encoded;
 }
 
 /**
@@ -628,7 +628,7 @@ export class CalendarEventLink extends Model<CalendarEventLink>("CalendarEventLi
  * @since 0.0.0
  */
 export declare namespace CalendarEventLink {
-  export type Encoded = S.Codec.Encoded<typeof CalendarEventLink>;
+  export type Encoded = typeof CalendarEventLink.Encoded;
 }
 
 /**
@@ -662,7 +662,7 @@ export class ConversationPostProcessing extends Model<ConversationPostProcessing
  * @since 0.0.0
  */
 export declare namespace ConversationPostProcessing {
-  export type Encoded = S.Codec.Encoded<typeof ConversationPostProcessing>;
+  export type Encoded = typeof ConversationPostProcessing.Encoded;
 }
 
 /**
@@ -698,7 +698,7 @@ export class ConversationAudioSpan extends Model<ConversationAudioSpan>("Convers
  * @since 0.0.0
  */
 export declare namespace ConversationAudioSpan {
-  export type Encoded = S.Codec.Encoded<typeof ConversationAudioSpan>;
+  export type Encoded = typeof ConversationAudioSpan.Encoded;
 }
 
 /**
@@ -735,7 +735,7 @@ export class ConversationAudio extends Model<ConversationAudio>("ConversationAud
  * @since 0.0.0
  */
 export declare namespace ConversationAudio {
-  export type Encoded = S.Codec.Encoded<typeof ConversationAudio>;
+  export type Encoded = typeof ConversationAudio.Encoded;
 }
 
 /**
@@ -766,7 +766,7 @@ export class TranscriptMatchSnippet extends Model<TranscriptMatchSnippet>("Trans
  * @since 0.0.0
  */
 export declare namespace TranscriptMatchSnippet {
-  export type Encoded = S.Codec.Encoded<typeof TranscriptMatchSnippet>;
+  export type Encoded = typeof TranscriptMatchSnippet.Encoded;
 }
 
 const SyncRelevance = LiteralKit(["keep", "review"]).pipe(
@@ -861,7 +861,7 @@ export class Conversation extends Model<Conversation>("Conversation")(
  * @since 0.0.0
  */
 export declare namespace Conversation {
-  export type Encoded = S.Codec.Encoded<typeof Conversation>;
+  export type Encoded = typeof Conversation.Encoded;
 }
 
 const decodeUnknownEffectConversation = S.decodeUnknownEffect(Conversation);
@@ -1117,7 +1117,7 @@ export class SharedConversationResponse extends Model<SharedConversationResponse
  * @since 0.0.0
  */
 export declare namespace SharedConversationResponse {
-  export type Encoded = S.Codec.Encoded<typeof SharedConversationResponse>;
+  export type Encoded = typeof SharedConversationResponse.Encoded;
 }
 
 /**
@@ -1257,7 +1257,7 @@ export class ConversationMutationResponse extends Model<ConversationMutationResp
  * @since 0.0.0
  */
 export declare namespace ConversationMutationResponse {
-  export type Encoded = S.Codec.Encoded<typeof ConversationMutationResponse>;
+  export type Encoded = typeof ConversationMutationResponse.Encoded;
 }
 
 /**
@@ -1292,7 +1292,7 @@ export class SetConversationTitleOperation extends Model<SetConversationTitleOpe
  * @since 0.0.0
  */
 export declare namespace SetConversationTitleOperation {
-  export type Encoded = S.Codec.Encoded<typeof SetConversationTitleOperation>;
+  export type Encoded = typeof SetConversationTitleOperation.Encoded;
 }
 
 /**
@@ -1329,7 +1329,7 @@ export class SetConversationStarredOperation extends Model<SetConversationStarre
  * @since 0.0.0
  */
 export declare namespace SetConversationStarredOperation {
-  export type Encoded = S.Codec.Encoded<typeof SetConversationStarredOperation>;
+  export type Encoded = typeof SetConversationStarredOperation.Encoded;
 }
 
 /**
@@ -1430,7 +1430,7 @@ export class ConversationSyncMutationRequest extends Model<ConversationSyncMutat
  * @since 0.0.0
  */
 export declare namespace ConversationSyncMutationRequest {
-  export type Encoded = S.Codec.Encoded<typeof ConversationSyncMutationRequest>;
+  export type Encoded = typeof ConversationSyncMutationRequest.Encoded;
 }
 
 /**
@@ -1472,7 +1472,7 @@ export class ConversationSyncState extends Model<ConversationSyncState>("Convers
  * @since 0.0.0
  */
 export declare namespace ConversationSyncState {
-  export type Encoded = S.Codec.Encoded<typeof ConversationSyncState>;
+  export type Encoded = typeof ConversationSyncState.Encoded;
 }
 
 /**
@@ -1512,7 +1512,7 @@ export class ConversationSyncMutationResponse extends Model<ConversationSyncMuta
  * @since 0.0.0
  */
 export declare namespace ConversationSyncMutationResponse {
-  export type Encoded = S.Codec.Encoded<typeof ConversationSyncMutationResponse>;
+  export type Encoded = typeof ConversationSyncMutationResponse.Encoded;
 }
 
 /**
@@ -1552,7 +1552,7 @@ export class ConversationSyncConflictResponse extends Model<ConversationSyncConf
  * @since 0.0.0
  */
 export declare namespace ConversationSyncConflictResponse {
-  export type Encoded = S.Codec.Encoded<typeof ConversationSyncConflictResponse>;
+  export type Encoded = typeof ConversationSyncConflictResponse.Encoded;
 }
 
 /**
@@ -1612,7 +1612,7 @@ export class CreateConversation extends Model<CreateConversation>("CreateConvers
  * @since 0.0.0
  */
 export declare namespace CreateConversation {
-  export type Encoded = S.Codec.Encoded<typeof CreateConversation>;
+  export type Encoded = typeof CreateConversation.Encoded;
 }
 
 /**
@@ -1660,7 +1660,7 @@ export class ExternalIntegrationCreateConversation extends Model<ExternalIntegra
  * @since 0.0.0
  */
 export declare namespace ExternalIntegrationCreateConversation {
-  export type Encoded = S.Codec.Encoded<typeof ExternalIntegrationCreateConversation>;
+  export type Encoded = typeof ExternalIntegrationCreateConversation.Encoded;
 }
 
 /**
@@ -1745,7 +1745,7 @@ export class CreateConversationResponse extends Model<CreateConversationResponse
  * @since 0.0.0
  */
 export declare namespace CreateConversationResponse {
-  export type Encoded = S.Codec.Encoded<typeof CreateConversationResponse>;
+  export type Encoded = typeof CreateConversationResponse.Encoded;
 }
 
 /**
@@ -1790,7 +1790,7 @@ export class ConversationFinalizationStatusResponse extends Model<ConversationFi
  * @since 0.0.0
  */
 export declare namespace ConversationFinalizationStatusResponse {
-  export type Encoded = S.Codec.Encoded<typeof ConversationFinalizationStatusResponse>;
+  export type Encoded = typeof ConversationFinalizationStatusResponse.Encoded;
 }
 
 /**
@@ -1821,7 +1821,7 @@ export class CreateMemoryResponse extends Model<CreateMemoryResponse>("CreateMem
  * @since 0.0.0
  */
 export declare namespace CreateMemoryResponse {
-  export type Encoded = S.Codec.Encoded<typeof CreateMemoryResponse>;
+  export type Encoded = typeof CreateMemoryResponse.Encoded;
 }
 
 /**
@@ -1862,7 +1862,7 @@ export class SetConversationEventsStateRequest extends Model<SetConversationEven
  * @since 0.0.0
  */
 export declare namespace SetConversationEventsStateRequest {
-  export type Encoded = S.Codec.Encoded<typeof SetConversationEventsStateRequest>;
+  export type Encoded = typeof SetConversationEventsStateRequest.Encoded;
 }
 
 /**
@@ -1902,7 +1902,7 @@ export class SetConversationActionItemsStateRequest extends Model<SetConversatio
  * @since 0.0.0
  */
 export declare namespace SetConversationActionItemsStateRequest {
-  export type Encoded = S.Codec.Encoded<typeof SetConversationActionItemsStateRequest>;
+  export type Encoded = typeof SetConversationActionItemsStateRequest.Encoded;
 }
 
 /**
@@ -1945,7 +1945,7 @@ export class BulkAssignSegmentsRequest extends Model<BulkAssignSegmentsRequest>(
  * @since 0.0.0
  */
 export declare namespace BulkAssignSegmentsRequest {
-  export type Encoded = S.Codec.Encoded<typeof BulkAssignSegmentsRequest>;
+  export type Encoded = typeof BulkAssignSegmentsRequest.Encoded;
 }
 
 /**
@@ -1976,7 +1976,7 @@ export class UpdateSegmentTextRequest extends Model<UpdateSegmentTextRequest>("U
  * @since 0.0.0
  */
 export declare namespace UpdateSegmentTextRequest {
-  export type Encoded = S.Codec.Encoded<typeof UpdateSegmentTextRequest>;
+  export type Encoded = typeof UpdateSegmentTextRequest.Encoded;
 }
 
 /**
@@ -2012,7 +2012,7 @@ export class UpdateSummaryRequest extends Model<UpdateSummaryRequest>("UpdateSum
  * @since 0.0.0
  */
 export declare namespace UpdateSummaryRequest {
-  export type Encoded = S.Codec.Encoded<typeof UpdateSummaryRequest>;
+  export type Encoded = typeof UpdateSummaryRequest.Encoded;
 }
 
 /**
@@ -2043,7 +2043,7 @@ export class DeleteActionItemRequest extends Model<DeleteActionItemRequest>("Del
  * @since 0.0.0
  */
 export declare namespace DeleteActionItemRequest {
-  export type Encoded = S.Codec.Encoded<typeof DeleteActionItemRequest>;
+  export type Encoded = typeof DeleteActionItemRequest.Encoded;
 }
 
 /**
@@ -2079,7 +2079,7 @@ export class UpdateActionItemDescriptionRequest extends Model<UpdateActionItemDe
  * @since 0.0.0
  */
 export declare namespace UpdateActionItemDescriptionRequest {
-  export type Encoded = S.Codec.Encoded<typeof UpdateActionItemDescriptionRequest>;
+  export type Encoded = typeof UpdateActionItemDescriptionRequest.Encoded;
 }
 
 /**
@@ -2130,7 +2130,7 @@ export class SearchRequest extends Model<SearchRequest>("SearchRequest")(
  * @since 0.0.0
  */
 export declare namespace SearchRequest {
-  export type Encoded = S.Codec.Encoded<typeof SearchRequest>;
+  export type Encoded = typeof SearchRequest.Encoded;
 }
 
 /**
@@ -2161,7 +2161,7 @@ export class TestPromptRequest extends Model<TestPromptRequest>("TestPromptReque
  * @since 0.0.0
  */
 export declare namespace TestPromptRequest {
-  export type Encoded = S.Codec.Encoded<typeof TestPromptRequest>;
+  export type Encoded = typeof TestPromptRequest.Encoded;
 }
 
 /**
@@ -2199,7 +2199,7 @@ export class MergeConversationsRequest extends Model<MergeConversationsRequest>(
  * @since 0.0.0
  */
 export declare namespace MergeConversationsRequest {
-  export type Encoded = S.Codec.Encoded<typeof MergeConversationsRequest>;
+  export type Encoded = typeof MergeConversationsRequest.Encoded;
 }
 
 /**
@@ -2239,7 +2239,7 @@ export class MergeConversationsResponse extends Model<MergeConversationsResponse
  * @since 0.0.0
  */
 export declare namespace MergeConversationsResponse {
-  export type Encoded = S.Codec.Encoded<typeof MergeConversationsResponse>;
+  export type Encoded = typeof MergeConversationsResponse.Encoded;
 }
 
 /**
@@ -2271,7 +2271,7 @@ export class SpeakerAnalytics extends Model<SpeakerAnalytics>("SpeakerAnalytics"
  * @since 0.0.0
  */
 export declare namespace SpeakerAnalytics {
-  export type Encoded = S.Codec.Encoded<typeof SpeakerAnalytics>;
+  export type Encoded = typeof SpeakerAnalytics.Encoded;
 }
 
 /**
@@ -2308,7 +2308,7 @@ export class ConversationAnalytics extends Model<ConversationAnalytics>("Convers
  * @since 0.0.0
  */
 export declare namespace ConversationAnalytics {
-  export type Encoded = S.Codec.Encoded<typeof ConversationAnalytics>;
+  export type Encoded = typeof ConversationAnalytics.Encoded;
 }
 
 void bool;

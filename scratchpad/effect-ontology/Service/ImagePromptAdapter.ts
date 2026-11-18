@@ -1,3 +1,4 @@
+
 /**
  * ImagePromptAdapter Service
  *
@@ -12,18 +13,18 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
+import * as Prompt from "effect/ai/Prompt";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import * as Base64 from "effect/encoding/Base64";
-import * as A from "effect/Array";
 import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
-import type * as S from "effect/Schema";
-import * as Prompt from "effect/ai/Prompt";
 import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
+import type * as S from "effect/Schema";
 import type { ImageForPrompt, ImageRef } from "../Domain/Model/Image.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { ImageBlobStore } from "./ImageBlobStore.ts";
@@ -190,13 +191,12 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
         );
 
       const toPromptParts: ImagePromptAdapterService["toPromptParts"] = (images) =>
-        images.map((img, index) =>
+        A.map(images, (img, index) =>
           Prompt.makePart("file", {
             mediaType: img.mediaType,
             data: img.base64,
             fileName: `image-${img.position ?? index}.${getExtension(img.mediaType)}`,
-          })
-        );
+          }));
 
       const buildUserMessageParts: ImagePromptAdapterService["buildUserMessageParts"] = (
         text,
@@ -212,7 +212,7 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
           // Add image parts with context
           for (const img of images) {
             // Add context/caption as text before image if available
-            const imageContext = [img.alt, img.caption, img.context].filter(Boolean).join(" - ");
+            const imageContext = A.filter([img.alt, img.caption, img.context], Boolean).join(" - ");
 
             if (P.isNotUndefined(imageContext)) {
               parts.push(Prompt.makePart("text", { text: `\n[Image ${img.position ?? 0}: ${imageContext}]` }));

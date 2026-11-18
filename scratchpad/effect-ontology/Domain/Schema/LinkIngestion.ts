@@ -1,4 +1,3 @@
-import * as Arbitrary from "effect/Arbitrary";
 /**
  * Link-ingestion request, result, listing, and detail contracts.
  *
@@ -8,13 +7,14 @@ import * as Arbitrary from "effect/Arbitrary";
 import { $ScratchpadId } from "@beep/identity";
 import { HttpUrl } from "@beep/ontology/Ontology.models";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as Match from "effect/Match";
-import * as Effect from "effect/Effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Match from "effect/Match";
 import * as S from "effect/Schema";
+import { PosInt } from "../../Schema/PosInt.ts";
 import { ContentHash, GcsUri, OntologyName } from "../Identity.ts";
 import { SourceType } from "../Model/EnrichedContent.ts";
-import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/LinkIngestion");
 
@@ -82,7 +82,8 @@ export type LinkStatus = typeof LinkStatus.Type;
  * @category dtos
  * @since 0.0.0
  */
-export class IngestLinkRequest extends S.Opaque<IngestLinkRequest, { readonly brand: unique symbol }>()(S.Struct({
+export class IngestLinkRequest extends S.Opaque<IngestLinkRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
     url: HttpUrl.annotateKey({
       description: "Absolute HTTP(S) resource URL to ingest.",
     }),
@@ -90,7 +91,8 @@ export class IngestLinkRequest extends S.Opaque<IngestLinkRequest, { readonly br
       description: "Ontology registry identifier that scopes extraction.",
     }),
     skipEnrich: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({
         description: "Whether AI enrichment is skipped; defaults to false.",
       })
@@ -102,14 +104,18 @@ export class IngestLinkRequest extends S.Opaque<IngestLinkRequest, { readonly br
       })
     ),
     allowDuplicates: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({
         description: "Whether already-known content may create another record; defaults to false.",
       })
     ),
-  }).pipe($I.annoteSchema("IngestLinkRequest", {
-    description: "Single-link ingestion request with validated URL, ontology scope, and explicit defaults.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("IngestLinkRequest", {
+      description: "Single-link ingestion request with validated URL, ontology scope, and explicit defaults.",
+    })
+  )
+) {
   static readonly is = S.is(IngestLinkRequest);
 }
 
@@ -134,7 +140,8 @@ export class IngestLinkRequest extends S.Opaque<IngestLinkRequest, { readonly br
  * @category dtos
  * @since 0.0.0
  */
-export class IngestLinkResponse extends S.Opaque<IngestLinkResponse, { readonly brand: unique symbol }>()(S.Struct({
+export class IngestLinkResponse extends S.Opaque<IngestLinkResponse, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: S.NonEmptyString.annotateKey({
       description: "Persistent identifier assigned to the ingested link.",
     }),
@@ -159,9 +166,12 @@ export class IngestLinkResponse extends S.Opaque<IngestLinkResponse, { readonly 
     duplicate: S.Boolean.annotateKey({
       description: "Whether ingestion resolved to content already known by the system.",
     }),
-  }).pipe($I.annoteSchema("IngestLinkResponse", {
-    description: "Successful link-ingestion response with canonical content and storage identities.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("IngestLinkResponse", {
+      description: "Successful link-ingestion response with canonical content and storage identities.",
+    })
+  )
+) {
   static readonly is = S.is(IngestLinkResponse);
 }
 
@@ -187,7 +197,8 @@ const batchIngestRequestConcurrencyDefault = PosInt.make(5);
  * @category dtos
  * @since 0.0.0
  */
-export class BatchIngestRequest extends S.Opaque<BatchIngestRequest, { readonly brand: unique symbol }>()(S.Struct({
+export class BatchIngestRequest extends S.Opaque<BatchIngestRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
     urls: HttpUrl.pipe(S.NonEmptyArray).annotateKey({
       description: "Non-empty collection of absolute HTTP(S) URLs to ingest.",
     }),
@@ -195,26 +206,32 @@ export class BatchIngestRequest extends S.Opaque<BatchIngestRequest, { readonly 
       description: "Ontology registry identifier that scopes extraction.",
     }),
     concurrency: PosInt.pipe(
-      S.withConstructorDefault(Effect.succeed(batchIngestRequestConcurrencyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(batchIngestRequestConcurrencyDefault)),
+      S.withConstructorDefault(Effect.succeed(batchIngestRequestConcurrencyDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(batchIngestRequestConcurrencyDefault)),
       S.annotateKey({
         description: "Maximum number of concurrent link ingestions; defaults to five.",
       })
     ),
     skipEnrich: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({
         description: "Whether AI enrichment is skipped for every link; defaults to false.",
       })
     ),
     continueOnError: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({
         description: "Whether remaining links continue after one failure; defaults to true.",
       })
     ),
-  }).pipe($I.annoteSchema("BatchIngestRequest", {
-    description: "Non-empty batch-ingestion request with bounded concurrency and explicit behavior defaults.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("BatchIngestRequest", {
+      description: "Non-empty batch-ingestion request with bounded concurrency and explicit behavior defaults.",
+    })
+  )
+) {
   static readonly is = S.is(BatchIngestRequest);
 }
 
@@ -300,7 +317,8 @@ export const BatchIngestResult = BatchIngestResultDefinition.pipe(
  */
 export type BatchIngestResult = typeof BatchIngestResult.Type;
 
-class BatchIngestSummary extends S.Opaque<BatchIngestSummary, { readonly brand: unique symbol }>()(S.Struct({
+class BatchIngestSummary extends S.Opaque<BatchIngestSummary, { readonly brand: unique symbol }>()(
+  S.Struct({
     total: S.Natural.annotateKey({
       description: "Total number of processed URLs.",
     }),
@@ -313,9 +331,12 @@ class BatchIngestSummary extends S.Opaque<BatchIngestSummary, { readonly brand: 
     error: S.Natural.annotateKey({
       description: "Number of URLs that failed ingestion.",
     }),
-  }).pipe($I.annoteSchema("BatchIngestSummary", {
-    description: "Non-negative counts summarizing a batch-ingestion result collection.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("BatchIngestSummary", {
+      description: "Non-negative counts summarizing a batch-ingestion result collection.",
+    })
+  )
+) {}
 
 const summarizeBatchResults = (results: ReadonlyArray<BatchIngestResult>): BatchIngestSummary => {
   const success = A.length(A.filter(results, BatchIngestResult.guards.success));
@@ -333,7 +354,8 @@ const summarizeBatchResults = (results: ReadonlyArray<BatchIngestResult>): Batch
 const batchIngestResponseDefinitionResultsDefault = A.empty<BatchIngestResult>();
 const BatchIngestResponseDefinition = S.Struct({
   results: S.Array(BatchIngestResult).pipe(
-    S.withConstructorDefault(Effect.succeed(batchIngestResponseDefinitionResultsDefault)), S.withDecodingDefaultType(Effect.succeed(batchIngestResponseDefinitionResultsDefault)),
+    S.withConstructorDefault(Effect.succeed(batchIngestResponseDefinitionResultsDefault)),
+    S.withDecodingDefaultType(Effect.succeed(batchIngestResponseDefinitionResultsDefault)),
     S.annotateKey({
       description: "Per-link tagged outcomes; defaults to an empty collection.",
     })
@@ -431,7 +453,8 @@ const listLinksQueryOffsetDefault = S.Natural.make(0);
  * @category dtos
  * @since 0.0.0
  */
-export class ListLinksQuery extends S.Opaque<ListLinksQuery, { readonly brand: unique symbol }>()(S.Struct({
+export class ListLinksQuery extends S.Opaque<ListLinksQuery, { readonly brand: unique symbol }>()(
+  S.Struct({
     status: S.OptionFromOptionalKey(LinkStatus).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
@@ -451,20 +474,25 @@ export class ListLinksQuery extends S.Opaque<ListLinksQuery, { readonly brand: u
       })
     ),
     limit: PosInt.pipe(
-      S.withConstructorDefault(Effect.succeed(listLinksQueryLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(listLinksQueryLimitDefault)),
+      S.withConstructorDefault(Effect.succeed(listLinksQueryLimitDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(listLinksQueryLimitDefault)),
       S.annotateKey({
         description: "Positive page size; defaults to twenty.",
       })
     ),
     offset: S.Natural.pipe(
-      S.withConstructorDefault(Effect.succeed(listLinksQueryOffsetDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(listLinksQueryOffsetDefault)),
+      S.withConstructorDefault(Effect.succeed(listLinksQueryOffsetDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(listLinksQueryOffsetDefault)),
       S.annotateKey({
         description: "Non-negative pagination offset; defaults to zero.",
       })
     ),
-  }).pipe($I.annoteSchema("ListLinksQuery", {
-    description: "Link-list query with Option-normalized filters and schema-owned pagination defaults.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ListLinksQuery", {
+      description: "Link-list query with Option-normalized filters and schema-owned pagination defaults.",
+    })
+  )
+) {}
 
 /**
  * Compact projection of one ingested link.
@@ -486,7 +514,8 @@ export class ListLinksQuery extends S.Opaque<ListLinksQuery, { readonly brand: u
  * @category models
  * @since 0.0.0
  */
-export class LinkSummary extends S.Opaque<LinkSummary, { readonly brand: unique symbol }>()(S.Struct({
+export class LinkSummary extends S.Opaque<LinkSummary, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: S.NonEmptyString.annotateKey({
       description: "Persistent link identifier.",
     }),
@@ -524,9 +553,12 @@ export class LinkSummary extends S.Opaque<LinkSummary, { readonly brand: unique 
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional UTC enrichment instant." })
     ),
-  }).pipe($I.annoteSchema("LinkSummary", {
-    description: "Compact ingested-link projection with canonical content identity and normalized optional metadata.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("LinkSummary", {
+      description: "Compact ingested-link projection with canonical content identity and normalized optional metadata.",
+    })
+  )
+) {}
 
 const listLinksResponseLinksDefault = A.empty<LinkSummary>();
 /**
@@ -550,18 +582,23 @@ const listLinksResponseLinksDefault = A.empty<LinkSummary>();
  * @category dtos
  * @since 0.0.0
  */
-export class ListLinksResponse extends S.Opaque<ListLinksResponse, { readonly brand: unique symbol }>()(S.Struct({
+export class ListLinksResponse extends S.Opaque<ListLinksResponse, { readonly brand: unique symbol }>()(
+  S.Struct({
     links: S.Array(LinkSummary).pipe(
-      S.withConstructorDefault(Effect.succeed(listLinksResponseLinksDefault)), S.withDecodingDefaultType(Effect.succeed(listLinksResponseLinksDefault)),
+      S.withConstructorDefault(Effect.succeed(listLinksResponseLinksDefault)),
+      S.withDecodingDefaultType(Effect.succeed(listLinksResponseLinksDefault)),
       S.annotateKey({ description: "Current page of link summaries." })
     ),
     total: S.Natural.annotateKey({ description: "Total matching link count." }),
     limit: PosInt.annotateKey({ description: "Positive requested page size." }),
     offset: S.Natural.annotateKey({ description: "Non-negative page offset." }),
     hasMore: S.Boolean.annotateKey({ description: "Whether another result page follows." }),
-  }).pipe($I.annoteSchema("ListLinksResponse", {
-    description: "Paginated link-list response with constrained counts and an always-present result collection.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ListLinksResponse", {
+      description: "Paginated link-list response with constrained counts and an always-present result collection.",
+    })
+  )
+) {}
 
 const linkDetailTopicsDefault = A.empty<string>();
 const linkDetailKeyEntitiesDefault = A.empty<string>();
@@ -591,7 +628,8 @@ const linkDetailKeyEntitiesDefault = A.empty<string>();
  * @category dtos
  * @since 0.0.0
  */
-export class LinkDetail extends S.Opaque<LinkDetail, { readonly brand: unique symbol }>()(S.Struct({
+export class LinkDetail extends S.Opaque<LinkDetail, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: S.NonEmptyString,
     contentHash: ContentHash,
     sourceUri: S.OptionFromNullishOr(HttpUrl).pipe(S.withConstructorDefault(Effect.succeedNone)),
@@ -601,8 +639,14 @@ export class LinkDetail extends S.Opaque<LinkDetail, { readonly brand: unique sy
     author: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     organization: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     language: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    topics: S.Array(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(linkDetailTopicsDefault)), S.withDecodingDefaultType(Effect.succeed(linkDetailTopicsDefault))),
-    keyEntities: S.Array(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(linkDetailKeyEntitiesDefault)), S.withDecodingDefaultType(Effect.succeed(linkDetailKeyEntitiesDefault))),
+    topics: S.Array(S.NonEmptyString).pipe(
+      S.withConstructorDefault(Effect.succeed(linkDetailTopicsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(linkDetailTopicsDefault))
+    ),
+    keyEntities: S.Array(S.NonEmptyString).pipe(
+      S.withConstructorDefault(Effect.succeed(linkDetailKeyEntitiesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(linkDetailKeyEntitiesDefault))
+    ),
     storageUri: GcsUri,
     status: LinkStatus,
     wordCount: S.OptionFromNullishOr(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
@@ -611,9 +655,13 @@ export class LinkDetail extends S.Opaque<LinkDetail, { readonly brand: unique sy
     enrichedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     processedAt: S.OptionFromNullishOr(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     errorMessage: S.OptionFromNullishOr(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("LinkDetail", {
-    description: "Detailed ingested-link projection with validated identities and fully normalized optional metadata.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("LinkDetail", {
+      description:
+        "Detailed ingested-link projection with validated identities and fully normalized optional metadata.",
+    })
+  )
+) {
   static readonly is = S.is(LinkDetail);
 }
 

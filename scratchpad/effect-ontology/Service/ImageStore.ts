@@ -1,3 +1,4 @@
+
 /**
  * ImageStore Service
  *
@@ -11,16 +12,16 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Order from "effect/Order";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import type { PlatformError, SystemError } from "effect/PlatformError";
-import * as S from "effect/Schema";
 import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
+import type * as S from "effect/Schema";
 import type { ImageAsset, ImageOwnerType, ImageRef } from "../Domain/Model/Image.ts";
 import { ImageManifest } from "../Domain/Model/Image.ts";
 import { PathLayout, StoragePathSegment } from "../Domain/PathLayout.ts";
@@ -233,9 +234,7 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
           const existing = yield* loadManifestWithGeneration(ref.ownerType, ref.ownerId);
           if (O.isSome(existing)) {
             const { generation, manifest } = existing.value;
-            const alreadyExists = manifest.images.some(
-              (img) => img.assetHash === ref.assetHash && img.position === ref.position
-            );
+            const alreadyExists = A.some(manifest.images, (img) => img.assetHash === ref.assetHash && img.position === ref.position);
             if (!alreadyExists) {
               const updatedAt = yield* DateTime.now;
               const updatedManifest: ImageManifest = {
@@ -273,7 +272,7 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
           const existing = yield* loadManifestWithGeneration(ownerType, ownerId);
           if (O.isNone(existing)) return;
           const { generation, manifest } = existing.value;
-          const filtered = manifest.images.filter((img) => img.assetHash !== assetHash);
+          const filtered = A.filter(manifest.images, (img) => img.assetHash !== assetHash);
           if (filtered.length !== manifest.images.length) {
             const updatedAt = yield* DateTime.now;
             const updatedManifest: ImageManifest = {

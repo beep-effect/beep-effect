@@ -116,7 +116,9 @@ export class PubSubError extends S.TaggedError<PubSubError, { readonly brand: un
  * @category errors
  * @since 0.0.0
  */
-export class DeadLetterError extends S.TaggedError<DeadLetterError, { readonly brand: unique symbol }>($I`DeadLetterError`)(
+export class DeadLetterError extends S.TaggedError<DeadLetterError, { readonly brand: unique symbol }>(
+  $I`DeadLetterError`
+)(
   "DeadLetterError",
   {
     jobId: S.NonEmptyString.annotateKey({

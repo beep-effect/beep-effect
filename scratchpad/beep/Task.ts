@@ -58,7 +58,7 @@ export type TaskActionProvider = typeof TaskActionProvider.Type;
  * @since 0.0.0
  */
 export declare namespace TaskActionProvider {
-  export type Encoded = S.Codec.Encoded<typeof TaskActionProvider>;
+  export type Encoded = typeof TaskActionProvider.Encoded;
 }
 
 /**
@@ -105,7 +105,7 @@ export type TaskAction = typeof TaskAction.Type;
  * @since 0.0.0
  */
 export declare namespace TaskAction {
-  export type Encoded = S.Codec.Encoded<typeof TaskAction>;
+  export type Encoded = typeof TaskAction.Encoded;
 }
 
 /**
@@ -153,7 +153,7 @@ export type TaskStatus = typeof TaskStatus.Type;
  * @since 0.0.0
  */
 export declare namespace TaskStatus {
-  export type Encoded = S.Codec.Encoded<typeof TaskStatus>;
+  export type Encoded = typeof TaskStatus.Encoded;
 }
 
 /**
@@ -224,5 +224,5 @@ export class Task extends Model<Task>("Task")(
  * @since 0.0.0
  */
 export declare namespace Task {
-  export type Encoded = S.Codec.Encoded<typeof Task>;
+  export type Encoded = typeof Task.Encoded;
 }

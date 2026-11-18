@@ -291,7 +291,7 @@ export class QuestionOption extends Model<QuestionOption>("QuestionOption")(
  * @since 0.0.0
  */
 export declare namespace QuestionOption {
-  export type Encoded = S.Codec.Encoded<typeof QuestionOption>;
+  export type Encoded = typeof QuestionOption.Encoded;
 }
 
 /**
@@ -327,7 +327,7 @@ export class QuestionSubject extends Model<QuestionSubject>("QuestionSubject")(
  * @since 0.0.0
  */
 export declare namespace QuestionSubject {
-  export type Encoded = S.Codec.Encoded<typeof QuestionSubject>;
+  export type Encoded = typeof QuestionSubject.Encoded;
 }
 
 /**
@@ -363,7 +363,7 @@ export class QuestionColdStartSequence extends Model<QuestionColdStartSequence>(
  * @since 0.0.0
  */
 export declare namespace QuestionColdStartSequence {
-  export type Encoded = S.Codec.Encoded<typeof QuestionColdStartSequence>;
+  export type Encoded = typeof QuestionColdStartSequence.Encoded;
 }
 
 /**
@@ -420,7 +420,7 @@ export class QuestionCardSpec extends Model<QuestionCardSpec>("QuestionCardSpec"
  * @since 0.0.0
  */
 export declare namespace QuestionCardSpec {
-  export type Encoded = S.Codec.Encoded<typeof QuestionCardSpec>;
+  export type Encoded = typeof QuestionCardSpec.Encoded;
 }
 
 /**
@@ -541,7 +541,7 @@ export class TaskCardSpec extends Model<TaskCardSpec>("TaskCardSpec")(
  * @since 0.0.0
  */
 export declare namespace TaskCardSpec {
-  export type Encoded = S.Codec.Encoded<typeof TaskCardSpec>;
+  export type Encoded = typeof TaskCardSpec.Encoded;
 }
 
 /**
@@ -606,7 +606,7 @@ export class GoalLinkSpec extends Model<GoalLinkSpec>("GoalLinkSpec")(
  * @since 0.0.0
  */
 export declare namespace GoalLinkSpec {
-  export type Encoded = S.Codec.Encoded<typeof GoalLinkSpec>;
+  export type Encoded = typeof GoalLinkSpec.Encoded;
 }
 
 /**
@@ -646,7 +646,7 @@ export class CaptureLinkSpec extends Model<CaptureLinkSpec>("CaptureLinkSpec")(
  * @since 0.0.0
  */
 export declare namespace CaptureLinkSpec {
-  export type Encoded = S.Codec.Encoded<typeof CaptureLinkSpec>;
+  export type Encoded = typeof CaptureLinkSpec.Encoded;
 }
 
 /**
@@ -687,7 +687,7 @@ export class ConversationLinkSpec extends Model<ConversationLinkSpec>("Conversat
  * @since 0.0.0
  */
 export declare namespace ConversationLinkSpec {
-  export type Encoded = S.Codec.Encoded<typeof ConversationLinkSpec>;
+  export type Encoded = typeof ConversationLinkSpec.Encoded;
 }
 
 /**
@@ -727,7 +727,7 @@ export class MemoryLinkSpec extends Model<MemoryLinkSpec>("MemoryLinkSpec")(
  * @since 0.0.0
  */
 export declare namespace MemoryLinkSpec {
-  export type Encoded = S.Codec.Encoded<typeof MemoryLinkSpec>;
+  export type Encoded = typeof MemoryLinkSpec.Encoded;
 }
 
 /**
@@ -773,7 +773,7 @@ export class MemoryReviewCardSpec extends Model<MemoryReviewCardSpec>("MemoryRev
  * @since 0.0.0
  */
 export declare namespace MemoryReviewCardSpec {
-  export type Encoded = S.Codec.Encoded<typeof MemoryReviewCardSpec>;
+  export type Encoded = typeof MemoryReviewCardSpec.Encoded;
 }
 
 /**
@@ -958,7 +958,7 @@ export class ChatFirstReceiptRequest extends Model<ChatFirstReceiptRequest>("Cha
  * @since 0.0.0
  */
 export declare namespace ChatFirstReceiptRequest {
-  export type Encoded = S.Codec.Encoded<typeof ChatFirstReceiptRequest>;
+  export type Encoded = typeof ChatFirstReceiptRequest.Encoded;
 }
 
 /**
@@ -1031,7 +1031,7 @@ export class ChatFirstReceiptResult extends Model<ChatFirstReceiptResult>("ChatF
  * @since 0.0.0
  */
 export declare namespace ChatFirstReceiptResult {
-  export type Encoded = S.Codec.Encoded<typeof ChatFirstReceiptResult>;
+  export type Encoded = typeof ChatFirstReceiptResult.Encoded;
 }
 
 /**
@@ -1100,7 +1100,7 @@ export class ChatFirstReceiptsRequest extends Model<ChatFirstReceiptsRequest>("C
  * @since 0.0.0
  */
 export declare namespace ChatFirstReceiptsRequest {
-  export type Encoded = S.Codec.Encoded<typeof ChatFirstReceiptsRequest>;
+  export type Encoded = typeof ChatFirstReceiptsRequest.Encoded;
 }
 
 /**
@@ -1171,7 +1171,7 @@ export class ChatFirstReceiptsResponse extends Model<ChatFirstReceiptsResponse>(
  * @since 0.0.0
  */
 export declare namespace ChatFirstReceiptsResponse {
-  export type Encoded = S.Codec.Encoded<typeof ChatFirstReceiptsResponse>;
+  export type Encoded = typeof ChatFirstReceiptsResponse.Encoded;
 }
 
 const deliveryDefault = ProactiveIntentDeliveryState.pipe(
@@ -1229,7 +1229,7 @@ export class ProactiveIntent extends Model<ProactiveIntent>("ProactiveIntent")(
  * @since 0.0.0
  */
 export declare namespace ProactiveIntent {
-  export type Encoded = S.Codec.Encoded<typeof ProactiveIntent>;
+  export type Encoded = typeof ProactiveIntent.Encoded;
 }
 
 const decodeUnknownEffectProactiveIntent = S.decodeUnknownEffect(ProactiveIntent);
@@ -1367,7 +1367,7 @@ export class DeadLetteredProactiveIntent extends Model<DeadLetteredProactiveInte
  * @since 0.0.0
  */
 export declare namespace DeadLetteredProactiveIntent {
-  export type Encoded = S.Codec.Encoded<typeof DeadLetteredProactiveIntent>;
+  export type Encoded = typeof DeadLetteredProactiveIntent.Encoded;
 }
 
 /**
@@ -1421,7 +1421,7 @@ export class MaterializableProactiveIntent extends Model<MaterializableProactive
  * @since 0.0.0
  */
 export declare namespace MaterializableProactiveIntent {
-  export type Encoded = S.Codec.Encoded<typeof MaterializableProactiveIntent>;
+  export type Encoded = typeof MaterializableProactiveIntent.Encoded;
 }
 
 /**
@@ -1481,7 +1481,7 @@ export class MaterializePromptsRequest extends Model<MaterializePromptsRequest>(
  * @since 0.0.0
  */
 export declare namespace MaterializePromptsRequest {
-  export type Encoded = S.Codec.Encoded<typeof MaterializePromptsRequest>;
+  export type Encoded = typeof MaterializePromptsRequest.Encoded;
 }
 
 /**
@@ -1516,7 +1516,7 @@ export class MaterializePromptsResponse extends Model<MaterializePromptsResponse
  * @since 0.0.0
  */
 export declare namespace MaterializePromptsResponse {
-  export type Encoded = S.Codec.Encoded<typeof MaterializePromptsResponse>;
+  export type Encoded = typeof MaterializePromptsResponse.Encoded;
 }
 
 /**
@@ -1590,7 +1590,7 @@ export class ProactiveIntentsResponse extends Model<ProactiveIntentsResponse>("P
  * @since 0.0.0
  */
 export declare namespace ProactiveIntentsResponse {
-  export type Encoded = S.Codec.Encoded<typeof ProactiveIntentsResponse>;
+  export type Encoded = typeof ProactiveIntentsResponse.Encoded;
 }
 
 /**
@@ -1631,7 +1631,7 @@ export class ProactiveIntentOutcomeRequest extends Model<ProactiveIntentOutcomeR
  * @since 0.0.0
  */
 export declare namespace ProactiveIntentOutcomeRequest {
-  export type Encoded = S.Codec.Encoded<typeof ProactiveIntentOutcomeRequest>;
+  export type Encoded = typeof ProactiveIntentOutcomeRequest.Encoded;
 }
 
 /**
@@ -1701,5 +1701,5 @@ export class ProactiveIntentOutcomeResponse extends Model<ProactiveIntentOutcome
  * @since 0.0.0
  */
 export declare namespace ProactiveIntentOutcomeResponse {
-  export type Encoded = S.Codec.Encoded<typeof ProactiveIntentOutcomeResponse>;
+  export type Encoded = typeof ProactiveIntentOutcomeResponse.Encoded;
 }

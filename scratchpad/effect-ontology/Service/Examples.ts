@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 /**
  * Examples Service
  *
@@ -23,15 +24,11 @@ import type * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
-import type {
-  CreateExampleInputInput,
-  ExampleRetrievalOptionsInput,
-  ExampleType,
-} from "../Repository/Examples.ts";
+import type { CreateExampleInputInput, ExampleRetrievalOptionsInput, ExampleType } from "../Repository/Examples.ts";
 import { ExampleRetrievalOptions, ExamplesRepository, ScoredExample } from "../Repository/Examples.ts";
 import type { LlmExampleRow } from "../Repository/schema.ts";
-import { EmbeddingService } from "./Embedding.ts";
 import { PosInt } from "../Schema/PosInt.ts";
+import { EmbeddingService } from "./Embedding.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Examples");
 
@@ -110,7 +107,8 @@ export type ExtractionStage = typeof ExtractionStage.Type;
  * @category configuration
  * @since 0.0.0
  */
-export class StageRetrievalOptions extends S.Opaque<StageRetrievalOptions, { readonly brand: unique symbol }>()(S.Struct({
+export class StageRetrievalOptions extends S.Opaque<StageRetrievalOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
     k: PositiveInt.pipe(S.optionalKey).annotateKey({ description: "Maximum positive-example count." }),
     negativeK: S.Natural.pipe(S.optionalKey).annotateKey({ description: "Maximum negative-example count." }),
     minSimilarity: SimilarityThreshold.pipe(S.optionalKey).annotateKey({
@@ -120,9 +118,12 @@ export class StageRetrievalOptions extends S.Opaque<StageRetrievalOptions, { rea
     targetPredicate: S.NonEmptyString.pipe(S.optionalKey).annotateKey({
       description: "Optional target predicate filter.",
     }),
-  }).pipe($I.annoteSchema("StageRetrievalOptions", {
-    description: "Limits, similarity threshold, and ontology filters for stage-aware example retrieval.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("StageRetrievalOptions", {
+      description: "Limits, similarity threshold, and ontology filters for stage-aware example retrieval.",
+    })
+  )
+) {}
 
 /**
  * Retrieved examples for a stage
@@ -139,12 +140,16 @@ export class StageRetrievalOptions extends S.Opaque<StageRetrievalOptions, { rea
  * @category models
  * @since 0.0.0
  */
-export class StageExamples extends S.Opaque<StageExamples, { readonly brand: unique symbol }>()(S.Struct({
+export class StageExamples extends S.Opaque<StageExamples, { readonly brand: unique symbol }>()(
+  S.Struct({
     positives: S.Array(ScoredExample),
     negatives: S.Array(ScoredExample),
-  }).pipe($I.annoteSchema("StageExamples", {
-    description: "Positive and negative few-shot examples selected for one pipeline stage.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("StageExamples", {
+      description: "Positive and negative few-shot examples selected for one pipeline stage.",
+    })
+  )
+) {}
 
 /**
  * Example statistics
@@ -161,14 +166,18 @@ export class StageExamples extends S.Opaque<StageExamples, { readonly brand: uni
  * @category models
  * @since 0.0.0
  */
-export class ExampleStats extends S.Opaque<ExampleStats, { readonly brand: unique symbol }>()(S.Struct({
+export class ExampleStats extends S.Opaque<ExampleStats, { readonly brand: unique symbol }>()(
+  S.Struct({
     total: S.Natural,
     byType: S.Record(S.String, S.Natural),
     negativeCount: S.Natural,
     avgSuccessRate: S.NullOr(SimilarityThreshold),
-  }).pipe($I.annoteSchema("ExampleStats", {
-    description: "Example totals, type counts, negative count, and nullable average success rate.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExampleStats", {
+      description: "Example totals, type counts, negative count, and nullable average success rate.",
+    })
+  )
+) {}
 
 // =============================================================================
 // Service
@@ -232,7 +241,7 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
         const negatives = includeNegatives ? yield* repository.findNegatives(ontologyId, queryText, k) : [];
 
         // Filter by example type
-        const filtered = vectorResults.filter((e) => e.exampleType === exampleType);
+        const filtered = A.filter(vectorResults, (e) => e.exampleType === exampleType);
 
         // Apply RRF to combine and rank (for future lexical component)
         // For now, just take top-k from vector search
@@ -278,7 +287,7 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
         });
 
         // Filter to matching example type
-        const filteredPositives = positives.filter((e) => e.exampleType === exampleType);
+        const filteredPositives = A.filter(positives, (e) => e.exampleType === exampleType);
 
         // Get negative examples for entity extraction stage
         const negatives =

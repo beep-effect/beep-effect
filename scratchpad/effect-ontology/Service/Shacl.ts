@@ -26,6 +26,7 @@ import {
   ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
 import { ShaclValidationServiceLive } from "@beep/shacl";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -33,10 +34,9 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as N3 from "n3";

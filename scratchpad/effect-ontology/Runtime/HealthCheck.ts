@@ -11,16 +11,16 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
-import * as Redacted from "effect/Redacted";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ConfigService } from "../Service/Config.ts";
@@ -122,14 +122,18 @@ export type HealthCheckStatus = typeof HealthCheckStatus.Type;
  * @category models
  * @since 0.0.0
  */
-export class HealthResult extends S.Opaque<HealthResult, { readonly brand: unique symbol }>()(S.Struct({
+export class HealthResult extends S.Opaque<HealthResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     status: HealthStatus,
     timestamp: S.NonEmptyString,
     checks: S.optionalKey(S.Record(S.String, HealthCheckStatus)),
     error: S.optionalKey(S.NonEmptyString),
-  }).pipe($I.annoteSchema("HealthResult", {
-    description: "Timestamped aggregate health status with optional dependency results and failure detail.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("HealthResult", {
+      description: "Timestamped aggregate health status with optional dependency results and failure detail.",
+    })
+  )
+) {}
 
 /**
  * Liveness, readiness, and deep-dependency probes for Kubernetes-style health checks.

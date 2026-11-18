@@ -21,16 +21,17 @@ import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import { BunServices } from "@effect/platform-bun";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
+import * as A from "effect/Array";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Response from "effect/ai/Response";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as ManagedRuntime from "effect/ManagedRuntime";
-import * as Stream from "effect/Stream";
-import * as A from "effect/Array";
 import * as P from "effect/Predicate";
-import * as LanguageModel from "effect/ai/LanguageModel";
-import * as Response from "effect/ai/Response";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { ConfigServiceDefault } from "../Service/Config.ts";
 import { EmbeddingCache } from "../Service/EmbeddingCache.ts";
 import { EmbeddingProvider } from "../Service/EmbeddingProvider.ts";
@@ -49,7 +50,6 @@ import type { ValidationPolicy } from "../Service/Shacl.ts";
 import { ShaclValidationReport, ShaclWorkflowService } from "../Service/Shacl.ts";
 import { StorageServiceTest } from "../Service/Storage.ts";
 import { MetricsService } from "../Telemetry/Metrics.ts";
-import * as S from "effect/Schema";
 
 /**
  * Mock LanguageModel for testing

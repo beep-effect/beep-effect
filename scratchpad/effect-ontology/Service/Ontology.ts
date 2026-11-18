@@ -1,3 +1,4 @@
+
 /**
  * Service: Ontology Services
  *
@@ -31,23 +32,23 @@ import {
   SKOS_SCOPE_NOTE as SKOS_SCOPENOTE,
 } from "@beep/rdf/Vocab/Skos";
 import { FilePath } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Hex from "effect/encoding/Hex";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
-import * as Ref from "effect/Ref";
-import * as Hex from "effect/encoding/Hex";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { OntologyError, OntologyFileNotFound, OntologyParsingFailed } from "../Domain/Error/Ontology.ts";
@@ -67,11 +68,13 @@ import { RdfBuilder } from "./Rdf.ts";
 const namedNodeValue = (value: IRI | NamedNode): string => (P.isString(value) ? value : value.value);
 
 import type { StorageServiceMethods } from "./Storage.ts";
+
 const decodeUnknownClassDefinition = S.decodeUnknownEffect(ClassDefinition);
 const decodeUnknownOntologyContext = S.decodeUnknownEffect(OntologyContext);
 const decodeUnknownPropertyDefinition = S.decodeUnknownEffect(PropertyDefinition);
-import { StorageService } from "./Storage.ts";
+
 import { PosInt } from "../Schema/PosInt.ts";
+import { StorageService } from "./Storage.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Ontology");
 const RDFS_DOMAIN = makeNamedNode(`${RDFS_NAMESPACE}domain`);
@@ -474,8 +477,7 @@ export const parseOntologyFromStore: {
       });
       // Store as HashSet<string> for easy lookup by string IDs
       const functionalProps = HashSet.fromIterable(
-        Chunk.toReadonlyArray(functionalPropQuads)
-          .filter((q) => q.subject.termType === "NamedNode")
+        A.filter(Chunk.toReadonlyArray(functionalPropQuads), (q) => q.subject.termType === "NamedNode")
           .map((q) => q.subject.value)
       );
 
@@ -962,7 +964,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         const semanticArray = Chunk.toReadonlyArray(semanticResults);
         const bm25Array = Chunk.toReadonlyArray(bm25Results);
         const fused = rrfFusion([semanticArray, bm25Array], 60);
-        const fusedIds = HashSet.fromIterable(fused.map((r) => r.id));
+        const fusedIds = HashSet.fromIterable(A.map(fused, (r) => r.id));
         const remaining: Array<ClassDefinition> = [];
         if (fused.length < limit && ontology.classes.length <= limit) {
           for (const cls of ontology.classes) {
@@ -978,7 +980,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           ontologySize: ontology.classes.length,
         });
         const results = [
-          ...fused.map((r) => {
+          ...A.map(fused, (r) => {
             const { rrfScore: _, ...cls } = r;
             return cls;
           }),
@@ -1038,7 +1040,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           const semanticArray = Chunk.toReadonlyArray(semanticResults);
           const bm25Array = Chunk.toReadonlyArray(bm25Results);
           const fused = rrfFusion([semanticArray, bm25Array], 60);
-          const fusedIds = HashSet.fromIterable(fused.map((r) => r.id));
+          const fusedIds = HashSet.fromIterable(A.map(fused, (r) => r.id));
           const remaining: Array<ClassDefinition> = [];
           if (fused.length < limit && ontology.classes.length <= limit) {
             for (const cls of ontology.classes) {
@@ -1054,7 +1056,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
             ontologySize: ontology.classes.length,
           });
           const results = [
-            ...fused.map((r) => {
+            ...A.map(fused, (r) => {
               const { rrfScore: _, ...cls } = r;
               return cls;
             }),
@@ -1173,7 +1175,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         const semanticArray = Chunk.toReadonlyArray(semanticResults);
         const bm25Array = Chunk.toReadonlyArray(bm25Results);
         const fused = rrfFusion([semanticArray, bm25Array], 60);
-        const fusedIds = HashSet.fromIterable(fused.map((r) => r.id));
+        const fusedIds = HashSet.fromIterable(A.map(fused, (r) => r.id));
         const remaining: Array<ClassDefinition> = [];
         if (fused.length < limit && ontology.classes.length <= limit) {
           for (const cls of ontology.classes) {
@@ -1232,7 +1234,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         const semanticArray = Chunk.toReadonlyArray(semanticResults);
         const bm25Array = Chunk.toReadonlyArray(bm25Results);
         const fused = rrfFusion([semanticArray, bm25Array], 60);
-        const fusedIds = HashSet.fromIterable(fused.map((r) => r.id));
+        const fusedIds = HashSet.fromIterable(A.map(fused, (r) => r.id));
         const remaining: Array<ClassDefinition> = [];
         if (fused.length < limit && ontology.classes.length <= limit) {
           for (const cls of ontology.classes) {
@@ -1248,7 +1250,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           limit,
         });
         const results = [
-          ...fused.map((r) => {
+          ...A.map(fused, (r) => {
             const { rrfScore: _, ...cls } = r;
             return cls;
           }),

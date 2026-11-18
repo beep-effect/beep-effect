@@ -1,3 +1,4 @@
+
 /**
  * Structured language-model generation with schema feedback and bounded retry.
  *
@@ -6,15 +7,15 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import * as Effect from "effect/Effect";
-import * as Ref from "effect/Ref";
-import type * as Cause from "effect/Cause";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import * as AiError from "effect/ai/AiError";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Prompt from "effect/ai/Prompt";
+import type * as Cause from "effect/Cause";
+import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
 import { recordProviderAttempt, recordProviderUsage } from "../Telemetry/ExtractionTelemetry.ts";
 import { makeCachedPromptFromStructured } from "./PromptCache.ts";
@@ -41,7 +42,11 @@ const generateWithFeedbackPolicyRetryPolicyDefault = RetryPolicy.make({});
  * @category models
  * @since 0.0.0
  */
-export class GenerateWithFeedbackPolicy extends S.Opaque<GenerateWithFeedbackPolicy, { readonly brand: unique symbol }>()(S.Struct({
+export class GenerateWithFeedbackPolicy extends S.Opaque<
+  GenerateWithFeedbackPolicy,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
     objectName: S.NonEmptyString.annotateKey({
       description: "Name supplied to the provider for the requested structured object.",
     }),
@@ -49,16 +54,21 @@ export class GenerateWithFeedbackPolicy extends S.Opaque<GenerateWithFeedbackPol
       description: "Stable service name attached to retry diagnostics.",
     }),
     retryPolicy: RetryPolicy.pipe(
-      S.withConstructorDefault(Effect.succeed(generateWithFeedbackPolicyRetryPolicyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(generateWithFeedbackPolicyRetryPolicyDefault)),
+      S.withConstructorDefault(Effect.succeed(generateWithFeedbackPolicyRetryPolicyDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(generateWithFeedbackPolicyRetryPolicyDefault)),
       S.annotateKey({ description: "Validated attempt, backoff, and overall deadline policy." })
     ),
     enablePromptCaching: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({ description: "Whether structured system prompts opt into provider prompt caching." })
     ),
-  }).pipe($I.annoteSchema("GenerateWithFeedbackPolicy", {
-    description: "Validated retry, naming, and prompt-caching policy for structured generation.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("GenerateWithFeedbackPolicy", {
+      description: "Validated retry, naming, and prompt-caching policy for structured generation.",
+    })
+  )
+) {
   static readonly decodeEffect = S.decodeEffect(GenerateWithFeedbackPolicy);
 }
 
@@ -159,7 +169,7 @@ export const generateObjectWithFeedback = Effect.fn("generateObjectWithFeedback"
                   maxAttempts: retryPolicy.maxAttempts,
                   errorDescription: Str.slice(0, 500)(error.reason.description),
                 }),
-              ]).pipe(Effect.asVoid)
+              ], { concurrency: 1 }).pipe(Effect.asVoid)
             : Effect.logWarning("Language-model attempt failed; retrying", {
                 service: policy.serviceName,
                 attempt: attemptNumber,

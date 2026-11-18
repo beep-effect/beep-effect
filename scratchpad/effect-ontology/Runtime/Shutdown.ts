@@ -38,11 +38,18 @@ const shutdownConfigDrainTimeoutDefault = Duration.seconds(30);
  * @category models
  * @since 0.0.0
  */
-export class ShutdownConfig extends S.Opaque<ShutdownConfig, { readonly brand: unique symbol }>()(S.Struct({
-    drainTimeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(shutdownConfigDrainTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(shutdownConfigDrainTimeoutDefault))),
-  }).pipe($I.annoteSchema("ShutdownConfig", {
-    description: "Maximum duration allowed for graceful in-flight request draining.",
-  }))) {}
+export class ShutdownConfig extends S.Opaque<ShutdownConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    drainTimeout: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(shutdownConfigDrainTimeoutDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(shutdownConfigDrainTimeoutDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("ShutdownConfig", {
+      description: "Maximum duration allowed for graceful in-flight request draining.",
+    })
+  )
+) {}
 
 /**
  * Default shutdown configuration

@@ -8,34 +8,34 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
+import * as A from "effect/Array";
+import type * as AiError from "effect/ai/AiError";
+import type * as LanguageModel from "effect/ai/LanguageModel";
+import type { TimeoutError } from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
-import * as Ord from "effect/Order";
-import * as A from "effect/Array";
-import type { TimeoutError } from "effect/Cause";
-import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Ord from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type * as AiError from "effect/ai/AiError";
-import type * as LanguageModel from "effect/ai/LanguageModel";
 import { OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { KnowledgeGraph } from "../Domain/Model/Entity.ts";
 import { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 import { EntityIndex } from "./EntityIndex.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
 import { RetryPolicy } from "./Retry.ts";
 import { Subgraph, SubgraphExtractor } from "./SubgraphExtractor.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/GraphRAG");
 
@@ -46,31 +46,38 @@ const retrievalOptionsShapeMinScoreDefault = Confidence.make(0.3);
 const retrievalOptionsShapeIncludeTypesDefault = A.empty<IRI>();
 const RetrievalOptionsShape = S.Struct({
   topK: PosInt.pipe(
-    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeTopKDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeTopKDefault)),
+    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeTopKDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeTopKDefault)),
     S.annotateKey({ description: "Maximum embedding matches used as graph seeds." })
   ),
   hops: S.Natural.pipe(
-    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeHopsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeHopsDefault)),
+    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeHopsDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeHopsDefault)),
     S.annotateKey({ description: "Maximum breadth-first distance from a seed." })
   ),
   maxNodes: PosInt.pipe(
-    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeMaxNodesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeMaxNodesDefault)),
+    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeMaxNodesDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeMaxNodesDefault)),
     S.annotateKey({ description: "Maximum entities admitted to the retrieved subgraph, including seeds." })
   ),
   minScore: Confidence.pipe(
-    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeMinScoreDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeMinScoreDefault)),
+    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeMinScoreDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(retrievalOptionsShapeMinScoreDefault)),
     S.annotateKey({ description: "Minimum embedding similarity admitted as a seed." })
   ),
   includeTypes: S.Array(IRI).pipe(
-    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeIncludeTypesDefault)), S.withDecodingDefaultType(Effect.succeed(retrievalOptionsShapeIncludeTypesDefault)),
+    S.withConstructorDefault(Effect.succeed(retrievalOptionsShapeIncludeTypesDefault)),
+    S.withDecodingDefaultType(Effect.succeed(retrievalOptionsShapeIncludeTypesDefault)),
     S.annotateKey({ description: "Optional ontology classes restricting seed candidates." })
   ),
   includeAttributes: S.Boolean.pipe(
-    S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
+    S.withConstructorDefault(Effect.succeed(true)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(true)),
     S.annotateKey({ description: "Whether entity attributes are rendered into generation context." })
   ),
   includeRelations: S.Boolean.pipe(
-    S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
+    S.withConstructorDefault(Effect.succeed(true)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(true)),
     S.annotateKey({ description: "Whether relations are rendered into generation context." })
   ),
 }).pipe(
@@ -82,7 +89,8 @@ const RetrievalOptionsShape = S.Struct({
 const generationOptionsShapeRetryPolicyDefault = RetryPolicy.make({});
 const GenerationOptionsShape = S.Struct({
   retryPolicy: RetryPolicy.pipe(
-    S.withConstructorDefault(Effect.succeed(generationOptionsShapeRetryPolicyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(generationOptionsShapeRetryPolicyDefault)),
+    S.withConstructorDefault(Effect.succeed(generationOptionsShapeRetryPolicyDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(generationOptionsShapeRetryPolicyDefault)),
     S.annotateKey({ description: "Validated attempt, backoff, and overall deadline policy." })
   ),
 }).pipe(
@@ -121,14 +129,18 @@ const GenerationOptionsShape = S.Struct({
  * @category models
  * @since 0.0.0
  */
-export class ScoredNode extends S.Opaque<ScoredNode, { readonly brand: unique symbol }>()(S.Struct({
+export class ScoredNode extends S.Opaque<ScoredNode, { readonly brand: unique symbol }>()(
+  S.Struct({
     entity: Entity.annotateKey({ description: "Retrieved entity." }),
     score: Confidence.annotateKey({ description: "Fused embedding-rank and hop-distance relevance." }),
     hopDistance: S.Natural.annotateKey({ description: "Shortest measured distance from any accepted seed." }),
     isSeed: S.Boolean.annotateKey({ description: "Whether the entity came directly from embedding search." }),
-  }).pipe($I.annoteSchema("ScoredNode", {
-    description: "Retrieved entity with a unit-interval relevance score and measured seed distance.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ScoredNode", {
+      description: "Retrieved entity with a unit-interval relevance score and measured seed distance.",
+    })
+  )
+) {}
 
 /**
  * Statistics for one graph-retrieval operation.
@@ -153,15 +165,19 @@ export class ScoredNode extends S.Opaque<ScoredNode, { readonly brand: unique sy
  * @category models
  * @since 0.0.0
  */
-export class RetrievalStats extends S.Opaque<RetrievalStats, { readonly brand: unique symbol }>()(S.Struct({
+export class RetrievalStats extends S.Opaque<RetrievalStats, { readonly brand: unique symbol }>()(
+  S.Struct({
     seedCount: S.Natural.annotateKey({ description: "Accepted embedding seeds present in the subgraph." }),
     nodeCount: S.Natural.annotateKey({ description: "Total retrieved entities." }),
     edgeCount: S.Natural.annotateKey({ description: "Total retrieved relations." }),
     hops: S.Natural.annotateKey({ description: "Deepest breadth-first distance actually reached." }),
     avgScore: Confidence.annotateKey({ description: "Mean fused relevance across retrieved entities." }),
-  }).pipe($I.annoteSchema("RetrievalStats", {
-    description: "Schema-backed counts, actual depth, and average relevance for graph retrieval.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("RetrievalStats", {
+      description: "Schema-backed counts, actual depth, and average relevance for graph retrieval.",
+    })
+  )
+) {}
 
 /**
  * Validated graph-retrieval policy.
@@ -178,9 +194,13 @@ export class RetrievalStats extends S.Opaque<RetrievalStats, { readonly brand: u
  * @category models
  * @since 0.0.0
  */
-export class RetrievalOptions extends S.Opaque<RetrievalOptions, { readonly brand: unique symbol }>()(S.Struct(RetrievalOptionsShape.fields).pipe($I.annoteSchema("RetrievalOptions", {
-    description: "Validated semantic seed, traversal-bound, and context-rendering policy.",
-  }))) {}
+export class RetrievalOptions extends S.Opaque<RetrievalOptions, { readonly brand: unique symbol }>()(
+  S.Struct(RetrievalOptionsShape.fields).pipe(
+    $I.annoteSchema("RetrievalOptions", {
+      description: "Validated semantic seed, traversal-bound, and context-rendering policy.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link RetrievalOptions}.
@@ -251,15 +271,19 @@ export type RetrievalOptionsInput = (typeof RetrievalOptions)["~type.make.in"];
  * @category models
  * @since 0.0.0
  */
-export class RetrievalResult extends S.Opaque<RetrievalResult, { readonly brand: unique symbol }>()(S.Struct({
+export class RetrievalResult extends S.Opaque<RetrievalResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     subgraph: Subgraph.annotateKey({ description: "Bounded graph context selected for the query." }),
     scoredNodes: S.Array(ScoredNode).annotateKey({ description: "Retrieved entities in descending relevance order." }),
     context: S.String.annotateKey({ description: "Human-readable context supplied to the language model." }),
     query: S.String.annotateKey({ description: "Natural-language query used for retrieval." }),
     stats: RetrievalStats.annotateKey({ description: "Measured retrieval statistics." }),
-  }).pipe($I.annoteSchema("RetrievalResult", {
-    description: "Bounded subgraph, fused scores, rendered context, query, and measured retrieval statistics.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("RetrievalResult", {
+      description: "Bounded subgraph, fused scores, rendered context, query, and measured retrieval statistics.",
+    })
+  )
+) {}
 
 /**
  * Validated language-model retry and timeout policy.
@@ -276,9 +300,13 @@ export class RetrievalResult extends S.Opaque<RetrievalResult, { readonly brand:
  * @category models
  * @since 0.0.0
  */
-export class GenerationOptions extends S.Opaque<GenerationOptions, { readonly brand: unique symbol }>()(S.Struct(GenerationOptionsShape.fields).pipe($I.annoteSchema("GenerationOptions", {
-    description: "Validated retry and deadline policy for grounded language-model generation.",
-  }))) {}
+export class GenerationOptions extends S.Opaque<GenerationOptions, { readonly brand: unique symbol }>()(
+  S.Struct(GenerationOptionsShape.fields).pipe(
+    $I.annoteSchema("GenerationOptions", {
+      description: "Validated retry and deadline policy for grounded language-model generation.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link GenerationOptions}.
@@ -311,9 +339,13 @@ export type GenerationOptionsInput = (typeof GenerationOptions)["~type.make.in"]
  * @category models
  * @since 0.0.0
  */
-export class AnswerOptions extends S.Opaque<AnswerOptions, { readonly brand: unique symbol }>()(S.Struct({ ...RetrievalOptionsShape.fields, ...GenerationOptionsShape.fields }).pipe($I.annoteSchema("AnswerOptions", {
-    description: "Validated retrieval, context-rendering, timeout, and retry policy for answering a query.",
-  }))) {}
+export class AnswerOptions extends S.Opaque<AnswerOptions, { readonly brand: unique symbol }>()(
+  S.Struct({ ...RetrievalOptionsShape.fields, ...GenerationOptionsShape.fields }).pipe(
+    $I.annoteSchema("AnswerOptions", {
+      description: "Validated retrieval, context-rendering, timeout, and retry policy for answering a query.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link AnswerOptions}.
@@ -346,12 +378,16 @@ export type AnswerOptionsInput = (typeof AnswerOptions)["~type.make.in"];
  * @category models
  * @since 0.0.0
  */
-export class FormatContextOptions extends S.Opaque<FormatContextOptions, { readonly brand: unique symbol }>()(S.Struct({
+export class FormatContextOptions extends S.Opaque<FormatContextOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
     includeAttributes: RetrievalOptionsShape.fields.includeAttributes,
     includeRelations: RetrievalOptionsShape.fields.includeRelations,
-  }).pipe($I.annoteSchema("FormatContextOptions", {
-    description: "Validated switches controlling attribute and relation rendering in graph context.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("FormatContextOptions", {
+      description: "Validated switches controlling attribute and relation rendering in graph context.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link FormatContextOptions}.
@@ -428,15 +464,19 @@ export type FormatContextOptionsInput = (typeof FormatContextOptions)["~type.mak
  * @category models
  * @since 0.0.0
  */
-export class GroundedAnswer extends S.Opaque<GroundedAnswer, { readonly brand: unique symbol }>()(S.Struct({
+export class GroundedAnswer extends S.Opaque<GroundedAnswer, { readonly brand: unique symbol }>()(
+  S.Struct({
     answer: S.NonEmptyString.annotateKey({ description: "Answer derived only from retrieved graph context." }),
     citations: S.Array(EntityId).annotateKey({ description: "Exact entity IDs supporting the answer." }),
     confidence: Confidence.annotateKey({ description: "Model confidence that retrieved context supports the answer." }),
     reasoning: S.NonEmptyString.annotateKey({ description: "Brief derivation of the answer from graph context." }),
     retrieval: RetrievalResult.annotateKey({ description: "Retrieval result used to ground generation." }),
-  }).pipe($I.annoteSchema("GroundedAnswer", {
-    description: "Generated answer with validated confidence, exact entity citations, and its retrieval provenance.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("GroundedAnswer", {
+      description: "Generated answer with validated confidence, exact entity citations, and its retrieval provenance.",
+    })
+  )
+) {}
 
 /**
  * One directed knowledge-graph relation in an answer explanation path.
@@ -476,14 +516,18 @@ export class GroundedAnswer extends S.Opaque<GroundedAnswer, { readonly brand: u
  * @category models
  * @since 0.0.0
  */
-export class ReasoningStep extends S.Opaque<ReasoningStep, { readonly brand: unique symbol }>()(S.Struct({
+export class ReasoningStep extends S.Opaque<ReasoningStep, { readonly brand: unique symbol }>()(
+  S.Struct({
     from: Entity.annotateKey({ description: "Canonical relation subject." }),
     relation: Relation.annotateKey({ description: "Relation traversed by the explanation path." }),
     to: Entity.annotateKey({ description: "Canonical entity-reference object." }),
     explanation: S.String.annotateKey({ description: "Human-readable explanation of this relation's role." }),
-  }).pipe($I.annoteSchema("ReasoningStep", {
-    description: "Directed entity-relation-entity step selected from a shortest connecting path.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ReasoningStep", {
+      description: "Directed entity-relation-entity step selected from a shortest connecting path.",
+    })
+  )
+) {}
 
 /**
  * Complete path-based derivation for a grounded answer.
@@ -531,15 +575,19 @@ export class ReasoningStep extends S.Opaque<ReasoningStep, { readonly brand: uni
  * @category models
  * @since 0.0.0
  */
-export class ReasoningTrace extends S.Opaque<ReasoningTrace, { readonly brand: unique symbol }>()(S.Struct({
+export class ReasoningTrace extends S.Opaque<ReasoningTrace, { readonly brand: unique symbol }>()(
+  S.Struct({
     steps: S.Array(ReasoningStep).annotateKey({ description: "Ordered relations connecting cited entities." }),
     explanation: S.String.annotateKey({ description: "Natural-language explanation of the complete path." }),
     confidence: Confidence.annotateKey({ description: "Confidence inherited from the grounded answer." }),
     query: S.String.annotateKey({ description: "Original query answered by the trace." }),
     involvedEntities: S.Array(EntityId).annotateKey({ description: "Cited and intermediate entity IDs in the path." }),
-  }).pipe($I.annoteSchema("ReasoningTrace", {
-    description: "Shortest-path reasoning steps, explanation, confidence, query, and involved entity IDs.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ReasoningTrace", {
+      description: "Shortest-path reasoning steps, explanation, confidence, query, and involved entity IDs.",
+    })
+  )
+) {}
 
 /**
  * Generation policy for a path explanation.
@@ -556,15 +604,20 @@ export class ReasoningTrace extends S.Opaque<ReasoningTrace, { readonly brand: u
  * @category models
  * @since 0.0.0
  */
-export class ExplainOptions extends S.Opaque<ExplainOptions, { readonly brand: unique symbol }>()(S.Struct({
+export class ExplainOptions extends S.Opaque<ExplainOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
     ...GenerationOptionsShape.fields,
     generateStepExplanations: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether a language model explains the selected path and each step." })
     ),
-  }).pipe($I.annoteSchema("ExplainOptions", {
-    description: "Validated timeout, retry, and natural-language explanation policy.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExplainOptions", {
+      description: "Validated timeout, retry, and natural-language explanation policy.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link ExplainOptions}.
@@ -597,7 +650,9 @@ export type ExplainOptionsInput = (typeof ExplainOptions)["~type.make.in"];
  * @category errors
  * @since 0.0.0
  */
-export class GraphRAGGenerationError extends S.TaggedError<GraphRAGGenerationError, { readonly brand: unique symbol }>($I`GraphRAGGenerationError`)(
+export class GraphRAGGenerationError extends S.TaggedError<GraphRAGGenerationError, { readonly brand: unique symbol }>(
+  $I`GraphRAGGenerationError`
+)(
   "GraphRAGGenerationError",
   {
     message: S.NonEmptyString.annotateKey({ description: "Human-readable generation or grounding diagnostic." }),

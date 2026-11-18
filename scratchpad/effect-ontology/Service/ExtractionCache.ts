@@ -10,12 +10,12 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import type * as PlatformError from "effect/PlatformError";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import type * as PlatformError from "effect/PlatformError";
 import * as S from "effect/Schema";
 import { Entity, Relation } from "../Domain/Model/Entity.ts";
 

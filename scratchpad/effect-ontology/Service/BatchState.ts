@@ -8,13 +8,13 @@
 import { $ScratchpadId } from "@beep/identity";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as PubSub from "effect/PubSub";
 import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
+import * as PubSub from "effect/PubSub";
 import * as KeyValueStore from "effect/persistence/KeyValueStore";
 import * as Persistence from "effect/persistence/Persistence";
+import * as S from "effect/Schema";
 import { BatchId } from "../Domain/Identity.ts";
 import { BatchState } from "../Domain/Model/BatchWorkflow.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
@@ -47,9 +47,10 @@ const decodeState = S.decodeUnknownEffect(S.fromJsonString(BatchState));
  * @category errors
  * @since 0.0.0
  */
-export class BatchStatePersistenceError extends S.TaggedError<BatchStatePersistenceError, { readonly brand: unique symbol }>(
-  $I`BatchStatePersistenceError`
-)(
+export class BatchStatePersistenceError extends S.TaggedError<
+  BatchStatePersistenceError,
+  { readonly brand: unique symbol }
+>($I`BatchStatePersistenceError`)(
   "BatchStatePersistenceError",
   {
     batchId: BatchId,
@@ -81,7 +82,9 @@ export class BatchStatePersistenceError extends S.TaggedError<BatchStatePersiste
  * @category errors
  * @since 0.0.0
  */
-export class BatchStateDecodeError extends S.TaggedError<BatchStateDecodeError, { readonly brand: unique symbol }>($I`BatchStateDecodeError`)(
+export class BatchStateDecodeError extends S.TaggedError<BatchStateDecodeError, { readonly brand: unique symbol }>(
+  $I`BatchStateDecodeError`
+)(
   "BatchStateDecodeError",
   {
     batchId: BatchId,

@@ -9,11 +9,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Request from "effect/Request";
 import * as RequestResolver from "effect/RequestResolver";
-import * as A from "effect/Array";
 import { dual2 } from "../Utils/Dual.ts";
 import type { EmbeddingProviderMethods, EmbeddingTaskType } from "./EmbeddingProvider.ts";
 import type { EmbedTextRequest } from "./EmbeddingRequest.ts";

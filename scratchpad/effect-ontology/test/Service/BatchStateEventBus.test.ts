@@ -1,14 +1,14 @@
 import { PgliteTestLayer } from "@beep/pglite";
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as PubSub from "effect/PubSub";
-import * as Stream from "effect/Stream";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
+import * as PubSub from "effect/PubSub";
 import * as KeyValueStore from "effect/persistence/KeyValueStore";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { BatchId, OntologyName } from "../../Domain/Identity.ts";
 import { BatchState } from "../../Domain/Model/BatchWorkflow.ts";
 import { PathLayout } from "../../Domain/PathLayout.ts";
@@ -17,6 +17,7 @@ import { BatchStateHub, BatchStateHubLayer, getBatchStateFromStore, publishState
 import { BatchStateBridge, BatchStateBridgeLive } from "../../Service/BatchStateBridge.ts";
 import { EventBusService, EventBusServiceMemory, EventBusServiceSqlLive } from "../../Service/EventBus.ts";
 import { StorageService, StorageServiceTest } from "../../Service/Storage.ts";
+
 const decodeBatchState = S.decodeEffect(BatchState);
 
 const makePendingState = Effect.fn("BatchStateEventBusTest.makePendingState")(function* (batchId: BatchId) {

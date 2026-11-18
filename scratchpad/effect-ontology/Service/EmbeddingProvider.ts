@@ -12,8 +12,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import type * as Effect from "effect/Effect";
 import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
@@ -117,12 +117,16 @@ export type Embedding = typeof Embedding.Type;
  * @category models
  * @since 0.0.0
  */
-export class EmbeddingRequest extends S.Opaque<EmbeddingRequest, { readonly brand: unique symbol }>()(S.Struct({
+export class EmbeddingRequest extends S.Opaque<EmbeddingRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
     text: S.String,
     taskType: EmbeddingTaskType,
-  }).pipe($I.annoteSchema("EmbeddingRequest", {
-    description: "Text paired with the provider-specific semantic embedding task.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("EmbeddingRequest", {
+      description: "Text paired with the provider-specific semantic embedding task.",
+    })
+  )
+) {}
 
 /**
  * Provider metadata for cache key generation and configuration
@@ -139,7 +143,8 @@ export class EmbeddingRequest extends S.Opaque<EmbeddingRequest, { readonly bran
  * @category models
  * @since 0.0.0
  */
-export class ProviderMetadata extends S.Opaque<ProviderMetadata, { readonly brand: unique symbol }>()(S.Struct({
+export class ProviderMetadata extends S.Opaque<ProviderMetadata, { readonly brand: unique symbol }>()(
+  S.Struct({
     providerId: LiteralKit(["nomic", "voyage", "openai"]),
     modelId: S.NonEmptyString,
     dimension: S.Finite.check(
@@ -147,9 +152,12 @@ export class ProviderMetadata extends S.Opaque<ProviderMetadata, { readonly bran
         message: "Embedding dimension must be greater than zero.",
       })
     ),
-  }).pipe($I.annoteSchema("ProviderMetadata", {
-    description: "Stable provider, model, and positive native vector dimension metadata.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ProviderMetadata", {
+      description: "Stable provider, model, and positive native vector dimension metadata.",
+    })
+  )
+) {}
 
 /**
  * EmbeddingProvider service interface

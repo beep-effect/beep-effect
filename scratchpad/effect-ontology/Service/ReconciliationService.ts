@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 /**
  * Service: Reconciliation Service
  *
@@ -13,20 +14,20 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Random from "effect/Random";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 import { StorageService } from "./Storage.ts";
 import type { WikidataApiError, WikidataRateLimitError } from "./WikidataClient.ts";
 import { WikidataCandidate, WikidataClient } from "./WikidataClient.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ReconciliationService");
 
@@ -52,7 +53,9 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ReconciliationService")
  * @category errors
  * @since 0.0.0
  */
-export class ReconciliationError extends S.TaggedError<ReconciliationError, { readonly brand: unique symbol }>($I`ReconciliationError`)(
+export class ReconciliationError extends S.TaggedError<ReconciliationError, { readonly brand: unique symbol }>(
+  $I`ReconciliationError`
+)(
   "ReconciliationError",
   {
     message: ErrorMessage.annotateKey({
@@ -94,21 +97,37 @@ const reconciliationConfigMaxCandidatesDefault = PosInt.make(5);
  * @category schemas
  * @since 0.0.0
  */
-export class ReconciliationConfig extends S.Opaque<ReconciliationConfig, { readonly brand: unique symbol }>()(S.Struct({
-  /** Minimum score for automatic linking (default: 90) */
-  autoLinkThreshold: Percentage.pipe(S.withConstructorDefault(Effect.succeed(reconciliationConfigAutoLinkThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(reconciliationConfigAutoLinkThresholdDefault))),
+export class ReconciliationConfig extends S.Opaque<ReconciliationConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /** Minimum score for automatic linking (default: 90) */
+    autoLinkThreshold: Percentage.pipe(
+      S.withConstructorDefault(Effect.succeed(reconciliationConfigAutoLinkThresholdDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(reconciliationConfigAutoLinkThresholdDefault))
+    ),
 
-  /** Minimum score for queueing for review (default: 50) */
-  queueThreshold: Percentage.pipe(S.withConstructorDefault(Effect.succeed(reconciliationConfigQueueThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(reconciliationConfigQueueThresholdDefault))),
+    /** Minimum score for queueing for review (default: 50) */
+    queueThreshold: Percentage.pipe(
+      S.withConstructorDefault(Effect.succeed(reconciliationConfigQueueThresholdDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(reconciliationConfigQueueThresholdDefault))
+    ),
 
-  /** Maximum candidates to consider (default: 5) */
-  maxCandidates: PosInt.pipe(S.withConstructorDefault(Effect.succeed(reconciliationConfigMaxCandidatesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(reconciliationConfigMaxCandidatesDefault))),
+    /** Maximum candidates to consider (default: 5) */
+    maxCandidates: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(reconciliationConfigMaxCandidatesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(reconciliationConfigMaxCandidatesDefault))
+    ),
 
-  /** Language for Wikidata search (default: "en") */
-  language: S.String.pipe(S.withConstructorDefault(Effect.succeed("en")), S.withDecodingDefaultTypeKey(Effect.succeed("en"))),
-  }).pipe($I.annoteSchema("ReconciliationConfig", {
-    description: "Auto-link and queue score thresholds plus candidate and language bounds.",
-  }))) {}
+    /** Language for Wikidata search (default: "en") */
+    language: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("en")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("en"))
+    ),
+  }).pipe(
+    $I.annoteSchema("ReconciliationConfig", {
+      description: "Auto-link and queue score thresholds plus candidate and language bounds.",
+    })
+  )
+) {}
 
 const DEFAULT_CONFIG = ReconciliationConfig.make({});
 
@@ -289,7 +308,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
      */
     const generateTaskId = Effect.fn("ReconciliationService.generateTaskId")(function* () {
       const timestamp = (yield* DateTime.now).epochMilliseconds.toString(36);
-      const random = (yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36).padStart(6, "0");
+      const random = Str.padStart(6, "0")((yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36));
       return `task-${timestamp}-${random}`;
     });
 

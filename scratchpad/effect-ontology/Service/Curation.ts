@@ -16,7 +16,6 @@ import { flow } from "effect/Function";
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import type * as Stream from "effect/Stream";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -25,6 +24,7 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import type * as Stream from "effect/Stream";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { EventBusError } from "../Domain/Error/EventBus.ts";
 import { ContentHash } from "../Domain/Identity.ts";
@@ -91,13 +91,17 @@ export type CurationServiceError = DrizzleError | S.SchemaError | AnyEmbeddingEr
  * @category models
  * @since 0.0.0
  */
-export class CurationResult extends S.Opaque<CurationResult, { readonly brand: unique symbol }>()(S.Struct({
+export class CurationResult extends S.Opaque<CurationResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     action: CurationActionTag,
     success: S.Boolean,
     details: S.Record(S.String, S.Unknown).pipe(S.optionalKey),
-  }).pipe($I.annoteSchema("CurationResult", {
-    description: "Success flag and optional details for one tagged curation action.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("CurationResult", {
+      description: "Success flag and optional details for one tagged curation action.",
+    })
+  )
+) {}
 
 // =============================================================================
 // Service

@@ -82,13 +82,17 @@ const isBudgetedStage = S.is(BudgetedStage);
  * @category models
  * @since 0.0.0
  */
-export class TokenBudgetState extends S.Opaque<TokenBudgetState, { readonly brand: unique symbol }>()(S.Struct({
+export class TokenBudgetState extends S.Opaque<TokenBudgetState, { readonly brand: unique symbol }>()(
+  S.Struct({
     total: S.Natural.annotateKey({ description: "Total token budget for the request." }),
     used: S.Natural.annotateKey({ description: "Tokens used across all stages." }),
     byStage: S.Record(S.String, S.Natural).annotateKey({ description: "Token usage indexed by stage name." }),
-  }).pipe($I.annoteSchema("TokenBudgetState", {
-    description: "Total and per-stage token consumption for one request budget.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("TokenBudgetState", {
+      description: "Total and per-stage token consumption for one request budget.",
+    })
+  )
+) {}
 
 /**
  * Budget allocation percentages by stage

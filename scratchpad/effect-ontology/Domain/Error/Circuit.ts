@@ -53,15 +53,13 @@ const CircuitOpenErrorFields = {
  * @category errors
  * @since 0.0.0
  */
-export class CircuitOpenError extends S.TaggedError<CircuitOpenError, { readonly brand: unique symbol }>($I`CircuitOpenError`)(
-  "CircuitOpenError",
-  CircuitOpenErrorFields,
-  {
-    ...$I.annote("CircuitOpenError", {
-      description: "Failure raised when a circuit breaker rejects work while open.",
-    }),
-  }
-) {
+export class CircuitOpenError extends S.TaggedError<CircuitOpenError, { readonly brand: unique symbol }>(
+  $I`CircuitOpenError`
+)("CircuitOpenError", CircuitOpenErrorFields, {
+  ...$I.annote("CircuitOpenError", {
+    description: "Failure raised when a circuit breaker rejects work while open.",
+  }),
+}) {
   /**
    * Human-readable circuit state and retry delay.
    *
@@ -101,10 +99,10 @@ export class CircuitOpenError extends S.TaggedError<CircuitOpenError, { readonly
  * @since 0.0.0
  */
 export const RateLimitReason = LiteralKit(["tokens", "requests", "concurrent"]).pipe(
-    $I.annoteSchema("RateLimitReason", {
-      description: "Closed resource dimension whose quota was exhausted.",
-    })
-  );
+  $I.annoteSchema("RateLimitReason", {
+    description: "Closed resource dimension whose quota was exhausted.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link RateLimitReason}.
@@ -148,7 +146,9 @@ const RateLimitErrorFields = {
  * @category errors
  * @since 0.0.0
  */
-export class RateLimitError extends S.TaggedError<RateLimitError, { readonly brand: unique symbol }>($I`RateLimitError`)(
+export class RateLimitError extends S.TaggedError<RateLimitError, { readonly brand: unique symbol }>(
+  $I`RateLimitError`
+)(
   "RateLimitError",
   RateLimitErrorFields,
   $I.annote("RateLimitError", {

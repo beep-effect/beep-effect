@@ -1,3 +1,4 @@
+
 /**
  * Service: CorrectorAgent
  *
@@ -25,19 +26,19 @@ import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import type * as Config from "effect/Config";
+import * as A from "effect/Array";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Clock from "effect/Clock";
+import type * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as A from "effect/Array";
-import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as LanguageModel from "effect/ai/LanguageModel";
 import { OptionalErrorCause } from "../../Domain/Error/Base.ts";
 import type { Agent } from "../../Domain/Model/Agent.ts";
 import { AgentId, AgentMetadata, ValidationResult } from "../../Domain/Model/Agent.ts";
@@ -308,7 +309,9 @@ export const correctionShouldApply: (correction: Correction) => boolean = Correc
  * @category errors
  * @since 0.0.0
  */
-export class CorrectionError extends S.TaggedError<CorrectionError, { readonly brand: unique symbol }>($I`CorrectionError`)(
+export class CorrectionError extends S.TaggedError<CorrectionError, { readonly brand: unique symbol }>(
+  $I`CorrectionError`
+)(
   "CorrectionError",
   {
     message: S.NonEmptyString,
@@ -344,9 +347,10 @@ export class CorrectionError extends S.TaggedError<CorrectionError, { readonly b
  * @category errors
  * @since 0.0.0
  */
-export class CorrectionApplicationError extends S.TaggedError<CorrectionApplicationError, { readonly brand: unique symbol }>(
-  $I`CorrectionApplicationError`
-)(
+export class CorrectionApplicationError extends S.TaggedError<
+  CorrectionApplicationError,
+  { readonly brand: unique symbol }
+>($I`CorrectionApplicationError`)(
   "CorrectionApplicationError",
   {
     message: S.NonEmptyString,
@@ -391,29 +395,33 @@ export class CorrectionApplicationError extends S.TaggedError<CorrectionApplicat
  * @category schemas
  * @since 0.0.0
  */
-export class CorrectionResult extends S.Opaque<CorrectionResult, { readonly brand: unique symbol }>()(S.Struct({
-  /**
-   * The original violation
-   */
-  violation: ShaclValidationViolation,
+export class CorrectionResult extends S.Opaque<CorrectionResult, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /**
+     * The original violation
+     */
+    violation: ShaclValidationViolation,
 
-  /**
-   * The correction that was generated
-   */
-  correction: Correction,
+    /**
+     * The correction that was generated
+     */
+    correction: Correction,
 
-  /**
-   * Whether the correction was applied
-   */
-  applied: S.Boolean,
+    /**
+     * Whether the correction was applied
+     */
+    applied: S.Boolean,
 
-  /**
-   * Time taken in milliseconds
-   */
-  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
-  }).pipe($I.annoteSchema("CorrectionResult", {
-    description: "Single-violation correction, whether it was applied, and elapsed milliseconds.",
-  }))) {}
+    /**
+     * Time taken in milliseconds
+     */
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
+  }).pipe(
+    $I.annoteSchema("CorrectionResult", {
+      description: "Single-violation correction, whether it was applied, and elapsed milliseconds.",
+    })
+  )
+) {}
 
 /**
  * Aggregate outcome of correcting every violation in a SHACL report.
@@ -437,31 +445,34 @@ export class CorrectionResult extends S.Opaque<CorrectionResult, { readonly bran
  * @category schemas
  * @since 0.0.0
  */
-export class BatchCorrectionResult extends S.Class<BatchCorrectionResult, { readonly brand: unique symbol }>($I`BatchCorrectionResult`)({
-  /**
-   * Individual correction results
-   */
-  results: S.Array(CorrectionResult),
+export class BatchCorrectionResult extends S.Class<BatchCorrectionResult, { readonly brand: unique symbol }>(
+  $I`BatchCorrectionResult`
+)(
+  {
+    /**
+     * Individual correction results
+     */
+    results: S.Array(CorrectionResult),
 
-  /**
-   * Total violations processed
-   */
-  totalViolations: S.Natural,
+    /**
+     * Total violations processed
+     */
+    totalViolations: S.Natural,
 
-  /**
-   * Number of corrections applied
-   */
-  correctedCount: S.Natural,
+    /**
+     * Number of corrections applied
+     */
+    correctedCount: S.Natural,
 
-  /**
-   * Number of violations skipped
-   */
-  skippedCount: S.Natural,
+    /**
+     * Number of violations skipped
+     */
+    skippedCount: S.Natural,
 
-  /**
-   * Total duration in milliseconds
-   */
-  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
+    /**
+     * Total duration in milliseconds
+     */
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   },
   $I.annote("BatchCorrectionResult", {
     description: "Per-violation results plus corrected, skipped, and elapsed counters.",
@@ -806,13 +817,12 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
       if (P.isTruthy(entityContext)) {
         parts.push("## Entity Context (Current Properties)", "```turtle", entityContext, "```", "");
       }
-      const relevantClasses = ontologyContext.classes
-        .slice(0, 5)
-        .map((c) => `- ${c.label || extractLocalName(c.id)}: ${c.comment || "No description"}`);
+      const relevantClasses = A.map(ontologyContext.classes
+        .slice(0, 5), (c) => `- ${c.label || extractLocalName(c.id)}: ${c.comment || "No description"}`);
       const relevantProps = ontologyContext.properties
         .slice(0, 10)
         .map(
-          (p) => `- ${p.label || extractLocalName(p.id)}: ${p.rangeType} (${p.range.map(extractLocalName).join(", ")})`
+          (p) => `- ${p.label || extractLocalName(p.id)}: ${p.rangeType} (${A.map(p.range, extractLocalName).join(", ")})`
         );
       parts.push("## Ontology Context", "### Classes");
       for (const cls of relevantClasses) {
@@ -832,7 +842,7 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
         "- explanation: Why this correction is appropriate",
         "- confidence: Your confidence in this correction (0-1)"
       );
-      return parts.filter((p) => p !== "").join("\n");
+      return A.filter(parts, (p) => p !== "").join("\n");
     };
     const getEntityContext = Effect.fn("CorrectorAgent.getEntityContext")(function* (
       store: RdfStore,

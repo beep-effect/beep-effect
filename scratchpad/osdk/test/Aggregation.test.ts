@@ -262,7 +262,7 @@ describe("literal domains", () => {
         rejects(GroupByKind)("objectType"),
         rejects(MetricName)(""),
         rejects(GroupKey)(""),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -420,7 +420,7 @@ describe("Aggregation", () => {
       const neither = A.map(PropertyMetricKind.literals, (type) =>
         rejects(Aggregation)({ type, approximatePercentile: 0.5 })
       );
-      const verdicts = yield* Effect.all([...both, ...neither]);
+      const verdicts = yield* Effect.all([...both, ...neither], { concurrency: 1 });
       strictEqual(verdicts.length, 14);
       assertTrue(A.every(verdicts, identity));
     })
@@ -435,7 +435,7 @@ describe("Aggregation", () => {
       const byIdentifier = A.map(PropertyMetricKind.literals, (type) =>
         rejects(Aggregation)({ type, propertyIdentifier: zipOfAddressWire, approximatePercentile: 0.5 })
       );
-      const verdicts = yield* Effect.all([...byField, ...byIdentifier]);
+      const verdicts = yield* Effect.all([...byField, ...byIdentifier], { concurrency: 1 });
       assertFalse(A.some(verdicts, identity));
     })
   );
@@ -452,7 +452,7 @@ describe("Aggregation", () => {
         rejects(Aggregation)({ type: "approximatePercentile", field: "salary" }),
         rejects(Aggregation)({ type: "approximatePercentile", field: "salary", percentile: 0.5 }),
         rejects(Aggregation)({ field: "salary" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -693,9 +693,9 @@ describe("GroupBy", () => {
       // A default is the text the wire types it as, whatever the property's type: the caller spells a number, a
       // boolean, a decimal with its scale or an instant, and the codec changes nothing in either direction.
       const texts: ReadonlyArray<GroupDefaultValue> = ["0", "2.5", "true", "unassigned", "7", "12.50", instant];
-      const defaults = yield* Effect.forEach(texts, (text) => S.encodeEffect(GroupDefaultValue)(text));
+      const defaults = yield* Effect.forEach(texts, (text) => S.encodeEffect(GroupDefaultValue)(text), { concurrency: 1 });
       deepStrictEqual(defaults, ["0", "2.5", "true", "unassigned", "7", "12.50", "2021-01-04T05:00:00.000Z"]);
-      const defaultsAgain = yield* Effect.forEach(defaults, (text) => S.decodeEffect(GroupDefaultValue)(text));
+      const defaultsAgain = yield* Effect.forEach(defaults, (text) => S.decodeEffect(GroupDefaultValue)(text), { concurrency: 1 });
       deepStrictEqual(defaultsAgain, texts);
       const grouping = yield* S.encodeEffect(GroupBy)(
         ExactGrouping.make({ property: byTeam, defaultValue: O.some("0") })
@@ -720,7 +720,7 @@ describe("GroupBy", () => {
         rejects(GroupDefaultValue)(0),
         rejects(GroupDefaultValue)(true),
         rejects(GroupDefaultValue)(BigDecimal.fromStringUnsafe("12.50")),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -729,12 +729,12 @@ describe("GroupBy", () => {
     "rejects an exact grouping that sets both a default value and a null group",
     Effect.fnUntraced(function* () {
       const contradictory = { type: "exact", field: "team", defaultValue: "unassigned", includeNullValues: true };
-      const rejected = yield* Effect.all([rejects(GroupBy)(contradictory), rejects(ExactGrouping)(contradictory)]);
+      const rejected = yield* Effect.all([rejects(GroupBy)(contradictory), rejects(ExactGrouping)(contradictory)], { concurrency: 1 });
       const accepted = yield* Effect.all([
         rejects(GroupBy)({ ...contradictory, includeNullValues: false }),
         rejects(GroupBy)({ type: "exact", field: "team", includeNullValues: true }),
         rejects(GroupBy)({ type: "exact", field: "team", defaultValue: "unassigned" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(rejected, identity));
       assertFalse(A.some(accepted, identity));
       assertNone(
@@ -754,9 +754,9 @@ describe("GroupBy", () => {
       const oneOf = (unit: string) => rejects(GroupBy)({ type: "duration", field: "hiredOn", value: 1, unit });
       const calendar = ["WEEKS", "MONTHS", "QUARTERS", "YEARS"];
       const clock = ["MILLISECONDS", "SECONDS", "MINUTES", "HOURS", "DAYS"];
-      const rejected = yield* Effect.forEach(calendar, twoOf);
-      const acceptedSingles = yield* Effect.forEach([...calendar, ...clock], oneOf);
-      const acceptedMultiples = yield* Effect.forEach(clock, twoOf);
+      const rejected = yield* Effect.forEach(calendar, twoOf, { concurrency: 1 });
+      const acceptedSingles = yield* Effect.forEach([...calendar, ...clock], oneOf, { concurrency: 1 });
+      const acceptedMultiples = yield* Effect.forEach(clock, twoOf, { concurrency: 1 });
       assertTrue(A.every(rejected, identity));
       assertFalse(A.some(acceptedSingles, identity));
       assertFalse(A.some(acceptedMultiples, identity));
@@ -777,14 +777,14 @@ describe("GroupBy", () => {
         { type: "ranges", ranges: [] },
         { type: "duration", value: 1, unit: "DAYS" },
       ];
-      const neither = yield* Effect.forEach(shapes, rejects(GroupBy));
+      const neither = yield* Effect.forEach(shapes, rejects(GroupBy), { concurrency: 1 });
       const both = yield* Effect.forEach(shapes, (shape) =>
         rejects(GroupBy)({ ...shape, field: "team", propertyIdentifier: zipOfAddressWire })
-      );
-      const byField = yield* Effect.forEach(shapes, (shape) => rejects(GroupBy)({ ...shape, field: "team" }));
+      , { concurrency: 1 });
+      const byField = yield* Effect.forEach(shapes, (shape) => rejects(GroupBy)({ ...shape, field: "team" }), { concurrency: 1 });
       const byIdentifier = yield* Effect.forEach(shapes, (shape) =>
         rejects(GroupBy)({ ...shape, propertyIdentifier: zipOfAddressWire })
-      );
+      , { concurrency: 1 });
       assertTrue(A.every(neither, identity));
       assertTrue(A.every(both, identity));
       assertFalse(A.some(byField, identity));
@@ -810,7 +810,7 @@ describe("GroupBy", () => {
         rejects(GroupBy)({ type: "duration", field: "hiredOn", value: 1.5, unit: "DAYS" }),
         rejects(GroupBy)({ type: "duration", field: "hiredOn", value: 1, unit: "days" }),
         rejects(GroupBy)({ type: "duration", field: "hiredOn", value: 1, unit: "FORTNIGHTS" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -952,7 +952,7 @@ describe("AggregateRequest", () => {
           { aggregation: [{ type: "count" }], groupBy: [], where: { type: "between", field: "age", value: [1, 2] } },
         ],
         (wire) => Effect.exit(S.decodeUnknownEffect(AggregateRequest)(wire))
-      );
+      , { concurrency: 1 });
       assertTrue(A.every(rejected, Exit.isFailure));
     })
   );
@@ -971,7 +971,7 @@ describe("AggregateRequest", () => {
         rejects(AggregateRequest)({ aggregation: [largestFirst], groupBy: [] }),
         rejects(AggregateRequest)({ aggregation: [largestFirst], groupBy: [byTeamWire] }),
         rejects(AggregateRequest)({ aggregation: [unordered, largestFirst], groupBy: [byTeamWire] }),
-      ]);
+      ], { concurrency: 1 });
       assertFalse(A.some(verdicts, identity));
     })
   );
@@ -985,7 +985,7 @@ describe("AggregateRequest", () => {
           aggregation: [unordered, { type: "sum", field: "salary", direction: "ASC" }],
           groupBy: [byTeamWire, { type: "fixedWidth", field: "age", fixedWidth: 10 }, byOfficeWire],
         }),
-      ]);
+      ], { concurrency: 1 });
       const accepted = yield* rejects(AggregateRequest)({
         aggregation: [unordered],
         groupBy: [byTeamWire, byOfficeWire],
@@ -1012,7 +1012,7 @@ describe("AggregateRequest", () => {
           aggregation: [largestFirst],
           groupBy: [{ type: "exact", field: "team", defaultValue: "unassigned" }],
         }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(rejected);
       assertFalse(A.some(accepted, identity));
       assertNone(
@@ -1055,7 +1055,7 @@ describe("AggregateRequest", () => {
         failureOf(GroupBy)({ type: "duration", field: "hiredOn", value: 2, unit: "YEARS" }),
         failureOf(AggregateRequest)({ aggregation: [largestFirst], groupBy: [byTeamWire, byOfficeWire] }),
         failureOf(AggregateRequest)({ aggregation: [largestFirst], groupBy: [byTeamWithNullsWire] }),
-      ]);
+      ], { concurrency: 1 });
       const valid = yield* failureOf(AggregateRequest)({ aggregation: [largestFirst], groupBy: [byTeamWire] });
       const rules = [
         'Expected exactly one of "field" and "propertyIdentifier" to address a property, got neither',
@@ -1086,7 +1086,7 @@ describe("AggregateRequest", () => {
           groupBy: [{ type: "duration", field: "hiredOn", value: 3, unit: "MONTHS" }],
         }),
         rejects(AggregateRequest)({ aggregation: [unordered], groupBy: [], accuracy: "ACCURATE" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1196,7 +1196,7 @@ describe("AggregateResponse", () => {
         rejects(AggregateResponse)({ accuracy: "ACCURATE", data: [{ group: {} }] }),
         rejects(AggregateResponse)({ accuracy: "ACCURATE", data: [{ group: {}, metrics: [{ value: 1 }] }] }),
         rejects(AggregateResponse)({ accuracy: "ACCURATE", data: [{ group: {}, metrics: [{ name: "", value: 1 }] }] }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1233,13 +1233,13 @@ describe("MetricKeyFromName", () => {
     "parses the count and every property metric and prints them back unchanged",
     Effect.fnUntraced(function* () {
       const names = ["count", ...A.map(PropertyMetricKind.literals, (metric) => `salary.${metric}`)];
-      const keys = yield* Effect.forEach(names, (name) => decodeKey(name));
+      const keys = yield* Effect.forEach(names, (name) => decodeKey(name), { concurrency: 1 });
       const expected: ReadonlyArray<MetricKey> = [
         CountKey.make({}),
         ...A.map(PropertyMetricKind.literals, (metric) => PropertyMetricKey.make({ property: salary, metric })),
       ];
       assertTrue(A.every(A.zip(keys, expected), ([key, wanted]) => keyEquivalence(key, wanted)));
-      const printed = yield* Effect.forEach(keys, (key) => encodeKey(key));
+      const printed = yield* Effect.forEach(keys, (key) => encodeKey(key), { concurrency: 1 });
       deepStrictEqual(printed, names);
     })
   );
@@ -1281,7 +1281,7 @@ describe("MetricKeyFromName", () => {
         rejects(MetricKeyFromName)(".sum"),
         rejects(MetricKeyFromName)("$count"),
         rejects(MetricKeyFromName)(12),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1415,7 +1415,7 @@ describe("regroupMetrics", () => {
       deepStrictEqual(lookup.aliased, {});
       const names = yield* Effect.forEach(A.getSomes(A.map(metrics, metricKeyOf)), (key) =>
         S.encodeEffect(MetricKeyFromName)(key)
-      );
+      , { concurrency: 1 });
       deepStrictEqual(names, ["count", "salary.sum", "salary.avg", "hiredOn.min", "hiredOn.max", "team.exactDistinct"]);
     })
   );
@@ -1446,7 +1446,7 @@ describe("constructors", () => {
           approximatePercentile(salary, 0.9),
         ],
         (metric) => encodeAggregation(metric)
-      );
+      , { concurrency: 1 });
       deepStrictEqual(wire, [
         { type: "count", name: "count" },
         { type: "sum", name: "salary.sum", field: "salary" },

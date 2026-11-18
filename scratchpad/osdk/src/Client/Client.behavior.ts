@@ -191,7 +191,7 @@ const decodeRows = Effect.fnUntraced(function* <A>(model: InstanceModel<A>, rows
     Effect.mapError(decodeRow(row), (cause) =>
       DecodeError.make({ message: cause.message, cause, index: O.some(index), locator: locatorOf(row) })
     )
-  );
+  , { concurrency: 1 });
 });
 
 // The ordering a read sends: the one the set carries, which the typed layer checked against the set's

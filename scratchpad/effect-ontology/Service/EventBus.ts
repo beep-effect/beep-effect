@@ -16,20 +16,20 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Inspectable from "effect/Inspectable";
-import * as Layer from "effect/Layer";
-import * as Queue from "effect/Queue";
-import * as Ref from "effect/Ref";
-import * as Stream from "effect/Stream";
-import { pipe } from "effect/Function";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
-import * as S from "effect/Schema";
 import type * as Event from "effect/eventlog/Event";
 import type * as EventGroup from "effect/eventlog/EventGroup";
 import * as EventJournal from "effect/eventlog/EventJournal";
 import * as SqlEventJournal from "effect/eventlog/SqlEventJournal";
+import { pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as PersistedQueue from "effect/persistence/PersistedQueue";
+import * as Queue from "effect/Queue";
+import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlSchema from "effect/sql/SqlSchema";
 import { EventBusError } from "../Domain/Error/EventBus.ts";
@@ -74,13 +74,17 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EventBus");
  * @category models
  * @since 0.0.0
  */
-export class JobWithMetadata extends S.Opaque<JobWithMetadata, { readonly brand: unique symbol }>()(S.Struct({
+export class JobWithMetadata extends S.Opaque<JobWithMetadata, { readonly brand: unique symbol }>()(
+  S.Struct({
     job: BackgroundJob,
     id: S.NonEmptyString,
     attempts: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Queue attempts must be non-negative." })),
-  }).pipe($I.annoteSchema("JobWithMetadata", {
-    description: "A schema-backed background job paired with queue identity and retry attempts.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("JobWithMetadata", {
+      description: "A schema-backed background job paired with queue identity and retry attempts.",
+    })
+  )
+) {}
 
 /**
  * Runtime schema for a canonical event entry from the journal.
@@ -671,9 +675,9 @@ export const EventBusServiceSql = Layer.effect(
         const maxAttempts = options?.maxAttempts ?? 5;
         const processingQueue = yield* queueFactory.make({ name: JOBS_QUEUE_NAME, schema: BackgroundJob, maxAttempts });
         return yield* processingQueue.take((job, { attempts, id }) =>
-            handler(job, {
-              id,
-              attempts,
+          handler(job, {
+            id,
+            attempts,
           }).pipe(Effect.asSome)
         );
       },

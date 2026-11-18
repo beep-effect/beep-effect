@@ -159,7 +159,7 @@ describe("Attachment", () => {
         rejects(AttachmentReference)(attachmentRid),
         rejects(AttachmentMetadata)({ rid: attachmentRid, filename: "a.txt", sizeBytes: 1, mediaType: "text/plain" }),
         rejects(AttachmentUpload)({ name: "a.txt" }),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true, true, true, true, true, true, true, true, true]);
     })
   );
@@ -278,7 +278,7 @@ describe("Media", () => {
         rejects(MediaReference)({ mimeType: "application/pdf" }),
         rejects(MediaItemReadToken)(""),
         rejects(MediaUploadRequest)({ fileName: "scan.png" }),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true, true, true, true, true, true, true, true]);
     })
   );
@@ -347,7 +347,7 @@ describe("CipherText", () => {
         rejects(CipherText)(`cipher::${cipherChannelRid}::AAAAkdB7::cipher`),
         rejects(CipherText)({ channel: cipherChannelRid, ciphertext: "AAAAkdB7" }),
         rejects(CipherChannelRid)(""),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true, true, true, true, true, true, true]);
       assertFalse(S.is(CipherText)({ channel: "ri.bellaso:main", ciphertext: "AAAAkdB7" }));
       assertFalse(S.is(CipherText)({ channel: cipherChannelRid, ciphertext: "" }));
@@ -537,7 +537,7 @@ describe("Security", () => {
         rejects(PropertyMarkings)({ type: "propertyMarkingSummary", disjunctive: ["secret"] }),
         rejects(PropertySecurities)({ disjunction: { type: "unsupportedPolicy" } }),
         rejects(PropertySecurities)({}),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true, true, true, true, true, true, true]);
     })
   );
@@ -625,7 +625,7 @@ describe("Security", () => {
         rejects(SecuredCount)({ value: 10, propertySecurityIndex: 1.5 }),
         rejects(SecuredCount)({ value: "10", propertySecurityIndex: 5 }),
         rejects(SecuredAttachment)({ value: { rid: "" }, propertySecurityIndex: 5 }),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true, true, true]);
     })
   );

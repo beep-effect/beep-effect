@@ -20,15 +20,16 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
-import * as Schedule from "effect/Schedule";
-import * as Stream from "effect/Stream";
 import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { PubSubError } from "../Domain/Error/EventBus.ts";
 import { OntologyEventEntry } from "../Domain/Schema/EventSchema.ts";
 import { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 import type { EventEntry } from "./EventBus.ts";
 import { EventBusService } from "./EventBus.ts";
+
 const encodeBackgroundJobJson = S.encodeEffect(S.fromJsonString(BackgroundJob));
 const encodeOntologyEventEntryJson = S.encodeEffect(S.fromJsonString(OntologyEventEntry));
 
@@ -64,12 +65,16 @@ const encodeUnknownDeadLetterMessageJson = S.encodeUnknownEffect(S.fromJsonStrin
  * @category models
  * @since 0.0.0
  */
-export class PublishResult extends S.Opaque<PublishResult, { readonly brand: unique symbol }>()(S.Struct({
+export class PublishResult extends S.Opaque<PublishResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     messageId: S.NonEmptyString,
     topicName: S.NonEmptyString,
-  }).pipe($I.annoteSchema("PublishResult", {
-    description: "Cloud Pub/Sub acknowledgement identifying the published message and topic.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("PublishResult", {
+      description: "Cloud Pub/Sub acknowledgement identifying the published message and topic.",
+    })
+  )
+) {}
 
 /**
  * Received message handle from a subscription.

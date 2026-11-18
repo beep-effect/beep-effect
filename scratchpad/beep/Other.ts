@@ -73,7 +73,7 @@ export type VoiceReadiness = typeof VoiceReadiness.Type;
  * @since 0.0.0
  */
 export declare namespace VoiceReadiness {
-  export type Encoded = S.Codec.Encoded<typeof VoiceReadiness>;
+  export type Encoded = typeof VoiceReadiness.Encoded;
 }
 
 const isVoiceReadiness = S.is(VoiceReadiness);
@@ -111,7 +111,7 @@ export class TimeZoneRejected extends S.TaggedError<TimeZoneRejected, { readonly
  * @since 0.0.0
  */
 export declare namespace TimeZoneRejected {
-  export type Encoded = S.Codec.Encoded<typeof TimeZoneRejected>;
+  export type Encoded = typeof TimeZoneRejected.Encoded;
 }
 
 const isIana = (value: string): boolean =>
@@ -206,7 +206,7 @@ export class SaveFcmTokenRequest extends Model<SaveFcmTokenRequest>("SaveFcmToke
  * @since 0.0.0
  */
 export declare namespace SaveFcmTokenRequest {
-  export type Encoded = S.Codec.Encoded<typeof SaveFcmTokenRequest>;
+  export type Encoded = typeof SaveFcmTokenRequest.Encoded;
 }
 
 /**
@@ -246,7 +246,7 @@ export class SyncUserTimeZoneRequest extends Model<SyncUserTimeZoneRequest>("Syn
  * @since 0.0.0
  */
 export declare namespace SyncUserTimeZoneRequest {
-  export type Encoded = S.Codec.Encoded<typeof SyncUserTimeZoneRequest>;
+  export type Encoded = typeof SyncUserTimeZoneRequest.Encoded;
 }
 
 /**
@@ -278,7 +278,7 @@ export class FcmTokenResponse extends Model<FcmTokenResponse>("FcmTokenResponse"
  * @since 0.0.0
  */
 export declare namespace FcmTokenResponse {
-  export type Encoded = S.Codec.Encoded<typeof FcmTokenResponse>;
+  export type Encoded = typeof FcmTokenResponse.Encoded;
 }
 
 /**
@@ -315,7 +315,7 @@ export class SendNotificationRequest extends Model<SendNotificationRequest>("Sen
  * @since 0.0.0
  */
 export declare namespace SendNotificationRequest {
-  export type Encoded = S.Codec.Encoded<typeof SendNotificationRequest>;
+  export type Encoded = typeof SendNotificationRequest.Encoded;
 }
 
 /**
@@ -350,7 +350,7 @@ export class SendAppNotificationRequest extends Model<SendAppNotificationRequest
  * @since 0.0.0
  */
 export declare namespace SendAppNotificationRequest {
-  export type Encoded = S.Codec.Encoded<typeof SendAppNotificationRequest>;
+  export type Encoded = typeof SendAppNotificationRequest.Encoded;
 }
 
 /**
@@ -386,7 +386,7 @@ export class UploadProfile extends Model<UploadProfile>("UploadProfile")(
  * @since 0.0.0
  */
 export declare namespace UploadProfile {
-  export type Encoded = S.Codec.Encoded<typeof UploadProfile>;
+  export type Encoded = typeof UploadProfile.Encoded;
 }
 
 /**
@@ -421,7 +421,7 @@ export class CreatePerson extends Model<CreatePerson>("CreatePerson")(
  * @since 0.0.0
  */
 export declare namespace CreatePerson {
-  export type Encoded = S.Codec.Encoded<typeof CreatePerson>;
+  export type Encoded = typeof CreatePerson.Encoded;
 }
 
 const finiteNumber = (value: unknown): value is number => P.isNumber(value) && !P.isBoolean(value) && Number.isFinite(value);
@@ -527,7 +527,7 @@ export class Person extends Model<Person>("Person")(
  * @since 0.0.0
  */
 export declare namespace Person {
-  export type Encoded = S.Codec.Encoded<typeof Person>;
+  export type Encoded = typeof Person.Encoded;
 }
 
 const decodeUnknownEffectPerson = S.decodeUnknownEffect(Person);

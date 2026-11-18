@@ -1,11 +1,11 @@
 import { HttpUrl as CanonicalHttpUrl } from "@beep/ontology/Ontology.models";
 import { describe, expect, it } from "@effect/vitest";
-import * as Effect from "effect/Effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/Arbitrary";
 import * as Api from "../../../Domain/Schema/Api.ts";
 import * as Auth from "../../../Domain/Schema/Auth.ts";
 import * as Batch from "../../../Domain/Schema/Batch.ts";
@@ -22,6 +22,7 @@ import * as OntologyRegistry from "../../../Domain/Schema/OntologyRegistry.ts";
 import * as Search from "../../../Domain/Schema/Search.ts";
 import * as Shacl from "../../../Domain/Schema/Shacl.ts";
 import * as Timeline from "../../../Domain/Schema/Timeline.ts";
+
 const decodeApiSubmitJobSource = S.decodeEffect(Api.SubmitJobSource);
 const decodeBatchStatusResponseBatchStatusResponse = S.decodeEffect(BatchStatusResponse.BatchStatusResponse);
 const decodeBatchRequestBatchRequestResult = S.decodeResult(BatchRequest.BatchRequest);
@@ -74,7 +75,7 @@ describe("effect-ontology public schema surface", () => {
           Arbitrary.checkEffect(
             Arbitrary.all([arbitrary]),
             ([value]) => {
-          expect(S.is(schema)(value), name).toBe(true);
+              expect(S.is(schema)(value), name).toBe(true);
 
               return true;
             },

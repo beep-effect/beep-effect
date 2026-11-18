@@ -149,7 +149,7 @@ export class ProactiveBudgetReservation extends Model<ProactiveBudgetReservation
  * @since 0.0.0
  */
 export declare namespace ProactiveBudgetReservation {
-  export type Encoded = S.Codec.Encoded<typeof ProactiveBudgetReservation>;
+  export type Encoded = typeof ProactiveBudgetReservation.Encoded;
 }
 
 /**
@@ -215,7 +215,7 @@ export class ProactiveBudgetState extends Model<ProactiveBudgetState>("Proactive
  * @since 0.0.0
  */
 export declare namespace ProactiveBudgetState {
-  export type Encoded = S.Codec.Encoded<typeof ProactiveBudgetState>;
+  export type Encoded = typeof ProactiveBudgetState.Encoded;
 }
 
 /**
@@ -252,7 +252,7 @@ export class ProactiveBudgetExhausted extends S.TaggedError<ProactiveBudgetExhau
  * @since 0.0.0
  */
 export declare namespace ProactiveBudgetExhausted {
-  export type Encoded = S.Codec.Encoded<typeof ProactiveBudgetExhausted>;
+  export type Encoded = typeof ProactiveBudgetExhausted.Encoded;
 }
 
 const zoneSuffix = (value: string): O.Option<string> => {

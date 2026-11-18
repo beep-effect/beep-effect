@@ -10,16 +10,16 @@
  * @since 0.0.0
  */
 
-import { DrizzleError } from "@beep/drizzle";
+import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
 import { getSomesStruct } from "@beep/utils/Option";
-import * as Context from "effect/Context";
-import * as DateTime from "effect/DateTime";
-import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -42,13 +42,11 @@ const normalizeQueryError = normalizeDrizzleError("execute");
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 
 const ArticleSelectRows = Articles.select.pipe(S.Array, S.mutable);
-const decodeArticleRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(ArticleSelectRows)(rows));
+const decodeArticleRows = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(ArticleSelectRows)(rows));
 
 const ArticleCountRows = S.Tuple([ArticleCountDatabaseRow]);
 
-const decodeArticleCountRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(ArticleCountRows)(rows));
+const decodeArticleCountRows = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(ArticleCountRows)(rows));
 
 // =============================================================================
 // Types

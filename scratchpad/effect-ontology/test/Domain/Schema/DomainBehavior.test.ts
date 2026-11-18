@@ -14,6 +14,7 @@ import {
 } from "../../../Domain/Schema/DocumentMetadata.ts";
 import { BackgroundJobId, JobMetadata } from "../../../Domain/Schema/JobSchema.ts";
 import { AssertionId, ClaimId, DerivedAssertionId, TextSpan } from "../../../Domain/Schema/KnowledgeModel.ts";
+
 const decodeGcsUri = S.decodeEffect(GcsUri);
 const decodeJobMetadata = S.decodeEffect(JobMetadata);
 const decodePreprocessingOptions = S.decodeEffect(PreprocessingOptions);

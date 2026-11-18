@@ -15,8 +15,8 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Semaphore from "effect/Semaphore";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import { ErrorMessage } from "../Domain/Error/Base.ts";
 import { ConfigService } from "../Service/Config.ts";
 
@@ -41,7 +41,9 @@ const $I = $ScratchpadId.create("effect-ontology/Runtime/LlmSemaphore");
  * @category errors
  * @since 0.0.0
  */
-export class SemaphoreTimeoutError extends S.TaggedError<SemaphoreTimeoutError, { readonly brand: unique symbol }>($I`SemaphoreTimeoutError`)(
+export class SemaphoreTimeoutError extends S.TaggedError<SemaphoreTimeoutError, { readonly brand: unique symbol }>(
+  $I`SemaphoreTimeoutError`
+)(
   "SemaphoreTimeoutError",
   {
     message: ErrorMessage.annotateKey({

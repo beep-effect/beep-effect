@@ -133,7 +133,7 @@ export class LedgerSlotDefinition extends Model<LedgerSlotDefinition>("LedgerSlo
  * @since 0.0.0
  */
 export declare namespace LedgerSlotDefinition {
-  export type Encoded = S.Codec.Encoded<typeof LedgerSlotDefinition>;
+  export type Encoded = typeof LedgerSlotDefinition.Encoded;
 }
 
 const slot = (name: string, rendererOrder: number, aliases: ReadonlyArray<string> = []) =>
@@ -241,7 +241,7 @@ export class UnsupportedLedgerSlot extends S.TaggedError<UnsupportedLedgerSlot, 
  * @since 0.0.0
  */
 export declare namespace UnsupportedLedgerSlot {
-  export type Encoded = S.Codec.Encoded<typeof UnsupportedLedgerSlot>;
+  export type Encoded = typeof UnsupportedLedgerSlot.Encoded;
 }
 
 /**
@@ -277,7 +277,7 @@ export class NegativeProfileBudget extends S.TaggedError<NegativeProfileBudget, 
  * @since 0.0.0
  */
 export declare namespace NegativeProfileBudget {
-  export type Encoded = S.Codec.Encoded<typeof NegativeProfileBudget>;
+  export type Encoded = typeof NegativeProfileBudget.Encoded;
 }
 
 /**

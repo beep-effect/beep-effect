@@ -8,9 +8,9 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as Workflow from "effect/workflow/Workflow";
@@ -37,6 +37,7 @@ import {
   makeCrossBatchResolutionActivity,
   makeIngestionActivity,
 } from "../../Workflow/DurableActivities.ts";
+
 const decodeClaimPersistenceInput = S.decodeEffect(ClaimPersistenceInput);
 const decodeEvidenceSpan = S.decodeEffect(EvidenceSpan);
 const decodeObjectRef = S.decodeEffect(ObjectRef);

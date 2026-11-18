@@ -10,6 +10,7 @@ import type {
 } from "../../Repository/EntityRegistry.ts";
 import { CanonicalEntityId, EntityAliasId } from "../../Repository/EntityRegistry.ts";
 import { ChunkOptions, OntologySearchResult, TextChunk } from "../../Service/Nlp.ts";
+
 const decodeChunkOptions = S.decodeEffect(ChunkOptions);
 const decodeClassDefinition = S.decodeEffect(ClassDefinition);
 const decodeTextChunkOption = S.decodeOption(TextChunk);

@@ -6,23 +6,27 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as Num from "effect/Number";
-import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { BatchId, DocumentId, GcsUri, OntologyVersion } from "../Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/BatchWorkflow");
 
-class DocumentFailure extends S.Opaque<DocumentFailure, { readonly brand: unique symbol }>()(S.Struct({
+class DocumentFailure extends S.Opaque<DocumentFailure, { readonly brand: unique symbol }>()(
+  S.Struct({
     code: S.NonEmptyString,
     message: S.NonEmptyString,
-  }).pipe($I.annoteSchema("DocumentFailure", {
-    description: "Stable code and diagnostic for one failed batch document.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("DocumentFailure", {
+      description: "Stable code and diagnostic for one failed batch document.",
+    })
+  )
+) {}
 
 const DocumentStatusDefinition = S.Union([
   S.Struct({
@@ -138,19 +142,30 @@ const BatchIdentityFields = {
  * @category value-objects
  * @since 0.0.0
  */
-export class BatchIdentity extends S.Opaque<BatchIdentity, { readonly brand: unique symbol }>()(S.Struct(BatchIdentityFields).pipe($I.annoteSchema("BatchIdentity", {
-    description: "Stable identity, ontology scope, manifest, and timestamps shared by a batch.",
-  }))) {}
+export class BatchIdentity extends S.Opaque<BatchIdentity, { readonly brand: unique symbol }>()(
+  S.Struct(BatchIdentityFields).pipe(
+    $I.annoteSchema("BatchIdentity", {
+      description: "Stable identity, ontology scope, manifest, and timestamps shared by a batch.",
+    })
+  )
+) {}
 
-class BatchFailure extends S.Opaque<BatchFailure, { readonly brand: unique symbol }>()(S.Struct({
+class BatchFailure extends S.Opaque<BatchFailure, { readonly brand: unique symbol }>()(
+  S.Struct({
     code: S.NonEmptyString,
     message: S.NonEmptyString,
-    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: false })).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("BatchFailure", {
-    description: "Stable failure code, user-facing diagnostic, and optional defect cause.",
-  }))) {}
+    cause: S.OptionFromOptionalKey(S.Defect({ includeStack: false })).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+  }).pipe(
+    $I.annoteSchema("BatchFailure", {
+      description: "Stable failure code, user-facing diagnostic, and optional defect cause.",
+    })
+  )
+) {}
 
-class BatchCompletionStats extends S.Opaque<BatchCompletionStats, { readonly brand: unique symbol }>()(S.Struct({
+class BatchCompletionStats extends S.Opaque<BatchCompletionStats, { readonly brand: unique symbol }>()(
+  S.Struct({
     documentsProcessed: S.Natural,
     documentsSucceeded: S.Natural,
     documentsFailed: S.Natural,
@@ -160,9 +175,12 @@ class BatchCompletionStats extends S.Opaque<BatchCompletionStats, { readonly bra
     clustersResolved: S.Natural,
     triplesIngested: S.Natural,
     totalDurationMs: S.DurationFromMillis,
-  }).pipe($I.annoteSchema("BatchCompletionStats", {
-    description: "Non-negative completion counts and elapsed duration for a batch.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("BatchCompletionStats", {
+      description: "Non-negative completion counts and elapsed duration for a batch.",
+    })
+  )
+) {}
 
 /**
  * Batch lifecycle discriminator used by transition policy.
@@ -187,10 +205,10 @@ export const BatchStage = LiteralKit([
   "Complete",
   "Failed",
 ]).pipe(
-    $I.annoteSchema("BatchStage", {
-      description: "Closed ordered lifecycle stages for batch ingestion.",
-    })
-  );
+  $I.annoteSchema("BatchStage", {
+    description: "Closed ordered lifecycle stages for batch ingestion.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link BatchStage}.
@@ -229,7 +247,10 @@ const BatchStateDefinition = S.TaggedUnion({
     documentsCompleted: S.Natural,
     documentsFailed: S.Natural,
     currentDocumentId: S.OptionFromOptionalKey(DocumentId).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    documentStatuses: S.Array(DocumentStatus).pipe(S.withConstructorDefault(Effect.succeed(batchStateDefinitionDocumentStatusesDefault)), S.withDecodingDefaultType(Effect.succeed(batchStateDefinitionDocumentStatusesDefault))),
+    documentStatuses: S.Array(DocumentStatus).pipe(
+      S.withConstructorDefault(Effect.succeed(batchStateDefinitionDocumentStatusesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(batchStateDefinitionDocumentStatusesDefault))
+    ),
   },
   Resolving: {
     ...BatchIdentityFields,
@@ -252,7 +273,10 @@ const BatchStateDefinition = S.TaggedUnion({
     ...BatchIdentityFields,
     canonicalGraphUri: GcsUri,
     stats: BatchCompletionStats,
-    documentStatuses: S.Array(DocumentStatus).pipe(S.withConstructorDefault(Effect.succeed(batchStateDefinitionDocumentStatusesDefault2)), S.withDecodingDefaultType(Effect.succeed(batchStateDefinitionDocumentStatusesDefault2))),
+    documentStatuses: S.Array(DocumentStatus).pipe(
+      S.withConstructorDefault(Effect.succeed(batchStateDefinitionDocumentStatusesDefault2)),
+      S.withDecodingDefaultType(Effect.succeed(batchStateDefinitionDocumentStatusesDefault2))
+    ),
     completedAt: S.DateTimeUtcFromString,
   },
   Failed: {

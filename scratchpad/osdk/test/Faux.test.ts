@@ -800,7 +800,7 @@ it.layer(FauxLive)("the typed facade over the in-memory transport", (it) => {
       const answer = yield* transport.loadObjects(
         LoadObjectsRequest.make({ objectSet: employees.objectSet, includeRid: true })
       );
-      const written = yield* Effect.forEach(stored, (object) => S.encodeEffect(OntologyObject)(object));
+      const written = yield* Effect.forEach(stored, (object) => S.encodeEffect(OntologyObject)(object), { concurrency: 1 });
       deepStrictEqual<unknown>(answer.data, written);
       // Read through the same function with the codec that needs no ontology, the rows are the stored objects.
       const plain = yield* pipe(
@@ -855,7 +855,7 @@ it.layer(FauxLive)("the typed facade over the in-memory transport", (it) => {
         })
       );
       // The transport answers with wire records; read with no ontology, each holds the one selected property.
-      const named = yield* Effect.forEach(names.data, (row) => S.decodeEffect(OntologyObject)(row));
+      const named = yield* Effect.forEach(names.data, (row) => S.decodeEffect(OntologyObject)(row), { concurrency: 1 });
       same(
         A.map(named, (object) => object.properties),
         [{ fullName: "Ada Lovelace" }, { fullName: "Grace Hopper" }]
@@ -954,7 +954,7 @@ it.layer(FauxLive)("the typed facade over the in-memory transport", (it) => {
         return metricOf(metrics, "salary", "approximatePercentile");
       });
       // Eight salaries: 150 160 170 175 180 185 190 200. Half a percent is rank 0.035 between 150 and 160.
-      const answers = yield* Effect.forEach([0, 50, 100, 250, -1, 0.5], percentileAt);
+      const answers = yield* Effect.forEach([0, 50, 100, 250, -1, 0.5], percentileAt, { concurrency: 1 });
       deepStrictEqual(
         A.map(answers, (answer) => (P.isNumber(answer) ? Math.round(answer * 1000) / 1000 : answer)),
         [150, 177.5, 200, 200, 150, 150.35]
@@ -1263,10 +1263,10 @@ describe("the evaluators", () => {
       const definition = yield* Effect.fromOption(getObjectType(world.ontology, ObjectTypeApiName.make("Office")));
       const isLarge = matchesFilter(definition.objectType, Filter.gte("capacity", 100));
       const rows = A.filter(world.objects, (object) => object.locator.objectType === "Office");
-      yield* equals(Effect.forEach(rows, isLarge), [true, false, true]);
+      yield* equals(Effect.forEach(rows, isLarge, { concurrency: 1 }), [true, false, true]);
       // The title and primary key selectors resolve through the object type.
       const byTitle = Filter.eq(TitleProperty.make({}), "London");
-      yield* equals(Effect.forEach(rows, matchesFilter(definition.objectType, byTitle)), [false, true, false]);
+      yield* equals(Effect.forEach(rows, matchesFilter(definition.objectType, byTitle), { concurrency: 1 }), [false, true, false]);
     })
   );
 
@@ -1282,7 +1282,7 @@ describe("the evaluators", () => {
         A.map(stored, (object) => [object.locator.objectType, object.locator.primaryKey])
       );
       // Each row reads back to the object the world holds; the request did not ask for resource identifiers.
-      const read = yield* Effect.forEach(answer.data, (row) => S.decodeEffect(OntologyObject)(row));
+      const read = yield* Effect.forEach(answer.data, (row) => S.decodeEffect(OntologyObject)(row), { concurrency: 1 });
       deepStrictEqual(
         read,
         A.map(stored, (object) => OntologyObject.make({ ...object, rid: O.none() }))

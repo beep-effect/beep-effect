@@ -10,6 +10,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
@@ -17,18 +18,17 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
-import * as Ref from "effect/Ref";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 import { ConfigService } from "./Config.ts";
 import type { StorageServiceMethods } from "./Storage.ts";
 import { StorageService } from "./Storage.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingCache");
 
@@ -116,12 +116,22 @@ const embeddingCacheConfigMaxEntriesDefault = PosInt.make(10_000);
  * @category models
  * @since 0.0.0
  */
-export class EmbeddingCacheConfig extends S.Opaque<EmbeddingCacheConfig, { readonly brand: unique symbol }>()(S.Struct({
-    ttl: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(embeddingCacheConfigTtlDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingCacheConfigTtlDefault))),
-    maxEntries: PosInt.pipe(S.withConstructorDefault(Effect.succeed(embeddingCacheConfigMaxEntriesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(embeddingCacheConfigMaxEntriesDefault))),
-  }).pipe($I.annoteSchema("EmbeddingCacheConfig", {
-    description: "Entry lifetime and capacity bound for an embedding cache.",
-  }))) {}
+export class EmbeddingCacheConfig extends S.Opaque<EmbeddingCacheConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    ttl: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(embeddingCacheConfigTtlDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(embeddingCacheConfigTtlDefault))
+    ),
+    maxEntries: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(embeddingCacheConfigMaxEntriesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(embeddingCacheConfigMaxEntriesDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("EmbeddingCacheConfig", {
+      description: "Entry lifetime and capacity bound for an embedding cache.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link EmbeddingCacheConfig}.

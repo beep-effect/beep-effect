@@ -398,7 +398,7 @@ describe("identifiers", () => {
         rejects(AgentContextItemId)(""),
         rejects(AgentConsistencyKey)(""),
         rejects(PrincipalId)(""),
-      ]);
+      ], { concurrency: 1 });
       strictEqual(A.length(verdicts), 11);
       assertTrue(A.every(verdicts, identity));
     })
@@ -407,9 +407,9 @@ describe("identifiers", () => {
   it.effect(
     "AgentVersion accepts the documented forms and rejects anything else",
     Effect.fnUntraced(function* () {
-      const accepted = yield* Effect.forEach(["1.2.3", "1.2.3-rc1", "0.0.0", "10.20.30-beta.2"], accepts(AgentVersion));
+      const accepted = yield* Effect.forEach(["1.2.3", "1.2.3-rc1", "0.0.0", "10.20.30-beta.2"], accepts(AgentVersion), { concurrency: 1 });
       assertTrue(A.every(accepted, identity));
-      const rejected = yield* Effect.forEach(["latest", "1.2", "1.2.3-", "v1.2.3", "1.2.3 "], rejects(AgentVersion));
+      const rejected = yield* Effect.forEach(["latest", "1.2", "1.2.3-", "v1.2.3", "1.2.3 "], rejects(AgentVersion), { concurrency: 1 });
       assertTrue(A.every(rejected, identity));
       const message = yield* failureOf(S.decodeEffect(AgentVersion)("latest"));
       strictEqual(message, "Expected an agent version such as 1.2.3 or 1.2.3-rc1");
@@ -472,7 +472,7 @@ describe("AgentDataType", () => {
           deepStrictEqual(fromDomain, wire);
           return decoded.type === kind && S.toEquivalence(AgentDataType)(decoded, expected);
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(verdicts), 16);
       assertTrue(A.every(verdicts, identity));
     })
@@ -581,7 +581,7 @@ describe("AgentDataType", () => {
           null,
         ],
         rejects(AgentDataType)
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(verdicts), 12);
       assertTrue(A.every(verdicts, identity));
     })
@@ -601,7 +601,7 @@ describe("AgentDataType", () => {
         rejects(AgentDataType)(duplicated),
         rejects(AgentStructType)(duplicated),
         accepts(AgentStructType)({ type: "struct", fields: [] }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       const message = yield* failureOf(S.decodeUnknownEffect(AgentStructType)(duplicated));
       assertTrue(Str.includes("Expected every field to have a distinct name")(message));
@@ -638,7 +638,7 @@ describe("AgentDataType", () => {
         discriminatorKey: "type",
         members: [{ discriminatorValue: "customer", fields: [{ name: "type", dataType: { type: "string" } }] }],
       };
-      const verdicts = yield* Effect.forEach([repeatedValue, repeatedField, shadowedKey], rejects(AgentDataType));
+      const verdicts = yield* Effect.forEach([repeatedValue, repeatedField, shadowedKey], rejects(AgentDataType), { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       const valueMessage = yield* failureOf(S.decodeUnknownEffect(AgentDiscriminatedUnionType)(repeatedValue));
       assertTrue(Str.includes("Expected every union member to have a distinct discriminator value")(valueMessage));
@@ -711,7 +711,7 @@ describe("AgentDefinition", () => {
           { ...definitionWire, agentStateType: { type: "decimal" } },
         ],
         rejects(AgentDefinition)
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(verdicts), 6);
       assertTrue(A.every(verdicts, identity));
       const message = yield* failureOf(
@@ -801,7 +801,7 @@ describe("sessions", () => {
           { type: "agentApiName", ontology: "", agentApiName: "triage" },
         ],
         rejects(AgentIdentifier)
-      );
+      , { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -854,7 +854,7 @@ describe("events", () => {
           { id: "", eventType: "userMessage", payload: "hello" },
         ],
         rejects(AgentEvent)
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(verdicts), 5);
       assertTrue(A.every(verdicts, identity));
       // A payload may be any JSON value, null included.
@@ -911,16 +911,16 @@ describe("session state", () => {
       deepStrictEqual(literals, ["live", "completed", "failed", "canceled"]);
       const decoded = yield* Effect.forEach(AgentSessionStatus.literals, (type) =>
         S.decodeEffect(AgentSessionStatusFromRecord)({ type })
-      );
+      , { concurrency: 1 });
       deepStrictEqual<ReadonlyArray<string>>(decoded, ["live", "completed", "failed", "canceled"]);
       const encoded = yield* Effect.forEach(AgentSessionStatus.literals, (status) =>
         S.encodeEffect(AgentSessionStatusFromRecord)(status)
-      );
+      , { concurrency: 1 });
       deepStrictEqual(encoded, [{ type: "live" }, { type: "completed" }, { type: "failed" }, { type: "canceled" }]);
       const verdicts = yield* Effect.forEach(
         [{ type: "cancelled" }, { type: "paused" }, "live", {}],
         rejects(AgentSessionStatusFromRecord)
-      );
+      , { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       const literalIsTheDomainValue: Equals<AgentSessionStatusFromRecord, AgentSessionStatus> = true;
       assertTrue(literalIsTheDomainValue);
@@ -980,7 +980,7 @@ describe("session state", () => {
           { ...sessionStateWire, contextItems: { "item-1": { type: "userMessage", data: "hello" } } },
         ],
         rejects(AgentStateResponse)
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(verdicts), 4);
       assertTrue(A.every(verdicts, identity));
     })
@@ -1019,7 +1019,7 @@ describe("AgentObjectReference", () => {
           { objectTypeApiName: "Customer", primaryKey: { customerId: 123 } },
         ],
         rejects(AgentObjectReference)
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(verdicts), 6);
       assertTrue(A.every(verdicts, identity));
       const message = yield* failureOf(
@@ -1121,7 +1121,7 @@ describe("valueCodec", () => {
           deepStrictEqual(again.encoded, canonical);
           return dataType.type === kind && S.is(codec)(decoded) && S.toEquivalence(codec)(again.decoded, decoded);
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(results), 16);
       assertTrue(A.every(results, identity));
     })
@@ -1146,10 +1146,10 @@ describe("valueCodec", () => {
               const decoded = yield* S.decodeUnknownEffect(codec)(encoded);
               return S.is(codec)(value) && equivalence(decoded, value);
             })
-          );
+          , { concurrency: 1 });
           return A.length(values) === 25 && A.every(verdicts, identity);
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(results), 15);
       assertTrue(A.every(results, identity));
       // The sixteenth case. Its key is the wire scalar that carries it, so it round-trips exactly like the others.
@@ -1164,7 +1164,7 @@ describe("valueCodec", () => {
           const decoded = yield* S.decodeUnknownEffect(objectCodec)(encoded);
           return S.is(objectCodec)(value) && sameReference(decoded, value);
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(objectVerdicts), 25);
       assertTrue(A.every(objectVerdicts, identity));
     })
@@ -1191,7 +1191,7 @@ describe("valueCodec", () => {
         rejects(valueCodec(booleanType))("yes"),
         rejects(valueCodec(stringType))(7),
         rejects(valueCodec(timestampType))("yesterday"),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1200,12 +1200,12 @@ describe("valueCodec", () => {
     "nullable is an Option over JSON null, at any depth of a container",
     Effect.fnUntraced(function* () {
       const codec = valueCodec(nullable(stringType));
-      const decoded = yield* Effect.forEach([null, "hello"], (wire) => S.decodeEffect(codec)(wire));
+      const decoded = yield* Effect.forEach([null, "hello"], (wire) => S.decodeEffect(codec)(wire), { concurrency: 1 });
       deepStrictEqual(decoded, [O.none(), O.some("hello")]);
-      const encoded = yield* Effect.forEach([O.none(), O.some("hello")], (value) => S.encodeEffect(codec)(value));
+      const encoded = yield* Effect.forEach([O.none(), O.some("hello")], (value) => S.encodeEffect(codec)(value), { concurrency: 1 });
       deepStrictEqual(encoded, [null, "hello"]);
       // Not nullable means not nullable.
-      const verdicts = yield* Effect.all([rejects(codec)(7), rejects(valueCodec(stringType))(null)]);
+      const verdicts = yield* Effect.all([rejects(codec)(7), rejects(valueCodec(stringType))(null)], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       const sparse = yield* throughCodec(valueCodec(list(nullable(integerType))), [1, null, 3]);
       deepStrictEqual(sparse.decoded, [O.some(1), O.none(), O.some(3)]);
@@ -1213,11 +1213,11 @@ describe("valueCodec", () => {
       // A nullable of a nullable has two absences and the wire one null: both encode to it, and it reads back
       // as the inner one.
       const twice = valueCodec(nullable(nullable(stringType)));
-      const decodedTwice = yield* Effect.forEach([null, "hello"], (wire) => S.decodeEffect(twice)(wire));
+      const decodedTwice = yield* Effect.forEach([null, "hello"], (wire) => S.decodeEffect(twice)(wire), { concurrency: 1 });
       deepStrictEqual(decodedTwice, [O.some(O.none()), O.some(O.some("hello"))]);
       const innerAbsence: O.Option<O.Option<string>> = O.some(O.none());
       const outerAbsence: O.Option<O.Option<string>> = O.none();
-      const encodedTwice = yield* Effect.forEach([innerAbsence, outerAbsence], (value) => S.encodeEffect(twice)(value));
+      const encodedTwice = yield* Effect.forEach([innerAbsence, outerAbsence], (value) => S.encodeEffect(twice)(value), { concurrency: 1 });
       deepStrictEqual(encodedTwice, [null, null]);
     })
   );
@@ -1241,7 +1241,7 @@ describe("valueCodec", () => {
         rejects(valueCodec(list(integerType)))(null),
         rejects(valueCodec(AgentRecordType.make({ valueType: integerType })))([1, 2]),
         rejects(valueCodec(AgentRecordType.make({ valueType: integerType })))({ first: "one" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1265,7 +1265,7 @@ describe("valueCodec", () => {
         rejects(codec)({ id: "one" }),
         rejects(codec)([1, "seen"]),
         rejects(codec)(null),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1282,7 +1282,7 @@ describe("valueCodec", () => {
         rejects(codec)(7),
         rejects(codec)([]),
         rejects(codec)(null),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1306,7 +1306,7 @@ describe("valueCodec", () => {
         rejects(codec)({ type: "customer", employeeId: "1ff8ceda" }),
         rejects(codec)({ customerId: 123 }),
         rejects(codec)("customer"),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       const single = valueCodec(
         AgentDiscriminatedUnionType.make({
@@ -1325,7 +1325,7 @@ describe("valueCodec", () => {
     "a discriminated union with no members has no values",
     Effect.fnUntraced(function* () {
       const codec = valueCodec(AgentDiscriminatedUnionType.make({ discriminatorKey: "type", members: [] }));
-      const verdicts = yield* Effect.forEach([{}, { type: "customer" }, null, "text", 1], rejects(codec));
+      const verdicts = yield* Effect.forEach([{}, { type: "customer" }, null, "text", 1], rejects(codec), { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1353,7 +1353,7 @@ describe("valueCodec", () => {
         // OSDK's sugar forms are not wire values: a bare key, and its `$apiName` / `$primaryKey` record.
         rejects(codec)(123),
         rejects(codec)({ $apiName: "Customer", $primaryKey: 123 }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1369,7 +1369,7 @@ describe("valueCodec", () => {
         rejects(codec)(""),
         rejects(codec)({ type: "base", objectType: "Customer" }),
         rejects(codec)(null),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1386,7 +1386,7 @@ describe("valueCodec", () => {
       const verdicts = yield* Effect.all([
         rejects(Row)({ optional: "b" }),
         rejects(Row)({ required: null, optional: "b" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1409,7 +1409,7 @@ describe("valueCodec", () => {
         rejects(codec)({ note: "no customer" }),
         rejects(codec)({ customer: { ...customerReferenceWire, objectTypeApiName: "Employee" } }),
         rejects(none)({ unexpected: 1 }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );

@@ -1,21 +1,21 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { IRI } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Response from "effect/ai/Response";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Stream from "effect/Stream";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as LanguageModel from "effect/ai/LanguageModel";
-import * as Response from "effect/ai/Response";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../../Domain/Model/Entity.ts";
 import { EntityId } from "../../Domain/Model/shared.ts";
 import { EntityIndex } from "../../Service/EntityIndex.ts";
 import { GraphRAG, GraphRAGGenerationError } from "../../Service/GraphRAG.ts";
 import { RetryPolicy } from "../../Service/Retry.ts";
 import { SubgraphExtractor } from "../../Service/SubgraphExtractor.ts";
-import * as S from "effect/Schema";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
@@ -124,12 +124,7 @@ describe("SubgraphExtractor", () => {
         const extractor = yield* SubgraphExtractor;
         const options = { maxNodes: PosInt.make(2), followIncoming: true, followOutgoing: true };
 
-        const dataFirst = yield* extractor.extract(
-          graph,
-          [alice.id, bob.id, carol.id],
-          S.Natural.make(2),
-          options
-        );
+        const dataFirst = yield* extractor.extract(graph, [alice.id, bob.id, carol.id], S.Natural.make(2), options);
         const dataLast = yield* extractor.extract([alice.id, bob.id, carol.id], S.Natural.make(2), options)(graph);
 
         assert.deepEqual(dataLast, dataFirst);

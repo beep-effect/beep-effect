@@ -14,22 +14,22 @@ import { Subject } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { SCHEMA_NAME } from "@beep/rdf/Vocab/SchemaOrg";
+import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Console from "effect/Console";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
-import * as Order from "effect/Order";
-import * as PlatformError from "effect/PlatformError";
-import * as A from "effect/Array";
-import { pipe } from "effect/Function";
-import * as O from "effect/Option";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import type * as PlatformError from "effect/PlatformError";
 import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
+import type * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { ParsingFailed, RdfError } from "../../Domain/Error/Rdf.ts";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
@@ -112,7 +112,11 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   manifest: O.Option<string>,
   threshold: number,
   verbose: boolean
-): Effect.fn.Return<void, KeyValueStoreError | ParsingFailed | PlatformError.PlatformError | RdfError | S.SchemaError, FileSystem.FileSystem | RdfBuilder | StorageService> {
+): Effect.fn.Return<
+  void,
+  KeyValueStoreError | ParsingFailed | PlatformError.PlatformError | RdfError | S.SchemaError,
+  FileSystem.FileSystem | RdfBuilder | StorageService
+> {
   const storage = yield* StorageService;
   const rdf = yield* RdfBuilder;
   yield* Console.log(`Analyzing entities for batch: ${batchId}`);

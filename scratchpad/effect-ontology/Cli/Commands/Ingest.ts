@@ -1,4 +1,15 @@
+import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import type * as Digest from "effect/crypto/Digest";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
 /**
  * CLI: Ingest Command
  *
@@ -10,22 +21,11 @@ import type * as Digest from "effect/crypto/Digest";
  * @since 0.0.0
  */
 import type * as PlatformError from "effect/PlatformError";
-import * as Console from "effect/Console";
-import * as DateTime from "effect/DateTime";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as Path from "effect/Path";
-import * as Random from "effect/Random";
-import * as A from "effect/Array";
-import { pipe } from "effect/Function";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import type * as KeyValueStore from "effect/persistence/KeyValueStore";
+import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Argument from "effect/cli/Argument";
-import * as Command from "effect/cli/Command";
-import * as Flag from "effect/cli/Flag";
-import type * as KeyValueStore from "effect/persistence/KeyValueStore";
 import {
   BatchId,
   ContentHash,

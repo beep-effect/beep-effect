@@ -136,7 +136,7 @@ export class RecurrenceEvidenceRef extends Model<RecurrenceEvidenceRef>("Recurre
  */
 export declare namespace RecurrenceEvidenceRef {
   /** Encoded form of {@link RecurrenceEvidenceRef}. */
-  export type Encoded = S.Codec.Encoded<typeof RecurrenceEvidenceRef>;
+  export type Encoded = typeof RecurrenceEvidenceRef.Encoded;
 }
 
 /**
@@ -170,7 +170,7 @@ export class RecurrenceRejected extends S.TaggedError<RecurrenceRejected, { read
  */
 export declare namespace RecurrenceRejected {
   /** Encoded form of {@link RecurrenceRejected}. */
-  export type Encoded = S.Codec.Encoded<typeof RecurrenceRejected>;
+  export type Encoded = typeof RecurrenceRejected.Encoded;
 }
 
 const positiveInt = (column: string, description: string) =>
@@ -271,7 +271,7 @@ export class CanonicalRecurrenceSignal extends Model<CanonicalRecurrenceSignal>(
  */
 export declare namespace CanonicalRecurrenceSignal {
   /** Encoded form of {@link CanonicalRecurrenceSignal}. */
-  export type Encoded = S.Codec.Encoded<typeof CanonicalRecurrenceSignal>;
+  export type Encoded = typeof CanonicalRecurrenceSignal.Encoded;
 }
 
 const monthBase = (month: number): number =>

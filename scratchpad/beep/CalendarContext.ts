@@ -82,7 +82,7 @@ export class MeetingParticipant extends Model<MeetingParticipant>("MeetingPartic
  * @since 0.0.0
  */
 export declare namespace MeetingParticipant {
-  export type Encoded = S.Codec.Encoded<typeof MeetingParticipant>;
+  export type Encoded = typeof MeetingParticipant.Encoded;
 }
 
 /**
@@ -150,7 +150,7 @@ export class CalendarMeetingContext extends Model<CalendarMeetingContext>("Calen
  * @since 0.0.0
  */
 export declare namespace CalendarMeetingContext {
-  export type Encoded = S.Codec.Encoded<typeof CalendarMeetingContext>;
+  export type Encoded = typeof CalendarMeetingContext.Encoded;
 }
 
 const decodeCalendarMeetingContext = S.decodeUnknownEffect(CalendarMeetingContext);

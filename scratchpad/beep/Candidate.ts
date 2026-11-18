@@ -230,7 +230,7 @@ export class WorkstreamProposal extends Model<WorkstreamProposal>("WorkstreamPro
  * @since 0.0.0
  */
 export declare namespace WorkstreamProposal {
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamProposal>;
+  export type Encoded = typeof WorkstreamProposal.Encoded;
 }
 
 const encodeWorkstreamProposal = S.encodeEffect(WorkstreamProposal);
@@ -277,7 +277,7 @@ export class CandidateCompatibilityMetadata extends Model<CandidateCompatibility
  * @since 0.0.0
  */
 export declare namespace CandidateCompatibilityMetadata {
-  export type Encoded = S.Codec.Encoded<typeof CandidateCompatibilityMetadata>;
+  export type Encoded = typeof CandidateCompatibilityMetadata.Encoded;
 }
 
 const encodeCandidateCompatibilityMetadata = S.encodeEffect(CandidateCompatibilityMetadata);
@@ -347,7 +347,7 @@ export class TaskCreateCandidate extends Model<TaskCreateCandidate>("TaskCreateC
  * @since 0.0.0
  */
 export declare namespace TaskCreateCandidate {
-  export type Encoded = S.Codec.Encoded<typeof TaskCreateCandidate>;
+  export type Encoded = typeof TaskCreateCandidate.Encoded;
 }
 
 /**
@@ -401,7 +401,7 @@ export class TaskUpdateCandidate extends Model<TaskUpdateCandidate>("TaskUpdateC
  * @since 0.0.0
  */
 export declare namespace TaskUpdateCandidate {
-  export type Encoded = S.Codec.Encoded<typeof TaskUpdateCandidate>;
+  export type Encoded = typeof TaskUpdateCandidate.Encoded;
 }
 
 const isTaskUpdateCandidate = S.is(TaskUpdateCandidate);
@@ -454,7 +454,7 @@ export class TaskCompleteCandidate extends Model<TaskCompleteCandidate>("TaskCom
  * @since 0.0.0
  */
 export declare namespace TaskCompleteCandidate {
-  export type Encoded = S.Codec.Encoded<typeof TaskCompleteCandidate>;
+  export type Encoded = typeof TaskCompleteCandidate.Encoded;
 }
 
 const isTaskCompleteCandidate = S.is(TaskCompleteCandidate);
@@ -507,7 +507,7 @@ export class TaskCancelCandidate extends Model<TaskCancelCandidate>("TaskCancelC
  * @since 0.0.0
  */
 export declare namespace TaskCancelCandidate {
-  export type Encoded = S.Codec.Encoded<typeof TaskCancelCandidate>;
+  export type Encoded = typeof TaskCancelCandidate.Encoded;
 }
 
 const isTaskCancelCandidate = S.is(TaskCancelCandidate);
@@ -567,7 +567,7 @@ export class TaskSupersedeCandidate extends Model<TaskSupersedeCandidate>("TaskS
  * @since 0.0.0
  */
 export declare namespace TaskSupersedeCandidate {
-  export type Encoded = S.Codec.Encoded<typeof TaskSupersedeCandidate>;
+  export type Encoded = typeof TaskSupersedeCandidate.Encoded;
 }
 
 const isTaskSupersedeCandidate = S.is(TaskSupersedeCandidate);
@@ -621,7 +621,7 @@ export class WorkstreamCreateCandidate extends Model<WorkstreamCreateCandidate>(
  * @since 0.0.0
  */
 export declare namespace WorkstreamCreateCandidate {
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamCreateCandidate>;
+  export type Encoded = typeof WorkstreamCreateCandidate.Encoded;
 }
 
 const changeHasField = (change: TaskChangePayload): boolean =>
@@ -1219,7 +1219,7 @@ export class CandidateRecord extends Model<CandidateRecord>("CandidateRecord")(
  * @since 0.0.0
  */
 export declare namespace CandidateRecord {
-  export type Encoded = S.Codec.Encoded<typeof CandidateRecord>;
+  export type Encoded = typeof CandidateRecord.Encoded;
 }
 
 /**
@@ -1303,7 +1303,7 @@ export class CandidateShapeError extends S.TaggedError<CandidateShapeError, { re
  * @since 0.0.0
  */
 export declare namespace CandidateShapeError {
-  export type Encoded = S.Codec.Encoded<typeof CandidateShapeError>;
+  export type Encoded = typeof CandidateShapeError.Encoded;
 }
 
 const omitNull = (value: unknown): unknown => (value === null ? undefined : value);
@@ -1562,7 +1562,7 @@ export class CandidateListResponse extends Model<CandidateListResponse>("Candida
  * @since 0.0.0
  */
 export declare namespace CandidateListResponse {
-  export type Encoded = S.Codec.Encoded<typeof CandidateListResponse>;
+  export type Encoded = typeof CandidateListResponse.Encoded;
 }
 
 /**
@@ -1601,7 +1601,7 @@ export class CandidateResolutionRequest extends Model<CandidateResolutionRequest
  * @since 0.0.0
  */
 export declare namespace CandidateResolutionRequest {
-  export type Encoded = S.Codec.Encoded<typeof CandidateResolutionRequest>;
+  export type Encoded = typeof CandidateResolutionRequest.Encoded;
 }
 
 /**
@@ -1653,7 +1653,7 @@ export class CandidateResolutionReceipt extends Model<CandidateResolutionReceipt
  * @since 0.0.0
  */
 export declare namespace CandidateResolutionReceipt {
-  export type Encoded = S.Codec.Encoded<typeof CandidateResolutionReceipt>;
+  export type Encoded = typeof CandidateResolutionReceipt.Encoded;
 }
 
 /**
@@ -1714,7 +1714,7 @@ export class CandidateMigrationReport extends Model<CandidateMigrationReport>("C
  * @since 0.0.0
  */
 export declare namespace CandidateMigrationReport {
-  export type Encoded = S.Codec.Encoded<typeof CandidateMigrationReport>;
+  export type Encoded = typeof CandidateMigrationReport.Encoded;
 }
 
 /**
@@ -1752,5 +1752,5 @@ export class CandidateMigrationRequest extends Model<CandidateMigrationRequest>(
  * @since 0.0.0
  */
 export declare namespace CandidateMigrationRequest {
-  export type Encoded = S.Codec.Encoded<typeof CandidateMigrationRequest>;
+  export type Encoded = typeof CandidateMigrationRequest.Encoded;
 }

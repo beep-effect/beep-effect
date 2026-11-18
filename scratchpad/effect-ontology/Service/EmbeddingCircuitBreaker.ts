@@ -13,14 +13,14 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
-import * as Ref from "effect/Ref";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import type { CircuitBreaker, CircuitOpenError } from "../Runtime/CircuitBreaker.ts";
 import { CircuitState, makeCircuitBreaker } from "../Runtime/CircuitBreaker.ts";
@@ -87,13 +87,26 @@ const providerCircuitConfigSuccessThresholdDefault = PosInt.make(2);
  * @category configuration
  * @since 0.0.0
  */
-export class ProviderCircuitConfig extends S.Opaque<ProviderCircuitConfig, { readonly brand: unique symbol }>()(S.Struct({
-    maxFailures: PosInt.pipe(S.withConstructorDefault(Effect.succeed(providerCircuitConfigMaxFailuresDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(providerCircuitConfigMaxFailuresDefault))),
-    resetTimeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(providerCircuitConfigResetTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(providerCircuitConfigResetTimeoutDefault))),
-    successThreshold: PosInt.pipe(S.withConstructorDefault(Effect.succeed(providerCircuitConfigSuccessThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(providerCircuitConfigSuccessThresholdDefault))),
-  }).pipe($I.annoteSchema("ProviderCircuitConfig", {
-    description: "Failure, recovery-delay, and recovery-success thresholds for an embedding provider.",
-  }))) {}
+export class ProviderCircuitConfig extends S.Opaque<ProviderCircuitConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    maxFailures: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(providerCircuitConfigMaxFailuresDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(providerCircuitConfigMaxFailuresDefault))
+    ),
+    resetTimeout: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(providerCircuitConfigResetTimeoutDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(providerCircuitConfigResetTimeoutDefault))
+    ),
+    successThreshold: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(providerCircuitConfigSuccessThresholdDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(providerCircuitConfigSuccessThresholdDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("ProviderCircuitConfig", {
+      description: "Failure, recovery-delay, and recovery-success thresholds for an embedding provider.",
+    })
+  )
+) {}
 
 /**
  * Circuit breaker status for observability
@@ -114,13 +127,17 @@ export class ProviderCircuitConfig extends S.Opaque<ProviderCircuitConfig, { rea
  * @category models
  * @since 0.0.0
  */
-export class CircuitStatus extends S.Opaque<CircuitStatus, { readonly brand: unique symbol }>()(S.Struct({
+export class CircuitStatus extends S.Opaque<CircuitStatus, { readonly brand: unique symbol }>()(
+  S.Struct({
     providerId: EmbeddingProviderId,
     state: CircuitState,
     isAvailable: S.Boolean,
-  }).pipe($I.annoteSchema("CircuitStatus", {
-    description: "Current circuit state and availability of one embedding provider.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("CircuitStatus", {
+      description: "Current circuit state and availability of one embedding provider.",
+    })
+  )
+) {}
 
 // =============================================================================
 // Default Configuration

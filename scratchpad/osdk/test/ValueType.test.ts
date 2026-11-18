@@ -114,9 +114,9 @@ describe("names, versions and status", () => {
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.forEach(["ACTIVE", "DEPRECATED"], (wire) =>
         S.decodeUnknownEffect(ValueTypeStatus)(wire)
-      );
+      , { concurrency: 1 });
       deepStrictEqual(decoded, ["active", "deprecated"]);
-      const encoded = yield* Effect.forEach(decoded, (status) => S.encodeEffect(ValueTypeStatus)(status));
+      const encoded = yield* Effect.forEach(decoded, (status) => S.encodeEffect(ValueTypeStatus)(status), { concurrency: 1 });
       deepStrictEqual(encoded, ["ACTIVE", "DEPRECATED"]);
     })
   );
@@ -135,7 +135,7 @@ describe("names, versions and status", () => {
         rejects(ValueTypeVersion)(""),
         rejects(ValueTypeStatus)("active"),
         rejects(ValueTypeStatus)("EXPERIMENTAL"),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -363,8 +363,8 @@ describe("ValueTypeFieldType", () => {
   it.effect(
     "decodes every wire base type and encodes it back to the same JSON",
     Effect.fnUntraced(function* () {
-      const decoded = yield* Effect.forEach(everyFieldTypeWire, (wire) => decodeFieldType(wire));
-      const encoded = yield* Effect.forEach(decoded, (fieldType) => encodeFieldType(fieldType));
+      const decoded = yield* Effect.forEach(everyFieldTypeWire, (wire) => decodeFieldType(wire), { concurrency: 1 });
+      const encoded = yield* Effect.forEach(decoded, (fieldType) => encodeFieldType(fieldType), { concurrency: 1 });
       deepStrictEqual(encoded, everyFieldTypeWire);
     })
   );
@@ -462,7 +462,7 @@ describe("ValueTypeFieldType", () => {
         rejects(ValueTypeFieldType)({ type: "array", subType: null }),
         rejects(ValueTypeFieldType)({ type: "struct", fields: [{ name: "" }] }),
         rejects(ValueTypeFieldType)({ type: "optional", wrappedType: { type: "map", keyType: 1 } }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -607,8 +607,8 @@ describe("ValueTypeConstraint", () => {
   it.effect(
     "decodes every wire constraint and encodes it back to the same JSON",
     Effect.fnUntraced(function* () {
-      const decoded = yield* Effect.forEach(everyConstraintWire, (wire) => decodeConstraint(wire));
-      const encoded = yield* Effect.forEach(decoded, (constraint) => encodeConstraint(constraint));
+      const decoded = yield* Effect.forEach(everyConstraintWire, (wire) => decodeConstraint(wire), { concurrency: 1 });
+      const encoded = yield* Effect.forEach(decoded, (constraint) => encodeConstraint(constraint), { concurrency: 1 });
       deepStrictEqual(encoded, everyConstraintWire);
     })
   );
@@ -655,7 +655,7 @@ describe("ValueTypeConstraint", () => {
       const verdicts = yield* Effect.all([
         rejects(StructConstraint)({ type: "struct", properties: { street: "" } }),
         rejects(StructConstraint)({ type: "struct" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -711,14 +711,14 @@ describe("ValueTypeConstraint", () => {
         ValueRangeConstraint.atLeast(since),
         ValueRangeConstraint.atMost(ceiling),
       ];
-      const wire = yield* Effect.forEach(ranges, (range) => S.encodeEffect(ValueRangeConstraint)(range));
+      const wire = yield* Effect.forEach(ranges, (range) => S.encodeEffect(ValueRangeConstraint)(range), { concurrency: 1 });
       deepStrictEqual(wire, [
         { type: "range", minimumValue: "-9007199254740993", maximumValue: "9007199254740993" },
         { type: "range", minimumValue: "2021-01-04T05:00:00.000Z" },
         // A decimal bound is written as plain decimal text with the scale it was given.
         { type: "range", maximumValue: "12.50" },
       ]);
-      const decoded = yield* Effect.forEach(wire, (range) => S.decodeEffect(ValueRangeConstraint)(range));
+      const decoded = yield* Effect.forEach(wire, (range) => S.decodeEffect(ValueRangeConstraint)(range), { concurrency: 1 });
       deepStrictEqual(decoded, ranges);
       deepStrictEqual(decoded, [
         ValueRangeConstraint.between("-9007199254740993", "9007199254740993"),
@@ -771,7 +771,7 @@ describe("ValueTypeConstraint", () => {
         rejects(ValueTypeConstraint)({ type: "enum", options: [{}] }),
         rejects(ValueTypeConstraint)({ type: "enum", options: [["a"]] }),
         rejects(ValueTypeConstraint)({ type: "enum" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -790,7 +790,7 @@ describe("ValueTypeConstraint", () => {
         rejects(ValueTypeConstraint)({ type: "oneOf", options: [] }),
         rejects(ValueTypeConstraint)({ type: "stringLength", lte: 3 }),
         rejects(ValueTypeConstraint)({}),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -994,7 +994,7 @@ describe("OntologyValueType", () => {
         rejects(OntologyValueType)({ ...colorValueTypeWire, fieldType: { type: "geoshape" } }),
         rejects(OntologyValueType)({ ...colorValueTypeWire, constraints: [{ type: "range" }] }),
         rejects(OntologyValueType)({ ...colorValueTypeWire, description: null }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );

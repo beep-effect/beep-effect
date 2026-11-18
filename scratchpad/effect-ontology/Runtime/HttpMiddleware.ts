@@ -13,20 +13,20 @@ import { flow } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
-import * as Inspectable from "effect/Inspectable";
-import * as Random from "effect/Random";
-import * as Redacted from "effect/Redacted";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as Str from "effect/String";
 import * as HttpMiddleware from "effect/http/HttpMiddleware";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Inspectable from "effect/Inspectable";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
+import * as Redacted from "effect/Redacted";
+import * as Str from "effect/String";
 import { ConflictActor } from "../Domain/Schema/Timeline.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { sha256 as sha256Effect } from "../Utils/Hash.ts";

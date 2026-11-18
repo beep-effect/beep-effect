@@ -640,7 +640,7 @@ export class MemoryExtractionError extends S.TaggedError<MemoryExtractionError, 
  * @since 0.0.0
  */
 export declare namespace MemoryExtractionError {
-  export type Encoded = S.Codec.Encoded<typeof MemoryExtractionError>;
+  export type Encoded = typeof MemoryExtractionError.Encoded;
 }
 
 /**
@@ -725,7 +725,7 @@ export class WorkingObservationExtractionError extends S.TaggedError<WorkingObse
  * @since 0.0.0
  */
 export declare namespace WorkingObservationExtractionError {
-  export type Encoded = S.Codec.Encoded<typeof WorkingObservationExtractionError>;
+  export type Encoded = typeof WorkingObservationExtractionError.Encoded;
 }
 
 /**
@@ -780,7 +780,7 @@ export class MemoryContractError extends S.TaggedError<MemoryContractError, { re
  * @since 0.0.0
  */
 export declare namespace MemoryContractError {
-  export type Encoded = S.Codec.Encoded<typeof MemoryContractError>;
+  export type Encoded = typeof MemoryContractError.Encoded;
 }
 
 /**
@@ -888,7 +888,7 @@ export class EvidenceRef extends Model<EvidenceRef>("EvidenceRef")(
  * @since 0.0.0
  */
 export declare namespace EvidenceRef {
-  export type Encoded = S.Codec.Encoded<typeof EvidenceRef>;
+  export type Encoded = typeof EvidenceRef.Encoded;
 }
 
 const confidenceColumn = () => kitDefault(["high", "medium", "low"], medium, "confidence");
@@ -979,7 +979,7 @@ export class L1MemoryArchiveItem extends Model<L1MemoryArchiveItem>("L1MemoryArc
  * @since 0.0.0
  */
 export declare namespace L1MemoryArchiveItem {
-  export type Encoded = S.Codec.Encoded<typeof L1MemoryArchiveItem>;
+  export type Encoded = typeof L1MemoryArchiveItem.Encoded;
 }
 
 /**
@@ -1328,7 +1328,7 @@ export class WorkingMemoryObservation extends Model<WorkingMemoryObservation>("W
  * @since 0.0.0
  */
 export declare namespace WorkingMemoryObservation {
-  export type Encoded = S.Codec.Encoded<typeof WorkingMemoryObservation>;
+  export type Encoded = typeof WorkingMemoryObservation.Encoded;
 }
 
 /**
@@ -1478,7 +1478,7 @@ export class SourceBackedMemoryCandidate extends Model<SourceBackedMemoryCandida
  * @since 0.0.0
  */
 export declare namespace SourceBackedMemoryCandidate {
-  export type Encoded = S.Codec.Encoded<typeof SourceBackedMemoryCandidate>;
+  export type Encoded = typeof SourceBackedMemoryCandidate.Encoded;
 }
 
 /**
@@ -1568,7 +1568,7 @@ export class L2SearchRequest extends Model<L2SearchRequest>("L2SearchRequest")(
  * @since 0.0.0
  */
 export declare namespace L2SearchRequest {
-  export type Encoded = S.Codec.Encoded<typeof L2SearchRequest>;
+  export type Encoded = typeof L2SearchRequest.Encoded;
 }
 
 const routeVersion = textDefault("schema_version", "l2_memory_route.v1");
@@ -1616,7 +1616,7 @@ export class L2MemoryRouteDurable extends Model<L2MemoryRouteDurable>("L2MemoryR
  * @since 0.0.0
  */
 export declare namespace L2MemoryRouteDurable {
-  export type Encoded = S.Codec.Encoded<typeof L2MemoryRouteDurable>;
+  export type Encoded = typeof L2MemoryRouteDurable.Encoded;
 }
 
 /**
@@ -1653,7 +1653,7 @@ export class L2MemoryRouteReview extends Model<L2MemoryRouteReview>("L2MemoryRou
  * @since 0.0.0
  */
 export declare namespace L2MemoryRouteReview {
-  export type Encoded = S.Codec.Encoded<typeof L2MemoryRouteReview>;
+  export type Encoded = typeof L2MemoryRouteReview.Encoded;
 }
 
 /**
@@ -1691,7 +1691,7 @@ export class L2MemoryRouteDiscard extends Model<L2MemoryRouteDiscard>("L2MemoryR
  * @since 0.0.0
  */
 export declare namespace L2MemoryRouteDiscard {
-  export type Encoded = S.Codec.Encoded<typeof L2MemoryRouteDiscard>;
+  export type Encoded = typeof L2MemoryRouteDiscard.Encoded;
 }
 
 /**
@@ -1737,7 +1737,7 @@ export class L2MemoryRouteHidden extends Model<L2MemoryRouteHidden>("L2MemoryRou
  * @since 0.0.0
  */
 export declare namespace L2MemoryRouteHidden {
-  export type Encoded = S.Codec.Encoded<typeof L2MemoryRouteHidden>;
+  export type Encoded = typeof L2MemoryRouteHidden.Encoded;
 }
 
 const L2RouteKit = LiteralKit(["durable", "review", "discard", "hidden"]);
@@ -1836,7 +1836,7 @@ export class L2SearchResult extends Model<L2SearchResult>("L2SearchResult")(
  * @since 0.0.0
  */
 export declare namespace L2SearchResult {
-  export type Encoded = S.Codec.Encoded<typeof L2SearchResult>;
+  export type Encoded = typeof L2SearchResult.Encoded;
 }
 
 /**
@@ -1892,7 +1892,7 @@ export class L2SearchPlan extends Model<L2SearchPlan>("L2SearchPlan")(
  * @since 0.0.0
  */
 export declare namespace L2SearchPlan {
-  export type Encoded = S.Codec.Encoded<typeof L2SearchPlan>;
+  export type Encoded = typeof L2SearchPlan.Encoded;
 }
 
 /**
@@ -2106,7 +2106,7 @@ export class DurableMemoryPatch extends Model<DurableMemoryPatch>("DurableMemory
  * @since 0.0.0
  */
 export declare namespace DurableMemoryPatch {
-  export type Encoded = S.Codec.Encoded<typeof DurableMemoryPatch>;
+  export type Encoded = typeof DurableMemoryPatch.Encoded;
 }
 
 const hasText = (value: O.Option<string>): boolean => O.isSome(value) && !Str.isEmpty(value.value);

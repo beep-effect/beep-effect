@@ -967,7 +967,7 @@ describe("OntologyDefinition", () => {
           const encoded = yield* encodeOntology(decoded);
           deepStrictEqual(encoded, { ...ontologyWire, [collection]: {} });
         })
-      );
+      , { concurrency: 1 });
     })
   );
 
@@ -1479,7 +1479,7 @@ describe("lookups", () => {
       const ontology = yield* decodeOntology(ontologyWire);
       const selectors = yield* Effect.forEach(R.keys(ontology.queryTypes), (key) =>
         S.decodeEffect(QuerySelectorFromVersionedApiName)(key)
-      );
+      , { concurrency: 1 });
       deepStrictEqual(
         A.map(selectors, (selector) =>
           O.getOrNull(O.map(getQueryType(ontology, selector), (found) => `${found.apiName}`))

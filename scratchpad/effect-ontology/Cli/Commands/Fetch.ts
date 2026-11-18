@@ -12,20 +12,20 @@
 import { getSomesStruct } from "@beep/utils/Option";
 import { thunkEmptyStr } from "@beep/utils/thunk";
 import type { DrizzleError } from "drizzle-orm";
+import * as A from "effect/Array";
 import * as Console from "effect/Console";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as A from "effect/Array";
 import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Argument from "effect/cli/Argument";
-import * as Command from "effect/cli/Command";
-import * as Flag from "effect/cli/Flag";
 import type { JinaApiError, JinaParseError, JinaRateLimitError, JinaTimeoutError } from "../../Domain/Error/Jina.ts";
 import { LinkStatus } from "../../Domain/Schema/LinkIngestion.ts";
 import { ContentEnrichmentAgent } from "../../Service/ContentEnrichmentAgent.ts";
@@ -33,6 +33,7 @@ import { JinaReaderClient } from "../../Service/JinaReaderClient.ts";
 import type { IngestResult } from "../../Service/LinkIngestionService.ts";
 import { LinkIngestionError, LinkIngestionService } from "../../Service/LinkIngestionService.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+
 const decodeUnknownLinkStatus = S.decodeUnknownEffect(LinkStatus);
 
 // =============================================================================

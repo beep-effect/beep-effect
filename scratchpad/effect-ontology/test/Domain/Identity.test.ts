@@ -1,8 +1,8 @@
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/Arbitrary";
 import {
   BatchId,
   ChunkId,
@@ -19,6 +19,7 @@ import {
   OntologyVersion,
 } from "../../Domain/Identity.ts";
 import { IdempotencyKey as UtilityIdempotencyKey } from "../../Utils/IdempotencyKey.ts";
+
 const decodeGcsBucket = S.decodeEffect(GcsBucket);
 const decodeGcsObject = S.decodeEffect(GcsObject);
 const decodeGcsBucketResult = S.decodeResult(GcsBucket);
@@ -55,7 +56,7 @@ describe("effect-ontology identity schemas", () => {
           Arbitrary.checkEffect(
             Arbitrary.all([arbitrary]),
             ([value]) => {
-          expect(S.is(schema)(value)).toBe(true);
+              expect(S.is(schema)(value)).toBe(true);
 
               return true;
             },

@@ -174,7 +174,7 @@ export class JitUsefulFeedbackReceipt extends Model<JitUsefulFeedbackReceipt>("J
  * @since 0.0.0
  */
 export declare namespace JitUsefulFeedbackReceipt {
-  export type Encoded = S.Codec.Encoded<typeof JitUsefulFeedbackReceipt>;
+  export type Encoded = typeof JitUsefulFeedbackReceipt.Encoded;
 }
 
 /**
@@ -220,7 +220,7 @@ export class JitFalsePositiveFeedbackReceipt extends Model<JitFalsePositiveFeedb
  * @since 0.0.0
  */
 export declare namespace JitFalsePositiveFeedbackReceipt {
-  export type Encoded = S.Codec.Encoded<typeof JitFalsePositiveFeedbackReceipt>;
+  export type Encoded = typeof JitFalsePositiveFeedbackReceipt.Encoded;
 }
 
 /**
@@ -272,7 +272,7 @@ export class JitSnoozeFeedbackReceipt extends Model<JitSnoozeFeedbackReceipt>("J
  * @since 0.0.0
  */
 export declare namespace JitSnoozeFeedbackReceipt {
-  export type Encoded = S.Codec.Encoded<typeof JitSnoozeFeedbackReceipt>;
+  export type Encoded = typeof JitSnoozeFeedbackReceipt.Encoded;
 }
 
 /**
@@ -314,7 +314,7 @@ export class JitDisableFeedbackReceipt extends Model<JitDisableFeedbackReceipt>(
  * @since 0.0.0
  */
 export declare namespace JitDisableFeedbackReceipt {
-  export type Encoded = S.Codec.Encoded<typeof JitDisableFeedbackReceipt>;
+  export type Encoded = typeof JitDisableFeedbackReceipt.Encoded;
 }
 
 /**
@@ -360,7 +360,7 @@ export class JitMissedOrLateFeedbackReceipt extends Model<JitMissedOrLateFeedbac
  * @since 0.0.0
  */
 export declare namespace JitMissedOrLateFeedbackReceipt {
-  export type Encoded = S.Codec.Encoded<typeof JitMissedOrLateFeedbackReceipt>;
+  export type Encoded = typeof JitMissedOrLateFeedbackReceipt.Encoded;
 }
 
 /**

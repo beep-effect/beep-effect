@@ -1,4 +1,7 @@
-import type * as Digest from "effect/crypto/Digest";
+
+import type * as AiError from "effect/ai/AiError";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Prompt from "effect/ai/Prompt";
 /**
  * Service: LLM with Retry
  *
@@ -16,14 +19,12 @@ import type * as Digest from "effect/crypto/Digest";
  * @since 0.0.0
  */
 import * as Cause from "effect/Cause";
+import type * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
-import * as Ref from "effect/Ref";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Prompt from "effect/ai/Prompt";
-import type * as AiError from "effect/ai/AiError";
-import * as LanguageModel from "effect/ai/LanguageModel";
 import type { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
 import { recordProviderAttempt, recordProviderUsage } from "../Telemetry/ExtractionTelemetry.ts";
 import { annotateError, annotateLlmCall, annotateRetry, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
@@ -152,7 +153,7 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
           errorType: "UnknownCause",
           errorMessage: Str.slice(0, 500)(Cause.pretty(cause)),
         }),
-      ])
+      ], { concurrency: 1 })
     ),
     Effect.tap(
       Effect.fn("LlmWithRetry.annotateSuccess")(function* (response) {
@@ -186,7 +187,7 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
             retryCount: retries,
             maxAttempts: retryPolicy.maxAttempts,
           }),
-        ]);
+        ], { concurrency: 1 });
       })
     ),
     Effect.withSpan(`${Str.toLowerCase(serviceName)}-llm`, {

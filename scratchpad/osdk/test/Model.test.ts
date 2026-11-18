@@ -365,7 +365,7 @@ describe("spec value codecs", () => {
           const agreed = yield* agreeOn(value, projected, wire);
           return type.type === kind && agreed && S.toEquivalence(projected)(fromSpec, fromProjection);
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(results), 22);
       assertTrue(A.every(results, identity));
     })
@@ -383,10 +383,10 @@ describe("spec value codecs", () => {
         Effect.fnUntraced(function* (kind) {
           const [value, type] = perCase[kind];
           const projected = valueCodec(type);
-          const verdicts = yield* Effect.forEach(wires, (wire) => agreeOn(value, projected, wire));
+          const verdicts = yield* Effect.forEach(wires, (wire) => agreeOn(value, projected, wire), { concurrency: 1 });
           return A.every(verdicts, identity);
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(wires), 47);
       deepStrictEqual(
         A.filter(A.zip(PropertyTypeKind.literals, results), ([, agreed]) => !agreed),
@@ -413,10 +413,10 @@ describe("spec value codecs", () => {
               const agreed = yield* agreeOn(value, projected, wire);
               return agreed && S.is(value)(sample) && S.is(projected)(sample);
             })
-          );
+          , { concurrency: 1 });
           return A.length(samples) === 40 && A.every(verdicts, identity);
         })
-      );
+      , { concurrency: 1 });
       deepStrictEqual(
         A.filter(A.zip(PropertyTypeKind.literals, results), ([, agreed]) => !agreed),
         []
@@ -441,7 +441,7 @@ describe("spec value codecs", () => {
         S.encodeUnknownEffect(Model.long.value)(lenientLong),
         S.encodeUnknownEffect(Model.decimal.value)(decimal),
         S.encodeUnknownEffect(Model.timestamp.value)(timestamp),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(encoded, ["7", "12.50", "2021-01-04T05:00:00.000Z"]);
     })
   );
@@ -580,7 +580,7 @@ describe("typeOf", () => {
       // A leaf states nothing but its tag, so it denotes exactly what the bare tag decodes to. A time series is
       // the one leaf type that must say more: the spec does not, so it denotes the item type that claims nothing.
       const plain = A.filter(Struct.keys(leafCodec), (kind) => kind !== "timeseries");
-      const bare = yield* Effect.forEach(plain, (kind) => S.decodeEffect(PropertyType)({ type: kind }));
+      const bare = yield* Effect.forEach(plain, (kind) => S.decodeEffect(PropertyType)({ type: kind }), { concurrency: 1 });
       strictEqual(A.length(plain), 18);
       deepStrictEqual(
         A.map(plain, (kind) => Model.typeOf(leafSpecs[kind])),
@@ -663,7 +663,7 @@ describe("typeOf", () => {
               const agreed = yield* agreeOn(value, projected, wire);
               return agreed && S.is(value)(sample) && S.is(projected)(sample);
             })
-          );
+          , { concurrency: 1 });
           // The same verdict on values that belong to no tag. One spec is left out, for one reason: a struct with
           // no fields drops an undeclared key when it is a typed spec and refuses it when it is projected
           // (`S.Record(S.String, S.Never)`, held by `Property.test.ts`). The two rules of a field-less struct are
@@ -671,10 +671,10 @@ describe("typeOf", () => {
           const fieldless = spec.kind === "struct" && R.isEmptyRecord(spec.shape.fields);
           const strayVerdicts = yield* Effect.forEach(fieldless ? [] : strays, (stray) =>
             agreeOn(value, projected, stray)
-          );
+          , { concurrency: 1 });
           return A.length(samples) === 40 && A.every(verdicts, identity) && A.every(strayVerdicts, identity);
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(results), 25);
       deepStrictEqual(
         A.filter(A.zip(A.map(everyConstructor, ([spec]) => spec.kind), results), ([, agreed]) => !agreed),
@@ -737,7 +737,7 @@ describe("spec fields and required", () => {
         rejects(Row)({ joined: "2021-02-30" }),
         rejects(Row)({ scores: [95.5, "eighty-eight"] }),
         rejects(Row)({ nickname: 7 }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(refused, identity));
     })
   );
@@ -754,13 +754,13 @@ describe("spec fields and required", () => {
           const ByProjection = S.Struct({ property: fieldCodec(type) });
           const verdicts = yield* Effect.forEach([{}, { property: null }, { property: wire }, { property: {} }], (row) =>
             agreeOn(BySpec, ByProjection, row)
-          );
+          , { concurrency: 1 });
           const present = yield* S.decodeEffect(BySpec)({ property: wire });
           const encoded = yield* S.encodeUnknownEffect(BySpec)(present);
           deepStrictEqual(encoded, { property: canonical });
           return A.every(verdicts, identity);
         })
-      );
+      , { concurrency: 1 });
       deepStrictEqual(
         A.filter(A.zip(PropertyTypeKind.literals, results), ([, agreed]) => !agreed),
         []
@@ -791,11 +791,11 @@ describe("spec fields and required", () => {
         rejects(Row)({ employeeId: null }),
         rejects(Row)({ employeeId: undefined }),
         rejects(Row)({ employeeId: 1.5 }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(refused, identity));
       // The optional field of the same spec accepts all of the shapes the required one refuses for absence.
       const Optional = S.Struct({ employeeId: Model.integer.field });
-      const accepted = yield* Effect.all([rejects(Optional)({}), rejects(Optional)({ employeeId: null })]);
+      const accepted = yield* Effect.all([rejects(Optional)({}), rejects(Optional)({ employeeId: null })], { concurrency: 1 });
       deepStrictEqual(accepted, [false, false]);
     })
   );
@@ -894,7 +894,7 @@ describe("vector, array and struct specs", () => {
         rejects(embedding.value)([0.1, 0.2, Number.NaN]),
         Effect.map(Effect.exit(S.encodeUnknownEffect(embedding.value)([0.1, 0.2])), Exit.isFailure),
         Effect.map(Effect.exit(S.encodeUnknownEffect(embedding.value)([0.1, 0.2, 0.3, 0.4])), Exit.isFailure),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       deepStrictEqual(
         [
@@ -912,7 +912,7 @@ describe("vector, array and struct specs", () => {
       const projected = valueCodec(VectorType.make({ dimension: 3 }));
       const agreed = yield* Effect.forEach([[0.1, 0.2, 0.3], [0.1, 0.2], [0.1, 0.2, 0.3, 0.4], []], (wire) =>
         agreeOn(embedding.value, projected, wire)
-      );
+      , { concurrency: 1 });
       deepStrictEqual(agreed, [true, true, true, true]);
       // Absent as a field like any other spec.
       const Row = S.Struct({ embedding: embedding.field });
@@ -942,7 +942,7 @@ describe("vector, array and struct specs", () => {
         rejects(longs.value)("1"),
         rejects(longs.value)(null),
         rejects(longs.value)({ 0: "1" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -987,7 +987,7 @@ describe("vector, array and struct specs", () => {
       const sparse = yield* Effect.all([
         S.decodeEffect(payment.value)({}),
         S.decodeEffect(payment.value)({ amount: null }),
-      ]);
+      ], { concurrency: 1 });
       const none = { amount: O.none(), paidAt: O.none(), year: O.none() };
       deepStrictEqual<unknown>(sparse, [none, none]);
       const verdicts = yield* Effect.all([
@@ -997,7 +997,7 @@ describe("vector, array and struct specs", () => {
         rejects(payment.value)([]),
         rejects(payment.value)("struct"),
         rejects(payment.value)(null),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1023,7 +1023,7 @@ describe("vector, array and struct specs", () => {
       deepStrictEqual<unknown>(encoded, wire);
       const sameAsProjection = yield* Effect.forEach([wire, [], [{ year: "x" }], [null], {}], (input) =>
         agreeOn(bonusHistory.value, valueCodec(bonusHistoryType), input)
-      );
+      , { concurrency: 1 });
       deepStrictEqual(sameAsProjection, [true, true, true, true, true]);
       strictEqual(bonusHistory.shape.element.kind, "struct");
 
@@ -1044,7 +1044,7 @@ describe("vector, array and struct specs", () => {
       const hollow = yield* Effect.all([
         S.decodeEffect(profile.value)({ address: {} }),
         S.decodeEffect(profile.value)({ address: { city: null } }),
-      ]);
+      ], { concurrency: 1 });
       const hollowAddress = { matrix: O.none(), address: O.some({ city: O.none(), zip: O.none() }) };
       deepStrictEqual<unknown>(hollow, [hollowAddress, hollowAddress]);
       const verdicts = yield* Effect.all([
@@ -1052,7 +1052,7 @@ describe("vector, array and struct specs", () => {
         rejects(profile.value)({ matrix: ["1"] }),
         rejects(profile.value)({ address: { city: 7 } }),
         rejects(profile.value)({ address: "NYC" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1066,7 +1066,7 @@ describe("vector, array and struct specs", () => {
       const projected = valueCodec(StructType.make({ fields: [] }));
       const agreed = yield* Effect.forEach(["not a struct", 42, true, [], {}], (wire) =>
         agreeOn(empty.value, projected, wire)
-      );
+      , { concurrency: 1 });
       deepStrictEqual(agreed, [true, true, true, true, true]);
     })
   );
@@ -1177,7 +1177,7 @@ describe("fieldsOf", () => {
         rejects(Row)({ name: "Ishmael", balance: 1, joined: "2021-05-01", tags: [], address: {} }),
         rejects(Row)({ age: 41, address: { city: 7 } }),
         rejects(Row)({ age: 41, balance: "" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(refused, identity));
     })
   );
@@ -1199,9 +1199,9 @@ describe("fieldsOf", () => {
         { tags: "a" },
         null,
       ];
-      const agreed = yield* Effect.forEach(wires, (wire) => agreeOn(viaStruct.value, OptionalRow, wire));
+      const agreed = yield* Effect.forEach(wires, (wire) => agreeOn(viaStruct.value, OptionalRow, wire), { concurrency: 1 });
       deepStrictEqual(agreed, [true, true, true, true, true, true, true]);
-      const accepted = yield* Effect.forEach(wires, (wire) => rejects(viaStruct.value)(wire));
+      const accepted = yield* Effect.forEach(wires, (wire) => rejects(viaStruct.value)(wire), { concurrency: 1 });
       deepStrictEqual(accepted, [false, false, false, false, true, true, true]);
       const samples = yield* Arbitrary.sampleEffect(Arbitrary.schema(OptionalRow), { count: 25, seed: 21 });
       assertTrue(A.every(samples, S.is(viaStruct.value)));

@@ -366,7 +366,7 @@ export class WriterAdmissionError extends S.TaggedError<WriterAdmissionError, { 
  * @since 0.0.0
  */
 export declare namespace WriterAdmissionError {
-  export type Encoded = S.Codec.Encoded<typeof WriterAdmissionError>;
+  export type Encoded = typeof WriterAdmissionError.Encoded;
 }
 
 /**
@@ -404,7 +404,7 @@ export class MemoryApplyError extends S.TaggedError<MemoryApplyError, { readonly
  * @since 0.0.0
  */
 export declare namespace MemoryApplyError {
-  export type Encoded = S.Codec.Encoded<typeof MemoryApplyError>;
+  export type Encoded = typeof MemoryApplyError.Encoded;
 }
 
 /**
@@ -514,7 +514,7 @@ export class MemoryControlState extends Model<MemoryControlState>("MemoryControl
  * @since 0.0.0
  */
 export declare namespace MemoryControlState {
-  export type Encoded = S.Codec.Encoded<typeof MemoryControlState>;
+  export type Encoded = typeof MemoryControlState.Encoded;
 }
 
 const isTransitioning = (mode: WriterMode): boolean =>
@@ -912,7 +912,7 @@ export class MemoryOutboxEvent extends Model<MemoryOutboxEvent>("MemoryOutboxEve
  * @since 0.0.0
  */
 export declare namespace MemoryOutboxEvent {
-  export type Encoded = S.Codec.Encoded<typeof MemoryOutboxEvent>;
+  export type Encoded = typeof MemoryOutboxEvent.Encoded;
 }
 
 /**
@@ -1006,7 +1006,7 @@ export class ApplyResult extends Model<ApplyResult>("ApplyResult")(
  * @since 0.0.0
  */
 export declare namespace ApplyResult {
-  export type Encoded = S.Codec.Encoded<typeof ApplyResult>;
+  export type Encoded = typeof ApplyResult.Encoded;
 }
 
 const readKey = (record: S.JsonObject, snake: string, camel: string): O.Option<unknown> =>

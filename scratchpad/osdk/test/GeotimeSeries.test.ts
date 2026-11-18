@@ -159,7 +159,7 @@ describe("GeotimeSeriesId and GeotimeSeriesIntegrationRid", () => {
       // Wire brands are loose (C10): an identifier is non-empty text, whatever it looks like.
       const loose = yield* Effect.all(
         A.map(["GeotimeSeriesReferencePlaceholder", " ", "a b", "ri.x"], (text) => S.decodeEffect(GeotimeSeriesId)(text))
-      );
+      , { concurrency: 1 });
       deepStrictEqual<ReadonlyArray<string>>(loose, ["GeotimeSeriesReferencePlaceholder", " ", "a b", "ri.x"]);
       const verdicts = yield* Effect.all([
         rejects(GeotimeSeriesId)(""),
@@ -167,7 +167,7 @@ describe("GeotimeSeriesId and GeotimeSeriesIntegrationRid", () => {
         rejects(GeotimeSeriesId)(null),
         rejects(GeotimeSeriesIntegrationRid)(""),
         rejects(GeotimeSeriesIntegrationRid)({ rid: integrationText }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       assertNone(GeotimeSeriesId.makeOption(""));
       assertNone(GeotimeSeriesIntegrationRid.makeOption(""));
@@ -210,7 +210,7 @@ describe("GeotimeSeriesById", () => {
         refusesToEncode(GeotimeSeriesById)({ type: "series", geotimeSeriesId: "" }),
         refusesToEncode(GeotimeSeriesById)(seriesIdText),
         refusesToEncode(GeotimeSeriesById)({ type: "integratedSeries", geotimeSeriesId: seriesIdText }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       const isById = S.is(GeotimeSeriesById);
       deepStrictEqual([isById(byId), isById(seriesIdText), isById(integrated), isById(resolved)], [true, false, false, false]);
@@ -268,7 +268,7 @@ describe("IntegratedGeotimeSeries", () => {
           sourceRid: "",
         }),
         refusesToEncode(IntegratedGeotimeSeries)(integratedWire),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -296,7 +296,7 @@ describe("GeotimeSeriesReference", () => {
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.all(
         A.map([byIdWire, integratedWire, resolvedWire], (wire) => S.decodeEffect(GeotimeSeriesReference)(wire))
-      );
+      , { concurrency: 1 });
       deepStrictEqual(
         A.map(decoded, (reference) => reference.type),
         ["series", "integratedSeries", "geotimeSeriesValue"]
@@ -305,7 +305,7 @@ describe("GeotimeSeriesReference", () => {
         { type: "series", geotimeSeriesId: seriesIdText },
         { type: "integratedSeries", geotimeSeriesId: seriesIdText, sourceRid: integrationText },
       ]);
-      const encoded = yield* Effect.all(A.map(decoded, (reference) => S.encodeEffect(GeotimeSeriesReference)(reference)));
+      const encoded = yield* Effect.all(A.map(decoded, (reference) => S.encodeEffect(GeotimeSeriesReference)(reference)), { concurrency: 1 });
       deepStrictEqual<unknown>(encoded, [byIdWire, integratedWire, resolvedWire]);
     })
   );
@@ -387,7 +387,7 @@ describe("GeotimeSeriesReference", () => {
         refusesToEncode(GeotimeSeriesReference)(byIdWire),
         refusesToEncode(GeotimeSeriesReference)({ type: "series", geotimeSeriesId: "" }),
         refusesToEncode(GeotimeSeriesReference)({ type: "seriesReference", geotimeSeriesId: seriesIdText }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -400,7 +400,7 @@ describe("GeotimeSeriesReference", () => {
       const verdicts = yield* Effect.all([
         rejects(GeotimeSeriesReference)({ type: "geotimeSeriesValue", position: [102.0, 0.5], timestamp: "Jan 4 2021" }),
         rejects(GeotimeSeriesReference)({ type: "geotimeSeriesValue", position: [102.0, 0.5], timestamp: "2021-01-04" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -434,7 +434,7 @@ describe("a geotimeSeriesReference property", () => {
           deepStrictEqual<unknown>(encoded, wire);
           return isReference(projected) && referenceEquivalence(projected, direct);
         })
-      );
+      , { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true, true, true]);
     })
   );
@@ -444,7 +444,7 @@ describe("a geotimeSeriesReference property", () => {
     Effect.fnUntraced(function* () {
       const decoded = yield* Effect.all(
         A.map([byIdWire, integratedWire, resolvedWire], (wire) => S.decodeEffect(codec)(wire))
-      );
+      , { concurrency: 1 });
       const references = A.filter(decoded, isReference);
       strictEqual(A.length(references), 3);
       deepStrictEqual(
@@ -473,7 +473,7 @@ describe("a geotimeSeriesReference property", () => {
           const decoded = yield* S.decodeUnknownEffect(codec)(encoded);
           return S.toEquivalence(codec)(decoded, sample);
         })
-      );
+      , { concurrency: 1 });
       assertTrue(A.every(returned, identity));
     })
   );
@@ -489,7 +489,7 @@ describe("a geotimeSeriesReference property", () => {
         rejects(codec)({ geotimeSeriesId: seriesIdText }),
         rejects(codec)({ type: "geotimeSeriesValue", position: [102.0, 0.5] }),
         rejects(codec)({ type: "series", geotimeSeriesId: seriesIdText }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -519,7 +519,7 @@ describe("a geotimeSeriesReference property", () => {
       );
       const encoded = yield* Effect.all(
         A.map([absent, present, presentIntegrated], (row) => S.encodeUnknownEffect(Row)(row))
-      );
+      , { concurrency: 1 });
       deepStrictEqual<unknown>(encoded, [{}, { employeeLocation: byIdWire }, { employeeLocation: integratedWire }]);
       const refused = yield* rejects(Row)({ employeeLocation: "" });
       assertTrue(refused);

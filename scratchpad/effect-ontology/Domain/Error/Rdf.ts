@@ -62,7 +62,9 @@ export class RdfError extends S.TaggedError<RdfError, { readonly brand: unique s
  * @category errors
  * @since 0.0.0
  */
-export class SerializationFailed extends S.TaggedError<SerializationFailed, { readonly brand: unique symbol }>($I`SerializationFailed`)(
+export class SerializationFailed extends S.TaggedError<SerializationFailed, { readonly brand: unique symbol }>(
+  $I`SerializationFailed`
+)(
   "SerializationFailed",
   {
     message: ErrorMessage.annotateKey({

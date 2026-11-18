@@ -202,7 +202,7 @@ describe("identifiers and literal domains", () => {
         rejects(TimeSeriesAggregationMethod)("MEDIAN"),
         rejects(WindowEdge)("MIDDLE"),
         rejects(StreamingOutputFormat)("CSV"),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -377,7 +377,7 @@ describe("TimeRange", () => {
         rejects(TimeRange)({ type: "relative", startTime: { when: "BEFORE", unit: "DAYS" } }),
         rejects(RelativeTime)({ when: "BEFORE", value: Number.POSITIVE_INFINITY, unit: "DAYS" }),
         rejects(RelativeTime)({ when: "BEFORE", value: "7", unit: "DAYS" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -454,7 +454,7 @@ describe("TimeSeriesPoint", () => {
         rejects(TimeSeriesPoint)({ time: "2021-01-04T05:00:00.000Z" }),
         rejects(TimeSeriesPoint)({ value: 1 }),
         rejects(StreamPointsResponse)({}),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -652,7 +652,7 @@ describe("TimeSeriesAggregation", () => {
         rejects(TimeSeriesAggregationStrategy)({ type: "exponential" }),
         rejects(TimeSeriesAggregation)({ method: "sum", strategy: { type: "cumulative" } }),
         rejects(TimeSeriesAggregation)({ method: "SUM" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -748,7 +748,7 @@ describe("stream requests", () => {
         rejects(StreamPointsRequest)({ aggregate: { method: "MEAN" } }),
         rejects(StreamPointsRequest)({ range: null }),
         rejects(StreamValuesRequest)({ range: "last week" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -855,12 +855,12 @@ describe("TimeSeriesReference", () => {
         { seriesId: "sensor-123", syncRid },
         { templateRid: `ri.time-series-catalog.main.template.${uuid}`, templateVersion: "1" },
       ];
-      const decoded = yield* Effect.forEach(wires, (wire) => decodeReference(wire));
+      const decoded = yield* Effect.forEach(wires, (wire) => decodeReference(wire), { concurrency: 1 });
       deepStrictEqual(
         A.map(decoded, (reference) => reference.type),
         ["series", "qualifiedSeries", "template"]
       );
-      const encoded = yield* Effect.forEach(decoded, (reference) => encodeReference(reference));
+      const encoded = yield* Effect.forEach(decoded, (reference) => encodeReference(reference), { concurrency: 1 });
       deepStrictEqual(encoded, wires);
     })
   );
@@ -926,7 +926,7 @@ describe("TimeSeriesReference", () => {
         rejects(TimeSeriesReference)(null),
         rejects(SeriesReference)({ seriesId: "wellPressureSeriesId", syncRid }),
         rejects(QualifiedSeriesReference)("wellPressureSeriesId"),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1019,7 +1019,7 @@ describe("GeotimeSeriesValue", () => {
         rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: { lon: 102.0, lat: 0.5 } }),
         rejects(GeotimeSeriesValue)({ timestamp, position: [102.0, 0.5] }),
         rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp: "now", position: [102.0, 0.5] }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );

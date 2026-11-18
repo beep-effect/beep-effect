@@ -12,9 +12,9 @@
  * @since 0.0.0
  */
 import * as Str from "@beep/utils/Str";
-import * as HashSet from "effect/HashSet";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 
 /**
  * Normalize a string for comparison

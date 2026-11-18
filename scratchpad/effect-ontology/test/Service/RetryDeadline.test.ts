@@ -13,7 +13,10 @@ import { RetryPolicy, retryEffect } from "../../Service/Retry.ts";
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 const decodeRetryPolicyResult = S.decodeResult(RetryPolicy);
 
-class TransientFailure extends S.TaggedError<TransientFailure, { readonly brand: unique symbol }>()("TransientFailure", {}) {}
+class TransientFailure extends S.TaggedError<TransientFailure, { readonly brand: unique symbol }>()(
+  "TransientFailure",
+  {}
+) {}
 
 const retryPolicy = RetryPolicy.make({
   attemptTimeout: Duration.seconds(1),

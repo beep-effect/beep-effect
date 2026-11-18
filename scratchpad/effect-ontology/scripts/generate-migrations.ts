@@ -6,27 +6,31 @@
  */
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
+import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as Path from "effect/Path";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+
 const ExtensionPrelude = `-- Drizzle Kit emits extension-dependent vector columns but cannot declare their
 -- prerequisite extensions. This generator-owned prelude must precede every CREATE TABLE.
 CREATE EXTENSION IF NOT EXISTS vector;--> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS pg_trgm;--> statement-breakpoint
 `;
 
-class MigrationGenerationError extends S.TaggedError<MigrationGenerationError, { readonly brand: unique symbol }>()("MigrationGenerationError", {
-  message: S.NonEmptyString,
-  exitCode: S.Int,
-}) {}
+class MigrationGenerationError extends S.TaggedError<MigrationGenerationError, { readonly brand: unique symbol }>()(
+  "MigrationGenerationError",
+  {
+    message: S.NonEmptyString,
+    exitCode: S.Int,
+  }
+) {}
 
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;

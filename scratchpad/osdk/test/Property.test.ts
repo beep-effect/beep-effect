@@ -332,7 +332,7 @@ describe("PropertyType", () => {
             PropertyType.isAnyOf([kind])(decoded)
           );
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(results), 22);
       assertTrue(A.every(results, identity));
     })
@@ -400,7 +400,7 @@ describe("PropertyType", () => {
     Effect.fnUntraced(function* () {
       const foreignTags = A.filter(DataTypeKind.literals, (tag) => !S.is(PropertyTypeKind)(tag));
       strictEqual(A.length(foreignTags), 22);
-      const foreign = yield* Effect.all(A.map(foreignTags, (tag) => rejects(PropertyType)({ type: tag })));
+      const foreign = yield* Effect.all(A.map(foreignTags, (tag) => rejects(PropertyType)({ type: tag })), { concurrency: 1 });
       const renamed = yield* Effect.all([
         rejects(PropertyType)({ type: "datetime" }),
         rejects(PropertyType)({ type: "numericTimeseries" }),
@@ -410,7 +410,7 @@ describe("PropertyType", () => {
         rejects(PropertyType)("string"),
         rejects(PropertyType)(null),
         rejects(PropertyType)([{ type: "string" }]),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(foreign, identity));
       assertTrue(A.every(renamed, identity));
     })
@@ -667,7 +667,7 @@ describe("ArrayType and StructType", () => {
           mainValue: { mainValueType: { type: "string" } },
         }),
         rejects(PropertyType)({ type: "struct", structFieldTypes: { bio: { type: "string" } } }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -764,7 +764,7 @@ describe("PropertyStatus", () => {
         rejects(PropertyStatus)({ type: "deprecated", message: "m", deadline: "2027-01-01", replacedBy: "" }),
         rejects(PropertyStatus)({ type: "deprecated", message: "m", deadline: 20270101 }),
         rejects(PropertyStatus)({ type: "deprecated", message: "m", deadline: null }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -776,12 +776,12 @@ describe("PropertyStatus", () => {
       const deadlines = ["", " ", "2027-01-01", "2027-01-01T00:00:00Z", "next quarter"];
       const decoded = yield* Effect.forEach(deadlines, (deadline) =>
         S.decodeEffect(DeprecatedProperty)({ type: "deprecated", message: "m", deadline })
-      );
+      , { concurrency: 1 });
       deepStrictEqual(
         A.map(decoded, (status) => status.deadline),
         deadlines
       );
-      const encoded = yield* Effect.forEach(decoded, (status) => S.encodeEffect(PropertyStatus)(status));
+      const encoded = yield* Effect.forEach(decoded, (status) => S.encodeEffect(PropertyStatus)(status), { concurrency: 1 });
       deepStrictEqual(
         encoded,
         A.map(deadlines, (deadline) => ({ type: "deprecated", message: "m", deadline }))
@@ -971,7 +971,7 @@ describe("PropertyDefinition", () => {
           dataConstraints: { nullability: "notNullable" },
         }),
         rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "rid", displayName: null }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1026,7 +1026,7 @@ describe("PropertyDefinition", () => {
         rejects(SharedPropertyType)({ rid: "rid", apiName: "tags", dataType: { type: "string" }, typeClasses: [] }),
         rejects(SharedPropertyType)({ apiName: "tags", displayName: "Tags", dataType: { type: "string" } }),
         rejects(SharedPropertyType)({ rid: "rid", apiName: "", displayName: "Tags", dataType: { type: "string" } }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       const minimal = SharedPropertyType.make({
         rid: SharedPropertyTypeRid.make("rid"),
@@ -1059,9 +1059,9 @@ describe("PropertyLoadLevel", () => {
   it.effect(
     "decodes each of the four empty wire records to its literal and encodes the literal back to the record",
     Effect.fnUntraced(function* () {
-      const decoded = yield* Effect.all(A.map(levels, (level) => S.decodeEffect(PropertyLoadLevel)({ type: level })));
+      const decoded = yield* Effect.all(A.map(levels, (level) => S.decodeEffect(PropertyLoadLevel)({ type: level })), { concurrency: 1 });
       deepStrictEqual(decoded, levels);
-      const encoded = yield* Effect.all(A.map(levels, (level) => S.encodeEffect(PropertyLoadLevel)(level)));
+      const encoded = yield* Effect.all(A.map(levels, (level) => S.encodeEffect(PropertyLoadLevel)(level)), { concurrency: 1 });
       deepStrictEqual(encoded, [
         { type: "noLoadLevel" },
         { type: "applyReducers" },
@@ -1094,7 +1094,7 @@ describe("PropertyLoadLevel", () => {
         rejects(PropertyLoadLevel)(null),
         refusesToEncode(PropertyLoadLevel)("APPLY_REDUCERS"),
         refusesToEncode(PropertyLoadLevel)({ type: "applyReducers" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1261,7 +1261,7 @@ describe("PropertySelector", () => {
         rejects(PropertySelector)({ type: "structField", propertyApiName: "address", structFieldApiName: "" }),
         rejects(PropertySelector)({ type: "title" }),
         rejects(PropertySelector)("fullName"),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1408,7 +1408,7 @@ describe("valueCodec", () => {
           deepStrictEqual(again.encoded, canonical);
           return type.type === kind && S.toEquivalence(valueCodec(type))(again.decoded, decoded);
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(results), 22);
       assertTrue(A.every(results, identity));
     })
@@ -1424,7 +1424,7 @@ describe("valueCodec", () => {
           const values = yield* Arbitrary.sampleEffect(Arbitrary.schema(codec), { count: 25, seed: 7 });
           return A.length(values) === 25 && A.every(values, S.is(codec));
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(results), 22);
       assertTrue(A.every(results, identity));
     })
@@ -1446,10 +1446,10 @@ describe("valueCodec", () => {
               const decoded = yield* S.decodeUnknownEffect(codec)(encoded);
               return equivalence(decoded, value);
             })
-          );
+          , { concurrency: 1 });
           return A.every(verdicts, identity);
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(results), 22);
       assertTrue(A.every(results, identity));
     })
@@ -1511,7 +1511,7 @@ describe("valueCodec", () => {
         rejects(codec)([0.1, 0.2, Number.NaN]),
         refusesToEncode(codec)([0.1, 0.2]),
         refusesToEncode(codec)([0.1, 0.2, 0.3, 0.4]),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       const single = valueCodec(VectorType.make({ dimension: 1 }));
       const one = yield* S.decodeEffect(single)([7]);
@@ -1600,7 +1600,7 @@ describe("valueCodec", () => {
         rejects(codec)([]),
         rejects(codec)("struct"),
         rejects(codec)(null),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1634,7 +1634,7 @@ describe("valueCodec", () => {
         rejects(codec)(null),
         rejects(codec)({ 0: [] }),
         rejects(valueCodec(ArrayType.make({ elementType: StringType.make({}) })))(["alpha", null]),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1700,7 +1700,7 @@ describe("valueCodec", () => {
         // The check reaches nested structs too.
         rejects(PropertyType)({ type: "array", subType: duplicateWire, reducers: [] }),
         refusesToEncode(StructType)({ type: "struct", fields: [first, second], mainValue: O.none() }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       deepStrictEqual(
         [
@@ -1737,7 +1737,7 @@ describe("valueCodec", () => {
         rejects(codec)(42),
         rejects(codec)(true),
         rejects(codec)([]),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1758,7 +1758,7 @@ describe("valueCodec", () => {
         rejects(codec)({ undeclared: "value" }),
         refusesToEncode(codec)("not a struct"),
         refusesToEncode(codec)([]),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       deepStrictEqual(
         [S.is(codec)({}), S.is(codec)("text"), S.is(codec)(7), S.is(codec)([]), S.is(codec)(null)],
@@ -1783,7 +1783,7 @@ describe("valueCodec", () => {
           geotimeSeriesId: "employee-50030",
           geotimeSeriesIntegrationRid: `ri.geotime-catalog.main.integration.${uuid}`,
         }),
-      ]);
+      ], { concurrency: 1 });
       assertFalse(A.some(verdicts, identity));
     })
   );
@@ -1826,7 +1826,7 @@ describe("valueCodec", () => {
         rejects(codec)({ geotimeSeriesId: "", geotimeSeriesIntegrationRid: integration }),
         rejects(codec)({ type: "geotimeSeriesValue", position: [102.0, 0.5] }),
         rejects(codec)(["employee-50030"]),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(refusals, identity));
     })
   );
@@ -1861,14 +1861,14 @@ describe("operandCodec", () => {
       Effect.fnUntraced(function* (generated) {
         const wire = yield* S.encodeUnknownEffect(value)(generated);
         if (!S.is(ScalarValue)(wire)) {
-          const refusals = yield* Effect.all([refusesToEncode(operand)(generated), rejects(operand)(wire)]);
+          const refusals = yield* Effect.all([refusesToEncode(operand)(generated), rejects(operand)(wire)], { concurrency: 1 });
           return { scalar: false, lawful: A.every(refusals, identity) };
         }
         const written = yield* S.encodeUnknownEffect(operand)(generated);
         const read = yield* S.decodeEffect(operand)(wire);
         return { scalar: true, lawful: written === wire && S.is(value)(read) && same(read, generated) };
       })
-    );
+    , { concurrency: 1 });
     return {
       kind,
       lawful: A.length(values) === 25 && A.every(verdicts, (verdict) => verdict.lawful),
@@ -1879,7 +1879,7 @@ describe("operandCodec", () => {
   it.effect(
     "round-trips every value that travels as a scalar and refuses every other, for each case of the union",
     Effect.fnUntraced(function* () {
-      const shares = yield* Effect.forEach(PropertyTypeKind.literals, scalarShare);
+      const shares = yield* Effect.forEach(PropertyTypeKind.literals, scalarShare, { concurrency: 1 });
       strictEqual(A.length(shares), 22);
       deepStrictEqual(
         A.filter(shares, (share) => !share.lawful),
@@ -1951,7 +1951,7 @@ describe("operandCodec", () => {
         through(BooleanType.make({}), "true"),
         through(LongType.make({}), 7),
         through(DecimalType.make({}), 2.5),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(
         A.map(legacy, ({ encoded }) => encoded),
         [238940, true, "7", "2.5"]
@@ -1987,7 +1987,7 @@ describe("operandCodec", () => {
         rejects(operandCodec(dates))(["2021-01-04"]),
         refusesToEncode(operandCodec(dates))([LocalDate.make({ year: 2021, month: 1, day: 4 })]),
         refusesToEncode(operandCodec(matrix))([[BigInt(7)]]),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true, true]);
     })
   );
@@ -2010,12 +2010,12 @@ describe("operandCodec", () => {
         rejects(operandCodec(AttachmentType.make({})))(
           "ri.blobster.main.attachment.bb32154e-e043-4b00-9461-93136ca96b6f"
         ),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       const notScalars: ReadonlyArray<unknown> = [null, undefined, {}, [], ["x"], BigInt(7), Number.NaN];
       const refused = yield* Effect.forEach(PropertyTypeKind.literals, (kind) =>
-        Effect.forEach(notScalars, rejects(operandCodec(valuePerCase[kind][0])))
-      );
+        Effect.forEach(notScalars, rejects(operandCodec(valuePerCase[kind][0])), { concurrency: 1 })
+      , { concurrency: 1 });
       assertTrue(A.every(A.flatten(refused), identity));
       // A rich value is not a wire operand: it has to be written by this codec, not handed to it as its wire form.
       const rich = yield* Effect.all([
@@ -2023,7 +2023,7 @@ describe("operandCodec", () => {
         rejects(operandCodec(DateType.make({})))(LocalDate.make({ year: 2021, month: 1, day: 4 })),
         rejects(operandCodec(TimestampType.make({})))(DateTime.makeUnsafe(0)),
         rejects(operandCodec(DecimalType.make({})))(BigDecimal.fromStringUnsafe("12.50")),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(rich, [true, true, true, true]);
     })
   );
@@ -2057,7 +2057,7 @@ describe("fieldCodec", () => {
         rejects(Row)({ balance: "" }),
         rejects(Row)({ balance: "12.5" }),
         rejects(Row)({ balance: "9223372036854775808" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -2274,7 +2274,7 @@ describe("parity with the OSDK test stubs", () => {
             struct: () => [type.type],
           });
         })
-      );
+      , { concurrency: 1 });
       // Between them the two stubs exercise every property type except `marking`.
       const covered: ReadonlyArray<string> = A.dedupe(A.flatten(tags));
       const all: ReadonlyArray<string> = PropertyTypeKind.literals;
@@ -2291,7 +2291,7 @@ describe("parity with the OSDK test stubs", () => {
       const verdicts = yield* Effect.forEach(
         R.toEntries(allPropertyValuesStub),
         decodesAsStubProperty(allPropertyTypesStub)
-      );
+      , { concurrency: 1 });
       const refused = A.map(
         A.filter(verdicts, ([, decoded]) => !decoded),
         ([property]) => property
@@ -2324,7 +2324,7 @@ describe("parity with the OSDK test stubs", () => {
   it.effect(
     "decodes the stub values of the employee object and encodes them back unchanged",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.forEach(R.toEntries(employeeValuesStub), decodesAsStubProperty(employeeStub));
+      const verdicts = yield* Effect.forEach(R.toEntries(employeeValuesStub), decodesAsStubProperty(employeeStub), { concurrency: 1 });
       deepStrictEqual(
         A.map(
           A.filter(verdicts, ([, decoded]) => !decoded),
@@ -2340,7 +2340,7 @@ describe("parity with the OSDK test stubs", () => {
           const result = yield* throughCodec(type, value);
           return Tuple.make(property, result.encoded);
         })
-      );
+      , { concurrency: 1 });
       deepStrictEqual(R.fromEntries(encoded), employeeValuesStub);
     })
   );
@@ -2369,7 +2369,7 @@ describe("decodeAddressTo", () => {
       deepStrictEqual(byField, { property: bySalary, width: 10 });
       deepStrictEqual(byRecord, byField);
       deepStrictEqual(byTitle, { property: TitleProperty.make({}), width: 10 });
-      const wire = yield* Effect.forEach([byField, byRecord, byTitle], (value) => S.encodeEffect(Bucketed)(value));
+      const wire = yield* Effect.forEach([byField, byRecord, byTitle], (value) => S.encodeEffect(Bucketed)(value), { concurrency: 1 });
       deepStrictEqual<unknown>(wire, [
         { field: "salary", fixedWidth: 10 },
         { field: "salary", fixedWidth: 10 },
@@ -2391,7 +2391,7 @@ describe("decodeAddressTo", () => {
           { field: "", fixedWidth: 10 },
         ],
         rejects(Bucketed)
-      );
+      , { concurrency: 1 });
       deepStrictEqual(verdicts, A.map(verdicts, () => true));
       assertFalse(S.is(Bucketed)({ property: bySalary, width: 0 }));
     })

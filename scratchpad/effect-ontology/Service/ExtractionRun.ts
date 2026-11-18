@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 
 /**
@@ -24,12 +25,12 @@ import { Sha256Hex } from "@beep/schema";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as Result from "effect/Result";
 import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { ExtractionRunId, IdempotencyKey } from "../Domain/Identity.ts";
@@ -118,7 +119,7 @@ const decodeExtractionRun = S.decodeUnknownEffect(S.fromJsonString(ExtractionRun
 const RUNS_PREFIX = "runs";
 const KEY_INDEX_FILE = "runs/key-index.json";
 
-const runKey = (runId: ExtractionRunId, ...parts: Array<string>): string => [RUNS_PREFIX, runId, ...parts].join("/");
+const runKey = (runId: ExtractionRunId, ...parts: Array<string>): string => A.join([RUNS_PREFIX, runId, ...parts], "/");
 
 const metadataKey = (runId: ExtractionRunId): string => runKey(runId, "metadata.json");
 
@@ -146,7 +147,9 @@ const outputKey = (runId: ExtractionRunId, filename: string): string => runKey(r
  * @category errors
  * @since 0.0.0
  */
-export class ExtractionRunError extends S.TaggedError<ExtractionRunError, { readonly brand: unique symbol }>($I`ExtractionRunError`)(
+export class ExtractionRunError extends S.TaggedError<ExtractionRunError, { readonly brand: unique symbol }>(
+  $I`ExtractionRunError`
+)(
   "ExtractionRunError",
   {
     message: ErrorMessage.annotateKey({
@@ -195,11 +198,7 @@ export interface ExtractionRunServiceMethods {
   /**
    * Save a text chunk
    */
-  saveChunk(
-    runId: ExtractionRunId,
-    chunkIndex: number,
-    chunkText: string
-  ): Effect.Effect<ChunkId, ExtractionRunError>;
+  saveChunk(runId: ExtractionRunId, chunkIndex: number, chunkText: string): Effect.Effect<ChunkId, ExtractionRunError>;
 
   /**
    * Save an output artifact
@@ -400,7 +399,10 @@ const makeExtractionRunService = Effect.gen(function* () {
       events: [AuditEvent.make({ timestamp: now, type: "started" })],
       errors: [],
       idempotencyKey: O.fromNullishOr(options?.idempotencyKey),
-      ontologyVersion: O.map(O.fromNullishOr(options?.ontologyVersion), flow(S.decodeUnknownResult(OntologyVersion), Result.getOrThrow)),
+      ontologyVersion: O.map(
+        O.fromNullishOr(options?.ontologyVersion),
+        flow(S.decodeUnknownResult(OntologyVersion), Result.getOrThrow)
+      ),
     });
     yield* storage.set(metadataKey(runId), yield* ExtractionRun.encodeJsonStringEffect(run));
     if (P.isNotUndefined(options?.idempotencyKey)) yield* updateKeyIndex(options.idempotencyKey, runId);
@@ -500,7 +502,7 @@ const makeExtractionRunService = Effect.gen(function* () {
     Effect.mapError(mapRunError("Failed to list extraction runs")),
     Effect.flatMap((keys) =>
       Effect.forEach(
-        keys.flatMap((key): Array<ExtractionRunId> => {
+        A.flatMap(keys, (key): Array<ExtractionRunId> => {
           const match = /^runs\/([^/]+)\/metadata\.json$/.exec(key);
           const runId = match?.[1];
           return P.isUndefined(runId) || !S.is(DocumentId)(runId) ? [] : [runId];

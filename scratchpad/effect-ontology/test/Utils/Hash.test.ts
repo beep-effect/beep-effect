@@ -1,10 +1,10 @@
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, it } from "@effect/vitest";
 import * as Cause from "effect/Cause";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
-import * as Digest from "effect/crypto/Digest";
 import * as S from "effect/Schema";
 import {
   hashEmbeddingKey,

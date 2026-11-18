@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import * as Digest from "effect/crypto/Digest";
 import { flow } from "effect/Function";
 /**
@@ -20,19 +21,19 @@ import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as P from "effect/Predicate";
 import * as Random from "effect/Random";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { ErrorMessage } from "../Domain/Error/Base.ts";
 import { ContentHash } from "../Domain/Identity.ts";
@@ -106,7 +107,8 @@ interface AssertionOverride {
  * @category models
  * @since 0.0.0
  */
-export class CreateAssertionInput extends S.Opaque<CreateAssertionInput, { readonly brand: unique symbol }>()(S.Struct({
+export class CreateAssertionInput extends S.Opaque<CreateAssertionInput, { readonly brand: unique symbol }>()(
+  S.Struct({
     ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope shared by every source claim." }),
     claimIds: S.NonEmptyArray(S.NonEmptyString).annotateKey({
       description: "One or more claim identifiers from which the assertion is derived.",
@@ -121,9 +123,12 @@ export class CreateAssertionInput extends S.Opaque<CreateAssertionInput, { reado
     confidence: Confidence.pipe(S.optionalKey).annotateKey({
       description: "Optional confidence override in the unit interval.",
     }),
-  }).pipe($I.annoteSchema("CreateAssertionInput", {
-    description: "Validated source claims, decision, curator, overrides, and confidence for assertion creation.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("CreateAssertionInput", {
+      description: "Validated source claims, decision, curator, overrides, and confidence for assertion creation.",
+    })
+  )
+) {}
 
 /**
  * Filter for querying assertions
@@ -144,16 +149,20 @@ export class CreateAssertionInput extends S.Opaque<CreateAssertionInput, { reado
  * @category configuration
  * @since 0.0.0
  */
-export class AssertionFilter extends S.Opaque<AssertionFilter, { readonly brand: unique symbol }>()(S.Struct({
+export class AssertionFilter extends S.Opaque<AssertionFilter, { readonly brand: unique symbol }>()(
+  S.Struct({
     subjectIri: S.String.pipe(S.optionalKey),
     predicateIri: S.String.pipe(S.optionalKey),
     status: AssertionStatus.pipe(S.optionalKey),
     curatedBy: S.String.pipe(S.optionalKey),
     limit: S.Natural.pipe(S.optionalKey),
     offset: S.Natural.pipe(S.optionalKey),
-  }).pipe($I.annoteSchema("AssertionFilter", {
-    description: "Optional subject, predicate, status, curator, limit, and offset for assertion queries.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("AssertionFilter", {
+      description: "Optional subject, predicate, status, curator, limit, and offset for assertion queries.",
+    })
+  )
+) {}
 
 /**
  * Assertion with full provenance information
@@ -190,12 +199,16 @@ export class AssertionFilter extends S.Opaque<AssertionFilter, { readonly brand:
  * @category models
  * @since 0.0.0
  */
-export class AssertionWithProvenance extends S.Opaque<AssertionWithProvenance, { readonly brand: unique symbol }>()(S.Struct({
+export class AssertionWithProvenance extends S.Opaque<AssertionWithProvenance, { readonly brand: unique symbol }>()(
+  S.Struct({
     assertion: S.suspend((): typeof AssertionRow => AssertionRow),
     sourceClaims: S.Array(Claims).pipe(S.mutable),
-  }).pipe($I.annoteSchema("AssertionWithProvenance", {
-    description: "Curated assertion paired with the complete set of source claim rows.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("AssertionWithProvenance", {
+      description: "Curated assertion paired with the complete set of source claim rows.",
+    })
+  )
+) {}
 
 /**
  * Internal assertion row type (matches what we store)
@@ -229,7 +242,8 @@ export class AssertionWithProvenance extends S.Opaque<AssertionWithProvenance, {
  * @category models
  * @since 0.0.0
  */
-export class AssertionRow extends S.Opaque<AssertionRow, { readonly brand: unique symbol }>()(S.Struct({
+export class AssertionRow extends S.Opaque<AssertionRow, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: S.NonEmptyString,
     ontologyId: S.NonEmptyString,
     subjectIri: S.NonEmptyString,
@@ -245,9 +259,12 @@ export class AssertionRow extends S.Opaque<AssertionRow, { readonly brand: uniqu
     validTo: S.NullOr(S.Date),
     rejectedAt: S.NullOr(S.Date),
     rejectionReason: S.NullOr(S.NonEmptyString),
-  }).pipe($I.annoteSchema("AssertionRow", {
-    description: "Stored assertion triple, lifecycle status, provenance, curator, confidence, and validity window.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("AssertionRow", {
+      description: "Stored assertion triple, lifecycle status, provenance, curator, confidence, and validity window.",
+    })
+  )
+) {}
 
 /**
  *  Typed failure for assertion lifecycle operations.
@@ -267,7 +284,9 @@ export class AssertionRow extends S.Opaque<AssertionRow, { readonly brand: uniqu
  * @category errors
  * @since 0.0.0
  */
-export class AssertionError extends S.TaggedError<AssertionError, { readonly brand: unique symbol }>($I`AssertionError`)(
+export class AssertionError extends S.TaggedError<AssertionError, { readonly brand: unique symbol }>(
+  $I`AssertionError`
+)(
   "AssertionError",
   {
     operation: S.Literals(["create", "reject"]).annotateKey({
@@ -388,7 +407,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
       const objectValue = input.override?.object ?? baseClaim.objectValue;
       const objectType = input.override?.objectType ?? (baseClaim.objectType === "iri" ? "iri" : "literal");
       const meanConfidence =
-        sourceClaims.reduce((sum, c) => sum + parseFloat(c.confidenceScore ?? "0.5"), 0) / sourceClaims.length;
+        A.reduce(sourceClaims, 0, (sum, c) => sum + parseFloat(c.confidenceScore ?? "0.5")) / sourceClaims.length;
       const avgConfidence =
         input.confidence ??
         (yield* S.decodeEffect(Confidence)(meanConfidence).pipe(
@@ -399,9 +418,8 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
             })
           )
         ));
-      const randomSuffix = Math.abs(yield* Random.nextInt)
-        .toString(36)
-        .slice(0, 6);
+      const randomSuffix = Str.slice(0, 6)(Math.abs(yield* Random.nextInt)
+        .toString(36));
       const uniqueSuffix = `${(yield* Clock.currentTimeMillis).toString(36)}${randomSuffix}`;
       const hash = yield* sha256(uniqueSuffix).pipe(
         Effect.mapError(() =>
@@ -459,16 +477,16 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
       const assertions = yield* Ref.get(assertionsRef);
       let results = A.fromIterable(HashMap.values(assertions));
       if (P.isNotUndefined(filter.subjectIri)) {
-        results = results.filter((a) => a.subjectIri === filter.subjectIri);
+        results = A.filter(results, (a) => a.subjectIri === filter.subjectIri);
       }
       if (P.isNotUndefined(filter.predicateIri)) {
-        results = results.filter((a) => a.predicateIri === filter.predicateIri);
+        results = A.filter(results, (a) => a.predicateIri === filter.predicateIri);
       }
       if (P.isNotUndefined(filter.status)) {
-        results = results.filter((a) => a.status === filter.status);
+        results = A.filter(results, (a) => a.status === filter.status);
       }
       if (P.isNotUndefined(filter.curatedBy)) {
-        results = results.filter((a) => a.curatedBy === filter.curatedBy);
+        results = A.filter(results, (a) => a.curatedBy === filter.curatedBy);
       }
       results = A.sort(
         results,
@@ -523,7 +541,10 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
         rejectedAt: DateTime.toDate(now),
         rejectionReason: reason,
       });
-      yield* Ref.update(assertionsRef, HashMap.set(Result.getOrThrow(S.decodeResult(AssertionId)(assertion.value.id)), updated));
+      yield* Ref.update(
+        assertionsRef,
+        HashMap.set(Result.getOrThrow(S.decodeResult(AssertionId)(assertion.value.id)), updated)
+      );
     });
 
     // -------------------------------------------------------------------------

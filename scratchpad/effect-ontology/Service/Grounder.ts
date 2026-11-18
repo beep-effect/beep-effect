@@ -1,3 +1,4 @@
+
 import * as Digest from "effect/crypto/Digest";
 /**
  * Service: Grounder
@@ -18,23 +19,23 @@ import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
 import { Str as BeepStr } from "@beep/utils";
+import * as A from "effect/Array";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Bool from "effect/Boolean";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
-import * as Stream from "effect/Stream";
-import * as A from "effect/Array";
-import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Stream from "effect/Stream";
 import { Entity, GroundingDecision, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithRetry } from "./LlmWithRetry.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Grounder");
 const noConfidence: () => O.Option<Confidence> = O.none;
@@ -147,12 +148,16 @@ const BatchEntityVerification = S.Struct({
  * @category models
  * @since 0.0.0
  */
-export class EntityVerificationInput extends S.Opaque<EntityVerificationInput, { readonly brand: unique symbol }>()(S.Struct({
+export class EntityVerificationInput extends S.Opaque<EntityVerificationInput, { readonly brand: unique symbol }>()(
+  S.Struct({
     context: S.NonEmptyString,
     entity: Entity,
-  }).pipe($I.annoteSchema("EntityVerificationInput", {
-    description: "Source context and schema-owned entity supplied to grounding verification.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("EntityVerificationInput", {
+      description: "Source context and schema-owned entity supplied to grounding verification.",
+    })
+  )
+) {}
 
 /**
  * Entity grounding result
@@ -181,7 +186,9 @@ export class EntityVerificationInput extends S.Opaque<EntityVerificationInput, {
  * @category models
  * @since 0.0.0
  */
-export class EntityGrounderResult extends S.Class<EntityGrounderResult, { readonly brand: unique symbol }>($I`EntityGrounderResult`)(
+export class EntityGrounderResult extends S.Class<EntityGrounderResult, { readonly brand: unique symbol }>(
+  $I`EntityGrounderResult`
+)(
   {
     decision: GroundingDecision,
     typeMatch: S.Boolean,
@@ -271,13 +278,20 @@ const relationEntityContextTypesDefault = A.empty();
  * @category models
  * @since 0.0.0
  */
-export class RelationEntityContext extends S.Opaque<RelationEntityContext, { readonly brand: unique symbol }>()(S.Struct({
+export class RelationEntityContext extends S.Opaque<RelationEntityContext, { readonly brand: unique symbol }>()(
+  S.Struct({
     entityId: EntityId,
     mention: S.NonEmptyString,
-    types: S.Array(IRI).pipe(S.withConstructorDefault(Effect.succeed(relationEntityContextTypesDefault)), S.withDecodingDefaultType(Effect.succeed(relationEntityContextTypesDefault))),
-  }).pipe($I.annoteSchema("RelationEntityContext", {
-    description: "Optional display metadata for an entity occupying a relation position.",
-  }))) {}
+    types: S.Array(IRI).pipe(
+      S.withConstructorDefault(Effect.succeed(relationEntityContextTypesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(relationEntityContextTypesDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("RelationEntityContext", {
+      description: "Optional display metadata for an entity occupying a relation position.",
+    })
+  )
+) {}
 
 /**
  * Input required to verify a relation triple
@@ -304,15 +318,19 @@ export class RelationEntityContext extends S.Opaque<RelationEntityContext, { rea
  * @category models
  * @since 0.0.0
  */
-export class RelationVerificationInput extends S.Opaque<RelationVerificationInput, { readonly brand: unique symbol }>()(S.Struct({
+export class RelationVerificationInput extends S.Opaque<RelationVerificationInput, { readonly brand: unique symbol }>()(
+  S.Struct({
     context: S.NonEmptyString,
     relation: Relation,
     subject: S.OptionFromOptionalKey(RelationEntityContext).pipe(S.withConstructorDefault(Effect.succeedNone)),
     predicate: S.OptionFromOptionalKey(PropertyDefinition).pipe(S.withConstructorDefault(Effect.succeedNone)),
     object: S.OptionFromOptionalKey(RelationEntityContext).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("RelationVerificationInput", {
-    description: "Canonical relation plus optional decoded ontology and entity display metadata.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("RelationVerificationInput", {
+      description: "Canonical relation plus optional decoded ontology and entity display metadata.",
+    })
+  )
+) {}
 
 const relationObjectPrompt = (
   relation: Relation,
@@ -600,7 +618,9 @@ const GroundingBatchKind = LiteralKit(["entity", "relation"]);
  * @category errors
  * @since 0.0.0
  */
-export class GroundingProtocolError extends S.TaggedError<GroundingProtocolError, { readonly brand: unique symbol }>($I`GroundingProtocolError`)(
+export class GroundingProtocolError extends S.TaggedError<GroundingProtocolError, { readonly brand: unique symbol }>(
+  $I`GroundingProtocolError`
+)(
   "GroundingProtocolError",
   {
     kind: GroundingBatchKind,
@@ -626,9 +646,7 @@ const groundingDecision = (grounded: boolean, confidence: Confidence): Grounding
 
 const missingIndexes = <TValue>(inputs: ReadonlyArray<TValue>, results: HashMap.HashMap<number, unknown>) =>
   A.getSomes(
-    A.map(inputs, (_, index) =>
-      HashMap.has(results, index) ? O.none<number>() : O.some(S.Natural.make(index))
-    )
+    A.map(inputs, (_, index) => (HashMap.has(results, index) ? O.none<number>() : O.some(S.Natural.make(index))))
   );
 
 const validateRelationBatch = Effect.fn("Grounder.validateRelationBatch")(function* (
@@ -667,8 +685,7 @@ const validateRelationBatch = Effect.fn("Grounder.validateRelationBatch")(functi
             relation: input.relation,
           })
         ),
-    })
-  );
+    }), { concurrency: 1 });
 });
 
 const validateEntityBatch = Effect.fn("Grounder.validateEntityBatch")(function* (
@@ -708,8 +725,7 @@ const validateEntityBatch = Effect.fn("Grounder.validateEntityBatch")(function* 
             entity,
           })
         ),
-    })
-  );
+    }), { concurrency: 1 });
 });
 
 /**
@@ -849,7 +865,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                   "grounder.grounded_count",
                   A.length(A.filter(results, (result) => result.grounded))
                 ),
-              ])
+              ], { concurrency: 1 })
             ),
             Effect.withSpan("grounder-batch-verification", {
               attributes: {
@@ -990,7 +1006,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
                   "grounder.entity_grounded_count",
                   A.length(A.filter(results, (result) => result.grounded))
                 ),
-              ])
+              ], { concurrency: 1 })
             ),
             Effect.withSpan("grounder-batch-entity-verification", {
               attributes: {

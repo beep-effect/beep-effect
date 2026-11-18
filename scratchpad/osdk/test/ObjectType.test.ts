@@ -492,9 +492,9 @@ describe("LinkCardinality", () => {
         ["ONE", "one"],
         ["MANY", "many"],
       ]);
-      const decoded = yield* Effect.forEach(["ONE", "MANY"], (wire) => S.decodeUnknownEffect(LinkCardinality)(wire));
+      const decoded = yield* Effect.forEach(["ONE", "MANY"], (wire) => S.decodeUnknownEffect(LinkCardinality)(wire), { concurrency: 1 });
       deepStrictEqual(decoded, ["one", "many"]);
-      const encoded = yield* Effect.forEach(decoded, (cardinality) => S.encodeEffect(LinkCardinality)(cardinality));
+      const encoded = yield* Effect.forEach(decoded, (cardinality) => S.encodeEffect(LinkCardinality)(cardinality), { concurrency: 1 });
       deepStrictEqual(encoded, ["ONE", "MANY"]);
     })
   );
@@ -1101,7 +1101,7 @@ describe("InterfacePropertyImplementation", () => {
           const encoded = yield* S.encodeEffect(InterfaceImplementation)(decoded);
           deepStrictEqual(encoded, { ...full, [record]: {} });
         })
-      );
+      , { concurrency: 1 });
       const bare = yield* S.decodeEffect(InterfaceImplementation)({});
       deepStrictEqual(bare, InterfaceImplementation.make({}));
       const canonical = yield* S.encodeEffect(InterfaceImplementation)(bare);
@@ -1345,7 +1345,7 @@ describe("ObjectType", () => {
           Effect.map(ObjectType.primaryKeyDefinition),
           Effect.map(O.map((definition) => definition.dataType.type))
         )
-      );
+      , { concurrency: 1 });
       deepStrictEqual(A.getSomes(kinds), A.fromIterable(PrimaryKeyKind.literals));
     })
   );
@@ -1524,7 +1524,7 @@ describe("ObjectTypeDefinition", () => {
           const encoded = yield* S.encodeEffect(ObjectTypeDefinition)(decoded);
           deepStrictEqual(encoded, { ...employeeDefinitionWire, [collection]: [] });
         })
-      );
+      , { concurrency: 1 });
       yield* Effect.forEach(
         Tuple.make("implementsInterfaces2", "sharedPropertyTypeMapping"),
         Effect.fnUntraced(function* (collection) {
@@ -1532,7 +1532,7 @@ describe("ObjectTypeDefinition", () => {
           const encoded = yield* S.encodeEffect(ObjectTypeDefinition)(decoded);
           deepStrictEqual(encoded, { ...employeeDefinitionWire, [collection]: {} });
         })
-      );
+      , { concurrency: 1 });
       const office = yield* S.decodeEffect(ObjectType)(officeWire);
       const bare = yield* S.decodeEffect(ObjectTypeDefinition)({ objectType: officeWire });
       deepStrictEqual(bare, ObjectTypeDefinition.make({ objectType: office }));

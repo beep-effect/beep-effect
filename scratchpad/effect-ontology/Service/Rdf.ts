@@ -1,3 +1,4 @@
+
 /**
  * Service: RDF Services
  *
@@ -12,67 +13,49 @@
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import {
-  N3ParseTurtleRequest,
-  N3SerializeTurtleRequest,
-  N3TurtleCodec,
-  N3TurtleCodecLive
-} from "@beep/n3";
+import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
 import type { BlankNode as BlankNodeType, Quad } from "@beep/rdf";
 import {
   GraphTerm,
   IRI,
+  makeBlankNode,
+  makeNamedNode as makeCanonicalNamedNode,
+  makeLiteral,
+  makeNamedNode,
+  makeQuad,
   NamedNode,
   ObjectTerm,
   Subject,
-  makeBlankNode,
-  makeLiteral,
-  makeNamedNode as makeCanonicalNamedNode,
-  makeNamedNode,
-  makeQuad,
 } from "@beep/rdf";
 import * as CanonicalRdf from "@beep/rdf/Rdf";
-import {DCTERMS_NAMESPACE} from "@beep/rdf/Vocab/Dcterms";
-import {OWL_NAMESPACE} from "@beep/rdf/Vocab/Owl";
-import {
-  PROV_ACTIVITY,
-  PROV_NAMESPACE,
-  PROV_WAS_GENERATED_BY
-} from "@beep/rdf/Vocab/Prov";
-import {RDF_NAMESPACE, RDF_TYPE} from "@beep/rdf/Vocab/Rdf";
-import {
-  XSD_BOOLEAN,
-  XSD_DOUBLE,
-  XSD_INTEGER,
-  XSD_NAMESPACE
-} from "@beep/rdf/Vocab/Xsd";
-import type * as Scope from "effect/Scope";
+import { DCTERMS_NAMESPACE } from "@beep/rdf/Vocab/Dcterms";
+import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
+import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
+import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import { XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
+import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashSet from "effect/MutableHashSet";
-import * as Result from "effect/Result";
-import * as A from "effect/Array";
-import {dual} from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import type * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import * as N3 from "n3";
-import {
-  ParsingFailed,
-  RdfError,
-  SerializationFailed
-} from "../Domain/Error/Rdf.ts";
-import type {Entity, Relation} from "../Domain/Model/Entity.ts";
-import {RelationObject} from "../Domain/Model/Entity.ts";
-import {CLAIMS, CORE, EXTR} from "../Domain/Rdf/Constants.ts";
-import {buildIri} from "../Utils/Rdf.ts";
-import {ConfigService, ConfigServiceDefault} from "./Config.ts";
+import { ParsingFailed, RdfError, SerializationFailed } from "../Domain/Error/Rdf.ts";
+import type { Entity, Relation } from "../Domain/Model/Entity.ts";
+import { RelationObject } from "../Domain/Model/Entity.ts";
+import { CLAIMS, CORE, EXTR } from "../Domain/Rdf/Constants.ts";
+import { buildIri } from "../Utils/Rdf.ts";
+import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Rdf");
 const OWL_SAME_AS = makeCanonicalNamedNode(`${OWL_NAMESPACE}sameAs`);
@@ -92,7 +75,8 @@ interface RdfConstructionPrefixes {
   readonly schema?: string;
 }
 
-const n3NamedNode = (value: string): N3.NamedNode => N3.DataFactory.namedNode(Result.getOrThrow(S.decodeResult(IRI)(value)));
+const n3NamedNode = (value: string): N3.NamedNode =>
+  N3.DataFactory.namedNode(Result.getOrThrow(S.decodeResult(IRI)(value)));
 const isIriObjectString = P.some([Str.startsWith("https://"), Str.startsWith("https://"), Str.startsWith("urn:")]);
 
 const valueToN3Literal = (value: string | number | boolean, prefixes: RdfConstructionPrefixes): N3.Literal => {
@@ -284,15 +268,12 @@ export const rdfStoreQuads: {
   (store: RdfStore, pattern: QuadPattern): Effect.Effect<ReadonlyArray<Quad>, RdfError>;
 } = dual(2, (store: RdfStore, pattern: QuadPattern): Effect.Effect<ReadonlyArray<Quad>, RdfError> => {
   const n3Store = backend(store);
-  return Effect.forEach(
-    n3Store.getQuads(
+  return Effect.forEach(n3Store.getQuads(
       domainTermToN3Term(pattern.subject ?? null),
       domainTermToN3Term(pattern.predicate ?? null),
       domainTermToN3Term(pattern.object ?? null),
       domainTermToN3Term(pattern.graph ?? null)
-    ),
-    n3QuadToDomainQuad
-  );
+    ), n3QuadToDomainQuad, { concurrency: 1 });
 });
 
 /**
@@ -567,7 +548,7 @@ const canonicalQuadToN3 = (quad: CanonicalRdf.Quad): N3.Quad =>
 export const rdfStoreToDataset = Effect.fn("Rdf.rdfStoreToDataset")(function* (
   store: RdfStore
 ): Effect.fn.Return<CanonicalRdf.Dataset, RdfError> {
-  const quads = yield* Effect.forEach(backend(store).getQuads(null, null, null, null), n3QuadToDomainQuad);
+  const quads = yield* Effect.forEach(backend(store).getQuads(null, null, null, null), n3QuadToDomainQuad, { concurrency: 1 });
   return CanonicalRdf.makeDataset(quads);
 });
 
@@ -1061,7 +1042,6 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
 
             // Query N3 store
 
-
             return n3Store.getQuads(n3Subject, n3Predicate, n3Object, n3Graph);
           },
           catch: (error) =>
@@ -1070,7 +1050,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
               cause: O.some(error),
             }),
         }).pipe(
-          Effect.flatMap((quads) => Effect.forEach(quads, n3QuadToDomainQuad)),
+          Effect.flatMap((quads) => Effect.forEach(quads, n3QuadToDomainQuad, { concurrency: 1 })),
           Effect.map(Chunk.fromIterable)
         ),
 
@@ -1329,12 +1309,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        * Uses standard RDF reification so the result remains representable by
        * the canonical `@beep/rdf` Dataset and serializable by `@beep/n3`.
        */
-      addTripleWithConfidence: (
-        store: RdfStore,
-        triple: ConfidenceTriple,
-        confidence: Confidence,
-        graphUri?: string
-      ) =>
+      addTripleWithConfidence: (store: RdfStore, triple: ConfidenceTriple, confidence: Confidence, graphUri?: string) =>
         Effect.try({
           try: () => {
             const n3Store = backend(store);
@@ -1414,12 +1389,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        *
        * @since 0.0.0
        */
-      generateMentionTriples: (
-        store: RdfStore,
-        entityUri: string,
-        mention: MentionInput,
-        options?: MentionOptions
-      ) =>
+      generateMentionTriples: (store: RdfStore, entityUri: string, mention: MentionInput, options?: MentionOptions) =>
         Effect.try({
           try: () => {
             const n3Store = backend(store);
@@ -1664,7 +1634,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
               cause: O.some(error),
             }),
         }).pipe(
-          Effect.flatMap((quads) => Effect.forEach(quads, n3QuadToDomainQuad)),
+          Effect.flatMap((quads) => Effect.forEach(quads, n3QuadToDomainQuad, { concurrency: 1 })),
           Effect.map(Chunk.fromIterable)
         ),
 

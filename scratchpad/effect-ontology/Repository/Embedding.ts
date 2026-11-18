@@ -20,10 +20,10 @@ import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -34,10 +34,10 @@ import { PostgresDrizzle } from "@beep/postgres";
 import { and, sql as drizzleSql, eq } from "drizzle-orm";
 import { dual } from "effect/Function";
 import * as SqlClient from "effect/sql/SqlClient";
+import { PosInt } from "../Schema/PosInt.ts";
 import { formatPgVector, normalizeDrizzleError } from "../Utils/Sql.ts";
 import type { EmbeddingRow } from "./schema.ts";
 import { Embeddings, embeddings } from "./schema.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 // =============================================================================
 // Types
@@ -95,13 +95,17 @@ export type EmbeddingEntityType = typeof EmbeddingEntityType.Type;
  * @category models
  * @since 0.0.0
  */
-export class SimilarityResult extends S.Opaque<SimilarityResult, { readonly brand: unique symbol }>()(S.Struct({
+export class SimilarityResult extends S.Opaque<SimilarityResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     entityId: S.NonEmptyString,
     entityType: EmbeddingEntityType,
     similarity: UnitInterval,
-  }).pipe($I.annoteSchema("SimilarityResult", {
-    description: "Repository entity and its cosine-similarity score.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("SimilarityResult", {
+      description: "Repository entity and its cosine-similarity score.",
+    })
+  )
+) {}
 
 /**
  * Repository entity and its reciprocal-rank-fusion scores from hybrid search.
@@ -127,15 +131,19 @@ export class SimilarityResult extends S.Opaque<SimilarityResult, { readonly bran
  * @category models
  * @since 0.0.0
  */
-export class HybridSearchResult extends S.Opaque<HybridSearchResult, { readonly brand: unique symbol }>()(S.Struct({
+export class HybridSearchResult extends S.Opaque<HybridSearchResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     entityId: S.NonEmptyString,
     entityType: EmbeddingEntityType,
     rrfScore: UnitInterval,
     vectorRank: S.Natural,
     textRank: S.Natural,
-  }).pipe($I.annoteSchema("HybridSearchResult", {
-    description: "Repository entity and its reciprocal-rank-fusion search scores.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("HybridSearchResult", {
+      description: "Repository entity and its reciprocal-rank-fusion search scores.",
+    })
+  )
+) {}
 
 const similaritySearchOptionsLimitDefault = PosInt.make(20);
 const similaritySearchOptionsMinSimilarityDefault = UnitInterval.make(0.5);
@@ -155,12 +163,22 @@ const similaritySearchOptionsMinSimilarityDefault = UnitInterval.make(0.5);
  * @category configuration
  * @since 0.0.0
  */
-export class SimilaritySearchOptions extends S.Opaque<SimilaritySearchOptions, { readonly brand: unique symbol }>()(S.Struct({
-    limit: PosInt.pipe(S.withConstructorDefault(Effect.succeed(similaritySearchOptionsLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(similaritySearchOptionsLimitDefault))),
-    minSimilarity: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(similaritySearchOptionsMinSimilarityDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(similaritySearchOptionsMinSimilarityDefault))),
-  }).pipe($I.annoteSchema("SimilaritySearchOptions", {
-    description: "Bounded result count and cosine-similarity threshold for vector search.",
-  }))) {}
+export class SimilaritySearchOptions extends S.Opaque<SimilaritySearchOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    limit: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(similaritySearchOptionsLimitDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(similaritySearchOptionsLimitDefault))
+    ),
+    minSimilarity: UnitInterval.pipe(
+      S.withConstructorDefault(Effect.succeed(similaritySearchOptionsMinSimilarityDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(similaritySearchOptionsMinSimilarityDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("SimilaritySearchOptions", {
+      description: "Bounded result count and cosine-similarity threshold for vector search.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link SimilaritySearchOptions}.
@@ -190,13 +208,26 @@ const hybridSearchOptionsTextWeightDefault = UnitInterval.make(0.4);
  * @category configuration
  * @since 0.0.0
  */
-export class HybridSearchOptions extends S.Opaque<HybridSearchOptions, { readonly brand: unique symbol }>()(S.Struct({
-    limit: PosInt.pipe(S.withConstructorDefault(Effect.succeed(hybridSearchOptionsLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(hybridSearchOptionsLimitDefault))),
-    vectorWeight: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(hybridSearchOptionsVectorWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(hybridSearchOptionsVectorWeightDefault))),
-    textWeight: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(hybridSearchOptionsTextWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(hybridSearchOptionsTextWeightDefault))),
-  }).pipe($I.annoteSchema("HybridSearchOptions", {
-    description: "Bounded result count and fusion weights for hybrid vector and text search.",
-  }))) {}
+export class HybridSearchOptions extends S.Opaque<HybridSearchOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    limit: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(hybridSearchOptionsLimitDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(hybridSearchOptionsLimitDefault))
+    ),
+    vectorWeight: UnitInterval.pipe(
+      S.withConstructorDefault(Effect.succeed(hybridSearchOptionsVectorWeightDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(hybridSearchOptionsVectorWeightDefault))
+    ),
+    textWeight: UnitInterval.pipe(
+      S.withConstructorDefault(Effect.succeed(hybridSearchOptionsTextWeightDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(hybridSearchOptionsTextWeightDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("HybridSearchOptions", {
+      description: "Bounded result count and fusion weights for hybrid vector and text search.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link HybridSearchOptions}.
@@ -293,7 +324,8 @@ const OneExistsSqlRow = S.Tuple([ExistsSqlRow]);
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const normalizeExecution = normalizeDrizzleError("execute");
 const decodeEmbeddingSqlRows = (rows: unknown) => normalizeDecodedRows(decodeUnknownEmbeddingSqlRowArray(rows));
-const decodeOneEmbeddingSqlRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(OneEmbeddingSqlRow)(rows));
+const decodeOneEmbeddingSqlRow = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(OneEmbeddingSqlRow)(rows));
 const decodeEmbeddingVectorSqlRows = (rows: unknown) =>
   normalizeDecodedRows(decodeUnknownEmbeddingVectorSqlRowArray(rows));
 const decodeSimilaritySqlRows = (rows: unknown) => normalizeDecodedRows(decodeUnknownSimilaritySqlRowArray(rows));

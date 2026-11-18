@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import { ExpandedTerm, expandQueryWithOntology, QueryExpansionOptions } from "../../Utils/Retrieval.ts";
+
 const decodeQueryExpansionOptions = S.decodeEffect(QueryExpansionOptions);
 const isExpandedTerm = S.is(ExpandedTerm);
 

@@ -33,6 +33,7 @@ import {
 } from "../../../Domain/Model/OntologyAgent.ts";
 import { OntologyEmbeddings } from "../../../Domain/Model/OntologyEmbeddings.ts";
 import { EntityId } from "../../../Domain/Model/shared.ts";
+
 const decodeEnhancedValidationReport = S.decodeEffect(EnhancedValidationReport);
 const decodeEvidenceSpan = S.decodeEffect(EvidenceSpan);
 const decodeExtractWithClaimsOptions = S.decodeEffect(ExtractWithClaimsOptions);

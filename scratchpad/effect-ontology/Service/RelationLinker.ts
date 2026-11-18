@@ -12,14 +12,14 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
+import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
-import * as Result from "effect/Result";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts";
@@ -59,16 +59,20 @@ const $I = $ScratchpadId.create("effect-ontology/Service/RelationLinker");
  * @category models
  * @since 0.0.0
  */
-export class LinkedRelation extends S.Opaque<LinkedRelation, { readonly brand: unique symbol }>()(S.Struct({
+export class LinkedRelation extends S.Opaque<LinkedRelation, { readonly brand: unique symbol }>()(
+  S.Struct({
     original: Relation,
     canonicalSubjectId: EntityId,
     canonicalPredicate: IRI,
     canonicalObject: RelationObject,
     subjectRemapped: S.Boolean,
     objectRemapped: S.Boolean,
-  }).pipe($I.annoteSchema("LinkedRelation", {
-    description: "Original relation paired with its canonicalized subject, predicate, object, and remapping flags.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("LinkedRelation", {
+      description: "Original relation paired with its canonicalized subject, predicate, object, and remapping flags.",
+    })
+  )
+) {}
 
 /**
  * Canonicalized relations and non-negative remapping and literal-object counts.
@@ -86,15 +90,19 @@ export class LinkedRelation extends S.Opaque<LinkedRelation, { readonly brand: u
  * @category models
  * @since 0.0.0
  */
-export class LinkingResult extends S.Opaque<LinkingResult, { readonly brand: unique symbol }>()(S.Struct({
+export class LinkingResult extends S.Opaque<LinkingResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     linkedRelations: S.Chunk(LinkedRelation),
     remappedCount: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Remapped count must be non-negative." })),
     literalObjectCount: S.Int.check(
       S.isGreaterThanOrEqualTo(0, { message: "Literal-object count must be non-negative." })
     ),
-  }).pipe($I.annoteSchema("LinkingResult", {
-    description: "Canonicalized relations and non-negative remapping and literal-object counts.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("LinkingResult", {
+      description: "Canonicalized relations and non-negative remapping and literal-object counts.",
+    })
+  )
+) {}
 
 /**
  * RelationLinker - Service for canonicalizing relations
@@ -141,7 +149,9 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
 
         for (const relation of relations) {
           // Canonicalize subject - unwrap Option with fallback to original
-          const canonicalSubjectId = Result.getOrThrow(S.decodeResult(EntityId)(O.getOrElse(getCanonicalId(erg, relation.subjectId), () => relation.subjectId)));
+          const canonicalSubjectId = Result.getOrThrow(
+            S.decodeResult(EntityId)(O.getOrElse(getCanonicalId(erg, relation.subjectId), () => relation.subjectId))
+          );
           const subjectRemapped = canonicalSubjectId !== relation.subjectId;
 
           if (subjectRemapped) {
@@ -155,7 +165,9 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
           if (RelationObject.guards.EntityReference(relation.object)) {
             // Entity reference - canonicalize
             const resolved = O.getOrElse(getCanonicalId(erg, relation.object.value), () => relation.object.value);
-            canonicalObject = RelationObject.cases.EntityReference.make({ value: Result.getOrThrow(S.decodeUnknownResult(EntityId)(resolved)) });
+            canonicalObject = RelationObject.cases.EntityReference.make({
+              value: Result.getOrThrow(S.decodeUnknownResult(EntityId)(resolved)),
+            });
             objectRemapped = resolved !== relation.object.value;
             if (objectRemapped) {
               remappedCount++;

@@ -12,23 +12,23 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import * as BunServices from "@effect/platform-bun/BunServices";
+import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
+import * as Args from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as Path from "effect/Path";
-import type { Scope } from "effect/Scope";
-import { PlatformError } from "effect/PlatformError";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import type { Scope } from "effect/Scope";
 import * as Str from "effect/String";
-import * as Args from "effect/cli/Argument";
-import * as Command from "effect/cli/Command";
-import * as Flag from "effect/cli/Flag";
 import { ErrorMessage, OptionalErrorCause } from "../../Domain/Error/Base.ts";
 import { ContentHash, Namespace, OntologyName } from "../../Domain/Identity.ts";
 import { ChunkingConfig, LlmConfig, RunConfig } from "../../Domain/Model/ExtractionRun.ts";
@@ -39,6 +39,7 @@ import { RdfBuilder } from "../../Service/Rdf.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
 
 const encodePrettyUnknown = S.encodeUnknownEffect(S.fromJsonString(S.Unknown, { space: 2 }));
+
 import type { ExtractionError } from "../../Domain/Error/Extraction.ts";
 import type { RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
 import { PosInt } from "../../Schema/PosInt.ts";
@@ -84,7 +85,9 @@ const concurrencyOption = Flag.Int("concurrency").pipe(
 // Helpers
 // =============================================================================
 
-class ExtractInputError extends S.TaggedError<ExtractInputError, { readonly brand: unique symbol }>($I`ExtractInputError`)(
+class ExtractInputError extends S.TaggedError<ExtractInputError, { readonly brand: unique symbol }>(
+  $I`ExtractInputError`
+)(
   "ExtractInputError",
   {
     message: ErrorMessage.annotateKey({

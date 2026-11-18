@@ -18,8 +18,8 @@ import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as P from "effect/Predicate";
+import * as SchemaTransformation from "effect/SchemaTransformation";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Examples");
 
@@ -30,10 +30,10 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
+import { PosInt } from "../Schema/PosInt.ts";
 import { formatPgVector, normalizeDrizzleError } from "../Utils/Sql.ts";
 import type { LlmExampleRow } from "./schema.ts";
 import { LlmExamples, llmExamples } from "./schema.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 // =============================================================================
 // Types
@@ -227,15 +227,28 @@ const exampleRetrievalOptionsMinSimilarityDefault = UnitInterval.make(0.6);
  * @category configuration
  * @since 0.0.0
  */
-export class ExampleRetrievalOptions extends S.Opaque<ExampleRetrievalOptions, { readonly brand: unique symbol }>()(S.Struct({
-    k: PosInt.pipe(S.withConstructorDefault(Effect.succeed(exampleRetrievalOptionsKDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(exampleRetrievalOptionsKDefault))),
-    minSimilarity: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(exampleRetrievalOptionsMinSimilarityDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(exampleRetrievalOptionsMinSimilarityDefault))),
+export class ExampleRetrievalOptions extends S.Opaque<ExampleRetrievalOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    k: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(exampleRetrievalOptionsKDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(exampleRetrievalOptionsKDefault))
+    ),
+    minSimilarity: UnitInterval.pipe(
+      S.withConstructorDefault(Effect.succeed(exampleRetrievalOptionsMinSimilarityDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(exampleRetrievalOptionsMinSimilarityDefault))
+    ),
     targetClass: S.optionalKey(S.NonEmptyString),
     targetPredicate: S.optionalKey(S.NonEmptyString),
-    includeNegatives: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
-  }).pipe($I.annoteSchema("ExampleRetrievalOptions", {
-    description: "Validated retrieval count, threshold, optional ontology filters, and negative-example policy.",
-  }))) {}
+    includeNegatives: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+  }).pipe(
+    $I.annoteSchema("ExampleRetrievalOptions", {
+      description: "Validated retrieval count, threshold, optional ontology filters, and negative-example policy.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link ExampleRetrievalOptions}.
@@ -269,10 +282,14 @@ export type ExampleRetrievalOptionsInput = (typeof ExampleRetrievalOptions)["~ty
  * @category models
  * @since 0.0.0
  */
-export class CreateExampleInput extends S.Opaque<CreateExampleInput, { readonly brand: unique symbol }>()(S.Struct({
+export class CreateExampleInput extends S.Opaque<CreateExampleInput, { readonly brand: unique symbol }>()(
+  S.Struct({
     ontologyId: S.NonEmptyString,
     exampleType: ExampleType,
-    source: ExampleSource.pipe(S.withConstructorDefault(Effect.succeed(ExampleSource.Enum.manual)), S.withDecodingDefaultTypeKey(Effect.succeed(ExampleSource.Enum.manual))),
+    source: ExampleSource.pipe(
+      S.withConstructorDefault(Effect.succeed(ExampleSource.Enum.manual)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ExampleSource.Enum.manual))
+    ),
     inputText: S.NonEmptyString,
     targetClass: S.optionalKey(S.NonEmptyString),
     targetPredicate: S.optionalKey(S.NonEmptyString),
@@ -283,12 +300,18 @@ export class CreateExampleInput extends S.Opaque<CreateExampleInput, { readonly 
     promptMessages: S.optionalKey(PromptMessages),
     explanation: S.optionalKey(S.NonEmptyString),
     embedding: S.Array(S.Finite),
-    isNegative: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
+    isNegative: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     negativePattern: S.optionalKey(S.NonEmptyString),
     createdBy: S.optionalKey(S.NonEmptyString),
-  }).pipe($I.annoteSchema("CreateExampleInput", {
-    description: "Validated repository input for creating a few-shot example.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("CreateExampleInput", {
+      description: "Validated repository input for creating a few-shot example.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link CreateExampleInput}.
@@ -333,12 +356,12 @@ const ExampleStatsRows = S.Tuple([ExampleStatsSqlRow]);
 
 const decodeOneLlmExampleRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(LlmExampleRows)(rows));
 const LlmExampleSelectRows = LlmExamples.select.pipe(S.Array, S.mutable);
-const decodeLlmExampleRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(LlmExampleSelectRows)(rows));
+const decodeLlmExampleRows = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(LlmExampleSelectRows)(rows));
 const ScoredExampleSqlRows = ScoredExample.pipe(S.Array, S.mutable);
 const decodeScoredExampleSqlRows = (rows: unknown) =>
   normalizeDecodedRows(S.decodeUnknownEffect(ScoredExampleSqlRows)(rows));
-const decodeOneExampleStatsSqlRow = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(ExampleStatsRows)(rows));
+const decodeOneExampleStatsSqlRow = (rows: unknown) =>
+  normalizeDecodedRows(S.decodeUnknownEffect(ExampleStatsRows)(rows));
 
 // =============================================================================
 // Service

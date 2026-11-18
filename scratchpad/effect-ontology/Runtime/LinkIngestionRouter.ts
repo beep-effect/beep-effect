@@ -10,23 +10,23 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FiberSet from "effect/FiberSet";
 import * as HashSet from "effect/HashSet";
-import * as Inspectable from "effect/Inspectable";
-import * as Layer from "effect/Layer";
-import * as Random from "effect/Random";
-import * as Schedule from "effect/Schedule";
-import * as Result from "effect/Result";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
 import { BatchId, ContentHash, DocumentId, GcsBucket, GcsUri, Namespace } from "../Domain/Identity.ts";
 import { BatchStage, BatchState } from "../Domain/Model/BatchWorkflow.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
@@ -44,9 +44,18 @@ const CreateBatchFromLinksBody = S.Struct({
   targetNamespace: S.optionalKey(S.String),
 });
 
-const NonTerminalBatchStage = BatchStage.pick(["Pending", "Preprocessing", "Extracting", "Resolving", "Validating", "Ingesting"]);
+const NonTerminalBatchStage = BatchStage.pick([
+  "Pending",
+  "Preprocessing",
+  "Extracting",
+  "Resolving",
+  "Validating",
+  "Ingesting",
+]);
 
-class BatchNotTerminalError extends S.TaggedError<BatchNotTerminalError, { readonly brand: unique symbol }>($I`BatchNotTerminalError`)(
+class BatchNotTerminalError extends S.TaggedError<BatchNotTerminalError, { readonly brand: unique symbol }>(
+  $I`BatchNotTerminalError`
+)(
   "BatchNotTerminalError",
   {
     batchId: BatchId.annotateKey({
@@ -179,9 +188,13 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       const randomA = (yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36).padStart(6, "0");
       const randomB = (yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36).padStart(6, "0");
       const batchId = Result.getOrThrow(S.decodeResult(BatchId)(`batch-${randomA}${randomB}`));
-      const targetNamespace = Result.getOrThrow(S.decodeResult(Namespace)(request.value.targetNamespace ?? entry.value.targetNamespace));
+      const targetNamespace = Result.getOrThrow(
+        S.decodeResult(Namespace)(request.value.targetNamespace ?? entry.value.targetNamespace)
+      );
       const ontologyUri = GcsUri.resolve(entry.value.storagePath, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket)));
-      const shaclUri = O.map(entry.value.shapesPath, (path) => GcsUri.resolve(path, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket))));
+      const shaclUri = O.map(entry.value.shapesPath, (path) =>
+        GcsUri.resolve(path, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket)))
+      );
       const embeddingsUri = O.map(entry.value.embeddingsPath, (path) =>
         GcsUri.resolve(path, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket)))
       );
@@ -224,10 +237,14 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       yield* backgroundTasks.fork(
         Effect.gen(function* () {
           const state = yield* pollToBatchState(String(batchId)).pipe(
-            Effect.filterOrElse(current => BatchState.isTerminal(current), current => BatchNotTerminalError.make({
-    batchId,
-    status: current._tag,
-})),
+            Effect.filterOrElse(
+              (current) => BatchState.isTerminal(current),
+              (current) =>
+                BatchNotTerminalError.make({
+                  batchId,
+                  status: current._tag,
+                })
+            ),
             Effect.retry({ times: 120, schedule: Schedule.spaced("5 seconds") })
           );
           const failed = BatchState.guards.Failed(state);

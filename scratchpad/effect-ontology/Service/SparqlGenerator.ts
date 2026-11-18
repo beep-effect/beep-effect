@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 /**
  * Service: SPARQL Generator
  *
@@ -19,6 +20,7 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId, CoreVocab } from "@beep/identity";
 import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -27,7 +29,6 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as LanguageModel from "effect/ai/LanguageModel";
 import { ErrorMessage, OptionalErrorCause, OptionalNonNegativeInt } from "../Domain/Error/Base.ts";
 import type { OntologyContext } from "../Domain/Model/Ontology.ts";
 import { extractLocalNameFromIri as extractLocalName } from "../Utils/Iri.ts";
@@ -59,7 +60,9 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SparqlGenerator");
  * @category errors
  * @since 0.0.0
  */
-export class SparqlGenerationError extends S.TaggedError<SparqlGenerationError, { readonly brand: unique symbol }>($I`SparqlGenerationError`)(
+export class SparqlGenerationError extends S.TaggedError<SparqlGenerationError, { readonly brand: unique symbol }>(
+  $I`SparqlGenerationError`
+)(
   "SparqlGenerationError",
   {
     message: ErrorMessage.annotateKey({
@@ -97,7 +100,9 @@ export class SparqlGenerationError extends S.TaggedError<SparqlGenerationError, 
  * @category errors
  * @since 0.0.0
  */
-export class SparqlSyntaxError extends S.TaggedError<SparqlSyntaxError, { readonly brand: unique symbol }>($I`SparqlSyntaxError`)(
+export class SparqlSyntaxError extends S.TaggedError<SparqlSyntaxError, { readonly brand: unique symbol }>(
+  $I`SparqlSyntaxError`
+)(
   "SparqlSyntaxError",
   {
     message: ErrorMessage.annotateKey({
@@ -136,7 +141,9 @@ export class SparqlSyntaxError extends S.TaggedError<SparqlSyntaxError, { readon
  * @category errors
  * @since 0.0.0
  */
-export class SparqlCorrectionError extends S.TaggedError<SparqlCorrectionError, { readonly brand: unique symbol }>($I`SparqlCorrectionError`)(
+export class SparqlCorrectionError extends S.TaggedError<SparqlCorrectionError, { readonly brand: unique symbol }>(
+  $I`SparqlCorrectionError`
+)(
   "SparqlCorrectionError",
   {
     message: ErrorMessage.annotateKey({
@@ -259,7 +266,7 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
 
           yield* Effect.logDebug("SPARQL generation prompt", {
             promptLength: prompt.length,
-            promptPreview: prompt.slice(0, 500),
+            promptPreview: Str.slice(0, 500)(prompt),
           });
 
           // Call LLM for structured output
@@ -402,7 +409,7 @@ const formatSchemaContext = (ontology: OntologyContext): string => {
     parts.push("## Classes");
     for (const cls of ontology.classes) {
       const localName = extractLocalName(cls.id);
-      const properties = cls.properties.map(extractLocalName).join(", ");
+      const properties = A.map(cls.properties, extractLocalName).join(", ");
       parts.push(
         `- ${localName}: ${cls.comment || cls.label}${P.isTruthy(properties) ? ` [properties: ${properties}]` : ""}`
       );
@@ -410,15 +417,15 @@ const formatSchemaContext = (ontology: OntologyContext): string => {
   }
 
   // Format properties grouped by type
-  const objectProps = ontology.properties.filter((p) => p.rangeType === "object");
-  const datatypeProps = ontology.properties.filter((p) => p.rangeType === "datatype");
+  const objectProps = A.filter(ontology.properties, (p) => p.rangeType === "object");
+  const datatypeProps = A.filter(ontology.properties, (p) => p.rangeType === "datatype");
 
   if (objectProps.length > 0) {
     parts.push("\n## Object Properties (link entities)");
     for (const prop of objectProps) {
       const localName = extractLocalName(prop.id);
-      const domain = prop.domain.map(extractLocalName).join(", ") || "any";
-      const range = prop.range.map(extractLocalName).join(", ") || "any";
+      const domain = A.map(prop.domain, extractLocalName).join(", ") || "any";
+      const range = A.map(prop.range, extractLocalName).join(", ") || "any";
       parts.push(`- ${localName}: ${domain} → ${range}${O.isSome(prop.comment) ? ` (${prop.comment})` : ""}`);
     }
   }
@@ -427,21 +434,20 @@ const formatSchemaContext = (ontology: OntologyContext): string => {
     parts.push("\n## Datatype Properties (literal values)");
     for (const prop of datatypeProps) {
       const localName = extractLocalName(prop.id);
-      const domain = prop.domain.map(extractLocalName).join(", ") || "any";
-      const range = prop.range.map(extractLocalName).join(", ") || "string";
+      const domain = A.map(prop.domain, extractLocalName).join(", ") || "any";
+      const range = A.map(prop.range, extractLocalName).join(", ") || "string";
       parts.push(`- ${localName}: ${domain} → ${range}${O.isSome(prop.comment) ? ` (${prop.comment})` : ""}`);
     }
   }
 
-  return parts.join("\n");
+  return A.join(parts, "\n");
 };
 
 /**
  * Format namespace prefixes as SPARQL PREFIX declarations
  */
 const formatPrefixes = (prefixes: Record<string, string>): string =>
-  R.toEntries(prefixes)
-    .map(([prefix, uri]) => `PREFIX ${prefix}: <${uri}>`)
+  A.map(R.toEntries(prefixes), ([prefix, uri]) => `PREFIX ${prefix}: <${uri}>`)
     .join("\n");
 
 /**
@@ -496,8 +502,8 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
   }
 
   // Check for SELECT keyword
-  const upperQuery = trimmed.toUpperCase();
-  if (!upperQuery.includes("SELECT") && !upperQuery.includes("ASK") && !upperQuery.includes("CONSTRUCT")) {
+  const upperQuery = Str.toUpperCase(trimmed);
+  if (!Str.includes("SELECT")(upperQuery) && !Str.includes("ASK")(upperQuery) && !Str.includes("CONSTRUCT")(upperQuery)) {
     return SparqlSyntaxError.make({
       message: "Query must contain SELECT, ASK, or CONSTRUCT",
       sparql,
@@ -505,7 +511,7 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
   }
 
   // Check for WHERE clause (required for SELECT)
-  if (upperQuery.includes("SELECT") && !upperQuery.includes("WHERE")) {
+  if (Str.includes("SELECT")(upperQuery) && !Str.includes("WHERE")(upperQuery)) {
     return SparqlSyntaxError.make({
       message: "SELECT query must contain WHERE clause",
       sparql,

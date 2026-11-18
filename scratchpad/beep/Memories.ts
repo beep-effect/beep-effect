@@ -561,7 +561,7 @@ export class MemoryCaptureContext extends Model<MemoryCaptureContext>("MemoryCap
  * @since 0.0.0
  */
 export declare namespace MemoryCaptureContext {
-  export type Encoded = S.Codec.Encoded<typeof MemoryCaptureContext>;
+  export type Encoded = typeof MemoryCaptureContext.Encoded;
 }
 
 const privateVisibility = "private";
@@ -635,7 +635,7 @@ export class Memory extends Model<Memory>("Memory")(
  * @since 0.0.0
  */
 export declare namespace Memory {
-  export type Encoded = S.Codec.Encoded<typeof Memory>;
+  export type Encoded = typeof Memory.Encoded;
 }
 
 const half = S.Finite.pipe(S.withConstructorDefault(Effect.succeed(0.5)));
@@ -716,7 +716,7 @@ export class Evidence extends Model<Evidence>("Evidence")(
  * @since 0.0.0
  */
 export declare namespace Evidence {
-  export type Encoded = S.Codec.Encoded<typeof Evidence>;
+  export type Encoded = typeof Evidence.Encoded;
 }
 
 const isEvidence = S.is(Evidence);
@@ -845,7 +845,7 @@ export class MemoryDB extends Model<MemoryDB>("MemoryDB")(
  * @since 0.0.0
  */
 export declare namespace MemoryDB {
-  export type Encoded = S.Codec.Encoded<typeof MemoryDB>;
+  export type Encoded = typeof MemoryDB.Encoded;
 }
 
 const decodeMemoryDB = S.decodeUnknownEffect(MemoryDB);
@@ -937,7 +937,7 @@ export class ShortTermMemory extends Model<ShortTermMemory>("ShortTermMemory")(
  * @since 0.0.0
  */
 export declare namespace ShortTermMemory {
-  export type Encoded = S.Codec.Encoded<typeof ShortTermMemory>;
+  export type Encoded = typeof ShortTermMemory.Encoded;
 }
 
 const sha256 = (value: string): Uint8Array => new Uint8Array(createHash("sha256").update(value, "utf8").digest());

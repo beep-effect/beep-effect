@@ -561,7 +561,7 @@ export class ScreenFrameSubjectIn extends Model<ScreenFrameSubjectIn>("ScreenFra
  * @since 0.0.0
  */
 export declare namespace ScreenFrameSubjectIn {
-  export type Encoded = S.Codec.Encoded<typeof ScreenFrameSubjectIn>;
+  export type Encoded = typeof ScreenFrameSubjectIn.Encoded;
 }
 
 /**
@@ -626,7 +626,7 @@ export class ScreenFrameCandidateIn extends Model<ScreenFrameCandidateIn>("Scree
  * @since 0.0.0
  */
 export declare namespace ScreenFrameCandidateIn {
-  export type Encoded = S.Codec.Encoded<typeof ScreenFrameCandidateIn>;
+  export type Encoded = typeof ScreenFrameCandidateIn.Encoded;
 }
 
 /**
@@ -696,7 +696,7 @@ export class ScreenFrameAdjudicationRequest extends Model<ScreenFrameAdjudicatio
  * @since 0.0.0
  */
 export declare namespace ScreenFrameAdjudicationRequest {
-  export type Encoded = S.Codec.Encoded<typeof ScreenFrameAdjudicationRequest>;
+  export type Encoded = typeof ScreenFrameAdjudicationRequest.Encoded;
 }
 
 /**
@@ -735,7 +735,7 @@ export class ScreenFrameSharingUpdateRequest extends Model<ScreenFrameSharingUpd
  * @since 0.0.0
  */
 export declare namespace ScreenFrameSharingUpdateRequest {
-  export type Encoded = S.Codec.Encoded<typeof ScreenFrameSharingUpdateRequest>;
+  export type Encoded = typeof ScreenFrameSharingUpdateRequest.Encoded;
 }
 
 /**
@@ -783,7 +783,7 @@ export class ScreenFrameSettings extends Model<ScreenFrameSettings>("ScreenFrame
  * @since 0.0.0
  */
 export declare namespace ScreenFrameSettings {
-  export type Encoded = S.Codec.Encoded<typeof ScreenFrameSettings>;
+  export type Encoded = typeof ScreenFrameSettings.Encoded;
 }
 
 /**
@@ -824,7 +824,7 @@ export class ScreenFrameSettingsUpdateRequest extends Model<ScreenFrameSettingsU
  * @since 0.0.0
  */
 export declare namespace ScreenFrameSettingsUpdateRequest {
-  export type Encoded = S.Codec.Encoded<typeof ScreenFrameSettingsUpdateRequest>;
+  export type Encoded = typeof ScreenFrameSettingsUpdateRequest.Encoded;
 }
 
 /**
@@ -864,7 +864,7 @@ export class NormalizedRect extends Model<NormalizedRect>("NormalizedRect")(
  * @since 0.0.0
  */
 export declare namespace NormalizedRect {
-  export type Encoded = S.Codec.Encoded<typeof NormalizedRect>;
+  export type Encoded = typeof NormalizedRect.Encoded;
 }
 
 /**
@@ -918,7 +918,7 @@ export class ScreenFrameGround extends Model<ScreenFrameGround>("ScreenFrameGrou
  * @since 0.0.0
  */
 export declare namespace ScreenFrameGround {
-  export type Encoded = S.Codec.Encoded<typeof ScreenFrameGround>;
+  export type Encoded = typeof ScreenFrameGround.Encoded;
 }
 
 /**
@@ -994,7 +994,7 @@ export class ConversationScreenFrame extends Model<ConversationScreenFrame>("Con
  * @since 0.0.0
  */
 export declare namespace ConversationScreenFrame {
-  export type Encoded = S.Codec.Encoded<typeof ConversationScreenFrame>;
+  export type Encoded = typeof ConversationScreenFrame.Encoded;
 }
 
 const emptyStrip: ReadonlyArray<ConversationScreenFrame> = [];
@@ -1055,7 +1055,7 @@ export class ConversationScreenFrameSet extends Model<ConversationScreenFrameSet
  * @since 0.0.0
  */
 export declare namespace ConversationScreenFrameSet {
-  export type Encoded = S.Codec.Encoded<typeof ConversationScreenFrameSet>;
+  export type Encoded = typeof ConversationScreenFrameSet.Encoded;
 }
 
 /**
@@ -1107,7 +1107,7 @@ export class ScreenFrameAdjudicationResponse extends Model<ScreenFrameAdjudicati
  * @since 0.0.0
  */
 export declare namespace ScreenFrameAdjudicationResponse {
-  export type Encoded = S.Codec.Encoded<typeof ScreenFrameAdjudicationResponse>;
+  export type Encoded = typeof ScreenFrameAdjudicationResponse.Encoded;
 }
 
 /**
@@ -1176,7 +1176,7 @@ export class ScreenFrameJudgement extends Model<ScreenFrameJudgement>("ScreenFra
  * @since 0.0.0
  */
 export declare namespace ScreenFrameJudgement {
-  export type Encoded = S.Codec.Encoded<typeof ScreenFrameJudgement>;
+  export type Encoded = typeof ScreenFrameJudgement.Encoded;
 }
 
 /**
@@ -1262,5 +1262,5 @@ export class ScreenFrameApprovalClaims extends Model<ScreenFrameApprovalClaims>(
  * @since 0.0.0
  */
 export declare namespace ScreenFrameApprovalClaims {
-  export type Encoded = S.Codec.Encoded<typeof ScreenFrameApprovalClaims>;
+  export type Encoded = typeof ScreenFrameApprovalClaims.Encoded;
 }

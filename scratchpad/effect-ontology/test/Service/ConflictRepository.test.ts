@@ -3,18 +3,19 @@ import { PgliteTestLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
 import { IRI } from "@beep/rdf";
 import { assert, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
-import * as Layer from "effect/Layer";
-import * as Order from "effect/Order";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as S from "effect/Schema";
 import * as HttpRouter from "effect/http/HttpRouter";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
 import { describe } from "vitest";
+import { UUID } from "../../Domain/Identity.ts";
 import {
   ConflictActor,
   ConflictsQuery,
@@ -26,7 +27,6 @@ import { ClaimRepository } from "../../Repository/Claim.ts";
 import { ConflictRepository, canonicalConflictPair, EqualConflictPairError } from "../../Repository/Conflict.ts";
 import { CurrentConflictActor } from "../../Runtime/HttpMiddleware.ts";
 import { TimelineRouter } from "../../Runtime/HttpServer.ts";
-import { UUID } from "../../Domain/Identity.ts";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 

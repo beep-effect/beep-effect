@@ -49,8 +49,8 @@ describe("RecursiveArraySizeHint", () => {
       const sizes = [0, 1, 2, 3, 10, 1000, 20_000];
       // `A.makeBy` never builds an empty array, so the empty case is spelled out.
       const arrays = A.map(sizes, (size) => (size === 0 ? A.empty<string>() : A.makeBy(size, (index) => `item-${index}`)));
-      const decoded = yield* Effect.forEach(arrays, (strings) => S.decodeEffect(Hinted)(strings));
-      const encoded = yield* Effect.forEach(decoded, (strings) => S.encodeEffect(Hinted)(strings));
+      const decoded = yield* Effect.forEach(arrays, (strings) => S.decodeEffect(Hinted)(strings), { concurrency: 1 });
+      const encoded = yield* Effect.forEach(decoded, (strings) => S.encodeEffect(Hinted)(strings), { concurrency: 1 });
       deepStrictEqual(A.map(decoded, A.length), sizes);
       deepStrictEqual(encoded, arrays);
       deepStrictEqual(A.map(arrays, S.is(Hinted)), A.map(sizes, () => true));
@@ -68,7 +68,7 @@ describe("RecursiveArraySizeHint", () => {
         Effect.exit(S.decodeUnknownEffect(Hinted)("abc")),
         // Refused by the real minimum-length check that sits beside the hint.
         Effect.exit(S.decodeEffect(HintedNonEmpty)([])),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(A.map(exits, Exit.isSuccess), [true, true, false, false, false]);
       assertFalse(S.is(HintedNonEmpty)([]));
       assertTrue(S.is(HintedNonEmpty)(A.makeBy(50, () => "x")));
@@ -101,7 +101,7 @@ describe("RecursiveArraySizeHint", () => {
     Effect.fnUntraced(function* () {
       const samples = yield* Effect.forEach([1, 2, 3, 4, 5], (seed) =>
         Arbitrary.sampleEffect(Arbitrary.schema(Hinted), { count: 200, seed })
-      );
+      , { concurrency: 1 });
       const all = A.flatten(samples);
       strictEqual(A.length(all), 1000);
       deepStrictEqual(lengths(all), [0, 1, 2]);
@@ -145,7 +145,7 @@ describe("RecursiveArraySizeHint", () => {
           const decoded = yield* S.decodeEffect(Tree)(encoded);
           return S.toEquivalence(Tree)(decoded, tree);
         })
-      );
+      , { concurrency: 1 });
       assertTrue(A.every(returned, identity));
     })
   );

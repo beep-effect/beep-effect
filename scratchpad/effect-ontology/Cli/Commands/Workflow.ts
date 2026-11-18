@@ -8,19 +8,21 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import type { DrizzleError } from "drizzle-orm";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Command from "effect/cli/Command";
-import * as Flag from "effect/cli/Flag";
-import {LinkIngestionError, LinkIngestionService } from "../../Service/LinkIngestionService.ts";
+import type { LinkIngestionError } from "../../Service/LinkIngestionService.ts";
+import { LinkIngestionService } from "../../Service/LinkIngestionService.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
-import type {DrizzleError} from "drizzle-orm";
 
 // =============================================================================
 // Command Options
@@ -56,7 +58,10 @@ const dryRunOption = Flag.Boolean("dry-run").pipe(
 // Subcommand: list-pending
 // =============================================================================
 
-const listPendingHandler = Effect.fn("listPendingHandler")(function* (ontology: O.Option<string>, limit: number): Effect.fn.Return<void, DrizzleError, LinkIngestionService> {
+const listPendingHandler = Effect.fn("listPendingHandler")(function* (
+  ontology: O.Option<string>,
+  limit: number
+): Effect.fn.Return<void, DrizzleError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   yield* Console.log("Listing pending/failed links...");
   yield* Console.log("");
@@ -142,7 +147,9 @@ const cleanupStaleCommand = Command.make(
 // Subcommand: re-enrich
 // =============================================================================
 
-const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (linkId: string): Effect.fn.Return<void, LinkIngestionError, LinkIngestionService> {
+const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (
+  linkId: string
+): Effect.fn.Return<void, LinkIngestionError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   yield* Console.log(`Re-enriching link: ${linkId}...`);
   const result = yield* ingestion.reEnrich(linkId);
@@ -167,7 +174,10 @@ const reEnrichCommand = Command.make("re-enrich", { linkId: linkIdOption }, ({ l
 // Subcommand: re-enrich-all
 // =============================================================================
 
-const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: O.Option<string>, limit: number): Effect.fn.Return<void, DrizzleError, LinkIngestionService> {
+const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (
+  ontology: O.Option<string>,
+  limit: number
+): Effect.fn.Return<void, DrizzleError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   yield* Console.log("Finding failed links to re-enrich...");
   const links = yield* ingestion.list({

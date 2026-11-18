@@ -102,7 +102,7 @@ export class CalendarMutationResult extends Model<CalendarMutationResult>("Calen
  * @since 0.0.0
  */
 export declare namespace CalendarMutationResult {
-  export type Encoded = S.Codec.Encoded<typeof CalendarMutationResult>;
+  export type Encoded = typeof CalendarMutationResult.Encoded;
 }
 
 const primitiveText = (value: S.Json): string => {

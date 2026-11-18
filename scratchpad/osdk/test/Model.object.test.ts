@@ -489,7 +489,7 @@ describe("Model.object", () => {
           { ...everythingWire, name: "Alex Karp" },
         ],
         (wire) => fails(decode(wire))
-      );
+      , { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true, true, true, true, true]);
     })
   );
@@ -562,9 +562,9 @@ describe("Model.object", () => {
     Effect.fnUntraced(function* () {
       const things = yield* Arbitrary.sampleEffect(Arbitrary.schema(Everything.Instance), { count: 25, seed: 7 });
       const employees = yield* Arbitrary.sampleEffect(Arbitrary.schema(Employee.Instance), { count: 25, seed: 11 });
-      const thingsSurvive = yield* Effect.forEach(things, (thing) => roundTrips(Everything.Instance, thing));
-      const employeesSurvive = yield* Effect.forEach(employees, (employee) => roundTrips(Employee.Instance, employee));
-      const wires = yield* Effect.forEach(employees, (employee) => S.encodeEffect(Employee.Instance)(employee));
+      const thingsSurvive = yield* Effect.forEach(things, (thing) => roundTrips(Everything.Instance, thing), { concurrency: 1 });
+      const employeesSurvive = yield* Effect.forEach(employees, (employee) => roundTrips(Employee.Instance, employee), { concurrency: 1 });
+      const wires = yield* Effect.forEach(employees, (employee) => S.encodeEffect(Employee.Instance)(employee), { concurrency: 1 });
 
       assertTrue(A.every(things, S.is(Everything.Instance)));
       assertTrue(A.every(employees, S.is(Employee.Instance)));
@@ -983,7 +983,7 @@ const lawfulInstances = Effect.fnUntraced(function* <A>(model: DeclaredModel<A>,
         O.isSome(R.get(wire, model.primaryKey))
       );
     })
-  );
+  , { concurrency: 1 });
   return A.length(instances) === 25 && A.every(verdicts, (verdict) => verdict);
 });
 
@@ -1017,7 +1017,7 @@ describe("one instance codec for both tiers", () => {
         sameInBothTiers(Employee, { ...employeeWire, __primaryKey: "50030", __rid: null, __score: 0.5 }),
         sameInBothTiers(Model.pick(Employee, ["fullName"]), employeeWire),
         sameInBothTiers(Office, { __apiName: "Office", __primaryKey: "nyc", officeId: "nyc" }),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true, true, true, true, true]);
     })
   );
@@ -1038,7 +1038,7 @@ describe("one instance codec for both tiers", () => {
           const byProjection = yield* failureOf(S.decodeEffect(Dynamic)(wire));
           return byModel === byProjection;
         })
-      );
+      , { concurrency: 1 });
       // One implementation, so the two tiers refuse with the very same words.
       deepStrictEqual(refused, [true, true, true, true]);
     })
@@ -1052,7 +1052,7 @@ describe("one instance codec for both tiers", () => {
         lawfulInstances(Employee, 5),
         lawfulInstances(Everything, 7),
         lawfulInstances(Model.pick(Employee, ["fullName", "skills"]), 11),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true, true, true]);
     })
   );
@@ -1083,7 +1083,7 @@ describe("one instance codec for both tiers", () => {
         boolean: lawfulInstances(keyed.boolean, 7),
         date: lawfulInstances(keyed.date, 8),
         timestamp: lawfulInstances(keyed.timestamp, 9),
-      });
+      }, { concurrency: 1 });
       deepStrictEqual(verdicts, {
         string: true,
         integer: true,
@@ -1541,7 +1541,7 @@ describe("Model.filter constructors", () => {
           Model.startsWith(Employee.property("fullName"), "John D"),
         ],
         (typed) => encodeFilter(typed.filter)
-      );
+      , { concurrency: 1 });
       deepStrictEqual(wire, [
         { type: "eq", field: "fullName", value: "John Doe" },
         { type: "eq", field: "active", value: true },
@@ -1604,7 +1604,7 @@ describe("Model.filter constructors", () => {
           const decoded = yield* S.decodeEffect(ObjectFilter)(wire);
           return S.toEquivalence(ObjectFilter)(decoded, filter);
         })
-      );
+      , { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true, true, true]);
       // And the rich operand is one decode away, through the projection the tier below publishes.
       const readBadge = yield* S.decodeEffect(operandCodec(LongType.make({})))(badge.filter.value);
@@ -1706,7 +1706,7 @@ describe("Model.set", () => {
         Model.subtract(everyone, johns),
         pipe(everyone, Model.subtract(johns)),
       ];
-      const wire = yield* Effect.forEach(sets, (set) => encodeSet(set.objectSet));
+      const wire = yield* Effect.forEach(sets, (set) => encodeSet(set.objectSet), { concurrency: 1 });
 
       const base = { type: "base", objectType: "Employee" };
       const johnsWire = {
@@ -1923,7 +1923,7 @@ describe("Model.set", () => {
       strictEqual(Model.traverse(Model.all(Named), "office", Office).model, Office);
 
       const generated = yield* Arbitrary.sampleEffect(Arbitrary.schema(Named.Instance), { count: 20, seed: 3 });
-      const survived = yield* Effect.forEach(generated, (instance) => roundTrips(Named.Instance, instance));
+      const survived = yield* Effect.forEach(generated, (instance) => roundTrips(Named.Instance, instance), { concurrency: 1 });
       assertTrue(A.every(generated, S.is(Named.Instance)));
       assertTrue(A.every(survived, (verdict) => verdict));
     })
@@ -2237,7 +2237,7 @@ describe("Model.policy findings", () => {
           { type: "renamedProperty", property: "age" },
         ],
         (input) => fails(decode(input))
-      );
+      , { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true, true, true, true, true]);
 
       const accepted = yield* decode({

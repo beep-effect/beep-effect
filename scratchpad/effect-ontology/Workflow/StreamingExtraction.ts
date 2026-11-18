@@ -1,3 +1,4 @@
+
 /**
  * Workflow: Streaming Extraction
  *
@@ -13,21 +14,21 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { ObjectRef } from "@beep/rdf/Prov";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Chunk from "effect/Chunk";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
-import * as Stream from "effect/Stream";
-import { pipe } from "effect/Function";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { LlmRateLimit, LlmTimeout } from "../Domain/Error/Llm.ts";
@@ -66,6 +67,7 @@ import { StorageServiceLive } from "../Service/Storage.ts";
 import { captureExtractionTelemetry, recordExtractionChunkCount } from "../Telemetry/ExtractionTelemetry.ts";
 import { annotateExtraction, LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { mergeGraphs } from "./Merge.ts";
+
 const decodeEvidenceSpan = S.decodeEffect(EvidenceSpan);
 const decodeObjectRef2 = S.decodeEffect(ObjectRef);
 
@@ -74,7 +76,9 @@ const $I = $ScratchpadId.create("effect-ontology/Workflow/StreamingExtraction");
 const SYSTEMIC_ERROR_CODES = ["ECONNREFUSED", "ETIMEDOUT", "ENOTFOUND"];
 const SYSTEMIC_ERROR_MESSAGES = ["connection refused", "database connection", "too many requests"];
 
-class GroundingWorkflowError extends S.TaggedError<GroundingWorkflowError, { readonly brand: unique symbol }>($I`GroundingWorkflowError`)(
+class GroundingWorkflowError extends S.TaggedError<GroundingWorkflowError, { readonly brand: unique symbol }>(
+  $I`GroundingWorkflowError`
+)(
   "GroundingWorkflowError",
   {
     message: S.NonEmptyString,
@@ -188,9 +192,7 @@ const decodeObjectRef = Effect.fn("StreamingExtraction.decodeObjectRef")(functio
  */
 export const makeExtractionWorkflow = Effect.gen(function* () {
   const configService = yield* ConfigService;
-  const [nlp, ontology, mentionExtractor, entityExtractor, relationExtractor, grounder, runService] = yield* Effect.all(
-    [NlpService, OntologyService, MentionExtractor, EntityExtractor, RelationExtractor, Grounder, ExtractionRunService]
-  );
+  const [nlp, ontology, mentionExtractor, entityExtractor, relationExtractor, grounder, runService] = yield* Effect.all([NlpService, OntologyService, MentionExtractor, EntityExtractor, RelationExtractor, Grounder, ExtractionRunService], { concurrency: 1 });
 
   return {
     /**
@@ -343,8 +345,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       });
                       const ctx = yield* ontology.ontology;
                       const classes = yield* Effect.forEach(A.take(ctx.classes, 100), (value) =>
-                        S.decodeUnknownEffect(ClassDefinition)(value)
-                      );
+                        S.decodeUnknownEffect(ClassDefinition)(value), { concurrency: 1 });
                       return Chunk.fromIterable(classes);
                     })
                   )
@@ -438,9 +439,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       )
                     ),
                 });
-                const entityAudit = yield* Effect.forEach(
-                  entityVerificationResults,
-                  Effect.fn("StreamingExtraction.makeEntityObservation")(function* (
+                const entityAudit = yield* Effect.forEach(entityVerificationResults, Effect.fn("StreamingExtraction.makeEntityObservation")(function* (
                     result: EntityGrounderResult,
                     index: number
                   ) {
@@ -476,8 +475,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       observation,
                       provenance,
                     };
-                  })
-                );
+                  }), { concurrency: 1 });
                 const entityObservations = A.map(entityAudit, ({ observation }) => observation);
                 const entityProvenance = makeExtractionProvenanceBundle(
                   activity,
@@ -628,9 +626,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       )
                     ),
                 });
-                const relationAudit = yield* Effect.forEach(
-                  verificationResults,
-                  Effect.fn("StreamingExtraction.makeRelationObservation")(function* (
+                const relationAudit = yield* Effect.forEach(verificationResults, Effect.fn("StreamingExtraction.makeRelationObservation")(function* (
                     result: GrounderResult,
                     index: number
                   ) {
@@ -659,8 +655,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       observation,
                       provenance,
                     };
-                  })
-                );
+                  }), { concurrency: 1 });
                 const relationObservations = A.map(relationAudit, ({ observation }) => observation);
                 const verifiedRelationArray = pipe(
                   relationAudit,
@@ -705,7 +700,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                     mentionCount: mentionArray.length,
                     candidateClassCount: classArray.length,
                   }),
-                ]);
+                ], { concurrency: 1 });
                 return fragment;
               },
               (effect, chunk) =>
@@ -779,7 +774,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
               }),
               Effect.annotateCurrentSpan(LlmAttributes.ENTITY_COUNT, graph.entities.length),
               Effect.annotateCurrentSpan(LlmAttributes.RELATION_COUNT, graph.relations.length),
-            ])
+            ], { concurrency: 1 })
           ),
           Effect.withSpan("graph-merge")
         );

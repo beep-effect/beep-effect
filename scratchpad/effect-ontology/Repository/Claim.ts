@@ -13,10 +13,10 @@
 
 import { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Equal from "effect/Equal";
 import * as Layer from "effect/Layer";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -28,12 +28,12 @@ import { and, count, desc, eq, isNull, or } from "drizzle-orm";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import { UUID } from "../Domain/Identity.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 import { normalizeDrizzleError } from "../Utils/Sql.ts";
 import { canonicalConflictPair, detectConflictKind } from "./Conflict.ts";
 import type { ClaimInsertRow, ClaimRow, CorrectionInsertRow, CorrectionRow } from "./schema.ts";
 import { Claims, Corrections, claims, conflicts, correctionClaims, corrections } from "./schema.ts";
-import { UUID } from "../Domain/Identity.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 const ClaimCountDatabaseRow = S.Struct({ count: S.Natural }).pipe(
   $I.annoteSchema("ClaimCountDatabaseRow", {
@@ -44,17 +44,14 @@ const ClaimCountDatabaseRow = S.Struct({ count: S.Natural }).pipe(
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 
 const ClaimSelectRows = Claims.select.pipe(S.Array, S.mutable);
-const decodeClaimRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(ClaimSelectRows)(rows));
+const decodeClaimRows = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(ClaimSelectRows)(rows));
 
 const CorrectionSelectRows = Corrections.select.pipe(S.Array, S.mutable);
-const decodeCorrectionRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(CorrectionSelectRows)(rows));
+const decodeCorrectionRows = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(CorrectionSelectRows)(rows));
 
 const ClaimCountRows = S.Tuple([ClaimCountDatabaseRow]);
 
-const decodeClaimCountRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(ClaimCountRows)(rows));
+const decodeClaimCountRows = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(ClaimCountRows)(rows));
 
 // =============================================================================
 // Types
@@ -101,7 +98,8 @@ export type PersistedCorrectionId = CorrectionRow["id"];
  * @category models
  * @since 0.0.0
  */
-export class ClaimFilter extends S.Opaque<ClaimFilter, { readonly brand: unique symbol }>()(S.Struct({
+export class ClaimFilter extends S.Opaque<ClaimFilter, { readonly brand: unique symbol }>()(
+  S.Struct({
     ontologyId: S.NonEmptyString,
     articleId: S.optionalKey(S.NonEmptyString),
     subjectIri: S.optionalKey(S.NonEmptyString),
@@ -110,9 +108,12 @@ export class ClaimFilter extends S.Opaque<ClaimFilter, { readonly brand: unique 
     includeDeprecated: S.optionalKey(S.Boolean),
     limit: S.optionalKey(PosInt),
     offset: S.optionalKey(S.Natural),
-  }).pipe($I.annoteSchema("ClaimFilter", {
-    description: "Ontology-scoped persisted-claim filters with bounded pagination fields.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ClaimFilter", {
+      description: "Ontology-scoped persisted-claim filters with bounded pagination fields.",
+    })
+  )
+) {}
 
 /**
  * Persisted claim paired with the detected conflict kind, returned as a
@@ -131,12 +132,16 @@ export class ClaimFilter extends S.Opaque<ClaimFilter, { readonly brand: unique 
  * @category models
  * @since 0.0.0
  */
-export class ConflictCandidate extends S.Opaque<ConflictCandidate, { readonly brand: unique symbol }>()(S.Struct({
+export class ConflictCandidate extends S.Opaque<ConflictCandidate, { readonly brand: unique symbol }>()(
+  S.Struct({
     existingClaim: Claims.select,
     conflictType: S.Literals(["position", "temporal"]),
-  }).pipe($I.annoteSchema("ConflictCandidate", {
-    description: "Persisted claim paired with the authoritative detected conflict kind.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ConflictCandidate", {
+      description: "Persisted claim paired with the authoritative detected conflict kind.",
+    })
+  )
+) {}
 
 /**
  * Joined correction record and the persisted claim identifiers it links.
@@ -168,13 +173,17 @@ export class ConflictCandidate extends S.Opaque<ConflictCandidate, { readonly br
  * @category models
  * @since 0.0.0
  */
-export class CorrectionChainEntry extends S.Opaque<CorrectionChainEntry, { readonly brand: unique symbol }>()(S.Struct({
+export class CorrectionChainEntry extends S.Opaque<CorrectionChainEntry, { readonly brand: unique symbol }>()(
+  S.Struct({
     correction: Corrections.select,
     originalClaimId: UUID,
     newClaimId: S.OptionFromNullishOr(UUID).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("CorrectionChainEntry", {
-    description: "Correction metadata joined to its original and optional replacement persisted claim identifiers.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("CorrectionChainEntry", {
+      description: "Correction metadata joined to its original and optional replacement persisted claim identifiers.",
+    })
+  )
+) {}
 
 const CorrectionChainEntryRows = CorrectionChainEntry.pipe(S.Array, S.mutable);
 const decodeCorrectionChainEntries = (rows: unknown) =>

@@ -1,3 +1,4 @@
+
 /**
  * Service: Ticket Service
  *
@@ -12,25 +13,26 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Base64Url from "effect/encoding/Base64Url";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
-import * as Schedule from "effect/Schedule";
-import * as Base64Url from "effect/encoding/Base64Url";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { AuthenticationError, TicketExpiredError, TicketNotFoundError } from "../Domain/Error/Auth.ts";
 import { ErrorMessage, Milliseconds } from "../Domain/Error/Base.ts";
 import { TicketRecord } from "../Domain/Schema/Auth.ts";
 import { StorageService } from "./Storage.ts";
+
 const decodeTicketRecord = S.decodeEffect(TicketRecord);
 const TicketRecordJson = S.fromJsonString(TicketRecord);
 const encodeTicketRecordJson = S.encodeEffect(TicketRecordJson);
@@ -63,7 +65,9 @@ const TicketStorageOperation = LiteralKit(["persist", "load", "remove", "list"])
  * @category errors
  * @since 0.0.0
  */
-export class TicketStorageError extends S.TaggedError<TicketStorageError, { readonly brand: unique symbol }>($I`TicketStorageError`)(
+export class TicketStorageError extends S.TaggedError<TicketStorageError, { readonly brand: unique symbol }>(
+  $I`TicketStorageError`
+)(
   "TicketStorageError",
   {
     message: ErrorMessage.annotateKey({ description: "Opaque ticket-storage failure summary." }),
@@ -202,14 +206,11 @@ const makeTicketService = Effect.gen(function* () {
           O.match({
             onNone: () => Effect.succeed(false),
             onSome: (content) =>
-              decodeTicketRecordJson(content).pipe(
-                Effect.map((record) => record.expiresAt.epochMilliseconds > now)
-              ),
+              decodeTicketRecordJson(content).pipe(Effect.map((record) => record.expiresAt.epochMilliseconds > now)),
           })
         ),
         Effect.mapError(ticketStorageError("load"))
-      )
-    );
+      ), { concurrency: 1 });
     return A.length(A.filter(flags, P.isTruthy));
   });
 

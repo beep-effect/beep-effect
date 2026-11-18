@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 /**
  * Entity Resolution using Effect Graph
  *
@@ -11,6 +12,7 @@
  */
 
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Graph from "effect/Graph";
@@ -20,10 +22,10 @@ import * as Inspectable from "effect/Inspectable";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as N from "effect/Number";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import type { Entity, KnowledgeGraph, Relation } from "../Domain/Model/Entity.ts";
 import { GroundingDecision, RelationObject } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionConfig, EREdge, ERNode } from "../Domain/Model/EntityResolution.ts";
@@ -47,7 +49,6 @@ import { dual2, dual3 } from "../Utils/Dual.ts";
 import { mergeEntityFields } from "../Utils/Entity.ts";
 import { computeEntitySimilarity, detectResolutionMethod, shouldConsiderMerge } from "../Utils/Similarity.ts";
 import { simpleTokenize } from "../Utils/String.ts";
-import * as S from "effect/Schema";
 
 // =============================================================================
 // Graph-Based Clustering
@@ -205,8 +206,8 @@ export const clusterEntities = dual3(
       if (entities.length >= USE_BLOCKING_THRESHOLD) {
         for (let i = 0; i < entities.length; i++) {
           const entity = entities[i];
-          const tokens = simpleTokenize(entity.mention.toLowerCase())
-            .map((t) => t.replace(/[^\w]/g, ""))
+          const tokens = simpleTokenize(Str.toLowerCase(entity.mention))
+            .map((t) => Str.replace(/[^\w]/g, "")(t))
             .filter((t) => t.length > 2 && !HashSet.has(STOP_WORDS, t));
 
           for (const token of HashSet.fromIterable(tokens)) {
@@ -231,8 +232,8 @@ export const clusterEntities = dual3(
         } else {
           // Large dataset: Use blocking
           const entityA = entities[i];
-          const tokens = simpleTokenize(entityA.mention.toLowerCase())
-            .map((t) => t.replace(/[^\w]/g, ""))
+          const tokens = simpleTokenize(Str.toLowerCase(entityA.mention))
+            .map((t) => Str.replace(/[^\w]/g, "")(t))
             .filter((t) => t.length > 2 && !HashSet.has(STOP_WORDS, t));
 
           if (tokens.length > 0) {
@@ -259,7 +260,7 @@ export const clusterEntities = dual3(
       // We process entities in chunks to avoid blocking the event loop
       // Using Effect.forEach with concurrency allows other fibers to run
       yield* Effect.forEach(
-        entities.map((_, i) => i),
+        A.map(entities, (_, i) => i),
         (i) =>
           Effect.sync(() => {
             const entityA = entities[i];
@@ -479,13 +480,13 @@ export const buildEntityResolutionGraph = dual2(
     const embeddingMap = clusteringResult.embeddingMap;
 
     // Phase 3: Create ResolvedEntity for each cluster
-    const resolvedEntities = clusters.map((cluster) => mergeClusterToResolved(cluster));
+    const resolvedEntities = A.map(clusters, (cluster) => mergeClusterToResolved(cluster));
 
     // Phase 4: Build canonical ID mapping and compute per-entity resolution info
     const canonicalMap: Record<string, EntityId> = {};
     const resolutionInfoMap = MutableHashMap.empty<string, EntityResolutionInfo>();
 
-    clusters.forEach((cluster, clusterIdx) => {
+    A.forEach(clusters, (cluster, clusterIdx) => {
       const resolvedEntity = resolvedEntities[clusterIdx];
       const canonicalId = resolvedEntity.canonicalId;
       const canonicalEntity = MutableHashMap.get(entityById, canonicalId);

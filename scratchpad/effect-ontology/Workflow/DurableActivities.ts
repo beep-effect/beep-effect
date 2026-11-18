@@ -1,3 +1,4 @@
+
 /**
  * Durable Workflow Activities
  *
@@ -29,6 +30,8 @@ import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import type { ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import * as A from "effect/Array";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Cause from "effect/Cause";
 import * as Chunk from "effect/Chunk";
 import * as DateTime from "effect/DateTime";
@@ -38,16 +41,14 @@ import * as HashMap from "effect/HashMap";
 import * as Inspectable from "effect/Inspectable";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
-import * as Order from "effect/Order";
-import * as Schedule from "effect/Schedule";
-import * as Result from "effect/Result";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Activity from "effect/workflow/Activity";
 import { ActivityError, ActivityGenericError, notFoundError, toActivityError } from "../Domain/Error/Activity.ts";
 import { BatchId, ContentHash, GcsUri, OntologyName } from "../Domain/Identity.ts";
@@ -303,15 +304,22 @@ export type ClaimPersistenceOutput = typeof ClaimPersistenceOutput.Type;
  * @category schemas
  * @since 0.0.0
  */
-export class CrossBatchResolutionOutput extends S.Opaque<CrossBatchResolutionOutput, { readonly brand: unique symbol }>()(S.Struct({
+export class CrossBatchResolutionOutput extends S.Opaque<
+  CrossBatchResolutionOutput,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
     entitiesTotal: S.Natural,
     matchedToExisting: S.Natural,
     newCanonicals: S.Natural,
     candidatesEvaluated: S.Natural,
     duration: S.DurationFromMillis,
-  }).pipe($I.annoteSchema("CrossBatchResolutionOutput", {
-    description: "Cross-batch resolution counts and an Effect Duration execution measurement.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("CrossBatchResolutionOutput", {
+      description: "Cross-batch resolution counts and an Effect Duration execution measurement.",
+    })
+  )
+) {}
 
 /**
  * Validated batch, graph, enablement, and ontology scope for cross-batch entity resolution.
@@ -335,14 +343,18 @@ export class CrossBatchResolutionOutput extends S.Opaque<CrossBatchResolutionOut
  * @category models
  * @since 0.0.0
  */
-export class CrossBatchResolutionInput extends S.Opaque<CrossBatchResolutionInput, { readonly brand: unique symbol }>()(S.Struct({
+export class CrossBatchResolutionInput extends S.Opaque<CrossBatchResolutionInput, { readonly brand: unique symbol }>()(
+  S.Struct({
     batchId: BatchId,
     resolvedGraphUri: GcsUri,
     enabled: S.Boolean,
     ontologyId: OntologyName,
-  }).pipe($I.annoteSchema("CrossBatchResolutionInput", {
-    description: "Validated batch, graph, enablement, and ontology scope for cross-batch entity resolution.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("CrossBatchResolutionInput", {
+      description: "Validated batch, graph, enablement, and ontology scope for cross-batch entity resolution.",
+    })
+  )
+) {}
 
 // -----------------------------------------------------------------------------
 // Shared helpers
@@ -458,7 +470,7 @@ const storeToKnowledgeGraph = Effect.fn("storeToKnowledgeGraph")(function* (stor
       })
     );
   }
-  const entityIdSet = MutableHashSet.fromIterable(entities.map((e) => e.id));
+  const entityIdSet = MutableHashSet.fromIterable(A.map(entities, (e) => e.id));
   const allQuads = yield* rdf.queryStore(store, {});
   const extractionArtifact = yield* claimExtractionArtifactFromQuads(allQuads);
   const relations: Array<Relation> = [];
@@ -598,8 +610,8 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
       );
 
       // Count total entities and relations before resolution
-      const totalEntities = knowledgeGraphs.reduce((sum, kg) => sum + kg.entities.length, 0);
-      const totalRelations = knowledgeGraphs.reduce((sum, kg) => sum + kg.relations.length, 0);
+      const totalEntities = A.reduce(knowledgeGraphs, 0, (sum, kg) => sum + kg.entities.length);
+      const totalRelations = A.reduce(knowledgeGraphs, 0, (sum, kg) => sum + kg.relations.length);
 
       yield* Effect.logInfo("Parsed document graphs", {
         batchId: input.batchId,
@@ -623,7 +635,7 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
       // 4. Build resolved Turtle with canonical IDs
       // Track entity provenance: which document each entity came from
       const entityToDocumentUri: Record<string, string> = {};
-      knowledgeGraphs.forEach((kg, docIndex) => {
+      A.forEach(knowledgeGraphs, (kg, docIndex) => {
         const docUri = input.documentGraphUris[docIndex];
         for (const entity of kg.entities) {
           entityToDocumentUri[entity.id] = docUri;
@@ -757,7 +769,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
       // 3. Fall back to auto-generation from ontology if shapes.ttl not found
       const shapesStore = Effect.fn("onNone")(
         function* () {
-          const shapesPath = input.ontologyUri.replace(/[^/]+\.ttl$/i, "shapes.ttl");
+          const shapesPath = Str.replace(/[^/]+\.ttl$/i, "shapes.ttl")(input.ontologyUri);
           const shapesContent = yield* storage.getOption(stripGsPrefix(shapesPath));
           if (O.isSome(shapesContent)) {
             yield* Effect.logInfo("Validation: Found shapes.ttl via auto-discovery", {
@@ -1197,7 +1209,9 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
           claimsPersisted: S.Natural.make(0),
           documentsProcessed: S.Natural.make(0),
           documentsFailed: S.Natural.make(0),
-          durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
+          durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(
+            Duration.toMillis(DateTime.distance(start, end))
+          ),
         };
       }
 
@@ -1644,7 +1658,9 @@ export const makeInferenceActivity = (input: InferenceInput) =>
           totalTripleCount: S.Natural.make(0),
           provenanceQuadCount: S.Natural.make(0),
           rulesApplied: S.Natural.make(0),
-          durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
+          durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(
+            Duration.toMillis(DateTime.distance(start, end))
+          ),
         };
       }
 
@@ -1706,9 +1722,8 @@ export const makeInferenceActivity = (input: InferenceInput) =>
         // We use RDF reification (rdf:Statement) to reference the inferred triples
         for (const quad of delta.newQuads) {
           // Create a statement IRI based on hash of the quad
-          const quadHash = `${quad.subject.value}|${quad.predicate.value}|${quad.object.value}`
-            .split("")
-            .reduce((acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) | 0, 0);
+          const quadHash = A.reduce(`${quad.subject.value}|${quad.predicate.value}|${quad.object.value}`
+            .split(""), 0, (acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) | 0);
           const statementIri = `${inferenceActivityIri}/stmt/${Math.abs(quadHash).toString(16)}`;
 
           // Reify the statement
@@ -2289,8 +2304,7 @@ Instructions:
  * @internal
  */
 const buildBatchComparisonPrompt = (pairs: ReadonlyArray<EntityPair>): string => {
-  const pairsFormatted = pairs
-    .map((pair, i) => {
+  const pairsFormatted = A.map(pairs, (pair, i) => {
       const typeLabelsA = formatEntityTypeLabels(pair.typesA);
       const typeLabelsB = formatEntityTypeLabels(pair.typesB);
       return `${i}. Entity A: "${pair.mentionA}" (${typeLabelsA || "?"})\n   Entity B: "${pair.mentionB}" (${
@@ -2366,7 +2380,7 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
       const threshold = O.getOrElse(input.verificationThreshold, () => DEFAULT_VERIFICATION_THRESHOLD);
 
       // Filter pairs that need verification (below threshold)
-      const pairsToVerify = input.entityPairs.filter((p) => p.similarity < threshold);
+      const pairsToVerify = A.filter(input.entityPairs, (p) => p.similarity < threshold);
       const skippedCount = input.entityPairs.length - pairsToVerify.length;
 
       yield* Effect.logInfo("LLM verification activity starting", {
@@ -2384,7 +2398,9 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
           rejected: [],
           skipped: S.Natural.make(skippedCount),
           totalProcessed: S.Natural.make(0),
-          durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(Duration.toMillis(DateTime.distance(start, end))),
+          durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)).make(
+            Duration.toMillis(DateTime.distance(start, end))
+          ),
         };
       }
 
@@ -2447,9 +2463,9 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
           }).pipe(Effect.provideService(LanguageModel.LanguageModel, llm));
 
           // Map results back to pairs
-          const resultsMap = HashMap.fromIterable(result.value.results.map((r) => [r.index, r]));
+          const resultsMap = HashMap.fromIterable(A.map(result.value.results, (r) => [r.index, r]));
 
-          batch.forEach((pair, idx) => {
+          A.forEach(batch, (pair, idx) => {
             const llmResult = HashMap.get(resultsMap, S.Natural.make(idx));
             const verifiedPair: VerifiedPair = {
               entityA: pair.entityA,
@@ -2563,7 +2579,7 @@ const buildClassificationPrompt = (
   }>
 ): string => {
   const docSummaries = previews
-    .map(({ contentType, index, preview }) => `Document ${index} (${contentType}):\n"""${preview.slice(0, 1500)}"""`)
+    .map(({ contentType, index, preview }) => `Document ${index} (${contentType}):\n"""${Str.slice(0, 1500)(preview)}"""`)
     .join("\n\n---\n\n");
 
   return `You are a document classification assistant. Analyze the following document previews and classify each one.
@@ -2714,7 +2730,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         // Use defaults for all documents (no classification)
         // Apply chunkingStrategyOverride if provided
         const overrideStrategy = options.chunkingStrategyOverride;
-        documentMetadata = previews.map((p) => {
+        documentMetadata = A.map(previews, (p) => {
           const fallback = DocumentMetadata.fallback({
             documentId: p.documentId,
             sourceUri: p.sourceUri,
@@ -2794,7 +2810,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         }
 
         // 4. Build DocumentMetadata for each document
-        documentMetadata = previews.map((p) => {
+        documentMetadata = A.map(previews, (p) => {
           const classification = MutableHashMap.get(classifications, p.index);
 
           if (O.isSome(classification)) {
@@ -2861,8 +2877,8 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
       }
 
       // 6. Compute stats
-      const totalEstimatedTokens = documentMetadata.reduce((sum, d) => sum + d.estimatedTokens, 0);
-      const avgComplexity = documentMetadata.reduce((sum, d) => sum + d.complexityScore, 0) / documentMetadata.length;
+      const totalEstimatedTokens = A.reduce(documentMetadata, 0, (sum, d) => sum + d.estimatedTokens);
+      const avgComplexity = A.reduce(documentMetadata, 0, (sum, d) => sum + d.complexityScore) / documentMetadata.length;
       const typeDistribution: Record<string, number> = {};
       for (const d of documentMetadata) {
         typeDistribution[d.documentType] = S.Natural.make((typeDistribution[d.documentType] ?? 0) + 1);

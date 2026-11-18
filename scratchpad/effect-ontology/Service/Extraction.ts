@@ -1,3 +1,4 @@
+
 import * as Digest from "effect/crypto/Digest";
 /**
  * Service: Extraction Services
@@ -13,22 +14,22 @@ import * as Digest from "effect/crypto/Digest";
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
+import * as A from "effect/Array";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Chunk from "effect/Chunk";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
-import * as Result from "effect/Result";
-import * as A from "effect/Array";
-import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as LanguageModel from "effect/ai/LanguageModel";
 import {
   EntityExtractionFailed,
   MentionExtractionFailed,
@@ -127,16 +128,16 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
         yield* Effect.logDebug("Entity extraction stage", {
           stage: "entity-extraction",
           candidateClasses: candidates.length,
-          candidateClassIris: candidates.map((c) => c.id).slice(0, 10),
+          candidateClassIris: A.map(candidates, (c) => c.id).slice(0, 10),
           textLength: text.length,
-          textPreview: text.slice(0, 200),
+          textPreview: Str.slice(0, 200)(text),
         });
         yield* Effect.logDebug("Entity extraction prompt", {
           stage: "entity-extraction",
           promptLength,
           systemMessageLength: structuredPrompt.systemMessage.length,
           userMessageLength: structuredPrompt.userMessage.length,
-          promptPreview: structuredPrompt.systemMessage.slice(0, 500),
+          promptPreview: Str.slice(0, 500)(structuredPrompt.systemMessage),
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
         const jsonSchemaText = yield* encodeUnknownJsonEffect(jsonSchema);
@@ -176,7 +177,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
                 entityCount: response.value.entities.length,
                 candidateClassCount: candidates.length,
               }),
-            ])
+            ], { concurrency: 1 })
           ),
           Effect.withSpan("entity-extraction-llm", {
             attributes: {
@@ -193,7 +194,8 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
             })
           )
         );
-        const propertyIris: ReadonlyArray<IRI> = (datatypeProps ?? []).map((p) => Result.getOrThrow(S.decodeResult(IRI)(p.id)));
+        const propertyIris: ReadonlyArray<IRI> = A.map((datatypeProps ?? []), (p) =>
+          Result.getOrThrow(S.decodeResult(IRI)(p.id)));
         const propertyMapResult = buildLocalNameToIriMapSafe(propertyIris);
         const propertyLocalNameToIriMap = propertyMapResult.map;
         if (propertyMapResult.hasCollisions) {
@@ -202,7 +204,7 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
             collisions: R.fromEntries(propertyMapResult.collisions),
           });
         }
-        const classIris: ReadonlyArray<IRI> = candidates.map((c) => c.id);
+        const classIris: ReadonlyArray<IRI> = A.map(candidates, (c) => c.id);
         const classMapResult = buildLocalNameToIriMapSafe(classIris);
         const localNameToIriMap = classMapResult.map;
         if (classMapResult.hasCollisions) {
@@ -273,8 +275,8 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
         yield* Effect.logInfo("Entity extraction complete", {
           stage: "entity-extraction",
           extractedCount: entityArray.length,
-          entityIds: entityArray.map((e) => e.id).slice(0, 10),
-          entityMentions: entityArray.map((e) => e.mention).slice(0, 5),
+          entityIds: A.map(entityArray, (e) => e.id).slice(0, 10),
+          entityMentions: A.map(entityArray, (e) => e.mention).slice(0, 5),
         });
         return Chunk.fromIterable(entities);
       }),
@@ -352,7 +354,7 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
         yield* Effect.logDebug("Mention extraction stage", {
           stage: "mention-extraction",
           textLength: text.length,
-          textPreview: text.slice(0, 200),
+          textPreview: Str.slice(0, 200)(text),
         });
         const response = yield* generateObjectWithRetry({
           prompt: structuredPrompt,
@@ -385,18 +387,16 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
             })
           )
         );
-        const mentions = response.value.mentions.map(
-          (m): Mention =>
+        const mentions = A.map(response.value.mentions, (m): Mention =>
             Mention.make({
               id: P.isTruthy(m.id) && /^[a-z][a-z0-9_]*$/.test(m.id) ? m.id : generateEntityId(m.mention),
               mention: m.mention,
               context: m.context,
-            })
-        );
+            }));
         yield* Effect.logInfo("Mention extraction complete", {
           stage: "mention-extraction",
           extractedCount: mentions.length,
-          mentionIds: mentions.map((m: Mention) => m.id).slice(0, 10),
+          mentionIds: A.map(mentions, (m: Mention) => m.id).slice(0, 10),
         });
         return Chunk.fromIterable(mentions);
       }),
@@ -467,7 +467,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
         if (properties.length === 0) {
           return Chunk.empty<Relation>();
         }
-        const validEntityIds = entityArray.map((e) => e.id);
+        const validEntityIds = A.map(entityArray, (e) => e.id);
         const entityTypesMap = MutableHashMap.empty<string, ReadonlyArray<string>>();
         for (const entity of entityArray) {
           MutableHashMap.set(entityTypesMap, entity.id, entity.types);
@@ -493,16 +493,16 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           entityCount: entityArray.length,
           entityIds: validEntityIds.slice(0, 10),
           propertyCount: properties.length,
-          propertyIris: properties.map((p) => p.id).slice(0, 10),
+          propertyIris: A.map(properties, (p) => p.id).slice(0, 10),
           textLength: text.length,
-          textPreview: text.slice(0, 200),
+          textPreview: Str.slice(0, 200)(text),
         });
         yield* Effect.logDebug("Relation extraction prompt", {
           stage: "relation-extraction",
           promptLength,
           systemMessageLength: structuredPrompt.systemMessage.length,
           userMessageLength: structuredPrompt.userMessage.length,
-          promptPreview: structuredPrompt.systemMessage.slice(0, 500),
+          promptPreview: Str.slice(0, 500)(structuredPrompt.systemMessage),
         });
         const jsonSchema = S.toJsonSchemaDocument(schema);
         const jsonSchemaText = yield* encodeUnknownJsonEffect(jsonSchema);
@@ -546,7 +546,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
             })
           )
         );
-        const propertyIris: ReadonlyArray<IRI> = properties.map((p) => Result.getOrThrow(S.decodeResult(IRI)(p.id)));
+        const propertyIris: ReadonlyArray<IRI> = A.map(properties, (p) => Result.getOrThrow(S.decodeResult(IRI)(p.id)));
         const relationPropertyMapResult = buildLocalNameToIriMapSafe(propertyIris);
         const localNameToIriMap = relationPropertyMapResult.map;
         if (relationPropertyMapResult.hasCollisions) {
@@ -581,10 +581,8 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
         ): boolean => {
           if (constraintTypes.length === 0) return true;
           return entityTypes.some((entityType) =>
-            constraintTypes.some(
-              (constraintType) =>
-                entityType === constraintType || (classHierarchy?.(entityType, constraintType) ?? false)
-            )
+            A.some(constraintTypes, (constraintType) =>
+                entityType === constraintType || (classHierarchy?.(entityType, constraintType) ?? false))
           );
         };
         const toRelation = (relationData: RelationData): O.Option<Relation> => {
@@ -645,7 +643,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
             {
               stage: "relation-extraction",
               violationCount: domainViolations.length,
-              violations: domainViolations.slice(0, 10).map((v) => ({
+              violations: A.map(domainViolations.slice(0, 10), (v) => ({
                 subject: v.subjectId,
                 predicate: v.predicate,
                 subjectTypes: v.subjectTypes,
@@ -660,7 +658,7 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
             {
               stage: "relation-extraction",
               violationCount: rangeViolations.length,
-              violations: rangeViolations.slice(0, 10).map((v) => ({
+              violations: A.map(rangeViolations.slice(0, 10), (v) => ({
                 object: v.objectId,
                 predicate: v.predicate,
                 objectTypes: v.objectTypes,
@@ -711,7 +709,9 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           Chunk.fromIterable([
             Relation.make({
               subjectId: entityArray[0].id,
-              predicate: Result.getOrThrow(S.decodeResult(IRI)(_properties.length > 0 ? _properties[0].id : "https://example.org/relatedTo")),
+              predicate: Result.getOrThrow(
+                S.decodeResult(IRI)(_properties.length > 0 ? _properties[0].id : "https://example.org/relatedTo")
+              ),
               object: RelationObject.cases.EntityReference.make({ value: entityArray[1].id }),
             }),
           ])

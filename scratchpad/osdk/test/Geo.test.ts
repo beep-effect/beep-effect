@@ -492,7 +492,7 @@ describe("Geo wire fixtures", () => {
         "MILES",
         "NAUTICAL_MILES",
       ];
-      const units = yield* Effect.forEach(wireUnits, (unit) => S.decodeEffect(DistanceUnit)(unit));
+      const units = yield* Effect.forEach(wireUnits, (unit) => S.decodeEffect(DistanceUnit)(unit), { concurrency: 1 });
       expect(units).toEqual([
         "millimeters",
         "centimeters",
@@ -504,7 +504,7 @@ describe("Geo wire fixtures", () => {
         "miles",
         "nauticalMiles",
       ]);
-      const encoded = yield* Effect.forEach(units, (unit) => S.encodeEffect(DistanceUnit)(unit));
+      const encoded = yield* Effect.forEach(units, (unit) => S.encodeEffect(DistanceUnit)(unit), { concurrency: 1 });
       expect(encoded).toEqual(wireUnits);
       expect(A.map(DistanceUnit.Pairs, ([wire]) => wire)).toEqual(wireUnits);
     })

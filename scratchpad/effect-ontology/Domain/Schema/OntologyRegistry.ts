@@ -7,10 +7,10 @@
 import { $ScratchpadId } from "@beep/identity";
 import { AbsoluteIRI, IRI } from "@beep/rdf";
 import { SemanticVersion } from "@beep/schema";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { GcsObject, OntologyName } from "../Identity.ts";
-import * as Effect from "effect/Effect";
-import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/OntologyRegistry");
 
@@ -47,7 +47,8 @@ const ontologyEntryImportsDefault = A.empty<IRI>();
  * @category models
  * @since 0.0.0
  */
-export class OntologyEntry extends S.Opaque<OntologyEntry, { readonly brand: unique symbol }>()(S.Struct({
+export class OntologyEntry extends S.Opaque<OntologyEntry, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: OntologyName.annotateKey({
       description: "Stable lowercase registry identifier for the ontology.",
     }),
@@ -76,7 +77,8 @@ export class OntologyEntry extends S.Opaque<OntologyEntry, { readonly brand: uni
       })
     ),
     imports: S.Array(IRI).pipe(
-      S.withConstructorDefault(Effect.succeed(ontologyEntryImportsDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyEntryImportsDefault)),
+      S.withConstructorDefault(Effect.succeed(ontologyEntryImportsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(ontologyEntryImportsDefault)),
       S.annotateKey({
         description: "Declared owl:imports IRIs; defaults to an empty collection.",
       })
@@ -96,9 +98,12 @@ export class OntologyEntry extends S.Opaque<OntologyEntry, { readonly brand: uni
     targetNamespace: AbsoluteIRI.annotateKey({
       description: "Absolute namespace IRI used for extracted resources.",
     }),
-  }).pipe($I.annoteSchema("OntologyEntry", {
-    description: "Validated registry entry for one versioned ontology and its optional companion artifacts.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("OntologyEntry", {
+      description: "Validated registry entry for one versioned ontology and its optional companion artifacts.",
+    })
+  )
+) {
   static readonly is = S.is(OntologyEntry);
   static readonly decodeOption = S.decodeUnknownOption(OntologyEntry);
 }
@@ -119,16 +124,20 @@ export class OntologyEntry extends S.Opaque<OntologyEntry, { readonly brand: uni
  * @category models
  * @since 0.0.0
  */
-export class SharedResources extends S.Opaque<SharedResources, { readonly brand: unique symbol }>()(S.Struct({
+export class SharedResources extends S.Opaque<SharedResources, { readonly brand: unique symbol }>()(
+  S.Struct({
     externalVocabs: S.OptionFromOptionalNullOr(GcsObject).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({
         description: "Optional canonical path to vocabularies shared by all ontologies.",
       })
     ),
-  }).pipe($I.annoteSchema("SharedResources", {
-    description: "Option-normalized storage resources shared by every ontology in a registry.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("SharedResources", {
+      description: "Option-normalized storage resources shared by every ontology in a registry.",
+    })
+  )
+) {}
 
 const ontologyRegistryOntologiesDefault = A.empty<OntologyEntry>();
 /**
@@ -158,7 +167,8 @@ const ontologyRegistryOntologiesDefault = A.empty<OntologyEntry>();
  * @category models
  * @since 0.0.0
  */
-export class OntologyRegistry extends S.Opaque<OntologyRegistry, { readonly brand: unique symbol }>()(S.Struct({
+export class OntologyRegistry extends S.Opaque<OntologyRegistry, { readonly brand: unique symbol }>()(
+  S.Struct({
     version: SemanticVersion.annotateKey({
       description: "Registry manifest format version.",
     }),
@@ -166,7 +176,8 @@ export class OntologyRegistry extends S.Opaque<OntologyRegistry, { readonly bran
       description: "UTC instant at which the registry was generated.",
     }),
     ontologies: S.Array(OntologyEntry).pipe(
-      S.withConstructorDefault(Effect.succeed(ontologyRegistryOntologiesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyRegistryOntologiesDefault)),
+      S.withConstructorDefault(Effect.succeed(ontologyRegistryOntologiesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(ontologyRegistryOntologiesDefault)),
       S.annotateKey({
         description: "Validated ontology entries; defaults to an empty collection.",
       })
@@ -177,9 +188,13 @@ export class OntologyRegistry extends S.Opaque<OntologyRegistry, { readonly bran
         description: "Optional resources shared by all ontology entries.",
       })
     ),
-  }).pipe($I.annoteSchema("OntologyRegistry", {
-    description: "Versioned, timestamped registry manifest containing validated ontology entries and shared resources.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("OntologyRegistry", {
+      description:
+        "Versioned, timestamped registry manifest containing validated ontology entries and shared resources.",
+    })
+  )
+) {
   static readonly is = S.is(OntologyRegistry);
   static readonly decodeOption = S.decodeUnknownOption(OntologyRegistry);
 }

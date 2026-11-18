@@ -211,7 +211,7 @@ const failureMessage =
 // Assertion helpers that keep every `yield*` out of call arguments.
 const expectRejected = <T, E>(schema: S.Codec<T, E>) =>
   Effect.fnUntraced(function* (inputs: ReadonlyArray<unknown>) {
-    const verdicts = yield* Effect.forEach(inputs, rejects(schema));
+    const verdicts = yield* Effect.forEach(inputs, rejects(schema), { concurrency: 1 });
     deepStrictEqual(
       verdicts,
       A.map(inputs, () => true)
@@ -220,7 +220,7 @@ const expectRejected = <T, E>(schema: S.Codec<T, E>) =>
 
 const expectAccepted = <T, E>(schema: S.Codec<T, E>) =>
   Effect.fnUntraced(function* (inputs: ReadonlyArray<unknown>) {
-    const verdicts = yield* Effect.forEach(inputs, rejects(schema));
+    const verdicts = yield* Effect.forEach(inputs, rejects(schema), { concurrency: 1 });
     deepStrictEqual(
       verdicts,
       A.map(inputs, () => false)
@@ -1121,12 +1121,12 @@ describe("ObjectFilter cases and invariants", () => {
   it.effect(
     "every case encodes to a wire record with the same tag and decodes back",
     Effect.fnUntraced(function* () {
-      const wires = yield* Effect.forEach(samples, (sample) => encodeFilter(sample));
+      const wires = yield* Effect.forEach(samples, (sample) => encodeFilter(sample), { concurrency: 1 });
       deepStrictEqual<ReadonlyArray<string>>(
         A.map(wires, (wire) => wire.type),
         ObjectFilter.discriminants
       );
-      const decoded = yield* Effect.forEach(wires, (wire) => decodeFilter(wire));
+      const decoded = yield* Effect.forEach(wires, (wire) => decodeFilter(wire), { concurrency: 1 });
       assertTrue(A.every(A.zip(decoded, samples), ([left, right]) => sameFilter(left, right)));
     })
   );
@@ -1515,7 +1515,7 @@ describe("the operand table and operandCodec", () => {
             strangers: A.filter(operands, (operand) => !A.contains(operandsOf(type), operandFamily(operand))),
           };
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(rows), 22);
       deepStrictEqual(
         A.filter(rows, (row) => A.isReadonlyArrayNonEmpty(row.strangers)),
@@ -1561,7 +1561,7 @@ describe("the operand table and operandCodec", () => {
             extra: A.difference(readable, allowedOperands[kind]),
           };
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(rows), 12);
       deepStrictEqual(
         A.filter(rows, (row) => A.isReadonlyArrayNonEmpty(row.missing)),
@@ -1608,7 +1608,7 @@ describe("the operand table and operandCodec", () => {
             )
           );
         })
-      );
+      , { concurrency: 1 });
       deepStrictEqual(verdicts, A.map(EquatableKind.literals, () => true));
     })
   );

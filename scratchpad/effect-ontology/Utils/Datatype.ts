@@ -42,12 +42,16 @@ const $I = $ScratchpadId.create("effect-ontology/Utils/Datatype");
  * @category models
  * @since 0.0.0
  */
-export class NormalizedValue extends S.Opaque<NormalizedValue, { readonly brand: unique symbol }>()(S.Struct({
+export class NormalizedValue extends S.Opaque<NormalizedValue, { readonly brand: unique symbol }>()(
+  S.Struct({
     value: S.String.annotateKey({ description: "Normalized string representation of the value." }),
     datatype: IRI.annotateKey({ description: "XSD datatype IRI describing the normalized value." }),
-  }).pipe($I.annoteSchema("NormalizedValue", {
-    description: "Normalized lexical value paired with its XSD datatype IRI.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("NormalizedValue", {
+      description: "Normalized lexical value paired with its XSD datatype IRI.",
+    })
+  )
+) {}
 
 // -----------------------------------------------------------------------------
 // Regex patterns for datatype detection

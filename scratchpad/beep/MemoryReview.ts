@@ -78,7 +78,7 @@ export class MemoryReviewRejected extends S.TaggedError<MemoryReviewRejected, { 
  * @since 0.0.0
  */
 export declare namespace MemoryReviewRejected {
-  export type Encoded = S.Codec.Encoded<typeof MemoryReviewRejected>;
+  export type Encoded = typeof MemoryReviewRejected.Encoded;
 }
 
 /**
@@ -188,7 +188,7 @@ export class MemoryReviewConflict extends Model<MemoryReviewConflict>("MemoryRev
  * @since 0.0.0
  */
 export declare namespace MemoryReviewConflict {
-  export type Encoded = S.Codec.Encoded<typeof MemoryReviewConflict>;
+  export type Encoded = typeof MemoryReviewConflict.Encoded;
 }
 
 const isAwareInstantString = S.is(S.String.check(S.isPattern(awareInstant)));

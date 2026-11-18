@@ -4,8 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import * as HashSet from "effect/HashSet";
+
 import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as Str from "effect/String";
 import { dual2 } from "./Dual.ts";
 

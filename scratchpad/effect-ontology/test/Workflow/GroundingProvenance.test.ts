@@ -2,12 +2,12 @@ import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { IRI } from "@beep/rdf/Iri";
 import { ObjectRef } from "@beep/rdf/Prov";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/Arbitrary";
 import {
   Entity,
   EntityObservation,
@@ -28,6 +28,7 @@ import {
   entityToClaims,
 } from "../../Utils/ClaimFactory.ts";
 import { mergeGraphs } from "../../Workflow/Merge.ts";
+
 const decodeEvidenceSpan = S.decodeEffect(EvidenceSpan);
 const decodeObjectRef = S.decodeEffect(ObjectRef);
 
@@ -270,17 +271,17 @@ describe("grounding provenance", () => {
         Arbitrary.checkEffect(
           Arbitrary.all([canonicalGraph, canonicalGraph, canonicalGraph]),
           ([first, second, third]) => {
-        const leftIdentity = mergeGraphs(empty, first);
-        const rightIdentity = mergeGraphs(first, empty);
-        const leftAssociated = mergeGraphs(mergeGraphs(first, second), third);
-        const rightAssociated = mergeGraphs(first, mergeGraphs(second, third));
+            const leftIdentity = mergeGraphs(empty, first);
+            const rightIdentity = mergeGraphs(first, empty);
+            const leftAssociated = mergeGraphs(mergeGraphs(first, second), third);
+            const rightAssociated = mergeGraphs(first, mergeGraphs(second, third));
 
-        return (
-          Equal.equals(leftIdentity, first) &&
-          Equal.equals(rightIdentity, first) &&
-          Equal.equals(mergeGraphs(first, second), mergeGraphs(second, first)) &&
-          Equal.equals(leftAssociated, rightAssociated)
-        );
+            return (
+              Equal.equals(leftIdentity, first) &&
+              Equal.equals(rightIdentity, first) &&
+              Equal.equals(mergeGraphs(first, second), mergeGraphs(second, first)) &&
+              Equal.equals(leftAssociated, rightAssociated)
+            );
           },
           { runs: 100 }
         )

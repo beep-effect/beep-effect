@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity";
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -7,10 +8,10 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
-import * as PubSub from "effect/PubSub";
-import * as Scope from "effect/Scope";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as PubSub from "effect/PubSub";
+import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import { OntologyName } from "../../Domain/Identity.ts";
 import { OntologyEventEntry } from "../../Domain/Schema/EventSchema.ts";
 import { InferenceRunResponse } from "../../Domain/Schema/Inference.ts";
@@ -18,7 +19,6 @@ import { EventBridgeLive, EventBridgeService } from "../../Runtime/EventBridge.t
 import { BroadcastEvent, EventBroadcastHub, EventBroadcastHubMemory } from "../../Runtime/EventBroadcastRouter.ts";
 import { InferenceJobStore, InferenceJobStoreLive } from "../../Runtime/InferenceRouter.ts";
 import { EventBusService, EventBusServiceMemory } from "../../Service/EventBus.ts";
-import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/test/Runtime/RuntimeEventServices.test");
 

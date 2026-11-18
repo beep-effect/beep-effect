@@ -118,9 +118,9 @@ const literalDomain = <A extends string, I extends string>(
       const wireLiterals = A.map(pairs, ([wire]) => wire);
       const domainLiterals = A.map(pairs, ([, domain]) => domain);
       deepStrictEqual(A.fromIterable(kit.Pairs), A.fromIterable(pairs));
-      const decoded = yield* Effect.forEach(wireLiterals, (wire) => decode(wire));
+      const decoded = yield* Effect.forEach(wireLiterals, (wire) => decode(wire), { concurrency: 1 });
       deepStrictEqual(decoded, domainLiterals);
-      const encoded = yield* Effect.forEach(domainLiterals, (domain) => encode(domain));
+      const encoded = yield* Effect.forEach(domainLiterals, (domain) => encode(domain), { concurrency: 1 });
       deepStrictEqual(encoded, wireLiterals);
     })
   );

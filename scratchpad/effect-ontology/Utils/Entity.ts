@@ -10,10 +10,10 @@
  */
 
 import type { IRI } from "@beep/rdf";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as Order from "effect/Order";
 import * as A from "effect/Array";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import type { Entity } from "../Domain/Model/Entity.ts";
 import { ENTITY_ID_PATTERN } from "../Domain/Model/shared.ts";

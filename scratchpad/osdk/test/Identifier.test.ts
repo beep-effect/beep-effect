@@ -187,7 +187,7 @@ describe("kind brands", () => {
       const encoded = yield* S.encodeEffect(ObjectTypeRid)(rid);
       strictEqual(rid, ObjectTypeRid.make(wire));
       strictEqual(encoded, wire);
-      const verdicts = yield* Effect.all(A.map(kindBrands, ([, schema]) => rejects(schema)("")));
+      const verdicts = yield* Effect.all(A.map(kindBrands, ([, schema]) => rejects(schema)("")), { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -277,7 +277,7 @@ describe("ResourceIdentifier", () => {
       const encoded = yield* S.encodeEffect(ResourceIdentifier)(decoded);
       strictEqual(decoded, ResourceIdentifier.make(wire));
       strictEqual(encoded, wire);
-      const verdicts = yield* Effect.all(A.map(malformedRids, rejects(ResourceIdentifier)));
+      const verdicts = yield* Effect.all(A.map(malformedRids, rejects(ResourceIdentifier)), { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -317,8 +317,8 @@ describe("ResourceIdentifierParts", () => {
   it.effect(
     "accepts exactly the strings ResourceIdentifier accepts",
     Effect.fnUntraced(function* () {
-      const accepted = yield* Effect.all(A.map(canonicalRids, rejects(ResourceIdentifierParts)));
-      const refused = yield* Effect.all(A.map(malformedRids, rejects(ResourceIdentifierParts)));
+      const accepted = yield* Effect.all(A.map(canonicalRids, rejects(ResourceIdentifierParts)), { concurrency: 1 });
+      const refused = yield* Effect.all(A.map(malformedRids, rejects(ResourceIdentifierParts)), { concurrency: 1 });
       assertFalse(A.some(accepted, identity));
       assertTrue(A.every(refused, identity));
     })
@@ -380,7 +380,7 @@ describe("ResourceIdentifierParts", () => {
     "ResourceIdentifierParts: encode then decode is equivalent to the original",
     Effect.fnUntraced(function* () {
       const samples = yield* Arbitrary.sampleEffect(Arbitrary.schema(ResourceIdentifierParts), { count: 50, seed: 1 });
-      const exits = yield* Effect.all(A.map(samples, (parts) => Effect.exit(encodeParts(parts))));
+      const exits = yield* Effect.all(A.map(samples, (parts) => Effect.exit(encodeParts(parts))), { concurrency: 1 });
       assertTrue(A.every(exits, Exit.isSuccess));
       const returned = yield* Effect.forEach(
         samples,
@@ -389,7 +389,7 @@ describe("ResourceIdentifierParts", () => {
           const decoded = yield* decodeParts(encoded);
           return partsEquivalence(decoded, parts);
         })
-      );
+      , { concurrency: 1 });
       strictEqual(A.length(returned), 50);
       assertTrue(A.every(returned, identity));
     })
@@ -432,7 +432,7 @@ describe("OntologyIdentifier", () => {
       // Loose text that only looks like a resource identifier is an API name: `ri.a.b.c.d` has the form, `rid` not.
       const loose = yield* Effect.forEach(["ri.a.b.c.d", "rid", "ri.ontology", "RI.ontology.main.ontology.x"], (text) =>
         decode(text)
-      );
+      , { concurrency: 1 });
       deepStrictEqual(A.map(loose, S.is(ResourceIdentifier)), [true, false, false, false]);
     })
   );
@@ -446,9 +446,9 @@ describe("OntologyIdentifier", () => {
         encode(OntologyApiName.make("default-ontology")),
         // The bare brand is as loose as the wire: a resource identifier that is not canonical still encodes.
         encode(OntologyRid.make("rid")),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(wire, [ontologyRid, "default-ontology", "rid"]);
-      const verdicts = yield* Effect.all([rejects(OntologyIdentifier)(""), rejects(OntologyIdentifier)(7)]);
+      const verdicts = yield* Effect.all([rejects(OntologyIdentifier)(""), rejects(OntologyIdentifier)(7)], { concurrency: 1 });
       deepStrictEqual(verdicts, [true, true]);
       assertFalse(S.is(OntologyIdentifier)(""));
     })

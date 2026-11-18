@@ -1,3 +1,4 @@
+
 /**
  * Service: NLP Services
  *
@@ -21,31 +22,31 @@ import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { WinkStringArray } from "@beep/wink/Wink.models";
 import { WinkEngine } from "@beep/wink/Wink.service";
 import { WinkCorpusManager } from "@beep/wink/WinkCorpus.service";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
-import * as Order from "effect/Order";
-import * as Schedule from "effect/Schedule";
-import * as SchemaGetter from "effect/SchemaGetter";
-import * as Tuple from "effect/Tuple";
-import * as Result from "effect/Result";
-import { pipe } from "effect/Function";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import type { OntologyContext } from "../Domain/Model/Ontology.ts";
 import { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import type { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
 import { ChunkingParams, ChunkingStrategy } from "../Domain/Schema/DocumentMetadata.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 import { enhanceTextForSearch } from "../Utils/Text.ts";
 import { EmbeddingService, EmbeddingServiceDefault } from "./Embedding.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 const SimilaritySearchResultOrder = Order.mapInput(
   Order.flip(Order.Number),
@@ -74,13 +75,17 @@ const NlpIndexKind = LiteralKit(["bm25", "semantic"]).pipe(
  * @category models
  * @since 0.0.0
  */
-export class TokenizeResult extends S.Opaque<TokenizeResult, { readonly brand: unique symbol }>()(S.Struct({
+export class TokenizeResult extends S.Opaque<TokenizeResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     tokens: S.Array(S.String),
     sentences: S.Array(S.String),
     entities: S.Array(S.String),
-  }).pipe($I.annoteSchema("TokenizeResult", {
-    description: "Token, sentence, and named-entity text emitted by one tokenization pass.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("TokenizeResult", {
+      description: "Token, sentence, and named-entity text emitted by one tokenization pass.",
+    })
+  )
+) {}
 
 /**
  * BM25 similarity result
@@ -98,29 +103,40 @@ export class TokenizeResult extends S.Opaque<TokenizeResult, { readonly brand: u
  * @category models
  * @since 0.0.0
  */
-export class SimilarityResult extends S.Opaque<SimilarityResult, { readonly brand: unique symbol }>()(S.Struct({
+export class SimilarityResult extends S.Opaque<SimilarityResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     doc: S.String,
     score: S.Finite,
     index: S.Natural,
-  }).pipe($I.annoteSchema("SimilarityResult", {
-    description: "Source document, finite similarity score, and stable input position for one ranked match.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("SimilarityResult", {
+      description: "Source document, finite similarity score, and stable input position for one ranked match.",
+    })
+  )
+) {}
 
-class TextChunkModel extends S.Opaque<TextChunkModel, { readonly brand: unique symbol }>()(S.Struct({
+class TextChunkModel extends S.Opaque<TextChunkModel, { readonly brand: unique symbol }>()(
+  S.Struct({
     index: S.Natural,
     text: S.String,
     startOffset: S.Natural,
     endOffset: S.Natural,
-  }).pipe($I.annoteSchema("TextChunkModel", {
-    description: "Zero-based source-aligned text chunk with non-negative UTF-16 offsets.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("TextChunkModel", {
+      description: "Zero-based source-aligned text chunk with non-negative UTF-16 offsets.",
+    })
+  )
+) {}
 
 const TextChunkDefinition = TextChunkModel.check(
-  S.makeFilter(({ endOffset, startOffset }) => endOffset >= startOffset, $I.annote("TextChunkOffsetOrderCheck", {
-    title: "Text Chunk Offset Order",
-    description: "Checks that a text chunk ends at or after its source start offset.",
-    message: "Expected endOffset to be greater than or equal to startOffset.",
-  }))
+  S.makeFilter(
+    ({ endOffset, startOffset }) => endOffset >= startOffset,
+    $I.annote("TextChunkOffsetOrderCheck", {
+      title: "Text Chunk Offset Order",
+      description: "Checks that a text chunk ends at or after its source start offset.",
+      message: "Expected endOffset to be greater than or equal to startOffset.",
+    })
+  )
 );
 
 /**
@@ -159,21 +175,29 @@ export const TextChunk = TextChunkDefinition.pipe(
  */
 export type TextChunk = typeof TextChunk.Type;
 
-class ChunkOptionsInput extends S.Opaque<ChunkOptionsInput, { readonly brand: unique symbol }>()(S.Struct({
+class ChunkOptionsInput extends S.Opaque<ChunkOptionsInput, { readonly brand: unique symbol }>()(
+  S.Struct({
     preserveSentences: S.OptionFromOptionalKey(ChunkingParams.fields.preserveSentences),
     maxChunkSize: S.OptionFromOptionalKey(ChunkingParams.fields.chunkSize),
     overlapSentences: S.OptionFromOptionalKey(ChunkingParams.fields.overlapSentences),
     strategy: S.OptionFromOptionalKey(ChunkingStrategy),
-  }).pipe($I.annoteSchema("ChunkOptionsInput", {
-    description: "Optional overrides derived from the canonical chunk-parameter domains and strategy registry.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ChunkOptionsInput", {
+      description: "Optional overrides derived from the canonical chunk-parameter domains and strategy registry.",
+    })
+  )
+) {}
 
-class ResolvedChunkOptions extends S.Opaque<ResolvedChunkOptions, { readonly brand: unique symbol }>()(S.Struct({
+class ResolvedChunkOptions extends S.Opaque<ResolvedChunkOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
     strategy: ChunkingStrategy,
     params: ChunkingParams,
-  }).pipe($I.annoteSchema("ResolvedChunkOptions", {
-    description: "Selected chunking strategy paired with one complete canonical parameter set.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ResolvedChunkOptions", {
+      description: "Selected chunking strategy paired with one complete canonical parameter set.",
+    })
+  )
+) {}
 
 const resolveChunkOptions = (options: ChunkOptionsInput): ResolvedChunkOptions => {
   const strategy = O.getOrElse(options.strategy, () => ChunkingStrategy.Enum.standard);
@@ -312,7 +336,9 @@ const OntologySearchResultKind = LiteralKit(["class", "property"]).pipe(
   })
 );
 
-class OntologySearchResultBase extends S.Class<OntologySearchResultBase, { readonly brand: unique symbol }>($I`OntologySearchResultBase`)(
+class OntologySearchResultBase extends S.Class<OntologySearchResultBase, { readonly brand: unique symbol }>(
+  $I`OntologySearchResultBase`
+)(
   {
     iri: IRI,
     score: S.Finite,
@@ -579,13 +605,13 @@ function chunkBySize(text: string, maxChunkSize: number, startIndex: number): Ar
   let lastEnd = 0;
   let sentenceMatch = sentencePattern.exec(text);
   while (P.isNotNull(sentenceMatch)) {
-    sentences.push(text.slice(lastEnd, sentenceMatch.index + sentenceMatch[0].length));
+    sentences.push(Str.slice(lastEnd, sentenceMatch.index + sentenceMatch[0].length)(text));
     lastEnd = sentenceMatch.index + sentenceMatch[0].length;
     sentenceMatch = sentencePattern.exec(text);
   }
   // Add remaining text as last sentence
   if (lastEnd < text.length) {
-    sentences.push(text.slice(lastEnd));
+    sentences.push(Str.slice(lastEnd)(text));
   }
 
   // If no sentences found, treat whole text as one
@@ -676,15 +702,13 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
       ) {
         const corpus = yield* corpora.createCorpus();
         return yield* Effect.gen(function* () {
-          const documents = yield* Effect.all(
-            A.map(docs, (text, index) =>
+          const documents = yield* Effect.all(A.map(docs, (text, index) =>
               tokenization.document(enhanceTextForSearch(text, 2), `${corpus.corpusId}-${index}`)
-            )
-          );
+            ), { concurrency: 1 });
           yield* corpora.learnDocuments({ corpusId: corpus.corpusId, documents });
           const queryResult = yield* corpora.query({ corpusId: corpus.corpusId, query, topN: k });
           return A.map(queryResult.ranked, (result): SimilarityResult => {
-            const index = Number.parseInt(result.id.slice(result.id.lastIndexOf("-") + 1), 10);
+            const index = Number.parseInt(Str.slice(result.id.lastIndexOf("-") + 1)(result.id), 10);
             return SimilarityResult.make({ doc: docs[index], index: S.Natural.make(index), score: result.score });
           });
         }).pipe(Effect.ensuring(corpora.deleteCorpus(corpus.corpusId)));
@@ -706,8 +730,8 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
               Effect.map((docVector) => O.some({ doc, index, embedding: docVector })),
               Effect.tapError((error) =>
                 Effect.logWarning("Embedding failed after retries", {
-    docPreview: doc.slice(0, 100),
-    error: Inspectable.toStringUnknown(error),
+                  docPreview: Str.slice(0, 100)(doc),
+                  error: Inspectable.toStringUnknown(error),
                 })
               ),
               Effect.orElseSucceed(O.none)
@@ -801,7 +825,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
             chunkSize += sentenceLength;
           }
           if (chunkSentences.length > 0) {
-            const chunkText = chunkSentences.join(" ");
+            const chunkText = A.join(chunkSentences, " ");
             const chunkStartOffset = sentenceIndex[i]?.startOffset ?? 0;
             const lastSentenceIdx = i + chunkSentences.length - 1;
             const chunkEndOffset = sentenceIndex[lastSentenceIdx]?.endOffset ?? chunkStartOffset + chunkText.length;
@@ -828,9 +852,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         const documents = ontology.toDocuments();
         const domainModelMap = MutableHashMap.empty<string, ClassDefinition | PropertyDefinition>();
         const corpus = yield* corpora.createCorpus({ bm25Config: config });
-        const corpusDocuments = yield* Effect.all(
-          A.map(documents, ([iri, document]) => tokenization.document(enhanceTextForSearch(document, 2), iri))
-        );
+        const corpusDocuments = yield* Effect.all(A.map(documents, ([iri, document]) => tokenization.document(enhanceTextForSearch(document, 2), iri)), { concurrency: 1 });
         yield* corpora.learnDocuments({ corpusId: corpus.corpusId, documents: corpusDocuments });
         for (const [iri] of documents) {
           const classDef = ontology.getClass(iri);
@@ -855,34 +877,34 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         query: string,
         limit: PosInt = PosInt.make(10)
       ): Effect.fn.Return<ReadonlyArray<OntologySearchResult>, NlpIndexError> {
-          const corpusId = index._corpusId;
-          const domainModelMap = index._domainModelMap;
-          const ontology = index._ontology;
-          if (P.not(P.isTruthy)(corpusId) || P.not(P.isTruthy)(domainModelMap) || P.not(P.isTruthy)(ontology)) {
-            return yield* NlpIndexError.make({
+        const corpusId = index._corpusId;
+        const domainModelMap = index._domainModelMap;
+        const ontology = index._ontology;
+        if (P.not(P.isTruthy)(corpusId) || P.not(P.isTruthy)(domainModelMap) || P.not(P.isTruthy)(ontology)) {
+          return yield* NlpIndexError.make({
+            indexKind: "bm25",
+            message: "Invalid BM25 index reference",
+            cause: O.none(),
+          });
+        }
+        const queryResult = yield* corpora.query({ corpusId, query, topN: limit }).pipe(
+          Effect.mapError((cause) =>
+            NlpIndexError.make({
               indexKind: "bm25",
-              message: "Invalid BM25 index reference",
-              cause: O.none(),
-            });
+              message: `Canonical Wink corpus query failed: ${cause.message}`,
+              cause: O.some(cause),
+            })
+          )
+        );
+        const results: Array<OntologySearchResult> = [];
+        for (const result of queryResult.ranked) {
+          const iri = result.id;
+          const domainModel = MutableHashMap.get(domainModelMap, iri);
+          if (O.isSome(domainModel)) {
+            const iriValue = Result.getOrThrow(S.decodeResult(IRI)(iri));
+            results.push(makeOntologySearchResult(iriValue, result.score, domainModel.value));
           }
-          const queryResult = yield* corpora.query({ corpusId, query, topN: limit }).pipe(
-            Effect.mapError((cause) =>
-              NlpIndexError.make({
-                indexKind: "bm25",
-                message: `Canonical Wink corpus query failed: ${cause.message}`,
-                cause: O.some(cause),
-              })
-            )
-          );
-          const results: Array<OntologySearchResult> = [];
-          for (const result of queryResult.ranked) {
-            const iri = result.id;
-            const domainModel = MutableHashMap.get(domainModelMap, iri);
-            if (O.isSome(domainModel)) {
-              const iriValue = Result.getOrThrow(S.decodeResult(IRI)(iri));
-              results.push(makeOntologySearchResult(iriValue, result.score, domainModel.value));
-            }
-          }
+        }
         return results;
       }),
       createOntologySemanticIndex: Effect.fn("NlpService.createOntologySemanticIndex")(function* (
@@ -891,8 +913,8 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         const documents = ontology.toDocuments();
         const embeddingMap = MutableHashMap.empty<string, ReadonlyArray<number>>();
         const domainModelMap = MutableHashMap.empty<string, ClassDefinition | PropertyDefinition>();
-        const iris = documents.map(([iri]) => iri);
-        const texts = documents.map(([, document]) => document);
+        const iris = A.map(documents, ([iri]) => iri);
+        const texts = A.map(documents, ([, document]) => document);
         const embeddings = yield* embedding.embedBatch(texts, "search_document").pipe(
           Effect.retry(embeddingRetrySchedule),
           Effect.timeout(Duration.times(EMBEDDING_TIMEOUT, texts.length)),

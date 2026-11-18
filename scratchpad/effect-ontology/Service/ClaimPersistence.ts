@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 /**
  * Claim Persistence Service
  *
@@ -47,16 +48,20 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ClaimPersistence");
  * @category models
  * @since 0.0.0
  */
-export class ArticleMetadata extends S.Opaque<ArticleMetadata, { readonly brand: unique symbol }>()(S.Struct({
+export class ArticleMetadata extends S.Opaque<ArticleMetadata, { readonly brand: unique symbol }>()(
+  S.Struct({
     uri: S.NonEmptyString,
     ontologyId: S.NonEmptyString,
     headline: S.optionalKey(S.String),
     publishedAt: S.Date,
     sourceName: S.optionalKey(S.NonEmptyString),
     contentHash: S.optionalKey(S.NonEmptyString),
-  }).pipe($I.annoteSchema("ArticleMetadata", {
-    description: "Validated article identity, publication time, and optional source metadata.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ArticleMetadata", {
+      description: "Validated article identity, publication time, and optional source metadata.",
+    })
+  )
+) {}
 
 /**
  * Result of claim persistence operation
@@ -78,13 +83,17 @@ export class ArticleMetadata extends S.Opaque<ArticleMetadata, { readonly brand:
  * @category models
  * @since 0.0.0
  */
-export class PersistenceResult extends S.Opaque<PersistenceResult, { readonly brand: unique symbol }>()(S.Struct({
+export class PersistenceResult extends S.Opaque<PersistenceResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     articleId: S.NonEmptyString,
     claimsInserted: S.Natural,
     claimsTotal: S.Natural,
-  }).pipe($I.annoteSchema("PersistenceResult", {
-    description: "Article identifier and non-negative claim persistence counts.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("PersistenceResult", {
+      description: "Article identifier and non-negative claim persistence counts.",
+    })
+  )
+) {}
 
 // =============================================================================
 // Service
@@ -162,7 +171,7 @@ export class ClaimPersistenceService extends Context.Service<ClaimPersistenceSer
       });
 
       // 2. Map ClaimData to ClaimInsertRow
-      const claimRows: Array<ClaimInsertRow> = claims.map((claim) => ({
+      const claimRows: Array<ClaimInsertRow> = A.map(claims, (claim) => ({
         articleId: article.id,
         ontologyId: articleMeta.ontologyId,
         subjectIri: claim.subjectIri,

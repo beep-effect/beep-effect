@@ -111,7 +111,7 @@ const exactly = Effect.fnUntraced(function* <T, E>(schema: S.Codec<T, E>, wire: 
 // Whether each wire value fails to decode, in order.
 const rejections = Effect.fnUntraced(function* <T, E>(schema: S.Codec<T, E>, wires: ReadonlyArray<unknown>) {
   const decode = S.decodeUnknownEffect(schema);
-  const exits = yield* Effect.forEach(wires, (wire) => Effect.exit(decode(wire)));
+  const exits = yield* Effect.forEach(wires, (wire) => Effect.exit(decode(wire)), { concurrency: 1 });
   return A.map(exits, (exit) => Exit.isFailure(exit));
 });
 
@@ -686,7 +686,7 @@ describe("LoadObjectsResponseOf", () => {
       deepStrictEqual(Struct.omit(typed, ["data"]), Struct.omit(rows, ["data"]));
       deepStrictEqual(Struct.omit(plain, ["data"]), Struct.omit(rows, ["data"]));
       // Decoding the port's rows one by one with the model's codec is the same as reading the answer whole.
-      const oneByOne = yield* Effect.forEach(rows.data, (row) => S.decodeEffect(Employee.Instance)(row));
+      const oneByOne = yield* Effect.forEach(rows.data, (row) => S.decodeEffect(Employee.Instance)(row), { concurrency: 1 });
       deepStrictEqual(oneByOne, typed.data);
     })
   );
@@ -1267,7 +1267,7 @@ it.layer(StubTransport)("the typed facade", (it) => {
     Effect.fnUntraced(function* () {
       const decodeObject = S.decodeEffect(OntologyObject);
       const page = yield* fetchPage(untyped(everyone), defaults);
-      const expected = yield* Effect.forEach([john, jane], (row) => decodeObject(row));
+      const expected = yield* Effect.forEach([john, jane], (row) => decodeObject(row), { concurrency: 1 });
       assertTrue(sameType<(typeof page.data)[number], OntologyObject>(true));
       deepStrictEqual(page.data, expected);
       assertSome(page.nextPageToken, PageToken.make("v1.second"));

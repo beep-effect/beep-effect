@@ -7,8 +7,8 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import * as S from "effect/Schema";
-import { KnowledgeGraph } from "./Entity.ts";
 import { PosInt } from "../../Schema/PosInt.ts";
+import { KnowledgeGraph } from "./Entity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionTelemetry");
 
@@ -46,11 +46,14 @@ export const ProviderTokenUsage = (() => {
     },
   });
   const schema = definition.check(
-    S.makeFilter((usage) => usage._tag !== "Partial" || usage.missingAttempts <= usage.attemptCount, $I.annote("ProviderTokenUsageAttemptCheck", {
-      title: "Provider Token Usage Attempt Counts",
-      description: "Partial usage cannot report more missing attempts than total attempts.",
-      message: "Expected missingAttempts to be less than or equal to attemptCount.",
-    }))
+    S.makeFilter(
+      (usage) => usage._tag !== "Partial" || usage.missingAttempts <= usage.attemptCount,
+      $I.annote("ProviderTokenUsageAttemptCheck", {
+        title: "Provider Token Usage Attempt Counts",
+        description: "Partial usage cannot report more missing attempts than total attempts.",
+        message: "Expected missingAttempts to be less than or equal to attemptCount.",
+      })
+    )
   );
   return schema.pipe(
     $I.annoteSchema("ProviderTokenUsage", {
@@ -86,12 +89,16 @@ export type ProviderTokenUsage = typeof ProviderTokenUsage.Type;
  * @category observability
  * @since 0.0.0
  */
-export class ExtractionTelemetry extends S.Opaque<ExtractionTelemetry, { readonly brand: unique symbol }>()(S.Struct({
+export class ExtractionTelemetry extends S.Opaque<ExtractionTelemetry, { readonly brand: unique symbol }>()(
+  S.Struct({
     chunkCount: S.Natural,
     usage: ProviderTokenUsage,
-  }).pipe($I.annoteSchema("ExtractionTelemetry", {
-    description: "Actual chunk count and provider usage captured for one extraction invocation.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExtractionTelemetry", {
+      description: "Actual chunk count and provider usage captured for one extraction invocation.",
+    })
+  )
+) {}
 
 /**
  * Successful extraction value returned by the workflow service.
@@ -122,9 +129,13 @@ export class ExtractionTelemetry extends S.Opaque<ExtractionTelemetry, { readonl
  * @category models
  * @since 0.0.0
  */
-export class ExtractionOutcome extends S.Opaque<ExtractionOutcome, { readonly brand: unique symbol }>()(S.Struct({
+export class ExtractionOutcome extends S.Opaque<ExtractionOutcome, { readonly brand: unique symbol }>()(
+  S.Struct({
     graph: KnowledgeGraph,
     telemetry: ExtractionTelemetry,
-  }).pipe($I.annoteSchema("ExtractionOutcome", {
-    description: "Published and audited knowledge graph paired with extraction telemetry.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExtractionOutcome", {
+      description: "Published and audited knowledge graph paired with extraction telemetry.",
+    })
+  )
+) {}

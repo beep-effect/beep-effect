@@ -3,10 +3,10 @@ import { makeDrizzleLayer, migrateBundle, PostgresDrizzle } from "@beep/postgres
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";

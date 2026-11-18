@@ -6,26 +6,32 @@
  */
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
+import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import * as A from "effect/Array";
-import * as S from "effect/Schema";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as S from "effect/Schema";
 
-class MigrationsDriftError extends S.TaggedError<MigrationsDriftError, { readonly brand: unique symbol }>()("MigrationsDriftError", {
-  message: S.String,
-  newFolders: S.Array(S.String),
-}) {}
+class MigrationsDriftError extends S.TaggedError<MigrationsDriftError, { readonly brand: unique symbol }>()(
+  "MigrationsDriftError",
+  {
+    message: S.String,
+    newFolders: S.Array(S.String),
+  }
+) {}
 
-class MigrationGenerationError extends S.TaggedError<MigrationGenerationError, { readonly brand: unique symbol }>()("MigrationGenerationError", {
-  exitCode: S.Int,
-  message: S.String,
-}) {}
+class MigrationGenerationError extends S.TaggedError<MigrationGenerationError, { readonly brand: unique symbol }>()(
+  "MigrationGenerationError",
+  {
+    exitCode: S.Int,
+    message: S.String,
+  }
+) {}
 
 const program = Effect.scoped(
   Effect.gen(function* () {

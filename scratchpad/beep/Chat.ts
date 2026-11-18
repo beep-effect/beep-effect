@@ -485,7 +485,7 @@ export class MessageConversationStructured extends Model<MessageConversationStru
  * @since 0.0.0
  */
 export declare namespace MessageConversationStructured {
-  export type Encoded = S.Codec.Encoded<typeof MessageConversationStructured>;
+  export type Encoded = typeof MessageConversationStructured.Encoded;
 }
 
 /**
@@ -525,7 +525,7 @@ export class MessageConversation extends Model<MessageConversation>("MessageConv
  * @since 0.0.0
  */
 export declare namespace MessageConversation {
-  export type Encoded = S.Codec.Encoded<typeof MessageConversation>;
+  export type Encoded = typeof MessageConversation.Encoded;
 }
 
 /**
@@ -571,7 +571,7 @@ export class FileChat extends Model<FileChat>("FileChat")(
  * @since 0.0.0
  */
 export declare namespace FileChat {
-  export type Encoded = S.Codec.Encoded<typeof FileChat>;
+  export type Encoded = typeof FileChat.Encoded;
 }
 
 /**
@@ -691,7 +691,7 @@ export class ChartDataPoint extends Model<ChartDataPoint>("ChartDataPoint")(
  * @since 0.0.0
  */
 export declare namespace ChartDataPoint {
-  export type Encoded = S.Codec.Encoded<typeof ChartDataPoint>;
+  export type Encoded = typeof ChartDataPoint.Encoded;
 }
 
 /**
@@ -732,7 +732,7 @@ export class ChartDataset extends Model<ChartDataset>("ChartDataset")(
  * @since 0.0.0
  */
 export declare namespace ChartDataset {
-  export type Encoded = S.Codec.Encoded<typeof ChartDataset>;
+  export type Encoded = typeof ChartDataset.Encoded;
 }
 
 /**
@@ -773,7 +773,7 @@ export class ChartData extends Model<ChartData>("ChartData")(
  * @since 0.0.0
  */
 export declare namespace ChartData {
-  export type Encoded = S.Codec.Encoded<typeof ChartData>;
+  export type Encoded = typeof ChartData.Encoded;
 }
 
 const evidenceKinds = HashSet.fromIterable([
@@ -928,7 +928,7 @@ export class ChatEvidenceReference extends Model<ChatEvidenceReference>("ChatEvi
  * @since 0.0.0
  */
 export declare namespace ChatEvidenceReference {
-  export type Encoded = S.Codec.Encoded<typeof ChatEvidenceReference>;
+  export type Encoded = typeof ChatEvidenceReference.Encoded;
 }
 
 const jsonSize = (value: S.JsonObject): number => JSON.stringify(value).length;
@@ -1049,7 +1049,7 @@ export class ChatEvidenceEnvelope extends Model<ChatEvidenceEnvelope>("ChatEvide
  * @since 0.0.0
  */
 export declare namespace ChatEvidenceEnvelope {
-  export type Encoded = S.Codec.Encoded<typeof ChatEvidenceEnvelope>;
+  export type Encoded = typeof ChatEvidenceEnvelope.Encoded;
 }
 
 /**
@@ -1210,7 +1210,7 @@ export class Message extends Model<Message>("Message")(
  * @since 0.0.0
  */
 export declare namespace Message {
-  export type Encoded = S.Codec.Encoded<typeof Message>;
+  export type Encoded = typeof Message.Encoded;
 }
 
 const decodeUnknownEffectMessage = S.decodeUnknownEffect(Message);
@@ -1594,7 +1594,7 @@ export class ResponseMessage extends Model<ResponseMessage>("ResponseMessage")(
  * @since 0.0.0
  */
 export declare namespace ResponseMessage {
-  export type Encoded = S.Codec.Encoded<typeof ResponseMessage>;
+  export type Encoded = typeof ResponseMessage.Encoded;
 }
 
 const awareScopeDate = S.NullOr(S.String).pipe(
@@ -1668,7 +1668,7 @@ export class PageContext extends Model<PageContext>("PageContext")(
  * @since 0.0.0
  */
 export declare namespace PageContext {
-  export type Encoded = S.Codec.Encoded<typeof PageContext>;
+  export type Encoded = typeof PageContext.Encoded;
 }
 
 /**
@@ -1719,7 +1719,7 @@ export class SendMessageRequest extends Model<SendMessageRequest>("SendMessageRe
  * @since 0.0.0
  */
 export declare namespace SendMessageRequest {
-  export type Encoded = S.Codec.Encoded<typeof SendMessageRequest>;
+  export type Encoded = typeof SendMessageRequest.Encoded;
 }
 
 /**
@@ -1759,7 +1759,7 @@ export class GenerateReplyTurn extends Model<GenerateReplyTurn>("GenerateReplyTu
  * @since 0.0.0
  */
 export declare namespace GenerateReplyTurn {
-  export type Encoded = S.Codec.Encoded<typeof GenerateReplyTurn>;
+  export type Encoded = typeof GenerateReplyTurn.Encoded;
 }
 
 /**
@@ -1818,7 +1818,7 @@ export class GenerateReplyRequest extends Model<GenerateReplyRequest>("GenerateR
  * @since 0.0.0
  */
 export declare namespace GenerateReplyRequest {
-  export type Encoded = S.Codec.Encoded<typeof GenerateReplyRequest>;
+  export type Encoded = typeof GenerateReplyRequest.Encoded;
 }
 
 /**
@@ -1851,7 +1851,7 @@ export class GenerateReplyResponse extends Model<GenerateReplyResponse>("Generat
  * @since 0.0.0
  */
 export declare namespace GenerateReplyResponse {
-  export type Encoded = S.Codec.Encoded<typeof GenerateReplyResponse>;
+  export type Encoded = typeof GenerateReplyResponse.Encoded;
 }
 
 /**
@@ -1889,7 +1889,7 @@ export class RateMessageRequest extends Model<RateMessageRequest>("RateMessageRe
  * @since 0.0.0
  */
 export declare namespace RateMessageRequest {
-  export type Encoded = S.Codec.Encoded<typeof RateMessageRequest>;
+  export type Encoded = typeof RateMessageRequest.Encoded;
 }
 
 /**
@@ -1921,7 +1921,7 @@ export class ShareChatMessagesRequest extends Model<ShareChatMessagesRequest>("S
  * @since 0.0.0
  */
 export declare namespace ShareChatMessagesRequest {
-  export type Encoded = S.Codec.Encoded<typeof ShareChatMessagesRequest>;
+  export type Encoded = typeof ShareChatMessagesRequest.Encoded;
 }
 
 /**
@@ -1967,7 +1967,7 @@ export class ChatSession extends Model<ChatSession>("ChatSession")(
  * @since 0.0.0
  */
 export declare namespace ChatSession {
-  export type Encoded = S.Codec.Encoded<typeof ChatSession>;
+  export type Encoded = typeof ChatSession.Encoded;
 }
 
 const decodeChatSession = S.decodeUnknownEffect(ChatSession);

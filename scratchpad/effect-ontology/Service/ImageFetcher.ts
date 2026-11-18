@@ -1,3 +1,4 @@
+
 import * as Digest from "effect/crypto/Digest";
 import { flow } from "effect/Function";
 /**
@@ -13,20 +14,20 @@ import { flow } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as Schedule from "effect/Schedule";
-import * as Stream from "effect/Stream";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 import { HttpStatusCode, Milliseconds } from "../Domain/Error/Base.ts";
 import type { ImageError } from "../Domain/Error/Image.ts";
 import {
@@ -37,8 +38,8 @@ import {
 } from "../Domain/Error/Image.ts";
 import type { ImageCandidate } from "../Domain/Model/Image.ts";
 import { ImageFetchResult } from "../Domain/Model/Image.ts";
-import { sha256Bytes as sha256BytesEffect } from "../Utils/Hash.ts";
 import { PosInt } from "../Schema/PosInt.ts";
+import { sha256Bytes as sha256BytesEffect } from "../Utils/Hash.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ImageFetcher");
 
@@ -116,14 +117,30 @@ const imageFetchOptionsMaxSizeBytesDefault = PosInt.make(DEFAULT_MAX_SIZE_BYTES)
  * @category configuration
  * @since 0.0.0
  */
-export class ImageFetchOptions extends S.Opaque<ImageFetchOptions, { readonly brand: unique symbol }>()(S.Struct({
-    timeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT)), S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT))),
-    maxSizeBytes: PosInt.pipe(S.withConstructorDefault(Effect.succeed(imageFetchOptionsMaxSizeBytesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(imageFetchOptionsMaxSizeBytesDefault))),
-    allowedTypes: S.NonEmptyArray(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(ALLOWED_CONTENT_TYPES)), S.withDecodingDefaultTypeKey(Effect.succeed(ALLOWED_CONTENT_TYPES))),
-    retry: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
-  }).pipe($I.annoteSchema("ImageFetchOptions", {
-    description: "Request timeout, byte ceiling, accepted media types, and retry policy for image fetching.",
-  }))) {}
+export class ImageFetchOptions extends S.Opaque<ImageFetchOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    timeout: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT))
+    ),
+    maxSizeBytes: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(imageFetchOptionsMaxSizeBytesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(imageFetchOptionsMaxSizeBytesDefault))
+    ),
+    allowedTypes: S.NonEmptyArray(S.NonEmptyString).pipe(
+      S.withConstructorDefault(Effect.succeed(ALLOWED_CONTENT_TYPES)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ALLOWED_CONTENT_TYPES))
+    ),
+    retry: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+  }).pipe(
+    $I.annoteSchema("ImageFetchOptions", {
+      description: "Request timeout, byte ceiling, accepted media types, and retry policy for image fetching.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link ImageFetchOptions}.
@@ -397,7 +414,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
           response.stream,
           (): Array<Uint8Array> => [],
           (acc, chunk) => {
-            const nextSize = acc.reduce((size, part) => size + part.length, 0) + chunk.length;
+            const nextSize = A.reduce(acc, 0, (size, part) => size + part.length) + chunk.length;
             if (nextSize > maxSizeBytes) {
               return Effect.fail(
                 ImageTooLargeError.make({
@@ -420,7 +437,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
                 })
           )
         );
-        const bytes = new Uint8Array(chunks.reduce((size, part) => size + part.length, 0));
+        const bytes = new Uint8Array(A.reduce(chunks, 0, (size, part) => size + part.length));
         let offset = 0;
         for (const chunk of chunks) {
           bytes.set(chunk, offset);

@@ -12,19 +12,19 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { getSomesStruct } from "@beep/utils/Option";
-import type * as Duration from "effect/Duration";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
+import type * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as MutableHashSet from "effect/MutableHashSet";
-import * as Result from "effect/Result";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { PlatformError, SystemError } from "effect/PlatformError";
+import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
 import { ContentHash } from "../Domain/Identity.ts";
 import { ImageAsset } from "../Domain/Model/Image.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";

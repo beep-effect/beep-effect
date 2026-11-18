@@ -1,3 +1,4 @@
+
 /**
  * Workflow Orchestrator Service
  *
@@ -19,6 +20,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -29,13 +31,12 @@ import * as Hash from "effect/Hash";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as Order from "effect/Order";
-import * as Ref from "effect/Ref";
-import * as Schedule from "effect/Schedule";
-import * as Result from "effect/Result";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Workflow from "effect/workflow/Workflow";
@@ -227,7 +228,7 @@ export const BatchExtractionWorkflow: Workflow.Workflow<
       })
     );
 
-    return `${payload.batchId}-${Math.abs(hash).toString(16).slice(0, 8)}`;
+    return `${payload.batchId}-${Str.slice(0, 8)(Math.abs(hash).toString(16))}`;
   },
   annotations: Context.make(Workflow.SuspendOnFailure, true).pipe(Context.add(Workflow.CaptureDefects, true)),
   suspendedRetrySchedule: Schedule.max([Schedule.exponential("1 second"), Schedule.recurs(5)]).pipe(Schedule.jittered),
@@ -726,7 +727,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
         batchId,
         documentsSucceeded: successfulResults.length,
         documentsFailed: failedResults.length,
-        failedDocumentIds: failedResults.map((r) => r.documentId),
+        failedDocumentIds: A.map(failedResults, (r) => r.documentId),
       });
 
       // If ALL documents failed, fail the entire batch
@@ -943,9 +944,9 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
           documentsProcessed: S.Natural.make(successfulResults.length),
           documentsSucceeded: S.Natural.make(successfulResults.length),
           documentsFailed: S.Natural.make(failedResults.length),
-          entitiesExtracted: S.Natural.make(successfulResults.reduce((sum, r) => sum + r.entityCount, 0)),
-          relationsExtracted: S.Natural.make(successfulResults.reduce((sum, r) => sum + r.relationCount, 0)),
-          claimsExtracted: S.Natural.make(successfulResults.reduce((sum, r) => sum + (r.claimCount ?? 0), 0)),
+          entitiesExtracted: S.Natural.make(A.reduce(successfulResults, 0, (sum, r) => sum + r.entityCount)),
+          relationsExtracted: S.Natural.make(A.reduce(successfulResults, 0, (sum, r) => sum + r.relationCount)),
+          claimsExtracted: S.Natural.make(A.reduce(successfulResults, 0, (sum, r) => sum + (r.claimCount ?? 0))),
           clustersResolved: S.Natural.make(resolutionResult.clustersFormed),
           triplesIngested: S.Natural.make(ingestionResult.triplesIngested),
           totalDurationMs: DateTime.distance(workflowStart, workflowEnd),

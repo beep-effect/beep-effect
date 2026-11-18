@@ -27,20 +27,20 @@ import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FiberMap from "effect/FiberMap";
-import * as Layer from "effect/Layer";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as PubSub from "effect/PubSub";
-import * as Random from "effect/Random";
-import * as Schedule from "effect/Schedule";
-import * as Stream from "effect/Stream";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import type * as Scope from "effect/Scope";
-import * as Str from "effect/String";
 import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as PubSub from "effect/PubSub";
+import * as Random from "effect/Random";
+import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
+import type * as Scope from "effect/Scope";
+import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 import type * as Socket from "effect/socket/Socket";
 import { OntologyName } from "../Domain/Identity.ts";
 import { OntologyEventEntry } from "../Domain/Schema/EventSchema.ts";
@@ -291,7 +291,9 @@ export class EventBroadcastHub extends Context.Service<EventBroadcastHub, EventB
 /**
  * Configuration for Cloud Pub/Sub event subscription
  */
-class PubSubSubscriptionError extends S.TaggedError<PubSubSubscriptionError, { readonly brand: unique symbol }>($I`PubSubSubscriptionError`)(
+class PubSubSubscriptionError extends S.TaggedError<PubSubSubscriptionError, { readonly brand: unique symbol }>(
+  $I`PubSubSubscriptionError`
+)(
   "PubSubSubscriptionError",
   {
     message: S.NonEmptyString,
@@ -304,7 +306,9 @@ class PubSubSubscriptionError extends S.TaggedError<PubSubSubscriptionError, { r
 
 const isSubscriptionAlreadyExists = S.is(S.Struct({ code: S.tag(6) }));
 
-class PubSubCreateError extends S.TaggedError<PubSubCreateError, { readonly brand: unique symbol }>($I`PubSubCreateError`)("PubSubCreateError", {
+class PubSubCreateError extends S.TaggedError<PubSubCreateError, { readonly brand: unique symbol }>(
+  $I`PubSubCreateError`
+)("PubSubCreateError", {
   alreadyExists: S.Boolean,
   cause: S.Defect({ includeStack: true }),
 }) {}

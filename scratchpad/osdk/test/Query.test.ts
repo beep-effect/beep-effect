@@ -279,7 +279,7 @@ describe("query identifiers", () => {
   it.effect(
     "rejects empty names",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([rejects(TypeReferenceId)(""), rejects(QueryStructFieldName)("")]);
+      const verdicts = yield* Effect.all([rejects(TypeReferenceId)(""), rejects(QueryStructFieldName)("")], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -408,7 +408,7 @@ describe("aggregation type descriptors", () => {
           keyType: { type: "string" },
           valueType: { type: "double" },
         }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -570,8 +570,8 @@ describe("QueryDataType", () => {
         { type: "unsupported", unsupportedType: "optional", params: { wrapped: "string" } },
         { type: "void" },
       ];
-      const decoded = yield* Effect.forEach(wires, (wire) => decodeDataType(wire));
-      const encoded = yield* Effect.forEach(decoded, (dataType) => encodeDataType(dataType));
+      const decoded = yield* Effect.forEach(wires, (wire) => decodeDataType(wire), { concurrency: 1 });
+      const encoded = yield* Effect.forEach(decoded, (dataType) => encodeDataType(dataType), { concurrency: 1 });
       deepStrictEqual(encoded, wires);
       deepStrictEqual(A.map(decoded, tagOf), [
         "array",
@@ -623,7 +623,7 @@ describe("QueryDataType", () => {
         rejects(QueryDataType)({ type: "typeReference", typeId: "" }),
         rejects(QueryDataType)({ type: "unsupported" }),
         rejects(QueryDataType)(null),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -878,12 +878,12 @@ describe("QueryType", () => {
         rejects(QueryParameter)({ dataType: { type: "string" } }),
         rejects(QueryParameter)({ required: true }),
         rejects(QueryParameter)({ dataType: { type: "string" }, required: "true" }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       const accepted = yield* Effect.all([
         rejects(QueryType)({ ...twoDimensionalFixture, version: "1.2.3-rc1" }),
         rejects(QueryType)(twoDimensionalFixture),
-      ]);
+      ], { concurrency: 1 });
       deepStrictEqual(accepted, [false, false]);
     })
   );
@@ -976,7 +976,7 @@ describe("aggregation values", () => {
     Effect.fnUntraced(function* () {
       const openBelow: typeof QueryRange.Encoded = { endValue: 10 };
       const openAbove: typeof QueryRange.Encoded = { startValue: "2010-10-01" };
-      const decoded = yield* Effect.forEach([openBelow, openAbove], (wire) => decodeRange(wire));
+      const decoded = yield* Effect.forEach([openBelow, openAbove], (wire) => decodeRange(wire), { concurrency: 1 });
       deepStrictEqual(
         A.map(decoded, (range) => [range.startValue, range.endValue]),
         [
@@ -984,7 +984,7 @@ describe("aggregation values", () => {
           [O.some("2010-10-01"), O.none()],
         ]
       );
-      const encoded = yield* Effect.forEach(decoded, (range) => encodeRange(range));
+      const encoded = yield* Effect.forEach(decoded, (range) => encodeRange(range), { concurrency: 1 });
       deepStrictEqual(encoded, [openBelow, openAbove]);
     })
   );
@@ -1018,7 +1018,7 @@ describe("aggregation values", () => {
         rejects(QueryAggregationGroup)({ key: "Q-AFN", value: { startValue: 1 } }),
         rejects(TwoDimensionalAggregation)([{ key: "Q-AFN", value: 1 }]),
         rejects(ThreeDimensionalAggregation)({ groups: [{ key: "Q-AFN", value: 1 }] }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       assertNone(QueryRange.makeOption({}));
       assertFalse(S.is(QueryRange)({ startValue: O.none(), endValue: O.none() }));
@@ -1111,13 +1111,13 @@ describe("query execution", () => {
         errorInstanceId: "b2ae7b3e-2c89-42f5-a762-68957a9c039d",
         parameters: { functionRid: "ri.function-registry.main.function.9b55870a-63c7-4d48-8f06-9627c0805968" },
       };
-      const decoded = yield* Effect.forEach([data, failure], (wire) => decodeStreamEvent(wire));
+      const decoded = yield* Effect.forEach([data, failure], (wire) => decodeStreamEvent(wire), { concurrency: 1 });
       const summarize = QueryStreamEvent.match({
         data: ({ value }) => `data:${A.isArray(value) ? value.length : 0}`,
         error: ({ errorName, errorDescription }) => `error:${errorName}:${O.isSome(errorDescription)}`,
       });
       deepStrictEqual(A.map(decoded, summarize), ["data:3", "error:QueryRuntimeError:false"]);
-      const encoded = yield* Effect.forEach(decoded, (event) => encodeStreamEvent(event));
+      const encoded = yield* Effect.forEach(decoded, (event) => encodeStreamEvent(event), { concurrency: 1 });
       deepStrictEqual(encoded, [data, failure]);
     })
   );
@@ -1187,7 +1187,7 @@ describe("query execution", () => {
         rejects(QueryTypeByRid)({ functionVersion: "0.11.0" }),
         rejects(QueryTypeByRid)({ queryTypeRid: "ri.function-registry.main.function.x", functionVersion: "latest" }),
         rejects(GetQueryTypesByRidRequest)({ requests: {} }),
-      ]);
+      ], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );

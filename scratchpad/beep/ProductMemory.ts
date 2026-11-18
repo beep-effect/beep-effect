@@ -243,7 +243,7 @@ export type MemoryLayer = typeof MemoryLayer.Type;
  */
 export declare namespace MemoryLayer {
   /** Encoded form of {@link MemoryLayer}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryLayer>;
+  export type Encoded = typeof MemoryLayer.Encoded;
 }
 
 /**
@@ -541,7 +541,7 @@ export class MemoryItemRejected extends S.TaggedError<MemoryItemRejected, { read
  */
 export declare namespace MemoryItemRejected {
   /** Encoded form of {@link MemoryItemRejected}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryItemRejected>;
+  export type Encoded = typeof MemoryItemRejected.Encoded;
 }
 
 /**
@@ -593,7 +593,7 @@ export class MemoryEvidenceLink extends Model<MemoryEvidenceLink>("MemoryEvidenc
  */
 export declare namespace MemoryEvidenceLink {
   /** Encoded form of {@link MemoryEvidenceLink}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryEvidenceLink>;
+  export type Encoded = typeof MemoryEvidenceLink.Encoded;
 }
 
 /**
@@ -630,7 +630,7 @@ export class AccessDecision extends Model<AccessDecision>("AccessDecision")(
  */
 export declare namespace AccessDecision {
   /** Encoded form of {@link AccessDecision}. */
-  export type Encoded = S.Codec.Encoded<typeof AccessDecision>;
+  export type Encoded = typeof AccessDecision.Encoded;
 }
 
 /**
@@ -683,7 +683,7 @@ export class MemoryAccessPolicy extends Model<MemoryAccessPolicy>("MemoryAccessP
  */
 export declare namespace MemoryAccessPolicy {
   /** Encoded form of {@link MemoryAccessPolicy}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryAccessPolicy>;
+  export type Encoded = typeof MemoryAccessPolicy.Encoded;
 }
 
 /**
@@ -778,7 +778,7 @@ export class MemoryItemAlias extends Model<MemoryItemAlias>("MemoryItemAlias")(
  */
 export declare namespace MemoryItemAlias {
   /** Encoded form of {@link MemoryItemAlias}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryItemAlias>;
+  export type Encoded = typeof MemoryItemAlias.Encoded;
 }
 
 /**
@@ -1024,7 +1024,7 @@ export class MemoryItem extends Model<MemoryItem>("MemoryItem")(
  */
 export declare namespace MemoryItem {
   /** Encoded form of {@link MemoryItem}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryItem>;
+  export type Encoded = typeof MemoryItem.Encoded;
 }
 
 const decodeUnknownEffectMemoryItem = S.decodeUnknownEffect(MemoryItem);

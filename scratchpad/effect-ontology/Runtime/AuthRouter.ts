@@ -8,19 +8,20 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
-import * as Inspectable from "effect/Inspectable";
-import * as Redacted from "effect/Redacted";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as Str from "effect/String";
 import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Inspectable from "effect/Inspectable";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
+import * as Str from "effect/String";
 import { AuthenticationError } from "../Domain/Error/Auth.ts";
 import { TicketRequest, TicketResponse } from "../Domain/Schema/Auth.ts";
 import { ConfigService } from "../Service/Config.ts";

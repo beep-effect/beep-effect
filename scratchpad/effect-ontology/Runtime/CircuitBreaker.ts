@@ -21,8 +21,8 @@ import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as N from "effect/Number";
-import * as Ref from "effect/Ref";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { CircuitOpenError } from "../Domain/Error/Circuit.ts";
 import { PosInt } from "../Schema/PosInt.ts";
@@ -95,13 +95,26 @@ const circuitBreakerConfigSuccessThresholdDefault = PosInt.make(2);
  * @category models
  * @since 0.0.0
  */
-export class CircuitBreakerConfig extends S.Opaque<CircuitBreakerConfig, { readonly brand: unique symbol }>()(S.Struct({
-    maxFailures: PosInt.pipe(S.withConstructorDefault(Effect.succeed(circuitBreakerConfigMaxFailuresDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigMaxFailuresDefault))),
-    resetTimeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(circuitBreakerConfigResetTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigResetTimeoutDefault))),
-    successThreshold: PosInt.pipe(S.withConstructorDefault(Effect.succeed(circuitBreakerConfigSuccessThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigSuccessThresholdDefault))),
-  }).pipe($I.annoteSchema("CircuitBreakerConfig", {
-    description: "Failure, recovery-delay, and recovery-success thresholds for a circuit breaker.",
-  }))) {}
+export class CircuitBreakerConfig extends S.Opaque<CircuitBreakerConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    maxFailures: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(circuitBreakerConfigMaxFailuresDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigMaxFailuresDefault))
+    ),
+    resetTimeout: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(circuitBreakerConfigResetTimeoutDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigResetTimeoutDefault))
+    ),
+    successThreshold: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(circuitBreakerConfigSuccessThresholdDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigSuccessThresholdDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("CircuitBreakerConfig", {
+      description: "Failure, recovery-delay, and recovery-success thresholds for a circuit breaker.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link CircuitBreakerConfig}.
@@ -131,14 +144,18 @@ export const DEFAULT_CIRCUIT_CONFIG = CircuitBreakerConfig.make({});
 /**
  * Circuit breaker internal state
  */
-class CircuitBreakerState extends S.Opaque<CircuitBreakerState, { readonly brand: unique symbol }>()(S.Struct({
+class CircuitBreakerState extends S.Opaque<CircuitBreakerState, { readonly brand: unique symbol }>()(
+  S.Struct({
     state: CircuitState,
     failureCount: NonNegativeCounter,
     successCount: NonNegativeCounter,
     lastFailureTime: NonNegativeCounter,
-  }).pipe($I.annoteSchema("CircuitBreakerState", {
-    description: "Mutable runtime counters and state held by a circuit breaker Ref.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("CircuitBreakerState", {
+      description: "Mutable runtime counters and state held by a circuit breaker Ref.",
+    })
+  )
+) {}
 
 /**
  * Create a circuit breaker

@@ -156,7 +156,7 @@ const rejects =
 
 const expectRejected = <T, E>(schema: S.Codec<T, E>) =>
   Effect.fnUntraced(function* (inputs: ReadonlyArray<unknown>) {
-    const verdicts = yield* Effect.forEach(inputs, rejects(schema));
+    const verdicts = yield* Effect.forEach(inputs, rejects(schema), { concurrency: 1 });
     deepStrictEqual(
       verdicts,
       A.map(inputs, () => true)
@@ -600,7 +600,7 @@ describe("SelectedPropertyOperation", () => {
         { type: "collectList", selectedPropertyApiName: "salary", limit: 10 },
         { type: "collectSet", selectedPropertyApiName: "salary", limit: 20 },
       ];
-      yield* Effect.forEach(A.zip(wires, samples), ([wire, sample]) => fixture(wire, sample));
+      yield* Effect.forEach(A.zip(wires, samples), ([wire, sample]) => fixture(wire, sample), { concurrency: 1 });
     })
   );
 
@@ -1485,7 +1485,7 @@ describe("ObjectSetArgument", () => {
       const inline = yield* S.decodeUnknownEffect(ObjectSetArgument)(inlineWire);
       deepStrictEqual(stored, ObjectSetRid.make(storedRid));
       deepStrictEqual(inline, ObjectSet.cases.filter.make({ objectSet: employees, where: isNull("lead") }));
-      const wire = yield* Effect.forEach([stored, inline], (value) => S.encodeEffect(ObjectSetArgument)(value));
+      const wire = yield* Effect.forEach([stored, inline], (value) => S.encodeEffect(ObjectSetArgument)(value), { concurrency: 1 });
       deepStrictEqual<unknown>(wire, [storedRid, inlineWire]);
     })
   );
@@ -1503,7 +1503,7 @@ describe("ObjectSetArgument", () => {
       const verdicts = yield* Effect.forEach(
         ["", 7, null, [storedRid], { type: "base" }, { type: "everything" }, { rid: storedRid }],
         rejects(ObjectSetArgument)
-      );
+      , { concurrency: 1 });
       deepStrictEqual(verdicts, A.map(verdicts, () => true));
     })
   );

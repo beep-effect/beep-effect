@@ -802,7 +802,7 @@ describe("the codecs of a typed operation, on the wire", () => {
         Effect.flatMap(S.decodeUnknownEffect(ActionParameterType)(type), (parameterType) =>
           equals(agree(spec, argumentCodec(parameterType), wire), canonical)
         )
-      );
+      , { concurrency: 1 });
       // What the projection refuses, the spec refuses: a vector of another dimension, an empty identifier,
       // a key that is not of the model's key type.
       assertNone(S.decodeOption(Model.vector(3).value)([1, 2]));
@@ -862,7 +862,7 @@ describe("the codecs of a typed operation, on the wire", () => {
         Effect.flatMap(S.decodeUnknownEffect(QueryDataType)(type), (dataType) =>
           equals(agree(spec, valueCodec(dataType, {}), wire), canonical)
         )
-      );
+      , { concurrency: 1 });
     })
   );
 

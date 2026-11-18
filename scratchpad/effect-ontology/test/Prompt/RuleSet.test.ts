@@ -2,6 +2,7 @@ import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { makeEntityRuleSet, makeMentionRuleSet, makeRelationRuleSet, RuleSet } from "../../Prompt/RuleSet.ts";
+
 const decodeRuleSet = S.decodeEffect(RuleSet);
 const encodeRuleSet = S.encodeEffect(RuleSet);
 
