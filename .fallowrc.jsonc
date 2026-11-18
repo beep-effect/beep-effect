@@ -17,7 +17,7 @@
     // Alchemy stacks of the tooling `infra` kind: the CLI loads alchemy.run.ts;
     // the turbo cache's token handoff command is run by operators (runbook);
     // the cost-controls deploy workflow runs plan-check.ts between plan and deploy;
-    // the ci-runners deploy workflow runs its plan-check.ts between plan and deploy.
+    // the ci-runners deploy workflow runs plan-check.ts as its checked plan and deploy steps.
     "packages/tooling/infra/*/alchemy.run.ts",
     "packages/tooling/infra/turbo-cache/token.ts",
     "packages/tooling/infra/cost-controls/plan-check.ts",

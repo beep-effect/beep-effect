@@ -23,8 +23,8 @@ Spot vCPU plus the reserve exceeds the quota.
 | Stage | Phase | Heavy cap | Overflow cap | Runner type | Allowed repositories | App credentials |
 | --- | --- | --- | --- | --- | --- | --- |
 | `prod` | `overlap` | 1 (live 2) | 2 (live 48) | Org | `beep-effect/beep-effect` | `CI_RUNNERS_GITHUB_*` from the `ci-runners-prod` environment |
-| `dev_$USER` | `overlap` | 0 | 0 | Repo | none | placeholders |
-| `dev_$USER` with `CI_RUNNERS_REHEARSAL_REPOSITORY` | `overlap` | 1 | 1 | Repo | the sandbox repository | `CI_RUNNERS_GITHUB_*` through `op run` |
+| `dev-$USER` | `overlap` | 0 | 0 | Repo | none | placeholders |
+| `dev-$USER` with `CI_RUNNERS_REHEARSAL_REPOSITORY` | `overlap` | 1 | 1 | Repo | the sandbox repository | `CI_RUNNERS_GITHUB_*` through `op run` |
 
 Every physical name derives from the stage (`beep-fleet-<stage>`), and a guard
 refuses any name that overlaps the live fleet's (`beep-ci`, `beep-ovf`,
@@ -64,7 +64,7 @@ Personal-stage plan (read-only, no credentials needed):
 eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
 export AWS_REGION=us-east-1
 cd packages/tooling/infra/ci-runners
-bunx alchemy plan --stage "dev_$USER" --env-file /dev/null
+bunx alchemy plan --stage "dev-$USER" --env-file /dev/null
 ```
 
 Expect 66 creates and 9 binding changes. `prod` is planned and deployed only

@@ -857,8 +857,18 @@ sandbox repository):
 eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
 export AWS_REGION=us-east-1
 cd packages/tooling/infra/ci-runners
-bunx alchemy plan --stage "dev_$USER" --env-file /dev/null
+bunx alchemy plan --stage "dev-$USER" --env-file /dev/null
 ```
+
+The stage name must be canonical (`[a-z0-9-]`, equal to its slug; `dev_$USER`
+is refused) and its fleet name must not prefix `beep-fleet-prod` or start
+with it (`requireDistinctStage`).
+
+Bootstrap (cutover step 1a): the first deploy is a `workflow_dispatch` with
+`bootstrap: true`, which excludes `DefaultSecurityGroup` from both the plan
+and the deploy, because the deploy role's default-group grant is scoped to
+the new VPC and that VPC does not exist yet. After the gate scopes the role
+to the new VPC, a normal dispatch deploys the full stack (step 1b).
 
 Read a saved personal plan log with `bun plan-check.ts log <plan log>`.
 

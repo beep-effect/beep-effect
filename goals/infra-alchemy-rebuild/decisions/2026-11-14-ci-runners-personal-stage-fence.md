@@ -5,7 +5,7 @@ lane: "goals/infra-alchemy-rebuild-p5-ci-runners"
 reversal: "Give personalConfig the production caps, runnerType Org and allow list, and let stageCredentials read the environment in every stage."
 ---
 
-A personal stage (`dev_$USER`) deploys the same graph as `prod` under its own names, but by default it cannot run or register a runner anywhere:
+A personal stage (`dev-$USER`; since 2026-11-18 the stage name must be canonical, so `dev_$USER` is refused by `requireDistinctStage`) deploys the same graph as `prod` under its own names, but by default it cannot run or register a runner anywhere:
 
 - Every pool cap is 0, so scale-up never launches; the webhook's repository allow list is empty, so it drops every event.
 - Runners register as repository runners (`runnerType: "Repo"`), never organization runners, so even a rehearsal cannot put a runner into the org groups `beep-ec2-heavy` or `beep-shard-overflow` that production jobs use.
@@ -23,7 +23,7 @@ CI_RUNNERS_REHEARSAL_REPOSITORY=<owner>/<sandbox> \
 CI_RUNNERS_GITHUB_APP_ID=op://<vault>/<item>/<app-id field> \
 CI_RUNNERS_GITHUB_APP_KEY_BASE64=op://<vault>/<item>/<base64 key field> \
 CI_RUNNERS_GITHUB_WEBHOOK_SECRET=op://<vault>/<item>/<rehearsal webhook secret field> \
-  op run -- bunx alchemy deploy --stage "dev_$USER" --env-file /dev/null
+  op run -- bunx alchemy deploy --stage "dev-$USER" --env-file /dev/null
 ```
 
 The App must be installed on the sandbox repository, and the sandbox needs a repository webhook (`workflow_job`) pointing at the stage's function URL with the rehearsal secret. Which App and which references to use is an open question for the gate (cutover decision); no rehearsal was run by this lane.

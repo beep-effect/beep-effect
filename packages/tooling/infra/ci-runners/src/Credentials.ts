@@ -7,6 +7,7 @@
  * @since 0.0.0
  */
 
+import { placeholderWebhookSecret } from "@beep/alchemy-github-runners/Webhook.program";
 import { $InfraCiRunnersId } from "@beep/identity/packages";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
@@ -78,15 +79,15 @@ export const appCredentialVariables = {
 } as const;
 
 /**
- * Credentials that authenticate nothing.
+ * Placeholder App credentials for a stage that has none.
  *
  * **Details**
  *
  * A personal stage without a rehearsal writes these: scale-up cannot mint
- * an installation token, and its webhook admits nothing, because the stage's
- * allow list is empty and an empty list admits no repository. A signature
- * made with the literal placeholder secret still verifies, so the empty allow
- * list (with both pool caps at 0) is the fence, not the secret.
+ * an installation token, and the webhook answers every delivery with 401,
+ * because `verifySignature` refuses the placeholder secret
+ * (`placeholderWebhookSecret`) even for a payload signed with it. The empty
+ * allow list and the zero pool caps fence the stage a second time.
  *
  * **Example** (Read a placeholder)
  *
@@ -103,7 +104,7 @@ export const appCredentialVariables = {
 export const placeholderCredentials = AppCredentials.make({
   id: Redacted.make("unset"),
   keyBase64: Redacted.make("unset"),
-  webhookSecret: Redacted.make("unset"),
+  webhookSecret: Redacted.make(placeholderWebhookSecret),
 });
 
 /**

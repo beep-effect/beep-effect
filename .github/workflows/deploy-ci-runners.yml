@@ -35,6 +35,11 @@ on:
       - bun.lock
       - .github/workflows/deploy-ci-runners.yml
   workflow_dispatch:
+    inputs:
+      bootstrap:
+        description: "Cutover step 1a only: deploy without DefaultSecurityGroup, before the deploy role is scoped to the new VPC"
+        type: boolean
+        default: false
 
 concurrency:
   group: alchemy-ci-runners-prod
@@ -82,7 +87,9 @@ jobs:
           CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
           CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
           CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
-        run: bun plan-check.ts plan --stage prod --out "$RUNNER_TEMP/ci-runners-checked-plan.json"
+          EXCLUDE: ${{ inputs.bootstrap && 'DefaultSecurityGroup' || '' }}
+        shell: bash
+        run: bun plan-check.ts plan --stage prod ${EXCLUDE:+--exclude "$EXCLUDE"} --out "$RUNNER_TEMP/ci-runners-checked-plan.json"
 
       # Applies only the checked change set: plans again, checks again, and
       # refuses before any write when the plan differs from the saved one.
@@ -94,15 +101,18 @@ jobs:
           CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
           CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
           CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
+          EXCLUDE: ${{ inputs.bootstrap && 'DefaultSecurityGroup' || '' }}
         run: |
           set -euo pipefail
-          bun plan-check.ts deploy --stage prod --checked "$RUNNER_TEMP/ci-runners-checked-plan.json" \
+          bun plan-check.ts deploy --stage prod ${EXCLUDE:+--exclude "$EXCLUDE"} --checked "$RUNNER_TEMP/ci-runners-checked-plan.json" \
             | tee "$RUNNER_TEMP/ci-runners-deploy.log"
 
       # One unsigned request to the webhook: the function must answer and refuse
       # it (401). No AWS describe call, so the check adds nothing to the
       # account's EC2 API rate the live scale-up shares.
+      # A bootstrap deploy is filtered, so it prints no stack output; the next full deploy checks the webhook.
       - name: Verify the webhook answers and refuses an unsigned event
+        if: ${{ !inputs.bootstrap }}
         shell: bash
         run: |
           set -euo pipefail

@@ -93,9 +93,23 @@ const refuseDrift = Effect.fn("CiRunners.planDriftRefuse")(function* (drift: Pla
 
 const stage = Flag.String("stage").pipe(Flag.withDescription("The stage to plan"));
 
-const planStage = Effect.fn("CiRunners.planStage")(function* (stageName: string) {
+// The bootstrap deploy excludes DefaultSecurityGroup until the deploy role is scoped to the new VPC (cutover step 1a).
+const exclude = Flag.String("exclude").pipe(
+  Flag.withDescription(
+    "Leave this FQN or logical id out of the plan (repeatable); plan and deploy must pass the same set"
+  ),
+  Flag.atLeast(0)
+);
+
+const planStage = Effect.fn("CiRunners.planStage")(function* (stageName: string, excluded: ReadonlyArray<string>) {
   const stack = yield* Alchemist.importStack("alchemy.run.ts");
-  const snapshot = yield* Alchemist.plan({ stack, stage: stageName, operation: "deploy", envFile: "/dev/null" });
+  const snapshot = yield* Alchemist.plan({
+    stack,
+    stage: stageName,
+    operation: "deploy",
+    envFile: "/dev/null",
+    ...(A.isReadonlyArrayNonEmpty(excluded) ? { exclude: excluded } : {}),
+  });
   const checked = yield* readEnginePlan(stageName, snapshot.native);
   yield* Effect.forEach(checked.resources, listChecked, { concurrency: 1, discard: true });
   yield* checkEnginePlan(checked).pipe(Effect.catchTag("PlanRefused", refuse));
@@ -117,9 +131,9 @@ const log = Command.make(
 
 const plan = Command.make(
   "plan",
-  { stage, out: Flag.String("out").pipe(Flag.withDescription("Where to save the checked plan")) },
-  Effect.fn("CiRunners.planCheckPlan")(function* ({ stage: stageName, out }) {
-    const { checked } = yield* planStage(stageName);
+  { stage, exclude, out: Flag.String("out").pipe(Flag.withDescription("Where to save the checked plan")) },
+  Effect.fn("CiRunners.planCheckPlan")(function* ({ stage: stageName, exclude: excluded, out }) {
+    const { checked } = yield* planStage(stageName, excluded);
     const fs = yield* FileSystem.FileSystem;
     const text = yield* S.encodeEffect(CheckedPlanJson)(checked);
     yield* fs.writeFileString(out, text);
@@ -132,12 +146,12 @@ const webhookUrl = (output: unknown) =>
 
 const deploy = Command.make(
   "deploy",
-  { stage, checked: Flag.String("checked").pipe(Flag.withDescription("The plan the plan step saved")) },
-  Effect.fn("CiRunners.planCheckDeploy")(function* ({ stage: stageName, checked: checkedPath }) {
+  { stage, exclude, checked: Flag.String("checked").pipe(Flag.withDescription("The plan the plan step saved")) },
+  Effect.fn("CiRunners.planCheckDeploy")(function* ({ stage: stageName, exclude: excluded, checked: checkedPath }) {
     const fs = yield* FileSystem.FileSystem;
     const text = yield* fs.readFileString(checkedPath);
     const checked: CheckedPlan = yield* S.decodeEffect(CheckedPlanJson)(text);
-    const { snapshot, checked: current } = yield* planStage(stageName);
+    const { snapshot, checked: current } = yield* planStage(stageName, excluded);
     const output = yield* applyIfUnchanged(checked, current, Alchemist.apply(snapshot)).pipe(
       Effect.catchTag("PlanDrift", refuseDrift)
     );

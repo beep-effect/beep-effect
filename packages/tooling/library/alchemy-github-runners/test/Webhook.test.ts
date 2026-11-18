@@ -1,7 +1,9 @@
 import {
   canRunJob,
   handleWebhook,
+  hmacSha256Hex,
   PoolMatcher,
+  placeholderWebhookSecret,
   selectPool,
   verifySignature,
   WebhookRequest,
@@ -188,6 +190,19 @@ describe("handleWebhook", () => {
       const response = yield* deliver(world, payload({}), {}, closed);
       expect(response.statusCode).toBe(403);
       expect(world.sent).toStrictEqual([]);
+    })
+  );
+
+  it.effect("refuses every delivery while the secret is the placeholder, even one signed with it", () =>
+    Effect.gen(function* () {
+      const placeholder = Redacted.make(placeholderWebhookSecret);
+      const signature = yield* hmacSha256Hex(placeholderWebhookSecret, "{}");
+      const rejected = yield* verifySignature({
+        secret: placeholder,
+        body: "{}",
+        signature: O.some(`sha256=${signature}`),
+      }).pipe(Effect.flip);
+      expect(rejected.statusCode).toBe(401);
     })
   );
 

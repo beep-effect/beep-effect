@@ -111,10 +111,13 @@ describe("RunnerFleetNames", () => {
       assertTrue(isPrefix(prefix));
       assertFalse(isPrefix(`${prefix}b`));
       assertFalse(isPrefix("Beep-fleet"));
-      assertFalse(isPrefix("xn--fleet"));
-      assertFalse(isPrefix("sthree-fleet"));
-      assertFalse(isPrefix("amzn-s3-demo-fleet"));
-      assertTrue(isPrefix("sthree"));
+      // The check runs on the derived "<prefix>-binaries" bucket names, so boundary prefixes are refused too.
+      for (const reserved of ["xn--fleet", "sthree-fleet", "amzn-s3-demo-fleet", "sthree", "xn-", "amzn-s3-demo"]) {
+        assertFalse(isPrefix(reserved));
+      }
+      for (const allowed of ["sthre", "xn", "amzn-s3-dem", "s3alias", "beep-fleet-prod"]) {
+        assertTrue(isPrefix(allowed));
+      }
       const pool = poolResourceNames(prefix, Str.repeat(24)("p"));
       const fleetNames = fleetResourceNames(prefix);
       expect(

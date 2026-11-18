@@ -124,23 +124,27 @@ const stageRefusal = (stage: string, slug: string): ReadonlyArray<string> =>
     : [
         ...(Str.isEmpty(slug) ? ["its name slug is empty"] : []),
         ...(slug.length > maxStageSlugLength ? [`its name slug is longer than ${maxStageSlugLength} characters`] : []),
-        ...(slug === productionStage || Str.startsWith(`${productionStage}-`)(slug)
-          ? [`its name slug "${slug}" claims the ${productionStage} names`]
+        ...(stage === slug ? [] : [`it is not canonical: use "${slug}", lower case letters, digits and "-" only`]),
+        // The termination watcher matches `ghr:environment` by prefix, so neither fleet name may prefix the other.
+        ...(Str.startsWith(productionStage)(slug) || Str.startsWith(slug)(productionStage)
+          ? [`its fleet name beep-fleet-${slug} and the ${productionStage} fleet name prefix one another`]
           : []),
       ];
 
 /**
- * Fail a stage other than `prod` whose name slug would take, or nest under,
- * the `prod` stage's names, is empty, or is too long.
+ * Fail a stage other than `prod` that is not canonical, whose fleet name
+ * and the `prod` fleet name prefix one another, or whose slug is empty or
+ * too long.
  *
  * **Details**
  *
  * `physicalNames` lowercases the stage and maps every other character to
- * `-`, so `Prod`, `prod_` and `PROD-x` would otherwise share or prefix the
- * production names, and the termination watcher matches `ghr:environment`
- * by prefix. Two personal stages can still share a slug (`dev_alice` and
- * `dev-alice`); the state store keys them apart, and personal stages launch
- * nothing without a rehearsal repository.
+ * `-`. A stage must equal its slug (`[a-z0-9-]`, no leading or trailing
+ * `-`), so two distinct stages never derive the same AWS names
+ * (`dev_alice` and `dev-alice` would; only `dev-alice` is accepted). The
+ * termination watcher matches `ghr:environment` by prefix, so the check
+ * runs both ways against `prod`: `prodfoo` (whose fleet name starts with
+ * `beep-fleet-prod`) and `pro` (whose fleet name prefixes it) are refused.
  *
  * **Example** (A personal stage passes)
  *
@@ -148,7 +152,7 @@ const stageRefusal = (stage: string, slug: string): ReadonlyArray<string> =>
  * import { requireDistinctStage } from "@beep/infra-ci-runners/Guards"
  * import * as Effect from "effect/Effect"
  *
- * Effect.runSync(requireDistinctStage("dev_alice"))
+ * Effect.runSync(requireDistinctStage("dev-alice"))
  * ```
  *
  * @param stage - The Alchemy stage being planned or deployed.

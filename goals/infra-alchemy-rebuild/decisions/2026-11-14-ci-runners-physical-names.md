@@ -5,7 +5,7 @@ lane: "goals/infra-alchemy-rebuild-p5-ci-runners"
 reversal: "Change physicalNames in packages/tooling/infra/ci-runners/src/Names.ts and redeploy each stage (every pinned name replaces)."
 ---
 
-Every name the `CiRunners` stack pins derives from the stage: `prod` is `beep-fleet-prod`, a personal stage `dev_alice` is `beep-fleet-dev-alice` (`physicalNames` in `packages/tooling/infra/ci-runners/src/Names.ts`). Production names, all new (D12), none adopted:
+Every name the `CiRunners` stack pins derives from the stage: `prod` is `beep-fleet-prod`, a personal stage `dev-alice` is `beep-fleet-dev-alice` (stage names must equal their slug since 2026-11-18, so no two stages share names, and neither `beep-fleet-<slug>` nor `beep-fleet-prod` may prefix the other) (`physicalNames` in `packages/tooling/infra/ci-runners/src/Names.ts`). Production names, all new (D12), none adopted:
 
 | Object | Production name |
 | --- | --- |

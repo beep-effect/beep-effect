@@ -25,26 +25,26 @@ describe("CiRunners guards and providers", () => {
     })
   );
 
-  it.effect("refuses a personal stage whose slug is empty, too long, or takes the prod names", () =>
+  it.effect("refuses a non-canonical stage, a prefix overlap with prod either way, an empty or too long slug", () =>
     Effect.gen(function* () {
       yield* requireDistinctStage("prod");
-      yield* requireDistinctStage("dev_alice");
+      yield* requireDistinctStage("dev-alice");
+      yield* requireDistinctStage("staging");
       yield* requireDistinctStage(Str.repeat(maxStageSlugLength)("a"));
       const refused = yield* Effect.forEach(
-        ["Prod", "prod_", "PROD-x", "__", Str.repeat(maxStageSlugLength + 1)("a")],
+        ["dev_alice", "prodfoo", "pro", "prod-x", "Prod", "__", Str.repeat(maxStageSlugLength + 1)("a")],
         (stage) => requireDistinctStage(stage).pipe(Effect.flip),
         { concurrency: 1 }
       );
-      expect(A.map(refused, (error) => error._tag)).toEqual([
-        "ConfigError",
-        "ConfigError",
-        "ConfigError",
-        "ConfigError",
-        "ConfigError",
-      ]);
-      expect(refused[0]?.message).toContain("claims the prod names");
-      expect(refused[3]?.message).toContain("empty");
-      expect(refused[4]?.message).toContain("longer than 40");
+      const messages = A.map(refused, (error) => error.message);
+      expect(A.map(refused, (error) => error._tag)).toEqual(A.replicate("ConfigError", 7));
+      expect(messages[0]).toContain('not canonical: use "dev-alice"');
+      expect(messages[1]).toContain("prefix one another");
+      expect(messages[2]).toContain("prefix one another");
+      expect(messages[3]).toContain("prefix one another");
+      expect(messages[4]).toContain("not canonical");
+      expect(messages[5]).toContain("empty");
+      expect(messages[6]).toContain("longer than 40");
     })
   );
 

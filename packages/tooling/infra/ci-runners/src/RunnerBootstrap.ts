@@ -501,11 +501,14 @@ const gzip = (text: string) =>
  *
  * **Details**
  *
- * Inline, {@link runnerPostInstall} alone is about 15 KB, and the rendered
- * user data passes EC2's {@link userDataLimitBytes}; packed it is about 5 KB.
- * Sourcing (not a child `bash`) keeps the inline semantics: the snippets are
- * `( … )` subshells that read the user data's unexported `$instance_id` and
- * `$region`. Each loader command stands alone under the user data's `bash -e`,
+ * Inline, {@link runnerPostInstall} alone is about 15 KB and the rendered
+ * user data is 18,015 bytes, past EC2's {@link userDataLimitBytes}; packed,
+ * the rendered user data is 7,867 bytes. Sourcing (not a child `bash`) runs
+ * the script exactly where the inline text ran: in the user data shell, in
+ * `/opt/actions-runner`, under its options. The script needs nothing from
+ * that shell's variables: each snippet is a `( … )` subshell, and
+ * `/opt/beep/imds-disable.sh` resolves the instance id and region from IMDS
+ * itself. Each loader command stands alone under the user data's `bash -e`,
  * so a corrupt payload stops the boot before the runner starts.
  *
  * **Example** (Pack a script)

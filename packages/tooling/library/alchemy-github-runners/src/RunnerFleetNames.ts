@@ -22,13 +22,26 @@ import * as Str from "effect/String";
 
 const $I = $AlchemyGithubRunnersId.create("RunnerFleetNames");
 
-// S3 refuses bucket names that start with these.
+// S3 refuses bucket names that start or end with these.
 const reservedBucketPrefixes = ["xn--", "sthree-", "amzn-s3-demo-"];
+const reservedBucketSuffixes = ["-s3alias", "--ol-s3", "--x-s3"];
+
+const isReservedBucketName = (name: string): boolean =>
+  A.some(reservedBucketPrefixes, (reserved) => Str.startsWith(reserved)(name)) ||
+  A.some(reservedBucketSuffixes, (reserved) => Str.endsWith(reserved)(name));
+
+// The bucket names a prefix derives: the binaries prefix and the full name with a 12-digit account id.
+const derivedBucketNames = (prefix: string): ReadonlyArray<string> => [
+  `${prefix}-binaries`,
+  `${prefix}-binaries-000000000000`,
+];
 
 /**
- * A fleet name prefix: lower case (S3 bucket names allow nothing else), not
- * one of the S3 reserved bucket prefixes (`xn--`, `sthree-`,
- * `amzn-s3-demo-`), at most 28 characters so the longest pinned name fits each AWS limit (Lambda
+ * A fleet name prefix: lower case (S3 bucket names allow nothing else),
+ * deriving no S3 bucket name that S3 reserves (one starting with `xn--`,
+ * `sthree-` or `amzn-s3-demo-`, or ending with `-s3alias`, `--ol-s3` or
+ * `--x-s3`; the check runs on the derived `<prefix>-binaries` names, so
+ * `sthree` is refused too), at most 28 characters so the longest pinned name fits each AWS limit (Lambda
  * function and EventBridge rule 64, IAM role 64, SQS queue 80, S3 bucket 63)
  * with a 24-character pool name.
  *
@@ -46,8 +59,8 @@ const reservedBucketPrefixes = ["xn--", "sthree-", "amzn-s3-demo-"];
  */
 export const FleetNamePrefix = S.String.check(
   S.isPattern(/^[a-z][a-z0-9-]{0,27}$/u),
-  S.makeFilter((prefix: string) => !A.some(reservedBucketPrefixes, (reserved) => Str.startsWith(reserved)(prefix)), {
-    message: "A fleet name prefix may not start with an S3 reserved bucket prefix",
+  S.makeFilter((prefix: string) => !A.some(derivedBucketNames(prefix), isReservedBucketName), {
+    message: "A fleet name prefix may not derive an S3 bucket name that S3 reserves",
   })
 ).pipe(
   $I.annoteSchema("FleetNamePrefix", {

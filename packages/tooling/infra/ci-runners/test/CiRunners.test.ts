@@ -120,7 +120,7 @@ const productionPhysicalNames: Readonly<Record<string, string>> = {
 };
 
 describe("CiRunners personal stage", () => {
-  const personal = Fakes.harness({ stage: "dev_test" });
+  const personal = Fakes.harness({ stage: "dev-test" });
   personal.provider("creates the whole graph under fenced names with no way to register a runner", (stack) =>
     Effect.gen(function* () {
       const { recorder } = personal;
@@ -176,7 +176,7 @@ describe("CiRunners personal stage", () => {
 });
 
 describe("CiRunners update and destroy", () => {
-  const lifecycle = Fakes.harness({ stage: "dev_test" });
+  const lifecycle = Fakes.harness({ stage: "dev-test" });
   lifecycle.provider("a rehearsal is refused inside the overlap budget, and destroy sweeps before teardown", (stack) =>
     Effect.gen(function* () {
       const { recorder } = lifecycle;
@@ -262,7 +262,7 @@ describe("CiRunners production stage", () => {
     })
   );
 
-  const otherAccount = Fakes.harness({ stage: "dev_test", accountId: Fakes.accounts.other });
+  const otherAccount = Fakes.harness({ stage: "dev-test", accountId: Fakes.accounts.other });
   otherAccount.provider("refuses another account", (stack) =>
     Effect.gen(function* () {
       const error = yield* Fakes.refusal(stack)(program.pipe(environmentOf({})));
@@ -272,7 +272,7 @@ describe("CiRunners production stage", () => {
     })
   );
 
-  const otherRegion = Fakes.harness({ stage: "dev_test", region: "us-west-2" });
+  const otherRegion = Fakes.harness({ stage: "dev-test", region: "us-west-2" });
   otherRegion.provider("refuses another region", (stack) =>
     Effect.gen(function* () {
       const error = yield* Fakes.refusal(stack)(program.pipe(environmentOf({})));
