@@ -341,7 +341,7 @@ const changeProfileFor = Effect.fnUntraced(function* (changed: string) {
 // the skip names what was pruned. "Pruned" means a declared product leaf whose directory is gone
 // (@beep/repo-cli-kit/ProductLeaves); an absent subject nobody declared is a typo or a rename, and
 // its row is checked and fails as before. An evidence file the checkout does not track is stale
-// unless it lies in no present workspace while one of the row's consumers was pruned; then it
+// unless it lies under the declared directory of one of the row's pruned consumers; then it
 // belonged to that consumer.
 const rowAbsence = (inventory: CheckoutInventory, row: CiGoalDataConsumer): ReadonlyArray<CheckoutSubject> => {
   const packet = prunedCheckoutSubjects(inventory, A.fromOption(packetSubjectOf(row.reference)));
@@ -361,7 +361,14 @@ const evidenceAbsence = (
 ): ReadonlyArray<CheckoutSubject> =>
   HashSet.has(tracked, evidence) || O.isSome(checkoutWorkspaceOf(inventory, evidence))
     ? A.empty()
-    : prunedCheckoutSubjects(inventory, A.map(row.consumers, workspaceSubject));
+    : A.map(
+        A.filter(row.consumers, (consumer) =>
+          O.exists(HashMap.get(inventory.prunedWorkspaces, consumer), (directory) =>
+            Str.startsWith(`${directory}/`)(evidence)
+          )
+        ),
+        workspaceSubject
+      );
 
 // A mutated path depends on what the row that registers it depends on.
 const mutationAbsence = (inventory: CheckoutInventory, mutated: string): ReadonlyArray<CheckoutSubject> =>
@@ -578,7 +585,7 @@ describe("the checkout-subject rule for census rows", () => {
     packets: packetRootsOf(["goals/demo/README.md"]),
     workspaces: HashMap.make(["@beep/kept", "packages/kept"]),
     prunedPackets: packetRootsOf(["goals/leaf/README.md"]),
-    prunedWorkspaces: HashSet.make("@beep/leaf"),
+    prunedWorkspaces: HashMap.make(["@beep/leaf", "packages/leaf"]),
   });
   const demoRow = (reference: string, consumers: A.NonEmptyReadonlyArray<string>) =>
     CiGoalDataConsumer.make({
@@ -618,6 +625,8 @@ describe("the checkout-subject rule for census rows", () => {
     expect(evidenceAbsence(inventory, noTracked, moved, "packages/old-home/test/Demo.test.ts")).toEqual([]);
     const missing = demoRow("goals/demo/ops/", ["@beep/kept", "@beep/typo"]);
     expect(evidenceAbsence(inventory, noTracked, missing, "packages/typo/test/Demo.test.ts")).toEqual([]);
+    // Another consumer being pruned does not excuse a path outside that consumer's directory.
+    expect(evidenceAbsence(inventory, noTracked, row, "packages/elsewhere/test/Demo.test.ts")).toEqual([]);
   });
 
   it("skips an untracked evidence file that belonged to a pruned consumer, and checks a tracked one", () => {

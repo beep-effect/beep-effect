@@ -62,7 +62,7 @@ const inventory = CheckoutInventory.make({
   packets: packetRootsOf(["goals/kept/README.md", "explorations/kept/assets/manifest.jsonl"]),
   workspaces: HashMap.make(["@beep/kept", "packages/kept"], ["@beep/nested", "packages/kept/nested"]),
   prunedPackets: packetRootsOf(["goals/leaf/README.md"]),
-  prunedWorkspaces: HashSet.make("@beep/leaf"),
+  prunedWorkspaces: HashMap.make(["@beep/leaf", "packages/leaf"]),
 });
 
 const leaves = PrunableLeaves.make({
@@ -140,7 +140,7 @@ it.layer(NodeServices.layer)("checkout inventory", (it) => {
       deepStrictEqual(A.sort(A.fromIterable(read.packets), Order.String), ["explorations/kept", "goals/kept"]);
       const names = read.workspaces.pipe(HashMap.keys, A.fromIterable);
       deepStrictEqual(A.sort(names, Order.String), ["@beep/kept", "@beep/renamed-again"]);
-      deepStrictEqual(A.fromIterable(read.prunedWorkspaces), ["@beep/leaf-server"]);
+      deepStrictEqual(HashMap.toEntries(read.prunedWorkspaces), [["@beep/leaf-server", "packages/leaf/server"]]);
       deepStrictEqual(A.fromIterable(read.prunedPackets), ["goals/leaf"]);
       strictEqual(isCheckoutSubjectPruned(read, workspaceSubject("@beep/renamed")), false);
     })

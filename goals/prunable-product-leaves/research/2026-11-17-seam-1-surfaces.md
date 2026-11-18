@@ -50,7 +50,7 @@ and one note naming each pruned subject otherwise.
 | Surface | Subject | Pruned-subject proof |
 | --- | --- | --- |
 | Goal-data consumer census rows, evidence, mutations, exclusions (`goal-data-consumer-census.test.ts`) | the row's packet and its consumer packages; an exclusion's owner package (checked against its source's package) and packet | per-item tests skip; the "checkout-subject rule for census rows" block proves the rule over a synthetic inventory, the stale-while-present and missing-name cases included |
-| `PrivateHomePaths` exemption rows (`Laws/PrivateHomePaths.ts`) | the exemption file's packet, skipped only when it is a declared packet (`prunablePackets`, default from `ProductLeaves`) | `laws-private-home-paths.test.ts` scratch repository with a declared pruned packet and an undeclared missing one; the law prints `skipped_exemptions` and one line per skipped row |
+| `PrivateHomePaths` exemption rows (`Laws/PrivateHomePaths.ts`) | the exemption file's packet, skipped only when it is a declared packet (`prunablePackets`, default from `ProductLeaves`) whose directory is gone | `laws-private-home-paths.test.ts` scratch repository with a declared pruned packet, an undeclared missing one and a declared packet whose directory remains; the law prints `skipped_exemptions` and one line per skipped row |
 | Law-practice integration shard plan (`ci-lane.test.ts`) | `@beep/law-practice-server`, read from its discovered directory | pruned run below |
 | Committed partition plans (`ci-partitions.test.ts`) | `@beep/law-practice-server` | pruned run |
 | Registry consumers and synthetic owners (`coverage-scope-goal-readers.test.ts`) | each consumer package | pruned run |

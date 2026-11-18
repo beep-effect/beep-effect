@@ -3,7 +3,6 @@ import { lintCommand } from "@beep/repo-cli/commands/Lint";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { localQualityConcurrencyPlan, rootLintPolicyStepsForTesting } from "@beep/repo-cli/test/Quality";
 import { readTurboCacheEnvironment } from "@beep/repo-cli/test/SharedInternals";
-import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -27,7 +26,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { vi } from "vitest";
-import { currentCheckoutInventory, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
+import { currentCheckoutInventory } from "./support/CheckoutSkip.ts";
 import { fixturePackageFiles, policyCliFixtureFiles, writeFixtureFiles } from "./support/PolicyCliFixture.ts";
 import type {
   canUseTurboCacheSecretSession,
@@ -868,11 +867,11 @@ describe("executed lint workers", { concurrent: false }, () => {
   it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect(
       "executes deprecated APIs on the ciops lab package",
-      (ctx) =>
+      () =>
         Effect.gen(function* () {
-          // The lab package is found by name; a checkout without @beep/ciops skips.
+          // The lab package is found by name, wherever it lives. It is not a product leaf, so a
+          // checkout without @beep/ciops fails here rather than skipping.
           const inventory = yield* currentCheckoutInventory;
-          skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject("@beep/ciops")]);
           const ciops = yield* Effect.fromOption(HashMap.get(inventory.workspaces, "@beep/ciops"));
           const root = yield* findRepoRoot();
           const result = yield* StepExec.runCaptured({

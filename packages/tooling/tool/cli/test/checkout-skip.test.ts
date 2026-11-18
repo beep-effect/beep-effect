@@ -13,14 +13,13 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
-import * as HashSet from "effect/HashSet";
 import { skipWhenCheckoutPruned, skipWhenPruned } from "./support/CheckoutSkip.ts";
 
 const inventory = CheckoutInventory.make({
   packets: packetRootsOf(["goals/kept/README.md"]),
   workspaces: HashMap.make(["@beep/kept", "packages/kept"]),
   prunedPackets: packetRootsOf(["goals/leaf/README.md"]),
-  prunedWorkspaces: HashSet.make("@beep/leaf"),
+  prunedWorkspaces: HashMap.make(["@beep/leaf", "packages/leaf"]),
 });
 
 // Records each skip note instead of throwing, as Vitest's skip would.

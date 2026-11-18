@@ -198,8 +198,9 @@ describe("package role task inputs", () => {
     );
 
     // The noEmit apps typecheck `tsconfig.check.json`, which includes tests; the Next apps typecheck
-    // theirs. Each one the checkout holds must be detected, so the per-workspace boundary above is
-    // never proved over an empty compiling set; a checkout that removed one skips it.
+    // theirs. Each one must be detected, so the per-workspace boundary above is never proved over an
+    // empty compiling set. Only a declared product leaf the checkout pruned skips
+    // (@beep/repo-cli-kit/ProductLeaves); any other missing name fails.
     for (const name of TEST_COMPILING_WORKSPACES) {
       it.effect(`detects that the build program of ${name} compiles its tests`, (ctx) =>
         Effect.gen(function* () {

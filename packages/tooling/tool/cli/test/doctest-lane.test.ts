@@ -25,7 +25,8 @@ const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeSer
 const fixture = NodeURL.fileURLToPath(new URL("./fixtures/doctest-lane/package/", import.meta.url));
 
 // These packages' configs override test.include (coverage.include is a different selector). Each is
-// read from wherever the workspace lives; a checkout that does not hold one skips it.
+// read from wherever the workspace lives. Only a declared product leaf the checkout pruned skips
+// (@beep/repo-cli-kit/ProductLeaves); any other missing package fails.
 const includeOverrides = [
   "@beep/todox",
   "@beep/professional-desktop",

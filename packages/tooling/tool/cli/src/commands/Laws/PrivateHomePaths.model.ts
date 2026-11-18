@@ -484,8 +484,8 @@ export class PrivateHomePathFinding extends S.Opaque<PrivateHomePathFinding, { r
  * `exemptions` defaults to {@link privateHomePathExemptions}; tests pass their
  * own rows for a scratch repository. `prunablePackets` defaults to the product
  * leaves' packets (`@beep/repo-cli-kit/ProductLeaves`): an exemption whose file
- * is untracked is skipped only when its packet is one of them and the checkout
- * holds none of its files.
+ * is untracked is skipped only when its packet is one of them and its
+ * directory is gone.
  *
  * **Example** (Configure a strict scan)
  *

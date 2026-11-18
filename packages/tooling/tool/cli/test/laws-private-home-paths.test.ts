@@ -494,6 +494,8 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
           "docs/fixture.md": "cwd /home/ada/x\n",
           "goals/x/history/sealed.txt": `${LEAKED_HOME}/a\n`,
           "docs/untracked.md": `cwd ${LEAKED_HOME}/x\n`,
+          // An emptied packet directory that holds only an untracked file is not pruned.
+          "goals/emptied/notes.txt": "untracked\n",
           "docs/deleted.md": `cwd ${LEAKED_HOME}/x\n`,
         };
         for (const [file, content] of R.toEntries(files)) {
@@ -545,8 +547,14 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
             count: 1,
             reason: "moved packet",
           }),
+          // goals/emptied is declared, but its directory still holds an untracked file: not pruned.
+          PrivateHomePathExemption.make({ file: "goals/emptied/history/sealed.txt", count: 1, reason: "emptied" }),
         ];
-        const prunablePackets = [PacketRoot.make("goals/pruned"), PacketRoot.make("goals/x")];
+        const prunablePackets = [
+          PacketRoot.make("goals/pruned"),
+          PacketRoot.make("goals/x"),
+          PacketRoot.make("goals/emptied"),
+        ];
 
         const strict = yield* runPrivateHomePaths(
           PrivateHomePathsOptions.make({ cwd: root, strictCheck: true, exemptions, prunablePackets })
@@ -560,13 +568,14 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
           ["docs/utf16-nobom.log", 1, "private-home-path"],
           ["goals/x/history/gone.txt", 1, "exemption-count-mismatch"],
           ["goals/archived/history/sealed.txt", 1, "exemption-count-mismatch"],
+          ["goals/emptied/history/sealed.txt", 1, "exemption-count-mismatch"],
         ]);
         expect(strict.skippedExemptions).toEqual(["goals/pruned/history/sealed.txt"]);
 
         const report = yield* runPrivateHomePaths(
           PrivateHomePathsOptions.make({ cwd: root, exemptions, prunablePackets })
         );
-        expect([report.strictFailure, report.findings.length]).toEqual([false, 7]);
+        expect([report.strictFailure, report.findings.length]).toEqual([false, 8]);
       })
     );
 

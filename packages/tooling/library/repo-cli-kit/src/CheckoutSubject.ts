@@ -210,7 +210,8 @@ export class PrunableLeaves extends S.Opaque<PrunableLeaves, { readonly brand: u
  *
  * `workspaces` maps each present package name to its repository-relative
  * directory. `prunedPackets` and `prunedWorkspaces` hold the declared
- * prunable subjects whose directories are gone.
+ * prunable subjects whose directories are gone; `prunedWorkspaces` maps each
+ * to the directory it was declared at.
  *
  * **Example** (Describe a small pruned checkout)
  *
@@ -223,9 +224,9 @@ export class PrunableLeaves extends S.Opaque<PrunableLeaves, { readonly brand: u
  *   packets: packetRootsOf(["goals/kept/README.md"]),
  *   workspaces: HashMap.make(["@beep/kept", "packages/kept"]),
  *   prunedPackets: packetRootsOf(["goals/leaf/README.md"]),
- *   prunedWorkspaces: HashSet.make("@beep/leaf"),
+ *   prunedWorkspaces: HashMap.make(["@beep/leaf", "packages/leaf"]),
  * })
- * console.log(HashSet.size(inventory.prunedWorkspaces)) // 1
+ * console.log(HashMap.size(inventory.prunedWorkspaces)) // 1
  * ```
  *
  * @category models
@@ -236,7 +237,7 @@ export class CheckoutInventory extends S.Opaque<CheckoutInventory, { readonly br
     packets: S.HashSet(PacketRoot),
     workspaces: S.HashMap(S.NonEmptyString, S.String),
     prunedPackets: S.HashSet(PacketRoot),
-    prunedWorkspaces: S.HashSet(S.NonEmptyString),
+    prunedWorkspaces: S.HashMap(S.NonEmptyString, S.String),
   }).pipe(
     $I.annoteSchema("CheckoutInventory", {
       description:
@@ -346,7 +347,7 @@ export const workspaceSubject = (packageName: string): CheckoutSubject =>
  *   packets: packetRootsOf(["goals/demo/README.md"]),
  *   workspaces: HashMap.make(["@beep/demo", "packages/demo"]),
  *   prunedPackets: HashSet.empty(),
- *   prunedWorkspaces: HashSet.empty(),
+ *   prunedWorkspaces: HashMap.empty(),
  * })
  * console.log(isCheckoutSubjectPresent(inventory, workspaceSubject("@beep/demo"))) // true
  * console.log(isCheckoutSubjectPresent(inventory, workspaceSubject("@beep/gone"))) // false
@@ -388,7 +389,7 @@ export const isCheckoutSubjectPresent: {
  *   packets: HashSet.empty(),
  *   workspaces: HashMap.empty(),
  *   prunedPackets: HashSet.empty(),
- *   prunedWorkspaces: HashSet.make("@beep/leaf"),
+ *   prunedWorkspaces: HashMap.make(["@beep/leaf", "packages/leaf"]),
  * })
  * console.log(isCheckoutSubjectPruned(inventory, workspaceSubject("@beep/leaf"))) // true
  * console.log(isCheckoutSubjectPruned(inventory, workspaceSubject("@beep/typo"))) // false
@@ -406,7 +407,7 @@ export const isCheckoutSubjectPruned: {
 } = dual(2, (inventory: CheckoutInventory, subject: CheckoutSubject): boolean =>
   CheckoutSubject.match(subject, {
     PacketSubject: ({ root }) => HashSet.has(inventory.prunedPackets, root),
-    WorkspaceSubject: ({ packageName }) => HashSet.has(inventory.prunedWorkspaces, packageName),
+    WorkspaceSubject: ({ packageName }) => HashMap.has(inventory.prunedWorkspaces, packageName),
   })
 );
 
@@ -424,7 +425,7 @@ export const isCheckoutSubjectPruned: {
  *   packets: HashSet.empty(),
  *   workspaces: HashMap.make(["@beep/kept", "packages/kept"]),
  *   prunedPackets: HashSet.empty(),
- *   prunedWorkspaces: HashSet.make("@beep/leaf"),
+ *   prunedWorkspaces: HashMap.make(["@beep/leaf", "packages/leaf"]),
  * })
  * const pruned = prunedCheckoutSubjects(inventory, [workspaceSubject("@beep/kept"), workspaceSubject("@beep/leaf")])
  * console.log(pruned.length) // 1
@@ -469,7 +470,7 @@ const byDirectoryLengthDescending: Order.Order<readonly [string, string]> = Orde
  *   packets: HashSet.empty(),
  *   workspaces: HashMap.make(["@beep/demo", "packages/demo"]),
  *   prunedPackets: HashSet.empty(),
- *   prunedWorkspaces: HashSet.empty(),
+ *   prunedWorkspaces: HashMap.empty(),
  * })
  * console.log(checkoutWorkspaceOf(inventory, "packages/demo/test/Demo.test.ts")) // Some("@beep/demo")
  * console.log(checkoutWorkspaceOf(inventory, "packages/gone/test/Gone.test.ts")) // None
@@ -604,6 +605,8 @@ export const loadCheckoutInventory = Effect.fn("CheckoutSubject.loadCheckoutInve
     packets,
     workspaces,
     prunedPackets: HashSet.fromIterable(A.filter(leaves.packets, (root) => !HashSet.has(packets, root))),
-    prunedWorkspaces: HashSet.fromIterable(A.map(prunedWorkspaces, (leaf) => leaf.packageName)),
+    prunedWorkspaces: HashMap.fromIterable(
+      A.map(prunedWorkspaces, (leaf) => [leaf.packageName, leaf.directory] as const)
+    ),
   });
 });
