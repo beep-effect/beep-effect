@@ -684,17 +684,22 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
     );
 
     it.effect(
-      "fails on an invalid declaration instead of reading it as empty",
+      "reads the declaration only for an ownerless row, and fails on an invalid one instead of reading it as empty",
       () =>
         Effect.andThen(
           temporaryWorkingDirectory,
           Effect.gen(function* () {
-            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget"] });
             yield* declare({ version: 1, prunes: [] });
+            // A clean registry has nothing to judge, so it never reads the declaration.
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget"] });
+            const clean = yield* lintOutcome;
+            expect(clean.passed).toBe(true);
 
-            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
-
-            expect(exit._tag).toBe("Failure");
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget", "retired-widget"] });
+            const invalid = yield* lintOutcome;
+            expect(invalid.passed).toBe(false);
+            // The invalid declaration fails the read; the orphan is not reported as if nothing were declared.
+            expect(orphanReported(invalid.errorLines, "retired-widget")).toBe(false);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       LINT_TIMEOUT

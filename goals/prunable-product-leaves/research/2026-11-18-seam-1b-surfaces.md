@@ -31,8 +31,9 @@ which this repository does not ship.
 - `checkoutPruneFindings` and `CheckoutPruneFindingsError`: a prune entry that
   matches a live path outside every keep entry, or names a discovered
   workspace. `liveCheckoutPruneFiles` expands the prune entries against the
-  working tree, files only, skipping node_modules and .git and not
-  following symbolic links
+  working tree, files only, skipping node_modules and .git, not following
+  symbolic links, and leaving out files git ignores (build output a clone
+  keeps after pulling a deletion)
   ([`decisions/2026-11-18-live-prune-entry-refused.md`](../decisions/2026-11-18-live-prune-entry-refused.md)).
 
 ## The subject rule

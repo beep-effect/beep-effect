@@ -2137,6 +2137,7 @@
     {"name":"IdentityRegistry.collectSourceFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"IdentityRegistry.reportViolations","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"IdentityRegistry.runIdentityRegistryLint","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"IdentityRegistry.withoutPrunedOwners","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Image.extractFrames","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Image.extractFramesDir","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ImageCommand.renderExtractFramesDirResult","owner":"@beep/repo-cli","family":"tooling","conforms":true},

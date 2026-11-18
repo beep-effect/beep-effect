@@ -59,6 +59,7 @@ import * as HashSet from "effect/HashSet";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { QualityTaskName } from "../Quality/Quality.schemas.ts";
@@ -894,13 +895,16 @@ export class PolicyToolsFingerprintPolicy extends Context.Service<
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const fsUtils = yield* FsUtils;
+    // The checkout inventory asks git which build output it ignores (goals/prunable-product-leaves, seam 1b).
+    const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const provide = <A, E>(
-      effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path | FsUtils>
+      effect: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path | FsUtils | ChildProcessSpawner.ChildProcessSpawner>
     ): Effect.Effect<A, E> =>
       effect.pipe(
         Effect.provideService(FileSystem.FileSystem, fs),
         Effect.provideService(Path.Path, path),
-        Effect.provideService(FsUtils, fsUtils)
+        Effect.provideService(FsUtils, fsUtils),
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, spawner)
       );
     const declarationFile = path.join(root, FINGERPRINT_PATH);
     const readDeclaration = fs.exists(declarationFile).pipe(

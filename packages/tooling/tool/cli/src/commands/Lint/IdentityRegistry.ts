@@ -389,6 +389,24 @@ const skippedRegistrationsLine = (skipped: A.NonEmptyReadonlyArray<IdentityRegis
     A.map(A.dedupe(A.map(skipped, (violation) => violation.subject)), workspaceSubject)
   )}`;
 
+// The ownerless rows whose workspace the checkout pruned or owns, set aside from the rest. The
+// inventory is read only when there is an ownerless row, so a clean registry reads nothing more.
+const withoutPrunedOwners = Effect.fn("IdentityRegistry.withoutPrunedOwners")(function* (
+  repoRoot: string,
+  found: ReadonlyArray<IdentityRegistryViolation>
+) {
+  if (!A.some(found, (violation) => isOwnerlessViolationKind(violation.kind))) {
+    return { skipped: A.empty<IdentityRegistryViolation>(), violations: found };
+  }
+  const inventory = yield* loadCheckoutInventory(repoRoot, productLeaves);
+  const isPrunedOwner = (violation: IdentityRegistryViolation): boolean =>
+    isOwnerlessViolationKind(violation.kind) && isCheckoutSubjectPruned(inventory, workspaceSubject(violation.subject));
+  return {
+    skipped: A.filter(found, isPrunedOwner),
+    violations: A.filter(found, (violation) => !isPrunedOwner(violation)),
+  };
+});
+
 const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryLint")(function* (options: {
   readonly fix: boolean;
 }) {
@@ -417,11 +435,7 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
   );
   const collectLocalRootViolations1 = yield* collectLocalRootViolations(repoRoot, slugsToDirs);
   const found = A.appendAll(argument, collectLocalRootViolations1);
-  const inventory = yield* loadCheckoutInventory(repoRoot, productLeaves);
-  const isPrunedOwner = (violation: IdentityRegistryViolation): boolean =>
-    isOwnerlessViolationKind(violation.kind) && isCheckoutSubjectPruned(inventory, workspaceSubject(violation.subject));
-  const skipped = A.filter(found, isPrunedOwner);
-  const violations = A.filter(found, (violation) => !isPrunedOwner(violation));
+  const { skipped, violations } = yield* withoutPrunedOwners(repoRoot, found);
 
   if (A.isReadonlyArrayNonEmpty(skipped)) {
     yield* Console.log(skippedRegistrationsLine(skipped));

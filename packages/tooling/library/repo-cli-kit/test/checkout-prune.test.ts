@@ -32,6 +32,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -328,6 +329,53 @@ it.layer(NodeServices.layer)("checkout prune declaration file", (it) => {
       deepStrictEqual(A.sort(files, Order.String), ["docs/demo/deep/notes.md", "docs/demo/guide.md", "renovate.json"]);
       const nothing = yield* liveCheckoutPruneFiles(root, emptyCheckoutPruneDeclaration);
       deepStrictEqual(nothing, []);
+    })
+  );
+});
+
+// A repository-locating variable inherited from a git hook would point `git init` at the real
+// checkout; an `undefined` value removes it from the child environment.
+const isolatedGitEnv = {
+  GIT_DIR: undefined,
+  GIT_WORK_TREE: undefined,
+  GIT_INDEX_FILE: undefined,
+  GIT_OBJECT_DIRECTORY: undefined,
+  GIT_COMMON_DIR: undefined,
+};
+
+const git = Effect.fnUntraced(function* (cwd: string, args: ReadonlyArray<string>) {
+  const handle = yield* ChildProcess.make("git", [...args], {
+    cwd,
+    env: isolatedGitEnv,
+    extendEnv: true,
+    stdin: "ignore",
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  return yield* handle.exitCode;
+});
+
+it.layer(NodeServices.layer)("checkout prune live files in a git checkout", (it) => {
+  it.effect("leaves out the build output git ignores under a pruned directory, and keeps every other file", () =>
+    Effect.gen(function* () {
+      const root = yield* repository({
+        ".gitignore": "dist/\n*.tsbuildinfo\n",
+        // A clone that built and then pulled the commit removing packages/gone keeps these.
+        "packages/gone/dist/index.js": "x\n",
+        "packages/gone/tsconfig.tsbuildinfo": "{}\n",
+        "docs/demo/guide.md": "x\n",
+      });
+      const initExit = yield* git(root, ["init", "-q"]);
+      strictEqual(initExit, 0);
+      const declaration = decodeDeclaration({
+        version: 1,
+        prune: [
+          { path: "packages/gone", why: "not shipped", packageName: "@beep/gone" },
+          { path: "docs/demo", why: "not shipped" },
+        ],
+      });
+      const files = yield* liveCheckoutPruneFiles(root, declaration);
+      deepStrictEqual(files, ["docs/demo/guide.md"]);
     })
   );
 });

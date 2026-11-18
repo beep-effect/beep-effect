@@ -29,6 +29,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { $RepoCliKitId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
@@ -44,7 +45,9 @@ import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import type { GitCommandError, UnknownRefError } from "@beep/git/Git";
 import type { GlobExpansionError } from "@beep/walker/Expand";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const $I = $RepoCliKitId.create("CheckoutPrune");
 
@@ -779,15 +782,31 @@ export const loadCheckoutPruneDeclaration = Effect.fn("CheckoutPrune.loadCheckou
 const expansionPatterns = (entry: CheckoutPruneEntry): ReadonlyArray<string> =>
   entry.isLiteral ? [entry.path, `${entry.path}/**`] : [entry.path];
 
+// The files of `files` git ignores: build output (dist, .turbo, *.tsbuildinfo) a clone keeps when
+// it pulls a commit that removes the tracked files around it. A tracked file is never ignored, and a
+// checkout that is not a git repository has no ignore rules.
+const ignoredFiles = Effect.fnUntraced(function* (repoRoot: string, files: ReadonlyArray<string>) {
+  if (A.isReadonlyArrayEmpty(files)) {
+    return HashSet.empty<string>();
+  }
+  const git = yield* Git;
+  const ignored = yield* git
+    .checkIgnore(repoRoot, files)
+    .pipe(Effect.catchTag("NotARepositoryError", () => Effect.succeed(A.empty<string>())));
+  return HashSet.fromIterable(ignored);
+});
+
 /**
  * The files in a checkout's working tree that its prune entries match.
  *
  * **Details**
  *
  * Each prune entry is expanded against the working tree, files only, never
- * following symbolic links or descending into `node_modules` or `.git`. The
- * result feeds {@link checkoutPruneFindings}; a checkout without prune
- * entries reads nothing.
+ * following symbolic links or descending into `node_modules` or `.git`. A
+ * file git ignores is not checkout content, so build output left under a
+ * pruned directory is no live file; a tracked file always is. The result
+ * feeds {@link checkoutPruneFindings}; a checkout without prune entries reads
+ * nothing, and git runs only when a prune entry matches a file on disk.
  *
  * **Example** (Compose the live-file scan)
  *
@@ -800,14 +819,18 @@ const expansionPatterns = (entry: CheckoutPruneEntry): ReadonlyArray<string> =>
  *
  * @param repoRoot - Absolute repository root.
  * @param declaration - What the checkout says it removed, replaced and keeps.
- * @returns The repository-relative files some prune entry matches.
+ * @returns The repository-relative files some prune entry matches that git does not ignore.
  * @category utilities
  * @since 0.0.0
  */
 export const liveCheckoutPruneFiles = Effect.fn("CheckoutPrune.liveCheckoutPruneFiles")(function* (
   repoRoot: string,
   declaration: CheckoutPruneDeclaration
-): Effect.fn.Return<ReadonlyArray<string>, GlobExpansionError, FileSystem.FileSystem | Path.Path> {
+): Effect.fn.Return<
+  ReadonlyArray<string>,
+  GlobExpansionError | GitCommandError | UnknownRefError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
+> {
   const expanded = yield* Effect.forEach(
     A.flatMap(declaration.prune, expansionPatterns),
     (pattern) =>
@@ -819,5 +842,7 @@ export const liveCheckoutPruneFiles = Effect.fn("CheckoutPrune.liveCheckoutPrune
       }),
     { concurrency: 1 }
   );
-  return A.dedupe(A.flatten(expanded));
+  const files = A.dedupe(A.flatten(expanded));
+  const ignored = yield* ignoredFiles(repoRoot, files).pipe(Effect.provideServiceEffect(Git, Git.make));
+  return A.filter(files, (file) => !HashSet.has(ignored, file));
 });

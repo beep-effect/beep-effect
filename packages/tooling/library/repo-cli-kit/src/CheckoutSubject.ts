@@ -58,9 +58,11 @@ import {
   loadCheckoutPruneDeclaration,
 } from "./CheckoutPrune.ts";
 import { workspaceMembers } from "./RepoWorkspaces.ts";
+import type { GitCommandError, UnknownRefError } from "@beep/git/Git";
 import type { WorkspacePackage } from "@beep/repo-workspaces/WorkspacePackage";
 import type { GlobExpansionError } from "@beep/walker/Expand";
 import type * as PlatformError from "effect/PlatformError";
+import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { CheckoutPruneDeclarationError } from "./CheckoutPrune.ts";
 import type { RepoWorkspacesError } from "./RepoWorkspaces.ts";
 
@@ -945,8 +947,10 @@ export const loadCheckoutInventory = Effect.fn("CheckoutSubject.loadCheckoutInve
   | PlatformError.PlatformError
   | CheckoutPruneDeclarationError
   | CheckoutPruneFindingsError
-  | GlobExpansionError,
-  FileSystem.FileSystem | Path.Path
+  | GlobExpansionError
+  | GitCommandError
+  | UnknownRefError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1000,8 +1004,13 @@ export const loadCheckoutInventoryWith = Effect.fn("CheckoutSubject.loadCheckout
   workspaces: HashMap.HashMap<string, string>
 ): Effect.fn.Return<
   CheckoutInventory,
-  PlatformError.PlatformError | CheckoutPruneDeclarationError | CheckoutPruneFindingsError | GlobExpansionError,
-  FileSystem.FileSystem | Path.Path
+  | PlatformError.PlatformError
+  | CheckoutPruneDeclarationError
+  | CheckoutPruneFindingsError
+  | GlobExpansionError
+  | GitCommandError
+  | UnknownRefError,
+  FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner
 > {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
