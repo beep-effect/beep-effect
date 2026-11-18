@@ -106,6 +106,7 @@ decision file per object).
 | `BeepEffectWeb` | `apps/beep-effect-web/alchemy.run.ts` | `deploy-beep-effect-web.yml` | `beep-effect-web-prod` | `https://beep-effect.com` (custom domain, `www` redirect) |
 | `Storybook` | `apps/storybook/alchemy.run.ts` | `deploy-storybook.yml` | `storybook-prod` | `https://beep-effect.com/storybook/` (zone route `beep-effect.com/storybook*` in front of the apex Worker) |
 | `CostControls` | `packages/tooling/infra/cost-controls/alchemy.run.ts` | `deploy-cost-controls.yml` | `cost-controls-prod` | AWS account budget, services anomaly monitor and subscription, cost allocation tags, Compute Optimizer and Cost Optimization Hub enrollment |
+| `CiRunners` | `packages/tooling/infra/ci-runners/alchemy.run.ts` | `deploy-ci-runners.yml` (disarmed: `CI_RUNNERS_DEPLOY_ARMED`) | `ci-runners-prod` | Self-hosted runner fleet: network, heavy and shard-overflow pools, reaper (P5; not yet deployed) |
 | `InfraGithub` | `packages/tooling/infra/github/alchemy.run.ts` | `deploy-infra-github.yml` (armed by repo variable `INFRA_GITHUB_DEPLOY_ARMED=true`, 2026-11-18) | `infra-github-prod` | settings, `main` ruleset, deploy environments, variables, labels of `beep-effect/beep-effect` |
 | `HostsAiMetrics` | `packages/tooling/infra/infra-hosts/alchemy.run.ts` | none (operator workstation only, D21) | none | Arize Phoenix on dankserver behind Tailscale Serve |
 | `HostsOpenClaw` | `packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts` | none (operator workstation only, D21) | none | the OpenClaw generation on the operator workstation |
@@ -842,9 +843,11 @@ needs DNS · Edit.
 through `RunnerFleet`, the runner IAM policies and the reaper. Design and
 resource table: the package README. Decisions:
 `goals/infra-alchemy-rebuild/decisions/*-ci-runners-*.md`. Not deployed: the
-first `prod` deploy, its workflow (`deploy-ci-runners.yml`, drafted in the
-workflow decision), its deploy role and the `ci-runners-prod` environment wait
-for the window-5 release of P5.
+workflow `deploy-ci-runners.yml` ships disarmed, its job running only while the
+repository variable `CI_RUNNERS_DEPLOY_ARMED` is `true` (unset, a merge, push or
+dispatch deploys nothing). The packet gate arms it for cutover step 1, after the
+deploy role and the `ci-runners-prod` environment exist and the orchestrator
+confirms the heavy burst cap is 6.
 
 Personal stage (plan needs no credentials; a deploy builds a fleet that cannot
 launch or register a runner unless `CI_RUNNERS_REHEARSAL_REPOSITORY` names a

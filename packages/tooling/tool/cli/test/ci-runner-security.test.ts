@@ -2235,6 +2235,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "deploy-turbo-cache.yml:Deploy turbo cache (prod)",
         // Prod deploy of the InfraGithub Alchemy stack; environment-gated and armed by a variable.
         "deploy-infra-github.yml:Deploy infra-github (prod)",
+        // Prod deploy of the CiRunners Alchemy stack; environment-gated and disarmed by a variable.
+        "deploy-ci-runners.yml:Deploy CI runners (prod)",
         "fleet-lane-probe.yml:Lane Probe (${{ inputs.lane }})",
         "fleet-shadow-check.yml:Shadow Probe",
         "heavy-admit.yml:Heavy Admission",

@@ -880,6 +880,8 @@ jobs:
 
 Open points in the draft for the releasing lane: the deploy log is assumed to print the stack output, webhook URL included (beta.87 has no `alchemy output` command; confirm the format on the first deploy and adjust the `grep`); an unsigned request gets 401 from `Webhook.program.ts`, a payload that fails the allow list 403; the `paths` filter redeploys the fleet on every library source change, which is intended (the Lambdas are bundled from that source) but means every `@beep/alchemy-github-runners` PR deploys runner code on merge, so those PRs need the same review bar as this package.
 
+Added at the packet gate's GO (2026-11-18), disarmed: the workflow ships in the P5 PR with its job gated on `if: vars.CI_RUNNERS_DEPLOY_ARMED == 'true'`, the pattern `deploy-infra-github.yml` uses, so merging it, a later push and a manual dispatch all skip the job before any step while the variable is unset. The gate sets the variable for cutover step 1, only after the deploy role and environment exist and the orchestrator confirms `BEEP_HEAVY_BURST_MAX=6`; unsetting it disarms again. Its `ci-runner-security` exemption line is added in the same PR.
+
 Lane goals/infra-alchemy-rebuild-p5-ci-runners
 
 Reverse: Do not add the drafted workflow; deploy prod from a gate-run dispatch instead.
