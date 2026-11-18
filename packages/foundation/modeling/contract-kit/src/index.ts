@@ -12,7 +12,7 @@
  * **Example** (Import the catalog namespace)
  *
  * ```ts
- * import { Catalog } from "@beep/contract-kit"
+ * import * as Catalog from "@beep/contract-kit/Catalog"
  *
  * console.log(typeof Catalog.make) // "function"
  * ```
@@ -28,7 +28,7 @@ export * as Catalog from "./Catalog.ts";
  * **Example** (Import the parity namespace)
  *
  * ```ts
- * import { Parity } from "@beep/contract-kit"
+ * import * as Parity from "@beep/contract-kit/Parity"
  *
  * console.log(typeof Parity.groupShape) // "function"
  * ```

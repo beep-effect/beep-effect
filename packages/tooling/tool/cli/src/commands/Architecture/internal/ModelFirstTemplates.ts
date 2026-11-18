@@ -22,9 +22,9 @@ const fence = "```";
  * **Example** (Names for the notes context)
  *
  * ```ts
- * import { modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
+ * import { ModelFirstContextRequest, modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
  *
- * const names = modelFirstContextNamesFor({ context: "notes", module: "Note" })
+ * const names = modelFirstContextNamesFor(ModelFirstContextRequest.make({ context: "notes", module: "Note" }))
  * console.log(names.contractPackage) // "@beep/notes-contract"
  * ```
  *
@@ -50,14 +50,38 @@ export class ModelFirstContextNames extends S.Opaque<ModelFirstContextNames, { r
 ) {}
 
 /**
+ * What a model-first context is generated from: its kebab-case context slug
+ * (the `packages/<context>` folder) and the PascalCase name of its first Module.
+ *
+ * **Example** (Request the notes context)
+ *
+ * ```ts
+ * import { ModelFirstContextRequest } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
+ *
+ * const request = ModelFirstContextRequest.make({ context: "notes", module: "Note" })
+ * console.log(request.module) // "Note"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ModelFirstContextRequest extends S.Opaque<ModelFirstContextRequest, { readonly brand: unique symbol }>()(
+  S.Struct({ context: S.String, module: S.String }).pipe(
+    $I.annoteSchema("ModelFirstContextRequest", {
+      description: "The context slug and first Module name a model-first context is generated from.",
+    })
+  )
+) {}
+
+/**
  * Derives every generated name from a context slug and a Module name.
  *
  * **Example** (Derive the identity composer of a contract package)
  *
  * ```ts
- * import { modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
+ * import { ModelFirstContextRequest, modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
  *
- * console.log(modelFirstContextNamesFor({ context: "case-files", module: "CaseFile" }).contractIdentity) // "$CaseFilesContractId"
+ * console.log(modelFirstContextNamesFor(ModelFirstContextRequest.make({ context: "case-files", module: "CaseFile" })).contractIdentity) // "$CaseFilesContractId"
  * ```
  *
  * @param input - The kebab-case context slug (the `packages/<context>` folder) and the PascalCase name of its first Module.
@@ -65,13 +89,7 @@ export class ModelFirstContextNames extends S.Opaque<ModelFirstContextNames, { r
  * @category constructors
  * @since 0.0.0
  */
-export const modelFirstContextNamesFor = ({
-  context,
-  module,
-}: {
-  readonly context: string;
-  readonly module: string;
-}): ModelFirstContextNames => {
+export const modelFirstContextNamesFor = ({ context, module }: ModelFirstContextRequest): ModelFirstContextNames => {
   const contextPascal = Str.pascalCase(context);
   return ModelFirstContextNames.make({
     context,
@@ -958,11 +976,12 @@ const sourceFile = (
  *
  * ```ts
  * import {
+ *   ModelFirstContextRequest,
  *   modelFirstContextNamesFor,
  *   modelFirstSourceFilesFor,
  * } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
  *
- * const files = modelFirstSourceFilesFor(modelFirstContextNamesFor({ context: "notes", module: "Note" }))
+ * const files = modelFirstSourceFilesFor(modelFirstContextNamesFor(ModelFirstContextRequest.make({ context: "notes", module: "Note" })))
  * console.log(files[0]?.path) // "src/Note/Note.id.ts"
  * ```
  *

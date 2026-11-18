@@ -35,7 +35,7 @@ import {
   modelFirstTargetFor,
   modelFirstWorkspaceDependenciesFor,
 } from "./internal/ModelFirstContext.ts";
-import { modelFirstContextNamesFor } from "./internal/ModelFirstTemplates.ts";
+import { ModelFirstContextRequest, modelFirstContextNamesFor } from "./internal/ModelFirstTemplates.ts";
 import {
   packageShellFileOperationsFor,
   packageShellRolePlanFor,
@@ -482,7 +482,9 @@ export const makeModelFirstContextOperationPlan = Effect.fn(function* (input: {
       `Invalid Module "${input.module}": a Module is a PascalCase name such as "Note".`
     );
   }
-  const names = modelFirstContextNamesFor(input);
+  const names = modelFirstContextNamesFor(
+    ModelFirstContextRequest.make({ context: input.context, module: input.module })
+  );
   const references = yield* modelFirstReferencesFor(input.repoRoot, names);
   return CanonicalSliceOperationPlan.make({
     schemaVersion: "architecture-operation-plan/v1",

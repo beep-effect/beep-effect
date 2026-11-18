@@ -43,10 +43,10 @@ export const generatedContextRoles: ReadonlyArray<ArchitectureContextRole> = ["c
  * **Example** (The notes target)
  *
  * ```ts
- * import { modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
+ * import { ModelFirstContextRequest, modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
  * import { modelFirstTargetFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext"
  *
- * console.log(modelFirstTargetFor(modelFirstContextNamesFor({ context: "notes", module: "Note" })).conceptPath) // "Note"
+ * console.log(modelFirstTargetFor(modelFirstContextNamesFor(ModelFirstContextRequest.make({ context: "notes", module: "Note" }))).conceptPath) // "Note"
  * ```
  *
  * @param names - The names the context is generated from.
@@ -80,10 +80,10 @@ const filesForRole = (
  * **Example** (The host's exports)
  *
  * ```ts
- * import { modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
+ * import { ModelFirstContextRequest, modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
  * import { modelFirstExportsFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext"
  *
- * console.log(modelFirstExportsFor(modelFirstContextNamesFor({ context: "notes", module: "Note" }), "host")) // ["./Adapters", "./Host"]
+ * console.log(modelFirstExportsFor(modelFirstContextNamesFor(ModelFirstContextRequest.make({ context: "notes", module: "Note" })), "host")) // ["./Adapters", "./Host"]
  * ```
  *
  * @param names - The names the context is generated from.
@@ -107,10 +107,10 @@ export const modelFirstExportsFor: {
  * **Example** (The notes role plans)
  *
  * ```ts
- * import { modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
+ * import { ModelFirstContextRequest, modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
  * import { modelFirstRolePlansFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext"
  *
- * const plans = modelFirstRolePlansFor(modelFirstContextNamesFor({ context: "notes", module: "Note" }))
+ * const plans = modelFirstRolePlansFor(modelFirstContextNamesFor(ModelFirstContextRequest.make({ context: "notes", module: "Note" })))
  * console.log(plans.map((plan) => plan.packageName)) // ["@beep/notes-contract", "@beep/notes-model", "@beep/notes-host"]
  * ```
  *
@@ -281,10 +281,10 @@ export type ModelFirstReferences = R.ReadonlyRecord<ArchitectureContextRole, Rea
  * **Example** (The model's workspace dependencies)
  *
  * ```ts
- * import { modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
+ * import { ModelFirstContextRequest, modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
  * import { modelFirstWorkspaceDependenciesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext"
  *
- * const names = modelFirstContextNamesFor({ context: "notes", module: "Note" })
+ * const names = modelFirstContextNamesFor(ModelFirstContextRequest.make({ context: "notes", module: "Note" }))
  * console.log(modelFirstWorkspaceDependenciesFor(names, "model")) // ["@beep/contract-kit", "@beep/identity", "@beep/notes-contract"]
  * ```
  *
@@ -449,11 +449,11 @@ const sourceOperationFor = (names: ModelFirstContextNames, file: ModelFirstSourc
  * **Example** (Count the notes source files)
  *
  * ```ts
- * import { modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
+ * import { ModelFirstContextRequest, modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
  * import { modelFirstOperationsFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext"
  *
  * const none = { contract: [], model: [], host: [], web: [] }
- * const operations = modelFirstOperationsFor(modelFirstContextNamesFor({ context: "notes", module: "Note" }), none)
+ * const operations = modelFirstOperationsFor(modelFirstContextNamesFor(ModelFirstContextRequest.make({ context: "notes", module: "Note" })), none)
  * console.log(operations.some((operation) => operation.path === "packages/notes/host/src/Host.ts")) // true
  * ```
  *

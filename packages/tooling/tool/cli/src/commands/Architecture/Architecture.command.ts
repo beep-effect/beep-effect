@@ -333,20 +333,33 @@ const createContextCommand = Command.make(
   )
 );
 
-const createSliceCommand = Command.make(
-  "slice",
-  {
-    slice: Argument.String("slice").pipe(Argument.withDescription("Slice or bounded-context name")),
-    concept: Argument.String("concept").pipe(Argument.withDescription("Concept name")),
-    domainKind: domainKindFlag,
-    stage: stageFlag("core"),
-    dryRun: dryRunFlag,
-  },
-  Effect.fn(function* ({ slice, concept, domainKind, stage, dryRun }) {
-    const plan = yield* makePlanFromCommand(slice, concept, domainKind, stage);
-    yield* runWriteCommand(plan, dryRun);
-  })
-).pipe(
+// `create slice` and `add concept` plan and write the same legacy concept.
+const legacyConceptConfig = {
+  slice: Argument.String("slice").pipe(Argument.withDescription("Slice or bounded-context name")),
+  concept: Argument.String("concept").pipe(Argument.withDescription("Concept name")),
+  domainKind: domainKindFlag,
+  stage: stageFlag("core"),
+  dryRun: dryRunFlag,
+};
+
+const writeLegacyConcept = Effect.fn(function* ({
+  slice,
+  concept,
+  domainKind,
+  stage,
+  dryRun,
+}: {
+  readonly slice: string;
+  readonly concept: string;
+  readonly domainKind: string;
+  readonly stage: string;
+  readonly dryRun: boolean;
+}) {
+  const plan = yield* makePlanFromCommand(slice, concept, domainKind, stage);
+  yield* runWriteCommand(plan, dryRun);
+});
+
+const createSliceCommand = Command.make("slice", legacyConceptConfig, writeLegacyConcept).pipe(
   Command.withDescription(
     "Legacy seven-package shape: create a canonical slice from the architecture operation-plan factory"
   )
@@ -365,20 +378,7 @@ const createPackageCommand = Command.make(
   })
 ).pipe(Command.withDescription("Legacy seven-package shape: create a shell-only canonical slice role package"));
 
-const addConceptCommand = Command.make(
-  "concept",
-  {
-    slice: Argument.String("slice").pipe(Argument.withDescription("Slice or bounded-context name")),
-    concept: Argument.String("concept").pipe(Argument.withDescription("Concept name")),
-    domainKind: domainKindFlag,
-    stage: stageFlag("core"),
-    dryRun: dryRunFlag,
-  },
-  Effect.fn(function* ({ slice, concept, domainKind, stage, dryRun }) {
-    const plan = yield* makePlanFromCommand(slice, concept, domainKind, stage);
-    yield* runWriteCommand(plan, dryRun);
-  })
-).pipe(
+const addConceptCommand = Command.make("concept", legacyConceptConfig, writeLegacyConcept).pipe(
   Command.withDescription("Legacy seven-package shape: add a concept through the architecture operation-plan factory")
 );
 
