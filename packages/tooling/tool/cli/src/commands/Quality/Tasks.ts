@@ -39,6 +39,8 @@ import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { FsUtils, FsUtilsLive, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { enumerate } from "@beep/repo-workspaces/internal/enumerate";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
+import { Audience, AudienceKind } from "@beep/runtime-env/Audience";
+import { RuntimeEnv } from "@beep/runtime-env/RuntimeEnv";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -1473,14 +1475,43 @@ const turboCacheArgsFor = (tasks: ReadonlyArray<string>, args: ReadonlyArray<str
     ? localOnlyTurboCacheArgs(localTurboCacheArgs(args))
     : localTurboCacheArgs(args);
 
-const turboRunArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> => {
+// The task path's audience, decided by `@beep/runtime-env` over the live
+// environment and read once per built step, so its argv and environment agree.
+// Turbo hides undeclared variables from tasks and replays a cache hit with the
+// log of whichever audience ran first; an agent run therefore exports `AGENT=1`,
+// the one variable Bun's quiet mode reads under every agent (it does not read
+// `AI_AGENT` or `CODEX_*`), and asks Turbo to replay errors only.
+const taskAudience = (): AudienceKind => Audience.detect(RuntimeEnv.fromRecord(Bun.env));
+
+const isTurboOutputLogsArg = (arg: string): boolean => arg === "--output-logs" || Str.startsWith("--output-logs=")(arg);
+
+const audienceStepEnv = (audience: AudienceKind): Readonly<Record<string, string>> =>
+  AudienceKind.is.agent(audience) ? { AGENT: "1" } : {};
+
+// A caller-owned `--output-logs` stays caller-owned, as a caller's `--cache` does.
+const audienceTurboArgs = (audience: AudienceKind, optionArgs: ReadonlyArray<string>): ReadonlyArray<string> =>
+  AudienceKind.is.agent(audience) && !A.some(optionArgs, isTurboOutputLogsArg) ? ["--output-logs=errors-only"] : [];
+
+const turboRunArgs = (
+  tasks: ReadonlyArray<string>,
+  args: ReadonlyArray<string>,
+  audience: AudienceKind
+): ReadonlyArray<string> => {
   const [optionArgs, passthroughArgs] = splitAtTurboPassthrough(args);
   // Golden regeneration writes fixtures, so even a second identical invocation
   // must execute instead of replaying a successful cached regeneration.
   const executionArgs = configStringEqualsSync("REGEN_GOLDENS", "1")
     ? ["--force", ...A.filter(optionArgs, (arg) => arg !== "--force" && !Str.startsWith(arg, "--force="))]
     : optionArgs;
-  return ["turbo", "run", ...tasks, ...turboCacheArgsFor(tasks, args), ...executionArgs, ...passthroughArgs];
+  return [
+    "turbo",
+    "run",
+    ...tasks,
+    ...turboCacheArgsFor(tasks, args),
+    ...audienceTurboArgs(audience, optionArgs),
+    ...executionArgs,
+    ...passthroughArgs,
+  ];
 };
 
 const boundedRootTurboArgs = (
@@ -3345,19 +3376,69 @@ const runStepGroup = Effect.fn("QualityTasks.runStepGroup")(function* (
   yield* failQualityTaskGroup(label, failures);
 });
 
-const turboStep = (cwd: string, label: string, tasks: ReadonlyArray<string>, args: ReadonlyArray<string>) => {
-  const env = turboCoverageEnv(tasks, args);
+const turboStep = (
+  cwd: string,
+  label: string,
+  tasks: ReadonlyArray<string>,
+  args: ReadonlyArray<string>,
+  audience: AudienceKind = taskAudience()
+) => {
+  // The secret-session choice keys on the step's own environment, never on the
+  // audience variable, so an agent run wraps exactly the steps a human run does.
+  const ownEnv = turboCoverageEnv(tasks, args);
+  const env = AudienceKind.is.agent(audience) ? { ...ownEnv, ...audienceStepEnv(audience) } : ownEnv;
   return QualityTaskStep.make({
     label,
     command: "bunx",
-    args: turboRunArgs(tasks, args),
+    args: turboRunArgs(tasks, args, audience),
     cwd,
     ...O.getSomesStruct({
       env: O.fromUndefinedOr(env),
-      useLocalEnv: turboStepLocalEnv(env, turboCachePlanNeedsSecretSession(turboCachePlan(args))),
+      useLocalEnv: turboStepLocalEnv(ownEnv, turboCachePlanNeedsSecretSession(turboCachePlan(args))),
     }),
   });
 };
+
+/**
+ * Build the step for one root `turbo run` invocation for an explicit audience.
+ * Exposed for focused unit tests.
+ *
+ * **Details**
+ *
+ * The task path reads the audience once per step from `@beep/runtime-env` and
+ * passes it here. Under `agent`, the step's environment carries `AGENT=1` and
+ * its argv carries `--output-logs=errors-only` unless the caller already passed
+ * an `--output-logs` option; `human` and `ci` leave both untouched.
+ *
+ * **Example** (Build a quiet agent check step)
+ *
+ * ```ts
+ * import { turboStepForTesting } from "@beep/repo-cli/test/Quality"
+ * import * as A from "effect/Array"
+ *
+ * const step = turboStepForTesting("/repo", "check", ["check"], ["--summarize"], "agent")
+ * console.log(step.env?.AGENT) // "1"
+ * console.log(A.contains(step.args, "--output-logs=errors-only")) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const turboStepForTesting: {
+  (
+    cwd: string,
+    label: string,
+    tasks: ReadonlyArray<string>,
+    args: ReadonlyArray<string>,
+    audience: AudienceKind
+  ): QualityTaskStep;
+  (
+    label: string,
+    tasks: ReadonlyArray<string>,
+    args: ReadonlyArray<string>,
+    audience: AudienceKind
+  ): (cwd: string) => QualityTaskStep;
+} = dual(5, turboStep);
 
 const coverageStep = (cwd: string, options: CoverageTaskOptions) => {
   // A narrow ratchet run resolves its owners through the planner, but a direct
@@ -3367,14 +3448,16 @@ const coverageStep = (cwd: string, options: CoverageTaskOptions) => {
     (A.isReadonlyArrayNonEmpty(options.expectedPackageNames)
       ? options.expectedPackageNames
       : explicitTurboFilterValues(options.args));
+  const audience = taskAudience();
   return QualityTaskStep.make({
     label: options.writeBaseline ? "coverage:baseline" : "coverage:ratchet",
     command: "bunx",
-    args: turboRunArgs(["coverage"], [...options.args, ...coverageVitestTopologyArgs(topologyPackageNames)]),
+    args: turboRunArgs(["coverage"], [...options.args, ...coverageVitestTopologyArgs(topologyPackageNames)], audience),
     cwd,
     env: {
       ...coverageEnvironment(),
       ...(options.writeBaseline ? { VITEST_COVERAGE_REPORT_ONLY: "1" } : {}),
+      ...audienceStepEnv(audience),
     },
   });
 };
@@ -3385,8 +3468,9 @@ const coverageFullShardStep = (
   packageNames: ReadonlyArray<string>,
   passthroughArgs: ReadonlyArray<string>,
   writeBaseline: boolean
-) =>
-  QualityTaskStep.make({
+) => {
+  const audience = taskAudience();
+  return QualityTaskStep.make({
     label: `coverage:shard-${index}`,
     command: "bunx",
     args: turboRunArgs(
@@ -3398,14 +3482,17 @@ const coverageFullShardStep = (
         ...passthroughArgs,
         ...A.map(packageNames, (packageName) => `--filter=${packageName}`),
         ...coverageVitestTopologyArgs(packageNames),
-      ]
+      ],
+      audience
     ),
     cwd,
     env: {
       ...coverageEnvironment(),
       ...(writeBaseline ? { VITEST_COVERAGE_REPORT_ONLY: "1" } : {}),
+      ...audienceStepEnv(audience),
     },
   });
+};
 
 const bunRunStep = (cwd: string, label: string, args: ReadonlyArray<string>) =>
   QualityTaskStep.make({
@@ -3450,9 +3537,12 @@ const sqlIntegrationEnv = (connectionUri: string): Record<string, string> => ({
   BEEP_TEST_DATABASE_URL: connectionUri,
 });
 
-const sqlIntegrationChildCommand = (args: ReadonlyArray<string>): SqlIntegrationChildCommand => ({
+const sqlIntegrationChildCommand = (
+  args: ReadonlyArray<string>,
+  audience: AudienceKind
+): SqlIntegrationChildCommand => ({
   command: "bunx",
-  args: turboRunArgs(["test:integration:serial"], ["--concurrency=1", ...withoutTurboConcurrencyArgs(args)]),
+  args: turboRunArgs(["test:integration:serial"], ["--concurrency=1", ...withoutTurboConcurrencyArgs(args)], audience),
 });
 
 const withRyukDisabledDuringAcquire = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
@@ -3481,15 +3571,18 @@ const sqlIntegrationStep = (
   repoRoot: string,
   args: ReadonlyArray<string>,
   resource: SqlIntegrationLaneResource,
-  childCommand: SqlIntegrationChildCommand = sqlIntegrationChildCommand(args)
-) =>
-  QualityTaskStep.make({
+  childCommand?: SqlIntegrationChildCommand
+) => {
+  const audience = taskAudience();
+  const child = childCommand ?? sqlIntegrationChildCommand(args, audience);
+  return QualityTaskStep.make({
     label: "test:integration:serial",
-    command: childCommand.command,
-    args: childCommand.args,
+    command: child.command,
+    args: child.args,
     cwd: repoRoot,
-    env: sqlIntegrationEnv(resource.connectionUri),
+    env: { ...sqlIntegrationEnv(resource.connectionUri), ...audienceStepEnv(audience) },
   });
+};
 
 const loadTestUtilsModule = Effect.tryPromise({
   try: () => import("@beep/test-utils"),
