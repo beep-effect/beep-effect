@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (PR #3394 takeover lane, claude/model-first-standard-scaffolder)",
-    "reason": "Re-record // after merging origin/main (#3392/#3397/#3399): main re-recorded the root baseline, and this branch's one added //#lint:policy-fingerprint input (packages/foundation/modeling/contract-kit/package.json) must be recorded on top of it. No qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-output-switch-on P1 lane, fix/gate-output-switch-on)",
+    "reason": "Re-record the root subject for turbo.json's global passThroughEnv, which gains every @beep/runtime-env agent presence key plus AI_AGENT, EDITOR and AGENT so a tool under Turbo sees the agent signal. Pass-through values stay out of task hashes (an agent and a human dry run hash @beep/glob#test identically), so reuse is unchanged; no task command, cache flag, input, output or env entry changed and no qualification is granted. Re-recorded after merging main at 51f698a46ae, which changed the root subject independently.",
     "basis": {
-      "path": "docs/reports/contract-kit-cache-review-2026-11-18.md",
-      "sha256": "714e6f90d843ebbd3a0aa27cf4becaf8d599a2d50e67d16a7d47506b8ba43b56"
+      "path": "docs/reports/gate-output-switch-on-cache-review-2026-11-18.md",
+      "sha256": "58cdc97cfca9560177b1157f129f8c65720f85bee468db52161ed4a2ac882fb0"
     }
   },
   "globalConfiguration": {
@@ -40,6 +40,22 @@
         "TSRS_FAST"
       ],
       "passThroughEnv": [
+        "AGENT",
+        "AI_AGENT",
+        "AUGMENT_AGENT",
+        "CLAUDECODE",
+        "CLAUDE_CODE",
+        "CODEX_SANDBOX",
+        "COPILOT_AGENT",
+        "COPILOT_CLI",
+        "CURSOR_AGENT",
+        "EDITOR",
+        "GEMINI_CLI",
+        "GOOSE_PROVIDER",
+        "JUNIE_DATA",
+        "JUNIE_SHIM_PATH",
+        "OPENCODE",
+        "REPL_ID",
         "BEEP_AGENT_SESSION_ID",
         "BEEP_NODE_BIN",
         "BEEP_DOCGEN_CONCURRENCY",
@@ -188,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "d0a747b3b25b4fe4e7e84d984bcfc3d50809cc327b7fb86279a222aa6df4aeb0"
+      "sha256": "7fc93f7b13075dd6ef47d25b5f3b291f62885cf1155ffa594e6009a9238beedb"
     }
   ],
   "nodes": [
