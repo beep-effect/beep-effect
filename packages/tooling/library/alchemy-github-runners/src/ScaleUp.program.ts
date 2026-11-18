@@ -509,9 +509,10 @@ const instanceIdOf = (parameterName: string): string => A.lastNonEmpty(Str.split
 
 // Either read failing fails the group, so no launch happens and every message of the group goes back for retry.
 // Parameter Store is read FIRST, EC2 second. A runner whose JIT config is gone at the first read has already booted,
-// and boot takes far longer than EC2's tag-filter lag (seconds), so the second read sees it. Reading EC2 first would
-// let a runner fall between the reads: unseen by EC2, then its config deleted before Parameter Store is read. A
-// runner seen by both is counted once, by instance id.
+// and a boot normally outlasts EC2's tag-filter lag (seconds), so the second read normally sees it. Reading EC2 first
+// would let a runner fall between the reads: unseen by EC2, then its config deleted before Parameter Store is read. A
+// runner seen by both is counted once, by instance id. An EC2 lag longer than a boot can still undercount, and the
+// invocation then overshoots by the runners it missed: the residual and tripwire in the CI runners cutover decision.
 const countRunners = Effect.fnUntraced(function* (config: PoolRuntimeConfig, filter: RunnerFilter) {
   const ec2 = yield* Ec2Fleet;
   const ssm = yield* SsmStore;
@@ -538,8 +539,12 @@ const countRunners = Effect.fnUntraced(function* (config: PoolRuntimeConfig, fil
  * optional "still queued" check (fail-open), runner count against the VM
  * cap, launch, configure, terminate what failed configuration. The count is
  * the runners EC2 shows plus those launched but not yet shown, read from
- * their unconsumed JIT config parameters, so EC2's read lag never admits a
- * runner past the cap. When either read fails, the group launches nothing
+ * their unconsumed JIT config parameters. Parameter Store is read first, so a
+ * runner that deleted its config before that read has booted, and EC2
+ * normally shows a booted runner. An EC2 read lag longer than a boot can
+ * still undercount, and the invocation then overshoots the cap by the
+ * runners both reads missed; the residual and its tripwire are in the CI
+ * runners cutover decision. When either read fails, the group launches nothing
  * and every one of its messages is returned for retry. With
  * ephemeral runners, messages over the cap and retryable launch failures are
  * returned for redelivery; everything else handled is published to the
