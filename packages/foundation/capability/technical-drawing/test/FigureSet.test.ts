@@ -159,14 +159,12 @@ const cleanMetrics = (dpi: number, antiAliased: boolean) =>
     height: Math.round(11 * dpi),
     dpi,
     antiAliased,
-    inkBounds: O.some(
-      InkBounds.make({
-        minX: Math.round(1.1 * dpi),
-        minY: Math.round(1.1 * dpi),
-        maxX: Math.round(7.5 * dpi),
-        maxY: Math.round(10 * dpi),
-      })
-    ),
+    inkBounds: InkBounds.makeOption({
+      minX: Math.round(1.1 * dpi),
+      minY: Math.round(1.1 * dpi),
+      maxX: Math.round(7.5 * dpi),
+      maxY: Math.round(10 * dpi),
+    }),
     inkPixels: 100,
     impurePixels: 0,
     largestBlackSquare: 4,
@@ -429,8 +427,8 @@ const sha256Hex = (text: string) =>
 const styled = SheetOptions.make({
   margins: "cfr-strict",
   labelGapMm: O.some(1),
-  sheetNumberLabel: O.some(LabelStyle.make({ typeface: "sans", sizePt: 18 })),
-  figureLabel: O.some(LabelStyle.make({ typeface: "serif", sizePt: 24 })),
+  sheetNumberLabel: LabelStyle.makeOption({ typeface: "sans", sizePt: 18 }),
+  figureLabel: LabelStyle.makeOption({ typeface: "serif", sizePt: 24 }),
 });
 const composeStyled = (n: number, options: SheetOptions = styled) =>
   composeSheet({ segments: square, shading: [], figure: n, sheet: n, sheets: 8, scale: 20, options });
@@ -1029,8 +1027,8 @@ describe("@beep/technical-drawing", () => {
       Effect.fnUntraced(function* () {
         const text = SheetOptions.make({
           ...styled,
-          sheetNumberLabel: O.some(LabelStyle.make({ typeface: "sans", sizePt: 18, render: "text" })),
-          figureLabel: O.some(LabelStyle.make({ typeface: "serif", sizePt: 24, render: "text" })),
+          sheetNumberLabel: LabelStyle.makeOption({ typeface: "sans", sizePt: 18, render: "text" }),
+          figureLabel: LabelStyle.makeOption({ typeface: "serif", sizePt: 24, render: "text" }),
         });
         const g = sheetGeometry(text);
         const centreX = (g.sight.left + g.sight.right) / 2;
@@ -1247,7 +1245,7 @@ describe("@beep/technical-drawing", () => {
           height: 3300,
           dpi: 300,
           antiAliased: true,
-          inkBounds: O.some(InkBounds.make({ minX: 200, minY: 200, maxX: 2500, maxY: 3250 })),
+          inkBounds: InkBounds.makeOption({ minX: 200, minY: 200, maxX: 2500, maxY: 3250 }),
           inkPixels: 1,
           impurePixels: 0,
           largestBlackSquare: 0,

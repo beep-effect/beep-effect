@@ -190,7 +190,7 @@ export type SkillContentDigest = typeof SkillContentDigest.Type;
  *   staging: "/repo/skills-lock.json.tmp-1",
  *   partial: O.none(),
  *   backup: O.some("/repo/.beep/skills-backups/skills-lock.json.1"),
- *   preimage: O.some(SkillContentDigest.cases.file.make({ hash: "aa" })),
+ *   preimage: SkillContentDigest.cases.file.makeOption({ hash: "aa" }),
  *   staged: SkillContentDigest.cases.file.make({ hash: "bb" }),
  *   filesystem: O.some("1:7:ext4")
  * })

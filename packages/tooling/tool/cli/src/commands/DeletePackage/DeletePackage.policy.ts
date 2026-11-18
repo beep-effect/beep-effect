@@ -245,12 +245,10 @@ const ownedTreeRefusal = (
   workspacePaths: ReadonlyArray<string>
 ): O.Option<DeletePackageRefusal> => {
   if (isRepositoryRootTarget(target)) {
-    return O.some(
-      DeletePackageRefusal.cases.hard.make({
-        kind: "dependent",
-        detail: `${target.packageName} resolves to the repository root; recursive deletion is forbidden.`,
-      })
-    );
+    return DeletePackageRefusal.cases.hard.makeOption({
+      kind: "dependent",
+      detail: `${target.packageName} resolves to the repository root; recursive deletion is forbidden.`,
+    });
   }
 
   return pipe(

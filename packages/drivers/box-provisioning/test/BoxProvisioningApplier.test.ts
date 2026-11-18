@@ -17,7 +17,6 @@ import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as TestClock from "effect/testing/TestClock";
 import { desiredFixture, observedAfterApplyFixture, observedFixture, postApplyAdoptionsFixture } from "./fixtures.ts";
 
@@ -198,7 +197,7 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning app
         collaborations: A.map(observedAfterApplyFixture.collaborations, (collaboration) =>
           BoxObservedCollaboration.make({
             ...collaboration,
-            principalProviderId: O.some(BoxProviderId.make("user-id")),
+            principalProviderId: BoxProviderId.makeOption("user-id"),
             role: "viewer",
           })
         ),

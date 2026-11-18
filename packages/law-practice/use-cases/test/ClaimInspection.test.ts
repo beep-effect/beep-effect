@@ -120,7 +120,7 @@ const assertPageIsGreedy = Effect.fn("ClaimInspectionTest.assertGreedyPage")(fun
     nextCursor:
       end === full.records.length
         ? O.none()
-        : O.some(ClaimInspectionCursor.make({ sourceKey: largeMixed.sourceKey, nextSourceOrdinal: end + 1 })),
+        : ClaimInspectionCursor.makeOption({ sourceKey: largeMixed.sourceKey, nextSourceOrdinal: end + 1 }),
   });
   const expandedEncoded = yield* encodePage(expanded);
   assert.isAbove(encoder.encode(expandedEncoded).byteLength, limit);

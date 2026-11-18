@@ -59,7 +59,7 @@ export class DigestProgress extends S.Opaque<DigestProgress, { readonly brand: u
  * const due = digestDayDue(
  *   LocalDate.make({ year: 2030, month: 1, day: 10 }),
  *   DigestProgress.make({
- *     digestedThrough: O.some(LocalDate.make({ year: 2030, month: 1, day: 6 })),
+ *     digestedThrough: LocalDate.makeOption({ year: 2030, month: 1, day: 6 }),
  *     earliestProcessed: O.none()
  *   })
  * )

@@ -143,8 +143,8 @@ describe("VaultSyncPass SQL durability", () => {
               DmsRemoteEvent.make({
                 eventId: "unknown-outside",
                 eventType: "created",
-                remoteId: O.some(V.RemoteItemId.make("outside")),
-                parentRemoteId: O.some(V.RemoteItemId.make("foreign-root")),
+                remoteId: V.RemoteItemId.makeOption("outside"),
+                parentRemoteId: V.RemoteItemId.makeOption("foreign-root"),
                 payload: { synthetic: true },
               })
             );
@@ -152,8 +152,8 @@ describe("VaultSyncPass SQL durability", () => {
               DmsRemoteEvent.make({
                 eventId: "unknown-inside",
                 eventType: "created",
-                remoteId: O.some(V.RemoteItemId.make("inside")),
-                parentRemoteId: O.some(V.RemoteItemId.make("fx-root")),
+                remoteId: V.RemoteItemId.makeOption("inside"),
+                parentRemoteId: V.RemoteItemId.makeOption("fx-root"),
                 payload: { synthetic: true },
               })
             );

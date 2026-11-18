@@ -843,16 +843,14 @@ const shadeFace =
       seen,
       ink:
         plan.style === "graded" && A.isReadonlyArrayNonEmpty(banded) && seen > 0
-          ? O.some(
-              BandInk.make({
-                face: index,
-                exposure,
-                density:
-                  (sumOf(A.flatMap(banded, (p) => A.map(p.strokes, (stroke) => viewedLength(endsOf(stroke.edge))))) *
-                    plan.minPitch) /
-                  seen,
-              })
-            )
+          ? BandInk.makeOption({
+              face: index,
+              exposure,
+              density:
+                (sumOf(A.flatMap(banded, (p) => A.map(p.strokes, (stroke) => viewedLength(endsOf(stroke.edge))))) *
+                  plan.minPitch) /
+                seen,
+            })
           : O.none(),
     };
   };

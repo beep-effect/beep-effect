@@ -159,7 +159,7 @@ export const claimInspectionWithLexicalEvidence = (identity: ClaimLexicalProvide
             };
             remainingCharacters -= qualifiedText.length;
             const unavailable = (reason: "source-work-limit" | "tokenization-failed" | "alignment-failed") =>
-              O.some(ClaimLexicalEvidence.cases.unavailable.make({ ...base, reason }));
+              ClaimLexicalEvidence.cases.unavailable.makeOption({ ...base, reason });
             if (qualifiedText.length > 32_768 || remainingCharacters < 0)
               return Effect.succeed(unavailable("source-work-limit"));
             return tokenization.tokenize(qualifiedText).pipe(
@@ -189,14 +189,12 @@ export const claimInspectionWithLexicalEvidence = (identity: ClaimLexicalProvide
                   if (!validClaimLexicalTokens(qualifiedText, facts)) return unavailable("alignment-failed");
                   const annotated = yield* intrinsicSourceFacts(facts, identity, membership);
                   return annotated.status === "ready"
-                    ? O.some(
-                        ClaimLexicalEvidence.cases.aligned.make({
-                          ...base,
-                          ...identity,
-                          tokens: annotated.tokens,
-                          lexicalWorkConsumed: annotated.lexicalWorkConsumed,
-                        })
-                      )
+                    ? ClaimLexicalEvidence.cases.aligned.makeOption({
+                        ...base,
+                        ...identity,
+                        tokens: annotated.tokens,
+                        lexicalWorkConsumed: annotated.lexicalWorkConsumed,
+                      })
                     : unavailable(annotated.reason);
                 })
               ),

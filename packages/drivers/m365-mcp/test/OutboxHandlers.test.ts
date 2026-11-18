@@ -95,7 +95,7 @@ const eventParams = {
 };
 
 const eventAt = (dateTime: string) =>
-  O.some(GraphDateTimeTimeZone.make({ dateTime: O.some(dateTime), timeZone: O.some("UTC") }));
+  GraphDateTimeTimeZone.makeOption({ dateTime: O.some(dateTime), timeZone: O.some("UTC") });
 
 const pinnedEvent = GraphEvent.make({
   changeKey: O.some("event-key-1"),
@@ -109,7 +109,7 @@ const pinnedEvent = GraphEvent.make({
 });
 
 const sender = (address: string) =>
-  O.some(GraphRecipient.make({ emailAddress: O.some(GraphEmailAddress.make({ address: O.some(address) })) }));
+  GraphRecipient.makeOption({ emailAddress: GraphEmailAddress.makeOption({ address: O.some(address) }) });
 
 const conversationMessage = (fields: {
   readonly from: string;
@@ -576,7 +576,7 @@ describe("@beep/m365-mcp outbox handlers", () => {
         const meeting = GraphEvent.make({
           attendees: O.some([
             GraphEventAttendee.make({
-              emailAddress: O.some(GraphEmailAddress.make({ address: O.some("guest@example.test") })),
+              emailAddress: GraphEmailAddress.makeOption({ address: O.some("guest@example.test") }),
               type: O.some("required"),
             }),
           ]),

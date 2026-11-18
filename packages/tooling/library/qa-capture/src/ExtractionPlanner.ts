@@ -211,9 +211,7 @@ const spanWindow = (options: {
   return ExtractionWindow.make({
     endEpochMs,
     frameTimesEpochMs: options.frameTimesEpochMs ?? fractionTimes(options.rule, startEpochMs, endEpochMs),
-    gif: options.rule.renderGif
-      ? O.some(GifSpec.make({ fps: options.rule.gifFps, width: DEFAULT_GIF_WIDTH }))
-      : O.none(),
+    gif: options.rule.renderGif ? GifSpec.makeOption({ fps: options.rule.gifFps, width: DEFAULT_GIF_WIDTH }) : O.none(),
     label: options.label,
     priority: options.rule.priority,
     ruleKind: options.rule.kind,
@@ -735,7 +733,7 @@ export const applyBudget: {
               "budget-fps-reduced",
               `gif fps ${spec.fps} -> ${DEGRADED_GIF_FPS} by ladder step 2`
             );
-            return withGif(window, O.some(GifSpec.make({ fps: DEGRADED_GIF_FPS, width: spec.width })));
+            return withGif(window, GifSpec.makeOption({ fps: DEGRADED_GIF_FPS, width: spec.width }));
           },
         }
       )
@@ -755,7 +753,7 @@ export const applyBudget: {
               "budget-width-reduced",
               `gif width ${spec.width} -> ${DEGRADED_GIF_WIDTH} by ladder step 3`
             );
-            return withGif(window, O.some(GifSpec.make({ fps: spec.fps, width: DEGRADED_GIF_WIDTH })));
+            return withGif(window, GifSpec.makeOption({ fps: spec.fps, width: DEGRADED_GIF_WIDTH }));
           },
         }
       )

@@ -492,9 +492,7 @@ describe("Turbo lane digests", () => {
         const failed = yield* resolveLaneInputDigestForTesting(
           {
             ...outcome(child),
-            failure: O.some(
-              QualityTaskFailed.make({ label: "ci:check", command: "bunx turbo run check", exitCode: 1 })
-            ),
+            failure: QualityTaskFailed.makeOption({ label: "ci:check", command: "bunx turbo run check", exitCode: 1 }),
           },
           O.none()
         );
@@ -674,9 +672,11 @@ describe("Turbo lane digests", () => {
           const red = summary("red", writtenAtMillis, [task("@beep/x#check", "hx1", "MISS", 1)]);
           yield* encodeSummary(red).pipe(Effect.flatMap((text) => fs.writeFileString(summaryPath, text)));
           yield* fs.utimes(summaryPath, writtenAtMillis / 1_000, writtenAtMillis / 1_000);
-          const failure = O.some(
-            QualityTaskFailed.make({ label: "ci:check", command: "bunx turbo run check", exitCode: 1 })
-          );
+          const failure = QualityTaskFailed.makeOption({
+            label: "ci:check",
+            command: "bunx turbo run check",
+            exitCode: 1,
+          });
           const failedOutcome = (step: QualityTaskStep): StreamingStepOutcome => ({
             durationMs: 1,
             startedAt: startedAtIso,

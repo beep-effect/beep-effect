@@ -174,22 +174,18 @@ const prepareChannel = Effect.fn("PublishedAcceptanceTest.channel")(function* (
   });
   const bundle = CacheProducerBundle.make({
     ...original,
-    upload: O.some(
-      CacheHostedProducerUpload.make({
-        taskHash: "0123456789abcdef",
-        archiveSha256: binding.configurationDigest,
-        archiveBytes: 128,
-        status: 202,
-      })
-    ),
-    adapterRuntime: O.some(
-      CacheProducerAdapterReceipt.make({
-        backendSha256: Sha256Hex.make(binding.configurationDigest),
-        targetSha256: uploadApproval.targetSha256,
-        ready: { ...observed, role: "writer", phase: "ready" },
-        afterLoad: { ...observed, role: "writer", phase: "after-load" },
-      })
-    ),
+    upload: CacheHostedProducerUpload.makeOption({
+      taskHash: "0123456789abcdef",
+      archiveSha256: binding.configurationDigest,
+      archiveBytes: 128,
+      status: 202,
+    }),
+    adapterRuntime: CacheProducerAdapterReceipt.makeOption({
+      backendSha256: Sha256Hex.make(binding.configurationDigest),
+      targetSha256: uploadApproval.targetSha256,
+      ready: { ...observed, role: "writer", phase: "ready" },
+      afterLoad: { ...observed, role: "writer", phase: "after-load" },
+    }),
   });
   const issuer = yield* initializeCacheProducerIssuer(directory, binding, contract);
   const observation = CacheProducerObservation.make({ observation: bundle, envelope: yield* issuer.issue(bundle) });

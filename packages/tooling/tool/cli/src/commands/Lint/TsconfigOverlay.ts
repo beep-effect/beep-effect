@@ -320,14 +320,12 @@ const referenceViolationOf = (
   const extra = HashSet.size(HashSet.difference(actualSet, expectedSet));
   const reordered = missing === 0 && extra === 0 ? ", reordered" : "";
 
-  return O.some(
-    TsconfigOverlayViolation.make({
-      file,
-      scope: "references",
-      key: "references",
-      detail: `expected the ${A.length(expected)} reference(s) of ${ownerName}, found ${A.length(actual)} (missing ${missing}, extra ${extra}${reordered})`,
-    })
-  );
+  return TsconfigOverlayViolation.makeOption({
+    file,
+    scope: "references",
+    key: "references",
+    detail: `expected the ${A.length(expected)} reference(s) of ${ownerName}, found ${A.length(actual)} (missing ${missing}, extra ${extra}${reordered})`,
+  });
 };
 
 // Canonical references next to the overlay: tsconfig.build.json owns them when

@@ -601,7 +601,7 @@ const repairItemToIndexed = Effect.fn("repairItemToIndexed")(function* (
       }),
     })
   );
-  return O.some(IndexedBlock.make({ block: checked.value, index: item.index }));
+  return IndexedBlock.makeOption({ block: checked.value, index: item.index });
 });
 
 const containsIndexedBlock = (blocks: ReadonlyArray<IndexedBlock>, index: number): boolean =>

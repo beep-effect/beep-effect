@@ -283,14 +283,12 @@ export const isClaudeSessionLive = Effect.fn("Resume.isClaudeSessionLive")(funct
     A.findFirst((index) => index.sessionId === sessionId)
   );
   if (O.isNone(matching) || !(yield* fs.exists(path.join(procRoot, `${matching.value.pid}`)))) return O.none();
-  return O.some(
-    ClaudeLiveSession.make({
-      pid: matching.value.pid,
-      sessionId: matching.value.sessionId,
-      cwd: matching.value.cwd,
-      name: O.fromUndefinedOr(matching.value.name),
-    })
-  );
+  return ClaudeLiveSession.makeOption({
+    pid: matching.value.pid,
+    sessionId: matching.value.sessionId,
+    cwd: matching.value.cwd,
+    name: O.fromUndefinedOr(matching.value.name),
+  });
 });
 
 const transcriptFallback = Effect.fn("Resume.transcriptFallback")(function* (
@@ -350,35 +348,33 @@ const transcriptFallback = Effect.fn("Resume.transcriptFallback")(function* (
       const workspace = decodePrProvenanceLabel(path.basename(cwd)).pipe(
         O.getOrElse<PrProvenanceLabel>(() => "unknown")
       );
-      return O.some(
-        PrSessionRecord.make({
-          schemaVersion: 1,
-          repository,
-          prNumber: O.some(pr),
-          prUrl: O.none(),
-          branch: "unknown",
-          harness: "claude-code",
-          hostHarness: O.none(),
-          sessionId: O.some(sessionId),
-          hostSessionId: O.none(),
-          sessionHome: O.some(cwd),
-          sessionHomeSource: "transcript",
-          entrypoint: "unknown",
-          sessionName: O.none(),
-          nameSource: "unknown",
-          model: "unknown",
-          clonePath: cwd,
-          checkoutPath: cwd,
-          worktreePath: O.none(),
-          workspace,
-          sessionWorkspace: O.none(),
-          childSession: false,
-          headSha: "unknown",
-          runId: `pr-link-${pr}`,
-          role: "created",
-          recordedAt,
-        })
-      );
+      return PrSessionRecord.makeOption({
+        schemaVersion: 1,
+        repository,
+        prNumber: O.some(pr),
+        prUrl: O.none(),
+        branch: "unknown",
+        harness: "claude-code",
+        hostHarness: O.none(),
+        sessionId: O.some(sessionId),
+        hostSessionId: O.none(),
+        sessionHome: O.some(cwd),
+        sessionHomeSource: "transcript",
+        entrypoint: "unknown",
+        sessionName: O.none(),
+        nameSource: "unknown",
+        model: "unknown",
+        clonePath: cwd,
+        checkoutPath: cwd,
+        worktreePath: O.none(),
+        workspace,
+        sessionWorkspace: O.none(),
+        childSession: false,
+        headSha: "unknown",
+        runId: `pr-link-${pr}`,
+        role: "created",
+        recordedAt,
+      });
     }),
     { concurrency: 8 }
   );

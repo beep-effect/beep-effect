@@ -214,12 +214,10 @@ export const CrossOriginEmbedderPolicyHeader = S.Union([CrossOriginEmbedderPolic
         O.match({
           onNone: O.none<ResponseHeader>,
           onSome: (value) =>
-            O.some(
-              ResponseHeader.make({
-                name: headerName,
-                value: O.some(value),
-              })
-            ),
+            ResponseHeader.makeOption({
+              name: headerName,
+              value: O.some(value),
+            }),
         })
       );
     });

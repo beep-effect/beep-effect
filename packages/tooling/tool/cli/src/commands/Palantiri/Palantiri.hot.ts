@@ -270,16 +270,14 @@ const carryOf = (current: HotParcelLine) => (previous: HotParcelLine) =>
   (previous.state === "read" || (previous.state === "carried" && previous.carries < MAX_HOT_LINE_CARRIES)) &&
   O.isSome(previous.summary) &&
   O.isSome(previous.asOf)
-    ? O.some(
-        HotParcelLine.make({
-          parcel: current.parcel,
-          state: "carried",
-          text: `${previous.summary.value} (stale since ${DateTime.formatIso(previous.asOf.value)}; this read: ${current.text})`,
-          summary: previous.summary,
-          asOf: previous.asOf,
-          carries: previous.carries + 1,
-        })
-      )
+    ? HotParcelLine.makeOption({
+        parcel: current.parcel,
+        state: "carried",
+        text: `${previous.summary.value} (stale since ${DateTime.formatIso(previous.asOf.value)}; this read: ${current.text})`,
+        summary: previous.summary,
+        asOf: previous.asOf,
+        carries: previous.carries + 1,
+      })
     : O.none();
 
 /**

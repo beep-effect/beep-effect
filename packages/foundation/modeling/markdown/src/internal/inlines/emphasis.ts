@@ -197,7 +197,7 @@ export const scanDelims: {
     charBefore(scanner.subject, scanner.pos),
     charAfter(scanner.subject, scanner.pos + numdelims)
   );
-  return O.some(DelimiterRun.make({ numdelims, ...capabilitiesOf(cc, flanks) }));
+  return DelimiterRun.makeOption({ numdelims, ...capabilitiesOf(cc, flanks) });
 });
 
 /**

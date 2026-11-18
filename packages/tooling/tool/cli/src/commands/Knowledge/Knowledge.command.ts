@@ -203,12 +203,10 @@ export const knowledgeSemanticDeltaFailure = (
   report: KnowledgeSemanticDeltaReport
 ): O.Option<KnowledgeIntroducedFindingsError> =>
   A.isReadonlyArrayNonEmpty(report.introduced)
-    ? O.some(
-        KnowledgeIntroducedFindingsError.make({
-          message: `knowledge semantic-delta: ${A.length(report.introduced)} introduced blocking finding(s).`,
-          introducedCount: S.Natural.make(A.length(report.introduced)),
-        })
-      )
+    ? KnowledgeIntroducedFindingsError.makeOption({
+        message: `knowledge semantic-delta: ${A.length(report.introduced)} introduced blocking finding(s).`,
+        introducedCount: S.Natural.make(A.length(report.introduced)),
+      })
     : O.none();
 
 const runSemanticDelta = Effect.fn("KnowledgeCommand.runSemanticDelta")(function* (options: {
@@ -458,12 +456,10 @@ export const renderKnowledgeRefsReport: {
 export const knowledgeRefsCheckFailure = (report: KnowledgeRefsReport): O.Option<KnowledgeHostPathDebtError> => {
   const debt = knowledgeRefsLiveDebt(report);
   return A.isReadonlyArrayNonEmpty(debt)
-    ? O.some(
-        KnowledgeHostPathDebtError.make({
-          message: `knowledge refs --check: ${A.length(debt)} live host-path observation(s).`,
-          liveDebtCount: S.Natural.make(A.length(debt)),
-        })
-      )
+    ? KnowledgeHostPathDebtError.makeOption({
+        message: `knowledge refs --check: ${A.length(debt)} live host-path observation(s).`,
+        liveDebtCount: S.Natural.make(A.length(debt)),
+      })
     : O.none();
 };
 

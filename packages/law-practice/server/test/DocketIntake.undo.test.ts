@@ -127,7 +127,7 @@ const ledger = {
         basis: "stated",
         computed: O.none(),
         date: LocalDate.make({ year: 2030, month: 4, day: 8 }),
-        stated: O.some(LocalDate.make({ year: 2030, month: 4, day: 8 })),
+        stated: LocalDate.makeOption({ year: 2030, month: 4, day: 8 }),
       }),
       entry: writtenEntry("e-provisional"),
       flags: [],

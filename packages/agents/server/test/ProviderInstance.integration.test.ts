@@ -172,7 +172,7 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
           AddProviderInstanceCommand.make({
             binaryPath: Domain.BinaryPath.make("/opt/bin/claude"),
             envVars,
-            homePath: O.some(Domain.HomePath.make("/tmp/claude-home")),
+            homePath: Domain.HomePath.makeOption("/tmp/claude-home"),
             kind: "claude",
             label: Domain.InstanceLabel.make("Personal Claude"),
           })
@@ -202,7 +202,7 @@ describe("ProviderInstance PGLite integration", { concurrent: false }, () => {
           AddProviderInstanceCommand.make({
             binaryPath: Domain.BinaryPath.make("~/opt/bin/codex"),
             envVars: {},
-            homePath: O.some(Domain.HomePath.make("/tmp/codex-home")),
+            homePath: Domain.HomePath.makeOption("/tmp/codex-home"),
             kind: "codex",
             label: Domain.InstanceLabel.make("Work Codex"),
           })

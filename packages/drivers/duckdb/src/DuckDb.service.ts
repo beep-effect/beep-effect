@@ -434,13 +434,11 @@ const makeConnectionClient = (
                   Effect.onInterrupt(() =>
                     Effect.sync(() => {
                       failed = O.orElse(failed, () =>
-                        O.some(
-                          DuckDbError.make({
-                            databasePath: O.some(options.databasePath),
-                            message: "DuckDB statement interrupted inside a transaction",
-                            operation,
-                          })
-                        )
+                        DuckDbError.makeOption({
+                          databasePath: O.some(options.databasePath),
+                          message: "DuckDB statement interrupted inside a transaction",
+                          operation,
+                        })
                       );
                     })
                   )

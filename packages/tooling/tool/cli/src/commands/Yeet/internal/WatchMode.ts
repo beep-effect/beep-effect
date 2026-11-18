@@ -907,7 +907,7 @@ export const runYeetWatchStream = Effect.fn("Yeet.runYeetWatchStream")(function*
       );
     const currentHead = yield* resumeWatchSettleClock(step.head, settleAt(step.head), millis);
     const verdict = settleAt(currentHead);
-    head = O.some(WatchSettleState.make({ ...currentHead, verdict: O.some(verdict) }));
+    head = WatchSettleState.makeOption({ ...currentHead, verdict: O.some(verdict) });
     yield* Console.error(`[yeet] ${renderYeetSettleDetail(verdict)}`);
     return YeetWatchSnapshot.make({ ...snapshot, settle: O.some(verdict) });
   });

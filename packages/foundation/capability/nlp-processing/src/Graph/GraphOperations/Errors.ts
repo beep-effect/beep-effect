@@ -141,7 +141,7 @@ export class OperationError extends S.TaggedError<OperationError, { readonly bra
  *
  * const error = GraphError.make({
  *   message: "Expected at least one leaf node",
- *   nodeId: O.some(NodeId.make("node-root"))
+ *   nodeId: NodeId.makeOption("node-root")
  * })
  *
  * error.message // => "Expected at least one leaf node"

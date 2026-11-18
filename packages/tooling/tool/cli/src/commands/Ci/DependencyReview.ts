@@ -419,15 +419,13 @@ const vulnerabilityFinding = (thresholds: DependencyReviewThresholds) => (change
     (advisory) => severityRank(advisory.severity) <= severityRank(thresholds.failOnSeverity)
   );
   return A.isReadonlyArrayNonEmpty(advisories)
-    ? O.some(
-        DependencyReviewFinding.cases.vulnerability.make({
-          manifest: change.manifest,
-          ecosystem: change.ecosystem,
-          name: change.name,
-          version: change.version,
-          advisories,
-        })
-      )
+    ? DependencyReviewFinding.cases.vulnerability.makeOption({
+        manifest: change.manifest,
+        ecosystem: change.ecosystem,
+        name: change.name,
+        version: change.version,
+        advisories,
+      })
     : O.none<DependencyReviewFinding>();
 };
 
@@ -440,8 +438,8 @@ const licenseFinding = (change: DependencyChange, license: string | null, decisi
     license: license ?? "",
   };
   return Match.value(decision).pipe(
-    Match.when("denied", () => O.some(DependencyReviewFinding.cases["denied-license"].make(target))),
-    Match.when("unresolved", () => O.some(DependencyReviewFinding.cases["unresolved-license"].make(target))),
+    Match.when("denied", () => DependencyReviewFinding.cases["denied-license"].makeOption(target)),
+    Match.when("unresolved", () => DependencyReviewFinding.cases["unresolved-license"].makeOption(target)),
     Match.orElse(O.none<DependencyReviewFinding>)
   );
 };

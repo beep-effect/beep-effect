@@ -58,7 +58,7 @@ const $I = $GovinfoId.create("Govinfo.service");
  * import type { GovinfoShape } from "@beep/govinfo"
  *
  * const shape: GovinfoShape = {
- *   rateLimit: Effect.succeed(O.some(RateLimitSnapshot.make({ limit: 1000, remaining: 999 }))),
+ *   rateLimit: Effect.succeed(RateLimitSnapshot.makeOption({ limit: 1000, remaining: 999 })),
  *   search: () => Effect.die("not implemented"),
  * }
  *

@@ -13,7 +13,6 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
@@ -266,7 +265,7 @@ describe("C0 gold source", () => {
           sha256: documentId,
         });
         const snapshot = LedgerDocumentSnapshot.make({
-          canonical: O.some(ResolvedSourceText.make({ identity, text: "Test" })),
+          canonical: ResolvedSourceText.makeOption({ identity, text: "Test" }),
           chunks: [],
           document,
           outcome: ParseOutcome.cases.Parsed.make({

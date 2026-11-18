@@ -29,7 +29,7 @@ const MAILBOX = "mailbox@example.test";
 const OBSERVED_AT = DateTime.makeUnsafe("2030-01-10T12:00:00Z");
 
 const graphInstant = (instant: { readonly dateTime: string; readonly timeZone: string }) =>
-  O.some(GraphDateTimeTimeZone.make({ dateTime: O.some(instant.dateTime), timeZone: O.some(instant.timeZone) }));
+  GraphDateTimeTimeZone.makeOption({ dateTime: O.some(instant.dateTime), timeZone: O.some(instant.timeZone) });
 
 // What Graph stores beside the view: none of it may change the comparison.
 const Outside = S.Struct({
@@ -94,7 +94,7 @@ const editEvent = (view: OutboxEventView, field: typeof EventField.Type): Outbox
   });
 
 const from = (address: string) =>
-  O.some(GraphRecipient.make({ emailAddress: O.some(GraphEmailAddress.make({ address: O.some(address) })) }));
+  GraphRecipient.makeOption({ emailAddress: GraphEmailAddress.makeOption({ address: O.some(address) }) });
 
 const message = (fields: {
   readonly from?: string;
@@ -204,14 +204,16 @@ describe("@beep/m365-mcp outbox basis", () => {
 
   it("keeps start and end exactly as Graph returned them, all-day events included", () => {
     const allDay = GraphEvent.make({
-      end: O.some(
-        GraphDateTimeTimeZone.make({ dateTime: O.some("2030-01-16T00:00:00.0000000"), timeZone: O.some("UTC") })
-      ),
+      end: GraphDateTimeTimeZone.makeOption({
+        dateTime: O.some("2030-01-16T00:00:00.0000000"),
+        timeZone: O.some("UTC"),
+      }),
       id: "event-1",
       isAllDay: O.some(true),
-      start: O.some(
-        GraphDateTimeTimeZone.make({ dateTime: O.some("2030-01-15T00:00:00.0000000"), timeZone: O.some("UTC") })
-      ),
+      start: GraphDateTimeTimeZone.makeOption({
+        dateTime: O.some("2030-01-15T00:00:00.0000000"),
+        timeZone: O.some("UTC"),
+      }),
     });
     const view = viewOf(allDay);
 
@@ -230,15 +232,16 @@ describe("@beep/m365-mcp outbox basis", () => {
   });
 
   it("reads an event without a start or end as no view, and defaults the missing fields", () => {
-    const start = O.some(
-      GraphDateTimeTimeZone.make({ dateTime: O.some("2030-01-15T09:00:00"), timeZone: O.some("UTC") })
-    );
+    const start = GraphDateTimeTimeZone.makeOption({
+      dateTime: O.some("2030-01-15T09:00:00"),
+      timeZone: O.some("UTC"),
+    });
 
     assertNone(eventViewOf(GraphEvent.make({ id: "event-1", start })));
     assertNone(
       eventViewOf(
         GraphEvent.make({
-          end: O.some(GraphDateTimeTimeZone.make({ dateTime: O.some("2030-01-15T10:00:00") })),
+          end: GraphDateTimeTimeZone.makeOption({ dateTime: O.some("2030-01-15T10:00:00") }),
           id: "e",
           start,
         })

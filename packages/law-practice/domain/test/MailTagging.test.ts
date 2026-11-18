@@ -51,7 +51,6 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -301,7 +300,7 @@ describe("MailTagging ledgers", () => {
   const applied = TagLedgerEntry.make({
     runId,
     messageId,
-    conversationId: O.some(MailConversationId.make("conv-0001")),
+    conversationId: MailConversationId.makeOption("conv-0001"),
     addedCategories: [matterCategoryName(acme), "P: USPTO"],
     decision: summarizeDecision(
       MatterMatched.make({ matterKey: acme, confidence: UnitInterval.make(0.95), evidence: [patentEvidence] })

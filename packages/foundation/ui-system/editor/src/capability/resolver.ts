@@ -233,14 +233,12 @@ const keybindingConflict = (
       return A.match(collisions, {
         onEmpty: O.none,
         onNonEmpty: (nonEmpty) =>
-          O.some(
-            KeybindingConflictError.make({
-              profileId: profile.id,
-              platform: binding.keybinding.platform,
-              chord: binding.keybinding.chord,
-              commandIds: A.map(nonEmpty, ({ commandId }) => commandId),
-            })
-          ),
+          KeybindingConflictError.makeOption({
+            profileId: profile.id,
+            platform: binding.keybinding.platform,
+            chord: binding.keybinding.chord,
+            commandIds: A.map(nonEmpty, ({ commandId }) => commandId),
+          }),
       });
     }
   }

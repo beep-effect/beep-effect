@@ -85,7 +85,7 @@ export const makeObservationExportReader = Effect.fn("AiMetrics.makeObservationE
       page.frames.length !== row.frames
     )
       return yield* failure();
-    return O.some(AcceptedPage.cases.Reconstructed.make({ receipt: TranscriptAcceptance.make(row), page }));
+    return AcceptedPage.cases.Reconstructed.makeOption({ receipt: TranscriptAcceptance.make(row), page });
   });
   const read = Effect.fn("AiMetrics.observationExport.read")(function* (receiptId: Sha256Hex) {
     const rows =
@@ -98,7 +98,7 @@ export const makeObservationExportReader = Effect.fn("AiMetrics.makeObservationE
       const receipt = yield* native.receipt(receiptId);
       const spans = yield* native.readNewEvents(receiptId);
       if (O.isNone(receipt) || O.isNone(spans)) return yield* failure();
-      return O.some(AcceptedPage.cases.Native.make({ receipt: receipt.value.page, spans: spans.value }));
+      return AcceptedPage.cases.Native.makeOption({ receipt: receipt.value.page, spans: spans.value });
     }
     return yield* readReconstructed(row, receiptId);
   }, Effect.mapError(failure));

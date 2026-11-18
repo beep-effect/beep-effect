@@ -76,7 +76,7 @@ const noticeTest = (claudeFolder: O.Option<NoticeClaudeFolder>) =>
 const NoticeTest = noticeTest(O.none());
 
 // A synthetic review folder, written with / as the runbook recommends for the environment file.
-const ReviewFolderTest = noticeTest(O.some(NoticeClaudeFolder.make("C:/Users/attorney/Review")));
+const ReviewFolderTest = noticeTest(NoticeClaudeFolder.makeOption("C:/Users/attorney/Review"));
 
 const question = (itemId: string) =>
   ReviewItem.cases.question.make({

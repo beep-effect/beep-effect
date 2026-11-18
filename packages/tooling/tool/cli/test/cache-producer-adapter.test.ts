@@ -150,13 +150,11 @@ const fixture = Effect.fn("ProducerAdapterTest.fixture")(function* (fault: typeo
     target,
     bearers,
     signing: Redacted.make("synthetic-native-signing-key"),
-    adapter: O.some(
-      CacheProducerAdapterLaunch.make({
-        executable: tool,
-        accessKey: Redacted.make("synthetic-storage-id"),
-        secretKey: Redacted.make("synthetic-storage-secret"),
-      })
-    ),
+    adapter: CacheProducerAdapterLaunch.makeOption({
+      executable: tool,
+      accessKey: Redacted.make("synthetic-storage-id"),
+      secretKey: Redacted.make("synthetic-storage-secret"),
+    }),
   });
   const approval = CacheProducerUploadApproval.make({
     targetSha256: yield* hashCacheProducerUploadTarget(target),

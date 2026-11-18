@@ -237,16 +237,14 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
             NativeScheduleOutcome.cases.Held.make({ eventId, reason: "attempt-limit" }),
             NativeScheduleOutcome.cases.Failed.make({ eventId, reason: "readback" }),
           ],
-          lag: O.some(
-            ObservationLagSummary.make({
-              sampledEvents: 2,
-              unknownSourceTimes: 1,
-              acceptedClockRegressions: 0,
-              sourceClockRegressions: 0,
-              maxAcceptedAgeMillis: O.some(2000),
-              maxSourceAgeMillis: O.some(60000),
-            })
-          ),
+          lag: ObservationLagSummary.makeOption({
+            sampledEvents: 2,
+            unknownSourceTimes: 1,
+            acceptedClockRegressions: 0,
+            sourceClockRegressions: 0,
+            maxAcceptedAgeMillis: O.some(2000),
+            maxSourceAgeMillis: O.some(60000),
+          }),
         })
       );
       const running = yield* f.runtime.run.pipe(Effect.forkChild);
@@ -471,16 +469,14 @@ const completeTick = (outcomes: ReadonlyArray<typeof NativeScheduleOutcome.Type>
   NativeScheduleTick.cases.Complete.make({
     wrapped: false,
     outcomes: [...outcomes],
-    lag: O.some(
-      ObservationLagSummary.make({
-        sampledEvents: 1,
-        unknownSourceTimes: 0,
-        acceptedClockRegressions: 0,
-        sourceClockRegressions: 0,
-        maxAcceptedAgeMillis: O.none(),
-        maxSourceAgeMillis: O.none(),
-      })
-    ),
+    lag: ObservationLagSummary.makeOption({
+      sampledEvents: 1,
+      unknownSourceTimes: 0,
+      acceptedClockRegressions: 0,
+      sourceClockRegressions: 0,
+      maxAcceptedAgeMillis: O.none(),
+      maxSourceAgeMillis: O.none(),
+    }),
   });
 
 it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
@@ -576,7 +572,7 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })((it) =>
       yield* TestClock.adjust(0);
       expect((yield* runtime.health).sources).toMatchObject({ phase: "idle" });
       yield* Ref.set(refuse, true);
-      yield* Ref.set(f.refusal, O.some(ObservationControlError.make({ reason: "paused" })));
+      yield* Ref.set(f.refusal, ObservationControlError.makeOption({ reason: "paused" }));
       yield* TestClock.adjust(150);
       const health30 = yield* runtime.health;
       expect(health30).toMatchObject({

@@ -824,13 +824,11 @@ const collectCandidates = Effect.fn("QaJudgePack.collectCandidates")(function* (
             () => QaCommandError.make({ message: `qa judge-pack refused non-file evidence path "${absolute}".` })
           ),
           Effect.map((info) =>
-            O.some(
-              JudgeEvidenceFile.make({
-                bytes: Number(info.size),
-                kind,
-                path: path.relative(layout.root, absolute),
-              })
-            )
+            JudgeEvidenceFile.makeOption({
+              bytes: Number(info.size),
+              kind,
+              path: path.relative(layout.root, absolute),
+            })
           ),
           Effect.orElseSucceed(O.none<JudgeEvidenceFile>)
         );

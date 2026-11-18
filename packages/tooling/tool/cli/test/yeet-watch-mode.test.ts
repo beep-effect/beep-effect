@@ -2026,14 +2026,12 @@ describe("B7 watch settle cache and timeout", () => {
             rulesetRead: () =>
               Ref.update(reads, (value) => value + 1).pipe(
                 Effect.as(
-                  O.some(
-                    YeetRulesetRequiredContexts.make({
-                      base: "main",
-                      contexts: ["Check", "Heavy / Check"],
-                      rulesetIds: [10240248],
-                      readAt: "2026-09-16T00:00:00Z",
-                    })
-                  )
+                  YeetRulesetRequiredContexts.makeOption({
+                    base: "main",
+                    contexts: ["Check", "Heavy / Check"],
+                    rulesetIds: [10240248],
+                    readAt: "2026-09-16T00:00:00Z",
+                  })
                 )
               ),
           });

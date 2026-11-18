@@ -568,19 +568,19 @@ export const qualifyClaimInput = Effect.fn("PatentDocument.qualifyClaimInput")(f
                     Num.Equivalence(known.claimNumber, parentClaimNumber)
                   );
                   if (A.isReadonlyArrayEmpty(source))
-                    return O.some(ClaimInputContextIssue.cases["missing-parent"].make({ parentClaimNumber }));
+                    return ClaimInputContextIssue.cases["missing-parent"].makeOption({ parentClaimNumber });
                   const parent = A.findFirst(normalized, (known) =>
                     Num.Equivalence(known.claim.claimNumber, parentClaimNumber)
                   );
                   if (O.isNone(parent))
-                    return O.some(ClaimInputContextIssue.cases["unnormalized-parent"].make({ parentClaimNumber }));
+                    return ClaimInputContextIssue.cases["unnormalized-parent"].makeOption({ parentClaimNumber });
                   const ready = O.exists(
                     HashMap.get(qualified, parent.value.record.sourceOrdinal),
                     ClaimInputQualification.guards["context-ready"]
                   );
                   return ready
                     ? O.none()
-                    : O.some(ClaimInputContextIssue.cases["affected-ancestor"].make({ parentClaimNumber }));
+                    : ClaimInputContextIssue.cases["affected-ancestor"].makeOption({ parentClaimNumber });
                 })
               ),
           });

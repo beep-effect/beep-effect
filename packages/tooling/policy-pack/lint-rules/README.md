@@ -35,6 +35,7 @@ loads. The package also owns the root oxlint custom plugin for repository-specif
 | `no-citation-optional-invocation` | error | `packages/law-practice/server/src/internal/Citation/**` | Citation authority is explicit; no optional `serviceOption`/`getOption`/`getOrUndefined` lookups. |
 | `no-hand-rolled-git-gh-spawn` | error | repo-cli and ai-metrics `src/**` | No hand-rolled `git`/`gh` spawn (program literal plus argv, `{ command, args }` runner spec, Bun argv, `ghOutput`); use `@beep/git`, `@beep/github`, `@beep/commands`, or `biome-ignore ...: KEEP (D-nn): <reason>` (`goals/repo-cli-gh-git-consolidation`, D-23). |
 | `no-unrecorded-spawner-double` | error | repo-cli and ai-metrics `test/**` | No hand-rolled `ChildProcessSpawner.make(...)` double; use `ScriptedSpawner`, or `biome-ignore ...: Own double: <reason>` (D-14). Never-spawn `Effect.die` guards are exempt. |
+| `prefer-schema-make-option` | error | `packages/**`, `apps/**` | An `Option` of a schema value comes from `X.makeOption(...)`, not `O.some(X.make(...))` (EF-35b). Receivers rooted at a non-Schema `effect/<Module>` namespace import are allowed; any other non-schema receiver takes `biome-ignore lint/plugin/prefer-schema-make-option: <reason>`. |
 
 Scope is set where the root `biome.jsonc` registers the rule: the top-level
 `plugins` array for `all`, an `overrides` entry otherwise. The presets in

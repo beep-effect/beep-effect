@@ -961,20 +961,18 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
           );
           yield* Ref.set(
             junieExchangeToken,
-            O.some(
-              JunieExchangeToken.make({
-                token: decoded.value.token,
-                credentialFingerprint,
-                expiresAt: O.match(exp, {
-                  onNone: () => time + Duration.toMillis(Duration.minutes(10)),
-                  onSome: (seconds) =>
-                    Math.min(
-                      seconds * 1000 - Duration.toMillis(JUNIE_TOKEN_SKEW),
-                      time + Duration.toMillis(Duration.minutes(10))
-                    ),
-                }),
-              })
-            )
+            JunieExchangeToken.makeOption({
+              token: decoded.value.token,
+              credentialFingerprint,
+              expiresAt: O.match(exp, {
+                onNone: () => time + Duration.toMillis(Duration.minutes(10)),
+                onSome: (seconds) =>
+                  Math.min(
+                    seconds * 1000 - Duration.toMillis(JUNIE_TOKEN_SKEW),
+                    time + Duration.toMillis(Duration.minutes(10))
+                  ),
+              }),
+            })
           );
           return decoded.value.token.pipe(O.some, Result.succeed);
         });
@@ -1066,15 +1064,12 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
       if (Result.isFailure(refresh)) return refresh.failure;
       yield* Ref.set(
         junieAccessToken,
-        O.some(
-          JunieAccessToken.make({
-            access_token: refresh.success.access_token,
-            id_token: refresh.success.id_token,
-            credentialFingerprint,
-            expiresAt:
-              (yield* Clock.currentTimeMillis) + Duration.toMillis(Duration.seconds(refresh.success.expires_in)),
-          })
-        )
+        JunieAccessToken.makeOption({
+          access_token: refresh.success.access_token,
+          id_token: refresh.success.id_token,
+          credentialFingerprint,
+          expiresAt: (yield* Clock.currentTimeMillis) + Duration.toMillis(Duration.seconds(refresh.success.expires_in)),
+        })
       );
       const authTest9 = yield* authTest(refresh.success.access_token);
       return yield* enrich(authTest9, refresh.success.id_token);

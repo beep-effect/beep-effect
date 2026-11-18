@@ -323,14 +323,12 @@ const resolveViolation = (
       ? Str.empty
       : pipe(normalizePath(path.relative(source.value.sourceRoot, targetPath)), stripKnownModuleExtension);
 
-  return O.some(
-    PackageTestImportViolation.make({
-      file: filePath,
-      line: use.line,
-      replacement: toRootImportAlias(source.value, sourceSubpath),
-      specifier: use.specifier,
-    })
-  );
+  return PackageTestImportViolation.makeOption({
+    file: filePath,
+    line: use.line,
+    replacement: toRootImportAlias(source.value, sourceSubpath),
+    specifier: use.specifier,
+  });
 };
 
 const collectPackageTestImportViolations = Effect.fn("PackageTestImports.collectViolations")(function* (

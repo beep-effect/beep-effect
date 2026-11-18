@@ -171,15 +171,13 @@ export const diffResearchReports: {
     const references = A.filter(current, P.not(isGoalResearchReportPath));
     const missing = sortedUnique(A.difference(inside, expected));
     const unlisted = sortedUnique(A.difference(expected, inside));
-    return O.some(
-      ResearchReportsDrift.make({
-        missing,
-        unlisted,
-        references: sortedUnique(references),
-        reordered:
-          A.isReadonlyArrayEmpty(missing) && A.isReadonlyArrayEmpty(unlisted) && A.isReadonlyArrayEmpty(references),
-      })
-    );
+    return ResearchReportsDrift.makeOption({
+      missing,
+      unlisted,
+      references: sortedUnique(references),
+      reordered:
+        A.isReadonlyArrayEmpty(missing) && A.isReadonlyArrayEmpty(unlisted) && A.isReadonlyArrayEmpty(references),
+    });
   }
 );
 

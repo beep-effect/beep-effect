@@ -135,21 +135,19 @@ export const makeObservationOutcomes = Effect.fn("AiMetrics.makeObservationOutco
     const terminal = A.findFirst(receipts, (r) =>
       r.fact._tag === "Finished" ? O.some({ outcome: r.fact.outcome, recordedAt: r.recordedAt }) : O.none()
     );
-    return O.some(
-      ObservationLaunchOutcome.make({
-        launchId,
-        evidenceEpoch: epoch,
-        declaredIdentity: prepared.value.fact.identity,
-        processInstanceId: processId,
-        sourceSessionId: session,
-        preparedObservedAt: prepared.value.recordedAt,
-        terminalObservedAt: O.map(terminal, (r) => r.recordedAt),
-        outcome: O.match(terminal, {
-          onNone: () => "pending",
-          onSome: (r) => r.outcome,
-        }),
-      })
-    );
+    return ObservationLaunchOutcome.makeOption({
+      launchId,
+      evidenceEpoch: epoch,
+      declaredIdentity: prepared.value.fact.identity,
+      processInstanceId: processId,
+      sourceSessionId: session,
+      preparedObservedAt: prepared.value.recordedAt,
+      terminalObservedAt: O.map(terminal, (r) => r.recordedAt),
+      outcome: O.match(terminal, {
+        onNone: () => "pending",
+        onSome: (r) => r.outcome,
+      }),
+    });
   });
   const launch = Effect.fn("AiMetrics.outcomes.launch")((launchId: Sha256Hex, epoch: number) =>
     sql.withTransaction(readLaunch(launchId, epoch))

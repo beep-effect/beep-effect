@@ -395,7 +395,7 @@ const aggregate: {
   2,
   (text: string, errors: ReadonlyArray<RawParseError>): O.Option<JsoncParseError> =>
     A.isReadonlyArrayNonEmpty(errors)
-      ? O.some(JsoncParseError.make({ errors: toDetails(text, errors), input: text }))
+      ? JsoncParseError.makeOption({ errors: toDetails(text, errors), input: text })
       : O.none()
 );
 

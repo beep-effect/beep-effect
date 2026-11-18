@@ -121,15 +121,13 @@ const readerStreamRefusal = (
 ): O.Option<SqlError> => {
   if (!reader) return O.none();
   return changesSession(sql) || (control !== "statement" && control !== "catalogContext")
-    ? O.some(
-        SqlError.make({
-          reason: AuthorizationError.make({
-            cause: sql,
-            message: "Reader streams cannot change session settings or transaction control",
-            operation: "executeStream",
-          }),
-        })
-      )
+    ? SqlError.makeOption({
+        reason: AuthorizationError.make({
+          cause: sql,
+          message: "Reader streams cannot change session settings or transaction control",
+          operation: "executeStream",
+        }),
+      })
     : O.none();
 };
 

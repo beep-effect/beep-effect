@@ -287,7 +287,7 @@ export const goalCompletionUnknownReasons = (
  *   requiredChecks: O.none(),
  *   requiredCheckFacts: [],
  *   redAttributions: [],
- *   reviewThreads: O.some(GoalReviewThreadTally.make({ total: 3, outstanding: 2 })),
+ *   reviewThreads: GoalReviewThreadTally.makeOption({ total: 3, outstanding: 2 }),
  * })
  * console.log(reasons) // ["2 review thread(s) outstanding"]
  * ```
@@ -770,14 +770,12 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
             const conclusionFinal = conclusion(final.value, false);
             if (conclusionFinal === "success" || conclusionFinal === "neutral" || conclusionFinal === "skipped")
               return O.none<GoalNonRequiredRed>();
-            return O.some(
-              GoalNonRequiredRed.make({
-                lane: name,
-                conclusionAtMerge: O.isSome(atMerge) ? conclusion(atMerge.value, true) : "unknown",
-                conclusionFinal,
-                attribution: "unknown",
-              })
-            );
+            return GoalNonRequiredRed.makeOption({
+              lane: name,
+              conclusionAtMerge: O.isSome(atMerge) ? conclusion(atMerge.value, true) : "unknown",
+              conclusionFinal,
+              attribution: "unknown",
+            });
           })
         ),
     });

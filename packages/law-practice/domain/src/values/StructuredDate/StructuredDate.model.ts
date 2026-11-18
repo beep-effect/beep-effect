@@ -30,7 +30,7 @@ const $I = $LawPracticeDomainId.create("values/StructuredDate/StructuredDate.mod
  *
  * const parsed = ParsedDate.make({
  *   year: S.Natural.make(2023),
- *   month: O.some(S.Natural.make(6)),
+ *   month: S.Natural.makeOption(6),
  * })
  *
  * console.log(O.isSome(parsed.month)) // true
@@ -118,7 +118,7 @@ export declare namespace ParsedDate {
  *   iso: "2023-06",
  *   parsed: ParsedDate.make({
  *     year: S.Natural.make(2023),
- *     month: O.some(S.Natural.make(6)),
+ *     month: S.Natural.makeOption(6),
  *   }),
  * })
  *

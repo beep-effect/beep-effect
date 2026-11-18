@@ -207,16 +207,14 @@ const resolveSummaryPaths = Effect.fn("Ci.resolveSummaryPaths")(function* (
     Effect.fn(function* (entry) {
       const candidatePath = path.join(runDirectory, entry);
       const stat = yield* fs.stat(candidatePath).pipe(CiCommandError.mapError(`Failed to stat ${candidatePath}.`));
-      return O.some(
-        SummaryCandidate.make({
-          path: candidatePath,
-          mtimeMillis: pipe(
-            stat.mtime,
-            O.map((mtime) => mtime.getTime()),
-            O.getOrElse(() => 0)
-          ),
-        })
-      );
+      return SummaryCandidate.makeOption({
+        path: candidatePath,
+        mtimeMillis: pipe(
+          stat.mtime,
+          O.map((mtime) => mtime.getTime()),
+          O.getOrElse(() => 0)
+        ),
+      });
     }),
     { concurrency: 4 }
   ).pipe(Effect.map(A.getSomes));

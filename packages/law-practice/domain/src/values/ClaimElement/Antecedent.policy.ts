@@ -344,14 +344,12 @@ const resolveInChain = (introductions: ReadonlyArray<LocatedTerm>, referring: Lo
   const ambiguous =
     (ruleId: AntecedentRuleId) =>
     (first: LocatedTerm, second: LocatedTerm, others: Iterable<LocatedTerm>): Verdict =>
-      O.some(
-        AntecedentFinding.cases["ambiguous-antecedent"].make({
-          rule: ruleId,
-          referring: referring.ref,
-          chain: chain.claims,
-          candidates: [first.ref, second.ref, ...Iterable.map(others, ({ ref }) => ref)],
-        })
-      );
+      AntecedentFinding.cases["ambiguous-antecedent"].makeOption({
+        rule: ruleId,
+        referring: referring.ref,
+        chain: chain.claims,
+        candidates: [first.ref, second.ref, ...Iterable.map(others, ({ ref }) => ref)],
+      });
   return pipe(
     byCount(
       A.filter(introductions, ({ term }) => Str.Equivalence(term.head, head)),
@@ -362,14 +360,12 @@ const resolveInChain = (introductions: ReadonlyArray<LocatedTerm>, referring: Lo
       byCount(
         A.filter(introductions, ({ term }) => Str.Equivalence(singularHead(term.head), singularHead(head))),
         (introducing): Verdict =>
-          O.some(
-            AntecedentFinding.cases["number-mismatch"].make({
-              rule: rule.determinerNumberMismatch,
-              referring: referring.ref,
-              chain: chain.claims,
-              introducing: introducing.ref,
-            })
-          ),
+          AntecedentFinding.cases["number-mismatch"].makeOption({
+            rule: rule.determinerNumberMismatch,
+            referring: referring.ref,
+            chain: chain.claims,
+            introducing: introducing.ref,
+          }),
         ambiguous(rule.determinerNumberMismatch)
       )
     ),
@@ -434,25 +430,21 @@ const fullVerdict =
         return O.map(
           A.findFirst(candidates, (candidate) => !A.contains(chain.claims, candidate.claimNumber)),
           (introducing): Verdict =>
-            O.some(
-              AntecedentFinding.cases["antecedent-outside-chain"].make({
-                rule: rule.outsideChain,
-                referring: referring.ref,
-                chain: chain.claims,
-                introducing: introducing.ref,
-              })
-            )
+            AntecedentFinding.cases["antecedent-outside-chain"].makeOption({
+              rule: rule.outsideChain,
+              referring: referring.ref,
+              chain: chain.claims,
+              introducing: introducing.ref,
+            })
         );
       }),
       O.getOrElse(
         (): Verdict =>
-          O.some(
-            AntecedentFinding.cases["missing-antecedent"].make({
-              rule: rule.definiteWithoutIntroduction,
-              referring: referring.ref,
-              chain: chain.claims,
-            })
-          )
+          AntecedentFinding.cases["missing-antecedent"].makeOption({
+            rule: rule.definiteWithoutIntroduction,
+            referring: referring.ref,
+            chain: chain.claims,
+          })
       )
     );
 

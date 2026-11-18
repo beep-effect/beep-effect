@@ -237,14 +237,12 @@ const readAttachment = Effect.fn("Provenance.readAttachment")(function* (
   const attachmentPath = yield* checked(root, path.join(attachmentDir, name));
   const info = yield* fs.stat(attachmentPath).pipe(Effect.mapError(fail));
   if (info.type === "File")
-    return O.some(
-      P.MailAttachmentEntry.cases.file.make({
-        ordinal: Number(/^(\d+)_/.exec(name)?.[1] ?? 0),
-        fileName: name,
-        relativePath: relative(path, root, attachmentPath),
-        sizeBytes: Number(info.size),
-      })
-    );
+    return P.MailAttachmentEntry.cases.file.makeOption({
+      ordinal: Number(/^(\d+)_/.exec(name)?.[1] ?? 0),
+      fileName: name,
+      relativePath: relative(path, root, attachmentPath),
+      sizeBytes: Number(info.size),
+    });
   if (info.type === "Directory" && /^Attachment\d+$/.test(name)) {
     let embeddedMessagePath: P.CorpusRelativePath | undefined;
     yield* walk(
@@ -255,15 +253,13 @@ const readAttachment = Effect.fn("Provenance.readAttachment")(function* (
           embeddedMessagePath = relative(path, root, path.dirname(nested));
       })
     );
-    return O.some(
-      P.MailAttachmentEntry.cases["embedded-message"].make({
-        ordinal: Number(Str.replace("Attachment", "")(name)),
-        fileName: name,
-        relativePath: relative(path, root, attachmentPath),
-        sizeBytes: 0,
-        ...O.getSomesStruct({ embeddedMessagePath: O.fromUndefinedOr(embeddedMessagePath) }),
-      })
-    );
+    return P.MailAttachmentEntry.cases["embedded-message"].makeOption({
+      ordinal: Number(Str.replace("Attachment", "")(name)),
+      fileName: name,
+      relativePath: relative(path, root, attachmentPath),
+      sizeBytes: 0,
+      ...O.getSomesStruct({ embeddedMessagePath: O.fromUndefinedOr(embeddedMessagePath) }),
+    });
   }
   return O.none();
 });

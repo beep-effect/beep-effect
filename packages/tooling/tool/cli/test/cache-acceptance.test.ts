@@ -173,14 +173,12 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("producer evidence project
           toolchain: execution.runtimeKeys.stable,
         },
         signedExecution: O.some(execution),
-        activation: O.some(
-          CacheActivationProjection.make({
-            path: "packages/identity/turbo.json",
-            before: CacheEvidenceReference.make({ path: "before.json", sha256: execution.sourceConfiguration }),
-            after: CacheEvidenceReference.make({ path: "after.json", sha256: execution.activatedConfiguration }),
-            sourceConfiguration: execution.sourceConfiguration,
-          })
-        ),
+        activation: CacheActivationProjection.makeOption({
+          path: "packages/identity/turbo.json",
+          before: CacheEvidenceReference.make({ path: "before.json", sha256: execution.sourceConfiguration }),
+          after: CacheEvidenceReference.make({ path: "after.json", sha256: execution.activatedConfiguration }),
+          sourceConfiguration: execution.sourceConfiguration,
+        }),
       });
       const binding = CacheProducerBinding.make({
         ...approval.binding,
@@ -242,12 +240,10 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("producer evidence project
       yield* validateCacheProducerApproval(CacheProducerApproval.make({ binding: canaryBinding, contract }));
       const canaryDrift = CacheTaskContract.make({
         ...contract,
-        signedExecution: O.some(
-          CacheSignedExecutionProfile.make({
-            ...execution,
-            runtimeKeys: { ...execution.runtimeKeys, canary: different },
-          })
-        ),
+        signedExecution: CacheSignedExecutionProfile.makeOption({
+          ...execution,
+          runtimeKeys: { ...execution.runtimeKeys, canary: different },
+        }),
       });
       const canaryDriftDigest = yield* hashCacheProducerContract(canaryDrift);
       yield* validateCacheProducerApproval(
@@ -291,12 +287,10 @@ it.layer(NodeCrypto.layer, { timeout: "30 seconds" })("producer evidence project
       }
       const changedContract = CacheTaskContract.make({
         ...contract,
-        signedExecution: O.some(
-          CacheSignedExecutionProfile.make({
-            ...execution,
-            activationRequest: CacheEvidenceReference.make({ ...execution.activationRequest, sha256: different }),
-          })
-        ),
+        signedExecution: CacheSignedExecutionProfile.makeOption({
+          ...execution,
+          activationRequest: CacheEvidenceReference.make({ ...execution.activationRequest, sha256: different }),
+        }),
       });
       const changedApproval = CacheProducerApproval.make({
         contract: changedContract,

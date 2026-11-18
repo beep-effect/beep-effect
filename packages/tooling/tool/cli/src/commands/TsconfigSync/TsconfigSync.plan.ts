@@ -394,13 +394,11 @@ const planRootReferenceSync = Effect.fn(function* (rootDir: string, workspaces: 
     JsoncModification.make({ content: original, path: ["references"], value: referenceEntries(expected) })
   );
 
-  return O.some(
-    PlannedFileChange.cases["root-references"].make({
-      filePath,
-      summary: summaryCounts(current, expected, "references"),
-      content: nextContent,
-    })
-  );
+  return PlannedFileChange.cases["root-references"].makeOption({
+    filePath,
+    summary: summaryCounts(current, expected, "references"),
+    content: nextContent,
+  });
 });
 
 const isReadonlyUnknownRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
@@ -588,13 +586,11 @@ const planRootAliasSync = Effect.fn(function* (rootDir: string, workspaces: Read
   );
   const updates = A.length(keysToSet) - additions;
 
-  return O.some(
-    PlannedFileChange.cases["root-aliases"].make({
-      filePath,
-      summary: `aliases: add ${additions}, update ${updates}, remove ${keysToRemove.length}`,
-      content: nextContent,
-    })
-  );
+  return PlannedFileChange.cases["root-aliases"].makeOption({
+    filePath,
+    summary: `aliases: add ${additions}, update ${updates}, remove ${keysToRemove.length}`,
+    content: nextContent,
+  });
 });
 
 /**
@@ -642,13 +638,11 @@ const planRootPackageProjectionSync = Effect.fn("TsconfigSync.planRootPackagePro
       return O.none<PlannedFileChange>();
     }
   }
-  return O.some(
-    PlannedFileChange.cases["root-package-projection"].make({
-      filePath,
-      summary: "projection: root package fields excluding catalog",
-      content,
-    })
-  );
+  return PlannedFileChange.cases["root-package-projection"].makeOption({
+    filePath,
+    summary: "projection: root package fields excluding catalog",
+    content,
+  });
 });
 
 const VITEST_ALIASES_FILENAME = "vitest.aliases.generated.json";
@@ -718,13 +712,11 @@ const planRootVitestAliasSync = Effect.fn(function* (rootDir: string, plannedRoo
     return O.none<PlannedFileChange>();
   }
 
-  return O.some(
-    PlannedFileChange.cases["root-vitest-aliases"].make({
-      filePath,
-      summary: summaryCounts(R.keys(currentPaths), R.keys(expectedPaths), "aliases"),
-      content: yield* renderBiomeJson(filePath, expectedPaths),
-    })
-  );
+  return PlannedFileChange.cases["root-vitest-aliases"].makeOption({
+    filePath,
+    summary: summaryCounts(R.keys(currentPaths), R.keys(expectedPaths), "aliases"),
+    content: yield* renderBiomeJson(filePath, expectedPaths),
+  });
 });
 
 /**
@@ -770,13 +762,11 @@ const planRootFallowBoundarySync = Effect.fn(function* (rootDir: string) {
     return O.none<PlannedFileChange>();
   }
 
-  return O.some(
-    PlannedFileChange.cases["root-fallow-boundaries"].make({
-      filePath,
-      summary: "boundaries: regenerate zones and rules from workspace dependency edges",
-      content,
-    })
-  );
+  return PlannedFileChange.cases["root-fallow-boundaries"].makeOption({
+    filePath,
+    summary: "boundaries: regenerate zones and rules from workspace dependency edges",
+    content,
+  });
 });
 
 /**
@@ -807,13 +797,11 @@ const planRootSyncpackSync = Effect.fn(function* (rootDir: string) {
   }
 
   const nextContent = yield* replaceSyncpackSources(original, expected);
-  return O.some(
-    PlannedFileChange.cases["root-syncpack"].make({
-      filePath: syncpackFilePath,
-      summary: summaryCounts(current, expected, "sources"),
-      content: nextContent,
-    })
-  );
+  return PlannedFileChange.cases["root-syncpack"].makeOption({
+    filePath: syncpackFilePath,
+    summary: summaryCounts(current, expected, "sources"),
+    content: nextContent,
+  });
 });
 
 const buildSubsetAdjacency = (
@@ -1036,13 +1024,11 @@ const planOnePackageReferenceSync = Effect.fnUntraced(function* (
       `[verbose] ${sourcePath}: computed ${computedTargets.value.length} ref(s), pruned ${extraTargets.length} existing ref(s)`
     );
   }
-  return O.some(
-    PlannedFileChange.cases["package-references"].make({
-      filePath: sourceOwnerTsconfigPath,
-      summary: summaryCounts(currentResolvedRefPaths, finalRefPaths, "references"),
-      content: nextContent,
-    })
-  );
+  return PlannedFileChange.cases["package-references"].makeOption({
+    filePath: sourceOwnerTsconfigPath,
+    summary: summaryCounts(currentResolvedRefPaths, finalRefPaths, "references"),
+    content: nextContent,
+  });
 });
 
 /**
@@ -1141,13 +1127,11 @@ const planOnePackageCheckReferenceSync = Effect.fnUntraced(function* (
     return O.none<PlannedFileChange>();
   }
 
-  return O.some(
-    PlannedFileChange.cases["package-check-references"].make({
-      filePath: overlayPath,
-      summary: summaryCounts(current, expected, "references"),
-      content: nextContent,
-    })
-  );
+  return PlannedFileChange.cases["package-check-references"].makeOption({
+    filePath: overlayPath,
+    summary: summaryCounts(current, expected, "references"),
+    content: nextContent,
+  });
 });
 
 /**

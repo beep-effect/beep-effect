@@ -410,12 +410,10 @@ const checkLocator = Effect.fnUntraced(function* (
   if (O.isSome(upstreamProblem)) {
     // Catalog availability and file drift are independent observations. Keep
     // the actual target value visible even when a live overlay drops a model.
-    return O.some(
-      DriftFinding.make({
-        ...upstreamProblem.value,
-        current,
-      })
-    );
+    return DriftFinding.makeOption({
+      ...upstreamProblem.value,
+      current,
+    });
   }
 
   if (O.isNone(expected)) {

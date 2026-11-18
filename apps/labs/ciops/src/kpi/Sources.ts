@@ -692,13 +692,11 @@ const mismatchOf = (rows: A.NonEmptyReadonlyArray<SourcedAdmissionRow>): O.Optio
   const head = A.headNonEmpty(rows);
   return A.every(rows, (row) => row.comparable === head.comparable)
     ? O.none()
-    : O.some(
-        KpiAdmissionJoinMismatchError.make({
-          nonce: head.row.nonce,
-          eventTag: head.row._tag,
-          message: "The canonical journal and the redacted snapshot disagree on a non-custody member of this row.",
-        })
-      );
+    : KpiAdmissionJoinMismatchError.makeOption({
+        nonce: head.row.nonce,
+        eventTag: head.row._tag,
+        message: "The canonical journal and the redacted snapshot disagree on a non-custody member of this row.",
+      });
 };
 
 const groupOrder = Order.mapInput(

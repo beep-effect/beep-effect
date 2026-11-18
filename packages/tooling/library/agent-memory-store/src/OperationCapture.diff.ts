@@ -202,7 +202,7 @@ const emitFile = (
       Insert: ({ edited }) => {
         const nodeId = mintNodeId();
         if (MutableHashSet.has(taken, nodeId)) {
-          return O.some(MintedNodeIdCollisionError.make({ nodeId }));
+          return MintedNodeIdCollisionError.makeOption({ nodeId });
         }
         MutableHashSet.add(taken, nodeId);
         operations.push(
@@ -312,7 +312,7 @@ export const captureBatch: {
             }
           }
           return Result.succeed(
-            A.isArrayNonEmpty(operations) ? O.some(OperationBatch.make({ base, operations, author })) : O.none()
+            A.isArrayNonEmpty(operations) ? OperationBatch.makeOption({ base, operations, author }) : O.none()
           );
         }
       )

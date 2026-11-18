@@ -156,7 +156,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) =>
         domain: "config",
         tier: "tier_1",
         url: AiSyncSourceUrl.make("https://example.com/schema.json"),
-        versionPin: O.some(AiSyncVersionPin.make("rust-v0.133.0")),
+        versionPin: AiSyncVersionPin.makeOption("rust-v0.133.0"),
         contentHash: O.some(emptyHash),
         isOfficial: true,
         driftMechanism: "version_and_hash",
@@ -198,7 +198,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("@beep/ai-sync", (it) =>
           agent: "codex",
           domain: "hooks",
           status: "supported",
-          sourceId: O.some(AiSyncSourceId.make("codex-hooks")),
+          sourceId: AiSyncSourceId.makeOption("codex-hooks"),
           rationale: "Codex publishes hook schemas.",
         })
       );

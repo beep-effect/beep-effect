@@ -490,7 +490,7 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
       const checker = GoalCloseoutChecker.of({
         check: Effect.fn("GoalsDoctorTest.countingChecker")(function* () {
           consulted += 1;
-          return O.some(GoalCloseoutCheck.make({ packet: "closed", finalPullRequest: 7, outcome: "unverified" }));
+          return GoalCloseoutCheck.makeOption({ packet: "closed", finalPullRequest: 7, outcome: "unverified" });
         }),
       });
       let exit: Exit.Exit<unknown, unknown> = Exit.void;
@@ -633,35 +633,31 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           declarationDigest: digest,
           // The accepted-head digest no longer gates (DN-12).
           acceptedDeclarationDigest: O.none(),
-          requiredChecks: O.some(
-            GoalRequiredCheckSnapshot.make({
-              contexts: ["Lint"],
-              sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
-              effectiveAt: time,
-              inventoryComplete: true,
-              mergeTimeInventory: O.some(
-                GoalMergeTimeInventory.make({
-                  source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
-                  ruleSuiteId: 1,
-                  ref: "refs/heads/main",
-                  afterSha: "merge-result",
-                  pushedAt: time,
-                  result: "pass",
-                  ruleSources: [
-                    GoalMergeTimeRuleSource.make({
-                      sourceType: "ruleset",
-                      rulesetId: O.some(42),
-                      name: O.some("main"),
-                      enforcement: "active",
-                      requiredStatusChecks: O.some("pass"),
-                      survives: true,
-                      version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
-                    }),
-                  ],
-                })
-              ),
-            })
-          ),
+          requiredChecks: GoalRequiredCheckSnapshot.makeOption({
+            contexts: ["Lint"],
+            sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
+            effectiveAt: time,
+            inventoryComplete: true,
+            mergeTimeInventory: GoalMergeTimeInventory.makeOption({
+              source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
+              ruleSuiteId: 1,
+              ref: "refs/heads/main",
+              afterSha: "merge-result",
+              pushedAt: time,
+              result: "pass",
+              ruleSources: [
+                GoalMergeTimeRuleSource.make({
+                  sourceType: "ruleset",
+                  rulesetId: O.some(42),
+                  name: O.some("main"),
+                  enforcement: "active",
+                  requiredStatusChecks: O.some("pass"),
+                  survives: true,
+                  version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
+                }),
+              ],
+            }),
+          }),
           requiredCheckFacts: [
             GoalRequiredCheckFact.make({
               context: "Lint",
@@ -674,15 +670,13 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           ],
           finalPullRequest: 7,
           acceptedHead: O.some("accepted-head"),
-          merge: O.some(
-            GoalMergeResult.make({
-              mergeCommit: "merge-result",
-              tree: "merge-tree",
-              mergedAt: time,
-              method: O.none(),
-              baseRef: "main",
-            })
-          ),
+          merge: GoalMergeResult.makeOption({
+            mergeCommit: "merge-result",
+            tree: "merge-tree",
+            mergedAt: time,
+            method: O.none(),
+            baseRef: "main",
+          }),
           evidence: row.extraUnknown
             ? [
                 ...hostedEvidence,
@@ -777,15 +771,13 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
           finalPullRequest: 7,
           acceptedHead: O.some("accepted-head"),
           merge: row.merged
-            ? O.some(
-                GoalMergeResult.make({
-                  mergeCommit: "merge-result",
-                  tree: "merge-tree",
-                  mergedAt: time,
-                  method: O.none(),
-                  baseRef: "main",
-                })
-              )
+            ? GoalMergeResult.makeOption({
+                mergeCommit: "merge-result",
+                tree: "merge-tree",
+                mergedAt: time,
+                method: O.none(),
+                baseRef: "main",
+              })
             : O.none(),
           evidence: [
             GoalEvidenceCheck.make({
@@ -846,25 +838,21 @@ it.layer(testLayer, { timeout: "20 seconds" })("goals doctor baseline ratchet", 
         packet: "typed",
         declarationDigest: digest,
         acceptedDeclarationDigest: O.some(digest),
-        requiredChecks: O.some(
-          GoalRequiredCheckSnapshot.make({
-            contexts: ["Lint"],
-            sources: ["surviving-ruleset-history"],
-            effectiveAt: time,
-            inventoryComplete: false,
-          })
-        ),
+        requiredChecks: GoalRequiredCheckSnapshot.makeOption({
+          contexts: ["Lint"],
+          sources: ["surviving-ruleset-history"],
+          effectiveAt: time,
+          inventoryComplete: false,
+        }),
         finalPullRequest: 7,
         acceptedHead: O.some("accepted-head"),
-        merge: O.some(
-          GoalMergeResult.make({
-            mergeCommit: "merge-result",
-            tree: "merge-tree",
-            mergedAt: time,
-            method: O.none(),
-            baseRef: "main",
-          })
-        ),
+        merge: GoalMergeResult.makeOption({
+          mergeCommit: "merge-result",
+          tree: "merge-tree",
+          mergedAt: time,
+          method: O.none(),
+          baseRef: "main",
+        }),
         evidence: [
           GoalEvidenceCheck.make({
             ref: GoalAcceptanceEvidenceRef.make({ kind: "hosted-required-checks", ref: "required", gating: true }),
@@ -1198,12 +1186,10 @@ describe("capabilityDoctorFindings", () => {
       { slug: "renamed", manifest: O.some(manifest("old-name", [])) },
       {
         slug: "docs",
-        manifest: O.some(
-          GoalManifest.make({
-            ...manifest("docs", ["kg/lookup"]),
-            initiative: { id: "docs", status: "reference", title: "Docs" },
-          })
-        ),
+        manifest: GoalManifest.makeOption({
+          ...manifest("docs", ["kg/lookup"]),
+          initiative: { id: "docs", status: "reference", title: "Docs" },
+        }),
       },
       { slug: "broken", manifest: O.none() },
     ]);

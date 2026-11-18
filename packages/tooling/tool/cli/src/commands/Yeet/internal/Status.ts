@@ -1279,8 +1279,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     checked: true,
     detail: `PR #${view.number} ${view.state}`,
     readFailure: O.match(O.all([checks, requiredChecks]), {
-      onNone: () =>
-        O.some(YeetCommandError.make({ message: "Failed to read the complete pull request check census." })),
+      onNone: () => YeetCommandError.makeOption({ message: "Failed to read the complete pull request check census." }),
       onSome: O.none,
     }),
     checks: A.map(O.getOrElse(checks, A.empty), (row) =>

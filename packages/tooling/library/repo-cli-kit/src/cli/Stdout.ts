@@ -164,7 +164,7 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
     );
   };
   const recordFailure = (message: string): void => {
-    MutableRef.set(failure, O.some(StreamWriteFailure.make({ stream: name, message, droppedLines: 1 })));
+    MutableRef.set(failure, StreamWriteFailure.makeOption({ stream: name, message, droppedLines: 1 }));
     marker(`[beep-cli] ${name} write failed: ${message}; later ${name} lines are dropped`);
   };
   // Bun completes many writes synchronously and runs their callbacks inside `write`, so

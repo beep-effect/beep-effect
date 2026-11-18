@@ -261,18 +261,16 @@ const diagnosticIssueFromLine = (
     O.flatMap((path) => packageNameForFile(context, path))
   );
 
-  return O.some(
-    QualityIssue.make({
-      ...issueBase(context, step, result, category, message, inferredPackageName),
-      id: issueId(step, category, message, inferredPackageName, file, linePosition(startLine)),
-      severity: severityForLine(match.groups.severity ?? "error"),
-      confidence: "structured",
-      evidence: [line],
-      ...optionalProp("file", file),
-      ...optionalProp("line", startLine),
-      ...optionalProp("column", startColumn),
-    })
-  );
+  return QualityIssue.makeOption({
+    ...issueBase(context, step, result, category, message, inferredPackageName),
+    id: issueId(step, category, message, inferredPackageName, file, linePosition(startLine)),
+    severity: severityForLine(match.groups.severity ?? "error"),
+    confidence: "structured",
+    evidence: [line],
+    ...optionalProp("file", file),
+    ...optionalProp("line", startLine),
+    ...optionalProp("column", startColumn),
+  });
 };
 
 const schemaFirstPolicyFindingSeverity = (

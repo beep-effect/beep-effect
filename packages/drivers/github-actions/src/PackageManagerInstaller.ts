@@ -1234,17 +1234,15 @@ const make = Effect.gen(function* () {
       if (pin.name === "bun") {
         const binary = path.join(directory, bunBinaryName);
         yield* assertFile(pin, binary, `cached bun binary (${bunBinaryName}) is missing`);
-        return O.some(
-          CachedPackageManager.make({
-            name: pin.name,
-            version: pin.version.toString(),
-            directory,
-            // The binary itself is executable; the entry directory IS the
-            // addPath target and no shim is written for bun anywhere.
-            binDir: directory,
-            bins: { bun: binary },
-          })
-        );
+        return CachedPackageManager.makeOption({
+          name: pin.name,
+          version: pin.version.toString(),
+          directory,
+          // The binary itself is executable; the entry directory IS the
+          // addPath target and no shim is written for bun anywhere.
+          binDir: directory,
+          bins: { bun: binary },
+        });
       }
       const manifest = yield* readPackageManifest(pin, directory);
       let bins = manifest.bins;
@@ -1272,15 +1270,13 @@ const make = Effect.gen(function* () {
       // but a failure to write is a typed cacheFailed, not a silent hole in
       // the PATH contract.
       yield* writeShims(pin, directory, directory, bins, { skipExisting: true });
-      return O.some(
-        CachedPackageManager.make({
-          name: pin.name,
-          version: pin.version.toString(),
-          directory,
-          binDir: path.join(directory, SHIM_DIR),
-          bins: rootBins(bins, directory),
-        })
-      );
+      return CachedPackageManager.makeOption({
+        name: pin.name,
+        version: pin.version.toString(),
+        directory,
+        binDir: path.join(directory, SHIM_DIR),
+        bins: rootBins(bins, directory),
+      });
     })
   );
 
@@ -1694,7 +1690,7 @@ const make = Effect.gen(function* () {
     }
     const probed = yield* ambientNpmVersion;
     return O.contains(probed, version)
-      ? O.some(AmbientPackageManager.make({ name: effective.name, version, bins: { npm: "npm", npx: "npx" } }))
+      ? AmbientPackageManager.makeOption({ name: effective.name, version, bins: { npm: "npm", npx: "npx" } })
       : O.none();
   });
 

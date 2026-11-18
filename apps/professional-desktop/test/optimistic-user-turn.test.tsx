@@ -106,7 +106,7 @@ const branchedTimeline = ThreadTimeline.make({
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(32),
       turnIndex: S.Natural.make(2),
-      parentTurnId: O.some(WorkspaceIdentity.TurnId.make(30)),
+      parentTurnId: WorkspaceIdentity.TurnId.makeOption(30),
       items: [TimelineMessageItem.make({ role: "user", content: replacementContent })],
       costMicros: 0,
     }),
@@ -124,21 +124,21 @@ const corruptBranchTimeline = ThreadTimeline.make({
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(40),
       turnIndex: S.Natural.make(0),
-      parentTurnId: O.some(WorkspaceIdentity.TurnId.make(40)),
+      parentTurnId: WorkspaceIdentity.TurnId.makeOption(40),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(41),
       turnIndex: S.Natural.make(1),
-      parentTurnId: O.some(WorkspaceIdentity.TurnId.make(99)),
+      parentTurnId: WorkspaceIdentity.TurnId.makeOption(99),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(42),
       turnIndex: S.Natural.make(2),
-      parentTurnId: O.some(WorkspaceIdentity.TurnId.make(43)),
+      parentTurnId: WorkspaceIdentity.TurnId.makeOption(43),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),
@@ -151,7 +151,7 @@ const corruptBranchTimeline = ThreadTimeline.make({
     TimelineTurn.make({
       turnId: WorkspaceIdentity.TurnId.make(44),
       turnIndex: S.Natural.make(4),
-      parentTurnId: O.some(WorkspaceIdentity.TurnId.make(45)),
+      parentTurnId: WorkspaceIdentity.TurnId.makeOption(45),
       items: [TimelineMessageItem.make({ role: "assistant", content: supersededContent })],
       costMicros: 0,
     }),

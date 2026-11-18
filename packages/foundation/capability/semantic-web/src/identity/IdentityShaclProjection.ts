@@ -60,12 +60,12 @@ const RequiredIdentityFibers = S.Array(S.String).pipe(S.check(IdentityRequiredFi
 const addressPropertyShapes = (path: NamedNode, value: string): ReadonlyArray<ShaclPropertyShape> => [
   ShaclPropertyShape.make({
     path,
-    minCount: O.some(S.Natural.make(1)),
-    maxCount: O.some(S.Natural.make(1)),
+    minCount: S.Natural.makeOption(1),
+    maxCount: S.Natural.makeOption(1),
   }),
   ShaclPropertyShape.make({
     path,
-    minCount: O.some(S.Natural.make(1)),
+    minCount: S.Natural.makeOption(1),
     hasValue: O.some(makeLiteral(value, XSD_STRING.value)),
   }),
 ];
@@ -135,7 +135,7 @@ export const projectShapes: {
             policy.requiredFibers,
             (fiber) =>
               Effect.map(resolveFiberPath(binding, fiber), (path) =>
-                ShaclPropertyShape.make({ path, minCount: O.some(S.Natural.make(1)) })
+                ShaclPropertyShape.make({ path, minCount: S.Natural.makeOption(1) })
               ),
             { concurrency: 1 }
           );

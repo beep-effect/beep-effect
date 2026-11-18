@@ -394,21 +394,17 @@ const isPackageLocalDocgenInput = (relativePath: string): boolean =>
 
 const fullReasonForFile = (filePath: string): O.Option<DocgenLocalFullReason> => {
   if (isExactFile(DOCGEN_LOCAL_FULL_INPUT_FILES, filePath)) {
-    return O.some(
-      DocgenLocalFullReason.make({
-        filePath,
-        message: "Global docgen or Turbo input changed.",
-      })
-    );
+    return DocgenLocalFullReason.makeOption({
+      filePath,
+      message: "Global docgen or Turbo input changed.",
+    });
   }
 
   if (hasPrefix(DOCGEN_LOCAL_FULL_INPUT_PREFIXES, filePath)) {
-    return O.some(
-      DocgenLocalFullReason.make({
-        filePath,
-        message: "Docgen tooling changed.",
-      })
-    );
+    return DocgenLocalFullReason.makeOption({
+      filePath,
+      message: "Docgen tooling changed.",
+    });
   }
 
   return O.none();
@@ -436,13 +432,11 @@ const selectPackage = (
     return O.none();
   }
 
-  return O.some(
-    DocgenLocalSelectedPackage.make({
-      name: pkg.name,
-      path: pkg.relativePath,
-      reasons,
-    })
-  );
+  return DocgenLocalSelectedPackage.makeOption({
+    name: pkg.name,
+    path: pkg.relativePath,
+    reasons,
+  });
 };
 
 const selectedPackageFromWorkspacePackage = (
@@ -821,14 +815,12 @@ const summarizeTurboTasks = (output: TurboDryRunDocument): ReadonlyArray<DocgenL
         return O.none();
       }
 
-      return O.some(
-        DocgenLocalTurboTask.make({
-          packageName: task.package,
-          taskId: task.taskId ?? `${task.package}#docgen`,
-          ...(P.isUndefined(task.cache?.source) ? {} : { cacheSource: task.cache.source }),
-          ...(P.isUndefined(task.cache?.status) ? {} : { cacheStatus: task.cache.status }),
-        })
-      );
+      return DocgenLocalTurboTask.makeOption({
+        packageName: task.package,
+        taskId: task.taskId ?? `${task.package}#docgen`,
+        ...(P.isUndefined(task.cache?.source) ? {} : { cacheSource: task.cache.source }),
+        ...(P.isUndefined(task.cache?.status) ? {} : { cacheStatus: task.cache.status }),
+      });
     }),
     collectOptions,
     A.dedupeWith((left, right) => left.packageName === right.packageName && left.taskId === right.taskId),

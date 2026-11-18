@@ -275,8 +275,8 @@ type BuildError = InvalidNodeIdError | DuplicateNodeIdError | ConflictingTermErr
 /** Checks a node's own `@id` is well formed and unclaimed, recording it in `seen` when it is. */
 const nodeIdentityError = (node: JsonLdNode, seen: MutableHashSet.MutableHashSet<string>): O.Option<BuildError> => {
   const id = node["@id"];
-  if (!NodeRef.isValidId(id)) return O.some(InvalidNodeIdError.make({ input: id }));
-  if (MutableHashSet.has(seen, id)) return O.some(DuplicateNodeIdError.make({ id }));
+  if (!NodeRef.isValidId(id)) return InvalidNodeIdError.makeOption({ input: id });
+  if (MutableHashSet.has(seen, id)) return DuplicateNodeIdError.makeOption({ id });
   MutableHashSet.add(seen, id);
   return O.none();
 };

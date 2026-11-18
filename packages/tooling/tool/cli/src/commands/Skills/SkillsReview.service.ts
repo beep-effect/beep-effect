@@ -562,21 +562,19 @@ const itemOf =
       return O.none();
     }
     const twoStrike = !applied && isSecondStrike(ledger, key);
-    return O.some(
-      SkillReviewItem.make({
-        ...key,
-        kind: applied ? "classification" : "conflict",
-        patch: row.patch,
-        file: row.file,
-        hunk: row.hunk,
-        status: row.status,
-        detail: row.detail,
-        currentLabel: labelOf(context.entry, row.patch),
-        twoStrike,
-        ghost: applied || twoStrike ? O.none() : ghostCandidate(ledger, key),
-        text: textFor(context.hunks, row),
-      })
-    );
+    return SkillReviewItem.makeOption({
+      ...key,
+      kind: applied ? "classification" : "conflict",
+      patch: row.patch,
+      file: row.file,
+      hunk: row.hunk,
+      status: row.status,
+      detail: row.detail,
+      currentLabel: labelOf(context.entry, row.patch),
+      twoStrike,
+      ghost: applied || twoStrike ? O.none() : ghostCandidate(ledger, key),
+      text: textFor(context.hunks, row),
+    });
   };
 
 const reviewSkill = Effect.fn("SkillsReview.reviewSkill")(function* (

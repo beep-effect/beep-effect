@@ -86,7 +86,7 @@ const arrivalsFrom = (
       priority: seed.publish ? "publish" : "verify",
       requestedWeightTokens: PosInt.make(seed.weight),
       enqueuedAtMillis: S.Natural.make(enqueuedAtMillis),
-      etaMillis: known ? O.some(PosInt.make(seed.etaMillis)) : O.none(),
+      etaMillis: known ? PosInt.makeOption(seed.etaMillis) : O.none(),
       holdMillis: PosInt.make(hold(seed.etaMillis, seed.holdPermille, known)),
     });
     return { atMillis: enqueuedAtMillis, arrivals: A.append(acc.arrivals, arrival) };
@@ -106,7 +106,7 @@ const arrival = (
     priority: "verify",
     requestedWeightTokens: PosInt.make(weight),
     enqueuedAtMillis: S.Natural.make(enqueuedAtMillis),
-    etaMillis: O.some(PosInt.make(holdMillis)),
+    etaMillis: PosInt.makeOption(holdMillis),
     holdMillis: PosInt.make(holdMillis),
   });
 
@@ -547,7 +547,7 @@ it.layer(BackfillModelLive, { timeout: "60 seconds" })("@beep/ciops SCHE-06 back
         checkoutKey: "checkout-a",
         weightTokens: PosInt.make(6),
         admittedAtMillis: S.Natural.make(0),
-        etaMillis: O.some(PosInt.make(10_000)),
+        etaMillis: PosInt.makeOption(10_000),
       });
       const unit = (nonce: string, weight: number, enqueuedAtMillis: number, eta: O.Option<number>) =>
         QueuedUnit.make({

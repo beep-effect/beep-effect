@@ -629,7 +629,7 @@ export const withAdmissionWorkloadBinding: {
   3,
   <A, E, R>(self: Effect.Effect<A, E, R>, workloadPath: string, leaseId: string): Effect.Effect<A, E, R> =>
     self.pipe(
-      Effect.provideService(CurrentAdmissionWorkload, O.some(AdmissionWorkloadBinding.make({ workloadPath, leaseId })))
+      Effect.provideService(CurrentAdmissionWorkload, AdmissionWorkloadBinding.makeOption({ workloadPath, leaseId }))
     )
 );
 
@@ -690,7 +690,7 @@ const admissionWorkloadFields = (
 ): O.Option<AdmissionWorkloadBinding> =>
   workloadPath === undefined || leaseId === undefined
     ? O.none()
-    : O.some(AdmissionWorkloadBinding.make({ leaseId, workloadPath }));
+    : AdmissionWorkloadBinding.makeOption({ leaseId, workloadPath });
 
 const sameAdmissionBinding = (left: AdmissionWorkloadBinding, right: AdmissionWorkloadBinding): boolean =>
   Str.Equivalence(left.workloadPath, right.workloadPath) && Str.Equivalence(left.leaseId, right.leaseId);
@@ -722,7 +722,7 @@ const resolveAdmissionWorkload = Effect.fn("StepExec.resolveAdmissionWorkload")(
       O.isNone(scoped) && O.isSome(inherited) && sameAdmissionBinding(selected.value, inherited.value)
         ? "inherited"
         : "owned";
-    return O.some(ResolvedAdmissionWorkload.make({ ...selected.value, ownership }));
+    return ResolvedAdmissionWorkload.makeOption({ ...selected.value, ownership });
   }
   return O.map(inherited, (binding) => ResolvedAdmissionWorkload.make({ ...binding, ownership: "inherited" }));
 });

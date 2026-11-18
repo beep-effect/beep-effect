@@ -177,15 +177,13 @@ export const KNOWLEDGE_PATH_REMOVAL_LOG = {
 const removalOfChange = (commit: KnowledgeCommitSha, subject: string, change: NameStatusEntry) =>
   Match.value(change.status).pipe(
     Match.when("deleted", () =>
-      O.some(
-        KnowledgePathRemoval.make({
-          path: change.path,
-          commit,
-          subject,
-          change: KnowledgePathChange.Enum.deleted,
-          renamedTo: O.none(),
-        })
-      )
+      KnowledgePathRemoval.makeOption({
+        path: change.path,
+        commit,
+        subject,
+        change: KnowledgePathChange.Enum.deleted,
+        renamedTo: O.none(),
+      })
     ),
     Match.when("renamed", () =>
       O.map(O.fromUndefinedOr(change.oldPath), (path) =>

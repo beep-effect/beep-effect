@@ -243,7 +243,7 @@ export const installCitationReferencePatterns = Effect.fn("Citation.installRefer
             nullableMultiRepeat: false,
           }),
         });
-        return O.some(CitationReferencePattern.make({ mode, pattern, descriptor }));
+        return CitationReferencePattern.makeOption({ mode, pattern, descriptor });
       },
       Effect.provideService(Digest.Digest, digest),
       timing.timed

@@ -606,7 +606,7 @@ const attachmentLine = (row: IntakeAttachment): string => {
  *         internetMessageId: O.some("<id@mail.example.test>"),
  *         conversationId: O.none(),
  *         from: O.some("Sender@example.test"),
- *         fromEmail: O.some(EmailString.make("sender@example.test")),
+ *         fromEmail: EmailString.makeOption("sender@example.test"),
  *         receivedAt: O.some("2026-10-10T12:00:00Z"),
  *         subject: ""
  *       }),

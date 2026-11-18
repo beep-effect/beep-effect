@@ -97,7 +97,7 @@ const ownerFencePoints = Effect.fn("LaneFenceTest.ownerFencePoints")(function* (
   const record = yield* owner
     .start(command, lease, () => {
       points = controller.steps();
-      return O.some(CitationNativeLaneFailure.make({ reason: "closed" }));
+      return CitationNativeLaneFailure.makeOption({ reason: "closed" });
     })
     .pipe(Effect.provideService(Scheduler.Scheduler, controller.controlled), Effect.withTracer(controller.tracer));
   yield* record.process.retire(false);

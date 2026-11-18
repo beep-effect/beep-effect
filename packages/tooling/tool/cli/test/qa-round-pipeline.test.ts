@@ -82,9 +82,7 @@ const withTempCwd = <A, E, R>(use: (cwd: string) => Effect.Effect<A, E, R>) =>
 const manifestFor = (round: number) =>
   SessionManifest.make({
     artifacts: [],
-    clockSync: O.some(
-      ClockSync.make({ confidence: "high", method: "beacon", offsetMs: 0, residualRmsMs: 3, slope: 1 })
-    ),
+    clockSync: ClockSync.makeOption({ confidence: "high", method: "beacon", offsetMs: 0, residualRmsMs: 3, slope: 1 }),
     eventsPath: "events.ndjson",
     legacyManifestPath: O.none(),
     schemaVersion: "beep.qa.capture-session.v1",

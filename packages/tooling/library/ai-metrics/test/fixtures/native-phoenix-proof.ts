@@ -229,13 +229,11 @@ const program = Effect.gen(function* () {
               maxRetryDelayMillis: 400,
               reconcileDelayMillis: 100,
               tickTimeoutMillis: 10000,
-              idempotentReplay: O.some(
-                IdempotentReplayPolicy.make({
-                  targetId: config.targetId,
-                  qualificationDigest,
-                  minimumDelayMillis: 3000,
-                })
-              ),
+              idempotentReplay: IdempotentReplayPolicy.makeOption({
+                targetId: config.targetId,
+                qualificationDigest,
+                minimumDelayMillis: 3000,
+              }),
             }),
             worker,
             reconciler

@@ -122,5 +122,5 @@ export const reviewCorrection = ReviewCorrectionDerivation.implementSync(({ reco
     parentRequired: o.parentRequired,
     idempotencyKey: operationId,
   });
-  return O.some(ReviewCorrection.make({ operationId, input }));
+  return ReviewCorrection.makeOption({ operationId, input });
 });

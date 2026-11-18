@@ -214,13 +214,11 @@ const collectSentences = (
     const resolvedSpan = resolveSentenceSpan(sentence, its, nextTokenStart, tokenArray.length);
 
     if (O.isNone(resolvedSpan)) {
-      failure = O.some(
-        SentenceSpanFailure.make({
-          reason: "Unable to derive a stable sentence token span.",
-          sentenceIndex: SentenceIndex.make(index),
-          sentenceText: sentence.out(),
-        })
-      );
+      failure = SentenceSpanFailure.makeOption({
+        reason: "Unable to derive a stable sentence token span.",
+        sentenceIndex: SentenceIndex.make(index),
+        sentenceText: sentence.out(),
+      });
       return;
     }
 
@@ -229,13 +227,11 @@ const collectSentences = (
     const maybeFirstToken = A.head(sentenceTokens);
 
     if (O.isNone(maybeFirstToken)) {
-      failure = O.some(
-        SentenceSpanFailure.make({
-          reason: "Resolved sentence span produced no tokens.",
-          sentenceIndex: SentenceIndex.make(index),
-          sentenceText: sentence.out(),
-        })
-      );
+      failure = SentenceSpanFailure.makeOption({
+        reason: "Resolved sentence span produced no tokens.",
+        sentenceIndex: SentenceIndex.make(index),
+        sentenceText: sentence.out(),
+      });
       return;
     }
 

@@ -231,7 +231,7 @@ describe("@beep/m365-mcp outbox send guard", () => {
       ...world.draft,
       toRecipients: O.map(world.draft.toRecipients, (stored) => [
         ...stored,
-        GraphRecipient.make({ emailAddress: O.some(GraphEmailAddress.make({})) }),
+        GraphRecipient.make({ emailAddress: GraphEmailAddress.makeOption({}) }),
       ]),
     });
 

@@ -303,8 +303,6 @@ export const lookupDownload: {
         return O.none();
       }
       const url = stringField(found, "signedDownloadUrl");
-      return url === undefined
-        ? O.none()
-        : O.some(CacheHit.make({ url, matchedKey: stringField(found, "matchedKey") }));
+      return url === undefined ? O.none() : CacheHit.makeOption({ url, matchedKey: stringField(found, "matchedKey") });
     })
 );

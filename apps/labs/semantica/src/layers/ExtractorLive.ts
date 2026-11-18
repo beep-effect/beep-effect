@@ -322,7 +322,7 @@ export const makeHostedExtractionRequest = (canonical: CanonicalText): LangExtra
   LangExtractRequest.make({
     documentId: NlpDocumentId.make(canonical.identity.sourceRef),
     examples: HOSTED_EXAMPLES,
-    options: LangExtractOptions.make({ fuzzyThreshold: O.some(UnitInterval.make(1)) }),
+    options: LangExtractOptions.make({ fuzzyThreshold: UnitInterval.makeOption(1) }),
     targets: HOSTED_TARGETS,
     text: canonical.text,
   });
@@ -373,7 +373,7 @@ const nonRelationBody = (extraction: GroundedExtraction, anchor: TextAnchor): Cl
 
 const entityAnchorOf = (claim: EvidenceClaimValue): O.Option<TextAnchor> =>
   ClaimBody.match(claim.body, {
-    Entity: (body) => O.some(TextAnchor.make(body)),
+    Entity: (body) => TextAnchor.makeOption(body),
     Relation: O.none<TextAnchor>,
     Structure: O.none<TextAnchor>,
   });

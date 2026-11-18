@@ -156,7 +156,7 @@ it.layer(LiveSource, { timeout: "30 seconds" })("a mixed-revision journal in a c
         head: Str.repeat(40)("c"),
         mode: "final-check",
         startedAt: "2026-11-14T00:20:00.000Z",
-        host: O.some(HostLabel.make("dankserver")),
+        host: HostLabel.makeOption("dankserver"),
         seat: O.some("claude-code"),
       });
       yield* appendYeetAttemptJournalEventForCheckout(checkout, RUN_BRANCH, third);

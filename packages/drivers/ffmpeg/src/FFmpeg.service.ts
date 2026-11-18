@@ -487,16 +487,14 @@ const parseProgressEvent = (
     expected <= 0 ? 0 : Math.min(100, Math.max(0, (frameCount.value / expected) * 100))
   );
 
-  return O.some(
-    FFmpegProgressEvent.make({
-      frameCount: frameCount.value,
-      kind: "progress",
-      outTimeSeconds,
-      percent,
-      progress,
-      speed: O.fromUndefinedOr(block.speed),
-    })
-  );
+  return FFmpegProgressEvent.makeOption({
+    frameCount: frameCount.value,
+    kind: "progress",
+    outTimeSeconds,
+    percent,
+    progress,
+    speed: O.fromUndefinedOr(block.speed),
+  });
 };
 
 const consumeProgressLine = (

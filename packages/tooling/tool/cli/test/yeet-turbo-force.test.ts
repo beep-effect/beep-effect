@@ -689,8 +689,8 @@ describe("attempt journal turboForce", () => {
             changed: [
               PackageInstalledTreeChange.make({
                 name: "@x/b",
-                base: O.some(Sha256Hex.make(Str.repeat(64)("a"))),
-                head: O.some(Sha256Hex.make(Str.repeat(64)("b"))),
+                base: Sha256Hex.makeOption(Str.repeat(64)("a")),
+                head: Sha256Hex.makeOption(Str.repeat(64)("b")),
               }),
             ],
           }),

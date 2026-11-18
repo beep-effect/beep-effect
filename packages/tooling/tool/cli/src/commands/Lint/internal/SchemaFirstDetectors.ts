@@ -498,18 +498,16 @@ const numericDomainEntryFromProperty = (
 
   const field = fieldName.value;
   const container = inferSchemaContainerSymbol(parent);
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: `${container}.${field}`,
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-numeric-domain",
-      line: property.getSourceFile().getLineAndColumnAtPos(property.getStart()).line,
-      owner,
-      reason: `Broad numeric schema field "${field}" should use S.Finite, S.Int, or a range check unless NaN and infinity are intentional.`,
-    })
-  );
+  return SchemaFirstInventoryEntry.makeOption({
+    file,
+    symbol: `${container}.${field}`,
+    kind: "schema-policy-advisory",
+    status: "advisory",
+    ruleId: "SFV4-numeric-domain",
+    line: property.getSourceFile().getLineAndColumnAtPos(property.getStart()).line,
+    owner,
+    reason: `Broad numeric schema field "${field}" should use S.Finite, S.Int, or a range check unless NaN and infinity are intentional.`,
+  });
 };
 
 const isBroadEmailSchemaExpression = (initializer: Node): boolean => {
@@ -541,19 +539,17 @@ const precisionAuditEntryFromProperty = (
   }
 
   const container = inferSchemaContainerSymbol(parent);
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: `${container}.email`,
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-precision-audit",
-      line: property.getSourceFile().getLineAndColumnAtPos(property.getStart()).line,
-      owner,
-      reason:
-        'Broad string field "email" should use @beep/schema Email, a local precise email schema, or a documented external-protocol exception.',
-    })
-  );
+  return SchemaFirstInventoryEntry.makeOption({
+    file,
+    symbol: `${container}.email`,
+    kind: "schema-policy-advisory",
+    status: "advisory",
+    ruleId: "SFV4-precision-audit",
+    line: property.getSourceFile().getLineAndColumnAtPos(property.getStart()).line,
+    owner,
+    reason:
+      'Broad string field "email" should use @beep/schema Email, a local precise email schema, or a documented external-protocol exception.',
+  });
 };
 
 const sourceHasStaticApiSchemaSignal = (sourceFile: import("ts-morph").SourceFile): boolean =>
@@ -730,18 +726,16 @@ const fnSchemaEntryFromFunctionLike = (
   }
 
   const name = functionLikeSymbolName(node);
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: name,
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-fn-schema",
-      line: node.getSourceFile().getLineAndColumnAtPos(node.getStart()).line,
-      owner,
-      reason: `Exported function "${name}" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable.`,
-    })
-  );
+  return SchemaFirstInventoryEntry.makeOption({
+    file,
+    symbol: name,
+    kind: "schema-policy-advisory",
+    status: "advisory",
+    ruleId: "SFV4-fn-schema",
+    line: node.getSourceFile().getLineAndColumnAtPos(node.getStart()).line,
+    owner,
+    reason: `Exported function "${name}" carries inline object contracts in a schema-modeled file; model them with Fn({ input, output }) from @beep/schema or an S.Class so the contract is executable.`,
+  });
 };
 
 /**
@@ -791,18 +785,16 @@ const nullReturnEntryFromFunctionLike = (
   }
 
   const name = functionLikeSymbolName(node);
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: name,
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-null-return",
-      line: node.getSourceFile().getLineAndColumnAtPos(node.getStart()).line,
-      owner,
-      reason: `Exported helper "${name}" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions).`,
-    })
-  );
+  return SchemaFirstInventoryEntry.makeOption({
+    file,
+    symbol: name,
+    kind: "schema-policy-advisory",
+    status: "advisory",
+    ruleId: "SFV4-null-return",
+    line: node.getSourceFile().getLineAndColumnAtPos(node.getStart()).line,
+    owner,
+    reason: `Exported helper "${name}" declares a null/undefined return; return O.Option, Result, Effect, or Exit instead (3rd-party/react boundary returns are ledgered exceptions).`,
+  });
 };
 
 const isNullReturnEligibleFilePath = (filePath: string): boolean => !Str.endsWith(".tsx")(filePath);
@@ -913,18 +905,16 @@ const normalizationEntryFromCallExpression = (
 
   const methodName = expression.getName();
   const container = inferExecutableContainerSymbol(callExpression);
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: `${container}.${methodName}`,
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-normalization",
-      line: callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line,
-      owner,
-      reason: `Normalization call ".${methodName}()" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data.`,
-    })
-  );
+  return SchemaFirstInventoryEntry.makeOption({
+    file,
+    symbol: `${container}.${methodName}`,
+    kind: "schema-policy-advisory",
+    status: "advisory",
+    ruleId: "SFV4-normalization",
+    line: callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line,
+    owner,
+    reason: `Normalization call ".${methodName}()" inside a function body in a schema-modeled file should live in a schema transformation (S.decodeTo + SchemaTransformation, or SchemaGetter) so the invariant travels with the data.`,
+  });
 };
 
 const sourceHasGetSomesSignal = (sourceFile: import("ts-morph").SourceFile): boolean =>
@@ -978,19 +968,17 @@ const getsomesStructEntryFromCallExpression = (
     return O.none();
   }
 
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: `${inferExecutableContainerSymbol(callExpression)}.R.getSomes`,
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-getsomes-struct",
-      line: callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line,
-      owner,
-      reason:
-        "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05).",
-    })
-  );
+  return SchemaFirstInventoryEntry.makeOption({
+    file,
+    symbol: `${inferExecutableContainerSymbol(callExpression)}.R.getSomes`,
+    kind: "schema-policy-advisory",
+    status: "advisory",
+    ruleId: "SFV4-getsomes-struct",
+    line: callExpression.getSourceFile().getLineAndColumnAtPos(callExpression.getStart()).line,
+    owner,
+    reason:
+      "R.getSomes over an inline Option-struct literal should use O.getSomesStruct (@beep/utils) to preserve literal keys and per-key value types; R.getSomes remains for homogeneous dynamic-key dictionaries (Law 20/47 as amended 2026-07-05).",
+  });
 };
 
 const sourceHasDefaultsSchemaSignal = (sourceFile: import("ts-morph").SourceFile): boolean =>
@@ -1017,18 +1005,16 @@ const defaultsEntryFromParameter = (
     return O.none();
   }
 
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: `${inferExecutableContainerSymbol(parameter)}.${parameterName}`,
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-defaults",
-      line: parameter.getSourceFile().getLineAndColumnAtPos(parameter.getStart()).line,
-      owner,
-      reason: `Parameter default object for "${parameterName}" should move fallback values into schema defaults so construction, decoding, and tests share one source of truth.`,
-    })
-  );
+  return SchemaFirstInventoryEntry.makeOption({
+    file,
+    symbol: `${inferExecutableContainerSymbol(parameter)}.${parameterName}`,
+    kind: "schema-policy-advisory",
+    status: "advisory",
+    ruleId: "SFV4-defaults",
+    line: parameter.getSourceFile().getLineAndColumnAtPos(parameter.getStart()).line,
+    owner,
+    reason: `Parameter default object for "${parameterName}" should move fallback values into schema defaults so construction, decoding, and tests share one source of truth.`,
+  });
 };
 
 const sourceHasEquivalenceSchemaSignal = (sourceFile: import("ts-morph").SourceFile): boolean =>
@@ -1059,19 +1045,17 @@ const equivalenceEntryFromVariableDeclaration = (
     return O.none();
   }
 
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: declaration.getName(),
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-equivalence",
-      line: declaration.getSourceFile().getLineAndColumnAtPos(declaration.getStart()).line,
-      owner,
-      reason:
-        'Exported schema-modeled equality helper "equals" should derive from S.toEquivalence(schema) unless comparison intentionally differs from schema semantics.',
-    })
-  );
+  return SchemaFirstInventoryEntry.makeOption({
+    file,
+    symbol: declaration.getName(),
+    kind: "schema-policy-advisory",
+    status: "advisory",
+    ruleId: "SFV4-equivalence",
+    line: declaration.getSourceFile().getLineAndColumnAtPos(declaration.getStart()).line,
+    owner,
+    reason:
+      'Exported schema-modeled equality helper "equals" should derive from S.toEquivalence(schema) unless comparison intentionally differs from schema semantics.',
+  });
 };
 
 // Upstream-parity detectors (SFV4-default-wrapper, SFV4-opaque-wrapper).

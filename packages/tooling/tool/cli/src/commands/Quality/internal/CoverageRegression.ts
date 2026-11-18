@@ -1596,12 +1596,10 @@ const maybeSnapshotEntry = Effect.fn("CoverageRegression.maybeSnapshotEntry")(fu
   }
 
   const summary = yield* readCoverageSummary(summaryPath);
-  return O.some(
-    CoverageSnapshotEntry.make({
-      packageName: info.name,
-      baseline: yield* toCoveragePackageBaseline(repoRoot, info.absolutePath, path, summary),
-    })
-  );
+  return CoverageSnapshotEntry.makeOption({
+    packageName: info.name,
+    baseline: yield* toCoveragePackageBaseline(repoRoot, info.absolutePath, path, summary),
+  });
 });
 
 /**
@@ -2065,21 +2063,19 @@ export const coverageBaselineRowDelta: {
         onSome: (before) => !packageBaselineEquivalence(before, after),
       });
 
-    return O.some(
-      CoverageBaselineRowDelta.make({
-        present: pipe(
-          R.toEntries(current.packages),
-          A.filter(presentDiffers),
-          A.map(([packageName]) => packageName),
-          A.sort(Order.String)
-        ),
-        removed: pipe(
-          R.keys(previous.packages),
-          A.filter((packageName) => !R.has(current.packages, packageName)),
-          A.sort(Order.String)
-        ),
-      })
-    );
+    return CoverageBaselineRowDelta.makeOption({
+      present: pipe(
+        R.toEntries(current.packages),
+        A.filter(presentDiffers),
+        A.map(([packageName]) => packageName),
+        A.sort(Order.String)
+      ),
+      removed: pipe(
+        R.keys(previous.packages),
+        A.filter((packageName) => !R.has(current.packages, packageName)),
+        A.sort(Order.String)
+      ),
+    });
   }
 );
 
@@ -3290,20 +3286,18 @@ const raisedFileRowJudgements = (
     A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
     A.map((metric) =>
       fileMetricRegressed(metric, proposed, actual, epsilon)
-        ? O.some(
-            CoverageRaisedRowFailure.make({
-              packageName,
-              packagePath,
-              filePath: O.some(filePath),
-              metric,
-              base: base[metric],
-              proposed: proposed[metric],
-              actual: actual[metric],
-              baseUncovered: base.uncovered[metric],
-              proposedUncovered: proposed.uncovered[metric],
-              actualUncovered: actual.uncovered[metric],
-            })
-          )
+        ? CoverageRaisedRowFailure.makeOption({
+            packageName,
+            packagePath,
+            filePath: O.some(filePath),
+            metric,
+            base: base[metric],
+            proposed: proposed[metric],
+            actual: actual[metric],
+            baseUncovered: base.uncovered[metric],
+            proposedUncovered: proposed.uncovered[metric],
+            actualUncovered: actual.uncovered[metric],
+          })
         : O.none()
     )
   );
@@ -3320,20 +3314,18 @@ const raisedPackageRowJudgements = (
     A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
     A.map((metric) =>
       metricRegressed(metric, proposed, actual, epsilon)
-        ? O.some(
-            CoverageRaisedRowFailure.make({
-              packageName,
-              packagePath: proposed.path,
-              filePath: O.none(),
-              metric,
-              base: base[metric],
-              proposed: proposed[metric],
-              actual: actual[metric],
-              baseUncovered: base.uncovered[metric],
-              proposedUncovered: proposed.uncovered[metric],
-              actualUncovered: actual.uncovered[metric],
-            })
-          )
+        ? CoverageRaisedRowFailure.makeOption({
+            packageName,
+            packagePath: proposed.path,
+            filePath: O.none(),
+            metric,
+            base: base[metric],
+            proposed: proposed[metric],
+            actual: actual[metric],
+            baseUncovered: base.uncovered[metric],
+            proposedUncovered: proposed.uncovered[metric],
+            actualUncovered: actual.uncovered[metric],
+          })
         : O.none()
     )
   );
@@ -3356,20 +3348,18 @@ const raisedVanishedFileRowJudgements = (
     A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
     A.map((metric) =>
       proposed[metric] > ZERO_PERCENTAGE
-        ? O.some(
-            CoverageRaisedRowFailure.make({
-              packageName,
-              packagePath,
-              filePath: O.some(filePath),
-              metric,
-              base: base[metric],
-              proposed: proposed[metric],
-              actual: ZERO_PERCENTAGE,
-              baseUncovered: base.uncovered[metric],
-              proposedUncovered: proposed.uncovered[metric],
-              actualUncovered: S.Natural.make(0),
-            })
-          )
+        ? CoverageRaisedRowFailure.makeOption({
+            packageName,
+            packagePath,
+            filePath: O.some(filePath),
+            metric,
+            base: base[metric],
+            proposed: proposed[metric],
+            actual: ZERO_PERCENTAGE,
+            baseUncovered: base.uncovered[metric],
+            proposedUncovered: proposed.uncovered[metric],
+            actualUncovered: S.Natural.make(0),
+          })
         : O.none()
     )
   );
@@ -3568,12 +3558,10 @@ const coveragePackageRowRemoval = (
   proposedPackage: O.Option<CoveragePackageBaseline>
 ): O.Option<CoveragePackageRowRemovedFailure> =>
   O.isSome(context.baselines.proposed) && O.isSome(measured) && O.isNone(proposedPackage)
-    ? O.some(
-        CoveragePackageRowRemovedFailure.make({
-          packageName: context.packageName,
-          packagePath: context.basePath,
-        })
-      )
+    ? CoveragePackageRowRemovedFailure.makeOption({
+        packageName: context.packageName,
+        packagePath: context.basePath,
+      })
     : O.none();
 
 // A lowered metric is either a floor this run judges — the package judges

@@ -348,18 +348,16 @@ const arbitraryTestsEntryFromSourceFile = (
   // The row stays anchored at the first codec call of any kind so excluding
   // S.Unknown plumbing from the count never re-keys an existing entry.
   const line = sourceFile.getLineAndColumnAtPos(codecCalls[0]?.getStart() ?? sourceFile.getStart()).line;
-  return O.some(
-    SchemaFirstInventoryEntry.make({
-      file,
-      symbol: "schema-codec-tests",
-      kind: "schema-policy-advisory",
-      status: "advisory",
-      ruleId: "SFV4-arbitrary-tests",
-      line,
-      owner,
-      reason: `Schema-heavy test file has ${schemaCodecCalls.length} Schema codec assertions but no schema-derived property coverage.`,
-    })
-  );
+  return SchemaFirstInventoryEntry.makeOption({
+    file,
+    symbol: "schema-codec-tests",
+    kind: "schema-policy-advisory",
+    status: "advisory",
+    ruleId: "SFV4-arbitrary-tests",
+    line,
+    owner,
+    reason: `Schema-heavy test file has ${schemaCodecCalls.length} Schema codec assertions but no schema-derived property coverage.`,
+  });
 };
 
 /**

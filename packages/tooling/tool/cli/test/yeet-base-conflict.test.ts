@@ -155,7 +155,7 @@ const snapshot = (root: string, input: SnapshotInput) => {
       ...(input.mergeStateStatus === undefined ? {} : { mergeStateStatus: input.mergeStateStatus }),
       ...(input.mergeable === undefined ? {} : { mergeable: input.mergeable }),
     }),
-    mergeReady: O.some(YeetMergeReady.make({ ready: O.isNone(failing), criteria, failing })),
+    mergeReady: YeetMergeReady.makeOption({ ready: O.isNone(failing), criteria, failing }),
   });
 };
 

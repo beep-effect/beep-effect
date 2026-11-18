@@ -86,17 +86,15 @@ const caseReportListBody = Effect.fnUntraced(function* (
   return yield* encodeUnknownCaseReportList(
     CaseReportList.make({
       receipt: O.some(receipt),
-      pageInfo: O.some(
-        PageInfo.make({
-          number: O.some(pageNumber),
-          size: O.some(54),
-          totalPages: O.some(totalPages),
-          totalElements: O.some(totalPages),
-          numberOfElements: O.some(content.length),
-          first: O.some(pageNumber === 0),
-          last: O.some(pageNumber >= totalPages - 1),
-        })
-      ),
+      pageInfo: PageInfo.makeOption({
+        number: O.some(pageNumber),
+        size: O.some(54),
+        totalPages: O.some(totalPages),
+        totalElements: O.some(totalPages),
+        numberOfElements: O.some(content.length),
+        first: O.some(pageNumber === 0),
+        last: O.some(pageNumber >= totalPages - 1),
+      }),
       content: O.some(content),
     })
   );
@@ -117,17 +115,15 @@ const partyReportListBody = Effect.fnUntraced(function* (
   return yield* encodeUnknownPartyReportList(
     PartyReportList.make({
       receipt: O.some(receipt),
-      pageInfo: O.some(
-        PageInfo.make({
-          number: O.some(0),
-          size: O.some(54),
-          totalPages: O.some(1),
-          totalElements: O.some(content.length),
-          numberOfElements: O.some(content.length),
-          first: O.some(true),
-          last: O.some(true),
-        })
-      ),
+      pageInfo: PageInfo.makeOption({
+        number: O.some(0),
+        size: O.some(54),
+        totalPages: O.some(1),
+        totalElements: O.some(content.length),
+        numberOfElements: O.some(content.length),
+        first: O.some(true),
+        last: O.some(true),
+      }),
       content: O.some(content),
       masterCase: O.none(),
     })

@@ -1104,7 +1104,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
         yield* sessionStart(sessionA, "2026-10-09T10:00:00Z", current),
         yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
         yield* HookPulseV1.encodeJsonEffect(
-          HookPulseV1.make({ ...child, transcriptPath: O.some(Sha256Hex.make(Str.repeat(64)("e"))) })
+          HookPulseV1.make({ ...child, transcriptPath: Sha256Hex.makeOption(Str.repeat(64)("e")) })
         ),
       ]);
       const ledger = yield* HarnessLedgerService;
@@ -1162,11 +1162,11 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
                 "2026-10-09T10:00:01Z",
                 "SessionStart",
                 O.none(),
-                O.some(Sha256Hex.make(Str.repeat(64)("f")))
+                Sha256Hex.makeOption(Str.repeat(64)("f"))
               ),
               HookPulseV1.decodeJsonEffect
             )),
-            transcriptPath: O.some(Sha256Hex.make(Str.repeat(64)("e"))),
+            transcriptPath: Sha256Hex.makeOption(Str.repeat(64)("e")),
           })
         ),
         yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
@@ -1196,7 +1196,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger service", (it) => {
       const stateDir = yield* makeHookStateDir("harness-primary-conflict-");
       const pulseRow22 = yield* pulseRow(sessionA, "2026-10-09T10:00:00Z", "SessionStart", O.none(), O.some(current));
       const start = yield* HookPulseV1.decodeJsonEffect(pulseRow22);
-      const second = HookPulseV1.make({ ...start, transcriptPath: O.some(Sha256Hex.make(Str.repeat(64)("e"))) });
+      const second = HookPulseV1.make({ ...start, transcriptPath: Sha256Hex.makeOption(Str.repeat(64)("e")) });
       yield* writeShard(stateDir, "2026-10-09", sessionA, [
         yield* HookPulseV1.encodeJsonEffect(start),
         yield* pulse(sessionA, "2026-10-09T10:01:00Z", O.none()),
@@ -1812,7 +1812,7 @@ layer(TestLayer, { timeout: "30 seconds" })("harness-ledger prune window diagnos
       );
       const childRow = yield* HookPulseV1.decodeJsonEffect(childLine);
       const child = yield* HookPulseV1.encodeJsonEffect(
-        HookPulseV1.make({ ...childRow, agentId: O.some(Sha256Hex.make(Str.repeat(64)("9"))) })
+        HookPulseV1.make({ ...childRow, agentId: Sha256Hex.makeOption(Str.repeat(64)("9")) })
       );
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;

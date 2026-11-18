@@ -179,7 +179,7 @@ export class YeetSettleVerdict extends S.Opaque<YeetSettleVerdict, { readonly br
  * import * as O from "effect/Option"
  *
  * const census = YeetExpectedContextCensus.make({ matched: ["Lint"], unmatched: ["Test Unit"], pending: [], missing: [] })
- * const verdict = O.some(YeetSettleVerdict.make({ settled: false, reason: O.some("required-pending"), census, waitedMs: 1, timeoutMs: 1 }))
+ * const verdict = YeetSettleVerdict.makeOption({ settled: false, reason: O.some("required-pending"), census, waitedMs: 1, timeoutMs: 1 })
  * console.log(yeetSettleCensusRequires(verdict, "Test Unit (unit-a)")) // true
  * console.log(yeetSettleCensusRequires(verdict, "Vercel")) // false
  * ```

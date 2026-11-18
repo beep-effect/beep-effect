@@ -206,7 +206,7 @@ const pathsOverlap = (
 
 const skippedAuditSource = (sourceName: string, sourcePath: string, message: string): AuditSourceResult => [
   O.none(),
-  O.some(ImageAuditSkippedEntry.make({ message, sourceName, sourcePath })),
+  ImageAuditSkippedEntry.makeOption({ message, sourceName, sourcePath }),
 ];
 
 const collectAuditSource = Effect.fn("Files.collectImageAuditSource")(function* (
@@ -560,14 +560,12 @@ const candidateSimilarityPair = (left: ImageAuditEntry, right: ImageAuditEntry):
   if (perceptualDistance > 24) return O.none();
   const colorDistance = colorHashDistance(left.colorHash, right.colorHash);
   if (colorDistance > 0.42) return O.none();
-  return O.some(
-    ImageAuditSimilarityPair.make({
-      colorDistance,
-      perceptualDistance,
-      sourceNameA: left.sourceName,
-      sourceNameB: right.sourceName,
-    })
-  );
+  return ImageAuditSimilarityPair.makeOption({
+    colorDistance,
+    perceptualDistance,
+    sourceNameA: left.sourceName,
+    sourceNameB: right.sourceName,
+  });
 };
 
 const candidateSimilarityPairs = (entries: ReadonlyArray<ImageAuditEntry>): ReadonlyArray<ImageAuditSimilarityPair> =>

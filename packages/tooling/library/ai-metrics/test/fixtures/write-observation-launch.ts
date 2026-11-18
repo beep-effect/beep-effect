@@ -25,15 +25,13 @@ const program = Effect.gen(function* () {
   const base = yield* launchFixture(origin);
   const config = ObservationLaunchConfig.make({
     ...base,
-    launchHttp: O.some(
-      ObservationLaunchHttpPolicy.make({
-        routes: [
-          { routeId: Sha256Hex.make(Str.repeat(64)("c")), harness: "codex-cli", surface: "cli" },
-          { routeId: Sha256Hex.make(Str.repeat(64)("d")), harness: "chatgpt-desktop", surface: "desktop" },
-        ],
-        bodyTimeoutMillis: 1000,
-      })
-    ),
+    launchHttp: ObservationLaunchHttpPolicy.makeOption({
+      routes: [
+        { routeId: Sha256Hex.make(Str.repeat(64)("c")), harness: "codex-cli", surface: "cli" },
+        { routeId: Sha256Hex.make(Str.repeat(64)("d")), harness: "chatgpt-desktop", surface: "desktop" },
+      ],
+      bodyTimeoutMillis: 1000,
+    }),
     discovery:
       sourceDirectory === "-"
         ? O.none()

@@ -55,12 +55,10 @@ export const Sash = (props: {
       );
       props.graph.registry.set(
         props.state.ratioOverrideAtom,
-        O.some(
-          RatioOverride.make({
-            splitId: props.splitId,
-            ratio,
-          })
-        )
+        RatioOverride.makeOption({
+          splitId: props.splitId,
+          ratio,
+        })
       );
     };
     const up = (event: PointerEvent): void => {
@@ -98,16 +96,14 @@ export const Sash = (props: {
       node.setPointerCapture?.(event.pointerId);
       props.graph.registry.set(
         props.state.resizeAtom,
-        O.some(
-          SashDrag.cases[split.value.layout.axis].make({
-            splitId: props.splitId,
-            start: positionOf(event),
-            initialRatio: SplitLayout.ratio(split.value.layout),
-            extent,
-            moved: false,
-            pointerId: event.pointerId,
-          })
-        )
+        SashDrag.cases[split.value.layout.axis].makeOption({
+          splitId: props.splitId,
+          start: positionOf(event),
+          initialRatio: SplitLayout.ratio(split.value.layout),
+          extent,
+          moved: false,
+          pointerId: event.pointerId,
+        })
       );
     };
     node.addEventListener("pointerdown", down);

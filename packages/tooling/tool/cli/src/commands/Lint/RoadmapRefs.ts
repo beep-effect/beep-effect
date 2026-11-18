@@ -123,7 +123,7 @@ const phaseSnapshotNear = (
 const definitionReference = (lineText: string): O.Option<RoadmapReference> => {
   const definition = ROADMAP_LINK_DEFINITION_PATTERN.exec(lineText);
   return definition !== null && P.isString(definition[1])
-    ? O.some(RoadmapReference.make({ target: definition[1] }))
+    ? RoadmapReference.makeOption({ target: definition[1] })
     : O.none();
 };
 
@@ -178,16 +178,14 @@ const linkReference = (
   }
   // `lastLineNumber` is 1-based, so indexing the 0-based array with it lands on the next line.
   const phaseSnapshot = phaseSnapshotNear(Str.slice(link.end)(unit.text), A.get(lines, unit.lastLineNumber));
-  return O.some(
-    RoadmapReference.make({
-      target: link.destination,
-      ...pipe(
-        phaseSnapshot,
-        O.map(([done, total]) => ({ phaseDone: done, phaseTotal: total })),
-        O.getOrElse(() => ({}))
-      ),
-    })
-  );
+  return RoadmapReference.makeOption({
+    target: link.destination,
+    ...pipe(
+      phaseSnapshot,
+      O.map(([done, total]) => ({ phaseDone: done, phaseTotal: total })),
+      O.getOrElse(() => ({}))
+    ),
+  });
 };
 
 const unitReferences =

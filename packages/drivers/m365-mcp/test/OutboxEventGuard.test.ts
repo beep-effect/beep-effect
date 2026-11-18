@@ -35,7 +35,7 @@ const checkOf = (input: GuardCase): OutboxEventUpdateCheck =>
         A.map((attendee) =>
           GraphEventAttendee.make({
             emailAddress: attendee.hasAddress
-              ? O.some(GraphEmailAddress.make({ address: O.some("guest@example.test") }))
+              ? GraphEmailAddress.makeOption({ address: O.some("guest@example.test") })
               : O.none(),
             type: attendee.type,
           })

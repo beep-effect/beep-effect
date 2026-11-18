@@ -872,7 +872,7 @@ describe("proof shadow mode", () => {
       const failure =
         exitCode === 0
           ? O.none<QualityTaskFailed>()
-          : O.some(QualityTaskFailed.make({ label: "ci:check", command: "bunx turbo run check", exitCode }));
+          : QualityTaskFailed.makeOption({ label: "ci:check", command: "bunx turbo run check", exitCode });
       const outcome = (step: QualityTaskStep) => ({
         durationMs: 90_000,
         startedAt: startedAtIso,

@@ -792,17 +792,15 @@ const rawEventEnvelopes = Effect.fn("AiMetrics.rawEventEnvelopes")(function* ({
         return O.none<AiMetricsRawEventEnvelope>();
       }
 
-      return O.some(
-        AiMetricsRawEventEnvelope.make({
-          eventName: eventNameFor(sourceKind, decoded.value),
-          lineNumber: index + 1,
-          rawEventHash: yield* hashPrivateIdentifier(line, hashSalt),
-          sourceKind,
-          sourcePathHash,
-          sourceRole: attribution.sourceRole,
-          timestamp: decoded.value.timestamp,
-        })
-      );
+      return AiMetricsRawEventEnvelope.makeOption({
+        eventName: eventNameFor(sourceKind, decoded.value),
+        lineNumber: index + 1,
+        rawEventHash: yield* hashPrivateIdentifier(line, hashSalt),
+        sourceKind,
+        sourcePathHash,
+        sourceRole: attribution.sourceRole,
+        timestamp: decoded.value.timestamp,
+      });
     }),
     { concurrency: 16 }
   );

@@ -444,15 +444,13 @@ const replayClusterOf = (
   if (!admissible(base) || !A.every(texts, admissible)) {
     return O.none();
   }
-  return O.some(
-    ReplayCluster.make({
-      path: cluster.path,
-      base: baseOf(kept, bases, cluster.path, base),
-      writers: A.map(A.zip(cluster.writers, texts), ([writer, text]) =>
-        ReplayWriter.make({ commits: writer.commits, hunks: hunksOf(base, text) })
-      ),
-    })
-  );
+  return ReplayCluster.makeOption({
+    path: cluster.path,
+    base: baseOf(kept, bases, cluster.path, base),
+    writers: A.map(A.zip(cluster.writers, texts), ([writer, text]) =>
+      ReplayWriter.make({ commits: writer.commits, hunks: hunksOf(base, text) })
+    ),
+  });
 };
 
 const program = Effect.gen(function* () {

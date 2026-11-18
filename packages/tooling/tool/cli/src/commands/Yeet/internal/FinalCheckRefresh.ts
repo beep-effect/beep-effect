@@ -484,15 +484,13 @@ export const checkFinalCheckRefresh = Effect.fn("Yeet.checkFinalCheckRefresh")(f
   FileSystem.FileSystem | Path.Path | GitServices | SecureRandom.SecureRandom
 > {
   const malformed = (receiptHead: string, which: string) =>
-    O.some(
-      FinalCheckRefreshRefused.make({
-        receiptHead,
-        finalHead,
-        reason: "malformed-receipt",
-        ownChanges: [],
-        detail: `the final-check receipt for ${which} ${Str.slice(0, 12)(receiptHead)} exists but does not decode; re-run \`${YEET_FINAL_CHECK_COMMAND}\` instead of falling back to an older receipt`,
-      })
-    );
+    FinalCheckRefreshRefused.makeOption({
+      receiptHead,
+      finalHead,
+      reason: "malformed-receipt",
+      ownChanges: [],
+      detail: `the final-check receipt for ${which} ${Str.slice(0, 12)(receiptHead)} exists but does not decode; re-run \`${YEET_FINAL_CHECK_COMMAND}\` instead of falling back to an older receipt`,
+    });
   // The rule covers only a head with no receipt of its own. A decodable one
   // is judged on its own (none here); a file that is there but unreadable must
   // refuse, never fall through to an ancestor.
@@ -512,15 +510,13 @@ export const checkFinalCheckRefresh = Effect.fn("Yeet.checkFinalCheckRefresh")(f
   // record: a receipt copied or renamed under another sha is refused here.
   const notPassing = finalCheckRefusal(receipt, receiptHead.value);
   if (O.isSome(notPassing)) {
-    return O.some(
-      FinalCheckRefreshRefused.make({
-        receiptHead: receiptHead.value,
-        finalHead,
-        reason: "ancestor-receipt-not-passing",
-        ownChanges: [],
-        detail: `the nearest ancestor receipt does not pass (${notPassing.value}); an older passing receipt never stands in for it`,
-      })
-    );
+    return FinalCheckRefreshRefused.makeOption({
+      receiptHead: receiptHead.value,
+      finalHead,
+      reason: "ancestor-receipt-not-passing",
+      ownChanges: [],
+      detail: `the nearest ancestor receipt does not pass (${notPassing.value}); an older passing receipt never stands in for it`,
+    });
   }
   const facts = yield* collectFinalCheckRefreshFacts(repoRoot, base, receipt.value, finalHead);
   return O.some(decideFinalCheckRefresh(facts));
@@ -553,7 +549,7 @@ const rewriteReceiptCandidates = Effect.fn("Yeet.rewriteReceiptCandidates")(func
       if (head === finalHead || (yield* isAncestor(repoRoot, head, finalHead))) return O.none();
       const stat = yield* fs.stat(path.join(directory, entry));
       const mtime = yield* Effect.fromOption(stat.mtime);
-      return O.some(RewriteReceiptCandidate.make({ head, mtime: DateTime.toEpochMillis(DateTime.makeUnsafe(mtime)) }));
+      return RewriteReceiptCandidate.makeOption({ head, mtime: DateTime.toEpochMillis(DateTime.makeUnsafe(mtime)) });
     }),
     { concurrency: 1 }
   );

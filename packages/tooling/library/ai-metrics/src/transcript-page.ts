@@ -526,15 +526,13 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
         const occurrenceStart = progress.discarding ? progress.discardStart : start + local;
         const occurrenceId = yield* hash(`source-occurrence/v1:${generationId}:${occurrenceStart}`);
         if (progress.discarding || boundary.length > input.maxLineBytes)
-          return O.some(
-            TranscriptFrame.cases.Rejected.make({
-              occurrenceId,
-              start: occurrenceStart,
-              end: start + boundary.end,
-              reason: "line-too-long",
-              complete: boundary.complete,
-            })
-          );
+          return TranscriptFrame.cases.Rejected.makeOption({
+            occurrenceId,
+            start: occurrenceStart,
+            end: start + boundary.end,
+            reason: "line-too-long",
+            complete: boundary.complete,
+          });
         if (!boundary.complete) return O.none();
         const completeFrame2 = yield* completeFrame(
           bytes.subarray(local, boundary.end),

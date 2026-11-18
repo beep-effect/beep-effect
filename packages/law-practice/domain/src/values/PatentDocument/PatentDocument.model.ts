@@ -345,16 +345,14 @@ export const inspectPatentClaimDependencies = (
     const expectedClaimNumber = PosInt.make(Num.increment(index));
     return A.getSomes([
       A.some(A.take(claims, index), (previous) => Num.Equivalence(previous.claimNumber, claim.claimNumber))
-        ? O.some(PatentClaimDependencyIssue.cases["duplicate-claim-number"].make({ claimNumber: claim.claimNumber }))
+        ? PatentClaimDependencyIssue.cases["duplicate-claim-number"].makeOption({ claimNumber: claim.claimNumber })
         : O.none(),
       Num.Equivalence(claim.claimNumber, expectedClaimNumber)
         ? O.none()
-        : O.some(
-            PatentClaimDependencyIssue.cases["nonconsecutive-claim-number"].make({
-              actualClaimNumber: claim.claimNumber,
-              expectedClaimNumber,
-            })
-          ),
+        : PatentClaimDependencyIssue.cases["nonconsecutive-claim-number"].makeOption({
+            actualClaimNumber: claim.claimNumber,
+            expectedClaimNumber,
+          }),
     ]);
   });
 
@@ -362,23 +360,19 @@ export const inspectPatentClaimDependencies = (
     A.flatMap(claimReferencesOf(claim), (parentClaimNumber) =>
       A.getSomes([
         O.isNone(claimByNumber(claims, parentClaimNumber))
-          ? O.some(
-              PatentClaimDependencyIssue.cases["missing-parent"].make({
-                claimNumber: claim.claimNumber,
-                parentClaimNumber,
-              })
-            )
+          ? PatentClaimDependencyIssue.cases["missing-parent"].makeOption({
+              claimNumber: claim.claimNumber,
+              parentClaimNumber,
+            })
           : O.none(),
         Num.Equivalence(claim.claimNumber, parentClaimNumber)
-          ? O.some(PatentClaimDependencyIssue.cases["self-reference"].make({ claimNumber: claim.claimNumber }))
+          ? PatentClaimDependencyIssue.cases["self-reference"].makeOption({ claimNumber: claim.claimNumber })
           : O.none(),
         Num.isGreaterThanOrEqualTo(parentClaimNumber, claim.claimNumber)
-          ? O.some(
-              PatentClaimDependencyIssue.cases["forward-reference"].make({
-                claimNumber: claim.claimNumber,
-                parentClaimNumber,
-              })
-            )
+          ? PatentClaimDependencyIssue.cases["forward-reference"].makeOption({
+              claimNumber: claim.claimNumber,
+              parentClaimNumber,
+            })
           : O.none(),
       ])
     )
@@ -523,7 +517,7 @@ const inspectPatentApplicationSections = (
     );
     return A.getSomes([
       A.some(A.take(sections, index), (candidate) => Eq.equals(candidate.role, section.role))
-        ? O.some(PatentApplicationSectionIssue.cases["duplicate-section-role"].make({ role: section.role }))
+        ? PatentApplicationSectionIssue.cases["duplicate-section-role"].makeOption({ role: section.role })
         : O.none(),
       pipe(
         previous,

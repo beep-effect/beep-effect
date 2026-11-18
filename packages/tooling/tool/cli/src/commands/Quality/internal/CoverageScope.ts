@@ -1572,7 +1572,7 @@ const measurableBaselineRowOwners = (
  * const scope = planCoverageAffectedScopeWithBaseline(
  *   [owner],
  *   ["standards/coverage.regression-baseline.jsonc"],
- *   O.some(CoverageBaselineRowDelta.make({ present: ["@beep/schema"], removed: [] }))
+ *   CoverageBaselineRowDelta.makeOption({ present: ["@beep/schema"], removed: [] })
  * )
  * console.log(scope._tag) // "selected"
  * ```

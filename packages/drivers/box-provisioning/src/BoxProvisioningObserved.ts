@@ -238,7 +238,7 @@ export type BoxDiscovery = typeof BoxDiscovery.Type;
  * const folder = BoxObservedFolder.make({
  *   etag: O.none(),
  *   name: "Workspace",
- *   parentProviderId: O.some(BoxProviderId.make("0")),
+ *   parentProviderId: BoxProviderId.makeOption("0"),
  *   providerId: BoxProviderId.make("100")
  * })
  * console.log(folder.providerId)

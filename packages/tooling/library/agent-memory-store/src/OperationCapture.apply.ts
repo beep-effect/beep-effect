@@ -53,7 +53,7 @@ interface Working {
 }
 
 const refuse = (nodeId: NodeId, reason: ApplyRefusal): O.Option<OperationApplyError> =>
-  O.some(OperationApplyError.make({ nodeId, reason }));
+  OperationApplyError.makeOption({ nodeId, reason });
 
 const ok: O.Option<OperationApplyError> = O.none();
 

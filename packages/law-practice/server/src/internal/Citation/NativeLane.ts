@@ -216,9 +216,9 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     )
   );
   const refused = (authorized: () => boolean) => {
-    if (closed) return O.some(CitationNativeLaneFailure.make({ reason: "closed" }));
-    if (poisoned) return O.some(CitationNativeLaneFailure.make({ reason: "quarantined" }));
-    if (!authorized()) return O.some(CitationNativeLaneFailure.make({ reason: "closed" }));
+    if (closed) return CitationNativeLaneFailure.makeOption({ reason: "closed" });
+    if (poisoned) return CitationNativeLaneFailure.makeOption({ reason: "quarantined" });
+    if (!authorized()) return CitationNativeLaneFailure.makeOption({ reason: "closed" });
     return O.none<CitationNativeLaneFailure>();
   };
   const ensureAuthority = Effect.fnUntraced(function* (authorized: () => boolean) {

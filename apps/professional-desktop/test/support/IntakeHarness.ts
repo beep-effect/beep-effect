@@ -2,7 +2,6 @@ import { WorkspaceVaultRootPath } from "@beep/workspace-domain/entities/Workspac
 import { WorkspaceVaultConfig } from "@beep/workspace-use-cases/public";
 import { createEffectActor } from "@xstate/effect";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as Queue from "effect/Queue";
 import * as Reactivity from "effect/reactivity/Reactivity";
 import { DesktopIntakeClient } from "@/intake/DesktopIntake.client";
@@ -11,6 +10,7 @@ import { DocumentIntakeInput } from "@/intake/DocumentIntake.models";
 import { DEFAULT_PROFESSIONAL_WORKSPACE_ID } from "@/workspace/ProfessionalWorkspace";
 import type { DocumentIntakeActionError } from "@beep/documents-use-cases/public";
 import type { WorkspaceVaultActionError } from "@beep/workspace-use-cases/public";
+import type * as O from "effect/Option";
 import type { VaultSelectionOutcome } from "@/intake/DocumentIntake.models";
 import type { VaultDirectoryPickError } from "@/intake/VaultDirectoryPicker.rpc";
 
@@ -20,7 +20,7 @@ export const selectedPath = "/tmp/professional-desktop-vault";
 
 export const configuredVault = WorkspaceVaultConfig.make({
   workspaceId,
-  vaultRootPath: O.some(WorkspaceVaultRootPath.make(selectedPath)),
+  vaultRootPath: WorkspaceVaultRootPath.makeOption(selectedPath),
 });
 
 export const unconfiguredVault = WorkspaceVaultConfig.make({ workspaceId });

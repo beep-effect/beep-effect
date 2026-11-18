@@ -572,13 +572,11 @@ const commandOccurrence = (
   documentId: string
 ): O.Option<KnowledgeCommandOccurrence> =>
   isKnowledgeCommandSpan(inline.span)
-    ? O.some(
-        KnowledgeCommandOccurrence.make({
-          documentId,
-          location: findingLocation(documentPath, lineNumber, inline.column),
-          words: knowledgeCommandWords(inline.span),
-        })
-      )
+    ? KnowledgeCommandOccurrence.makeOption({
+        documentId,
+        location: findingLocation(documentPath, lineNumber, inline.column),
+        words: knowledgeCommandWords(inline.span),
+      })
     : O.none();
 
 /**
@@ -750,16 +748,14 @@ const indexCandidate = Effect.fn("Knowledge.indexCandidate")(function* (
   }
   const expectedDigest = yield* sha256(bytes.expected);
   const archivedDigest = yield* sha256(bytes.archived);
-  return O.some(
-    KnowledgeFindingCandidate.make({
-      kind: "index-drift",
-      documentId,
-      subject: `producer://goals/index:${expectedDigest}:${archivedDigest}`,
-      location: KnowledgeFindingLocation.make({ path: INDEX_PATH }),
-      message: "goals/INDEX.md differs from the current-checkout projection of the archive data.",
-      remediation: "Run `bun run beep goals index --write` and commit the regenerated index.",
-    })
-  );
+  return KnowledgeFindingCandidate.makeOption({
+    kind: "index-drift",
+    documentId,
+    subject: `producer://goals/index:${expectedDigest}:${archivedDigest}`,
+    location: KnowledgeFindingLocation.make({ path: INDEX_PATH }),
+    message: "goals/INDEX.md differs from the current-checkout projection of the archive data.",
+    remediation: "Run `bun run beep goals index --write` and commit the regenerated index.",
+  });
 });
 
 const documentCandidatesForSide = Effect.fn("Knowledge.documentCandidatesForSide")(function* (
@@ -1444,8 +1440,8 @@ const commandProbeResultFromLine = (line: string): O.Option<KnowledgeCommandProb
   const canonicalPath = A.drop(fields, 1);
   return O.flatMap(A.head(fields), (status) =>
     Match.value(status).pipe(
-      Match.when("resolved", () => O.some(KnowledgeCommandResolved.make({ canonicalPath }))),
-      Match.when("unknown", () => O.some(KnowledgeCommandUnknown.make({ canonicalPath }))),
+      Match.when("resolved", () => KnowledgeCommandResolved.makeOption({ canonicalPath })),
+      Match.when("unknown", () => KnowledgeCommandUnknown.makeOption({ canonicalPath })),
       Match.orElse(O.none<KnowledgeCommandProbeResult>)
     )
   );

@@ -66,12 +66,10 @@ import type * as Fiber from "effect/Fiber";
 export const prepareComposerDocumentSafetyGate = (document: Md.Document): O.Option<ComposerSafetyRefusal> => {
   const issues = documentSafetyIssues(document);
   return A.isReadonlyArrayNonEmpty(issues)
-    ? O.some(
-        ComposerSafetyRefusal.make({
-          issueCount: A.length(issues),
-          message: unsafeDocumentMessage(issues),
-        })
-      )
+    ? ComposerSafetyRefusal.makeOption({
+        issueCount: A.length(issues),
+        message: unsafeDocumentMessage(issues),
+      })
     : O.none();
 };
 
