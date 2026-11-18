@@ -18,6 +18,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -25,6 +26,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { vi } from "vitest";
+import { currentCheckoutInventory } from "./support/CheckoutSkip.ts";
 import { fixturePackageFiles, policyCliFixtureFiles, writeFixtureFiles } from "./support/PolicyCliFixture.ts";
 import type {
   canUseTurboCacheSecretSession,
@@ -865,17 +867,22 @@ describe("executed lint workers", { concurrent: false }, () => {
   it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect(
       "executes deprecated APIs on the ciops lab package",
-      Effect.fnUntraced(function* () {
-        const root = yield* findRepoRoot();
-        const result = yield* StepExec.runCaptured({
-          command: "bun",
-          args: ["run", `${root}/${prefix}/src/bin.ts`, "--", "lint", "deprecated-apis", "--package", "."],
-          cwd: `${root}/apps/labs/ciops`,
-          env: R.filter(process.env, (_, key) => !Str.startsWith("VITEST")(key)),
-          extendEnv: false,
-        });
-        expect(result.exitCode, result.output).toBe(0);
-      }),
+      () =>
+        Effect.gen(function* () {
+          // The lab package is found by name, wherever it lives. It is not a product leaf, so a
+          // checkout without @beep/ciops fails here rather than skipping.
+          const inventory = yield* currentCheckoutInventory;
+          const ciops = yield* Effect.fromOption(HashMap.get(inventory.workspaces, "@beep/ciops"));
+          const root = yield* findRepoRoot();
+          const result = yield* StepExec.runCaptured({
+            command: "bun",
+            args: ["run", `${root}/${prefix}/src/bin.ts`, "--", "lint", "deprecated-apis", "--package", "."],
+            cwd: `${root}/${ciops}`,
+            env: R.filter(process.env, (_, key) => !Str.startsWith("VITEST")(key)),
+            extendEnv: false,
+          });
+          expect(result.exitCode, result.output).toBe(0);
+        }),
       EXECUTED_WORKER_TIMEOUT_MILLIS
     );
   });

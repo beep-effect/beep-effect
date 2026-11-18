@@ -3,6 +3,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { workspaceDirectories } from "@beep/repo-cli/test/SharedInternals";
+import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -18,6 +19,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { currentCheckoutInventory, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 
 // Quality audit K3 and M10 (2026-11-02): package prose never enters a build, check, test or transit
 // hash, and test sources stay out of `build` and `transit`, so neither cascades through `^build` or
@@ -27,6 +29,21 @@ const $I = $RepoCliId.create("test/package-role-turbo-inputs");
 
 const PROSE = ["!README.md", "!CHANGELOG.md", "!LICENSE"];
 const TESTS = "!test/**";
+// Workspaces whose build program compiles their tests.
+const TEST_COMPILING_WORKSPACES = [
+  "@beep/api-docs",
+  "@beep/ciops",
+  "@beep/docket-intake",
+  "@beep/lane-cockpit",
+  "@beep/oip-web",
+  "@beep/practice-claude-mod",
+  "@beep/practice-identify",
+  "@beep/practice-m365-contacts",
+  "@beep/practice-mail-tagging",
+  "@beep/practice-review-hub",
+  "@beep/practice-setup",
+  "@beep/todox",
+];
 const EXTENDS = "$TURBO_EXTENDS$";
 const Strings = S.Array(S.String);
 
@@ -168,9 +185,6 @@ describe("package role task inputs", () => {
           }),
           { concurrency: 1 }
         );
-        const compiling = A.filter(rows, ([, compiles]) => compiles);
-        // The noEmit apps typecheck `tsconfig.check.json`, which includes tests; the Next apps typecheck theirs.
-        expect(A.length(compiling)).toBeGreaterThanOrEqual(11);
         for (const [directory, compiles, inputs] of rows) {
           expect(A.contains(inputs, TESTS), directory).toBe(!compiles);
           // An override restates the root boundary rather than diverging from it.
@@ -182,6 +196,24 @@ describe("package role task inputs", () => {
       }),
       { timeout: 60_000 }
     );
+
+    // The noEmit apps typecheck `tsconfig.check.json`, which includes tests; the Next apps typecheck
+    // theirs. Each one must be detected, so the per-workspace boundary above is never proved over an
+    // empty compiling set. Only a declared product leaf the checkout pruned skips
+    // (@beep/repo-cli-kit/ProductLeaves); any other missing name fails.
+    for (const name of TEST_COMPILING_WORKSPACES) {
+      it.effect(`detects that the build program of ${name} compiles its tests`, (ctx) =>
+        Effect.gen(function* () {
+          const inventory = yield* currentCheckoutInventory;
+          skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject(name)]);
+          const { repo } = yield* readRoot();
+          const directories = yield* workspaceDirectories(repo);
+          const directory = yield* Effect.fromOption(HashMap.get(directories, name));
+          const compiles = yield* buildCompilesTests(directory);
+          expect(compiles, name).toBe(true);
+        })
+      );
+    }
   });
 
   it.layer(PlatformLayer, { timeout: "30 seconds" })("native Turbo fixture", (it) => {

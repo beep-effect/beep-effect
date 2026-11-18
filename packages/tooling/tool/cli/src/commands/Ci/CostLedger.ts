@@ -503,7 +503,10 @@ const withMissing = (note: string, missing: ReadonlyArray<string>): string =>
 
 // Sources this fold does not join yet, each with the lever that would supply it.
 const UNJOINED_SOURCES: ReadonlyArray<readonly [CiLedgerSourceKind, string]> = [
-  ["turbo-tasks", "per-task hosted Turbo rows are MEAS-06, still open: unit-results.json is uploaded only on failure"],
+  [
+    "turbo-tasks",
+    "per-task hosted Turbo rows are not joined: Test Unit timings (MEAS-06) are a per-partition artifact the fold does not read yet",
+  ],
   ["final-check", "local final-check attempts (MEAS-07 journals) are not joined by this fold"],
   ["economics", "local Yeet attempt lanes are not joined by this fold"],
   [

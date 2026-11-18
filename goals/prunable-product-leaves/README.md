@@ -31,12 +31,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement, seam 1 next (P0 Research done 2026-11-17).
+P1 Implement: seam 1 done, seam 2 next.
 
 ## Latest Evidence
 
 - 2026-11-17: coupling audit of `origin/main`,
   [`research/2026-11-17-product-leaf-couplings.md`](research/2026-11-17-product-leaf-couplings.md).
+- 2026-11-17: seam 1 surfaces, helper and pruned run,
+  [`research/2026-11-17-seam-1-surfaces.md`](research/2026-11-17-seam-1-surfaces.md).
 
 ## Notes
 
