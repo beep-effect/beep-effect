@@ -77,6 +77,55 @@ export class PlanEntry extends S.Opaque<PlanEntry, { readonly brand: unique symb
   )
 ) {}
 
+/**
+ * A resource line whose action word the gate does not know: kept by name and
+ * word only, never the rest of the line, so the plan check can refuse it
+ * instead of skipping it.
+ *
+ * **Example** (Decode an unreadable line)
+ *
+ * ```ts
+ * import { UnreadableResourceLine } from "@beep/infra-cost-controls/PlanCheck"
+ * import * as S from "effect/Schema"
+ *
+ * const line = S.decodeUnknownSync(UnreadableResourceLine)({ fqn: "MonthlyBudget", action: "migrate" })
+ * console.log(line.action) // "migrate"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class UnreadableResourceLine extends S.Opaque<UnreadableResourceLine, { readonly brand: unique symbol }>()(
+  S.Struct({ fqn: S.String, action: S.String }).pipe(
+    $I.annoteSchema("UnreadableResourceLine", {
+      description: "A plan resource line whose action word is not a known plan action.",
+    })
+  )
+) {}
+
+/**
+ * A parsed plan: the readable resource entries and every resource line whose
+ * action could not be read. The gate refuses a plan with any unreadable line.
+ *
+ * **Example** (Decode a parsed plan)
+ *
+ * ```ts
+ * import { PlanLog } from "@beep/infra-cost-controls/PlanCheck"
+ * import * as S from "effect/Schema"
+ *
+ * const log = S.decodeUnknownSync(PlanLog)({ entries: [], unreadable: [] })
+ * console.log(log.entries.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PlanLog extends S.Opaque<PlanLog, { readonly brand: unique symbol }>()(
+  S.Struct({ entries: S.Array(PlanEntry), unreadable: S.Array(UnreadableResourceLine) }).pipe(
+    $I.annoteSchema("PlanLog", { description: "A parsed plan, readable entries and unreadable resource lines." })
+  )
+) {}
+
 const TagStatus = S.Struct({ TagKey: S.String, Status: S.String });
 const ComputeOptimizerStatus = S.Struct({ status: S.String, memberAccountsEnrolled: S.optionalKey(S.Boolean) });
 const HubItem = S.Struct({ status: S.String });
@@ -233,6 +282,7 @@ export const ViolationReason = LiteralKit([
   "singleton-property-change",
   "live-setting-differs",
   "unexpected-resource",
+  "unreadable-action",
 ]).pipe($I.annoteSchema("ViolationReason", { description: "Why the pre-deploy gate refuses a plan." }));
 
 /**
@@ -323,47 +373,85 @@ const safePropertyName = (raw: string): string => {
 const clean = (line: string) => pipe(line, Str.replace(ansi, ""), Str.replace(logPrefix, ""));
 const isPlanAction = S.is(PlanAction);
 
+// Add a change line's property name (never its value) to the last entry.
+const withChangedProperty = (entries: ReadonlyArray<PlanEntry>, line: string): ReadonlyArray<PlanEntry> => {
+  const property = safePropertyName(changeLine.exec(line)?.[2] ?? "");
+  return pipe(
+    A.last(entries),
+    O.filter(() => Str.isNonEmpty(property)),
+    O.match({
+      onNone: () => entries,
+      onSome: (last) =>
+        A.append(
+          A.dropRight(entries, 1),
+          PlanEntry.make({ ...last, changedProperties: A.dedupe(A.append(last.changedProperties, property)) })
+        ),
+    })
+  );
+};
+
+interface ParseState {
+  readonly entries: ReadonlyArray<PlanEntry>;
+  // False after an unreadable resource line: its change lines belong to no readable entry.
+  readonly latestReadable: boolean;
+  readonly unreadable: ReadonlyArray<UnreadableResourceLine>;
+}
+
+const emptyParse: ParseState = { entries: [], unreadable: [], latestReadable: true };
+
 /**
  * Parse a detailed `alchemy plan` log (`--detailed`, pretty or CI log
  * format) into one entry per resource with the names of the properties it
  * changes. Values are dropped on the way in.
+ *
+ * **Details**
+ *
+ * A `[Fqn] word` resource line whose word is not a {@link PlanAction} is
+ * not skipped: it lands in `unreadable` by name and word only, and
+ * {@link checkPlan} refuses the plan on it. Its change lines are attributed to no
+ * entry, so they never land on the readable resource before it. Lines that are not resource
+ * lines (the summary, `Done:` and other log output) never match.
  *
  * **Example** (Parse one adopted resource)
  *
  * ```ts
  * import { parsePlanLog } from "@beep/infra-cost-controls/PlanCheck"
  *
- * const entries = parsePlanLog("[AppTag] adopted\n  no declared property changes\n")
- * console.log(entries[0]?.action) // "adopted"
+ * const log = parsePlanLog("[AppTag] adopted\n  no declared property changes\n")
+ * console.log(log.entries[0]?.action) // "adopted"
  * ```
  *
  * @param log - The plan output, as written by `alchemy plan --detailed`.
- * @returns One entry per resource line, in log order.
+ * @returns The readable entries in log order and every unreadable resource line.
  * @category validation
  * @since 0.0.0
  */
-export const parsePlanLog = (log: string): ReadonlyArray<PlanEntry> =>
-  A.reduce(pipe(log, Str.split("\n"), A.map(clean)), A.empty<PlanEntry>(), (entries, line) => {
-    const resource = resourceLine.exec(line);
-    const action = resource?.[2];
-    if (resource !== null && action !== undefined && isPlanAction(action)) {
-      return A.append(entries, PlanEntry.make({ fqn: resource[1] ?? "", action, changedProperties: [] }));
+export const parsePlanLog = (log: string): PlanLog => {
+  const parsed = A.reduce(
+    pipe(log, Str.split("\n"), A.map(clean)),
+    emptyParse,
+    (state: ParseState, line): ParseState => {
+      const resource = resourceLine.exec(line);
+      const fqn = resource?.[1];
+      const action = resource?.[2];
+      if (fqn !== undefined && action !== undefined) {
+        return isPlanAction(action)
+          ? {
+              ...state,
+              entries: A.append(state.entries, PlanEntry.make({ fqn, action, changedProperties: [] })),
+              latestReadable: true,
+            }
+          : {
+              ...state,
+              unreadable: A.append(state.unreadable, UnreadableResourceLine.make({ fqn, action })),
+              latestReadable: false,
+            };
+      }
+      return state.latestReadable ? { ...state, entries: withChangedProperty(state.entries, line) } : state;
     }
-    const change = changeLine.exec(line);
-    const property = safePropertyName(change?.[2] ?? "");
-    return pipe(
-      A.last(entries),
-      O.filter(() => Str.isNonEmpty(property)),
-      O.match({
-        onNone: () => entries,
-        onSome: (last) =>
-          A.append(
-            A.dropRight(entries, 1),
-            PlanEntry.make({ ...last, changedProperties: A.dedupe(A.append(last.changedProperties, property)) })
-          ),
-      })
-    );
-  });
+  );
+  return PlanLog.make({ entries: parsed.entries, unreadable: parsed.unreadable });
+};
 
 /**
  * The one resource the gate lets a plan delete: the stack's own anomaly email
@@ -454,9 +542,13 @@ const liveViolations = (live: LiveSettings): ReadonlyArray<PlanViolation> => [
 ];
 
 // Every reason the plan may not deploy; empty when it may.
-const planCheckViolations = (entries: ReadonlyArray<PlanEntry>, live: LiveSettings): ReadonlyArray<PlanViolation> => [
-  ...planViolations(entries),
-  ...missingSingletons(entries),
+const unreadableViolations = (unreadable: ReadonlyArray<UnreadableResourceLine>): ReadonlyArray<PlanViolation> =>
+  A.map(unreadable, (line) => violation(line.fqn, "unreadable-action", line.action));
+
+const planCheckViolations = (log: PlanLog, live: LiveSettings): ReadonlyArray<PlanViolation> => [
+  ...unreadableViolations(log.unreadable),
+  ...planViolations(log.entries),
+  ...missingSingletons(log.entries),
   ...liveViolations(live),
 ];
 
@@ -467,7 +559,7 @@ const planCheckViolations = (entries: ReadonlyArray<PlanEntry>, live: LiveSettin
  * **Example** (Gate a plan)
  *
  * ```ts
- * import { LiveSettings, checkPlan } from "@beep/infra-cost-controls/PlanCheck"
+ * import { LiveSettings, PlanLog, checkPlan } from "@beep/infra-cost-controls/PlanCheck"
  * import * as Effect from "effect/Effect"
  *
  * const live = LiveSettings.make({
@@ -476,26 +568,23 @@ const planCheckViolations = (entries: ReadonlyArray<PlanEntry>, live: LiveSettin
  *   costOptimizationHub: { items: [] },
  *   anomalyMonitors: [],
  * })
- * const exit = Effect.runSyncExit(checkPlan([], live))
+ * const exit = Effect.runSyncExit(checkPlan(PlanLog.make({ entries: [], unreadable: [] }), live))
  * console.log(exit._tag) // "Failure"
  * ```
  *
- * @param entries - The parsed plan.
+ * @param log - The parsed plan.
  * @param live - The live values of the nine adopted settings.
  * @returns The checked entries.
  * @category validation
  * @since 0.0.0
  */
-export const checkPlan = Effect.fn("CostControls.checkPlan")(function* (
-  entries: ReadonlyArray<PlanEntry>,
-  live: LiveSettings
-) {
-  const violations = planCheckViolations(entries, live);
+export const checkPlan = Effect.fn("CostControls.checkPlan")(function* (log: PlanLog, live: LiveSettings) {
+  const violations = planCheckViolations(log, live);
   if (A.isReadonlyArrayNonEmpty(violations)) {
     return yield* PlanCheckFailed.make({
       violations,
       escalate: A.some(violations, (v) => ViolationReason.is["unexpected-resource"](v.reason)),
     });
   }
-  return entries;
+  return log.entries;
 });
