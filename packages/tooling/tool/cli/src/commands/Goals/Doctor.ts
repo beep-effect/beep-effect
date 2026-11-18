@@ -33,7 +33,9 @@
 import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
+import { isCheckoutPathPruned, loadCheckoutInventory } from "@beep/repo-cli-kit/CheckoutSubject";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
+import { productLeaves } from "@beep/repo-cli-kit/ProductLeaves";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import { A, O, pipe, Str, thunkEmptyStr, thunkFalse } from "@beep/utils";
@@ -224,7 +226,9 @@ const GoalDoctorSeverity = LiteralKit(["blocking", "advisory"]).pipe(
  * **Details**
  *
  * `key` is the stable identity used for baseline membership; it never embeds
- * volatile detail so a finding keeps its identity across runs.
+ * volatile detail so a finding keeps its identity across runs. `target` is
+ * the repository path a link finding points at, so a link into a subject the
+ * checkout pruned can be skipped.
  *
  * **Example** (Make a doctor finding)
  *
@@ -251,9 +255,11 @@ export class GoalDoctorFinding extends S.Opaque<GoalDoctorFinding, { readonly br
     severity: GoalDoctorSeverity,
     key: S.String,
     message: S.String,
+    target: S.optionalKey(S.String),
   }).pipe(
     $I.annoteSchema("GoalDoctorFinding", {
-      description: "One goals-doctor finding with a stable baseline-membership key.",
+      description:
+        "One goals-doctor finding with a stable baseline-membership key, and the repository path a link finding points at.",
     })
   )
 ) {}
@@ -1048,12 +1054,15 @@ const explorationBacklinkFindings = Effect.fn("Goals.explorationBacklinkFindings
       ),
     absent: () =>
       A.of(
-        finding(
-          record.slug,
-          "exploration-backlink-missing",
-          "advisory",
-          `provenance.exploration "${exploration.value}" does not exist in the working tree.`
-        )
+        GoalDoctorFinding.make({
+          ...finding(
+            record.slug,
+            "exploration-backlink-missing",
+            "advisory",
+            `provenance.exploration "${exploration.value}" does not exist in the working tree.`
+          ),
+          target: exploration.value,
+        })
       ),
   });
 });
@@ -1763,6 +1772,21 @@ const loadDoctorBaselineKeys = Effect.fn("Goals.loadDoctorBaselineKeys")(functio
   );
 });
 
+// The findings the checkout's prunes skipped, counted and named; nothing when there are none.
+const printSkippedFindings = Effect.fn("Goals.printSkippedFindings")(function* (
+  skipped: ReadonlyArray<GoalDoctorFinding>
+) {
+  if (A.isReadonlyArrayEmpty(skipped)) {
+    return;
+  }
+  yield* Console.log(`[goals:doctor] skipped_pruned=${A.length(skipped)}`);
+  yield* Effect.forEach(
+    skipped,
+    (item) => Console.log(`[goals:doctor] skipped ${item.key}: pruned from this checkout`),
+    { concurrency: 1, discard: true }
+  );
+});
+
 // Prints a header and its lines on stderr, or nothing when there are no lines.
 const printErrorSection = Effect.fn("Goals.printErrorSection")(function* (
   header: string,
@@ -1795,9 +1819,39 @@ const printNonFatalFindings = Effect.fn("Goals.printNonFatalFindings")(function*
   );
 });
 
+// goals/prunable-product-leaves, seam 1b: a finding of a packet the checkout pruned or owns, or a
+// link finding whose target it pruned, does not apply to this checkout. It is skipped and counted.
+// The inventory is read only when there is a finding to judge, so a clean run reads nothing more.
+const withoutPrunedFindings = Effect.fn("Goals.withoutPrunedFindings")(function* (
+  found: ReadonlyArray<readonly [GoalDoctorFinding, string]>
+) {
+  if (A.isReadonlyArrayEmpty(found)) {
+    return { allFindings: A.empty<GoalDoctorFinding>(), skipped: A.empty<GoalDoctorFinding>() };
+  }
+  const path = yield* Path.Path;
+  const inventory = yield* loadCheckoutInventory(path.resolve("."), productLeaves);
+  const isPruned = ([item, packet]: readonly [GoalDoctorFinding, string]): boolean =>
+    isCheckoutPathPruned(inventory, packet) ||
+    O.exists(O.fromUndefinedOr(item.target), (target) => isCheckoutPathPruned(inventory, target));
+  return {
+    allFindings: A.map(
+      A.filter(found, (row) => !isPruned(row)),
+      ([item]) => item
+    ),
+    skipped: A.map(A.filter(found, isPruned), ([item]) => item),
+  };
+});
+
 /**
  * Run the goals doctor: collect findings, ratchet blocking ones against the
  * committed baseline, and fail on new blocking findings.
+ *
+ * **Details**
+ *
+ * The findings of a packet the checkout pruned or owns, and a link finding
+ * whose target it pruned (see `@beep/repo-cli-kit/CheckoutSubject`), are
+ * skipped and counted. A packet whose directory remains is present, so it is
+ * checked in full unless the checkout's declaration owns it.
  *
  * **Example** (Verify doctor returns Effect)
  *
@@ -1843,16 +1897,23 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
     A.map(packets, (packet) => ({ slug: packet.record.slug, manifest: packet.manifest }))
   );
   const explorationFindings = yield* collectExplorationArchiveFindings();
-  const allFindings = [
-    ...A.flatMap(packets, (packet) => packet.findings),
-    ...explorationFindings,
-    ...capabilityFindings,
-    ...A.filter(
-      advisoriesFromGit.findings,
-      (item) => item.kind !== "completion-gate-unsatisfied" || !HashSet.has(structuredSlugs, item.slug)
+  const found = [
+    ...A.map(
+      [
+        ...A.flatMap(packets, (packet) => packet.findings),
+        ...capabilityFindings,
+        ...A.filter(
+          advisoriesFromGit.findings,
+          (item) => item.kind !== "completion-gate-unsatisfied" || !HashSet.has(structuredSlugs, item.slug)
+        ),
+        ...completionFindings,
+      ],
+      (item) => [item, `${GOALS_DIR}/${item.slug}`] as const
     ),
-    ...completionFindings,
+    // An exploration finding's slug is already its packet root, `explorations/<slug>`.
+    ...A.map(explorationFindings, (item) => [item, item.slug] as const),
   ];
+  const { allFindings, skipped } = yield* withoutPrunedFindings(found);
   const blocking = A.filter(allFindings, (item) => item.severity === "blocking");
   const advisories = A.filter(allFindings, (item) => item.severity === "advisory");
 
@@ -1866,6 +1927,7 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   yield* Console.log(
     `[goals:doctor] packets=${A.length(records)} blocking_new=${A.length(classified.introduced)} blocking_inherited=${A.length(classified.inherited)} baseline_resolved=${A.length(classified.resolved)} advisories=${A.length(advisories)}`
   );
+  yield* printSkippedFindings(skipped);
   yield* printNonFatalFindings({
     notes: [...advisoriesFromGit.notes, ...A.flatMap(structured, (row) => row.notes)],
     advisories,

@@ -44,7 +44,7 @@ const heavy = RunnerPool.make({
   labels: ["beep-ec2-heavy"],
   runnerGroup: "beep-ec2-heavy",
   runnerNamePrefix: "beep-ci-",
-  jobRetry: O.some(JobRetryPolicy.make({ maxAttempts: 2, delaySeconds: 120, delayBackoff: 2 })),
+  jobRetry: JobRetryPolicy.makeOption({ maxAttempts: 2, delaySeconds: 120, delayBackoff: 2 }),
 });
 const overflow = RunnerPool.make({
   name: "overflow",

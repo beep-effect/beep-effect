@@ -684,7 +684,7 @@ export class M365ListDriveItemVersionsRequest extends S.Opaque<
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
- * const request = M365ListMessagesRequest.make({ top: O.some(PosInt.make(10)) })
+ * const request = M365ListMessagesRequest.make({ top: PosInt.makeOption(10) })
  * console.log(request.top)
  * ```
  *
@@ -819,7 +819,7 @@ export class M365GetMessageRequest extends S.Opaque<M365GetMessageRequest, { rea
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
- * const request = M365ListEventsRequest.make({ top: O.some(PosInt.make(10)) })
+ * const request = M365ListEventsRequest.make({ top: PosInt.makeOption(10) })
  * console.log(request.top)
  * ```
  *

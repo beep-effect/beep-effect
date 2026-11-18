@@ -323,6 +323,7 @@ const resolveViolation = (
       ? Str.empty
       : pipe(normalizePath(path.relative(source.value.sourceRoot, targetPath)), stripKnownModuleExtension);
 
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
   return O.some(
     PackageTestImportViolation.make({
       file: filePath,

@@ -442,7 +442,7 @@ const latestAttempts = (projections: ReadonlyArray<UnitTimingProjection>): Reado
  *         fileMs: 10,
  *         executedTestFiles: executed,
  *         expectedTestFiles: O.some(5),
- *         shard: O.some(UnitTimingShard.make({ index, total: 2 })),
+ *         shard: UnitTimingShard.makeOption({ index, total: 2 }),
  *         files: [],
  *       }),
  *     ],

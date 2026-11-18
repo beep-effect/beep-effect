@@ -208,14 +208,12 @@ describe("ci ledger fold", () => {
           }),
         ],
         run: windowRun(7, 2),
-        testPlan: O.some(
-          CiLedgerTestPlan.make({
-            lanes: [
-              lanePlan("test-integration", ["lps-int-1", "int-rest"], O.some(4)),
-              lanePlan("test-unit", ["unit-a"], O.some(30)),
-            ],
-          })
-        ),
+        testPlan: CiLedgerTestPlan.makeOption({
+          lanes: [
+            lanePlan("test-integration", ["lps-int-1", "int-rest"], O.some(4)),
+            lanePlan("test-unit", ["unit-a"], O.some(30)),
+          ],
+        }),
       })
     );
     strictEqual(row.rerunCopies, 1);
@@ -254,14 +252,12 @@ describe("ci ledger fold", () => {
     const noneSelected = CiLedgerRun.make({
       jobs,
       run: windowRun(8),
-      testPlan: O.some(
-        CiLedgerTestPlan.make({
-          lanes: [
-            lanePlan("test-integration", ["lps-int-2", "int-rest"], O.some(0)),
-            lanePlan("test-unit", [], O.none()),
-          ],
-        })
-      ),
+      testPlan: CiLedgerTestPlan.makeOption({
+        lanes: [
+          lanePlan("test-integration", ["lps-int-2", "int-rest"], O.some(0)),
+          lanePlan("test-unit", [], O.none()),
+        ],
+      }),
     });
     deepStrictEqual(legs(noneSelected), [
       ["int-rest", "empty"],
@@ -283,9 +279,9 @@ describe("ci ledger fold", () => {
             }),
           ],
           run: windowRun(9),
-          testPlan: O.some(
-            CiLedgerTestPlan.make({ lanes: [lanePlan("test-integration", ["lps-int-2", "int-rest"], O.none())] })
-          ),
+          testPlan: CiLedgerTestPlan.makeOption({
+            lanes: [lanePlan("test-integration", ["lps-int-2", "int-rest"], O.none())],
+          }),
         })
       ),
       [
@@ -306,7 +302,7 @@ describe("ci ledger fold", () => {
       jobs: [],
       partialReads: [CiWorkflowPartialRead.make({ attempt: 1, message: "HTTP 502", runId: 12 })],
       run: windowRun(12),
-      testPlan: O.some(CiLedgerTestPlan.make({ lanes: [] })),
+      testPlan: CiLedgerTestPlan.makeOption({ lanes: [] }),
     });
     const report = foldCiLedger(
       CiLedgerCapture.make({
@@ -332,9 +328,9 @@ describe("ci ledger fold", () => {
   });
 
   it("judges the Test Plan join by every part it covers, the catch-all selection line included", () => {
-    const plan = O.some(
-      CiLedgerTestPlan.make({ lanes: [lanePlan("test-integration", ["lps-int-1", "int-rest"], O.some(3))] })
-    );
+    const plan = CiLedgerTestPlan.makeOption({
+      lanes: [lanePlan("test-integration", ["lps-int-1", "int-rest"], O.some(3))],
+    });
     const jobs = [job(1, "Test Integration (lps-int-1)", 0, 60), job(2, "Test Integration (int-rest)", 0, 120)];
     const proof = CiLedgerPartitionProof.make({
       lane: "test-integration",

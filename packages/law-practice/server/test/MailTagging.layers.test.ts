@@ -56,7 +56,6 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Ref from "effect/Ref";
 import * as Str from "effect/String";
@@ -68,7 +67,7 @@ const acme = MatterKey.make("acme.10001");
 const notice = MailEnvelope.make({
   messageId: MailMessageId.make("msg-1"),
   subject: "Office action for 16/123,456",
-  senderAddress: O.some(EmailString.make("notices@uspto.gov")),
+  senderAddress: EmailString.makeOption("notices@uspto.gov"),
   receivedAt: DateTime.add(since, { minutes: 1 }),
   categories: ["Personal"],
   hasAttachments: true,

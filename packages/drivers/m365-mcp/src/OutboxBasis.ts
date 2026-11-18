@@ -653,7 +653,7 @@ const instantOf: (value: O.Option<GraphDateTimeTimeZone>) => O.Option<OutboxEven
  * import { eventViewOf } from "@beep/m365-mcp/OutboxBasis"
  * import * as O from "effect/Option"
  *
- * const at = (dateTime: string) => O.some(GraphDateTimeTimeZone.make({ dateTime: O.some(dateTime), timeZone: O.some("UTC") }))
+ * const at = (dateTime: string) => GraphDateTimeTimeZone.makeOption({ dateTime: O.some(dateTime), timeZone: O.some("UTC") })
  * const view = eventViewOf(
  *   GraphEvent.make({ end: at("2030-01-15T10:00:00.0000000"), id: "event-id", start: at("2030-01-15T09:00:00.0000000") })
  * )
@@ -737,7 +737,7 @@ const newestOtherReplyIn = (
  * import * as O from "effect/Option"
  *
  * const from = (address: string) =>
- *   O.some(GraphRecipient.make({ emailAddress: O.some(GraphEmailAddress.make({ address: O.some(address) })) }))
+ *   GraphRecipient.makeOption({ emailAddress: GraphEmailAddress.makeOption({ address: O.some(address) }) })
  * const page = [
  *   GraphMessage.make({
  *     from: from("counsel@example.test"),

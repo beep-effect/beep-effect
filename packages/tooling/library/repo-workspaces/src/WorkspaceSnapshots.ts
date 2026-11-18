@@ -292,14 +292,12 @@ const snapshotOf: {
   // unusable `version` (a non-string, or `""`) degrades to absent rather than
   // failing the snapshot — the tolerance this projection applies throughout.
   const version = parsed.version;
-  return O.some(
-    PackageStateSnapshot.make({
-      name,
-      ...(P.isString(version) && version !== "" ? { version } : {}),
-      relativePath,
-      ...dependencyBlocksOf(parsed),
-    })
-  );
+  return PackageStateSnapshot.makeOption({
+    name,
+    ...(P.isString(version) && version !== "" ? { version } : {}),
+    relativePath,
+    ...dependencyBlocksOf(parsed),
+  });
 });
 
 /** What a ref declares: its globs, its catalog sources and its hook replays. */

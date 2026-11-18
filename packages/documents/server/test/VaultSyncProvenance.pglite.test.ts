@@ -8,7 +8,6 @@ import * as A from "effect/Array";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -36,13 +35,11 @@ const resolver = V.SessionResolver.of({
 // The mappings the production host mounts (Layer.ts): genesis first, then the v1 request context,
 // whose principalKey is the string field the driver copies.
 const config = AlchemyPostgresConfig.make({
-  provenance: O.some(
-    ProvenanceMapping.make({
-      contextKey: V.GenesisProvenance.key,
-      principalField: "principal",
-      sourceKindField: "source",
-    })
-  ),
+  provenance: ProvenanceMapping.makeOption({
+    contextKey: V.GenesisProvenance.key,
+    principalField: "principal",
+    sourceKindField: "source",
+  }),
   provenanceMappings: [
     ProvenanceMapping.make({
       contextKey: V.VaultSyncRequestContext.key,

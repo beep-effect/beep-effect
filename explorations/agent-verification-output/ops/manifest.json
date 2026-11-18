@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "agent-verification-output",
+    "title": "Agent-Legible Verification Output",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/gate-output-switch-on",
+        "goals/agent-output-census",
+        "goals/gate-report-core",
+        "goals/gate-run-history",
+        "goals/gate-report-rollout",
+        "goals/ci-gate-reports"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-11-18",
+    "updated": "2026-11-18"
+  }
+}

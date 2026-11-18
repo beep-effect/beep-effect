@@ -189,7 +189,7 @@ export const observeAiMetricsGitRoot = Effect.fn("AiMetrics.observeGitRoot")(fun
             try: () => new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(bytes)),
             catch: (cause) => GitRootEvidenceOperationError.make({ cause }),
           });
-          return O.some(GitProbeResult.make({ exitCode: yield* handle.exitCode, output }));
+          return GitProbeResult.makeOption({ exitCode: yield* handle.exitCode, output });
         })
       );
     const observeIdentity = Effect.fnUntraced(function* (gitDir: string, commonDir: string) {

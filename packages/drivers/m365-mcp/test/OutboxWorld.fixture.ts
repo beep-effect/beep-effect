@@ -71,7 +71,7 @@ export const sha256Of = (content: Uint8Array): Effect.Effect<Sha256Hex, never, D
 
 export const recipients = (addresses: ReadonlyArray<string>): ReadonlyArray<GraphRecipient> =>
   A.map(addresses, (address) =>
-    GraphRecipient.make({ emailAddress: O.some(GraphEmailAddress.make({ address: O.some(address) })) })
+    GraphRecipient.make({ emailAddress: GraphEmailAddress.makeOption({ address: O.some(address) }) })
   );
 
 export const storedDraft = GraphMessage.make({

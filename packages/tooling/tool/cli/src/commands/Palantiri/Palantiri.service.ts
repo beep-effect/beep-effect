@@ -837,7 +837,7 @@ export const makeHostPressureSource = Effect.fnUntraced(function* <R>(readers: H
     return HostPressureInput.make({
       readAt,
       pressure: read,
-      memory: O.some(HostMemoryInput.make({ availableGib, totalGib, ceilingGib: O.some(ceilingGib), computeProfile })),
+      memory: HostMemoryInput.makeOption({ availableGib, totalGib, ceilingGib: O.some(ceilingGib), computeProfile }),
       admission: slots,
     });
   }).pipe(Effect.provide(context), Effect.withSpan("PalantiriSource.hostPressure"));
@@ -1040,21 +1040,19 @@ const bucketInputOf =
   (summary: O.Option<LedgerSummary>) =>
   ([signal, reading]: readonly [ReserveSignal, BucketReading]): O.Option<GithubHeadroomBucketInput> =>
     isIdentityName(reading.key.identity) && isBucketName(reading.key.resource)
-      ? O.some(
-          GithubHeadroomBucketInput.make({
-            identity: reading.key.identity,
-            resource: reading.key.resource,
-            limit: reading.limit,
-            remaining: reading.remaining,
-            used: O.getOrElse(reading.used, () => reading.limit - reading.remaining),
-            resetsAt: reading.resetAt,
-            asOf: reading.asOf,
-            basis: reading.basis,
-            reserve: reserveNameOf(signal.state),
-            reserveFloor: floorOf(signal.state, reading.limit),
-            unattributedLastHour: unattributedOf(summary, signal),
-          })
-        )
+      ? GithubHeadroomBucketInput.makeOption({
+          identity: reading.key.identity,
+          resource: reading.key.resource,
+          limit: reading.limit,
+          remaining: reading.remaining,
+          used: O.getOrElse(reading.used, () => reading.limit - reading.remaining),
+          resetsAt: reading.resetAt,
+          asOf: reading.asOf,
+          basis: reading.basis,
+          reserve: reserveNameOf(signal.state),
+          reserveFloor: floorOf(signal.state, reading.limit),
+          unattributedLastHour: unattributedOf(summary, signal),
+        })
       : O.none();
 
 const spenderOf = (spend: CommandSpend): GithubSpender =>

@@ -161,7 +161,10 @@ export class CatalogUsageTemplateReference extends S.Opaque<
  *
  * `manifests` includes the root manifest. `lockfilePackages` lists the package
  * names `bun.lock` resolves, which is how a root override of a transitive
- * dependency proves a consumer.
+ * dependency proves a consumer. `prunedManifests` holds the dependencies
+ * `bun.lock` still records for workspaces the checkout pruned
+ * (goals/prunable-product-leaves, seam 1b): their consumption excuses an
+ * entry, but never counts as a live consumer.
  *
  * **Example** (Construct an empty snapshot)
  *
@@ -186,9 +189,14 @@ export class CatalogUsageSnapshot extends S.Opaque<CatalogUsageSnapshot, { reado
     manifests: S.Array(CatalogUsageManifest),
     lockfilePackages: S.Array(S.String),
     templateReferences: S.Array(CatalogUsageTemplateReference),
+    prunedManifests: S.Array(CatalogUsageManifest).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.withDecodingDefaultKey(Effect.succeed([]))
+    ),
   }).pipe(
     $I.annoteSchema("CatalogUsageSnapshot", {
-      description: "Root manifest, workspace manifests, lockfile package names and template catalog references.",
+      description:
+        "Root manifest, workspace manifests, lockfile package names, template catalog references, and the lockfile's records of pruned workspaces.",
     })
   )
 ) {}
@@ -223,6 +231,11 @@ export class CatalogUsageFinding extends S.Opaque<CatalogUsageFinding, { readonl
 /**
  * Aggregate result of the catalog usage check.
  *
+ * **Details**
+ *
+ * `prunedConsumers` lists the entries and overrides whose only consumers are
+ * workspaces the checkout pruned: they are skipped and counted, not findings.
+ *
  * **Example** (Construct a clean report)
  *
  * ```ts
@@ -248,9 +261,14 @@ export class CatalogUsageReport extends S.Opaque<CatalogUsageReport, { readonly 
     manifests: S.Finite,
     templateReferences: S.Finite,
     findings: S.Array(CatalogUsageFinding),
+    prunedConsumers: S.Array(CatalogUsageFinding).pipe(
+      S.withConstructorDefault(Effect.succeed([])),
+      S.withDecodingDefaultKey(Effect.succeed([]))
+    ),
   }).pipe(
     $I.annoteSchema("CatalogUsageReport", {
-      description: "Counts of checked catalog entries, overrides, manifests and template references, plus findings.",
+      description:
+        "Counts of checked catalog entries, overrides, manifests and template references, the findings, and the entries only pruned workspaces consumed.",
     })
   )
 ) {}

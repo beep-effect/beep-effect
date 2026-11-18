@@ -329,7 +329,7 @@ const openedHead = (row: OpeningRow) => {
     ordinal: ClaimSourceProofOrdinal.make(proofs.length + 1),
     coreEnd: core.endChar,
     scope: fixture.bodyScope,
-    boundary: O.some(ClaimSourceProofRef.make({ ordinal: closingBoundary.ordinal, slot: "boundary" })),
+    boundary: ClaimSourceProofRef.makeOption({ ordinal: closingBoundary.ordinal, slot: "boundary" }),
     gap: O.none(),
   });
   proofs.push(closure);

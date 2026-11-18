@@ -400,7 +400,7 @@ const compared = <Value>(
 ): O.Option<FieldAgreement> =>
   O.isNone(extractor) && O.isNone(critic)
     ? O.none()
-    : O.some(FieldAgreement.make({ agreed: O.makeEquivalence(equivalence)(extractor, critic), field }));
+    : FieldAgreement.makeOption({ agreed: O.makeEquivalence(equivalence)(extractor, critic), field });
 
 const periodEquivalence = S.toEquivalence(DocketResponsePeriod);
 
@@ -446,7 +446,7 @@ export const compareReadings: {
 } = dual(2, (entry: ParalegalEntry, reading: SecretaryReview): ReadonlyArray<FieldAgreement> => {
   const claims = claimsOf(entry);
   return A.getSomes([
-    O.some(FieldAgreement.make({ agreed: isDocketEntry(entry) === reading.isDocketItem, field: "classification" })),
+    FieldAgreement.makeOption({ agreed: isDocketEntry(entry) === reading.isDocketItem, field: "classification" }),
     compared("mail-date", claims.mailDate, reading.mailDate, sameDate),
     compared("response-period", claims.responsePeriod, reading.responsePeriod, periodEquivalence),
     compared("stated-due-date", claims.statedDueDate, reading.statedDueDate, sameDate),

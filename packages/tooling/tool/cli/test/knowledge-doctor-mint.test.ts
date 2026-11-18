@@ -160,7 +160,7 @@ describe("knowledge doctor mint workflow", () => {
         const grown = tree({ "docs/a.md": "See `docs/gone.md` and `docs/also-gone.md`.\nThen `docs/new-gap.md`." });
         const files = seal({
           ...(yield* committedAt(first.baseline, EARLIER)),
-          promotions: O.some(KnowledgeDoctorPromotions.make({ promotions: [promotionRow] })),
+          promotions: KnowledgeDoctorPromotions.makeOption({ promotions: [promotionRow] }),
         });
         const refusal = yield* Effect.flip(mintText(grown, files, [promotionRow]));
         assert.strictEqual(refusal._tag, "KnowledgeMintRefusal");
@@ -231,9 +231,11 @@ describe("knowledge doctor mint workflow", () => {
       owners: ["@kriegcloud"],
     });
     const head = seal({
-      baseline: O.some(
-        KnowledgeDoctorBaseline.make({ mintedAt: MINTED, note: "Sealed knowledge-doctor baseline.", entries: [entry] })
-      ),
+      baseline: KnowledgeDoctorBaseline.makeOption({
+        mintedAt: MINTED,
+        note: "Sealed knowledge-doctor baseline.",
+        entries: [entry],
+      }),
     });
     // The quality lane passes the acceptance facts only when condition (i) holds.
     const rules = (

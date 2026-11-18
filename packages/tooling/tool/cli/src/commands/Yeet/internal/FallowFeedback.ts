@@ -379,7 +379,8 @@ const envelopeDefect = (
           })
         )
       )
-    : O.some(
+    : // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+      O.some(
         FallowEnvelopeDefect.make({
           detail: `advisory-named envelope was produced in check mode (${entry.envelope.reportPath})`,
           filePath: entry.filePath,

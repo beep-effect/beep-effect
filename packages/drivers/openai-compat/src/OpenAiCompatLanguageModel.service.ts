@@ -97,7 +97,7 @@ const decodeKnownFinishReasonOption: (reason: string) => O.Option<Response.Finis
  * const PosInt = S.Int.check(S.isGreaterThan(0))
  *
  * const config = OpenAiCompatLanguageModelConfig.make({
- *   maxTokens: O.some(PosInt.make(512)),
+ *   maxTokens: PosInt.makeOption(512),
  *   temperature: O.some(0.2)
  * })
  *
@@ -636,19 +636,24 @@ const prepareResponseFormat = (
             schemaConversionDescription("Unable to convert structured response schema to JSON Schema.", error)
           ),
         try: () =>
-          O.some(
-            OpenAiCompatJsonSchemaResponseFormat.make({
-              json_schema: {
-                name: responseFormat.objectName,
-                schema: jsonObjectOrEmpty(
-                  Tool.getJsonSchemaFromSchema(responseFormat.schema, { transformer: toCodecOpenAI })
-                ),
-                strict: config.strictJsonSchema,
-              },
-              type: "json_schema",
-            })
-          ),
-      })
+          jsonObjectOrEmpty(Tool.getJsonSchemaFromSchema(responseFormat.schema, { transformer: toCodecOpenAI })),
+      }).pipe(
+        Effect.flatMap((schema) =>
+          OpenAiCompatJsonSchemaResponseFormat.makeEffect({
+            json_schema: { name: responseFormat.objectName, schema, strict: config.strictJsonSchema },
+            type: "json_schema",
+          }).pipe(
+            Effect.mapError((issue) =>
+              makeUnsupportedSchema(
+                moduleName,
+                "prepareResponseFormat",
+                `Structured response format refused by its schema: ${issue.toString()}`
+              )
+            )
+          )
+        ),
+        Effect.asSome
+      )
     ),
     Match.discriminator("type")("text", () => Effect.succeedNone),
     Match.exhaustive

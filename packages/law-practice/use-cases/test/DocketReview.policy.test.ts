@@ -249,7 +249,7 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     assertSome(passedOf(entryOf({ statedDueDate: O.some(wrongDue) }), source, "due-equals-mail-plus-period"), false);
     assertSome(
       passedOf(
-        entryOf({ statedDueDate: O.some(LocalDate.make({ year: 2030, month: 4, day: 8 })) }),
+        entryOf({ statedDueDate: LocalDate.makeOption({ year: 2030, month: 4, day: 8 }) }),
         source,
         "due-equals-mail-plus-period"
       ),
@@ -516,7 +516,7 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     const previous = readingOf({ readFromSourceDocument: true });
     const reread = SecretaryReview.make({
       isDocketItem: false,
-      mailDate: O.some(LocalDate.make({ year: 2030, month: 1, day: 9 })),
+      mailDate: LocalDate.makeOption({ year: 2030, month: 1, day: 9 }),
       matterReferences: ["FIX-0002"],
       notes: "Second fixture reading.",
       responsePeriod: O.some(fortyFiveDays),
@@ -616,7 +616,7 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     const assess = (reading: SecretaryReview, findings: ReadonlyArray<ReviewFinding>) =>
       assessReviewRound(ReviewRoundDraft.make({ entry: entryOf(), findings, index: 2, reading, source })).findings;
     const inconsistent = readingOf({ statedDueDate: O.some(statedDue) });
-    const consistent = readingOf({ statedDueDate: O.some(LocalDate.make({ year: 2030, month: 4, day: 8 })) });
+    const consistent = readingOf({ statedDueDate: LocalDate.makeOption({ year: 2030, month: 4, day: 8 }) });
     const raised = assess(inconsistent, [minor]);
 
     expect(A.map(raised, (finding) => [finding.severity, finding.field])).toStrictEqual([
@@ -635,7 +635,7 @@ describe("@beep/law-practice-use-cases DocketReview policy", () => {
     const STATED = "Response due by April 8, 2030.";
     const MAILED = "Mailed   January 8, 2030.";
     const withStated = ReviewSourceText.make({ messageText: `${BODY}\n${STATED}` });
-    const stated = O.some(LocalDate.make({ year: 2030, month: 4, day: 8 }));
+    const stated = LocalDate.makeOption({ year: 2030, month: 4, day: 8 });
     const previous = readingOf({ citedText: O.some(`${PERIOD}\n${STATED}`), statedDueDate: stated });
     const reread = SecretaryReview.make({
       citedText: O.some(`${MAILED}\n${STATED}`),

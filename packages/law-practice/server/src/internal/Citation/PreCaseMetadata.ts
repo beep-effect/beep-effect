@@ -125,16 +125,14 @@ export const installCitationPreCaseMetadataExtraction = Effect.fn("Citation.inst
     const strings = yield* installedStrings;
     const cleaned = yield* strings.cleanPinCite(pin);
     const fullSpanStart = request.spanStart - (owned.value.end - owned.value.start);
-    return O.some(
-      CitationPreCaseMetadataPatch.make({
-        fullSpanStart,
-        metadata: {
-          pinCite: truthy(cleaned) ? cleaned : null,
-          antecedentGuess,
-          pinCiteSpanStart: truthy(pin) ? fullSpanStart : request.pinCiteSpanStart,
-        },
-      })
-    );
+    return CitationPreCaseMetadataPatch.makeOption({
+      fullSpanStart,
+      metadata: {
+        pinCite: truthy(cleaned) ? cleaned : null,
+        antecedentGuess,
+        pinCiteSpanStart: truthy(pin) ? fullSpanStart : request.pinCiteSpanStart,
+      },
+    });
   });
 });
 /** Capture authenticated PRE_FULL/Year patterns and existing metadata owners.

@@ -431,12 +431,12 @@ describe("@beep/m365 service", () => {
         const messages = yield* m365.listMessages(
           M365ListMessagesRequest.make({
             filter: O.some("receivedDateTime ge 2026-01-01"),
-            top: O.some(PosInt.make(2)),
+            top: PosInt.makeOption(2),
           })
         );
         const message = yield* m365.getMessage(M365GetMessageRequest.make({ messageId: "message-id" }));
         const events = yield* m365.listEvents(
-          M365ListEventsRequest.make({ top: O.some(PosInt.make(3)), userId: O.some("user-id") })
+          M365ListEventsRequest.make({ top: PosInt.makeOption(3), userId: O.some("user-id") })
         );
         const event = yield* m365.getEvent(
           M365GetEventRequest.make({ eventId: "event-id", userId: O.some("user-id") })

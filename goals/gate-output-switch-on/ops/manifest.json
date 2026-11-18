@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "gate-output-switch-on",
+    "packetId": "goal-packet/v1:08cd03bbddd6873e974d87a075115a19c07f32c61584480bffddc5678ca51d6a",
+    "title": "Gate Output: Switch On What Exists",
+    "status": "active",
+    "created": "2026-11-18",
+    "updated": "2026-11-18",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/gate-output-switch-on",
+  "lifecycle": "active",
+  "mission": "Land the six located fixes that need no new model, so agents get shorter gate output this week",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-verification-output",
+    "graduated": "2026-11-18"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/gate-output-switch-on/README.md",
+    "goals/gate-output-switch-on/SPEC.md",
+    "goals/gate-output-switch-on/PLAN.md",
+    "goals/gate-output-switch-on/GOAL.md",
+    "goals/gate-output-switch-on/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/gate-output-switch-on/GOAL.md"
+    }
+  ],
+  "provides": [
+    "verification-output/agent-signal-through-turbo",
+    "verification-output/errors-only-task-logs",
+    "verification-output/global-flag-help-summary",
+    "verification-output/envelopes-off-stdout",
+    "verification-output/unbuilt-dependency-probe"
+  ],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Agent signal through Turbo",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Quiet surfaces",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Unbuilt-dependency probe",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/gate-output-switch-on/GOAL.md)\" -le 4000",
+    "jq . goals/gate-output-switch-on/ops/manifest.json",
+    "rg -n \"gate-output-switch-on|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/gate-output-switch-on",
+    "git diff --check -- goals/gate-output-switch-on",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

@@ -653,16 +653,14 @@ export const planForkRepair: (input: {
     );
     const losing = subtreeOf(index, losingRoots);
     const rebaseDrafts = yield* rebaseDraftsOnto(input.packet, input.root, tip, losing);
-    return O.some(
-      PacketForkRepairPlan.make({
-        packet: input.packet,
-        root: input.root,
-        fork,
-        survivor: survivorId,
-        survivorTip: tip,
-        rebaseDrafts,
-        filesToRemove: A.map(losing, (stored) => stored.fileName),
-      })
-    );
+    return PacketForkRepairPlan.makeOption({
+      packet: input.packet,
+      root: input.root,
+      fork,
+      survivor: survivorId,
+      survivorTip: tip,
+      rebaseDrafts,
+      filesToRemove: A.map(losing, (stored) => stored.fileName),
+    });
   }
 );

@@ -486,11 +486,12 @@ export const makeNativeDeliveryScheduler = Effect.fn("AiMetrics.makeNativeDelive
       )
       .pipe(Effect.result);
     if (Result.isFailure(reconciliation))
-      return O.some(NativeScheduleOutcome.cases.Failed.make({ eventId: candidate.eventId, reason: "readback" }));
+      return NativeScheduleOutcome.cases.Failed.makeOption({ eventId: candidate.eventId, reason: "readback" });
     if (!replayPermitted(reconciliation.success, elapsed))
-      return O.some(
-        NativeScheduleOutcome.cases.Reconciled.make({ eventId: candidate.eventId, result: reconciliation.success })
-      );
+      return NativeScheduleOutcome.cases.Reconciled.makeOption({
+        eventId: candidate.eventId,
+        result: reconciliation.success,
+      });
     // Historical acceptance/ambiguity never overrides a latest permanent refusal.
     const latestOutcome = yield* ledger.readOutcome(prior.value.attemptId);
     if (O.isSome(latestOutcome) && latestOutcome.value._tag === "Rejected")

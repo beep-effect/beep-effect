@@ -1,0 +1,283 @@
+# CI Gate Reports Spec
+
+## Objective
+
+Render GitHub Actions output from gate reports, upload every hosted run's reports as the feed for
+main's baseline, and put a failing job's cause one command away.
+
+`gate-report-core` builds the gate report (gate > unit > item), the recorder that writes it under
+`.beep/gates/`, and the agent and terminal projections. This goal adds the third projection
+(decision `audience-three-projections`): a GitHub job summary plus a grouped log, rendered from the
+same report. It uploads the reports of every hosted run and gives a lane a lookup for main's
+newest reports at its merge base (the hosted feed of decision `history-baseline`). It adds a
+planned command on the repo CLI that prints a failing job's verdict and isolated failing region by
+run or PR number, and a CI-job adapter that reads a workflow run as a gate.
+
+The design is settled in the exploration: `explorations/agent-verification-output/BRIEF.md`,
+`explorations/agent-verification-output/MAP.md` (candidate 6) and
+`explorations/agent-verification-output/DECISIONS.md` (`audience-three-projections`,
+`history-baseline`, `agent-surface`).
+
+## Non-Goals
+
+- The report model, the agent and terminal projections, the recorder (`gate-report-core`).
+- History labels and the store that reads the feed (`gate-run-history`). This goal ships the feed
+  and its lookup; history consumes them.
+- Putting the remaining local gates on the contract (`gate-report-rollout`).
+- SARIF upload to code scanning and a Checks API writer (decision `interchange-projections`).
+- MCP tools or hooks (decision `agent-surface`).
+- Workflow changes that do not serve the projection, the upload or the adapter.
+
+## Source Hierarchy
+
+1. User objective or issue that created this packet.
+2. `AGENTS.md`, `CLAUDE.md`, and required skills.
+3. Governing architecture/package standards.
+4. This `SPEC.md`.
+5. `PLAN.md`.
+6. `GOAL.md`.
+7. Supporting `research/`, `ops/`, and `history/` files.
+
+Higher sources outrank lower sources when they conflict.
+
+## Target Surfaces
+
+Repo CLI paths are under `packages/tooling/tool/cli/src/commands/`.
+
+- Workflows: `.github/workflows/check.yml`, `.github/workflows/heavy.yml`,
+  `.github/workflows/shard-overflow.yml`, `.github/workflows/storybook.yml`,
+  `.github/workflows/property-laws-nightly.yml`, `.github/workflows/fleet-lane-probe.yml`, and
+  `.github/actions/setup-monorepo-ci/action.yml`.
+- CI commands: `Ci/Ci.command.ts` (`append-turbo-summary`), `Ci/CiTaskOutcomes.ts`
+  (`TaskOutcomeRecord`, `taskOutcomeArtifactPrefix`, `taskOutcomesOf`), `Ci/RouteCorpus.ts` (the
+  hosted artifact reader), `HostedTaskOutcome` in `Ci/Route.schemas.ts`, `Ci/CiRunnerOutputs.ts`,
+  `Ci/CiLane.ts`, `Ci/CiGovernance.ts` (`workflow-lint`).
+- The failing-region route: `isolateYeetMonitorJobLogFailure`, `stripYeetMonitorLogDecoration` and
+  the private `readFailedJobLog` in `Yeet/internal/MonitorLoop.ts`.
+- Renderers to reuse: `Render.markdown` and `Render.githubLog` in
+  `packages/foundation/capability/cli-kit/src/Render.ts`, `GithubAnnotation` in
+  `packages/foundation/capability/cli-kit/src/GithubAnnotation.ts`, `CommandNeutralizer` and
+  `WorkflowCommand` in `packages/foundation/modeling/github-commands/src/`, and `CheckDocument` and
+  `GitHubMarkdown` in `packages/foundation/modeling/github-reporting/src/`.
+- GitHub access: `GitHubClient` in `packages/drivers/github/src/GitHubClient.ts`, `ActionOutputs`
+  in `packages/drivers/github-actions/src/ActionOutputs.ts`, and the budget ledger in
+  `packages/tooling/tool/cli/src/internal/github/GithubLedger.service.ts`.
+- The gate-run services and the planned `gate` command family from `gate-report-core`.
+- Guidance: `AGENTS.md` (the REST log-read line) and `.claude/skills/yeet/references/gh-rest.md`.
+
+## Workflows that run gates today
+
+32 workflows live under `.github/workflows/`. These run gates:
+
+| Workflow | Gate jobs | Logs | Step summary | Per-task record and artifacts |
+| --- | --- | --- | --- | --- |
+| `check.yml` | Repo Sanity, Docs Policy, Ecosystem Contracts, Codegen Drift, Labs, Lint (per partition), Test Unit (per partition and overflow), Test Integration (per partition), Coverage Regression, Professional Desktop IPC Stdio, Property Laws (per partition), Fallow Advisory Envelopes, JSDoc Ratchet, Commitlint, Secret Scanning, Security, Nix Shell, SAST | raw stream of `bun run beep ci lane <id>` through a `run_lane` shell wrapper, Turbo with `TURBO_LOG_ORDER=stream` | `bun run beep ci append-turbo-summary` after Labs, Lint, Test Unit, Test Integration and Property Laws; hand-built Markdown in Fallow Advisory and JSDoc Ratchet | `bun run beep ci task-outcomes` writes `.beep/ci-task-outcomes/record.json` (`task-outcomes/v1`) after the same jobs and Repo Sanity, uploaded as `task-outcomes-<run>-<attempt>-<job>-<partition>` with `retention-days: 30` |
+| `heavy.yml` (called as `heavy.yml@main` by `check.yml` and `heavy-admit.yml`) | Lint Policy, Check, Docgen, Doctest, Build | `run_lane ci lane <id>`, raw stream | one `append-turbo-summary` | Turbo summary uploaded as `turbo-summary-verify-<lane>`; no task-outcome record |
+| `shard-overflow.yml` | Test Unit overflow partitions | `run_lane ci lane test-unit` | `append-turbo-summary` | task-outcome record and artifact |
+| `storybook.yml` | Storybook | `run_lane ci lane storybook` | `append-turbo-summary` | two artifacts |
+| `property-laws-nightly.yml` | Property Laws Sweep | `bun run beep ci lane property` | `append-turbo-summary` | none |
+| `fleet-lane-probe.yml` | Lane Probe (one lane by input) | `bun run beep ci lane <lane> --summarize` | none | none |
+
+Other summary writers in source: the check-census gate table (`Quality/CheckCensus.ts`), the
+rerun decision (`Ci/CiRerunRunnerLoss.ts`), `Ci/CiRunnerOutputs.ts` and
+`Ci/CiOperational.service.ts`. Annotations are hand-written `::error::` and `::warning::` lines in
+workflow shell (eight in `check.yml`) plus Vitest's `github-actions` reporter, which Turbo passes
+`GITHUB_ACTIONS` through to. No workflow adds a problem matcher.
+
+## The CI projection
+
+- One renderer, from the gate report only, never from the job's log. It produces the neutral
+  document of `gate-report-core` and renders it through `Render.markdown` for the step summary
+  and `Render.githubLog` for the grouped log.
+- **Job summary.** The same verdict line and failure list the local agent console prints, in the
+  same order, as GitHub-flavoured Markdown: verdict, the failing items (location, code, first
+  message line), the cap line (`... N more in the record`), the record's artifact name. One
+  summary per gate step.
+- **Grouped log.** One `::group::` block per unit holding its items, after the tool's raw stream,
+  with the verdict line printed last outside any group.
+- **Annotations.** One `::error` or `::warning` per failing item with `file`, `line` and `col`,
+  ranked by the model's order, capped at 10 per level per step and 50 per job (GitHub's limits);
+  the summary states how many were not annotated.
+- **Limits are laws of the renderer.** The summary stays under 1 MiB per step (GitHub's limit) and
+  under a renderer budget of 64 KiB; a job writes at most 20 step summaries (GitHub shows no
+  more). Every tool-provided string passes through `CommandNeutralizer`, so text inside a
+  diagnostic never becomes a workflow command.
+- Workflow steps call a planned CI subcommand on the repo CLI that appends the projection for the
+  reports a job wrote, beside `append-turbo-summary`.
+
+## Report upload and the main feed
+
+- Every hosted job that runs a gate uploads its `.beep/gates/` reports and raw logs, red or green,
+  with `retention-days` set (`bun run beep ci workflow-lint` rejects an upload without it).
+- A planned lookup command answers: the newest main reports for a given merge base. It finds the
+  newest completed `main` run at the merge base, or at the nearest ancestor that has reports
+  within a bounded walk, and returns the reports for the requested gates. `gate-run-history`
+  reads this lookup for its "already red on main" label.
+- **The carrier is chosen in P0 against these criteria, recorded as a decision:**
+  1. Red runs are carried. The baseline exists to identify reds already on main, so a carrier
+     that keeps only passing tasks fails.
+  2. The lookup is keyed by commit: it resolves "main at SHA" without scanning unbounded run
+     history.
+  3. Each lookup's GitHub request count is bounded and recorded in the budget ledger; the target
+     is five REST requests or fewer for a hit at the merge base, and no GraphQL.
+  4. Retention covers the oldest live lane's merge base: at least 30 days.
+  5. No new paid service or endpoint.
+  6. One record per job, decodable by schema, with no second copy of the same facts.
+- The candidates: workflow artifacts holding the gate reports; the per-task outcome record
+  (`TaskOutcomeRecord`) widened to carry or point to them, which `Ci/RouteCorpus.ts` already reads
+  through `GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts`; and the Turbo remote cache,
+  which keys task outputs by task hash and does not store failed tasks.
+
+## The failing-region command
+
+- A planned command on the repo CLI takes a run id or a PR number and prints, for each failed job
+  of that run (or of the PR head's newest runs), the job's verdict and failures.
+- When the job uploaded a gate report, it prints that report's agent console. No log is fetched.
+- Otherwise it reuses the monitor's route: `gh run view --job <id> --log-failed`, then the
+  per-job logs endpoint through `GitHubClient`, cut by `isolateYeetMonitorJobLogFailure` and
+  cleaned by `stripYeetMonitorLogDecoration`. The route moves out of the private
+  `readFailedJobLog` into one exported function that both the monitor and the command call.
+- The printed region is bounded by core's agent budget, verdict first and last. The whole log is
+  saved under `.beep/gates/` and named by path and size.
+- A log whose failing step cannot be bounded prints one line saying so, with the saved path.
+- Every request goes through `GitHubClient`, so the budget ledger records it. The command spends
+  REST only; GraphQL is shared at 5,000 points an hour per identity across every session
+  (`.claude/skills/yeet/references/gh-rest.md`).
+- No `yeet gh` subcommand fetches logs today; the yeet skill documents a raw `gh api ... /logs`
+  call. This command replaces that recipe.
+
+## The CI-job adapter
+
+- A workflow run is a gate, each job a unit, each step an item: `GET
+  /repos/{owner}/{repo}/actions/runs/{run_id}/jobs` gives steps with status and conclusion, and no
+  log read.
+- Step conclusions map onto the closed outcome set: `success` passed, `failure` failed, `skipped`
+  skipped, `cancelled` and `timed_out` failures with their own counts (honest counts). A job with
+  no steps never reads as green.
+- A failed step's item detail is the job's gate-report verdict when one was uploaded, else the
+  isolated region.
+- The failing-region command and the lookup both use the adapter; the run's report is recorded
+  locally like any other gate.
+
+## Constraints
+
+- Design order is the repo law: the CI-projection document and the feed's record schema first,
+  then the service contracts (projection, uploader, lookup, log route), then implementation.
+- No CI console renders from a raw stream (BRIEF no-go). The raw stream stays in the job log and
+  in the uploaded raw log.
+- `check.yml` and `heavy-admit.yml` call `heavy.yml@main`. A change to `heavy.yml` never runs in
+  the PR that carries it; it proves itself on the first `main` run after merge. `heavy.yml`
+  changes ride their own PR, opened after the commands they call are on `main`.
+- A workflow file is a global input to the coverage ratchet, so workflow PRs carry no package
+  source.
+- GitHub API quota is shared by every session on an identity. Lookups and log reads use REST
+  through `GitHubClient` and are visible in `bun run beep github ledger report`; uploads run on
+  the runner's token and spend no agent identity's quota.
+- The monitor's behaviour is unchanged by extracting the log route: its tests keep
+  passing unchanged.
+- Every edited workspace package passes `bun run beep quality package-verify <@beep/package>`
+  before hand-off.
+
+## Acceptance Criteria
+
+- [ ] P0 records the carrier decision with each of the six criteria answered by evidence (a
+  fixture lookup, a request count, the retention setting).
+- [ ] A renderer test: for a red gate-report fixture, the job summary's verdict line and failure
+  list equal the local agent console's verdict and failure lines (same items, same order).
+- [ ] A 200-item fixture renders at most 10 error annotations for the step, a cap line naming the
+  rest, and a summary under 64 KiB; a diagnostic message containing `::error::` renders as text,
+  not as a workflow command.
+- [ ] Every gate job listed in "Workflows that run gates today" renders its summary from gate
+  reports. Evidence: the first `main` run after each workflow PR merges, cited by run id in a
+  checkpoint, shows the projection in every gate job.
+- [ ] A test over the workflow files asserts every job that runs `bun run beep ci lane` uploads
+  its gate reports with `retention-days` set; `bun run beep ci workflow-lint` passes.
+- [ ] The lookup, against recorded REST fixtures, returns main's reports at a given merge base,
+  walks to the nearest ancestor with reports when the merge base has none, returns red reports,
+  and spends at most five REST requests for a hit at the merge base.
+- [ ] The failing-region command, given a run id or a PR number with recorded fixtures: prints the
+  uploaded report's verdict and failures when one exists; otherwise prints the isolated region
+  within core's agent budget, verdict first and last, plus the saved log's path and size; prints
+  one line for an unbounded log. It spends no GraphQL.
+- [ ] The monitor calls the extracted log route, and its existing log-classification tests pass
+  unchanged.
+- [ ] The CI-job adapter, from a recorded jobs response: one failed step yields one failed item
+  under its job; `cancelled` and `timed_out` steps count as failures with their own counts; a job
+  with no steps is not green.
+- [ ] `.claude/skills/yeet/references/gh-rest.md` and the `AGENTS.md` log-read line name the
+  planned command instead of the raw `gh api` recipe; `bun run beep skills update --check` passes.
+- [ ] Census, once the planned census command of `agent-output-census` exists, over seven days
+  after the guidance merges: the share of CI-log fetches piped through `tail`, `head` or `grep`
+  falls from 100% (805 fetches, none unfiltered, on 2026-11-18) to 20% or less, and turns spent
+  fetching a CI log fall from 747 (7.4% of the 10,117 verification turns) to at most 3.7% of
+  verification turns. Until the command exists, fixtures stand in: the failing-region output for
+  the recorded red job is at most core's agent budget.
+- [ ] `bun run beep quality package-verify` passes for every touched package.
+- [ ] No unrelated refactors or formatting churn.
+
+## Verification Matrix
+
+| Check | Command or evidence | Required result |
+| --- | --- | --- |
+| Packet launcher size | `test "$(wc -m < goals/ci-gate-reports/GOAL.md)" -le 4000` | Passes |
+| Manifest JSON | `jq . goals/ci-gate-reports/ops/manifest.json` | Passes |
+| Whitespace | `git diff --check -- goals/ci-gate-reports` | Passes |
+| Projection and limits | renderer tests, run by `bun run beep quality package-verify @beep/repo-cli` | Same lines as local; caps hold |
+| Upload coverage | workflow test; `bun run beep ci workflow-lint` | Every gate job uploads with retention |
+| Lookup | recorded-fixture lookup tests | Hit, ancestor walk, reds, at most five requests |
+| Failing region | recorded-fixture command tests | Bounded, verdict first and last, REST only |
+| Hosted proof | first `main` run after each workflow PR, by run id | Projection in every gate job |
+| GitHub spend | `bun run beep github ledger report` | Lookup and log reads attributed, REST only |
+| Skills | `bun run beep skills update --check` | Passes |
+| Census | the planned census command, seven-day window | Rows at or under the targets above |
+
+## Stop Conditions
+
+- Required source files are missing or materially contradictory.
+- Any spend: purchases, paid services, quota top-ups or plan changes need the
+  operator.
+- The same blocker repeats after reasonable investigation.
+
+Scope growth, destructive side effects and policy calls are not stops: decide
+them and record each as a decision file.
+
+## Decision log
+
+Record each decision as its own file under `decisions/` (`bun run beep goals
+decisions add ci-gate-reports --title "..." --reversal "..."`); the block below is
+generated from that directory and never edited by hand.
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug ci-gate-reports`; add a `kind: decision` file there, never edit this block._
+
+### A failing job is reached through files and a repo CLI command, not MCP or hooks, 2026-11-18
+
+Operator ruling in `explorations/agent-verification-output/DECISIONS.md`, entry `agent-surface`: an agent reaches detail beyond the verdict through typed records on disk and repo CLI commands; no MCP tools and no hooks are added. For CI this means a planned command on the repo CLI that prints a failing job's verdict and isolated failing region by run or PR number, saves the whole log under `.beep/gates/` and names it by path and size. It behaves the same under Claude, Codex, Cursor and Grok, adds nothing to always-loaded context, and replaces the raw `gh api` log recipe in the yeet skill. Footer pointers are runnable commands.
+
+Lane explore/agent-verification-output
+
+Reverse: Add an MCP tool for CI failures and drop the failing-region command
+
+### The CI projection is the third view of the same gate report, 2026-11-18
+
+Operator ruling in `explorations/agent-verification-output/DECISIONS.md`, entry `audience-three-projections`: one record, three projections chosen by detection with a flag to override. This goal builds the CI one: a GitHub job summary plus a grouped log, rendered from the gate report and never from the job log. A hosted red therefore reads the same facts in the same order as the local agent console, so a human checking a hosted job sees what an agent saw. GitHub limits (annotations per step and per job, summary size, summaries per job) are laws of the renderer.
+
+Lane explore/agent-verification-output
+
+Reverse: Leave hosted jobs on raw tool streams and Turbo step summaries
+
+### Hosted runs upload their gate reports as the main baseline feed, 2026-11-18
+
+Operator ruling in `explorations/agent-verification-output/DECISIONS.md`, entry `history-baseline`: a history label compares against the lane's own earlier runs plus main's latest hosted results, so output distinguishes a failure introduced on the lane from one already red on main. This goal supplies the hosted half: every hosted gate job uploads its reports, red or green, and a lookup returns main's newest reports for a given merge base. `goals/gate-run-history` consumes the lookup in its hosted-main phase. The carrier (workflow artifacts, the per-task outcome record, or the Turbo remote cache) is chosen in P0 against the criteria in `SPEC.md`; a carrier that drops red runs fails the first criterion.
+
+Lane explore/agent-verification-output
+
+Reverse: Stop the upload and the lookup; history labels then compare against lane runs only
+
+<!-- beep:decisions:end -->
+
+## Exception Ledger
+
+| Exception | Scope | Owner | Rationale | Removal condition |
+| --- | --- | --- | --- | --- |
+| None | N/A | N/A | N/A | N/A |

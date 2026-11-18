@@ -153,9 +153,9 @@ describe("joinEconomicsPressure", () => {
         window: EconomicsPsiWindow.make({
           samples: 3,
           boots: 2,
-          cpuSome10: O.some(EconomicsPsiFigure.make({ mean: 2, max: 3 })),
-          memorySome10: O.some(EconomicsPsiFigure.make({ mean: 0, max: 0 })),
-          ioSome10: O.some(EconomicsPsiFigure.make({ mean: 5, max: 6 })),
+          cpuSome10: EconomicsPsiFigure.makeOption({ mean: 2, max: 3 }),
+          memorySome10: EconomicsPsiFigure.makeOption({ mean: 0, max: 0 }),
+          ioSome10: EconomicsPsiFigure.makeOption({ mean: 5, max: 6 }),
           memAvailableGibMin: O.some(79.5),
         }),
       })
@@ -167,8 +167,8 @@ describe("joinEconomicsPressure", () => {
         window: EconomicsPsiWindow.make({
           samples: 1,
           boots: 1,
-          cpuSome10: O.some(EconomicsPsiFigure.make({ mean: 4, max: 4 })),
-          memorySome10: O.some(EconomicsPsiFigure.make({ mean: 0, max: 0 })),
+          cpuSome10: EconomicsPsiFigure.makeOption({ mean: 4, max: 4 }),
+          memorySome10: EconomicsPsiFigure.makeOption({ mean: 0, max: 0 }),
           ioSome10: O.none(),
           memAvailableGibMin: O.none(),
         }),

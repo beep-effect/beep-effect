@@ -25,7 +25,6 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { World, worldContext } from "./support/FakeWorld.ts";
 import { message, poolConfig } from "./support/Fixtures.ts";
@@ -101,9 +100,10 @@ describe("Lambda entry points", () => {
   it.effect("scheduled entries run their programs", () =>
     Effect.gen(function* () {
       const world = new World();
-      world.latestAsset = O.some(
-        ReleaseAsset.make({ name: "actions-runner-linux-x64-2.330.0.tar.gz", downloadUrl: "u" })
-      );
+      world.latestAsset = ReleaseAsset.makeOption({
+        name: "actions-runner-linux-x64-2.330.0.tar.gz",
+        downloadUrl: "u",
+      });
       const context = worldContext(world);
       yield* ScaleDownLambda.definition.run(poolConfig(), {}).pipe(Effect.provideContext(context));
       yield* HousekeeperLambda.definition

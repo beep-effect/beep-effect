@@ -266,28 +266,24 @@ export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<M
         const count = A.length(panels);
         const rawIndex = stripInsertionIndex(state, group.value.groupId, panels, group.value.box, point.left);
         const index = S.Natural.make(Math.min(count, Math.max(0, rawIndex)));
-        return O.some(
-          MovePanelCommandSchema.make({
-            panelId: drag.panelId,
-            target: TabPlacement.make({
-              groupId: group.value.groupId,
-              index: O.some(index),
-            }),
-          })
-        );
+        return MovePanelCommandSchema.makeOption({
+          panelId: drag.panelId,
+          target: TabPlacement.make({
+            groupId: group.value.groupId,
+            index: O.some(index),
+          }),
+        });
       }
     }
     if (O.isNone(floating) && O.isSome(rootSide)) {
-      return O.some(
-        MovePanelCommandSchema.make({
-          panelId: drag.panelId,
-          target: RootSplitPlacement.make({
-            side: rootSide.value,
-            splitId: freshSplitId(),
-            newGroupId: freshGroupId(),
-          }),
-        })
-      );
+      return MovePanelCommandSchema.makeOption({
+        panelId: drag.panelId,
+        target: RootSplitPlacement.make({
+          side: rootSide.value,
+          splitId: freshSplitId(),
+          newGroupId: freshGroupId(),
+        }),
+      });
     }
     if (O.isNone(group)) return O.none();
     const { box, groupId } = group.value;
@@ -318,26 +314,22 @@ export const compileDrop: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<M
       Match.orElse(O.none<DockSide>)
     );
     if (O.isSome(side)) {
-      return O.some(
-        MovePanelCommandSchema.make({
-          panelId: drag.panelId,
-          target: SplitPlacement.make({
-            referenceGroupId: groupId,
-            newGroupId: freshGroupId(),
-            splitId: freshSplitId(),
-            side: side.value,
-          }),
-        })
-      );
+      return MovePanelCommandSchema.makeOption({
+        panelId: drag.panelId,
+        target: SplitPlacement.make({
+          referenceGroupId: groupId,
+          newGroupId: freshGroupId(),
+          splitId: freshSplitId(),
+          side: side.value,
+        }),
+      });
     }
     return S.toEquivalence(GroupId)(groupId, drag.fromGroupId)
       ? O.none()
-      : O.some(
-          MovePanelCommandSchema.make({
-            panelId: drag.panelId,
-            target: TabPlacement.make({ groupId }),
-          })
-        );
+      : MovePanelCommandSchema.makeOption({
+          panelId: drag.panelId,
+          target: TabPlacement.make({ groupId }),
+        });
   }
 );
 
@@ -406,11 +398,9 @@ export const dropPreview: Dual3<AdapterState, DockAtomGraph, TabDrag, O.Option<D
               SectionPreview.make({ box: splitPreviewBox(box, side, newGroupRatio) })
             ),
           rootSplit: ({ side, newGroupRatio }) =>
-            O.some(
-              SectionPreview.make({
-                box: splitPreviewBox(graph.registry.get(state.containerAtom), side, newGroupRatio),
-              })
-            ),
+            SectionPreview.makeOption({
+              box: splitPreviewBox(graph.registry.get(state.containerAtom), side, newGroupRatio),
+            }),
         });
       })
     )

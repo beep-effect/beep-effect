@@ -758,7 +758,7 @@ const copularNominalPlan = (
     // quote cannot enclose its immediately preceding coordinator without an
     // intervening closing-quote token, so the original quote check suffices.
     const headEnd = end - 1 > headStart && coordinatorBeforeCopula(tokens, end - 1) ? end - 1 : end;
-    return O.some(NominalBoundaryPlan.make({ headEnd, resumeAt: end, reason: "copular-subject" }));
+    return NominalBoundaryPlan.makeOption({ headEnd, resumeAt: end, reason: "copular-subject" });
   });
 };
 const participleAt = (tokens: ReadonlyArray<Span>, at: number): boolean => {
@@ -803,13 +803,13 @@ const participialNominalPlan = (
     const following = at + 3;
     if (O.isSome(determinerAt(tokens, following))) {
       if (at === headStart) return O.none();
-      return O.some(NominalBoundaryPlan.make({ headEnd: at, resumeAt: following, reason: "coordinated-action" }));
+      return NominalBoundaryPlan.makeOption({ headEnd: at, resumeAt: following, reason: "coordinated-action" });
     }
     const noun = tokenWordAt(tokens, following);
     if (!HashSet.has(nominalFollowers, noun) || Str.endsWith("s")(noun)) return O.none();
     const end = following + headAt(tokens, following, quotations).length;
     return end > following
-      ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "shared-participle" }))
+      ? NominalBoundaryPlan.makeOption({ headEnd: end, resumeAt: end, reason: "shared-participle" })
       : O.none();
   });
 };
@@ -830,10 +830,10 @@ const definitePossessivePlan = (
       HashSet.has(nominalFollowers, head) &&
       HashSet.has(nominalFollowers, Str.slice(0, -1)(head)) &&
       !Str.endsWith("ss")(head)
-      ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "possessive-known-plural" }))
+      ? NominalBoundaryPlan.makeOption({ headEnd: end, resumeAt: end, reason: "possessive-known-plural" })
       : O.none();
   return auxiliary === "has"
-    ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "possessive-regular-singular" }))
+    ? NominalBoundaryPlan.makeOption({ headEnd: end, resumeAt: end, reason: "possessive-regular-singular" })
     : O.none();
 };
 const possessiveAgreementPlan = (
@@ -850,11 +850,11 @@ const possessiveAgreementPlan = (
     surfaceAt(tokens, index + 1)(["plurality", "of"]);
   if (pluralQuantity)
     return auxiliary === "have"
-      ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "possessive-plural-quantity" }))
+      ? NominalBoundaryPlan.makeOption({ headEnd: end, resumeAt: end, reason: "possessive-plural-quantity" })
       : O.none();
   if (HashSet.has(HashSet.make("a", "an"), article))
     return auxiliary === "has"
-      ? O.some(NominalBoundaryPlan.make({ headEnd: end, resumeAt: end, reason: "possessive-singular-article" }))
+      ? NominalBoundaryPlan.makeOption({ headEnd: end, resumeAt: end, reason: "possessive-singular-article" })
       : O.none();
   return definitePossessivePlan(tokens, index, end);
 };
@@ -1043,7 +1043,7 @@ const licensedInfinitiveAt = (
   const objectAt = verbAt + 1;
   if (!licensedVerbAt(tokens, verbAt) || !explicitLexicalObjectAt(tokens, objectAt, quotations)) return O.none();
   if (A.some(A.range(index, objectAt), (at) => quotedTokenAt(tokens, at, quotations))) return O.none();
-  return O.some(InspectionSourceRole.make({ consumedStart: index, resumeAt: objectAt, reason: "licensed-infinitive" }));
+  return InspectionSourceRole.makeOption({ consumedStart: index, resumeAt: objectAt, reason: "licensed-infinitive" });
 };
 const inspectionRoleAt = (
   tokens: ReadonlyArray<Span>,
@@ -1053,12 +1053,14 @@ const inspectionRoleAt = (
   const infinitive = licensedInfinitiveAt(tokens, index, quotations);
   if (O.isSome(infinitive)) return infinitive;
   if (reciprocalAt(tokens, index, quotations))
-    return O.some(
-      InspectionSourceRole.make({ consumedStart: index, resumeAt: index + 2, reason: "reciprocal-argument" })
-    );
+    return InspectionSourceRole.makeOption({
+      consumedStart: index,
+      resumeAt: index + 2,
+      reason: "reciprocal-argument",
+    });
   const previous = tokenWordAt(tokens, index - 1);
   if (relationAt(tokens, index, quotations) && (HashSet.has(copulas, previous) || isPredicateToken(tokens, index - 1)))
-    return O.some(InspectionSourceRole.make({ consumedStart: index, resumeAt: index + 2, reason: "relational-link" }));
+    return InspectionSourceRole.makeOption({ consumedStart: index, resumeAt: index + 2, reason: "relational-link" });
   return O.none();
 };
 const relationalNominalPlan = (
@@ -1521,14 +1523,12 @@ const isSpatialPartHead = (head: string): boolean =>
 const pairOwnership = (element: EncodedElement, left: EncodedTerm, right: EncodedTerm): O.Option<SourceOwnership> => {
   const bridge = ownerBridge(element, left, right);
   if (bridge === "of")
-    return O.some(
-      SourceOwnership.make({
-        part: mentionKey(element.path, left),
-        owner: mentionKey(element.path, right),
-        head: left.head,
-        reason: "of",
-      })
-    );
+    return SourceOwnership.makeOption({
+      part: mentionKey(element.path, left),
+      owner: mentionKey(element.path, right),
+      head: left.head,
+      reason: "of",
+    });
   const reason = bridge === "of which" ? "relative" : "composition";
   // "a signal of which the sensor is aware" is a relative predicate argument,
   // not a possessive part relationship. The relative branch needs a part head.
@@ -1536,14 +1536,12 @@ const pairOwnership = (element: EncodedElement, left: EncodedTerm, right: Encode
   const composition =
     /^(?:with|having|including|containing|has|have|(?:further )?(?:comprises|includes)|(?:is|are) provided with)$/u;
   if (reason === "composition" && O.isNone(Str.match(composition)(bridge))) return O.none();
-  return O.some(
-    SourceOwnership.make({
-      part: mentionKey(element.path, right),
-      owner: mentionKey(element.path, left),
-      head: right.head,
-      reason,
-    })
-  );
+  return SourceOwnership.makeOption({
+    part: mentionKey(element.path, right),
+    owner: mentionKey(element.path, left),
+    head: right.head,
+    reason,
+  });
 };
 const claimOfMention = (path: string): O.Option<number> => Num.parse(A.headNonEmpty(Str.split(path, ".")));
 const mentionPrecedes = (path: string, term: EncodedTerm, otherPath: string, other: EncodedTerm): boolean =>
@@ -1584,14 +1582,12 @@ const partLocationOwnership = (element: EncodedElement): O.Option<SourceOwnershi
       if (!HashSet.has(HashSet.make("in", "on", "at"), ownerBridge(element, part, region))) return O.none();
       if (ownerBridge(element, region, owner) !== "of") return O.none();
       if (!isSpatialPartHead(region.head)) return O.none();
-      return O.some(
-        SourceOwnership.make({
-          part: mentionKey(element.path, part),
-          owner: mentionKey(element.path, owner),
-          head: part.head,
-          reason: "part-location",
-        })
-      );
+      return SourceOwnership.makeOption({
+        part: mentionKey(element.path, part),
+        owner: mentionKey(element.path, owner),
+        head: part.head,
+        reason: "part-location",
+      });
     }
   );
 const rawOwnership = (elements: ReadonlyArray<EncodedElement>): ReadonlyArray<SourceOwnership> => {

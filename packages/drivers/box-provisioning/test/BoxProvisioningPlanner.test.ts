@@ -361,7 +361,7 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning pla
           BoxObservedFolder.make({
             etag: O.none(),
             name: "Fixture workspace",
-            parentProviderId: O.some(BoxProviderId.make("0")),
+            parentProviderId: BoxProviderId.makeOption("0"),
             providerId: BoxProviderId.make("101"),
           }),
         ],
@@ -387,7 +387,7 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning pla
           BoxObservedCollaboration.make({
             folderProviderId: BoxProviderId.make("100"),
             principal: "foreign@example.test",
-            principalProviderId: O.some(BoxProviderId.make("foreign-user-id")),
+            principalProviderId: BoxProviderId.makeOption("foreign-user-id"),
             principalType: "user",
             providerId: BoxProviderId.make("foreign-collaboration-id"),
             role: "viewer",
@@ -439,7 +439,7 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning pla
           BoxObservedFolder.make({
             etag: O.none(),
             name: "Fixture child",
-            parentProviderId: O.some(BoxProviderId.make("100")),
+            parentProviderId: BoxProviderId.makeOption("100"),
             providerId: BoxProviderId.make("101"),
           }),
         ],
@@ -447,7 +447,7 @@ it.layer(BunCrypto.layer, { timeout: "10 seconds" })("@beep/box-provisioning pla
           BoxObservedCollaboration.make({
             folderProviderId: BoxProviderId.make("101"),
             principal: "user@example.test",
-            principalProviderId: O.some(BoxProviderId.make("user-id")),
+            principalProviderId: BoxProviderId.makeOption("user-id"),
             principalType: "user",
             providerId: BoxProviderId.make("collaboration-id"),
             role: "editor",

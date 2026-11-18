@@ -389,7 +389,7 @@ const objectSubject = (quad: Quad): O.Option<Subject> =>
   quad.object.termType === "NamedNode" || quad.object.termType === "BlankNode" ? O.some(quad.object) : O.none();
 
 const objectInteger = (quad: Quad): O.Option<number> =>
-  quad.object.termType === "Literal" ? O.some(S.Natural.make(Number.parseInt(quad.object.value, 10))) : O.none();
+  quad.object.termType === "Literal" ? S.Natural.makeOption(Number.parseInt(quad.object.value, 10)) : O.none();
 
 const quadsForSubject = (dataset: Dataset, subject: Subject): ReadonlyArray<Quad> =>
   pipe(
@@ -717,21 +717,19 @@ const repairProposal = Effect.fn("Ontology.Validation.repairProposal")(function*
       onSome: Effect.fn("Ontology.Validation.repairProposal.candidate")(function* (candidate) {
         const verified = yield* verifyRepair(input, violation, candidate.operations, shacl, shapes);
         return verified
-          ? O.some(
-              OntologyRepairProposal.make({
-                id: `repair:${violationIndex}:${pipe(
-                  candidate.operations,
-                  A.map((operation) => serializeQuad(operation.quad)),
-                  A.join("|")
-                )}`,
-                violationIndex: S.Natural.make(violationIndex),
-                focusNode: violation.focusNode,
-                path: violation.path,
-                message: `${candidate.safety} repair verified against the SHACL engine.`,
-                operations: candidate.operations,
-                verified,
-              })
-            )
+          ? OntologyRepairProposal.makeOption({
+              id: `repair:${violationIndex}:${pipe(
+                candidate.operations,
+                A.map((operation) => serializeQuad(operation.quad)),
+                A.join("|")
+              )}`,
+              violationIndex: S.Natural.make(violationIndex),
+              focusNode: violation.focusNode,
+              path: violation.path,
+              message: `${candidate.safety} repair verified against the SHACL engine.`,
+              operations: candidate.operations,
+              verified,
+            })
           : O.none<OntologyRepairProposal>();
       }),
     })

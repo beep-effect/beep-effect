@@ -130,17 +130,15 @@ const installPatch = Effect.fn("Citation.installJournalMetadataPatch")(function*
       CitationMetadataStringFields.make({ pinCite, parenthetical, year }),
       request.year
     );
-    return O.some(
-      CitationJournalMetadataPatch.make({
-        fullSpanEnd: request.spanEnd + owned.value.end,
-        year: common.numericYear,
-        metadata: CitationMetadataStringFields.make({
-          pinCite: common.pinCite,
-          parenthetical: common.parenthetical,
-          year: common.year,
-        }),
-      })
-    );
+    return CitationJournalMetadataPatch.makeOption({
+      fullSpanEnd: request.spanEnd + owned.value.end,
+      year: common.numericYear,
+      metadata: CitationMetadataStringFields.make({
+        pinCite: common.pinCite,
+        parenthetical: common.parenthetical,
+        year: common.year,
+      }),
+    });
   });
 });
 /** Compose source journal helper and superclass inference under shared owners.

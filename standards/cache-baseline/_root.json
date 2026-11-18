@@ -8,8 +8,8 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (model-first-standard scaffolder lane, claude/model-first-standard-scaffolder)",
-    "reason": "Re-record // after merging origin/main (#3396): main re-recorded the root baseline, and this branch's one added //#lint:policy-fingerprint input (packages/foundation/modeling/contract-kit/package.json) must be recorded on top of it. No qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (PR #3394 takeover lane, claude/model-first-standard-scaffolder)",
+    "reason": "Re-record // after merging origin/main (#3392/#3397/#3399): main re-recorded the root baseline, and this branch's one added //#lint:policy-fingerprint input (packages/foundation/modeling/contract-kit/package.json) must be recorded on top of it. No qualification is granted.",
     "basis": {
       "path": "docs/reports/contract-kit-cache-review-2026-11-18.md",
       "sha256": "714e6f90d843ebbd3a0aa27cf4becaf8d599a2d50e67d16a7d47506b8ba43b56"
@@ -188,7 +188,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "1c2ad1aac0b48bcb15d2caea75b1cf89467db3c18e57872d274482fbc488648b"
+      "sha256": "d0a747b3b25b4fe4e7e84d984bcfc3d50809cc327b7fb86279a222aa6df4aeb0"
     }
   ],
   "nodes": [

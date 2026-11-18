@@ -4,7 +4,6 @@ import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { fakeScanner } from "./fakeScanner.ts";
@@ -55,13 +54,11 @@ it.effect.prop(
       assert.strictEqual(scanner.pos, sample.before.length);
       assert.deepStrictEqual(
         once,
-        O.some(
-          DelimiterRun.make({
-            numdelims: sample.count,
-            canOpen: true,
-            canClose: (sample.before === "!" || sample.before === "😀") && sample.after === "😀",
-          })
-        )
+        DelimiterRun.makeOption({
+          numdelims: sample.count,
+          canOpen: true,
+          canClose: (sample.before === "!" || sample.before === "😀") && sample.after === "😀",
+        })
       );
     }),
   floorRuns

@@ -290,9 +290,13 @@ describe("commands/Qa report rendering", () => {
         relativePath: "frames/drag-w1_00000.png",
       }),
     ],
-    clockSync: O.some(
-      ClockSync.make({ confidence: "low", method: "assumed-start", offsetMs: -1000, residualRmsMs: 0, slope: 1 })
-    ),
+    clockSync: ClockSync.makeOption({
+      confidence: "low",
+      method: "assumed-start",
+      offsetMs: -1000,
+      residualRmsMs: 0,
+      slope: 1,
+    }),
     eventsPath: "events.ndjson",
     legacyManifestPath: O.none(),
     schemaVersion: "beep.qa.capture-session.v1",

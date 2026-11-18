@@ -63,7 +63,7 @@ export const goldenDeploymentIntent = OpenclawDeploymentIntent.make({
       contextTokens: O.some(32768),
       id: "ollama",
       models: [OpenclawModelDeclaration.make({ id: "gemma3:4b", input: ["text"], name: "gemma3:4b" })],
-      params: O.some(OpenclawModelProviderParams.make({ numCtx: O.some(32768) })),
+      params: OpenclawModelProviderParams.makeOption({ numCtx: O.some(32768) }),
     }),
   ],
   secretsResolver: OpenclawSecretsResolverIntent.make({
@@ -71,20 +71,18 @@ export const goldenDeploymentIntent = OpenclawDeploymentIntent.make({
     opBinaryPath: "/opt/beep/openclaw/bin/op",
     trustedDir: "/opt/beep/openclaw",
   }),
-  telegram: O.some(
-    OpenclawTelegramIntent.make({
-      botTokenRef: OpenclawSecretReference.make("op://beep-p0-spike3/spike3-telegram/bot-token"),
-      defaultTo: O.some("@p0_spike1_jul25"),
-      dmPolicy: "disabled",
-      groupPolicy: "open",
-      groups: {
-        "-1004475923698": OpenclawTelegramGroupIntent.make({
-          groupPolicy: O.some("open"),
-          requireMention: false,
-        }),
-      },
-    })
-  ),
+  telegram: OpenclawTelegramIntent.makeOption({
+    botTokenRef: OpenclawSecretReference.make("op://beep-p0-spike3/spike3-telegram/bot-token"),
+    defaultTo: O.some("@p0_spike1_jul25"),
+    dmPolicy: "disabled",
+    groupPolicy: "open",
+    groups: {
+      "-1004475923698": OpenclawTelegramGroupIntent.make({
+        groupPolicy: O.some("open"),
+        requireMention: false,
+      }),
+    },
+  }),
 });
 
 export const goldenIntentCanonicalJson = `{

@@ -1,0 +1,18 @@
+{
+  "previous": {
+    "@beep/repo-cli-kit": "1246e5fc0a0a749875010202e40f2534d91d0093d127f1c1be49684f90380b57",
+    "//": "0f6bf02d514da1ab6d3667112264a12bb5ba5809c1212c5b01c5928e65367fca"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5, feat/prunable-seam-1b",
+    "reason": "Record the two new upstream tasks that @beep/repo-cli-kit gains on build, check, lint:deprecated-apis and test from the @beep/glob and @beep/walker dependencies seam 1b of goals/prunable-product-leaves adds for the CheckoutPrune module, and the root turbo.json digest after the policy fingerprint reseal grew six generated seal tasks inputs. Preserve commands, cache flags, outputs, environment, declared inputs, epoch and qualification scope; inputs only grow; no qualification or exception.",
+    "basis": {
+      "path": "goals/prunable-product-leaves/research/2026-11-18-seam-1b-cache-review.md",
+      "sha256": "2c4dc72ad693bda061ff79e13fc8f425a35d050eae577f6b9c1d150a111b7d17"
+    }
+  },
+  "subjects": ["//", "@beep/repo-cli-kit"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

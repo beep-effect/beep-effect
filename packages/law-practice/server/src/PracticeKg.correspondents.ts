@@ -475,13 +475,11 @@ const participantsOf = (
         onSome: (match) => match[2] ?? "",
       });
       if (!O.isSome(named) && !bareAddressPattern.test(address)) return O.none<PracticeKgEmailParticipant>();
-      return O.some(
-        PracticeKgEmailParticipant.make({
-          address: normalizeAddress(address),
-          name: O.match(named, { onNone: () => null, onSome: (match) => cleanName(match[1]) }),
-          role,
-        })
-      );
+      return PracticeKgEmailParticipant.makeOption({
+        address: normalizeAddress(address),
+        name: O.match(named, { onNone: () => null, onSome: (match) => cleanName(match[1]) }),
+        role,
+      });
     })
   );
 };

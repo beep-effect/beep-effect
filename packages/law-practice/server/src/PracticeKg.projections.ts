@@ -840,7 +840,7 @@ const existingSourceSpecs = Effect.fn("PracticeKg.existingSourceSpecs")(function
         Effect.orElseSucceed(() => [false, false]),
         Effect.map(([sourcesExist, textExists]) =>
           sourcesExist && textExists
-            ? O.some(GraphTextSourceSpec.make({ sourcesPath, textGlob: path.join(textDir, "operation:*.txt") }))
+            ? GraphTextSourceSpec.makeOption({ sourcesPath, textGlob: path.join(textDir, "operation:*.txt") })
             : O.none()
         )
       );

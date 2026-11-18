@@ -363,7 +363,7 @@ export const makeDmsMirrorFixture = Effect.fn($I`makeDmsMirrorFixture`)(function
       name: O.some(item.name),
       parentRemoteId: O.map(item.parentId, RemoteItemId.make),
       payload: { emittedBy: "DmsMirrorFixture", eventType },
-      remoteId: O.some(RemoteItemId.make(item.remoteId)),
+      remoteId: RemoteItemId.makeOption(item.remoteId),
     });
     yield* Ref.update(eventsRef, A.append({ event, position }));
   });

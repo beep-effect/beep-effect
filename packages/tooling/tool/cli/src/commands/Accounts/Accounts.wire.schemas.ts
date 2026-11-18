@@ -150,7 +150,7 @@ export const ClaudeUsageBodyJson = JsonStringCodec(ClaudeUsageBody);
 
 const claudeLimitWindow = (limit: typeof ClaudeLimit.Type): O.Option<UsageWindow> => {
   const window = (kind: UsageWindow["kind"], scope: O.Option<string>) =>
-    O.some(UsageWindow.make({ kind, scope, usedPercent: limit.percent, resetsAt: limit.resets_at }));
+    UsageWindow.makeOption({ kind, scope, usedPercent: limit.percent, resetsAt: limit.resets_at });
   if (limit.kind === "session") return window("session", O.none());
   if (limit.kind === "weekly_all") return window("weekly", O.none());
   if (limit.kind === "weekly_scoped") {

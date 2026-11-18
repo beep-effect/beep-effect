@@ -645,15 +645,13 @@ export const makeOpenClawDeploymentIntent: {
           version: proofSkillVersion,
         }),
       ],
-      telegram: O.some(
-        OpenclawTelegramIntent.make({
-          botTokenRef: deployment.telegramBotTokenRef,
-          defaultTo: deployment.telegramDefaultTo,
-          dmPolicy: deployment.telegramDmPolicy,
-          groupPolicy: deployment.telegramGroupPolicy,
-          groups: {},
-        })
-      ),
+      telegram: OpenclawTelegramIntent.makeOption({
+        botTokenRef: deployment.telegramBotTokenRef,
+        defaultTo: deployment.telegramDefaultTo,
+        dmPolicy: deployment.telegramDmPolicy,
+        groupPolicy: deployment.telegramGroupPolicy,
+        groups: {},
+      }),
     });
   })
 );

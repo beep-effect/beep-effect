@@ -69,7 +69,7 @@ export type EcfrErrorReason = typeof EcfrErrorReason.Type;
  * import { EcfrErrorOptions } from "@beep/ecfr"
  * import * as O from "effect/Option"
  *
- * const options = EcfrErrorOptions.make({ status: O.some(S.Natural.make(503)) })
+ * const options = EcfrErrorOptions.make({ status: S.Natural.makeOption(503) })
  * console.log(options.status)
  * ```
  *

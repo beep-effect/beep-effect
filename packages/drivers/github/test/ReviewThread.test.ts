@@ -109,24 +109,22 @@ const messageText = (message: unknown): string =>
 // --- Model helpers --------------------------------------------------------------
 
 const newestComment = (author: O.Option<ReviewThreadActor>): O.Option<ReviewThreadComment> =>
-  O.some(
-    ReviewThreadComment.make({
-      id: "PRRC_x",
-      databaseId: O.none(),
-      author,
-      body: "",
-      path: "src/a.ts",
-      line: O.none(),
-      originalLine: O.none(),
-      createdAt: "2026-11-02T00:00:00Z",
-      url: "https://example.test",
-    })
-  );
+  ReviewThreadComment.makeOption({
+    id: "PRRC_x",
+    databaseId: O.none(),
+    author,
+    body: "",
+    path: "src/a.ts",
+    line: O.none(),
+    originalLine: O.none(),
+    createdAt: "2026-11-02T00:00:00Z",
+    url: "https://example.test",
+  });
 
 /** The newest comment is by a human with this login. */
-const lastWordFrom = (login: string) => newestComment(O.some(ReviewThreadActor.make({ login, isBot: false })));
+const lastWordFrom = (login: string) => newestComment(ReviewThreadActor.makeOption({ login, isBot: false }));
 /** The newest comment is by a bot with this login. */
-const lastWordFromBot = (login: string) => newestComment(O.some(ReviewThreadActor.make({ login, isBot: true })));
+const lastWordFromBot = (login: string) => newestComment(ReviewThreadActor.makeOption({ login, isBot: true }));
 /** The newest comment's author account is gone. */
 const lastWordAnonymous = newestComment(O.none());
 

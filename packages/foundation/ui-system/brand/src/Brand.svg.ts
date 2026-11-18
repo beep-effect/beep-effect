@@ -105,7 +105,7 @@ const svgOpen = (width: number, height: number, label: string): string =>
  *     mark: beep.mark,
  *     size: 32,
  *     paint: MarkPaint.make({ stroke: beep.dark.brand["400"], frame: beep.dark.foreground.base, lens: beep.dark.brand["900"] }),
- *     ground: O.some(MarkGround.make({ fill: beep.dark.brand["900"], radius: 6 })),
+ *     ground: MarkGround.makeOption({ fill: beep.dark.brand["900"], radius: 6 }),
  *   })
  * )
  * console.log(svg.startsWith("<svg"))

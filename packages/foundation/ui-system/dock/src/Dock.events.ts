@@ -189,7 +189,7 @@ export class PanelTabComponentChangedEvent extends S.Opaque<
  * const event = PanelConstraintsChangedEvent.make({
  *   panelId: PanelId.make("panel-one"),
  *   groupId: GroupId.make("group-one"),
- *   constraints: O.some(PanelConstraints.make({ minWidth: O.some(240) })),
+ *   constraints: PanelConstraints.makeOption({ minWidth: O.some(240) }),
  * })
  * console.log(event.kind)
  * ```

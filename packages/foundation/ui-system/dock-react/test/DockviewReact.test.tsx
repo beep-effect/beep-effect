@@ -238,7 +238,7 @@ describe("DockviewReact", { concurrent: false }, () => {
         id: panel1Id,
         title: "Inherited Tab",
         view: TextPanelView.make({ text: "first" }),
-        tabComponent: O.some(RendererKey.make("toString")),
+        tabComponent: RendererKey.makeOption("toString"),
       });
       const graph = yield* makeGraph(makeWorkspace([inherited]));
       render(<DockviewReact graph={graph} components={{}} tabComponents={{}} />);

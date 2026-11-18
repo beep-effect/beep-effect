@@ -484,7 +484,7 @@ const threadsClear = (threads: GateTableThreads): boolean =>
  *     requiredContexts: O.some(["Lint"]),
  *     checkRuns: [MergeGateCheckRun.make({ id: 1, name: "Lint", status: "completed", conclusion: "success" })],
  *     statuses: O.some([]),
- *     window: O.some(YeetReviewWindowElapsed.make({ anchor: "head-push", anchoredAt: "2026-11-06T00:00:00Z", windowMs: 1200000 })),
+ *     window: YeetReviewWindowElapsed.makeOption({ anchor: "head-push", anchoredAt: "2026-11-06T00:00:00Z", windowMs: 1200000 }),
  *     threads: GateTableThreadsCounted.make({ outstanding: 0, total: 2 }),
  *   })
  * )

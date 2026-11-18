@@ -479,7 +479,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
     const window = ExtractionWindow.make({
       endEpochMs: 1754000002000,
       frameTimesEpochMs: [1754000001000, 1754000001500],
-      gif: O.some(GifSpec.make({ fps: 12, width: 640 })),
+      gif: GifSpec.makeOption({ fps: 12, width: 640 }),
       label: "drag-w0",
       priority: "P0",
       ruleKind: "drag",

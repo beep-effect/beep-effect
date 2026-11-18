@@ -471,7 +471,7 @@ export const stashUnstagedWorktree = Effect.fn("Yeet.stashUnstagedWorktree")(fun
   yield* Console.log(
     `[yeet] staged-only: parked ${unstagedPaths.length + untrackedPaths.length} residue path(s) in stash "${marker}"`
   );
-  return O.some(YeetStashState.make({ createdAt, marker, stashSha }));
+  return YeetStashState.makeOption({ createdAt, marker, stashSha });
 });
 
 const stashIndexPattern = /^stash@\{(\d+)\}$/u;
@@ -970,7 +970,7 @@ const collectExistingCommitPublishIntent = Effect.fn("Yeet.collectExistingCommit
     ],
     { concurrency: 1 }
   );
-  return O.some(YeetExistingCommitPublishIntent.make({ commitSha, paths }));
+  return YeetExistingCommitPublishIntent.makeOption({ commitSha, paths });
 });
 
 const emptyIndexPublishIntent = Effect.fn("Yeet.emptyIndexPublishIntent")(function* (

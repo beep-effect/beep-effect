@@ -400,15 +400,13 @@ const localExecLayer = (options?: {
         if (O.isNone(detected)) return O.none<ExecContext>();
 
         const { prefix, dlxPrefix, scriptPrefix } = LocalExec.prefixes(detected.value.name);
-        return O.some(
-          ExecContext.make({
-            label: detected.value.name,
-            prefix,
-            dlxPrefix,
-            scriptPrefix,
-            directory: root.value,
-          })
-        );
+        return ExecContext.makeOption({
+          label: detected.value.name,
+          prefix,
+          dlxPrefix,
+          scriptPrefix,
+          directory: root.value,
+        });
       });
 
       return { context };

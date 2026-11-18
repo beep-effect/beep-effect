@@ -535,7 +535,7 @@ export const modelsExchangeMountOf: {
       if (!Str.startsWith("/")(point) || !containsPath(point, path)) return best;
       return O.isSome(best) && Str.length(best.value.point) > Str.length(point)
         ? best
-        : O.some(ModelsExchangeMount.make({ id: BigInt(id), point }));
+        : ModelsExchangeMount.makeOption({ id: BigInt(id), point });
     })
 );
 

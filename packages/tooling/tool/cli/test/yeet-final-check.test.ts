@@ -554,7 +554,7 @@ describe("forced final-check on a worker", () => {
   });
 
   it("forces a noop coverage plan without naming packages", () => {
-    const routing = O.some(CoverageNoopScope.make({})).pipe(forcedRouting);
+    const routing = CoverageNoopScope.makeOption({}).pipe(forcedRouting);
     const lines = forcedWorkerFinalCheckLines(routing);
     const last = A.last(lines);
     assertSome(

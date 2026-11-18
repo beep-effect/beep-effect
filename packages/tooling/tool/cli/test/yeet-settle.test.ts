@@ -89,14 +89,12 @@ const at = "2026-09-16T00:00:00.000Z";
 const decodeBranchRules = S.decodeUnknownEffect(S.Array(GhBranchRule));
 const decodeStatusRemote = S.decodeEffect(YeetStatusRemote);
 const expected = (contexts: ReadonlyArray<string>) =>
-  O.some(
-    YeetRulesetRequiredContexts.make({
-      base: "main",
-      contexts,
-      rulesetIds: [10240248],
-      readAt: at,
-    })
-  );
+  YeetRulesetRequiredContexts.makeOption({
+    base: "main",
+    contexts,
+    rulesetIds: [10240248],
+    readAt: at,
+  });
 const check = (name: string, outcome: YeetSettleCheck["outcome"] = "pass", required = true) =>
   YeetSettleCheck.make({ name, outcome, required });
 // The status snapshot carries each check's whole record; these fixtures only
@@ -104,15 +102,13 @@ const check = (name: string, outcome: YeetSettleCheck["outcome"] = "pass", requi
 const recordOf = (value: YeetSettleCheck) =>
   YeetWatchCheck.make({ name: value.name, outcome: value.outcome, required: value.required });
 const admission = (verdict: HeavyAdmission["verdict"], docsOnly = false) =>
-  O.some(
-    HeavyAdmission.make({
-      verdict,
-      admitted: verdict === "run",
-      sources: verdict === "run" ? ["label"] : [],
-      docsOnly,
-      changedPathCount: 1,
-    })
-  );
+  HeavyAdmission.makeOption({
+    verdict,
+    admitted: verdict === "run",
+    sources: verdict === "run" ? ["label"] : [],
+    docsOnly,
+    changedPathCount: 1,
+  });
 // Property-test predicates, named so the property body stays flat (fallow CRAP gate).
 const expectSettledVerdict = (input: YeetSettleInput, result: YeetSettleVerdict): void => {
   const reason = O.getOrNull(result.reason);
@@ -802,16 +798,14 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
                   const ready = criteria(n >= 4);
                   return YeetStatusSnapshot.make({
                     ...value,
-                    mergeReady: O.some(
-                      YeetMergeReady.make({
-                        ready: n >= 4,
-                        criteria: ready,
-                        failing: A.findFirst(
-                          YeetMergeReadyCriterion.literals,
-                          (criterion) => !mergeReadyCriterionHolds(ready, criterion)
-                        ),
-                      })
-                    ),
+                    mergeReady: YeetMergeReady.makeOption({
+                      ready: n >= 4,
+                      criteria: ready,
+                      failing: A.findFirst(
+                        YeetMergeReadyCriterion.literals,
+                        (criterion) => !mergeReadyCriterionHolds(ready, criterion)
+                      ),
+                    }),
                   });
                 })
               ),
@@ -925,7 +919,7 @@ it.layer(platform, { timeout: "30 seconds" })("B7 merge-loop timing", (layerIt) 
                 );
                 return YeetStatusSnapshot.make({
                   ...value,
-                  mergeReady: O.some(YeetMergeReady.make({ ready: true, criteria, failing: O.none() })),
+                  mergeReady: YeetMergeReady.makeOption({ ready: true, criteria, failing: O.none() }),
                 });
               })
             ),
@@ -1042,9 +1036,11 @@ describe("closeout follow-up gate", () => {
       closeoutWith(0),
       YeetStatusRemote.make({
         ...remoteWith(0),
-        reviewWindow: O.some(
-          YeetReviewWindowElapsed.make({ anchor: "head-push", anchoredAt: "2026-10-06T00:00:00.000Z", windowMs: 1 })
-        ),
+        reviewWindow: YeetReviewWindowElapsed.makeOption({
+          anchor: "head-push",
+          anchoredAt: "2026-10-06T00:00:00.000Z",
+          windowMs: 1,
+        }),
       })
     );
     assertNone(O.flatMap(elapsed, (value) => value.failing));

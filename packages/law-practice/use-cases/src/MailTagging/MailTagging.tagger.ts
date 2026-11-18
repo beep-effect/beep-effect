@@ -217,13 +217,11 @@ const candidateOf =
     A.match(entryEvidence(signals, entry), {
       onEmpty: O.none,
       onNonEmpty: (evidence) =>
-        O.some(
-          MatterCandidate.make({
-            matterKey: entry.matterKey,
-            confidence: matterEvidenceConfidence(evidence),
-            evidence,
-          })
-        ),
+        MatterCandidate.makeOption({
+          matterKey: entry.matterKey,
+          confidence: matterEvidenceConfidence(evidence),
+          evidence,
+        }),
     });
 
 const bestFirst: Order.Order<MatterCandidate> = Order.combine(
@@ -460,7 +458,7 @@ export const decideMatterTagging: {
  * const envelope = MailEnvelope.make({
  *   messageId: MailMessageId.make("msg-0001"),
  *   subject: "Notice",
- *   senderAddress: O.some(EmailString.make("notices@uspto.gov")),
+ *   senderAddress: EmailString.makeOption("notices@uspto.gov"),
  *   receivedAt: DateTime.makeUnsafe("2026-07-02T09:00:00.000Z"),
  *   hasAttachments: true
  * })

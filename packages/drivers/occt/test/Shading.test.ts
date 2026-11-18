@@ -395,7 +395,7 @@ describe("@beep/occt shading", () => {
                 ProjectionRequest.make({
                   solid: legacyFixture,
                   cameras: [front],
-                  shading: O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3, litThreshold: 0.55 })),
+                  shading: ShadingPlan.makeOption({ minPitch: 1, maxPitch: 3, litThreshold: 0.55 }),
                 })
               )
             ),
@@ -1305,7 +1305,7 @@ describe("@beep/occt shading", () => {
           ProjectionRequest.make({
             solid,
             cameras: [front],
-            shading: O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3, litThreshold: 0.55 })),
+            shading: ShadingPlan.makeOption({ minPitch: 1, maxPitch: 3, litThreshold: 0.55 }),
           })
         );
         const [gradedView] = yield* occt.project(

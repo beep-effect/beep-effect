@@ -20,7 +20,7 @@ export const heavyPool = RunnerPool.make({
   labels: ["beep-ec2-heavy"],
   runnerGroup: "beep-ec2-heavy",
   runnerNamePrefix: "beep-ci-",
-  jobRetry: O.some(JobRetryPolicy.make({ maxAttempts: 2, delaySeconds: 120, delayBackoff: 2 })),
+  jobRetry: JobRetryPolicy.makeOption({ maxAttempts: 2, delaySeconds: 120, delayBackoff: 2 }),
 });
 
 export const poolConfig = (pool: RunnerPool = heavyPool) =>

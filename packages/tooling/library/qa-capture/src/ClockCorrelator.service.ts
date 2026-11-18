@@ -219,15 +219,13 @@ export const fitBeaconClockSync: {
           : residualRmsMs <= BEACON_MEDIUM_CONFIDENCE_RMS_MS
             ? "medium"
             : "low";
-      return O.some(
-        ClockSync.make({
-          confidence,
-          method: "beacon",
-          offsetMs,
-          residualRmsMs,
-          slope: 1,
-        })
-      );
+      return ClockSync.makeOption({
+        confidence,
+        method: "beacon",
+        offsetMs,
+        residualRmsMs,
+        slope: 1,
+      });
     });
   });
 });

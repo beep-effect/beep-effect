@@ -484,6 +484,7 @@ export const checkFinalCheckRefresh = Effect.fn("Yeet.checkFinalCheckRefresh")(f
   FileSystem.FileSystem | Path.Path | GitServices | SecureRandom.SecureRandom
 > {
   const malformed = (receiptHead: string, which: string) =>
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
     O.some(
       FinalCheckRefreshRefused.make({
         receiptHead,
@@ -512,6 +513,7 @@ export const checkFinalCheckRefresh = Effect.fn("Yeet.checkFinalCheckRefresh")(f
   // record: a receipt copied or renamed under another sha is refused here.
   const notPassing = finalCheckRefusal(receipt, receiptHead.value);
   if (O.isSome(notPassing)) {
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
     return O.some(
       FinalCheckRefreshRefused.make({
         receiptHead: receiptHead.value,
@@ -553,7 +555,7 @@ const rewriteReceiptCandidates = Effect.fn("Yeet.rewriteReceiptCandidates")(func
       if (head === finalHead || (yield* isAncestor(repoRoot, head, finalHead))) return O.none();
       const stat = yield* fs.stat(path.join(directory, entry));
       const mtime = yield* Effect.fromOption(stat.mtime);
-      return O.some(RewriteReceiptCandidate.make({ head, mtime: DateTime.toEpochMillis(DateTime.makeUnsafe(mtime)) }));
+      return RewriteReceiptCandidate.makeOption({ head, mtime: DateTime.toEpochMillis(DateTime.makeUnsafe(mtime)) });
     }),
     { concurrency: 1 }
   );

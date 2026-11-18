@@ -191,7 +191,7 @@ const openGrammar = (
   if (hasName && !O.exists(R.get(names, token.name), (group) => group === token.value)) return O.none();
   const named = token.value > state.groups && hasName ? state.named + 1 : state.named;
   const groups = Num.max(state.groups, token.value);
-  return O.some(GrammarState.make({ depth: state.depth + 1, groups, named, quantifiable: false }));
+  return GrammarState.makeOption({ depth: state.depth + 1, groups, named, quantifiable: false });
 };
 const newlineAtoms = (sets: CitationRegexAtomSets) => {
   const counts = new Uint32Array(sets.atoms);
@@ -212,20 +212,20 @@ const grammarStep = (
   Match.value(token.kind).pipe(
     Match.whenOr("open", "lookahead", () => openGrammar(state, token, program.names)),
     Match.when("close", () =>
-      state.depth === 0 ? O.none() : O.some(GrammarState.make({ ...state, depth: state.depth - 1, quantifiable: true }))
+      state.depth === 0 ? O.none() : GrammarState.makeOption({ ...state, depth: state.depth - 1, quantifiable: true })
     ),
     Match.when("repeat", () =>
-      state.quantifiable ? O.some(GrammarState.make({ ...state, quantifiable: false })) : O.none()
+      state.quantifiable ? GrammarState.makeOption({ ...state, quantifiable: false }) : O.none()
     ),
     Match.whenOr("atom", "boundary", "non-boundary", () =>
-      token.value < program.sets.atoms ? O.some(GrammarState.make({ ...state, quantifiable: true })) : O.none()
+      token.value < program.sets.atoms ? GrammarState.makeOption({ ...state, quantifiable: true }) : O.none()
     ),
     Match.when("end", () =>
       token.value < program.sets.atoms && newlines[token.value] === 1
-        ? O.some(GrammarState.make({ ...state, quantifiable: false }))
+        ? GrammarState.makeOption({ ...state, quantifiable: false })
         : O.none()
     ),
-    Match.orElse(() => O.some(GrammarState.make({ ...state, quantifiable: false })))
+    Match.orElse(() => GrammarState.makeOption({ ...state, quantifiable: false }))
   );
 const validGrammar = (program: typeof ProgramShape.Type) => {
   const newlines = newlineAtoms(program.sets);
@@ -585,11 +585,11 @@ export const makeCitationRegexProgram = Effect.fn("Citation.makeRegexProgram")(f
       } else if (left.digits === 0) return O.none<RepeatBounds>();
       if (peek() !== 125) return O.none<RepeatBounds>();
       index++;
-      return O.some(RepeatBounds.make({ minimum: left.value, maximum }));
+      return RepeatBounds.makeOption({ minimum: left.value, maximum });
     });
     const simpleRepeat = (minimum: number, maximum: typeof Maximum.Type) => {
       index++;
-      return O.some(RepeatBounds.make({ minimum, maximum }));
+      return RepeatBounds.makeOption({ minimum, maximum });
     };
     const rejectUnqualifiedFuzzy = Effect.fn("Citation.rejectUnqualifiedFuzzy")(function* () {
       if (categories.engine !== "python-regex-v0" || peek() !== 123) return;

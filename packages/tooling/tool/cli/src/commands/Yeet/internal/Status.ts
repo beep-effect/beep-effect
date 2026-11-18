@@ -1280,6 +1280,7 @@ const collectRemoteStatus = Effect.fn("YeetStatus.collectRemoteStatus")(function
     detail: `PR #${view.number} ${view.state}`,
     readFailure: O.match(O.all([checks, requiredChecks]), {
       onNone: () =>
+        // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
         O.some(YeetCommandError.make({ message: "Failed to read the complete pull request check census." })),
       onSome: O.none,
     }),

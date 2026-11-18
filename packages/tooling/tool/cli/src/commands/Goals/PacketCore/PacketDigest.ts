@@ -424,6 +424,6 @@ export const parsePacketEventFileName = (fileName: string): O.Option<PacketEvent
       if (!isPacketEventType(typeText)) {
         return O.none();
       }
-      return O.some(PacketEventFileNameParts.make({ seq: Number(seqText), type: typeText, id: idText }));
+      return PacketEventFileNameParts.makeOption({ seq: Number(seqText), type: typeText, id: idText });
     })
   );
