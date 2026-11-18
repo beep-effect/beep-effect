@@ -224,7 +224,7 @@ const fleetCeilingStatements: ReadonlyArray<IAM.PolicyStatement> = [
     Resource: [instances, `arn:aws:ec2:${region}:${account}:volume/*`, `arn:aws:ec2:${region}:${account}:fleet/*`],
     Condition: { StringLike: { "aws:RequestTag/ghr:environment": "beep-fleet-*" } },
   },
-  // ...only from the stack's own launch templates, subnets and security groups.
+  // ...and only into the stack's own subnet and security group (and its launch template, when one is named).
   {
     Sid: "CeilingLaunchFromStack",
     Effect: "Allow",
@@ -342,9 +342,9 @@ const fleetCeilingStatements: ReadonlyArray<IAM.PolicyStatement> = [
  * The allow statements are the ceiling, no wider than the deploy role's own
  * reach: the fleet's SSM parameters, queues, functions, log groups and
  * binaries bucket by ARN, KMS only through SSM for a fleet parameter, and EC2
- * mutations only on instances tagged with a fleet `ghr:environment`,
- * launched from the stack's own launch templates, subnets and security
- * groups. Only the reads in {@link boundaryWildcardReasons} name
+ * mutations only on instances tagged with a fleet `ghr:environment`; a
+ * launch needs that request tag and a stack-owned subnet and security group
+ * (and launch template, when the request names one). Only the reads in {@link boundaryWildcardReasons} name
  * `Resource: "*"`. There is no snapshot, image or volume-attribute grant. The deny statements close the escalation paths
  * explicitly: every IAM write but passing a fleet role, assuming or passing
  * any role outside the fleet, and every Organizations, account and billing
