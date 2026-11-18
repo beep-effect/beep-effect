@@ -992,9 +992,10 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     const attemptRead = gh(["run", "task-outcomes", `${runId}`, `${view.attempt}`], repoRoot).pipe(
       Effect.tapErrorTag("RouteGhRateLimited", (refused) => Ref.update(carried, (n) => n + refused.requests))
     );
-    const outcomes = yield* meter.admit(label).pipe(
-      Effect.andThen(attemptRead),
-      Effect.catchTag("RouteGhRateLimited", () => waitForReset(label, repoRoot, attemptRead))
+    // Every attempt is admitted at the reserve, the retry after the rate-limit wait included.
+    const admittedRead = meter.admit(label).pipe(Effect.andThen(attemptRead));
+    const outcomes = yield* admittedRead.pipe(
+      Effect.catchTag("RouteGhRateLimited", () => waitForReset(label, repoRoot, admittedRead))
     );
     const read = yield* decodeTaskOutcomeRead(outcomes).pipe(
       Effect.mapError(RouteError.mapError("corpus-fetch", `${label} returned an unreadable payload.`))

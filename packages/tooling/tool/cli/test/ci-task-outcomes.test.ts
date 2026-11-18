@@ -553,11 +553,11 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       const receipt = yield* Fiber.join(fiber);
       // Three requests before the refusal, two in the read after the wait.
       deepStrictEqual([readCalls, receipt.taskOutcomeReads], [2, O.some(5)]);
-      // The task-outcome read is admitted once (at the reserve) and both its attempts are metered, beside the day's
-      // list, the run view and the rate-limit lookup of the wait: 1 + 1 + 1 + 2 metered calls.
+      // Both task-outcome attempts are admitted at the reserve (the first, and the retry after the wait) and metered,
+      // beside the day's list, the run view and the rate-limit lookup of the wait: 1 + 1 + 1 + 2 metered calls.
       deepStrictEqual(
         [A.filter(admitted, Str.startsWith("gh run task-outcomes")), meteredCalls],
-        [[`gh run task-outcomes ${RUN} 1`], 5]
+        [[`gh run task-outcomes ${RUN} 1`, `gh run task-outcomes ${RUN} 1`], 5]
       );
     })
   );
