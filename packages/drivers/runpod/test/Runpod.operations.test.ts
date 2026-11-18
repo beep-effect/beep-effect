@@ -138,7 +138,11 @@ describe("@beep/runpod generated operations", () => {
           ...A.map(descriptor.headerParams, ({ field }) => field),
           ...(descriptor.requestBody === "none" ? A.empty<string>() : ["body"]),
         ];
-        const declaredStatuses = A.map(descriptor.responses, ({ status }) => status);
+        const decodedStatuses = pipe(
+          descriptor.responses,
+          A.filter(({ body }) => body !== "event-stream"),
+          A.map(({ status }) => status)
+        );
 
         expect([descriptor.operationId, sorted(R.keys(definition.properties ?? {}))]).toEqual([
           descriptor.operationId,
@@ -146,10 +150,12 @@ describe("@beep/runpod generated operations", () => {
         ]);
         expect(A.every(descriptor.pathParams, (param) => A.contains(required, param))).toBe(true);
         expect(A.contains(required, "body")).toBe(descriptor.requestBodyRequired);
-        for (const [status, response] of R.toEntries(responses)) {
-          expect(A.contains(declaredStatuses, status)).toBe(true);
-          expect(S.toJsonSchemaDocument(response).dialect).toBe("draft-2020-12");
-        }
+        // Both directions: a decoder exists for exactly the declared statuses
+        // whose body is not an event stream (those are read as SSE).
+        deepStrictEqual(
+          { operationId: descriptor.operationId, decoded: sorted(R.keys(responses)) },
+          { operationId: descriptor.operationId, decoded: sorted(decodedStatuses) }
+        );
       }),
       { concurrency: 1, discard: true }
     )
