@@ -144,7 +144,7 @@ export const appCredentials = Config.all({
  * import * as Effect from "effect/Effect"
  * import * as Redacted from "effect/Redacted"
  *
- * const credentials = Effect.runSync(stageCredentials("dev_alice"))
+ * const credentials = Effect.runSync(stageCredentials("dev-alice"))
  * console.log(Redacted.value(credentials.webhookSecret)) // "unset"
  * ```
  *

@@ -88,7 +88,7 @@ export const stageSlug: (stage: string) => string = flow(
 
 /**
  * The pinned names of a stage. `prod` is `beep-fleet-prod`; a personal stage
- * `dev_alice` is `beep-fleet-dev-alice`. The stage is always part of the
+ * `dev-alice` is `beep-fleet-dev-alice`. The stage is always part of the
  * name, so no stage's fleet name is a prefix of another stage's environment
  * except where one personal slug prefixes another.
  *
@@ -97,7 +97,7 @@ export const stageSlug: (stage: string) => string = flow(
  * ```ts
  * import { physicalNames } from "@beep/infra-ci-runners/Names"
  *
- * console.log(physicalNames("dev_alice").ssmRoot) // "/beep-fleet/dev-alice"
+ * console.log(physicalNames("dev-alice").ssmRoot) // "/beep-fleet/dev-alice"
  * ```
  *
  * @param stage - The Alchemy stage.

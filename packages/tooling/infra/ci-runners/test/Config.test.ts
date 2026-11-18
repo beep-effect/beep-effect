@@ -69,7 +69,7 @@ describe("CiRunners configuration", () => {
 describe("CiRunners personal-stage fence", () => {
   it.effect("launches nothing and allows no repository without a rehearsal", () =>
     Effect.gen(function* () {
-      const config = yield* resolveStageConfig("dev_test").pipe(environmentOf({}));
+      const config = yield* resolveStageConfig("dev-test").pipe(environmentOf({}));
       expect(config.runnerType).toBe("Repo");
       expect(config.repositoryAllowList).toEqual([]);
       expect(effectiveCap(config.heavy, config.phase)).toBe(0);
@@ -82,7 +82,7 @@ describe("CiRunners personal-stage fence", () => {
       const input = personalConfig(O.some("alice/sandbox"));
       expect(input.repositoryAllowList).toEqual(["alice/sandbox"]);
       expect(input.heavy.overlapMaximumCount).toBe(1);
-      const error = yield* resolveStageConfig("dev_test").pipe(
+      const error = yield* resolveStageConfig("dev-test").pipe(
         environmentOf({ CI_RUNNERS_REHEARSAL_REPOSITORY: "alice/sandbox" }),
         Effect.flip
       );
@@ -99,7 +99,7 @@ describe("CiRunners personal-stage fence", () => {
       assertFalse(isRehearsalRepository("beep-effect/beep-effect"));
       assertFalse(isRehearsalRepository("Beep-Effect/Beep-Effect"));
       assertTrue(isRehearsalRepository("alice/sandbox"));
-      const error = yield* resolveStageConfig("dev_test").pipe(
+      const error = yield* resolveStageConfig("dev-test").pipe(
         environmentOf({ CI_RUNNERS_REHEARSAL_REPOSITORY: "beep-effect/beep-effect" }),
         Effect.flip
       );
@@ -135,7 +135,7 @@ describe("CiRunners physical names", () => {
 
   it.effect("keeps every stage's names clear of the live fleet", () =>
     Effect.sync(() => {
-      for (const stage of ["prod", "dev_alice", "dev_Bob", "staging"]) {
+      for (const stage of ["prod", "dev-alice", "dev-bob", "staging"]) {
         expect(liveFleetOverlaps(physicalNames(stage))).toEqual([]);
       }
       assertTrue(touchesLiveFleet("beep-ci-heavy"));
@@ -148,8 +148,8 @@ describe("CiRunners physical names", () => {
   it.effect("never lets the prod watcher prefix match a personal stage's runners", () =>
     Effect.sync(() => {
       const prodPrefix = physicalNames("prod").fleet;
-      assertFalse(Str.startsWith(prodPrefix)(poolEnvironment("dev_alice", "heavy")));
-      assertFalse(Str.startsWith(physicalNames("dev_alice").fleet)(poolEnvironment("prod", "heavy")));
+      assertFalse(Str.startsWith(prodPrefix)(poolEnvironment("dev-alice", "heavy")));
+      assertFalse(Str.startsWith(physicalNames("dev-alice").fleet)(poolEnvironment("prod", "heavy")));
     })
   );
 });

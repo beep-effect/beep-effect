@@ -174,8 +174,8 @@ const runnerPolicies = Effect.fn("CiRunners.runnerPolicies")(function* (names: P
  * import { placeholderCredentials } from "@beep/infra-ci-runners/Credentials"
  * import * as Effect from "effect/Effect"
  *
- * const program = Effect.flatMap(resolveStageConfig("dev_alice"), (config) =>
- *   declareCiRunners({ config, stage: "dev_alice", credentials: placeholderCredentials })
+ * const program = Effect.flatMap(resolveStageConfig("dev-alice"), (config) =>
+ *   declareCiRunners({ config, stage: "dev-alice", credentials: placeholderCredentials })
  * )
  * console.log(typeof program) // "object"
  * ```

@@ -32,7 +32,7 @@ import type { PhysicalNames } from "./Names.ts";
  * import { requireCiForProduction } from "@beep/infra-ci-runners/Guards"
  * import * as Effect from "effect/Effect"
  *
- * Effect.runSync(requireCiForProduction("dev_alice"))
+ * Effect.runSync(requireCiForProduction("dev-alice"))
  * ```
  *
  * @param stage - The Alchemy stage being planned or deployed.
@@ -57,7 +57,7 @@ export const requireCiForProduction = Effect.fn("CiRunners.requireCiForProductio
  * import { requireConfiguredTarget } from "@beep/infra-ci-runners/Guards"
  * import * as Effect from "effect/Effect"
  *
- * const guard = Effect.flatMap(resolveStageConfig("dev_alice"), requireConfiguredTarget)
+ * const guard = Effect.flatMap(resolveStageConfig("dev-alice"), requireConfiguredTarget)
  * console.log(typeof guard) // "object"
  * ```
  *

@@ -636,7 +636,7 @@ export const RehearsalRepository = S.String.check(
 export const rehearsalRepositoryVariable = "CI_RUNNERS_REHEARSAL_REPOSITORY";
 
 /**
- * Configuration input of a personal stage (`dev_$USER`).
+ * Configuration input of a personal stage (`dev-$USER`).
  *
  * **Details**
  *
@@ -728,7 +728,7 @@ export const rehearsalRepository = Config.schema(RehearsalRepository, rehearsalR
  * import { resolveStageConfig } from "@beep/infra-ci-runners/Config"
  * import * as Effect from "effect/Effect"
  *
- * const config = Effect.runSync(resolveStageConfig("dev_alice"))
+ * const config = Effect.runSync(resolveStageConfig("dev-alice"))
  * console.log(config.runnerType) // "Repo"
  * ```
  *
