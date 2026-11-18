@@ -66,10 +66,13 @@ kept file, stays present and strict
 
 ## Surfaces in this pull request
 
-Each surface reads the inventory only when it has something to judge (a
-missing link, an ownerless registration, drift, an unconsumed entry), so a
-clean run in the full checkout reads nothing more. Each skip is counted on
-the surface's own output.
+The doctors, the lints and the law read the inventory only when they have
+something to judge (a missing link, an ownerless registration, drift, a
+finding), so a clean run in the full checkout reads nothing more.
+`quality catalog-usage` reads it with the workspace manifests it already
+scans: the lockfile records of pruned workspaces are part of the usage it
+counts, so it cannot know in advance whether one matters. Each skip is
+counted on the surface's own output.
 
 | Surface | What skips | Tests |
 | --- | --- | --- |
