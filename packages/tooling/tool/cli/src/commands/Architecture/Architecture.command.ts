@@ -17,13 +17,14 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { registerScaffoldedWorkspaces } from "../CreatePackage/CreatePackage.command.ts";
+import { registerScaffoldedWorkspaces, scaffoldedRegistrationGaps } from "../CreatePackage/CreatePackage.command.ts";
 import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/internal/IdentityBulkRegistration.ts";
 import {
   ensureCurrentModelFirstReferences,
   makeArchitectureOperationPlan,
   makeArchitecturePackageOperationPlan,
   makeModelFirstContextOperationPlan,
+  modelFirstPackagePathsOf,
   shapeOfOperationPlan,
 } from "./Architecture.plan.ts";
 import {
@@ -247,16 +248,17 @@ const ensureIdempotent = Effect.fn(function* (result: OperationPlanCheckResult) 
 });
 
 // A model-first apply registers its packages the way `create-package` does.
-const registerModelFirstPackages = Effect.fn(function* (rootDir: string, plan: CanonicalSliceOperationPlan) {
-  const { addedWorkspaces, registeredSlugs } = yield* registerScaffoldedWorkspaces(
-    rootDir,
-    A.map(plan.roles, (rolePlan) => rolePlan.path)
-  );
+const registerModelFirstPackages = Effect.fn(function* (rootDir: string, packagePaths: ReadonlyArray<string>) {
+  const { addedWorkspaces, registeredSlugs } = yield* registerScaffoldedWorkspaces(rootDir, packagePaths);
   yield* Console.log(
     `architecture context registration: workspaces=${A.join(addedWorkspaces, ",")} identities=${A.join(
       registeredSlugs,
       ","
     )}`
+  );
+  // Registration refreshes bun.lock only; the workspace links come from an install.
+  yield* Console.log(
+    "architecture context registration: run `bun install` from the repository root before running the new packages' checks or tests."
   );
 });
 
@@ -270,14 +272,33 @@ const registerLegacyIdentities = Effect.fn(function* (rootDir: string) {
 const applyAndRegister = Effect.fn(function* (plan: CanonicalSliceOperationPlan, register: boolean) {
   const rootDir = yield* findRepoRoot();
   const shape = shapeOfOperationPlan(plan);
-  // A saved model-first plan must carry the references the sync would write now.
+  // A saved model-first plan must name the packages it writes and carry the
+  // references the sync would write now, both checked before anything is written.
+  const packagePaths = shape === "model-first" ? yield* modelFirstPackagePathsOf(plan) : [];
   if (shape === "model-first") yield* ensureCurrentModelFirstReferences(rootDir, plan);
   const result = yield* applyCanonicalSliceOperationPlan(rootDir, plan);
   yield* reportApplyResult(result);
   yield* ArchitectureShape.match(shape, {
-    "model-first": () => registerModelFirstPackages(rootDir, plan),
+    "model-first": () => registerModelFirstPackages(rootDir, packagePaths),
     legacy: () => (register ? registerLegacyIdentities(rootDir) : Effect.void),
   });
+});
+
+// After an interrupted apply the files can all match while the packages were
+// never registered; check would then call the plan idempotent.
+const ensureModelFirstRegistration = Effect.fn(function* (rootDir: string, plan: CanonicalSliceOperationPlan) {
+  const packagePaths = yield* modelFirstPackagePathsOf(plan);
+  const { missingWorkspaces, missingIdentities } = yield* scaffoldedRegistrationGaps(rootDir, packagePaths);
+  if (A.isReadonlyArrayNonEmpty(missingWorkspaces) || A.isReadonlyArrayNonEmpty(missingIdentities)) {
+    return yield* DomainError.newMessage(
+      Text.joinLines([
+        "Architecture operation plan is not registered.",
+        `missing-workspaces=${A.join(missingWorkspaces, ",")}`,
+        `missing-identities=${A.join(missingIdentities, ",")}`,
+        "Run `beep architecture apply --file <plan>` to register them.",
+      ])
+    );
+  }
 });
 
 const runWriteCommand = Effect.fn(function* (plan: CanonicalSliceOperationPlan, dryRun: boolean) {
@@ -334,11 +355,13 @@ const architectureCheckCommand = Command.make(
     const rootDir = yield* findRepoRoot();
     const plan = yield* readOperationPlanFile(file);
     const planShape = yield* ensurePlanShape(plan, shape);
-    // The same read-only freshness check apply runs; legacy plans skip it.
+    // A model-first plan is checked like apply checks it, and its registration is
+    // checked too, all read-only; legacy plans check their files alone.
     if (planShape === "model-first") yield* ensureCurrentModelFirstReferences(rootDir, plan);
     const result = yield* checkCanonicalSliceOperationPlan(rootDir, plan);
     yield* reportCheckResult(result);
     yield* ensureIdempotent(result);
+    if (planShape === "model-first") yield* ensureModelFirstRegistration(rootDir, plan);
   })
 ).pipe(Command.withDescription("Validate that a canonical architecture operation plan is idempotent"));
 

@@ -65,7 +65,7 @@ export const registerMissingWorkspaceIdentityPackages = Effect.fn(
   const missing = CreatePackageIdentityRegistration.missingIdentityRegistrations(registryContent, nonLabSlugs);
 
   for (const slug of missing) {
-    yield* CreatePackageIdentityRegistration.ensureIdentityPackageRegistration(absolutePath, slug);
+    yield* CreatePackageIdentityRegistration.ensureIdentityPackageRegistration(absolutePath, slug, repoRoot);
   }
 
   const missingLabs = CreatePackageIdentityRegistration.missingIdentityRegistrations(registryContent, labSlugs);

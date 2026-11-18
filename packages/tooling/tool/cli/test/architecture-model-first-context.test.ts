@@ -1,6 +1,7 @@
 import * as Catalog from "@beep/contract-kit/Catalog";
 import * as Parity from "@beep/contract-kit/Parity";
 import {
+  ArchitectureSliceRolePlan,
   applyCanonicalSliceOperationPlan,
   architectureCommand,
   CanonicalSliceOperationPlan,
@@ -10,12 +11,18 @@ import {
   ensureCurrentModelFirstReferences,
   makeArchitectureOperationPlan,
   makeModelFirstContextOperationPlan,
+  modelFirstPackagePathsOf,
   renderPackageJsonOperation,
   shapeOfOperationPlan,
   WriteFileOperation,
   WritePackageJsonOperation,
 } from "@beep/repo-cli/commands/Architecture";
-import { duplicateBindingsOf } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates";
+import { modelFirstOperationsFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext";
+import {
+  duplicateBindingsOf,
+  ModelFirstContextRequest,
+  modelFirstContextNamesFor,
+} from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates";
 import { registerScaffoldedWorkspaceEntries } from "@beep/repo-cli/commands/CreatePackage";
 import { TsconfigSyncPlan } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan";
 import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
@@ -228,6 +235,16 @@ const staleOf = (plan: CanonicalSliceOperationPlan): CanonicalSliceOperationPlan
   });
 
 const checkoutIdentity = "packages/foundation/modeling/identity";
+
+// Each checkout workspace gets a project: TS-morph scopes the identity
+// registry edit to the project owning the file, and the tsconfig sync gives a
+// project reference only to a workspace with an owner config.
+const writeWorkspaceProject = Effect.fnUntraced(function* (identityDirectory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const project = yield* jsonStringifyPretty({ include: ["src"], compilerOptions: { rootDir: "src" } });
+  yield* fs.writeFileString(path.join(identityDirectory, "tsconfig.json"), project);
+});
 const checkoutKit = "packages/foundation/modeling/contract-kit";
 
 // A disposable checkout in the git-ignored tmp/ holding the named workspaces
@@ -253,6 +270,9 @@ const makeCheckout = Effect.fnUntraced(function* (
   for (const file of files) {
     yield* fs.makeDirectory(path.dirname(path.join(checkout, file)), { recursive: true });
     yield* fs.copyFile(path.join(root, file), path.join(checkout, file));
+  }
+  for (const workspace of workspaces) {
+    yield* writeWorkspaceProject(path.join(checkout, workspace));
   }
   return checkout;
 });
@@ -411,6 +431,7 @@ describe("beep architecture: model-first context", () => {
         for (const file of ["package.json", "src/packages.ts"]) {
           yield* fs.copyFile(path.join(root, identity, file), path.join(checkout, identity, file));
         }
+        yield* writeWorkspaceProject(path.join(checkout, identity));
 
         const plan = yield* notesPlan;
         yield* applyCanonicalSliceOperationPlan(checkout, plan);
@@ -557,14 +578,73 @@ describe("beep architecture: model-first context", () => {
     it.effect(
       "a saved plan applies only while its project references match the workspace graph",
       Effect.fnUntraced(function* () {
-        const root = yield* repoRoot;
-        const plan = yield* notesPlan;
-        yield* ensureCurrentModelFirstReferences(root, plan);
-        const refusal = yield* Effect.flip(ensureCurrentModelFirstReferences(root, staleOf(plan)));
+        // A fresh checkout, so no earlier scaffold of the context can be there.
+        const checkout = yield* makeCheckout("model-first-fresh-");
+        const plan = yield* makeModelFirstContextOperationPlan({
+          repoRoot: checkout,
+          context: "notes",
+          module: "Note",
+        });
+        yield* ensureCurrentModelFirstReferences(checkout, plan);
+        const refusal = yield* Effect.flip(ensureCurrentModelFirstReferences(checkout, staleOf(plan)));
         expect(refusal.message).toContain("packages/notes/contract/tsconfig.json");
         expect(refusal.message).toContain("Regenerate the plan");
         // Nothing of the plan exists in the checkout, so there is nothing to reconcile.
         expect(refusal.message).not.toContain("already exist");
+      })
+    );
+
+    it.effect(
+      "registration paths come from the manifests the plan writes; an edited role path is refused",
+      Effect.fnUntraced(function* () {
+        const plan = yield* notesPlan;
+        const packagePaths = yield* modelFirstPackagePathsOf(plan);
+        expect(packagePaths).toEqual(["packages/notes/contract", "packages/notes/model", "packages/notes/host"]);
+        const edited = CanonicalSliceOperationPlan.make({
+          ...plan,
+          roles: A.map(plan.roles, (rolePlan) =>
+            rolePlan.role === "model"
+              ? ArchitectureSliceRolePlan.make({ ...rolePlan, path: "packages/notes/host" })
+              : rolePlan
+          ),
+        });
+        const refusal = yield* Effect.flip(modelFirstPackagePathsOf(edited));
+        expect(refusal.message).toContain("model: packages/notes/host");
+      })
+    );
+
+    it.effect(
+      "rejects a context named after a directory workspace discovery skips",
+      Effect.fnUntraced(function* () {
+        const refusal = yield* Effect.flip(
+          makeModelFirstContextOperationPlan({ repoRoot: "/repo", context: "build", module: "Task" })
+        );
+        expect(refusal.message).toContain("workspace discovery skips a directory named build");
+      })
+    );
+
+    it.effect(
+      "references a dependency's tsconfig.build.json when it has one, as the tsconfig sync does",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const checkout = yield* makeCheckout("model-first-build-config-");
+        const project = yield* jsonStringifyPretty({ extends: "./tsconfig.json" });
+        yield* fs.writeFileString(path.join(checkout, checkoutKit, "tsconfig.build.json"), project);
+        const plan = yield* makeModelFirstContextOperationPlan({
+          repoRoot: checkout,
+          context: "notes",
+          module: "Note",
+        });
+        const contractConfig = pipe(
+          plan.operations,
+          A.filter(isWriteFileOperation),
+          A.findFirst((operation) => operation.path === "packages/notes/contract/tsconfig.json"),
+          O.map((operation) => operation.content),
+          O.getOrElse(() => "")
+        );
+        expect(contractConfig).toContain("../../foundation/modeling/contract-kit/tsconfig.build.json");
+        expect(contractConfig).toContain("../../foundation/modeling/identity/tsconfig.json");
       })
     );
 
@@ -689,6 +769,42 @@ describe("beep architecture: model-first context", () => {
         })
       );
     }
+
+    it("reads type-only, aliased and destructured bindings by namespace", () => {
+      const source = A.join(
+        [
+          'import type * as T from "t";',
+          'import type { U } from "u";',
+          'import { type V, W as X } from "v";',
+          "interface T {}",
+          "type U = string;",
+          "const { V } = values;",
+          "export function X() {}",
+        ],
+        "\n"
+      );
+      expect(duplicateBindingsOf(source)).toEqual(["T", "U", "X"]);
+    });
+
+    it.effect(
+      "a package with no project references gets none in its tsconfig and an empty list in its overlays",
+      Effect.fnUntraced(function* () {
+        const plan = yield* notesPlan;
+        const names = modelFirstContextNamesFor(ModelFirstContextRequest.make({ context: "notes", module: "Note" }));
+        const operations = modelFirstOperationsFor(names, { contract: [], model: [], host: [] });
+        const contentOf = (path: string) =>
+          pipe(
+            operations,
+            A.filter(isWriteFileOperation),
+            A.findFirst((operation) => operation.path === path),
+            O.map((operation) => operation.content),
+            O.getOrElse(() => "")
+          );
+        expect(contentOf("packages/notes/host/tsconfig.json")).not.toContain("references");
+        expect(contentOf("packages/notes/host/tsconfig.check.json")).toContain('"references": []');
+        expect(A.length(operations)).toBe(A.length(plan.operations));
+      })
+    );
 
     it.effect(
       "notes/Note binds every name once in every generated file",

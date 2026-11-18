@@ -6,12 +6,16 @@
  * @since 0.0.0
  */
 
+import { $RepoCliId } from "@beep/identity/packages";
+import { LiteralKit } from "@beep/schema";
 import { A, Str } from "@beep/utils";
 import { dual, pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+
+const $I = $RepoCliId.create("commands/Architecture/internal/ModelFirstContext");
+
 import {
-  ArchitectureContextRole,
   ArchitecturePlanTarget,
   ArchitectureSliceRolePlan,
   WriteFileOperation,
@@ -19,7 +23,47 @@ import {
 } from "../Architecture.schemas.ts";
 import { modelFirstSourceFilesFor } from "./ModelFirstTemplates.ts";
 import { packageNameForRole, pathForRole } from "./RoleTopology.ts";
+import type { ArchitectureContextRole } from "../Architecture.schemas.ts";
 import type { ModelFirstContextNames, ModelFirstSourceFile } from "./ModelFirstTemplates.ts";
+
+/**
+ * The context roles this step generates: every role but `web`, which waits for
+ * the bindings generator.
+ *
+ * **Example** (Validate a generated role)
+ *
+ * ```ts
+ * import { GeneratedContextRole } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(GeneratedContextRole)("web")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const GeneratedContextRole = LiteralKit(["contract", "model", "host"]).pipe(
+  $I.annoteSchema("GeneratedContextRole", {
+    description: "A model-first context role generated today: contract, model or host.",
+  })
+);
+
+/**
+ * A model-first context role generated today.
+ *
+ * **Example** (Type a generated role)
+ *
+ * ```ts
+ * import type { GeneratedContextRole } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext"
+ *
+ * const role: GeneratedContextRole = "host"
+ * console.log(role) // "host"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type GeneratedContextRole = typeof GeneratedContextRole.Type;
 
 /**
  * The context roles generated today. `web` waits for the bindings generator.
@@ -35,7 +79,7 @@ import type { ModelFirstContextNames, ModelFirstSourceFile } from "./ModelFirstT
  * @category constants
  * @since 0.0.0
  */
-export const generatedContextRoles: ReadonlyArray<ArchitectureContextRole> = ["contract", "model", "host"];
+export const generatedContextRoles: ReadonlyArray<GeneratedContextRole> = ["contract", "model", "host"];
 
 /**
  * The plan target of a model-first context: the context and its first Module.
@@ -137,7 +181,7 @@ const devDependencies: R.ReadonlyRecord<string, string> = {
   "bun-types": "catalog:",
 };
 
-const dependenciesFor = ArchitectureContextRole.match({
+const dependenciesFor = GeneratedContextRole.match({
   contract: (): R.ReadonlyRecord<string, string> => ({
     "@alchemy.run/domain": "catalog:",
     "@beep/contract-kit": "workspace:^",
@@ -150,38 +194,38 @@ const dependenciesFor = ArchitectureContextRole.match({
     effect: "catalog:",
   }),
   host: (): R.ReadonlyRecord<string, string> => ({ "@alchemy.run/domain": "catalog:", effect: "catalog:" }),
-  web: (): R.ReadonlyRecord<string, string> => ({ effect: "catalog:" }),
 });
 
 const contextDependenciesFor = (
   names: ModelFirstContextNames,
-  role: ArchitectureContextRole
+  role: GeneratedContextRole
 ): R.ReadonlyRecord<string, string> =>
-  ArchitectureContextRole.match(role, {
+  GeneratedContextRole.match(role, {
     contract: () => dependenciesFor(role),
     model: () => ({ ...dependenciesFor(role), [names.contractPackage]: "workspace:^" }),
     host: () => ({ ...dependenciesFor(role), [names.modelPackage]: "workspace:^" }),
-    web: () => ({ ...dependenciesFor(role), [names.contractPackage]: "workspace:^" }),
   });
 
-const contextDevDependenciesFor = ArchitectureContextRole.match({
-  contract: (): R.ReadonlyRecord<string, string> => ({ ...devDependencies, "@effect/platform-node": "catalog:" }),
+const contextDevDependenciesFor = GeneratedContextRole.match({
+  contract: (): R.ReadonlyRecord<string, string> => ({
+    ...devDependencies,
+    "@effect/platform-node": "catalog:",
+    "ts-morph": "catalog:",
+  }),
   model: (): R.ReadonlyRecord<string, string> => ({ ...devDependencies, "@beep/contract-kit": "workspace:^" }),
   host: (): R.ReadonlyRecord<string, string> => devDependencies,
-  web: (): R.ReadonlyRecord<string, string> => devDependencies,
 });
 
-const packageDescriptionFor = (names: ModelFirstContextNames, role: ArchitectureContextRole): string =>
-  ArchitectureContextRole.match(role, {
+const packageDescriptionFor = (names: ModelFirstContextNames, role: GeneratedContextRole): string =>
+  GeneratedContextRole.match(role, {
     contract: () => `The ${names.contextLabel} context's contract: what clients and other contexts import.`,
     model: () => `The ${names.contextLabel} context's write and reaction model.`,
     host: () => `The ${names.contextLabel} context's host: server adapters and hosting.`,
-    web: () => `The ${names.contextLabel} context's screens over generated bindings.`,
   });
 
 const packageJsonOperationFor = (
   names: ModelFirstContextNames,
-  role: ArchitectureContextRole
+  role: GeneratedContextRole
 ): WritePackageJsonOperation => {
   const target = modelFirstTargetFor(names);
   return WritePackageJsonOperation.make({
@@ -198,7 +242,7 @@ const packageJsonOperationFor = (
   });
 };
 
-const agentsContent = (names: ModelFirstContextNames, role: ArchitectureContextRole, packageName: string): string =>
+const agentsContent = (names: ModelFirstContextNames, role: GeneratedContextRole, packageName: string): string =>
   `# ${packageName}
 
 ${packageDescriptionFor(names, role)}
@@ -210,7 +254,7 @@ ${packageDescriptionFor(names, role)}
 - Before handing back a change, run \`bun run beep quality package-verify ${packageName}\` from the repository root.
 `;
 
-const readmeContent = (names: ModelFirstContextNames, role: ArchitectureContextRole, packageName: string): string =>
+const readmeContent = (names: ModelFirstContextNames, role: GeneratedContextRole, packageName: string): string =>
   `# ${packageName}
 
 ${packageDescriptionFor(names, role)}
@@ -265,14 +309,14 @@ const docgenContent = (path: string): string => `{
  * ```ts
  * import type { ModelFirstReferences } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext"
  *
- * const none: ModelFirstReferences = { contract: [], model: [], host: [], web: [] }
+ * const none: ModelFirstReferences = { contract: [], model: [], host: [] }
  * console.log(none.host.length) // 0
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export type ModelFirstReferences = R.ReadonlyRecord<ArchitectureContextRole, ReadonlyArray<string>>;
+export type ModelFirstReferences = R.ReadonlyRecord<GeneratedContextRole, ReadonlyArray<string>>;
 
 /**
  * The workspace packages one generated package depends on, dev dependencies
@@ -295,11 +339,11 @@ export type ModelFirstReferences = R.ReadonlyRecord<ArchitectureContextRole, Rea
  * @since 0.0.0
  */
 export const modelFirstWorkspaceDependenciesFor: {
-  (names: ModelFirstContextNames, role: ArchitectureContextRole): ReadonlyArray<string>;
-  (role: ArchitectureContextRole): (names: ModelFirstContextNames) => ReadonlyArray<string>;
+  (names: ModelFirstContextNames, role: GeneratedContextRole): ReadonlyArray<string>;
+  (role: GeneratedContextRole): (names: ModelFirstContextNames) => ReadonlyArray<string>;
 } = dual(
   2,
-  (names: ModelFirstContextNames, role: ArchitectureContextRole): ReadonlyArray<string> =>
+  (names: ModelFirstContextNames, role: GeneratedContextRole): ReadonlyArray<string> =>
     pipe(
       [...R.keys(contextDependenciesFor(names, role)), ...R.keys(contextDevDependenciesFor(role))],
       A.filter(Str.startsWith("@beep/")),
@@ -381,7 +425,7 @@ export default mergeConfig(
 `;
 
 const shellFile = (
-  role: ArchitectureContextRole,
+  role: GeneratedContextRole,
   path: string,
   writer: WriteFileOperation["writer"],
   content: string,
@@ -390,7 +434,7 @@ const shellFile = (
 
 const shellFilesFor = (
   names: ModelFirstContextNames,
-  role: ArchitectureContextRole,
+  role: GeneratedContextRole,
   references: ReadonlyArray<string>
 ): ReadonlyArray<WriteFileOperation> => {
   const target = modelFirstTargetFor(names);
@@ -452,7 +496,7 @@ const sourceOperationFor = (names: ModelFirstContextNames, file: ModelFirstSourc
  * import { ModelFirstContextRequest, modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
  * import { modelFirstOperationsFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext"
  *
- * const none = { contract: [], model: [], host: [], web: [] }
+ * const none = { contract: [], model: [], host: [] }
  * const operations = modelFirstOperationsFor(modelFirstContextNamesFor(ModelFirstContextRequest.make({ context: "notes", module: "Note" })), none)
  * console.log(operations.some((operation) => operation.path === "packages/notes/host/src/Host.ts")) // true
  * ```

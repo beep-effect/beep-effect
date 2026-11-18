@@ -1216,6 +1216,7 @@
     {"name":"CreatePackage.registerScaffoldedWorkspaceEntries","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CreatePackage.registerScaffoldedWorkspaces","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CreatePackage.removeRetiredPackageName","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CreatePackage.scaffoldedRegistrationGaps","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DeletePackage.assembleDeletePolicy","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DeletePackage.decodeManifest","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"DeletePackage.enforceOwnedTreeTargetPolicy","owner":"@beep/repo-cli","family":"tooling","conforms":true},

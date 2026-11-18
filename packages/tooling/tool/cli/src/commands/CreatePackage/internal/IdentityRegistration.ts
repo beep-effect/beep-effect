@@ -91,27 +91,36 @@ const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
  * @category utilities
  * @since 0.0.0
  */
-const ensureIdentityPackageRegistration = Effect.fn(function* (identityPackagesFilePath: string, packageName: string) {
+const ensureIdentityPackageRegistration = Effect.fn(function* (
+  identityPackagesFilePath: string,
+  packageName: string,
+  repoRoot?: string | undefined
+) {
   const tsMorphService = yield* TSMorphService;
-  return yield* tsMorphService.updateSourceFile(identityPackagesFilePath, (sourceFile) => {
-    const composersDeclaration =
-      sourceFile.getVariableDeclaration("generatedComposers") ?? sourceFile.getVariableDeclarationOrThrow("composers");
-    const composersCall = composersDeclaration.getInitializerIfKindOrThrow(SyntaxKind.CallExpression);
-    const existingSegments = pipe(
-      composersCall.getArguments(),
-      A.flatMap((argument) => pipe(O.fromNullishOr(argument.asKind(SyntaxKind.StringLiteral)), O.toArray)),
-      A.map((literal) => literal.getLiteralText())
-    );
+  return yield* tsMorphService.updateSourceFile(
+    identityPackagesFilePath,
+    (sourceFile) => {
+      const composersDeclaration =
+        sourceFile.getVariableDeclaration("generatedComposers") ??
+        sourceFile.getVariableDeclarationOrThrow("composers");
+      const composersCall = composersDeclaration.getInitializerIfKindOrThrow(SyntaxKind.CallExpression);
+      const existingSegments = pipe(
+        composersCall.getArguments(),
+        A.flatMap((argument) => pipe(O.fromNullishOr(argument.asKind(SyntaxKind.StringLiteral)), O.toArray)),
+        A.map((literal) => literal.getLiteralText())
+      );
 
-    if (!A.some(existingSegments, Str.equivalence(packageName))) {
-      composersCall.addArgument(`"${packageName}"`);
-    }
+      if (!A.some(existingSegments, Str.equivalence(packageName))) {
+        composersCall.addArgument(`"${packageName}"`);
+      }
 
-    const accessorName = toIdentityAccessorName(packageName);
-    if (sourceFile.getVariableDeclaration(accessorName) === undefined) {
-      sourceFile.addStatements(typedIdentityExportBlock(packageName));
-    }
-  });
+      const accessorName = toIdentityAccessorName(packageName);
+      if (sourceFile.getVariableDeclaration(accessorName) === undefined) {
+        sourceFile.addStatements(typedIdentityExportBlock(packageName));
+      }
+    },
+    repoRoot
+  );
 });
 
 const composeCallExpressions = (sourceFile: SourceFile): ReadonlyArray<CallExpression> =>

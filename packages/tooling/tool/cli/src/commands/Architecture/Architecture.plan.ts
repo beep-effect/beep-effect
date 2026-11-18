@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 
-import { workspaceMembers } from "@beep/repo-cli-kit/RepoWorkspaces";
+import { skippedWorkspaceDirectoryNames, workspaceMembers } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { DomainError } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as Effect from "effect/Effect";
@@ -18,6 +18,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { toIdentityAccessorName } from "../CreatePackage/internal/IdentityExportBlock.ts";
+import { TsconfigSyncPlan } from "../TsconfigSync/TsconfigSync.plan.ts";
 import {
   ArchitectureContextRole,
   ArchitecturePlanTarget,
@@ -73,7 +74,7 @@ import type {
   ArchitectureSliceRolePlan,
 } from "./Architecture.schemas.ts";
 import type { AcceptedProofFile } from "./internal/AcceptedProofManifest.ts";
-import type { ModelFirstReferences } from "./internal/ModelFirstContext.ts";
+import type { GeneratedContextRole, ModelFirstReferences } from "./internal/ModelFirstContext.ts";
 import type { ModelFirstContextNames } from "./internal/ModelFirstTemplates.ts";
 
 const defaultPlanTarget = defaultArchitecturePlanTarget;
@@ -457,23 +458,39 @@ const modelFirstReferencesFor = Effect.fnUntraced(function* (repoRoot: string, n
     );
   }
   yield* ensureIdentityAccessorsFree(repoRoot, members, target);
-  const directories = HashMap.fromIterable([
-    ...A.map(members, (member) => [member.name, member.relativePath] as const),
-    ...A.map(generatedContextRoles, (role) => [packageNameForRole(target, role), pathForRole(target, role)] as const),
+  // The reference target is the sync's own owner config per workspace
+  // (tsconfig.build.json when one exists, else tsconfig.json); a workspace with
+  // neither gets no reference, as the sync gives it none. A generated package
+  // does not exist yet and takes the fallback.
+  const descriptors = yield* TsconfigSyncPlan.buildWorkspaceDescriptors(repoRoot).pipe(
+    Effect.mapError(DomainError.newCause("Failed to read the workspace tsconfigs"))
+  );
+  const ownerConfigs = HashMap.fromIterable([
+    ...A.map(
+      descriptors,
+      (descriptor) =>
+        [
+          descriptor.packageName,
+          O.map(O.fromUndefinedOr(descriptor.ownerTsconfigPath), (owner) => path.relative(repoRoot, owner)),
+        ] as const
+    ),
+    ...A.map(
+      generatedContextRoles,
+      (role) => [packageNameForRole(target, role), O.some(`${pathForRole(target, role)}/tsconfig.json`)] as const
+    ),
   ]);
-  const referencesOf = Effect.fnUntraced(function* (role: ArchitectureContextRole) {
-    const directoriesOfDependencies = yield* Effect.forEach(
+  const referencesOf = Effect.fnUntraced(function* (role: GeneratedContextRole) {
+    const ownersOfDependencies = yield* Effect.forEach(
       modelFirstWorkspaceDependenciesFor(names, role),
       (dependency) =>
-        O.match(HashMap.get(directories, dependency), {
+        O.match(HashMap.get(ownerConfigs, dependency), {
           onNone: () => DomainError.newMessage(`Workspace package "${dependency}" is not in the repository.`),
           onSome: Effect.succeed,
         }),
       { concurrency: 1 }
     );
     return pipe(
-      directoriesOfDependencies,
-      A.map((directory) => `${directory}/tsconfig.json`),
+      A.getSomes(ownersOfDependencies),
       A.sort(Order.String),
       A.map((tsconfig) => path.relative(pathForRole(target, role), tsconfig))
     );
@@ -482,7 +499,6 @@ const modelFirstReferencesFor = Effect.fnUntraced(function* (repoRoot: string, n
     contract: yield* referencesOf("contract"),
     model: yield* referencesOf("model"),
     host: yield* referencesOf("host"),
-    web: A.empty<string>(),
   } satisfies ModelFirstReferences;
 });
 const isContextSlug = S.is(S.String.check(S.isPattern(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u)));
@@ -548,6 +564,13 @@ export const makeModelFirstContextOperationPlan = Effect.fn(function* (input: {
   if (!isContextSlug(input.context)) {
     return yield* DomainError.newMessage(
       `Invalid context "${input.context}": a context is a kebab-case slug such as "notes" or "case-files".`
+    );
+  }
+  // Workspace discovery never looks beneath these, so a package there is never
+  // registered or synced.
+  if (A.contains(skippedWorkspaceDirectoryNames, input.context)) {
+    return yield* DomainError.newMessage(
+      `Invalid context "${input.context}": workspace discovery skips a directory named ${input.context} (${A.join(skippedWorkspaceDirectoryNames, ", ")}), so its packages would never be registered.`
     );
   }
   if (!isModuleName(input.module)) {
@@ -657,4 +680,60 @@ export const ensureCurrentModelFirstReferences = Effect.fn(function* (
   return yield* DomainError.newMessage(
     `The plan's project references no longer match the workspace graph (${A.join(stale, ", ")}). ${regenerate}.${recovery}`
   );
+});
+
+const isWritePackageJsonOperation = S.is(WritePackageJsonOperation);
+
+/**
+ * The package directories a model-first plan writes, read from its validated
+ * package-manifest operations, after checking that each role plan names the
+ * directory its role's manifest is written to.
+ *
+ * **Details**
+ *
+ * Registration uses these paths, so an edited plan whose role paths disagree
+ * with the files it writes is refused before anything is written; an
+ * unmodified plan replays.
+ *
+ * **Example** (The notes packages)
+ *
+ * ```ts
+ * import { makeModelFirstContextOperationPlan, modelFirstPackagePathsOf } from "@beep/repo-cli/commands/Architecture"
+ * import { NodeServices } from "@effect/platform-node"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.flatMap(
+ *   makeModelFirstContextOperationPlan({ repoRoot: "/workspace/beep-effect", context: "notes", module: "Note" }),
+ *   modelFirstPackagePathsOf
+ * )
+ * Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then(console.log)
+ * ```
+ *
+ * @param plan - A model-first operation plan.
+ * @returns The repo-relative package directories, in manifest order.
+ * @category validation
+ * @since 0.0.0
+ */
+export const modelFirstPackagePathsOf = Effect.fn(function* (plan: CanonicalSliceOperationPlan) {
+  const manifests = A.filter(plan.operations, isWritePackageJsonOperation);
+  const mismatched = A.filter(
+    plan.roles,
+    (rolePlan) =>
+      !A.some(
+        manifests,
+        (manifest) =>
+          manifest.role === rolePlan.role &&
+          manifest.repositoryDirectory === rolePlan.path &&
+          manifest.packageName === rolePlan.packageName
+      )
+  );
+  if (A.isReadonlyArrayNonEmpty(mismatched)) {
+    return yield* DomainError.newMessage(
+      `The plan's role paths do not match the package manifests it writes (${A.join(
+        A.map(mismatched, (rolePlan) => `${rolePlan.role}: ${rolePlan.path}`),
+        ", "
+      )}). Regenerate the plan instead of editing it.`
+    );
+  }
+  return A.map(manifests, (manifest) => manifest.repositoryDirectory);
 });

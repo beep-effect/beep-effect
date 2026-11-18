@@ -53,6 +53,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { withJournalFileLock } from "../../internal/repo-run/AdmissionJournal.ts";
 import { syncTsconfigAtRoot } from "../TsconfigSync/index.ts";
 import { TsconfigSyncRunOptionsSync } from "../TsconfigSync/TsconfigSync.schemas.ts";
 import {
@@ -1133,15 +1134,81 @@ const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(functio
  */
 export const registerScaffoldedWorkspaceEntries = Effect.fn("CreatePackage.registerScaffoldedWorkspaceEntries")(
   function* (repoRoot: string, packagePaths: ReadonlyArray<string>) {
-    const addedWorkspaces: Array<string> = [];
-    for (const packagePath of packagePaths) {
-      const added = yield* ensureRootWorkspaceEntry(repoRoot, packagePath);
-      if (added) A.appendInPlace(addedWorkspaces, packagePath);
-    }
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    // The root manifest is read, merged and rewritten once per path: hold one
+    // cross-process lock over the whole loop so two registrations in the same
+    // checkout cannot overwrite each other's entries.
+    const lockDirectory = path.join(repoRoot, ".beep", "locks");
+    yield* fs
+      .makeDirectory(lockDirectory, { recursive: true })
+      .pipe(Effect.mapError(DomainError.newCause(`Failed to create "${lockDirectory}"`)));
+    const addedWorkspaces = yield* withJournalFileLock(
+      path.join(lockDirectory, "root-workspaces.lock"),
+      () =>
+        Effect.filter(packagePaths, (packagePath) => ensureRootWorkspaceEntry(repoRoot, packagePath), {
+          concurrency: 1,
+        }),
+      undefined,
+      "Another process is registering workspaces in this checkout; retry after it completes."
+    ).pipe(Effect.catchTag("QualitySchedulerError", (error) => DomainError.newMessage(error.message)));
     const registeredSlugs = yield* registerMissingWorkspaceIdentityPackages(repoRoot);
     return { addedWorkspaces, registeredSlugs } as const;
   }
 );
+
+/**
+ * What registration would still add for package directories another
+ * scaffolder wrote, without writing anything: the root workspace entries
+ * that do not cover them and the identity composers the registry lacks.
+ *
+ * **Example** (Read the registration gaps of a generated context)
+ *
+ * ```ts
+ * import { scaffoldedRegistrationGaps } from "@beep/repo-cli/commands/CreatePackage"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = scaffoldedRegistrationGaps("/repo", ["packages/notes/contract"])
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - Absolute repository root.
+ * @param packagePaths - Repo-relative package directories.
+ * @returns The paths missing a workspace entry and the slugs missing a composer.
+ * @effects Reads the root manifest, each package manifest and the identity registry.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const scaffoldedRegistrationGaps = Effect.fn("CreatePackage.scaffoldedRegistrationGaps")(function* (
+  repoRoot: string,
+  packagePaths: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const missingWorkspaces = yield* Effect.filter(
+    packagePaths,
+    (packagePath) => rootWorkspaceEntryNeeded(repoRoot, packagePath),
+    { concurrency: 1 }
+  );
+  const slugs = yield* Effect.forEach(
+    packagePaths,
+    Effect.fnUntraced(function* (packagePath) {
+      const manifest = yield* readPackageJsonFile(path.join(repoRoot, packagePath, "package.json")).pipe(
+        Effect.mapError(DomainError.newCause(`Failed to read the "${packagePath}" package manifest`))
+      );
+      return Str.replace("@beep/", "")(manifest.name);
+    }),
+    { concurrency: 1 }
+  );
+  const registryFile = yield* CreatePackageIdentityRegistration.resolveIdentityPackagesFilePath(repoRoot);
+  const registryPath = path.join(repoRoot, registryFile);
+  const registry = yield* fs
+    .readFileString(registryPath)
+    .pipe(Effect.mapError(DomainError.newCause(`Failed to read "${registryPath}"`)));
+  const missingIdentities = CreatePackageIdentityRegistration.missingIdentityRegistrations(registry, slugs);
+  return { missingWorkspaces, missingIdentities } as const;
+});
 
 /**
  * Register package directories another scaffolder already wrote, the way

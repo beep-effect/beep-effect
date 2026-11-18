@@ -9,7 +9,6 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect/Function";
-import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { ArchitectureContextRole } from "../Architecture.schemas.ts";
@@ -117,11 +116,7 @@ const bindingsIn = (names: string, space: Space): ReadonlyArray<readonly [string
     A.filter(Str.isNonEmpty),
     A.map((entry): readonly [string, Space] => {
       const typeOnly = Str.startsWith("type ")(entry);
-      const local = pipe(
-        Str.split(Str.replace(/^type\s+/u, "")(entry), /\s+as\s+/u),
-        A.last,
-        O.getOrElse(() => entry)
-      );
+      const local = A.lastNonEmpty(Str.split(Str.replace(/^type\s+/u, "")(entry), /\s+as\s+/u));
       return [Str.trim(local), typeOnly ? "type" : space];
     })
   );
@@ -135,17 +130,17 @@ const declarationSpace = (keyword: string): Space =>
 const topLevelBindings = (content: string): ReadonlyArray<readonly [string, Space]> => [
   ...A.map(
     matchesOf(content, /^import\s+(type\s+)?\*\s+as\s+(\$?\w+)\s+from/gmu),
-    (match): readonly [string, Space] => [match[2] ?? "", match[1] === undefined ? "both" : "type"]
+    (match): readonly [string, Space] => [String(match[2]), match[1] === undefined ? "both" : "type"]
   ),
   ...A.flatMap(matchesOf(content, /^import\s+(type\s+)?\{([^}]*)\}\s+from/gmu), (match) =>
-    bindingsIn(match[2] ?? "", match[1] === undefined ? "both" : "type")
+    bindingsIn(String(match[2]), match[1] === undefined ? "both" : "type")
   ),
   ...A.flatMap(matchesOf(content, /^(?:export\s+)?const\s+\{([^}]*)\}\s*=/gmu), (match) =>
-    bindingsIn(match[1] ?? "", "value")
+    bindingsIn(String(match[1]), "value")
   ),
   ...A.map(
     matchesOf(content, /^(?:export\s+)?(const|let|function|class|type|interface)\s+(\$?\w+)/gmu),
-    (match): readonly [string, Space] => [match[2] ?? "", declarationSpace(match[1] ?? "")]
+    (match): readonly [string, Space] => [String(match[2]), declarationSpace(String(match[1]))]
   ),
 ];
 
@@ -542,11 +537,12 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
+import { Project, SyntaxKind } from "ts-morph";
 
 // What a contract may resolve (ARCHITECTURE.md, "Legal Imports"): never a model, host or driver.
-// Its own package name appears in its JSDoc examples.
 const allowed = [
   "@alchemy.run/domain",
   "@beep/contract-kit",
@@ -556,15 +552,40 @@ const allowed = [
   "effect",
 ] as const;
 
-const isAllowed = (specifier: string): boolean =>
-  Str.startsWith(".")(specifier) ||
+const isAllowedPackage = (specifier: string): boolean =>
   A.some(allowed, (root) => specifier === root || Str.startsWith(\`\${root}/\`)(specifier));
 
-const specifiersOf = (source: string): ReadonlyArray<string> =>
-  pipe(
-    A.fromIterable(pipe(source, Str.matchAll(/from\\s+"([^"]+)"/g))),
-    A.map((match) => match[1] ?? "")
+const project = new Project({ useInMemoryFileSystem: true });
+
+// Every module specifier of one file, read from its syntax tree: imports
+// (side-effect imports too), re-exports, import-equals and dynamic imports.
+const specifiersOf = (fileName: string, source: string): ReadonlyArray<string> => {
+  const file = project.createSourceFile(fileName, source, { overwrite: true });
+  const dynamicImports = pipe(
+    file.getDescendantsOfKind(SyntaxKind.CallExpression),
+    A.filter((call) => call.getExpression().getKind() === SyntaxKind.ImportKeyword),
+    A.flatMap((call) => A.map(call.getArguments(), (argument) => Str.replace(/^["'\`]|["'\`]$/g, "")(argument.getText())))
   );
+  return [
+    ...A.map(file.getImportDeclarations(), (declaration) => declaration.getModuleSpecifierValue()),
+    ...A.flatMap(file.getExportDeclarations(), (declaration) =>
+      O.toArray(O.fromNullishOr(declaration.getModuleSpecifierValue()))
+    ),
+    ...A.map(file.getDescendantsOfKind(SyntaxKind.ExternalModuleReference), (reference) =>
+      Str.replace(/^["']|["']$/g, "")(reference.getExpression()?.getText() ?? "")
+    ),
+    ...dynamicImports,
+  ];
+};
+
+// A relative specifier is legal when it resolves inside the contract package;
+// a bare one when it names an allowed package.
+const illegalImportsOf = (path: Path.Path, packageRoot: string, fileName: string, source: string) =>
+  A.filter(specifiersOf(fileName, source), (specifier) => {
+    if (!Str.startsWith(".")(specifier)) return !isAllowedPackage(specifier);
+    const relative = path.relative(packageRoot, path.resolve(path.dirname(fileName), specifier));
+    return Str.startsWith("..")(relative) || path.isAbsolute(relative);
+  });
 
 describe("contract imports", () => {
   layer(NodeServices.layer)((it) => {
@@ -573,19 +594,38 @@ describe("contract imports", () => {
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const src = yield* path.fromFileUrl(new URL("../src", import.meta.url));
+        const packageRoot = yield* path.fromFileUrl(new URL("..", import.meta.url));
+        const src = path.join(packageRoot, "src");
         const entries = yield* fs.readDirectory(src, { recursive: true });
         const files = A.filter(entries, Str.endsWith(".ts"));
-        const sources = yield* Effect.forEach(files, (file) => fs.readFileString(path.join(src, file)), {
-          concurrency: 1,
-        });
-        const illegal = pipe(
-          sources,
-          A.flatMap(specifiersOf),
-          A.filter((specifier) => !isAllowed(specifier))
+        const illegal = yield* Effect.forEach(
+          files,
+          (file) =>
+            Effect.map(fs.readFileString(path.join(src, file)), (source) =>
+              illegalImportsOf(path, packageRoot, path.join(src, file), source)
+            ),
+          { concurrency: 1 }
         );
         expect(files.length).toBeGreaterThan(0);
-        expect(illegal).toEqual([]);
+        expect(A.flatten(illegal)).toEqual([]);
+      })
+    );
+
+    it.effect(
+      "refuse a driver import, a relative import into the model and a side-effect import",
+      Effect.fnUntraced(function* () {
+        const path = yield* Path.Path;
+        const packageRoot = yield* path.fromFileUrl(new URL("..", import.meta.url));
+        const fixture = path.join(packageRoot, "src", "Fixture.ts");
+        const illegal = (source: string) => illegalImportsOf(path, packageRoot, fixture, source);
+        const driver = "import { Pg } from '@beep/postgres';\\n";
+        const intoModel = 'export * from "../../model/src/Model.ts";\\n';
+        const sideEffect = 'import "node:fs";\\n';
+        const sibling = 'import { Id } from "./Id.ts";\\n';
+        expect(illegal(driver)).toEqual(["@beep/postgres"]);
+        expect(illegal(intoModel)).toEqual(["../../model/src/Model.ts"]);
+        expect(illegal(sideEffect)).toEqual(["node:fs"]);
+        expect(illegal(sibling)).toEqual([]);
       })
     );
   });
