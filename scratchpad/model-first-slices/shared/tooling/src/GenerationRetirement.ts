@@ -9,7 +9,6 @@ import * as N from "effect/Number";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { ledgerOf } from "./FactRetirement.ts";
-import { Equal } from "effect"
 
 /**
  * A consumer's checkpoint on the feed, read from where that consumer keeps it:

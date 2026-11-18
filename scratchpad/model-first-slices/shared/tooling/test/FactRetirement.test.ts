@@ -4,7 +4,7 @@ import { Count, Name, Sequence } from "@proto/kernel/Measure";
 import { checkFactRetirement, ledgerOf } from "@proto/tooling/FactRetirement";
 import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
-import * as Equal from "effect/Equal";
+import * as Eq from "effect/Equal";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -35,14 +35,14 @@ const publishedOf = (descriptors: ReadonlyArray<DeploymentDescriptor>) =>
 const consumedOf = (descriptors: ReadonlyArray<DeploymentDescriptor>) =>
   A.flatMap(descriptors, (descriptor) => A.map(descriptor.consumes, (fact) => ({ consumer: descriptor.context, fact })));
 const isPublished = (descriptors: ReadonlyArray<DeploymentDescriptor>) => (fact: FactVersion) =>
-  A.some(publishedOf(descriptors), (entry) => Equal.equals(entry.fact, fact));
+  A.some(publishedOf(descriptors), (entry) => Eq.equals(entry.fact, fact));
 const isConsumed = (descriptors: ReadonlyArray<DeploymentDescriptor>) => (fact: FactVersion) =>
-  A.some(consumedOf(descriptors), (entry) => Equal.equals(entry.fact, fact));
+  A.some(consumedOf(descriptors), (entry) => Eq.equals(entry.fact, fact));
 const isSuperseded = (descriptors: ReadonlyArray<DeploymentDescriptor>) => (fact: FactVersion) =>
   A.some(publishedOf(descriptors), ({ fact: other }) => other.producer === fact.producer && other.contract === fact.contract && other.version > fact.version);
 
 /** The same entries, whatever their order. */
-const sameEntries = <A>(actual: ReadonlyArray<A>, expected: ReadonlyArray<A>) => {
+const sameEntries = (actual: ReadonlyArray<unknown>, expected: ReadonlyArray<unknown>) => {
   expect(actual).toHaveLength(expected.length);
   expect(actual).toEqual(expect.arrayContaining([...expected]));
 };

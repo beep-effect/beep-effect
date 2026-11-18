@@ -1,4 +1,5 @@
 import { PrincipalId, RunId } from "@proto/kernel/Ids";
+import { Name } from "@proto/kernel/Measure";
 import { pipe } from "effect/Function";
 import * as Headers from "effect/http/Headers";
 import * as Match from "effect/Match";
@@ -7,7 +8,8 @@ import * as S from "effect/Schema";
 
 /**
  * Who a request says it is: a human, an agent run, or a process acting for a
- * human (a poller, a webhook).
+ * human (a poller, a webhook). A process is named as a policy or handler is,
+ * so the header it is sent in reads back as the same credential.
  *
  * **Gotchas**
  *
@@ -22,7 +24,7 @@ import * as S from "effect/Schema";
 export const Credential = S.TaggedUnion({
   Human: { principal: PrincipalId },
   Agent: { run: RunId },
-  Process: { process: S.String, principal: PrincipalId },
+  Process: { process: Name, principal: PrincipalId },
 });
 /**
  * @category models
@@ -32,18 +34,19 @@ export type Credential = typeof Credential.Type;
 
 const FIXTURE = /^Fixture (human|agent|process):([^@\s]+)(?:@(\S+))?$/;
 
+const decode = S.decodeUnknownOption(Credential);
+
+// Each part is decoded, so a malformed id or process name reads as no credential, never a defect.
 const parse = (value: string): O.Option<Credential> =>
   pipe(
     O.fromNullishOr(FIXTURE.exec(value)),
     O.flatMap(([, kind, subject = "", principal]) =>
       Match.value(kind).pipe(
         Match.withReturnType<O.Option<Credential>>(),
-        Match.when("human", () => Credential.cases.Human.makeOption({ principal: PrincipalId.make(subject) })),
-        Match.when("agent", () => Credential.cases.Agent.makeOption({ run: RunId.make(subject) })),
+        Match.when("human", () => decode({ _tag: "Human", principal: subject })),
+        Match.when("agent", () => decode({ _tag: "Agent", run: subject })),
         Match.when("process", () =>
-          O.map(O.fromNullishOr(principal), (on) =>
-            Credential.cases.Process.make({ process: subject, principal: PrincipalId.make(on) }),
-          ),
+          O.flatMap(O.fromNullishOr(principal), (on) => decode({ _tag: "Process", process: subject, principal: on })),
         ),
         Match.orElse(O.none<Credential>),
       ),

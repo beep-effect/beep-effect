@@ -204,8 +204,9 @@ export const BoundaryLive = Layer.effect(
           O.match(ref.delegation, {
             onNone: thunkEffectSucceedNone,
             onSome: (delegation) =>
+              // Of the grant the ref names: a delegation of another grant answers for nothing.
               Effect.map(delegationInForce(delegation, O.some(run), at), (found) =>
-                O.map(found, ({ grant, terms }) => CapabilityGrant.make({
+                O.map(O.filter(found, ({ grant }) => grant === ref.grant), ({ grant, terms }) => CapabilityGrant.make({
                   grant,
                   delegation: O.some(delegation), ...terms
                 }))

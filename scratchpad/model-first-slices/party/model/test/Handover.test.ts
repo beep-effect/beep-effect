@@ -2,7 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import * as InMemory from "@alchemy.run/domain/InMemory";
 import { Internals } from "@alchemy.run/domain/Model";
 import { expect, it } from "@effect/vitest";
-import { RunId } from "@proto/kernel/Ids";
+import type { RunId } from "@proto/kernel/Ids";
 import { provenanceOf } from "@proto/kernel/Invocation";
 import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
 import { ClaimAccepted } from "@proto/party-contract/Claim/AcceptClaim.command";
@@ -13,9 +13,7 @@ import { type AssertedReview, ClaimReviewState } from "@proto/party-contract/Cla
 import { ClaimRetracted } from "@proto/party-contract/Claim/RetractClaim.command";
 import { ReviewRequested } from "@proto/party-contract/Claim/ReviewRequested.event";
 import { ClaimDecidedV1, ClaimDecidedV2, ClaimFeed } from "@proto/party-contract/Facts/ClaimDecided.fact";
-import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { PartyIntake, PartyReview } from "@proto/party-contract/Party.capabilities";
-import { Proposition } from "@proto/party-contract/Proposition";
 import { Authority } from "@proto/party-model/Authority.external";
 import { Claim, ClaimState } from "@proto/party-model/Claim/Claim.aggregate";
 import { ClaimReviewLive } from "@proto/party-model/Claim/ClaimReview.handler";
@@ -28,6 +26,7 @@ import { partyStreamPins } from "@proto/party-model/Facts/StreamPins";
 import { PartyHandlers } from "@proto/party-model/Party.handlers";
 import { PartyModel } from "@proto/party-model/Party.model";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
+import { reviewRun } from "@proto/party-model/Review/ReviewPlan";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
 import { checkPublisherHandover } from "@proto/tooling/PublisherHandover";
 import * as A from "@beep/utils/Array";
@@ -38,7 +37,8 @@ import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as O from "@beep/utils/Option";
 import * as Schedule from "effect/Schedule";
-import { acme, human, onOrg, twoSources } from "./fixtures.ts";
+import { Cast, rolesOf } from "./Cast.ts";
+import { member, twoSources } from "./fixtures.ts";
 
 // Phase 10 (D47): an upgrade that replaces a publisher waits until the old one has published
 // everything pending. The old code is phase 8's: `ClaimFacts` reads the review view and writes
@@ -116,23 +116,30 @@ const ports = Layer.mergeAll(
   ContactSource.toLayer(Effect.succeed({ observe: () => Effect.die("unused") })),
 );
 
-const intake = human("p_intake", [onOrg("g_intake", PartyIntake, acme)]);
-const reviewer = human("p_rev", [onOrg("g_rev", PartyReview, acme)]);
-const claim = ClaimId.make("claim_1");
-const runs = [RunId.make("review:claim_1:1"), RunId.make("review:claim_1:2")];
-const proposition = Proposition.cases.HasIdentifier.make({ party: PartyId.make("party_dana"), scheme: "email", value: "dana@acme.test" });
-const reviewRequested = (run: RunId, evidenceRevision: number) =>
-  ReviewRequested.make({ run, org: acme, proposition, signals: twoSources, evidenceRevision, provenance: provenanceOf(intake) });
-/** The claim's history as phase 8's code stored it: asserted, two reviews, accepted directly, no scope. */
-const history = [
-  ClaimAsserted.make({ org: acme, proposition, signals: twoSources, provenance: provenanceOf(intake) }),
-  reviewRequested(runs[0]!, 1),
-  reviewRequested(runs[1]!, 1),
-  ClaimAccepted.make({ proposition, org: O.none(), reviewRuns: O.none(), provenance: provenanceOf(reviewer) }),
-];
+/** A claim of this cast decided under phase 8's code: its org, its two review runs, and its history as that code stored it. */
+const sceneOf = (cast: Cast) => {
+  const { home: org, intake: asserter, reviewer: decider, claim } = rolesOf(cast);
+  const intake = member(asserter, org, [PartyIntake]);
+  const reviewer = member(decider, org, [PartyReview]);
+  const runs = [reviewRun(claim, 1), reviewRun(claim, 2)];
+  const proposition = cast.identifier;
+  const signals = twoSources(cast);
+  const reviewRequested = (run: RunId) =>
+    ReviewRequested.make({ run, org, proposition, signals, evidenceRevision: 1, provenance: provenanceOf(intake) });
+  /** Asserted, two reviews, accepted directly, no scope. */
+  const history = [
+    ClaimAsserted.make({ org, proposition, signals, provenance: provenanceOf(intake) }),
+    ...A.map(runs, reviewRequested),
+    ClaimAccepted.make({ proposition, org: O.none(), reviewRuns: O.none(), provenance: provenanceOf(reviewer) }),
+  ];
+  return { org, claim, runs, history };
+};
 
-it.live("an upgrade that closes generation 1 waits for the old publisher; the new one republishes every review run", () =>
+// Each run deploys two generations of the model and polls their publishers, so this property runs
+// ten times, not the default hundred.
+it.live.prop("an upgrade that closes generation 1 waits for the old publisher; the new one republishes every review run", [Cast], ([cast]) =>
   Effect.gen(function* () {
+    const { org, claim, runs, history } = sceneOf(cast);
     const platform = InMemory.make();
     const gate = yield* Deferred.make<void>();
     const store = yield* Layer.build(MemoryPartyDirectoryStore);
@@ -180,8 +187,9 @@ it.live("an upgrade that closes generation 1 waits for the old publisher; the ne
     );
     // The scope generation 1 published, both review runs: the lookup, not the fallback (which would name none).
     expect(A.map(republished.entries, (entry) => entry.event)).toMatchObject([
-      { _tag: "ClaimDecidedV1", factId: "claim_1:decided", org: acme, reviewRuns: runs },
-      { _tag: "ClaimDecidedV2", factId: "claim_1:decided", org: acme, reviewRuns: runs, basis: "direct" },
+      { _tag: "ClaimDecidedV1", factId: `${claim}:decided`, org, reviewRuns: runs },
+      { _tag: "ClaimDecidedV2", factId: `${claim}:decided`, org, reviewRuns: runs, basis: "direct" },
     ]);
   }).pipe(Effect.scoped),
+  { timeout: 120_000, arbitrary: { runs: 10 } },
 );

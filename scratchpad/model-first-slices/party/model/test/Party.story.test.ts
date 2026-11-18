@@ -11,6 +11,7 @@ import { MergeRefused, MergeRefusal } from "@proto/party-contract/Claim/RecordMe
 import type { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { PartyIntake, PartyPropose, PartyRead, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { PartiesMerged } from "@proto/party-contract/Party/MergeParties.command";
+import type { PartyId } from "@proto/party-contract/Party/Party.id";
 import { PartyRegistered, RegisterParty } from "@proto/party-contract/Party/RegisterParty.command";
 import { Proposition } from "@proto/party-contract/Proposition";
 import { Authority } from "@proto/party-model/Authority.external";
@@ -30,7 +31,7 @@ import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
 import * as Str from "effect/String";
-import { Cast } from "./Cast.ts";
+import { Cast, rolesOf } from "./Cast.ts";
 import { member, oneSource, onOrg, readmitted, twoSources } from "./fixtures.ts";
 
 const { call, fail, given, provide, query, rejected, succeed, then, view, when } = Story;
@@ -45,13 +46,14 @@ const story = Story.make(PartyModel, {
 
 /** Who acts, and on what, in a story over this cast. */
 const sceneOf = (cast: Cast) => {
-  const { home, other } = cast.orgs;
-  const intake = member(cast.people.intake, home, [PartyIntake, PartyRead, PartyPropose]);
-  const reviewer = member(cast.people.reviewer, home, [PartyReview, PartyRead]);
-  const outsider = member(cast.people.outsider, other, [PartyIntake, PartyRead]);
-  const claim = Claim.ref(cast.claims.claim);
-  const survivor = Party.ref(cast.parties.survivor);
-  const absorbed = Party.ref(cast.parties.absorbed);
+  const roles = rolesOf(cast);
+  const { home, other } = roles;
+  const intake = member(roles.intake, home, [PartyIntake, PartyRead, PartyPropose]);
+  const reviewer = member(roles.reviewer, home, [PartyReview, PartyRead]);
+  const outsider = member(roles.outsider, other, [PartyIntake, PartyRead]);
+  const claim = Claim.ref(roles.claim);
+  const survivor = Party.ref(roles.survivor);
+  const absorbed = Party.ref(roles.absorbed);
   const sameParty = Proposition.cases.SameParty.make({ survivor: survivor.id, absorbed: absorbed.id });
   /** The hop the merge policy adds when it reacts to the accept at `seq`. */
   const mergeHop = (seq: number) =>
@@ -96,7 +98,7 @@ it.effect.prop("a grant revoked between two hops stops the second hop, and the r
     asserted(),
     ...accepted,
     // The review grant was revoked after the accept: authority re-admits with the read grant alone.
-    succeed(Authority.readmit, readmitted(reviewer, mergeHop(2), [onOrg(cast.people.reviewer, PartyRead, home)])),
+    succeed(Authority.readmit, readmitted(reviewer, mergeHop(2), [onOrg(rolesOf(cast).reviewer, PartyRead, home)])),
     then(
       claim,
       MergeRefused.make({
@@ -150,22 +152,22 @@ it.effect.prop("one source is not corroboration", [Cast], ([cast]) => {
   );
 });
 
-const byPartyId = Order.mapInput(Order.String, (row: { readonly id: string }) => row.id);
+const byPartyId = Order.mapInput(Order.String, (row: { readonly id: PartyId; readonly name: string }) => row.id);
 
 it.effect.prop("a party search returns only a granted org's rows, a page at a time", [Cast], ([cast]) => {
   const { home, other, intake, reviewer, outsider, survivor, absorbed } = sceneOf(cast);
-  const elsewhere = Party.ref(cast.parties.elsewhere);
+  const elsewhere = Party.ref(rolesOf(cast).elsewhere);
   // Every party shares the family name; the search asks for it in lower case.
   const { family } = cast.names;
   const named = (given: string) => `${given} ${family}`;
   const text = Str.toLowerCase(family);
-  const [first, second] = A.sort(
-    [
-      { id: survivor.id, name: named(cast.names.survivor) },
-      { id: absorbed.id, name: named(cast.names.absorbed) },
-    ],
-    byPartyId,
-  );
+  // The directory lists rows in party id order.
+  const rows = [
+    { id: survivor.id, name: named(cast.names.survivor) },
+    { id: absorbed.id, name: named(cast.names.absorbed) },
+  ] as const;
+  const first = Order.min(byPartyId)(...rows);
+  const second = Order.max(byPartyId)(...rows);
   return story(
     as(intake),
     when(survivor, RegisterParty.make({ org: home, name: named(cast.names.survivor) })),

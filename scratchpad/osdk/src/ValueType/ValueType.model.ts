@@ -16,9 +16,10 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, MappedLiteralKit } from "@beep/schema";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
+import * as R from "@beep/utils/Record"
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import {
@@ -39,6 +40,7 @@ import { ValueTypeKind } from "../DataType/DataType.values.ts";
 import { PropertyApiName, ValueTypeApiName, ValueTypeRid } from "../Identifier/Identifier.model.ts";
 import { RecursiveArraySizeHint } from "../internal/RecursionHint.ts";
 import { ScalarValue } from "../Value/Value.model.ts";
+
 
 const $I = $ScratchpadId.create("osdk/ValueType/ValueType.model");
 
@@ -635,6 +637,13 @@ export class StructConstraint extends S.Opaque<StructConstraint, { readonly bran
   )
 ) {}
 
+export declare namespace StructConstraint {
+  export interface Encoded {
+    readonly type: "struct"
+    readonly properties: R.ReadonlyRecord<PropertyApiName.Encoded, ValueTypeApiName.Encoded>
+  }
+}
+
 /**
  * Requires text to match a regular expression, wholly or in part.
  *
@@ -654,6 +663,14 @@ export class RegexConstraint extends S.Opaque<RegexConstraint, { readonly brand:
     })
   )
 ) {}
+
+export declare namespace RegexConstraint {
+  export interface Encoded {
+    readonly type: "regex"
+    readonly pattern: string;
+    readonly partialMatch: boolean;
+  }
+}
 
 /**
  * Bounds how many elements a list holds, whether they repeat, and what each element must satisfy.
@@ -784,6 +801,14 @@ export class LengthConstraint extends S.Opaque<LengthConstraint, { readonly bran
    */
   static exactly(length: number): LengthConstraint {
     return LengthConstraint.between(length, length);
+  }
+}
+
+export declare namespace LengthConstraint {
+  export interface Encoded {
+    readonly type: "length"
+    readonly minimumLength?: number
+    readonly maximumLength?: number
   }
 }
 

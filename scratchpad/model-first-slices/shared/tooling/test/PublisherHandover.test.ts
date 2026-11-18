@@ -1,45 +1,19 @@
 import { expect, it } from "@effect/vitest";
-import { Count, Name, Sequence } from "@proto/kernel/Measure";
-import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
+import { Count, Name } from "@proto/kernel/Measure";
+import { StreamPin, type StreamWriter } from "@proto/kernel/PublishedStream";
 import { checkPublisherHandover, Handover, handoversOf, PublisherBacklog } from "@proto/tooling/PublisherHandover";
 import * as A from "@beep/utils/Array";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
-import * as HashSet from "effect/HashSet";
-import * as Match from "effect/Match";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import { Changed, changedOf, listedOf, Listings, reordered, Writer, writerOf } from "./Writer.ts";
 
 // Phase 10 (D47): an upgrade that closes a published stream's generation, or gives it another
 // writer, is refused while the outgoing writer has anything pending.
 // Every value below is generated from a schema. A scene says, stream by stream, what the upgrade
 // does to a generation; the current and next pins are built from it, so the handovers are known by
 // construction.
-
-/** A writer as a model declares it: a projection, its generation and the sources it reads, each once. */
-const Writer = S.Struct({ projection: Name, generation: Count, sources: S.Array(Name) });
-type Writer = typeof Writer.Type;
-const writerOf = (writer: Writer): StreamWriter => StreamWriter.make({ ...writer, sources: A.dedupe(writer.sources) });
-
-/** How the incoming writer differs from the outgoing one. */
-const Change = S.Literals(["projection", "generation", "added", "removed"]);
-/** A writer and one change to it: `extra` names what the change adds, `bump` how far a generation moves. */
-const Replacement = S.Struct({ writer: Writer, change: Change, extra: Name, bump: Sequence });
-type Replacement = typeof Replacement.Type;
-
-/** The outgoing writer and the incoming one that one change made of it. */
-const replacedOf = ({ writer, change, extra, bump }: Replacement) => {
-  const base = writerOf(writer);
-  // Longer than every source the writer reads, so not one of them.
-  const withFresh = { ...base, sources: A.append(base.sources, `${A.join(base.sources, "")}${extra}`) };
-  return Match.value(change).pipe(
-    Match.when("projection", () => ({ outgoing: base, incoming: { ...base, projection: `${base.projection}${extra}` } })),
-    Match.when("generation", () => ({ outgoing: base, incoming: { ...base, generation: base.generation + bump } })),
-    Match.when("added", () => ({ outgoing: base, incoming: withFresh })),
-    Match.when("removed", () => ({ outgoing: withFresh, incoming: base })),
-    Match.exhaustive,
-  );
-};
 
 /** What an upgrade does to one generation. */
 const Case = S.TaggedUnion({
@@ -52,11 +26,10 @@ const Case = S.TaggedUnion({
   /** Open, and gone from the next pins. */
   Dropped: { writer: Writer },
   /** Open, and written by another writer in the next code. */
-  Replaced: Replacement.fields,
-  /** Closed, or retired, now: whatever the next code pins, it takes no writer (`next`: absent, closed, or open with a writer). */
-  Served: { retired: S.Option(Count), next: S.Option(S.Option(Writer)) },
+  Replaced: Changed.fields,
+  /** Closed, or retired, now: whatever the next code pins (`next`: absent, closed, or open with a writer), it takes no writer. */
+  Served: { retired: S.Option(Count), next: Writer.pipe(S.Option, S.Option) },
 });
-type Case = typeof Case.Type;
 
 const Scene = S.Array(S.Struct({ stream: Name, case: Case }));
 type Scene = typeof Scene.Type;
@@ -72,7 +45,7 @@ const currentOf = ({ stream, case: of }: Stream): StreamPin =>
     Closed: ({ writer }) => open(stream, writerOf(writer)),
     Retired: ({ writer }) => open(stream, writerOf(writer)),
     Dropped: ({ writer }) => open(stream, writerOf(writer)),
-    Replaced: (replaced) => open(stream, replacedOf(replaced).outgoing),
+    Replaced: (replaced) => open(stream, changedOf(replaced).before),
     Served: ({ retired }) =>
       O.match(retired, {
         onNone: () => StreamPin.cases.Closed.make({ stream }),
@@ -82,28 +55,27 @@ const currentOf = ({ stream, case: of }: Stream): StreamPin =>
 
 const nextOf = ({ stream, case: of }: Stream): O.Option<StreamPin> =>
   Case.match(of, {
-    Kept: ({ writer }) => {
-      const kept = writerOf(writer);
-      return O.some(open(stream, { ...kept, sources: A.reverse(kept.sources) }));
-    },
+    Kept: ({ writer }) => O.some(open(stream, reordered(writer))),
     Closed: () => O.some(StreamPin.cases.Closed.make({ stream })),
     Retired: ({ length }) => O.some(StreamPin.cases.Retired.make({ stream, length })),
-    Dropped: O.none,
-    Replaced: (replaced) => O.some(open(stream, replacedOf(replaced).incoming)),
+    Dropped: O.none<StreamPin>,
+    Replaced: (replaced) => O.some(open(stream, changedOf(replaced).after)),
     Served: ({ next }) =>
       O.map(next, O.match({ onNone: () => StreamPin.cases.Closed.make({ stream }), onSome: (writer) => open(stream, writerOf(writer)) })),
   });
 
 /** The handover a generation's case makes. */
-const handoverOf = ({ stream, case: of }: Stream): O.Option<Handover> =>
-  Case.match(of, {
-    Kept: O.none,
-    Closed: ({ writer }) => O.some(Handover.make({ stream, writer: writerOf(writer), change: "closed" })),
-    Retired: ({ writer }) => O.some(Handover.make({ stream, writer: writerOf(writer), change: "closed" })),
-    Dropped: ({ writer }) => O.some(Handover.make({ stream, writer: writerOf(writer), change: "closed" })),
-    Replaced: (replaced) => O.some(Handover.make({ stream, writer: replacedOf(replaced).outgoing, change: "replaced" })),
-    Served: O.none,
+const handoverOf = ({ stream, case: of }: Stream): O.Option<Handover> => {
+  const closed = ({ writer }: { readonly writer: Writer }) => O.some(Handover.make({ stream, writer: writerOf(writer), change: "closed" }));
+  return Case.match(of, {
+    Kept: O.none<Handover>,
+    Closed: closed,
+    Retired: closed,
+    Dropped: closed,
+    Replaced: (replaced) => O.some(Handover.make({ stream, writer: changedOf(replaced).before, change: "replaced" })),
+    Served: O.none<Handover>,
   });
+};
 
 const pinsOf = (scene: Scene) => ({ current: A.map(streamsOf(scene), currentOf), next: A.getSomes(A.map(streamsOf(scene), nextOf)) });
 const expectedOf = (scene: Scene) => A.getSomes(A.map(streamsOf(scene), handoverOf));
@@ -123,17 +95,11 @@ it.prop("the order of the next pins does not matter, and the order of the curren
   expect(handoversOf({ current: A.reverse(current), next })).toEqual(A.reverse(expectedOf(scene)));
 });
 
-/** Two source lists over the same three names, so they often repeat a name and often have the same length. */
-const Listings = S.Struct({ writer: Writer, names: S.Tuple([Name, Name, Name]), outgoing: S.Array(Count), incoming: S.Array(Count) });
-
-it.prop("a writer is kept exactly when the next code reads the same set of sources with it", [Listings], ([{ writer, names, outgoing, incoming }]) => {
-  const sourcesOf = (picks: ReadonlyArray<number>) => A.map(picks, (pick) => names[pick % names.length] ?? names[0]);
-  const before = StreamWriter.make({ ...writer, sources: sourcesOf(outgoing) });
-  const after = StreamWriter.make({ ...writer, sources: sourcesOf(incoming) });
-  const setOf = (writer: StreamWriter) => HashSet.fromIterable(writer.sources);
-  const sameSet = HashSet.isSubset(setOf(before), setOf(after)) && HashSet.isSubset(setOf(after), setOf(before));
-  const handovers = handoversOf({ current: [open(writer.projection, before)], next: [open(writer.projection, after)] });
-  expect(handovers).toEqual(sameSet ? [] : [Handover.make({ stream: writer.projection, writer: before, change: "replaced" })]);
+it.prop("a writer is kept exactly when the next code reads the same set of sources with it", [Listings], ([listings]) => {
+  const { before, after, sameSources } = listedOf(listings);
+  const stream = listings.writer.projection;
+  const handovers = handoversOf({ current: [open(stream, before)], next: [open(stream, after)] });
+  expect(handovers).toEqual(sameSources ? [] : [Handover.make({ stream, writer: before, change: "replaced" })]);
 });
 
 /**
@@ -141,7 +107,7 @@ it.prop("a writer is kept exactly when the next code reads the same set of sourc
  * outgoing writer's pending count, if its backlog was read; and other writers of the same streams,
  * read first, with their own counts.
  */
-const Upgrade = S.Struct({ scene: Scene, reads: S.Array(S.Option(Count)), others: S.Array(S.Struct({ extra: Name, pending: Count })) });
+const Upgrade = S.Struct({ scene: Scene, reads: Count.pipe(S.Option, S.Array), others: S.Array(S.Struct({ extra: Name, pending: Count })) });
 type Upgrade = typeof Upgrade.Type;
 
 const backlogOf = ({ scene, reads, others }: Upgrade) => {
@@ -157,7 +123,6 @@ const backlogOf = ({ scene, reads, others }: Upgrade) => {
   );
   return { handovers, backlog: [...otherWriters, ...outgoing] };
 };
-
 
 it.effect.prop("the upgrade passes with its handovers only once every outgoing writer was read and has nothing pending", [Upgrade], ([upgrade]) =>
   Effect.gen(function* () {
@@ -181,8 +146,7 @@ it.effect.prop("for any pins and backlog, each handover is exactly one of unread
     const unread = Result.match(outcome, { onSuccess: A.empty<Handover>, onFailure: (refusal) => refusal.unread });
     const pending = Result.match(outcome, { onSuccess: A.empty<Handover>, onFailure: (refusal) => A.map(refusal.pending, (entry) => entry.handover) });
     const drained = A.filter(handovers, (handover) =>
-      A.some(backlog, (entry) => entry.stream === handover.stream && entry.writer === handover.writer.projection) &&
-      !A.contains(pending, handover),
+      A.some(backlog, (entry) => entry.stream === handover.stream && entry.writer === handover.writer.projection) && !A.contains(pending, handover),
     );
     expect(A.length(unread) + A.length(pending) + A.length(drained)).toBe(A.length(handovers));
     expect(A.every(handovers, (handover) => A.contains(unread, handover) || A.contains(pending, handover) || A.contains(drained, handover))).toBe(true);

@@ -1,7 +1,8 @@
 import * as InMemory from "@alchemy.run/domain/InMemory";
 import { Internals } from "@alchemy.run/domain/Model";
 import { expect, it } from "@effect/vitest";
-import { StreamWriter } from "@proto/kernel/PublishedStream";
+import { Sequence } from "@proto/kernel/Measure";
+import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
 import { Authority } from "@proto/party-model/Authority.external";
 import { MemoryPartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
 import { ContactSource } from "@proto/party-model/Evidence/ContactSource.external";
@@ -12,6 +13,7 @@ import { PartyModel } from "@proto/party-model/Party.model";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
 import { checkPublishedStreams, liveStreamsOf, StreamDrift } from "@proto/tooling/PublishedStreams";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -56,13 +58,18 @@ it.effect("the deployed model matches its pins", () =>
   }),
 );
 
-it.effect("bumping the publisher without a new stream generation fails the check", () =>
+it.effect.prop("bumping the publisher by any number of versions without a new stream generation fails the check", [Sequence], ([bump]) =>
   Effect.gen(function* () {
-    const live = yield* hostedStreams(Layer.merge(PartyHandlers, claimDecisionsLive(ClaimDecisionsVersion + 1)));
+    const live = yield* hostedStreams(Layer.merge(PartyHandlers, claimDecisionsLive(ClaimDecisionsVersion + bump)));
     const failure = yield* Effect.flip(checkPublishedStreams(partyStreamPins, live));
-    const pinned = StreamWriter.make({ projection: "ClaimDecisions", generation: 0, sources: ["Claim"] });
+    // The one open pin is the stream the bumped publisher writes; its generation moves by the bump.
+    const open = yield* Effect.fromOption(A.findFirst(partyStreamPins, StreamPin.guards.Open)).pipe(Effect.orDie);
     expect(failure.drift).toEqual([
-      StreamDrift.cases.Changed.make({ stream: "PartyFacts2", pinned, live: { ...pinned, generation: 1 } }),
+      StreamDrift.cases.Changed.make({
+        stream: open.stream,
+        pinned: open.writer,
+        live: StreamWriter.make({ ...open.writer, generation: open.writer.generation + bump }),
+      }),
     ]);
   }),
 );

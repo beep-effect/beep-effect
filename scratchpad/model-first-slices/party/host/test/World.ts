@@ -107,3 +107,14 @@ export const asHuman = (principal: PrincipalId) => ({ headers: headersFor(Creden
 
 /** The headers an agent run presents. */
 export const asAgent = (run: RunId) => ({ headers: headersFor(Credential.cases.Agent.make({ run })) });
+
+/**
+ * A story in a world of its own: the world is built for the story and closed
+ * with it, so one property run never sees another run's claims or grants.
+ */
+export const inWorld = <A, E, R>(story: Effect.Effect<A, E, R>) =>
+  World.pipe(
+    Layer.build,
+    Effect.flatMap((context) => Effect.provideContext(story, context)),
+    Effect.scoped,
+  );

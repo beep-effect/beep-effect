@@ -1,7 +1,7 @@
 import * as A from "@beep/utils/Array";
 import * as Str from "@beep/utils/Str";
 import type { Capability } from "@proto/kernel/Capability";
-import { GrantId, OrgId, PrincipalId, RunId } from "@proto/kernel/Ids";
+import { DelegationId, GrantId, OrgId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { Name } from "@proto/kernel/Measure";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { ProposalView } from "@proto/party-contract/Claim/ClaimReview.read";
@@ -9,6 +9,7 @@ import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { Proposition } from "@proto/party-contract/Proposition";
 import { reviewRun } from "@proto/party-model/Review/ReviewPlan";
+import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import { GrantToIssue } from "./World.ts";
 
@@ -65,8 +66,11 @@ export const Cast = S.Struct({
 /** A generated cast. */
 export type Cast = typeof Cast.Type;
 
-/** A party's full name: its given name and the cast's surname. */
-export const nameOf = (cast: Cast, given: string) => `${given} ${cast.surname}`;
+/** The party's full name: its given name and the cast's surname. */
+export const partyName = (cast: Cast) => `${cast.partyGiven} ${cast.surname}`;
+
+/** The duplicate's full name: another given name, the same surname. */
+export const duplicateName = (cast: Cast) => `${cast.duplicateGiven} ${cast.surname}`;
 
 /** What a directory search types to find both of the cast's parties: their surname, in lower case. */
 export const searchText = (cast: Cast) => Str.toLowerCase(cast.surname);
@@ -75,10 +79,13 @@ export const searchText = (cast: Cast) => Str.toLowerCase(cast.surname);
 export const partiesInOrder = (cast: Cast) => A.sort([cast.party, cast.duplicate], Str.Order);
 
 /** The id of the grant a holder gets for a capability: derived from both, so each grant in a story has its own. */
-export const grantIdOf = (holder: PrincipalId, capability: Capability) => GrantId.make(`${holder}~${capability.id}`);
+export const grantIdOf: {
+  (capability: Capability): (holder: PrincipalId) => GrantId;
+  (holder: PrincipalId, capability: Capability): GrantId;
+} = dual(2, (holder: PrincipalId, capability: Capability): GrantId => GrantId.make(`${holder}~${capability.id}`));
 
-/** A grant for a holder on an org, issued by the cast's owner. */
-export const grantOf = (cast: Cast, holder: PrincipalId, capability: Capability, org: OrgId) =>
+/** The grants the cast's owner issues: one for a holder, a capability and an org. */
+export const grantsBy = (cast: Cast) => (holder: PrincipalId, capability: Capability, org: OrgId) =>
   GrantToIssue.make({ id: grantIdOf(holder, capability), holder, capability, org, owner: cast.owner });
 
 /** The claim the cast's identifier makes about its party. */
@@ -90,3 +97,6 @@ export const sameParty = (cast: Cast) => Proposition.cases.SameParty.make({ surv
 
 /** The stream a claim's commands write. */
 export const claimStream = (claim: ClaimId) => `Claim/${claim}`;
+
+/** The delegation the runs context opens for a run it starts (`GrantOnRequest`): named for the run. */
+export const delegationOf = (run: RunId) => DelegationId.make(`dlg:${run}`);

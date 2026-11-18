@@ -28,18 +28,16 @@ type Entry = {
   readonly envelope: { readonly seq: number }
 };
 
+/** `encode`, with its payload tagged by the `version` it encodes. */
+const versioned = <A, I, E>(version: number, encode: (event: A) => Effect.Effect<I, E>) =>
+  flow(encode, Effect.map((payload) => ({ version, payload })))
+
 /** An entry's version and payload, as that version encodes it. */
 const encoded = (event: ClaimDecidedV1 | ClaimDecidedV2) =>
   Match.value(event).pipe(
     Match.tagsExhaustive({
-      ClaimDecidedV1: flow(encodeV1, Effect.map((payload) => ({
-        version: 1,
-        payload
-      }))),
-      ClaimDecidedV2: flow(encodeV2, Effect.map((payload) => ({
-        version: 2,
-        payload
-      })))
+      ClaimDecidedV1: versioned(1, encodeV1),
+      ClaimDecidedV2: versioned(2, encodeV2)
     })
   )
 
@@ -58,18 +56,16 @@ const envelopeAt = (offset: number) => ({ event, envelope }: Entry) =>
     )
   )
 
+/** The envelopes of `entries` served at `offset`, in order. */
+const envelopesAt = (offset: number) => (entries: ReadonlyArray<Entry>) =>
+  Effect.forEach(entries, envelopeAt(offset), { concurrency: 1 })
+
 /** A stream's page reader, as both generations offer it. */
 type Pages = {
-  readonly list: {
-    (key: "claims", options: {
+  readonly list: (key: "claims", options: {
     readonly after: number;
     readonly take: number
-  }): Effect.Effect<{ readonly entries: ReadonlyArray<Entry> }>,
-    (options: {
-    readonly after: number;
-    readonly take: number
-  }): (key: "claims") => Effect.Effect<{ readonly entries: ReadonlyArray<Entry> }>
-  }
+  }) => Effect.Effect<{ readonly entries: ReadonlyArray<Entry> }>
 };
 
 const allOf = (stream: Pages, after: number, read: ReadonlyArray<Entry>): Effect.Effect<ReadonlyArray<Entry>> =>
@@ -123,6 +119,44 @@ export const liveGenerationOf = (name: string) => (stream: Pages): Effect.Effect
     Effect.orDie
   )
 
+/** The length `pins` fixes for generation 1, once its pin is retired. */
+const retiredLengthOf = (pins: ReadonlyArray<StreamPin>) =>
+  A.findFirst(pins, (pin) => StreamPin.guards.Retired(pin) && pin.stream === "PartyFacts" ? O.some(pin.length) : O.none())
+
+/** Party's fact feed over both generations' outboxes, under `pins`. */
+const makePartyFactsFeed = Effect.fnUntraced(function* (pins: ReadonlyArray<StreamPin>) {
+  const closed = yield* PartyFacts
+  const open = yield* PartyFacts2
+  const retired = retiredLengthOf(pins)
+  return PartyFactsFeed.of({
+    read: Effect.fn("PartyFactsFeed.read")(
+      function* ({ after, take }) {
+        const closedLength = yield* O.match(retired, {
+          onSome: Effect.succeed,
+          onNone: () => closed.peek("claims").pipe(Effect.map(O.match({
+            onNone: thunk0,
+            onSome: (entry) => entry.envelope.seq
+          })))
+        })
+        const first = O.isNone(retired) && after < closedLength ? (yield* closed.list("claims", {
+          after,
+          take
+        })).entries : []
+        const rest = take - A.length(first)
+        const second = rest > 0 ? (yield* open.list("claims", {
+          after: N.max(after - closedLength, 0),
+          take: rest
+        })).entries : []
+        const served = yield* envelopesAt(0)(first)
+        const followed = yield* envelopesAt(closedLength)(second)
+        return A.appendAll(served, followed)
+      },
+      // The outbox holds only what Party encoded itself, and a peek without `atLeast` never waits.
+      Effect.orDie
+    )
+  })
+})
+
 /**
  * Party's fact feed over its outbox, under `pins`, its generations in order:
  * each entry becomes an envelope with the producer, the contract, the version
@@ -154,41 +188,7 @@ export const liveGenerationOf = (name: string) => (stream: Pages): Effect.Effect
  * @category adapters
  * @since 0.0.0
  */
-export const partyFactsFeedFor = (pins: ReadonlyArray<StreamPin>) => Layer.effect(
-  PartyFactsFeed,
-  Effect.gen(function* () {
-    const closed = yield* PartyFacts
-    const open = yield* PartyFacts2
-    const retired = A.findFirst(pins, (pin) => StreamPin.guards.Retired(pin) && pin.stream === "PartyFacts" ? O.some(pin.length) : O.none())
-    return {
-      read: Effect.fn("PartyFactsFeed.read")(
-        function* ({ after, take }) {
-          const closedLength = yield* O.match(retired, {
-            onSome: Effect.succeed,
-            onNone: () => closed.peek("claims").pipe(Effect.map(O.match({
-              onNone: thunk0,
-              onSome: (entry) => entry.envelope.seq
-            })))
-          })
-          const first = O.isNone(retired) && after < closedLength ? (yield* closed.list("claims", {
-            after,
-            take
-          })).entries : []
-          const rest = take - A.length(first)
-          const second = rest > 0 ? (yield* open.list("claims", {
-            after: N.max(after - closedLength, 0),
-            take: rest
-          })).entries : []
-          const served = yield* Effect.forEach(first, envelopeAt(0), { concurrency: 1 })
-          const followed = yield* Effect.forEach(second, envelopeAt(closedLength), { concurrency: 1 })
-          return A.appendAll(served, followed)
-        },
-        // The outbox holds only what Party encoded itself, and a peek without `atLeast` never waits.
-        Effect.orDie
-      )
-    }
-  })
-)
+export const partyFactsFeedFor = flow(makePartyFactsFeed, Layer.effect(PartyFactsFeed))
 
 /**
  * Party's fact feed under its pins (`partyStreamPins`).

@@ -92,6 +92,10 @@ export const PropertyApiName = S.NonEmptyString.pipe(
   })
 );
 
+export declare namespace PropertyApiName {
+  export type Encoded = typeof PropertyApiName.Encoded
+}
+
 /**
  * Runtime type of {@link PropertyApiName}.
  *
@@ -238,6 +242,10 @@ export const ValueTypeApiName = S.NonEmptyString.pipe(
     description: "API name of a value type, a reusable constrained base type that properties may reference.",
   })
 );
+
+export declare namespace ValueTypeApiName {
+  export type Encoded = typeof ValueTypeApiName.Encoded
+}
 
 /**
  * Runtime type of {@link ValueTypeApiName}.

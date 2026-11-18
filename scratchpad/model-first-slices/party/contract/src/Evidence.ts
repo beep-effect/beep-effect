@@ -37,7 +37,8 @@ export type Trust = typeof Trust.Type;
  * @since 0.0.0
  */
 export const EvidenceSignal = S.Struct({
-  source: S.String,
+  // A signal names the source it came from: an empty source is no source.
+  source: S.NonEmptyString,
   quote: S.String,
   trust: Trust.pipe((self) => {
       const defaultValue = Effect.succeed(Trust.Enum.normal)
