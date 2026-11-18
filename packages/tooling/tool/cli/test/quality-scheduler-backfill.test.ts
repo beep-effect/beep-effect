@@ -419,17 +419,12 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "20 seco
         const archive = path.join(root, "journal-archive");
         yield* fs.makeDirectory(archive, { recursive: true });
         const day = 86_400_000;
-        const rowsFor = Effect.fn("rowsFor")(function* (nonce: string, at: number) {
-          const admitted = yield* S.encodeEffect(S.fromJsonString(AdmissionJournalAdmitted))(
-            admittedRow(nonce, "full-proof", at)
-          );
-          const released = yield* S.encodeEffect(S.fromJsonString(AdmissionJournalReleasedV3))(
-            releasedRow(nonce, at + 1_000)
-          );
-          return `${admitted}\n${released}\n`;
-        });
-        const oldRows = yield* rowsFor("old", 1_000);
-        const recentRows = yield* rowsFor("recent", 2 * day + 1_000);
+        // One admitted and one released row per nonce, in the bytes the journal writer emits.
+        const rowsFor = (nonce: string, at: number) =>
+          `{"_tag":"admission-admitted","schemaVersion":"yeet-admission-journal/v1","nonce":"${nonce}","pid":3,"procStart":"3","kind":"full-proof","weightTokens":3,"priority":"verify","originKey":"origin-ada","enqueuedAtMillis":${at},"admittedAtMillis":${at}}\n` +
+          `{"checkoutRoot":"/repo/ada","branch":"feat/ada","_tag":"admission-released","schemaVersion":"yeet-admission-journal/v3","nonce":"${nonce}","pid":3,"releasedAtMillis":${at + 1_000}}\n`;
+        const oldRows = rowsFor("old", 1_000);
+        const recentRows = rowsFor("recent", 2 * day + 1_000);
         yield* fs.writeFileString(path.join(archive, "1970-01-01.ndjson"), oldRows);
         yield* fs.writeFileString(path.join(archive, "1970-01-03.ndjson"), recentRows);
         const recent = yield* readAdmissionJournalHistorySince(root, 2 * day);
