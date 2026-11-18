@@ -582,6 +582,64 @@ export const admissionUnitFields = {
   ),
 };
 
+/**
+ * The declared ETA a ticket carries and its lease copies (SCHE-06).
+ *
+ * **Details**
+ *
+ * An optional key read as an `Option` of whole milliseconds. Writers emit it
+ * only while the admission protocol's `backfill` gate is `easy`; with it off
+ * every ticket and lease is byte-identical to the format before SCHE-06. A
+ * record without it never backfills, and a lease without it (or past it) makes
+ * the head's start unprojectable, which stops backfill.
+ *
+ * **Example** (Reuse the ETA field)
+ *
+ * ```ts
+ * import { admissionEtaFields } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(Object.keys(admissionEtaFields)) // ["etaMillis"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const admissionEtaFields = {
+  etaMillis: S.Int.check(S.isGreaterThan(0)).pipe(
+    S.OptionFromOptionalKey,
+    S.catchDecoding(unrecognizedAsNone),
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
+};
+
+/**
+ * The conditional starvation bound a ticket stamps on entering protected ordering (SCHE-06).
+ *
+ * **Details**
+ *
+ * The owning contender writes it once, on the scan at which its ticket has
+ * waited the protection window, and only when every ETA the bound reads is
+ * declared. Backfill is off while any queued ticket is past its deadline.
+ *
+ * **Example** (Reuse the deadline field)
+ *
+ * ```ts
+ * import { admissionDeadlineFields } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(Object.keys(admissionDeadlineFields)) // ["deadlineMillis"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const admissionDeadlineFields = {
+  deadlineMillis: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+    S.OptionFromOptionalKey,
+    S.catchDecoding(unrecognizedAsNone),
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
+};
+
 // A pressure stall share in percent, as the host-pressure parcel decodes it.
 const PressureSome10 = PressureStats.fields.avg10.pipe(
   S.OptionFromOptionalKey,
@@ -759,6 +817,7 @@ export class YeetAdmissionLease extends S.Opaque<YeetAdmissionLease, { readonly 
     hotPaths: ArrayKeyDefaultEmpty(S.String),
     runScope: S.optionalKey(RunScopeRecord),
     ...admissionUnitFields,
+    ...admissionEtaFields,
   }).pipe(
     $I.annoteSchema("YeetAdmissionLease", {
       description: "One machine-wide admission lease charging heavy repository work against memory capacity.",
@@ -827,6 +886,8 @@ export class YeetAdmissionTicket extends S.Opaque<YeetAdmissionTicket, { readonl
     ),
     nonce: S.String,
     ...admissionUnitFields,
+    ...admissionEtaFields,
+    ...admissionDeadlineFields,
   }).pipe(
     $I.annoteSchema("YeetAdmissionTicket", {
       description: "One durable admission-queue ticket owned by a waiting contender process.",

@@ -1116,6 +1116,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
         {
           availableGib: 10,
           capacityTokens: 0,
+          deadlineMillis: O.none(),
           nowMillis,
           state: {
             dead: [],
@@ -3894,6 +3895,19 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
               yield* expectCommandSuccess(["scheduler", "protocol", "--pressure", "off"]);
               const pressureOff = yield* admissionProtocolStatus();
               expect(pressureOff.pressure).toBe("off");
+              yield* expectCommandSuccess([
+                "scheduler",
+                "protocol",
+                "--backfill",
+                "easy",
+                "--fairness",
+                "origin-checkout",
+              ]);
+              const backfillOn = yield* admissionProtocolStatus();
+              expect([backfillOn.backfill, backfillOn.fairness]).toStrictEqual(["easy", "origin-checkout"]);
+              yield* expectCommandSuccess(["scheduler", "protocol", "--backfill", "off", "--fairness", "off"]);
+              const backfillOff = yield* admissionProtocolStatus();
+              expect([backfillOff.backfill, backfillOff.fairness]).toStrictEqual(["off", "off"]);
               yield* expectCommandSuccess(["scheduler", "reconcile-attempts"]);
               const conflict = yield* Effect.exit(
                 runQualityCommand(["scheduler", "protocol", "--enable-evictions", "--disable-evictions"])

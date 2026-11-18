@@ -652,3 +652,155 @@ export class SimulationInputError extends S.TaggedError<SimulationInputError, { 
     description: "The arrival stream cannot be simulated, for example because two arrivals share a nonce.",
   })
 ) {}
+
+/**
+ * How the journal replay declares an ETA for one recorded unit.
+ *
+ * **Details**
+ *
+ * The ETA is the nearest-rank quantile (`quantilePermille`) of the last
+ * `historyLimit` holds of the same work kind released at or before the unit's
+ * enqueue instant, so the replay never reads the future. A kind with fewer
+ * than `minSamples` such holds declares no ETA and so never backfills.
+ *
+ * **Example** (The p90 estimator)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ReplayEtaEstimator } from "@/backfill/Schemas"
+ *
+ * const PosInt = S.Int.check(S.isGreaterThan(0))
+ * const estimator = ReplayEtaEstimator.make({
+ *   quantilePermille: PosInt.make(900),
+ *   minSamples: PosInt.make(5),
+ *   historyLimit: PosInt.make(200)
+ * })
+ * console.log(estimator.quantilePermille) // 900
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class ReplayEtaEstimator extends S.Opaque<ReplayEtaEstimator, { readonly brand: unique symbol }>()(
+  S.Struct({
+    quantilePermille: PosInt.check(S.isLessThanOrEqualTo(1000)),
+    minSamples: PosInt,
+    historyLimit: PosInt,
+  }).pipe(
+    $I.annoteSchema("ReplayEtaEstimator", {
+      description: "Causal per-kind hold quantile the journal replay declares as each unit's ETA.",
+    })
+  )
+) {}
+
+/**
+ * One arm of the tail-wait A/B: the capacity and the two SCHE-06 switches.
+ *
+ * **Example** (The deployed arm at ten tokens)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { ReplayArmSpec } from "@/backfill/Schemas"
+ *
+ * const arm = ReplayArmSpec.make({
+ *   capacityTokens: S.Int.check(S.isGreaterThan(0)).make(10),
+ *   backfill: "off",
+ *   fairness: "off"
+ * })
+ * console.log(arm.backfill) // "off"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class ReplayArmSpec extends S.Opaque<ReplayArmSpec, { readonly brand: unique symbol }>()(
+  S.Struct({
+    capacityTokens: PosInt,
+    backfill: BackfillMode,
+    fairness: FairnessMode,
+  }).pipe(
+    $I.annoteSchema("ReplayArmSpec", {
+      description: "Capacity and SCHE-06 mode switches of one tail-wait A/B arm.",
+    })
+  )
+) {}
+
+/**
+ * Nearest-rank wait quantiles of one population, in milliseconds.
+ *
+ * **Example** (An empty population)
+ *
+ * ```ts
+ * import { summarizeWaits } from "@/backfill/JournalReplay"
+ *
+ * console.log(summarizeWaits([]).count) // 0
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class WaitSummary extends S.Opaque<WaitSummary, { readonly brand: unique symbol }>()(
+  S.Struct({
+    count: S.Natural,
+    p50Millis: S.Natural,
+    p90Millis: S.Natural,
+    p95Millis: S.Natural,
+    p99Millis: S.Natural,
+    maxMillis: S.Natural,
+    meanMillis: S.Natural,
+    overMinute: S.Natural,
+  }).pipe(
+    $I.annoteSchema("WaitSummary", {
+      description: "Nearest-rank p50, p90, p95, p99, max and mean wait, and the count waiting over a minute.",
+    })
+  )
+) {}
+
+/**
+ * What one A/B arm produced on the replayed stream.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class ReplayArmResult extends S.Opaque<ReplayArmResult, { readonly brand: unique symbol }>()(
+  S.Struct({
+    arm: ReplayArmSpec,
+    waits: WaitSummary,
+    backfills: S.Natural,
+    breaches: S.Natural,
+    peakActiveTokens: S.Natural,
+  }).pipe(
+    $I.annoteSchema("ReplayArmResult", {
+      description: "Wait summary, backfill admissions, bound breaches and peak tokens of one A/B arm.",
+    })
+  )
+) {}
+
+/**
+ * The tail-wait A/B over one recorded admission journal.
+ *
+ * **Details**
+ *
+ * `chains` counts the admitted-and-released nonces replayed; `skipped` counts
+ * nonces without both rows (withdrawn, evicted, or cut by the window) and rows
+ * no decoder accepted. `recorded` summarizes the waits the deployed scheduler
+ * actually produced, so each arm can be read against it.
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class ReplayReport extends S.Opaque<ReplayReport, { readonly brand: unique symbol }>()(
+  S.Struct({
+    chains: S.Natural,
+    skipped: S.Natural,
+    spanMillis: S.Natural,
+    etaDeclared: S.Natural,
+    estimator: ReplayEtaEstimator,
+    recorded: WaitSummary,
+    arms: S.Array(ReplayArmResult),
+  }).pipe(
+    $I.annoteSchema("ReplayReport", {
+      description: "Recorded waits and per-arm simulated waits of the SCHE-06 tail-wait A/B over one journal.",
+    })
+  )
+) {}

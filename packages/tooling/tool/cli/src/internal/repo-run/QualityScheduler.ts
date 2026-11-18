@@ -45,7 +45,21 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
+  AdmissionAttemptVerdict,
+  AdmissionBackfillPolicy,
+  AdmissionBackfillView,
+  AdmissionEtaEstimator,
+} from "./AdmissionBackfill.schemas.ts";
+import {
+  admissionAttemptVerdict,
+  admissionConditionalDeadline,
+  admissionEtaFor,
+  admissionUsageIntervals,
+} from "./AdmissionBackfill.ts";
+import {
+  AdmissionBackfillMode,
   AdmissionEvictionEmission,
+  AdmissionFairnessMode,
   AdmissionJournalAdmitted,
   AdmissionJournalEnqueued,
   AdmissionJournalLeaseEvictedV3,
@@ -116,7 +130,12 @@ import {
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { AdmissionJournalLeaseEvicted, AdmissionJournalTicketEvicted } from "./AdmissionJournal.ts";
+import type { AdmissionUsageInterval } from "./AdmissionBackfill.schemas.ts";
+import type {
+  AdmissionJournalEvent,
+  AdmissionJournalLeaseEvicted,
+  AdmissionJournalTicketEvicted,
+} from "./AdmissionJournal.ts";
 import type { MemoryStatsShape } from "./MemoryStats.service.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
@@ -586,6 +605,68 @@ export const setAdmissionPressureProtocol = Effect.fn("QualityScheduler.setAdmis
 ) {
   const directories = yield* ensureAdmissionDirectories();
   return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, pressure }));
+});
+
+/**
+ * Turn the SCHE-06 EASY backfill verdict on (`easy`) or off.
+ *
+ * **Details**
+ *
+ * With it on, new tickets declare a journal-derived ETA, protected tickets
+ * stamp their conditional bound, and a contender behind a capacity-blocked
+ * head may pass it when its ETA ends before the head's projected start. A
+ * checkout at an older revision keeps the head-of-line rule and the overshoot
+ * rollback, so mixed revisions never exceed capacity. Every other gate keeps
+ * its state.
+ *
+ * **Example** (Reference the backfill gate writer)
+ *
+ * ```ts
+ * import { setAdmissionBackfillProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof setAdmissionBackfillProtocol) // "function"
+ * ```
+ *
+ * @param backfill - Desired backfill mode.
+ * @returns The protocol marker that was published.
+ * @category admission
+ * @since 0.0.0
+ */
+export const setAdmissionBackfillProtocol = Effect.fn("QualityScheduler.setAdmissionBackfillProtocol")(function* (
+  backfill: AdmissionBackfillMode
+) {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, backfill }));
+});
+
+/**
+ * Turn the SCHE-06 origin-then-checkout fairness order on (`origin-checkout`) or off.
+ *
+ * **Details**
+ *
+ * With it on, tickets that have not waited the protection window are ordered
+ * by their origin's, then their checkout's, token-milliseconds over the last
+ * 30 minutes, read from the admission journal on each scan. Protected tickets
+ * keep enqueue order. Every other gate keeps its state.
+ *
+ * **Example** (Reference the fairness gate writer)
+ *
+ * ```ts
+ * import { setAdmissionFairnessProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof setAdmissionFairnessProtocol) // "function"
+ * ```
+ *
+ * @param fairness - Desired fairness mode.
+ * @returns The protocol marker that was published.
+ * @category admission
+ * @since 0.0.0
+ */
+export const setAdmissionFairnessProtocol = Effect.fn("QualityScheduler.setAdmissionFairnessProtocol")(function* (
+  fairness: AdmissionFairnessMode
+) {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, fairness }));
 });
 
 // Staging siblings are named `<target>.tmp-<pid>[-<start identity>]-<uuid>`.
@@ -1981,6 +2062,188 @@ const selfMayAttempt = (
   return false;
 };
 
+// SCHE-06 (PLAN slice 12). The ETA a new ticket declares under the backfill gate:
+// the p90 of its kind's last 200 recorded holds, once five exist.
+const backfillEtaEstimator = AdmissionEtaEstimator.make({ quantilePermille: 900, minSamples: 5, historyLimit: 200 });
+const BACKFILL_FAIRNESS_WINDOW_MILLIS = Duration.toMillis(Duration.minutes(30));
+
+/**
+ * What one scan's SCHE-06 verdict needs beyond the scan: the policy and the windowed released leases.
+ *
+ * @category admission
+ * @since 0.0.0
+ */
+export interface AdmissionBackfillContext {
+  readonly finished: ReadonlyArray<AdmissionUsageInterval>;
+  readonly policy: AdmissionBackfillPolicy;
+}
+
+const isBackfillProtocolOn = (protocol: AdmissionProtocol): boolean =>
+  !AdmissionBackfillMode.is.off(protocol.backfill) || !AdmissionFairnessMode.is.off(protocol.fairness);
+
+// Protection starts at the deployed publish aging, so with both modes off the order
+// is the deployed one; the bound adds one heartbeat of polling slack per ticket.
+const backfillPolicyFor = (
+  protocol: AdmissionProtocol,
+  capacityTokens: number,
+  config: AdmissionConfig
+): AdmissionBackfillPolicy =>
+  AdmissionBackfillPolicy.make({
+    capacityTokens,
+    publishAgingMillis: config.publishAgingSeconds * 1000,
+    protectAfterMillis: config.publishAgingSeconds * 1000,
+    fairnessWindowMillis: BACKFILL_FAIRNESS_WINDOW_MILLIS,
+    promotionOverheadMillis: config.heartbeatSeconds * 1000,
+    backfill: protocol.backfill,
+    fairness: protocol.fairness,
+  });
+
+// The journal is read only behind the gates; an unreadable journal reads as empty,
+// which only drops the fairness usage and the ETA (so nothing backfills).
+const readBackfillJournalEvents = (root: string) =>
+  readAdmissionJournalHistory(root).pipe(
+    Effect.map((history) => history.events),
+    Effect.orElseSucceed(A.empty<AdmissionJournalEvent>)
+  );
+
+const readBackfillContext = Effect.fnUntraced(function* (
+  root: string,
+  protocol: AdmissionProtocol,
+  capacityTokens: number,
+  nowMillis: number,
+  config: AdmissionConfig
+): Effect.fn.Return<O.Option<AdmissionBackfillContext>, never, FileSystem.FileSystem | Path.Path> {
+  if (!isBackfillProtocolOn(protocol)) {
+    return O.none();
+  }
+  const finished = AdmissionFairnessMode.is.off(protocol.fairness)
+    ? A.empty<AdmissionUsageInterval>()
+    : yield* Effect.map(
+        readBackfillJournalEvents(root),
+        admissionUsageIntervals(nowMillis, BACKFILL_FAIRNESS_WINDOW_MILLIS)
+      );
+  return O.some({ policy: backfillPolicyFor(protocol, capacityTokens, config), finished });
+});
+
+// A new ticket declares an ETA only under the backfill gate, so with it off every
+// ticket and lease keeps the bytes it had before SCHE-06.
+const backfillEtaFor = Effect.fnUntraced(function* (
+  root: string,
+  protocol: AdmissionProtocol,
+  kind: AdmissionWorkKind
+): Effect.fn.Return<O.Option<number>, never, FileSystem.FileSystem | Path.Path> {
+  return AdmissionBackfillMode.is.off(protocol.backfill)
+    ? O.none()
+    : yield* Effect.map(readBackfillJournalEvents(root), admissionEtaFor(kind, backfillEtaEstimator));
+});
+
+// The verdict runs after the deployed skippable checks, unchanged: a skippable ticket
+// leaves the line (the contender's own origin stamp is ignored for itself).
+const backfillViewFor = (
+  state: LiveAdmissionState,
+  nowMillis: number,
+  config: AdmissionConfig,
+  self: YeetAdmissionTicket,
+  context: AdmissionBackfillContext
+): AdmissionBackfillView =>
+  AdmissionBackfillView.make({
+    nowMillis,
+    tickets: A.filter(
+      A.map(state.tickets, ({ ticket }) => ticket),
+      (ticket) =>
+        !isTicketSkippable(state, ticket, nowMillis, config, ticket.pid === self.pid && ticket.nonce === self.nonce)
+    ),
+    leases: A.map(state.leases, ({ lease }) => lease),
+    finished: context.finished,
+  });
+
+const selfMayAttemptWith = (
+  state: LiveAdmissionState,
+  capacityTokens: number,
+  nowMillis: number,
+  config: AdmissionConfig,
+  self: YeetAdmissionTicket,
+  context: O.Option<AdmissionBackfillContext>
+): boolean =>
+  O.match(context, {
+    onNone: () => selfMayAttempt(state, capacityTokens, nowMillis, config, self),
+    onSome: (backfill) =>
+      AdmissionAttemptVerdict.guards.Attempt(
+        admissionAttemptVerdict(backfillViewFor(state, nowMillis, config, self, backfill), backfill.policy, self.nonce)
+      ),
+  });
+
+// The bound a contender stamps on its own ticket: once, on the first scan at which it
+// is protected, and only under the backfill gate.
+const backfillDeadlineFor = (
+  state: LiveAdmissionState,
+  nowMillis: number,
+  config: AdmissionConfig,
+  self: YeetAdmissionTicket,
+  context: O.Option<AdmissionBackfillContext>
+): O.Option<number> =>
+  pipe(
+    context,
+    O.filter(
+      (backfill) =>
+        AdmissionBackfillMode.is.easy(backfill.policy.backfill) &&
+        O.isNone(self.deadlineMillis) &&
+        nowMillis - self.enqueuedAtMillis >= backfill.policy.protectAfterMillis
+    ),
+    O.flatMap((backfill) =>
+      admissionConditionalDeadline(
+        backfillViewFor(state, nowMillis, config, self, backfill),
+        backfill.policy,
+        self.nonce
+      )
+    )
+  );
+
+/**
+ * Exposes the gated self-selection for deterministic scheduler tests.
+ *
+ * **Details**
+ *
+ * `None` runs the deployed rule; `Some` runs the SCHE-06 verdict after the
+ * deployed skippable checks. With both modes `off` the two agree.
+ *
+ * **Example** (Reference the self-selection seam)
+ *
+ * ```ts
+ * import { selfMayAttemptForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof selfMayAttemptForTesting) // "function"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const selfMayAttemptForTesting = (scan: {
+  readonly capacityTokens: number;
+  readonly config: AdmissionConfig;
+  readonly context: O.Option<AdmissionBackfillContext>;
+  readonly leases: ReadonlyArray<YeetAdmissionLease>;
+  readonly nowMillis: number;
+  readonly self: YeetAdmissionTicket;
+  readonly tickets: ReadonlyArray<YeetAdmissionTicket>;
+}): boolean =>
+  selfMayAttemptWith(
+    {
+      leases: A.map(scan.leases, (lease) => ({ path: lease.nonce, lease })),
+      tickets: A.map(scan.tickets, (ticket) => ({ path: ticket.nonce, ticket })),
+      dead: A.empty(),
+      deadLeases: A.empty(),
+      deadTickets: A.empty(),
+      quarantined: A.empty(),
+    },
+    scan.capacityTokens,
+    scan.nowMillis,
+    scan.config,
+    scan.self,
+    scan.context
+  );
+
 /**
  * Gate coordinating origin-lock migration and the below-envelope fallback
  * underneath machine-wide admission.
@@ -2254,6 +2517,7 @@ const stageSelfLease = Effect.fnUntraced(function* (
     unit: ticket.unit,
     weightSource: ticket.weightSource,
     owner: ticket.owner,
+    etaMillis: ticket.etaMillis,
   });
   const leasePath = path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`);
   const promotionPath = promotionTransitionPath(path, directories, ticket.nonce);
@@ -2334,6 +2598,8 @@ const heartbeatLoop = Effect.fnUntraced(function* (
 interface PromotionTickInfo {
   readonly availableGib: number;
   readonly capacityTokens: number;
+  // The SCHE-06 bound this scan stamps on the contender's own ticket, when it is due.
+  readonly deadlineMillis: O.Option<number>;
   readonly nowMillis: number;
   readonly state: LiveAdmissionState;
 }
@@ -2377,8 +2643,16 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
     config,
     destination
   );
-  const info: PromotionTickInfo = { availableGib, capacityTokens, nowMillis, state };
-  if (!selfMayAttempt(state, capacityTokens, nowMillis, config, ticket)) {
+  const protocol = yield* readAdmissionProtocol(directories.root);
+  const backfill = yield* readBackfillContext(directories.root, protocol, capacityTokens, nowMillis, config);
+  const info: PromotionTickInfo = {
+    availableGib,
+    capacityTokens,
+    deadlineMillis: backfillDeadlineFor(state, nowMillis, config, ticket, backfill),
+    nowMillis,
+    state,
+  };
+  if (!selfMayAttemptWith(state, capacityTokens, nowMillis, config, ticket, backfill)) {
     return { admitted: O.none(), info, originBusy: hasLegacySameOriginOwner(state, ticket), scopeUnavailable: false };
   }
   const attempt = yield* tryAdmitSelf(directories, request, ticket, gate, config);
@@ -2501,6 +2775,7 @@ const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, Ga
       ...ticket,
       heartbeatAtMillis: refreshedMillis,
       blockedOnOriginAtMillis: tick.originBusy ? refreshedMillis : ticket.blockedOnOriginAtMillis,
+      deadlineMillis: O.orElse(ticket.deadlineMillis, () => tick.info.deadlineMillis),
     });
     const encodedTicketText = yield* encodeTicketText(ticket);
     yield* refreshHeartbeat(ticketPath, encodedTicketText);
@@ -2865,6 +3140,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     branch: admittedRequest.branch,
     command: admittedRequest.command,
   });
+  const unitGatedFields = unitGatedTicketFieldsFor(protocol.units, admittedRequest, owner);
   const ticket = YeetAdmissionTicket.make({
     schemaVersion: "yeet-admission-ticket/v1",
     pid: process.pid,
@@ -2886,7 +3162,8 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     computeProfile: O.some(computeProfile.profile),
     stage: admittedRequest.stage,
     forceLocal: admittedRequest.forceLocal,
-    ...unitGatedTicketFieldsFor(protocol.units, admittedRequest, owner),
+    ...unitGatedFields,
+    etaMillis: yield* backfillEtaFor(directories.root, protocol, unitGatedFields.kind),
   });
   const ticketPath = path.join(directories.queue, `${ticket.nonce}-${ticket.pid}.ticket.json`);
   return yield* Effect.uninterruptibleMask((restore) =>
@@ -3225,6 +3502,8 @@ export const QualitySchedulerLive: Layer.Layer<QualityScheduler> = Layer.succeed
     setEvictionProtocol: setAdmissionEvictionProtocol,
     setUnitProtocol: setAdmissionUnitProtocol,
     setPressureProtocol: setAdmissionPressureProtocol,
+    setBackfillProtocol: setAdmissionBackfillProtocol,
+    setFairnessProtocol: setAdmissionFairnessProtocol,
     history: admissionJournalHistory(),
     archive: admissionJournalArchiveStatus(),
     recordRoute: recordAdmissionRoute,
