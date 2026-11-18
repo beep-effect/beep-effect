@@ -138,6 +138,23 @@ describe("route corpus read budget", () => {
     )
   );
 
+  it.effect("admits a call when the ledger cannot read the reserve", () =>
+    withLedger(
+      Effect.gen(function* () {
+        const ledger = yield* GithubBudgetLedger;
+        const budget = yield* makeRouteReadBudget(
+          O.some({ ...ledger, reserves: Effect.die("unreadable"), reserve: () => Effect.die("unreadable") })
+        );
+        yield* budget.admit("gh run list");
+        yield* budget.metered(respond(4000, 30 * SECOND)).pipe(Effect.provideService(RateLimitSink, ledger.sink));
+        yield* budget.admit("gh run view 4");
+        const spend = yield* budget.spend;
+        expect(spend.reserveWaits).toBe(0);
+        assertSome(spend.identity, identity);
+      })
+    )
+  );
+
   it.effect("refuses a wait past an hour so the checkpoint resumes the capture later", () =>
     withLedger(
       Effect.gen(function* () {
