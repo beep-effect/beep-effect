@@ -1154,17 +1154,15 @@ export const replyDispositionRows = (pass: ReplyPassFacts): ReadonlyArray<Review
   A.getSomes(
     A.map(A.zip(pass.actions, pass.outcomes), ([action, outcome]) =>
       action._tag === "post" && isWrittenOutcome(outcome)
-        ? O.some(
-            ReviewLaneDispositionRow.make({
-              schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
-              prNumber: pass.prNumber,
-              branch: pass.branch,
-              recordedAt: pass.recordedAt,
-              threadId: action.threadId,
-              reviewer: action.reviewer,
-              disposition: outcome.disposition,
-            })
-          )
+        ? ReviewLaneDispositionRow.makeOption({
+            schemaVersion: YEET_REVIEW_LANE_SCHEMA_VERSION,
+            prNumber: pass.prNumber,
+            branch: pass.branch,
+            recordedAt: pass.recordedAt,
+            threadId: action.threadId,
+            reviewer: action.reviewer,
+            disposition: outcome.disposition,
+          })
         : O.none<ReviewLaneDispositionRow>()
     )
   );

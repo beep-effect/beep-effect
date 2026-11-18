@@ -664,14 +664,12 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
           outlineSeparations: A.match(outline.moves, {
             onEmpty: O.none,
             onNonEmpty: (moves) =>
-              O.some(
-                OutlineSeparation.make({
-                  lines: A.length(moves),
-                  largestMoveMm: A.max(moves, Order.Number) * mm,
-                  trimmedStrokes: strokes.trimmed,
-                  droppedStrokes: strokes.dropped,
-                })
-              ),
+              OutlineSeparation.makeOption({
+                lines: A.length(moves),
+                largestMoveMm: A.max(moves, Order.Number) * mm,
+                trimmedStrokes: strokes.trimmed,
+                droppedStrokes: strokes.dropped,
+              }),
           }),
         });
       }),

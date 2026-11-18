@@ -392,7 +392,7 @@ const makeGoalCompletionClaimsReader = Effect.gen(function* () {
       (file) =>
         fs.readFileString(path.join(absolute, file)).pipe(
           Effect.map((text) =>
-            O.some(GoalSourcedDecision.make({ path: `${directory}/${file}`, source: "working-tree", text }))
+            GoalSourcedDecision.makeOption({ path: `${directory}/${file}`, source: "working-tree", text })
           ),
           Effect.orElseSucceed(O.none<GoalSourcedDecision>)
         ),

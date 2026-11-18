@@ -225,7 +225,7 @@ describe("@beep/technical-drawing sheet-set approval", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         // the spec recorded someone else; the reply that would otherwise pass is from attorney@example.com
-        const other = yield* writeSheetSet(O.some(EmailAddress.make("partner@example.com")));
+        const other = yield* writeSheetSet(EmailAddress.makeOption("partner@example.com"));
         const wrongApprover = yield* Effect.flip(
           sign(other.manifestPath, ConfirmationSource.cases.email.make({ messageId: "approved" }))
         );

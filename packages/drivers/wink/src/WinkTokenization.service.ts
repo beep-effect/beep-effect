@@ -214,6 +214,7 @@ const collectSentences = (
     const resolvedSpan = resolveSentenceSpan(sentence, its, nextTokenStart, tokenArray.length);
 
     if (O.isNone(resolvedSpan)) {
+      // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
       failure = O.some(
         SentenceSpanFailure.make({
           reason: "Unable to derive a stable sentence token span.",
@@ -229,6 +230,7 @@ const collectSentences = (
     const maybeFirstToken = A.head(sentenceTokens);
 
     if (O.isNone(maybeFirstToken)) {
+      // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
       failure = O.some(
         SentenceSpanFailure.make({
           reason: "Resolved sentence span produced no tokens.",

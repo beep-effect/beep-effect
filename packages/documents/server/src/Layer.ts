@@ -18,7 +18,6 @@ import * as Config from "effect/Config";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import { DocumentsServerLayer, DocumentsServerLlmLayer } from "./aggregates/Document/index.ts";
 import {
   BOX_MIRROR_DEFAULT_ROOT_NAME,
@@ -117,13 +116,11 @@ export const VaultSyncMirrorRootLayer = Layer.effect(
 // Genesis sends carry their import principal in this request context, and Session-gated sends carry
 // the v1 request context (D17 F8); the driver stamps whichever is present on each event row.
 const platformConfig = AlchemyPostgresConfig.make({
-  provenance: O.some(
-    ProvenanceMapping.make({
-      contextKey: V.GenesisProvenance.key,
-      principalField: "principal",
-      sourceKindField: "source",
-    })
-  ),
+  provenance: ProvenanceMapping.makeOption({
+    contextKey: V.GenesisProvenance.key,
+    principalField: "principal",
+    sourceKindField: "source",
+  }),
   provenanceMappings: [
     ProvenanceMapping.make({
       contextKey: V.VaultSyncRequestContext.key,

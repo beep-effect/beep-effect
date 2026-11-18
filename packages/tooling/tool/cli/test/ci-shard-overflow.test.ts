@@ -61,14 +61,14 @@ const facts = (overrides: Partial<ShardOverflowFacts> = {}): ShardOverflowFacts 
     repository: REPOSITORY,
     headRepository: REPOSITORY,
     partitions: PLAN,
-    queue: O.some(ShardOverflowQueue.make({ queuedHostedJobs: 140, overflowJobs: 0, runsRead: 12 })),
+    queue: ShardOverflowQueue.makeOption({ queuedHostedJobs: 140, overflowJobs: 0, runsRead: 12 }),
     waitLimitSeconds: O.some(600),
     poolSize: O.some(48),
     ...overrides,
   });
 
 const busy = (queuedHostedJobs: number, overflowJobs: number) =>
-  O.some(ShardOverflowQueue.make({ queuedHostedJobs, overflowJobs, runsRead: 10 }));
+  ShardOverflowQueue.makeOption({ queuedHostedJobs, overflowJobs, runsRead: 10 });
 
 describe("decideShardOverflow", () => {
   it("routes the whole plan when the hosted wait passes the limit and the pool has room", () => {

@@ -158,22 +158,20 @@ export const installCitationPostCaseMetadataExtraction = Effect.fn("Citation.ins
       const selected = yield* courts.lookup(rawCourt);
       court = selected.court.pipe(O.getOrNull, O.some);
     }
-    return O.some(
-      CitationPostCaseMetadataPatch.make({
-        fullSpanEnd,
-        year: numericYear,
-        metadata: {
-          pinCite: pointLength(cleanedPin) === 0 ? null : cleanedPin,
-          extra,
-          parenthetical,
-          year,
-          month,
-          day,
-          pinCiteSpanEnd: pointLength(rawPin) > 0 ? O.some(request.spanEnd + pointLength(rawPin)) : O.none(),
-          court,
-        },
-      })
-    );
+    return CitationPostCaseMetadataPatch.makeOption({
+      fullSpanEnd,
+      year: numericYear,
+      metadata: {
+        pinCite: pointLength(cleanedPin) === 0 ? null : cleanedPin,
+        extra,
+        parenthetical,
+        year,
+        month,
+        day,
+        pinCiteSpanEnd: pointLength(rawPin) > 0 ? O.some(request.spanEnd + pointLength(rawPin)) : O.none(),
+        court,
+      },
+    });
   });
 });
 /** Capture the source helper's owners without running later name, pre-citation,

@@ -218,7 +218,7 @@ export class BoxContentMigrationFolder extends S.Opaque<BoxContentMigrationFolde
  * const file = BoxContentMigrationFile.make({
  *   fileName: "letter.pdf",
  *   folderPath: ["Clients", "Alpha"],
- *   ruleId: O.some(BoxContentMigrationRuleId.make("closed-matters")),
+ *   ruleId: BoxContentMigrationRuleId.makeOption("closed-matters"),
  *   sha256: Sha256Hex.make("a".repeat(64)),
  *   sizeBytes: 1024,
  *   sourceRelativePath: "alpha/letter.pdf"

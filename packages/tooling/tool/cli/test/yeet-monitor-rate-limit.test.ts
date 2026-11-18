@@ -272,7 +272,7 @@ const pauseLedger = layerGithubBudgetLedger({ host: HostLabel.make("hub") }).pip
 );
 const labelledClient = Layer.merge(
   rateLimitClient(liveRateLimitPayload),
-  Layer.succeed(GithubBudgetIdentity, O.some(GithubIdentityLabel.make("user:alice")))
+  Layer.succeed(GithubBudgetIdentity, GithubIdentityLabel.makeOption("user:alice"))
 );
 
 it.layer(Layer.merge(pauseLedger, labelledClient), { timeout: "30 seconds" })(

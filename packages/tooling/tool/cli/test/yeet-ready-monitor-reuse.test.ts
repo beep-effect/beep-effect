@@ -101,7 +101,7 @@ const jobRecord = (
     ...fields,
   });
 
-const runner = (pid: number) => O.some(ProofJobRunner.make({ pid, startedAt: "2026-11-14T10:00:01.000Z" }));
+const runner = (pid: number) => ProofJobRunner.makeOption({ pid, startedAt: "2026-11-14T10:00:01.000Z" });
 
 const submission = (
   argv: ReadonlyArray<string>,
@@ -293,7 +293,7 @@ describe("readiness monitor runtime left", () => {
       jobRequest(CLI_ARGV),
       {
         submittedAt: "not a time",
-        runner: O.some(ProofJobRunner.make({ pid: 31337, startedAt: "2026-11-14T10:20:00.000Z" })),
+        runner: ProofJobRunner.makeOption({ pid: 31337, startedAt: "2026-11-14T10:20:00.000Z" }),
       },
       O.some(HOUR)
     );

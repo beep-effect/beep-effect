@@ -554,14 +554,12 @@ export const parseReference = (text: string): O.Option<ParsedReference> => {
     return O.none();
   }
 
-  return O.some(
-    ParsedReference.make({
-      key,
-      identifier: Str.toLowerCase(key),
-      label: Str.slice(1, -1)(rawLabel),
-      url,
-      ...O.getSomesStruct({ title: O.fromUndefinedOr(tail.title) }),
-      length: scanner.pos,
-    })
-  );
+  return ParsedReference.makeOption({
+    key,
+    identifier: Str.toLowerCase(key),
+    label: Str.slice(1, -1)(rawLabel),
+    url,
+    ...O.getSomesStruct({ title: O.fromUndefinedOr(tail.title) }),
+    length: scanner.pos,
+  });
 };

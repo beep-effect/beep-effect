@@ -4058,20 +4058,18 @@ const plannedAnnotationToPhoenix = (
     ? { score: annotation.value }
     : { label: P.isBoolean(annotation.value) ? (annotation.value ? "true" : "false") : annotation.value };
 
-  return O.some(
-    PhoenixAnnotationInput.make({
-      identifier: annotation.annotationId,
-      metadata: {
-        optimization: annotation.optimization,
-        source: annotation.source,
-        ...annotation.metadata,
-      },
-      name: annotation.name,
-      targetId: annotation.targetRef,
-      targetKind: annotation.targetKind,
-      ...valueFields,
-    })
-  );
+  return PhoenixAnnotationInput.makeOption({
+    identifier: annotation.annotationId,
+    metadata: {
+      optimization: annotation.optimization,
+      source: annotation.source,
+      ...annotation.metadata,
+    },
+    name: annotation.name,
+    targetId: annotation.targetRef,
+    targetKind: annotation.targetKind,
+    ...valueFields,
+  });
 };
 
 const unconfirmedSyncResult = ({

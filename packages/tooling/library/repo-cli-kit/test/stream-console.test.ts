@@ -466,14 +466,14 @@ describe("stream console", () => {
           callback(new Error("first"));
           return false;
         },
-        failure: O.some(StreamWriteFailure.make({ stream: "stdout", message: "first", droppedLines: 1 })),
+        failure: StreamWriteFailure.makeOption({ stream: "stdout", message: "first", droppedLines: 1 }),
       },
       {
         tag: "throw",
         write: () => {
           throw new Error("first");
         },
-        failure: O.some(StreamWriteFailure.make({ stream: "stdout", message: "first", droppedLines: 1 })),
+        failure: StreamWriteFailure.makeOption({ stream: "stdout", message: "first", droppedLines: 1 }),
       },
       {
         tag: "ok-then-throw",
@@ -489,7 +489,7 @@ describe("stream console", () => {
           callback(new Error("first"));
           throw new Error("second");
         },
-        failure: O.some(StreamWriteFailure.make({ stream: "stdout", message: "first", droppedLines: 1 })),
+        failure: StreamWriteFailure.makeOption({ stream: "stdout", message: "first", droppedLines: 1 }),
       },
     ];
     for (const testCase of cases) {

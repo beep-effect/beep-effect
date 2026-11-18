@@ -116,7 +116,7 @@ const Tab = (props: {
       if (O.isNone(current)) return;
       props.graph.registry.set(
         props.state.dragAtom,
-        O.flatMap(current, (drag) => (drag.moved ? O.some(TabDrag.make({ ...drag, concluded: true })) : O.none()))
+        O.flatMap(current, (drag) => (drag.moved ? TabDrag.makeOption({ ...drag, concluded: true }) : O.none()))
       );
       // The press moved focus to the dragged tab; hand it back to the
       // group's active tab so the cancelled gesture leaves no focus trace
@@ -185,7 +185,7 @@ const Tab = (props: {
       // release reads as a plain click.
       props.graph.registry.set(
         props.state.dragAtom,
-        finalDrag.moved ? O.some(TabDrag.make({ ...finalDrag, concluded: true })) : O.none()
+        finalDrag.moved ? TabDrag.makeOption({ ...finalDrag, concluded: true }) : O.none()
       );
       releaseCapture(node, event.pointerId);
       if (finalDrag.moved)
@@ -214,18 +214,16 @@ const Tab = (props: {
       const pointer = relativePositionOf(props.state, event);
       props.graph.registry.set(
         props.state.dragAtom,
-        O.some(
-          TabDrag.make({
-            panelId: props.panel.id,
-            fromGroupId: props.groupId,
-            pointer,
-            origin: pointer,
-            moved: false,
-            concluded: false,
-            pointerId: event.pointerId,
-            // fallow-ignore-next-line code-duplication -- pointer-down captures the drag snapshot for its paired move handler, like the floating pane. Owner: @beep/dock-react. Exit: share one drag-snapshot hook once a third pane needs it.
-          })
-        )
+        TabDrag.makeOption({
+          panelId: props.panel.id,
+          fromGroupId: props.groupId,
+          pointer,
+          origin: pointer,
+          moved: false,
+          concluded: false,
+          pointerId: event.pointerId,
+          // fallow-ignore-next-line code-duplication -- pointer-down captures the drag snapshot for its paired move handler, like the floating pane. Owner: @beep/dock-react. Exit: share one drag-snapshot hook once a third pane needs it.
+        })
       );
     };
     node.addEventListener("pointerdown", down);

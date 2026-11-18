@@ -62,17 +62,16 @@
  * @since 0.0.0
  */
 
-import { packetRootOf, packetRootsOf } from "@beep/repo-cli-kit/CheckoutSubject";
+import { isCheckoutPathPruned, loadCheckoutInventory, PrunableLeaves } from "@beep/repo-cli-kit/CheckoutSubject";
+import { productLeaves } from "@beep/repo-cli-kit/ProductLeaves";
 import { findRepoRoot } from "@beep/repo-utils";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
@@ -91,6 +90,8 @@ import {
 } from "./PrivateHomePaths.model.ts";
 import type { Git } from "@beep/git/Git";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
+import type * as FileSystem from "effect/FileSystem";
+import type * as Path from "effect/Path";
 import type * as ChildProcess from "effect/process/ChildProcessSpawner";
 import type { PrivateHomePathExemption, PrivateHomePathsOptions } from "./PrivateHomePaths.model.ts";
 
@@ -463,6 +464,26 @@ export const applyPrivateHomePathExemption: {
 export const formatPrivateHomePathFinding = (finding: PrivateHomePathFinding): string =>
   `${finding.file}:${finding.line}:${finding.column}  ${finding.match}  →  ${finding.suggestion}`;
 
+// The untracked exemption files whose subject the checkout pruned or owns.
+const prunedExemptionFiles = Effect.fn("PrivateHomePaths.prunedExemptionFiles")(function* (
+  options: PrivateHomePathsOptions,
+  untracked: ReadonlyArray<PrivateHomePathExemption>
+) {
+  const repoRoot = yield* findRepoRoot(options.cwd).pipe(
+    PrivateHomePathsExecutionError.mapError("Failed to locate the repository root")
+  );
+  const inventory = yield* loadCheckoutInventory(
+    repoRoot,
+    PrunableLeaves.make({ workspaces: productLeaves.workspaces, packets: options.prunablePackets })
+  ).pipe(PrivateHomePathsExecutionError.mapError("Failed to read the checkout inventory"));
+  return HashSet.fromIterable(
+    A.map(
+      A.filter(untracked, (row) => isCheckoutPathPruned(inventory, row.file)),
+      (row) => row.file
+    )
+  );
+});
+
 /**
  * Run the private home path law over every git-tracked text file.
  *
@@ -472,10 +493,12 @@ export const formatPrivateHomePathFinding = (finding: PrivateHomePathFinding): s
  * scans the working-tree text, decoding a file that contains a NUL byte rather
  * than skipping it, so `skippedBinaryFiles` stays 0. Exempt
  * archives are scanned too, so a count change fails; an exemption row whose
- * file is no longer tracked is reported as stale, unless the row's packet is a
- * declared product-leaf packet (`prunablePackets`) whose directory is gone:
- * then the row lands in `skippedExemptions` instead (a fork or trimmed lane
- * removed the packet). `exemptFiles` counts the
+ * file is no longer tracked is reported as stale, unless the checkout pruned or
+ * owns the row's subject: a declared product-leaf packet (`prunablePackets`)
+ * or workspace whose directory is gone, or a packet or path the checkout's
+ * prune declaration names (`@beep/repo-cli-kit/CheckoutSubject`). Then the
+ * row lands in `skippedExemptions` instead (a fork or trimmed lane removed or
+ * replaced it). `exemptFiles` counts the
  * archives that matched their sealed count.
  *
  * **Example** (Count findings in the repository)
@@ -526,37 +549,17 @@ export const runPrivateHomePaths = Effect.fn("PrivateHomePaths.runPrivateHomePat
     },
   });
   const seen = HashSet.fromIterable(A.map(outcomes, (outcome) => outcome.file));
-  const presentPackets = packetRootsOf(seen);
-  // An untracked row is skipped, not stale, only when its packet is a declared product-leaf packet
-  // the checkout pruned. A row whose packet is present, undeclared, or that lives in no packet stays
-  // strict, so a renamed or archived packet still fails the law.
+  // An untracked row is skipped, not stale, only when the checkout pruned or owns its subject: a
+  // declared product-leaf packet (`prunablePackets`) or product-leaf workspace whose directory is
+  // gone, or a packet or path the checkout's prune declaration names. A row whose subject is
+  // present, undeclared, or the repository's stays strict, so a renamed or archived packet, or an
+  // emptied or untracked-only packet directory, still fails the law. The inventory is read only
+  // when a row is untracked.
   const untracked = A.filter(options.exemptions, (row) => !HashSet.has(seen, row.file));
-  const prunable = HashSet.fromIterable(options.prunablePackets);
-  // A declared packet with no tracked file counts as pruned only when its directory is gone too, so
-  // an emptied or untracked-only packet directory keeps its rows stale.
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot(options.cwd).pipe(
-    PrivateHomePathsExecutionError.mapError("Failed to locate the repository root")
-  );
-  const candidates = A.dedupe(
-    A.filter(
-      A.getSomes(A.map(untracked, (row) => packetRootOf(row.file))),
-      (root) => HashSet.has(prunable, root) && !HashSet.has(presentPackets, root)
-    )
-  );
-  const pruned = yield* Effect.filter(
-    candidates,
-    (root) =>
-      fs.exists(path.join(repoRoot, root)).pipe(
-        Effect.map((exists) => !exists),
-        PrivateHomePathsExecutionError.mapError(`Failed to inspect ${root}`)
-      ),
-    { concurrency: 1 }
-  );
-  const prunedPackets = HashSet.fromIterable(pruned);
-  const inAbsentPacket = (row: PrivateHomePathExemption): boolean =>
-    O.exists(packetRootOf(row.file), (root) => HashSet.has(prunedPackets, root));
+  const prunedRows = A.isReadonlyArrayEmpty(untracked)
+    ? HashSet.empty<string>()
+    : yield* prunedExemptionFiles(options, untracked);
+  const inAbsentPacket = (row: PrivateHomePathExemption): boolean => HashSet.has(prunedRows, row.file);
   const absentPacket = A.filter(untracked, inAbsentPacket);
   const stale = A.filter(untracked, (row) => !inAbsentPacket(row));
   const reported = A.appendAll(

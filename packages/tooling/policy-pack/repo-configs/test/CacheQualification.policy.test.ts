@@ -687,7 +687,7 @@ it.effect("keeps signed execution identities distinct and rejects inconsistent a
       cachePromotionFailures(
         CacheTaskContract.make({
           ...reviewed,
-          activation: O.some(CacheActivationProjection.make({ ...activation, sourceConfiguration: digest(110) })),
+          activation: CacheActivationProjection.makeOption({ ...activation, sourceConfiguration: digest(110) }),
         }),
         []
       )

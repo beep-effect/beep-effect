@@ -16,7 +16,7 @@ import { EVENT_ID, MAILBOX, OutboxWorld, OutboxWorldServices } from "./OutboxWor
 import type { OutboxBasisStatus } from "@beep/m365-mcp";
 
 const at = (dateTime: string) =>
-  O.some(GraphDateTimeTimeZone.make({ dateTime: O.some(dateTime), timeZone: O.some("UTC") }));
+  GraphDateTimeTimeZone.makeOption({ dateTime: O.some(dateTime), timeZone: O.some("UTC") });
 
 const pinnedMessage = GraphMessage.make({
   changeKey: O.some("message-key-1"),

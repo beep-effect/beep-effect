@@ -141,12 +141,10 @@ it.layer(PdfBackendToolsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices
         backend.svgToPdf(
           [path.join(dir, "sheet.svg")],
           path.join(dir, "out.pdf"),
-          O.some(
-            SheetFonts.make({
-              directory: fontDirectory,
-              families: [LabelFontAlias.make({ requested: "Arial", family: "Label Boxes" })],
-            })
-          )
+          SheetFonts.makeOption({
+            directory: fontDirectory,
+            families: [LabelFontAlias.make({ requested: "Arial", family: "Label Boxes" })],
+          })
         )
       );
       assertInstanceOf(error, DrawingError);
@@ -242,7 +240,7 @@ const fakeTools = Layer.effect(
                     width: 100,
                     height: 80,
                     dpi: request.dpi,
-                    inkBox: O.some(PixelBox.make({ minX: 10, minY: 20, maxX: 40, maxY: 50 })),
+                    inkBox: PixelBox.makeOption({ minX: 10, minY: 20, maxX: 40, maxY: 50 }),
                     inkPixels: 100,
                     impurePixels: 2,
                     chromaPixels: 0,
@@ -379,7 +377,7 @@ const manifestWith = (sheet: O.Option<SheetOptions>) =>
         svgFile: "fig-1.svg",
         svgSha256: "00",
         visibleSegments: 4,
-        camera: O.some(Camera.make({ eye: [-1, -1, 1], up: [0, 0, 1] })),
+        camera: Camera.makeOption({ eye: [-1, -1, 1], up: [0, 0, 1] }),
       }),
       FigureRecord.make({
         figure: 2,
@@ -388,7 +386,7 @@ const manifestWith = (sheet: O.Option<SheetOptions>) =>
         svgFile: "fig-2.svg",
         svgSha256: "00",
         visibleSegments: 4,
-        camera: O.some(Camera.make({ eye: [-1, -1, -1], up: [0, 0, 1], focus: O.some(10) })),
+        camera: Camera.makeOption({ eye: [-1, -1, -1], up: [0, 0, 1], focus: O.some(10) }),
       }),
       FigureRecord.make({
         figure: 3,
@@ -412,7 +410,7 @@ describe("beep drawings render summary", () => {
     Effect.fnUntraced(function* () {
       const requested = SheetOptions.make({});
       const fromSpec = renderManifestSummary({
-        manifest: manifestWith(O.some(SheetOptions.make({ margins: "cfr-strict" }))),
+        manifest: manifestWith(SheetOptions.makeOption({ margins: "cfr-strict" })),
         requested,
       });
       expect(fromSpec).toContain("sheet: letter, margins cfr-strict (from the spec; the --format flag was not used)");
@@ -565,16 +563,14 @@ describe("beep drawings render summary of a full manifest", () => {
           }),
         ],
         omissions: [OmissionProof.make({ omitted: "rear", shown: "front", relation: "mirror", proven: true })],
-        validation: O.some(
-          ValidationReport.make({
-            pdfSha256: "00",
-            pageCount: 2,
-            findings: [
-              finding("pdf-version", O.none(), "PDF header is 1.7"),
-              finding("margin-top", O.some(2), "top margin is 1.2 cm"),
-            ],
-          })
-        ),
+        validation: ValidationReport.makeOption({
+          pdfSha256: "00",
+          pageCount: 2,
+          findings: [
+            finding("pdf-version", O.none(), "PDF header is 1.7"),
+            finding("margin-top", O.some(2), "top margin is 1.2 cm"),
+          ],
+        }),
       });
       deepStrictEqual(renderManifestSummary({ manifest: shaded, requested }), [
         'rendered "Synthetic block": 1 shaded sheet(s) at 2 pt/unit → sheets.pdf',
@@ -591,7 +587,7 @@ describe("beep drawings render summary of a full manifest", () => {
       ]);
       const clean = RenderManifest.make({
         ...base,
-        validation: O.some(ValidationReport.make({ pdfSha256: "00", pageCount: 3, findings: [] })),
+        validation: ValidationReport.makeOption({ pdfSha256: "00", pageCount: 3, findings: [] }),
       });
       expect(renderManifestSummary({ manifest: clean, requested })).toContain("validator: ok (3 page(s), sha256 00)");
     })

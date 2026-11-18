@@ -171,6 +171,7 @@ export const diffResearchReports: {
     const references = A.filter(current, P.not(isGoalResearchReportPath));
     const missing = sortedUnique(A.difference(inside, expected));
     const unlisted = sortedUnique(A.difference(expected, inside));
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
     return O.some(
       ResearchReportsDrift.make({
         missing,

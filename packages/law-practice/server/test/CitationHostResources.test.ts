@@ -620,7 +620,7 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
                     CitationMention.make({
                       ...mention,
                       components: [CitationComponentAnchor.make({ name: "token", anchor: mention.anchor })],
-                      footnote: O.some(CitationFootnoteZone.make({ label: O.some("n1"), anchor: mention.anchor })),
+                      footnote: CitationFootnoteZone.makeOption({ label: O.some("n1"), anchor: mention.anchor }),
                     })
                   ),
                 }

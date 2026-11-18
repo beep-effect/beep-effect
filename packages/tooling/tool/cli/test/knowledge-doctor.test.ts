@@ -26,6 +26,7 @@ import {
 } from "@beep/repo-cli/commands/Knowledge";
 import { knowledgeDoctorCommand } from "@beep/repo-cli/commands/Knowledge/Knowledge.command";
 import { KnowledgeCommandSurface, renderKnowledgeDoctorHumanReport } from "@beep/repo-cli/test/Knowledge";
+import { productLeaves } from "@beep/repo-cli-kit/ProductLeaves";
 import { findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -1109,4 +1110,93 @@ describe("knowledge doctor branch-name spans", () => {
       );
     })
   );
+});
+
+// goals/prunable-product-leaves, seam 1b: a missing path the tree's checkout pruned or owns is
+// skipped and counted, and so is a delegated goals-doctor finding of a packet it owns. Every other
+// missing path still fails: undeclared, kept, inside a present subject, or a product leaf under keep.
+describe("knowledge doctor in a trimmed checkout", () => {
+  const ROOT_MANIFEST = '{ "name": "@beep/root", "private": true, "workspaces": ["packages/*"] }';
+  const DRIFTED_MANIFEST =
+    '{ "schemaVersion": "initiative-manifest/v2", "initiative": { "id": "replaced", "status": "active" }, "lifecycle": "paused", "completionGate": { "operator": "yeet", "requiresPullRequest": true, "requiresMergeable": true, "statement": "Ship via yeet.", "grandfathered": false } }';
+  const DECLARATION = "standards/checkout-prune.jsonc";
+  // A product-leaf packet, read from the declaration so no test source names a real packet path.
+  const keptProductPacket = O.getOrThrow(A.get(productLeaves.packets, 1));
+
+  it.layer(testLayer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "skips missing paths into pruned subjects and counts them, and fails every other missing path",
+      Effect.fnUntraced(function* () {
+        const tree = yield* memoryTree({
+          files: {
+            "package.json": ROOT_MANIFEST,
+            "packages/kept/package.json": '{ "name": "@beep/kept" }',
+            [DECLARATION]: `{ "version": 1, "prune": [{ "path": "docs/legal", "why": "not shipped" }], "keep": [{ "path": "docs/legal/README.md", "why": "kept docs link to it" }, { "path": "${keptProductPacket}", "why": "this checkout keeps the packet" }] }`,
+            "docs/guide.md": doc(
+              "`packages/drivers/box/README.md`",
+              "`docs/legal/guide.md`",
+              "`docs/missing.md`",
+              "`docs/legal/README.md`",
+              `\`${keptProductPacket}/README.md\``,
+              "`packages/kept/MISSING.md`"
+            ),
+          },
+        });
+        const report = yield* scanKnowledgeDoctorTree(tree);
+        assert.deepStrictEqual(subjects(report, "broken-tracked-path"), [
+          "repo-path:docs/legal/README.md",
+          "repo-path:docs/missing.md",
+          `repo-path:${keptProductPacket}/README.md`,
+          "repo-path:packages/kept/MISSING.md",
+        ]);
+        assert.strictEqual(report.skippedPrunedCount, 2);
+        assert.include(renderKnowledgeDoctorHumanReport(report), "skipped as pruned from this checkout: 2");
+      })
+    );
+
+    it.effect(
+      "skips an owned packet's delegated findings and missing paths, and checks them without the owned entry",
+      Effect.fnUntraced(function* () {
+        const files = {
+          "package.json": ROOT_MANIFEST,
+          "goals/replaced/ops/manifest.json": DRIFTED_MANIFEST,
+          "goals/replaced/README.md": "# replaced\n\n## Status\n\nLifecycle: `active`\n",
+          "docs/guide.md": doc("`goals/replaced/MISSING.md`"),
+        };
+        const strictTree = yield* memoryTree({ files });
+        const strict = yield* scanKnowledgeDoctorTree(strictTree);
+        assert.deepStrictEqual(subjects(strict, "broken-tracked-path"), ["repo-path:goals/replaced/MISSING.md"]);
+        assert.isTrue(A.some(strict.findings, (row) => row.origin === "delegated"));
+        assert.strictEqual(strict.skippedPrunedCount, undefined);
+
+        const ownedTree = yield* memoryTree({
+          files: {
+            ...files,
+            [DECLARATION]:
+              '{ "version": 1, "owned": [{ "path": "goals/replaced", "why": "this checkout replaced it" }] }',
+          },
+        });
+        const owned = yield* scanKnowledgeDoctorTree(ownedTree);
+        assert.deepStrictEqual(subjects(owned, "broken-tracked-path"), []);
+        assert.isFalse(A.some(owned.findings, (row) => row.origin === "delegated"));
+        assert.isAbove(owned.skippedPrunedCount ?? 0, 1);
+      })
+    );
+
+    it.effect(
+      "fails closed on an invalid declaration, or one whose prune entries name tracked paths",
+      Effect.fnUntraced(function* () {
+        for (const declaration of [
+          '{ "version": 1, "prunes": [] }',
+          '{ "version": 1, "prune": [{ "path": "docs", "why": "a tracked file remains" }] }',
+        ]) {
+          const tree = yield* memoryTree({
+            files: { "package.json": ROOT_MANIFEST, [DECLARATION]: declaration, "docs/guide.md": "`docs/missing.md`" },
+          });
+          const error = yield* Effect.flip(scanKnowledgeDoctorTree(tree));
+          assert.strictEqual(error._tag, "KnowledgeOperationalError", declaration);
+        }
+      })
+    );
+  });
 });

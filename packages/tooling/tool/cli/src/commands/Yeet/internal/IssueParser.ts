@@ -261,6 +261,7 @@ const diagnosticIssueFromLine = (
     O.flatMap((path) => packageNameForFile(context, path))
   );
 
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
   return O.some(
     QualityIssue.make({
       ...issueBase(context, step, result, category, message, inferredPackageName),

@@ -532,15 +532,13 @@ export const timeCommand =
               const sessionId = yield* host.sessionId;
               MutableRef.set(
                 timer,
-                O.some(
-                  TimerInterval.make({
-                    schemaVersion: "practice-timer/v1",
-                    sessionId,
-                    matter: MutableRef.get(matter),
-                    startedAt: now,
-                    stoppedAt: now,
-                  })
-                )
+                TimerInterval.makeOption({
+                  schemaVersion: "practice-timer/v1",
+                  sessionId,
+                  matter: MutableRef.get(matter),
+                  startedAt: now,
+                  stoppedAt: now,
+                })
               );
               MutableRef.set(elapsedMinutes, 0);
               MutableRef.set(ticker, O.some($.clock.every(minute, () => void updateElapsed($)())));

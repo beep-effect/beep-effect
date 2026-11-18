@@ -124,7 +124,7 @@ const statusChanged = (
     text: "status: completed\n",
     transition: StatusTransition.make({
       field: "status",
-      from: O.some(StatusValue.make("active")),
+      from: StatusValue.makeOption("active"),
       to: StatusValue.make("completed"),
     }),
     author,

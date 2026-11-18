@@ -48,7 +48,7 @@ const placeholderSha256 = Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41
 const ledgerPath: RepoRelativePath = "explorations/beep-ci-operational-ontology/research/control-interventions.yaml";
 
 const set = (n: number, p50: number, p95: number) =>
-  PercentileSet.make({ n: S.Natural.make(n), p50Ms: O.some(S.Natural.make(p50)), p95Ms: O.some(S.Natural.make(p95)) });
+  PercentileSet.make({ n: S.Natural.make(n), p50Ms: S.Natural.makeOption(p50), p95Ms: S.Natural.makeOption(p95) });
 
 const emptySet = PercentileSet.make({ n: S.Natural.make(0), p50Ms: O.none(), p95Ms: O.none() });
 

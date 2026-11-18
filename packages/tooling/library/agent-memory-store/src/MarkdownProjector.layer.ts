@@ -439,17 +439,15 @@ const make = Effect.gen(function* () {
             contentHash,
             revisionId,
             text: node.text,
-            anchor: O.some(
-              OccurrenceAnchor.make({
-                source,
-                unit: "utf16",
-                anchor: TextAnchor.make({
-                  startChar: node.range.offset,
-                  endChar: node.range.offset + node.range.length,
-                  quote: node.text,
-                }),
-              })
-            ),
+            anchor: OccurrenceAnchor.makeOption({
+              source,
+              unit: "utf16",
+              anchor: TextAnchor.make({
+                startChar: node.range.offset,
+                endChar: node.range.offset + node.range.length,
+                quote: node.text,
+              }),
+            }),
             filePath: file.path,
             after,
             author: MarkdownImportLineage,

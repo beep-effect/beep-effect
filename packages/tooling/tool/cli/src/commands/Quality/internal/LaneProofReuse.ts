@@ -387,18 +387,16 @@ export const prepareLaneProofSession = Effect.fn("LaneProofReuse.prepareSession"
     { concurrency: 1 }
   );
   yield* fs.makeDirectory(path.dirname(storePath), { recursive: true }).pipe(Effect.ignore);
-  return O.some(
-    LaneProofSession.make({
-      mode,
-      path: storePath,
-      records: pipe(
-        store,
-        O.map((value) => value.records),
-        O.getOrElse(A.empty<LaneProofRecord>)
-      ),
-      identities,
-    })
-  );
+  return LaneProofSession.makeOption({
+    mode,
+    path: storePath,
+    records: pipe(
+      store,
+      O.map((value) => value.records),
+      O.getOrElse(A.empty<LaneProofRecord>)
+    ),
+    identities,
+  });
 });
 
 /**

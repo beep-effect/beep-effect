@@ -216,8 +216,11 @@ export const makeCitationNativeLane = Effect.fn("Citation.makeNativeLane")(funct
     )
   );
   const refused = (authorized: () => boolean) => {
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
     if (closed) return O.some(CitationNativeLaneFailure.make({ reason: "closed" }));
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
     if (poisoned) return O.some(CitationNativeLaneFailure.make({ reason: "quarantined" }));
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
     if (!authorized()) return O.some(CitationNativeLaneFailure.make({ reason: "closed" }));
     return O.none<CitationNativeLaneFailure>();
   };

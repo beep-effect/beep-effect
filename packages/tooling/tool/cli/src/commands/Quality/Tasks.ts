@@ -2679,15 +2679,13 @@ const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function
     yield* Console.log(`[beep-cli] ${label}: skipped lane ${lane.id}: ${reportOnlySkipReason}`);
     return {
       lane,
-      laneRun: O.some(
-        QualityTaskLaneRun.make({
-          id: lane.id,
-          label: lane.step.label,
-          status: "skipped",
-          reason: O.some(reportOnlySkipReason),
-          inputDigest: O.none(),
-        })
-      ),
+      laneRun: QualityTaskLaneRun.makeOption({
+        id: lane.id,
+        label: lane.step.label,
+        status: "skipped",
+        reason: O.some(reportOnlySkipReason),
+        inputDigest: O.none(),
+      }),
       failures: A.empty<QualityTaskFailed>(),
       reused: false,
       stopAfterRed: false,
@@ -2706,15 +2704,13 @@ const runGithubCheckLane = Effect.fn("QualityTasks.runGithubCheckLane")(function
   if (activeReuse) {
     return {
       lane,
-      laneRun: O.some(
-        QualityTaskLaneRun.make({
-          id: lane.id,
-          label: lane.step.label,
-          status: "reused",
-          inputDigest: O.none(),
-          commandText: O.some(commandText(lane.step.command, lane.step.args)),
-        })
-      ),
+      laneRun: QualityTaskLaneRun.makeOption({
+        id: lane.id,
+        label: lane.step.label,
+        status: "reused",
+        inputDigest: O.none(),
+        commandText: O.some(commandText(lane.step.command, lane.step.args)),
+      }),
       failures: A.empty<QualityTaskFailed>(),
       reused: true,
       stopAfterRed: false,
@@ -5226,13 +5222,11 @@ export const parseQualityTaskInvocation = (argv: ReadonlyArray<string>): O.Optio
     }
 
     const parsed = parseFixArgs(rawArgs);
-    return O.some(
-      QualityTaskInvocation.make({
-        task: command,
-        args: parsed.args,
-        fix: QualityTaskName.is.lint(command) && parsed.fix,
-      })
-    );
+    return QualityTaskInvocation.makeOption({
+      task: command,
+      args: parsed.args,
+      fix: QualityTaskName.is.lint(command) && parsed.fix,
+    });
   };
 
   return A.match(argv, {

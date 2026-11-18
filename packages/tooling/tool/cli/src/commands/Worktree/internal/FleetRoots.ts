@@ -183,7 +183,7 @@ const readRootsFile = Effect.fn("FleetRoots.readFile")(function* (repository: Pr
   const document = yield* decodeRootsDocument(content.value).pipe(
     Effect.mapError(WorktreeCommandError.new(`Failed to decode ${file} as a fleet roots document.`, { path: file }))
   );
-  return O.some(ConfiguredFleetRoots.make({ source: "file", roots: document.roots }));
+  return ConfiguredFleetRoots.makeOption({ source: "file", roots: document.roots });
 });
 
 /**
@@ -222,7 +222,7 @@ export const readConfiguredFleetRoots = Effect.fn("FleetRoots.readConfigured")(f
     const roots = yield* decodeRootEntries(envRoots.value).pipe(
       Effect.mapError(WorktreeCommandError.new(`${FLEET_ROOTS_ENV} must list absolute directories.`))
     );
-    return O.some(ConfiguredFleetRoots.make({ source: "env", roots }));
+    return ConfiguredFleetRoots.makeOption({ source: "env", roots });
   }
   return O.isSome(repository) ? yield* readRootsFile(repository.value) : O.none();
 });

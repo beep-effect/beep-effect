@@ -84,6 +84,7 @@ const cycleFinding = (
   const key = A.join(A.sort(A.dedupe(cycle), Order.String), "|");
   if (MutableHashSet.has(reported, key)) return O.none();
   MutableHashSet.add(reported, key);
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
   return O.some(
     FleetLintFinding.make({
       slug,
@@ -150,7 +151,8 @@ const duplicateIdentityFindings = (nodes: ReadonlyArray<PacketNode>): ReadonlyAr
         MutableHashMap.get(declared, id),
         O.flatMap((slugs) =>
           A.length(slugs) > 1
-            ? O.some(
+            ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+              O.some(
                 FleetLintFinding.make({
                   slug: id,
                   kind: "duplicate-slug",
@@ -176,6 +178,7 @@ const packetReferenceFinding = (
     packetReference(reference),
     O.flatMap((related) => {
       if (!MutableHashSet.has(known, related)) {
+        // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
         return O.some(
           FleetLintFinding.make({
             slug: node.slug,
@@ -192,7 +195,8 @@ const packetReferenceFinding = (
       );
       return O.contains(version, "initiative-manifest/v2")
         ? O.none()
-        : O.some(
+        : // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          O.some(
             FleetLintFinding.make({
               slug: node.slug,
               kind: "unmigrated-reference",

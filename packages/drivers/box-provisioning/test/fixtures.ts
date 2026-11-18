@@ -100,15 +100,15 @@ export const observedFixture = BoxObservedState.make({
   rootFolderId: BoxProviderId.make("0"),
   folders: [
     BoxObservedFolder.make({
-      etag: O.some(BoxProviderRevision.make("etag-workspace")),
+      etag: BoxProviderRevision.makeOption("etag-workspace"),
       name: "Fixture workspace",
-      parentProviderId: O.some(BoxProviderId.make("0")),
+      parentProviderId: BoxProviderId.makeOption("0"),
       providerId: BoxProviderId.make("100"),
     }),
     BoxObservedFolder.make({
       etag: O.none(),
       name: "Foreign staging drop",
-      parentProviderId: O.some(BoxProviderId.make("0")),
+      parentProviderId: BoxProviderId.makeOption("0"),
       providerId: BoxProviderId.make("999"),
     }),
   ],
@@ -134,9 +134,9 @@ export const observedAfterApplyFixture = BoxObservedState.make({
   folders: [
     ...observedFixture.folders,
     BoxObservedFolder.make({
-      etag: O.some(BoxProviderRevision.make("etag-child")),
+      etag: BoxProviderRevision.makeOption("etag-child"),
       name: "Fixture child",
-      parentProviderId: O.some(BoxProviderId.make("100")),
+      parentProviderId: BoxProviderId.makeOption("100"),
       providerId: BoxProviderId.make("101"),
     }),
   ],

@@ -344,6 +344,7 @@ const resolveInChain = (introductions: ReadonlyArray<LocatedTerm>, referring: Lo
   const ambiguous =
     (ruleId: AntecedentRuleId) =>
     (first: LocatedTerm, second: LocatedTerm, others: Iterable<LocatedTerm>): Verdict =>
+      // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
       O.some(
         AntecedentFinding.cases["ambiguous-antecedent"].make({
           rule: ruleId,
@@ -362,6 +363,7 @@ const resolveInChain = (introductions: ReadonlyArray<LocatedTerm>, referring: Lo
       byCount(
         A.filter(introductions, ({ term }) => Str.Equivalence(singularHead(term.head), singularHead(head))),
         (introducing): Verdict =>
+          // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
           O.some(
             AntecedentFinding.cases["number-mismatch"].make({
               rule: rule.determinerNumberMismatch,
@@ -434,6 +436,7 @@ const fullVerdict =
         return O.map(
           A.findFirst(candidates, (candidate) => !A.contains(chain.claims, candidate.claimNumber)),
           (introducing): Verdict =>
+            // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
             O.some(
               AntecedentFinding.cases["antecedent-outside-chain"].make({
                 rule: rule.outsideChain,
@@ -446,6 +449,7 @@ const fullVerdict =
       }),
       O.getOrElse(
         (): Verdict =>
+          // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
           O.some(
             AntecedentFinding.cases["missing-antecedent"].make({
               rule: rule.definiteWithoutIntroduction,

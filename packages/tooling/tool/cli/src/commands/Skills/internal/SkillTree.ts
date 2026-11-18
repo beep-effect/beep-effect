@@ -229,13 +229,11 @@ export const readLocalSkillFiles = Effect.fn("SkillsProvenance.readLocalSkillFil
       return O.none();
     }
     const linkPath = yield* validateRelativePath(path.relative(absoluteSkillDir, absoluteEntry), skill);
-    return O.some(
-      SkillUpstreamContentFile.make({
-        path: linkPath,
-        mode: "120000",
-        bytes: textEncoder.encode(linkTarget.value),
-      })
-    );
+    return SkillUpstreamContentFile.makeOption({
+      path: linkPath,
+      mode: "120000",
+      bytes: textEncoder.encode(linkTarget.value),
+    });
   });
 
   const readLeafEntries = Effect.fn("SkillsProvenance.readLocalSkillFiles.readLeafEntries")(function* (

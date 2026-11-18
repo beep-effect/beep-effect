@@ -363,7 +363,7 @@ export const makeCitationRuntimeDictionary = Effect.fn("Citation.makeRuntimeDict
       if (capacity === 0) return O.none<typeof Hit.Type>();
       const decision = yield* probeEpoch(key, text);
       if (decision._tag === "Missing") return O.none<typeof Hit.Type>();
-      if (decision._tag === "Match") return O.some(Hit.make({ entryId: decision.entryId, bucket: decision.bucket }));
+      if (decision._tag === "Match") return Hit.makeOption({ entryId: decision.entryId, bucket: decision.bucket });
     }
   });
   const emptySlot = Effect.fn("Citation.runtimeDictionaryEmptySlot")(function* (

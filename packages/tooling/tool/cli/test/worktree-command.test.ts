@@ -275,7 +275,7 @@ it.layer(Layer.mergeAll(WorktreeMergedPullRequestProbeLive, NodeCrypto.layer), {
       return Effect.gen(function* () {
         const probe = yield* WorktreeMergedPullRequestProbe;
         const atHead = yield* probe.mergedAtHead("/repo", "reused-branch", head);
-        expect(atHead).toEqual(O.some(PosInt.make(1098)));
+        expect(atHead).toEqual(PosInt.makeOption(1098));
         const atUnmerged = yield* probe.mergedAtHead(
           "/repo",
           "reused-branch",
@@ -812,9 +812,11 @@ describe("worktree output rendering", () => {
       const inspected = (upstream: WorktreeUpstreamState) =>
         WorktreeRemovalReceipt.make({
           ...base,
-          unpushedInspection: O.some(
-            WorktreeUnpushedInspection.make({ unpushed: true, baseRange: "origin/main..HEAD", upstream })
-          ),
+          unpushedInspection: WorktreeUnpushedInspection.makeOption({
+            unpushed: true,
+            baseRange: "origin/main..HEAD",
+            upstream,
+          }),
         });
       const isUpstreamLine = Str.startsWith("  upstream:");
       const pruned = (verdict: WorktreeUpstreamVerdict) =>
@@ -2364,7 +2366,7 @@ describe("worktree git operations", () => {
               mergedAtHead: Effect.fn("WorktreeMergedPullRequestProbe.mergedAtHead")((_cwd, askedBranch, askedHead) =>
                 Effect.succeed(
                   Str.Equivalence(askedBranch, branch) && Str.Equivalence(askedHead, head)
-                    ? O.some(PosInt.make(1098))
+                    ? PosInt.makeOption(1098)
                     : O.none()
                 ).pipe(Effect.tap(() => Ref.update(probeCalls, (count) => count + 1)))
               ),
@@ -2629,7 +2631,7 @@ describe("worktree git operations", () => {
                       WorktreeRemovalRequest.make({
                         ...request,
                         exemptInvoker: WorktreeInvokerExemption.make({
-                          sessionMarker: O.some(WorktreeSessionMarker.make({ name: "CLAUDE_PID", pid: 1 })),
+                          sessionMarker: WorktreeSessionMarker.makeOption({ name: "CLAUDE_PID", pid: 1 }),
                         }),
                       })
                     )
@@ -2683,9 +2685,7 @@ describe("worktree git operations", () => {
           const resultGitText118 = yield* runGitText(cleanPath, ["rev-parse", "HEAD"]);
           const head = GitObjectId.make(resultGitText118);
           const stale = yield* Effect.flip(
-            removalService.remove(
-              legacyRequest("legacy-clean", cleanPath, O.some(GitObjectId.make(Str.repeat(40)("a"))))
-            )
+            removalService.remove(legacyRequest("legacy-clean", cleanPath, GitObjectId.makeOption(Str.repeat(40)("a"))))
           );
           expect(stale._tag).toBe("WorktreeCommandError");
           const exists119 = yield* fs.exists(cleanPath);

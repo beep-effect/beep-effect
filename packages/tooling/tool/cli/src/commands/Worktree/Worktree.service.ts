@@ -337,7 +337,7 @@ export interface WorktreeMergedPullRequestProbeShape {
  *
  * const stub = Layer.succeed(
  *   WorktreeMergedPullRequestProbe,
- *   WorktreeMergedPullRequestProbe.of({ mergedAtHead: () => Effect.succeed(O.some(PosInt.make(1098))) })
+ *   WorktreeMergedPullRequestProbe.of({ mergedAtHead: () => Effect.succeed(PosInt.makeOption(1098)) })
  * )
  * console.log(typeof stub) // "object"
  * ```

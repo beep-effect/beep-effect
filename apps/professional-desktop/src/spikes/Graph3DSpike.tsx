@@ -273,13 +273,11 @@ const runGraphStressAtom = professionalBrowserRuntime.fn<void>()(
     const updates = A.length(durations);
     ctx.set(
       stressReportAtom,
-      O.some(
-        StressReport.make({
-          updates: PosInt.make(updates),
-          avgUpdateMs: Duration.millis(N.round(N.sumAll(durations) / updates, 2)),
-          worstUpdateMs: Duration.millis(N.round(A.reduce(durations, 0, N.max), 2)),
-        })
-      )
+      StressReport.makeOption({
+        updates: PosInt.make(updates),
+        avgUpdateMs: Duration.millis(N.round(N.sumAll(durations) / updates, 2)),
+        worstUpdateMs: Duration.millis(N.round(A.reduce(durations, 0, N.max), 2)),
+      })
     );
   })
 );

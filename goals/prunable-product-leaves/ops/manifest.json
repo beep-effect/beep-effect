@@ -33,6 +33,10 @@
   "researchReports": [
     "research/2026-11-17-product-leaf-couplings.md",
     "research/2026-11-17-seam-1-surfaces.md",
+    "research/2026-11-18-seam-1b-cache-request.json",
+    "research/2026-11-18-seam-1b-cache-review.md",
+    "research/2026-11-18-seam-1b-surfaces.md",
+    "research/OPPORTUNITIES.md",
     "research/SOURCES.md"
   ],
   "agentLaunchers": [

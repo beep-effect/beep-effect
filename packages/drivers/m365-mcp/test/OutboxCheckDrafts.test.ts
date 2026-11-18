@@ -39,7 +39,7 @@ const NINE = "2030-01-15T09:00:00.0000000";
 const TEN = "2030-01-15T10:00:00.0000000";
 
 const graphAt = (dateTime: string) =>
-  O.some(GraphDateTimeTimeZone.make({ dateTime: O.some(dateTime), timeZone: O.some("UTC") }));
+  GraphDateTimeTimeZone.makeOption({ dateTime: O.some(dateTime), timeZone: O.some("UTC") });
 
 const pinnedEvent = GraphEvent.make({
   end: graphAt(TEN),

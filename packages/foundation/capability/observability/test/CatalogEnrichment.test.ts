@@ -374,7 +374,7 @@ describe("layerCatalogEnrichment", () => {
       );
       deepStrictEqual(
         O.map(packageOf(catalog, "GET /health"), (resolved) => resolved.package),
-        O.some(PackageName.make("@beep/parcels-server"))
+        PackageName.makeOption("@beep/parcels-server")
       );
     })
   );

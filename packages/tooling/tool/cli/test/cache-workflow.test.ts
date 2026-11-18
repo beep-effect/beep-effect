@@ -185,23 +185,19 @@ const supervisedFixture = Effect.fn("WorkflowTest.supervisedFixture")(function* 
       target,
       bearers,
       signing: Redacted.make("synthetic-workflow-artifact-key"),
-      adapter: O.some(
-        CacheProducerAdapterLaunch.make({
-          executable: "/fixture/adapter",
-          accessKey: Redacted.make("synthetic-storage-id"),
-          secretKey: Redacted.make("synthetic-storage-secret"),
-        })
-      ),
+      adapter: CacheProducerAdapterLaunch.makeOption({
+        executable: "/fixture/adapter",
+        accessKey: Redacted.make("synthetic-storage-id"),
+        secretKey: Redacted.make("synthetic-storage-secret"),
+      }),
     });
     runtime = O.some(supplied);
     binding = CacheProducerBinding.make({
       ...binding,
-      uploadApproval: O.some(
-        CacheProducerUploadApproval.make({
-          targetSha256: yield* hashCacheProducerUploadTarget(target),
-          artifactKeySha256: yield* hashCacheProducerUploadKey(supplied.signing),
-        })
-      ),
+      uploadApproval: CacheProducerUploadApproval.makeOption({
+        targetSha256: yield* hashCacheProducerUploadTarget(target),
+        artifactKeySha256: yield* hashCacheProducerUploadKey(supplied.signing),
+      }),
     });
   }
   const directory = path.join(path.dirname(root), "issuer");
@@ -295,12 +291,10 @@ const provisioningFixture = Effect.fn("WorkflowTest.provisioningFixture")(functi
   const profile = CacheProducerExecutionProfile.make({ target, adapterExecutable: "/fixture/owned-adapter" });
   const binding = CacheProducerBinding.make({
     ...state.binding,
-    uploadApproval: O.some(
-      CacheProducerUploadApproval.make({
-        targetSha256: yield* hashCacheProducerUploadTarget(target),
-        artifactKeySha256: Sha256Hex.make(Str.repeat(64)("c")),
-      })
-    ),
+    uploadApproval: CacheProducerUploadApproval.makeOption({
+      targetSha256: yield* hashCacheProducerUploadTarget(target),
+      artifactKeySha256: Sha256Hex.make(Str.repeat(64)("c")),
+    }),
   });
   const approval = CacheProducerApproval.make({ binding, contract: state.contract });
   vi.spyOn(Linker, "inspectCacheLinkedFile").mockImplementation((file) =>

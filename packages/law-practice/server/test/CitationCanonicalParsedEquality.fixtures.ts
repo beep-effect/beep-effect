@@ -105,7 +105,7 @@ const hashActualCase = Effect.fn("CanonicalParsedEqualityTest.hash")(function* (
   const edition = yield* readCitationFrozenEdition(owner, reference);
   const input = CitationCaseResourceHashInput.make({
     citation,
-    selectedEdition: O.some(CitationAuthorityEdition.make({ edition: reference, shortName: edition.value.short_name })),
+    selectedEdition: CitationAuthorityEdition.makeOption({ edition: reference, shortName: edition.value.short_name }),
     missingPageIdentityHash: O.none(),
   });
   return yield* makeCitationCaseResourceHash(input);

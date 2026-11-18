@@ -200,11 +200,9 @@ describe("@beep/docket-intake backfill-questions", () => {
           ...script,
           getMessage: Effect.succeed(
             GraphMessage.make({
-              from: O.some(
-                GraphRecipient.make({
-                  emailAddress: O.some(GraphEmailAddress.make({ address: O.some("examiner@example.com") })),
-                })
-              ),
+              from: GraphRecipient.makeOption({
+                emailAddress: GraphEmailAddress.makeOption({ address: O.some("examiner@example.com") }),
+              }),
               id: "m-journaled",
               // Late on 9 January in Chicago, already 10 January in UTC.
               receivedDateTime: O.some("2030-01-10T03:30:00Z"),

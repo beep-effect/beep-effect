@@ -146,13 +146,11 @@ const rawAnchor = (sourceText: string, startChar: number, endChar: number): O.Op
     Bool.match({
       onFalse: O.none<TextAnchor>,
       onTrue: () =>
-        O.some(
-          TextAnchor.make({
-            endChar: S.Natural.make(endChar),
-            quote: Str.slice(startChar, endChar)(sourceText),
-            startChar: S.Natural.make(startChar),
-          })
-        ),
+        TextAnchor.makeOption({
+          endChar: S.Natural.make(endChar),
+          quote: Str.slice(startChar, endChar)(sourceText),
+          startChar: S.Natural.make(startChar),
+        }),
     })
   );
 
@@ -519,7 +517,7 @@ export const locateGroundedExtractions: {
         locatePreparedRawText(sourceText, normalizedSource, extraction.text).pipe(
           Effect.mapError((error) =>
             VerifiedSpanError.make({
-              candidateIndex: O.some(S.Natural.make(index)),
+              candidateIndex: S.Natural.makeOption(index),
               message: error.message,
               reason: error.reason,
             })
@@ -594,7 +592,7 @@ const verifyLocatedAnchors = (
         Effect.mapBoth({
           onFailure:
             /* istanbul ignore next -- locator output already proves boundaries and exact slices; retain fail-closed defense. Owner: @beep/langextract. Exit: the locator returns a verified-receipt type that the verifier does not re-check. */
-            (error) => attemptFailure("anchor", error.reason, O.some(S.Natural.make(index))),
+            (error) => attemptFailure("anchor", error.reason, S.Natural.makeOption(index)),
           onSuccess: (verified) =>
             VerifiedSpanCandidateAnchorReceipt.make({
               candidateIndex: S.Natural.make(index),

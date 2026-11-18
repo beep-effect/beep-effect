@@ -192,7 +192,7 @@ const stallItem =
  * const input = HostPressureInput.make({
  *   readAt: now,
  *   pressure: PressureSourceInput.cases.Missing.make({ detail: "no /proc/pressure" }),
- *   memory: O.some(HostMemoryInput.make({ availableGib: 40, totalGib: 64 })),
+ *   memory: HostMemoryInput.makeOption({ availableGib: 40, totalGib: 64 }),
  *   admission: O.none()
  * })
  * console.log(hostPressureItems(input, now).map((item) => item._tag)) // ["HostMemory"]

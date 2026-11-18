@@ -112,8 +112,8 @@ export type AlignmentStatus = typeof AlignmentStatus.Type;
  * import * as O from "effect/Option"
  *
  * console.log(LangExtractOptions.make({
- *   fuzzyThreshold: O.some(UnitInterval.make(0.9)),
- *   maxExtractions: O.some(S.Natural.make(5))
+ *   fuzzyThreshold: UnitInterval.makeOption(0.9),
+ *   maxExtractions: S.Natural.makeOption(5)
  * }))
  * ```
  *
@@ -144,7 +144,7 @@ export class LangExtractOptions extends S.Opaque<LangExtractOptions, { readonly 
  * console.log(ExtractionCandidate.make({
  *   label: "person",
  *   text: "Ada Lovelace",
- *   confidence: O.some(UnitInterval.make(0.98))
+ *   confidence: UnitInterval.makeOption(0.98)
  * }))
  * ```
  *
@@ -321,7 +321,7 @@ export class GroundedExtractionMatchMinimalFold extends S.Opaque<
  *   text: "March 3, 2024",
  *   matchedText: "Rarch 3, 2O24",
  *   span: Contract.Span.make({ start: S.Natural.make(58), end: S.Natural.make(71) }),
- *   confidence: O.some(UnitInterval.make(0.82))
+ *   confidence: UnitInterval.makeOption(0.82)
  * })
  *
  * console.log(O.getOrUndefined(filingDate.confidence)) // => 0.82

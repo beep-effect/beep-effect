@@ -350,7 +350,7 @@ export class HoldNotOpenError extends S.TaggedError<HoldNotOpenError, { readonly
  *   nodeId: NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e7f"),
  *   filePath: MemoryFilePath.make("notes.md"),
  *   after: NodeId.make("018f9c3e-7d2a-7b4c-9e1f-2a3b4c5d6e80"),
- *   afterFilePath: O.some(MemoryFilePath.make("MEMORY.md")),
+ *   afterFilePath: MemoryFilePath.makeOption("MEMORY.md"),
  * })
  * console.log(error._tag)
  * ```
@@ -439,8 +439,8 @@ export class FolderAlreadyImportedError extends S.TaggedError<
  * import * as O from "effect/Option"
  *
  * const error = UnimportedFolderError.make({
- *   root: O.some(PosixPath.make("memory")),
- *   folderDigest: O.some(Sha256Hex.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")),
+ *   root: PosixPath.makeOption("memory"),
+ *   folderDigest: Sha256Hex.makeOption("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
  * })
  * console.log(error.root)
  * ```

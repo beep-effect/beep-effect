@@ -201,9 +201,7 @@ const replayPolicy = (targetId: Sha256Hex, minimumDelayMillis = 100) =>
   NativeSchedulePolicy.make({
     ...schedulePolicy,
     maxRetryDelayMillis: 100,
-    idempotentReplay: O.some(
-      IdempotentReplayPolicy.make({ targetId, qualificationDigest: id("f"), minimumDelayMillis })
-    ),
+    idempotentReplay: IdempotentReplayPolicy.makeOption({ targetId, qualificationDigest: id("f"), minimumDelayMillis }),
   });
 
 it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: true })((it) =>
@@ -361,13 +359,11 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       const f = yield* fixture();
       const policy = NativeSchedulePolicy.make({
         ...schedulePolicy,
-        idempotentReplay: O.some(
-          IdempotentReplayPolicy.make({
-            targetId: f.config.targetId,
-            qualificationDigest: id("f"),
-            minimumDelayMillis: 100,
-          })
-        ),
+        idempotentReplay: IdempotentReplayPolicy.makeOption({
+          targetId: f.config.targetId,
+          qualificationDigest: id("f"),
+          minimumDelayMillis: 100,
+        }),
       });
       const scheduler = yield* f.reopen(policy);
       const tick25 = yield* scheduler.tick;

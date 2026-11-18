@@ -14,7 +14,7 @@ describe("toAnnotatedDocument", () => {
   it("projects only source-aligned extractions into handoff entities", () => {
     const documentId = DocumentId.make("doc-1");
     const aligned = GroundedExtraction.cases.match_exact.make({
-      confidence: O.some(UnitInterval.make(0.98)),
+      confidence: UnitInterval.makeOption(0.98),
       label: "person",
       matchedText: "Ada Lovelace",
       span: Contract.Span.make({ end: S.Natural.make(12), start: S.Natural.make(0) }),

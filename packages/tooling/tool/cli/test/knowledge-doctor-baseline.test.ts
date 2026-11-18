@@ -425,14 +425,15 @@ describe("knowledge doctor sealed baseline", () => {
         const entry = O.getOrThrow(A.head(baseline.entries));
         const replaceFirst = (next: KnowledgeBaselineEntry) =>
           seal({
-            baseline: O.some(
-              KnowledgeDoctorBaseline.make({ ...baseline, entries: [next, ...A.drop(baseline.entries, 1)] })
-            ),
+            baseline: KnowledgeDoctorBaseline.makeOption({
+              ...baseline,
+              entries: [next, ...A.drop(baseline.entries, 1)],
+            }),
           });
         assert.deepStrictEqual(
           tamperRules(
             seal({
-              baseline: O.some(KnowledgeDoctorBaseline.make({ ...baseline, entries: A.drop(baseline.entries, 1) })),
+              baseline: KnowledgeDoctorBaseline.makeOption({ ...baseline, entries: A.drop(baseline.entries, 1) }),
             }),
             base
           ),
@@ -441,7 +442,7 @@ describe("knowledge doctor sealed baseline", () => {
         assert.deepStrictEqual(
           tamperRules(
             seal({
-              baseline: O.some(KnowledgeDoctorBaseline.make({ ...baseline, entries: A.reverse(baseline.entries) })),
+              baseline: KnowledgeDoctorBaseline.makeOption({ ...baseline, entries: A.reverse(baseline.entries) }),
             }),
             base
           ),
@@ -454,18 +455,16 @@ describe("knowledge doctor sealed baseline", () => {
           replaceFirst(KnowledgeBaselineEntry.make({ ...entry, spanClass: "historical-with-commit" })),
           replaceFirst(KnowledgeBaselineEntry.make({ ...entry, group: "deleted-target-rot" })),
           seal({
-            baseline: O.some(
-              KnowledgeDoctorBaseline.make({
-                ...baseline,
-                entries: A.append(
-                  baseline.entries,
-                  KnowledgeBaselineEntry.make({ ...entry, key: `knowledge-doctor/v1:${Str.repeat(64)("f")}` })
-                ),
-              })
-            ),
+            baseline: KnowledgeDoctorBaseline.makeOption({
+              ...baseline,
+              entries: A.append(
+                baseline.entries,
+                KnowledgeBaselineEntry.make({ ...entry, key: `knowledge-doctor/v1:${Str.repeat(64)("f")}` })
+              ),
+            }),
           }),
-          seal({ baseline: O.some(KnowledgeDoctorBaseline.make({ ...baseline, mintedAt: PROMOTED_AT })) }),
-          seal({ baseline: O.some(KnowledgeDoctorBaseline.make({ ...baseline, note: "edited" })) }),
+          seal({ baseline: KnowledgeDoctorBaseline.makeOption({ ...baseline, mintedAt: PROMOTED_AT }) }),
+          seal({ baseline: KnowledgeDoctorBaseline.makeOption({ ...baseline, note: "edited" }) }),
         ]) {
           assert.deepStrictEqual(tamperRules(head, base), [nonRemoval]);
         }
@@ -505,7 +504,7 @@ describe("knowledge doctor sealed baseline", () => {
         const report = yield* scanKnowledgeDoctorTree(baseTree());
         const tampered = yield* checkOf(report, {
           base,
-          head: seal({ baseline: O.some(KnowledgeDoctorBaseline.make({ ...baseline, note: "edited" })) }),
+          head: seal({ baseline: KnowledgeDoctorBaseline.makeOption({ ...baseline, note: "edited" }) }),
         });
         assert.strictEqual(O.getOrThrow(knowledgeDoctorGateFailure(tampered)).governanceCount, 1);
       })

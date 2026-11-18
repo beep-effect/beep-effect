@@ -159,7 +159,7 @@ describe("IssueReferences property floor", () => {
           for (const hit of parsed)
             assert.deepStrictEqual(
               G.parseBareLineReference(stringifyBare(hit)),
-              O.some(G.BareLineReference.make({ keyword: hit.keyword, issueNumber: hit.issueNumber }))
+              G.BareLineReference.makeOption({ keyword: hit.keyword, issueNumber: hit.issueNumber })
             );
         }
       }),

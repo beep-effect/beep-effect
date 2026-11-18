@@ -280,7 +280,7 @@ export const restoreCitationMentionAgainstVerifiedSource: {
       onNone: () => Effect.succeedNone,
       onSome: (zone) =>
         reverify(verifiedSource, zone.anchor).pipe(
-          Effect.map((proof) => O.some(CitationFootnoteZone.make({ label: zone.label, anchor: proof })))
+          Effect.map((proof) => CitationFootnoteZone.makeOption({ label: zone.label, anchor: proof }))
         ),
     });
     const restored = yield* makeCitationMention({

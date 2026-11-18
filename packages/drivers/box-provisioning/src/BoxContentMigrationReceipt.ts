@@ -231,7 +231,7 @@ export class BoxContentActionSkipped extends S.Opaque<BoxContentActionSkipped, {
  * const outcome = BoxContentActionBlocked.make({
  *   actionDigest: Sha256Hex.make("a".repeat(64)),
  *   actionKind: "file",
- *   providerId: O.some(BoxProviderId.make("301")),
+ *   providerId: BoxProviderId.makeOption("301"),
  *   reason: "name-conflict"
  * })
  * console.log(outcome.reason)
@@ -647,7 +647,7 @@ export class BoxContentJournalSkipped extends S.Opaque<BoxContentJournalSkipped,
  * const entry = BoxContentJournalAdoptedExistingFolder.make({
  *   ...makeExampleContentJournalFields(),
  *   actionKind: "folder",
- *   providerId: O.some(BoxProviderId.make("200"))
+ *   providerId: BoxProviderId.makeOption("200")
  * })
  * console.log(entry.phase)
  * ```

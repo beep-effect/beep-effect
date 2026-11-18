@@ -805,7 +805,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
                 mailDate: O.some(mailDate),
                 notes: "Fixture review.",
                 readFromSourceDocument: true,
-                responsePeriod: O.some(DocketResponsePeriod.make({ amount: periodDays, unit: "days" })),
+                responsePeriod: DocketResponsePeriod.makeOption({ amount: periodDays, unit: "days" }),
               })
             ),
         });
@@ -1409,7 +1409,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
                 field: "response-period",
               }),
             ],
-            selfReportedConfidence: O.some(UnitInterval.make(0.9)),
+            selfReportedConfidence: UnitInterval.makeOption(0.9),
           })
         ),
     }),
@@ -1502,7 +1502,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
                 mailDate: O.some(addDays(mailDate, 1)),
                 title: "Due Date: fixture response",
               }),
-              selfReportedConfidence: O.some(UnitInterval.make(0.95)),
+              selfReportedConfidence: UnitInterval.makeOption(0.95),
             })
           ),
       },
@@ -1647,7 +1647,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
   it.layer(
     testLayer({
       enter: () =>
-        Effect.succeed(datedEntry({ statedDueDate: O.some(LocalDate.make({ year: 2030, month: 1, day: 2 })) })),
+        Effect.succeed(datedEntry({ statedDueDate: LocalDate.makeOption({ year: 2030, month: 1, day: 2 }) })),
       review: () => Effect.succeed(undatedReview),
       reread: () => Effect.succeed(undatedReview),
     }),
@@ -1787,7 +1787,7 @@ describe("@beep/law-practice-use-cases DocketIntake", () => {
                 outcome: NotDocketItem.make({ messageId: "m1" }),
                 processedOn: TODAY,
                 receivedAt: "2030-01-09T10:00:00Z",
-                review: O.some(DocketReviewProgress.make({ rounds: [] })),
+                review: DocketReviewProgress.makeOption({ rounds: [] }),
               }),
             },
           }),

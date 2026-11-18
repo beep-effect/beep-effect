@@ -225,50 +225,42 @@ describe("packages/tooling/tool/cli schema-first models", () => {
     });
 
     it("does not exempt an entry whose ruleId is not a policy-tracked card", () => {
-      const policy = O.some(
-        SchemaCrispeningPolicyDocument.make({
-          schemaVersion: "schema-crispening-policy/v1",
-          cards: ["SFV4-normalization"],
-          families: { foundation: { blocking: false } },
-          ownerOverrides: {},
-        })
-      );
+      const policy = SchemaCrispeningPolicyDocument.makeOption({
+        schemaVersion: "schema-crispening-policy/v1",
+        cards: ["SFV4-normalization"],
+        families: { foundation: { blocking: false } },
+        ownerOverrides: {},
+      });
       expect(isSchemaCrispeningPolicyExempt(policy)(trackedEntry)).toBe(false);
     });
 
     it("exempts a tracked card whose resolved family is non-blocking", () => {
-      const policy = O.some(
-        SchemaCrispeningPolicyDocument.make({
-          schemaVersion: "schema-crispening-policy/v1",
-          cards: ["SFV4-defaults"],
-          families: { foundation: { blocking: false } },
-          ownerOverrides: {},
-        })
-      );
+      const policy = SchemaCrispeningPolicyDocument.makeOption({
+        schemaVersion: "schema-crispening-policy/v1",
+        cards: ["SFV4-defaults"],
+        families: { foundation: { blocking: false } },
+        ownerOverrides: {},
+      });
       expect(isSchemaCrispeningPolicyExempt(policy)(trackedEntry)).toBe(true);
     });
 
     it("does not exempt a tracked card whose resolved family is blocking", () => {
-      const policy = O.some(
-        SchemaCrispeningPolicyDocument.make({
-          schemaVersion: "schema-crispening-policy/v1",
-          cards: ["SFV4-defaults"],
-          families: { foundation: { blocking: true } },
-          ownerOverrides: {},
-        })
-      );
+      const policy = SchemaCrispeningPolicyDocument.makeOption({
+        schemaVersion: "schema-crispening-policy/v1",
+        cards: ["SFV4-defaults"],
+        families: { foundation: { blocking: true } },
+        ownerOverrides: {},
+      });
       expect(isSchemaCrispeningPolicyExempt(policy)(trackedEntry)).toBe(false);
     });
 
     it("lets a blocking owner override win over a non-blocking family", () => {
-      const policy = O.some(
-        SchemaCrispeningPolicyDocument.make({
-          schemaVersion: "schema-crispening-policy/v1",
-          cards: ["SFV4-defaults"],
-          families: { foundation: { blocking: false } },
-          ownerOverrides: { "@beep/schema": { blocking: true } },
-        })
-      );
+      const policy = SchemaCrispeningPolicyDocument.makeOption({
+        schemaVersion: "schema-crispening-policy/v1",
+        cards: ["SFV4-defaults"],
+        families: { foundation: { blocking: false } },
+        ownerOverrides: { "@beep/schema": { blocking: true } },
+      });
       expect(isSchemaCrispeningPolicyExempt(policy)(trackedEntry)).toBe(false);
     });
 
@@ -277,14 +269,12 @@ describe("packages/tooling/tool/cli schema-first models", () => {
         ...trackedEntry,
         file: "packages/shared/kernel/src/Foo.ts",
       });
-      const policy = O.some(
-        SchemaCrispeningPolicyDocument.make({
-          schemaVersion: "schema-crispening-policy/v1",
-          cards: ["SFV4-defaults"],
-          families: {},
-          ownerOverrides: {},
-        })
-      );
+      const policy = SchemaCrispeningPolicyDocument.makeOption({
+        schemaVersion: "schema-crispening-policy/v1",
+        cards: ["SFV4-defaults"],
+        families: {},
+        ownerOverrides: {},
+      });
       expect(isSchemaCrispeningPolicyExempt(policy)(sharedEntry)).toBe(true);
     });
   });
@@ -511,14 +501,12 @@ describe("G4 foundation family-flip regression fixture", () => {
   it("counts the foundation violation and exempts the drivers violation (flipped policy)", () => {
     // Mirrors the committed policy after the foundation flip: foundation blocking,
     // drivers still non-blocking. SFV4-fn-schema is a policy-tracked novel card.
-    const policy = O.some(
-      SchemaCrispeningPolicyDocument.make({
-        schemaVersion: "schema-crispening-policy/v1",
-        cards: ["SFV4-fn-schema"],
-        families: { foundation: { blocking: true }, drivers: { blocking: false } },
-        ownerOverrides: {},
-      })
-    );
+    const policy = SchemaCrispeningPolicyDocument.makeOption({
+      schemaVersion: "schema-crispening-policy/v1",
+      cards: ["SFV4-fn-schema"],
+      families: { foundation: { blocking: true }, drivers: { blocking: false } },
+      ownerOverrides: {},
+    });
     const isExempt = isSchemaCrispeningPolicyExempt(policy);
 
     // (a) foundation side: NOT exempt -> survives the collect filter -> counted.

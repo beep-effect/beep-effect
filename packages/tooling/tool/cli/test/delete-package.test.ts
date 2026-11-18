@@ -1901,7 +1901,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
     const acknowledgedPolicy = (entries: ReadonlyArray<DeletePackageAcknowledgement>) =>
       DeletePackagePolicyEvaluation.acknowledgedOccurrencesFor(
         policy({
-          acknowledgements: O.some(DeletePackageAcknowledgements.make({ target: "@beep/deploy", entries })),
+          acknowledgements: DeletePackageAcknowledgements.makeOption({ target: "@beep/deploy", entries }),
         })
       );
 

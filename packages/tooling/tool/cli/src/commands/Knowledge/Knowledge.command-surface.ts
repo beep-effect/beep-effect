@@ -1221,16 +1221,14 @@ const updateStaticCommandAt = (
   A.match(path, {
     onEmpty: () => update(node),
     onNonEmpty: ([head, ...rest]) =>
-      O.some(
-        StaticCommandNode.make({
-          ...node,
-          children: A.getSomes(
-            A.map(node.children, (child) =>
-              Str.equivalence(child.name, head) ? updateStaticCommandAt(child, rest, update) : O.some(child)
-            )
-          ),
-        })
-      ),
+      StaticCommandNode.makeOption({
+        ...node,
+        children: A.getSomes(
+          A.map(node.children, (child) =>
+            Str.equivalence(child.name, head) ? updateStaticCommandAt(child, rest, update) : O.some(child)
+          )
+        ),
+      }),
   });
 
 /**

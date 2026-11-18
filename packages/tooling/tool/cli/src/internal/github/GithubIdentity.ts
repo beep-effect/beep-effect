@@ -564,7 +564,7 @@ export const fromGithubIdentity: {
   2,
   (identity: GithubIdentity, login: O.Option<string>): O.Option<ConfiguredGithubIdentity> =>
     GithubIdentityKind.match(identity.kind, {
-      "gh-cli": () => O.some(ConfiguredGithubIdentity.cases.GhCli.make({})),
+      "gh-cli": () => ConfiguredGithubIdentity.cases.GhCli.makeOption({}),
       "op-ref": () =>
         O.flatMap(O.all({ tokenRef: identity.tokenRef, login }), (fields) =>
           ConfiguredGithubIdentity.cases.OpRef.makeOption(fields)

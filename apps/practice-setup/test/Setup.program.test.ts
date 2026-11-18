@@ -649,7 +649,7 @@ describe("bootstrapper helpers", () => {
     expect(source).toContain('import bundle from "./practice-gateway.mcpb" with { type: "file" };');
     expect(source).toContain('import { main } from "../../src/bin.ts";');
     expect(source).toContain('import { EmbeddedGateway } from "../../src/Setup.models.ts";');
-    expect(source).toContain('main(O.some(EmbeddedGateway.make({ bundle, version: "0.1.0" })));');
+    expect(source).toContain('main(EmbeddedGateway.makeOption({ bundle, version: "0.1.0" }));');
   });
 
   it("pins a lower-case SHA-256 for the Claude installer", () => {

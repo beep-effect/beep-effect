@@ -62,7 +62,8 @@ const rowRed =
     const severity = row.severity;
     return row.acked || row.superseded || severity === "P2" || !isLaneRedKind(kind)
       ? O.none()
-      : O.some(
+      : // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+        O.some(
           LaneRed.make({
             kind,
             severity,
@@ -83,7 +84,8 @@ const jobRed =
   (job: ProofJobInput): O.Option<LaneRed> => {
     const observedAt = O.orElse(job.endedAt, () => O.some(job.submittedAt));
     return job.failed
-      ? O.some(
+      ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+        O.some(
           LaneRed.make({
             kind: "proof-job-failed",
             severity: "P1",

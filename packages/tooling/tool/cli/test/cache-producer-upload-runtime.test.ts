@@ -79,16 +79,14 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
         });
         const approved = CacheProducerBinding.make({
           ...binding,
-          uploadApproval: O.some(
-            CacheProducerUploadApproval.make({
-              ...O.getOrThrow(binding.uploadApproval),
-              targetSha256: yield* hashCacheProducerUploadTarget(target),
-            })
-          ),
+          uploadApproval: CacheProducerUploadApproval.makeOption({
+            ...O.getOrThrow(binding.uploadApproval),
+            targetSha256: yield* hashCacheProducerUploadTarget(target),
+          }),
         });
         const result = yield* assertCacheProducerUploadRuntime(
           approved,
-          O.some(CacheProducerUploadRuntime.make({ ...runtime, target }))
+          CacheProducerUploadRuntime.makeOption({ ...runtime, target })
         ).pipe(Effect.isSuccess);
         expect(result).toBe(bucket === "beep-turbo-r2-pilot");
       }),
@@ -197,24 +195,23 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
       for (const target of candidates) {
         const approved = CacheProducerBinding.make({
           ...binding,
-          uploadApproval: O.some(
-            CacheProducerUploadApproval.make({
-              ...O.getOrThrow(binding.uploadApproval),
-              targetSha256: yield* hashCacheProducerUploadTarget(target),
-            })
-          ),
+          uploadApproval: CacheProducerUploadApproval.makeOption({
+            ...O.getOrThrow(binding.uploadApproval),
+            targetSha256: yield* hashCacheProducerUploadTarget(target),
+          }),
         });
         const failure = yield* assertCacheProducerUploadRuntime(
           approved,
-          O.some(CacheProducerUploadRuntime.make({ ...runtime, target }))
+          CacheProducerUploadRuntime.makeOption({ ...runtime, target })
         ).pipe(Effect.flip);
         expect(failure.message).toContain("approved bounded pilot profile");
       }
       const relative = CacheProducerUploadRuntime.make({
         ...runtime,
-        adapter: O.some(
-          CacheProducerAdapterLaunch.make({ ...O.getOrThrow(runtime.adapter), executable: "relative-adapter" })
-        ),
+        adapter: CacheProducerAdapterLaunch.makeOption({
+          ...O.getOrThrow(runtime.adapter),
+          executable: "relative-adapter",
+        }),
       });
       const pipe8 = yield* assertCacheProducerUploadRuntime(binding, O.some(relative)).pipe(Effect.isFailure);
       assertTrue(pipe8);
@@ -234,7 +231,7 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
       argument.toBe(hashCacheProducerUploadTarget1);
       const pipe10 = yield* assertCacheProducerUploadRuntime(
         binding,
-        O.some(CacheProducerUploadRuntime.make({ ...runtime, target: changed }))
+        CacheProducerUploadRuntime.makeOption({ ...runtime, target: changed })
       ).pipe(Effect.isFailure);
       assertTrue(pipe10);
       const rotated = CacheProducerUploadRuntime.make({
@@ -293,12 +290,10 @@ it.layer(NodeCrypto.layer)("approved producer upload runtime", (it) => {
       for (const target of targets) {
         const independentlyHashed = CacheProducerBinding.make({
           ...binding,
-          uploadApproval: O.some(
-            CacheProducerUploadApproval.make({
-              ...O.getOrThrow(binding.uploadApproval),
-              targetSha256: yield* hashCacheProducerUploadTarget(target),
-            })
-          ),
+          uploadApproval: CacheProducerUploadApproval.makeOption({
+            ...O.getOrThrow(binding.uploadApproval),
+            targetSha256: yield* hashCacheProducerUploadTarget(target),
+          }),
         });
         const selected = CacheProducerUploadRuntime.make({ ...runtime, target });
         const failure = yield* assertCacheProducerUploadRuntime(independentlyHashed, O.some(selected)).pipe(

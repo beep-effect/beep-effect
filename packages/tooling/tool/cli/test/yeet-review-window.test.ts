@@ -920,7 +920,7 @@ it.layer(yeetRealGitTestLayer, {
 
 describe("rewrite carry rendering", () => {
   it("renders the carry suffix for open and elapsed windows", () => {
-    const carried = O.some(YeetReviewWindowCarry.make({ rewrites: 2, rootSha: "root" }));
+    const carried = YeetReviewWindowCarry.makeOption({ rewrites: 2, rootSha: "root" });
     const anchoredAt = "2026-11-10T02:40:00.000Z";
     const open = YeetReviewWindowOpen.make({
       anchor: "head-push",

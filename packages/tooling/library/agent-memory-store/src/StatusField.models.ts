@@ -230,7 +230,7 @@ export const statusMoveBetween: {
         token !== from &&
         (wholeToken.test(token) || A.some(lifecycle.order, (value) => value === token));
       return spliced
-        ? O.some(StatusTransition.make({ field: lifecycle.field, from: O.some(from), to: StatusValue.make(token) }))
+        ? StatusTransition.makeOption({ field: lifecycle.field, from: O.some(from), to: StatusValue.make(token) })
         : O.none();
     })
 );

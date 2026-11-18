@@ -260,7 +260,7 @@ const readRawCogneeSettings: Effect.Effect<O.Option<CogneeRawSettings>, Research
     const password = yield* Config.Redacted(COGNEE_ENV.password).pipe(
       Config.withDefault(Redacted.make(DEFAULT_COGNEE_PASSWORD))
     );
-    return O.some(CogneeRawSettings.make({ apiUrl: apiUrl.value, email, password }));
+    return CogneeRawSettings.makeOption({ apiUrl: apiUrl.value, email, password });
   }
 ).pipe(ResearchCommandError.mapError(COGNEE_SETTINGS_INVALID));
 

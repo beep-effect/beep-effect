@@ -234,5 +234,5 @@ export const deriveYeetMergeReady: {
     greptileScore: closeout.greptileScore,
   });
   const failing = firstFailingCriterion(criteria);
-  return O.some(YeetMergeReady.make({ ready: O.isNone(failing), failing, criteria }));
+  return YeetMergeReady.makeOption({ ready: O.isNone(failing), failing, criteria });
 });

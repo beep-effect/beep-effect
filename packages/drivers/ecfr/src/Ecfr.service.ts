@@ -148,8 +148,8 @@ export class EcfrTitleParams extends S.Opaque<EcfrTitleParams, { readonly brand:
  *
  * const params = EcfrSearchParams.make({
  *   query: O.some("water"),
- *   page: O.some(S.Natural.make(1)),
- *   perPage: O.some(S.Natural.make(20))
+ *   page: S.Natural.makeOption(1),
+ *   perPage: S.Natural.makeOption(20)
  * })
  * console.log(params.query)
  * ```

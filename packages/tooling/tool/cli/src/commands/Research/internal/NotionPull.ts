@@ -222,15 +222,13 @@ const extractSavedLink = (page: unknown): O.Option<NotionSavedLink> =>
         O.filter(P.isString),
         O.getOrElse(() => "")
       );
-      return O.some(
-        NotionSavedLink.make({
-          createdIso,
-          pageId: pageId.value,
-          tags: parts.tags,
-          title: Str.isEmpty(Str.trim(parts.title)) ? pageId.value : Str.trim(parts.title),
-          url: parts.url,
-        })
-      );
+      return NotionSavedLink.makeOption({
+        createdIso,
+        pageId: pageId.value,
+        tags: parts.tags,
+        title: Str.isEmpty(Str.trim(parts.title)) ? pageId.value : Str.trim(parts.title),
+        url: parts.url,
+      });
     })
   );
 
@@ -275,15 +273,13 @@ const extractBlockLink = (block: unknown): O.Option<NotionSavedLink> =>
         O.filter(P.isString),
         O.getOrElse(() => "")
       );
-      return O.some(
-        NotionSavedLink.make({
-          createdIso,
-          pageId: blockId.value,
-          tags: [],
-          title: Str.isEmpty(title) ? url.value : title,
-          url,
-        })
-      );
+      return NotionSavedLink.makeOption({
+        createdIso,
+        pageId: blockId.value,
+        tags: [],
+        title: Str.isEmpty(title) ? url.value : title,
+        url,
+      });
     })
   );
 

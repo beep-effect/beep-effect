@@ -289,14 +289,16 @@ describe("harness-ledger", () => {
         rowId: "hl-20260925-0a1b2c3d",
         createdAt: DateTime.makeUnsafe("2026-09-25T12:00:00.000Z"),
         edit: { kind: "commit", ref: "489ea7c488" },
-        hypothesis: O.some(
-          BehavioralClaim.make({ claim: "c", expectedSurface: "skill", expectedMetric: "schema-first findings" })
-        ),
+        hypothesis: BehavioralClaim.makeOption({
+          claim: "c",
+          expectedSurface: "skill",
+          expectedMetric: "schema-first findings",
+        }),
         mechanismClass: "skill",
         touched: HashSet.make(touched),
         fingerprint,
         repoRevision: O.some("489ea7c488"),
-        delta: O.some(HarnessLedgerDelta.make({ score: 0.1, cost: 3 })),
+        delta: HarnessLedgerDelta.makeOption({ score: 0.1, cost: 3 }),
         disposition: "accepted",
         dispositionEvidence: O.some("PR #1"),
         ...overrides,

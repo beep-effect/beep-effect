@@ -259,15 +259,13 @@ const patternTarget = (entry: KnowledgePackageEntrypoint, key: string): O.Option
     Str.endsWith(suffix)(key) &&
     Str.length(key) > Str.length(prefix) + Str.length(suffix);
   return fits
-    ? O.some(
-        KnowledgePackageEntrypoint.make({
-          key: entry.key,
-          target: O.map(
-            entry.target,
-            Str.replace("*", Str.slice(Str.length(prefix), Str.length(key) - Str.length(suffix))(key))
-          ),
-        })
-      )
+    ? KnowledgePackageEntrypoint.makeOption({
+        key: entry.key,
+        target: O.map(
+          entry.target,
+          Str.replace("*", Str.slice(Str.length(prefix), Str.length(key) - Str.length(suffix))(key))
+        ),
+      })
     : O.none();
 };
 

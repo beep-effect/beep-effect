@@ -352,9 +352,10 @@ export const readCapturedCitationSession = Effect.fn("Citation.readCapturedSessi
       );
       const footnote = O.isNone(mention.footnote)
         ? O.none<CitationFootnoteZone>()
-        : O.some(
-            CitationFootnoteZone.make({ label: mention.footnote.value.label, anchor: O.getOrThrow(anchors.footnote) })
-          );
+        : CitationFootnoteZone.makeOption({
+            label: mention.footnote.value.label,
+            anchor: O.getOrThrow(anchors.footnote),
+          });
       return yield* S.decodeUnknownEffect(CitationMentionType)({
         ...mention,
         anchor: anchors.anchor,

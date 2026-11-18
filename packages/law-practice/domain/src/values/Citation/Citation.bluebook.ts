@@ -106,7 +106,7 @@ const fullFrom = (value: typeof BluebookCitation.Encoded) =>
       defendant: O.some(value.defendant),
       year: O.some(value.year),
       pinCite: O.fromNullishOr(value.pinCite),
-      court: O.some(CitationKnownCourt.make({ id: CourtId.make("scotus"), vocabularyVersion: version })),
+      court: CitationKnownCourt.makeOption({ id: CourtId.make("scotus"), vocabularyVersion: version }),
       month: O.none(),
       day: O.none(),
       parenthetical: O.none(),

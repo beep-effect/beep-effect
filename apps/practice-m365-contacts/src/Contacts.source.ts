@@ -130,16 +130,14 @@ export const loadContacts = Effect.fn("Contacts.load")(function* (inputs: Contac
   return {
     contacts,
     unidentifiable,
-    census: O.some(
-      ContactCensus.make({
-        csvInputs,
-        csvNormalized: A.length(contacts),
-        unidentifiable,
-        vcfCards: A.length(vcfRaw),
-        vcfNormalized: A.length(vcf),
-        vcfOverlap: A.length(overlaps),
-        vcfOnly: A.length(vcf) - A.length(overlaps),
-      })
-    ),
+    census: ContactCensus.makeOption({
+      csvInputs,
+      csvNormalized: A.length(contacts),
+      unidentifiable,
+      vcfCards: A.length(vcfRaw),
+      vcfNormalized: A.length(vcf),
+      vcfOverlap: A.length(overlaps),
+      vcfOnly: A.length(vcf) - A.length(overlaps),
+    }),
   };
 });

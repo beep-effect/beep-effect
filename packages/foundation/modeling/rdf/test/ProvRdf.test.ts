@@ -203,7 +203,7 @@ describe("ProvRdf", () => {
       ProvBundle.make({
         records: [
           Entity.make({
-            id: O.some(ObjectRef.make(`urn:beep:prov-property:${index}`)),
+            id: ObjectRef.makeOption(`urn:beep:prov-property:${index}`),
             value: O.some(value),
           }),
         ],
@@ -239,11 +239,11 @@ describe("ProvRdf", () => {
           Entity.make({ value: O.some(false) }),
           Entity.make({}),
           Entity.make({
-            id: O.some(ObjectRef.make("urn:example:derived")),
+            id: ObjectRef.makeOption("urn:example:derived"),
             wasQuotedFrom: O.some([ObjectRef.make("urn:example:quotation-source")]),
             wasRevisionOf: O.some([ObjectRef.make("urn:example:revision-source")]),
           }),
-          Agent.make({ id: O.some(ObjectRef.make("agent:reviewer")), name: O.none() }),
+          Agent.make({ id: ObjectRef.makeOption("agent:reviewer"), name: O.none() }),
           Generation.make({
             entity: ObjectRef.make("entity:artifact"),
             activity: ObjectRef.make("activity:build"),
@@ -282,13 +282,13 @@ describe("ProvRdf", () => {
   );
 
   it("rejects lifecycle adjuncts instead of projecting them incompletely", () => {
-    const result = provBundleToDataset(ProvBundle.make({ records: [], lifecycle: O.some(LifecycleTimes.make({})) }));
+    const result = provBundleToDataset(ProvBundle.make({ records: [], lifecycle: LifecycleTimes.makeOption({}) }));
 
     assertFailure(mapResultFailureTag(result), "ProvRdfCodecError");
   });
 
   it("rejects duplicate record subjects before RDF projection", () => {
-    const id = O.some(ObjectRef.make("urn:example:duplicate"));
+    const id = ObjectRef.makeOption("urn:example:duplicate");
     const bundle = ProvBundle.make({
       records: [Entity.make({ id, value: O.some("first") }), Entity.make({ id, value: O.some("second") })],
     });
@@ -297,7 +297,7 @@ describe("ProvRdf", () => {
   });
 
   it("rejects duplicate record subjects even when their PROV types differ", () => {
-    const id = O.some(ObjectRef.make("urn:example:multi-type-agent"));
+    const id = ObjectRef.makeOption("urn:example:multi-type-agent");
     const bundle = ProvBundle.make({
       records: [Agent.make({ id, name: O.some("Person") }), SoftwareAgent.make({ id, name: O.some("Software") })],
     });
@@ -373,10 +373,10 @@ describe("ProvRdf", () => {
       const decodedExternal = yield* Effect.fromResult(datasetToProvBundle(externalDataset));
       const reencodedExternal = yield* Effect.fromResult(provBundleToDataset(decodedExternal));
       const reservedBundle = ProvBundle.make({
-        records: [Entity.make({ id: O.some(ObjectRef.make("urn:beep:rdf:prov:record:123")) })],
+        records: [Entity.make({ id: ObjectRef.makeOption("urn:beep:rdf:prov:record:123") })],
       });
       const localBundle = ProvBundle.make({
-        records: [Entity.make({ id: O.some(ObjectRef.make("local-entity")) })],
+        records: [Entity.make({ id: ObjectRef.makeOption("local-entity") })],
       });
       const encodedReserved = yield* Effect.fromResult(provBundleToDataset(reservedBundle));
       const decodedReserved = yield* Effect.fromResult(datasetToProvBundle(encodedReserved));

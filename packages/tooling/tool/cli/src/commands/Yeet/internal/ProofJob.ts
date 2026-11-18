@@ -895,13 +895,11 @@ export const proofJobOutcomeForExit: {
   (exit: Exit.Exit<unknown, unknown>, end: ProofJobCommandEnd): O.Option<ProofJobOutcome> =>
     Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)
       ? O.none()
-      : O.some(
-          ProofJobOutcome.make({
-            verdictOutcome: Exit.isSuccess(exit) ? "success" : "failure",
-            elapsedMs: O.some(end.elapsedMs),
-            endedAt: end.endedAt,
-          })
-        )
+      : ProofJobOutcome.makeOption({
+          verdictOutcome: Exit.isSuccess(exit) ? "success" : "failure",
+          elapsedMs: O.some(end.elapsedMs),
+          endedAt: end.endedAt,
+        })
 );
 
 /**
@@ -1930,7 +1928,7 @@ export const proofJobWaitExitTable: ReadonlyArray<ProofJobWaitExit> = A.map(
  *
  * const outcome = proofJobSettledWaitOutcome({
  *   phase: "finished",
- *   outcome: O.some(ProofJobOutcome.make({ verdictOutcome: "success", endedAt: "2026-09-25T00:00:00Z" }))
+ *   outcome: ProofJobOutcome.makeOption({ verdictOutcome: "success", endedAt: "2026-09-25T00:00:00Z" })
  * })
  * console.log(outcome) // "success"
  * ```

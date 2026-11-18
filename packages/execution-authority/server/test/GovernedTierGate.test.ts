@@ -61,7 +61,7 @@ const ungrantedTool = Tool.make("ontology_unlisted_mutation");
 // Real dispatches carry a session id; clientId varies per HTTP request, so a
 // helper that pins the session while varying the client mirrors production.
 const callerOf = (sessionId: string, clientId = 1) =>
-  O.some(McpCallerIdentity.make({ clientId: S.Natural.make(clientId), sessionId: O.some(sessionId) }));
+  McpCallerIdentity.makeOption({ clientId: S.Natural.make(clientId), sessionId: O.some(sessionId) });
 
 interface Harness {
   readonly decisions: Ref.Ref<ReadonlyArray<ExecutionDecisionRecord>>;

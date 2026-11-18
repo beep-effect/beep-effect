@@ -1038,9 +1038,9 @@ const unsettledReason = (input: YeetSettleInput, census: YeetExpectedContextCens
  * import { deriveSettleVerdict, YeetRulesetRequiredContexts, YeetSettleCheck, YeetSettleInput } from "@beep/repo-cli/test/Yeet"
  * import * as O from "effect/Option"
  *
- * const expected = O.some(YeetRulesetRequiredContexts.make({
+ * const expected = YeetRulesetRequiredContexts.makeOption({
  *   base: "main", contexts: ["Lint"], rulesetIds: [1], readAt: "2026-09-16T00:00:00.000Z"
- * }))
+ * })
  * const registering = deriveSettleVerdict(YeetSettleInput.make({ expected, checks: [], closeoutBound: false, waitedMs: 5_000, timeoutMs: 60_000 }))
  * const pending = deriveSettleVerdict(YeetSettleInput.make({
  *   expected, checks: [YeetSettleCheck.make({ name: "Lint", outcome: "pending" })], closeoutBound: false, waitedMs: 20_000, timeoutMs: 60_000
@@ -1300,7 +1300,7 @@ const unnamedConflictBase = (): string => "the pull request's base";
  *   census: YeetExpectedContextCensus.make({ matched: ["Lint"], unmatched: [], pending: [], missing: [], gated: ["Heavy / Check", "Heavy / Lint Policy"] }),
  *   waitedMs: 180_000,
  *   timeoutMs: 1_800_000,
- *   admission: O.some(HeavyAdmission.make({ verdict: "hold", admitted: false, sources: [], docsOnly: false, changedPathCount: 2 }))
+ *   admission: HeavyAdmission.makeOption({ verdict: "hold", admitted: false, sources: [], docsOnly: false, changedPathCount: 2 })
  * })
  * console.log(renderYeetSettleDetail(verdict))
  * // settle: heavy-not-admitted; gated: Heavy / Check, Heavy / Lint Policy; admit: bun run beep yeet ready (flips a draft at content-final and applies ready-for-heavy); waited 3m (not counted toward the 30m settle timeout)

@@ -873,7 +873,7 @@ const helperVariantVerdicts = (
           expectedEvidenceVerdicts(
             summary.family,
             "field",
-            O.some(FixtureMutation.make({ original: record, field })),
+            FixtureMutation.makeOption({ original: record, field }),
             "clone"
           ),
         ],
