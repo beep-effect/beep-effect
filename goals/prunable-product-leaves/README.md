@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement: seam 1 done; seam 1b (a checkout declares its own prunes) next, then seam 2.
+P1 Implement: seam 1 done; seam 1b (a checkout declares its own prunes) in progress in two PRs, then seam 2.
 
 ## Latest Evidence
 
@@ -39,6 +39,8 @@ P1 Implement: seam 1 done; seam 1b (a checkout declares its own prunes) next, th
   [`research/2026-11-17-product-leaf-couplings.md`](research/2026-11-17-product-leaf-couplings.md).
 - 2026-11-17: seam 1 surfaces, helper and pruned run,
   [`research/2026-11-17-seam-1-surfaces.md`](research/2026-11-17-seam-1-surfaces.md).
+- 2026-11-18: seam 1b declaration, subject rule and source surfaces,
+  [`research/2026-11-18-seam-1b-surfaces.md`](research/2026-11-18-seam-1b-surfaces.md).
 
 ## Notes
 

@@ -10,11 +10,19 @@
 import { SkillsLockDocument } from "@beep/ai-sync/SkillsLock.schemas";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import {
+  CHECKOUT_PRUNE_DECLARATION_PATH,
+  decodeCheckoutPruneDeclaration,
+  emptyCheckoutPruneDeclaration,
+} from "@beep/repo-cli-kit/CheckoutPrune";
+import { CheckoutFacts, checkoutInventoryOf, packetRootsOf } from "@beep/repo-cli-kit/CheckoutSubject";
 import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
+import { productLeaves } from "@beep/repo-cli-kit/ProductLeaves";
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -45,6 +53,7 @@ import {
   KnowledgeSkillsFacts,
   KnowledgeWorkspacePackage,
 } from "./KnowledgeDoctor.schemas.ts";
+import type { CheckoutInventory } from "@beep/repo-cli-kit/CheckoutSubject";
 import type { GoalDoctorFinding, GoalPacketReader } from "../Goals/Doctor.ts";
 import type { KnowledgeTreeOracle } from "./Knowledge.refs.ts";
 import type {
@@ -116,7 +125,9 @@ const WORKSPACE_SCOPE = "@beep/";
  * `@beep/*` package whose tracked `package.json` sits in a directory the root manifest's
  * `workspaces` globs name (every manifest when the root declares none), `pathAliases` the root `tsconfig.json` `paths` entries for `@beep/*` specifiers,
  * `fileExports` the declaration scan of one source file, and `skills` the normalized skills lock
- * plus the installed skill directories.
+ * plus the installed skill directories. `checkoutInventory` is the tree as a checkout: its packets,
+ * workspace packages, the product leaves and declared subjects it pruned, and its own prune
+ * declaration (`standards/checkout-prune.jsonc` when the tree tracks one).
  *
  * @see {@link deriveKnowledgeDoctorDomain} for the uncached derivation.
  * @see {@link cacheKnowledgeDoctorDomain} for the memoized live form.
@@ -124,6 +135,7 @@ const WORKSPACE_SCOPE = "@beep/";
  * @since 0.0.0
  */
 export interface KnowledgeDoctorDomain {
+  readonly checkoutInventory: Effect.Effect<CheckoutInventory, KnowledgeOperationalError>;
   readonly fileExports: (file: string) => Effect.Effect<KnowledgeFileExports, KnowledgeOperationalError>;
   readonly goalsDoctorFindings: Effect.Effect<ReadonlyArray<GoalDoctorFinding>, KnowledgeOperationalError>;
   readonly packages: Effect.Effect<ReadonlyArray<KnowledgeWorkspacePackage>, KnowledgeOperationalError>;
@@ -721,6 +733,50 @@ const deriveSkills = Effect.fn("KnowledgeDoctorDomain.skills")(function* (
 });
 
 /* -------------------------------------------------------------------------------------------------
+ * The tree as a checkout (goals/prunable-product-leaves, seam 1b)
+ * ---------------------------------------------------------------------------------------------- */
+
+// Every directory that holds a tracked path, the root excluded.
+const trackedDirectories = (paths: HashSet.HashSet<string>): HashSet.HashSet<string> =>
+  HashSet.fromIterable(
+    A.flatMap(A.fromIterable(paths), (path) => {
+      const segments = Str.split(path, "/");
+      return A.makeBy(A.length(segments) - 1, (index) => A.join(A.take(segments, index + 1), "/"));
+    })
+  );
+
+const toOperationalError = (error: { readonly message: string }) =>
+  KnowledgeOperationalError.make({ message: error.message });
+
+// The tree's checkout inventory: tracked packets, workspace packages and directories, and the
+// tree's own prune declaration. A declaration that does not decode, or whose prune entries name
+// tracked paths, fails closed.
+const deriveCheckoutInventory = Effect.fn("KnowledgeDoctorDomain.checkoutInventory")(function* (
+  oracle: KnowledgeTreeOracle,
+  paths: HashSet.HashSet<string>
+) {
+  const text = yield* knowledgeTreeFacts.readTextIfTracked(oracle, paths, CHECKOUT_PRUNE_DECLARATION_PATH);
+  const declaration = yield* O.match(text, {
+    onNone: () => Effect.succeed(emptyCheckoutPruneDeclaration),
+    onSome: (value) => decodeCheckoutPruneDeclaration(value).pipe(Effect.mapError(toOperationalError)),
+  });
+  const packages = yield* deriveKnowledgePackages(oracle, paths);
+  const facts = CheckoutFacts.make({
+    packets: packetRootsOf(paths),
+    workspaces: HashMap.fromIterable(
+      A.map(
+        A.filter(packages, (member) => Str.isNonEmpty(member.root)),
+        (member) => [member.name, member.root] as const
+      )
+    ),
+    directories: trackedDirectories(paths),
+    files: paths,
+    declaration,
+  });
+  return yield* Effect.fromResult(checkoutInventoryOf(facts, productLeaves)).pipe(Effect.mapError(toOperationalError));
+});
+
+/* -------------------------------------------------------------------------------------------------
  * Domain construction, caching, and overlay
  * ---------------------------------------------------------------------------------------------- */
 
@@ -793,6 +849,7 @@ export const deriveKnowledgeDoctorDomainFromPaths: {
 } = dual(
   2,
   (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<string>): KnowledgeDoctorDomain => ({
+    checkoutInventory: deriveCheckoutInventory(oracle, paths),
     packets: derivePackets(oracle),
     packages: deriveKnowledgePackages(oracle, paths),
     pathAliases: derivePathAliases(oracle, paths),
@@ -836,6 +893,7 @@ export const cacheKnowledgeDoctorDomain = Effect.fn("KnowledgeDoctorDomain.cache
 ) {
   const exportsByFile = MutableHashMap.empty<string, KnowledgeFileExports>();
   return {
+    checkoutInventory: yield* Effect.cached(domain.checkoutInventory),
     packets: yield* Effect.cached(domain.packets),
     packages: yield* Effect.cached(domain.packages),
     pathAliases: yield* Effect.cached(domain.pathAliases),

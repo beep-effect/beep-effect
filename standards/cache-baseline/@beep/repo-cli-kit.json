@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/repo-cli-kit",
   "review": {
-    "reviewer": "Claude Opus 5.5 (declaration-only-builds PR 3, check once)",
-    "reason": "Record the configuration drift of check once: the root turbo.json check task depends on the package's own build as well as ^build, and bun run beep lint package-scripts --write rewrote 180 declaration-only scripts blocks so beep:check leads with tsrs -p tsconfig.json --emitDeclarationOnly instead of tsrs -p tsconfig.check.json (first-segment flags such as @beep/repo-cli's --checkerCostCache carried over), re-keying the command digest of every task of the written packages, cached or not. The 19 packages whose build is not declaration-only keep their previous check graph through an explicit tasks.check.dependsOn [\"^build\"] in their own turbo.json. Task commands, cache flags, inputs, outputs and environment are unchanged; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5, feat/prunable-seam-1b",
+    "reason": "Record the two new upstream tasks that @beep/repo-cli-kit gains on build, check, lint:deprecated-apis and test from the @beep/glob and @beep/walker dependencies seam 1b of goals/prunable-product-leaves adds for the CheckoutPrune module, and the root turbo.json digest after the policy fingerprint reseal grew six generated seal tasks inputs. Preserve commands, cache flags, outputs, environment, declared inputs, epoch and qualification scope; inputs only grow; no qualification or exception.",
     "basis": {
-      "path": "docs/reports/check-once-cache-review-2026-11-13.md",
-      "sha256": "3c9c0c16b9aff33114a2733091c6ea5e9831fbd7b5fc27fee96432d6bdfa3cc3"
+      "path": "goals/prunable-product-leaves/research/2026-11-18-seam-1b-cache-review.md",
+      "sha256": "2c4dc72ad693bda061ff79e13fc8f425a35d050eae577f6b9c1d150a111b7d17"
     }
   },
   "nodes": [
@@ -20,6 +20,7 @@
         "@beep/duckdb#build",
         "@beep/file-processing#build",
         "@beep/git#build",
+        "@beep/glob#build",
         "@beep/identity#build",
         "@beep/jsonc#build",
         "@beep/memfs#build",
@@ -30,7 +31,8 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
-        "@beep/utils#build"
+        "@beep/utils#build",
+        "@beep/walker#build"
       ],
       "configuration": {
         "cache": true,
@@ -88,6 +90,7 @@
         "@beep/duckdb#build",
         "@beep/file-processing#build",
         "@beep/git#build",
+        "@beep/glob#build",
         "@beep/identity#build",
         "@beep/jsonc#build",
         "@beep/memfs#build",
@@ -99,7 +102,8 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
-        "@beep/utils#build"
+        "@beep/utils#build",
+        "@beep/walker#build"
       ],
       "configuration": {
         "cache": true,
@@ -145,6 +149,7 @@
         "@beep/duckdb#build",
         "@beep/file-processing#build",
         "@beep/git#build",
+        "@beep/glob#build",
         "@beep/identity#build",
         "@beep/jsonc#build",
         "@beep/memfs#build",
@@ -155,7 +160,8 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
-        "@beep/utils#build"
+        "@beep/utils#build",
+        "@beep/walker#build"
       ],
       "configuration": {
         "cache": false,
@@ -284,6 +290,7 @@
         "@beep/duckdb#transit",
         "@beep/file-processing#transit",
         "@beep/git#transit",
+        "@beep/glob#transit",
         "@beep/identity#transit",
         "@beep/jsonc#transit",
         "@beep/memfs#transit",
@@ -295,7 +302,8 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
-        "@beep/utils#transit"
+        "@beep/utils#transit",
+        "@beep/walker#transit"
       ],
       "configuration": {
         "cache": true,
@@ -496,6 +504,7 @@
         "@beep/duckdb#transit",
         "@beep/file-processing#transit",
         "@beep/git#transit",
+        "@beep/glob#transit",
         "@beep/identity#transit",
         "@beep/jsonc#transit",
         "@beep/memfs#transit",
@@ -506,7 +515,8 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
-        "@beep/utils#transit"
+        "@beep/utils#transit",
+        "@beep/walker#transit"
       ],
       "configuration": {
         "cache": false,
@@ -554,6 +564,7 @@
         "@beep/duckdb#transit",
         "@beep/file-processing#transit",
         "@beep/git#transit",
+        "@beep/glob#transit",
         "@beep/identity#transit",
         "@beep/jsonc#transit",
         "@beep/memfs#transit",
@@ -565,7 +576,8 @@
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
         "@beep/utils#transit",
-        "@beep/utils#transit"
+        "@beep/utils#transit",
+        "@beep/walker#transit"
       ],
       "configuration": {
         "cache": true,
@@ -620,6 +632,7 @@
         "@beep/duckdb#build",
         "@beep/file-processing#build",
         "@beep/git#build",
+        "@beep/glob#build",
         "@beep/identity#build",
         "@beep/jsonc#build",
         "@beep/memfs#build",
@@ -630,7 +643,8 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
-        "@beep/utils#build"
+        "@beep/utils#build",
+        "@beep/walker#build"
       ],
       "configuration": {
         "cache": false,

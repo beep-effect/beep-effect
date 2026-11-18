@@ -12,6 +12,7 @@ import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
 import { FrontmatterFormat } from "@beep/markdown/MarkdownNode";
+import { isCheckoutPathPruned } from "@beep/repo-cli-kit/CheckoutSubject";
 import { isCi } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { findRepoRoot } from "@beep/repo-utils";
 import { Str } from "@beep/utils";
@@ -143,11 +144,13 @@ import {
   TreeEntryWitness,
 } from "./KnowledgeDoctor.schemas.ts";
 import type { GitInvocation } from "@beep/git/GitCommand";
+import type { CheckoutInventory } from "@beep/repo-cli-kit/CheckoutSubject";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
 import type { GitCommandErrorAdapter, GitKitError } from "../../internal/repo-run/GitExec.ts";
+import type { GoalDoctorFinding } from "../Goals/Doctor.ts";
 import type { KnowledgeStaticCommandTree } from "./Knowledge.command-surface.ts";
 import type { KnowledgeCloneAttributesError, KnowledgeMintRefusal, KnowledgeSealBroken } from "./Knowledge.errors.ts";
 import type { KnowledgeCommitSha, KnowledgeDocumentFenceLine, KnowledgeTreeOracle } from "./Knowledge.refs.ts";
@@ -1394,10 +1397,55 @@ const evaluateSpan = Effect.fn("KnowledgeDoctor.evaluateSpan")(function* (
   );
 });
 
+// goals/prunable-product-leaves, seam 1b: a missing path the tree's checkout pruned or owns (a
+// pruned product leaf or packet, or a path its prune declaration names) is no broken link; neither is
+// a goals-doctor finding of a packet the checkout pruned or owns. Both are skipped and counted.
+const PATH_FAILURE_KINDS = HashSet.make("broken-tracked-path", "failed-assertion");
+const PATH_CAUSE_PREFIX = "path:";
+
+const prunedPathRow =
+  (inventory: CheckoutInventory) =>
+  (row: FindingRow): boolean =>
+    HashSet.has(PATH_FAILURE_KINDS, row.candidate.kind) &&
+    Str.startsWith(PATH_CAUSE_PREFIX)(row.causeKey) &&
+    isCheckoutPathPruned(inventory, Str.slice(PATH_CAUSE_PREFIX.length)(row.causeKey));
+
+const prunedGoalFinding =
+  (inventory: CheckoutInventory) =>
+  (finding: GoalDoctorFinding): boolean =>
+    isCheckoutPathPruned(inventory, `goals/${finding.slug}`) ||
+    O.exists(O.fromUndefinedOr(finding.target), (target) => isCheckoutPathPruned(inventory, target));
+
+// The rows the tree's checkout keeps, and how many it skipped. The inventory is read only when a
+// row could be skipped, so a tree without one reads nothing more.
+const withoutPrunedRows = Effect.fn("KnowledgeDoctor.withoutPrunedRows")(function* <Row>(
+  tree: KnowledgeDoctorTree,
+  rows: ReadonlyArray<Row>,
+  pruned: (inventory: CheckoutInventory) => (row: Row) => boolean,
+  candidate: (row: Row) => boolean
+) {
+  if (!A.some(rows, candidate)) {
+    return { kept: rows, skipped: 0 };
+  }
+  const inventory = yield* tree.domain.checkoutInventory;
+  const isPruned = pruned(inventory);
+  const kept = A.filter(rows, (row) => !isPruned(row));
+  return { kept, skipped: A.length(rows) - A.length(kept) };
+});
+
+const isPathFailureRow = (row: FindingRow): boolean => HashSet.has(PATH_FAILURE_KINDS, row.candidate.kind);
+
 // Every goals-doctor finding the tree's bytes determine, listed as delegated: the goals doctor keeps
 // the gate, and each one is a causal root for the claims beneath it.
 const delegatedFindings = Effect.fn("KnowledgeDoctor.delegatedFindings")(function* (tree: KnowledgeDoctorTree) {
-  const delegatedRows = yield* tree.domain.goalsDoctorFindings.pipe(Effect.map(A.map(knowledgeDelegatedRow)));
+  const goalFindings = yield* tree.domain.goalsDoctorFindings;
+  const { kept: keptGoalFindings, skipped } = yield* withoutPrunedRows(
+    tree,
+    goalFindings,
+    prunedGoalFinding,
+    () => true
+  );
+  const delegatedRows = A.map(keptGoalFindings, knowledgeDelegatedRow);
   const severities = HashMap.fromIterable(
     A.map(delegatedRows, (row) => [row.candidate.subject, row.severity] as const)
   );
@@ -1405,15 +1453,18 @@ const delegatedFindings = Effect.fn("KnowledgeDoctor.delegatedFindings")(functio
     A.map(delegatedRows, (row) => row.candidate),
     (candidate) => O.getOrElse(HashMap.get(severities, candidate.subject), () => "blocking" as const)
   );
-  return A.zipWith(findings, delegatedRows, (finding, row) =>
-    KnowledgeDoctorFinding.make({
-      finding,
-      spanClass: KnowledgeSpanClass.Enum.verified,
-      origin: "delegated",
-      evaluator: O.none(),
-      causeKey: row.causeKey,
-    })
-  );
+  return {
+    findings: A.zipWith(findings, delegatedRows, (finding, row) =>
+      KnowledgeDoctorFinding.make({
+        finding,
+        spanClass: KnowledgeSpanClass.Enum.verified,
+        origin: "delegated",
+        evaluator: O.none(),
+        causeKey: row.causeKey,
+      })
+    ),
+    skipped,
+  };
 });
 
 const citationAncestry = Effect.fn("KnowledgeDoctor.citationAncestry")(function* (
@@ -1529,11 +1580,17 @@ export const scanKnowledgeDoctorTree = Effect.fn("KnowledgeDoctor.scanTree")(fun
       unchecked += result.unchecked;
     }
   }
+  const { kept: keptRows, skipped: skippedRows } = yield* withoutPrunedRows(
+    tree,
+    rows,
+    prunedPathRow,
+    isPathFailureRow
+  );
   const findings = yield* knowledgeFindingsFromCandidates(
-    A.map(rows, (row) => row.candidate),
+    A.map(keptRows, (row) => row.candidate),
     severityOf
   );
-  const owned = A.zipWith(findings, rows, (finding, row) =>
+  const owned = A.zipWith(findings, keptRows, (finding, row) =>
     KnowledgeDoctorFinding.make({
       finding,
       spanClass: row.spanClass,
@@ -1543,11 +1600,13 @@ export const scanKnowledgeDoctorTree = Effect.fn("KnowledgeDoctor.scanTree")(fun
     })
   );
   const delegated = yield* delegatedFindings(tree);
-  const all = A.sort(A.appendAll(owned, delegated), doctorFindingOrder);
+  const all = A.sort(A.appendAll(owned, delegated.findings), doctorFindingOrder);
   const removals = yield* findingRemovals(tree, all);
   const countOf = (spanClass: KnowledgeSpanClass) =>
     S.Natural.make(O.getOrElse(HashMap.get(counts, spanClass), () => 0));
+  const skippedPruned = skippedRows + delegated.skipped;
   return KnowledgeDoctorReport.make({
+    ...(skippedPruned > 0 ? { skippedPrunedCount: S.Natural.make(skippedPruned) } : {}),
     treeish: tree.treeish,
     tree: tree.commit,
     mode: "report",

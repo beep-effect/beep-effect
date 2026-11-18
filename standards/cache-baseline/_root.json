@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (model-first-slices check wiring lane, ci/model-first-slices-check)",
-    "reason": "Re-record the root subject for the final bytes after merging main 4c8ff79287b: the root postinstall now runs install:model-first-slices only when CI is unset, so every cached root computation, //#check:model-first-slices included, drifts on the manifest bytes. The task's inputs are unchanged, and it still installs the prototype itself, so its result does not depend on CI. No other command, cache flag, input, output or environment changed; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5, feat/prunable-seam-1b",
+    "reason": "Re-record the root subject for the final bytes after merging main 93c373f0ddb: main's model-first-slices check wiring and seam 1b of goals/prunable-product-leaves both change the root turbo.json (seam 1b's policy fingerprint reseal grew six generated seal tasks' inputs). The root digest is the only change. No command, cache flag, output, environment or declared input changed beyond those two reviewed edits; inputs only grow; no qualification or exception.",
     "basis": {
-      "path": "docs/reports/model-first-slices-check-cache-review-2026-11-18.md",
-      "sha256": "00eeaf94c35febdb1752886a1d30c2aa65fcdb2c14da25e13512d90fceeb6f25"
+      "path": "goals/prunable-product-leaves/research/2026-11-18-seam-1b-cache-review.md",
+      "sha256": "2c4dc72ad693bda061ff79e13fc8f425a35d050eae577f6b9c1d150a111b7d17"
     }
   },
   "globalConfiguration": {
@@ -188,7 +188,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "adb1afa2889984a6f5bb9771cba0409a7f12bb2d70cf9bb0e911db23340ba534"
+      "sha256": "9a5dc124db8ec3216ecea07123230943720a30e2747450e09a9b409154b7387a"
     }
   ],
   "nodes": [

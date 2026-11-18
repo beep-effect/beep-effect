@@ -5075,6 +5075,7 @@
           "@beep/duckdb",
           "@beep/file-processing",
           "@beep/git",
+          "@beep/glob",
           "@beep/identity",
           "@beep/jsonc",
           "@beep/memfs",
@@ -5086,7 +5087,8 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/walker"
         ],
         "allowTypeOnly": [
           "@beep/cli-kit",
@@ -5094,6 +5096,7 @@
           "@beep/duckdb",
           "@beep/file-processing",
           "@beep/git",
+          "@beep/glob",
           "@beep/identity",
           "@beep/jsonc",
           "@beep/memfs",
@@ -5105,7 +5108,8 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/walker"
         ]
       },
       {
