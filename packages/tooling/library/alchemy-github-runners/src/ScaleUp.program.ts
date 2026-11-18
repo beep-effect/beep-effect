@@ -22,6 +22,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { FleetLaunchRequest, FleetOverride } from "./Ec2Fleet.models.ts";
 import { Ec2Fleet } from "./Ec2Fleet.service.ts";
@@ -439,16 +440,12 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
     return [];
   }
 
-  const current =
-    config.pool.maximumCount === -1
-      ? 0
-      : (yield* ec2.listRunners(
-          RunnerFilter.make({
-            environment: O.some(config.environment),
-            type: O.some(owner.type),
-            owner: O.some(owner.owner),
-          })
-        )).length;
+  const ownerFilter = RunnerFilter.make({
+    environment: O.some(config.environment),
+    type: O.some(owner.type),
+    owner: O.some(owner.owner),
+  });
+  const current = config.pool.maximumCount === -1 ? 0 : (yield* ec2.listRunners(ownerFilter)).length;
   const wanted = stillQueued.length;
   const allowed =
     config.pool.maximumCount === -1 ? wanted : Math.max(0, Math.min(wanted, config.pool.maximumCount - current));
@@ -490,6 +487,15 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
     concurrency: 1,
     discard: true,
   });
+  // The cap is counted from a tag-filtered DescribeInstances, which can lag a fresh launch. The next invocation
+  // (reserved concurrency 1) would count too few and launch past the cap, so wait, bounded, until this one's
+  // runners are counted. A runner still unseen after the wait is left to the reaper's TTL, not retried.
+  yield* awaitCounted({
+    uncapped: config.pool.maximumCount === -1,
+    filter: ownerFilter,
+    expected: current + launched.instanceIds.length - failedConfig.length,
+    launched: launched.instanceIds.length,
+  });
 
   const retryCount = launched.retryable + failedConfig.length;
   const retrying = A.appendAll(
@@ -498,6 +504,24 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
   );
   yield* publishRetries(retrying);
   return retrying;
+});
+
+const awaitCounted = Effect.fnUntraced(function* (input: {
+  readonly uncapped: boolean;
+  readonly filter: RunnerFilter;
+  readonly expected: number;
+  readonly launched: number;
+}) {
+  if (input.uncapped || input.launched === 0) return;
+  const { filter, expected } = input;
+  const ec2 = yield* Ec2Fleet;
+  yield* ec2
+    .listRunners(filter)
+    .pipe(
+      Effect.map(A.length),
+      Effect.repeat({ until: (counted) => counted >= expected, schedule: Schedule.spaced("1 second"), times: 15 }),
+      Effect.ignore
+    );
 });
 
 /**

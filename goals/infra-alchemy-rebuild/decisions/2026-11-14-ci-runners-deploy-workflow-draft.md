@@ -24,6 +24,10 @@ name: Deploy CI runners
 # manual dispatch. The packet gate arms it for cutover step 1 only after the
 # orchestrator confirms the CI goals driver lowered the heavy burst cap to 6
 # (decision "CI runners cutover from the Pulumi fleet").
+# Armed, only the two cutover dispatches run (`bootstrap`, then
+# `default-security-group`): a `routine` run, every push included, also needs
+# CI_RUNNERS_ROUTINE_ARMED = `true`, which the gate sets only after step 1b
+# succeeds. So no push can reconcile the stack between 1a and 1b.
 #
 # The plan step plans the stage, runs the plan check (src/PlanCheck.ts) and
 # saves the checked plan; it stops the job on a replace, delete or orphan, a
@@ -65,7 +69,10 @@ permissions:
 jobs:
   deploy:
     name: Deploy CI runners (prod)
-    if: vars.CI_RUNNERS_DEPLOY_ARMED == 'true'
+    if: >-
+      vars.CI_RUNNERS_DEPLOY_ARMED == 'true' &&
+      (vars.CI_RUNNERS_ROUTINE_ARMED == 'true' ||
+      (github.event_name == 'workflow_dispatch' && inputs.mode != 'routine'))
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment:

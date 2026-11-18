@@ -1,5 +1,6 @@
 import {
   AwsApiError,
+  Ec2Fleet,
   FleetLaunchResult,
   handleScaleUp,
   RunnerPool,
@@ -9,10 +10,13 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import { World, worldContext } from "./support/FakeWorld.ts";
 import { heavyPool, poolConfig, queued } from "./support/Fixtures.ts";
 import type { PoolRuntimeConfig } from "@beep/alchemy-github-runners";
@@ -111,6 +115,33 @@ describe("handleScaleUp", () => {
       );
       const published = yield* decodeRetry(world.sent[0]?.body);
       expect(published).toStrictEqual({ id: 3, retryCounter: 0 });
+    })
+  );
+
+  it.effect("waits until its own launches are counted before the next invocation can count the cap", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const base = worldContext(world);
+      const fleet = Context.get(base, Ec2Fleet);
+      // EC2's filtered read lags the launch: the first two counts after it miss the new runner.
+      let calls = 0;
+      const lagging = Ec2Fleet.of({
+        ...fleet,
+        listRunners: Effect.fn("LaggingEc2.listRunners")(function* (filter) {
+          const runners = yield* fleet.listRunners(filter);
+          calls += 1;
+          return calls >= 2 && calls <= 3 ? [] : runners;
+        }),
+      });
+      const fiber = yield* handleScaleUp({ config: poolConfig(), batch: [queued({ id: 1 })] }).pipe(
+        Effect.provideContext(Context.add(base, Ec2Fleet, lagging)),
+        Effect.forkChild
+      );
+      yield* TestClock.adjust("5 seconds");
+      const retry = yield* Fiber.join(fiber);
+      expect(retry).toStrictEqual([]);
+      expect(world.fleetRequests[0]?.targetCapacity).toBe(1);
+      expect(calls).toBe(4);
     })
   );
 

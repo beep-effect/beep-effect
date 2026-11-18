@@ -437,6 +437,8 @@ export const fleetBoundary = (stage: string): IAM.PolicyDocument => ({
       Action: ["organizations:*", "account:*", "aws-portal:*", "billing:*"],
       Resource: ["*"],
     },
+    // ec2:MetadataHttpEndpoint is the instance's current endpoint state, not the requested value: the live fleet's
+    // CloudTrail (ModifyInstanceMetadataOptions, 2026-11-18) shows the first disable allowed and later changes denied.
     {
       Sid: "DenyMetadataOptionsOnceDisabled",
       Effect: "Deny",
@@ -649,12 +651,19 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
     Resource: [`arn:aws:ssm:${region}:${account}:parameter/beep-fleet/prod/*`],
   },
   { Sid: "SsmDescribe", Effect: "Allow", Action: ["ssm:DescribeParameters"], Resource: ["*"] },
+  // Tag on create needs kms:TagResource on keys generally (the KMS developer guide: "an IAM policy that isn't
+  // restricted to particular KMS keys"), so the tag grant cannot be held to the new key. It is held to the stack's
+  // ownership keys and values instead, and the tags it can set confer only reads, rotation and fleet aliases:
+  // no key policy, deletion, disable or untag grant exists, and data use goes through SSM for fleet parameters only.
   {
     Sid: "KmsCreateTagged",
     Effect: "Allow",
     Action: ["kms:CreateKey", "kms:TagResource"],
     Resource: ["*"],
-    Condition: { StringEquals: { "aws:RequestTag/alchemy::stack": "CiRunners" } },
+    Condition: {
+      StringEquals: requested,
+      "ForAllValues:StringEquals": { "aws:TagKeys": ["alchemy::stack", "alchemy::stage", "alchemy::id"] },
+    },
   },
   {
     Sid: "KmsOwnedKeys",
@@ -662,20 +671,33 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
     Action: [
       "kms:DescribeKey",
       "kms:GetKeyPolicy",
-      "kms:PutKeyPolicy",
-      "kms:EnableKeyRotation",
       "kms:GetKeyRotationStatus",
-      "kms:ScheduleKeyDeletion",
-      "kms:TagResource",
-      "kms:UntagResource",
       "kms:ListResourceTags",
-      "kms:Encrypt",
-      "kms:Decrypt",
-      "kms:GenerateDataKey",
+      "kms:EnableKeyRotation",
+      "kms:CreateAlias",
+      "kms:UpdateAlias",
+      "kms:DeleteAlias",
     ],
-    Resource: ["*"],
-    Condition: { StringEquals: { "aws:ResourceTag/alchemy::stack": "CiRunners" } },
+    Resource: [`arn:aws:kms:${region}:${account}:key/*`],
+    Condition: { StringEquals: owned },
   },
+  // SSM SecureString writes and reads use the caller's KMS permissions, through SSM, with the parameter ARN as the
+  // encryption context: so the fleet key serves only fleet parameters, whatever tags a key carries.
+  {
+    Sid: "KmsThroughFleetParameters",
+    Effect: "Allow",
+    Action: ["kms:Encrypt", "kms:Decrypt", "kms:GenerateDataKey"],
+    Resource: [`arn:aws:kms:${region}:${account}:key/*`],
+    Condition: {
+      StringEquals: { "kms:ViaService": `ssm.${region}.amazonaws.com` },
+      StringLike: {
+        "kms:EncryptionContext:PARAMETER_ARN": `arn:aws:ssm:${region}:${account}:parameter/beep-fleet/prod/*`,
+      },
+    },
+  },
+  // Alchemy's KMS.Alias reads every alias (ListAliases takes no resource-level scope) before it creates one;
+  // an alias write is checked on the alias and on its target key (KmsOwnedKeys).
+  { Sid: "KmsListAliases", Effect: "Allow", Action: ["kms:ListAliases"], Resource: ["*"] },
   {
     Sid: "KmsFleetAliases",
     Effect: "Allow",
@@ -692,6 +714,13 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
       "s3:GetBucketPublicAccessBlock",
       "s3:PutBucketTagging",
       "s3:GetBucketTagging",
+      // Alchemy's S3.Bucket reads these on every reconcile: location (existence), policy, encryption and
+      // notifications, and puts the default encryption when the observed rule differs.
+      "s3:GetBucketLocation",
+      "s3:GetBucketPolicy",
+      "s3:GetEncryptionConfiguration",
+      "s3:PutEncryptionConfiguration",
+      "s3:GetBucketNotification",
       "s3:PutObject",
       "s3:DeleteObject",
       "s3:GetObject",

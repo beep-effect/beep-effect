@@ -39,9 +39,11 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { checkPlan, PlanAction, PlannedResource, PlanReading, PlanViolation } from "./PlanCheck.ts";
 import type { CRUD, Plan } from "alchemy/Plan";
@@ -56,7 +58,7 @@ const $I = $InfraCiRunnersId.create("CheckedDeploy");
  * ```ts
  * import { CheckedResource } from "@beep/infra-ci-runners/CheckedDeploy"
  *
- * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "00", bindingsDigest: "", secretsDigest: "", pendingReplacement: false })
+ * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "00", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false })
  * console.log(vpc.action) // "create"
  * ```
  *
@@ -72,11 +74,12 @@ export class CheckedResource extends S.Opaque<CheckedResource, { readonly brand:
     propsDigest: S.String,
     bindingsDigest: S.String,
     secretsDigest: S.String,
+    baselineDigest: S.String,
     pendingReplacement: S.Boolean,
   }).pipe(
     $I.annoteSchema("CheckedResource", {
       description:
-        "A planned resource: action, `<fqn>/<sid> <action>` bindings, digests of its declared properties, binding payloads and secrets, and whether it holds a pending replacement.",
+        "A planned resource: action, `<fqn>/<sid> <action>` bindings, digests of its declared properties, binding payloads, secrets and starting state, and whether it holds a pending replacement.",
     })
   )
 ) {}
@@ -139,7 +142,7 @@ export type PlanExpectation = typeof PlanExpectation.Type;
  * ```ts
  * import { CheckedPlan } from "@beep/infra-ci-runners/CheckedDeploy"
  *
- * console.log(CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", resources: [], actions: [] }).stage) // "prod"
+ * console.log(CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [], actions: [] }).stage) // "prod"
  * ```
  *
  * @category models
@@ -150,6 +153,7 @@ export class CheckedPlan extends S.Opaque<CheckedPlan, { readonly brand: unique 
     stage: S.String,
     expectation: PlanExpectation,
     secretSalt: S.String,
+    sourceTree: S.String,
     resources: S.Array(CheckedResource),
     actions: S.Array(CheckedAction),
   }).pipe($I.annoteSchema("CheckedPlan", { description: "The change set the plan check approved." }))
@@ -166,7 +170,7 @@ export class CheckedPlan extends S.Opaque<CheckedPlan, { readonly brand: unique 
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
  *
- * const plan = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", resources: [], actions: [] })
+ * const plan = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [], actions: [] })
  * const text = Effect.runSync(S.encodeEffect(CheckedPlanJson)(plan))
  * console.log(Effect.runSync(S.decodeUnknownEffect(CheckedPlanJson)(text)).stage) // "prod"
  * ```
@@ -206,6 +210,72 @@ export class PlanDrift extends S.TaggedError<PlanDrift, { readonly brand: unique
     description: "The deploy-time plan differs from the plan the gate checked.",
   })
 ) {}
+
+/**
+ * The checkout the plan was made from is not one clean committed tree, so no
+ * source identity can bind the Lambda bundles; nothing was planned.
+ *
+ * **Example** (Construct the refusal)
+ *
+ * ```ts
+ * import { UnboundSource } from "@beep/infra-ci-runners/CheckedDeploy"
+ *
+ * console.log(UnboundSource.make({ reason: "uncommitted changes" })._tag) // "UnboundSource"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class UnboundSource extends S.TaggedError<UnboundSource, { readonly brand: unique symbol }>($I`UnboundSource`)(
+  "UnboundSource",
+  { reason: S.String },
+  $I.annoteError<UnboundSource>("UnboundSource", {
+    title: "Unbound source",
+    description: "The plan's checkout is not a clean committed tree.",
+  })
+) {}
+
+const gitOutput = (args: ReadonlyArray<string>) =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const handle = yield* ChildProcess.make("git", A.copy(args), { stdin: "ignore", stdout: "pipe", stderr: "pipe" });
+      const output = yield* handle.all.pipe(Stream.decodeText(), Stream.mkString);
+      const exitCode = yield* handle.exitCode;
+      return { output: Str.trim(output), exitCode };
+    })
+  );
+
+/**
+ * The git tree id of the clean checkout a plan is made from: the identity of
+ * every Lambda bundle's source, since Alchemy keeps the bundle hash out of the
+ * plan.
+ *
+ * **Details**
+ *
+ * Fails with {@link UnboundSource} when the worktree has uncommitted or
+ * untracked changes, or when git cannot answer, so a checked plan always names
+ * the exact sources its bundles come from. `plan` and `deploy` each read it;
+ * a different tree is drift.
+ *
+ * **Example** (Reference the reader)
+ *
+ * ```ts
+ * import { readSourceTree } from "@beep/infra-ci-runners/CheckedDeploy"
+ *
+ * console.log(typeof readSourceTree) // "object"
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const readSourceTree = Effect.gen(function* () {
+  const status = yield* gitOutput(["status", "--porcelain", "--untracked-files=all"]);
+  if (status.exitCode !== 0) return yield* UnboundSource.make({ reason: "git status failed" });
+  if (!Str.isEmpty(status.output)) return yield* UnboundSource.make({ reason: "uncommitted changes" });
+  const tree = yield* gitOutput(["rev-parse", "HEAD^{tree}"]);
+  if (tree.exitCode !== 0) return yield* UnboundSource.make({ reason: "no committed tree" });
+  return tree.output;
+}).pipe(Effect.catchTag("PlatformError", () => Effect.fail(UnboundSource.make({ reason: "git did not run" }))));
 
 const byFqn = Order.mapInput(Order.String, (entry: { readonly fqn: string }) => entry.fqn);
 
@@ -259,6 +329,24 @@ const secretsDigestOf = Effect.fn("CiRunners.secretsDigest")(function* (
 
 // An update whose state still holds an unfinished replacement: applying it also deletes the old generation.
 const isPendingReplacement = (node: CRUD): boolean => node.action === "update" && node.state.status === "replaced";
+
+// The state an update or delete starts from: the props last applied and the attributes last observed. A plan that
+// changes retention 7 -> 30 and one that changes it 90 -> 30 declare the same props; only this tells them apart.
+// Keyed by the plan's salt like the secrets fingerprint, because state attributes can hold secret values.
+const baselineOf = (node: CRUD): O.Option<unknown> =>
+  node.action === "create" || !P.isObject(node.state)
+    ? O.none()
+    : O.some({
+        props: P.hasProperty(node.state, "props") ? node.state.props : undefined,
+        attr: P.hasProperty(node.state, "attr") ? node.state.attr : undefined,
+      });
+
+const baselineDigestOf = Effect.fn("CiRunners.baselineDigest")(function* (salt: string, node: CRUD) {
+  return yield* O.match(baselineOf(node), {
+    onNone: () => Effect.succeed(""),
+    onSome: (baseline) => hmacSha256Hex(salt, A.join(formatYamlLines(baseline), "\n")),
+  });
+});
 
 /**
  * A fresh random salt for {@link readEnginePlan}'s secrets fingerprint.
@@ -314,8 +402,9 @@ export const readEnginePlan = Effect.fn("CiRunners.readEnginePlan")(function* (i
   readonly plan: Plan;
   readonly salt: string;
   readonly expectation: PlanExpectation;
+  readonly sourceTree: string;
 }) {
-  const { stage, plan, salt, expectation } = input;
+  const { stage, plan, salt, expectation, sourceTree } = input;
   const nodes: ReadonlyArray<CRUD> = A.filter(
     [...R.values(plan.resources), ...R.values(plan.deletions)],
     P.isNotUndefined
@@ -342,6 +431,7 @@ export const readEnginePlan = Effect.fn("CiRunners.readEnginePlan")(function* (i
         propsDigest: yield* digestOf(props),
         bindingsDigest: A.join(bindingDigests, ","),
         secretsDigest: yield* secretsDigestOf(salt, planSecrets, entriesOf(node)),
+        baselineDigest: yield* baselineDigestOf(salt, node),
         pendingReplacement: isPendingReplacement(node),
       });
     }),
@@ -351,6 +441,7 @@ export const readEnginePlan = Effect.fn("CiRunners.readEnginePlan")(function* (i
     stage,
     expectation,
     secretSalt: salt,
+    sourceTree,
     resources: A.sort(resources, byFqn),
     actions: A.sort(
       A.map(describePlan(plan).actions, (row) => CheckedAction.make({ fqn: row.fqn, action: row.action })),
@@ -369,7 +460,7 @@ export const readEnginePlan = Effect.fn("CiRunners.readEnginePlan")(function* (i
  * ```ts
  * import { CheckedPlan, toReading } from "@beep/infra-ci-runners/CheckedDeploy"
  *
- * console.log(toReading(CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", resources: [], actions: [] })).violations) // []
+ * console.log(toReading(CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [], actions: [] })).violations) // []
  * ```
  *
  * @param plan - The checked plan.
@@ -415,16 +506,25 @@ const bindingViolations = (expectation: PlanExpectation, resource: CheckedResour
     (binding) => unexpected(expectation, resource.fqn, `binding ${binding}`)
   );
 
+// Step 1a creates; a re-run after a partial bootstrap also meets the resources the failed run created, as noops.
+// Nothing else passes: no update, replace, delete or adoption, and a noop resource takes only noop bindings.
 const bootstrapViolations = (resource: CheckedResource): ReadonlyArray<PlanViolation> => [
   ...(resource.fqn === defaultSecurityGroup ? [unexpected("bootstrap", resource.fqn, "planned in step 1a")] : []),
-  ...(resource.action === "create" ? [] : [unexpected("bootstrap", resource.fqn, resource.action)]),
-  ...bindingViolations("bootstrap", resource, "create"),
+  ...(resource.action === "create" || resource.action === "noop"
+    ? []
+    : [unexpected("bootstrap", resource.fqn, resource.action)]),
+  ...bindingViolations("bootstrap", resource, resource.action === "noop" ? "noop" : "create"),
 ];
+
+// Alchemy reads the VPC's AWS-made default group before it has a state row and plans it `adopted`, not `create`.
+const isDefaultGroupFirstPlan = (action: PlanAction): boolean => action === "adopted" || action === "create";
 
 const defaultGroupViolations = (resource: CheckedResource): ReadonlyArray<PlanViolation> =>
   resource.fqn === defaultSecurityGroup
     ? [
-        ...(resource.action === "create" ? [] : [unexpected("default-security-group", resource.fqn, resource.action)]),
+        ...(isDefaultGroupFirstPlan(resource.action)
+          ? []
+          : [unexpected("default-security-group", resource.fqn, resource.action)]),
         ...A.map(resource.bindings, (binding) =>
           unexpected("default-security-group", resource.fqn, `binding ${binding}`)
         ),
@@ -441,14 +541,14 @@ const missingDefaultGroup = (plan: CheckedPlan): ReadonlyArray<PlanViolation> =>
 
 /**
  * Every change a checked plan makes that its {@link PlanExpectation} does not
- * allow; empty for `routine`.
+ * allow; for `routine`, only an adoption.
  *
  * **Example** (A routine plan has no expectation violations)
  *
  * ```ts
  * import { CheckedPlan, expectationViolations } from "@beep/infra-ci-runners/CheckedDeploy"
  *
- * const plan = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", resources: [], actions: [] })
+ * const plan = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [], actions: [] })
  * console.log(expectationViolations(plan)) // []
  * ```
  *
@@ -459,7 +559,13 @@ const missingDefaultGroup = (plan: CheckedPlan): ReadonlyArray<PlanViolation> =>
  */
 export const expectationViolations = (plan: CheckedPlan): ReadonlyArray<PlanViolation> =>
   PlanExpectation.match(plan.expectation, {
-    routine: () => [],
+    // An adoption takes over a resource nobody declared through this stack; only step 1b may adopt, and only the
+    // default group.
+    routine: () =>
+      A.map(
+        A.filter(plan.resources, (resource) => resource.action === "adopted"),
+        (resource) => unexpected("routine", resource.fqn, "adopted")
+      ),
     bootstrap: () => A.flatMap(plan.resources, bootstrapViolations),
     "default-security-group": () => [
       ...missingDefaultGroup(plan),
@@ -476,8 +582,8 @@ export const expectationViolations = (plan: CheckedPlan): ReadonlyArray<PlanViol
  * import { CheckedPlan, CheckedResource, checkEnginePlan } from "@beep/infra-ci-runners/CheckedDeploy"
  * import * as Effect from "effect/Effect"
  *
- * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", pendingReplacement: false })
- * const plan = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", resources: [vpc], actions: [] })
+ * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false })
+ * const plan = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [vpc], actions: [] })
  * console.log(Effect.runSync(checkEnginePlan(plan)).length) // 1
  * ```
  *
@@ -510,6 +616,7 @@ const keyed = (plan: CheckedPlan) =>
               resource.propsDigest,
               resource.bindingsDigest,
               resource.secretsDigest,
+              resource.baselineDigest,
               String(resource.pendingReplacement),
             ],
             "|"
@@ -530,6 +637,7 @@ const differencesOf = (checked: CheckedPlan, current: CheckedPlan): PlanDifferen
     changed: [
       ...(checked.stage === current.stage ? [] : ["stage"]),
       ...(checked.expectation === current.expectation ? [] : ["expectation"]),
+      ...(checked.sourceTree === current.sourceTree ? [] : ["sourceTree"]),
       ...A.filter(afterKeys, (key) =>
         O.exists(HashMap.get(before, key), (signature) => !O.contains(HashMap.get(after, key), signature))
       ),
@@ -546,9 +654,9 @@ const differencesOf = (checked: CheckedPlan, current: CheckedPlan): PlanDifferen
  * ```ts
  * import { CheckedPlan, CheckedResource, planDifferences } from "@beep/infra-ci-runners/CheckedDeploy"
  *
- * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", pendingReplacement: false })
- * const checked = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", resources: [], actions: [] })
- * const current = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", resources: [vpc], actions: [] })
+ * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false })
+ * const checked = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [], actions: [] })
+ * const current = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [vpc], actions: [] })
  * console.log(planDifferences(checked, current).added) // ["Vpc"]
  * ```
  *
@@ -573,9 +681,9 @@ export const planDifferences: {
  * import { applyIfUnchanged, CheckedPlan, CheckedResource } from "@beep/infra-ci-runners/CheckedDeploy"
  * import * as Effect from "effect/Effect"
  *
- * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", pendingReplacement: false })
- * const checked = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", resources: [], actions: [] })
- * const current = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", resources: [vpc], actions: [] })
+ * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false })
+ * const checked = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [], actions: [] })
+ * const current = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [vpc], actions: [] })
  * const exit = Effect.runSyncExit(applyIfUnchanged(checked, current, Effect.succeed("applied")))
  * console.log(exit._tag) // "Failure"
  * ```

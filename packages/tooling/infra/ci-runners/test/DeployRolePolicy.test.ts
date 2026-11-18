@@ -225,6 +225,70 @@ describe("CiRunners deploy role policy", () => {
     })
   );
 
+  it.effect("lets a tag on a KMS key grant only reads, rotation and fleet aliases, and data use only through SSM", () =>
+    Effect.sync(() => {
+      const sid = (name: string) => A.filter(v2.Statement, (statement) => statement.Sid === name);
+      const kmsActions = A.filter(
+        A.flatMap(
+          A.filter(v2.Statement, (statement) => statement.Effect === "Allow"),
+          actionsOf
+        ),
+        Str.startsWith("kms:")
+      );
+      for (const action of ["kms:PutKeyPolicy", "kms:ScheduleKeyDeletion", "kms:DisableKey", "kms:UntagResource"]) {
+        assertFalse(A.contains(kmsActions, action));
+      }
+      expect(A.map(sid("KmsCreateTagged"), (statement) => statement.Condition)).toStrictEqual([
+        {
+          StringEquals: { "aws:RequestTag/alchemy::stack": "CiRunners", "aws:RequestTag/alchemy::stage": "prod" },
+          "ForAllValues:StringEquals": { "aws:TagKeys": ["alchemy::stack", "alchemy::stage", "alchemy::id"] },
+        },
+      ]);
+      expect(A.flatMap(sid("KmsOwnedKeys"), actionsOf)).toStrictEqual([
+        "kms:DescribeKey",
+        "kms:GetKeyPolicy",
+        "kms:GetKeyRotationStatus",
+        "kms:ListResourceTags",
+        "kms:EnableKeyRotation",
+        "kms:CreateAlias",
+        "kms:UpdateAlias",
+        "kms:DeleteAlias",
+      ]);
+      for (const statement of A.filter(v2.Statement, (s) =>
+        A.some(actionsOf(s), (a) => a === "kms:Decrypt" || a === "kms:Encrypt")
+      )) {
+        expect(statement.Condition).toStrictEqual({
+          StringEquals: { "kms:ViaService": "ssm.us-east-1.amazonaws.com" },
+          StringLike: {
+            "kms:EncryptionContext:PARAMETER_ARN": "arn:aws:ssm:us-east-1:832907639880:parameter/beep-fleet/prod/*",
+          },
+        });
+      }
+      expect(A.map(sid("KmsListAliases"), (statement) => [actionsOf(statement), resourcesOf(statement)])).toStrictEqual(
+        [[["kms:ListAliases"], ["*"]]]
+      );
+    })
+  );
+
+  it.effect("grants the bucket reads Alchemy's reconcile makes on the prod binaries bucket only", () =>
+    Effect.sync(() => {
+      const binaries = A.filter(v2.Statement, (statement) => statement.Sid === "S3Binaries");
+      for (const action of [
+        "s3:GetBucketLocation",
+        "s3:GetBucketNotification",
+        "s3:GetBucketPolicy",
+        "s3:GetEncryptionConfiguration",
+        "s3:PutEncryptionConfiguration",
+      ]) {
+        assertTrue(A.some(binaries, (statement) => grants(statement, action)));
+      }
+      expect(A.flatMap(binaries, resourcesOf)).toStrictEqual([
+        "arn:aws:s3:::beep-fleet-prod-binaries-832907639880",
+        "arn:aws:s3:::beep-fleet-prod-binaries-832907639880/*",
+      ]);
+    })
+  );
+
   const roleMutations = [
     "iam:CreateRole",
     "iam:PutRolePolicy",

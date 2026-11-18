@@ -7,6 +7,7 @@
   "instruments": [],
   "spans": [
     {"name":"CiRunners.applyIfUnchanged","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
+    {"name":"CiRunners.baselineDigest","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
     {"name":"CiRunners.checkPlan","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
     {"name":"CiRunners.declare","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
     {"name":"CiRunners.declareNetwork","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
@@ -19,6 +20,7 @@
     {"name":"CiRunners.requireCiForProduction","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
     {"name":"CiRunners.requireDistinctStage","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
     {"name":"CiRunners.requireFencedNames","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
+    {"name":"CiRunners.requireSigningAppKey","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
     {"name":"CiRunners.resolveStageConfig","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
     {"name":"CiRunners.runnerPolicies","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
     {"name":"CiRunners.secretsDigest","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},

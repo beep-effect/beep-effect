@@ -7,7 +7,7 @@ import {
   resolveStageConfig,
   spotVcpuCommitted,
 } from "@beep/infra-ci-runners/Config";
-import { stageCredentials } from "@beep/infra-ci-runners/Credentials";
+import { AppCredentials, requireSigningAppKey, stageCredentials } from "@beep/infra-ci-runners/Credentials";
 import { liveFleetOverlaps, physicalNames, poolEnvironment, touchesLiveFleet } from "@beep/infra-ci-runners/Names";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
@@ -271,6 +271,47 @@ describe("CiRunners production credentials", () => {
         if (Str.isNonEmpty(bad)) assertFalse(Str.includes(bad)(error.message));
         assertFalse(Str.includes(` ${bad.length} `)(error.message));
       }
+    })
+  );
+});
+
+// A real RSA key, generated per run: the signing check needs one that signs, and none is committed.
+const generatedAppKeyBase64 = Effect.promise(() =>
+  crypto.subtle.generateKey(
+    { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048, publicExponent: new Uint8Array([1, 0, 1]), hash: "SHA-256" },
+    true,
+    ["sign", "verify"]
+  )
+).pipe(
+  Effect.flatMap((pair) => Effect.promise(() => crypto.subtle.exportKey("pkcs8", pair.privateKey))),
+  Effect.map((der) => {
+    const body = A.join(A.map(A.chunksOf(Str.split("")(Base64.encode(new Uint8Array(der))), 64), A.join("")), "\n");
+    const label = A.join(["PRIVATE", "KEY"], " ");
+    return Base64.encode(`-----BEGIN ${label}-----\n${body}\n-----END ${label}-----\n`);
+  })
+);
+
+const credentialsWith = (keyBase64: string) =>
+  AppCredentials.make({
+    id: Redacted.make("12345"),
+    keyBase64: Redacted.make(keyBase64),
+    webhookSecret: Redacted.make(fakeWebhookSecret),
+  });
+
+describe("CiRunners App key signing check", () => {
+  it.effect("passes a key that signs and refuses a well-formed key that cannot, naming neither", () =>
+    Effect.gen(function* () {
+      const real = yield* generatedAppKeyBase64;
+      yield* requireSigningAppKey(credentialsWith(real));
+      const env = productionCredentialEnv;
+      const refused = yield* requireSigningAppKey(credentialsWith(env.CI_RUNNERS_GITHUB_APP_KEY_BASE64)).pipe(
+        Effect.flip
+      );
+      expect(refused._tag).toBe("ConfigError");
+      expect(refused.message).toContain("App key cannot sign a GitHub App JWT");
+      assertFalse(Str.includes(env.CI_RUNNERS_GITHUB_APP_KEY_BASE64)(refused.message));
+      const garbage = yield* requireSigningAppKey(credentialsWith("not base64 at all!")).pipe(Effect.flip);
+      expect(garbage.message).toContain("App key cannot sign a GitHub App JWT");
     })
   );
 });

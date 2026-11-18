@@ -7,9 +7,11 @@
  * @since 0.0.0
  */
 
+import { AppSigningKey, appKeyCanSign } from "@beep/alchemy-github-runners/GitHubApp.layer";
 import { placeholderWebhookSecret } from "@beep/alchemy-github-runners/Webhook.program";
 import { $InfraCiRunnersId } from "@beep/identity/packages";
 import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as HashSet from "effect/HashSet";
@@ -248,4 +250,49 @@ export const appCredentials = Config.all({
 export const stageCredentials = Effect.fn("CiRunners.stageCredentials")(function* (stage: string) {
   const rehearsal = stage === productionStage ? O.none() : yield* rehearsalRepository;
   return stage === productionStage || O.isSome(rehearsal) ? yield* appCredentials : placeholderCredentials;
+});
+
+/**
+ * Fail unless the App key can sign the RS256 JWT GitHub requires.
+ *
+ * **Details**
+ *
+ * The loader's checks prove the key is a base64 PEM private-key block of
+ * plausible length; only signing proves it is a usable RSA key. A key that
+ * passes the format but cannot sign would let the webhook accept jobs while
+ * scale-up never gets an installation token. `plan-check.ts` runs this with
+ * the runtime's own signer before planning, for every stage that holds real
+ * credentials. The failure is a `ConfigError` that says only "App key cannot
+ * sign a GitHub App JWT".
+ *
+ * **Example** (Reference the check)
+ *
+ * ```ts
+ * import { requireSigningAppKey } from "@beep/infra-ci-runners/Credentials"
+ *
+ * console.log(typeof requireSigningAppKey) // "function"
+ * ```
+ *
+ * @param credentials - The loaded App credentials.
+ * @returns An effect that fails with a `ConfigError` when the key cannot sign.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const requireSigningAppKey = Effect.fn("CiRunners.requireSigningAppKey")(function* (
+  credentials: AppCredentials
+) {
+  const pem = credentials.keyBase64.pipe(
+    Redacted.value,
+    Str.trim,
+    Base64.decodeString,
+    Result.getOrElse(() => "")
+  );
+  const signs = yield* appKeyCanSign(
+    AppSigningKey.make({ appId: Redacted.value(credentials.id), privateKeyPem: Redacted.make(pem) })
+  );
+  if (!signs) {
+    return yield* Effect.fail(
+      new Config.ConfigError(new ConfigProvider.SourceError({ message: "App key cannot sign a GitHub App JWT" }))
+    );
+  }
 });

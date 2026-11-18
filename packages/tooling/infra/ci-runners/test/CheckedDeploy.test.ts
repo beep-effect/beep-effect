@@ -53,12 +53,16 @@ const hexDigest = Digest.Digest.of({
 
 const salt = Str.repeat(32)("00");
 
-const readWith = (plan: Plan, options: { readonly salt?: string; readonly expectation?: PlanExpectation } = {}) =>
+const readWith = (
+  plan: Plan,
+  options: { readonly salt?: string; readonly expectation?: PlanExpectation; readonly sourceTree?: string } = {}
+) =>
   readEnginePlan({
     stage: "prod",
     plan,
     salt: options.salt ?? salt,
     expectation: options.expectation ?? "routine",
+    sourceTree: options.sourceTree ?? "tree-1",
   }).pipe(Effect.provideService(Digest.Digest, hexDigest));
 
 const planOf = (stack: Fakes.TypedStack) => stack.plan(production).pipe(Effect.flatMap((plan) => readWith(plan)));
@@ -79,12 +83,20 @@ const resource = (fqn: string, overrides: Partial<CheckedResource> = {}) =>
     propsDigest: "d1",
     bindingsDigest: "",
     secretsDigest: "",
+    baselineDigest: "",
     pendingReplacement: false,
     ...overrides,
   });
 
 const planWith = (...resources: ReadonlyArray<CheckedResource>) =>
-  CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: salt, resources, actions: [] });
+  CheckedPlan.make({
+    stage: "prod",
+    expectation: "routine",
+    secretSalt: salt,
+    sourceTree: "tree-1",
+    resources,
+    actions: [],
+  });
 
 const expecting = (expectation: PlanExpectation, ...resources: ReadonlyArray<CheckedResource>) =>
   CheckedPlan.make({ ...planWith(...resources), expectation });
@@ -297,6 +309,43 @@ describe("CiRunners checked-plan reading", () => {
     })
   );
 
+  it.effect("binds an update to its starting state: the same 7 -> 30 passes, 90 -> 30 drifts", () =>
+    Effect.gen(function* () {
+      const retention = (from: number) =>
+        single({
+          action: "update",
+          props: { retention: 30 },
+          state: { status: "created", props: { retention: from }, attr: { retention: from } },
+        });
+      const checked = yield* readWith(retention(7));
+      const same = yield* readWith(retention(7));
+      const moved = yield* readWith(retention(90));
+      expect(planDifferences(checked, same)).toStrictEqual({ added: [], removed: [], changed: [] });
+      expect(planDifferences(checked, moved).changed).toStrictEqual(["Vpc"]);
+      const written = yield* Ref.make(false);
+      const outcome = yield* outcomeOf(applyIfUnchanged(checked, moved, recordingWrite(written)));
+      expect(outcome).toBe("PlanDrift");
+      const wrote = yield* Ref.get(written);
+      assertFalse(wrote);
+      const created = yield* readWith(single({ action: "create", props: { retention: 30 } }));
+      expect(A.map(created.resources, (row) => row.baselineDigest)).toStrictEqual([""]);
+    })
+  );
+
+  it.effect("binds the plan to its source tree, so a rebuilt bundle from other sources drifts", () =>
+    Effect.gen(function* () {
+      const reaper = single({ action: "update", props: { main: "reaper.ts" } });
+      const checked = yield* readWith(reaper, { sourceTree: "tree-1" });
+      const rebuilt = yield* readWith(reaper, { sourceTree: "tree-2" });
+      expect(planDifferences(checked, rebuilt).changed).toStrictEqual(["sourceTree"]);
+      const written = yield* Ref.make(false);
+      const outcome = yield* outcomeOf(applyIfUnchanged(checked, rebuilt, recordingWrite(written)));
+      expect(outcome).toBe("PlanDrift");
+      const wrote = yield* Ref.get(written);
+      assertFalse(wrote);
+    })
+  );
+
   it.effect("fingerprints redacted values under a salt, so a changed secret drifts and no secret is stored", () =>
     Effect.gen(function* () {
       const withSecret = (secret: string) =>
@@ -354,9 +403,24 @@ describe("CiRunners checked-plan reading", () => {
 describe("CiRunners cutover expectations", () => {
   const group = (overrides: Partial<CheckedResource> = {}) => resource("DefaultSecurityGroup", overrides);
 
-  it.effect("takes any checked plan as routine", () =>
+  it.effect("takes any checked plan as routine except an adoption", () =>
     Effect.sync(() => {
       expect(tagsOf(planWith(resource("Vpc", { action: "update" })))).toStrictEqual([]);
+      expect(tagsOf(planWith(resource("Vpc", { action: "adopted" })))).toStrictEqual(["UnexpectedChange"]);
+      expect(tagsOf(planWith(group({ action: "adopted" })))).toStrictEqual(["UnexpectedChange"]);
+    })
+  );
+
+  it.effect("re-runs a partial step 1a: noops the failed run created pass, nothing else does", () =>
+    Effect.sync(() => {
+      const created = resource("Subnet", { action: "noop", bindings: ["Subnet/Grant noop"] });
+      expect(tagsOf(expecting("bootstrap", created, resource("Vpc")))).toStrictEqual([]);
+      expect(
+        tagsOf(expecting("bootstrap", resource("Vpc", { action: "noop", bindings: ["Vpc/G create"] })))
+      ).toStrictEqual(["UnexpectedChange"]);
+      expect(tagsOf(expecting("bootstrap", resource("Vpc", { action: "adopted" })))).toStrictEqual([
+        "UnexpectedChange",
+      ]);
     })
   );
 
@@ -375,6 +439,13 @@ describe("CiRunners cutover expectations", () => {
     Effect.sync(() => {
       const quiet = resource("Vpc", { action: "noop", bindings: ["Vpc/Grant noop"] });
       expect(tagsOf(expecting("default-security-group", group(), quiet))).toStrictEqual([]);
+      // Alchemy reads the AWS-made group before it has a state row, so step 1b plans it `adopted`.
+      expect(tagsOf(expecting("default-security-group", group({ action: "adopted" }), quiet))).toStrictEqual([]);
+      expect(
+        tagsOf(
+          expecting("default-security-group", group({ action: "adopted", bindings: ["DefaultSecurityGroup/X create"] }))
+        )
+      ).toStrictEqual(["UnexpectedChange"]);
       expect(tagsOf(expecting("default-security-group", quiet))).toStrictEqual(["UnexpectedChange"]);
       expect(tagsOf(expecting("default-security-group", group({ action: "update" }), quiet))).toStrictEqual([
         "UnexpectedChange",

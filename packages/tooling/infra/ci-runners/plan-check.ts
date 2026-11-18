@@ -36,7 +36,9 @@ import {
   newSecretSalt,
   PlanExpectation,
   readEnginePlan,
+  readSourceTree,
 } from "./src/CheckedDeploy.ts";
+import { placeholderCredentials, requireSigningAppKey, stageCredentials } from "./src/Credentials.ts";
 import { checkPlan, mustEscalate, PlanViolation, readPlanLog } from "./src/PlanCheck.ts";
 import type { CheckedPlan, CheckedResource, PlanDrift } from "./src/CheckedDeploy.ts";
 import type { PlannedResource, PlanRefused } from "./src/PlanCheck.ts";
@@ -92,7 +94,10 @@ const refuseDrift = Effect.fn("CiRunners.planDriftRefuse")(function* (drift: Pla
     [
       ...A.map(drift.added, (fqn) => `${fqn}: planned now, absent from the checked plan`),
       ...A.map(drift.removed, (fqn) => `${fqn}: in the checked plan, absent now`),
-      ...A.map(drift.changed, (fqn) => `${fqn}: action, bindings or declared properties differ`),
+      ...A.map(
+        drift.changed,
+        (fqn) => `${fqn}: action, bindings, declared properties, starting state or source tree differ`
+      ),
     ],
     (line) => Console.error(`DRIFT ${line}`),
     { concurrency: 1, discard: true }
@@ -125,6 +130,9 @@ const planStage = Effect.fn("CiRunners.planStage")(function* (input: {
   readonly expectation: PlanExpectation;
 }) {
   const { stage: stageName, excluded, salt, expectation } = input;
+  // A key that passes the loader's format checks but cannot sign would deploy a fleet that never launches.
+  const credentials = yield* stageCredentials(stageName);
+  if (credentials !== placeholderCredentials) yield* requireSigningAppKey(credentials);
   const stack = yield* Alchemist.importStack("alchemy.run.ts");
   const snapshot = yield* Alchemist.plan({
     stack,
@@ -133,7 +141,11 @@ const planStage = Effect.fn("CiRunners.planStage")(function* (input: {
     envFile: "/dev/null",
     ...(A.isReadonlyArrayNonEmpty(excluded) ? { exclude: excluded } : {}),
   });
-  const checked = yield* readEnginePlan({ stage: stageName, plan: snapshot.native, salt, expectation });
+  // The clean tree the bundles are built from: Alchemy keeps the bundle hash out of the plan.
+  const sourceTree = yield* readSourceTree.pipe(
+    Effect.tapError((unbound) => Console.error(`REFUSED ${unbound.reason}`))
+  );
+  const checked = yield* readEnginePlan({ stage: stageName, plan: snapshot.native, salt, expectation, sourceTree });
   yield* Effect.forEach(checked.resources, listChecked, { concurrency: 1, discard: true });
   yield* checkEnginePlan(checked).pipe(Effect.catchTag("PlanRefused", refuse));
   return { snapshot, checked };
