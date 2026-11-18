@@ -14085,6 +14085,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "Owner: @beep/law-practice-server. This public-boundary control deliberately advances TestClock across 800 ms of queued admission and 9500 ms of resolver subject work; the resolver sleep is virtual subject behavior. Separate advances prove engine-before-admission versus extractor-after-admission timing and exact refusal labels with zero native children. Exit: retire when the harness can prove this quantitative ordering without virtual-time advancement. Reviewed in goals/citation-engine-install-once/decisions/2026-11-13-advance-virtual-time-to-prove-the-two-admission-deadline-contracts.md."
+    },
+    {
+      "id": "EV015:packages/tooling/tool/cli/test/ci-task-outcomes.test.ts:237:TestClock.adjust@15#1",
+      "lens": "resource",
+      "ruleId": "EV015",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/ci-task-outcomes.test.ts",
+      "line": 237,
+      "endLine": 237,
+      "symbol": "TestClock.adjust",
+      "occurrence": "v2:593cc7e237415be656b27b8c2bf78989faab3ca73aae1a1c12a393e7da35eea8",
+      "class": "shared-test-clock-adjustment",
+      "evidence": "TestClock.adjust(\"5 seconds\")",
+      "replacement": {
+        "primitive": "TestClock.adjust",
+        "sketch": "it.layer.option.excludeTestServices: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) only when the block intentionally needs live default Clock and Console and supplies any required test services explicitly. TestClock.adjust: Use for shared-test-clock-adjustment judgments (EV015, candidate class shared-test-clock-adjustment) to review ownership of a shared deterministic clock and forked work before advancing it. Preserve deterministic timeout subjects; prove serial ownership or isolate test services before considering a reset."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The REST-runner case forks one runner call whose first artifact listing fails, then advances its own TestClock past the runner's one-second retry backoff; nothing else in the case shares the clock or forks work, so the adjustment owns the only waiting fiber. Owner: @beep/repo-cli. Exit: retire when the route runner takes its retry schedule from an injectable service the test can make immediate."
     }
   ]
 }
