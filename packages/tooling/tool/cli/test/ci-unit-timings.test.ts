@@ -13,7 +13,7 @@ import {
   unitTimingCensus,
   writeUnitTimings,
 } from "@beep/repo-cli/commands/Ci";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import { NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
 import { assertNone, assertSome, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
