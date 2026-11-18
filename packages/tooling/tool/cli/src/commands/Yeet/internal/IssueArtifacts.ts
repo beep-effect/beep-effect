@@ -20,6 +20,7 @@ import { YeetRunResult } from "../Yeet.schemas.ts";
 import { artifactDirForContext, safeArtifactName, writeTextFile } from "./ArtifactPaths.ts";
 import { executeHeadInstallPreflight, HEAD_INSTALL_PREFLIGHT_STEP_ID } from "./HeadInstallPreflight.ts";
 import { laneRunsForWrapper, readInnerLaneReports } from "./InnerLaneReports.ts";
+import { MONITOR_CONTEXT_STEP_ID } from "./Planner.ts";
 import { buildQualityIssueIndex, qualityIssuesFromStepResult } from "./QualityIssueIndex.ts";
 import type { Git } from "@beep/git/Git";
 import type * as Digest from "effect/crypto/Digest";
@@ -114,9 +115,6 @@ export const rawOutputPathForStep = Effect.fn("Yeet.rawOutputPathForStep")(funct
   const artifactDir = yield* artifactDirForContext(context);
   return path.join(artifactDir, "logs", `${safeArtifactName(step.id)}.log`);
 });
-
-// The planner's `monitor:01-pr-context` step, whose output the monitor decodes.
-const MONITOR_CONTEXT_STEP_ID = "monitor:01-pr-context";
 
 /**
  * Execute a planned repo step while streaming output into its Yeet log artifact.
