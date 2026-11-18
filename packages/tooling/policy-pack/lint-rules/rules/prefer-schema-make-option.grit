@@ -17,9 +17,7 @@ language js
 //     `// biome-ignore lint/plugin/prefer-schema-make-option: <why make has no makeOption here>`.
 
 // The leading identifier of a receiver such as `S.Natural` or `X.cases.Y`.
-pattern receiver_root($root) {
-  r"^([A-Za-z_$][A-Za-z0-9_$]*)(?:[^A-Za-z0-9_$][\s\S]*)?$"($root)
-}
+pattern receiver_root($root) { r"^([A-Za-z_$][A-Za-z0-9_$]*)(?:[^A-Za-z0-9_$][\s\S]*)?$"($root) }
 
 // A namespace import of a non-Schema Effect module binds `$root`.
 pattern non_schema_effect_namespace($root) {
