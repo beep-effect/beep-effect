@@ -1,5 +1,6 @@
 import {
   applyIfUnchanged,
+  CheckedAction,
   CheckedPlan,
   CheckedPlanJson,
   CheckedResource,
@@ -18,6 +19,7 @@ import * as Hex from "effect/encoding/Hex";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Fakes from "./support/Fakes.ts";
+import type { Plan } from "alchemy/Plan";
 
 const productionEnvironment = Effect.provideService(
   ConfigProvider.ConfigProvider,
@@ -125,6 +127,22 @@ describe("CiRunners checked deploy", () => {
       expect(tags).toStrictEqual(A.replicate("PlanDrift", drifts.length));
       const touched = yield* Ref.get(untouched);
       assertFalse(touched);
+    })
+  );
+
+  it.effect("reads stack actions from the engine plan and compares them by FQN", () =>
+    Effect.gen(function* () {
+      // A minimal engine plan holding one stack action and no resources.
+      const engine = {
+        resources: {},
+        deletions: {},
+        actions: { Seed: { action: "run", def: { FQN: "Seed", LogicalId: "Seed", Type: "Test.Seed" } } },
+        actionDeletions: {},
+      } as unknown as Plan;
+      const read = yield* readEnginePlan("prod", engine).pipe(Effect.provideService(Digest.Digest, hexDigest));
+      expect(read.actions).toStrictEqual([CheckedAction.make({ fqn: "Seed", action: "run" })]);
+      const dropped = CheckedPlan.make({ ...read, actions: [CheckedAction.make({ fqn: "Seed", action: "delete" })] });
+      expect(planDifferences(dropped)(read)).toStrictEqual({ added: [], removed: [], changed: ["action:Seed"] });
     })
   );
 
