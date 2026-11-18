@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 import { $BrandId } from "@beep/identity";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { renderThemeCss } from "./Brand.css.ts";
 import { MarkGround, MarkPaint, MarkSvgRequest, WordmarkSvgRequest } from "./Brand.schema.ts";
@@ -100,7 +99,7 @@ export const renderBrandAssets = (identity: BrandIdentity): ReadonlyArray<Render
         mark: identity.mark,
         size: 32,
         paint: favicon(identity),
-        ground: O.some(MarkGround.make({ fill: identity.dark.brand["900"], radius: 6 })),
+        ground: MarkGround.makeOption({ fill: identity.dark.brand["900"], radius: 6 }),
       })
     ),
   }),

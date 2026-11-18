@@ -1434,13 +1434,11 @@ const currentCaptureClaim = Effect.fn("Library.currentCaptureClaim")(function* (
     capture.complete &&
     (yield* librarySourceEvidenceValid(root, source, capture).pipe(Effect.orElseSucceed(() => false)))
   )
-    return O.some(
-      LibraryEffectiveCapture.make({
-        revision,
-        capture,
-        category: "readable",
-      })
-    );
+    return LibraryEffectiveCapture.makeOption({
+      revision,
+      capture,
+      category: "readable",
+    });
   if (!(yield* libraryDispositionValid(root, catalog, source, capture).pipe(Effect.orElseSucceed(() => false))))
     return O.none();
   const receipt = A.findFirst(capture.artifacts, (artifact) => artifact.role === "reviewed-disposition");
@@ -1450,13 +1448,11 @@ const currentCaptureClaim = Effect.fn("Library.currentCaptureClaim")(function* (
   const review = yield* fs
     .readFileString(path.resolve(root, receipt.value.path))
     .pipe(Effect.flatMap(decodeLibraryJson(LibraryDispositionImportPayload)));
-  return O.some(
-    LibraryEffectiveCapture.make({
-      revision,
-      capture,
-      category: review.disposition,
-    })
-  );
+  return LibraryEffectiveCapture.makeOption({
+    revision,
+    capture,
+    category: review.disposition,
+  });
 });
 
 /**

@@ -459,7 +459,7 @@ export const rewriteMessageCategories: (input: {
 const toEventDraft = (entry: DocketCalendarEntry, timeZone: string): M365EventDraft =>
   M365EventDraft.make({
     ...m365AllDayWindow(entry.date, timeZone),
-    body: O.some(M365EventBody.make({ content: entry.bodyText, contentType: "text" })),
+    body: M365EventBody.makeOption({ content: entry.bodyText, contentType: "text" }),
     categories: [entry.category],
     isAllDay: true,
     isReminderOn: O.some(true),

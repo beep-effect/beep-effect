@@ -969,17 +969,15 @@ const originalQualifiedScopes = (
 ): O.Option<ClaimOriginalQualifiedScopes> => {
   const transition = rawClaimTransitionScope(claim, charge);
   if (O.isNone(transition) || !charge(claim.preamble.length + claim.body.length + 48)) return O.none();
-  return O.some(
-    ClaimOriginalQualifiedScopes.make({
-      preamble: TextAnchor.make({ startChar: 0, endChar: claim.preamble.length, quote: claim.preamble }),
-      transition: transition.value,
-      body: TextAnchor.make({
-        startChar: claim.claimText.length - claim.body.length,
-        endChar: claim.claimText.length,
-        quote: claim.body,
-      }),
-    })
-  );
+  return ClaimOriginalQualifiedScopes.makeOption({
+    preamble: TextAnchor.make({ startChar: 0, endChar: claim.preamble.length, quote: claim.preamble }),
+    transition: transition.value,
+    body: TextAnchor.make({
+      startChar: claim.claimText.length - claim.body.length,
+      endChar: claim.claimText.length,
+      quote: claim.body,
+    }),
+  });
 };
 const intrinsicSourceIdentityEqual = S.toEquivalence(ClaimLexicalSourceIdentity);
 const intrinsicWitnessEqual = S.toEquivalence(ClaimIntrinsicNounWitness);
@@ -2902,7 +2900,7 @@ class RoleCompiler {
     if (!this.charge(cost + 4)) return O.none();
     const ordinal = ClaimSourceProofOrdinal.make(this.certificates.length + 1);
     this.certificates.push(build(ordinal));
-    return O.some(ClaimSourceProofRef.make({ ordinal, slot }));
+    return ClaimSourceProofRef.makeOption({ ordinal, slot });
   };
   private rawToken = (index: number): O.Option<ClaimSourceProofRef> => A.get(this.tokenCertificates, index);
   private sourceScope = (span: TextAnchor): O.Option<ClaimSourceProofRef> => {
@@ -3400,14 +3398,12 @@ class RoleCompiler {
     );
     if (O.isNone(fact)) return O.none();
     this.intrinsicFactsProduced = true;
-    return O.some(
-      ClaimHeadTerminalEvidence.cases["intrinsic-noun-terminal"].make({
-        intrinsicNoun: fact.value,
-        rawAuxiliary: auxiliary.value,
-        nonfiniteModifiers,
-        orderedModifiers,
-      })
-    );
+    return ClaimHeadTerminalEvidence.cases["intrinsic-noun-terminal"].makeOption({
+      intrinsicNoun: fact.value,
+      rawAuxiliary: auxiliary.value,
+      nonfiniteModifiers,
+      orderedModifiers,
+    });
   };
   private certifyHeadClosure = (
     nominal: ClaimNominalSpan,
@@ -5402,26 +5398,24 @@ class RoleCompiler {
     ];
     if (!A.every(passes, (pass) => pass())) return O.none();
     if (this.intrinsicFactsProduced && !this.charge(this.tokens.length * 16 + 24)) return O.none();
-    return O.some(
-      ClaimClauseRolePlan.make({
-        qualifiedText: this.claim.claimText,
-        qualifiedClaim: O.some(this.claim),
-        originalLexicalInput:
-          this.intrinsicFactsProduced || this.distributiveFactsProduced || O.isSome(this.rightList)
-            ? this.originalInput
-            : O.none(),
-        stage: "candidates",
-        remainingWork: this.remaining,
-        nominals: this.nominals,
-        predicates: this.predicates,
-        clauses: this.clauses,
-        proofs: this.proofs,
-        certificates: this.certificates,
-        candidateStates: this.candidateStates,
-        privateCandidates: this.privateCandidates,
-        opaqueSelections: this.opaqueSelections,
-      })
-    );
+    return ClaimClauseRolePlan.makeOption({
+      qualifiedText: this.claim.claimText,
+      qualifiedClaim: O.some(this.claim),
+      originalLexicalInput:
+        this.intrinsicFactsProduced || this.distributiveFactsProduced || O.isSome(this.rightList)
+          ? this.originalInput
+          : O.none(),
+      stage: "candidates",
+      remainingWork: this.remaining,
+      nominals: this.nominals,
+      predicates: this.predicates,
+      clauses: this.clauses,
+      proofs: this.proofs,
+      certificates: this.certificates,
+      candidateStates: this.candidateStates,
+      privateCandidates: this.privateCandidates,
+      opaqueSelections: this.opaqueSelections,
+    });
   };
 }
 const compileRoles = (claim: PatentClaim, evidence: ClaimLexicalEvidence): O.Option<ClaimClauseRolePlan> => {

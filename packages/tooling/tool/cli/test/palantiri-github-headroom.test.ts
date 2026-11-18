@@ -220,7 +220,7 @@ describe("makeGithubHeadroomSource", () => {
             ),
             latestUsable: Effect.fnUntraced(function* (key: BucketKey) {
               return bucketKeyString(key) === bucketKeyString(widened)
-                ? O.some(BucketReading.make({ ...reading("core", 4000), key: widened }, unchecked))
+                ? BucketReading.makeOption({ ...reading("core", 4000), key: widened }, unchecked)
                 : yield* ledger.latestUsable(key);
             }),
           });

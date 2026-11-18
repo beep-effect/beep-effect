@@ -157,18 +157,16 @@ const fleetProbe = (
 ): ResidueDrainProbeShape => ({
   facts: () =>
     Effect.map(Ref.get(registry), (rows) =>
-      O.some(
-        ResidueDrainFleetFacts.make({
-          roots: ConfiguredFleetRoots.make({
-            source: "derived",
-            roots: [FleetRootEntry.make({ path: fleet.projects })],
-          }),
-          registry: rows,
-          ...EMPTY_LISTS,
-          ...options.lists,
-          stateDirectory: fleet.state,
-        })
-      )
+      ResidueDrainFleetFacts.makeOption({
+        roots: ConfiguredFleetRoots.make({
+          source: "derived",
+          roots: [FleetRootEntry.make({ path: fleet.projects })],
+        }),
+        registry: rows,
+        ...EMPTY_LISTS,
+        ...options.lists,
+        stateDirectory: fleet.state,
+      })
     ),
   livenessReadings: (checkout) =>
     options.readings === undefined ? Effect.succeed(DORMANT) : options.readings(checkout),

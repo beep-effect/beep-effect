@@ -58,7 +58,7 @@ describe("AgentMemoryStore errors", () => {
 
   it("refuses an unimported folder with its root and digest, or with neither when no folder was named", () => {
     const error = UnimportedFolderError.make({
-      root: O.some(PosixPath.make("memory")),
+      root: PosixPath.makeOption("memory"),
       folderDigest: O.some(folderDigest),
     });
 

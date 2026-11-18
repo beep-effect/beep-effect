@@ -171,7 +171,7 @@ const projectionNote = (figure: RenderManifest["figures"][number]): string =>
  *   pdfFile: "sheets.pdf",
  *   pdfSha256: "00",
  *   validation: O.none(),
- *   sheet: O.some(SheetOptions.make({ margins: "cfr-strict" }))
+ *   sheet: SheetOptions.makeOption({ margins: "cfr-strict" })
  * })
  * console.log(renderManifestSummary({ manifest, requested: SheetOptions.make({}) }).join("\n"))
  * ```

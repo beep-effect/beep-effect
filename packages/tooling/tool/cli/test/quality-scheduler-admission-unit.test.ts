@@ -635,7 +635,7 @@ it.layer(SchedulerTestLayer, { concurrent: false, timeout: "20 seconds" })("Cach
       const lease = yield* decodeLease(admitted.leaseText);
       deepStrictEqual(
         [lease.kind, lease.weightTokens, lease.unit, lease.weightSource],
-        ["cache", 1, O.some(AdmissionUnit.cases.tier.make({})), O.some(staticSeed)]
+        ["cache", 1, AdmissionUnit.cases.tier.makeOption({}), O.some(staticSeed)]
       );
       const rows = yield* decodeRows(admitted.journal);
       deepStrictEqual(kindsOf(rows), [

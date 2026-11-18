@@ -287,7 +287,7 @@ export const goalCompletionUnknownReasons = (
  *   requiredChecks: O.none(),
  *   requiredCheckFacts: [],
  *   redAttributions: [],
- *   reviewThreads: O.some(GoalReviewThreadTally.make({ total: 3, outstanding: 2 })),
+ *   reviewThreads: GoalReviewThreadTally.makeOption({ total: 3, outstanding: 2 }),
  * })
  * console.log(reasons) // ["2 review thread(s) outstanding"]
  * ```
@@ -770,6 +770,7 @@ export const observeGoalCompletion = Effect.fn("Goals.Completion.observe")(funct
             const conclusionFinal = conclusion(final.value, false);
             if (conclusionFinal === "success" || conclusionFinal === "neutral" || conclusionFinal === "skipped")
               return O.none<GoalNonRequiredRed>();
+            // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
             return O.some(
               GoalNonRequiredRed.make({
                 lane: name,

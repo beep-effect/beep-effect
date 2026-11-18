@@ -526,6 +526,7 @@ export const readTranscriptPage = Effect.fn("AiMetrics.readTranscriptPage")(func
         const occurrenceStart = progress.discarding ? progress.discardStart : start + local;
         const occurrenceId = yield* hash(`source-occurrence/v1:${generationId}:${occurrenceStart}`);
         if (progress.discarding || boundary.length > input.maxLineBytes)
+          // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
           return O.some(
             TranscriptFrame.cases.Rejected.make({
               occurrenceId,

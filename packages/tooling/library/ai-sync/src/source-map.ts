@@ -18,7 +18,7 @@ import {
 const makeSourceId = (value: string) => AiSyncSourceId.make(value);
 const makeSourceUrl = (value: string) => AiSyncSourceUrl.make(value);
 const someSourceId = (value: string) => O.some(makeSourceId(value));
-const someVersionPin = (value: string) => O.some(AiSyncVersionPin.make(value));
+const someVersionPin = (value: string) => AiSyncVersionPin.makeOption(value);
 
 /**
  * Tier-1 sources fetched by the generator and strict drift checker.

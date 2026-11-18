@@ -69,14 +69,12 @@ describe("visibleThreadTurnsAtoms", () => {
     const registry = track(registryWithTimeline());
     registry.set(
       streamingTurnAtom,
-      O.some(
-        StreamingTurn.make({
-          threadId,
-          userContent: message("rewrite"),
-          truncateFrom: O.some(editedTurnId),
-          blocks: [],
-        })
-      )
+      StreamingTurn.makeOption({
+        threadId,
+        userContent: message("rewrite"),
+        truncateFrom: O.some(editedTurnId),
+        blocks: [],
+      })
     );
     const view = registry.get(visibleThreadTurnsAtoms(threadId));
     expect(A.map(view.turns, (item) => item.turnId)).toEqual([firstTurnId]);
@@ -105,14 +103,12 @@ describe("visibleThreadTurnsAtoms", () => {
     const registry = track(registryWithTimeline());
     registry.set(
       streamingTurnAtom,
-      O.some(
-        StreamingTurn.make({
-          threadId: WorkspaceIdentity.ThreadId.make(99),
-          userContent: message("elsewhere"),
-          truncateFrom: O.some(editedTurnId),
-          blocks: [],
-        })
-      )
+      StreamingTurn.makeOption({
+        threadId: WorkspaceIdentity.ThreadId.make(99),
+        userContent: message("elsewhere"),
+        truncateFrom: O.some(editedTurnId),
+        blocks: [],
+      })
     );
     const view = registry.get(visibleThreadTurnsAtoms(threadId));
     expect(A.map(view.turns, (item) => item.turnId)).toEqual([firstTurnId, editedTurnId, tailTurnId]);

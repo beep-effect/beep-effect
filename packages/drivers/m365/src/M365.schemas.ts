@@ -900,7 +900,7 @@ export class GraphMessage extends S.Opaque<GraphMessage, { readonly brand: uniqu
  * import * as O from "effect/Option"
  *
  * const attendee = GraphEventAttendee.make({
- *   emailAddress: O.some(GraphEmailAddress.make({ address: O.some("guest@example.test") })),
+ *   emailAddress: GraphEmailAddress.makeOption({ address: O.some("guest@example.test") }),
  *   type: O.some("required")
  * })
  * console.log(O.isSome(attendee.type)) // true

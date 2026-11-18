@@ -165,7 +165,7 @@ const AgentsLayer = Layer.mergeAll(
             matterReferences: ["FIX-0001"],
             rationale: "States a due date.",
             responsePeriod: O.some(THREE_MONTHS),
-            statedDueDate: O.some(LocalDate.make({ year: 2030, month: 4, day: 8 })),
+            statedDueDate: LocalDate.makeOption({ year: 2030, month: 4, day: 8 }),
             title: "Due Date: fixture response",
           })
         );

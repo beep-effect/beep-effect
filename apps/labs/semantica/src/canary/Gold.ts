@@ -210,7 +210,7 @@ const selectJobs = Effect.fn("Gold.selectJobs")(function* (subsets: GoldSubset, 
     );
     const selected = A.getSomes(
       A.map(GOLD_SUBSETS, (subset) =>
-        A.contains(subsets[subset], paperId) ? O.some(GoldJob.make({ paperId, subset })) : O.none()
+        A.contains(subsets[subset], paperId) ? GoldJob.makeOption({ paperId, subset }) : O.none()
       )
     );
     if (A.length(selected) === 0) {

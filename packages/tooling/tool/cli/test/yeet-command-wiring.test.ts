@@ -1655,16 +1655,14 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
           : undefined
       );
       const layer = (stackNumber: O.Option<number>): O.Option<YeetStackLayerDecision> =>
-        O.some(
-          YeetStackPublishDecision.cases.Layer.make({
-            parentNumber: 1426,
-            parentHeadRef: "feat/parent",
-            parentHeadSha: Str.repeat(40)("a"),
-            trunk: "main",
-            stackNumber,
-            parentMoved: false,
-          })
-        );
+        YeetStackPublishDecision.cases.Layer.makeOption({
+          parentNumber: 1426,
+          parentHeadRef: "feat/parent",
+          parentHeadSha: Str.repeat(40)("a"),
+          trunk: "main",
+          stackNumber,
+          parentMoved: false,
+        });
       const unlinked = layer(O.none());
       const linked = layer(O.some(1430));
       const publishAs = (stackLayer: O.Option<YeetStackLayerDecision>) =>

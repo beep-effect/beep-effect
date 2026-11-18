@@ -713,7 +713,7 @@ const makeEngine: {
           advanced,
           torn:
             advanced < window.size
-              ? O.some(JournalUnterminated.make({ path: config.path, offset: advanced, end: window.size }))
+              ? JournalUnterminated.makeOption({ path: config.path, offset: advanced, end: window.size })
               : O.none<JournalUnterminated>(),
         };
       })

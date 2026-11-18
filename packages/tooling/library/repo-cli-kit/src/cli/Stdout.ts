@@ -164,6 +164,7 @@ const makeLineWriter = (name: ProcessStreamName, stream: () => NodeJS.WriteStrea
     );
   };
   const recordFailure = (message: string): void => {
+    // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
     MutableRef.set(failure, O.some(StreamWriteFailure.make({ stream: name, message, droppedLines: 1 })));
     marker(`[beep-cli] ${name} write failed: ${message}; later ${name} lines are dropped`);
   };

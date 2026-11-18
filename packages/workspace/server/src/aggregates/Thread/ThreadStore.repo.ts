@@ -178,11 +178,9 @@ const projectTimeline = (
                       )
                     ),
                   tool_call: (item: ToolCallItem) =>
-                    O.some(
-                      ThreadStoreServer.Thread.TimelineToolCallItem.make({
-                        name: item.name,
-                      })
-                    ),
+                    ThreadStoreServer.Thread.TimelineToolCallItem.makeOption({
+                      name: item.name,
+                    }),
                   tool_result: O.none<ThreadStoreServer.Thread.TimelineItem>,
                   artifact_ref: O.none<ThreadStoreServer.Thread.TimelineItem>,
                   activity: O.none<ThreadStoreServer.Thread.TimelineItem>,

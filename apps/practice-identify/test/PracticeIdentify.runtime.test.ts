@@ -123,7 +123,7 @@ it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.l
         const { fs, file } = yield* fixture();
         yield* fs.writeFileString(file("contacts.jsonl"), "");
         const assertion = I.IndexEvidence.make({
-          clientNumber: O.some(I.ClientNumber.make("90001")),
+          clientNumber: I.ClientNumber.makeOption("90001"),
           names: ["Acme Widgets LLC"],
           folders: [],
           references: ["90001.10001US01"],
@@ -164,7 +164,7 @@ it.layer(makeIdentificationStages(lookup).pipe(Layer.provideMerge(NodeServices.l
         const truth = I.TrainingDocument.make({
           document: doc,
           clientNumber: I.ClientNumber.make("90001"),
-          docket: O.some(I.DocketId.make("10001US01")),
+          docket: I.DocketId.makeOption("10001US01"),
         });
         const argument2 = file("documents.jsonl");
         const encoded2 = yield* encode(I.IdentificationDocument, doc);

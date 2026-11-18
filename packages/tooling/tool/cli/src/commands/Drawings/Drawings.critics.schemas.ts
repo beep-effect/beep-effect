@@ -727,7 +727,7 @@ export class CriticSeatLimit extends S.Opaque<CriticSeatLimit, { readonly brand:
  * const seat = CriticSeatUnavailable.make({
  *   reason: "time-limit",
  *   path: O.none(),
- *   limit: O.some(CriticSeatLimit.make({ amount: 90, unit: "minutes" })),
+ *   limit: CriticSeatLimit.makeOption({ amount: 90, unit: "minutes" }),
  *   detail: "the seat ran past its 90-minute limit and was stopped",
  * })
  * console.log(seat.reason) // "time-limit"

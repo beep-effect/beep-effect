@@ -506,7 +506,7 @@ export class StreamingTurn extends S.Opaque<StreamingTurn, { readonly brand: uni
  *
  * registry.set(
  *   streamingTurnAtom,
- *   O.some(StreamingTurn.make({ threadId, userContent, blocks: [block] }))
+ *   StreamingTurn.makeOption({ threadId, userContent, blocks: [block] })
  * )
  *
  * console.log(O.isSome(registry.get(streamingTurnAtom))) // true
@@ -628,7 +628,7 @@ export class EditTarget extends S.Opaque<EditTarget, { readonly brand: unique sy
  * const content = Document.make({ children: [P.make({ children: [Text.make({ value: "Edit me" })] })] })
  * const registry = AtomRegistry.make()
  *
- * registry.set(editTargetAtom, O.some(EditTarget.make({ threadId, turnId, content })))
+ * registry.set(editTargetAtom, EditTarget.makeOption({ threadId, turnId, content }))
  *
  * console.log(O.isSome(registry.get(editTargetAtom))) // true
  * ```

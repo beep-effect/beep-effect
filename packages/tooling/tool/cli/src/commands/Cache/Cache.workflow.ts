@@ -634,13 +634,11 @@ export const loadCacheProducerExecutionRuntime = Effect.fn("CacheWorkflow.loadEx
     target: profile.target,
     bearers: yield* loadCacheConformanceBearers(profile.target),
     signing: capabilities.signing,
-    adapter: O.some(
-      CacheProducerAdapterLaunch.make({
-        executable: profile.adapterExecutable,
-        accessKey: capabilities.accessKey,
-        secretKey: capabilities.secretKey,
-      })
-    ),
+    adapter: CacheProducerAdapterLaunch.makeOption({
+      executable: profile.adapterExecutable,
+      accessKey: capabilities.accessKey,
+      secretKey: capabilities.secretKey,
+    }),
   });
   const owned = yield* validateProvidedCacheProducerUploadRuntime(binding, runtime);
   return Tuple.make(binding, owned);

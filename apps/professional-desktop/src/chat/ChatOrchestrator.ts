@@ -523,7 +523,7 @@ const streamAndPersist = (
             }),
             finalization: Effect.fnUntraced(function* (event) {
               const completedAt = yield* Clock.currentTimeMillis;
-              yield* Ref.set(finalizedUsage, O.some(ProviderUsageMetadata.make(event.usage)));
+              yield* Ref.set(finalizedUsage, ProviderUsageMetadata.makeOption(event.usage));
               yield* Ref.set(finalizedAt, O.some(completedAt));
               return O.none<AssistantBlock>();
             }),

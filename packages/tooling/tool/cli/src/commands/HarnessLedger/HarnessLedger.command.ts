@@ -112,9 +112,11 @@ const buildHypothesis = Effect.fn("HarnessLedger.buildHypothesis")(function* (
       "--hypothesis, --expected-surface, and --expected-metric are given together or not at all."
     );
   }
-  return O.some(
-    BehavioralClaim.make({ claim: text.value, expectedSurface: surface.value, expectedMetric: metric.value })
-  );
+  return BehavioralClaim.makeOption({
+    claim: text.value,
+    expectedSurface: surface.value,
+    expectedMetric: metric.value,
+  });
 });
 
 /**
@@ -203,7 +205,7 @@ const buildDelta = Effect.fn("HarnessLedger.buildDelta")(function* (score: O.Opt
   if (O.isNone(score) || O.isNone(cost)) {
     return yield* HarnessLedgerInputError.new("--score and --cost are given together or not at all.");
   }
-  return O.some(HarnessLedgerDelta.make({ score: score.value, cost: cost.value }));
+  return HarnessLedgerDelta.makeOption({ score: score.value, cost: cost.value });
 });
 
 /**

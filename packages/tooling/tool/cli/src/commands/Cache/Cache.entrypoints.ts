@@ -101,14 +101,12 @@ export const attachCacheEntrypointReview = Effect.fn("CacheEntrypoints.attachRev
   );
   return CacheCensusReport.make({
     ...census,
-    entrypointReview: O.some(
-      CacheCensusEntrypointReview.make({
-        sources: request.sources,
-        artifacts,
-        reviews: request.reviews,
-        unresolved: request.unresolved,
-      })
-    ),
+    entrypointReview: CacheCensusEntrypointReview.makeOption({
+      sources: request.sources,
+      artifacts,
+      reviews: request.reviews,
+      unresolved: request.unresolved,
+    }),
     unresolved: pipe(
       A.appendAll(census.unresolved, request.unresolved),
       A.append("Entrypoint attachments establish source identity only; candidate runtime evidence remains required."),

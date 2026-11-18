@@ -198,11 +198,11 @@ describe("@beep/ecfr", () => {
       apiUrl: ECFR_API_URL,
     });
     expect(encode(EcfrErrorOptions, EcfrErrorOptions.make({}))).toEqual({});
-    expect(encode(EcfrErrorOptions, EcfrErrorOptions.make({ status: O.some(S.Natural.make(503)) }))).toEqual({
+    expect(encode(EcfrErrorOptions, EcfrErrorOptions.make({ status: S.Natural.makeOption(503) }))).toEqual({
       status: 503,
     });
     expect(
-      encode(EcfrError, EcfrError.of("response status", EcfrErrorOptions.make({ status: O.some(S.Natural.make(503)) })))
+      encode(EcfrError, EcfrError.of("response status", EcfrErrorOptions.make({ status: S.Natural.makeOption(503) })))
     ).toEqual({
       _tag: "EcfrError",
       reason: "response status",
@@ -301,9 +301,9 @@ describe("@beep/ecfr", () => {
         const search = EcfrSearchParams.make({
           agencySlugs: O.some(["example-agency", "second-agency"]),
           order: O.some("relevance"),
-          page: O.some(S.Natural.make(3)),
+          page: S.Natural.makeOption(3),
           paginateBy: O.some("results"),
-          perPage: O.some(S.Natural.make(25)),
+          perPage: S.Natural.makeOption(25),
           query: O.some("clean water"),
         });
         yield* ecfr.searchResults(search);
@@ -358,7 +358,7 @@ describe("@beep/ecfr", () => {
         yield* ecfr.listVersions(
           EcfrVersionsParams.make({
             issueDateGte: O.some("2026-01-01"),
-            page: O.some(S.Natural.make(2)),
+            page: S.Natural.makeOption(2),
             part: O.some("1"),
             title: "1",
           })
@@ -392,7 +392,7 @@ describe("@beep/ecfr", () => {
           .searchResultsAll(
             EcfrSearchParams.make({
               query: O.some("water"),
-              perPage: O.some(S.Natural.make(1)),
+              perPage: S.Natural.makeOption(1),
             })
           )
           .pipe(Stream.runCollect);

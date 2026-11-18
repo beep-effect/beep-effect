@@ -981,17 +981,15 @@ export const observeGoalMergeTimeEvidence = Effect.fn("Goals.CompletionEvidence.
     return GoalMergeTimeEvidence.make({ requiredChecks: O.none(), facts: [] });
   const contexts = A.dedupe(A.flatMap(versions, (version) => version.contexts));
   return GoalMergeTimeEvidence.make({
-    requiredChecks: O.some(
-      GoalRequiredCheckSnapshot.make({
-        contexts,
-        sources: A.map(versions, (version) => version.source),
-        effectiveAt: mergedAt,
-        inventoryComplete: O.isSome(inventory) && A.isReadonlyArrayEmpty(gaps),
-        rulesetReadsComplete: readsComplete,
-        mergeTimeInventory: inventory,
-        gaps,
-      })
-    ),
+    requiredChecks: GoalRequiredCheckSnapshot.makeOption({
+      contexts,
+      sources: A.map(versions, (version) => version.source),
+      effectiveAt: mergedAt,
+      inventoryComplete: O.isSome(inventory) && A.isReadonlyArrayEmpty(gaps),
+      rulesetReadsComplete: readsComplete,
+      mergeTimeInventory: inventory,
+      gaps,
+    }),
     facts: goalRequiredCheckFacts({ contexts, checkRuns: request.checkRuns, head: acceptedHead }),
   });
 });

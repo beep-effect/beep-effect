@@ -28,7 +28,6 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as AtomRegistry from "effect/reactivity/AtomRegistry";
 import * as S from "effect/Schema";
 import {
@@ -118,7 +117,7 @@ describe("DockPolicy", () => {
             "policy-reorder",
             MovePanelCommand.make({
               panelId: panelTwo.id,
-              target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(0)) }),
+              target: TabPlacement.make({ groupId: groupOne, index: S.Natural.makeOption(0) }),
             })
           )
         );

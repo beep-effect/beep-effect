@@ -55,13 +55,11 @@ const truncateHead = (fixture: Fixture) => (certificates: ReadonlyArray<ClaimFin
   const fakeClosure = ClaimFiniteSourceProof.cases.closure.make({
     ...closure,
     coreEnd: cover.token.anchor.endChar,
-    gap: O.some(
-      TextAnchor.make({
-        startChar: cover.token.anchor.endChar,
-        endChar: plate.token.anchor.startChar,
-        quote: Str.slice(cover.token.anchor.endChar, plate.token.anchor.startChar)(text),
-      })
-    ),
+    gap: TextAnchor.makeOption({
+      startChar: cover.token.anchor.endChar,
+      endChar: plate.token.anchor.startChar,
+      quote: Str.slice(cover.token.anchor.endChar, plate.token.anchor.startChar)(text),
+    }),
   });
   const fakeHead = ClaimFiniteSourceProof.cases.head.make({
     ...head,
@@ -114,7 +112,7 @@ it.effect("joins a punctuationless qualified end to the whole scope and stops on
     });
     const closing = ClaimFiniteSourceProof.cases.closure.make({
       ...closure,
-      boundary: O.some(ClaimSourceProofRef.make({ ordinal: boundary.ordinal, slot: "boundary" })),
+      boundary: ClaimSourceProofRef.makeOption({ ordinal: boundary.ordinal, slot: "boundary" }),
     });
     const coherent = [...A.map(proofs, (p) => (p.ordinal === closing.ordinal ? closing : p)), boundary];
     assert.strictEqual(head.core.endChar, claim.claimText.length);

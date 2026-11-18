@@ -707,14 +707,12 @@ export const BoxDriveToolkitHandlers = BoxDriveToolkit.toLayer(
         Effect.flatMap(fs.stat),
         Effect.map((info) =>
           info.type === "Directory" || info.type === "File"
-            ? O.some(
-                BoxEntry.make({
-                  name,
-                  path: A.join(A.append(parent, name), "/"),
-                  kind: info.type === "Directory" ? "folder" : "file",
-                  sizeBytes: info.type === "File" ? O.some(ByteSize.toNumberUnsafe(info.size)) : O.none(),
-                })
-              )
+            ? BoxEntry.makeOption({
+                name,
+                path: A.join(A.append(parent, name), "/"),
+                kind: info.type === "Directory" ? "folder" : "file",
+                sizeBytes: info.type === "File" ? O.some(ByteSize.toNumberUnsafe(info.size)) : O.none(),
+              })
             : O.none()
         ),
         // An entry that escapes, vanished or cannot be read is left out of the listing.

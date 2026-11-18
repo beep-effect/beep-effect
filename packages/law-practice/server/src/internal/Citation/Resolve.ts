@@ -167,7 +167,7 @@ const resolveMentions = Effect.fn("Citation.resolveMentions")(function* (
         authorities,
         CitationAuthority.make({
           id,
-          representative: O.some(CitationGroupMember.cases.Mention.make({ mentionId: mention.id })),
+          representative: CitationGroupMember.cases.Mention.makeOption({ mentionId: mention.id }),
         })
       );
     }

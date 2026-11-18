@@ -167,7 +167,7 @@ describe("Admission models", () => {
       expect(decoded).toEqual(conflict);
 
       const placed = ConflictResolution.cases.theirs.make({
-        placement: O.some(InsertPlacement.make({ afterNodeId: O.none() })),
+        placement: InsertPlacement.makeOption({ afterNodeId: O.none() }),
       });
       const encodedResolution = yield* S.encodeEffect(ConflictResolution)(placed);
       expect(encodedResolution).toEqual({ choice: "theirs", placement: {} });

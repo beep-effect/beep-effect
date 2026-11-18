@@ -121,7 +121,8 @@ const readerStreamRefusal = (
 ): O.Option<SqlError> => {
   if (!reader) return O.none();
   return changesSession(sql) || (control !== "statement" && control !== "catalogContext")
-    ? O.some(
+    ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+      O.some(
         SqlError.make({
           reason: AuthorizationError.make({
             cause: sql,

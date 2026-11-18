@@ -161,7 +161,7 @@ export class BackfillPolicy extends S.Opaque<BackfillPolicy, { readonly brand: u
  *   priority: "verify",
  *   weightTokens: PosInt.make(3),
  *   enqueuedAtMillis: S.Natural.make(0),
- *   etaMillis: O.some(PosInt.make(60_000)),
+ *   etaMillis: PosInt.makeOption(60_000),
  *   deadlineMillis: O.none()
  * })
  * console.log(unit.nonce) // "unit-1"
@@ -205,7 +205,7 @@ export class QueuedUnit extends S.Opaque<QueuedUnit, { readonly brand: unique sy
  *   checkoutKey: "checkout-a",
  *   weightTokens: PosInt.make(3),
  *   admittedAtMillis: S.Natural.make(1_000),
- *   etaMillis: O.some(PosInt.make(60_000))
+ *   etaMillis: PosInt.makeOption(60_000)
  * })
  * console.log(lease.weightTokens) // 3
  * ```
@@ -465,7 +465,7 @@ export class FairnessReading extends S.Opaque<FairnessReading, { readonly brand:
  *   priority: "publish",
  *   requestedWeightTokens: PosInt.make(1),
  *   enqueuedAtMillis: S.Natural.make(0),
- *   etaMillis: O.some(PosInt.make(30_000)),
+ *   etaMillis: PosInt.makeOption(30_000),
  *   holdMillis: PosInt.make(20_000)
  * })
  * console.log(arrival.holdMillis) // 20000

@@ -336,7 +336,7 @@ export const makePayloadReclaimer = Effect.fn("AiMetrics.makePayloadReclaimer")(
             if (assessment === EventAssessment.Enum.waiting) return O.none<ReclamationPopulation>();
             if (assessment === EventAssessment.Enum.unenrolled) unenrolledReferences += 1;
           }
-          return O.some(ReclamationPopulation.make({ states, unenrolledReferences, eventCount: eventIds.length }));
+          return ReclamationPopulation.makeOption({ states, unenrolledReferences, eventCount: eventIds.length });
         });
         const readNativeOwnership = Effect.fnUntraced(function* (
           receiptId: Sha256Hex,

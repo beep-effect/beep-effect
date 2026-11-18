@@ -812,7 +812,7 @@ describe("yeet merge-gate --relaxed own versus inherited reds (S11, 2026-11-02)"
           MergeGateInput.make({
             read: read({
               checkRuns: repoSanityRed,
-              baseRuns: O.some(MergeGateBaseEvidence.make({ mergeBase: greenBaseRuns, baseTip: tipPending.baseTip })),
+              baseRuns: MergeGateBaseEvidence.makeOption({ mergeBase: greenBaseRuns, baseTip: tipPending.baseTip }),
             }),
             options: relaxed(),
           })

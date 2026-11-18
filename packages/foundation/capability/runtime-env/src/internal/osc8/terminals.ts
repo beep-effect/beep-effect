@@ -253,7 +253,7 @@ type Identify = (env: Env) => O.Option<IdentifyResult>;
 const isSet = (value: string | undefined): value is string => value !== undefined && value !== "";
 
 const identified = (version: O.Option<string>, rawIdentifier: string): O.Option<IdentifyResult> =>
-  O.some(IdentifyResult.make({ version, rawIdentifier }));
+  IdentifyResult.makeOption({ version, rawIdentifier });
 
 /** A terminal that names itself in `TERM_PROGRAM` and its version in `TERM_PROGRAM_VERSION`. */
 const byTermProgram =

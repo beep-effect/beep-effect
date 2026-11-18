@@ -140,13 +140,11 @@ const candidateFor = (
 ): O.Option<LegalOppositionCandidateInput> => {
   const overlap = scopeOverlap(LegalScopeContext.make(left.scope), LegalScopeContext.make(right.scope));
   return overlapsOnEveryAxis(overlap) && isPrimaFacieOpposed(left, right)
-    ? O.some(
-        LegalOppositionCandidateInput.make({
-          act: left.content.description,
-          overlappingScope: overlap,
-          relators: HashSet.make(left.id, right.id),
-        })
-      )
+    ? LegalOppositionCandidateInput.makeOption({
+        act: left.content.description,
+        overlappingScope: overlap,
+        relators: HashSet.make(left.id, right.id),
+      })
     : O.none();
 };
 

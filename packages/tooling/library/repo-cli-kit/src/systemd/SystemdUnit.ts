@@ -162,7 +162,7 @@ const parseSystemdDirective = (line: string): O.Option<SystemdUnitDirective> => 
   return O.flatMap(Str.indexOf("=")(trimmed), (separator) => {
     const key = Str.slice(0, separator)(trimmed);
     return DIRECTIVE_KEY_PATTERN.test(key)
-      ? O.some(SystemdUnitDirective.make({ key, value: Str.trim(Str.slice(separator + 1)(trimmed)) }))
+      ? SystemdUnitDirective.makeOption({ key, value: Str.trim(Str.slice(separator + 1)(trimmed)) })
       : O.none();
   });
 };

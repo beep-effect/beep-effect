@@ -146,8 +146,7 @@ const fixture = Effect.gen(function* () {
           anchor,
           engineArtifact: artifact,
           components: row.start === 3 ? [CitationComponentAnchor.make({ name: "fullSpan", anchor: zone })] : [],
-          footnote:
-            row.start === 3 ? O.some(CitationFootnoteZone.make({ label: O.some("1"), anchor: zone })) : O.none(),
+          footnote: row.start === 3 ? CitationFootnoteZone.makeOption({ label: O.some("1"), anchor: zone }) : O.none(),
           signal: O.none(),
           warnings: [],
           evidenceConfidence: O.none(),

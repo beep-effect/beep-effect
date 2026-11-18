@@ -288,7 +288,7 @@ export const parseBareLineReference = (line: string): O.Option<BareLineReference
   const issueNumber = Number(A.getUnsafe(match, 2));
   if (!Number.isSafeInteger(issueNumber)) return O.none();
   const keyword = O.getOrThrow(R.get(CLOSING_KEYWORD_BY_NAME, Str.toLowerCase(A.getUnsafe(match, 1))));
-  return O.some(BareLineReference.make({ issueNumber, keyword }));
+  return BareLineReference.makeOption({ issueNumber, keyword });
 };
 
 /**

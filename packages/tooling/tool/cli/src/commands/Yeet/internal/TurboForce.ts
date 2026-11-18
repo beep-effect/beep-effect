@@ -142,7 +142,7 @@ const isTurboForceDecidingMode = S.is(TurboForceDecidingMode);
  *
  * const change = PackageInstalledTreeChange.make({
  *   name: "@beep/new",
- *   head: O.some(Sha256Hex.make(Str.repeat(64)("a"))),
+ *   head: Sha256Hex.makeOption(Str.repeat(64)("a")),
  * })
  * console.log(O.isNone(change.base)) // true
  * ```
@@ -216,8 +216,8 @@ export class InstalledTreesLockfileUnchanged extends S.Opaque<
  *   changed: [
  *     PackageInstalledTreeChange.make({
  *       name: "@beep/a",
- *       base: O.some(Sha256Hex.make(Str.repeat(64)("a"))),
- *       head: O.some(Sha256Hex.make(Str.repeat(64)("b"))),
+ *       base: Sha256Hex.makeOption(Str.repeat(64)("a")),
+ *       head: Sha256Hex.makeOption(Str.repeat(64)("b")),
  *     }),
  *   ],
  * })

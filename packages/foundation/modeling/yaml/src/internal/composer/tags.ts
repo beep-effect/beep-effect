@@ -229,7 +229,7 @@ export function parseDirective(source: string): O.Option<RawDirective> {
     if (Str.startsWith("#")(p)) break;
     parameters.push(p);
   }
-  return O.some(RawDirective.make({ name, parameters }));
+  return RawDirective.makeOption({ name, parameters });
 }
 
 // The handle a `%TAG` directive child declares, when it declares one.

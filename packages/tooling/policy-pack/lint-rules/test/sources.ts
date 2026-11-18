@@ -391,4 +391,41 @@ export const SOURCES: { readonly [K in RuleName]: RuleSource } = {
       "\n"
     ),
   },
+  "prefer-schema-make-option": {
+    invalidCount: 5,
+    messageIncludes: "makeOption",
+    invalid: A.join(
+      [
+        'import * as O from "effect/Option";',
+        'import * as Option from "effect/Option";',
+        'import * as S from "effect/Schema";',
+        "export const struct = O.some(Point.make({ x: 1, y: 2 }));",
+        "export const brand = Option.some(S.Natural.make(1));",
+        "export const tagged = O.some(Shape.cases.Circle.make({ radius: 1 }));",
+        "export const multiline = O.some(",
+        "  Point.make({",
+        "    x: 1,",
+        "  })",
+        ");",
+        "export const nested = Point.make({ label: O.some(Label.make('a')) });",
+      ],
+      "\n"
+    ),
+    valid: A.join(
+      [
+        'import * as O from "effect/Option";',
+        'import * as Redacted from "effect/Redacted";',
+        'import * as Tuple from "effect/Tuple";',
+        "export const option = Point.makeOption({ x: 1, y: 2 });",
+        "export const redacted = O.some(Redacted.make('secret'));",
+        "export const tuple = O.some(Tuple.make(1, 2));",
+        "export const piped = O.some(Point.make({ x: 1 }).pipe(describe));",
+        "export const plain = O.some(value);",
+        "// O.some(Point.make({ x: 1 })) in a comment",
+        "// biome-ignore lint/plugin/prefer-schema-make-option: Pool.make is a resource constructor, not a schema",
+        "export const pool = O.some(Pool.make(1));",
+      ],
+      "\n"
+    ),
+  },
 };

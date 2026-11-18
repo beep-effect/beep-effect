@@ -715,7 +715,7 @@ const failed = (first: KnowledgeEvaluationFailure, ...rest: ReadonlyArray<Knowle
 
 const pathWitness = (tree: KnowledgeDoctorTree, repoPath: string): O.Option<ResolutionWitness> =>
   HashSet.has(tree.entryIndex.paths, repoPath) || HashSet.has(tree.entryIndex.directories, repoPath)
-    ? O.some(TreeEntryWitness.make({ path: repoPath }))
+    ? TreeEntryWitness.makeOption({ path: repoPath })
     : O.map(
         A.findFirst(tree.producers, (output) => Str.equivalence(output.targetPath, repoPath)),
         (output) => ProducerWitness.make({ producerId: output.producerId, targetPath: output.targetPath })

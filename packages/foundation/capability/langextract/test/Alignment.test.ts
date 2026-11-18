@@ -43,7 +43,7 @@ const sourceOf = (sourceText: string) => AlignmentSource.make({ sourceText });
 
 describe("alignCandidate", () => {
   it("constructs alignment sources through the data-last options form", () => {
-    const source = AlignmentSource.fromOptions(LangExtractOptions.make({ maxExtractions: O.some(S.Natural.make(3)) }))(
+    const source = AlignmentSource.fromOptions(LangExtractOptions.make({ maxExtractions: S.Natural.makeOption(3) }))(
       "Ada Lovelace"
     );
 

@@ -690,8 +690,8 @@ export class WindowBounds extends S.Opaque<WindowBounds, { readonly brand: uniqu
  *
  * const set = PercentileSet.make({
  *   n: S.Natural.make(58),
- *   p50Ms: O.some(S.Natural.make(3_671_966)),
- *   p95Ms: O.some(S.Natural.make(36_741_278))
+ *   p50Ms: S.Natural.makeOption(3_671_966),
+ *   p95Ms: S.Natural.makeOption(36_741_278)
  * })
  * console.log(set.n) // 58
  * ```

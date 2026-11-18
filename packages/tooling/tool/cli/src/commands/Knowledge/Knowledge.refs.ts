@@ -1705,7 +1705,7 @@ export const knowledgePathAssertion = (lineText: string): O.Option<KnowledgePath
     O.fromNullishOr(PATH_ASSERTION_LINE_PATTERN.exec(lineText)),
     O.flatMap(([, indent, path]) =>
       P.isString(indent) && P.isString(path)
-        ? O.some(KnowledgePathAssertion.make({ path, column: Str.length(indent) + 1 }))
+        ? KnowledgePathAssertion.makeOption({ path, column: Str.length(indent) + 1 })
         : O.none()
     )
   );
@@ -2409,10 +2409,10 @@ const ancestorPrefixes = (repoPath: string): ReadonlyArray<string> => {
 
 const skippedEntry = (entry: KnowledgeTrackedEntry): O.Option<KnowledgeSkippedBlob> => {
   if (entry.mode === SYMLINK_MODE) {
-    return O.some(KnowledgeSkippedBlob.make({ path: entry.path, mode: entry.mode, reason: "symlink" }));
+    return KnowledgeSkippedBlob.makeOption({ path: entry.path, mode: entry.mode, reason: "symlink" });
   }
   return entry.mode === GITLINK_MODE
-    ? O.some(KnowledgeSkippedBlob.make({ path: entry.path, mode: entry.mode, reason: "gitlink" }))
+    ? KnowledgeSkippedBlob.makeOption({ path: entry.path, mode: entry.mode, reason: "gitlink" })
     : O.none();
 };
 

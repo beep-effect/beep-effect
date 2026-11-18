@@ -81,7 +81,7 @@ const ollamaProvider = OpenclawModelProviderIntent.make({
   contextTokens: O.some(32768),
   id: "ollama",
   models: [OpenclawModelDeclaration.make({ id: "gemma3:4b", input: ["text"], name: "gemma3:4b" })],
-  params: O.some(OpenclawModelProviderParams.make({ numCtx: O.some(32768) })),
+  params: OpenclawModelProviderParams.makeOption({ numCtx: O.some(32768) }),
 });
 
 const minimalIntent = OpenclawDeploymentIntent.make({

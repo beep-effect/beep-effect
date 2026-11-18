@@ -203,7 +203,7 @@ const runScanCore = Effect.fn("Test.runScan")(
         recognizerPath: "recognizer",
         ada:
           backend === "adaface-kprpe"
-            ? O.some(PreparedAdaFaceArtifacts.make({ alignerPath: "aligner", recognizerPath: "recognizer" }))
+            ? PreparedAdaFaceArtifacts.makeOption({ alignerPath: "aligner", recognizerPath: "recognizer" })
             : O.none(),
         components: [],
       });

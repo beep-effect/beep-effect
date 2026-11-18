@@ -156,9 +156,10 @@ export const installCitationCanonicalFactory = Effect.fn("CanonicalDefaultFactor
     return yield* makeCitationCaseResourceHash(
       CitationCaseResourceHashInput.make({
         citation,
-        selectedEdition: O.some(
-          CitationAuthorityEdition.make({ edition: reference, shortName: edition.value.short_name })
-        ),
+        selectedEdition: CitationAuthorityEdition.makeOption({
+          edition: reference,
+          shortName: edition.value.short_name,
+        }),
         missingPageIdentityHash: O.none(),
       })
     );

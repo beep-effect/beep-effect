@@ -424,13 +424,11 @@ export const ancestryChainOf = Effect.fnUntraced(function* (
     fs.readFileString(`/proc/${current}/status`).pipe(
       Effect.option,
       Effect.map((status) =>
-        O.some(
-          ProcessStatus.make({
-            pid: current,
-            parent: O.getOrElse(O.flatMap(status, parentPidOf), noParent),
-            command: "",
-          })
-        )
+        ProcessStatus.makeOption({
+          pid: current,
+          parent: O.getOrElse(O.flatMap(status, parentPidOf), noParent),
+          command: "",
+        })
       )
     )
   );

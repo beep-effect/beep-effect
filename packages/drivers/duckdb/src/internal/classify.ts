@@ -124,7 +124,7 @@ const RULES: ReadonlyArray<ClassifyRule> = [
     /^(?:(?:Failed to (?:connect|query|prepare): )?(?:instance closed|connection disconnected)|Failed to execute prepared statement)/,
     always((_, base) => ConnectionError.make(base)),
   ],
-  [/^IO Error:/, (_, base) => (base.operation === "connect" ? O.some(ConnectionError.make(base)) : O.none())],
+  [/^IO Error:/, (_, base) => (base.operation === "connect" ? ConnectionError.makeOption(base) : O.none())],
   [/^(?:Parser|Catalog|Binder) Error:/, always((_, base) => SqlSyntaxError.make(base))],
 ];
 

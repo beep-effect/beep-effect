@@ -1301,7 +1301,7 @@ exec "$@"
           PffexportEngineConfig.make({
             bwrapPath: O.some(bwrapPath),
             exportRoot,
-            maxOutputBytes: O.some(PosInt.make(1)),
+            maxOutputBytes: PosInt.makeOption(1),
             pffexportPath: stubPath,
             systemdRunPath,
           })
@@ -1366,7 +1366,7 @@ exec "$@"
             bwrapPath: O.some(bwrapPath),
             existingExportPolicy: "replace",
             exportRoot,
-            maxOutputBytes: O.some(PosInt.make(1_000_000)),
+            maxOutputBytes: PosInt.makeOption(1_000_000),
             pffexportPath: stubPath,
             systemdRunPath,
           })
@@ -1426,7 +1426,7 @@ exec "$@"
           PffexportEngineConfig.make({
             bwrapPath: O.some(bwrapPath),
             exportRoot,
-            maxOutputBytes: O.some(PosInt.make(1_000_000)),
+            maxOutputBytes: PosInt.makeOption(1_000_000),
             pffexportPath: stubPath,
             systemdRunPath,
           })
@@ -1450,7 +1450,7 @@ exec "$@"
             bwrapPath: O.some(bwrapPath),
             exportRoot,
             existingExportPolicy: "replace",
-            maxOutputBytes: O.some(PosInt.make(1_000_000)),
+            maxOutputBytes: PosInt.makeOption(1_000_000),
             pffexportPath: stubPath,
             systemdRunPath,
           })

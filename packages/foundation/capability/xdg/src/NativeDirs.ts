@@ -99,27 +99,23 @@ export class NativeDirs extends S.Opaque<NativeDirs, { readonly brand: unique sy
 
     if (platform === "darwin") {
       const appSupport = path.join(paths.home, "Library", "Application Support", namespace);
-      return O.some(
-        NativeDirs.make({
-          config: appSupport,
-          data: appSupport,
-          cache: path.join(paths.home, "Library", "Caches", namespace),
-          state: appSupport,
-        })
-      );
+      return NativeDirs.makeOption({
+        config: appSupport,
+        data: appSupport,
+        cache: path.join(paths.home, "Library", "Caches", namespace),
+        state: appSupport,
+      });
     }
 
     if (platform === "win32") {
       const roaming = paths.appData ?? path.join(paths.home, "AppData", "Roaming");
       const local = paths.localAppData ?? path.join(paths.home, "AppData", "Local");
-      return O.some(
-        NativeDirs.make({
-          config: path.join(roaming, namespace),
-          data: path.join(roaming, namespace),
-          cache: path.join(local, namespace, "Cache"),
-          state: path.join(local, namespace),
-        })
-      );
+      return NativeDirs.makeOption({
+        config: path.join(roaming, namespace),
+        data: path.join(roaming, namespace),
+        cache: path.join(local, namespace, "Cache"),
+        state: path.join(local, namespace),
+      });
     }
 
     return O.none();

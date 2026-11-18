@@ -192,13 +192,11 @@ const dateOptions = (
       QuestionOption.make({
         optionId: `use-${candidate.date.toISOString()}`,
         label: Str.capitalize(`use ${longDate(candidate.date)}, ${sourcePhrase(candidate.source)}`),
-        write: O.some(
-          OptionWrite.cases["calendar-date"].make({
-            title: O.getOrElse(input.title, () => DEFAULT_TITLE),
-            dueOn: candidate.date,
-            eventId: O.some(needsReview.entry.eventId),
-          })
-        ),
+        write: OptionWrite.cases["calendar-date"].makeOption({
+          title: O.getOrElse(input.title, () => DEFAULT_TITLE),
+          dueOn: candidate.date,
+          eventId: O.some(needsReview.entry.eventId),
+        }),
       })
     )
   );

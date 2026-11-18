@@ -1647,14 +1647,12 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
         )
       );
     const emlId = yield* deriveChildId(operation, emlRelativePath.value);
-    return O.some(
-      ArtifactReference.make({
-        id: emlId,
-        mediaType: "message/rfc822",
-        relativePath: emlRelativePath.value,
-        sizeBytes: S.Natural.make(emlBytes.length),
-      })
-    );
+    return ArtifactReference.makeOption({
+      id: emlId,
+      mediaType: "message/rfc822",
+      relativePath: emlRelativePath.value,
+      sizeBytes: S.Natural.make(emlBytes.length),
+    });
   });
 
   const resolveItemEml = Effect.fn("Libpff.pffexport.resolveItemEml")(function* (
@@ -1741,13 +1739,11 @@ export const makePffexportFileProcessingEngine = Effect.fn("Libpff.makePffexport
       return O.none<ArtifactReference>();
     }
     const jsonlId = yield* deriveChildId(operation, jsonlRelativePath.value);
-    return O.some(
-      ArtifactReference.make({
-        id: jsonlId,
-        relativePath: jsonlRelativePath.value,
-        sizeBytes: S.Natural.make(jsonlBytes.length),
-      })
-    );
+    return ArtifactReference.makeOption({
+      id: jsonlId,
+      relativePath: jsonlRelativePath.value,
+      sizeBytes: S.Natural.make(jsonlBytes.length),
+    });
   });
 
   // Atomic target ownership: two concurrent exports of the same

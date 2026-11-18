@@ -98,7 +98,7 @@ const read = Effect.fn("Yeet.headMoveRead")((root: string, args: ReadonlyArray<s
 );
 const lines = (text: string) => A.filter(Str.split(text, "\n"), Str.isNonEmpty);
 const changed = (request: YeetHeadMoveRequest, change: YeetHeadMoveChange, detail: string) =>
-  O.some(YeetHeadMoveChanged.make({ ...request, change, detail }));
+  YeetHeadMoveChanged.makeOption({ ...request, change, detail });
 const requireStep = Effect.fn("Yeet.headMoveRequireStep")(
   (verdict: O.Option<YeetHeadMoveChanged>): Effect.Effect<void, YeetHeadMoveChanged> =>
     O.match(verdict, { onNone: () => Effect.void, onSome: Effect.fail })

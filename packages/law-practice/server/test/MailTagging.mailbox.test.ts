@@ -62,7 +62,7 @@ const mailboxOver = (overrides: Partial<M365Shape>) =>
   );
 
 const recipient = (address: string) =>
-  GraphRecipient.make({ emailAddress: O.some(GraphEmailAddress.make({ address: O.some(address) })) });
+  GraphRecipient.make({ emailAddress: GraphEmailAddress.makeOption({ address: O.some(address) }) });
 
 const received = (id: string, minute: number) => ({
   id,

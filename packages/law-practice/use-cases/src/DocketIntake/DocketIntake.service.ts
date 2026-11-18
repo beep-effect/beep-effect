@@ -1139,7 +1139,7 @@ const persistRounds = Effect.fnUntraced(function* (
           outcome: IntakeFailed.make({ messageId: message.messageId, stage: "review" }),
           processedOn: context.today,
           receivedAt: message.receivedAt,
-          review: O.some(DocketReviewProgress.make({ rounds })),
+          review: DocketReviewProgress.makeOption({ rounds }),
         })
       ),
     })

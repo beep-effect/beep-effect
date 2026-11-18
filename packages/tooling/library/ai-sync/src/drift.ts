@@ -146,7 +146,7 @@ export const checkGeneratedArtifacts = Effect.fn("AiSync.checkGeneratedArtifacts
  *   domain: "config",
  *   tier: "tier_1",
  *   url: AiSyncSourceUrl.make("https://example.com/schema.json"),
- *   contentHash: O.some(AiSyncContentHash.make("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")),
+ *   contentHash: AiSyncContentHash.makeOption("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
  *   isOfficial: true,
  *   driftMechanism: "hash"
  * })

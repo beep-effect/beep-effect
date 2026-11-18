@@ -48,7 +48,7 @@ const minutesElapsed = (input: {
 
 const ownerOfRunner = (runner: RunnerInstance): O.Option<RunnerOwner> =>
   O.flatMap(O.all({ owner: runner.owner, type: runner.type }), ({ owner, type }) =>
-    isRunnerType(type) ? O.some(RunnerOwner.make({ owner, type })) : O.none()
+    isRunnerType(type) ? RunnerOwner.makeOption({ owner, type }) : O.none()
   );
 
 /**

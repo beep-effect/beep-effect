@@ -430,8 +430,8 @@ export const YEET_GATE_AUXILIARY_ARTIFACT_PATHS: ReadonlyArray<string> = [
  * })
  * const verdict = assessGateStaleness(
  *   descriptor,
- *   O.some(GateFileWitness.make({ modifiedAtMs: 1_000, path: descriptor.artifactPath })),
- *   O.some(GateFileWitness.make({ modifiedAtMs: 2_000, path: "packages/x/src/X.ts" }))
+ *   GateFileWitness.makeOption({ modifiedAtMs: 1_000, path: descriptor.artifactPath }),
+ *   GateFileWitness.makeOption({ modifiedAtMs: 2_000, path: "packages/x/src/X.ts" })
  * )
  * console.log(verdict.status)
  * ```

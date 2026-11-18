@@ -198,7 +198,7 @@ const SECRETARY_FIELDS = [
 const paralegalEntry = ParalegalDocketEntry.make({
   matterReferences: ["FIX-0001"],
   rationale: "States a due date.",
-  statedDueDate: O.some(LocalDate.make({ year: 2031, month: 7, day: 19 })),
+  statedDueDate: LocalDate.makeOption({ year: 2031, month: 7, day: 19 }),
   title: "Fixture response due",
 });
 
@@ -228,10 +228,10 @@ const disputes = [
 
 const datedEntry = ParalegalDocketEntry.make({
   citedText: O.some("Mailed January 8, 2030. A response is due within three months"),
-  mailDate: O.some(LocalDate.make({ year: 2030, month: 1, day: 8 })),
+  mailDate: LocalDate.makeOption({ year: 2030, month: 1, day: 8 }),
   matterReferences: ["FIX-0001"],
   rationale: "States a response period.",
-  responsePeriod: O.some(DocketResponsePeriod.make({ amount: 3, unit: "months" })),
+  responsePeriod: DocketResponsePeriod.makeOption({ amount: 3, unit: "months" }),
   title: "Fixture response due",
 });
 

@@ -1281,7 +1281,7 @@ export const countYeetWatchOptionalFailures = (snapshot: YeetWatchSnapshot): num
  *
  * const child = YeetWatchCheck.make({ name: "Test Unit (unit-a)", outcome: "fail", required: false })
  * const settle = deriveSettleVerdict(YeetSettleInput.make({
- *   expected: O.some(YeetRulesetRequiredContexts.make({ base: "main", contexts: ["Test Unit"], rulesetIds: [1], readAt: "2026-09-16T00:00:00.000Z" })),
+ *   expected: YeetRulesetRequiredContexts.makeOption({ base: "main", contexts: ["Test Unit"], rulesetIds: [1], readAt: "2026-09-16T00:00:00.000Z" }),
  *   checks: [YeetSettleCheck.make({ name: child.name, outcome: child.outcome, required: false })],
  *   closeoutBound: false, waitedMs: 0, timeoutMs: 1_000
  * }))

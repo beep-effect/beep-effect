@@ -551,16 +551,14 @@ export const makeDeliveryLedger = Effect.fn("AiMetrics.makeDeliveryLedger")(
                 if (rows.length > config.maxAttemptsPerEvent) return yield* failure("storage");
                 const history = yield* readEventHistory(eventId, rows);
                 const visible = yield* readEventVisibility(eventId);
-                return O.some(
-                  DeliveryEventState.make({
-                    eventId,
-                    targetId: config.targetId,
-                    attempts: rows.length,
-                    acknowledgedAttempts: history.acknowledged,
-                    ambiguousAttempts: history.ambiguous,
-                    state: stateFromEvidence(visible, history),
-                  })
-                );
+                return DeliveryEventState.makeOption({
+                  eventId,
+                  targetId: config.targetId,
+                  attempts: rows.length,
+                  acknowledgedAttempts: history.acknowledged,
+                  ambiguousAttempts: history.ambiguous,
+                  state: stateFromEvidence(visible, history),
+                });
               })
             )
           )

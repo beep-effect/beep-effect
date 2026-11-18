@@ -160,16 +160,14 @@ const snapshot = (root: string, checks: ReadonlyArray<YeetWatchCheck>, state: st
       state,
       failingCheckCount: A.filter(checks, (value) => value.outcome === "fail").length,
     }),
-    mergeReady: O.some(
-      YeetMergeReady.make({
-        ready: false,
-        criteria,
-        failing: A.findFirst(
-          YeetMergeReadyCriterion.literals,
-          (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
-        ),
-      })
-    ),
+    mergeReady: YeetMergeReady.makeOption({
+      ready: false,
+      criteria,
+      failing: A.findFirst(
+        YeetMergeReadyCriterion.literals,
+        (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
+      ),
+    }),
   });
 };
 

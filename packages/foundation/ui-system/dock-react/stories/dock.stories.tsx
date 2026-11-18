@@ -119,7 +119,7 @@ const maximizedWorkspace = PopulatedWorkspace.make({
       }),
     }),
   }),
-  maximized: O.some(GroupId.make("story-max-main")),
+  maximized: GroupId.makeOption("story-max-main"),
 });
 
 const tabsWorkspace = PopulatedWorkspace.make({
@@ -143,7 +143,7 @@ const constrainedWorkspace = PopulatedWorkspace.make({
           id: PanelId.make("story-constrained-panel"),
           title: "Constrained",
           view: TextPanelView.make({ text: "This panel cannot shrink below 300 pixels." }),
-          constraints: O.some(PanelConstraints.make({ minWidth: O.some(300) })),
+          constraints: PanelConstraints.makeOption({ minWidth: O.some(300) }),
         }),
       }),
       right: TabsNode.make({

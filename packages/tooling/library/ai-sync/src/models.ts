@@ -455,7 +455,7 @@ class AiSyncSourceMetadataIdentity extends S.Opaque<AiSyncSourceMetadataIdentity
  *   domain: "config",
  *   tier: "tier_1",
  *   url: AiSyncSourceUrl.make("https://example.com/schema.json"),
- *   versionPin: O.some(AiSyncVersionPin.make("rust-v0.133.0")),
+ *   versionPin: AiSyncVersionPin.makeOption("rust-v0.133.0"),
  *   isOfficial: true,
  *   driftMechanism: "hash"
  * })

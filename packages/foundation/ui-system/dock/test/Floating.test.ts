@@ -129,7 +129,7 @@ describe("floating dock topology", () => {
             "reorder",
             MovePanelCommand.make({
               panelId: panelOne.id,
-              target: TabPlacement.make({ groupId: groupOne, index: O.some(S.Natural.make(1)) }),
+              target: TabPlacement.make({ groupId: groupOne, index: S.Natural.makeOption(1) }),
             })
           )
         );

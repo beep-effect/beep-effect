@@ -1233,7 +1233,7 @@ const drawnInkOf = (
         A.reduce(0, (sum, segment: Segment2) => sum + segmentLength(segment))
       );
       return face.seen > 0 && length > 0
-        ? O.some(BandInk.make({ face: index, exposure: face.exposure, density: (length * minPitch) / face.seen }))
+        ? BandInk.makeOption({ face: index, exposure: face.exposure, density: (length * minPitch) / face.seen })
         : O.none();
     }),
     A.getSomes

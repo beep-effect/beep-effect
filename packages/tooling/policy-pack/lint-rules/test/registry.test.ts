@@ -211,6 +211,14 @@ describe("rule registry", () => {
             "Disallow hand-rolled `ChildProcessSpawner.make(...)` test doubles in repo-cli and ai-metrics tests; use `ScriptedSpawner`, or keep the double with a recorded `Own double` biome-ignore. Never-spawn `Effect.die` guards are exempt.",
           scope: "packages/tooling/tool/cli/test/**, packages/tooling/library/ai-metrics/test/**",
         },
+        "prefer-schema-make-option": {
+          name: "prefer-schema-make-option",
+          severity: "error",
+          replaces: null,
+          summary:
+            "Build an `Option` of a schema value with the schema's own `makeOption` (EF-35b), never `O.some(X.make(...))`; non-schema receivers rooted at an `effect/<Module>` import are allowed, others take a recorded biome-ignore.",
+          scope: "packages/**, apps/**",
+        },
       });
     })
   );

@@ -276,7 +276,7 @@ export const chordFromKeyboardEvent: {
       (modifier === "alt" && event.altKey) ||
       (modifier === "shift" && event.shiftKey)
   );
-  return O.some(KeyChord.make({ modifiers, key: PlatformSchema.is.apple(platform) && key === "os" ? "meta" : key }));
+  return KeyChord.makeOption({ modifiers, key: PlatformSchema.is.apple(platform) && key === "os" ? "meta" : key });
 });
 
 /** Detects the host keyboard platform without failing during SSR.

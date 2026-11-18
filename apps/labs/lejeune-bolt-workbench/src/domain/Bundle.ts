@@ -460,7 +460,7 @@ const CanonicalRfqAComponents = Tuple.make(
 
 const CanonicalRfqBComponents = Tuple.make(
   Component.make({
-    finishId: O.some(EntityId.make("hot-dip-galvanized")),
+    finishId: EntityId.makeOption("hot-dip-galvanized"),
     id: EntityId.make("rfq-b-bolt"),
     kind: "bolt",
     label: "A490 Type 1 heavy hex bolt",
@@ -468,7 +468,7 @@ const CanonicalRfqBComponents = Tuple.make(
     strengthClass: "490",
   }),
   Component.make({
-    finishId: O.some(EntityId.make("hot-dip-galvanized")),
+    finishId: EntityId.makeOption("hot-dip-galvanized"),
     id: EntityId.make("rfq-b-dti"),
     kind: "dti",
     label: "F959 Type 325 DTI",
