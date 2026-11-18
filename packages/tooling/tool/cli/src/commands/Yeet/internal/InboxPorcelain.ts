@@ -323,20 +323,18 @@ const yeetAckReasonRuleViolation = (flags: YeetAckResolutionFlags): O.Option<str
 // empty reason here.
 const yeetAckResolutionCandidates = (flags: YeetAckResolutionFlags): ReadonlyArray<YeetAckResolution> =>
   A.getSomes([
-    flags.observed === true ? O.some(YeetAckObservedResolution.make({ via: "inbox-ack" })) : O.none(),
-    Str.isNonEmpty(flags.fixSha) ? O.some(YeetAckFixResolution.make({ sha: flags.fixSha })) : O.none(),
-    flags.environmentOnly ? O.some(YeetAckEnvironmentOnlyResolution.make({ reason: flags.reason })) : O.none(),
-    flags.wontfix ? O.some(YeetAckWontfixResolution.make({ reason: flags.reason })) : O.none(),
-    Str.isNonEmpty(flags.threadUrl) ? O.some(YeetAckThreadResolution.make({ url: flags.threadUrl })) : O.none(),
+    flags.observed === true ? YeetAckObservedResolution.makeOption({ via: "inbox-ack" }) : O.none(),
+    Str.isNonEmpty(flags.fixSha) ? YeetAckFixResolution.makeOption({ sha: flags.fixSha }) : O.none(),
+    flags.environmentOnly ? YeetAckEnvironmentOnlyResolution.makeOption({ reason: flags.reason }) : O.none(),
+    flags.wontfix ? YeetAckWontfixResolution.makeOption({ reason: flags.reason }) : O.none(),
+    Str.isNonEmpty(flags.threadUrl) ? YeetAckThreadResolution.makeOption({ url: flags.threadUrl }) : O.none(),
     flags.waive
-      ? O.some(
-          YeetAckWaiveResolution.make({
-            actor: flags.actor,
-            expiresAt: flags.expiresAt,
-            reason: flags.reason,
-            shard: flags.shard,
-          })
-        )
+      ? YeetAckWaiveResolution.makeOption({
+          actor: flags.actor,
+          expiresAt: flags.expiresAt,
+          reason: flags.reason,
+          shard: flags.shard,
+        })
       : O.none(),
   ]);
 

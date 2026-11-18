@@ -36,15 +36,13 @@ const nextDigit = (state: DecimalState, point: number) => {
   if (O.isSome(decimal))
     return state.count === 4300
       ? O.none<DecimalState>()
-      : O.some(
-          DecimalState.make({
-            value: state.value * BigInt(10) + BigInt(decimal.value),
-            count: state.count + 1,
-            previousDigit: true,
-          })
-        );
+      : DecimalState.makeOption({
+          value: state.value * BigInt(10) + BigInt(decimal.value),
+          count: state.count + 1,
+          previousDigit: true,
+        });
   return point === 95 && state.previousDigit
-    ? O.some(DecimalState.make({ ...state, previousDigit: false }))
+    ? DecimalState.makeOption({ ...state, previousDigit: false })
     : O.none<DecimalState>();
 };
 const digits = Effect.fn("Citation.scanPythonIntegerDigits")(function* (

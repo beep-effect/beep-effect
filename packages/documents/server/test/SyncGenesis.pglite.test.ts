@@ -24,7 +24,6 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
@@ -74,13 +73,11 @@ const common = (entity: string, id: number) => ({
 
 const genesisPlatform = AlchemyPostgresPlatform.layer(
   AlchemyPostgresConfig.make({
-    provenance: O.some(
-      ProvenanceMapping.make({
-        contextKey: V.GenesisProvenance.key,
-        principalField: "principal",
-        sourceKindField: "source",
-      })
-    ),
+    provenance: ProvenanceMapping.makeOption({
+      contextKey: V.GenesisProvenance.key,
+      principalField: "principal",
+      sourceKindField: "source",
+    }),
   })
 );
 const ProcessedRows = S.Array(S.Struct({ processed: S.Int }));

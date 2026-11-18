@@ -630,7 +630,7 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
     ]).pipe(Effect.option);
     if (O.isNone(shown) || shown.value.exitCode !== 0) return O.none<ProofJobUnitEvidence>();
     const loadState = Str.trim(shown.value.output);
-    if (loadState === "not-found") return O.some(ProofJobUnitEvidence.cases.absent.make({}));
+    if (loadState === "not-found") return ProofJobUnitEvidence.cases.absent.makeOption({});
     if (loadState !== "loaded") return O.none<ProofJobUnitEvidence>();
     const detailed = yield* command("systemctl", [
       "--user",

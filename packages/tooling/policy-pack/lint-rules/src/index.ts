@@ -39,7 +39,8 @@ const $I = $LintRulesId;
  *   "no-hand-rolled-canonical-json",
  *   "no-citation-optional-invocation",
  *   "no-hand-rolled-git-gh-spawn",
- *   "no-unrecorded-spawner-double"
+ *   "no-unrecorded-spawner-double",
+ *   "prefer-schema-make-option"
  * ])
  * ```
  *
@@ -59,6 +60,7 @@ export const RULE_NAMES = [
   "no-citation-optional-invocation",
   "no-hand-rolled-git-gh-spawn",
   "no-unrecorded-spawner-double",
+  "prefer-schema-make-option",
 ] as const;
 
 /**
@@ -185,6 +187,7 @@ export class RuleRegistrySchema extends S.Opaque<RuleRegistrySchema, { readonly 
     "no-citation-optional-invocation": RuleMetadataSchema,
     "no-hand-rolled-git-gh-spawn": RuleMetadataSchema,
     "no-unrecorded-spawner-double": RuleMetadataSchema,
+    "prefer-schema-make-option": RuleMetadataSchema,
   }).pipe(
     $I.annoteSchema("RuleRegistrySchema", {
       description: "Schema for the finite rule registry keyed by rule slug.",
@@ -299,6 +302,14 @@ export const RULES: { readonly [K in RuleName]: RuleMetadata } = RuleRegistrySch
     summary:
       "Disallow hand-rolled `ChildProcessSpawner.make(...)` test doubles in repo-cli and ai-metrics tests; use `ScriptedSpawner`, or keep the double with a recorded `Own double` biome-ignore. Never-spawn `Effect.die` guards are exempt.",
     scope: O.some("packages/tooling/tool/cli/test/**, packages/tooling/library/ai-metrics/test/**"),
+  }),
+  "prefer-schema-make-option": RuleMetadataSchema.make({
+    name: "prefer-schema-make-option",
+    severity: "error",
+    replaces: O.none(),
+    summary:
+      "Build an `Option` of a schema value with the schema's own `makeOption` (EF-35b), never `O.some(X.make(...))`; non-schema receivers rooted at an `effect/<Module>` import are allowed, others take a recorded biome-ignore.",
+    scope: O.some("packages/**, apps/**"),
   }),
 });
 

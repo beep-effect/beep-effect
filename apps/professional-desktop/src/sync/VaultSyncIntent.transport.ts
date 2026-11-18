@@ -198,13 +198,11 @@ const makeApiTransport = Effect.gen(function* () {
     const destinationId = first.value;
     const status = yield* classify(client.VaultSyncStatus.get(destinationId));
     const open = yield* classify(client.OpenConflicts.get(destinationId));
-    return O.some(
-      VaultSyncServerState.make({
-        destinationId,
-        destination: status?.destination ?? unregistered,
-        conflicts: open ?? H.empty(),
-      })
-    );
+    return VaultSyncServerState.makeOption({
+      destinationId,
+      destination: status?.destination ?? unregistered,
+      conflicts: open ?? H.empty(),
+    });
   });
   return VaultSyncIntentTransport.of({ read, send });
 });

@@ -193,8 +193,8 @@ const optionalDate = (description: string) => S.OptionFromOptionalKey(LocalDateF
  * import * as O from "effect/Option";
  *
  * const resolved = resolveDocketDueDate(DocketDueDateCandidates.make({
- *   computed: O.some(LocalDate.make({ year: 2030, month: 4, day: 15 })),
- *   stated: O.some(LocalDate.make({ year: 2030, month: 4, day: 16 }))
+ *   computed: LocalDate.makeOption({ year: 2030, month: 4, day: 15 }),
+ *   stated: LocalDate.makeOption({ year: 2030, month: 4, day: 16 })
  * }));
  * console.log(O.map(resolved, (due) => due.basis)); // Some("earlier-of-differing")
  * ```
@@ -256,7 +256,7 @@ export class DocketDueDateCandidates extends S.Opaque<DocketDueDateCandidates, {
  *   basis: "stated",
  *   computed: O.none(),
  *   date: LocalDate.make({ year: 2030, month: 4, day: 15 }),
- *   stated: O.some(LocalDate.make({ year: 2030, month: 4, day: 15 }))
+ *   stated: LocalDate.makeOption({ year: 2030, month: 4, day: 15 })
  * });
  * console.log(docketDatesDiffer(due)); // false
  * ```

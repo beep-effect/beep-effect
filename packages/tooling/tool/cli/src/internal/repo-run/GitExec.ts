@@ -94,14 +94,12 @@ const parseGitTreeEntry = (record: string): O.Option<GitTreeEntry> => {
   ) {
     return O.none();
   }
-  return O.some(
-    GitTreeEntry.make({
-      mode: match[1],
-      objectType: match[2],
-      objectId: match[3],
-      path: match[4],
-    })
-  );
+  return GitTreeEntry.makeOption({
+    mode: match[1],
+    objectType: match[2],
+    objectId: match[3],
+    path: match[4],
+  });
 };
 
 /** Parse exact NUL-delimited recursive tree output, failing with `None` on any malformed record. @category parsing @since 0.0.0 */

@@ -199,7 +199,7 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
       );
       const inZone = (anchor: typeof first.anchor) => ({
         ...first,
-        footnote: O.some(CitationFootnoteZone.make({ label: O.none(), anchor })),
+        footnote: CitationFootnoteZone.makeOption({ label: O.none(), anchor }),
       });
       assert.isTrue(S.is(CitationMention)(inZone(first.anchor)));
       assert.isFalse(S.is(CitationMention)(inZone(foreign)));

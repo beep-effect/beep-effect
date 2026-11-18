@@ -87,7 +87,7 @@ const embeddingInputs = Effect.fn("CanaryC1.embeddingInputs")(function* (
               }
               const text = Str.slice(chunk.anchor.startChar, chunk.anchor.endChar)(canonical.text);
               return Str.isNonEmpty(text)
-                ? O.some(EmbeddingInput.make({ chunk: chunk.id, text }))
+                ? EmbeddingInput.makeOption({ chunk: chunk.id, text })
                 : O.none<EmbeddingInput>();
             })
           ),

@@ -34,13 +34,11 @@ export const postgresSuites = <E>({
   const config = AlchemyPostgresConfig.make({
     tablePrefix,
     pollMillis: 25,
-    provenance: O.some(
-      ProvenanceMapping.make({
-        contextKey: "Conformance/CurrentActor",
-        principalField: "principal",
-        sourceKindField: "sourceKind",
-      })
-    ),
+    provenance: ProvenanceMapping.makeOption({
+      contextKey: "Conformance/CurrentActor",
+      principalField: "principal",
+      sourceKindField: "sourceKind",
+    }),
   });
   const tables = AlchemyPostgresTables.of(config);
 
@@ -116,7 +114,7 @@ export const postgresSuites = <E>({
     platform: AlchemyPostgresPlatform.layer(
       AlchemyPostgresConfig.make({
         ...config,
-        backfill: O.some(BackfillTuning.make({ page: 2, nodePage: 2, apply: 2, leafSize: 1, depth: 1 })),
+        backfill: BackfillTuning.makeOption({ page: 2, nodePage: 2, apply: 2, leafSize: 1, depth: 1 }),
       })
     ),
     legacyOrder,

@@ -905,7 +905,7 @@ describe("Yeet provenance footer splice", () => {
         const result = yield* ensurePullRequest(
           context(root),
           recorder,
-          O.some(RepoPlanStep.make({ ...prCreateStep, args: ["pr", "create", "--draft"] })),
+          RepoPlanStep.makeOption({ ...prCreateStep, args: ["pr", "create", "--draft"] }),
           O.none(),
           { findOpen: () => Effect.succeedNone }
         ).pipe(

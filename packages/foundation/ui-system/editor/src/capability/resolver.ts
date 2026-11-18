@@ -233,6 +233,7 @@ const keybindingConflict = (
       return A.match(collisions, {
         onEmpty: O.none,
         onNonEmpty: (nonEmpty) =>
+          // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
           O.some(
             KeybindingConflictError.make({
               profileId: profile.id,

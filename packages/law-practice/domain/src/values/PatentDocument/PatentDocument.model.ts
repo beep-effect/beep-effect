@@ -345,11 +345,13 @@ export const inspectPatentClaimDependencies = (
     const expectedClaimNumber = PosInt.make(Num.increment(index));
     return A.getSomes([
       A.some(A.take(claims, index), (previous) => Num.Equivalence(previous.claimNumber, claim.claimNumber))
-        ? O.some(PatentClaimDependencyIssue.cases["duplicate-claim-number"].make({ claimNumber: claim.claimNumber }))
+        ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          O.some(PatentClaimDependencyIssue.cases["duplicate-claim-number"].make({ claimNumber: claim.claimNumber }))
         : O.none(),
       Num.Equivalence(claim.claimNumber, expectedClaimNumber)
         ? O.none()
-        : O.some(
+        : // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          O.some(
             PatentClaimDependencyIssue.cases["nonconsecutive-claim-number"].make({
               actualClaimNumber: claim.claimNumber,
               expectedClaimNumber,
@@ -362,7 +364,8 @@ export const inspectPatentClaimDependencies = (
     A.flatMap(claimReferencesOf(claim), (parentClaimNumber) =>
       A.getSomes([
         O.isNone(claimByNumber(claims, parentClaimNumber))
-          ? O.some(
+          ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+            O.some(
               PatentClaimDependencyIssue.cases["missing-parent"].make({
                 claimNumber: claim.claimNumber,
                 parentClaimNumber,
@@ -370,10 +373,12 @@ export const inspectPatentClaimDependencies = (
             )
           : O.none(),
         Num.Equivalence(claim.claimNumber, parentClaimNumber)
-          ? O.some(PatentClaimDependencyIssue.cases["self-reference"].make({ claimNumber: claim.claimNumber }))
+          ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+            O.some(PatentClaimDependencyIssue.cases["self-reference"].make({ claimNumber: claim.claimNumber }))
           : O.none(),
         Num.isGreaterThanOrEqualTo(parentClaimNumber, claim.claimNumber)
-          ? O.some(
+          ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+            O.some(
               PatentClaimDependencyIssue.cases["forward-reference"].make({
                 claimNumber: claim.claimNumber,
                 parentClaimNumber,
@@ -523,7 +528,8 @@ const inspectPatentApplicationSections = (
     );
     return A.getSomes([
       A.some(A.take(sections, index), (candidate) => Eq.equals(candidate.role, section.role))
-        ? O.some(PatentApplicationSectionIssue.cases["duplicate-section-role"].make({ role: section.role }))
+        ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          O.some(PatentApplicationSectionIssue.cases["duplicate-section-role"].make({ role: section.role }))
         : O.none(),
       pipe(
         previous,

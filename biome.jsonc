@@ -330,6 +330,14 @@
   },
   "overrides": [
     {
+      // prefer-schema-make-option (EF-35b): workspace source only; the frozen
+      // `goals/**/ops` snapshots keep the bytes they recorded.
+      "includes": ["packages/**", "apps/**"],
+      "plugins": [
+        "./packages/tooling/policy-pack/lint-rules/rules/prefer-schema-make-option.grit"
+      ]
+    },
+    {
       "includes": ["packages/law-practice/server/src/internal/Citation/**"],
       "plugins": [
         "./packages/tooling/policy-pack/lint-rules/rules/no-citation-optional-invocation.grit"

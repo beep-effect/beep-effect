@@ -48,7 +48,7 @@ const testLayer = () => {
 const interval = TimerInterval.make({
   schemaVersion: "practice-timer/v1",
   sessionId: "s-1",
-  matter: O.some(ChosenMatter.make({ reference: "10008", docketKey: "12345.10008US01", client: "12345" })),
+  matter: ChosenMatter.makeOption({ reference: "10008", docketKey: "12345.10008US01", client: "12345" }),
   startedAt: DateTime.makeUnsafe(0),
   stoppedAt: DateTime.makeUnsafe(60_000),
 });

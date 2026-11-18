@@ -217,47 +217,41 @@ const storedRow = Effect.fn("ReceiptStoreTest.storedRow")(function* (
     packet: "demo",
     declarationDigest: digest,
     acceptedDeclarationDigest: O.some(digest),
-    requiredChecks: O.some(
-      GoalRequiredCheckSnapshot.make({
-        contexts: ["Lint"],
-        sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
-        effectiveAt: at,
-        inventoryComplete: true,
-        mergeTimeInventory: O.some(
-          GoalMergeTimeInventory.make({
-            source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
-            ruleSuiteId: 1,
-            ref: "refs/heads/main",
-            afterSha: "merge-result",
-            pushedAt: at,
-            result: "pass",
-            ruleSources: [
-              GoalMergeTimeRuleSource.make({
-                sourceType: "ruleset",
-                rulesetId: O.some(42),
-                name: O.some("main"),
-                enforcement: "active",
-                requiredStatusChecks: O.some("pass"),
-                survives: true,
-                version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
-              }),
-            ],
-          })
-        ),
-      })
-    ),
+    requiredChecks: GoalRequiredCheckSnapshot.makeOption({
+      contexts: ["Lint"],
+      sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
+      effectiveAt: at,
+      inventoryComplete: true,
+      mergeTimeInventory: GoalMergeTimeInventory.makeOption({
+        source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
+        ruleSuiteId: 1,
+        ref: "refs/heads/main",
+        afterSha: "merge-result",
+        pushedAt: at,
+        result: "pass",
+        ruleSources: [
+          GoalMergeTimeRuleSource.make({
+            sourceType: "ruleset",
+            rulesetId: O.some(42),
+            name: O.some("main"),
+            enforcement: "active",
+            requiredStatusChecks: O.some("pass"),
+            survives: true,
+            version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
+          }),
+        ],
+      }),
+    }),
     finalPullRequest: 7,
     acceptedHead: O.some("accepted-head"),
     merged: O.some(true),
-    merge: O.some(
-      GoalMergeResult.make({
-        mergeCommit: "merge-result",
-        tree: "merge-tree",
-        mergedAt: at,
-        method: O.none(),
-        baseRef: "main",
-      })
-    ),
+    merge: GoalMergeResult.makeOption({
+      mergeCommit: "merge-result",
+      tree: "merge-tree",
+      mergedAt: at,
+      method: O.none(),
+      baseRef: "main",
+    }),
     evidence: [
       verifiedCheck("hosted-required-checks", "required"),
       verifiedCheck("hosted-review-threads", "outstanding"),
@@ -272,7 +266,7 @@ const storedRow = Effect.fn("ReceiptStoreTest.storedRow")(function* (
         source: "check-run",
       }),
     ],
-    reviewThreads: O.some(GoalReviewThreadTally.make({ total: 1, outstanding: 0 })),
+    reviewThreads: GoalReviewThreadTally.makeOption({ total: 1, outstanding: 0 }),
     nonRequiredReds: [],
     subClaims: [],
     outcome: "unsatisfied",

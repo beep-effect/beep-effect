@@ -168,13 +168,11 @@ describe("ClosingList property floor", () => {
           );
         assert.deepStrictEqual(
           G.parseReferenceList(line),
-          O.some(
-            G.ReferenceList.make({
-              keyword: sample.keyword,
-              closing: S.is(ClosingKeyword)(sample.keyword),
-              issueNumbers: issues,
-            })
-          )
+          G.ReferenceList.makeOption({
+            keyword: sample.keyword,
+            closing: S.is(ClosingKeyword)(sample.keyword),
+            issueNumbers: issues,
+          })
         );
         assert.deepStrictEqual(G.parseReferenceList(`${line}, #9007199254740992`), O.none());
         assert.deepStrictEqual(G.harvestReferenceLists(`${line}, #9007199254740992`), []);

@@ -194,13 +194,11 @@ const readControllerBudget = Effect.fnUntraced(function* (ancestor: string, dire
   if (!S.is(S.Finite)(ceiling)) return O.none<CgroupMemoryBudget>();
   const currentText = yield* fs.readFileString(`${directory}/memory.current`);
   const current = yield* requireBudgetMetadata(decodeCgroupBytes(Str.trim(currentText)));
-  return O.some(
-    CgroupMemoryBudget.make({
-      path: ancestor,
-      ceilingGib: ceiling / GIB,
-      availableGib: Math.max(0, (ceiling - current) / GIB),
-    })
-  );
+  return CgroupMemoryBudget.makeOption({
+    path: ancestor,
+    ceilingGib: ceiling / GIB,
+    availableGib: Math.max(0, (ceiling - current) / GIB),
+  });
 });
 
 const parentCgroupOf = (cgroup: string): string => {

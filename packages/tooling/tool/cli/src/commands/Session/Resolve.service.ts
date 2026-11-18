@@ -181,20 +181,18 @@ export const claimsFor: {
           DateTime.max(at, row.recordedAt)
         ),
     });
-    return O.some(
-      SessionClaim.make({
-        checkout: latest.checkout,
-        lane: latest.lane,
-        branch: latest.branch,
-        pr: O.isSome(latest.pr) ? latest.pr : O.flatMap(A.last(prRows), (row) => row.pr),
-        harness: latest.harness,
-        sessionId: latest.sessionId,
-        state: latest.state,
-        next: latest.next,
-        matchedBy,
-        claimedAt,
-      })
-    );
+    return SessionClaim.makeOption({
+      checkout: latest.checkout,
+      lane: latest.lane,
+      branch: latest.branch,
+      pr: O.isSome(latest.pr) ? latest.pr : O.flatMap(A.last(prRows), (row) => row.pr),
+      harness: latest.harness,
+      sessionId: latest.sessionId,
+      state: latest.state,
+      next: latest.next,
+      matchedBy,
+      claimedAt,
+    });
   };
   return A.sort(A.getSomes(A.map(newest, claimOf)), claimOrder);
 });

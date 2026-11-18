@@ -371,13 +371,11 @@ const packageBlindSpot = Effect.fn("PackageTestTypecheck.packageBlindSpot")(func
 
   const ownsTestProject = yield* packageOwnsTestProject(packageDir, testDir, testSources);
 
-  return O.some(
-    TestTypecheckBlindSpot.make({
-      package: packageName.value,
-      directory: normalizePath(path.relative(repoRoot, packageDir)),
-      kind: ownsTestProject ? "unwired-test-tsconfig" : "missing-test-tsconfig",
-    })
-  );
+  return TestTypecheckBlindSpot.makeOption({
+    package: packageName.value,
+    directory: normalizePath(path.relative(repoRoot, packageDir)),
+    kind: ownsTestProject ? "unwired-test-tsconfig" : "missing-test-tsconfig",
+  });
 });
 
 /**

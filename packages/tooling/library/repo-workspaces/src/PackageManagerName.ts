@@ -338,12 +338,10 @@ const devEnginesHint = (manifest: Record<string, unknown>): O.Option<ManagerHint
   if (!P.isString(name) || name === "" || Str.includes("@")(name)) return O.none();
 
   const version = slot.version;
-  return O.some(
-    ManagerHint.make({
-      name,
-      version: P.isString(version) && version !== "" ? exactVersionOf(name, version) : O.none<string>(),
-    })
-  );
+  return ManagerHint.makeOption({
+    name,
+    version: P.isString(version) && version !== "" ? exactVersionOf(name, version) : O.none<string>(),
+  });
 };
 
 /**

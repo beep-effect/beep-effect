@@ -111,12 +111,10 @@ export const FloatingPane = (
         );
         props.graph.registry.set(
           props.state.floatingOverrideAtom,
-          O.some(
-            FloatingOverride.make({
-              groupId,
-              anchoredBox: topLeftBox(next, container),
-            })
-          )
+          FloatingOverride.makeOption({
+            groupId,
+            anchoredBox: topLeftBox(next, container),
+          })
         );
       };
       const down = (event: PointerEvent): void => {
@@ -128,15 +126,13 @@ export const FloatingPane = (
         node.setPointerCapture?.(event.pointerId);
         props.graph.registry.set(
           props.state.floatingGestureAtom,
-          O.some(
-            FloatingGesture.cases[mode].make({
-              groupId,
-              start: positionOf(event),
-              initial: props.anchoredBox,
-              initialBox: member.box,
-              moved: false,
-            })
-          )
+          FloatingGesture.cases[mode].makeOption({
+            groupId,
+            start: positionOf(event),
+            initial: props.anchoredBox,
+            initialBox: member.box,
+            moved: false,
+          })
         );
       };
       const up = (event: PointerEvent): void => finish(node, event);

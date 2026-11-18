@@ -697,20 +697,18 @@ const findingForFence = (source: string, fence: ScannedFence): ReadonlyArray<Doc
   if (O.isNone(canonical)) return A.of(unnameableTitleFinding(fence, info, verdict));
 
   const consoleRewrites = planConsoleRewrites(fence.code, fence.codeStartLine);
-  const plan = O.some(
-    MarkPlan.make({
-      location: fence.location,
-      sourceDigest: sourceDigest(source),
-      expectedInfoString: canonical.value,
-      addMarker: !info.markerPresent,
-      ...O.getSomesStruct({
-        addName: O.isNone(O.fromUndefinedOr(info.name))
-          ? O.some(Str.slice(`ts ${doctestSourceMarker} `.length)(canonical.value))
-          : O.none<string>(),
-      }),
-      consoleRewrites,
-    })
-  );
+  const plan = MarkPlan.makeOption({
+    location: fence.location,
+    sourceDigest: sourceDigest(source),
+    expectedInfoString: canonical.value,
+    addMarker: !info.markerPresent,
+    ...O.getSomesStruct({
+      addName: O.isNone(O.fromUndefinedOr(info.name))
+        ? O.some(Str.slice(`ts ${doctestSourceMarker} `.length)(canonical.value))
+        : O.none<string>(),
+    }),
+    consoleRewrites,
+  });
   return A.flatten([
     markerFindings(fence, info, verdict, canonical.value, plan),
     typeOnlyFindings(fence, info, verdict, plan),

@@ -581,12 +581,10 @@ describe("@beep/pdf-tools service", () => {
             SvgToPdfRequest.make({
               svgPaths: [path.join(dir, "a.svg")],
               outputPath: path.join(dir, "out.pdf"),
-              fonts: O.some(
-                PinnedFonts.make({
-                  directory: fontDir,
-                  families: [FontFamilyAlias.make({ requested: "Arial", family: "Liberation Sans" })],
-                })
-              ),
+              fonts: PinnedFonts.makeOption({
+                directory: fontDir,
+                families: [FontFamilyAlias.make({ requested: "Arial", family: "Liberation Sans" })],
+              }),
             })
           );
           const runs = runsIn(dir);
@@ -619,7 +617,7 @@ describe("@beep/pdf-tools service", () => {
               SvgToPdfRequest.make({
                 svgPaths: [path.join(dir, "a.svg")],
                 outputPath: path.join(dir, "out.pdf"),
-                fonts: O.some(PinnedFonts.make({ directory: missing, families: [] })),
+                fonts: PinnedFonts.makeOption({ directory: missing, families: [] }),
               })
             )
           );

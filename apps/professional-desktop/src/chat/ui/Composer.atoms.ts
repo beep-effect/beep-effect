@@ -66,7 +66,8 @@ import type * as Fiber from "effect/Fiber";
 export const prepareComposerDocumentSafetyGate = (document: Md.Document): O.Option<ComposerSafetyRefusal> => {
   const issues = documentSafetyIssues(document);
   return A.isReadonlyArrayNonEmpty(issues)
-    ? O.some(
+    ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+      O.some(
         ComposerSafetyRefusal.make({
           issueCount: A.length(issues),
           message: unsafeDocumentMessage(issues),

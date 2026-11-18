@@ -84,7 +84,7 @@ const scannerFor: {
 describe("delimiter measurements", () => {
   it("returns the same schema payload in both call forms and restores the cursor", () => {
     const scanner = scannerFor(" **word**", 1);
-    const expected = O.some(DelimiterRun.make({ numdelims: 2, canOpen: true, canClose: false }));
+    const expected = DelimiterRun.makeOption({ numdelims: 2, canOpen: true, canClose: false });
     assert.deepStrictEqual(scanDelims(scanner, "*"), expected);
     assert.strictEqual(scanner.pos, 1);
     assert.deepStrictEqual(scanDelims("*")(scanner), expected);
@@ -116,13 +116,13 @@ describe("delimiter measurements", () => {
     const scanner = scannerFor("😀__a__😀", 2);
     assert.deepStrictEqual(
       scanDelims(scanner, "_"),
-      O.some(DelimiterRun.make({ numdelims: 2, canOpen: true, canClose: false }))
+      DelimiterRun.makeOption({ numdelims: 2, canOpen: true, canClose: false })
     );
     assert.strictEqual(scanner.pos, 2);
     scanner.pos = 5;
     assert.deepStrictEqual(
       scanDelims("_")(scanner),
-      O.some(DelimiterRun.make({ numdelims: 2, canOpen: false, canClose: true }))
+      DelimiterRun.makeOption({ numdelims: 2, canOpen: false, canClose: true })
     );
     assert.strictEqual(scanner.pos, 5);
   });
@@ -131,7 +131,7 @@ describe("delimiter measurements", () => {
     const scanner = scannerFor("a\udc00_a", 2);
     assert.deepStrictEqual(
       scanDelims(scanner, "_"),
-      O.some(DelimiterRun.make({ numdelims: 1, canOpen: false, canClose: false }))
+      DelimiterRun.makeOption({ numdelims: 1, canOpen: false, canClose: false })
     );
     assert.strictEqual(scanner.pos, 2);
   });

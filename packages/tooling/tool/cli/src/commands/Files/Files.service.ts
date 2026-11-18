@@ -468,17 +468,15 @@ const collectSortableFile = Effect.fn("Files.collectSortableFile")(function* (
   }
 
   return {
-    file: O.some(
-      SortableFile.make({
-        birthtime: stat.birthtime,
-        canonicalPath: canonicalPath.value,
-        extension,
-        mediaKind,
-        name: entry,
-        size: stat.size,
-        sourcePath,
-      })
-    ),
+    file: SortableFile.makeOption({
+      birthtime: stat.birthtime,
+      canonicalPath: canonicalPath.value,
+      extension,
+      mediaKind,
+      name: entry,
+      size: stat.size,
+      sourcePath,
+    }),
     skippedCount: 0,
   };
 });

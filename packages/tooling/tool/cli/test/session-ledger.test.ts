@@ -534,35 +534,31 @@ describe("beep session", () => {
               packet: "verified",
               declarationDigest: digest,
               acceptedDeclarationDigest: O.some(digest),
-              requiredChecks: O.some(
-                GoalRequiredCheckSnapshot.make({
-                  contexts: ["Lint"],
-                  sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
-                  effectiveAt: mergedAt,
-                  inventoryComplete: true,
-                  mergeTimeInventory: O.some(
-                    GoalMergeTimeInventory.make({
-                      source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
-                      ruleSuiteId: 1,
-                      ref: "refs/heads/main",
-                      afterSha: "merge-result",
-                      pushedAt: mergedAt,
-                      result: "pass",
-                      ruleSources: [
-                        GoalMergeTimeRuleSource.make({
-                          sourceType: "ruleset",
-                          rulesetId: O.some(42),
-                          name: O.some("main"),
-                          enforcement: "active",
-                          requiredStatusChecks: O.some("pass"),
-                          survives: true,
-                          version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
-                        }),
-                      ],
-                    })
-                  ),
-                })
-              ),
+              requiredChecks: GoalRequiredCheckSnapshot.makeOption({
+                contexts: ["Lint"],
+                sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
+                effectiveAt: mergedAt,
+                inventoryComplete: true,
+                mergeTimeInventory: GoalMergeTimeInventory.makeOption({
+                  source: "repos/{owner}/{repo}/rulesets/rule-suites/1",
+                  ruleSuiteId: 1,
+                  ref: "refs/heads/main",
+                  afterSha: "merge-result",
+                  pushedAt: mergedAt,
+                  result: "pass",
+                  ruleSources: [
+                    GoalMergeTimeRuleSource.make({
+                      sourceType: "ruleset",
+                      rulesetId: O.some(42),
+                      name: O.some("main"),
+                      enforcement: "active",
+                      requiredStatusChecks: O.some("pass"),
+                      survives: true,
+                      version: O.some("repos/{owner}/{repo}/rulesets/42/history/1"),
+                    }),
+                  ],
+                }),
+              }),
               requiredCheckFacts: [
                 GoalRequiredCheckFact.make({
                   context: "Lint",
@@ -576,18 +572,16 @@ describe("beep session", () => {
               finalPullRequest: 1429,
               acceptedHead: O.some("accepted-head"),
               merged: O.some(true),
-              merge: O.some(
-                GoalMergeResult.make({
-                  mergeCommit: "merge-result",
-                  tree: "merge-tree",
-                  mergedAt,
-                  method: O.none(),
-                  baseRef: "main",
-                })
-              ),
+              merge: GoalMergeResult.makeOption({
+                mergeCommit: "merge-result",
+                tree: "merge-tree",
+                mergedAt,
+                method: O.none(),
+                baseRef: "main",
+              }),
               grandfathered: false,
               evidence: [hosted("hosted-required-checks", "required"), hosted("hosted-review-threads", "outstanding")],
-              reviewThreads: O.some(GoalReviewThreadTally.make({ total: 0, outstanding: 0 })),
+              reviewThreads: GoalReviewThreadTally.makeOption({ total: 0, outstanding: 0 }),
               nonRequiredReds: [],
               subClaims: [],
               verifiedAt: mergedAt,

@@ -1956,13 +1956,11 @@ const convergeMonitorInbox = Effect.fn("YeetMonitorLoop.convergeInbox")(function
     ...observation,
     poll: MonitorPoll.make({
       ...observation.poll,
-      head: O.some(
-        MonitorHeadState.make({
-          ...conflicted,
-          wavePinned: true,
-          waveRedSet: pinning ? O.orElse(stamped, () => O.some(redSet)) : conflicted.waveRedSet,
-        })
-      ),
+      head: MonitorHeadState.makeOption({
+        ...conflicted,
+        wavePinned: true,
+        waveRedSet: pinning ? O.orElse(stamped, () => O.some(redSet)) : conflicted.waveRedSet,
+      }),
     }),
   });
 });
@@ -2043,7 +2041,7 @@ const closeoutMonitorHead = Effect.fn("YeetMonitorLoop.closeoutHead")(function* 
   const value3 = yield* options.now ?? DateTime.now;
   const at = DateTime.formatIso(value3);
   const timeline = yeetHeadTimelineStamp(O.getOrThrow(poll.head).timeline, "closeoutAt", at);
-  const head = O.some(MonitorHeadState.make({ ...current, timeline }));
+  const head = MonitorHeadState.makeOption({ ...current, timeline });
   const nextPoll = MonitorPoll.make({ ...poll, head });
   yield* Console.log(
     `[yeet] closeout: ${closedOut.success.report.issueCount} issue(s) for head ${Str.slice(0, 7)(current.timeline.headSha)}`
@@ -2084,7 +2082,7 @@ const stampMonitorReadiness = Effect.fn("YeetMonitorLoop.stampReadiness")(functi
     timeline = yeetHeadTimelineStamp(timeline, "readyAt", at);
   }
   yield* reportMonitorSettleTransition(current.verdict, verdict);
-  const head = O.some(MonitorHeadState.make({ ...current, timeline, verdict: O.some(verdict) }));
+  const head = MonitorHeadState.makeOption({ ...current, timeline, verdict: O.some(verdict) });
   snapshot = YeetStatusSnapshot.make({ ...snapshot, timeline: O.some(timeline) });
   return MonitorObservation.make({ ...observation, snapshot, poll: MonitorPoll.make({ ...poll, head }) });
 });
@@ -2123,7 +2121,7 @@ const settleAndCloseoutMonitorHead = Effect.fn("YeetMonitorLoop.settleAndCloseou
     ...observation,
     poll: MonitorPoll.make({
       ...observation.poll,
-      head: O.some(MonitorHeadState.make({ ...current, timeline, verdict: O.some(verdict) })),
+      head: MonitorHeadState.makeOption({ ...current, timeline, verdict: O.some(verdict) }),
     }),
   });
   const terminal = yeetMonitorTerminalState(O.fromUndefinedOr(observation.snapshot.remote.state));
@@ -2168,14 +2166,12 @@ const decideMonitorTerminal = Effect.fn("YeetMonitorLoop.decideTerminal")(functi
       ),
       Match.orElse(() => Console.log("[yeet] pull request is CLOSED without merging; ending the merge loop"))
     );
-    return O.some(
-      MonitorPoll.make({ ...poll, terminal: O.filter(terminal, (value) => HashSet.has(terminals, value)) })
-    );
+    return MonitorPoll.makeOption({ ...poll, terminal: O.filter(terminal, (value) => HashSet.has(terminals, value)) });
   }
   const verdict = O.flatMap(poll.head, (head) => head.verdict);
   if (O.exists(verdict, (value) => O.contains(value.reason, "settle-timeout"))) {
     yield* Console.log(`[yeet] settle-timeout${detail}`);
-    return O.some(MonitorPoll.make({ ...poll, terminal: O.some("settle-timeout") }));
+    return MonitorPoll.makeOption({ ...poll, terminal: O.some("settle-timeout") });
   }
   return O.none<MonitorPoll>();
 });
@@ -2231,7 +2227,7 @@ const announceMonitorReadiness = Effect.fn("YeetMonitorLoop.announceReadiness")(
   if (!HashSet.has(terminals, "ready")) {
     yield* Console.log(`[yeet] merge-ready announced for head ${Str.slice(0, 7)(current.timeline.headSha)}`);
   }
-  return MonitorPoll.make({ ...poll, head: O.some(MonitorHeadState.make({ ...current, announcedRow: O.some(id) })) });
+  return MonitorPoll.make({ ...poll, head: MonitorHeadState.makeOption({ ...current, announcedRow: O.some(id) }) });
 });
 
 // A settled head ends an until-ready loop on readiness, or — while the pull

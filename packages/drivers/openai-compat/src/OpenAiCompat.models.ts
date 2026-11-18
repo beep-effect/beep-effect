@@ -1014,9 +1014,9 @@ export class OpenAiCompatAssistantDelta extends S.Opaque<
  * import { OpenAiCompatUsage } from "@beep/openai-compat"
  *
  * const usage = OpenAiCompatUsage.make({
- *   completion_tokens: O.some(S.Natural.make(2)),
- *   prompt_tokens: O.some(S.Natural.make(1)),
- *   total_tokens: O.some(S.Natural.make(3))
+ *   completion_tokens: S.Natural.makeOption(2),
+ *   prompt_tokens: S.Natural.makeOption(1),
+ *   total_tokens: S.Natural.makeOption(3)
  * })
  *
  * console.log(usage)
@@ -1059,7 +1059,7 @@ export class OpenAiCompatUsage extends S.Opaque<OpenAiCompatUsage, { readonly br
  * const choice = OpenAiCompatChatCompletionChoice.make({
  *   finish_reason: O.some("stop"),
  *   index: S.Natural.make(0),
- *   message: O.some(OpenAiCompatAssistantMessage.make({ content: O.some("Hello"), role: "assistant" }))
+ *   message: OpenAiCompatAssistantMessage.makeOption({ content: O.some("Hello"), role: "assistant" })
  * })
  *
  * console.log(choice)
@@ -1108,7 +1108,7 @@ export class OpenAiCompatChatCompletionChoice extends S.Opaque<
  *     OpenAiCompatChatCompletionChoice.make({
  *       finish_reason: O.some("stop"),
  *       index: S.Natural.make(0),
- *       message: O.some(OpenAiCompatAssistantMessage.make({ content: O.some("Hello") }))
+ *       message: OpenAiCompatAssistantMessage.makeOption({ content: O.some("Hello") })
  *     })
  *   ]
  * })
@@ -1152,7 +1152,7 @@ export class OpenAiCompatChatCompletionResponse extends S.Opaque<
  * import { OpenAiCompatAssistantDelta, OpenAiCompatChatCompletionChunkChoice } from "@beep/openai-compat"
  *
  * const choice = OpenAiCompatChatCompletionChunkChoice.make({
- *   delta: O.some(OpenAiCompatAssistantDelta.make({ content: O.some("Hi ") })),
+ *   delta: OpenAiCompatAssistantDelta.makeOption({ content: O.some("Hi ") }),
  *   index: S.Natural.make(0)
  * })
  *
@@ -1200,7 +1200,7 @@ export class OpenAiCompatChatCompletionChunkChoice extends S.Opaque<
  * const chunk = OpenAiCompatChatCompletionChunk.make({
  *   choices: [
  *     OpenAiCompatChatCompletionChunkChoice.make({
- *       delta: O.some(OpenAiCompatAssistantDelta.make({ content: O.some("Hi ") })),
+ *       delta: OpenAiCompatAssistantDelta.makeOption({ content: O.some("Hi ") }),
  *       index: S.Natural.make(0)
  *     })
  *   ]

@@ -14,7 +14,6 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import { identity } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { FixtureRegistrationsLive } from "./fixtures/FixtureHost.ts";
@@ -67,7 +66,7 @@ describe("dispatch anchor", () => {
         const server = yield* McpServer.McpServer;
         const result = yield* server
           .callTool({ name: "anchor_report", arguments: {} })
-          .pipe(Effect.provideService(CurrentMcpDispatchAnchor, O.some(McpDispatchAnchor.make("anchor-under-test"))));
+          .pipe(Effect.provideService(CurrentMcpDispatchAnchor, McpDispatchAnchor.makeOption("anchor-under-test")));
         assert.strictEqual(anchorReport(result), "anchor-under-test");
       })
     );
@@ -76,7 +75,7 @@ describe("dispatch anchor", () => {
   it.layer(
     FixtureRegistrationsLive.pipe(
       Layer.provideMerge(Layer.mergeAll(McpServer.McpServer.layer, StubMcpClientLayer)),
-      Layer.provide(Layer.succeed(CurrentMcpDispatchAnchor, O.some(McpDispatchAnchor.make("captured-at-build"))))
+      Layer.provide(Layer.succeed(CurrentMcpDispatchAnchor, McpDispatchAnchor.makeOption("captured-at-build")))
     ),
     { timeout: "5 seconds" }
   )("with an anchor in the layer-build context", (it) => {

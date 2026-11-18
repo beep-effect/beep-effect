@@ -184,7 +184,7 @@ export class PatentAssignee extends S.Opaque<PatentAssignee, { readonly brand: u
  *
  * const reference = PatentReference.make({
  *   country: O.some(OfficeCode.Enum.US),
- *   number: O.some(PatentNumber.make("7654321")),
+ *   number: PatentNumber.makeOption("7654321"),
  *   kindCode: O.some(KindCode.Enum.B2)
  * })
  * console.log(reference.kindCode)
@@ -236,7 +236,7 @@ export class PatentReference extends S.Opaque<PatentReference, { readonly brand:
  * import { KindCode, OfficeCode, PatentMetadata, PatentNumber } from "@beep/law-practice-domain"
  *
  * const metadata = PatentMetadata.make({
- *   patentNumber: O.some(PatentNumber.make("7654321")),
+ *   patentNumber: PatentNumber.makeOption("7654321"),
  *   country: O.some(OfficeCode.Enum.US),
  *   kindCode: O.some(KindCode.Enum.B2)
  * })
@@ -614,7 +614,7 @@ export declare namespace PatentDisplayMetadata {
  *
  * const display = PatentDisplay.make({
  *   country: OfficeCode.Enum.US,
- *   number: O.some(PatentNumber.make("7654321")),
+ *   number: PatentNumber.makeOption("7654321"),
  *   kindCode: O.some(KindCode.Enum.B2),
  *   formatted: "US 7,654,321 B2",
  *   office: PATENT_OFFICES.US,

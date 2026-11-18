@@ -390,13 +390,11 @@ export const parseReferenceList = (line: string): O.Option<ReferenceList> => {
   if (afterWhitespace === cursor) return O.none();
   const issueNumbers = parseItems(trimmed, afterWhitespace);
   if (O.isNone(issueNumbers)) return O.none();
-  return O.some(
-    ReferenceList.make({
-      keyword: keyword.value,
-      closing: R.has(CLOSING_KEYWORD_BY_NAME, keyword.value),
-      issueNumbers: issueNumbers.value,
-    })
-  );
+  return ReferenceList.makeOption({
+    keyword: keyword.value,
+    closing: R.has(CLOSING_KEYWORD_BY_NAME, keyword.value),
+    issueNumbers: issueNumbers.value,
+  });
 };
 
 /**

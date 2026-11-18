@@ -2,7 +2,6 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ChosenMatter, TimerInterval } from "@/PracticeMod.values";
 
@@ -12,7 +11,7 @@ describe("TimerInterval", () => {
       const interval = TimerInterval.make({
         schemaVersion: "practice-timer/v1",
         sessionId: "s-1",
-        matter: O.some(ChosenMatter.make({ reference: "12345.10008US01", docketKey: null, client: null })),
+        matter: ChosenMatter.makeOption({ reference: "12345.10008US01", docketKey: null, client: null }),
         startedAt: DateTime.makeUnsafe(0),
         stoppedAt: DateTime.makeUnsafe(60_000),
       });

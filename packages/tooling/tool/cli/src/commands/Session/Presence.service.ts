@@ -303,19 +303,17 @@ export const capturePresence = Effect.fn("SessionPresence.capture")(function* (f
       : O.isSome(t3)
         ? "t3-code"
         : "unknown";
-  return O.some(
-    SessionPresence.make({
-      schemaVersion: "session-presence/v1",
-      repository: facts.repository,
-      harness: identity.harness,
-      entrypoint,
-      sessionId: identity.sessionId.value,
-      routes: routesFor({ harness: identity.harness, sessionId: identity.sessionId.value, t3 }),
-      checkout: facts.checkout,
-      branch: facts.branch,
-      recordedAt,
-    })
-  );
+  return SessionPresence.makeOption({
+    schemaVersion: "session-presence/v1",
+    repository: facts.repository,
+    harness: identity.harness,
+    entrypoint,
+    sessionId: identity.sessionId.value,
+    routes: routesFor({ harness: identity.harness, sessionId: identity.sessionId.value, t3 }),
+    checkout: facts.checkout,
+    branch: facts.branch,
+    recordedAt,
+  });
 });
 
 /**

@@ -181,7 +181,7 @@ export const measureP6 = (options: {
     inkBox:
       tally.maxX < 0
         ? O.none()
-        : O.some(PixelBox.make({ minX: tally.minX, minY: tally.minY, maxX: tally.maxX, maxY: tally.maxY })),
+        : PixelBox.makeOption({ minX: tally.minX, minY: tally.minY, maxX: tally.maxX, maxY: tally.maxY }),
     inkPixels: tally.inkPixels,
     impurePixels: tally.impurePixels,
     chromaPixels: tally.chromaPixels,

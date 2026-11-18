@@ -135,13 +135,11 @@ const openRemote = (fields: {
     // about the other criteria, and the window has its own suite.
     reviewWindow:
       fields.reviewWindow ??
-      O.some(
-        YeetReviewWindowElapsed.make({
-          anchor: "ready-for-review",
-          anchoredAt: "2026-10-06T00:00:00.000Z",
-          windowMs: 1_200_000,
-        })
-      ),
+      YeetReviewWindowElapsed.makeOption({
+        anchor: "ready-for-review",
+        anchoredAt: "2026-10-06T00:00:00.000Z",
+        windowMs: 1_200_000,
+      }),
     ...O.getSomesStruct({
       reviewDecision: O.fromUndefinedOr(fields.reviewDecision),
       checkCount: O.fromUndefinedOr(fields.checkCount),
@@ -1069,7 +1067,7 @@ describe("yeet remote check partitions", () => {
     const remote = YeetStatusRemote.make({
       ...openRemote({}),
       ...O.getSomesStruct(summary),
-      readFailure: O.some(YeetCommandError.make({ message: "HTTP 503 reading the complete check census" })),
+      readFailure: YeetCommandError.makeOption({ message: "HTTP 503 reading the complete check census" }),
     });
 
     assertSome(summary.requiredCheckCount, 1);
@@ -1086,7 +1084,7 @@ describe("yeet remote check partitions", () => {
     const complete = openRemote({ checkCount: 24, failingCheckCount: 0, pendingCheckCount: 0 });
     const unread = YeetStatusRemote.make({
       ...complete,
-      readFailure: O.some(YeetCommandError.make({ message: "Required check capture was unreadable" })),
+      readFailure: YeetCommandError.makeOption({ message: "Required check capture was unreadable" }),
     });
     const held = O.getOrThrow(deriveYeetMergeReady(closeoutArtifact(0, O.none()), unread));
     strictEqual(held.ready, false);
@@ -1191,7 +1189,7 @@ describe("yeet status snapshot rendering and encoding", () => {
       requiredCheckCount: 15,
       failingRequiredCheckCount: 0,
       pendingRequiredCheckCount: 0,
-      readFailure: O.some(YeetCommandError.make({ message: "Complete check capture unavailable" })),
+      readFailure: YeetCommandError.makeOption({ message: "Complete check capture unavailable" }),
     });
     const summary = renderYeetStatusSummary(
       YeetStatusSnapshot.make({

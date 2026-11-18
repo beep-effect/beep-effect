@@ -109,6 +109,6 @@ export const chosenMatterOf: {
         ),
         () => first
       );
-      return O.some(ChosenMatter.make({ reference, docketKey: preferred.docketKey, client: preferred.client }));
+      return ChosenMatter.makeOption({ reference, docketKey: preferred.docketKey, client: preferred.client });
     })
 );

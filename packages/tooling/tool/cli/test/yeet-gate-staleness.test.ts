@@ -33,10 +33,10 @@ const goalsDescriptor = GateArtifactDescriptor.make({
 });
 
 const artifactAt = (modifiedAtMs: number) =>
-  O.some(GateFileWitness.make({ modifiedAtMs, path: descriptor.artifactPath }));
+  GateFileWitness.makeOption({ modifiedAtMs, path: descriptor.artifactPath });
 
 const inputAt = (modifiedAtMs: number) =>
-  O.some(GateFileWitness.make({ modifiedAtMs, path: "packages/tooling/tool/cli/test/new-suite.test.ts" }));
+  GateFileWitness.makeOption({ modifiedAtMs, path: "packages/tooling/tool/cli/test/new-suite.test.ts" });
 
 describe("gate staleness assessment", () => {
   it("reports an artifact older than the newest change as stale", () => {
@@ -87,7 +87,7 @@ describe("gate staleness assessment", () => {
         (entry) =>
           assessGateStaleness(
             entry,
-            O.some(GateFileWitness.make({ modifiedAtMs: 1_000, path: entry.artifactPath })),
+            GateFileWitness.makeOption({ modifiedAtMs: 1_000, path: entry.artifactPath }),
             O.none()
           ).status === "fresh"
       )
@@ -103,8 +103,8 @@ describe("gate staleness assessment", () => {
     expect(
       assessGateStaleness(
         goalsDescriptor,
-        O.some(GateFileWitness.make({ modifiedAtMs: 1_000, path: goalsDescriptor.artifactPath })),
-        O.some(GateFileWitness.make({ modifiedAtMs: 2_000, path: goalsInput }))
+        GateFileWitness.makeOption({ modifiedAtMs: 1_000, path: goalsDescriptor.artifactPath }),
+        GateFileWitness.makeOption({ modifiedAtMs: 2_000, path: goalsInput })
       ).status
     ).toBe("stale");
   });
@@ -117,7 +117,7 @@ describe("gate staleness assessment", () => {
       assessGateStaleness(
         descriptor,
         artifactAt(1_000),
-        O.some(GateFileWitness.make({ modifiedAtMs: 2_000, path: sourceInput }))
+        GateFileWitness.makeOption({ modifiedAtMs: 2_000, path: sourceInput })
       ).status
     ).toBe("stale");
   });

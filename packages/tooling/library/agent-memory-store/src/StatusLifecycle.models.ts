@@ -106,7 +106,7 @@ export class StatusLifecycle extends S.Opaque<StatusLifecycle, { readonly brand:
  *
  * const transition = StatusTransition.make({
  *   field: "status",
- *   from: O.some(StatusValue.make("active")),
+ *   from: StatusValue.makeOption("active"),
  *   to: StatusValue.make("completed"),
  * })
  * console.log(transition.to)
@@ -150,7 +150,7 @@ export class StatusTransition extends S.Opaque<StatusTransition, { readonly bran
  * })
  * const backward = StatusTransition.make({
  *   field: "status",
- *   from: O.some(StatusValue.make("active")),
+ *   from: StatusValue.makeOption("active"),
  *   to: StatusValue.make("draft"),
  * })
  * console.log(lifecycleAllows(lifecycle, backward)) // false

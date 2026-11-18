@@ -77,9 +77,7 @@ const pageOf = (
     range: ClaimInspectionPageRange.make({ startSourceOrdinal, endSourceOrdinal, totalRecords: report.records.length }),
     deliveryStatus: hasMore ? "incomplete" : "complete",
     nextCursor: hasMore
-      ? O.some(
-          ClaimInspectionCursor.make({ sourceKey: report.input.sourceKey, nextSourceOrdinal: endSourceOrdinal + 1 })
-        )
+      ? ClaimInspectionCursor.makeOption({ sourceKey: report.input.sourceKey, nextSourceOrdinal: endSourceOrdinal + 1 })
       : O.none(),
   });
 };

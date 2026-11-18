@@ -206,7 +206,7 @@ const addressSet = flow(A.map(normalizeAddress), A.dedupe, sortStrings);
  *
  * const addresses = storedRecipientAddresses(
  *   O.some([
- *     GraphRecipient.make({ emailAddress: O.some(GraphEmailAddress.make({ address: O.some("counsel@example.test") })) })
+ *     GraphRecipient.make({ emailAddress: GraphEmailAddress.makeOption({ address: O.some("counsel@example.test") }) })
  *   ])
  * )
  * console.log(addresses)
@@ -336,5 +336,6 @@ export const checkSendExpectation = (check: OutboxSendCheck): O.Option<OutboxSen
     A.map(([field]) => field)
   );
 
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
   return A.isReadonlyArrayNonEmpty(fields) ? O.some(OutboxSendMismatch.make({ fields })) : O.none();
 };

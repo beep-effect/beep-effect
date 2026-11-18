@@ -637,6 +637,7 @@ export const turboEnvironmentHealthWarnings = Effect.fn("EnvConfig.turboEnvironm
     references,
     ([variableName, reference]) =>
       secretReferenceProbe(repoRoot, { ...secretFreeEnvironment, [variableName]: reference }).pipe(
+        // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
         Effect.map((usable) => (usable ? O.none() : O.some(TurboEnvironmentHealthWarning.make({ variableName }))))
       ),
     { concurrency: environmentHealthProbeConcurrency }

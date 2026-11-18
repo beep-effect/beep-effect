@@ -303,15 +303,13 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
       get(ref).pipe(
         Effect.map((entry) =>
           entry.kind === "text"
-            ? O.some(
-                CitationPythonUnicodeValue.make({
-                  ...entry.unicode,
-                  storage: CitationPythonUnicodeStorage.make({
-                    width: entry.unicode.storage.width,
-                    bytes: new Uint8Array(entry.unicode.storage.bytes),
-                  }),
-                })
-              )
+            ? CitationPythonUnicodeValue.makeOption({
+                ...entry.unicode,
+                storage: CitationPythonUnicodeStorage.make({
+                  width: entry.unicode.storage.width,
+                  bytes: new Uint8Array(entry.unicode.storage.bytes),
+                }),
+              })
             : O.none()
         )
       )
@@ -335,7 +333,7 @@ export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")
       get(ref).pipe(
         Effect.map((entry) =>
           entry.kind === "text"
-            ? O.some(CitationCleanerTextDescriptor.make({ text: entry.unicode.text, subtype: entry.subtype }))
+            ? CitationCleanerTextDescriptor.makeOption({ text: entry.unicode.text, subtype: entry.subtype })
             : O.none()
         )
       )

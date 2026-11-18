@@ -47,10 +47,14 @@ const inputWith = (files: ReadonlyArray<PressureFile>, readAt = NOW) =>
   HostPressureInput.make({
     readAt,
     pressure: PressureSourceInput.cases.Read.make({ files }),
-    memory: O.some(HostMemoryInput.make({ availableGib: 40.04, totalGib: 62.5 })),
-    admission: O.some(
-      AdmissionSlotsInput.make({ capacityTokens: 3, activeTokens: 1, queued: 0, dead: 0, hardFloorEngaged: false })
-    ),
+    memory: HostMemoryInput.makeOption({ availableGib: 40.04, totalGib: 62.5 }),
+    admission: AdmissionSlotsInput.makeOption({
+      capacityTokens: 3,
+      activeTokens: 1,
+      queued: 0,
+      dead: 0,
+      hardFloorEngaged: false,
+    }),
   });
 
 const healthy = inputWith([

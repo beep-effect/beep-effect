@@ -23,7 +23,6 @@ import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientError from "effect/http/HttpClientError";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -334,7 +333,7 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
         "fails with output-limit-exceeded when the driver budget is exceeded",
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(
-            TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(4)) })
+            TikaServerEngineConfig.make({ maxOutputBytes: PosInt.makeOption(4) })
           );
           const madeExtractOperationFixture5 = yield* makeExtractOperationFixture("plain-text");
           const error = yield* engine.extract(madeExtractOperationFixture5).pipe(Effect.flip);
@@ -353,7 +352,7 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
         "lets a tighter per-operation budget win over the driver budget",
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(
-            TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(4_096)) })
+            TikaServerEngineConfig.make({ maxOutputBytes: PosInt.makeOption(4_096) })
           );
           const madeExtractOperationFixture6 = yield* makeExtractOperationFixture("plain-text", {
             maxMaterializedBytes: 4,
@@ -373,7 +372,7 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
         "lets a tighter driver budget win over the per-operation budget",
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(
-            TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(4)) })
+            TikaServerEngineConfig.make({ maxOutputBytes: PosInt.makeOption(4) })
           );
           const madeExtractOperationFixture7 = yield* makeExtractOperationFixture("plain-text", {
             maxMaterializedBytes: 4_096,
@@ -391,7 +390,7 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
       "extracts normally when both budgets leave room",
       Effect.fnUntraced(function* () {
         const engine = yield* makeTikaServerFileProcessingEngine(
-          TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(4_096)) })
+          TikaServerEngineConfig.make({ maxOutputBytes: PosInt.makeOption(4_096) })
         );
         const madeExtractOperationFixture8 = yield* makeExtractOperationFixture("plain-text", {
           maxMaterializedBytes: 4_096,
@@ -410,7 +409,7 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
         "counts response metadata against the budget, not just extracted text",
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(
-            TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(1_024)) })
+            TikaServerEngineConfig.make({ maxOutputBytes: PosInt.makeOption(1_024) })
           );
           const madeExtractOperationFixture9 = yield* makeExtractOperationFixture("plain-text");
           const error = yield* engine.extract(madeExtractOperationFixture9).pipe(Effect.flip);
@@ -429,7 +428,7 @@ describe("makeTikaServerFileProcessingEngine output budgets", () => {
         "enforces the budget before parsing the response body",
         Effect.fnUntraced(function* () {
           const engine = yield* makeTikaServerFileProcessingEngine(
-            TikaServerEngineConfig.make({ maxOutputBytes: O.some(PosInt.make(64)) })
+            TikaServerEngineConfig.make({ maxOutputBytes: PosInt.makeOption(64) })
           );
           const madeExtractOperationFixture10 = yield* makeExtractOperationFixture("plain-text");
           const error = yield* engine.extract(madeExtractOperationFixture10).pipe(Effect.flip);

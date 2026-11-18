@@ -124,29 +124,25 @@ const fixture = () =>
     packet: "unmentioned-packet",
     declarationDigest: "declaration",
     acceptedDeclarationDigest: O.some("accepted-declaration"),
-    requiredChecks: O.some(
-      GoalRequiredCheckSnapshot.make({
-        contexts: ["Lint"],
-        sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
-        effectiveAt: time,
-        inventoryComplete: true,
-        mergeTimeInventory: O.some(completeInventory),
-      })
-    ),
+    requiredChecks: GoalRequiredCheckSnapshot.makeOption({
+      contexts: ["Lint"],
+      sources: ["repos/{owner}/{repo}/rulesets/42/history/1"],
+      effectiveAt: time,
+      inventoryComplete: true,
+      mergeTimeInventory: O.some(completeInventory),
+    }),
     requiredCheckFacts: [lintFact],
     finalPullRequest: 1429,
     acceptedHead: O.some("accepted-head"),
     merged: O.some(true),
     grandfathered: false,
-    merge: O.some(
-      GoalMergeResult.make({
-        mergeCommit: MERGE_COMMIT,
-        tree: "merge-tree",
-        mergedAt: time,
-        method: O.some("squash"),
-        baseRef: "main",
-      })
-    ),
+    merge: GoalMergeResult.makeOption({
+      mergeCommit: MERGE_COMMIT,
+      tree: "merge-tree",
+      mergedAt: time,
+      method: O.some("squash"),
+      baseRef: "main",
+    }),
     evidence: [
       GoalEvidenceCheck.make({
         ref,
@@ -161,7 +157,7 @@ const fixture = () =>
         detail: "No outstanding review thread (0 read when refresh ran).",
       }),
     ],
-    reviewThreads: O.some(GoalReviewThreadTally.make({ total: 0, outstanding: 0 })),
+    reviewThreads: GoalReviewThreadTally.makeOption({ total: 0, outstanding: 0 }),
     nonRequiredReds: [],
     subClaims: [],
     verifiedAt: time,
@@ -459,17 +455,13 @@ describe("pure goal completion resolver", () => {
       const receipt = yield* GoalCompletionVerifier.resolve(
         GoalCompletionObservation.make({
           ...observation,
-          requiredChecks: O.some(
-            GoalRequiredCheckSnapshot.make({
-              ...snapshot,
-              mergeTimeInventory: O.some(
-                GoalMergeTimeInventory.make({
-                  ...completeInventory,
-                  ruleSources: [...completeInventory.ruleSources, deleted],
-                })
-              ),
-            })
-          ),
+          requiredChecks: GoalRequiredCheckSnapshot.makeOption({
+            ...snapshot,
+            mergeTimeInventory: GoalMergeTimeInventory.makeOption({
+              ...completeInventory,
+              ruleSources: [...completeInventory.ruleSources, deleted],
+            }),
+          }),
         })
       );
       // Every required context is green, so the deleted ruleset's failed
@@ -534,7 +526,7 @@ describe("pure goal completion resolver", () => {
         (yield* GoalCompletionVerifier.resolve(
           GoalCompletionObservation.make({
             ...observation,
-            requiredChecks: O.some(GoalRequiredCheckSnapshot.make({ ...snapshot, inventoryComplete: true })),
+            requiredChecks: GoalRequiredCheckSnapshot.makeOption({ ...snapshot, inventoryComplete: true }),
           })
         )).outcome
       ).toBe("unknown");
@@ -542,13 +534,11 @@ describe("pure goal completion resolver", () => {
         (yield* GoalCompletionVerifier.resolve(
           GoalCompletionObservation.make({
             ...observation,
-            requiredChecks: O.some(
-              GoalRequiredCheckSnapshot.make({
-                ...snapshot,
-                inventoryComplete: true,
-                mergeTimeInventory: O.some(completeInventory),
-              })
-            ),
+            requiredChecks: GoalRequiredCheckSnapshot.makeOption({
+              ...snapshot,
+              inventoryComplete: true,
+              mergeTimeInventory: O.some(completeInventory),
+            }),
           })
         )).outcome
       ).toBe("verified");
@@ -563,9 +553,11 @@ describe("pure goal completion resolver", () => {
         (yield* GoalCompletionVerifier.resolve(
           GoalCompletionObservation.make({
             ...observation,
-            requiredChecks: O.some(
-              GoalRequiredCheckSnapshot.make({ ...snapshot, inventoryComplete: true, rulesetReadsComplete: false })
-            ),
+            requiredChecks: GoalRequiredCheckSnapshot.makeOption({
+              ...snapshot,
+              inventoryComplete: true,
+              rulesetReadsComplete: false,
+            }),
           })
         )).outcome
       ).toBe("unknown");

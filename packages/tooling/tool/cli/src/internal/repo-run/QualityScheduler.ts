@@ -2653,9 +2653,7 @@ const readBackfillContext = Effect.fnUntraced(function* (
         readRecentBackfillJournalEvents(root, nowMillis),
         admissionUsageIntervals(nowMillis, BACKFILL_FAIRNESS_WINDOW_MILLIS)
       );
-  return O.some(
-    AdmissionBackfillContext.make({ policy: backfillPolicyFor(protocol, capacityTokens, config), finished })
-  );
+  return AdmissionBackfillContext.makeOption({ policy: backfillPolicyFor(protocol, capacityTokens, config), finished });
 });
 
 // A new ticket declares an ETA only under the backfill gate, so with it off every

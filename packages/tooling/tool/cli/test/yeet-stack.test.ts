@@ -56,7 +56,7 @@ const pull = (overrides: Partial<GithubPullRequestRecord> = {}): GithubPullReque
   });
 
 const stackRef = (position: number, number: number = STACK) =>
-  O.some(GithubPullRequestStackRef.make({ number, position, size: 2, baseRef: "main" }));
+  GithubPullRequestStackRef.makeOption({ number, position, size: 2, baseRef: "main" });
 
 const child = (overrides: Partial<GithubPullRequestRecord> = {}): GithubPullRequestRecord =>
   pull({
@@ -70,7 +70,7 @@ const child = (overrides: Partial<GithubPullRequestRecord> = {}): GithubPullRequ
     ...overrides,
   });
 
-const green = O.some(YeetTrunkHealth.cases.Green.make({ sha: MAIN }));
+const green = YeetTrunkHealth.cases.Green.makeOption({ sha: MAIN });
 
 const facts = (overrides: Partial<YeetStackPublishFacts> = {}): YeetStackPublishFacts =>
   YeetStackPublishFacts.make({
@@ -104,9 +104,9 @@ describe("decideYeetStackPublish", () => {
     ["parent-off-trunk", facts({ parent: pull({ baseRef: "feat/other" }) })],
     ["parent-stacked", facts({ parent: pull({ stack: stackRef(1) }) })],
     ["not-built-on-parent", facts({ builtOnParent: false })],
-    ["trunk-red", facts({ trunkHealth: O.some(YeetTrunkHealth.cases.Red.make({ sha: MAIN, contexts: ["Lint"] })) })],
+    ["trunk-red", facts({ trunkHealth: YeetTrunkHealth.cases.Red.makeOption({ sha: MAIN, contexts: ["Lint"] }) })],
     ["trunk-unknown", facts({ trunkHealth: O.none() })],
-    ["trunk-unknown", facts({ trunkHealth: O.some(YeetTrunkHealth.cases.Unknown.make({ detail: "no run" })) })],
+    ["trunk-unknown", facts({ trunkHealth: YeetTrunkHealth.cases.Unknown.makeOption({ detail: "no run" }) })],
     ["existing-base-mismatch", facts({ existing: O.some(child({ baseRef: "main" })) })],
     [
       "stack-mismatch",
@@ -120,7 +120,7 @@ describe("decideYeetStackPublish", () => {
 
   it("names what it observed in the refusal sentence", () => {
     const decision = decideYeetStackPublish(
-      facts({ trunkHealth: O.some(YeetTrunkHealth.cases.Red.make({ sha: MAIN, contexts: ["Lint", "Test Unit"] })) })
+      facts({ trunkHealth: YeetTrunkHealth.cases.Red.makeOption({ sha: MAIN, contexts: ["Lint", "Test Unit"] }) })
     );
     deepStrictEqual(
       decision,

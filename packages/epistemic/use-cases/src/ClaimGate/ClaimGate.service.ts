@@ -65,7 +65,7 @@ const buildRequest = (
         properties: [
           ShaclPropertyShape.make({
             path: makeNamedNode(EVIDENCE_QUOTE_IRI),
-            minCount: O.some(S.Natural.make(1)),
+            minCount: S.Natural.makeOption(1),
             datatype: O.some(makeNamedNode(XSD_STRING.value)),
           }),
         ],

@@ -450,7 +450,7 @@ export class ReviewLaneMergeReadyRow extends S.Opaque<ReviewLaneMergeReadyRow, {
  *   branch: "feat/review-lane",
  *   recordedAt: "2026-10-27T10:30:00.000Z",
  *   threadId: "PRRT_kwDOA",
- *   reviewer: O.some(YeetReviewerIdentity.make({ login: "greptile-apps[bot]", kind: "greptile" })),
+ *   reviewer: YeetReviewerIdentity.makeOption({ login: "greptile-apps[bot]", kind: "greptile" }),
  *   disposition: "fixed",
  * })
  * console.log(row.disposition) // "fixed"

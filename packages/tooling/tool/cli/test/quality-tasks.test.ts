@@ -2659,9 +2659,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 durationMs: 1,
                 startedAt: "2026-09-28T04:00:00.000Z",
                 endedAt: "2026-09-28T04:00:05.000Z",
-                failure: O.some(
-                  QualityTaskFailed.make({ label: "quality:check", command: "bun run beep ci lane check", exitCode: 1 })
-                ),
+                failure: QualityTaskFailed.makeOption({
+                  label: "quality:check",
+                  command: "bun run beep ci lane check",
+                  exitCode: 1,
+                }),
                 step: wrapper,
               },
               O.none()
@@ -5386,7 +5388,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ).toMatchObject({ cheapGates: 3 });
 
       // Admission: other runs' tokens scale every width an override did not pin; `ci` never scales.
-      const half = O.some(QualityAdmissionLoad.make({ activeTokens: 4, capacityTokens: 8 }));
+      const half = QualityAdmissionLoad.makeOption({ activeTokens: 4, capacityTokens: 8 });
       expect(resolveQualityConcurrencyPlan(workstationDetection, {}, half)).toMatchObject({
         rootTurbo: 4,
         policyLint: 4,
@@ -5403,7 +5405,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(ciPlanUnderLoad).toMatchObject({ rootTurbo: 4, notes: [] });
       assertNone(ciPlanUnderLoad.admission);
       // A saturated host degrades to the `current` widths, never below them.
-      const saturated = O.some(QualityAdmissionLoad.make({ activeTokens: 9, capacityTokens: 9 }));
+      const saturated = QualityAdmissionLoad.makeOption({ activeTokens: 9, capacityTokens: 9 });
       expect(resolveQualityConcurrencyPlan(workstationDetection, {}, saturated)).toMatchObject({
         rootTurbo: 3,
         policyLint: 4,
@@ -5422,7 +5424,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         resolveQualityConcurrencyPlan(
           workstationDetection,
           {},
-          O.some(QualityAdmissionLoad.make({ activeTokens: 0, capacityTokens: 8 }))
+          QualityAdmissionLoad.makeOption({ activeTokens: 0, capacityTokens: 8 })
         )
       ).toMatchObject({ rootTurbo: 8, notes: [] });
 
@@ -7758,7 +7760,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         });
 
         const delta = (present: ReadonlyArray<string>, removed: ReadonlyArray<string> = []) =>
-          O.some(CoverageBaselineRowDelta.make({ present, removed }));
+          CoverageBaselineRowDelta.makeOption({ present, removed });
 
         expect(coverageBaselineRowDelta(previous, previous)).toEqual(delta([]));
         expect(coverageBaselineRowDelta(previous, provenanceOnly)).toEqual(delta([]));
@@ -7824,7 +7826,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             yield* runGit(repoRoot, ["add", "--all"]);
             yield* runGit(repoRoot, ["commit", "-m", "baseline"]);
             const delta = (present: ReadonlyArray<string>) =>
-              O.some(CoverageBaselineRowDelta.make({ present, removed: [] }));
+              CoverageBaselineRowDelta.makeOption({ present, removed: [] });
             const coverageBaselineRowDeltaFromBase64 = yield* coverageBaselineRowDeltaFromBase(repoRoot, "HEAD");
             expect(coverageBaselineRowDeltaFromBase64).toEqual(delta([]));
 
@@ -8442,7 +8444,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           const result = compareCoverageRegressionSnapshotsWithProposedForTesting(
             CoverageComparisonBaselines.make({
               baseline: rows(base),
-              proposed: O.some(CoverageRegressionBaseline.make({ ...coverageRegressionBaseline, packages: {} })),
+              proposed: CoverageRegressionBaseline.makeOption({ ...coverageRegressionBaseline, packages: {} }),
               mergeBase: O.some(rows(base)),
               selfJudge: O.some(planCoverageSelfJudgeScope(owners, [])),
             }),
@@ -9010,7 +9012,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         const baseline = "standards/coverage.regression-baseline.jsonc";
 
         const delta = (present: ReadonlyArray<string>, removed: ReadonlyArray<string> = []) =>
-          O.some(CoverageBaselineRowDelta.make({ present, removed }));
+          CoverageBaselineRowDelta.makeOption({ present, removed });
 
         expect(planCoverageAffectedScope(owners, [baseline])).toMatchObject({ _tag: "full" });
         expect(planCoverageAffectedScopeWithBaseline(owners, [baseline], O.none())).toMatchObject({ _tag: "full" });

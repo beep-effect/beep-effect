@@ -223,14 +223,12 @@ const letterMetrics = (dpi: number, antiAliased: boolean) =>
     height: Math.round(11 * dpi),
     dpi,
     antiAliased,
-    inkBounds: O.some(
-      InkBounds.make({
-        minX: Math.round(1.1 * dpi),
-        minY: Math.round(1.1 * dpi),
-        maxX: Math.round(7.5 * dpi),
-        maxY: Math.round(10 * dpi),
-      })
-    ),
+    inkBounds: InkBounds.makeOption({
+      minX: Math.round(1.1 * dpi),
+      minY: Math.round(1.1 * dpi),
+      maxX: Math.round(7.5 * dpi),
+      maxY: Math.round(10 * dpi),
+    }),
     inkPixels: 100,
     impurePixels: 0,
     largestBlackSquare: 4,
@@ -624,7 +622,7 @@ describe("@beep/occt service", () => {
           ProjectionRequest.make({
             solid: block,
             cameras: [level, blind],
-            shading: O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3, litThreshold: 1 })),
+            shading: ShadingPlan.makeOption({ minPitch: 1, maxPitch: 3, litThreshold: 1 }),
           })
         );
         const backFacing = (view: EdgeSet | undefined) =>
@@ -746,7 +744,7 @@ describe("@beep/occt service", () => {
               ProjectionRequest.make({
                 solid: fixture,
                 cameras: [front],
-                shading: O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3, litThreshold: -1 })),
+                shading: ShadingPlan.makeOption({ minPitch: 1, maxPitch: 3, litThreshold: -1 }),
               })
             )
           ),
@@ -765,7 +763,7 @@ describe("@beep/occt service", () => {
           ProjectionRequest.make({
             solid: fixture,
             cameras: [front],
-            shading: O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3 })),
+            shading: ShadingPlan.makeOption({ minPitch: 1, maxPitch: 3 }),
           })
         );
         const shading = view?.shading ?? [];
@@ -785,7 +783,7 @@ describe("@beep/occt service", () => {
       Effect.fnUntraced(function* () {
         const occt = yield* Occt;
         const post = Part.make({ name: "post", add: [Box.make({ min: [-4, -30, 0], max: [4, -24, 30] })] });
-        const plan = O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3 }));
+        const plan = ShadingPlan.makeOption({ minPitch: 1, maxPitch: 3 });
         const shadingLength = (solid: ModelSpec) =>
           occt.project(ProjectionRequest.make({ solid, cameras: [front], shading: plan })).pipe(
             Effect.map((views) =>
@@ -835,7 +833,7 @@ describe("@beep/occt service", () => {
           ProjectionRequest.make({
             solid: post,
             cameras: [Camera.make({ eye: [1, 0.3, 0], up: [0, 0, 1] })],
-            shading: O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3, litThreshold: 0 })),
+            shading: ShadingPlan.makeOption({ minPitch: 1, maxPitch: 3, litThreshold: 0 }),
           })
         );
         const shading = view?.shading ?? [];
@@ -870,7 +868,7 @@ describe("@beep/occt service", () => {
               Camera.make({ eye: [-1, -1.2, 0.85], up: [0, 0, 1], target: [0, 0, 15], focus: O.some(200) }),
             ],
             withHidden: true,
-            shading: O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3 })),
+            shading: ShadingPlan.makeOption({ minPitch: 1, maxPitch: 3 }),
           })
         );
         expect(A.map(views, (view) => view.broken)).toEqual([[], [], []]);
@@ -939,7 +937,7 @@ describe("@beep/occt service", () => {
       "never shades a broken part",
       Effect.fnUntraced(function* () {
         const occt = yield* Occt;
-        const plan = O.some(ShadingPlan.make({ minPitch: 1, maxPitch: 3, litThreshold: 1 }));
+        const plan = ShadingPlan.makeOption({ minPitch: 1, maxPitch: 3, litThreshold: 1 });
         const slab = Part.make({ name: "slab", add: [box([0, 0, 0], [40, 10, 30])] });
         const shade = (part: Part) =>
           occt

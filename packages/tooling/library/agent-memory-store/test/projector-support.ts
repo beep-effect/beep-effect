@@ -218,7 +218,7 @@ export const statusEvent = Effect.fnUntraced(function* (
   const revisionId = yield* revisionIdOf(nodeId, [head], contentHash);
   const transition = StatusTransition.make({
     field: "status",
-    from: O.some(StatusValue.make(from)),
+    from: StatusValue.makeOption(from),
     to: StatusValue.make(to),
   });
   const event: MemoryEvent = {

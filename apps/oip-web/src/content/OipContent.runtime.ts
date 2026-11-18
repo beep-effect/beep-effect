@@ -102,17 +102,15 @@ const sanityConfig = Effect.fn("OipContent.sanityConfig")(function* () {
     return O.none();
   }
 
-  return O.some(
-    SanityConfigInput.make({
-      ...O.getSomesStruct({
-        projectId,
-        dataset,
-        apiHost: yield* readTextConfigOption("SANITY_API_HOST"),
-        apiVersion: yield* readTextConfigOption("SANITY_API_VERSION"),
-        apiToken: yield* readRedactedConfigOption("SANITY_API_TOKEN"),
-      }),
-    })
-  );
+  return SanityConfigInput.makeOption({
+    ...O.getSomesStruct({
+      projectId,
+      dataset,
+      apiHost: yield* readTextConfigOption("SANITY_API_HOST"),
+      apiVersion: yield* readTextConfigOption("SANITY_API_VERSION"),
+      apiToken: yield* readRedactedConfigOption("SANITY_API_TOKEN"),
+    }),
+  });
 });
 
 const loadFromSanity = (config: SanityConfigInput): Effect.Effect<OipSiteContent, OipContentLoadError> =>

@@ -95,7 +95,7 @@ const fixture = Effect.gen(function* () {
     engineArtifact: artifact,
     anchor,
     components: [CitationComponentAnchor.make({ name: "fullSpan", anchor: zone })],
-    footnote: O.some(CitationFootnoteZone.make({ label: O.some("1"), anchor: zone })),
+    footnote: CitationFootnoteZone.makeOption({ label: O.some("1"), anchor: zone }),
     signal: O.none(),
     warnings: [],
     evidenceConfidence: O.none(),
@@ -158,7 +158,7 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
       const outside = yield* anchorAt(source, 16, 24);
       const citationResult5 = yield* makeCitationMention({
         ...input,
-        footnote: O.some(CitationFootnoteZone.make({ label: O.none(), anchor: outside })),
+        footnote: CitationFootnoteZone.makeOption({ label: O.none(), anchor: outside }),
       }).pipe(Effect.flip);
       expect(citationResult5.reason).toBe("invalid-input");
     })
@@ -251,7 +251,7 @@ it.layer(BunCrypto.layer)("verified citation mention composition", (it) => {
       const mention = yield* makeCitationMention({
         ...input,
         signal: O.some("see"),
-        evidenceConfidence: O.some(UnitInterval.make(0.5)),
+        evidenceConfidence: UnitInterval.makeOption(0.5),
         warnings: [CitationOverlapWarning.make({ previousMentionId })],
       });
       const receipt = yield* projectCitationMentionReceipt(mention);

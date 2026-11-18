@@ -371,7 +371,7 @@ export const findCitationPythonLiteral = Effect.fn("Citation.findNativeLiteral")
     if (visited++ % 4096 === 0) yield* Effect.yieldNow;
     if (!nativeLiteralCandidate(source, needle, index)) continue;
     if (yield* nativeReplacementMatches(source, needle, index))
-      return O.some(CitationPythonSliceBounds.make({ start: index - bounds.start, end: index - bounds.start + count }));
+      return CitationPythonSliceBounds.makeOption({ start: index - bounds.start, end: index - bounds.start + count });
   }
   return O.none<CitationPythonSliceBounds>();
 });

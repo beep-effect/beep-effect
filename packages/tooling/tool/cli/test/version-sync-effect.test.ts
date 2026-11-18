@@ -1430,7 +1430,7 @@ it.layer(VersionSyncTestLayer, { timeout: "30 seconds" })("VersionSync Effect so
       const state = yield* resolveEffectCatalog(tmpDir);
       deepStrictEqual(
         state.effectSource,
-        O.some(EffectSourcePin.make({ version: "4.1.0", commit: EFFECT_4_1_0_COMMIT }))
+        EffectSourcePin.makeOption({ version: "4.1.0", commit: EFFECT_4_1_0_COMMIT })
       );
 
       const resolved = yield* withEffectReleaseCommit(state, false).pipe(

@@ -350,14 +350,12 @@ const wakingPanelTable = (holder: number) => {
     status: (pid: number) =>
       pid === holder
         ? Effect.sync(() =>
-            O.some(
-              ProcessStatus.make({
-                pid,
-                parent: 55,
-                command: "zsh",
-                contextSwitches: O.some(switches.pipe(MutableRef.incrementAndGet)),
-              })
-            )
+            ProcessStatus.makeOption({
+              pid,
+              parent: 55,
+              command: "zsh",
+              contextSwitches: O.some(switches.pipe(MutableRef.incrementAndGet)),
+            })
           )
         : table.status(pid),
   };

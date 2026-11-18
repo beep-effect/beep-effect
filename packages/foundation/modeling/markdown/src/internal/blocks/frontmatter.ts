@@ -359,14 +359,12 @@ const closingFence = (
   for (let lineStart = valueStart; ; ) {
     const [lineEnd, next] = lineBounds(source, lineStart);
     if (isClosingFence(Str.slice(lineStart, lineEnd)(source), rule)) {
-      return O.some(
-        RawFrontmatterCapture.make({
-          format: rule.format,
-          value: Str.slice(valueStart, lineStart)(source),
-          newline,
-          bodyOffset: next,
-        })
-      );
+      return RawFrontmatterCapture.makeOption({
+        format: rule.format,
+        value: Str.slice(valueStart, lineStart)(source),
+        newline,
+        bodyOffset: next,
+      });
     }
     if (next === lineEnd) {
       return O.none();

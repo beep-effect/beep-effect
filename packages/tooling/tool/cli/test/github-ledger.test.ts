@@ -385,7 +385,7 @@ describe("GithubLedger windows", () => {
     ];
     const resetWithCredential = A.map(reset, (row) => ({
       ...row,
-      credential: O.some(CredentialFingerprint.make("aaaaaaaaaaaa")),
+      credential: CredentialFingerprint.makeOption("aaaaaaaaaaaa"),
     }));
     const [window] = windowsOf({ key: coreAlice, rows: resetWithCredential, admitGraphqlSamples: false });
     expect(window?.crossesReset).toBe(true);

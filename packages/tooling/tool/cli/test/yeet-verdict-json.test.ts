@@ -98,24 +98,22 @@ describe("YeetVerdictJson", () => {
     Effect.gen(function* () {
       const blocked = YeetVerdict.make({
         ...verdict,
-        mergeReady: O.some(
-          YeetMergeReady.make({
-            ready: false,
-            failing: O.some("threads-resolved"),
-            criteria: YeetMergeReadyCriteria.make({
-              prOpen: true,
-              notDraft: true,
-              closeoutRun: true,
-              requiredChecksGreen: true,
-              threadsResolved: false,
-              mergeable: true,
-              mergeStateAcceptable: true,
-              reviewDecisionAcceptable: true,
-              reviewWindowElapsed: true,
-              greptileScore: O.some("5/5"),
-            }),
-          })
-        ),
+        mergeReady: YeetMergeReady.makeOption({
+          ready: false,
+          failing: O.some("threads-resolved"),
+          criteria: YeetMergeReadyCriteria.make({
+            prOpen: true,
+            notDraft: true,
+            closeoutRun: true,
+            requiredChecksGreen: true,
+            threadsResolved: false,
+            mergeable: true,
+            mergeStateAcceptable: true,
+            reviewDecisionAcceptable: true,
+            reviewWindowElapsed: true,
+            greptileScore: O.some("5/5"),
+          }),
+        }),
       });
       const text = yield* YeetVerdictJson.encode(blocked);
       expect(text).toContain('"failing":"threads-resolved"');
@@ -127,7 +125,7 @@ describe("YeetVerdictJson", () => {
 
   it.effect("round-trips the publication commit without replacing the starting head", () =>
     Effect.gen(function* () {
-      const publishedHeadSha = O.some(GitObjectId.make("1111111111111111111111111111111111111111"));
+      const publishedHeadSha = GitObjectId.makeOption("1111111111111111111111111111111111111111");
       const recorded = YeetVerdict.make({ ...verdict, publishedHeadSha });
       const decoded = yield* YeetVerdictJson.encode(recorded).pipe(Effect.flatMap(YeetVerdictJson.decode));
       expect(decoded.head).toBe(verdict.head);

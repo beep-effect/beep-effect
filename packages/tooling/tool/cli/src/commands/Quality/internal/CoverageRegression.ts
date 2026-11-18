@@ -1596,12 +1596,10 @@ const maybeSnapshotEntry = Effect.fn("CoverageRegression.maybeSnapshotEntry")(fu
   }
 
   const summary = yield* readCoverageSummary(summaryPath);
-  return O.some(
-    CoverageSnapshotEntry.make({
-      packageName: info.name,
-      baseline: yield* toCoveragePackageBaseline(repoRoot, info.absolutePath, path, summary),
-    })
-  );
+  return CoverageSnapshotEntry.makeOption({
+    packageName: info.name,
+    baseline: yield* toCoveragePackageBaseline(repoRoot, info.absolutePath, path, summary),
+  });
 });
 
 /**
@@ -2065,21 +2063,19 @@ export const coverageBaselineRowDelta: {
         onSome: (before) => !packageBaselineEquivalence(before, after),
       });
 
-    return O.some(
-      CoverageBaselineRowDelta.make({
-        present: pipe(
-          R.toEntries(current.packages),
-          A.filter(presentDiffers),
-          A.map(([packageName]) => packageName),
-          A.sort(Order.String)
-        ),
-        removed: pipe(
-          R.keys(previous.packages),
-          A.filter((packageName) => !R.has(current.packages, packageName)),
-          A.sort(Order.String)
-        ),
-      })
-    );
+    return CoverageBaselineRowDelta.makeOption({
+      present: pipe(
+        R.toEntries(current.packages),
+        A.filter(presentDiffers),
+        A.map(([packageName]) => packageName),
+        A.sort(Order.String)
+      ),
+      removed: pipe(
+        R.keys(previous.packages),
+        A.filter((packageName) => !R.has(current.packages, packageName)),
+        A.sort(Order.String)
+      ),
+    });
   }
 );
 
@@ -3290,7 +3286,8 @@ const raisedFileRowJudgements = (
     A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
     A.map((metric) =>
       fileMetricRegressed(metric, proposed, actual, epsilon)
-        ? O.some(
+        ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          O.some(
             CoverageRaisedRowFailure.make({
               packageName,
               packagePath,
@@ -3320,7 +3317,8 @@ const raisedPackageRowJudgements = (
     A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
     A.map((metric) =>
       metricRegressed(metric, proposed, actual, epsilon)
-        ? O.some(
+        ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          O.some(
             CoverageRaisedRowFailure.make({
               packageName,
               packagePath: proposed.path,
@@ -3356,7 +3354,8 @@ const raisedVanishedFileRowJudgements = (
     A.filter((metric) => rowRaised(metric, base, proposed, epsilon)),
     A.map((metric) =>
       proposed[metric] > ZERO_PERCENTAGE
-        ? O.some(
+        ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+          O.some(
             CoverageRaisedRowFailure.make({
               packageName,
               packagePath,
@@ -3568,7 +3567,8 @@ const coveragePackageRowRemoval = (
   proposedPackage: O.Option<CoveragePackageBaseline>
 ): O.Option<CoveragePackageRowRemovedFailure> =>
   O.isSome(context.baselines.proposed) && O.isSome(measured) && O.isNone(proposedPackage)
-    ? O.some(
+    ? // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
+      O.some(
         CoveragePackageRowRemovedFailure.make({
           packageName: context.packageName,
           packagePath: context.basePath,

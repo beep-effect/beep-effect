@@ -226,7 +226,7 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
               RouteReadSpend.make({
                 requests: 263,
                 reserveWaits: 2,
-                identity: O.some(GithubIdentityLabel.make("user:alice")),
+                identity: GithubIdentityLabel.makeOption("user:alice"),
                 metered: true,
               })
             )

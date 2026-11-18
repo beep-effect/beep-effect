@@ -684,7 +684,7 @@ describe("REST merge gate", () => {
 
   it("holds transient unknown windows with their reason and refuses invalid local configuration", () => {
     const unknownFacts = (reason: string) =>
-      facts({ headPushedAt: O.none(), windowResult: O.some(YeetReviewWindowUnknown.make({ reason })) });
+      facts({ headPushedAt: O.none(), windowResult: YeetReviewWindowUnknown.makeOption({ reason }) });
     const transient = decideYeetGhMergeGate(unknownFacts("the timeline of pull request #1501 could not be read"));
     expect(transient.onlyHolds).toBe(true);
     expect(transient.findings).toMatchObject([
@@ -694,9 +694,9 @@ describe("REST merge gate", () => {
       facts({
         headPushedAt: O.none(),
         windowConfigValid: false,
-        windowResult: O.some(
-          YeetReviewWindowUnknown.make({ reason: "BEEP_YEET_REVIEW_WINDOW is not a duration such as 20 minutes" })
-        ),
+        windowResult: YeetReviewWindowUnknown.makeOption({
+          reason: "BEEP_YEET_REVIEW_WINDOW is not a duration such as 20 minutes",
+        }),
       })
     );
     expect(invalid.onlyHolds).toBe(false);
@@ -871,7 +871,7 @@ const comment = (login: string, isBot = false) =>
   ReviewThreadComment.make({
     id: "PRRC_1",
     databaseId: O.none(),
-    author: O.some(ReviewThreadActor.make({ login, isBot })),
+    author: ReviewThreadActor.makeOption({ login, isBot }),
     body: "",
     path: "a.ts",
     line: O.some(1),

@@ -144,16 +144,14 @@ const snapshot = (
       ...(mergeStateStatus === undefined ? {} : { mergeStateStatus }),
       ...(mergeable === undefined ? {} : { mergeable }),
     }),
-    mergeReady: O.some(
-      YeetMergeReady.make({
-        ready,
-        criteria,
-        failing: A.findFirst(
-          YeetMergeReadyCriterion.literals,
-          (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
-        ),
-      })
-    ),
+    mergeReady: YeetMergeReady.makeOption({
+      ready,
+      criteria,
+      failing: A.findFirst(
+        YeetMergeReadyCriterion.literals,
+        (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
+      ),
+    }),
   });
 };
 const report = (sha = head, issueCount = 0) => ({
@@ -1118,16 +1116,14 @@ const asDraft = (base: YeetStatusSnapshot): YeetStatusSnapshot => {
   return YeetStatusSnapshot.make({
     ...base,
     remote: YeetStatusRemote.make({ ...base.remote, isDraft: true, mergeStateStatus: "DRAFT", mergeable: "MERGEABLE" }),
-    mergeReady: O.some(
-      YeetMergeReady.make({
-        ready: false,
-        criteria,
-        failing: A.findFirst(
-          YeetMergeReadyCriterion.literals,
-          (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
-        ),
-      })
-    ),
+    mergeReady: YeetMergeReady.makeOption({
+      ready: false,
+      criteria,
+      failing: A.findFirst(
+        YeetMergeReadyCriterion.literals,
+        (criterion) => !mergeReadyCriterionHolds(criteria, criterion)
+      ),
+    }),
   });
 };
 
@@ -1144,7 +1140,7 @@ const withReviewWindow = (base: YeetStatusSnapshot, reviewWindow: YeetReviewWind
   return YeetStatusSnapshot.make({
     ...base,
     remote: YeetStatusRemote.make({ ...base.remote, reviewWindow: O.some(reviewWindow) }),
-    mergeReady: O.some(YeetMergeReady.make({ ready: O.isNone(failing), criteria, failing })),
+    mergeReady: YeetMergeReady.makeOption({ ready: O.isNone(failing), criteria, failing }),
   });
 };
 const openWindow = YeetReviewWindowOpen.make({

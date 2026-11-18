@@ -1558,7 +1558,9 @@ export class KnowledgeDoctorRatchet extends S.Opaque<KnowledgeDoctorRatchet, { r
  * `ratchet` is present only in `check` mode, where governance findings (`baseline-tamper`, lease
  * violations) are listed among `findings` too.
  * `uncheckedOptionCount` totals option tokens on resolved commands whose declared options are not
- * statically derivable; a non-zero count is lost coverage, never a pass.
+ * statically derivable; a non-zero count is lost coverage, never a pass. `skippedPrunedCount`,
+ * present only when non-zero, counts the missing-path findings and delegated goals-doctor findings
+ * the tree's checkout skipped because it pruned or owns their subject.
  *
  * **Example** (Build an empty report)
  *
@@ -1597,6 +1599,7 @@ export class KnowledgeDoctorReport extends S.Opaque<KnowledgeDoctorReport, { rea
     mode: KnowledgeDoctorMode,
     spanCounts: KnowledgeSpanCounts,
     uncheckedOptionCount: S.Natural,
+    skippedPrunedCount: S.optionalKey(S.Natural),
     rootHistory: KnowledgeRootHistory,
     groups: S.Array(KnowledgeCauseGroup),
     findings: S.Array(KnowledgeDoctorFinding),
@@ -1604,7 +1607,7 @@ export class KnowledgeDoctorReport extends S.Opaque<KnowledgeDoctorReport, { rea
   }).pipe(
     $I.annoteSchema("KnowledgeDoctorReport", {
       description:
-        "Knowledge-doctor report: span-class totals, causal groups, every classified finding, and the check ratchet.",
+        "Knowledge-doctor report: span-class totals, causal groups, every classified finding, the check ratchet, and how many findings the checkout's prunes skipped.",
     })
   )
 ) {}

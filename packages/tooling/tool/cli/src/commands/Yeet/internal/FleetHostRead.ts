@@ -380,7 +380,7 @@ export const classifyFleetHostJournalPath: {
     O.contains(A.last(base), repositoryKey) && O.contains(A.get(base, A.length(base) - 2), STORE_ATTEMPTS_SEGMENT);
   const checkout = isLive ? O.some(A.join(A.dropRight(base, 2), "/")) : O.none<string>();
   return isRunJournal && Str.isNonEmpty(runId) && (isLive || isStore) && PRINTABLE_PATH.test(relative)
-    ? O.some(FleetHostJournalPath.make({ checkout: O.filter(checkout, Str.isNonEmpty), runId }))
+    ? FleetHostJournalPath.makeOption({ checkout: O.filter(checkout, Str.isNonEmpty), runId })
     : O.none();
 });
 

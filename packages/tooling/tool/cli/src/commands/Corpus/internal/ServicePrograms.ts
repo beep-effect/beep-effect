@@ -502,7 +502,7 @@ const discoverCatalogManifests = Effect.fn("CorpusCommandService.discoverCatalog
           return fs.exists(manifestPath).pipe(
             CorpusCommandError.mapError(`Failed checking run provenance manifest "${manifestPath}".`),
             Effect.map((exists) =>
-              exists ? O.some(CatalogManifest.make({ manifestPath, runLabel: entry })) : O.none<CatalogManifest>()
+              exists ? CatalogManifest.makeOption({ manifestPath, runLabel: entry }) : O.none<CatalogManifest>()
             )
           );
         }),
@@ -980,6 +980,7 @@ const failedOutcome = (
   childArtifactCount: 0,
   ocr: O.none(),
   routingKey,
+  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
   failure: O.some(
     FailedFileProcessingFailureRecord.make({
       artifactId: ids.artifactId,
@@ -1485,13 +1486,11 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
   ): Effect.fn.Return<CorpusExtractOutcome, CorpusCommandError> {
     const { first, ids, record } = input;
     const readPageCount = A.length(A.filter(pageResults, ([row]) => row.status === "read"));
-    const ocr = O.some(
-      CorpusExtractOcrCounts.make({
-        failedPageCount: S.Natural.make(pages.pageCount - readPageCount),
-        missingLanguages: O.some(missingLanguages),
-        readPageCount: S.Natural.make(readPageCount),
-      })
-    );
+    const ocr = CorpusExtractOcrCounts.makeOption({
+      failedPageCount: S.Natural.make(pages.pageCount - readPageCount),
+      missingLanguages: O.some(missingLanguages),
+      readPageCount: S.Natural.make(readPageCount),
+    });
     if (readPageCount === 0) {
       return { ...first, ocr };
     }
@@ -1548,14 +1547,12 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
     if (A.isReadonlyArrayEmpty(plan.selected)) {
       return {
         ...input.first,
-        ocr: O.some(
-          CorpusExtractOcrCounts.make({
-            completed: false,
-            failedPageCount: S.Natural.make(0),
-            missingLanguages: O.some(plan.missing),
-            readPageCount: S.Natural.make(0),
-          })
-        ),
+        ocr: CorpusExtractOcrCounts.makeOption({
+          completed: false,
+          failedPageCount: S.Natural.make(0),
+          missingLanguages: O.some(plan.missing),
+          readPageCount: S.Natural.make(0),
+        }),
       };
     }
     const pageResults = yield* Effect.forEach(
@@ -1591,13 +1588,11 @@ const makeExtractOcr = Effect.fn("CorpusCommandService.makeExtractOcr")(function
         Console.log(`corpus extract: OCR could not count the pages of "${input.ids.relativePath}": ${message}`).pipe(
           Effect.as({
             ...input.first,
-            ocr: O.some(
-              CorpusExtractOcrCounts.make({
-                failedPageCount: S.Natural.make(0),
-                pageCountFailed: true,
-                readPageCount: S.Natural.make(0),
-              })
-            ),
+            ocr: CorpusExtractOcrCounts.makeOption({
+              failedPageCount: S.Natural.make(0),
+              pageCountFailed: true,
+              readPageCount: S.Natural.make(0),
+            }),
           })
         ),
       Read: ({ pages }) => readPages(input, pages),
@@ -2042,6 +2037,7 @@ const extractCorpusLocked = Effect.fn("CorpusCommandService.extractCorpusLocked"
             Match.discriminator("resultKind")("skipped", (skipped) =>
               Effect.succeed({
                 childArtifactCount: 0,
+                // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
                 failure: O.some(
                   SkippedFileProcessingFailureRecord.make({
                     artifactId: ids.artifactId,

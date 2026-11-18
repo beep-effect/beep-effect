@@ -50,7 +50,7 @@ const $I = $RepoCliId.create("commands/Files/Files.plan");
  *   sourcePath: "/srv/photos/IMG_0042.jpg"
  * })
  * const options = TargetNameForEntryOptions.make({
- *   dimensions: O.some(MediaDimensions.make({ width: 4032, height: 3024 })),
+ *   dimensions: MediaDimensions.makeOption({ width: 4032, height: 3024 }),
  *   file,
  *   index: 7,
  *   width: 3
@@ -433,22 +433,20 @@ export const cropBordersPlanEntryFromDetection = (entry: DetectBordersEntry): O.
     return O.none();
   }
 
-  return O.some(
-    CropBordersPlanEntry.make({
-      borderCount: entry.borderCount,
-      classification: entry.classification,
-      cropHeight,
-      cropLeft,
-      cropTop,
-      cropWidth,
-      extension: entry.extension,
-      originalHeight: entry.height,
-      originalWidth: entry.width,
-      sides: entry.sides,
-      sourceName: entry.sourceName,
-      sourcePath: entry.sourcePath,
-    })
-  );
+  return CropBordersPlanEntry.makeOption({
+    borderCount: entry.borderCount,
+    classification: entry.classification,
+    cropHeight,
+    cropLeft,
+    cropTop,
+    cropWidth,
+    extension: entry.extension,
+    originalHeight: entry.height,
+    originalWidth: entry.width,
+    sides: entry.sides,
+    sourceName: entry.sourceName,
+    sourcePath: entry.sourcePath,
+  });
 };
 
 /**
