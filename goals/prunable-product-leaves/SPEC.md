@@ -10,7 +10,8 @@ forkable (`standards/architecture/11-evolution-and-deprecation.md`, and the
 isolation rule in `standards/architecture/08-testing.md`). For the product
 leaves that promise does not hold today: kept tooling and generic slices import
 them, aggregate their tables, or read their files from disk. This goal builds
-four seams that make it hold, then a guard that keeps it holding.
+five seams that make it hold (the fifth found while building the first), then a
+guard that keeps it holding.
 
 ## Definitions
 
@@ -52,7 +53,10 @@ four seams that make it hold, then a guard that keeps it holding.
   4. Rewrite the ratchet baselines and inventories that list product paths
      with their own `--write` commands (for example
      `standards/entity-kit-freeze.baseline.jsonc` through
-     `bun run beep laws entity-kit-freeze --write`); they may only shrink.
+     `bun run beep laws entity-kit-freeze --write`, and the policy fingerprint
+     seals through `bun run beep lint policy-fingerprint --write`); they may
+     only shrink. Drop the root `package.json` catalog entries that
+     `bun run beep quality catalog-usage` reports without a consumer.
   5. `bun install` again, so the lockfile and workspace links name no removed
      package.
   6. Check, lint and test every remaining workspace.
@@ -69,8 +73,9 @@ four seams that make it hold, then a guard that keeps it holding.
   (`goals/time-to-certainty`, `goals/verification-route`,
   `explorations/turborepo-quality-cache`). They are the tool's own data and
   must fail loudly when absent.
-- Pruning hosted CI configuration (`CI_LANE_PARTITIONS`, workflow files) for a
-  fork. A fork regenerates or edits its own CI.
+- Workflow YAML under `.github/workflows/`. A fork edits its own workflows.
+  The CI tables in repo-cli source are seam 5
+  (`decisions/2026-11-17-ci-tables-seam.md`).
 
 ## Source Hierarchy
 
@@ -100,7 +105,8 @@ Built in payoff order, one PR each (`PLAN.md` tracks status).
    `runner-burst` fixture in `ci-runner-security.test.ts`, the
    `legal-ontology-landscape` manifest in `@beep/ontology`'s
    `SemanticFoundation.test.ts`, and any further disk read the seam's sweep of
-   `packages/tooling/**` finds.
+   `packages/tooling/**` finds. The surfaces covered and the ones left, with
+   reasons: `research/2026-11-17-seam-1-surfaces.md`.
 2. **Legal CLI command groups become their own prunable package.** The
    repo-cli command groups that import product drivers (`Drawings`, the
    `Corpus` service programs, `Files process`, the Box research library) move
@@ -134,6 +140,13 @@ Built in payoff order, one PR each (`PLAN.md` tracks status).
      choice as a decision. Either way the rehearsal's generator step leaves no
      SQL for a removed leaf, and db-admin's live migration tests read only the
      regenerated output.
+5. **CI tables follow the present workspaces.** The lane partition table
+   (`commands/Ci/CiLanePartitions.ts`), the Desktop codegen and IPC steps in
+   `commands/Ci/CiLane.ts`, the sharded partition sources and the check-census
+   default targets name product packages, and their proofs fail closed on an
+   absent package. They are derived from, or filtered by, the present
+   workspaces, so a pruned checkout proves them without an edit while the full
+   checkout keeps every guard.
 
 ## Target Surfaces
 
@@ -152,6 +165,8 @@ Built in payoff order, one PR each (`PLAN.md` tracks status).
   `packages/workspace/**`, `packages/architecture-lab/**`,
   `standards/ARCHITECTURE.md`, `standards/architecture/07-non-slice-families.md`
   and `standards/architecture/DECISIONS.md` (seam 4).
+- `packages/tooling/tool/cli/src/commands/Ci/**` and
+  `packages/tooling/tool/cli/src/commands/Quality/CheckCensusGate.ts` (seam 5).
 
 ## Constraints
 
@@ -230,6 +245,14 @@ Operator decision, 2026-11-17. A census row, law exemption or test fixture whose
 Lane feat/prunable-product-leaves
 
 Reverse: Remove the presence check from each tolerant surface; every row, exemption and fixture is asserted unconditionally again.
+
+### CI tables in repo-cli source become a fifth seam, 2026-11-17
+
+Found while building seam 1 (research/2026-11-17-seam-1-surfaces.md). Kept repo-cli source names product packages in its CI tables: the lane partition table (commands/Ci/CiLanePartitions.ts), whose proof fails closed on an assigned package that is absent; the Desktop codegen and IPC steps in commands/Ci/CiLane.ts; the sharded partition sources in commands/Ci/CiPartitions.schemas.ts; and the check-census default targets in commands/Quality/CheckCensusGate.ts. These are not fixtures, so seam 1's skip rule does not fit them: in the full checkout a guard that fails on an absent package is right. A pruned checkout needs the tables derived from, or filtered by, the present workspaces instead. Agent call: they become seam 5, built after seam 4 with the same projection approach. Workflow YAML stays out of scope. Until seam 5 lands, the prune rehearsal fails ten ci-lane and ci-docs-policy tests for this reason alone.
+
+Lane feat/prunable-seam-1
+
+Reverse: Drop seam 5 and restore the CI-configuration non-goal; a fork then edits its own CI tables by hand.
 
 ### Four decoupling seams, built in payoff order, 2026-11-17
 
