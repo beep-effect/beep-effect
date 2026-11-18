@@ -588,7 +588,9 @@ const validatedCatalogBlocks: {
     CatalogAssemblyError
   > =>
     Effect.flatMap(
-      Effect.all([validCatalogOf(catalog, labels.catalog), validCatalogsOf(catalogs, labels.catalogs)]),
+      Effect.all([validCatalogOf(catalog, labels.catalog), validCatalogsOf(catalogs, labels.catalogs)], {
+        concurrency: 1,
+      }),
       ([validCatalog, validCatalogs]) =>
         // The default catalog declared twice — pnpm rejects the equivalent
         // duplication. Structural presence: an explicit `catalog: {}` still counts.
@@ -639,12 +641,19 @@ const validCatalogsOf = (
     return Effect.fail(malformed("catalog", label, `"${label}" must map catalog names to catalogs`));
   }
   return Effect.map(
-    Effect.forEach(R.toEntries(catalogs), ([name, entries]) =>
-      isStringRecord(entries)
-        ? Effect.succeed([name, entries] as const)
-        : Effect.fail(
-            malformed("catalog", `${label}.${name}`, `"${label}.${name}" must map dependency names to version strings`)
-          )
+    Effect.forEach(
+      R.toEntries(catalogs),
+      ([name, entries]) =>
+        isStringRecord(entries)
+          ? Effect.succeed([name, entries] as const)
+          : Effect.fail(
+              malformed(
+                "catalog",
+                `${label}.${name}`,
+                `"${label}.${name}" must map dependency names to version strings`
+              )
+            ),
+      { concurrency: 1 }
     ),
     (pairs) => O.some(R.fromEntries(pairs))
   );

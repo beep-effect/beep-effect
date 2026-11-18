@@ -1300,7 +1300,7 @@ const collectJsonlInputFiles = Effect.fn("AIMetrics.collectJsonlInputFiles")(fun
     const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
     const childPaths = A.map(entries, (entry) => path.join(currentPath, entry));
 
-    const forEach7 = yield* Effect.forEach(childPaths, walk);
+    const forEach7 = yield* Effect.forEach(childPaths, walk, { concurrency: 1 });
     return A.flatten(forEach7);
   });
 
@@ -1809,7 +1809,7 @@ const renderForwarderRunResult = Effect.fn("AIMetrics.renderForwarderRunResult")
       Console.log(
         `${source.sourceKind}: included=${source.includedFileCount} candidates=${source.candidateFileCount} limited=${source.limitedByMaxFiles}`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Console.log(`derived duckdb: ${result.duckDbPath}`);
   yield* Console.log(`parquet mode: ${result.parquetExportMode}`);
@@ -2988,7 +2988,8 @@ const renderMirrorSyncPlan = Effect.fn("AIMetrics.renderMirrorSyncPlan")(functio
       ? yield* encodeCommandJson(result)
       : `ai-metrics mirror sync: dry-run; confirm with --confirm ${p7MirrorConfirmToken}`
   );
-  if (!json) yield* Effect.forEach(plannedCommands, (command) => Console.log(command), { discard: true });
+  if (!json)
+    yield* Effect.forEach(plannedCommands, (command) => Console.log(command), { concurrency: 1, discard: true });
 });
 
 const renderMirrorSyncResult = Effect.fn("AIMetrics.renderMirrorSyncResult")(function* (

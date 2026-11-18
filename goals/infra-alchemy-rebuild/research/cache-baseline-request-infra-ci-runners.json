@@ -1,11 +1,14 @@
 {
-  "previous": "864483404cc6034c7d173a3b6c637df08a2f925c289fddfcfcbbac3d42cf982f",
+  "previous": {
+    "//": "40ea44759cecdb4f775d0ba3583b91193e86e880d92f8a6bdb3cee0e837e297a",
+    "@beep/infra-ci-runners": "9bb4d87c2b7ca58b1fafc69aa677adecb26eb54fe4c038ab27fb3655e03df7fc"
+  },
   "review": {
     "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p5-ci-runners)",
-    "reason": "Record the new @beep/infra-ci-runners package at its generated scripts and its manifest joining the //#lint:policy-fingerprint inputs in turbo.json; no command, output or environment changes, no qualification granted.",
+    "reason": "Record the new @beep/infra-ci-runners package at its generated scripts and its manifest joining the //#lint:policy-fingerprint inputs in turbo.json, re-recorded on the per-subject baseline after merging main; no command, output or environment changes, no qualification granted.",
     "basis": {
       "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-ci-runners.md",
-      "sha256": "dc065fd326828e442433b424d1395b46bc2ebf9466e22348021b4e86a14d992d"
+      "sha256": "eb242fe64f5361bde5d1e01290597b03db0f3e52a80c7ec36f3cb9afdd6aae4c"
     }
   },
   "scope": ["@beep/identity#lint", "@beep/types#lint"],

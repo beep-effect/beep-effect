@@ -503,10 +503,13 @@ const makeCheck = (): ModelsCheckShape => ({
             : "";
           const file = ModelsTargetFile.make({ root: target.root, absolutePath, content });
 
-          return yield* Effect.forEach(target.locators, (locator) =>
-            checkLocator({ manual, answered, bindings, file, locator, manifest, models, reader, target })
+          return yield* Effect.forEach(
+            target.locators,
+            (locator) => checkLocator({ manual, answered, bindings, file, locator, manifest, models, reader, target }),
+            { concurrency: 1 }
           ).pipe(Effect.map(A.getSomes));
-        })
+        }),
+        { concurrency: 1 }
       ).pipe(Effect.map(A.flatten));
 
       return ModelsCheckReport.make({

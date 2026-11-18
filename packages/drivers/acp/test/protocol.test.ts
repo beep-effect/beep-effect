@@ -1900,9 +1900,9 @@ const WireFrame = S.Struct({
 const decodeWireFrame = S.decodeEffect(AcpJson.fromJsonText(WireFrame));
 const takeFrame = (output: Queue.Queue<string>) => Queue.take(output).pipe(Effect.flatMap(decodeWireFrame));
 const takeFrames = (output: Queue.Queue<string>, count: number) =>
-  Effect.forEach(A.range(1, count), () => takeFrame(output));
+  Effect.forEach(A.range(1, count), () => takeFrame(output), { concurrency: 1 });
 // Lets every runnable fiber reach its next suspension point.
-const settle = Effect.forEach(A.range(1, 20), () => Effect.yieldNow, { discard: true });
+const settle = Effect.forEach(A.range(1, 20), () => Effect.yieldNow, { concurrency: 1, discard: true });
 
 class TypedRpcs extends RpcGroup.make(
   Rpc.make("x/typed", { payload: S.Struct({ n: S.Finite }), success: S.Struct({ ok: S.Boolean }) })
@@ -2069,8 +2069,10 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
         send.pipe(Effect.match({ onFailure: O.some, onSuccess: () => O.none<AcpError.AcpError>() }), Effect.forkScoped);
 
       // The writer holds one chunk and the queue holds 1,024 more; the rest of the sends park.
-      const notifications = yield* Effect.forEach(A.range(1, sendCount), (index) =>
-        outcome(transport.notify("x/flood", index))
+      const notifications = yield* Effect.forEach(
+        A.range(1, sendCount),
+        (index) => outcome(transport.notify("x/flood", index)),
+        { concurrency: 1 }
       );
       const request = yield* outcome(transport.request("x/test", { hello: "world" }));
       yield* Deferred.await(allLogged);
@@ -2079,7 +2081,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
 
       const error = yield* Deferred.await(terminated);
       assert.instanceOf(error, AcpError.AcpTransportError);
-      const forEach73 = yield* Effect.forEach(notifications, Fiber.join);
+      const forEach73 = yield* Effect.forEach(notifications, Fiber.join, { concurrency: 1 });
       const failures = A.getSomes(forEach73);
       assert.isAbove(failures.length, 0);
       for (const failure of failures) {
@@ -2322,7 +2324,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
         onNotification: () =>
           Deferred.await(protocolReady).pipe(
             Effect.flatMap((protocol) =>
-              Effect.forEach(["x/first", "x/second"], (method) => protocol.request(method, {}))
+              Effect.forEach(["x/first", "x/second"], (method) => protocol.request(method, {}), { concurrency: 1 })
             ),
             Effect.flatMap((results) => Deferred.succeed(answers, results)),
             Effect.asVoid
@@ -2484,7 +2486,7 @@ it.layer(NodeServices.layer, { timeout: "10 seconds" })("effect-acp protocol har
         )
       );
 
-      const forEach101 = yield* Effect.forEach(A.range(1, 4), () => Queue.take(notifications));
+      const forEach101 = yield* Effect.forEach(A.range(1, 4), () => Queue.take(notifications), { concurrency: 1 });
       assert.deepEqual(forEach101, [
         { _tag: "ExtNotification", method: "@effect/rpc/Eof", params: null },
         { _tag: "ExtNotification", method: "@effect/rpc/Ping", params: null },

@@ -230,14 +230,39 @@ Use the complete audit output; a baseline rejection's `Unreviewed:` list extends
 up to `. Unknown`, rather than just the first few subjects shown.
 
 Submit `bun run beep cache baseline --request <request.json>` only after review.
-Set `previous` to the SHA-256 of the **exact current text** of
-`standards/cache-qualification-baseline.json` (including whitespace and trailing
-newline, not a parsed/re-encoded object). Copy `scope`, `profile` and `epoch`
-unchanged from that baseline. Set `subjects` to only those named in the drift
+The baseline is one file per subject under `standards/cache-baseline/`
+(`_root.json` for `//`, `@beep/<name>.json` for a package). Set `previous` to an
+object mapping each subject whose file the request rewrites or deletes to the
+SHA-256 of that file's **exact current text** (including whitespace and trailing
+newline, not a parsed/re-encoded object), for example
+`{"@beep/md": "<sha256 of standards/cache-baseline/@beep/md.json>"}`; a new
+subject needs no entry. If an entry is missing or stale, the writer refuses and
+prints the exact `previous` object to review and use. Copy `scope`, `profile` and
+`epoch` unchanged from `_root.json`. Set `subjects` to only those named in the drift
 and the reviewed basis; bind `review.basis.path` and `review.basis.sha256` to
 the reviewed basis file's exact bytes. The request also names the reviewer
-and reason. See [goals/tsc-rs-gates/research/cache-baseline-request-2026-10-14.json](https://github.com/beep-effect/beep-effect-goals-archive/blob/main/goals/tsc-rs-gates/research/cache-baseline-request-2026-10-14.json)
-for the request shape, not current hashes or a reusable subject list.
+and reason. The current request shape (placeholders, not reusable hashes or a
+reusable subject list):
+
+```json
+{
+  "previous": { "@beep/md": "<sha256 of standards/cache-baseline/@beep/md.json>" },
+  "review": {
+    "reviewer": "<agent and lane>",
+    "reason": "<which inputs changed and why no qualification is granted>",
+    "basis": { "path": "docs/reports/<review>.md", "sha256": "<sha256 of that file>" }
+  },
+  "subjects": ["@beep/md"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "<profile from _root.json>",
+  "epoch": "<epoch from _root.json>"
+}
+```
+
+Requests archived before the per-subject split (for example under
+`docs/reports/` and in the goals archive) carry `previous` as one bare digest of
+the old single file; the writer no longer decodes that form, so copy only their
+`review`, `subjects`, `scope`, `profile` and `epoch` shape.
 
 S31b permits only drift-named subjects with changed inputs: no widened
 qualification, no new exception rows, and no standards debt or exception
@@ -245,8 +270,9 @@ inventory growth. List the subjects and their reasons in the PR body. Never
 re-record a baseline to hide a red whose input did not change. Re-run the audit
 after the reviewed request. A main merge that adds root tasks adds drifted
 subjects: update the basis to name those tasks and input changes, recompute its
-SHA-256 in the request, and refresh `previous` from the exact current baseline
-text before re-running. Keep scope/profile/epoch and qualification unchanged.
+SHA-256 in the request, and refresh `previous` from the exact current text of
+the subject files it replaces before re-running. A merge that touched only other
+subjects leaves `previous` valid. Keep scope/profile/epoch and qualification unchanged.
 
 ## CI / security fixes: validate against the CI token's permissions
 

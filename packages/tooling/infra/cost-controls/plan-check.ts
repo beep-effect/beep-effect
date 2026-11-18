@@ -55,22 +55,25 @@ const planCheck = Command.make(
     const fs = yield* FileSystem.FileSystem;
     const readJson = (path: string) => fs.readFileString(path).pipe(Effect.flatMap(decodeJson));
     const planLog = yield* fs.readFileString(plan);
-    const outputs = yield* Effect.all({
-      costAllocationTags: readJson(tags),
-      computeOptimizer: readJson(computeOptimizer),
-      costOptimizationHub: readJson(hub),
-      anomalyMonitors: readJson(monitors),
-    });
+    const outputs = yield* Effect.all(
+      {
+        costAllocationTags: readJson(tags),
+        computeOptimizer: readJson(computeOptimizer),
+        costOptimizationHub: readJson(hub),
+        anomalyMonitors: readJson(monitors),
+      },
+      { concurrency: 1 }
+    );
     const raw = yield* decodeOutputs(outputs);
-    const entries = parsePlanLog(planLog);
+    const log = parsePlanLog(planLog);
     const settings = liveSettingsFromAws(raw);
-    for (const entry of entries) {
+    for (const entry of log.entries) {
       const changed = A.isReadonlyArrayNonEmpty(entry.changedProperties)
         ? ` changes: ${A.join(entry.changedProperties, ", ")}`
         : "";
       yield* Console.log(`[${entry.fqn}] ${entry.action}${changed}`);
     }
-    yield* checkPlan(entries, settings).pipe(Effect.catchTag("PlanCheckFailed", report));
+    yield* checkPlan(log, settings).pipe(Effect.catchTag("PlanCheckFailed", report));
     yield* Console.log(
       "plan-check: every adopted singleton is an adopt or no-op with no property change; deploy may run"
     );

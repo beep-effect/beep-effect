@@ -66,14 +66,14 @@ it.effect.prop(
   ([specifiers]) =>
     Effect.gen(function* () {
       const quote = S.encodeEffect(QuotedString);
-      const quoted = yield* Effect.forEach(specifiers, (value) => quote(value));
+      const quoted = yield* Effect.forEach(specifiers, (value) => quote(value), { concurrency: 1 });
       const text = A.join(
         A.map(quoted, (specifier) => `import ${specifier}; /* comment */`),
         "\n"
       );
       const parsed = SourceBoundary.importSpecifiers(text);
       assert.deepStrictEqual(parsed, specifiers);
-      const requoted = yield* Effect.forEach(parsed, (value) => quote(value));
+      const requoted = yield* Effect.forEach(parsed, (value) => quote(value), { concurrency: 1 });
       const rendered = A.join(
         A.map(requoted, (specifier) => `import ${specifier};`),
         "\n"

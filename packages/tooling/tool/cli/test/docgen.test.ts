@@ -557,7 +557,7 @@ export const markerFixture = true;
       );
       yield* fs.writeFileString(path.join(srcDir, `${fixtureName}.ts`), source);
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   return { packageDir, repoRoot, srcDir };

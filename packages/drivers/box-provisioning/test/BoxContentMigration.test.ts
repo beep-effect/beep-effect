@@ -148,7 +148,7 @@ const prepare = Effect.fn("BoxContentMigrationTest.prepare")(function* (
         .makeDirectory(path.dirname(target), { recursive: true })
         .pipe(Effect.andThen(fs.writeFile(target, spec.content)));
     },
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const mapInput = {
     expectedEnterpriseId: "enterprise-id",
@@ -352,7 +352,9 @@ scenario(
     const artifacts = A.join(
       [
         argument,
-        ...(yield* yield* Effect.map(Ref.get(journal), (value) => Effect.forEach(value, encodeBoxContentJournalEntry))),
+        ...(yield* yield* Effect.map(Ref.get(journal), (value) =>
+          Effect.forEach(value, encodeBoxContentJournalEntry, { concurrency: 1 })
+        )),
       ],
       "\n"
     );

@@ -379,8 +379,10 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
           const ledger = yield* LedgerRows;
           const feed = yield* streamStore("OrderFeed");
           const cy = customerId("cy");
-          const placed = yield* Effect.forEach(["cy-1", "cy-2", "cy-3"], (name) =>
-            orders.send(orderId(name), PlaceOrder.make({ customer: cy, amount: 1 }))
+          const placed = yield* Effect.forEach(
+            ["cy-1", "cy-2", "cy-3"],
+            (name) => orders.send(orderId(name), PlaceOrder.make({ customer: cy, amount: 1 })),
+            { concurrency: 1 }
           );
           const rows = A.map(placed, ({ stream }) => `${stream}:1`);
           yield* eventually(
@@ -597,14 +599,17 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
               (customer, index) =>
                 Effect.gen(function* () {
                   yield* Context.get(context, Customer).send(customer, JoinCustomer.make({ name: `n${index}` }));
-                  yield* Effect.forEach(A.range(1, 3), (n) =>
-                    Context.get(context, Order).send(
-                      orderId(`page-${index}-${n}`),
-                      PlaceOrder.make({ customer, amount: n })
-                    )
+                  yield* Effect.forEach(
+                    A.range(1, 3),
+                    (n) =>
+                      Context.get(context, Order).send(
+                        orderId(`page-${index}-${n}`),
+                        PlaceOrder.make({ customer, amount: n })
+                      ),
+                    { concurrency: 1 }
                   );
                 }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
           }).pipe(Effect.scoped);
           yield* Effect.gen(function* () {
@@ -623,8 +628,11 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
               Effect.timeout(Duration.seconds(20))
             );
             strictEqual(history.complete, true);
-            const folded = yield* Effect.forEach(customers, (customer) =>
-              eventually(totals.get(Customer.ref(customer)), (found) => O.exists(found, ({ orders }) => orders >= 3))
+            const folded = yield* Effect.forEach(
+              customers,
+              (customer) =>
+                eventually(totals.get(Customer.ref(customer)), (found) => O.exists(found, ({ orders }) => orders >= 3)),
+              { concurrency: 1 }
             );
             deepStrictEqual(
               A.drop(folded, 1),
@@ -650,14 +658,17 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
               (customer) =>
                 Effect.andThen(
                   Context.get(context, Customer).send(customer, JoinCustomer.make({ name: customer })),
-                  Effect.forEach(A.range(1, 2), (n) =>
-                    Context.get(context, Order).send(
-                      orderId(`${customer}-${n}`),
-                      PlaceOrder.make({ customer, amount: n })
-                    )
+                  Effect.forEach(
+                    A.range(1, 2),
+                    (n) =>
+                      Context.get(context, Order).send(
+                        orderId(`${customer}-${n}`),
+                        PlaceOrder.make({ customer, amount: n })
+                      ),
+                    { concurrency: 1 }
                   )
                 ),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
           }).pipe(Effect.scoped);
           // Stopped right after it starts: its run, directory, scanner and source jobs are left mid-way.
@@ -669,8 +680,13 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
               Effect.timeout(Duration.seconds(20))
             );
             strictEqual(history.complete, true);
-            const folded = yield* Effect.forEach(customers, (customer) =>
-              eventually(totals.get(Customer.ref(customer)), (found) => O.exists(found, ({ orders }) => orders === 2))
+            const folded = yield* Effect.forEach(
+              customers,
+              (customer) =>
+                eventually(totals.get(Customer.ref(customer)), (found) =>
+                  O.exists(found, ({ orders }) => orders === 2)
+                ),
+              { concurrency: 1 }
             );
             deepStrictEqual(
               folded,
@@ -685,11 +701,15 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
           const ivy = customerId("ivy");
           const before = yield* Effect.gen(function* () {
             const context = yield* Layer.build(Counting.layer(OrderCountLive).pipe(Layer.provideMerge(freshRows)));
-            const placed = yield* Effect.forEach(["ivy-1", "ivy-2"], (name) =>
-              Context.get(context, Order).send(orderId(name), PlaceOrder.make({ customer: ivy, amount: 1 }))
+            const placed = yield* Effect.forEach(
+              ["ivy-1", "ivy-2"],
+              (name) => Context.get(context, Order).send(orderId(name), PlaceOrder.make({ customer: ivy, amount: 1 })),
+              { concurrency: 1 }
             );
-            yield* Effect.forEach(placed, (receipt) =>
-              Context.get(context, OrderCount.Progress).caughtUp(receipt, { timeout: "5 seconds" })
+            yield* Effect.forEach(
+              placed,
+              (receipt) => Context.get(context, OrderCount.Progress).caughtUp(receipt, { timeout: "5 seconds" }),
+              { concurrency: 1 }
             );
             return Context.get(context, LedgerRows).rows.pipe(MutableHashMap.size);
           }).pipe(Effect.scoped);
@@ -763,8 +783,10 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
           const names = A.map(["kai", "lu"], customerId);
           yield* Effect.gen(function* () {
             const context = yield* Layer.build(RelayBefore.layer(Layer.empty));
-            yield* Effect.forEach(names, (customer) =>
-              Context.get(context, Customer).send(customer, JoinCustomer.make({ name: customer }))
+            yield* Effect.forEach(
+              names,
+              (customer) => Context.get(context, Customer).send(customer, JoinCustomer.make({ name: customer })),
+              { concurrency: 1 }
             );
             // Not read while filling: in beta.85 InMemory, reading a view key before its first
             // delivery keeps it out of the directory, and a later backfill would miss it.
@@ -802,7 +824,7 @@ export const consumers = <R, E, PE>(target: ConsumerTarget<R, E, PE>) => {
                   Context.get(context, Customer).send(customer, JoinCustomer.make({ name: customer })),
                   Context.get(context, Order).send(orderId(`${customer}-o`), PlaceOrder.make({ customer, amount: 1 }))
                 ),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
           }).pipe(Effect.scoped);
           // Built and torn down at once: its backfill run and the jobs it scheduled are left behind.

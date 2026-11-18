@@ -87,7 +87,8 @@ export const makeSnapshot = Effect.fn("RetentionTest.snapshot")(function* () {
       },
       { ...edgeInput, ...productEntityFixtureInput("EpistemicEdgeVersion", 4), orgId: 2 },
     ],
-    (input) => S.decodeUnknownEffect(EdgeVersion)(input)
+    (input) => S.decodeUnknownEffect(EdgeVersion)(input),
+    { concurrency: 1 }
   );
   const dispositions = yield* Effect.forEach(
     [
@@ -112,7 +113,8 @@ export const makeSnapshot = Effect.fn("RetentionTest.snapshot")(function* () {
         resolvedAt: 2100,
       },
     ],
-    (input) => S.decodeUnknownEffect(ClaimDisposition)(input)
+    (input) => S.decodeUnknownEffect(ClaimDisposition)(input),
+    { concurrency: 1 }
   );
   return RetentionSnapshot.make({ edges, dispositions });
 });

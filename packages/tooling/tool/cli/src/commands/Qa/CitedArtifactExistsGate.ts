@@ -252,19 +252,23 @@ export const evaluateCitedArtifactExists: GateEvaluator<
   const canonicalRoot = yield* fs
     .realPath(input.roundRoot)
     .pipe(Effect.orElseSucceed(() => path.resolve(input.roundRoot)));
-  const present = yield* Effect.forEach(input.citedPaths, (citedPath) => {
-    const lexicalCandidate = path.resolve(canonicalRoot, citedPath);
-    return resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: citedPath }).pipe(
-      Effect.flatMap((canonicalCandidate) =>
-        Eq.equals(lexicalCandidate, canonicalCandidate)
-          ? fs
-              .stat(canonicalCandidate)
-              .pipe(Effect.map((info) => (Eq.equals(info.type, "File") ? O.some(citedPath) : O.none<string>())))
-          : Effect.succeed(O.none<string>())
-      ),
-      Effect.orElseSucceed(O.none<string>)
-    );
-  });
+  const present = yield* Effect.forEach(
+    input.citedPaths,
+    (citedPath) => {
+      const lexicalCandidate = path.resolve(canonicalRoot, citedPath);
+      return resolvePathWithinCanonicalRoot({ canonicalRoot, candidate: citedPath }).pipe(
+        Effect.flatMap((canonicalCandidate) =>
+          Eq.equals(lexicalCandidate, canonicalCandidate)
+            ? fs
+                .stat(canonicalCandidate)
+                .pipe(Effect.map((info) => (Eq.equals(info.type, "File") ? O.some(citedPath) : O.none<string>())))
+            : Effect.succeed(O.none<string>())
+        ),
+        Effect.orElseSucceed(O.none<string>)
+      );
+    },
+    { concurrency: 1 }
+  );
   const presentPaths = HashSet.fromIterable(A.getSomes(present));
   const missingPaths = A.filter(input.citedPaths, (citedPath) => !HashSet.has(presentPaths, citedPath));
   const now1 = yield* DateTime.now;

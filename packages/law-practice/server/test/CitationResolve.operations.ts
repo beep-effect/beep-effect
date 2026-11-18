@@ -121,12 +121,15 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
       const selected = resource.edition_guess?.artifactSha256 ?? null;
       publication = { editions: refs, selectedEdition: selected };
       if (A.contains(["FullCaseCitation", "ShortCaseCitation"], kind)) {
-        const values = yield* Effect.forEach(refs, (ref) =>
-          Effect.gen(function* () {
-            const entry = yield* Effect.fromOption(HashMap.get(editions, ref));
-            const reporterId = yield* Effect.fromOption(O.fromUndefinedOr(entry.reporterId));
-            return { edition: ref, reporterId };
-          })
+        const values = yield* Effect.forEach(
+          refs,
+          (ref) =>
+            Effect.gen(function* () {
+              const entry = yield* Effect.fromOption(HashMap.get(editions, ref));
+              const reporterId = yield* Effect.fromOption(O.fromUndefinedOr(entry.reporterId));
+              return { edition: ref, reporterId };
+            }),
+          { concurrency: 1 }
         );
         publication = {
           vocabularyVersion: vocabulary.publicArtifactVersion,
@@ -165,50 +168,56 @@ export const loadResolutionOperationContexts = Effect.gen(function* () {
     });
     return { citation, selectedEdition };
   });
-  const contexts = yield* Effect.forEach(observations, (row) =>
-    Effect.gen(function* () {
-      const body = row.payload.value;
-      yield* S.decodeUnknownEffect(Callbacks)(body.input);
-      const digest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(row.payload.raw));
-      if (digest !== row.normalizedSha256) {
-        return yield* Effect.die("Observation payload hash mismatch");
-      }
-      if (body.outcome.kind !== "success") {
-        return yield* Effect.die("Expected successful committed default observation");
-      }
-      let text = "";
-      let descriptors = HashMap.empty<Sha256Hex, CitationAuthorityEdition>();
-      const mentions = yield* Effect.forEach(body.input.citations, (source) =>
-        Effect.gen(function* () {
-          const projected = yield* project(source);
-          if (O.isSome(projected.selectedEdition)) {
-            descriptors = HashMap.set(
-              descriptors,
-              projected.selectedEdition.value.edition,
-              projected.selectedEdition.value
-            );
-          }
-          const start = Str.length(text);
-          const quote = source.matchedText;
-          text = `${text}${quote}; `;
-          return { citation: projected.citation, start, end: start + Str.length(quote), quote };
-        })
-      );
-      const context = CitationResolutionContext.make({
-        name: row.id,
-        text,
-        mentions,
-        editions: descriptors.pipe(HashMap.values, A.fromIterable),
-        outcome: { status: "value", groups: A.map(body.stages.resolutionGroups, (group) => group.members) },
-      });
-      return {
-        context,
-        sourceSiteId: row.sourceSiteId,
-        sourceNormalizedSha256: row.normalizedSha256,
-        sourceCitationModels: body.input.citations,
-        sourceResolutionGroups: body.stages.resolutionGroups,
-      };
-    })
+  const contexts = yield* Effect.forEach(
+    observations,
+    (row) =>
+      Effect.gen(function* () {
+        const body = row.payload.value;
+        yield* S.decodeUnknownEffect(Callbacks)(body.input);
+        const digest = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(row.payload.raw));
+        if (digest !== row.normalizedSha256) {
+          return yield* Effect.die("Observation payload hash mismatch");
+        }
+        if (body.outcome.kind !== "success") {
+          return yield* Effect.die("Expected successful committed default observation");
+        }
+        let text = "";
+        let descriptors = HashMap.empty<Sha256Hex, CitationAuthorityEdition>();
+        const mentions = yield* Effect.forEach(
+          body.input.citations,
+          (source) =>
+            Effect.gen(function* () {
+              const projected = yield* project(source);
+              if (O.isSome(projected.selectedEdition)) {
+                descriptors = HashMap.set(
+                  descriptors,
+                  projected.selectedEdition.value.edition,
+                  projected.selectedEdition.value
+                );
+              }
+              const start = Str.length(text);
+              const quote = source.matchedText;
+              text = `${text}${quote}; `;
+              return { citation: projected.citation, start, end: start + Str.length(quote), quote };
+            }),
+          { concurrency: 1 }
+        );
+        const context = CitationResolutionContext.make({
+          name: row.id,
+          text,
+          mentions,
+          editions: descriptors.pipe(HashMap.values, A.fromIterable),
+          outcome: { status: "value", groups: A.map(body.stages.resolutionGroups, (group) => group.members) },
+        });
+        return {
+          context,
+          sourceSiteId: row.sourceSiteId,
+          sourceNormalizedSha256: row.normalizedSha256,
+          sourceCitationModels: body.input.citations,
+          sourceResolutionGroups: body.stages.resolutionGroups,
+        };
+      }),
+    { concurrency: 1 }
   );
   return { corpusSha256, contexts, sourceSiteIds: A.dedupe(A.map(observations, (row) => row.sourceSiteId)) };
 }).pipe(Effect.withSpan("ResolveTest.loadOperationContexts"));

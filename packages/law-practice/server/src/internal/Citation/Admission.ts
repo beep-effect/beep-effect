@@ -2,7 +2,7 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { CitationEngineLimits, CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
+import { CitationSafetyLimitExceeded } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
@@ -13,9 +13,9 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/Admission");
-const Limits = S.toType(CitationEngineLimits);
 const Reason = LiteralKit(["invalid-policy", "closed", "quarantined"]).pipe(
   $I.annoteSchema("Reason", { description: "Redacted private admission construction or lifetime failure." })
 );
@@ -54,10 +54,9 @@ export class CitationOperationAdmission extends Context.Service<
 /** Decode the shared admission policy and retain its normalized queue budget.
  * @internal @category operations @since 0.0.0
  */
-export const prepareCitationAdmissionPolicy = Effect.fn("Citation.prepareAdmissionPolicy")(function* (policy: unknown) {
-  const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(
-    Effect.mapError(() => CitationAdmissionFailure.make({ reason: "invalid-policy" }))
-  );
+export const prepareCitationAdmissionPolicy = Effect.fn("Citation.prepareAdmissionPolicy")(function* (
+  limits: CitationEngineLimits
+) {
   const queueDeadline = limits.queueDeadline.pipe(Duration.toMillis, Duration.millis);
   return { limits, queueDeadline };
 });
@@ -66,7 +65,9 @@ export const prepareCitationAdmissionPolicy = Effect.fn("Citation.prepareAdmissi
  * wait for the operation's finalizers before returning its active permit.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationOperationAdmission = Effect.fn("Citation.makeOperationAdmission")(function* (policy: unknown) {
+export const makeCitationOperationAdmission = Effect.fn("Citation.makeOperationAdmission")(function* (
+  policy: CitationEngineLimits
+) {
   const { limits, queueDeadline } = yield* prepareCitationAdmissionPolicy(policy);
   const operationDeadline = limits.operationDeadline.pipe(Duration.toMillis, Duration.millis);
   const clock = yield* Clock.Clock;

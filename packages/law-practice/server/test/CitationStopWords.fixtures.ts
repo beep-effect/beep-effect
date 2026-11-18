@@ -4,13 +4,14 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationStopWordsConfiguration,
-  makeCitationStopWords,
+  makeCitationStopWords as makeOwnedCitationStopWords,
 } from "@beep/law-practice-server/internal/Citation/StopWords";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataFailure,
@@ -23,6 +24,11 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationStopWords = installCitationOwnedTestStage({
+  schema: CitationStopWordsConfiguration,
+  install: makeOwnedCitationStopWords,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationStopWords");
 const Configuration = S.Struct({
@@ -105,7 +111,7 @@ export const replayCitationStopWords = Effect.fn("StopWordsTest.replay")(functio
     setup.operation,
     setup.admission,
     setup.observed.snapshot,
-    rows.length * 3
+    rows.length
   );
 });
 /** Refuse cumulative over-allocation and preserve configuration after caller mutation. */
@@ -119,22 +125,22 @@ export const assertCitationStopWordsBudget = Effect.fn("StopWordsTest.budget")(f
   setup.configuration.patterns.leadingIn.bytes.fill(0);
   const repeated = yield* setup.stage.clean(row.source);
   expect(repeated).toEqual(accepted);
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 6);
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 2);
   const tight = yield* install("bun", 80);
   yield* assertCitationMetadataRefusal(
     tight.stage.clean(row.source),
     tight.operation,
     tight.admission,
     tight.observed.snapshot,
-    3
+    1
   );
 });
 /** Preserve closed parent lifetime, captured timer and closed invalid-input failure. */
 export const assertCitationStopWordsLifetime = Effect.fn("StopWordsTest.lifetime")(function* () {
   const scope = yield* Scope.make();
   const closed = yield* install("bun").pipe(Effect.provideService(Scope.Scope, scope));
+  // An owned configuration whose pattern fails authentication is refused by the stage.
   for (const configuration of [
-    null,
     {
       ...closed.configuration,
       patterns: { ...closed.configuration.patterns, stopWords: { width: 1, bytes: new Uint8Array([88]) } },

@@ -490,27 +490,30 @@ const parseClaim = Effect.fn("PatentDocument.parseClaim")(function* (
 export const normalizeClaimInput = Effect.fn("PatentDocument.normalizeClaimInput")(function* (
   input: ClaimInputCollection
 ): Effect.fn.Return<ReadonlyArray<ClaimInputNormalization>> {
-  return yield* Effect.forEach(input.records, (record) =>
-    ClaimInputRecord.match(record, {
-      unavailable: (record) => Effect.succeed(ClaimInputNormalization.cases["extraction-failed"].make({ record })),
-      text: (record) =>
-        O.match(record.numberText, {
-          onNone: () =>
-            Effect.succeed(
-              ClaimInputNormalization.cases["normalization-failed"].make({
-                record,
-                message: "The source record has no claim number; its source position is not a replacement number.",
-              })
-            ),
-          onSome: (numberText) =>
-            parseClaim(numberText, record.canonicalText).pipe(
-              Effect.map((claim) => ClaimInputNormalization.cases.normalized.make({ record, claim })),
-              Effect.catchTag("PatentDocumentNormalizationError", ({ message }) =>
-                Effect.succeed(ClaimInputNormalization.cases["normalization-failed"].make({ record, message }))
-              )
-            ),
-        }),
-    })
+  return yield* Effect.forEach(
+    input.records,
+    (record) =>
+      ClaimInputRecord.match(record, {
+        unavailable: (record) => Effect.succeed(ClaimInputNormalization.cases["extraction-failed"].make({ record })),
+        text: (record) =>
+          O.match(record.numberText, {
+            onNone: () =>
+              Effect.succeed(
+                ClaimInputNormalization.cases["normalization-failed"].make({
+                  record,
+                  message: "The source record has no claim number; its source position is not a replacement number.",
+                })
+              ),
+            onSome: (numberText) =>
+              parseClaim(numberText, record.canonicalText).pipe(
+                Effect.map((claim) => ClaimInputNormalization.cases.normalized.make({ record, claim })),
+                Effect.catchTag("PatentDocumentNormalizationError", ({ message }) =>
+                  Effect.succeed(ClaimInputNormalization.cases["normalization-failed"].make({ record, message }))
+                )
+              ),
+          }),
+      }),
+    { concurrency: 1 }
   );
 });
 
@@ -632,8 +635,10 @@ export const qualifyClaimInput = Effect.fn("PatentDocument.qualifyClaimInput")(f
 export const normalizePatentClaims = Effect.fn("PatentDocument.normalizeClaims")(function* (
   numberedClaims: ReadonlyArray<readonly [claimNumberText: string, claimText: string]>
 ): Effect.fn.Return<PatentClaims, PatentDocumentNormalizationError> {
-  const claims = yield* Effect.forEach(numberedClaims, ([claimNumberText, claimText]) =>
-    parseClaim(claimNumberText, claimText)
+  const claims = yield* Effect.forEach(
+    numberedClaims,
+    ([claimNumberText, claimText]) => parseClaim(claimNumberText, claimText),
+    { concurrency: 1 }
   );
   return yield* decodeUnknownPatentClaims(claims).pipe(
     Effect.mapError((cause) =>
@@ -701,25 +706,29 @@ export const normalizePatentApplicationDocument = Effect.fn("PatentDocument.norm
   if (A.isReadonlyArrayNonEmpty(errors)) {
     return yield* A.headNonEmpty(errors);
   }
-  const sections = yield* Effect.forEach(drafts, (draft) => {
-    const content = Str.trim(renderPatentTextBlocks(draft.blocks));
-    return Str.isNonEmpty(content)
-      ? Effect.succeed(
-          PatentApplicationSection.make({
-            content,
-            heading: draft.heading,
-            role: draft.role,
-            sourceEnd: S.Natural.make(draft.sourceEnd),
-            sourceStart: S.Natural.make(draft.sourceStart),
-          })
-        )
-      : Effect.fail(
-          PatentDocumentNormalizationError.make({
-            message: `Patent application section ${draft.heading} must not be empty.`,
-            reason: "empty-section",
-          })
-        );
-  });
+  const sections = yield* Effect.forEach(
+    drafts,
+    (draft) => {
+      const content = Str.trim(renderPatentTextBlocks(draft.blocks));
+      return Str.isNonEmpty(content)
+        ? Effect.succeed(
+            PatentApplicationSection.make({
+              content,
+              heading: draft.heading,
+              role: draft.role,
+              sourceEnd: S.Natural.make(draft.sourceEnd),
+              sourceStart: S.Natural.make(draft.sourceStart),
+            })
+          )
+        : Effect.fail(
+            PatentDocumentNormalizationError.make({
+              message: `Patent application section ${draft.heading} must not be empty.`,
+              reason: "empty-section",
+            })
+          );
+    },
+    { concurrency: 1 }
+  );
   const claimsDraft = A.findFirst(drafts, (draft) => draft.role === "claims");
   const claims = yield* pipe(
     claimsDraft,

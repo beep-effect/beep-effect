@@ -30,10 +30,13 @@ describe("@beep/html browser import boundary", () => {
             return Promise.allSettled([child.exited, stderr]);
           }).pipe(Effect.withSpan("Html.browserImport.cleanup"))
       );
-      const [exitCode, stderr] = yield* Effect.all([
-        Effect.promise(() => child.exited).pipe(Effect.withSpan("Html.browserImport.exit")),
-        Effect.promise(() => readStderr).pipe(Effect.withSpan("Html.browserImport.drain")),
-      ]).pipe(Effect.withSpan("Html.browserImport.import"));
+      const [exitCode, stderr] = yield* Effect.all(
+        [
+          Effect.promise(() => child.exited).pipe(Effect.withSpan("Html.browserImport.exit")),
+          Effect.promise(() => readStderr).pipe(Effect.withSpan("Html.browserImport.drain")),
+        ],
+        { concurrency: 1 }
+      ).pipe(Effect.withSpan("Html.browserImport.import"));
 
       expect({ exitCode, stderr }).toStrictEqual({ exitCode: 0, stderr: "" });
     })

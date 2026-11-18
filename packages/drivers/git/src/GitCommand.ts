@@ -238,8 +238,14 @@ const diffListFlags = (options: DiffListOptions): ReadonlyArray<string> => [
 const rangeArgs = (base: string, head: string, twoDot: boolean | undefined): ReadonlyArray<string> =>
   twoDot === true ? [base, head] : [`${base}...${head}`];
 
-/** {@link DiffListOptions} plus `twoDot`, which selects the plain `<base> <head>` pair over `<base>...<head>`. */
-type ChangedFilesOptions = DiffListOptions & { readonly twoDot?: boolean };
+/**
+ * {@link DiffListOptions} plus `twoDot`, which selects the plain `<base> <head>` pair over `<base>...<head>`,
+ * and `ignoreSubmodules`, which overrides the configured submodule visibility.
+ */
+type ChangedFilesOptions = DiffListOptions & {
+  readonly twoDot?: boolean;
+  readonly ignoreSubmodules?: StatusIgnoreSubmodules;
+};
 
 // Implementation of GitCommand.changedFiles; the public contract lives on the static.
 const changedFiles = (base: string, head: string, relative = false, options: ChangedFilesOptions = {}): GitInvocation =>
@@ -249,6 +255,7 @@ const changedFiles = (base: string, head: string, relative = false, options: Cha
     "-z",
     relative ? "--relative" : "--no-relative",
     ...diffListFlags(options),
+    ...(options.ignoreSubmodules !== undefined ? [`--ignore-submodules=${options.ignoreSubmodules}`] : []),
     ...rangeArgs(base, head, options.twoDot),
     ...pathspecArgs(options.pathspec),
   ]);
@@ -757,10 +764,12 @@ export type StatusUntrackedFiles = typeof StatusUntrackedFiles.Type;
  * @since 0.0.0
  */
 export const StatusIgnoreSubmodules = LiteralKit(["none", "untracked", "dirty", "all"]).pipe(
-  $I.annoteSchema("StatusIgnoreSubmodules", { description: "Which submodule changes `git status` ignores." })
+  $I.annoteSchema("StatusIgnoreSubmodules", {
+    description: "Which submodule changes `git status` or a `git diff` path list ignores.",
+  })
 );
 /**
- * Selects which submodule changes `git status` ignores.
+ * Selects which submodule changes `git status` or a `git diff` path list ignores.
  *
  * @see {@link StatusIgnoreSubmodules} for the runtime schema of accepted modes.
  * @category type-level
@@ -1451,16 +1460,19 @@ export class GitCommand {
    *
    * **Details**
    *
-   * `git diff --name-only -z (--relative | --no-relative) [--no-renames] [--diff-filter=<letters>] (<base>...<head> | <base> <head>) [-- <pathspec>...]`
+   * `git diff --name-only -z (--relative | --no-relative) [--no-renames] [--diff-filter=<letters>] [--ignore-submodules=<when>] (<base>...<head> | <base> <head>) [-- <pathspec>...]`
    * — the paths that differ between the merge base of `base` and `head`, and
    * `head` itself, NUL-terminated.
    *
    * `options.noRenames` turns rename detection off so a moved file lists as
    * its old AND new path; `options.diffFilter` keeps only the named status
-   * letters (lower case excludes them); `options.pathspec` scopes the diff
-   * behind `--`; `options.twoDot` emits the plain `<base> <head>` pair — a
-   * tree-to-tree comparison — instead of the merge-base `...` form. With no
-   * option passed the argv is exactly the four-flag range form it always was.
+   * letters (lower case excludes them); `options.ignoreSubmodules` overrides
+   * `diff.ignoreSubmodules` and a submodule's `ignore` setting, so `none`
+   * lists every moved gitlink however the checkout is configured;
+   * `options.pathspec` scopes the diff behind `--`; `options.twoDot` emits
+   * the plain `<base> <head>` pair — a tree-to-tree comparison — instead of
+   * the merge-base `...` form. With no option passed the argv is exactly the
+   * four-flag range form it always was.
    *
    * **Gotchas**
    *
@@ -1495,12 +1507,13 @@ export class GitCommand {
    * const invocation = GitCommand.changedFiles("main", "HEAD", false, {
    *   noRenames: true,
    *   diffFilter: "ACMR",
+   *   ignoreSubmodules: "none",
    *   twoDot: true,
    *   pathspec: ["src"],
    * });
    *
    * console.log(invocation.redactedArgs.join(" "));
-   * // diff --name-only -z --no-relative --no-renames --diff-filter=ACMR main HEAD -- src
+   * // diff --name-only -z --no-relative --no-renames --diff-filter=ACMR --ignore-submodules=none main HEAD -- src
    * ```
    *
    * @category constructors

@@ -31,9 +31,9 @@ it.effect.prop(
                 Retry.transient({ also: [pattern] }).while(CommandFailedError.make({ ...error, kind: "timeout" }))
               );
             }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         ),
-      { discard: true }
+      { concurrency: 1, discard: true }
     ),
   runs
 );

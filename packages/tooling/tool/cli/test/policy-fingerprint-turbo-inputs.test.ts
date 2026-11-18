@@ -252,19 +252,22 @@ describe("policy fingerprint Turbo inputs", { concurrent: false }, () => {
             (file) => `${directory}/${file}`
           );
         });
-        const forEach4 = yield* Effect.forEach(A.dedupe(A.flatMap(seals, ([task]) => declaredOf(task))), modulesOf);
+        const forEach4 = yield* Effect.forEach(A.dedupe(A.flatMap(seals, ([task]) => declaredOf(task))), modulesOf, {
+          concurrency: 1,
+        });
         const modules = A.dedupe(A.flatten(forEach4));
         const forEach5 = yield* Effect.forEach(
           modules,
           Effect.fnUntraced(function* (module) {
             const readFileString23 = yield* fs.readFileString(`${root}/${module}`);
             return [module, moduleRootFileReads(module, readFileString23)] as const;
-          })
+          }),
+          { concurrency: 1 }
         );
         const reads = HashMap.fromIterable(forEach5);
         for (const [task] of seals) {
           const declared = declaredOf(task);
-          const forEach6 = yield* Effect.forEach(declared, modulesOf);
+          const forEach6 = yield* Effect.forEach(declared, modulesOf, { concurrency: 1 });
           const read = A.flatMap(A.flatten(forEach6), (module) =>
             O.getOrElse(HashMap.get(reads, module), A.empty<string>)
           );
@@ -494,7 +497,9 @@ describe("Documentation task inputs", { concurrent: false }, () => {
           "packages/tooling/policy-pack/repo-configs/src/laws/rule.ts",
           "packages/tooling/policy-pack/repo-configs/src/internal/laws/helper.ts",
         ];
-        yield* Effect.forEach(sourceFiles, (file) => writeFile(root, file, "export const value = 1;\n"));
+        yield* Effect.forEach(sourceFiles, (file) => writeFile(root, file, "export const value = 1;\n"), {
+          concurrency: 1,
+        });
         yield* writeFile(root, ".oxlintrc.docs.json", "{}\n");
         yield* writeFile(root, ".oxlintrc.deprecated-apis.jsonc", "{}\n");
         yield* writeFile(root, "tsdoc.json", "{}\n");
@@ -531,7 +536,8 @@ describe("Documentation task inputs", { concurrent: false }, () => {
             "apps/labs/probe/check.ts",
             "packages/probe/.context/check.ts",
           ],
-          (file) => assertMutation(file, [false, false, false])
+          (file) => assertMutation(file, [false, false, false]),
+          { concurrency: 1 }
         );
         yield* assertMutation("infra/standalone/check.ts", [false, false, true]);
         yield* assertMutation("packages/unrelated/package.json", [true, false, true]);
@@ -542,8 +548,10 @@ describe("Documentation task inputs", { concurrent: false }, () => {
         // No fixture closure module names a checker configuration, so each one replays only the
         // tasks that declare it: the routed seal families are proven against the live CLI separately.
         yield* assertMutation(".oxlintrc.deprecated-apis.jsonc", [true, false, false]);
-        yield* Effect.forEach([".oxlintrc.docs.json", "tsdoc.json"], (file) =>
-          assertMutation(file, [false, true, true])
+        yield* Effect.forEach(
+          [".oxlintrc.docs.json", "tsdoc.json"],
+          (file) => assertMutation(file, [false, true, true]),
+          { concurrency: 1 }
         );
         yield* Effect.forEach(
           [
@@ -551,7 +559,8 @@ describe("Documentation task inputs", { concurrent: false }, () => {
             "packages/tooling/policy-pack/repo-configs/src/internal/laws/helper.ts",
             "packages/helper/src/index.ts",
           ],
-          (file) => assertMutation(file, [true, true, true])
+          (file) => assertMutation(file, [true, true, true]),
+          { concurrency: 1 }
         );
       }),
       { timeout: 180_000 }

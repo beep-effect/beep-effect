@@ -88,7 +88,9 @@ function checkEntries(
     readonly enforceVersion: boolean;
   }
 ) {
-  return Effect.forEach(models, (model) => checkEntry(Entry.make(model), options)).pipe(Effect.map(A.flatten));
+  return Effect.forEach(models, (model) => checkEntry(Entry.make(model), options), { concurrency: 1 }).pipe(
+    Effect.map(A.flatten)
+  );
 }
 
 function checkFunction(model: Domain.Function) {
@@ -112,7 +114,7 @@ function checkFunction(model: Domain.Function) {
  * @since 0.0.0
  */
 export function checkFunctions(models: ReadonlyArray<Domain.Function>) {
-  return Effect.forEach(models, checkFunction).pipe(Effect.map(A.flatten));
+  return Effect.forEach(models, checkFunction, { concurrency: 1 }).pipe(Effect.map(A.flatten));
 }
 
 const checkClass = Effect.fn("checkClass")(function* (model: Domain.Class) {
@@ -140,7 +142,7 @@ const checkClass = Effect.fn("checkClass")(function* (model: Domain.Class) {
  * @since 0.0.0
  */
 export function checkClasses(models: ReadonlyArray<Domain.Class>) {
-  return Effect.forEach(models, checkClass).pipe(Effect.map(A.flatten));
+  return Effect.forEach(models, checkClass, { concurrency: 1 }).pipe(Effect.map(A.flatten));
 }
 
 function checkConstant(model: Domain.Constant) {
@@ -164,7 +166,7 @@ function checkConstant(model: Domain.Constant) {
  * @since 0.0.0
  */
 export function checkConstants(models: ReadonlyArray<Domain.Constant>) {
-  return Effect.forEach(models, checkConstant).pipe(Effect.map(A.flatten));
+  return Effect.forEach(models, checkConstant, { concurrency: 1 }).pipe(Effect.map(A.flatten));
 }
 
 function checkInterface(model: Domain.Interface) {
@@ -188,7 +190,7 @@ function checkInterface(model: Domain.Interface) {
  * @since 0.0.0
  */
 export function checkInterfaces(models: ReadonlyArray<Domain.Interface>) {
-  return Effect.forEach(models, checkInterface).pipe(Effect.map(A.flatten));
+  return Effect.forEach(models, checkInterface, { concurrency: 1 }).pipe(Effect.map(A.flatten));
 }
 
 function checkTypeAlias(model: Domain.TypeAlias) {
@@ -212,7 +214,7 @@ function checkTypeAlias(model: Domain.TypeAlias) {
  * @since 0.0.0
  */
 export function checkTypeAliases(models: ReadonlyArray<Domain.TypeAlias>) {
-  return Effect.forEach(models, checkTypeAlias).pipe(Effect.map(A.flatten));
+  return Effect.forEach(models, checkTypeAlias, { concurrency: 1 }).pipe(Effect.map(A.flatten));
 }
 
 const checkNamespace = Effect.fn("checkNamespace")(function* (
@@ -242,7 +244,7 @@ const checkNamespace = Effect.fn("checkNamespace")(function* (
  * @since 0.0.0
  */
 export function checkNamespaces(models: ReadonlyArray<Domain.Namespace>) {
-  return Effect.forEach(models, checkNamespace).pipe(Effect.map(A.flatten));
+  return Effect.forEach(models, checkNamespace, { concurrency: 1 }).pipe(Effect.map(A.flatten));
 }
 
 /**
@@ -363,5 +365,5 @@ export function checkModule(module: Domain.Module) {
  * @since 0.0.0
  */
 export function checkModules(modules: ReadonlyArray<Domain.Module>) {
-  return Effect.forEach(modules, checkModule).pipe(Effect.map(A.flatten));
+  return Effect.forEach(modules, checkModule, { concurrency: 1 }).pipe(Effect.map(A.flatten));
 }

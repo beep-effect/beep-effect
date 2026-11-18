@@ -212,8 +212,10 @@ describe("@beep/m365-mcp outbox audit log", () => {
         );
         const readDirectory1 = yield* fs.readDirectory(directory);
         const names = pipe(readDirectory1, A.sort(Order.String));
-        const lines = yield* Effect.forEach(names, (name) =>
-          fs.readFileString(path.join(directory, name)).pipe(Effect.map(Str.split("\n")))
+        const lines = yield* Effect.forEach(
+          names,
+          (name) => fs.readFileString(path.join(directory, name)).pipe(Effect.map(Str.split("\n"))),
+          { concurrency: 1 }
         );
         const stat = yield* fs.stat(directory);
 

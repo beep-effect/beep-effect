@@ -439,7 +439,7 @@ const assistantToolCalls = (
   pipe(
     parts,
     A.filter((part): part is Prompt.ToolCallPart => part.type === "tool-call"),
-    Effect.forEach((part) => assistantToolCall(moduleName, toolNameMapper, part))
+    Effect.forEach((part) => assistantToolCall(moduleName, toolNameMapper, part), { concurrency: 1 })
   );
 
 const toolResultMessage = (
@@ -503,13 +503,13 @@ const prepareMessage = (
     Match.discriminator("role")("tool", (message) =>
       pipe(
         message.content,
-        Effect.forEach((part) => toolResultMessage(moduleName, toolNameMapper, part))
+        Effect.forEach((part) => toolResultMessage(moduleName, toolNameMapper, part), { concurrency: 1 })
       )
     ),
     Match.discriminator("role")("user", (message) =>
       pipe(
         message.content,
-        Effect.forEach((part) => userContentPart(moduleName, part)),
+        Effect.forEach((part) => userContentPart(moduleName, part), { concurrency: 1 }),
         Effect.map((content) => [
           OpenAiCompatUserChatMessage.make({
             content,
@@ -528,7 +528,7 @@ const prepareMessages = (
 ): Effect.Effect<OpenAiCompatChatCompletionRequest["messages"], AiError.AiError> =>
   pipe(
     prompt.content,
-    Effect.forEach((message) => prepareMessage(moduleName, toolNameMapper, message)),
+    Effect.forEach((message) => prepareMessage(moduleName, toolNameMapper, message), { concurrency: 1 }),
     Effect.map(A.flatten),
     Effect.map((messages) =>
       pipe(
@@ -586,7 +586,7 @@ const prepareTools = (
   A.isReadonlyArrayNonEmpty(options.tools)
     ? pipe(
         options.tools,
-        Effect.forEach((tool) => prepareTool(moduleName, config, tool)),
+        Effect.forEach((tool) => prepareTool(moduleName, config, tool), { concurrency: 1 }),
         Effect.asSome
       )
     : Effect.succeedNone;
@@ -792,7 +792,7 @@ const makeCompletedStreamToolCallsParts = (
 ): Effect.Effect<ReadonlyArray<Response.StreamPartEncoded>, AiError.AiError> =>
   pipe(
     R.values(activeToolCalls),
-    Effect.forEach((toolCall) => makeCompletedStreamToolCallParts(moduleName, toolCall)),
+    Effect.forEach((toolCall) => makeCompletedStreamToolCallParts(moduleName, toolCall), { concurrency: 1 }),
     Effect.map(A.flatten)
   );
 
@@ -829,7 +829,7 @@ const makeChoiceParts = Effect.fn("OpenAiCompatLanguageModel.makeChoiceParts")(f
     choice.message,
     O.flatMap((message) => message.tool_calls),
     O.getOrElse(A.empty<OpenAiCompatToolCall>),
-    Effect.forEach((toolCall) => makeToolCallPart(moduleName, toolNameMapper, toolCall))
+    Effect.forEach((toolCall) => makeToolCallPart(moduleName, toolNameMapper, toolCall), { concurrency: 1 })
   );
   return [...textParts, ...toolParts, makeFinishPart(response.usage, choice.finish_reason)];
 });
@@ -909,7 +909,8 @@ const makeStreamChoiceParts = Effect.fn("OpenAiCompatLanguageModel.makeStreamCho
             : []),
         ];
         return parts;
-      })
+      }),
+      { concurrency: 1 }
     )
   );
   const shouldFinish =

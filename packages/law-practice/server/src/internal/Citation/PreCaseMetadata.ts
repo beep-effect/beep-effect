@@ -15,6 +15,7 @@ import {
 } from "./MetadataComposition.ts";
 import { makeCitationPinCiteCleaner } from "./MetadataStrings.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationPublicationMetadataConfiguration } from "./MetadataComposition.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
@@ -143,14 +144,14 @@ export const installCitationPreCaseMetadataExtraction = Effect.fn("Citation.inst
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationPreCaseMetadata = Effect.fn("Citation.makePreCaseMetadata")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  configuration: CitationOwned<CitationPublicationMetadataConfiguration>
 ) {
   const installed = yield* makeCitationPublicationMetadataOperation(
-    policy,
-    runtimeInput,
-    configurationInput,
+    limits,
+    runtime,
+    configuration,
     "d151b7a02a061593bb44bd881eee2dc174fff7f1b5449512f25cc2b98fb315b0",
     installCitationPreCaseMetadataExtraction,
     () => fail("invalid-configuration")

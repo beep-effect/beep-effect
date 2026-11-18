@@ -138,7 +138,8 @@ it.effect.prop(
         expect(() => ObservationAvailabilityView.make(inconsistent)).toThrow();
         const json = yield* encodeJsonValue(inconsistent);
         yield* decodeAvailabilityView(json).pipe(Effect.flip);
-      })
+      }),
+      { concurrency: 1 }
     );
   }),
   { arbitrary: fcRuns(50) }

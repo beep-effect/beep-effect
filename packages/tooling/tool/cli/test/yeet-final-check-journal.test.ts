@@ -300,8 +300,10 @@ const admissionRoutes = Effect.fnUntraced(function* (runtimeRoot: RuntimeRootCho
   const path = yield* Path.Path;
   const admission = yield* admissionJournalPath(admissionRootFor(path, runtimeRoot));
   const text = yield* fs.readFileString(admission);
-  const rows = yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) =>
-    decodeAdmissionJournalEvent(line)
+  const rows = yield* Effect.forEach(
+    A.filter(Str.split(text, "\n"), Str.isNonEmpty),
+    (line) => decodeAdmissionJournalEvent(line),
+    { concurrency: 1 }
   );
   return A.filter(rows, AdmissionJournalEvent.guards["admission-routed"]);
 });
@@ -313,8 +315,10 @@ const subsetReceipts = Effect.fnUntraced(function* (root: string, head: string) 
   const fs = yield* FileSystem.FileSystem;
   const directory = `${root}/${FINAL_CHECK_SUBSET_RECEIPT_DIR}/${head}`;
   const files = yield* fs.readDirectory(directory);
-  return yield* Effect.forEach(A.sort(files, Order.String), (file) =>
-    fs.readFileString(`${directory}/${file}`).pipe(Effect.flatMap(decodeReceiptJson))
+  return yield* Effect.forEach(
+    A.sort(files, Order.String),
+    (file) => fs.readFileString(`${directory}/${file}`).pipe(Effect.flatMap(decodeReceiptJson)),
+    { concurrency: 1 }
   );
 });
 
@@ -322,8 +326,10 @@ const journalEvents = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const journal = yield* attemptJournalPathForCheckout(root, "main");
   const text = yield* fs.readFileString(journal);
-  return yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) =>
-    decodeYeetAttemptJournalEvent(line)
+  return yield* Effect.forEach(
+    A.filter(Str.split(text, "\n"), Str.isNonEmpty),
+    (line) => decodeYeetAttemptJournalEvent(line),
+    { concurrency: 1 }
   );
 });
 

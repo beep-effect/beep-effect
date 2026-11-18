@@ -170,7 +170,9 @@ const runTask = Effect.fn("OntoauthorMat.runTask")(function* (fixture: TaskFixtu
     })
   );
   const sparqlDataset = makeDataset([...reference.dataset.quads, ...inference.inferredDataset.quads]);
-  const actualAskValues = yield* Effect.forEach(askQueries(cq), (query) => executeAsk(query, sparqlDataset));
+  const actualAskValues = yield* Effect.forEach(askQueries(cq), (query) => executeAsk(query, sparqlDataset), {
+    concurrency: 1,
+  });
   const competencyPass =
     validation.validation.conforms &&
     actualAskValues.length === fixture.expectedAskValues.length &&
@@ -194,7 +196,7 @@ describe("OntoAuthor-Mat competency fixtures", () => {
     it.effect(
       "executes t1-t6 through Turtle, Oxigraph ASK, structural inference, and SHACL validation",
       Effect.fnUntraced(function* () {
-        const results = yield* Effect.forEach(taskFixtures, runTask);
+        const results = yield* Effect.forEach(taskFixtures, runTask, { concurrency: 1 });
 
         expect(results).toEqual(
           A.map(taskFixtures, (fixture, index) => ({

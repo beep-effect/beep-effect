@@ -92,13 +92,16 @@ const assertJsonRoundTrip = Effect.fn("FileProcessingTest.assertJsonRoundTrip")(
   expect(reencoded).toBe(encoded);
 });
 
-const fixtureIds = Effect.all({
-  artifactId: S.decodeEffect(ArtifactId)("artifact:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
-  digest: S.decodeEffect(ContentDigest)("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
-  operationId: S.decodeEffect(OperationId)(
-    "operation:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-  ),
-});
+const fixtureIds = Effect.all(
+  {
+    artifactId: S.decodeEffect(ArtifactId)("artifact:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+    digest: S.decodeEffect(ContentDigest)("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"),
+    operationId: S.decodeEffect(OperationId)(
+      "operation:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    ),
+  },
+  { concurrency: 1 }
+);
 
 type FixtureIds = {
   readonly artifactId: ArtifactId;

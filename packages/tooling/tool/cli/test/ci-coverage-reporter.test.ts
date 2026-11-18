@@ -133,7 +133,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "60 se
             expect(receipt.runtimeVersion).toBe(process.versions.bun ?? process.versions.node);
             expect(receipt.success).toBe(success);
             expect(receipt.provider).toBe(context.config.coverage.provider);
-          })
+          }),
+          { concurrency: 1 }
         );
       })
     );

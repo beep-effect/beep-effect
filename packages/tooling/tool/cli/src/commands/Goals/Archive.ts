@@ -312,7 +312,7 @@ const printArchivePlan = (plan: ArchivePlan, json: boolean): Effect.Effect<void>
         Effect.orDie,
         Effect.flatMap((encoded) => Console.log(canonicalJsonTextPretty(encoded)))
       )
-    : Effect.forEach(renderArchivePlanSummary(plan), (line) => Console.log(line), { discard: true });
+    : Effect.forEach(renderArchivePlanSummary(plan), (line) => Console.log(line), { concurrency: 1, discard: true });
 
 const planMismatch = (root: string, expected: string | undefined, plan: ArchivePlan): ArchiveError =>
   ArchiveError.new(
@@ -391,9 +391,7 @@ export const runGoalsArchive = Effect.fn("Goals.runGoalsArchive")(function* (
     yield* Effect.forEach(
       renderArchiveDryRun({ plan, archiveDir, kindLabel: options.kind }),
       (line) => Console.log(line),
-      {
-        discard: true,
-      }
+      { concurrency: 1, discard: true }
     );
     return O.none<ArchiveReceipt>();
   }

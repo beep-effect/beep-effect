@@ -9,7 +9,6 @@ import {
   CitationBuiltinCleanerName,
   CitationCleanerFailure,
   CitationCleanerObject,
-  CitationEngineLimits,
   CitationPythonUnicodeStorage,
   CitationSafetyLimitExceeded,
   CitationTextBudget,
@@ -26,10 +25,9 @@ import * as Scope from "effect/Scope";
 import * as Str from "effect/String";
 import { CitationCleanerTextDescriptor, CitationCleanerTextOutput } from "./CleanerTextIdentity.ts";
 import { CitationPythonUnicodeValue, makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import type { CitationLiveCleanerObject } from "@beep/law-practice-use-cases/server";
+import type { CitationEngineLimits, CitationLiveCleanerObject } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonUnicodeFailure } from "./PythonUnicode.ts";
 
-const Limits = S.toType(CitationEngineLimits);
 type Failure = CitationCleanerFailure | CitationSafetyLimitExceeded;
 
 const CitationCleanerTextOutputType = S.toType(CitationCleanerTextOutput);
@@ -119,8 +117,9 @@ const fail = (reason: CitationCleanerFailure["reason"]) => CitationCleanerFailur
  * all capabilities and drops every arena-held value without inspecting hosts.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")(function* (policy: unknown) {
-  const limits = yield* S.decodeUnknownEffect(Limits)(policy).pipe(Effect.mapError(() => fail("invalid-input")));
+export const makeCitationCleanerValues = Effect.fn("Citation.makeCleanerValues")(function* (
+  limits: CitationEngineLimits
+) {
   const clock = yield* Clock.Clock;
   const cleanMillis = Duration.toMillis(limits.cleanDeadline);
   const operationMillis = Duration.toMillis(limits.operationDeadline);

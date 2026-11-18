@@ -80,7 +80,8 @@ describe("OutlookItemRefFromInput", () => {
           "message:",
           "ticket:AAMk1",
         ],
-        refuses
+        refuses,
+        { concurrency: 1 }
       );
       deepStrictEqual(
         tags,

@@ -318,8 +318,10 @@ export const concatCitationPythonRanges = Effect.fn("Citation.concatNativeRanges
   }>,
   beforeAllocate: (layout: CitationPythonSliceLayout) => Effect.Effect<void, E, R>
 ) {
-  const sizes = yield* Effect.forEach(ranges, (range) =>
-    measureCitationPythonSlice(range.source, range.start, range.end)
+  const sizes = yield* Effect.forEach(
+    ranges,
+    (range) => measureCitationPythonSlice(range.source, range.start, range.end),
+    { concurrency: 1 }
   );
   const width = A.reduce(sizes, 1 as 1 | 2 | 4, (a, size) => (a > size.width ? a : size.width));
   const pythonLength = A.reduce(sizes, 0, (a, size) => a + size.pythonLength);

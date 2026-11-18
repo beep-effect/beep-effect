@@ -101,9 +101,11 @@ export const HoldAnchor = S.TaggedUnion({
   RootOverride: { packageName: S.NonEmptyString },
   PatchedDependency: { key: S.NonEmptyString },
   OsvPackageOverride: { packageName: S.NonEmptyString },
+  OsvIgnoredVuln: { id: S.NonEmptyString },
 }).pipe(
   $I.annoteSchema("HoldAnchor", {
-    description: "A typed config site that enforces a hold: catalog, manifest, syncpack, override, patch or OSV entry.",
+    description:
+      "A typed config site that enforces a hold: catalog, manifest, syncpack, override, patch, OSV package override or OSV advisory ignore.",
   })
 );
 

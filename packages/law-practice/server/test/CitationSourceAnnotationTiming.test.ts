@@ -5,7 +5,11 @@ import {
 } from "@beep/law-practice-server/internal/Citation/AnnotationCallback";
 import { makeCitationAnnotationOperation } from "@beep/law-practice-server/internal/Citation/AnnotationOperation";
 import { makeCitationSourceAnnotation } from "@beep/law-practice-server/internal/Citation/SourceAnnotation";
-import { CitationAnnotationReplacement, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
+import {
+  CitationAnnotationReplacement,
+  CitationEngineLimits,
+  CitationPythonUnicodeStorage,
+} from "@beep/law-practice-use-cases/server";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -16,6 +20,7 @@ import * as Fiber from "effect/Fiber";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { installCitationAnnotationEntryFixture } from "./CitationAnnotationEntry.fixtures.ts";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
@@ -45,8 +50,9 @@ it.layer(citationTokenizerTestLayer)("raw-source annotation timing", (it) => {
             return CitationAnnotationCallbackResult.cases.Text.make({ text: span });
           }),
         });
+        const limits = yield* ownCitationTestConfiguration(CitationEngineLimits, setup.limits);
         const entry = yield* makeCitationAnnotationOperation(
-          setup.limits,
+          limits,
           setup.runtime,
           setup.configuration,
           Sha256Hex.make(Str.repeat(64)("a"))

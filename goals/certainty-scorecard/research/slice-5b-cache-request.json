@@ -1,0 +1,15 @@
+{
+  "previous": "c1d4c1c3d06982a88e18d7cafc52f62bf195b799b78fdbcb11dbaa4dc41086c9",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (certainty-scorecard slice 5b, feat/certainty-admission-pressure-fields)",
+    "reason": "Record the root drift of //#lint:policy-fingerprint: its inputs gain packages/tooling/library/palantiri/src/** because the admission scheduler now imports the host-pressure parcel's percent schema and PSI parser from @beep/palantiri, so a change to them must invalidate the policy-lint cache. Commands, cache flags, outputs and environment are unchanged; inputs only grow; no qualification or exception.",
+    "basis": {
+      "path": "goals/certainty-scorecard/research/slice-5b-cache-review.md",
+      "sha256": "d4528aa167132df5280023727b6c7f8a58c85af3522c84d9da83c84a0949ef62"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

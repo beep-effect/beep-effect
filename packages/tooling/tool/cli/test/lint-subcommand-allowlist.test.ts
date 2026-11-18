@@ -218,8 +218,10 @@ it.layer(CommandTestLayer, { timeout: "5 seconds" })((it) => {
         const tsMorph = yield* TSMorphService;
         const repoRoot = yield* findRepoRoot();
         const sourceDir = path.join(repoRoot, "packages/tooling/tool/cli/src");
-        const preFastPathSources = yield* Effect.forEach(PRE_FAST_PATH_MODULES, (module) =>
-          Effect.map(fs.readFileString(path.join(repoRoot, module)), (source) => ({ module, source }))
+        const preFastPathSources = yield* Effect.forEach(
+          PRE_FAST_PATH_MODULES,
+          (module) => Effect.map(fs.readFileString(path.join(repoRoot, module)), (source) => ({ module, source })),
+          { concurrency: 1 }
         );
         const binMainSource = yield* fs.readFileString(path.join(sourceDir, "bin-main.ts"));
         const manifestSource = yield* fs.readFileString(path.join(sourceDir, "internal/dispatch/Dispatch.manifest.ts"));

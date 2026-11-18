@@ -184,10 +184,13 @@ const appendDisposition = Effect.fn("HarnessLedger.appendDisposition")(function*
       `${previous.rowId} is superseded by ${successor.value.rowId}; disposition the latest row of its chain.`
     );
   }
-  const declared = yield* Effect.forEach(options.touched, (surface) =>
-    contextSurfaceId(surface.kind, surface.name).pipe(
-      Effect.mapError(HarnessLedgerIoError.wrap(`Failed to hash surface ${surface.kind}:${surface.name}.`))
-    )
+  const declared = yield* Effect.forEach(
+    options.touched,
+    (surface) =>
+      contextSurfaceId(surface.kind, surface.name).pipe(
+        Effect.mapError(HarnessLedgerIoError.wrap(`Failed to hash surface ${surface.kind}:${surface.name}.`))
+      ),
+    { concurrency: 1 }
   );
   // The row keeps the evidence's fingerprint; the decision belongs to the
   // harness it is made under, which may have changed since the proposal.
@@ -235,25 +238,28 @@ const listImpl = Effect.fn("HarnessLedger.list")(function* (options: HarnessLedg
   // An unset --model / --reasoning-effort is not compared: substitute the
   // row's own recorded component so only supplied components and the harness
   // hashes can make a row stale.
-  const entries = yield* Effect.forEach(chainHeads(rows), (head) =>
-    harnessFingerprintFromParts(
-      HarnessFingerprintParts.make({
-        modelId: O.getOrElse(options.modelId, () => head.fingerprint.modelId),
-        reasoningEffort: O.getOrElse(options.reasoningEffort, () => head.fingerprint.reasoningEffort),
-        harnessSessionHash: current.harnessSessionHash,
-        harnessBaselineHash: current.harnessBaselineHash,
-      })
-    ).pipe(
-      Effect.mapBoth({
-        onFailure: HarnessLedgerIoError.wrap("Failed to derive the row's current harness fingerprint."),
-        onSuccess: (fingerprint) =>
-          HarnessLedgerListEntry.make({
-            row: head,
-            stale: isStale(head, fingerprint),
-            chainLength: chainLength(rows, head),
-          }),
-      })
-    )
+  const entries = yield* Effect.forEach(
+    chainHeads(rows),
+    (head) =>
+      harnessFingerprintFromParts(
+        HarnessFingerprintParts.make({
+          modelId: O.getOrElse(options.modelId, () => head.fingerprint.modelId),
+          reasoningEffort: O.getOrElse(options.reasoningEffort, () => head.fingerprint.reasoningEffort),
+          harnessSessionHash: current.harnessSessionHash,
+          harnessBaselineHash: current.harnessBaselineHash,
+        })
+      ).pipe(
+        Effect.mapBoth({
+          onFailure: HarnessLedgerIoError.wrap("Failed to derive the row's current harness fingerprint."),
+          onSuccess: (fingerprint) =>
+            HarnessLedgerListEntry.make({
+              row: head,
+              stale: isStale(head, fingerprint),
+              chainLength: chainLength(rows, head),
+            }),
+        })
+      ),
+    { concurrency: 1 }
   );
   return pipe(
     entries,
@@ -278,25 +284,28 @@ const buildPruneProposals = Effect.fn("HarnessLedger.buildPruneProposals")(funct
     0,
     12
   )(observed.harnessHash)} ending ${DateTime.formatIso(windowEnd)}`;
-  return yield* Effect.forEach(candidates, (candidate) =>
-    makeHarnessLedgerRowId(createdAt).pipe(
-      Effect.map((rowId) =>
-        PruneProposal.make({
-          candidate,
-          row: HarnessLedgerRow.make({
-            rowId,
-            createdAt,
-            edit: { kind: HarnessEditRefKind.Enum.pending },
-            mechanismClass: prunableSurfaceMechanism(candidate.kind),
-            fingerprint,
-            disposition: LedgerDisposition.Enum.proposed,
-            dispositionEvidence: O.some(evidence),
-            targetSurface: O.some(candidate.surfaceId),
-            windowSessions: O.some(observed.sessionsObserved),
-          }),
-        })
-      )
-    )
+  return yield* Effect.forEach(
+    candidates,
+    (candidate) =>
+      makeHarnessLedgerRowId(createdAt).pipe(
+        Effect.map((rowId) =>
+          PruneProposal.make({
+            candidate,
+            row: HarnessLedgerRow.make({
+              rowId,
+              createdAt,
+              edit: { kind: HarnessEditRefKind.Enum.pending },
+              mechanismClass: prunableSurfaceMechanism(candidate.kind),
+              fingerprint,
+              disposition: LedgerDisposition.Enum.proposed,
+              dispositionEvidence: O.some(evidence),
+              targetSurface: O.some(candidate.surfaceId),
+              windowSessions: O.some(observed.sessionsObserved),
+            }),
+          })
+        )
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -346,7 +355,8 @@ const blockedTargets = Effect.fn("HarnessLedger.blockedTargets")(function* (
       Effect.map(
         blockOf(head, harnessHash),
         O.map((block) => [block, target] as const)
-      )
+      ),
+    { concurrency: 1 }
   );
   const targetsBlockedBy = (block: ProposalBlock): HashSet.HashSet<string> =>
     pipe(

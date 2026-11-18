@@ -399,11 +399,14 @@ it.layer(testLayer, { timeout: "30 seconds" })("fleet mirror scan", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
 
-      yield* Effect.forEach([fixture.alpha, fixture.beta], (checkout) =>
-        Effect.gen(function* () {
-          yield* fs.makeDirectory(path.join(checkout, "notes"), { recursive: true });
-          yield* fs.writeFileString(path.join(checkout, "notes", "shared.md"), "# shared\n");
-        })
+      yield* Effect.forEach(
+        [fixture.alpha, fixture.beta],
+        (checkout) =>
+          Effect.gen(function* () {
+            yield* fs.makeDirectory(path.join(checkout, "notes"), { recursive: true });
+            yield* fs.writeFileString(path.join(checkout, "notes", "shared.md"), "# shared\n");
+          }),
+        { concurrency: 1 }
       );
 
       const snapshot = yield* scanFixture(fixture);

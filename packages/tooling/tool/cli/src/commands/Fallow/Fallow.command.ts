@@ -464,14 +464,13 @@ const checkDoctrineBoundaries = Effect.fn("Fallow.checkDoctrineBoundaries")(func
     yield* Effect.forEach(
       manifestViolations,
       (violation) => Console.error(renderManifestDoctrineViolation(violation)),
-      {
-        discard: true,
-      }
+      { concurrency: 1, discard: true }
     );
   }
   if (A.isReadonlyArrayNonEmpty(sourceViolations)) {
     yield* Console.error("Source import violations:");
     yield* Effect.forEach(sourceViolations, (violation) => Console.error(renderSourceDoctrineViolation(violation)), {
+      concurrency: 1,
       discard: true,
     });
   }

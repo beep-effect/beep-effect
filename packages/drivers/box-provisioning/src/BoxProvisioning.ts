@@ -119,10 +119,10 @@ const makeService = (
 
   const applyReviewedPlan = Effect.fn("BoxProvisioning.applyReviewedPlan")(
     function* (desiredInput: unknown, reviewedPlanJson: unknown) {
-      const [desired, reviewedPlan] = yield* Effect.all([
-        decodeBoxDesiredState(desiredInput),
-        decodeBoxProvisioningPlan(reviewedPlanJson),
-      ]);
+      const [desired, reviewedPlan] = yield* Effect.all(
+        [decodeBoxDesiredState(desiredInput), decodeBoxProvisioningPlan(reviewedPlanJson)],
+        { concurrency: 1 }
+      );
       const planDigestValid = yield* hasValidBoxProvisioningPlanDigest(reviewedPlan).pipe(
         Effect.mapError(toPlanStageFailure)
       );
@@ -197,7 +197,9 @@ export interface BoxProvisioningShape {
  */
 export class BoxProvisioning extends Context.Service<BoxProvisioning, BoxProvisioningShape>()($I`BoxProvisioning`) {
   static readonly layer = Layer.unwrap(
-    Effect.all([BoxProvisioningInventory, BoxProvisioningPlanner, BoxProvisioningApplier, Digest.Digest]).pipe(
+    Effect.all([BoxProvisioningInventory, BoxProvisioningPlanner, BoxProvisioningApplier, Digest.Digest], {
+      concurrency: 1,
+    }).pipe(
       Effect.map(([inventory, planner, applier, digest]) =>
         Layer.succeed(BoxProvisioning, BoxProvisioning.of(makeService(inventory, planner, applier, digest)))
       )

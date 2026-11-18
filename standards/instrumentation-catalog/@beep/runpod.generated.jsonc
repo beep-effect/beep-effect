@@ -8,10 +8,8 @@
   "spans": [
     {"name":"Runpod.applyPathParams","owner":"@beep/runpod","family":"driver","conforms":true},
     {"name":"Runpod.buildRequest","owner":"@beep/runpod","family":"driver","conforms":true},
-    {"name":"Runpod.executeJsonOperation","owner":"@beep/runpod","family":"driver","conforms":true},
-    {"name":"Runpod.executeRawResponse","owner":"@beep/runpod","family":"driver","conforms":true},
-    {"name":"Runpod.executeTextOperation","owner":"@beep/runpod","family":"driver","conforms":true},
-    {"name":"Runpod.executeVoidOperation","owner":"@beep/runpod","family":"driver","conforms":true},
+    {"name":"Runpod.executeHttp","owner":"@beep/runpod","family":"driver","conforms":true},
+    {"name":"Runpod.executeOperation","owner":"@beep/runpod","family":"driver","conforms":true},
     {"name":"Runpod.makeRunpodFromConfig","owner":"@beep/runpod","family":"driver","conforms":true},
     {"name":"Runpod.makeRunpodFromEnvironment","owner":"@beep/runpod","family":"driver","conforms":true},
     {"name":"Runpod.operation","owner":"@beep/runpod","family":"driver","conforms":true},

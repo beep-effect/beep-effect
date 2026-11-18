@@ -202,11 +202,14 @@ export const listExplorationPacketFiles = Effect.fn("Goals.listExplorationPacket
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const present = yield* Effect.forEach(ExplorationPacketFile.literals, (file) =>
-    fs.exists(path.join(repoRoot, "explorations", exploration, file)).pipe(
-      Effect.orElseSucceed(constFalse),
-      Effect.map((exists) => (exists ? O.some(file) : O.none<ExplorationPacketFile>()))
-    )
+  const present = yield* Effect.forEach(
+    ExplorationPacketFile.literals,
+    (file) =>
+      fs.exists(path.join(repoRoot, "explorations", exploration, file)).pipe(
+        Effect.orElseSucceed(constFalse),
+        Effect.map((exists) => (exists ? O.some(file) : O.none<ExplorationPacketFile>()))
+      ),
+    { concurrency: 1 }
   );
   return A.getSomes(present);
 });

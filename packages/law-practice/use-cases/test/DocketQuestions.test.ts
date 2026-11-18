@@ -87,10 +87,13 @@ describe("@beep/law-practice-use-cases docket questions", () => {
     it.effect(
       "raises one valid question per needs-review reason, with a stable id",
       Effect.fnUntraced(function* () {
-        const questions = yield* Effect.forEach(DocketNeedsReviewReason.literals, (reason) =>
-          Effect.flatMap(raise(DocketQuestionInput.make({ outcome: needsReview(reason) })), (question) =>
-            Effect.fromOption(question)
-          )
+        const questions = yield* Effect.forEach(
+          DocketNeedsReviewReason.literals,
+          (reason) =>
+            Effect.flatMap(raise(DocketQuestionInput.make({ outcome: needsReview(reason) })), (question) =>
+              Effect.fromOption(question)
+            ),
+          { concurrency: 1 }
         );
         const again = yield* raise(DocketQuestionInput.make({ outcome: needsReview("agents-disagree") }));
 
@@ -117,20 +120,23 @@ describe("@beep/law-practice-use-cases docket questions", () => {
     it.effect(
       "names the email in every reason's question and states each matter flag",
       Effect.fnUntraced(function* () {
-        const questions = yield* Effect.forEach(DocketNeedsReviewReason.literals, (reason) =>
-          Effect.flatMap(
-            raise(
-              identified(
-                DocketNeedsReview.make({
-                  entry: DocketWrittenEntry.make({ eventId: NEEDS_REVIEW_EVENT }),
-                  flags: ["matter-not-found", "matter-lookup-failed"],
-                  messageId: "AAMkAGsynthetic-message-1=",
-                  reason,
-                })
-              )
+        const questions = yield* Effect.forEach(
+          DocketNeedsReviewReason.literals,
+          (reason) =>
+            Effect.flatMap(
+              raise(
+                identified(
+                  DocketNeedsReview.make({
+                    entry: DocketWrittenEntry.make({ eventId: NEEDS_REVIEW_EVENT }),
+                    flags: ["matter-not-found", "matter-lookup-failed"],
+                    messageId: "AAMkAGsynthetic-message-1=",
+                    reason,
+                  })
+                )
+              ),
+              Effect.fromOption
             ),
-            Effect.fromOption
-          )
+          { concurrency: 1 }
         );
 
         for (const question of questions) {
@@ -385,7 +391,8 @@ describe("@beep/law-practice-use-cases docket questions", () => {
             Effect.map(
               raise(DocketQuestionInput.make({ outcome })),
               O.map(({ itemId }) => itemId)
-            )
+            ),
+          { concurrency: 1 }
         );
         expect(A.dedupe(A.getSomes(ids))).toHaveLength(3);
       })

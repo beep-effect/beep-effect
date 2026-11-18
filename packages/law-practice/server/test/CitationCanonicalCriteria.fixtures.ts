@@ -13,7 +13,9 @@ import type { CitationOracleOperations } from "@beep/law-practice-use-cases/test
  */
 export const readCitationCanonicalAssertionPayloads = Effect.fn("CanonicalCriteriaTest.payloads")(
   (assertions: HashMap.HashMap<string, { readonly payload: string }>, ids: ReadonlyArray<string>) =>
-    Effect.forEach(ids, (id) => Effect.fromOption(HashMap.get(assertions, id)).pipe(Effect.map((row) => row.payload)))
+    Effect.forEach(ids, (id) => Effect.fromOption(HashMap.get(assertions, id)).pipe(Effect.map((row) => row.payload)), {
+      concurrency: 1,
+    })
 );
 
 /** Read an original successful builtin plain parser call with its exact None profile.

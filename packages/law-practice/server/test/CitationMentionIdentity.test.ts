@@ -77,15 +77,17 @@ it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
   it.effect("keeps identities stable under replay and consumer ordering while separating repeated quotes", () =>
     Effect.gen(function* () {
       const source = yield* sourceIdentity(sourceText);
-      const anchors = yield* Effect.forEach([3, 13], (start) => verifiedAnchor(sourceText, start, source));
+      const anchors = yield* Effect.forEach([3, 13], (start) => verifiedAnchor(sourceText, start, source), {
+        concurrency: 1,
+      });
       const inputs = A.map(anchors, (anchor) =>
         CitationMentionIdentityInput.make({ anchor, engineArtifact: artifact, semanticKind: "case" })
       );
-      const forward = yield* Effect.forEach(inputs, makeCitationMentionId);
-      const reverse = yield* Effect.forEach(A.reverse(inputs), makeCitationMentionId);
+      const forward = yield* Effect.forEach(inputs, makeCitationMentionId, { concurrency: 1 });
+      const reverse = yield* Effect.forEach(A.reverse(inputs), makeCitationMentionId, { concurrency: 1 });
       expect(reverse).toEqual(A.reverse(forward));
       expect(A.dedupe(forward).length).toBe(2);
-      const citationResult1 = yield* Effect.forEach(inputs, makeCitationMentionId);
+      const citationResult1 = yield* Effect.forEach(inputs, makeCitationMentionId, { concurrency: 1 });
       expect(citationResult1).toEqual(forward);
     })
   );
@@ -104,12 +106,15 @@ it.layer(BunCrypto.layer)("citation occurrence identity production", (it) => {
         { extractor: SourceTextExtractor.make({ name: "utf8", version: "2" }) },
         { normalizationVersion: "2" },
       ];
-      const changedSources = yield* Effect.forEach(overrides, (override) =>
-        Effect.gen(function* () {
-          const changed = yield* sourceIdentity(sourceText, override);
-          const proof = yield* verifiedAnchor(sourceText, 3, changed);
-          return yield* makeCitationMentionId({ anchor: proof, engineArtifact: artifact, semanticKind: "case" });
-        })
+      const changedSources = yield* Effect.forEach(
+        overrides,
+        (override) =>
+          Effect.gen(function* () {
+            const changed = yield* sourceIdentity(sourceText, override);
+            const proof = yield* verifiedAnchor(sourceText, 3, changed);
+            return yield* makeCitationMentionId({ anchor: proof, engineArtifact: artifact, semanticKind: "case" });
+          }),
+        { concurrency: 1 }
       );
       const changedText = `${sourceText}!`;
       const changedTextSource = yield* sourceIdentity(changedText);

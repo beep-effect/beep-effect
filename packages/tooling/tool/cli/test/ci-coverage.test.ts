@@ -586,7 +586,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
                   extendEnv: true,
                 }).pipe(Effect.asVoid)
               : Effect.void,
-          { discard: true }
+          { concurrency: 1, discard: true }
         )
       );
       const proof = CiLanePartitionProof.make({
@@ -669,7 +669,7 @@ it.layer(layer, { timeout: "10 seconds" })("CI coverage artifact orchestration",
                   )
                 )
               : Effect.void,
-          { discard: true }
+          { concurrency: 1, discard: true }
         )
       );
       const proof = CiLanePartitionProof.make({

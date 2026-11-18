@@ -4,6 +4,7 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
@@ -13,6 +14,7 @@ import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -23,6 +25,11 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type * as PlatformError from "effect/PlatformError";
+
+/** Explicit platform services for Node-parent native qualification.
+ * @internal @category testing @since 0.0.0
+ */
+export const citationNativeNodeTestPlatform = Layer.merge(NodeServices.layer, NodeCrypto.layer);
 
 /** Bundle the actual owned HTML entrypoint once per scope, retaining its WASM asset lookup.
  * @internal @category testing @since 0.0.0
@@ -215,12 +222,16 @@ export const makeCitationObservedSpawner = Effect.fn("NativeSourceTest.makeSpawn
   const real = yield* ChildProcessSpawner;
   let spawned = 0;
   let confirmed = 0;
+  let live = 0;
+  let maximumAlive = 0;
   const spawner = ChildProcessSpawner.of({
     ...real,
     spawn: Effect.fn("NativeSourceTest.spawn")((command) =>
       real.spawn(command).pipe(
         Effect.map((handle) => {
           spawned++;
+          live++;
+          maximumAlive = Math.max(maximumAlive, live);
           let seen = false;
           return {
             ...handle,
@@ -234,6 +245,7 @@ export const makeCitationObservedSpawner = Effect.fn("NativeSourceTest.makeSpawn
                     );
                     seen = true;
                     confirmed++;
+                    live--;
                   }
                 })
               )
@@ -243,7 +255,11 @@ export const makeCitationObservedSpawner = Effect.fn("NativeSourceTest.makeSpawn
       )
     ),
   });
-  return { spawner, snapshot: Effect.sync(() => CitationNativeExitCounts.make({ spawned, confirmed })) };
+  return {
+    spawner,
+    snapshot: Effect.sync(() => CitationNativeExitCounts.make({ spawned, confirmed })),
+    maximumAlive: Effect.sync(() => maximumAlive),
+  };
 });
 /** Delay kill acknowledgement independently of the actual OS exit, preserving
  * the existing observed-spawner proof and enabling quarantine controls.
@@ -300,16 +316,42 @@ export const makeCitationNativeManualClock = Effect.fn("WorkerTest.manualSleep")
   duration: Duration.Duration
 ) {
   const clock = yield* Clock.Clock;
-  const requested = yield* Deferred.make<void>();
-  const wake = yield* Deferred.make<void>();
+  let active = HashSet.empty<number>();
+  let sleeps = A.empty<Deferred.Deferred<void>>();
   const controlled = yield* makeCitationNativeSleepClock((input) =>
     Duration.equals(input, duration)
-      ? Deferred.succeed(requested, undefined).pipe(Effect.andThen(Deferred.await(wake)))
+      ? Effect.gen(function* () {
+          const wake = yield* Deferred.make<void>();
+          const index = sleeps.length;
+          sleeps = A.append(sleeps, wake);
+          active = HashSet.add(active, index);
+          yield* Deferred.await(wake).pipe(
+            Effect.ensuring(
+              Effect.sync(() => {
+                active = HashSet.remove(active, index);
+              })
+            )
+          );
+        })
       : clock.sleep(input)
+  );
+  const triggerSleep = Effect.fn("WorkerTest.triggerSleep")((index: number) =>
+    Effect.suspend(() =>
+      O.match(A.get(sleeps, index), {
+        onNone: () => Effect.never,
+        onSome: (wake) => Deferred.succeed(wake, undefined).pipe(Effect.asVoid),
+      })
+    )
   );
   return {
     clock: controlled,
-    trigger: Deferred.await(requested).pipe(Effect.andThen(Deferred.succeed(wake, undefined))),
+    sleeps: Effect.sync(() => sleeps.length),
+    triggerSleep,
+    trigger: Effect.yieldNow.pipe(
+      Effect.andThen(Effect.sync(() => A.findFirstIndex(sleeps, (_, index) => HashSet.has(active, index)))),
+      Effect.repeat({ until: O.isSome }),
+      Effect.flatMap(O.match({ onNone: () => Effect.never, onSome: triggerSleep }))
+    ),
   };
 });
 /** @internal @category testing @since 0.0.0 */
@@ -318,9 +360,9 @@ export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(f
   family: "html" | "regex" | "diff" = "html",
   runtimeKind: CitationNativeRuntimeKind = "bun"
 ) {
-  const version = family === "regex" ? "v2" : "v1";
+  const version = family === "regex" ? "v3" : "v1";
   const ready = `{"_tag":"Ready","version":"citation-${family}-worker/${version}"}\\n`;
-  const started = `{"_tag":"Started","version":"citation-${family}-worker/${version}"}\\n`;
+  const started = `{"_tag":"Started","version":"citation-${family}-worker/${version}"${family === "regex" ? ',"sequence":0' : ""}}\\n`;
   const success = '{"_tag":"Success","version":"citation-html-worker/v1","text":"released"}\\n';
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -336,7 +378,7 @@ export const makeCitationNativeWorkerFixture = Effect.fn("WorkerTest.fixture")(f
       : `const timer=setInterval(()=>{if(existsSync(${releaseLiteral})){clearInterval(timer);process.stdout.write('${success}');}},10);`;
   yield* fs.writeFileString(
     workerFile,
-    `import {writeFileSync,existsSync} from 'node:fs';process.stdout.write('${ready}');process.stdin.resume();process.stdin.on('end',()=>process.stdout.write('${started}',()=>{writeFileSync(${markerLiteral},'entered');${action}}));`
+    `import {writeFileSync,existsSync} from 'node:fs';process.stdout.write('${ready}');process.stdin.resume();process.stdin.on('${family === "regex" ? "data" : "end"}',()=>process.stdout.write('${started}',()=>{writeFileSync(${markerLiteral},'entered');${action}}));`
   );
   const executable = yield* runtimeKind === "node" ? citationNodeTestExecutable : citationBunTestExecutable;
   return { fs, cwd, workerFile, marker, release, kind: runtimeKind, executable };

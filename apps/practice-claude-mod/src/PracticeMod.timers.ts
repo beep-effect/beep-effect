@@ -80,7 +80,9 @@ export const makeTimerLog = Effect.gen(function* () {
   // Returned as text for the attorney to copy; the mod writes no files (#1728).
   const exportJsonl = Effect.gen(function* () {
     const rows = yield* read;
-    const lines = yield* Effect.forEach(rows, (row) => S.encodeEffect(RowLine)(row).pipe(Effect.mapError(unreadable)));
+    const lines = yield* Effect.forEach(rows, (row) => S.encodeEffect(RowLine)(row).pipe(Effect.mapError(unreadable)), {
+      concurrency: 1,
+    });
     return A.join(lines, "\n") + (lines.length > 0 ? "\n" : "");
   });
   const record = (interval: TimerInterval) => Semaphore.withPermit(writes)(recordUnserialized(interval));

@@ -83,7 +83,7 @@ const createLegacyPglite046Fixture = Effect.fn(
               ),
               Effect.promise(() => pglite.query("INSERT INTO legacy_notes (body) VALUES ('keep me')")),
             ],
-            { discard: true }
+            { concurrency: 1, discard: true }
           )
         )
       ),

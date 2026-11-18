@@ -272,14 +272,17 @@ it.layer(BunCrypto.layer, { timeout: "5 seconds" })("@beep/provenance VerifiedTe
     "rejects lone UTF-16 surrogates without conflating them with the replacement character",
     Effect.fnUntraced(function* () {
       const source = identity({ textDigest: replacementCharacterDigest });
-      const failures = yield* Effect.forEach(["\ud800", "\udc00"], (sourceText) =>
-        verifySourceTextIdentity(
-          VerifySourceTextIdentityInput.make({
-            expectedSource: source,
-            source,
-            sourceText,
-          })
-        ).pipe(Effect.flip)
+      const failures = yield* Effect.forEach(
+        ["\ud800", "\udc00"],
+        (sourceText) =>
+          verifySourceTextIdentity(
+            VerifySourceTextIdentityInput.make({
+              expectedSource: source,
+              source,
+              sourceText,
+            })
+          ).pipe(Effect.flip),
+        { concurrency: 1 }
       );
       const replacement = yield* verifySourceTextIdentity(
         VerifySourceTextIdentityInput.make({

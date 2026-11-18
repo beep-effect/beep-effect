@@ -1128,7 +1128,7 @@ const proveCiLanePartitionShards = Effect.fn("CiLane.proveCiLanePartitionShards"
   yield* Effect.forEach(
     packageBins(lanePartitions),
     ([packageName, bins]) => proveShardedPackageBins(laneId, partitionId, packageName, bins),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -1909,9 +1909,9 @@ export const ciLaneStepsForTesting: {
       ],
       fallow: () => fallowRunPhaseSteps(repoRoot, options),
       // Hosted CI regenerates the inventory into .beep/ci/ and ratchets it. A
-      // caller that already ran the scan (root beep:preflight writes both the
-      // committed artifact and the CI mirror from one `jsdoc-inventory`) passes
-      // `--inventory <path>` and only the ratchet runs (quality-lane audit A3).
+      // caller that already ran the scan (root beep:preflight's `jsdoc-inventory`
+      // writes this same ignored .beep/ci/ copy) passes `--inventory <path>` and
+      // only the ratchet runs (quality-lane audit A3).
       "jsdoc-ratchet": () =>
         pipe(
           O.fromUndefinedOr(options.inventory),
@@ -2227,7 +2227,7 @@ const runCiFallowLane = Effect.fn("CiLane.runCiFallowLane")(function* (
         });
       }
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   if (options.validateEnvelopes) {
@@ -2547,7 +2547,10 @@ export const runCiLaneSteps = Effect.fn("CiLane.runCiLaneSteps")(function* (
   // The JSDoc ratchet's inventory and compare are a dependency chain: never
   // compare yesterday's artifact after a failed scan.
   yield* ciLaneFailurePolicy(laneId) === "fail-fast"
-    ? Effect.forEach(steps, (step) => runQualityTaskStreamingStepGroup(`ci:${laneId}`, [step]), { discard: true })
+    ? Effect.forEach(steps, (step) => runQualityTaskStreamingStepGroup(`ci:${laneId}`, [step]), {
+        concurrency: 1,
+        discard: true,
+      })
     : runQualityTaskStreamingStepGroup(`ci:${laneId}`, steps);
 });
 
@@ -2909,6 +2912,7 @@ const runCiPartitionedLane = Effect.fn("CiLane.runCiPartitionedLane")(function* 
     `[ci] ${laneId} partition union proved: ${selection.taskPackageNames.length} executable tasks, ${proof.selectedTaskCount} selected, ${proof.partitionTaskCount} in ${partition}.`
   );
   yield* Effect.forEach(ciLaneDefaultPlacementLinesForTesting(laneId, selection.taskPackageNames), Console.log, {
+    concurrency: 1,
     discard: true,
   });
   yield* provePlannedCiLanePartitions(laneId, partition, options, selection);

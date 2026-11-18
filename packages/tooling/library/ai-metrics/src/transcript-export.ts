@@ -176,7 +176,8 @@ export const encodeTranscriptTraceBatch = Effect.fn("AiMetrics.encodeTranscriptT
           ...usage,
         ],
       };
-    })
+    }),
+    { concurrency: 1 }
   ).pipe(Effect.mapError(() => TranscriptExportError.make({ reason: "encoding" })));
   const body = yield* encodeObservationTraceWire(
     input.project,

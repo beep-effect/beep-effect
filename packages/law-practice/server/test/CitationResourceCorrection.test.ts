@@ -151,21 +151,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
     withCitationTestInvocation(
       Effect.gen(function* () {
         const { owner, limits } = yield* load();
-        const invalidPolicy = yield* makeCitationResourceCorrection(null).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(null).pipe(
-              Effect.map((bind) => ({
-                ...stage,
-                reporter: bind(stage.reporter),
-                page: bind(stage.page),
-                citation: bind(stage.citation),
-              }))
-            )
-          ),
-          Effect.provideService(CitationFrozenEditions, owner),
-          Effect.flip
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const correction = yield* makeCitationResourceCorrection(limits).pipe(
           Effect.flatMap((stage) =>
             makeCitationTestScaffoldBinding(limits).pipe(
@@ -239,7 +224,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
           const corpus = yield* loadCitationCorpus();
           const { limits } = yield* load();
           const unicode = yield* makeCitationPythonUnicode(limits);
-          const words = yield* Effect.forEach(corpus.replacementWords, (word) => unicode.fromStorage(word));
+          const words = yield* Effect.forEach(corpus.replacementWords, (word) => unicode.fromStorage(word), {
+            concurrency: 1,
+          });
           for (const [source, old, replacement, result] of corpus.replacements) {
             const input = yield* at(words, source);
             const needle = yield* at(words, old);

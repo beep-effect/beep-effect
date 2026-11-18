@@ -380,7 +380,10 @@ const recordRequestBody = (options: PacerMockOptionsInput, request: MockRequest)
   );
 
 const tracedRequest = (options: PacerMockOptionsInput, request: MockRequest): Effect.Effect<void> =>
-  Effect.all([recordRequestHeaders(options, request), recordRequestBody(options, request)], { discard: true });
+  Effect.all([recordRequestHeaders(options, request), recordRequestBody(options, request)], {
+    concurrency: 1,
+    discard: true,
+  });
 
 const recordLogoutToken = (options: PacerMockOptionsInput, request: MockRequest): Effect.Effect<void> =>
   pipe(
@@ -492,7 +495,7 @@ const recordDeletedReport = (options: PacerMockOptionsInput, path: string): Effe
         })
       ),
     ],
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
 const mockDeleteReportResponse = (

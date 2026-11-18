@@ -1070,9 +1070,9 @@ const commandSourceFiles = Effect.fn("Knowledge.commandSourceFiles")(function* (
       );
     return O.some([path.relative(checkoutRoot, filePath), text] as const);
   });
-  return yield* Effect.forEach(A.appendAll(sourceNames, sharedFlagSources), readCommandSourceFile).pipe(
-    Effect.map(A.getSomes)
-  );
+  return yield* Effect.forEach(A.appendAll(sourceNames, sharedFlagSources), readCommandSourceFile, {
+    concurrency: 1,
+  }).pipe(Effect.map(A.getSomes));
 });
 
 const buildStaticCommandTree = Effect.fn("Knowledge.buildStaticCommandTree")(function* (checkoutRoot: string) {
@@ -1113,6 +1113,18 @@ const isGitAttributesPath = (repoPath: string): boolean =>
   repoPath === ".gitattributes" || Str.endsWith("/.gitattributes")(repoPath);
 
 /**
+ * Whether a repository path's archived bytes can reach {@link buildStaticCommandTree}: the command
+ * source root, the shared flag sources, and every in-tree `.gitattributes` file.
+ *
+ * @param repoPath - Repository-relative path.
+ * @returns True when the static command reader, or the attributes shaping its bytes, reads the path.
+ */
+const isStaticCommandTreeInput = (repoPath: string): boolean =>
+  Str.startsWith(`${COMMAND_SOURCE_ROOT}/`)(repoPath) ||
+  A.contains(SHARED_FLAG_SOURCES, repoPath) ||
+  isGitAttributesPath(repoPath);
+
+/**
  * Every tracked entry whose archived bytes can reach {@link buildStaticCommandTree}, as sorted
  * `mode objectId path` rows.
  *
@@ -1130,12 +1142,7 @@ const staticCommandTreeInputs = (
 ): ReadonlyArray<string> =>
   pipe(
     entries,
-    A.filter(
-      (entry) =>
-        Str.startsWith(`${COMMAND_SOURCE_ROOT}/`)(entry.path) ||
-        A.contains(SHARED_FLAG_SOURCES, entry.path) ||
-        isGitAttributesPath(entry.path)
-    ),
+    A.filter((entry) => isStaticCommandTreeInput(entry.path)),
     A.map((entry) => `${entry.mode} ${entry.objectId} ${entry.path}`),
     A.sort(Order.String)
   );
@@ -1288,6 +1295,7 @@ export const KnowledgeCommandSurface = {
   buildStaticCommandTree,
   commandTreeProbeSource,
   isGitAttributesPath,
+  isStaticCommandTreeInput,
   staticCommandTreeInputs,
   decodeCurrentCommandTree,
   pruneStaticCommand,

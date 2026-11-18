@@ -134,10 +134,13 @@ describe("GitHubClient.request", () => {
     it.layer(
       Layer.effect(
         ValidationClients,
-        Effect.forEach(cases, ({ code, script }) =>
-          Layer.build(GitHubClient.layerFromToken({ token: TOKEN, fetch: script.fetch, retry: "off" })).pipe(
-            Effect.map((context) => ({ code, client: Context.get(context, GitHubClient) }))
-          )
+        Effect.forEach(
+          cases,
+          ({ code, script }) =>
+            Layer.build(GitHubClient.layerFromToken({ token: TOKEN, fetch: script.fetch, retry: "off" })).pipe(
+              Effect.map((context) => ({ code, client: Context.get(context, GitHubClient) }))
+            ),
+          { concurrency: 1 }
         )
       ),
       { timeout: "30 seconds" }
@@ -157,7 +160,7 @@ describe("GitHubClient.request", () => {
                 assert.isTrue(GitHubError.hasValidationCode(code)(error), code);
                 assert.isFalse(GitHubError.hasValidationCode("already_exists")(error), code);
               }),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
         })
       );

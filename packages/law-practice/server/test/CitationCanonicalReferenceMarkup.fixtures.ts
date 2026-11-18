@@ -61,7 +61,8 @@ const readRows = Effect.fn("CanonicalReferenceMarkupTest.read")(function* (famil
       }
       yield* S.decodeEffect(Filtered)(row.payload);
       return { id: row.id, input: header.context.values, references: A.empty<string>() };
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 /** Run original HTML/reference criteria and complete source-observed models.

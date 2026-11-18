@@ -416,7 +416,9 @@ export const runCacheConformance = Effect.fn("CacheConformance.run")(function* (
   yield* assertCacheConformanceTargetBoundary(target);
   const now1 = yield* DateTime.now;
   const startedAt = DateTime.formatIso(now1);
-  const cases = yield* Effect.forEach(corpus.cases, (entry) => scoreCase(entry, corpus, target, bearers));
+  const cases = yield* Effect.forEach(corpus.cases, (entry) => scoreCase(entry, corpus, target, bearers), {
+    concurrency: 1,
+  });
   return assembleCacheConformanceRun({
     corpus,
     target,
@@ -526,8 +528,10 @@ export const runCacheConformanceLab = Effect.fn("CacheConformance.runLab")(funct
   const proxy = yield* makeCacheConformanceFaultProxy(
     CacheConformanceProxyOptions.make({ target, bearers, holdMs: labHoldMs })
   );
-  const cases = yield* Effect.forEach(corpus.cases, (entry) =>
-    scoreLabCase(entry, corpus, target, bearers, proxy, envelope)
+  const cases = yield* Effect.forEach(
+    corpus.cases,
+    (entry) => scoreLabCase(entry, corpus, target, bearers, proxy, envelope),
+    { concurrency: 1 }
   );
   return assembleCacheConformanceRun({
     corpus,

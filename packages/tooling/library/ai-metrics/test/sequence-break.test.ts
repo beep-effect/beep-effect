@@ -352,10 +352,13 @@ const notificationRows = Effect.fnUntraced(function* (store: NotifierStore) {
 
   const readDirectory1 = yield* fs.readDirectory(store.notificationDir);
   const files = A.sort(readDirectory1, Str.Order);
-  const rows = yield* Effect.forEach(files, (file) =>
-    Effect.map(fs.readFileString(path.join(store.notificationDir, file)), (contents) =>
-      A.filter(Str.split("\n")(contents), (line) => line.length > 0)
-    )
+  const rows = yield* Effect.forEach(
+    files,
+    (file) =>
+      Effect.map(fs.readFileString(path.join(store.notificationDir, file)), (contents) =>
+        A.filter(Str.split("\n")(contents), (line) => line.length > 0)
+      ),
+    { concurrency: 1 }
   );
 
   return A.flatten(rows);
@@ -373,17 +376,22 @@ const waitForNotificationRows = (store: NotifierStore, minimumCount: number) =>
 
 const decodedNotifications = Effect.fnUntraced(function* (store: NotifierStore) {
   const notificationRows2 = yield* notificationRows(store);
-  return yield* Effect.forEach(notificationRows2, (row) => SequenceBreakNotificationV1.decodeJsonEffect(row));
+  return yield* Effect.forEach(notificationRows2, (row) => SequenceBreakNotificationV1.decodeJsonEffect(row), {
+    concurrency: 1,
+  });
 });
 
 const breakerEventRows = Effect.fnUntraced(function* (store: NotifierStore) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const files = yield* fs.readDirectory(store.circuitEventDir);
-  const rows = yield* Effect.forEach(files, (file) =>
-    Effect.map(fs.readFileString(path.join(store.circuitEventDir, file)), (contents) =>
-      A.filter(Str.split("\n")(contents), (line) => line.length > 0)
-    )
+  const rows = yield* Effect.forEach(
+    files,
+    (file) =>
+      Effect.map(fs.readFileString(path.join(store.circuitEventDir, file)), (contents) =>
+        A.filter(Str.split("\n")(contents), (line) => line.length > 0)
+      ),
+    { concurrency: 1 }
   );
 
   return A.flatten(rows);
@@ -391,7 +399,9 @@ const breakerEventRows = Effect.fnUntraced(function* (store: NotifierStore) {
 
 const decodedBreakerEvents = Effect.fnUntraced(function* (store: NotifierStore) {
   const breakerEventRows3 = yield* breakerEventRows(store);
-  return yield* Effect.forEach(breakerEventRows3, (row) => CircuitBreakerEventV1.decodeJsonEffect(row));
+  return yield* Effect.forEach(breakerEventRows3, (row) => CircuitBreakerEventV1.decodeJsonEffect(row), {
+    concurrency: 1,
+  });
 });
 
 const expectSilentSuccess = (run: { readonly exitCode: number; readonly stderr: string; readonly stdout: string }) => {
@@ -708,7 +718,8 @@ esac
             expectSilentSuccess(resultNotifier23);
             const readFileString24 = yield* fs.readFileString(`${store.stateHome}/desktop.txt`);
             expect(readFileString24).not.toContain("--action");
-          })
+          }),
+        { concurrency: 1 }
       );
     })
   );
@@ -759,7 +770,8 @@ esac
             const desktop = yield* fs.readFileString(`${store.stateHome}/desktop.txt`);
             expect(desktop).toContain("--action=default=Open parent task");
             expect(desktop).toContain(host);
-          })
+          }),
+        { concurrency: 1 }
       );
     })
   );
@@ -795,7 +807,8 @@ esac
             expectSilentSuccess(resultNotifier26);
             const readFileString27 = yield* fs.readFileString(`${store.stateHome}/desktop.txt`);
             expect(readFileString27).not.toContain("--action");
-          })
+          }),
+        { concurrency: 1 }
       );
     })
   );
@@ -853,7 +866,8 @@ esac
             expect(opened).toBe(`${uri}\n`);
             const readFileString28 = yield* fs.readFileString(`${store.stateHome}/desktop.txt`);
             expect(readFileString28).toContain(`--action=default=${label}`);
-          })
+          }),
+        { concurrency: 1 }
       );
     })
   );

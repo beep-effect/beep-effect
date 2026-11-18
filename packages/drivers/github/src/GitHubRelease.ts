@@ -401,7 +401,7 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
       const { owner, repo } = yield* Repo;
       yield* Effect.annotateCurrentSpan({ owner, repo });
       const raw = yield* client.paginate("GET /repos/{owner}/{repo}/releases", { owner, repo }, options?.page);
-      return yield* Effect.forEach(raw, project("GitHubRelease.list"));
+      return yield* Effect.forEach(raw, project("GitHubRelease.list"), { concurrency: 1 });
     }),
 
     update: dual(
@@ -483,7 +483,7 @@ const make = (client: GitHubClient["Service"]): GitHubReleaseShape => {
           { owner, repo, release_id: id },
           options?.page
         );
-        return yield* Effect.forEach(raw, assetOf("GitHubRelease.listAssets"));
+        return yield* Effect.forEach(raw, assetOf("GitHubRelease.listAssets"), { concurrency: 1 });
       })
     ),
   };

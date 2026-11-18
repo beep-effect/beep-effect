@@ -461,7 +461,7 @@ jobs:
         uses: ./.github/actions/setup-monorepo-ci
 
       - name: Install typos
-        uses: taiki-e/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2.90.2
+        uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
         with:
           tool: typos-cli@1.50.3
 
@@ -2314,7 +2314,7 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts
 
       - name: OSV vulnerability scan
-        uses: google/osv-scanner-action/osv-scanner-action@b1d267aea5211fa648d9d442fa64b90dbdcbdd36 # v2.7.0
+        uses: google/osv-scanner-action/osv-scanner-action@32d3cd482bdadfb38b186c0ad1b031902d55d932 # v2.7.1
         with:
           scan-args: |-
             --lockfile=bun.lock
@@ -2394,7 +2394,7 @@ jobs:
 
       - name: Install Nix
         if: steps.lane-gate.outputs.should_run == 'true'
-        uses: cachix/install-nix-action@75c75c31ebece974e48ebc36b4ad125bd97bd97b # v31
+        uses: cachix/install-nix-action@3dc140bfc76c49fbd4dd958429132e3746bcb086 # v31
         with:
           nix_path: nixpkgs=channel:nixos-unstable
 

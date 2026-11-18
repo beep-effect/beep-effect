@@ -152,7 +152,8 @@ const fixture = Effect.gen(function* () {
           warnings: [],
           evidenceConfidence: O.none(),
         });
-      })
+      }),
+    { concurrency: 1 }
   );
   const first = A.getUnsafe(mentions, 0);
   const authorityId = yield* makeCitationAuthorityId({

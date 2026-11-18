@@ -352,7 +352,7 @@ export const readCiEventBaseFacts = Effect.fn("CiEventBase.readFacts")(function*
       Effect.catchTag("UnknownRefError", () => Effect.succeedNone),
       CiCommandError.mapError(`--event-base could not read parent ${index} of HEAD in ${repoRoot}.`)
     );
-  const parents = yield* Effect.forEach([1, 2, 3], parent);
+  const parents = yield* Effect.forEach([1, 2, 3], parent, { concurrency: 1 });
   return CiEventBaseFacts.make({
     eventName: yield* readEventValue("GITHUB_EVENT_NAME"),
     eventSha: yield* readEventValue("GITHUB_SHA"),

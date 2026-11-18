@@ -634,12 +634,12 @@ const targetFromWire: (input: unknown) => Effect.Effect<PandocTarget, S.SchemaEr
 
 const decodeInlines = flow(
   decodeUnknownArray,
-  Effect.flatMap((values) => Effect.forEach(values, decodeInline))
+  Effect.flatMap((values) => Effect.forEach(values, decodeInline, { concurrency: 1 }))
 );
 
 const decodeBlockList = flow(
   decodeUnknownArray,
-  Effect.flatMap((values) => Effect.forEach(values, decodeBlock))
+  Effect.flatMap((values) => Effect.forEach(values, decodeBlock, { concurrency: 1 }))
 );
 
 const unknownInline = (wire: PandocConstructorWire): UnknownInline => UnknownInline.make({ wire });
@@ -693,7 +693,9 @@ const rejectUnsupportedConstructorInSlot = (
 const decodeBlockItems = (
   input: unknown
 ): Effect.Effect<ReadonlyArray<ReadonlyArray<PandocBlock.Type>>, S.SchemaError> =>
-  Effect.flatMap(decodeUnknownArray(input), (items) => Effect.forEach(items, (item) => decodeBlockList(item)));
+  Effect.flatMap(decodeUnknownArray(input), (items) =>
+    Effect.forEach(items, (item) => decodeBlockList(item), { concurrency: 1 })
+  );
 
 const decodeChildInline = (
   input: unknown,
@@ -784,7 +786,9 @@ const decodeCitation = Effect.fn("Pandoc.decodeCitation")(function* (wire: typeo
     return yield* rejectUnsupportedConstructorInSlot(wire.citationMode, "a Citation mode slot");
   }
   yield* decodeAbsentPayload(wire.citationMode.c);
-  const [prefix, suffix] = yield* Effect.all([decodeInlines(wire.citationPrefix), decodeInlines(wire.citationSuffix)]);
+  const [prefix, suffix] = yield* Effect.all([decodeInlines(wire.citationPrefix), decodeInlines(wire.citationSuffix)], {
+    concurrency: 1,
+  });
   return Citation.make({
     hash: wire.citationHash,
     id: wire.citationId,
@@ -808,10 +812,10 @@ const decodeQuotedInline = Effect.fn("Pandoc.decodeQuotedInline")(function* (pay
 
 const decodeCiteInline = Effect.fn("Pandoc.decodeCiteInline")(function* (payload: unknown) {
   const [citationWires, childrenWire] = yield* decodeCitePayloadWire(payload);
-  const [citations, children] = yield* Effect.all([
-    Effect.forEach(citationWires, decodeCitation),
-    decodeInlines(childrenWire),
-  ]);
+  const [citations, children] = yield* Effect.all(
+    [Effect.forEach(citationWires, decodeCitation, { concurrency: 1 }), decodeInlines(childrenWire)],
+    { concurrency: 1 }
+  );
   return Cite.make({ children, citations });
 });
 
@@ -937,25 +941,30 @@ const decodeTableBlock = (payload: unknown): Effect.Effect<PandocBlock.Type, S.S
 
 const decodeLineBlock = Effect.fn("Pandoc.decodeLineBlock")(function* (payload: unknown) {
   const lineWires = yield* decodeLineBlockPayloadWire(payload);
-  const lines = yield* Effect.forEach(lineWires, (line) => decodeInlines(line));
+  const lines = yield* Effect.forEach(lineWires, (line) => decodeInlines(line), { concurrency: 1 });
   return LineBlock.make({ lines });
 });
 
 const decodeDefinitionList = Effect.fn("Pandoc.decodeDefinitionList")(function* (payload: unknown) {
   const itemWires = yield* decodeDefinitionListPayloadWire(payload);
-  const items = yield* Effect.forEach(itemWires, ([termWire, definitionWires]) =>
-    Effect.map(Effect.all([decodeInlines(termWire), decodeBlockItems(definitionWires)]), PandocDefinitionListItem.make)
+  const items = yield* Effect.forEach(
+    itemWires,
+    ([termWire, definitionWires]) =>
+      Effect.map(
+        Effect.all([decodeInlines(termWire), decodeBlockItems(definitionWires)], { concurrency: 1 }),
+        PandocDefinitionListItem.make
+      ),
+    { concurrency: 1 }
   );
   return DefinitionList.make({ items });
 });
 
 const decodeFigure = Effect.fn("Pandoc.decodeFigure")(function* (payload: unknown) {
   const [attrWire, captionWire, childrenWire] = yield* decodeFigurePayloadWire(payload);
-  const [attr, caption, children] = yield* Effect.all([
-    attrFromWire(attrWire),
-    decodeCaption(captionWire),
-    decodeBlockList(childrenWire),
-  ]);
+  const [attr, caption, children] = yield* Effect.all(
+    [attrFromWire(attrWire), decodeCaption(captionWire), decodeBlockList(childrenWire)],
+    { concurrency: 1 }
+  );
   return Figure.make({ attr, caption, children });
 });
 
@@ -1023,14 +1032,18 @@ function decodeMetaValue(input: unknown): Effect.Effect<PandocMetaValue, S.Schem
       Match.when("MetaBlocks", () => Effect.map(decodeBlockList(wire.c), (children) => MetaBlocks.make({ children }))),
       Match.when("MetaList", () =>
         Effect.flatMap(decodeJsonArray(wire.c), (values) =>
-          Effect.map(Effect.forEach(values, decodeMetaValue), (decoded) => MetaList.make({ values: decoded }))
+          Effect.map(Effect.forEach(values, decodeMetaValue, { concurrency: 1 }), (decoded) =>
+            MetaList.make({ values: decoded })
+          )
         )
       ),
       Match.when("MetaMap", () =>
         Effect.flatMap(decodeJsonRecord(wire.c), (entries) =>
           Effect.map(
-            Effect.forEach(Struct.entries(entries), ([key, value]) =>
-              Effect.map(decodeMetaValue(value), (decoded) => [key, decoded] as const)
+            Effect.forEach(
+              Struct.entries(entries),
+              ([key, value]) => Effect.map(decodeMetaValue(value), (decoded) => [key, decoded] as const),
+              { concurrency: 1 }
             ),
             (decoded) => MetaMap.make({ entries: R.fromEntries(decoded) })
           )
@@ -1048,8 +1061,10 @@ function decodeMetaValue(input: unknown): Effect.Effect<PandocMetaValue, S.Schem
 const decodeMeta = (input: unknown): Effect.Effect<PandocMeta, S.SchemaError> =>
   Effect.flatMap(decodeJsonRecord(input), (meta) =>
     Effect.map(
-      Effect.forEach(Struct.entries(meta), ([key, value]) =>
-        Effect.map(decodeMetaValue(value), (decoded) => [key, decoded] as const)
+      Effect.forEach(
+        Struct.entries(meta),
+        ([key, value]) => Effect.map(decodeMetaValue(value), (decoded) => [key, decoded] as const),
+        { concurrency: 1 }
       ),
       R.fromEntries
     )
@@ -1433,7 +1448,7 @@ const inspectChildren = (
   inspect: (value: unknown, path: JsonPathType) => LosslessInspection
 ): LosslessInspection =>
   Effect.map(
-    Effect.forEach(values, (value, index) => inspect(value, appendPath(path, index))),
+    Effect.forEach(values, (value, index) => inspect(value, appendPath(path, index)), { concurrency: 1 }),
     A.flatten
   );
 
@@ -1467,7 +1482,9 @@ const inspectBlockItems = (
 ): LosslessInspection =>
   inspectDecoded(decodeBlockItemsWire(input), "block", constructor, constructorPath, (items) =>
     Effect.map(
-      Effect.forEach(items, (item, itemIndex) => inspectChildren(item, appendPath(path, itemIndex), inspectBlock)),
+      Effect.forEach(items, (item, itemIndex) => inspectChildren(item, appendPath(path, itemIndex), inspectBlock), {
+        concurrency: 1,
+      }),
       A.flatten
     )
   );
@@ -1498,13 +1515,16 @@ const inspectCitation = (wire: typeof CitationWire.Type, path: JsonPathType): Lo
   const modePath = appendPath(path, "citationMode");
   const mode = decodeCitationMode(wire.citationMode.t);
   return Effect.map(
-    Effect.all([
-      O.isNone(mode)
-        ? inspectUnsupportedConstructorInSlot(wire.citationMode, "inline", modePath, "a Citation mode slot")
-        : inspectDecoded(decodeAbsentPayload(wire.citationMode.c), "inline", wire.citationMode.t, modePath),
-      inspectChildren(wire.citationPrefix, appendPath(path, "citationPrefix"), inspectInline),
-      inspectChildren(wire.citationSuffix, appendPath(path, "citationSuffix"), inspectInline),
-    ]),
+    Effect.all(
+      [
+        O.isNone(mode)
+          ? inspectUnsupportedConstructorInSlot(wire.citationMode, "inline", modePath, "a Citation mode slot")
+          : inspectDecoded(decodeAbsentPayload(wire.citationMode.c), "inline", wire.citationMode.t, modePath),
+        inspectChildren(wire.citationPrefix, appendPath(path, "citationPrefix"), inspectInline),
+        inspectChildren(wire.citationSuffix, appendPath(path, "citationSuffix"), inspectInline),
+      ],
+      { concurrency: 1 }
+    ),
     A.flatten
   );
 };
@@ -1512,13 +1532,18 @@ const inspectCitation = (wire: typeof CitationWire.Type, path: JsonPathType): Lo
 const inspectCite = (payload: unknown, path: JsonPathType): LosslessInspection =>
   inspectDecoded(decodeCitePayloadWire(payload), "inline", "Cite", path, ([citations, children]) =>
     Effect.map(
-      Effect.all([
-        Effect.map(
-          Effect.forEach(citations, (citation, index) => inspectCitation(citation, appendPath(path, "c", 0, index))),
-          A.flatten
-        ),
-        inspectChildren(children, appendPath(path, "c", 1), inspectInline),
-      ]),
+      Effect.all(
+        [
+          Effect.map(
+            Effect.forEach(citations, (citation, index) => inspectCitation(citation, appendPath(path, "c", 0, index)), {
+              concurrency: 1,
+            }),
+            A.flatten
+          ),
+          inspectChildren(children, appendPath(path, "c", 1), inspectInline),
+        ],
+        { concurrency: 1 }
+      ),
       A.flatten
     )
   );
@@ -1584,7 +1609,9 @@ const inspectOrderedList = (payload: unknown, path: JsonPathType): LosslessInspe
 const inspectLineBlock = (payload: unknown, path: JsonPathType): LosslessInspection =>
   inspectDecoded(decodeLineBlockPayloadWire(payload), "block", "LineBlock", path, (lines) =>
     Effect.map(
-      Effect.forEach(lines, (line, index) => inspectChildren(line, appendPath(path, "c", index), inspectInline)),
+      Effect.forEach(lines, (line, index) => inspectChildren(line, appendPath(path, "c", index), inspectInline), {
+        concurrency: 1,
+      }),
       A.flatten
     )
   );
@@ -1592,19 +1619,28 @@ const inspectLineBlock = (payload: unknown, path: JsonPathType): LosslessInspect
 const inspectDefinitionList = (payload: unknown, path: JsonPathType): LosslessInspection =>
   inspectDecoded(decodeDefinitionListPayloadWire(payload), "block", "DefinitionList", path, (items) =>
     Effect.map(
-      Effect.forEach(items, ([term, definitions], itemIndex) =>
-        Effect.map(
-          Effect.all([
-            inspectChildren(term, appendPath(path, "c", itemIndex, 0), inspectInline),
-            Effect.map(
-              Effect.forEach(definitions, (blocks, definitionIndex) =>
-                inspectChildren(blocks, appendPath(path, "c", itemIndex, 1, definitionIndex), inspectBlock)
-              ),
-              A.flatten
+      Effect.forEach(
+        items,
+        ([term, definitions], itemIndex) =>
+          Effect.map(
+            Effect.all(
+              [
+                inspectChildren(term, appendPath(path, "c", itemIndex, 0), inspectInline),
+                Effect.map(
+                  Effect.forEach(
+                    definitions,
+                    (blocks, definitionIndex) =>
+                      inspectChildren(blocks, appendPath(path, "c", itemIndex, 1, definitionIndex), inspectBlock),
+                    { concurrency: 1 }
+                  ),
+                  A.flatten
+                ),
+              ],
+              { concurrency: 1 }
             ),
-          ]),
-          A.flatten
-        )
+            A.flatten
+          ),
+        { concurrency: 1 }
       ),
       A.flatten
     )
@@ -1719,13 +1755,16 @@ function inspectTablePayload(
   path: JsonPathType
 ): LosslessInspection {
   return Effect.map(
-    Effect.all([
-      inspectTableCaption(payload[1], appendPath(path, 1)),
-      inspectChildren(payload[2], appendPath(path, 2), inspectTableColumnSpec),
-      inspectTableHeadOrFoot(payload[3], appendPath(path, 3)),
-      inspectChildren(payload[4], appendPath(path, 4), inspectTableBody),
-      inspectTableHeadOrFoot(payload[5], appendPath(path, 5)),
-    ]),
+    Effect.all(
+      [
+        inspectTableCaption(payload[1], appendPath(path, 1)),
+        inspectChildren(payload[2], appendPath(path, 2), inspectTableColumnSpec),
+        inspectTableHeadOrFoot(payload[3], appendPath(path, 3)),
+        inspectChildren(payload[4], appendPath(path, 4), inspectTableBody),
+        inspectTableHeadOrFoot(payload[5], appendPath(path, 5)),
+      ],
+      { concurrency: 1 }
+    ),
     A.flatten
   );
 }
@@ -1794,8 +1833,10 @@ function inspectMetaValue(input: unknown, path: JsonPathType): LosslessInspectio
           Match.when("MetaMap", () =>
             inspectDecoded(decodeJsonRecord(wire.c), "meta", wire.t, path, (entries) =>
               Effect.map(
-                Effect.forEach(Struct.entries(entries), ([key, value]) =>
-                  inspectMetaValue(value, appendPath(path, "c", key))
+                Effect.forEach(
+                  Struct.entries(entries),
+                  ([key, value]) => inspectMetaValue(value, appendPath(path, "c", key)),
+                  { concurrency: 1 }
                 ),
                 A.flatten
               )
@@ -1809,7 +1850,7 @@ function inspectMetaValue(input: unknown, path: JsonPathType): LosslessInspectio
 
 const inspectMeta = (meta: Readonly<Record<string, S.Json>>): LosslessInspection =>
   Effect.map(
-    Effect.forEach(Struct.entries(meta), ([key, value]) => inspectMetaValue(value, ["meta", key])),
+    Effect.forEach(Struct.entries(meta), ([key, value]) => inspectMetaValue(value, ["meta", key]), { concurrency: 1 }),
     A.flatten
   );
 
@@ -1818,7 +1859,7 @@ const decodePandocJsonLosslessInternal = (input: unknown): Effect.Effect<PandocL
     Effect.flatMap(decodeWire(rawWire), (wire) =>
       Effect.flatMap(
         Effect.map(
-          Effect.forEach(wire.blocks, (block, index) => inspectBlock(block, ["blocks", index])),
+          Effect.forEach(wire.blocks, (block, index) => inspectBlock(block, ["blocks", index]), { concurrency: 1 }),
           A.flatten
         ),
         (blockIssues) =>

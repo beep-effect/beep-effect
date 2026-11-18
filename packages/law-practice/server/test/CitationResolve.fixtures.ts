@@ -67,25 +67,28 @@ export const prepareCitationResolutionContext = Effect.fn("ResolveTest.prepare")
   const verifiedSource = yield* verifySourceTextIdentity(
     VerifySourceTextIdentityInput.make({ source, expectedSource: source, sourceText: row.text })
   );
-  const mentions = yield* Effect.forEach(row.mentions, (mention) =>
-    Effect.gen(function* () {
-      const anchor = yield* verifyTextAnchorAgainstVerifiedSource(
-        VerifyTextAnchorAgainstVerifiedSourceInput.make({
-          verifiedSource,
-          anchor: TextAnchor.make({ startChar: mention.start, endChar: mention.end, quote: mention.quote }),
-        })
-      );
-      return yield* makeCitationMention({
-        citation: mention.citation,
-        anchor,
-        engineArtifact,
-        components: [],
-        footnote: O.none(),
-        signal: O.none(),
-        warnings: [],
-        evidenceConfidence: O.none(),
-      });
-    })
+  const mentions = yield* Effect.forEach(
+    row.mentions,
+    (mention) =>
+      Effect.gen(function* () {
+        const anchor = yield* verifyTextAnchorAgainstVerifiedSource(
+          VerifyTextAnchorAgainstVerifiedSourceInput.make({
+            verifiedSource,
+            anchor: TextAnchor.make({ startChar: mention.start, endChar: mention.end, quote: mention.quote }),
+          })
+        );
+        return yield* makeCitationMention({
+          citation: mention.citation,
+          anchor,
+          engineArtifact,
+          components: [],
+          footnote: O.none(),
+          signal: O.none(),
+          warnings: [],
+          evidenceConfidence: O.none(),
+        });
+      }),
+    { concurrency: 1 }
   );
   const policy = yield* defaultCitationEnginePolicy;
   return { verifiedSource, mentions, editions: row.editions, engineArtifact, limits: policy.limits };

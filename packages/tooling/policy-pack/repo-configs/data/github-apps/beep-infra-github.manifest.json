@@ -1,0 +1,19 @@
+{
+  "name": "beep-infra-github",
+  "url": "https://github.com/beep-effect/beep-effect",
+  "description": "Deploys the InfraGithub Alchemy stack: repository settings, the main ruleset, environments, variables and labels of beep-effect.",
+  "public": false,
+  "redirect_url": "http://localhost:8787/callback",
+  "hook_attributes": {
+    "url": "https://example.invalid/beep-infra-github-disabled",
+    "active": false
+  },
+  "default_events": [],
+  "default_permissions": {
+    "administration": "write",
+    "environments": "write",
+    "actions_variables": "write",
+    "issues": "write",
+    "metadata": "read"
+  }
+}

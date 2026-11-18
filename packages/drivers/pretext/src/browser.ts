@@ -150,8 +150,10 @@ const captureFontMetrics = Effect.fn("Pretext.captureFontMetrics")(function* (re
   const now = yield* DateTime.now;
   // Sequential by design: measurement is synchronous single-canvas work, so
   // concurrency would only add fiber overhead and canvas contention.
-  const entries = yield* Effect.forEach(request.words, (word) =>
-    Effect.map(measureText(word, request.font), (width) => [word, width] as const)
+  const entries = yield* Effect.forEach(
+    request.words,
+    (word) => Effect.map(measureText(word, request.font), (width) => [word, width] as const),
+    { concurrency: 1 }
   );
   const markerWidth = yield* measureText("i", request.font);
   const pairWidth = yield* measureText("i i", request.font);

@@ -167,7 +167,8 @@ export const replayCitationAnnotationCallbacks = Effect.fn("AnnotationCallbackTe
           Effect.map((bind) => ({ ...stage, assemble: bind(stage.assemble) }))
         )
       ),
-      Effect.provideService(CitationAnnotationAnnotator, port)
+      Effect.provideService(CitationAnnotationAnnotator, port),
+      Effect.provideContext(setup.provided)
     );
     const output = replay.assemble(row.source, row.input);
     if (row.result._tag === "Failure") {

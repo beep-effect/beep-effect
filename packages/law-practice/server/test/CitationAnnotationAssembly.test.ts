@@ -128,7 +128,7 @@ const install = Effect.fn("AnnotationAssemblyTest.install")(function* (
   const unicode = yield* makeCitationPythonUnicode(base);
   return { assembly, unicode, budget, limits };
 });
-it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: false })(
+it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: false, timeout: "30 seconds" })(
   "native annotation assembly",
   (it) => {
     it.effect(
@@ -187,18 +187,21 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           const discovery = yield* readCitationHtmlDiscoveryCorpus();
           const fs = yield* FileSystem.FileSystem;
           const captured = yield* Effect.context<Scope.Scope | Digest.Digest | Path.Path>();
-          // One request is served by one engine's spawner, so each runtime gets its own invocation.
+          // Each row is one annotate request, so it opens its own invocation that owns the request's
+          // diff runtime and assembly: one invocation around the whole loop held six requests to a
+          // single real-time extract deadline, which contended runs exceeded. The invocation's scope
+          // releases each request's workers before the runtime's spawn count is checked.
           for (const kind of ["bun", "node"] as const) {
-            yield* withCitationTestInvocation(
-              Effect.gen(function* () {
-                const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
-                const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-annotation-diff-" });
-                const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
-                const assembly = yield* makeCitationAnnotationAssembly(setup.limits).pipe(
-                  Effect.provideService(CitationTextBudget, setup.budget)
-                );
-                for (const row of A.filter(corpus.cases, (_, index) => index % 6 === 0)) {
-                  const output = yield* setup.operation.run(
+            const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
+            for (const row of A.filter(corpus.cases, (_, index) => index % 6 === 0)) {
+              const output = yield* withCitationTestInvocation(
+                Effect.gen(function* () {
+                  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-annotation-diff-" });
+                  const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
+                  const assembly = yield* makeCitationAnnotationAssembly(setup.limits).pipe(
+                    Effect.provideService(CitationTextBudget, setup.budget)
+                  );
+                  return yield* setup.operation.run(
                     "annotate",
                     Effect.gen(function* () {
                       const html = yield* installCitationHtmlGeometry(
@@ -228,15 +231,16 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
                       Effect.provideService(CitationTextBudget, setup.budget)
                     )
                   );
-                  expect(output).toEqual(row.result);
-                }
-                yield* assertCitationWorkerCompositionReleased(
-                  setup.operation,
-                  setup.admission,
-                  setup.observed.snapshot,
-                  12
-                );
-              })
+                }),
+                setup.limits
+              ).pipe(Effect.provideContext(setup.provided));
+              expect(output).toEqual(row.result);
+            }
+            yield* assertCitationWorkerCompositionReleased(
+              setup.operation,
+              setup.admission,
+              setup.observed.snapshot,
+              12
             );
           }
         }),

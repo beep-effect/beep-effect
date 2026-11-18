@@ -291,7 +291,8 @@ export const makeSessionRouteProbeLive = Effect.fn("SessionRouteProbe.makeLive")
       if (O.isNone(names)) return reading("unknown", `Claude live index ${sessionsDir} is unreadable`);
       const contents = yield* Effect.forEach(
         A.filter(names.value, (name) => LIVE_INDEX_FILE.test(name)),
-        (name) => fs.readFileString(path.join(sessionsDir, name)).pipe(Effect.option)
+        (name) => fs.readFileString(path.join(sessionsDir, name)).pipe(Effect.option),
+        { concurrency: 1 }
       );
       const entries = A.map(contents, O.flatMap(decodeLiveIndexEntry));
       const matches = A.filter(A.getSomes(entries), (entry) => entry.sessionId === sessionId);
@@ -303,10 +304,13 @@ export const makeSessionRouteProbeLive = Effect.fn("SessionRouteProbe.makeLive")
       }
       const ownStart = yield* processStartTimeForPid(process.pid);
       if (O.isNone(ownStart)) return reading("unknown", "/proc is unreadable, so the pid cannot be checked");
-      const checked = yield* Effect.forEach(matches, (entry) =>
-        processStartTimeForPid(entry.pid).pipe(
-          Effect.map((start) => ({ entry, alive: O.exists(start, (value) => value === entry.procStart) }))
-        )
+      const checked = yield* Effect.forEach(
+        matches,
+        (entry) =>
+          processStartTimeForPid(entry.pid).pipe(
+            Effect.map((start) => ({ entry, alive: O.exists(start, (value) => value === entry.procStart) }))
+          ),
+        { concurrency: 1 }
       );
       return O.match(
         A.findFirst(checked, (check) => check.alive),

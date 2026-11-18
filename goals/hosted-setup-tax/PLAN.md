@@ -18,7 +18,7 @@ Status: `active` (P0 and P1 in progress; TURB-01 slice 1 merged as #3063; slice 
 
 PR-sized, in landing order. "Global input" means the PR touches `turbo.json`, `bun.lock`, root
 `package.json` or a workflow file: it freezes coverage rows at base, runs the full matrix and re-records
-`standards/cache-qualification-baseline.json` in the same PR. Every CI-YAML slice names its tested revert in
+`standards/cache-baseline/` in the same PR. Every CI-YAML slice names its tested revert in
 the PR body and a decision file. At most three of these are open at once.
 
 **Wave 1 (startable now, no selector change):**

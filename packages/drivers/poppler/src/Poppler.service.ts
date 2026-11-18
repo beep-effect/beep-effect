@@ -198,6 +198,7 @@ export const makePopplerRasterizer = Effect.fn("Poppler.makeRasterizer")(functio
 
   return {
     probe: Effect.forEach([config.pdfinfoPath, config.pdftoppmPath], (tool) => run(tool, ["-v"]), {
+      concurrency: 1,
       discard: true,
     }),
     pageCount: Effect.fn("Poppler.pageCount")(function* (pdfPath) {

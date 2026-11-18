@@ -136,7 +136,7 @@ export const replayNamedCleanerScenes = Effect.fn("NamedCorpusTest.replay")(func
     event.kind === "builtin-raise" ? event : { ...event, value: { ...event.value, text: text(event.value.text) } };
   const verify = Effect.fn("NamedCorpusTest.verify")(function* (row: typeof NamedCase.Type) {
     observed = [];
-    const citationResult2 = yield* Effect.forEach(row.steps.names, h.values.text);
+    const citationResult2 = yield* Effect.forEach(row.steps.names, h.values.text, { concurrency: 1 });
     h.select(citationResult2);
     yield* Effect.forEach(
       row.runs,
@@ -167,15 +167,20 @@ export const replayNamedCleanerScenes = Effect.fn("NamedCorpusTest.replay")(func
       }),
       { concurrency: 1, discard: true }
     );
-    const expectedEvents = yield* Effect.forEach(A.filter(row.events, S.is(BuiltinEvent)), (value) =>
-      S.decodeEffect(BuiltinEvent)(value).pipe(Effect.map(normalize))
+    const expectedEvents = yield* Effect.forEach(
+      A.filter(row.events, S.is(BuiltinEvent)),
+      (value) => S.decodeEffect(BuiltinEvent)(value).pipe(Effect.map(normalize)),
+      { concurrency: 1 }
     );
     expect(observed, row.name).toEqual(expectedEvents);
     const citationResult5 = yield* h.registry.read;
-    const actual = yield* Effect.forEach(citationResult5, ([key, _value, builtin]) =>
-      Effect.gen(function* () {
-        return { key: yield* present(key), value: { kind: "builtin-function", name: O.getOrThrow(builtin) } };
-      })
+    const actual = yield* Effect.forEach(
+      citationResult5,
+      ([key, _value, builtin]) =>
+        Effect.gen(function* () {
+          return { key: yield* present(key), value: { kind: "builtin-function", name: O.getOrThrow(builtin) } };
+        }),
+      { concurrency: 1 }
     );
     expect(actual, row.name).toEqual(
       A.map(row.lookupAfter, (binding) => ({ ...binding, key: { ...binding.key, text: text(binding.key.text) } }))

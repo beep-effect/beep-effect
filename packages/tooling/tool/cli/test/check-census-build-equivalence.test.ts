@@ -717,7 +717,8 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census build equivalence",
           ["--build-equivalence", "--gate-only"],
           ["--build-equivalence", "--write-baseline"],
         ],
-        (args) => Effect.flip(runCheckCensusCommand(args))
+        (args) => Effect.flip(runCheckCensusCommand(args)),
+        { concurrency: 1 }
       );
 
       expect(A.map(failures, (error) => error.message)).toStrictEqual(

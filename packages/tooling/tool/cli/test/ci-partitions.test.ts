@@ -320,12 +320,15 @@ const fixtureRepo = Effect.fn("CiPartitionsTest.fixtureRepo")(function* () {
     workspaces: A.map(fixturePackages, ([, packagePath]) => packagePath),
   });
   yield* fs.writeFileString(path.join(root, "package.json"), rootManifest);
-  yield* Effect.forEach(fixturePackages, ([name, packagePath]) =>
-    Effect.gen(function* () {
-      yield* fs.makeDirectory(path.join(root, packagePath), { recursive: true });
-      const manifest = yield* encodeJson({ name, version: "0.0.0" });
-      yield* fs.writeFileString(path.join(root, packagePath, "package.json"), manifest);
-    })
+  yield* Effect.forEach(
+    fixturePackages,
+    ([name, packagePath]) =>
+      Effect.gen(function* () {
+        yield* fs.makeDirectory(path.join(root, packagePath), { recursive: true });
+        const manifest = yield* encodeJson({ name, version: "0.0.0" });
+        yield* fs.writeFileString(path.join(root, packagePath, "package.json"), manifest);
+      }),
+    { concurrency: 1 }
   );
   return root;
 });

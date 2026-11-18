@@ -776,7 +776,8 @@ const newestProducerPartitions = Effect.fn("CoverageArtifacts.newestProducerPart
         return yield* configurationError("duplicate producer partition attempt.");
       }
       return A.sortWith(candidates, ([manifest]) => manifest.identity.runAttempt, Order.flip(Order.Number))[0];
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 

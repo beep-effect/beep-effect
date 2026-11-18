@@ -3,7 +3,10 @@ import { Citation, CitationEditionRef, CitationShortCaseMetadata } from "@beep/l
 import { getCitationExtractionShortcut } from "@beep/law-practice-server/internal/Citation/ExtractionShortcut";
 import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
-import { makeCitationSemanticProjection } from "@beep/law-practice-server/internal/Citation/SemanticProjection";
+import {
+  CitationSemanticProjectionConfiguration,
+  makeCitationSemanticProjection as makeOwnedCitationSemanticProjection,
+} from "@beep/law-practice-server/internal/Citation/SemanticProjection";
 import { makeCitationSemanticVocabulary } from "@beep/law-practice-server/internal/Citation/SemanticVocabulary";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
@@ -17,11 +20,17 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import { readCitationOracleFixture, setupCitationMetadataRuntime } from "./CitationRegexWorker.fixtures.ts";
 import { makeCitationVocabularyAssertion } from "./CitationSemanticVocabulary.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 import { CitationNativeUnicodeHex, CitationTokenSeedHex } from "./CitationTokenSeed.fixtures.ts";
+
+const makeCitationSemanticProjection = installCitationOwnedTestStage({
+  schema: CitationSemanticProjectionConfiguration,
+  install: makeOwnedCitationSemanticProjection,
+});
 
 const Mapping = S.fromJsonString(
   S.Struct({

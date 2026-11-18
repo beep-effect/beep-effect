@@ -117,8 +117,11 @@ const writeSteps = Effect.fnUntraced(function* (m365: M365Shape, config: DocketI
     (page) => `count=${A.length(page.value)}`
   );
   const events = O.match(found, { onNone: A.empty<string>, onSome: (page) => A.map(page.value, (e) => e.id) });
-  const deleted = yield* Effect.forEach(events, (eventId) =>
-    step("delete event", m365.deleteEvent(M365DeleteEventRequest.make({ eventId, userId })), () => `id=${eventId}`)
+  const deleted = yield* Effect.forEach(
+    events,
+    (eventId) =>
+      step("delete event", m365.deleteEvent(M365DeleteEventRequest.make({ eventId, userId })), () => `id=${eventId}`),
+    { concurrency: 1 }
   );
   return [O.isSome(created), A.isReadonlyArrayNonEmpty(events), A.every(deleted, O.isSome)];
 });

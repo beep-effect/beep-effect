@@ -14,12 +14,14 @@ import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import { CitationOperationAdmission } from "../internal/Citation/Admission.ts";
 import { CitationAnnotationEntryConfiguration } from "../internal/Citation/AnnotationEntry.ts";
 import { failCitationAnnotationBoundary } from "../internal/Citation/AnnotationFailure.ts";
 import { makeCitationAnnotationOperation } from "../internal/Citation/AnnotationOperation.ts";
 import { CitationMissingPageIdentityFactory } from "../internal/Citation/CallbackRuntimeIndex.ts";
+import { ownCitationConfiguration, ownedDerive, ownedField } from "../internal/Citation/ConfigurationOwnership.ts";
 import { CitationDefaultConfigurationInput } from "../internal/Citation/DefaultConfiguration.ts";
 import { makeCitationDocumentServices } from "../internal/Citation/DocumentServices.ts";
 import {
@@ -32,12 +34,12 @@ import { CitationInvocationPolicy, openCitationInvocation } from "../internal/Ci
 import { CitationNativeProcessAdmission, makeCitationAdmissionOwners } from "../internal/Citation/NativeAdmission.ts";
 import { CitationNativeProcessRuntime } from "../internal/Citation/NativeProcess.ts";
 import { failCitationCleanerBoundary } from "../internal/Citation/PortFailure.ts";
-import { captureCitationOperationPolicy, captureCitationSnapshot } from "../internal/Citation/Snapshot.ts";
 import { makeCitationSourceCleaning } from "../internal/Citation/SourceCleaning.ts";
 import { makeCitationSourcePairDocument } from "../internal/Citation/SourceDocument.ts";
 import { makeCitationSourceResolution } from "../internal/Citation/SourceResolution.ts";
 import { CitationVerifiedExtractionConfiguration } from "../internal/Citation/VerifiedExtraction.ts";
 import type { CitationEngineOperation, CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "../internal/Citation/ConfigurationOwnership.ts";
 import type { CitationInvocation } from "../internal/Citation/Invocation.ts";
 
 const $I = $LawPracticeServerId.create("CitationEngine/CitationEngine.layer");
@@ -70,8 +72,6 @@ export class CitationEngineConfiguration extends S.Opaque<
     })
   )
 ) {}
-const Configuration = S.toType(CitationEngineConfiguration);
-const ConfigurationJson = CitationEngineConfiguration.pipe(S.toCodecJson, S.fromJsonString);
 /** A stage tree is installed once, at engine construction, so its install must
  * not read a request value (the invocation or its text budget). Pass `true`:
  * an install that still requires one does not typecheck, so it fails at engine
@@ -81,17 +81,19 @@ const installedWithoutRequestValues = <A, E, R>(
   install: Effect.Effect<A, E, R>,
   _noRequestValues: [Extract<R, CitationInvocation | CitationTextBudget>] extends [never] ? true : false
 ) => install;
-const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
-  const invalid = () => CitationInputError.make({ operation: "extract" });
-  const configuration = yield* captureCitationSnapshot(Configuration, ConfigurationJson, raw, invalid);
-  const { limits, engineArtifact } = yield* captureCitationOperationPolicy(
-    configuration.limits,
-    configuration.extraction.engineArtifact,
-    invalid
-  );
+const invalidConfiguration = () => CitationInputError.make({ operation: "extract" });
+/** Install the four operations from configuration the engine already owns.
+ * Nothing below this point decodes or detaches configuration.
+ */
+const install = Effect.fn("Citation.installEngine")(function* (
+  configuration: CitationOwned<CitationEngineConfiguration>
+) {
+  const limits = ownedField(configuration, "limits");
+  const engineArtifact = configuration.extraction.engineArtifact;
   // A host-provided shared owner is required, so private stage fallbacks cannot
   // silently create a second total native capacity in this composition.
-  yield* CitationNativeProcessAdmission;
+  const nativeAdmission = yield* CitationNativeProcessAdmission;
+  const nativeSpawner = yield* ChildProcessSpawner;
   // Null-page case hashing uses semantic-object identity. Require the trusted
   // owner at installation instead of refusing a valid citation on first use.
   yield* CitationMissingPageIdentityFactory;
@@ -101,7 +103,7 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
     )
   );
   const extraction = yield* installedWithoutRequestValues(
-    makeCitationSourcePairDocument(limits, configuration.runtime, configuration.extraction),
+    makeCitationSourcePairDocument(limits, configuration.runtime, ownedField(configuration, "extraction")),
     true
   ).pipe(
     Effect.updateContext(
@@ -119,7 +121,12 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
     )
   );
   const annotation = yield* installedWithoutRequestValues(
-    makeCitationAnnotationOperation(limits, configuration.runtime, configuration.annotation, engineArtifact),
+    makeCitationAnnotationOperation(
+      limits,
+      configuration.runtime,
+      ownedField(configuration, "annotation"),
+      engineArtifact
+    ),
     true
   ).pipe(
     Effect.updateContext(
@@ -140,6 +147,8 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
       )
     ).pipe(
       Effect.provideService(CitationOperationAdmission, admission),
+      Effect.provideService(CitationNativeProcessAdmission, nativeAdmission),
+      Effect.provideService(ChildProcessSpawner, nativeSpawner),
       Effect.provideService(Clock.Clock, invocationClock)
     );
   return CitationEngine.of({
@@ -178,6 +187,11 @@ const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
       )
     ),
   });
+});
+// Configuration crosses from a caller into the engine here: one detach.
+const make = Effect.fn("Citation.makeEngine")(function* (raw: unknown) {
+  const configuration = yield* ownCitationConfiguration(CitationEngineConfiguration, raw, invalidConfiguration);
+  return yield* install(configuration);
 });
 /** Build the four real admitted operations with captured dependencies. The host
  * supplies source/vocabulary, missing-page object identity and coherent runtime
@@ -227,38 +241,47 @@ export class CitationEngineDefaultConfiguration extends S.Opaque<
     })
   )
 ) {}
-const DefaultConfiguration = S.toType(CitationEngineDefaultConfiguration);
-const DefaultConfigurationJson = CitationEngineDefaultConfiguration.pipe(S.toCodecJson, S.fromJsonString);
 const makeDefault = Effect.fn("Citation.makeDefaultEngine")(function* (raw: unknown) {
-  const invalid = () => CitationInputError.make({ operation: "extract" });
-  // Snapshot before asynchronous asset reads or host acquisition can mutate input.
-  const configuration = yield* captureCitationSnapshot(DefaultConfiguration, DefaultConfigurationJson, raw, invalid);
+  const invalid = invalidConfiguration;
+  // Own before asynchronous asset reads or host acquisition can mutate input.
+  const configuration = yield* ownCitationConfiguration(CitationEngineDefaultConfiguration, raw, invalid);
   const { limits, build, runtime, htmlRuntime, xmlRuntime, assets } = configuration;
   if (
     !A.every([runtime, htmlRuntime, xmlRuntime, assets.diffRuntime], (backend) => backend.kind === build.runtime.kind)
   )
     return yield* invalid();
   const owners = yield* makeCitationAdmissionOwners(limits).pipe(Effect.mapError(invalid));
-  const installed = yield* makeCitationDefaultEngineConfiguration(limits, assets, build).pipe(Effect.mapError(invalid));
-  const services = yield* makeCitationDocumentServices(limits, htmlRuntime).pipe(
-    Effect.provideContext(owners),
-    Effect.mapError((error) =>
-      S.is(CitationSafetyLimitExceeded)(error)
-        ? CitationSafetyLimitExceeded.make({ operation: "extract", limit: error.limit })
-        : invalid()
-    )
+  // The installed configuration is derived from the owned caller configuration
+  // and the engine-read sealed assets: owned by derivation, no second detach.
+  // The order of observable failures is the base's: assets, document services,
+  // then validation of the assembled engine configuration.
+  const installed = yield* ownedDerive(
+    configuration,
+    Effect.fnUntraced(function* (owned: CitationEngineDefaultConfiguration) {
+      const assembled = yield* makeCitationDefaultEngineConfiguration(owned.limits, owned.assets, owned.build).pipe(
+        Effect.mapError(invalid)
+      );
+      const services = yield* makeCitationDocumentServices(owned.limits, owned.htmlRuntime).pipe(
+        Effect.provideContext(owners),
+        Effect.mapError((error) =>
+          S.is(CitationSafetyLimitExceeded)(error)
+            ? CitationSafetyLimitExceeded.make({ operation: "extract", limit: error.limit })
+            : invalid()
+        )
+      );
+      const engine = yield* CitationEngineConfiguration.makeEffect({
+        limits: owned.limits,
+        runtime: owned.runtime,
+        extraction: { extraction: assembled.configuration, engineArtifact: assembled.engineArtifact },
+        annotation: { geometry: assembled.configuration.extraction.document, xmlRuntime: owned.xmlRuntime },
+      }).pipe(Effect.mapError(invalid));
+      return { editions: assembled.editions, services: services.context, engine };
+    })
   );
-  const captured = Context.merge(owners, services.context).pipe(
+  const captured = Context.merge(owners, installed.services).pipe(
     Context.add(CitationFrozenEditions, installed.editions)
   );
-  const engine = yield* make(
-    CitationEngineConfiguration.make({
-      limits,
-      runtime,
-      extraction: { extraction: installed.configuration, engineArtifact: installed.engineArtifact },
-      annotation: { geometry: installed.configuration.extraction.document, xmlRuntime },
-    })
-  ).pipe(Effect.provideContext(captured));
+  const engine = yield* install(ownedField(installed, "engine")).pipe(Effect.provideContext(captured));
   return Context.add(captured, CitationEngine, engine);
 });
 /** Install authenticated default parsing, cleaner/value/container owners, one

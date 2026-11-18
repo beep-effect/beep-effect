@@ -1140,6 +1140,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
     Ref.getAndSet(extPending, HashMap.empty()).pipe(
       Effect.flatMap((pending) =>
         Effect.forEach(HashMap.values(pending), ({ deferred }) => Deferred.fail(deferred, error), {
+          concurrency: 1,
           discard: true,
         })
       )
@@ -1562,7 +1563,7 @@ export const makeAcpPatchedProtocol = Effect.fn($I`makeAcpPatchedProtocol`)(func
       Effect.tapErrorTag("AcpProtocolParseError", (error) =>
         logProtocol({ direction: "incoming", payload: decodeFailureDiagnostics(error), stage: "decode_failed" })
       ),
-      Effect.flatMap((messages) => Effect.forEach(messages, routeDecodedMessage, { discard: true }))
+      Effect.flatMap((messages) => Effect.forEach(messages, routeDecodedMessage, { concurrency: 1, discard: true }))
     );
 
   // An AcpError (one a stdout transform raised, for instance) ends the connection as it is; any

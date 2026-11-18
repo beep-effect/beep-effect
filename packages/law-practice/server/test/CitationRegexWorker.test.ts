@@ -1,26 +1,26 @@
 import * as NodeURL from "node:url";
 import { $LawPracticeServerId } from "@beep/identity/packages";
+import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
   CitationNativeProcessAdmission,
   makeCitationNativeProcessAdmission,
 } from "@beep/law-practice-server/internal/Citation/NativeAdmission";
-import { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import { CitationRegexPatternProfile } from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
-import { installCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
+import {
+  CitationNativeProcessRuntime,
+  CitationNativeRuntimeKind,
+} from "@beep/law-practice-server/internal/Citation/NativeProcess";
+import {
+  CitationRegexPatternDescriptor,
+  CitationRegexPatternProfile,
+} from "@beep/law-practice-server/internal/Citation/RegexDescriptors";
+import { CitationRegexEngine } from "@beep/law-practice-server/internal/Citation/RegexEngine";
+import { makeCitationRegexResult } from "@beep/law-practice-server/internal/Citation/RegexResult";
+import { installCitationRegexEvaluator as installOwnedCitationRegexEvaluator } from "@beep/law-practice-server/internal/Citation/RegexWorker";
 import { makeCitationRegexEvaluation } from "@beep/law-practice-server/internal/Citation/RegexWorkerEvaluation";
-import { citationRegexWorkerProgram } from "@beep/law-practice-server/internal/Citation/RegexWorkerProgram";
 import {
   CitationRegexMatchMode,
-  CitationRegexWorkerJob,
-  encodeCitationRegexJob,
-  readCitationRegexFrames,
+  CitationRegexPayload,
 } from "@beep/law-practice-server/internal/Citation/RegexWorkerProtocol";
-import {
-  CitationRegexWorkerStartup,
-  decodeCitationRegexReply,
-  decodeCitationRegexStartup,
-  encodeCitationRegexStartup,
-} from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -36,13 +36,10 @@ import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as PlatformError from "effect/PlatformError";
-import * as Predicate from "effect/Predicate";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
-import * as Sink from "effect/Sink";
-import * as Stdio from "effect/Stdio";
-import * as Stream from "effect/Stream";
+import * as Scope from "effect/Scope";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
   makeCitationNativeAcknowledgementSpawner,
@@ -52,7 +49,18 @@ import {
   waitForCitationNativeTest,
 } from "./CitationNativeSpawner.fixtures.ts";
 import { setupCitationRegexWorker as setup } from "./CitationRegexWorker.fixtures.ts";
-import type { CitationRegexWorkerReply } from "@beep/law-practice-server/internal/Citation/RegexWorkerRpc";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const installCitationRegexEvaluator = Effect.fnUntraced(function* (
+  a0: Parameters<typeof installOwnedCitationRegexEvaluator>[0],
+  a1: unknown,
+  a2: unknown,
+  a3?: Parameters<typeof installOwnedCitationRegexEvaluator>[3]
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
+  const o2 = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), a2);
+  return yield* installOwnedCitationRegexEvaluator(a0, o1, o2, a3);
+});
 
 const $I = $LawPracticeServerId.create("test/CitationRegexWorker");
 const ExpectedMatches = S.Array(S.Array(S.Tuple([S.Int, S.Int])).check(S.isMaxLength(3))).check(S.isMaxLength(2));
@@ -86,7 +94,6 @@ const pointWords = (points: ReadonlyArray<number>) => {
   return { width: 4, bytes };
 };
 const pattern = native("(?P<maybe>a)?(b)");
-const decodeStartup = S.decodeUnknownEffect(S.toType(CitationRegexWorkerStartup));
 const descriptor = {
   patternSha256: "b07d89ba5ecfc4ef7c8c6208e879a81454b1cc89203805eceef7e16b55117bb7",
   flags: 0,
@@ -143,27 +150,26 @@ const assertModeCaptures = Effect.fn("RegexWorkerTest.assertModeCaptures")(funct
 });
 
 it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices: true })("owned native regex", (it) => {
+  it.effect("refuses duplicate generated descriptor bindings before spawning", () =>
+    Effect.gen(function* () {
+      const { worker, observed } = yield* setup([descriptor]);
+      const bindings = yield* ownCitationTestConfiguration(S.Array(CitationRegexPatternDescriptor), [
+        descriptor,
+        descriptor,
+      ]);
+      const duplicate = yield* worker.bindDescriptors(bindings).pipe(Effect.flip);
+      expect(duplicate).toMatchObject({ reason: "invalid-bindings" });
+      const generated = yield* worker.bindDescriptors(A.take(bindings, 1));
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const bind = yield* makeCitationTestScaffoldBinding(limits);
+      const invalidQuota = yield* bind(generated.evaluate)(pattern, native("b ab"), 0, -1).pipe(Effect.flip);
+      expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
+      const exits = yield* observed.snapshot;
+      expect(exits).toEqual({ spawned: 0, confirmed: 0 });
+    })
+  );
   it.effect("rejects malformed policy, runtime and match quotas before spawning", () =>
     Effect.gen(function* () {
-      const limits = (yield* defaultCitationEnginePolicy).limits;
-      const invalidPolicy = yield* installCitationRegexEvaluator(null, null, []).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(null).pipe(
-            Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-          )
-        ),
-        Effect.flip
-      );
-      expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
-      const invalidRuntime = yield* installCitationRegexEvaluator(limits, null, []).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(limits).pipe(
-            Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-          )
-        ),
-        Effect.flip
-      );
-      expect(invalidRuntime).toMatchObject({ reason: "invalid-runtime" });
       const { worker, observed } = yield* setup([descriptor]);
       const invalidQuota = yield* worker.evaluate(pattern, native("b ab"), 0, -1).pipe(Effect.flip);
       expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
@@ -171,123 +177,49 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       expect(exits).toEqual({ spawned: 0, confirmed: 0 });
     })
   );
-  it.effect("runs the one-request program with complete mode results and closed limit failures", () =>
+  it.effect("evaluates every mode and empty source through the surviving native evaluator", () =>
     Effect.gen(function* () {
-      const stdio = yield* Stdio.Stdio;
-      const limits = (yield* defaultCitationEnginePolicy).limits;
-      const startup = yield* decodeStartup({
-        limits: { ...limits, patternMatches: 2 },
-        descriptor,
-        engine: "python-re",
-      });
-      const argument = yield* encodeCitationRegexStartup(startup);
-      const cases = A.flatMap(CitationRegexMatchMode.literals, (mode) => [
-        { mode, maxMatches: 2, tag: "Complete", expected: { groups: 2, matches: mode === "finditer" ? 2 : 1 } },
-        {
-          mode,
-          maxMatches: 3,
-          tag: "Failure",
-          expected: { failure: { _tag: "CitationSafetyLimitExceeded", limit: "patternMatches" } },
-        },
-      ]);
-      for (const { mode, maxMatches, tag, expected } of cases) {
-        const frame = yield* encodeCitationRegexJob(
-          CitationRegexWorkerJob.make({
+      const limits = { ...(yield* defaultCitationEnginePolicy).limits, patternMatches: 2 };
+      const selected = yield* ownCitationTestConfiguration(CitationRegexPatternDescriptor, descriptor);
+      const evaluator = yield* makeCitationRegexEvaluation({ limits, descriptor: selected, engine: "python-re" });
+      for (const mode of CitationRegexMatchMode.literals) {
+        for (const source of [
+          { text: "b ab", matches: { finditer: 2, search: 1, match: 1 } },
+          { text: "zzz", matches: { finditer: 0, search: 0, match: 0 } },
+        ]) {
+          const job = CitationRegexPayload.make({
             patternWidth: 1,
             patternBytes: pattern.bytes,
             sourceWidth: 1,
-            sourceBytes: native("b ab").bytes,
+            sourceBytes: native(source.text).bytes,
             flags: 0,
             mode,
-            maxMatches,
-          }),
-          limits.processMessageBytes
-        );
-        const chunks = A.empty<Uint8Array>();
-        yield* citationRegexWorkerProgram.pipe(
-          Effect.provideService(Stdio.Stdio, {
-            ...stdio,
-            args: Effect.succeed([argument]),
-            stdin: Stream.make(frame),
-            stdout: () =>
-              Sink.forEach((chunk: string | Uint8Array) =>
-                Effect.sync(() => {
-                  chunks.push(Predicate.isString(chunk) ? new TextEncoder().encode(chunk) : chunk);
-                })
-              ),
-          })
-        );
-        const replies = A.empty<typeof CitationRegexWorkerReply.Type>();
-        yield* readCitationRegexFrames(Stream.fromIterable(chunks), limits.processMessageBytes, 3, (body) =>
-          decodeCitationRegexReply(body).pipe(Effect.tap((reply) => Effect.sync(() => replies.push(reply))))
-        );
-        expect(A.map(replies, (reply) => reply._tag)).toEqual(["Ready", "Started", tag]);
-        expect(A.last(replies)).toMatchObject({ value: expected });
-      }
-    })
-  );
-  it.effect("rejects missing requests and sanitizes each broken reply stage", () =>
-    Effect.gen(function* () {
-      const stdio = yield* Stdio.Stdio;
-      const limits = (yield* defaultCitationEnginePolicy).limits;
-      const startup = yield* decodeStartup({ limits, descriptor, engine: "python-re" });
-      const argument = yield* encodeCitationRegexStartup(startup);
-      const frame = yield* encodeCitationRegexJob(
-        CitationRegexWorkerJob.make({
-          patternWidth: 1,
-          patternBytes: pattern.bytes,
-          sourceWidth: 1,
-          sourceBytes: native("b ab").bytes,
-          flags: 0,
-          mode: "finditer",
-          maxMatches: 2,
-        }),
-        limits.processMessageBytes
-      );
-      const missingStartup = yield* citationRegexWorkerProgram.pipe(
-        Effect.provideService(Stdio.Stdio, { ...stdio, args: Effect.succeed([]) }),
-        Effect.flip
-      );
-      expect(missingStartup).toMatchObject({ reason: "invalid-runtime" });
-      const missingRequest = yield* citationRegexWorkerProgram.pipe(
-        Effect.provideService(Stdio.Stdio, {
-          ...stdio,
-          args: Effect.succeed([argument]),
-          stdin: Stream.empty,
-          stdout: () => Sink.drain,
-        }),
-        Effect.flip
-      );
-      expect(missingRequest).toMatchObject({ reason: "invalid-frame" });
-      for (const brokenStage of [1, 2, 3]) {
-        let stage = 0;
-        const error = yield* citationRegexWorkerProgram.pipe(
-          Effect.provideService(Stdio.Stdio, {
-            ...stdio,
-            args: Effect.succeed([argument]),
-            stdin: Stream.make(frame),
-            stdout: () => {
-              stage++;
-              return stage === brokenStage
-                ? Sink.fail(PlatformError.systemError({ module: "Stdio", method: "stdout", _tag: "Unknown" }))
-                : Sink.drain;
-            },
-          }),
-          Effect.flip
-        );
-        expect(error).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "channel-failed" });
-        expect(stage).toBe(brokenStage);
+            maxMatches: 2,
+          });
+          const bytes = yield* evaluator.evaluate(job);
+          const decoder = yield* makeCitationRegexResult(limits, 2, source.text.length);
+          const result = yield* decoder.decode(bytes, 2);
+          expect(result.matches).toBe(source.matches[mode]);
+          const refused = yield* evaluator
+            .evaluate(CitationRegexPayload.make({ ...job, maxMatches: 3 }))
+            .pipe(Effect.flip);
+          expect(refused).toMatchObject({ limit: "patternMatches" });
+        }
       }
     })
   );
   it.effect("rejects malformed native source storage before evaluation", () =>
     Effect.gen(function* () {
       const limits = (yield* defaultCitationEnginePolicy).limits;
-      const startup = yield* decodeStartup({ limits, descriptor, engine: "python-re" });
+      const startup = {
+        limits,
+        descriptor: yield* S.decodeUnknownEffect(CitationRegexPatternDescriptor)(descriptor),
+        engine: CitationRegexEngine.Enum["python-re"],
+      };
       const evaluator = yield* makeCitationRegexEvaluation(startup);
       const error = yield* evaluator
         .evaluate(
-          CitationRegexWorkerJob.make({
+          CitationRegexPayload.make({
             patternWidth: 1,
             patternBytes: pattern.bytes,
             sourceWidth: 2,
@@ -489,7 +421,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
       })
     );
 
-    it.effect(`quarantines ${kind} total and regex capacity until late exit acknowledgement`, () =>
+    it.effect(`quarantines ${kind} lane capacity until late exit acknowledgement`, () =>
       Effect.gen(function* () {
         const acknowledged = yield* Deferred.make<void>();
         const { worker, admission, observed, fixture, timer } = yield* controlled(
@@ -506,7 +438,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
           limit: "cleanupDeadline",
         });
         const citationResult34 = yield* admission.snapshot;
-        expect(citationResult34).toMatchObject({ active: 1, regexActive: 1, quarantined: 1 });
+        expect(citationResult34).toMatchObject({ active: 1, regexActive: 0, quarantined: 1 });
         const citationResult35 = yield* worker.evaluate(pattern, native("replacement"), 0).pipe(Effect.flip);
         expect(citationResult35).toMatchObject({
           reason: "quarantined",
@@ -523,7 +455,7 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
     );
   }
 
-  it.effect("refuses a later evaluator whose spawner is not the request owner's", () =>
+  it.effect("refuses first and later evaluators whose runtime differs from the lane's", () =>
     Effect.gen(function* () {
       const fixture = yield* makeCitationNativeWorkerFixture("busy", "regex", "bun");
       const limits = (yield* defaultCitationEnginePolicy).limits;
@@ -537,36 +469,36 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer), { excludeTestServices:
         );
       const creator = yield* install(first.spawner);
       const stranger = yield* install(second.spawner);
+      const otherClock = yield* makeCitationNativeSleepClock(() => Effect.never);
+      const foreignClock = yield* install(first.spawner).pipe(Effect.provideService(Clock.Clock, otherClock));
+      const installation = yield* Scope.make();
+      const closedStranger = yield* install(second.spawner).pipe(Effect.provideService(Scope.Scope, installation));
+      yield* Scope.close(installation, Exit.void);
       yield* withCitationTestInvocation(
         Effect.gen(function* () {
+          const closedMismatch = yield* closedStranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
+          expect(closedMismatch).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "closed" });
+          const firstMismatch = yield* stranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
+          expect(firstMismatch).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
+          const clockMismatch = yield* foreignClock.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
+          expect(clockMismatch).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
           // An out-of-range quota fails after the request's owner exists, before any child.
           const invalidQuota = yield* creator.evaluate(pattern, native("b"), 0, -1).pipe(Effect.flip);
           expect(invalidQuota).toMatchObject({ reason: "invalid-runtime" });
+          const invocation = yield* CitationInvocation;
+          const session = yield* invocation.regex.snapshot;
+          expect(session).toMatchObject({ state: "absent", jobs: 0 });
           const refused = yield* stranger.evaluate(pattern, native("b"), 0).pipe(Effect.flip);
           expect(refused).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
-        })
-      );
+        }),
+        limits
+      ).pipe(Effect.provideService(ChildProcessSpawner, first.spawner));
       const firstExits = yield* first.snapshot;
       expect(firstExits).toEqual({ spawned: 0, confirmed: 0 });
       const secondExits = yield* second.snapshot;
       expect(secondExits).toEqual({ spawned: 0, confirmed: 0 });
       const released = yield* admission.snapshot;
       expect(released).toMatchObject({ active: 0, regexActive: 0, quarantined: 0 });
-    })
-  );
-
-  it.effect("rejects missing startup arguments and capture metadata beyond the installation budget", () =>
-    Effect.gen(function* () {
-      const malformed = yield* decodeCitationRegexStartup([]).pipe(Effect.flip);
-      expect(malformed).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
-      const policy = yield* defaultCitationEnginePolicy;
-      const startup = yield* decodeStartup({
-        limits: { ...policy.limits, patternUtf16: 1 },
-        descriptor,
-        engine: "python-re",
-      });
-      const oversized = yield* encodeCitationRegexStartup(startup).pipe(Effect.flip);
-      expect(oversized).toMatchObject({ _tag: "CitationRegexWorkerFailure", reason: "invalid-runtime" });
     })
   );
 });

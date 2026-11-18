@@ -301,7 +301,8 @@ export const probeObservationRoots = Effect.fn("AiMetrics.probeObservationRoots"
           knownLaunches: ObservationPopulation.cases.Unknown.make({}),
           expectedEvents: ObservationPopulation.cases.Unknown.make({}),
         });
-      })
+      }),
+      { concurrency: 1 }
     );
     const observedAt = yield* DateTime.now;
     const encodedVersionHostRecordJson = yield* encodeVersionHostRecordJson({

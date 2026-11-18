@@ -119,69 +119,72 @@ export const fixture = Effect.gen(function* () {
     artifacts: [evidence, rawHtml, response],
     reason: "",
   });
-  const qualifications = yield* Effect.forEach(["firecrawl", "grok-deep-research"], (adapter) =>
-    Effect.gen(function* () {
-      const probeCapture = LibraryCapture.make({ ...capture, id: adapter, method: adapter });
-      const probe = LibraryProbeEvidence.make({
-        adapter,
-        sourceId: source.id,
-        sourceUrl: source.canonicalUrl,
-        status: "verified",
-        captureId: probeCapture.id,
-        complete: true,
-        artifacts: [evidence, rawHtml, response],
-      });
-      const encoded = yield* S.encodeEffect(LibraryProbeEvidenceJson)(probe);
-      const providerEvents = [
-        {
-          direction: "sent",
-          message: {
-            method: "session/prompt",
-            params: { sessionId: "test", prompt: [{ type: "text", text: "/deep-research fixture" }] },
+  const qualifications = yield* Effect.forEach(
+    ["firecrawl", "grok-deep-research"],
+    (adapter) =>
+      Effect.gen(function* () {
+        const probeCapture = LibraryCapture.make({ ...capture, id: adapter, method: adapter });
+        const probe = LibraryProbeEvidence.make({
+          adapter,
+          sourceId: source.id,
+          sourceUrl: source.canonicalUrl,
+          status: "verified",
+          captureId: probeCapture.id,
+          complete: true,
+          artifacts: [evidence, rawHtml, response],
+        });
+        const encoded = yield* S.encodeEffect(LibraryProbeEvidenceJson)(probe);
+        const providerEvents = [
+          {
+            direction: "sent",
+            message: {
+              method: "session/prompt",
+              params: { sessionId: "test", prompt: [{ type: "text", text: "/deep-research fixture" }] },
+            },
           },
-        },
-        {
-          direction: "received",
-          message: {
-            params: {
-              sessionId: "test",
-              update: {
-                sessionUpdate: "workflow_updated",
-                run_id: "fixture",
-                name: "deep-research",
-                status: "completed",
-                phases: A.map(["Plan", "Research", "Verify", "Report"], (title) => ({ title, state: "done" })),
+          {
+            direction: "received",
+            message: {
+              params: {
+                sessionId: "test",
+                update: {
+                  sessionUpdate: "workflow_updated",
+                  run_id: "fixture",
+                  name: "deep-research",
+                  status: "completed",
+                  phases: A.map(["Plan", "Research", "Verify", "Report"], (title) => ({ title, state: "done" })),
+                },
               },
             },
           },
-        },
-      ];
-      const providerEncoded = yield* S.encodeUnknownEffect(UnknownJson)(A.getUnsafe(providerEvents, 0));
-      const completionEncoded = yield* S.encodeUnknownEffect(UnknownJson)(A.getUnsafe(providerEvents, 1));
-      const providerArtifact = LibraryArtifact.make({
-        ...(yield* saveImmutable(
-          root,
-          `qualifications/${adapter}/provider.ndjson`,
-          new TextEncoder().encode(`${providerEncoded}\n${completionEncoded}`)
-        )),
-        role: "raw-provider-events",
-        mediaType: "application/x-ndjson",
-      });
-      const artifact = LibraryArtifact.make({
-        ...(yield* saveImmutable(root, `qualifications/${adapter}/probe.json`, new TextEncoder().encode(encoded))),
-        role: "qualification-probe",
-        mediaType: "application/json",
-      });
-      return LibraryQualification.make({
-        id: adapter,
-        adapter,
-        status: "verified",
-        required: true,
-        recordedAt: "2026-10-06",
-        evidence: adapter === "grok-deep-research" ? [providerArtifact] : [artifact],
-        reason: "actual fixture probe",
-      });
-    })
+        ];
+        const providerEncoded = yield* S.encodeUnknownEffect(UnknownJson)(A.getUnsafe(providerEvents, 0));
+        const completionEncoded = yield* S.encodeUnknownEffect(UnknownJson)(A.getUnsafe(providerEvents, 1));
+        const providerArtifact = LibraryArtifact.make({
+          ...(yield* saveImmutable(
+            root,
+            `qualifications/${adapter}/provider.ndjson`,
+            new TextEncoder().encode(`${providerEncoded}\n${completionEncoded}`)
+          )),
+          role: "raw-provider-events",
+          mediaType: "application/x-ndjson",
+        });
+        const artifact = LibraryArtifact.make({
+          ...(yield* saveImmutable(root, `qualifications/${adapter}/probe.json`, new TextEncoder().encode(encoded))),
+          role: "qualification-probe",
+          mediaType: "application/json",
+        });
+        return LibraryQualification.make({
+          id: adapter,
+          adapter,
+          status: "verified",
+          required: true,
+          recordedAt: "2026-10-06",
+          evidence: adapter === "grok-deep-research" ? [providerArtifact] : [artifact],
+          reason: "actual fixture probe",
+        });
+      }),
+    { concurrency: 1 }
   );
   const catalog = LibraryCatalog.make({
     schema: "beep.research.library/v2",

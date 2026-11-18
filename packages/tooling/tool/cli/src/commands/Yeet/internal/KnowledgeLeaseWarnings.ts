@@ -110,5 +110,5 @@ export const warnKnowledgeLeases = Effect.fn("Yeet.warnKnowledgeLeases")(functio
     onFailure: () => Effect.succeed(["knowledge leases could not be read: the lease command did not start."]),
     onSuccess: (captured) => knowledgeLeaseWarningLines(captured.exitCode, captured.stdout),
   });
-  yield* Effect.forEach(lines, (line) => Console.error(`[yeet] warning: ${line}`), { discard: true });
+  yield* Effect.forEach(lines, (line) => Console.error(`[yeet] warning: ${line}`), { concurrency: 1, discard: true });
 });

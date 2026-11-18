@@ -199,8 +199,10 @@ describe("@beep/box-provisioning content migration artifact privacy", () => {
     it.effect.each(sensitiveSentinels)(
       "$category",
       Effect.fnUntraced(function* ({ value }) {
-        const errors = yield* Effect.forEach(withSentinel(planDocument, value), (document) =>
-          encodeJson(document).pipe(Effect.flatMap(decodeBoxContentMigrationPlan), Effect.flip)
+        const errors = yield* Effect.forEach(
+          withSentinel(planDocument, value),
+          (document) => encodeJson(document).pipe(Effect.flatMap(decodeBoxContentMigrationPlan), Effect.flip),
+          { concurrency: 1 }
         );
 
         expect(A.dedupe(A.map(errors, (error) => error.stage))).toEqual(["migration-plan"]);
@@ -220,8 +222,10 @@ describe("@beep/box-provisioning content migration artifact privacy", () => {
           { ...receiptDocument, outcomes: [{ ...receiptDocument.outcomes[0], providerId: value }] },
           { ...receiptDocument, outcomes: [{ ...receiptDocument.outcomes[0], message: value }] },
         ];
-        const errors = yield* Effect.forEach(A.take(receipts, 5), (document) =>
-          encodeJson(document).pipe(Effect.flatMap(decodeBoxContentMigrationReceipt), Effect.flip)
+        const errors = yield* Effect.forEach(
+          A.take(receipts, 5),
+          (document) => encodeJson(document).pipe(Effect.flatMap(decodeBoxContentMigrationReceipt), Effect.flip),
+          { concurrency: 1 }
         );
         // An unknown key such as raw error text is not rejected, it is dropped: it can never be re-encoded.
         const stripped = yield* encodeJson(receipts[5]).pipe(Effect.flatMap(decodeBoxContentMigrationReceipt));

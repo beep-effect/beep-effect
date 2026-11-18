@@ -216,7 +216,7 @@ const lintOneRubric = Effect.fn("lintOneRubric")(function* (
 
 const runLintJudgeRubric = Effect.fn("runLintJudgeRubric")(function* () {
   const repoRoot = yield* findRepoRoot();
-  const counts = yield* Effect.forEach(RUBRICS, (rubric) => lintOneRubric(repoRoot, rubric));
+  const counts = yield* Effect.forEach(RUBRICS, (rubric) => lintOneRubric(repoRoot, rubric), { concurrency: 1 });
   const violationCount = Num.sumAll(counts);
   if (violationCount > 0) {
     yield* Console.error(`[lint:judge-rubric] found ${violationCount} lens drift violation(s).`);

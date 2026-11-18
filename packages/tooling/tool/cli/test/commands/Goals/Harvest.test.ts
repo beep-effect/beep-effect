@@ -175,7 +175,7 @@ const makeFixtureRepo = Effect.fn("HarvestTest.makeFixtureRepo")(function* () {
       ["infra/cache/research/OPPORTUNITIES.md", LEDGER],
     ] as const,
     ([relative, text]) => writeFixtureFile(root, relative, text),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* commitAll(root, "fixture");
   return root;

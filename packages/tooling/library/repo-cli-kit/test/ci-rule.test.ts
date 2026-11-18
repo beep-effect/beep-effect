@@ -112,11 +112,14 @@ describe("the one CI rule", () => {
 
   it.effect("isCi agrees with isCiSync on every row through a provided ConfigProvider", () =>
     Effect.gen(function* () {
-      const verdicts = yield* Effect.forEach(rows, (row) =>
-        isCi.pipe(
-          Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(row.env)),
-          Effect.map((ci) => [row.name, ci] as const)
-        )
+      const verdicts = yield* Effect.forEach(
+        rows,
+        (row) =>
+          isCi.pipe(
+            Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(row.env)),
+            Effect.map((ci) => [row.name, ci] as const)
+          ),
+        { concurrency: 1 }
       );
       expect(verdicts).toEqual(A.map(rows, (row) => [row.name, row.ci] as const));
     })
@@ -138,8 +141,11 @@ describe("the one CI rule", () => {
 
   it.effect("the retired predicates match their recorded verdicts", () =>
     Effect.gen(function* () {
-      const recorded = yield* Effect.forEach(rows, (row) =>
-        Effect.map(configBoolean(row.env), (boolean) => [row.name, exactTrue(row.env), boolean, nonEmpty(row.env)])
+      const recorded = yield* Effect.forEach(
+        rows,
+        (row) =>
+          Effect.map(configBoolean(row.env), (boolean) => [row.name, exactTrue(row.env), boolean, nonEmpty(row.env)]),
+        { concurrency: 1 }
       );
       expect(recorded).toEqual(
         A.map(rows, (row) => [row.name, row.exactTrue, row.configBoolean, row.nonEmpty] as const)

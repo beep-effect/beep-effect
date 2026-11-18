@@ -387,7 +387,8 @@ it.layer(platform, { timeout: "60 seconds" })("squash commitlint against the rep
               expect(predicted.body).toContain(`* ${subject}`);
               expect(pipe(report.message.body, Str.replaceAll("\n", " "))).toContain(subject);
             })
-        )
+        ),
+      { concurrency: 1 }
     )
   );
 

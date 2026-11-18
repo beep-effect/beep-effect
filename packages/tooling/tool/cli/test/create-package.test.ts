@@ -209,7 +209,8 @@ const withSanctionedEcosystemDiagnosticDelta = Effect.fnUntraced(function* (
             },
           }
         : plugin;
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 const NoEmitTurboConfig = {
@@ -1698,8 +1699,10 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
                 A.dedupe,
                 A.appendAll(created)
               );
-              const proofs = yield* Effect.forEach(partitions, (partition) =>
-                proveCiLanePartition(laneId, partition, taskPackages, taskPackages, taskPackages, false)
+              const proofs = yield* Effect.forEach(
+                partitions,
+                (partition) => proveCiLanePartition(laneId, partition, taskPackages, taskPackages, taskPackages, false),
+                { concurrency: 1 }
               );
               for (const packageName of created) {
                 expect(A.length(A.filter(proofs, (proof) => A.contains(proof.packages, packageName)))).toBe(1);

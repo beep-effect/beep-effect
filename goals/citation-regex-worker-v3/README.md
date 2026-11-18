@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,11 +31,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-Not started. First slice: B1, the native lane, once slice A2 of `citation-engine-install-once` has merged.
+All three slices are merged: B1 #3336 (one native lane per invocation, limits policy v2), B2
+#3352 (protocol v3 and `CitationRegexSession`, one regex child process per invocation) and B3
+#3355 (protocol v2 deleted, law-practice shard plan re-recorded). Ten plain-text calls start 10
+regex child processes instead of 291, with 291 evaluations unchanged. The packet is closed; the
+reflection is [history/reflections/2026-11-14-claude.md](history/reflections/2026-11-14-claude.md).
 
 ## Latest Evidence
 
-Not started.
+[Replay acceptance](history/evidence/2026-11-14-replay-acceptance.md): the five serial replays
+finish under 20% of their watchdog on hosted CI (2% to 18%) and at 10% to 20% on beep-worker, with identical asserted
+results.
 
 ## Notes
 

@@ -98,7 +98,7 @@ export const makeJsonlLog = Effect.fnUntraced(function* <
       ? Effect.void
       : Effect.scoped(
           Effect.gen(function* () {
-            const forEach1 = yield* Effect.forEach(values, encodeLine);
+            const forEach1 = yield* Effect.forEach(values, encodeLine, { concurrency: 1 });
             const text = A.join(forEach1, "\n");
             yield* fs.makeDirectory(path.dirname(options.file), { recursive: true, mode: 0o700 });
             const handle = yield* fs.open(options.file, { flag: "a", mode: 0o600 });

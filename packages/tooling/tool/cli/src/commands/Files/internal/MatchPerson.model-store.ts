@@ -967,8 +967,10 @@ export const preparePersonMatchOnnxModels = Effect.fn("Files.preparePersonMatchO
   const models = yield* ensureCanonicalDirectory(path.join(root, "models"), "ONNX models directory");
   const directory = yield* ensureCanonicalDirectory(path.join(models, "beep_buffalo_l_v1"), "pinned ONNX directory");
   const required = backend === "buffalo-l" ? [pins.detector, pins.recognizer] : [pins.detector];
-  const missingArtifacts = Effect.forEach(required, (artifact) =>
-    validateArtifactPath(artifact, path.join(directory, artifact.fileName)).pipe(Effect.isSuccess)
+  const missingArtifacts = Effect.forEach(
+    required,
+    (artifact) => validateArtifactPath(artifact, path.join(directory, artifact.fileName)).pipe(Effect.isSuccess),
+    { concurrency: 1 }
   ).pipe(Effect.map((validation) => A.filter(required, (_, index) => validation[index] !== true)));
   const missing = yield* missingArtifacts;
   if (A.isReadonlyArrayNonEmpty(missing)) {

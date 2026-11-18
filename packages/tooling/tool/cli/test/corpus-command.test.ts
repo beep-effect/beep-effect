@@ -145,7 +145,7 @@ const makeSealedLedgerVariants = Effect.fn("CorpusTest.makeSealedLedgerVariants"
   );
   const withoutSeal = A.filter(records, (record) => record.recordType !== "archive-manifest-seal");
   const reseal = Effect.fn("CorpusTest.resealArchiveLedger")(function* (unsealed: ReadonlyArray<ArchiveLedgerRecord>) {
-    const encoded = yield* Effect.forEach(unsealed, encodeArchiveLedgerRecordJson);
+    const encoded = yield* Effect.forEach(unsealed, encodeArchiveLedgerRecordJson, { concurrency: 1 });
     const manifestSha256 = Sha256Hex.make(bytesToHex(sha256(utf8ToBytes(`${A.join(encoded, "\n")}\n`))));
     return A.append(
       unsealed,
@@ -1083,7 +1083,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration evidence inva
       const argument1 = Str.split(/\r?\n/u);
       const readFileString1 = yield* fs.readFileString(ledgerPath);
       const lines = A.filter(argument1(readFileString1), Str.isNonEmpty);
-      const mailRecords = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
+      const mailRecords = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson, { concurrency: 1 });
       const recycleFixture = yield* makeRecycleRestorationFixture();
       yield* restoreRecycle(
         RestorationRecycleOptions.make({
@@ -1103,7 +1103,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration evidence inva
         )
       );
       const recycleLines = A.filter(argument2(readFileString4), Str.isNonEmpty);
-      const recycleRecords = yield* Effect.forEach(recycleLines, decodeTransformationLedgerRecordJson);
+      const recycleRecords = yield* Effect.forEach(recycleLines, decodeTransformationLedgerRecordJson, {
+        concurrency: 1,
+      });
       const legacyFixture = yield* makeLegacyWordRestorationFixture();
       yield* restoreLegacyWord(legacyWordRestorationOptions(legacyFixture));
       const argument3 = Str.split(/\r?\n/u);
@@ -1114,7 +1116,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration evidence inva
         )
       );
       const legacyLines = A.filter(argument3(readFileString6), Str.isNonEmpty);
-      const legacyRecords = yield* Effect.forEach(legacyLines, decodeTransformationLedgerRecordJson);
+      const legacyRecords = yield* Effect.forEach(legacyLines, decodeTransformationLedgerRecordJson, {
+        concurrency: 1,
+      });
 
       A.forEach([mailRecords, recycleRecords, legacyRecords], exerciseEvidenceMutations);
     }),
@@ -1471,25 +1475,28 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus organize", (it) => {
         { label: "source-b", name: "duplicate.txt", content: "client notes" },
         { label: "source-b", name: "one/Unique (10110WO02-US1).docx", content: "single docket" },
       ];
-      const lines = yield* Effect.forEach(sources, (source, index) =>
-        Effect.gen(function* () {
-          const destPath = path.join(rawRoot, source.label, source.name);
-          yield* fs.makeDirectory(path.dirname(destPath), { recursive: true });
-          yield* fs.writeFileString(destPath, source.content);
-          return yield* encodeProvenanceLine(
-            CorpusProvenanceRecord.make({
-              ...provenanceRecord({
-                destPath,
-                originPath: `/origin/${source.label}/${source.name}`,
-                relativePath: source.name,
-                sha256: contentDigest(source.content),
-                sizeBytes: utf8ToBytes(source.content).byteLength,
-                sourceLabel: source.label,
-              }),
-              mtimeEpoch: 1_700_000_000 + index,
-            })
-          );
-        })
+      const lines = yield* Effect.forEach(
+        sources,
+        (source, index) =>
+          Effect.gen(function* () {
+            const destPath = path.join(rawRoot, source.label, source.name);
+            yield* fs.makeDirectory(path.dirname(destPath), { recursive: true });
+            yield* fs.writeFileString(destPath, source.content);
+            return yield* encodeProvenanceLine(
+              CorpusProvenanceRecord.make({
+                ...provenanceRecord({
+                  destPath,
+                  originPath: `/origin/${source.label}/${source.name}`,
+                  relativePath: source.name,
+                  sha256: contentDigest(source.content),
+                  sizeBytes: utf8ToBytes(source.content).byteLength,
+                  sourceLabel: source.label,
+                }),
+                mtimeEpoch: 1_700_000_000 + index,
+              })
+            );
+          }),
+        { concurrency: 1 }
       );
       yield* fs.writeFileString(path.join(rawRoot, "provenance.jsonl"), A.join(lines, "\n"));
       yield* fs.writeFileString(path.join(catalogRoot, "restoration-manifest.jsonl"), "");
@@ -1510,7 +1517,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus organize", (it) => {
         versionGroups: 1,
       });
       const readProvenanceLines1 = yield* readProvenanceLines(path.join(catalogRoot, "organize-manifest.jsonl"));
-      const records = yield* Effect.forEach(readProvenanceLines1, (line) => decodeOrganizeRecordJson(line));
+      const records = yield* Effect.forEach(readProvenanceLines1, (line) => decodeOrganizeRecordJson(line), {
+        concurrency: 1,
+      });
       expect(
         A.map(
           A.filter(records, (row) => row.docket === "10109WO02-US1"),
@@ -1634,19 +1643,22 @@ const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture"
   yield* Effect.forEach(
     A.filter(sources, (source) => source.present !== false),
     (source) => fs.writeFile(path.join(rawDir, source.name), fixtureBytes(source.content)),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
-  const manifestLines = yield* Effect.forEach(sources, (source) =>
-    encodeProvenanceLine(
-      provenanceRecord({
-        destPath: path.join(rawDir, source.name),
-        originPath: `/origin/source-a/${source.name}`,
-        relativePath: source.name,
-        sha256: contentDigest(source.content),
-        sizeBytes: fixtureBytes(source.content).byteLength,
-        sourceLabel: "source-a",
-      })
-    )
+  const manifestLines = yield* Effect.forEach(
+    sources,
+    (source) =>
+      encodeProvenanceLine(
+        provenanceRecord({
+          destPath: path.join(rawDir, source.name),
+          originPath: `/origin/source-a/${source.name}`,
+          relativePath: source.name,
+          sha256: contentDigest(source.content),
+          sizeBytes: fixtureBytes(source.content).byteLength,
+          sourceLabel: "source-a",
+        })
+      ),
+    { concurrency: 1 }
   );
   yield* fs.writeFileString(manifestPath, `${A.join(manifestLines, "\n")}\n`);
 
@@ -1658,7 +1670,7 @@ const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture"
   const readText = (relativePath: string) => fs.readFileString(path.join(outDir, relativePath));
   const pageRows = Effect.fn("CorpusTest.pageRows")(function* (content: string | Uint8Array) {
     const lines = yield* readProvenanceLines(path.join(outDir, "ocr", "pages", `${operationIdFor(content)}.jsonl`));
-    return yield* Effect.forEach(lines, CorpusPageReadingRecordJson.decode);
+    return yield* Effect.forEach(lines, CorpusPageReadingRecordJson.decode, { concurrency: 1 });
   });
   const recognitionCalls = Effect.fn("CorpusTest.recognitionCalls")(function* () {
     const text = yield* fs.readFileString(callLog).pipe(Effect.orElseSucceed(() => ""));
@@ -1716,7 +1728,7 @@ const makeExtractResumeFixture = Effect.fn("CorpusTest.makeExtractResumeFixture"
 
 const readProvenanceRecords = Effect.fn("CorpusTest.readProvenanceRecords")(function* (manifestPath: string) {
   const lines = yield* readProvenanceLines(manifestPath);
-  return yield* Effect.forEach(lines, (line) => decodeCorpusProvenanceRecordJson(line));
+  return yield* Effect.forEach(lines, (line) => decodeCorpusProvenanceRecordJson(line), { concurrency: 1 });
 });
 
 const decodeArchiveMoveManifestRecordJson = S.decodeUnknownEffect(S.fromJsonString(CorpusArchiveMoveManifestRecord));
@@ -1726,7 +1738,7 @@ const readArchiveMoveManifestRecords = Effect.fn("CorpusTest.readArchiveMoveMani
   manifestPath: string
 ) {
   const lines = yield* readProvenanceLines(manifestPath);
-  return yield* Effect.forEach(lines, (line) => decodeArchiveMoveManifestRecordJson(line));
+  return yield* Effect.forEach(lines, (line) => decodeArchiveMoveManifestRecordJson(line), { concurrency: 1 });
 });
 
 it.layer(testLayer, { timeout: "30 seconds" })("corpus catalog run manifests", (it) => {
@@ -1778,7 +1790,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus catalog run manifests", (
             sourceLabel: "source-a",
           }),
         ],
-        encodeProvenanceLine
+        encodeProvenanceLine,
+        { concurrency: 1 }
       );
       const runLines = yield* Effect.forEach(
         [
@@ -1820,7 +1833,8 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus catalog run manifests", (
             sourceLabel: "source-c",
           }),
         ],
-        encodeProvenanceLine
+        encodeProvenanceLine,
+        { concurrency: 1 }
       );
       yield* fs.writeFileString(path.join(rawRoot, "provenance.jsonl"), `${A.join(baseLines, "\n")}\n`);
       yield* fs.writeFileString(path.join(rawRoot, runLabel, "provenance.jsonl"), `${A.join(runLines, "\n")}\n`);
@@ -2714,8 +2728,10 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus salvage run labels and de
       const sourceBDir = path.join(root, "source-b");
       const sourceCDir = path.join(root, "source-c");
       const sourceDDir = path.join(root, "source-d");
-      yield* Effect.forEach([sourceADir, sourceBDir, sourceCDir, sourceDDir], (sourceDir) =>
-        fs.makeDirectory(sourceDir, { recursive: true })
+      yield* Effect.forEach(
+        [sourceADir, sourceBDir, sourceCDir, sourceDDir],
+        (sourceDir) => fs.makeDirectory(sourceDir, { recursive: true }),
+        { concurrency: 1 }
       );
 
       const firstFileName = "~first-walked.pst.tmp";
@@ -2733,9 +2749,10 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus salvage run labels and de
         [sourceBDir, sourceCDir, sourceDDir],
         (sourceDir) =>
           Effect.forEach(sharedFiles, (file) => fs.writeFileString(path.join(sourceDir, file.name), file.body), {
+            concurrency: 1,
             discard: true,
           }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
 
       const summary = yield* salvageCorpus(
@@ -2754,7 +2771,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus salvage run labels and de
 
       const manifestPath = path.join(corpusRoot, "raw", "run-multi-source", "provenance.jsonl");
       const lines = yield* readProvenanceLines(manifestPath);
-      const records = yield* Effect.forEach(lines, (line) => decodeCorpusProvenanceRecordJson(line));
+      const records = yield* Effect.forEach(lines, (line) => decodeCorpusProvenanceRecordJson(line), {
+        concurrency: 1,
+      });
       const firstLine = yield* Effect.fromOption(A.head(lines));
       const firstRecord = yield* Effect.fromOption(A.head(records));
 
@@ -3247,8 +3266,10 @@ const writePresentCollectorManifest = Effect.fn("CorpusTest.writePresentCollecto
     }
   );
   yield* visit(sourceRoot);
-  const encoded = yield* Effect.forEach(records, (record) =>
-    S.encodeEffect(collectorManifestJson)(record).pipe(Effect.orDie)
+  const encoded = yield* Effect.forEach(
+    records,
+    (record) => S.encodeEffect(collectorManifestJson)(record).pipe(Effect.orDie),
+    { concurrency: 1 }
   );
   yield* fs.writeFileString(collectorManifest, `${A.join(encoded, "\n")}\n`).pipe(Effect.orDie);
   return records.length;
@@ -3327,8 +3348,10 @@ const makeRestorationFixture = Effect.fn("CorpusTest.makeRestorationFixture")(fu
       status: "error",
     }),
   ];
-  const encodedCollectorRows = yield* Effect.forEach(collectorRows, (record) =>
-    S.encodeEffect(collectorManifestJson)(record).pipe(Effect.orDie)
+  const encodedCollectorRows = yield* Effect.forEach(
+    collectorRows,
+    (record) => S.encodeEffect(collectorManifestJson)(record).pipe(Effect.orDie),
+    { concurrency: 1 }
   );
   yield* fs.writeFileString(collectorManifest, `${A.join(encodedCollectorRows, "\n")}\n`);
   return {
@@ -3436,7 +3459,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
         const argument4 = Str.split(/\r?\n/u);
         const readFileString7 = yield* fs.readFileString(manifestPath);
         const lines = A.filter(argument4(readFileString7), Str.isNonEmpty);
-        const records = yield* Effect.forEach(lines, decodeArchiveLedgerRecordJson);
+        const records = yield* Effect.forEach(lines, decodeArchiveLedgerRecordJson, { concurrency: 1 });
         const changedRows = A.filter(records, (record) => record.recordType === "archive-changed-during-copy");
         const stablePass = A.findFirst(
           records,
@@ -3532,7 +3555,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
           const argument5 = Str.split(/\r?\n/u);
           const readFileString9 = yield* fs.readFileString(manifestPath);
           const lines = A.filter(argument5(readFileString9), Str.isNonEmpty);
-          const records = yield* Effect.forEach(lines, decodeArchiveLedgerRecordJson);
+          const records = yield* Effect.forEach(lines, decodeArchiveLedgerRecordJson, { concurrency: 1 });
 
           if (changeParentMode) {
             expect(error).toBeInstanceOf(CorpusCommandError);
@@ -3715,7 +3738,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
       const argument6 = Str.split(/\r?\n/u);
       const readFileString10 = yield* fs.readFileString(manifestPath);
       const lines = A.filter(argument6(readFileString10), Str.isNonEmpty);
-      const records = yield* Effect.forEach(lines, decodeArchiveLedgerRecordJson);
+      const records = yield* Effect.forEach(lines, decodeArchiveLedgerRecordJson, { concurrency: 1 });
       const resumedPass = A.findFirst(
         records,
         (record) => record.recordType === "archive-file-pass" && record.sourceRelativePath === "nested/large.bin"
@@ -3775,7 +3798,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
       const argument7 = Str.split(/\r?\n/u);
       const readFileString11 = yield* fs.readFileString(manifestPath);
       const originalLines = A.filter(argument7(readFileString11), Str.isNonEmpty);
-      const records = yield* Effect.forEach(originalLines, decodeArchiveLedgerRecordJson);
+      const records = yield* Effect.forEach(originalLines, decodeArchiveLedgerRecordJson, { concurrency: 1 });
       const seal = A.findFirst(records, (record) => record.recordType === "archive-manifest-seal");
       const terminal = A.findFirst(
         records,
@@ -3876,7 +3899,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
         variants,
         (variant) =>
           Effect.gen(function* () {
-            const encoded = yield* Effect.forEach(variant, encodeArchiveLedgerRecordJson);
+            const encoded = yield* Effect.forEach(variant, encodeArchiveLedgerRecordJson, { concurrency: 1 });
             yield* fs.writeFileString(manifestPath, `${A.join(encoded, "\n")}\n`);
             const exit = yield* verifyRestorationArchive(
               RestorationVerifyOptions.make({
@@ -3886,12 +3909,14 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration preservation"
             ).pipe(Effect.exit);
             expect(exit).toMatchObject({ _tag: "Failure" });
           }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
 
       // The optional fifth class (operator-deleted-noise) beside the four
       // ratified classes verifies; the verifier checks classes by name.
-      const encodedFifth = yield* Effect.forEach(withOperatorDeletedClass, encodeArchiveLedgerRecordJson);
+      const encodedFifth = yield* Effect.forEach(withOperatorDeletedClass, encodeArchiveLedgerRecordJson, {
+        concurrency: 1,
+      });
       yield* fs.writeFileString(manifestPath, `${A.join(encodedFifth, "\n")}\n`);
       const verifiedWithFifth = yield* verifyRestorationArchive(
         RestorationVerifyOptions.make({
@@ -4290,7 +4315,7 @@ const readTransformationLedgerFixture = Effect.fnUntraced(function* (ledgerPath:
   const argument8 = Str.split(/\r?\n/u);
   const readFileString12 = yield* fs.readFileString(ledgerPath);
   const lines = A.filter(argument8(readFileString12), Str.isNonEmpty);
-  const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
+  const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson, { concurrency: 1 });
   return { lines, records };
 });
 
@@ -4382,7 +4407,8 @@ const makeMailMembershipFixture = Effect.fnUntraced(function* (
   );
   const records = yield* Effect.forEach(
     A.filter(Str.split(/\r?\n/u)(text), Str.isNonEmpty),
-    decodeArchiveLedgerRecordJson
+    decodeArchiveLedgerRecordJson,
+    { concurrency: 1 }
   );
   const pass = yield* Effect.fromOption(
     A.findFirst(records, (row) => row.recordType === "archive-file-pass" && row.sizeBytes === 1024 * 1024 + 64)
@@ -4424,7 +4450,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       const argument9 = Str.split(/\r?\n/u);
       const readFileString13 = yield* fs.readFileString(ledgerPath);
       const lines = A.filter(argument9(readFileString13), Str.isNonEmpty);
-      const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
+      const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson, { concurrency: 1 });
       const pass = A.findFirst(records, (record) => record.recordType === "mail-store-pass");
       const children = A.filter(records, (record) => record.recordType === "mail-child-pass");
       const repair = A.findFirst(
@@ -4987,7 +5013,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       const argument10 = Str.split(/\r?\n/u);
       const readFileString14 = yield* fs.readFileString(ledgerPath);
       const resumedLines = A.filter(argument10(readFileString14), Str.isNonEmpty);
-      const records = yield* Effect.forEach(resumedLines, decodeTransformationLedgerRecordJson);
+      const records = yield* Effect.forEach(resumedLines, decodeTransformationLedgerRecordJson, { concurrency: 1 });
       const familyStarts = A.filter(records, (record) => record.recordType === "family-run-start");
       const attemptStarts = A.filter(records, (record) => record.recordType === "family-attempt-start");
       const interrupted = A.filter(records, (record) => record.recordType === "family-attempt-interrupted");
@@ -5058,7 +5084,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       const argument11 = Str.split(/\r?\n/u);
       const readFileString15 = yield* fs.readFileString(ledgerPath);
       const resumedLines = A.filter(argument11(readFileString15), Str.isNonEmpty);
-      const records = yield* Effect.forEach(resumedLines, decodeTransformationLedgerRecordJson);
+      const records = yield* Effect.forEach(resumedLines, decodeTransformationLedgerRecordJson, { concurrency: 1 });
       const interruptions = A.filter(records, (record) => record.recordType === "family-attempt-interrupted");
       const starts = A.filter(records, (record) => record.recordType === "family-attempt-start");
       const terminals = A.filter(
@@ -5104,7 +5130,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
         const argument12 = Str.split(/\r?\n/u);
         const readFileString16 = yield* fs.readFileString(ledgerPath);
         const lines = A.filter(argument12(readFileString16), Str.isNonEmpty);
-        const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
+        const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson, { concurrency: 1 });
         const segment = A.dropRight(records, 2);
         const interrupted = A.findFirst(segment, (record) => record.recordType === "family-attempt-interrupted");
         const acceptance = records[records.length - 1];
@@ -5117,7 +5143,9 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
           return yield* Effect.die(`Mail ledger lacked the ${tamper} evidence selected for tampering.`);
         }
         const tamperedSegment = tampered.value;
-        const encodedSegment = yield* Effect.forEach(tamperedSegment, encodeTransformationLedgerRecordJson);
+        const encodedSegment = yield* Effect.forEach(tamperedSegment, encodeTransformationLedgerRecordJson, {
+          concurrency: 1,
+        });
         const evidenceSha256 = Sha256Hex.make(bytesToHex(sha256(utf8ToBytes(`${A.join(encodedSegment, "\n")}\n`))));
         const rewrittenAcceptance = TransformationLedgerRecord.cases["family-acceptance-pass"].make({
           ...acceptance,
@@ -5125,7 +5153,8 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
         });
         const encodedTerminal = yield* Effect.forEach(
           [summary, rewrittenAcceptance] as const,
-          encodeTransformationLedgerRecordJson
+          encodeTransformationLedgerRecordJson,
+          { concurrency: 1 }
         );
         yield* fs.writeFileString(ledgerPath, `${A.join(A.appendAll(encodedSegment, encodedTerminal), "\n")}\n`);
 
@@ -5183,7 +5212,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
         const argument13 = Str.split(/\r?\n/u);
         const readFileString17 = yield* fs.readFileString(ledgerPath);
         const lines = A.filter(argument13(readFileString17), Str.isNonEmpty);
-        const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
+        const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson, { concurrency: 1 });
         const terminal = A.findFirst(records, (record) => record.recordType === "mail-store-exception");
         assertSome(
           O.map(terminal, (record) =>
@@ -5207,7 +5236,7 @@ it.layer(testLayer, { concurrent: false, timeout: "30 seconds" })("corpus restor
       const argument14 = Str.split(/\r?\n/u);
       const readFileString18 = yield* fs.readFileString(ledgerPath);
       const lines = A.filter(argument14(readFileString18), Str.isNonEmpty);
-      const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
+      const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson, { concurrency: 1 });
       const terminal = A.findFirst(records, (record) => record.recordType === "mail-store-exception");
       if (O.isNone(terminal) || terminal.value.recordType !== "mail-store-exception") {
         return yield* Effect.die("Expected an approved corrupt-store terminal.");
@@ -5383,7 +5412,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration recycle", (it
       const argument15 = Str.split(/\r?\n/u);
       const readFileString19 = yield* fs.readFileString(ledgerPath);
       const lines = A.filter(argument15(readFileString19), Str.isNonEmpty);
-      const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
+      const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson, { concurrency: 1 });
       const joins = A.filter(records, (record) => record.recordType === "recycle-join");
       const mappings = A.filter(records, (record) => record.recordType === "recycle-mapping");
       const start = A.findFirst(records, (record) => record.recordType === "family-run-start");
@@ -5710,7 +5739,7 @@ it.layer(testLayer, { timeout: "30 seconds" })("corpus restoration legacy Word",
       const argument16 = Str.split(/\r?\n/u);
       const readFileString20 = yield* fs.readFileString(ledgerPath);
       const lines = A.filter(argument16(readFileString20), Str.isNonEmpty);
-      const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson);
+      const records = yield* Effect.forEach(lines, decodeTransformationLedgerRecordJson, { concurrency: 1 });
       const passes = A.filter(records, (record) => record.recordType === "legacy-word-pass");
       const exceptions = A.filter(records, (record) => record.recordType === "legacy-word-exception");
       const acceptance = A.findFirst(

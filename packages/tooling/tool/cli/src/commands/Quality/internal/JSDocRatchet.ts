@@ -95,14 +95,14 @@ export const jsdocZeroLegacyGeneratedResiduals: ReadonlyArray<string> = [];
  * ```ts
  * import { defaultJSDocInventoryPath } from "@beep/repo-cli/test/Quality"
  *
- * const result = defaultJSDocInventoryPath === "standards/jsdoc-documentation.inventory.jsonc"
+ * const result = defaultJSDocInventoryPath === ".beep/ci/jsdoc-documentation.inventory.jsonc"
  * console.log(result) // rendered command output
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const defaultJSDocInventoryPath = "standards/jsdoc-documentation.inventory.jsonc";
+export const defaultJSDocInventoryPath = ".beep/ci/jsdoc-documentation.inventory.jsonc";
 
 /**
  * Repo-relative path to the committed JSDoc totals regression baseline.
@@ -183,7 +183,7 @@ class JSDocInventoryTotalsDocument extends S.Opaque<JSDocInventoryTotalsDocument
  *
  * const baseline = JSDocTotalsRegressionBaseline.make({
  *   schema_version: 1,
- *   source_inventory: "standards/jsdoc-documentation.inventory.jsonc",
+ *   source_inventory: ".beep/ci/jsdoc-documentation.inventory.jsonc",
  *   regeneration_command: "bun run beep quality jsdoc-inventory",
  *   snapshot_command: "bun run beep quality jsdoc-ratchet --write-baseline",
  *   comparison: "fail-on-growth",
@@ -703,7 +703,7 @@ const enforceZeroLegacy = Effect.fn("JSDocRatchet.enforceZeroLegacy")(function* 
  *
  * const options: RunJSDocRatchetOptions = {
  *   baselinePath: "standards/jsdoc-totals.regression-baseline.jsonc",
- *   inventoryPath: "standards/jsdoc-documentation.inventory.jsonc",
+ *   inventoryPath: ".beep/ci/jsdoc-documentation.inventory.jsonc",
  *   writeBaseline: false
  * }
  * console.log(options.baselinePath)
@@ -738,7 +738,7 @@ export class RunJSDocRatchetOptions extends S.Opaque<RunJSDocRatchetOptions, { r
  *
  * const program = runJSDocRatchet({
  *   baselinePath: "standards/jsdoc-totals.regression-baseline.jsonc",
- *   inventoryPath: "standards/jsdoc-documentation.inventory.jsonc",
+ *   inventoryPath: ".beep/ci/jsdoc-documentation.inventory.jsonc",
  *   writeBaseline: false
  * })
  * console.log(program) // example value

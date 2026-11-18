@@ -236,7 +236,8 @@ const roundTrips = Effect.fn("settleTest.roundTrips")(function* <Schema extends 
       const decoded = yield* S.decodeUnknownEffect(schema)(encoded);
       const value1 = yield* S.encodeEffect(schema)(decoded);
       expect(value1).toEqual(encoded);
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 

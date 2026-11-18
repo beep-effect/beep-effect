@@ -577,6 +577,7 @@ export const syncDataToTsCommand = Command.make(
       });
 
       yield* Effect.forEach(results, (result) => reportTargetResult(result, mode, verbose), {
+        concurrency: 1,
         discard: true,
       });
       yield* writeReports(reportDir, results, mode);

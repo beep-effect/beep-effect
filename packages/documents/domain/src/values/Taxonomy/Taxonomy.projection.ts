@@ -247,7 +247,7 @@ export const projectFiledDocumentPath = Effect.fn("Documents.Taxonomy.projectFil
   const rootSegment = yield* decodeSegment(ROOT_SEGMENT);
   const clientSegment = yield* stableDisplaySegment(input.context.clientStableKey, input.context.clientDisplayName);
   const matterSegment = yield* stableDisplaySegment(input.context.matterStableKey, input.context.matterDisplayName);
-  const taxonomySegments = yield* Effect.all(A.map(concepts, taxonomyFolderSegment));
+  const taxonomySegments = yield* Effect.all(A.map(concepts, taxonomyFolderSegment), { concurrency: 1 });
   const fileName = yield* projectedFileName(input.originalFileName, input.contentDigest);
   const segments = [rootSegment, clientSegment, matterSegment, ...taxonomySegments, fileName];
   return ProjectedVaultPath.make({

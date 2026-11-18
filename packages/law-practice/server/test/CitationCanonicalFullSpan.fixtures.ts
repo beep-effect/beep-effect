@@ -86,7 +86,8 @@ const readCalls = Effect.fn("CanonicalFullSpanTest.calls")(function* (
           )
         : [{ id: `${prefix}${simple ? 1189 : 1200}:12:caseDeclaration::${row.ordinal}`, index: 0 }];
       return { row, body, models, combined, simple, targets };
-    })
+    }),
+    { concurrency: 1 }
   );
   expect(A.reduce(calls, 0, (total, call) => total + call.targets.length)).toBe(13);
   return calls;
@@ -117,16 +118,16 @@ const observeFullSpan = (range: readonly [number, number], combined: boolean, id
  */
 export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCounts> = A.map(
   [
-    [0, 0, 0, 0, 70, 70, 2, 1, 0],
-    [0, 0, 0, 0, 15, 15, 0, 1, 0],
-    [0, 0, 0, 0, 15, 15, 0, 1, 0],
-    [0, 0, 0, 0, 24, 24, 0, 1, 0],
-    [0, 0, 0, 0, 19, 19, 0, 1, 0],
-    [0, 0, 0, 0, 15, 15, 0, 1, 0],
-    [0, 0, 0, 0, 65, 65, 1, 1, 0],
-    [0, 0, 0, 0, 38, 38, 1, 1, 0],
-    [0, 0, 0, 0, 15, 15, 0, 1, 0],
-    [0, 0, 0, 0, 15, 15, 0, 1, 0],
+    [0, 0, 0, 0, 70, 1, 2, 1, 0],
+    [0, 0, 0, 0, 15, 1, 0, 1, 0],
+    [0, 0, 0, 0, 15, 1, 0, 1, 0],
+    [0, 0, 0, 0, 24, 1, 0, 1, 0],
+    [0, 0, 0, 0, 19, 1, 0, 1, 0],
+    [0, 0, 0, 0, 15, 1, 0, 1, 0],
+    [0, 0, 0, 0, 65, 1, 1, 1, 0],
+    [0, 0, 0, 0, 38, 1, 1, 1, 0],
+    [0, 0, 0, 0, 15, 1, 0, 1, 0],
+    [0, 0, 0, 0, 15, 1, 0, 1, 0],
   ] as const,
   ([
     metadataOperationInstalls,
@@ -148,6 +149,7 @@ export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCoun
       nativeProcesses,
       regexDescriptorBindings,
       nativeProcessOwners,
+      nativeLaneUnits: 1,
       diffXmlWorkerConstructions,
     })
 );
@@ -173,13 +175,14 @@ export const citationCanonicalFullSpanWork: ReadonlyArray<CitationEngineWorkCoun
  */
 export const citationCanonicalFullSpanConstruction = CitationEngineWorkCounts.make({
   metadataOperationInstalls: 16,
-  configurationDetaches: 10,
+  configurationDetaches: 1,
   tokenizerBuilds: 1,
   regexWorkerConstructions: 26,
   regexEvaluations: 0,
   nativeProcesses: 0,
   regexDescriptorBindings: 0,
   nativeProcessOwners: 1,
+  nativeLaneUnits: 0,
   diffXmlWorkerConstructions: 0,
 });
 /** Check and log the work one engine construction performed.

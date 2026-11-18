@@ -664,7 +664,7 @@ const sessionGroupProjections = Effect.fnUntraced(function* (
 
   return {
     session: sessionProjection(head, identity),
-    turns: yield* Effect.forEach(rows, (row) => turnProjection(row, identity)),
+    turns: yield* Effect.forEach(rows, (row) => turnProjection(row, identity), { concurrency: 1 }),
   };
 });
 
@@ -679,7 +679,9 @@ const sessionGroupProjections = Effect.fnUntraced(function* (
 // the same content-addressed span id -- and a single OTLP request containing a duplicate
 // span id is one the collector may reject outright rather than deduplicate.
 const spanProjectionsFor = Effect.fnUntraced(function* (rows: ReadonlyArray<AiMetricsOtlpTurnExportRow>) {
-  const groups = yield* Effect.forEach(R.values(A.groupBy(rows, sessionSeed)), sessionGroupProjections);
+  const groups = yield* Effect.forEach(R.values(A.groupBy(rows, sessionSeed)), sessionGroupProjections, {
+    concurrency: 1,
+  });
   const sessionProjections = A.map(groups, (group) => group.session);
   const turnProjections = A.flatMap(groups, (group) => group.turns);
 
@@ -801,7 +803,7 @@ export const markAiMetricsOtlpTurnsExported: (
             )
           );
       }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   }
 );
@@ -1060,7 +1062,7 @@ const runAiMetricsOtlpProjectionBatchExportUntraced: (
       );
       yield* onChunkDelivered(chunk);
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   return AiMetricsOtlpExportResult.make({

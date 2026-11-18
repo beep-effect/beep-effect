@@ -1534,10 +1534,10 @@ const runLockfileInstallOnMain = (
   O.match(state.mainTip, {
     onNone: () => runCommandStep("bun", ["install"], cwd, action),
     onSome: (observedTip) =>
-      Effect.all([
-        observeSha(cwd, `refs/heads/${state.mainBranch}`),
-        observeSha(cwd, `refs/remotes/origin/${state.mainBranch}`),
-      ]).pipe(
+      Effect.all(
+        [observeSha(cwd, `refs/heads/${state.mainBranch}`), observeSha(cwd, `refs/remotes/origin/${state.mainBranch}`)],
+        { concurrency: 1 }
+      ).pipe(
         Effect.flatMap(([localMain, trackingMain]) =>
           // An earlier step may have skipped the refresh (dirty tree, held
           // main, failed fetch). An unrefreshed main proves nothing about

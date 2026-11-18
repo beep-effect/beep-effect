@@ -388,7 +388,7 @@ const writeIntegrationWorkspace = Effect.fnUntraced(function* (
       });
       yield* fs.writeFileString(argument2, encodedJson2);
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -820,7 +820,8 @@ const coverageArtifactPlanRepository = Effect.fnUntraced(function* () {
         scripts: name === "covered" ? { coverage: "vitest run --coverage" } : { test: "vitest run" },
       });
       yield* fs.writeFileString(argument4, encodedJson4);
-    })
+    }),
+    { concurrency: 1 }
   );
   yield* runGit(root, ["init"]);
   yield* runGit(root, ["config", "user.name", "Coverage Plan Fixture"]);
@@ -1842,7 +1843,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "lint:schema-catalog",
         "lint:oxlint",
         "quality:jsdoc-ratchet:regenerated",
-        "quality:jsdoc-ratchet:committed",
         "fallow:audit",
         "fallow:dead-code",
         "fallow:health",
@@ -1907,12 +1907,6 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:regenerated")).toEqual(
         expectedTurboArgs("jsdoc:ratchet:check", ["--summarize"])
       );
-      expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:committed")).toEqual([
-        "run",
-        "beep",
-        "quality",
-        "jsdoc-ratchet",
-      ]);
       expect(A.map(githubCheckLanesForModeForTesting("/repo", "cheap-gates"), (lane) => lane.id)).toEqual(
         A.map(lanes, (lane) => lane.id)
       );
@@ -2390,7 +2384,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         yield* Effect.forEach(
           reportLines,
           (line) => decodeQualityTaskLaneRunReportJson(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -2466,7 +2460,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           readFileString5,
           Str.split("\n"),
           A.filter(Str.isNonEmpty),
-          Effect.forEach((line) => decodeTurboLaneLedgerRow(line))
+          Effect.forEach((line) => decodeTurboLaneLedgerRow(line), { concurrency: 1 })
         );
         expect(rows).toEqual([{ _tag: "closed", attempted: 0 }]);
         // A closed ledger with nothing declared folds to no digest rather than an empty one.
@@ -2626,7 +2620,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               readFileString11,
               Str.split("\n"),
               A.filter(Str.isNonEmpty),
-              Effect.forEach((line) => decodeTurboLaneLedgerRow(line))
+              Effect.forEach((line) => decodeTurboLaneLedgerRow(line), { concurrency: 1 })
             );
             expect(
               A.map(
@@ -2800,7 +2794,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 runQualityTaskGithubCheckLaneWaves("pre-push", [], "fail-fast")
               )
             ),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
 
         const logLines16 = yield* TestConsole.logLines;
@@ -2810,8 +2804,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           A.filter(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX))
         );
         expect(reportLines).toHaveLength(2);
-        const reports = yield* Effect.forEach(reportLines, (line) =>
-          decodeQualityTaskLaneRunReportJson(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line))
+        const reports = yield* Effect.forEach(
+          reportLines,
+          (line) => decodeQualityTaskLaneRunReportJson(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)),
+          { concurrency: 1 }
         );
         expect(A.every(reports, (report) => A.isReadonlyArrayEmpty(report.lanes))).toBe(true);
         pipe(
@@ -2864,7 +2860,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               );
               yield* Fiber.interrupt(wrapper);
               expect(lines).toHaveLength(2);
-              const reports = yield* Effect.forEach(lines, (line) => decodeQualityTaskLaneRunReportJson(line));
+              const reports = yield* Effect.forEach(lines, (line) => decodeQualityTaskLaneRunReportJson(line), {
+                concurrency: 1,
+              });
               expect(A.flatMap(reports, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual([
                 "first",
                 "second",
@@ -2914,7 +2912,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               );
               yield* Fiber.interrupt(wrapper);
               expect(lines).toHaveLength(2);
-              const reports = yield* Effect.forEach(lines, (line) => decodeQualityTaskLaneRunReportJson(line));
+              const reports = yield* Effect.forEach(lines, (line) => decodeQualityTaskLaneRunReportJson(line), {
+                concurrency: 1,
+              });
               expect(A.flatMap(reports, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual([
                 "first",
                 "second",
@@ -4812,7 +4812,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         const readFileString39 = yield* fs.readFileString(artifactPath);
         const journaled = yield* Effect.forEach(
           pipe(readFileString39, Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeQualityTaskLaneRunReportJson(line)
+          (line) => decodeQualityTaskLaneRunReportJson(line),
+          { concurrency: 1 }
         );
         expect(A.flatMap(journaled, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual(laneIds);
       }).pipe(
@@ -6661,7 +6662,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                 coveragePackageBaselineFromSummaryForTesting("/repo", "/repo/packages/existing", encodedJson45)
               );
               return error.message;
-            })
+            }),
+            { concurrency: 1 }
           );
 
           assert.strictEqual(messages[0], messages[1]);
@@ -6690,7 +6692,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               assert.include(error.message, "without control characters");
               assert.notMatch(error.message, /[\u0000-\u001F\u007F-\u009F]/u);
             }),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
         }),
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
@@ -6751,7 +6753,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               );
               assertTrue(Exit.isFailure(decoded), `Expected ${label} to fail summary decoding`);
             }),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
         }),
         Effect.provideServiceEffect(Console.Console, TestConsole.make)
@@ -6857,7 +6859,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               const decoded = yield* Effect.exit(decodeUnknownCoverageRegressionBaseline(input));
               assertTrue(Exit.isFailure(decoded), `Expected ${label} to fail baseline decoding`);
             }),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
 
           const unsafeFailure = yield* Effect.exit(
@@ -8465,7 +8467,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
               A.drop(lines, 1),
               Effect.fnUntraced(function* (line) {
                 return yield* decodeCoverageFileBaselineJson(O.getOrElse(A.last(Str.split(": ")(line)), () => ""));
-              })
+              }),
+              { concurrency: 1 }
             );
             expect(A.map(decoded, (row) => row.lines)).toEqual([70, 70]);
           }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -8551,11 +8554,15 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                     private: true,
                     scripts: { coverage: "vitest" },
                   });
-                  return yield* Effect.all([
-                    fs.writeFileString(argument17, encodedJson17),
-                    fs.writeFileString(path.join(repoRoot, `packages/${name}/src/Index.ts`), "export const v = 1;\n"),
-                  ]);
-                })
+                  return yield* Effect.all(
+                    [
+                      fs.writeFileString(argument17, encodedJson17),
+                      fs.writeFileString(path.join(repoRoot, `packages/${name}/src/Index.ts`), "export const v = 1;\n"),
+                    ],
+                    { concurrency: 1 }
+                  );
+                }),
+                { concurrency: 1 }
               );
               yield* writeBaseline(
                 withRows({
@@ -8727,7 +8734,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   path.join(repoRoot, `packages/${name}/src/Index.ts`),
                   "export const v = 1;\n"
                 );
-              })
+              }),
+              { concurrency: 1 }
             );
             const baseline = yield* encodeCoverageRegressionBaseline(
               withRows({
@@ -8894,7 +8902,8 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
                   path.join(repoRoot, `packages/${name}/src/Index.ts`),
                   "export const v = 1;\n"
                 );
-              })
+              }),
+              { concurrency: 1 }
             );
             yield* writeBaseline(
               withRows({
@@ -10887,6 +10896,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       );
       yield* fs.writeFileString(fakeOpPath, A.join(options.op, "\n"));
       yield* Effect.forEach([fakeBunxPath, fakeBunPath, fakeOpPath], (file) => fs.chmod(file, 0o755), {
+        concurrency: 1,
         discard: true,
       });
       if (options.envFile !== undefined) {
@@ -10895,7 +10905,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       yield* Effect.forEach(
         R.toEntries(options.files ?? {}),
         ([file, content]) => fs.writeFileString(path.join(tmpDir, file), content),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       yield* Effect.sync(clearTurboCacheSecretSessionVerdictsForTesting);
       return { binDir, commandLogPath: path.join(tmpDir, "quality-commands.log") };

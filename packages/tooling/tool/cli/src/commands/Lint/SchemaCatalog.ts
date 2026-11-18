@@ -889,13 +889,16 @@ export const shardSchemaCatalogDocument = Effect.fn("SchemaCatalog.shardDocument
   document: SchemaCatalogDocument
 ) {
   const groups = A.groupBy(document.entries, (entry) => entry.owner);
-  return yield* Effect.forEach(A.sort(R.keys(groups), Order.String), (owner) =>
-    decodeSchemaCatalogShard({
-      schemaVersion: "schema-catalog-shard/v1",
-      generatedBy: SCHEMA_CATALOG_GENERATED_BY,
-      owner,
-      entries: O.getOrElse(R.get(groups, owner), A.empty),
-    })
+  return yield* Effect.forEach(
+    A.sort(R.keys(groups), Order.String),
+    (owner) =>
+      decodeSchemaCatalogShard({
+        schemaVersion: "schema-catalog-shard/v1",
+        generatedBy: SCHEMA_CATALOG_GENERATED_BY,
+        owner,
+        entries: O.getOrElse(R.get(groups, owner), A.empty),
+      }),
+    { concurrency: 1 }
   );
 });
 
@@ -926,9 +929,10 @@ export const renderSchemaCatalogShard = Effect.fn("SchemaCatalog.renderShard")(f
       ["generatedBy", encoded.generatedBy],
       ["owner", encoded.owner],
     ] as const,
-    ([key, value]) => Effect.map(json(value), (text) => `  "${key}": ${text}`)
+    ([key, value]) => Effect.map(json(value), (text) => `  "${key}": ${text}`),
+    { concurrency: 1 }
   );
-  const lines = yield* Effect.forEach(encoded.entries, json);
+  const lines = yield* Effect.forEach(encoded.entries, json, { concurrency: 1 });
   const entries = A.isReadonlyArrayEmpty(lines)
     ? `  "entries": []`
     : `  "entries": [\n${A.join(
@@ -958,11 +962,14 @@ export const generateSchemaCatalogShards = Effect.fn("SchemaCatalog.generateShar
   document: SchemaCatalogDocument
 ) {
   const shards = yield* shardSchemaCatalogDocument(document);
-  return yield* Effect.forEach(shards, (shard) =>
-    Effect.map(renderSchemaCatalogShard(shard), (content) => ({
-      path: schemaCatalogShardPath(shard.owner),
-      content,
-    }))
+  return yield* Effect.forEach(
+    shards,
+    (shard) =>
+      Effect.map(renderSchemaCatalogShard(shard), (content) => ({
+        path: schemaCatalogShardPath(shard.owner),
+        content,
+      })),
+    { concurrency: 1 }
   );
 });
 
@@ -1018,6 +1025,19 @@ type ShardDrift = { readonly path: string; readonly line: string };
 
 const drift = (path: string, status: string): ShardDrift => ({ path, line: `[schema-catalog] ${status} ${path}` });
 
+// Syncs every generated shard, then retires every listed file, in that order;
+// returns the drift each step reported.
+const syncShardsAndRetire = Effect.fn("SchemaCatalog.syncShardsAndRetire")(function* (
+  write: boolean,
+  repoRoot: string,
+  shards: ReadonlyArray<{ readonly path: string; readonly content: string }>,
+  retired: ReadonlyArray<string>
+) {
+  const synced = yield* Effect.forEach(shards, (shard) => syncShard(write, repoRoot, shard), { concurrency: 1 });
+  const retiredDrift = yield* Effect.forEach(retired, (file) => retireFile(write, repoRoot, file), { concurrency: 1 });
+  return A.getSomes(A.appendAll(synced, retiredDrift));
+});
+
 const reportDrift = Effect.fn("SchemaCatalog.reportDrift")(function* (
   write: boolean,
   drifted: ReadonlyArray<ShardDrift>,
@@ -1025,12 +1045,12 @@ const reportDrift = Effect.fn("SchemaCatalog.reportDrift")(function* (
 ) {
   const lines = A.map(drifted, (entry) => entry.line);
   if (!write && A.isReadonlyArrayNonEmpty(lines)) {
-    yield* Effect.forEach(lines, (line) => Console.error(line), { discard: true });
+    yield* Effect.forEach(lines, (line) => Console.error(line), { concurrency: 1, discard: true });
     return yield* failWithReportedExit(
       `schema-catalog: ${A.length(lines)} shard(s) under ${SCHEMA_CATALOG_DIR} are stale, missing or orphaned; run ${SCHEMA_CATALOG_GENERATED_BY}.`
     );
   }
-  yield* Effect.forEach(lines, (line) => Console.log(line), { discard: true });
+  yield* Effect.forEach(lines, (line) => Console.log(line), { concurrency: 1, discard: true });
   yield* Console.log(write ? `[schema-catalog] wrote ${scopeLabel}` : `[schema-catalog] ${scopeLabel} is current`);
 });
 
@@ -1104,7 +1124,7 @@ const runScopedSchemaCatalog = Effect.fn("SchemaCatalog.runScoped")(function* (
     )
   );
   const stagedFiles = HashSet.map(stagedAbsolute, (absolute) => toPosixPath(path.relative(repoRoot, absolute)));
-  const committed = yield* Effect.forEach(owners, (owner) => readShardEntries(repoRoot, owner));
+  const committed = yield* Effect.forEach(owners, (owner) => readShardEntries(repoRoot, owner), { concurrency: 1 });
   const kept = A.filter(A.flatten(committed), (entry) => !HashSet.has(stagedFiles, entry.file));
   const matched = yield* schemaCatalogSourcePaths(repoRoot);
   const sourcePaths = A.filter(matched, (absolute) => HashSet.has(stagedAbsolute, absolute));
@@ -1122,10 +1142,7 @@ const runScopedSchemaCatalog = Effect.fn("SchemaCatalog.runScoped")(function* (
     A.filter(A.map(owners, schemaCatalogShardPath), (file) => !A.some(shards, (shard) => shard.path === file)),
     (file) => fs.exists(path.join(repoRoot, file))
   );
-  const drifted = A.getSomes([
-    ...(yield* Effect.forEach(shards, (shard) => syncShard(options.write, repoRoot, shard))),
-    ...(yield* Effect.forEach(emptied, (file) => retireFile(options.write, repoRoot, file))),
-  ]);
+  const drifted = yield* syncShardsAndRetire(options.write, repoRoot, shards, emptied);
   yield* reportDrift(options.write, drifted, A.join(owners, ", "));
   return yield* finishSchemaCatalogRun(options, repoRoot, document, shards, drifted);
 });
@@ -1165,10 +1182,7 @@ export const runSchemaCatalog = Effect.fn("SchemaCatalog.run")(function* (option
     const expected = A.map(shards, (shard) => shard.path);
     const existingCatalogFiles3 = yield* existingCatalogFiles(repoRoot);
     const orphans = A.filter(existingCatalogFiles3, (file) => !A.contains(expected, file));
-    const drifted = A.getSomes([
-      ...(yield* Effect.forEach(shards, (shard) => syncShard(options.write, repoRoot, shard))),
-      ...(yield* Effect.forEach(orphans, (file) => retireFile(options.write, repoRoot, file))),
-    ]);
+    const drifted = yield* syncShardsAndRetire(options.write, repoRoot, shards, orphans);
     yield* reportDrift(options.write, drifted, SCHEMA_CATALOG_DIR);
     return yield* finishSchemaCatalogRun(options, repoRoot, document, shards, drifted);
   }).pipe(Effect.withSpan("SchemaCatalog.run"));

@@ -112,7 +112,10 @@ it.layer(TestRuntime, { excludeTestServices: true })("HTML worker qualification"
         let spawned = 0;
         let confirmedExits = 0;
         const citationResult9 = yield* runtime;
-        const worker = yield* makeCitationHtmlWorker({ ...limits, concurrentOperations: 2 }, citationResult9).pipe(
+        const worker = yield* makeCitationHtmlWorker(
+          { ...limits, concurrentOperations: 2, concurrentRegexProcesses: 2 },
+          citationResult9
+        ).pipe(
           Effect.provideService(ChildProcessSpawner, {
             ...real,
             spawn: (command) =>

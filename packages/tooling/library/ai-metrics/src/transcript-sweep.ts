@@ -165,7 +165,8 @@ export const runTranscriptSweep = Effect.fn("AiMetrics.runTranscriptSweep")(func
         pathHash,
         sourceId: yield* hash(`transcript-source/v1:${source.source}:${pathHash}`),
       };
-    })
+    }),
+    { concurrency: 1 }
   );
   if (A.dedupe(A.map(candidates, (source) => source.sourceId)).length !== candidates.length)
     return yield* TranscriptIntakeError.make({ reason: "configuration" });
@@ -216,7 +217,8 @@ export const runTranscriptSweep = Effect.fn("AiMetrics.runTranscriptSweep")(func
       return Result.isFailure(result)
         ? TranscriptSweepOutcome.cases.Failed.make({ sourceId, error: result.failure })
         : result.success;
-    })
+    }),
+    { concurrency: 1 }
   );
   return TranscriptSweepReport.make({
     declared: candidates.length,

@@ -637,13 +637,17 @@ const ownPackage = (raw: PnpmLockfileRawType, key: string): PnpmPackageEntry | u
  */
 const instancePackages = Effect.fnUntraced(function* (raw: PnpmLockfileRawType, index: PnpmIndex) {
   const snapshots = A.filter(R.toEntries(raw.snapshots ?? {}), ([key]) => isPnpmIdentity(key));
-  const fromSnapshots = yield* Effect.forEach(R.toEntries(raw.snapshots ?? {}), ([key, snapshot]) =>
-    emitPackage(key, ownPackage(raw, plainOf(key)), [snapshot.dependencies, snapshot.optionalDependencies], index)
+  const fromSnapshots = yield* Effect.forEach(
+    R.toEntries(raw.snapshots ?? {}),
+    ([key, snapshot]) =>
+      emitPackage(key, ownPackage(raw, plainOf(key)), [snapshot.dependencies, snapshot.optionalDependencies], index),
+    { concurrency: 1 }
   );
   const covered = MutableHashSet.fromIterable(A.map(snapshots, ([key]) => plainOf(key)));
   const orphans = yield* Effect.forEach(
     A.filter(R.toEntries(raw.packages ?? {}), ([key]) => !MutableHashSet.has(covered, key)),
-    ([key, pkg]) => emitPackage(key, pkg, [pkg.dependencies, pkg.optionalDependencies], index)
+    ([key, pkg]) => emitPackage(key, pkg, [pkg.dependencies, pkg.optionalDependencies], index),
+    { concurrency: 1 }
   );
   return A.appendAll(A.flatten(fromSnapshots), A.flatten(orphans));
 });

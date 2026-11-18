@@ -40,6 +40,7 @@ export const anchorKey = (anchor: HoldAnchor): string =>
     RootOverride: ({ packageName }) => `override:${packageName}`,
     PatchedDependency: ({ key }) => `patch:${key}`,
     OsvPackageOverride: ({ packageName }) => `osv:${packageName}`,
+    OsvIgnoredVuln: ({ id }) => `osv-ignore:${id}`,
   });
 
 const byHoldId = Order.mapInput(Order.String, (version: HoldClaimVersion) => version.proposition.holdId);

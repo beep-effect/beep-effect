@@ -353,10 +353,10 @@ describe("source-record fallback and replay", () => {
         exchangeDn("/o=ExampleOrg/cn=dana"),
         username(UsernameInput.make({ service: "https://chat.example.test", handle: "Dana" })),
       ] as const;
-      const forward = yield* Effect.all(A.map(inputs, keyOf));
-      const backward = yield* Effect.all(A.map(A.reverse(inputs), keyOf));
+      const forward = yield* Effect.all(A.map(inputs, keyOf), { concurrency: 1 });
+      const backward = yield* Effect.all(A.map(A.reverse(inputs), keyOf), { concurrency: 1 });
       expect(A.reverse(backward)).toEqual(forward);
-      const all41 = yield* Effect.all(A.map(inputs, keyOf));
+      const all41 = yield* Effect.all(A.map(inputs, keyOf), { concurrency: 1 });
       expect(all41).toEqual(forward);
     })
   );

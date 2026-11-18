@@ -394,29 +394,35 @@ const commitRoundArtifacts = Effect.fn("QaJudgeIngest.commitRoundArtifacts")(fun
   const path = yield* Path.Path;
   const write = (name: string, bytes: Uint8Array) =>
     writeFileWithinRootAtomically({ bytes, candidate: name, root }).pipe(Effect.asVoid);
-  const prior = yield* Effect.forEach(artifacts, ([name]) =>
-    fs
-      .exists(path.join(root, name))
-      .pipe(
-        Effect.flatMap((exists) => (exists ? Effect.asSome(fs.readFile(path.join(root, name))) : Effect.succeedNone))
-      )
+  const prior = yield* Effect.forEach(
+    artifacts,
+    ([name]) =>
+      fs
+        .exists(path.join(root, name))
+        .pipe(
+          Effect.flatMap((exists) => (exists ? Effect.asSome(fs.readFile(path.join(root, name))) : Effect.succeedNone))
+        ),
+    { concurrency: 1 }
   ).pipe(QaCommandError.mapError(`qa judge-ingest could not read the previous artifacts in ${root}.`));
   // Only targets that were actually committed are rolled back. Every one of
   // them is restored even if an earlier restore fails; each failure is kept
   // with the file it belongs to.
   const committed = yield* Ref.make(0);
   const restore = (count: number) =>
-    Effect.forEach(A.take(A.zip(artifacts, prior), count), ([[name], before]) =>
-      O.match(before, {
-        onNone: () =>
-          fs.remove(path.join(root, name), { force: true }).pipe(QaCommandError.mapError(`could not remove ${name}`)),
-        onSome: (bytes) => write(name, bytes).pipe(QaCommandError.mapError(`could not restore ${name}`)),
-      }).pipe(
-        Effect.match({
-          onFailure: (error) => O.some({ error, name }),
-          onSuccess: () => O.none(),
-        })
-      )
+    Effect.forEach(
+      A.take(A.zip(artifacts, prior), count),
+      ([[name], before]) =>
+        O.match(before, {
+          onNone: () =>
+            fs.remove(path.join(root, name), { force: true }).pipe(QaCommandError.mapError(`could not remove ${name}`)),
+          onSome: (bytes) => write(name, bytes).pipe(QaCommandError.mapError(`could not restore ${name}`)),
+        }).pipe(
+          Effect.match({
+            onFailure: (error) => O.some({ error, name }),
+            onSuccess: () => O.none(),
+          })
+        ),
+      { concurrency: 1 }
     ).pipe(Effect.map((results) => A.getSomes(results)));
   // The commit and its rollback form one uninterruptible critical section: an
   // interruption that arrives mid-commit takes effect only once the set is
@@ -424,7 +430,7 @@ const commitRoundArtifacts = Effect.fn("QaJudgeIngest.commitRoundArtifacts")(fun
   yield* Effect.forEach(
     artifacts,
     ([name, bytes]) => write(name, bytes).pipe(Effect.andThen(Ref.update(committed, (count) => count + 1))),
-    { discard: true }
+    { concurrency: 1, discard: true }
   ).pipe(
     Effect.catch((cause) =>
       Effect.flatMap(Ref.get(committed), (count) =>

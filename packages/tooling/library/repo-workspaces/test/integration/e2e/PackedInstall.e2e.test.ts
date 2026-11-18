@@ -221,7 +221,10 @@ const answers = (pm: PackageManagerName) =>
     Effect.orElseSucceed(() => false)
   );
 const ON_PATH: Readonly<Record<PackageManagerName, boolean>> = await fixture.runtime.runPromise(
-  Effect.all({ npm: answers("npm"), pnpm: answers("pnpm"), yarn: answers("yarn"), bun: answers("bun") })
+  Effect.all(
+    { npm: answers("npm"), pnpm: answers("pnpm"), yarn: answers("yarn"), bun: answers("bun") },
+    { concurrency: 1 }
+  )
 );
 const HAS_NPM = ON_PATH.npm;
 const HAS_PNPM = ON_PATH.pnpm;

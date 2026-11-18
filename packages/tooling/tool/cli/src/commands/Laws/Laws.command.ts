@@ -574,11 +574,12 @@ const reportLawSummary = Effect.fn("reportLawSummary")(function* (options: {
   }
   yield* Console.log(`[${options.prefix}] mode=${options.check ? "check" : "report"}`);
   yield* Effect.forEach(options.counters, ([name, value]) => Console.log(`[${options.prefix}] ${name}=${value}`), {
+    concurrency: 1,
     discard: true,
   });
   yield* Console.log(`[${options.prefix}] findings=${options.findings.length}`);
   // Not a bare `Console.log`: `Effect.forEach` passes the index too, which it would print.
-  yield* Effect.forEach(options.findings, (line) => Console.log(line), { discard: true });
+  yield* Effect.forEach(options.findings, (line) => Console.log(line), { concurrency: 1, discard: true });
 });
 
 /**

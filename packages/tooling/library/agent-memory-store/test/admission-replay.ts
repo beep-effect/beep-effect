@@ -213,8 +213,10 @@ const replayInOrder = Effect.fnUntraced(function* (
   }
   const exported = yield* store.projector.exportFolder(prepared.root);
   const held = yield* store.admission.held;
-  const disk = yield* Effect.forEach(prepared.fixture.files, (file) =>
-    Effect.map(fs.readFileString(`${prepared.root}/${file.path}`), (text) => [file.path, text] as const)
+  const disk = yield* Effect.forEach(
+    prepared.fixture.files,
+    (file) => Effect.map(fs.readFileString(`${prepared.root}/${file.path}`), (text) => [file.path, text] as const),
+    { concurrency: 1 }
   );
   yield* fs.remove(database);
   return {

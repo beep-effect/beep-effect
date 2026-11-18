@@ -172,7 +172,7 @@ const toRdfJsDataset = (
         try: () => target.add(toRdfJsQuad(runtime.factory, quad)),
         catch: driverError("datasetLoadFailed", "Failed to load a quad into the SHACL engine dataset."),
       }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   ).pipe(Effect.as(target));
 };
 

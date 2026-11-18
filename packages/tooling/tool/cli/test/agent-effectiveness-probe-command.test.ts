@@ -246,7 +246,9 @@ it.layer(TestLayer, { concurrent: false, timeout: "20 seconds" })("agent-effecti
       const preflight = path.join(root, "preflight.json");
       yield* writeText(preflight, { schemaVersion: "skill-probe-preflight/v1", rows: [], dropped: [] });
       const records = path.join(root, "records.jsonl");
-      const lines = yield* Effect.forEach([record("B", false, 0), record("C", true, 0)], (entry) => encodeJson(entry));
+      const lines = yield* Effect.forEach([record("B", false, 0), record("C", true, 0)], (entry) => encodeJson(entry), {
+        concurrency: 1,
+      });
       yield* writeText(records, `${A.join(lines, "\n")}\n`);
 
       yield* run(["evals", "probe", "select", "--records", records, "--preflight", preflight]);

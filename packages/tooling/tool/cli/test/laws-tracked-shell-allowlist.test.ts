@@ -66,7 +66,7 @@ const makeFixtureCheckout = Effect.fn("TrackedShellAllowlistTest.makeFixtureChec
     yield* fs.writeFileString(path.join(root, file), "#!/usr/bin/env bash\n");
   });
   yield* fs.writeFileString(path.join(root, "bun.lock"), "");
-  yield* Effect.forEach([...allowedFixtures, ...extra, "scripts/removed.sh"], write, { discard: true });
+  yield* Effect.forEach([...allowedFixtures, ...extra, "scripts/removed.sh"], write, { concurrency: 1, discard: true });
   yield* runGit(root, ["init", "--quiet"]);
   yield* runGit(root, ["add", "."]);
   yield* runGit(root, ["rm", "--cached", "--quiet", "scripts/removed.sh"]);

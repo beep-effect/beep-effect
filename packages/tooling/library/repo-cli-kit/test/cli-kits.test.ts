@@ -361,10 +361,14 @@ describe("cli/FsGuards", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* fs.makeTempDirectoryScoped({ prefix: "fs-guards-hash-vectors-" });
-        const digests = yield* Effect.forEach(sha256Vectors, ({ text }, index) => {
-          const filePath = path.join(root, `vector-${index}.bin`);
-          return fs.writeFileString(filePath, text).pipe(Effect.andThen(hashFileSha256(filePath, hashTestError)));
-        });
+        const digests = yield* Effect.forEach(
+          sha256Vectors,
+          ({ text }, index) => {
+            const filePath = path.join(root, `vector-${index}.bin`);
+            return fs.writeFileString(filePath, text).pipe(Effect.andThen(hashFileSha256(filePath, hashTestError)));
+          },
+          { concurrency: 1 }
+        );
 
         expect(digests).toEqual(A.map(sha256Vectors, ({ digest }) => digest));
       })
@@ -397,7 +401,8 @@ describe("cli/FsGuards", () => {
               streamed: yield* hashFileSha256(filePath, hashTestError),
               wholeBuffer: yield* decodeSha256FromBytes(bytes),
             };
-          })
+          }),
+          { concurrency: 1 }
         );
 
         expect(A.map(pairs, ({ streamed }) => streamed)).toEqual(A.map(pairs, ({ wholeBuffer }) => wholeBuffer));
@@ -445,7 +450,7 @@ describe("cli/FsGuards", () => {
               whole.set(chunk, index * hashFileChunkBytes);
               return fs.writeFile(filePath, chunk, { flag: "a" });
             },
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
           const digest6 = yield* crypto.digest(Digest.sha256, whole);
           const expected = Hex.encode(digest6);

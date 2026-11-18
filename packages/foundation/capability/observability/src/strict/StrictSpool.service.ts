@@ -364,7 +364,7 @@ const readSegments = <E>(
   names: Effect.Effect<ReadonlyArray<string>, E>
 ): Effect.Effect<StrictSpoolSurvey, E> =>
   names.pipe(
-    Effect.flatMap((sorted) => Effect.forEach(sorted, (name) => readSegment(reader, name))),
+    Effect.flatMap((sorted) => Effect.forEach(sorted, (name) => readSegment(reader, name), { concurrency: 1 })),
     Effect.map((entries) => StrictSpoolSurvey.make({ entries }))
   );
 
@@ -426,8 +426,10 @@ export const makeStrictSpool = Effect.fn("StrictSpool.make")(function* (options:
   const evict = (): Effect.Effect<ReadonlyArray<TelemetryRefusalTag>> =>
     Effect.gen(function* () {
       const names = yield* segmentNames;
-      const sizes = yield* Effect.forEach(names, (name) =>
-        fs.stat(path.join(directory, name)).pipe(Effect.map((info) => ByteSize.toNumberUnsafe(info.size)))
+      const sizes = yield* Effect.forEach(
+        names,
+        (name) => fs.stat(path.join(directory, name)).pipe(Effect.map((info) => ByteSize.toNumberUnsafe(info.size))),
+        { concurrency: 1 }
       );
       const total = A.reduce(sizes, 0, (sum, size) => sum + size);
       // Walk oldest first, picking segments until the rest fit.
@@ -439,11 +441,14 @@ export const makeStrictSpool = Effect.fn("StrictSpool.make")(function* (options:
             : state
         )
       ).names;
-      return yield* Effect.forEach(candidates, (name) =>
-        fs.remove(path.join(directory, name), { force: true }).pipe(
-          Effect.as(TelemetryRefusalTag.Enum["spool-evicted"]),
-          Effect.orElseSucceed(() => TelemetryRefusalTag.Enum["spool-evict-failed"])
-        )
+      return yield* Effect.forEach(
+        candidates,
+        (name) =>
+          fs.remove(path.join(directory, name), { force: true }).pipe(
+            Effect.as(TelemetryRefusalTag.Enum["spool-evicted"]),
+            Effect.orElseSucceed(() => TelemetryRefusalTag.Enum["spool-evict-failed"])
+          ),
+        { concurrency: 1 }
       );
     }).pipe(Effect.orElseSucceed(() => [TelemetryRefusalTag.Enum["spool-evict-failed"]]));
 

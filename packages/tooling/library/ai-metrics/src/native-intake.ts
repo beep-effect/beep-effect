@@ -334,7 +334,8 @@ export const makeNativeIntakeJournal = Effect.fn("AiMetrics.makeNativeIntakeJour
                   const payload = yield* encodeNativeTraceMetadataJson(span);
                   if ((yield* hashPublicTextSha256(payload)) !== row.payloadHash) return yield* failure("storage");
                   return span;
-                })
+                }),
+                { concurrency: 1 }
               );
               return O.some(events);
             })

@@ -251,7 +251,7 @@ const readInboxRows = Effect.fn("readInboxRows")(function* (root: string) {
     onNone: () => A.empty<string>(),
     onSome: (value) => A.filter(Str.split(value, "\n"), Str.isNonEmpty),
   });
-  return yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line));
+  return yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line), { concurrency: 1 });
 });
 
 describe("loadYeetRemediationWave", () => {

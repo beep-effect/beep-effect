@@ -24,7 +24,8 @@ import { makeCitationPythonLower } from "./PythonCase.ts";
 import { filterCitationPythonStorage, makeCitationPythonUnicode } from "./PythonUnicode.ts";
 import { citationRegexCellFor } from "./RegexAlphabet.ts";
 import { makeCitationRegexPointSets } from "./RegexPointSets.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CourtLookup");
 const Reason = LiteralKit(["invalid-policy", "invalid-table", "incompatible-vocabulary"]).pipe(
@@ -45,7 +46,6 @@ const fail = (reason: typeof Reason.Type) => CitationCourtLookupFailure.make({ r
 const Key = S.String.check(S.isMaxLength(256), S.isPattern(/^[a-z0-9_]*$/)).pipe(
   $I.annoteSchema("Key", { description: "Authenticated ASCII key in the pinned ordered court table." })
 );
-const Payload = S.String.check(S.isBetweenLength(81475, 81475));
 const Table = S.fromJsonString(S.Array(S.Tuple([CourtId, Key])).check(S.isBetweenLength(2798, 2798)));
 /** Native normalization and vocabulary identity are data, never verified spans.
  * @internal @category models @since 0.0.0
@@ -61,8 +61,7 @@ export class CitationCourtLookupResult extends S.Opaque<CitationCourtLookupResul
     })
   )
 ) {}
-const authenticateTable = Effect.fn("Citation.authenticateCourtTable")(function* (input: unknown) {
-  const payload = yield* S.decodeUnknownEffect(Payload)(input).pipe(Effect.mapError(() => fail("invalid-table")));
+const authenticateTable = Effect.fn("Citation.authenticateCourtTable")(function* (payload: string) {
   const hash = yield* S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(payload)).pipe(
     Effect.mapError(() => fail("invalid-table"))
   );
@@ -80,10 +79,9 @@ const authenticateTable = Effect.fn("Citation.authenticateCourtTable")(function*
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationCourtLookup = Effect.fn("Citation.makeCourtLookup")(function* (
-  policy: unknown,
-  payload: unknown
+  limits: CitationEngineLimits,
+  payload: string
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
   const table = yield* authenticateTable(payload);
   const timing = yield* makeCitationRegexTiming(limits, true);
   const unicode = yield* makeCitationPythonUnicode(limits, timing.operation);

@@ -94,8 +94,10 @@ const program = Effect.gen(function* () {
   const lsTree = yield* git(["ls-tree", "-r", "-z", "--name-only", commit, "--", "goals"]);
   const listed = Str.split(lsTree, "\u0000");
   const tracked = A.filter(listed, (file) => Str.endsWith(".md")(file));
-  const ranked = yield* Effect.forEach(tracked, (file) =>
-    Effect.map(digest.digestHex(Digest.sha256, new TextEncoder().encode(file)), (rank) => ({ file, rank }))
+  const ranked = yield* Effect.forEach(
+    tracked,
+    (file) => Effect.map(digest.digestHex(Digest.sha256, new TextEncoder().encode(file)), (rank) => ({ file, rank })),
+    { concurrency: 1 }
   );
   const ordered = A.map(
     A.sort(

@@ -566,7 +566,7 @@ const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
       },
       options?.page
     );
-    return yield* Effect.forEach(commits, summarize("GitHubCommit.list"));
+    return yield* Effect.forEach(commits, summarize("GitHubCommit.list"), { concurrency: 1 });
   }),
 
   compare: dual(
@@ -588,8 +588,8 @@ const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
         status: selected.status,
         aheadBy: selected.ahead_by,
         behindBy: selected.behind_by,
-        commits: yield* Effect.forEach(selected.commits, summarize("GitHubCommit.compare")),
-        files: yield* Effect.forEach(selected.files ?? [], fileOf("GitHubCommit.compare")),
+        commits: yield* Effect.forEach(selected.commits, summarize("GitHubCommit.compare"), { concurrency: 1 }),
+        files: yield* Effect.forEach(selected.files ?? [], fileOf("GitHubCommit.compare"), { concurrency: 1 }),
       }).pipe(
         Effect.mapError((error) =>
           GitHubError.decode("GitHubCommit.compare", "GitHub returned an unexpected commit comparison", error)
@@ -628,7 +628,7 @@ const make = (client: GitHubClient["Service"]): GitHubCommitShape => ({
                   if (files.length < perPage) finished = true;
                   return files.length === 0
                     ? Effect.succeedNone
-                    : Effect.asSome(Effect.forEach(files, fileOf("GitHubCommit.changedFiles")));
+                    : Effect.asSome(Effect.forEach(files, fileOf("GitHubCommit.changedFiles"), { concurrency: 1 }));
                 })
               );
           }),

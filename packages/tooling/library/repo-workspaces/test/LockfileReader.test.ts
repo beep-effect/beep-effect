@@ -309,12 +309,15 @@ describe("workspace error encoding", () => {
     Effect.gen(function* () {
       const cause = new Error("originating failure");
       assert.isString(cause.stack);
-      const encoded = yield* Effect.all([
-        S.encodeEffect(LockfileReadError)(
-          LockfileReadError.make({ lockfilePath: "/repo/pnpm-lock.yaml", format: "pnpm", cause })
-        ),
-        S.encodeEffect(ChangeDetectionError)(ChangeDetectionError.make({ operation: "diff", cause })),
-      ]);
+      const encoded = yield* Effect.all(
+        [
+          S.encodeEffect(LockfileReadError)(
+            LockfileReadError.make({ lockfilePath: "/repo/pnpm-lock.yaml", format: "pnpm", cause })
+          ),
+          S.encodeEffect(ChangeDetectionError)(ChangeDetectionError.make({ operation: "diff", cause })),
+        ],
+        { concurrency: 1 }
+      );
       for (const error of encoded) {
         assert.isTrue(P.isObject(error.cause));
         if (P.isObject(error.cause)) assert.strictEqual(error.cause.stack, cause.stack);

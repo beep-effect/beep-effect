@@ -217,10 +217,15 @@ const census = Effect.gen(function* () {
     (source) =>
       fs.readFileString(path.join(root, source)).pipe(
         Effect.flatMap((text) =>
-          Effect.forEach(scanSource(source, text), ([reference, bare]) =>
-            Effect.map(resolveReference(reference, packetPaths), (resolved) =>
-              A.map(keepResolved(bare, resolved), (consumed) => CensusEntry.make({ path: consumed, reference, source }))
-            )
+          Effect.forEach(
+            scanSource(source, text),
+            ([reference, bare]) =>
+              Effect.map(resolveReference(reference, packetPaths), (resolved) =>
+                A.map(keepResolved(bare, resolved), (consumed) =>
+                  CensusEntry.make({ path: consumed, reference, source })
+                )
+              ),
+            { concurrency: 1 }
           )
         ),
         Effect.map(A.flatten)
@@ -390,7 +395,8 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "120 seco
             const text = yield* fs.readFileString(path.join(root, directory.value, "package.json"));
             const manifest = yield* decodePackageName(text);
             return [source, O.some(manifest.name)] as const;
-          })
+          }),
+          { concurrency: 1 }
         );
         const owners = HashMap.fromIterable(ownerRows);
         // The coverage planner selects a registry path's readers from its row's consumers, so a

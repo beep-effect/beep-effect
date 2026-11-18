@@ -348,7 +348,7 @@ const toEncryptedRemoteBatch = Effect.fnUntraced(function* (row: EncryptedRemote
 });
 
 const decodeBatches = Effect.fnUntraced(function* (rows: unknown) {
-  return yield* decodeBatchRows(rows).pipe(Effect.flatMap(Effect.forEach(toEncryptedRemoteBatch)));
+  return yield* decodeBatchRows(rows).pipe(Effect.flatMap(Effect.forEach(toEncryptedRemoteBatch, { concurrency: 1 })));
 });
 const decodeSessionAuthBindings = decodeSessionAuthBindingRows;
 

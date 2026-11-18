@@ -1175,7 +1175,9 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const inventoryText28 = yield* inventoryText(1);
           yield* fs.writeFileString(transcript, inventoryText28);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
-          const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
+          const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)), {
+            concurrency: 1,
+          });
 
           const replacement = yield* encodeJson({
             findings: [
@@ -1199,7 +1201,9 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const failed = yield* withFailingCertificateWrites(
             runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }))
           ).pipe(Effect.flip);
-          const after = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
+          const after = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)), {
+            concurrency: 1,
+          });
 
           expect(failed).toMatchObject({
             _tag: "QaCommandError",
@@ -1264,7 +1268,9 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           yield* fs.writeFileString(transcript, inventoryText32);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
           const names = ["inventory.json", "inventory.md", GATE_CERTIFICATE_FILE];
-          const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
+          const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)), {
+            concurrency: 1,
+          });
 
           const failed = yield* Effect.flatMap(FileSystem.FileSystem, (base) =>
             runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) })).pipe(
@@ -1292,7 +1298,9 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
             _tag: "QaCommandError",
             message: `qa judge-ingest could not write into ${layout.root}; the previous inventory and gate certificate were restored.`,
           });
-          const forEach33 = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
+          const forEach33 = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)), {
+            concurrency: 1,
+          });
           expect(forEach33).toEqual(before);
         })
       )
@@ -1309,7 +1317,9 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const inventoryText34 = yield* inventoryText(1);
           yield* fs.writeFileString(transcript, inventoryText34);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
-          const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
+          const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)), {
+            concurrency: 1,
+          });
 
           const failed = yield* Effect.flatMap(FileSystem.FileSystem, (base) =>
             runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) })).pipe(
@@ -1337,7 +1347,9 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
             _tag: "QaCommandError",
             message: `qa judge-ingest could not write into ${layout.root}; no file was changed.`,
           });
-          const forEach35 = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
+          const forEach35 = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)), {
+            concurrency: 1,
+          });
           expect(forEach35).toEqual(before);
         })
       )
@@ -1354,7 +1366,9 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
           const inventoryText36 = yield* inventoryText(1);
           yield* fs.writeFileString(transcript, inventoryText36);
           yield* runQaJudgeIngest(cwd, QaJudgeIngestOptions.make({ from: transcript, round: RoundNumber.make(1) }));
-          const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
+          const before = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)), {
+            concurrency: 1,
+          });
           const replacement = yield* encodeJson({
             findings: [],
             judge: { effort: "low", model: "gpt-daybreak-blue-latest" },
@@ -1394,7 +1408,9 @@ it.layer(QaLayer, { timeout: "10 seconds" })("QA round pipeline", (it) => {
               )
             )
           ).pipe(Effect.flip);
-          const after = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)));
+          const after = yield* Effect.forEach(names, (name) => fs.readFileString(path.join(layout.root, name)), {
+            concurrency: 1,
+          });
 
           expect(failed).toMatchObject({
             _tag: "QaCommandError",

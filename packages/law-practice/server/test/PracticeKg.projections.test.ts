@@ -323,7 +323,7 @@ const makeFixtureCatalog = Effect.fn("PracticeKgTest.makeFixtureCatalog")(functi
           "INSERT INTO corpus_source_files VALUES ('base', 'fixture-source', $1, $2, '2026-01-02T03:04:05.000Z', $3)",
           [relativePath, index + 10, digest]
         ),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     yield* db.run(
       "INSERT INTO corpus_source_files VALUES ('2026-07-refresh', 'fixture-refresh', 'refresh-note.txt', 24, '2026-01-02T03:04:06.000Z', $1)",
@@ -422,7 +422,7 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
       status: "succeeded",
     }),
   ];
-  const sourceLines = yield* Effect.forEach(sourceRows, (row) => encodeFixtureSource(row));
+  const sourceLines = yield* Effect.forEach(sourceRows, (row) => encodeFixtureSource(row), { concurrency: 1 });
   yield* fs.writeFileString(path.join(extractRoot, "sources.jsonl"), `${A.join(sourceLines, "\n")}\n`);
   yield* fs.writeFileString(
     path.join(textRoot, "operation:op-a.txt"),
@@ -478,7 +478,7 @@ const makeFixtureExtract = Effect.fn("PracticeKgTest.makeFixtureExtract")(functi
           Effect.andThen(fs.writeFileString(path.join(directory, "Message.txt"), "body is intentionally not indexed"))
         );
     },
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const messageOne = path.join(childrenRoot, "Message00001");
   const messageTwo = path.join(childrenRoot, "Message00002");
@@ -541,7 +541,7 @@ const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(functi
           `INSERT INTO corpus_source_files VALUES ('${workingRun}', 'source-b', $1, $2, '2026-01-02T03:04:07.000Z', $3)`,
           [relativePath, index + 30, digest]
         ),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   }).pipe(withDuckDb(path.join(corpusRoot, "catalog", "corpus.duckdb")));
   const extractRoot = path.join(corpusRoot, "staging", `extract-${workingRun}`);
@@ -552,25 +552,28 @@ const addWorkingFilesRun = Effect.fn("PracticeKgTest.addWorkingFilesRun")(functi
     // only the text names a client, under a country stage the old scan did not know
     ["text", workingDigests.textKeyed, `notice for ${workingClients.text}.40004ZA01`],
   ] as const;
-  const sourceLines = yield* Effect.forEach(texts, ([name, digest]) =>
-    encodeFixtureSource(
-      FixtureSourceRow.make({
-        artifactId: `artifact-working-${name}`,
-        digest,
-        engine: "tika",
-        format: "text",
-        operationId: `operation:op-working-${name}`,
-        relativePath: `text/operation:op-working-${name}.txt`,
-        sizeBytes: 20,
-        status: "succeeded",
-      })
-    )
+  const sourceLines = yield* Effect.forEach(
+    texts,
+    ([name, digest]) =>
+      encodeFixtureSource(
+        FixtureSourceRow.make({
+          artifactId: `artifact-working-${name}`,
+          digest,
+          engine: "tika",
+          format: "text",
+          operationId: `operation:op-working-${name}`,
+          relativePath: `text/operation:op-working-${name}.txt`,
+          sizeBytes: 20,
+          status: "succeeded",
+        })
+      ),
+    { concurrency: 1 }
   );
   yield* fs.writeFileString(path.join(extractRoot, "sources.jsonl"), `${A.join(sourceLines, "\n")}\n`);
   yield* Effect.forEach(
     texts,
     ([name, , text]) => fs.writeFileString(path.join(extractRoot, "text", `operation:op-working-${name}.txt`), text),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const registerPath = path.join(corpusRoot, "docket-register.jsonl");
   yield* fs.writeFileString(
@@ -622,7 +625,7 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
           `INSERT INTO corpus_source_files VALUES ('${mailRun}', 'source-b', $1, $2, '2026-01-02T03:04:08.000Z', $3)`,
           [relativePath, index + 50, digest]
         ),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     yield* Effect.forEach(
       dominantDigests,
@@ -645,24 +648,27 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
               )
             )
           ),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   }).pipe(withDuckDb(path.join(corpusRoot, "catalog", "corpus.duckdb")));
 
   const extractRoot = path.join(corpusRoot, "staging", "extract");
-  const baseLines = yield* Effect.forEach(dominantDigests, (digest, index) =>
-    encodeFixtureSource(
-      FixtureSourceRow.make({
-        artifactId: `artifact-letter-${index}`,
-        digest,
-        engine: "tika",
-        format: "text",
-        operationId: `operation:op-letter-${index}`,
-        relativePath: `text/operation:op-letter-${index}.txt`,
-        sizeBytes: 20,
-        status: "succeeded",
-      })
-    )
+  const baseLines = yield* Effect.forEach(
+    dominantDigests,
+    (digest, index) =>
+      encodeFixtureSource(
+        FixtureSourceRow.make({
+          artifactId: `artifact-letter-${index}`,
+          digest,
+          engine: "tika",
+          format: "text",
+          operationId: `operation:op-letter-${index}`,
+          relativePath: `text/operation:op-letter-${index}.txt`,
+          sizeBytes: 20,
+          status: "succeeded",
+        })
+      ),
+    { concurrency: 1 }
   );
   const baseSources = yield* fs.readFileString(path.join(extractRoot, "sources.jsonl"));
   yield* fs.writeFileString(path.join(extractRoot, "sources.jsonl"), `${baseSources}${A.join(baseLines, "\n")}\n`);
@@ -673,7 +679,7 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
         path.join(extractRoot, "text", `operation:op-letter-${index}.txt`),
         `letter ${fixtureClients.alpha}.20001US01 about application 11/223,344`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   const mailRoot = path.join(corpusRoot, "staging", `extract-${mailRun}`);
@@ -698,7 +704,8 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
           sizeBytes: 20,
           status: "succeeded",
         })
-      )
+      ),
+    { concurrency: 1 }
   );
   yield* fs.writeFileString(path.join(mailRoot, "sources.jsonl"), `${A.join(mailLines, "\n")}\n`);
   const argument = path.join(mailRoot, "metadata", "operation:op-mail-filing.json");
@@ -745,29 +752,32 @@ const addMailRun = Effect.fn("PracticeKgTest.addMailRun")(function* (corpusRoot:
       organization: null,
       sources: ["csv"],
     });
-  const contactLines = yield* Effect.all([
-    contact("c_aaaaaaaaaaaa", "Pat Example", "pat@example.com", false, [
-      [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-answer"],
-      [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-pc-folder"],
-      [fixtureClients.beta, `${fixtureClients.beta}.20001`, "org-name-match"],
-    ]),
-    // The attorney's own matter number has the dotted shape of a family key but is no matter (D-20).
-    contact("c_dddddddddddd", "Lee Example", "lee@example.com", false, [
-      [fixtureClients.alpha, `${fixtureClients.alpha}.00012`, "attorney-answer"],
-    ]),
-    // A family key keyed to another client than the link's own.
-    contact("c_eeeeeeeeeeee", "Kim Example", "kim@example.com", false, [
-      [fixtureClients.beta, `${fixtureClients.alpha}.20001`, "attorney-answer"],
-    ]),
-    contact("c_bbbbbbbbbbbb", "Example Docketing", "docketing@example.com", true, [
-      [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-pc-folder"],
-    ]),
-    contact("c_cccccccccccc", "Sam Other", "sam@other.test", false, [
-      [fixtureClients.beta, `${fixtureClients.beta}.20001`, "org-name-match"],
-      [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "email-subject-ref"],
-      [fixtureClients.beta, null, "org-name-match"],
-    ]),
-  ]);
+  const contactLines = yield* Effect.all(
+    [
+      contact("c_aaaaaaaaaaaa", "Pat Example", "pat@example.com", false, [
+        [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-answer"],
+        [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-pc-folder"],
+        [fixtureClients.beta, `${fixtureClients.beta}.20001`, "org-name-match"],
+      ]),
+      // The attorney's own matter number has the dotted shape of a family key but is no matter (D-20).
+      contact("c_dddddddddddd", "Lee Example", "lee@example.com", false, [
+        [fixtureClients.alpha, `${fixtureClients.alpha}.00012`, "attorney-answer"],
+      ]),
+      // A family key keyed to another client than the link's own.
+      contact("c_eeeeeeeeeeee", "Kim Example", "kim@example.com", false, [
+        [fixtureClients.beta, `${fixtureClients.alpha}.20001`, "attorney-answer"],
+      ]),
+      contact("c_bbbbbbbbbbbb", "Example Docketing", "docketing@example.com", true, [
+        [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "attorney-pc-folder"],
+      ]),
+      contact("c_cccccccccccc", "Sam Other", "sam@other.test", false, [
+        [fixtureClients.beta, `${fixtureClients.beta}.20001`, "org-name-match"],
+        [fixtureClients.alpha, `${fixtureClients.alpha}.20001`, "email-subject-ref"],
+        [fixtureClients.beta, null, "org-name-match"],
+      ]),
+    ],
+    { concurrency: 1 }
+  );
   yield* fs.writeFileString(contactsPath, A.join(contactLines, "\n"));
   return contactsPath;
 });
@@ -796,16 +806,19 @@ const duckDump = Effect.fn("PracticeKgTest.duckDump")(function* (databasePath: s
       "SELECT to_json(t)::VARCHAR AS line FROM fts_terms t ORDER BY term",
       "SELECT to_json(b)::VARCHAR AS line FROM fts_bm25 b ORDER BY term, doc_id",
     ];
-    const sections = yield* Effect.forEach(statements, (statement) =>
-      db.query(statement).pipe(
-        Effect.flatMap(decodeDumpLines),
-        Effect.map((rows) =>
-          A.join(
-            A.map(rows, (row) => row.line),
-            "\n"
+    const sections = yield* Effect.forEach(
+      statements,
+      (statement) =>
+        db.query(statement).pipe(
+          Effect.flatMap(decodeDumpLines),
+          Effect.map((rows) =>
+            A.join(
+              A.map(rows, (row) => row.line),
+              "\n"
+            )
           )
-        )
-      )
+        ),
+      { concurrency: 1 }
     );
     return A.join(sections, "\n-- table --\n");
   }).pipe(withDuckDb(databasePath));
@@ -1400,8 +1413,10 @@ describe("practice KG projections", () => {
             ["kg_provenance", { iri: "https://beep-effect.com/ns/practice-kg/application/76543210" }],
             ["kg_provenance", { natural_key: "76543210" }],
           ] as const;
-          const results = yield* Effect.forEach(liveCalls, ([name, args]) =>
-            callToolText(name, args).pipe(Effect.flatMap(decodeToolResultJson))
+          const results = yield* Effect.forEach(
+            liveCalls,
+            ([name, args]) => callToolText(name, args).pipe(Effect.flatMap(decodeToolResultJson)),
+            { concurrency: 1 }
           );
           expect(A.length(results)).toBe(10);
           A.forEach(results, (result) => {
@@ -1495,10 +1510,13 @@ describe("practice KG projections", () => {
           expect(missingDigest.note).toContain("No graph node or document");
           // Some budget between "everything fits" and "nothing fits" lands on the
           // balanced tier, which must name what it left out.
-          const budgeted = yield* Effect.forEach(A.range(2, 14), (step) =>
-            callToolText("kg_docket_family", { budgetBytes: step * 50, family: "20001" }).pipe(
-              Effect.flatMap(decodeToolResultJson)
-            )
+          const budgeted = yield* Effect.forEach(
+            A.range(2, 14),
+            (step) =>
+              callToolText("kg_docket_family", { budgetBytes: step * 50, family: "20001" }).pipe(
+                Effect.flatMap(decodeToolResultJson)
+              ),
+            { concurrency: 1 }
           );
           const balanced = O.getOrThrow(A.findFirst(budgeted, (result) => result.tier === "balanced"));
           pipe(balanced.truncated, assertFalse);
@@ -1601,7 +1619,8 @@ describe("practice KG projections", () => {
                   )
                   .pipe(Effect.flatMap(decodeColumnRows));
                 expect(A.map(columnRows, (row) => row.columnName)).toStrictEqual(declared);
-              })
+              }),
+            { concurrency: 1 }
           );
         }),
         { timeout: 120_000 }
@@ -2276,10 +2295,13 @@ describe("practice KG projections", () => {
         expect(missingDuckDbSummary).toMatchObject({ claims: 9, failedFiles: 0, files: 1 });
         const rows = yield* Effect.gen(function* () {
           const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-          return yield* Effect.forEach(["20001US05", "20001US06"], (docket) =>
-            sql
-              .unsafe(PracticeKgQueries.candidateClaims, [docket, null, null])
-              .pipe(Effect.flatMap(decodeCandidateClaimRows))
+          return yield* Effect.forEach(
+            ["20001US05", "20001US06"],
+            (docket) =>
+              sql
+                .unsafe(PracticeKgQueries.candidateClaims, [docket, null, null])
+                .pipe(Effect.flatMap(decodeCandidateClaimRows)),
+            { concurrency: 1 }
           ).pipe(Effect.map(A.flatten));
         }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })));
 
@@ -2604,7 +2626,8 @@ describe("practice KG projections", () => {
                   )
                   .pipe(Effect.flatMap(decodeColumnRows));
                 expect(A.map(columnRows, (row) => row.columnName)).toStrictEqual(declared);
-              })
+              }),
+            { concurrency: 1 }
           );
           return yield* sql.unsafe(PracticeKgQueries.candidateClaims, ["20001US01", null, null]);
         }).pipe(provideScopedLayer(Pglite.makeLayer({ dataDir: path.join(bundleOut, "kg.pglite") })));

@@ -9,11 +9,14 @@ it.effect(
       ["bun", "--eval", 'console.log("stdout witness"); console.error("stderr witness"); process.exitCode = 7;'],
       { stdin: "ignore", stdout: "pipe", stderr: "pipe" }
     );
-    const result = yield* Effect.all({
-      exitCode: Effect.promise(() => child.exited),
-      stdout: Effect.promise(() => new Response(child.stdout).text()),
-      stderr: Effect.promise(() => new Response(child.stderr).text()),
-    });
+    const result = yield* Effect.all(
+      {
+        exitCode: Effect.promise(() => child.exited),
+        stdout: Effect.promise(() => new Response(child.stdout).text()),
+        stderr: Effect.promise(() => new Response(child.stderr).text()),
+      },
+      { concurrency: 1 }
+    );
     expect(result).toEqual({ exitCode: 7, stdout: "stdout witness\n", stderr: "stderr witness\n" });
   })
 );

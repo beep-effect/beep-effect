@@ -113,12 +113,15 @@ describe("C1 vector projection", () => {
         const model4 = embeddingModel(PosInt.make(4));
         const queryId = chunkId("1");
         const neighborId = chunkId("2");
-        const vectors = yield* Effect.all([
-          vector(model3, queryId, [1, 0, 0]),
-          vector(model3, neighborId, [0.9, 0.1, 0]),
-          vector(model4, queryId, [1, 0, 0, 0]),
-          vector(model4, neighborId, [0.8, 0.2, 0, 0]),
-        ]);
+        const vectors = yield* Effect.all(
+          [
+            vector(model3, queryId, [1, 0, 0]),
+            vector(model3, neighborId, [0.9, 0.1, 0]),
+            vector(model4, queryId, [1, 0, 0, 0]),
+            vector(model4, neighborId, [0.8, 0.2, 0, 0]),
+          ],
+          { concurrency: 1 }
+        );
 
         yield* projection.rebuild(vectors);
         const neighbors3 = yield* projection.neighbors(A.getUnsafe(vectors, 0), PosInt.make(3));

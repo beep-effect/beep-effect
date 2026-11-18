@@ -328,7 +328,7 @@ const projectCapture = Effect.fn("CodexSecurity.projectCapture")(function* (inpu
     });
   }
   const payload = yield* decodeCodexFindingsCapturePayload(payloadInput);
-  const reports = yield* Effect.forEach(findings.findings, reportOf(manifest));
+  const reports = yield* Effect.forEach(findings.findings, reportOf(manifest), { concurrency: 1 });
   return { payload, reports, evidenceJson: yield* encodeJson(metadata), coverage: input.coverage.completeness };
 });
 

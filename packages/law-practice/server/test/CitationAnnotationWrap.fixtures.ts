@@ -42,24 +42,29 @@ export const replayCitationNativeWrap = Effect.fn("AnnotationWrapTest.native")(f
   const wrapper = yield* makeCitationAnnotationWrap(setup.limits, setup.runtime).pipe(
     Effect.provideContext(setup.provided)
   );
-  const templates = yield* makeCitationAnnotationTemplates(setup.limits).pipe(
-    Effect.provideService(CitationTextBudget, setup.budget)
+  const bind = yield* makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
+    Effect.provideContext(setup.provided)
   );
-  const rows = full
-    ? corpus.cases
-    : A.filter(corpus.cases, (row) => row.id % 110 === 0 || row.id % 110 === 34 || row.id % 110 === 16);
-  let children = 0;
-  for (const row of rows) {
-    const output = wrapper.wrap(
-      templates,
-      CitationPythonUnicodeStorage.make(row.source),
-      CitationPythonUnicodeStorage.make(row.before),
-      CitationPythonUnicodeStorage.make(row.after)
-    );
-    yield* assertCitationAnnotationOutcome(output, row.result, `${kind}:${row.id}`);
-    if (row.result._tag === "Success") children++;
-  }
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, children);
+  yield* bind(() =>
+    Effect.gen(function* () {
+      const templates = yield* makeCitationAnnotationTemplates(setup.limits).pipe(
+        Effect.provideService(CitationTextBudget, setup.budget)
+      );
+      const rows = full
+        ? corpus.cases
+        : A.filter(corpus.cases, (row) => row.id % 110 === 0 || row.id % 110 === 34 || row.id % 110 === 16);
+      for (const row of rows) {
+        const output = wrapper.wrap(
+          templates,
+          CitationPythonUnicodeStorage.make(row.source),
+          CitationPythonUnicodeStorage.make(row.before),
+          CitationPythonUnicodeStorage.make(row.after)
+        );
+        yield* assertCitationAnnotationOutcome(output, row.result, `${kind}:${row.id}`);
+      }
+    })
+  )();
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 1);
 });
 const $I = $LawPracticeServerId.create("test/CitationAnnotationWrap");
 const Check = S.Struct({ text: CitationNativeUnicodeHex, fast: S.Boolean, value: S.Boolean }).pipe(
@@ -116,7 +121,8 @@ export const replayCitationWrapComposition = Effect.fn("AnnotationWrapTest.compo
       makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
         Effect.map((bind) => ({ ...stage, assemble: bind(stage.assemble) }))
       )
-    )
+    ),
+    Effect.provideContext(setup.provided)
   );
   const rows = full ? corpus.cases : A.filter(corpus.cases, (row) => row.id % 9 === 2 || row.id % 9 === 8);
   let children = 0;

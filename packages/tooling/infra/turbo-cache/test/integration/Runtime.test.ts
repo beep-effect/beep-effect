@@ -179,7 +179,7 @@ test.provider(
                   const unknownTeam = yield* statusOf(auth, method, "test-only-alpha");
                   expect(unknownTeam).toBe(403);
                 }),
-              { discard: true }
+              { concurrency: 1, discard: true }
             );
 
             return true;
@@ -193,7 +193,7 @@ test.provider(
         ["/", "/ping", "/throw-exception", "/internal/count", "/v8/artifacts/status/"],
         (path) =>
           HttpClient.get(new URL(path, origin)).pipe(Effect.map((response) => expect(response.status).toBe(404))),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
 
       yield* Effect.forEach(
@@ -202,7 +202,7 @@ test.provider(
           statusOf(new URL(`/auth-proof/v8/artifacts/abc${suffix}`, origin), "GET", "test-only-alpha").pipe(
             Effect.map((status) => expect(status).toBe(403))
           ),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
 
       yield* Effect.forEach(
@@ -211,7 +211,7 @@ test.provider(
           statusOf(new URL(`/auth-proof/v8/artifacts/${hash}?slug=alpha`, origin), "GET", "test-only-alpha").pipe(
             Effect.map((status) => expect(status).toBe(404))
           ),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
 
       const invalidBody = yield* encodeJson({ hashes: ["bad/hash"] });
@@ -289,7 +289,11 @@ test.provider(
       expect(restored).toBe("built");
 
       const summaries = yield* fs.readDirectory(`${directory}/.turbo/runs`);
-      const sources = yield* Effect.forEach(summaries, (file) => fs.readFileString(`${directory}/.turbo/runs/${file}`));
+      const sources = yield* Effect.forEach(
+        summaries,
+        (file) => fs.readFileString(`${directory}/.turbo/runs/${file}`),
+        { concurrency: 1 }
+      );
       expect(A.some(sources, Str.includes('"source": "REMOTE"'))).toBe(true);
 
       const writeOnly = yield* run("second-cache", { TURBO_CACHE: "local:w,remote:w" });

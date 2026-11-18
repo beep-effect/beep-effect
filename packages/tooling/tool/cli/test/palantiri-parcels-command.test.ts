@@ -300,6 +300,7 @@ describe("host-pressure", () => {
           yield* fs.makeDirectory(path.join(proc, "pressure"));
         }
         yield* Effect.forEach(files, ([name, text]) => fs.writeFileString(path.join(proc, "pressure", name), text), {
+          concurrency: 1,
           discard: true,
         });
         const source = yield* makeHostPressureSource({ procRoot: proc, admission: Effect.succeedNone }).pipe(

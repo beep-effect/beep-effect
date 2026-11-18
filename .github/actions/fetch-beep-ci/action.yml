@@ -17,8 +17,8 @@ runs:
     - name: Fetch and verify the pinned beep CI binary
       shell: bash
       env:
-        BEEP_CI_RELEASE_TAG: beep-ci-a56516d6d309
-        BEEP_CI_SHA256: 6dfe082df52d4e23ad3b2ca3270e84792c61227e9f60d7eb61b0d3900d61df5c
+        BEEP_CI_RELEASE_TAG: beep-ci-a7b469a4a84a
+        BEEP_CI_SHA256: a926ac3c6c5a405f8f9623fac1654e956058cd636f71717e6762e57ddbe407a4
         BEEP_CI_REPOSITORY: ${{ github.repository }}
         BEEP_CI_API_URL: ${{ github.api_url }}
         BEEP_CI_TOKEN: ${{ github.token }}

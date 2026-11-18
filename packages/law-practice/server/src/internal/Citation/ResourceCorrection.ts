@@ -17,8 +17,8 @@ import {
   replaceCitationPythonStorage,
   sliceCitationPythonStorage,
 } from "./PythonUnicode.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
-import type { CitationTextBudget } from "@beep/law-practice-use-cases/server";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits, CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ResourceCorrection");
@@ -109,8 +109,9 @@ const correctPageMarkers = Effect.fn("Citation.correctNativePageMarkers")(functi
  * surrogate points that a JavaScript projection would coalesce on re-encoding.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationResourceCorrection = Effect.fn("Citation.makeResourceCorrection")(function* (policy: unknown) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
+export const makeCitationResourceCorrection = Effect.fn("Citation.makeResourceCorrection")(function* (
+  limits: CitationEngineLimits
+) {
   const owner = yield* CitationFrozenEditions;
   const unicode = yield* makeCitationPythonUnicode(limits);
   const timing = yield* makeCitationRegexTiming(limits, true);

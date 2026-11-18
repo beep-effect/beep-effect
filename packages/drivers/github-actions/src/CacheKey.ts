@@ -294,7 +294,8 @@ const wildcardMatches = Effect.fnUntraced(function* (
     (wildcard) =>
       descend(wildcard, { cwd: workspace, prune: [], followSymlinks: true }).pipe(
         Effect.mapError((cause) => CacheKeyReadError.make({ path: path.join(workspace, cause.path), cause }))
-      )
+      ),
+    { concurrency: 1 }
   );
   return A.flatMap(found, A.fromIterable);
 });

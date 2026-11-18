@@ -77,8 +77,10 @@ describe("TimerLog", () => {
         );
         assertNone(O.flatMap(A.last(rows), (row) => row.matter));
         const jsonl = yield* log.exportJsonl;
-        const decoded = yield* Effect.forEach(Str.split("\n")(Str.trim(jsonl)), (line) =>
-          decodeTimerIntervalLine(line)
+        const decoded = yield* Effect.forEach(
+          Str.split("\n")(Str.trim(jsonl)),
+          (line) => decodeTimerIntervalLine(line),
+          { concurrency: 1 }
         );
         expect(decoded).toEqual(rows);
       })

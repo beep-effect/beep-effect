@@ -434,8 +434,9 @@ export const resolvePracticeKgTelemetryDir = Effect.fn("PracticeKgTelemetryKey.r
   const base = yield* Match.value(platform).pipe(
     Match.when("win32", () => optionalEnv("LOCALAPPDATA")),
     Match.orElse(() =>
-      Effect.map(Effect.all([optionalEnv("XDG_STATE_HOME"), optionalEnv("HOME")]), ([state, home]) =>
-        O.orElse(state, () => O.map(home, (dir) => path.join(dir, ".local", "state")))
+      Effect.map(
+        Effect.all([optionalEnv("XDG_STATE_HOME"), optionalEnv("HOME")], { concurrency: 1 }),
+        ([state, home]) => O.orElse(state, () => O.map(home, (dir) => path.join(dir, ".local", "state")))
       )
     )
   );

@@ -50,7 +50,7 @@ it.effect.prop(
     Effect.gen(function* () {
       const render = (specifiers: ReadonlyArray<string>) =>
         Effect.map(
-          Effect.forEach(specifiers, (value) => S.encodeEffect(stringCodec)(value)),
+          Effect.forEach(specifiers, (value) => S.encodeEffect(stringCodec)(value), { concurrency: 1 }),
           (quoted) =>
             A.join(
               A.map(quoted, (value) => `import ${value};`),

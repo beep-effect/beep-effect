@@ -257,7 +257,8 @@ it.layer(CommandTestLayer, { timeout: "10 seconds" })("quality command dispatch"
           ["turbo-config-proof", "--selector", "not-a-selector"],
           ["residue-reap", "--qualification-views-keep", "not-an-integer"],
         ],
-        (argv) => Effect.exit(runQualityCommand(argv))
+        (argv) => Effect.exit(runQualityCommand(argv)),
+        { concurrency: 1 }
       );
 
       expect(A.every(exits, (exit) => exit._tag === "Failure")).toBe(true);

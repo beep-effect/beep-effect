@@ -102,17 +102,20 @@ const eventRows = Effect.fnUntraced(function* (store: BreakerStore) {
   if (!(yield* fs.exists(store.eventDir))) return A.empty<string>();
 
   const files = yield* fs.readDirectory(store.eventDir);
-  const rows = yield* Effect.forEach(files, (file) =>
-    Effect.map(fs.readFileString(path.join(store.eventDir, file)), (contents) =>
-      A.filter(Str.split("\n")(contents), (line) => line.length > 0)
-    )
+  const rows = yield* Effect.forEach(
+    files,
+    (file) =>
+      Effect.map(fs.readFileString(path.join(store.eventDir, file)), (contents) =>
+        A.filter(Str.split("\n")(contents), (line) => line.length > 0)
+      ),
+    { concurrency: 1 }
   );
   return A.flatten(rows);
 });
 
 const decodedEvents = Effect.fnUntraced(function* (store: BreakerStore) {
   const eventRows1 = yield* eventRows(store);
-  return yield* Effect.forEach(eventRows1, (row) => CircuitBreakerEventV1.decodeJsonEffect(row));
+  return yield* Effect.forEach(eventRows1, (row) => CircuitBreakerEventV1.decodeJsonEffect(row), { concurrency: 1 });
 });
 
 it.layer(NodeServices.layer)("agent command circuit breaker", (it) => {

@@ -6,7 +6,6 @@ import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationEngineCleanerPlan,
   CitationEngineExtractionOptions,
-  CitationEngineLimits,
   CitationEngineSourceInput,
   CitationInputError,
   CitationSafetyLimitExceeded,
@@ -19,10 +18,10 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import { snapshotCitationValue } from "./Snapshot.ts";
 import { makeCitationSourceEvidence } from "./SourceEvidence.ts";
-import type { CitationEngineFailure } from "@beep/law-practice-use-cases/server";
+import type { CitationEngineFailure, CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SourceRequest");
 type EvidenceFields = { readonly source: S.Codec<VerifiedSourceText> };
@@ -68,7 +67,6 @@ const MarkupProbe = S.Struct({ markup: Slot.pipe(S.withDecodingDefaultKey(Effect
   $I.annoteSchema("MarkupProbe", { description: "Markup slot inspected after the shortcut condition." })
 );
 const SourceJson = SourceTextIdentity.pipe(S.toCodecJson, S.fromJsonString);
-const LimitsJson = CitationEngineLimits.pipe(S.toCodecJson, S.fromJsonString);
 const inputFailure = () => CitationInputError.make({ operation: "extract" });
 const safety = (limit: CitationSafetyLimitExceeded["limit"]) =>
   CitationSafetyLimitExceeded.make({ operation: "extract", limit });
@@ -97,10 +95,8 @@ const prepareOptions = Effect.fn("Citation.prepareSourceRequestOptions")(functio
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationSourceRequestAdapter = Effect.fn("Citation.makeSourceRequestAdapter")(function* (
-  policy: unknown
+  limits: CitationEngineLimits
 ) {
-  const decoded = yield* decodeCitationRegexPolicy(policy, inputFailure);
-  const limits = yield* snapshotCitationValue(LimitsJson, decoded, inputFailure);
   const evidence = yield* makeCitationSourceEvidence(limits);
   const timing = yield* makeCitationRegexTiming(limits, true);
   const resolve = Effect.fn("Citation.resolveRequestSource")((source: SourceTextIdentity, text: string) =>

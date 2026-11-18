@@ -27,7 +27,7 @@ const writeAsset = Effect.fn("writeAsset")(function* (asset: { readonly path: st
 
 const assets = renderBrandAssets(beep);
 
-const writeAll = Effect.forEach(assets, writeAsset, { discard: true }).pipe(
+const writeAll = Effect.forEach(assets, writeAsset, { concurrency: 1, discard: true }).pipe(
   Effect.andThen(Console.log(`rendered ${A.length(assets)} files`))
 );
 

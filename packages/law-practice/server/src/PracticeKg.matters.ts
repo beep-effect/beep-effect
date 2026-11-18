@@ -355,7 +355,7 @@ INSERT INTO matter_dockets VALUES (
 export const writeMatterTables = Effect.fn("PracticeKg.writeMatterTables")(function* (tables: PracticeKgMatterTables) {
   return yield* Effect.gen(function* () {
     const db = yield* DuckDb;
-    yield* Effect.forEach(createMatterTables, (statement) => db.run(statement), { discard: true });
+    yield* Effect.forEach(createMatterTables, (statement) => db.run(statement), { concurrency: 1, discard: true });
     yield* Effect.forEach(
       tables.matters,
       (row) =>
@@ -369,7 +369,7 @@ export const writeMatterTables = Effect.fn("PracticeKg.writeMatterTables")(funct
           row.docketCount,
           row.documentCount,
         ]),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     yield* Effect.forEach(
       tables.dockets,
@@ -383,7 +383,7 @@ export const writeMatterTables = Effect.fn("PracticeKg.writeMatterTables")(funct
           A.join(row.applicationNumbers, listSeparator),
           A.join(row.patentNumbers, listSeparator),
         ]),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   }).pipe(PracticeKgProjectionError.mapError("Failed writing matter tables."));
 });

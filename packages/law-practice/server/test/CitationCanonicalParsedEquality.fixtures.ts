@@ -61,7 +61,8 @@ const readRows = Effect.fn("CanonicalParsedEqualityTest.read")(function* () {
           const original = yield* S.decodeEffect(OriginalModels)(body.outcome.value);
           expect(original, id).toHaveLength(1);
           return { id, raw: body.input.plain_text, models: original };
-        })
+        }),
+        { concurrency: 1 }
       );
       const criteria = yield* Effect.forEach(
         [cohort.model, cohort.hash],
@@ -73,7 +74,8 @@ const readRows = Effect.fn("CanonicalParsedEqualityTest.read")(function* () {
             A.map(models, (value) => A.getUnsafe(value.models, 0))
           );
           return { id, criterion };
-        })
+        }),
+        { concurrency: 1 }
       );
       const modelCriterion = A.getUnsafe(criteria, 0);
       expect(
@@ -85,11 +87,13 @@ const readRows = Effect.fn("CanonicalParsedEqualityTest.read")(function* () {
         hashCriterion.criterion.operands,
         Effect.fnUntraced(function* (value) {
           return (yield* S.decodeUnknownEffect(Integer)(value.value)).integer;
-        })
+        }),
+        { concurrency: 1 }
       );
       expect(A.getUnsafe(hashes, 0), hashCriterion.id).toBe(A.getUnsafe(hashes, 1));
       return { models, modelId: modelCriterion.id, hashId: hashCriterion.id, hashes };
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 const hashActualCase = Effect.fn("CanonicalParsedEqualityTest.hash")(function* (
@@ -128,7 +132,8 @@ export const replayCitationCanonicalParsedEquality = Effect.fn("CanonicalParsedE
       Effect.fnUntraced(function* (input) {
         const parsed = yield* replay.extract(input.raw, "plain", input.models, input.id, null);
         return yield* hashActualCase(owner, A.getUnsafe(parsed.citations, 0));
-      })
+      }),
+      { concurrency: 1 }
     );
     expect(
       A.map(actual, (value) => value.citationHash),

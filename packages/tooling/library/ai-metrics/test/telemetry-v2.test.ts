@@ -131,7 +131,8 @@ it.layer(NodeServices.layer)("telemetry-v2 contracts", (it) => {
     Effect.gen(function* () {
       const fixtureTexts = yield* Effect.forEach(
         ["flight-record.json", "ingest-enumeration.json", "ingest-manifest.json"],
-        readFixture
+        readFixture,
+        { concurrency: 1 }
       );
       const combined = A.join(fixtureTexts, "\n");
 

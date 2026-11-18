@@ -138,17 +138,23 @@ describe("mail census", () => {
 
 it.effect("reports larger alias-spread histogram buckets", () =>
   Effect.gen(function* () {
-    const sharedName = yield* Effect.forEach(A.range(1, 6), (index) =>
-      ingest(`alias-${index}`, {
-        senderName: "Alex",
-        senderEmailAddress: `alex-${index}@acme.example`,
-      })
+    const sharedName = yield* Effect.forEach(
+      A.range(1, 6),
+      (index) =>
+        ingest(`alias-${index}`, {
+          senderName: "Alex",
+          senderEmailAddress: `alex-${index}@acme.example`,
+        }),
+      { concurrency: 1 }
     );
-    const sharedIdentifier = yield* Effect.forEach(["Dana", "D Brooks", "Dana Brooks"], (name) =>
-      ingest(name, {
-        senderName: name,
-        senderEmailAddress: "dana@acme.example",
-      })
+    const sharedIdentifier = yield* Effect.forEach(
+      ["Dana", "D Brooks", "Dana Brooks"],
+      (name) =>
+        ingest(name, {
+          senderName: name,
+          senderEmailAddress: "dana@acme.example",
+        }),
+      { concurrency: 1 }
     );
     const census = A.reduce(A.appendAll(sharedName, sharedIdentifier), emptyCensus(), (state, mail) =>
       observe(state, mail)

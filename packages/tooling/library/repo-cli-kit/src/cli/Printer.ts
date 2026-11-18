@@ -40,7 +40,7 @@ export const printLines = Effect.fn("RepoCli.Printer.printLines")(function* (
   // The lambda is load-bearing: `Effect.forEach` passes the element index as a
   // second argument, and `Console.log` is variadic, so a bare reference prints
   // the index after every line.
-  yield* Effect.forEach(lines, (line) => Console.log(line), { discard: true });
+  yield* Effect.forEach(lines, (line) => Console.log(line), { concurrency: 1, discard: true });
 });
 
 /**
@@ -149,6 +149,7 @@ export const logTaggedSummary = Effect.fn("RepoCli.Printer.logTaggedSummary")(fu
   record: Readonly<Record<string, string | number | boolean>>
 ): Effect.fn.Return<void> {
   yield* Effect.forEach(R.toEntries(record), ([key, value]) => Console.log(`[${tag}] ${key}=${value}`), {
+    concurrency: 1,
     discard: true,
   });
 });

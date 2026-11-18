@@ -4,12 +4,13 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationHtmlDiscoveryConfiguration,
-  makeCitationHtmlDiscovery,
+  makeCitationHtmlDiscovery as makeOwnedCitationHtmlDiscovery,
 } from "@beep/law-practice-server/internal/Citation/HtmlDiscovery";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import {
   assertCitationMetadataRefusal,
@@ -19,6 +20,11 @@ import {
 } from "./CitationRegexWorker.fixtures.ts";
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationHtmlDiscovery = installCitationOwnedTestStage({
+  schema: CitationHtmlDiscoveryConfiguration,
+  install: makeOwnedCitationHtmlDiscovery,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationHtmlDiscovery");
 const PatternCorpus = S.fromJsonString(
@@ -96,7 +102,7 @@ export const replayCitationHtmlDiscovery = Effect.fn("HtmlDiscoveryTest.replay")
     setup.operation,
     setup.admission,
     setup.observed.snapshot,
-    rows.length * 2
+    rows.length
   );
 });
 /** Installed configuration is owned; effective input refusal spawns no child. */
@@ -108,7 +114,7 @@ export const assertCitationHtmlDiscoveryOwnership = Effect.fn("HtmlDiscoveryTest
   const result = yield* setup.stage.discover(row.markup);
   expect(result.placeholder).toEqual(row.placeholder);
   expect(result.tags).toEqual(row.tags);
-  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 2);
+  yield* assertCitationWorkerCompositionReleased(setup.operation, setup.admission, setup.observed.snapshot, 1);
   const tight = yield* install("bun", 1);
   yield* assertCitationMetadataRefusal(
     tight.stage.discover(row.markup),

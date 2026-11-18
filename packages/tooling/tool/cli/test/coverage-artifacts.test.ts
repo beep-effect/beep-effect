@@ -236,28 +236,31 @@ const signedV8Fixture = Effect.fnUntraced(function* () {
   yield* f.fs.remove(f.path.join(f.packageRoot, "src/index.ts"));
   const consequent = pipe(code, Str.indexOf("{ return 1; }"), O.getOrElse(constant(-1)));
   const fileUrl = yield* f.path.toFileUrl(file);
-  const converted = yield* Effect.forEach([3, 0], (count) =>
-    Effect.tryPromise({
-      try: () =>
-        convertV8({
-          code,
-          ast: parse("choose.js", code).then((result) => result.program),
-          coverage: {
-            url: fileUrl.href,
-            functions: [
-              {
-                functionName: "choose",
-                isBlockCoverage: true,
-                ranges: [
-                  { startOffset: 0, endOffset: code.length, count: 1 },
-                  { startOffset: consequent + 1, endOffset: consequent + "{ return 1; }".length - 1, count },
-                ],
-              },
-            ],
-          },
-        }),
-      catch: (cause) => CoverageArtifactsTestOperationError.make({ cause }),
-    }).pipe(Effect.flatMap(encode), Effect.flatMap(decodeRawFixture), Effect.map(R.values))
+  const converted = yield* Effect.forEach(
+    [3, 0],
+    (count) =>
+      Effect.tryPromise({
+        try: () =>
+          convertV8({
+            code,
+            ast: parse("choose.js", code).then((result) => result.program),
+            coverage: {
+              url: fileUrl.href,
+              functions: [
+                {
+                  functionName: "choose",
+                  isBlockCoverage: true,
+                  ranges: [
+                    { startOffset: 0, endOffset: code.length, count: 1 },
+                    { startOffset: consequent + 1, endOffset: consequent + "{ return 1; }".length - 1, count },
+                  ],
+                },
+              ],
+            },
+          }),
+        catch: (cause) => CoverageArtifactsTestOperationError.make({ cause }),
+      }).pipe(Effect.flatMap(encode), Effect.flatMap(decodeRawFixture), Effect.map(R.values)),
+    { concurrency: 1 }
   );
   const first = converted[0]?.[0];
   const second = converted[1]?.[0];

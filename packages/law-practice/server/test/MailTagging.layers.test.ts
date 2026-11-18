@@ -89,7 +89,7 @@ class Inbox extends Context.Service<
 
 const InboxLive = Layer.effect(
   Inbox,
-  Effect.all({ message: Ref.make(notice), uploads: Ref.make<ReadonlyArray<string>>([]) })
+  Effect.all({ message: Ref.make(notice), uploads: Ref.make<ReadonlyArray<string>>([]) }, { concurrency: 1 })
 );
 
 const Providers = Layer.mergeAll(

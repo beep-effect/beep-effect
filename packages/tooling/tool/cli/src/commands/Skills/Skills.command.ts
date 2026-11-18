@@ -728,7 +728,8 @@ const writeRemoteSkill = Effect.fn("Skills.writeRemoteSkill")(function* (
     Effect.fnUntraced(function* (file) {
       const relativePath = yield* validateSkillFilePath(file.path, source.name);
       return SkillPublicationFile.make({ path: relativePath, bytes: file.bytes });
-    })
+    }),
+    { concurrency: 1 }
   );
   const publisher = yield* SkillPublisher;
   yield* publisher.publishDirectory(repoRoot, skillDir, files);
@@ -1235,7 +1236,7 @@ const evaluateLockDriftV2 = Effect.fnUntraced(function* (
 ) {
   const path = yield* Path.Path;
   const names = yield* listInstalledSkillNames(repoRoot);
-  const entries = yield* Effect.forEach(names, (name) => desiredLockEntry(repoRoot, current, name));
+  const entries = yield* Effect.forEach(names, (name) => desiredLockEntry(repoRoot, current, name), { concurrency: 1 });
   const desired = SkillsLockDocument.make({ version: 2, skills: toSortedRecord(entries) });
   if (skillsLockDocumentEquivalence(current, desired)) {
     return O.none<SkillDrift>();
@@ -1262,7 +1263,8 @@ const evaluateVendoredTreeDrift = Effect.fnUntraced(function* (repoRoot: string,
       return installedTreeHash === entry.effective.installedTreeHash
         ? A.empty<SkillDrift>()
         : A.of<SkillDrift>({ _tag: "HandEditedVendoredOutput", name });
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.flatten(drift);
 });

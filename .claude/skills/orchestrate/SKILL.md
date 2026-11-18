@@ -315,7 +315,8 @@ below); `threads=?` is never zero.
 Rulings in force since 2026-10-06 (verbatim sources in
 `~/.claude/memory/beep-effect/feedback-review-window-before-merge.md` and
 `feedback-autonomy-ruling-2026-10-06.md`): ready at content-final; no merge
-inside 20 minutes of ready or the last push; only money escalates; review
+inside 20 minutes of ready or the last push (a proven clean merge of the base
+keeps the earlier push, AGENTS.md "Mergeable"); only money escalates; review
 findings are fixed in the PR, never deferred to follow-up issues outside the
 AGENTS.md exceptions (2026-10-24, superseding "review loops stop after round
 2"); non-required Heavy/Coverage reds merge over only with a written

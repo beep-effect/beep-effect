@@ -82,9 +82,11 @@ export const ingestContact = Effect.fn("PartyContact.ingestContact")(function* (
       IngestIdentifier.make({ id: IdentifierId.make(`party-ident:${key}`), value: normalized.success, key, represents })
     );
   });
-  yield* Effect.forEach(card.emails, (email) => collect(emailAddress(email.raw), email.represents));
-  yield* Effect.forEach(card.phones, (phone) => collect(phoneNumber(phone), false));
-  yield* Effect.forEach(card.identifiers, (identifier) => collect(Effect.succeed(identifier), false));
+  yield* Effect.forEach(card.emails, (email) => collect(emailAddress(email.raw), email.represents), { concurrency: 1 });
+  yield* Effect.forEach(card.phones, (phone) => collect(phoneNumber(phone), false), { concurrency: 1 });
+  yield* Effect.forEach(card.identifiers, (identifier) => collect(Effect.succeed(identifier), false), {
+    concurrency: 1,
+  });
   const unique = A.dedupeWith(
     identifiers,
     (left, right) => left.key === right.key && left.represents === right.represents

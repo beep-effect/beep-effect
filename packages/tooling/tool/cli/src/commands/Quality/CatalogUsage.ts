@@ -385,11 +385,15 @@ const readCatalogUsageSnapshot = Effect.fn("CatalogUsage.readCatalogUsageSnapsho
   const workspaceFiles = yield* collectWorkspacePackageJsonFiles(repoRoot).pipe(
     CatalogUsageError.mapError("Failed to list workspace package manifests.")
   );
-  const manifests = yield* Effect.forEach(["package.json", ...workspaceFiles], (file) => readManifest(repoRoot, file));
+  const manifests = yield* Effect.forEach(["package.json", ...workspaceFiles], (file) => readManifest(repoRoot, file), {
+    concurrency: 1,
+  });
   const lockfilePackages = yield* readLockfilePackages(repoRoot);
   const templateFiles = yield* collectTemplateFiles(repoRoot);
-  const templateReferences = yield* Effect.forEach(templateFiles, (file) =>
-    Effect.map(readText(repoRoot, file), (content) => catalogTemplateReferencesFromText(file, content))
+  const templateReferences = yield* Effect.forEach(
+    templateFiles,
+    (file) => Effect.map(readText(repoRoot, file), (content) => catalogTemplateReferencesFromText(file, content)),
+    { concurrency: 1 }
   );
 
   return CatalogUsageSnapshot.make({
@@ -468,7 +472,10 @@ export const runCatalogUsageCheck = Effect.fn("CatalogUsage.runCatalogUsageCheck
   );
   if (A.isReadonlyArrayNonEmpty(report.findings)) {
     yield* Console.error("[catalog-usage] root catalog entries and overrides without a consumer:");
-    yield* Effect.forEach(report.findings, (finding) => Console.error(renderFinding(finding)), { discard: true });
+    yield* Effect.forEach(report.findings, (finding) => Console.error(renderFinding(finding)), {
+      concurrency: 1,
+      discard: true,
+    });
     return yield* CatalogUsageError.make({
       message: `${A.length(report.findings)} root catalog entr(ies) or override(s) have no consumer.`,
       file: "package.json",

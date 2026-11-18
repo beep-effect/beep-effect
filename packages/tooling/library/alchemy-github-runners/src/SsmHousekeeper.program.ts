@@ -46,13 +46,13 @@ const dayMillis = 86_400_000;
 export const handleSsmHousekeeping = Effect.fn("SsmHousekeeper.handle")(function* (config: HousekeeperRuntimeConfig) {
   const ssm = yield* SsmStore;
   const cutoff = (yield* Clock.currentTimeMillis) - config.minimumDaysOld * dayMillis;
-  const listed = yield* Effect.forEach(config.tokenPaths, ssm.listByPath);
+  const listed = yield* Effect.forEach(config.tokenPaths, ssm.listByPath, { concurrency: 1 });
   const stale = A.map(
     A.filter(A.flatten(listed), (entry) => O.exists(entry.lastModified, (modified) => modified < cutoff)),
     (entry) => entry.name
   );
   if (!config.dryRun) {
-    yield* Effect.forEach(stale, (name) => ssm.delete(name).pipe(Effect.ignore), { discard: true });
+    yield* Effect.forEach(stale, (name) => ssm.delete(name).pipe(Effect.ignore), { concurrency: 1, discard: true });
   }
   return stale;
 });

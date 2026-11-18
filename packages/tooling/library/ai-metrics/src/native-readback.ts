@@ -168,7 +168,8 @@ const expectedAttributes = Effect.fnUntraced(function* (expected: typeof expecte
         value.stringValue ?? (value.intValue !== undefined ? Number(value.intValue) : value.boolValue)
       ).pipe(Effect.mapError(() => fail("encoding")));
       return [key, scalar] satisfies readonly [string, string | number | boolean];
-    })
+    }),
+    { concurrency: 1 }
   );
   return R.fromEntries(entries);
 });

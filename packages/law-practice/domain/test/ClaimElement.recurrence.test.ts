@@ -159,7 +159,8 @@ const preparedFor = Effect.fn("recurrence.preparedFor")(function* (
           : { ...fields, claimType: "dependent", claimReferences: control.claimReferences }
       );
       return ClaimInputQualification.cases["context-ready"].make({ record: source, claim });
-    })
+    }),
+    { concurrency: 1 }
   );
   return PreparedClaimInspection.make({ input, qualifications });
 });

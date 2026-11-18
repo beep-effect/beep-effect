@@ -427,7 +427,7 @@ describe("goalCompletionTransient", () => {
         expect(receipt.outcome).toBe("unknown");
         expect([gap, goalCompletionTransient(receipt)]).toEqual([gap, A.contains(TRANSIENT_GAPS, gap)]);
       }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     )
   );
 

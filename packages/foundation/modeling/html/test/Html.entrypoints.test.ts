@@ -45,10 +45,13 @@ describe("@beep/html per-module entry points", () => {
             return Promise.allSettled([child.exited, stderr]);
           }).pipe(Effect.withSpan("Html.entrypointsImport.cleanup"))
       );
-      const [exitCode, stderr] = yield* Effect.all([
-        Effect.promise(() => child.exited).pipe(Effect.withSpan("Html.entrypointsImport.exit")),
-        Effect.promise(() => readStderr).pipe(Effect.withSpan("Html.entrypointsImport.drain")),
-      ]).pipe(Effect.withSpan("Html.entrypointsImport.import"));
+      const [exitCode, stderr] = yield* Effect.all(
+        [
+          Effect.promise(() => child.exited).pipe(Effect.withSpan("Html.entrypointsImport.exit")),
+          Effect.promise(() => readStderr).pipe(Effect.withSpan("Html.entrypointsImport.drain")),
+        ],
+        { concurrency: 1 }
+      ).pipe(Effect.withSpan("Html.entrypointsImport.import"));
 
       expect({ exitCode, stderr }).toStrictEqual({ exitCode: 0, stderr: "" });
     })

@@ -67,7 +67,8 @@ describe("Range", () => {
         assertSuccess(Range.parseResult(input), range);
         const versions = yield* Effect.forEach(
           ["0.9.9", `${tuple}-0`, `${tuple}-alpha`, `${tuple}-beta`, tuple, "2.0.0"],
-          SemVer.parse
+          SemVer.parse,
+          { concurrency: 1 }
         );
         for (const version of versions) assert.isFalse(range.test(version), `${input} at ${version}`);
         assert.deepStrictEqual(range.filter(versions), []);
@@ -161,10 +162,13 @@ describe("Range", () => {
           const range = yield* Range.parse(input);
           assert.strictEqual(range.toString(), ">=0.0.0");
           assertSuccess(Range.parseResult(input), range);
-          const stable = yield* Effect.forEach(["0.0.0", "0.9.9", "1.0.0", "2.0.0", "999.0.0"], SemVer.parse);
+          const stable = yield* Effect.forEach(["0.0.0", "0.9.9", "1.0.0", "2.0.0", "999.0.0"], SemVer.parse, {
+            concurrency: 1,
+          });
           const prereleases = yield* Effect.forEach(
             ["0.0.0-0", "0.5.0-alpha", "1.0.0-beta", "2.0.0-rc.1"],
-            SemVer.parse
+            SemVer.parse,
+            { concurrency: 1 }
           );
           for (const version of stable) assert.isTrue(range.test(version), `${input} at ${version}`);
           for (const version of prereleases) assert.isFalse(range.test(version), `${input} at ${version}`);
@@ -183,7 +187,8 @@ describe("Range", () => {
           assertSuccess(Range.parseResult(input), range);
           const versions = yield* Effect.forEach(
             ["0.0.0-0", "0.0.0-alpha", "0.0.0", "0.9.9", "1.0.0-beta", "1.0.0", "2.0.0-rc.1", "2.0.0", "999.0.0"],
-            SemVer.parse
+            SemVer.parse,
+            { concurrency: 1 }
           );
           for (const version of versions) assert.isFalse(range.test(version), `${input} at ${version}`);
           assert.deepStrictEqual(range.filter(versions), []);
@@ -206,7 +211,9 @@ describe("Range", () => {
     it.effect("matches instance and static forms identically", () =>
       Effect.gen(function* () {
         const range = yield* Range.parse("^1.0.0");
-        const versions = yield* Effect.forEach(["0.9.0", "1.0.0", "1.9.9", "2.0.0"], (s) => SemVer.parse(s));
+        const versions = yield* Effect.forEach(["0.9.0", "1.0.0", "1.9.9", "2.0.0"], (s) => SemVer.parse(s), {
+          concurrency: 1,
+        });
         assert.deepStrictEqual(A.map(range.filter(versions), String), ["1.0.0", "1.9.9"]);
         assert.deepStrictEqual(Range.filter(versions, range), range.filter(versions));
         const parsed7 = yield* SemVer.parse("1.5.0");
@@ -232,7 +239,9 @@ describe("Range", () => {
   describe("maxSatisfying / minSatisfying", () => {
     it.effect("finds the extremum satisfying version as an Option", () =>
       Effect.gen(function* () {
-        const versions = yield* Effect.forEach(["0.9.0", "1.0.0", "1.5.0", "1.9.9", "2.0.0"], (s) => SemVer.parse(s));
+        const versions = yield* Effect.forEach(["0.9.0", "1.0.0", "1.5.0", "1.9.9", "2.0.0"], (s) => SemVer.parse(s), {
+          concurrency: 1,
+        });
         const range = yield* Range.parse("^1.0.0");
         assertSome(Range.maxSatisfying(versions, range).pipe(O.map(String)), "1.9.9");
         assertSome(Range.minSatisfying(versions, range).pipe(O.map(String)), "1.0.0");
@@ -503,7 +512,8 @@ describe("Range round-1 regressions", () => {
           "*",
           "<0.0.0-0",
         ],
-        Range.parse
+        Range.parse,
+        { concurrency: 1 }
       );
       ranges.push(Range.make({ sets: [[]] }), Range.make({ sets: [] }));
       const versions = yield* Effect.forEach(
@@ -527,7 +537,8 @@ describe("Range round-1 regressions", () => {
           "2.0.0-beta",
           "2.0.0",
         ],
-        SemVer.parse
+        SemVer.parse,
+        { concurrency: 1 }
       );
       for (const a of ranges) {
         for (const b of ranges) {

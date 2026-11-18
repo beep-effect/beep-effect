@@ -613,17 +613,19 @@ export const validateCacheSignedPilotReceipt = Effect.fn("CachePilot.validateSig
   yield* validateSignedPolicyRefusal(receipt, runs, baseline);
 
   yield* validateSignedBaselineInputs(receipt, freshRuns, baseline);
-  yield* Effect.forEach(freshPairs, (pair) => validateCacheSignedPilotFreshPair(pair, receipt.key), { discard: true });
+  yield* Effect.forEach(freshPairs, (pair) => validateCacheSignedPilotFreshPair(pair, receipt.key), {
+    concurrency: 1,
+    discard: true,
+  });
   yield* validateCacheSignedPilotConcurrency(freshPairs);
   yield* Effect.forEach(receipt.shadows, (shadow) => validateCacheSignedPilotShadow(shadow, baseline), {
+    concurrency: 1,
     discard: true,
   });
   yield* Effect.forEach(
     receipt.mutations,
     (mutation) => validateCacheSignedPilotMutation(mutation, receipt.key, receipt.client),
-    {
-      discard: true,
-    }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     A.appendAll(
@@ -631,7 +633,7 @@ export const validateCacheSignedPilotReceipt = Effect.fn("CachePilot.validateSig
       A.map(receipt.shadows, (shadow) => shadow.comparison)
     ),
     (pair) => validateCacheSignedPilotPair(pair, receipt.key, receipt.client),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   return receipt;

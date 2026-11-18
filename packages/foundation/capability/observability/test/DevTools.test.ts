@@ -72,10 +72,13 @@ describe("DevTools", () => {
       yield* Layer.build(tracerLayer).pipe(
         Effect.flatMap((context) =>
           Effect.provideContext(
-            Effect.all([
-              traced.pipe(Effect.withSpan("published", { attributes: { early: true } })),
-              traced.pipe(Effect.withSpan("filtered")),
-            ]),
+            Effect.all(
+              [
+                traced.pipe(Effect.withSpan("published", { attributes: { early: true } })),
+                traced.pipe(Effect.withSpan("filtered")),
+              ],
+              { concurrency: 1 }
+            ),
             context
           )
         )

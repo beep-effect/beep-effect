@@ -319,11 +319,14 @@ describe("LegalPositionRelatorPolicy — admission", () => {
     it.effect("refuses a record missing any one required field, naming the field it refused", () =>
       Effect.gen(function* () {
         const policy = yield* LegalPositionRelatorPolicy;
-        const refusals = yield* Effect.forEach(REQUIRED_RELATOR_FIELDS, (field) =>
-          policy.admit(R.remove(PRIVILEGE_TO_ENTER, field)).pipe(
-            Effect.flip,
-            Effect.map((error) => ({ field, message: error.message, tag: error._tag }))
-          )
+        const refusals = yield* Effect.forEach(
+          REQUIRED_RELATOR_FIELDS,
+          (field) =>
+            policy.admit(R.remove(PRIVILEGE_TO_ENTER, field)).pipe(
+              Effect.flip,
+              Effect.map((error) => ({ field, message: error.message, tag: error._tag }))
+            ),
+          { concurrency: 1 }
         );
 
         expect(A.length(refusals)).toBe(A.length(REQUIRED_RELATOR_FIELDS));

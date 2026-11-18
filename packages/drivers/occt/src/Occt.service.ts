@@ -65,10 +65,10 @@ const loadKernel = Effect.fn("Occt.loadKernel")(function* () {
   const path = yield* Path.Path;
   const wasmPath = require.resolve("replicad-opencascadejs/wasm");
   const replicadPackageJson = path.join(path.dirname(require.resolve("replicad")), "..", "package.json");
-  const [wasm, replicadVersion] = yield* Effect.all([
-    fs.readFile(wasmPath),
-    fs.readFileString(replicadPackageJson).pipe(Effect.flatMap(decodePackageVersion)),
-  ]).pipe(Effect.mapError((cause) => OcctError.fromUnknown("kernel-init", "Could not read the kernel files.", cause)));
+  const [wasm, replicadVersion] = yield* Effect.all(
+    [fs.readFile(wasmPath), fs.readFileString(replicadPackageJson).pipe(Effect.flatMap(decodePackageVersion))],
+    { concurrency: 1 }
+  ).pipe(Effect.mapError((cause) => OcctError.fromUnknown("kernel-init", "Could not read the kernel files.", cause)));
   const wasmSha256 = yield* sha256(wasm);
   const oc: OpenCascadeInstance = yield* Effect.tryPromise({
     try: () => opencascade({ wasmBinary: wasm }),
@@ -116,19 +116,22 @@ const makeService = Effect.fn("Occt.makeService")(function* () {
       Effect.mapError((cause) => OcctError.fromUnknown("invalid-request", "Invalid projection request.", cause))
     );
     const built = yield* build(ModelSpec.make(request.solid));
-    return yield* Effect.forEach(request.cameras, (camera) =>
-      Effect.try({
-        try: () =>
-          project({
-            oc,
-            built,
-            camera,
-            withHidden: request.withHidden,
-            shading: request.shading,
-            overlays: request.solid.overlays,
-          }),
-        catch: (cause) => OcctError.fromUnknown("projection", "Hidden-line removal failed.", cause),
-      })
+    return yield* Effect.forEach(
+      request.cameras,
+      (camera) =>
+        Effect.try({
+          try: () =>
+            project({
+              oc,
+              built,
+              camera,
+              withHidden: request.withHidden,
+              shading: request.shading,
+              overlays: request.solid.overlays,
+            }),
+          catch: (cause) => OcctError.fromUnknown("projection", "Hidden-line removal failed.", cause),
+        }),
+      { concurrency: 1 }
     );
   });
 

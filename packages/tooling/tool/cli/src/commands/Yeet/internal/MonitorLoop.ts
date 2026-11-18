@@ -1736,7 +1736,7 @@ const noticeMonitorCorruptReceipts = Effect.fn("YeetMonitorLoop.noticeCorruptRec
       Console.error(
         `[yeet] base-conflict ack receipt ${receipt.path} does not decode; counting conflict generation ${receipt.generation} on head ${Str.slice(0, 7)(observed.headSha)} as consumed`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   return A.reduce(fresh, noticed, (acc, receipt) => HashSet.add(acc, receipt.generation));
 });
@@ -1912,7 +1912,7 @@ const convergeMonitorComments = Effect.fn("YeetMonitorLoop.convergeComments")(fu
       Console.log(
         `[yeet] P1 pr-comment row ${row.id}: comment by @${row.capsule.author} on PR #${row.capsule.prNumber} ${row.capsule.link}`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 

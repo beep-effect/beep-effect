@@ -87,7 +87,8 @@ const walkForHeaderFiles = Effect.fn("PracticeKg.walkForHeaderFiles")(function* 
         return yield* walkForHeaderFiles(canonical, canonicalRoot);
       }
       return info.type === "File" && entry === "OutlookHeaders.txt" ? A.of(canonical) : A.empty<string>();
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.flatten(children);
 });
@@ -149,7 +150,8 @@ const readEmailArchiveRows = Effect.fn("PracticeKg.readEmailArchiveRows")(functi
           submitIso: O.flatMap(headerValue(headers, "Client submit time"), outlookTimestampToIso),
         }),
       });
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 
@@ -201,11 +203,14 @@ export const readEmailRows = Effect.fn("PracticeKg.readEmailRows")(function* (
     .readDirectory(childrenRoot)
     .pipe(PracticeKgProjectionError.mapError(`Failed reading extract children root "${childrenRoot}".`));
   const archiveEntries = A.sort(pipe1, Order.String);
-  const rows = yield* Effect.forEach(archiveEntries, (archiveEntry) =>
-    O.match(archiveDigestFromDirectory(archiveEntry), {
-      onNone: () => Effect.succeed(A.empty<PracticeKgEmailHeaderRow>()),
-      onSome: (archiveDigest) => readEmailArchiveRows(path.join(childrenRoot, archiveEntry), archiveDigest),
-    })
+  const rows = yield* Effect.forEach(
+    archiveEntries,
+    (archiveEntry) =>
+      O.match(archiveDigestFromDirectory(archiveEntry), {
+        onNone: () => Effect.succeed(A.empty<PracticeKgEmailHeaderRow>()),
+        onSome: (archiveDigest) => readEmailArchiveRows(path.join(childrenRoot, archiveEntry), archiveDigest),
+      }),
+    { concurrency: 1 }
   );
   return A.sort(
     A.flatten(rows),

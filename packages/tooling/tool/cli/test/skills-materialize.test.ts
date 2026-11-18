@@ -224,7 +224,8 @@ const makeRepo = Effect.fn("SkillsMaterializeTest.makeRepo")(function* (
         owner: "@kriegcloud",
         dropCondition: "Drop when upstream contains an equivalent change.",
       });
-    })
+    }),
+    { concurrency: 1 }
   );
   const readFileString1 = yield* fs.readFileString(oracleLockFixture);
   const base = (yield* decodeSkillsLockDocumentJson(readFileString1)).skills.oracle;

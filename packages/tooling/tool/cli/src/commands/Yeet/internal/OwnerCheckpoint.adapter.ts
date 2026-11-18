@@ -250,7 +250,7 @@ export const readOwnerCheckpointSnapshot = Effect.fn("OwnerCheckpoint.readNative
     const statusRows = yield* client
       .paginateStream("GET /repos/{owner}/{repo}/commits/{ref}/statuses", at)
       .pipe(collectNativeRows);
-    const statuses = yield* Effect.forEach(statusRows, projectOwnerCheckpointClassicStatus);
+    const statuses = yield* Effect.forEach(statusRows, projectOwnerCheckpointClassicStatus, { concurrency: 1 });
     if (A.dedupe(A.map(statuses, (row) => row.id)).length !== statuses.length) return yield* refuse("evidence");
     // The retained merge gate models required check runs. Status-only names stay
     // explicitly unsupported until that pure contract is extended and qualified.

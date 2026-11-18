@@ -515,6 +515,7 @@ const enumerateWildcard = Effect.fnUntraced(function* (scope: EnumerationScope, 
     const frame = current;
     const entries = yield* readFrame(scope, wildcard, frame);
     yield* Effect.forEach(entries, (entry) => visitEntry(scope, wildcard, traversal, frame, entry), {
+      concurrency: 1,
       discard: true,
     });
   }
@@ -612,7 +613,10 @@ export const enumerate: {
       skipsPath: skipsPathOf(skipDirectoryNames),
     };
     yield* includeLiterals(scope, globs.literals);
-    yield* Effect.forEach(globs.wildcards, (wildcard) => enumerateWildcard(scope, wildcard), { discard: true });
+    yield* Effect.forEach(globs.wildcards, (wildcard) => enumerateWildcard(scope, wildcard), {
+      concurrency: 1,
+      discard: true,
+    });
     return A.sort(
       A.map([...scope.included], ([relativePath, absolute]) =>
         EnumeratedDirectory.make({ relativePath, path: absolute })

@@ -64,7 +64,7 @@ const raiseOnFailedExtractFramesDir = (result: ExtractFramesDirResult): Effect.E
 const renderExtractFramesDirResult = Effect.fn("ImageCommand.renderExtractFramesDirResult")(function* (
   result: ExtractFramesDirResult
 ): Effect.fn.Return<void, ImageCommandError> {
-  yield* Effect.forEach(result.outcomes, printExtractFramesDirOutcome, { discard: true });
+  yield* Effect.forEach(result.outcomes, printExtractFramesDirOutcome, { concurrency: 1, discard: true });
   yield* Console.log(renderExtractFramesDirSummary(result));
   yield* raiseOnFailedExtractFramesDir(result);
 });

@@ -150,15 +150,18 @@ export const suiteWith = (testApi: Vitest.MethodsNonLive<SqlClient.SqlClient | S
 
           // each round's id is new, so both transactions find no row for it
           // beep: Effect.forEach replaces the upstream for loop.
-          yield* Effect.forEach(A.range(0, 9), (round) =>
-            Effect.all(
-              A.map([1, 2], (n) =>
-                queue
-                  .offer(`offer-${n}`, { id: `job-${round}`, deduplicate: "untilExecuted" })
-                  .pipe(sql.withTransaction)
+          yield* Effect.forEach(
+            A.range(0, 9),
+            (round) =>
+              Effect.all(
+                A.map([1, 2], (n) =>
+                  queue
+                    .offer(`offer-${n}`, { id: `job-${round}`, deduplicate: "untilExecuted" })
+                    .pipe(sql.withTransaction)
+                ),
+                { concurrency: "unbounded", discard: true }
               ),
-              { concurrency: "unbounded", discard: true }
-            )
+            { concurrency: 1 }
           );
         }).pipe(TestClock.withLive),
       { timeout: 30000 }

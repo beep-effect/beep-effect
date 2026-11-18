@@ -31,7 +31,7 @@ it.layer(BunCrypto.layer)("canonical authority identity", (it) => {
   it.effect("matches all 169 independently captured resource equality observations", () =>
     Effect.gen(function* () {
       const data = yield* inputs;
-      const ids = yield* Effect.forEach(data.cases, (row) => makeCitationAuthorityId(row.input));
+      const ids = yield* Effect.forEach(data.cases, (row) => makeCitationAuthorityId(row.input), { concurrency: 1 });
       expect(A.length(ids)).toBe(13);
       expect(ids).toEqual(A.map(data.cases, (row) => row.expectedId));
       expect(A.map(ids, (left) => A.map(ids, (right) => left === right))).toEqual(data.equality);

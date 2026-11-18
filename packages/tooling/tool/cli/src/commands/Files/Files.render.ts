@@ -455,9 +455,7 @@ export const renderDetectBordersReportJson = Effect.fn("Files.renderDetectBorder
  * @since 0.0.0
  */
 export const logRenamePlan = Effect.fn("Files.logRenamePlan")(function* (plan: ReadonlyArray<RenamePlanEntry>) {
-  yield* Effect.forEach(plan, (entry) => Console.log(renderPlanEntry(entry)), {
-    discard: true,
-  });
+  yield* Effect.forEach(plan, (entry) => Console.log(renderPlanEntry(entry)), { concurrency: 1, discard: true });
 });
 
 /**
@@ -479,6 +477,7 @@ export const logStripMetadataPlan = Effect.fn("Files.logStripMetadataPlan")(func
   plan: ReadonlyArray<StripMetadataPlanEntry>
 ) {
   yield* Effect.forEach(plan, (entry) => Console.log(renderStripMetadataPlanEntry(entry)), {
+    concurrency: 1,
     discard: true,
   });
 });
@@ -500,9 +499,11 @@ export const logStripMetadataPlan = Effect.fn("Files.logStripMetadataPlan")(func
  */
 export const logNormalizePlan = Effect.fn("Files.logNormalizePlan")(function* (plan: NormalizePlan) {
   yield* Effect.forEach(plan.entries, (entry) => Console.log(renderNormalizePlanEntry(entry)), {
+    concurrency: 1,
     discard: true,
   });
   yield* Effect.forEach(plan.skipped, (entry) => Console.log(renderNormalizeSkippedEntry(entry)), {
+    concurrency: 1,
     discard: true,
   });
 });
@@ -526,9 +527,11 @@ export const logCreateCaptionFilesPlan = Effect.fn("Files.logCreateCaptionFilesP
   plan: CreateCaptionFilesPlan
 ) {
   yield* Effect.forEach(plan.entries, (entry) => Console.log(renderCreateCaptionFilesPlanEntry(entry)), {
+    concurrency: 1,
     discard: true,
   });
   yield* Effect.forEach(plan.skipped, (entry) => Console.log(renderCreateCaptionFilesSkippedEntry(entry)), {
+    concurrency: 1,
     discard: true,
   });
 });
@@ -552,9 +555,11 @@ export const logArchivePoorCandidatesPlan = Effect.fn("Files.logArchivePoorCandi
   plan: ArchivePoorCandidatesPlan
 ) {
   yield* Effect.forEach(plan.entries, (entry) => Console.log(renderArchivePoorCandidatesEntry(entry)), {
+    concurrency: 1,
     discard: true,
   });
   yield* Effect.forEach(plan.skipped, (entry) => Console.log(renderArchivePoorCandidatesSkippedEntry(entry)), {
+    concurrency: 1,
     discard: true,
   });
 });
@@ -579,6 +584,7 @@ export const logDetectBordersEntries = Effect.fn("Files.logDetectBordersEntries"
 ) {
   const borderedEntries = A.filter(entries, (entry) => entry.hasBorder);
   yield* Effect.forEach(borderedEntries, (entry) => Console.log(renderDetectBordersEntry(entry)), {
+    concurrency: 1,
     discard: true,
   });
 });
@@ -602,6 +608,7 @@ export const logCropBordersPlan = Effect.fn("Files.logCropBordersPlan")(function
   plan: ReadonlyArray<CropBordersPlanEntry>
 ) {
   yield* Effect.forEach(plan, (entry) => Console.log(renderCropBordersPlanEntry(entry)), {
+    concurrency: 1,
     discard: true,
   });
 });

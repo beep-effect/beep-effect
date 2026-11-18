@@ -555,9 +555,13 @@ export const collectExpectationRewrites = Effect.fn("Yeet.collectExpectationRewr
   const renamed = yield* readGitRenames(repoRoot, mergeBase, "HEAD", EXPECTATION_TEST_PATHSPEC, listingAdapter, () =>
     YeetCommandError.make({ message: "git diff --name-status returned a malformed rename table.", exitCode: 1 })
   );
-  const fromModified = yield* Effect.forEach(modified, (path) => diffTestFile(repoRoot, mergeBase, path, path));
-  const fromRenamed = yield* Effect.forEach(renamed, (rename) =>
-    diffTestFile(repoRoot, mergeBase, rename.sourcePath, rename.targetPath)
+  const fromModified = yield* Effect.forEach(modified, (path) => diffTestFile(repoRoot, mergeBase, path, path), {
+    concurrency: 1,
+  });
+  const fromRenamed = yield* Effect.forEach(
+    renamed,
+    (rename) => diffTestFile(repoRoot, mergeBase, rename.sourcePath, rename.targetPath),
+    { concurrency: 1 }
   );
   return A.flatten([...fromModified, ...fromRenamed]);
 });
@@ -629,8 +633,10 @@ export const verifyExpectationRewrites = Effect.fn("Yeet.verifyExpectationRewrit
       if (installExit !== 0) {
         return unverifiedAll(`bun install in the merge-base worktree exited ${installExit}`);
       }
-      return yield* Effect.forEach(files, ([testFile, count]) =>
-        classifyOnBase(baseRoot, testFile, baseFileFor(rewrites, testFile), count)
+      return yield* Effect.forEach(
+        files,
+        ([testFile, count]) => classifyOnBase(baseRoot, testFile, baseFileFor(rewrites, testFile), count),
+        { concurrency: 1 }
       );
     }),
     () => git.worktreeRemove(repoRoot, baseRoot, { force: true }).pipe(Effect.ignore)

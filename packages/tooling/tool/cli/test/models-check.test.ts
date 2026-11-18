@@ -61,7 +61,7 @@ const stageWorkspace = Effect.fnUntraced(function* (manifestFixture = "manifest.
   yield* Effect.forEach(
     stagedFixtures,
     (name) => Effect.flatMap(readFixtureText(name), (content) => fs.writeFileString(path.join(root, name), content)),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   const manifestPath = path.join(root, "models.yaml");

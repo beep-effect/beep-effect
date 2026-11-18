@@ -108,14 +108,19 @@ const readPacketTopic = Effect.fnUntraced(function* (manifest: string, kind: str
 export const libraryTopics = Effect.fn("Library.topics")(function* (repoRoot: string, reportWarnings = true) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const listed = yield* Effect.forEach(["goals", "explorations"], (kind) =>
-    fs.readDirectory(path.join(repoRoot, kind)).pipe(
-      Effect.orElseSucceed(A.empty<string>),
-      Effect.map((entries) => A.map(A.sort(entries, Str.Order), (slug) => ({ kind, slug })))
-    )
+  const listed = yield* Effect.forEach(
+    ["goals", "explorations"],
+    (kind) =>
+      fs.readDirectory(path.join(repoRoot, kind)).pipe(
+        Effect.orElseSucceed(A.empty<string>),
+        Effect.map((entries) => A.map(A.sort(entries, Str.Order), (slug) => ({ kind, slug })))
+      ),
+    { concurrency: 1 }
   );
-  const reads = yield* Effect.forEach(A.flatten(listed), ({ kind, slug }) =>
-    readPacketTopic(path.join(repoRoot, kind, slug, "ops/manifest.json"), kind, slug)
+  const reads = yield* Effect.forEach(
+    A.flatten(listed),
+    ({ kind, slug }) => readPacketTopic(path.join(repoRoot, kind, slug, "ops/manifest.json"), kind, slug),
+    { concurrency: 1 }
   );
   const topics = A.flatMap(reads, (read) => (read._tag === "Topic" ? [read.topic] : []));
   const warnings = A.filter(reads, (read) => read._tag === "Unreadable").length;

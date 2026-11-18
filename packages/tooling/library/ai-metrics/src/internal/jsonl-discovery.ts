@@ -59,7 +59,9 @@ export const collectJsonlFiles = Effect.fn("AiMetrics.collectJsonlFiles")(functi
     }
 
     const entries = yield* fs.readDirectory(currentPath).pipe(Effect.orElseSucceed(A.empty<string>));
-    const forEach1 = yield* Effect.forEach(entries, (entry) => walk(pathApi.join(currentPath, entry)));
+    const forEach1 = yield* Effect.forEach(entries, (entry) => walk(pathApi.join(currentPath, entry)), {
+      concurrency: 1,
+    });
     return A.flatten(forEach1);
   });
 

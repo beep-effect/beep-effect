@@ -226,8 +226,10 @@ it.layer(NodeServices.layer, { concurrent: false, timeout: "20 seconds" })(
         const path = `${yield* temp}/usage.jsonl`;
         const cumulative = { total_token_usage: { input_tokens: 0, output_tokens: 9 } };
         const emptyLast = { ...cumulative, last_token_usage: {} };
-        const lines = yield* Effect.forEach([cumulative, emptyLast], (info) =>
-          encode({ type: "event_msg", payload: { type: "token_count", info } })
+        const lines = yield* Effect.forEach(
+          [cumulative, emptyLast],
+          (info) => encode({ type: "event_msg", payload: { type: "token_count", info } }),
+          { concurrency: 1 }
         );
         yield* fs.writeFileString(path, `${A.join(lines, "\n")}\n`);
         const page = yield* readTranscriptPage(input(path));

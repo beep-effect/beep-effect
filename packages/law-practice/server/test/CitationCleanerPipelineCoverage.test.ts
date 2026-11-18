@@ -1,6 +1,11 @@
 import { makeCitationCleanerPipeline } from "@beep/law-practice-server/internal/Citation/CleanerPipeline";
 import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import {
+  CitationNativeProcessAdmission,
+  makeCitationNativeProcessAdmission,
+} from "@beep/law-practice-server/internal/Citation/NativeAdmission";
+import { makeCitationNativeLane } from "@beep/law-practice-server/internal/Citation/NativeLane";
+import {
   CitationCleaner,
   CitationCleanerFailure,
   CitationCleanerProduced,
@@ -13,8 +18,10 @@ import { it } from "@beep/test-runner";
 import { assertSome, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
+import * as Scope from "effect/Scope";
 import { makeCitationCleanerRegistryHarness as setup } from "./CitationCleanerRegistry.fixtures.ts";
 import { makeCitationTestScaffoldBinding, withCitationTestTextBudget } from "./CitationInvocation.fixtures.ts";
 
@@ -228,6 +235,45 @@ it.effect("preserves empty owned text without charging and refuses a non-callabl
       const snapshot = yield* work.snapshot;
       strictEqual(snapshot.producedTextUtf16, 0);
       strictEqual(snapshot.closed, true);
+    })
+  )
+);
+
+it.effect("maps a closed lane yield to a cleaner runtime refusal without invoking the host", () =>
+  withCitationTestTextBudget(
+    100,
+    Effect.gen(function* () {
+      const h = yield* setup();
+      const invocation = yield* CitationInvocation;
+      const admission = yield* makeCitationNativeProcessAdmission(invocation.policy.limits);
+      const scope = yield* Scope.make();
+      const lane = yield* makeCitationNativeLane(invocation.policy.limits, "clean").pipe(
+        Effect.provideService(Scope.Scope, scope),
+        Effect.provideService(CitationNativeProcessAdmission, admission)
+      );
+      const callback = yield* h.values.retainHost("closed-lane-callback");
+      let calls = 0;
+      h.hooks({
+        ...callableHooks,
+        invoke: () =>
+          Effect.sync(() => {
+            calls++;
+          }).pipe(Effect.andThen(Effect.die("closed lane invoked host"))),
+      });
+      h.select([callback]);
+      const pipeline = yield* makeCitationCleanerPipeline(invocation.policy.limits).pipe(
+        Effect.provideService(CitationCleaner, h.registry.runtime)
+      );
+      yield* Scope.close(scope, Exit.void);
+      const refused = yield* pipeline
+        .run({ text: "x", plan: "closed-lane" })
+        .pipe(Effect.provideService(CitationInvocation, { ...invocation, lane }), Effect.flip);
+      deepStrictEqual(refused, failure("runtime-failed"));
+      strictEqual(calls, 0);
+      const work = yield* h.work;
+      const state = yield* work.snapshot;
+      strictEqual(state.closed, true);
+      strictEqual(state.producedTextUtf16, 0);
     })
   )
 );

@@ -216,16 +216,6 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("literal citation cl
   );
 });
 
-it.effect("rejects malformed policy with a closed failure before installing operations", () =>
-  Effect.gen(function* () {
-    for (const policy of [null, {}, { sourceUtf16: 0 }]) {
-      const failure = yield* makeCitationLiteralCleaners(policy).pipe(Effect.flip);
-      expect(failure).toMatchObject({ reason: "invalid-input" });
-      expect("cause" in failure).toBe(false);
-    }
-  })
-);
-
 it.effect("rejects malformed literal requests before scanning or reserving text", () =>
   Effect.gen(function* () {
     const policy = yield* defaultCitationEnginePolicy;

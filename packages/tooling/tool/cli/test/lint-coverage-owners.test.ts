@@ -71,7 +71,7 @@ const writeFixture = Effect.fn("LintCoverageOwnersTest.writeFixture")(function* 
       ? '{ "name": "fixture-root", "private": true, "workspaces": ["packages/*"] }\n'
       : '{ "name": "fixture-root", "private": true }\n'
   );
-  yield* Effect.forEach(files, ([file, text]) => writeFile(root, file, text), { discard: true });
+  yield* Effect.forEach(files, ([file, text]) => writeFile(root, file, text), { concurrency: 1, discard: true });
   return root;
 });
 

@@ -239,7 +239,8 @@ const captureCacheSignedPilotWorker = Effect.fn("CachePilot.captureSignedWorker"
           request.pilot.biomeExecutable,
           request.pilot.executable,
         ],
-        fs.realPath
+        fs.realPath,
+        { concurrency: 1 }
       );
       const directory = yield* makePrivateSupervisorStorage(root, mounts);
       const encoded = yield* JsonStringCodec(CacheSignedPilotRequest).encode(

@@ -121,7 +121,7 @@ describe("CliLog.status", () => {
             CliLog.status(vocab, "success", "d"),
             CliLog.status(vocab, "success", "e", { level: "Debug" }),
           ],
-          { discard: true }
+          { concurrency: 1, discard: true }
         ),
         "human"
       );
@@ -139,7 +139,7 @@ describe("CliLog.status", () => {
             CliLog.status(Status.core, "failure", "z", { indent: -3 }),
             CliLog.status(Status.core, "failure", "w"),
           ],
-          { discard: true }
+          { concurrency: 1, discard: true }
         ),
         "agent"
       );
@@ -158,7 +158,7 @@ describe("CliLog.status", () => {
             CliLog.status(Status.core, "info", "d", { indent: Number.NaN }),
             CliLog.status(Status.core, "info", "e", { indent: 64 }),
           ],
-          { discard: true }
+          { concurrency: 1, discard: true }
         ),
         "agent"
       );

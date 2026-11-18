@@ -20,8 +20,8 @@ sets an environment variable, an extra input or an output of its own. What a rea
   network call and reads no credential, and `test/support/PersonalPlan.ts` is a recorded plan log with the
   stage renamed, so the result depends only on source inputs.
 - Workspace dependencies `@beep/alchemy-aws-extras`, `@beep/alchemy-github-runners`, `@beep/identity`,
-  `@beep/schema`; catalog dependencies `alchemy`, `@alchemy.run/aws`, `@alchemy.run/docker` (new catalog
-  entry at the same `2.0.0-beta.87` as the other `@alchemy.run/*` pins), `@alchemy.run/test`,
+  `@beep/schema`; catalog dependencies `alchemy`, `@alchemy.run/aws`, `@alchemy.run/docker` (a catalog
+  entry `main` already carries, `2.0.0-beta.87` like the other `@alchemy.run/*` pins), `@alchemy.run/test`,
   `@distilled.cloud/aws`, `@effect/platform-bun`, `effect`.
 
 Recording the package adopts its computations as reviewed legacy settings. No task becomes newly qualified and
@@ -31,6 +31,6 @@ no exception row is added.
 
 `bun run beep lint policy-fingerprint --write` added `packages/tooling/infra/ci-runners/package.json` to the
 generated `inputs` of `//#lint:policy-fingerprint` in `turbo.json` and to
-`standards/policy-tools.fingerprint.json`, as for every new workspace package. The root `package.json` gains one
-catalog line (`@alchemy.run/docker`). No task was added or removed, and no command, output, environment or
+`standards/policy-tools.fingerprint.json`, as for every new workspace package. Re-recorded 2026-11-18 on the
+per-subject baseline (`standards/cache-baseline/`) after merging `main`; the root `package.json` gains no line. No task was added or removed, and no command, output, environment or
 dependency edge changed. Scope, profile and epoch are unchanged.

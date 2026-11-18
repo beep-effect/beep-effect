@@ -131,7 +131,7 @@ describe("yeet resume", () => {
             expect(exit._tag).toBe("Failure");
             expect(globalThis.String(exit)).toContain("positive one-based integer");
           }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       )
     );
   });

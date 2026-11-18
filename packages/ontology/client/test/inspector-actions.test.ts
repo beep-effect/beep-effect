@@ -69,11 +69,14 @@ describe("ontology inspector client actions", () => {
       registry.set(setSubject, "not an iri");
       registry.set(setPredicate, "https://example.test/predicate");
       registry.set(setObject, "https://example.test/object");
-      yield* Effect.all([
-        AtomRegistry.getResult(registry, setSubject),
-        AtomRegistry.getResult(registry, setPredicate),
-        AtomRegistry.getResult(registry, setObject),
-      ]);
+      yield* Effect.all(
+        [
+          AtomRegistry.getResult(registry, setSubject),
+          AtomRegistry.getResult(registry, setPredicate),
+          AtomRegistry.getResult(registry, setObject),
+        ],
+        { concurrency: 1 }
+      );
 
       registry.set(setOntologyInspectorObjectKindAtom, "iri");
       yield* AtomRegistry.getResult(registry, setOntologyInspectorObjectKindAtom);
