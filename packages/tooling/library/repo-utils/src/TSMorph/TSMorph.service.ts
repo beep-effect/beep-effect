@@ -388,9 +388,12 @@ export type TSMorphServiceShape = {
   readonly getDiagnostics: (
     request: TsMorphDiagnosticsRequest
   ) => Effect.Effect<TsMorphDiagnosticsResult, TSMorphServiceError>;
+  // `repoRoot` scopes the project to that checkout instead of the working
+  // directory's, so a caller can edit a file in a sibling checkout.
   readonly updateSourceFile: (
     filePath: string,
-    update: (sourceFile: SourceFile, project: Project) => void
+    update: (sourceFile: SourceFile, project: Project) => void,
+    repoRoot?: string | undefined
   ) => Effect.Effect<boolean, TSMorphServiceError>;
 };
 
@@ -1398,14 +1401,14 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
   );
 
   const updateSourceFile: TSMorphServiceShape["updateSourceFile"] = Effect.fn("TSMorphService.updateSourceFile")(
-    function* (filePath, update) {
+    function* (filePath, update, repoRoot) {
       const safeFilePath = TypeScriptImplementationFilePath.make(filePath);
       const scope = yield* resolveScopeFromEntrypoint(
         TsMorphScopeEntrypointFile.make({
           _tag: "file",
           filePath: safeFilePath,
         }),
-        O.none(),
+        O.map(O.fromUndefinedOr(repoRoot), (root) => RepoRootPath.make(root)),
         DEFAULT_SCOPE_MODE,
         DEFAULT_REFERENCE_POLICY
       );

@@ -1,0 +1,18 @@
+{
+  "previous": {
+    "//": "e1ad252d218ee2f74ab9fbcf3c9fa53261e153f36b90c83daa1247135c33ed8b",
+    "@beep/repo-cli": "aef54f8d27e38b3249e2d6be01682e6ea8e0811388617da281c295b2eeb2266d"
+  },
+  "review": {
+    "reviewer": "Claude Fable 5.2 (gate-output-switch-on P3 lane, fix/gate-output-check-probe)",
+    "reason": "Re-record two subjects after merging the P1 and P2 slices of the same goal into the probe lane. @beep/repo-cli was re-recorded independently on both sides (the probe rewrote its generated check script; the merged slices changed its manifest), so the merged manifest matches neither record. The root subject drifts because turbo.json now carries both the merged passThroughEnv keys and the probe's CheckProbe.ts entries in four task input lists. Task outputs, environment entries and cache flags are unchanged by the merge; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+    }
+  },
+  "subjects": ["//", "@beep/repo-cli"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

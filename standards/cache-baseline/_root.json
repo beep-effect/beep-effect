@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5, feat/prunable-seam-1b",
-    "reason": "Re-record the root subject for the final bytes after merging main 93c373f0ddb: main's model-first-slices check wiring and seam 1b of goals/prunable-product-leaves both change the root turbo.json (seam 1b's policy fingerprint reseal grew six generated seal tasks' inputs). The root digest is the only change. No command, cache flag, output, environment or declared input changed beyond those two reviewed edits; inputs only grow; no qualification or exception.",
+    "reviewer": "Claude Fable 5.2 (gate-output-switch-on P3 lane, fix/gate-output-check-probe)",
+    "reason": "Re-record two subjects after merging the P1 and P2 slices of the same goal into the probe lane. @beep/repo-cli was re-recorded independently on both sides (the probe rewrote its generated check script; the merged slices changed its manifest), so the merged manifest matches neither record. The root subject drifts because turbo.json now carries both the merged passThroughEnv keys and the probe's CheckProbe.ts entries in four task input lists. Task outputs, environment entries and cache flags are unchanged by the merge; no qualification is granted.",
     "basis": {
-      "path": "goals/prunable-product-leaves/research/2026-11-18-seam-1b-cache-review.md",
-      "sha256": "2c4dc72ad693bda061ff79e13fc8f425a35d050eae577f6b9c1d150a111b7d17"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "globalConfiguration": {
@@ -40,6 +40,22 @@
         "TSRS_FAST"
       ],
       "passThroughEnv": [
+        "AGENT",
+        "AI_AGENT",
+        "AUGMENT_AGENT",
+        "CLAUDECODE",
+        "CLAUDE_CODE",
+        "CODEX_SANDBOX",
+        "COPILOT_AGENT",
+        "COPILOT_CLI",
+        "CURSOR_AGENT",
+        "EDITOR",
+        "GEMINI_CLI",
+        "GOOSE_PROVIDER",
+        "JUNIE_DATA",
+        "JUNIE_SHIM_PATH",
+        "OPENCODE",
+        "REPL_ID",
         "BEEP_AGENT_SESSION_ID",
         "BEEP_NODE_BIN",
         "BEEP_DOCGEN_CONCURRENCY",
@@ -188,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "9a5dc124db8ec3216ecea07123230943720a30e2747450e09a9b409154b7387a"
+      "sha256": "3b74e78e443d46fc003cbee01305dbb88b7e429e8c8c276993341f9d04907cdd"
     }
   ],
   "nodes": [
@@ -2161,6 +2177,7 @@
           "packages/foundation/capability/walker/src/**",
           "packages/foundation/capability/xdg/package.json",
           "packages/foundation/capability/xdg/src/**",
+          "packages/foundation/modeling/contract-kit/package.json",
           "packages/foundation/modeling/epistemics/package.json",
           "packages/foundation/modeling/epistemics/src/**",
           "packages/foundation/modeling/github-commands/package.json",

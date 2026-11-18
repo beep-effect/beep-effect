@@ -1,11 +1,14 @@
 import { CliColor } from "@beep/cli-kit";
 import { TerminalEnv } from "@beep/runtime-env";
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
 import * as CliError from "effect/cli/CliError";
 import * as CliOutput from "effect/cli/CliOutput";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Stdio from "effect/Stdio";
 
 describe("CliColor.enabled", () => {
@@ -155,6 +158,65 @@ describe("CliColor.formatterLayer", () => {
           rendered,
           CliOutput.defaultFormatter({ colors: false }).formatVersion("my-awesome-tool", "1.2.3")
         );
+      })
+    );
+  });
+
+  // Core's formatter options pass through beside the colour decision and the overrides.
+  const globalFlagDoc = {
+    name: "log-level",
+    aliases: [],
+    type: "string",
+    description: O.some("Sets the minimum log level"),
+    required: false,
+  };
+  const helpDocAt = (commandPath: ReadonlyArray<string>) => ({
+    description: "A command",
+    usage: A.join(commandPath, " "),
+    annotations: Context.empty(),
+    flags: [],
+    globalFlags: [globalFlagDoc],
+    commandPath,
+  });
+  it.layer(
+    CliColor.formatterLayer(
+      { formatVersion: (name, version) => `${name} ${version} via @scope/plugin 2.0.0` },
+      { globalFlags: "summary", inheritedFlags: "none" }
+    ).pipe(
+      Layer.provide(Stdio.layerTest({ stdoutIsTerminal: Effect.succeed(false) })),
+      Layer.provide(Layer.succeed(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})))
+    ),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("applies the formatter options while keeping the overrides and the colour decision", () =>
+      Effect.gen(function* () {
+        const formatter = yield* CliOutput.Formatter;
+        const expected = CliOutput.defaultFormatter({ colors: false, globalFlags: "summary", inheritedFlags: "none" });
+        const subcommand = formatter.formatHelpDoc(helpDocAt(["tool", "sub"]));
+        assert.strictEqual(subcommand, expected.formatHelpDoc(helpDocAt(["tool", "sub"])));
+        assert.include(subcommand, "Run 'tool --help' for global flags");
+        assert.notInclude(subcommand, "--log-level");
+        const root = formatter.formatHelpDoc(helpDocAt(["tool"]));
+        assert.include(root, "GLOBAL FLAGS");
+        assert.include(root, "--log-level");
+        assert.strictEqual(formatter.formatVersion("tool", "1.0.0"), "tool 1.0.0 via @scope/plugin 2.0.0");
+      })
+    );
+  });
+
+  it.layer(
+    CliColor.formatterLayer().pipe(
+      Layer.provide(Stdio.layerTest({ stdoutIsTerminal: Effect.succeed(false) })),
+      Layer.provide(Layer.succeed(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({})))
+    ),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("lists global flags in full on a subcommand when no option is given", () =>
+      Effect.gen(function* () {
+        const formatter = yield* CliOutput.Formatter;
+        const subcommand = formatter.formatHelpDoc(helpDocAt(["tool", "sub"]));
+        assert.include(subcommand, "--log-level");
+        assert.notInclude(subcommand, "Run 'tool --help' for global flags");
       })
     );
   });

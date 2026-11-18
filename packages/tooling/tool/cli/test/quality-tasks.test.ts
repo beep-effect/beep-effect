@@ -91,6 +91,7 @@ import {
   foldTurboLaneDigests,
   GateOrderSeed,
   GateOrderSeedRow,
+  GITHUB_CHECK_RUN_REPORT_FILE_NAME,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
   GithubCheckLaneSpec,
@@ -172,6 +173,7 @@ import {
   testTsgoPlanningForTesting,
   turboLaneDigestFromSummary,
   turboSecretSessionStepForTesting,
+  turboStepForTesting,
   turboStepLocalEnvForTesting,
   unsplitIntegrationTaskArgsForTesting,
   validateCoverageTaskArgsForTesting,
@@ -198,6 +200,7 @@ import {
 import { DEFAULT_GATE_ORDER_SEED, WaveOrder } from "@beep/repo-cli/test/Yeet";
 import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
+import { AgentEnvKey } from "@beep/runtime-env/RuntimeEnv";
 import { Percentage } from "@beep/schema/Percentage";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -206,7 +209,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { assert, describe, expect, vi } from "@effect/vitest";
+import { afterAll, assert, beforeAll, describe, expect, vi } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
@@ -245,7 +248,7 @@ const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive in
 const decodeQualityTaskLaneRun = S.decodeEffect(QualityTaskLaneRun);
 const decodeQualityTaskLaneRunReportJson = S.decodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
 const encodeQualityTaskLaneRunReport = S.encodeEffect(QualityTaskLaneRunReport);
-const encodeQualityTaskLaneRunReportJson = S.encodeEffect(S.fromJsonString(QualityTaskLaneRunReport));
+const decodeGithubCheckRunReportJson = S.decodeEffect(S.fromJsonString(GithubCheckRunReport));
 
 const decodeCoverageComparisonFailure = S.decodeEffect(CoverageComparisonFailure);
 const decodeGithubCheckFailurePolicy = S.decodeEffect(GithubCheckFailurePolicy);
@@ -466,6 +469,23 @@ const withoutCiEffect = <Out, E, R>(use: Effect.Effect<Out, E, R>): Effect.Effec
     undefined,
     withEnvVarEffect("GITHUB_ACTIONS", undefined, withEnvVarEffect("CONTINUOUS_INTEGRATION", undefined, use))
   );
+
+// The task path reads its audience from the live environment, so an agent shell
+// would add `AGENT=1` and `--output-logs=errors-only` to every Turbo step this
+// file builds. The file pins a human run; the agent tests set the audience
+// themselves. `EDITOR` is the `devin` pattern row's variable.
+const agentSignalKeys: ReadonlyArray<string> = [...AgentEnvKey.literals, "AI_AGENT", "EDITOR"];
+const ambientAgentSignal = R.fromEntries(A.map(agentSignalKeys, (key) => [key, Bun.env[key]] as const));
+
+beforeAll(() => {
+  for (const key of agentSignalKeys) delete Bun.env[key];
+});
+
+afterAll(() => {
+  for (const [key, value] of R.toEntries(ambientAgentSignal)) {
+    if (value !== undefined) Bun.env[key] = value;
+  }
+});
 
 const withEnvVarsEffect = <Out, E, Req>(
   values: Readonly<Record<string, string | undefined>>,
@@ -2701,17 +2721,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         expect(report.schemaVersion).toBe("quality-task-lane-run/v1");
         assertSome(report.parentLaneId, "full:02-ci-parity");
         expect(A.map(report.lanes, (lane) => lane.id)).toEqual(["check"]);
+        // AC6 (gate-output-switch-on): the file is the record, so stdout carries no copy of the envelope.
         const logLines14 = yield* TestConsole.logLines;
-        const emitted = pipe(
-          logLines14,
-          A.filter(isString),
-          A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
-          O.getOrThrow
-        );
-        const emittedReport = yield* decodeQualityTaskLaneRunReportJson(
-          Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
-        );
-        expect(A.map(emittedReport.lanes, (lane) => lane.id)).toEqual(["check"]);
+        expect(
+          A.filter(A.filter(logLines14, isString), Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX))
+        ).toStrictEqual([]);
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -2719,50 +2733,52 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
-    it.effect("rebuilds an unscoped lane report from an unscoped artifact", () =>
+    // AC6 (gate-output-switch-on): with the side channel set, both envelopes stay in their durable files.
+    it.effect("writes both GitHub-check envelopes to durable files and none to stdout under the side channel", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const tempDir = yield* fs.makeTempDirectoryScoped();
-        const artifactPath = path.join(tempDir, "unscoped-inner-lanes.ndjson");
-        const durableReport = yield* encodeQualityTaskLaneRunReportJson(
-          QualityTaskLaneRunReport.make({
-            schemaVersion: "quality-task-lane-run/v1",
-            parentLaneId: O.none(),
-            lanes: [
-              QualityTaskLaneRun.make({
-                id: "check",
-                label: "ci:check",
-                status: "passed",
-                inputDigest: O.none(),
-              }),
-            ],
-          })
-        );
-        yield* fs.writeFileString(artifactPath, `${durableReport}\n`);
-
+        const artifactPath = path.join(tempDir, "inner-lanes.ndjson");
+        const waves = [
+          GithubCheckLaneWaveSpec.make({
+            wave: "preflight",
+            lanes: [githubCheckTestLane("quality:green", "preflight", "process.exit(0)")],
+          }),
+        ];
         yield* withEnvVarEffect(
           QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
           artifactPath,
           withEnvVarEffect(
             QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
-            undefined,
-            runQualityTaskStreamingLaneGroup("ci:local", [])
+            "full:02-ci-parity",
+            runQualityTaskGithubCheckLaneWaves("pre-push", waves, "fail-fast")
           )
         );
 
         const logLines15 = yield* TestConsole.logLines;
-        const emitted = pipe(
-          logLines15,
-          A.filter(isString),
-          A.findFirst(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)),
-          O.getOrThrow
+        const envelopes = A.filter(
+          A.filter(logLines15, isString),
+          (line) =>
+            Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX)(line) ||
+            Str.startsWith(GITHUB_CHECK_RUN_REPORT_PREFIX)(line)
         );
-        const emittedReport = yield* decodeQualityTaskLaneRunReportJson(
-          Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(emitted)
-        );
-        assertNone(emittedReport.parentLaneId);
-        expect(A.map(emittedReport.lanes, (lane) => lane.id)).toEqual(["check"]);
+        expect(envelopes).toStrictEqual([]);
+
+        const laneText = yield* fs.readFileString(artifactPath);
+        const laneLines = pipe(laneText, Str.split("\n"), A.filter(Str.isNonEmpty));
+        const laneReports = yield* Effect.forEach(laneLines, (line) => decodeQualityTaskLaneRunReportJson(line), {
+          concurrency: 1,
+        });
+        expect(A.flatMap(laneReports, (report) => A.map(report.lanes, (lane) => lane.id))).toEqual(["quality:green"]);
+
+        const checkText = yield* fs.readFileString(path.join(tempDir, GITHUB_CHECK_RUN_REPORT_FILE_NAME));
+        const checkLines = pipe(checkText, Str.split("\n"), A.filter(Str.isNonEmpty));
+        expect(checkLines).toHaveLength(1);
+        const checkReport = yield* A.head(checkLines).pipe(O.getOrThrow, decodeGithubCheckRunReportJson);
+        assertSome(checkReport.parentLaneId, "full:02-ci-parity");
+        expect(checkReport.failurePolicy).toBe("fail-fast");
+        expect(A.map(checkReport.lanes, (lane) => [lane.id, lane.status])).toEqual([["quality:green", "passed"]]);
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -2770,55 +2786,29 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       )
     );
 
-    it.effect("falls back when a lane artifact is missing or belongs to another parent", () =>
+    // AC6 (gate-output-switch-on): a bare terminal run keeps both envelopes on stdout, as before.
+    it.effect("prints both envelopes to stdout unchanged without the side channel", () =>
       Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const tempDir = yield* fs.makeTempDirectoryScoped();
-        const missingPath = path.join(tempDir, "missing.ndjson");
-        const foreignPath = path.join(tempDir, "foreign.ndjson");
-        const foreignReport = yield* encodeQualityTaskLaneRunReportJson(
-          QualityTaskLaneRunReport.make({
-            schemaVersion: "quality-task-lane-run/v1",
-            parentLaneId: O.some("full:foreign-parent"),
-            lanes: [],
-          })
-        );
-        yield* fs.writeFileString(foreignPath, `${foreignReport}\n`);
-
-        yield* Effect.forEach(
-          [missingPath, foreignPath],
-          (artifactPath) =>
-            withEnvVarEffect(
-              QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
-              artifactPath,
-              withEnvVarEffect(
-                QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
-                "full:current-parent",
-                runQualityTaskGithubCheckLaneWaves("pre-push", [], "fail-fast")
-              )
-            ),
-          { concurrency: 1, discard: true }
+        yield* withEnvVarEffect(
+          QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
+          undefined,
+          withEnvVarEffect(
+            QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
+            undefined,
+            runQualityTaskGithubCheckLaneWaves("pre-push", [], "fail-fast")
+          )
         );
 
         const logLines16 = yield* TestConsole.logLines;
-        const reportLines = pipe(
-          logLines16,
-          A.filter(isString),
-          A.filter(Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX))
-        );
-        expect(reportLines).toHaveLength(2);
-        const reports = yield* Effect.forEach(
-          reportLines,
-          (line) => decodeQualityTaskLaneRunReportJson(Str.slice(QUALITY_TASK_LANE_RUN_REPORT_PREFIX.length)(line)),
-          { concurrency: 1 }
-        );
-        expect(A.every(reports, (report) => A.isReadonlyArrayEmpty(report.lanes))).toBe(true);
-        pipe(
-          reports,
-          A.every((report) => O.contains(report.parentLaneId, "full:current-parent")),
-          assertTrue
-        );
+        const lines = A.filter(logLines16, isString);
+        const checkLines = A.filter(lines, Str.startsWith(GITHUB_CHECK_RUN_REPORT_PREFIX));
+        expect(checkLines).toStrictEqual([
+          `${GITHUB_CHECK_RUN_REPORT_PREFIX}{"schemaVersion":"github-check-run/v1","failurePolicy":"fail-fast","lanes":[],"skippedAfterRed":0}`,
+        ]);
+        const laneLines = A.filter(lines, Str.startsWith(QUALITY_TASK_LANE_RUN_REPORT_PREFIX));
+        expect(laneLines).toStrictEqual([
+          `${QUALITY_TASK_LANE_RUN_REPORT_PREFIX}{"schemaVersion":"quality-task-lane-run/v1","lanes":[]}`,
+        ]);
       }).pipe(
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
         Effect.provideServiceEffect(Console.Console, TestConsole.make),
@@ -11706,6 +11696,80 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         rootQualityStepsForTesting("/repo", getInvocation(["audit", "--filter=@beep/schema"]))
       );
       expect(argsOf(audit[0])).not.toContain(LABS_EXCLUDE_FILTER);
+    });
+  });
+
+  describe("agent audience on Turbo steps", () => {
+    const callerArgs = ["--affected", "--summarize"];
+
+    it("exports AGENT=1 and replays errors only under an agent", () => {
+      const step = turboStepForTesting("/repo", "check", ["check"], callerArgs, "agent");
+
+      expect(step.env).toEqual({ AGENT: "1" });
+      expect(step.args).toEqual([
+        "turbo",
+        "run",
+        "check",
+        ...expectedTurboCacheArgs(callerArgs),
+        "--output-logs=errors-only",
+        ...callerArgs,
+      ]);
+    });
+
+    it("leaves human and CI steps exactly as before", () => {
+      for (const audience of ["human", "ci"] as const) {
+        const step = turboStepForTesting("/repo", "check", ["check"], callerArgs, audience);
+        expect(step).not.toHaveProperty("env");
+        expect(step.args).toEqual(expectedTurboArgs("check", callerArgs));
+      }
+    });
+
+    it("keeps the secret-session choice of a human run", () => {
+      const agent = turboStepForTesting("/repo", "check", ["check"], callerArgs, "agent");
+      const human = turboStepForTesting("/repo", "check", ["check"], callerArgs, "human");
+      expect(agent.useLocalEnv).toBe(human.useLocalEnv);
+    });
+
+    it("lets a caller's own --output-logs win", () => {
+      for (const own of [["--output-logs=full"], ["--output-logs", "hash-only"]]) {
+        const step = turboStepForTesting("/repo", "check", ["check"], own, "agent");
+        expect(step.args).not.toContain("--output-logs=errors-only");
+        expect(step.args).toEqual(expect.arrayContaining(own));
+        expect(step.env).toEqual({ AGENT: "1" });
+      }
+    });
+
+    it("does not read an --output-logs after the passthrough delimiter as the caller's", () => {
+      const step = turboStepForTesting("/repo", "test", ["test"], ["--", "--output-logs=full"], "agent");
+      expect(step.args).toContain("--output-logs=errors-only");
+      expect(A.drop(step.args, A.length(step.args) - 2)).toEqual(["--", "--output-logs=full"]);
+    });
+
+    it("merges AGENT=1 into a coverage step's own environment", () => {
+      const step = turboStepForTesting("/repo", "coverage", ["coverage"], [], "agent");
+      expect(step.env).toMatchObject({ AGENT: "1" });
+      expect(R.size(step.env ?? {})).toBeGreaterThan(1);
+    });
+
+    for (const [marker, value] of [
+      ["CLAUDECODE", "1"],
+      ["CODEX_THREAD_ID", "thread-fixture"],
+    ] as const) {
+      it(`reads the audience through @beep/runtime-env on the task path (${marker})`, () => {
+        const steps = withoutCi(() =>
+          withEnvVar(marker, value, () => rootQualityStepsForTesting("/repo", getInvocation(["check"])))
+        );
+        const check = O.getOrThrow(A.head(steps));
+        expect(check.env).toMatchObject({ AGENT: "1" });
+        expect(check.args).toContain("--output-logs=errors-only");
+      });
+    }
+
+    it("builds no agent signal when no agent is detected on the task path", () => {
+      const steps = withoutCi(() => rootQualityStepsForTesting("/repo", getInvocation(["check"])));
+      const check = O.getOrThrow(A.head(steps));
+      expect(check.env?.AGENT).toBeUndefined();
+      expect(check.args).not.toContain("--output-logs=errors-only");
     });
   });
 

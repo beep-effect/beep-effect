@@ -117,9 +117,14 @@ export const ArchitectureSliceRole = LiteralKit([
   "ui",
   "proof-app",
   "db-admin",
+  "contract",
+  "model",
+  "host",
+  "web",
 ]).pipe(
   $I.annoteSchema("ArchitectureSliceRole", {
-    description: "Role package, proof app, or internal admin target represented in an architecture operation plan.",
+    description:
+      "Role package, proof app, or internal admin target represented in an architecture operation plan: the legacy seven-package roles and the model-first context roles.",
   })
 );
 
@@ -139,6 +144,85 @@ export const ArchitectureSliceRole = LiteralKit([
  * @since 0.0.0
  */
 export type ArchitectureSliceRole = typeof ArchitectureSliceRole.Type;
+
+/**
+ * Package roles of a model-first bounded context: one package per dependency
+ * closure.
+ *
+ * **Example** (Validate the contract role)
+ *
+ * ```ts
+ * import { ArchitectureContextRole } from "@beep/repo-cli/commands/Architecture"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ArchitectureContextRole)("contract")) // true
+ * console.log(S.is(ArchitectureContextRole)("use-cases")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ArchitectureContextRole = LiteralKit(["contract", "model", "host", "web"]).pipe(
+  $I.annoteSchema("ArchitectureContextRole", {
+    description: "Package role of a model-first bounded context: contract, model, host or web.",
+  })
+);
+
+/**
+ * Package role of a model-first bounded context.
+ *
+ * **Example** (Assign the model role)
+ *
+ * ```ts
+ * import type { ArchitectureContextRole } from "@beep/repo-cli/commands/Architecture"
+ *
+ * const role: ArchitectureContextRole = "model"
+ * console.log(role) // "model"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ArchitectureContextRole = typeof ArchitectureContextRole.Type;
+
+/**
+ * Slice shapes an architecture operation plan can describe: the model-first
+ * four-package context, or the legacy seven-package slice.
+ *
+ * **Example** (Validate the legacy shape)
+ *
+ * ```ts
+ * import { ArchitectureShape } from "@beep/repo-cli/commands/Architecture"
+ * import * as S from "effect/Schema"
+ *
+ * console.log(S.is(ArchitectureShape)("legacy")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ArchitectureShape = LiteralKit(["model-first", "legacy"]).pipe(
+  $I.annoteSchema("ArchitectureShape", {
+    description: "Slice shape of an architecture operation plan: model-first or legacy.",
+  })
+);
+
+/**
+ * Slice shape an architecture operation plan describes.
+ *
+ * **Example** (Assign the model-first shape)
+ *
+ * ```ts
+ * import type { ArchitectureShape } from "@beep/repo-cli/commands/Architecture"
+ *
+ * const shape: ArchitectureShape = "model-first"
+ * console.log(shape) // "model-first"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ArchitectureShape = typeof ArchitectureShape.Type;
 
 /**
  * Slice role packages supported by `beep architecture create package`.
@@ -371,6 +455,7 @@ export const ArchitectureOperationSource = LiteralKit([
   "package-shell",
   "legacy-cleanup",
   "legacy-plan",
+  "model-first-template",
 ]).pipe(
   $I.annoteSchema("ArchitectureOperationSource", {
     description: "Origin of an architecture operation within the normalized plan factory.",
@@ -610,7 +695,7 @@ export class WritePackageJsonOperation extends S.Opaque<WritePackageJsonOperatio
   S.Struct({
     kind: S.tag("write-package-json"),
     operationId: OperationId,
-    role: ArchitecturePackageRole,
+    role: S.Union([ArchitecturePackageRole, ArchitectureContextRole]),
     path: S.String,
     writeMode: WriteIfMissing,
     conflictPolicy: SkipIdenticalFailDifferent,

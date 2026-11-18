@@ -139,6 +139,10 @@ const isolatedSuites = [
 // an inherited value fails their nested lanes. It must be unset, not empty: the reader falls back
 // with `??`. Workers inherit this process's environment, and a test that needs it sets its own.
 Reflect.deleteProperty(process.env, "BEEP_YEET_PROOF_BASE");
+// A Yeet proof step names its inner-lane report and wrapper id. An inherited value would send a test's
+// lane rows into the parent run's report and move the lane envelopes the tests read off stdout.
+Reflect.deleteProperty(process.env, "BEEP_YEET_INNER_LANE_REPORT_PATH");
+Reflect.deleteProperty(process.env, "BEEP_YEET_INNER_LANE_PARENT_ID");
 
 // Doctest mode collects `src/**` through `includeSource` and the property sweep resolves its own
 // include list, so both keep the single isolated project; splitting would run doctests twice.

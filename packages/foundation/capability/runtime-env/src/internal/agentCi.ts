@@ -58,8 +58,63 @@ export const CiName = CiNameBase.pipe(
  */
 export type CiName = typeof CiName.Type;
 
+const AgentEnvKeyBase = LiteralKit([
+  "CLAUDECODE",
+  "CLAUDE_CODE",
+  "REPL_ID",
+  "GEMINI_CLI",
+  "CODEX_SANDBOX",
+  "CODEX_THREAD_ID",
+  "OPENCODE",
+  "AUGMENT_AGENT",
+  "GOOSE_PROVIDER",
+  "JUNIE_DATA",
+  "JUNIE_SHIM_PATH",
+  "COPILOT_AGENT",
+  "COPILOT_CLI",
+  "CURSOR_AGENT",
+]);
+
+/**
+ * Names the environment variables whose presence marks an AI agent in the std-env agent table.
+ *
+ * **Details**
+ *
+ * The literals are the table's presence keys in its declared order; a set, non-empty value of any one of them
+ * detects its agent. Three more variables decide detection without being presence keys: `AI_AGENT` names the
+ * agent outright and wins over the table, and the `pi` and `devin` rows match a pattern in `PATH` and `EDITOR`.
+ * A tool that forwards the agent signal to child processes forwards these keys and those three.
+ *
+ * **Example** (List the presence keys an environment allowlist must forward)
+ *
+ * ```ts
+ * import { AgentEnvKey } from "@beep/runtime-env/RuntimeEnv";
+ * import * as A from "effect/Array";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(A.contains(AgentEnvKey.literals, "CODEX_THREAD_ID")) // true
+ * console.log(S.is(AgentEnvKey)("AI_AGENT")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const AgentEnvKey = AgentEnvKeyBase.pipe(
+  $I.annoteSchema("AgentEnvKey", {
+    description: "An environment variable whose presence marks an AI agent in the std-env agent table.",
+  })
+);
+
+/**
+ * Agent presence key accepted by the {@link AgentEnvKey} schema.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type AgentEnvKey = typeof AgentEnvKey.Type;
+
 type AgentRule =
-  | readonly [name: string, keys: ReadonlyArray<string>]
+  | readonly [name: string, keys: ReadonlyArray<AgentEnvKey>]
   | readonly [name: string, test: (env: Env) => boolean];
 
 const isSet = (value: string | undefined): value is string => value !== undefined && value !== "";
