@@ -425,7 +425,7 @@ const decodeWorkflowRows = S.decodeUnknownEffect(S.Array(WorkflowWire));
 const decodeRunRows = S.decodeUnknownEffect(S.Array(RunWire));
 const decodeJobRows = S.decodeUnknownEffect(S.Array(JobWire));
 const ArtifactWire = S.Struct({ id: S.Int, name: S.String, expired: S.Boolean, size_in_bytes: S.Int });
-const decodeArtifactRows = S.decodeUnknownEffect(S.Array(ArtifactWire));
+const ArtifactPage = S.Struct({ total_count: S.Int, artifacts: S.Array(ArtifactWire) });
 const ArchiveBytes = S.instanceOf(ArrayBuffer);
 const decodeRecordJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const ARTIFACT_PAGE = 100;
@@ -535,16 +535,27 @@ export const makeRouteGithubRunner = Effect.gen(function* () {
         if (args[1] === "task-outcomes") {
           const runId = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[2]);
           const attempt = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[3]);
-          yield* Ref.update(spent, (n) => n + 1);
-          const artifacts = yield* client
-            .paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts", {
-              ...at,
-              run_id: runId,
-              per_page: ARTIFACT_PAGE,
-            })
-            .pipe(Effect.flatMap(decodeArtifactRows));
-          // The first page is counted before the call; later pages once the listing is known.
-          yield* Ref.update(spent, (n) => n + Math.max(0, Math.ceil(A.length(artifacts) / ARTIFACT_PAGE) - 1));
+          // Paged by hand so every page is counted as it is requested, a page a failed attempt sent included.
+          const listPages = (
+            page: number,
+            seen: ReadonlyArray<typeof ArtifactWire.Type>
+          ): Effect.Effect<ReadonlyArray<typeof ArtifactWire.Type>, GitHubError> =>
+            Ref.update(spent, (n) => n + 1).pipe(
+              Effect.andThen(
+                client.requestDecoded(
+                  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts",
+                  { ...at, run_id: runId, per_page: ARTIFACT_PAGE, page },
+                  ArtifactPage
+                )
+              ),
+              Effect.flatMap((listing) => {
+                const all = A.appendAll(seen, listing.artifacts);
+                return A.length(listing.artifacts) < ARTIFACT_PAGE || A.length(all) >= listing.total_count
+                  ? Effect.succeed(all)
+                  : listPages(page + 1, all);
+              })
+            );
+          const artifacts = yield* listPages(1, A.empty());
           const prefix = taskOutcomeArtifactPrefix(runId, attempt);
           const wanted = A.filter(
             artifacts,

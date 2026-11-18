@@ -251,6 +251,59 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       })
   );
 
+  it.effect("counts every listing page an attempt sends, including the pages of an attempt that failed", () =>
+    Effect.gen(function* () {
+      const recordText = yield* encodeRecord(record("Test Unit (unit-a)", [["@beep/a#test", "fail"]]));
+      const archive = zipSync({ "record.json": new TextEncoder().encode(recordText) });
+      // 150 artifacts over two pages: page 1 is all other artifacts, page 2 holds the record.
+      const other = A.makeBy(100, (i) => ({
+        id: 100 + i,
+        name: `unit-coverage-${RUN}-1-p${i}`,
+        expired: false,
+        size_in_bytes: 10,
+      }));
+      const rest = A.append(
+        A.makeBy(49, (i) => ({ id: 300 + i, name: `unit-timings-${RUN}-1-p${i}`, expired: false, size_in_bytes: 10 })),
+        {
+          id: 1,
+          name: `task-outcomes-${RUN}-1-test-unit-shard-unit-a`,
+          expired: false,
+          size_in_bytes: archive.byteLength,
+        }
+      );
+      const firstPage = yield* encode({ total_count: 150, artifacts: other });
+      const secondPage = yield* encode({ total_count: 150, artifacts: rest });
+      // The first request for page 2 fails, so the runner retries the whole listing.
+      let secondPageCalls = 0;
+      const fetch: RecordedFetch = Object.assign(
+        (input: string | URL | Request): Promise<Response> => {
+          const url = new URL(input instanceof Request ? input.url : input);
+          const page = url.searchParams.get("page");
+          secondPageCalls += page === "2" ? 1 : 0;
+          const json = (body: string, status = 200) =>
+            new Response(body, { status, headers: { "content-type": "application/json" } });
+          const response = Str.endsWith("/zip")(url.pathname)
+            ? new Response(archive, { status: 200, headers: { "content-type": "application/zip" } })
+            : page === "2"
+              ? secondPageCalls === 1
+                ? json("{}", 500)
+                : json(secondPage)
+              : json(firstPage);
+          Object.defineProperty(response, "url", { value: url.href });
+          return Promise.resolve(response);
+        },
+        { preconnect: () => undefined }
+      );
+      const run = yield* restRunner(fetch);
+      const fiber = yield* Effect.forkChild(run(["run", "task-outcomes", `${RUN}`, "1"], "."));
+      yield* TestClock.adjust("5 seconds");
+      const pagedText = yield* Fiber.join(fiber);
+      const payload = yield* decodePayload(pagedText);
+      // Attempt 1: pages 1 and 2 (failed). Attempt 2: pages 1 and 2. Then one download.
+      deepStrictEqual([payload.requests, A.map(payload.records, (entry) => entry.job)], [5, ["Test Unit (unit-a)"]]);
+    })
+  );
+
   it.effect("the capture fills failed jobs' tasks, so a failed task is `task` and a setup failure `setup`", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
