@@ -509,22 +509,22 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       // The reset is reported as already past, so the capture waits only its safety margin.
       const rateLimit = yield* encode({ resources: { core: { reset: 1_794_000_000 } } });
       let readCalls = 0;
-      // Lazy, as the real runner is: a retried effect re-runs its body.
+      // Lazy, as the real runner is: a retried effect re-runs its body, so the first read is refused and the
+      // read after the wait succeeds.
+      const refusedOnce = Effect.suspend(() => {
+        readCalls += 1;
+        return readCalls === 1
+          ? Effect.fail(RouteGhRateLimited.make({ command: "gh run task-outcomes", output: "429", requests: 3 }))
+          : Effect.succeed(outcomes);
+      });
+      // The window is one day of one workflow, so every list call is that day's.
+      const answers: Readonly<Record<string, Effect.Effect<string, RouteGhRateLimited>>> = {
+        api: Effect.succeed(rateLimit),
+        list: Effect.succeed(list),
+        "task-outcomes": refusedOnce,
+      };
       const runGh: RouteGhRunner = (args) =>
-        Effect.suspend(() => {
-          readCalls += args[1] === "task-outcomes" ? 1 : 0;
-          return args[0] === "api"
-            ? Effect.succeed(rateLimit)
-            : args[1] === "list"
-              ? Effect.succeed(args[5] === DAY && args[3] === "Check" ? list : "[]")
-              : args[1] === "task-outcomes"
-                ? readCalls === 1
-                  ? Effect.fail(
-                      RouteGhRateLimited.make({ command: "gh run task-outcomes", output: "429", requests: 3 })
-                    )
-                  : Effect.succeed(outcomes)
-                : Effect.succeed(view);
-        });
+        answers[args[0] === "api" ? "api" : (args[1] ?? "")] ?? Effect.succeed(view);
       const corpus = yield* makeRouteCorpus(runGh);
       const fiber = yield* Effect.forkChild(
         corpus.capture(
