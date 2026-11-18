@@ -434,6 +434,29 @@ it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "20 seco
         deepStrictEqual(A.dedupe(A.map(all.events, (event) => event.nonce)), ["old", "recent"]);
       })
     );
+
+    it.effect("never opens an older segment: one that cannot be read fails only the full read", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = "/run/sche-06-window-unread/admit";
+        const archive = path.join(root, "journal-archive");
+        const day = 86_400_000;
+        // A directory where a day segment belongs: any attempt to read it fails.
+        yield* fs.makeDirectory(path.join(archive, "1970-01-01.ndjson"), { recursive: true });
+        yield* fs.writeFileString(
+          path.join(archive, "1970-01-03.ndjson"),
+          `{"checkoutRoot":"/repo/ada","branch":"feat/ada","_tag":"admission-released","schemaVersion":"yeet-admission-journal/v3","nonce":"recent","pid":3,"releasedAtMillis":${2 * day + 1_000}}\n`
+        );
+        const recent = yield* readAdmissionJournalHistorySince(root, 2 * day);
+        deepStrictEqual(
+          [recent.archive.segments, recent.archivedRows, A.map(recent.events, (event) => event.nonce)],
+          [["1970-01-03.ndjson"], 1, ["recent"]]
+        );
+        const full = yield* Effect.exit(readAdmissionJournalHistory(root));
+        strictEqual(full._tag, "Failure");
+      })
+    );
   }
 );
 
