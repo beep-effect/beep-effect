@@ -356,8 +356,9 @@ export class EnvironmentSpec extends S.Opaque<EnvironmentSpec, { readonly brand:
 ) {}
 
 /**
- * One issue and pull request label. `description` is `None` where GitHub
- * holds `null`.
+ * One issue and pull request label. `description` is `None` for a label with
+ * no description: the stack writes `""`, which GitHub then returns (it held
+ * `null` before the first deploy).
  *
  * **Example** (Make a label)
  *
