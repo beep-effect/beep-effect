@@ -32,6 +32,16 @@ const flagValue = (argv: ReadonlyArray<string>, flag: string): O.Option<string> 
     (index) => A.get(argv, index + 1)
   );
 
+// A numeric flag: absent reads as its default, anything else must parse and pass `valid`.
+const flagNumber = (argv: ReadonlyArray<string>, flag: string, fallback: number, valid: (value: number) => boolean) =>
+  O.match(flagValue(argv, flag), {
+    onNone: () => Effect.succeed(fallback),
+    onSome: (raw) =>
+      Effect.fromOption(O.liftPredicate(Number(raw), valid)).pipe(
+        Effect.mapError(() => SimulationInputError.make({ message: `${flag} ${raw} is not a valid value.` }))
+      ),
+  });
+
 const arms = A.flatMap([10, 8, 6, 5], (capacity) =>
   A.map(
     [
@@ -53,19 +63,36 @@ const program = Effect.gen(function* () {
       SimulationInputError.make({ message: "usage: backfill-ab.ts <admission-root> [--since <epoch-millis>]" })
     )
   );
-  const since = O.getOrElse(O.map(flagValue(argv, "--since"), Number), () => 0);
-  const permille = O.getOrElse(O.map(flagValue(argv, "--eta-permille"), Number), () => 900);
+  const since = yield* flagNumber(argv, "--since", 0, (value) => Number.isSafeInteger(value) && value >= 0);
+  const permille = yield* flagNumber(
+    argv,
+    "--eta-permille",
+    900,
+    (value) => Number.isInteger(value) && value >= 1 && value <= 1000
+  );
+  // A mistyped root must not read as an empty journal.
+  if (!(yield* fs.exists(path.join(root, "journal.ndjson")))) {
+    return yield* SimulationInputError.make({ message: `No admission journal at ${root}/journal.ndjson.` });
+  }
+  // The archive directory is optional; every file that exists must read.
   const archive = path.join(root, "journal-archive");
   const segments = yield* fs.readDirectory(archive).pipe(Effect.orElseSucceed(A.empty<string>));
   const files = A.append(
     A.map(A.sort(A.filter(segments, Str.endsWith(".ndjson")), Order.String), (name) => path.join(archive, name)),
     path.join(root, "journal.ndjson")
   );
-  const texts = yield* Effect.forEach(files, (file) => fs.readFileString(file).pipe(Effect.orElseSucceed(() => "")), {
-    concurrency: 1,
-  });
+  const texts = yield* Effect.forEach(files, (file) => fs.readFileString(file), { concurrency: 1 });
+  const lines = A.filter(A.flatMap(texts, Str.split("\n")), Str.isNonEmpty);
+  const decoded = A.map(lines, (line) => decodeRow(line));
+  // A row this decoder rejects (a newer schema version or work kind) would silently shrink the replay.
+  const undecoded = A.length(A.filter(decoded, O.isNone));
+  if (undecoded > 0) {
+    return yield* SimulationInputError.make({
+      message: `${undecoded} of ${A.length(lines)} journal rows did not decode; update the lab journal decoder before replaying.`,
+    });
+  }
   const events = A.filter(
-    A.getSomes(A.map(A.flatMap(texts, Str.split("\n")), (line) => decodeRow(line))),
+    A.getSomes(decoded),
     (event) => !("enqueuedAtMillis" in event) || event.enqueuedAtMillis >= since
   );
   const estimator = ReplayEtaEstimator.make({

@@ -782,8 +782,8 @@ export class ReplayArmResult extends S.Opaque<ReplayArmResult, { readonly brand:
  * **Details**
  *
  * `chains` counts the admitted-and-released nonces replayed; `skipped` counts
- * nonces without both rows (withdrawn, evicted, or cut by the window) and rows
- * no decoder accepted. `recorded` summarizes the waits the deployed scheduler
+ * nonces without both rows (withdrawn, evicted, or cut by the window); the
+ * A/B script refuses a journal with rows its decoder rejects. `recorded` summarizes the waits the deployed scheduler
  * actually produced, so each arm can be read against it.
  *
  * @category schemas

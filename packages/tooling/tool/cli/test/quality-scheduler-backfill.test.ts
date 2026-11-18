@@ -464,10 +464,12 @@ describe("SCHE-06 modes off equal the deployed self-selection", () => {
   const config = AdmissionConfig.make({});
 
   it("agrees on every seeded queue", () => {
+    // An exact 32-bit LCG (Math.imul keeps every product in range); draws come from the high
+    // 16 bits, because the low bits of a power-of-two LCG cycle with short periods.
     let seed = 7;
     const next = (bound: number): number => {
-      seed = (seed * 1_103_515_245 + 12_345) % 2_147_483_648;
-      return seed % bound;
+      seed = (Math.imul(seed, 1_103_515_245) + 12_345) >>> 0;
+      return (seed >>> 16) % bound;
     };
     for (let round = 0; round < 400; round++) {
       const tickets = A.makeBy(1 + next(5), (index) =>
