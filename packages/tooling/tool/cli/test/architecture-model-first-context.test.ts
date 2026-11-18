@@ -453,5 +453,17 @@ describe("beep architecture: model-first context", () => {
         expect(refusal.message).toContain("kebab-case slug");
       })
     );
+
+    for (const module of ["Domain", "Effect", "Story", "NotesModel", "NotesApi"]) {
+      it.effect(
+        `rejects the Module name ${module}, which a generated file already binds`,
+        Effect.fnUntraced(function* () {
+          const refusal = yield* Effect.flip(
+            makeModelFirstContextOperationPlan({ repoRoot: "/repo", context: "notes", module })
+          );
+          expect(refusal.message).toContain("already bind that name");
+        })
+      );
+    }
   });
 });

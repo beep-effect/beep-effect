@@ -7,13 +7,47 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { Str } from "@beep/utils";
+import { A, Str } from "@beep/utils";
+import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import { ArchitectureContextRole } from "../Architecture.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Architecture/internal/ModelFirstTemplates");
 
 const fence = "```";
+
+/**
+ * Module names the generated files cannot take: every fixed binding a template
+ * imports or declares beside the Module's own names (`Domain`, `Effect`, `S`,
+ * `Story`, ...). A Module named after one would shadow its import.
+ *
+ * **Example** (A reserved Module name)
+ *
+ * ```ts
+ * import { reservedModuleNames } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * console.log(HashSet.has(reservedModuleNames, "Domain")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const reservedModuleNames: HashSet.HashSet<string> = HashSet.make(
+  "A",
+  "Catalog",
+  "Domain",
+  "Effect",
+  "FileSystem",
+  "Host",
+  "Layer",
+  "NodeServices",
+  "O",
+  "Path",
+  "S",
+  "Story",
+  "Str"
+);
 
 /**
  * The names a model-first context is generated from: the context slug and
@@ -102,6 +136,48 @@ export const modelFirstContextNamesFor = ({ context, module }: ModelFirstContext
     contractIdentity: `$${contextPascal}ContractId`,
     modelIdentity: `$${contextPascal}ModelId`,
   });
+};
+
+const contextBindingSuffixes = [
+  "Adapters",
+  "Api",
+  "Catalog",
+  "Contract",
+  "Handlers",
+  "Hosted",
+  "Model",
+  "Ports",
+] as const;
+
+/**
+ * Whether a Module name would collide with a binding the generated files
+ * declare or import: a fixed import (`Domain`, `Effect`, ...) or a name the
+ * context derives (`NotesModel`, `NotesApi`, ...).
+ *
+ * **Example** (A Module named after an import collides)
+ *
+ * ```ts
+ * import {
+ *   ModelFirstContextRequest,
+ *   moduleNameCollides,
+ * } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
+ *
+ * console.log(moduleNameCollides(ModelFirstContextRequest.make({ context: "notes", module: "Domain" }))) // true
+ * console.log(moduleNameCollides(ModelFirstContextRequest.make({ context: "notes", module: "NotesModel" }))) // true
+ * console.log(moduleNameCollides(ModelFirstContextRequest.make({ context: "notes", module: "Note" }))) // false
+ * ```
+ *
+ * @param request - The context slug and Module name.
+ * @returns `true` when the Module name is taken by a generated binding.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const moduleNameCollides = (request: ModelFirstContextRequest): boolean => {
+  const { contextPascal, module } = modelFirstContextNamesFor(request);
+  return (
+    HashSet.has(reservedModuleNames, module) ||
+    A.some(contextBindingSuffixes, (suffix) => `${contextPascal}${suffix}` === module)
+  );
 };
 
 /**

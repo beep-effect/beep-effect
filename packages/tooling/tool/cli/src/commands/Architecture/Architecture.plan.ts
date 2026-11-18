@@ -35,7 +35,11 @@ import {
   modelFirstTargetFor,
   modelFirstWorkspaceDependenciesFor,
 } from "./internal/ModelFirstContext.ts";
-import { ModelFirstContextRequest, modelFirstContextNamesFor } from "./internal/ModelFirstTemplates.ts";
+import {
+  ModelFirstContextRequest,
+  modelFirstContextNamesFor,
+  moduleNameCollides,
+} from "./internal/ModelFirstTemplates.ts";
 import {
   packageShellFileOperationsFor,
   packageShellRolePlanFor,
@@ -480,6 +484,11 @@ export const makeModelFirstContextOperationPlan = Effect.fn(function* (input: {
   if (!isModuleName(input.module)) {
     return yield* DomainError.newMessage(
       `Invalid Module "${input.module}": a Module is a PascalCase name such as "Note".`
+    );
+  }
+  if (moduleNameCollides(ModelFirstContextRequest.make({ context: input.context, module: input.module }))) {
+    return yield* DomainError.newMessage(
+      `Invalid Module "${input.module}": the generated files already bind that name (an import or a context-derived name); choose another Module name.`
     );
   }
   const names = modelFirstContextNamesFor(
