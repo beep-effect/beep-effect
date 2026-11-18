@@ -965,6 +965,24 @@ const input = CreateOrderInput.make({ orderId: "o-1", customerId: "c-1" })
 - Put defaults in schema definitions, not in handler/service fallback object literals.
 - Use `S.withConstructorDefault` for constructor-time defaults.
 - Use `S.withDecodingDefaultKey` for decode-time defaults (never `S.withDecodingDefault`, EF-40).
+  `S.withDecodingDefaultTypeKey` states the default as a decoded value, which is the form to use when
+  the field's encoded and decoded sides differ.
+- Ask two questions of every field. What does it start as (its initial value, such as an empty
+  collection, a zero counter, an absent link, the first state of a lifecycle)? What is it when the
+  input leaves it out (its default)? When one value answers both, the field carries it: a constructor
+  default, so `X.make({})` is the initial value, and a decoding default, so a missing key reads the
+  same value. The owner's `initial` is then `State.make({})`, never a second literal.
+- An optional field that starts absent is
+  `X.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone))`. It needs no decoding
+  default: `S.OptionFromOptionalKey` already reads a missing key as `O.none()`.
+- Describe each defaulted key with `S.annotateKey({ description })`, saying what the field holds and
+  what it starts as.
+- Give no default to a field whose empty value is the widest one, or that carries identity, authority,
+  provenance or money (a grant's expiry or operations, a delegation reference, an invocation chain, an
+  allowance). It stays required, so leaving it out is refused.
+- Never pass `{ encodingStrategy: "omit" }` to a decoding default on a field that can hold a value: it
+  drops the key from the encoded output whatever the value is.
+- A list that cannot be empty is `S.NonEmptyArray`, not an array with a default.
 
 Example:
 
@@ -1118,6 +1136,24 @@ Avoid this:
 - Use class-local statics for repeated `decode`, `encode`, `arbitrary`, and
   `equivalence` helpers when they reduce repeated plumbing without introducing
   import cycles.
+- Build an `Option` of a schema value with the constructor's own
+  `makeOption`, never by wrapping `make` in `O.some`. Every schema has it:
+  classes, brands, structs and tagged-union cases.
+
+  ```ts
+  // never
+  O.some(StreamDrift.cases.Unpinned.make({ stream }))
+  O.some(DelegationId.make(id))
+
+  // always
+  StreamDrift.cases.Unpinned.makeOption({ stream })
+  DelegationId.makeOption(id)
+  ```
+
+  The two differ on input the schema refuses: `make` throws and `makeOption`
+  returns `O.none()`. Use `makeOption` where an absent value is a legal outcome
+  of that branch. Where a refused input must surface, use `makeEffect` or a
+  decode and keep the failure typed.
 - Reference proofs:
   `packages/foundation/modeling/schema/test/LiteralKit.test.ts` and
   `packages/foundation/modeling/schema/test/MappedLiteralKit.test.ts`.

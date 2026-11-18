@@ -204,7 +204,7 @@ it.effect("a parent gives a child a share of its budget and a narrower grant; th
       allowance,
       terms: granted,
     });
-  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: O.some(DelegationId.make("dlg:run_1")) });
+  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.makeOption("dlg:run_1") });
   const openHop = hopOn("OpenChildOnRequest", "AgentRun/run_1", 3, "ChildRequested");
   return story(
     ...active(100),
@@ -283,7 +283,7 @@ it.effect("a parent gives a child a share of its budget and a narrower grant; th
     view(SessionRuns, session, {
       runs: [
         { run: RunId.make("run_1"), previous: O.none(), parent: O.none(), status: "awaiting-child" },
-        { run: RunId.make("run_child"), previous: O.none(), parent: O.some(RunId.make("run_1")), status: "running" },
+        { run: RunId.make("run_child"), previous: O.none(), parent: RunId.makeOption("run_1"), status: "running" },
       ],
     }),
   );
@@ -291,7 +291,7 @@ it.effect("a parent gives a child a share of its budget and a narrower grant; th
 
 it.effect("a run at its history bound continues as a new run, and the session's chain shows both", () => {
   const next = AgentRun.ref("run_1~1");
-  const nextSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: O.some(DelegationId.make("dlg:run_1")) });
+  const nextSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.makeOption("dlg:run_1") });
   const continueHop = hopOn("ContinueAtBound", "AgentRun/run_1", 5, "RunContinued");
   return story(
     ...activeBounded(100, 2),
@@ -356,7 +356,7 @@ it.effect("a run at its history bound continues as a new run, and the session's 
     view(SessionRuns, session, {
       runs: [
         { run: RunId.make("run_1"), previous: O.none(), parent: O.none(), status: "continued" },
-        { run: RunId.make("run_1~1"), previous: O.some(RunId.make("run_1")), parent: O.none(), status: "running" },
+        { run: RunId.make("run_1~1"), previous: RunId.makeOption("run_1"), parent: O.none(), status: "running" },
       ],
     }),
   );
@@ -382,7 +382,7 @@ it.effect("completing a run releases its open reservations, so a finished run ho
 it.effect("a child that finishes resumes its parent, which keeps what the child did not spend", () => {
   const child = AgentRun.ref("run_child");
   const childTerms = terms(O.some(["ProposeDisposition"]));
-  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: O.some(DelegationId.make("dlg:run_1")) });
+  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.makeOption("dlg:run_1") });
   const asChild = asRun("run_child", "dlg:run_child", childTerms);
   return story(
     ...active(100),
@@ -470,7 +470,7 @@ it.effect("a child that finishes resumes its parent, which keeps what the child 
 it.effect("a child that runs out of budget is exhausted, and its parent resumes with what the child left", () => {
   const child = AgentRun.ref("run_child");
   const childTerms = terms(O.some(["ProposeDisposition"]));
-  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: O.some(DelegationId.make("dlg:run_1")) });
+  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.makeOption("dlg:run_1") });
   const asChild = asRun("run_child", "dlg:run_child", childTerms);
   return story(
     ...active(100),
@@ -561,7 +561,7 @@ it.effect("a child that runs out of budget is exhausted, and its parent resumes 
 it.effect("a child refused mid-run gives back its reservation and resumes its parent, which keeps the child's share", () => {
   const child = AgentRun.ref("run_child");
   const childTerms = terms(O.some(["ProposeDisposition"]));
-  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: O.some(DelegationId.make("dlg:run_1")) });
+  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.makeOption("dlg:run_1") });
   const asChild = asRun("run_child", "dlg:run_child", childTerms);
   return story(
     ...active(100),

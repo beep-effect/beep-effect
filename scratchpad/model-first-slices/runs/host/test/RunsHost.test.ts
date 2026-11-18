@@ -14,6 +14,7 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { acme, Harness, requestRun, testHop, World } from "./RunsWorld.ts";
+import { thunkTrue } from "@beep/utils"
 
 const encodeV1 = S.encodeEffect(S.toCodecJson(ClaimDecidedV1));
 const encodeV2 = S.encodeEffect(S.toCodecJson(ClaimDecidedV2));
@@ -75,7 +76,7 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       const waiting = yield* as(RunReport.cases.AwaitApproval.make({}), "await", settled.run, settled.provenance);
       expect(waiting.run).toBe("run_1~1");
       yield* harness.run("run_1~1", (state) => state._tag === "AwaitingApproval");
-      const first = yield* harness.run("run_1", () => true);
+      const first = yield* harness.run("run_1", thunkTrue);
       expect(first).toMatchObject({ _tag: "Continued", next: "run_1~1" });
 
       // The decision names the run the claim opened; the inbox concludes the live one.
@@ -244,7 +245,7 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       yield* reserve("r2", 50);
       const other = yield* harness.commitsOn("run_1");
       expect(other).toBe(once + 1);
-      const state = yield* harness.run("run_1", () => true);
+      const state = yield* harness.run("run_1", thunkTrue);
       expect(state).toMatchObject({
         run: { reservations: [{ reservation: "r1", units: 40 }, { reservation: "r2", units: 50 }] },
       });

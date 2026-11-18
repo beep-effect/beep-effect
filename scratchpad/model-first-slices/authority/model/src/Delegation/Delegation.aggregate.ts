@@ -23,6 +23,7 @@ import { identity } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { thunkEffectVoid } from "@beep/utils"
 
 /**
  * A delegation's lifecycle: opened for one agent run from a grant (directly,
@@ -67,7 +68,7 @@ const requireDelegator = (active: ActiveDelegation, invocation: Invocation): Eff
 
 const requireNarrower = (current: GrantTerms, next: GrantTerms): Effect.Effect<void, TermsWiden> =>
   O.match(widens(current, next), {
-    onNone: () => Effect.void,
+    onNone: thunkEffectVoid,
     onSome: (dimension) => Effect.fail(TermsWiden.make({ dimension })),
   });
 

@@ -10,6 +10,7 @@ import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
+import { thunk0 } from "@beep/utils"
 
 /** Every `<Noun>.<kind>.ts(x)` source file of every workspace package. */
 const roleFiles = Effect.gen(function* () {
@@ -19,7 +20,7 @@ const roleFiles = Effect.gen(function* () {
   const packages = yield* ImportGraph.loadWorkspace(root);
   const files = yield* Effect.forEach(packages.pipe(HashMap.values, A.fromIterable), (pkg) =>
     Effect.map(
-      fs.readDirectory(path.join(pkg.dir, "src"), { recursive: true }).pipe(Effect.orElseSucceed(() => [])),
+      fs.readDirectory(path.join(pkg.dir, "src"), { recursive: true }).pipe(Effect.orElseSucceed(A.empty)),
       A.map((file) => path.join(pkg.dir, "src", file)),
     ),
     { concurrency: 1 },
@@ -68,6 +69,6 @@ it("negative controls: a missing primary, a second command, an unknown kind; an 
     { problem: 'no primary export "MissingGrant" of kind rejection' },
   ]);
   expect(violationsOf("Foo.widget.ts", { Foo: {} })).toMatchObject([{ problem: 'unknown kind "widget": add a rule or an exemption' }]);
-  expect(violationsOf("Claim.rules.ts", { anything: () => 0 })).toEqual([]);
+  expect(violationsOf("Claim.rules.ts", { anything: thunk0 })).toEqual([]);
   expect(Str.isNonEmpty(exempt.rules ?? "")).toBe(true);
 });

@@ -107,7 +107,7 @@ const byPartyId = Order.mapInput(Order.String, (row: DirectoryRow) => row.partyI
 
 const applyChange = (rows: HashMap.HashMap<PartyId, DirectoryRow>, change: DirectoryChange) =>
   DirectoryChange.match(change, {
-    Registered: ({ partyId, org, name }) => HashMap.set(rows, partyId, { partyId, org, name, absorbed: [] }),
+    Registered: ({ partyId, org, name }) => HashMap.set(rows, partyId, DirectoryRow.make({ partyId, org, name })),
     Merged: ({ partyId, absorbed }) =>
       HashMap.modify(rows, partyId, (row) =>
         A.contains(row.absorbed, absorbed) ? row : { ...row, absorbed: A.append(row.absorbed, absorbed) },
@@ -195,7 +195,7 @@ export const MemoryPartyDirectoryStore = Layer.effect(
           Ref.modify(table, (current): readonly [ReadonlyArray<string>, Table] => {
             const candidate = generationOf(current, generation);
             const behind = O.match(current.active, {
-              onNone: () => [],
+              onNone: A.empty<string>,
               onSome: (active) => behindOf(generationOf(current, active), candidate),
             });
             return A.isReadonlyArrayEmpty(behind)

@@ -126,11 +126,11 @@ const heldBySuccessor = (stream: string, retiring: LiveGeneration, successor: Li
     A.map(retiring.entries, (entry) =>
       O.match(A.findFirst(successor.entries, sameFact(entry)), {
         onNone: () =>
-          O.some(RetirementRefusal.cases.FactMissing.make({ stream, successor: successor.stream, factId: entry.factId, version: entry.version })),
+          RetirementRefusal.cases.FactMissing.makeOption({ stream, successor: successor.stream, factId: entry.factId, version: entry.version }),
         onSome: (held) =>
           Equal.equals(held.payload, entry.payload)
             ? O.none()
-            : O.some(RetirementRefusal.cases.PayloadDiffers.make({ stream, successor: successor.stream, factId: entry.factId, version: entry.version })),
+            : RetirementRefusal.cases.PayloadDiffers.makeOption({ stream, successor: successor.stream, factId: entry.factId, version: entry.version }),
       }),
     ),
   );
@@ -154,9 +154,9 @@ const readPast = (
   A.getSomes(
     A.map(consumers, (consumer) =>
       O.match(A.findFirst(checkpoints, (checkpoint) => checkpoint.consumer === consumer), {
-        onNone: () => O.some(RetirementRefusal.cases.CheckpointUnread.make({ stream, consumer })),
+        onNone: () => RetirementRefusal.cases.CheckpointUnread.makeOption({ stream, consumer }),
         onSome: ({ position }) =>
-          position >= through ? O.none() : O.some(RetirementRefusal.cases.ConsumerBehind.make({ stream, consumer, checkpoint: position, through })),
+          position >= through ? O.none() : RetirementRefusal.cases.ConsumerBehind.makeOption({ stream, consumer, checkpoint: position, through }),
       }),
     ),
   );

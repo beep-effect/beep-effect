@@ -68,21 +68,21 @@ const sameWriter = (a: StreamWriter, b: StreamWriter): boolean =>
 
 const handoverOf = (next: ReadonlyArray<StreamPin>) => (pin: StreamPin): O.Option<Handover> =>
   StreamPin.match(pin, {
-    Closed: () => O.none(),
-    Retired: () => O.none(),
+    Closed: O.none<Handover>,
+    Retired: O.none<Handover>,
     Open: ({ stream, writer }) =>
       O.match(
         A.findFirst(next, (candidate) => candidate.stream === stream),
         {
           // A generation the next code drops is closed too (the stream-pin check refuses it anyway).
-          onNone: () => O.some(Handover.make({ stream, writer, change: "closed" })),
+          onNone: () => Handover.makeOption({ stream, writer, change: "closed" }),
           onSome: (after) =>
             StreamPin.match(after, {
-              Closed: () => O.some(Handover.make({ stream, writer, change: "closed" })),
+              Closed: () => Handover.makeOption({ stream, writer, change: "closed" }),
               // Retired at once: its writer is taken all the same (the retirement check refuses it).
-              Retired: () => O.some(Handover.make({ stream, writer, change: "closed" })),
+              Retired: () => Handover.makeOption({ stream, writer, change: "closed" }),
               Open: ({ writer: incoming }) =>
-                sameWriter(writer, incoming) ? O.none() : O.some(Handover.make({ stream, writer, change: "replaced" })),
+                sameWriter(writer, incoming) ? O.none() : Handover.makeOption({ stream, writer, change: "replaced" }),
             }),
         },
       ),

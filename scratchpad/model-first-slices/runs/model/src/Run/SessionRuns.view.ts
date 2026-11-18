@@ -32,7 +32,7 @@ export class SessionRuns extends Domain.View(
     middleware: [Session],
     rejects: [NotInSession],
     state: SessionRunsState,
-    initial: { runs: [], requesters: [] },
+    initial: SessionRunsState.make({}),
     evolve: {
       RunRequested: (view, event, { source }) => ({
         ...upsert(view, source.id, "requested"),

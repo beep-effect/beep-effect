@@ -16,6 +16,7 @@ import { identity } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { thunkEffectVoid } from "@beep/utils"
 
 /**
  * A grant's lifecycle: issued and active with its current terms, then
@@ -51,7 +52,7 @@ const orgOf = (terms: GrantTerms) => ResourceScope.cases.Org.make({ org: terms.r
 
 const requireNarrower = (current: GrantTerms, next: GrantTerms): Effect.Effect<void, TermsWiden> =>
   O.match(widens(current, next), {
-    onNone: () => Effect.void,
+    onNone: thunkEffectVoid,
     onSome: (dimension) => Effect.fail(TermsWiden.make({ dimension })),
   });
 

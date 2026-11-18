@@ -5,6 +5,7 @@ import * as O from "effect/Option";
 import type * as SqlClient from "effect/sql/SqlClient";
 import { lazyClusterSql } from "../ClusterSql.ts";
 import { InboxStore } from "./Inbox.store.ts";
+import { thunk0 } from "@beep/utils"
 
 /**
  * The inbox store in the cluster's Postgres: the producer's checkpoint and
@@ -27,7 +28,7 @@ export const PgInboxStore = Layer.effect(
     return InboxStore.of({
       checkpoint: Effect.fn("PgInboxStore.checkpoint")((producer: string) =>
         withSql((sql) => sql<{ readonly seq: number }>`SELECT seq FROM runs_inbox_checkpoints WHERE producer = ${producer}`.pipe(
-          Effect.map((rows) => O.getOrElse(O.map(A.head(rows), (row) => row.seq), () => 0)),
+          Effect.map((rows) => O.getOrElse(O.map(A.head(rows), (row) => row.seq), thunk0)),
           Effect.orDie,
         )),
       ),

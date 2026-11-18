@@ -12,6 +12,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as Activity from "effect/workflow/Activity";
+import { thunkEffectVoid } from "@beep/utils"
 
 export class Incremented extends Domain.Event("Incremented", { by: Schema.Int }) {}
 export class TooBig extends Schema.TaggedError<TooBig, { readonly brand: unique symbol }>()("TooBig", { max: Schema.Int }) {}
@@ -165,7 +166,7 @@ const HoldDeadlineLive = HoldDeadline.toLayer(
           .pipe(
             Effect.catchTag(
               ["AlreadyExecuted", "AlreadyCancelled", "NotScheduled"],
-              () => Effect.void,
+              thunkEffectVoid,
             ),
           );
       }

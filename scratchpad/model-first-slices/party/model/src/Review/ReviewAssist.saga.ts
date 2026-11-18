@@ -12,6 +12,7 @@ import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { Assessed, ReasonerUnavailable } from "./Reasoner.external.ts";
 import { LiveRun, RunEnded, RunRefused } from "./ReviewRuns.external.ts";
+import { thunkNull } from "@beep/utils"
 
 /**
  * The executor of one review run, keyed by the run: reserve budget, assess
@@ -66,7 +67,7 @@ const StoredReservation = S.NullOr(LiveRun).pipe(
           onNone: () => Reservation.cases.OutOfBudget.make({}),
           onSome: (live) => Reservation.cases.Reserved.make({ live }),
         }),
-      encode: Reservation.match({ OutOfBudget: () => null, Reserved: ({ live }) => live }),
+      encode: Reservation.match({ OutOfBudget: thunkNull, Reserved: ({ live }) => live }),
     }),
   ),
 );
@@ -95,7 +96,7 @@ const StoredProposalSent = S.NullOr(S.String).pipe(
           onNone: () => ProposalSent.cases.Made.make({}),
           onSome: (refusal) => ProposalSent.cases.Refused.make({ refusal }),
         }),
-      encode: ProposalSent.match({ Made: () => null, Refused: ({ refusal }) => refusal }),
+      encode: ProposalSent.match({ Made: thunkNull, Refused: ({ refusal }) => refusal }),
     }),
   ),
 );

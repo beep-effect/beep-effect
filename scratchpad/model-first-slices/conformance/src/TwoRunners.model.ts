@@ -2,6 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 
 /**
@@ -31,10 +32,20 @@ export class Write extends Domain.Command("Write", {
  * @category aggregates
  * @since 0.0.0
  */
+/** A slot's labels, in the order written. */
+const SlotState = S.Struct({
+  labels: Initial.empty(S.String).pipe(S.annotateKey({ description: "Every label written to the slot; none at first." })),
+});
+
+/** How many writes any slot has taken. */
+const SlotTallyState = S.Struct({
+  writes: S.Int.pipe(Initial.of(0), S.annotateKey({ description: "Writes counted so far; none at first." })),
+});
+
 export class Slot extends Domain.Aggregate("Slot", {
   id: S.String,
-  state: S.Struct({ labels: S.Array(S.String) }),
-  initial: { labels: [] },
+  state: SlotState,
+  initial: SlotState.make({}),
   commands: [Write],
   decide: {
     Write: Effect.fn(function* (_, command) {
@@ -61,8 +72,8 @@ export class SlotTally extends Domain.View("SlotTally", {
   from: [Slot],
   key: S.Literal("all"),
   keyOf: { Slot: () => "all" as const },
-  state: S.Struct({ writes: S.Int }),
-  initial: { writes: 0 },
+  state: SlotTallyState,
+  initial: SlotTallyState.make({}),
   evolve: { Written: (tally) => ({ writes: tally.writes + 1 }) },
 }) {}
 

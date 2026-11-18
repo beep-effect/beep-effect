@@ -9,6 +9,7 @@ import { Authority } from "../Authority.external.ts";
 import { Claim } from "../Claim/Claim.aggregate.ts";
 import { MergeOnSameParty } from "./MergeOnSameParty.policy.ts";
 import { Party } from "./Party.aggregate.ts";
+import { thunkEffectVoid } from "@beep/utils"
 
 /**
  * Asks the authority context to re-admit the accepting provenance for this
@@ -46,7 +47,7 @@ export const MergeOnSamePartyLive = MergeOnSameParty.toLayer(
         HasIdentifier: () => Effect.succeed(O.none<MergeRefusal>()),
       });
       yield* O.match(refusal, {
-        onNone: () => Effect.void,
+        onNone: thunkEffectVoid,
         onSome: (reason) =>
           claims
             .send(trigger.source, RecordMergeRefused.make({ reason, provenance: extend(event.provenance, hop) }))

@@ -33,6 +33,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { identity } from "effect/Function";
+import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 import { reviewRun } from "../Review/ReviewPlan.ts";
 import { admission, claimIn, requireAdmission, requireGranted, requirePending, scopeOf } from "./Claim.rules.ts";
@@ -51,9 +52,9 @@ export const ClaimState = S.TaggedUnion({
     org: OrgId,
     proposition: Proposition,
     signals: S.Array(EvidenceSignal),
-    revision: S.Int,
-    reviews: S.Int,
-    proposal: S.OptionFromNullOr(ProposalView),
+    revision: S.Int.pipe(Initial.of(1), S.annotateKey({ description: "The evidence revision; an asserted claim starts at 1." })),
+    reviews: S.Int.pipe(Initial.of(0), S.annotateKey({ description: "How many reviews were requested; none at first." })),
+    proposal: Initial.none(ProposalView).pipe(S.annotateKey({ description: "The latest proposal still standing; absent until a review proposes one." })),
   },
   Accepted: { org: OrgId, proposition: Proposition },
   Retracted: { org: OrgId, reason: S.String },
@@ -224,9 +225,6 @@ export class Claim extends Domain.Aggregate(
           org: event.org,
           proposition: event.proposition,
           signals: event.signals,
-          revision: 1,
-          reviews: 0,
-          proposal: O.none(),
         }),
       ReviewRequested: (state) =>
         ClaimState.matchOrElse(

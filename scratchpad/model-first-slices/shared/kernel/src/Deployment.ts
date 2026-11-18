@@ -1,5 +1,6 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
+import * as Initial from "./Initial.ts";
 
 /**
  * One version of a published integration fact: who produces it, the fact's
@@ -41,8 +42,13 @@ export type ProcessKind = typeof ProcessKind.Type;
 export const ClusterWiring = S.Struct({
   module: S.String,
   export: S.String,
-  parts: S.Array(S.Struct({ name: S.String, uses: S.Array(S.String) })),
-  apis: S.Array(S.String),
+  parts: Initial.empty(
+    S.Struct({
+      name: S.String,
+      uses: Initial.empty(S.String).pipe(S.annotateKey({ description: "The parts this part uses; none unless stated." })),
+    }),
+  ).pipe(S.annotateKey({ description: "The parts the wiring provides; none unless stated." })),
+  apis: Initial.empty(S.String).pipe(S.annotateKey({ description: "The parts the context's Apis use; none unless stated." })),
 });
 /**
  * @category models
@@ -65,9 +71,8 @@ export type ClusterWiring = typeof ClusterWiring.Type;
  *   context: "runs",
  *   models: ["Runs"],
  *   processes: [{ name: "ClaimDecidedInbox", kind: "inbox" }],
- *   publishes: [],
  *   consumes: [{ producer: "party", contract: "ClaimDecided", version: 1 }],
- *   cluster: { module: "@proto/runs-host/Runs.cluster", export: "RunsCluster", parts: [], apis: [] },
+ *   cluster: { module: "@proto/runs-host/Runs.cluster", export: "RunsCluster" },
  * });
  * ```
  *
@@ -77,9 +82,11 @@ export type ClusterWiring = typeof ClusterWiring.Type;
 export const DeploymentDescriptor = S.Struct({
   context: S.String,
   models: S.Array(S.String),
-  processes: S.Array(S.Struct({ name: S.String, kind: ProcessKind })),
-  publishes: S.Array(FactVersion),
-  consumes: S.Array(FactVersion),
+  processes: Initial.empty(S.Struct({ name: S.String, kind: ProcessKind })).pipe(
+    S.annotateKey({ description: "The processes the host runs beside its models; none unless stated." }),
+  ),
+  publishes: Initial.empty(FactVersion).pipe(S.annotateKey({ description: "The fact versions the context publishes; none unless stated." })),
+  consumes: Initial.empty(FactVersion).pipe(S.annotateKey({ description: "The fact versions the context consumes; none unless stated." })),
   cluster: ClusterWiring,
 });
 /**

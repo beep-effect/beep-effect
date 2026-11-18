@@ -5,6 +5,7 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { containersOf, docker, psql, runnerService } from "./Stack.ts";
+import { thunk0 } from "@beep/utils"
 
 // Phase 10 (D45): who owns a shard on the stack, read the way Effect Cluster 4.1.4 records it. Its
 // SQL runner storage holds each shard as a session-level PostgreSQL advisory lock,
@@ -22,7 +23,7 @@ import { containersOf, docker, psql, runnerService } from "./Stack.ts";
  */
 const hashString = (value: string): number => {
   let h = 5381;
-  for (let i = value.length - 1; i >= 0; i--) h = (h * 33) ^ O.getOrElse(Str.charCodeAt(value, i), () => 0);
+  for (let i = value.length - 1; i >= 0; i--) h = (h * 33) ^ O.getOrElse(Str.charCodeAt(value, i), thunk0);
   return (h & 0xbfffffff) | ((h >>> 1) & 0x40000000);
 };
 

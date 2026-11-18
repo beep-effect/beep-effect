@@ -21,6 +21,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Schedule from "effect/Schedule";
+import { thunkFalse } from "@beep/utils"
 
 // The authority model in memory, with the real Session middleware and boundary in front of it.
 const Hosted = hostAuthority(Domain.InMemory);
@@ -59,7 +60,7 @@ const delegationsListed = (agentRun: RunId, count: number) =>
     view.get(agentRun).pipe(
       Effect.repeat({
         schedule: Schedule.spaced("20 millis"),
-        until: (state) => O.match(state, { onNone: () => false, onSome: (s) => s.delegations.length === count }),
+        until: (state) => O.match(state, { onNone: thunkFalse, onSome: (s) => s.delegations.length === count }),
         times: 100,
       }),
     ),
@@ -223,7 +224,7 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
         .grantRun({
           provenance: granted.provenance,
           hop,
-          source: GrantRef.make({ grant: GrantId.make("g_rev"), delegation: O.some(DelegationId.make("d_run")) }),
+          source: GrantRef.make({ grant: GrantId.make("g_rev"), delegation: DelegationId.makeOption("d_run") }),
           delegation: DelegationId.make("d_child"),
           run: RunId.make("run_child"),
           terms: { ...narrowed, operations: O.none() },

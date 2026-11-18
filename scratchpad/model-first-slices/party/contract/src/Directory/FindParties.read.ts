@@ -3,6 +3,7 @@ import * as Catalog from "@proto/contract-kit/Catalog";
 import { OrgId } from "@proto/kernel/Ids";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
+import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 import { PartyId } from "../Party/Party.id.ts";
 
@@ -16,7 +17,7 @@ export const DirectoryRow = S.Struct({
   partyId: PartyId,
   org: OrgId,
   name: S.String,
-  absorbed: S.Array(PartyId),
+  absorbed: Initial.empty(PartyId).pipe(S.annotateKey({ description: "The parties merged into this one; none at first." })),
 });
 /**
  * @category models

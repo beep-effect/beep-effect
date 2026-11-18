@@ -116,7 +116,7 @@ it.effect("a request cancelled before its grant arrives is withdrawn: only its r
 
 it.effect("a child the authority context refuses returns its share to the parent", () => {
   const childTerms = terms(O.some(["ProposeDisposition"]));
-  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: O.some(DelegationId.make("dlg:run_1")) });
+  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.makeOption("dlg:run_1") });
   const delegate = DelegateRun.make({
     child: RunId.make("run_child"),
     delegation: DelegationId.make("dlg:run_child"),

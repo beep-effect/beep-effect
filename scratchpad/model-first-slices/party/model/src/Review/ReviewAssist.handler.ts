@@ -11,6 +11,7 @@ import { Reasoner } from "./Reasoner.external.ts";
 import { ProposalSent, Reservation, ReviewAssist, ReviewAssistActivities } from "./ReviewAssist.saga.ts";
 import { ReviewPlan } from "./ReviewPlan.ts";
 import { type BudgetRefused, type LiveRun, ReviewRuns, RunEnded, type RunRefused } from "./ReviewRuns.external.ts";
+import { thunkEffectVoid } from "@beep/utils"
 
 /** How the proposal went, in memory: what the activity recorded, or a claim already decided. */
 const Proposal = S.TaggedUnion({ Made: {}, Refused: { refusal: S.String }, AlreadyDecided: {} });
@@ -143,6 +144,6 @@ export const ReviewAssistLive = ReviewAssist.toLayer(
       }
 
       yield* report("await", runs.awaitApproval(as("await")));
-    }, Effect.catchTag("RunEnded", () => Effect.void));
+    }, Effect.catchTag("RunEnded", thunkEffectVoid));
   }),
 );

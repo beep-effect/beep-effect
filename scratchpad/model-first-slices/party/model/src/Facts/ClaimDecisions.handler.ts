@@ -40,7 +40,7 @@ const runsNamedBy = Match.type<Decision>().pipe(
 
 const orgOf = (state: ClaimState): O.Option<OrgId> =>
   ClaimState.match(state, {
-    Unasserted: () => O.none(),
+    Unasserted: O.none<OrgId>,
     Pending: (pending) => O.some(pending.org),
     Accepted: (accepted) => O.some(accepted.org),
     Retracted: (retracted) => O.some(retracted.org),

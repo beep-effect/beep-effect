@@ -14,6 +14,7 @@ import {
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
+import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 
 /**
@@ -24,7 +25,11 @@ import * as S from "effect/Schema";
  */
 export const PartyState = S.TaggedUnion({
   Unregistered: {},
-  Active: { org: OrgId, name: S.String, absorbed: S.Array(PartyId) },
+  Active: {
+    org: OrgId,
+    name: S.String,
+    absorbed: Initial.empty(PartyId).pipe(S.annotateKey({ description: "The parties merged into this one; none at first." })),
+  },
 });
 /**
  * @category models
@@ -74,7 +79,7 @@ export class Party extends Domain.Aggregate(
       }),
     },
     evolve: {
-      PartyRegistered: (_, event) => PartyState.cases.Active.make({ org: event.org, name: event.name, absorbed: [] }),
+      PartyRegistered: (_, event) => PartyState.cases.Active.make({ org: event.org, name: event.name }),
       PartiesMerged: (state, event) =>
         PartyState.matchOrElse(
           state,

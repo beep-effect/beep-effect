@@ -1,4 +1,5 @@
 import { DeploymentDescriptor, FactVersion } from "@proto/kernel/Deployment";
+import * as Initial from "@proto/kernel/Initial";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -23,8 +24,12 @@ export class UnpublishedFact extends S.TaggedError<UnpublishedFact, { readonly b
  * @since 0.0.0
  */
 export const FactLedger = S.Struct({
-  missing: S.Array(S.Struct({ consumer: S.String, fact: FactVersion })),
-  retirable: S.Array(S.Struct({ publisher: S.String, fact: FactVersion })),
+  missing: Initial.empty(S.Struct({ consumer: S.String, fact: FactVersion })).pipe(
+    S.annotateKey({ description: "Fact versions a consumer needs that nobody publishes; none unless found." }),
+  ),
+  retirable: Initial.empty(S.Struct({ publisher: S.String, fact: FactVersion })).pipe(
+    S.annotateKey({ description: "Fact versions nobody consumes that a newer version supersedes; none unless found." }),
+  ),
 });
 /**
  * @category models
@@ -44,7 +49,7 @@ const sameFact = (a: FactVersion) => (b: FactVersion) =>
 export const ledgerOf = (descriptors: ReadonlyArray<DeploymentDescriptor>): FactLedger => {
   const published = A.flatMap(descriptors, (d) => A.map(d.publishes, (fact) => ({ publisher: d.context, fact })));
   const consumed = A.flatMap(descriptors, (d) => A.map(d.consumes, (fact) => ({ consumer: d.context, fact })));
-  return {
+  return FactLedger.make({
     missing: A.filter(consumed, ({ fact }) => !A.some(published, (p) => sameFact(fact)(p.fact))),
     // A producer's newest version is never retirable: with no consumer yet it is being introduced (D40).
     retirable: A.filter(
@@ -53,7 +58,7 @@ export const ledgerOf = (descriptors: ReadonlyArray<DeploymentDescriptor>): Fact
         !A.some(consumed, (c) => sameFact(fact)(c.fact)) &&
         A.some(published, (p) => p.fact.producer === fact.producer && p.fact.contract === fact.contract && p.fact.version > fact.version),
     ),
-  };
+  });
 };
 
 /**

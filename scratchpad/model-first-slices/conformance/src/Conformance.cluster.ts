@@ -9,6 +9,7 @@ import { app } from "@proto/conformance-upstream/app";
 import { ConformanceLive } from "@proto/conformance-upstream/model";
 import * as O from "effect/Option";
 import { Slot, SlotTally, TwoRunnersModel, Write } from "./TwoRunners.model.ts";
+import { thunk0 } from "@beep/utils"
 
 /**
  * The conformance models on a cluster: upstream's conformance model (served
@@ -31,7 +32,7 @@ export const ConformanceCluster = <ROut, E, R>(platform: Layer.Layer<ROut, E, R>
       if (pipe(url.pathname, Str.endsWith("/tally"))) {
         // A read without `atLeast` does not wait, so it never times out.
         const counted = yield* tally.get("all").pipe(Effect.orDie);
-        return yield* HttpServerResponse.json({ writes: O.match(counted, { onNone: () => 0, onSome: (view) => view.writes }) });
+        return yield* HttpServerResponse.json({ writes: O.match(counted, { onNone: thunk0, onSome: (view) => view.writes }) });
       }
       if (pipe(url.pathname, Str.endsWith("/state"))) {
         const state = yield* slot.get(param("slot"));

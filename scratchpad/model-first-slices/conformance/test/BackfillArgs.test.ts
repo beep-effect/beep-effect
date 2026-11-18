@@ -9,6 +9,7 @@ import * as O from "effect/Option";
 import * as Schedule from "effect/Schedule";
 import * as Schema from "effect/Schema";
 import { makeSimHostWith, type SimHostOptions } from "./SimHost.ts";
+import { thunk0 } from "@beep/utils"
 
 // Phase 10, patch 5 (D46): a consumer added by a deploy receives the history of the instances that
 // were there before it. Its backfill lists the directory, and the first page of a listing passes
@@ -68,7 +69,7 @@ const deployOverHistory = Effect.fn("deployOverHistory")(function* (args: SimHos
     const census = yield* Census;
     yield* ledgers.send("c", BookMany.make({ count: 1 }));
     // Until the backfill has brought the three earlier bookings, or eight seconds have passed.
-    const bookings = census.get("all").pipe(Effect.map(O.match({ onNone: () => 0, onSome: (view) => view.bookings })));
+    const bookings = census.get("all").pipe(Effect.map(O.match({ onNone: thunk0, onSome: (view) => view.bookings })));
     return yield* bookings.pipe(Effect.repeat({ schedule: Schedule.spaced("100 millis"), until: (n) => n >= 4, times: 80 }));
   }).pipe(Effect.ensuring(sim.close), Effect.provideContext(after));
 });

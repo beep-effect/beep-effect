@@ -1,11 +1,13 @@
 import type * as Domain from "@alchemy.run/domain";
 import { consumerClass, runClass } from "@alchemy.run/domain/DurableObjects";
+import { Count, Name, Sequence } from "@proto/kernel/Measure";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { thunkTrue } from "@beep/utils"
 
 /**
  * One row of a host's object storage: the object (an instance's entity id, `Model.Class/key`,
@@ -32,7 +34,7 @@ export type StoredRow = typeof StoredRow.Type;
  * @category models
  * @since 0.0.0
  */
-export const ConsumerRef = S.Struct({ name: S.String, generation: S.Int, classGeneration: S.Int });
+export const ConsumerRef = S.Struct({ name: Name, generation: Count, classGeneration: Count });
 /**
  * @category models
  * @since 0.0.0
@@ -49,10 +51,17 @@ export type ConsumerRef = typeof ConsumerRef.Type;
  * @since 0.0.0
  */
 export const WriterShape = S.Struct({
-  model: S.String,
+  model: Name,
   projection: ConsumerRef,
-  on: S.Array(S.String),
-  views: S.Array(ConsumerRef),
+  on: S.Array(Name),
+  views: S.Array(ConsumerRef).check(
+    S.makeFilter((views) => A.length(A.dedupeWith(views, (a, b) => a.name === b.name)) === A.length(views), {
+      identifier: "OneRefPerViewCheck",
+      title: "One ref per view",
+      description: "Each view is listed once: a hosted model runs one generation of a view.",
+      message: "Expected each view to be listed once",
+    }),
+  ),
 });
 /**
  * @category models
@@ -76,11 +85,11 @@ export type WriterShape = typeof WriterShape.Type;
  * @since 0.0.0
  */
 export const Backlog = S.Struct({
-  staged: S.Int,
-  throughViews: S.Int,
-  unprocessed: S.Int,
+  staged: Count,
+  throughViews: Count,
+  unprocessed: Count,
   runComplete: S.Boolean,
-  pending: S.Int,
+  pending: Count,
 });
 /**
  * @category models
@@ -88,26 +97,46 @@ export const Backlog = S.Struct({
  */
 export type Backlog = typeof Backlog.Type;
 
-/** A staged delivery, as an outbox row holds it (`Platform.ts`, `Delivery`). */
-const StagedDelivery = S.Struct({
+/**
+ * A staged delivery, as an outbox row holds it (`Platform.ts`, `Delivery`).
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const StagedDelivery = S.Struct({
   target: S.Struct({ kind: S.String, name: S.String, generation: S.optionalKey(S.Int) }),
   key: S.String,
   source: S.String,
-  seq: S.Int,
+  seq: Sequence,
   tag: S.String,
 });
 const decodeDelivery = S.decodeUnknownOption(StagedDelivery);
 
-/** A projection key's progress (`DurableObjects.ts`, `ProjectionMeta`): what it took in, by source. */
-const KeyProgress = S.Struct({ accepted: S.Int, processed: S.Int, intake: S.Record(S.String, S.Int) });
+/**
+ * A projection key's progress (`DurableObjects.ts`, `ProjectionMeta`): what it took in, by source.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const KeyProgress = S.Struct({ accepted: S.Int, processed: S.Int, intake: S.Record(S.String, S.Int) });
 const decodeProgress = S.decodeUnknownOption(KeyProgress);
 
-/** A view key's snapshot (`Platform.ts`, `ViewSnapshot`): what it applied, by source. */
-const ViewApplied = S.Struct({ checkpoints: S.Record(S.String, S.Int) });
+/**
+ * A view key's snapshot (`Platform.ts`, `ViewSnapshot`): what it applied, by source.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ViewApplied = S.Struct({ checkpoints: S.Record(S.String, S.Int) });
 const decodeApplied = S.decodeUnknownOption(ViewApplied);
 
-/** A consumer run's state at its root (`Backfill.ts`, `RunState`). */
-const RunPhase = S.Struct({ phase: S.String });
+/**
+ * A consumer run's state at its root (`Backfill.ts`, `RunState`).
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RunPhase = S.Struct({ phase: S.String });
 const decodePhase = S.decodeUnknownOption(RunPhase);
 
 /** The class an object belongs to in `model`: the segment `Model.Class` of its id. */
@@ -118,9 +147,10 @@ const classOf = (model: string, object: string): O.Option<string> =>
   );
 
 /** The key of an object of `cls` in `model`: what follows `Model.Class/` in its id. */
+/** The key of an instance of `model`'s class `cls`: what follows its `Model.Class` segment, which must match whole. */
 const keyOf = (model: string, cls: string, object: string): O.Option<string> => {
-  const marker = `${model}.${cls}/`;
-  return O.map(Str.indexOf(marker)(object), (at) => Str.slice(at + marker.length)(object));
+  const segments = Str.split(object, "/");
+  return O.map(A.findFirstIndex(segments, (segment) => segment === `${model}.${cls}`), (at) => A.join(A.drop(segments, at + 1), "/"));
 };
 
 /** Per key of a consumer class, the last `seq` it took in from each source, from `rows` decoded by `decode`. */
@@ -186,7 +216,13 @@ export const backlogOf: {
   const keyClass = consumerClass("projection", shape.projection.name, shape.projection.classGeneration);
   const isTarget = (kind: string, ref: ConsumerRef, target: typeof StagedDelivery.Type["target"]) =>
     target.kind === kind && target.name === ref.name && (target.generation ?? 0) === ref.generation;
-  const staged = A.getSomes(A.map(A.filter(rows, (row) => pipe(row.key, Str.startsWith("outbox:"))), (row) => decodeDelivery(row.value)));
+  // A model's deliveries are staged in its own instances' outboxes: another model's are not this writer's.
+  const staged = A.getSomes(
+    A.map(
+      A.filter(rows, (row) => pipe(row.key, Str.startsWith("outbox:")) && O.isSome(classOf(shape.model, row.object))),
+      (row) => decodeDelivery(row.value),
+    ),
+  );
   // A row stays until its delivery returns, so a delivery the consumer has taken in may still be
   // staged: those are counted where they now wait, not twice.
   const writerTook = takenBy(shape.model, keyClass, "meta", rows, (value) => O.map(decodeProgress(value), (progress) => progress.intake));
@@ -222,7 +258,7 @@ export const backlogOf: {
     (row) => row.key === runKey && O.contains(classOf(shape.model, row.object), runClass(keyClass)),
   );
   const runComplete = O.match(O.flatMap(run, (row) => decodePhase(row.value)), {
-    onNone: () => true,
+    onNone: thunkTrue,
     onSome: (state) => state.phase === "complete",
   });
   return {

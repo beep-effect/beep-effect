@@ -13,6 +13,7 @@ import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { thunkTrue } from "@beep/utils"
 
 // Phase 7: `bun run check` must run the Effect build of the compiler, at the monorepo's pins, over
 // every project, with the monorepo's own rule map. Modelled on the monorepo's
@@ -106,7 +107,7 @@ it.layer(NodeServices.layer)((it) => {
         return match?.[1] ?? "";
       });
       // Every workspace package with a tsconfig is checked, and so are the scripts.
-      const workspaces = O.getOrElse(root.workspaces, () => []);
+      const workspaces = O.getOrElse(root.workspaces, A.empty);
       const withConfig = yield* Effect.filter(workspaces, (dir) => fs.exists(path.join(prototype, dir, "tsconfig.json")));
       expect(A.difference([...withConfig, "scripts"], projects)).toEqual([]);
     }),
@@ -146,7 +147,7 @@ it.layer(NodeServices.layer)((it) => {
           roots,
           (name) =>
             Effect.map(
-              Effect.orElseSucceed(fs.readDirectory(path.join(prototype, name), { recursive: true }), () => []),
+              Effect.orElseSucceed(fs.readDirectory(path.join(prototype, name), { recursive: true }), A.empty),
               (nested) => A.map(nested, (file) => path.join(name, file)),
             ),
           { concurrency: 1 },
@@ -206,7 +207,7 @@ it.layer(NodeServices.layer)((it) => {
     Effect.gen(function* () {
       const { fs, path, prototype, manifest } = yield* layout;
       const root = yield* manifest(path.join(prototype, "package.json"));
-      const dirs = [...O.getOrElse(root.workspaces, () => []), "scripts", "proofs"];
+      const dirs = [...O.getOrElse(root.workspaces, A.empty<string>), "scripts", "proofs"];
       const listed = yield* Effect.forEach(dirs, (dir) =>
         Effect.map(fs.readDirectory(path.join(prototype, dir), { recursive: true }), (names) =>
           A.map(
@@ -225,9 +226,9 @@ it.layer(NodeServices.layer)((it) => {
       const directive = /^\s*(?:\/\/|\/\*|\*).*@effect-diagnostics/m;
       const withDirective = A.filter(sources, ({ text }) => directive.test(text));
       expect(A.map(withDirective, ({ file }) => file)).toEqual(["apps/practice/generated/Practice.front.ts"]);
-      const front = A.findFirst(withDirective, () => true);
+      const front = A.findFirst(withDirective, thunkTrue);
       const lines = O.match(front, {
-        onNone: () => [],
+        onNone: A.empty<string>,
         onSome: ({ text }) => A.filter(pipe(text, Str.split("\n")), (line) => directive.test(line)),
       });
       expect(lines).toHaveLength(1);

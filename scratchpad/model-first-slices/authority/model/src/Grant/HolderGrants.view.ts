@@ -1,8 +1,14 @@
 import * as Domain from "@alchemy.run/domain";
 import { GrantId, PrincipalId } from "@proto/kernel/Ids";
 import * as A from "effect/Array";
+import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 import { Grant } from "./Grant.aggregate.ts";
+
+/** What a holder's index starts as and holds: the grants issued to them and not yet revoked or expired. */
+const HolderGrantsState = S.Struct({
+  grants: Initial.empty(GrantId).pipe(S.annotateKey({ description: "The grants the principal holds; none at first." })),
+});
 
 /**
  * Which grants each principal holds, issued and not yet revoked or expired:
@@ -24,8 +30,8 @@ export class HolderGrants extends Domain.View(
     from: [Grant],
     key: PrincipalId,
     keyOf: { Grant: ({ event }) => event.holder },
-    state: S.Struct({ grants: S.Array(GrantId) }),
-    initial: { grants: [] },
+    state: HolderGrantsState,
+    initial: HolderGrantsState.make({}),
     evolve: {
       GrantIssued: (view, _event, { source }) => ({ grants: A.union(view.grants, [source.id]) }),
       GrantRevoked: (view, _event, { source }) => ({ grants: A.difference(view.grants, [source.id]) }),

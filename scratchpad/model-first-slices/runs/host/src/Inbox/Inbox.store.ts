@@ -7,6 +7,7 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
+import { thunk0 } from "@beep/utils"
 
 const $I = $RunsHostId.create("Inbox/Inbox.store");
 
@@ -51,7 +52,7 @@ export const MemoryInboxStore = Layer.effect(
     Ref.make({ checkpoints: HashMap.empty<string, number>(), seen: HashSet.empty<string>() }),
     (table) => ({
       checkpoint: (producer) =>
-        Effect.map(Ref.get(table), ({ checkpoints }) => O.getOrElse(HashMap.get(checkpoints, producer), () => 0)),
+        Effect.map(Ref.get(table), ({ checkpoints }) => O.getOrElse(HashMap.get(checkpoints, producer), thunk0)),
       seen: (key) => Effect.map(Ref.get(table), ({ seen }) => HashSet.has(seen, key)),
       commit: (producer, key, seq) =>
         Ref.update(table, ({ checkpoints, seen }) => ({

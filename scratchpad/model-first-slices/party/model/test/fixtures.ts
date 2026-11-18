@@ -89,7 +89,7 @@ export const delegated = ({
 }) =>
   CapabilityGrant.make({
     grant: GrantId.make(grant),
-    delegation: O.some(DelegationId.make(delegation)),
+    delegation: DelegationId.makeOption(delegation),
     capability: capability.id,
     operations: O.some(A.fromIterable(operations)),
     resource: ResourceScope.cases.Record.make({ org, record }),

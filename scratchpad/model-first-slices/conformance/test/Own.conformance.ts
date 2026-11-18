@@ -56,6 +56,7 @@ import {
   shardOf,
   slotEntity,
 } from "./ShardOwnership.ts";
+import { thunkFalse, thunkTrue } from "@beep/utils"
 
 // The prototype's own conformance cases (phase 5, D5, D16), against the deployed stack over its
 // Apis. Each case records its evidence with console.log; a failure is a finding, not a retry.
@@ -168,7 +169,7 @@ live("a runner killed right after a commit: every reaction happens once, within 
     run: storedTags(`Practice/Runs.AgentRunAggregate/review:${claim}:1`),
     review: reviewer.ClaimReview.get(claim, human("p_rev")).pipe(
       Effect.map((found) => O.isSome(proposalIn(found))),
-      Effect.orElseSucceed(() => false),
+      Effect.orElseSucceed(thunkFalse),
     ),
   }, { concurrency: 1 });
   const done = (seen: Effect.Success<typeof reactions>) => seen.claim === claimReactions && seen.run === runReactions && seen.review;
@@ -332,7 +333,7 @@ live("two runners on one instance (D38, D55): a write sent to a frozen runner is
   const firstB = Exit.isSuccess(quick) ? O.some(receiptOf(quick.value)) : O.none();
   const firstA = Exit.isSuccess(slowResult) && Exit.isSuccess(slowResult.value) ? O.some(receiptOf(slowResult.value.value)) : O.none();
   const sameReceipt = (first: O.Option<ReturnType<typeof receiptOf>>, retry: O.Option<ReturnType<typeof receiptOf>>) =>
-    O.match(first, { onNone: () => true, onSome: (receipt) => Equal.equals(O.some(receipt), retry) });
+    O.match(first, { onNone: thunkTrue, onSome: (receipt) => Equal.equals(O.some(receipt), retry) });
   expect(sameReceipt(firstB, O.map(retriedB, receiptOf))).toBe(true);
   expect(sameReceipt(firstA, O.map(retriedA, receiptOf))).toBe(true);
 }));

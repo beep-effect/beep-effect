@@ -5,6 +5,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CapabilityId, DelegationId, GrantId, OrgId } from "./Ids.ts";
+import { thunkFalse, thunkTrue } from "@beep/utils"
 
 /**
  * What a grant reaches: a whole org, or one record in it (a stream such as
@@ -59,7 +60,7 @@ export const covers: {
   (granted: ResourceScope, wanted: ResourceScope): boolean =>
     granted.org === wanted.org &&
     ResourceScope.match(granted, {
-      Org: () => true,
+      Org: thunkTrue,
       Record: ({ record }) => ResourceScope.guards.Record(wanted) && wanted.record === record,
     }),
 );
@@ -156,9 +157,9 @@ export const allows =
   (grant: CapabilityGrant): boolean =>
     grant.capability === need.capability.id &&
     A.contains(need.capability.operations, need.operation) &&
-    O.match(grant.operations, { onNone: () => true, onSome: A.contains(need.operation) }) &&
+    O.match(grant.operations, { onNone: thunkTrue, onSome: A.contains(need.operation) }) &&
     covers(grant.resource, need.resource) &&
-    O.match(grant.expires, { onNone: () => true, onSome: (expires) => DateTime.isGreaterThan(expires, need.at) });
+    O.match(grant.expires, { onNone: thunkTrue, onSome: (expires) => DateTime.isGreaterThan(expires, need.at) });
 
 /**
  * Which term of a grant a change would widen.
@@ -179,9 +180,9 @@ const within: ReadonlyArray<readonly [TermDimension, (parent: GrantTerms, child:
     "operations",
     (parent, child) =>
       O.match(parent.operations, {
-        onNone: () => true,
+        onNone: thunkTrue,
         onSome: (granted) =>
-          O.match(child.operations, { onNone: () => false, onSome: A.every((operation) => A.contains(granted, operation)) }),
+          O.match(child.operations, { onNone: thunkFalse, onSome: A.every((operation) => A.contains(granted, operation)) }),
       }),
   ],
   ["resource", (parent, child) => covers(parent.resource, child.resource)],
@@ -189,8 +190,8 @@ const within: ReadonlyArray<readonly [TermDimension, (parent: GrantTerms, child:
     "expires",
     (parent, child) =>
       O.match(parent.expires, {
-        onNone: () => true,
-        onSome: (until) => O.match(child.expires, { onNone: () => false, onSome: DateTime.isLessThanOrEqualTo(until) }),
+        onNone: thunkTrue,
+        onSome: (until) => O.match(child.expires, { onNone: thunkFalse, onSome: DateTime.isLessThanOrEqualTo(until) }),
       }),
   ],
 ];
@@ -237,5 +238,5 @@ export const inForce: {
 } = dual(
   2,
   (terms: GrantTerms, at: DateTime.Utc): boolean =>
-    O.match(terms.expires, { onNone: () => true, onSome: (expires) => DateTime.isGreaterThan(expires, at) }),
+    O.match(terms.expires, { onNone: thunkTrue, onSome: (expires) => DateTime.isGreaterThan(expires, at) }),
 );

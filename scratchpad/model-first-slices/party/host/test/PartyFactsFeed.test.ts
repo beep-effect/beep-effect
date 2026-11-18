@@ -21,6 +21,7 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Stream from "effect/Stream";
+import { thunkEffectVoid } from "@beep/utils"
 
 // Phase 9 (D43): the feed serves the closed generation, then generation 2 after it, and generation 2
 // republishes what generation 1 holds under the same fact ids.
@@ -66,7 +67,7 @@ const host = (stream: string, facts: ReadonlyArray<Fact>) => {
         ),
         cursor: null,
       }),
-    append: () => Effect.void,
+    append: thunkEffectVoid,
   };
 };
 

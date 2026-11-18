@@ -1,7 +1,6 @@
 import * as Effect from "effect/Effect"
 import { LiteralKit } from "@beep/schema/LiteralKit"
 import * as S from "effect/Schema"
-import { pipe } from "effect/Function"
 
 /**
  * How far a signal's source is trusted.

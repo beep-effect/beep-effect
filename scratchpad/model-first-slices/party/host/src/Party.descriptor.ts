@@ -24,7 +24,6 @@ export const PartyDeployment = DeploymentDescriptor.make({
     contract: ClaimDecided.contract,
     version: Number(version),
   })),
-  consumes: [],
   cluster: {
     module: "@proto/party-host/Party.cluster",
     export: "PartyCluster",

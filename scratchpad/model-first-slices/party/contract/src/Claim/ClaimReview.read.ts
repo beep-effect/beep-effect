@@ -3,6 +3,7 @@ import { OrgId, RunId } from "@proto/kernel/Ids";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as O from "effect/Option";
+import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 import { Disposition } from "../Disposition.ts";
 import { Proposition } from "../Proposition.ts";
@@ -59,10 +60,10 @@ const asserted = {
   org: OrgId,
   proposition: Proposition,
   sources: S.Int,
-  revision: S.Int,
-  reviews: S.Array(RunId),
-  proposal: S.OptionFromNullOr(ProposalView),
-  notes: S.Array(ClaimNote),
+  revision: S.Int.pipe(Initial.of(1), S.annotateKey({ description: "The evidence revision; an asserted claim starts at 1." })),
+  reviews: Initial.empty(RunId).pipe(S.annotateKey({ description: "The review runs requested so far; none at first." })),
+  proposal: Initial.none(ProposalView).pipe(S.annotateKey({ description: "The latest proposal still standing; absent until a review proposes one." })),
+  notes: Initial.empty(ClaimNote).pipe(S.annotateKey({ description: "What the reviewer was told about refusals; none at first." })),
 };
 
 /**
@@ -75,7 +76,7 @@ const asserted = {
  * ```ts
  * import { ClaimReviewState } from "@proto/party-contract/Claim/ClaimReview.read";
  *
- * const standing = ClaimReviewState.match(ClaimReviewState.cases.Unasserted.make({ notes: [] }), {
+ * const standing = ClaimReviewState.match(ClaimReviewState.cases.Unasserted.make({}), {
  *   Unasserted: () => "not asserted",
  *   Pending: ({ revision }) => `pending at revision ${revision}`,
  *   Accepted: () => "accepted",
@@ -87,7 +88,7 @@ const asserted = {
  * @since 0.0.0
  */
 export const ClaimReviewState = S.TaggedUnion({
-  Unasserted: { notes: S.Array(ClaimNote) },
+  Unasserted: { notes: Initial.empty(ClaimNote).pipe(S.annotateKey({ description: "Refusals noted before the claim exists; none at first." })) },
   Pending: asserted,
   Accepted: asserted,
   Retracted: asserted,
@@ -115,7 +116,7 @@ export type AssertedReview = Exclude<ClaimReviewState, { readonly _tag: "Unasser
  * import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
  * import * as O from "effect/Option";
  *
- * const none = O.isNone(proposalOf(ClaimReviewState.cases.Unasserted.make({ notes: [] })));
+ * const none = O.isNone(proposalOf(ClaimReviewState.cases.Unasserted.make({})));
  * ```
  *
  * @category getters
@@ -123,7 +124,7 @@ export type AssertedReview = Exclude<ClaimReviewState, { readonly _tag: "Unasser
  */
 export const proposalOf = (review: ClaimReviewState): O.Option<ProposalView> =>
   ClaimReviewState.match(review, {
-    Unasserted: () => O.none(),
+    Unasserted: O.none<ProposalView>,
     Pending: ({ proposal }) => proposal,
     Accepted: ({ proposal }) => proposal,
     Retracted: ({ proposal }) => proposal,
@@ -135,7 +136,7 @@ export const proposalOf = (review: ClaimReviewState): O.Option<ProposalView> =>
  * @category models
  * @since 0.0.0
  */
-export const ClaimReviewInitial: ClaimReviewState = ClaimReviewState.cases.Unasserted.make({ notes: [] });
+export const ClaimReviewInitial: ClaimReviewState = ClaimReviewState.cases.Unasserted.make({});
 
 /**
  * The `ClaimReview` view's read contract, with no aggregate behind it: its

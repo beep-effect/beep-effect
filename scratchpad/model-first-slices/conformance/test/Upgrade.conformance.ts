@@ -34,6 +34,7 @@ import {
   runState,
   services,
 } from "./Stack.ts";
+import { thunk0 } from "@beep/utils"
 
 // Phase 11 (D47, D50): an upgrade on the cluster. With RESTORE_PHASE=upgrade-decide, the stack runs
 // phase 8's code (commit 0d11b18590d): a claim is decided while its review view is held on a row
@@ -119,7 +120,7 @@ const runEvents = (run: string) =>
 
 /** How many conclusions `run` stored. */
 const concludedOf = (concluded: ReadonlyArray<{ readonly run: string; readonly concluded: number }>, run: string) =>
-  O.getOrElse(O.map(A.findFirst(concluded, (entry) => entry.run === run), (entry) => entry.concluded), () => 0);
+  O.getOrElse(O.map(A.findFirst(concluded, (entry) => entry.run === run), (entry) => entry.concluded), thunk0);
 
 if (O.contains(registration.restorePhase, "upgrade-after")) {
   live("after the current code is deployed over phase 8's data: every review run concluded once, and generation 2 holds the decision", Effect.gen(function* () {

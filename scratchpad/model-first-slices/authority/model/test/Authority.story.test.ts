@@ -290,7 +290,7 @@ it.effect("a run delegates its delegation further, only narrower, and only as it
       child,
       DelegationOpened.make({
         parent: GrantId.make("g_1"),
-        parentDelegation: O.some(DelegationId.make("d_1")),
+        parentDelegation: DelegationId.makeOption("d_1"),
         holder: RunId.make("run_2"),
         delegator: PrincipalId.make("p_rev"),
         terms: narrower,

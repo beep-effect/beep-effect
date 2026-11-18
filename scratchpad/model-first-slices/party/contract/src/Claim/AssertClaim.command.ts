@@ -3,6 +3,7 @@ import { OrgId, RunId } from "@proto/kernel/Ids";
 import { carry } from "@proto/kernel/Invocation";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
+import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 import { EvidenceSignal } from "../Evidence.ts";
 import { Proposition } from "../Proposition.ts";
@@ -51,7 +52,7 @@ export class AssertClaim extends Domain.Command(
     input: { org: OrgId, proposition: Proposition, signals: S.Array(EvidenceSignal) },
     events: [ClaimAsserted, ReviewRequested],
     rejects: [ClaimAlreadyAsserted, MissingGrant],
-    reply: { reviewRun: S.OptionFromNullOr(RunId) },
+    reply: { reviewRun: Initial.none(RunId).pipe(S.annotateKey({ description: "The review run the assertion requested; absent when none was needed." })) },
   },
   { description: "Assert a proposition about parties in an organization, with its evidence, for review." },
 ) {}

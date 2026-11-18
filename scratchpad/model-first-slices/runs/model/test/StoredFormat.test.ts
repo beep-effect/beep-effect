@@ -93,7 +93,7 @@ it.layer(NodeServices.layer)((it) => {
         view(SessionRuns, SessionId.make("session_1"), {
           runs: [
             { run: RunId.make("run_1"), previous: O.none(), parent: O.none(), status: "continued" },
-            { run: RunId.make("run_1~1"), previous: O.some(RunId.make("run_1")), parent: O.none(), status: "completed" },
+            { run: RunId.make("run_1~1"), previous: RunId.makeOption("run_1"), parent: O.none(), status: "completed" },
           ],
         }),
       );

@@ -2,10 +2,12 @@ import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
 import { dual } from "effect/Function";
 import * as Match from "effect/Match";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { Receipt } from "../Bindings.ts";
+import { thunk0, thunkTrue } from "@beep/utils"
 
 /** What every approval in flight carries: its command id, what it approves, the view revision it was made from, and how many times it was sent. */
 const inFlight = {
@@ -86,7 +88,17 @@ export type SeenView = typeof SeenView.Type;
  * @category models
  * @since 0.0.0
  */
-export const Screen = S.Struct({ claim: ClaimId, view: S.Option(SeenView), approval: Approval });
+export const Screen = S.Struct({
+  claim: ClaimId,
+  view: S.Option(SeenView).pipe(
+    S.withConstructorDefault(Effect.succeedNone),
+    S.annotateKey({ description: "What the screen last saw of the claim; nothing until the first snapshot." }),
+  ),
+  approval: Approval.pipe(
+    S.withConstructorDefault(Effect.succeed(Approval.cases.Idle.make({}))),
+    S.annotateKey({ description: "Where the reviewer's approval stands; idle at first." }),
+  ),
+});
 /**
  * @category models
  * @since 0.0.0
@@ -146,7 +158,7 @@ export type Intent = typeof Intent.Type;
  * @category constructors
  * @since 0.0.0
  */
-export const initial = (claim: ClaimId): Screen => ({ claim, view: O.none(), approval: Approval.cases.Idle.make({}) });
+export const initial = (claim: ClaimId): Screen => Screen.make({ claim });
 
 const emit = (screen: Screen, ...intents: ReadonlyArray<Intent>): readonly [Screen, ReadonlyArray<Intent>] => [
   screen,
@@ -158,7 +170,7 @@ const isInFlight = S.is(InFlight);
 const current = (screen: Screen, commandId: string): O.Option<InFlight> =>
   O.filter(O.liftPredicate(screen.approval, isInFlight), (approval) => approval.commandId === commandId);
 const newer = (screen: Screen, revision: number) =>
-  O.match(screen.view, { onNone: () => true, onSome: (view) => revision > view.revision });
+  O.match(screen.view, { onNone: thunkTrue, onSome: (view) => revision > view.revision });
 const noticed = (screen: Screen, notice: Notice): Screen => ({ ...screen, approval: Approval.cases.Noticed.make({ notice }) });
 
 /**
@@ -250,7 +262,7 @@ export const update: {
           : unchanged({
               ...noticed(screen, Notice.cases.Approved.make({ commandId })),
               view: newer(screen, revision)
-                ? O.some({ review, revision, epoch: O.match(screen.view, { onNone: () => 0, onSome: (view) => view.epoch }) })
+                ? O.some({ review, revision, epoch: O.match(screen.view, { onNone: thunk0, onSome: (view) => view.epoch }) })
                 : screen.view,
             }),
     }),

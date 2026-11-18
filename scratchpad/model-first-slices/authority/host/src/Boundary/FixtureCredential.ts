@@ -37,8 +37,8 @@ const parse = (value: string): O.Option<Credential> =>
     O.fromNullishOr(FIXTURE.exec(value)),
     O.flatMap(([, kind, subject = "", principal]) =>
       Match.value(kind).pipe(
-        Match.when("human", () => O.some(Credential.cases.Human.make({ principal: PrincipalId.make(subject) }))),
-        Match.when("agent", () => O.some(Credential.cases.Agent.make({ run: RunId.make(subject) }))),
+        Match.when("human", () => Credential.cases.Human.makeOption({ principal: PrincipalId.make(subject) })),
+        Match.when("agent", () => Credential.cases.Agent.makeOption({ run: RunId.make(subject) })),
         Match.when("process", () =>
           O.map(O.fromNullishOr(principal), (on) =>
             Credential.cases.Process.make({ process: subject, principal: PrincipalId.make(on) }),

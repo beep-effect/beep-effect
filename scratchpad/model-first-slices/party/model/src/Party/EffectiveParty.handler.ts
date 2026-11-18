@@ -7,6 +7,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import { EffectiveParty } from "./EffectiveParty.view.ts";
+import { thunkEffectVoid } from "@beep/utils"
 
 /**
  * Who may read a party: an invocation with a `party.read` grant on its org
@@ -21,7 +22,7 @@ export const EffectivePartyLive = EffectiveParty.toLayer(
       const now = yield* DateTime.now;
       const registered = O.filter(O.fromNullishOr(party), EffectivePartyState.guards.Registered);
       yield* O.match(O.map(registered, (found) => found.org), {
-        onNone: () => Effect.void,
+        onNone: thunkEffectVoid,
         onSome: (org) =>
           requireGrant(
             PartyRead,

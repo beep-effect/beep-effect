@@ -2,6 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import { OrgId } from "@proto/kernel/Ids";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
+import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 import { PartiesMerged } from "./MergeParties.command.ts";
 import { PartyId } from "./Party.id.ts";
@@ -27,7 +28,11 @@ import { PartyRegistered } from "./RegisterParty.command.ts";
  */
 export const EffectivePartyState = S.TaggedUnion({
   Unregistered: {},
-  Registered: { org: OrgId, name: S.String, absorbed: S.Array(PartyId) },
+  Registered: {
+    org: OrgId,
+    name: S.String,
+    absorbed: Initial.empty(PartyId).pipe(S.annotateKey({ description: "The parties merged into this one; none at first." })),
+  },
 });
 /**
  * @category models

@@ -24,7 +24,7 @@ import {
 import { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
 import { Unaccountable } from "@proto/kernel/Session.middleware";
 import { $AuthorityHostId } from "@proto/kernel/Identity";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import type * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -32,6 +32,7 @@ import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import { Credential } from "./FixtureCredential.ts";
+import { thunkTrue } from "@beep/utils"
 
 const $I = $AuthorityHostId.create("Boundary/Boundary");
 
@@ -73,7 +74,7 @@ export class Boundary extends Context.Service<
 >()($I`Boundary`) {}
 
 const listed = <S, A>(state: O.Option<S>, items: (state: S) => ReadonlyArray<A>): ReadonlyArray<A> =>
-  O.match(state, { onNone: () => [], onSome: items });
+  O.match(state, { onNone: A.emptyReadonly<A>, onSome: items });
 
 /**
  * The boundary over the hosted authority model. The views are indexes; each
@@ -96,7 +97,7 @@ export const BoundaryLive = Layer.effect(
     const grantInForce = (grant: GrantId, holder: O.Option<PrincipalId>, at: DateTime.Utc) =>
       Effect.map(grants.get(grant), (state) =>
         state._tag === "Active" &&
-        O.match(holder, { onNone: () => true, onSome: (principal) => state.holder === principal }) &&
+        O.match(holder, { onNone: thunkTrue, onSome: (principal) => state.holder === principal }) &&
         inForce(state.terms, at)
           ? O.some(state.terms)
           : O.none<GrantTerms>(),
@@ -115,7 +116,7 @@ export const BoundaryLive = Layer.effect(
         const held = yield* delegations.get(delegation);
         const usable =
           held._tag === "Active" &&
-          O.match(holder, { onNone: () => true, onSome: (run) => held.holder === run }) &&
+          O.match(holder, { onNone: thunkTrue, onSome: (run) => held.holder === run }) &&
           inForce(held.terms, at);
         if (!usable) return O.none();
         const parentTerms = yield* O.match(held.parentDelegation, {
@@ -217,7 +218,7 @@ export const BoundaryLive = Layer.effect(
             Effect.flatMap(answerFor(run), (answerer) =>
               O.isSome(answerer) && answerer.value.accountable === accountable
                 ? Effect.succeed(answerer.value.onBehalfOf)
-                : Effect.fail(ReadmissionRefused.make({ reason: "unaccountable", lapsed: [] })),
+                : Effect.fail(ReadmissionRefused.make({ reason: "unaccountable" })),
             ),
         });
         const confirmed = yield* Effect.forEach(provenance.grants, (ref) =>

@@ -50,7 +50,7 @@ export const asRun: {
   Invocation.make({
     root: Root.cases.Agent.make({ run: RunId.make(run), accountable: PrincipalId.make("p_req") }),
     onBehalfOf: PrincipalId.make("p_req"),
-    grants: [CapabilityGrant.make({ grant: GrantId.make("g_req"), delegation: O.some(DelegationId.make(delegation)), ...granted })],
+    grants: [CapabilityGrant.make({ grant: GrantId.make("g_req"), delegation: DelegationId.makeOption(delegation), ...granted })],
     chain: [],
   }),
 );

@@ -15,6 +15,7 @@ import * as Schema from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
+import { thunk0 } from "@beep/utils"
 
 // An in-process Durable Object host for `@alchemy.run/domain/DurableObjects`, trimmed from
 // upstream's `packages/integration-tests/test/Domain/DurableObjects.test.ts` at 33c10dd. Each
@@ -108,7 +109,7 @@ const makeStorage = (id: string, reads: MutableHashMap.MutableHashMap<string, nu
   const sortedKeys = () => data.pipe(MutableHashMap.keys, A.fromIterable, A.sort(Order.String));
   const count = (key: string) => {
     if (!endsWithLease(key)) return;
-    MutableHashMap.modifyAt(reads, readKey(id, key), (n) => O.some(O.getOrElse(n, () => 0) + 1));
+    MutableHashMap.modifyAt(reads, readKey(id, key), (n) => O.some(O.getOrElse(n, thunk0) + 1));
   };
   return {
     get: <T>(key: string) =>
@@ -355,7 +356,7 @@ export const makeSimHostWith = (options: SimHostOptions) => (seed: (id: string, 
       lookup: (model, cls) => namespace(DurableObjects.className(model.modelName, cls)),
       claimKey: Effect.sync(() => ({})),
     },
-    reads: (id, key) => O.getOrElse(MutableHashMap.get(reads, readKey(id, key)), () => 0),
+    reads: (id, key) => O.getOrElse(MutableHashMap.get(reads, readKey(id, key)), thunk0),
     ids: () => storages.pipe(MutableHashMap.keys, A.fromIterable),
     write: (id, entries) =>
       Effect.flatMap(Effect.fromOption(MutableHashMap.get(storages, id)).pipe(Effect.orDie), (storage) =>

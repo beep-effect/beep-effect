@@ -96,6 +96,6 @@ if (O.contains(registration.restorePhase, "retirement")) {
     expect(A.filter(verdict.refusals, (refusal) => RetirementRefusal.guards.Unread(refusal))).toEqual([]);
     expect(A.length(gen1.entries)).toBeGreaterThan(0);
     // Generation 1 is still served: the deployed pins keep it closed.
-    expect(A.findFirst(partyStreamPins, (pin) => pin.stream === "PartyFacts")).toEqual(O.some(StreamPin.cases.Closed.make({ stream: "PartyFacts" })));
+    expect(A.findFirst(partyStreamPins, (pin) => pin.stream === "PartyFacts")).toEqual(StreamPin.cases.Closed.makeOption({ stream: "PartyFacts" }));
   }));
 }

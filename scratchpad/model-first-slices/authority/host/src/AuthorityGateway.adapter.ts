@@ -13,6 +13,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Schedule from "effect/Schedule";
 import { Boundary, BoundaryLive } from "./Boundary/Boundary.ts";
+import { thunkEffectVoid } from "@beep/utils"
 
 /**
  * The authority context's side of its gateway: re-admission through the
@@ -69,7 +70,7 @@ export const AuthorityGatewayLive = Layer.effect(
           });
           yield* accountability
             .send(run, AssignAccountability.make({}))
-            .pipe(asRequester, Effect.catchTag("AccountabilityAlreadyAssigned", () => Effect.void));
+            .pipe(asRequester, Effect.catchTag("AccountabilityAlreadyAssigned", thunkEffectVoid));
           const answerer = yield* accountability.get(run);
           if (answerer._tag !== "Live") return yield* RunGrantRefused.make({ reason: "NotAccountable" });
           // The model's own policy opens the delegation; wait until it is.

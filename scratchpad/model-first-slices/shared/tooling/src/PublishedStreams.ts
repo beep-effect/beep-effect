@@ -71,18 +71,18 @@ const driftOfLive = (pins: ReadonlyArray<StreamPin>) => (live: LiveStream): O.Op
   O.match(
     A.findFirst(pins, (pin) => pin.stream === live.stream),
     {
-      onNone: () => O.some(StreamDrift.cases.Unpinned.make({ stream: live.stream })),
+      onNone: () => StreamDrift.cases.Unpinned.makeOption({ stream: live.stream }),
       onSome: (pin) =>
         StreamPin.match(pin, {
           Closed: () => O.map(live.writer, (writer) => StreamDrift.cases.Reopened.make({ stream: live.stream, writer })),
           Retired: () => O.map(live.writer, (writer) => StreamDrift.cases.Reopened.make({ stream: live.stream, writer })),
           Open: ({ writer: pinned }) =>
             O.match(live.writer, {
-              onNone: () => O.some(StreamDrift.cases.Unwritten.make({ stream: live.stream, pinned })),
+              onNone: () => StreamDrift.cases.Unwritten.makeOption({ stream: live.stream, pinned }),
               onSome: (writer) =>
                 sameWriter(pinned, writer)
                   ? O.none()
-                  : O.some(StreamDrift.cases.Changed.make({ stream: live.stream, pinned, live: writer })),
+                  : StreamDrift.cases.Changed.makeOption({ stream: live.stream, pinned, live: writer }),
             }),
         }),
     },

@@ -33,9 +33,11 @@ import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Struct from "effect/Struct";
+import { thunk0 } from "@beep/utils"
 
 /**
  * A run's budget, in units: what it was allowed, what is held by open
@@ -44,7 +46,12 @@ import * as Struct from "effect/Struct";
  * @category models
  * @since 0.0.0
  */
-export const Budget = S.Struct({ allowance: S.Int, reserved: S.Int, spent: S.Int, allocated: S.Int });
+export const Budget = S.Struct({
+  allowance: S.Int,
+  reserved: S.Int.pipe(Initial.of(0), S.annotateKey({ description: "Units held by open reservations; none at first." })),
+  spent: S.Int.pipe(Initial.of(0), S.annotateKey({ description: "Units settled; none at first." })),
+  allocated: S.Int.pipe(Initial.of(0), S.annotateKey({ description: "Units handed to child runs; none at first." })),
+});
 /**
  * @category models
  * @since 0.0.0
@@ -80,8 +87,8 @@ export const RunRecord = S.Struct({
   delegation: DelegationId,
   provenance: Provenance,
   budget: Budget,
-  reservations: S.Array(HeldReservation),
-  steps: S.Int,
+  reservations: Initial.empty(HeldReservation).pipe(S.annotateKey({ description: "The reservations still open; none at first." })),
+  steps: S.Int.pipe(Initial.of(0), S.annotateKey({ description: "Steps recorded so far; none at first." })),
   historyBound: S.Int,
 });
 /**
@@ -247,8 +254,8 @@ const releaseAll = (run: RunRecord): RunRecord => ({ ...withBudget(run, { reserv
  */
 export const requestOf = (state: AgentRunState): O.Option<RunRequest> =>
   AgentRunState.match(state, {
-    Unrequested: () => O.none(),
-    Rejected: () => O.none(),
+    Unrequested: O.none<RunRequest>,
+    Rejected: O.none<RunRequest>,
     Requested: ({ run }) => O.some(run),
     Withdrawn: ({ run }) => O.some(run),
     Refused: ({ run }) => O.some(run),
@@ -270,10 +277,10 @@ export const requestOf = (state: AgentRunState): O.Option<RunRequest> =>
  */
 export const recordOf = (state: AgentRunState): O.Option<RunRecord> =>
   AgentRunState.match(state, {
-    Unrequested: () => O.none(),
-    Rejected: () => O.none(),
-    Requested: () => O.none(),
-    Withdrawn: () => O.none(),
+    Unrequested: O.none<RunRecord>,
+    Rejected: O.none<RunRecord>,
+    Requested: O.none<RunRecord>,
+    Withdrawn: O.none<RunRecord>,
     Refused: ({ run }) => O.some(run),
     Running: ({ run }) => O.some(run),
     AwaitingApproval: ({ run }) => O.some(run),
@@ -366,7 +373,7 @@ export class AgentRun extends Domain.Aggregate(
           reason: command.reason,
           released: Match.value(state).pipe(
             Match.tag("Running", "AwaitingApproval", "AwaitingChild", ({ run }) => run.budget.reserved),
-            Match.orElse(() => 0),
+            Match.orElse(thunk0),
           ),
           provenance: command.provenance,
         }),
@@ -629,9 +636,7 @@ export class AgentRun extends Domain.Aggregate(
             requester: event.requester,
             source: event.source,
             terms: event.terms,
-            budget: { allowance: event.allowance, reserved: 0, spent: 0, allocated: 0 },
-            reservations: [],
-            steps: 0,
+            budget: Budget.make({ allowance: event.allowance }),
             historyBound: event.historyBound,
           }),
         }),
@@ -746,9 +751,7 @@ export class AgentRun extends Domain.Aggregate(
             terms: event.terms,
             delegation: event.delegation,
             provenance: event.runProvenance,
-            budget: { allowance: event.allowance, reserved: 0, spent: 0, allocated: 0 },
-            reservations: [],
-            steps: 0,
+            budget: Budget.make({ allowance: event.allowance }),
             historyBound: event.historyBound,
           }),
         }),
@@ -807,7 +810,7 @@ export class AgentRun extends Domain.Aggregate(
     },
     reply: {
       ReserveBudget: (state) => ({
-        remaining: O.match(requestOf(state), { onNone: () => 0, onSome: (run) => remaining(run.budget) }),
+        remaining: O.match(requestOf(state), { onNone: thunk0, onSome: (run) => remaining(run.budget) }),
       }),
     },
   },
