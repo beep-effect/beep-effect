@@ -251,6 +251,14 @@ Lane feat/certainty-fleet-host-fields
 
 Reverse: Delete this checkpoint so the slice-5b checkpoint is the latest PLAN status note, and revert the slice-9 PR.
 
+### Slice 11b (ROUT-05 slice 2b): per-task outcome records, 2026-11-18
+
+Slice 11b (ROUT-05 slice 2b) adds `beep ci task-outcomes` and two steps in each lane job that runs Turbo, `Record Turbo task outcomes` (continue-on-error) and `Upload Turbo task outcomes` (artifact `task-outcomes-<run>-<attempt>-<job>-<key>`), mirrored into `shard-overflow.yml`; `heavy.yml` is untouched (decision `task-outcome-records`). The route capture reads a run's records only when it has a failed job, fills `HostedJob.tasks` on those jobs, and counts the reads in the receipt's optional `taskOutcomeReads`. The admission gate is `packages/tooling/tool/cli/test/ci-task-outcomes.test.ts`: exit-code mapping and precedence, the command over two run summaries, the REST read of a zipped record (other attempts and expired artifacts skipped, two requests counted), and a capture with a seeded failing task (`task`), a seeded setup failure with no record (`setup`), an overflow-named job whose tasks passed (`harness`) and a passing job whose record is not attached, loaded back under `route-corpus/v1`. A workflow PR: the operator merges it by hand in the held set, after #3302, turbo-cache stage 2 and P5's overlap and before window 6 starts (operator ruling 2026-11-18, ci-lane-economics decision `window-5-preview-restart`); slice 11b merges last, after slice 13 (#3367). Slice 12's 2026-10-31..now capture predates the producer, so its failed jobs keep `tasks` absent.
+
+Lane feat/certainty-11b-task-outcomes
+
+Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-11b PR.
+
 ### Slice 12: route corpus captured through 2026-11-17 under the reserve, 2026-11-18
 
 Slice 12 (ROUT-05 slice 3) is built. `beep ci route capture` holds each GitHub call while the capture identity's `core` bucket is below `github-budget-ledger`'s 15% reserve, counts every response, and reads a run's jobs in pages of 30 after a 502 (decision `route-capture-reserve-gated`). The corpus receipt now covers 2026-09-01..2026-11-17: 10,435 runs, sha256 `d8328a6dd060…`, 4,107 runs beyond the old receipt, captured in five checkpointed bursts for 8,282 metered responses. The first corpus whose failed jobs carry steps: 4,439 in the new window. Census conservation holds: lane, support and unknown jobs and minutes sum to the totals (315,252 jobs). Unknown is 2.4% of job time overall and 0.84% on the new window, all retired `Shadcn Lint` (folded into Repo Sanity by #3117) and two unexpanded conditional names on skipped jobs. With slice 12, ROUT-05 is landed except the per-task outcomes of slice 11b.

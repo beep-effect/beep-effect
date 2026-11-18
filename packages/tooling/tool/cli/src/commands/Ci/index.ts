@@ -176,6 +176,13 @@ export * from "./CiShardOverflow.ts";
  */
 export * from "./CiShardOverflowPreflight.ts";
 /**
+ * Public per-task outcome records of hosted lane jobs (ROUT-05 slice 2b).
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiTaskOutcomes.ts";
+/**
  * Public Test Unit timing projection schemas (MEAS-06).
  *
  * @category models

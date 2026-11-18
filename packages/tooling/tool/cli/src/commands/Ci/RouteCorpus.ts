@@ -45,9 +45,12 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { unzipSync } from "fflate";
 import {
   GithubClientRequest,
   GithubIdentity,
@@ -56,6 +59,7 @@ import {
 } from "../../internal/github/GithubIdentity.ts";
 import { GithubRest, layerGithubRest } from "../../internal/github/GithubRest.ts";
 import { sha256HexBytes } from "../Goals/PacketCore/PacketDigest.ts";
+import { TaskOutcomeRecord, taskOutcomeArtifactPrefix } from "./CiTaskOutcomes.ts";
 import { HostedJob, HostedRun, HostedStep, RouteCorpusReceipt, RouteError } from "./Route.schemas.ts";
 import { RouteCorpus, RouteCorpusLoaded } from "./Route.service.ts";
 import { makeRouteReadBudget, RouteReadBudget } from "./RouteBudget.ts";
@@ -192,6 +196,8 @@ export class RouteGhRateLimited extends S.TaggedError<RouteGhRateLimited, { read
   {
     command: S.String,
     output: S.String,
+    // The task-outcome requests the refused call had already sent, so the capture can count them across the wait.
+    requests: S.Int.pipe(S.withConstructorDefault(Effect.succeed(0))),
   },
   $I.annoteError<RouteGhRateLimited>("RouteGhRateLimited", {
     description: "A gh call refused because the GitHub API rate limit was exhausted.",
@@ -317,6 +323,41 @@ const hostedRunOf = (view: GhRunView): HostedRun =>
     jobs: A.map(view.jobs, hostedJobOf),
   });
 
+const TaskOutcomeRead = S.Struct({ requests: S.Int, records: S.Array(TaskOutcomeRecord) }).pipe(
+  $I.annoteSchema("TaskOutcomeRead", {
+    description: "The task-outcome records of one run attempt and the GitHub requests spent reading them.",
+  })
+);
+const decodeTaskOutcomeRead = S.decodeUnknownEffect(S.fromJsonString(TaskOutcomeRead));
+
+// The task-outcome reads a continued capture carries from its receipt; a window started again counts afresh.
+const carriedReads = (loaded: RouteCorpusLoaded, kept: boolean): number =>
+  kept ? O.getOrElse(loaded.receipt.taskOutcomeReads, () => 0) : 0;
+
+// A fetched run and the GitHub requests its task-outcome records cost.
+type FetchedRun = { readonly run: HostedRun; readonly reads: number };
+
+const isFailedJob = (job: HostedJob): boolean => O.exists(job.conclusion, (value) => Str.Equivalence(value, "failure"));
+
+// A record names its job as GitHub lists it; a job reached through a reusable workflow is listed as
+// `<caller> / <job>` (the overflow shard), so a record also joins a job whose name starts with `<job> / `.
+const recordFor = (records: ReadonlyArray<TaskOutcomeRecord>, job: HostedJob): O.Option<TaskOutcomeRecord> =>
+  A.findFirst(records, (record) => record.job === job.name || Str.startsWith(`${record.job} / `)(job.name));
+
+// Tasks are kept on the jobs that keep steps: the failed ones.
+const withTaskOutcomes = (run: HostedRun, records: ReadonlyArray<TaskOutcomeRecord>): HostedRun =>
+  HostedRun.make({
+    ...run,
+    jobs: A.map(run.jobs, (job) =>
+      isFailedJob(job)
+        ? O.match(recordFor(records, job), {
+            onNone: () => job,
+            onSome: (record) => HostedJob.make({ ...job, tasks: O.some(record.tasks) }),
+          })
+        : job
+    ),
+  });
+
 // A pull-request run, or a push to `main`. Only finished ones are fetched; an
 // unfinished one keeps its day open so a later capture lists it again.
 const isEligibleRun = (row: GhRunListRow): boolean =>
@@ -385,6 +426,38 @@ const JobWire = S.Struct({
 const decodeWorkflowRows = S.decodeUnknownEffect(S.Array(WorkflowWire));
 const decodeRunRows = S.decodeUnknownEffect(S.Array(RunWire));
 const decodeJobRows = S.decodeUnknownEffect(S.Array(JobWire));
+const ArtifactWire = S.Struct({ id: S.Int, name: S.String, expired: S.Boolean, size_in_bytes: S.Int });
+const ArtifactPage = S.Struct({ total_count: S.Int, artifacts: S.Array(ArtifactWire) });
+const ArchiveBytes = S.instanceOf(ArrayBuffer);
+const decodeRecordJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const ARTIFACT_PAGE = 100;
+// A record is one small JSON file (a few hundred bytes per task). Any artifact or archive entry above this bound is
+// not a record a lane wrote: it is skipped unread, so a crafted archive cannot make the capture inflate it.
+const RECORD_BYTES_MAX = 1024 * 1024;
+
+// The JSON files of one record artifact, parsed but not yet decoded: the capture decodes them as
+// `task-outcomes/v1` records, so a malformed one fails there with the run it came from.
+const archiveRecords = Effect.fnUntraced(function* (bytes: ArrayBuffer, name: string) {
+  const entries = yield* Effect.try({
+    // Only small JSON entries are inflated; every other entry is skipped before it expands.
+    try: () =>
+      unzipSync(new Uint8Array(bytes), {
+        filter: (file) => Str.endsWith(".json")(file.name) && file.originalSize <= RECORD_BYTES_MAX,
+      }),
+    catch: RouteError.mapError("corpus-fetch", `Artifact ${name} is not a zip archive.`),
+  });
+  return yield* Effect.forEach(
+    A.sort(
+      R.toEntries(entries),
+      Order.mapInput(Order.String, ([file]: readonly [string, Uint8Array]) => file)
+    ),
+    ([file, content]) =>
+      decodeRecordJson(new TextDecoder().decode(content)).pipe(
+        Effect.mapError(RouteError.mapError("corpus-fetch", `${name}/${file} is not JSON.`))
+      ),
+    { concurrency: 1 }
+  );
+});
 const encodeWire = S.encodeEffect(S.fromJsonString(S.Unknown));
 const ghRun = (run: typeof RunWire.Type) => ({
   databaseId: run.id,
@@ -422,76 +495,134 @@ export const makeRouteGithubRunner = Effect.gen(function* () {
   const repo = yield* Repo;
   const rest = yield* GithubRest;
   const at = { owner: repo.owner, repo: repo.repo };
+  // `spent` counts the task-outcome requests of one call across its retries, so a retried listing or download is
+  // counted every time it is sent.
   const runGh: RouteGhRunner = (args) =>
-    Effect.gen(function* () {
-      if (args[0] === "api") {
-        const limit = yield* rest.rateLimit;
-        return yield* encodeWire({ resources: { core: { reset: DateTime.toEpochMillis(limit.core.resetAt) / 1000 } } });
-      }
-      if (args[1] === "list") {
-        const workflow = args[3] ?? "";
-        const id = S.is(WorkflowReference)(workflow)
-          ? workflow
-          : yield* client.paginate("GET /repos/{owner}/{repo}/actions/workflows", { ...at, per_page: 100 }).pipe(
-              Effect.flatMap((rows) => decodeWorkflowRows(rows)),
-              Effect.flatMap((rows) =>
-                Effect.fromOption(
-                  A.findFirst(rows, (row) => row.name === workflow),
-                  () =>
-                    RouteError.new(
-                      "corpus-fetch",
-                      `gh run list --workflow ${workflow} --created ${args[5]} returned no matching workflow.`
-                    )
+    Effect.flatMap(Ref.make(0), (spent) =>
+      Effect.gen(function* () {
+        if (args[0] === "api") {
+          const limit = yield* rest.rateLimit;
+          return yield* encodeWire({
+            resources: { core: { reset: DateTime.toEpochMillis(limit.core.resetAt) / 1000 } },
+          });
+        }
+        if (args[1] === "list") {
+          const workflow = args[3] ?? "";
+          const id = S.is(WorkflowReference)(workflow)
+            ? workflow
+            : yield* client.paginate("GET /repos/{owner}/{repo}/actions/workflows", { ...at, per_page: 100 }).pipe(
+                Effect.flatMap((rows) => decodeWorkflowRows(rows)),
+                Effect.flatMap((rows) =>
+                  Effect.fromOption(
+                    A.findFirst(rows, (row) => row.name === workflow),
+                    () =>
+                      RouteError.new(
+                        "corpus-fetch",
+                        `gh run list --workflow ${workflow} --created ${args[5]} returned no matching workflow.`
+                      )
+                  )
+                ),
+                Effect.map((row) => row.id)
+              );
+          const rows = yield* client
+            .paginate("GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs", {
+              ...at,
+              workflow_id: id,
+              created: args[5] ?? "",
+              per_page: 100,
+            })
+            .pipe(Effect.flatMap(decodeRunRows));
+          return yield* encodeWire(A.map(rows, ghRun));
+        }
+        if (args[1] === "task-outcomes") {
+          const runId = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[2]);
+          const attempt = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[3]);
+          // Paged by hand so every page is counted as it is requested, a page a failed attempt sent included.
+          const listPages = (
+            page: number,
+            seen: ReadonlyArray<typeof ArtifactWire.Type>
+          ): Effect.Effect<ReadonlyArray<typeof ArtifactWire.Type>, GitHubError> =>
+            Ref.update(spent, (n) => n + 1).pipe(
+              Effect.andThen(
+                client.requestDecoded(
+                  "GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts",
+                  { ...at, run_id: runId, per_page: ARTIFACT_PAGE, page },
+                  ArtifactPage
                 )
               ),
-              Effect.map((row) => row.id)
+              Effect.flatMap((listing) => {
+                const all = A.appendAll(seen, listing.artifacts);
+                return A.length(listing.artifacts) < ARTIFACT_PAGE || A.length(all) >= listing.total_count
+                  ? Effect.succeed(all)
+                  : listPages(page + 1, all);
+              })
             );
-        const rows = yield* client
-          .paginate("GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs", {
+          const artifacts = yield* listPages(1, A.empty());
+          const prefix = taskOutcomeArtifactPrefix(runId, attempt);
+          const wanted = A.filter(
+            artifacts,
+            (artifact) =>
+              !artifact.expired && Str.startsWith(prefix)(artifact.name) && artifact.size_in_bytes <= RECORD_BYTES_MAX
+          );
+          const records = yield* Effect.forEach(
+            wanted,
+            (artifact) =>
+              Ref.update(spent, (n) => n + 1).pipe(
+                Effect.andThen(
+                  client
+                    .requestDecoded(
+                      "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/zip",
+                      { ...at, artifact_id: artifact.id },
+                      ArchiveBytes
+                    )
+                    .pipe(Effect.flatMap((bytes) => archiveRecords(bytes, artifact.name)))
+                )
+              ),
+            { concurrency: 1 }
+          );
+          return yield* encodeWire({ requests: yield* Ref.get(spent), records: A.flatten(records) });
+        }
+        const runId = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[2]);
+        const run = yield* client.requestDecoded(
+          "GET /repos/{owner}/{repo}/actions/runs/{run_id}",
+          { ...at, run_id: runId },
+          RunWire
+        );
+        const jobPages = (perPage: number) =>
+          client.paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs", {
             ...at,
-            workflow_id: id,
-            created: args[5] ?? "",
-            per_page: 100,
-          })
-          .pipe(Effect.flatMap(decodeRunRows));
-        return yield* encodeWire(A.map(rows, ghRun));
-      }
-      const runId = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[2]);
-      const run = yield* client.requestDecoded(
-        "GET /repos/{owner}/{repo}/actions/runs/{run_id}",
-        { ...at, run_id: runId },
-        RunWire
-      );
-      const jobPages = (perPage: number) =>
-        client.paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs", {
-          ...at,
-          run_id: runId,
-          per_page: perPage,
+            run_id: runId,
+            per_page: perPage,
+          });
+        // Some runs answer 502 on every 100-job page yet read cleanly at 30 (run 42669948388;
+        // certainty-scorecard decision `per-attempt-page-fallback`), so a transport failure is
+        // retried once in pages of 30 before the call fails.
+        const jobs = yield* jobPages(ROUTE_CORPUS_JOB_PAGE).pipe(
+          Effect.catchIf(GitHubError.hasKind("transport"), () => jobPages(ROUTE_CORPUS_JOB_FALLBACK_PAGE)),
+          Effect.flatMap(decodeJobRows)
+        );
+        return yield* encodeWire({
+          ...ghRun(run),
+          jobs: A.map(jobs, (job) => ({
+            name: job.name,
+            conclusion: job.conclusion,
+            startedAt: job.started_at,
+            completedAt: job.completed_at,
+            steps: job.steps ?? null,
+          })),
         });
-      // Some runs answer 502 on every 100-job page yet read cleanly at 30 (run 42669948388;
-      // certainty-scorecard decision `per-attempt-page-fallback`), so a transport failure is
-      // retried once in pages of 30 before the call fails.
-      const jobs = yield* jobPages(ROUTE_CORPUS_JOB_PAGE).pipe(
-        Effect.catchIf(GitHubError.hasKind("transport"), () => jobPages(ROUTE_CORPUS_JOB_FALLBACK_PAGE)),
-        Effect.flatMap(decodeJobRows)
-      );
-      return yield* encodeWire({
-        ...ghRun(run),
-        jobs: A.map(jobs, (job) => ({
-          name: job.name,
-          conclusion: job.conclusion,
-          startedAt: job.started_at,
-          completedAt: job.completed_at,
-          steps: job.steps ?? null,
-        })),
-      });
-    }).pipe(
-      Effect.mapError(routeGithubFailure(args)),
-      Effect.retry({
-        times: 2,
-        schedule: Schedule.exponential(Duration.seconds(1)),
-        while: P.not(P.isTagged("RouteGhRateLimited")),
-      })
+      }).pipe(
+        Effect.mapError(routeGithubFailure(args)),
+        Effect.retry({
+          times: 2,
+          schedule: Schedule.exponential(Duration.seconds(1)),
+          while: P.not(P.isTagged("RouteGhRateLimited")),
+        }),
+        // A rate-limited call hands the requests it already sent to the caller that waits for the reset.
+        Effect.catchTag("RouteGhRateLimited", (refused) =>
+          Effect.flatMap(Ref.get(spent), (requests) => Effect.fail(RouteGhRateLimited.make({ ...refused, requests })))
+        )
+      )
     );
   return runGh;
 }).pipe(Effect.withSpan("RouteCorpus.githubRunner"));
@@ -621,6 +752,8 @@ type CaptureState = {
   readonly pinned: O.Option<string>;
   readonly covered: string;
   readonly open: boolean;
+  // GitHub requests spent on task-outcome records, summed over the captures that built the corpus.
+  readonly reads: number;
 };
 
 type CapturePlan = {
@@ -740,6 +873,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
       pinned: yield* Effect.asSome(digest(bytes, corpusPath)),
       covered: "",
       open: true,
+      reads: 0,
     };
   });
 
@@ -831,7 +965,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
   const fetchRun = Effect.fn("RouteCorpus.fetchRun")(function* (
     repoRoot: string,
     runId: number
-  ): Effect.fn.Return<O.Option<HostedRun>, RouteError> {
+  ): Effect.fn.Return<O.Option<FetchedRun>, RouteError> {
     const text = yield* callGh(`gh run view ${runId}`, ["run", "view", `${runId}`, "--json", GH_VIEW_FIELDS], repoRoot);
     const view = yield* decodeGhRunView(text).pipe(
       Effect.mapError(RouteError.mapError("corpus-fetch", `gh run view ${runId} returned an unreadable payload.`))
@@ -841,7 +975,32 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     }
     // A rerun can start between the list and the view: the view then shows the
     // newer, unfinished attempt, which is not evidence yet.
-    return view.status === "completed" ? O.some(hostedRunOf(view)) : O.none();
+    if (view.status !== "completed") {
+      return O.none();
+    }
+    const run = hostedRunOf(view);
+    if (!A.some(run.jobs, isFailedJob)) {
+      return O.some({ run, reads: 0 });
+    }
+    // A failed job's per-task records ride the run as artifacts of its attempt; only runs with a failed job
+    // are read, since only failed jobs keep steps and tasks.
+    const label = `gh run task-outcomes ${runId} ${view.attempt}`;
+    // A call refused for the rate limit reports the requests it had sent; they are added to the retried call's.
+    const carried = yield* Ref.make(0);
+    // Metered like every capture call: every response it gets is counted in the capture's spend.
+    const attemptRead = gh(["run", "task-outcomes", `${runId}`, `${view.attempt}`], repoRoot).pipe(
+      Effect.tapErrorTag("RouteGhRateLimited", (refused) => Ref.update(carried, (n) => n + refused.requests))
+    );
+    // Every attempt is admitted at the reserve, the retry after the rate-limit wait included.
+    const admittedRead = meter.admit(label).pipe(Effect.andThen(attemptRead));
+    const outcomes = yield* admittedRead.pipe(
+      Effect.catchTag("RouteGhRateLimited", () => waitForReset(label, repoRoot, admittedRead))
+    );
+    const read = yield* decodeTaskOutcomeRead(outcomes).pipe(
+      Effect.mapError(RouteError.mapError("corpus-fetch", `${label} returned an unreadable payload.`))
+    );
+    const before = yield* Ref.get(carried);
+    return O.some({ run: withTaskOutcomes(run, read.records), reads: read.requests + before });
   });
 
   // Where this capture starts and what the receipt already covers. A receipt
@@ -925,10 +1084,11 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
           pinned: A.every(loaded.value.runs, inWindow) ? O.some(loaded.value.receipt.sha256) : O.none(),
           covered: "",
           open: true,
+          reads: carriedReads(loaded.value, A.every(loaded.value.runs, inWindow)),
         }
       : (yield* exists(corpusPath))
         ? yield* readExisting(corpusPath)
-        : { runs: HashMap.empty(), pinned: O.none(), covered: "", open: true };
+        : { runs: HashMap.empty(), pinned: O.none(), covered: "", open: true, reads: 0 };
     yield* fs
       .makeDirectory(outDir, { recursive: true })
       .pipe(Effect.mapError(RouteError.mapError("corpus-pin", `Failed to create ${outDir}.`)));
@@ -967,6 +1127,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
         heads: HashSet.size(HashSet.fromIterable(A.map(runs, (run) => run.headSha))),
         path: path.relative(path.resolve(options.repoRoot), pinnedPath(sha256)),
         sha256,
+        taskOutcomeReads: O.some(state.reads),
       });
       const receiptText = yield* encodeReceipt(receipt).pipe(
         Effect.mapError(RouteError.mapError("corpus-pin", `Failed to encode the receipt for ${corpusPath}.`))
@@ -996,7 +1157,8 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
       const viewed = yield* Effect.forEach(pending, (runId) => fetchRun(options.repoRoot, runId), {
         concurrency: ROUTE_CORPUS_FETCH_CONCURRENCY,
       });
-      const fetched = A.getSomes(viewed);
+      const read = A.getSomes(viewed);
+      const fetched = A.map(read, (entry) => entry.run);
       const open =
         state.open &&
         isLaterDay(DateTime.formatIsoDateUtc(now), day) &&
@@ -1010,6 +1172,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
         pinned: A.isReadonlyArrayEmpty(fetched) ? state.pinned : O.none(),
         covered: open ? day : state.covered,
         open,
+        reads: A.reduce(read, state.reads, (total, entry) => total + entry.reads),
       });
       return written;
     });
