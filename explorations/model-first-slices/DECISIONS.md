@@ -1218,3 +1218,41 @@ operator. Nothing is posted; the operator is asked again before anything goes ou
 **Rationale:** A patch that no longer applies, or a defect upstream has already fixed another way,
 changes what is worth sending. Rejected: holding the set as written; dropping the upstream work.
 Recommended answer accepted.
+
+## 2026-11-17 — D59 the shape is confirmed
+
+**Question:** `BRIEF.md` and the fifth draft of the artifact are current to D58. Do they match the
+picture in the operator's head?
+
+**Answer:** Confirmed. The shape stands as written and the packet moves to decompose.
+
+**Rationale:** The operator's confirmation in words is the exit signal for the shape stage.
+Rejected: holding at shape for a further read; revising the brief first. Recommended answer
+accepted.
+
+## 2026-11-17 — D60 appetite
+
+**Question:** The brief had no appetite and graduation requires one. How much does the first round
+of goal packets take on?
+
+**Answer:** The standard plus one real slice. Amend `standards/ARCHITECTURE.md` and the scaffolding
+and lint tooling to the four-package shape, and build one real context end to end on it in
+`packages/`. Everything else stays in `MAP.md` as gated candidates.
+
+**Rationale:** A standard with no slice built on it is unproven in the repo, and one slice is the
+smallest thing that exercises the standard, the tooling and the host together. Rejected: the
+standard and tooling alone, with no slice until upstream releases the fixes; goal packets now for
+every context and the unbuilt scope. Recommended answer accepted.
+
+## 2026-11-17 — D61 how goal work gets the library fixes
+
+**Question:** A real slice on Effect Cluster needs the six library fixes, which upstream has not
+released. How does goal work in the monorepo get them?
+
+**Answer:** As root patches. The fixes go into the monorepo's `patchedDependencies` and come out
+when an Alchemy release includes them. `@beep/alchemy-postgres` stays until then (D53).
+
+**Rationale:** The host guarantees in the brief hold only with the fixes, and the first slice is
+meant to run on the host the standard names. Rejected: proving slices in memory only until
+upstream ships; running new slices on the repo-owned platform meanwhile. Recommended answer
+accepted. D53's rejection stands: the repo-owned platform is not retired on carried patches.

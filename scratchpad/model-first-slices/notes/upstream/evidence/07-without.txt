@@ -1,0 +1,3 @@
+[1/1 ✓0 ✗1] ✗ test/Domain/CommitFence.test.ts > Domain commit refused by a fencing host > a runner that lost the instance during its commit is refused; the retry commits on the owner (21ms)
+  Error: TypeError: undefined is not a constructor (evaluating 'new DurableObjects.ShardLost({ id, shard: `runner ${runner}` })')
+Tests: 1 failed | 0 passed (1 files, 67ms)

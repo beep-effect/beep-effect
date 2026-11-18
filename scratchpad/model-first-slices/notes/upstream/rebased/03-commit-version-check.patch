@@ -1,0 +1,701 @@
+Rebased copy of `03-commit-version-check.patch` against alchemy `main` at 3ff34b94f6c4 (2026-11-17).
+Apply from the repository root with `git apply`; the text above the first `diff --git` line is
+ignored. The original, against 33c10dd, is `../03-commit-version-check.patch`.
+
+## State of this copy
+
+- Formatted with the repository's `oxfmt`; `oxfmt --check`, `oxlint` and `pnpm typecheck` pass
+  with the whole set applied.
+- Carries its tests: `packages/integration-tests/test/Domain/CommitVersionCheck.test.ts`, with a
+  two-runner in-process host (`two-runner-host.ts`) and its model (`two-runner-model.ts`). Both
+  cases fail on `main` and pass with this patch; the held-instance case also fails with the version
+  check alone.
+
+## What changed from the original
+
+- `main` already imports `effect/Data` in `DurableObjects.ts`, so the import hunk is gone.
+- `main` split the commit into `commit` and `persist` (#3373, #3420): the receipt is written first
+  inside the transaction and `persist` writes the events, `meta`, the routed marks and the outbox.
+  The version check is now the first statement of that transaction, before the receipt.
+- New on `main`: a decision (#3420) can hold an instance (`meta.held`) between its read and its
+  commit. The check also refuses a commit when the stored `meta` is held, and the refusal is then
+  `InstanceHeld`, which `whenFree` already settles and retries, instead of `CommitConflict`. This
+  is an addition to what ran on a cluster: it has run in the in-process test only.
+- A refused commit fails with `yield* new CommitConflict(...)` rather than `Effect.fail(...)`, as
+  the repository's lint asks.
+- The Effect Cluster hunk (`pg_advisory_xact_lock` in `objectStorage.transaction`) is unchanged.
+
+The original description follows unchanged. Its line references are to 33c10dd.
+
+fix(domain): never acknowledge a commit on a version that moved since decide
+
+Against alchemy `packages/domain/src` at 33c10dd (2.0.0-beta.87). Apply from the repository root
+with `git apply`; the text above the first `---` line is ignored.
+
+## Problem
+
+An aggregate's `commit` reads `meta`, runs `decide` on that state, and writes the events, `meta`,
+the receipt and the outbox in one storage transaction. It does not check, inside that
+transaction, that `meta` is still the version `decide` was given. It relies on one-at-a-time
+execution per instance.
+
+On Effect Cluster that holds only while one runner owns the instance. A runner that stalls (a GC
+pause, a partition, a frozen container) past its shard lock's 35 s expiry keeps running the entity
+it had; another runner takes the shard and serves the same instance. Both can then commit:
+
+- the second runner decides on version 1 and commits version 2;
+- the stalled runner's commit, decided on version 1 too, then writes `event:000000000002` and
+  `meta` over it.
+
+PostgreSQL row locks do not prevent this: both transactions read `meta` at version 1 before either
+commits, and the second simply waits for the first's row locks and then overwrites. The first
+write was acknowledged and is lost.
+
+## Fix
+
+- `commit`: the transaction first reads `meta` again and returns `undefined`, writing nothing, when
+  its version is not the one `decide` was given. The commit then fails with a new `CommitConflict`
+  (`id`, `decided`, `stored`).
+- The object method `send` passes `CommitConflict` through as a failure of the call
+  (`reportDefectsUnlessConflict`), where every other cause is still reported as a defect value. The
+  caller's `unwrapDefects` already retries a failed call with `TRANSIT_RETRY`, under the same
+  command id; a scheduled command's job is retried by its callback.
+- Effect Cluster: `objectStorage.transaction` takes `pg_advisory_xact_lock(hashtextextended(object,
+  0))` first, so transactions on one instance serialize across runners and the version check sees
+  the other's commit. The lock ends with the transaction.
+
+## Why it is safe
+
+- Never acknowledged: a commit that loses the check writes nothing (the check is the transaction's
+  first step) and returns no receipt.
+- Idempotency: the retry starts from the receipt lookup, which answers first, as before. If the
+  other runner committed this same command, the retry gets that receipt; otherwise it decides again
+  on the stored state.
+- One at a time: the retry is a new call, routed to whichever runner owns the instance now, so only
+  the current owner decides again.
+- Durable Objects (Cloudflare) and Rivet: storage transactions on one instance already serialize, so
+  the check always passes. Its cost is one `meta` read inside the transaction.
+- The in-memory platform has its own commit path and is unchanged.
+
+One `meta` read and one advisory lock per commit on Effect Cluster. The advisory key is a 64-bit
+hash of the object name, so two objects can share a key and serialize their commits; they never
+deadlock, since a transaction takes one key.
+
+The check orders commits by their transactions, not by shard ownership: when the stale runner's
+transaction started first, the stale runner is acknowledged and the other runner's commit is the
+one refused and retried. Nothing acknowledged is lost either way. Refusing the stale runner itself
+needs a fence on shard ownership (`07-commit-fenced-on-shard-ownership.patch`).
+
+## Failing case, and how it was reproduced
+
+- In process (two in-process runners sharing one instance's storage, with serialized transactions
+  and a `TestClock`): runner 0 decides on version 0 and holds; runner 1 commits version 1; runner
+  0's commit returns. Before the change, runner 0 is acknowledged at version 1 and the stored events
+  are `[A]` (B lost). After it, runner 0's first commit is refused, its retry is acknowledged at
+  version 2, and the events are `[B, A]`.
+- On a cluster (two runners and a front on Effect Cluster with PostgreSQL 17, on a single-node Docker
+swarm on one workstation): a runner frozen with `docker pause` while its commit waited on a row lock
+  held from another session, until the other runner had taken its shard. Before the change, in two
+  runs, the frozen runner was acknowledged at version 2 and the other runner's event then replaced
+  its own. After it, three runs lost no acknowledged write; the frozen runner was still
+  acknowledged in all three, which 07 addresses.
+
+## Where it ran
+
+- On a cluster: the paused-inside-commit case above, and the Domain conformance suite in
+  `packages/integration-tests/test/Domain/conformance/`, unchanged.
+- In process: the two-runner case above; the in-memory and Durable Objects suites pass unchanged.
+
+## Depends on
+
+Nothing. No hunk overlaps 01, 02 or 06; 07 builds on this one.
+---
+diff --git a/packages/domain/src/DurableObjects.ts b/packages/domain/src/DurableObjects.ts
+index 133571ab3..9a20dccb7 100644
+--- a/packages/domain/src/DurableObjects.ts
++++ b/packages/domain/src/DurableObjects.ts
+@@ -237,6 +237,37 @@ const reportDefects = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+     ),
+   );
+ 
++/**
++ * A commit found the instance's stored version moved since `decide` was
++ * given its state: another host committed to the same instance meanwhile (on
++ * Effect Cluster, two runners holding one instance while its shard moves).
++ * Nothing was written and nothing is acknowledged; the caller retries.
++ */
++export class CommitConflict extends Data.TaggedError("CommitConflict")<{
++  readonly id: string;
++  readonly decided: number;
++  readonly stored: number;
++}> {}
++
++/**
++ * Like {@link reportDefects}, except that a lost version check fails the call
++ * itself, so the caller's `unwrapDefects` retries it in transit under the
++ * same command id, and the retry starts again from the receipt lookup.
++ */
++const reportDefectsUnlessConflict = <A, E, R>(effect: Effect.Effect<A, E | CommitConflict, R>) =>
++  reportDefects(
++    effect.pipe(
++      Effect.catchIf(
++        (error): error is CommitConflict => error instanceof CommitConflict,
++        Effect.succeed,
++      ),
++    ),
++  ).pipe(
++    Effect.flatMap((value) =>
++      value instanceof CommitConflict ? Effect.fail(value) : Effect.succeed(value as A),
++    ),
++  );
++
+ /**
+  * How long to keep retrying a call that failed in transit: an instance being
+  * reset reports an opaque error, and for a while after a deploy some instances
+@@ -955,10 +986,26 @@ const aggregateObject = (
+         };
+         const kick = yield* state.storage.transaction(
+           Effect.gen(function* () {
++            // The version check, first in the commit's transaction: the commit applies only
++            // to the version `decide` was given, on an instance no decision holds. On a host
++            // whose transactions serialize per instance (Effect Cluster's Postgres storage)
++            // it sees every commit and every hold before it.
++            const stored = yield* storedMeta;
++            if (stored.version !== current.version || stored.held) return undefined;
+             yield* state.storage.put(`receipt:${meta.commandId}`, sent);
+             return yield* persist(id, current.version, result);
+           }),
+         );
++        // Lost the check: never acknowledged, and nothing was written.
++        if (kick === undefined) {
++          const stored = yield* storedMeta;
++          if (stored.held) return yield* new InstanceHeld();
++          return yield* new CommitConflict({
++            id,
++            decided: current.version,
++            stored: stored.version,
++          });
++        }
+         return { sent, kick };
+       });
+     /**
+@@ -1287,7 +1334,7 @@ const aggregateObject = (
+     );
+     return {
+       send: (id: string, command: Json, meta: Aggregate.SendMeta) =>
+-        reportDefects(send(id, command, meta)),
++        reportDefectsUnlessConflict(send(id, command, meta)),
+       schedule: (
+         id: string,
+         name: string,
+diff --git a/packages/domain/src/EffectCluster/index.ts b/packages/domain/src/EffectCluster/index.ts
+index 5c1b13d5e..058a29864 100644
+--- a/packages/domain/src/EffectCluster/index.ts
++++ b/packages/domain/src/EffectCluster/index.ts
+@@ -253,9 +253,19 @@ const objectStorage = (sql: SqlClient, object: string, gate: InputGateShape): Ob
+           Effect.map((rows) => new Map(rows.map((row) => [row.key, decode<T>(row.value)]))),
+         ),
+       ),
+-    // Held across the whole transaction, as Cloudflare's gate is.
++    // Held across the whole transaction, as Cloudflare's gate is. The transaction first takes
++    // the object's advisory lock: two runners can hold one instance while its shard moves, and
++    // their transactions on it serialize here, so a commit's version check sees the other's.
+     transaction: (effect) =>
+-      gate.exclusive(sql.withTransaction(effect).pipe(Effect.orDie)) as never,
++      gate.exclusive(
++        sql
++          .withTransaction(
++            sql`SELECT pg_advisory_xact_lock(hashtextextended(${object}, 0))`.pipe(
++              Effect.andThen(effect),
++            ),
++          )
++          .pipe(Effect.orDie),
++      ) as never,
+   };
+ };
+ 
+diff --git a/packages/integration-tests/test/Domain/CommitVersionCheck.test.ts b/packages/integration-tests/test/Domain/CommitVersionCheck.test.ts
+new file mode 100644
+index 000000000..cec98a76f
+--- /dev/null
++++ b/packages/integration-tests/test/Domain/CommitVersionCheck.test.ts
+@@ -0,0 +1,108 @@
++import { describe, expect, it } from "@alchemy.run/test";
++import * as Effect from "effect/Effect";
++import * as Fiber from "effect/Fiber";
++import * as Latch from "effect/Latch";
++import { twoRunnerHost } from "./two-runner-host.ts";
++import {
++  Account,
++  AccountId,
++  Deposit,
++  hosted,
++  InsufficientFunds,
++  logOf,
++  stallOf,
++  Transfer,
++  TransferMoney,
++  Withdraw,
++} from "./two-runner-model.ts";
++
++/**
++ * A commit applies only to the version its `decide` was given, on an
++ * instance no decision holds. Two runners serve one instance here, as on
++ * Effect Cluster while a shard moves: runner 0 decides and stalls, runner 1
++ * commits meanwhile, then runner 0's commit goes on.
++ */
++
++describe("Domain commit version check, two runners on one instance", { tags: ["unit"] }, () => {
++  it.live(
++    "a commit on a version that moved since its decide is retried, and no write is lost",
++    () =>
++      Effect.gen(function* () {
++        const a = AccountId.make("lost");
++        const sim = twoRunnerHost();
++        yield* Effect.gen(function* () {
++          const accounts = yield* Account;
++          // Runner 0 decides a deposit of 1 on version 0 and stalls there.
++          const first = yield* Effect.forkChild(
++            accounts.send(new Deposit({ accountId: a, amount: 1, stall: true })),
++          );
++          yield* stallOf(a).reached.await;
++          // The shard moves: runner 1 commits a deposit of 2 as version 1.
++          sim.serveFrom(1);
++          const second = yield* accounts.send(
++            new Deposit({ accountId: a, amount: 2, stall: false }),
++          );
++          expect(second.version).toBe(1);
++          // Runner 0 goes on. Its commit is refused; the retry decides again on runner 1.
++          yield* stallOf(a).release.open;
++          const retried = yield* Fiber.join(first);
++          expect(retried.version).toBe(2);
++          expect(logOf(sim, a)).toEqual(["Deposited 2", "Deposited 1"]);
++          expect(yield* accounts.get(a)).toEqual({ balance: 3, amounts: [2, 1] });
++        }).pipe(Effect.provide(hosted(sim)), Effect.ensuring(sim.close));
++      }),
++  );
++
++  it.live(
++    "a commit on an instance a decision holds waits for the decision, then decides again",
++    () =>
++      Effect.gen(function* () {
++        const a = AccountId.make("held-from");
++        const b = AccountId.make("held-to");
++        let preparing: Latch.Latch | undefined;
++        const sim = twoRunnerHost({
++          // The decision stalls with `a` held: the call that prepares `b` waits.
++          intercept: (call, run) =>
++            call.method === "txPrepare" && preparing !== undefined
++              ? Effect.andThen(preparing.await, run)
++              : run,
++        });
++        yield* Effect.gen(function* () {
++          const accounts = yield* Account;
++          const transfer = yield* Transfer;
++          yield* accounts.send(new Deposit({ accountId: a, amount: 100, stall: false }));
++          // Runner 0 decides to withdraw all 100 from `a` and stalls there.
++          const withdraw = yield* Effect.forkChild(
++            Effect.flip(accounts.send(new Withdraw({ accountId: a, amount: 100, stall: true }))),
++          );
++          yield* stallOf(a).reached.await;
++          // On runner 1, a transfer of all 100 from `a` holds `a` at the same version.
++          sim.serveFrom(1);
++          preparing = Latch.makeUnsafe(false);
++          const transferred = yield* Effect.forkChild(
++            transfer.send(new TransferMoney({ from: a, to: b, amount: 100 })),
++          );
++          yield* Effect.sleep("100 millis");
++          expect(sim.rowsOf(`VersionCheckBank.AccountAggregate/${a}`).get("meta")).toMatchObject({
++            held: true,
++            version: 1,
++          });
++          // Runner 0's withdrawal goes on while `a` is held: its commit must not land.
++          yield* stallOf(a).release.open;
++          yield* Effect.sleep("300 millis");
++          expect(logOf(sim, a)).toEqual(["Deposited 100"]);
++          // The transfer finishes; the withdrawal then decides again, on what is left.
++          yield* preparing.open;
++          const receipt = yield* Fiber.join(transferred);
++          expect(receipt.commits).toEqual([
++            { stream: `Account/${a}`, version: 2 },
++            { stream: `Account/${b}`, version: 1 },
++          ]);
++          expect(yield* Fiber.join(withdraw)).toEqual(new InsufficientFunds({ balance: 0 }));
++          expect(logOf(sim, a)).toEqual(["Deposited 100", "TransferSent 100"]);
++          expect(yield* accounts.get(a)).toEqual({ balance: 0, amounts: [100, -100] });
++        }).pipe(Effect.provide(hosted(sim)), Effect.ensuring(sim.close));
++      }),
++    { timeout: 30_000 },
++  );
++});
+diff --git a/packages/integration-tests/test/Domain/two-runner-host.ts b/packages/integration-tests/test/Domain/two-runner-host.ts
+new file mode 100644
+index 000000000..e3cc682ba
+--- /dev/null
++++ b/packages/integration-tests/test/Domain/two-runner-host.ts
+@@ -0,0 +1,231 @@
++import * as DurableObjects from "@alchemy.run/domain/DurableObjects";
++import { RuntimeContext } from "alchemy/RuntimeContext";
++import * as Clock from "effect/Clock";
++import * as Effect from "effect/Effect";
++import * as Exit from "effect/Exit";
++import * as Fiber from "effect/Fiber";
++import * as Scope from "effect/Scope";
++import * as Semaphore from "effect/Semaphore";
++
++// ------------------------------------- one instance's storage, served by two runners
++
++/**
++ * An in-process host whose instances can run on two runners at once, as on
++ * Effect Cluster while a shard moves: a runner that stalls past its shard
++ * lock keeps the instance it had while another runner takes the shard.
++ *
++ * Each runner builds its own copy of an instance, with its own exclusive
++ * section, over the instance's one storage. Calls go to the runner that
++ * `serveFrom` names when the call runs, so a retry reaches whichever runner
++ * serves the instance then; a call already running stays where it is.
++ * Transactions on one instance run one at a time across runners, as Effect
++ * Cluster's Postgres storage runs them under the instance's advisory lock.
++ */
++export const twoRunnerHost = (
++  options: {
++    /** Wrap a call between objects: the test decides when it runs. */
++    readonly intercept?: (
++      call: {
++        readonly cls: string;
++        readonly method: string;
++        readonly args: ReadonlyArray<unknown>;
++      },
++      run: Effect.Effect<unknown, unknown>,
++    ) => Effect.Effect<unknown, unknown>;
++  } = {},
++) => {
++  const classes = new Map<string, DurableObjects.ObjectImpl>();
++  const rows = new Map<string, Map<string, unknown>>();
++  const locks = new Map<string, Semaphore.Semaphore>();
++  const instances = new Map<string, Effect.Effect<Record<string, unknown>>>();
++  const scopes: Array<Scope.Closeable> = [];
++  const committers = new Map<string, Array<number>>();
++  let serving = 0;
++
++  const rowsOf = (id: string) => {
++    const held = rows.get(id) ?? new Map<string, unknown>();
++    rows.set(id, held);
++    return held;
++  };
++  const lockOf = (id: string) => {
++    const held = locks.get(id) ?? Semaphore.makeUnsafe(1);
++    locks.set(id, held);
++    return held;
++  };
++
++  /** The storage `runner` sees for instance `id`. */
++  const storageFor = (id: string, runner: number): DurableObjects.ObjectStorage => {
++    const data = rowsOf(id);
++    const clone = <T>(value: T): T => (value === undefined ? value : structuredClone(value));
++    return {
++      get: <T>(key: string) => Effect.sync(() => clone(data.get(key) as T | undefined)),
++      put: ((keyOrEntries: string | Record<string, unknown>, value?: unknown) =>
++        Effect.sync(() => {
++          if (typeof keyOrEntries === "string") data.set(keyOrEntries, clone(value));
++          else for (const [key, entry] of Object.entries(keyOrEntries)) data.set(key, clone(entry));
++        })) as DurableObjects.ObjectStorage["put"],
++      delete: ((keyOrKeys: string | ReadonlyArray<string>) =>
++        Effect.sync(() => {
++          if (typeof keyOrKeys === "string") return data.delete(keyOrKeys);
++          return keyOrKeys.filter((key) => data.delete(key)).length;
++        })) as DurableObjects.ObjectStorage["delete"],
++      list: <T>(options: DurableObjects.ListOptions = {}) =>
++        Effect.sync(() => {
++          let keys = [...data.keys()]
++            .sort()
++            .filter(
++              (key) =>
++                (options.prefix === undefined || key.startsWith(options.prefix)) &&
++                (options.start === undefined || key >= options.start) &&
++                (options.startAfter === undefined || key > options.startAfter) &&
++                (options.end === undefined || key < options.end),
++            );
++          if (options.reverse) keys.reverse();
++          if (options.limit !== undefined) keys = keys.slice(0, options.limit);
++          return new Map(keys.map((key) => [key, clone(data.get(key) as T)]));
++        }),
++      // One at a time per instance, across runners; a failure restores what was there.
++      transaction: (effect) =>
++        lockOf(id).withPermits(1)(
++          Effect.suspend(() => {
++            const before = new Map(data);
++            return effect.pipe(
++              Effect.onExit((exit) =>
++                Exit.isFailure(exit)
++                  ? Effect.sync(() => {
++                      data.clear();
++                      for (const [key, value] of before) data.set(key, value);
++                    })
++                  : Effect.sync(() => {
++                      committers.set(id, [...(committers.get(id) ?? []), runner]);
++                    }),
++              ),
++            );
++          }),
++        ),
++    };
++  };
++
++  const build = (cls: string, id: string, runner: number) => {
++    const storage = storageFor(id, runner);
++    const gate = Semaphore.makeUnsafe(1);
++    const scope = Scope.makeUnsafe();
++    scopes.push(scope);
++    return Effect.gen(function* () {
++      let timer: { readonly at: number; readonly fiber: Fiber.Fiber<void> } | undefined;
++      const set = (at: number) =>
++        Effect.gen(function* () {
++          const previous = timer;
++          const now = yield* Clock.currentTimeMillis;
++          const fiber = yield* Effect.sleep(Math.max(0, at - now)).pipe(
++            Effect.andThen(
++              Effect.suspend(() => {
++                timer = undefined;
++                return callbacks.fire;
++              }),
++            ),
++            Effect.forkIn(scope),
++          );
++          timer = { at, fiber };
++          if (previous) yield* Fiber.interrupt(previous.fiber);
++        });
++      const callbacks = DurableObjects.alarmCallbacks(storage, {
++        get: Effect.sync(() => timer?.at ?? null),
++        set,
++      });
++      const runtime = {
++        Type: "Sim",
++        id,
++        env: {},
++        get: () => Effect.undefined,
++        set: (key: string) => Effect.succeed(key),
++      } as RuntimeContext["Service"];
++      const record = yield* classes.get(cls)!.pipe(
++        Effect.provideService(DurableObjects.ObjectState, {
++          storage,
++          exclusive: (effect) => gate.withPermits(1)(effect),
++          waitUntil: (effect) => Effect.asVoid(Effect.forkIn(effect, scope)),
++        }),
++        Effect.provideService(RuntimeContext, runtime),
++        Effect.provideService(Scope.Scope, scope),
++        Effect.provide(callbacks.callbacks),
++      );
++      // Each call runs as its own event, with the instance's runtime.
++      const methods: Record<string, unknown> = {};
++      for (const [method, value] of Object.entries(record)) {
++        methods[method] =
++          typeof value === "function"
++            ? (...args: ReadonlyArray<unknown>) => {
++                const result = (value as (...args: ReadonlyArray<unknown>) => unknown)(...args);
++                return Effect.isEffect(result)
++                  ? Effect.scoped(
++                      (result as Effect.Effect<unknown, unknown, RuntimeContext>).pipe(
++                        Effect.provideService(RuntimeContext, runtime),
++                      ),
++                    )
++                  : result;
++              }
++            : value;
++      }
++      return methods;
++    }).pipe(Effect.cached, Effect.runSync);
++  };
++
++  const instance = (cls: string, name: string) => {
++    const id = `${cls}/${name}`;
++    const key = `${serving}|${id}`;
++    const built = instances.get(key) ?? build(cls, id, serving);
++    instances.set(key, built);
++    return built;
++  };
++
++  const namespace = (cls: string): DurableObjects.Namespace => ({
++    getByName: (name) =>
++      new Proxy({} as DurableObjects.Stub, {
++        get:
++          (_, method: string) =>
++          (...args: ReadonlyArray<unknown>) => {
++            // Routed when the call runs: a retry reaches the runner that serves the instance then.
++            const run = Effect.flatMap(
++              Effect.suspend(() => instance(cls, name)),
++              (methods) =>
++                (methods[method] as (...args: ReadonlyArray<unknown>) => Effect.Effect<unknown>)(
++                  ...structuredClone(args),
++                ).pipe(
++                  Effect.map((result) => (result === undefined ? result : structuredClone(result))),
++                ),
++            );
++            return options.intercept === undefined
++              ? run
++              : options.intercept({ cls, method, args }, run);
++          },
++      }),
++  });
++
++  const host: DurableObjects.Host = {
++    declare: (model, cls, impl) =>
++      Effect.sync(() => {
++        const name = DurableObjects.className(model.modelName, cls);
++        classes.set(name, impl);
++        return namespace(name);
++      }),
++    lookup: (model, cls) => namespace(DurableObjects.className(model.modelName, cls)),
++    claimKey: Effect.sync(() => ({})),
++  };
++
++  return {
++    host,
++    /** Which runner serves the calls made from now on (0 at first). */
++    serveFrom: (runner: number) => {
++      serving = runner;
++    },
++    /** An instance's stored rows, by key. */
++    rowsOf,
++    /** The runner of each transaction on instance `id` that completed, in order. */
++    committers: (id: string): ReadonlyArray<number> => committers.get(id) ?? [],
++    /** Stop every instance's background work and alarm. */
++    close: Effect.suspend(() =>
++      Effect.forEach(scopes, (scope) => Scope.close(scope, Exit.void), { discard: true }),
++    ),
++  };
++};
+diff --git a/packages/integration-tests/test/Domain/two-runner-model.ts b/packages/integration-tests/test/Domain/two-runner-model.ts
+new file mode 100644
+index 000000000..840aeaf34
+--- /dev/null
++++ b/packages/integration-tests/test/Domain/two-runner-model.ts
+@@ -0,0 +1,128 @@
++import * as Domain from "@alchemy.run/domain";
++import * as DurableObjects from "@alchemy.run/domain/DurableObjects";
++import * as SecureRandom from "effect/crypto/SecureRandom";
++import * as Effect from "effect/Effect";
++import * as Latch from "effect/Latch";
++import * as Layer from "effect/Layer";
++import * as Schema from "effect/Schema";
++import type { twoRunnerHost } from "./two-runner-host.ts";
++
++/**
++ * A bank for the two-runner cases: deposits and withdrawals on one account,
++ * and transfers decided across two. A command with `stall` set stops in its
++ * `decide`, as a runner frozen inside its call does, until the test lets it
++ * go on.
++ */
++
++const gates = new Map<string, { readonly reached: Latch.Latch; readonly release: Latch.Latch }>();
++
++/**
++ * The stall of account `id`'s commands: `reached` opens when a stalled
++ * `decide` is reached, and it goes on once `release` opens. Each case uses
++ * accounts of its own, so cases running together don't share a stall.
++ */
++export const stallOf = (id: string) => {
++  const gate = gates.get(id) ?? {
++    reached: Latch.makeUnsafe(false),
++    release: Latch.makeUnsafe(false),
++  };
++  gates.set(id, gate);
++  return gate;
++};
++const stall = (id: string) =>
++  Effect.suspend(() => Effect.andThen(stallOf(id).reached.open, stallOf(id).release.await));
++
++export const AccountId = Schema.String.pipe(Schema.brand("AccountId"));
++
++export class Deposited extends Domain.Event("Deposited", { amount: Schema.Int }) {}
++export class Withdrawn extends Domain.Event("Withdrawn", { amount: Schema.Int }) {}
++export class TransferSent extends Domain.Event("TransferSent", {
++  to: AccountId,
++  amount: Schema.Int,
++}) {}
++export class TransferReceived extends Domain.Event("TransferReceived", {
++  from: AccountId,
++  amount: Schema.Int,
++}) {}
++export class InsufficientFunds extends Domain.Rejection("InsufficientFunds", {
++  balance: Schema.Int,
++}) {}
++
++export class Deposit extends Domain.Command("Deposit", {
++  input: { accountId: AccountId, amount: Schema.Int, stall: Schema.Boolean },
++  events: [Deposited],
++}) {}
++export class Withdraw extends Domain.Command("Withdraw", {
++  input: { accountId: AccountId, amount: Schema.Int, stall: Schema.Boolean },
++  events: [Withdrawn],
++  rejects: [InsufficientFunds],
++}) {}
++export class TransferMoney extends Domain.Command("TransferMoney", {
++  input: { from: AccountId, to: AccountId, amount: Schema.Int },
++  events: [TransferSent, TransferReceived],
++  rejects: [InsufficientFunds],
++}) {}
++
++export class Account extends Domain.Aggregate("Account", {
++  id: AccountId,
++  state: Schema.Struct({ balance: Schema.Int, amounts: Schema.Array(Schema.Int) }),
++  initial: { balance: 0, amounts: [] },
++  commands: [Deposit, Withdraw],
++  keyOf: (command) => command.accountId,
++  events: [TransferSent, TransferReceived],
++  decide: {
++    Deposit: Effect.fn(function* (_, cmd) {
++      if (cmd.stall) yield* stall(cmd.accountId);
++      return [new Deposited({ amount: cmd.amount })];
++    }),
++    Withdraw: Effect.fn(function* (account, cmd) {
++      if (cmd.stall) yield* stall(cmd.accountId);
++      if (cmd.amount > account.balance)
++        return yield* new InsufficientFunds({ balance: account.balance });
++      return [new Withdrawn({ amount: cmd.amount })];
++    }),
++  },
++  evolve: {
++    Deposited: (s, e) => ({ balance: s.balance + e.amount, amounts: [...s.amounts, e.amount] }),
++    Withdrawn: (s, e) => ({ balance: s.balance - e.amount, amounts: [...s.amounts, -e.amount] }),
++    TransferSent: (s, e) => ({ balance: s.balance - e.amount, amounts: [...s.amounts, -e.amount] }),
++    TransferReceived: (s, e) => ({
++      balance: s.balance + e.amount,
++      amounts: [...s.amounts, e.amount],
++    }),
++  },
++}) {}
++
++export class Transfer extends Domain.Decision(TransferMoney, {
++  reads: { from: Account, to: Account },
++  keyOf: (cmd) => ({ from: cmd.from, to: cmd.to }),
++  decide: ({ from, to }, cmd) =>
++    cmd.amount > from.state.balance
++      ? new InsufficientFunds({ balance: from.state.balance })
++      : [
++          from.record(new TransferSent({ to: to.id, amount: cmd.amount })),
++          to.record(new TransferReceived({ from: from.id, amount: cmd.amount })),
++        ],
++}) {}
++
++export class Bank extends Domain.Model("VersionCheckBank", {
++  aggregates: [Account],
++  decisions: [Transfer],
++}) {}
++
++export const hosted = (sim: ReturnType<typeof twoRunnerHost>) =>
++  Bank.layer(Layer.empty).pipe(
++    Layer.provideMerge(DurableObjects.makePlatform(sim.host)),
++    Layer.provideMerge(SecureRandom.layerWebCrypto),
++  );
++
++/** An account's stored events, in order, as `<tag> <amount>`. */
++export const logOf = (sim: ReturnType<typeof twoRunnerHost>, id: string) =>
++  [...sim.rowsOf(`VersionCheckBank.AccountAggregate/${id}`).entries()]
++    .filter(([key]) => key.startsWith("event:"))
++    .map(([, row]) => {
++      const { event } = row as {
++        readonly event: { readonly _tag: string; readonly amount: number };
++      };
++      return `${event._tag} ${event.amount}`;
++    });

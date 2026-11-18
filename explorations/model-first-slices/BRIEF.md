@@ -7,8 +7,9 @@ the implementing goal packets. The exploration is shaped when the human says
 this file matches the picture in their head.
 -->
 
-Current to D58 (2026-11-17). Not yet confirmed by the operator. The fifth-draft design artifact is
-the long form of this brief; `DECISIONS.md` is the source of truth where they differ.
+Current to D61 (2026-11-17). Confirmed by the operator on 2026-11-17 (D59). The fifth-draft design
+artifact (`research/21`) is the long form of this brief; `DECISIONS.md` is the source of truth
+where they differ.
 
 ## Problem
 
@@ -22,8 +23,10 @@ the system alongside people.
 
 ## Appetite
 
-Not set by the operator. The graduation gate (D16) bounded the exploration and is met (D53). The
-size of each goal packet is set when the packet is decomposed.
+The standard plus one real slice (D60). The first round of goal packets amends
+`standards/ARCHITECTURE.md` and the scaffolding and lint tooling to the four-package shape, and
+builds one real context end to end on it in `packages/`, running on Effect Cluster with the library
+fixes carried as root patches (D61). Everything else waits in `MAP.md` as gated candidates.
 
 ## Solution Sketch
 
@@ -114,7 +117,7 @@ and a proof inventory of 41 entries.
 ## Rabbit Holes
 
 - **The host guarantees depend on fixes upstream does not ship.** Until they are in an Alchemy
-  release, any slice run on Effect Cluster carries the patches.
+  release, the monorepo carries them as root patches (D61).
 - **A connection pooler that rewrites the session name defeats the fence's identity.** The runner
   starts and every commit is then refused. The startup guard cannot see this.
 - **Not yet observed on a cluster:** the startup guard, the refusal on an unnamed pool, the

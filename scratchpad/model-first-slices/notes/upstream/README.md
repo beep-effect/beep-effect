@@ -2,6 +2,11 @@
 
 **Nothing here has been sent.** No issue, pull request or message has been posted upstream.
 
+Checked against alchemy `main` on 2026-11-17: see [`MAIN-CHECK.md`](./MAIN-CHECK.md). Copies
+rebased onto `main`, formatted and carrying tests are in `rebased/`; draft texts are in `drafts/`;
+the test runs with and without each fix are in `evidence/`. The files below are the set as it ran
+on the cluster, against 33c10dd, and are kept unchanged.
+
 Seven patches and three write-ups for alchemy at 33c10dd (2.0.0-beta.87), in the order a
 maintainer should take them. Patches apply from the repository root with `git apply`. Applied to
 33c10dd in the order 01, 02, 03, 06, 08, 07, 10, they reproduce exactly the sources the application
