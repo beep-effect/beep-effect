@@ -67,8 +67,33 @@ bun run beep architecture check --file /tmp/architecture-plan.json
 bun run beep architecture apply --file /tmp/architecture-plan.json
 ```
 
-Ergonomic wrappers write by default and expose the same JSON plan with
-`--dry-run`:
+A plan describes one of two slice shapes, read from its roles:
+`model-first` (the four-package context: `contract`, `model`, `host`, and later
+`web`) or `legacy` (the seven-package slice). `plan` resolves its shape like
+this:
+
+- `--shape model-first` plans a model-first context and needs `--slice` (the
+  context) and `--concept` (its first Module); it refuses `--stage` and
+  `--domain-kind`.
+- `--shape legacy` plans a legacy slice.
+- Without `--shape`, an explicit `--slice` and `--concept` with neither
+  `--stage` nor `--domain-kind` plans a model-first context. Anything else,
+  including a bare `plan`, is the legacy `architecture-lab` / `WorkItem` plan.
+
+`check` and `apply` take `--shape` too; when given, the plan file must describe
+that shape. Applying a model-first plan also registers its packages the way
+`create-package` does (workspaces, identity composers, tsconfig sync,
+`bun.lock`).
+
+Create a model-first context directly:
+
+```bash
+bun run beep architecture create context notes Note --dry-run
+bun run beep architecture plan --slice notes --concept Note > /tmp/notes-plan.json
+```
+
+The remaining wrappers build the legacy seven-package shape. Ergonomic wrappers
+write by default and expose the same JSON plan with `--dry-run`:
 
 ```bash
 bun run beep architecture create slice architecture-lab WorkItem --stage core --dry-run

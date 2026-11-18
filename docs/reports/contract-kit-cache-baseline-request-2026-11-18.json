@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "//": "0f6bf02d514da1ab6d3667112264a12bb5ba5809c1212c5b01c5928e65367fca"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (model-first-standard scaffolder lane, claude/model-first-standard-scaffolder)",
+    "reason": "Record the new @beep/contract-kit package's tasks (generated library scripts, root task definitions, no override) and the one manifest input the policy fingerprint added to //#lint:policy-fingerprint. No qualification is granted.",
+    "basis": {
+      "path": "docs/reports/contract-kit-cache-review-2026-11-18.md",
+      "sha256": "714e6f90d843ebbd3a0aa27cf4becaf8d599a2d50e67d16a7d47506b8ba43b56"
+    }
+  },
+  "subjects": ["//", "@beep/contract-kit"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

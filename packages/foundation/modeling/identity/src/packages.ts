@@ -262,7 +262,8 @@ const generatedComposers = $I.compose(
   "alchemy-vercel",
   "infra-cost-controls",
   "infra-hosts",
-  "infra-github"
+  "infra-github",
+  "contract-kit"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3934,3 +3935,20 @@ export const $InfraHostsId: Identity.IdentityComposer<"@beep/infra-hosts"> = com
  * @since 0.0.0
  */
 export const $InfraGithubId: Identity.IdentityComposer<"@beep/infra-github"> = composers.$InfraGithubId;
+
+/**
+ * Identity composer for `@beep/contract-kit`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $ContractKitId } from "@beep/identity/packages"
+ *
+ * const id = $ContractKitId.make("ContractKit")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $ContractKitId: Identity.IdentityComposer<"@beep/contract-kit"> = composers.$ContractKitId;
