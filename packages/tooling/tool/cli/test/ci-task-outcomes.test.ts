@@ -30,6 +30,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -180,55 +181,74 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
     })
   );
 
-  it.effect("the REST runner reads only this attempt's unexpired record artifacts and counts its requests", () =>
-    Effect.gen(function* () {
-      const recordText = yield* encodeRecord(record("Test Unit (unit-a)", [["@beep/a#test", "fail"]]));
-      const otherText = yield* encodeRecord(record("Test Unit (unit-z)", [["@beep/z#test", "pass"]]));
-      // Two JSON files and a non-JSON one in one archive: both records are read, in file-name order.
-      const archive = zipSync({
-        "record.json": new TextEncoder().encode(recordText),
-        "a-extra.json": new TextEncoder().encode(otherText),
-        "notes.txt": new TextEncoder().encode("ignored"),
-      });
-      const artifacts = {
-        total_count: 4,
-        artifacts: [
-          { id: 1, name: `task-outcomes-${RUN}-1-test-unit-shard-unit-a`, expired: false },
-          { id: 2, name: `task-outcomes-${RUN}-1-lint-shard-lint-1`, expired: true },
-          { id: 3, name: `task-outcomes-${RUN}-2-test-unit-shard-unit-a`, expired: false },
-          { id: 4, name: `unit-coverage-${RUN}-1-unit-a`, expired: false },
-        ],
-      };
-      const listing = yield* encode(artifacts);
-      const downloads: Array<string> = [];
-      const fetch: RecordedFetch = Object.assign(
-        (input: string | URL | Request): Promise<Response> => {
-          const url = new URL(input instanceof Request ? input.url : input);
-          const zip = Str.endsWith("/zip")(url.pathname);
-          if (zip) downloads.push(url.pathname);
-          const response = zip
-            ? new Response(archive, { status: 200, headers: { "content-type": "application/zip" } })
-            : new Response(listing, { status: 200, headers: { "content-type": "application/json" } });
-          Object.defineProperty(response, "url", { value: url.href });
-          return Promise.resolve(response);
-        },
-        { preconnect: () => undefined }
-      );
-      const run = yield* restRunner(fetch);
-      const text = yield* run(["run", "task-outcomes", `${RUN}`, "1"], ".");
-      const payload = yield* decodePayload(text);
-      deepStrictEqual(downloads, ["/repos/example/repo/actions/artifacts/1/zip"]);
-      deepStrictEqual(
-        [payload.requests, A.map(payload.records, (entry) => [entry.job, outcomeRows(entry.tasks)])],
-        [
-          2,
-          [
-            ["Test Unit (unit-z)", ["@beep/z#test=pass"]],
-            ["Test Unit (unit-a)", ["@beep/a#test=fail"]],
+  it.effect(
+    "the REST runner reads only this attempt's bounded record artifacts and counts every request it sends",
+    () =>
+      Effect.gen(function* () {
+        const recordText = yield* encodeRecord(record("Test Unit (unit-a)", [["@beep/a#test", "fail"]]));
+        const otherText = yield* encodeRecord(record("Test Unit (unit-z)", [["@beep/z#test", "pass"]]));
+        // Two JSON files and a non-JSON one in one archive: both records are read, in file-name order.
+        const archive = zipSync({
+          "record.json": new TextEncoder().encode(recordText),
+          "a-extra.json": new TextEncoder().encode(otherText),
+          "notes.txt": new TextEncoder().encode("ignored"),
+          // Compresses to a few kilobytes but inflates past the record bound: it is skipped before it expands, so it
+          // never reaches the record decoder (which would refuse it).
+          "big.json": new TextEncoder().encode(`{"padding":"${Str.repeat(1_100_000)("a")}"}`),
+        });
+        const artifacts = {
+          total_count: 5,
+          artifacts: [
+            {
+              id: 1,
+              name: `task-outcomes-${RUN}-1-test-unit-shard-unit-a`,
+              expired: false,
+              size_in_bytes: archive.byteLength,
+            },
+            { id: 2, name: `task-outcomes-${RUN}-1-lint-shard-lint-1`, expired: true, size_in_bytes: 300 },
+            { id: 3, name: `task-outcomes-${RUN}-2-test-unit-shard-unit-a`, expired: false, size_in_bytes: 300 },
+            { id: 4, name: `unit-coverage-${RUN}-1-unit-a`, expired: false, size_in_bytes: 300 },
+            // Named like a record but larger than any record: never downloaded.
+            { id: 5, name: `task-outcomes-${RUN}-1-labs-single`, expired: false, size_in_bytes: 2 * 1024 * 1024 },
           ],
-        ]
-      );
-    })
+        };
+        const listing = yield* encode(artifacts);
+        const downloads: Array<string> = [];
+        // The first listing call fails, so the runner retries it: both listings are counted.
+        let listings = 0;
+        const fetch: RecordedFetch = Object.assign(
+          (input: string | URL | Request): Promise<Response> => {
+            const url = new URL(input instanceof Request ? input.url : input);
+            const zip = Str.endsWith("/zip")(url.pathname);
+            if (zip) downloads.push(url.pathname);
+            listings += zip ? 0 : 1;
+            const response = zip
+              ? new Response(archive, { status: 200, headers: { "content-type": "application/zip" } })
+              : listings === 1
+                ? new Response("{}", { status: 500, headers: { "content-type": "application/json" } })
+                : new Response(listing, { status: 200, headers: { "content-type": "application/json" } });
+            Object.defineProperty(response, "url", { value: url.href });
+            return Promise.resolve(response);
+          },
+          { preconnect: () => undefined }
+        );
+        const run = yield* restRunner(fetch);
+        const fiber = yield* Effect.forkChild(run(["run", "task-outcomes", `${RUN}`, "1"], "."));
+        yield* TestClock.adjust("5 seconds");
+        const text = yield* Fiber.join(fiber);
+        const payload = yield* decodePayload(text);
+        deepStrictEqual(downloads, ["/repos/example/repo/actions/artifacts/1/zip"]);
+        deepStrictEqual(
+          [payload.requests, A.map(payload.records, (entry) => [entry.job, outcomeRows(entry.tasks)])],
+          [
+            3,
+            [
+              ["Test Unit (unit-z)", ["@beep/z#test=pass"]],
+              ["Test Unit (unit-a)", ["@beep/a#test=fail"]],
+            ],
+          ]
+        );
+      })
   );
 
   it.effect("the capture fills failed jobs' tasks, so a failed task is `task` and a setup failure `setup`", () =>

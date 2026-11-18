@@ -46,6 +46,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -423,22 +424,29 @@ const JobWire = S.Struct({
 const decodeWorkflowRows = S.decodeUnknownEffect(S.Array(WorkflowWire));
 const decodeRunRows = S.decodeUnknownEffect(S.Array(RunWire));
 const decodeJobRows = S.decodeUnknownEffect(S.Array(JobWire));
-const ArtifactWire = S.Struct({ id: S.Int, name: S.String, expired: S.Boolean });
+const ArtifactWire = S.Struct({ id: S.Int, name: S.String, expired: S.Boolean, size_in_bytes: S.Int });
 const decodeArtifactRows = S.decodeUnknownEffect(S.Array(ArtifactWire));
 const ArchiveBytes = S.instanceOf(ArrayBuffer);
 const decodeRecordJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const ARTIFACT_PAGE = 100;
+// A record is one small JSON file (a few hundred bytes per task). Any artifact or archive entry above this bound is
+// not a record a lane wrote: it is skipped unread, so a crafted archive cannot make the capture inflate it.
+const RECORD_BYTES_MAX = 1024 * 1024;
 
 // The JSON files of one record artifact, parsed but not yet decoded: the capture decodes them as
 // `task-outcomes/v1` records, so a malformed one fails there with the run it came from.
 const archiveRecords = Effect.fnUntraced(function* (bytes: ArrayBuffer, name: string) {
   const entries = yield* Effect.try({
-    try: () => unzipSync(new Uint8Array(bytes)),
+    // Only small JSON entries are inflated; every other entry is skipped before it expands.
+    try: () =>
+      unzipSync(new Uint8Array(bytes), {
+        filter: (file) => Str.endsWith(".json")(file.name) && file.originalSize <= RECORD_BYTES_MAX,
+      }),
     catch: RouteError.mapError("corpus-fetch", `Artifact ${name} is not a zip archive.`),
   });
   return yield* Effect.forEach(
     A.sort(
-      A.filter(R.toEntries(entries), ([file]) => Str.endsWith(".json")(file)),
+      R.toEntries(entries),
       Order.mapInput(Order.String, ([file]: readonly [string, Uint8Array]) => file)
     ),
     ([file, content]) =>
@@ -485,104 +493,119 @@ export const makeRouteGithubRunner = Effect.gen(function* () {
   const repo = yield* Repo;
   const rest = yield* GithubRest;
   const at = { owner: repo.owner, repo: repo.repo };
+  // `spent` counts the task-outcome requests of one call across its retries, so a retried listing or download is
+  // counted every time it is sent.
   const runGh: RouteGhRunner = (args) =>
-    Effect.gen(function* () {
-      if (args[0] === "api") {
-        const limit = yield* rest.rateLimit;
-        return yield* encodeWire({ resources: { core: { reset: DateTime.toEpochMillis(limit.core.resetAt) / 1000 } } });
-      }
-      if (args[1] === "list") {
-        const workflow = args[3] ?? "";
-        const id = S.is(WorkflowReference)(workflow)
-          ? workflow
-          : yield* client.paginate("GET /repos/{owner}/{repo}/actions/workflows", { ...at, per_page: 100 }).pipe(
-              Effect.flatMap((rows) => decodeWorkflowRows(rows)),
-              Effect.flatMap((rows) =>
-                Effect.fromOption(
-                  A.findFirst(rows, (row) => row.name === workflow),
-                  () =>
-                    RouteError.new(
-                      "corpus-fetch",
-                      `gh run list --workflow ${workflow} --created ${args[5]} returned no matching workflow.`
+    Effect.flatMap(Ref.make(0), (spent) =>
+      Effect.gen(function* () {
+        if (args[0] === "api") {
+          const limit = yield* rest.rateLimit;
+          return yield* encodeWire({
+            resources: { core: { reset: DateTime.toEpochMillis(limit.core.resetAt) / 1000 } },
+          });
+        }
+        if (args[1] === "list") {
+          const workflow = args[3] ?? "";
+          const id = S.is(WorkflowReference)(workflow)
+            ? workflow
+            : yield* client.paginate("GET /repos/{owner}/{repo}/actions/workflows", { ...at, per_page: 100 }).pipe(
+                Effect.flatMap((rows) => decodeWorkflowRows(rows)),
+                Effect.flatMap((rows) =>
+                  Effect.fromOption(
+                    A.findFirst(rows, (row) => row.name === workflow),
+                    () =>
+                      RouteError.new(
+                        "corpus-fetch",
+                        `gh run list --workflow ${workflow} --created ${args[5]} returned no matching workflow.`
+                      )
+                  )
+                ),
+                Effect.map((row) => row.id)
+              );
+          const rows = yield* client
+            .paginate("GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs", {
+              ...at,
+              workflow_id: id,
+              created: args[5] ?? "",
+              per_page: 100,
+            })
+            .pipe(Effect.flatMap(decodeRunRows));
+          return yield* encodeWire(A.map(rows, ghRun));
+        }
+        if (args[1] === "task-outcomes") {
+          const runId = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[2]);
+          const attempt = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[3]);
+          yield* Ref.update(spent, (n) => n + 1);
+          const artifacts = yield* client
+            .paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts", {
+              ...at,
+              run_id: runId,
+              per_page: ARTIFACT_PAGE,
+            })
+            .pipe(Effect.flatMap(decodeArtifactRows));
+          // The first page is counted before the call; later pages once the listing is known.
+          yield* Ref.update(spent, (n) => n + Math.max(0, Math.ceil(A.length(artifacts) / ARTIFACT_PAGE) - 1));
+          const prefix = taskOutcomeArtifactPrefix(runId, attempt);
+          const wanted = A.filter(
+            artifacts,
+            (artifact) =>
+              !artifact.expired && Str.startsWith(prefix)(artifact.name) && artifact.size_in_bytes <= RECORD_BYTES_MAX
+          );
+          const records = yield* Effect.forEach(
+            wanted,
+            (artifact) =>
+              Ref.update(spent, (n) => n + 1).pipe(
+                Effect.andThen(
+                  client
+                    .requestDecoded(
+                      "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/zip",
+                      { ...at, artifact_id: artifact.id },
+                      ArchiveBytes
                     )
+                    .pipe(Effect.flatMap((bytes) => archiveRecords(bytes, artifact.name)))
                 )
               ),
-              Effect.map((row) => row.id)
-            );
-        const rows = yield* client
-          .paginate("GET /repos/{owner}/{repo}/actions/workflows/{workflow_id}/runs", {
-            ...at,
-            workflow_id: id,
-            created: args[5] ?? "",
-            per_page: 100,
-          })
-          .pipe(Effect.flatMap(decodeRunRows));
-        return yield* encodeWire(A.map(rows, ghRun));
-      }
-      if (args[1] === "task-outcomes") {
+            { concurrency: 1 }
+          );
+          return yield* encodeWire({ requests: yield* Ref.get(spent), records: A.flatten(records) });
+        }
         const runId = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[2]);
-        const attempt = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[3]);
-        const artifacts = yield* client
-          .paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts", {
+        const run = yield* client.requestDecoded(
+          "GET /repos/{owner}/{repo}/actions/runs/{run_id}",
+          { ...at, run_id: runId },
+          RunWire
+        );
+        const jobPages = (perPage: number) =>
+          client.paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs", {
             ...at,
             run_id: runId,
-            per_page: ARTIFACT_PAGE,
-          })
-          .pipe(Effect.flatMap(decodeArtifactRows));
-        const prefix = taskOutcomeArtifactPrefix(runId, attempt);
-        const wanted = A.filter(artifacts, (artifact) => !artifact.expired && Str.startsWith(prefix)(artifact.name));
-        const records = yield* Effect.forEach(
-          wanted,
-          (artifact) =>
-            client
-              .requestDecoded(
-                "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/zip",
-                { ...at, artifact_id: artifact.id },
-                ArchiveBytes
-              )
-              .pipe(Effect.flatMap((bytes) => archiveRecords(bytes, artifact.name))),
-          { concurrency: 1 }
+            per_page: perPage,
+          });
+        // Some runs answer 502 on every 100-job page yet read cleanly at 30 (run 42669948388;
+        // certainty-scorecard decision `per-attempt-page-fallback`), so a transport failure is
+        // retried once in pages of 30 before the call fails.
+        const jobs = yield* jobPages(ROUTE_CORPUS_JOB_PAGE).pipe(
+          Effect.catchIf(GitHubError.hasKind("transport"), () => jobPages(ROUTE_CORPUS_JOB_FALLBACK_PAGE)),
+          Effect.flatMap(decodeJobRows)
         );
-        // One request per listing page (at least one) and one per download.
-        const pages = Math.max(1, Math.ceil(A.length(artifacts) / ARTIFACT_PAGE));
-        return yield* encodeWire({ requests: pages + A.length(wanted), records: A.flatten(records) });
-      }
-      const runId = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[2]);
-      const run = yield* client.requestDecoded(
-        "GET /repos/{owner}/{repo}/actions/runs/{run_id}",
-        { ...at, run_id: runId },
-        RunWire
-      );
-      const jobPages = (perPage: number) =>
-        client.paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs", {
-          ...at,
-          run_id: runId,
-          per_page: perPage,
+        return yield* encodeWire({
+          ...ghRun(run),
+          jobs: A.map(jobs, (job) => ({
+            name: job.name,
+            conclusion: job.conclusion,
+            startedAt: job.started_at,
+            completedAt: job.completed_at,
+            steps: job.steps ?? null,
+          })),
         });
-      // Some runs answer 502 on every 100-job page yet read cleanly at 30 (run 42669948388;
-      // certainty-scorecard decision `per-attempt-page-fallback`), so a transport failure is
-      // retried once in pages of 30 before the call fails.
-      const jobs = yield* jobPages(ROUTE_CORPUS_JOB_PAGE).pipe(
-        Effect.catchIf(GitHubError.hasKind("transport"), () => jobPages(ROUTE_CORPUS_JOB_FALLBACK_PAGE)),
-        Effect.flatMap(decodeJobRows)
-      );
-      return yield* encodeWire({
-        ...ghRun(run),
-        jobs: A.map(jobs, (job) => ({
-          name: job.name,
-          conclusion: job.conclusion,
-          startedAt: job.started_at,
-          completedAt: job.completed_at,
-          steps: job.steps ?? null,
-        })),
-      });
-    }).pipe(
-      Effect.mapError(routeGithubFailure(args)),
-      Effect.retry({
-        times: 2,
-        schedule: Schedule.exponential(Duration.seconds(1)),
-        while: P.not(P.isTagged("RouteGhRateLimited")),
-      })
+      }).pipe(
+        Effect.mapError(routeGithubFailure(args)),
+        Effect.retry({
+          times: 2,
+          schedule: Schedule.exponential(Duration.seconds(1)),
+          while: P.not(P.isTagged("RouteGhRateLimited")),
+        })
+      )
     );
   return runGh;
 }).pipe(Effect.withSpan("RouteCorpus.githubRunner"));
