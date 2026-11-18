@@ -32,9 +32,10 @@ inputs:
       Export the Turbo remote-cache credential tuple (TURBO_API, TURBO_TEAM,
       TURBO_TOKEN, TURBO_CACHE) plus TURBO_LOG_ORDER=stream into the job
       environment. Trusted main pushes receive read-write access through
-      the turbo-token input; same-repository pull requests receive read-only
-      access through the turbo-read-token input; forks and every other event
-      stay local-only.
+      the turbo-token input; same-repository pull requests and `schedule` or
+      `workflow_dispatch` runs on `refs/heads/main` receive read-only access
+      through the turbo-read-token input; forks and every other event stay
+      local-only.
       Policy lives in beep ci job-env.
     required: false
     default: "false"
@@ -94,7 +95,7 @@ inputs:
     description: >-
       Pass secrets.TURBO_CACHE_READ_TOKEN (the Worker cache's ci-pr read
       token) from the calling job. Exported only on same-repository pull
-      requests.
+      requests and `schedule` or `workflow_dispatch` runs on `refs/heads/main`.
     required: false
     default: ""
   database-url:

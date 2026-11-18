@@ -1039,12 +1039,15 @@ with `turbo-remote-cache` reads the Worker cache: `heavy.yml`, `check.yml`,
 
 and no `r2-*` inputs, so the R2 pilot's adapter never starts in CI and cannot
 override `TURBO_API`. `beep ci job-env` decides the posture: protected `main`
-pushes write; same-repository pull requests read (`local:rw,remote:r`); forks
-and every other event stay local. `data-sync.yml` (dispatch only) and
-`property-laws-nightly.yml` (schedule and dispatch) therefore run local-only and
-pass no cache inputs until a follow-on chain lands, one PR at a time: `job-env`
-grants scheduled and dispatched `refs/heads/main` runs read-only access, a
-`beep-ci` pin bump ships it, and a third PR restores those two callers' inputs. The scheduled `cache-warm.yml` pass writes the Worker cache too
+pushes write; same-repository pull requests and `schedule` or
+`workflow_dispatch` runs on `refs/heads/main` read (`local:rw,remote:r`, read
+token only); forks and every other event stay local. The two callers that run
+only on schedule or dispatch, `data-sync.yml` (dispatch only) and
+`property-laws-nightly.yml` (schedule and dispatch), pass `turbo-remote-cache`,
+`turbo-api`, `turbo-team` and `turbo-read-token` and never a write token. They
+ran local-only from stage 2 until the follow-on chain landed: the `job-env`
+read grant, the `beep-ci` pin bump that ships it (`beep-ci-69e898ef9350`), then
+the restore of these inputs. The scheduled `cache-warm.yml` pass writes the Worker cache too
 (`TURBO_CACHE_WRITE_TOKEN`), so the 30-day bucket expiry never leaves CI cold;
 its R2 adapter now starts only for the explicit `r2_probe` qualification
 dispatch.
