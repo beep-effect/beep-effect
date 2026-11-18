@@ -195,7 +195,6 @@ export const declareCiRunners = Effect.fn("CiRunners.declare")(function* (input:
   const production = input.stage === productionStage;
   const network = yield* declareNetwork(config.network, names);
   const policies = yield* runnerPolicies(names);
-  const [firstSubnet, ...otherSubnets] = network.subnetIds;
 
   const fleet = yield* RunnerFleet(
     RunnerFleetProps.make({
@@ -206,7 +205,7 @@ export const declareCiRunners = Effect.fn("CiRunners.declare")(function* (input:
       ssmRoot: names.ssmRoot,
       runnerType: config.runnerType,
       repositoryAllowList: config.repositoryAllowList,
-      subnetIds: [firstSubnet ?? "", ...otherSubnets],
+      subnetIds: network.subnetIds,
       app: { id: credentials.id, keyBase64: credentials.keyBase64, webhookSecret: credentials.webhookSecret },
       pools: [toRunnerPool(config.heavy, config.phase), toRunnerPool(config.overflow, config.phase)],
       runAs: config.image.runAs,

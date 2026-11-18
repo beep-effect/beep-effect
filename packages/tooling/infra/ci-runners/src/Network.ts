@@ -15,7 +15,7 @@ import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
-import type { NetworkSettings } from "./Config.ts";
+import type { NetworkSettings, SubnetSlot } from "./Config.ts";
 import type { PhysicalNames } from "./Names.ts";
 
 /**
@@ -113,25 +113,27 @@ const publicSubnets = Effect.fn("CiRunners.publicSubnets")(function* (input: {
   readonly vpc: EC2.Vpc;
   readonly routeTable: EC2.RouteTable;
 }) {
-  return yield* Effect.forEach(
-    input.network.subnets,
-    Effect.fnUntraced(function* (slot, index) {
-      const id = `PublicSubnet${index + 1}`;
-      const name = `${input.names.subnetPrefix}-${slot.availabilityZone}`;
-      const subnet = yield* EC2.Subnet(id, {
-        vpcId: input.vpc.vpcId,
-        availabilityZone: slot.availabilityZone,
-        cidrBlock: slot.cidrBlock,
-        mapPublicIpOnLaunch: false,
-        tags: networkTags(input.names.fleet, name),
-      });
-      yield* EC2.RouteTableAssociation(`${id}Route`, {
-        routeTableId: input.routeTable.routeTableId,
-        subnetId: subnet.subnetId,
-      });
-      return subnet;
-    })
-  );
+  const declareSubnet = Effect.fnUntraced(function* (slot: SubnetSlot, index: number) {
+    const id = `PublicSubnet${index + 1}`;
+    const name = `${input.names.subnetPrefix}-${slot.availabilityZone}`;
+    const subnet = yield* EC2.Subnet(id, {
+      vpcId: input.vpc.vpcId,
+      availabilityZone: slot.availabilityZone,
+      cidrBlock: slot.cidrBlock,
+      mapPublicIpOnLaunch: false,
+      tags: networkTags(input.names.fleet, name),
+    });
+    yield* EC2.RouteTableAssociation(`${id}Route`, {
+      routeTableId: input.routeTable.routeTableId,
+      subnetId: subnet.subnetId,
+    });
+    return subnet;
+  });
+  const [first, ...rest] = input.network.subnets;
+  // The first subnet is declared on its own so the list stays non-empty by type.
+  const head = yield* declareSubnet(first, 0);
+  const tail = yield* Effect.forEach(rest, (slot, index) => declareSubnet(slot, index + 1), { concurrency: 1 });
+  return A.prepend(tail, head);
 });
 
 /**

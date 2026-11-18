@@ -41,6 +41,7 @@ const explain = PlanViolation.match({
 
 const refuse = Effect.fn("CiRunners.planCheckRefuse")(function* (refusal: PlanRefused) {
   yield* Effect.forEach(refusal.violations, (violation) => Console.error(`REFUSED ${explain(violation)}`), {
+    concurrency: 1,
     discard: true,
   });
   if (mustEscalate(refusal.violations)) {
@@ -59,7 +60,7 @@ const planCheck = Command.make(
     const fs = yield* FileSystem.FileSystem;
     const log = yield* fs.readFileString(plan);
     const reading = readPlanLog(log);
-    yield* Effect.forEach(reading.resources, listResource, { discard: true });
+    yield* Effect.forEach(reading.resources, listResource, { concurrency: 1, discard: true });
     yield* checkPlan(reading).pipe(Effect.catchTag("PlanRefused", refuse));
     yield* Console.log("plan-check: no replace, delete or orphan, and every line read; deploy may run");
   })

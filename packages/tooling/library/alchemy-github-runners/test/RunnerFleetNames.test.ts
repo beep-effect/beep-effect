@@ -3,6 +3,7 @@ import * as Test from "@alchemy.run/test/Vitest";
 import {
   FleetNamePrefix,
   fleetResourceNames,
+  JobRetryPolicy,
   poolResourceNames,
   RunnerFleet,
   RunnerFleetProps,
@@ -14,6 +15,7 @@ import { inMemoryState } from "alchemy/State/InMemoryState";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
@@ -64,7 +66,13 @@ const harness = (stage: string) => {
 };
 
 const pools: A.NonEmptyReadonlyArray<RunnerPool> = [
-  RunnerPool.make({ name: "heavy", instanceTypes: ["m7i.4xlarge"], maximumCount: 2, labels: ["beep-fleet-heavy"] }),
+  RunnerPool.make({
+    name: "heavy",
+    instanceTypes: ["m7i.4xlarge"],
+    maximumCount: 2,
+    labels: ["beep-fleet-heavy"],
+    jobRetry: O.some(JobRetryPolicy.make({ maxAttempts: 2, delaySeconds: 120, delayBackoff: 2 })),
+  }),
   RunnerPool.make({
     name: "overflow",
     instanceTypes: ["r7a.2xlarge"],
@@ -130,6 +138,8 @@ describe("RunnerFleetNames", () => {
       expect(byFqn["Runners/RunnerBinaries"]).toBe("beep-fleet-prod-binaries-123456789012");
       expect(byFqn["Runners/InstanceStateChangeRule"]).toBe("beep-fleet-prod-instance-state-change");
       expect(byFqn["Runners/Webhook"]).toBe("beep-fleet-prod-webhook");
+      expect(byFqn["Runners/Poolheavy/JobRetry"]).toBe("beep-fleet-prod-heavy-job-retry");
+      expect(byFqn["Runners/Poolheavy/JobRetryQueueDlq"]).toBe("beep-fleet-prod-heavy-job-retry-dlq");
     })
   );
 

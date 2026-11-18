@@ -156,8 +156,12 @@ export const reapExpiredRunners = Effect.fn("CiRunners.reapExpiredRunners")(func
   const ec2 = yield* Ec2Fleet;
   const now = yield* Clock.currentTimeMillis;
   const cutoff = now - Duration.toMillis(Duration.minutes(config.ttlMinutes));
-  const listed = yield* Effect.forEach(config.environments, (environment) =>
-    ec2.listRunners(RunnerFilter.make({ environment: O.some(environment), states: reapableStates }))
+  const listed = yield* Effect.forEach(
+    config.environments,
+    (environment) =>
+      // One listing at a time: these share the account's EC2 API rate with scale-up.
+      ec2.listRunners(RunnerFilter.make({ environment: O.some(environment), states: reapableStates })),
+    { concurrency: 1 }
   );
   const instances = A.flatten(listed);
   const expired = pipe(

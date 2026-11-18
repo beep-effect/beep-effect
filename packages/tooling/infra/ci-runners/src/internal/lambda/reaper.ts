@@ -21,7 +21,13 @@ const runtime = ManagedRuntime.make(
 
 const runtimeConfig = Config.schema(S.fromJsonString(ReaperRuntimeConfig), runtimeConfigEnvName);
 
-const pass = Effect.gen(function* () {
+/**
+ * One reaper pass from the environment: read the runtime configuration, reap
+ * and log the report. Exported for tests, which provide a fake `Ec2Fleet`.
+ *
+ * @internal
+ */
+export const reaperPass = Effect.gen(function* () {
   const config = yield* runtimeConfig;
   const report = yield* reapExpiredRunners(config);
   yield* Effect.logInfo("reaper pass", report);
@@ -36,4 +42,4 @@ const pass = Effect.gen(function* () {
  * @internal
  */
 export const handler = (): Promise<{ readonly inspected: number; readonly reaped: ReadonlyArray<string> }> =>
-  runtime.runPromise(pass);
+  runtime.runPromise(reaperPass);

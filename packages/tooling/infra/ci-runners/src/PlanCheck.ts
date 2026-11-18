@@ -250,12 +250,9 @@ const stripDecoration: (line: string) => string = flow(
 
 const isPlanAction = S.is(PlanAction);
 
-const withLast = (reading: PlanReading, update: (resource: PlannedResource) => PlannedResource): PlanReading =>
-  O.match(A.last(reading.resources), {
-    onNone: () => reading,
-    onSome: (last) =>
-      PlanReading.make({ ...reading, resources: A.append(A.dropRight(reading.resources, 1), update(last)) }),
-  });
+// Replaces the reading's last resource; callers only pass a reading that has one.
+const withLast = (reading: PlanReading, last: PlannedResource): PlanReading =>
+  PlanReading.make({ ...reading, resources: A.append(A.dropRight(reading.resources, 1), last) });
 
 const flag = (reading: PlanReading, violation: PlanViolation): PlanReading =>
   PlanReading.make({ ...reading, violations: A.append(reading.violations, violation) });
@@ -264,10 +261,16 @@ const flag = (reading: PlanReading, violation: PlanViolation): PlanReading =>
 const readBinding = (reading: PlanReading, line: string): O.Option<PlanReading> =>
   pipe(
     O.fromNullishOr(bindingPattern.exec(line)),
-    O.filter((match) => O.exists(A.last(reading.resources), (last) => Str.startsWith(`${last.fqn}/`)(match[1] ?? ""))),
-    O.map((match) =>
-      withLast(reading, (last) =>
-        PlannedResource.make({ ...last, bindings: A.append(last.bindings, `${match[1]} ${match[2]}`) })
+    O.flatMap((match) =>
+      pipe(
+        A.last(reading.resources),
+        O.filter((last) => Str.startsWith(`${last.fqn}/`)(String(match[1]))),
+        O.map((last) =>
+          withLast(
+            reading,
+            PlannedResource.make({ ...last, bindings: A.append(last.bindings, `${match[1]} ${match[2]}`) })
+          )
+        )
       )
     )
   );
@@ -275,9 +278,9 @@ const readBinding = (reading: PlanReading, line: string): O.Option<PlanReading> 
 const readResource = (reading: PlanReading, line: string): O.Option<PlanReading> =>
   pipe(
     O.fromNullishOr(resourcePattern.exec(line)),
-    O.flatMap(([, fqn = "", action]) =>
+    O.flatMap(([, fqn, action]) =>
       isPlanAction(action)
-        ? O.some(PlannedResource.make({ fqn, action, bindings: [], changedProperties: [] }))
+        ? O.some(PlannedResource.make({ fqn: String(fqn), action, bindings: [], changedProperties: [] }))
         : O.none()
     ),
     O.map((resource) => PlanReading.make({ ...reading, resources: A.append(reading.resources, resource) }))
@@ -286,21 +289,27 @@ const readResource = (reading: PlanReading, line: string): O.Option<PlanReading>
 const readTask = (reading: PlanReading, line: string): O.Option<PlanReading> =>
   pipe(
     O.fromNullishOr(taskPattern.exec(line)),
-    O.map((match) => flag(reading, PlanViolation.cases.ActionTask.make({ fqn: match[1] ?? "", verb: match[2] ?? "" })))
+    O.map((match) =>
+      flag(reading, PlanViolation.cases.ActionTask.make({ fqn: String(match[1]), verb: String(match[2]) }))
+    )
   );
 
+// An indented line belongs to the resource above it; before any resource it is unreadable.
 const readProperty = (reading: PlanReading, line: string): O.Option<PlanReading> =>
-  indentedPattern.test(line) && A.isReadonlyArrayNonEmpty(reading.resources)
-    ? O.some(
-        O.match(O.fromNullishOr(propertyNamePattern.exec(line)?.[1]), {
-          onNone: () => reading,
-          onSome: (name) =>
-            withLast(reading, (last) =>
-              PlannedResource.make({ ...last, changedProperties: A.dedupe(A.append(last.changedProperties, name)) })
-            ),
-        })
-      )
-    : O.none();
+  pipe(
+    A.last(reading.resources),
+    O.filter(() => indentedPattern.test(line)),
+    O.map((last) =>
+      O.match(O.fromNullishOr(propertyNamePattern.exec(line)?.[1]), {
+        onNone: () => reading,
+        onSome: (name) =>
+          withLast(
+            reading,
+            PlannedResource.make({ ...last, changedProperties: A.dedupe(A.append(last.changedProperties, name)) })
+          ),
+      })
+    )
+  );
 
 const lineReaders = [readBinding, readResource, readTask, readProperty];
 

@@ -710,8 +710,10 @@ export const rehearsalRepository = Config.schema(RehearsalRepository, rehearsalR
 
 /**
  * Decode the configuration of a stage: `prod` gets {@link productionConfig},
- * every other stage {@link personalConfig}. A configuration that fails its
- * schema stops the stack with a `ConfigError` before any resource is read.
+ * every other stage {@link personalConfig}. The rehearsal variable is the only
+ * untrusted input and fails with a `ConfigError`; a tracked configuration that
+ * fails its schema is a defect in source (tests decode both inputs) and dies
+ * before any resource is read.
  *
  * **Example** (Resolve a personal stage)
  *
@@ -724,11 +726,11 @@ export const rehearsalRepository = Config.schema(RehearsalRepository, rehearsalR
  * ```
  *
  * @param stage - The Alchemy stage being planned or deployed.
- * @returns The stage's validated configuration, or a `ConfigError`.
+ * @returns The stage's validated configuration, or a `ConfigError` for a bad rehearsal repository.
  * @category configuration
  * @since 0.0.0
  */
 export const resolveStageConfig = Effect.fn("CiRunners.resolveStageConfig")(function* (stage: string) {
   const input = stage === productionStage ? productionConfig : yield* Config.map(rehearsalRepository, personalConfig);
-  return yield* decodeCiRunnersConfig(input).pipe(Effect.mapError((error) => new Config.ConfigError(error)));
+  return yield* decodeCiRunnersConfig(input).pipe(Effect.orDie);
 });
