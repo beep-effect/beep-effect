@@ -249,7 +249,7 @@ export const packetSubjectOf = (repoPath: string): O.Option<CheckoutSubject> =>
  * console.log(workspaceSubject("@beep/repo-cli")._tag) // "WorkspaceSubject"
  * ```
  *
- * @param packageName - The workspace package name.
+ * @param packageName - The `@beep/<name>` a check depends on, as its manifest declares it.
  * @returns A `WorkspaceSubject` for the package.
  * @category constructors
  * @since 0.0.0
@@ -409,7 +409,7 @@ export const describeCheckoutSubject = (subject: CheckoutSubject): string =>
  * // "absent from this checkout: workspace @beep/gone"
  * ```
  *
- * @param subjects - The absent subjects.
+ * @param subjects - What the checkout lacks, in the order the check declared it.
  * @returns One line naming each absent subject.
  * @category utilities
  * @since 0.0.0
