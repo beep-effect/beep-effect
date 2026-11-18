@@ -27,7 +27,7 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runRepoCommandCapture } from "../../internal/repo-run/index.ts";
+import { runRepoCommandCaptureSplit } from "../../internal/repo-run/index.ts";
 import { CiCommandError } from "./Ci.errors.ts";
 import { CI_LANE_DESCRIPTORS } from "./CiLane.ts";
 import { CiSupportJobName, ciCalledJobName } from "./CiLaneJobs.ts";
@@ -168,14 +168,16 @@ const snapshotJson = S.fromJsonString(S.Unknown, { space: 2 });
 const encodeSnapshotJson = snapshotJson.pipe(S.encodeUnknownEffect);
 
 /**
- * One `gh api` reply: its exit code, the merged stdout/stderr text and whether
- * the capture bound truncated it.
+ * One `gh api` reply: its exit code, its output text and whether the capture
+ * bound truncated it.
  *
  * **Details**
  *
- * A non-zero exit keeps `gh`'s own error line (for example
- * `gh: Not Found (HTTP 404)`) in `output`, so callers that must tell a
- * permission, missing-data or rate-limit failure apart read it from here.
+ * A zero exit's `output` is stdout alone (the `--include` headers and the body),
+ * so advice gh prints on stderr never reaches a parser. A non-zero exit keeps
+ * `gh`'s own error line (for example `gh: Not Found (HTTP 404)`) in `output`,
+ * after any stdout, so callers that must tell a permission, missing-data or
+ * rate-limit failure apart read it from here.
  *
  * **Example** (Record a not-found reply)
  *
@@ -194,7 +196,7 @@ export class GithubApiReply extends S.Opaque<GithubApiReply, { readonly brand: u
     exitCode: S.Int,
     output: S.String,
     truncated: S.Boolean,
-  }).pipe($I.annoteSchema("GithubApiReply", { description: "Exit code and merged output of one gh api request." }))
+  }).pipe($I.annoteSchema("GithubApiReply", { description: "Exit code and stdout-first text of one gh api request." }))
 ) {}
 
 interface GithubPolicyClientShape {
@@ -258,11 +260,11 @@ const makeClient = Effect.fn("CiGovernance.makeClient")(function* (root: string)
   const request = Effect.fn("CiGovernance.request")(function* (args: ReadonlyArray<string>) {
     // KEEP (D-19): reads gh's own exit code, error line and --include headers (#249b).
     // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
-    const result = yield* runRepoCommandCapture("gh", ["api", ...args], root).pipe(
+    const result = yield* runRepoCommandCaptureSplit("gh", ["api", ...args], root).pipe(
       Effect.provide(capture),
       CiCommandError.mapError("GitHub policy request failed; state is unknown.")
     );
-    return GithubApiReply.make(result);
+    return GithubApiReply.make({ exitCode: result.exitCode, output: result.output, truncated: result.truncated });
   });
   const call = (route: string, params: Readonly<Record<string, unknown>>) =>
     Effect.flatMap(github, (context) =>

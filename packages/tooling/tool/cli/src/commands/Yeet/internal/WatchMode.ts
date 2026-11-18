@@ -51,7 +51,7 @@ import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { runRepoCommandCaptureSplit } from "../../../internal/repo-run/index.ts";
 import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext } from "./ArtifactPaths.ts";
@@ -184,7 +184,7 @@ const checksRead = Effect.fn("Yeet.checksRead")(function* (
 > {
   // KEEP (D-13): `gh pr checks` gives the checks rollup with `bucket`, which no kit member does.
   // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
-  const result = yield* runRepoCommandCapture(
+  const result = yield* runRepoCommandCaptureSplit(
     "gh",
     ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket,link,workflow,description"],
     context.repoRoot
@@ -289,7 +289,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
 > {
   // KEEP (D-13): `gh pr view` resolves the pull request from the checked-out branch.
   // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
-  const viewResult = yield* runRepoCommandCapture(
+  const viewResult = yield* runRepoCommandCaptureSplit(
     "gh",
     [
       "pr",

@@ -131,6 +131,7 @@ import {
   buildYeetRunPlanWithMode,
   CI_PARITY_STEP_ID,
   emptyTurboPlanSnapshot,
+  MONITOR_CONTEXT_STEP_ID,
   MONITOR_READY_SUBMIT_ARGV,
   MONITOR_READY_SUBMIT_STEP_ID,
   PR_HEAVY_ADMISSION_LABEL_STEP_ID,
@@ -2173,7 +2174,7 @@ const runMonitorPhase = Effect.fn("Yeet.runMonitorPhase")(function* (
   if (A.isReadonlyArrayEmpty(monitorSteps)) {
     return;
   }
-  const contextSteps = A.filter(monitorSteps, (step) => step.id === "monitor:01-pr-context");
+  const contextSteps = A.filter(monitorSteps, (step) => step.id === MONITOR_CONTEXT_STEP_ID);
   const checkSteps = A.filter(monitorSteps, (step) => step.id === "monitor:02-pr-checks-watch");
   const contextResults = yield* runPhase(context, contextSteps, recorder);
   if (A.some(contextResults, (result) => result.exitCode !== 0)) {
