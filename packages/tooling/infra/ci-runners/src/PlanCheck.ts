@@ -293,7 +293,8 @@ const readResource = (reading: PlanReading, line: string): O.Option<PlanReading>
     O.fromNullishOr(resourcePattern.exec(line)),
     O.flatMap(([, fqn, action]) =>
       isPlanAction(action)
-        ? O.some(PlannedResource.make({ fqn: String(fqn), action, bindings: [], changedProperties: [] }))
+        ? // biome-ignore lint/plugin/prefer-schema-make-option: fail-closed plan reader; a construction failure must surface as a defect, never become O.none (a dropped row that reads as a pass)
+          O.some(PlannedResource.make({ fqn: String(fqn), action, bindings: [], changedProperties: [] }))
         : O.none()
     ),
     O.map((resource) => PlanReading.make({ ...reading, resources: A.append(reading.resources, resource) }))

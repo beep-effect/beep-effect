@@ -15,7 +15,6 @@ import { inMemoryState } from "alchemy/State/InMemoryState";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
@@ -71,7 +70,7 @@ const pools: A.NonEmptyReadonlyArray<RunnerPool> = [
     instanceTypes: ["m7i.4xlarge"],
     maximumCount: 2,
     labels: ["beep-fleet-heavy"],
-    jobRetry: O.some(JobRetryPolicy.make({ maxAttempts: 2, delaySeconds: 120, delayBackoff: 2 })),
+    jobRetry: JobRetryPolicy.makeOption({ maxAttempts: 2, delaySeconds: 120, delayBackoff: 2 }),
   }),
   RunnerPool.make({
     name: "overflow",
