@@ -16593,14 +16593,14 @@
     },
     "@beep/infra-cost-controls": {
       "path": "packages/tooling/infra/cost-controls",
-      "lines": 99.35,
-      "statements": 99.39,
-      "branches": 91.66,
-      "functions": 98.27,
+      "lines": 99.37,
+      "statements": 99.42,
+      "branches": 92.94,
+      "functions": 98.36,
       "uncovered": {
         "lines": 1,
         "statements": 1,
-        "branches": 7,
+        "branches": 6,
         "functions": 1
       },
       "files": {
@@ -16643,12 +16643,12 @@
         "packages/tooling/infra/cost-controls/src/PlanCheck.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 89.06,
+          "branches": 90.76,
           "functions": 100,
           "uncovered": {
             "lines": 0,
             "statements": 0,
-            "branches": 7,
+            "branches": 6,
             "functions": 0
           }
         },
