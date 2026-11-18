@@ -12,10 +12,9 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { replayTailWaits } from "@/backfill/JournalReplay";
+import { decodeJournalLines, replayTailWaits } from "@/backfill/JournalReplay";
 import { ReplayArmSpec, ReplayEtaEstimator, ReplayReport, SimulationInputError } from "@/backfill/Schemas";
 import { PosInt } from "@/projection/PosInt";
-import { AdmissionJournalEvent } from "@/projection/Schemas";
 
 // SCHE-06 tail-wait A/B (PLAN slice 12): replay a recorded admission journal
 // root (its `journal-archive/*.ndjson` day segments, then `journal.ndjson`)
@@ -23,7 +22,6 @@ import { AdmissionJournalEvent } from "@/projection/Schemas";
 //   bun run scripts/backfill-ab.ts <admission-root> [--since <epoch-millis>] [--eta-permille <n>]
 // The report holds counts and wait quantiles only: no paths, origins or nonces.
 
-const decodeRow = S.decodeUnknownOption(S.fromJsonString(AdmissionJournalEvent));
 const encodeReport = S.encodeUnknownEffect(S.fromJsonString(ReplayReport));
 
 // A numeric flag: absent reads as its default; present, it needs an operand that parses and passes `valid`.
@@ -42,18 +40,6 @@ const flagNumber = (argv: ReadonlyArray<string>, flag: string, fallback: number,
         }),
     }
   );
-
-// The tags the replay reads. A row carrying one of them that does not decode is schema drift; any
-// other line (a worker `admission-routed` row, a torn tail, a tag this lab does not know) is opaque.
-const ReplayTag = S.Literals([
-  "admission-admitted",
-  "admission-released",
-  "admission-enqueued",
-  "admission-withdrawn",
-  "admission-lease-evicted",
-  "admission-ticket-evicted",
-]);
-const decodeTag = S.decodeUnknownOption(S.fromJsonString(S.Struct({ _tag: ReplayTag })));
 
 const arms = A.flatMap([10, 8, 6, 5], (capacity) =>
   A.map(
@@ -102,22 +88,11 @@ const program = Effect.gen(function* () {
   );
   const texts = yield* Effect.forEach(files, (file) => fs.readFileString(file), { concurrency: 1 });
   const lines = A.filter(A.flatMap(texts, Str.split("\n")), Str.isNonEmpty);
-  const replayLines = A.filter(lines, (line) => O.isSome(decodeTag(line)));
-  const decoded = A.map(replayLines, (line) => decodeRow(line));
-  // A replay row this decoder rejects (a newer schema version or work kind) would silently shrink the replay.
-  const drifted = A.length(A.filter(decoded, O.isNone));
-  if (drifted > 0) {
-    return yield* SimulationInputError.make({
-      message: `${drifted} of ${A.length(replayLines)} replay rows did not decode; update the lab journal decoder before replaying.`,
-    });
-  }
+  const read = yield* decodeJournalLines(lines);
   yield* Console.error(
-    `[backfill-ab] ${A.length(lines) - A.length(replayLines)} of ${A.length(lines)} journal lines carry no replay row (routed rows, torn tails) and were skipped.`
+    `[backfill-ab] ${read.opaqueLines} of ${A.length(lines)} journal lines carry no replay row (routed rows, torn tails) and were skipped.`
   );
-  const events = A.filter(
-    A.getSomes(decoded),
-    (event) => !("enqueuedAtMillis" in event) || event.enqueuedAtMillis >= since
-  );
+  const events = A.filter(read.events, (event) => !("enqueuedAtMillis" in event) || event.enqueuedAtMillis >= since);
   const estimator = ReplayEtaEstimator.make({
     quantilePermille: PosInt.make(permille),
     minSamples: PosInt.make(5),
