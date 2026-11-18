@@ -237,7 +237,7 @@ monorepo's pins) over the fifteen packages, `conformance/upstream` and `scripts/
 Effect language service rules from the monorepo's `tsconfig.base.json` unchanged, and none overrides them.
 `conformance/upstream` holds upstream's conformance model, app and cases, ported from alchemy at 33c10dd and
 adapted to those rules with upstream's routes, case names and assertions unchanged.
-`shared/tooling/test/Compiler.guard.test.ts` guards the wiring with three checks:
+`shared/tooling/test/Compiler.guard.test.ts` guards the wiring:
 
 - **Version.** The installed compiler matches the monorepo's pins, and `--version` names the Effect build.
 - **Canary.** A project with one Effect-only finding fails under the Effect build and passes under stock
