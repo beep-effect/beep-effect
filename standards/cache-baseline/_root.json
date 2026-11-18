@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p3-github)",
-    "reason": "Record the new @beep/infra-github workspace (eight generated tooling tasks, an Alchemy stack entry in tsconfig, a committed census fixture) and the root manifest workspace and catalog entries it needs; no command, output or environment beyond the generated shape, no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (heavy-pool-diet slice 3, perf/heavy-pool-diet-lanes-first)",
+    "reason": "Record the policy-fingerprint input drift from Heavy Admission importing the change profile readers: the root task gains CiOperational.service.ts and @beep/github-reporting source as generated inputs. No command, output, environment or cache flag changed; no qualification is granted.",
     "basis": {
-      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-github-stack.md",
-      "sha256": "d1a1363b45db8ae3613ef1694ba56e10e0e6928f98fd7e1436828d654a1a3796"
+      "path": "docs/reports/heavy-pool-diet-lane-skips-cache-review-2026-11-13.md",
+      "sha256": "3fd4da242c819aa407056e8f4c267901c3811d60df9ec1534f997a6fff4ab5b2"
     }
   },
   "globalConfiguration": {
@@ -188,7 +188,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "e8ab3dda27d10d6498474fd65fcf3b47155f74fa2b4b649d88a5e85a7846b5a9"
+      "sha256": "274f4e55e3668b04d24edb74c803f5c24f9e27a63a22fbb2649422ab9fe69477"
     }
   ],
   "nodes": [
@@ -2125,6 +2125,7 @@
           "packages/foundation/modeling/github-commands/src/**",
           "packages/foundation/modeling/github-references/package.json",
           "packages/foundation/modeling/github-reporting/package.json",
+          "packages/foundation/modeling/github-reporting/src/**",
           "packages/foundation/modeling/glob/package.json",
           "packages/foundation/modeling/glob/src/**",
           "packages/foundation/modeling/html/package.json",
