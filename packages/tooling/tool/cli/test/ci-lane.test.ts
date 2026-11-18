@@ -42,6 +42,7 @@ import {
   turboCachePlanArgs,
   workspaceManifests,
 } from "@beep/repo-cli/test/SharedInternals";
+import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { FsUtilsLive, findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
@@ -75,6 +76,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { CurrentCheckout, CurrentCheckoutLive, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 import { commandArgs } from "./support/commandArgs.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 import type { SpawnRecord } from "@beep/commands/ScriptedSpawner";
@@ -203,10 +205,9 @@ const branchProtectionContextSnapshotUrl = new URL(
 );
 const checkWorkflowUrl = new URL("../../../../../.github/workflows/check.yml", import.meta.url);
 const heavyWorkflowUrl = new URL("../../../../../.github/workflows/heavy.yml", import.meta.url);
-const integrationShardPlanUrl = new URL(
-  "../../../../../packages/law-practice/server/vitest.integration.shards.json",
-  import.meta.url
-);
+// The integration shards belong to @beep/law-practice-server; its plan is read from wherever the
+// workspace lives, and the test skips in a checkout that does not hold the package.
+const INTEGRATION_SHARD_PACKAGE = "@beep/law-practice-server";
 const decodeIntegrationShardPlan = S.decodeUnknownEffect(
   S.Struct({ shardSeconds: S.Array(S.Finite), shards: S.String.pipe(S.Array, S.Array) })
 );
@@ -592,28 +593,36 @@ describe("CI lane partitions", () => {
     }
   });
 
-  it.effect("sizes the law-practice-server integration shards from the committed LPT plan", () =>
-    Effect.gen(function* () {
-      const plan = yield* Effect.tryPromise({
-        try: () => Bun.file(integrationShardPlanUrl).json(),
-        catch: (cause) => CiLaneTestOperationError.make({ cause }),
-      }).pipe(Effect.flatMap(decodeIntegrationShardPlan));
-      const shards = A.filter(
-        CI_LANE_PARTITIONS,
-        (partition) => partition.lane === "test-integration" && partition.shard !== undefined
-      );
-      expect(A.length(shards)).toBe(A.length(plan.shards));
-      expect(A.map(shards, (partition) => partition.shard?.total)).toEqual(
-        A.makeBy(A.length(shards), () => A.length(plan.shards))
-      );
-      expect(A.map(shards, (partition) => partition.shard?.index)).toEqual(A.range(1, A.length(shards)));
-      expect(A.map(shards, (partition) => partition.weightSeconds)).toEqual(A.map(plan.shardSeconds, Math.round));
-      // Worst measured file seconds per shard stay within the sharded file budget, so the slowest
-      // observed hosted runner still finishes the partition under the ten-minute job target.
-      for (const seconds of plan.shardSeconds) {
-        expect(seconds).toBeLessThanOrEqual(CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS);
-      }
-    })
+  it.layer(Layer.merge(CurrentCheckoutLive, NodeServices.layer), { timeout: "10 seconds" })((it) =>
+    it.effect("sizes the law-practice-server integration shards from the committed LPT plan", (ctx) =>
+      Effect.gen(function* () {
+        const inventory = yield* CurrentCheckout;
+        skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject(INTEGRATION_SHARD_PACKAGE)]);
+        const path = yield* Path.Path;
+        const repoRoot = yield* findRepoRoot();
+        const directory = yield* Effect.fromOption(HashMap.get(inventory.workspaces, INTEGRATION_SHARD_PACKAGE));
+        const planPath = path.join(repoRoot, directory, "vitest.integration.shards.json");
+        const plan = yield* Effect.tryPromise({
+          try: () => Bun.file(planPath).json(),
+          catch: (cause) => CiLaneTestOperationError.make({ cause }),
+        }).pipe(Effect.flatMap(decodeIntegrationShardPlan));
+        const shards = A.filter(
+          CI_LANE_PARTITIONS,
+          (partition) => partition.lane === "test-integration" && partition.shard !== undefined
+        );
+        expect(A.length(shards)).toBe(A.length(plan.shards));
+        expect(A.map(shards, (partition) => partition.shard?.total)).toEqual(
+          A.makeBy(A.length(shards), () => A.length(plan.shards))
+        );
+        expect(A.map(shards, (partition) => partition.shard?.index)).toEqual(A.range(1, A.length(shards)));
+        expect(A.map(shards, (partition) => partition.weightSeconds)).toEqual(A.map(plan.shardSeconds, Math.round));
+        // Worst measured file seconds per shard stay within the sharded file budget, so the slowest
+        // observed hosted runner still finishes the partition under the ten-minute job target.
+        for (const seconds of plan.shardSeconds) {
+          expect(seconds).toBeLessThanOrEqual(CI_SHARDED_PARTITION_FILE_BUDGET_SECONDS);
+        }
+      })
+    )
   );
 
   it("plans an integration shard through Turbo and the catch-all through the root integration lane", () => {

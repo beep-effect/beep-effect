@@ -9,6 +9,7 @@
     {"name":"ArtifactIo.formatJsonc","owner":"@beep/repo-cli-kit","family":"tooling","conforms":true},
     {"name":"ArtifactIo.readArtifact","owner":"@beep/repo-cli-kit","family":"tooling","conforms":true},
     {"name":"ArtifactIo.writeArtifact","owner":"@beep/repo-cli-kit","family":"tooling","conforms":true},
+    {"name":"CheckoutSubject.loadCheckoutInventory","owner":"@beep/repo-cli-kit","family":"tooling","conforms":true},
     {"name":"Cli.readStdinDocument","owner":"@beep/repo-cli-kit","family":"tooling","conforms":true},
     {"name":"EnvConfig.canUseTurboCacheSecretSession","owner":"@beep/repo-cli-kit","family":"tooling","conforms":true},
     {"name":"EnvConfig.envFileSecretReferenceEntries","owner":"@beep/repo-cli-kit","family":"tooling","conforms":true},

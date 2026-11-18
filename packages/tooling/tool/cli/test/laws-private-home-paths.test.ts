@@ -11,6 +11,7 @@ import {
   runPrivateHomePaths,
   scanPrivateHomePathText,
 } from "@beep/repo-cli/test/Laws";
+import { PacketRoot } from "@beep/repo-cli-kit/CheckoutSubject";
 import { FsUtilsLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
@@ -493,6 +494,8 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
           "docs/fixture.md": "cwd /home/ada/x\n",
           "goals/x/history/sealed.txt": `${LEAKED_HOME}/a\n`,
           "docs/untracked.md": `cwd ${LEAKED_HOME}/x\n`,
+          // An emptied packet directory that holds only an untracked file is not pruned.
+          "goals/emptied/notes.txt": "untracked\n",
           "docs/deleted.md": `cwd ${LEAKED_HOME}/x\n`,
         };
         for (const [file, content] of R.toEntries(files)) {
@@ -535,10 +538,26 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
         const exemptions = [
           PrivateHomePathExemption.make({ file: "goals/x/history/sealed.txt", count: 1, reason: "sealed capture" }),
           PrivateHomePathExemption.make({ file: "goals/x/history/gone.txt", count: 1, reason: "removed capture" }),
+          // A declared prunable packet the checkout does not hold (a fork removed it) skips its rows.
+          // goals/x is present, so its gone.txt row above stays stale, and goals/archived is absent but
+          // was never declared prunable, so its row is stale too.
+          PrivateHomePathExemption.make({ file: "goals/pruned/history/sealed.txt", count: 1, reason: "pruned packet" }),
+          PrivateHomePathExemption.make({
+            file: "goals/archived/history/sealed.txt",
+            count: 1,
+            reason: "moved packet",
+          }),
+          // goals/emptied is declared, but its directory still holds an untracked file: not pruned.
+          PrivateHomePathExemption.make({ file: "goals/emptied/history/sealed.txt", count: 1, reason: "emptied" }),
+        ];
+        const prunablePackets = [
+          PacketRoot.make("goals/pruned"),
+          PacketRoot.make("goals/x"),
+          PacketRoot.make("goals/emptied"),
         ];
 
         const strict = yield* runPrivateHomePaths(
-          PrivateHomePathsOptions.make({ cwd: root, strictCheck: true, exemptions })
+          PrivateHomePathsOptions.make({ cwd: root, strictCheck: true, exemptions, prunablePackets })
         );
         expect([strict.strictFailure, strict.exemptFiles, strict.skippedBinaryFiles]).toEqual([true, 1, 0]);
         expect(A.map(strict.findings, (finding) => [finding.file, finding.line, finding.rule])).toEqual([
@@ -548,10 +567,15 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
           ["docs/seed.md", 1, "private-home-path"],
           ["docs/utf16-nobom.log", 1, "private-home-path"],
           ["goals/x/history/gone.txt", 1, "exemption-count-mismatch"],
+          ["goals/archived/history/sealed.txt", 1, "exemption-count-mismatch"],
+          ["goals/emptied/history/sealed.txt", 1, "exemption-count-mismatch"],
         ]);
+        expect(strict.skippedExemptions).toEqual(["goals/pruned/history/sealed.txt"]);
 
-        const report = yield* runPrivateHomePaths(PrivateHomePathsOptions.make({ cwd: root, exemptions }));
-        expect([report.strictFailure, report.findings.length]).toEqual([false, 6]);
+        const report = yield* runPrivateHomePaths(
+          PrivateHomePathsOptions.make({ cwd: root, exemptions, prunablePackets })
+        );
+        expect([report.strictFailure, report.findings.length]).toEqual([false, 8]);
       })
     );
 
