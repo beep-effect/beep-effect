@@ -15,6 +15,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { writeArtifact } from "@beep/repo-cli-kit/artifacts/ArtifactIo";
 import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
@@ -538,7 +539,6 @@ export const writeUnitTimings = Effect.fn("CiUnitTimings.write")(function* (
   coverageOutput: string,
   out: string
 ) {
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const identity = yield* ActionsIdentity.pipe(CiCommandError.mapError("Failed to read the run identity."));
   const options = yield* S.decodeEffect(UnitTimingOptions)({
@@ -553,9 +553,7 @@ export const writeUnitTimings = Effect.fn("CiUnitTimings.write")(function* (
   const projection = yield* projectUnitTimings(repoRoot, options);
   const target = path.resolve(repoRoot, out);
   const text = yield* encodeProjection(projection).pipe(CiCommandError.mapError("Failed to encode the projection."));
-  yield* fs
-    .makeDirectory(path.dirname(target), { recursive: true })
-    .pipe(Effect.andThen(fs.writeFileString(target, `${text}\n`)), CiCommandError.mapError(`Failed to write ${out}.`));
+  yield* writeArtifact({ path: target, body: `${text}\n`, onError: CiCommandError.new(`Failed to write ${out}.`) });
   const executed = A.reduce(projection.packages, 0, (total, row) => total + row.executedTestFiles);
   yield* Console.log(
     `[ci] unit timings for ${partition} (${projection.event}): ${A.length(projection.packages)} package invocation(s), ${executed} test file(s), ${projection.sealed ? "sealed" : "unsealed"}; wrote ${path.relative(repoRoot, target)}.`
