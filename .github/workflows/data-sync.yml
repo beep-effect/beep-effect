@@ -21,12 +21,12 @@ jobs:
           persist-credentials: false
 
       - name: Setup monorepo CI
+        # Local-only until turbo-cache's follow-on lands: `beep ci job-env` gives a
+        # remote read only to same-repository pull requests, so this schedule/dispatch
+        # job's cache inputs were dead. The root fix (job-env reads for schedule and
+        # workflow_dispatch on refs/heads/main), a beep-ci pin bump, then a restore of
+        # these inputs land as separate PRs in that order.
         uses: ./.github/actions/setup-monorepo-ci
-        with:
-          turbo-remote-cache: "true"
-          turbo-api: ${{ vars.TURBO_CACHE_API }}
-          turbo-team: ${{ vars.TURBO_CACHE_TEAM }}
-          turbo-read-token: ${{ secrets.TURBO_CACHE_READ_TOKEN }}
 
       - name: Sync official datasets
         env:

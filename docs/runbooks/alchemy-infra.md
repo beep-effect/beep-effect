@@ -964,10 +964,9 @@ can never seed the cache.
 
 ### CI enrolment (stage 2)
 
-Every job that calls `.github/actions/setup-monorepo-ci` with
-`turbo-remote-cache` reads the Worker cache: `heavy.yml`, `check.yml`,
-`shard-overflow.yml`, `storybook.yml`, `data-sync.yml` and
-`property-laws-nightly.yml`. Each passes
+Every push and pull-request job that calls `.github/actions/setup-monorepo-ci`
+with `turbo-remote-cache` reads the Worker cache: `heavy.yml`, `check.yml`,
+`shard-overflow.yml` and `storybook.yml`. Each passes
 
 | Input | Value |
 | --- | --- |
@@ -977,8 +976,16 @@ Every job that calls `.github/actions/setup-monorepo-ci` with
 | `turbo-read-token` | `secrets.TURBO_CACHE_READ_TOKEN` (repository secret, principal `ci-pr`) |
 
 and no `r2-*` inputs, so the R2 pilot's adapter never starts in CI and cannot
-override `TURBO_API`. `beep ci job-env` still decides the posture: protected
-`main` pushes write, same-repository pull requests read, forks stay local.
+override `TURBO_API`. `beep ci job-env` decides the posture: protected `main`
+pushes write; same-repository pull requests read (`local:rw,remote:r`); forks
+and every other event stay local. `data-sync.yml` (dispatch only) and
+`property-laws-nightly.yml` (schedule and dispatch) therefore run local-only and
+pass no cache inputs until a follow-on chain lands, one PR at a time: `job-env`
+grants scheduled and dispatched `refs/heads/main` runs read-only access, a
+`beep-ci` pin bump ships it, and a third PR restores those two callers' inputs. The scheduled `cache-warm.yml` pass writes the Worker cache too
+(`TURBO_CACHE_WRITE_TOKEN`), so the 30-day bucket expiry never leaves CI cold;
+its R2 adapter now starts only for the explicit `r2_probe` qualification
+dispatch.
 
 The old caches keep serving: the AWS Lambda cache (`vars.TURBO_API`,
 `secrets.TURBO_TOKEN`, `secrets.TURBO_READ_TOKEN`) and the R2 pilot

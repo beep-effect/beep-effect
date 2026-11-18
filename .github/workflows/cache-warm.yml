@@ -36,10 +36,12 @@ jobs:
     # more wall time than the old single starved pass.
     timeout-minutes: 90
     environment: turbo-cache-write
+    # The warm pass fills the Worker cache that CI reads since turbo-cache stage 2
+    # (@beep/infra-turbo-cache, ci-main write token in turbo-cache-write).
     env:
-      TURBO_API: ${{ vars.TURBO_API }}
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      TURBO_API: ${{ vars.TURBO_CACHE_API }}
+      TURBO_TOKEN: ${{ secrets.TURBO_CACHE_WRITE_TOKEN }}
+      TURBO_TEAM: ${{ vars.TURBO_CACHE_TEAM }}
       TURBO_CACHE: local:rw,remote:rw
     steps:
       - name: Checkout exact main
@@ -60,8 +62,10 @@ jobs:
       - name: Setup pinned toolchain
         uses: ./.github/actions/setup-monorepo-ci
 
+      # Only the explicit R2 qualification dispatch starts the pilot's adapter; the
+      # scheduled warm pass must not let it override TURBO_API with the pilot.
       - name: Start optional R2 cache adapter
-        if: vars.TURBO_R2_ENABLED == 'true' || inputs.r2_probe
+        if: inputs.r2_probe
         shell: bash
         env:
           R2_ENDPOINT: ${{ vars.TURBO_R2_ENDPOINT }}
