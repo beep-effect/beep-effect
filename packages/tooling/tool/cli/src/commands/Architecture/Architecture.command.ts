@@ -95,18 +95,52 @@ const decodeShape = (value: string): Effect.Effect<ArchitectureShape, DomainErro
     )
   );
 
-// An explicit `--shape` wins; otherwise a legacy-only flag selects the legacy
-// shape, and the default is model-first.
-const resolvePlanShape = Effect.fn(function* (shape: O.Option<string>, legacyFlags: ReadonlyArray<O.Option<string>>) {
-  const usesLegacyFlags = A.some(legacyFlags, O.isSome);
-  if (O.isNone(shape)) {
-    return usesLegacyFlags ? ("legacy" as const) : ("model-first" as const);
-  }
-  const decoded = yield* decodeShape(shape.value);
-  if (decoded === "model-first" && usesLegacyFlags) {
-    return yield* DomainError.newMessage("--stage and --domain-kind apply to the legacy shape only.");
-  }
-  return decoded;
+// `plan` resolves its shape so a bare `plan` stays the legacy lab plan:
+// - `--shape` decides when given; `--shape model-first` needs `--slice` and
+//   `--concept` and refuses `--stage` and `--domain-kind`.
+// - Without `--shape`, an explicit `--slice` and `--concept` with no legacy-only
+//   flag select model-first; anything else is legacy.
+const planFromFlags = Effect.fn(function* (flags: {
+  readonly shape: O.Option<string>;
+  readonly slice: O.Option<string>;
+  readonly concept: O.Option<string>;
+  readonly domainKind: O.Option<string>;
+  readonly stage: O.Option<string>;
+}) {
+  const usesLegacyFlags = O.isSome(flags.domainKind) || O.isSome(flags.stage);
+  const explicit = O.isSome(flags.slice) && O.isSome(flags.concept);
+  const resolved = yield* O.match(flags.shape, {
+    onNone: () => Effect.succeed(explicit && !usesLegacyFlags ? ("model-first" as const) : ("legacy" as const)),
+    onSome: decodeShape,
+  });
+  const legacy = () =>
+    makePlanFromCommand(
+      O.getOrElse(flags.slice, () => defaultArchitecturePlanTarget.boundedContext),
+      O.getOrElse(flags.concept, () => defaultArchitecturePlanTarget.concept),
+      O.getOrElse(flags.domainKind, () => defaultArchitecturePlanTarget.domainKind),
+      O.getOrElse(flags.stage, () => defaultArchitecturePlanTarget.stage)
+    );
+  const modelFirst = Effect.fnUntraced(function* () {
+    if (usesLegacyFlags) {
+      return yield* DomainError.newMessage("--stage and --domain-kind apply to the legacy shape only.");
+    }
+    const missing = A.getSomes([
+      O.isNone(flags.slice) ? O.some("--slice") : O.none(),
+      O.isNone(flags.concept) ? O.some("--concept") : O.none(),
+    ]);
+    if (A.isReadonlyArrayNonEmpty(missing)) {
+      return yield* DomainError.newMessage(
+        `--shape model-first needs the context and its Module: missing ${A.join(missing, " and ")}.`
+      );
+    }
+    const repoRoot = yield* findRepoRoot();
+    return yield* makeModelFirstContextOperationPlan({
+      repoRoot,
+      context: O.getOrElse(flags.slice, () => ""),
+      module: O.getOrElse(flags.concept, () => ""),
+    });
+  });
+  return yield* ArchitectureShape.match(resolved, { "model-first": modelFirst, legacy });
 });
 
 // With `--shape`, a plan file must describe that shape; without it, the plan's
@@ -122,13 +156,13 @@ const ensurePlanShape = Effect.fn(function* (plan: CanonicalSliceOperationPlan, 
 });
 
 const planSliceFlag = Flag.String("slice").pipe(
-  Flag.withDescription("Slice or bounded-context name"),
-  Flag.withDefault(defaultArchitecturePlanTarget.boundedContext)
+  Flag.withDescription("Slice or bounded-context name (legacy default: architecture-lab); the context for model-first"),
+  Flag.optional
 );
 
 const planConceptFlag = Flag.String("concept").pipe(
-  Flag.withDescription("Concept name"),
-  Flag.withDefault(defaultArchitecturePlanTarget.concept)
+  Flag.withDescription("Concept name (legacy default: WorkItem); the first Module for model-first"),
+  Flag.optional
 );
 
 const decodeStage = (value: string): Effect.Effect<ArchitecturePlanStage, DomainError> =>
@@ -259,24 +293,13 @@ const architecturePlanCommand = Command.make(
     domainKind: planDomainKindFlag,
     stage: planStageFlag,
   },
-  Effect.fn(function* ({ shape, slice, concept, domainKind, stage }) {
-    const resolved = yield* resolvePlanShape(shape, [domainKind, stage]);
-    const repoRoot = yield* findRepoRoot();
-    const plan = yield* ArchitectureShape.match(resolved, {
-      "model-first": () => makeModelFirstContextOperationPlan({ repoRoot, context: slice, module: concept }),
-      legacy: () =>
-        makePlanFromCommand(
-          slice,
-          concept,
-          O.getOrElse(domainKind, () => defaultArchitecturePlanTarget.domainKind),
-          O.getOrElse(stage, () => defaultArchitecturePlanTarget.stage)
-        ),
-    });
+  Effect.fn(function* (flags) {
+    const plan = yield* planFromFlags(flags);
     yield* printPlanJson(plan);
   })
 ).pipe(
   Command.withDescription(
-    "Emit a schema-versioned architecture operation plan as JSON: a model-first context by default (--slice is the context, --concept its Module), or a legacy slice with --shape legacy, --stage or --domain-kind"
+    "Emit a schema-versioned architecture operation plan as JSON. A bare plan is the legacy lab plan; --shape model-first, or an explicit --slice (the context) and --concept (its Module) with no --stage or --domain-kind, plans a model-first context"
   )
 );
 

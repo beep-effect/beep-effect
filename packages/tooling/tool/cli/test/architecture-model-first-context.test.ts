@@ -327,18 +327,85 @@ describe("beep architecture: model-first context", () => {
       )
     );
 
-    it.effect(
-      "plan defaults to the model-first shape and --shape legacy keeps the legacy plan",
-      Effect.fnUntraced(
-        function* () {
-          yield* runArchitectureCommand(["plan", "--slice", "notes", "--concept", "Note"]);
-          const output = yield* loggedText;
-          const modelFirst = yield* decodeCanonicalSliceOperationPlanJson(output);
-          expect(shapeOfOperationPlan(modelFirst)).toBe("model-first");
-        },
-        Effect.provideServiceEffect(Console.Console, TestConsole.make)
-      )
-    );
+    const shapeCases: ReadonlyArray<
+      readonly [name: string, args: ReadonlyArray<string>, shape: string, context: string, concept: string]
+    > = [
+      ["a bare plan is the legacy lab plan", [], "legacy", "architecture-lab", "WorkItem"],
+      [
+        "--shape legacy is legacy",
+        ["--shape", "legacy", "--slice", "notes", "--concept", "Note"],
+        "legacy",
+        "notes",
+        "Note",
+      ],
+      ["--stage alone implies legacy", ["--stage", "core"], "legacy", "architecture-lab", "WorkItem"],
+      ["--domain-kind alone implies legacy", ["--domain-kind", "entities"], "legacy", "architecture-lab", "WorkItem"],
+      [
+        "--stage with an explicit slice and concept stays legacy",
+        ["--slice", "notes", "--concept", "Note", "--stage", "core"],
+        "legacy",
+        "notes",
+        "Note",
+      ],
+      [
+        "an explicit --slice and --concept is model-first",
+        ["--slice", "notes", "--concept", "Note"],
+        "model-first",
+        "notes",
+        "Note",
+      ],
+      [
+        "--shape model-first with --slice and --concept is model-first",
+        ["--shape", "model-first", "--slice", "notes", "--concept", "Note"],
+        "model-first",
+        "notes",
+        "Note",
+      ],
+    ];
+    for (const [name, args, shape, context, concept] of shapeCases) {
+      it.effect(
+        `plan: ${name}`,
+        Effect.fnUntraced(
+          function* () {
+            yield* runArchitectureCommand(["plan", ...args]);
+            const output = yield* loggedText;
+            const plan = yield* decodeCanonicalSliceOperationPlanJson(output);
+            expect([shapeOfOperationPlan(plan), plan.target.boundedContext, plan.target.concept]).toEqual([
+              shape,
+              context,
+              concept,
+            ]);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        )
+      );
+    }
+
+    const refusalCases: ReadonlyArray<readonly [name: string, args: ReadonlyArray<string>, message: string]> = [
+      [
+        "--shape model-first without --slice and --concept",
+        ["--shape", "model-first"],
+        "missing --slice and --concept",
+      ],
+      ["--shape model-first without --concept", ["--shape", "model-first", "--slice", "notes"], "missing --concept"],
+      [
+        "--shape model-first --stage core",
+        ["--shape", "model-first", "--slice", "notes", "--concept", "Note", "--stage", "core"],
+        "--stage and --domain-kind apply to the legacy shape only",
+      ],
+    ];
+    for (const [name, args, message] of refusalCases) {
+      it.effect(
+        `plan refuses ${name}`,
+        Effect.fnUntraced(
+          function* () {
+            const refusal = yield* Effect.flip(runArchitectureCommand(["plan", ...args]));
+            expect(String(refusal)).toContain(message);
+          },
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        )
+      );
+    }
 
     it.effect(
       "apply refuses a plan of another shape than --shape names",
