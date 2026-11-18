@@ -457,7 +457,11 @@ describe("catalog usage", () => {
           yield* declare({
             version: 1,
             prune: [{ path: "packages/gone", why: "not shipped", packageName: "@beep/gone" }],
-            owned: [{ path: "packages/replaced", why: "replaced", packageName: "@beep/replaced" }],
+            owned: [
+              { path: "packages/replaced", why: "replaced", packageName: "@beep/replaced" },
+              // An owned path that names no workspace has no lockfile record to read.
+              { path: "docs/replaced-guide.md", why: "replaced" },
+            ],
           });
           const declared = yield* Effect.flip(runCatalogUsageCheck(tmpDir));
           expect(declared.message).toBe("1 root catalog entr(ies) or override(s) have no consumer.");
