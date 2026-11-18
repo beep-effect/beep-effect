@@ -122,6 +122,8 @@ export const ROUTE_CORPUS_FILE = "hosted-runs.ndjson.gz";
 export const ROUTE_CORPUS_RECEIPT_FILE = "RECEIPTS.json";
 
 const ROUTE_CORPUS_FETCH_CONCURRENCY = 8;
+const ROUTE_CORPUS_JOB_PAGE = 100;
+const ROUTE_CORPUS_JOB_FALLBACK_PAGE = 30;
 const RATE_LIMIT_MAX_WAIT = Duration.minutes(60);
 const RATE_LIMIT_MARGIN_MS = 1000;
 const GH_LIST_FIELDS = "databaseId,workflowName,event,status,conclusion,createdAt,updatedAt,headBranch,headSha,attempt";
@@ -460,9 +462,19 @@ export const makeRouteGithubRunner = Effect.gen(function* () {
         { ...at, run_id: runId },
         RunWire
       );
-      const jobs = yield* client
-        .paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs", { ...at, run_id: runId, per_page: 100 })
-        .pipe(Effect.flatMap(decodeJobRows));
+      const jobPages = (perPage: number) =>
+        client.paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs", {
+          ...at,
+          run_id: runId,
+          per_page: perPage,
+        });
+      // Some runs answer 502 on every 100-job page yet read cleanly at 30 (run 42669948388;
+      // certainty-scorecard decision `per-attempt-page-fallback`), so a transport failure is
+      // retried once in pages of 30 before the call fails.
+      const jobs = yield* jobPages(ROUTE_CORPUS_JOB_PAGE).pipe(
+        Effect.catchIf(GitHubError.hasKind("transport"), () => jobPages(ROUTE_CORPUS_JOB_FALLBACK_PAGE)),
+        Effect.flatMap(decodeJobRows)
+      );
       return yield* encodeWire({
         ...ghRun(run),
         jobs: A.map(jobs, (job) => ({
