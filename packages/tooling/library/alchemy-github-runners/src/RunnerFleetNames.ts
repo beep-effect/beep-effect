@@ -22,6 +22,9 @@ import * as Str from "effect/String";
 
 const $I = $AlchemyGithubRunnersId.create("RunnerFleetNames");
 
+// S3 refuses bucket names that start with these.
+const reservedBucketPrefixes = ["xn--", "sthree-", "amzn-s3-demo-"];
+
 /**
  * A fleet name prefix: lower case (S3 bucket names allow nothing else), not
  * one of the S3 reserved bucket prefixes (`xn--`, `sthree-`,
@@ -41,8 +44,6 @@ const $I = $AlchemyGithubRunnersId.create("RunnerFleetNames");
  * @category models
  * @since 0.0.0
  */
-const reservedBucketPrefixes = ["xn--", "sthree-", "amzn-s3-demo-"];
-
 export const FleetNamePrefix = S.String.check(
   S.isPattern(/^[a-z][a-z0-9-]{0,27}$/u),
   S.makeFilter((prefix: string) => !A.some(reservedBucketPrefixes, (reserved) => Str.startsWith(reserved)(prefix)), {
