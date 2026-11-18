@@ -3142,12 +3142,14 @@
         "allow": [
           "@beep/identity",
           "@beep/infra-github",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/infra-github",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {
