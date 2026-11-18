@@ -454,6 +454,19 @@ describe("beep architecture: model-first context", () => {
       })
     );
 
+    it.effect(
+      "rejects a context whose generated workspace names another package owns",
+      Effect.fnUntraced(function* () {
+        const root = yield* repoRoot;
+        const refusal = yield* Effect.flip(
+          makeModelFirstContextOperationPlan({ repoRoot: root, context: "skill", module: "Skill" })
+        );
+        expect(refusal.message).toContain(
+          "@beep/skill-contract (owned by packages/foundation/modeling/skill-contract)"
+        );
+      })
+    );
+
     for (const module of ["Domain", "Effect", "Story", "NotesModel", "NotesApi"]) {
       it.effect(
         `rejects the Module name ${module}, which a generated file already binds`,

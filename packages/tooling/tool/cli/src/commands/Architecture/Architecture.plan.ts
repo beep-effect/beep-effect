@@ -388,6 +388,24 @@ const modelFirstReferencesFor = Effect.fnUntraced(function* (repoRoot: string, n
     Effect.mapError(DomainError.newCause("Failed to read the workspace manifests"))
   );
   const target = modelFirstTargetFor(names);
+  // A generated name another workspace already owns is refused; the same name
+  // at the same path is this context, so a saved plan replays.
+  const taken = A.filter(generatedContextRoles, (role) =>
+    A.some(
+      members,
+      (member) => member.name === packageNameForRole(target, role) && member.relativePath !== pathForRole(target, role)
+    )
+  );
+  if (A.isReadonlyArrayNonEmpty(taken)) {
+    const owners = A.map(taken, (role) => {
+      const name = packageNameForRole(target, role);
+      const owner = A.findFirst(members, (member) => member.name === name);
+      return `${name} (owned by ${O.match(owner, { onNone: () => "another workspace", onSome: (member) => member.relativePath })})`;
+    });
+    return yield* DomainError.newMessage(
+      `Context "${names.context}" would generate workspace names already in use: ${A.join(owners, ", ")}. Choose another context name.`
+    );
+  }
   const directories = HashMap.fromIterable([
     ...A.map(members, (member) => [member.name, member.relativePath] as const),
     ...A.map(generatedContextRoles, (role) => [packageNameForRole(target, role), pathForRole(target, role)] as const),
