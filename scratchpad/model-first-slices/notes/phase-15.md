@@ -1,7 +1,7 @@
 # Phase 15: queries, and no free strings left (2026-11-18)
 
 In process only. No swarm, deploy or container this phase. `bun run check` exits 0, `bun run test`
-passes 260 tests, 110 of 110 declared outcomes execute, and `bun run generated:check` passes.
+passes 263 tests, 110 of 110 declared outcomes execute, and `bun run generated:check` passes.
 
 ## Queries
 
@@ -23,6 +23,24 @@ passes 260 tests, 110 of 110 declared outcomes execute, and `bun run generated:c
   `waitsFor`.
 - **The web binding forwards `after`** and takes one receipt or a list for `atLeast`.
 
+### A rebuild keeps read-your-own-write (owner's ruling, 2026-11-18)
+
+While a newer directory generation is building, `PartyDirectoryStore.apply` forwards each of its
+writes to the active generation, under the active generation's own positions: what the active
+generation already applied is refused there, and what it has not seen lands in both. A search that
+waited for a write finds it before the switch as after it. In Postgres both writes are one
+transaction.
+
+- **Held by** a law against both stores (the active generation ends complete whatever part of the
+  history it had, a replay changes nothing, the switch changes nothing a search finds) and a
+  rebuild story in `party/model/test/Rebuild.test.ts` (a party registered while generation 1
+  builds is found before the switch). Both fail with forwarding switched off.
+- **Limit.** One change is applied to two generations, so it must mean the same row in both. A
+  generation that changes what a change means cannot be built beside the one it replaces this way.
+- **A flaky law was fixed on the way.** The partial-name search law cut names by UTF-16 unit, so it
+  could search for half of a surrogate pair, which is not text a search takes. It cuts by
+  character now, and upper-cases only when that is the same text in another case.
+
 ### Not done, and why
 
 - **The `/runs-state` route stays** (`runs/host/src/Runs.cluster.ts`). Cluster conformance cases
@@ -30,10 +48,6 @@ passes 260 tests, 110 of 110 declared outcomes execute, and `bun run generated:c
   `RunState` as the intake human (the reviewer is not in the session), change tag comparisons to
   statuses (`awaiting-approval`), and give the stored-forms case a direct database read, because
   `RunState` reads a withdrawn run as `cancelled`.
-- **Read-your-own-write during a directory rebuild** is undecided (owner). A read that waited for
-  its receipt is served from the active generation, which the write has not reached. Forwarding
-  live writes to the active generation keeps the guarantee only while both generations share a row
-  shape; refusing makes the directory unavailable for the rebuild.
 - **Empty search still lists every party of the org** (owner: is listing a use case?).
 
 ## Ids and text
