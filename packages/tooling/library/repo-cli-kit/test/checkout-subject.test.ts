@@ -100,6 +100,8 @@ describe("checkout subjects", () => {
     // Absent but never declared prunable: not pruned, so its check runs and fails.
     strictEqual(isCheckoutSubjectPresent(inventory, missing), false);
     strictEqual(isCheckoutSubjectPruned(inventory, missing), false);
+    strictEqual(isCheckoutSubjectPresent(inventory, workspaceSubject("@beep/kept")), true);
+    strictEqual(isCheckoutSubjectPresent(inventory, workspaceSubject("@beep/leaf")), false);
     strictEqual(isCheckoutSubjectPruned(inventory, workspaceSubject("@beep/leaf")), true);
     strictEqual(isCheckoutSubjectPruned(inventory, workspaceSubject("@beep/typo")), false);
     deepStrictEqual(prunedCheckoutSubjects(inventory, [kept, leaf, missing, workspaceSubject("@beep/leaf")]), [
