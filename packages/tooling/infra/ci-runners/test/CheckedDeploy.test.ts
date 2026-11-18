@@ -494,6 +494,8 @@ describe("CiRunners step 1b from the post-1a state", () => {
       const group = A.filter(step1b.resources, (resource) => resource.fqn === "DefaultSecurityGroup");
       expect(A.map(group, (resource) => [resource.action, resource.bindings])).toStrictEqual([["adopted", []]]);
       expect(tagsOf(step1b)).toStrictEqual([]);
+      // The full gate under the step-1b expectation passes the adopted row.
+      yield* checkEnginePlan(step1b);
       const routine = yield* readWith(plan, { expectation: "routine" });
       expect(tagsOf(routine)).toStrictEqual(["UnexpectedChange"]);
       // The adopted row is drift-compared like any other: the same plan read again matches it.

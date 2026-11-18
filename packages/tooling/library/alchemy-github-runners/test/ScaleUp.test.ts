@@ -4,6 +4,7 @@ import {
   FleetLaunchResult,
   handleScaleUp,
   RunnerPool,
+  SsmStore,
   sanitizeAllocationStrategy,
   toCreateFleetRequest,
 } from "@beep/alchemy-github-runners";
@@ -153,6 +154,36 @@ describe("handleScaleUp", () => {
         [queued({ id: 1 })],
         poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 }))
       );
+      expect(world.fleetRequests).toStrictEqual([]);
+      expect(retry).toStrictEqual(["m-1"]);
+    })
+  );
+
+  it.effect("counts a runner that boots between the two reads: its config is read first, EC2 then shows it", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.ssm["/beep-ci/heavy/tokens/i-booting"] = { value: "jit", modified: 0, tags: { InstanceId: "i-booting" } };
+      const base = worldContext(world);
+      const ssm = Context.get(base, SsmStore);
+      // The runner boots right after Parameter Store is read: it deletes its config and EC2 starts to show it.
+      const booting = SsmStore.of({
+        ...ssm,
+        listByPath: Effect.fn("BootingSsm.listByPath")(function* (path) {
+          const listed = yield* ssm.listByPath(path);
+          world.ssm = R.remove(world.ssm, "/beep-ci/heavy/tokens/i-booting");
+          world.launch(1, {
+            "ghr:Application": "github-action-runner",
+            "ghr:environment": "beep-ci-heavy",
+            "ghr:Type": "Org",
+            "ghr:Owner": "beep-effect",
+          });
+          return listed;
+        }),
+      });
+      const retry = yield* handleScaleUp({
+        config: poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 })),
+        batch: [queued({ id: 1 })],
+      }).pipe(Effect.provideContext(Context.add(base, SsmStore, booting)));
       expect(world.fleetRequests).toStrictEqual([]);
       expect(retry).toStrictEqual(["m-1"]);
     })

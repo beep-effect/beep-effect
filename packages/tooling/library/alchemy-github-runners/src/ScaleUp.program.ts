@@ -508,11 +508,15 @@ const inFlightWindowMillis = 15 * 60 * 1000;
 const instanceIdOf = (parameterName: string): string => A.lastNonEmpty(Str.split("/")(parameterName));
 
 // Either read failing fails the group, so no launch happens and every message of the group goes back for retry.
+// Parameter Store is read FIRST, EC2 second. A runner whose JIT config is gone at the first read has already booted,
+// and boot takes far longer than EC2's tag-filter lag (seconds), so the second read sees it. Reading EC2 first would
+// let a runner fall between the reads: unseen by EC2, then its config deleted before Parameter Store is read. A
+// runner seen by both is counted once, by instance id.
 const countRunners = Effect.fnUntraced(function* (config: PoolRuntimeConfig, filter: RunnerFilter) {
   const ec2 = yield* Ec2Fleet;
   const ssm = yield* SsmStore;
-  const visible = yield* ec2.listRunners(filter);
   const tokens = yield* ssm.listByPath(config.tokenPath);
+  const visible = yield* ec2.listRunners(filter);
   const now = yield* Clock.currentTimeMillis;
   const seen = HashSet.fromIterable(A.map(visible, (runner) => runner.instanceId));
   const inFlight = A.filter(

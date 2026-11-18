@@ -742,13 +742,23 @@ Both fleets keep running throughout.
 (f) The operator decides whether to delete the old SSM App parameters under `/github-action-runners/`, the key behind `alias/beep-ci-github-app` (schedule deletion, 30 days) and `beep-ci-fleet-boundary`.
 Rollback before (d), in order (amended 2026-11-18, #3386 review).
 
-First, if step 6b ran, restore the delivery paths before any job is sent back to the old labels (amended 2026-11-18, #3386 r4620414302):
+If step 6b ran, restore the delivery paths in this order before any job is sent back to the old labels (amended 2026-11-18, #3386 r4620414302 and r4620549657). Step 6b deleted the overlap repository webhook, and jobs still run on the `beep-fleet-*` labels until step 4's workflow revert, so the new fleet's delivery comes back first:
 
-1. Point the App webhook back at the live controller's URL recorded before 6b.
-2. Re-create the live overflow pool's repository webhook on its recorded live URL.
-3. Re-create the overlap repository webhook on the new fleet's webhook function URL (step 2), not on a live endpoint: jobs still run on the `beep-fleet-*` labels until step 4's workflow revert, and only the new fleet serves them.
-4. Check that the next deliveries show a 2xx: the live controllers for the App and overflow hooks, the new fleet's function for the overlap hook.
-5. Only then run step 4's rollback (phase revert, paused and drained scale-up, workflow revert). Once the workflow revert has moved every job off the `beep-fleet-*` labels and the new fleet's queues are drained, the overlap repository webhook may be deleted. After (d), `pulumi stack import` of the archive restores state only, and that state still lists the fleet the destroy removed. So run `pulumi preview --refresh` first, which must show the missing fleet resources as creates, and only then `pulumi up --refresh` from the archived commit. A recreated API Gateway endpoint gets a new host, so the URLs recorded before 6b no longer deliver (amended 2026-11-18, #3386 r4617469545). Read the recreated `controllerWebhook` and `shardOverflowWebhook` stack outputs (`pulumi stack output`), point the App webhook at `controllerWebhook` with `beep github app`, and re-create only the live-overflow repository webhook on `shardOverflowWebhook`, secrets unchanged. The overlap repository webhook keeps targeting the new fleet's webhook function URL until step 4's workflow rollback has moved the jobs off the `beep-fleet-*` labels; delete it only after that. Then verify the recreated endpoints (the controllers answer, the App and live-overflow repository webhooks deliver with a 2xx) before any job is sent back to the old labels.
+1. Re-create the overlap repository webhook on the new fleet's webhook function URL (step 2), and verify a 2xx delivery from it.
+2. Point the App webhook back at the live controller's URL recorded before 6b.
+3. Re-create the live overflow pool's repository webhook on its recorded live URL.
+4. Check that the next App and live-overflow deliveries show a 2xx from the live controllers.
+5. Only then run step 4's rollback (phase revert, paused and drained scale-up, workflow revert).
+6. Once the workflow revert has moved every job off the `beep-fleet-*` labels and the new fleet's queues are drained, delete the overlap repository webhook.
+
+Rollback after (d). `pulumi stack import` of the archive restores state only, and that state still lists the fleet the destroy removed. A recreated API Gateway endpoint gets a new host, so the URLs recorded before 6b no longer deliver (amended 2026-11-18, #3386 r4617469545). In order:
+
+1. Re-create the overlap repository webhook on the new fleet's webhook function URL, and verify a 2xx delivery from it, since 6b deleted it and jobs still run on the `beep-fleet-*` labels.
+2. Run `pulumi preview --refresh`, which must show the missing fleet resources as creates, and only then `pulumi up --refresh` from the archived commit.
+3. Read the recreated `controllerWebhook` and `shardOverflowWebhook` stack outputs (`pulumi stack output`). Point the App webhook at `controllerWebhook` with `beep github app`, and re-create the live-overflow repository webhook on `shardOverflowWebhook`, secrets unchanged.
+4. Verify the recreated endpoints: the controllers answer, and the App and live-overflow webhooks deliver with a 2xx.
+5. Run step 4's workflow revert.
+6. Delete the overlap repository webhook only after the revert has moved every job off the `beep-fleet-*` labels.
 
 **Readers of the live fleet's labels, groups, tags and paths (git grep of the tree, 2026-11-14), with the edit each needs.**
 
