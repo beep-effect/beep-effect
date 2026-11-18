@@ -4,13 +4,13 @@
     "id": "gate-output-switch-on",
     "packetId": "goal-packet/v1:08cd03bbddd6873e974d87a075115a19c07f32c61584480bffddc5678ca51d6a",
     "title": "Gate Output: Switch On What Exists",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-18",
     "updated": "2026-11-18",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/gate-output-switch-on",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Land the six located fixes that need no new model, so agents get shorter gate output this week",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3403,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -81,12 +87,12 @@
     {
       "id": "P5",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -100,5 +106,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3403
+  }
 }

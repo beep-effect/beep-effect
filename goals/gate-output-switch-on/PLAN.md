@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress`
+Status: `complete`
 
 ## Phases
 
@@ -13,8 +13,8 @@ Status: `in-progress`
 | P2 Quiet surfaces | complete | Fixes 3, 4 and 5: formatter options on `CliColor.formatterLayer` and `globalFlags: "summary"` in the repo CLI; envelopes off stdout when the artifact env is set, with a durable GitHub-check report; the submit step on the split executor. | AC5 to AC7 hold. |
 | P3 Unbuilt-dependency probe | complete | Fix 6: the one-line probe on both package-local check entry points, reusing `missingReferenceOutputs`. | AC8 holds; a fresh lane's package check prints one line where it printed one TS6305 per reference. |
 | P4 Verify | complete | Run `bun run beep quality package-verify` for every touched package and `bun run beep cache audit`; record the before and after character counts. | AC9 and AC10 hold; evidence is under `history/`. |
-| P5 Yeet: PR to mergeable | in-progress | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P6 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P5 Yeet: PR to mergeable | complete | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P6 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Work Breakdown
 
