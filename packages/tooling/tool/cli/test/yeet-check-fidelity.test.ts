@@ -351,6 +351,34 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("--until-ready check fidelity
     })
   );
 
+  it.effect("reads the pull request and a red census from stdout when gh writes advice to stderr", () =>
+    Effect.gen(function* () {
+      const root = yield* tempRoot();
+      // gh 2.105.0 prints advice on stderr under `AI_AGENT` or `CLAUDECODE`; a
+      // failing check also exits non-zero with the whole census on stdout.
+      const hint = "hint: if you need to wait for this pull request to be reviewed, merged, or closed\n";
+      const advising = ScriptedSpawner.make((command, args) => {
+        if (command === "git") return {};
+        if (args[0] === "pr" && args[1] === "view") return { stdout: pullRequestJson, stderr: hint };
+        if (isPrChecks(args))
+          return { stdout: A.contains(args, "--required") ? requiredChecksJson : checksJson, stderr: hint, exit: 1 };
+        return { stdout: args[0] === "api" ? threadsJson : "[]" };
+      });
+      const expected = yield* collectYeetStatus(contextFor(root), true).pipe(withGh(fidelitySpawner()));
+      const status = yield* collectYeetStatus(contextFor(root), true).pipe(withGh(advising));
+      assertNone(status.remote.readFailure);
+      expect(status.remote.checks).toStrictEqual(expected.remote.checks);
+      const census = yield* collectRemoteChecksForTesting(contextFor(root), false).pipe(withGh(advising));
+      assertSome(
+        O.map(
+          census,
+          A.map((row) => row.completedAt)
+        ),
+        ["2026-09-25T11:53:05Z", "0001-01-01T00:00:00Z"]
+      );
+    })
+  );
+
   it.effect("names a gh that rejects --json instead of returning an unreadable census", () =>
     Effect.gen(function* () {
       const root = yield* tempRoot();

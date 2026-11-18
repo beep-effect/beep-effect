@@ -194,13 +194,13 @@ describe("the shipped check-registration backoff", () => {
 const PR_VIEW_JSON = `{"number":558,"headRefName":"feat/yeet-monitor-hardening","state":"OPEN"}`;
 
 /** Answers `gh pr view` and `gh api`; the check watch answers from `watch`. */
-const monitorSpawnerLayer = (watch: { readonly exitCode: number; readonly output: string }) =>
+const monitorSpawnerLayer = (watch: { readonly exitCode: number; readonly output: string }, contextStderr = "") =>
   Layer.provideMerge(
     Git.layer,
     ScriptedSpawner.make((command, args) => {
       const line = A.join([command, ...args], " ");
       if (Str.includes("pr view")(line)) {
-        return { stdout: PR_VIEW_JSON };
+        return { stdout: PR_VIEW_JSON, stderr: contextStderr };
       }
       if (Str.includes("pr checks")(line)) {
         return { stdout: watch.output, exit: watch.exitCode };
@@ -291,6 +291,41 @@ describe("the monitor phase check watch", () => {
         // A red is about the code, so the registration story must stay out of it.
         expect(error.message).not.toContain("No checks registered");
         expect(error.exitCode).toBe(1);
+      })
+    );
+  });
+});
+
+// gh 2.105.0 prints advice on stderr after a clean `gh pr view` under
+// `AI_AGENT` or `CLAUDECODE`; the context step decodes stdout alone.
+const GH_AGENT_HINT =
+  "hint: if you need to wait for this pull request to be reviewed, merged, or closed before continuing, use this instead of polling:\n";
+
+describe("the monitor phase pull request context", () => {
+  it.layer(
+    Layer.mergeAll(
+      PlatformLayer,
+      monitorSpawnerLayer({ exitCode: 0, output: "All checks were successful" }, GH_AGENT_HINT)
+    ),
+    { timeout: "30 seconds" }
+  )((it) => {
+    it.effect("decodes the pull request from stdout when gh writes advice to stderr", () =>
+      Effect.gen(function* () {
+        const root = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+        const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
+
+        yield* runMonitorPhaseForTesting(
+          monitorPhaseContext(root),
+          monitorSteps(root),
+          recorder,
+          "yeet monitor failed."
+        );
+
+        const recorded = yield* Ref.get(recorder);
+        expect(A.map(recorded, (executed) => [executed.step.id, executed.result.output])).toEqual([
+          ["monitor:01-pr-context", PR_VIEW_JSON],
+          ["monitor:02-pr-checks-watch", "All checks were successful"],
+        ]);
       })
     );
   });

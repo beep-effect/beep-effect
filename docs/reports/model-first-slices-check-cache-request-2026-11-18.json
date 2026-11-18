@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "//": "b9ca19268815f9a3c9f22b82956cb24df31928a60ae138fc8f6b3d5a6279eeaa"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (model-first-slices check wiring lane, ci/model-first-slices-check)",
+    "reason": "Re-record the root subject for the final bytes after merging main 4c8ff79287b: the root postinstall now runs install:model-first-slices only when CI is unset, so every cached root computation, //#check:model-first-slices included, drifts on the manifest bytes. The task's inputs are unchanged, and it still installs the prototype itself, so its result does not depend on CI. No other command, cache flag, input, output or environment changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/model-first-slices-check-cache-review-2026-11-18.md",
+      "sha256": "00eeaf94c35febdb1752886a1d30c2aa65fcdb2c14da25e13512d90fceeb6f25"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

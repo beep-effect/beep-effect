@@ -1,5 +1,25 @@
 # model-first-slices
 
+## Install and hosted check
+
+A root `bun install` also installs this workspace: the root `postinstall` runs
+`bun run install:model-first-slices`, a `bun install --frozen-lockfile` here, and the root install
+fails when `scratchpad/model-first-slices/bun.lock` is out of date. The `postinstall` skips that
+step when the `CI` environment variable is set (GitHub Actions sets `CI=true`), so hosted jobs that
+never read this workspace do not download its dependencies. Local clones, worktrees and the Yeet
+head-install preflight leave `CI` unset and install it. Hosted CI runs the root Turbo
+task `check:model-first-slices` in the Lint Policy lane whenever this workspace, the root
+`tsconfig.base.json`, the root `package.json` or `bun.lock`, or the linked `@beep/identity` and
+`@beep/schema` sources change. The task installs this workspace first, then runs its check and its
+toolchain guard tests. To run the two by hand from the repository root:
+
+```sh
+bun run --cwd scratchpad/model-first-slices check
+bun run --cwd scratchpad/model-first-slices/shared/tooling test
+```
+
+## Overview
+
 A standalone prototype of the model-first slices design, reworked to
 `explorations/model-first-slices/DECISIONS.md` through phase 12 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster; phase 6 patched two library defects locally and ran it again; phase 7 put `bun run check` on the Effect build of the compiler and applied the owner's review; phase 8 ran the suite on the swarm against the phase 7 code; phase 9 built the rulings on its three failures, D41 to D43, and ran it again; phase 10 built D45 to D47 and ran it a fifth time; phase 11 built D49 to D51 and ran it a sixth time, with an upgrade from phase 8's code; phase 12, in process only, added the fence's start check and the frozen-runner case):
 file grammar, contract packages, the authority context, re-admission at each hop, the `runs`
@@ -237,11 +257,13 @@ monorepo's pins) over the fifteen packages, `conformance/upstream` and `scripts/
 Effect language service rules from the monorepo's `tsconfig.base.json` unchanged, and none overrides them.
 `conformance/upstream` holds upstream's conformance model, app and cases, ported from alchemy at 33c10dd and
 adapted to those rules with upstream's routes, case names and assertions unchanged.
-`shared/tooling/test/Compiler.guard.test.ts` guards the wiring with three checks:
+`shared/tooling/test/Compiler.guard.test.ts` guards the wiring:
 
 - **Version.** The installed compiler matches the monorepo's pins, and `--version` names the Effect build.
-- **Canary.** `shared/tooling/canary` fails under the Effect build with one Effect-only finding, and passes
-  under stock `tsrs`.
+- **Canary.** A project with one Effect-only finding fails under the Effect build and passes under stock
+  `tsrs`. The guard test writes it into a git-ignored folder for the length of the test, so no file with
+  a deliberate finding sits in the tree.
+- **Coverage.** Every `.ts` and `.tsx` file in the prototype belongs to a project `bun run check` compiles.
 - **One directive.** The only inline diagnostics directive in the prototype is the generated front's
   `strictEffectProvide:off`, on its deploy-time `Effect.provide(Database)`: an Alchemy class entry point.
   `scripts/entries.ts` emits it with its reason, owner and exit.
@@ -375,4 +397,4 @@ Teardown, always: `(cd apps/practice && bun run destroy)`, check that no `practi
 service, container, network, volume or image remains, remove the image the deploy pulled by digest
 (`postgres:17-alpine@sha256:…`, when the node already had another `postgres:17-alpine`),
 `docker swarm leave --force`, remove `docker_gwbridge`, and delete `apps/practice/.alchemy/`.
-Builds add to Docker's build cache, which this procedure does not prune. `probes/` holds the earlier probes against the pre-rework layout; their paths are stale.
+Builds add to Docker's build cache, which this procedure does not prune. `probes/` holds the earlier probes against the pre-rework layout as text records beside their outputs; they are not compiled.

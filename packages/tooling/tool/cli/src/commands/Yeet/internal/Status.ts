@@ -21,7 +21,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { GhActor, GithubRest, ghOutput } from "../../../internal/github/index.ts";
-import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { runRepoCommandCaptureSplit } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { runArtifactPathForContext, runIdForContext } from "./ArtifactPaths.ts";
 import { closeoutIssueFromReviewThread, PrCloseoutReportJson } from "./Closeout.ts";
@@ -723,7 +723,7 @@ export const collectRemoteChecks: {
     const args = ["pr", "checks", ...(required ? ["--required"] : []), "--json", YEET_STATUS_CHECK_FIELDS];
     // KEEP (D-13): `gh pr checks` gives the checks rollup with `bucket`, which no kit member does.
     // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
-    const result = yield* runRepoCommandCapture("gh", args, context.repoRoot).pipe(
+    const result = yield* runRepoCommandCaptureSplit("gh", args, context.repoRoot).pipe(
       Effect.mapError(YeetCommandError.new("Failed to inspect PR checks for yeet status."))
     );
     if (result.truncated) {
@@ -734,8 +734,9 @@ export const collectRemoteChecks: {
     // failing check also exits non-zero and its text may carry either phrase.
     // An older gh has no `gh pr checks --json`: its output starts with the flag
     // error and decodes as neither, so name the cause instead of returning an
-    // unreadable census the caller can only report as incomplete.
-    return yield* decodeGhStatusChecks(result.output).pipe(
+    // unreadable census the caller can only report as incomplete. The census
+    // decodes from stdout alone; the phrases are matched in both streams.
+    return yield* decodeGhStatusChecks(result.stdout).pipe(
       Effect.asSome,
       Effect.catch(() =>
         result.exitCode !== 0 && GH_PR_CHECKS_JSON_UNSUPPORTED.test(result.output)
@@ -851,7 +852,7 @@ export const collectRemoteWorkflowRuns = Effect.fn("YeetStatus.collectRemoteWork
   // KEEP (D-13): `gh run list --branch` feeds the failed-job collection beside the checks rollup, which no
   // kit member reads.
   // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
-  const result = yield* runRepoCommandCapture(
+  const result = yield* runRepoCommandCaptureSplit(
     "gh",
     ["run", "list", "--branch", context.branch, "--limit", "20", "--json", "databaseId,headSha,status,conclusion,name"],
     context.repoRoot

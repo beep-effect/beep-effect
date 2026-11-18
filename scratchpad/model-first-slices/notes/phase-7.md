@@ -37,8 +37,10 @@ outcome check reports 109 of 109 declared outcomes executed. `handlers:check` an
   - *Version guard.* The installed versions equal the monorepo pins, and the proxy's `--version`
     names the Effect build at both pins. Every `check` segment is the Effect build, and every
     workspace with a tsconfig, plus `scripts`, is checked.
-  - *Canary* (`shared/tooling/canary/`). One floating `Effect.log(...)` fails under the Effect
-    build with exactly one `effect(floatingEffect)` error, while stock `tsrs` passes it.
+  - *Canary* (then a project under `shared/tooling`). One floating `Effect.log(...)` fails under
+    the Effect build with exactly one `effect(floatingEffect)` error, while stock `tsrs` passes it.
+  - Since 2026-11-18 the guard test writes the canary into a git-ignored folder for the length of
+    the test, and the guard file has six tests, one of them the file-coverage guard.
 - **Service keys.** Service keys come from `@beep/identity` composers. `shared/kernel/src/Identity.ts`
   roots `$PrototypeId` at `$ScratchpadId.create("model-first-slices")` and exports one composer per
   package. Every `Context.Service` key is `$I\`Name\``.

@@ -1,8 +1,0 @@
-{
-  "extends": "../../../tsconfig.base.json",
-  // The compiler canary (phase 7): one deliberate Effect-only finding, so a check that does not
-  // load the Effect rules passes here while the Effect build fails. Not part of `bun run check`;
-  // shared/tooling/test/Compiler.guard.test.ts runs it and expects exactly that failure.
-  "include": [],
-  "files": ["Canary.ts"]
-}
