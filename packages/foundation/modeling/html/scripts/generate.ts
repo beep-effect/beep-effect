@@ -2697,6 +2697,8 @@ export const ${name} = taggedUnion<${types}, ${encodeds}>(
   const header = `/**
  * GENERATED FILE — do not edit by hand. Run \`bun run generate\`.
  *
+ * **Details**
+ *
  * Exhaustive, schema-first AST of the WHATWG HTML specification (conforming +
  * obsolete elements). Each element is an \`S.TaggedClass\` whose \`_tag\` is its tag
  * name; all are combined into the {@link HtmlNode} discriminated union via
@@ -3079,6 +3081,8 @@ ${pipe(
   const meta = `/**
  * GENERATED FILE — do not edit by hand. Run \`bun run generate\`.
  *
+ * **Details**
+ *
  * Per-element metadata for the HTML AST: DOM interface, conformance tier, void /
  * raw-text classification, and (advisory) content categories.
  *
@@ -3343,6 +3347,8 @@ export const XML_FOREIGN_ATTRIBUTE_NAMES: ReadonlyArray<string> = Object.freeze(
 
 /**
  * Shared current attributes permitted on every generated HTML element.
+ *
+ * **Details**
  *
  * Per-element metadata reuses this frozen inventory and appends only its
  * element-specific current attributes.
@@ -4083,12 +4089,12 @@ const freezeElementMeta = (value: HtmlElementMeta): HtmlElementMeta =>
     return Object.freeze(value);
   };
 
-const elementMetaSource: Readonly<Record<HtmlTag, S.Codec.Encoded<typeof HtmlElementMeta>>> = {
+const elementMetaSource: Readonly<Record<HtmlTag, typeof HtmlElementMeta.Encoded>> = {
 ${metaEntries}
 };
 
 const decodeElementMetaResult = S.decodeResult(HtmlElementMeta);
-const decodeElementMeta = (value: S.Codec.Encoded<typeof HtmlElementMeta>): HtmlElementMeta =>
+const decodeElementMeta = (value: typeof HtmlElementMeta.Encoded): HtmlElementMeta =>
   Result.getOrThrow(decodeElementMetaResult(value));
 
 /**
