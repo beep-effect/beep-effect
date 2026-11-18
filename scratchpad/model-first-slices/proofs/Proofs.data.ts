@@ -322,8 +322,8 @@ export const proofs: ReadonlyArray<Proof> = [
   Proof.make({
     id: "compiler-canary",
     invariant: "An Effect-only finding (a floating Effect) fails the check: the canary project fails under the Effect build, with exactly one effect(floatingEffect) error and no unknown-rule warning.",
-    checkers: ["shared/tooling/test/Compiler.guard.test.ts", "shared/tooling/canary/Canary.ts"],
-    reads: "The compiler's output and exit code over the canary project.",
+    checkers: ["shared/tooling/test/Compiler.guard.test.ts"],
+    reads: "The compiler's output and exit code over a canary project the test writes and removes.",
     assumptions: "The canary's one finding is one the stock compiler cannot report.",
     gaps: "One rule; a rule the Effect build stopped reporting would pass unnoticed.",
     reviewer: "Nothing beyond keeping the canary's finding Effect-only.",
