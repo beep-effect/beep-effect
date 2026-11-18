@@ -71,7 +71,7 @@ const dryRunFlag = Flag.Boolean("dry-run").pipe(
 
 const shapeFlag = Flag.String("shape").pipe(
   Flag.withDescription(
-    "Slice shape: model-first (the four-package context, default) or legacy (the seven-package slice)"
+    "Slice shape: model-first (the four-package context) or legacy (the seven-package slice); see `plan --help` for how plan resolves it"
   ),
   Flag.optional
 );

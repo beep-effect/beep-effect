@@ -27,7 +27,10 @@ source and is never imported.
 
 1. **Command surface.** `bun run beep architecture create context <context>
    <Module>` plans and writes a model-first context. `plan`, `apply` and `check`
-   accept `--shape model-first|legacy` (default `model-first`). The seven-role
+   accept `--shape model-first|legacy`. As built (PR #3394), a bare `plan` is
+   the legacy lab plan; `plan` resolves to model-first for `--shape model-first`
+   or an explicit `--slice` and `--concept`, and `apply`/`check` take the shape
+   from the plan's roles. The seven-role
    commands (`create slice`, `create package`, `add concept`, `add role`) stay
    and are labelled legacy in their help; they keep working unchanged for
    legacy slices.
