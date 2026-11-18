@@ -138,7 +138,7 @@ const routeFailure = <A, R>(effect: Effect.Effect<A, RouteError, R>) =>
   );
 
 const renderSpend = (spend: RouteReadSpend): string =>
-  `[ci route] capture read GitHub ${spend.requests} time(s)${O.match(spend.identity, {
+  `[ci route] capture metered ${spend.requests} GitHub response(s)${O.match(spend.identity, {
     onNone: () => "",
     onSome: (identity) => ` as ${identity}`,
   })}; ${

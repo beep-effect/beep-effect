@@ -13,9 +13,18 @@
  * ledger's A7 ruling says. Without a ledger in context (`BEEP_GITHUB_LEDGER`
  * off) every call is admitted and the spend reports `metered: false`.
  *
- * Every response the GitHub transport observes is counted, pagination pages
- * and `GET /rate_limit` included, and still forwarded to the sink that was in
- * context, so the ledger keeps recording the capture's rows.
+ * Admission is per logical call: one `gh run list` day or one `gh run view`
+ * (the run, its job pages and, after a transport failure, the 30-job pages),
+ * with its retries. A call admitted just above the floor can therefore cross
+ * it by its own pages; at the corpus's eight concurrent calls that is a few
+ * dozen requests at most, typically eight to sixteen, after which every
+ * further call waits for the reset.
+ *
+ * The count is the responses the transport hands to `RateLimitSink`: those
+ * that carry rate-limit headers, pagination pages and `GET /rate_limit`
+ * included. That is the set the ledger records, and each is forwarded to the
+ * sink that was in context, so the ledger keeps the capture's rows. A
+ * response without the headers (some 5xx answers) is not counted.
  *
  * @since 0.0.0
  */
@@ -80,9 +89,9 @@ export class RouteReadSpend extends S.Opaque<RouteReadSpend, { readonly brand: u
  * @since 0.0.0
  */
 export interface RouteReadBudgetShape {
-  /** Wait while the capture identity's `core` bucket is below its reserve; fail when the reset is too far. */
+  /** Before one logical call: wait while the capture identity's `core` bucket is below its reserve; fail when the reset is too far. */
   readonly admit: (label: string) => Effect.Effect<void, RouteError>;
-  /** Run one call with every response it observes counted and forwarded to the sink in context. */
+  /** Run one call with every rate-limit-bearing response counted and forwarded to the sink in context. */
   readonly metered: <A, E, R>(call: Effect.Effect<A, E, R>) => Effect.Effect<A, E, R>;
   /** What the capture has spent so far. */
   readonly spend: Effect.Effect<RouteReadSpend>;

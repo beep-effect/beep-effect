@@ -240,8 +240,8 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
         );
         const errorLines = yield* TestConsole.errorLines;
         expect(A.map(errorLines, String)).toEqual([
-          "[ci route] capture read GitHub 263 time(s) as user:alice; waited 2 time(s) for the core reserve",
-          "[ci route] capture read GitHub 4 time(s); unmetered: no GitHub budget ledger, the reserve was not read",
+          "[ci route] capture metered 263 GitHub response(s) as user:alice; waited 2 time(s) for the core reserve",
+          "[ci route] capture metered 4 GitHub response(s); unmetered: no GitHub budget ledger, the reserve was not read",
         ]);
       })
     )
