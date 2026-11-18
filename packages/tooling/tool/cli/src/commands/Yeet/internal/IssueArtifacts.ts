@@ -13,7 +13,7 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
-import { executeRepoPlanStepStreaming } from "../../../internal/repo-run/index.ts";
+import { executeRepoPlanStepSplit, executeRepoPlanStepStreaming } from "../../../internal/repo-run/index.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { renderPackageQualityPacketMarkdown } from "../Yeet.render.ts";
 import { YeetRunResult } from "../Yeet.schemas.ts";
@@ -115,6 +115,9 @@ export const rawOutputPathForStep = Effect.fn("Yeet.rawOutputPathForStep")(funct
   return path.join(artifactDir, "logs", `${safeArtifactName(step.id)}.log`);
 });
 
+// The planner's `monitor:01-pr-context` step, whose output the monitor decodes.
+const MONITOR_CONTEXT_STEP_ID = "monitor:01-pr-context";
+
 /**
  * Execute a planned repo step while streaming output into its Yeet log artifact.
  *
@@ -170,11 +173,15 @@ export const executeStepWithArtifacts = Effect.fn("Yeet.executeStepWithArtifacts
   | Digest.Digest
 > {
   const rawOutputPath = yield* rawOutputPathForStep(context, step);
-  return yield* step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID
-    ? executeHeadInstallPreflight(context, step, O.some(rawOutputPath))
-    : executeRepoPlanStepStreaming(step, O.some(rawOutputPath)).pipe(
-        Effect.mapError(YeetCommandError.new(`Failed to execute ${step.label}.`))
-      );
+  if (step.id === HEAD_INSTALL_PREFLIGHT_STEP_ID) {
+    return yield* executeHeadInstallPreflight(context, step, O.some(rawOutputPath));
+  }
+  // The monitor decodes its pull request context as JSON, so that read takes gh's stdout apart from the
+  // advice gh prints on stderr; every other step streams its merged output live.
+  const execute = step.id === MONITOR_CONTEXT_STEP_ID ? executeRepoPlanStepSplit : executeRepoPlanStepStreaming;
+  return yield* execute(step, O.some(rawOutputPath)).pipe(
+    Effect.mapError(YeetCommandError.new(`Failed to execute ${step.label}.`))
+  );
 });
 
 /**

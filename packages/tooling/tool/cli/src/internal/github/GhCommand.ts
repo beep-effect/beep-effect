@@ -3,9 +3,11 @@
  *
  * {@link ghOutput} is the single "run gh, map a nonzero exit or a truncated
  * capture into a caller-owned error" wrapper that Yeet previously hand-rolled at
- * three call sites. It builds on the wave-1 {@link runRepoCommandCapture} so the
- * spawn, env, and capture-bound semantics stay identical; only the error mapping
- * is a parameter, keeping this module free of any command-group error type.
+ * three call sites. It builds on {@link runRepoCommandCaptureSplit}, which keeps
+ * the repo-run spawn, env, and capture-bound semantics but captures stdout apart
+ * from stderr, so advice gh prints on stderr never reaches a caller's parser;
+ * only the error mapping is a parameter, keeping this module free of any
+ * command-group error type.
  *
  * What is left here has no `@beep/github` member: `gh pr view` / `gh pr checks`
  * read the current branch's pull request and gh's own check buckets, and
@@ -19,14 +21,15 @@
 
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { runRepoCommandCapture } from "../repo-run/index.ts";
+import { runRepoCommandCaptureSplit } from "../repo-run/index.ts";
 
 /**
  * A classified `gh` invocation failure handed to a caller's error mapper.
  *
  * `spawn` carries the underlying spawn failure cause; `nonzero-exit` carries the
- * exit code and captured output; `truncated` reports that captured output
- * overflowed the repo-run capture bound.
+ * exit code and the text of both streams, stdout first, so gh's stderr error
+ * line is kept; `truncated` reports that either stream overflowed the repo-run
+ * capture bound.
  *
  * **Example** (Classify a truncated capture)
  *
@@ -69,6 +72,12 @@ export interface GhOutputOptions<E> {
  * Run `gh` with captured output, returning stdout on success and mapping a spawn
  * failure, nonzero exit, or truncated capture into the caller's error.
  *
+ * **Details**
+ *
+ * The success value is stdout alone: gh may print advice on stderr after a
+ * clean run (2.105.0 does after `gh pr view` under `AI_AGENT` or `CLAUDECODE`),
+ * and that text would otherwise fail the caller's JSON decode.
+ *
  * **Example** (Fetch PR facts with a caller-owned error)
  *
  * ```ts
@@ -84,7 +93,7 @@ export interface GhOutputOptions<E> {
  * ```
  *
  * @param options - Command args, working directory, label, and error mapper.
- * @returns The captured stdout on a clean, non-truncated zero-exit run.
+ * @returns The captured stdout, without stderr, on a clean, non-truncated zero-exit run.
  * @category execution
  * @since 0.0.0
  */
@@ -93,7 +102,7 @@ export const ghOutput = Effect.fn("GhCommand.ghOutput")(function* <E>(options: G
   // owner: owner: `ghOutput` is repo-cli's shared gh-CLI route for KEEP gh reads; each caller records its
   // reason.
   // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: owner, reason above
-  const result = yield* runRepoCommandCapture("gh", options.args, options.cwd).pipe(
+  const result = yield* runRepoCommandCaptureSplit("gh", options.args, options.cwd).pipe(
     Effect.mapError((cause) => options.onFailure({ _tag: "spawn", label: options.label, command, cause }))
   );
   if (result.exitCode !== 0) {

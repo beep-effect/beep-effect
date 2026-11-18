@@ -79,7 +79,7 @@ import {
   githubConclusion,
   githubJobShapeEvidence,
 } from "../../../internal/github/index.ts";
-import { runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { runRepoCommandCaptureSplit } from "../../../internal/repo-run/index.ts";
 import { decideHeavyAdmission, HeavyAdmission, HeavyAdmissionEvent } from "../../Ci/HeavyAdmission.ts";
 import { detectNoLocationTs2589Flake } from "../../Quality/internal/FlakeQuarantine.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -1049,7 +1049,7 @@ const readFailedJobLog = Effect.fn("YeetMonitorLoop.readFailedJobLog")(function*
 > {
   // KEEP (D-15): gh cuts the failing steps out of the run's log archive (`--log-failed`).
   // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-15), reason above
-  const primary = yield* runRepoCommandCapture(
+  const primary = yield* runRepoCommandCaptureSplit(
     "gh",
     ["run", "view", "--job", `${jobDatabaseId}`, "--log-failed"],
     context.repoRoot
