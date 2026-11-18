@@ -127,3 +127,12 @@ ceebcebce7e0ffff8dd377f524e05c9ceafde756:packages/effect/src/Config.ts:generic-a
 # public jwt.io sample token in one intermediate commit; the fixture is redacted at the head.
 e081aea6aef0c979251013960d8d93adba86eb7d:packages/drivers/venice-ai/test/fixtures/swagger.json:jwt:9643
 e081aea6aef0c979251013960d8d93adba86eb7d:packages/drivers/venice-ai/test/fixtures/swagger.json:jwt:9783
+# Gate-output fix 6 cache baseline request: the `previous` map holds the SHA-256 of each
+# re-recorded standards/cache-baseline file, keyed by package name. Digests named after
+# @beep/discord, @beep/freshbooks and other packages match token rules; none is a secret.
+docs/reports/check-probe-cache-baseline-request-2026-11-18.json:freshbooks-access-token:73
+docs/reports/check-probe-cache-baseline-request-2026-11-18.json:discord-api-token:41
+docs/reports/check-probe-cache-baseline-request-2026-11-18.json:generic-api-key:17
+docs/reports/check-probe-cache-baseline-request-2026-11-18.json:generic-api-key:18
+docs/reports/check-probe-cache-baseline-request-2026-11-18.json:generic-api-key:121
+docs/reports/check-probe-cache-baseline-request-2026-11-18.json:generic-api-key:201

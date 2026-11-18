@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/api-docs",
   "review": {
-    "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-    "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-      "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/api-docs#build",
       "command": "bun run beep:build",
-      "commandDigest": "168425e8c3b4d0d37102da6aacf2a6ac2108f4bfc2b7027f54a3cf27c5b6e816",
+      "commandDigest": "584e5e66e4e6ce2e1c01e801060dbe5a9eb1c4041535372e8027977a633fb25c",
       "dependencies": [
         "@beep/codegen-kit#build",
         "@beep/ecfr#build",
@@ -60,8 +60,8 @@
     },
     {
       "computation": "@beep/api-docs#check",
-      "command": "bun run beep:check",
-      "commandDigest": "168425e8c3b4d0d37102da6aacf2a6ac2108f4bfc2b7027f54a3cf27c5b6e816",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "584e5e66e4e6ce2e1c01e801060dbe5a9eb1c4041535372e8027977a633fb25c",
       "dependencies": [
         "@beep/codegen-kit#build",
         "@beep/ecfr#build",
@@ -109,7 +109,7 @@
     {
       "computation": "@beep/api-docs#coverage",
       "command": "bun run beep:coverage",
-      "commandDigest": "168425e8c3b4d0d37102da6aacf2a6ac2108f4bfc2b7027f54a3cf27c5b6e816",
+      "commandDigest": "584e5e66e4e6ce2e1c01e801060dbe5a9eb1c4041535372e8027977a633fb25c",
       "dependencies": [
         "@beep/codegen-kit#build",
         "@beep/ecfr#build",
@@ -167,7 +167,7 @@
     {
       "computation": "@beep/api-docs#dev",
       "command": "portless api-docs.labs.beep sh -c 'bun --watch src/main.ts'",
-      "commandDigest": "168425e8c3b4d0d37102da6aacf2a6ac2108f4bfc2b7027f54a3cf27c5b6e816",
+      "commandDigest": "584e5e66e4e6ce2e1c01e801060dbe5a9eb1c4041535372e8027977a633fb25c",
       "dependencies": [
         "@beep/codegen-kit#build",
         "@beep/ecfr#build",
@@ -205,7 +205,7 @@
     {
       "computation": "@beep/api-docs#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "168425e8c3b4d0d37102da6aacf2a6ac2108f4bfc2b7027f54a3cf27c5b6e816",
+      "commandDigest": "584e5e66e4e6ce2e1c01e801060dbe5a9eb1c4041535372e8027977a633fb25c",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -239,7 +239,7 @@
     {
       "computation": "@beep/api-docs#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "168425e8c3b4d0d37102da6aacf2a6ac2108f4bfc2b7027f54a3cf27c5b6e816",
+      "commandDigest": "584e5e66e4e6ce2e1c01e801060dbe5a9eb1c4041535372e8027977a633fb25c",
       "dependencies": [
         "@beep/codegen-kit#transit",
         "@beep/ecfr#transit",
@@ -312,7 +312,7 @@
     {
       "computation": "@beep/api-docs#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "168425e8c3b4d0d37102da6aacf2a6ac2108f4bfc2b7027f54a3cf27c5b6e816",
+      "commandDigest": "584e5e66e4e6ce2e1c01e801060dbe5a9eb1c4041535372e8027977a633fb25c",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -342,7 +342,7 @@
     {
       "computation": "@beep/api-docs#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "168425e8c3b4d0d37102da6aacf2a6ac2108f4bfc2b7027f54a3cf27c5b6e816",
+      "commandDigest": "584e5e66e4e6ce2e1c01e801060dbe5a9eb1c4041535372e8027977a633fb25c",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -388,7 +388,7 @@
     {
       "computation": "@beep/api-docs#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "168425e8c3b4d0d37102da6aacf2a6ac2108f4bfc2b7027f54a3cf27c5b6e816",
+      "commandDigest": "584e5e66e4e6ce2e1c01e801060dbe5a9eb1c4041535372e8027977a633fb25c",
       "dependencies": [
         "@beep/codegen-kit#transit",
         "@beep/ecfr#transit",
@@ -439,7 +439,7 @@
     {
       "computation": "@beep/api-docs#test",
       "command": "bun run beep:test",
-      "commandDigest": "168425e8c3b4d0d37102da6aacf2a6ac2108f4bfc2b7027f54a3cf27c5b6e816",
+      "commandDigest": "584e5e66e4e6ce2e1c01e801060dbe5a9eb1c4041535372e8027977a633fb25c",
       "dependencies": [
         "@beep/codegen-kit#transit",
         "@beep/ecfr#transit",

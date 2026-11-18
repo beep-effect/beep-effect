@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/epistemic-server",
   "review": {
-    "reviewer": "Claude Opus 5.5 (declaration-only-builds PR 3, check once)",
-    "reason": "Record the configuration drift of check once: the root turbo.json check task depends on the package's own build as well as ^build, and bun run beep lint package-scripts --write rewrote 180 declaration-only scripts blocks so beep:check leads with tsrs -p tsconfig.json --emitDeclarationOnly instead of tsrs -p tsconfig.check.json (first-segment flags such as @beep/repo-cli's --checkerCostCache carried over), re-keying the command digest of every task of the written packages, cached or not. The 19 packages whose build is not declaration-only keep their previous check graph through an explicit tasks.check.dependsOn [\"^build\"] in their own turbo.json. Task commands, cache flags, inputs, outputs and environment are unchanged; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-once-cache-review-2026-11-13.md",
-      "sha256": "3c9c0c16b9aff33114a2733091c6ea5e9831fbd7b5fc27fee96432d6bdfa3cc3"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/epistemic-server#build",
       "command": "bun run beep:build",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [
         "@beep/epistemic-domain#build",
         "@beep/epistemic-tables#build",
@@ -81,8 +81,8 @@
     },
     {
       "computation": "@beep/epistemic-server#check",
-      "command": "bun run beep:check",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [
         "@beep/epistemic-domain#build",
         "@beep/epistemic-server#build",
@@ -140,7 +140,7 @@
     {
       "computation": "@beep/epistemic-server#coverage",
       "command": "bunx vitest run --coverage test/*.test.ts test/integration/ContradictionTriage.pglite.test.ts",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [
         "@beep/epistemic-domain#build",
         "@beep/epistemic-tables#build",
@@ -206,7 +206,7 @@
     {
       "computation": "@beep/epistemic-server#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [
         "@beep/epistemic-server#transit",
         "@beep/repo-docgen#transit"
@@ -246,7 +246,7 @@
     {
       "computation": "@beep/epistemic-server#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -280,7 +280,7 @@
     {
       "computation": "@beep/epistemic-server#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [
         "@beep/epistemic-domain#transit",
         "@beep/epistemic-tables#transit",
@@ -361,7 +361,7 @@
     {
       "computation": "@beep/epistemic-server#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -391,7 +391,7 @@
     {
       "computation": "@beep/epistemic-server#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -447,7 +447,7 @@
     {
       "computation": "@beep/epistemic-server#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -493,7 +493,7 @@
     {
       "computation": "@beep/epistemic-server#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [
         "@beep/epistemic-domain#transit",
         "@beep/epistemic-tables#transit",
@@ -552,7 +552,7 @@
     {
       "computation": "@beep/epistemic-server#test",
       "command": "bun run beep:test",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [
         "@beep/epistemic-domain#transit",
         "@beep/epistemic-tables#transit",
@@ -619,7 +619,7 @@
     {
       "computation": "@beep/epistemic-server#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [
         "@beep/epistemic-domain#build",
         "@beep/epistemic-tables#build",
@@ -675,7 +675,7 @@
     {
       "computation": "@beep/epistemic-server#test:integration:parallel",
       "command": "bun run beep:test:integration",
-      "commandDigest": "5f893bbb58470244a18966d82be6882c8f11afd0112a44654aa1bd44d2e55898",
+      "commandDigest": "aad487e09151fbbfc5dcf8cc65274500fbb49d1712428a8f254c236ed93906b1",
       "dependencies": [
         "@beep/epistemic-domain#build",
         "@beep/epistemic-tables#build",

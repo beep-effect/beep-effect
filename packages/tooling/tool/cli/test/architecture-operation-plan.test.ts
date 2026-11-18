@@ -699,7 +699,7 @@ describe("architecture operation plan", () => {
           "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/**",
           "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
           build: "bun run beep:build",
-          check: "bun run beep:check",
+          check: "beep-cli quality check-probe && bun run beep:check",
           coverage: "bunx vitest run --coverage --exclude=test/integration/**",
           docgen: "bun run beep:docgen",
           lint: "bun run beep:lint",

@@ -35,6 +35,7 @@ import {
   PackageKind,
   PackageScriptsReport,
   RetiredScriptName,
+  renderTaskScriptBinding,
   retiredImplScripts,
   ScriptsBlock,
   scriptsBlockFromRecord,
@@ -199,8 +200,6 @@ const ruleEnabled = (rule: TaskScriptRule, actual: ScriptsBlock, evidence: Deriv
     Match.exhaustive
   );
 
-const bindingText = (binding: Exclude<TaskScriptRule["binding"], { readonly _tag: "owned" }>) =>
-  binding._tag === "cli" ? binding.command : `bun run ${binding.ifPresent ? "--if-present " : ""}${binding.impl}`;
 const missingOwnedTask = (actual: ScriptsBlock, rule: TaskScriptRule) =>
   rule.presence._tag === "required" && rule.binding._tag === "owned" && !HashMap.has(actual.tasks, rule.name);
 
@@ -215,7 +214,7 @@ const expectedBlock: PackageScriptsPolicyShape["expected"] = (kind, actual, evid
       continue;
     }
     if (rule.binding._tag === "owned") continue;
-    const value = bindingText(rule.binding);
+    const value = renderTaskScriptBinding(rule.binding);
     tasks = HashMap.set(tasks, rule.name, value);
     impls = seedImplementation(kind, actual, impls, rule, value);
   }

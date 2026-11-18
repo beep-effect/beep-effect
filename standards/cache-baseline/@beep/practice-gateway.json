@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/practice-gateway",
   "review": {
-    "reviewer": "Claude Opus 5.5 (declaration-only-builds PR 3, check once)",
-    "reason": "Record the configuration drift of check once: the root turbo.json check task depends on the package's own build as well as ^build, and bun run beep lint package-scripts --write rewrote 180 declaration-only scripts blocks so beep:check leads with tsrs -p tsconfig.json --emitDeclarationOnly instead of tsrs -p tsconfig.check.json (first-segment flags such as @beep/repo-cli's --checkerCostCache carried over), re-keying the command digest of every task of the written packages, cached or not. The 19 packages whose build is not declaration-only keep their previous check graph through an explicit tasks.check.dependsOn [\"^build\"] in their own turbo.json. Task commands, cache flags, inputs, outputs and environment are unchanged; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-once-cache-review-2026-11-13.md",
-      "sha256": "3c9c0c16b9aff33114a2733091c6ea5e9831fbd7b5fc27fee96432d6bdfa3cc3"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/practice-gateway#build",
       "command": "bun run beep:build",
-      "commandDigest": "7eed70b7ff6a44fdb2e2ba218ef779864029658fb6124575bca90f261903dd93",
+      "commandDigest": "3e3bde07ecb432d32921c79d8c97e0e164fdd9ca9378598862eb7bf70b50dc76",
       "dependencies": [
         "@beep/doc-text#build",
         "@beep/duckdb#build",
@@ -81,8 +81,8 @@
     },
     {
       "computation": "@beep/practice-gateway#check",
-      "command": "bun run beep:check",
-      "commandDigest": "7eed70b7ff6a44fdb2e2ba218ef779864029658fb6124575bca90f261903dd93",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "3e3bde07ecb432d32921c79d8c97e0e164fdd9ca9378598862eb7bf70b50dc76",
       "dependencies": [
         "@beep/doc-text#build",
         "@beep/duckdb#build",
@@ -140,7 +140,7 @@
     {
       "computation": "@beep/practice-gateway#coverage",
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "7eed70b7ff6a44fdb2e2ba218ef779864029658fb6124575bca90f261903dd93",
+      "commandDigest": "3e3bde07ecb432d32921c79d8c97e0e164fdd9ca9378598862eb7bf70b50dc76",
       "dependencies": [
         "@beep/doc-text#build",
         "@beep/duckdb#build",
@@ -206,7 +206,7 @@
     {
       "computation": "@beep/practice-gateway#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "7eed70b7ff6a44fdb2e2ba218ef779864029658fb6124575bca90f261903dd93",
+      "commandDigest": "3e3bde07ecb432d32921c79d8c97e0e164fdd9ca9378598862eb7bf70b50dc76",
       "dependencies": [
         "@beep/practice-gateway#transit",
         "@beep/repo-docgen#transit"
@@ -246,7 +246,7 @@
     {
       "computation": "@beep/practice-gateway#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "7eed70b7ff6a44fdb2e2ba218ef779864029658fb6124575bca90f261903dd93",
+      "commandDigest": "3e3bde07ecb432d32921c79d8c97e0e164fdd9ca9378598862eb7bf70b50dc76",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -280,7 +280,7 @@
     {
       "computation": "@beep/practice-gateway#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "7eed70b7ff6a44fdb2e2ba218ef779864029658fb6124575bca90f261903dd93",
+      "commandDigest": "3e3bde07ecb432d32921c79d8c97e0e164fdd9ca9378598862eb7bf70b50dc76",
       "dependencies": [
         "@beep/doc-text#transit",
         "@beep/duckdb#transit",
@@ -361,7 +361,7 @@
     {
       "computation": "@beep/practice-gateway#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "7eed70b7ff6a44fdb2e2ba218ef779864029658fb6124575bca90f261903dd93",
+      "commandDigest": "3e3bde07ecb432d32921c79d8c97e0e164fdd9ca9378598862eb7bf70b50dc76",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -391,7 +391,7 @@
     {
       "computation": "@beep/practice-gateway#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "7eed70b7ff6a44fdb2e2ba218ef779864029658fb6124575bca90f261903dd93",
+      "commandDigest": "3e3bde07ecb432d32921c79d8c97e0e164fdd9ca9378598862eb7bf70b50dc76",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -447,7 +447,7 @@
     {
       "computation": "@beep/practice-gateway#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "7eed70b7ff6a44fdb2e2ba218ef779864029658fb6124575bca90f261903dd93",
+      "commandDigest": "3e3bde07ecb432d32921c79d8c97e0e164fdd9ca9378598862eb7bf70b50dc76",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -493,7 +493,7 @@
     {
       "computation": "@beep/practice-gateway#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "7eed70b7ff6a44fdb2e2ba218ef779864029658fb6124575bca90f261903dd93",
+      "commandDigest": "3e3bde07ecb432d32921c79d8c97e0e164fdd9ca9378598862eb7bf70b50dc76",
       "dependencies": [
         "@beep/doc-text#transit",
         "@beep/duckdb#transit",
@@ -552,7 +552,7 @@
     {
       "computation": "@beep/practice-gateway#test",
       "command": "bun run beep:test",
-      "commandDigest": "7eed70b7ff6a44fdb2e2ba218ef779864029658fb6124575bca90f261903dd93",
+      "commandDigest": "3e3bde07ecb432d32921c79d8c97e0e164fdd9ca9378598862eb7bf70b50dc76",
       "dependencies": [
         "@beep/doc-text#transit",
         "@beep/duckdb#transit",
