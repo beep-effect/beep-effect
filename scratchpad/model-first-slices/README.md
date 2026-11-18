@@ -240,8 +240,10 @@ adapted to those rules with upstream's routes, case names and assertions unchang
 `shared/tooling/test/Compiler.guard.test.ts` guards the wiring with three checks:
 
 - **Version.** The installed compiler matches the monorepo's pins, and `--version` names the Effect build.
-- **Canary.** `shared/tooling/canary` fails under the Effect build with one Effect-only finding, and passes
-  under stock `tsrs`.
+- **Canary.** A project with one Effect-only finding fails under the Effect build and passes under stock
+  `tsrs`. The guard test writes it into a git-ignored folder for the length of the test, so no file with
+  a deliberate finding sits in the tree.
+- **Coverage.** Every `.ts` and `.tsx` file in the prototype belongs to a project `bun run check` compiles.
 - **One directive.** The only inline diagnostics directive in the prototype is the generated front's
   `strictEffectProvide:off`, on its deploy-time `Effect.provide(Database)`: an Alchemy class entry point.
   `scripts/entries.ts` emits it with its reason, owner and exit.
@@ -375,4 +377,4 @@ Teardown, always: `(cd apps/practice && bun run destroy)`, check that no `practi
 service, container, network, volume or image remains, remove the image the deploy pulled by digest
 (`postgres:17-alpine@sha256:…`, when the node already had another `postgres:17-alpine`),
 `docker swarm leave --force`, remove `docker_gwbridge`, and delete `apps/practice/.alchemy/`.
-Builds add to Docker's build cache, which this procedure does not prune. `probes/` holds the earlier probes against the pre-rework layout; their paths are stale.
+Builds add to Docker's build cache, which this procedure does not prune. `probes/` holds the earlier probes against the pre-rework layout as text records beside their outputs; they are not compiled.

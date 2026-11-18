@@ -4,6 +4,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import type { PlatformError } from "effect/PlatformError";
@@ -25,6 +26,15 @@ const Manifest = S.Struct({
   workspaces: S.String.pipe(S.Array, S.OptionFromOptionalKey),
 });
 const decodeManifest = S.decodeEffect(S.fromJsonString(Manifest));
+
+/**
+ * The compiler canary: an Effect built and never run. Plain TypeScript accepts it; the Effect build
+ * reports `floatingEffect`, at error severity in the monorepo's rule map.
+ */
+const canarySource = 'import * as Effect from "effect/Effect";\n\nEffect.log("built, never run");\n';
+
+/** The canary's project, four folders below the prototype root (`shared/tooling/tmp/canary-*`). */
+const canaryTsconfig = '{ "extends": "../../../../tsconfig.base.json", "include": [], "files": ["Canary.ts"] }\n';
 
 /** Where the prototype and the monorepo sit, and how to read a manifest. */
 const layout = Effect.gen(function* () {
@@ -102,6 +112,55 @@ it.layer(NodeServices.layer)((it) => {
     }),
   );
 
+  it.effect(
+    "every TypeScript file in the prototype belongs to a checked project",
+    () =>
+      Effect.gen(function* () {
+        const { fs, path, prototype, manifest } = yield* layout;
+        const root = yield* manifest(path.join(prototype, "package.json"));
+        const check = O.getOrThrow(O.flatMap(root.scripts, (scripts) => O.fromNullishOr(scripts["check"])));
+        const projects = A.getSomes(
+          A.map(pipe(check, Str.split(" && ")), (segment) =>
+            O.fromNullishOr(/^effect-tsgo tsrs -p (\S+)$/.exec(segment)?.[1]),
+          ),
+        );
+        // What each checked project compiles, as paths from the prototype root.
+        const listed = yield* Effect.forEach(
+          projects,
+          (project) => effectTsrs(prototype, ["-p", project, "--listFilesOnly"]),
+          { concurrency: 1 },
+        );
+        const covered = HashSet.fromIterable(
+          A.flatMap(listed, ({ output }) =>
+            A.filter(
+              A.map(pipe(output, Str.split("\n")), (file) => path.relative(prototype, Str.trim(file))),
+              (file) => !Str.startsWith("..")(file),
+            ),
+          ),
+        );
+        // Every source file on disk, leaving out what is installed, generated for a run, or built.
+        const skipped = ["node_modules", "tmp", "dist", ".alchemy", "coverage"];
+        const names = yield* fs.readDirectory(prototype);
+        const roots = A.filter(names, (name) => !A.contains(skipped, name));
+        const walked = yield* Effect.forEach(
+          roots,
+          (name) =>
+            Effect.map(
+              Effect.orElseSucceed(fs.readDirectory(path.join(prototype, name), { recursive: true }), () => []),
+              (nested) => A.map(nested, (file) => path.join(name, file)),
+            ),
+          { concurrency: 1 },
+        );
+        const sources = A.filter([...roots, ...A.flatten(walked)], (file) => {
+          const segments = pipe(file, Str.split(path.sep));
+          return /\.tsx?$/.test(file) && !A.some(segments, (segment) => A.contains(skipped, segment));
+        });
+        expect(sources.length).toBeGreaterThan(0);
+        expect(A.filter(sources, (file) => !HashSet.has(covered, file))).toEqual([]);
+      }),
+    60_000,
+  );
+
   it.effect("the compiler is the Effect build of tsrs at the monorepo's pins", () =>
     Effect.gen(function* () {
       const { path, prototype, monorepo, manifest } = yield* layout;
@@ -123,15 +182,24 @@ it.layer(NodeServices.layer)((it) => {
   );
 
   it.effect("the canary: an Effect-only finding fails the check, with no unknown-rule warning", () =>
-    Effect.gen(function* () {
-      const { prototype } = yield* layout;
-      const { exit, output } = yield* effectTsrs(prototype, ["-p", "shared/tooling/canary", "--pretty", "false"]);
-      expect(exit).not.toBe(0);
-      const diagnostics = A.filter(pipe(output, Str.split("\n")), Str.includes(": error TS"));
-      expect(diagnostics).toHaveLength(1);
-      expect(diagnostics[0]).toContain("effect(floatingEffect)");
-      expect(output).not.toContain("TS377134");
-    }),
+    Effect.scoped(
+      Effect.gen(function* () {
+        const { fs, path, prototype } = yield* layout;
+        // The canary is written for the length of this test, into a git-ignored folder, so no file
+        // with a deliberate finding sits in the tree for an editor to report.
+        const parent = path.join(prototype, "shared/tooling/tmp");
+        yield* fs.makeDirectory(parent, { recursive: true });
+        const dir = yield* fs.makeTempDirectoryScoped({ directory: parent, prefix: "canary-" });
+        yield* fs.writeFileString(path.join(dir, "Canary.ts"), canarySource);
+        yield* fs.writeFileString(path.join(dir, "tsconfig.json"), canaryTsconfig);
+        const { exit, output } = yield* effectTsrs(prototype, ["-p", path.relative(prototype, dir), "--pretty", "false"]);
+        expect(exit).not.toBe(0);
+        const diagnostics = A.filter(pipe(output, Str.split("\n")), Str.includes(": error TS"));
+        expect(diagnostics).toHaveLength(1);
+        expect(diagnostics[0]).toContain("effect(floatingEffect)");
+        expect(output).not.toContain("TS377134");
+      }),
+    ),
   );
 
   it.effect("one inline diagnostics directive in the whole prototype: the generated front's deploy-time entry point", () =>
