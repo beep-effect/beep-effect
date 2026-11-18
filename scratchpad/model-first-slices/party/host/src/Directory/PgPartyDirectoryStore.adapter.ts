@@ -17,6 +17,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import type * as SqlClient from "effect/sql/SqlClient";
 import * as Str from "effect/String";
+import { flow } from "effect"
 
 const schema = (sql: SqlClient.SqlClient) =>
   Effect.all(
@@ -98,7 +99,7 @@ export const PgPartyDirectoryStore = Layer.effect(
       checkpoints: Effect.fn("PgPartyDirectoryStore.checkpoints")((generation: number) =>
         withSql((sql) => sql<{ readonly stream: string; readonly seq: number }>`
           SELECT stream, seq FROM party_directory_positions WHERE generation = ${generation}`.pipe(
-          Effect.map((rows) => HashMap.fromIterable(A.map(rows, (row) => [row.stream, row.seq] as const))),
+          Effect.map(flow(A.map( (row) => [row.stream, row.seq] as const), HashMap.fromIterable)),
           Effect.orDie,
         )),
       ),
