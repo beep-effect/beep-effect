@@ -131,27 +131,20 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
           ["packages/b/coverage/unit-results.json", "0", "passed", 1],
         ]
       );
-      const a = projection.packages[0];
-      assertSome(O.fromUndefinedOr(a?.expectedTestFiles).pipe(O.flatten), 2);
-      strictEqual(a?.wallMs, 400);
-      strictEqual(a?.fileMs, 500);
+      const a = yield* Effect.fromOption(A.head(projection.packages));
+      assertSome(a.expectedTestFiles, 2);
+      strictEqual(a.wallMs, 400);
+      strictEqual(a.fileMs, 500);
       deepStrictEqual(
-        A.map(a?.files ?? [], (file) => [file.path, file.durationMs, file.tests]),
+        A.map(a.files, (file) => [file.path, file.durationMs, file.tests]),
         [
           ["packages/a/test/one.test.ts", 200, 3],
           ["packages/a/test/two.test.ts", 300, 2],
         ]
       );
-      const [push] = unitTimingCensus([projection]);
+      const push = yield* Effect.fromOption(A.head(unitTimingCensus([projection])));
       deepStrictEqual(
-        [
-          push?.event,
-          push?.packages,
-          push?.executedTestFiles,
-          push?.expectedTestFiles,
-          push?.unmatched,
-          push?.unsealed,
-        ],
+        [push.event, push.packages, push.executedTestFiles, push.expectedTestFiles, push.unmatched, push.unsealed],
         ["push", 3, 4, 4, [], []]
       );
     })
@@ -177,10 +170,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
           ["@beep/b", "unreadable", 0],
         ]
       );
-      assertNone(projection.packages[0]?.expectedTestFiles ?? O.some(0));
-      const [pr] = unitTimingCensus([projection]);
+      const first = yield* Effect.fromOption(A.head(projection.packages));
+      assertNone(first.expectedTestFiles);
+      const pr = yield* Effect.fromOption(A.head(unitTimingCensus([projection])));
       deepStrictEqual(
-        [pr?.event, pr?.executedTestFiles, pr?.unmatched, pr?.unsealed],
+        [pr.event, pr.executedTestFiles, pr.unmatched, pr.unsealed],
         ["pull_request", 1, [], ["7:1:@beep/a:0", "7:1:@beep/b:0"]]
       );
     })
@@ -198,8 +192,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
         A.map(projection.packages, (row) => [row.packageName, row.outcome, row.executedTestFiles]),
         [["@beep/a", "missing", 0]]
       );
-      const [push] = unitTimingCensus([projection]);
-      deepStrictEqual([push?.expectedTestFiles, push?.unmatched], [1, ["7:1:@beep/a:0"]]);
+      const push = yield* Effect.fromOption(A.head(unitTimingCensus([projection])));
+      deepStrictEqual([push.expectedTestFiles, push.unmatched], [1, ["7:1:@beep/a:0"]]);
     })
   );
 
