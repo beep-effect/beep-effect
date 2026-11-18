@@ -2,6 +2,7 @@ import * as NodeURL from "node:url";
 import { doctestFenceInfo, doctestSourceMarker, isDoctestSourcePath } from "@beep/repo-cli/test/Docgen";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { workspaceManifests } from "@beep/repo-cli/test/SharedInternals";
+import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { FsUtils, FsUtilsLive, findRepoRoot, readPackageJsonFile, toSortedRecord } from "@beep/repo-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
@@ -18,23 +19,25 @@ import * as Str from "effect/String";
 // vitest 5: `resolveConfig` returns Vite's ResolvedConfig; the `test` key is a module augmentation from "vitest/config".
 import "vitest/config";
 import { resolveConfig } from "vitest/node";
+import { currentCheckoutInventory, skipUnlessCheckoutHolds } from "./support/CheckoutSkip.ts";
 
 const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const fixture = NodeURL.fileURLToPath(new URL("./fixtures/doctest-lane/package/", import.meta.url));
 
-// These configs override test.include (coverage.include is a different selector).
+// These packages' configs override test.include (coverage.include is a different selector). Each is
+// read from wherever the workspace lives; a checkout that does not hold one skips it.
 const includeOverrides = [
-  "apps/todox",
-  "apps/professional-desktop",
-  "apps/practice-kg-mcp",
-  "apps/oip-web",
-  "apps/labs/trustgraph-workbench",
-  "apps/labs/semantica",
-  "apps/labs/lejeune-bolt-workbench",
-  "apps/labs/ciops",
-  "apps/labs/api-docs",
-  "packages/drivers/duckdb",
-  "infra",
+  "@beep/todox",
+  "@beep/professional-desktop",
+  "@beep/practice-kg-mcp",
+  "@beep/oip-web",
+  "@beep/trustgraph-workbench",
+  "@beep/semantica",
+  "@beep/lejeune-bolt-workbench",
+  "@beep/ciops",
+  "@beep/api-docs",
+  "@beep/duckdb",
+  "@beep/infra",
 ];
 
 const ResolvedDoctestConfig = S.Struct({
@@ -229,25 +232,27 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("doctest l
     })
   );
 
-  it.effect(
-    "keeps ordinary includes and suppresses every inheriting override in doctest mode",
-    Effect.fnUntraced(function* () {
-      const root = yield* findRepoRoot();
-      for (const active of [false, true]) {
-        yield* Effect.forEach(
-          includeOverrides,
-          Effect.fnUntraced(function* (dir) {
-            const config = yield* resolvedConfig(`${root}/${dir}`, active);
-            expect(config.include.length === 0, `${dir}: mode=${active}`).toBe(active);
-            expect(config.passWithNoTests, dir).toBe(!active);
-            expect(config.includeSource, dir).toEqual(active ? ["src/**/*.{ts,tsx}"] : []);
-          }),
-          { concurrency: 1 }
-        );
-      }
-    }),
-    { timeout: 120_000 }
-  );
+  for (const name of includeOverrides) {
+    it.effect(
+      `keeps ordinary includes and suppresses the inheriting override of ${name} in doctest mode`,
+      (ctx) =>
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const inventory = yield* currentCheckoutInventory;
+          skipUnlessCheckoutHolds(ctx, inventory, [workspaceSubject(name)]);
+          const root = yield* findRepoRoot();
+          const relative = yield* Effect.fromOption(HashMap.get(inventory.workspaces, name));
+          const directory = path.join(root, relative);
+          for (const active of [false, true]) {
+            const config = yield* resolvedConfig(directory, active);
+            expect(config.include.length === 0, `${name}: mode=${active}`).toBe(active);
+            expect(config.passWithNoTests, name).toBe(!active);
+            expect(config.includeSource, name).toEqual(active ? ["src/**/*.{ts,tsx}"] : []);
+          }
+        }),
+      { timeout: 120_000 }
+    );
+  }
 
   it.effect(
     "runs the package script through the shared doctest mode",

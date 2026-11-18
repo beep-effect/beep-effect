@@ -19,6 +19,7 @@ import {
   VitestShardPlan,
   worstCaseRunTimings,
 } from "@beep/repo-cli/commands/Ci";
+import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { NodeCrypto, NodePath } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
@@ -34,6 +35,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { CurrentCheckout, CurrentCheckoutLive, skipUnlessCheckoutHolds } from "./support/CheckoutSkip.ts";
 
 const esc = "\u001b";
 
@@ -165,30 +167,37 @@ const CommittedCheckout = Layer.mergeAll(
   })
 );
 
-it.layer(CommittedCheckout, { timeout: "30 seconds" })("committed partition plans", (it) => {
-  it.effect("keep every Test Unit partition within budget and every sharded weight equal to its plan", () =>
-    Effect.gen(function* () {
-      const report = yield* checkCiPartitions("/repo");
-      const testUnit = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "test-unit");
-      deepStrictEqual(
-        A.map(report.rows, (row) => row.partitionId),
-        A.map(testUnit, (partition) => partition.id)
-      );
-      deepStrictEqual(
-        A.filter(report.rows, (row) => row.status !== "within"),
-        []
-      );
-      // Plan files that no longer exist are advisory, never a failure: the plan is refreshed from a
-      // later green run once the deletion has landed.
-      expect(A.every(report.warnings, (warning) => Str.includes("no longer in")(warning))).toBe(true);
-      // The checkout lists this suite itself, which the repo-cli plan schedules.
-      expect(A.some(report.warnings, Str.includes("test/ci-partitions.test.ts"))).toBe(false);
-      const rendered = renderCiPartitionReport(report);
-      expect(rendered[0]).toContain("partition");
-      strictEqual(A.length(rendered), 1 + A.length(report.rows) + A.length(report.warnings));
-    })
-  );
-});
+it.layer(Layer.merge(CommittedCheckout, CurrentCheckoutLive), { timeout: "30 seconds" })(
+  "committed partition plans",
+  (it) => {
+    it.effect("keep every Test Unit partition within budget and every sharded weight equal to its plan", (ctx) =>
+      Effect.gen(function* () {
+        // The law-practice plan is that package's file; a checkout without the package has no committed
+        // plan to judge, so the check skips. CurrentCheckout reads the real checkout, not the in-memory one.
+        const inventory = yield* CurrentCheckout;
+        skipUnlessCheckoutHolds(ctx, inventory, [workspaceSubject("@beep/law-practice-server")]);
+        const report = yield* checkCiPartitions("/repo");
+        const testUnit = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "test-unit");
+        deepStrictEqual(
+          A.map(report.rows, (row) => row.partitionId),
+          A.map(testUnit, (partition) => partition.id)
+        );
+        deepStrictEqual(
+          A.filter(report.rows, (row) => row.status !== "within"),
+          []
+        );
+        // Plan files that no longer exist are advisory, never a failure: the plan is refreshed from a
+        // later green run once the deletion has landed.
+        expect(A.every(report.warnings, (warning) => Str.includes("no longer in")(warning))).toBe(true);
+        // The checkout lists this suite itself, which the repo-cli plan schedules.
+        expect(A.some(report.warnings, Str.includes("test/ci-partitions.test.ts"))).toBe(false);
+        const rendered = renderCiPartitionReport(report);
+        expect(rendered[0]).toContain("partition");
+        strictEqual(A.length(rendered), 1 + A.length(report.rows) + A.length(report.warnings));
+      })
+    );
+  }
+);
 
 describe("partition table shape", () => {
   it("covers every sharded partition id of the table exactly once", () => {

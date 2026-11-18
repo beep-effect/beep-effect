@@ -3,6 +3,7 @@ import { lintCommand } from "@beep/repo-cli/commands/Lint";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { localQualityConcurrencyPlan, rootLintPolicyStepsForTesting } from "@beep/repo-cli/test/Quality";
 import { readTurboCacheEnvironment } from "@beep/repo-cli/test/SharedInternals";
+import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -18,6 +19,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -25,6 +27,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { vi } from "vitest";
+import { currentCheckoutInventory, skipUnlessCheckoutHolds } from "./support/CheckoutSkip.ts";
 import { fixturePackageFiles, policyCliFixtureFiles, writeFixtureFiles } from "./support/PolicyCliFixture.ts";
 import type {
   canUseTurboCacheSecretSession,
@@ -865,17 +868,22 @@ describe("executed lint workers", { concurrent: false }, () => {
   it.layer(platform, { timeout: "30 seconds" })((it) => {
     it.effect(
       "executes deprecated APIs on the ciops lab package",
-      Effect.fnUntraced(function* () {
-        const root = yield* findRepoRoot();
-        const result = yield* StepExec.runCaptured({
-          command: "bun",
-          args: ["run", `${root}/${prefix}/src/bin.ts`, "--", "lint", "deprecated-apis", "--package", "."],
-          cwd: `${root}/apps/labs/ciops`,
-          env: R.filter(process.env, (_, key) => !Str.startsWith("VITEST")(key)),
-          extendEnv: false,
-        });
-        expect(result.exitCode, result.output).toBe(0);
-      }),
+      (ctx) =>
+        Effect.gen(function* () {
+          // The lab package is found by name; a checkout without @beep/ciops skips.
+          const inventory = yield* currentCheckoutInventory;
+          skipUnlessCheckoutHolds(ctx, inventory, [workspaceSubject("@beep/ciops")]);
+          const ciops = yield* Effect.fromOption(HashMap.get(inventory.workspaces, "@beep/ciops"));
+          const root = yield* findRepoRoot();
+          const result = yield* StepExec.runCaptured({
+            command: "bun",
+            args: ["run", `${root}/${prefix}/src/bin.ts`, "--", "lint", "deprecated-apis", "--package", "."],
+            cwd: `${root}/${ciops}`,
+            env: R.filter(process.env, (_, key) => !Str.startsWith("VITEST")(key)),
+            extendEnv: false,
+          });
+          expect(result.exitCode, result.output).toBe(0);
+        }),
       EXECUTED_WORKER_TIMEOUT_MILLIS
     );
   });

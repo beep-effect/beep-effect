@@ -2066,6 +2066,7 @@
         "packages/tooling/library/ai-sync/package.json",
         "packages/tooling/library/ai-sync/src/Skills.schemas.ts",
         "packages/tooling/library/ai-sync/src/SkillsLock.schemas.ts",
+        "packages/tooling/library/repo-cli-kit/src/CheckoutSubject.ts",
         "packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
         "packages/tooling/library/repo-cli-kit/src/artifacts/ArtifactIo.ts",
         "packages/tooling/library/repo-cli-kit/src/artifacts/GeneratedFileDrift.ts",

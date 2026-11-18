@@ -516,6 +516,13 @@ export class PrivateHomePathsOptions extends S.Opaque<PrivateHomePathsOptions, {
 /**
  * Result of one private home path law run.
  *
+ * **Details**
+ *
+ * `skippedExemptions` lists the exemption files the run did not check because
+ * the checkout does not hold their packet (a fork or trimmed lane that removed
+ * it). An exemption whose packet is present but whose file is gone is a stale
+ * row and stays a finding.
+ *
  * **Example** (Construct a clean summary)
  *
  * ```ts
@@ -541,6 +548,7 @@ export class PrivateHomePathsSummary extends S.Opaque<PrivateHomePathsSummary, {
     exemptFiles: S.Int,
     strictFailure: S.Boolean,
     findings: ArrayKeyDefaultEmpty(PrivateHomePathFinding),
+    skippedExemptions: ArrayKeyDefaultEmpty(S.String),
   }).pipe(
     $I.annoteSchema("PrivateHomePathsSummary", {
       description: "Result of one private home path law run over the git-tracked text files.",

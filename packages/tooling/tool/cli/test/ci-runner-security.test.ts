@@ -7,6 +7,7 @@ import {
   workflowJobContexts,
   workflowPolicyDiagnostics,
 } from "@beep/repo-cli/commands/Ci";
+import { packetSubjectOf } from "@beep/repo-cli-kit/CheckoutSubject";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
@@ -28,6 +29,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { currentCheckoutInventory, skipUnlessCheckoutHolds } from "./support/CheckoutSkip.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 import type { CiRelevanceLane } from "@beep/repo-cli/commands/Ci";
 
@@ -97,6 +99,8 @@ const WorkflowJobs = S.Record(
   })
 );
 type WorkflowJobs = typeof WorkflowJobs.Type;
+// The retired burst launcher record, read from the speed-loop packet.
+const RUNNER_BURST = "goals/speed-loop/ops/runner-burst";
 const decodeWorkflowSteps = S.decodeUnknownEffect(S.Array(WorkflowStep));
 const decodeWorkflowJobs = S.decodeUnknownEffect(WorkflowJobs);
 const decodeInspectionPolicy = S.decodeUnknownEffect(
@@ -1676,13 +1680,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
 
-  it.effect(
-    "keeps the legacy non-ephemeral burst launcher retired",
-    Effect.fnUntraced(function* () {
+  it.effect("keeps the legacy non-ephemeral burst launcher retired", (ctx) =>
+    Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+      // The launcher record lives in the speed-loop packet; a checkout without that packet skips.
+      const inventory = yield* currentCheckoutInventory;
+      skipUnlessCheckoutHolds(ctx, inventory, A.fromOption(packetSubjectOf(RUNNER_BURST)));
       const repoRoot = yield* findRepoRoot();
-      const burstRoot = path.join(repoRoot, "goals/speed-loop/ops/runner-burst");
+      const burstRoot = path.join(repoRoot, RUNNER_BURST);
       const readDirectory15 = yield* fs.readDirectory(burstRoot);
       const entries = A.sort(readDirectory15, Order.String);
       const readme = yield* fs.readFileString(path.join(burstRoot, "README.md"));

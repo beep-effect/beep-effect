@@ -2,19 +2,30 @@ import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { Git } from "@beep/git/Git";
 import { GlobSet } from "@beep/glob";
 import {
+  CiGoalDataConsumer,
   CiGoalDocument,
   ciBinaryCommand,
   ciGoalDataConsumers,
   ciOperationalPatterns,
   isHeavyDocsOnlyPath,
 } from "@beep/repo-cli/commands/Ci";
+import {
+  absentCheckoutSubjects,
+  CheckoutInventory,
+  checkoutWorkspaceOf,
+  loadCheckoutInventory,
+  packetRootsOf,
+  packetSubjectOf,
+  workspaceSubject,
+} from "@beep/repo-cli-kit/CheckoutSubject";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
-import { expect } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -28,7 +39,9 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { skipWhenAbsent } from "./support/CheckoutSkip.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
+import type { CheckoutSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 
 // ROUT-03 (goals/route-soundness-repair): the packet-data consumer census. It regenerates, from
 // the tracked tree, every goals/ and explorations/ path a test reads, spawns or imports, or a
@@ -78,11 +91,13 @@ const CLASSIFIER_TABLES: ReadonlyArray<string> = [
   "packages/tooling/tool/cli/test/goal-data-consumer-census.test.ts",
 ];
 
-// Census entries a scan finds that are not code-route reads, each with the reason.
+// Census entries a scan finds that are not code-route reads, each with the reason and the workspace
+// package that owns its source.
 class CensusExclusion extends S.Opaque<CensusExclusion, { readonly brand: unique symbol }>()(
   S.Struct({
     reference: S.NonEmptyString,
     source: S.NonEmptyString,
+    owner: S.NonEmptyString,
     kind: S.Literals(["packet-document", "synthetic-fixture"]),
     reason: S.NonEmptyString,
   })
@@ -91,6 +106,7 @@ const exclusions: ReadonlyArray<CensusExclusion> = [
   CensusExclusion.make({
     reference: "goals/*/ops/manifest.json",
     source: "packages/tooling/tool/cli/test/goals-ops-typecheck.test.ts",
+    owner: "@beep/repo-cli",
     kind: "packet-document",
     reason:
       "packet manifests are goal documents (CiGoalDocument); packet policy on goals-only PRs is ROUT-02's docs-policy job",
@@ -98,24 +114,28 @@ const exclusions: ReadonlyArray<CensusExclusion> = [
   CensusExclusion.make({
     reference: "goals/_template/",
     source: "packages/tooling/tool/cli/test/commands/Goals/Harvest.test.ts",
+    owner: "@beep/repo-cli",
     kind: "synthetic-fixture",
     reason: "asserts the harvester skips template rows of a temp tree it builds",
   }),
   CensusExclusion.make({
     reference: "goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json",
     source: "packages/tooling/tool/cli/test/ci-cache-pilot.test.ts",
+    owner: "@beep/repo-cli",
     kind: "synthetic-fixture",
     reason: "the test writes its own copy into a temp root",
   }),
   CensusExclusion.make({
     reference: "goals/turborepo-quality-cache-adoption/research/errors-only-client-pins.json",
     source: "packages/tooling/tool/cli/test/ci-cache-pilot-in-process.test.ts",
+    owner: "@beep/repo-cli",
     kind: "synthetic-fixture",
     reason: "the test writes its own copy into a temp root",
   }),
   CensusExclusion.make({
     reference: "explorations/beep-ci-operational-ontology/research",
     source: "apps/labs/ciops/test/kpi-reading.test.ts",
+    owner: "@beep/ciops",
     kind: "synthetic-fixture",
     reason:
       "this hit is the directory the test creates under a temp root; its real reads go through the src/kpi/Pins.ts constants, which the pinned-source scan reports",
@@ -123,12 +143,14 @@ const exclusions: ReadonlyArray<CensusExclusion> = [
   CensusExclusion.make({
     reference: "explorations/beep-ci-operational-ontology/research/control-interventions.yaml",
     source: "apps/labs/ciops/test/kpi-contract.test.ts",
+    owner: "@beep/ciops",
     kind: "synthetic-fixture",
     reason: "contract data with a placeholder digest; the file is never read",
   }),
   CensusExclusion.make({
     reference: "explorations/stacked-pr-adoption/research/",
     source: "packages/tooling/tool/cli/test/support/YeetHeadMove.ts",
+    owner: "@beep/repo-cli",
     kind: "synthetic-fixture",
     reason: "the head-move harness inits its own temp repository and writes stack-probe files under this prefix",
   }),
@@ -312,132 +334,295 @@ const changeProfileFor = Effect.fnUntraced(function* (changed: string) {
   return A.join(logged, "\n");
 });
 
-it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "120 seconds" })(
-  "goal-data consumer census (ROUT-03)",
-  (it) => {
-    it.effect(
-      "keeps every goals/ path a test reads, spawns or imports, or a package turbo.json declares, off docs-only",
-      Effect.fnUntraced(function* () {
-        const { entries } = yield* census;
-        const consumed = A.filter(entries, (entry) => !isExcluded(entry));
-        const docsOnly = A.map(
-          A.filter(consumed, (entry) => isHeavyDocsOnlyPath(entry.path)),
-          (entry) => `${entry.path} <- ${entry.source} (${entry.reference}); register it in ciGoalDataConsumers`
-        );
-        expect(docsOnly).toEqual([]);
-        // The census reaches every consumer family the packet names.
-        const consumedPaths = HashSet.fromIterable(A.map(consumed, (entry) => entry.path));
-        for (const [, mutated] of mutations) {
-          expect(HashSet.has(consumedPaths, mutated), mutated).toBe(true);
-        }
-        expect(A.some(consumed, (entry) => /^goals\/[^/]+\/ops\/.+\.ts$/u.test(entry.path))).toBe(true);
-        // Every exclusion is still found by the scan from its own source; a packet-document
-        // exclusion covers only goal documents.
-        for (const exclusion of exclusions) {
-          const excluded = A.filter(
-            entries,
-            (entry) => entry.reference === exclusion.reference && entry.source === exclusion.source
-          );
-          expect(A.isReadonlyArrayNonEmpty(excluded), `${exclusion.source}: ${exclusion.reference}`).toBe(true);
-          if (exclusion.kind === "packet-document") {
-            expect(
-              A.filter(excluded, (entry) => !pathPattern(ciOperationalPatterns.goals).test(entry.path)),
-              exclusion.reference
-            ).toEqual([]);
-          }
-        }
-      })
-    );
+// The checkout-subject rule (goals/prunable-product-leaves, seam 1). A row reads one packet's paths
+// for its consumer packages, so it depends on that packet and on those workspaces. A checkout that
+// removed the packet, or every consumer, holds nothing the row could prove: the row is skipped and
+// the skip names what is absent. Otherwise the row is checked exactly as before. An evidence file
+// the checkout does not track is stale unless it lies in no present workspace while one of the
+// row's consumers is absent; then it belonged to that pruned consumer. A consumer that moved keeps
+// its package name, so its evidence stays strict.
+const rowAbsence = (inventory: CheckoutInventory, row: CiGoalDataConsumer): ReadonlyArray<CheckoutSubject> => {
+  const packet = absentCheckoutSubjects(inventory, A.fromOption(packetSubjectOf(row.reference)));
+  if (A.isReadonlyArrayNonEmpty(packet)) {
+    return packet;
+  }
+  const consumers = A.map(row.consumers, workspaceSubject);
+  const absentConsumers = absentCheckoutSubjects(inventory, consumers);
+  return A.length(absentConsumers) === A.length(consumers) ? absentConsumers : A.empty();
+};
 
-    it.effect(
-      "keeps each consumer row live: it matches census paths and its evidence still reaches them",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const { root, paths, entries } = yield* census;
-        const tracked = HashSet.fromIterable(paths);
-        const consumedPaths = A.map(
-          A.filter(entries, (entry) => !isExcluded(entry)),
-          (entry) => entry.path
-        );
-        for (const row of ciGoalDataConsumers) {
-          const pattern = pathPattern(row.pattern);
-          expect(
-            A.some(consumedPaths, (consumed) => pattern.test(consumed)),
-            row.pattern
-          ).toBe(true);
-          for (const evidence of row.evidence) {
-            expect(HashSet.has(tracked, evidence), evidence).toBe(true);
-            const text = yield* fs.readFileString(path.join(root, evidence));
-            expect(Str.includes(row.reference)(text), `${evidence} reaches ${row.reference}`).toBe(true);
-          }
-        }
-        // The projection joins every row into codeRoots, and none of them was docs-only by accident.
-        for (const row of ciGoalDataConsumers) {
-          expect(Str.includes(row.pattern)(ciOperationalPatterns.codeRoots), row.pattern).toBe(true);
-        }
-      })
-    );
+const evidenceAbsence = (
+  inventory: CheckoutInventory,
+  tracked: HashSet.HashSet<string>,
+  row: CiGoalDataConsumer,
+  evidence: string
+): ReadonlyArray<CheckoutSubject> =>
+  HashSet.has(tracked, evidence) || O.isSome(checkoutWorkspaceOf(inventory, evidence))
+    ? A.empty()
+    : absentCheckoutSubjects(inventory, A.map(row.consumers, workspaceSubject));
 
-    it.effect(
-      "lists every reader package as a consumer of the row matching its path, and no turbo.json packet document",
-      Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const { root, paths, entries } = yield* census;
-        const tracked = HashSet.fromIterable(paths);
-        const consumed = A.filter(entries, (entry) => !isExcluded(entry));
-        const ownerRows = yield* Effect.forEach(
-          A.dedupe(A.map(consumed, (entry) => entry.source)),
-          Effect.fnUntraced(function* (source) {
-            const directory = owningPackageDirectory(source, tracked);
-            if (O.isNone(directory)) return [source, O.none<string>()] as const;
-            const text = yield* fs.readFileString(path.join(root, directory.value, "package.json"));
-            const manifest = yield* decodePackageName(text);
-            return [source, O.some(manifest.name)] as const;
-          }),
-          { concurrency: 1 }
-        );
-        const owners = HashMap.fromIterable(ownerRows);
-        // The coverage planner selects a registry path's readers from its row's consumers, so a
-        // reader package missing from them would leave that path's tests out of coverage.
-        const unlisted = A.filterMap(consumed, (entry) => {
-          const owner = O.flatten(HashMap.get(owners, entry.source));
-          const readers = registryReadersOf(entry.path);
-          return O.exists(owner, (name) => A.contains(readers, name))
-            ? Result.failVoid
-            : Result.succeed(
-                `${entry.path} <- ${entry.source} (${O.getOrElse(owner, () => "no package.json")}); add the package to the consumers of the ciGoalDataConsumers row matching the path (row consumers: ${A.isReadonlyArrayNonEmpty(readers) ? A.join(readers, ", ") : "none"})`
-              );
-        });
-        expect(unlisted).toEqual([]);
-        // Turbo would select a package for a packet-document edit that the planner treats as
-        // noop, which makes hosted Test Unit stricter than local final-check.
-        const turboPacketDocuments = A.map(
-          A.filter(consumed, (entry) => PACKAGE_TURBO.test(entry.source) && isGoalDocument(entry.path)),
-          (entry) => `${entry.path} <- ${entry.source} (${entry.reference}); a turbo.json input must name goal data`
-        );
-        expect(turboPacketDocuments).toEqual([]);
-      })
-    );
+// A mutated path depends on what the row that registers it depends on.
+const mutationAbsence = (inventory: CheckoutInventory, mutated: string): ReadonlyArray<CheckoutSubject> =>
+  pipe(
+    A.findFirst(ciGoalDataConsumers, (row) => pathPattern(row.pattern).test(mutated)),
+    O.map((row) => rowAbsence(inventory, row)),
+    O.getOrElse(() => A.empty<CheckoutSubject>())
+  );
 
-    it.effect(
-      "selects the code route through change-profile for each mutated consumer that was docs-only before",
-      Effect.fnUntraced(function* () {
-        const { paths } = yield* census;
-        const opsScript = A.findFirst(paths, (file) => /^goals\/[^/]+\/ops\/.+\.ts$/u.test(file));
-        assertTrue(opsScript.pipe(O.isSome));
-        const named = A.append(mutations, ["`.ts` ops script", O.getOrElse(opsScript, () => "")] as const);
-        for (const [label, mutated] of named) {
-          expect(A.contains(paths, mutated), `${label}: ${mutated} is tracked`).toBe(true);
-          expect(preRepairDocsOnly.test(mutated), `${label} was docs-only before ROUT-03`).toBe(true);
-          const profile = yield* changeProfileFor(mutated);
-          expect(routeLines(profile), label).toBe("goals_only=false\ndocs_only=false\ndesktop_rust_relevant=false");
-        }
-        // Control: prose beside a consumed path keeps the docs-only skip.
-        const control = yield* changeProfileFor("goals/citation-extraction-engine/history/evidence/README.md");
-        expect(routeLines(control)).toBe("goals_only=false\ndocs_only=true\ndesktop_rust_relevant=false");
+const exclusionAbsence = (inventory: CheckoutInventory, exclusion: CensusExclusion): ReadonlyArray<CheckoutSubject> =>
+  absentCheckoutSubjects(inventory, [
+    workspaceSubject(exclusion.owner),
+    ...A.fromOption(packetSubjectOf(exclusion.reference)),
+  ]);
+
+// The census and the checkout inventory, read once and shared by every test below.
+class CensusFacts extends Context.Service<
+  CensusFacts,
+  {
+    readonly root: string;
+    readonly paths: ReadonlyArray<string>;
+    readonly tracked: HashSet.HashSet<string>;
+    readonly entries: ReadonlyArray<CensusEntry>;
+    readonly inventory: CheckoutInventory;
+  }
+>()("@beep/repo-cli/test/goal-data-consumer-census.test/CensusFacts") {}
+
+const CensusFactsLive = Layer.effect(
+  CensusFacts,
+  Effect.gen(function* () {
+    const scanned = yield* census;
+    const inventory = yield* loadCheckoutInventory(scanned.root);
+    return { ...scanned, tracked: HashSet.fromIterable(scanned.paths), inventory };
+  })
+);
+
+const consumedPathsOf = (entries: ReadonlyArray<CensusEntry>): ReadonlyArray<string> =>
+  A.map(
+    A.filter(entries, (entry) => !isExcluded(entry)),
+    (entry) => entry.path
+  );
+
+it.layer(Layer.provideMerge(CensusFactsLive, Layer.provideMerge(Git.layer, NodeServices.layer)), {
+  timeout: "120 seconds",
+})("goal-data consumer census (ROUT-03)", (it) => {
+  it.effect(
+    "keeps every goals/ path a test reads, spawns or imports, or a package turbo.json declares, off docs-only",
+    Effect.fnUntraced(function* () {
+      const { entries } = yield* CensusFacts;
+      const consumed = A.filter(entries, (entry) => !isExcluded(entry));
+      const docsOnly = A.map(
+        A.filter(consumed, (entry) => isHeavyDocsOnlyPath(entry.path)),
+        (entry) => `${entry.path} <- ${entry.source} (${entry.reference}); register it in ciGoalDataConsumers`
+      );
+      expect(docsOnly).toEqual([]);
+      expect(A.some(consumed, (entry) => /^goals\/[^/]+\/ops\/.+\.ts$/u.test(entry.path))).toBe(true);
+    })
+  );
+
+  // The census reaches every consumer family the packet names.
+  for (const [label, mutated] of mutations) {
+    it.effect(`tracks and consumes the ${label}`, (ctx) =>
+      Effect.gen(function* () {
+        const { entries, inventory, tracked } = yield* CensusFacts;
+        skipWhenAbsent(ctx, mutationAbsence(inventory, mutated));
+        expect(HashSet.has(tracked, mutated), `${label}: ${mutated} is tracked`).toBe(true);
+        expect(A.contains(consumedPathsOf(entries), mutated), mutated).toBe(true);
       })
     );
   }
-);
+
+  // Every exclusion is still found by the scan from its own source; a packet-document exclusion
+  // covers only goal documents.
+  for (const exclusion of exclusions) {
+    it.effect(`still finds the ${exclusion.kind} exclusion ${exclusion.reference} in ${exclusion.source}`, (ctx) =>
+      Effect.gen(function* () {
+        const { entries, inventory } = yield* CensusFacts;
+        skipWhenAbsent(ctx, exclusionAbsence(inventory, exclusion));
+        const excluded = A.filter(
+          entries,
+          (entry) => entry.reference === exclusion.reference && entry.source === exclusion.source
+        );
+        expect(A.isReadonlyArrayNonEmpty(excluded), `${exclusion.source}: ${exclusion.reference}`).toBe(true);
+        if (exclusion.kind === "packet-document") {
+          expect(
+            A.filter(excluded, (entry) => !pathPattern(ciOperationalPatterns.goals).test(entry.path)),
+            exclusion.reference
+          ).toEqual([]);
+        }
+      })
+    );
+  }
+
+  // Each consumer row stays live: it matches census paths and its evidence still reaches them.
+  for (const row of ciGoalDataConsumers) {
+    it.effect(`keeps the ${row.reference} row matching census paths`, (ctx) =>
+      Effect.gen(function* () {
+        const { entries, inventory } = yield* CensusFacts;
+        skipWhenAbsent(ctx, rowAbsence(inventory, row));
+        const pattern = pathPattern(row.pattern);
+        expect(
+          A.some(consumedPathsOf(entries), (consumed) => pattern.test(consumed)),
+          row.pattern
+        ).toBe(true);
+      })
+    );
+    for (const evidence of row.evidence) {
+      it.effect(`keeps ${evidence} reaching the ${row.reference} row`, (ctx) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const { root, inventory, tracked } = yield* CensusFacts;
+          skipWhenAbsent(ctx, rowAbsence(inventory, row));
+          skipWhenAbsent(ctx, evidenceAbsence(inventory, tracked, row, evidence));
+          expect(HashSet.has(tracked, evidence), evidence).toBe(true);
+          const text = yield* fs.readFileString(path.join(root, evidence));
+          expect(Str.includes(row.reference)(text), `${evidence} reaches ${row.reference}`).toBe(true);
+        })
+      );
+    }
+  }
+
+  // The projection joins every row into codeRoots, and none of them was docs-only by accident.
+  it.effect("joins every consumer row into codeRoots", () =>
+    Effect.sync(() => {
+      for (const row of ciGoalDataConsumers) {
+        expect(Str.includes(row.pattern)(ciOperationalPatterns.codeRoots), row.pattern).toBe(true);
+      }
+    })
+  );
+
+  it.effect(
+    "lists every reader package as a consumer of the row matching its path, and no turbo.json packet document",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { root, tracked, entries } = yield* CensusFacts;
+      const consumed = A.filter(entries, (entry) => !isExcluded(entry));
+      const ownerRows = yield* Effect.forEach(
+        A.dedupe(A.map(consumed, (entry) => entry.source)),
+        Effect.fnUntraced(function* (source) {
+          const directory = owningPackageDirectory(source, tracked);
+          if (O.isNone(directory)) return [source, O.none<string>()] as const;
+          const text = yield* fs.readFileString(path.join(root, directory.value, "package.json"));
+          const manifest = yield* decodePackageName(text);
+          return [source, O.some(manifest.name)] as const;
+        }),
+        { concurrency: 1 }
+      );
+      const owners = HashMap.fromIterable(ownerRows);
+      // The coverage planner selects a registry path's readers from its row's consumers, so a
+      // reader package missing from them would leave that path's tests out of coverage.
+      const unlisted = A.filterMap(consumed, (entry) => {
+        const owner = O.flatten(HashMap.get(owners, entry.source));
+        const readers = registryReadersOf(entry.path);
+        return O.exists(owner, (name) => A.contains(readers, name))
+          ? Result.failVoid
+          : Result.succeed(
+              `${entry.path} <- ${entry.source} (${O.getOrElse(owner, () => "no package.json")}); add the package to the consumers of the ciGoalDataConsumers row matching the path (row consumers: ${A.isReadonlyArrayNonEmpty(readers) ? A.join(readers, ", ") : "none"})`
+            );
+      });
+      expect(unlisted).toEqual([]);
+      // Turbo would select a package for a packet-document edit that the planner treats as
+      // noop, which makes hosted Test Unit stricter than local final-check.
+      const turboPacketDocuments = A.map(
+        A.filter(consumed, (entry) => PACKAGE_TURBO.test(entry.source) && isGoalDocument(entry.path)),
+        (entry) => `${entry.path} <- ${entry.source} (${entry.reference}); a turbo.json input must name goal data`
+      );
+      expect(turboPacketDocuments).toEqual([]);
+    })
+  );
+
+  // The route assertions classify a scripted one-path diff against the committed patterns, so
+  // they hold whether or not the checkout still tracks the mutated path.
+  it.effect(
+    "selects the code route through change-profile for each mutated consumer that was docs-only before",
+    Effect.fnUntraced(function* () {
+      const { paths } = yield* CensusFacts;
+      const opsScript = A.findFirst(paths, (file) => /^goals\/[^/]+\/ops\/.+\.ts$/u.test(file));
+      assertTrue(opsScript.pipe(O.isSome));
+      const named = A.append(mutations, ["`.ts` ops script", O.getOrElse(opsScript, () => "")] as const);
+      for (const [label, mutated] of named) {
+        expect(preRepairDocsOnly.test(mutated), `${label} was docs-only before ROUT-03`).toBe(true);
+        const profile = yield* changeProfileFor(mutated);
+        expect(routeLines(profile), label).toBe("goals_only=false\ndocs_only=false\ndesktop_rust_relevant=false");
+      }
+      // Control: prose beside a consumed path keeps the docs-only skip.
+      const control = yield* changeProfileFor("goals/citation-extraction-engine/history/evidence/README.md");
+      expect(routeLines(control)).toBe("goals_only=false\ndocs_only=true\ndesktop_rust_relevant=false");
+    })
+  );
+});
+
+// The rule itself, over a synthetic checkout that holds goals/demo and @beep/kept only. Every case
+// that is stale while its subject exists must come back empty, which keeps its assertion running.
+describe("the checkout-subject rule for census rows", () => {
+  const inventory = CheckoutInventory.make({
+    packets: packetRootsOf(["goals/demo/README.md"]),
+    workspaces: HashMap.make(["@beep/kept", "packages/kept"]),
+  });
+  const demoRow = (reference: string, consumers: A.NonEmptyReadonlyArray<string>) =>
+    CiGoalDataConsumer.make({
+      pattern: `^${reference}`,
+      reference,
+      consumers,
+      modes: ["read"],
+      evidence: ["packages/kept/test/Demo.test.ts"],
+    });
+  const noTracked = HashSet.empty<string>();
+
+  it("checks a row whose packet and consumers are present, or whose consumers are partly present", () => {
+    expect(rowAbsence(inventory, demoRow("goals/demo/ops/", ["@beep/kept"]))).toEqual([]);
+    expect(rowAbsence(inventory, demoRow("goals/demo/ops/", ["@beep/kept", "@beep/pruned"]))).toEqual([]);
+    expect(rowAbsence(inventory, demoRow("goals/*/ops/**/*.ts", ["@beep/kept"]))).toEqual([]);
+  });
+
+  it("skips a row whose packet is absent, or whose every consumer is absent", () => {
+    expect(rowAbsence(inventory, demoRow("goals/pruned/ops/", ["@beep/kept"]))).toEqual(
+      A.fromOption(packetSubjectOf("goals/pruned/ops/"))
+    );
+    expect(rowAbsence(inventory, demoRow("goals/demo/ops/", ["@beep/pruned"]))).toEqual([
+      workspaceSubject("@beep/pruned"),
+    ]);
+  });
+
+  it("keeps an untracked evidence file stale inside a present workspace or when every consumer is present", () => {
+    const row = demoRow("goals/demo/ops/", ["@beep/kept", "@beep/pruned"]);
+    expect(evidenceAbsence(inventory, noTracked, row, "packages/kept/test/Renamed.test.ts")).toEqual([]);
+    // A consumer that moved directories keeps its name, so its old evidence path is stale.
+    const moved = demoRow("goals/demo/ops/", ["@beep/kept"]);
+    expect(evidenceAbsence(inventory, noTracked, moved, "packages/old-home/test/Demo.test.ts")).toEqual([]);
+  });
+
+  it("skips an untracked evidence file that belonged to a pruned consumer, and checks a tracked one", () => {
+    const row = demoRow("goals/demo/ops/", ["@beep/kept", "@beep/pruned"]);
+    expect(evidenceAbsence(inventory, noTracked, row, "packages/pruned/test/Demo.test.ts")).toEqual([
+      workspaceSubject("@beep/pruned"),
+    ]);
+    const tracked = HashSet.make("packages/pruned/test/Demo.test.ts");
+    expect(evidenceAbsence(inventory, tracked, row, "packages/pruned/test/Demo.test.ts")).toEqual([]);
+  });
+
+  it("skips an exclusion whose owner or packet is absent, and checks one whose subjects are present", () => {
+    const exclusion = (owner: string, reference: string) =>
+      CensusExclusion.make({
+        reference,
+        source: "packages/kept/test/X.test.ts",
+        owner,
+        kind: "synthetic-fixture",
+        reason: "demo",
+      });
+    expect(exclusionAbsence(inventory, exclusion("@beep/kept", "goals/demo/research/x.json"))).toEqual([]);
+    expect(exclusionAbsence(inventory, exclusion("@beep/pruned", "goals/demo/research/x.json"))).toEqual([
+      workspaceSubject("@beep/pruned"),
+    ]);
+    expect(exclusionAbsence(inventory, exclusion("@beep/kept", "goals/pruned/research/x.json"))).toEqual(
+      A.fromOption(packetSubjectOf("goals/pruned/research/x.json"))
+    );
+  });
+
+  it("registers every mutated path in exactly the row whose subjects it inherits", () => {
+    for (const [label, mutated] of mutations) {
+      expect(A.length(A.filter(ciGoalDataConsumers, (row) => pathPattern(row.pattern).test(mutated))), label).toBe(1);
+    }
+  });
+});

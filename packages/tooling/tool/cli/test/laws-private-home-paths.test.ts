@@ -535,6 +535,9 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
         const exemptions = [
           PrivateHomePathExemption.make({ file: "goals/x/history/sealed.txt", count: 1, reason: "sealed capture" }),
           PrivateHomePathExemption.make({ file: "goals/x/history/gone.txt", count: 1, reason: "removed capture" }),
+          // A packet the checkout does not hold (a fork removed it) skips its rows; goals/x is
+          // present, so its gone.txt row above stays a stale finding.
+          PrivateHomePathExemption.make({ file: "goals/pruned/history/sealed.txt", count: 1, reason: "pruned packet" }),
         ];
 
         const strict = yield* runPrivateHomePaths(
@@ -549,6 +552,7 @@ it.layer(PlatformLayer, { timeout: "120 seconds" })((it) => {
           ["docs/utf16-nobom.log", 1, "private-home-path"],
           ["goals/x/history/gone.txt", 1, "exemption-count-mismatch"],
         ]);
+        expect(strict.skippedExemptions).toEqual(["goals/pruned/history/sealed.txt"]);
 
         const report = yield* runPrivateHomePaths(PrivateHomePathsOptions.make({ cwd: root, exemptions }));
         expect([report.strictFailure, report.findings.length]).toEqual([false, 6]);

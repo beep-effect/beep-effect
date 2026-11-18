@@ -102,11 +102,17 @@ it.layer(Layer.merge(TaxonomyLoader.layer, BunFileSystem.layer), { timeout: "30 
       })
     );
 
-    it.effect(
-      "decodes the real asset manifest without vendor bytes and preserves kind routing",
-      Effect.fnUntraced(function* () {
+    it.effect("decodes the real asset manifest without vendor bytes and preserves kind routing", (ctx) =>
+      Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = "../../../../explorations/legal-ontology-landscape/assets/manifest.jsonl";
+        // The manifest lives in an exploration packet that a trimmed checkout or fork may drop. Skip
+        // only when the packet directory itself is absent, as the repo's checkout-subject rule does
+        // (goals/prunable-product-leaves); a missing manifest inside a present packet still fails.
+        const packet = Str.replace(/\/assets\/manifest\.jsonl$/u, "")(path);
+        if (!(yield* fs.exists(packet))) {
+          return ctx.skip(`absent from this checkout: packet ${Str.replace(/^(?:\.\.\/)+/u, "")(packet)}`);
+        }
         const content = yield* fs.readFileString(path);
         const lines = A.filter(Str.split(content, "\n"), Str.isNonEmpty);
         const entries = yield* Effect.forEach(lines, (line, index) => decodeLoadManifestEntry(path, line, index), {
