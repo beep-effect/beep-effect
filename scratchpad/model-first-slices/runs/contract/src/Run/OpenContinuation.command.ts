@@ -3,6 +3,8 @@ import { GrantTerms } from "@proto/kernel/Capability";
 import { DelegationId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { GrantRef, Provenance } from "@proto/kernel/Invocation";
 import * as S from "effect/Schema";
+import { Count, Sequence } from "@proto/kernel/Measure";
+import { HistoryBound } from "./HistoryBound.ts";
 import { HeldReservation } from "./Reservation.id.ts";
 import { RunEvent } from "./RunEvent.ts";
 import { Since } from "./Since.ts";
@@ -23,13 +25,13 @@ export class ContinuationOpened extends Domain.Event(
   RunEvent.fields({
     previous: RunId,
     lineage: RunId,
-    generation: S.Int,
+    generation: Sequence,
     parent: Since.phase3(S.OptionFromNullOr(RunId), null),
     purpose: S.String,
     versions: RunVersions,
-    allowance: S.Int,
+    allowance: Count,
     reservations: Since.phase3(S.Array(HeldReservation), []),
-    historyBound: S.Int,
+    historyBound: HistoryBound,
     source: GrantRef,
     terms: GrantTerms,
     delegation: DelegationId,
@@ -55,13 +57,13 @@ export class OpenContinuation extends Domain.Command(
       session: SessionId,
       previous: RunId,
       lineage: RunId,
-      generation: S.Int,
+      generation: Sequence,
       parent: S.OptionFromNullOr(RunId),
       purpose: S.String,
       versions: RunVersions,
-      allowance: S.Int,
+      allowance: Count,
       reservations: S.Array(HeldReservation),
-      historyBound: S.Int,
+      historyBound: HistoryBound,
       source: GrantRef,
       terms: GrantTerms,
       delegation: DelegationId,

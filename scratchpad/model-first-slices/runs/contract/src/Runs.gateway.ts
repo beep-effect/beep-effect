@@ -6,6 +6,8 @@ import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
+import { Count } from "@proto/kernel/Measure";
+import { HistoryBound } from "./Run/HistoryBound.ts";
 import { ReservationId } from "./Run/Reservation.id.ts";
 import { RunStatus } from "./Run/RunStatus.ts";
 import { RunVersions } from "./Run/RunVersions.ts";
@@ -21,8 +23,8 @@ const $I = $RunsContractId.create("Runs.gateway");
  * @since 0.0.0
  */
 export const RunReport = S.TaggedUnion({
-  Reserve: { reservation: ReservationId, units: S.Int },
-  Settle: { reservation: ReservationId, units: S.Int },
+  Reserve: { reservation: ReservationId, units: Count },
+  Settle: { reservation: ReservationId, units: Count },
   Release: { reservation: ReservationId },
   Step: { step: S.String },
   AwaitApproval: {},
@@ -49,8 +51,8 @@ export const RunRequest = S.Struct({
   session: SessionId,
   purpose: S.String,
   versions: RunVersions,
-  allowance: S.Int,
-  historyBound: S.Int,
+  allowance: Count,
+  historyBound: HistoryBound,
   source: GrantRef,
   terms: GrantTerms,
 });
@@ -102,7 +104,7 @@ export class RunReportRefused extends S.TaggedError<RunReportRefused, { readonly
  */
 export class RunBudgetExceeded extends S.TaggedError<RunBudgetExceeded, { readonly brand: unique symbol }>()(
   "RunBudgetExceeded",
-  { remaining: S.Int },
+  { remaining: Count },
 ) {}
 
 /**

@@ -13,7 +13,7 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";

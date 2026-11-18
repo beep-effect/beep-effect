@@ -4,6 +4,8 @@ import { PrincipalId, RunId } from "@proto/kernel/Ids";
 import { GrantRef } from "@proto/kernel/Invocation";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as S from "effect/Schema";
+import { Count } from "@proto/kernel/Measure";
+import { HistoryBound } from "./HistoryBound.ts";
 import { RunEvent } from "./RunEvent.ts";
 import { RunVersions } from "./RunVersions.ts";
 import { SessionId } from "./Session.id.ts";
@@ -47,8 +49,8 @@ export class RunRequested extends Domain.Event(
   RunEvent.fields({
     purpose: S.String,
     versions: RunVersions,
-    allowance: S.Int,
-    historyBound: S.Int,
+    allowance: Count,
+    historyBound: HistoryBound,
     source: GrantRef,
     terms: GrantTerms,
     requester: PrincipalId,
@@ -73,8 +75,8 @@ export class RequestRun extends Domain.Command(
       session: SessionId,
       purpose: S.String,
       versions: RunVersions,
-      allowance: S.Int,
-      historyBound: S.Int,
+      allowance: Count,
+      historyBound: HistoryBound,
       source: GrantRef,
       terms: GrantTerms,
     },

@@ -10,7 +10,7 @@ import { checkGenerationRetirement, RetirementRefusal } from "@proto/tooling/Gen
 import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Num from "effect/Number";
+import * as N from "effect/Number";
 import * as O from "@beep/utils/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -52,7 +52,7 @@ const generation = Effect.fn("generation")(function* (stream: string) {
       ),
     ),
   );
-  const length = A.reduce(stored, 0, (last, entry) => Num.max(last, entry.position));
+  const length = A.reduce(stored, 0, (last, entry) => N.max(last, entry.position));
   return { live: { stream, entries }, length, unreadable: A.length(stored) - A.length(entries) };
 });
 

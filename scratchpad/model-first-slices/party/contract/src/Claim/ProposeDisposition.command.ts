@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { RunId } from "@proto/kernel/Ids";
+import { Sequence } from "@proto/kernel/Measure";
 import { carry } from "@proto/kernel/Invocation";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
@@ -31,7 +32,7 @@ export class NotAnAgent extends S.TaggedError<NotAnAgent, { readonly brand: uniq
  */
 export class ProposalStale extends S.TaggedError<ProposalStale, { readonly brand: unique symbol }>()(
   "ProposalStale",
-  { evidenceRevision: S.Int },
+  { evidenceRevision: Sequence },
   $I.annote("ProposalStale", { httpApiStatus: 409, description: "The evidence changed since the proposal's revision; assess it again." }),
 ) {}
 
@@ -44,7 +45,7 @@ export class ProposalStale extends S.TaggedError<ProposalStale, { readonly brand
  */
 export class DispositionProposed extends Domain.Event(
   "DispositionProposed",
-  carry({ disposition: Disposition, rationale: S.String, run: RunId, evidenceRevision: S.Int, digest: S.String }),
+  carry({ disposition: Disposition, rationale: S.String, run: RunId, evidenceRevision: Sequence, digest: S.String }),
   { description: "An agent run proposed what to do with a pending claim and why, against one evidence revision, under a digest that an approval names." },
 ) {}
 
@@ -59,7 +60,7 @@ export class ProposeDisposition extends Domain.Command(
   {
     target: ClaimId,
     middleware: [Session],
-    input: { disposition: Disposition, rationale: S.String, evidenceRevision: S.Int },
+    input: { disposition: Disposition, rationale: S.String, evidenceRevision: Sequence },
     events: [DispositionProposed],
     rejects: [ClaimNotPending, MissingGrant, NotAnAgent, ProposalStale],
   },

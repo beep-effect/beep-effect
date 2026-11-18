@@ -14,6 +14,7 @@
     "./Run/ConcludeRun.command": "./src/Run/ConcludeRun.command.ts",
     "./Run/DelegateRun.command": "./src/Run/DelegateRun.command.ts",
     "./Run/ExhaustRun.command": "./src/Run/ExhaustRun.command.ts",
+    "./Run/HistoryBound": "./src/Run/HistoryBound.ts",
     "./Run/NotThisRun.rejection": "./src/Run/NotThisRun.rejection.ts",
     "./Run/OpenChildRun.command": "./src/Run/OpenChildRun.command.ts",
     "./Run/OpenContinuation.command": "./src/Run/OpenContinuation.command.ts",
@@ -33,6 +34,7 @@
     "./Run/SettleUsage.command": "./src/Run/SettleUsage.command.ts",
     "./Run/Since": "./src/Run/Since.ts",
     "./Run/UnknownReservation.rejection": "./src/Run/UnknownReservation.rejection.ts",
+    "./Run/UsageExceedsReservation.rejection": "./src/Run/UsageExceedsReservation.rejection.ts",
     "./Runs.gateway": "./src/Runs.gateway.ts",
     "./RunsApi.contract": "./src/RunsApi.contract.ts"
   },

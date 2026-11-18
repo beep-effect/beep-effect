@@ -1,4 +1,5 @@
 import type * as Domain from "@alchemy.run/domain";
+import { Name } from "@proto/kernel/Measure";
 import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
 import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
@@ -14,7 +15,7 @@ import * as S from "effect/Schema";
  * @category models
  * @since 0.0.0
  */
-export const LiveStream = S.Struct({ stream: S.String, writer: S.Option(StreamWriter) });
+export const LiveStream = S.Struct({ stream: Name, writer: S.Option(StreamWriter) });
 /**
  * @category models
  * @since 0.0.0
@@ -61,11 +62,12 @@ export class PublishedStreamDrift extends S.TaggedError<PublishedStreamDrift, { 
   { drift: S.Array(StreamDrift) },
 ) {}
 
+/** The same projection and generation, reading the same set of sources: a source listed twice is read once. */
 const sameWriter = (a: StreamWriter, b: StreamWriter): boolean =>
   a.projection === b.projection &&
   a.generation === b.generation &&
-  A.length(a.sources) === A.length(b.sources) &&
-  A.every(a.sources, (source) => A.contains(b.sources, source));
+  A.every(a.sources, (source) => A.contains(b.sources, source)) &&
+  A.every(b.sources, (source) => A.contains(a.sources, source));
 
 const driftOfLive = (pins: ReadonlyArray<StreamPin>) => (live: LiveStream): O.Option<StreamDrift> =>
   O.match(

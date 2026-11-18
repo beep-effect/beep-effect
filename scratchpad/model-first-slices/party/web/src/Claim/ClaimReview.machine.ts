@@ -1,3 +1,4 @@
+import { Count, IdText, Name, Sequence } from "@proto/kernel/Measure";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
 import { dual } from "effect/Function";
@@ -11,11 +12,11 @@ import { thunk0, thunkTrue } from "@beep/utils"
 
 /** What every approval in flight carries: its command id, what it approves, the view revision it was made from, and how many times it was sent. */
 const inFlight = {
-  commandId: S.String,
+  commandId: IdText,
   digest: S.String,
-  evidenceRevision: S.Int,
-  baseRevision: S.Int,
-  attempts: S.Int,
+  evidenceRevision: Sequence,
+  baseRevision: Count,
+  attempts: Sequence,
 };
 
 /**
@@ -25,9 +26,9 @@ const inFlight = {
  * @since 0.0.0
  */
 export const Notice = S.TaggedUnion({
-  Approved: { commandId: S.String },
-  Refused: { commandId: S.String, reason: S.String },
-  Denied: { commandId: S.String, reason: S.String },
+  Approved: { commandId: IdText },
+  Refused: { commandId: IdText, reason: Name },
+  Denied: { commandId: IdText, reason: Name },
 });
 /**
  * @category models
@@ -74,7 +75,7 @@ export type InFlight = typeof InFlight.Type;
  * @category models
  * @since 0.0.0
  */
-export const SeenView = S.Struct({ review: S.Option(ClaimReviewState), revision: S.Int, epoch: S.Int });
+export const SeenView = S.Struct({ review: S.Option(ClaimReviewState), revision: Count, epoch: Count });
 /**
  * @category models
  * @since 0.0.0
@@ -114,19 +115,19 @@ export type Screen = typeof Screen.Type;
  */
 export const Message = S.TaggedUnion({
   /** A state from the subscription. */
-  Snapshot: { review: S.Option(ClaimReviewState), revision: S.Int, epoch: S.Int },
+  Snapshot: { review: S.Option(ClaimReviewState), revision: Count, epoch: Count },
   /** The person pressed Approve; the controller minted the command id. */
-  ApproveClicked: { commandId: S.String },
+  ApproveClicked: { commandId: IdText },
   /** The command committed. */
-  Accepted: { commandId: S.String, receipt: Receipt },
+  Accepted: { commandId: IdText, receipt: Receipt },
   /** The model refused it with a declared rejection. */
-  Rejected: { commandId: S.String, reason: S.String },
+  Rejected: { commandId: IdText, reason: Name },
   /** Authority refused it. */
-  Denied: { commandId: S.String, reason: S.String },
+  Denied: { commandId: IdText, reason: Name },
   /** Nobody knows whether it committed. */
-  Unknown: { commandId: S.String },
+  Unknown: { commandId: IdText },
   /** A read that waited for the command's receipt returned. */
-  CaughtUp: { commandId: S.String, review: S.Option(ClaimReviewState), revision: S.Int },
+  CaughtUp: { commandId: IdText, review: S.Option(ClaimReviewState), revision: Count },
 });
 /**
  * @category models
@@ -142,9 +143,9 @@ export type Message = typeof Message.Type;
  */
 export const Intent = S.TaggedUnion({
   /** Send `ApproveProposal` under this command id (a retry reuses it). */
-  Approve: { commandId: S.String, digest: S.String, evidenceRevision: S.Int },
+  Approve: { commandId: IdText, digest: S.String, evidenceRevision: Sequence },
   /** Read the view once it has applied this receipt. */
-  ReadAfterWrite: { commandId: S.String, receipt: Receipt },
+  ReadAfterWrite: { commandId: IdText, receipt: Receipt },
 });
 /**
  * @category models

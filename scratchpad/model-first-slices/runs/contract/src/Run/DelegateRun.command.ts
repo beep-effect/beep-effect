@@ -4,6 +4,8 @@ import { DelegationId, RunId } from "@proto/kernel/Ids";
 import { GrantRef } from "@proto/kernel/Invocation";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as S from "effect/Schema";
+import { Count } from "@proto/kernel/Measure";
+import { HistoryBound } from "./HistoryBound.ts";
 import { BudgetExceeded } from "./BudgetExceeded.rejection.ts";
 import { NotThisRun } from "./NotThisRun.rejection.ts";
 import { RunEvent } from "./RunEvent.ts";
@@ -38,10 +40,10 @@ export class ChildRequested extends Domain.Event(
     child: RunId,
     delegation: DelegationId,
     purpose: S.String,
-    allowance: S.Int,
+    allowance: Count,
     terms: GrantTerms,
     versions: RunVersions,
-    historyBound: S.Int,
+    historyBound: HistoryBound,
     source: GrantRef,
   }),
   { description: "The run set aside part of its budget for a child run, under narrower terms of its own delegation, and waits for it." },
@@ -59,7 +61,7 @@ export class DelegateRun extends Domain.Command(
   {
     target: RunId,
     middleware: [Session],
-    input: { child: RunId, delegation: DelegationId, purpose: S.String, allowance: S.Int, terms: GrantTerms },
+    input: { child: RunId, delegation: DelegationId, purpose: S.String, allowance: Count, terms: GrantTerms },
     events: [ChildRequested],
     rejects: [RunNotRunning, NotThisRun, BudgetExceeded, ChildGrantWidens],
   },

@@ -1,5 +1,6 @@
 import type * as Domain from "@alchemy.run/domain";
 import { OrgId } from "@proto/kernel/Ids";
+import { Count, Sequence } from "@proto/kernel/Measure";
 import { DirectoryRow } from "@proto/party-contract/Directory/FindParties.read";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { $PartyModelId } from "@proto/kernel/Identity";
@@ -42,7 +43,7 @@ export type DirectoryChange = typeof DirectoryChange.Type;
  * @category models
  * @since 0.0.0
  */
-export const DirectoryWrite = S.Struct({ stream: S.String, seq: S.Int, change: DirectoryChange });
+export const DirectoryWrite = S.Struct({ stream: S.String, seq: Sequence, change: DirectoryChange });
 /**
  * @category models
  * @since 0.0.0
@@ -57,7 +58,7 @@ export type DirectoryWrite = typeof DirectoryWrite.Type;
  * @since 0.0.0
  */
 export class GenerationBehind extends S.TaggedError<GenerationBehind, { readonly brand: unique symbol }>()("GenerationBehind", {
-  generation: S.Int,
+  generation: Count,
   behind: S.Array(S.String),
 }) {}
 

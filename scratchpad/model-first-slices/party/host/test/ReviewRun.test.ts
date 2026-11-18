@@ -15,7 +15,7 @@ import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as Schedule from "effect/Schedule";
 import type * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";

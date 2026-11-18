@@ -11,7 +11,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as Schedule from "effect/Schedule";
 import { Boundary, BoundaryLive } from "./Boundary/Boundary.ts";
 import { thunkEffectVoid } from "@beep/utils"

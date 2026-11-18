@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { GrantTerms } from "@proto/kernel/Capability";
+import { Count } from "@proto/kernel/Measure";
 import { RunId } from "@proto/kernel/Ids";
 import { GrantRef, Hop, Provenance } from "@proto/kernel/Invocation";
 import * as S from "effect/Schema";
@@ -27,7 +28,7 @@ export class RunEnded extends S.TaggedError<RunEnded, { readonly brand: unique s
  * @category errors
  * @since 0.0.0
  */
-export class BudgetRefused extends S.TaggedError<BudgetRefused, { readonly brand: unique symbol }>()("BudgetRefused", { remaining: S.Int }) {}
+export class BudgetRefused extends S.TaggedError<BudgetRefused, { readonly brand: unique symbol }>()("BudgetRefused", { remaining: Count }) {}
 
 /**
  * The versions a review run records: prompt, model and tool contract.
@@ -80,8 +81,8 @@ export class ReviewRuns extends Domain.ExternalSystem(
         session: S.String,
         purpose: S.String,
         versions: ReviewVersions,
-        allowance: S.Int,
-        historyBound: S.Int,
+        allowance: Count,
+        historyBound: Count,
         source: GrantRef,
         terms: GrantTerms,
       },
@@ -89,11 +90,11 @@ export class ReviewRuns extends Domain.ExternalSystem(
       error: RunRefused,
     },
     reserve: {
-      args: { ...call, reservation: S.String, units: S.Int },
+      args: { ...call, reservation: S.String, units: Count },
       success: LiveRun,
       error: [RunRefused, BudgetRefused, RunEnded],
     },
-    settle: { args: { ...call, reservation: S.String, units: S.Int }, success: LiveRun, error: [RunRefused, RunEnded] },
+    settle: { args: { ...call, reservation: S.String, units: Count }, success: LiveRun, error: [RunRefused, RunEnded] },
     release: { args: { ...call, reservation: S.String }, success: LiveRun, error: [RunRefused, RunEnded] },
     step: { args: { ...call, step: S.String }, success: LiveRun, error: [RunRefused, RunEnded] },
     awaitApproval: { args: call, success: LiveRun, error: [RunRefused, RunEnded] },

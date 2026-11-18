@@ -14,7 +14,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import * as Str from "@beep/utils/Str";

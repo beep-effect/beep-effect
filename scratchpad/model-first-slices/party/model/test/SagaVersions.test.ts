@@ -3,7 +3,7 @@ import * as InMemory from "@alchemy.run/domain/InMemory";
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Activity from "effect/workflow/Activity";

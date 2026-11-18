@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { OrgId, RunId } from "@proto/kernel/Ids";
+import { Sequence } from "@proto/kernel/Measure";
 import { carry } from "@proto/kernel/Invocation";
 import * as S from "effect/Schema";
 import { EvidenceSignal } from "../Evidence.ts";
@@ -20,7 +21,7 @@ export class ReviewRequested extends Domain.Event(
     org: OrgId,
     proposition: Proposition,
     signals: S.Array(EvidenceSignal),
-    evidenceRevision: S.Int,
+    evidenceRevision: Sequence,
   }),
   { description: "A review of the claim was asked for as this agent run, with what the run needs to assess and the evidence revision it reviews. Each review is its own run." },
 ) {}

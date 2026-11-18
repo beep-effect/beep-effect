@@ -1,5 +1,5 @@
 import * as S from "effect/Schema";
-import { IdText } from "@proto/kernel/Measure";
+import { Count, IdText } from "@proto/kernel/Measure";
 
 /**
  * One budget reservation on a run, made before an inference or tool call
@@ -28,7 +28,7 @@ export type ReservationId = typeof ReservationId.Type;
  * @category models
  * @since 0.0.0
  */
-export const HeldReservation = S.Struct({ reservation: ReservationId, units: S.Int });
+export const HeldReservation = S.Struct({ reservation: ReservationId, units: Count });
 /**
  * @category models
  * @since 0.0.0

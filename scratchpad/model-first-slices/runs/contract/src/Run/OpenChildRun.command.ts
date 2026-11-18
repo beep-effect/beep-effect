@@ -3,6 +3,8 @@ import { GrantTerms } from "@proto/kernel/Capability";
 import { DelegationId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { GrantRef, Provenance } from "@proto/kernel/Invocation";
 import * as S from "effect/Schema";
+import { Count } from "@proto/kernel/Measure";
+import { HistoryBound } from "./HistoryBound.ts";
 import { RunEvent } from "./RunEvent.ts";
 import { RunVersions } from "./RunVersions.ts";
 import { SessionId } from "./Session.id.ts";
@@ -20,8 +22,8 @@ export class ChildRunOpened extends Domain.Event(
     parent: RunId,
     purpose: S.String,
     versions: RunVersions,
-    allowance: S.Int,
-    historyBound: S.Int,
+    allowance: Count,
+    historyBound: HistoryBound,
     source: GrantRef,
     terms: GrantTerms,
     delegation: DelegationId,
@@ -48,8 +50,8 @@ export class OpenChildRun extends Domain.Command(
       parent: RunId,
       purpose: S.String,
       versions: RunVersions,
-      allowance: S.Int,
-      historyBound: S.Int,
+      allowance: Count,
+      historyBound: HistoryBound,
       source: GrantRef,
       terms: GrantTerms,
       delegation: DelegationId,

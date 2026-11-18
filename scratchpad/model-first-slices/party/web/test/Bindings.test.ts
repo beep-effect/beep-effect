@@ -19,7 +19,7 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as Schedule from "effect/Schedule";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";

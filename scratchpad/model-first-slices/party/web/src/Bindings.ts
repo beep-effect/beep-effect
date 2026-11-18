@@ -2,13 +2,14 @@ import type * as Command from "@alchemy.run/domain/Command";
 import type * as Read from "@alchemy.run/domain/Read";
 import type * as View from "@alchemy.run/domain/View";
 import * as A from "@beep/utils/Array";
+import { Sequence } from "@proto/kernel/Measure";
 import * as Cause from "effect/Cause";
 import type * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import type * as Headers from "effect/http/Headers";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
@@ -23,7 +24,7 @@ import { Credentials } from "./Credentials.context.ts";
  * @category models
  * @since 0.0.0
  */
-export const Receipt = S.Struct({ stream: S.String, version: S.Int });
+export const Receipt = S.Struct({ stream: S.NonEmptyString, version: Sequence });
 /**
  * @category models
  * @since 0.0.0

@@ -1,25 +1,25 @@
 import * as Domain from "@alchemy.run/domain";
 import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
-import * as Schema from "effect/Schema";
+import * as S from "effect/Schema";
 
 // A slot that records labelled writes, each decided after a hold: the in-process two-runner cases'
 // model (the fenced commit, the frozen runner).
 
 /** A write was recorded. */
-export class Written extends Domain.Event("Written", { label: Schema.String }) {}
+export class Written extends Domain.Event("Written", { label: S.String }) {}
 
 /** Record a label once `decide` has held for `holdMs`. */
 export class Write extends Domain.Command("Write", {
-  target: Schema.String,
-  input: { label: Schema.String, holdMs: Schema.Finite },
+  target: S.String,
+  input: { label: S.String, holdMs: S.Finite },
   events: [Written],
 }) {}
 
 /** The labels written, in order. */
 export class Slot extends Domain.Aggregate("Slot", {
-  id: Schema.String,
-  state: Schema.Struct({ labels: Schema.Array(Schema.String) }),
+  id: S.String,
+  state: S.Struct({ labels: S.Array(S.String) }),
   initial: { labels: [] },
   commands: [Write],
   decide: {

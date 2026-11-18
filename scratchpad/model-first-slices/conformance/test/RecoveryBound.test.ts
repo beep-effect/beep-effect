@@ -4,7 +4,7 @@ import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
-import * as Num from "effect/Number";
+import * as N from "effect/Number";
 import * as Path from "effect/Path";
 import * as Str from "@beep/utils/Str";
 import {
@@ -71,8 +71,8 @@ it.layer(NodeServices.layer)((it) => {
       expect(pipe(library, Str.includes('schedule: Schedule.min([Schedule.exponential("100 millis"), Schedule.spaced("2 seconds")]),'))).toBe(true);
       expect(pipe(library, Str.includes("times: 35,"))).toBe(true);
       // Each delay is the shorter of the exponential (100 ms, doubling) and the 2 s spacing.
-      const delays = A.makeBy(35, (n) => Num.min(100 * 2 ** n, RETRY_SPACING_MS));
-      expect(A.reduce(delays, 0, Num.sum)).toBe(TRANSIT_RETRY_BUDGET_MS);
+      const delays = A.makeBy(35, (n) => N.min(100 * 2 ** n, RETRY_SPACING_MS));
+      expect(A.reduce(delays, 0, N.sum)).toBe(TRANSIT_RETRY_BUDGET_MS);
       expect(FROZEN_WRITE_BOUND_MS).toBe(TRANSIT_RETRY_BUDGET_MS + TRANSIT_ATTEMPT_ALLOWANCE_MS);
     }),
   );

@@ -5,7 +5,7 @@ import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
-import * as Num from "effect/Number";
+import * as N from "effect/Number";
 import * as O from "@beep/utils/Option";
 import * as Ref from "effect/Ref";
 import { thunk0 } from "@beep/utils"
@@ -60,7 +60,7 @@ export const MemoryInboxStore = Layer.effect(
       seen: (key) => Effect.map(Ref.get(table), ({ seen }) => HashSet.has(seen, key)),
       commit: dual(3, (producer: string, key: O.Option<string>, seq: number) =>
         Ref.update(table, ({ checkpoints, seen }) => ({
-          checkpoints: HashMap.set(checkpoints, producer, Num.max(O.getOrElse(HashMap.get(checkpoints, producer), thunk0), seq)),
+          checkpoints: HashMap.set(checkpoints, producer, N.max(O.getOrElse(HashMap.get(checkpoints, producer), thunk0), seq)),
           seen: O.match(key, { onNone: () => seen, onSome: (handled) => pipe(seen, HashSet.add(handled)) }),
         })),
       ),

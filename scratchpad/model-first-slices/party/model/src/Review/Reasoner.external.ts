@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { RunId } from "@proto/kernel/Ids";
+import { Count } from "@proto/kernel/Measure";
 import { Disposition } from "@proto/party-contract/Disposition";
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { Proposition } from "@proto/party-contract/Proposition";
@@ -37,9 +38,9 @@ export type Assessment = typeof Assessment.Type;
  * @since 0.0.0
  */
 export const Usage = S.Struct({
-  units: S.Int,
+  units: Count,
   // Added in phase 4 (D35): stored results and tapes without it read 0.
-  cachedUnits: S.Int.pipe(S.withDecodingDefaultKey(Effect.succeed(0)), S.withConstructorDefault(Effect.succeed(0))),
+  cachedUnits: Count.pipe(S.withDecodingDefaultKey(Effect.succeed(0)), S.withConstructorDefault(Effect.succeed(0))),
 });
 
 /**
@@ -76,7 +77,7 @@ export const AssessRequest = S.Struct({
   step: S.String,
   idempotencyKey: S.String,
   promptVersion: S.String,
-  maxAllowance: S.Int,
+  maxAllowance: Count,
   proposition: Proposition,
   signals: S.Array(EvidenceSignal),
 });

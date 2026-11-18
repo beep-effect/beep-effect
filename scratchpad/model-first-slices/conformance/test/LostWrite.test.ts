@@ -6,7 +6,7 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
-import * as Schema from "effect/Schema";
+import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import { makeSimHost, type SimHost } from "./SimHost.ts";
 
@@ -15,15 +15,15 @@ import { makeSimHost, type SimHost } from "./SimHost.ts";
 // commit must not be acknowledged on a version that has moved since its decide: without the
 // patch the first overwrites `event:1` and `meta`, so the second's acknowledged write is lost.
 
-class Written extends Domain.Event("Written", { label: Schema.String }) {}
+class Written extends Domain.Event("Written", { label: S.String }) {}
 class Write extends Domain.Command("Write", {
-  target: Schema.String,
-  input: { label: Schema.String, holdMs: Schema.Finite },
+  target: S.String,
+  input: { label: S.String, holdMs: S.Finite },
   events: [Written],
 }) {}
 class Slot extends Domain.Aggregate("Slot", {
-  id: Schema.String,
-  state: Schema.Struct({ labels: Schema.Array(Schema.String) }),
+  id: S.String,
+  state: S.Struct({ labels: S.Array(S.String) }),
   initial: { labels: [] },
   commands: [Write],
   decide: {

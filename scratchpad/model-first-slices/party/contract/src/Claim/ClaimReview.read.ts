@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { OrgId, RunId } from "@proto/kernel/Ids";
+import { Count, Sequence } from "@proto/kernel/Measure";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as O from "@beep/utils/Option";
@@ -29,7 +30,7 @@ export const ProposalView = S.Struct({
   disposition: Disposition,
   rationale: S.String,
   run: RunId,
-  evidenceRevision: S.Int,
+  evidenceRevision: Sequence,
   digest: S.String,
 });
 /**
@@ -59,8 +60,8 @@ export type ClaimNote = typeof ClaimNote.Type;
 const asserted = {
   org: OrgId,
   proposition: Proposition,
-  sources: S.Int,
-  revision: S.Int.pipe(Initial.of(1, { description: "The evidence revision; an asserted claim starts at 1." })),
+  sources: Count,
+  revision: Sequence.pipe(Initial.of(1, { description: "The evidence revision; an asserted claim starts at 1." })),
   reviews: Initial.empty(RunId, { description: "The review runs requested so far; none at first." }),
   proposal: Initial.none(ProposalView, { description: "The latest proposal still standing; absent until a review proposes one." }),
   notes: Initial.empty(ClaimNote, { description: "What the reviewer was told about refusals; none at first." }),

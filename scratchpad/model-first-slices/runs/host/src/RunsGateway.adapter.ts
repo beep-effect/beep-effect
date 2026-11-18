@@ -17,6 +17,7 @@ import { RunNotRunning } from "@proto/runs-contract/Run/RunNotRunning.rejection"
 import { ReserveBudget } from "@proto/runs-contract/Run/ReserveBudget.command";
 import { SettleUsage } from "@proto/runs-contract/Run/SettleUsage.command";
 import { UnknownReservation } from "@proto/runs-contract/Run/UnknownReservation.rejection";
+import { UsageExceedsReservation } from "@proto/runs-contract/Run/UsageExceedsReservation.rejection";
 import {
   type CurrentRun,
   RunReport,
@@ -33,7 +34,7 @@ import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as S from "effect/Schema";
 import { liveRun, settling } from "./Lineage.ts";
 
@@ -43,7 +44,7 @@ const $I = $RunsHostId.create("RunsGateway.adapter");
  * What a re-admitted report to a run can be refused with: the run's own
  * rejections of the report commands, or the re-admission's.
  */
-const ReportRejection = S.Union([RunNotRunning, NotThisRun, UnknownReservation, BudgetExceeded, ReadmissionRefused]).pipe(
+const ReportRejection = S.Union([RunNotRunning, NotThisRun, UnknownReservation, UsageExceedsReservation, BudgetExceeded, ReadmissionRefused]).pipe(
   $I.annoteSchema("ReportRejection", { description: "What a re-admitted report to a run can be refused with." }),
   S.toTaggedUnion("_tag"),
 );

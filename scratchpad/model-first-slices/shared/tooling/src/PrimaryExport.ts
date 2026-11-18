@@ -3,7 +3,7 @@ import * as Context from "effect/Context";
 import { dual, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "@beep/utils/Str";

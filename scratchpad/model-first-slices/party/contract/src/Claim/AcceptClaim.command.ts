@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { carry } from "@proto/kernel/Invocation";
+import { Count } from "@proto/kernel/Measure";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -33,7 +34,7 @@ export type AdmissionGate = typeof AdmissionGate.Type;
  */
 export class AdmissionGateUnmet extends S.TaggedError<AdmissionGateUnmet, { readonly brand: unique symbol }>()(
   "AdmissionGateUnmet",
-  { gate: AdmissionGate, have: S.Int, need: S.Int },
+  { gate: AdmissionGate, have: Count, need: Count },
   $I.annote("AdmissionGateUnmet", { httpApiStatus: 422, description: "The claim's evidence does not clear its admission gate." }),
 ) {}
 

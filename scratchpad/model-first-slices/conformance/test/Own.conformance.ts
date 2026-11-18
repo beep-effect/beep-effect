@@ -10,16 +10,16 @@ import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Equal from "effect/Equal";
+import * as Eq from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
-import * as Num from "effect/Number";
+import * as N from "effect/Number";
 import * as O from "@beep/utils/Option";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
@@ -175,7 +175,7 @@ live("a runner killed right after a commit: every reaction happens once, within 
   }, { concurrency: 1 });
   const done = (seen: Effect.Success<typeof reactions>) => seen.claim === claimReactions && seen.run === runReactions && seen.review;
   const deadline = killedAt + RECOVERY_BOUND_MS;
-  const remaining = Effect.map(Clock.currentTimeMillis, (now) => Num.max(deadline - now, 0));
+  const remaining = Effect.map(Clock.currentTimeMillis, (now) => N.max(deadline - now, 0));
   const untilDone = yield* remaining;
   const atDone = yield* reactions.pipe(
     Effect.repeat({ schedule: Schedule.spaced("1 second"), until: done }),
@@ -334,7 +334,7 @@ live("two runners on one instance (D38, D55): a write sent to a frozen runner is
   const firstB = Exit.isSuccess(quick) ? O.some(receiptOf(quick.value)) : O.none();
   const firstA = Exit.isSuccess(slowResult) && Exit.isSuccess(slowResult.value) ? O.some(receiptOf(slowResult.value.value)) : O.none();
   const sameReceipt = (first: O.Option<ReturnType<typeof receiptOf>>, retry: O.Option<ReturnType<typeof receiptOf>>) =>
-    O.match(first, { onNone: thunkTrue, onSome: (receipt) => Equal.equals(O.some(receipt), retry) });
+    O.match(first, { onNone: thunkTrue, onSome: (receipt) => Eq.equals(O.some(receipt), retry) });
   expect(sameReceipt(firstB, O.map(retriedB, receiptOf))).toBe(true);
   expect(sameReceipt(firstA, O.map(retriedA, receiptOf))).toBe(true);
 }));

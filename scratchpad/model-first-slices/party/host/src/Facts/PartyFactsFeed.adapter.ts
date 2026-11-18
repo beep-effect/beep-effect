@@ -13,7 +13,7 @@ import * as A from "@beep/utils/Array"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Match from "effect/Match"
-import * as Num from "effect/Number"
+import * as N from "effect/Number"
 import * as O from "@beep/utils/Option"
 import * as S from "effect/Schema"
 import { flow, pipe } from "effect/Function"
@@ -60,10 +60,16 @@ const envelopeAt = (offset: number) => ({ event, envelope }: Entry) =>
 
 /** A stream's page reader, as both generations offer it. */
 type Pages = {
-  readonly list: (key: "claims", options: {
+  readonly list: {
+    (key: "claims", options: {
     readonly after: number;
     readonly take: number
-  }) => Effect.Effect<{ readonly entries: ReadonlyArray<Entry> }>
+  }): Effect.Effect<{ readonly entries: ReadonlyArray<Entry> }>,
+    (options: {
+    readonly after: number;
+    readonly take: number
+  }): (key: "claims") => Effect.Effect<{ readonly entries: ReadonlyArray<Entry> }>
+  }
 };
 
 const allOf = (stream: Pages, after: number, read: ReadonlyArray<Entry>): Effect.Effect<ReadonlyArray<Entry>> =>
@@ -170,7 +176,7 @@ export const partyFactsFeedFor = (pins: ReadonlyArray<StreamPin>) => Layer.effec
           })).entries : []
           const rest = take - A.length(first)
           const second = rest > 0 ? (yield* open.list("claims", {
-            after: Num.max(after - closedLength, 0),
+            after: N.max(after - closedLength, 0),
             take: rest
           })).entries : []
           const served = yield* Effect.forEach(first, envelopeAt(0), { concurrency: 1 })

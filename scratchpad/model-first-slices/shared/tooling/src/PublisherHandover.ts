@@ -1,4 +1,5 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { Count, Name } from "@proto/kernel/Measure";
 import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
 import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
@@ -41,7 +42,7 @@ export type Handover = typeof Handover.Type;
  * @category models
  * @since 0.0.0
  */
-export const PublisherBacklog = S.Struct({ stream: S.String, writer: S.String, pending: S.Int });
+export const PublisherBacklog = S.Struct({ stream: Name, writer: Name, pending: Count });
 /**
  * @category models
  * @since 0.0.0
@@ -56,15 +57,16 @@ export type PublisherBacklog = typeof PublisherBacklog.Type;
  * @since 0.0.0
  */
 export class PublisherPending extends S.TaggedError<PublisherPending, { readonly brand: unique symbol }>()("PublisherPending", {
-  pending: S.Array(S.Struct({ handover: Handover, pending: S.Int })),
+  pending: S.Array(S.Struct({ handover: Handover, pending: Count })),
   unread: S.Array(Handover),
 }) {}
 
+/** The same projection and generation, reading the same set of sources: a source listed twice is read once. */
 const sameWriter = (a: StreamWriter, b: StreamWriter): boolean =>
   a.projection === b.projection &&
   a.generation === b.generation &&
-  A.length(a.sources) === A.length(b.sources) &&
-  A.every(a.sources, (source) => A.contains(b.sources, source));
+  A.every(a.sources, (source) => A.contains(b.sources, source)) &&
+  A.every(b.sources, (source) => A.contains(a.sources, source));
 
 const handoverOf = (next: ReadonlyArray<StreamPin>) => (pin: StreamPin): O.Option<Handover> =>
   StreamPin.match(pin, {

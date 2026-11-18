@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { RunId } from "@proto/kernel/Ids";
+import { Count, Sequence } from "@proto/kernel/Measure";
 import { carry } from "@proto/kernel/Invocation";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
@@ -52,11 +53,11 @@ export class ProposalApproved extends Domain.Event(
     approval: ApprovalId,
     run: RunId,
     digest: S.String,
-    evidenceRevision: S.Int,
+    evidenceRevision: Sequence,
     outcome: S.Literals(["accepted", "retracted"]),
     proposition: Proposition,
     // Widened in phase 3 (D22): every stored integer still reads; absent is stored as `null`.
-    corroboration: S.OptionFromNullOr(S.Int),
+    corroboration: S.OptionFromNullOr(Count),
     // Added in phase 9 (D43): the decision's scope, absent on events stored before it.
     ...DecisionScope,
   }),
@@ -75,7 +76,7 @@ export class ApproveProposal extends Domain.Command(
   {
     target: ClaimId,
     middleware: [Session],
-    input: { digest: S.String, evidenceRevision: S.Int },
+    input: { digest: S.String, evidenceRevision: Sequence },
     events: [ProposalApproved],
     rejects: [HumanApprovalRequired, MissingGrant, ClaimNotPending, ProposalMismatch, AdmissionGateUnmet],
   },

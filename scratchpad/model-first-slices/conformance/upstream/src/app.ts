@@ -17,7 +17,7 @@ import * as Effect from "effect/Effect";
 import { HttpServerRequest } from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Match from "effect/Match";
-import * as Option from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
 import {
   ConformanceApi,
@@ -71,7 +71,7 @@ export const app = Effect.map(
           Effect.gen(function* () {
             const total = yield* totals.get(Counter.ref(id)).pipe(Effect.orDie);
             return yield* HttpServerResponse.json(
-              Option.getOrElse(total, () => ({ total: 0, increments: 0 })),
+              O.getOrElse(total, () => ({ total: 0, increments: 0 })),
             );
           }),
         ),

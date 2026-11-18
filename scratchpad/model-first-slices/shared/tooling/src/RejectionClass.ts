@@ -1,7 +1,7 @@
 import * as A from "@beep/utils/Array";
 import { pipe } from "effect/Function";
 import * as O from "@beep/utils/Option";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 

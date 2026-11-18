@@ -20,6 +20,7 @@ import { ChildRunRefused, RefuseChild } from "@proto/runs-contract/Run/RefuseChi
 import { RejectRun, RunRejected } from "@proto/runs-contract/Run/RejectRun.command";
 import { ReleaseReservation, ReservationReleased } from "@proto/runs-contract/Run/ReleaseReservation.command";
 import { RequestRun, RunAlreadyExists, HumanOnly, RunRequested } from "@proto/runs-contract/Run/RequestRun.command";
+import { HistoryBound } from "@proto/runs-contract/Run/HistoryBound";
 import { HeldReservation } from "@proto/runs-contract/Run/Reservation.id";
 import { BudgetReserved, ReserveBudget } from "@proto/runs-contract/Run/ReserveBudget.command";
 import { RunNotRunning } from "@proto/runs-contract/Run/RunNotRunning.rejection";
@@ -28,12 +29,14 @@ import { RunVersions } from "@proto/runs-contract/Run/RunVersions";
 import { SessionId } from "@proto/runs-contract/Run/Session.id";
 import { SettleUsage, UsageSettled } from "@proto/runs-contract/Run/SettleUsage.command";
 import { UnknownReservation } from "@proto/runs-contract/Run/UnknownReservation.rejection";
+import { UsageExceedsReservation } from "@proto/runs-contract/Run/UsageExceedsReservation.rejection";
 import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "@beep/utils/Option";
 import * as Initial from "@proto/kernel/Initial";
+import { Count } from "@proto/kernel/Measure";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Struct from "effect/Struct";
@@ -41,17 +44,33 @@ import { thunk0 } from "@beep/utils"
 
 /**
  * A run's budget, in units: what it was allowed, what is held by open
- * reservations, what it spent, and what it set aside for children.
+ * reservations, what it spent, and what it set aside for children. Each is
+ * a count, and together the three uses never pass the allowance, so what
+ * remains ({@link remaining}) is never negative.
+ *
+ * **Example** (A run that reserved 40 of 100 units)
+ * ```ts
+ * import { Budget, remaining } from "@proto/runs-model/Run/AgentRun.aggregate";
+ *
+ * const left = remaining(Budget.make({ allowance: 100, reserved: 40 }));
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
 export const Budget = S.Struct({
-  allowance: S.Int,
-  reserved: S.Int.pipe(Initial.of(0, { description: "Units held by open reservations; none at first." })),
-  spent: S.Int.pipe(Initial.of(0, { description: "Units settled; none at first." })),
-  allocated: S.Int.pipe(Initial.of(0, { description: "Units handed to child runs; none at first." })),
-});
+  allowance: Count,
+  reserved: Count.pipe(Initial.of(0, { description: "Units held by open reservations; none at first." })),
+  spent: Count.pipe(Initial.of(0, { description: "Units settled; none at first." })),
+  allocated: Count.pipe(Initial.of(0, { description: "Units handed to child runs; none at first." })),
+}).check(
+  S.makeFilter(({ allowance, reserved, spent, allocated }) => reserved + spent + allocated <= allowance, {
+    identifier: "BudgetWithinAllowanceCheck",
+    title: "Within allowance",
+    description: "What is reserved, spent and allocated together is at most the allowance.",
+    message: "Expected reserved, spent and allocated to add up to at most the allowance",
+  }),
+);
 /**
  * @category models
  * @since 0.0.0
@@ -75,7 +94,7 @@ export type Budget = typeof Budget.Type;
 export const RunRecord = S.Struct({
   session: SessionId,
   lineage: RunId,
-  generation: S.Int,
+  generation: Count,
   parent: S.OptionFromNullOr(RunId),
   previous: S.OptionFromNullOr(RunId),
   purpose: S.String,
@@ -88,8 +107,8 @@ export const RunRecord = S.Struct({
   provenance: Provenance,
   budget: Budget,
   reservations: Initial.empty(HeldReservation, { description: "The reservations still open; none at first." }),
-  steps: S.Int.pipe(Initial.of(0, { description: "Steps recorded so far; none at first." })),
-  historyBound: S.Int,
+  steps: Count.pipe(Initial.of(0, { description: "Steps recorded so far; none at first." })),
+  historyBound: HistoryBound,
 });
 /**
  * @category models
@@ -133,7 +152,7 @@ export const AgentRunState = S.TaggedUnion({
   Requested: { run: RunRequest },
   Running: { run: RunRecord },
   AwaitingApproval: { run: RunRecord },
-  AwaitingChild: { run: RunRecord, child: RunId, allowance: S.Int },
+  AwaitingChild: { run: RunRecord, child: RunId, allowance: Count },
   Completed: { run: RunRecord, outcome: S.String },
   Rejected: { session: SessionId, reason: S.String },
   Refused: { run: RunRecord, reason: S.String },
@@ -180,7 +199,20 @@ const CancelledBeforeGrant = S.TaggedStruct("Cancelled", {
  */
 export const StoredAgentRunState = S.Union([AgentRunState, CancelledBeforeGrant]);
 
-/** What remains to reserve or allocate. */
+/**
+ * What remains to reserve or allocate: the allowance less what is reserved,
+ * spent and allocated. A valid {@link Budget} never leaves it negative.
+ *
+ * **Example** (What a run that reserved 40 and spent 12 of 100 has left)
+ * ```ts
+ * import { Budget, remaining } from "@proto/runs-model/Run/AgentRun.aggregate";
+ *
+ * const left = remaining(Budget.make({ allowance: 100, reserved: 40, spent: 12 }));
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
 export const remaining = (budget: Budget): number => budget.allowance - budget.reserved - budget.spent - budget.allocated;
 
 /**
@@ -403,6 +435,9 @@ export class AgentRun extends Domain.Aggregate(
         const held = yield* Effect.fromOption(reservationOf(run, command.reservation)).pipe(
           Effect.mapError(() => UnknownReservation.make({ reservation: command.reservation })),
         );
+        // A settlement returns what the reservation did not use; it never spends past it.
+        if (command.units > held.units)
+          return yield* UsageExceedsReservation.make({ reservation: command.reservation, reserved: held.units, units: command.units });
         const after = withBudget(run, {
           reserved: run.budget.reserved - held.units,
           spent: run.budget.spent + command.units,

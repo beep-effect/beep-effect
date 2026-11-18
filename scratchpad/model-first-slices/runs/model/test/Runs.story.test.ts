@@ -1,16 +1,7 @@
 import { Story } from "@alchemy.run/domain/Story";
 import { expect, it } from "@effect/vitest";
-import type { GrantTerms } from "@proto/kernel/Capability";
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
-import { DelegationId, GrantId, PrincipalId, RunId } from "@proto/kernel/Ids";
-import {
-  byProcess,
-  Cause,
-  extend,
-  GrantRef,
-  Invocation,
-  provenanceOf,
-} from "@proto/kernel/Invocation";
+import { byProcess, Cause, extend, type Invocation, provenanceOf } from "@proto/kernel/Invocation";
 import { RunActivated } from "@proto/runs-contract/Run/ActivateRun.command";
 import { AwaitApproval, RunAwaitingApproval } from "@proto/runs-contract/Run/AwaitApproval.command";
 import { ChildRunFinished } from "@proto/runs-contract/Run/ChildFinished.command";
@@ -31,683 +22,638 @@ import { RunNotRunning } from "@proto/runs-contract/Run/RunNotRunning.rejection"
 import { SettleUsage, UsageSettled } from "@proto/runs-contract/Run/SettleUsage.command";
 import { Authority, GrantDenied } from "@proto/runs-model/Authority.external";
 import { AgentRun } from "@proto/runs-model/Run/AgentRun.aggregate";
+import { ContinueAtBound } from "@proto/runs-model/Run/ContinueAtBound.policy";
+import { GrantOnRequest } from "@proto/runs-model/Run/GrantOnRequest.policy";
+import { OpenChildOnRequest } from "@proto/runs-model/Run/OpenChildOnRequest.policy";
+import { ResumeParent } from "@proto/runs-model/Run/ResumeParent.policy";
 import { SessionRuns } from "@proto/runs-model/Run/SessionRuns.view";
 import { RunsHandlers } from "@proto/runs-model/Runs.handlers";
 import { RunsModel } from "@proto/runs-model/Runs.model";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
+import { Cast, nextOf } from "./Cast.ts";
+import {
+  active,
+  asRun,
+  childTerms,
+  delegatedSource,
+  delegationOf,
+  hopOn,
+  parentTerms,
+  requested,
+  requesterOf,
+  runOf,
+  self,
+  sourceOf,
+  termsOf,
+} from "./fixtures.ts";
 
 const { call, fail, provide, rejected, replied, state, succeed, then, view, when } = Story;
 const as = (invocation: Invocation) => provide(CurrentInvocation, invocation);
 
 const story = Story.make(RunsModel, { layer: RunsHandlers, stub: [Authority] });
 
-import {
-  active,
-  activeBounded,
-  asRun,
-  hopOn,
-  parentTerms,
-  requester,
-  reservation,
-  run1,
-  self,
-  session,
-  source,
-  terms,
-  versions,
-} from "./fixtures.ts";
-import * as O from "@beep/utils/Option";
+// Every story is a property over a generated cast (`Cast.ts`), at the default 100 runs. The
+// amounts come from the cast's ledger: `used` is what a call uses, `unused` what its reservation
+// held beyond that, `free` what stays free beside it, and `over` how far a refused request goes.
 
-it.effect("a person requests a run; the authority context grants its narrowed delegation and it starts", () => {
-  const grantHop = hopOn("GrantOnRequest", "AgentRun/run_1", 1, "RunRequested");
-  const request = RequestRun.make({ session, purpose: "review", versions, allowance: 100, historyBound: 20, source, terms: parentTerms });
+/** What one call's reservation holds: what it uses and what it does not. */
+const heldOf = ({ ledger }: Cast) => ledger.used + ledger.unused;
+
+/** A run's allowance: one reservation's worth and what stays free beside it. */
+const allowanceOf = (cast: Cast) => heldOf(cast) + cast.ledger.free;
+
+/** The child's share, its own allowance: one reservation's worth and what stays free beside it. */
+const shareOf = allowanceOf;
+
+/** A parent's allowance when it delegates: the child's share, and more beside it. */
+const parentAllowanceOf = (cast: Cast) => shareOf(cast) + cast.ledger.over;
+
+/** The parent delegates its child's share under the child's narrower terms, and the child opens under its own delegation. */
+const childOpens = (cast: Cast) => {
+  const { run, child } = cast.runs;
+  const share = shareOf(cast);
+  const granted = childTerms(cast);
+  const asChild = asRun(cast, child, granted);
+  return [
+    as(asRun(cast, run)),
+    when(
+      runOf(cast),
+      DelegateRun.make({ child, delegation: delegationOf(child), purpose: cast.purposes.child, allowance: share, terms: granted }),
+    ),
+    then(
+      runOf(cast),
+      ChildRequested.make({
+        session: cast.session,
+        child,
+        delegation: delegationOf(child),
+        purpose: cast.purposes.child,
+        allowance: share,
+        terms: granted,
+        versions: cast.versions,
+        historyBound: cast.bound,
+        source: delegatedSource(cast),
+        provenance: self(cast, run),
+      }),
+    ),
+    call(Authority.grantRun, { run: child, source: delegatedSource(cast) }),
+    succeed(Authority.grantRun, {
+      delegation: delegationOf(child),
+      accountable: cast.principals.requester,
+      provenance: provenanceOf(asChild),
+    }),
+    then(
+      AgentRun.ref(child),
+      ChildRunOpened.make({
+        session: cast.session,
+        parent: run,
+        purpose: cast.purposes.child,
+        versions: cast.versions,
+        allowance: share,
+        historyBound: cast.bound,
+        source: delegatedSource(cast),
+        terms: granted,
+        delegation: delegationOf(child),
+        accountable: cast.principals.requester,
+        requester: cast.principals.requester,
+        runProvenance: provenanceOf(asChild),
+        provenance: extend(self(cast, run), hopOn(OpenChildOnRequest.policyName, run, 3, ChildRequested)),
+      }),
+    ),
+  ];
+};
+
+it.effect.prop("a person requests a run; the authority context grants its narrowed delegation and it starts", [Cast], ([cast]) => {
+  const { run: id, stray } = cast.runs;
+  const run = runOf(cast);
+  const allowance = allowanceOf(cast);
+  const request = RequestRun.make({
+    session: cast.session,
+    purpose: cast.purposes.run,
+    versions: cast.versions,
+    allowance,
+    historyBound: cast.bound,
+    source: sourceOf(cast),
+    terms: parentTerms(cast),
+  });
   return story(
     // A run starts a child with DelegateRun; only a person requests a top-level run.
-    as(asRun("run_x", "dlg:x")),
-    when(run1, request),
+    as(asRun(cast, stray)),
+    when(run, request),
     rejected(HumanOnly.make({})),
-    as(requester),
-    when(run1, request),
-    then(
-      run1,
-      RunRequested.make({
-        session,
-        purpose: "review",
-        versions,
-        allowance: 100,
-        historyBound: 20,
-        source,
-        terms: parentTerms,
-        requester: PrincipalId.make("p_req"),
-        provenance: provenanceOf(requester),
-      }),
-    ),
-    call(Authority.grantRun, { run: RunId.make("run_1"), source, terms: parentTerms, delegation: DelegationId.make("dlg:run_1") }),
+    as(requesterOf(cast)),
+    when(run, request),
+    then(run, requested(cast, allowance)),
+    call(Authority.grantRun, { run: id, source: sourceOf(cast), terms: parentTerms(cast), delegation: delegationOf(id) }),
     succeed(Authority.grantRun, {
-      delegation: DelegationId.make("dlg:run_1"),
-      accountable: PrincipalId.make("p_req"),
-      provenance: self("run_1", "dlg:run_1"),
+      delegation: delegationOf(id),
+      accountable: cast.principals.requester,
+      provenance: self(cast, id),
     }),
     then(
-      run1,
+      run,
       RunActivated.make({
-        session,
-        delegation: DelegationId.make("dlg:run_1"),
-        accountable: PrincipalId.make("p_req"),
-        runProvenance: self("run_1", "dlg:run_1"),
-        provenance: extend(provenanceOf(requester), grantHop),
+        session: cast.session,
+        delegation: delegationOf(id),
+        accountable: cast.principals.requester,
+        runProvenance: self(cast, id),
+        provenance: extend(provenanceOf(requesterOf(cast)), hopOn(GrantOnRequest.policyName, id, 1, RunRequested)),
       }),
     ),
-    state(run1, (current) => {
-      expect(current).toMatchObject({ _tag: "Running", run: { budget: { allowance: 100, reserved: 0, spent: 0, allocated: 0 } } });
+    state(run, (current) => {
+      expect(current).toMatchObject({ _tag: "Running", run: { budget: { allowance, reserved: 0, spent: 0, allocated: 0 } } });
     }),
-    view(SessionRuns, session, { runs: [{ run: RunId.make("run_1"), previous: O.none(), parent: O.none(), status: "running" }] }),
+    view(SessionRuns, cast.session, { runs: [{ run: id, previous: O.none(), parent: O.none(), status: "running" }] }),
   );
 });
 
-it.effect("a refused grant is recorded as the run's rejection", () =>
-  story(
-    as(requester),
-    when(run1, RequestRun.make({ session, purpose: "review", versions, allowance: 100, historyBound: 20, source, terms: parentTerms })),
-    then(
-      run1,
-      RunRequested.make({
-        session,
-        purpose: "review",
-        versions,
-        allowance: 100,
-        historyBound: 20,
-        source,
-        terms: parentTerms,
-        requester: PrincipalId.make("p_req"),
-        provenance: provenanceOf(requester),
+it.effect.prop("a refused grant is recorded as the run's rejection", [Cast], ([cast]) => {
+  const { run: id } = cast.runs;
+  const run = runOf(cast);
+  const allowance = allowanceOf(cast);
+  return story(
+    as(requesterOf(cast)),
+    when(
+      run,
+      RequestRun.make({
+        session: cast.session,
+        purpose: cast.purposes.run,
+        versions: cast.versions,
+        allowance,
+        historyBound: cast.bound,
+        source: sourceOf(cast),
+        terms: parentTerms(cast),
       }),
     ),
-    call(Authority.grantRun, { run: RunId.make("run_1") }),
-    fail(Authority.grantRun, GrantDenied.make({ reason: "TermsWiden" })),
+    then(run, requested(cast, allowance)),
+    call(Authority.grantRun, { run: id }),
+    fail(Authority.grantRun, GrantDenied.make({ reason: cast.words.denial })),
     then(
-      run1,
+      run,
       RunRejected.make({
-        session,
-        reason: "grant:TermsWiden",
+        session: cast.session,
+        reason: `grant:${cast.words.denial}`,
         released: 0,
-        provenance: extend(provenanceOf(requester), hopOn("GrantOnRequest", "AgentRun/run_1", 1, "RunRequested")),
+        provenance: extend(provenanceOf(requesterOf(cast)), hopOn(GrantOnRequest.policyName, id, 1, RunRequested)),
       }),
     ),
-    view(SessionRuns, session, { runs: [{ run: RunId.make("run_1"), previous: O.none(), parent: O.none(), status: "rejected" }] }),
-  ),
-);
+    view(SessionRuns, cast.session, { runs: [{ run: id, previous: O.none(), parent: O.none(), status: "rejected" }] }),
+  );
+});
 
-it.effect("a run refused mid-run, its hop refused at re-admission, gives back what its open reservation held", () =>
-  story(
-    ...active(100),
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, ReserveBudget.make({ reservation: reservation("r1"), units: 40 })),
-    then(run1, BudgetReserved.make({ session, reservation: reservation("r1"), units: 40, remaining: 60, provenance: self("run_1", "dlg:run_1") })),
+it.effect.prop("a run refused mid-run, its hop refused at re-admission, gives back what its open reservation held", [Cast], ([cast]) => {
+  const { run: id } = cast.runs;
+  const run = runOf(cast);
+  const [reservation] = cast.reservations;
+  const allowance = allowanceOf(cast);
+  const held = heldOf(cast);
+  const { refusal } = cast.words;
+  return story(
+    ...active(cast, allowance),
+    as(asRun(cast, id)),
+    when(run, ReserveBudget.make({ reservation, units: held })),
+    then(run, BudgetReserved.make({ session: cast.session, reservation, units: held, remaining: cast.ledger.free, provenance: self(cast, id) })),
     // The settle hop was refused, so the gateway records the refusal without re-admitting the run.
-    when(run1, RejectRun.make({ session, reason: "readmission:lapsed", provenance: self("run_1", "dlg:run_1") })),
-    then(run1, RunRejected.make({ session, reason: "readmission:lapsed", released: 40, provenance: self("run_1", "dlg:run_1") })),
-    state(run1, (current) =>
+    when(run, RejectRun.make({ session: cast.session, reason: refusal, provenance: self(cast, id) })),
+    then(run, RunRejected.make({ session: cast.session, reason: refusal, released: held, provenance: self(cast, id) })),
+    state(run, (current) =>
       expect(current).toMatchObject({
         _tag: "Refused",
-        reason: "readmission:lapsed",
-        run: { budget: { allowance: 100, reserved: 0, spent: 0 }, reservations: [] },
+        reason: refusal,
+        run: { budget: { allowance, reserved: 0, spent: 0 }, reservations: [] },
       }),
     ),
     // It takes no more reports, and reads as rejected.
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, ReleaseReservation.make({ reservation: reservation("r1") })),
+    as(asRun(cast, id)),
+    when(run, ReleaseReservation.make({ reservation })),
     rejected(RunNotRunning.make({ status: "rejected" })),
-    view(SessionRuns, session, { runs: [{ run: RunId.make("run_1"), previous: O.none(), parent: O.none(), status: "rejected" }] }),
-  ),
-);
+    view(SessionRuns, cast.session, { runs: [{ run: id, previous: O.none(), parent: O.none(), status: "rejected" }] }),
+  );
+});
 
-it.effect("reservations never exceed what remains, so two reservations cannot spend one allowance", () =>
-  story(
-    ...active(100),
+it.effect.prop("reservations never exceed what remains, so two reservations cannot spend one allowance", [Cast], ([cast]) => {
+  const { run: id } = cast.runs;
+  const run = runOf(cast);
+  const [stray, first, second, third, fourth] = cast.reservations;
+  const { used, free, over } = cast.ledger;
+  const allowance = allowanceOf(cast);
+  const held = heldOf(cast);
+  // After the first settles, everything but what it used is left.
+  const left = allowance - used;
+  return story(
+    ...active(cast, allowance),
     // Only the run itself reports on the run.
-    as(requester),
-    when(run1, ReserveBudget.make({ reservation: reservation("r0"), units: 1 })),
+    as(requesterOf(cast)),
+    when(run, ReserveBudget.make({ reservation: stray, units: used })),
     rejected(NotThisRun.make({})),
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, ReserveBudget.make({ reservation: reservation("r1"), units: 60 })),
-    then(run1, BudgetReserved.make({ session, reservation: reservation("r1"), units: 60, remaining: 40, provenance: self("run_1", "dlg:run_1") })),
+    as(asRun(cast, id)),
+    when(run, ReserveBudget.make({ reservation: first, units: held })),
+    then(run, BudgetReserved.make({ session: cast.session, reservation: first, units: held, remaining: free, provenance: self(cast, id) })),
     // A second, parallel call would spend the same allowance: refused.
-    when(run1, ReserveBudget.make({ reservation: reservation("r2"), units: 50 })),
-    rejected(BudgetExceeded.make({ requested: 50, remaining: 40 })),
+    when(run, ReserveBudget.make({ reservation: second, units: free + over })),
+    rejected(BudgetExceeded.make({ requested: free + over, remaining: free })),
     // Settled at the usage reported: the unused part of the reservation returns.
-    when(run1, SettleUsage.make({ reservation: reservation("r1"), units: 45 })),
+    when(run, SettleUsage.make({ reservation: first, units: used })),
     then(
-      run1,
-      UsageSettled.make({ session, reservation: reservation("r1"), reserved: 60, units: 45, remaining: 55, provenance: self("run_1", "dlg:run_1") }),
+      run,
+      UsageSettled.make({ session: cast.session, reservation: first, reserved: held, units: used, remaining: left, provenance: self(cast, id) }),
     ),
-    when(run1, ReserveBudget.make({ reservation: reservation("r3"), units: 55 })),
-    then(run1, BudgetReserved.make({ session, reservation: reservation("r3"), units: 55, remaining: 0, provenance: self("run_1", "dlg:run_1") })),
+    when(run, ReserveBudget.make({ reservation: third, units: left })),
+    then(run, BudgetReserved.make({ session: cast.session, reservation: third, units: left, remaining: 0, provenance: self(cast, id) })),
     // A failed call releases its reservation.
-    when(run1, ReleaseReservation.make({ reservation: reservation("r3") })),
-    then(run1, ReservationReleased.make({ session, reservation: reservation("r3"), units: 55, provenance: self("run_1", "dlg:run_1") })),
-    when(run1, ReserveBudget.make({ reservation: reservation("r4"), units: 56 })),
-    rejected(BudgetExceeded.make({ requested: 56, remaining: 55 })),
-    state(run1, (current) => {
-      expect(current).toMatchObject({ run: { budget: { allowance: 100, reserved: 0, spent: 45, allocated: 0 } } });
+    when(run, ReleaseReservation.make({ reservation: third })),
+    then(run, ReservationReleased.make({ session: cast.session, reservation: third, units: left, provenance: self(cast, id) })),
+    when(run, ReserveBudget.make({ reservation: fourth, units: left + over })),
+    rejected(BudgetExceeded.make({ requested: left + over, remaining: left })),
+    state(run, (current) => {
+      expect(current).toMatchObject({ run: { budget: { allowance, reserved: 0, spent: used, allocated: 0 } } });
     }),
-  ),
+  );
+});
+
+it.effect.prop(
+  "a parent gives a child a share of its budget and a narrower grant; the child cannot widen or overspend",
+  [Cast],
+  ([cast]) => {
+    const { run: id, child } = cast.runs;
+    const run = runOf(cast);
+    const childRun = AgentRun.ref(child);
+    const [first, second] = cast.reservations;
+    const { over } = cast.ledger;
+    const allowance = parentAllowanceOf(cast);
+    const share = shareOf(cast);
+    const granted = childTerms(cast);
+    const delegate = (units: number, terms: typeof granted) =>
+      DelegateRun.make({ child, delegation: delegationOf(child), purpose: cast.purposes.child, allowance: units, terms });
+    return story(
+      ...active(cast, allowance),
+      as(asRun(cast, id)),
+      when(run, delegate(share, termsOf(cast, O.none()))),
+      rejected(ChildGrantWidens.make({ dimension: "operations" })),
+      when(run, delegate(allowance + over, granted)),
+      rejected(BudgetExceeded.make({ requested: allowance + over, remaining: allowance })),
+      // The authority context delegates the parent's delegation, narrowed, to the child.
+      ...A.map(childOpens(cast), (step) =>
+        step._tag === "Call" ? call(Authority.grantRun, { run: child, source: delegatedSource(cast), delegation: delegationOf(child), terms: granted }) : step,
+      ),
+      // The child's share came out of the parent's budget; the parent waits.
+      state(run, (current) => {
+        expect(current).toMatchObject({ _tag: "AwaitingChild", run: { budget: { allowance, allocated: share } } });
+      }),
+      as(asRun(cast, child, granted)),
+      when(childRun, ReserveBudget.make({ reservation: first, units: share + over })),
+      rejected(BudgetExceeded.make({ requested: share + over, remaining: share })),
+      when(childRun, ReserveBudget.make({ reservation: first, units: share })),
+      then(
+        childRun,
+        BudgetReserved.make({ session: cast.session, reservation: first, units: share, remaining: 0, provenance: self(cast, child, granted) }),
+      ),
+      as(asRun(cast, id)),
+      when(run, ReserveBudget.make({ reservation: second, units: over })),
+      rejected(RunNotRunning.make({ status: "awaiting-child" })),
+      view(SessionRuns, cast.session, {
+        runs: [
+          { run: id, previous: O.none(), parent: O.none(), status: "awaiting-child" },
+          { run: child, previous: O.none(), parent: O.some(id), status: "running" },
+        ],
+      }),
+    );
+  },
 );
 
-it.effect("a parent gives a child a share of its budget and a narrower grant; the child cannot widen or overspend", () => {
-  const child = AgentRun.ref("run_child");
-  const childTerms = terms(O.some(["ProposeDisposition"]));
-  const delegate = (allowance: number, granted: GrantTerms) =>
-    DelegateRun.make({
-      child: RunId.make("run_child"),
-      delegation: DelegationId.make("dlg:run_child"),
-      purpose: "sub-review",
-      allowance,
-      terms: granted,
-    });
-  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.makeOption("dlg:run_1") });
-  const openHop = hopOn("OpenChildOnRequest", "AgentRun/run_1", 3, "ChildRequested");
+it.effect.prop("a run at its history bound continues as a new run, and the session's chain shows both", [Cast], ([cast]) => {
+  const { run: id } = cast.runs;
+  const run = runOf(cast);
+  const next = nextOf(id);
+  const allowance = allowanceOf(cast);
+  const bound = A.length(cast.steps);
+  // The continuation follows the request, the grant and one step for each place up to the bound.
+  const continueHop = hopOn(ContinueAtBound.policyName, id, 2 + bound + 1, RunContinued);
+  const steps = A.flatMap(cast.steps, (step, index) => {
+    const recorded = StepRecorded.make({ session: cast.session, step, count: index + 1, provenance: self(cast, id) });
+    return [
+      when(run, RecordStep.make({ step })),
+      index + 1 < bound
+        ? then(run, recorded)
+        : then(
+            run,
+            recorded,
+            RunContinued.make({
+              session: cast.session,
+              next,
+              lineage: id,
+              generation: 1,
+              parent: O.none(),
+              remaining: allowance,
+              reservations: [],
+              purpose: cast.purposes.run,
+              versions: cast.versions,
+              historyBound: bound,
+              source: delegatedSource(cast),
+              terms: parentTerms(cast),
+              requester: cast.principals.requester,
+              provenance: self(cast, id),
+            }),
+          ),
+    ];
+  });
   return story(
-    ...active(100),
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, delegate(30, terms(O.none()))),
-    rejected(ChildGrantWidens.make({ dimension: "operations" })),
-    when(run1, delegate(200, childTerms)),
-    rejected(BudgetExceeded.make({ requested: 200, remaining: 100 })),
-    when(run1, delegate(30, childTerms)),
+    ...active(cast, allowance, bound),
+    as(asRun(cast, id)),
+    ...steps,
+    call(Authority.grantRun, { run: next, source: delegatedSource(cast), delegation: delegationOf(next), terms: parentTerms(cast) }),
+    succeed(Authority.grantRun, { delegation: delegationOf(next), accountable: cast.principals.requester, provenance: self(cast, next) }),
     then(
-      run1,
-      ChildRequested.make({
-        session,
-        child: RunId.make("run_child"),
-        delegation: DelegationId.make("dlg:run_child"),
-        purpose: "sub-review",
-        allowance: 30,
-        terms: childTerms,
-        versions,
-        historyBound: 20,
-        source: childSource,
-        provenance: self("run_1", "dlg:run_1"),
-      }),
-    ),
-    // The authority context delegates the parent's delegation, narrowed, to the child.
-    call(Authority.grantRun, {
-      run: RunId.make("run_child"),
-      source: childSource,
-      delegation: DelegationId.make("dlg:run_child"),
-      terms: childTerms,
-    }),
-    succeed(Authority.grantRun, {
-      delegation: DelegationId.make("dlg:run_child"),
-      accountable: PrincipalId.make("p_req"),
-      provenance: self("run_child", "dlg:run_child", childTerms),
-    }),
-    then(
-      child,
-      ChildRunOpened.make({
-        session,
-        parent: RunId.make("run_1"),
-        purpose: "sub-review",
-        versions,
-        allowance: 30,
-        historyBound: 20,
-        source: childSource,
-        terms: childTerms,
-        delegation: DelegationId.make("dlg:run_child"),
-        accountable: PrincipalId.make("p_req"),
-        requester: PrincipalId.make("p_req"),
-        runProvenance: self("run_child", "dlg:run_child", childTerms),
-        provenance: extend(self("run_1", "dlg:run_1"), openHop),
-      }),
-    ),
-    // The child's share came out of the parent's budget; the parent waits.
-    state(run1, (current) => {
-      expect(current).toMatchObject({ _tag: "AwaitingChild", run: { budget: { allowance: 100, allocated: 30 } } });
-    }),
-    as(asRun("run_child", "dlg:run_child", childTerms)),
-    when(child, ReserveBudget.make({ reservation: reservation("c1"), units: 31 })),
-    rejected(BudgetExceeded.make({ requested: 31, remaining: 30 })),
-    when(child, ReserveBudget.make({ reservation: reservation("c1"), units: 30 })),
-    then(
-      child,
-      BudgetReserved.make({
-        session,
-        reservation: reservation("c1"),
-        units: 30,
-        remaining: 0,
-        provenance: self("run_child", "dlg:run_child", childTerms),
-      }),
-    ),
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, ReserveBudget.make({ reservation: reservation("p1"), units: 1 })),
-    rejected(RunNotRunning.make({ status: "awaiting-child" })),
-    view(SessionRuns, session, {
-      runs: [
-        { run: RunId.make("run_1"), previous: O.none(), parent: O.none(), status: "awaiting-child" },
-        { run: RunId.make("run_child"), previous: O.none(), parent: RunId.makeOption("run_1"), status: "running" },
-      ],
-    }),
-  );
-});
-
-it.effect("a run at its history bound continues as a new run, and the session's chain shows both", () => {
-  const next = AgentRun.ref("run_1~1");
-  const nextSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.makeOption("dlg:run_1") });
-  const continueHop = hopOn("ContinueAtBound", "AgentRun/run_1", 5, "RunContinued");
-  return story(
-    ...activeBounded(100, 2),
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, RecordStep.make({ step: "assess" })),
-    then(run1, StepRecorded.make({ session, step: "assess", count: 1, provenance: self("run_1", "dlg:run_1") })),
-    when(run1, RecordStep.make({ step: "propose" })),
-    then(
-      run1,
-      StepRecorded.make({ session, step: "propose", count: 2, provenance: self("run_1", "dlg:run_1") }),
-      RunContinued.make({
-        session,
-        next: RunId.make("run_1~1"),
-        lineage: RunId.make("run_1"),
-        generation: 1,
-        parent: O.none(),
-        remaining: 100,
-        reservations: [],
-        purpose: "review",
-        versions,
-        historyBound: 2,
-        source: nextSource,
-        terms: parentTerms,
-        requester: PrincipalId.make("p_req"),
-        provenance: self("run_1", "dlg:run_1"),
-      }),
-    ),
-    call(Authority.grantRun, {
-      run: RunId.make("run_1~1"),
-      source: nextSource,
-      delegation: DelegationId.make("dlg:run_1~1"),
-      terms: parentTerms,
-    }),
-    succeed(Authority.grantRun, {
-      delegation: DelegationId.make("dlg:run_1~1"),
-      accountable: PrincipalId.make("p_req"),
-      provenance: self("run_1~1", "dlg:run_1~1"),
-    }),
-    then(
-      next,
+      AgentRun.ref(next),
       ContinuationOpened.make({
-        session,
-        previous: RunId.make("run_1"),
-        lineage: RunId.make("run_1"),
+        session: cast.session,
+        previous: id,
+        lineage: id,
         generation: 1,
         parent: O.none(),
-        purpose: "review",
-        versions,
-        allowance: 100,
+        purpose: cast.purposes.run,
+        versions: cast.versions,
+        allowance,
         reservations: [],
-        historyBound: 2,
-        source: nextSource,
-        terms: parentTerms,
-        delegation: DelegationId.make("dlg:run_1~1"),
-        accountable: PrincipalId.make("p_req"),
-        requester: PrincipalId.make("p_req"),
-        runProvenance: self("run_1~1", "dlg:run_1~1"),
-        provenance: extend(self("run_1", "dlg:run_1"), continueHop),
+        historyBound: bound,
+        source: delegatedSource(cast),
+        terms: parentTerms(cast),
+        delegation: delegationOf(next),
+        accountable: cast.principals.requester,
+        requester: cast.principals.requester,
+        runProvenance: self(cast, next),
+        provenance: extend(self(cast, id), continueHop),
       }),
     ),
-    state(run1, { _tag: "Continued", next: RunId.make("run_1~1") }),
-    view(SessionRuns, session, {
+    state(run, { _tag: "Continued", next }),
+    view(SessionRuns, cast.session, {
       runs: [
-        { run: RunId.make("run_1"), previous: O.none(), parent: O.none(), status: "continued" },
-        { run: RunId.make("run_1~1"), previous: RunId.makeOption("run_1"), parent: O.none(), status: "running" },
+        { run: id, previous: O.none(), parent: O.none(), status: "continued" },
+        { run: next, previous: O.some(id), parent: O.none(), status: "running" },
       ],
     }),
   );
 });
 
-it.effect("completing a run releases its open reservations, so a finished run holds no budget", () =>
-  story(
-    ...active(100),
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, ReserveBudget.make({ reservation: reservation("r1"), units: 60 })),
-    then(run1, BudgetReserved.make({ session, reservation: reservation("r1"), units: 60, remaining: 40, provenance: self("run_1", "dlg:run_1") })),
-    when(run1, CompleteRun.make({ outcome: "done" })),
-    then(run1, RunCompleted.make({ session, outcome: "done", released: 60, provenance: self("run_1", "dlg:run_1") })),
-    state(run1, (current) => {
+it.effect.prop("completing a run releases its open reservations, so a finished run holds no budget", [Cast], ([cast]) => {
+  const { run: id } = cast.runs;
+  const run = runOf(cast);
+  const [reservation] = cast.reservations;
+  const allowance = allowanceOf(cast);
+  const held = heldOf(cast);
+  const { outcome } = cast.words;
+  return story(
+    ...active(cast, allowance),
+    as(asRun(cast, id)),
+    when(run, ReserveBudget.make({ reservation, units: held })),
+    then(run, BudgetReserved.make({ session: cast.session, reservation, units: held, remaining: cast.ledger.free, provenance: self(cast, id) })),
+    when(run, CompleteRun.make({ outcome })),
+    then(run, RunCompleted.make({ session: cast.session, outcome, released: held, provenance: self(cast, id) })),
+    state(run, (current) => {
       expect(current).toMatchObject({
         _tag: "Completed",
-        run: { budget: { allowance: 100, reserved: 0, spent: 0 }, reservations: [] },
+        run: { budget: { allowance, reserved: 0, spent: 0 }, reservations: [] },
       });
     }),
-  ),
-);
-
-it.effect("a child that finishes resumes its parent, which keeps what the child did not spend", () => {
-  const child = AgentRun.ref("run_child");
-  const childTerms = terms(O.some(["ProposeDisposition"]));
-  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.makeOption("dlg:run_1") });
-  const asChild = asRun("run_child", "dlg:run_child", childTerms);
-  return story(
-    ...active(100),
-    as(asRun("run_1", "dlg:run_1")),
-    when(
-      run1,
-      DelegateRun.make({
-        child: RunId.make("run_child"),
-        delegation: DelegationId.make("dlg:run_child"),
-        purpose: "sub-review",
-        allowance: 30,
-        terms: childTerms,
-      }),
-    ),
-    then(
-      run1,
-      ChildRequested.make({
-        session,
-        child: RunId.make("run_child"),
-        delegation: DelegationId.make("dlg:run_child"),
-        purpose: "sub-review",
-        allowance: 30,
-        terms: childTerms,
-        versions,
-        historyBound: 20,
-        source: childSource,
-        provenance: self("run_1", "dlg:run_1"),
-      }),
-    ),
-    call(Authority.grantRun, { run: RunId.make("run_child"), source: childSource }),
-    succeed(Authority.grantRun, {
-      delegation: DelegationId.make("dlg:run_child"),
-      accountable: PrincipalId.make("p_req"),
-      provenance: provenanceOf(asChild),
-    }),
-    then(
-      child,
-      ChildRunOpened.make({
-        session,
-        parent: RunId.make("run_1"),
-        purpose: "sub-review",
-        versions,
-        allowance: 30,
-        historyBound: 20,
-        source: childSource,
-        terms: childTerms,
-        delegation: DelegationId.make("dlg:run_child"),
-        accountable: PrincipalId.make("p_req"),
-        requester: PrincipalId.make("p_req"),
-        runProvenance: provenanceOf(asChild),
-        provenance: extend(self("run_1", "dlg:run_1"), hopOn("OpenChildOnRequest", "AgentRun/run_1", 3, "ChildRequested")),
-      }),
-    ),
-    as(asChild),
-    when(child, ReserveBudget.make({ reservation: reservation("c1"), units: 20 })),
-    then(child, BudgetReserved.make({ session, reservation: reservation("c1"), units: 20, remaining: 10, provenance: provenanceOf(asChild) })),
-    when(child, SettleUsage.make({ reservation: reservation("c1"), units: 12 })),
-    then(
-      child,
-      UsageSettled.make({ session, reservation: reservation("c1"), reserved: 20, units: 12, remaining: 18, provenance: provenanceOf(asChild) }),
-    ),
-    when(child, CompleteRun.make({ outcome: "done" })),
-    then(child, RunCompleted.make({ session, outcome: "done", released: 0, provenance: provenanceOf(asChild) })),
-    // The policy reads the finished child and tells its parent: 18 of 30 come back.
-    then(
-      run1,
-      ChildRunFinished.make({
-        session,
-        child: RunId.make("run_child"),
-        allowance: 30,
-        spent: 12,
-        outcome: "done",
-        provenance: extend(provenanceOf(asChild), hopOn("ResumeParent", "AgentRun/run_child", 4, "RunCompleted")),
-      }),
-    ),
-    state(run1, (current) => {
-      expect(current).toMatchObject({ _tag: "Running", run: { budget: { allowance: 100, allocated: 0, spent: 12 } } });
-    }),
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, ReserveBudget.make({ reservation: reservation("p1"), units: 88 })),
-    then(run1, BudgetReserved.make({ session, reservation: reservation("p1"), units: 88, remaining: 0, provenance: self("run_1", "dlg:run_1") })),
   );
 });
 
-it.effect("a child that runs out of budget is exhausted, and its parent resumes with what the child left", () => {
-  const child = AgentRun.ref("run_child");
-  const childTerms = terms(O.some(["ProposeDisposition"]));
-  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.makeOption("dlg:run_1") });
-  const asChild = asRun("run_child", "dlg:run_child", childTerms);
+it.effect.prop("a child that finishes resumes its parent, which keeps what the child did not spend", [Cast], ([cast]) => {
+  const { run: id, child } = cast.runs;
+  const run = runOf(cast);
+  const childRun = AgentRun.ref(child);
+  const [first, second] = cast.reservations;
+  const { used, unused, free } = cast.ledger;
+  const allowance = parentAllowanceOf(cast);
+  const share = shareOf(cast);
+  const held = heldOf(cast);
+  const { outcome } = cast.words;
+  const asChild = asRun(cast, child, childTerms(cast));
   return story(
-    ...active(100),
-    as(asRun("run_1", "dlg:run_1")),
-    when(
-      run1,
-      DelegateRun.make({
-        child: RunId.make("run_child"),
-        delegation: DelegationId.make("dlg:run_child"),
-        purpose: "sub-review",
-        allowance: 30,
-        terms: childTerms,
-      }),
-    ),
-    then(
-      run1,
-      ChildRequested.make({
-        session,
-        child: RunId.make("run_child"),
-        delegation: DelegationId.make("dlg:run_child"),
-        purpose: "sub-review",
-        allowance: 30,
-        terms: childTerms,
-        versions,
-        historyBound: 20,
-        source: childSource,
-        provenance: self("run_1", "dlg:run_1"),
-      }),
-    ),
-    call(Authority.grantRun, { run: RunId.make("run_child"), source: childSource }),
-    succeed(Authority.grantRun, {
-      delegation: DelegationId.make("dlg:run_child"),
-      accountable: PrincipalId.make("p_req"),
-      provenance: provenanceOf(asChild),
-    }),
-    then(
-      child,
-      ChildRunOpened.make({
-        session,
-        parent: RunId.make("run_1"),
-        purpose: "sub-review",
-        versions,
-        allowance: 30,
-        historyBound: 20,
-        source: childSource,
-        terms: childTerms,
-        delegation: DelegationId.make("dlg:run_child"),
-        accountable: PrincipalId.make("p_req"),
-        requester: PrincipalId.make("p_req"),
-        runProvenance: provenanceOf(asChild),
-        provenance: extend(self("run_1", "dlg:run_1"), hopOn("OpenChildOnRequest", "AgentRun/run_1", 3, "ChildRequested")),
-      }),
-    ),
+    ...active(cast, allowance),
+    ...childOpens(cast),
     as(asChild),
-    when(child, ReserveBudget.make({ reservation: reservation("c1"), units: 20 })),
-    then(child, BudgetReserved.make({ session, reservation: reservation("c1"), units: 20, remaining: 10, provenance: provenanceOf(asChild) })),
-    when(child, SettleUsage.make({ reservation: reservation("c1"), units: 12 })),
+    when(childRun, ReserveBudget.make({ reservation: first, units: held })),
+    then(childRun, BudgetReserved.make({ session: cast.session, reservation: first, units: held, remaining: free, provenance: provenanceOf(asChild) })),
+    when(childRun, SettleUsage.make({ reservation: first, units: used })),
     then(
-      child,
-      UsageSettled.make({ session, reservation: reservation("c1"), reserved: 20, units: 12, remaining: 18, provenance: provenanceOf(asChild) }),
-    ),
-    // The next call needs more than the 18 left: the child's executor ends it as exhausted.
-    when(child, ReserveBudget.make({ reservation: reservation("c2"), units: 30 })),
-    rejected(BudgetExceeded.make({ requested: 30, remaining: 18 })),
-    when(child, ExhaustRun.make({})),
-    then(child, RunExhausted.make({ session, remaining: 18, provenance: provenanceOf(asChild) })),
-    // The policy reads the finished child and tells its parent: 18 of 30 come back.
-    then(
-      run1,
-      ChildRunFinished.make({
-        session,
-        child: RunId.make("run_child"),
-        allowance: 30,
-        spent: 12,
-        outcome: "RunExhausted",
-        provenance: extend(provenanceOf(asChild), hopOn("ResumeParent", "AgentRun/run_child", 4, "RunExhausted")),
+      childRun,
+      UsageSettled.make({
+        session: cast.session,
+        reservation: first,
+        reserved: held,
+        units: used,
+        remaining: unused + free,
+        provenance: provenanceOf(asChild),
       }),
     ),
-    state(run1, (current) => {
-      expect(current).toMatchObject({ _tag: "Running", run: { budget: { allowance: 100, allocated: 0, spent: 12 } } });
+    when(childRun, CompleteRun.make({ outcome })),
+    then(childRun, RunCompleted.make({ session: cast.session, outcome, released: 0, provenance: provenanceOf(asChild) })),
+    // The policy reads the finished child and tells its parent: all but what it used of its share come back.
+    then(
+      run,
+      ChildRunFinished.make({
+        session: cast.session,
+        child,
+        allowance: share,
+        spent: used,
+        outcome,
+        provenance: extend(provenanceOf(asChild), hopOn(ResumeParent.policyName, child, 4, RunCompleted)),
+      }),
+    ),
+    state(run, (current) => {
+      expect(current).toMatchObject({ _tag: "Running", run: { budget: { allowance, allocated: 0, spent: used } } });
     }),
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, ReserveBudget.make({ reservation: reservation("p1"), units: 88 })),
-    then(run1, BudgetReserved.make({ session, reservation: reservation("p1"), units: 88, remaining: 0, provenance: self("run_1", "dlg:run_1") })),
+    as(asRun(cast, id)),
+    when(run, ReserveBudget.make({ reservation: second, units: allowance - used })),
+    then(
+      run,
+      BudgetReserved.make({ session: cast.session, reservation: second, units: allowance - used, remaining: 0, provenance: self(cast, id) }),
+    ),
   );
 });
 
-it.effect("a child refused mid-run gives back its reservation and resumes its parent, which keeps the child's share", () => {
-  const child = AgentRun.ref("run_child");
-  const childTerms = terms(O.some(["ProposeDisposition"]));
-  const childSource = GrantRef.make({ grant: GrantId.make("g_req"), delegation: DelegationId.makeOption("dlg:run_1") });
-  const asChild = asRun("run_child", "dlg:run_child", childTerms);
+it.effect.prop("a child that runs out of budget is exhausted, and its parent resumes with what the child left", [Cast], ([cast]) => {
+  const { run: id, child } = cast.runs;
+  const run = runOf(cast);
+  const childRun = AgentRun.ref(child);
+  const [first, second, third] = cast.reservations;
+  const { used, unused, free, over } = cast.ledger;
+  const allowance = parentAllowanceOf(cast);
+  const share = shareOf(cast);
+  const held = heldOf(cast);
+  const left = unused + free;
+  const asChild = asRun(cast, child, childTerms(cast));
   return story(
-    ...active(100),
-    as(asRun("run_1", "dlg:run_1")),
-    when(
-      run1,
-      DelegateRun.make({
-        child: RunId.make("run_child"),
-        delegation: DelegationId.make("dlg:run_child"),
-        purpose: "sub-review",
-        allowance: 30,
-        terms: childTerms,
-      }),
-    ),
-    then(
-      run1,
-      ChildRequested.make({
-        session,
-        child: RunId.make("run_child"),
-        delegation: DelegationId.make("dlg:run_child"),
-        purpose: "sub-review",
-        allowance: 30,
-        terms: childTerms,
-        versions,
-        historyBound: 20,
-        source: childSource,
-        provenance: self("run_1", "dlg:run_1"),
-      }),
-    ),
-    call(Authority.grantRun, { run: RunId.make("run_child"), source: childSource }),
-    succeed(Authority.grantRun, {
-      delegation: DelegationId.make("dlg:run_child"),
-      accountable: PrincipalId.make("p_req"),
-      provenance: provenanceOf(asChild),
-    }),
-    then(
-      child,
-      ChildRunOpened.make({
-        session,
-        parent: RunId.make("run_1"),
-        purpose: "sub-review",
-        versions,
-        allowance: 30,
-        historyBound: 20,
-        source: childSource,
-        terms: childTerms,
-        delegation: DelegationId.make("dlg:run_child"),
-        accountable: PrincipalId.make("p_req"),
-        requester: PrincipalId.make("p_req"),
-        runProvenance: provenanceOf(asChild),
-        provenance: extend(self("run_1", "dlg:run_1"), hopOn("OpenChildOnRequest", "AgentRun/run_1", 3, "ChildRequested")),
-      }),
-    ),
+    ...active(cast, allowance),
+    ...childOpens(cast),
     as(asChild),
-    when(child, ReserveBudget.make({ reservation: reservation("c1"), units: 20 })),
-    then(child, BudgetReserved.make({ session, reservation: reservation("c1"), units: 20, remaining: 10, provenance: provenanceOf(asChild) })),
+    when(childRun, ReserveBudget.make({ reservation: first, units: held })),
+    then(childRun, BudgetReserved.make({ session: cast.session, reservation: first, units: held, remaining: free, provenance: provenanceOf(asChild) })),
+    when(childRun, SettleUsage.make({ reservation: first, units: used })),
+    then(
+      childRun,
+      UsageSettled.make({ session: cast.session, reservation: first, reserved: held, units: used, remaining: left, provenance: provenanceOf(asChild) }),
+    ),
+    // The next call needs more than is left: the child's executor ends it as exhausted.
+    when(childRun, ReserveBudget.make({ reservation: second, units: left + over })),
+    rejected(BudgetExceeded.make({ requested: left + over, remaining: left })),
+    when(childRun, ExhaustRun.make({})),
+    then(childRun, RunExhausted.make({ session: cast.session, remaining: left, provenance: provenanceOf(asChild) })),
+    // The policy reads the finished child and tells its parent: what the child left comes back.
+    then(
+      run,
+      ChildRunFinished.make({
+        session: cast.session,
+        child,
+        allowance: share,
+        spent: used,
+        outcome: RunExhausted.tag,
+        provenance: extend(provenanceOf(asChild), hopOn(ResumeParent.policyName, child, 4, RunExhausted)),
+      }),
+    ),
+    state(run, (current) => {
+      expect(current).toMatchObject({ _tag: "Running", run: { budget: { allowance, allocated: 0, spent: used } } });
+    }),
+    as(asRun(cast, id)),
+    when(run, ReserveBudget.make({ reservation: third, units: allowance - used })),
+    then(
+      run,
+      BudgetReserved.make({ session: cast.session, reservation: third, units: allowance - used, remaining: 0, provenance: self(cast, id) }),
+    ),
+  );
+});
+
+it.effect.prop("a child refused mid-run gives back its reservation and resumes its parent, which keeps the child's share", [Cast], ([cast]) => {
+  const { child } = cast.runs;
+  const run = runOf(cast);
+  const childRun = AgentRun.ref(child);
+  const [reservation] = cast.reservations;
+  const allowance = parentAllowanceOf(cast);
+  const share = shareOf(cast);
+  const held = heldOf(cast);
+  const { refusal } = cast.words;
+  const asChild = asRun(cast, child, childTerms(cast));
+  return story(
+    ...active(cast, allowance),
+    ...childOpens(cast),
+    as(asChild),
+    when(childRun, ReserveBudget.make({ reservation, units: held })),
+    then(
+      childRun,
+      BudgetReserved.make({ session: cast.session, reservation, units: held, remaining: cast.ledger.free, provenance: provenanceOf(asChild) }),
+    ),
     // The child's next hop was refused at re-admission: the refusal is recorded without re-admitting it.
-    when(child, RejectRun.make({ session, reason: "readmission:lapsed", provenance: provenanceOf(asChild) })),
-    then(child, RunRejected.make({ session, reason: "readmission:lapsed", released: 20, provenance: provenanceOf(asChild) })),
-    // The policy reads the refused child and tells its parent: it spent nothing, so all 30 come back.
+    when(childRun, RejectRun.make({ session: cast.session, reason: refusal, provenance: provenanceOf(asChild) })),
+    then(childRun, RunRejected.make({ session: cast.session, reason: refusal, released: held, provenance: provenanceOf(asChild) })),
+    // The policy reads the refused child and tells its parent: it spent nothing, so its whole share comes back.
     then(
-      run1,
+      run,
       ChildRunFinished.make({
-        session,
-        child: RunId.make("run_child"),
-        allowance: 30,
+        session: cast.session,
+        child,
+        allowance: share,
         spent: 0,
-        outcome: "RunRejected",
-        provenance: extend(provenanceOf(asChild), hopOn("ResumeParent", "AgentRun/run_child", 3, "RunRejected")),
+        outcome: RunRejected.tag,
+        provenance: extend(provenanceOf(asChild), hopOn(ResumeParent.policyName, child, 3, RunRejected)),
       }),
     ),
-    state(run1, (current) => {
-      expect(current).toMatchObject({ _tag: "Running", run: { budget: { allowance: 100, allocated: 0, spent: 0 } } });
+    state(run, (current) => {
+      expect(current).toMatchObject({ _tag: "Running", run: { budget: { allowance, allocated: 0, spent: 0 } } });
     }),
   );
 });
 
-it.effect("a fact that decided the run's subject concludes it under its own provenance, once", () => {
-  const factHop = byProcess(
-    "ClaimDecisionInbox",
-    Cause.cases.Fact.make({ producer: "party", contract: "ClaimDecided", version: 1, fact: "claim_1:decided" }),
-  );
+it.effect.prop("a fact that decided the run's subject concludes it under its own provenance, once", [Cast], ([cast]) => {
+  const { run: id } = cast.runs;
+  const run = runOf(cast);
+  const [reservation] = cast.reservations;
+  const allowance = allowanceOf(cast);
+  const held = heldOf(cast);
+  const { outcome } = cast.words;
+  const { process, producer, contract, version, fact } = cast.fact;
+  const factHop = byProcess(process, Cause.cases.Fact.make({ producer, contract, version, fact }));
   return story(
-    ...active(100),
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, ReserveBudget.make({ reservation: reservation("r1"), units: 10 })),
-    then(run1, BudgetReserved.make({ session, reservation: reservation("r1"), units: 10, remaining: 90, provenance: self("run_1", "dlg:run_1") })),
-    when(run1, AwaitApproval.make({})),
-    then(run1, RunAwaitingApproval.make({ session, provenance: self("run_1", "dlg:run_1") })),
-    when(run1, ConcludeRun.make({ outcome: "accepted", hop: factHop })),
-    then(run1, RunCompleted.make({ session, outcome: "accepted", released: 10, provenance: extend(self("run_1", "dlg:run_1"), factHop) })),
+    ...active(cast, allowance),
+    as(asRun(cast, id)),
+    when(run, ReserveBudget.make({ reservation, units: held })),
+    then(run, BudgetReserved.make({ session: cast.session, reservation, units: held, remaining: cast.ledger.free, provenance: self(cast, id) })),
+    when(run, AwaitApproval.make({})),
+    then(run, RunAwaitingApproval.make({ session: cast.session, provenance: self(cast, id) })),
+    when(run, ConcludeRun.make({ outcome, hop: factHop })),
+    then(run, RunCompleted.make({ session: cast.session, outcome, released: held, provenance: extend(self(cast, id), factHop) })),
     // The same fact again finds the run finished and records nothing.
-    when(run1, ConcludeRun.make({ outcome: "accepted", hop: factHop })),
-    then(run1),
-    state(run1, (current) => {
-      expect(current).toMatchObject({ _tag: "Completed", outcome: "accepted", run: { budget: { reserved: 0 } } });
+    when(run, ConcludeRun.make({ outcome, hop: factHop })),
+    then(run),
+    state(run, (current) => {
+      expect(current).toMatchObject({ _tag: "Completed", outcome, run: { budget: { reserved: 0 } } });
     }),
   );
 });
 
 // Idempotency (D14), pinned as the library behaves today: the receipt is looked up by command
 // id before the command is decoded, authorized or decided (InMemory.ts:646-650).
-it.effect("a reused command id with the same payload returns the first receipt and records nothing", () =>
-  story(
-    ...active(100),
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, ReserveBudget.make({ reservation: reservation("r1"), units: 40 }), { commandId: "reserve-1" }),
-    then(run1, BudgetReserved.make({ session, reservation: reservation("r1"), units: 40, remaining: 60, provenance: self("run_1", "dlg:run_1") })),
-    replied({ remaining: 60 }),
-    when(run1, ReserveBudget.make({ reservation: reservation("r1"), units: 40 }), { commandId: "reserve-1" }),
-    then(run1),
-    replied({ remaining: 60 }),
-  ),
-);
+it.effect.prop("a reused command id with the same payload returns the first receipt and records nothing", [Cast], ([cast]) => {
+  const { run: id } = cast.runs;
+  const run = runOf(cast);
+  const [reservation] = cast.reservations;
+  const held = heldOf(cast);
+  const { free } = cast.ledger;
+  const reserve = ReserveBudget.make({ reservation, units: held });
+  return story(
+    ...active(cast, allowanceOf(cast)),
+    as(asRun(cast, id)),
+    when(run, reserve, { commandId: cast.commandId }),
+    then(run, BudgetReserved.make({ session: cast.session, reservation, units: held, remaining: free, provenance: self(cast, id) })),
+    replied({ remaining: free }),
+    when(run, reserve, { commandId: cast.commandId }),
+    then(run),
+    replied({ remaining: free }),
+  );
+});
 
-it.effect("PINNED HAZARD: a reused command id with a different payload returns the first request's receipt", () =>
-  story(
-    ...active(100),
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, ReserveBudget.make({ reservation: reservation("r1"), units: 40 }), { commandId: "reserve-1" }),
-    then(run1, BudgetReserved.make({ session, reservation: reservation("r1"), units: 40, remaining: 60, provenance: self("run_1", "dlg:run_1") })),
-    replied({ remaining: 60 }),
+it.effect.prop("PINNED HAZARD: a reused command id with a different payload returns the first request's receipt", [Cast], ([cast]) => {
+  const { run: id } = cast.runs;
+  const run = runOf(cast);
+  const [first, second] = cast.reservations;
+  const held = heldOf(cast);
+  const { free, over } = cast.ledger;
+  return story(
+    ...active(cast, allowanceOf(cast)),
+    as(asRun(cast, id)),
+    when(run, ReserveBudget.make({ reservation: first, units: held }), { commandId: cast.commandId }),
+    then(run, BudgetReserved.make({ session: cast.session, reservation: first, units: held, remaining: free, provenance: self(cast, id) })),
+    replied({ remaining: free }),
     // A different reservation under the same id: not decided, not refused, answered with the old reply.
-    when(run1, ReserveBudget.make({ reservation: reservation("r2"), units: 50 }), { commandId: "reserve-1" }),
-    then(run1),
-    replied({ remaining: 60 }),
-    state(run1, (current) => {
-      expect(current).toMatchObject({ run: { reservations: [{ reservation: "r1", units: 40 }] } });
+    when(run, ReserveBudget.make({ reservation: second, units: over }), { commandId: cast.commandId }),
+    then(run),
+    replied({ remaining: free }),
+    state(run, (current) => {
+      expect(current).toMatchObject({ run: { reservations: [{ reservation: first, units: held }] } });
     }),
-  ),
-);
+  );
+});
 
-it.effect("PINNED HAZARD: a caller without the grant, reusing the id, receives the stored result", () =>
-  story(
-    ...active(100),
-    as(asRun("run_1", "dlg:run_1")),
-    when(run1, ReserveBudget.make({ reservation: reservation("r1"), units: 40 }), { commandId: "reserve-1" }),
-    then(run1, BudgetReserved.make({ session, reservation: reservation("r1"), units: 40, remaining: 60, provenance: self("run_1", "dlg:run_1") })),
-    replied({ remaining: 60 }),
+it.effect.prop("PINNED HAZARD: a caller without the grant, reusing the id, receives the stored result", [Cast], ([cast]) => {
+  const { run: id } = cast.runs;
+  const run = runOf(cast);
+  const [first, , third] = cast.reservations;
+  const held = heldOf(cast);
+  const { free, used } = cast.ledger;
+  const reserve = ReserveBudget.make({ reservation: first, units: held });
+  return story(
+    ...active(cast, allowanceOf(cast)),
+    as(asRun(cast, id)),
+    when(run, reserve, { commandId: cast.commandId }),
+    then(run, BudgetReserved.make({ session: cast.session, reservation: first, units: held, remaining: free, provenance: self(cast, id) })),
+    replied({ remaining: free }),
     // The requester is not the run, so a fresh id is refused ...
-    as(requester),
-    when(run1, ReserveBudget.make({ reservation: reservation("r9"), units: 1 })),
+    as(requesterOf(cast)),
+    when(run, ReserveBudget.make({ reservation: third, units: used })),
     rejected(NotThisRun.make({})),
     // ... but the reused id is answered from the receipt, before any check runs.
-    when(run1, ReserveBudget.make({ reservation: reservation("r1"), units: 40 }), { commandId: "reserve-1" }),
-    then(run1),
-    replied({ remaining: 60 }),
-  ),
-);
+    when(run, reserve, { commandId: cast.commandId }),
+    then(run),
+    replied({ remaining: free }),
+  );
+});

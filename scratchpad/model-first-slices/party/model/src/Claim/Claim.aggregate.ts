@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { CurrentInvocation, requireGrant } from "@proto/kernel/CurrentInvocation.context";
+import { Count, Sequence } from "@proto/kernel/Measure";
 import { OrgId } from "@proto/kernel/Ids";
 import { Operator, operatorOf, provenanceOf, Root } from "@proto/kernel/Invocation";
 import { AcceptClaim, ClaimAccepted } from "@proto/party-contract/Claim/AcceptClaim.command";
@@ -52,8 +53,8 @@ export const ClaimState = S.TaggedUnion({
     org: OrgId,
     proposition: Proposition,
     signals: S.Array(EvidenceSignal),
-    revision: S.Int.pipe(Initial.of(1, { description: "The evidence revision; an asserted claim starts at 1." })),
-    reviews: S.Int.pipe(Initial.of(0, { description: "How many reviews were requested; none at first." })),
+    revision: Sequence.pipe(Initial.of(1, { description: "The evidence revision; an asserted claim starts at 1." })),
+    reviews: Count.pipe(Initial.of(0, { description: "How many reviews were requested; none at first." })),
     proposal: Initial.none(ProposalView, { description: "The latest proposal still standing; absent until a review proposes one." }),
   },
   Accepted: { org: OrgId, proposition: Proposition },

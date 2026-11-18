@@ -1,13 +1,15 @@
 import { type DeploymentDescriptor, FactVersion } from "@proto/kernel/Deployment";
+import { Count, Name } from "@proto/kernel/Measure";
 import { type GenerationEntry, type LiveGeneration, StreamPin } from "@proto/kernel/PublishedStream";
 import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
-import * as Equal from "effect/Equal";
+import * as Eq from "effect/Equal";
 import { pipe } from "effect/Function";
-import * as Num from "effect/Number";
+import * as N from "effect/Number";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { ledgerOf } from "./FactRetirement.ts";
+import { Equal } from "effect"
 
 /**
  * A consumer's checkpoint on the feed, read from where that consumer keeps it:
@@ -16,7 +18,7 @@ import { ledgerOf } from "./FactRetirement.ts";
  * @category models
  * @since 0.0.0
  */
-export const ConsumerCheckpoint = S.Struct({ consumer: S.String, position: S.Int });
+export const ConsumerCheckpoint = S.Struct({ consumer: Name, position: Count });
 /**
  * @category models
  * @since 0.0.0
@@ -30,7 +32,7 @@ export type ConsumerCheckpoint = typeof ConsumerCheckpoint.Type;
  * @category models
  * @since 0.0.0
  */
-export const FeedRef = S.Struct({ producer: S.String, contract: S.String });
+export const FeedRef = S.Struct({ producer: Name, contract: Name });
 /**
  * @category models
  * @since 0.0.0
@@ -104,7 +106,7 @@ export class RetirementRefused extends S.TaggedError<RetirementRefused, { readon
 
 /** The number of positions a generation held: its last entry's position, 0 when empty. */
 const lengthOf = (generation: LiveGeneration): number =>
-  A.reduce(generation.entries, 0, (last, entry) => Num.max(last, entry.position));
+  A.reduce(generation.entries, 0, (last, entry) => N.max(last, entry.position));
 
 const readOf = (generations: ReadonlyArray<LiveGeneration>) => (stream: string) =>
   A.findFirst(generations, (generation) => generation.stream === stream);
@@ -128,7 +130,7 @@ const heldBySuccessor = (stream: string, retiring: LiveGeneration, successor: Li
         onNone: () =>
           RetirementRefusal.cases.FactMissing.makeOption({ stream, successor: successor.stream, factId: entry.factId, version: entry.version }),
         onSome: (held) =>
-          Equal.equals(held.payload, entry.payload)
+          Eq.equals(held.payload, entry.payload)
             ? O.none()
             : RetirementRefusal.cases.PayloadDiffers.makeOption({ stream, successor: successor.stream, factId: entry.factId, version: entry.version }),
       }),
@@ -228,7 +230,7 @@ export const checkGenerationRetirement = ({
   const streams = (pins: ReadonlyArray<StreamPin>) => A.map(pins, (pin) => pin.stream);
   // (c) Pins are append-only: the current generations stay, in order, at the head of the next.
   const moved =
-    Equal.equals(streams(current), A.take(streams(next), A.length(current)))
+    Eq.equals(streams(current), A.take(streams(next), A.length(current)))
       ? A.empty<RetirementRefusal>()
       : [RetirementRefusal.cases.PinsMoved.make({ current: streams(current), next: streams(next) })];
   const consumers = consumersOf(feed, descriptors);
@@ -240,7 +242,7 @@ export const checkGenerationRetirement = ({
       A.filter(before, (pin) => O.isNone(heldBy(read)(pin))),
       (pin) => RetirementRefusal.cases.Unread.make({ stream: pin.stream }),
     );
-    const from = A.reduce(A.getSomes(A.map(before, heldBy(read))), 0, Num.sum);
+    const from = A.reduce(A.getSomes(A.map(before, heldBy(read))), 0, N.sum);
     const through = from + length;
     const successor = A.findFirst(A.drop(next, index + 1), (later) => !StreamPin.guards.Retired(later));
     const refusals: ReadonlyArray<RetirementRefusal> = pipe(

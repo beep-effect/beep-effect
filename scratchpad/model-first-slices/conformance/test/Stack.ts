@@ -13,7 +13,7 @@ import { dual, pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as Layer from "effect/Layer";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Schedule from "effect/Schedule";

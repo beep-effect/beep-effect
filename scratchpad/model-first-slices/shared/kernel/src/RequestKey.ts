@@ -3,7 +3,7 @@ import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Order from "effect/Order";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "@beep/utils/Str";

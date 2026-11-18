@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { RunId } from "@proto/kernel/Ids";
+import { Sequence } from "@proto/kernel/Measure";
 import { Provenance } from "@proto/kernel/Invocation";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
@@ -32,7 +33,7 @@ export class ReviewAssist extends Domain.Saga(
       claim: ClaimId,
       proposition: Proposition,
       signals: S.Array(EvidenceSignal),
-      evidenceRevision: S.Int,
+      evidenceRevision: Sequence,
       provenance: Provenance,
     },
     rejects: [ReasonerUnavailable, RunRefused, ClaimNotPending, MissingGrant, NotAnAgent, ProposalStale],

@@ -2,7 +2,7 @@ import type { RunId } from "@proto/kernel/Ids";
 import { AgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as Schedule from "effect/Schedule";
 
 /**
