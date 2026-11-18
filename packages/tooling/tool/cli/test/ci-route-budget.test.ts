@@ -119,6 +119,25 @@ describe("route corpus read budget", () => {
     )
   );
 
+  it.effect("holds the first call, before any response names the identity, on a user bucket below its reserve", () =>
+    withLedger(
+      Effect.gen(function* () {
+        const { budget, sink } = yield* meteredBudget;
+        // Another reader on this host spent the bucket; the capture has observed nothing yet.
+        yield* respond(5, 30 * SECOND).pipe(Effect.provideService(RateLimitSink, sink));
+        const held = yield* Effect.forkChild(budget.admit("gh run list"));
+        yield* TestClock.adjust("29 seconds");
+        expect(held.pollUnsafe()).toBeUndefined();
+        yield* TestClock.adjust("2 seconds");
+        const exit = yield* Fiber.await(held);
+        expect(exit._tag).toBe("Success");
+        const spend = yield* budget.spend;
+        expect(spend.requests).toBe(0);
+        expect(spend.reserveWaits).toBe(1);
+      })
+    )
+  );
+
   it.effect("refuses a wait past an hour so the checkpoint resumes the capture later", () =>
     withLedger(
       Effect.gen(function* () {

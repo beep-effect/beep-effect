@@ -21,6 +21,7 @@
  */
 import { RateLimitSink } from "@beep/github/Resilience";
 import { $RepoCliId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -29,6 +30,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { identityOfObservation } from "../../internal/github/GithubLedger.reducers.ts";
 import { BucketKey, GithubIdentityLabel, ReserveState } from "../../internal/github/GithubLedger.schemas.ts";
 import { GithubBudgetLedger } from "../../internal/github/GithubLedger.service.ts";
@@ -106,9 +108,9 @@ export class RouteReadBudget extends Context.Service<RouteReadBudget, RouteReadB
  *
  * **Details**
  *
- * The identity is learned from the first observed response, so the first call
- * is admitted; GitHub's own rate-limit refusal and the corpus's reset wait
- * still guard it.
+ * The identity is learned from the first observed response. Until then a
+ * call is held while any `user:` identity's `core` bucket is below its
+ * floor, since the capture reads as this host's `gh` login.
  *
  * **Example** (An unmetered budget admits every call)
  *
@@ -153,37 +155,53 @@ export const makeRouteReadBudget = Effect.fnUntraced(function* (
       return yield* Effect.provideService(call, RateLimitSink, { record: observe(inner) });
     });
 
-  // The reset instant while the identity's core bucket is below its floor; none admits the call.
-  const belowUntil = (owner: GithubBudgetLedgerShape, who: GithubIdentityLabel) =>
-    owner.reserve(BucketKey.make({ identity: who, resource: "core" })).pipe(
-      Effect.map((signal) =>
-        ReserveState.guards.Below(signal.state) ? O.some(signal.state.resetAt) : O.none<DateTime.Utc>()
+  // The held bucket and its reset while the capture identity's core bucket is below its floor; none
+  // admits the call. Until a response names the identity, any user's core bucket below its floor holds,
+  // because the capture reads as this host's `gh` login.
+  const heldBucket = (owner: GithubBudgetLedgerShape, who: O.Option<GithubIdentityLabel>) =>
+    O.match(who, {
+      onSome: (known) => Effect.map(owner.reserve(BucketKey.make({ identity: known, resource: "core" })), A.of),
+      onNone: () =>
+        Effect.map(
+          owner.reserves,
+          A.filter((signal) => signal.key.resource === "core" && Str.startsWith("user:")(signal.key.identity))
+        ),
+    }).pipe(
+      Effect.map(
+        A.findFirst((signal) =>
+          ReserveState.guards.Below(signal.state)
+            ? O.some({ identity: signal.key.identity, resetAt: signal.state.resetAt })
+            : O.none()
+        )
       ),
       Effect.catchCause((cause) =>
-        Effect.as(Effect.logDebug("route corpus reserve unreadable", cause), O.none<DateTime.Utc>())
+        Effect.as(
+          Effect.logDebug("route corpus reserve unreadable", cause),
+          O.none<{ readonly identity: GithubIdentityLabel; readonly resetAt: DateTime.Utc }>()
+        )
       )
     );
 
   const admit: (label: string) => Effect.Effect<void, RouteError> = Effect.fnUntraced(function* (label: string) {
     if (O.isNone(ledger)) return;
     const who = yield* Ref.get(identity);
-    if (O.isNone(who)) return;
-    const until = yield* belowUntil(ledger.value, who.value);
-    if (O.isNone(until)) return;
+    const held = yield* heldBucket(ledger.value, who);
+    if (O.isNone(held)) return;
+    const { identity: owner, resetAt } = held.value;
     const now = yield* DateTime.now;
     const wait = Duration.sum(
-      Duration.millis(Math.max(0, DateTime.toEpochMillis(until.value) - DateTime.toEpochMillis(now))),
+      Duration.millis(Math.max(0, DateTime.toEpochMillis(resetAt) - DateTime.toEpochMillis(now))),
       RESERVE_MARGIN
     );
     if (Duration.isGreaterThan(wait, RESERVE_MAX_WAIT)) {
       return yield* RouteError.new(
         "corpus-fetch",
-        `${label} is held: ${who.value}'s core bucket is below its 15% reserve until ${DateTime.formatIso(until.value)}; rerun the capture after that to continue from its checkpoint.`
+        `${label} is held: ${owner}'s core bucket is below its 15% reserve until ${DateTime.formatIso(resetAt)}; rerun the capture after that to continue from its checkpoint.`
       );
     }
     yield* Ref.update(reserveWaits, (n) => n + 1);
     yield* Effect.logWarning("route corpus waiting for the GitHub core reserve to clear").pipe(
-      Effect.annotateLogs({ label, identity: who.value, resetsAt: DateTime.formatIso(until.value) })
+      Effect.annotateLogs({ label, identity: owner, resetsAt: DateTime.formatIso(resetAt) })
     );
     yield* Effect.sleep(wait);
     return yield* admit(label);
