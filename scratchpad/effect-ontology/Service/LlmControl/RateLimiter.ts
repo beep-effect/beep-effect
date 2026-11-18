@@ -267,7 +267,8 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
     );
   return {
     acquire: Effect.fn("CentralRateLimiter.acquire")(function* (estimatedTokens: number) {
-      const now = Number(yield* Clock.currentTimeMillis);
+      const resolvedValue270_26 = yield* Clock.currentTimeMillis;
+      const now = Number(resolvedValue270_26);
       const current = yield* Ref.get(state);
       if (current.circuitState === "open") {
         const elapsed = now - current.lastReset;
@@ -314,7 +315,8 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
     }),
     release: Effect.fn("CentralRateLimiter.release")(function* (_actualTokens: number, success: boolean) {
       yield* semaphore.release(1);
-      const now = Number(yield* Clock.currentTimeMillis);
+      const resolvedValue317_26 = yield* Clock.currentTimeMillis;
+      const now = Number(resolvedValue317_26);
       yield* Ref.update(state, (s) => {
         if (success) {
           const newSuccessCount = s.successCount + 1;
@@ -341,7 +343,8 @@ const make = Effect.fn("CentralRateLimiter.make")(function* (config: RateLimiter
     getMetrics: Ref.get(state),
     getResetTime: Effect.gen(function* () {
       const s = yield* Ref.get(state);
-      const now = Number(yield* Clock.currentTimeMillis);
+      const resolvedValue344_26 = yield* Clock.currentTimeMillis;
+      const now = Number(resolvedValue344_26);
       const elapsed = now - s.lastReset;
       return Duration.millis(N.max(0, rateWindowMillis - elapsed));
     }),

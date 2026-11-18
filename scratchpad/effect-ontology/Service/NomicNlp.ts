@@ -1,4 +1,3 @@
-
 /**
  * Nomic NLP Service - Effect wrapper for Nomic Embeddings via Transformers.js
  *

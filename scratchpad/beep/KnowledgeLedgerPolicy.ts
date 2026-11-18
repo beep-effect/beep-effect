@@ -328,7 +328,12 @@ export const normalizePlaybookHandle = (value: unknown): string => {
   if (P.isString(value) || P.isNumber(value) || P.isBoolean(value)) {
     return A.join(" ")(A.filter(Str.split(/\s+/u)(String(value)), (part) => part.length > 0));
   }
-  return A.join(" ")(A.filter(Str.split(/\s+/u)(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value).pipe(Result.getOrThrow)), (part) => part.length > 0));
+  return S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value).pipe(
+    Result.getOrThrow,
+    Str.split(/\s+/u),
+    A.filter((part) => part.length > 0),
+    A.join(" "),
+  );
 };
 
 const slotByName = A.reduce(LEDGER_SLOT_DEFINITIONS, Rec.empty<string, LedgerSlotDefinition>(), (acc, definition) =>

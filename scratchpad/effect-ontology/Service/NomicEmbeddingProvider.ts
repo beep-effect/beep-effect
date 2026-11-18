@@ -17,8 +17,8 @@ import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
 import { ConfigService } from "./Config.ts";
-import type { EmbeddingProviderMethods, EmbeddingRequest, ProviderMetadata } from "./EmbeddingProvider.ts";
-import { cosineSimilarity, EmbeddingProvider } from "./EmbeddingProvider.ts";
+import type { EmbeddingProviderMethods, EmbeddingRequest } from "./EmbeddingProvider.ts";
+import { cosineSimilarity, EmbeddingProvider, ProviderMetadata } from "./EmbeddingProvider.ts";
 import type { NomicTaskType } from "./NomicNlp.ts";
 import { NomicNlpService, NomicNlpServiceLive } from "./NomicNlp.ts";
 
@@ -64,18 +64,18 @@ export const NomicEmbeddingProviderLive: Layer.Layer<EmbeddingProvider, never, N
       const nomic = yield* NomicNlpService;
       const config = yield* ConfigService;
 
-      const metadata: ProviderMetadata = {
+      const metadata: ProviderMetadata = ProviderMetadata.make({
         providerId: "nomic",
         modelId: config.embedding.transformersModelId,
         dimension: config.embedding.dimension,
-      };
+      });
 
       const embedBatch: EmbeddingProviderMethods["embedBatch"] = Effect.fn("NomicEmbeddingProvider.embedBatch")(
         function* (requests: ReadonlyArray<EmbeddingRequest>) {
           if (A.isReadonlyArrayEmpty(requests)) {
             return [];
           }
-          const taskType = mapTaskType(requests[0].taskType);
+          const taskType = mapTaskType(A.getUnsafe(requests, 0).taskType);
           const texts = A.map(requests, (request) => request.text);
           return yield* nomic.embedBatch(texts, taskType, config.embedding.dimension);
         },

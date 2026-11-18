@@ -1,4 +1,3 @@
-
 /**
  * Service: RDF Services
  *
@@ -18,6 +17,7 @@ import type { BlankNode as BlankNodeType, Quad } from "@beep/rdf";
 import {
   GraphTerm,
   IRI,
+  MakeQuadOptionsInput,
   makeBlankNode,
   makeNamedNode as makeCanonicalNamedNode,
   makeLiteral,
@@ -268,12 +268,16 @@ export const rdfStoreQuads: {
   (store: RdfStore, pattern: QuadPattern): Effect.Effect<ReadonlyArray<Quad>, RdfError>;
 } = dual(2, (store: RdfStore, pattern: QuadPattern): Effect.Effect<ReadonlyArray<Quad>, RdfError> => {
   const n3Store = backend(store);
-  return Effect.forEach(n3Store.getQuads(
+  return Effect.forEach(
+    n3Store.getQuads(
       domainTermToN3Term(pattern.subject ?? null),
       domainTermToN3Term(pattern.predicate ?? null),
       domainTermToN3Term(pattern.object ?? null),
       domainTermToN3Term(pattern.graph ?? null)
-    ), n3QuadToDomainQuad, { concurrency: 1 });
+    ),
+    n3QuadToDomainQuad,
+    { concurrency: 1 }
+  );
 });
 
 /**
@@ -496,7 +500,7 @@ const n3QuadToDomainQuad = Effect.fn("Rdf.n3QuadToDomainQuad")(function* (n3Quad
   const object = yield* n3TermToDomainTerm(n3Quad.object);
 
   return n3Quad.graph.termType === "NamedNode"
-    ? makeQuad(subject, predicate, { object, graph: makeNamedNode(n3Quad.graph.value) })
+    ? makeQuad(subject, predicate, MakeQuadOptionsInput.make({ object, graph: makeNamedNode(n3Quad.graph.value) }))
     : makeQuad(subject, predicate, object);
 });
 
@@ -548,7 +552,9 @@ const canonicalQuadToN3 = (quad: CanonicalRdf.Quad): N3.Quad =>
 export const rdfStoreToDataset = Effect.fn("Rdf.rdfStoreToDataset")(function* (
   store: RdfStore
 ): Effect.fn.Return<CanonicalRdf.Dataset, RdfError> {
-  const quads = yield* Effect.forEach(backend(store).getQuads(null, null, null, null), n3QuadToDomainQuad, { concurrency: 1 });
+  const quads = yield* Effect.forEach(backend(store).getQuads(null, null, null, null), n3QuadToDomainQuad, {
+    concurrency: 1,
+  });
   return CanonicalRdf.makeDataset(quads);
 });
 
@@ -980,18 +986,19 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
        */
       parseTurtle: (turtle: string) =>
         turtleCodec.parse(N3ParseTurtleRequest.make({ source: turtle })).pipe(
-          Effect.map(({ dataset }) => {
-            const n3Store = new N3.Store();
-            n3Store.addQuads(A.map(dataset.quads, canonicalQuadToN3));
-            return makeRdfStore(n3Store);
-          }),
-          Effect.mapError((error) =>
-            ParsingFailed.make({
-              message: `Failed to parse Turtle: ${error.message}`,
-              cause: O.some(error),
-              format: O.some("Turtle"),
-            })
-          )
+          Effect.mapBoth({
+            onSuccess: ({ dataset }) => {
+              const n3Store = new N3.Store();
+              n3Store.addQuads(A.map(dataset.quads, canonicalQuadToN3));
+              return makeRdfStore(n3Store);
+            },
+            onFailure: (error) =>
+              ParsingFailed.make({
+                message: `Failed to parse Turtle: ${error.message}`,
+                cause: O.some(error),
+                format: O.some("Turtle"),
+              }),
+          })
         ),
 
       /**
@@ -1095,7 +1102,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             const namespace = P.isNotUndefined(options?.targetNamespace)
               ? (() => {
                   // Extract protocol://domain/ from baseNs
-                  const match = baseNs.match(/^https?:\/\/[^/]+\//);
+                  const match = O.getOrNull(Str.match(/^https?:\/\/[^/]+\//)(baseNs));
                   const baseDomain = P.isNotNull(match) ? match[0] : "https://example.org/";
                   return `${baseDomain}${options.targetNamespace}/`;
                 })()
@@ -1144,7 +1151,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
             const namespace = P.isNotUndefined(options?.targetNamespace)
               ? (() => {
                   // Extract protocol://domain/ from baseNs
-                  const match = baseNs.match(/^https?:\/\/[^/]+\//);
+                  const match = O.getOrNull(Str.match(/^https?:\/\/[^/]+\//)(baseNs));
                   const baseDomain = P.isNotNull(match) ? match[0] : "https://example.org/";
                   return `${baseDomain}${options.targetNamespace}/`;
                 })()
@@ -1518,14 +1525,15 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
                 })
               )
               .pipe(
-                Effect.map(({ source }) => source),
-                Effect.mapError((error) =>
-                  SerializationFailed.make({
-                    message: `Turtle serialization failed: ${error.message}`,
-                    cause: O.some(error),
-                    format: O.some("Turtle"),
-                  })
-                )
+                Effect.mapBoth({
+                  onSuccess: ({ source }) => source,
+                  onFailure: (error) =>
+                    SerializationFailed.make({
+                      message: `Turtle serialization failed: ${error.message}`,
+                      cause: O.some(error),
+                      format: O.some("Turtle"),
+                    }),
+                })
               )
           ),
           Effect.timeoutOrElse({
@@ -1574,7 +1582,7 @@ export class RdfBuilder extends Context.Service<RdfBuilder>()($I`RdfBuilder`, {
                 )
               );
             } else {
-              resume(Effect.succeed(result));
+              resume(Effect.succeed(result ?? ""));
             }
           });
         }).pipe(

@@ -1,4 +1,3 @@
-
 import * as Digest from "effect/crypto/Digest";
 /**
  * Service: Grounder
@@ -377,13 +376,15 @@ const buildGrounderPrompt = ({ context, object, predicate, relation, subject }: 
     object: [objectLabel, objectDetail],
     predicateLabel,
     subjectLabel,
-  } = relationPromptLabels({
-    context,
-    object,
-    predicate,
-    relation,
-    subject,
-  });
+  } = relationPromptLabels(
+    RelationVerificationInput.make({
+      context,
+      object,
+      predicate,
+      relation,
+      subject,
+    })
+  );
 
   return `You are a verifier that determines whether a triple is grounded in the provided context.
 
@@ -669,23 +670,27 @@ const validateRelationBatch = Effect.fn("Grounder.validateRelationBatch")(functi
       missingIndexes: missing,
     });
   }
-  return yield* Effect.forEach(inputs, (input, index) =>
-    O.match(HashMap.get(byIndex, index), {
-      onNone: () =>
-        GroundingProtocolError.make({
-          kind: "relation",
-          expectedCount: S.Natural.make(inputs.length),
-          receivedCount: S.Natural.make(results.length),
-          missingIndexes: [S.Natural.make(index)],
-        }),
-      onSome: (result) =>
-        Effect.succeed(
-          GrounderResult.make({
-            decision: groundingDecision(result.grounded, result.confidence),
-            relation: input.relation,
-          })
-        ),
-    }), { concurrency: 1 });
+  return yield* Effect.forEach(
+    inputs,
+    (input, index) =>
+      O.match(HashMap.get(byIndex, index), {
+        onNone: () =>
+          GroundingProtocolError.make({
+            kind: "relation",
+            expectedCount: S.Natural.make(inputs.length),
+            receivedCount: S.Natural.make(results.length),
+            missingIndexes: [S.Natural.make(index)],
+          }),
+        onSome: (result) =>
+          Effect.succeed(
+            GrounderResult.make({
+              decision: groundingDecision(result.grounded, result.confidence),
+              relation: input.relation,
+            })
+          ),
+      }),
+    { concurrency: 1 }
+  );
 });
 
 const validateEntityBatch = Effect.fn("Grounder.validateEntityBatch")(function* (
@@ -708,24 +713,28 @@ const validateEntityBatch = Effect.fn("Grounder.validateEntityBatch")(function* 
       missingIndexes: missing,
     });
   }
-  return yield* Effect.forEach(entities, (entity, index) =>
-    O.match(HashMap.get(byIndex, index), {
-      onNone: () =>
-        GroundingProtocolError.make({
-          kind: "entity",
-          expectedCount: S.Natural.make(entities.length),
-          receivedCount: S.Natural.make(results.length),
-          missingIndexes: [S.Natural.make(index)],
-        }),
-      onSome: (result) =>
-        Effect.succeed(
-          EntityGrounderResult.make({
-            decision: groundingDecision(result.grounded, result.confidence),
-            typeMatch: result.typeMatch,
-            entity,
-          })
-        ),
-    }), { concurrency: 1 });
+  return yield* Effect.forEach(
+    entities,
+    (entity, index) =>
+      O.match(HashMap.get(byIndex, index), {
+        onNone: () =>
+          GroundingProtocolError.make({
+            kind: "entity",
+            expectedCount: S.Natural.make(entities.length),
+            receivedCount: S.Natural.make(results.length),
+            missingIndexes: [S.Natural.make(index)],
+          }),
+        onSome: (result) =>
+          Effect.succeed(
+            EntityGrounderResult.make({
+              decision: groundingDecision(result.grounded, result.confidence),
+              typeMatch: result.typeMatch,
+              entity,
+            })
+          ),
+      }),
+    { concurrency: 1 }
+  );
 });
 
 /**
@@ -805,7 +814,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             return [];
           }
           if (inputs.length === 1) {
-            const prompt = buildGrounderPrompt(inputs[0]);
+            const prompt = buildGrounderPrompt(A.getUnsafe(inputs, 0));
             const result = yield* generateObjectWithRetry({
               prompt,
               schema: Verification,
@@ -828,7 +837,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             return [
               GrounderResult.make({
                 decision: groundingDecision(result.value.grounded, result.value.confidence),
-                relation: inputs[0].relation,
+                relation: A.getUnsafe(inputs, 0).relation,
               }),
             ];
           }
@@ -854,18 +863,21 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
         (effect, inputs) =>
           effect.pipe(
             Effect.tap((results) =>
-              Effect.all([
-                Effect.logDebug("Grounder batch verification complete", {
-                  stage: "grounder",
-                  batchSize: inputs.length,
-                  groundedCount: A.length(A.filter(results, (result) => result.grounded)),
-                }),
-                Effect.annotateCurrentSpan(LlmAttributes.RELATION_COUNT, inputs.length),
-                Effect.annotateCurrentSpan(
-                  "grounder.grounded_count",
-                  A.length(A.filter(results, (result) => result.grounded))
-                ),
-              ], { concurrency: 1 })
+              Effect.all(
+                [
+                  Effect.logDebug("Grounder batch verification complete", {
+                    stage: "grounder",
+                    batchSize: inputs.length,
+                    groundedCount: A.length(A.filter(results, (result) => result.grounded)),
+                  }),
+                  Effect.annotateCurrentSpan(LlmAttributes.RELATION_COUNT, inputs.length),
+                  Effect.annotateCurrentSpan(
+                    "grounder.grounded_count",
+                    A.length(A.filter(results, (result) => result.grounded))
+                  ),
+                ],
+                { concurrency: 1 }
+              )
             ),
             Effect.withSpan("grounder-batch-verification", {
               attributes: {
@@ -948,7 +960,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
             return [];
           }
           if (entities.length === 1) {
-            const input = { context, entity: entities[0] };
+            const input = EntityVerificationInput.make({ context, entity: A.getUnsafe(entities, 0) });
             const prompt = buildEntityGrounderPrompt(input);
             const result = yield* generateObjectWithRetry({
               prompt,
@@ -969,7 +981,7 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
               EntityGrounderResult.make({
                 decision: groundingDecision(result.value.grounded, result.value.confidence),
                 typeMatch: result.value.typeMatch,
-                entity: entities[0],
+                entity: A.getUnsafe(entities, 0),
               }),
             ];
           }
@@ -995,18 +1007,21 @@ export class Grounder extends Context.Service<Grounder>()($I`Grounder`, {
         (effect, _context, entities) =>
           effect.pipe(
             Effect.tap((results) =>
-              Effect.all([
-                Effect.logDebug("Grounder batch entity verification complete", {
-                  stage: "grounder",
-                  batchSize: entities.length,
-                  groundedCount: A.length(A.filter(results, (result) => result.grounded)),
-                }),
-                Effect.annotateCurrentSpan(LlmAttributes.ENTITY_COUNT, entities.length),
-                Effect.annotateCurrentSpan(
-                  "grounder.entity_grounded_count",
-                  A.length(A.filter(results, (result) => result.grounded))
-                ),
-              ], { concurrency: 1 })
+              Effect.all(
+                [
+                  Effect.logDebug("Grounder batch entity verification complete", {
+                    stage: "grounder",
+                    batchSize: entities.length,
+                    groundedCount: A.length(A.filter(results, (result) => result.grounded)),
+                  }),
+                  Effect.annotateCurrentSpan(LlmAttributes.ENTITY_COUNT, entities.length),
+                  Effect.annotateCurrentSpan(
+                    "grounder.entity_grounded_count",
+                    A.length(A.filter(results, (result) => result.grounded))
+                  ),
+                ],
+                { concurrency: 1 }
+              )
             ),
             Effect.withSpan("grounder-batch-entity-verification", {
               attributes: {

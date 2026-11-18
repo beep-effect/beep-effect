@@ -147,8 +147,8 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       }
 
       const httpRequest = yield* HttpServerRequest.HttpServerRequest;
-      const yielded1 = yield* httpRequest.json;
-const request = S.decodeUnknownOption(CreateBatchFromLinksBody)(yielded1);
+      const requestBody = yield* httpRequest.json;
+      const request = S.decodeUnknownOption(CreateBatchFromLinksBody)(requestBody);
       if (O.isNone(request)) {
         return yield* HttpServerResponse.json(
           { error: "VALIDATION_ERROR", message: "Invalid create-batch request" },
@@ -180,7 +180,10 @@ const request = S.decodeUnknownOption(CreateBatchFromLinksBody)(yielded1);
         return yield* HttpServerResponse.json(
           {
             error: "VALIDATION_ERROR",
-            message: `Links do not belong to ontology "${ontologyId}": ${A.join(A.map(invalidLinks, (link) => link.id), ", ")}`,
+            message: `Links do not belong to ontology "${ontologyId}": ${A.join(
+              A.map(invalidLinks, (link) => link.id),
+              ", "
+            )}`,
           },
           { status: 400 }
         );
@@ -220,8 +223,8 @@ const request = S.decodeUnknownOption(CreateBatchFromLinksBody)(yielded1);
         createdAt: now,
       });
       const manifestPath = PathLayout.batch.manifest(batchId);
-      const yielded2 = yield* BatchManifest.encodeEffectFromJsonString(manifest);
-yield* storage.set(manifestPath, yielded2);
+      const manifestJson = yield* BatchManifest.encodeEffectFromJsonString(manifest);
+      yield* storage.set(manifestPath, manifestJson);
       const manifestUri = Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${manifestPath}`));
       const payload = yield* BatchWorkflowPayload.decodeUnknownEffect({
         batchId,

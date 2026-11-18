@@ -1,4 +1,3 @@
-
 /**
  * ImagePromptAdapter Service
  *
@@ -25,7 +24,8 @@ import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
 import type * as S from "effect/Schema";
-import type { ImageForPrompt, ImageRef } from "../Domain/Model/Image.ts";
+import type { ImageRef } from "../Domain/Model/Image.ts";
+import { ImageForPrompt } from "../Domain/Model/Image.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { ImageBlobStore } from "./ImageBlobStore.ts";
 import { StorageServiceLive } from "./Storage.ts";
@@ -170,15 +170,17 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
             }
 
             // Convert to ImageForPrompt
-            return O.some<ImageForPrompt>({
-              base64: toBase64(bytesOpt.value),
-              mediaType: asset.contentType,
-              alt: ref.alt,
-              caption: ref.caption,
-              context: ref.context,
-              position: O.some(ref.position),
-              assetHash: O.some(ref.assetHash),
-            });
+            return O.some<ImageForPrompt>(
+              ImageForPrompt.make({
+                base64: toBase64(bytesOpt.value),
+                mediaType: asset.contentType,
+                alt: ref.alt,
+                caption: ref.caption,
+                context: ref.context,
+                position: O.some(ref.position),
+                assetHash: O.some(ref.assetHash),
+              })
+            );
           }),
           { concurrency: 5 }
         ).pipe(
@@ -196,7 +198,8 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
             mediaType: img.mediaType,
             data: img.base64,
             fileName: `image-${img.position ?? index}.${getExtension(img.mediaType)}`,
-          }));
+          })
+        );
 
       const buildUserMessageParts: ImagePromptAdapterService["buildUserMessageParts"] = (
         text,
@@ -212,7 +215,10 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
           // Add image parts with context
           for (const img of images) {
             // Add context/caption as text before image if available
-            const imageContext = A.filter([img.alt, img.caption, img.context], Boolean).join(" - ");
+            const imageContext = A.join(
+              A.filter(A.getSomes([img.alt, img.caption, img.context]), (value) => value.length > 0),
+              " - "
+            );
 
             if (P.isNotUndefined(imageContext)) {
               parts.push(Prompt.makePart("text", { text: `\n[Image ${img.position ?? 0}: ${imageContext}]` }));

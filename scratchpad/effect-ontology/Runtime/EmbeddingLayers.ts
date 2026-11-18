@@ -1,4 +1,3 @@
-import { EmbeddingRateLimiterConfig } from "../Service/EmbeddingRateLimiter.ts";
 /**
  * Embedding Layer Composition
  *
@@ -18,6 +17,7 @@ import { EmbeddingCache } from "../Service/EmbeddingCache.ts";
 import type { EmbeddingProvider } from "../Service/EmbeddingProvider.ts";
 import type { EmbeddingRateLimiter } from "../Service/EmbeddingRateLimiter.ts";
 import {
+  EmbeddingRateLimiterConfig,
   EmbeddingRateLimiterLocal,
   EmbeddingRateLimiterVoyage,
   makeEmbeddingRateLimiter,
@@ -113,11 +113,13 @@ export const EmbeddingRateLimiterFromConfig: Layer.Layer<EmbeddingRateLimiter, n
     const { maxConcurrent, provider, rateLimitRpm } = config.embedding;
 
     // Use config values to create rate limiter
-    return makeEmbeddingRateLimiter(EmbeddingRateLimiterConfig.make({
-      provider,
-      requestsPerMinute: rateLimitRpm,
-      maxConcurrent,
-    }));
+    return makeEmbeddingRateLimiter(
+      EmbeddingRateLimiterConfig.make({
+        provider,
+        requestsPerMinute: rateLimitRpm,
+        maxConcurrent,
+      })
+    );
   })
 );
 

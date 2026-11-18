@@ -1,4 +1,3 @@
-
 /**
  * Service: Wikidata Client
  *
@@ -449,7 +448,8 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
         if (remaining > 0) {
           yield* Effect.sleep(Duration.millis(remaining));
         }
-        yield* Ref.set(lastRequestTime, yield* Clock.currentTimeMillis);
+        const resolvedValue451_41 = yield* Clock.currentTimeMillis;
+        yield* Ref.set(lastRequestTime, resolvedValue451_41);
       })
     );
 
@@ -491,7 +491,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
       // Check for rate limiting
       if (res.status === 429) {
         const retryAfter = res.headers["retry-after"];
-        const seconds = P.isTruthy(retryAfter) ? parseInt(retryAfter, 10) : 60;
+        const seconds = P.isString(retryAfter) && retryAfter.length > 0 ? parseInt(retryAfter, 10) : 60;
         return yield* WikidataRateLimitError.make({
           retryAfter: Duration.seconds(seconds),
         });

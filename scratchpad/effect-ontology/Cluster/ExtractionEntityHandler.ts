@@ -1,7 +1,5 @@
-import { RunStats } from "../Domain/Model/ExtractionRun.ts";
-import { LlmConfig } from "../Domain/Model/ExtractionRun.ts";
-import { ChunkingConfig } from "../Domain/Model/ExtractionRun.ts";
 import * as Digest from "effect/crypto/Digest";
+import { ChunkingConfig, LlmConfig, RunConfig, RunStats } from "../Domain/Model/ExtractionRun.ts";
 /**
  * Extraction Entity Handler
  *
@@ -112,8 +110,8 @@ const makeEvent = Effect.fn("ExtractionEntityHandler.makeEvent")(function* (
   extra: Record<string, unknown> = {}
 ) {
   const eventNumber = yield* Random.nextInt;
-  const yielded1 = yield* DateTime.now;
-const timestamp = DateTime.formatIso(yielded1);
+  const eventTime = yield* DateTime.now;
+  const timestamp = DateTime.formatIso(eventTime);
   return yield* S.decodeUnknownEffect(ProgressEvent)({
     _tag,
     eventId: `evt-${eventNumber}`,
@@ -199,12 +197,13 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
   const extractFromText = Effect.fn("ExtractionEntityHandler.extractFromText")(
     function* (envelope: ClusterEntity.Request<typeof ExtractFromTextRpc>) {
       const { ontologyId, ontologyVersion, params, text } = envelope.payload;
-      const yielded2 = yield* computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params)).pipe(
-          Effect.provideService(Digest.Digest, crypto)
-        );
-const idempotencyKey = IdempotencyKey.make(
-        yielded2
-      );
+      const idempotencyDigest = yield* computeIdempotencyKey(
+        text,
+        ontologyId,
+        ontologyVersion,
+        toExtractionParams(params)
+      ).pipe(Effect.provideService(Digest.Digest, crypto));
+      const idempotencyKey = IdempotencyKey.make(idempotencyDigest);
       const runId = yield* getRunIdFromText(text).pipe(Effect.provideService(Digest.Digest, crypto));
       const keyString = idempotencyKey;
       const startTime = yield* DateTime.now;
@@ -214,17 +213,15 @@ const idempotencyKey = IdempotencyKey.make(
       const existingRun = yield* runService.getByKey(idempotencyKey);
       if (O.isSome(existingRun) && RunStatus.guards.Complete(existingRun.value.status)) {
         const stats = O.getOrElse(existingRun.value.stats, () => emptyStats);
-        const yielded3 = yield* makeEvent(runId, "extraction_complete", 100, {
-            totalEntities: "entityCount" in stats ? stats.entityCount : stats.totalEntities,
-            totalRelations: "relationCount" in stats ? stats.relationCount : stats.verifiedRelations,
-            uniqueEntityTypes: 0,
-            totalDurationMs: "duration" in stats ? Duration.toMillis(stats.duration) : 0,
-            successfulChunks: "chunkCount" in stats ? stats.chunkCount : stats.successfulChunks,
-            failedChunks: 0,
-          });
-return Stream.make(
-          yielded3
-        );
+        const cachedCompletionEvent = yield* makeEvent(runId, "extraction_complete", 100, {
+          totalEntities: "entityCount" in stats ? stats.entityCount : stats.totalEntities,
+          totalRelations: "relationCount" in stats ? stats.relationCount : stats.verifiedRelations,
+          uniqueEntityTypes: 0,
+          totalDurationMs: "duration" in stats ? Duration.toMillis(stats.duration) : 0,
+          successfulChunks: "chunkCount" in stats ? stats.chunkCount : stats.successfulChunks,
+          failedChunks: 0,
+        });
+        return Stream.make(cachedCompletionEvent);
       }
 
       yield* tokenBudget.reset(config.llm.maxTokens);
@@ -252,8 +249,10 @@ return Stream.make(
         );
 
       const ontologyParts = Str.includes("/")(ontologyId) ? Str.split("/")(ontologyId) : ["default", ontologyId];
-      const namespace = yield* S.decodeEffect(Namespace)(ontologyParts[0]);
-      const name = yield* S.decodeEffect(OntologyName)(ontologyParts[1] ?? ontologyParts[0]);
+      const namespace = yield* S.decodeEffect(Namespace)(A.getUnsafe(ontologyParts, 0));
+      const name = yield* S.decodeEffect(OntologyName)(
+        O.getOrElse(A.get(ontologyParts, 1), () => A.getUnsafe(ontologyParts, 0))
+      );
       const ontologyRef = OntologyRef.make({
         namespace,
         name,
@@ -262,7 +261,7 @@ return Stream.make(
 
       yield* runService.createRun(
         text,
-        {
+        RunConfig.make({
           chunking: ChunkingConfig.make({
             maxChunkSize: PosInt.make(500),
             preserveSentences: true,
@@ -279,26 +278,28 @@ return Stream.make(
           grounding: config.grounder.enabled
             ? GroundingPolicy.cases.Enabled.make({})
             : GroundingPolicy.cases.Disabled.make({}),
-        },
+        }),
         { idempotencyKey, ontologyVersion }
       );
       yield* runService.setStatus(runId, RunStatus.cases.Running.make({ startedAt: yield* DateTime.now }));
 
       const statsRef = yield* Ref.make(emptyStats);
-      const yielded4 = yield* DateTime.now;
-const initialEvents = [
-        yield* makeEvent(runId, "extraction_started", 0, {
-          totalChunks: chunks.length,
-          textMetadata: {
-            characterCount: text.length,
-            estimatedAvgChunkSize: Math.round(text.length / Math.max(chunks.length, 1)),
-            contentType: "text/plain",
-          },
-        }),
-        yield* makeEvent(runId, "stage_started", 5, { stage: "chunking" }),
+      const extractionStartedEvent = yield* makeEvent(runId, "extraction_started", 0, {
+        totalChunks: chunks.length,
+        textMetadata: {
+          characterCount: text.length,
+          estimatedAvgChunkSize: Math.round(text.length / Math.max(chunks.length, 1)),
+          contentType: "text/plain",
+        },
+      });
+      const chunkingStartedEvent = yield* makeEvent(runId, "stage_started", 5, { stage: "chunking" });
+      const chunkingCompletedAt = yield* DateTime.now;
+      const initialEvents = [
+        extractionStartedEvent,
+        chunkingStartedEvent,
         yield* makeEvent(runId, "stage_completed", 10, {
           stage: "chunking",
-          durationMs: DateTime.distance(chunkingStart, yielded4).pipe(Duration.toMillis),
+          durationMs: DateTime.distance(chunkingStart, chunkingCompletedAt).pipe(Duration.toMillis),
           itemCount: chunks.length,
         }),
       ];
@@ -349,31 +350,32 @@ const initialEvents = [
           );
           yield* rateLimiter.release(estimatedTokens, true);
 
-          const yielded5 = yield* makeEvent(runId, "chunk_processing_complete", chunkProgress + 5, {
-              chunkIndex: chunk.index,
-              entityCount: entityArray.length,
-              relationCount: verifiedRelations.length,
-            });
-events.push(
-            yielded5
-          );
+          const chunkCompletedEvent = yield* makeEvent(runId, "chunk_processing_complete", chunkProgress + 5, {
+            chunkIndex: chunk.index,
+            entityCount: entityArray.length,
+            relationCount: verifiedRelations.length,
+          });
+          events.push(chunkCompletedEvent);
           return events;
         }),
         { concurrency: config.runtime.concurrency }
       );
 
       const stats = yield* Ref.get(statsRef);
-      const yielded6 = yield* DateTime.now;
-const totalDuration = DateTime.distance(startTime, yielded6).pipe(Duration.toMillis);
-      yield* runService.updateStats(runId, RunStats.make({
-        chunkCount: S.Natural.make(chunks.length),
-        entityCount: S.Natural.make(stats.totalEntities),
-        relationCount: S.Natural.make(stats.verifiedRelations),
-        resolvedCount: S.Natural.make(0),
-        clusterCount: S.Natural.make(0),
-        tokensUsed: S.Natural.make(stats.tokensUsed),
-        duration: Duration.millis(totalDuration),
-      }));
+      const extractionCompletedAt = yield* DateTime.now;
+      const totalDuration = DateTime.distance(startTime, extractionCompletedAt).pipe(Duration.toMillis);
+      yield* runService.updateStats(
+        runId,
+        RunStats.make({
+          chunkCount: S.Natural.make(chunks.length),
+          entityCount: S.Natural.make(stats.totalEntities),
+          relationCount: S.Natural.make(stats.verifiedRelations),
+          resolvedCount: S.Natural.make(0),
+          clusterCount: S.Natural.make(0),
+          tokensUsed: S.Natural.make(stats.tokensUsed),
+          duration: Duration.millis(totalDuration),
+        })
+      );
       yield* runService.completeRun(runId);
 
       const completion = yield* makeEvent(runId, "extraction_complete", 100, {
@@ -397,23 +399,22 @@ const totalDuration = DateTime.distance(startTime, yielded6).pipe(Duration.toMil
             const text = envelope.payload.text;
             const runId = yield* getRunIdFromText(text).pipe(Effect.provideService(Digest.Digest, crypto));
             const { ontologyId, ontologyVersion, params } = envelope.payload;
-            const yielded7 = yield* computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params)).pipe(
-                Effect.provideService(Digest.Digest, crypto)
-              );
-const idempotencyKey = IdempotencyKey.make(
-              yielded7
-            );
+            const failedIdempotencyDigest = yield* computeIdempotencyKey(
+              text,
+              ontologyId,
+              ontologyVersion,
+              toExtractionParams(params)
+            ).pipe(Effect.provideService(Digest.Digest, crypto));
+            const idempotencyKey = IdempotencyKey.make(failedIdempotencyDigest);
             const extractionError = toExtractionError(error);
             yield* runService.failRun(runId, "llm_error", extractionError.message).pipe(Effect.ignore);
             yield* Ref.update(cancellationRegistry, HashMap.remove(idempotencyKey));
-            const yielded8 = yield* makeEvent(runId, "extraction_failed", 0, {
-                errorType: "extraction_error",
-                errorMessage: extractionError.message,
-                isRecoverable: false,
-              });
-return Stream.make(
-              yielded8
-            );
+            const extractionFailedEvent = yield* makeEvent(runId, "extraction_failed", 0, {
+              errorType: "extraction_error",
+              errorMessage: extractionError.message,
+              isRecoverable: false,
+            });
+            return Stream.make(extractionFailedEvent);
           })
         ),
         Effect.mapError(toExtractionError)
@@ -451,8 +452,8 @@ return Stream.make(
       if (O.isNone(run)) return yield* ExtractionError.make({ message: "Extraction not found" });
       if (P.isTagged(run.value.status, "Complete") || P.isTagged(run.value.status, "Failed")) return false;
 
-      const yielded9 = yield* Ref.get(cancellationRegistry);
-const signal = HashMap.get(yielded9, key);
+      const cancellationSignals = yield* Ref.get(cancellationRegistry);
+      const signal = HashMap.get(cancellationSignals, key);
       if (O.isSome(signal)) {
         yield* Deferred.succeed(signal.value, void 0);
         yield* Ref.update(cancellationRegistry, HashMap.remove(key));
@@ -479,7 +480,7 @@ const signal = HashMap.get(yielded9, key);
         });
       }
       const completedAt = P.isTagged(run.value.status, "Complete")
-        ? O.some(DateTime.formatIso(run.value.status.completedAt))
+        ? run.value.status.completedAt.pipe(DateTime.formatIso, O.some)
         : O.none();
       const error = P.isTagged(run.value.status, "Failed") ? O.some(run.value.status.error.message) : O.none();
       const fields = {
@@ -488,7 +489,7 @@ const signal = HashMap.get(yielded9, key);
             P.isTagged(run.value.status, "Complete") ? 100 : P.isTagged(run.value.status, "Running") ? 50 : 0
           )
         ),
-        startedAt: O.some(DateTime.formatIso(run.value.createdAt)),
+        startedAt: run.value.createdAt.pipe(DateTime.formatIso, O.some),
         completedAt,
         error,
       };
@@ -504,7 +505,7 @@ const signal = HashMap.get(yielded9, key);
 
   return {
     ExtractFromText: (envelope: ClusterEntity.Request<typeof ExtractFromTextRpc>) =>
-      Stream.unwrap(extractFromText(envelope)),
+      envelope.pipe(extractFromText, Stream.unwrap),
     GetCachedResult: getCachedResult,
     CancelExtraction: cancelExtraction,
     GetExtractionStatus: getExtractionStatus,

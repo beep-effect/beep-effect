@@ -205,12 +205,15 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (inp
     if (current.state === "half_open") {
       const newSuccessCount = current.successCount + 1;
       if (newSuccessCount >= config.successThreshold) {
-        yield* Ref.set(stateRef, {
-          state: "closed",
-          failureCount: 0,
-          successCount: 0,
-          lastFailureTime: 0,
-        } satisfies CircuitBreakerState);
+        yield* Ref.set(
+          stateRef,
+          CircuitBreakerState.make({
+            state: "closed",
+            failureCount: 0,
+            successCount: 0,
+            lastFailureTime: 0,
+          })
+        );
         yield* Effect.logInfo("Circuit breaker closed after recovery", {
           successCount: newSuccessCount,
         });
@@ -237,22 +240,28 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (inp
     const now = yield* Clock.currentTimeMillis;
     const current = yield* getState;
     if (current.state === "half_open") {
-      yield* Ref.set(stateRef, {
-        state: "open",
-        failureCount: config.maxFailures,
-        successCount: 0,
-        lastFailureTime: Number(now),
-      } satisfies CircuitBreakerState);
+      yield* Ref.set(
+        stateRef,
+        CircuitBreakerState.make({
+          state: "open",
+          failureCount: config.maxFailures,
+          successCount: 0,
+          lastFailureTime: Number(now),
+        })
+      );
       yield* Effect.logWarning("Circuit breaker reopened after half-open failure");
     } else if (current.state === "closed") {
       const newFailureCount = current.failureCount + 1;
       if (newFailureCount >= config.maxFailures) {
-        yield* Ref.set(stateRef, {
-          state: "open",
-          failureCount: newFailureCount,
-          successCount: 0,
-          lastFailureTime: Number(now),
-        } satisfies CircuitBreakerState);
+        yield* Ref.set(
+          stateRef,
+          CircuitBreakerState.make({
+            state: "open",
+            failureCount: newFailureCount,
+            successCount: 0,
+            lastFailureTime: Number(now),
+          })
+        );
         yield* Effect.logWarning("Circuit breaker opened", {
           failureCount: newFailureCount,
           resetTimeoutMs: Duration.toMillis(config.resetTimeout),
@@ -318,12 +327,15 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (inp
       ),
     getState: () => Ref.get(stateRef).pipe(Effect.map((s) => s.state)),
     reset: () =>
-      Ref.set(stateRef, {
-        state: "closed",
-        failureCount: 0,
-        successCount: 0,
-        lastFailureTime: 0,
-      } satisfies CircuitBreakerState),
+      Ref.set(
+        stateRef,
+        CircuitBreakerState.make({
+          state: "closed",
+          failureCount: 0,
+          successCount: 0,
+          lastFailureTime: 0,
+        })
+      ),
   };
 });
 

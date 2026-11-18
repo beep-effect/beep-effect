@@ -40,14 +40,20 @@ import { RdfBuilder, rdfStoreAddQuad } from "./Rdf.ts";
 const $I = $ScratchpadId.create("effect-ontology/Service/Claim");
 const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
 
-const randomUuid = Effect.all([
-  Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-  Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-  Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-  Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-], { concurrency: 1 }).pipe(
+const randomUuid = Effect.all(
+  [
+    Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
+    Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
+    Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
+    Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
+  ],
+  { concurrency: 1 }
+).pipe(
   Effect.map((parts) => {
-    const hex = parts.map((part) => Str.padStart(8, "0")(part.toString(16))).join("");
+    const hex = A.join(
+      A.map(parts, (part) => Str.padStart(8, "0")(part.toString(16))),
+      ""
+    );
     return `${Str.slice(0, 8)(hex)}-${Str.slice(8, 12)(hex)}-4${Str.slice(13, 16)(hex)}-a${Str.slice(17, 20)(hex)}-${Str.slice(20)(hex)}`;
   })
 );
@@ -269,12 +275,12 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
       const resolvedCorrectionId = P.isUndefined(correctionId) ? yield* randomUuid : correctionId;
       yield* repo.deprecateClaim(claimId, resolvedCorrectionId, ontologyId);
 
-      return {
+      return DeprecationResult.make({
         claimId,
         deprecatedAt: DateTime.toDate(now),
         reason,
         ...(P.isUndefined(correctionId) ? {} : { correctionId }),
-      };
+      });
     });
 
     /**

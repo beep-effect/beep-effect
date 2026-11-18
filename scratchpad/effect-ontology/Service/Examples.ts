@@ -265,7 +265,7 @@ export class ExamplesService extends Context.Service<ExamplesService>()($I`Examp
       ontologyId: string,
       stage: ExtractionStage,
       contextText: string,
-      options: StageRetrievalOptions = {}
+      options: StageRetrievalOptions = StageRetrievalOptions.make({})
     ): Effect.Effect<StageExamples, ExamplesServiceError> =>
       Effect.gen(function* () {
         const { k = 3, minSimilarity = 0.6, negativeK = 2, targetClass, targetPredicate } = options;

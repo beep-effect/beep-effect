@@ -193,10 +193,13 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
           Effect.tap(() => Cache.invalidateAll(uriCache)),
           Effect.withSpan("CachedArticleRepository.invalidateAll")
         ),
-        cacheStats: Effect.all({
-          articleCacheSize: Cache.size(articleCache),
-          uriCacheSize: Cache.size(uriCache),
-        }, { concurrency: 1, concurrency: 1 }).pipe(Effect.withSpan("CachedArticleRepository.cacheStats")),
+        cacheStats: Effect.all(
+          {
+            articleCacheSize: Cache.size(articleCache),
+            uriCacheSize: Cache.size(uriCache),
+          },
+          { concurrency: 1 }
+        ).pipe(Effect.withSpan("CachedArticleRepository.cacheStats")),
       };
     }),
   }

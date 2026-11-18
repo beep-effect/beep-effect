@@ -296,7 +296,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
       // Check for rate limiting response
       if (response.status === 429) {
         const retryAfter = response.headers["retry-after"];
-        const seconds = P.isTruthy(retryAfter) ? parseInt(retryAfter, 10) : 60;
+        const seconds = P.isString(retryAfter) && retryAfter.length > 0 ? parseInt(retryAfter, 10) : 60;
         return yield* JinaRateLimitError.make({
           retryAfterMs: Milliseconds.make(seconds * 1000),
         });

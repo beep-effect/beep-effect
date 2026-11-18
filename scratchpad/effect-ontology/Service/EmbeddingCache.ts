@@ -527,7 +527,8 @@ export const makePersistentEmbeddingCache = Effect.fn("EmbeddingCache.makePersis
 
   const lookupMemory = Effect.fn("EmbeddingCache.lookupMemory")(function* (hash: string) {
     const now = yield* Clock.currentTimeMillis;
-    const entry = HashMap.get(yield* Ref.get(memoryCache), hash);
+    const resolvedValue530_31 = yield* Ref.get(memoryCache);
+    const entry = HashMap.get(resolvedValue530_31, hash);
     if (O.isSome(entry) && isExpired(entry.value, now)) {
       yield* Ref.update(memoryCache, HashMap.remove(hash));
       return { entry: O.none<CacheEntry>(), now };

@@ -13,7 +13,7 @@ import * as A from "effect/Array";
  * @since 0.0.0
  */
 
-import { flow } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as Graph from "effect/Graph";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -106,8 +106,10 @@ export const getCanonicalId = dual2((erg: EntityResolutionGraph, entityId: Entit
 export const getMentionsForEntity = dual2(
   (erg: EntityResolutionGraph, canonicalId: EntityId): ReadonlyArray<MentionRecord> => {
     // Find all entity IDs that map to this canonical ID
-    const matchingIds = A.filter(R.toEntries(erg.canonicalMap), ([_, canonical]) => canonical === canonicalId)
-      .map(([entityId]) => Result.getOrThrow(S.decodeResult(EntityId)(entityId)));
+    const matchingIds = A.map(
+      A.filter(R.toEntries(erg.canonicalMap), ([_, canonical]) => canonical === canonicalId),
+      ([entityId]) => Result.getOrThrow(S.decodeResult(EntityId)(entityId))
+    );
 
     // Look up MentionRecord nodes in the graph
     const mentions: Array<MentionRecord> = [];
@@ -176,7 +178,7 @@ export const toMermaid = (erg: EntityResolutionGraph): string => {
     mention: string;
   }> = [];
 
-  for (const [idx, node] of Graph.entries(Graph.nodes(erg.graph))) {
+  for (const [idx, node] of pipe(erg.graph, Graph.nodes, Graph.entries)) {
     ERNode.match(node, {
       MentionRecord: (mention) => mentionNodes.push({ idx, node: mention }),
       ResolvedEntity: (resolved) =>
@@ -201,7 +203,7 @@ export const toMermaid = (erg: EntityResolutionGraph): string => {
   }
 
   // Add edges
-  for (const [_edgeIdx, edgeInfo] of Graph.entries(Graph.edges(erg.graph))) {
+  for (const [_edgeIdx, edgeInfo] of pipe(erg.graph, Graph.edges, Graph.entries)) {
     const { data, source, target } = edgeInfo;
 
     EREdge.match(data, {
@@ -222,10 +224,10 @@ export const toMermaid = (erg: EntityResolutionGraph): string => {
  * @internal
  */
 const extractLocalName = (iri: string): string => {
-  const hashIdx = iri.lastIndexOf("#");
+  const hashIdx = O.getOrElse(Str.lastIndexOf("#")(iri), () => -1);
   if (hashIdx !== -1) return Str.slice(hashIdx + 1)(iri);
 
-  const slashIdx = iri.lastIndexOf("/");
+  const slashIdx = O.getOrElse(Str.lastIndexOf("/")(iri), () => -1);
   if (slashIdx !== -1) return Str.slice(slashIdx + 1)(iri);
 
   return iri;

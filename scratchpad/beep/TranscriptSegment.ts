@@ -738,7 +738,8 @@ const startsWithLowercaseCased = (value: string): boolean => {
   const match = /\p{L}/u.exec(Str.trim(value));
   const char = match?.[0];
   if (char === undefined) return false;
-  return char === Str.toLowerCase(char) && char !== Str.toUpperCase(char);
+  const upper = Str.toUpperCase(char);
+  return char === Str.toLowerCase(char) && !Equal.equals(char, upper);
 };
 
 const normalizeText = (value: string): string =>

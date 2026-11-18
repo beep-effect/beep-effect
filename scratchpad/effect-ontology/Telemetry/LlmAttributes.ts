@@ -1,4 +1,3 @@
-import * as Str from "effect/String";
 /**
  * LLM Span Attributes
  *
@@ -10,6 +9,7 @@ import * as Str from "effect/String";
  * @since 0.0.0
  */
 import * as Effect from "effect/Effect";
+import * as Str from "effect/String";
 import { calculateCost } from "./CostCalculator.ts";
 
 /**
@@ -169,10 +169,13 @@ export const annotateLlmCall = (attrs: {
  * @since 0.0.0
  */
 export const annotateRetry = (attrs: { retryCount: number; maxAttempts: number }): Effect.Effect<void> =>
-  Effect.all([
-    Effect.annotateCurrentSpan(LlmAttributes.RETRY_COUNT, attrs.retryCount),
-    Effect.annotateCurrentSpan(LlmAttributes.RETRY_MAX_ATTEMPTS, attrs.maxAttempts),
-  ], { concurrency: 1 }).pipe(Effect.asVoid);
+  Effect.all(
+    [
+      Effect.annotateCurrentSpan(LlmAttributes.RETRY_COUNT, attrs.retryCount),
+      Effect.annotateCurrentSpan(LlmAttributes.RETRY_MAX_ATTEMPTS, attrs.maxAttempts),
+    ],
+    { concurrency: 1 }
+  ).pipe(Effect.asVoid);
 
 /**
  * Annotates the current span with an error type and an optional message.

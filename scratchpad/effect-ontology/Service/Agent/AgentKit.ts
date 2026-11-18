@@ -1,3 +1,4 @@
+import { IngestOptions } from "../LinkIngestionService.ts";
 /**
  * Service: AgentKit
  *
@@ -191,10 +192,13 @@ const makeAgentKit = Effect.gen(function* () {
       onNone: () => ({}),
       onSome: (value): Record<string, unknown> => O.getOrElse(decodeUnknownRecordOption(value), () => ({})),
     });
-    const ingestResult = yield* ingestionOpt.value.ingestUrl(task.sourceUrl.value, {
-      ontologyId: task.ontologyId.value,
-      ...extraOptions,
-    });
+    const ingestResult = yield* ingestionOpt.value.ingestUrl(
+      task.sourceUrl.value,
+      IngestOptions.make({
+        ontologyId: task.ontologyId.value,
+        ...extraOptions,
+      })
+    );
     const contentOpt = yield* storage.getOption(ingestResult.storageUri);
     if (O.isNone(contentOpt)) {
       return yield* AgentInputError.make({

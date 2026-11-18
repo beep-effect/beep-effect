@@ -1,3 +1,4 @@
+import { FindSimilarOptions } from "./EntityIndex.ts";
 /**
  * Schema-backed graph retrieval, grounded generation, and path explanation.
  *
@@ -1068,8 +1069,8 @@ export class GraphRAG extends Context.Service<GraphRAG>()($I`GraphRAG`, {
         query,
         options.topK,
         A.length(options.includeTypes) === 0
-          ? { minScore: options.minScore }
-          : { minScore: options.minScore, filterTypes: options.includeTypes }
+          ? FindSimilarOptions.make({ minScore: options.minScore })
+          : FindSimilarOptions.make({ minScore: options.minScore, filterTypes: options.includeTypes })
       );
       if (A.length(similar) === 0) {
         const subgraph = Subgraph.make({
@@ -1224,7 +1225,7 @@ Return exact entity IDs from [id: ...] markers as citations. Explain when the gr
       optionsInput: ExplainOptionsInput
     ) {
       const options = ExplainOptions.make(optionsInput);
-      const steps = connectingSteps(answerValue.retrieval.subgraph, answerValue.citations);
+      const steps = connectingSteps(Subgraph.make(answerValue.retrieval.subgraph), answerValue.citations);
       const involvedEntities = A.fromIterable(
         A.reduce(steps, HashSet.fromIterable(answerValue.citations), (ids, step) =>
           HashSet.add(HashSet.add(ids, step.from.id), step.to.id)

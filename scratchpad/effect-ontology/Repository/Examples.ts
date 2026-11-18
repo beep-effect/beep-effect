@@ -491,8 +491,8 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository, Exam
         const rows = yield* normalizeQueryError(
           drizzle.select().from(llmExamples).where(eq(llmExamples.id, id)).limit(1)
         );
-        const yielded1 = yield* decodeLlmExampleRows(rows);
-return A.head(yielded1);
+        const exampleRows = yield* decodeLlmExampleRows(rows);
+        return A.head(exampleRows);
       });
 
       /**
@@ -591,21 +591,19 @@ return A.head(yielded1);
        * Record example usage and update success rate
        */
       const recordUsage: ExamplesRepositoryShape["recordUsage"] = dual(2, (id: ExampleId, wasSuccessful: boolean) =>
-        Effect.asVoid(
-          normalizeQueryError(
-            drizzle
-              .update(llmExamples)
-              .set({
-                usageCount: drizzleSql`${llmExamples.usageCount} + 1`,
-                successRate: drizzleSql`CASE
+        normalizeQueryError(
+          drizzle
+            .update(llmExamples)
+            .set({
+              usageCount: drizzleSql`${llmExamples.usageCount} + 1`,
+              successRate: drizzleSql`CASE
                 WHEN ${llmExamples.usageCount} = 0 THEN ${wasSuccessful ? 1 : 0}::numeric(4,3)
                 ELSE (${llmExamples.successRate} * ${llmExamples.usageCount} + ${wasSuccessful ? 1 : 0}) /
                   (${llmExamples.usageCount} + 1)
               END`,
-              })
-              .where(eq(llmExamples.id, id))
-          )
-        )
+            })
+            .where(eq(llmExamples.id, id))
+        ).pipe(Effect.asVoid)
       );
 
       /**

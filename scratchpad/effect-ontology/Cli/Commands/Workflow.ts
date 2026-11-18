@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import { IngestedLinkFilter } from "../../Service/LinkIngestionService.ts";
 /**
  * CLI: Workflow Commands
@@ -66,11 +67,13 @@ const listPendingHandler = Effect.fn("listPendingHandler")(function* (
   const ingestion = yield* LinkIngestionService;
   yield* Console.log("Listing pending/failed links...");
   yield* Console.log("");
-  const links = yield* ingestion.list(IngestedLinkFilter.make({
-    ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
-    status: "pending",
-    limit,
-  }));
+  const links = yield* ingestion.list(
+    IngestedLinkFilter.make({
+      ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
+      status: "pending",
+      limit,
+    })
+  );
   if (A.isReadonlyArrayEmpty(links)) {
     yield* Console.log("No pending links found.");
     return;
@@ -109,11 +112,13 @@ const cleanupStaleHandler = Effect.fn("cleanupStaleHandler")(function* (
   if (dryRun) {
     yield* Console.log("(dry-run mode - no changes will be made)");
     yield* Console.log("");
-    const staleLinks = yield* ingestion.list(IngestedLinkFilter.make({
-      ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
-      status: "pending",
-      limit: 1000,
-    }));
+    const staleLinks = yield* ingestion.list(
+      IngestedLinkFilter.make({
+        ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
+        status: "pending",
+        limit: 1000,
+      })
+    );
     const cutoffDate = DateTime.toDateUtc(DateTime.makeUnsafe((yield* Clock.currentTimeMillis) - minutes * 60 * 1000));
     const staleCandidates = A.filter(staleLinks, (link) => link.updatedAt !== null && link.updatedAt < cutoffDate);
     if (A.isReadonlyArrayEmpty(staleCandidates)) {
@@ -163,8 +168,10 @@ const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (
   yield* Console.log("");
   yield* Console.log(`  Status: ${link.status}`);
   yield* Console.log(`  Headline: ${link.headline}`);
-  yield* Console.log(`  Topics: ${link.topics ? A.join(A, link.topics, ", ") : "(none)"}`);
-  yield* Console.log(`  Key Entities: ${link.keyEntities ? A.join(link.keyEntities, ", ") : "(none)"}`);
+  const topicsDisplay = link.topics !== null ? A.join(link.topics, ", ") : "";
+  const entitiesDisplay = link.keyEntities !== null ? A.join(link.keyEntities, ", ") : "";
+  yield* Console.log(`  Topics: ${Str.isEmpty(topicsDisplay) ? "(none)" : topicsDisplay}`);
+  yield* Console.log(`  Key Entities: ${Str.isEmpty(entitiesDisplay) ? "(none)" : entitiesDisplay}`);
 });
 
 const reEnrichCommand = Command.make("re-enrich", { linkId: linkIdOption }, ({ linkId }) =>
@@ -181,11 +188,13 @@ const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (
 ): Effect.fn.Return<void, DrizzleError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   yield* Console.log("Finding failed links to re-enrich...");
-  const links = yield* ingestion.list(IngestedLinkFilter.make({
-    ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
-    status: "failed",
-    limit,
-  }));
+  const links = yield* ingestion.list(
+    IngestedLinkFilter.make({
+      ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
+      status: "failed",
+      limit,
+    })
+  );
   if (A.isReadonlyArrayEmpty(links)) {
     yield* Console.log("No failed links found.");
     return;

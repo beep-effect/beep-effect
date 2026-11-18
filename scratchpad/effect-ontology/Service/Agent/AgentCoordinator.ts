@@ -1,3 +1,4 @@
+import { pipe } from "effect/Function";
 
 /**
  * Service: AgentCoordinator
@@ -333,9 +334,10 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
             )
           ),
       };
+      const resolvedValue337_46 = yield* DateTime.now;
       const registered: RegisteredAgent<AgentTask, AgentTask, AgentExecutionError> = {
         agent: normalizedAgent,
-        registeredAt: DateTime.toEpochMillis(yield* DateTime.now),
+        registeredAt: DateTime.toEpochMillis(resolvedValue337_46),
         agentType,
         enabled: true,
       };
@@ -365,7 +367,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       const agent = HashMap.get(registry, agentId);
 
       if (O.isNone(agent)) {
-        const registeredIds = A.fromIterable(HashMap.keys(registry));
+        const registeredIds = pipe(registry, HashMap.keys, A.fromIterable);
         return yield* AgentNotFoundError.make({
           agentId,
           registeredAgents: registeredIds,
@@ -380,7 +382,11 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
      */
     const listAgents: Effect.Effect<ReadonlyArray<AgentMetadata>> = Effect.gen(function* () {
       const registry = yield* Ref.get(registryRef);
-      return A.map(A.fromIterable(HashMap.values(registry)), (registered) => registered.agent.metadata);
+      return pipe(
+        HashMap.values(registry),
+        A.fromIterable,
+        A.map((registered) => registered.agent.metadata)
+      );
     });
 
     /**
@@ -603,7 +609,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       let currentInput = task;
 
       for (let i = 0; i < agents.length; i++) {
-        const registered = agents[i];
+        const registered = A.getUnsafe(agents, i);
         const agent = registered.agent;
         const agentId = agent.metadata.id;
 

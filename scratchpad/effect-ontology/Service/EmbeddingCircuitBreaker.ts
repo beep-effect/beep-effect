@@ -158,11 +158,11 @@ export class CircuitStatus extends S.Opaque<CircuitStatus, { readonly brand: uni
  * @since 0.0.0
  */
 export const DEFAULT_EMBEDDING_CIRCUIT_CONFIG: Record<EmbeddingProviderId, ProviderCircuitConfig> = {
-  voyage: {
+  voyage: ProviderCircuitConfig.make({
     maxFailures: PosInt.make(3),
     resetTimeout: Duration.seconds(30),
     successThreshold: PosInt.make(2),
-  },
+  }),
   nomic: ProviderCircuitConfig.make({
     maxFailures: PosInt.make(5),
     resetTimeout: Duration.minutes(1),
@@ -269,11 +269,11 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
       ): Effect.fn.Return<CircuitStatus> {
         const circuit = yield* getOrCreateCircuit(providerId);
         const state = yield* circuit.getState();
-        return {
+        return CircuitStatus.make({
           providerId,
           state,
           isAvailable: state !== "open",
-        };
+        });
       });
 
       /**
@@ -286,11 +286,13 @@ export class EmbeddingCircuitBreaker extends Context.Service<EmbeddingCircuitBre
         return yield* Effect.all(
           A.map(entries, ([providerId, circuit]) =>
             circuit.getState().pipe(
-              Effect.map((state) => ({
-                providerId,
-                state,
-                isAvailable: state !== "open",
-              }))
+              Effect.map((state) =>
+                CircuitStatus.make({
+                  providerId,
+                  state,
+                  isAvailable: state !== "open",
+                })
+              )
             )
           ),
           { concurrency: "unbounded" }

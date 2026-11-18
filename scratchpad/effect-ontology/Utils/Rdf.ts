@@ -1,3 +1,4 @@
+import { MakeQuadOptionsInput } from "@beep/rdf/Rdf";
 /**
  * Pure RDF term and quad construction helpers.
  *
@@ -121,7 +122,7 @@ export const canonicalQuad = (input: {
     O.map(input.graph, (value) => (P.isString(value) ? makeNamedNode(value) : value)),
     {
       onNone: () => makeQuad(subject, predicate, object),
-      onSome: (graph) => makeQuad(subject, predicate, { object, graph }),
+      onSome: (graph) => makeQuad(subject, predicate, MakeQuadOptionsInput.make({ object, graph })),
     }
   );
 };

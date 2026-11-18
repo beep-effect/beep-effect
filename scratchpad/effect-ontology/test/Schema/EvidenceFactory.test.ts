@@ -1,4 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
@@ -33,10 +34,10 @@ describe("extraction factory evidence", () => {
       const person = yield* decodePerson;
       const typeName = makeLocalNameSchema([person.id], "Type", "Class");
 
-      const yielded1 = yield* S.decodeEffect(typeName)("person");
-expect(yielded1).toBe("person");
-      const yielded2 = yield* S.encodeEffect(typeName)("person");
-expect(yielded2).toBe("Person");
+      const decodedTypeName = yield* S.decodeEffect(typeName)("person");
+      expect(decodedTypeName).toBe("person");
+      const encodedTypeName = yield* S.encodeEffect(typeName)("person");
+      expect(encodedTypeName).toBe("Person");
     })
   );
 
@@ -75,7 +76,7 @@ expect(yielded2).toBe("Person");
         ],
       });
 
-      const mention = O.map(output.entities[0].mentions, (mentions) => mentions[0]);
+      const mention = O.flatMap(A.getUnsafe(output.entities, 0).mentions, A.head);
       expect(O.map(mention, (value) => value.quote)).toEqual(O.some(legacyEvidence.text));
       expect(O.flatMap(mention, (value) => value.confidence)).toEqual(O.some(0.8));
     })
@@ -107,7 +108,9 @@ expect(yielded2).toBe("Person");
         ],
       });
 
-      expect(O.map(valid.relations[0].evidence, (evidence) => evidence.quote)).toEqual(O.some(legacyEvidence.text));
+      expect(O.map(A.getUnsafe(valid.relations, 0).evidence, (evidence) => evidence.quote)).toEqual(
+        O.some(legacyEvidence.text)
+      );
       expect(Result.isFailure(invalid)).toBe(true);
     })
   );

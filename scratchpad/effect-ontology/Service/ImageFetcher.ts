@@ -1,4 +1,3 @@
-
 import * as Digest from "effect/crypto/Digest";
 import { flow } from "effect/Function";
 /**
@@ -399,7 +398,7 @@ export class ImageFetcher extends Context.Service<ImageFetcher, ImageFetcherServ
 
         // Check content-length if available
         const contentLength = response.headers["content-length"];
-        if (P.isTruthy(contentLength)) {
+        if (P.isString(contentLength) && contentLength.length > 0) {
           const size = parseInt(contentLength, 10);
           if (!Number.isNaN(size) && size > maxSizeBytes) {
             return yield* ImageTooLargeError.make({

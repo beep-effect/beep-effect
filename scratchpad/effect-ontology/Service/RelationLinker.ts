@@ -1,3 +1,4 @@
+import { pipe } from "effect/Function";
 /**
  * Service: Relation Linker
  *
@@ -149,8 +150,10 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
 
         for (const relation of relations) {
           // Canonicalize subject - unwrap Option with fallback to original
-          const canonicalSubjectId = Result.getOrThrow(
-            S.decodeResult(EntityId)(O.getOrElse(getCanonicalId(erg, relation.subjectId), () => relation.subjectId))
+          const canonicalSubjectId = pipe(
+            O.getOrElse(getCanonicalId(erg, relation.subjectId), () => relation.subjectId),
+            S.decodeResult(EntityId),
+            Result.getOrThrow
           );
           const subjectRemapped = canonicalSubjectId !== relation.subjectId;
 
@@ -178,21 +181,23 @@ export class RelationLinker extends Context.Service<RelationLinker>()($I`Relatio
             literalObjectCount++;
           }
 
-          linkedRelations.push({
-            original: relation,
-            canonicalSubjectId,
-            canonicalPredicate: relation.predicate,
-            canonicalObject,
-            subjectRemapped,
-            objectRemapped,
-          });
+          linkedRelations.push(
+            LinkedRelation.make({
+              original: relation,
+              canonicalSubjectId,
+              canonicalPredicate: relation.predicate,
+              canonicalObject,
+              subjectRemapped,
+              objectRemapped,
+            })
+          );
         }
 
-        return {
+        return LinkingResult.make({
           linkedRelations: Chunk.fromIterable(linkedRelations),
           remappedCount,
           literalObjectCount,
-        };
+        });
       }),
 
     /**

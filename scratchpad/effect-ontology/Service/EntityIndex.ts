@@ -1,3 +1,5 @@
+import { pipe } from "effect/Function";
+
 /**
  * Service: Entity Index
  *
@@ -272,7 +274,7 @@ const makeEntityIndexMethods = (
   findSimilar: Effect.fn("EntityIndex.findSimilar")(function* (
     query: string,
     k: number,
-    options: FindSimilarOptions = {}
+    options: FindSimilarOptions = FindSimilarOptions.make({})
   ) {
     const state = yield* Ref.get(stateRef);
     if (HashMap.size(state.entities) === 0) return [];
@@ -288,7 +290,7 @@ const makeEntityIndexMethods = (
         if (O.isSome(typeEntities)) candidateIds = HashSet.union(candidateIds, typeEntities.value);
       }
     } else {
-      candidateIds = HashSet.fromIterable(HashMap.keys(state.entities));
+      candidateIds = pipe(state.entities, HashMap.keys, HashSet.fromIterable);
     }
     const scored: Array<ScoredEntity> = [];
     const minScore = options.minScore ?? 0;
@@ -487,7 +489,7 @@ export interface PersistentEntityIndexService extends EntityIndexService {
   readonly stats: Effect.Effect<{
     readonly entityCount: number;
     readonly typeCount: number;
-    readonly lastPersistedAt: O.Option<S.Natural>;
+    readonly lastPersistedAt: O.Option<typeof S.Natural.Type>;
   }>;
 }
 
@@ -550,7 +552,7 @@ export const makePersistentEntityIndex = dual3(
     Effect.gen(function* () {
       // In-memory state
       const stateRef = yield* Ref.make<IndexState>(emptyState);
-      const lastPersistedRef = yield* Ref.make<O.Option<S.Natural>>(O.none());
+      const lastPersistedRef = yield* Ref.make<O.Option<typeof S.Natural.Type>>(O.none());
 
       const base = makeEntityIndexMethods(embedding, stateRef);
 
@@ -569,7 +571,8 @@ export const makePersistentEntityIndex = dual3(
             });
           }
         }
-        return { version: 1, indexedAt: S.Natural.make(yield* Clock.currentTimeMillis), entities };
+        const resolvedValue572_56 = yield* Clock.currentTimeMillis;
+        return { version: 1, indexedAt: S.Natural.make(resolvedValue572_56), entities };
       });
 
       const deserialize = Effect.fn("PersistentEntityIndex.deserialize")(function* (data: SerializedEntityIndex) {

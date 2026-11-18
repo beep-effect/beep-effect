@@ -43,8 +43,8 @@ const program = Effect.scoped(
     const scratchRoot = yield* fs.makeTempDirectoryScoped({ prefix: "effect-ontology-migrations-drift-" });
     const scratch = path.join(scratchRoot, "migrations");
     yield* fs.copy(migrationsFolder, scratch);
-    const yielded1 = yield* fs.readDirectory(scratch);
-const before = HashSet.fromIterable(yielded1);
+    const existingEntries = yield* fs.readDirectory(scratch);
+    const before = HashSet.fromIterable(existingEntries);
 
     const exitCode = yield* spawner.exitCode(
       ChildProcess.make(
@@ -70,15 +70,15 @@ const before = HashSet.fromIterable(yielded1);
       });
     }
 
-    const yielded2 = yield* fs.readDirectory(scratch);
-const newFolders = A.filter(yielded2, (entry) => !HashSet.has(before, entry));
+    const generatedEntries = yield* fs.readDirectory(scratch);
+    const newFolders = A.filter(generatedEntries, (entry) => !HashSet.has(before, entry));
     if (A.isReadonlyArrayNonEmpty(newFolders)) {
       yield* Effect.forEach(
         newFolders,
         Effect.fnUntraced(function* (folder) {
           yield* Console.error(`--- pending migration ${folder} ---`);
-          const yielded3 = yield* fs.readFileString(path.join(scratch, folder, "migration.sql"));
-yield* Console.error(yielded3);
+          const migrationSql = yield* fs.readFileString(path.join(scratch, folder, "migration.sql"));
+          yield* Console.error(migrationSql);
         }),
         { concurrency: 1, discard: true }
       );
@@ -91,6 +91,6 @@ yield* Console.error(yielded3);
   })
 );
 
-const main = Effect.scoped(Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(BunServices.layer))));
+const main = program.pipe(Layer.effectDiscard, Layer.provide(BunServices.layer), Layer.build, Effect.scoped);
 
 BunRuntime.runMain(main);

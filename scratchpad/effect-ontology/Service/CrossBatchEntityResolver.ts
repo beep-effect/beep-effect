@@ -511,17 +511,17 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
         config: CrossBatchResolverConfig = CrossBatchResolverConfig.default()
       ): Effect.fn.Return<CrossBatchResolutionResult, CrossBatchResolutionError> {
         if (A.isReadonlyArrayEmpty(entities)) {
-          return {
+          return CrossBatchResolutionResult.make({
             canonicalMap: {},
             newCanonicals: [],
             mergedEntities: [],
-            stats: {
+            stats: ResolutionStats.make({
               totalEntities: S.Natural.make(0),
               matchedToExisting: S.Natural.make(0),
               createdNew: S.Natural.make(0),
               candidatesEvaluated: S.Natural.make(0),
-            },
-          };
+            }),
+          });
         }
 
         yield* Effect.logInfo("Cross-batch entity resolution starting", {
@@ -553,24 +553,24 @@ export class CrossBatchEntityResolver extends Context.Service<CrossBatchEntityRe
           config
         );
 
-        const stats: ResolutionStats = {
+        const stats: ResolutionStats = ResolutionStats.make({
           totalEntities: S.Natural.make(entities.length),
           matchedToExisting: S.Natural.make(resolutionResult.matchedEntities.length),
           createdNew: S.Natural.make(finalResult.newCanonicals.length),
           candidatesEvaluated: S.Natural.make(resolutionResult.candidatesEvaluated),
-        };
+        });
 
         yield* Effect.logInfo("Cross-batch entity resolution complete", {
           ...stats,
           batchId,
         });
 
-        return {
+        return CrossBatchResolutionResult.make({
           canonicalMap: finalResult.canonicalMap,
           newCanonicals: finalResult.newCanonicals,
           mergedEntities: A.map(resolutionResult.matchedEntities, toMergedEntity),
           stats,
-        };
+        });
       });
 
       /**

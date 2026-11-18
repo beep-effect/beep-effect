@@ -415,15 +415,20 @@ describe("ConflictRepository", { concurrent: false }, () => {
         Effect.sync(() => HttpRouter.toWebHandler(TimelineHttpTestLayer, { disableLogger: true })),
         Effect.fnUntraced(function* (webHandler) {
           const requestContext = Context.empty();
-          const entityResponse = yield* Effect.tryPromise(() =>
-            webHandler.handler(
-              new Request(
-                `http://effect-ontology.test/v1/timeline/entities/${encodeURIComponent("https://example.test/entities/position")}?ontologyId=${OntologyA}`
+          const entityResponse = yield* Effect.tryPromise({
+            try: () =>
+              webHandler.handler(
+                new Request(
+                  `http://effect-ontology.test/v1/timeline/entities/${encodeURIComponent("https://example.test/entities/position")}?ontologyId=${OntologyA}`
+                ),
+                requestContext
               ),
-              requestContext
-            )
-          );
-          const entityText = yield* Effect.tryPromise(() => entityResponse.text());
+            catch: (cause) => TestBoundaryError.make({ cause }),
+          });
+          const entityText = yield* Effect.tryPromise({
+            try: () => entityResponse.text(),
+            catch: (cause) => TestBoundaryError.make({ cause }),
+          });
           assert.strictEqual(entityResponse.status, 200, entityText);
           const entityTimeline = yield* decodeTimelineEntityResponseJson(entityText);
           assert.deepStrictEqual(
@@ -433,13 +438,18 @@ describe("ConflictRepository", { concurrent: false }, () => {
           assert.strictEqual(entityTimeline.corrections[0]?.originalClaimId, ClaimA);
           assert.strictEqual(O.getOrNull(entityTimeline.corrections[0]?.newClaimId ?? O.none()), ClaimB);
 
-          const listResponse = yield* Effect.tryPromise(() =>
-            webHandler.handler(
-              new Request("http://effect-ontology.test/v1/timeline/conflicts?ontologyId=ontology-a&limit=1&offset=0"),
-              requestContext
-            )
-          );
-          const listText = yield* Effect.tryPromise(() => listResponse.text());
+          const listResponse = yield* Effect.tryPromise({
+            try: () =>
+              webHandler.handler(
+                new Request("http://effect-ontology.test/v1/timeline/conflicts?ontologyId=ontology-a&limit=1&offset=0"),
+                requestContext
+              ),
+            catch: (cause) => TestBoundaryError.make({ cause }),
+          });
+          const listText = yield* Effect.tryPromise({
+            try: () => listResponse.text(),
+            catch: (cause) => TestBoundaryError.make({ cause }),
+          });
           assert.strictEqual(listResponse.status, 200);
           const list = yield* decodeListResponseJson(listText);
           const conflict = yield* Effect.fromOption(A.head(list.conflicts), () => "missing HTTP conflict").pipe(
@@ -452,25 +462,30 @@ describe("ConflictRepository", { concurrent: false }, () => {
             ConflictTransition.cases.ignore.make({ notes: O.some("reviewed") })
           );
           const patch = Effect.fnUntraced(function* () {
-            return yield* Effect.tryPromise(() =>
-              webHandler.handler(
-                new Request(
-                  `http://effect-ontology.test/v1/timeline/conflicts/${conflict.id}?ontologyId=${OntologyA}`,
-                  {
-                    method: "PATCH",
-                    headers: { "content-type": "application/json" },
-                    body: patchBody,
-                  }
+            return yield* Effect.tryPromise({
+              try: () =>
+                webHandler.handler(
+                  new Request(
+                    `http://effect-ontology.test/v1/timeline/conflicts/${conflict.id}?ontologyId=${OntologyA}`,
+                    {
+                      method: "PATCH",
+                      headers: { "content-type": "application/json" },
+                      body: patchBody,
+                    }
+                  ),
+                  requestContext
                 ),
-                requestContext
-              )
-            );
+              catch: (cause) => TestBoundaryError.make({ cause }),
+            });
           });
           const transitioned = yield* patch();
           const repeated = yield* patch();
           assert.strictEqual(transitioned.status, 200);
           assert.strictEqual(repeated.status, 409);
-          const transitionedJson = yield* Effect.tryPromise(() => transitioned.json());
+          const transitionedJson = yield* Effect.tryPromise({
+            try: () => transitioned.json(),
+            catch: (cause) => TestBoundaryError.make({ cause }),
+          });
           const transitionedTag = yield* decodeUnknownStructInlineSchema(transitionedJson);
           assert.strictEqual(transitionedTag._tag, "ignored");
         }),
@@ -479,3 +494,8 @@ describe("ConflictRepository", { concurrent: false }, () => {
     })
   );
 });
+
+class TestBoundaryError extends S.TaggedError<TestBoundaryError, { readonly brand: unique symbol }>()(
+  "TestBoundaryError",
+  { cause: S.Defect({ includeStack: true }) }
+) {}

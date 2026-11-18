@@ -513,8 +513,8 @@ export class EntityRegistryRepository extends Context.Service<
             .where(and(eq(canonicalEntities.ontologyId, ontologyId), eq(canonicalEntities.id, id)))
             .limit(1)
         );
-        const yielded1 = yield* decodeCanonicalEntityDrizzleRows(rows);
-return A.head(yielded1);
+        const canonicalEntitiesResult = yield* decodeCanonicalEntityDrizzleRows(rows);
+        return A.head(canonicalEntitiesResult);
       })
     );
 
@@ -531,8 +531,8 @@ return A.head(yielded1);
             .where(and(eq(canonicalEntities.ontologyId, ontologyId), eq(canonicalEntities.iri, iri)))
             .limit(1)
         );
-        const yielded2 = yield* decodeCanonicalEntityDrizzleRows(rows);
-return A.head(yielded2);
+        const canonicalEntitiesResult = yield* decodeCanonicalEntityDrizzleRows(rows);
+        return A.head(canonicalEntitiesResult);
       })
     );
 
@@ -589,7 +589,8 @@ return A.head(yielded2);
                   LIMIT ${k}
               `);
 
-        return yield* decodeBlockingCandidateSqlRows(results);
+        const rows = yield* decodeBlockingCandidateSqlRows(results);
+        return A.map(rows, (row) => BlockingCandidate.make(row));
       })
     );
 
@@ -623,7 +624,8 @@ return A.head(yielded2);
               LIMIT ${k}
           `);
 
-        return yield* decodeBlockingCandidateSqlRows(results);
+        const rows = yield* decodeBlockingCandidateSqlRows(results);
+        return A.map(rows, (row) => BlockingCandidate.make(row));
       })
     );
 
@@ -807,8 +809,8 @@ return A.head(yielded2);
             .where(and(eq(entityAliases.ontologyId, ontologyId), eq(entityAliases.mentionNormalized, normalized)))
             .limit(1)
         );
-        const yielded3 = yield* decodeEntityAliasDrizzleRows(rows);
-return A.head(yielded3);
+        const entityAliasesResult = yield* decodeEntityAliasDrizzleRows(rows);
+        return A.head(entityAliasesResult);
       })
     );
 

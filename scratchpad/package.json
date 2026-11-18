@@ -50,6 +50,7 @@
     "@effect/platform-bun": "catalog:",
     "@google-cloud/pubsub": "catalog:",
     "@google-cloud/storage": "catalog:",
+    "@noble/hashes": "catalog:",
     "@xenova/transformers": "catalog:",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",

@@ -385,16 +385,20 @@ export const detectIriCollisions = dual2((entities: Iterable<Entity>, baseNamesp
       );
 
       if (isDifferent) {
-        collisions.push({
-          entityId,
-          iri: buildIri(baseNamespace, entityId),
-          entities: A.map(entityList, (e) => ({
-            mention: e.mention,
-            types: e.types,
-            documentId: e.documentId,
-            chunkIndex: e.chunkIndex,
-          })),
-        });
+        collisions.push(
+          IriCollisionWarning.make({
+            entityId,
+            iri: buildIri(baseNamespace, entityId),
+            entities: A.map(entityList, (e) =>
+              IriCollisionEntity.make({
+                mention: e.mention,
+                types: e.types,
+                documentId: e.documentId,
+                chunkIndex: e.chunkIndex,
+              })
+            ),
+          })
+        );
       }
     }
   }
@@ -559,17 +563,19 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
   for (const typeIri of entity.types) {
     const claimId = generateClaimId(subjectIri, RDF_TYPE.value, typeIri, documentId);
 
-    claims.push(ClaimData.make({
-      claimId,
-      subjectIri,
-      predicateIri: RDF_TYPE.value,
-      objectValue: typeIri,
-      objectType: "iri",
-      articleId: documentId,
-      ontologyId,
-      confidence,
-      ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
-    }));
+    claims.push(
+      ClaimData.make({
+        claimId,
+        subjectIri,
+        predicateIri: RDF_TYPE.value,
+        objectValue: typeIri,
+        objectType: "iri",
+        articleId: documentId,
+        ontologyId,
+        confidence,
+        ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
+      })
+    );
   }
 
   // 2. Create claims for each attribute
@@ -583,17 +589,19 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
 
     const claimId = generateClaimId(subjectIri, predicateIri, objectValue, documentId);
 
-    claims.push(ClaimData.make({
-      claimId,
-      subjectIri,
-      predicateIri,
-      objectValue,
-      objectType,
-      articleId: documentId,
-      ontologyId,
-      confidence,
-      ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
-    }));
+    claims.push(
+      ClaimData.make({
+        claimId,
+        subjectIri,
+        predicateIri,
+        objectValue,
+        objectType,
+        articleId: documentId,
+        ontologyId,
+        confidence,
+        ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
+      })
+    );
   }
 
   return claims;
@@ -1119,6 +1127,6 @@ export const claimExtractionArtifactFromQuads = Effect.fn("ClaimFactory.claimExt
     O.getOrElse(() => "")
   );
 
-  const yielded1 = yield* S.decodeEffect(ClaimExtractionArtifactJson)(payload);
-return O.some(yielded1);
+  const extractionArtifact = yield* S.decodeEffect(ClaimExtractionArtifactJson)(payload);
+  return O.some(extractionArtifact);
 });

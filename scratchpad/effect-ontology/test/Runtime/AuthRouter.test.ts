@@ -11,6 +11,7 @@ import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
 import { ArticleRepository } from "../../Repository/Article.ts";
 import { ClaimRepository } from "../../Repository/Claim.ts";
 import { ConflictRepository } from "../../Repository/Conflict.ts";
@@ -108,7 +109,10 @@ describe("AuthRouter", () => {
             return HttpServerResponse.text(actor.principal);
           })
         ).pipe(Effect.provideService(HttpServerRequest.HttpServerRequest, request));
-        const principal = yield* Effect.tryPromise(() => HttpServerResponse.toWeb(response).text());
+        const principal = yield* Effect.tryPromise({
+          try: () => HttpServerResponse.toWeb(response).text(),
+          catch: (cause) => TestBoundaryError.make({ cause }),
+        });
 
         assert.strictEqual(principal, "anonymous");
       })
@@ -127,17 +131,23 @@ describe("AuthRouter", () => {
             })
           ),
           Effect.fnUntraced(function* (webHandler) {
-            const listResponse = yield* Effect.tryPromise(() =>
-              webHandler.handler(new Request("http://effect-ontology.test/v1/timeline/conflicts?ontologyId=ontology-a"))
-            );
-            const transitionResponse = yield* Effect.tryPromise(() =>
-              webHandler.handler(
-                new Request(
-                  "http://effect-ontology.test/v1/timeline/conflicts/00000000-0000-4000-8000-000000000001?ontologyId=ontology-a",
-                  { method: "PATCH" }
-                )
-              )
-            );
+            const listResponse = yield* Effect.tryPromise({
+              try: () =>
+                webHandler.handler(
+                  new Request("http://effect-ontology.test/v1/timeline/conflicts?ontologyId=ontology-a")
+                ),
+              catch: (cause) => TestBoundaryError.make({ cause }),
+            });
+            const transitionResponse = yield* Effect.tryPromise({
+              try: () =>
+                webHandler.handler(
+                  new Request(
+                    "http://effect-ontology.test/v1/timeline/conflicts/00000000-0000-4000-8000-000000000001?ontologyId=ontology-a",
+                    { method: "PATCH" }
+                  )
+                ),
+              catch: (cause) => TestBoundaryError.make({ cause }),
+            });
 
             assert.strictEqual(listResponse.status, 401);
             assert.strictEqual(transitionResponse.status, 401);
@@ -148,3 +158,8 @@ describe("AuthRouter", () => {
     );
   });
 });
+
+class TestBoundaryError extends S.TaggedError<TestBoundaryError, { readonly brand: unique symbol }>()(
+  "TestBoundaryError",
+  { cause: S.Defect({ includeStack: true }) }
+) {}

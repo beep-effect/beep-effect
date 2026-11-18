@@ -1,4 +1,3 @@
-
 /**
  * Structured language-model generation with schema feedback and bounded retry.
  *
@@ -161,15 +160,18 @@ export const generateObjectWithFeedback = Effect.fn("generateObjectWithFeedback"
         ),
         Effect.tapError((error) =>
           AiError.isAiError(error) && error.reason._tag === "InvalidOutputError"
-            ? Effect.all([
-                Ref.update(promptRef, Prompt.concat(buildFeedbackPrompt(error.reason))),
-                Effect.logWarning("Structured output failed validation; retrying with feedback", {
-                  service: policy.serviceName,
-                  attempt: attemptNumber,
-                  maxAttempts: retryPolicy.maxAttempts,
-                  errorDescription: Str.slice(0, 500)(error.reason.description),
-                }),
-              ], { concurrency: 1 }).pipe(Effect.asVoid)
+            ? Effect.all(
+                [
+                  Ref.update(promptRef, Prompt.concat(buildFeedbackPrompt(error.reason))),
+                  Effect.logWarning("Structured output failed validation; retrying with feedback", {
+                    service: policy.serviceName,
+                    attempt: attemptNumber,
+                    maxAttempts: retryPolicy.maxAttempts,
+                    errorDescription: Str.slice(0, 500)(error.reason.description),
+                  }),
+                ],
+                { concurrency: 1 }
+              ).pipe(Effect.asVoid)
             : Effect.logWarning("Language-model attempt failed; retrying", {
                 service: policy.serviceName,
                 attempt: attemptNumber,

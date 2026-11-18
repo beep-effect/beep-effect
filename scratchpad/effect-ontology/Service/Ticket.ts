@@ -1,4 +1,3 @@
-
 /**
  * Service: Ticket Service
  *
@@ -99,7 +98,8 @@ const makeTicketService = Effect.gen(function* () {
   const crypto = yield* SecureRandom.SecureRandom;
 
   const generateSecureToken = Effect.fn("TicketService.generateSecureToken")(function* () {
-    return Base64Url.encode(yield* crypto.randomBytes(32));
+    const resolvedValue101_29 = yield* crypto.randomBytes(32);
+    return Base64Url.encode(resolvedValue101_29);
   });
 
   const persistTicket = (ticket: string, record: TicketRecord) =>
@@ -200,17 +200,21 @@ const makeTicketService = Effect.gen(function* () {
   const getActiveCount = Effect.gen(function* () {
     const keys = yield* listTicketKeys;
     const now = yield* Clock.currentTimeMillis;
-    const flags = yield* Effect.forEach(keys, (key) =>
-      storage.getOption(key).pipe(
-        Effect.flatMap(
-          O.match({
-            onNone: () => Effect.succeed(false),
-            onSome: (content) =>
-              decodeTicketRecordJson(content).pipe(Effect.map((record) => record.expiresAt.epochMilliseconds > now)),
-          })
+    const flags = yield* Effect.forEach(
+      keys,
+      (key) =>
+        storage.getOption(key).pipe(
+          Effect.flatMap(
+            O.match({
+              onNone: () => Effect.succeed(false),
+              onSome: (content) =>
+                decodeTicketRecordJson(content).pipe(Effect.map((record) => record.expiresAt.epochMilliseconds > now)),
+            })
+          ),
+          Effect.mapError(ticketStorageError("load"))
         ),
-        Effect.mapError(ticketStorageError("load"))
-      ), { concurrency: 1 });
+      { concurrency: 1 }
+    );
     return A.length(A.filter(flags, P.isTruthy));
   });
 

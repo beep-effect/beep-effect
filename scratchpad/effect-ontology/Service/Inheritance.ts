@@ -98,14 +98,14 @@ export class InheritanceService extends Context.Service<InheritanceService>()($I
         MutableHashMap.set(propertyMap, p.id, p);
       }
       const effectivePropertyIds = MutableHashSet.empty<string>();
-      const ownClass = A.find(context.classes, (c) => c.id === classIri);
+      const ownClass = O.getOrUndefined(A.findFirst(context.classes, (c) => c.id === classIri));
       if (P.isNotUndefined(ownClass)) {
         for (const p of ownClass.properties) {
           MutableHashSet.add(effectivePropertyIds, p);
         }
       }
       for (const ancestorIri of ancestors) {
-        const ancestorClass = A.find(context.classes, (c) => c.id === ancestorIri);
+        const ancestorClass = O.getOrUndefined(A.findFirst(context.classes, (c) => c.id === ancestorIri));
         if (P.isNotUndefined(ancestorClass)) {
           for (const p of ancestorClass.properties) {
             MutableHashSet.add(effectivePropertyIds, p);

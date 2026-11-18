@@ -1,10 +1,10 @@
-import * as Str from "effect/String";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import { SystemError } from "effect/PlatformError";
 import * as KeyValueStore from "effect/persistence/KeyValueStore";
+import * as Str from "effect/String";
 import { IdempotencyKey } from "../../Domain/Identity.ts";
 import { ExtractionRunError, ExtractionRunService, ExtractionRunServiceLive } from "../../Service/ExtractionRun.ts";
 import { StorageService, StorageServiceTest } from "../../Service/Storage.ts";
@@ -69,8 +69,8 @@ describe("ExtractionRunService storage boundaries", () => {
       "initializes only missing index state as empty",
       Effect.fnUntraced(function* () {
         const runs = yield* ExtractionRunService;
-        const yielded1 = yield* runs.existsByKey(key);
-assert.isFalse(yielded1);
+        const runExists = yield* runs.existsByKey(key);
+        assert.isFalse(runExists);
       })
     );
   });

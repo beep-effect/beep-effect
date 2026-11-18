@@ -590,8 +590,8 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository, Em
               )
               .limit(1)
               .pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
-            const yielded1 = yield* decodeEmbeddingSqlRows(result);
-return A.head(yielded1);
+            const embeddingRows = yield* decodeEmbeddingSqlRows(result);
+            return A.head(embeddingRows);
           })
       );
 

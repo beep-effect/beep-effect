@@ -1,6 +1,6 @@
-import * as Str from "effect/String";
 import * as Digest from "effect/crypto/Digest";
-import { flow } from "effect/Function";
+import { flow, pipe } from "effect/Function";
+import * as Str from "effect/String";
 /**
  * Service: Assertion
  *
@@ -401,7 +401,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
           message: "No valid claims found for assertion",
         });
       }
-      const baseClaim = sourceClaims[0];
+      const baseClaim = A.getUnsafe(sourceClaims, 0);
       const subjectIri = input.override?.subject ?? baseClaim.subjectIri;
       const predicateIri = input.override?.predicate ?? baseClaim.predicateIri;
       const objectValue = input.override?.object ?? baseClaim.objectValue;
@@ -418,8 +418,8 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
             })
           )
         ));
-      const randomSuffix = Str.slice(0, 6)(Math.abs(yield* Random.nextInt)
-        .toString(36));
+      const resolvedValue420_37 = yield* Random.nextInt;
+      const randomSuffix = Str.slice(0, 6)(Math.abs(resolvedValue420_37).toString(36));
       const uniqueSuffix = `${(yield* Clock.currentTimeMillis).toString(36)}${randomSuffix}`;
       const hash = yield* sha256(uniqueSuffix).pipe(
         Effect.mapError(() =>
@@ -475,7 +475,7 @@ export class AssertionService extends Context.Service<AssertionService>()($I`Ass
      */
     const query = Effect.fn("query")(function* (filter: AssertionFilter) {
       const assertions = yield* Ref.get(assertionsRef);
-      let results = A.fromIterable(HashMap.values(assertions));
+      let results = pipe(assertions, HashMap.values, A.fromIterable);
       if (P.isNotUndefined(filter.subjectIri)) {
         results = A.filter(results, (a) => a.subjectIri === filter.subjectIri);
       }

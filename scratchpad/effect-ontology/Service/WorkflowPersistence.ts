@@ -9,10 +9,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as KeyValueStore from "effect/persistence/KeyValueStore";
 import * as Persistence from "effect/persistence/Persistence";
+import * as Str from "effect/String";
 import { StorageService, StorageServiceLive, StorageServiceTest } from "./Storage.ts";
 
 // -----------------------------------------------------------------------------
@@ -61,6 +63,9 @@ export const StorageKeyValueStoreLive = Layer.effect(
       clear: storage.clear,
 
       size: storage.size,
+      keys: storage.keys.pipe(
+        Effect.map((keys) => A.map(A.filter(keys, Str.startsWith(prefix)), Str.slice(prefix.length)))
+      ),
     });
   })
 );

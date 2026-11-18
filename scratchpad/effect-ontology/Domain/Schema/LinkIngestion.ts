@@ -367,8 +367,8 @@ const BatchIngestResponseDefinition = S.Struct({
   S.makeFilter(
     ({ results, summary }) =>
       matchBatchSummaryConsistency({
-        actual: summary,
-        expected: summarizeBatchResults(results),
+        actual: BatchIngestSummary.make(summary),
+        expected: BatchIngestSummary.make(summarizeBatchResults(results)),
       }),
     $I.annote("BatchIngestSummaryConsistencyCheck", {
       title: "Batch Ingest Summary Consistency",

@@ -1,5 +1,5 @@
-
 import * as Digest from "effect/crypto/Digest";
+import { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
 /**
  * Service: Content Enrichment Agent
  *
@@ -216,10 +216,10 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
       // Calculate word count from content
       const wordCount = A.length(A.filter(Str.split(/\s+/)(content), (word) => Str.length(word) > 0));
 
-      const prompt = {
+      const prompt = StructuredPrompt.make({
         systemMessage: ENRICHMENT_SYSTEM_PROMPT,
         userMessage: buildEnrichmentPrompt(content, url),
-      };
+      });
 
       const response = yield* generateObjectWithRetry({
         prompt,

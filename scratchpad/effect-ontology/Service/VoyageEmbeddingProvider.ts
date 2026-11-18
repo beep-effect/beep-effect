@@ -1,3 +1,4 @@
+import { pipe } from "effect/Function";
 /**
  * Voyage AI Embedding Provider
  *
@@ -47,8 +48,8 @@ import {
 } from "../Domain/Error/Embedding.ts";
 import { PosInt } from "../Schema/PosInt.ts";
 import { ConfigService } from "./Config.ts";
-import type { EmbeddingProviderMethods, EmbeddingRequest, ProviderMetadata } from "./EmbeddingProvider.ts";
-import { cosineSimilarity, EmbeddingProvider } from "./EmbeddingProvider.ts";
+import type { EmbeddingProviderMethods, EmbeddingRequest } from "./EmbeddingProvider.ts";
+import { cosineSimilarity, EmbeddingProvider, ProviderMetadata } from "./EmbeddingProvider.ts";
 import { EmbeddingRateLimiter } from "./EmbeddingRateLimiter.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/VoyageEmbeddingProvider");
@@ -412,11 +413,11 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
   const timeoutMs = Duration.toMillis(timeout);
   const dimension = VOYAGE_MODELS[model];
 
-  const metadata: ProviderMetadata = {
+  const metadata: ProviderMetadata = ProviderMetadata.make({
     providerId: "voyage",
     modelId: model,
     dimension,
-  };
+  });
 
   /**
    * Map task type to Voyage input_type
@@ -445,17 +446,18 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
       // Success: parse with schema
       "2xx": (res) =>
         HttpClientResponse.schemaBodyJson(VoyageResponseSchema)(res).pipe(
-          Effect.map((parsed) => {
-            // Sort by index to maintain order (API may return out of order)
-            const sorted = A.sortWith(parsed.data, (datum) => datum.index, Order.Number);
-            return A.map(sorted, (datum) => datum.embedding);
-          }),
-          Effect.mapError((e) =>
-            EmbeddingInvalidResponseError.make({
-              message: `Invalid Voyage response: ${e.message}`,
-              provider: "voyage",
-            })
-          )
+          Effect.mapBoth({
+            onSuccess: (parsed) => {
+              // Sort by index to maintain order (API may return out of order)
+              const sorted = A.sortWith(parsed.data, (datum) => datum.index, Order.Number);
+              return A.map(sorted, (datum) => datum.embedding);
+            },
+            onFailure: (e) =>
+              EmbeddingInvalidResponseError.make({
+                message: `Invalid Voyage response: ${e.message}`,
+                provider: "voyage",
+              }),
+          })
         ),
 
       // Rate limit: parse error body and include retry-after
@@ -467,7 +469,7 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
               EmbeddingRateLimitError.make({
                 message: `Voyage API rate limit: ${O.getOrElse(errorBody.detail, () => "rate limit exceeded")}`,
                 provider: "voyage",
-                retryAfterMs: O.some(Milliseconds.make(Duration.toMillis(parseRetryAfter(res)))),
+                retryAfterMs: pipe(parseRetryAfter(res), Duration.toMillis, Milliseconds.make, O.some),
               })
             )
           )
@@ -522,7 +524,7 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
             return [];
           }
 
-          const inputType = mapInputType(requests[0].taskType);
+          const inputType = mapInputType(A.getUnsafe(requests, 0).taskType);
           const texts = A.map(requests, (request) => request.text);
 
           // Build request (pure value, not Effect)

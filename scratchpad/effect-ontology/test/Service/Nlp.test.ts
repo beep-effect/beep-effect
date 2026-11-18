@@ -1,12 +1,13 @@
-import * as Str from "effect/String";
-import * as A from "effect/Array";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { EmbeddingService } from "../../Service/Embedding.ts";
+import { ProviderMetadata } from "../../Service/EmbeddingProvider.ts";
 import { NlpIndexError, NlpService } from "../../Service/Nlp.ts";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
@@ -19,11 +20,13 @@ const EmbeddingServiceTest = Layer.succeed(
     embed: Effect.fn("EmbeddingService.embed")(() => Effect.succeed([1])),
     embedBatch: Effect.fn("EmbeddingService.embedBatch")((texts) => Effect.succeed(A.map(texts, () => [1]))),
     cosineSimilarity: () => 1,
-    getProviderMetadata: Effect.succeed({
-      providerId: "nomic",
-      modelId: "test",
-      dimension: 1,
-    }),
+    getProviderMetadata: Effect.succeed(
+      ProviderMetadata.make({
+        providerId: "nomic",
+        modelId: "test",
+        dimension: 1,
+      })
+    ),
   })
 );
 
@@ -103,8 +106,14 @@ describe("NlpService canonical Wink adapter", () => {
           A.map(speakerChunks, (chunk) => chunk.text),
           ["SPEAKER 1: Hello.", "SPEAKER 2: Hi."]
         );
-        assert.strictEqual(sectionChunks[1].startOffset, sectionText.indexOf("## First"));
-        assert.strictEqual(speakerChunks[1].startOffset, speakerText.indexOf("SPEAKER 2"));
+        assert.strictEqual(
+          A.getUnsafe(sectionChunks, 1).startOffset,
+          O.getOrElse(Str.indexOf("## First")(sectionText), () => -1)
+        );
+        assert.strictEqual(
+          A.getUnsafe(speakerChunks, 1).startOffset,
+          O.getOrElse(Str.indexOf("SPEAKER 2")(speakerText), () => -1)
+        );
       })
     );
 
@@ -119,8 +128,8 @@ describe("NlpService canonical Wink adapter", () => {
         );
 
         assert.isAtLeast(results.length, 1);
-        assert.strictEqual(results[0].index, 0);
-        assert.strictEqual(results[0].doc, "semantic graph model");
+        assert.strictEqual(A.getUnsafe(results, 0).index, 0);
+        assert.strictEqual(A.getUnsafe(results, 0).doc, "semantic graph model");
       })
     );
   });

@@ -159,7 +159,7 @@ export const makeAuthMiddleware = Effect.gen(function* () {
       const apiKey = A.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader;
 
       // Validate API key
-      if (P.not(P.isTruthy)(apiKey) || !HashSet.has(apiKeys, apiKey)) {
+      if (apiKey === undefined || apiKey === "" || !HashSet.has(apiKeys, apiKey)) {
         yield* Effect.logWarning("Unauthorized request", {
           path,
           hasKey: !P.not(P.isTruthy)(apiKey),
@@ -257,9 +257,8 @@ export const makeLoggingMiddleware = Effect.sync(() =>
     Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
       const start = yield* Clock.currentTimeMillis;
-      const yielded1 = yield* Random.nextInt;
-const requestId = Str.slice(0, 8)(Math.abs(yielded1)
-        .toString(16));
+      const requestRandomValue = yield* Random.nextInt;
+      const requestId = Str.slice(0, 8)(Math.abs(requestRandomValue).toString(16));
 
       const path = request.url;
       const method = request.method;

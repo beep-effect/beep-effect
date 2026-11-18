@@ -75,7 +75,8 @@ const sha256Hex = sha256;
  * @returns Deterministic document ID
  */
 const generateDocumentId = Effect.fn("ExtractionRun.generateDocumentId")(function* (text: string) {
-  const documentId = DocumentId.fromContentHash(ContentHash.make(yield* sha256Hex(text)));
+  const resolvedValue77_66 = yield* sha256Hex(text);
+  const documentId = DocumentId.fromContentHash(ContentHash.make(resolvedValue77_66));
   return ExtractionRunIdSchema.make(documentId);
 });
 
@@ -338,7 +339,8 @@ const makeExtractionRunService = Effect.gen(function* () {
     }
     const run = yield* decodeExtractionRun(content.value);
     const updated = updater(run);
-    yield* storage.set(metadataKey(runId), yield* ExtractionRun.encodeJsonStringEffect(updated));
+    const resolvedValue340_44 = yield* ExtractionRun.encodeJsonStringEffect(updated);
+    yield* storage.set(metadataKey(runId), resolvedValue340_44);
     return updated;
   });
 
@@ -364,7 +366,8 @@ const makeExtractionRunService = Effect.gen(function* () {
   ) {
     const index = yield* getKeyIndex;
     const updated = { ...index, [key]: runId };
-    yield* storage.set(KEY_INDEX_FILE, yield* S.encodeEffect(KeyIndexJson)(updated));
+    const resolvedValue366_40 = yield* S.encodeEffect(KeyIndexJson)(updated);
+    yield* storage.set(KEY_INDEX_FILE, resolvedValue366_40);
   });
 
   const createRunRaw = Effect.fn("ExtractionRunService.createRun")(function* (
@@ -404,7 +407,8 @@ const makeExtractionRunService = Effect.gen(function* () {
         flow(S.decodeUnknownResult(OntologyVersion), Result.getOrThrow)
       ),
     });
-    yield* storage.set(metadataKey(runId), yield* ExtractionRun.encodeJsonStringEffect(run));
+    const resolvedValue406_44 = yield* ExtractionRun.encodeJsonStringEffect(run);
+    yield* storage.set(metadataKey(runId), resolvedValue406_44);
     if (P.isNotUndefined(options?.idempotencyKey)) yield* updateKeyIndex(options.idempotencyKey, runId);
     return run;
   });
@@ -436,10 +440,11 @@ const makeExtractionRunService = Effect.gen(function* () {
     const filename = OutputType.filename(outputType);
     yield* storage.set(outputKey(runId, filename), content);
     const now = yield* DateTime.now;
+    const resolvedValue441_28 = yield* hashContent(content).pipe(Effect.provideService(Digest.Digest, crypto));
     const metadata = OutputMetadata.make({
       type: outputType,
       path: `outputs/${filename}`,
-      hash: Sha256Hex.make(yield* hashContent(content).pipe(Effect.provideService(Digest.Digest, crypto))),
+      hash: Sha256Hex.make(resolvedValue441_28),
       size: S.Natural.make(Buffer.byteLength(content, "utf8")),
       savedAt: now,
     });
@@ -517,15 +522,18 @@ const makeExtractionRunService = Effect.gen(function* () {
   );
 
   const existsByKeyRaw = Effect.fn("ExtractionRunService.existsByKey")(function* (key: IdempotencyKey) {
-    const runId = R.get(yield* getKeyIndex, key);
+    const resolvedValue519_25 = yield* getKeyIndex;
+    const runId = R.get(resolvedValue519_25, key);
     if (O.isNone(runId)) return false;
-    return O.isSome(yield* storage.getOption(metadataKey(runId.value)));
+    const resolvedValue521_21 = yield* storage.getOption(metadataKey(runId.value));
+    return O.isSome(resolvedValue521_21);
   });
   const existsByKey = (key: IdempotencyKey) =>
     existsByKeyRaw(key).pipe(Effect.mapError(mapRunError("Failed to check extraction idempotency key")));
 
   const getByKeyRaw = Effect.fn("ExtractionRunService.getByKey")(function* (key: IdempotencyKey) {
-    const runId = R.get(yield* getKeyIndex, key);
+    const resolvedValue527_25 = yield* getKeyIndex;
+    const runId = R.get(resolvedValue527_25, key);
     if (O.isNone(runId)) return O.none<ExtractionRun>();
     const content = yield* storage.getOption(metadataKey(runId.value));
     return yield* O.match(content, {

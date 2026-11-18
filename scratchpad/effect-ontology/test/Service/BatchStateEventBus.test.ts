@@ -162,13 +162,13 @@ describe("BatchStateBridge", () => {
         const eventBus = yield* EventBusService;
         const events = yield* eventBus.subscribeEvents;
 
-        const yielded1 = yield* bridge.isRunning;
-assert.isTrue(yielded1);
+        const runningAfterStart = yield* bridge.isRunning;
+        assert.isTrue(runningAfterStart);
         yield* PubSub.publish(hub, state);
         yield* PubSub.publish(hub, state);
         yield* Effect.repeat(Effect.yieldNow, { times: 4 });
-        const yielded2 = yield* bridge.isRunning;
-assert.isTrue(yielded2);
+        const runningAfterRestart = yield* bridge.isRunning;
+        assert.isTrue(runningAfterRestart);
 
         const entries = yield* Stream.runCollect(Stream.take(events, 2));
         const first = yield* A.head(entries).pipe(
@@ -190,8 +190,8 @@ assert.isTrue(yielded2);
 
         yield* PubSub.shutdown(hub);
         yield* Effect.repeat(Effect.yieldNow, { times: 4 });
-        const yielded3 = yield* bridge.isRunning;
-assert.isFalse(yielded3);
+        const runningAfterStop = yield* bridge.isRunning;
+        assert.isFalse(runningAfterStop);
       })
     );
   });
@@ -202,8 +202,8 @@ describe("EventBus queue backend parity", () => {
     it.effect(
       "tracks enqueue, take, and process lifecycle counts",
       Effect.fnUntraced(function* () {
-        const yielded4 = yield* queueLifecycle();
-assert.deepEqual(yielded4, [1, 0, 1, 0]);
+        const memoryQueueSizes = yield* queueLifecycle();
+        assert.deepEqual(memoryQueueSizes, [1, 0, 1, 0]);
       })
     );
   });
@@ -212,8 +212,8 @@ assert.deepEqual(yielded4, [1, 0, 1, 0]);
     it.effect(
       "tracks enqueue, take, and process lifecycle counts",
       Effect.fnUntraced(function* () {
-        const yielded5 = yield* queueLifecycle();
-assert.deepEqual(yielded5, [1, 0, 1, 0]);
+        const sqlQueueSizes = yield* queueLifecycle();
+        assert.deepEqual(sqlQueueSizes, [1, 0, 1, 0]);
       })
     );
   });

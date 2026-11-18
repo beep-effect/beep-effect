@@ -13,6 +13,7 @@
 import { $ScratchpadId } from "@beep/identity";
 import type { GraphTerm, Quad } from "@beep/rdf";
 import { makeQuad, NamedNode, ObjectTerm, Subject } from "@beep/rdf";
+import { MakeQuadOptionsInput } from "@beep/rdf/Rdf";
 import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Rdf/Types");
@@ -99,6 +100,6 @@ export class Triple extends S.Class<Triple, { readonly brand: unique symbol }>($
   toQuad(graph?: GraphTerm): Quad {
     return graph === undefined
       ? makeQuad(this.subject, this.predicate, this.object)
-      : makeQuad(this.subject, this.predicate, { object: this.object, graph });
+      : makeQuad(this.subject, this.predicate, MakeQuadOptionsInput.make({ object: this.object, graph }));
   }
 }

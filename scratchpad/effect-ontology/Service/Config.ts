@@ -1,4 +1,3 @@
-
 /**
  * Schema-backed application configuration and environment loading.
  *
@@ -722,21 +721,24 @@ const makeConfigService = Effect.gen(function* () {
     rdf,
     api,
     jina,
-  ] = yield* Effect.all([
-    LlmConfig,
-    StorageConfig,
-    OntologyConfig,
-    RuntimeConfig,
-    GrounderConfig,
-    EmbeddingConfig,
-    ExtractionConfig,
-    EntityRegistryConfig,
-    InferenceConfig,
-    ValidationConfig,
-    RdfConfig,
-    ApiConfig,
-    JinaConfig,
-  ], { concurrency: 1 });
+  ] = yield* Effect.all(
+    [
+      LlmConfig,
+      StorageConfig,
+      OntologyConfig,
+      RuntimeConfig,
+      GrounderConfig,
+      EmbeddingConfig,
+      ExtractionConfig,
+      EntityRegistryConfig,
+      InferenceConfig,
+      ValidationConfig,
+      RdfConfig,
+      ApiConfig,
+      JinaConfig,
+    ],
+    { concurrency: 1 }
+  );
 
   return AppConfig.make({
     api,

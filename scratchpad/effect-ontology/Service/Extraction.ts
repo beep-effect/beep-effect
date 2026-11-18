@@ -1,4 +1,3 @@
-
 import * as Digest from "effect/crypto/Digest";
 /**
  * Service: Extraction Services
@@ -158,26 +157,29 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
           Effect.provideService(Digest.Digest, crypto),
           Effect.provideService(LanguageModel.LanguageModel, llm),
           Effect.tap((response) =>
-            Effect.all([
-              Effect.logInfo("Entity extraction LLM response", {
-                stage: "entity-extraction",
-                entityCount: response.value.entities.length,
-                inputTokens: response.usage.inputTokens.total ?? 0,
-                outputTokens: response.usage.outputTokens.total ?? 0,
-              }),
-              annotateLlmCall({
-                model: config.llm.model,
-                provider: config.llm.provider,
-                promptLength,
-                inputTokens: response.usage.inputTokens.total ?? 0,
-                outputTokens: response.usage.outputTokens.total ?? 0,
-                schemaHash,
-              }),
-              annotateExtraction({
-                entityCount: response.value.entities.length,
-                candidateClassCount: candidates.length,
-              }),
-            ], { concurrency: 1 })
+            Effect.all(
+              [
+                Effect.logInfo("Entity extraction LLM response", {
+                  stage: "entity-extraction",
+                  entityCount: response.value.entities.length,
+                  inputTokens: response.usage.inputTokens.total ?? 0,
+                  outputTokens: response.usage.outputTokens.total ?? 0,
+                }),
+                annotateLlmCall({
+                  model: config.llm.model,
+                  provider: config.llm.provider,
+                  promptLength,
+                  inputTokens: response.usage.inputTokens.total ?? 0,
+                  outputTokens: response.usage.outputTokens.total ?? 0,
+                  schemaHash,
+                }),
+                annotateExtraction({
+                  entityCount: response.value.entities.length,
+                  candidateClassCount: candidates.length,
+                }),
+              ],
+              { concurrency: 1 }
+            )
           ),
           Effect.withSpan("entity-extraction-llm", {
             attributes: {
@@ -194,8 +196,9 @@ export class EntityExtractor extends Context.Service<EntityExtractor>()($I`Entit
             })
           )
         );
-        const propertyIris: ReadonlyArray<IRI> = A.map((datatypeProps ?? []), (p) =>
-          Result.getOrThrow(S.decodeResult(IRI)(p.id)));
+        const propertyIris: ReadonlyArray<IRI> = A.map(datatypeProps ?? [], (p) =>
+          Result.getOrThrow(S.decodeResult(IRI)(p.id))
+        );
         const propertyMapResult = buildLocalNameToIriMapSafe(propertyIris);
         const propertyLocalNameToIriMap = propertyMapResult.map;
         if (propertyMapResult.hasCollisions) {
@@ -387,12 +390,15 @@ export class MentionExtractor extends Context.Service<MentionExtractor>()($I`Men
             })
           )
         );
-        const mentions = A.map(response.value.mentions, (m): Mention =>
+        const mentions = A.map(
+          response.value.mentions,
+          (m): Mention =>
             Mention.make({
               id: P.isTruthy(m.id) && /^[a-z][a-z0-9_]*$/.test(m.id) ? m.id : generateEntityId(m.mention),
               mention: m.mention,
               context: m.context,
-            }));
+            })
+        );
         yield* Effect.logInfo("Mention extraction complete", {
           stage: "mention-extraction",
           extractedCount: mentions.length,
@@ -580,9 +586,12 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
           constraintTypes: ReadonlyArray<string>
         ): boolean => {
           if (constraintTypes.length === 0) return true;
-          return entityTypes.some((entityType) =>
-            A.some(constraintTypes, (constraintType) =>
-                entityType === constraintType || (classHierarchy?.(entityType, constraintType) ?? false))
+          return A.some(entityTypes, (entityType) =>
+            A.some(
+              constraintTypes,
+              (constraintType) =>
+                entityType === constraintType || (classHierarchy?.(entityType, constraintType) ?? false)
+            )
           );
         };
         const toRelation = (relationData: RelationData): O.Option<Relation> => {
@@ -708,11 +717,13 @@ export class RelationExtractor extends Context.Service<RelationExtractor>()($I`R
         return Effect.succeed(
           Chunk.fromIterable([
             Relation.make({
-              subjectId: entityArray[0].id,
+              subjectId: A.getUnsafe(entityArray, 0).id,
               predicate: Result.getOrThrow(
-                S.decodeResult(IRI)(_properties.length > 0 ? _properties[0].id : "https://example.org/relatedTo")
+                S.decodeResult(IRI)(
+                  _properties.length > 0 ? A.getUnsafe(_properties, 0).id : "https://example.org/relatedTo"
+                )
               ),
-              object: RelationObject.cases.EntityReference.make({ value: entityArray[1].id }),
+              object: RelationObject.cases.EntityReference.make({ value: A.getUnsafe(entityArray, 1).id }),
             }),
           ])
         );

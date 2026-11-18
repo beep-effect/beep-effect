@@ -57,8 +57,8 @@ const program = Effect.gen(function* () {
     });
   }
 
-  const yielded1 = yield* fs.readDirectory(migrationsFolder);
-const baselineFolders = A.filter(yielded1, Str.endsWith("_baseline"));
+  const migrationEntries = yield* fs.readDirectory(migrationsFolder);
+  const baselineFolders = A.filter(migrationEntries, Str.endsWith("_baseline"));
   yield* Effect.forEach(
     baselineFolders,
     Effect.fn("installExtensionPrelude")(function* (folder) {
@@ -73,8 +73,6 @@ const baselineFolders = A.filter(yielded1, Str.endsWith("_baseline"));
   yield* Console.log(`Generated migrations in ${migrationsFolder}`);
 });
 
-const main = Effect.scoped(
-  Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(BunServices.layer))).pipe(Effect.asVoid)
-);
+const main = program.pipe(Layer.effectDiscard, Layer.provide(BunServices.layer), Layer.build, Effect.scoped);
 
 BunRuntime.runMain(main);

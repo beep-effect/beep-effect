@@ -1279,7 +1279,7 @@ export const repairMessageRecord = (input: unknown): unknown => {
     const metadata = data.metadata;
     if (P.isString(metadata)) {
       // Legacy metadata that is not JSON stays a string.
-      S.decodeUnknownResult(S.fromJsonString(S.Unknown))(metadata).pipe(
+      S.decodeResult(S.fromJsonString(S.Unknown))(metadata).pipe(
         Result.map((parsed) => {
           if (isRecord(parsed) && Arr.isArray(parsed.content_blocks)) data.contentBlocks = parsed.content_blocks;
         }),

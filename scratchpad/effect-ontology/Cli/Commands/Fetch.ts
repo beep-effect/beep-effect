@@ -1,6 +1,3 @@
-import { BulkIngestOptions } from "../../Service/LinkIngestionService.ts";
-import { IngestedLinkFilter } from "../../Service/LinkIngestionService.ts";
-import { IngestOptions } from "../../Service/LinkIngestionService.ts";
 /**
  * CLI: Fetch and Link Ingestion Commands
  *
@@ -34,7 +31,13 @@ import { LinkStatus } from "../../Domain/Schema/LinkIngestion.ts";
 import { ContentEnrichmentAgent } from "../../Service/ContentEnrichmentAgent.ts";
 import { JinaReaderClient } from "../../Service/JinaReaderClient.ts";
 import type { IngestResult } from "../../Service/LinkIngestionService.ts";
-import { LinkIngestionError, LinkIngestionService } from "../../Service/LinkIngestionService.ts";
+import {
+  BulkIngestOptions,
+  IngestedLinkFilter,
+  IngestOptions,
+  LinkIngestionError,
+  LinkIngestionService,
+} from "../../Service/LinkIngestionService.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
 
 const decodeUnknownLinkStatus = S.decodeUnknownEffect(LinkStatus);
@@ -209,12 +212,15 @@ const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
 
   yield* Console.log(`Ingesting: ${url} (ontology: ${ontologyId})`);
 
-  const result = yield* ingestion.ingestUrl(url, IngestOptions.make({
-    ontologyId,
-    enrich: !skipEnrich,
-    ...getSomesStruct({ sourceType }),
-    skipDuplicates: !allowDuplicates,
-  }));
+  const result = yield* ingestion.ingestUrl(
+    url,
+    IngestOptions.make({
+      ontologyId,
+      enrich: !skipEnrich,
+      ...getSomesStruct({ sourceType }),
+      skipDuplicates: !allowDuplicates,
+    })
+  );
 
   const outputLines = result.duplicate
     ? ["Content already exists (duplicate)", `  ID: ${result.id}`, `  Hash: ${result.contentHash}`]
@@ -308,11 +314,13 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
     onNone: () => Effect.succeedNone,
     onSome: flow(decodeUnknownLinkStatus, Effect.map(O.some)),
   });
-  const documents = yield* ingestion.list(IngestedLinkFilter.make({
-    ...getSomesStruct({ status: canonicalStatus, sourceType }),
-    limit,
-    offset,
-  }));
+  const documents = yield* ingestion.list(
+    IngestedLinkFilter.make({
+      ...getSomesStruct({ status: canonicalStatus, sourceType }),
+      limit,
+      offset,
+    })
+  );
   if (jsonOutput) {
     const output = A.map(documents, (doc) => ({
       id: doc.id,
@@ -411,31 +419,38 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
     A.filter(P.and(Str.isNonEmpty, P.not(Str.startsWith("#"))))
   );
   yield* Console.log(`Ingesting ${urls.length} URLs with concurrency ${concurrency} (ontology: ${ontologyId})\n`);
-  const results = yield* ingestion.ingestUrls(urls, BulkIngestOptions.make({
-    ontologyId,
-    concurrency,
-    enrich: !skipEnrich,
-    continueOnError: true,
-  }));
-  const resultLines = yield* Effect.forEach(results, (result) => {
-    if (LinkIngestionError.is(result)) {
-      return Effect.succeed(`[ERROR] ${result.url ?? "unknown"}: ${result.message}`);
-    } else {
-      const ingestResult = result;
-      if (ingestResult.duplicate) {
-        return Effect.succeed(`[SKIP] ${Str.slice(0, 12)(ingestResult.contentHash)}... (duplicate)`);
+  const results = yield* ingestion.ingestUrls(
+    urls,
+    BulkIngestOptions.make({
+      ontologyId,
+      concurrency,
+      enrich: !skipEnrich,
+      continueOnError: true,
+    })
+  );
+  const resultLines = yield* Effect.forEach(
+    results,
+    (result) => {
+      if (LinkIngestionError.is(result)) {
+        return Effect.succeed(`[ERROR] ${result.url ?? "unknown"}: ${result.message}`);
       } else {
-        return Effect.succeed(
-          `[OK] ${Str.slice(0, 12)(ingestResult.contentHash)}... ${O.fromNullishOr(ingestResult.headline).pipe(
-            O.match({
-              onNone: thunkEmptyStr,
-              onSome: Str.slice(0, 40),
-            })
-          )}`
-        );
+        const ingestResult = result;
+        if (ingestResult.duplicate) {
+          return Effect.succeed(`[SKIP] ${Str.slice(0, 12)(ingestResult.contentHash)}... (duplicate)`);
+        } else {
+          return Effect.succeed(
+            `[OK] ${Str.slice(0, 12)(ingestResult.contentHash)}... ${O.fromNullishOr(ingestResult.headline).pipe(
+              O.match({
+                onNone: thunkEmptyStr,
+                onSome: Str.slice(0, 40),
+              })
+            )}`
+          );
+        }
       }
-    }
-  }, { concurrency: 1 });
+    },
+    { concurrency: 1 }
+  );
   const errors = A.filter(results, LinkIngestionError.is);
   const successes = A.filter(results, (result): result is IngestResult => !LinkIngestionError.is(result));
   const counts = {

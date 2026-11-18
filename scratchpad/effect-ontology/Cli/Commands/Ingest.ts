@@ -36,8 +36,7 @@ import {
   OntologyName,
   OntologyVersion,
 } from "../../Domain/Identity.ts";
-import { ManifestDocument } from "../../Domain/Schema/Batch.ts";
-import { BatchManifest } from "../../Domain/Schema/Batch.ts";
+import { BatchManifest, ManifestDocument } from "../../Domain/Schema/Batch.ts";
 import { ConfigService } from "../../Service/Config.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { sha256SyncFull } from "../../Utils/Hash.ts";
@@ -131,8 +130,8 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
     const filePath = path.join(dir, file);
     const stat = yield* fs.stat(filePath);
     const content = yield* fs.readFileString(filePath);
-    const yielded1 = yield* sha256SyncFull(content);
-const docId = DocumentId.fromContentHash(ContentHash.make(yielded1));
+    const documentDigest = yield* sha256SyncFull(content);
+    const docId = DocumentId.fromContentHash(ContentHash.make(documentDigest));
     const storageKey = `${storagePrefix}/documents/${docId}`;
     yield* storage.set(storageKey, content);
     const contentType = Str.endsWith(".json")(file)
@@ -143,19 +142,21 @@ const docId = DocumentId.fromContentHash(ContentHash.make(yielded1));
           ? "text/markdown"
           : "text/plain";
     const sourceUri = yield* S.decodeUnknownEffect(GcsUri)(`gs://${bucket}/${storageKey}`);
-    documents.push(ManifestDocument.make({
-      documentId: docId,
-      sourceUri,
-      contentType,
-      sizeBytes: S.Natural.make(Number(stat.size)),
-    }));
+    documents.push(
+      ManifestDocument.make({
+        documentId: docId,
+        sourceUri,
+        contentType,
+        sizeBytes: S.Natural.make(Number(stat.size)),
+      })
+    );
     yield* Console.log(`  Uploaded: ${file} -> ${storageKey}`);
   }
   const ontologyContent = yield* fs.readFileString(ontology);
   const ontologyName = yield* S.decodeEffect(OntologyName)(ontologyId);
   const targetNamespace = yield* S.decodeEffect(Namespace)(namespace);
-  const yielded2 = yield* sha256SyncFull(ontologyContent);
-const ontologyHash = ContentHash.make(yielded2);
+  const ontologyDigest = yield* sha256SyncFull(ontologyContent);
+  const ontologyHash = ContentHash.make(ontologyDigest);
   const ontologyFilename = path.basename(ontology);
   const ontologyKey = `${storagePrefix}/ontology/${ontologyFilename}`;
   yield* storage.set(ontologyKey, ontologyContent);

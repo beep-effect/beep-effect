@@ -10,6 +10,7 @@ import * as TestClock from "effect/testing/TestClock";
 import { EntityRegistryRepository } from "../../Repository/EntityRegistry.ts";
 import { CurationJobProcessor } from "../../Service/CurationJobProcessor.ts";
 import { EmbeddingService } from "../../Service/Embedding.ts";
+import { ProviderMetadata } from "../../Service/EmbeddingProvider.ts";
 import type { EventBusServiceMethods } from "../../Service/EventBus.ts";
 import { EventBusService } from "../../Service/EventBus.ts";
 
@@ -23,7 +24,7 @@ const EmbeddingServiceTest = Layer.succeed(
       Effect.die("EmbeddingServiceTest.embedBatch is unused")
     ),
     cosineSimilarity: () => 0,
-    getProviderMetadata: Effect.succeed({ providerId: "nomic", modelId: "test", dimension: 1 }),
+    getProviderMetadata: Effect.succeed(ProviderMetadata.make({ providerId: "nomic", modelId: "test", dimension: 1 })),
   })
 );
 
@@ -54,15 +55,15 @@ describe("CurationJobProcessor", () => {
           Effect.gen(function* () {
             yield* processor.runBackground(Duration.millis(5));
             yield* TestClock.adjust(Duration.millis(25));
-            const yielded1 = yield* Ref.get(polls);
-assert.isAbove(yielded1, 0);
+            const pollCount = yield* Ref.get(polls);
+            assert.isAbove(pollCount, 0);
           })
         );
 
         const pollsAtScopeClose = yield* Ref.get(polls);
         yield* TestClock.adjust(Duration.millis(25));
-        const yielded2 = yield* Ref.get(polls);
-assert.strictEqual(yielded2, pollsAtScopeClose);
+        const finalPollCount = yield* Ref.get(polls);
+        assert.strictEqual(finalPollCount, pollsAtScopeClose);
       })
     );
   });

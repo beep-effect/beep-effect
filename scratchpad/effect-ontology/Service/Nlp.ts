@@ -1,4 +1,3 @@
-
 /**
  * Service: NLP Services
  *
@@ -486,7 +485,7 @@ const makePatternChunker =
       return chunkBySize(text, maxChunkSize, chunkIndex);
     }
 
-    const firstBoundaryOffset = boundaryOffsets[0];
+    const firstBoundaryOffset = A.getUnsafe(boundaryOffsets, 0);
     if (firstBoundaryOffset > 0) {
       const preText = Str.trim(Str.slice(0, firstBoundaryOffset)(text));
       if (preText.length > 0) {
@@ -499,7 +498,7 @@ const makePatternChunker =
     }
 
     for (let index = 0; index < boundaryOffsets.length; index++) {
-      const startOffset = boundaryOffsets[index];
+      const startOffset = A.getUnsafe(boundaryOffsets, index);
       const endOffset = boundaryOffsets[index + 1] ?? text.length;
       const boundaryText = Str.trim(Str.slice(startOffset, endOffset)(text));
 
@@ -559,7 +558,10 @@ function chunkByParagraphs(text: string, maxChunkSize: number, _overlapSentences
     }
 
     // Find actual position in original text
-    const startOffset = text.indexOf(trimmedParagraph, currentOffset);
+    const startOffset = O.getOrElse(
+      O.map(Str.indexOf(trimmedParagraph)(Str.slice(currentOffset)(text)), (index) => index + currentOffset),
+      () => -1
+    );
     const endOffset = startOffset + trimmedParagraph.length;
 
     if (trimmedParagraph.length <= maxChunkSize) {
@@ -702,14 +704,24 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
       ) {
         const corpus = yield* corpora.createCorpus();
         return yield* Effect.gen(function* () {
-          const documents = yield* Effect.all(A.map(docs, (text, index) =>
+          const documents = yield* Effect.all(
+            A.map(docs, (text, index) =>
               tokenization.document(enhanceTextForSearch(text, 2), `${corpus.corpusId}-${index}`)
-            ), { concurrency: 1 });
+            ),
+            { concurrency: 1 }
+          );
           yield* corpora.learnDocuments({ corpusId: corpus.corpusId, documents });
           const queryResult = yield* corpora.query({ corpusId: corpus.corpusId, query, topN: k });
           return A.map(queryResult.ranked, (result): SimilarityResult => {
-            const index = Number.parseInt(Str.slice(result.id.lastIndexOf("-") + 1)(result.id), 10);
-            return SimilarityResult.make({ doc: docs[index], index: S.Natural.make(index), score: result.score });
+            const index = Number.parseInt(
+              Str.slice(O.getOrElse(Str.lastIndexOf("-")(result.id), () => -1) + 1)(result.id),
+              10
+            );
+            return SimilarityResult.make({
+              doc: A.getUnsafe(docs, index),
+              index: S.Natural.make(index),
+              score: result.score,
+            });
           });
         }).pipe(Effect.ensuring(corpora.deleteCorpus(corpus.corpusId)));
       }),
@@ -799,7 +811,10 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         let searchOffset = 0;
         sentenceCollection.each((sentence: WinkSentenceView) => {
           const sentenceText = sentence.out();
-          const startOffset = text.indexOf(sentenceText, searchOffset);
+          const startOffset = O.getOrElse(
+            O.map(Str.indexOf(sentenceText)(Str.slice(searchOffset)(text)), (index) => index + searchOffset),
+            () => -1
+          );
           const endOffset = startOffset + sentenceText.length;
           sentenceIndex.push({
             text: sentenceText,
@@ -816,7 +831,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
           const chunkSentences: Array<string> = [];
           let chunkSize = 0;
           for (let j = i; j < sentences.length; j++) {
-            const sentence = sentences[j];
+            const sentence = A.getUnsafe(sentences, j);
             const sentenceLength = sentence.length + (j > i ? 1 : 0);
             if (chunkSize + sentenceLength > maxChunkSize && chunkSentences.length > 0) {
               break;
@@ -836,7 +851,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
               break;
             }
           } else {
-            const sentence = sentences[i];
+            const sentence = A.getUnsafe(sentences, i);
             const chunkStartOffset = sentenceIndex[i]?.startOffset ?? 0;
             const chunkEndOffset = sentenceIndex[i]?.endOffset ?? chunkStartOffset + sentence.length;
             chunks.push(makeTextChunk(chunkIndex++, sentence, chunkStartOffset, chunkEndOffset));
@@ -852,7 +867,10 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
         const documents = ontology.toDocuments();
         const domainModelMap = MutableHashMap.empty<string, ClassDefinition | PropertyDefinition>();
         const corpus = yield* corpora.createCorpus({ bm25Config: config });
-        const corpusDocuments = yield* Effect.all(A.map(documents, ([iri, document]) => tokenization.document(enhanceTextForSearch(document, 2), iri)), { concurrency: 1 });
+        const corpusDocuments = yield* Effect.all(
+          A.map(documents, ([iri, document]) => tokenization.document(enhanceTextForSearch(document, 2), iri)),
+          { concurrency: 1 }
+        );
         yield* corpora.learnDocuments({ corpusId: corpus.corpusId, documents: corpusDocuments });
         for (const [iri] of documents) {
           const classDef = ontology.getClass(iri);
@@ -926,7 +944,7 @@ export class NlpService extends Context.Service<NlpService>()($I`NlpService`, {
           )
         );
         for (let i = 0; i < iris.length && i < embeddings.length; i++) {
-          const iri = iris[i];
+          const iri = A.getUnsafe(iris, i);
           const emb = embeddings[i];
           MutableHashMap.set(embeddingMap, iri, emb);
           const classDef = ontology.getClass(iri);

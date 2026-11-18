@@ -409,7 +409,7 @@ const formatSchemaContext = (ontology: OntologyContext): string => {
     parts.push("## Classes");
     for (const cls of ontology.classes) {
       const localName = extractLocalName(cls.id);
-      const properties = A.map(cls.properties, extractLocalName).join(", ");
+      const properties = A.join(A.map(cls.properties, extractLocalName), ", ");
       parts.push(
         `- ${localName}: ${cls.comment || cls.label}${P.isTruthy(properties) ? ` [properties: ${properties}]` : ""}`
       );
@@ -424,8 +424,8 @@ const formatSchemaContext = (ontology: OntologyContext): string => {
     parts.push("\n## Object Properties (link entities)");
     for (const prop of objectProps) {
       const localName = extractLocalName(prop.id);
-      const domain = A.map(prop.domain, extractLocalName).join(", ") || "any";
-      const range = A.map(prop.range, extractLocalName).join(", ") || "any";
+      const domain = A.join(A.map(prop.domain, extractLocalName), ", ") || "any";
+      const range = A.join(A.map(prop.range, extractLocalName), ", ") || "any";
       parts.push(`- ${localName}: ${domain} → ${range}${O.isSome(prop.comment) ? ` (${prop.comment})` : ""}`);
     }
   }
@@ -434,8 +434,8 @@ const formatSchemaContext = (ontology: OntologyContext): string => {
     parts.push("\n## Datatype Properties (literal values)");
     for (const prop of datatypeProps) {
       const localName = extractLocalName(prop.id);
-      const domain = A.map(prop.domain, extractLocalName).join(", ") || "any";
-      const range = A.map(prop.range, extractLocalName).join(", ") || "string";
+      const domain = A.join(A.map(prop.domain, extractLocalName), ", ") || "any";
+      const range = A.join(A.map(prop.range, extractLocalName), ", ") || "string";
       parts.push(`- ${localName}: ${domain} → ${range}${O.isSome(prop.comment) ? ` (${prop.comment})` : ""}`);
     }
   }
@@ -447,8 +447,10 @@ const formatSchemaContext = (ontology: OntologyContext): string => {
  * Format namespace prefixes as SPARQL PREFIX declarations
  */
 const formatPrefixes = (prefixes: Record<string, string>): string =>
-  A.map(R.toEntries(prefixes), ([prefix, uri]) => `PREFIX ${prefix}: <${uri}>`)
-    .join("\n");
+  A.join(
+    A.map(R.toEntries(prefixes), ([prefix, uri]) => `PREFIX ${prefix}: <${uri}>`),
+    "\n"
+  );
 
 /**
  * Build the SPARQL generation prompt
@@ -503,7 +505,11 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
 
   // Check for SELECT keyword
   const upperQuery = Str.toUpperCase(trimmed);
-  if (!Str.includes("SELECT")(upperQuery) && !Str.includes("ASK")(upperQuery) && !Str.includes("CONSTRUCT")(upperQuery)) {
+  if (
+    !Str.includes("SELECT")(upperQuery) &&
+    !Str.includes("ASK")(upperQuery) &&
+    !Str.includes("CONSTRUCT")(upperQuery)
+  ) {
     return SparqlSyntaxError.make({
       message: "Query must contain SELECT, ASK, or CONSTRUCT",
       sparql,
@@ -519,8 +525,8 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
   }
 
   // Check for balanced braces
-  const openBraces = (trimmed.match(/{/g) || []).length;
-  const closeBraces = (trimmed.match(/}/g) || []).length;
+  const openBraces = (O.getOrNull(Str.match(/{/g)(trimmed)) || []).length;
+  const closeBraces = (O.getOrNull(Str.match(/}/g)(trimmed)) || []).length;
   if (openBraces !== closeBraces) {
     return SparqlSyntaxError.make({
       message: `Unbalanced braces: ${openBraces} open, ${closeBraces} close`,
@@ -529,8 +535,8 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
   }
 
   // Check for balanced parentheses
-  const openParens = (trimmed.match(/\(/g) || []).length;
-  const closeParens = (trimmed.match(/\)/g) || []).length;
+  const openParens = (O.getOrNull(Str.match(/\(/g)(trimmed)) || []).length;
+  const closeParens = (O.getOrNull(Str.match(/\)/g)(trimmed)) || []).length;
   if (openParens !== closeParens) {
     return SparqlSyntaxError.make({
       message: `Unbalanced parentheses: ${openParens} open, ${closeParens} close`,
@@ -539,8 +545,8 @@ const validateSparqlSyntax = (sparql: string): SparqlSyntaxError | undefined => 
   }
 
   // Check for unclosed strings
-  const singleQuotes = (trimmed.match(/'/g) || []).length;
-  const doubleQuotes = (trimmed.match(/"/g) || []).length;
+  const singleQuotes = (O.getOrNull(Str.match(/'/g)(trimmed)) || []).length;
+  const doubleQuotes = (O.getOrNull(Str.match(/"/g)(trimmed)) || []).length;
   if (singleQuotes % 2 !== 0) {
     return SparqlSyntaxError.make({
       message: "Unclosed single-quoted string",

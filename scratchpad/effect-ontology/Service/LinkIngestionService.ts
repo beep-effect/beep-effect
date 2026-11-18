@@ -1,3 +1,4 @@
+import { ImageRef } from "../Domain/Model/Image.ts";
 /**
  * Service: Link Ingestion Service
  *
@@ -310,7 +311,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
           .where(and(eq(ingestedLinks.ontologyId, ontologyId), eq(ingestedLinks.contentHash, hash)))
           .limit(1)
       );
-      return A.head(yield* decodeIngestedLinkRows(rows));
+      const resolvedValue313_21 = yield* decodeIngestedLinkRows(rows);
+      return A.head(resolvedValue313_21);
     });
 
     // Content hash cache with long TTL (immutable content).
@@ -414,16 +416,18 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
                 );
 
                 // Add reference to link's image manifest
-                yield* imageStore.addImageRef({
-                  ownerType: "link",
-                  ownerId: contentHash, // Using contentHash as stable ID
-                  assetHash: fetchResult.hash,
-                  alt: fetchResult.candidate.alt,
-                  caption: fetchResult.candidate.caption,
-                  position: fetchResult.candidate.order,
-                  context: O.none(),
-                  role: O.some(fetchResult.candidate.role),
-                });
+                yield* imageStore.addImageRef(
+                  ImageRef.make({
+                    ownerType: "link",
+                    ownerId: contentHash, // Using contentHash as stable ID
+                    assetHash: fetchResult.hash,
+                    alt: fetchResult.candidate.alt,
+                    caption: fetchResult.candidate.caption,
+                    position: fetchResult.candidate.order,
+                    context: O.none(),
+                    role: O.some(fetchResult.candidate.role),
+                  })
+                );
               }).pipe(
                 Effect.catch((error) =>
                   Effect.logWarning("Failed to store image, continuing", {
@@ -457,6 +461,9 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
 
       // 6. Persist to database
       const wordCount = content.wordCount;
+      const enrichedAt = P.isNotUndefined(enrichedContent)
+        ? yield* DateTime.now.pipe(Effect.map(DateTime.toDateUtc))
+        : null;
       const insertRow: IngestedLinkInsertRow = {
         contentHash,
         ontologyId,
@@ -476,12 +483,12 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         keyEntities: [...(enrichedContent?.keyEntities ?? [])],
         storageUri: storagePath,
         status: enrich && P.isNotUndefined(enrichedContent) ? "enriched" : "pending",
-        enrichedAt: P.isNotUndefined(enrichedContent) ? DateTime.toDateUtc(yield* DateTime.now) : null,
+        enrichedAt,
         wordCount,
         metadata,
       };
 
-      const [inserted] = yield* normalizeQueryError(drizzle.insert(ingestedLinks).values(insertRow).returning()).pipe(
+      const insertedRows = yield* normalizeQueryError(drizzle.insert(ingestedLinks).values(insertRow).returning()).pipe(
         Effect.flatMap(decodeIngestedLinkRows),
         Effect.mapError((error) =>
           LinkIngestionError.make({
@@ -493,6 +500,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         )
       );
 
+      const inserted = A.getUnsafe(insertedRows, 0);
       return IngestResult.make({
         id: inserted.id,
         contentHash,
@@ -517,7 +525,7 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         return yield* Effect.forEach(
           urls,
           (url) =>
-            ingestUrl(url, ingestOptions).pipe(
+            ingestUrl(url, IngestOptions.make(ingestOptions)).pipe(
               Effect.map((result): IngestResult | LinkIngestionError => result),
               Effect.catch(
                 (error): Effect.Effect<IngestResult | LinkIngestionError, LinkIngestionError> =>
@@ -553,13 +561,14 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       const rows = yield* normalizeQueryError(
         drizzle.select().from(ingestedLinks).where(eq(ingestedLinks.id, id)).limit(1)
       );
-      return A.head(yield* decodeIngestedLinkRows(rows));
+      const resolvedValue556_21 = yield* decodeIngestedLinkRows(rows);
+      return A.head(resolvedValue556_21);
     });
 
     /**
      * List ingested links with filters
      */
-    const list = Effect.fn("list")(function* (filter: IngestedLinkFilter = {}) {
+    const list = Effect.fn("list")(function* (filter: IngestedLinkFilter = IngestedLinkFilter.make({})) {
       let query = drizzle.select().from(ingestedLinks).$dynamic();
       const conditions = [
         ...(P.isNotUndefined(filter.ontologyId) ? [eq(ingestedLinks.ontologyId, filter.ontologyId)] : []),
@@ -576,18 +585,19 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
       if (P.isNotUndefined(filter.offset)) {
         query = query.offset(filter.offset);
       }
-      return yield* decodeIngestedLinkRows(yield* normalizeQueryError(query));
+      const resolvedValue579_44 = yield* normalizeQueryError(query);
+      return yield* decodeIngestedLinkRows(resolvedValue579_44);
     });
 
     /**
      * Get pending links ready for extraction
      */
-    const getPending = (limit: number = 100) => list({ status: "pending", limit });
+    const getPending = (limit: number = 100) => list(IngestedLinkFilter.make({ status: "pending", limit }));
 
     /**
      * Get enriched links ready for extraction
      */
-    const getEnriched = (limit: number = 100) => list({ status: "enriched", limit });
+    const getEnriched = (limit: number = 100) => list(IngestedLinkFilter.make({ status: "enriched", limit }));
 
     // -----------------------------------------------------------------------
     // Status Updates
@@ -597,7 +607,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
      * Mark link as processed
      */
     const markProcessed = Effect.fn("markProcessed")(function* (id: string) {
-      const now = DateTime.toDateUtc(yield* DateTime.now);
+      const resolvedValue600_38 = yield* DateTime.now;
+      const now = DateTime.toDateUtc(resolvedValue600_38);
       const rows = yield* normalizeQueryError(
         drizzle
           .update(ingestedLinks)
@@ -605,14 +616,16 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
           .where(eq(ingestedLinks.id, id))
           .returning()
       );
-      return A.head(yield* decodeIngestedLinkRows(rows));
+      const resolvedValue608_21 = yield* decodeIngestedLinkRows(rows);
+      return A.head(resolvedValue608_21);
     });
 
     /**
      * Mark link as failed
      */
     const markFailed = Effect.fn("markFailed")(function* (id: string, errorMessage: string) {
-      const now = DateTime.toDateUtc(yield* DateTime.now);
+      const resolvedValue615_38 = yield* DateTime.now;
+      const now = DateTime.toDateUtc(resolvedValue615_38);
       const rows = yield* normalizeQueryError(
         drizzle
           .update(ingestedLinks)
@@ -620,7 +633,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
           .where(eq(ingestedLinks.id, id))
           .returning()
       );
-      return A.head(yield* decodeIngestedLinkRows(rows));
+      const resolvedValue623_21 = yield* decodeIngestedLinkRows(rows);
+      return A.head(resolvedValue623_21);
     });
 
     /**
@@ -630,7 +644,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
      * The link-to-batch association is tracked in the link_batch_items table.
      */
     const markProcessing = Effect.fn("markProcessing")(function* (id: string) {
-      const now = DateTime.toDateUtc(yield* DateTime.now);
+      const resolvedValue633_38 = yield* DateTime.now;
+      const now = DateTime.toDateUtc(resolvedValue633_38);
       const rows = yield* normalizeQueryError(
         drizzle
           .update(ingestedLinks)
@@ -641,7 +656,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
           .where(eq(ingestedLinks.id, id))
           .returning()
       );
-      return A.head(yield* decodeIngestedLinkRows(rows));
+      const resolvedValue644_21 = yield* decodeIngestedLinkRows(rows);
+      return A.head(resolvedValue644_21);
     });
 
     /**
@@ -720,7 +736,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
         );
 
         // 4. Update database
-        const now = DateTime.toDateUtc(yield* DateTime.now);
+        const resolvedValue723_40 = yield* DateTime.now;
+        const now = DateTime.toDateUtc(resolvedValue723_40);
         const updatedRows = yield* normalizeQueryError(
           drizzle
             .update(ingestedLinks)
@@ -788,7 +805,8 @@ export class LinkIngestionService extends Context.Service<LinkIngestionService>(
           ? and(baseCondition, eq(ingestedLinks.ontologyId, ontologyId))
           : baseCondition;
 
-        const now = DateTime.toDateUtc(yield* DateTime.now);
+        const resolvedValue791_40 = yield* DateTime.now;
+        const now = DateTime.toDateUtc(resolvedValue791_40);
         const results = yield* drizzle
           .update(ingestedLinks)
           .set({

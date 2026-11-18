@@ -418,11 +418,11 @@ export const EventBusServiceMemory = Layer.effect(
       function* (job) {
         const sequence = yield* Ref.updateAndGet(jobIdCounter, (value) => value + 1);
         const id = `job_${sequence}_${yield* Clock.currentTimeMillis}`;
-        const jobWithMeta: JobWithMetadata = {
+        const jobWithMeta: JobWithMetadata = JobWithMetadata.make({
           job,
           id,
           attempts: 0,
-        };
+        });
         yield* Queue.offer(jobQueue, jobWithMeta);
         yield* Effect.logDebug("Job enqueued", { id, type: job._tag });
         return id;
@@ -437,19 +437,19 @@ export const EventBusServiceMemory = Layer.effect(
     );
 
     const takeJob: EventBusServiceMethods["takeJob"] = Queue.poll(jobQueue).pipe(
-      Effect.map((opt) =>
-        O.map(opt, (jwm) => ({
-          ...jwm,
-          attempts: jwm.attempts + 1,
-        }))
-      ),
-      Effect.mapError((cause) =>
-        EventBusError.make({
-          method: "takeJob",
-          message: "Failed to take job",
-          cause,
-        })
-      )
+      Effect.mapBoth({
+        onSuccess: (opt) =>
+          O.map(opt, (jwm) => ({
+            ...jwm,
+            attempts: jwm.attempts + 1,
+          })),
+        onFailure: (cause) =>
+          EventBusError.make({
+            method: "takeJob",
+            message: "Failed to take job",
+            cause,
+          }),
+      })
     );
 
     const processJob: EventBusServiceMethods["processJob"] = Effect.fn("processJob")(function* (handler, options) {
@@ -463,7 +463,7 @@ export const EventBusServiceMemory = Layer.effect(
         Effect.catch((error) =>
           Effect.gen(function* () {
             if (attempts < maxAttempts) {
-              yield* Queue.offer(jobQueue, { job, id, attempts });
+              yield* Queue.offer(jobQueue, JobWithMetadata.make({ job, id, attempts }));
               yield* Effect.logWarning("Job failed, retrying", {
                 id,
                 attempts,
@@ -658,7 +658,7 @@ export const EventBusServiceSql = Layer.effect(
     );
 
     const takeJob: EventBusServiceMethods["takeJob"] = jobQueue
-      .take((job, { attempts, id }) => Effect.succeed({ attempts, id, job }))
+      .take((job, { attempts, id }) => Effect.succeed(JobWithMetadata.make({ attempts, id, job })))
       .pipe(
         Effect.timeoutOption(Duration.millis(10)),
         Effect.mapError((cause) =>
@@ -733,14 +733,15 @@ export const EventBusServiceSql = Layer.effect(
       `,
     });
     const pendingJobCount: EventBusServiceMethods["pendingJobCount"] = readPendingJobCount(undefined).pipe(
-      Effect.map((row) => row.count),
-      Effect.mapError((cause) =>
-        EventBusError.make({
-          method: "pendingJobCount",
-          message: "Failed to count pending persisted jobs",
-          cause: O.some(cause),
-        })
-      )
+      Effect.mapBoth({
+        onSuccess: (row) => row.count,
+        onFailure: (cause) =>
+          EventBusError.make({
+            method: "pendingJobCount",
+            message: "Failed to count pending persisted jobs",
+            cause: O.some(cause),
+          }),
+      })
     );
 
     const shutdown: EventBusServiceMethods["shutdown"] = Effect.logInfo("EventBusService SQL shutdown");

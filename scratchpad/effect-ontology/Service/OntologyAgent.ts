@@ -1,4 +1,3 @@
-
 /**
  * Service: OntologyAgent
  *
@@ -60,8 +59,7 @@ import {
 } from "../Domain/Model/OntologyAgent.ts";
 import { PosInt } from "../Schema/PosInt.ts";
 import { extractLocalNameFromIri } from "../Utils/Iri.ts";
-import type { CreateClaimInput } from "./Claim.ts";
-import { ClaimService } from "./Claim.ts";
+import { ClaimService, CreateClaimInput } from "./Claim.ts";
 import type { AppConfig } from "./Config.ts";
 import { ConfigService } from "./Config.ts";
 import { ExtractionWorkflow } from "./ExtractionWorkflow.ts";
@@ -428,7 +426,7 @@ const makeOntologyAgent = Effect.gen(function* () {
       const baseNamespace = O.isSome(options.targetNamespace)
         ? (() => {
             // Extract protocol://domain/ from config.rdf.baseNamespace
-            const match = config.rdf.baseNamespace.match(/^https?:\/\/[^/]+\//);
+            const match = O.getOrNull(Str.match(/^https?:\/\/[^/]+\//)(config.rdf.baseNamespace));
             const baseDomain = P.isNotNull(match) ? match[0] : "https://example.org/";
             return `${baseDomain}${options.targetNamespace.value}/`;
           })()
@@ -459,7 +457,7 @@ const makeOntologyAgent = Effect.gen(function* () {
         });
 
         // Build claim input from relation
-        const claimInput: CreateClaimInput = {
+        const claimInput: CreateClaimInput = CreateClaimInput.make({
           ontologyId: options.ontologyId,
           subjectIri,
           predicateIri: relation.predicate,
@@ -476,7 +474,7 @@ const makeOntologyAgent = Effect.gen(function* () {
                 },
               }
             : {}),
-        };
+        });
 
         yield* claimService.createClaim(claimInput);
         claimCount++;
@@ -766,7 +764,8 @@ const makeOntologyAgent = Effect.gen(function* () {
           explanation: formatViolationExplanation(v),
           suggestion: O.fromNullishOr(generateCorrectionSuggestion(v)),
           severity: v.severity,
-        })),
+        })
+      ),
 
     /**
      * Validate an RDF graph with auto-generated shapes and enhanced reporting
@@ -832,7 +831,8 @@ const makeOntologyAgent = Effect.gen(function* () {
           explanation: formatViolationExplanation(v),
           suggestion: O.fromNullishOr(generateCorrectionSuggestion(v)),
           severity: v.severity,
-        }));
+        })
+      );
 
       const endTime = yield* DateTime.now;
       const duration = DateTime.distance(startTime, endTime);
@@ -1296,9 +1296,10 @@ const formatAnswerWithLlm = (
     }
 
     // Format triples as a simple table for LLM
-    const triplesText = A.map(triples
-      .slice(0, 50), (t) => `${t.subject} --[${t.predicate}]--> ${t.object}`)
-      .join("\n");
+    const triplesText = A.join(
+      A.map(triples.slice(0, 50), (t) => `${t.subject} --[${t.predicate}]--> ${t.object}`),
+      "\n"
+    );
 
     const prompt = `You are a knowledge graph question answering system.
 

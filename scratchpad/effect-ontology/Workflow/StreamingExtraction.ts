@@ -1,4 +1,3 @@
-
 /**
  * Workflow: Streaming Extraction
  *
@@ -192,7 +191,10 @@ const decodeObjectRef = Effect.fn("StreamingExtraction.decodeObjectRef")(functio
  */
 export const makeExtractionWorkflow = Effect.gen(function* () {
   const configService = yield* ConfigService;
-  const [nlp, ontology, mentionExtractor, entityExtractor, relationExtractor, grounder, runService] = yield* Effect.all([NlpService, OntologyService, MentionExtractor, EntityExtractor, RelationExtractor, Grounder, ExtractionRunService], { concurrency: 1 });
+  const [nlp, ontology, mentionExtractor, entityExtractor, relationExtractor, grounder, runService] = yield* Effect.all(
+    [NlpService, OntologyService, MentionExtractor, EntityExtractor, RelationExtractor, Grounder, ExtractionRunService],
+    { concurrency: 1 }
+  );
 
   return {
     /**
@@ -344,8 +346,11 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                         error: renderUnknownError(error),
                       });
                       const ctx = yield* ontology.ontology;
-                      const classes = yield* Effect.forEach(A.take(ctx.classes, 100), (value) =>
-                        S.decodeUnknownEffect(ClassDefinition)(value), { concurrency: 1 });
+                      const classes = yield* Effect.forEach(
+                        A.take(ctx.classes, 100),
+                        (value) => S.decodeUnknownEffect(ClassDefinition)(value),
+                        { concurrency: 1 }
+                      );
                       return Chunk.fromIterable(classes);
                     })
                   )
@@ -372,16 +377,16 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                         propertyCount: Chunk.toReadonlyArray(properties).length,
                       })
                     ),
-                    Effect.map((properties) =>
-                      A.filter(Chunk.toReadonlyArray(properties), (p) => p.rangeType === "datatype")
-                    ),
-                    Effect.mapError((error) =>
-                      ExtractionError.make({
-                        message: `Datatype property scoping failed for chunk ${chunk.index}`,
-                        cause: O.some(error),
-                        text: O.some(chunk.text),
-                      })
-                    )
+                    Effect.mapBoth({
+                      onSuccess: (properties) =>
+                        A.filter(Chunk.toReadonlyArray(properties), (p) => p.rangeType === "datatype"),
+                      onFailure: (error) =>
+                        ExtractionError.make({
+                          message: `Datatype property scoping failed for chunk ${chunk.index}`,
+                          cause: O.some(error),
+                          text: O.some(chunk.text),
+                        }),
+                    })
                   );
                 const rawEntities = yield* entityExtractor
                   .extract(chunk.text, classArray, candidateDatatypeProperties)
@@ -439,7 +444,9 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       )
                     ),
                 });
-                const entityAudit = yield* Effect.forEach(entityVerificationResults, Effect.fn("StreamingExtraction.makeEntityObservation")(function* (
+                const entityAudit = yield* Effect.forEach(
+                  entityVerificationResults,
+                  Effect.fn("StreamingExtraction.makeEntityObservation")(function* (
                     result: EntityGrounderResult,
                     index: number
                   ) {
@@ -475,7 +482,9 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       observation,
                       provenance,
                     };
-                  }), { concurrency: 1 });
+                  }),
+                  { concurrency: 1 }
+                );
                 const entityObservations = A.map(entityAudit, ({ observation }) => observation);
                 const entityProvenance = makeExtractionProvenanceBundle(
                   activity,
@@ -586,9 +595,9 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                             RelationEntityContext.make({ entityId: value, mention, types })
                           );
                         },
-                        Text: O.none,
-                        Number: O.none,
-                        Boolean: O.none,
+                        Text: () => O.none<RelationEntityContext>(),
+                        Number: () => O.none<RelationEntityContext>(),
+                        Boolean: () => O.none<RelationEntityContext>(),
                       }),
                     });
                   }
@@ -626,7 +635,9 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       )
                     ),
                 });
-                const relationAudit = yield* Effect.forEach(verificationResults, Effect.fn("StreamingExtraction.makeRelationObservation")(function* (
+                const relationAudit = yield* Effect.forEach(
+                  verificationResults,
+                  Effect.fn("StreamingExtraction.makeRelationObservation")(function* (
                     result: GrounderResult,
                     index: number
                   ) {
@@ -655,7 +666,9 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                       observation,
                       provenance,
                     };
-                  }), { concurrency: 1 });
+                  }),
+                  { concurrency: 1 }
+                );
                 const relationObservations = A.map(relationAudit, ({ observation }) => observation);
                 const verifiedRelationArray = pipe(
                   relationAudit,
@@ -685,22 +698,25 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                   entityObservations,
                   relationObservations,
                 });
-                yield* Effect.all([
-                  Effect.logDebug("Chunk processing complete", {
-                    stage: "chunk-processing",
-                    chunkIndex: chunk.index,
-                    entityCount: fragment.entities.length,
-                    relationCount: fragment.relations.length,
-                  }),
-                  annotateExtraction({
-                    chunkIndex: chunk.index,
-                    chunkTextLength: chunk.text.length,
-                    entityCount: fragment.entities.length,
-                    relationCount: fragment.relations.length,
-                    mentionCount: mentionArray.length,
-                    candidateClassCount: classArray.length,
-                  }),
-                ], { concurrency: 1 });
+                yield* Effect.all(
+                  [
+                    Effect.logDebug("Chunk processing complete", {
+                      stage: "chunk-processing",
+                      chunkIndex: chunk.index,
+                      entityCount: fragment.entities.length,
+                      relationCount: fragment.relations.length,
+                    }),
+                    annotateExtraction({
+                      chunkIndex: chunk.index,
+                      chunkTextLength: chunk.text.length,
+                      entityCount: fragment.entities.length,
+                      relationCount: fragment.relations.length,
+                      mentionCount: mentionArray.length,
+                      candidateClassCount: classArray.length,
+                    }),
+                  ],
+                  { concurrency: 1 }
+                );
                 return fragment;
               },
               (effect, chunk) =>
@@ -738,7 +754,7 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
                 Effect.logError("Defect in chunk processing", {
                   defect: Cause.pretty(cause),
                 }),
-                Effect.succeed(Cause.hasDies(cause))
+                pipe(cause, Cause.hasDies, Effect.succeed)
               );
               return yield* Effect.failCause(
                 Cause.map(cause, (error) =>
@@ -763,18 +779,21 @@ export const makeExtractionWorkflow = Effect.gen(function* () {
             mergeGraphs
           ),
           Effect.tap((graph) =>
-            Effect.all([
-              Effect.logInfo("Streaming extraction complete", {
-                stage: "streaming-extraction",
-                totalEntities: graph.entities.length,
-                totalRelations: graph.relations.length,
-                uniqueEntityTypes: HashSet.size(
-                  HashSet.fromIterable(A.flatMap(graph.entities, (entity) => entity.types))
-                ),
-              }),
-              Effect.annotateCurrentSpan(LlmAttributes.ENTITY_COUNT, graph.entities.length),
-              Effect.annotateCurrentSpan(LlmAttributes.RELATION_COUNT, graph.relations.length),
-            ], { concurrency: 1 })
+            Effect.all(
+              [
+                Effect.logInfo("Streaming extraction complete", {
+                  stage: "streaming-extraction",
+                  totalEntities: graph.entities.length,
+                  totalRelations: graph.relations.length,
+                  uniqueEntityTypes: HashSet.size(
+                    HashSet.fromIterable(A.flatMap(graph.entities, (entity) => entity.types))
+                  ),
+                }),
+                Effect.annotateCurrentSpan(LlmAttributes.ENTITY_COUNT, graph.entities.length),
+                Effect.annotateCurrentSpan(LlmAttributes.RELATION_COUNT, graph.relations.length),
+              ],
+              { concurrency: 1 }
+            )
           ),
           Effect.withSpan("graph-merge")
         );

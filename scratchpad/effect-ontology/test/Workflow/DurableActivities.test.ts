@@ -1,4 +1,3 @@
-import { IngestionActivityInput } from "../../Domain/Schema/Batch.ts";
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { IRI } from "@beep/rdf";
 import { ObjectRef } from "@beep/rdf/Prov";
@@ -20,6 +19,7 @@ import { WorkflowInstance } from "effect/workflow/WorkflowEngine";
 import { BatchId, GcsUri, Namespace, OntologyName } from "../../Domain/Identity.ts";
 import { EntityObservation, EvidenceSpan } from "../../Domain/Model/Entity.ts";
 import { PathLayout } from "../../Domain/PathLayout.ts";
+import { IngestionActivityInput } from "../../Domain/Schema/Batch.ts";
 import { ClaimId } from "../../Domain/Schema/KnowledgeModel.ts";
 import { ClaimPersistenceService, PersistenceResult } from "../../Service/ClaimPersistence.ts";
 import { ConfigServiceDefault } from "../../Service/Config.ts";
@@ -106,16 +106,20 @@ describe("durable activity boundaries", () => {
 
         yield* Effect.all(
           [
-            makeIngestionActivity(IngestionActivityInput.make({
-              batchId: BatchA,
-              validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${firstPath}`)),
-              targetNamespace: namespace,
-            })).execute,
-            makeIngestionActivity(IngestionActivityInput.make({
-              batchId: BatchB,
-              validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${secondPath}`)),
-              targetNamespace: namespace,
-            })).execute,
+            makeIngestionActivity(
+              IngestionActivityInput.make({
+                batchId: BatchA,
+                validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${firstPath}`)),
+                targetNamespace: namespace,
+              })
+            ).execute,
+            makeIngestionActivity(
+              IngestionActivityInput.make({
+                batchId: BatchB,
+                validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${secondPath}`)),
+                targetNamespace: namespace,
+              })
+            ).execute,
           ],
           { concurrency: "unbounded" }
         );
@@ -236,8 +240,8 @@ describe("durable activity boundaries", () => {
         );
 
         assert.strictEqual(output.claimsPersisted, 1);
-        const yielded1 = yield* Ref.get(persistedClaims);
-assert.isTrue(Equal.equals(yielded1, artifact.claims));
+        const storedClaims = yield* Ref.get(persistedClaims);
+        assert.isTrue(Equal.equals(storedClaims, artifact.claims));
       })
     );
 
@@ -280,8 +284,8 @@ assert.isTrue(Equal.equals(yielded1, artifact.claims));
           })
         ).execute.pipe(Effect.provideService(CrossBatchEntityResolver, resolver));
 
-        const yielded2 = yield* Ref.get(resolveCalls);
-assert.strictEqual(yielded2, 1);
+        const resolveCallCount = yield* Ref.get(resolveCalls);
+        assert.strictEqual(resolveCallCount, 1);
         assert.strictEqual(output.newCanonicals, 1);
       })
     );
@@ -292,16 +296,18 @@ assert.strictEqual(yielded2, 1);
       "stops interruption retries at the configured bound",
       Effect.fnUntraced(function* () {
         const attempts = yield* InterruptAttempts;
-        const fiber = yield* makeIngestionActivity(IngestionActivityInput.make({
-          batchId: BatchA,
-          validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/interrupted.ttl")),
-          targetNamespace: Namespace.make("interrupt-retry"),
-        })).execute.pipe(Effect.forkChild);
+        const fiber = yield* makeIngestionActivity(
+          IngestionActivityInput.make({
+            batchId: BatchA,
+            validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/interrupted.ttl")),
+            targetNamespace: Namespace.make("interrupt-retry"),
+          })
+        ).execute.pipe(Effect.forkChild);
 
         yield* TestClock.adjust(Duration.seconds(30));
 
-        const yielded3 = yield* Ref.get(attempts);
-assert.strictEqual(yielded3, 4);
+        const attemptCount = yield* Ref.get(attempts);
+        assert.strictEqual(attemptCount, 4);
         assert.isTrue(O.isSome(O.fromUndefinedOr(fiber.pollUnsafe())));
       })
     );

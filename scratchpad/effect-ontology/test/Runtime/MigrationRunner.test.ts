@@ -1,5 +1,11 @@
 import { PgliteTestLayer } from "@beep/pglite";
-import { makeDrizzleLayer, migrateBundle, PostgresDrizzle } from "@beep/postgres";
+import {
+  MigrationBundleConfig,
+  MigrationBundleEntry,
+  makeDrizzleLayer,
+  migrateBundle,
+  PostgresDrizzle,
+} from "@beep/postgres";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as BunServices from "@effect/platform-bun/BunServices";
 import { assert, it } from "@effect/vitest";
@@ -7,6 +13,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as SqlClient from "effect/sql/SqlClient";
@@ -17,15 +24,15 @@ import { migrationsFolder } from "../../Runtime/Persistence/MigrationRunner.ts";
 const MigrationProbeRow = S.Struct({ id: S.Int, label: S.String });
 const MigrationJournalRow = S.Struct({ name: S.String });
 
-const BaselineProbe = {
+const BaselineProbe = MigrationBundleEntry.make({
   name: "20260101000000_probe_baseline",
   sql: "CREATE TABLE migration_probe (id INTEGER PRIMARY KEY);",
-};
+});
 
-const FutureProbe = {
+const FutureProbe = MigrationBundleEntry.make({
   name: "20260102000000_probe_future",
   sql: "ALTER TABLE migration_probe ADD COLUMN label TEXT NOT NULL DEFAULT 'future';",
-};
+});
 
 const DatabaseTestLayer = Layer.merge(makeDrizzleLayer().pipe(Layer.provideMerge(PgliteTestLayer)), BunCrypto.layer);
 
@@ -36,12 +43,16 @@ describe("effect-ontology migrations", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const migrationNames = yield* fs.readDirectory(migrationsFolder);
-        const customSql = yield* Effect.forEach(A.filter(migrationNames, Str.endsWith("_postgres_features")), (name) =>
-          fs.readFileString(`${migrationsFolder}/${name}/migration.sql`)
-        , { concurrency: 1 });
-        const baselineSql = yield* Effect.forEach(A.filter(migrationNames, Str.endsWith("_baseline")), (name) =>
-          fs.readFileString(`${migrationsFolder}/${name}/migration.sql`)
-        , { concurrency: 1 });
+        const customSql = yield* Effect.forEach(
+          A.filter(migrationNames, Str.endsWith("_postgres_features")),
+          (name) => fs.readFileString(`${migrationsFolder}/${name}/migration.sql`),
+          { concurrency: 1 }
+        );
+        const baselineSql = yield* Effect.forEach(
+          A.filter(migrationNames, Str.endsWith("_baseline")),
+          (name) => fs.readFileString(`${migrationsFolder}/${name}/migration.sql`),
+          { concurrency: 1 }
+        );
         const sql = A.join(customSql, "\n");
         const baseline = A.join(baselineSql, "\n");
 
@@ -53,7 +64,10 @@ describe("effect-ontology migrations", { concurrent: false }, () => {
         assert.include(sql, "CREATE TRIGGER ingested_links_updated_at");
         assert.include(baseline, "CREATE EXTENSION IF NOT EXISTS vector");
         assert.include(baseline, "CREATE EXTENSION IF NOT EXISTS pg_trgm");
-        assert.isBelow(baseline.indexOf("CREATE EXTENSION IF NOT EXISTS vector"), baseline.indexOf("vector(768)"));
+        assert.isBelow(
+          O.getOrElse(Str.indexOf("CREATE EXTENSION IF NOT EXISTS vector")(baseline), () => -1),
+          O.getOrElse(Str.indexOf("vector(768)")(baseline), () => -1)
+        );
         assert.include(baseline, 'CONSTRAINT "claims_rank_check"');
         assert.include(baseline, 'CONSTRAINT "conflicts_canonical_claim_pair_check"');
         assert.include(baseline, 'CONSTRAINT "conflicts_resolution_state_check"');
@@ -69,11 +83,14 @@ describe("effect-ontology migrations", { concurrent: false }, () => {
       Effect.fnUntraced(function* () {
         const database = yield* PostgresDrizzle;
         const sql = yield* SqlClient.SqlClient;
-        const config = { migrationsSchema: "effect_ontology", migrations: [BaselineProbe] };
+        const config = MigrationBundleConfig.make({ migrationsSchema: "effect_ontology", migrations: [BaselineProbe] });
 
         yield* migrateBundle(database, config);
         yield* migrateBundle(database, config);
-        yield* migrateBundle(database, { ...config, migrations: [BaselineProbe, FutureProbe] });
+        yield* migrateBundle(
+          database,
+          MigrationBundleConfig.make({ ...config, migrations: [BaselineProbe, FutureProbe] })
+        );
         yield* sql`INSERT INTO migration_probe (id) VALUES (1)`;
 
         const readProbe = SqlSchema.findOne({

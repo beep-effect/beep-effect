@@ -301,11 +301,11 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
         });
       }
 
-      return {
+      return JobProcessingStats.make({
         jobsProcessed,
         errors,
         durationMs,
-      };
+      });
     });
 
     // -------------------------------------------------------------------------

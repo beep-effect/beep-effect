@@ -1,4 +1,3 @@
-
 /**
  * ImageStore Service
  *
@@ -234,26 +233,27 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
           const existing = yield* loadManifestWithGeneration(ref.ownerType, ref.ownerId);
           if (O.isSome(existing)) {
             const { generation, manifest } = existing.value;
-            const alreadyExists = A.some(manifest.images, (img) => img.assetHash === ref.assetHash && img.position === ref.position);
+            const alreadyExists = A.some(
+              manifest.images,
+              (img) => img.assetHash === ref.assetHash && img.position === ref.position
+            );
             if (!alreadyExists) {
               const updatedAt = yield* DateTime.now;
-              const updatedManifest: ImageManifest = {
+              const updatedManifest: ImageManifest = ImageManifest.make({
                 ...manifest,
                 images: A.sort([...manifest.images, ref], ImageRefOrder),
-                totalCount: manifest.totalCount + 1,
                 updatedAt,
-              };
+              });
               yield* saveManifest(updatedManifest, generation);
             }
           } else {
             const updatedAt = yield* DateTime.now;
-            const newManifest: ImageManifest = {
+            const newManifest: ImageManifest = ImageManifest.make({
               ownerType: ref.ownerType,
               ownerId: ref.ownerId,
               images: [ref],
-              totalCount: 1,
               updatedAt,
-            };
+            });
             const json = yield* ImageManifest.encodeEffectFromJsonStringFormatted(newManifest);
             yield* storage.setIfGenerationMatch(manifestPath, json, "0");
           }
@@ -275,12 +275,7 @@ export class ImageStore extends Context.Service<ImageStore, ImageStoreService>()
           const filtered = A.filter(manifest.images, (img) => img.assetHash !== assetHash);
           if (filtered.length !== manifest.images.length) {
             const updatedAt = yield* DateTime.now;
-            const updatedManifest: ImageManifest = {
-              ...manifest,
-              images: filtered,
-              totalCount: filtered.length,
-              updatedAt,
-            };
+            const updatedManifest: ImageManifest = ImageManifest.make({ ...manifest, images: filtered, updatedAt });
             yield* saveManifest(updatedManifest, generation);
           }
         }),

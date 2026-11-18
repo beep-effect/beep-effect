@@ -1,3 +1,12 @@
+import { pipe } from "effect/Function";
+import {
+  ExtractionActivityInput,
+  IngestionActivityInput,
+  ResolutionActivityInput,
+  ValidationActivityInput,
+} from "../Domain/Schema/Batch.ts";
+import { PreprocessingActivityInput } from "../Domain/Schema/DocumentMetadata.ts";
+import { CrossBatchResolutionInput } from "../Workflow/DurableActivities.ts";
 
 /**
  * Workflow Orchestrator Service
@@ -48,8 +57,7 @@ import {
   WorkflowSuspendedError,
 } from "../Domain/Error/Workflow.ts";
 import { BatchId, DocumentId, GcsUri } from "../Domain/Identity.ts";
-import type { DocumentStatus } from "../Domain/Model/BatchWorkflow.ts";
-import { BatchState } from "../Domain/Model/BatchWorkflow.ts";
+import { BatchState, DocumentStatus } from "../Domain/Model/BatchWorkflow.ts";
 import { BatchManifest, BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
 import { ChunkingParams, defaultChunkingParams, EnrichedManifest } from "../Domain/Schema/DocumentMetadata.ts";
 import {
@@ -111,10 +119,10 @@ const toWorkflowError = (error: unknown): WorkflowError =>
 const extractFilename = (path: string): string => {
   if (Str.startsWith("gs://")(path)) {
     const parts = Str.split("/")(path);
-    return parts[parts.length - 1];
+    return A.lastNonEmpty(parts);
   }
   const parts = Str.split("/")(path);
-  return parts[parts.length - 1];
+  return A.lastNonEmpty(parts);
 };
 
 /**
@@ -277,7 +285,7 @@ const toFailedState = (state: BatchState, cause: Cause.Cause<unknown>, failedAt:
     error: {
       code: "WORKFLOW_FAILED",
       message: Cause.pretty(cause),
-      cause: O.some(Cause.squash(cause)),
+      cause: pipe(cause, Cause.squash, O.some),
     },
     lastSuccessfulStage: O.fromNullishOr(state._tag === "Pending" ? undefined : failedStage),
   });
@@ -298,11 +306,12 @@ const pollResultToBatchState = Match.type<Workflow.Result<BatchState, AnyWorkflo
           const stored = yield* getBatchStateFromStore(context.batchId);
           const fallback = O.getOrUndefined(stored);
           if (P.isNotUndefined(fallback)) {
-            return toFailedState(fallback, cause, yield* DateTime.now);
+            const resolvedValue300_51 = yield* DateTime.now;
+            return toFailedState(fallback, cause, resolvedValue300_51);
           }
           return yield* WorkflowError.make({
             message: `Workflow ${context.executionId} failed`,
-            cause: O.some(Cause.squash(cause)),
+            cause: pipe(cause, Cause.squash, O.some),
           });
         }),
       })
@@ -468,11 +477,13 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       const preprocessingEnabled = payload.preprocessing.enabled;
       const preprocessingResult = yield* (
         preprocessingEnabled
-          ? makePreprocessingActivity({
-              batchId,
-              manifestUri,
-              preprocessing: payload.preprocessing,
-            }).execute
+          ? makePreprocessingActivity(
+              PreprocessingActivityInput.make({
+                batchId,
+                manifestUri,
+                preprocessing: payload.preprocessing,
+              })
+            ).execute
           : Effect.succeed({
               enrichedManifestUri: Result.getOrThrow(S.decodeResult(GcsUri)(manifestUri)),
               totalDocuments: S.Natural.make(manifest.documents.length),
@@ -599,28 +610,30 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
           );
 
           // Execute extraction with error handling per document
-          const result = yield* makeStreamingExtractionActivity({
-            batchId,
-            documentId: doc.documentId,
-            sourceUri: doc.sourceUri,
-            ontologyUri: manifest.ontologyUri,
-            ontologyId: manifest.ontologyId,
-            targetNamespace: manifest.targetNamespace,
-            ontologyEmbeddingsUri: payload.ontologyEmbeddingsUri,
-            chunking: O.match(docMetadata, {
-              onNone: () => defaultChunkingParams.standard,
-              onSome: (metadata) =>
-                ChunkingParams.make({
-                  chunkSize: metadata.suggestedChunkSize,
-                  overlapSentences: metadata.suggestedOverlap,
-                  preserveSentences: defaultChunkingParams[metadata.chunkingStrategy].preserveSentences,
-                }),
-            }),
-            eventTime: O.flatMap(docMetadata, (metadata) => metadata.eventTime),
-            publishedAt: O.flatMap(docMetadata, (metadata) => metadata.publishedAt),
-            title: O.flatMap(docMetadata, (metadata) => metadata.title),
-            language: O.map(docMetadata, (metadata) => metadata.language),
-          }).execute.pipe(
+          const result = yield* makeStreamingExtractionActivity(
+            ExtractionActivityInput.make({
+              batchId,
+              documentId: doc.documentId,
+              sourceUri: doc.sourceUri,
+              ontologyUri: manifest.ontologyUri,
+              ontologyId: manifest.ontologyId,
+              targetNamespace: manifest.targetNamespace,
+              ontologyEmbeddingsUri: payload.ontologyEmbeddingsUri,
+              chunking: O.match(docMetadata, {
+                onNone: () => defaultChunkingParams.standard,
+                onSome: (metadata) =>
+                  ChunkingParams.make({
+                    chunkSize: metadata.suggestedChunkSize,
+                    overlapSentences: metadata.suggestedOverlap,
+                    preserveSentences: defaultChunkingParams[metadata.chunkingStrategy].preserveSentences,
+                  }),
+              }),
+              eventTime: O.flatMap(docMetadata, (metadata) => metadata.eventTime),
+              publishedAt: O.flatMap(docMetadata, (metadata) => metadata.publishedAt),
+              title: O.flatMap(docMetadata, (metadata) => metadata.title),
+              language: O.map(docMetadata, (metadata) => metadata.language),
+            })
+          ).execute.pipe(
             Effect.map(
               (
                 output
@@ -650,10 +663,10 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
                           status: "failed",
                           startedAt: O.some(startedAt),
                           completedAt,
-                          error: {
+                          error: DocumentStatus.cases.failed.fields.error.make({
                             code: "EXTRACTION_FAILED",
                             message: errorMessage,
-                          },
+                          }),
                         }
                       : s
                   )
@@ -756,10 +769,12 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       });
       yield* emitState(resolvingState);
 
-      const resolutionResult = yield* makeResolutionActivity({
-        batchId,
-        documentGraphUris: A.map(successfulResults, (r) => r.graphUri),
-      }).execute;
+      const resolutionResult = yield* makeResolutionActivity(
+        ResolutionActivityInput.make({
+          batchId,
+          documentGraphUris: A.map(successfulResults, (r) => r.graphUri),
+        })
+      ).execute;
 
       lastSuccessfulStage = "resolving";
 
@@ -770,12 +785,14 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
 
       // Cross-batch entity resolution (optional - requires Postgres + pgvector)
       // Links entities to persistent canonical registry across extraction batches
-      const crossBatchResult = yield* makeCrossBatchResolutionActivity({
-        batchId,
-        resolvedGraphUri: resolutionResult.resolvedUri,
-        enabled: config.entityRegistry.enabled,
-        ontologyId: manifest.ontologyId,
-      }).execute;
+      const crossBatchResult = yield* makeCrossBatchResolutionActivity(
+        CrossBatchResolutionInput.make({
+          batchId,
+          resolvedGraphUri: resolutionResult.resolvedUri,
+          enabled: config.entityRegistry.enabled,
+          ontologyId: manifest.ontologyId,
+        })
+      ).execute;
 
       if (config.entityRegistry.enabled) {
         yield* Effect.logInfo("Cross-batch resolution complete", {
@@ -829,13 +846,15 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
 
       // Pass validation policy from manifest to activity
       // The activity's validateWithPolicy will fail with ValidationPolicyError if policy violated
-      const validationResult = yield* makeValidationActivity({
-        batchId,
-        resolvedGraphUri: graphForValidation,
-        ontologyUri: manifest.ontologyUri,
-        shaclUri: manifest.shaclUri,
-        validationPolicy: manifest.validationPolicy,
-      }).execute;
+      const validationResult = yield* makeValidationActivity(
+        ValidationActivityInput.make({
+          batchId,
+          resolvedGraphUri: graphForValidation,
+          ontologyUri: manifest.ontologyUri,
+          shaclUri: manifest.shaclUri,
+          validationPolicy: manifest.validationPolicy,
+        })
+      ).execute;
 
       yield* Effect.logInfo("Validation complete", {
         batchId,
@@ -917,11 +936,13 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
       });
       yield* emitState(ingestingState);
 
-      const ingestionResult = yield* makeIngestionActivity({
-        batchId,
-        validatedGraphUri: validationResult.validatedUri,
-        targetNamespace: manifest.targetNamespace,
-      }).execute;
+      const ingestionResult = yield* makeIngestionActivity(
+        IngestionActivityInput.make({
+          batchId,
+          validatedGraphUri: validationResult.validatedUri,
+          targetNamespace: manifest.targetNamespace,
+        })
+      ).execute;
 
       lastSuccessfulStage = "ingesting";
 
@@ -1002,7 +1023,7 @@ export const BatchExtractionWorkflowLayer = BatchExtractionWorkflow.toLayer((pay
             error: {
               code: "WORKFLOW_FAILED",
               message: Cause.pretty(cause),
-              cause: O.some(Cause.squash(cause)),
+              cause: pipe(cause, Cause.squash, O.some),
             },
             lastSuccessfulStage: O.fromNullishOr(lastSuccessfulStage),
           });

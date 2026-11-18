@@ -22,8 +22,7 @@ import type { KnowledgeGraph } from "../Domain/Model/Entity.ts";
 import { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import { PosInt } from "../Schema/PosInt.ts";
-import type { FindSimilarOptions } from "./EntityIndex.ts";
-import { EntityIndex } from "./EntityIndex.ts";
+import { EntityIndex, FindSimilarOptions } from "./EntityIndex.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/SubgraphExtractor");
 
@@ -376,8 +375,8 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()($I`S
       yield* entityIndex.index(graph);
       const findOptions: FindSimilarOptions =
         A.length(options.filterTypes) === 0
-          ? { minScore: options.minSimilarity }
-          : { minScore: options.minSimilarity, filterTypes: options.filterTypes };
+          ? FindSimilarOptions.make({ minScore: options.minSimilarity })
+          : FindSimilarOptions.make({ minScore: options.minSimilarity, filterTypes: options.filterTypes });
       const similar = yield* entityIndex.findSimilar(query, options.topK, findOptions);
       if (A.length(similar) === 0) {
         return emptySubgraph([]);

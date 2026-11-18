@@ -1,4 +1,3 @@
-
 import type * as AiError from "effect/ai/AiError";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Prompt from "effect/ai/Prompt";
@@ -143,17 +142,20 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
   return yield* attempt.pipe(
     retryEffect(retryPolicy),
     Effect.tapCause((cause) =>
-      Effect.all([
-        Effect.logError(`${serviceName} LLM attempts exhausted`, {
-          stage: Str.toLowerCase(serviceName),
-          promptLength,
-          cause: Cause.pretty(cause),
-        }),
-        annotateError({
-          errorType: "UnknownCause",
-          errorMessage: Str.slice(0, 500)(Cause.pretty(cause)),
-        }),
-      ], { concurrency: 1 })
+      Effect.all(
+        [
+          Effect.logError(`${serviceName} LLM attempts exhausted`, {
+            stage: Str.toLowerCase(serviceName),
+            promptLength,
+            cause: Cause.pretty(cause),
+          }),
+          annotateError({
+            errorType: "UnknownCause",
+            errorMessage: cause.pipe(Cause.pretty, Str.slice(0, 500)),
+          }),
+        ],
+        { concurrency: 1 }
+      )
     ),
     Effect.tap(
       Effect.fn("LlmWithRetry.annotateSuccess")(function* (response) {
@@ -163,31 +165,34 @@ export const generateObjectWithRetry = Effect.fn("generateObjectWithRetry")(func
         const inputTokens = response.usage.inputTokens.total ?? 0;
         const outputTokens = response.usage.outputTokens.total ?? 0;
 
-        yield* Effect.all([
-          recordProviderUsage({
-            inputTokens: response.usage.inputTokens.total,
-            outputTokens: response.usage.outputTokens.total,
-          }),
-          Effect.logInfo(`${serviceName} LLM response`, {
-            stage: Str.toLowerCase(serviceName),
-            inputTokens,
-            outputTokens,
-            retryCount: retries,
-            ...successAnnotations,
-          }),
-          annotateLlmCall({
-            model,
-            provider,
-            promptLength,
-            inputTokens,
-            outputTokens,
-            schemaHash,
-          }),
-          annotateRetry({
-            retryCount: retries,
-            maxAttempts: retryPolicy.maxAttempts,
-          }),
-        ], { concurrency: 1 });
+        yield* Effect.all(
+          [
+            recordProviderUsage({
+              inputTokens: response.usage.inputTokens.total,
+              outputTokens: response.usage.outputTokens.total,
+            }),
+            Effect.logInfo(`${serviceName} LLM response`, {
+              stage: Str.toLowerCase(serviceName),
+              inputTokens,
+              outputTokens,
+              retryCount: retries,
+              ...successAnnotations,
+            }),
+            annotateLlmCall({
+              model,
+              provider,
+              promptLength,
+              inputTokens,
+              outputTokens,
+              schemaHash,
+            }),
+            annotateRetry({
+              retryCount: retries,
+              maxAttempts: retryPolicy.maxAttempts,
+            }),
+          ],
+          { concurrency: 1 }
+        );
       })
     ),
     Effect.withSpan(`${Str.toLowerCase(serviceName)}-llm`, {

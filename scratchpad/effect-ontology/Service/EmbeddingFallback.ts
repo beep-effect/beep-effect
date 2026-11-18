@@ -1,3 +1,4 @@
+import { ProviderMetadata } from "./EmbeddingProvider.ts";
 /**
  * Embedding Fallback Service
  *
@@ -216,11 +217,11 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
 
     // Create Nomic provider (wraps NomicNlpService)
     const nomicProvider: EmbeddingProviderMethods = {
-      metadata: {
+      metadata: ProviderMetadata.make({
         providerId: "nomic",
         modelId: "nomic-embed-text-v1.5",
         dimension: 768,
-      },
+      }),
       embedBatch: (requests: ReadonlyArray<EmbeddingRequest>) =>
         Effect.forEach(
           requests,

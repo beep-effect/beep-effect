@@ -410,8 +410,8 @@ const makeEventBroadcastHubMemory = Effect.gen(function* () {
  */
 const makeEventBroadcastHubPubSub = Effect.gen(function* () {
   const config = yield* EventBroadcastConfig;
-  const yielded1 = yield* Effect.context();
-const runFork = Effect.runForkWith(yielded1);
+  const broadcastContext = yield* Effect.context();
+  const runFork = Effect.runForkWith(broadcastContext);
 
   // Initialize Cloud Pub/Sub client
   const pubsub = new GCloudPubSub({ projectId: config.projectId });
@@ -693,15 +693,15 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
   const hub = yield* EventBroadcastHub;
   const writer = yield* socket.writer;
   const serverId = (yield* Random.nextIntBetween(0, 0x7fffffff)).toString(16);
-  const yielded2 = yield* Clock.currentTimeMillis;
-const connected: ServerMessage = {
+  const connectedAtMillis = yield* Clock.currentTimeMillis;
+  const connected: ServerMessage = {
     type: "connected",
     ontologyId,
     serverId,
-    timestamp: S.Natural.make(yielded2),
+    timestamp: S.Natural.make(connectedAtMillis),
   };
-  const yielded3 = yield* encodeServerMessage(connected);
-yield* writer.write(new TextEncoder().encode(yielded3));
+  const connectedJson = yield* encodeServerMessage(connected);
+  yield* writer.write(new TextEncoder().encode(connectedJson));
   yield* Effect.logInfo("WebSocket client connected", { ontologyId });
   const eventQueue = yield* hub.subscribe(ontologyId);
   const fibers = yield* FiberMap.make<string>();
@@ -709,12 +709,13 @@ yield* writer.write(new TextEncoder().encode(yielded3));
     fibers,
     "events"
   )(
-    Stream.fromSubscription(eventQueue).pipe(
+    eventQueue.pipe(
+      Stream.fromSubscription,
       Stream.tap(
         Effect.fnUntraced(function* (event) {
           const message: ServerMessage = { ...event, type: "event" };
-          const yielded4 = yield* encodeServerMessage(message);
-yield* writer.write(new TextEncoder().encode(yielded4));
+          const messageJson = yield* encodeServerMessage(message);
+          yield* writer.write(new TextEncoder().encode(messageJson));
         })
       ),
       Stream.runDrain
@@ -725,10 +726,10 @@ yield* writer.write(new TextEncoder().encode(yielded4));
     "ping"
   )(
     Effect.gen(function* () {
-      const yielded5 = yield* Clock.currentTimeMillis;
-const ping: ServerMessage = { type: "ping", timestamp: S.Natural.make(yielded5) };
-      const yielded6 = yield* encodeServerMessage(ping);
-yield* writer.write(new TextEncoder().encode(yielded6));
+      const pingAtMillis = yield* Clock.currentTimeMillis;
+      const ping: ServerMessage = { type: "ping", timestamp: S.Natural.make(pingAtMillis) };
+      const pingJson = yield* encodeServerMessage(ping);
+      yield* writer.write(new TextEncoder().encode(pingJson));
     }).pipe(Effect.delay("30 seconds"), Effect.forever, Effect.ignore)
   );
   const reader = yield* socket.reader;
@@ -782,12 +783,12 @@ yield* writer.write(new TextEncoder().encode(yielded6));
 export const broadcastDomainEvent = Effect.fn("broadcastDomainEvent")(function* (event: EventEntry) {
   const hub = yield* EventBroadcastHub;
   const ontologyId = event.payload.ontologyId;
-  const yielded7 = yield* Clock.currentTimeMillis;
-const broadcastEvent: BroadcastEvent = {
+  const broadcastAtMillis = yield* Clock.currentTimeMillis;
+  const broadcastEvent: BroadcastEvent = {
     type: "event",
     entry: event,
     ontologyId,
-    timestamp: S.Natural.make(yielded7),
+    timestamp: S.Natural.make(broadcastAtMillis),
   };
   yield* hub.broadcast(ontologyId, broadcastEvent);
 });

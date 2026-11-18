@@ -1,4 +1,3 @@
-
 /**
  * Service: CorrectorAgent
  *
@@ -817,13 +816,15 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
       if (P.isTruthy(entityContext)) {
         parts.push("## Entity Context (Current Properties)", "```turtle", entityContext, "```", "");
       }
-      const relevantClasses = A.map(ontologyContext.classes
-        .slice(0, 5), (c) => `- ${c.label || extractLocalName(c.id)}: ${c.comment || "No description"}`);
-      const relevantProps = ontologyContext.properties
-        .slice(0, 10)
-        .map(
-          (p) => `- ${p.label || extractLocalName(p.id)}: ${p.rangeType} (${A.map(p.range, extractLocalName).join(", ")})`
-        );
+      const relevantClasses = A.map(
+        ontologyContext.classes.slice(0, 5),
+        (c) => `- ${c.label || extractLocalName(c.id)}: ${c.comment || "No description"}`
+      );
+      const relevantProps = A.map(
+        ontologyContext.properties.slice(0, 10),
+        (p) =>
+          `- ${p.label || extractLocalName(p.id)}: ${p.rangeType} (${A.join(A.map(p.range, extractLocalName), ", ")})`
+      );
       parts.push("## Ontology Context", "### Classes");
       for (const cls of relevantClasses) {
         parts.push(cls);
@@ -842,7 +843,10 @@ export class CorrectorAgent extends Context.Service<CorrectorAgent, CorrectorAge
         "- explanation: Why this correction is appropriate",
         "- confidence: Your confidence in this correction (0-1)"
       );
-      return A.filter(parts, (p) => p !== "").join("\n");
+      return A.join(
+        A.filter(parts, (p) => p !== ""),
+        "\n"
+      );
     };
     const getEntityContext = Effect.fn("CorrectorAgent.getEntityContext")(function* (
       store: RdfStore,

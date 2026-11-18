@@ -1,3 +1,4 @@
+import { pipe } from "effect/Function";
 
 /**
  * Service: Ontology Services
@@ -103,7 +104,7 @@ const collectSearchResultClasses = (
       },
     });
   A.forEach(results, collect);
-  return Chunk.fromIterable(MutableHashMap.values(classes));
+  return pipe(classes, MutableHashMap.values, Chunk.fromIterable);
 };
 
 const collectOntologyClasses =
@@ -335,7 +336,7 @@ export const parseOntologyFromStore: {
               subject: makeBlankNode(current),
               predicate: RDF_REST,
             });
-            const restQuad = Chunk.toReadonlyArray(restQuads)[0];
+            const restQuad = A.getUnsafe(Chunk.toReadonlyArray(restQuads), 0);
             current = P.isTruthy(restQuad) ? restQuad.object.value : "";
           }
 
@@ -476,9 +477,10 @@ export const parseOntologyFromStore: {
         object: OWL_FUNCTIONAL_PROPERTY,
       });
       // Store as HashSet<string> for easy lookup by string IDs
-      const functionalProps = HashSet.fromIterable(
-        A.filter(Chunk.toReadonlyArray(functionalPropQuads), (q) => q.subject.termType === "NamedNode")
-          .map((q) => q.subject.value)
+      const functionalProps = pipe(
+        A.filter(Chunk.toReadonlyArray(functionalPropQuads), (q) => q.subject.termType === "NamedNode"),
+        A.map((q) => q.subject.value),
+        HashSet.fromIterable
       );
 
       const propInfos = MutableHashMap.empty<
@@ -533,47 +535,12 @@ export const parseOntologyFromStore: {
 
           const label = O.orElse(getFirst(labels, id), () => getFirst(prefLabels, id));
           if (O.isSome(label)) {
-            finalClasses.push(
-              yield* decodeUnknownClassDefinition({
-                id: IRI.make(id),
-                label: label.value,
-                comment: getFirst(comments, id),
-                // properties field expects IRI[], coerce from string[]
-                properties: asIriArray(getOrEmpty(classProperties, id)),
-                prefLabels: getOrEmpty(prefLabels, id),
-                altLabels: getOrEmpty(altLabels, id),
-                hiddenLabels: getOrEmpty(hiddenLabels, id),
-                definition: getFirst(definitions, id),
-                scopeNote: getFirst(scopeNotes, id),
-                example: getFirst(examples, id),
-                // SKOS fields expect string[] (full IRIs as strings)
-                broader: asIriArray(getOrEmpty(broaders, id)),
-                narrower: asIriArray(getOrEmpty(narrowers, id)),
-                related: asIriArray(getOrEmpty(relateds, id)),
-                exactMatch: asIriArray(getOrEmpty(exactMatches, id)),
-                closeMatch: asIriArray(getOrEmpty(closeMatches, id)),
-                equivalentClass: asIriArray(getOrEmpty(equivalentClasses, id)),
-              })
-            );
-          }
-        }
-      }
-
-      // Finalize Properties
-      const finalProperties: Array<PropertyDefinition> = [];
-      for (const [id, info] of propInfos) {
-        const label = O.orElse(getFirst(labels, id), () => getFirst(prefLabels, id));
-        if (O.isSome(label)) {
-          finalProperties.push(
-            yield* decodeUnknownPropertyDefinition({
+            const resolvedValue537_15 = yield* decodeUnknownClassDefinition({
               id: IRI.make(id),
               label: label.value,
               comment: getFirst(comments, id),
-              // domain/range expect string[] (full IRIs as strings)
-              domain: asIriArray(getOrEmpty(domains, id)),
-              range: asIriArray(getOrEmpty(ranges, id)),
-              rangeType: info.rangeType,
-              isFunctional: HashSet.has(functionalProps, id),
+              // properties field expects IRI[], coerce from string[]
+              properties: asIriArray(getOrEmpty(classProperties, id)),
               prefLabels: getOrEmpty(prefLabels, id),
               altLabels: getOrEmpty(altLabels, id),
               hiddenLabels: getOrEmpty(hiddenLabels, id),
@@ -586,9 +553,42 @@ export const parseOntologyFromStore: {
               related: asIriArray(getOrEmpty(relateds, id)),
               exactMatch: asIriArray(getOrEmpty(exactMatches, id)),
               closeMatch: asIriArray(getOrEmpty(closeMatches, id)),
-              inverseOf: asIriArray(getOrEmpty(inverseOfs, id)),
-            })
-          );
+              equivalentClass: asIriArray(getOrEmpty(equivalentClasses, id)),
+            });
+            finalClasses.push(resolvedValue537_15);
+          }
+        }
+      }
+
+      // Finalize Properties
+      const finalProperties: Array<PropertyDefinition> = [];
+      for (const [id, info] of propInfos) {
+        const label = O.orElse(getFirst(labels, id), () => getFirst(prefLabels, id));
+        if (O.isSome(label)) {
+          const resolvedValue568_13 = yield* decodeUnknownPropertyDefinition({
+            id: IRI.make(id),
+            label: label.value,
+            comment: getFirst(comments, id),
+            // domain/range expect string[] (full IRIs as strings)
+            domain: asIriArray(getOrEmpty(domains, id)),
+            range: asIriArray(getOrEmpty(ranges, id)),
+            rangeType: info.rangeType,
+            isFunctional: HashSet.has(functionalProps, id),
+            prefLabels: getOrEmpty(prefLabels, id),
+            altLabels: getOrEmpty(altLabels, id),
+            hiddenLabels: getOrEmpty(hiddenLabels, id),
+            definition: getFirst(definitions, id),
+            scopeNote: getFirst(scopeNotes, id),
+            example: getFirst(examples, id),
+            // SKOS fields expect string[] (full IRIs as strings)
+            broader: asIriArray(getOrEmpty(broaders, id)),
+            narrower: asIriArray(getOrEmpty(narrowers, id)),
+            related: asIriArray(getOrEmpty(relateds, id)),
+            exactMatch: asIriArray(getOrEmpty(exactMatches, id)),
+            closeMatch: asIriArray(getOrEmpty(closeMatches, id)),
+            inverseOf: asIriArray(getOrEmpty(inverseOfs, id)),
+          });
+          finalProperties.push(resolvedValue568_13);
         }
       }
 
@@ -901,7 +901,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         const registry = registryOpt.value;
         return yield* registry.resolveToEntry(identifier).pipe(Effect.orElseSucceed(O.none<OntologyEntry>));
       }),
-      hasRegistry: Effect.succeed(O.isSome(registryOpt)),
+      hasRegistry: pipe(registryOpt, O.isSome, Effect.succeed),
       generateVersion: Effect.fn("OntologyService.generateVersion")(function* (
         ontologyId: string,
         ontologyIri: string
@@ -917,18 +917,15 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
           );
         const namespace = yield* decodeIdentity(Namespace, "namespace");
         const name = yield* decodeIdentity(OntologyName, "name");
-        const hash = ContentHash.make(
-          Hex.encode(
-            yield* crypto.digest(Digest.sha256, new TextEncoder().encode(ontologyIri)).pipe(
-              Effect.mapError((cause) =>
-                OntologyError.make({
-                  message: `Failed to hash ontology IRI: ${ontologyIri}`,
-                  cause: O.some(cause),
-                })
-              )
-            )
+        const resolvedValue922_13 = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(ontologyIri)).pipe(
+          Effect.mapError((cause) =>
+            OntologyError.make({
+              message: `Failed to hash ontology IRI: ${ontologyIri}`,
+              cause: O.some(cause),
+            })
           )
         );
+        const hash = ContentHash.make(Hex.encode(resolvedValue922_13));
         return OntologyVersion.fromParts(namespace, name, hash);
       }),
       searchClassesHybridFromUri: Effect.fn("OntologyService.searchClassesHybridFromUri")(function* (
@@ -1010,7 +1007,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         for (const prop of props) {
           MutableHashMap.set(uniqueProps, prop.id, prop);
         }
-        return Chunk.fromIterable(MutableHashMap.values(uniqueProps));
+        return pipe(uniqueProps, MutableHashMap.values, Chunk.fromIterable);
       }),
       searchClassesHybridFromUriWithEmbeddings: Effect.fn("OntologyService.searchClassesHybridFromUriWithEmbeddings")(
         function* (uri: string, query: string, embeddings: OntologyEmbeddings, limit: number = 100) {
@@ -1110,7 +1107,7 @@ export class OntologyService extends Context.Service<OntologyService>()($I`Ontol
         for (const prop of props) {
           MutableHashMap.set(uniqueProps, prop.id, prop);
         }
-        return Chunk.fromIterable(MutableHashMap.values(uniqueProps));
+        return pipe(uniqueProps, MutableHashMap.values, Chunk.fromIterable);
       }),
       searchClassesSemantic: Effect.fn("OntologyService.searchClassesSemantic")(function* (
         query: string,

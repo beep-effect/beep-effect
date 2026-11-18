@@ -190,10 +190,10 @@ export const MockShaclService = (options?: {
         : {}),
       ...(P.isNotUndefined(violation.sourceShape) ? { sourceShape: Rdf.makeNamedNode(violation.sourceShape) } : {}),
     }));
-    const yielded1 = yield* DateTime.now;
-return yield* S.decodeEffect(ShaclValidationReport)({
+    const validatedAt = yield* DateTime.now;
+    return yield* S.decodeEffect(ShaclValidationReport)({
       validation: { conforms: A.isReadonlyArrayEmpty(violations), violations, truncated: false },
-      validatedAt: DateTime.formatIso(yielded1),
+      validatedAt: DateTime.formatIso(validatedAt),
       dataGraphTripleCount: rdfStoreSize(dataStore),
       shapesGraphTripleCount: rdfStoreSize(shapesStore),
       durationMs: 0,
@@ -233,17 +233,17 @@ return yield* S.decodeEffect(ShaclValidationReport)({
  *
  * @since 0.0.0
  */
-const MockEmbeddingProvider = Layer.succeed(EmbeddingProvider, ProviderMetadata.make({
-  metadata: {
+const MockEmbeddingProvider = Layer.succeed(EmbeddingProvider, {
+  metadata: ProviderMetadata.make({
     providerId: "nomic",
     modelId: "test-model",
     dimension: 768,
-  },
+  }),
   embedBatch: Effect.fn("EmbeddingProvider.embedBatch")((_requests) =>
     Effect.succeed(A.map(_requests, () => A.replicate(0, 768)))
   ),
   cosineSimilarity: (_a, _b) => 0,
-}));
+});
 
 /**
  * Test Layers

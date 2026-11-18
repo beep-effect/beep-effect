@@ -1,10 +1,10 @@
-import * as Str from "effect/String";
 import { MimeType } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { ContentHash, DocumentId, GcsUri } from "../../../Domain/Identity.ts";
 import {
   ChunkingParams,

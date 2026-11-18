@@ -1,4 +1,3 @@
-
 /**
  * Workflow: Entity Resolution
  *
@@ -152,8 +151,8 @@ const findEntityClusters = (
   // Compare all pairs of entities
   for (let i = 0; i < entities.length; i++) {
     for (let j = i + 1; j < entities.length; j++) {
-      if (shouldMerge(entities[i], entities[j], config)) {
-        union(entities[i].id, entities[j].id);
+      if (shouldMerge(A.getUnsafe(entities, i), A.getUnsafe(entities, j), config)) {
+        union(A.getUnsafe(entities, i).id, A.getUnsafe(entities, j).id);
       }
     }
   }

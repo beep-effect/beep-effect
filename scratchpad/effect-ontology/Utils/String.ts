@@ -83,15 +83,15 @@ export const levenshteinDistance: {
     for (let i = 1; i <= a.length; i++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
       currRow[i] = Math.min(
-        prevRow[i] + 1, // deletion
-        currRow[i - 1] + 1, // insertion
-        prevRow[i - 1] + cost // substitution
+        A.getUnsafe(prevRow, i) + 1, // deletion
+        A.getUnsafe(currRow, i - 1) + 1, // insertion
+        A.getUnsafe(prevRow, i - 1) + cost // substitution
       );
     }
     [prevRow, currRow] = [currRow, prevRow];
   }
 
-  return prevRow[a.length];
+  return A.getUnsafe(prevRow, a.length);
 });
 
 /**

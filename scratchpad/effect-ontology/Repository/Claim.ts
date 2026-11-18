@@ -390,16 +390,14 @@ export class ClaimRepository extends Context.Service<ClaimRepository, ClaimRepos
     const getClaim: ClaimRepositoryShape["getClaim"] = dual(
       2,
       Effect.fn("getClaim")(function* (id: PersistedClaimId, ontologyId: string) {
-        const yielded1 = yield* normalizeQueryError(
-            drizzle
-              .select()
-              .from(claims)
-              .where(and(eq(claims.id, id), eq(claims.ontologyId, ontologyId)))
-              .limit(1)
-          );
-const [result] = yield* decodeClaimRows(
-          yielded1
+        const matchingClaimRows = yield* normalizeQueryError(
+          drizzle
+            .select()
+            .from(claims)
+            .where(and(eq(claims.id, id), eq(claims.ontologyId, ontologyId)))
+            .limit(1)
         );
+        const [result] = yield* decodeClaimRows(matchingClaimRows);
         return O.fromNullishOr(result);
       })
     );
@@ -447,8 +445,8 @@ const [result] = yield* decodeClaimRows(
       if (P.isNotUndefined(filter.offset)) {
         query = query.offset(filter.offset);
       }
-      const yielded2 = yield* normalizeQueryError(query);
-return yield* decodeClaimRows(yielded2);
+      const matchingClaimRows = yield* normalizeQueryError(query);
+      return yield* decodeClaimRows(matchingClaimRows);
     });
 
     // -------------------------------------------------------------------------
@@ -460,7 +458,8 @@ return yield* decodeClaimRows(yielded2);
      */
     const getClaimsByArticle: ClaimRepositoryShape["getClaimsByArticle"] = dual(
       2,
-      (articleId: ArticleId, ontologyId: string) => getClaims(ClaimFilter.make({ articleId, ontologyId, includeDeprecated: false }))
+      (articleId: ArticleId, ontologyId: string) =>
+        getClaims(ClaimFilter.make({ articleId, ontologyId, includeDeprecated: false }))
     );
 
     /**
@@ -468,7 +467,8 @@ return yield* decodeClaimRows(yielded2);
      */
     const getClaimsBySubject: ClaimRepositoryShape["getClaimsBySubject"] = dual(
       2,
-      (subjectIri: string, ontologyId: string) => getClaims(ClaimFilter.make({ subjectIri, ontologyId, includeDeprecated: false }))
+      (subjectIri: string, ontologyId: string) =>
+        getClaims(ClaimFilter.make({ subjectIri, ontologyId, includeDeprecated: false }))
     );
 
     /**
@@ -536,10 +536,11 @@ return yield* decodeClaimRows(yielded2);
     const insertCorrection: ClaimRepositoryShape["insertCorrection"] = Effect.fn("insertCorrection")(function* (
       correction: CorrectionInsertRow
     ) {
-      const yielded3 = yield* normalizeQueryError(drizzle.insert(corrections).values(correction).returning());
-const [result] = yield* decodeCorrectionRows(
-        yielded3
+      const insertedCorrectionRows = yield* normalizeQueryError(
+        drizzle.insert(corrections).values(correction).returning()
       );
+      const [result] = yield* decodeCorrectionRows(insertedCorrectionRows);
+      if (result === undefined) return yield* Effect.die("INSERT RETURNING produced no row");
       return result;
     });
 
@@ -549,10 +550,10 @@ const [result] = yield* decodeCorrectionRows(
     const getCorrection: ClaimRepositoryShape["getCorrection"] = Effect.fn("getCorrection")(function* (
       id: PersistedCorrectionId
     ) {
-      const yielded4 = yield* normalizeQueryError(drizzle.select().from(corrections).where(eq(corrections.id, id)).limit(1));
-const [result] = yield* decodeCorrectionRows(
-        yielded4
+      const matchingCorrectionRows = yield* normalizeQueryError(
+        drizzle.select().from(corrections).where(eq(corrections.id, id)).limit(1)
       );
+      const [result] = yield* decodeCorrectionRows(matchingCorrectionRows);
       return O.fromNullishOr(result);
     });
 
@@ -670,8 +671,8 @@ const [result] = yield* decodeCorrectionRows(
       if (A.isReadonlyArrayNonEmpty(conditions)) {
         query = query.where(and(...conditions));
       }
-      const yielded5 = yield* normalizeQueryError(query);
-const [result] = yield* decodeClaimCountRows(yielded5);
+      const claimCountRows = yield* normalizeQueryError(query);
+      const [result] = yield* decodeClaimCountRows(claimCountRows);
       return result.count;
     });
 

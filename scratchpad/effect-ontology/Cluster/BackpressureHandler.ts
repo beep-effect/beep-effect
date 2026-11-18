@@ -399,7 +399,7 @@ export const withBackpressureMetered: {
               }
 
               const offered = yield* Queue.offer(queue, O.some(event)).pipe(
-                Effect.map(() => true),
+                Effect.as(true),
                 Effect.orElseSucceed(() => false)
               );
 

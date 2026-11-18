@@ -81,11 +81,11 @@ export class EmbeddingRateLimiterConfig extends S.Opaque<
  * @category constants
  * @since 0.0.0
  */
-export const VOYAGE_RATE_LIMITS: EmbeddingRateLimiterConfig = {
+export const VOYAGE_RATE_LIMITS: EmbeddingRateLimiterConfig = EmbeddingRateLimiterConfig.make({
   provider: "voyage",
   requestsPerMinute: 100,
   maxConcurrent: 10,
-};
+});
 
 /**
  * Default configuration for local models (effectively unlimited)
@@ -101,11 +101,11 @@ export const VOYAGE_RATE_LIMITS: EmbeddingRateLimiterConfig = {
  * @category constants
  * @since 0.0.0
  */
-export const LOCAL_RATE_LIMITS: EmbeddingRateLimiterConfig = {
+export const LOCAL_RATE_LIMITS: EmbeddingRateLimiterConfig = EmbeddingRateLimiterConfig.make({
   provider: "nomic",
   requestsPerMinute: 10000,
   maxConcurrent: 50,
-};
+});
 
 /**
  * EmbeddingRateLimiter service interface

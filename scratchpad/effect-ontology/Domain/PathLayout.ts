@@ -47,13 +47,13 @@ const annotateParser =
   };
 
 const makeBatchPathSchema = <const Name extends string, const Suffix extends string>(
-  name: Name,
+  name: Parameters<typeof S.brand<Name>>[0],
   suffix: Suffix,
   description: string
 ) =>
   S.TemplateLiteral(["batches/", BatchId, `/${suffix}`]).pipe(
     annotateStoragePath(name, description),
-    S.brand(name),
+    S.brand<Name>(name),
     SchemaUtils.withStatics((schema) => ({
       fromBatch: (batchId: BatchId): typeof schema.Type =>
         Result.getOrThrow(S.decodeUnknownResult(schema)(`batches/${batchId}/${suffix}`)),
@@ -61,13 +61,13 @@ const makeBatchPathSchema = <const Name extends string, const Suffix extends str
   );
 
 const makeDocumentPathSchema = <const Name extends string, const Suffix extends string>(
-  name: Name,
+  name: Parameters<typeof S.brand<Name>>[0],
   suffix: Suffix,
   description: string
 ) =>
   S.TemplateLiteral(["documents/", DocumentId, `/${suffix}`]).pipe(
     annotateStoragePath(name, description),
-    S.brand(name),
+    S.brand<Name>(name),
     SchemaUtils.withStatics((schema) => ({
       fromDocument: (documentId: DocumentId): typeof schema.Type =>
         Result.getOrThrow(S.decodeUnknownResult(schema)(`documents/${documentId}/${suffix}`)),
@@ -75,13 +75,13 @@ const makeDocumentPathSchema = <const Name extends string, const Suffix extends 
   );
 
 const makeImageHashPathSchema = <const Name extends string, const Suffix extends string>(
-  name: Name,
+  name: Parameters<typeof S.brand<Name>>[0],
   suffix: Suffix,
   description: string
 ) =>
   S.TemplateLiteral(["assets/images/", ContentHash, `/${suffix}`]).pipe(
     annotateStoragePath(name, description),
-    S.brand(name),
+    S.brand<Name>(name),
     SchemaUtils.withStatics((schema) => ({
       fromHash: (hash: ContentHash): typeof schema.Type =>
         Result.getOrThrow(S.decodeUnknownResult(schema)(`assets/images/${hash}/${suffix}`)),
@@ -89,13 +89,13 @@ const makeImageHashPathSchema = <const Name extends string, const Suffix extends
   );
 
 const makeImageOwnerPathSchema = <const Name extends string, const Suffix extends string>(
-  name: Name,
+  name: Parameters<typeof S.brand<Name>>[0],
   suffix: Suffix,
   description: string
 ) =>
   S.TemplateLiteral(["assets/owners/", ImageOwnerType, "/", StoragePathSegment, `/images${suffix}`]).pipe(
     annotateStoragePath(name, description),
-    S.brand(name),
+    S.brand<Name>(name),
     SchemaUtils.withStatics((schema) => ({
       fromParts: (ownerType: ImageOwnerType, ownerId: StoragePathSegment): typeof schema.Type =>
         Result.getOrThrow(S.decodeUnknownResult(schema)(`assets/owners/${ownerType}/${ownerId}/images${suffix}`)),

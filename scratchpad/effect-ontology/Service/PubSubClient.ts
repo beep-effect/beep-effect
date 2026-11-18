@@ -354,7 +354,8 @@ export const PubSubClientLive = Layer.effect(
     });
 
     const publishEvent: PubSubClientMethods["publishEvent"] = Effect.fn("publishEvent")(function* (event) {
-      const timestamp = DateTime.formatIso(yield* DateTime.now);
+      const resolvedValue357_44 = yield* DateTime.now;
+      const timestamp = DateTime.formatIso(resolvedValue357_44);
       const encoded = yield* encodeOntologyEventEntryJson(event).pipe(
         Effect.mapError((cause) =>
           PubSubError.make({
@@ -374,7 +375,8 @@ export const PubSubClientLive = Layer.effect(
     });
 
     const publishJob: PubSubClientMethods["publishJob"] = Effect.fn("publishJob")(function* (job) {
-      const timestamp = DateTime.formatIso(yield* DateTime.now);
+      const resolvedValue377_44 = yield* DateTime.now;
+      const timestamp = DateTime.formatIso(resolvedValue377_44);
       const encoded = yield* encodeBackgroundJobJson(job).pipe(
         Effect.mapError((cause) =>
           PubSubError.make({
@@ -394,7 +396,8 @@ export const PubSubClientLive = Layer.effect(
 
     const publishToDeadLetter: PubSubClientMethods["publishToDeadLetter"] = Effect.fn("publishToDeadLetter")(
       function* (originalMessage, error, attempts) {
-        const failedAt = DateTime.formatIso(yield* DateTime.now);
+        const resolvedValue397_45 = yield* DateTime.now;
+        const failedAt = DateTime.formatIso(resolvedValue397_45);
         const encoded = yield* encodeUnknownDeadLetterMessageJson({
           originalMessage,
           error,

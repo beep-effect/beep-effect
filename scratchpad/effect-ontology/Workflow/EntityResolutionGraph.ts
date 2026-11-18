@@ -30,16 +30,12 @@ import type { Entity, KnowledgeGraph, Relation } from "../Domain/Model/Entity.ts
 import { GroundingDecision, RelationObject } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionConfig, EREdge, ERNode } from "../Domain/Model/EntityResolution.ts";
 import { MentionRecord, RelationEdge, ResolutionEdge, ResolvedEntity } from "../Domain/Model/EntityResolution.ts";
-import type {
-  ClusteringResult,
-  EntityCluster,
-  EntityResolutionGraph,
-  EntityResolutionInfo,
-} from "../Domain/Model/EntityResolutionGraph.ts";
+import type { ClusteringResult, EntityCluster, EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts";
 import {
   ClusteringResult as ClusteringResultModel,
   EntityCluster as EntityClusterModel,
   EntityResolutionGraph as EntityResolutionGraphModel,
+  EntityResolutionInfo,
   EntityResolutionStats,
   SimilarityEdge,
 } from "../Domain/Model/EntityResolutionGraph.ts";
@@ -131,7 +127,7 @@ export const clusterEntities = dual3(
         return ClusteringResultModel.make({
           clusters: [
             EntityClusterModel.make({
-              entities: [entities[0]],
+              entities: [A.getUnsafe(entities, 0)],
               minSimilarity: UnitInterval.make(1),
               methods: ["exact"],
             }),
@@ -205,10 +201,11 @@ export const clusterEntities = dual3(
       // Build Inverted Index if dataset is large enough
       if (entities.length >= USE_BLOCKING_THRESHOLD) {
         for (let i = 0; i < entities.length; i++) {
-          const entity = entities[i];
-          const tokens = simpleTokenize(Str.toLowerCase(entity.mention))
-            .map((t) => Str.replace(/[^\w]/g, "")(t))
-            .filter((t) => t.length > 2 && !HashSet.has(STOP_WORDS, t));
+          const entity = A.getUnsafe(entities, i);
+          const tokens = A.filter(
+            A.map(simpleTokenize(Str.toLowerCase(entity.mention)), (t) => Str.replace(/[^\w]/g, "")(t)),
+            (t) => t.length > 2 && !HashSet.has(STOP_WORDS, t)
+          );
 
           for (const token of HashSet.fromIterable(tokens)) {
             const indexes = O.getOrElse(MutableHashMap.get(invertedIndex, token), () => {
@@ -231,10 +228,11 @@ export const clusterEntities = dual3(
           }
         } else {
           // Large dataset: Use blocking
-          const entityA = entities[i];
-          const tokens = simpleTokenize(Str.toLowerCase(entityA.mention))
-            .map((t) => Str.replace(/[^\w]/g, "")(t))
-            .filter((t) => t.length > 2 && !HashSet.has(STOP_WORDS, t));
+          const entityA = A.getUnsafe(entities, i);
+          const tokens = A.filter(
+            A.map(simpleTokenize(Str.toLowerCase(entityA.mention)), (t) => Str.replace(/[^\w]/g, "")(t)),
+            (t) => t.length > 2 && !HashSet.has(STOP_WORDS, t)
+          );
 
           if (tokens.length > 0) {
             for (const token of tokens) {
@@ -263,11 +261,11 @@ export const clusterEntities = dual3(
         A.map(entities, (_, i) => i),
         (i) =>
           Effect.sync(() => {
-            const entityA = entities[i];
+            const entityA = A.getUnsafe(entities, i);
             const candidates = getCandidates(i);
 
             for (const j of candidates) {
-              const entityB = entities[j];
+              const entityB = A.getUnsafe(entities, j);
 
               // Compute embedding similarity if available
               const embeddingSim = O.getOrUndefined(
@@ -487,7 +485,7 @@ export const buildEntityResolutionGraph = dual2(
     const resolutionInfoMap = MutableHashMap.empty<string, EntityResolutionInfo>();
 
     A.forEach(clusters, (cluster, clusterIdx) => {
-      const resolvedEntity = resolvedEntities[clusterIdx];
+      const resolvedEntity = A.getUnsafe(resolvedEntities, clusterIdx);
       const canonicalId = resolvedEntity.canonicalId;
       const canonicalEntity = MutableHashMap.get(entityById, canonicalId);
 
@@ -497,11 +495,15 @@ export const buildEntityResolutionGraph = dual2(
         // Compute actual similarity and method for this entity to canonical
         if (entity.id === canonicalId) {
           // Entity IS the canonical - perfect match
-          MutableHashMap.set(resolutionInfoMap, entity.id, {
-            entityId: entity.id,
-            similarity: UnitInterval.make(1.0),
-            method: "exact",
-          });
+          MutableHashMap.set(
+            resolutionInfoMap,
+            entity.id,
+            EntityResolutionInfo.make({
+              entityId: entity.id,
+              similarity: UnitInterval.make(1.0),
+              method: "exact",
+            })
+          );
         } else if (O.isSome(canonicalEntity)) {
           // Compute embedding similarity if available
           const embeddingSim = O.getOrUndefined(
@@ -523,11 +525,15 @@ export const buildEntityResolutionGraph = dual2(
           );
           const method = detectResolutionMethod(entity, canonicalEntity.value, kg.relations);
 
-          MutableHashMap.set(resolutionInfoMap, entity.id, {
-            entityId: entity.id,
-            similarity: UnitInterval.make(similarity),
-            method,
-          });
+          MutableHashMap.set(
+            resolutionInfoMap,
+            entity.id,
+            EntityResolutionInfo.make({
+              entityId: entity.id,
+              similarity: UnitInterval.make(similarity),
+              method,
+            })
+          );
         }
       }
     });

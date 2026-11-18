@@ -1,13 +1,13 @@
-import * as Str from "effect/String";
-import * as R from "effect/Record";
 import { HttpUrl as CanonicalHttpUrl } from "@beep/ontology/Ontology.models";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as Api from "../../../Domain/Schema/Api.ts";
 import * as Auth from "../../../Domain/Schema/Auth.ts";
 import * as Batch from "../../../Domain/Schema/Batch.ts";
@@ -31,7 +31,7 @@ const decodeBatchRequestBatchRequestResult = S.decodeResult(BatchRequest.BatchRe
 const decodeUnknownApiSubmitJobRequestResult = S.decodeUnknownResult(Api.SubmitJobRequest);
 const decodeUnknownBatchRequestBatchRequestResult = S.decodeUnknownResult(BatchRequest.BatchRequest);
 
-const schemaModules: ReadonlyArray<readonly [string, object]> = [
+const schemaModules: ReadonlyArray<readonly [string, Readonly<Record<string, unknown>>]> = [
   ["Api", Api],
   ["Auth", Auth],
   ["Batch", Batch],
@@ -51,7 +51,7 @@ const schemaModules: ReadonlyArray<readonly [string, object]> = [
 ];
 
 const publicSchemas = A.flatMap(schemaModules, ([moduleName, moduleExports]) =>
-  A.filterMap(R.toEntries(moduleExports), ([exportName, value]) =>
+  A.filterMap(R.toEntries<string, unknown>(moduleExports), ([exportName, value]) =>
     /^[A-Z]/.test(exportName) && S.isSchema(value)
       ? Result.succeed({
           name: `${moduleName}.${exportName}`,

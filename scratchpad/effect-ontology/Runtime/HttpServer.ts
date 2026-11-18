@@ -33,8 +33,7 @@ import * as Str from "effect/String";
 import { BatchId, DocumentId, GcsUri, UUID } from "../Domain/Identity.ts";
 import { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
-import { BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
-import { BatchManifest } from "../Domain/Schema/Batch.ts";
+import { BatchManifest, BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
 import type { PreprocessingOptions } from "../Domain/Schema/BatchRequest.ts";
 import { BatchRequest } from "../Domain/Schema/BatchRequest.ts";
 import { ClaimRank, TextSpan } from "../Domain/Schema/KnowledgeModel.ts";
@@ -99,10 +98,13 @@ const stripGsPrefix = (uri: string): string =>
 const resolveBucket = (config: { storage: { bucket: O.Option<string> } }) =>
   O.getOrElse(config.storage.bucket, () => "local-bucket");
 
-const randomIdFragment = Effect.all([
-  Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-  Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-], { concurrency: 1 }).pipe(
+const randomIdFragment = Effect.all(
+  [
+    Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
+    Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
+  ],
+  { concurrency: 1 }
+).pipe(
   Effect.map(A.map((part) => Str.padStart(8, "0")(part.toString(16)))),
   Effect.map(A.join("")),
   Effect.map(Str.takeLeft(12))
@@ -136,34 +138,37 @@ const createManifest = Effect.fn("HttpServer.createManifest")(function* (request
     onSome: Effect.succeed,
   });
 
-  const documents = yield* Effect.forEach(request.documents, (doc) =>
-    Effect.gen(function* () {
-      const documentId = yield* O.match(doc.documentId, {
-        onNone: () => generateDocumentId,
-        onSome: Effect.succeed,
-      });
+  const documents = yield* Effect.forEach(
+    request.documents,
+    (doc) =>
+      Effect.gen(function* () {
+        const documentId = yield* O.match(doc.documentId, {
+          onNone: () => generateDocumentId,
+          onSome: Effect.succeed,
+        });
 
-      const sizeBytes = yield* O.match(doc.sizeBytes, {
-        onSome: Effect.succeed,
-        onNone: () =>
-          storage.getOption(stripGsPrefix(doc.sourceUri)).pipe(
-            Effect.map((content) =>
-              O.getOrElse(
-                O.map(content, (value) => S.Natural.make(new TextEncoder().encode(value).length)),
-                () => S.Natural.make(0)
+        const sizeBytes = yield* O.match(doc.sizeBytes, {
+          onSome: Effect.succeed,
+          onNone: () =>
+            storage.getOption(stripGsPrefix(doc.sourceUri)).pipe(
+              Effect.map((content) =>
+                O.getOrElse(
+                  O.map(content, (value) => S.Natural.make(new TextEncoder().encode(value).length)),
+                  () => S.Natural.make(0)
+                )
               )
-            )
-          ),
-      });
+            ),
+        });
 
-      return {
-        documentId,
-        sourceUri: doc.sourceUri,
-        contentType: doc.contentType,
-        sizeBytes,
-      };
-    })
-  , { concurrency: 1 });
+        return {
+          documentId,
+          sourceUri: doc.sourceUri,
+          contentType: doc.contentType,
+          sizeBytes,
+        };
+      }),
+    { concurrency: 1 }
+  );
 
   return BatchManifest.make({
     batchId,
@@ -241,15 +246,15 @@ const claimRowToClaimWithRank = Effect.fn("HttpServer.claimRowToClaimWithRank")(
   const predicate = yield* S.decodeEffect(IRI)(claim.predicateIri);
   const rank = yield* ClaimRank.decodeEffect(claim.rank);
   const source = yield* articleRowToArticleSummary(article);
-  const yielded1 = yield* S.decodeEffect(IRI)(claim.objectValue);
-const object =
-    claim.objectType === "iri"
-      ? makeNamedNode(yielded1)
-      : makeLiteral(
+  const object = yield* claim.objectType === "iri"
+    ? S.decodeEffect(IRI)(claim.objectValue).pipe(Effect.map(makeNamedNode))
+    : Effect.succeed(
+        makeLiteral(
           claim.objectValue,
           claim.objectDatatype ?? XSD_STRING.value,
           P.isNull(claim.objectLanguage) ? {} : { language: claim.objectLanguage }
-        );
+        )
+      );
   const validTime =
     P.isNotNull(claim.validFrom) && P.isNotNull(claim.validTo)
       ? O.some({
@@ -304,10 +309,10 @@ const conflictRecordToClaimConflict = Effect.fn("HttpServer.conflictRecordToClai
         reason: "Conflict references a claim whose article is unavailable in the ontology scope.",
       })
     );
-  const yielded2 = yield* requireArticle(articleA, record.claimA.id);
-const claimA = yield* claimRowToClaimWithRank(record.claimA, yielded2);
-  const yielded3 = yield* requireArticle(articleB, record.claimB.id);
-const claimB = yield* claimRowToClaimWithRank(record.claimB, yielded3);
+  const requiredArticleA = yield* requireArticle(articleA, record.claimA.id);
+  const claimA = yield* claimRowToClaimWithRank(record.claimA, requiredArticleA);
+  const requiredArticleB = yield* requireArticle(articleB, record.claimB.id);
+  const claimB = yield* claimRowToClaimWithRank(record.claimB, requiredArticleB);
   const base = {
     id: record.conflict.id,
     ontologyId: record.conflict.ontologyId,
@@ -403,12 +408,14 @@ export const TimelineRouter = HttpRouter.addAll([
       const articleRepo = yield* ArticleRepository;
 
       // Get claims for this entity
-      const claims = yield* claimRepo.getClaims(ClaimFilter.make({
-        ontologyId: queryParams.ontologyId,
-        subjectIri: decodedIri,
-        includeDeprecated: queryParams.includeDeprecated,
-        limit: PosInt.make(100),
-      }));
+      const claims = yield* claimRepo.getClaims(
+        ClaimFilter.make({
+          ontologyId: queryParams.ontologyId,
+          subjectIri: decodedIri,
+          includeDeprecated: queryParams.includeDeprecated,
+          limit: PosInt.make(100),
+        })
+      );
 
       // Get articles for each claim
       const claimsWithArticles = yield* Effect.forEach(
@@ -418,10 +425,11 @@ export const TimelineRouter = HttpRouter.addAll([
           if (O.isNone(articleOpt)) {
             return O.none<ClaimWithRank>();
           }
-          const yielded4 = yield* claimRowToClaimWithRank(claim, articleOpt.value);
-return O.some(yielded4);
-        })
-      , { concurrency: 1 });
+          const rankedClaim = yield* claimRowToClaimWithRank(claim, articleOpt.value);
+          return O.some(rankedClaim);
+        }),
+        { concurrency: 1 }
+      );
 
       const validClaims = A.filter(A.getSomes(claimsWithArticles), (claim) => {
         const claimedAt = DateTime.toEpochMillis(claim.transactionTime.assertedAt);
@@ -440,11 +448,13 @@ return O.some(yielded4);
 
       const correctionSourceClaims = queryParams.includeDeprecated
         ? claims
-        : yield* claimRepo.getClaims(ClaimFilter.make({
-            ontologyId: queryParams.ontologyId,
-            subjectIri: decodedIri,
-            includeDeprecated: true,
-          }));
+        : yield* claimRepo.getClaims(
+            ClaimFilter.make({
+              ontologyId: queryParams.ontologyId,
+              subjectIri: decodedIri,
+              includeDeprecated: true,
+            })
+          );
       const correctionEntries = yield* Effect.forEach(
         correctionSourceClaims,
         (claim) => claimRepo.getCorrectionChain(claim.id),
@@ -488,14 +498,16 @@ return O.some(yielded4);
       const offset = queryParams.offset;
 
       // Get claims with filters
-      const claims = yield* claimRepo.getClaims(ClaimFilter.make({
-        ontologyId: queryParams.ontologyId,
-        ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
-        ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
-        ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
-        limit: PosInt.make(limit + 1), // Fetch one extra to check hasMore
-        offset,
-      }));
+      const claims = yield* claimRepo.getClaims(
+        ClaimFilter.make({
+          ontologyId: queryParams.ontologyId,
+          ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
+          ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
+          ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
+          limit: PosInt.make(limit + 1), // Fetch one extra to check hasMore
+          offset,
+        })
+      );
 
       const hasMore = claims.length > limit;
       const claimResults = hasMore ? A.take(claims, limit) : claims;
@@ -512,20 +524,23 @@ return O.some(yielded4);
           if (O.isSome(queryParams.source) && articleOpt.value.sourceName !== queryParams.source.value) {
             return O.none<ClaimWithRank>();
           }
-          const yielded5 = yield* claimRowToClaimWithRank(claim, articleOpt.value);
-return O.some(yielded5);
-        })
-      , { concurrency: 1 });
+          const rankedClaim = yield* claimRowToClaimWithRank(claim, articleOpt.value);
+          return O.some(rankedClaim);
+        }),
+        { concurrency: 1 }
+      );
 
       const validClaims = A.getSomes(claimsWithArticles);
 
       // Get total count
-      const total = yield* claimRepo.countClaims(ClaimFilter.make({
-        ontologyId: queryParams.ontologyId,
-        ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
-        ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
-        ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
-      }));
+      const total = yield* claimRepo.countClaims(
+        ClaimFilter.make({
+          ontologyId: queryParams.ontologyId,
+          ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
+          ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
+          ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
+        })
+      );
 
       return yield* HttpServerResponse.schemaJson(TimelineClaimsResponse)(
         TimelineClaimsResponse.make({
@@ -576,7 +591,9 @@ return O.some(yielded5);
       const claims = yield* claimRepo.getClaimsByArticle(articleId, queryParams.ontologyId);
 
       // Transform claims
-      const claimsWithRank = yield* Effect.forEach(claims, (claim) => claimRowToClaimWithRank(claim, article), { concurrency: 1 });
+      const claimsWithRank = yield* Effect.forEach(claims, (claim) => claimRowToClaimWithRank(claim, article), {
+        concurrency: 1,
+      });
 
       // Count unique entities (subjects)
       const uniqueSubjects = HashSet.fromIterable(A.map(claims, (claim) => claim.subjectIri));
@@ -634,10 +651,8 @@ return O.some(yielded5);
       const transitioned = yield* conflictRepo.transition(query.ontologyId, id, action, actor);
 
       if (O.isSome(transitioned)) {
-        const yielded6 = yield* conflictRecordToClaimConflict(transitioned.value);
-return yield* HttpServerResponse.schemaJson(ClaimConflict)(
-          yielded6
-        );
+        const transitionedConflict = yield* conflictRecordToClaimConflict(transitioned.value);
+        return yield* HttpServerResponse.schemaJson(ClaimConflict)(transitionedConflict);
       }
 
       const existing = yield* conflictRepo.get(query.ontologyId, id);
@@ -706,11 +721,13 @@ export const SearchRouter = HttpRouter.addAll([
           // Get claims with filters
           // Note: Full-text search would require pg_trgm or ts_vector
           // For now, we do a simple query and filter in memory
-          const claims = yield* claimRepo.getClaims(ClaimFilter.make({
-            ontologyId: request.ontologyId,
-            ...(O.isSome(request.rank) ? { rank: request.rank.value } : {}),
-            includeDeprecated: false,
-          }));
+          const claims = yield* claimRepo.getClaims(
+            ClaimFilter.make({
+              ontologyId: request.ontologyId,
+              ...(O.isSome(request.rank) ? { rank: request.rank.value } : {}),
+              includeDeprecated: false,
+            })
+          );
 
           const queryLower = Str.toLowerCase(request.query);
           const predicateSet = O.map(request.predicates, HashSet.fromIterable);
@@ -721,34 +738,37 @@ export const SearchRouter = HttpRouter.addAll([
             onSome: (predicates) => A.filter(textMatched, (claim) => HashSet.has(predicates, claim.predicateIri)),
           });
 
-          const claimsWithArticles = yield* Effect.forEach(predicateMatched, (claim) =>
-            Effect.gen(function* () {
-              const articleOpt = yield* articleRepo.getArticle(claim.articleId, claim.ontologyId);
-              if (O.isNone(articleOpt)) {
-                return O.none<ClaimWithRank>();
-              }
-              const article = articleOpt.value;
-              if (
-                O.isSome(sourceSet) &&
-                !HashSet.has(sourceSet.value, P.isNotNull(article.sourceName) ? article.sourceName : "")
-              ) {
-                return O.none<ClaimWithRank>();
-              }
-              if (O.isSome(request.dateRange)) {
-                const published = article.publishedAt?.getTime();
-                if (P.isUndefined(published)) {
+          const claimsWithArticles = yield* Effect.forEach(
+            predicateMatched,
+            (claim) =>
+              Effect.gen(function* () {
+                const articleOpt = yield* articleRepo.getArticle(claim.articleId, claim.ontologyId);
+                if (O.isNone(articleOpt)) {
                   return O.none<ClaimWithRank>();
                 }
-                const from = DateTime.toEpochMillis(request.dateRange.value.from);
-                const to = DateTime.toEpochMillis(request.dateRange.value.to);
-                if (published < from || published > to) {
+                const article = articleOpt.value;
+                if (
+                  O.isSome(sourceSet) &&
+                  !HashSet.has(sourceSet.value, P.isNotNull(article.sourceName) ? article.sourceName : "")
+                ) {
                   return O.none<ClaimWithRank>();
                 }
-              }
-              const yielded7 = yield* claimRowToClaimWithRank(claim, article);
-return O.some(yielded7);
-            })
-          , { concurrency: 1 });
+                if (O.isSome(request.dateRange)) {
+                  const published = article.publishedAt?.getTime();
+                  if (P.isUndefined(published)) {
+                    return O.none<ClaimWithRank>();
+                  }
+                  const from = DateTime.toEpochMillis(request.dateRange.value.from);
+                  const to = DateTime.toEpochMillis(request.dateRange.value.to);
+                  if (published < from || published > to) {
+                    return O.none<ClaimWithRank>();
+                  }
+                }
+                const rankedClaim = yield* claimRowToClaimWithRank(claim, article);
+                return O.some(rankedClaim);
+              }),
+            { concurrency: 1 }
+          );
 
           const filteredClaims = A.getSomes(claimsWithArticles);
           const validClaims = A.take(A.drop(filteredClaims, offset), limit);
@@ -788,11 +808,13 @@ return O.some(yielded7);
           const limit = request.limit;
 
           // Get all claims to find unique subjects
-          const claims = yield* claimRepo.getClaims(ClaimFilter.make({
-            ontologyId: request.ontologyId,
-            includeDeprecated: false,
-            limit: PosInt.make(1000),
-          }));
+          const claims = yield* claimRepo.getClaims(
+            ClaimFilter.make({
+              ontologyId: request.ontologyId,
+              includeDeprecated: false,
+              limit: PosInt.make(1000),
+            })
+          );
 
           // Group by subject and filter by query
           const queryLower = Str.toLowerCase(request.query);
@@ -838,20 +860,25 @@ return O.some(yielded7);
             ),
             limit
           );
-          const entities = yield* Effect.forEach(entityCandidates, (entity) =>
-            Effect.gen(function* () {
-              const iri = yield* S.decodeEffect(IRI)(entity.iri);
-              const types = yield* Effect.forEach(A.fromIterable(entity.types), (type) => S.decodeEffect(IRI)(type), { concurrency: 1 });
-              const label = O.filter(A.last(Str.split(/[#/]/)(entity.iri)), Str.isNonEmpty);
-              return EntitySearchResult.make({
-                iri,
-                label,
-                types,
-                claimCount: S.Natural.make(entity.claimCount),
-                topClaims: [],
-              });
-            })
-          , { concurrency: 1 });
+          const entities = yield* Effect.forEach(
+            entityCandidates,
+            (entity) =>
+              Effect.gen(function* () {
+                const iri = yield* S.decodeEffect(IRI)(entity.iri);
+                const types = yield* Effect.forEach(A.fromIterable(entity.types), (type) => S.decodeEffect(IRI)(type), {
+                  concurrency: 1,
+                });
+                const label = O.filter(A.last(Str.split(/[#/]/)(entity.iri)), Str.isNonEmpty);
+                return EntitySearchResult.make({
+                  iri,
+                  label,
+                  types,
+                  claimCount: S.Natural.make(entity.claimCount),
+                  topClaims: [],
+                });
+              }),
+            { concurrency: 1 }
+          );
 
           return yield* HttpServerResponse.schemaJson(EntitySearchResponse)(
             EntitySearchResponse.make({
@@ -889,11 +916,13 @@ return O.some(yielded7);
       const limit = queryParams.limit;
 
       // Get claims and extract unique subjects
-      const claims = yield* claimRepo.getClaims(ClaimFilter.make({
-        ontologyId: queryParams.ontologyId,
-        includeDeprecated: false,
-        limit: PosInt.make(500),
-      }));
+      const claims = yield* claimRepo.getClaims(
+        ClaimFilter.make({
+          ontologyId: queryParams.ontologyId,
+          includeDeprecated: false,
+          limit: PosInt.make(500),
+        })
+      );
 
       const prefixLower = Str.toLowerCase(queryParams.prefix);
       const seen = MutableHashSet.empty<string>();
@@ -911,18 +940,21 @@ return O.some(yielded7);
           });
         }
       }
-      const suggestionList = yield* Effect.forEach(suggestionIris, (suggestion) =>
-        S.decodeEffect(IRI)(suggestion.iri).pipe(
-          Effect.map((iri) =>
-            Suggestion.make({
-              label: suggestion.label,
-              iri,
-              type: O.none(),
-              description: O.none(),
-            })
-          )
-        )
-      , { concurrency: 1 });
+      const suggestionList = yield* Effect.forEach(
+        suggestionIris,
+        (suggestion) =>
+          S.decodeEffect(IRI)(suggestion.iri).pipe(
+            Effect.map((iri) =>
+              Suggestion.make({
+                label: suggestion.label,
+                iri,
+                type: O.none(),
+                description: O.none(),
+              })
+            )
+          ),
+        { concurrency: 1 }
+      );
 
       return yield* HttpServerResponse.schemaJson(SuggestionsResponse)(
         SuggestionsResponse.make({
@@ -990,11 +1022,13 @@ return O.some(yielded7);
           const results = yield* Effect.forEach(
             page,
             Effect.fnUntraced(function* (article) {
-              const claims = yield* claimRepo.getClaims(ClaimFilter.make({
-                ontologyId: request.ontologyId,
-                articleId: article.id,
-                includeDeprecated: true,
-              }));
+              const claims = yield* claimRepo.getClaims(
+                ClaimFilter.make({
+                  ontologyId: request.ontologyId,
+                  articleId: article.id,
+                  includeDeprecated: true,
+                })
+              );
               const conflictCounts = yield* conflictRepo.counts(
                 ConflictsQuery.make({
                   ontologyId: request.ontologyId,
@@ -1007,8 +1041,9 @@ return O.some(yielded7);
                 claimCount: S.Natural.make(claims.length),
                 conflictCount: S.Natural.make(conflictCounts.total),
               });
-            })
-          , { concurrency: 1 });
+            }),
+            { concurrency: 1 }
+          );
 
           const total = S.Natural.make(filtered.length);
 
@@ -1050,8 +1085,8 @@ const startExtraction = Effect.fn("startExtraction")(function* (request: BatchRe
 
 const extractionRouteHandler = Effect.gen(function* () {
   const request = yield* HttpServerRequest.HttpServerRequest;
-  const yielded8 = yield* request.json;
-const decoded = BatchRequest.decodeUnknownOption(yielded8);
+  const requestBody = yield* request.json;
+  const decoded = BatchRequest.decodeUnknownOption(requestBody);
   if (O.isNone(decoded)) {
     return yield* HttpServerResponse.json(
       { error: "VALIDATION_ERROR", message: "Invalid batch extraction request" },
@@ -1139,8 +1174,8 @@ export const HealthRouter = HttpRouter.addAll([
     "/health/live",
     Effect.gen(function* () {
       const health = yield* HealthCheckService;
-      const yielded9 = yield* health.liveness();
-return yield* HttpServerResponse.json(yielded9);
+      const liveness = yield* health.liveness();
+      return yield* HttpServerResponse.json(liveness);
     })
   ),
   HttpRouter.route(
@@ -1290,8 +1325,8 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
                 if (Cause.hasInterrupts(cause)) {
                   return yield* Effect.failCause(cause);
                 }
-                const yielded10 = yield* Random.nextInt;
-const requestId = Math.abs(yielded10).toString(16);
+                const requestRandomValue = yield* Random.nextInt;
+                const requestId = Math.abs(requestRandomValue).toString(16);
 
                 yield* Effect.logError("Unhandled error in HTTP handler", {
                   requestId,

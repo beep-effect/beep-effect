@@ -1,5 +1,5 @@
-import * as Str from "effect/String";
 import * as Digest from "effect/crypto/Digest";
+import * as Str from "effect/String";
 /**
  * Service: Document Classifier
  *
@@ -319,12 +319,13 @@ const buildBatchPrompt = (
     contentType?: string;
   }>
 ): string => {
-  const docSummaries = documents
-    .map(({ contentType, index, preview }) => {
+  const docSummaries = A.join(
+    A.map(documents, ({ contentType, index, preview }) => {
       const typeHint = P.isNotUndefined(contentType) ? ` (${contentType})` : "";
       return `Document ${index}${typeHint}:\n"""${Str.slice(0, MAX_PREVIEW_SIZE)(preview)}"""`;
-    })
-    .join("\n\n---\n\n");
+    }),
+    "\n\n---\n\n"
+  );
 
   return `You are a document classification assistant. Analyze the following document previews and classify each one.
 

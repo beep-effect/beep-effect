@@ -1,4 +1,3 @@
-import * as Str from "effect/String";
 import { IRI } from "@beep/rdf/Iri";
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
@@ -6,6 +5,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import {
   BatchId,
   ContentHash,

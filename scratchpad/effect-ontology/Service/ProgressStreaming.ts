@@ -266,11 +266,13 @@ export const createExtractionStarted: {
     }
   ): Effect.fn.Return<ExtractionStartedEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue273_37 = yield* DateTime.now;
     return ExtractionStartedEvent.make({
       _tag: "extraction_started",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue273_37),
       overallProgress: Percentage.make(0),
       totalChunks: state.totalChunks,
       textMetadata: {
@@ -337,11 +339,13 @@ export const createChunkingProgress: {
     avgChunkSize: PosInt
   ): Effect.fn.Return<ChunkingProgressEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue344_37 = yield* DateTime.now;
     return ChunkingProgressEvent.make({
       _tag: "chunking_progress",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue344_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       chunksCompleted,
       chunksProcessing,
@@ -405,11 +409,13 @@ export const createChunkProcessingStarted: {
     textPreview: string
   ): Effect.fn.Return<ChunkProcessingStartedEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue412_37 = yield* DateTime.now;
     return ChunkProcessingStartedEvent.make({
       _tag: "chunk_processing_started",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue412_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       chunkIndex,
       chunkTextLength,
@@ -478,11 +484,13 @@ export const createEntityFound: {
     confidence?: Confidence
   ): Effect.fn.Return<EntityFoundEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue485_37 = yield* DateTime.now;
     return EntityFoundEvent.make({
       _tag: "entity_found",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue485_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 40)),
       chunkIndex,
       entityId,
@@ -559,11 +567,13 @@ export const createRelationFound: {
     confidence?: Confidence
   ): Effect.fn.Return<RelationFoundEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue566_37 = yield* DateTime.now;
     return RelationFoundEvent.make({
       _tag: "relation_found",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue566_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 60)),
       chunkIndex,
       subjectId,
@@ -637,11 +647,13 @@ export const createChunkProcessingComplete: {
     errors?: Array<{ readonly phase: string; readonly message: string }>
   ): Effect.fn.Return<ChunkProcessingCompleteEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue644_37 = yield* DateTime.now;
     return ChunkProcessingCompleteEvent.make({
       _tag: "chunk_processing_complete",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue644_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 100)),
       chunkIndex,
       entityCount,
@@ -719,11 +731,13 @@ export const createExtractionComplete: {
     failedChunks: number
   ): Effect.fn.Return<ExtractionCompleteEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue726_37 = yield* DateTime.now;
     return ExtractionCompleteEvent.make({
       _tag: "extraction_complete",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue726_37),
       overallProgress: Percentage.make(100),
       totalEntities,
       totalRelations,
@@ -804,10 +818,12 @@ export const createExtractionFailed: {
     options?: CreateExtractionFailedOptions
   ): Effect.fn.Return<ExtractionFailedEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue810_37 = yield* DateTime.now;
     return ExtractionFailedEvent.make({
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue810_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       errorType,
       errorMessage,
@@ -888,10 +904,12 @@ export const createRecoverableError: {
     recoveryAction: string
   ): Effect.fn.Return<RecoverableErrorEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue894_37 = yield* DateTime.now;
     return RecoverableErrorEvent.make({
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue894_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 50)),
       chunkIndex,
       errorType,
@@ -1205,12 +1223,14 @@ export const enqueueEvent: {
           eventQueue: newQueue,
           lastWarnTime: now,
         }));
+        const eventId = yield* nextEventId;
+        const resolvedValue1213_43 = yield* DateTime.now;
         return O.some(
           BackpressureWarningEvent.make({
             _tag: "backpressure_warning",
-            eventId: yield* nextEventId,
+            eventId: eventId,
             runId: event.runId,
-            timestamp: DateTime.formatIso(yield* DateTime.now),
+            timestamp: DateTime.formatIso(resolvedValue1213_43),
             overallProgress: event.overallProgress,
             queuedEvents: PosInt.make(queueSize),
             maxQueueSize: PosInt.make(state.config.maxQueueSize),

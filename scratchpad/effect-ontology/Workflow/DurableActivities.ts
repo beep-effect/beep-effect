@@ -1,3 +1,7 @@
+import { pipe } from "effect/Function";
+
+import { PreprocessingStats } from "../Domain/Schema/DocumentMetadata.ts";
+import { ArticleMetadata } from "../Service/ClaimPersistence.ts";
 
 /**
  * Durable Workflow Activities
@@ -636,7 +640,7 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
       // Track entity provenance: which document each entity came from
       const entityToDocumentUri: Record<string, string> = {};
       A.forEach(knowledgeGraphs, (kg, docIndex) => {
-        const docUri = input.documentGraphUris[docIndex];
+        const docUri = A.getUnsafe(input.documentGraphUris, docIndex);
         for (const entity of kg.entities) {
           entityToDocumentUri[entity.id] = docUri;
         }
@@ -667,8 +671,8 @@ export const makeResolutionActivity = (input: ResolutionActivityInput) =>
           provenanceMap[canonicalId] = [];
         }
         // Only add unique document URIs
-        if (!provenanceMap[canonicalId].includes(docUri)) {
-          provenanceMap[canonicalId].push(docUri);
+        if (!(provenanceMap[canonicalId] ?? []).includes(docUri)) {
+          (provenanceMap[canonicalId] ?? []).push(docUri);
         }
       }
 
@@ -843,7 +847,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
       });
 
-      return {
+      return ValidationActivityOutput.make({
         validatedUri: Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${validationGraphPath}`)),
         conforms: report.validation.conforms,
         violations: S.Natural.make(report.validation.violations.length),
@@ -852,7 +856,7 @@ export const makeValidationActivity = (input: ValidationActivityInput) =>
           : [],
         reportUri: Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${reportPath}`)),
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
-      };
+      });
     }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
@@ -940,7 +944,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
         Effect.mapError((error) =>
           ActivityGenericError.make({
             message: `Failed to parse new graph: ${error.message}`,
-            cause: O.some(Inspectable.toStringUnknown(error)),
+            cause: pipe(error, Inspectable.toStringUnknown, O.some),
           })
         )
       );
@@ -966,7 +970,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
             Effect.mapError((error) =>
               ActivityGenericError.make({
                 message: `Failed to parse existing graph: ${error.message}`,
-                cause: O.some(Inspectable.toStringUnknown(error)),
+                cause: pipe(error, Inspectable.toStringUnknown, O.some),
               })
             )
           );
@@ -977,7 +981,7 @@ export const makeIngestionActivity = (input: IngestionActivityInput) =>
             Effect.mapError((error) =>
               ActivityGenericError.make({
                 message: `Failed to parse new graph for merge: ${error.message}`,
-                cause: O.some(Inspectable.toStringUnknown(error)),
+                cause: pipe(error, Inspectable.toStringUnknown, O.some),
               })
             )
           );
@@ -1251,11 +1255,12 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
           // Parse TriG to extract entities and relations (preserves named graphs)
           const store = yield* rdf.parseTriG(graphContent);
           const knowledgeGraph = yield* storeToKnowledgeGraph(store);
-          const extractionArtifact = yield* claimExtractionArtifactFromQuads(yield* rdf.queryStore(store, {}));
+          const resolvedValue1253_78 = yield* rdf.queryStore(store, {});
+          const extractionArtifact = yield* claimExtractionArtifactFromQuads(resolvedValue1253_78);
 
           // Get metadata for this document
           // Try to find metadata by matching graph URI path to sourceUri
-          const pathMatch = graphPath.match(/documents\/([^/]+)\//);
+          const pathMatch = O.getOrNull(Str.match(/documents\/([^/]+)\//)(graphPath));
           const documentIdFromPath = pathMatch?.[1];
           let docMeta = P.isNotUndefined(documentIdFromPath)
             ? O.getOrUndefined(MutableHashMap.get(metadataMap, documentIdFromPath))
@@ -1274,7 +1279,7 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
 
           // Convert to claims
           // Convert Namespace identifier to full IRI
-          const match = config.rdf.baseNamespace.match(/^https?:\/\/[^/]+\//);
+          const match = O.getOrNull(Str.match(/^https?:\/\/[^/]+\//)(config.rdf.baseNamespace));
           const baseDomain = P.isNotNull(match) ? match[0] : "https://example.org/";
           const baseNamespace = `${baseDomain}${input.targetNamespace}/`;
           const claims = O.match(extractionArtifact, {
@@ -1303,12 +1308,12 @@ export const makeClaimPersistenceActivity = (input: ClaimPersistenceInput) =>
           });
           const persistResult = yield* claimPersistence.value.persistClaims(
             claims,
-            {
+            ArticleMetadata.make({
               uri: docMeta.sourceUri,
               ontologyId: input.ontologyId,
               ...(O.isSome(docMeta.headline) ? { headline: docMeta.headline.value } : {}),
               publishedAt: DateTime.toDate(publishedAt),
-            },
+            }),
             graphUri
           );
 
@@ -1422,13 +1427,13 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
           batchId: input.batchId,
         });
         const end = yield* DateTime.now;
-        return {
+        return CrossBatchResolutionOutput.make({
           entitiesTotal: S.Natural.make(0),
           matchedToExisting: S.Natural.make(0),
           newCanonicals: S.Natural.make(0),
           candidatesEvaluated: S.Natural.make(0),
           duration: DateTime.distance(start, end),
-        };
+        });
       }
 
       // Runtime compositions outside the server may omit the resolver, so the
@@ -1481,13 +1486,13 @@ export const makeCrossBatchResolutionActivity = (input: CrossBatchResolutionInpu
         durationMs: Duration.toMillis(DateTime.distance(start, end)),
       });
 
-      return {
+      return CrossBatchResolutionOutput.make({
         entitiesTotal: S.Natural.make(result.stats.totalEntities),
         matchedToExisting: S.Natural.make(result.stats.matchedToExisting),
         newCanonicals: S.Natural.make(result.stats.createdNew),
         candidatesEvaluated: S.Natural.make(result.stats.candidatesEvaluated),
         duration: DateTime.distance(start, end),
-      };
+      });
     }).pipe(Effect.mapError(preserveActivityError)),
     interruptRetryPolicy: activityRetryPolicy,
   });
@@ -1722,8 +1727,11 @@ export const makeInferenceActivity = (input: InferenceInput) =>
         // We use RDF reification (rdf:Statement) to reference the inferred triples
         for (const quad of delta.newQuads) {
           // Create a statement IRI based on hash of the quad
-          const quadHash = A.reduce(`${quad.subject.value}|${quad.predicate.value}|${quad.object.value}`
-            .split(""), 0, (acc, char) => ((acc << 5) - acc + char.charCodeAt(0)) | 0);
+          const quadHash = A.reduce(
+            Str.split(`${quad.subject.value}|${quad.predicate.value}|${quad.object.value}`, ""),
+            0,
+            (acc, char) => ((acc << 5) - acc + O.getOrElse(Str.charCodeAt(char, 0), () => NaN)) | 0
+          );
           const statementIri = `${inferenceActivityIri}/stmt/${Math.abs(quadHash).toString(16)}`;
 
           // Reify the statement
@@ -2304,14 +2312,16 @@ Instructions:
  * @internal
  */
 const buildBatchComparisonPrompt = (pairs: ReadonlyArray<EntityPair>): string => {
-  const pairsFormatted = A.map(pairs, (pair, i) => {
+  const pairsFormatted = A.join(
+    A.map(pairs, (pair, i) => {
       const typeLabelsA = formatEntityTypeLabels(pair.typesA);
       const typeLabelsB = formatEntityTypeLabels(pair.typesB);
       return `${i}. Entity A: "${pair.mentionA}" (${typeLabelsA || "?"})\n   Entity B: "${pair.mentionB}" (${
         typeLabelsB || "?"
       })\n   Similarity: ${pair.similarity.toFixed(2)}`;
-    })
-    .join("\n\n");
+    }),
+    "\n\n"
+  );
 
   return `You are an entity resolution expert. For each pair, determine if the two mentions refer to the same real-world entity.
 
@@ -2413,7 +2423,7 @@ export const makeLlmVerificationActivity = (input: LlmVerificationInput) =>
 
         if (batch.length === 1) {
           // Single pair: use focused prompt
-          const pair = batch[0];
+          const pair = A.getUnsafe(batch, 0);
           const prompt = buildComparisonPrompt(pair);
 
           const result = yield* generateObjectWithRetry({
@@ -2578,9 +2588,13 @@ const buildClassificationPrompt = (
     contentType: string;
   }>
 ): string => {
-  const docSummaries = previews
-    .map(({ contentType, index, preview }) => `Document ${index} (${contentType}):\n"""${Str.slice(0, 1500)(preview)}"""`)
-    .join("\n\n---\n\n");
+  const docSummaries = A.join(
+    A.map(
+      previews,
+      ({ contentType, index, preview }) => `Document ${index} (${contentType}):\n"""${Str.slice(0, 1500)(preview)}"""`
+    ),
+    "\n\n---\n\n"
+  );
 
   return `You are a document classification assistant. Analyze the following document previews and classify each one.
 
@@ -2878,7 +2892,8 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
 
       // 6. Compute stats
       const totalEstimatedTokens = A.reduce(documentMetadata, 0, (sum, d) => sum + d.estimatedTokens);
-      const avgComplexity = A.reduce(documentMetadata, 0, (sum, d) => sum + d.complexityScore) / documentMetadata.length;
+      const avgComplexity =
+        A.reduce(documentMetadata, 0, (sum, d) => sum + d.complexityScore) / documentMetadata.length;
       const typeDistribution: Record<string, number> = {};
       for (const d of documentMetadata) {
         typeDistribution[d.documentType] = S.Natural.make((typeDistribution[d.documentType] ?? 0) + 1);
@@ -2888,7 +2903,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
       const end = yield* DateTime.now;
       const durationMs = Duration.toMillis(DateTime.distance(start, end));
 
-      const enrichedManifest: EnrichedManifest = {
+      const enrichedManifest: EnrichedManifest = EnrichedManifest.make({
         batchId: manifest.batchId,
         ontologyUri: manifest.ontologyUri,
         ontologyVersion: manifest.ontologyVersion,
@@ -2897,7 +2912,7 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
         documents: documentMetadata,
         createdAt: manifest.createdAt,
         preprocessedAt,
-        preprocessingStats: {
+        preprocessingStats: PreprocessingStats.make({
           totalDocuments: S.Natural.make(documentMetadata.length),
           classifiedCount: S.Natural.make(classifiedCount),
           failedCount: S.Natural.make(failedCount),
@@ -2905,8 +2920,8 @@ export const makePreprocessingActivity = (input: PreprocessingActivityInput) =>
           preprocessingDurationMs: durationMs,
           averageComplexity: UnitInterval.make(avgComplexity),
           documentTypeDistribution: typeDistribution,
-        },
-      };
+        }),
+      });
 
       // 8. Write enriched manifest to storage
       const enrichedManifestPath = PathLayout.batch.enrichedManifest(input.batchId);

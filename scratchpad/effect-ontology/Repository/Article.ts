@@ -207,10 +207,9 @@ export class ArticleRepository extends Context.Service<ArticleRepository, Articl
       const insertArticle: ArticleRepositoryShape["insertArticle"] = Effect.fn("insertArticle")(function* (
         article: ArticleInsertRow
       ) {
-        const yielded1 = yield* normalizeQueryError(drizzle.insert(articles).values(article).returning());
-const [result] = yield* decodeArticleRows(
-          yielded1
-        );
+        const insertedArticleRows = yield* normalizeQueryError(drizzle.insert(articles).values(article).returning());
+        const [result] = yield* decodeArticleRows(insertedArticleRows);
+        if (result === undefined) return yield* Effect.die("INSERT RETURNING produced no row");
         return result;
       });
 
@@ -220,16 +219,14 @@ const [result] = yield* decodeArticleRows(
       const getArticle: ArticleRepositoryShape["getArticle"] = dual(
         2,
         Effect.fn("getArticle")(function* (id: ArticleId, ontologyId: string) {
-          const yielded2 = yield* normalizeQueryError(
-              drizzle
-                .select()
-                .from(articles)
-                .where(and(eq(articles.id, id), eq(articles.ontologyId, ontologyId)))
-                .limit(1)
-            );
-const [result] = yield* decodeArticleRows(
-            yielded2
+          const articleRowsById = yield* normalizeQueryError(
+            drizzle
+              .select()
+              .from(articles)
+              .where(and(eq(articles.id, id), eq(articles.ontologyId, ontologyId)))
+              .limit(1)
           );
+          const [result] = yield* decodeArticleRows(articleRowsById);
           return O.fromNullishOr(result);
         })
       );
@@ -240,16 +237,14 @@ const [result] = yield* decodeArticleRows(
       const getArticleByUri: ArticleRepositoryShape["getArticleByUri"] = dual(
         2,
         Effect.fn("getArticleByUri")(function* (uri: string, ontologyId: string) {
-          const yielded3 = yield* normalizeQueryError(
-              drizzle
-                .select()
-                .from(articles)
-                .where(and(eq(articles.uri, uri), eq(articles.ontologyId, ontologyId)))
-                .limit(1)
-            );
-const [result] = yield* decodeArticleRows(
-            yielded3
+          const articleRowsByUri = yield* normalizeQueryError(
+            drizzle
+              .select()
+              .from(articles)
+              .where(and(eq(articles.uri, uri), eq(articles.ontologyId, ontologyId)))
+              .limit(1)
           );
+          const [result] = yield* decodeArticleRows(articleRowsByUri);
           return O.fromNullishOr(result);
         })
       );
@@ -277,17 +272,15 @@ const [result] = yield* decodeArticleRows(
           ontologyId: string,
           updates: Omit<Partial<ArticleInsertRow>, "ontologyId">
         ) {
-          const yielded5 = yield* DateTime.now;
-const yielded101 = yield* normalizeQueryError(
-              drizzle
-                .update(articles)
-                .set({ ...updates, updatedAt: DateTime.toDateUtc(yielded5) })
-                .where(and(eq(articles.id, id), eq(articles.ontologyId, ontologyId)))
-                .returning()
-            );
-const [result] = yield* decodeArticleRows(
-            yielded101
+          const updatedAt = yield* DateTime.now;
+          const updatedArticleRows = yield* normalizeQueryError(
+            drizzle
+              .update(articles)
+              .set({ ...updates, updatedAt: DateTime.toDateUtc(updatedAt) })
+              .where(and(eq(articles.id, id), eq(articles.ontologyId, ontologyId)))
+              .returning()
           );
+          const [result] = yield* decodeArticleRows(updatedArticleRows);
           return O.fromNullishOr(result);
         })
       );
@@ -354,8 +347,8 @@ const [result] = yield* decodeArticleRows(
         if (P.isNotUndefined(filter.offset)) {
           query = query.offset(filter.offset);
         }
-        const yielded6 = yield* normalizeQueryError(query);
-return yield* decodeArticleRows(yielded6);
+        const matchingArticleRows = yield* normalizeQueryError(query);
+        return yield* decodeArticleRows(matchingArticleRows);
       });
 
       /**
@@ -400,8 +393,8 @@ return yield* decodeArticleRows(yielded6);
         if (conditions.length > 0) {
           query = query.where(and(...conditions));
         }
-        const yielded7 = yield* normalizeQueryError(query);
-const [result] = yield* decodeArticleCountRows(yielded7);
+        const articleCountRows = yield* normalizeQueryError(query);
+        const [result] = yield* decodeArticleCountRows(articleCountRows);
         return result.count;
       });
 
@@ -415,10 +408,10 @@ const [result] = yield* decodeArticleCountRows(yielded7);
       const insertArticlesBatch: ArticleRepositoryShape["insertArticlesBatch"] = Effect.fn("insertArticlesBatch")(
         function* (articleList: Array<ArticleInsertRow>) {
           if (A.isReadonlyArrayEmpty(articleList)) return [];
-          const yielded8 = yield* normalizeQueryError(drizzle.insert(articles).values(articleList).returning());
-return yield* decodeArticleRows(
-            yielded8
+          const insertedArticleRows = yield* normalizeQueryError(
+            drizzle.insert(articles).values(articleList).returning()
           );
+          return yield* decodeArticleRows(insertedArticleRows);
         }
       );
 

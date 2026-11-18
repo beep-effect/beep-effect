@@ -1,3 +1,4 @@
+import { pipe } from "effect/Function";
 /**
  * Graph Merge Utilities
  *
@@ -250,7 +251,7 @@ const mergeEntityCollections = (left: ReadonlyArray<Entity>, right: ReadonlyArra
       })
     );
   }
-  return A.sort(A.fromIterable(HashMap.toValues(entities)), EntityOrder);
+  return A.sort(pipe(entities, HashMap.toValues, A.fromIterable), EntityOrder);
 };
 
 const mergeRelationCollections = (
@@ -269,7 +270,7 @@ const mergeRelationCollections = (
       })
     );
   }
-  return A.sort(A.fromIterable(MutableHashMap.values(relations)), RelationOrder);
+  return A.sort(pipe(relations, MutableHashMap.values, A.fromIterable), RelationOrder);
 };
 
 const mergeGraphData = (left: KnowledgeGraph, right: KnowledgeGraph): KnowledgeGraph =>

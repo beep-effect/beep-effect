@@ -46,10 +46,10 @@ describe("RetryPolicy", () => {
       );
       yield* TestClock.adjust(Duration.seconds(2));
 
-      const yielded1 = yield* Fiber.join(dataFirstFiber);
-assert.strictEqual(yielded1, 3);
-      const yielded2 = yield* Ref.get(dataFirstAttempts);
-assert.strictEqual(yielded2, 3);
+      const dataFirstResult = yield* Fiber.join(dataFirstFiber);
+      assert.strictEqual(dataFirstResult, 3);
+      const dataFirstAttemptCount = yield* Ref.get(dataFirstAttempts);
+      assert.strictEqual(dataFirstAttemptCount, 3);
 
       const dataLastAttempts = yield* Ref.make(0);
       const dataLastFiber = yield* succeedOnThirdAttempt(dataLastAttempts).pipe(
@@ -58,10 +58,10 @@ assert.strictEqual(yielded2, 3);
       );
       yield* TestClock.adjust(Duration.seconds(2));
 
-      const yielded3 = yield* Fiber.join(dataLastFiber);
-assert.strictEqual(yielded3, 3);
-      const yielded4 = yield* Ref.get(dataLastAttempts);
-assert.strictEqual(yielded4, 3);
+      const dataLastResult = yield* Fiber.join(dataLastFiber);
+      assert.strictEqual(dataLastResult, 3);
+      const dataLastAttemptCount = yield* Ref.get(dataLastAttempts);
+      assert.strictEqual(dataLastAttemptCount, 3);
     })
   );
 
@@ -88,8 +88,8 @@ assert.strictEqual(yielded4, 3);
 
       const error = yield* Fiber.join(fiber);
       assert.isTrue(Cause.isTimeoutError(error));
-      const yielded5 = yield* Ref.get(attempts);
-assert.strictEqual(yielded5, 2);
+      const attemptCount = yield* Ref.get(attempts);
+      assert.strictEqual(attemptCount, 2);
     })
   );
 
@@ -109,8 +109,8 @@ assert.strictEqual(yielded5, 2);
 
       assert.isTrue(Result.isFailure(result));
       assert.isTrue(S.isSchemaError(error));
-      const yielded6 = yield* Ref.get(attempts);
-assert.strictEqual(yielded6, 0);
+      const attemptCount = yield* Ref.get(attempts);
+      assert.strictEqual(attemptCount, 0);
     })
   );
 });
@@ -134,8 +134,8 @@ describe("StageTimeoutService", () => {
           .pipe(Effect.flip, Effect.forkChild);
 
         yield* TestClock.adjust(Duration.seconds(1));
-        const yielded7 = yield* Ref.get(softWarningObserved);
-assert.isTrue(yielded7);
+        const warningObserved = yield* Ref.get(softWarningObserved);
+        assert.isTrue(warningObserved);
 
         yield* TestClock.adjust(Duration.seconds(1));
         const error = yield* Fiber.join(fiber);
@@ -156,12 +156,12 @@ assert.isTrue(yielded7);
         yield* TestClock.adjust(Duration.seconds(2));
 
         assert.strictEqual(result, "complete");
-        const yielded8 = yield* Ref.get(softWarningObserved);
-assert.isFalse(yielded8);
-        const yielded9 = yield* timeouts.wouldTimeout("chunking", Duration.seconds(2));
-assert.isFalse(yielded9);
-        const yielded10 = yield* timeouts.wouldTimeout("chunking", Duration.millis(2001));
-assert.isTrue(yielded10);
+        const warningObserved = yield* Ref.get(softWarningObserved);
+        assert.isFalse(warningObserved);
+        const atBudgetTimeout = yield* timeouts.wouldTimeout("chunking", Duration.seconds(2));
+        assert.isFalse(atBudgetTimeout);
+        const overBudgetTimeout = yield* timeouts.wouldTimeout("chunking", Duration.millis(2001));
+        assert.isTrue(overBudgetTimeout);
       })
     );
   });

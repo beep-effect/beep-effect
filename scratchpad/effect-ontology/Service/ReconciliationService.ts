@@ -360,7 +360,7 @@ export class ReconciliationService extends Context.Service<ReconciliationService
         };
       }
 
-      const bestMatch = candidates[0];
+      const bestMatch = A.getUnsafe(candidates, 0);
 
       // Decision based on score
       if (bestMatch.score >= config.autoLinkThreshold) {
@@ -418,11 +418,12 @@ export class ReconciliationService extends Context.Service<ReconciliationService
      */
     const storeWikidataLink = Effect.fn("storeWikidataLink")(function* (entityIri: string, qid: string) {
       const wikidataUri = `https://www.wikidata.org/entity/${qid}`;
+      const resolvedValue424_38 = yield* DateTime.now;
       const linkData = yield* encodeWikidataLink({
         entityIri,
         qid,
         wikidataUri,
-        linkedAt: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
+        linkedAt: DateTime.toDateUtc(resolvedValue424_38).toISOString(),
       }).pipe(
         Effect.mapError((cause) =>
           ReconciliationError.make({
@@ -453,12 +454,13 @@ export class ReconciliationService extends Context.Service<ReconciliationService
       candidates: ReadonlyArray<WikidataCandidate>
     ) {
       const taskId = yield* generateTaskId();
+      const resolvedValue460_39 = yield* DateTime.now;
       const task: VerificationTask = {
         id: taskId,
         entityIri,
         label,
         candidates,
-        createdAt: DateTime.toDateUtc(yield* DateTime.now),
+        createdAt: DateTime.toDateUtc(resolvedValue460_39),
         status: "pending",
       };
       const taskJson = yield* encodeVerificationTask(task).pipe(

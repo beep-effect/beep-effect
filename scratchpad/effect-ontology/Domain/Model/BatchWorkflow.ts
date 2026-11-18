@@ -352,7 +352,7 @@ const isValidTransition = (from: BatchStage, to: BatchStage): boolean =>
 
 const validateTransition = (from: BatchStage, to: BatchStage): O.Option<string> =>
   Bool.match(isValidTransition(from, to), {
-    onTrue: () => O.none<BatchFailure>(),
+    onTrue: () => O.none<string>(),
     onFalse: () =>
       pipe(
         validTransitions[from],

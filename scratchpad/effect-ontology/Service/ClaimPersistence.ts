@@ -158,10 +158,10 @@ export class ClaimPersistenceService extends Context.Service<ClaimPersistenceSer
       const article = yield* articleRepo.getOrCreateArticle({
         uri: articleMeta.uri,
         ontologyId: articleMeta.ontologyId,
-        headline: articleMeta.headline,
+        ...(P.isUndefined(articleMeta.headline) ? {} : { headline: articleMeta.headline }),
         publishedAt: articleMeta.publishedAt,
-        sourceName: articleMeta.sourceName,
-        contentHash: articleMeta.contentHash,
+        ...(P.isUndefined(articleMeta.sourceName) ? {} : { sourceName: articleMeta.sourceName }),
+        ...(P.isUndefined(articleMeta.contentHash) ? {} : { contentHash: articleMeta.contentHash }),
       });
 
       yield* Effect.logDebug("Article resolved for claim persistence", {
@@ -180,11 +180,15 @@ export class ClaimPersistenceService extends Context.Service<ClaimPersistenceSer
         objectType: claim.objectType,
         rank: "normal",
         confidenceScore: claim.confidence?.toString(),
-        evidenceText: claim.evidence?.text,
-        evidenceStartOffset: claim.evidence?.startOffset,
-        evidenceEndOffset: claim.evidence?.endOffset,
-        validFrom: claim.validFrom,
-        validTo: claim.validTo,
+        ...(P.isUndefined(claim.evidence)
+          ? {}
+          : {
+              evidenceText: claim.evidence.text,
+              evidenceStartOffset: claim.evidence.startOffset,
+              evidenceEndOffset: claim.evidence.endOffset,
+            }),
+        ...(P.isUndefined(claim.validFrom) ? {} : { validFrom: claim.validFrom }),
+        ...(P.isUndefined(claim.validTo) ? {} : { validTo: claim.validTo }),
       }));
 
       // 3. Upsert claims (idempotent)
