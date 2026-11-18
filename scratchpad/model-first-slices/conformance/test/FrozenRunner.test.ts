@@ -130,7 +130,7 @@ it.effect("a write in flight when its runner froze, and one sent while it was fr
       const againB = yield* slots.send("s", Write.make({ label: "B", holdMs: 0 }), { commandId: "b" });
       expect([Exit.isSuccess(a.exit) ? a.exit.value : undefined, Exit.isSuccess(b.exit) ? b.exit.value : undefined]).toEqual([againA, againB]);
       expect(sim.committers(SLOT)).toEqual([1, 1]);
-      const counts = yield* Effect.all([stored("A"), stored("B")]);
+      const counts = yield* Effect.all([stored("A"), stored("B")], { concurrency: 1 });
       expect(counts).toEqual([1, 1]);
     }),
   );

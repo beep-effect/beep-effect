@@ -36,6 +36,9 @@ upstream issue 3490 waits on a maintainer's answer (D62). The gated candidates i
 
 ## Trail
 
+- 2026-11-17: phase 13, found by the pre-publish check after merging `main`: the prototype moved to
+  the `@effect/tsgo` 0.70 rule set, and the three upstream conformance files are ported under the
+  full rules instead of vendored and exempt. Zero diagnostics, 196 tests.
 - 2026-11-17: graduated. D59 to D66: the shape confirmed; the appetite set to the standard plus
   one real slice; the fixes as root patches; `authority` first, as the one context for grants;
   `goals/slice-topology-audit` superseded; three goal packets created. A capability inventory

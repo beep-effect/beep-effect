@@ -84,9 +84,11 @@ export const scan = Effect.fn("SourceScan.scan")(function* (
         A.map((name) => path.join(dir, "src", name)),
       ),
     ),
+    { concurrency: 1 },
   );
   const scanned = yield* Effect.forEach(A.flatten(files), (file) =>
     Effect.map(fs.readFileString(path.join(root, file)), (source) => scanText(file, source)),
+    { concurrency: 1 },
   );
   return A.filter(A.flatten(scanned), (violation) => !A.contains(allowed, violation.file));
 });

@@ -20,6 +20,12 @@ const apis = [
   { name: "Intake", api: IntakeContract, module: "IntakeApi.contract", exported: "IntakeContract" },
 ] as const;
 
+/** A served command whose class the contract package exports no `<Module>/<Tag>.command` entry for. */
+class NoContractEntry extends S.TaggedError<NoContractEntry, { readonly brand: unique symbol }>()("NoContractEntry", {
+  tag: S.String,
+  message: S.String,
+}) {}
+
 type Served = { readonly kind: string; readonly tag?: string; readonly viewName?: string; readonly queryName?: string };
 
 const render = Effect.gen(function* () {
@@ -38,7 +44,7 @@ const render = Effect.gen(function* () {
       Effect.fromOption,
       Effect.mapBoth({
         onSuccess: (entry) => `@proto/party-contract${pipe(entry, Str.slice(1))}`,
-        onFailure: () => new Error(`no contract entry for command ${tag}`),
+        onFailure: () => NoContractEntry.make({ tag, message: `no contract entry for command ${tag}` }),
       }),
       Effect.orDie,
     );

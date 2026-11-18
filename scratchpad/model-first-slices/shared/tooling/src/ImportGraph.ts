@@ -65,7 +65,7 @@ export const loadWorkspace = Effect.fn("ImportGraph.loadWorkspace")(function* (r
     return Effect.map(manifestOf(dir), (manifest) =>
       WorkspacePackage.make({ name: manifest.name, dir, exports: manifest.exports }),
     );
-  });
+  }, { concurrency: 1 });
   return HashMap.fromIterable(A.map(packages, (pkg) => [pkg.name, pkg] as const));
 });
 
@@ -124,10 +124,10 @@ export const reachable = Effect.fn("ImportGraph.reachable")(function* (
       : Effect.gen(function* () {
           MutableHashSet.add(seen, file);
           const source = yield* fs.readFileString(file);
-          const next = yield* Effect.forEach(specifiersOf(source), (specifier) => resolve(file, specifier));
-          yield* Effect.forEach(A.getSomes(next), visit, { discard: true });
+          const next = yield* Effect.forEach(specifiersOf(source), (specifier) => resolve(file, specifier), { concurrency: 1 });
+          yield* Effect.forEach(A.getSomes(next), visit, { concurrency: 1, discard: true });
         });
-  yield* Effect.forEach(entries, visit, { discard: true });
+  yield* Effect.forEach(entries, visit, { concurrency: 1, discard: true });
   return A.sort(A.fromIterable(seen), Order.String);
 });
 

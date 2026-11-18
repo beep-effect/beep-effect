@@ -92,7 +92,7 @@ live("a run and a session view stored in phase 6's forms decode on the cluster, 
   const receipt = yield* runs.CancelRun(RunId.make(requested), { reason: "no longer needed" }, human("p_req"));
   // The one stored as phase 6's cancelled-before-grant form reads as withdrawn: a second cancel is refused.
   const refused = yield* Effect.flip(runs.CancelRun(RunId.make(withdrawn), { reason: "again" }, human("p_req")));
-  const states = yield* Effect.all([runState(requested), runState(withdrawn)]);
+  const states = yield* Effect.all([runState(requested), runState(withdrawn)], { concurrency: 1 });
   const read = yield* runs.SessionRuns.get(SessionId.make(session), { ...human("p_req"), atLeast: receipt });
   const stored = yield* psql(
     `SELECT value FROM alchemy_domain_objects WHERE object = 'Practice/Runs.AgentRunAggregate/${requested}' AND key = 'meta'`,

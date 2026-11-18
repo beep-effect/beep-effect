@@ -156,7 +156,7 @@ export const BoundaryLive = Layer.effect(
       const view = yield* Effect.orDie(holderGrants.get(principal));
       const ids = listed(view, (held) => held.grants);
       const root = Root.cases.Human.make({ principal });
-      const confirmed = yield* Effect.forEach(ids, (grant) => confirm(GrantRef.make({ grant, delegation: O.none() }), root, at));
+      const confirmed = yield* Effect.forEach(ids, (grant) => confirm(GrantRef.make({ grant, delegation: O.none() }), root, at), { concurrency: 1 });
       return A.getSomes(confirmed);
     });
 
@@ -175,6 +175,7 @@ export const BoundaryLive = Layer.effect(
         Effect.flatMap(delegations.get(delegation), (held) =>
           held._tag === "Active" ? confirm(GrantRef.make({ grant: held.parent, delegation: O.some(delegation) }), root, at) : Effect.succeedNone,
         ),
+        { concurrency: 1 },
       );
       return A.getSomes(confirmed);
     });
@@ -221,6 +222,7 @@ export const BoundaryLive = Layer.effect(
         });
         const confirmed = yield* Effect.forEach(provenance.grants, (ref) =>
           Effect.map(confirm(ref, provenance.root, at), (live) => ({ ref, live })),
+          { concurrency: 1 },
         );
         const live = A.getSomes(A.map(confirmed, ({ live }) => live));
         const lapsed = A.getSomes(A.map(confirmed, ({ ref, live }) => (O.isNone(live) ? O.some(ref) : O.none())));

@@ -146,9 +146,11 @@ it.layer(NodeServices.layer)((it) => {
             (name) => path.join(dir, name),
           ),
         ),
+        { concurrency: 1 },
       );
       const sources = yield* Effect.forEach(A.flatten(listed), (file) =>
         Effect.map(fs.readFileString(path.join(prototype, file)), (text) => ({ file, text })),
+        { concurrency: 1 },
       );
       // A directive is a comment line naming the Effect diagnostics; a string that contains the
       // words (the generator's template, this test) is not one.
@@ -166,7 +168,7 @@ it.layer(NodeServices.layer)((it) => {
     }),
   );
 
-  it.effect("every checked project takes its rules from the monorepo's base config; only the vendored project drops them", () =>
+  it.effect("every checked project takes its rules from the monorepo's base config, and none overrides them", () =>
     Effect.gen(function* () {
       const { fs, path, prototype, monorepo, manifest } = yield* layout;
       const root = yield* manifest(path.join(prototype, "package.json"));
@@ -189,9 +191,7 @@ it.layer(NodeServices.layer)((it) => {
         // The chain ends at the monorepo's base, which holds the plugin block.
         expect(A.map(chain, (link) => link.file)).toContain(base);
         const overriding = A.filter(chain, (link) => link.plugins && link.file !== base);
-        expect(A.map(overriding, (link) => path.relative(prototype, link.file))).toEqual(
-          project === "conformance/upstream" ? ["conformance/upstream/tsconfig.json"] : [],
-        );
+        expect(A.map(overriding, (link) => path.relative(prototype, link.file))).toEqual([]);
       }
     }),
   );

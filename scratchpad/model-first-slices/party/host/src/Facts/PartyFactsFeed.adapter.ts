@@ -80,6 +80,7 @@ export const liveGenerationOf = (name: string) => (stream: Pages): Effect.Effect
     Effect.map(
       Effect.forEach(entries, ({ event, envelope }) =>
         Effect.map(encoded(event), ({ version, payload }) => ({ position: envelope.seq, factId: event.factId, version, payload })),
+        { concurrency: 1 },
       ),
       (read) => ({ stream: name, entries: read }),
     ),
@@ -135,8 +136,8 @@ export const partyFactsFeedFor = (pins: ReadonlyArray<StreamPin>) => Layer.effec
           const first = O.isNone(retired) && after < closedLength ? (yield* closed.list("claims", { after, take })).entries : [];
           const rest = take - A.length(first);
           const second = rest > 0 ? (yield* open.list("claims", { after: Num.max(after - closedLength, 0), take: rest })).entries : [];
-          const served = yield* Effect.forEach(first, envelopeAt(0));
-          const followed = yield* Effect.forEach(second, envelopeAt(closedLength));
+          const served = yield* Effect.forEach(first, envelopeAt(0), { concurrency: 1 });
+          const followed = yield* Effect.forEach(second, envelopeAt(closedLength), { concurrency: 1 });
           return A.appendAll(served, followed);
         },
         // The outbox holds only what Party encoded itself, and a peek without `atLeast` never waits.

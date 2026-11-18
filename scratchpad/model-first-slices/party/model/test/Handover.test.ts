@@ -143,7 +143,7 @@ it.live("an upgrade that closes generation 1 waits for the old publisher; the ne
         const old = yield* Layer.build(PartyPhase8.layer(Layer.merge(ClaimReviewLive, claimFactsLive(gate))).pipe(Layer.provide(platform.layer)));
         const internals = Context.get(old, Internals);
         const claims = yield* Effect.fromOption(O.fromNullishOr(internals.aggregates.get("Claim")?.seed)).pipe(Effect.orDie);
-        const encoded = yield* Effect.forEach(history, internals.kernel.encodeEvent);
+        const encoded = yield* Effect.forEach(history, internals.kernel.encodeEvent, { concurrency: 1 });
         yield* claims(claim, encoded);
         // The backlog the check reads on this host: decided claims whose fact generation 1 lacks.
         const backlog = Effect.gen(function* () {

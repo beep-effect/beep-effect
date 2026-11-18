@@ -35,7 +35,7 @@ const recordedTape = Effect.gen(function* () {
       const recording = yield* Layer.build(recordingReasoner(assessWithFixture).pipe(Layer.provideMerge(memoryTape())));
       return yield* Effect.gen(function* () {
         const reasoner = yield* Reasoner;
-        yield* Effect.forEach(keys, (call) => reasoner.assess(call), { discard: true });
+        yield* Effect.forEach(keys, (call) => reasoner.assess(call), { concurrency: 1, discard: true });
         const tape = yield* ReasonerTape;
         return yield* tape.entries;
       }).pipe(Effect.provideContext(recording));

@@ -30,7 +30,7 @@ const schema = (sql: SqlClient.SqlClient) =>
       sql`CREATE TABLE IF NOT EXISTS party_directory_active (
         id integer PRIMARY KEY CHECK (id = 1), generation integer NOT NULL)`,
     ],
-    { discard: true },
+    { concurrency: 1, discard: true },
   );
 
 /**

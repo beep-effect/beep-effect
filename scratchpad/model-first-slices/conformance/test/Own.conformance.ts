@@ -82,7 +82,7 @@ const setup = Effect.gen(function* () {
     issue(`g_propose_${r}`, "p_intake", "party.propose", org),
     issue(`g_review_${r}`, "p_rev", "party.review", org),
     issue(`g_read_${r}`, "p_rev", "party.read", org),
-  ]);
+  ], { concurrency: 1 });
   expect(A.every(grants, (g) => g.ok)).toBe(true);
   // The boundary reads grants from the authority model's views; give them a moment.
   yield* Effect.sleep("2 seconds");
@@ -170,7 +170,7 @@ live("a runner killed right after a commit: every reaction happens once, within 
       Effect.map((found) => O.isSome(proposalIn(found))),
       Effect.orElseSucceed(() => false),
     ),
-  });
+  }, { concurrency: 1 });
   const done = (seen: Effect.Success<typeof reactions>) => seen.claim === claimReactions && seen.run === runReactions && seen.review;
   const deadline = killedAt + RECOVERY_BOUND_MS;
   const remaining = Effect.map(Clock.currentTimeMillis, (now) => Num.max(deadline - now, 0));
@@ -217,12 +217,12 @@ live("a projection batch cut by a runner crash is redelivered and the Postgres d
       rows: psql(`SELECT count(*) FROM party_directory_rows WHERE party_id = '${party}'`).pipe(Effect.orElseSucceed(() => "no table yet")),
       blocked: blockedByLock,
       meta: psql(`SELECT left(value, 160) ${meta}`),
-    }),
+    }, { concurrency: 1 }),
     (w) => w.rows === "1" && Str.isNonEmpty(w.blocked),
     60,
   );
   const rowsAtKill = window.rows;
-  const killed = yield* killRunnersThen(Effect.all({ ended: endBlocked, released: releaseLock }));
+  const killed = yield* killRunnersThen(Effect.all({ ended: endBlocked, released: releaseLock }, { concurrency: 1 }));
   yield* Fiber.join(lock);
   yield* log("projection-window", { window, killed });
   const found = yield* eventually(
@@ -298,7 +298,7 @@ live("two runners on one instance (D38, D55): a write sent to a frozen runner is
   const slow = yield* Effect.forkChild(write("A", 70_000).pipe(Effect.exit));
   const runners = yield* containersOf(runnerService);
   const owner = yield* eventually(
-    Effect.forEach(runners, (id) => Effect.map(docker("logs", id), (out) => (pipe(out, Str.includes("deciding A")) && pipe(out, Str.includes(slot)) ? [id] : []))).pipe(
+    Effect.forEach(runners, (id) => Effect.map(docker("logs", id), (out) => (pipe(out, Str.includes("deciding A")) && pipe(out, Str.includes(slot)) ? [id] : [])), { concurrency: 1 }).pipe(
       Effect.map(A.flatten),
     ),
     (found) => found.length === 1,
@@ -312,14 +312,14 @@ live("two runners on one instance (D38, D55): a write sent to a frozen runner is
   const sentAt = yield* Clock.currentTimeMillis;
   const quick = yield* write("B", 0).pipe(Effect.timeout(`${FROZEN_WRITE_BOUND_MS + 30_000} millis`), Effect.exit);
   const answeredAfterMs = (yield* Clock.currentTimeMillis) - sentAt;
-  const storedBefore = yield* Effect.all([stored("A"), stored("B")]);
+  const storedBefore = yield* Effect.all([stored("A"), stored("B")], { concurrency: 1 });
   yield* docker("unpause", stale);
   const slowResult = yield* Fiber.join(slow).pipe(Effect.timeout("150 seconds"), Effect.exit);
   // After the resume, each write is retried under its command id until it is answered.
   const retried = (label: string) => eventually(write(label, 0).pipe(Effect.option), O.isSome, 120);
   const retriedB = yield* retried("B");
   const retriedA = yield* retried("A");
-  const storedAfter = yield* Effect.all([stored("A"), stored("B")]);
+  const storedAfter = yield* Effect.all([stored("A"), stored("B")], { concurrency: 1 });
   const state = yield* get(`/tworunners/state?slot=${slot}`);
   yield* log("frozen-runner", { quick, answeredAfterMs, slow: slowResult, retriedA, retriedB, storedBefore, storedAfter, state });
   // The write sent during the pause is answered within the bound, with its receipt or a failure.

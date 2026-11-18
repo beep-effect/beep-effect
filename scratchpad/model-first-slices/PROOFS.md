@@ -332,7 +332,7 @@ A closed generation stops being served only when the retirement check approves t
 
 ### compiler-effect-build
 
-`bun run check` runs the Effect build of tsrs at the monorepo's pinned @effect/tsgo and tsrs over every project, each taking its rules from the monorepo's base config, and exits 0; only the vendored upstream project drops the rules. The prototype holds one inline diagnostics directive: `strictEffectProvide:off` on the generated front's deploy-time `Effect.provide(Database)`, an Alchemy class entry point, emitted by apps/practice/scripts/entries.ts with its reason, owner (@proto/practice) and exit.
+`bun run check` runs the Effect build of tsrs at the monorepo's pinned @effect/tsgo and tsrs over every project, each taking its rules from the monorepo's base config with no project overriding them, and exits 0. The prototype holds one inline diagnostics directive: `strictEffectProvide:off` on the generated front's deploy-time `Effect.provide(Database)`, an Alchemy class entry point, emitted by apps/practice/scripts/entries.ts with its reason, owner (@proto/practice) and exit.
 
 - **Checker:** `shared/tooling/test/Compiler.guard.test.ts`
 - **Reads:** The root manifest's check script, the installed compiler manifests and `--version`, the monorepo catalog pins, each project's tsconfig extends chain, and every source file's comment lines for a diagnostics directive.
@@ -362,12 +362,12 @@ A report hop of the review run (reserve, settle, step, release, exhaust, the wai
 
 ### cluster-upstream-conformance
 
-The host passes upstream's ten Domain conformance cases, with the vendored conformance model on the stack's pool.
+The host passes upstream's ten Domain conformance cases, with the conformance model ported from upstream on the stack's pool.
 
 - **Checker:** `conformance/test/Upstream.conformance.ts`, `conformance/upstream/src/conformance.ts`
 - **Reads:** The deployed front over HTTP and WebSocket.
-- **Assumes:** The vendored files match upstream at 33c10dd except import paths.
-- **Gaps:** Two runners on one workstation; no network partitions.
+- **Assumes:** The ported files keep upstream's routes, case names and assertions at 33c10dd; only their import paths and the forms the Effect rules require changed (constructors, typed errors, service reads, sequential options).
+- **Gaps:** Two runners on one workstation; no network partitions. The cases last ran on a deployed stack before the port to the Effect rules.
 - **Left to a reviewer:** Nothing mechanical.
 - **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 

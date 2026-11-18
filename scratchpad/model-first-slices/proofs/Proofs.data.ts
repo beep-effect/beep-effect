@@ -312,7 +312,7 @@ export const proofs: ReadonlyArray<Proof> = [
   }),
   Proof.make({
     id: "compiler-effect-build",
-    invariant: "`bun run check` runs the Effect build of tsrs at the monorepo's pinned @effect/tsgo and tsrs over every project, each taking its rules from the monorepo's base config, and exits 0; only the vendored upstream project drops the rules. The prototype holds one inline diagnostics directive: `strictEffectProvide:off` on the generated front's deploy-time `Effect.provide(Database)`, an Alchemy class entry point, emitted by apps/practice/scripts/entries.ts with its reason, owner (@proto/practice) and exit.",
+    invariant: "`bun run check` runs the Effect build of tsrs at the monorepo's pinned @effect/tsgo and tsrs over every project, each taking its rules from the monorepo's base config with no project overriding them, and exits 0. The prototype holds one inline diagnostics directive: `strictEffectProvide:off` on the generated front's deploy-time `Effect.provide(Database)`, an Alchemy class entry point, emitted by apps/practice/scripts/entries.ts with its reason, owner (@proto/practice) and exit.",
     checkers: ["shared/tooling/test/Compiler.guard.test.ts"],
     reads: "The root manifest's check script, the installed compiler manifests and `--version`, the monorepo catalog pins, each project's tsconfig extends chain, and every source file's comment lines for a diagnostics directive.",
     assumptions: "The proxy's `--version` names the Effect build; a project's rules come only from its extends chain.",
@@ -344,11 +344,11 @@ export const proofs: ReadonlyArray<Proof> = [
   }),
   Proof.make({
     id: "cluster-upstream-conformance",
-    invariant: "The host passes upstream's ten Domain conformance cases, with the vendored conformance model on the stack's pool.",
+    invariant: "The host passes upstream's ten Domain conformance cases, with the conformance model ported from upstream on the stack's pool.",
     checkers: ["conformance/test/Upstream.conformance.ts", "conformance/upstream/src/conformance.ts"],
     reads: "The deployed front over HTTP and WebSocket.",
-    assumptions: "The vendored files match upstream at 33c10dd except import paths.",
-    gaps: "Two runners on one workstation; no network partitions.",
+    assumptions: "The ported files keep upstream's routes, case names and assertions at 33c10dd; only their import paths and the forms the Effect rules require changed (constructors, typed errors, service reads, sequential options).",
+    gaps: "Two runners on one workstation; no network partitions. The cases last ran on a deployed stack before the port to the Effect rules.",
     reviewer: "Nothing mechanical.",
     live: true,
   }),

@@ -375,7 +375,7 @@ commit is then refused, and the startup guard cannot see it.
   GCP, Kubernetes, Fly, Hetzner and Cloudflare.
 - **A `Domain.Model` on a cluster pool.** Where: `@alchemy.run/domain/EffectCluster`. State:
   2026-11-07 (#3143); on the Durable Object pool since 2026-11-12 (#3276), once that pool grew
-  `RunnerHost` and `InstanceStorage`. Upstream's ten Domain conformance cases are vendored into the
+  `RunnerHost` and `InstanceStorage`. Upstream's ten Domain conformance cases are ported into the
   prototype from alchemy at 33c10dd and pass on the swarm host.
 
 There are two implementations of cluster on Durable Objects, and they expose different integration
@@ -677,7 +677,7 @@ apps/
     generated/
       Practice.entry.ts                   generated from the descriptors, never edited
       Practice.front.ts
-conformance/                              upstream's ten cases, vendored; the prototype's own cases
+conformance/                              upstream's ten cases, ported; the prototype's own cases
 patches/                                  the local library fixes, applied by patchedDependencies
 ```
 

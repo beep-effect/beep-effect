@@ -1,15 +1,10 @@
 {
   "extends": "../../tsconfig.base.json",
-  // Upstream's Domain conformance files, vendored from alchemy at 33c10dd (2.0.0-beta.87) and kept
-  // as upstream wrote them, apart from a two-line provenance header and their import paths (phase 5;
-  // notes/phase-7.md lists the files). They are checked for TypeScript errors only: the Effect language
-  // service plugin is not loaded here, because these files are upstream's code, not the
-  // prototype's, and are not edited to satisfy its rules. Every file the prototype owns gets the
-  // full rule set; the conformance package reaches these through this package's exports, so its
-  // own check does not report them.
+  // Upstream's Domain conformance model, app and cases, ported from alchemy at 33c10dd (2.0.0-beta.87)
+  // and adapted to this repository's Effect rules, with upstream's routes, case names and assertions
+  // unchanged. Like every other project they take the full rule set from the monorepo's base config.
+  // The conformance package reaches these files through this package's exports, so its own check
+  // does not report them; this project does.
   "include": [],
-  "files": ["src/app.ts", "src/conformance.ts", "src/model.ts"],
-  "compilerOptions": {
-    "plugins": []
-  }
+  "files": ["src/app.ts", "src/conformance.ts", "src/model.ts"]
 }

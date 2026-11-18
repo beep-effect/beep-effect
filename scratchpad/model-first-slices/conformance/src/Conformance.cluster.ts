@@ -23,7 +23,7 @@ export const ConformanceCluster = <ROut, E, R>(platform: Layer.Layer<ROut, E, R>
   const upstream = ConformanceLive.pipe(Layer.provide(platform));
   const twoRunners = TwoRunnersModel.layer(Layer.empty).pipe(Layer.provide(platform));
   // The route, over the slot's client: a write, timed, or the slot's state.
-  const slots = Effect.map(Effect.all({ slot: Effect.service(Slot), tally: Effect.service(SlotTally) }), ({ slot, tally }) =>
+  const slots = Effect.map(Effect.all({ slot: Effect.service(Slot), tally: Effect.service(SlotTally) }, { concurrency: 1 }), ({ slot, tally }) =>
     Effect.gen(function* () {
       const request = yield* HttpServerRequest;
       const url = new URL(request.url, "http://front");

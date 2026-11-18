@@ -154,7 +154,7 @@ it.effect("after an allowed retirement, checkpoints keep their positions and no 
     expect(approved).toEqual([{ stream: "PartyFacts", from: 0, through: 2 }]);
     const retired = yield* feedOf(closedFacts, openFacts, partyFactsFeedFor(next));
     // Every checkpoint at or past the retired generation reads exactly what it read before.
-    const pages = (feed: PartyFactsFeed["Service"]) => Effect.forEach([2, 3, 4, 5, 6], (after) => feed.read({ after, take: 50 }));
+    const pages = (feed: PartyFactsFeed["Service"]) => Effect.forEach([2, 3, 4, 5, 6], (after) => feed.read({ after, take: 50 }), { concurrency: 1 });
     const servedPages = yield* pages(served);
     const retiredPages = yield* pages(retired);
     expect(retiredPages).toEqual(servedPages);

@@ -362,6 +362,7 @@ export const makeSimHostWith = (options: SimHostOptions) => (seed: (id: string, 
         storage.put(entries),
       ),
     close: Effect.forEach(scopes.pipe(MutableHashMap.values, A.fromIterable), (scope) => Scope.close(scope, Exit.void), {
+      concurrency: 1,
       discard: true,
     }),
     serveFrom: (runner) => {

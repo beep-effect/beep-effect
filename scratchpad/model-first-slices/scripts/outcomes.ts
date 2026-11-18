@@ -51,10 +51,11 @@ const program = Effect.gen(function* () {
   const path = yield* Path.Path;
   const dir = yield* path.fromFileUrl(new URL("../node_modules/.cache/proto-outcomes/", import.meta.url));
   const files = yield* fs.readDirectory(dir).pipe(Effect.orElseSucceed(() => []));
-  const lines = yield* Effect.forEach(files, (file) => fs.readFileString(path.join(dir, file)));
+  const lines = yield* Effect.forEach(files, (file) => fs.readFileString(path.join(dir, file)), { concurrency: 1 });
   const executed = yield* Effect.forEach(
     A.filter(A.flatMap(lines, Str.split("\n")), Str.isNonEmpty),
     (line) => S.decodeEffect(S.fromJsonString(Row))(line),
+    { concurrency: 1 },
   );
   const seen = HashSet.fromIterable(A.map(executed, keyOf));
   const listed = HashSet.fromIterable(A.map(uncoveredOutcomes, keyOf));

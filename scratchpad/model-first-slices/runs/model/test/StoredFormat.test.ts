@@ -44,7 +44,7 @@ const stored = Effect.fn("stored")(function* (name: string) {
 });
 const decodeEvent = (json: unknown) => decodeAs(StoredEvent)(json);
 const history = (name: string) =>
-  Effect.flatMap(stored(name), ({ json }) => Effect.forEach(json as ReadonlyArray<unknown>, decodeEvent));
+  Effect.flatMap(stored(name), ({ json }) => Effect.forEach(json as ReadonlyArray<unknown>, decodeEvent, { concurrency: 1 }));
 
 const { given, state, view } = Story;
 const story = Story.make(RunsModel, { layer: RunsHandlers, stub: [Authority] });
@@ -65,7 +65,7 @@ it.layer(NodeServices.layer)((it) => {
         readonly events: ReadonlyArray<unknown>;
         readonly reply: unknown;
       };
-      const receiptEvents = yield* Effect.forEach(receipt.events, decodeEvent);
+      const receiptEvents = yield* Effect.forEach(receipt.events, decodeEvent, { concurrency: 1 });
       expect(receiptEvents).toMatchObject([{ _tag: "BudgetReserved", units: 30 }]);
       const reply = yield* decodeAs(ReserveBudget.reply!)(receipt.reply);
       expect(reply).toEqual({ remaining: 58 });
@@ -133,7 +133,7 @@ it.layer(NodeServices.layer)((it) => {
         "AgentRun.cancelled-requested.state.json",
         "ReserveBudget.receipt.json",
       ];
-      const before = yield* Effect.forEach(names, stored);
+      const before = yield* Effect.forEach(names, stored, { concurrency: 1 });
       yield* history("run_1.history.json");
       yield* history("run_1~1.history.json");
       for (const { file, bytes } of before) {

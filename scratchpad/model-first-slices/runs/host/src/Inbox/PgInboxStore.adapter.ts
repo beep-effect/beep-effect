@@ -21,7 +21,7 @@ export const PgInboxStore = Layer.effect(
       Effect.all([
         sql`CREATE TABLE IF NOT EXISTS runs_inbox_checkpoints (producer text PRIMARY KEY, seq integer NOT NULL)`,
         sql`CREATE TABLE IF NOT EXISTS runs_inbox_seen (key text PRIMARY KEY)`,
-      ]),
+      ], { concurrency: 1 }),
     );
     const withSql = <A, E>(f: (sql: SqlClient.SqlClient) => Effect.Effect<A, E>) => Effect.flatMap(connect, f);
     return InboxStore.of({

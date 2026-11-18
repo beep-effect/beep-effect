@@ -105,6 +105,7 @@ const rowsOf = Effect.fn("rowsOf")(function* (sim: SimHost) {
       onNone: () => Effect.succeed(A.empty<StoredRow>()),
       onSome: (storage) => Effect.map(storage.list<unknown>(), (entries) => A.map(A.fromIterable(entries), ([key, value]) => ({ object: id, key, value }))),
     }),
+    { concurrency: 1 },
   );
   return A.flatten(all);
 });

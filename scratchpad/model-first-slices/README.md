@@ -90,7 +90,7 @@ runs/host              @proto/runs-host           RunsGateway's live half (follo
 apps/practice          @proto/practice            Deployment.ts (the composed descriptors, checked for fact retirement),
                                                   Cluster.ts (Docker database + swarm pool), hand-written entry modules
                                                   for each model, gateways, Session and poller; PracticeApi; alchemy.run.ts
-conformance            @proto/conformance         upstream's Domain conformance model, app and cases (vendored at
+conformance            @proto/conformance         upstream's Domain conformance model, app and cases (ported from
                                                   33c10dd), the two-runners slot (D38), the prototype's own cases
                                                   and backup/restore, run against a deployed stack only; an in-memory
                                                   host for the drain-lease test (bun run test)
@@ -232,11 +232,12 @@ bun run outcomes            # declared command outcomes the last test run did no
 
 ## Compiler (phase 7)
 
-`bun run check` runs `effect-tsgo tsrs -p <project>` (@effect/tsgo 0.68.1, tsrs 0.24.0-ts7.1.0-beta, the
+`bun run check` runs `effect-tsgo tsrs -p <project>` (@effect/tsgo 0.70.0, tsrs 0.25.0-ts7.1.0-beta, the
 monorepo's pins) over the fifteen packages, `conformance/upstream` and `scripts/`. Every project inherits the
-Effect language service rules from the monorepo's `tsconfig.base.json` unchanged. The exception is
-`conformance/upstream`: it holds upstream's vendored conformance files, byte for byte, and is checked for
-TypeScript errors only. `shared/tooling/test/Compiler.guard.test.ts` guards the wiring with three checks:
+Effect language service rules from the monorepo's `tsconfig.base.json` unchanged, and none overrides them.
+`conformance/upstream` holds upstream's conformance model, app and cases, ported from alchemy at 33c10dd and
+adapted to those rules with upstream's routes, case names and assertions unchanged.
+`shared/tooling/test/Compiler.guard.test.ts` guards the wiring with three checks:
 
 - **Version.** The installed compiler matches the monorepo's pins, and `--version` names the Effect build.
 - **Canary.** `shared/tooling/canary` fails under the Effect build with one Effect-only finding, and passes

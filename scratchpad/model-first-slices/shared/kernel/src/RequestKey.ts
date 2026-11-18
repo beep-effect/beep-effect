@@ -18,11 +18,12 @@ const jsonText = S.encodeEffect(S.fromJsonString(S.Unknown));
  */
 const canonical = (value: unknown): Effect.Effect<string, S.SchemaError> =>
   A.isArray(value)
-    ? Effect.map(Effect.forEach(value, canonical), (parts) => `[${A.join(parts, ",")}]`)
+    ? Effect.map(Effect.forEach(value, canonical, { concurrency: 1 }), (parts) => `[${A.join(parts, ",")}]`)
     : P.isObject(value)
       ? Effect.map(
           Effect.forEach(A.sort(R.keys(value), Order.String), (key) =>
             Effect.zipWith(jsonText(key), canonical(value[key]), (name, text) => `${name}:${text}`),
+            { concurrency: 1 },
           ),
           (parts) => `{${A.join(parts, ",")}}`,
         )

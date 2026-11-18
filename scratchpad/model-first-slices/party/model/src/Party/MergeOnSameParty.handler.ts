@@ -32,12 +32,8 @@ export const MergeOnSamePartyLive = MergeOnSameParty.toLayer(
       const hop = byProcess(MergeOnSameParty.policyName, eventCause(trigger));
       const refusal = yield* Proposition.match(event.proposition, {
         SameParty: ({ survivor, absorbed }) =>
-          authority.readmit({ provenance: event.provenance, hop }).pipe(
-            Effect.flatMap((invocation) =>
-              parties
-                .send(survivor, MergeParties.make({ absorbed }))
-                .pipe(Effect.provideService(CurrentInvocation, invocation)),
-            ),
+          parties.send(survivor, MergeParties.make({ absorbed })).pipe(
+            Effect.provideServiceEffect(CurrentInvocation, authority.readmit({ provenance: event.provenance, hop })),
             Effect.as(O.none<MergeRefusal>()),
             Effect.catchTags({
               ReadmissionRefused: (refused) =>

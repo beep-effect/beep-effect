@@ -36,10 +36,10 @@
   "devDependencies": {
     "@beep/identity": "link:../../packages/foundation/modeling/identity",
     "@beep/schema": "link:../../packages/foundation/modeling/schema",
-    "@effect/tsgo": "0.68.1",
+    "@effect/tsgo": "0.70.0",
     "@effect/vitest": "4.1.4",
     "@types/node": "26.6.5",
-    "tsrs": "0.24.0-ts7.1.0-beta",
+    "tsrs": "0.25.0-ts7.1.0-beta",
     "vitest": "5.0.4"
   },
   "overrides": {

@@ -67,7 +67,7 @@ it.live("a run in flight finishes on the saga version it started, while new runs
           yield* waitRunning(next.status);
           yield* v1.get("job_1").signal(Go, {});
           yield* next.signal(Go, {});
-          return yield* Effect.all([v1.get("job_1").result, next.result]);
+          return yield* Effect.all([v1.get("job_1").result, next.result], { concurrency: 1 });
         }).pipe(Effect.provideContext(deployment));
       }),
     );

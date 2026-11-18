@@ -7,6 +7,7 @@ import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as S from "effect/Schema";
 import { ConformanceStack } from "../src/Deployment.ts";
 
 // `bun scripts/entries.ts` writes generated/Practice.entry.ts (what every runner of the pool
@@ -20,31 +21,37 @@ const header = [
   "// `bun run entries` rewrites it, and `bun run entries --check` fails on drift.",
 ];
 
+/** The cluster parts use one another in a cycle, so no order places each after the parts it uses. */
+class PartCycle extends S.TaggedError<PartCycle, { readonly brand: unique symbol }>()("PartCycle", {
+  message: S.String,
+}) {}
+
 /** Every part, ordered so each comes after the parts it uses. */
-const ordered = (descriptors: ReadonlyArray<DeploymentDescriptor>) => {
+const ordered = Effect.fnUntraced(function* (descriptors: ReadonlyArray<DeploymentDescriptor>) {
   const parts = A.flatMap(descriptors, (d) => A.map(d.cluster.parts, (part) => ({ owner: d.context, ...part })));
   const out: Array<(typeof parts)[number]> = [];
   let placed = HashSet.empty<string>();
   while (out.length < parts.length) {
     const ready = A.filter(parts, (p) => !HashSet.has(placed, p.name) && A.every(p.uses, (u) => HashSet.has(placed, u)));
-    if (ready.length === 0) throw new Error("a cycle among cluster parts");
+    if (ready.length === 0) return yield* PartCycle.make({ message: "a cycle among cluster parts" });
     for (const p of ready) {
       out.push(p);
       placed = HashSet.add(placed, p.name);
     }
   }
   return out;
-};
+});
 
-const entry = (descriptors: ReadonlyArray<DeploymentDescriptor>) => {
+const entry = Effect.fnUntraced(function* (descriptors: ReadonlyArray<DeploymentDescriptor>) {
+  const placed = yield* ordered(descriptors);
   const imports = A.map(descriptors, (d) => `import { ${d.cluster.export} } from "${d.cluster.module}";`);
   const contexts = A.map(descriptors, (d) => `export const ${d.context} = ${d.cluster.export}(platform);`);
-  const parts = A.map(ordered(descriptors), (p) =>
+  const parts = A.map(placed, (p) =>
     A.isReadonlyArrayEmpty(p.uses)
       ? `export const ${p.name} = ${p.owner}.parts.${p.name};`
       : `export const ${p.name} = ${p.owner}.parts.${p.name}.pipe(Layer.provide(Layer.mergeAll(${A.join(p.uses, ", ")})));`,
   );
-  const names = A.map(ordered(descriptors), (p) => p.name);
+  const names = A.map(placed, (p) => p.name);
   return lines([
     ...header,
     'import * as DomainCluster from "@alchemy.run/domain/EffectCluster";',
@@ -72,7 +79,7 @@ const entry = (descriptors: ReadonlyArray<DeploymentDescriptor>) => {
     "export default PracticeLive;",
     "",
   ]);
-};
+});
 
 /**
  * Why the front's deploy-time props provide `Database` with `Effect.provide`, in the repo's
@@ -162,6 +169,6 @@ Effect.gen(function* () {
   const path = yield* Path.Path;
   const dir = yield* path.fromFileUrl(new URL("../generated/", import.meta.url));
   const argv = process.argv.slice(2);
-  yield* generatedFile(path.join(dir, "Practice.entry.ts"), Effect.sync(() => entry(ConformanceStack)), argv);
+  yield* generatedFile(path.join(dir, "Practice.entry.ts"), entry(ConformanceStack), argv);
   yield* generatedFile(path.join(dir, "Practice.front.ts"), Effect.sync(() => front(ConformanceStack)), argv);
 }).pipe(Effect.provide(NodeServices.layer), NodeRuntime.runMain);

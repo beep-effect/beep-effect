@@ -94,7 +94,7 @@ export const ClaimDecidedInboxLive = Layer.effect(
             }).pipe(Effect.provideService(Digest.Digest, digest));
             yield* runs.send(live.run, ConcludeRun.make({ outcome: fact.outcome, hop }), { commandId });
           }),
-        { discard: true },
+        { concurrency: 1, discard: true },
       );
       yield* store.commit(envelope.producer, O.some(key), envelope.seq);
     });
@@ -102,7 +102,7 @@ export const ClaimDecidedInboxLive = Layer.effect(
     const drain: Effect.Effect<number> = Effect.gen(function* () {
       const after = yield* store.checkpoint(ClaimDecided.producer);
       const facts = yield* feed.read({ after, take: 50 });
-      yield* Effect.forEach(facts, handle, { discard: true });
+      yield* Effect.forEach(facts, handle, { concurrency: 1, discard: true });
       return A.isReadonlyArrayEmpty(facts) ? 0 : facts.length + (yield* drain);
     });
 

@@ -162,7 +162,7 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       const concluded = yield* Effect.all([
         harness.run("run_1", (state) => state._tag === "Completed"),
         harness.run("run_2", (state) => state._tag === "Completed"),
-      ]);
+      ], { concurrency: 1 });
       expect(concluded).toMatchObject([{ outcome: "accepted" }, { outcome: "accepted" }]);
       const after1 = yield* harness.commitsOn("run_1");
       const after2 = yield* harness.commitsOn("run_2");
@@ -269,7 +269,7 @@ it.layer(Digest.layerWebCrypto)((it) => {
         key("p_req", "Reserve", { run: "run_1", report: { reservation: "r2", units: 40 } }),
         key("p_other", "Reserve", { run: "run_1", report: { reservation: "r1", units: 40 } }),
         key("p_req", "Settle", { run: "run_1", report: { reservation: "r1", units: 40 } }),
-      ]);
+      ], { concurrency: 1 });
       expect(HashSet.size(HashSet.fromIterable([base, ...others]))).toBe(5);
     }),
   );

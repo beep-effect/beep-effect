@@ -46,7 +46,7 @@ const stored = Effect.fn("stored")(function* (name: string) {
 });
 const history = (name: string) =>
   Effect.flatMap(stored(name), ({ json }) =>
-    Effect.forEach(json as ReadonlyArray<unknown>, decodeEvent),
+    Effect.forEach(json as ReadonlyArray<unknown>, decodeEvent, { concurrency: 1 }),
   );
 
 const { given, state, view } = Story;
@@ -79,7 +79,7 @@ it.layer(NodeServices.layer)((it) => {
         readonly events: ReadonlyArray<unknown>;
         readonly reply: unknown;
       };
-      const receiptEvents = yield* Effect.forEach(receipt.events, decodeEvent);
+      const receiptEvents = yield* Effect.forEach(receipt.events, decodeEvent, { concurrency: 1 });
       expect(receiptEvents).toHaveLength(2);
       const reply = yield* decodeAs(AssertClaim.reply!)(receipt.reply);
       expect(reply).toEqual({ reviewRun: O.some("review:claim_1:1") });
@@ -114,7 +114,7 @@ it.layer(NodeServices.layer)((it) => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const names = ["claim_1.history.json", "claim_2.history.json", "Claim.state.json", "AssertClaim.receipt.json", "ReviewAssist.payload.json"];
-      const before = yield* Effect.forEach(names, stored);
+      const before = yield* Effect.forEach(names, stored, { concurrency: 1 });
       const claim1 = yield* history("claim_1.history.json");
       yield* history("claim_2.history.json");
       for (const { file, bytes } of before) {

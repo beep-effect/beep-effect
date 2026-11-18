@@ -76,7 +76,7 @@ export const makeClaimReviewController = Effect.fnUntraced(function* (claim: Cla
     SubscriptionRef.modify(screen, (current) => {
       const [next, intents] = update(current, message);
       return [intents, next];
-    }).pipe(Effect.flatMap((intents) => Effect.forEach(intents, (intent) => Effect.forkIn(execute(intent), scope), { discard: true })));
+    }).pipe(Effect.flatMap((intents) => Effect.forEach(intents, (intent) => Effect.forkIn(execute(intent), scope), { concurrency: 1, discard: true })));
 
   yield* Effect.forkIn(
     Reviewer.ClaimReview.subscribe(claim).pipe(

@@ -41,7 +41,7 @@ export const mailboxPollerLive = (options: {
     { main: options.main },
     // The ports and the cursor, then the poll they drive.
     Effect.map(
-      Effect.all({ source: Effect.service(ContactSource), intake: Effect.service(IntakeApi.Client), lastSeen: Ref.make(0) }),
+      Effect.all({ source: Effect.service(ContactSource), intake: Effect.service(IntakeApi.Client), lastSeen: Ref.make(0) }, { concurrency: 1 }),
       ({ source, intake, lastSeen }) => {
       const org = OrgId.make(options.org);
       return Effect.gen(function* () {

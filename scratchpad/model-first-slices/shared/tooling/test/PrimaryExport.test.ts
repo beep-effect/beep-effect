@@ -22,6 +22,7 @@ const roleFiles = Effect.gen(function* () {
       fs.readDirectory(path.join(pkg.dir, "src"), { recursive: true }).pipe(Effect.orElseSucceed(() => [])),
       A.map((file) => path.join(pkg.dir, "src", file)),
     ),
+    { concurrency: 1 },
   );
   return {
     root,
@@ -46,6 +47,7 @@ it.layer(NodeServices.layer)("on the workspace's files", (it) => {
             Effect.promise(() => import(file) as Promise<Record<string, unknown>>),
             (module) => violationsOf(path.relative(root, file), module),
           ),
+          { concurrency: 1 },
         );
         expect(A.flatten(found)).toEqual([]);
       }),

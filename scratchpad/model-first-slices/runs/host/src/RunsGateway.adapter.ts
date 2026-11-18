@@ -69,9 +69,7 @@ export const RunsGatewayLive = Layer.effect(
 
     /** Send under the provenance re-admitted for this hop. */
     const readmitted = <A, E>(provenance: Provenance, hop: Hop, send: Effect.Effect<A, E, CurrentInvocation>) =>
-      Effect.flatMap(authority.readmit({ provenance, hop }), (invocation) =>
-        Effect.provideService(send, CurrentInvocation, invocation),
-      );
+      Effect.provideServiceEffect(send, CurrentInvocation, authority.readmit({ provenance, hop }));
 
     const isEnded = S.is(EndedStatus);
     const refusal = (cause: {

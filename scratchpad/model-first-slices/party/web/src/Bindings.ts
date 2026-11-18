@@ -8,6 +8,7 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as P from "effect/Predicate";
 import type * as Headers from "effect/http/Headers";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
@@ -124,7 +125,7 @@ export const command: {
   const isDeclared = (error: unknown): error is Rejection => A.some(cls.rejects, (rejection) => S.is(rejection)(error));
   const classify = (commandId: string, error: unknown): CommandOutcome<Rejection> => {
     const tag = (error as { readonly _tag?: unknown } | null)?._tag;
-    return typeof tag !== "string"
+    return !P.isString(tag)
       ? { _tag: "Unknown", commandId, reason: String(error) }
       : HashSet.has(deniedTags, tag)
         ? { _tag: "Denied", commandId, reason: tag }

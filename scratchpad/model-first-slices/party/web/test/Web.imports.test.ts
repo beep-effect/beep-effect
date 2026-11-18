@@ -43,6 +43,7 @@ const violations = Effect.fn("violations")(function* (
         bad: A.filter(A.map(files, (f) => path.relative(root, f)), (f) => forbidden(f) && !A.contains(allowed, f)),
       };
     }),
+    { concurrency: 1 },
   );
 });
 

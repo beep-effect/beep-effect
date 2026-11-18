@@ -125,12 +125,8 @@ export const ReviewAssistLive = ReviewAssist.toLayer(
       const proposed = yield* Activity.make({
         name: "propose",
         ...ReviewAssistActivities.propose,
-        execute: authority.readmit({ provenance: live.provenance, hop: hop("propose") }).pipe(
-          Effect.flatMap((invocation) =>
-            claims
-              .send(claim, ProposeDisposition.make({ ...assessed.assessment, evidenceRevision }))
-              .pipe(Effect.provideService(CurrentInvocation, invocation)),
-          ),
+        execute: claims.send(claim, ProposeDisposition.make({ ...assessed.assessment, evidenceRevision })).pipe(
+          Effect.provideServiceEffect(CurrentInvocation, authority.readmit({ provenance: live.provenance, hop: hop("propose") })),
           Effect.as(ProposalSent.cases.Made.make({})),
           Effect.catchTag("ReadmissionRefused", (refused) =>
             Effect.succeed(ProposalSent.cases.Refused.make({ refusal: `readmission:${refused.reason}` })),

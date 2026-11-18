@@ -94,6 +94,7 @@ export const runnerNames = Effect.gen(function* () {
       const address = A.findFirst(addresses, (registeredAt) => A.some(ips, (ip) => pipe(registeredAt, Str.startsWith(`${ip}:`))));
       return { id, name: O.map(address, (at) => `effect-cluster:${at}`) };
     }),
+    { concurrency: 1 },
   );
 });
 
@@ -105,7 +106,7 @@ export const runnerLogging: {
 const loggingOf = (line: string, since: string) =>
   Effect.flatMap(containersOf(runnerService), (ids) =>
     Effect.map(
-      Effect.forEach(ids, (id) => Effect.map(docker("logs", "--since", since, id), (out) => (pipe(out, Str.includes(line)) ? [id] : []))),
+      Effect.forEach(ids, (id) => Effect.map(docker("logs", "--since", since, id), (out) => (pipe(out, Str.includes(line)) ? [id] : [])), { concurrency: 1 }),
       A.flatten,
     ),
   );

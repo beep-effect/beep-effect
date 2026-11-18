@@ -1,5 +1,5 @@
-// Vendored from alchemy-run/alchemy packages/integration-tests/test/Domain/conformance/model.ts
-// at 33c10dd55f (2.0.0-beta.87). Changes: import paths only (see notes/phase-5.md).
+// Ported from alchemy-run/alchemy packages/integration-tests/test/Domain/conformance/model.ts
+// at 33c10dd55f (2.0.0-beta.87), adapted to this repository's Effect rules; behaviour unchanged.
 /**
  * The model every Domain platform runs for the conformance suite: an
  * aggregate that rejects, a view, a policy that starts a saga, a saga that
@@ -14,7 +14,7 @@ import * as Schema from "effect/Schema";
 import * as Activity from "effect/workflow/Activity";
 
 export class Incremented extends Domain.Event("Incremented", { by: Schema.Int }) {}
-export class TooBig extends Domain.Rejection("TooBig", { max: Schema.Int }) {}
+export class TooBig extends Schema.TaggedError<TooBig, { readonly brand: unique symbol }>()("TooBig", { max: Schema.Int }) {}
 
 export class Increment extends Domain.Command("Increment", {
   target: Schema.String,
@@ -31,7 +31,7 @@ export class Counter extends Domain.Aggregate("Counter", {
   commands: [Increment],
   decide: {
     Increment: (_, command) =>
-      command.by > 10 ? new TooBig({ max: 10 }) : [new Incremented({ by: command.by })],
+      command.by > 10 ? TooBig.make({ max: 10 }) : [Incremented.make({ by: command.by })],
   },
   evolve: {
     Incremented: (state, event) => ({ total: state.total + event.by }),
@@ -56,7 +56,7 @@ export class Echo extends Domain.Aggregate("Echo", {
   initial: { total: 0 },
   commands: [Mirror],
   decide: {
-    Mirror: (_, command) => [new Mirrored({ by: command.by })],
+    Mirror: (_, command) => [Mirrored.make({ by: command.by })],
   },
   evolve: {
     Mirrored: (state, event) => ({ total: state.total + event.by }),
@@ -88,7 +88,7 @@ const MirrorFirstLive = MirrorFirst.toLayer(
     return Effect.fn(function* ({ key, by }) {
       yield* Activity.make({
         name: "mirror",
-        execute: echoes.send(key, new Mirror({ by })).pipe(Effect.orDie),
+        execute: echoes.send(key, Mirror.make({ by })).pipe(Effect.orDie),
       });
     });
   }),
@@ -136,9 +136,9 @@ export class Hold extends Domain.Aggregate("Hold", {
   initial: { status: "none" },
   commands: [PlaceHold, ReleaseHold, ExpireHold],
   decide: {
-    PlaceHold: () => [new HoldPlaced()],
-    ReleaseHold: () => [new HoldReleased()],
-    ExpireHold: () => [new HoldExpired()],
+    PlaceHold: () => [HoldPlaced.make({})],
+    ReleaseHold: () => [HoldReleased.make({})],
+    ExpireHold: () => [HoldExpired.make({})],
   },
   evolve: {
     HoldPlaced: () => ({ status: "held" as const }),
@@ -158,7 +158,7 @@ const HoldDeadlineLive = HoldDeadline.toLayer(
     const holds = yield* Hold;
     return Effect.fn(function* ({ source, event }) {
       if (event._tag === "HoldPlaced") {
-        yield* holds.schedule(source, new ExpireHold(), { after: HOLD_WINDOW, commandId: EXPIRY });
+        yield* holds.schedule(source, ExpireHold.make({}), { after: HOLD_WINDOW, commandId: EXPIRY });
       } else {
         yield* holds
           .unschedule(source, EXPIRY)

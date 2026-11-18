@@ -29,7 +29,7 @@ const record = Effect.gen(function* () {
       : [],
   );
   if (A.isReadonlyArrayEmpty(rows)) return;
-  const executed = yield* Effect.forEach(rows, (row) => encodeExecuted(row));
+  const executed = yield* Effect.forEach(rows, (row) => encodeExecuted(row), { concurrency: 1 });
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const cache = yield* path.fromFileUrl(new URL("../../../node_modules/.cache/proto-outcomes/", import.meta.url));

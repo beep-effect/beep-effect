@@ -139,11 +139,12 @@ export const plan = Effect.fn("HandlerRegistry.plan")(function* (options: Option
       onNone: () => Effect.fail(MissingHandler.make({ member })),
       onSome: (file) => Effect.succeed({ member, file }),
     }),
+    { concurrency: 1 },
   );
   yield* Effect.forEach(
     A.filter(handlerFiles, (file) => !A.contains(members, path.basename(file, HANDLER))),
     (file) => Effect.fail(UnregisteredHandler.make({ file })),
-    { discard: true },
+    { concurrency: 1, discard: true },
   );
   return render(options, entries);
 });

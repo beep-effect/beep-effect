@@ -1329,3 +1329,23 @@ behind a gate.
 monorepo) and can run beside the doctrine work; the slice needs both. Rejected: two goals with the
 host as the slice's opening phase; one goal with phases for everything. Recommended answer
 accepted.
+
+## 2026-11-17 — Phase 13: the prototype under the monorepo's gates
+
+Found by Yeet's final-check on the branch after `main` was merged in; no ruling was needed. Notes
+are this entry. In memory only: no swarm, deploy or container.
+
+- **The inherited rule set moved.** `main` enables the `@effect/tsgo` 0.70 rules in the base
+  config the prototype inherits. The prototype now pins `@effect/tsgo` 0.70.0 and the matching
+  `tsrs`. The bump raised 64 new findings in the prototype's own code, nearly all loops with no stated
+  concurrency; all are fixed in code and none changes behaviour.
+- **The vendored upstream files lose their exemption.** Phase 7 checked `conformance/upstream`
+  for TypeScript errors only. The monorepo's `lint:tsgo-rules` gate allows no project to switch
+  the Effect rules off, so the three files are now ported: 72 findings fixed, headers changed to
+  "ported, behaviour unchanged". Routes, case names, assertions and response bodies are the same.
+  The cases have not run on a deployed stack since the port.
+- **The native-runtime law.** One error and five warnings under `scratchpad/model-first-slices/`
+  are fixed in code, with no allowlist entry.
+
+As re-run by the orchestrating session: zero diagnostics over 17 projects, 196 tests, 109 of 109
+declared outcomes, the registry and generated-file checks pass, and both root gates pass.

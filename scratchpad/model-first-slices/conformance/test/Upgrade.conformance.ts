@@ -72,7 +72,7 @@ if (O.contains(registration.restorePhase, "upgrade-decide")) {
       issue(`g_propose_${r}`, "p_intake", "party.propose", org),
       issue(`g_review_${r}`, "p_rev", "party.review", org),
       issue(`g_read_${r}`, "p_rev", "party.read", org),
-    ]);
+    ], { concurrency: 1 });
     expect(A.every(grants, (grant) => grant.ok)).toBe(true);
     yield* Effect.sleep("2 seconds");
     const { intake, reviewer } = yield* clients;
@@ -153,6 +153,7 @@ if (O.contains(registration.restorePhase, "upgrade-after")) {
     const runs = A.filter(Str.split(listed, "\n"), Str.isNonEmpty);
     const concluded = yield* Effect.forEach(runs, (each) =>
       Effect.map(count(`SELECT count(*) FROM alchemy_domain_objects WHERE object = 'Practice/Runs.AgentRunAggregate/${each}' AND key LIKE 'event:%' AND value::json->'event'->>'_tag' IN ('RunCompleted', 'RunRefused', 'RunCancelled')`), (n) => ({ run: each, concluded: n })),
+      { concurrency: 1 },
     );
     const events = yield* runEvents(run);
     const state = yield* runState(run);

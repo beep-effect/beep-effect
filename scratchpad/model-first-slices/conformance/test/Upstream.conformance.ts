@@ -1,5 +1,6 @@
 import { it } from "@effect/vitest";
 import { conformance } from "@proto/conformance-upstream/conformance";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
@@ -9,11 +10,11 @@ import { registration, url } from "./Stack.ts";
 
 // Upstream's ten Domain conformance cases, against the conformance model hosted on this stack's
 // pool and served by its front under the root path.
-const services = Layer.mergeAll(FetchHttpClient.layer, Socket.layerWebSocketConstructorGlobal);
+const services = Layer.mergeAll(FetchHttpClient.layer, Socket.layerWebSocketConstructorGlobal, SecureRandom.layerWebCrypto);
 
 conformance({
-  // Upstream types a case as `Effect<void, any, any>`; each needs only these services, built into
-  // the case's scope. `CASE_TIMEOUT` overrides upstream's per-case timeout.
+  // A case reads an HTTP client and secure randomness; these services are built into the case's
+  // scope. `CASE_TIMEOUT` overrides upstream's per-case timeout.
   test: <E>(
     name: string,
     effect: Effect.Effect<void, E, Layer.Success<typeof services>>,
