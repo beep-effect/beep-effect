@@ -87,15 +87,10 @@ jobs:
           free-disk: "true"
           free-disk-min-gib: "64"
           turbo-remote-cache: "true"
-          turbo-api: ${{ vars.TURBO_API }}
-          turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
-          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
-          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
-          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
-          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
-          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
+          turbo-api: ${{ vars.TURBO_CACHE_API }}
+          turbo-team: ${{ vars.TURBO_CACHE_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_CACHE_WRITE_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_CACHE_READ_TOKEN }}
 
       - name: Select Storybook before browser provisioning
         if: steps.lane-gate.outputs.should_run == 'true'

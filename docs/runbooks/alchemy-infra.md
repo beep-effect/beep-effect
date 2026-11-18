@@ -939,9 +939,9 @@ A trusted workstation's token goes into its 1Password item the same way: any
 receiver that reads the value from stdin and stores it works, and the vault
 write goes through the human `op-human` lane when the agent lane cannot write.
 
-The new secret names stand beside the live `TURBO_TOKEN`/`TURBO_READ_TOKEN`
-until CI is flipped to the Worker (cutover stage 2). `@beep/infra-github`
-takes these secrets over when it lands.
+The new secret names stand beside the retired `TURBO_TOKEN`/`TURBO_READ_TOKEN`
+until P6 removes the old caches. `@beep/infra-github` lists both sets as
+unmanaged (the values come from this stack's state, not from 1Password).
 
 ### Rotate or revoke a token
 
@@ -961,3 +961,35 @@ values in a dotenv file. Verify with a remote round trip: `turbo run <task>
 --summarize` in a clean cache directory reports `"source": "REMOTE"` on the
 second run. A read token's upload is refused with `403 read_only`, so a PR job
 can never seed the cache.
+
+### CI enrolment (stage 2)
+
+Every push and pull-request job that calls `.github/actions/setup-monorepo-ci`
+with `turbo-remote-cache` reads the Worker cache: `heavy.yml`, `check.yml`,
+`shard-overflow.yml` and `storybook.yml`. Each passes
+
+| Input | Value |
+| --- | --- |
+| `turbo-api` | `vars.TURBO_CACHE_API` (`https://beep-turbo-cache.beep-effect.workers.dev`) |
+| `turbo-team` | `vars.TURBO_CACHE_TEAM` (`beep`) |
+| `turbo-token` | `secrets.TURBO_CACHE_WRITE_TOKEN` on pushes only (`turbo-cache-write` environment, principal `ci-main`) |
+| `turbo-read-token` | `secrets.TURBO_CACHE_READ_TOKEN` (repository secret, principal `ci-pr`) |
+
+and no `r2-*` inputs, so the R2 pilot's adapter never starts in CI and cannot
+override `TURBO_API`. `beep ci job-env` decides the posture: protected `main`
+pushes write; same-repository pull requests read (`local:rw,remote:r`); forks
+and every other event stay local. `data-sync.yml` (dispatch only) and
+`property-laws-nightly.yml` (schedule and dispatch) therefore run local-only and
+pass no cache inputs until a follow-on chain lands, one PR at a time: `job-env`
+grants scheduled and dispatched `refs/heads/main` runs read-only access, a
+`beep-ci` pin bump ships it, and a third PR restores those two callers' inputs. The scheduled `cache-warm.yml` pass writes the Worker cache too
+(`TURBO_CACHE_WRITE_TOKEN`), so the 30-day bucket expiry never leaves CI cold;
+its R2 adapter now starts only for the explicit `r2_probe` qualification
+dispatch.
+
+The old caches keep serving: the AWS Lambda cache (`vars.TURBO_API`,
+`secrets.TURBO_TOKEN`, `secrets.TURBO_READ_TOKEN`) and the R2 pilot
+(`vars.TURBO_R2_*`, `secrets.TURBO_R2_*`) are untouched and still answer
+workstations and any branch that predates the switch. Rollback is reverting the
+stage-2 PR: the callers go back to the old names, which never stopped working.
+P6 retires the old names and the old caches.
