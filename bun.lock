@@ -2757,6 +2757,19 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/foundation/modeling/contract-kit": {
+      "name": "@beep/contract-kit",
+      "version": "0.0.0",
+      "dependencies": {
+        "@alchemy.run/domain": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/foundation/modeling/epistemics": {
       "name": "@beep/epistemics",
       "version": "0.0.0",
@@ -5253,6 +5266,8 @@
     "@beep/commands": ["@beep/commands@workspace:packages/drivers/commands"],
 
     "@beep/config-file": ["@beep/config-file@workspace:packages/foundation/capability/config-file"],
+
+    "@beep/contract-kit": ["@beep/contract-kit@workspace:packages/foundation/modeling/contract-kit"],
 
     "@beep/cosmos": ["@beep/cosmos@workspace:packages/drivers/cosmos"],
 

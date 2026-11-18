@@ -216,6 +216,12 @@
         ]
       },
       {
+        "name": "@beep/contract-kit",
+        "patterns": [
+          "packages/foundation/modeling/contract-kit/src/**"
+        ]
+      },
+      {
         "name": "@beep/cosmos",
         "patterns": [
           "packages/drivers/cosmos/src/**"
@@ -2006,6 +2012,15 @@
           "@beep/utils",
           "@beep/walker",
           "@beep/yaml"
+        ]
+      },
+      {
+        "from": "@beep/contract-kit",
+        "allow": [
+          "@beep/contract-kit"
+        ],
+        "allowTypeOnly": [
+          "@beep/contract-kit"
         ]
       },
       {
