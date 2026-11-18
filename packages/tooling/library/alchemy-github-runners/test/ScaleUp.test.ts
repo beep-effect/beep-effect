@@ -12,7 +12,6 @@ import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Fiber from "effect/Fiber";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -118,30 +117,59 @@ describe("handleScaleUp", () => {
     })
   );
 
-  it.effect("waits until its own launches are counted before the next invocation can count the cap", () =>
+  it.effect("refuses to launch and returns every message for retry when the runner count cannot be read", () =>
     Effect.gen(function* () {
       const world = new World();
       const base = worldContext(world);
       const fleet = Context.get(base, Ec2Fleet);
-      // EC2's filtered read lags the launch: the first two counts after it miss the new runner.
-      let calls = 0;
-      const lagging = Ec2Fleet.of({
+      const failing = Ec2Fleet.of({
         ...fleet,
-        listRunners: Effect.fn("LaggingEc2.listRunners")(function* (filter) {
-          const runners = yield* fleet.listRunners(filter);
-          calls += 1;
-          return calls >= 2 && calls <= 3 ? [] : runners;
+        listRunners: Effect.fn("FailingEc2.listRunners")(function* () {
+          return yield* AwsApiError.make({
+            service: "ec2",
+            operation: "describeInstances",
+            code: O.some("RequestLimitExceeded"),
+            retryable: true,
+            message: "throttled",
+          });
         }),
       });
-      const fiber = yield* handleScaleUp({ config: poolConfig(), batch: [queued({ id: 1 })] }).pipe(
-        Effect.provideContext(Context.add(base, Ec2Fleet, lagging)),
-        Effect.forkChild
+      const retry = yield* handleScaleUp({ config: poolConfig(), batch: [queued({ id: 1 }), queued({ id: 2 })] }).pipe(
+        Effect.provideContext(Context.add(base, Ec2Fleet, failing))
       );
-      yield* TestClock.adjust("5 seconds");
-      const retry = yield* Fiber.join(fiber);
-      expect(retry).toStrictEqual([]);
+      expect(retry).toStrictEqual(["m-1", "m-2"]);
+      expect(world.fleetRequests).toStrictEqual([]);
+      expect(world.sent).toStrictEqual([]);
+    })
+  );
+
+  it.effect("counts a launch EC2 does not show yet through its unconsumed JIT config, and retries past the cap", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      // The previous invocation launched i-unseen and wrote its JIT config; EC2's filtered read does not show it yet.
+      world.ssm["/beep-ci/heavy/tokens/i-unseen"] = { value: "jit", modified: 0, tags: { InstanceId: "i-unseen" } };
+      const retry = yield* run(
+        world,
+        [queued({ id: 1 })],
+        poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 }))
+      );
+      expect(world.fleetRequests).toStrictEqual([]);
+      expect(retry).toStrictEqual(["m-1"]);
+    })
+  );
+
+  it.effect("ignores a JIT config older than the in-flight window, so a runner that never booted holds no slot", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.ssm["/beep-ci/heavy/tokens/i-stale"] = { value: "jit", modified: 0, tags: { InstanceId: "i-stale" } };
+      yield* TestClock.adjust("16 minutes");
+      const retry = yield* run(
+        world,
+        [queued({ id: 1 })],
+        poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 }))
+      );
       expect(world.fleetRequests[0]?.targetCapacity).toBe(1);
-      expect(calls).toBe(4);
+      expect(retry).toStrictEqual([]);
     })
   );
 

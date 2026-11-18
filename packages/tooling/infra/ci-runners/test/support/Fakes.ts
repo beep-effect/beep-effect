@@ -128,8 +128,22 @@ const table: ReadonlyArray<readonly [ResourceClass<never>, string, Attributes]> 
   ],
 ];
 
-const fakeProvider = (recorder: Recorder, [resource, type, attributes]: (typeof table)[number]) =>
+// The real provider reads the VPC's AWS-made default group before the stack has a state row for it, and Alchemy
+// adopts what it reads; with `adoptDefaultGroup` the fake does the same (cutover step 1b, after step 1a).
+const awsMadeDefaultGroup = {
+  read: Effect.fn("Fake.readDefaultGroup")(function* (input: { readonly olds?: News }) {
+    const vpcId = input.olds?.vpcId;
+    return P.isString(vpcId) ? { vpcId, groupId: `sg-default-${vpcId}`, ingress: [], egress: [] } : undefined;
+  }),
+};
+
+const fakeProvider = (
+  recorder: Recorder,
+  [resource, type, attributes]: (typeof table)[number],
+  adoptDefaultGroup: boolean
+) =>
   Provider.succeed(resource, {
+    ...(adoptDefaultGroup && type === "EC2.DefaultSecurityGroup" ? awsMadeDefaultGroup : {}),
     reconcile: Effect.fn("Fake.reconcile")(function* (input: {
       readonly fqn: string;
       readonly news: News;
@@ -208,11 +222,11 @@ const environment = (accountId: string, region: string) =>
     }) as never
   );
 
-const providers = (recorder: Recorder, accountId: string, region: string) =>
+const providers = (recorder: Recorder, accountId: string, region: string, adoptDefaultGroup: boolean) =>
   A.reduce(
     table,
     RunnerSweepProvider.pipe(Layer.provide(sweepServices(recorder))) as Layer.Layer<never>,
-    (layer, row) => Layer.merge(layer, fakeProvider(recorder, row) as Layer.Layer<never>)
+    (layer, row) => Layer.merge(layer, fakeProvider(recorder, row, adoptDefaultGroup) as Layer.Layer<never>)
   ).pipe(Layer.provideMerge(environment(accountId, region)));
 
 /** A failure surfaced by a scratch deploy or destroy. */
@@ -235,10 +249,16 @@ export const harness = (options: {
   readonly stage: string;
   readonly accountId?: string | undefined;
   readonly region?: string | undefined;
+  readonly adoptDefaultGroup?: boolean | undefined;
 }) => {
   const recorder = new Recorder();
   const { test } = Test.make({
-    providers: providers(recorder, options.accountId ?? accounts.expected, options.region ?? "us-east-1"),
+    providers: providers(
+      recorder,
+      options.accountId ?? accounts.expected,
+      options.region ?? "us-east-1",
+      options.adoptDefaultGroup ?? false
+    ),
     state: inMemoryState(),
     stage: options.stage,
   });

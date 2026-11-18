@@ -516,6 +516,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                     actions: ["ssm:PutParameter", "ssm:AddTagsToResource", "ssm:GetParameter"],
                     resources: [Output.interpolate`${tokenArn}/*`, Output.interpolate`${configArn}/*`],
                   }),
+                  // Counts launched runners EC2 does not show yet: their JIT configs under the token path.
+                  allow({ actions: ["ssm:GetParametersByPath"], resources: [tokenArn] }),
                   ...readAppSecrets,
                   ...O.match(jobRetryQueue, {
                     onNone: () => [],

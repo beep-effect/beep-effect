@@ -1,9 +1,12 @@
 import {
+  AwsApiError,
   appParameterNames,
+  Ec2Fleet,
   HousekeeperRuntimeConfig,
   PoolMatcher,
   PoolRuntimeConfig,
   ReleaseAsset,
+  RunnerPool,
   runtimeConfigEnvName,
   SelfHostedRunner,
   SyncerRuntimeConfig,
@@ -22,12 +25,14 @@ import { hmacSha256Hex } from "@beep/alchemy-github-runners/WebCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { World, worldContext } from "./support/FakeWorld.ts";
-import { message, poolConfig } from "./support/Fixtures.ts";
+import { heavyPool, message, poolConfig } from "./support/Fixtures.ts";
 
 const encodeMessage = S.encodeEffect(S.fromJsonString(S.Unknown));
 const encodePool = S.encodeEffect(S.fromJsonString(PoolRuntimeConfig));
@@ -77,6 +82,45 @@ describe("Lambda entry points", () => {
         .pipe(Effect.provideContext(worldContext(world)));
       expect([out, world.instances.length]).toStrictEqual([{ batchItemFailures: [] }, 1]);
       expect(ScaleUpLambda.definition.layer(poolConfig())).toBeDefined();
+    })
+  );
+
+  it.effect("scale-up reports a launch refused for an unreadable or unsettled count as a batch item failure", () =>
+    Effect.gen(function* () {
+      const event = yield* sqsEvent([message({ id: 1 })]);
+      // The runner count cannot be read: nothing launches, and the record goes back to SQS, never acknowledged.
+      const unreadable = new World();
+      const base = worldContext(unreadable);
+      const fleet = Context.get(base, Ec2Fleet);
+      const failing = Ec2Fleet.of({
+        ...fleet,
+        listRunners: Effect.fn("FailingEc2.listRunners")(function* () {
+          return yield* AwsApiError.make({
+            service: "ec2",
+            operation: "describeInstances",
+            code: O.some("RequestLimitExceeded"),
+            retryable: true,
+            message: "throttled",
+          });
+        }),
+      });
+      const refused = yield* ScaleUpLambda.definition
+        .run(poolConfig(), event)
+        .pipe(Effect.provideContext(Context.add(base, Ec2Fleet, failing)));
+      expect([refused, unreadable.fleetRequests.length]).toStrictEqual([
+        { batchItemFailures: [{ itemIdentifier: "m-0" }] },
+        0,
+      ]);
+      // A launch EC2 does not show yet still holds its slot through its JIT config: the record goes back for retry.
+      const unsettled = new World();
+      unsettled.ssm["/beep-ci/heavy/tokens/i-unseen"] = { value: "jit", modified: 0, tags: { InstanceId: "i-unseen" } };
+      const capped = yield* ScaleUpLambda.definition
+        .run(poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 })), event)
+        .pipe(Effect.provideContext(worldContext(unsettled)));
+      expect([capped, unsettled.fleetRequests.length]).toStrictEqual([
+        { batchItemFailures: [{ itemIdentifier: "m-0" }] },
+        0,
+      ]);
     })
   );
 

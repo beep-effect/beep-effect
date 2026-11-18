@@ -1,3 +1,4 @@
+import * as AWS from "@alchemy.run/aws";
 import {
   applyIfUnchanged,
   CheckedAction,
@@ -461,6 +462,31 @@ describe("CiRunners cutover expectations", () => {
           expecting("default-security-group", group(), resource("Vpc", { action: "noop", bindings: ["Vpc/G create"] }))
         )
       ).toStrictEqual(["UnexpectedChange"]);
+    })
+  );
+});
+
+describe("CiRunners step 1b from the post-1a state", () => {
+  // Step 1a left the VPC and no DefaultSecurityGroup row; the provider then reads the AWS-made group and Alchemy adopts it.
+  const vpcOnly = AWS.EC2.Vpc("Vpc", { cidrBlock: "10.89.0.0/16" });
+  const withDefaultGroup = Effect.gen(function* () {
+    const vpc = yield* vpcOnly;
+    yield* AWS.EC2.DefaultSecurityGroup("DefaultSecurityGroup", { vpcId: vpc.vpcId, ingress: [], egress: [] });
+  });
+  const postBootstrap = Fakes.harness({ stage: "prod", adoptDefaultGroup: true });
+  postBootstrap.provider("plans the default group adopted: step 1b takes it, routine refuses it", (stack) =>
+    Effect.gen(function* () {
+      yield* stack.deploy(vpcOnly);
+      const plan = yield* stack.plan(withDefaultGroup);
+      const step1b = yield* readWith(plan, { expectation: "default-security-group" });
+      const group = A.filter(step1b.resources, (resource) => resource.fqn === "DefaultSecurityGroup");
+      expect(A.map(group, (resource) => [resource.action, resource.bindings])).toStrictEqual([["adopted", []]]);
+      expect(tagsOf(step1b)).toStrictEqual([]);
+      const routine = yield* readWith(plan, { expectation: "routine" });
+      expect(tagsOf(routine)).toStrictEqual(["UnexpectedChange"]);
+      // The adopted row is drift-compared like any other: the same plan read again matches it.
+      const again = yield* readWith(plan, { expectation: "default-security-group" });
+      expect(planDifferences(step1b, again)).toStrictEqual({ added: [], removed: [], changed: [] });
     })
   );
 });

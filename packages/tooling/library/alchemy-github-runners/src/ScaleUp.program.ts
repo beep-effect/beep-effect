@@ -16,14 +16,16 @@
 
 import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
-import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FleetLaunchRequest, FleetOverride } from "./Ec2Fleet.models.ts";
 import { Ec2Fleet } from "./Ec2Fleet.service.ts";
 import { GitHubRunners } from "./GitHubApp.service.ts";
@@ -445,7 +447,7 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
     type: O.some(owner.type),
     owner: O.some(owner.owner),
   });
-  const current = config.pool.maximumCount === -1 ? 0 : (yield* ec2.listRunners(ownerFilter)).length;
+  const current = config.pool.maximumCount === -1 ? 0 : yield* countRunners(config, ownerFilter);
   const wanted = stillQueued.length;
   const allowed =
     config.pool.maximumCount === -1 ? wanted : Math.max(0, Math.min(wanted, config.pool.maximumCount - current));
@@ -487,15 +489,6 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
     concurrency: 1,
     discard: true,
   });
-  // The cap is counted from a tag-filtered DescribeInstances, which can lag a fresh launch. The next invocation
-  // (reserved concurrency 1) would count too few and launch past the cap, so wait, bounded, until this one's
-  // runners are counted. A runner still unseen after the wait is left to the reaper's TTL, not retried.
-  yield* awaitCounted({
-    uncapped: config.pool.maximumCount === -1,
-    filter: ownerFilter,
-    expected: current + launched.instanceIds.length - failedConfig.length,
-    launched: launched.instanceIds.length,
-  });
 
   const retryCount = launched.retryable + failedConfig.length;
   const retrying = A.appendAll(
@@ -506,22 +499,29 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
   return retrying;
 });
 
-const awaitCounted = Effect.fnUntraced(function* (input: {
-  readonly uncapped: boolean;
-  readonly filter: RunnerFilter;
-  readonly expected: number;
-  readonly launched: number;
-}) {
-  if (input.uncapped || input.launched === 0) return;
-  const { filter, expected } = input;
+// A runner's JIT config parameter lives from its configuration until the runner reads and deletes it at boot, and
+// Parameter Store reads are consistent where EC2's tag-filtered DescribeInstances lags a fresh launch. So a pool's
+// launched runners are those EC2 shows plus those with a recent unconsumed JIT config EC2 does not show yet. Older
+// parameters are left to the housekeeper: a runner that never booted within the window is not in flight.
+const inFlightWindowMillis = 15 * 60 * 1000;
+
+const instanceIdOf = (parameterName: string): string => A.lastNonEmpty(Str.split("/")(parameterName));
+
+// Either read failing fails the group, so no launch happens and every message of the group goes back for retry.
+const countRunners = Effect.fnUntraced(function* (config: PoolRuntimeConfig, filter: RunnerFilter) {
   const ec2 = yield* Ec2Fleet;
-  yield* ec2
-    .listRunners(filter)
-    .pipe(
-      Effect.map(A.length),
-      Effect.repeat({ until: (counted) => counted >= expected, schedule: Schedule.spaced("1 second"), times: 15 }),
-      Effect.ignore
-    );
+  const ssm = yield* SsmStore;
+  const visible = yield* ec2.listRunners(filter);
+  const tokens = yield* ssm.listByPath(config.tokenPath);
+  const now = yield* Clock.currentTimeMillis;
+  const seen = HashSet.fromIterable(A.map(visible, (runner) => runner.instanceId));
+  const inFlight = A.filter(
+    tokens,
+    (token) =>
+      O.exists(token.lastModified, (modified) => now - modified <= inFlightWindowMillis) &&
+      !HashSet.has(seen, instanceIdOf(token.name))
+  );
+  return A.length(visible) + A.length(inFlight);
 });
 
 /**
@@ -531,8 +531,12 @@ const awaitCounted = Effect.fnUntraced(function* (input: {
  * **Details**
  *
  * Messages are sorted by retry counter and grouped by owner. Per group:
- * optional "still queued" check (fail-open), live runner count against the
- * VM cap, launch, configure, terminate what failed configuration. With
+ * optional "still queued" check (fail-open), runner count against the VM
+ * cap, launch, configure, terminate what failed configuration. The count is
+ * the runners EC2 shows plus those launched but not yet shown, read from
+ * their unconsumed JIT config parameters, so EC2's read lag never admits a
+ * runner past the cap. When either read fails, the group launches nothing
+ * and every one of its messages is returned for retry. With
  * ephemeral runners, messages over the cap and retryable launch failures are
  * returned for redelivery; everything else handled is published to the
  * job-retry queue. Non-`workflow_job` events with ephemeral runners are
