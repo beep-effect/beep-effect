@@ -1,4 +1,4 @@
-[1/1 ✓1 ✗0] ✓ test/Domain/ProbeFenceDecision.test.ts > probe > a decision whose primary commit is fenced (3.0s)
+[1/1 ✓1 ✗0] ✓ test/Domain/ProbeFenceDecision.test.ts.txt > probe > a decision whose primary commit is fenced (3.0s)
 Tests: 0 failed | 1 passed (1 files, 3.1s)
 PROBE send exit: {"_id":"Exit","_tag":"Failure","cause":{"_id":"Cause","reasons":[{"_tag":"Die","defect":{}}]}}
 PROBE right after: a=["Deposited 100"] a.meta={"state":{"balance":100,"amounts":[100]},"version":1,"held":true} b.meta={"state":null,"version":0,"held":true} committers a=[0,0] b=[1]

@@ -417,7 +417,7 @@ version-checks them inside a transaction.
 ## The fence and the Decision paths
 
 This was shown by an in-process probe, not by one of the carried tests. The probe source and its
-output are in `evidence/ProbeFenceDecision.test.ts` and `evidence/probe-fence-decision.txt`.
+output are in `evidence/ProbeFenceDecision.test.ts.txt` and `evidence/probe-fence-decision.txt`.
 
 The setup:
 

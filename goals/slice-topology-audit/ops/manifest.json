@@ -46,7 +46,7 @@
       "command": "/goal follow the instructions in goals/slice-topology-audit/GOAL.md"
     }
   ],
-  "provides": ["architecture/slice-audit"],
+  "provides": [],
   "requires": [],
   "phases": [
     {
