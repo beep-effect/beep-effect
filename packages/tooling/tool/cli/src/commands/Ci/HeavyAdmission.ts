@@ -686,13 +686,13 @@ export const readHeavyAdmissionRoute = Effect.fn("Ci.readHeavyAdmissionRoute")(f
 });
 
 /**
- * The Docgen relevance expression, as the `grep -E` source text `heavy.yml`'s
- * `Determine lane execution` step greps the pinned PR diff with.
+ * The Docgen relevance expression, as `grep -E` source text.
  *
  * **Details**
  *
- * `ci-runner-security.test.ts` pins the workflow's text to this string until
- * the in-VM decision is retired.
+ * `heavy.yml`'s retired in-VM `Determine lane execution` step grepped the
+ * pinned PR diff with this text; Heavy Admission now decides the Docgen skip
+ * with it and the lane job skips at job level (goals/heavy-pool-diet slice 6).
  *
  * **Example** (Print the expression)
  *
@@ -746,8 +746,8 @@ export const HEAVY_LANE_IDS: ReadonlyArray<CiLaneId> = A.filter(CI_LANE_ID_VALUE
  *
  * **Details**
  *
- * Reproduces the in-VM `Determine lane execution` step of `heavy.yml`, so the
- * caller can skip those lanes at job level before a runner boots. Only a
+ * Replaces the in-VM `Determine lane execution` step `heavy.yml` used to run:
+ * the caller skips those lanes at job level before a runner boots. Only a
  * `pull_request` with a readable pinned diff (`Some`) can skip: every heavy
  * lane when the change profile is goals-only, and Docgen when no changed path
  * matches {@link heavyDocgenRelevantPattern} (an empty diff included). A `None`
