@@ -502,7 +502,7 @@
   "labels": [
     {
       "color": "ededed",
-      "description": null,
+      "description": "",
       "name": "aardvark"
     },
     {
@@ -517,12 +517,12 @@
     },
     {
       "color": "ededed",
-      "description": null,
+      "description": "",
       "name": "codex"
     },
     {
       "color": "ededed",
-      "description": null,
+      "description": "",
       "name": "compute-profile-worker"
     },
     {
@@ -587,7 +587,7 @@
     },
     {
       "color": "ededed",
-      "description": null,
+      "description": "",
       "name": "property-laws-nightly"
     },
     {
@@ -602,22 +602,22 @@
     },
     {
       "color": "ededed",
-      "description": null,
+      "description": "",
       "name": "size/L"
     },
     {
       "color": "ededed",
-      "description": null,
+      "description": "",
       "name": "size/M"
     },
     {
       "color": "ededed",
-      "description": null,
+      "description": "",
       "name": "size/S"
     },
     {
       "color": "ededed",
-      "description": null,
+      "description": "",
       "name": "size/XL"
     },
     {

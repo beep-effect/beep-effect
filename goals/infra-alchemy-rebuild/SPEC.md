@@ -823,13 +823,39 @@ Lane goals/infra-alchemy-rebuild-p3-cost-controls
 
 Reverse: Rename the budget and subscription in packages/tooling/infra/cost-controls/src/CostControls.ts (a rename replaces them); to recreate the monitor instead, the Pulumi-owned one must be deleted first (one per account).
 
+### Cost controls Pulumi cutover executed: live verified, old pair destroyed, 11 state entries removed, 2026-11-14
+
+Executed by the packet gate session, attended with the orchestrator, on 2026-11-14, in the live-first order (decision "Cost controls cutover goes live first, Pulumi destroy second"). Facts from the gate session.
+
+**Live deploy (steps 1 and 2).** #3320 merged 2026-11-14T05:15:40Z as `1f34884a98c`; `Deploy cost controls` run 43560670140 succeeded. Plan `1 to create, 1 to update` (`AnomalyAlerts` create, `MonthlyBudget` update), the nine singletons `noop`, the pre-deploy gate printed `deploy may run`. Account read afterwards: four budget notifications with one EMAIL subscriber each, `beep-account-anomaly-alerts` DAILY, budget actions 0.
+
+**Pulumi cutover (steps 3 to 5) on `beep-ci-runners/production`.**
+
+- BEFORE export 05:20Z: 367 resources, 3,396,936 bytes, sha256 `2c5933f882423d165f2a7469d85131305369bedf3d4ec8ef44dccc567291d00c`, byte-identical to the 2026-11-13 archive.
+- Unprotect 05:20:47Z: 12 resources.
+- Targeted destroy preview: exactly 2 deletes (JSON step list `delete=2, same=1`); no `--target-dependents`, no `--refresh`, no `--run-program`. Real destroy 05:22:15Z to 05:22:20Z: 2 deleted (`Monthly Budget`, `beep-account-daily-anomalies`).
+- State deletes 05:22:55Z to 05:23:19Z: 11, each rc 0.
+- AFTER export 05:24Z: 354 resources, 3,329,126 bytes, sha256 `07fb8a58b4187a51bc1eca31e64f60e7dea395d980ec2bc7f26427de9314b326`, 0 pending operations.
+- Comparison: BEFORE minus AFTER is exactly the 13 `AccountCostControls` URNs; nothing added. The other 354 resources are content-identical apart from three serialization effects of the CLI's state rewrite: 75 secret fields re-encrypted; empty-list entries dropped from `propertyDependencies` on 82 resources (non-empty entries and `dependencies` identical); 27 resources reordered in the snapshot list with 0 dangling and 0 out-of-order references.
+- `shard-overflow-preflight` ok at 05:24:47Z. Account after: budget `beep-account-monthly-cost` only, subscription `beep-account-anomaly-alerts` only, the services monitor present, six tags Active, both enrollments Active.
+
+**Freeze.** A freeze on `pulumi preview` and `pulumi up` for `beep-ci-runners/production` started 2026-11-14T05:22:55Z and ends after the component-removal PR (step 6, this lane) merges and `pulumi preview --expect-no-changes --stack organization/beep-ci-runners/production` is clean: until then the program still declares the component, and a preview would plan all thirteen objects again.
+
+**Step 6.** The component-removal PR deletes `AccountCostControls` from the program (`infra/src/internal/ci-runners-entry.ts`, infra/src/AccountCostControls.ts (removed in #3366) and its test) and the `accountCostControls:` keys `expectedAccountId`, `monthlyBudgetUsd` and `anomalyImpactUsd` from `infra/ci-runners/Pulumi.production.yaml`. It keeps `accountCostControls:notificationEmailAddresses` and moves `decodeNotificationRecipients` unchanged into `infra/src/NotificationRecipients.ts`, because the AWS turbo cache's throttle alarm reads both. With the 13 URNs already gone from state, the program's desired graph after this PR equals the AFTER state, so the diff against the stack is nothing; `preview` being frozen, that is proven by reading the program diff (only the component's import and construction removed; every other declaration and the alarm's config read untouched). It merges only after `live` has been green for 24 hours (not before 2026-11-15T05:18Z).
+
+**Archives.** Both exports stay under `~/.local/state/beep/infra-archives/pulumi-exports/` until the packet closes, not just until the first clean `pulumi preview --expect-no-changes --stack organization/beep-ci-runners/production`: the rollback imports the BEFORE export, or splices its 13 URNs, and compares the current state with the AFTER export.
+
+Lane goals/infra-alchemy-rebuild-p3-cost-controls-pulumi-removal
+
+Reverse: The 'after step 4' and 'after step 6' rollback paragraphs of decision 'Cost controls cutover from Pulumi' (disarm the Alchemy prod stage; compare a fresh export with the AFTER archive; import the BEFORE archive if unchanged, else splice its 13 URNs into the current export and import that; refresh, preview two creates, targeted up with --target-dependents; revert the removal PR first if it has merged).
+
 ### Cost controls cutover from Pulumi: destroy two URNs, state-delete eleven, no pulumi up, 2026-11-14
 
 Rulings (packet gate session, 2026-11-14): the PR that removes the `AccountCostControls` component from the Pulumi program must merge before any later `pulumi preview` or `pulumi up` of `beep-ci-runners/production`, and it keeps `accountCostControls:notificationEmailAddresses` for the turbo-cache throttle alarm. The runner fleet and the AWS turbo cache in that stack are under a CI measurement window until the 2026-11-20 verdict, so every Pulumi step below is state-only or target-only, and the packet gate session tells the orchestrator before running them. The passphrase comes only through `op run` from the 1Password field `PULUMI_ENCRYPTION_PASSPHRASE` of item `BEEP_SECRETS` in vault `BEEP_SECRETS` (verified by the gate 2026-11-14); it never goes in a file, an argument or a log.
 
 Procedure for the launching session; this lane ran none of it except the export. It touches only the `AccountCostControls` subtree of `beep-ci-runners/production` (backend `s3://oip-law-pulumi-state`, secrets provider `passphrase`), never runs the program (`pulumi destroy` and the `pulumi state` commands read state only; never pass `--run-program`), and needs no `pulumi up`. The same stack holds the live runner fleet and the AWS turbo cache, and a CI measurement window is running: no other URN is named, and `pulumi destroy` runs only with explicit `--target`s and without `--target-dependents`.
 
-Archive: `pulumi stack export --stack production` taken 2026-11-13 at `~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-2026-11-13.json` (3,396,936 bytes, sha256 `2c5933f882423d165f2a7469d85131305369bedf3d4ec8ef44dccc567291d00c`, deployment version 4, last update 2026-11-13T13:44:48-06:00, 367 resources, 0 pending operations). Re-export immediately before step 1 if the stack's last update is newer than that, and record the new file's size and sha256 in a follow-up decision; the newest export is the reversal.
+Archive: `pulumi stack export --stack production` taken 2026-11-13 at `~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-2026-11-13.json` (3,396,936 bytes, sha256 `2c5933f882423d165f2a7469d85131305369bedf3d4ec8ef44dccc567291d00c`, deployment version 4, last update 2026-11-13T13:44:48-06:00, 367 resources, 0 pending operations). Re-export immediately before step 1 if the stack's last update is newer than that, and record the new file's size and sha256 in a follow-up decision; the latest export taken before step 1 is the reversal (it was the BEFORE export `~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-2026-11-14T0520Z-before.json`, 367 resources; the AFTER export taken later has none of the 13 AccountCostControls URNs).
 
 URNs (13: eleven live resources, the component's AWS provider, the component). Every one but the component is `protect: true`; tags and enrollments are also `retainOnDelete`.
 
@@ -901,19 +927,23 @@ Order (packet gate ruling, 2026-11-14, superseding the earlier destroy-first ord
    ```
 
    Check after the loop: no `AccountCostControls` URN in the export and 354 resources; `aws` reads unchanged (six tags Active, both enrollments Active, monitor present).
-6. In a later PR, merged only after the `live` deploy has been green for 24 hours, delete `AccountCostControls` from `infra/src/internal/ci-runners-entry.ts`, `infra/src/AccountCostControls.ts` and its test, and the `accountCostControls:` keys from `Pulumi.production.yaml` except `notificationEmailAddresses`, which the turbo-cache throttle alarm keeps reading. That PR merges before the next `pulumi preview` or `up` of this stack: until then the program still declares the component, and a preview would plan to create all eleven resources again (the monitor create would hit the one-per-account quota). After it, the recipient list lives in two places only: that Pulumi config key and the `cost-controls-prod` GitHub secret.
+6. In a later PR, merged only after the `live` deploy has been green for 24 hours, delete `AccountCostControls` from `infra/src/internal/ci-runners-entry.ts`, infra/src/AccountCostControls.ts (removed in #3366) and its test, and the `accountCostControls:` keys from `Pulumi.production.yaml` except `notificationEmailAddresses`, which the turbo-cache throttle alarm keeps reading. That PR merges before the next `pulumi preview` or `up` of this stack: until then the program still declares the component, and a preview would plan to create all eleven resources again (the monitor create would hit the one-per-account quota). After it, the recipient list lives in two places only: that Pulumi config key and the `cost-controls-prod` GitHub secret.
 
 Rollback, by stage:
 
 - Before step 4 (the Pulumi pair is still live): one PR sets `notifications` back to `silent`. Its plan deletes the stack's own `AnomalyAlerts` subscription, the single delete `checkPlan` allows, by logical id and by the `delete` action only; the budget's notifications update to none. Every other delete, every replace and every orphan is still refused, and the nine adopted settings still may not change, so the window-5 condition is not weakened. Check: the gate step passes, and `aws ce get-anomaly-subscriptions` no longer lists `beep-account-anomaly-alerts`.
-- After step 4, before the component-removal PR (step 6) merges, restore the Pulumi budget and subscription: `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE op run -- pulumi stack import --stack production --file <newest archive>` (import only if no other update ran since the export; otherwise re-add single objects with `pulumi import`). The import restores state only, and that state still lists the two objects step 4 deleted, so refresh them first: `... op run -- pulumi refresh --stack production --target "$U1" --target "$U2" --yes`, then `... op run -- pulumi preview --stack production --target "$U1" --target "$U2"` and confirm exactly two creates, then `... op run -- pulumi up --stack production --target "$U1" --target "$U2" --yes`. Check: `aws budgets describe-budgets` lists `Monthly Budget` and `aws ce get-anomaly-subscriptions` lists `beep-account-daily-anomalies`. Then take the Alchemy prod stage back to `silent` (first case) so only one set mails. The singletons need nothing: neither tool changed their status.
-- After step 6 merged: `pulumi up` and `preview` build their desired graph from the current program, which no longer declares the component, so first revert the component-removal PR (restoring `AccountCostControls` in the program and its config keys) and merge the revert, then run the import, refresh, preview and targeted `up` above. The orchestrator is told first, as for every step here.
+- After step 4, before the component-removal PR (step 6) merges, restore the Pulumi budget and subscription. Every command names the stack in full; `...` below stands for the `PULUMI_CONFIG_PASSPHRASE=op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE` prefix of `op run`, and `A=~/.local/state/beep/infra-archives/pulumi-exports` is set first. First take the Alchemy prod stage back to `silent` (first case) so only one set mails and the Alchemy stage is disarmed before Pulumi state changes. Then check whether the stack moved after the AFTER export: `... op run -- pulumi stack export --stack organization/beep-ci-runners/production --file "$A/beep-ci-runners-production-<UTC>-rollback-current.json"` (this is also the archive of the current state; record its size and sha256 in a decision), and compare it with `$A/beep-ci-runners-production-2026-11-14T0524Z-after.json` (354 resources, sha256 `07fb8a58b4187a51bc1eca31e64f60e7dea395d980ec2bc7f26427de9314b326`) on the deployment version and checkpoint (`jq '.version, .deployment.manifest'`) and on the resource URN set (`jq '[.deployment.resources[].urn] | sort'`); bytes are not comparable, because the CLI re-encrypts secrets on every state rewrite.
+  - Unchanged since AFTER: import the BEFORE export, `... op run -- pulumi stack import --stack organization/beep-ci-runners/production --file "$A/beep-ci-runners-production-2026-11-14T0520Z-before.json"` (367 resources, sha256 `2c5933f882423d165f2a7469d85131305369bedf3d4ec8ef44dccc567291d00c`; the AFTER export has none of the 13 AccountCostControls URNs).
+  - Moved since AFTER: never import BEFORE wholesale, because it would roll back every later change to the runner fleet and the turbo cache. `pulumi import` cannot bring the pair back either: the budget and subscription were destroyed in AWS, so there is nothing to adopt. Splice the 13 URNs into the current state instead: `jq --slurpfile before "$A/beep-ci-runners-production-2026-11-14T0520Z-before.json" --slurpfile after "$A/beep-ci-runners-production-2026-11-14T0524Z-after.json" '([$after[0].deployment.resources[].urn]) as $kept | ($before[0].deployment.resources | map(select(.urn as $u | $kept | index($u) | not))) as $acc | .deployment.resources += $acc' "$A/beep-ci-runners-production-<UTC>-rollback-current.json" > "$A/beep-ci-runners-production-<UTC>-rollback-spliced.json"`. It keeps every current resource as it is and appends the 13 in BEFORE's order: the component comes before its children, and everything they reference (the stack root, the providers) is already earlier in the list, so parents precede children. Check before importing: the spliced file has the current count plus 13, and its URN set minus the current one is exactly the 13 `AccountCostControls` URNs. Then check the spliced checkpoint's own references: every resource's `parent`, each entry of `dependencies` and `propertyDependencies`, and the URN part of `provider` (`urn::id`) must name a resource earlier in the list. `jq '.deployment.resources as $r | ($r | to_entries | map({key: .value.urn, value: .key}) | from_entries) as $ix | [$r | to_entries[] | .key as $i | .value | ([.parent] + (.dependencies // []) + ([(.propertyDependencies // {})[]] | add // []) + [(.provider // null | if . == null then null else split("::") | .[:-1] | join("::") end)]) | map(select(. != null and . != "")) | map(select(($ix[.] // $i) >= $i)) | length] | add // 0' "$A/beep-ci-runners-production-<UTC>-rollback-spliced.json"` prints the count of violations (a missing URN counts too); on any non-zero count, stop and do not import. Only at 0: `... op run -- pulumi stack import --stack organization/beep-ci-runners/production --file "$A/beep-ci-runners-production-<UTC>-rollback-spliced.json"`.
+  - Either way, the imported state still lists the two objects step 4 destroyed. `... op run -- pulumi refresh --stack organization/beep-ci-runners/production --target "$U1" --target "$U2" --yes` drops them from state. `... op run -- pulumi preview --stack organization/beep-ci-runners/production --target "$U1" --target "$U2" --target-dependents` must show exactly two creates. `... op run -- pulumi up --stack organization/beep-ci-runners/production --target "$U1" --target "$U2" --target-dependents --yes` recreates them. Check: `aws budgets describe-budgets` lists `Monthly Budget` and `aws ce get-anomaly-subscriptions` lists `beep-account-daily-anomalies`. The singletons need nothing: neither tool changed their status.
+
+- After step 6 merged: `pulumi up` and `preview` build their desired graph from the current program, which no longer declares the component, so first revert the component-removal PR (restoring `AccountCostControls` in the program and its config keys) and merge the revert, then run the rollback above from its stack-moved check: the disarm, the export and comparison, the BEFORE import or the splice, then the refresh, preview and targeted `up`. The orchestrator is told first, as for every step here.
 
 Timing: steps 3 to 5 run right after step 2 is verified; the duplicate mails last only until step 4. The component-removal PR (step 6) does not merge until the `live` deploy has been green for 24 hours.
 
 Lane goals/infra-alchemy-rebuild-p3-cost-controls
 
-Reverse: Before the program PR: pulumi stack import --stack production --file ~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-2026-11-13.json (or a newer export), then pulumi up --target the budget and subscription URNs.
+Reverse: Disarm the Alchemy prod stage (back to silent). Export organization/beep-ci-runners/production and compare it with the AFTER export; if unchanged, pulumi stack import the BEFORE export ~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-2026-11-14T0520Z-before.json, otherwise splice its 13 AccountCostControls URNs into the current export and import that. Then pulumi refresh and pulumi up --target-dependents the budget and subscription URNs (after step 6, revert it first).
 
 ### Cost controls runs silent beside Pulumi and goes live after the cutover, 2026-11-14
 
@@ -1463,6 +1493,42 @@ Accepted by the packet gate session, 2026-11-14; the PR body says it changes a m
 Lane goals/infra-alchemy-rebuild-p4-oip-web
 
 Reverse: Remove valueFrom and valueDigest from @beep/alchemy-vercel EnvVar and pass secrets as value again, accepting plain text in the KMS-encrypted state bucket.
+
+### infra-github is armed: beep-infra-github App 5808968, first deploy adopted ruleset 10240248 with no write, 2026-11-18
+
+**App.** `beep-infra-github`, app id 5808968, installation 183128206, installed on
+`beep-effect/beep-effect` only. The 2026-11-15 mint registered App 5766296 but could not
+store its key (the `op` on `PATH` was the service-account shim, which cannot create items);
+that orphan App was deleted. The 2026-11-18 mint stored the credentials through `op-human`.
+The launcher now picks a human-capable writer and preflights the vault before it listens
+(this PR).
+
+**Environment.** `infra-github-prod` has a `main`-only branch policy plus
+`INFRA_GITHUB_APP_ID`, the secret `INFRA_GITHUB_APP_PRIVATE_KEY` and
+`ALCHEMY_STATE_ROLE_ARN = arn:aws:iam::832907639880:role/beep-alchemy-infra-github-deploy`.
+The role was created per decision `2026-11-14-infra-github-deploy-role`. IAM simulation:
+`allowed` under `InfraGithub/`, `implicitDeny` under `CostControls/`, `implicitDeny` for
+`PutBucketVersioning`.
+
+**Armed.** `INFRA_GITHUB_DEPLOY_ARMED=true` at 2026-11-18T00:10:15Z. First deploy: run
+44205593606 on `main` 0ebff74854, success at 00:11:58Z.
+
+**Ruleset 10240248.** The normalized diff of `rules`, `conditions`, `bypass_actors` and
+`enforcement` (ids and timestamps removed) is empty. `updated_at` is unchanged at
+2026-10-27T04:49:40-05:00: the stack adopted the ruleset with no write. The CI goals driver
+ruled no window-5 restart.
+
+**Side effect.** The provider's create upserts existing objects. Eight labels that had no
+description now return `""` instead of `null`. Everything else matches the census:
+repository settings, the four environments, and the `KNOWLEDGE_MINT_*` variables are
+untouched.
+
+**Standing rule (CI goals driver).** Report a later infra-github deploy only if the ruleset
+diff is non-empty, or the deploy changes repository settings or required contexts.
+
+Lane goals/infra-alchemy-rebuild-mint-vault-writer
+
+Reverse: gh variable delete INFRA_GITHUB_DEPLOY_ARMED -R beep-effect/beep-effect
 
 <!-- beep:decisions:end -->
 
