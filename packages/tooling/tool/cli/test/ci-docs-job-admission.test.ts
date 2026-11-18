@@ -24,14 +24,57 @@ const afterShardsDocsGuard =
 // predates the output (empty) running the lane.
 const afterShardsRelevanceGuard = (lane: string) =>
   `\${{ !cancelled() && needs.change-profile.result == 'success' && needs.change-profile.outputs.docs_only != 'true' && needs.change-profile.outputs.${lane}_relevant != 'false' }}`;
-const heavyGuard =
-  "${{ inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation }}";
+// HOST-06 (goals/heavy-pool-diet): each heavy lane also skips at job level, before a runner boots,
+// when Heavy Admission's `lane_skips` names it or, on a pull request, the route skips it. Lint
+// Policy (ruling D11) runs after the required lanes and still reports when one fails or skips.
+const heavyLaneGuard = (lane: string, afterRequiredLanes = false) =>
+  `\${{ ${afterRequiredLanes ? "!cancelled() && " : ""}inputs.admitted && !inputs.producer_inspection && !inputs.producer_preparation && !inputs.producer_execution && !inputs.local_pilot_observation && !contains(format(',{0},', inputs.lane_skips), ',${lane},') && (github.event_name != 'pull_request' || !contains(format(',{0},', inputs.route_skips), ',${lane},')) }}`;
 const heavyLaneContracts = [
-  { job: "verify", id: "lint-policy", name: "Lint Policy", timeout: 50, docgen: "3", typos: "true", guard: heavyGuard },
-  { job: "check", id: "check", name: "Check", timeout: 120, docgen: "3", typos: "false", guard: heavyGuard },
-  { job: "docgen", id: "docgen", name: "Docgen", timeout: 60, docgen: "6", typos: "false", guard: heavyGuard },
-  { job: "doctest", id: "doctest", name: "Doctest", timeout: 60, docgen: "3", typos: "false", guard: heavyGuard },
-  { job: "build", id: "build", name: "Build", timeout: 40, docgen: "3", typos: "false", guard: heavyGuard },
+  {
+    job: "verify",
+    id: "lint-policy",
+    name: "Lint Policy",
+    timeout: 50,
+    docgen: "3",
+    typos: "true",
+    guard: heavyLaneGuard("lint-policy", true),
+  },
+  {
+    job: "check",
+    id: "check",
+    name: "Check",
+    timeout: 120,
+    docgen: "3",
+    typos: "false",
+    guard: heavyLaneGuard("check"),
+  },
+  {
+    job: "docgen",
+    id: "docgen",
+    name: "Docgen",
+    timeout: 60,
+    docgen: "6",
+    typos: "false",
+    guard: heavyLaneGuard("docgen"),
+  },
+  {
+    job: "doctest",
+    id: "doctest",
+    name: "Doctest",
+    timeout: 60,
+    docgen: "3",
+    typos: "false",
+    guard: heavyLaneGuard("doctest"),
+  },
+  {
+    job: "build",
+    id: "build",
+    name: "Build",
+    timeout: 40,
+    docgen: "3",
+    typos: "false",
+    guard: heavyLaneGuard("build"),
+  },
 ];
 const verificationLaneContracts = [
   {
