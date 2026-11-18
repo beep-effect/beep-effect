@@ -242,6 +242,26 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
         A.map(projection.packages, (row) => row.packageName),
         ["@beep/a"]
       );
+      // When this attempt's manifest selects b, its stale report is not read back as a result: it is `missing`.
+      yield* write(".beep/ci-coverage/unit-a/manifest.json", {
+        schemaVersion: "coverage-producer/v1",
+        identity: { runId: "7", runAttempt: 1 },
+        packages: [
+          selection("@beep/a", "packages/a", ["packages/a/test/one.test.ts"]),
+          selection("@beep/b", "packages/b", ["packages/b/test/one.test.ts"]),
+        ],
+      });
+      const sealed = yield* projectUnitTimings(
+        root,
+        UnitTimingOptions.make({ ...options("unit-a"), writtenSince: O.some(setupStartedAt) })
+      );
+      deepStrictEqual(
+        A.map(sealed.packages, (row) => [row.packageName, row.outcome, row.executedTestFiles]),
+        [
+          ["@beep/a", "passed", 1],
+          ["@beep/b", "missing", 0],
+        ]
+      );
     })
   );
 

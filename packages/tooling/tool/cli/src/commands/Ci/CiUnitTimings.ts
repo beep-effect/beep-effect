@@ -200,6 +200,25 @@ const fileRow = (repoRoot: string, path: Path.Path, result: typeof VitestFileRes
     tests: A.length(result.assertionResults),
   });
 
+const rowBase = (location: ReportLocation, selection: O.Option<Selection>) => ({
+  ...location,
+  expectedTestFiles: O.map(selection, (entry) => entry.expected),
+  shard: O.flatMap(selection, (entry) => entry.shard),
+});
+
+// An invocation the manifest selected whose report this attempt did not write (absent, or left by an earlier
+// attempt and dropped by `writtenSince`) is `missing`, never read.
+const missingRow = (location: ReportLocation, selection: O.Option<Selection>) =>
+  UnitTimingPackage.make({
+    ...rowBase(location, selection),
+    outcome: UnitTimingOutcome.Enum.missing,
+    wallMs: 0,
+    fileMs: 0,
+    executedTestFiles: 0,
+    files: [],
+  });
+
+// A report this attempt wrote: `workspaceReports` already proved it present and fresh.
 const packageRow = Effect.fnUntraced(function* (
   repoRoot: string,
   location: ReportLocation,
@@ -207,22 +226,8 @@ const packageRow = Effect.fnUntraced(function* (
 ): Effect.fn.Return<UnitTimingPackage, CiCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const base = {
-    ...location,
-    expectedTestFiles: O.map(selection, (entry) => entry.expected),
-    shard: O.flatMap(selection, (entry) => entry.shard),
-  };
+  const base = rowBase(location, selection);
   const absolute = path.join(repoRoot, location.reportPath);
-  if (!(yield* fs.exists(absolute).pipe(CiCommandError.mapError(`Failed to stat ${location.reportPath}.`)))) {
-    return UnitTimingPackage.make({
-      ...base,
-      outcome: UnitTimingOutcome.Enum.missing,
-      wallMs: 0,
-      fileMs: 0,
-      executedTestFiles: 0,
-      files: [],
-    });
-  }
   const text = yield* fs
     .readFileString(absolute)
     .pipe(CiCommandError.mapError(`Failed to read ${location.reportPath}.`));
@@ -357,14 +362,14 @@ export const projectUnitTimings = Effect.fn("CiUnitTimings.project")(function* (
   const selected = O.getOrElse(selections, HashMap.empty<string, Selection>);
   const onDisk = HashMap.fromIterable(A.map(located, (location) => [location.reportPath, location] as const));
   const unreported = A.filter(HashMap.toValues(selected), (entry) => !HashMap.has(onDisk, entry.location.reportPath));
-  const locations = A.appendAll(
+  const read = yield* Effect.forEach(
     located,
-    A.map(unreported, (entry) => entry.location)
-  );
-  const packages = yield* Effect.forEach(
-    locations,
     (location) => packageRow(repoRoot, location, HashMap.get(selected, location.reportPath)),
     { concurrency: 8 }
+  );
+  const packages = A.appendAll(
+    read,
+    A.map(unreported, (entry) => missingRow(entry.location, O.some(entry)))
   );
   return UnitTimingProjection.make({
     schemaVersion: "unit-timings/v1",
