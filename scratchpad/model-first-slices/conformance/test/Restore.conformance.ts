@@ -5,12 +5,12 @@ import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimR
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { Proposition } from "@proto/party-contract/Proposition";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";

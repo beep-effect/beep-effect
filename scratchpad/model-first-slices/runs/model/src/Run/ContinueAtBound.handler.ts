@@ -2,7 +2,7 @@ import { DelegationId, RunId } from "@proto/kernel/Ids";
 import { byProcess, eventCause, extend } from "@proto/kernel/Invocation";
 import { OpenContinuation } from "@proto/runs-contract/Run/OpenContinuation.command";
 import { RejectRun } from "@proto/runs-contract/Run/RejectRun.command";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { Authority } from "../Authority.external.ts";
 import { AgentRun } from "./AgentRun.aggregate.ts";

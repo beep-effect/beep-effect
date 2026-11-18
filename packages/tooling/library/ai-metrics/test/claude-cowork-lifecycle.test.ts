@@ -1,4 +1,4 @@
-import { createConnection } from "node:net";
+import * as NodeNet from "node:net";
 import {
   CoworkLifecycleError,
   CoworkLifecyclePolicy,
@@ -445,7 +445,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, platformLayer), 
         const fs = yield* FileSystem.FileSystem;
         const server = yield* makeLifecycleAckServer("{}", false);
         const socket = yield* Effect.acquireRelease(
-          Effect.sync(() => createConnection({ path: server.path })),
+          Effect.sync(() => NodeNet.createConnection({ path: server.path })),
           (owned) =>
             Effect.sync(() => {
               owned.destroy();

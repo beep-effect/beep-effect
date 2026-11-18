@@ -12,14 +12,14 @@ import { PartyFacts2 } from "@proto/party-model/Facts/PartyFacts2.stream";
 import { partyStreamPins } from "@proto/party-model/Facts/StreamPins";
 import { RunsDeployment } from "@proto/runs-host/Runs.descriptor";
 import { checkGenerationRetirement } from "@proto/tooling/GenerationRetirement";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Stream from "effect/Stream";
 import { thunkEffectVoid } from "@beep/utils"
 

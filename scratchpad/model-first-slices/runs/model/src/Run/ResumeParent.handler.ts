@@ -2,7 +2,7 @@ import { RunId } from "@proto/kernel/Ids";
 import { byProcess, eventCause, extend } from "@proto/kernel/Invocation";
 import { ChildFinished } from "@proto/runs-contract/Run/ChildFinished.command";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { AgentRun, requestOf, unspent } from "./AgentRun.aggregate.ts";
 import { ResumeParent, ResumeParentTrigger } from "./ResumeParent.policy.ts";
 

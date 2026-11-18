@@ -7,7 +7,7 @@ import { ClaimNotPending } from "@proto/party-contract/Claim/ClaimNotPending.rej
 import { NotAnAgent, ProposalStale } from "@proto/party-contract/Claim/ProposeDisposition.command";
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { Proposition } from "@proto/party-contract/Proposition";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { Assessed, ReasonerUnavailable } from "./Reasoner.external.ts";

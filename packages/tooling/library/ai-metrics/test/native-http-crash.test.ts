@@ -1,5 +1,5 @@
 import * as NodeURL from "node:url";
-import * as Zlib from "node:zlib";
+import * as NodeZlib from "node:zlib";
 import { TranscriptAcceptance, TranscriptIntakeStats } from "@beep/repo-ai-metrics/transcript-intake";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
@@ -72,9 +72,9 @@ const scenario = Effect.fn("NativeHttpCrashTest.scenario")(function* () {
         .pipe(Effect.flatMap((response) => response.arrayBuffer.pipe(Effect.as(response.status))));
     const post2 = yield* post(new Uint8Array(), "application/x-protobuf");
     expect(post2).toBe(200);
-    const post3 = yield* post(Zlib.gzipSync(body), "application/json", "gzip");
+    const post3 = yield* post(NodeZlib.gzipSync(body), "application/json", "gzip");
     expect(post3).toBe(200);
-    const post4 = yield* post(Zlib.gzipSync(Str.repeat(1_048_576)(" ")), "application/json", "gzip");
+    const post4 = yield* post(NodeZlib.gzipSync(Str.repeat(1_048_576)(" ")), "application/json", "gzip");
     expect(post4).toBe(413);
     const post5 = yield* post(new Uint8Array([255]), "application/x-protobuf");
     expect(post5).toBe(400);

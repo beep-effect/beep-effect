@@ -11,7 +11,7 @@ import {
   PartyRegistered,
   RegisterParty,
 } from "@proto/party-contract/Party/RegisterParty.command";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as Initial from "@proto/kernel/Initial";

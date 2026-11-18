@@ -14,6 +14,7 @@ import {
   preparePersonMatchOnnxModels,
 } from "@beep/repo-cli/test/Files";
 import { it } from "@beep/test-runner";
+import { atRegistration } from "@beep/test-utils/Registration";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, expect } from "@effect/vitest";
@@ -31,7 +32,7 @@ import reference from "./fixtures/photo-face/python-reference.json" with { type:
 import type { PersonMatchBackend } from "@beep/repo-cli/test/Files";
 import type { InferenceSession } from "onnxruntime-node";
 
-const modelDirectory = Effect.runSync(Config.String("BEEP_PHOTO_FACE_PARITY_MODELS").pipe(Config.option));
+const modelDirectory = atRegistration(Config.String("BEEP_PHOTO_FACE_PARITY_MODELS").pipe(Config.option));
 const nativeModelLayer = Layer.mergeAll(
   NodeServices.layer,
   NodeCrypto.layer,

@@ -1,8 +1,8 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 
 /**

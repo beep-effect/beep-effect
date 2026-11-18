@@ -5,7 +5,7 @@ import { PartyRead } from "@proto/party-contract/Party.capabilities";
 import { EffectivePartyState } from "@proto/party-contract/Party/EffectiveParty.read";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { EffectiveParty } from "./EffectiveParty.view.ts";
 import { thunkEffectVoid } from "@beep/utils"
 

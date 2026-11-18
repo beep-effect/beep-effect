@@ -1,11 +1,11 @@
 import * as Domain from "@alchemy.run/domain";
 import * as DurableObjects from "@alchemy.run/domain/DurableObjects";
 import { expect, it } from "@effect/vitest";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Schema from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import { makeSimHost, type SimHost } from "./SimHost.ts";

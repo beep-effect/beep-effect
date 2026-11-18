@@ -3,13 +3,13 @@ import { expect, it } from "@effect/vitest";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import * as ImportGraph from "@proto/tooling/ImportGraph";
 import { exempt, violationsOf } from "@proto/tooling/PrimaryExport";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Path from "effect/Path";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { thunk0 } from "@beep/utils"
 
 /** Every `<Noun>.<kind>.ts(x)` source file of every workspace package. */

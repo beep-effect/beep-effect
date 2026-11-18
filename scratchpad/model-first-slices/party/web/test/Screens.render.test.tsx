@@ -16,7 +16,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Stream from "effect/Stream";
 import { afterEach } from "vitest";
 

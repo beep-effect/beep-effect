@@ -1,9 +1,9 @@
 import type * as Domain from "@alchemy.run/domain";
 import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
@@ -97,7 +97,7 @@ const driftOfLive = (pins: ReadonlyArray<StreamPin>) => (live: LiveStream): O.Op
  * ```ts
  * import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
  * import { driftOf } from "@proto/tooling/PublishedStreams";
- * import * as O from "effect/Option";
+ * import * as O from "@beep/utils/Option";
  *
  * const opened = StreamWriter.make({ projection: "ClaimDecisions", generation: 0, sources: ["Claim"] });
  * const drift = driftOf(

@@ -9,15 +9,15 @@ import {
 } from "@proto/party-model/Directory/PartyDirectory.store";
 import { and, arrayContains, eq, isNull, lt, not, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { dual, flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as SqlClient from "effect/sql/SqlClient";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { ClusterSql, ClusterSqlLive, type Connection } from "../ClusterSql.ts";
 import {
   PartyDirectoryActive,
@@ -26,6 +26,7 @@ import {
   PartyDirectoryTables,
   StoreKit,
 } from "./PartyDirectory.table.ts";
+import { thunkEffectSucceedNone } from "@beep/utils"
 
 /**
  * The store was asked for a generation this deploy declares no row table
@@ -105,7 +106,7 @@ export const pgPartyDirectoryStoreFor = (rows: Readonly<Record<number, PartyDire
       const activeGeneration = ({ activeRows }: Effect.Success<typeof connected>) =>
         activeRows.findById(1).pipe(
           Effect.map((row) => O.some(row.generation)),
-          Effect.catchTag("NoSuchElementError", () => Effect.succeedNone),
+          Effect.catchTag("NoSuchElementError", thunkEffectSucceedNone),
         );
 
       return PartyDirectoryStore.of({

@@ -2,7 +2,7 @@ import { expect, it } from "@effect/vitest";
 import { DeploymentDescriptor } from "@proto/kernel/Deployment";
 import { type GenerationEntry, StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
 import { checkGenerationRetirement, RetirementRefusal } from "@proto/tooling/GenerationRetirement";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 
 // Phase 11 (D51): a closed generation stops being served only when the retirement check approves the

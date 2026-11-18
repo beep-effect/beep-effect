@@ -1,7 +1,7 @@
 import { ExpireGrant } from "@proto/authority-contract/Grant/ExpireGrant.command";
 import { byProcess, eventCause, extend } from "@proto/kernel/Invocation";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { ExpireAtDeadline } from "./ExpireAtDeadline.policy.ts";
 import { Grant } from "./Grant.aggregate.ts";
 import { thunkEffectVoid } from "@beep/utils"

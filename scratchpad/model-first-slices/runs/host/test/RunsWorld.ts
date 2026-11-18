@@ -21,12 +21,12 @@ import { SessionId } from "@proto/runs-contract/Run/Session.id";
 import { type RunRequestRefused, RunsGateway } from "@proto/runs-contract/Runs.gateway";
 import { AgentRun, type AgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
 import { $RunsHostId } from "@proto/kernel/Identity";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 

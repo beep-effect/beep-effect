@@ -5,7 +5,7 @@ import type { ClaimReviewState } from "@proto/party-contract/Claim/ClaimReview.r
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { Proposition } from "@proto/party-contract/Proposition";
 import { Approval, initial, Intent, Message, type Screen, update } from "@proto/party-web/Claim/ClaimReview.machine";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { screenStory } from "./ScreenStory.ts";
 
 const { intents, run: story, send, state } = screenStory(update);

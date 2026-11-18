@@ -15,11 +15,11 @@ import { ResourceScope } from "@proto/kernel/Capability";
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
 import { CapabilityId, DelegationId, GrantId, OrgId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { byProcess, Cause, GrantRef, Provenance, Root } from "@proto/kernel/Invocation";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Schedule from "effect/Schedule";
 import { thunkFalse } from "@beep/utils"
 

@@ -6,7 +6,7 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Ref from "effect/Ref";
 import { thunk0 } from "@beep/utils"
 

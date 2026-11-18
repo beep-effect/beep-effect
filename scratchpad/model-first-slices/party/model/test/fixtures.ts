@@ -2,9 +2,9 @@ import { type Capability, CapabilityGrant, ResourceScope } from "@proto/kernel/C
 import { DelegationId, GrantId, OrgId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { type Hop, Invocation, Root } from "@proto/kernel/Invocation";
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 
 const isInvocation = S.is(Invocation);

@@ -9,7 +9,7 @@ import * as Layer from "effect/Layer";
 import * as R from "effect/Record";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as Migrator from "effect/sql/Migrator";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { PartyMigrations } from "./Party.migrations.ts";
 
 const $I = $PartyHostId.create("ClusterSql");

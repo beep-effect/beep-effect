@@ -55,7 +55,7 @@ import {
   terms,
   versions,
 } from "./fixtures.ts";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 
 it.effect("a person requests a run; the authority context grants its narrowed delegation and it starts", () => {
   const grantHop = hopOn("GrantOnRequest", "AgentRun/run_1", 1, "RunRequested");

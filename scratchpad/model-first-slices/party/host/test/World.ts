@@ -19,12 +19,12 @@ import { ClaimDecidedInboxLive, ClaimDecidedInboxPoller } from "@proto/runs-host
 import { MemoryInboxStore } from "@proto/runs-host/Inbox/Inbox.store";
 import { AgentRun, type AgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
 import { $PartyHostId } from "@proto/kernel/Identity";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Schedule from "effect/Schedule";
 
 const $I = $PartyHostId.create("test/World");

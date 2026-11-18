@@ -1,7 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import { PartyDeployment } from "@proto/party-host/Party.descriptor";
 import { checkFactRetirement, UnpublishedFact } from "@proto/tooling/FactRetirement";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { PracticeDeployment } from "../src/Deployment.ts";
 

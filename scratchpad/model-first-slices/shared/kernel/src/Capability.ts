@@ -1,8 +1,8 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as DateTime from "effect/DateTime";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { CapabilityId, DelegationId, GrantId, OrgId } from "./Ids.ts";
 import { thunkFalse, thunkTrue } from "@beep/utils"

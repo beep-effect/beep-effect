@@ -1,20 +1,20 @@
 import * as DurableObjects from "@alchemy.run/domain/DurableObjects";
 import { RuntimeContext } from "alchemy/RuntimeContext";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Latch from "effect/Latch";
 import * as MutableHashMap from "effect/MutableHashMap";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Schema from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { thunk0 } from "@beep/utils"
 
 // An in-process Durable Object host for `@alchemy.run/domain/DurableObjects`, trimmed from

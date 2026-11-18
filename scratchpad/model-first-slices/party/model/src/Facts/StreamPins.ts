@@ -17,7 +17,7 @@ import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
  * ```ts
  * import { partyStreamPins } from "@proto/party-model/Facts/StreamPins";
  * import { StreamPin } from "@proto/kernel/PublishedStream";
- * import * as A from "effect/Array";
+ * import * as A from "@beep/utils/Array";
  *
  * const open = A.filter(partyStreamPins, StreamPin.guards.Open);
  * ```

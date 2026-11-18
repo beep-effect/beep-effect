@@ -2,7 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import { OrgId, RunId } from "@proto/kernel/Ids";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 import { Disposition } from "../Disposition.ts";
@@ -114,7 +114,7 @@ export type AssertedReview = Exclude<ClaimReviewState, { readonly _tag: "Unasser
  * **Example** (The proposal a reviewer would approve)
  * ```ts
  * import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
- * import * as O from "effect/Option";
+ * import * as O from "@beep/utils/Option";
  *
  * const none = O.isNone(proposalOf(ClaimReviewState.cases.Unasserted.make({})));
  * ```

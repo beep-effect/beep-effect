@@ -9,9 +9,9 @@ import {
   ClaimReviewState,
 } from "@proto/party-contract/Claim/ClaimReview.read";
 import { renderMergeRefusal } from "@proto/party-contract/Claim/RecordMergeRefused.command";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import { identity } from "effect/Function";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { Claim } from "./Claim.aggregate.ts";
 
 /** Change what an asserted claim's review shows, in whichever state it is; a claim not asserted yet keeps its review. */

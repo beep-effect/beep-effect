@@ -1,12 +1,12 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
 import * as ImportGraph from "@proto/tooling/ImportGraph";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Path from "effect/Path";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 
 // A file the contract's closure must never reach: anything of a model or host
 // package (this context's or another's), or a write-model or handler file anywhere.

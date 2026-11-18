@@ -16,7 +16,7 @@ const $I = $KernelId.create("ReadmissionRefused.rejection");
  * ```ts
  * import { GrantId } from "@proto/kernel/Ids";
  * import { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
- * import * as O from "effect/Option";
+ * import * as O from "@beep/utils/Option";
  *
  * const refusal = ReadmissionRefused.make({ reason: "lapsed", lapsed: [{ grant: GrantId.make("g_rev"), delegation: O.none() }] });
  * ```

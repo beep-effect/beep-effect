@@ -4,14 +4,14 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { AuthorityModel } from "@proto/authority-model/Authority.model";
 import { PartyModel } from "@proto/party-model/Party.model";
 import { RunsModel } from "@proto/runs-model/Runs.model";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { encodedTagOf } from "@proto/tooling/RejectionClass";
 import { uncoveredOutcomes } from "../proofs/Outcomes.allow.ts";
 

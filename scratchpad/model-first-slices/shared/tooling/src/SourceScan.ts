@@ -1,11 +1,11 @@
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as Path from "effect/Path";
 import type { PlatformError } from "effect/PlatformError";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 
 /**
  * Source that builds or provides an invocation outside the trusted boundary.

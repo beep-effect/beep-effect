@@ -36,10 +36,10 @@ import { PartyModel } from "@proto/party-model/Party.model";
 import { Reasoner, ReasonerUnavailable } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewAssist } from "@proto/party-model/Review/ReviewAssist.saga";
 import { BudgetRefused, ReviewRuns, RunEnded, RunRefused } from "@proto/party-model/Review/ReviewRuns.external";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Layer from "effect/Layer";
 import { acme, agentRun, delegated, human, onOrg, oneSource, readmitted } from "./fixtures.ts";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 
 const { call, fail, given, provide, rejected, saga, succeed, then, view, when } = Story;
 const as = (invocation: Invocation) => provide(CurrentInvocation, invocation);

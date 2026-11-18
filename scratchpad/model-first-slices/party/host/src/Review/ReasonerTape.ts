@@ -1,6 +1,6 @@
 import { Assessed, AssessRequest } from "@proto/party-model/Review/Reasoner.external";
 import { $PartyHostId } from "@proto/kernel/Identity";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";

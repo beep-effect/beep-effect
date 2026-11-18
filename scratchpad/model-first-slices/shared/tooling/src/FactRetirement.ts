@@ -1,6 +1,6 @@
 import { DeploymentDescriptor, FactVersion } from "@proto/kernel/Deployment";
 import * as Initial from "@proto/kernel/Initial";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 

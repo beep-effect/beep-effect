@@ -1,7 +1,7 @@
 import type * as Command from "@alchemy.run/domain/Command";
 import type * as Read from "@alchemy.run/domain/Read";
 import type * as View from "@alchemy.run/domain/View";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Cause from "effect/Cause";
 import type * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";

@@ -1,10 +1,10 @@
 import { useAtom, useAtomSet, useAtomValue } from "@effect/atom-react";
 import type { OrgId } from "@proto/kernel/Ids";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";

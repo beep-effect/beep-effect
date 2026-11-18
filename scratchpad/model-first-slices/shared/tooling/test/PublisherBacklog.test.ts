@@ -12,7 +12,7 @@ import {
   ViewApplied,
   WriterShape,
 } from "@proto/tooling/PublisherBacklog";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as S from "effect/Schema";
 
 // Phase 11 (D50): a publisher's backlog read from its host's own records, for any writer.

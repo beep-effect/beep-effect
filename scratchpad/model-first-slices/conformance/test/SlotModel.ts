@@ -1,5 +1,5 @@
 import * as Domain from "@alchemy.run/domain";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 

@@ -3,7 +3,7 @@ import * as Test from "@alchemy.run/test/Vitest";
 import { CreateAllowList, isCreateAllowed, LabelSpec, StackConfig } from "@beep/infra-github/Config";
 import { productionConfig, productionCreateAllowList, productionStage } from "@beep/infra-github/Production";
 import { prodGitHubProviders } from "@beep/infra-github/ProdWriteGuard";
-import { decodeLiveRuleset } from "@beep/infra-github/RulesetGuard";
+import { LiveRuleset } from "@beep/infra-github/RulesetGuard";
 import { declareStack } from "@beep/infra-github/Stack";
 import { expect } from "@effect/vitest";
 import * as ProviderModule from "alchemy/Provider";
@@ -16,10 +16,15 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FakeRepository, fakeProviders } from "./support/FakeGitHub.ts";
 import { typed } from "./support/Scratch.ts";
 import type { DeployError, TypedScratch } from "./support/Scratch.ts";
+
+// The capture is decoded as strictly as the live read, synchronously, while the scenario registers.
+const decodeLiveRulesetSync = (input: unknown) =>
+  S.decodeUnknownSync(LiveRuleset)(input, { onExcessProperty: "error" });
 
 const MAIN = 10_240_248;
 
@@ -52,7 +57,7 @@ const scenario = (
   between: (fake: FakeRepository) => void = () => undefined
 ) => {
   const fake = FakeRepository.fromCensus();
-  const capture = Effect.runSync(decodeLiveRuleset(fake.ruleset(MAIN)));
+  const capture = decodeLiveRulesetSync(fake.ruleset(MAIN));
   const providers = prodGitHubProviders(productionCreateAllowList, capture).pipe(
     Layer.provideMerge(fakeProviders(fake))
   );
@@ -163,7 +168,7 @@ scenario("a planned replace fails the plan", (stack, fake) =>
 // precreate and delete are refused outright, whatever the logical id.
 {
   const fake = FakeRepository.fromCensus();
-  const capture = Effect.runSync(decodeLiveRuleset(fake.ruleset(MAIN)));
+  const capture = decodeLiveRulesetSync(fake.ruleset(MAIN));
   const providers = prodGitHubProviders(productionCreateAllowList, capture).pipe(
     Layer.provideMerge(fakeProviders(fake))
   );

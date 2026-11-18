@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as SqlClient from "effect/sql/SqlClient";
 import { ClusterSql, ClusterSqlLive, type Connection } from "../ClusterSql.ts";
 import { InboxStore } from "./Inbox.store.ts";

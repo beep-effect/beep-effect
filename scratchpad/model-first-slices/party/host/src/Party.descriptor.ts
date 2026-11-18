@@ -1,7 +1,7 @@
 import { DeploymentDescriptor } from "@proto/kernel/Deployment";
 import { ClaimDecided } from "@proto/party-contract/Facts/ClaimDecided.fact";
 import { PartyModel } from "@proto/party-model/Party.model";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as R from "effect/Record";
 
 /**

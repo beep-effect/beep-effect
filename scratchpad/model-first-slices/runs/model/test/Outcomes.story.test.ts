@@ -20,9 +20,9 @@ import { UnknownReservation } from "@proto/runs-contract/Run/UnknownReservation.
 import { Authority, GrantDenied } from "@proto/runs-model/Authority.external";
 import { RunsHandlers } from "@proto/runs-model/Runs.handlers";
 import { RunsModel } from "@proto/runs-model/Runs.model";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import { active, asRun, hopOn, parentTerms, requester, reservation, run1, self, session, source, terms, versions } from "./fixtures.ts";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 
 // The outcomes the other stories leave unexecuted (`bun run outcomes`): each refusal a run
 // command declares, from the side that meets it.

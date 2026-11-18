@@ -23,14 +23,14 @@ import { ClaimReviewLive } from "@proto/party-model/Claim/ClaimReview.handler";
 import { ClaimReview } from "@proto/party-model/Claim/ClaimReview.view";
 import { PartyFacts } from "@proto/party-model/Facts/PartyFacts.stream";
 import { backlogOf, type StoredRow, writerShapeOf } from "@proto/tooling/PublisherBacklog";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Schedule from "effect/Schedule";
 import { makeSimHost, type SimHost } from "./SimHost.ts";
 

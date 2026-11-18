@@ -4,7 +4,7 @@ import { ClusterSql, clusterSqlFrom, clusterSqlNames, migrate, migrationsTable }
 import { PartyMigrations } from "@proto/party-host/Party.migrations";
 import * as PartySchema from "@proto/party-host/Party.schema";
 import { getTableName, isTable } from "drizzle-orm";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";

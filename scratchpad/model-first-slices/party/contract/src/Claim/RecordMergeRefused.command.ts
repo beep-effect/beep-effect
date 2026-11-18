@@ -1,11 +1,11 @@
 import * as Domain from "@alchemy.run/domain";
 import { carry, Provenance } from "@proto/kernel/Invocation";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import { pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { ClaimId } from "./Claim.id.ts";
 
 /**

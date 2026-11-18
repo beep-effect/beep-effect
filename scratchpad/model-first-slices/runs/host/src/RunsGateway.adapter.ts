@@ -32,7 +32,7 @@ import { AgentRun, AgentRunState, recordOf, requestOf, sessionOf } from "@proto/
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { liveRun, settling } from "./Lineage.ts";

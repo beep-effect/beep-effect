@@ -2,7 +2,7 @@ import { expect, it } from "@effect/vitest";
 import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
 import { checkPublishedStreams, driftOf, type LiveStream, StreamDrift } from "@proto/tooling/PublishedStreams";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 
 // Phase 9 (D43): a projection feeding a published stream cannot be rebuilt or re-sourced in place;
 // it writes a new stream generation, pinned, and the old one is pinned closed.

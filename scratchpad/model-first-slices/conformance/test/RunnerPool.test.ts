@@ -3,8 +3,8 @@ import { expect, it } from "@effect/vitest";
 import * as RunnerAddress from "effect/cluster/RunnerAddress";
 import * as ShardingConfig from "effect/cluster/ShardingConfig";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
-import * as Str from "effect/String";
+import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
 
 // Phase 12: the commit fence's start check. A runner whose fenced commits could never succeed (no
 // address, or a pool not named after it) fails at start with `RunnerPoolUnnamed`; one whose pool

@@ -14,7 +14,7 @@ import { provenanceOf, Root } from "@proto/kernel/Invocation";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { thunkEffectVoid } from "@beep/utils"
 

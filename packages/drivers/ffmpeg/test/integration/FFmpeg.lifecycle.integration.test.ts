@@ -1,4 +1,4 @@
-import { execPath } from "node:process";
+import * as NodeProcess from "node:process";
 import { FFmpeg, ProbeVideoRequest } from "@beep/ffmpeg";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
@@ -29,7 +29,7 @@ const observedSpawnerLayer = Layer.effectContext(
       nativeSpawner
         .spawn(
           ChildProcess.isStandardCommand(command)
-            ? ChildProcess.make(execPath, ["-e", "setInterval(() => {}, 1000)"], command.options)
+            ? ChildProcess.make(NodeProcess.execPath, ["-e", "setInterval(() => {}, 1000)"], command.options)
             : command
         )
         .pipe(Effect.tap((handle) => Deferred.succeed(started, handle)))

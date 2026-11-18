@@ -29,9 +29,9 @@ import { ReviewRequested } from "@proto/party-contract/Claim/ReviewRequested.eve
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { PartyIntake, PartyPropose, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { Proposition } from "@proto/party-contract/Proposition";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { flow, identity } from "effect/Function";
 import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";

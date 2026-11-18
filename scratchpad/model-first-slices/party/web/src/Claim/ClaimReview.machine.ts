@@ -3,7 +3,7 @@ import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimR
 import { dual } from "effect/Function";
 import * as Match from "effect/Match";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { Receipt } from "../Bindings.ts";

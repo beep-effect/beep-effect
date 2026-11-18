@@ -4,10 +4,10 @@ import type { ProposalApproved } from "@proto/party-contract/Claim/ApprovePropos
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import type { ClaimRetracted } from "@proto/party-contract/Claim/RetractClaim.command";
 import { ClaimDecidedV1, ClaimDecidedV2 } from "@proto/party-contract/Facts/ClaimDecided.fact";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { Claim, ClaimState } from "../Claim/Claim.aggregate.ts";
 import { ClaimDecisions } from "./ClaimDecisions.projection.ts";
 import { PartyFacts } from "./PartyFacts.stream.ts";

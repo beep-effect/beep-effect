@@ -4,13 +4,13 @@ import { Grant } from "@proto/authority-model/Grant/Grant.aggregate";
 import { ResourceScope } from "@proto/kernel/Capability";
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
 import { CapabilityId, GrantId, OrgId, PrincipalId } from "@proto/kernel/Ids";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import { HttpServerRequest } from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
-import * as O from "effect/Option";
-import * as Str from "effect/String";
+import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
 import { bootstrap } from "./Boundary/Boundary.ts";
 
 /**

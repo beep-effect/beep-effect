@@ -1,12 +1,12 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Num from "effect/Number";
 import * as Path from "effect/Path";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import {
   ENTITY_MESSAGE_POLL_MS,
   ENTITY_TERMINATION_MS,

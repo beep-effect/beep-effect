@@ -2,7 +2,7 @@ import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import type { DeploymentDescriptor } from "@proto/kernel/Deployment";
 import { generatedFile } from "@proto/tooling/GeneratedFile";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
@@ -111,15 +111,15 @@ const front = (descriptors: ReadonlyArray<DeploymentDescriptor>) => {
     'import * as Docker from "@alchemy.run/docker";',
     'import * as Cluster from "@alchemy.run/effect-cluster";',
     'import type { HttpEffect } from "alchemy/Http";',
-    'import * as A from "effect/Array";',
+    'import * as A from "@beep/utils/Array";',
     'import * as Effect from "effect/Effect";',
     'import { pipe } from "effect/Function";',
     'import { HttpServerRequest } from "effect/http/HttpServerRequest";',
     'import * as HttpServerResponse from "effect/http/HttpServerResponse";',
     'import * as Layer from "effect/Layer";',
-    'import * as O from "effect/Option";',
+    'import * as O from "@beep/utils/Option";',
     'import * as R from "effect/Record";',
-    'import * as Str from "effect/String";',
+    'import * as Str from "@beep/utils/Str";',
     'import { Database } from "../src/Cluster.ts";',
     `import { ${A.join(A.sort([...A.map(descriptors, (d) => d.context), ...used], Order.String), ", ")} } from "./Practice.entry.ts";`,
     "",

@@ -4,9 +4,9 @@ import { checkPublisherHandover } from "@proto/tooling/PublisherHandover";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import type * as Scope from "effect/Scope";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { count, handoverBacklog, hostBacklog, livePins, pendingDecisions, phase6Writer } from "./HostBacklog.ts";
 import { record, registration, services } from "./Stack.ts";
 

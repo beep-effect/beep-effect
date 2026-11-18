@@ -4,7 +4,7 @@ import { ClaimReviewState } from "@proto/party-contract/Claim/ClaimReview.read";
 import { PartyRead } from "@proto/party-contract/Party.capabilities";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { claimIn } from "./Claim.rules.ts";
 import { ClaimReview } from "./ClaimReview.view.ts";
 import { thunkEffectVoid } from "@beep/utils"

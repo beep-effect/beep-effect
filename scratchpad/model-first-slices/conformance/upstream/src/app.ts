@@ -12,13 +12,13 @@
  * - `/place/:id`, `/release/:id`, `/hold/:id` place, release and read a hold
  * - `/api` serves {@link ConformanceApi}: calls over HTTP, live reads over WebSockets
  */
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { HttpServerRequest } from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Match from "effect/Match";
 import * as Option from "effect/Option";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import {
   ConformanceApi,
   Counter,

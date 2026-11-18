@@ -26,7 +26,7 @@ import { PartyModel } from "@proto/party-model/Party.model";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { acme, agentRun, delegated, human, onOrg, twoSources } from "./fixtures.ts";
 
 const { given, provide, streamed, then, when } = Story;

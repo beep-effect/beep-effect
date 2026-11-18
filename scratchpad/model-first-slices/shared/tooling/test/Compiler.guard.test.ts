@@ -1,18 +1,18 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import type { PlatformError } from "effect/PlatformError";
 import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { thunkTrue } from "@beep/utils"
 
 // Phase 7: `bun run check` must run the Effect build of the compiler, at the monorepo's pins, over

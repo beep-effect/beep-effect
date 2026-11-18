@@ -22,9 +22,9 @@ import { EffectiveParty } from "@proto/party-model/Party/EffectiveParty.view";
 import { Party } from "@proto/party-model/Party/Party.aggregate";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { acme, globex, human, onOrg, oneSource, readmitted, twoSources } from "./fixtures.ts";
 
 const { call, fail, given, provide, query, rejected, succeed, then, view, when } = Story;

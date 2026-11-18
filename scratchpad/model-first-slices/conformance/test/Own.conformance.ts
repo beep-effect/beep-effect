@@ -5,7 +5,7 @@ import { ClaimReviewEvent, type ClaimReviewState, proposalOf } from "@proto/part
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { Proposition } from "@proto/party-contract/Proposition";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as DateTime from "effect/DateTime";
@@ -18,13 +18,13 @@ import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import {
   blockedByLock,
   clients,

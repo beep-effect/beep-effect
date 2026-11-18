@@ -26,7 +26,7 @@ import { Party } from "@proto/party-model/Party/Party.aggregate";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { acme, agentRun, delegated, human, onOrg, oneSource } from "./fixtures.ts";
 
 // The outcomes the other stories leave unexecuted (`bun run outcomes`): each refusal a Party

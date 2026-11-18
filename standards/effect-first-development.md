@@ -1143,6 +1143,14 @@ Avoid this:
   classes, brands, structs and tagged-union cases.
 
   ```ts
+  import * as O from "effect/Option"
+  import * as S from "effect/Schema"
+
+  const DelegationId = S.String.pipe(S.brand("DelegationId"))
+  const StreamDrift = S.TaggedUnion({ Unpinned: { stream: S.String } })
+  declare const id: string
+  declare const stream: string
+
   // never
   O.some(StreamDrift.cases.Unpinned.make({ stream }))
   O.some(DelegationId.make(id))

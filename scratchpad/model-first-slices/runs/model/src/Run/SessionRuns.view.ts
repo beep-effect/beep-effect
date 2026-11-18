@@ -4,8 +4,8 @@ import type { RunId } from "@proto/kernel/Ids";
 import type { RunStatus } from "@proto/runs-contract/Run/RunStatus";
 import { NotInSession, type SessionRun, SessionRunsState, SessionRunsRead } from "@proto/runs-contract/Run/SessionRuns.read";
 import { SessionId } from "@proto/runs-contract/Run/Session.id";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
+import * as A from "@beep/utils/Array";
+import * as O from "@beep/utils/Option";
 import { AgentRun } from "./AgentRun.aggregate.ts";
 
 type State = SessionRunsState;

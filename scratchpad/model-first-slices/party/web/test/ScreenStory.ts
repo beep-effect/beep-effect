@@ -1,5 +1,5 @@
 import { expect } from "@effect/vitest";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as P from "effect/Predicate";
 
 /** A nested partial: what a `state` step expects of the screen. */

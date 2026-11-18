@@ -1,7 +1,7 @@
 import { useAtomSet, useAtomValue } from "@effect/atom-react";
 import type { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { approveClaim, claimReviewScreen } from "./ClaimReview.controller.ts";
 import { Approval, Notice, type Screen } from "./ClaimReview.machine.ts";

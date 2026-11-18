@@ -3,17 +3,17 @@ import { OrgId } from "@proto/kernel/Ids";
 import { DirectoryRow } from "@proto/party-contract/Directory/FindParties.read";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { $PartyModelId } from "@proto/kernel/Identity";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 
 const $I = $PartyModelId.create("Directory/PartyDirectory.store");
 

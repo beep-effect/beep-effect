@@ -1,5 +1,5 @@
 import * as Domain from "@alchemy.run/domain";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as Initial from "@proto/kernel/Initial";

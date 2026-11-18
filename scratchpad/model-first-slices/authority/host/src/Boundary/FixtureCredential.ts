@@ -2,7 +2,7 @@ import { PrincipalId, RunId } from "@proto/kernel/Ids";
 import { pipe } from "effect/Function";
 import * as Headers from "effect/http/Headers";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 
 /**
@@ -37,6 +37,7 @@ const parse = (value: string): O.Option<Credential> =>
     O.fromNullishOr(FIXTURE.exec(value)),
     O.flatMap(([, kind, subject = "", principal]) =>
       Match.value(kind).pipe(
+        Match.withReturnType<O.Option<Credential>>(),
         Match.when("human", () => Credential.cases.Human.makeOption({ principal: PrincipalId.make(subject) })),
         Match.when("agent", () => Credential.cases.Agent.makeOption({ run: RunId.make(subject) })),
         Match.when("process", () =>
@@ -44,7 +45,7 @@ const parse = (value: string): O.Option<Credential> =>
             Credential.cases.Process.make({ process: subject, principal: PrincipalId.make(on) }),
           ),
         ),
-        Match.orElse(() => O.none()),
+        Match.orElse(O.none<Credential>),
       ),
     ),
   );

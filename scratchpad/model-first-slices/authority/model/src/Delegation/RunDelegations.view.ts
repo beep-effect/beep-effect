@@ -1,6 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { DelegationId, RunId } from "@proto/kernel/Ids";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 import { Delegation } from "./Delegation.aggregate.ts";

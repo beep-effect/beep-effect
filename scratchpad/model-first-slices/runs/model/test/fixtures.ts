@@ -9,7 +9,7 @@ import { ReservationId } from "@proto/runs-contract/Run/Reservation.id";
 import { RunVersions } from "@proto/runs-contract/Run/RunVersions";
 import { SessionId } from "@proto/runs-contract/Run/Session.id";
 import { AgentRun } from "@proto/runs-model/Run/AgentRun.aggregate";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 
 // Fixtures build invocations, as the authority context does in a host.
 export const acme = OrgId.make("org_acme");

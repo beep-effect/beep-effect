@@ -1490,12 +1490,14 @@
           "@beep/alchemy-aws-extras",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/alchemy-aws-extras",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1523,6 +1525,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1532,6 +1535,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },

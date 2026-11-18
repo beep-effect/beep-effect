@@ -7,12 +7,12 @@ import { ReservationId } from "@proto/runs-contract/Run/Reservation.id";
 import { RunReport, RunReportRefused, RunsGateway } from "@proto/runs-contract/Runs.gateway";
 import { ClaimDecidedInbox } from "@proto/runs-host/Inbox/ClaimDecided.inbox";
 import { AgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as HashSet from "effect/HashSet";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { acme, Harness, requestRun, testHop, World } from "./RunsWorld.ts";
 import { thunkTrue } from "@beep/utils"

@@ -4,10 +4,10 @@ import { pipe } from "effect/Function";
 import { HttpServerRequest } from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Layer from "effect/Layer";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { app } from "@proto/conformance-upstream/app";
 import { ConformanceLive } from "@proto/conformance-upstream/model";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { Slot, SlotTally, TwoRunnersModel, Write } from "./TwoRunners.model.ts";
 import { thunk0 } from "@beep/utils"
 

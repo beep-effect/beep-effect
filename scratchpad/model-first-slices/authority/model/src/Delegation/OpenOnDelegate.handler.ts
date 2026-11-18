@@ -3,7 +3,7 @@ import { DelegationId, GrantId } from "@proto/kernel/Ids";
 import { byProcess, eventCause, extend } from "@proto/kernel/Invocation";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { Delegation } from "./Delegation.aggregate.ts";
 import { OpenOnDelegate } from "./OpenOnDelegate.policy.ts";
 import { thunkEffectVoid } from "@beep/utils"

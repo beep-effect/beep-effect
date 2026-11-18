@@ -1,6 +1,6 @@
 import { Reasoner, ReasonerUnavailable } from "@proto/party-model/Review/Reasoner.external";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { ReasonerTape } from "./ReasonerTape.ts";
 
 /**

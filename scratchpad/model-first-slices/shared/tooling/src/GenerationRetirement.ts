@@ -1,11 +1,11 @@
 import { type DeploymentDescriptor, FactVersion } from "@proto/kernel/Deployment";
 import { type GenerationEntry, type LiveGeneration, StreamPin } from "@proto/kernel/PublishedStream";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import { pipe } from "effect/Function";
 import * as Num from "effect/Number";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { ledgerOf } from "./FactRetirement.ts";
 

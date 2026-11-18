@@ -1,4 +1,4 @@
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Match from "effect/Match";

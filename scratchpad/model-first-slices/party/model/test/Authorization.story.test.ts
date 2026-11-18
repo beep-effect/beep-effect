@@ -23,7 +23,7 @@ import { MergeRefused, MergeRefusal } from "@proto/party-contract/Claim/RecordMe
 import * as DateTime from "effect/DateTime";
 import * as Layer from "effect/Layer";
 import { acme, globex, human, onOrg, readmitted, twoSources } from "./fixtures.ts";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 
 const mergeHop = byProcess("MergeOnSameParty", Cause.cases.Event.make({ stream: "Claim/claim_1", seq: 2, event: "ClaimAccepted" }));
 

@@ -42,7 +42,7 @@ import { CapabilityId, DelegationId, GrantId, OrgId, PrincipalId, RunId } from "
 import { byProcess, Cause, extend, Invocation, provenanceOf, Root } from "@proto/kernel/Invocation";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import * as DateTime from "effect/DateTime";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 
 const { clock, given, provide, rejected, then, when } = Story;
 const as = (invocation: Invocation) => provide(CurrentInvocation, invocation);

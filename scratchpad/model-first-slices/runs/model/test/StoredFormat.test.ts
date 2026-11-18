@@ -18,7 +18,7 @@ import { RunsHandlers } from "@proto/runs-model/Runs.handlers";
 import { RunsModel } from "@proto/runs-model/Runs.model";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 

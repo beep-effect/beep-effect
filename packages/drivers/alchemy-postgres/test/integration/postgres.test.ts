@@ -4,16 +4,16 @@
  * prefix, so runs never see each other's rows.
  */
 import { PostgresClient } from "@beep/postgres";
+import { atRegistration } from "@beep/test-utils/Registration";
 import { describe, it } from "@effect/vitest";
 import * as Config from "effect/Config";
-import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Random from "effect/Random";
 import { postgresSuites } from "../conformance/postgres-suites.ts";
 
 // Read once, while the suite registers: whether there is a database to run against.
-const url = Effect.runSync(Config.Redacted("DB_PG_URL").pipe(Config.option));
-const run = Effect.runSync(Random.nextIntBetween(0, 1_000_000_000));
+const url = atRegistration(Config.Redacted("DB_PG_URL").pipe(Config.option));
+const run = atRegistration(Random.nextIntBetween(0, 1_000_000_000));
 
 O.match(url, {
   onNone: () =>

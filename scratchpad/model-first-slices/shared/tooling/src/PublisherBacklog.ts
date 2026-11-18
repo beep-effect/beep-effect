@@ -1,12 +1,12 @@
 import type * as Domain from "@alchemy.run/domain";
 import { consumerClass, runClass } from "@alchemy.run/domain/DurableObjects";
 import { Count, Name, Sequence } from "@proto/kernel/Measure";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { thunkTrue } from "@beep/utils"
 
 /**

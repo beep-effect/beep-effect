@@ -30,13 +30,13 @@ import { PartyModel } from "@proto/party-model/Party.model";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
 import { checkPublisherHandover } from "@proto/tooling/PublisherHandover";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Schedule from "effect/Schedule";
 import { acme, human, onOrg, twoSources } from "./fixtures.ts";
 

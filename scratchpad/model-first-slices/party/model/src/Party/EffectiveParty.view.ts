@@ -2,7 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
 import { EffectivePartyInitial, EffectivePartyState, EffectivePartyRead } from "@proto/party-contract/Party/EffectiveParty.read";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import { identity } from "effect/Function";
 import { Party } from "./Party.aggregate.ts";
 

@@ -3,7 +3,7 @@ import * as NodeServices from "@effect/platform-node/NodeServices";
 import { IntakeContract } from "@proto/party-contract/IntakeApi.contract";
 import { ReviewerContract } from "@proto/party-contract/ReviewerApi.contract";
 import { generatedFile } from "@proto/tooling/GeneratedFile";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
@@ -11,7 +11,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 
 // `bun scripts/bindings.ts` writes src/Party.bindings.ts from the Party contract's Apis;
 // `--check` fails on drift. Only the contract is read: the web package never sees the model.

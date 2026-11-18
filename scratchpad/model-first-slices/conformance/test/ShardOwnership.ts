@@ -1,9 +1,9 @@
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
-import * as O from "effect/Option";
-import * as Str from "effect/String";
+import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
 import { containersOf, docker, psql, runnerService } from "./Stack.ts";
 import { thunk0 } from "@beep/utils"
 

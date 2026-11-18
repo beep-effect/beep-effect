@@ -1,7 +1,7 @@
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
 import { Root } from "@proto/kernel/Invocation";
 import { NotInSession } from "@proto/runs-contract/Run/SessionRuns.read";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { SessionRuns } from "./SessionRuns.view.ts";
 

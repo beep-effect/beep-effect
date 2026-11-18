@@ -1,6 +1,6 @@
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import { dual, pipe } from "effect/Function";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { CapabilityGrant } from "./Capability.ts";
 import { DelegationId, GrantId, PrincipalId, RunId } from "./Ids.ts";

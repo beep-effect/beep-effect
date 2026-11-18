@@ -3,7 +3,7 @@ import { Credential, headersFor } from "@proto/authority-host/Boundary/FixtureCr
 import { PrincipalId } from "@proto/kernel/Ids";
 import { IntakeContract } from "@proto/party-contract/IntakeApi.contract";
 import { ReviewerContract } from "@proto/party-contract/ReviewerApi.contract";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Config from "effect/Config";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
@@ -18,7 +18,7 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 
 /** The deployed front (`CONFORMANCE_URL`), and the stage's service names (D37: one fixed stage). */
 export const url = Config.String("CONFORMANCE_URL").pipe(Config.withDefault("http://127.0.0.1:18640"));

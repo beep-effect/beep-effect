@@ -5,12 +5,12 @@ import { ClusterSql, clusterSqlFrom, clusterSqlNames } from "@proto/runs-host/Cl
 import { InboxStore, MemoryInboxStore } from "@proto/runs-host/Inbox/Inbox.store";
 import { PgInboxStoreOverClusterSql } from "@proto/runs-host/Inbox/PgInboxStore.adapter";
 import { RunsMigrations } from "@proto/runs-host/Runs.migrations";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 
 // The inbox store's laws, held by both implementations: memory, and the Postgres adapter on
