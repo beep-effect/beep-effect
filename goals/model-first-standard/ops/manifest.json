@@ -6,7 +6,7 @@
     "title": "Model-First Standard",
     "status": "active",
     "created": "2026-11-17",
-    "updated": "2026-11-17",
+    "updated": "2026-11-18",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/model-first-standard",
@@ -54,12 +54,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

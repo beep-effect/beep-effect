@@ -24,11 +24,18 @@ Domain-agnostic reusable substrate, developer-operational packages, and
 technical boundary wrappers use explicit non-slice family/kind grammar so they
 are as legible as slices instead of becoming generic `common` buckets.
 
-A slice is a domain-bounded module family with its own domain language,
-application use-cases, typed configuration contracts when those exist, server
-adapters, client adapters, tables, and UI. Technical wrappers live in the
-repo-level `drivers` family. The goal is high modularity without copy-paste
-drift:
+A slice is a bounded context: it owns a language, its data and its invariants,
+and its write and reaction model is one `Domain.Model` by default. It ships as
+four packages, one per dependency closure: `contract` (what clients and other
+contexts import), `model` (the write and reaction model), `host` (server
+adapters, stores and cluster classes) and `web` (React). Contexts exchange
+versioned integration facts through published streams and call each other only
+through contracts. Effect Cluster on Postgres is the first host. See
+[Model-First Slice Topology](#model-first-slice-topology). Slices built on the
+earlier seven-package shape (domain, use-cases, config, server, client, tables,
+ui) stay legal as the legacy shape until their own migration. Technical
+wrappers live in the repo-level `drivers` family. The goal is high modularity
+without copy-paste drift:
 experiments should be easy to create, easy to delete, and still shaped like
 production-quality code.
 
@@ -48,15 +55,16 @@ Start with the smallest boundary that owns the meaning:
 
 | Task | Default home |
 |------|--------------|
-| Product behavior or product language | The owning slice. |
+| Product behavior or product language | The owning slice: its `contract` and `model` packages. |
+| Facts or calls another context needs | The provider's `contract` package: an integration fact or a gateway contract. |
 | Product language deliberately shared by multiple slices | `shared/*`, after the shared-kernel promotion gate. |
 | External engines, SDKs, services, frameworks, or browser platform wrappers | `drivers/*`. |
 | Domain-agnostic reusable substrate owned by this repo | `foundation/*`, after the specific-home-first routing test. |
 | Repo-authored libraries published for external consumption | `ecosystem/*`, through the promotion gate in [14-ecosystem-packages.md](architecture/14-ecosystem-packages.md). |
 | Law-abiding experimental app proving an uncertain idea | `apps/labs/*`, per [15-lab-apps.md](architecture/15-lab-apps.md). |
-| Typed application/runtime configuration contracts | The slice or shared `config` package. |
+| Typed application/runtime configuration contracts | The runtime that reads them: the slice `host` or the app. Legacy slices: the slice or shared `config` package. |
 | Product-agnostic UI primitives, themes, tokens, hooks, composition helpers, or repo brand identity | `foundation/ui-system`. |
-| Browser/client product state, adapters, or interaction behavior | The slice `client` or `ui` package. |
+| Browser/client product state, adapters, or interaction behavior | The slice `web` package. Legacy slices: the slice `client` or `ui` package. |
 | App runtime wiring | The app entrypoint or an app-local `src/runtime/Layer.ts` helper. |
 
 Apps are executable workspaces, not reusable package surfaces by default.
@@ -77,9 +85,9 @@ production-shaped, durable while useful, and mechanically deletable without
 per-app shared-registration edits. They obey
 [15-lab-apps.md](architecture/15-lab-apps.md).
 
-The core vocabulary is deliberately small at the entry point: slice, domain,
-use-cases, adapter, driver, shared kernel, foundation, config contract, Layer,
-and canonical subpath name. More specialized terms remain canonical, but use the
+The core vocabulary is deliberately small at the entry point: slice (bounded
+context), contract, model, host, web, Module, integration fact, adapter,
+driver, shared kernel, foundation, Layer, and proof inventory. More specialized terms remain canonical, but use the
 [glossary](architecture/GLOSSARY.md) when they first matter instead of loading
 the whole vocabulary at once.
 
@@ -97,11 +105,13 @@ repository, handler, and driver in the system.
 
 ### 2. Ports Point Inward, Adapters Point Outward
 
-Domain concepts must not know about drivers. Use-cases define product ports and
-boundary contracts. Server packages implement product ports using tables and
-drivers. Driver packages expose technical capabilities and dev-safe wrappers
-around third-party
-libraries.
+Domain concepts must not know about drivers. In a model-first slice the model
+declares every port it needs (`.external.ts`, `.store.ts`, a consumer port over
+another context's gateway), and the host implements them in `.adapter.ts`
+files over drivers or other contexts' contracts. In a legacy slice, use-cases
+define product ports and boundary contracts and server packages implement them
+using tables and drivers. Driver packages expose technical capabilities and
+dev-safe wrappers around third-party libraries.
 
 ### 3. Shared Is A Shared Kernel
 
@@ -136,6 +146,13 @@ nullish fields unless an external wire contract requires that shape; in those
 cases, decode or normalize the boundary value into an internal tagged model
 before case-specific behavior branches.
 
+In a model-first slice the stored formats are the Model's events, state,
+receipts, request context and saga payloads, and they follow the
+stored-format law: stored bytes are never rewritten and schemas convert on read
+(see [Stored Formats Convert On Read](#stored-formats-convert-on-read)).
+Tables are projection stores and inbox stores inside a host. The
+`ProductEntity` law below governs legacy slices; the entity kit is frozen.
+
 Persisted entities follow the same law. A persisted product entity starts with
 `ProductEntity.Entity<Self>()(EntityId)(fields, annotations)` from
 `@beep/shared-domain/entity/ProductEntity`. This factory supplies the schema
@@ -162,8 +179,11 @@ SQL DSL, live database execution, transactions, repositories, or migrations.
 
 ### 6. Topology Is Compressed Context
 
-Readers get the map from mirrored package paths and role suffixes. This is why
-the repo uses concept-qualified role module names such as
+Readers get the map from mirrored package paths and role suffixes. A
+model-first slice uses `<Module>/<Noun>.<kind>.ts`, such as
+`Claim/AcceptClaim.command.ts`, `Claim/Claim.aggregate.ts` and
+`Claim/ClaimReview.handler.ts`, with generated files checked for drift. Legacy
+slices use concept-qualified role module names such as
 `Membership.policy.ts`, `Membership.event-handlers.ts`, and
 `Membership.command-client.ts`.
 
@@ -322,10 +342,375 @@ Client/UI dependency caveats:
   does not permit live driver capability, query execution, migrations,
   repositories, seeders, or database transactions in shared packages.
 
-## Slice Package Topology
+## Model-First Slice Topology
 
-Every product slice uses the same package family unless a package genuinely has
-no role in that slice.
+A slice is a bounded context: it owns a language, its data and its
+invariants. Its write and reaction model is one `Domain.Model` from
+`@alchemy.run/domain` by default. A second Model in the same context is allowed
+only for an independent event lifecycle or storage placement. How much fits in
+an agent's context window is not a boundary test (D2). Decision numbers in this
+section cite `explorations/model-first-slices/DECISIONS.md`, the source of
+truth for this shape; the dated record is "Slices Are Model-First Bounded
+Contexts In Four Packages" (2026-11-18) in `standards/architecture/DECISIONS.md`.
+
+This is the target shape. Every new slice uses it, and no new slice migration
+to `@alchemy.run/domain` starts on the seven-package shape (D17). Slices built
+on the seven-package shape stay legal as the legacy shape until their own
+migration; see [Legacy Seven-Package Slice Topology](#legacy-seven-package-slice-topology).
+
+### Four Packages, One Per Dependency Closure
+
+A package exists for one dependency closure (D3):
+
+```txt
+packages/<context>/
+  contract/   @beep/<context>-contract   what clients and other contexts import
+  model/      @beep/<context>-model      the write and reaction model
+  host/       @beep/<context>-host       server adapters, stores, cluster classes
+  web/        @beep/<context>-web        React screens over generated bindings
+```
+
+`contract`, `model` and `host` exist for every context. `web` exists when the
+context has screens. There is no `use-cases`, `tables`, `config`, `client` or
+`ui` package in a model-first context:
+
+- `use-cases` dissolves: commands live in the contract, their decisions in the
+  model's aggregates, and the library's command dispatch is the execution
+  boundary.
+- `tables` dissolves: a table is a projection store or an inbox store behind a
+  port, implemented in the host.
+- `config` dissolves: each runtime owns its configuration in the host or the
+  app, and business constants are model values.
+- `client` and `ui` become one `web` package over bindings generated from the
+  contract (D12).
+
+The contract is the default import for browsers and for other contexts. A
+screen that wants `Aggregate.predict` imports the model on purpose, and that
+screen is listed (D3). A predicted result is never authorization and never a
+write.
+
+### The Contract Package
+
+The contract holds the aggregate-free declarations: ids, commands with their
+events and private rejections, shared events and rejections, read contracts for
+views and queries, integration facts, gateway contracts and the context's
+capabilities. Its client Apis are `Domain.Api` declarations over a catalog
+shaped like a Model that holds the context's commands, view read contracts and
+queries and no aggregate. The typed nested client survives, and a parity test
+asserts that each contract Api's RPC group equals the model Api's group (D9, as
+amended in phase 1 of the exploration).
+
+An Api over a catalog is a client contract only; serving it, or calling
+`clientInProcess` on it, has no model behind it and fails. The library builds an
+Api only from a Model, and `decide` and `evolve` are inline fields of the
+aggregate declaration, so the contract declares views and queries a second
+time, as read contracts built from shared parts. This lasts until upstream
+splits the Api from the model. The upstream target has two parts: a model-free
+Api contract, and an aggregate declaration separate from `decide` and
+`evolve`, as `toLayer` already separates views, policies and sagas from their
+implementations. When that lands, the catalog and the second declarations are
+deleted.
+
+### File Grammar
+
+Declarations are `<Module>/<Noun>.<kind>.ts`. A `.handler.ts` beside a
+declaration implements a view, policy, saga, projection, query or cluster
+class. An `.adapter.ts` in the host implements a port, a gateway or a
+middleware's server half over a driver or another context's contract (D10).
+
+- **Folders are Modules.** A Module holds a consistency boundary, a process or
+  a read model. The same Module name appears in the contract and the model:
+  the contract's `Claim/` holds what a client sends and reads, the model's
+  `Claim/` holds the aggregate that decides it. The package line is the
+  dependency closure and the Module line is the concept. There are no kind
+  folders (`aggregates/`, `commands/`, `events/`) and no subdomain folders.
+- **One primary export per file.** Each file has one designated primary
+  export, and a checker compares it with the suffix by a rule per kind: most
+  kinds name the primary after the noun; an adapter is named for what it
+  adapts, and a machine's primary is its `update`.
+- **A command is a complete decision record.** A command file holds the
+  command, the events it records and the rejections only it returns. An event
+  that several commands record gets an `.event.ts`; a rejection that several
+  commands share gets a `.rejection.ts`.
+- **Generated files are never edited.** `<Context>.handlers.ts` is generated
+  from the Model and checked by diff: a hand-kept registry can omit a handler
+  while every suffix check passes. Web bindings and the app's cluster entry
+  modules are generated the same way.
+- **Retired.** `.live.ts`, which names no responsibility and mislabels handlers
+  that run unchanged in memory; subdomain folders; kind folders; wildcard
+  package exports; `.atoms.ts` and `.view.tsx` as web roles.
+
+Role vocabulary:
+
+| Package | Suffix | Holds |
+|---------|--------|-------|
+| contract | `.id.ts` | A branded id |
+| contract | `.command.ts` | A command; its events and private rejections as companions |
+| contract | `.event.ts` | An event several commands record |
+| contract | `.rejection.ts` | A rejection several commands share |
+| contract | `.read.ts` | A view's or query's read contract |
+| contract | `.fact.ts` | A published integration fact and its versions |
+| contract | `.gateway.ts` | A service other contexts call |
+| contract | `.catalog.ts` | The aggregate-free catalog (until upstream splits the Api) |
+| contract | `.capabilities.ts` | The operations a grant can name |
+| contract | `.contract.ts` | A client Api over the catalog |
+| model | `.aggregate.ts` | State union, `decide`, `evolve`, `reply` |
+| model | `.rules.ts` | Pure guards that `decide` starts from |
+| model | `.view.ts`, `.stream.ts` | A read model; a stream, published or internal |
+| model | `.policy.ts`, `.saga.ts` | A reaction; a process |
+| model | `.projection.ts`, `.query.ts` | A store or stream writer; a reader |
+| model | `.handler.ts` | The implementation of a view, policy, saga, projection or query |
+| model | `.store.ts` | A store port and its memory twin |
+| model | `.external.ts` | A `Domain.ExternalSystem` port |
+| model | `.api.ts`, `.model.ts` | An Api; the context's Model |
+| model | `<Context>.handlers.ts` | The generated handler registry |
+| model | `<Context>.ports.ts` | The ports union and the purity assertion |
+| host | `.adapter.ts` | A port, a gateway or a middleware's server half |
+| host | `.singleton.ts`, `.entity.ts`, `.cron.ts`, `.workflow.ts` | A cluster class |
+| host | `.handler.ts` | A cluster class's implementation |
+| host | `.inbox.ts`, `.store.ts` | A consumer's inbox; a host-side store port |
+| host | `.http.ts`, `.mcp.ts`, `.route.ts` | An HTTP or MCP surface; a host route |
+| host | `<Context>.cluster.ts` | What the context runs on a pool: parts and Apis |
+| host | `<Context>.descriptor.ts` | The deployment descriptor, as data |
+| host | `Adapters.ts`, `Host.ts`, `Config.ts` | Composers; the host runtime's configuration |
+| web | `.screen.tsx` | A React screen over bindings or a machine |
+| web | `.machine.ts` | Screen state, messages and a pure `update` |
+| web | `.controller.ts` | Runs a machine's intents through the bindings |
+| web | `<Context>.bindings.ts` | Bindings generated from the contract |
+| web | `.runtime.ts` | The atom runtime |
+| kernel | `.context.ts`, `.middleware.ts` | Request context and middleware declarations |
+
+### Exact Exports
+
+Every package's `exports` map names each entry point exactly. A wildcard over
+`src` (`./*`) is not a boundary in a model-first package, because it makes the
+boundary depend on every caller obeying a convention (D10). The source export
+map is the truth and the publish mirror is derived from it. Where a package has
+a root entry, it is a pure re-export. Import specifiers keep their `.ts`
+extensions.
+
+### Legal Imports
+
+| Package | Resolves | Cannot resolve |
+|---------|----------|----------------|
+| contract | `@alchemy.run/domain`, `effect`, the shared kernel, the contract kit, `foundation/primitive` and `foundation/modeling` | any model, host, aggregate or handler file; drivers |
+| model | its own contract, `@alchemy.run/domain`, `effect`, the shared kernel, `foundation/primitive` and `foundation/modeling` | drivers, React, the DOM, Node, any other context |
+| host | its own model and contract, other contexts' contracts, drivers, `@alchemy.run/effect-cluster` | React, another context's model or host |
+| web | its own contract and generated bindings, React, Effect Atom; its own model only for a listed `Aggregate.predict` screen | any `.handler.ts` or `.adapter.ts`, the host, driver roots |
+| app | slice hosts and their deployment descriptors, webs, pools and cloud provider packages | Module-level internals of any context |
+
+Between contexts:
+
+- A context never imports another context's aggregate, private event, view,
+  store, handler or model. A stored domain event rebuilds the producer's
+  state; letting another context follow it would make every internal
+  refactor a public breaking change (D11).
+- A context reaches another only through the provider's contract: a
+  synchronous call through a port the consumer declares in its model and
+  implements in its host over the provider's gateway contract, or an
+  asynchronous integration fact read from the provider's published stream
+  (see [Between Contexts](#between-contexts)).
+- The model declares everything it needs from outside itself as ports. A type
+  in `<Context>.ports.ts` fails when a handler requires a service the model
+  never declared and names the leaked service. Neither the type nor the
+  package manager proves a handler's code is pure (`fetch`, `Date.now` and
+  module state leave no Effect requirement), so lint and the independent
+  reviewer cover those.
+
+### The Shared Kernel In A Model-First Slice
+
+The shared kernel stays language only (D7, D27): ids, the `Invocation` and
+`Provenance` schemas, the pure grant-check language (grant terms, what "covers"
+means, the `MissingGrant` rejection), the fact envelope and inbox key, the
+request key, the deployment descriptor and stream pin schemas, and the
+`Session` middleware declaration. It holds no aggregate, no Model, no Layer and
+no credential handling. Model-first contexts do not use `shared/use-cases`:
+synchronous contracts live in the provider's contract package.
+
+### Authority
+
+A context named `authority` owns grants, delegation and a general
+Accountability relation: every agent-rooted action names an accountable human
+(D7, D18, D27). Only authority builds an `Invocation`. Events store
+provenance alone: the root, on whose behalf, the causal chain and grant ids,
+never grant terms (D4, D24). At each hop a policy or saga asks authority,
+through a port it declares, to re-admit the chain from live grants.
+Re-admission never adds a grant; it passes those still in force, and a command
+that needs a lapsed one is refused and the refusal recorded (D30). A command an
+integration fact starts runs under the consuming record's own provenance plus a
+hop naming the fact; facts carry no provenance and nobody is re-admitted for
+them (D32). Command ids are request keys over the org, the operation and a
+request fingerprint, and the org is the same resource scope grants are
+checked against (D14, D36). The `audience` annotation, `Actor`, `CurrentActor`
+and the kernel's `stamp` and `relay` are retired. Approval is an authenticated
+command in the product context, not a workflow signal (D4, D28).
+
+Agent runs belong to a context named `runs`: the `AgentRun` aggregate, the
+budget ledger and run lineage (D6, D28). A run gets its authority by
+delegation when it is requested (named operations, a resource scope, an
+expiry), and a child run narrows it again (D26); the budget lives in the runs
+ledger alone (D29). A run is one bounded piece of work, and a session entity
+holds a chain of runs (D23). An operating agent calls tools derived from a
+contract under a grant; an agent that writes code gets the contract client in
+a sandbox (D21). A Reasoner port carries an evaluation contract (D19).
+
+### The Host
+
+Effect Cluster on Postgres is the first host (D5). Each context's host
+publishes a deployment descriptor as data, naming its models, its processes and
+the fact versions it consumes (D13, D34). The app composes descriptors onto
+pools and names no individual model or process, and the cluster entry modules
+are generated into the app from the composed descriptors (D40). A slice names
+no cloud.
+
+One context calls another through the provider's contract Api over the pool's
+own dispatch. Contexts in a pool trust each other, a caller from another pool
+presents that pool's gateway token, and a host has no principal of its own;
+every call still carries provenance that authority re-admits (D39).
+
+A pool is a host for a model-first context when it meets these guarantees,
+each with its bound. The conformance suite proves the first three on the
+cluster; the startup refusal of D54 and the frozen-runner case of D55 are
+proven in process, and their cluster cases have not run yet:
+
+- No acknowledged write is overwritten: the commit transaction re-reads the
+  version and refuses when it moved (D41).
+- A runner that lost its shard cannot commit: the commit is fenced on shard
+  ownership, identified by a connection pool named for the runner, and a
+  runner whose pool is not named fails at start (D45, D49, D54).
+- After a runner dies, every reaction happens exactly once within one lease
+  plus wake latency: 80 seconds on the present library constants, a 60-second
+  lease and two 10-second polls (D42).
+- A write sent to a frozen runner completes or fails within the caller's retry
+  budget, is never stored twice, and a retry under the same id gets its
+  receipt (D55).
+
+Effect Cluster meets them with library fixes that are not yet in an Alchemy
+release. Goal work adds those fixes as root patches in `patchedDependencies`
+(`goals/effect-cluster-host`), and they come out when a release includes them
+(D61).
+`@beep/alchemy-postgres` remains until an Alchemy release carries the fixes and
+the conformance suite passes on it unpatched (D5, D53). `Domain.InMemory` hosts
+stories and tests.
+
+### Between Contexts
+
+Contexts exchange versioned integration facts (D11, D33):
+
+- **Publishing.** The producer declares each fact in its contract
+  (`<Module>/<Fact>.fact.ts`), one event class per version. A projection in
+  the producer's model reads aggregate events directly, never a versioned
+  view, and writes the facts to a `Domain.Stream`. That projection is the
+  outbox; no host outbox table or relay exists. The host serves the stream as
+  a feed.
+- **Consuming.** The consumer keeps an inbox in its host, keyed by producer,
+  fact id and version. It translates each fact into its own language and sends
+  its own commands under request keys, so a fact delivered twice changes
+  nothing.
+- **Pins and generations.** A published stream is pinned to its writer, its
+  generation and its sources. The projection behind it is never rebuilt in
+  place: a checker refuses a version bump of the projection or of anything it
+  reads, and a change of its sources, unless the generation is pinned closed and
+  a new one opened. A change to a fact is a new fact version or a new stream
+  generation. The feed serves closed generations followed by the open one as a
+  single log, and positions keep their meaning across generations (D43).
+- **Handover.** An upgrade that replaces a publisher waits until the old one
+  has published everything pending, read from the host's own records for any
+  publisher (D47, D50).
+- **Retirement.** A fact version is retired when no deployment descriptor
+  consumes it, and a producer's newest version never is (D34, D40). A closed
+  generation stops being served only when the next holds every fact it held,
+  every consumer in every descriptor has read past it, and positions keep
+  their meaning (D51).
+- **Synchronous calls** go through a consumer-declared port over the
+  provider's gateway contract (D11).
+
+Contexts are named by their language: every name has one meaning inside a
+context, and context naming stays with the independent reviewer.
+
+### Stored Formats Convert On Read
+
+Stored bytes are never rewritten (D22). Payload conversion on read handles
+added defaults, removals, renames and compatible type changes; an incompatible
+change is one declared read-time transform per version step. A new event tag is
+for a new fact only. The law covers every stored format: events, aggregate
+state, receipts, request context and saga payloads. Saga activity results are
+part of it: a compatible change converts on read, an incompatible change is a
+new saga version, and runs in flight finish on the version they started (D35).
+Frozen old-format fixtures and replay equivalence prove each change. A rebuild
+or replay suppresses side effects, and a projection sink takes the source
+position and generation (D14).
+
+Every stored field has a retention class. Content that may have to be erased
+(names, document text, evidence excerpts) lives in a store behind a port, and
+erasure leaves a tombstone; events are never rewritten for it. An agent's reads
+of privileged material are recorded, and untrusted content carries a trust
+label that limits which actions it can influence (D14). These rules are decided
+and have no checker yet.
+
+### Web
+
+React stays. An ordinary screen is one `.screen.tsx` over bindings generated
+from the contract: view subscriptions, command atoms with ids and typed
+rejections, read-after-write and reconnect. A screen with real interaction law
+adds a `.machine.ts` with a pure `update`, a `.controller.ts` and a story. Every
+machine correlates on command id, receipt and view revision (D12).
+
+### Proof Inventory
+
+Each invariant of a context is listed in a generated proof inventory with its
+checker, the inputs the checker reads, its assumptions, its known gaps and its
+evidence. The inventory is rendered from data and a check fails on drift (D8).
+
+- Mechanical laws run in every check: `Domain.verify` on each Model, the
+  primary-export rule, import-graph walks of the contract and web closures,
+  the port purity type, handler-registry drift, contract parity, stream pins
+  and stored-format fixtures. The model, host and app import rows are held by
+  the package manifests. The cluster entries run as the conformance suite
+  against a deployed stack.
+- Story coverage counts executed outcomes: every declared command outcome must
+  execute in some story or test. A rejection tag found in a file does not count.
+  A story fails on any event, rejection or external call it does not account
+  for.
+- The Effect language-service rules run in every check with nothing switched
+  off.
+- Semantic questions go to a reviewer that did not write the change: whether
+  each context, aggregate and command names a thing the business recognises
+  and belongs where it was put; whether each capability is the narrowest that
+  does the job and each delegation narrows; whether a fact should be public and
+  each of its fields belongs in what other contexts may depend on; what a
+  stored field may retain. A person decides only where that reviewer and the
+  author disagree.
+
+### Scaffolding And Checks
+
+`bun run beep architecture` will generate a four-package context through
+`bun run beep create-package`, which stays the only package bootstrap, once
+`goals/model-first-standard` retargets it (P1 step 2); until then it emits only
+the legacy shape and is not used for a new context. The
+shell `create-package` emits is the package skeleton law, and every package
+with tests type-checks its test tree. Checkers for role suffix and placement,
+exact exports and imports between contexts start from a day-one baseline of the
+legacy slices' violations and only ratchet down; a slice leaves the baseline
+with its own migration (D17). A syntactic check is a Biome GritQL rule; a check
+that needs the import graph, the file system or generation lives in the repo
+CLI.
+
+## Legacy Seven-Package Slice Topology
+
+> **Legacy shape.** This section and the seven-package sections it governs
+> ([Boundary-Sensitive Export Contracts](#boundary-sensitive-export-contracts),
+> [Canonical Concept Topology](#canonical-concept-topology),
+> [Domain-Kind Folders](#domain-kind-folders), [Role Suffixes](#role-suffixes),
+> [Responsibility Boundaries](#responsibility-boundaries) and
+> [Event-Sourced Slices On `@alchemy.run/domain`](#event-sourced-slices-on-alchemyrundomain))
+> describe slices built before the model-first shape. They stay legal until
+> each slice's own migration and bind edits to those slices. New slices use
+> [Model-First Slice Topology](#model-first-slice-topology), and no new slice
+> migration to `@alchemy.run/domain` starts on this shape.
+
+Every legacy product slice uses the same package family unless a package
+genuinely has no role in that slice.
 
 ```txt
 packages/<slice>/
@@ -419,6 +804,9 @@ packages/drivers/<name> -> @beep/<name>
 New packages should follow this target layout immediately.
 
 ## Boundary-Sensitive Export Contracts
+
+> **Legacy shape.** This section governs legacy seven-package slices. Model-first
+> slices follow [Model-First Slice Topology](#model-first-slice-topology).
 
 This standard is target-first. Boundary-sensitive package roots and `./*`
 wildcard exports may remain during migration for compatibility, but explicit
@@ -681,6 +1069,11 @@ using tooling as a backdoor dependency root.
 
 ### Slice Consumption Rules
 
+A model-first slice follows [Legal Imports](#legal-imports): each of its four
+packages has one closure, and contexts reach each other only through the
+provider's contract. The rules below govern legacy seven-package slices and the
+family ceilings that hold for both shapes.
+
 Slices and the shared kernel may consume `foundation`, but only in boundary-
 appropriate ways:
 
@@ -874,6 +1267,9 @@ flowchart LR
 
 ## Canonical Concept Topology
 
+> **Legacy shape.** This section governs legacy seven-package slices. Model-first
+> slices follow [Model-First Slice Topology](#model-first-slice-topology).
+
 The default concept topology mirrors the domain spine across packages.
 
 ```txt
@@ -1001,6 +1397,9 @@ concept only owns the role files that its behavior actually needs.
 
 ## Domain-Kind Folders
 
+> **Legacy shape.** This section governs legacy seven-package slices. Model-first
+> slices follow [Model-First Slice Topology](#model-first-slice-topology).
+
 Domain package folders classify the kind of domain concept:
 
 | Folder        | Meaning                                                                                                                      |
@@ -1015,6 +1414,9 @@ Aggregates are first-class. Do not hide aggregate roots in `entities/` when the
 concept is really a consistency boundary.
 
 ## Role Suffixes
+
+> **Legacy shape.** This section governs legacy seven-package slices. Model-first
+> slices follow the role vocabulary in [File Grammar](#file-grammar).
 
 Role suffixes are the filename vocabulary that tells readers what a
 module is allowed to do.
@@ -1189,6 +1591,9 @@ migration, but they are not the canonical boundary contract.
 | `ui`          | `.form.tsx`, `.fields.tsx`, `.table.tsx`, `.list.tsx`, `.detail.tsx`, `.admin.tsx` |
 
 ## Responsibility Boundaries
+
+> **Legacy shape.** This section governs legacy seven-package slices. Model-first
+> slices follow [Model-First Slice Topology](#model-first-slice-topology).
 
 ### `domain`
 
@@ -1631,6 +2036,15 @@ export const MembershipRepositoryLive = Layer.effect(
 
 ## CQRS, Events, Workflows, Cluster, And Read Models
 
+In a model-first slice every write and reaction is a `@alchemy.run/domain`
+block: commands and events in the contract; aggregates, views, streams,
+policies, sagas, projections and queries in the model, each implemented by a
+`.handler.ts` beside it; cluster classes in the host. Effect Cluster is the
+process model, and the host guarantees in [The Host](#the-host) are the
+conformance bar for any pool. The rest of this section, its role files and its
+planned eventlog, message-storage, workflow and sharding drivers describe legacy
+seven-package slices; no model-first slice uses those drivers.
+
 CQRS and distributed-system roles stay concept-local by default.
 
 In this diagram, solid arrows are application flow. The dotted arrow is an
@@ -1729,6 +2143,18 @@ State machine placement:
 | Client interaction state         | `client/<Concept>.machine.ts`          |
 
 ### Event-Sourced Slices On `@alchemy.run/domain`
+
+> **Legacy shape.** This placement table is the seven-package placement of
+> `@alchemy.run/domain` blocks, used by `documents` vault-sync until its own
+> migration. A new slice places blocks by closure instead (see
+> [Model-First Slice Topology](#model-first-slice-topology)): declarations a
+> client needs in `contract`, decisions and reactions in `model`, adapters and
+> cluster classes in `host`. Its Platform is Effect Cluster on Postgres, and
+> `@beep/alchemy-postgres` remains for legacy slices until an Alchemy release
+> carries the host fixes. The rules below about provenance as a
+> `RequestContext` and upcast-on-read versions are refined for model-first
+> slices by [Authority](#authority) and
+> [Stored Formats Convert On Read](#stored-formats-convert-on-read).
 
 A slice whose write model is event-sourced declares it with
 `@alchemy.run/domain` (decision 2026-11-06 in
@@ -2173,6 +2599,12 @@ High-risk rules get an explicit lane and current status:
 | App Layer boundaries | `Doctrine` + `Review Gate` | Docs-only ownership test | No private reach-through imports from app runtime helpers |
 | Migration posture | `Doctrine` | Docs-only taxonomy | Repo-check reporting by bucket |
 | Browser capability routing | `Doctrine` + future `Hard Check` | Docs-only routing table | Browser-root and driver-root import checks |
+| Model-first role suffix and placement | `Hard Check` | Doctrine; checker lands with `goals/model-first-standard` | Repo CLI checker with a day-one baseline for legacy slices |
+| Exact package exports | `Hard Check` | Doctrine; checker lands with `goals/model-first-standard` | Export-map lint with a day-one baseline |
+| Imports between contexts and package closures | `Hard Check` | Doctrine; checker lands with `goals/model-first-standard` | Import-graph checker with a day-one baseline |
+| Handler registry and proof inventory | `Generated Default` + `Hard Check` | Doctrine; generators land with `goals/model-first-standard` | Generators with `--check` drift mode and executed-outcome coverage |
+| Context naming, capability scope, public facts, retention | `Review Gate` | Doctrine | An independent reviewer that did not write the change |
+| No new slice migration on the seven-package shape | `Doctrine` | Doctrine | The scaffolder generates only the four-package shape for new contexts |
 
 The migration posture has five buckets:
 
@@ -2188,6 +2620,12 @@ New architecture-sensitive work must not introduce legacy labels as homes,
 package-root or `./*` wildcard exports as the canonical boundary contract,
 global runtime/config aggregation, direct env reads in slice code, or
 symmetry-only packages.
+
+The model-first four-package slice is `Target Doctrine`. The seven-package slice
+is `Transitional Compatibility`: existing slices keep it until their own
+migration, and a new slice on it, or a new migration to `@alchemy.run/domain`
+on it, is `Forbidden In New Work`. A slice leaves the checkers' baselines in
+the change that migrates it; nothing is rewritten in bulk.
 
 Cleanup-on-touch is triggered by boundary edits: package manifests, exports,
 boundary-sensitive imports, ownership docs, config/shared/Layer surfaces, and

@@ -77,17 +77,24 @@ const decodeRun = S.decodeUnknownEffect(S.fromJsonString(HostedRun));
 const encodeRun = S.encodeEffect(S.fromJsonString(HostedRun));
 
 // Answers `gh run list` and `gh run view` from the recorded payloads and records
-// every call with its cwd first; a date with no recorded list has no runs.
+// every call with its cwd first; a date with no recorded list has no runs, and a
+// run with no recorded task-outcome read has no records (one listing request).
 const fixtureRunner = Effect.fn("RouteCorpusTest.fixtureRunner")(function* (calls: Calls) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const directory = yield* path.fromFileUrl(FIXTURES);
   const runGh: RouteGhRunner = (args, cwd) => {
-    const name = args[1] === "list" ? `list.${args[3]}.${args[5]}.json` : `view.${args[2]}.json`;
+    const name =
+      args[1] === "list"
+        ? `list.${args[3]}.${args[5]}.json`
+        : args[1] === "task-outcomes"
+          ? `task-outcomes.${args[2]}.json`
+          : `view.${args[2]}.json`;
+    const missing = args[1] === "task-outcomes" ? '{"requests":1,"records":[]}' : "[]";
     const file = path.join(directory, name);
     return Ref.update(calls, A.append([cwd, ...args])).pipe(
       Effect.andThen(fs.exists(file)),
-      Effect.flatMap((present) => (present ? fs.readFileString(file) : Effect.succeed("[]"))),
+      Effect.flatMap((present) => (present ? fs.readFileString(file) : Effect.succeed(missing))),
       Effect.mapError(RouteError.mapError("corpus-fetch", `fixture ${name} is unreadable`))
     );
   };
@@ -463,6 +470,8 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             heads: 3,
             path: `corpus/hosted-runs.${receipt.sha256}.ndjson.gz`,
             sha256: yield* sha256Hex(bytes),
+            // One run has a failed job, so its attempt's record listing is one request.
+            taskOutcomeReads: O.some(1),
           })
         );
         const readFileString59 = yield* fs.readFileString(path.join(root, "corpus", ROUTE_CORPUS_RECEIPT_FILE));
