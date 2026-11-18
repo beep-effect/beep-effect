@@ -1136,24 +1136,27 @@ export const registerScaffoldedWorkspaceEntries = Effect.fn("CreatePackage.regis
   function* (repoRoot: string, packagePaths: ReadonlyArray<string>) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    // The root manifest is read, merged and rewritten once per path: hold one
-    // cross-process lock over the whole loop so two registrations in the same
-    // checkout cannot overwrite each other's entries.
+    // The root manifest and the identity registry are each read, merged and
+    // rewritten: hold one cross-process lock over both updates so two
+    // registrations in the same checkout cannot overwrite each other's entries.
     const lockDirectory = path.join(repoRoot, ".beep", "locks");
     yield* fs
       .makeDirectory(lockDirectory, { recursive: true })
       .pipe(Effect.mapError(DomainError.newCause(`Failed to create "${lockDirectory}"`)));
-    const addedWorkspaces = yield* withJournalFileLock(
+    return yield* withJournalFileLock(
       path.join(lockDirectory, "root-workspaces.lock"),
-      () =>
-        Effect.filter(packagePaths, (packagePath) => ensureRootWorkspaceEntry(repoRoot, packagePath), {
-          concurrency: 1,
-        }),
+      Effect.fnUntraced(function* () {
+        const addedWorkspaces = yield* Effect.filter(
+          packagePaths,
+          (packagePath) => ensureRootWorkspaceEntry(repoRoot, packagePath),
+          { concurrency: 1 }
+        );
+        const registeredSlugs = yield* registerMissingWorkspaceIdentityPackages(repoRoot);
+        return { addedWorkspaces, registeredSlugs } as const;
+      }),
       undefined,
       "Another process is registering workspaces in this checkout; retry after it completes."
     ).pipe(Effect.catchTag("QualitySchedulerError", (error) => DomainError.newMessage(error.message)));
-    const registeredSlugs = yield* registerMissingWorkspaceIdentityPackages(repoRoot);
-    return { addedWorkspaces, registeredSlugs } as const;
   }
 );
 
