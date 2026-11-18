@@ -592,7 +592,9 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
   },
   // CreateEventSourceMapping with Tags depends on lambda:TagResource, and tag on create carries no create-action
   // key, so this is the narrowest tag grant Alchemy's create needs: only the three ownership keys, with the stack's
-  // values. A tag put on a foreign mapping grants no write on it: Update and Delete also need a fleet function.
+  // values. Tagging a foreign mapping makes it writable only if it already targets a fleet function. Only this role
+  // can create a mapping on a fleet function, so no other principal can attach one, and the live fleet's six
+  // mappings are denied outright (DenyLiveFleetMappings).
   {
     Sid: "LambdaMappingsTagOnCreate",
     Effect: "Allow",
