@@ -511,8 +511,10 @@ const instanceIdOf = (parameterName: string): string => A.lastNonEmpty(Str.split
 // Parameter Store is read FIRST, EC2 second. A runner whose JIT config is gone at the first read has already booted,
 // and a boot normally outlasts EC2's tag-filter lag (seconds), so the second read normally sees it. Reading EC2 first
 // would let a runner fall between the reads: unseen by EC2, then its config deleted before Parameter Store is read. A
-// runner seen by both is counted once, by instance id. An EC2 lag longer than a boot can still undercount, and the
-// invocation then overshoots by the runners it missed: the residual and tripwire in the CI runners cutover decision.
+// runner seen by both is counted once, by instance id. An EC2 lag longer than a boot can still undercount. An invocation
+// then launches at most min(runners missed, cap) beyond the true cap, since it requests at most `cap - counted`; across
+// invocations the overshoot accumulates, ceilinged by the account's Spot vCPU quota. The CI runners cutover decision
+// records the residual and its tripwire.
 const countRunners = Effect.fnUntraced(function* (config: PoolRuntimeConfig, filter: RunnerFilter) {
   const ec2 = yield* Ec2Fleet;
   const ssm = yield* SsmStore;
@@ -542,9 +544,11 @@ const countRunners = Effect.fnUntraced(function* (config: PoolRuntimeConfig, fil
  * their unconsumed JIT config parameters. Parameter Store is read first, so a
  * runner that deleted its config before that read has booted, and EC2
  * normally shows a booted runner. An EC2 read lag longer than a boot can
- * still undercount, and the invocation then overshoots the cap by the
- * runners both reads missed; the residual and its tripwire are in the CI
- * runners cutover decision. When either read fails, the group launches nothing
+ * still undercount. An invocation then launches at most min(runners missed,
+ * cap) beyond the true cap, because it requests at most `cap - counted`;
+ * across invocations the overshoot accumulates, ceilinged by the account's
+ * Spot vCPU quota. The residual and its tripwire are in the CI runners
+ * cutover decision. When either read fails, the group launches nothing
  * and every one of its messages is returned for retry. With
  * ephemeral runners, messages over the cap and retryable launch failures are
  * returned for redelivery; everything else handled is published to the
