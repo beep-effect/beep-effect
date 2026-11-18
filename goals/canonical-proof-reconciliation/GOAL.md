@@ -8,7 +8,8 @@ kind folders, doctrine suffixes, role-named members (`User.Model`,
 `User.Table`, `User.Repo`), per-operation `contracts/` + `handlers/` — one
 codemod PR per slice, each proven by a shrinking audit baseline.
 
-Requires `architecture/slice-audit` from `goals/slice-topology-audit`: stop
+Requires `architecture/slice-audit` from `goals/model-first-standard`
+(re-scope against that standard first): stop
 if `beep architecture audit` or its baseline
 (`architecture.audit-baseline.jsonc` under `standards/`) is missing on `main`.
 

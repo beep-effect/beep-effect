@@ -1,0 +1,239 @@
+fix(effect-cluster, domain): fail a runner at start when its commits could never be fenced
+
+Against alchemy `packages/effect-cluster/src` and `packages/domain/src` at 33c10dd
+(2.0.0-beta.87) with 03, 08 and 07 applied first. Apply from the repository root with `git apply`;
+the text above the first `---` line is ignored.
+
+**This change has run in process only. It has not run on a cluster.**
+
+## Problem
+
+With 07 and 08, a runner's commits are fenced on its own lock session, the one named after the
+runner. A runner that has no address (`ShardingConfig.runnerAddress` is none), or whose runner pool
+was built without that name (a host that builds its own pool, or an `@alchemy.run/effect-cluster`
+without 08), has no such session. Every commit it makes is refused with `ShardLost` and retried
+until the caller gives up. Nothing is acknowledged that should not be, but nothing is written
+either, and the only sign is a `commit fenced` warning per commit.
+
+## Fix
+
+- `packages/effect-cluster/src/Host.ts`:
+  - `RunnerHost` gains `poolName`, the `application_name` the runner's bootstrap gave the pool
+    Effect's SQL runner storage reserves its lock session from;
+  - `RunnerPoolUnnamed` (reason `no-runner-address`, `pool-not-named` or
+    `pool-named-for-another-runner`, and a message that names the expected name);
+  - `checkRunnerPool(poolName)`: with `ShardingConfig` in context, it fails with
+    `RunnerPoolUnnamed` unless the runner has an address and `poolName` is
+    `runnerPoolName(address)`. A storage that takes no advisory locks keeps no lock session, and
+    passes.
+- `packages/effect-cluster/src/internal/Bootstrap.ts`: the runner's address and pool name are
+  computed once, before the entrypoints are built; the name goes to the pool, as in 08, and to
+  `RunnerHost`.
+- `packages/domain/src/EffectCluster/index.ts`: the Layer a runner launches inside the cluster runs
+  `checkRunnerPool` first, logs `commit fence unavailable: <message>` and dies, so the runner fails
+  to start. The fence's doc comment says so, and loses a reference to an outside design note that
+  07 left in it.
+
+## What it checks, and when
+
+At runner start, from the runner's configuration only: that it has an address, and that its
+bootstrap declared a pool name equal to the name that address gives. It does not query
+PostgreSQL. At start the lock session may not exist yet, or may hold no shard yet, and a lock
+session lost to a pause is rebuilt a few seconds after the runner resumes; a query for a session
+with the runner's name could fail on a healthy runner. A false alarm would stop a runner that
+fences correctly, which is worse than no check.
+
+So it cannot see a connection pooler or proxy that rewrites or drops `application_name`. A runner
+behind one starts, and its commits are refused at the fence (the safe failure), not failed at
+start.
+
+## Failing case, and how it was reproduced
+
+In process, `checkRunnerPool` run with Effect's own `ShardingConfig` service:
+
+- an address and no declared name: fails with `pool-not-named`, and the message names
+  `effect-cluster:10.0.1.6:34431`;
+- no address: `no-runner-address`;
+- a name made for another address: `pool-named-for-another-runner`;
+- the name `runnerPoolName` gives, including its hashed form for a 70-character host: passes;
+- advisory locks disabled, with no address and no name: passes.
+
+Not exercised: the bootstrap declaring the name, the launched Layer running the check on a real
+runner, and a runner failing to start.
+
+## Where it ran
+
+- On a cluster: nothing.
+- In process: the cases above. The three changed sources type-check against the package's own
+  dependencies, and load under Bun.
+
+## Depends on
+
+03 and 07 (07 extends 03; this edits 07's runner branch and doc comment) and 08 (`runnerPoolName`
+and the pool name it gives).
+
+---
+--- a/packages/domain/src/EffectCluster/index.ts
++++ b/packages/domain/src/EffectCluster/index.ts
+@@ -5,6 +5,7 @@ import {
+   PlatformDeclaration,
+ } from "@alchemy.run/effect-cluster/Entity";
+ import {
++  checkRunnerPool,
+   HasNoPool,
+   InstanceStorage,
+   makeNamespace,
+@@ -206,7 +207,7 @@ const encode = (value: unknown) => JSON.stringify(value ?? null);
+ const decode = <T>(text: string) => JSON.parse(text) as T;
+ 
+ /**
+- * The commit fence (D45 in the prototype): a commit is acknowledged only if
++ * The commit fence: a commit is acknowledged only if
+  * its runner held the instance's shard lock for the whole commit transaction.
+  *
+  * Effect Cluster's SQL runner storage holds each shard as a session-level
+@@ -230,7 +231,9 @@ const decode = <T>(text: string) => JSON.parse(text) as T;
+  * address the runner gives Effect, so the lock session carries the name and
+  * the fence computes it the same way. There is no fallback: a runner whose
+  * pool is not named (another bootstrap) has no session of its own, and every
+- * commit it makes is refused.
++ * commit it makes would be refused. A runner therefore checks at start that it
++ * has an address and that its bootstrap named its pool after it
++ * (`checkRunnerPool`), and fails to start otherwise.
+  *
+  * A takeover cannot complete only in the server's own commit, between the
+  * trigger and the commit record; even then the new owner cannot commit to the
+@@ -933,6 +936,14 @@ export const layerEntities = <PoolReq>(
+         yield* runner.value.host(
+           hosted,
+           Effect.gen(function* () {
++            // Fenced commits need this runner's lock session to carry its name: fail at start
++            // where it cannot, instead of refusing every commit later.
++            yield* checkRunnerPool(runner.value.poolName).pipe(
++              Effect.tapError((unnamed) =>
++                Effect.logError(`commit fence unavailable: ${unnamed.message} Every commit on this runner would be refused.`),
++              ),
++              Effect.orDie,
++            );
+             yield* Deferred.succeed(joined, yield* Sharding.Sharding);
+             const clusterEngine = yield* WorkflowEngine.WorkflowEngine;
+             for (const [workflow, execute] of yield* Ref.get(registrations))
+--- a/packages/effect-cluster/src/Host.ts
++++ b/packages/effect-cluster/src/Host.ts
+@@ -5,9 +5,12 @@
+  *
+  * @module
+  */
++import * as ShardingConfig from "effect/cluster/ShardingConfig";
+ import * as Context from "effect/Context";
+-import type * as Effect from "effect/Effect";
++import * as Data from "effect/Data";
++import * as Effect from "effect/Effect";
+ import type * as Layer from "effect/Layer";
++import * as Option from "effect/Option";
+ import type { HostedEntity } from "./Entity.ts";
+ 
+ export { type GatewayTarget, makeNamespace } from "./internal/Gateway.ts";
+@@ -29,6 +32,12 @@ export class RunnerHost extends Context.Service<
+       entity: HostedEntity,
+       layer: Layer.Layer<never, never, any>,
+     ) => Effect.Effect<void>;
++    /**
++     * The `application_name` the runner's bootstrap gave the Postgres pool
++     * Effect's SQL runner storage reserves its shard-lock session from
++     * (`runnerPoolName`); absent when it named none.
++     */
++    readonly poolName?: string | undefined;
+   }
+ >()("Cluster.RunnerHost") {}
+ 
+@@ -84,3 +93,52 @@ export const runnerPoolName = (host: string, port: number): string => {
+   for (const byte of new TextEncoder().encode(`${host}:${port}`)) hash = Math.imul(hash ^ byte, 0x01000193);
+   return `effect-cluster:#${(hash >>> 0).toString(16).padStart(8, "0")}`;
+ };
++
++/**
++ * Why a runner's shard-lock session could never be told apart from another
++ * runner's: the runner has no address (`ShardingConfig.runnerAddress`), its
++ * bootstrap did not name its Postgres pool, or named it after another address.
++ */
++export class RunnerPoolUnnamed extends Data.TaggedError("Cluster.RunnerPoolUnnamed")<{
++  readonly reason: "no-runner-address" | "pool-not-named" | "pool-named-for-another-runner";
++  readonly message: string;
++}> {}
++
++/**
++ * The start check of a runner whose commits are fenced on its shard lock
++ * (`@alchemy.run/domain/EffectCluster`): fails unless the runner has an
++ * address and its pool carries the name that address gives
++ * (`runnerPoolName`). It reads the runner's configuration only, never the
++ * database: at start the lock session may not exist yet, or may hold no shard
++ * yet, so a query could not tell an unnamed pool from a session still opening.
++ * A storage that takes no advisory locks keeps no lock session, and passes.
++ */
++export const checkRunnerPool = (
++  poolName: string | undefined,
++): Effect.Effect<void, RunnerPoolUnnamed, ShardingConfig.ShardingConfig> =>
++  Effect.flatMap(Effect.service(ShardingConfig.ShardingConfig), (config) => {
++    if (config.shardLockDisableAdvisory) return Effect.void;
++    if (Option.isNone(config.runnerAddress))
++      return Effect.fail(
++        new RunnerPoolUnnamed({
++          reason: "no-runner-address",
++          message: "This runner has no address (ShardingConfig.runnerAddress), so no session can be named after it.",
++        }),
++      );
++    const expected = runnerPoolName(config.runnerAddress.value.host, config.runnerAddress.value.port);
++    if (poolName === undefined)
++      return Effect.fail(
++        new RunnerPoolUnnamed({
++          reason: "pool-not-named",
++          message: `This runner's Postgres pool is not named. Build it with applicationName ${expected} (runnerPoolName), as the runner bootstrap does, so its shard-lock session can be told apart.`,
++        }),
++      );
++    if (poolName !== expected)
++      return Effect.fail(
++        new RunnerPoolUnnamed({
++          reason: "pool-named-for-another-runner",
++          message: `This runner's Postgres pool is named ${poolName}, not ${expected}, the name its address gives.`,
++        }),
++      );
++    return Effect.void;
++  });
+--- a/packages/effect-cluster/src/internal/Bootstrap.ts
++++ b/packages/effect-cluster/src/internal/Bootstrap.ts
+@@ -230,12 +230,17 @@ export const bootstrap = (
+           ? all
+           : [...all, built],
+       );
++    const host = yield* runnerHost;
++    // The name the runner storage's pool is given below, declared to the Layers built here so
++    // one that fences its commits on this runner's lock session can check it at start.
++    const poolName = runnerPoolName(host, RUNNER_PORT);
+     const runner = RunnerHost.of({
+       host: (entity, layer) =>
+         Effect.andThen(
+           add(entity),
+           Ref.update(launchedRef, (all) => [...all, layer]),
+         ),
++      poolName,
+     });
+     for (const entrypoint of entrypoints) {
+       const declaration =
+@@ -262,7 +267,6 @@ export const bootstrap = (
+     const hosted = yield* Ref.get(hostedRef);
+     const launched = yield* Ref.get(launchedRef);
+ 
+-    const host = yield* runnerHost;
+     const group = env("CLUSTER_SHARD_GROUPS") ?? "default";
+     // Every hosted entity lives in this pool's own shard group.
+     const placed = hosted
+@@ -314,7 +318,7 @@ export const bootstrap = (
+       Layer.provide(
+         PgClient.layer({
+           url: Redacted.make(env("CLUSTER_DATABASE_URL")!),
+-          applicationName: runnerPoolName(host, RUNNER_PORT),
++          applicationName: poolName,
+         }),
+       ),
+     );

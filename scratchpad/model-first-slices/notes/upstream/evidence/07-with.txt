@@ -1,0 +1,2 @@
+[1/1 ✓1 ✗0] ✓ test/Domain/CommitFence.test.ts > Domain commit refused by a fencing host > a runner that lost the instance during its commit is refused; the retry commits on the owner (122ms)
+Tests: 0 failed | 1 passed (1 files, 169ms)

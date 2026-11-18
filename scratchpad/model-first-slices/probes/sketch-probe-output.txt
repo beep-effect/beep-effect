@@ -1,0 +1,10 @@
+apps/practice/probe/Sketch.probe.ts(19,3): error TS2345: Argument of type 'Effect<(args_0: TriggerOf<typeof MergeOnSameParty>) => Effect<void, never, CurrentActor>, never, Key<"Party">>' is not assignable to parameter of type 'Effect<Handler<TriggerOf<typeof MergeOnSameParty>>, never, Key<"Party">>'.
+  Type '(args_0: TriggerOf<typeof MergeOnSameParty>) => Effect<void, never, CurrentActor>' is not assignable to type 'Handler<TriggerOf<typeof MergeOnSameParty>>'.
+    Type 'Effect<void, never, CurrentActor>' is not assignable to type 'Effect<void, never, never>'.
+      Type 'CurrentActor' is not assignable to type 'never'.
+apps/practice/probe/Sketch.probe.ts(35,5): error TS2322: Type 'Effect<Receipt<ClaimAccepted | ClaimAsserted | ClaimRetracted | DispositionProposed, void>, ClaimNotPending | NotAMember | NotAnAgent, never>' is not assignable to type 'Effect<void, never, never>'.
+  Type 'Receipt<ClaimAccepted | ClaimAsserted | ClaimRetracted | DispositionProposed, void>' is not assignable to type 'void'.
+apps/practice/probe/Sketch.probe.ts(42,76): error TS2345: Argument of type '{ _tag: "Completed"; }' is not assignable to parameter of type '{ readonly _tag: "Died"; } | Status<void, ReasonerUnavailable | Instance<"AdmissionGateUnmet", { readonly gate: Literals<readonly ["independent-corroboration", "source-support"]>; readonly have: Int; readonly need: Int; }> | Instance<"ClaimNotPending", { readonly status: Literals<readonly ["Unasserted", "Accepted", "Retracted"]>; }> | Instance<"NotAMember", {}> | Instance<"NotAnAgent", {}>>'.
+  Property 'result' is missing in type '{ _tag: "Completed"; }' but required in type '{ readonly _tag: "Completed"; readonly result: void; }'.
+apps/practice/probe/Sketch.probe.ts(46,10): error TS2488: Type 'typeof MailboxPoller' must have a '[Symbol.iterator]()' method that returns an iterator.
+apps/practice/probe/Sketch.probe.ts(51,14): error TS2739: Type 'ExternalSystemKey<"Reasoner">' is missing the following properties from type 'Reasoner': Service, key, [ServiceTypeId]

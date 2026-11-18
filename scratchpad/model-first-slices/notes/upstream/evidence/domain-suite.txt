@@ -1,0 +1,11 @@
+main, no patches: Tests: 0 failed | 415 passed (30 files, 32.1s)
+main with the formatted set: Tests: 0 failed | 424 passed (33 files, 31.7s)
+added: ✓ test/Domain/ClusterRunnerPool.test.ts > Effect Cluster runner pool check at start > a runner whose pool is named after it starts
+added: ✓ test/Domain/ClusterRunnerPool.test.ts > Effect Cluster runner pool check at start > a runner whose pool is not named fails, naming the name to give it
+added: ✓ test/Domain/ClusterRunnerPool.test.ts > Effect Cluster runner pool check at start > a runner whose storage takes no advisory locks has no lock session, and starts
+added: ✓ test/Domain/ClusterRunnerPool.test.ts > Effect Cluster runner pool check at start > a runner without an address, or whose pool is named for another, fails
+added: ✓ test/Domain/ClusterRunnerPool.test.ts > Effect Cluster runner pool name > is a hash when PostgreSQL would cut or change it, the same on both sides
+added: ✓ test/Domain/ClusterRunnerPool.test.ts > Effect Cluster runner pool name > is the runner's address, as Effect Cluster is given it
+added: ✓ test/Domain/CommitFence.test.ts > Domain commit refused by a fencing host > a runner that lost the instance during its commit is refused; the retry commits on the owner
+added: ✓ test/Domain/CommitVersionCheck.test.ts > Domain commit version check, two runners on one instance > a commit on an instance a decision holds waits for the decision, then decides again
+added: ✓ test/Domain/CommitVersionCheck.test.ts > Domain commit version check, two runners on one instance > a commit on a version that moved since its decide is retried, and no write is lost

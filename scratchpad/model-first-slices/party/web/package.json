@@ -1,0 +1,45 @@
+{
+  "name": "@proto/party-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./Bindings": "./src/Bindings.ts",
+    "./Claim/ClaimReview.controller": "./src/Claim/ClaimReview.controller.ts",
+    "./Claim/ClaimReview.machine": "./src/Claim/ClaimReview.machine.ts",
+    "./Claim/ClaimReview.screen": "./src/Claim/ClaimReview.screen.tsx",
+    "./Credentials.context": "./src/Credentials.context.ts",
+    "./Directory/FindParties.screen": "./src/Directory/FindParties.screen.tsx",
+    "./Party.bindings": "./src/Party.bindings.ts",
+    "./Party.runtime": "./src/Party.runtime.ts"
+  },
+  "scripts": {
+    "bindings": "bun scripts/bindings.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@effect/atom-react": "4.1.4",
+    "@proto/kernel": "workspace:*",
+    "@proto/party-contract": "workspace:*",
+    "effect": "4.1.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "4.1.4",
+    "@effect/vitest": "4.1.4",
+    "@proto/authority-host": "workspace:*",
+    "@proto/authority-model": "workspace:*",
+    "@proto/party-host": "workspace:*",
+    "@proto/party-model": "workspace:*",
+    "@proto/runs-host": "workspace:*",
+    "@proto/tooling": "workspace:*",
+    "@testing-library/react": "16.3.3",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "happy-dom": "21.0.4",
+    "vitest": "5.0.4"
+  }
+}

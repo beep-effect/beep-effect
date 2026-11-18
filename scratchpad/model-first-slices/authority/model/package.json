@@ -1,0 +1,36 @@
+{
+  "name": "@proto/authority-model",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./Accountability/Accountability.aggregate": "./src/Accountability/Accountability.aggregate.ts",
+    "./Authority.handlers": "./src/Authority.handlers.ts",
+    "./Authority.model": "./src/Authority.model.ts",
+    "./Authority.ports": "./src/Authority.ports.ts",
+    "./AuthorityApi.api": "./src/AuthorityApi.api.ts",
+    "./Delegation/Delegation.aggregate": "./src/Delegation/Delegation.aggregate.ts",
+    "./Delegation/OpenOnDelegate.policy": "./src/Delegation/OpenOnDelegate.policy.ts",
+    "./Delegation/RunDelegations.view": "./src/Delegation/RunDelegations.view.ts",
+    "./Grant/ExpireAtDeadline.policy": "./src/Grant/ExpireAtDeadline.policy.ts",
+    "./Grant/Grant.aggregate": "./src/Grant/Grant.aggregate.ts",
+    "./Grant/HolderGrants.view": "./src/Grant/HolderGrants.view.ts"
+  },
+  "scripts": {
+    "handlers": "bun scripts/handlers.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@proto/authority-contract": "workspace:*",
+    "@proto/kernel": "workspace:*",
+    "effect": "4.1.4"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "4.1.4",
+    "@effect/vitest": "4.1.4",
+    "@proto/tooling": "workspace:*",
+    "vitest": "5.0.4"
+  }
+}

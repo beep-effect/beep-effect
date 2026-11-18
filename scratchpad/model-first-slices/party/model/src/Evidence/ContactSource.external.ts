@@ -1,9 +1,8 @@
 import * as Domain from "@alchemy.run/domain";
-import "@proto/kernel/Audience";
+import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
+import { EvidenceSignal } from "@proto/party-contract/Evidence";
+import { Proposition } from "@proto/party-contract/Proposition";
 import * as S from "effect/Schema";
-import { ClaimId } from "../Claim/Claim.id.ts";
-import { EvidenceSignal } from "../Evidence.ts";
-import { Proposition } from "../Proposition.ts";
 
 /**
  * The mailbox could not be read.
@@ -11,7 +10,7 @@ import { Proposition } from "../Proposition.ts";
  * @category errors
  * @since 0.0.0
  */
-export class MailboxUnavailable extends S.TaggedError<MailboxUnavailable>()("MailboxUnavailable", {
+export class MailboxUnavailable extends S.TaggedError<MailboxUnavailable, { readonly brand: unique symbol }>()("MailboxUnavailable", {
   mailbox: S.String,
 }) {}
 
@@ -46,7 +45,7 @@ export class ContactSource extends Domain.ExternalSystem(
   "ContactSource",
   {
     observe: {
-      args: { mailbox: S.String, since: S.Number },
+      args: { mailbox: S.String, since: S.Finite },
       success: { assertions: S.Array(SourceAssertion) },
       error: MailboxUnavailable,
     },

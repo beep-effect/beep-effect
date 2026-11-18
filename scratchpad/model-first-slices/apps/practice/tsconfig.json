@@ -1,4 +1,11 @@
 {
   "extends": "../../tsconfig.base.json",
-  "include": ["src/**/*.ts", "alchemy.run.ts"]
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts",
+    "generated/**/*.ts",
+    "scripts/**/*.ts",
+    "alchemy.run.ts",
+    "vitest.config.ts"
+  ]
 }

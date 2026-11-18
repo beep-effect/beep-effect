@@ -1,0 +1,54 @@
+{
+  "name": "@proto/runs-contract",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./Run/ActivateRun.command": "./src/Run/ActivateRun.command.ts",
+    "./Run/AwaitApproval.command": "./src/Run/AwaitApproval.command.ts",
+    "./Run/BudgetExceeded.rejection": "./src/Run/BudgetExceeded.rejection.ts",
+    "./Run/CancelRun.command": "./src/Run/CancelRun.command.ts",
+    "./Run/ChildFinished.command": "./src/Run/ChildFinished.command.ts",
+    "./Run/CompleteRun.command": "./src/Run/CompleteRun.command.ts",
+    "./Run/ConcludeRun.command": "./src/Run/ConcludeRun.command.ts",
+    "./Run/DelegateRun.command": "./src/Run/DelegateRun.command.ts",
+    "./Run/ExhaustRun.command": "./src/Run/ExhaustRun.command.ts",
+    "./Run/NotThisRun.rejection": "./src/Run/NotThisRun.rejection.ts",
+    "./Run/OpenChildRun.command": "./src/Run/OpenChildRun.command.ts",
+    "./Run/OpenContinuation.command": "./src/Run/OpenContinuation.command.ts",
+    "./Run/RecordStep.command": "./src/Run/RecordStep.command.ts",
+    "./Run/RefuseChild.command": "./src/Run/RefuseChild.command.ts",
+    "./Run/RejectRun.command": "./src/Run/RejectRun.command.ts",
+    "./Run/ReleaseReservation.command": "./src/Run/ReleaseReservation.command.ts",
+    "./Run/RequestRun.command": "./src/Run/RequestRun.command.ts",
+    "./Run/Reservation.id": "./src/Run/Reservation.id.ts",
+    "./Run/ReserveBudget.command": "./src/Run/ReserveBudget.command.ts",
+    "./Run/RunEvent": "./src/Run/RunEvent.ts",
+    "./Run/RunNotRunning.rejection": "./src/Run/RunNotRunning.rejection.ts",
+    "./Run/RunStatus": "./src/Run/RunStatus.ts",
+    "./Run/RunVersions": "./src/Run/RunVersions.ts",
+    "./Run/Session.id": "./src/Run/Session.id.ts",
+    "./Run/SessionRuns.read": "./src/Run/SessionRuns.read.ts",
+    "./Run/SettleUsage.command": "./src/Run/SettleUsage.command.ts",
+    "./Run/Since": "./src/Run/Since.ts",
+    "./Run/UnknownReservation.rejection": "./src/Run/UnknownReservation.rejection.ts",
+    "./Runs.gateway": "./src/Runs.gateway.ts",
+    "./RunsApi.contract": "./src/RunsApi.contract.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@proto/contract-kit": "workspace:*",
+    "@proto/kernel": "workspace:*",
+    "effect": "4.1.4"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "4.1.4",
+    "@effect/vitest": "4.1.4",
+    "@proto/tooling": "workspace:*",
+    "vitest": "5.0.4"
+  }
+}

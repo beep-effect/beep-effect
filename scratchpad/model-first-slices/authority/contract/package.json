@@ -1,0 +1,33 @@
+{
+  "name": "@proto/authority-contract",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./Accountability/AssignAccountability.command": "./src/Accountability/AssignAccountability.command.ts",
+    "./Accountability/ReleaseAccountability.command": "./src/Accountability/ReleaseAccountability.command.ts",
+    "./Authority.capabilities": "./src/Authority.capabilities.ts",
+    "./Authority.gateway": "./src/Authority.gateway.ts",
+    "./AuthorityApi.contract": "./src/AuthorityApi.contract.ts",
+    "./Delegation/DelegateFurther.command": "./src/Delegation/DelegateFurther.command.ts",
+    "./Delegation/DelegationNotActive.rejection": "./src/Delegation/DelegationNotActive.rejection.ts",
+    "./Delegation/NarrowDelegation.command": "./src/Delegation/NarrowDelegation.command.ts",
+    "./Delegation/NotDelegator.rejection": "./src/Delegation/NotDelegator.rejection.ts",
+    "./Delegation/OpenDelegation.command": "./src/Delegation/OpenDelegation.command.ts",
+    "./Delegation/RevokeDelegation.command": "./src/Delegation/RevokeDelegation.command.ts",
+    "./Grant/DelegateGrant.command": "./src/Grant/DelegateGrant.command.ts",
+    "./Grant/ExpireGrant.command": "./src/Grant/ExpireGrant.command.ts",
+    "./Grant/GrantNotActive.rejection": "./src/Grant/GrantNotActive.rejection.ts",
+    "./Grant/IssueGrant.command": "./src/Grant/IssueGrant.command.ts",
+    "./Grant/NarrowGrant.command": "./src/Grant/NarrowGrant.command.ts",
+    "./Grant/RevokeGrant.command": "./src/Grant/RevokeGrant.command.ts",
+    "./TermsWiden.rejection": "./src/TermsWiden.rejection.ts"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@proto/contract-kit": "workspace:*",
+    "@proto/kernel": "workspace:*",
+    "effect": "4.1.4"
+  }
+}

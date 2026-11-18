@@ -1,0 +1,352 @@
+diff --git a/lib/Host.d.ts b/lib/Host.d.ts
+index d5734e45fc9e98f51425d62618391d477cf38343..0f4e2dd3d58cb50c8a4198b929183ca0af37eea2 100644
+--- a/lib/Host.d.ts
++++ b/lib/Host.d.ts
+@@ -5,8 +5,9 @@
+  *
+  * @module
+  */
++import * as ShardingConfig from "effect/cluster/ShardingConfig";
+ import * as Context from "effect/Context";
+-import type * as Effect from "effect/Effect";
++import * as Effect from "effect/Effect";
+ import type * as Layer from "effect/Layer";
+ import type { HostedEntity } from "./Entity.ts";
+ export { type GatewayTarget, makeNamespace } from "./internal/Gateway.ts";
+@@ -14,6 +15,12 @@ export { HasNoPool } from "./internal/HostedRuntime.ts";
+ declare const RunnerHost_base: Context.ServiceClass<RunnerHost, "Cluster.RunnerHost", {
+     /** Host an entity on this runner, launching `layer` in the cluster beside it. */
+     readonly host: (entity: HostedEntity, layer: Layer.Layer<never, never, any>) => Effect.Effect<void>;
++    /**
++     * The `application_name` the runner's bootstrap gave the Postgres pool
++     * Effect's SQL runner storage reserves its shard-lock session from
++     * (`runnerPoolName`); absent when it named none.
++     */
++    readonly poolName?: string | undefined;
+ }>;
+ /**
+  * The runner a Layer is being built on. A runner's bootstrap provides it
+@@ -57,4 +64,37 @@ declare const InstanceStorage_base: Context.ServiceClass<InstanceStorage, "Clust
+  */
+ export declare class InstanceStorage extends InstanceStorage_base {
+ }
++/**
++ * The `application_name` a runner's Postgres pool carries: `effect-cluster:<host>:<port>`,
++ * from the address the runner gives Effect Cluster. Effect's SQL runner storage reserves the
++ * session that holds the runner's shard locks from this pool, so the lock session carries it
++ * too, and any connection can tell which runner holds a shard (`pg_locks` joined to
++ * `pg_stat_activity`). PostgreSQL keeps 63 bytes of the name and replaces characters outside
++ * printable ASCII; a name that would be cut or changed is replaced by `effect-cluster:#` and
++ * an FNV-1a hash of `host:port`, so no two runners share a cut name.
++ */
++export declare const runnerPoolName: (host: string, port: number) => string;
++declare const RunnerPoolUnnamed_base: new <A extends Record<string, any> = {}>(args: import("effect/Types").VoidIfEmpty<{ readonly [P in keyof A as P extends "_tag" ? never : P]: A[P] }>) => import("effect/Cause").YieldableError & {
++    readonly _tag: "Cluster.RunnerPoolUnnamed";
++} & Readonly<A>;
++/**
++ * Why a runner's shard-lock session could never be told apart from another
++ * runner's: the runner has no address (`ShardingConfig.runnerAddress`), its
++ * bootstrap did not name its Postgres pool, or named it after another address.
++ */
++export declare class RunnerPoolUnnamed extends RunnerPoolUnnamed_base<{
++    readonly reason: "no-runner-address" | "pool-not-named" | "pool-named-for-another-runner";
++    readonly message: string;
++}> {
++}
++/**
++ * The start check of a runner whose commits are fenced on its shard lock
++ * (`@alchemy.run/domain/EffectCluster`): fails unless the runner has an
++ * address and its pool carries the name that address gives
++ * (`runnerPoolName`). It reads the runner's configuration only, never the
++ * database: at start the lock session may not exist yet, or may hold no shard
++ * yet, so a query could not tell an unnamed pool from a session still opening.
++ * A storage that takes no advisory locks keeps no lock session, and passes.
++ */
++export declare const checkRunnerPool: (poolName: string | undefined) => Effect.Effect<void, RunnerPoolUnnamed, ShardingConfig.ShardingConfig>;
+ //# sourceMappingURL=Host.d.ts.map
+\ No newline at end of file
+diff --git a/lib/Host.js b/lib/Host.js
+index cdbdf953270349a4ff7a84a2a81383592e62c4c9..4931a17839c0b95e8a70dddc429914302db2d100 100644
+--- a/lib/Host.js
++++ b/lib/Host.js
+@@ -5,7 +5,11 @@
+  *
+  * @module
+  */
++import * as ShardingConfig from "effect/cluster/ShardingConfig";
+ import * as Context from "effect/Context";
++import * as Data from "effect/Data";
++import * as Effect from "effect/Effect";
++import * as Option from "effect/Option";
+ export { makeNamespace } from "./internal/Gateway.js";
+ export { HasNoPool } from "./internal/HostedRuntime.js";
+ /**
+@@ -28,4 +32,60 @@ export class RunnerHost extends Context.Service()("Cluster.RunnerHost") {
+  */
+ export class InstanceStorage extends Context.Service()("Cluster.InstanceStorage") {
+ }
++/**
++ * The `application_name` a runner's Postgres pool carries: `effect-cluster:<host>:<port>`,
++ * from the address the runner gives Effect Cluster. Effect's SQL runner storage reserves the
++ * session that holds the runner's shard locks from this pool, so the lock session carries it
++ * too, and any connection can tell which runner holds a shard (`pg_locks` joined to
++ * `pg_stat_activity`). PostgreSQL keeps 63 bytes of the name and replaces characters outside
++ * printable ASCII; a name that would be cut or changed is replaced by `effect-cluster:#` and
++ * an FNV-1a hash of `host:port`, so no two runners share a cut name.
++ */
++export const runnerPoolName = (host, port) => {
++    const full = `effect-cluster:${host}:${port}`;
++    const bytes = new TextEncoder().encode(full);
++    if (bytes.length <= 63 && /^[\x20-\x7e]*$/.test(full))
++        return full;
++    let hash = 0x811c9dc5;
++    for (const byte of new TextEncoder().encode(`${host}:${port}`))
++        hash = Math.imul(hash ^ byte, 0x01000193);
++    return `effect-cluster:#${(hash >>> 0).toString(16).padStart(8, "0")}`;
++};
++/**
++ * Why a runner's shard-lock session could never be told apart from another
++ * runner's: the runner has no address (`ShardingConfig.runnerAddress`), its
++ * bootstrap did not name its Postgres pool, or named it after another address.
++ */
++export class RunnerPoolUnnamed extends Data.TaggedError("Cluster.RunnerPoolUnnamed") {
++}
++/**
++ * The start check of a runner whose commits are fenced on its shard lock
++ * (`@alchemy.run/domain/EffectCluster`): fails unless the runner has an
++ * address and its pool carries the name that address gives
++ * (`runnerPoolName`). It reads the runner's configuration only, never the
++ * database: at start the lock session may not exist yet, or may hold no shard
++ * yet, so a query could not tell an unnamed pool from a session still opening.
++ * A storage that takes no advisory locks keeps no lock session, and passes.
++ */
++export const checkRunnerPool = (poolName) => Effect.flatMap(Effect.service(ShardingConfig.ShardingConfig), (config) => {
++    if (config.shardLockDisableAdvisory)
++        return Effect.void;
++    if (Option.isNone(config.runnerAddress))
++        return Effect.fail(new RunnerPoolUnnamed({
++            reason: "no-runner-address",
++            message: "This runner has no address (ShardingConfig.runnerAddress), so no session can be named after it.",
++        }));
++    const expected = runnerPoolName(config.runnerAddress.value.host, config.runnerAddress.value.port);
++    if (poolName === undefined)
++        return Effect.fail(new RunnerPoolUnnamed({
++            reason: "pool-not-named",
++            message: `This runner's Postgres pool is not named. Build it with applicationName ${expected} (runnerPoolName), as the runner bootstrap does, so its shard-lock session can be told apart.`,
++        }));
++    if (poolName !== expected)
++        return Effect.fail(new RunnerPoolUnnamed({
++            reason: "pool-named-for-another-runner",
++            message: `This runner's Postgres pool is named ${poolName}, not ${expected}, the name its address gives.`,
++        }));
++    return Effect.void;
++});
+ //# sourceMappingURL=Host.js.map
+\ No newline at end of file
+diff --git a/lib/internal/Bootstrap.js b/lib/internal/Bootstrap.js
+index 461ff1825e4867daa8bc7d43c6a823144501c1dc..26f179eff52c9733b2bbd0ac2ca2300013b82de4 100644
+--- a/lib/internal/Bootstrap.js
++++ b/lib/internal/Bootstrap.js
+@@ -29,7 +29,7 @@ import * as Path from "effect/Path";
+ import * as Redacted from "effect/Redacted";
+ import * as Ref from "effect/Ref";
+ import { PlatformDeclaration } from "../Entity.js";
+-import { RunnerHost } from "../Host.js";
++import { RunnerHost, runnerPoolName } from "../Host.js";
+ import { GATEWAY_PORT, RUNNER_PORT, gatewayLayer } from "./Gateway.js";
+ import { HasNoPool } from "./HostedRuntime.js";
+ const env = (name) => process.env[name];
+@@ -163,8 +163,13 @@ export const bootstrap = (definitions) => {
+             all.some((other) => other.kind === "entity" && other.entity.type === built.entity.type)
+             ? all
+             : [...all, built]);
++        const host = yield* runnerHost;
++        // The name the runner storage's pool is given below, declared to the Layers built here so
++        // one that fences its commits on this runner's lock session can check it at start.
++        const poolName = runnerPoolName(host, RUNNER_PORT);
+         const runner = RunnerHost.of({
+             host: (entity, layer) => Effect.andThen(add(entity), Ref.update(launchedRef, (all) => [...all, layer])),
++            poolName,
+         });
+         for (const entrypoint of entrypoints) {
+             const declaration = entrypoint?.[PlatformDeclaration] ??
+@@ -186,7 +191,6 @@ export const bootstrap = (definitions) => {
+         }
+         const hosted = yield* Ref.get(hostedRef);
+         const launched = yield* Ref.get(launchedRef);
+-        const host = yield* runnerHost;
+         const group = env("CLUSTER_SHARD_GROUPS") ?? "default";
+         // Every hosted entity lives in this pool's own shard group.
+         const placed = hosted
+@@ -218,7 +222,12 @@ export const bootstrap = (definitions) => {
+                 runnerListenAddress: Option.some(RunnerAddress.make(env("CLUSTER_LISTEN_HOST") ?? "0.0.0.0", RUNNER_PORT)),
+                 ...shardGroupsConfig(),
+             },
+-        }).pipe(Layer.provide(PgClient.layer({ url: Redacted.make(env("CLUSTER_DATABASE_URL")) })));
++        }).pipe(
++        // Named after the runner, so its shard-lock session can be told apart (`runnerPoolName`).
++        Layer.provide(PgClient.layer({
++            url: Redacted.make(env("CLUSTER_DATABASE_URL")),
++            applicationName: poolName,
++        })));
+         // Singletons and crons run in this pool's shard group too, each with
+         // the services its Construction phase had.
+         const scheduled = hosted.flatMap((entry) => entry.kind === "singleton"
+diff --git a/src/Host.ts b/src/Host.ts
+index f19a5426c933201bb3d2537322e34bc789fecaa8..0c2b51dad04942bc46a2162f791536c2c8415b0c 100644
+--- a/src/Host.ts
++++ b/src/Host.ts
+@@ -5,9 +5,12 @@
+  *
+  * @module
+  */
++import * as ShardingConfig from "effect/cluster/ShardingConfig";
+ import * as Context from "effect/Context";
+-import type * as Effect from "effect/Effect";
++import * as Data from "effect/Data";
++import * as Effect from "effect/Effect";
+ import type * as Layer from "effect/Layer";
++import * as Option from "effect/Option";
+ import type { HostedEntity } from "./Entity.ts";
+ 
+ export { type GatewayTarget, makeNamespace } from "./internal/Gateway.ts";
+@@ -29,6 +32,12 @@ export class RunnerHost extends Context.Service<
+       entity: HostedEntity,
+       layer: Layer.Layer<never, never, any>,
+     ) => Effect.Effect<void>;
++    /**
++     * The `application_name` the runner's bootstrap gave the Postgres pool
++     * Effect's SQL runner storage reserves its shard-lock session from
++     * (`runnerPoolName`); absent when it named none.
++     */
++    readonly poolName?: string | undefined;
+   }
+ >()("Cluster.RunnerHost") {}
+ 
+@@ -66,3 +75,70 @@ export class InstanceStorage extends Context.Service<
+     transaction<A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R>;
+   }
+ >()("Cluster.InstanceStorage") {}
++
++/**
++ * The `application_name` a runner's Postgres pool carries: `effect-cluster:<host>:<port>`,
++ * from the address the runner gives Effect Cluster. Effect's SQL runner storage reserves the
++ * session that holds the runner's shard locks from this pool, so the lock session carries it
++ * too, and any connection can tell which runner holds a shard (`pg_locks` joined to
++ * `pg_stat_activity`). PostgreSQL keeps 63 bytes of the name and replaces characters outside
++ * printable ASCII; a name that would be cut or changed is replaced by `effect-cluster:#` and
++ * an FNV-1a hash of `host:port`, so no two runners share a cut name.
++ */
++export const runnerPoolName = (host: string, port: number): string => {
++  const full = `effect-cluster:${host}:${port}`;
++  const bytes = new TextEncoder().encode(full);
++  if (bytes.length <= 63 && /^[\x20-\x7e]*$/.test(full)) return full;
++  let hash = 0x811c9dc5;
++  for (const byte of new TextEncoder().encode(`${host}:${port}`)) hash = Math.imul(hash ^ byte, 0x01000193);
++  return `effect-cluster:#${(hash >>> 0).toString(16).padStart(8, "0")}`;
++};
++
++/**
++ * Why a runner's shard-lock session could never be told apart from another
++ * runner's: the runner has no address (`ShardingConfig.runnerAddress`), its
++ * bootstrap did not name its Postgres pool, or named it after another address.
++ */
++export class RunnerPoolUnnamed extends Data.TaggedError("Cluster.RunnerPoolUnnamed")<{
++  readonly reason: "no-runner-address" | "pool-not-named" | "pool-named-for-another-runner";
++  readonly message: string;
++}> {}
++
++/**
++ * The start check of a runner whose commits are fenced on its shard lock
++ * (`@alchemy.run/domain/EffectCluster`): fails unless the runner has an
++ * address and its pool carries the name that address gives
++ * (`runnerPoolName`). It reads the runner's configuration only, never the
++ * database: at start the lock session may not exist yet, or may hold no shard
++ * yet, so a query could not tell an unnamed pool from a session still opening.
++ * A storage that takes no advisory locks keeps no lock session, and passes.
++ */
++export const checkRunnerPool = (
++  poolName: string | undefined,
++): Effect.Effect<void, RunnerPoolUnnamed, ShardingConfig.ShardingConfig> =>
++  Effect.flatMap(Effect.service(ShardingConfig.ShardingConfig), (config) => {
++    if (config.shardLockDisableAdvisory) return Effect.void;
++    if (Option.isNone(config.runnerAddress))
++      return Effect.fail(
++        new RunnerPoolUnnamed({
++          reason: "no-runner-address",
++          message: "This runner has no address (ShardingConfig.runnerAddress), so no session can be named after it.",
++        }),
++      );
++    const expected = runnerPoolName(config.runnerAddress.value.host, config.runnerAddress.value.port);
++    if (poolName === undefined)
++      return Effect.fail(
++        new RunnerPoolUnnamed({
++          reason: "pool-not-named",
++          message: `This runner's Postgres pool is not named. Build it with applicationName ${expected} (runnerPoolName), as the runner bootstrap does, so its shard-lock session can be told apart.`,
++        }),
++      );
++    if (poolName !== expected)
++      return Effect.fail(
++        new RunnerPoolUnnamed({
++          reason: "pool-named-for-another-runner",
++          message: `This runner's Postgres pool is named ${poolName}, not ${expected}, the name its address gives.`,
++        }),
++      );
++    return Effect.void;
++  });
+diff --git a/src/internal/Bootstrap.ts b/src/internal/Bootstrap.ts
+index f16f6f36c8567af41f7b698dd1af54aa43200755..3e2633c5b7570e19193b3c65234aefa682c6f44b 100644
+--- a/src/internal/Bootstrap.ts
++++ b/src/internal/Bootstrap.ts
+@@ -44,7 +44,7 @@ import type { Rpc, RpcGroup } from "effect/rpc";
+ import type { Workflow as EffectWorkflow } from "effect/workflow";
+ import type { HostedCron } from "../Cron.ts";
+ import { PlatformDeclaration, type HostedEntity } from "../Entity.ts";
+-import { RunnerHost } from "../Host.ts";
++import { RunnerHost, runnerPoolName } from "../Host.ts";
+ import type { HostedSingleton } from "../Singleton.ts";
+ import type { HostedWorkflow } from "../Workflow.ts";
+ import { GATEWAY_PORT, RUNNER_PORT, gatewayLayer } from "./Gateway.ts";
+@@ -230,12 +230,17 @@ export const bootstrap = (
+           ? all
+           : [...all, built],
+       );
++    const host = yield* runnerHost;
++    // The name the runner storage's pool is given below, declared to the Layers built here so
++    // one that fences its commits on this runner's lock session can check it at start.
++    const poolName = runnerPoolName(host, RUNNER_PORT);
+     const runner = RunnerHost.of({
+       host: (entity, layer) =>
+         Effect.andThen(
+           add(entity),
+           Ref.update(launchedRef, (all) => [...all, layer]),
+         ),
++      poolName,
+     });
+     for (const entrypoint of entrypoints) {
+       const declaration =
+@@ -262,7 +267,6 @@ export const bootstrap = (
+     const hosted = yield* Ref.get(hostedRef);
+     const launched = yield* Ref.get(launchedRef);
+ 
+-    const host = yield* runnerHost;
+     const group = env("CLUSTER_SHARD_GROUPS") ?? "default";
+     // Every hosted entity lives in this pool's own shard group.
+     const placed = hosted
+@@ -309,7 +313,15 @@ export const bootstrap = (
+         ),
+         ...shardGroupsConfig(),
+       },
+-    }).pipe(Layer.provide(PgClient.layer({ url: Redacted.make(env("CLUSTER_DATABASE_URL")!) })));
++    }).pipe(
++      // Named after the runner, so its shard-lock session can be told apart (`runnerPoolName`).
++      Layer.provide(
++        PgClient.layer({
++          url: Redacted.make(env("CLUSTER_DATABASE_URL")!),
++          applicationName: poolName,
++        }),
++      ),
++    );
+     // Singletons and crons run in this pool's shard group too, each with
+     // the services its Construction phase had.
+     const scheduled = hosted.flatMap((entry) =>

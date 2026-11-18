@@ -1,8 +1,7 @@
 import * as Domain from "@alchemy.run/domain";
-import "@proto/kernel/Audience";
-import { PartiesMerged } from "../Party/MergeParties.command.ts";
+import { PartiesMerged } from "@proto/party-contract/Party/MergeParties.command";
+import { PartyRegistered } from "@proto/party-contract/Party/RegisterParty.command";
 import { Party } from "../Party/Party.aggregate.ts";
-import { PartyRegistered } from "../Party/RegisterParty.command.ts";
 
 /**
  * Every party, one row each, in a store outside the model, for searches

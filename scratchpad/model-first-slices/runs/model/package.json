@@ -1,0 +1,36 @@
+{
+  "name": "@proto/runs-model",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./Authority.external": "./src/Authority.external.ts",
+    "./Run/AgentRun.aggregate": "./src/Run/AgentRun.aggregate.ts",
+    "./Run/ContinueAtBound.policy": "./src/Run/ContinueAtBound.policy.ts",
+    "./Run/GrantOnRequest.policy": "./src/Run/GrantOnRequest.policy.ts",
+    "./Run/OpenChildOnRequest.policy": "./src/Run/OpenChildOnRequest.policy.ts",
+    "./Run/ResumeParent.policy": "./src/Run/ResumeParent.policy.ts",
+    "./Run/SessionRuns.view": "./src/Run/SessionRuns.view.ts",
+    "./Runs.handlers": "./src/Runs.handlers.ts",
+    "./Runs.model": "./src/Runs.model.ts",
+    "./Runs.ports": "./src/Runs.ports.ts",
+    "./RunsApi.api": "./src/RunsApi.api.ts"
+  },
+  "scripts": {
+    "handlers": "bun scripts/handlers.ts",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@proto/kernel": "workspace:*",
+    "@proto/runs-contract": "workspace:*",
+    "effect": "4.1.4"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "4.1.4",
+    "@effect/vitest": "4.1.4",
+    "@proto/tooling": "workspace:*",
+    "vitest": "5.0.4"
+  }
+}

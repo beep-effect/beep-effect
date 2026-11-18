@@ -1,0 +1,14 @@
+{
+  "name": "@proto/contract-kit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./Catalog": "./src/Catalog.ts"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "effect": "4.1.4"
+  }
+}
