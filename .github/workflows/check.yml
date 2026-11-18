@@ -116,8 +116,7 @@ jobs:
       docs_only: ${{ steps.decide.outputs.docs_only }}
       route_skips: ${{ steps.decide.outputs.route_skips }}
       route_receipt: ${{ steps.decide.outputs.route_receipt }}
-      # HOST-06 (goals/heavy-pool-diet slice 3): exposed, not yet passed. heavy.yml@main declares
-      # `lane_skips` only once slice 3 merges; slice 6 passes it to the heavy caller below.
+      # HOST-06 (goals/heavy-pool-diet): heavy lanes that skip for a reason other than the route.
       lane_skips: ${{ steps.decide.outputs.lane_skips }}
       # heavy.yml@main no longer declares Coverage Regression, so this is a
       # constant until COVE-08 makes that job name a literal and deletes it.
@@ -223,10 +222,13 @@ jobs:
     secrets: inherit
     with:
       admitted: ${{ needs.admission.outputs.verdict == 'run' }}
-      # Verification route (goals/verification-route slice 3): heavy lanes the enforced route
-      # excludes start, then complete skip-satisfied with this receipt in their job summary.
+      # Verification route (goals/verification-route slice 3): on a pull request, heavy lanes the
+      # enforced route excludes skip at job level; Heavy Admission prints the receipt.
       route_skips: ${{ needs.admission.outputs.route_skips }}
       route_receipt: ${{ needs.admission.outputs.route_receipt }}
+      # HOST-06 (goals/heavy-pool-diet slice 6): every lane on a goals-only pull request, and
+      # Docgen on a pull request with no Docgen-relevant path, skip at job level before a runner boots.
+      lane_skips: ${{ needs.admission.outputs.lane_skips }}
   # Repo Sanity starts for every diff and is the required gate for documentation
   # too. A docs_only diff (prose, packet files, changesets) skips the lane body
   # and runs only what such a diff can fail: the private home path law (the
@@ -562,15 +564,10 @@ jobs:
           free-disk-min-gib: "64"
           turbo-remote-cache: "true"
           app-secrets: "true"
-          turbo-api: ${{ vars.TURBO_API }}
-          turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
-          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
-          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
-          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
-          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
-          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
+          turbo-api: ${{ vars.TURBO_CACHE_API }}
+          turbo-team: ${{ vars.TURBO_CACHE_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_CACHE_WRITE_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_CACHE_READ_TOKEN }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -691,15 +688,10 @@ jobs:
           free-disk-min-gib: "64"
           turbo-remote-cache: "true"
           app-secrets: "true"
-          turbo-api: ${{ vars.TURBO_API }}
-          turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
-          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
-          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
-          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
-          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
-          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
+          turbo-api: ${{ vars.TURBO_CACHE_API }}
+          turbo-team: ${{ vars.TURBO_CACHE_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_CACHE_WRITE_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_CACHE_READ_TOKEN }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -1002,15 +994,10 @@ jobs:
           free-disk-min-gib: "64"
           turbo-remote-cache: "true"
           app-secrets: "true"
-          turbo-api: ${{ vars.TURBO_API }}
-          turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
-          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
-          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
-          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
-          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
-          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
+          turbo-api: ${{ vars.TURBO_CACHE_API }}
+          turbo-team: ${{ vars.TURBO_CACHE_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_CACHE_WRITE_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_CACHE_READ_TOKEN }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -1236,15 +1223,10 @@ jobs:
           free-disk-min-gib: "64"
           turbo-remote-cache: "true"
           app-secrets: "true"
-          turbo-api: ${{ vars.TURBO_API }}
-          turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
-          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
-          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
-          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
-          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
-          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
+          turbo-api: ${{ vars.TURBO_CACHE_API }}
+          turbo-team: ${{ vars.TURBO_CACHE_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_CACHE_WRITE_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_CACHE_READ_TOKEN }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -1725,15 +1707,10 @@ jobs:
           native-pdf-tools: "true"
           turbo-remote-cache: "true"
           app-secrets: "true"
-          turbo-api: ${{ vars.TURBO_API }}
-          turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
-          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
-          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
-          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
-          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
-          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
+          turbo-api: ${{ vars.TURBO_CACHE_API }}
+          turbo-team: ${{ vars.TURBO_CACHE_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_CACHE_WRITE_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_CACHE_READ_TOKEN }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -1878,15 +1855,10 @@ jobs:
           free-disk: "true"
           free-disk-min-gib: "64"
           turbo-remote-cache: "true"
-          turbo-api: ${{ vars.TURBO_API }}
-          turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
-          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
-          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
-          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
-          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
-          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
+          turbo-api: ${{ vars.TURBO_CACHE_API }}
+          turbo-team: ${{ vars.TURBO_CACHE_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_CACHE_WRITE_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_CACHE_READ_TOKEN }}
 
       - name: Run Fallow envelopes
         id: fallow
@@ -2004,15 +1976,10 @@ jobs:
         with:
           use-node: "false"
           turbo-remote-cache: "true"
-          turbo-api: ${{ vars.TURBO_API }}
-          turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_TOKEN || '' }}
-          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
-          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
-          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
-          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
-          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
-          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
+          turbo-api: ${{ vars.TURBO_CACHE_API }}
+          turbo-team: ${{ vars.TURBO_CACHE_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && secrets.TURBO_CACHE_WRITE_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_CACHE_READ_TOKEN }}
 
       - name: Run JSDoc inventory ratchet
         if: steps.lane-gate.outputs.should_run == 'true'

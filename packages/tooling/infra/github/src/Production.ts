@@ -271,6 +271,10 @@ export const productionConfig: StackConfig = StackConfig.make({
       unmanaged("variable", "Turbo cache enrollment; @beep/infra-turbo-cache's cutover sets these.")
     ),
     ...A.map(
+      ["TURBO_CACHE_API", "TURBO_CACHE_TEAM"],
+      unmanaged("variable", "The Worker cache's origin and team, set at turbo-cache stage 2; CI reads these.")
+    ),
+    ...A.map(
       ["APP_ENV", "APP_LOG_FORMAT", "APP_LOG_LEVEL", "APP_NAME", "NEXT_PUBLIC_ENV"],
       unmanaged("secret", "No known value source in 1Password; values cannot be read back from GitHub.")
     ),
@@ -291,6 +295,8 @@ export const productionConfig: StackConfig = StackConfig.make({
         "turbo-cache-write/TURBO_R2_WRITE_ACCESS_KEY_ID",
         "turbo-cache-write/TURBO_R2_WRITE_SECRET_ACCESS_KEY",
         "turbo-cache-write/TURBO_TOKEN",
+        "TURBO_CACHE_READ_TOKEN",
+        "turbo-cache-write/TURBO_CACHE_WRITE_TOKEN",
       ],
       unmanaged("secret", "Produced by the turbo cache stack; not duplicated here.")
     ),

@@ -85,8 +85,7 @@ jobs:
       docs_only: ${{ steps.decide.outputs.docs_only || steps.docs.outputs.docs_only }}
       route_skips: ${{ steps.decide.outputs.route_skips }}
       route_receipt: ${{ steps.decide.outputs.route_receipt }}
-      # HOST-06 (goals/heavy-pool-diet slice 3): exposed, not yet passed. heavy.yml@main declares
-      # `lane_skips` only once slice 3 merges; slice 6 passes it to the heavy caller below.
+      # HOST-06 (goals/heavy-pool-diet): heavy lanes that skip for a reason other than the route.
       lane_skips: ${{ steps.decide.outputs.lane_skips }}
     steps:
       # A later label never decides admission again: it repeats a passing proof
@@ -272,3 +271,6 @@ jobs:
       # same route skips and receipt as check.yml.
       route_skips: ${{ needs.admission.outputs.route_skips }}
       route_receipt: ${{ needs.admission.outputs.route_receipt }}
+      # HOST-06 (goals/heavy-pool-diet slice 6): every lane on a goals-only pull request, and
+      # Docgen on a pull request with no Docgen-relevant path, skip at job level before a runner boots.
+      lane_skips: ${{ needs.admission.outputs.lane_skips }}

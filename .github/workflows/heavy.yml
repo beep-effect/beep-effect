@@ -23,7 +23,11 @@ on:
         default: ""
 
       route_receipt:
-        description: Compact verification route receipt with footprint, atom counts and skip reasons.
+        description: >-
+          Compact verification route receipt with footprint, atom counts and
+          skip reasons. Heavy Admission prints it; no lane reads it since the
+          skips moved to job level (goals/heavy-pool-diet slice 6). It stays
+          declared because a caller run that predates slice 6 still passes it.
         required: false
         type: string
         default: ""
@@ -31,10 +35,10 @@ on:
       lane_skips:
         description: >-
           Comma-separated heavy lane ids Heavy Admission skips for a reason
-          other than the route: every lane on a goals-only diff, and docgen on
-          a pull request whose diff has no Docgen-relevant path. Each lane job
-          skips at job level before a runner boots. Callers pass it from
-          goals/heavy-pool-diet slice 6; until then the in-VM lane gate decides.
+          other than the route: every lane on a goals-only pull request, and
+          docgen on a pull request whose diff has no Docgen-relevant path.
+          Each lane job skips at job level before a runner boots; no lane
+          decides in the VM (goals/heavy-pool-diet slice 6).
         required: false
         type: string
         default: ""
@@ -154,69 +158,16 @@ jobs:
         if: inputs.admitted
         uses: ./.github/actions/fetch-beep-ci
 
-      - name: Determine lane execution
-        id: lane-gate
-        shell: bash
-        env:
-          ADMITTED: ${{ inputs.admitted }}
-          LANE_NAME: ${{ env.BEEP_CI_LANE_NAME }}
-          LANE_ID: ${{ env.BEEP_CI_LANE_ID }}
-          ROUTE_SKIPS: ${{ inputs.route_skips }}
-          ROUTE_RECEIPT: ${{ inputs.route_receipt }}
-        run: |
-          set -euo pipefail
-          if [[ "${ADMITTED}" != "true" ]]; then
-            echo "heavy admission: not admitted; ${LANE_NAME} passes without work"
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          if [[ "$GITHUB_EVENT_NAME" == "pull_request" && ",${ROUTE_SKIPS}," == *",${LANE_ID},"* ]]; then
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-            {
-              echo "### Verification route: skip-satisfied"
-              echo
-              printf 'Lane: `%s`\n\n' "$LANE_ID"
-              printf '%s\n' "$ROUTE_RECEIPT"
-            } >> "$GITHUB_STEP_SUMMARY"
-            exit 0
-          fi
-
-          should_run=true
-          eval "$(beep ci change-profile)"
-          if [[ "$goals_only" == "true" ]]; then
-            should_run=false
-          fi
-
-          if [[ "${{ env.BEEP_CI_LANE_ID }}" == "docgen" && "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
-            if [[ -n "$BEEP_CI_PR_BASE_SHA" && -n "$BEEP_CI_PR_HEAD_SHA" ]] \
-              && changed_files="$(git diff --name-only --no-renames "${BEEP_CI_PR_BASE_SHA}...${BEEP_CI_PR_HEAD_SHA}")"; then
-              if [[ -z "$changed_files" ]] || ! grep -Eq '(^apps/|^packages/|^infra/|/docgen\.json$|\.(ts|tsx|mts|cts|md)$)' <<< "$changed_files"; then
-                should_run=false
-              fi
-            else
-              echo "Docgen PR diff unavailable; retaining verification"
-            fi
-          fi
-
-          echo "should_run=$should_run" >> "$GITHUB_OUTPUT"
-
       - name: Setup monorepo CI
-        if: steps.lane-gate.outputs.should_run == 'true'
         uses: ./.github/actions/setup-monorepo-ci
         with:
           free-disk: "true"
           turbo-remote-cache: ${{ env.BEEP_CI_LANE_USES_TURBO }}
           app-secrets: "true"
-          turbo-api: ${{ vars.TURBO_API }}
-          turbo-team: ${{ vars.TURBO_TEAM }}
-          turbo-token: ${{ github.event_name == 'push' && env.BEEP_CI_LANE_USES_TURBO == 'true' && secrets.TURBO_TOKEN || '' }}
-          turbo-read-token: ${{ secrets.TURBO_READ_TOKEN }}
-          r2-enabled: ${{ vars.TURBO_R2_ENABLED }}
-          r2-endpoint: ${{ vars.TURBO_R2_ENDPOINT }}
-          r2-bucket: ${{ vars.TURBO_R2_BUCKET }}
-          r2-access-key-id: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_ACCESS_KEY_ID || (github.event_name != 'push' && secrets.TURBO_R2_READ_ACCESS_KEY_ID || '') }}
-          r2-secret-access-key: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && secrets.TURBO_R2_WRITE_SECRET_ACCESS_KEY || (github.event_name != 'push' && secrets.TURBO_R2_READ_SECRET_ACCESS_KEY || '') }}
+          turbo-api: ${{ vars.TURBO_CACHE_API }}
+          turbo-team: ${{ vars.TURBO_CACHE_TEAM }}
+          turbo-token: ${{ github.event_name == 'push' && env.BEEP_CI_LANE_USES_TURBO == 'true' && secrets.TURBO_CACHE_WRITE_TOKEN || '' }}
+          turbo-read-token: ${{ secrets.TURBO_CACHE_READ_TOKEN }}
           database-url: ${{ github.event_name == 'push' && secrets.DATABASE_URL || '' }}
           database-url-unpooled: ${{ github.event_name == 'push' && secrets.DATABASE_URL_UNPOOLED || '' }}
           email-resend-api-key: ${{ github.event_name == 'push' && secrets.EMAIL_RESEND_API_KEY || '' }}
@@ -229,7 +180,7 @@ jobs:
       # PRs may restore the main Docgen cache without saving it. Same-
       # repository PRs can also read the remote cache; forks remain tokenless.
       - name: Restore main Docgen Turbo cache
-        if: env.BEEP_CI_LANE_ID == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'pull_request'
+        if: env.BEEP_CI_LANE_ID == 'docgen' && github.event_name == 'pull_request'
         id: docgen-turbo-cache-restore
         continue-on-error: true
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -240,13 +191,12 @@ jobs:
             turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-
 
       - name: Install typos
-        if: steps.lane-gate.outputs.should_run == 'true' && env.BEEP_CI_LANE_INSTALL_TYPOS == 'true'
+        if: env.BEEP_CI_LANE_INSTALL_TYPOS == 'true'
         uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
         with:
           tool: typos-cli@1.50.3
 
       - name: Run verification lane
-        if: steps.lane-gate.outputs.should_run == 'true'
         env:
           # The knowledge doctor's seal guard admits a baseline change only on the
           # mint App's pull request (C8 condition i); the App's login is
@@ -316,7 +266,7 @@ jobs:
       # Only trusted main pushes publish a cache entry. Pull requests have no
       # save step, so restored main artifacts cannot be poisoned by PR code.
       - name: Save main Docgen Turbo cache
-        if: env.BEEP_CI_LANE_ID == 'docgen' && steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'push'
+        if: env.BEEP_CI_LANE_ID == 'docgen' && github.event_name == 'push'
         continue-on-error: true
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -324,7 +274,7 @@ jobs:
           key: turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}
 
       - name: Append Turbo summary
-        if: env.BEEP_CI_LANE_USES_TURBO == 'true' && steps.lane-gate.outputs.should_run == 'true' && always()
+        if: env.BEEP_CI_LANE_USES_TURBO == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
       - name: Upload trusted Turbo summaries
@@ -335,10 +285,6 @@ jobs:
           path: .turbo/runs/*.json
           retention-days: 7
           if-no-files-found: warn
-
-      - name: Skip lane
-        if: steps.lane-gate.outputs.should_run != 'true'
-        run: echo "${{ env.BEEP_CI_LANE_NAME }} passes without work for this change set."
 
       - name: Stop R2 cache adapter
         if: always() && inputs.admitted

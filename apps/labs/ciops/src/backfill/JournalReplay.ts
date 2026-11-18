@@ -36,6 +36,7 @@ import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { PosInt } from "../projection/PosInt.ts";
+import { AdmissionJournalEvent } from "../projection/Schemas.ts";
 import {
   BackfillPolicy,
   ReplayArmResult,
@@ -43,12 +44,13 @@ import {
   ReplayStream,
   ReplayTiming,
   SimulationEvent,
+  SimulationInputError,
   UnitArrival,
   WaitSummary,
 } from "./Schemas.ts";
 import { simulateStream } from "./Simulation.ts";
-import type { AdmissionJournalEvent, AdmissionPriority, AdmissionWorkKind } from "../projection/Schemas.ts";
-import type { ReplayArmSpec, ReplayEtaEstimator, SimulationInputError } from "./Schemas.ts";
+import type { AdmissionPriority, AdmissionWorkKind } from "../projection/Schemas.ts";
+import type { ReplayArmSpec, ReplayEtaEstimator } from "./Schemas.ts";
 
 /**
  * One admitted-and-released nonce joined from the journal.
@@ -340,4 +342,58 @@ export const replayTailWaits = Effect.fn("BackfillModel.replayTailWaits")(functi
     recorded: summarizeWaits(stream.recordedWaits),
     arms: results,
   });
+});
+
+// The tags the replay reads. A row carrying one of them that does not decode is schema drift; any
+// other line (a worker `admission-routed` row, a torn tail, a tag this lab does not know) is opaque.
+const ReplayTag = S.Literals([
+  "admission-admitted",
+  "admission-released",
+  "admission-enqueued",
+  "admission-withdrawn",
+  "admission-lease-evicted",
+  "admission-ticket-evicted",
+]);
+const decodeReplayTag = S.decodeUnknownOption(S.fromJsonString(S.Struct({ _tag: ReplayTag })));
+const decodeJournalRow = S.decodeUnknownOption(S.fromJsonString(AdmissionJournalEvent));
+
+/**
+ * Decode raw journal lines for the replay, failing only on schema drift.
+ *
+ * **Details**
+ *
+ * A line whose `_tag` is a replay tag must decode; one that does not is a
+ * newer row shape the lab decoder must learn, and the replay refuses it
+ * rather than shrinking. Every other line is opaque and counted, not decoded:
+ * worker `admission-routed` rows, torn tails the journal writer can leave,
+ * and tags this lab does not know.
+ *
+ * **Example** (A routed row is opaque)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { decodeJournalLines } from "@/backfill/JournalReplay"
+ *
+ * const read = Effect.runSync(decodeJournalLines(['{"_tag":"admission-routed","nonce":"r"}']))
+ * console.log(read.events.length, read.opaqueLines) // 0 1
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export const decodeJournalLines = Effect.fn("BackfillModel.decodeJournalLines")(function* (
+  lines: ReadonlyArray<string>
+): Effect.fn.Return<
+  { readonly events: ReadonlyArray<AdmissionJournalEvent>; readonly opaqueLines: number },
+  SimulationInputError
+> {
+  const replayLines = A.filter(lines, (line) => O.isSome(decodeReplayTag(line)));
+  const decoded = A.map(replayLines, (line) => decodeJournalRow(line));
+  const drifted = A.length(A.filter(decoded, O.isNone));
+  if (drifted > 0) {
+    return yield* SimulationInputError.make({
+      message: `${drifted} of ${A.length(replayLines)} replay rows did not decode; update the lab journal decoder before replaying.`,
+    });
+  }
+  return { events: A.getSomes(decoded), opaqueLines: A.length(lines) - A.length(replayLines) };
 });

@@ -12,10 +12,9 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { replayTailWaits } from "@/backfill/JournalReplay";
+import { decodeJournalLines, replayTailWaits } from "@/backfill/JournalReplay";
 import { ReplayArmSpec, ReplayEtaEstimator, ReplayReport, SimulationInputError } from "@/backfill/Schemas";
 import { PosInt } from "@/projection/PosInt";
-import { AdmissionJournalEvent } from "@/projection/Schemas";
 
 // SCHE-06 tail-wait A/B (PLAN slice 12): replay a recorded admission journal
 // root (its `journal-archive/*.ndjson` day segments, then `journal.ndjson`)
@@ -23,24 +22,24 @@ import { AdmissionJournalEvent } from "@/projection/Schemas";
 //   bun run scripts/backfill-ab.ts <admission-root> [--since <epoch-millis>] [--eta-permille <n>]
 // The report holds counts and wait quantiles only: no paths, origins or nonces.
 
-const decodeRow = S.decodeUnknownOption(S.fromJsonString(AdmissionJournalEvent));
 const encodeReport = S.encodeUnknownEffect(S.fromJsonString(ReplayReport));
 
-const flagValue = (argv: ReadonlyArray<string>, flag: string): O.Option<string> =>
-  O.flatMap(
-    A.findFirstIndex(argv, (arg) => arg === flag),
-    (index) => A.get(argv, index + 1)
-  );
-
-// A numeric flag: absent reads as its default, anything else must parse and pass `valid`.
+// A numeric flag: absent reads as its default; present, it needs an operand that parses and passes `valid`.
 const flagNumber = (argv: ReadonlyArray<string>, flag: string, fallback: number, valid: (value: number) => boolean) =>
-  O.match(flagValue(argv, flag), {
-    onNone: () => Effect.succeed(fallback),
-    onSome: (raw) =>
-      Effect.fromOption(O.liftPredicate(Number(raw), valid)).pipe(
-        Effect.mapError(() => SimulationInputError.make({ message: `${flag} ${raw} is not a valid value.` }))
-      ),
-  });
+  O.match(
+    A.findFirstIndex(argv, (arg) => arg === flag),
+    {
+      onNone: () => Effect.succeed(fallback),
+      onSome: (index) =>
+        O.match(A.get(argv, index + 1), {
+          onNone: () => Effect.fail(SimulationInputError.make({ message: `${flag} needs a value.` })),
+          onSome: (raw) =>
+            Effect.fromOption(O.liftPredicate(Number(raw), valid)).pipe(
+              Effect.mapError(() => SimulationInputError.make({ message: `${flag} ${raw} is not a valid value.` }))
+            ),
+        }),
+    }
+  );
 
 const arms = A.flatMap([10, 8, 6, 5], (capacity) =>
   A.map(
@@ -76,25 +75,24 @@ const program = Effect.gen(function* () {
   }
   // The archive directory is optional; every file that exists must read.
   const archive = path.join(root, "journal-archive");
-  const segments = yield* fs.readDirectory(archive).pipe(Effect.orElseSucceed(A.empty<string>));
+  const segments = yield* fs
+    .readDirectory(archive)
+    .pipe(
+      Effect.catchTag("PlatformError", (error) =>
+        error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : Effect.fail(error)
+      )
+    );
   const files = A.append(
     A.map(A.sort(A.filter(segments, Str.endsWith(".ndjson")), Order.String), (name) => path.join(archive, name)),
     path.join(root, "journal.ndjson")
   );
   const texts = yield* Effect.forEach(files, (file) => fs.readFileString(file), { concurrency: 1 });
   const lines = A.filter(A.flatMap(texts, Str.split("\n")), Str.isNonEmpty);
-  const decoded = A.map(lines, (line) => decodeRow(line));
-  // A row this decoder rejects (a newer schema version or work kind) would silently shrink the replay.
-  const undecoded = A.length(A.filter(decoded, O.isNone));
-  if (undecoded > 0) {
-    return yield* SimulationInputError.make({
-      message: `${undecoded} of ${A.length(lines)} journal rows did not decode; update the lab journal decoder before replaying.`,
-    });
-  }
-  const events = A.filter(
-    A.getSomes(decoded),
-    (event) => !("enqueuedAtMillis" in event) || event.enqueuedAtMillis >= since
+  const read = yield* decodeJournalLines(lines);
+  yield* Console.error(
+    `[backfill-ab] ${read.opaqueLines} of ${A.length(lines)} journal lines carry no replay row (routed rows, torn tails) and were skipped.`
   );
+  const events = A.filter(read.events, (event) => !("enqueuedAtMillis" in event) || event.enqueuedAtMillis >= since);
   const estimator = ReplayEtaEstimator.make({
     quantilePermille: PosInt.make(permille),
     minSamples: PosInt.make(5),
