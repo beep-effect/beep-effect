@@ -127,7 +127,8 @@ export class PoolMatcher extends S.Opaque<PoolMatcher, { readonly brand: unique 
  *
  * **Details**
  *
- * An empty `repositoryAllowList` admits every repository.
+ * The webhook dispatches only events from a repository in
+ * `repositoryAllowList`: an empty list admits none (upstream admits every one).
  *
  * **Example** (One pool, one repository)
  *

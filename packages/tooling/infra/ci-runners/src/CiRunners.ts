@@ -18,11 +18,11 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { effectiveCap, PoolName, productionStage, resolveStageConfig } from "./Config.ts";
 import { stageCredentials } from "./Credentials.ts";
-import { requireCiForProduction, requireConfiguredTarget, requireFencedNames } from "./Guards.ts";
+import { requireCiForProduction, requireConfiguredTarget, requireDistinctStage, requireFencedNames } from "./Guards.ts";
 import { physicalNames } from "./Names.ts";
 import { declareNetwork, networkTags } from "./Network.ts";
 import { declareReaper, ReaperRuntimeConfig } from "./Reaper.ts";
-import { imdsDisablePolicyDocument, runnerPostInstall } from "./RunnerBootstrap.ts";
+import { imdsDisablePolicyDocument, packPostInstall, runnerPostInstall } from "./RunnerBootstrap.ts";
 import type { CiRunnersConfig, FleetPhase, PoolSettings } from "./Config.ts";
 import type { AppCredentials } from "./Credentials.ts";
 import type { PhysicalNames } from "./Names.ts";
@@ -209,7 +209,7 @@ export const declareCiRunners = Effect.fn("CiRunners.declare")(function* (input:
       app: { id: credentials.id, keyBase64: credentials.keyBase64, webhookSecret: credentials.webhookSecret },
       pools: [toRunnerPool(config.heavy, config.phase), toRunnerPool(config.overflow, config.phase)],
       runAs: config.image.runAs,
-      postInstall: runnerPostInstall,
+      postInstall: yield* packPostInstall(runnerPostInstall),
       runnerManagedPolicyArns: [policies.imdsDisableArn],
       runnerPermissionsBoundaryArn: policies.boundaryArn,
       launchTemplate: {
@@ -275,6 +275,7 @@ export const declareCiRunners = Effect.fn("CiRunners.declare")(function* (input:
 export const program = Effect.gen(function* () {
   const stack = yield* Alchemy.Stack;
   yield* requireCiForProduction(stack.stage);
+  yield* requireDistinctStage(stack.stage);
   yield* requireFencedNames(physicalNames(stack.stage));
   const config = yield* resolveStageConfig(stack.stage);
   yield* requireConfiguredTarget(config);

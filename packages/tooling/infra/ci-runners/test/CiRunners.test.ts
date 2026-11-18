@@ -177,11 +177,12 @@ describe("CiRunners personal stage", () => {
 
 describe("CiRunners update and destroy", () => {
   const lifecycle = Fakes.harness({ stage: "dev_test" });
-  lifecycle.provider("a rehearsal raises the caps in place, and destroy sweeps before teardown", (stack) =>
+  lifecycle.provider("a rehearsal is refused inside the overlap budget, and destroy sweeps before teardown", (stack) =>
     Effect.gen(function* () {
       const { recorder } = lifecycle;
       yield* stack.deploy(program.pipe(environmentOf({})));
-      yield* stack.deploy(
+      recorder.events = [];
+      const refused = yield* Fakes.refusal(stack)(
         program.pipe(
           environmentOf({
             CI_RUNNERS_REHEARSAL_REPOSITORY: "alice/sandbox",
@@ -191,9 +192,10 @@ describe("CiRunners update and destroy", () => {
           })
         )
       );
+      expect(Fakes.tagChain(refused)).toContain("ConfigError");
+      expect(A.filter(recorder.events, Str.startsWith("reconcile:"))).toEqual([]);
       const overflow = yield* poolConfig(recorder, "overflow");
-      expect(overflow.pool.maximumCount).toBe(1);
-      expect(overflow.runnerType).toBe("Repo");
+      expect(overflow.pool.maximumCount).toBe(0);
 
       recorder.events = [];
       yield* stack.destroy();

@@ -15,12 +15,15 @@ name: Deploy CI runners
 # orchestrator confirms the CI goals driver lowered the heavy burst cap to 6
 # (decision "CI runners cutover from the Pulumi fleet").
 #
-# The plan runs first, to a file, and plan-check.ts (tested in
-# src/PlanCheck.ts) stops the job before any deploy on a replace, delete,
-# orphan, foreign resource or unreadable line. Credentials: the stack-scoped
-# OIDC role vars.CI_RUNNERS_DEPLOY_ROLE_ARN on the ci-runners-prod environment;
-# App credentials are that environment's secrets, passed only to the plan and
-# deploy steps, and stay Redacted to SSM.
+# The plan step plans the stage, runs the plan check (src/PlanCheck.ts) and
+# saves the checked plan; it stops the job on a replace, delete or orphan, a
+# destructive binding change, a foreign resource or a stack action. The deploy
+# step plans again under the stage lease, checks again and applies that same
+# plan object only when it equals the saved one (src/CheckedDeploy.ts,
+# applyIfUnchanged); any drift between the two stops it before a write.
+# Credentials: the stack-scoped OIDC role vars.CI_RUNNERS_DEPLOY_ROLE_ARN on
+# the ci-runners-prod environment; App credentials are that environment's
+# secrets, passed only to the plan and deploy steps, and stay Redacted to SSM.
 # Runbook: docs/runbooks/alchemy-infra.md.
 on:
   push:
@@ -70,9 +73,20 @@ jobs:
           role-session-name: alchemy-ci-runners-prod
           aws-region: us-east-1
 
-      # The detailed plan goes to a file only; on failure just the non-property
-      # lines are printed, so no declared value reaches the job log.
-      - name: Plan prod stage
+      # Plans prod, prints resources, actions and bindings (never a value), runs
+      # the plan check and saves the checked plan for the deploy step.
+      - name: Plan and check the prod stage
+        working-directory: packages/tooling/infra/ci-runners
+        # The App secrets reach only the two steps that run the stack program.
+        env:
+          CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
+          CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
+          CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
+        run: bun plan-check.ts plan --stage prod --out "$RUNNER_TEMP/ci-runners-checked-plan.json"
+
+      # Applies only the checked change set: plans again, checks again, and
+      # refuses before any write when the plan differs from the saved one.
+      - name: Deploy the checked plan
         working-directory: packages/tooling/infra/ci-runners
         shell: bash
         # The App secrets reach only the two steps that run the stack program.
@@ -82,30 +96,8 @@ jobs:
           CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
         run: |
           set -euo pipefail
-          if ! bunx alchemy plan --stage prod --env-file /dev/null --no-input --detailed \
-            > "$RUNNER_TEMP/ci-runners-plan.log" 2>&1; then
-            grep -v -E 'INFO: {3}' "$RUNNER_TEMP/ci-runners-plan.log" || true
-            exit 1
-          fi
-
-      # Pre-deploy gate: refuses any replace, delete or orphan, any resource
-      # outside the stack and any unreadable plan line; it prints resources,
-      # actions, bindings and changed property names, never values.
-      - name: Check the plan before deploy
-        working-directory: packages/tooling/infra/ci-runners
-        run: bun plan-check.ts "$RUNNER_TEMP/ci-runners-plan.log"
-
-      - name: Deploy prod stage
-        working-directory: packages/tooling/infra/ci-runners
-        shell: bash
-        # The App secrets reach only the two steps that run the stack program.
-        env:
-          CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
-          CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
-          CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
-        run: |
-          set -euo pipefail
-          bunx alchemy deploy --stage prod --yes --env-file /dev/null --no-input | tee "$RUNNER_TEMP/ci-runners-deploy.log"
+          bun plan-check.ts deploy --stage prod --checked "$RUNNER_TEMP/ci-runners-checked-plan.json" \
+            | tee "$RUNNER_TEMP/ci-runners-deploy.log"
 
       # One unsigned request to the webhook: the function must answer and refuse
       # it (401). No AWS describe call, so the check adds nothing to the
@@ -114,7 +106,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          url="$(grep -o -E 'https://[a-z0-9]+\.lambda-url\.us-east-1\.on\.aws/' "$RUNNER_TEMP/ci-runners-deploy.log" | tail -n 1 || true)"
+          url="$(grep -o -E '^webhookUrl=https://[a-z0-9]+\.lambda-url\.us-east-1\.on\.aws/' "$RUNNER_TEMP/ci-runners-deploy.log" | tail -n 1 | cut -d= -f2- || true)"
           if [[ -z "$url" ]]; then
             echo "::error::the deploy log names no webhook function URL"
             exit 1

@@ -101,6 +101,8 @@ const flowLogsRole = (names: PhysicalNames, logGroupArn: Output.Output<string>) 
             Action: ["logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogStreams"],
             Resource: [Output.interpolate`${logGroupArn}:*`],
           },
+          // The flow-logs service calls DescribeLogGroups, which takes no resource-level scope.
+          { Effect: "Allow", Action: ["logs:DescribeLogGroups"], Resource: ["*"] },
         ],
       },
     },

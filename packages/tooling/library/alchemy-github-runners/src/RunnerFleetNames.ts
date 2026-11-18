@@ -15,14 +15,17 @@
  */
 
 import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $AlchemyGithubRunnersId.create("RunnerFleetNames");
 
 /**
- * A fleet name prefix: lower case (S3 bucket names allow nothing else), at
- * most 28 characters so the longest pinned name fits each AWS limit (Lambda
+ * A fleet name prefix: lower case (S3 bucket names allow nothing else), not
+ * one of the S3 reserved bucket prefixes (`xn--`, `sthree-`,
+ * `amzn-s3-demo-`), at most 28 characters so the longest pinned name fits each AWS limit (Lambda
  * function and EventBridge rule 64, IAM role 64, SQS queue 80, S3 bucket 63)
  * with a 24-character pool name.
  *
@@ -38,7 +41,14 @@ const $I = $AlchemyGithubRunnersId.create("RunnerFleetNames");
  * @category models
  * @since 0.0.0
  */
-export const FleetNamePrefix = S.String.check(S.isPattern(/^[a-z][a-z0-9-]{0,27}$/u)).pipe(
+const reservedBucketPrefixes = ["xn--", "sthree-", "amzn-s3-demo-"];
+
+export const FleetNamePrefix = S.String.check(
+  S.isPattern(/^[a-z][a-z0-9-]{0,27}$/u),
+  S.makeFilter((prefix: string) => !A.some(reservedBucketPrefixes, (reserved) => Str.startsWith(reserved)(prefix)), {
+    message: "A fleet name prefix may not start with an S3 reserved bucket prefix",
+  })
+).pipe(
   $I.annoteSchema("FleetNamePrefix", {
     description: "Lower-case prefix of every pinned fleet name, at most 28 characters.",
   })

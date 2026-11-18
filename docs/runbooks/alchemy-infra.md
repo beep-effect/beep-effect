@@ -860,12 +860,27 @@ cd packages/tooling/infra/ci-runners
 bunx alchemy plan --stage "dev_$USER" --env-file /dev/null
 ```
 
-Pre-deploy gate. `plan-check.ts <plan log>` (tested in `test/PlanCheck.test.ts`)
-fails the job before any deploy on a replace, delete or orphan of any
-resource, a resource outside the stack, an action task, or a line after the
-`Plan:` header it cannot read. If it fails, do not re-run or work around it:
-ask the CI goals driver through the orchestrator. A change that must replace
-or delete a resource is an operator-reviewed deploy, never the push job.
+Read a saved personal plan log with `bun plan-check.ts log <plan log>`.
+
+Pre-deploy gate and checked deploy. The workflow's plan step runs
+`plan-check.ts plan --stage prod --out <file>`: it plans, refuses a replace,
+delete or orphan of any resource, a binding replace, unbind or delete, a
+resource outside the stack or a stack action (`src/PlanCheck.ts`, tested in
+`test/PlanCheck.test.ts`), and saves the checked plan. The deploy step runs
+`plan-check.ts deploy --stage prod --checked <file>`: it plans again, checks
+again, and applies that same plan only when it equals the saved one; any
+added, removed or changed resource, binding, property digest or action stops
+it with `PlanDrift` before any write (`src/CheckedDeploy.ts`, tested in
+`test/CheckedDeploy.test.ts`). The job never runs `alchemy deploy`. If either
+step refuses, do not re-run or work around it: ask the CI goals driver through
+the orchestrator. A change that must replace or delete a resource is an
+operator-reviewed deploy, never the push job.
+
+User data. The post-install travels gzip-compressed and base64-encoded and is
+sourced by the user data shell (`packPostInstall`); inline it would push the
+rendered user data past EC2's 16 KiB limit. `test/RunnerBootstrap.test.ts`
+keeps the rendered size under the limit, and cutover step 3 proves each pool
+boots and completes a real job.
 
 Outside IaC, owned by the operator: the org runner groups `beep-ec2-heavy` and
 `beep-shard-overflow` (selected workflows only) and the GitHub App and webhook

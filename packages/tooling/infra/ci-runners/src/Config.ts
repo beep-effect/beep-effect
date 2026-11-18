@@ -14,10 +14,12 @@ import { $InfraCiRunnersId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $InfraCiRunnersId.create("Config");
 
@@ -408,7 +410,7 @@ const SpotBudgetFields = S.Struct({
  * import * as Effect from "effect/Effect"
  *
  * const config = Effect.runSync(decodeCiRunnersConfig(productionConfig))
- * console.log(spotVcpuCommitted(config)) // 448
+ * console.log(spotVcpuCommitted(config)) // 512
  * ```
  *
  * @param config - The stage's phase, quota, reserve and pools.
@@ -529,9 +531,11 @@ export const productionRepository = "beep-effect/beep-effect";
  * `infra/src/CiRunnerPool.ts`, `infra/src/CiFleetController.ts` and
  * `infra/ci-runners/Pulumi.production.yaml`; the Spot quota (512, "All
  * Standard Spot Instance Requests") was read on 2026-11-14. The live
- * reserve, 416 vCPU, is the live heavy pool at its default cap (2 × 16) plus
- * the live overflow pool at 48 × 8; it leaves 64 vCPU, so during the
- * overlap a live heavy burst may raise that pool to at most 6 VMs.
+ * reserve, 480 vCPU, is the live fleet at the overlap's agreed burst cap:
+ * the heavy pool at 6 × 16 plus the overflow pool at 48 × 8. With this
+ * stage's overlap caps (1 × 16 + 2 × 8) the two fleets commit exactly the
+ * 512 quota, so the budget check refuses any larger overlap cap, and a live
+ * heavy burst cap above 6 is outside the budget.
  *
  * **Example** (Read the production overlap cap)
  *
@@ -549,7 +553,7 @@ export const productionConfig: CiRunnersConfig.Encoded = {
   region: "us-east-1",
   phase: "overlap",
   spotQuotaVcpu: 512,
-  liveFleetReserveVcpu: 416,
+  liveFleetReserveVcpu: 480,
   network: {
     vpcCidr: "10.89.0.0/16",
     subnets: [
@@ -610,7 +614,7 @@ export const productionConfig: CiRunnersConfig.Encoded = {
  */
 export const RehearsalRepository = S.String.check(
   S.isPattern(/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/u),
-  S.makeFilter((repository: string) => repository !== productionRepository, {
+  S.makeFilter((repository: string) => Str.toLowerCase(repository) !== productionRepository, {
     message: `A personal stage may not register runners to ${productionRepository}`,
   })
 ).pipe($I.annoteSchema("RehearsalRepository", { description: "The repository a personal rehearsal serves." }));
@@ -639,8 +643,11 @@ export const rehearsalRepositoryVariable = "CI_RUNNERS_REHEARSAL_REPOSITORY";
  * Without a rehearsal repository every cap is 0 and the webhook's allow list
  * is empty: the stage deploys the whole graph, but the webhook drops every
  * event and scale-up never launches. With one, each pool may launch one
- * repository runner for that repository alone. The live-fleet reserve still
- * applies, so a rehearsal fits beside both production fleets.
+ * repository runner for that repository alone. The reserve is the live
+ * fleet's plus the production overlap (480 + 32 = 512 vCPU, the whole
+ * quota), so the budget check refuses a rehearsal that launches anything
+ * while the overlap lasts; a launching rehearsal needs `primary` or a
+ * drained live fleet.
  *
  * **Example** (A personal stage launches nothing by default)
  *
@@ -661,7 +668,7 @@ export const personalConfig = (rehearsal: O.Option<string>): CiRunnersConfig.Enc
   return {
     ...productionConfig,
     phase: "overlap",
-    liveFleetReserveVcpu: productionConfig.liveFleetReserveVcpu + 64,
+    liveFleetReserveVcpu: productionConfig.liveFleetReserveVcpu + 32,
     heavy: { ...productionConfig.heavy, maximumCount: cap, overlapMaximumCount: cap, jobRetry: false },
     overflow: { ...productionConfig.overflow, maximumCount: cap, overlapMaximumCount: cap, jobRetry: false },
     runnerType: "Repo",
@@ -711,9 +718,9 @@ export const rehearsalRepository = Config.schema(RehearsalRepository, rehearsalR
 /**
  * Decode the configuration of a stage: `prod` gets {@link productionConfig},
  * every other stage {@link personalConfig}. The rehearsal variable is the only
- * untrusted input and fails with a `ConfigError`; a tracked configuration that
- * fails its schema is a defect in source (tests decode both inputs) and dies
- * before any resource is read.
+ * untrusted input. Both a bad rehearsal repository and a configuration that
+ * fails its schema (a rehearsal during the overlap exceeds the Spot budget)
+ * fail with a `ConfigError` before any resource is read.
  *
  * **Example** (Resolve a personal stage)
  *
@@ -726,11 +733,16 @@ export const rehearsalRepository = Config.schema(RehearsalRepository, rehearsalR
  * ```
  *
  * @param stage - The Alchemy stage being planned or deployed.
- * @returns The stage's validated configuration, or a `ConfigError` for a bad rehearsal repository.
+ * @returns The stage's validated configuration, or a `ConfigError` for a bad rehearsal repository or a budget past the Spot quota.
  * @category configuration
  * @since 0.0.0
  */
 export const resolveStageConfig = Effect.fn("CiRunners.resolveStageConfig")(function* (stage: string) {
   const input = stage === productionStage ? productionConfig : yield* Config.map(rehearsalRepository, personalConfig);
-  return yield* decodeCiRunnersConfig(input).pipe(Effect.orDie);
+  return yield* decodeCiRunnersConfig(input).pipe(
+    Effect.mapError(
+      (error) =>
+        new Config.ConfigError(new ConfigProvider.SourceError({ message: `Stage "${stage}": ${error.message}` }))
+    )
+  );
 });

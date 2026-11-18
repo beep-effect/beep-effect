@@ -11,8 +11,9 @@ import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Str from "effect/String";
 import { productionStage } from "./Config.ts";
-import { liveFleetOverlaps } from "./Names.ts";
+import { liveFleetOverlaps, stageSlug } from "./Names.ts";
 import type { CiRunnersConfig } from "./Config.ts";
 import type { PhysicalNames } from "./Names.ts";
 
@@ -95,6 +96,72 @@ export const requireFencedNames = Effect.fn("CiRunners.requireFencedNames")(func
     return yield* Effect.fail(
       new Config.ConfigError(
         new ConfigProvider.SourceError({ message: `Names overlap the live fleet: ${A.join(overlaps, ", ")}` })
+      )
+    );
+  }
+});
+
+/**
+ * The longest stage slug a personal stage may use, so every
+ * `beep-fleet-<slug>-…` name stays inside its AWS limit.
+ *
+ * **Example** (Read the limit)
+ *
+ * ```ts
+ * import { maxStageSlugLength } from "@beep/infra-ci-runners/Guards"
+ *
+ * console.log(maxStageSlugLength) // 40
+ * ```
+ *
+ * @category guards
+ * @since 0.0.0
+ */
+export const maxStageSlugLength = 40;
+
+const stageRefusal = (stage: string, slug: string): ReadonlyArray<string> =>
+  stage === productionStage
+    ? []
+    : [
+        ...(Str.isEmpty(slug) ? ["its name slug is empty"] : []),
+        ...(slug.length > maxStageSlugLength ? [`its name slug is longer than ${maxStageSlugLength} characters`] : []),
+        ...(slug === productionStage || Str.startsWith(`${productionStage}-`)(slug)
+          ? [`its name slug "${slug}" claims the ${productionStage} names`]
+          : []),
+      ];
+
+/**
+ * Fail a stage other than `prod` whose name slug would take, or nest under,
+ * the `prod` stage's names, is empty, or is too long.
+ *
+ * **Details**
+ *
+ * `physicalNames` lowercases the stage and maps every other character to
+ * `-`, so `Prod`, `prod_` and `PROD-x` would otherwise share or prefix the
+ * production names, and the termination watcher matches `ghr:environment`
+ * by prefix. Two personal stages can still share a slug (`dev_alice` and
+ * `dev-alice`); the state store keys them apart, and personal stages launch
+ * nothing without a rehearsal repository.
+ *
+ * **Example** (A personal stage passes)
+ *
+ * ```ts
+ * import { requireDistinctStage } from "@beep/infra-ci-runners/Guards"
+ * import * as Effect from "effect/Effect"
+ *
+ * Effect.runSync(requireDistinctStage("dev_alice"))
+ * ```
+ *
+ * @param stage - The Alchemy stage being planned or deployed.
+ * @returns An effect that fails with a `ConfigError` naming each reason.
+ * @category guards
+ * @since 0.0.0
+ */
+export const requireDistinctStage = Effect.fn("CiRunners.requireDistinctStage")(function* (stage: string) {
+  const reasons = stageRefusal(stage, stageSlug(stage));
+  if (A.isReadonlyArrayNonEmpty(reasons)) {
+    return yield* Effect.fail(
+      new Config.ConfigError(
+        new ConfigProvider.SourceError({ message: `Stage "${stage}" is refused: ${A.join(reasons, "; ")}` })
       )
     );
   }

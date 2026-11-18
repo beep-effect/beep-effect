@@ -8,6 +8,11 @@
  */
 
 /**
+ * @category validation
+ * @since 0.0.0
+ */
+export * as CheckedDeploy from "./CheckedDeploy.ts";
+/**
  * @category resources
  * @since 0.0.0
  */

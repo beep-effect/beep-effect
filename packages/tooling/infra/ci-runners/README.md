@@ -49,10 +49,12 @@ before the runner starts and powers the instance off when it exits.
 another account or region (`requireDeployTarget` from
 `@beep/alchemy-aws-extras`) and names that overlap the live fleet.
 
-### Pre-deploy gate (`plan-check.ts`, `src/PlanCheck.ts`)
+### Pre-deploy gate and checked deploy (`plan-check.ts`, `src/PlanCheck.ts`, `src/CheckedDeploy.ts`)
 
-Reads the plan log and refuses any replace, delete or orphan, any resource
-outside the stack and any line it cannot read; see the runbook.
+Refuses any replace, delete or orphan, any destructive binding change, any
+resource outside the stack, any stack action and any plan-log line it cannot
+read. The deploy applies only the plan the check saved: a re-plan that differs
+is refused before any write. See the runbook.
 
 ## Commands
 

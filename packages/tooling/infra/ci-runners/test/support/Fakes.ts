@@ -24,6 +24,7 @@ import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import type { RunnerLaunchTemplate as RunnerLaunchTemplateResource } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate";
 import type { Input } from "alchemy/Input";
+import type { Plan } from "alchemy/Plan";
 import type { ResourceClass } from "alchemy/Resource";
 
 export interface Reconciled {
@@ -215,6 +216,7 @@ export interface TypedStack {
     readonly include?: never;
     readonly exclude?: never;
   }) => Effect.Effect<void, StackFailure>;
+  readonly plan: <A, E, R>(definition: Effect.Effect<A, E, R>) => Effect.Effect<Plan, StackFailure>;
 }
 
 /** One isolated recorder plus the `@alchemy.run/test` API at `stage`. */

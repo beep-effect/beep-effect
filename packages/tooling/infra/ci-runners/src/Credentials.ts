@@ -83,8 +83,10 @@ export const appCredentialVariables = {
  * **Details**
  *
  * A personal stage without a rehearsal writes these: scale-up cannot mint
- * an installation token and the webhook rejects every signature, so the
- * stage cannot register a runner anywhere.
+ * an installation token, and its webhook admits nothing, because the stage's
+ * allow list is empty and an empty list admits no repository. A signature
+ * made with the literal placeholder secret still verifies, so the empty allow
+ * list (with both pool caps at 0) is the fence, not the secret.
  *
  * **Example** (Read a placeholder)
  *

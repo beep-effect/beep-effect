@@ -83,12 +83,13 @@ const payload = (input: {
 const deliver = Effect.fn("deliver")(function* (
   world: World,
   payloadOrBody: Effect.Effect<string, S.SchemaError> | string,
-  headers: Record<string, string> = {}
+  headers: Record<string, string> = {},
+  runtime: WebhookRuntimeConfig = config
 ) {
   const body = typeof payloadOrBody === "string" ? payloadOrBody : yield* payloadOrBody;
   const signature = yield* sign(body);
   return yield* handleWebhook({
-    config,
+    config: runtime,
     secret,
     request: WebhookRequest.make({
       headers: { "x-github-event": "workflow_job", "x-hub-signature-256": signature, ...headers },
@@ -176,6 +177,16 @@ describe("handleWebhook", () => {
         ping.statusCode,
         malformed.statusCode,
       ]).toStrictEqual([201, 202, 403, 202, 400]);
+      expect(world.sent).toStrictEqual([]);
+    })
+  );
+
+  it.effect("fails closed on an empty allow list: a signed queued job from any repository is refused", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const closed = WebhookRuntimeConfig.make({ ...config, repositoryAllowList: [] });
+      const response = yield* deliver(world, payload({}), {}, closed);
+      expect(response.statusCode).toBe(403);
       expect(world.sent).toStrictEqual([]);
     })
   );

@@ -76,7 +76,9 @@ export class PlannedResource extends S.Opaque<PlannedResource, { readonly brand:
  *
  * **Details**
  *
- * `DestructiveAction`: a replace, delete or orphan. `ForeignResource`: a
+ * `DestructiveAction`: a replace, delete or orphan. `DestructiveBinding`: a
+ * binding that is replaced, unbound or deleted, which drops a live grant or
+ * event source. `ForeignResource`: a
  * root logical id the stack does not declare. `UnreadableLine`: a line after
  * the plan header that is no resource, binding, task or property line.
  * `MissingPlan`: zero or several `Plan:` headers. `ActionTask`: a planned
@@ -96,6 +98,7 @@ export class PlannedResource extends S.Opaque<PlannedResource, { readonly brand:
  */
 export const PlanViolation = S.TaggedUnion({
   DestructiveAction: { fqn: S.String, action: PlanAction },
+  DestructiveBinding: { binding: S.String },
   ForeignResource: { fqn: S.String, action: PlanAction },
   UnreadableLine: { line: S.String },
   MissingPlan: { headers: S.Int },
@@ -237,7 +240,7 @@ const escapeSequence = /\u001b\[[0-9;]*m/gu;
 const timestampPrefix = /^\[\d{2}:\d{2}:\d{2}\.\d{3}\] [A-Z]+(?: \(#\d+\))?(?: [^:]+)?: ?/u;
 const headerPattern = /^Plan: /u;
 const resourcePattern = /^\[([^\]]+)\] ([a-z]+)(?: \([^)]*\))*$/u;
-const bindingPattern = /^\[([^\]]+)\] (create|update|adopted|replace|unbind|noop)$/u;
+const bindingPattern = /^\[([^\]]+)\] (create|update|adopted|replace|unbind|delete|noop)$/u;
 const taskPattern = /^\[([^\]]+)\] (run|drop) \[action\]$/u;
 const indentedPattern = /^ {2,}\S/u;
 const propertyNamePattern = /^ {2}[+~-]? ?([A-Za-z_$][\w$.-]*):/u;
@@ -357,7 +360,15 @@ export const readPlanLog = (log: string): PlanReading => {
 const isDestructive = (action: PlanAction): boolean =>
   PlanAction.is.replace(action) || PlanAction.is.delete(action) || PlanAction.is.orphaned(action);
 
+// A binding reads `<fqn>/<sid> <action>`; replace, unbind and delete drop what it grants.
+const destructiveBindingActions = HashSet.make("replace", "unbind", "delete");
+const isDestructiveBinding = (binding: string): boolean =>
+  O.exists(A.last(Str.split(" ")(binding)), (action) => HashSet.has(destructiveBindingActions, action));
+
 const resourceViolations = (resource: PlannedResource): ReadonlyArray<PlanViolation> => [
+  ...A.map(A.filter(resource.bindings, isDestructiveBinding), (binding) =>
+    PlanViolation.cases.DestructiveBinding.make({ binding })
+  ),
   ...(isStackResource(resource.fqn)
     ? []
     : [PlanViolation.cases.ForeignResource.make({ fqn: resource.fqn, action: resource.action })]),
@@ -388,7 +399,8 @@ export const planViolations = (reading: PlanReading): ReadonlyArray<PlanViolatio
 ];
 
 /**
- * Pass a plan that only creates, updates, adopts or leaves resources alone;
+ * Pass a plan that only creates, updates, adopts or leaves resources alone,
+ * and only creates, updates or keeps bindings;
  * fail with {@link PlanRefused} otherwise.
  *
  * **Details**

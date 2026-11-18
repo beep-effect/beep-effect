@@ -111,6 +111,10 @@ describe("RunnerFleetNames", () => {
       assertTrue(isPrefix(prefix));
       assertFalse(isPrefix(`${prefix}b`));
       assertFalse(isPrefix("Beep-fleet"));
+      assertFalse(isPrefix("xn--fleet"));
+      assertFalse(isPrefix("sthree-fleet"));
+      assertFalse(isPrefix("amzn-s3-demo-fleet"));
+      assertTrue(isPrefix("sthree"));
       const pool = poolResourceNames(prefix, Str.repeat(24)("p"));
       const fleetNames = fleetResourceNames(prefix);
       expect(

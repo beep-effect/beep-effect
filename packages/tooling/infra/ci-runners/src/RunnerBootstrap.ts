@@ -18,6 +18,9 @@
  * @since 0.0.0
  */
 
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as Base64 from "effect/encoding/Base64";
 import type * as IAM from "@alchemy.run/aws/IAM";
 
 // The runner agent and every job step both run as this user (ImageSettings.runAs in prod).
@@ -467,3 +470,73 @@ export const imdsDisablePolicyDocument: IAM.PolicyDocument = {
     },
   ],
 };
+
+/**
+ * The most raw bytes EC2 accepts as instance user data.
+ *
+ * **Example** (16 KiB)
+ *
+ * ```ts
+ * import { userDataLimitBytes } from "@beep/infra-ci-runners/RunnerBootstrap"
+ *
+ * console.log(userDataLimitBytes) // 16384
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const userDataLimitBytes = 16_384;
+
+const gzip = (text: string) =>
+  Effect.promise(() =>
+    new Response(new Blob([new TextEncoder().encode(text)]).stream().pipeThrough(new CompressionStream("gzip")))
+      .arrayBuffer()
+      .then((buffer) => new Uint8Array(buffer))
+  );
+
+/**
+ * Pack a post-install into a short loader: the script travels gzip-compressed
+ * and base64-encoded, is unpacked to a temporary file and sourced by the user
+ * data shell.
+ *
+ * **Details**
+ *
+ * Inline, {@link runnerPostInstall} alone is about 15 KB, and the rendered
+ * user data passes EC2's {@link userDataLimitBytes}; packed it is about 5 KB.
+ * Sourcing (not a child `bash`) keeps the inline semantics: the snippets are
+ * `( … )` subshells that read the user data's unexported `$instance_id` and
+ * `$region`. Each loader command stands alone under the user data's `bash -e`,
+ * so a corrupt payload stops the boot before the runner starts.
+ *
+ * **Example** (Pack a script)
+ *
+ * ```ts
+ * import { packPostInstall } from "@beep/infra-ci-runners/RunnerBootstrap"
+ * import * as Effect from "effect/Effect"
+ *
+ * const loader = await Effect.runPromise(packPostInstall("echo hi\n"))
+ * console.log(loader.includes("gunzip")) // true
+ * ```
+ *
+ * @param script - The post-install to pack.
+ * @returns The loader that unpacks and sources it.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const packPostInstall = Effect.fn("CiRunners.packPostInstall")(function* (script: string) {
+  const packed = yield* gzip(script);
+  const payload = Base64.encode(packed);
+  return A.join(
+    [
+      'beep_post_install="$(mktemp)"',
+      `base64 -d > "$beep_post_install.gz" <<'BEEP_POST_INSTALL'`,
+      payload,
+      "BEEP_POST_INSTALL",
+      'gunzip -c "$beep_post_install.gz" > "$beep_post_install"',
+      '. "$beep_post_install"',
+      'rm -f "$beep_post_install" "$beep_post_install.gz"',
+      "",
+    ],
+    "\n"
+  );
+});

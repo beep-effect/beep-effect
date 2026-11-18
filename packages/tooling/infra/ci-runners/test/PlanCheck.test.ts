@@ -65,6 +65,28 @@ describe("CiRunners plan check", () => {
     })
   );
 
+  it.effect("refuses a binding replace, unbind or delete under a no-op resource, and accepts binding creates", () =>
+    Effect.gen(function* () {
+      expect(reasons(planOf("Plan: 1 binding change", "[Reaper] noop", "[Reaper/Reaper] replace"))).toEqual([
+        "DestructiveBinding",
+      ]);
+      expect(
+        reasons(planOf("Plan: 2 binding changes", "[Reaper] noop", "[Reaper/Reaper] unbind", "[Reaper/Invoke] delete"))
+      ).toEqual(["DestructiveBinding", "DestructiveBinding"]);
+      const refusal = yield* checkPlan(
+        readPlanLog(planOf("Plan: 1 binding change", "[Reaper] noop", "[Reaper/Reaper] unbind"))
+      ).pipe(Effect.flip);
+      assertTrue(mustEscalate(refusal.violations));
+      const accepted = yield* checkPlan(
+        readPlanLog(planOf("Plan: 1 to create", "[Reaper] create", "[Reaper/Reaper] create", "[Reaper/Invoke] update"))
+      );
+      expect(A.flatMap(accepted, (resource) => resource.bindings)).toEqual([
+        "Reaper/Reaper create",
+        "Reaper/Invoke update",
+      ]);
+    })
+  );
+
   it.effect("fails closed on a line it cannot read", () =>
     Effect.sync(() => {
       expect(reasons(planOf("Plan: 1 to create", "[Vpc] create", "something unexpected"))).toEqual(["UnreadableLine"]);

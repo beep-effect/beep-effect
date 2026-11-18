@@ -34,10 +34,10 @@ describe("CiRunners configuration", () => {
     })
   );
 
-  it.effect("commits 448 of the 512 Spot vCPU in the overlap and 512 at the live caps", () =>
+  it.effect("commits all 512 Spot vCPU in the overlap and 512 at the live caps", () =>
     Effect.gen(function* () {
       const overlap = yield* decodeCiRunnersConfig(productionConfig);
-      expect(spotVcpuCommitted(overlap)).toBe(448);
+      expect(spotVcpuCommitted(overlap)).toBe(512);
       const primary = yield* decodeCiRunnersConfig({
         ...productionConfig,
         phase: "primary",
@@ -77,20 +77,27 @@ describe("CiRunners personal-stage fence", () => {
     })
   );
 
-  it.effect("allows one repository runner per pool for a rehearsal repository", () =>
+  it.effect("allows one repository runner per pool for a rehearsal, never inside the overlap budget", () =>
     Effect.gen(function* () {
-      const config = yield* resolveStageConfig("dev_test").pipe(
-        environmentOf({ CI_RUNNERS_REHEARSAL_REPOSITORY: "alice/sandbox" })
+      const input = personalConfig(O.some("alice/sandbox"));
+      expect(input.repositoryAllowList).toEqual(["alice/sandbox"]);
+      expect(input.heavy.overlapMaximumCount).toBe(1);
+      const error = yield* resolveStageConfig("dev_test").pipe(
+        environmentOf({ CI_RUNNERS_REHEARSAL_REPOSITORY: "alice/sandbox" }),
+        Effect.flip
       );
-      expect(config.repositoryAllowList).toEqual(["alice/sandbox"]);
-      expect(effectiveCap(config.heavy, config.phase)).toBe(1);
-      expect(spotVcpuCommitted(config)).toBeLessThanOrEqual(config.spotQuotaVcpu);
+      expect(error._tag).toBe("ConfigError");
+      expect(error.message).toContain("exceeds the Spot vCPU quota");
+      const drained = yield* decodeCiRunnersConfig({ ...input, phase: "primary" });
+      expect(effectiveCap(drained.heavy, drained.phase)).toBe(1);
+      expect(spotVcpuCommitted(drained)).toBeLessThanOrEqual(drained.spotQuotaVcpu);
     })
   );
 
   it.effect("refuses the production repository as a rehearsal", () =>
     Effect.gen(function* () {
       assertFalse(isRehearsalRepository("beep-effect/beep-effect"));
+      assertFalse(isRehearsalRepository("Beep-Effect/Beep-Effect"));
       assertTrue(isRehearsalRepository("alice/sandbox"));
       const error = yield* resolveStageConfig("dev_test").pipe(
         environmentOf({ CI_RUNNERS_REHEARSAL_REPOSITORY: "beep-effect/beep-effect" }),

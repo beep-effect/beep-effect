@@ -149,7 +149,7 @@ const respond = (statusCode: number, body: string) => WebhookResponse.make({ sta
  *
  * Order matches upstream: signature first (401), then event type (202 for
  * anything but `workflow_job`), payload decode (400), repository allow list
- * (403), action (201 and no dispatch unless `queued`), label match (202 when
+ * (403; an empty list admits no repository, unlike upstream), action (201 and no dispatch unless `queued`), label match (202 when
  * no pool accepts), then one SQS message to the selected pool (201). Queue
  * failures surface as `AwsApiError`; the Lambda boundary answers 500.
  *
@@ -186,7 +186,8 @@ export const handleWebhook = Effect.fn("Webhook.handle")(function* (input: {
       Effect.mapError(() => WebhookRejected.make({ statusCode: 400, message: "Malformed workflow_job payload" }))
     );
     const repository = event.repository.full_name;
-    if (A.isReadonlyArrayNonEmpty(config.repositoryAllowList) && !A.contains(config.repositoryAllowList, repository)) {
+    // Fail closed: an empty allow list admits no repository (upstream admits every one).
+    if (!A.contains(config.repositoryAllowList, repository)) {
       return yield* WebhookRejected.make({
         statusCode: 403,
         message: `Received event from unauthorized repository ${repository}`,
