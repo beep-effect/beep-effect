@@ -36,7 +36,7 @@
     "explorations/agent-verification-output/MAP.md",
     "explorations/agent-verification-output/DECISIONS.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
