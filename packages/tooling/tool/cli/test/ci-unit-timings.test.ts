@@ -17,6 +17,7 @@ import { it } from "@effect/vitest";
 import { assertNone, assertSome, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
@@ -196,6 +197,45 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
       );
       const push = yield* Effect.fromOption(A.head(unitTimingCensus([projection])));
       deepStrictEqual([push.expectedTestFiles, push.unmatched], [1, ["7:@beep/a:0"]]);
+    })
+  );
+
+  it.effect("a report last written before this job's setup started is not this attempt's row", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const { root, write } = yield* workspace([
+        ["@beep/a", "packages/a"],
+        ["@beep/b", "packages/b"],
+      ]);
+      yield* write(
+        "packages/a/coverage/unit-results.json",
+        report(root, true, [{ file: "packages/a/test/one.test.ts", start: 0, end: 10, tests: 1 }])
+      );
+      yield* write(
+        "packages/b/coverage/unit-results.json",
+        report(root, true, [{ file: "packages/b/test/one.test.ts", start: 0, end: 10, tests: 1 }])
+      );
+      // A kept self-hosted workspace: package b's report predates this job.
+      const setupStartedAt = 1_800_000_000;
+      yield* fs.utimes(
+        path.join(root, "packages/a/coverage/unit-results.json"),
+        DateTime.toDateUtc(DateTime.makeUnsafe(setupStartedAt * 1000)),
+        DateTime.toDateUtc(DateTime.makeUnsafe((setupStartedAt + 60) * 1000))
+      );
+      yield* fs.utimes(
+        path.join(root, "packages/b/coverage/unit-results.json"),
+        DateTime.toDateUtc(DateTime.makeUnsafe(setupStartedAt * 1000)),
+        DateTime.toDateUtc(DateTime.makeUnsafe((setupStartedAt - 3600) * 1000))
+      );
+      const projection = yield* projectUnitTimings(
+        root,
+        UnitTimingOptions.make({ ...options("unit-a"), writtenSince: O.some(setupStartedAt) })
+      );
+      deepStrictEqual(
+        A.map(projection.packages, (row) => row.packageName),
+        ["@beep/a"]
+      );
     })
   );
 

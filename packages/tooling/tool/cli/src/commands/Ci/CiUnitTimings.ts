@@ -116,6 +116,7 @@ export class UnitTimingOptions extends S.Opaque<UnitTimingOptions, { readonly br
     runId: S.Option(S.Int),
     runAttempt: S.Option(S.Int),
     sha: S.Option(S.NonEmptyString),
+    writtenSince: S.Option(S.Int).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("UnitTimingOptions", {
       description: "The partition, its coverage output directory and the run identity a projection is stamped with.",
@@ -140,11 +141,14 @@ const byReportPath = Order.mapInput(Order.String, (row: UnitTimingPackage) => ro
 const byFilePath = Order.mapInput(Order.String, (row: UnitTimingFile) => row.path);
 
 // The Vitest reports one workspace holds: `coverage/unit-results.json`, invocation 0, and
-// `coverage/invocation-<n>/unit-results.json`, the layout CiCoverage gives a multi-invocation package.
+// `coverage/invocation-<n>/unit-results.json`, the layout CiCoverage gives a multi-invocation package. With
+// `writtenSince` (epoch seconds, the job's setup start), a report last written before it is a file a kept
+// workspace held from an earlier attempt, and is not this attempt's row.
 const workspaceReports = Effect.fnUntraced(function* (
   repoRoot: string,
   packageName: string,
-  dir: string
+  dir: string,
+  writtenSince: O.Option<number>
 ): Effect.fn.Return<ReadonlyArray<ReportLocation>, CiCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -169,7 +173,20 @@ const workspaceReports = Effect.fnUntraced(function* (
       )
     )
   );
-  const present = yield* Effect.filter(candidates, (candidate) => exists(candidate.file), { concurrency: 1 });
+  const writtenThisAttempt = Effect.fnUntraced(function* (file: string) {
+    if (!(yield* exists(file))) {
+      return false;
+    }
+    const info = yield* fs.stat(file).pipe(CiCommandError.mapError(`Failed to stat ${path.relative(repoRoot, file)}.`));
+    return O.match(writtenSince, {
+      onNone: () => true,
+      onSome: (since) =>
+        O.match(info.mtime, { onNone: () => true, onSome: (mtime) => mtime.getTime() >= since * 1000 }),
+    });
+  });
+  const present = yield* Effect.filter(candidates, (candidate) => writtenThisAttempt(candidate.file), {
+    concurrency: 1,
+  });
   return A.map(present, (candidate) => ({
     packageName,
     packagePath,
@@ -336,7 +353,7 @@ export const projectUnitTimings = Effect.fn("CiUnitTimings.project")(function* (
       HashMap.toEntries(workspaces),
       Order.mapInput(Order.String, ([name]: readonly [string, unknown]) => name)
     ),
-    ([name, workspace]) => workspaceReports(repoRoot, name, workspace.dir),
+    ([name, workspace]) => workspaceReports(repoRoot, name, workspace.dir, options.writtenSince),
     { concurrency: 8 }
   ).pipe(Effect.map(A.flatten));
   const selections = yield* manifestSelections(repoRoot, options);
@@ -485,6 +502,7 @@ const ActionsIdentity = Config.all({
   runId: optionalInt("GITHUB_RUN_ID"),
   runAttempt: optionalInt("GITHUB_RUN_ATTEMPT"),
   sha: Config.option(Config.String("GITHUB_SHA")),
+  setupStartedAt: optionalInt("BEEP_SETUP_STARTED_AT"),
 });
 
 /**
@@ -522,6 +540,7 @@ export const writeUnitTimings = Effect.fn("CiUnitTimings.write")(function* (
     runId: identity.runId,
     runAttempt: identity.runAttempt,
     sha: O.filter(identity.sha, Str.isNonEmpty),
+    writtenSince: identity.setupStartedAt,
   }).pipe(CiCommandError.mapError("Invalid unit-timings options."));
   const projection = yield* projectUnitTimings(repoRoot, options);
   const target = path.resolve(repoRoot, out);
