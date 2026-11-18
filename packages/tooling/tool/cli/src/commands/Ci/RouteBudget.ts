@@ -60,16 +60,17 @@ const RESERVE_MARGIN = Duration.seconds(1);
  * @category models
  * @since 0.0.0
  */
-export class RouteReadSpend extends S.Class<RouteReadSpend, { readonly brand: unique symbol }>($I`RouteReadSpend`)(
-  {
+export class RouteReadSpend extends S.Opaque<RouteReadSpend, { readonly brand: unique symbol }>()(
+  S.Struct({
     requests: S.Int,
     reserveWaits: S.Int,
     identity: S.Option(GithubIdentityLabel),
     metered: S.Boolean,
-  },
-  $I.annote("RouteReadSpend", {
-    description: "GitHub responses a route capture observed, its reserve waits, identity and metering.",
-  })
+  }).pipe(
+    $I.annoteSchema("RouteReadSpend", {
+      description: "GitHub responses a route capture observed, its reserve waits, identity and metering.",
+    })
+  )
 ) {}
 
 /**
