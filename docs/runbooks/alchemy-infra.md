@@ -363,11 +363,18 @@ live settings; run them only when the gate asks.
    The launcher writes the credentials with `op-human` (your desktop-approved 1Password
    CLI) when it is on `PATH`, else with `op`; `--op-cli <command>` names another one.
    On agent workstations `op` is the service-account shim, which cannot create items.
-   Before the server listens, the launcher creates and deletes a throwaway secure note
-   in `BEEP_SECRETS` with that CLI. If either step fails it refuses to start, so GitHub
-   never registers an App whose private key cannot be stored. Approve the 1Password
-   prompts the preflight raises. The 2026-11-15 mint lost its key this way, and the
-   orphan App had to be deleted under GitHub sudo mode.
+   Before the server listens, the launcher runs a startup access check: it creates and
+   deletes a throwaway secure note in `BEEP_SECRETS` with that CLI, and refuses to start
+   if either step fails. Approve the 1Password prompts it raises. The check makes a lost
+   key unlikely, not impossible: 1Password access can expire, or you can reject the later
+   approval, between the check and the callback's write. The 2026-11-15 mint lost its key
+   to a service-account `op` that could not create items.
+
+   If the callback reports that the App was registered but storing it failed, do not
+   reload the page (the code is single-use). Revoke the new App's generated private key,
+   delete the uninstalled registration, then run the launcher again. Deleting an
+   organization App needs GitHub sudo mode (a passkey prompt) at
+   `https://github.com/organizations/beep-effect/settings/apps/<slug>/advanced`.
 
    Confirm the registration page lists exactly: Administration, Environments, Variables
    and Issues read and write, Metadata read-only, no webhook. The launcher stores

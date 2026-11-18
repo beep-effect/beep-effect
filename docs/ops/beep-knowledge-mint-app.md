@@ -36,9 +36,10 @@ holds the manifest, and `bun run beep github app mint beep-knowledge-mint` serve
 
 Agent service accounts are read-only on `BEEP_SECRETS`, so the writer is a human-capable
 1Password CLI: `op-human` when it is on `PATH`, else `op`, or the `--op-cli <command>`
-override. Before the server listens, the launcher creates and deletes a throwaway item in
-`BEEP_SECRETS` with that writer and refuses to start if either step fails, so no App is
-registered whose key cannot be stored. Never use GitHub's
+override. Before the server listens, the launcher runs a startup access check: it creates
+and deletes a throwaway item in `BEEP_SECRETS` with that writer, and refuses to start if
+either step fails. That makes a lost key unlikely, not impossible: 1Password access can
+expire, or you can reject the later approval, after the check passes. Never use GitHub's
 "Generate a private key" button: it downloads a PEM.
 
 If conversion succeeds but storage fails, do not reload the callback; the code is

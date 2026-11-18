@@ -11,8 +11,9 @@
  *
  * The vault writer is a human-capable 1Password CLI (`op-human` when it is on
  * `PATH`, else `op`, or the `--op-cli` override). Before the server listens, a
- * preflight creates and deletes a throwaway item in the vault, so an App is never
- * registered whose credentials cannot be stored.
+ * startup access check creates and deletes a throwaway item in the vault. It makes
+ * a lost key unlikely, not impossible: 1Password access can still expire, or the
+ * operator can reject a later approval, between the check and the callback's write.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -285,8 +286,10 @@ const preflightTemplate = (title: string) =>
  *
  * The check creates a throwaway secure note through the same stdin pipe the
  * credential write uses, then deletes it by its unique title. Either step
- * failing refuses the mint before the loopback server listens, so GitHub never
- * registers an App whose private key would be lost.
+ * failing refuses the mint before the loopback server listens. This is a startup
+ * access check: it makes a lost private key unlikely, not impossible, because
+ * 1Password access can expire, or the operator can reject the later approval,
+ * after it passes. The callback still reports a failed write with recovery steps.
  *
  * **Example** (Build the preflight)
  *
@@ -315,7 +318,7 @@ export const preflightGitHubAppVaultWriter = Effect.fn("GitHubAppMint.preflight"
   const created = yield* exitCodeOf(storeCommand(writer, template));
   if (created !== 0) {
     return yield* refuse(
-      `${writer.command} cannot create items in ${VAULT} (exit ${created}); refusing to start, so no App is registered whose credentials cannot be stored. Sign in a human-capable 1Password CLI (op-human) or pass --op-cli <command>.`
+      `${writer.command} cannot create items in ${VAULT} (exit ${created}); refusing to start before any App is registered. Sign in a human-capable 1Password CLI (op-human) or pass --op-cli <command>.`
     );
   }
   const deleted = yield* exitCodeOf(
