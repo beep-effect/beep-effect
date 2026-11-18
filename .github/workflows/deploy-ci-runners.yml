@@ -19,7 +19,8 @@ name: Deploy CI runners
 # src/PlanCheck.ts) stops the job before any deploy on a replace, delete,
 # orphan, foreign resource or unreadable line. Credentials: the stack-scoped
 # OIDC role vars.CI_RUNNERS_DEPLOY_ROLE_ARN on the ci-runners-prod environment;
-# App credentials are that environment's secrets and stay Redacted to SSM.
+# App credentials are that environment's secrets, passed only to the plan and
+# deploy steps, and stay Redacted to SSM.
 # Runbook: docs/runbooks/alchemy-infra.md.
 on:
   push:
@@ -53,9 +54,6 @@ jobs:
     env:
       CI: "true"
       ALCHEMY_TELEMETRY_DISABLED: "1"
-      CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
-      CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
-      CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -77,6 +75,11 @@ jobs:
       - name: Plan prod stage
         working-directory: packages/tooling/infra/ci-runners
         shell: bash
+        # The App secrets reach only the two steps that run the stack program.
+        env:
+          CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
+          CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
+          CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
         run: |
           set -euo pipefail
           if ! bunx alchemy plan --stage prod --env-file /dev/null --no-input --detailed \
@@ -95,6 +98,11 @@ jobs:
       - name: Deploy prod stage
         working-directory: packages/tooling/infra/ci-runners
         shell: bash
+        # The App secrets reach only the two steps that run the stack program.
+        env:
+          CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
+          CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
+          CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
         run: |
           set -euo pipefail
           bunx alchemy deploy --stage prod --yes --env-file /dev/null --no-input | tee "$RUNNER_TEMP/ci-runners-deploy.log"
