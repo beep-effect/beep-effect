@@ -6,12 +6,15 @@
  * @since 0.0.0
  */
 
+import { workspaceMembers } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { DomainError } from "@beep/repo-utils";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import {
@@ -25,7 +28,13 @@ import {
   WritePackageJsonOperation,
 } from "./Architecture.schemas.ts";
 import { acceptedProofFiles, legacyFixturePaths } from "./internal/AcceptedProofManifest.ts";
-import { modelFirstOperationsFor, modelFirstRolePlansFor, modelFirstTargetFor } from "./internal/ModelFirstContext.ts";
+import {
+  generatedContextRoles,
+  modelFirstOperationsFor,
+  modelFirstRolePlansFor,
+  modelFirstTargetFor,
+  modelFirstWorkspaceDependenciesFor,
+} from "./internal/ModelFirstContext.ts";
 import { modelFirstContextNamesFor } from "./internal/ModelFirstTemplates.ts";
 import {
   packageShellFileOperationsFor,
@@ -33,7 +42,13 @@ import {
   packageShellTargetFor,
   shellPackageJsonOperationFor,
 } from "./internal/PackageShell.ts";
-import { isStageIncluded, roleAllowedForTarget, rolePlanFor } from "./internal/RoleTopology.ts";
+import {
+  isStageIncluded,
+  packageNameForRole,
+  pathForRole,
+  roleAllowedForTarget,
+  rolePlanFor,
+} from "./internal/RoleTopology.ts";
 import {
   isPackageLevelFile,
   proofFileMatchesDomainKind,
@@ -52,6 +67,8 @@ import type {
   ArchitectureSliceRolePlan,
 } from "./Architecture.schemas.ts";
 import type { AcceptedProofFile } from "./internal/AcceptedProofManifest.ts";
+import type { ModelFirstReferences } from "./internal/ModelFirstContext.ts";
+import type { ModelFirstContextNames } from "./internal/ModelFirstTemplates.ts";
 
 const defaultPlanTarget = defaultArchitecturePlanTarget;
 
@@ -357,6 +374,44 @@ export const makeArchitecturePackageOperationPlan = Effect.fn(function* (input: 
 });
 
 const isContextRole = S.is(ArchitectureContextRole);
+
+// The tsconfig sync gives each package one reference per direct workspace
+// dependency (dev dependencies included), sorted by target path and relative
+// to the package; computing the same here keeps apply-then-check idempotent.
+const modelFirstReferencesFor = Effect.fnUntraced(function* (repoRoot: string, names: ModelFirstContextNames) {
+  const path = yield* Path.Path;
+  const members = yield* workspaceMembers(repoRoot).pipe(
+    Effect.mapError(DomainError.newCause("Failed to read the workspace manifests"))
+  );
+  const target = modelFirstTargetFor(names);
+  const directories = HashMap.fromIterable([
+    ...A.map(members, (member) => [member.name, member.relativePath] as const),
+    ...A.map(generatedContextRoles, (role) => [packageNameForRole(target, role), pathForRole(target, role)] as const),
+  ]);
+  const referencesOf = Effect.fnUntraced(function* (role: ArchitectureContextRole) {
+    const directoriesOfDependencies = yield* Effect.forEach(
+      modelFirstWorkspaceDependenciesFor(names, role),
+      (dependency) =>
+        O.match(HashMap.get(directories, dependency), {
+          onNone: () => DomainError.newMessage(`Workspace package "${dependency}" is not in the repository.`),
+          onSome: Effect.succeed,
+        }),
+      { concurrency: 1 }
+    );
+    return pipe(
+      directoriesOfDependencies,
+      A.map((directory) => `${directory}/tsconfig.json`),
+      A.sort(Order.String),
+      A.map((tsconfig) => path.relative(pathForRole(target, role), tsconfig))
+    );
+  });
+  return {
+    contract: yield* referencesOf("contract"),
+    model: yield* referencesOf("model"),
+    host: yield* referencesOf("host"),
+    web: A.empty<string>(),
+  } satisfies ModelFirstReferences;
+});
 const isContextSlug = S.is(S.String.check(S.isPattern(/^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$/u)));
 const isModuleName = S.is(S.String.check(S.isPattern(/^[A-Z][A-Za-z0-9]*$/u)));
 
@@ -398,20 +453,22 @@ export const shapeOfOperationPlan = (plan: CanonicalSliceOperationPlan): Archite
  *
  * ```ts
  * import { makeModelFirstContextOperationPlan } from "@beep/repo-cli/commands/Architecture"
+ * import { NodeServices } from "@effect/platform-node"
  * import * as Effect from "effect/Effect"
  *
  * const program = Effect.map(
- *   makeModelFirstContextOperationPlan({ context: "notes", module: "Note" }),
+ *   makeModelFirstContextOperationPlan({ repoRoot: "/workspace/beep-effect", context: "notes", module: "Note" }),
  *   (plan) => plan.roles.map((role) => role.packageName)
  * )
- * Effect.runPromise(program).then(console.log)
+ * Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then(console.log)
  * ```
  *
- * @effects Builds the plan in memory; filesystem writes happen only when the plan is applied.
+ * @effects Reads the workspace manifests to resolve project references; filesystem writes happen only when the plan is applied.
  * @category constructors
  * @since 0.0.0
  */
 export const makeModelFirstContextOperationPlan = Effect.fn(function* (input: {
+  readonly repoRoot: string;
   readonly context: string;
   readonly module: string;
 }) {
@@ -426,11 +483,12 @@ export const makeModelFirstContextOperationPlan = Effect.fn(function* (input: {
     );
   }
   const names = modelFirstContextNamesFor(input);
+  const references = yield* modelFirstReferencesFor(input.repoRoot, names);
   return CanonicalSliceOperationPlan.make({
     schemaVersion: "architecture-operation-plan/v1",
     target: modelFirstTargetFor(names),
     roles: modelFirstRolePlansFor(names),
-    operations: A.map(modelFirstOperationsFor(names), (operation) =>
+    operations: A.map(modelFirstOperationsFor(names, references), (operation) =>
       withOperationMetadata(operation, "model-first-template")
     ),
   });

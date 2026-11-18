@@ -8,6 +8,8 @@
 
 import { A, Str } from "@beep/utils";
 import { dual, pipe } from "effect/Function";
+import * as Order from "effect/Order";
+import * as R from "effect/Record";
 import {
   ArchitectureContextRole,
   ArchitecturePlanTarget,
@@ -17,7 +19,6 @@ import {
 } from "../Architecture.schemas.ts";
 import { modelFirstSourceFilesFor } from "./ModelFirstTemplates.ts";
 import { packageNameForRole, pathForRole } from "./RoleTopology.ts";
-import type * as R from "effect/Record";
 import type { ModelFirstContextNames, ModelFirstSourceFile } from "./ModelFirstTemplates.ts";
 
 /**
@@ -255,7 +256,73 @@ const docgenContent = (path: string): string => `{
 }
 `;
 
-const tsconfigContent = `{
+/**
+ * Each generated package's tsconfig project references, relative to the
+ * package directory, in the order the tsconfig sync writes them.
+ *
+ * **Example** (No references)
+ *
+ * ```ts
+ * import type { ModelFirstReferences } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext"
+ *
+ * const none: ModelFirstReferences = { contract: [], model: [], host: [], web: [] }
+ * console.log(none.host.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ModelFirstReferences = R.ReadonlyRecord<ArchitectureContextRole, ReadonlyArray<string>>;
+
+/**
+ * The workspace packages one generated package depends on, dev dependencies
+ * included: the edges the tsconfig sync turns into project references.
+ *
+ * **Example** (The model's workspace dependencies)
+ *
+ * ```ts
+ * import { modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
+ * import { modelFirstWorkspaceDependenciesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext"
+ *
+ * const names = modelFirstContextNamesFor({ context: "notes", module: "Note" })
+ * console.log(modelFirstWorkspaceDependenciesFor(names, "model")) // ["@beep/contract-kit", "@beep/identity", "@beep/notes-contract"]
+ * ```
+ *
+ * @param names - The names the context is generated from.
+ * @param role - The context role.
+ * @returns The `@beep/*` package names, sorted.
+ * @category getters
+ * @since 0.0.0
+ */
+export const modelFirstWorkspaceDependenciesFor: {
+  (names: ModelFirstContextNames, role: ArchitectureContextRole): ReadonlyArray<string>;
+  (role: ArchitectureContextRole): (names: ModelFirstContextNames) => ReadonlyArray<string>;
+} = dual(
+  2,
+  (names: ModelFirstContextNames, role: ArchitectureContextRole): ReadonlyArray<string> =>
+    pipe(
+      [...R.keys(contextDependenciesFor(names, role)), ...R.keys(contextDevDependenciesFor(role))],
+      A.filter(Str.startsWith("@beep/")),
+      A.dedupe,
+      A.sort(Order.String)
+    )
+);
+
+const referenceEntry = (reference: string): string => `    {\n      "path": "${reference}"\n    }`;
+
+const referencesBlock = (references: ReadonlyArray<string>): string =>
+  A.match(references, {
+    onEmpty: () => "[]",
+    onNonEmpty: (entries) => `[\n${A.join(A.map(entries, referenceEntry), ",\n")}\n  ]`,
+  });
+
+const trailingReferences = (references: ReadonlyArray<string>): string =>
+  A.match(references, {
+    onEmpty: () => "",
+    onNonEmpty: () => `,\n  "references": ${referencesBlock(references)}`,
+  });
+
+const tsconfigContent = (references: ReadonlyArray<string>): string => `{
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../../tsconfig.base.json",
   "include": ["src"],
@@ -263,11 +330,11 @@ const tsconfigContent = `{
     "types": ["node"],
     "outDir": "dist",
     "rootDir": "src"
-  }
+  }${trailingReferences(references)}
 }
 `;
 
-const tsconfigTestContent = `{
+const tsconfigTestContent = (references: ReadonlyArray<string>): string => `{
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../../tsconfig.base.json",
   "include": ["src", "test"],
@@ -281,14 +348,14 @@ const tsconfigTestContent = `{
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  }${trailingReferences(references)}
 }
 `;
 
-const tsconfigCheckContent = `{
+const tsconfigCheckContent = (references: ReadonlyArray<string>): string => `{
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "./tsconfig.json",
-  "references": [],
+  "references": ${referencesBlock(references)},
   "compilerOptions": {
     "composite": false,
     "declaration": false,
@@ -323,7 +390,8 @@ const shellFile = (
 
 const shellFilesFor = (
   names: ModelFirstContextNames,
-  role: ArchitectureContextRole
+  role: ArchitectureContextRole,
+  references: ReadonlyArray<string>
 ): ReadonlyArray<WriteFileOperation> => {
   const target = modelFirstTargetFor(names);
   const base = pathForRole(target, role);
@@ -339,19 +407,25 @@ const shellFilesFor = (
     shellFile(role, `${base}/LICENSE`, "template", "MIT\n", `Write ${role} package license marker.`),
     shellFile(role, `${base}/README.md`, "template", readmeContent(names, role, packageName), `Write ${role} README.`),
     shellFile(role, `${base}/docgen.json`, "json", docgenContent(base), `Write ${role} docgen configuration.`),
-    shellFile(role, `${base}/tsconfig.json`, "jsonc", tsconfigContent, `Write ${role} TypeScript configuration.`),
+    shellFile(
+      role,
+      `${base}/tsconfig.json`,
+      "jsonc",
+      tsconfigContent(references),
+      `Write ${role} TypeScript configuration.`
+    ),
     shellFile(
       role,
       `${base}/tsconfig.test.json`,
       "jsonc",
-      tsconfigTestContent,
+      tsconfigTestContent(references),
       `Write ${role} test TypeScript configuration.`
     ),
     shellFile(
       role,
       `${base}/tsconfig.check.json`,
       "jsonc",
-      tsconfigCheckContent,
+      tsconfigCheckContent(references),
       `Write ${role} check TypeScript configuration.`
     ),
     shellFile(role, `${base}/vitest.config.ts`, "template", vitestContent, `Write ${role} Vitest configuration.`),
@@ -378,22 +452,36 @@ const sourceOperationFor = (names: ModelFirstContextNames, file: ModelFirstSourc
  * import { modelFirstContextNamesFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
  * import { modelFirstOperationsFor } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstContext"
  *
- * const operations = modelFirstOperationsFor(modelFirstContextNamesFor({ context: "notes", module: "Note" }))
+ * const none = { contract: [], model: [], host: [], web: [] }
+ * const operations = modelFirstOperationsFor(modelFirstContextNamesFor({ context: "notes", module: "Note" }), none)
  * console.log(operations.some((operation) => operation.path === "packages/notes/host/src/Host.ts")) // true
  * ```
  *
  * @param names - The names the context is generated from.
+ * @param references - Each package's tsconfig project references, as the tsconfig sync writes them.
  * @returns The package and source operations, in plan order.
  * @category constructors
  * @since 0.0.0
  */
-export const modelFirstOperationsFor = (
-  names: ModelFirstContextNames
-): ReadonlyArray<WritePackageJsonOperation | WriteFileOperation> => {
-  const files = modelFirstSourceFilesFor(names);
-  return A.flatMap(generatedContextRoles, (role) => [
-    packageJsonOperationFor(names, role),
-    ...shellFilesFor(names, role),
-    ...A.map(filesForRole(files, role), (file) => sourceOperationFor(names, file)),
-  ]);
-};
+export const modelFirstOperationsFor: {
+  (
+    names: ModelFirstContextNames,
+    references: ModelFirstReferences
+  ): ReadonlyArray<WritePackageJsonOperation | WriteFileOperation>;
+  (
+    references: ModelFirstReferences
+  ): (names: ModelFirstContextNames) => ReadonlyArray<WritePackageJsonOperation | WriteFileOperation>;
+} = dual(
+  2,
+  (
+    names: ModelFirstContextNames,
+    references: ModelFirstReferences
+  ): ReadonlyArray<WritePackageJsonOperation | WriteFileOperation> => {
+    const files = modelFirstSourceFilesFor(names);
+    return A.flatMap(generatedContextRoles, (role) => [
+      packageJsonOperationFor(names, role),
+      ...shellFilesFor(names, role, references[role]),
+      ...A.map(filesForRole(files, role), (file) => sourceOperationFor(names, file)),
+    ]);
+  }
+);

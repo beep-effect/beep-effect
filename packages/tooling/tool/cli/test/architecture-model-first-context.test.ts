@@ -10,7 +10,9 @@ import {
   WriteFileOperation,
   WritePackageJsonOperation,
 } from "@beep/repo-cli/commands/Architecture";
+import { TsconfigSyncPlan } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan";
 import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
+import { workspaceDependencyGraph } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { FsUtilsLive, jsonStringifyPretty, TSMorphServiceLive } from "@beep/repo-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, layer } from "@effect/vitest";
@@ -20,6 +22,7 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -95,23 +98,76 @@ const sorted = (values: ReadonlyArray<string>) => A.sort(values, Order.String);
 
 const isSourceOrTest = (path: string) => pipe(path, Str.includes("/src/")) || pipe(path, Str.includes("/test/"));
 
-const notesPlan = makeModelFirstContextOperationPlan({ context: "notes", module: "Note" });
+const repoRoot = Effect.flatMap(Path.Path, (path) => path.fromFileUrl(new URL("../../../../..", import.meta.url)));
 
-// Generated packages resolve each other and their identity composers through
-// this harness; in a real apply, workspace and identity registration do it.
-const harnessFiles = Effect.fnUntraced(function* (proofRoot: string, repoRoot: string, path: Path.Path) {
-  const toRepo = path.relative(proofRoot, repoRoot);
-  const identitySource = path.join(toRepo, "packages/foundation/modeling/identity/src/packages.ts");
-  const aliases = {
-    "@beep/identity/packages": ["./identity-packages.ts"],
-    "@beep/notes-contract/*": ["./packages/notes/contract/src/*.ts"],
-    "@beep/notes-model/*": ["./packages/notes/model/src/*.ts"],
-    "@beep/notes-host/*": ["./packages/notes/host/src/*.ts"],
-  };
-  return {
-    "identity-packages.ts": `import { $I } from "${identitySource}";
+const notesPlan = Effect.flatMap(repoRoot, (root) =>
+  makeModelFirstContextOperationPlan({ repoRoot: root, context: "notes", module: "Note" })
+);
 
-export * from "${identitySource}";
+const isNotesPath = Str.includes("/packages/notes/");
+
+// The throwaway context lives in the checkout's git-ignored `tmp/`, not at the
+// repo root and not registered as workspaces, so the harness supplies only what
+// that location takes away. The generated package files are used as written.
+//
+// - `tsconfig.base.json` and `vitest.shared.ts`: the generated tsconfigs and
+//   Vitest configs extend `../../../<file>`, the repo root in a real context.
+// - `packages/foundation/modeling/{identity,contract-kit}`: the real manifests
+//   and a tsconfig extending the real project, so the generated project
+//   references resolve as they do in place (the sync skips linked workspaces).
+// - `node_modules/@beep/notes-*`: the workspace links `bun install` makes.
+// - `node_modules/@beep/identity` and the Vitest alias to it: the identity
+//   composers registration would add, `$NotesContractId` and `$NotesModelId`.
+// - `package.json`: the workspace list the tsconfig sync reads.
+const writeHarness = Effect.fnUntraced(function* (proofRoot: string, root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const toRepo = path.relative(proofRoot, root);
+  const writes: ReadonlyArray<readonly [string, string]> = [
+    [
+      "package.json",
+      yield* jsonStringifyPretty({
+        name: "model-first-proof",
+        private: true,
+        workspaces: [
+          "packages/notes/contract",
+          "packages/notes/model",
+          "packages/notes/host",
+          "packages/foundation/modeling/identity",
+          "packages/foundation/modeling/contract-kit",
+        ],
+      }),
+    ],
+    ["tsconfig.base.json", yield* jsonStringifyPretty({ extends: path.join(toRepo, "tsconfig.base.json") })],
+    [
+      "vitest.shared.ts",
+      `import shared from "${path.join(toRepo, "vitest.shared.ts")}";
+
+const identity = new URL("./node_modules/@beep/identity/packages.ts", import.meta.url).pathname;
+const alias = shared.resolve?.alias;
+
+export default {
+  ...shared,
+  resolve: {
+    ...shared.resolve,
+    alias: [{ find: "@beep/identity/packages", replacement: identity }, ...(Array.isArray(alias) ? alias : [])],
+  },
+};
+`,
+    ],
+    [
+      "node_modules/@beep/identity/package.json",
+      yield* jsonStringifyPretty({
+        name: "@beep/identity",
+        type: "module",
+        exports: { "./packages": "./packages.ts" },
+      }),
+    ],
+    [
+      "node_modules/@beep/identity/packages.ts",
+      `import { $I } from "@beep/identity-source/packages";
+
+export * from "@beep/identity-source/packages";
 
 const composers = $I.compose("notes-contract", "notes-model", "notes-host");
 
@@ -119,50 +175,34 @@ export const $NotesContractId = composers.$NotesContractId;
 export const $NotesModelId = composers.$NotesModelId;
 export const $NotesHostId = composers.$NotesHostId;
 `,
-    "tsconfig.base.json": yield* jsonStringifyPretty({
-      extends: path.join(toRepo, "tsconfig.base.json"),
-      compilerOptions: { paths: aliases },
-    }),
-    "tsconfig.proof.json": yield* jsonStringifyPretty({
-      extends: "./tsconfig.base.json",
-      include: ["identity-packages.ts", "packages/notes/*/src", "packages/notes/*/test"],
-      compilerOptions: {
-        rootDir: toRepo,
-        noEmit: true,
-        composite: false,
-        declaration: false,
-        declarationMap: false,
-        incremental: false,
-        sourceMap: false,
-        types: ["node", "bun-types"],
-      },
-    }),
-    "vitest.proof.config.ts": `import { defineConfig } from "vitest/config";
-
-const at = (path: string) => new URL(path, import.meta.url).pathname;
-
-export default defineConfig({
-  resolve: {
-    alias: [
-      { find: "@beep/identity/packages", replacement: at("./identity-packages.ts") },
-      { find: /^@beep\\/notes-contract\\/(.*)$/, replacement: \`\${at("./packages/notes/contract/src/")}$1.ts\` },
-      { find: /^@beep\\/notes-model\\/(.*)$/, replacement: \`\${at("./packages/notes/model/src/")}$1.ts\` },
-      { find: /^@beep\\/notes-host\\/(.*)$/, replacement: \`\${at("./packages/notes/host/src/")}$1.ts\` },
     ],
-  },
-  test: {
-    include: ["packages/notes/*/test/**/*.test.ts"],
-    pool: "forks",
-    maxWorkers: 1,
-    fileParallelism: false,
-  },
-});
-`,
-  };
+  ];
+  for (const [file, content] of writes) {
+    yield* fs.makeDirectory(path.dirname(path.join(proofRoot, file)), { recursive: true });
+    yield* fs.writeFileString(path.join(proofRoot, file), content);
+  }
+  const links: ReadonlyArray<readonly [string, string]> = [
+    ["node_modules/@beep/identity-source", path.join(root, "packages/foundation/modeling/identity")],
+    ["node_modules/@beep/notes-contract", path.join(proofRoot, "packages/notes/contract")],
+    ["node_modules/@beep/notes-model", path.join(proofRoot, "packages/notes/model")],
+    ["node_modules/@beep/notes-host", path.join(proofRoot, "packages/notes/host")],
+  ];
+  for (const dependency of ["packages/foundation/modeling/identity", "packages/foundation/modeling/contract-kit"]) {
+    const proxy = path.join(proofRoot, dependency);
+    const manifest = yield* fs.readFileString(path.join(root, dependency, "package.json"));
+    const project = yield* jsonStringifyPretty({ extends: path.join(root, dependency, "tsconfig.json") });
+    yield* fs.makeDirectory(proxy, { recursive: true });
+    yield* fs.writeFileString(path.join(proxy, "package.json"), manifest);
+    yield* fs.writeFileString(path.join(proxy, "tsconfig.json"), project);
+  }
+  for (const [link, target] of links) {
+    yield* fs.makeDirectory(path.dirname(path.join(proofRoot, link)), { recursive: true });
+    yield* fs.symlink(target, path.join(proofRoot, link));
+  }
 });
 
-const run = (cwd: string, args: ReadonlyArray<string>) =>
-  runCapturedStreams({ command: "bunx", args, cwd, extendEnv: true, env: { FORCE_COLOR: "0", NO_COLOR: "1" } });
+const run = (cwd: string, command: string, args: ReadonlyArray<string>) =>
+  runCapturedStreams({ command, args, cwd, extendEnv: true, env: { FORCE_COLOR: "0", NO_COLOR: "1" } });
 
 describe("beep architecture: model-first context", () => {
   layer(TestLayer, { timeout: "30 seconds" })((it) => {
@@ -204,54 +244,70 @@ describe("beep architecture: model-first context", () => {
     );
   });
 
-  layer(TestLayer, { timeout: "240 seconds" })((it) => {
+  layer(TestLayer, { timeout: "300 seconds" })((it) => {
     it.effect(
-      "generates sources that type-check, lint clean and pass their story and parity tests",
+      "apply then check is idempotent after the tsconfig sync, and the packages' own scripts pass",
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const cliRoot = yield* path.fromFileUrl(new URL("..", import.meta.url));
-        const repoRoot = path.resolve(cliRoot, "../../../..");
+        const root = yield* repoRoot;
         // Inside the checkout (so packages resolve the root node_modules) and git-ignored (`tmp/`).
-        const tmpRoot = path.join(cliRoot, "tmp");
+        const tmpRoot = path.join(root, "packages/tooling/tool/cli/tmp");
         yield* fs.makeDirectory(tmpRoot, { recursive: true });
         const proofRoot = yield* fs.makeTempDirectoryScoped({ directory: tmpRoot, prefix: "model-first-" });
 
         const plan = yield* notesPlan;
         const applied = yield* applyCanonicalSliceOperationPlan(proofRoot, plan);
         expect(applied.writtenPaths.length).toBe(plan.operations.length);
+        yield* writeHarness(proofRoot, root);
+
+        // The sync the real apply runs, planned by its own code over the generated packages.
+        const workspaces = yield* TsconfigSyncPlan.buildWorkspaceDescriptors(proofRoot);
+        const { adjacency } = yield* workspaceDependencyGraph(proofRoot);
+        const references = yield* TsconfigSyncPlan.planPackageReferenceSync(
+          proofRoot,
+          workspaces,
+          adjacency,
+          undefined,
+          false
+        );
+        const overlays = yield* TsconfigSyncPlan.planPackageCheckReferenceSync(workspaces, undefined, HashMap.empty());
+        const docgen = yield* TsconfigSyncPlan.planPackageDocgenSync(proofRoot, workspaces, undefined);
+        expect(A.filter(workspaces, (workspace) => isNotesPath(workspace.absoluteDir)).length).toBe(3);
+        const notesChanges = pipe(
+          [...references, ...overlays, ...docgen],
+          A.map((change) => change.filePath),
+          A.filter(isNotesPath)
+        );
+        expect(notesChanges).toEqual([]);
+
         const check = yield* checkCanonicalSliceOperationPlan(proofRoot, plan);
+        expect(check.differingPaths).toEqual([]);
         expect(check.idempotent).toBe(true);
 
-        const harness = yield* harnessFiles(proofRoot, repoRoot, path);
-        for (const [file, content] of R.toEntries(harness)) {
-          yield* fs.writeFileString(path.join(proofRoot, file), content);
+        // Each package's own `check` (build, then its tsconfig.test.json) in dependency order.
+        for (const role of ["contract", "model", "host"] as const) {
+          const checked = yield* run(path.join(proofRoot, "packages/notes", role), "bun", ["run", "beep:check"]);
+          expect(Str.trim(Str.replace(/^\$ .*$/gmu, "")(`${checked.stdout}${checked.stderr}`))).toBe("");
+          expect(checked.exitCode).toBe(0);
         }
 
-        const typeCheck = yield* run(proofRoot, ["tsrs", "-p", "tsconfig.proof.json"]);
-        expect(`${typeCheck.stdout}${typeCheck.stderr}`).toBe("");
-        expect(typeCheck.exitCode).toBe(0);
-
-        const lint = yield* run(repoRoot, [
+        const lint = yield* run(root, "bunx", [
           "biome",
           "check",
           "--vcs-use-ignore-file=false",
-          path.join(proofRoot, "packages"),
+          path.join(proofRoot, "packages/notes"),
         ]);
         expect(lint.exitCode).toBe(0);
 
-        const tests = yield* run(proofRoot, [
-          "--bun",
-          "vitest",
-          "run",
-          "--config",
-          "vitest.proof.config.ts",
-          "--root",
-          ".",
-        ]);
-        expect(tests.exitCode).toBe(0);
-        expect(`${tests.stdout}${tests.stderr}`).toContain("3 passed (3)");
-        expect(`${tests.stdout}${tests.stderr}`).toContain("5 passed (5)");
+        // Each package's own `test` script through its generated vitest.config.ts.
+        const contractTests = yield* run(path.join(proofRoot, "packages/notes/contract"), "bun", ["run", "beep:test"]);
+        expect(contractTests.exitCode).toBe(0);
+        expect(`${contractTests.stdout}${contractTests.stderr}`).toContain("1 passed (1)");
+        const modelTests = yield* run(path.join(proofRoot, "packages/notes/model"), "bun", ["run", "beep:test"]);
+        expect(modelTests.exitCode).toBe(0);
+        expect(`${modelTests.stdout}${modelTests.stderr}`).toContain("2 passed (2)");
+        expect(`${modelTests.stdout}${modelTests.stderr}`).toContain("4 passed (4)");
       })
     );
   });
@@ -302,7 +358,9 @@ describe("beep architecture: model-first context", () => {
     it.effect(
       "rejects a context that is not a kebab-case slug",
       Effect.fnUntraced(function* () {
-        const refusal = yield* Effect.flip(makeModelFirstContextOperationPlan({ context: "Notes", module: "Note" }));
+        const refusal = yield* Effect.flip(
+          makeModelFirstContextOperationPlan({ repoRoot: "/repo", context: "Notes", module: "Note" })
+        );
         expect(refusal.message).toContain("kebab-case slug");
       })
     );

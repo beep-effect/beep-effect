@@ -261,8 +261,9 @@ const architecturePlanCommand = Command.make(
   },
   Effect.fn(function* ({ shape, slice, concept, domainKind, stage }) {
     const resolved = yield* resolvePlanShape(shape, [domainKind, stage]);
+    const repoRoot = yield* findRepoRoot();
     const plan = yield* ArchitectureShape.match(resolved, {
-      "model-first": () => makeModelFirstContextOperationPlan({ context: slice, module: concept }),
+      "model-first": () => makeModelFirstContextOperationPlan({ repoRoot, context: slice, module: concept }),
       legacy: () =>
         makePlanFromCommand(
           slice,
@@ -322,7 +323,8 @@ const createContextCommand = Command.make(
     dryRun: dryRunFlag,
   },
   Effect.fn(function* ({ context, module, dryRun }) {
-    const plan = yield* makeModelFirstContextOperationPlan({ context, module });
+    const repoRoot = yield* findRepoRoot();
+    const plan = yield* makeModelFirstContextOperationPlan({ repoRoot, context, module });
     yield* runWriteCommand(plan, dryRun);
   })
 ).pipe(
