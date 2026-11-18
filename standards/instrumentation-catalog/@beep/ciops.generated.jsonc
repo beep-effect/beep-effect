@@ -8,7 +8,9 @@
   "spans": [
     {"name":"AboxPolicy.decodeAdmissionPolicyParams","owner":"@beep/ciops","family":"lab","conforms":true},
     {"name":"BackfillModel.deadline","owner":"@beep/ciops","family":"lab","conforms":true},
+    {"name":"BackfillModel.decodeJournalLines","owner":"@beep/ciops","family":"lab","conforms":true},
     {"name":"BackfillModel.order","owner":"@beep/ciops","family":"lab","conforms":true},
+    {"name":"BackfillModel.replayTailWaits","owner":"@beep/ciops","family":"lab","conforms":true},
     {"name":"BackfillModel.simulate","owner":"@beep/ciops","family":"lab","conforms":true},
     {"name":"BackfillModel.verdict","owner":"@beep/ciops","family":"lab","conforms":true},
     {"name":"CiOpsKpi.probes","owner":"@beep/ciops","family":"lab","conforms":true},

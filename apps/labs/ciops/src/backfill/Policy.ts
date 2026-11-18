@@ -13,6 +13,8 @@
  * @since 0.0.0
  */
 
+// fallow-ignore-file code-duplication -- the SCHE-06 lab model and its live port in @beep/repo-cli (QualityScheduler.ts) are deliberately mirrored: the property laws and the tail-wait A/B read this copy, and a lab app cannot be a dependency of the CLI. Owner: @beep/ciops. Exit: delete the mirrored functions here and import the live verdict once a shared scheduler-policy module exists that both packages depend on.
+
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
