@@ -22,8 +22,8 @@ const $I = $InfraCiRunnersId.create("Names");
  * **Details**
  *
  * `fleet` is the `RunnerFleet` name: each pool's `ghr:environment` is
- * `<fleet>-<pool>` and the termination watcher acts on instances whose
- * environment starts with `<fleet>`. The composite derives the KMS alias
+ * `<fleet>-<pool>`, and the termination watcher acts only on instances whose
+ * `ghr:environment` equals one of the fleet's pool environments exactly. The composite derives the KMS alias
  * (`alias/<fleet>-github-app`) and the SSM paths under `ssmRoot` from these;
  * in `prod` the composite pins every other name it chooses under `<fleet>-`
  * (`RunnerFleetProps.namePrefix`), and personal stages take Alchemy-generated

@@ -166,30 +166,38 @@ describe("CiRunners configuration validation", () => {
   const refusedMessage = <A, E extends { readonly message: string }, R>(effect: Effect.Effect<A, E, R>) =>
     Effect.map(Effect.flip(effect), (error) => error.message);
 
-  it.effect("refuses CIDR blocks AWS does not accept, subnets outside the VPC and overlapping subnets", () =>
-    Effect.gen(function* () {
-      const subnet = (cidrBlock: string) => ({ availabilityZone: "us-east-1a", cidrBlock });
-      const messages = yield* Effect.forEach(
-        [
-          withNetwork({ vpcCidr: "10.300.0.0/16" }),
-          withNetwork({ vpcCidr: "10.89.0.0/8" }),
-          withNetwork({ vpcCidr: "10.89.1.0/16" }),
-          withNetwork({ subnets: [subnet("10.89.0.0/29")] }),
-          withNetwork({ subnets: [subnet("10.90.0.0/20")] }),
-          withNetwork({ subnets: [subnet("10.89.0.0/20"), subnet("10.89.8.0/21")] }),
-        ],
-        refusedMessage,
-        { concurrency: 1 }
-      );
-      expect(messages[0]).toContain("/16 to /28");
-      expect(messages[1]).toContain("/16 to /28");
-      expect(messages[2]).toContain("first address");
-      expect(messages[3]).toContain("/16 to /28");
-      expect(messages[4]).toContain("inside the VPC block");
-      expect(messages[5]).toContain("must not overlap");
-      const fine = yield* withNetwork({ subnets: [subnet("10.89.0.0/20"), subnet("10.89.16.0/28")] });
-      expect(fine.network.subnets.length).toBe(2);
-    })
+  it.effect(
+    "refuses CIDR blocks AWS does not accept, non-private VPC blocks, subnets outside the VPC, overlapping subnets and two in one AZ",
+    () =>
+      Effect.gen(function* () {
+        const subnet = (cidrBlock: string, availabilityZone = "us-east-1a") => ({ availabilityZone, cidrBlock });
+        const messages = yield* Effect.forEach(
+          [
+            withNetwork({ vpcCidr: "10.300.0.0/16" }),
+            withNetwork({ vpcCidr: "10.89.0.0/8" }),
+            withNetwork({ vpcCidr: "10.89.1.0/16" }),
+            withNetwork({ subnets: [subnet("10.89.0.0/29")] }),
+            withNetwork({ subnets: [subnet("10.90.0.0/20")] }),
+            withNetwork({ subnets: [subnet("10.89.0.0/20"), subnet("10.89.8.0/21", "us-east-1b")] }),
+            withNetwork({ subnets: [subnet("10.89.0.0/20"), subnet("10.89.16.0/20")] }),
+            withNetwork({ vpcCidr: "169.254.0.0/16", subnets: [subnet("169.254.0.0/20")] }),
+            withNetwork({ vpcCidr: "100.64.0.0/16", subnets: [subnet("100.64.0.0/20")] }),
+          ],
+          refusedMessage,
+          { concurrency: 1 }
+        );
+        expect(messages[0]).toContain("/16 to /28");
+        expect(messages[1]).toContain("/16 to /28");
+        expect(messages[2]).toContain("first address");
+        expect(messages[3]).toContain("/16 to /28");
+        expect(messages[4]).toContain("inside the VPC block");
+        expect(messages[5]).toContain("must not overlap");
+        expect(messages[6]).toContain("only one runner subnet");
+        expect(messages[7]).toContain("RFC 1918");
+        expect(messages[8]).toContain("RFC 1918");
+        const fine = yield* withNetwork({ subnets: [subnet("10.89.0.0/20"), subnet("10.89.16.0/28", "us-east-1b")] });
+        expect(fine.network.subnets.length).toBe(2);
+      })
   );
 
   it.effect(

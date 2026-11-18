@@ -67,14 +67,14 @@ describe("CiRunners plan check", () => {
 
   it.effect("refuses a binding replace, unbind or delete under a no-op resource, and accepts binding creates", () =>
     Effect.gen(function* () {
-      expect(reasons(planOf("Plan: 1 binding change", "[Reaper] noop", "[Reaper/Reaper] replace"))).toEqual([
+      expect(reasons(planOf("Plan: 1 binding changes", "[Reaper] noop", "[Reaper/Reaper] replace"))).toEqual([
         "DestructiveBinding",
       ]);
       expect(
         reasons(planOf("Plan: 2 binding changes", "[Reaper] noop", "[Reaper/Reaper] unbind", "[Reaper/Invoke] delete"))
       ).toEqual(["DestructiveBinding", "DestructiveBinding"]);
       const refusal = yield* checkPlan(
-        readPlanLog(planOf("Plan: 1 binding change", "[Reaper] noop", "[Reaper/Reaper] unbind"))
+        readPlanLog(planOf("Plan: 1 binding changes", "[Reaper] noop", "[Reaper/Reaper] unbind"))
       ).pipe(Effect.flip);
       assertTrue(mustEscalate(refusal.violations));
       const accepted = yield* checkPlan(
@@ -98,6 +98,12 @@ describe("CiRunners plan check", () => {
   it.effect("refuses a log whose rows do not account for the summary counts", () =>
     Effect.sync(() => {
       expect(reasons(planOf("Plan: 1 to delete"))).toEqual(["IncompletePlan"]);
+      // A log that ends after the summary, or mid-header, is refused; Alchemy's empty summaries pass.
+      expect(reasons(planOf("Plan: 1 tasks"))).toEqual(["IncompletePlan"]);
+      expect(reasons(planOf("Plan: 66 to"))).toEqual(["UnreadableLine"]);
+      expect(reasons(planOf("Plan: 2 to create, 1 to"))).toEqual(["UnreadableLine"]);
+      expect(reasons(planOf("Plan: no resources"))).toEqual([]);
+      expect(reasons(planOf("Plan: no changes"))).toEqual([]);
       expect(reasons(planOf("Plan: 2 to create, 1 binding changes", "[Vpc] create", "[Reaper] create"))).toEqual([
         "IncompletePlan",
       ]);
@@ -139,7 +145,8 @@ describe("CiRunners plan check", () => {
 
   it.effect("knows the stack's roots, subnets included", () =>
     Effect.sync(() => {
-      assertTrue(isStackResource("PublicSubnet3Route"));
+      assertTrue(isStackResource("PublicSubnet-us-east-1cRoute"));
+      assertFalse(isStackResource("PublicSubnet3Route"));
       assertTrue(isStackResource("Runners/Pooloverflow/ScaleUp"));
       assertFalse(isStackResource("PublicSubnetX"));
     })

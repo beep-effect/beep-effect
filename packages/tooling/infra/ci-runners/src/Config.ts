@@ -210,6 +210,12 @@ const apart = (left: string, right: string): boolean =>
     ([a, b]) => a.first + a.size <= b.first || b.first + b.size <= a.first
   );
 
+// The private ranges of RFC 1918. AWS reserves or refuses parts of the rest for a VPC (169.254.0.0/16 link-local,
+// 224.0.0.0/4 multicast, 0.0.0.0/8, 127.0.0.0/8), and the fleet needs no public block, so a VPC block must lie in one.
+const privateRanges = ["10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"];
+
+const isPrivateBlock = (cidr: string): boolean => A.some(privateRanges, (range) => contains(range)(cidr));
+
 const disjoint = (blocks: ReadonlyArray<string>): boolean =>
   A.every(blocks, (cidr, index) => A.every(A.drop(blocks, index + 1), (other) => apart(cidr, other)));
 
@@ -295,7 +301,16 @@ export class NetworkSettings extends S.Opaque<NetworkSettings, { readonly brand:
       }),
       S.makeFilter((network) => disjoint(A.map(network.subnets, (subnet) => subnet.cidrBlock)), {
         message: "Subnet blocks must not overlap",
-      })
+      }),
+      S.makeFilter((network) => isPrivateBlock(network.vpcCidr), {
+        message: "The VPC block must lie in an RFC 1918 private range (10/8, 172.16/12 or 192.168/16)",
+      }),
+      // One CreateFleet request takes at most one subnet per Availability Zone, and scale-up passes every subnet.
+      S.makeFilter(
+        (network) =>
+          A.length(A.dedupe(A.map(network.subnets, (subnet) => subnet.availabilityZone))) === A.length(network.subnets),
+        { message: "Each Availability Zone may hold only one runner subnet" }
+      )
     ),
     $I.annoteSchema("NetworkSettings", { description: "VPC, public subnets and flow-log retention." })
   )

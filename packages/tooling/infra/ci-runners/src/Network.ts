@@ -119,8 +119,9 @@ const publicSubnets = Effect.fn("CiRunners.publicSubnets")(function* (input: {
   readonly routeTable: EC2.RouteTable;
   readonly defaultRoute: EC2.Route;
 }) {
-  const declareSubnet = Effect.fnUntraced(function* (slot: SubnetSlot, index: number) {
-    const id = `PublicSubnet${index + 1}`;
+  // Keyed by Availability Zone, which the config holds unique: reordering the slots keeps every subnet's identity.
+  const declareSubnet = Effect.fnUntraced(function* (slot: SubnetSlot) {
+    const id = `PublicSubnet-${slot.availabilityZone}`;
     const name = `${input.names.subnetPrefix}-${slot.availabilityZone}`;
     const subnet = yield* EC2.Subnet(id, {
       vpcId: input.vpc.vpcId,
@@ -142,8 +143,8 @@ const publicSubnets = Effect.fn("CiRunners.publicSubnets")(function* (input: {
   });
   const [first, ...rest] = input.network.subnets;
   // The first subnet is declared on its own so the list stays non-empty by type.
-  const head = yield* declareSubnet(first, 0);
-  const tail = yield* Effect.forEach(rest, (slot, index) => declareSubnet(slot, index + 1), { concurrency: 1 });
+  const head = yield* declareSubnet(first);
+  const tail = yield* Effect.forEach(rest, (slot) => declareSubnet(slot), { concurrency: 1 });
   return A.prepend(tail, head);
 });
 

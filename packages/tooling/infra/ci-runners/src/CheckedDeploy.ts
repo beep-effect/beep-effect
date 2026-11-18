@@ -32,6 +32,7 @@ import { describePlan, describeResource } from "alchemy/Plan";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual, pipe } from "effect/Function";
@@ -282,16 +283,29 @@ const byFqn = Order.mapInput(Order.String, (entry: { readonly fqn: string }) => 
 const declaredProps = (node: unknown): O.Option<unknown> =>
   P.hasProperty(node, "props") ? O.some(node.props) : O.none();
 
+const isPlainRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
+  P.isObject(value) && !A.isArray(value) && [Object.prototype, null].includes(Object.getPrototypeOf(value));
+
+// Alchemy's display renders an Effect `Duration` as `(opaque)`, so a 60 s and a 90 s timeout would digest alike.
+// Before formatting, each Duration becomes its value in milliseconds; redaction is untouched (Redacted passes through).
+const withDurations = (value: unknown): unknown =>
+  Duration.isDuration(value)
+    ? { duration: `${Duration.toMillis(value)}ms` }
+    : A.isArray(value)
+      ? A.map(value, withDurations)
+      : isPlainRecord(value)
+        ? R.map(value, withDurations)
+        : value;
+
+const formatted = (value: unknown): string => A.join(formatYamlLines(withDurations(value)), "\n");
+
 const digestOf = Effect.fn("CiRunners.propsDigest")(function* (props: O.Option<unknown>) {
   const digest = yield* Digest.Digest;
   return yield* O.match(props, {
     onNone: () => Effect.succeed(""),
-    onSome: (value) => digest.digestHex(Digest.sha256, new TextEncoder().encode(A.join(formatYamlLines(value), "\n"))),
+    onSome: (value) => digest.digestHex(Digest.sha256, new TextEncoder().encode(formatted(value))),
   });
 });
-
-const isPlainRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
-  P.isObject(value) && !A.isArray(value) && [Object.prototype, null].includes(Object.getPrototypeOf(value));
 
 // Every `Redacted` value under a declared value, as `<path>=<value>` in key order. Values known only after
 // apply, effects and functions carry no declared secret and are skipped.
@@ -344,7 +358,7 @@ const baselineOf = (node: CRUD): O.Option<unknown> =>
 const baselineDigestOf = Effect.fn("CiRunners.baselineDigest")(function* (salt: string, node: CRUD) {
   return yield* O.match(baselineOf(node), {
     onNone: () => Effect.succeed(""),
-    onSome: (baseline) => hmacSha256Hex(salt, A.join(formatYamlLines(baseline), "\n")),
+    onSome: (baseline) => hmacSha256Hex(salt, formatted(baseline)),
   });
 });
 

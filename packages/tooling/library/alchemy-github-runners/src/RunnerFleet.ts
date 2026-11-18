@@ -291,6 +291,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
     props.id,
     Effect.gen(function* () {
       const appNames = appParameterNames(props.ssmRoot);
+      // Every ARN the fleet's own policies name carries the stage's account and region, not a wildcard.
+      const { accountId, region } = yield* AWSEnvironment.current;
       const prefix = O.fromUndefinedOr(props.namePrefix);
       const fleetNames = O.map(prefix, fleetResourceNames);
       const pinFunction = (name: (names: FleetResourceNames) => string) =>
@@ -312,12 +314,9 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         allow({ actions: ["kms:Decrypt"], resources: [key.keyArn] }),
       ] as const;
 
-      const bucketName = yield* O.match(fleetNames, {
-        onNone: () => Effect.succeed({}),
-        onSome: (names) =>
-          AWSEnvironment.current.pipe(
-            Effect.map(({ accountId }) => ({ bucketName: `${names.binariesBucketPrefix}-${accountId}` }))
-          ),
+      const bucketName = O.match(fleetNames, {
+        onNone: () => ({}),
+        onSome: (names) => ({ bucketName: `${names.binariesBucketPrefix}-${accountId}` }),
       });
       const binaries = yield* S3.Bucket("RunnerBinaries", {
         ...bucketName,
@@ -345,8 +344,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                 O.map(poolNames, (names) => ({ queue: queue(names), dlq: dlq(names) }));
               const tokenPath = poolTokenPath(props.ssmRoot, pool.name);
               const configPath = poolConfigPath(props.ssmRoot, pool.name);
-              const tokenArn = ssmArn`arn:aws:ssm:*:*:parameter${tokenPath}`;
-              const configArn = ssmArn`arn:aws:ssm:*:*:parameter${configPath}`;
+              const tokenArn = ssmArn`arn:aws:ssm:${region}:${accountId}:parameter${tokenPath}`;
+              const configArn = ssmArn`arn:aws:ssm:${region}:${accountId}:parameter${configPath}`;
 
               const runnerRole = yield* IAM.Role("RunnerRole", {
                 ...pin("roleName", (names) => names.runnerRole),
@@ -380,7 +379,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                       }),
                       allow({
                         actions: ["ec2:TerminateInstances", "ec2:CreateTags"],
-                        resources: ["arn:aws:ec2:*:*:instance/*"],
+                        resources: [`arn:aws:ec2:${region}:${accountId}:instance/*`],
                         condition: { StringEquals: { "aws:ARN": "${ec2:SourceInstanceARN}" } },
                       }),
                       allow({ actions: ["ec2:DescribeTags"], resources: ["*"] }),
@@ -661,8 +660,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
           allow({
             actions: ["ssm:GetParametersByPath", "ssm:DeleteParameter"],
             resources: A.flatMap(tokenPaths, (path) => [
-              ssmArn`arn:aws:ssm:*:*:parameter${path}`,
-              ssmArn`arn:aws:ssm:*:*:parameter${path}/*`,
+              ssmArn`arn:aws:ssm:${region}:${accountId}:parameter${path}`,
+              ssmArn`arn:aws:ssm:${region}:${accountId}:parameter${path}/*`,
             ]),
           }),
         ])

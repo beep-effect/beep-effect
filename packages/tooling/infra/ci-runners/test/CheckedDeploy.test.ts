@@ -19,6 +19,7 @@ import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";
+import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as Redacted from "effect/Redacted";
@@ -330,6 +331,17 @@ describe("CiRunners checked-plan reading", () => {
       assertFalse(wrote);
       const created = yield* readWith(single({ action: "create", props: { retention: 30 } }));
       expect(A.map(created.resources, (row) => row.baselineDigest)).toStrictEqual([""]);
+    })
+  );
+
+  it.effect("fingerprints a Duration by its value, so 60 s and 90 s timeouts drift", () =>
+    Effect.gen(function* () {
+      const timeout = (seconds: number) => single({ action: "create", props: { timeout: Duration.seconds(seconds) } });
+      const checked = yield* readWith(timeout(60));
+      const same = yield* readWith(timeout(60));
+      const longer = yield* readWith(timeout(90));
+      expect(planDifferences(checked, same)).toStrictEqual({ added: [], removed: [], changed: [] });
+      expect(planDifferences(checked, longer).changed).toStrictEqual(["Vpc"]);
     })
   );
 

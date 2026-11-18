@@ -44,7 +44,27 @@ describe("CiRunners guards and providers", () => {
       expect(messages[3]).toContain("prefix one another");
       expect(messages[4]).toContain("not canonical");
       expect(messages[5]).toContain("empty");
-      expect(messages[6]).toContain("longer than 40");
+      expect(messages[6]).toContain("longer than 16");
+    })
+  );
+
+  it.effect("admits only slugs every generated name keeps whole, at each boundary-scoped name limit", () =>
+    Effect.sync(() => {
+      const slug = Str.repeat(maxStageSlugLength)("a");
+      const suffix = Str.repeat(16)("x");
+      // Alchemy's generated name: `<stack>-<logical id>-<stage>-<suffix>`, lower case for S3; past the limit it truncates.
+      const generated = (logicalId: string) => `CiRunners-${logicalId}-${slug}-${suffix}`;
+      const limits: ReadonlyArray<readonly [string, number]> = [
+        ["RunnerBinariesSyncer", 64],
+        ["TerminationWatcher", 64],
+        ["SsmHousekeeper", 64],
+        ["RunnerBinaries", 63],
+        ["DeregisterRetryQueueDlq", 80],
+      ];
+      for (const [logicalId, limit] of limits) {
+        expect([logicalId, generated(logicalId).length <= limit]).toStrictEqual([logicalId, true]);
+      }
+      expect(`CiRunners-RunnerBinariesSyncer-${slug}a-${suffix}`.length > 64).toBe(true);
     })
   );
 

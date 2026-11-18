@@ -102,21 +102,32 @@ export const requireFencedNames = Effect.fn("CiRunners.requireFencedNames")(func
 });
 
 /**
- * The longest stage slug a personal stage may use, so every
- * `beep-fleet-<slug>-…` name stays inside its AWS limit.
+ * The longest stage slug a personal stage may use, so every name Alchemy
+ * generates for it keeps the whole slug.
+ *
+ * **Details**
+ *
+ * A personal stage's unpinned names are `CiRunners-<logical id>-<slug>-<suffix>`
+ * with a 16-character suffix, and Alchemy truncates a name past its service's limit,
+ * cutting the slug that the stage's permissions boundary matches
+ * (`CiRunners-*-<slug>-*`). The longest boundary-scoped logical id is the
+ * `RunnerBinariesSyncer` function (20 characters), whose function and
+ * execution-role names allow 64 characters: 9 + 1 + 20 + 1 + slug + 1 + 16 is
+ * at most 64, so the slug is at most 16. The binaries bucket (`RunnerBinaries`, 63) allows 21 and the
+ * queues (80) more.
  *
  * **Example** (Read the limit)
  *
  * ```ts
  * import { maxStageSlugLength } from "@beep/infra-ci-runners/Guards"
  *
- * console.log(maxStageSlugLength) // 40
+ * console.log(maxStageSlugLength) // 16
  * ```
  *
  * @category guards
  * @since 0.0.0
  */
-export const maxStageSlugLength = 40;
+export const maxStageSlugLength = 16;
 
 // Each rule: when it refuses a stage, and the reason it gives. `stage` is the stage name, `slug` its name slug.
 const stageRules: ReadonlyArray<{
@@ -132,7 +143,8 @@ const stageRules: ReadonlyArray<{
     refuses: (stage, slug) => stage !== slug,
     reason: (slug) => `it is not canonical: use "${slug}", lower case letters, digits and "-" only`,
   },
-  // The termination watcher matches `ghr:environment` by prefix, so neither fleet name may prefix the other.
+  // The termination watcher matches `ghr:environment` exactly; this keeps the fleet names apart by prefix, so no
+  // `beep-fleet-<slug>-*` name pattern of one stage (grants, the boundary, the live-fleet fence) reaches the other.
   {
     refuses: (_stage, slug) => Str.startsWith(productionStage)(slug) || Str.startsWith(slug)(productionStage),
     reason: (slug) => `its fleet name beep-fleet-${slug} and the ${productionStage} fleet name prefix one another`,
@@ -164,9 +176,12 @@ const stageRefusal = (stage: string, slug: string): ReadonlyArray<string> =>
  * `-`. A stage must equal its slug (`[a-z0-9-]`, no leading or trailing
  * `-`), so two distinct stages never derive the same AWS names
  * (`dev_alice` and `dev-alice` would; only `dev-alice` is accepted). The
- * termination watcher matches `ghr:environment` by prefix, so the check
- * runs both ways against `prod`: `prodfoo` (whose fleet name starts with
- * `beep-fleet-prod`) and `pro` (whose fleet name prefixes it) are refused.
+ * termination watcher matches `ghr:environment` exactly; the prefix check
+ * runs both ways against `prod` so no name pattern of one fleet reaches the
+ * other: `prodfoo` (whose fleet name starts with `beep-fleet-prod`) and
+ * `pro` (whose fleet name prefixes it) are refused. A slug longer than
+ * {@link maxStageSlugLength} is refused because Alchemy would truncate it out
+ * of the generated names the boundary matches.
  * A slug with `prod` as a `-`-delimited segment (`alice-prod`, `dev-prod-x`)
  * is refused too: the prod boundary's `CiRunners-*-prod-*` patterns would
  * match the names Alchemy generates for it.

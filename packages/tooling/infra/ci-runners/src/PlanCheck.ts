@@ -15,6 +15,7 @@ import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -85,8 +86,9 @@ export class PlannedResource extends S.Opaque<PlannedResource, { readonly brand:
  * `MissingPlan`: zero or several `Plan:` headers. `ActionTask`: a planned
  * Alchemy action (`run` or `drop`), which this stack never declares.
  * `IncompletePlan`: a `Plan:` summary count (`N to <action>`,
- * `N binding changes`) that the rows after it do not account for, such as a truncated
- * log. `PendingReplacement`: an `update` of a resource whose state still holds an
+ * `N binding changes`, `N tasks`) that the rows after it do not account for, such as a truncated
+ * log; a summary that is not Alchemy's grammar at all, such as a log cut mid-header, is an
+ * `UnreadableLine`. `PendingReplacement`: an `update` of a resource whose state still holds an
  * unfinished replacement, which the apply would also finish by deleting the
  * old generation. `UnexpectedChange`: a change the requested cutover
  * expectation does not allow (`src/CheckedDeploy.ts`).
@@ -189,8 +191,8 @@ export const mustEscalate = (violations: ReadonlyArray<PlanViolation>): boolean 
 
 /**
  * Root logical ids the stack declares. The fleet composite's resources all
- * sit under `Runners/`; subnets are `PublicSubnet<n>` and
- * `PublicSubnet<n>Route`.
+ * sit under `Runners/`; subnets are `PublicSubnet-<availability zone>` and
+ * `PublicSubnet-<availability zone>Route`.
  *
  * **Example** (The composite root)
  *
@@ -221,7 +223,7 @@ export const StackRoots: ReadonlyArray<string> = [
   "Runners",
 ];
 
-const subnetRoot = /^PublicSubnet\d+(?:Route)?$/u;
+const subnetRoot = /^PublicSubnet-[a-z]{2}(?:-[a-z]+)+-\d[a-z](?:Route)?$/u;
 const roots = HashSet.fromIterable(StackRoots);
 
 /**
@@ -335,19 +337,27 @@ const readProperty = (reading: PlanReading, line: string): O.Option<PlanReading>
     )
   );
 
-const summaryCountPattern = /(\d+) (?:to (create|update|adopted|replace|delete|orphaned)|(binding) changes)/gu;
+// Alchemy's summary (beta.87 `formatPlanLines`): `no resources`, `no changes`, or `, `-joined parts, each
+// `N to <action>`, `N binding changes` or `N tasks`. Anything else, such as a log cut mid-header, is unreadable.
+const summaryPartPattern = /^(\d+) (?:to (create|update|adopted|replace|delete|orphaned)|(binding) changes|(tasks))$/u;
 
-// The summary's counts against the rows read: `N to <action>` per resource action and `N binding changes`.
+// The summary's counts against the rows read: per resource action, non-noop bindings and stack action tasks.
 const countViolations = (header: string, reading: PlanReading): ReadonlyArray<PlanViolation> => {
+  const summaryText = Str.replace(headerPattern, "")(header);
+  if (summaryText === "no resources" || summaryText === "no changes") return [];
+  const parts = A.map(Str.split(", ")(summaryText), (part) => summaryPartPattern.exec(part));
+  if (!A.every(parts, P.isNotNull)) return [PlanViolation.cases.UnreadableLine.make({ line: header })];
   const read = (change: string): number =>
     change === "binding"
       ? A.filter(
           A.flatMap(reading.resources, (resource) => resource.bindings),
           (binding) => !Str.endsWith(" noop")(binding)
         ).length
-      : A.filter(reading.resources, (resource) => resource.action === change).length;
-  return A.filterMap(A.fromIterable(Str.matchAll(summaryCountPattern)(header)), (match) => {
-    const change = String(match[2] ?? match[3]);
+      : change === "tasks"
+        ? A.filter(reading.violations, PlanViolation.guards.ActionTask).length
+        : A.filter(reading.resources, (resource) => resource.action === change).length;
+  return A.filterMap(A.filter(parts, P.isNotNull), (match) => {
+    const change = String(match[2] ?? match[3] ?? match[4]);
     const summary = Number(match[1]);
     return summary === read(change)
       ? Result.failVoid
