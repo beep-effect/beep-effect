@@ -12,7 +12,7 @@
   "packetPath": "goals/slice-topology-audit",
   "lifecycle": "superseded",
   "mission": "Make the slice grammar mechanical: land the locked doctrine amendments, then ship beep architecture audit with a day-one baseline ratchet in a required check",
-  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): Worthwhile but unstarted and not in flight; pausing reduces open active goals. Resume with `bun run beep goals set-status slice-topology-audit active` when it is picked up. Before the ruling: Graduated 2026-08-30 from explorations/v3-consistency-audit; P0 not started. First PR is the doctrine amendments PR.",
+  "statusNote": "Superseded 2026-11-17 by goals/model-first-standard (operator ruling, explorations/model-first-slices/DECISIONS.md D65); do not resume. History: paused unstarted on 2026-11-13 by operator ruling (finish board); graduated 2026-08-30 from explorations/v3-consistency-audit, P0 never started.",
   "blockedBy": [],
   "executionCapable": true,
   "reflectionRequired": true,
@@ -89,5 +89,6 @@
     "The same blocker repeats after reasonable investigation."
   ],
   "supersededBy": "model-first-standard",
-  "supersededNote": "2026-11-17: superseded by goals/model-first-standard (operator ruling, explorations/model-first-slices/DECISIONS.md D65). That goal takes over the mission on the four-package shape: the doctrine amendment, the scaffolder and checkers under a baseline ratchet, and it provides architecture/slice-audit."
+  "supersededNote": "2026-11-17: superseded by goals/model-first-standard (operator ruling, explorations/model-first-slices/DECISIONS.md D65). That goal takes over the mission on the four-package shape: the doctrine amendment, the scaffolder and checkers under a baseline ratchet, and it provides architecture/slice-audit.",
+  "retentionReason": "Retained on main as the record of the seven-package audit plan that goals/model-first-standard replaces; archive once that goal's doctrine amendment has merged."
 }

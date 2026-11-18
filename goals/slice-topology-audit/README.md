@@ -4,7 +4,7 @@
 
 Lifecycle: `superseded`
 
-**Paused by operator ruling (finish board, 2026-11-13).** Worthwhile but unstarted and not in flight; pausing reduces open active goals. No lane is working on it; resume with `bun run beep goals set-status slice-topology-audit active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
+**Superseded on 2026-11-17 by [`goals/model-first-standard`](../model-first-standard/README.md)** (operator ruling, [`explorations/model-first-slices/DECISIONS.md`](../../explorations/model-first-slices/DECISIONS.md) D65). Do not resume this packet. That goal takes over the mission on the four-package slice shape (the doctrine amendment, the scaffolder and checkers under a baseline ratchet) and provides `architecture/slice-audit`. History: this packet was paused unstarted by the finish-board ruling of 2026-11-13 ([`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md)).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
