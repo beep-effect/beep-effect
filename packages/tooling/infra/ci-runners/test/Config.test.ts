@@ -11,12 +11,15 @@ import { stageCredentials } from "@beep/infra-ci-runners/Credentials";
 import { liveFleetOverlaps, physicalNames, poolEnvironment, touchesLiveFleet } from "@beep/infra-ci-runners/Names";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
+import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { fakeWebhookSecret, productionCredentialEnv } from "./support/Credentials.ts";
 
 const isRehearsalRepository = S.is(RehearsalRepository);
 const environmentOf = (values: Record<string, string>) =>
@@ -212,11 +215,15 @@ describe("CiRunners configuration validation", () => {
   it.effect("counts the pools once per runner owner the allow list admits", () =>
     Effect.gen(function* () {
       const primary = yield* decodeCiRunnersConfig({ ...productionConfig, phase: "primary" });
-      const owners = {
-        ...primary,
-        repositoryAllowList: ["beep-effect/beep-effect", "Beep-Effect/other", "alice/sandbox"],
-      };
-      expect(spotVcpuCommitted(owners)).toBe(spotVcpuCommitted(primary) * 2);
+      const allowList = ["beep-effect/beep-effect", "beep-effect/other", "alice/sandbox"];
+      // Org runners: one owner per organization (beep-effect, alice), compared exactly as scale-up's ownerOf does.
+      expect(spotVcpuCommitted({ ...primary, runnerType: "Org", repositoryAllowList: allowList })).toBe(
+        spotVcpuCommitted(primary) * 2
+      );
+      // Repo runners: one owner per repository.
+      expect(spotVcpuCommitted({ ...primary, runnerType: "Repo", repositoryAllowList: allowList })).toBe(
+        spotVcpuCommitted(primary) * 3
+      );
       expect(spotVcpuCommitted({ ...primary, repositoryAllowList: [] })).toBe(spotVcpuCommitted(primary));
     })
   );
@@ -228,20 +235,37 @@ describe("CiRunners production credentials", () => {
       Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(values))
     );
 
-  it.effect("refuses a blank or placeholder credential, naming neither value", () =>
+  it.effect("loads real-shaped credentials and refuses weak ones, naming neither the value nor its length", () =>
     Effect.gen(function* () {
-      const real = {
-        CI_RUNNERS_GITHUB_APP_ID: "12345",
-        CI_RUNNERS_GITHUB_APP_KEY_BASE64: "a2V5",
-        CI_RUNNERS_GITHUB_WEBHOOK_SECRET: "s3cret",
-      };
-      const loaded = yield* credentialsOf(real);
+      const loaded = yield* credentialsOf(productionCredentialEnv);
       const isSecret = Redacted.isRedacted(loaded.id);
       assertTrue(isSecret);
-      for (const bad of ["", "   ", "unset"]) {
-        const error = yield* Effect.flip(credentialsOf({ ...real, CI_RUNNERS_GITHUB_WEBHOOK_SECRET: bad }));
+      const pem = (length: number) =>
+        Base64.encode(
+          `-----BEGIN ${A.join(["RSA", "PRIVATE", "KEY"], " ")}-----\n${Str.repeat(length)("A")}\n-----END ${A.join(["RSA", "PRIVATE", "KEY"], " ")}-----\n`
+        );
+      const refusals: ReadonlyArray<readonly [string, string, string]> = [
+        // An empty value fails on the type itself, so its message names the schema, still without value or length.
+        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", "", "Credentials/WebhookSecret"],
+        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", "unset", "webhook secret too short"],
+        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", Str.repeat(7)("unset"), "webhook secret too short"],
+        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", `unset${fakeWebhookSecret}`, "webhook secret too short"],
+        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", Str.repeat(40)("a"), "webhook secret too short"],
+        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", Str.slice(0, 31)(fakeWebhookSecret), "webhook secret too short"],
+        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", `${fakeWebhookSecret}      `, "webhook secret too short"],
+        ["CI_RUNNERS_GITHUB_APP_KEY_BASE64", "a2V5", "App key is not a PEM private key"],
+        ["CI_RUNNERS_GITHUB_APP_KEY_BASE64", pem(64), "App key is not a PEM private key"],
+        ["CI_RUNNERS_GITHUB_APP_KEY_BASE64", "not base64 at all!", "App key is not a PEM private key"],
+        ["CI_RUNNERS_GITHUB_APP_ID", "unset", "App id is not a number"],
+        ["CI_RUNNERS_GITHUB_APP_ID", "", "Credentials/AppId"],
+      ];
+      for (const [variable, bad, message] of refusals) {
+        const error = yield* Effect.flip(credentialsOf({ ...productionCredentialEnv, [variable]: bad }));
         expect(error._tag).toBe("ConfigError");
-        expect(error.message).toContain("CI_RUNNERS_GITHUB_WEBHOOK_SECRET");
+        expect(error.message).toContain(message);
+        expect(error.message).toContain(variable);
+        if (Str.isNonEmpty(bad)) assertFalse(Str.includes(bad)(error.message));
+        assertFalse(Str.includes(` ${bad.length} `)(error.message));
       }
     })
   );

@@ -11,8 +11,11 @@ import { placeholderWebhookSecret } from "@beep/alchemy-github-runners/Webhook.p
 import { $InfraCiRunnersId } from "@beep/identity/packages";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as Base64 from "effect/encoding/Base64";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { productionStage, rehearsalRepository } from "./Config.ts";
@@ -108,25 +111,81 @@ export const placeholderCredentials = AppCredentials.make({
   webhookSecret: Redacted.make(placeholderWebhookSecret),
 });
 
-// A real credential: neither blank (GitHub Actions passes an unset secret as "") nor the placeholder.
-const RealCredential = S.String.check(
-  S.makeFilter((value: string) => Str.isNonEmpty(Str.trim(value)) && value !== placeholderWebhookSecret, {
-    message: "Expected a real credential: an empty value or the placeholder is refused",
-  })
-).pipe($I.annoteSchema("RealCredential", { description: "A credential that is neither blank nor the placeholder." }));
+/**
+ * The fewest characters a webhook secret may have: 32 characters from the
+ * hex alphabet (16 symbols, 4 bits each) carry 128 bits, and every wider
+ * alphabet the check admits (base64, base64url, alphanumerics) carries more.
+ *
+ * **Example** (128 bits as hex)
+ *
+ * ```ts
+ * import { minimumWebhookSecretLength } from "@beep/infra-ci-runners/Credentials"
+ *
+ * console.log(minimumWebhookSecretLength * 4) // 128
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const minimumWebhookSecretLength = 32;
 
-const realCredential = (name: string) => Config.schema(S.Redacted(RealCredential), name);
+// Every alphabet a generated secret uses: hex, base64 and base64url. Anything else (spaces, punctuation) is refused.
+const secretAlphabet = /^[A-Za-z0-9+/=_-]+$/u;
+
+// A random 32-character secret from even the hex alphabet shows at least 10 distinct characters with near
+// certainty; fewer means a pattern ("unset" repeated, a run of one character), not a random value.
+const minimumDistinctCharacters = 10;
+
+const isRandomLooking = (value: string): boolean =>
+  value.length >= minimumWebhookSecretLength &&
+  secretAlphabet.test(value) &&
+  HashSet.size(HashSet.fromIterable(value)) >= minimumDistinctCharacters &&
+  !Str.includes(placeholderWebhookSecret)(Str.toLowerCase(value));
+
+// Failure messages name the problem only, never the value or its length.
+const WebhookSecret = S.String.check(S.makeFilter(isRandomLooking, { message: "webhook secret too short" })).pipe(
+  $I.annoteSchema("WebhookSecret", { description: "A webhook secret of at least 128 bits." })
+);
+
+const pemPrivateKey =
+  /^-----BEGIN (?:RSA |EC )?PRIVATE KEY-----\r?\n(?:[A-Za-z0-9+/=]+\r?\n)+-----END (?:RSA |EC )?PRIVATE KEY-----\s*$/u;
+
+// A 2048-bit RSA key in PEM is about 1,700 characters; anything under 1,000 is not a usable App key.
+const minimumPemLength = 1000;
+
+const isPemPrivateKey = (base64: string): boolean =>
+  Result.match(Base64.decodeString(Str.trim(base64)), {
+    onFailure: () => false,
+    onSuccess: (pem) => pem.length >= minimumPemLength && pemPrivateKey.test(pem),
+  });
+
+const AppKeyBase64 = S.String.check(
+  S.makeFilter(isPemPrivateKey, { message: "App key is not a PEM private key" })
+).pipe($I.annoteSchema("AppKeyBase64", { description: "A base64-encoded PEM private key." }));
+
+const AppId = S.String.check(
+  S.makeFilter((value: string) => /^\d+$/u.test(value), { message: "App id is not a number" })
+).pipe($I.annoteSchema("AppId", { description: "A GitHub App id." }));
 
 /**
  * Read the App credentials from the environment.
  *
  * **Details**
  *
- * Each value must be real: an empty value, which GitHub Actions passes for
- * an unset secret, or the placeholder `unset` fails with a `ConfigError`
- * before any resource is declared, so a fleet never stores a secret that
- * would refuse every delivery. Only the blank or placeholder value can fail
- * this check, and neither is a secret.
+ * This is the one loader every stage that holds real credentials uses
+ * (`prod` and a rehearsal), so both `plan-check.ts plan` and
+ * `plan-check.ts deploy` decode through it before any resource is
+ * declared. The webhook secret must have at least
+ * {@link minimumWebhookSecretLength} characters (128 bits even as hex) from
+ * the hex or base64 alphabets, with at least 10 distinct characters, so a
+ * padded placeholder or a run of one character is refused. The App key
+ * must decode from base64 to a PEM private-key block of plausible RSA
+ * length, and the App id must be a number. An empty value, which GitHub
+ * Actions passes for an unset secret, fails all three. Each failure is a
+ * `ConfigError` whose message names the problem only ("webhook secret too
+ * short", "App key is not a PEM private key"), never the value or its
+ * length. These checks are what make the checked plan's salted secret
+ * fingerprint safe to store beside its salt.
  *
  * **Example** (Reference the config)
  *
@@ -140,9 +199,9 @@ const realCredential = (name: string) => Config.schema(S.Redacted(RealCredential
  * @since 0.0.0
  */
 export const appCredentials = Config.all({
-  id: realCredential(appCredentialVariables.id),
-  keyBase64: realCredential(appCredentialVariables.keyBase64),
-  webhookSecret: realCredential(appCredentialVariables.webhookSecret),
+  id: Config.schema(S.Redacted(AppId), appCredentialVariables.id),
+  keyBase64: Config.schema(S.Redacted(AppKeyBase64), appCredentialVariables.keyBase64),
+  webhookSecret: Config.schema(S.Redacted(WebhookSecret), appCredentialVariables.webhookSecret),
 }).pipe(Config.map(AppCredentials.make));
 
 /**

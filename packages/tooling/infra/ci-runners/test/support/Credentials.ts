@@ -19,3 +19,10 @@ export const fakeWebhookSecret = A.join(
   A.makeBy(32, (index) => (index % 16).toString(16)),
   ""
 );
+
+/** The three production variables, set to the fakes. */
+export const productionCredentialEnv = {
+  CI_RUNNERS_GITHUB_APP_ID: "12345",
+  CI_RUNNERS_GITHUB_APP_KEY_BASE64: fakeAppKeyBase64,
+  CI_RUNNERS_GITHUB_WEBHOOK_SECRET: fakeWebhookSecret,
+};

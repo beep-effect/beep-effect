@@ -235,9 +235,26 @@ const redactedEntries = (value: unknown, path: string): ReadonlyArray<string> =>
 };
 
 // A keyed fingerprint of the declared secrets: HMAC-SHA256 under the plan's random salt, never the values.
-const secretsDigestOf = Effect.fn("CiRunners.secretsDigest")(function* (salt: string, values: ReadonlyArray<unknown>) {
-  const entries = A.flatMap(values, (value, index) => redactedEntries(value, `${index}`));
-  return A.isReadonlyArrayNonEmpty(entries) ? yield* hmacSha256Hex(salt, A.join(entries, "\n")) : "";
+// The declared values of a node that can hold a secret: its props and each binding's payload.
+const secretBearing = (node: CRUD): ReadonlyArray<unknown> => [
+  O.getOrUndefined(declaredProps(node)),
+  ...A.map(node.bindings, (binding) => binding.data),
+];
+
+const entriesOf = (node: CRUD): ReadonlyArray<string> =>
+  A.flatMap(secretBearing(node), (value, index) => redactedEntries(value, `${index}`));
+
+// The HMAC covers the plan's whole secret material, then the node's own entries. A resource that holds one
+// low-entropy value (the App id parameter) is thus never fingerprinted alone: guessing it offline also needs the
+// App key and the webhook secret, which the loader holds to 128 bits.
+const secretsDigestOf = Effect.fn("CiRunners.secretsDigest")(function* (
+  salt: string,
+  planSecrets: string,
+  entries: ReadonlyArray<string>
+) {
+  return A.isReadonlyArrayNonEmpty(entries)
+    ? yield* hmacSha256Hex(salt, `${planSecrets}\n--\n${A.join(entries, "\n")}`)
+    : "";
 });
 
 // An update whose state still holds an unfinished replacement: applying it also deletes the old generation.
@@ -303,6 +320,7 @@ export const readEnginePlan = Effect.fn("CiRunners.readEnginePlan")(function* (i
     [...R.values(plan.resources), ...R.values(plan.deletions)],
     P.isNotUndefined
   );
+  const planSecrets = pipe(nodes, A.flatMap(entriesOf), A.sort(Order.String), A.join("\n"));
   const resources = yield* Effect.forEach(
     nodes,
     Effect.fnUntraced(function* (node) {
@@ -323,10 +341,7 @@ export const readEnginePlan = Effect.fn("CiRunners.readEnginePlan")(function* (i
         bindings: A.map(row.bindings, (binding) => `${row.fqn}/${binding.sid} ${binding.action}`),
         propsDigest: yield* digestOf(props),
         bindingsDigest: A.join(bindingDigests, ","),
-        secretsDigest: yield* secretsDigestOf(salt, [
-          O.getOrUndefined(props),
-          ...A.map(payloads, (binding) => binding.data),
-        ]),
+        secretsDigest: yield* secretsDigestOf(salt, planSecrets, entriesOf(node)),
         pendingReplacement: isPendingReplacement(node),
       });
     }),

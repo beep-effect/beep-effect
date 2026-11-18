@@ -24,6 +24,7 @@ import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { fakeAppKeyBase64, fakeWebhookSecret, productionCredentialEnv } from "./support/Credentials.ts";
 import * as Fakes from "./support/Fakes.ts";
 import type { PlanExpectation } from "@beep/infra-ci-runners/CheckedDeploy";
 import type { Plan } from "alchemy/Plan";
@@ -33,8 +34,8 @@ const productionEnvironment = Effect.provideService(
   ConfigProvider.fromUnknown({
     CI: "true",
     CI_RUNNERS_GITHUB_APP_ID: "12345",
-    CI_RUNNERS_GITHUB_APP_KEY_BASE64: "a2V5",
-    CI_RUNNERS_GITHUB_WEBHOOK_SECRET: "webhook-secret",
+    CI_RUNNERS_GITHUB_APP_KEY_BASE64: fakeAppKeyBase64,
+    CI_RUNNERS_GITHUB_WEBHOOK_SECRET: fakeWebhookSecret,
   })
 );
 
@@ -129,6 +130,38 @@ describe("CiRunners checked deploy", () => {
       const text = yield* S.encodeEffect(CheckedPlanJson)(first);
       const decoded = yield* S.decodeEffect(CheckedPlanJson)(text);
       expect(decoded).toStrictEqual(first);
+    })
+  );
+
+  const secrets = Fakes.harness({ stage: "prod" });
+  secrets.provider("fingerprints no planned resource by the App id alone", (stack) =>
+    Effect.gen(function* () {
+      const withWebhookSecret = (webhookSecret: string) =>
+        stack
+          .plan(
+            program.pipe(
+              Effect.provideService(
+                ConfigProvider.ConfigProvider,
+                ConfigProvider.fromUnknown({
+                  CI: "true",
+                  ...productionCredentialEnv,
+                  CI_RUNNERS_GITHUB_WEBHOOK_SECRET: webhookSecret,
+                })
+              )
+            )
+          )
+          .pipe(Effect.flatMap((plan) => readWith(plan)));
+      const first = yield* withWebhookSecret(fakeWebhookSecret);
+      const second = yield* withWebhookSecret("fedcba9876543210fedcba9876543210");
+      const fingerprinted = A.filter(first.resources, (row) => Str.isNonEmpty(row.secretsDigest));
+      // The App id parameter, the App key parameter and the webhook secret parameter at least.
+      assertTrue(fingerprinted.length >= 3);
+      assertTrue(A.some(fingerprinted, (row) => row.fqn === "Runners/AppId"));
+      // Only the webhook secret changed, yet every fingerprint moves: none covers the App id (or any one value) alone.
+      const changed = A.filter(fingerprinted, (row) =>
+        A.some(second.resources, (other) => other.fqn === row.fqn && other.secretsDigest !== row.secretsDigest)
+      );
+      expect(A.map(changed, (row) => row.fqn)).toStrictEqual(A.map(fingerprinted, (row) => row.fqn));
     })
   );
 

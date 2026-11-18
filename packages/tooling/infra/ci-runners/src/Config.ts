@@ -444,16 +444,18 @@ const SpotBudgetFields = S.Struct({
   liveFleetReserveVcpu: NonNegativeInt,
   heavy: PoolSettings,
   overflow: PoolSettings,
+  runnerType: RunnerType,
   repositoryAllowList: S.Array(S.String),
 });
 
-// Scale-up caps each pool per runner owner (`ScaleUp.program` counts runners by environment and owner),
-// so the worst case is the pools' caps times the distinct owners the allow list admits (at least one).
-const ownerCount = (allowList: ReadonlyArray<string>): number =>
-  Math.max(
-    1,
-    A.dedupe(A.map(allowList, (repository) => Str.toLowerCase(A.headNonEmpty(Str.split("/")(repository))))).length
-  );
+// Scale-up caps each pool per runner owner (`ScaleUp.program` counts runners by environment and owner), and it
+// derives the owner as `ownerOf` does: the organization for Org runners, `owner/repo` for Repo runners, compared
+// exactly. The worst case is the pools' caps times the distinct owners the allow list admits (at least one).
+const ownerOf = (runnerType: RunnerType, repository: string): string =>
+  runnerType === "Org" ? A.headNonEmpty(Str.split("/")(repository)) : repository;
+
+const ownerCount = (runnerType: RunnerType, allowList: ReadonlyArray<string>): number =>
+  Math.max(1, A.dedupe(A.map(allowList, (repository) => ownerOf(runnerType, repository))).length);
 
 /**
  * The Spot vCPU a stage commits: both pools' worst case, once per runner
@@ -477,7 +479,7 @@ const ownerCount = (allowList: ReadonlyArray<string>): number =>
  */
 export const spotVcpuCommitted = (config: typeof SpotBudgetFields.Type): number =>
   (poolWorstCaseVcpu(config.heavy, config.phase) + poolWorstCaseVcpu(config.overflow, config.phase)) *
-    ownerCount(config.repositoryAllowList) +
+    ownerCount(config.runnerType, config.repositoryAllowList) +
   FleetPhase.match(config.phase, { overlap: () => config.liveFleetReserveVcpu, primary: () => 0 });
 
 /**
