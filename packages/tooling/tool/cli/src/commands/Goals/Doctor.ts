@@ -1772,6 +1772,21 @@ const loadDoctorBaselineKeys = Effect.fn("Goals.loadDoctorBaselineKeys")(functio
   );
 });
 
+// The findings the checkout's prunes skipped, counted and named; nothing when there are none.
+const printSkippedFindings = Effect.fn("Goals.printSkippedFindings")(function* (
+  skipped: ReadonlyArray<GoalDoctorFinding>
+) {
+  if (A.isReadonlyArrayEmpty(skipped)) {
+    return;
+  }
+  yield* Console.log(`[goals:doctor] skipped_pruned=${A.length(skipped)}`);
+  yield* Effect.forEach(
+    skipped,
+    (item) => Console.log(`[goals:doctor] skipped ${item.key}: pruned from this checkout`),
+    { concurrency: 1, discard: true }
+  );
+});
+
 // Prints a header and its lines on stderr, or nothing when there are no lines.
 const printErrorSection = Effect.fn("Goals.printErrorSection")(function* (
   header: string,
@@ -1912,12 +1927,7 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
   yield* Console.log(
     `[goals:doctor] packets=${A.length(records)} blocking_new=${A.length(classified.introduced)} blocking_inherited=${A.length(classified.inherited)} baseline_resolved=${A.length(classified.resolved)} advisories=${A.length(advisories)}`
   );
-  if (A.isReadonlyArrayNonEmpty(skipped)) {
-    yield* Console.log(`[goals:doctor] skipped_pruned=${A.length(skipped)}`);
-    for (const item of skipped) {
-      yield* Console.log(`[goals:doctor] skipped ${item.key}: pruned from this checkout`);
-    }
-  }
+  yield* printSkippedFindings(skipped);
   yield* printNonFatalFindings({
     notes: [...advisoriesFromGit.notes, ...A.flatMap(structured, (row) => row.notes)],
     advisories,

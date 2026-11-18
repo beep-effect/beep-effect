@@ -18,6 +18,7 @@ import {
   isCheckoutPathDeclaredPruned,
   isCheckoutPathKept,
   isCheckoutPathOwned,
+  isCheckoutPathPruneDeclared,
   liveCheckoutPruneFiles,
   loadCheckoutPruneDeclaration,
 } from "@beep/repo-cli-kit/CheckoutPrune";
@@ -217,6 +218,10 @@ describe("checkout prune path predicates", () => {
   it("declares owned paths pruned and owned, and leaves workspace entries to the workspace rule", () => {
     strictEqual(isCheckoutPathDeclaredPruned(declaration, "renovate.json"), true);
     strictEqual(isCheckoutPathOwned(declaration, "renovate.json"), true);
+    // Removed and replaced are told apart: renovate.json is owned, not pruned away.
+    strictEqual(isCheckoutPathPruneDeclared(declaration, "renovate.json"), false);
+    strictEqual(isCheckoutPathPruneDeclared(declaration, "docs/demo/guide.md"), true);
+    strictEqual(isCheckoutPathPruneDeclared("docs/demo/README.md")(declaration), false);
     strictEqual(isCheckoutPathOwned("docs/demo/guide.md")(declaration), false);
     // An entry that names a workspace package declares that workspace, not its paths.
     strictEqual(isCheckoutPathDeclaredPruned(declaration, "packages/drivers/demo/src/index.ts"), false);

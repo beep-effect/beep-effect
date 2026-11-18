@@ -289,12 +289,67 @@ const phaseSnapshotFinding = Effect.fn("RoadmapRefs.phaseSnapshotFinding")(funct
   );
 });
 
+// One roadmap reference, resolved against the checkout.
+interface ResolvedReference {
+  readonly missing: boolean;
+  readonly reference: RoadmapReference;
+  readonly repoPath: string;
+  readonly resolvedTarget: string;
+}
+
+const missingTargetFinding = (row: ResolvedReference): RoadmapPolicyFinding =>
+  makeFinding(
+    "error",
+    row.reference.target,
+    `Roadmap link target does not exist: ${row.resolvedTarget}.`,
+    "Restore the referenced packet path or update the roadmap link to an existing target."
+  );
+
+// Prints a header and its findings on stderr, or nothing when there are none.
+const logFindingSection = Effect.fn("RoadmapRefs.logFindingSection")(function* (
+  header: string,
+  findings: ReadonlyArray<RoadmapPolicyFinding>
+) {
+  if (A.isReadonlyArrayEmpty(findings)) return;
+  yield* Console.error(header);
+  yield* Effect.forEach(findings, logPolicyFinding, { concurrency: 1, discard: true });
+});
+
+// The missing targets the checkout pruned, counted and named; nothing when there are none.
+const logSkippedTargets = Effect.fn("RoadmapRefs.logSkippedTargets")(function* (skipped: ReadonlyArray<string>) {
+  if (A.isReadonlyArrayEmpty(skipped)) return;
+  yield* Console.log(`[roadmap] skipped_pruned=${A.length(skipped)}`);
+  yield* Effect.forEach(
+    skipped,
+    (target) => Console.log(`[roadmap] skipped ${target}: its packet is pruned from this checkout`),
+    { concurrency: 1, discard: true }
+  );
+});
+
+// goals/prunable-product-leaves, seam 1b: a missing target in a packet the checkout pruned or owns
+// is skipped and counted, not blocking. The inventory is read only when a target is missing.
+const prunedMissingTargets = Effect.fn("RoadmapRefs.prunedMissingTargets")(function* (
+  repoRoot: string,
+  missing: ReadonlyArray<ResolvedReference>
+) {
+  if (A.isReadonlyArrayEmpty(missing)) return HashSet.empty<string>();
+  const inventory = yield* loadCheckoutInventory(repoRoot, productLeaves);
+  return HashSet.fromIterable(
+    A.map(
+      A.filter(missing, (row) => isCheckoutPathPruned(inventory, row.repoPath)),
+      (row) => row.reference.target
+    )
+  );
+});
+
 /**
  * Verifies roadmap packet links exist and reports goal phase-count drift.
  *
  * **Details**
  *
  * The roadmap is read from `repoRootOverride` when it is `Some` and from the checkout found by `findRepoRoot()` otherwise.
+ * A missing target inside a packet the checkout pruned or owns (`@beep/repo-cli-kit/CheckoutSubject`) is skipped and
+ * counted instead of blocking.
  *
  * **Example** (Verify Effect lint runner)
  *
@@ -316,62 +371,42 @@ export const runRoadmapRefsLint = Effect.fn(function* (repoRootOverride: O.Optio
   });
   const roadmapPath = path.join(repoRoot, ROADMAP_PATH);
   const raw = yield* fs.readFileString(roadmapPath);
-  const blocking = A.empty<RoadmapPolicyFinding>();
-  const advisories = A.empty<RoadmapPolicyFinding>();
-  const skipped = A.empty<string>();
-  // Read only when a target is missing: a link into a packet the checkout pruned is skipped and
-  // counted, not blocking (goals/prunable-product-leaves, seam 1b).
-  const inventory = yield* Effect.cached(loadCheckoutInventory(repoRoot, productLeaves));
-
-  for (const reference of parseRoadmapReferences(raw)) {
-    const resolvedTarget = path.resolve(path.dirname(roadmapPath), targetPath(reference.target));
-    const repoPath = path.relative(repoRoot, resolvedTarget);
-    const isDerivedProjection = HashSet.has(DERIVED_PROJECTION_PATHS, repoPath);
-    if (!(yield* fs.exists(resolvedTarget)) && !isDerivedProjection) {
-      const checkout = yield* inventory;
-      if (isCheckoutPathPruned(checkout, repoPath)) {
-        skipped.push(reference.target);
-        continue;
-      }
-      blocking.push(
-        makeFinding(
-          "error",
-          reference.target,
-          `Roadmap link target does not exist: ${resolvedTarget}.`,
-          "Restore the referenced packet path or update the roadmap link to an existing target."
-        )
-      );
-      continue;
-    }
-
-    const advisory = yield* phaseSnapshotFinding(reference, roadmapPath, resolvedTarget);
-    if (O.isSome(advisory)) {
-      advisories.push(advisory.value);
-    }
-  }
+  const resolved = yield* Effect.forEach(
+    parseRoadmapReferences(raw),
+    Effect.fnUntraced(function* (reference) {
+      const resolvedTarget = path.resolve(path.dirname(roadmapPath), targetPath(reference.target));
+      const repoPath = path.relative(repoRoot, resolvedTarget);
+      const exists = yield* fs.exists(resolvedTarget);
+      return {
+        reference,
+        resolvedTarget,
+        repoPath,
+        missing: !exists && !HashSet.has(DERIVED_PROJECTION_PATHS, repoPath),
+      } satisfies ResolvedReference;
+    }),
+    { concurrency: 1 }
+  );
+  const missing = A.filter(resolved, (row) => row.missing);
+  const pruned = yield* prunedMissingTargets(repoRoot, missing);
+  const isPruned = (row: ResolvedReference): boolean => HashSet.has(pruned, row.reference.target);
+  const skipped = A.map(A.filter(missing, isPruned), (row) => row.reference.target);
+  const blocking = A.map(
+    A.filter(missing, (row) => !isPruned(row)),
+    missingTargetFinding
+  );
+  const advisoryOptions = yield* Effect.forEach(
+    A.filter(resolved, (row) => !row.missing),
+    (row) => phaseSnapshotFinding(row.reference, roadmapPath, row.resolvedTarget),
+    { concurrency: 1 }
+  );
+  const advisories = A.getSomes(advisoryOptions);
 
   yield* Console.log(`[roadmap] blocking_findings=${A.length(blocking)}`);
   yield* Console.log(`[roadmap] advisory_findings=${A.length(advisories)}`);
-
-  if (A.isReadonlyArrayNonEmpty(skipped)) {
-    yield* Console.log(`[roadmap] skipped_pruned=${A.length(skipped)}`);
-    for (const target of skipped) {
-      yield* Console.log(`[roadmap] skipped ${target}: its packet is pruned from this checkout`);
-    }
-  }
-
-  if (A.isReadonlyArrayNonEmpty(advisories)) {
-    yield* Console.error("[roadmap] advisories (non-fatal):");
-    for (const finding of advisories) {
-      yield* logPolicyFinding(finding);
-    }
-  }
-
+  yield* logSkippedTargets(skipped);
+  yield* logFindingSection("[roadmap] advisories (non-fatal):", advisories);
+  yield* logFindingSection("[roadmap] blocking findings:", blocking);
   if (A.isReadonlyArrayNonEmpty(blocking)) {
-    yield* Console.error("[roadmap] blocking findings:");
-    for (const finding of blocking) {
-      yield* logPolicyFinding(finding);
-    }
     return yield* failWithReportedExit("roadmap: referenced goal or exploration target is missing.");
   }
 });

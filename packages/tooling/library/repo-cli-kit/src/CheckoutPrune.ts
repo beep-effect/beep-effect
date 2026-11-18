@@ -325,7 +325,7 @@ const Entries = S.Array(CheckoutPruneEntry).pipe(
  */
 export class CheckoutPruneDeclaration extends S.Opaque<CheckoutPruneDeclaration, { readonly brand: unique symbol }>()(
   S.Struct({
-    version: S.Literal(1),
+    version: S.tag(1),
     prune: Entries,
     keep: Entries,
     owned: Entries,
@@ -351,7 +351,7 @@ export class CheckoutPruneDeclaration extends S.Opaque<CheckoutPruneDeclaration,
  * @category constants
  * @since 0.0.0
  */
-export const emptyCheckoutPruneDeclaration: CheckoutPruneDeclaration = CheckoutPruneDeclaration.make({ version: 1 });
+export const emptyCheckoutPruneDeclaration: CheckoutPruneDeclaration = CheckoutPruneDeclaration.make({});
 
 /**
  * A checkout prune declaration that cannot be read, parsed or decoded.
@@ -550,6 +550,46 @@ export const isCheckoutPathDeclaredPruned: {
   (declaration: CheckoutPruneDeclaration, repoPath: string): boolean =>
     !isCheckoutPathKept(declaration, repoPath) &&
     (declaresPath(declaration.prune, repoPath) || declaresPath(declaration.owned, repoPath))
+);
+
+/**
+ * Whether a prune entry declares a repository path: a prune entry matches it
+ * and no keep entry does.
+ *
+ * **Details**
+ *
+ * The prune half of {@link isCheckoutPathDeclaredPruned}: a path the checkout
+ * removed, as opposed to one it owns. Only entries without `packageName`
+ * declare repository paths.
+ *
+ * **Example** (Tell a removed path from an owned one)
+ *
+ * ```ts
+ * import { CheckoutPruneDeclaration, isCheckoutPathPruneDeclared } from "@beep/repo-cli-kit/CheckoutPrune"
+ * import * as S from "effect/Schema"
+ *
+ * const declaration = S.decodeUnknownSync(CheckoutPruneDeclaration)({
+ *   version: 1,
+ *   prune: [{ path: "docs/demo", why: "not shipped" }],
+ *   owned: [{ path: "renovate.json", why: "own dependency bot" }],
+ * })
+ * console.log(isCheckoutPathPruneDeclared(declaration, "docs/demo/guide.md")) // true
+ * console.log(isCheckoutPathPruneDeclared(declaration, "renovate.json")) // false
+ * ```
+ *
+ * @param declaration - The checkout's prune declaration.
+ * @param repoPath - A repository-relative POSIX path.
+ * @returns `true` when a prune entry, and no keep entry, matches the path.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isCheckoutPathPruneDeclared: {
+  (repoPath: string): (declaration: CheckoutPruneDeclaration) => boolean;
+  (declaration: CheckoutPruneDeclaration, repoPath: string): boolean;
+} = dual(
+  2,
+  (declaration: CheckoutPruneDeclaration, repoPath: string): boolean =>
+    !isCheckoutPathKept(declaration, repoPath) && declaresPath(declaration.prune, repoPath)
 );
 
 /**

@@ -53,6 +53,7 @@ import {
   isCheckoutPathDeclaredPruned,
   isCheckoutPathKept,
   isCheckoutPathOwned,
+  isCheckoutPathPruneDeclared,
   liveCheckoutPruneFiles,
   loadCheckoutPruneDeclaration,
 } from "./CheckoutPrune.ts";
@@ -60,7 +61,7 @@ import { workspaceMembers } from "./RepoWorkspaces.ts";
 import type { WorkspacePackage } from "@beep/repo-workspaces/WorkspacePackage";
 import type { GlobExpansionError } from "@beep/walker/Expand";
 import type * as PlatformError from "effect/PlatformError";
-import type { CheckoutPruneDeclarationError, CheckoutPruneEntry } from "./CheckoutPrune.ts";
+import type { CheckoutPruneDeclarationError } from "./CheckoutPrune.ts";
 import type { RepoWorkspacesError } from "./RepoWorkspaces.ts";
 
 const $I = $RepoCliKitId.create("CheckoutSubject");
@@ -438,15 +439,6 @@ export const workspaceSubject = (packageName: string): CheckoutSubject =>
 export const repositoryPathSubject = (path: string): CheckoutSubject =>
   CheckoutSubject.cases.RepositoryPathSubject.make({ path });
 
-// Only entries without `packageName` declare packets and repository paths; one that names a
-// workspace package declares that workspace.
-const declaresPath = (entries: ReadonlyArray<CheckoutPruneEntry>, repoPath: string): boolean =>
-  A.some(entries, (entry) => entry.packageName === undefined && entry.matches(repoPath));
-
-// A prune entry declares the path and no keep entry carves it out.
-const isPathPruneDeclared = (declaration: CheckoutPruneDeclaration, repoPath: string): boolean =>
-  declaresPath(declaration.prune, repoPath) && !isCheckoutPathKept(declaration, repoPath);
-
 // A keep entry protects a workspace by its package name or by matching its directory.
 const keepCoversWorkspace = (declaration: CheckoutPruneDeclaration, packageName: string, directory: string): boolean =>
   A.some(declaration.keep, (entry) => entry.packageName === packageName || entry.matches(directory));
@@ -461,6 +453,12 @@ const ownedWorkspaces = (declaration: CheckoutPruneDeclaration): ReadonlyArray<r
 
 /**
  * Whether a checkout holds a subject.
+ *
+ * **Details**
+ *
+ * A repository path is present unless a prune entry of the checkout's
+ * declaration removes it: `loadCheckoutInventory` refuses a declaration whose
+ * prune entries match a live file.
  *
  * **Example** (Check a packet and a workspace)
  *
@@ -484,12 +482,6 @@ const ownedWorkspaces = (declaration: CheckoutPruneDeclaration): ReadonlyArray<r
  * console.log(isCheckoutSubjectPresent(inventory, workspaceSubject("@beep/gone"))) // false
  * ```
  *
- * **Details**
- *
- * A repository path is present unless a prune entry of the checkout's
- * declaration removes it: `loadCheckoutInventory` refuses a declaration whose
- * prune entries match a live file.
- *
  * @param inventory - The checkout's packets and workspaces.
  * @param subject - The subject to look up.
  * @returns `true` when the checkout holds the subject.
@@ -503,7 +495,7 @@ export const isCheckoutSubjectPresent: {
   CheckoutSubject.match(subject, {
     PacketSubject: ({ root }) => HashSet.has(inventory.packets, root),
     WorkspaceSubject: ({ packageName }) => HashMap.has(inventory.workspaces, packageName),
-    RepositoryPathSubject: ({ path }) => !isPathPruneDeclared(inventory.declaration, path),
+    RepositoryPathSubject: ({ path }) => !isCheckoutPathPruneDeclared(inventory.declaration, path),
   })
 );
 
@@ -557,7 +549,7 @@ export const isCheckoutSubjectPruned: {
   CheckoutSubject.match(subject, {
     PacketSubject: ({ root }) =>
       HashSet.has(inventory.prunedPackets, root) ||
-      (!HashSet.has(inventory.packets, root) && isPathPruneDeclared(inventory.declaration, root)) ||
+      (!HashSet.has(inventory.packets, root) && isCheckoutPathPruneDeclared(inventory.declaration, root)) ||
       isCheckoutPathOwned(inventory.declaration, root),
     WorkspaceSubject: ({ packageName }) =>
       HashMap.has(inventory.prunedWorkspaces, packageName) ||
