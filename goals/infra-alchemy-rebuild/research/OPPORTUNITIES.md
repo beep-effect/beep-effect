@@ -567,6 +567,7 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** `bun run beep create-package` writes a seed row, or the package-scoped ratchet
   fails a PR that adds a coverage-owning package without a row. A writer mode that adopts rows from downloaded
   hosted artifacts (`--coverage-input` with `--write-baseline`) would make the repair one command.
+
 ## 2026-11-14: a base-sync merge that re-records a baseline has no Yeet push path
 
 - **Doing:** P3 GitHub stack (#3324), merging `main` after #3348 split the cache baseline into per-subject
