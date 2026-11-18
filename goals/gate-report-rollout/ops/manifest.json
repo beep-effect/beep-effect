@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "gate-report-rollout",
+    "packetId": "goal-packet/v1:f04a6812af1dfef2b57fbceca046bc63ae4484435196d963396cb6c8adb90a45",
+    "title": "Gate Report Rollout",
+    "status": "active",
+    "created": "2026-11-18",
+    "updated": "2026-11-18",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/gate-report-rollout",
+  "lifecycle": "active",
+  "mission": "Put every remaining gate on the gate-report contract, make Yeet read gate reports instead of streams, and remove the reasons agents poll: a heartbeat on long gates and a block-until-changed mode on the status commands",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-verification-output",
+    "graduated": "2026-11-18"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/gate-report-rollout/README.md",
+    "goals/gate-report-rollout/SPEC.md",
+    "goals/gate-report-rollout/PLAN.md",
+    "goals/gate-report-rollout/GOAL.md",
+    "goals/gate-report-rollout/research/SOURCES.md",
+    "explorations/agent-verification-output/MAP.md",
+    "explorations/agent-verification-output/DECISIONS.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/gate-report-rollout/GOAL.md"
+    }
+  ],
+  "provides": [
+    "gate-report/lane-adapters",
+    "gate-report/heartbeat",
+    "yeet/block-until-changed"
+  ],
+  "requires": [
+    "gate-report/model",
+    "gate-report/console",
+    "gate-report/recorder"
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Adapters and conformance",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Aggregates and Yeet consumers",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Heartbeat and block until changed",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Guidance and measurement",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/gate-report-rollout/GOAL.md)\" -le 4000",
+    "jq . goals/gate-report-rollout/ops/manifest.json",
+    "rg -n \"gate-report-rollout|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/gate-report-rollout",
+    "git diff --check -- goals/gate-report-rollout",
+    "bun run beep lint reflection-artifacts",
+    "bun run beep skills update --check"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "blockedBy": ["goals/gate-report-core"]
+}

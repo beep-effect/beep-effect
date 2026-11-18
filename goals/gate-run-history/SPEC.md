@@ -1,0 +1,329 @@
+# Gate Run History Spec
+
+## Objective
+
+Record every gate report by branch, and label each failure against two series: the lane's own
+earlier runs and main's latest hosted results at the lane's merge base. A re-run on a lane says
+what changed since the last one.
+
+The labels answer the question the repo's attribute-before-repairing law asks: is this red mine,
+inherited, or noise. This goal delivers the history store, the label classifier, the fix-loop
+delta line, the history queries of the planned `gate` command family on the repo CLI, the
+reconciliation with flake quarantine, and the hosted-main baseline.
+
+The design is settled in `explorations/agent-verification-output`: `BRIEF.md` ("History"),
+`DECISIONS.md` (entries `history-baseline`, `core-enhancements`, `agent-surface`), `MAP.md`
+candidate 4, and `research/vitest-agent-core.md` sections 3.2 to 3.4 and 9, cited against the
+reference checkout `.repos/vitest-agent` at `1cf1ab94`. The report model, the console and its
+label and delta slots are `goals/gate-report-core`; this spec uses its types and names.
+
+## Non-Goals
+
+- The report model, the recorder and the console projections: `goals/gate-report-core`.
+- Choosing the carrier for hosted reports and uploading them from CI: `goals/ci-gate-reports`.
+  This goal consumes what that goal uploads.
+- Changing the detection rules of flake quarantine. History adds labels; the quarantine keeps
+  deciding whether a lane passes.
+- Coverage trends, failure-signature occurrence counts, notes, hypotheses and the session, turn,
+  agent and TDD tables of upstream's database (decision `tdd-workflow-no-go` in the exploration).
+- An MCP tool or a hook for history (decision `agent-surface`).
+- History for output of commands the repo does not own.
+
+## Source Hierarchy
+
+1. User objective or issue that created this packet.
+2. `AGENTS.md`, `CLAUDE.md`, and required skills.
+3. Governing architecture/package standards.
+4. This `SPEC.md`.
+5. `PLAN.md`.
+6. `GOAL.md`.
+7. Supporting `research/`, `ops/`, and `history/` files.
+
+Higher sources outrank lower sources when they conflict.
+
+## Target Surfaces
+
+- The gate-run library `goals/gate-report-core` creates (working name `@beep/repo-gate-run`,
+  `packages/tooling/library/repo-gate-run`): the history store module, its layer and the
+  baseline import. The store module is a separate entry that the Vitest adapter never imports.
+- The gate-report model (working name `@beep/gate-report`,
+  `packages/foundation/modeling/gate-report`): the series and observation schemas, the label
+  classifier and the delta, as pure functions.
+- `packages/tooling/tool/cli/src/commands/Quality/Tasks.ts`: the task path ingests each rendered
+  record into history after the console is flushed.
+- The planned `gate` command family on the repo CLI (the `Gate` command directory core adds):
+  list a subject's history, show one item's series, import main's hosted baseline for the lane's
+  merge base.
+- `packages/tooling/tool/cli/src/commands/Quality/internal/FlakeQuarantine.ts`: quarantine
+  incidents are recorded as history observations. Its detection is unchanged.
+
+Reused: `@beep/sqlite` (`packages/drivers/sqlite`; exports `SqliteClient`, `make`, `makeLayer`,
+`SqliteError`, `SqliteTestLayer`) and `@beep/xdg` (`packages/foundation/capability/xdg`;
+`AppDirs` with its `state` kind of `AppDirKind`). Precedent: `@beep/agent-memory-store`
+(`packages/tooling/library/agent-memory-store`, `MemoryLog.layer.ts`), a tooling library on the
+same driver.
+
+## Constraints
+
+### The series
+
+- The series key is `(gate, subject, item key, branch)`. The item key is core's: the file and
+  full name for a test; the file, code or rule, and message shape for a diagnostic.
+- An observation is one item outcome in one run: `passed` or `failed`, with the run's input
+  fingerprint (core: the Turbo task hash, else a digest of head and uncommitted changes), head
+  commit, branch, origin (`local` or `hosted`) and time. Each attempt of a runner retry is its own
+  observation on the run's input.
+- A diagnostic gate records only failing items. An item key absent from a unit the run checked is
+  a `passed` observation. An item in a unit the run did not check is no observation.
+- A cache replay is not an observation. A restored record keeps its original run id; inserts are
+  idempotent on run id, and every answer for a report excludes observations carrying that report's
+  own run id. A cache hit therefore renders the same labels and delta as the run it replays.
+- The window `W` is configuration, default 10 runs per series per branch. The reader and the
+  retention use the same `W`; upstream reads 20 and keeps 10 (study section 3.3). Runs are retained
+  newest 200 per `(gate, subject, branch)`; pruning a run never deletes the observations still in
+  a window (upstream `0003_run_retention.ts:92-155`).
+
+### The two comparison series
+
+- **Lane series `L`**: the earlier observations of the item on the report's branch with origin
+  `local`, newest first, at most `W`.
+- **Main baseline `M`**: the item's observation in main's hosted report for the same gate and
+  subject at the lane's merge base with `main`. If no hosted report exists for that commit, the
+  newest hosted main report whose head is an ancestor of the merge base serves, and the console
+  names its distance (`main baseline 3 commits before merge base`). Local runs on `main` never
+  serve as the baseline. Without either, `M` is absent.
+
+### Labels
+
+Upstream's `classifyTest` (`packages/sdk/src/utils/classify-test.ts:11-26`, study section 3.3) is
+the starting point:
+
+| Current | Prior runs in window | Upstream result |
+| --- | --- | --- |
+| failed | none, or all passed | `new-failure` |
+| failed | newest prior failed | `persistent` |
+| failed | some failed, newest passed | `flaky` |
+| passed | none, or none failed | `stable` |
+| passed | any failed | `recovered` |
+
+Its named weaknesses and the fix for each:
+
+| Weakness (study section 9) | Fix here |
+| --- | --- |
+| One window shared by every branch and worktree, so a red on one lane relabels the same test on all of them | Series partitioned by branch; main's baseline from hosted results only |
+| Two flaky rules that disagree (`classify-test.ts:15-20` and the MCP query, `DataReaderLive.ts:711-730`) | One flaky rule, below, used by the label, the queries and the quarantine reconciliation |
+| Vitest's retry flag stored and never read | Each retry attempt is an observation on the run's input |
+| Window a constant: read 20, keep 10 (`HistoryTrackerLive.ts:13`, `DataStoreLive.ts:458`) | `W` is configuration, the same for reading and retention |
+| `recovered` sticks for up to nine green runs after one red | `recovered` marks only the first green run after a red, stated here as the law |
+| `new-failure` cannot tell a lane's own red from an inherited one | `introduced-on-lane` and `red-on-main` are separate labels with separate evidence |
+
+**The flaky rule.** An item is flaky when two of its observations on the same input fingerprint
+disagree, one `failed` and one `passed`. The observations considered are the current run's
+attempts, `L`, and `M`'s hosted series for the baseline input. A fail and a pass on different
+inputs are a code change, not flakiness.
+
+**Labels for a failed item**, the closed set from core, first match wins:
+
+1. `flaky`: the flaky rule holds.
+2. `red-on-main`: `M` exists and the item failed in it.
+3. `persistent`: the newest observation in `L` failed.
+4. `introduced-on-lane`: `M` exists and the item passed in it, or `L` holds a `passed`
+   observation of the item.
+5. No label: none of the above can be decided. The console says once why
+   (`no main baseline for <merge-base>`). A failure is never labelled `introduced-on-lane`
+   without evidence.
+
+**`recovered`** labels a passed item whose newest observation in `L` failed. It holds for that one
+run only. It never appears on a failure line; it feeds the delta's `fixed` count and the record.
+
+### The fix-loop delta
+
+The delta compares the report with the newest earlier run on the same branch, origin `local`, same
+gate and subject, over the items in units both runs checked:
+
+- `fixed`: failed in the earlier run; passed or absent from a checked unit now.
+- `still failing`: failed in both.
+- `new`: failed now; passed or absent from a checked unit in the earlier run.
+
+Items in units only one run checked are not counted, and the line then ends with
+`(scope differs)`. Without an earlier run there is no delta line. On a red run the line reads
+`since last run: F fixed, S still failing, N new`; on a green run with `F > 0` it is a suffix of
+the one verdict line, `(F fixed since last run)`.
+
+### Storage
+
+- The store sits on `@beep/sqlite`, which wraps `@effect/sql-sqlite-bun` over `bun:sqlite` and runs
+  only under Bun. A tooling package may depend on a driver only for a narrowly scoped operational
+  adapter, declaring the driver dependency and project reference directly and keeping product
+  semantics out of the driver (`standards/ARCHITECTURE.md`, "Family And Kind Dependency Rules").
+  `@beep/agent-memory-store` is the precedent. The history store is that adapter: the library's
+  only driver.
+- One SQLite file per repository under the XDG state directory, through `@beep/xdg` `AppDirs`:
+  `$XDG_STATE_HOME/beep/gate-history/<repository-key>.sqlite`. The key is the canonical `origin`
+  URL as `host__owner__repo`, else a digest of the real path of the git common directory. Every
+  clone and worktree of the repository shares the file; the branch column partitions it.
+- Write-ahead logging and a busy timeout on every connection. The driver turns both on by default
+  and retries the WAL switch on `SQLITE_BUSY` within the busy timeout.
+- One transaction per run: the run row, its checked units and its observations commit together,
+  with the retention prune. The connection is synchronous, so the transaction body never yields
+  to the scheduler mid-transaction, the invariant upstream holds with
+  `References.PreventSchedulerYield` (`packages/engine/src/utils/persist-transaction.ts:175`).
+- A concurrent first open is a typed failure. `SqliteError` never crosses the store's port; the
+  store translates it into a `GateHistoryError` whose reason is a `LiteralKit` domain
+  (`open-busy`, `open-failed`, `migrate-failed`, `write-failed`, `read-deadline`). `open-busy` and
+  migration contention retry on a bounded, jittered exponential schedule (5 attempts from 50 ms).
+  Upstream dies untyped at the WAL switch (`okf/limitations/concurrent-first-open-wal-switch.md`).
+- Migrations are versioned and idempotent and run inside a transaction, so two first openers
+  converge on one schema.
+
+### Rendering never waits on the store
+
+- The label and delta read for a report runs under a deadline, default 250 ms, configuration. On
+  the deadline or any `GateHistoryError`, the console renders without labels and delta and adds
+  one line naming the cause. The verdict is never hidden (core law 10).
+- Writes start only after the console is flushed. A failed write leaves the console as printed
+  and is reported on stderr in one line.
+- The store is written by the repo CLI task path under Bun, from the records the gates wrote. It
+  is never opened inside a Vitest process, which may be Node.
+
+### Hosted-main baseline
+
+- Main's reports reach a lane through the carrier `goals/ci-gate-reports` chooses: workflow
+  artifacts, the per-task outcome record
+  (`packages/tooling/tool/cli/src/commands/Ci/CiTaskOutcomes.ts`) or the Turbo remote cache.
+- The `gate` command family's baseline import fetches the hosted main reports for the lane's merge
+  base and records them with origin `hosted` and branch `main`, one transaction per report.
+- Until that carrier exists, `M` is absent, labels 2 and 4 fall back to lane evidence, and the
+  console says so once.
+
+### Reconciliation with flake quarantine
+
+`FlakeQuarantine.ts` quarantines a no-location TS2589 failure whose standalone rerun passes
+(`detectNoLocationTs2589Flake`, `FlakeQuarantineIncident`, the artifact
+`.beep/yeet/flake-quarantine.json`). That is the flaky rule: one input, two outcomes. Each
+incident is recorded as two observations of the check item `(package, TS2589, no location)` on one
+input fingerprint, `failed` then `passed`, so history labels it `flaky`. The quarantine stays the
+authority on the lane's verdict.
+
+### Port inventory
+
+Paths are relative to `.repos/vitest-agent` at `1cf1ab94`.
+
+| Upstream | Disposition |
+| --- | --- |
+| `packages/sdk/src/utils/classify-test.ts:11-26` | port into the model, rules as above |
+| `packages/engine/src/layers/HistoryTrackerLive.ts:13-41` | port; window becomes configuration |
+| `packages/engine/src/services/HistoryTracker.ts:26` | port; key becomes the series key |
+| `packages/engine/src/utils/persist-transaction.ts:175`, `okf/invariants/persist-transaction-no-yield.md` | port the invariant |
+| `packages/engine/src/layers/DataStoreLive.ts:217,458`, `DataReaderLive.ts:498,711-730` | read for invariants; the second flaky rule is replaced |
+| `packages/engine/src/migrations/0003_run_retention.ts:92-155` | read for the retention invariant; result tables only |
+| `packages/engine/src/utils/resolve-project-key-from-cwd.ts:17-38` | read for the repository-key canonicalization |
+| `okf/decisions/31-deterministic-xdg-path-resolution.md:117-125` | read; one file shared by worktrees is kept, the shared window is not |
+
+The ported code lands in packages core creates, which already carry the dual-copyright MIT
+`LICENSE` (beep-effect and C. Spencer Beggs) and the README `Provenance` and `Attribution`
+sections. This goal adds its upstream files to that `Attribution` list. The porting order and
+style conversions are core's (`goals/gate-report-core/SPEC.md`, "Porting order and style").
+
+## Acceptance Criteria
+
+- [ ] **AC-H1 Partition.** In one store, a red on branch A never changes a label or a delta on
+  branch B; a test writes both branches and reads each.
+- [ ] **AC-H2 Labels.** A table test covers each label and the no-label case with the exact rule
+  above, including a retried pass, a red already on main, and a failure with neither baseline nor
+  lane evidence.
+- [ ] **AC-H3 One flaky rule.** A fail and a pass on one input fingerprint label `flaky`; a fail
+  and a pass on two inputs do not. The label, the history queries and the quarantine
+  reconciliation call the same function.
+- [ ] **AC-H4 `recovered` holds one run.** After red, green, green, only the first green item is
+  `recovered`.
+- [ ] **AC-H5 Window as configuration.** With `W = 3`, the reader and the retention both keep three
+  observations per series per branch.
+- [ ] **AC-H6 Delta.** A re-run of a fixture prints the exact fixed, still-failing and new counts;
+  a re-run over fewer units prints `(scope differs)`; a green re-run after a red carries the
+  `fixed` suffix on its one line.
+- [ ] **AC-H7 Red on main.** A failure red in main's hosted report at the lane's merge base is
+  labelled `red-on-main`; a local run on `main` never is the baseline; the ancestor fallback names
+  its distance.
+- [ ] **AC-H8 Degrade.** With a locked, unreadable or slow store, the console renders without
+  labels, names the cause in one line, keeps the verdict first and last, and the exit code is
+  unchanged.
+- [ ] **AC-H9 Concurrency.** Twelve writer processes open a missing store file at once and each
+  records 25 runs; the store then holds 300 runs, each readable, and no writer fails untyped. The
+  test runs at normal priority with bounded work.
+- [ ] **AC-H10 Replay.** Ingesting a restored record twice adds nothing, and a Turbo cache hit
+  prints the same labels and delta as the run it replays.
+- [ ] **AC-H11 Quarantine.** Replaying a flake-quarantine incident fixture labels the check item
+  `flaky`, and the quarantine's verdict for the lane is unchanged.
+- [ ] **AC-H12 Boundaries.** The library's manifest declares `@beep/sqlite` as its only driver; the
+  Vitest adapter's import graph does not reach the store module.
+- [ ] **AC-H13 Queries.** The planned `gate` command family lists a subject's history and shows
+  one item's series by branch.
+- [ ] `bun run beep quality package-verify` passes for every touched package.
+- [ ] When `goals/agent-output-census` has landed, the census rows for log digs per run and turns
+  per verdict are cited before and after in `history/`.
+- [ ] No unrelated refactors or formatting churn.
+
+## Verification Matrix
+
+| Check | Command or evidence | Required result |
+| --- | --- | --- |
+| History tests | the `AC-H1` to `AC-H13` tests in the model and library packages | All pass |
+| Package gates | `bun run beep quality package-verify <@beep/package>` for each touched package | Passes |
+| Concurrency | the twelve-writer test (`AC-H9`) | 300 runs, no untyped failure |
+| Driver boundary | `jq '.dependencies' packages/tooling/library/repo-gate-run/package.json` | `@beep/sqlite` is the only driver |
+| Reflection | `bun run beep lint reflection-artifacts` | Passes |
+| Packet launcher size | `test "$(wc -m < goals/gate-run-history/GOAL.md)" -le 4000` | Passes |
+| Manifest JSON | `jq . goals/gate-run-history/ops/manifest.json` | Passes |
+| Whitespace | `git diff --check -- goals/gate-run-history` | Passes |
+
+## Stop Conditions
+
+- Required source files are missing or materially contradictory.
+- Any spend: purchases, paid services, quota top-ups or plan changes need the
+  operator.
+- The same blocker repeats after reasonable investigation.
+
+Scope growth, destructive side effects and policy calls are not stops: decide
+them and record each as a decision file.
+
+## Decision log
+
+Record each decision as its own file under `decisions/` (`bun run beep goals
+decisions add gate-run-history --title "..." --reversal "..."`); the block below is
+generated from that directory and never edited by hand.
+
+<!-- beep:decisions:begin -->
+_Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug gate-run-history`; add a `kind: decision` file there, never edit this block._
+
+### History is read through files and repo CLI commands, never MCP or hooks, 2026-11-18
+
+History is reached through the planned `gate` command family on the repo CLI: list a subject's history, show one item's series by branch, import main's hosted baseline. Labels and the delta appear in the console the record renders. No MCP tool and no hook is added to any harness. Ruling: explorations/agent-verification-output/DECISIONS.md, entry `agent-surface`.
+
+Lane explore/agent-verification-output
+
+Reverse: Add an MCP tool over the history store in a new goal
+
+### The fix-loop delta is computed here; core renders it, 2026-11-18
+
+Of the four enhancements the operator chose, this goal owns the fix-loop delta: a re-run on a lane reports fixed, still failing and new counts against the lane's previous run of the same gate and subject, over the units both runs checked. goals/gate-report-core renders the line from the history slot; a cache replay renders the same delta as the run it replays. Ruling: explorations/agent-verification-output/DECISIONS.md, entry `core-enhancements`.
+
+Lane explore/agent-verification-output
+
+Reverse: Remove the delta from the history service and the console slot
+
+### Labels compare against the lane's own runs and main's hosted results, 2026-11-18
+
+Every run is recorded with its branch, and the series key is gate, subject, item key and branch. A failure is labelled against two series: the lane's own earlier local runs, and main's hosted report at the lane's merge base (local runs on main never serve). Output distinguishes a failure introduced on the lane from one already red on main, and a red on one lane never relabels another. Upstream's one history shared by every worktree and branch is replaced by this partition. Ruling: explorations/agent-verification-output/DECISIONS.md, entry `history-baseline`.
+
+Lane explore/agent-verification-output
+
+Reverse: Drop the main baseline and label from lane history alone
+
+<!-- beep:decisions:end -->
+
+## Exception Ledger
+
+| Exception | Scope | Owner | Rationale | Removal condition |
+| --- | --- | --- | --- | --- |
+| None | N/A | N/A | N/A | N/A |
