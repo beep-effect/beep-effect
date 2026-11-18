@@ -45,7 +45,7 @@ export const BackfillMode = LiteralKit(["off", "easy"]).pipe(
  * @category models
  * @since 0.0.0
  */
-export type BackfillMode = typeof BackfillMode.Type;
+type BackfillMode = typeof BackfillMode.Type;
 
 /**
  * How unprotected units of the same rank are ordered.
@@ -79,7 +79,7 @@ export const FairnessMode = LiteralKit(["off", "origin-checkout"]).pipe(
  * @category models
  * @since 0.0.0
  */
-export type FairnessMode = typeof FairnessMode.Type;
+type FairnessMode = typeof FairnessMode.Type;
 
 /**
  * Policy of the backfill and fairness model.
@@ -309,18 +309,10 @@ export class SchedulerView extends S.Opaque<SchedulerView, { readonly brand: uni
 /**
  * Path by which a unit was admitted.
  *
- * **Example** (Recognize a backfill admission)
- *
- * ```ts
- * import { AdmissionRoute } from "@/backfill/Schemas"
- *
- * console.log(AdmissionRoute.is.backfill("backfill")) // true
- * ```
- *
  * @category schemas
  * @since 0.0.0
  */
-export const AdmissionRoute = LiteralKit(["head", "backfill"]).pipe(
+const AdmissionRoute = LiteralKit(["head", "backfill"]).pipe(
   $I.annoteSchema("AdmissionRoute", {
     description: "Whether a unit was admitted as the queue head or by passing a blocked head.",
   })
@@ -349,18 +341,10 @@ export type AdmissionRoute = typeof AdmissionRoute.Type;
  * - `ends-after-head-start`: its ETA would end after the head's projected start.
  * - `not-queued`: the nonce is not waiting.
  *
- * **Example** (Recognize a capacity wait)
- *
- * ```ts
- * import { WaitReason } from "@/backfill/Schemas"
- *
- * console.log(WaitReason.is.capacity("capacity")) // true
- * ```
- *
  * @category schemas
  * @since 0.0.0
  */
-export const WaitReason = LiteralKit([
+const WaitReason = LiteralKit([
   "capacity",
   "behind-head",
   "behind-backfill",

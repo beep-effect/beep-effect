@@ -76,16 +76,8 @@ const effectiveRank = (policy: BackfillPolicy, nowMillis: number, unit: QueuedUn
     verify: () => (nowMillis - unit.enqueuedAtMillis >= policy.publishAgingMillis ? 0 : 1),
   });
 
-/**
- * The keys fairness reads from a unit: its origin and its checkout.
- *
- * @category models
- * @since 0.0.0
- */
-export interface FairnessKeys {
-  readonly checkoutKey: string;
-  readonly originKey: string;
-}
+// The keys fairness reads from a unit: its origin and its checkout.
+type FairnessKeys = Pick<QueuedUnit, "checkoutKey" | "originKey">;
 
 const checkoutUsageKey = (originKey: string, checkoutKey: string): string => `${originKey}\u0000${checkoutKey}`;
 
@@ -252,42 +244,10 @@ const projectedEnds = (view: SchedulerView): O.Option<ReadonlyArray<{ end: numbe
  * start cannot be projected, so nothing may backfill. The head's weight is
  * clamped to the capacity, so a projection always exists otherwise.
  *
- * **Example** (A head that fits now)
- *
- * ```ts
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- * import { projectedHeadStart } from "@/backfill/Policy"
- * import { BackfillPolicy, QueuedUnit, SchedulerView } from "@/backfill/Schemas"
- *
- * const PosInt = S.Int.check(S.isGreaterThan(0))
- * const policy = BackfillPolicy.make({
- *   capacityTokens: PosInt.make(10),
- *   publishAgingMillis: PosInt.make(120_000),
- *   protectAfterMillis: PosInt.make(120_000),
- *   fairnessWindowMillis: PosInt.make(1_800_000),
- *   promotionOverheadMillis: S.Natural.make(0),
- *   backfill: "easy",
- *   fairness: "off"
- * })
- * const head = QueuedUnit.make({
- *   nonce: "head",
- *   originKey: "a",
- *   checkoutKey: "a",
- *   priority: "publish",
- *   weightTokens: PosInt.make(4),
- *   enqueuedAtMillis: S.Natural.make(0),
- *   etaMillis: O.none(),
- *   deadlineMillis: O.none()
- * })
- * const view = SchedulerView.make({ nowMillis: S.Natural.make(5), waiting: [head], running: [], finished: [] })
- * console.log(O.getOrNull(projectedHeadStart(view, policy, head))) // 5
- * ```
- *
  * @category projections
  * @since 0.0.0
  */
-export const projectedHeadStart: {
+const projectedHeadStart: {
   (policy: BackfillPolicy, head: QueuedUnit): (view: SchedulerView) => O.Option<number>;
   (view: SchedulerView, policy: BackfillPolicy, head: QueuedUnit): O.Option<number>;
 } = dual(3, (view: SchedulerView, policy: BackfillPolicy, head: QueuedUnit): O.Option<number> => {
@@ -375,21 +335,10 @@ export const conditionalDeadline: {
 /**
  * Whether any waiting unit is past its stamped deadline, which disables backfill.
  *
- * **Example** (No deadline, no breach)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import { isBoundBreached } from "@/backfill/Policy"
- * import { SchedulerView } from "@/backfill/Schemas"
- *
- * const view = SchedulerView.make({ nowMillis: S.Natural.make(0), waiting: [], running: [], finished: [] })
- * console.log(isBoundBreached(view)) // false
- * ```
- *
  * @category predicates
  * @since 0.0.0
  */
-export const isBoundBreached = (view: SchedulerView): boolean =>
+const isBoundBreached = (view: SchedulerView): boolean =>
   A.some(view.waiting, (unit) => O.exists(unit.deadlineMillis, (deadline) => view.nowMillis > deadline));
 
 /**

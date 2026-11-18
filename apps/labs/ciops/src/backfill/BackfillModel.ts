@@ -36,7 +36,7 @@ const $I = $CiopsId.create("backfill/BackfillModel");
  * @category services
  * @since 0.0.0
  */
-export interface BackfillModelShape {
+interface BackfillModelShape {
   readonly deadline: (policy: BackfillPolicy, view: SchedulerView, unit: QueuedUnit) => Effect.Effect<O.Option<number>>;
   readonly order: (policy: BackfillPolicy, view: SchedulerView) => Effect.Effect<ReadonlyArray<QueuedUnit>>;
   readonly simulate: (
