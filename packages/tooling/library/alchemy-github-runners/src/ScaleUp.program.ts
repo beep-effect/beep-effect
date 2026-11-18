@@ -205,8 +205,12 @@ const failedLaunch = (count: number, retryable: boolean): LaunchOutcome =>
  * **Details**
  *
  * A thrown `CreateFleet` counts every runner as failed, retryable when the
- * error is. A partial launch counts the shortfall as retryable when any
- * reported error code is in `scaleErrors`, otherwise as not retryable.
+ * error is (throttling, 5xx, network) or when its code is in `scaleErrors`,
+ * the same quota and capacity codes as a per-instance error. A partial launch
+ * counts the shortfall as retryable when any reported error code is in
+ * `scaleErrors`, otherwise as not retryable. Retryable messages go back to the
+ * build queue as batch item failures and are never also published to the
+ * job-retry queue.
  *
  * **Example** (Wire the launcher)
  *
@@ -227,7 +231,10 @@ export const launchRunners: (input: FleetLaunchInput) => Effect.Effect<LaunchOut
   const ec2 = yield* Ec2Fleet;
   const attempt = yield* ec2.createFleet(fleetLaunchRequest(input)).pipe(Effect.result);
   if (attempt._tag === "Failure") {
-    return failedLaunch(input.count, attempt.failure.retryable);
+    // A request-level quota or capacity error (`MaxSpotInstanceCountExceeded`, `InsufficientInstanceCapacity`, ...) is
+    // retryable exactly as the same code is per instance: the group's messages return as batch item failures only.
+    const scaleError = O.exists(attempt.failure.code, (code) => A.contains(input.config.scaleErrors, code));
+    return failedLaunch(input.count, attempt.failure.retryable || scaleError);
   }
   const fleet: FleetLaunchResult = attempt.success;
   const missing = input.count - fleet.instanceIds.length;

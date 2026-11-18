@@ -39,7 +39,8 @@ export const runtimeConfigEnvName = "BEEP_RUNNER_CONFIG";
 
 /**
  * EC2 error codes scale-up treats as retryable when `CreateFleet` returns them
- * per instance, as upstream's default `scale_errors`.
+ * per instance or for the whole request: upstream's default `scale_errors`
+ * plus `VcpuLimitExceeded`.
  *
  * **Example** (Is a capacity error retryable?)
  *
@@ -61,6 +62,8 @@ export const defaultScaleErrors: ReadonlyArray<string> = [
   "MaxSpotFleetRequestCountExceeded",
   "InsufficientInstanceCapacity",
   "InsufficientCapacityOnHost",
+  // The account's vCPU quota for the instance family, beyond upstream's list.
+  "VcpuLimitExceeded",
 ];
 
 /**

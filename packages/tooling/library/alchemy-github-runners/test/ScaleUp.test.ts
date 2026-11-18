@@ -262,6 +262,59 @@ describe("handleScaleUp", () => {
     })
   );
 
+  it.effect(
+    "returns every message as a batch item failure when CreateFleet itself fails with a quota or capacity code",
+    () =>
+      Effect.gen(function* () {
+        for (const code of [
+          "MaxSpotInstanceCountExceeded",
+          "VcpuLimitExceeded",
+          "InsufficientInstanceCapacity",
+          "UnfulfillableCapacity",
+        ]) {
+          const world = new World();
+          // The request itself fails, as the live layer reports it: the code is not a transport retry.
+          world.fleetAnswers = [
+            AwsApiError.make({
+              service: "ec2",
+              operation: "createFleet",
+              code: O.some(code),
+              retryable: false,
+              message: code,
+            }),
+          ];
+          const retried = yield* run(world, [queued({ id: 1 }), queued({ id: 2 })]);
+          // Exactly one retry path: both messages come back to the build queue, nothing goes to the job-retry queue.
+          expect([code, retried, world.sent.length, world.instances.length]).toStrictEqual([
+            code,
+            ["m-1", "m-2"],
+            0,
+            0,
+          ]);
+        }
+      })
+  );
+
+  it.effect("keeps a non-quota request-level CreateFleet failure on the job-retry path, as before", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.fleetAnswers = [
+        AwsApiError.make({
+          service: "ec2",
+          operation: "createFleet",
+          code: O.some("UnauthorizedOperation"),
+          retryable: false,
+          message: "denied",
+        }),
+      ];
+      const retried = yield* run(world, [queued({ id: 1 })]);
+      expect(retried).toStrictEqual([]);
+      expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([
+        "https://sqs.us-east-1.amazonaws.com/1/heavy-job-retry",
+      ]);
+    })
+  );
+
   it.effect("retries the shortfall of a partial launch that reported a scale error", () =>
     Effect.gen(function* () {
       const world = new World();
