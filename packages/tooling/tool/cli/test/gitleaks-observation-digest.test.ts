@@ -59,6 +59,15 @@ const GitleaksAllowlist = S.Struct({
 const GitleaksConfig = S.Struct({ allowlists: S.Array(GitleaksAllowlist) });
 const GitleaksReport = S.Struct({ RuleID: S.String }).pipe(S.Array, S.fromJsonString);
 
+const loadConfig = Effect.fn("GitleaksObservationDigestTest.loadConfig")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const configPath = yield* path.fromFileUrl(CONFIG);
+  const text = yield* fs.readFileString(configPath);
+  const parsed = yield* Effect.fromResult(Toml.parse(text));
+  return yield* S.decodeUnknownEffect(GitleaksConfig)(parsed);
+});
+
 const runGitleaks = Effect.fn("GitleaksObservationDigestTest.run")(function* (
   args: ReadonlyArray<string>,
   cwd: string
@@ -106,12 +115,7 @@ const scan = Effect.fn("GitleaksObservationDigestTest.scan")(function* (target: 
 it.layer(TestLayer, { timeout: "120 seconds" })("gitleaks observation digest allowlist", (it) => {
   it.effect("exception pins rule, path and complete line", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const configPath = yield* path.fromFileUrl(CONFIG);
-      const text = yield* fs.readFileString(configPath);
-      const parsed = yield* Effect.fromResult(Toml.parse(text));
-      const config = yield* S.decodeUnknownEffect(GitleaksConfig)(parsed);
+      const config = yield* loadConfig();
       const matches = A.filter(config.allowlists, (item) =>
         A.some(item.paths ?? [], (allowedPath) => Str.includes("integrated")(allowedPath))
       );
@@ -179,12 +183,7 @@ const TOKEN_NAMED_PACKAGES = ["@beep/api-docs", "@beep/discord", "@beep/freshboo
 it.layer(TestLayer, { timeout: "120 seconds" })("gitleaks cache baseline request allowlist", (it) => {
   it.effect("exception pins rules, request paths and one package digest per line", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const configPath = yield* path.fromFileUrl(CONFIG);
-      const text = yield* fs.readFileString(configPath);
-      const parsed = yield* Effect.fromResult(Toml.parse(text));
-      const config = yield* S.decodeUnknownEffect(GitleaksConfig)(parsed);
+      const config = yield* loadConfig();
       const matches = A.filter(config.allowlists, (item) =>
         A.some(item.paths ?? [], (allowedPath) => Str.includes("docs/reports")(allowedPath))
       );
