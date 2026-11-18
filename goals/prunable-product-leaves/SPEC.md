@@ -41,19 +41,22 @@ guard that keeps it holding.
   root directory exists in the checkout; a workspace is present when workspace
   discovery finds a member with that package name. A present subject keeps
   every assertion strict, stale-file checks included: a fixture or evidence
-  file missing from a present packet or workspace still fails.
+  file missing from a present packet or workspace still fails. The one
+  exception, from seam 1b, is a subject the checkout's prune declaration marks
+  owned (replaced with the checkout's own content); a keep entry restores the
+  rule for any path it carves out.
 - **Pruned.** What a skip needs, beyond absence. The product leaves and their
   packets are declared prunable in `@beep/repo-cli-kit/ProductLeaves`
   (workspaces by name and directory). From seam 1b, a trimmed checkout or fork
   may also declare its own prunes in checkout-prune.jsonc under standards/
   (`CheckoutPruneDeclaration`), which this repository does not ship. A subject
-  is pruned when it is declared and its directory is gone, or when the
-  declaration marks it owned (replaced with the checkout's own content); only a
-  pruned subject skips, and a prune entry that matches a live path outside
-  every keep entry is a finding. An absent subject
-  nobody declared (a typo, a renamed or archived packet, a renamed kept
-  package) fails as before, and so does a declared package whose name is gone
-  while its directory remains (renamed in place).
+  is pruned when it is declared (a product leaf, or matched by a prune entry
+  and no keep entry) and its directory is gone, or when the declaration marks
+  it owned and no keep entry covers it. Only a pruned subject skips, and a
+  prune entry that matches a live path outside every keep entry is a finding.
+  An absent subject nobody declared (a typo, a renamed or archived packet, a
+  renamed kept package) fails as before, and so does a declared package whose
+  name is gone while its directory remains (renamed in place).
 - **Prune rehearsal.** In a disposable worktree, in this order:
   1. `bun install` on the full checkout, so the `beep` CLI and its
      dependencies resolve for the steps below.
@@ -300,7 +303,7 @@ Reverse: Delete the rule and its allowlist; the seams stay merged.
 
 ### A trimmed checkout declares its own prunes in a standards file, 2026-11-18
 
-Extends the declared-prune rule in 2026-11-17-absent-subject-skipped-present-strict.md, which stays in force with its present-strict, subject-keying and one-helper rules, and extends the ProductLeaves catalog that #3379 shipped with a second source of declarations. The review of #3379 showed that a skip keyed on absence turns a stale or misspelled name into a silent skip, and #3379 now skips only for subjects listed in @beep/repo-cli-kit/ProductLeaves whose directory is gone. A code catalog has a limit: a trimmed checkout or fork can drop only what that kept file lists, and it cannot add its own drops without editing a kept package. Agent call: a checkout may carry one optional tracked declaration at checkout-prune.jsonc under standards/. This repository ships none, so every assertion here stays as strict as #3379 left it. Its schema is CheckoutPruneDeclaration, in a new @beep/repo-cli-kit/CheckoutPrune module: { version: 1, prune: [CheckoutPruneEntry], keep: [CheckoutPruneEntry], owned: [CheckoutPruneEntry] }, where CheckoutPruneEntry is { path, why }, and path is a repository-relative git :(glob) pathspec (** crosses segments, * does not). A prune entry names a path the checkout removed. An owned entry names a path the checkout replaced with its own content, so upstream checks of that path do not apply to it. A keep entry carves a path out of a broader prune or owned glob. A path is declared pruned when it matches a prune or owned entry and no keep entry. loadCheckoutInventory reads the declaration. A subject skips when it is in productLeaves or matched by a prune entry and its directory is gone, or when it is matched by an owned entry. An absent subject that is not declared still fails. A prune entry that matches a live path outside every keep entry is a finding, so a declaration cannot hide a live path; owned and keep entries match live paths by design. Each tolerant surface class gets both tests: absent and declared skips with the note, absent and undeclared fails.
+Extends the declared-prune rule in 2026-11-17-absent-subject-skipped-present-strict.md, which stays in force with its present-strict, subject-keying and one-helper rules, and extends the ProductLeaves catalog that #3379 shipped with a second source of declarations. The review of #3379 showed that a skip keyed on absence turns a stale or misspelled name into a silent skip, and #3379 now skips only for subjects listed in @beep/repo-cli-kit/ProductLeaves whose directory is gone. A code catalog has a limit: a trimmed checkout or fork can drop only what that kept file lists, and it cannot add its own drops without editing a kept package. Agent call: a checkout may carry one optional tracked declaration at checkout-prune.jsonc under standards/. This repository ships none, so every assertion here stays as strict as #3379 left it. Its schema is CheckoutPruneDeclaration, in a new @beep/repo-cli-kit/CheckoutPrune module: { version: 1, prune: [CheckoutPruneEntry], keep: [CheckoutPruneEntry], owned: [CheckoutPruneEntry] }, where CheckoutPruneEntry is { path, why }, and path is a repository-relative git :(glob) pathspec (** crosses segments, * does not). A prune entry names a path the checkout removed. An owned entry names a path the checkout replaced with its own content, so upstream checks of that path do not apply to it. A keep entry carves a path out of a broader prune or owned glob. A path is declared pruned when it matches a prune or owned entry and no keep entry. loadCheckoutInventory reads the declaration. A subject skips when it is in productLeaves, or declared pruned by a prune entry, and its directory is gone; or when it is declared pruned by an owned entry. A keep entry therefore protects a subject from both. Owned is the one exception to the present-strict rule: an owned subject skips although its directory exists, because the checkout replaced what upstream checks assert. An absent subject that is not declared still fails. A prune entry that matches a live path outside every keep entry is a finding, so a declaration cannot hide a live path; owned and keep entries match live paths by design. Each tolerant surface class gets these tests: absent and declared skips with the note; absent and undeclared fails; a live owned subject skips while the same path without an owned entry stays strict; a subject carved out by keep stays strict.
 
 Lane feat/prunable-prune-declaration
 
