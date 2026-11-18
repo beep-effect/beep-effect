@@ -55,6 +55,15 @@ const TURBO_SECRET_INPUTS: ReadonlyArray<readonly [string, string]> = [
   ["turbo-token", "TURBO_TOKEN"],
   ["turbo-read-token", "TURBO_READ_TOKEN"],
 ];
+// The policy slots above are what the action and the script name; the calling
+// jobs fill the two Turbo slots from the Worker cache's own secrets
+// (@beep/infra-turbo-cache, turbo-cache stage 2), which stand beside the
+// retired names until P6 removes them.
+const TURBO_CALLER_SECRETS: Readonly<Record<string, string>> = {
+  TURBO_TOKEN: "TURBO_CACHE_WRITE_TOKEN",
+  TURBO_READ_TOKEN: "TURBO_CACHE_READ_TOKEN",
+};
+const callerSecret = (slot: string): string => O.getOrElse(R.get(TURBO_CALLER_SECRETS, slot), () => slot);
 const APP_SECRET_INPUTS: ReadonlyArray<readonly [string, string]> = [
   ["database-url", "DATABASE_URL"],
   ["database-url-unpooled", "DATABASE_URL_UNPOOLED"],
@@ -71,14 +80,15 @@ const SECRET_INPUTS: ReadonlyArray<readonly [string, string]> = [...TURBO_SECRET
 // push events in the workflow expression itself, so PR-controlled code never
 // sees them even before the policy script runs.
 const secretReference = (name: string): string =>
-  name === "TURBO_READ_TOKEN"
+  name === "TURBO_CACHE_READ_TOKEN"
     ? `\${{ secrets.${name} }}`
     : `\${{ github.event_name == 'push' && secrets.${name} || '' }}`;
-const secretInputLine = ([input, name]: readonly [string, string]): string => `${input}: ${secretReference(name)}`;
+const secretInputLine = ([input, name]: readonly [string, string]): string =>
+  `${input}: ${secretReference(callerSecret(name))}`;
 const LANE_WRITE_TOKEN =
-  "${{ github.event_name == 'push' && env.BEEP_CI_LANE_USES_TURBO == 'true' && secrets.TURBO_TOKEN || '' }}";
+  "${{ github.event_name == 'push' && env.BEEP_CI_LANE_USES_TURBO == 'true' && secrets.TURBO_CACHE_WRITE_TOKEN || '' }}";
 const SECRET_INPUT_LINES = [...A.map(SECRET_INPUTS, secretInputLine), `turbo-token: ${LANE_WRITE_TOKEN}`];
-const SECRET_REFERENCES = A.map(SECRET_INPUTS, ([, name]) => `secrets.${name}`);
+const SECRET_REFERENCES = A.map(SECRET_INPUTS, ([, name]) => `secrets.${callerSecret(name)}`);
 
 const WorkflowStep = S.Struct({
   name: S.optionalKey(S.String),
@@ -435,15 +445,19 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
     jobId === "verify" ? "${{ env.BEEP_CI_LANE_USES_TURBO }}" : "true",
     jobId
   );
-  assert.strictEqual(inputs["turbo-api"], "${{ vars.TURBO_API }}", jobId);
-  assert.strictEqual(inputs["turbo-team"], "${{ vars.TURBO_TEAM }}", jobId);
+  assert.strictEqual(inputs["turbo-api"], "${{ vars.TURBO_CACHE_API }}", jobId);
+  assert.strictEqual(inputs["turbo-team"], "${{ vars.TURBO_CACHE_TEAM }}", jobId);
   assert.isUndefined(inputs["repository-secrets"], jobId);
   assert.strictEqual(
     inputs["turbo-token"],
-    jobId === "verify" ? LANE_WRITE_TOKEN : secretReference("TURBO_TOKEN"),
+    jobId === "verify" ? LANE_WRITE_TOKEN : secretReference("TURBO_CACHE_WRITE_TOKEN"),
     `${jobId} turbo-token`
   );
-  assert.strictEqual(inputs["turbo-read-token"], secretReference("TURBO_READ_TOKEN"), `${jobId} turbo-read-token`);
+  assert.strictEqual(
+    inputs["turbo-read-token"],
+    secretReference("TURBO_CACHE_READ_TOKEN"),
+    `${jobId} turbo-read-token`
+  );
   for (const [input, name] of APP_SECRET_INPUTS) {
     assert.strictEqual(inputs[input], appSecrets ? secretReference(name) : undefined, `${jobId} ${input}`);
   }

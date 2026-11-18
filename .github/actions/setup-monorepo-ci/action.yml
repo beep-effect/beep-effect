@@ -32,8 +32,9 @@ inputs:
       Export the Turbo remote-cache credential tuple (TURBO_API, TURBO_TEAM,
       TURBO_TOKEN, TURBO_CACHE) plus TURBO_LOG_ORDER=stream into the job
       environment. Trusted main pushes receive read-write access through
-      TURBO_TOKEN; same-repository pull requests receive read-only access
-      through TURBO_READ_TOKEN; forks and every other event stay local-only.
+      the turbo-token input; same-repository pull requests receive read-only
+      access through the turbo-read-token input; forks and every other event
+      stay local-only.
       Policy lives in beep ci job-env.
     required: false
     default: "false"
@@ -65,11 +66,13 @@ inputs:
     required: false
     default: "false"
   turbo-api:
-    description: Pass vars.TURBO_API from the calling job.
+    description: >-
+      Pass vars.TURBO_CACHE_API (the @beep/infra-turbo-cache Worker origin)
+      from the calling job.
     required: false
     default: ""
   turbo-team:
-    description: Pass vars.TURBO_TEAM from the calling job.
+    description: Pass vars.TURBO_CACHE_TEAM (the Worker cache team) from the calling job.
     required: false
     default: ""
   # Composite actions cannot read the secrets context, so the calling job
@@ -82,14 +85,16 @@ inputs:
   # value.
   turbo-token:
     description: >-
-      Pass secrets.TURBO_TOKEN (read-write remote cache) from the calling job.
-      Exported only on trusted pushes.
+      Pass secrets.TURBO_CACHE_WRITE_TOKEN (the Worker cache's ci-main write
+      token, turbo-cache-write environment) from the calling job. Exported
+      only on trusted pushes.
     required: false
     default: ""
   turbo-read-token:
     description: >-
-      Pass secrets.TURBO_READ_TOKEN (read-only remote cache) from the calling
-      job. Exported only on same-repository pull requests.
+      Pass secrets.TURBO_CACHE_READ_TOKEN (the Worker cache's ci-pr read
+      token) from the calling job. Exported only on same-repository pull
+      requests.
     required: false
     default: ""
   database-url:

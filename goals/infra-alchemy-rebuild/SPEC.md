@@ -1530,6 +1530,14 @@ Lane goals/infra-alchemy-rebuild-mint-vault-writer
 
 Reverse: gh variable delete INFRA_GITHUB_DEPLOY_ARMED -R beep-effect/beep-effect
 
+### Turbo-cache stage 2: every Turbo-backed CI job reads the Worker cache under new names, 2026-11-18
+
+Released by the operator's 2026-11-18 ruling on the window-5 holds. All six workflows that call the setup-monorepo-ci action with the remote cache (heavy, check, shard-overflow, storybook, data-sync, property-laws-nightly) move together, not only heavy and check: the ci-runner-security test pins one allowlist of secret lines across every caller, and a split would also give the overflow shards a different cache from the lanes they stand in for. Each passes `vars.TURBO_CACHE_API` and `vars.TURBO_CACHE_TEAM` (new repository variables: the Worker origin and team `beep`), `secrets.TURBO_CACHE_WRITE_TOKEN` on pushes (`turbo-cache-write` environment, principal ci-main) and `secrets.TURBO_CACHE_READ_TOKEN` (repository, principal ci-pr), and drops its `r2-*` inputs, because the R2 pilot's adapter would otherwise start and override `TURBO_API`. The action and `beep ci job-env` keep their input and policy slot names; only the sources change, so the push-writes, same-repository-PR-reads, forks-local posture is unchanged. Both secrets were issued 2026-11-18 with the package's token.ts from prod state through `gh secret set` on stdin (values never printed); `@beep/infra-github` lists the two variables and two secrets as unmanaged and its census fixture records them. The AWS Lambda cache and the R2 pilot keep serving under their old names until P6. Dry proof against the prod Worker with the same two tokens, from a scratch workspace: write token remote miss, read token remote hit (`"source": "REMOTE"`), read token upload refused (`read_only`), and the write token still missing that hash afterwards.
+
+Lane goals/infra-alchemy-rebuild-p3-turbo-cache-stage-2
+
+Reverse: Revert the stage-2 PR: the six callers go back to vars.TURBO_API/TURBO_TEAM, secrets.TURBO_TOKEN/TURBO_READ_TOKEN and the R2 inputs, all still live; then gh variable delete TURBO_CACHE_API TURBO_CACHE_TEAM and gh secret delete TURBO_CACHE_READ_TOKEN (repo) and TURBO_CACHE_WRITE_TOKEN (--env turbo-cache-write).
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
