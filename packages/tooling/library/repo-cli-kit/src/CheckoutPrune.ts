@@ -284,6 +284,7 @@ export class CheckoutPruneEntry extends S.Class<CheckoutPruneEntry, { readonly b
    * console.log([literal.isLiteral, glob.isLiteral]) // [true, false]
    * ```
    *
+   * @returns `true` when the pathspec has no wildcard.
    * @category getters
    * @since 0.0.0
    */
@@ -467,6 +468,7 @@ export class CheckoutPruneFindingsError extends S.TaggedError<
    * console.log(error.message.startsWith("standards/checkout-prune.jsonc")) // true
    * ```
    *
+   * @returns The declaration path, then each finding, then the remedy.
    * @category getters
    * @since 0.0.0
    */
@@ -493,7 +495,7 @@ export class CheckoutPruneFindingsError extends S.TaggedError<
  * console.log(isCheckoutPathKept(declaration, "docs/demo/guide.md")) // false
  * ```
  *
- * @param declaration - The checkout's prune declaration.
+ * @param declaration - What the checkout says it removed, replaced and keeps.
  * @param repoPath - A repository-relative POSIX path.
  * @returns `true` when a keep entry matches the path.
  * @category predicates
@@ -536,7 +538,7 @@ const declaresPath = (entries: ReadonlyArray<CheckoutPruneEntry>, repoPath: stri
  * console.log(isCheckoutPathDeclaredPruned(declaration, "docs/other.md")) // false
  * ```
  *
- * @param declaration - The checkout's prune declaration.
+ * @param declaration - What the checkout says it removed, replaced and keeps.
  * @param repoPath - A repository-relative POSIX path.
  * @returns `true` when the declaration removes or replaces the path.
  * @category predicates
@@ -577,7 +579,7 @@ export const isCheckoutPathDeclaredPruned: {
  * console.log(isCheckoutPathPruneDeclared(declaration, "renovate.json")) // false
  * ```
  *
- * @param declaration - The checkout's prune declaration.
+ * @param declaration - What the checkout says it removed, replaced and keeps.
  * @param repoPath - A repository-relative POSIX path.
  * @returns `true` when a prune entry, and no keep entry, matches the path.
  * @category predicates
@@ -614,7 +616,7 @@ export const isCheckoutPathPruneDeclared: {
  * console.log(isCheckoutPathOwned(declaration, "renovate.json")) // true
  * ```
  *
- * @param declaration - The checkout's prune declaration.
+ * @param declaration - What the checkout says it removed, replaced and keeps.
  * @param repoPath - A repository-relative POSIX path.
  * @returns `true` when an owned entry, and no keep entry, matches the path.
  * @category predicates
@@ -656,7 +658,7 @@ export const isCheckoutPathOwned: {
  * console.log(findings.map((finding) => finding.live)) // ["docs/demo/guide.md"]
  * ```
  *
- * @param declaration - The checkout's prune declaration.
+ * @param declaration - What the checkout says it removed, replaced and keeps.
  * @param livePaths - The repository-relative paths the checkout holds.
  * @param liveWorkspaces - The package names workspace discovery finds.
  * @returns One finding per prune entry that names something live.
@@ -797,7 +799,7 @@ const expansionPatterns = (entry: CheckoutPruneEntry): ReadonlyArray<string> =>
  * ```
  *
  * @param repoRoot - Absolute repository root.
- * @param declaration - The checkout's prune declaration.
+ * @param declaration - What the checkout says it removed, replaced and keeps.
  * @returns The repository-relative files some prune entry matches.
  * @category utilities
  * @since 0.0.0
