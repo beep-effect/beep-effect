@@ -593,7 +593,7 @@ describe("CI lane partitions", () => {
     }
   });
 
-  it.layer(Layer.merge(CurrentCheckoutLive, NodeServices.layer))((it) =>
+  it.layer(Layer.merge(CurrentCheckoutLive, NodeServices.layer), { timeout: "10 seconds" })((it) =>
     it.effect("sizes the law-practice-server integration shards from the committed LPT plan", (ctx) =>
       Effect.gen(function* () {
         const inventory = yield* CurrentCheckout;
