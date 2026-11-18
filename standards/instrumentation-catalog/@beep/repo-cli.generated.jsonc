@@ -786,6 +786,7 @@
     {"name":"CiPartitions.writeCiPartitionPlans","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiPartitions.writeFamilyPlan","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CiPartitions.writeShardPlan","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CiTaskOutcomes.write","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ClearingHouse.physicalTargets","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ClearingHouse.publishSkillTree","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"ClearingHouse.removeIfEmpty","owner":"@beep/repo-cli","family":"tooling","conforms":true},

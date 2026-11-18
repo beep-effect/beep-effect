@@ -606,9 +606,10 @@ export class HostedTaskOutcome extends S.Opaque<HostedTaskOutcome, { readonly br
  * `steps` and `tasks` are optional keys of `route-corpus/v1`, so every row
  * captured before them decodes, and re-encodes byte for byte, with both
  * `None`. The capture records `steps` only on a job that concluded `failure`,
- * the one job the replay judges by its steps. No capture fills `tasks` yet: a
- * job that carries per-task outcome records gets them there. The replay reads
- * both through `hostedJobRedOrigin` (`RouteCensus.ts`).
+ * the one job the replay judges by its steps, and fills `tasks` on the same
+ * jobs from the `task-outcomes/v1` record the job uploaded
+ * (`CiTaskOutcomes.ts`); a failed job with no record keeps `tasks` absent.
+ * The replay reads both through `hostedJobRedOrigin` (`RouteCensus.ts`).
  *
  * **Example** (A finished hosted job)
  *
@@ -686,6 +687,14 @@ export class HostedRun extends S.Opaque<HostedRun, { readonly brand: unique symb
  * The receipt pinning a captured corpus: window, counts and the sha256 of the
  * corpus file.
  *
+ * **Details**
+ *
+ * `taskOutcomeReads` counts the GitHub requests the capture spent reading
+ * per-task outcome records (one artifact listing page per run with a failed
+ * job, one download per record), summed over the captures that built the
+ * corpus. A receipt written before those reads has no key and decodes as
+ * `None`.
+ *
  * **Example** (An empty corpus receipt)
  *
  * ```ts import.meta.vitest name="An empty corpus receipt"
@@ -719,6 +728,7 @@ export class RouteCorpusReceipt extends S.Opaque<RouteCorpusReceipt, { readonly 
     heads: S.Int,
     path: S.NonEmptyString,
     sha256: S.NonEmptyString,
+    taskOutcomeReads: S.Int.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("RouteCorpusReceipt", {
       description: "Digest-pinned receipt for a captured hosted-run corpus.",

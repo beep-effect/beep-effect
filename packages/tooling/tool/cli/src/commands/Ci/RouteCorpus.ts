@@ -44,9 +44,11 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as R from "effect/Record";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { unzipSync } from "fflate";
 import {
   GithubClientRequest,
   GithubIdentity,
@@ -55,6 +57,7 @@ import {
 } from "../../internal/github/GithubIdentity.ts";
 import { GithubRest, layerGithubRest } from "../../internal/github/GithubRest.ts";
 import { sha256HexBytes } from "../Goals/PacketCore/PacketDigest.ts";
+import { TaskOutcomeRecord, taskOutcomeArtifactPrefix } from "./CiTaskOutcomes.ts";
 import { HostedJob, HostedRun, HostedStep, RouteCorpusReceipt, RouteError } from "./Route.schemas.ts";
 import { RouteCorpus, RouteCorpusLoaded } from "./Route.service.ts";
 import type * as Digest from "effect/crypto/Digest";
@@ -312,6 +315,37 @@ const hostedRunOf = (view: GhRunView): HostedRun =>
     jobs: A.map(view.jobs, hostedJobOf),
   });
 
+const TaskOutcomeRead = S.Struct({ requests: S.Int, records: S.Array(TaskOutcomeRecord) }).pipe(
+  $I.annoteSchema("TaskOutcomeRead", {
+    description: "The task-outcome records of one run attempt and the GitHub requests spent reading them.",
+  })
+);
+const decodeTaskOutcomeRead = S.decodeUnknownEffect(S.fromJsonString(TaskOutcomeRead));
+
+// A fetched run and the GitHub requests its task-outcome records cost.
+type FetchedRun = { readonly run: HostedRun; readonly reads: number };
+
+const isFailedJob = (job: HostedJob): boolean => O.exists(job.conclusion, (value) => Str.Equivalence(value, "failure"));
+
+// A record names its job as GitHub lists it; a job reached through a reusable workflow is listed as
+// `<caller> / <job>` (the overflow shard), so a record also joins a job whose name starts with `<job> / `.
+const recordFor = (records: ReadonlyArray<TaskOutcomeRecord>, job: HostedJob): O.Option<TaskOutcomeRecord> =>
+  A.findFirst(records, (record) => record.job === job.name || Str.startsWith(`${record.job} / `)(job.name));
+
+// Tasks are kept on the jobs that keep steps: the failed ones.
+const withTaskOutcomes = (run: HostedRun, records: ReadonlyArray<TaskOutcomeRecord>): HostedRun =>
+  HostedRun.make({
+    ...run,
+    jobs: A.map(run.jobs, (job) =>
+      isFailedJob(job)
+        ? O.match(recordFor(records, job), {
+            onNone: () => job,
+            onSome: (record) => HostedJob.make({ ...job, tasks: O.some(record.tasks) }),
+          })
+        : job
+    ),
+  });
+
 // A pull-request run, or a push to `main`. Only finished ones are fetched; an
 // unfinished one keeps its day open so a later capture lists it again.
 const isEligibleRun = (row: GhRunListRow): boolean =>
@@ -380,6 +414,31 @@ const JobWire = S.Struct({
 const decodeWorkflowRows = S.decodeUnknownEffect(S.Array(WorkflowWire));
 const decodeRunRows = S.decodeUnknownEffect(S.Array(RunWire));
 const decodeJobRows = S.decodeUnknownEffect(S.Array(JobWire));
+const ArtifactWire = S.Struct({ id: S.Int, name: S.String, expired: S.Boolean });
+const decodeArtifactRows = S.decodeUnknownEffect(S.Array(ArtifactWire));
+const ArchiveBytes = S.instanceOf(ArrayBuffer);
+const decodeRecordJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
+const ARTIFACT_PAGE = 100;
+
+// The JSON files of one record artifact, parsed but not yet decoded: the capture decodes them as
+// `task-outcomes/v1` records, so a malformed one fails there with the run it came from.
+const archiveRecords = Effect.fnUntraced(function* (bytes: ArrayBuffer, name: string) {
+  const entries = yield* Effect.try({
+    try: () => unzipSync(new Uint8Array(bytes)),
+    catch: RouteError.mapError("corpus-fetch", `Artifact ${name} is not a zip archive.`),
+  });
+  return yield* Effect.forEach(
+    A.sort(
+      A.filter(R.toEntries(entries), ([file]) => Str.endsWith(".json")(file)),
+      Order.mapInput(Order.String, ([file]: readonly [string, Uint8Array]) => file)
+    ),
+    ([file, content]) =>
+      decodeRecordJson(new TextDecoder().decode(content)).pipe(
+        Effect.mapError(RouteError.mapError("corpus-fetch", `${name}/${file} is not JSON.`))
+      ),
+    { concurrency: 1 }
+  );
+});
 const encodeWire = S.encodeEffect(S.fromJsonString(S.Unknown));
 const ghRun = (run: typeof RunWire.Type) => ({
   databaseId: run.id,
@@ -450,6 +509,34 @@ export const makeRouteGithubRunner = Effect.gen(function* () {
           })
           .pipe(Effect.flatMap(decodeRunRows));
         return yield* encodeWire(A.map(rows, ghRun));
+      }
+      if (args[1] === "task-outcomes") {
+        const runId = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[2]);
+        const attempt = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[3]);
+        const artifacts = yield* client
+          .paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts", {
+            ...at,
+            run_id: runId,
+            per_page: ARTIFACT_PAGE,
+          })
+          .pipe(Effect.flatMap(decodeArtifactRows));
+        const prefix = taskOutcomeArtifactPrefix(runId, attempt);
+        const wanted = A.filter(artifacts, (artifact) => !artifact.expired && Str.startsWith(prefix)(artifact.name));
+        const records = yield* Effect.forEach(
+          wanted,
+          (artifact) =>
+            client
+              .requestDecoded(
+                "GET /repos/{owner}/{repo}/actions/artifacts/{artifact_id}/zip",
+                { ...at, artifact_id: artifact.id },
+                ArchiveBytes
+              )
+              .pipe(Effect.flatMap((bytes) => archiveRecords(bytes, artifact.name))),
+          { concurrency: 1 }
+        );
+        // One request per listing page (at least one) and one per download.
+        const pages = Math.max(1, Math.ceil(A.length(artifacts) / ARTIFACT_PAGE));
+        return yield* encodeWire({ requests: pages + A.length(wanted), records: A.flatten(records) });
       }
       const runId = yield* S.decodeUnknownEffect(S.FiniteFromString)(args[2]);
       const run = yield* client.requestDecoded(
@@ -604,6 +691,8 @@ type CaptureState = {
   readonly pinned: O.Option<string>;
   readonly covered: string;
   readonly open: boolean;
+  // GitHub requests spent on task-outcome records, summed over the captures that built the corpus.
+  readonly reads: number;
 };
 
 type CapturePlan = {
@@ -713,6 +802,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
       pinned: yield* Effect.asSome(digest(bytes, corpusPath)),
       covered: "",
       open: true,
+      reads: 0,
     };
   });
 
@@ -803,7 +893,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
   const fetchRun = Effect.fn("RouteCorpus.fetchRun")(function* (
     repoRoot: string,
     runId: number
-  ): Effect.fn.Return<O.Option<HostedRun>, RouteError> {
+  ): Effect.fn.Return<O.Option<FetchedRun>, RouteError> {
     const text = yield* callGh(`gh run view ${runId}`, ["run", "view", `${runId}`, "--json", GH_VIEW_FIELDS], repoRoot);
     const view = yield* decodeGhRunView(text).pipe(
       Effect.mapError(RouteError.mapError("corpus-fetch", `gh run view ${runId} returned an unreadable payload.`))
@@ -813,7 +903,21 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     }
     // A rerun can start between the list and the view: the view then shows the
     // newer, unfinished attempt, which is not evidence yet.
-    return view.status === "completed" ? O.some(hostedRunOf(view)) : O.none();
+    if (view.status !== "completed") {
+      return O.none();
+    }
+    const run = hostedRunOf(view);
+    if (!A.some(run.jobs, isFailedJob)) {
+      return O.some({ run, reads: 0 });
+    }
+    // A failed job's per-task records ride the run as artifacts of its attempt; only runs with a failed job
+    // are read, since only failed jobs keep steps and tasks.
+    const label = `gh run task-outcomes ${runId} ${view.attempt}`;
+    const outcomes = yield* callGh(label, ["run", "task-outcomes", `${runId}`, `${view.attempt}`], repoRoot);
+    const read = yield* decodeTaskOutcomeRead(outcomes).pipe(
+      Effect.mapError(RouteError.mapError("corpus-fetch", `${label} returned an unreadable payload.`))
+    );
+    return O.some({ run: withTaskOutcomes(run, read.records), reads: read.requests });
   });
 
   // Where this capture starts and what the receipt already covers. A receipt
@@ -897,10 +1001,11 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
           pinned: A.every(loaded.value.runs, inWindow) ? O.some(loaded.value.receipt.sha256) : O.none(),
           covered: "",
           open: true,
+          reads: A.every(loaded.value.runs, inWindow) ? O.getOrElse(loaded.value.receipt.taskOutcomeReads, () => 0) : 0,
         }
       : (yield* exists(corpusPath))
         ? yield* readExisting(corpusPath)
-        : { runs: HashMap.empty(), pinned: O.none(), covered: "", open: true };
+        : { runs: HashMap.empty(), pinned: O.none(), covered: "", open: true, reads: 0 };
     yield* fs
       .makeDirectory(outDir, { recursive: true })
       .pipe(Effect.mapError(RouteError.mapError("corpus-pin", `Failed to create ${outDir}.`)));
@@ -939,6 +1044,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
         heads: HashSet.size(HashSet.fromIterable(A.map(runs, (run) => run.headSha))),
         path: path.relative(path.resolve(options.repoRoot), pinnedPath(sha256)),
         sha256,
+        taskOutcomeReads: O.some(state.reads),
       });
       const receiptText = yield* encodeReceipt(receipt).pipe(
         Effect.mapError(RouteError.mapError("corpus-pin", `Failed to encode the receipt for ${corpusPath}.`))
@@ -968,7 +1074,8 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
       const viewed = yield* Effect.forEach(pending, (runId) => fetchRun(options.repoRoot, runId), {
         concurrency: ROUTE_CORPUS_FETCH_CONCURRENCY,
       });
-      const fetched = A.getSomes(viewed);
+      const read = A.getSomes(viewed);
+      const fetched = A.map(read, (entry) => entry.run);
       const open =
         state.open &&
         isLaterDay(DateTime.formatIsoDateUtc(now), day) &&
@@ -982,6 +1089,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
         pinned: A.isReadonlyArrayEmpty(fetched) ? state.pinned : O.none(),
         covered: open ? day : state.covered,
         open,
+        reads: A.reduce(read, state.reads, (total, entry) => total + entry.reads),
       });
       return written;
     });

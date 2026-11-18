@@ -402,6 +402,25 @@ jobs:
               ;;
           esac
 
+      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
+      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
+      # decides the job, so it continues on error.
+      - name: Record Turbo task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        env:
+          JOB_NAME: ${{ env.BEEP_CI_LANE_NAME }}
+        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+
+      - name: Upload Turbo task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ env.BEEP_CI_LANE_ID }}
+          path: .beep/ci-task-outcomes/record.json
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Upload trusted Turbo summaries
         if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -620,6 +639,25 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
+      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
+      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
+      # decides the job, so it continues on error.
+      - name: Record Turbo task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        env:
+          JOB_NAME: Labs
+        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+
+      - name: Upload Turbo task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: .beep/ci-task-outcomes/record.json
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Upload trusted Turbo summaries
         if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -731,6 +769,25 @@ jobs:
       - name: Append Turbo summary
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
+
+      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
+      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
+      # decides the job, so it continues on error.
+      - name: Record Turbo task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        env:
+          JOB_NAME: Lint (${{ matrix.partition }})
+        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+
+      - name: Upload Turbo task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
+          path: .beep/ci-task-outcomes/record.json
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Upload trusted Turbo summaries
         if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
@@ -1083,6 +1140,25 @@ jobs:
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
 
+      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
+      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
+      # decides the job, so it continues on error.
+      - name: Record Turbo task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        env:
+          JOB_NAME: Test Unit (${{ matrix.partition }})
+        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+
+      - name: Upload Turbo task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
+          path: .beep/ci-task-outcomes/record.json
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Upload trusted Turbo summaries
         if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -1278,6 +1354,25 @@ jobs:
       - name: Append Turbo summary
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
+
+      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
+      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
+      # decides the job, so it continues on error.
+      - name: Record Turbo task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        env:
+          JOB_NAME: Test Integration (${{ matrix.partition }})
+        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+
+      - name: Upload Turbo task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
+          path: .beep/ci-task-outcomes/record.json
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Upload trusted Turbo summaries
         if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
@@ -1766,6 +1861,25 @@ jobs:
       - name: Append Turbo summary
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary
+
+      # One {task, outcome} record per Turbo task this job ran (goals/certainty-scorecard
+      # ROUT-05 slice 2b), read by the route corpus capture. A measurement: it never
+      # decides the job, so it continues on error.
+      - name: Record Turbo task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        env:
+          JOB_NAME: Property Laws (${{ matrix.partition }})
+        run: bun run beep ci task-outcomes --job-name "$JOB_NAME" --out .beep/ci-task-outcomes/record.json
+
+      - name: Upload Turbo task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ matrix.partition }}
+          path: .beep/ci-task-outcomes/record.json
+          retention-days: 30
+          if-no-files-found: warn
 
       - name: Upload trusted Turbo summaries
         if: github.event_name == 'push' && hashFiles('.turbo/runs/*.json') != ''
