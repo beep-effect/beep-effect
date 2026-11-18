@@ -17,6 +17,7 @@ import {
   taskOutcomesOf,
   writeTaskOutcomes,
 } from "@beep/repo-cli/commands/Ci";
+import { makeRouteReadBudget } from "@beep/repo-cli/commands/Ci/RouteBudget";
 import { hostedJobRedOrigin } from "@beep/repo-cli/commands/Ci/RouteCensus";
 import { makeRouteCorpus, makeRouteGithubRunner, RouteGhRateLimited } from "@beep/repo-cli/commands/Ci/RouteCorpus";
 import { layerGithubRest } from "@beep/repo-cli/test/SharedInternals";
@@ -525,7 +526,17 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       };
       const runGh: RouteGhRunner = (args) =>
         answers[args[0] === "api" ? "api" : (args[1] ?? "")] ?? Effect.succeed(view);
-      const corpus = yield* makeRouteCorpus(runGh);
+      // A recording budget over the real unmetered one: every admitted label and every metered call is kept.
+      const unmetered = yield* makeRouteReadBudget(O.none());
+      const admitted: Array<string> = [];
+      let meteredCalls = 0;
+      const budget = {
+        ...unmetered,
+        admit: (label: string) => Effect.sync(() => admitted.push(label)).pipe(Effect.andThen(unmetered.admit(label))),
+        metered: <A, E, R>(call: Effect.Effect<A, E, R>) =>
+          Effect.sync(() => (meteredCalls += 1)).pipe(Effect.andThen(unmetered.metered(call))),
+      };
+      const corpus = yield* makeRouteCorpus(runGh, budget);
       const fiber = yield* Effect.forkChild(
         corpus.capture(
           RouteCorpusCaptureOptions.make({
@@ -542,6 +553,12 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       const receipt = yield* Fiber.join(fiber);
       // Three requests before the refusal, two in the read after the wait.
       deepStrictEqual([readCalls, receipt.taskOutcomeReads], [2, O.some(5)]);
+      // The task-outcome read is admitted once (at the reserve) and both its attempts are metered, beside the day's
+      // list, the run view and the rate-limit lookup of the wait: 1 + 1 + 1 + 2 metered calls.
+      deepStrictEqual(
+        [A.filter(admitted, Str.startsWith("gh run task-outcomes")), meteredCalls],
+        [[`gh run task-outcomes ${RUN} 1`], 5]
+      );
     })
   );
 });

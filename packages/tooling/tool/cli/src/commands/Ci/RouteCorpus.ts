@@ -987,10 +987,13 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     const label = `gh run task-outcomes ${runId} ${view.attempt}`;
     // A call refused for the rate limit reports the requests it had sent; they are added to the retried call's.
     const carried = yield* Ref.make(0);
-    const attemptRead = runGh(["run", "task-outcomes", `${runId}`, `${view.attempt}`], repoRoot).pipe(
+    // Metered like every capture call, and admitted once below: the read waits at the reserve and every
+    // response it gets is counted in the capture's spend.
+    const attemptRead = gh(["run", "task-outcomes", `${runId}`, `${view.attempt}`], repoRoot).pipe(
       Effect.tapErrorTag("RouteGhRateLimited", (refused) => Ref.update(carried, (n) => n + refused.requests))
     );
-    const outcomes = yield* attemptRead.pipe(
+    const outcomes = yield* meter.admit(label).pipe(
+      Effect.andThen(attemptRead),
       Effect.catchTag("RouteGhRateLimited", () => waitForReset(label, repoRoot, attemptRead))
     );
     const read = yield* decodeTaskOutcomeRead(outcomes).pipe(
