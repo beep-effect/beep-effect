@@ -354,7 +354,7 @@ export const planDifferences: {
  *
  * @param checked - The plan the gate approved.
  * @param current - The plan the deploy computed, from the same plan object `write` applies.
- * @param write - The apply.
+ * @param write - The effect that applies the plan; it never starts on a refusal.
  * @returns What `write` returns, or `PlanRefused` / `PlanDrift` with nothing written.
  * @category validation
  * @since 0.0.0
