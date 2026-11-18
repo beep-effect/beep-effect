@@ -44,8 +44,11 @@ guard that keeps it holding.
   file missing from a present packet or workspace still fails.
 - **Pruned.** What a skip needs, beyond absence. The product leaves and their
   packets are declared prunable in `@beep/repo-cli-kit/ProductLeaves`
-  (workspaces by name and directory). A subject is pruned when it is declared
-  and its directory is gone; only a pruned subject skips. An absent subject
+  (workspaces by name and directory). From seam 1b, a trimmed checkout or fork
+  may also declare its own prunes in `standards/checkout-prune.jsonc`
+  (`CheckoutPruneDeclaration`), which this repository does not ship. A subject
+  is pruned when it is declared and its directory is gone; only a pruned
+  subject skips, and a declared entry whose directory remains is a finding. An absent subject
   nobody declared (a typo, a renamed or archived packet, a renamed kept
   package) fails as before, and so does a declared package whose name is gone
   while its directory remains (renamed in place).
@@ -114,6 +117,14 @@ Built in payoff order, one PR each (`PLAN.md` tracks status).
    `SemanticFoundation.test.ts`, and any further disk read the seam's sweep of
    `packages/tooling/**` finds. The surfaces covered and the ones left, with
    reasons: `research/2026-11-17-seam-1-surfaces.md`.
+   - **1b. A checkout declares its own prunes.** An optional tracked
+     `standards/checkout-prune.jsonc` (`CheckoutPruneDeclaration`: prune,
+     keep and owned entries of git `:(glob)` pathspecs, each with a reason)
+     lets a trimmed checkout or fork name what it removed without editing a
+     kept package. The surfaces seam 1 left (repo-root config fixtures, the
+     pilot-packet tests, the census exclusions, and the doctor and roadmap
+     link checks) tolerate declared prunes as well
+     (`decisions/2026-11-18-checkout-prune-declaration.md`).
 2. **Legal CLI command groups become their own prunable package.** The
    repo-cli command groups that import product drivers (`Drawings`, the
    `Corpus` service programs, `Files process`, the Box research library) move
@@ -284,6 +295,14 @@ Operator decision, 2026-11-17. Tooling (packages/tooling/**), foundation (packag
 Lane feat/prunable-product-leaves
 
 Reverse: Delete the rule and its allowlist; the seams stay merged.
+
+### A trimmed checkout declares its own prunes in standards/checkout-prune.jsonc, 2026-11-18
+
+Supersedes the absence rule in 2026-11-17-absent-subject-skipped-present-strict.md and extends the ProductLeaves catalog that #3379 shipped. The review of #3379 showed that a skip keyed on absence turns a stale or misspelled name into a silent skip, and #3379 now skips only for subjects listed in @beep/repo-cli-kit/ProductLeaves whose directory is gone. A code catalog has a limit: a trimmed checkout or fork can drop only what that kept file lists, and it cannot add its own drops without editing a kept package. Agent call: a checkout may carry one optional tracked declaration at standards/checkout-prune.jsonc. This repository ships none, so every assertion here stays as strict as #3379 left it. Its schema is CheckoutPruneDeclaration, in a new @beep/repo-cli-kit/CheckoutPrune module: { version: 1, prune: [CheckoutPruneEntry], keep: [CheckoutPruneEntry], owned: [CheckoutPruneEntry] }, where CheckoutPruneEntry is { path, why }, and path is a repository-relative git :(glob) pathspec (** crosses segments, * does not). A path is declared pruned when it matches a prune or owned entry and no keep entry. loadCheckoutInventory reads the declaration. A subject skips when its directory is gone and it is either in productLeaves or declared pruned. An absent subject that is not declared still fails. A declared entry whose matched directory still exists is a finding, so a declaration cannot hide a live path. Each tolerant surface class gets both tests: absent and declared skips with the note, absent and undeclared fails.
+
+Lane feat/prunable-prune-declaration
+
+Reverse: Delete the CheckoutPrune module and stop reading the file; ProductLeaves alone decides what may be pruned again.
 
 <!-- beep:decisions:end -->
 

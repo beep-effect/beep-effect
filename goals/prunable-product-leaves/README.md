@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement: seam 1 done, seam 2 next.
+P1 Implement: seam 1 done; seam 1b (a checkout declares its own prunes) next, then seam 2.
 
 ## Latest Evidence
 
