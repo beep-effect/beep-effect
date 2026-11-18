@@ -820,6 +820,7 @@ const CiEnvironmentMode = LiteralKit([
   "local-only",
   "read-write (trusted push)",
   "read-only (same-repository pull request)",
+  "read-only (main schedule or dispatch)",
   "exported (trusted push)",
   "blank",
 ]);

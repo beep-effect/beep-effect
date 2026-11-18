@@ -42,7 +42,8 @@ Not started.
 ## Notes
 
 - Graduated 2026-08-30 from [`explorations/v3-consistency-audit`](../../explorations/v3-consistency-audit/README.md). Requires
-  `architecture/slice-audit` (`goals/slice-topology-audit`): do not open a
+  `architecture/slice-audit` (from `goals/model-first-standard` since 2026-11-17, which
+  superseded `goals/slice-topology-audit`): do not open a
   codemod PR before the audit command, its baseline and its required check
   exist on `main`.
 - The migration is a baseline delta per PR, never a big-bang rename; 724

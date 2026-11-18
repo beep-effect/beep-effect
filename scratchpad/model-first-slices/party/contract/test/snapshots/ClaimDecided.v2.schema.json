@@ -1,0 +1,69 @@
+{
+  "dialect": "draft-2020-12",
+  "schema": {
+    "$ref": "#/$defs/ClaimDecidedV2Encoded"
+  },
+  "definitions": {
+    "ClaimDecidedV2Encoded": {
+      "type": "object",
+      "properties": {
+        "_tag": {
+          "type": "string",
+          "enum": [
+            "ClaimDecidedV2"
+          ]
+        },
+        "factId": {
+          "type": "string"
+        },
+        "claim": {
+          "type": "string"
+        },
+        "org": {
+          "type": "string"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "retracted"
+          ]
+        },
+        "basis": {
+          "type": "string",
+          "enum": [
+            "approval",
+            "direct"
+          ]
+        },
+        "approval": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reviewRuns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "_tag",
+        "factId",
+        "claim",
+        "org",
+        "decision",
+        "basis",
+        "approval",
+        "reviewRuns"
+      ],
+      "additionalProperties": true
+    }
+  }
+}

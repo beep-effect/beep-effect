@@ -1,0 +1,7 @@
+[1/6 ✓1 ✗0] ✓ test/Domain/ClusterRunnerPool.test.ts > Effect Cluster runner pool name > is the runner's address, as Effect Cluster is given it (1ms)
+[2/6 ✓2 ✗0] ✓ test/Domain/ClusterRunnerPool.test.ts > Effect Cluster runner pool name > is a hash when PostgreSQL would cut or change it, the same on both sides (0ms)
+[3/6 ✓3 ✗0] ✓ test/Domain/ClusterRunnerPool.test.ts > Effect Cluster runner pool check at start > a runner whose pool is named after it starts (1ms)
+[4/6 ✓4 ✗0] ✓ test/Domain/ClusterRunnerPool.test.ts > Effect Cluster runner pool check at start > a runner whose pool is not named fails, naming the name to give it (1ms)
+[5/6 ✓5 ✗0] ✓ test/Domain/ClusterRunnerPool.test.ts > Effect Cluster runner pool check at start > a runner without an address, or whose pool is named for another, fails (1ms)
+[6/6 ✓6 ✗0] ✓ test/Domain/ClusterRunnerPool.test.ts > Effect Cluster runner pool check at start > a runner whose storage takes no advisory locks has no lock session, and starts (0ms)
+Tests: 0 failed | 6 passed (1 files, 63ms)

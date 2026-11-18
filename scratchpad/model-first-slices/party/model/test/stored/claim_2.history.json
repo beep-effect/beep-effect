@@ -1,0 +1,135 @@
+[
+  {
+    "_tag": "ClaimAsserted",
+    "org": "org_acme",
+    "proposition": {
+      "_tag": "HasIdentifier",
+      "party": "party_dana",
+      "scheme": "email",
+      "value": "dana@acme.test"
+    },
+    "signals": [
+      {
+        "source": "mailbox:intake",
+        "excerpt": "From: Dana Smith <dana@acme.test>"
+      },
+      {
+        "source": "crm",
+        "excerpt": "dana@acme.test on file"
+      }
+    ],
+    "provenance": {
+      "root": {
+        "_tag": "Human",
+        "principal": "p_intake"
+      },
+      "onBehalfOf": "p_intake",
+      "grants": [
+        {
+          "grant": "g_intake",
+          "delegation": null
+        },
+        {
+          "grant": "g_intake_propose",
+          "delegation": null
+        }
+      ],
+      "chain": []
+    }
+  },
+  {
+    "_tag": "ReviewRequested",
+    "run": "review:claim_2:1",
+    "org": "org_acme",
+    "proposition": {
+      "_tag": "HasIdentifier",
+      "party": "party_dana",
+      "scheme": "email",
+      "value": "dana@acme.test"
+    },
+    "signals": [
+      {
+        "source": "mailbox:intake",
+        "excerpt": "From: Dana Smith <dana@acme.test>"
+      },
+      {
+        "source": "crm",
+        "excerpt": "dana@acme.test on file"
+      }
+    ],
+    "evidenceRevision": 1,
+    "provenance": {
+      "root": {
+        "_tag": "Human",
+        "principal": "p_intake"
+      },
+      "onBehalfOf": "p_intake",
+      "grants": [
+        {
+          "grant": "g_intake",
+          "delegation": null
+        },
+        {
+          "grant": "g_intake_propose",
+          "delegation": null
+        }
+      ],
+      "chain": []
+    }
+  },
+  {
+    "_tag": "ClaimAccepted",
+    "proposition": {
+      "_tag": "HasIdentifier",
+      "party": "party_dana",
+      "scheme": "email",
+      "value": "dana@acme.test"
+    },
+    "corroboration": 2,
+    "provenance": {
+      "root": {
+        "_tag": "Human",
+        "principal": "p_rev"
+      },
+      "onBehalfOf": "p_rev",
+      "grants": [
+        {
+          "grant": "g_rev",
+          "delegation": null
+        }
+      ],
+      "chain": []
+    }
+  },
+  {
+    "_tag": "MergeRefused",
+    "reason": "readmission:lapsed",
+    "provenance": {
+      "root": {
+        "_tag": "Human",
+        "principal": "p_rev"
+      },
+      "onBehalfOf": "p_rev",
+      "grants": [
+        {
+          "grant": "g_rev",
+          "delegation": null
+        }
+      ],
+      "chain": [
+        {
+          "by": {
+            "_tag": "Process",
+            "process": "MergeOnSameParty"
+          },
+          "cause": {
+            "_tag": "Event",
+            "stream": "Claim/claim_2",
+            "seq": 3,
+            "event": "ClaimAccepted"
+          }
+        }
+      ]
+    }
+  }
+]

@@ -5,7 +5,18 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    "./*": "./src/*.ts"
+    "./Capability": "./src/Capability.ts",
+    "./CurrentInvocation.context": "./src/CurrentInvocation.context.ts",
+    "./Deployment": "./src/Deployment.ts",
+    "./Fact": "./src/Fact.ts",
+    "./Identity": "./src/Identity.ts",
+    "./Ids": "./src/Ids.ts",
+    "./Invocation": "./src/Invocation.ts",
+    "./MissingGrant.rejection": "./src/MissingGrant.rejection.ts",
+    "./PublishedStream": "./src/PublishedStream.ts",
+    "./ReadmissionRefused.rejection": "./src/ReadmissionRefused.rejection.ts",
+    "./RequestKey": "./src/RequestKey.ts",
+    "./Session.middleware": "./src/Session.middleware.ts"
   },
   "dependencies": {
     "@alchemy.run/domain": "2.0.0-beta.87",

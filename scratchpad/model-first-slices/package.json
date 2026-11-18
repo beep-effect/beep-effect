@@ -5,21 +5,48 @@
   "type": "module",
   "workspaces": [
     "shared/kernel",
+    "shared/contract-kit",
+    "shared/tooling",
+    "party/contract",
     "party/model",
     "party/host",
-    "apps/practice"
+    "party/web",
+    "authority/contract",
+    "authority/model",
+    "authority/host",
+    "runs/contract",
+    "runs/model",
+    "runs/host",
+    "apps/practice",
+    "conformance",
+    "conformance/upstream"
   ],
   "scripts": {
-    "check": "tsc --noEmit -p shared/kernel && tsc --noEmit -p party/model && tsc --noEmit -p party/host && tsc --noEmit -p apps/practice",
-    "test": "bun run --cwd party/model test && bun run --cwd party/host test"
+    "check": "effect-tsgo tsrs -p shared/kernel && effect-tsgo tsrs -p shared/contract-kit && effect-tsgo tsrs -p shared/tooling && effect-tsgo tsrs -p party/contract && effect-tsgo tsrs -p party/model && effect-tsgo tsrs -p party/host && effect-tsgo tsrs -p party/web && effect-tsgo tsrs -p authority/contract && effect-tsgo tsrs -p authority/model && effect-tsgo tsrs -p authority/host && effect-tsgo tsrs -p runs/contract && effect-tsgo tsrs -p runs/model && effect-tsgo tsrs -p runs/host && effect-tsgo tsrs -p apps/practice && effect-tsgo tsrs -p conformance && effect-tsgo tsrs -p conformance/upstream && effect-tsgo tsrs -p scripts",
+    "test": "rm -rf node_modules/.cache/proto-outcomes && bun run --cwd shared/tooling test && bun run --cwd party/contract test && bun run --cwd runs/contract test && bun run --cwd party/model test && bun run --cwd authority/model test && bun run --cwd runs/model test && bun run --cwd authority/host test && bun run --cwd runs/host test && bun run --cwd party/host test && bun run --cwd party/web test && bun run --cwd apps/practice test && bun run --cwd conformance test && bun scripts/outcomes.ts --check",
+    "handlers": "bun run --cwd party/model handlers && bun run --cwd authority/model handlers && bun run --cwd runs/model handlers",
+    "handlers:check": "bun run --cwd party/model handlers --check && bun run --cwd authority/model handlers --check && bun run --cwd runs/model handlers --check",
+    "bindings": "bun run --cwd party/web bindings",
+    "proofs": "bun scripts/proofs.ts",
+    "outcomes": "bun scripts/outcomes.ts",
+    "generated:check": "bun run handlers:check && bun run --cwd party/web bindings --check && bun run --cwd apps/practice entries --check && bun scripts/proofs.ts --check",
+    "conformance": "bun run --cwd conformance conformance",
+    "entries": "bun run --cwd apps/practice entries"
   },
   "devDependencies": {
+    "@beep/identity": "link:../../packages/foundation/modeling/identity",
+    "@beep/schema": "link:../../packages/foundation/modeling/schema",
+    "@effect/tsgo": "0.70.0",
     "@effect/vitest": "4.1.4",
     "@types/node": "26.6.5",
-    "typescript": "7.1.0-dev.20261105.1",
+    "tsrs": "0.25.0-ts7.1.0-beta",
     "vitest": "5.0.4"
   },
   "overrides": {
     "effect": "4.1.4"
+  },
+  "patchedDependencies": {
+    "@alchemy.run/domain@2.0.0-beta.87": "patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch",
+    "@alchemy.run/effect-cluster@2.0.0-beta.87": "patches/@alchemy.run%2Feffect-cluster@2.0.0-beta.87.patch"
   }
 }

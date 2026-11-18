@@ -1,0 +1,120 @@
+[
+  {
+    "_tag": "ContinuationOpened",
+    "session": "session_1",
+    "previous": "run_1",
+    "lineage": "run_1",
+    "generation": 1,
+    "purpose": "review",
+    "versions": {
+      "prompt": "p1",
+      "model": "m1",
+      "tools": "t1"
+    },
+    "allowance": 88,
+    "historyBound": 2,
+    "source": {
+      "grant": "g_req",
+      "delegation": "dlg:run_1"
+    },
+    "terms": {
+      "capability": "party.propose",
+      "operations": [
+        "ProposeDisposition"
+      ],
+      "resource": {
+        "_tag": "Org",
+        "org": "org_acme"
+      },
+      "expires": null
+    },
+    "delegation": "dlg:run_1~1",
+    "accountable": "p_req",
+    "requester": "p_req",
+    "runProvenance": {
+      "root": {
+        "_tag": "Agent",
+        "run": "run_1~1",
+        "accountable": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": "dlg:run_1~1"
+        }
+      ],
+      "chain": []
+    },
+    "provenance": {
+      "root": {
+        "_tag": "Agent",
+        "run": "run_1",
+        "accountable": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": "dlg:run_1"
+        }
+      ],
+      "chain": [
+        {
+          "by": {
+            "_tag": "Process",
+            "process": "ContinueAtBound"
+          },
+          "cause": {
+            "_tag": "Event",
+            "stream": "AgentRun/run_1",
+            "seq": 7,
+            "event": "RunContinued"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "_tag": "BudgetReserved",
+    "session": "session_1",
+    "reservation": "r2",
+    "units": 30,
+    "remaining": 58,
+    "provenance": {
+      "root": {
+        "_tag": "Agent",
+        "run": "run_1~1",
+        "accountable": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": "dlg:run_1~1"
+        }
+      ],
+      "chain": []
+    }
+  },
+  {
+    "_tag": "RunCompleted",
+    "session": "session_1",
+    "outcome": "approved:approval_1",
+    "provenance": {
+      "root": {
+        "_tag": "Agent",
+        "run": "run_1~1",
+        "accountable": "p_req"
+      },
+      "onBehalfOf": "p_req",
+      "grants": [
+        {
+          "grant": "g_req",
+          "delegation": "dlg:run_1~1"
+        }
+      ],
+      "chain": []
+    }
+  }
+]

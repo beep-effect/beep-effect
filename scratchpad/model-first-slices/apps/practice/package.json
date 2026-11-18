@@ -3,18 +3,33 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "exports": {
-    "./*": "./src/*.ts"
-  },
+  "exports": {},
   "dependencies": {
     "@alchemy.run/docker": "2.0.0-beta.87",
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@alchemy.run/effect-cluster": "2.0.0-beta.87",
     "@effect/platform-node": "4.1.4",
+    "@proto/authority-host": "workspace:*",
+    "@proto/authority-model": "workspace:*",
+    "@proto/conformance": "workspace:*",
     "@proto/kernel": "workspace:*",
-    "@proto/party": "workspace:*",
+    "@proto/party-contract": "workspace:*",
     "@proto/party-host": "workspace:*",
+    "@proto/party-model": "workspace:*",
+    "@proto/runs-host": "workspace:*",
+    "@proto/runs-model": "workspace:*",
+    "@proto/tooling": "workspace:*",
     "alchemy": "2.0.0-beta.87",
     "effect": "4.1.4"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "entries": "bun scripts/entries.ts",
+    "deploy": "bun --bun ../../node_modules/.bin/alchemy deploy --stage mfs-conformance --no-input --yes",
+    "destroy": "bun --bun ../../node_modules/.bin/alchemy destroy --stage mfs-conformance --no-input --yes"
+  },
+  "devDependencies": {
+    "@effect/vitest": "4.1.4",
+    "vitest": "5.0.4"
   }
 }

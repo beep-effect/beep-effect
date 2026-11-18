@@ -1,0 +1,28 @@
+{
+  "root": {
+    "_tag": "Agent",
+    "run": "run_1",
+    "accountable": "p_req"
+  },
+  "onBehalfOf": "p_req",
+  "grants": [
+    {
+      "grant": "g_req",
+      "delegation": "dlg:run_1"
+    }
+  ],
+  "chain": [
+    {
+      "by": {
+        "_tag": "Agent",
+        "run": "run_1"
+      },
+      "cause": {
+        "_tag": "SagaStep",
+        "saga": "ReviewAssist",
+        "key": "run_1",
+        "step": "settle"
+      }
+    }
+  ]
+}

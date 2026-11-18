@@ -1916,7 +1916,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   );
 
   it.effect(
-    "gives same-repository pull requests read-only cache access while forks and untrusted events stay local-only",
+    "gives same-repository pull requests and main schedule or dispatch runs read-only cache access while forks and other events stay local-only",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -1935,12 +1935,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const secretEnvironment = (values: Readonly<Record<string, string>>) =>
         R.mapKeys(values, (name) => `BEEP_CI_SECRET_${name}`);
       let scenario = 0;
-      const jobEnv = Effect.fnUntraced(function* (input: {
+      const jobEnvText = Effect.fnUntraced(function* (input: {
         readonly eventName: string;
         readonly headRepository: string;
         readonly turboRemoteCache: boolean;
         readonly appSecrets: boolean;
         readonly turboApi?: string;
+        readonly ref?: string;
         readonly secrets?: Readonly<Record<string, string>>;
       }) {
         scenario += 1;
@@ -1952,6 +1953,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
             ...R.map(process.env, (value, name) => (Str.startsWith("BEEP_CI_SECRET_")(name) ? "" : value)),
             ...secretEnvironment(input.secrets ?? secrets),
             GITHUB_EVENT_NAME: input.eventName,
+            GITHUB_REF: input.ref ?? "",
             GITHUB_REPOSITORY: "beep-effect/beep-effect",
             GITHUB_ENV: outputPath,
             BEEP_CI_HEAD_REPOSITORY: input.headRepository,
@@ -1968,9 +1970,103 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         assert.notInclude(stdout, "write-token");
         assert.notInclude(stdout, "read-token");
         assert.notInclude(stdout, "postgres://");
-        const readFileString18 = yield* fs.readFileString(outputPath);
-        return parseGithubEnv(readFileString18);
+        return yield* fs.readFileString(outputPath);
       });
+      const jobEnv = (input: Parameters<typeof jobEnvText>[0]) => jobEnvText(input).pipe(Effect.map(parseGithubEnv));
+      // The exact GITHUB_ENV bytes the script wrote for a push and a same-repository pull
+      // request before main schedule and dispatch runs gained read access: that grant must
+      // not change either event's output by a byte.
+      const githubEnvText = (entries: ReadonlyArray<readonly [string, string]>): string =>
+        A.join(
+          A.map(entries, ([name, value]) => `${name}<<EFFECTED_EOF\n${value}\nEFFECTED_EOF\n`),
+          ""
+        );
+      const blankAppSecrets = A.map(
+        [
+          "DATABASE_URL_UNPOOLED",
+          "EMAIL_RESEND_API_KEY",
+          "AUTH_SECRET",
+          "BETTER_AUTH_SECRET",
+          "BETTER_AUTH_URL",
+          "SECURITY_TRUSTED_ORIGINS",
+          "LIVEBLOCKS_SECRET_KEY",
+        ],
+        (name) => [name, ""] as const
+      );
+      const pinnedSecrets = {
+        TURBO_TOKEN: "write-token",
+        TURBO_READ_TOKEN: "read-token",
+        DATABASE_URL: "postgres://push-only",
+      };
+      const pinnedPush = yield* jobEnvText({
+        eventName: "push",
+        headRepository: "",
+        turboRemoteCache: true,
+        appSecrets: true,
+        ref: "refs/heads/main",
+        secrets: pinnedSecrets,
+      });
+      assert.strictEqual(
+        pinnedPush,
+        githubEnvText([
+          ["TURBO_API", "https://cache.example.test"],
+          ["TURBO_TOKEN", "write-token"],
+          ["TURBO_TEAM", "team_beep"],
+          ["TURBO_CACHE", "local:rw,remote:rw"],
+          ["TURBO_LOG_ORDER", "stream"],
+          ["BEEP_CI_TURBO_REMOTE_MODE", "read-write (trusted push)"],
+          ["DATABASE_URL", "postgres://push-only"],
+          ...blankAppSecrets,
+        ])
+      );
+      const pinnedPullRequest = yield* jobEnvText({
+        eventName: "pull_request",
+        headRepository: "beep-effect/beep-effect",
+        turboRemoteCache: true,
+        appSecrets: true,
+        ref: "refs/pull/1/merge",
+        secrets: pinnedSecrets,
+      });
+      assert.strictEqual(
+        pinnedPullRequest,
+        githubEnvText([
+          ["TURBO_API", "https://cache.example.test"],
+          ["TURBO_TOKEN", "read-token"],
+          ["TURBO_TEAM", "team_beep"],
+          ["TURBO_CACHE", "local:rw,remote:r"],
+          ["TURBO_LOG_ORDER", "stream"],
+          ["BEEP_CI_TURBO_REMOTE_MODE", "read-only (same-repository pull request)"],
+          ["DATABASE_URL", ""],
+          ...blankAppSecrets,
+        ])
+      );
+
+      // A scheduled or dispatched run on refs/heads/main reads with the read token,
+      // never writes and never receives application secrets; the same events on any
+      // other ref stay local-only.
+      for (const eventName of ["schedule", "workflow_dispatch"]) {
+        const mainRun = yield* jobEnv({
+          eventName,
+          headRepository: "",
+          turboRemoteCache: true,
+          appSecrets: true,
+          ref: "refs/heads/main",
+        });
+        assert.strictEqual(mainRun.TURBO_TOKEN, "read-token", eventName);
+        assert.strictEqual(mainRun.TURBO_CACHE, "local:rw,remote:r", eventName);
+        assert.strictEqual(mainRun.BEEP_CI_TURBO_REMOTE_MODE, "read-only (main schedule or dispatch)", eventName);
+        assert.strictEqual(mainRun.DATABASE_URL, "", eventName);
+        const branchRun = yield* jobEnv({
+          eventName,
+          headRepository: "",
+          turboRemoteCache: true,
+          appSecrets: false,
+          ref: "refs/heads/feature",
+        });
+        assert.strictEqual(branchRun.TURBO_TOKEN, "", eventName);
+        assert.strictEqual(branchRun.TURBO_API, "", eventName);
+        assert.strictEqual(branchRun.TURBO_CACHE, "local:rw", eventName);
+      }
 
       const push = yield* jobEnv({
         eventName: "push",
