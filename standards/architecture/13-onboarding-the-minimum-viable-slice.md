@@ -99,8 +99,10 @@ The stories run on `Domain.InMemory` with the model alone: no host, no
 database. A story fails on any event, rejection or external call it does not
 account for, and coverage counts the declared outcomes that executed.
 
-`bun run beep architecture` generates this shape through
-`bun run beep create-package`. Do not hand-author the packages.
+`bun run beep architecture` will generate this shape through
+`bun run beep create-package` once `goals/model-first-standard` retargets it
+(P1 step 2); until then it emits only the legacy shape, so do not use it for a
+new context. Once it does, do not hand-author the packages.
 
 ## 3. Adding the first fact another context reads
 

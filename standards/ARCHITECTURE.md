@@ -586,8 +586,9 @@ proven in process, and their cluster cases have not run yet:
   receipt (D55).
 
 Effect Cluster meets them with library fixes that are not yet in an Alchemy
-release. The monorepo carries those fixes as root patches in
-`patchedDependencies`, and they come out when a release includes them (D61).
+release. Goal work adds those fixes as root patches in `patchedDependencies`
+(`goals/effect-cluster-host`), and they come out when a release includes them
+(D61).
 `@beep/alchemy-postgres` remains until an Alchemy release carries the fixes and
 the conformance suite passes on it unpatched (D5, D53). `Domain.InMemory` hosts
 stories and tests.
@@ -683,8 +684,10 @@ evidence. The inventory is rendered from data and a check fails on drift (D8).
 
 ### Scaffolding And Checks
 
-`bun run beep architecture` generates a four-package context through
-`bun run beep create-package`, which stays the only package bootstrap. The
+`bun run beep architecture` will generate a four-package context through
+`bun run beep create-package`, which stays the only package bootstrap, once
+`goals/model-first-standard` retargets it (P1 step 2); until then it emits only
+the legacy shape and is not used for a new context. The
 shell `create-package` emits is the package skeleton law, and every package
 with tests type-checks its test tree. Checkers for role suffix and placement,
 exact exports and imports between contexts start from a day-one baseline of the
