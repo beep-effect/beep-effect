@@ -208,6 +208,48 @@ export const $NotesHostId = composers.$NotesHostId;
   }
 });
 
+// As if @beep/contract-kit had moved after the plan was saved.
+const staleOf = (plan: CanonicalSliceOperationPlan): CanonicalSliceOperationPlan =>
+  CanonicalSliceOperationPlan.make({
+    ...plan,
+    operations: A.map(plan.operations, (operation) =>
+      isWriteFileOperation(operation)
+        ? WriteFileOperation.make({
+            ...operation,
+            content: Str.replaceAll(
+              "foundation/modeling/contract-kit",
+              "foundation/capability/contract-kit"
+            )(operation.content),
+          })
+        : operation
+    ),
+  });
+
+// A disposable checkout in the git-ignored tmp/ holding the identity workspace
+// and the contract kit's manifest: enough for the planner to resolve a context.
+const makeCheckout = Effect.fnUntraced(function* (prefix: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const root = yield* repoRoot;
+  const tmpRoot = path.join(root, "packages/tooling/tool/cli/tmp");
+  yield* fs.makeDirectory(tmpRoot, { recursive: true });
+  const checkout = yield* fs.makeTempDirectoryScoped({ directory: tmpRoot, prefix });
+  const identity = "packages/foundation/modeling/identity";
+  const kit = "packages/foundation/modeling/contract-kit";
+  const rootManifest = yield* jsonStringifyPretty({
+    name: "proof-checkout",
+    private: true,
+    workspaces: [identity, kit],
+  });
+  yield* fs.writeFileString(path.join(checkout, "package.json"), rootManifest);
+  yield* fs.makeDirectory(path.join(checkout, identity, "src"), { recursive: true });
+  yield* fs.makeDirectory(path.join(checkout, kit), { recursive: true });
+  for (const file of [`${identity}/package.json`, `${identity}/src/packages.ts`, `${kit}/package.json`]) {
+    yield* fs.copyFile(path.join(root, file), path.join(checkout, file));
+  }
+  return checkout;
+});
+
 const run = (cwd: string, command: string, args: ReadonlyArray<string>) =>
   runCapturedStreams({ command, args, cwd, extendEnv: true, env: { FORCE_COLOR: "0", NO_COLOR: "1" } });
 
@@ -511,24 +553,47 @@ describe("beep architecture: model-first context", () => {
         const root = yield* repoRoot;
         const plan = yield* notesPlan;
         yield* ensureCurrentModelFirstReferences(root, plan);
-        // As if @beep/contract-kit had moved after the plan was saved.
-        const stale = CanonicalSliceOperationPlan.make({
-          ...plan,
-          operations: A.map(plan.operations, (operation) =>
-            isWriteFileOperation(operation)
-              ? WriteFileOperation.make({
-                  ...operation,
-                  content: Str.replaceAll(
-                    "foundation/modeling/contract-kit",
-                    "foundation/capability/contract-kit"
-                  )(operation.content),
-                })
-              : operation
-          ),
-        });
-        const refusal = yield* Effect.flip(ensureCurrentModelFirstReferences(root, stale));
+        const refusal = yield* Effect.flip(ensureCurrentModelFirstReferences(root, staleOf(plan)));
         expect(refusal.message).toContain("packages/notes/contract/tsconfig.json");
         expect(refusal.message).toContain("Regenerate the plan");
+        // Nothing of the plan exists in the checkout, so there is nothing to reconcile.
+        expect(refusal.message).not.toContain("already exist");
+      })
+    );
+
+    it.effect(
+      "check --file refuses a model-first plan whose references are stale, like apply",
+      Effect.fnUntraced(
+        function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const dir = yield* fs.makeTempDirectoryScoped({ prefix: "model-first-stale-" });
+          const planPath = path.join(dir, "plan.json");
+          const plan = yield* notesPlan;
+          const json = yield* encodeCanonicalSliceOperationPlanJson(staleOf(plan));
+          yield* fs.writeFileString(planPath, json);
+          const refusal = yield* Effect.flip(runArchitectureCommand(["check", "--file", planPath]));
+          expect(String(refusal)).toContain("no longer match the workspace graph");
+        },
+        Effect.provideServiceEffect(Console.Console, TestConsole.make)
+      )
+    );
+
+    it.effect(
+      "after an interrupted apply the stale-plan error lists the files to reconcile",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("model-first-interrupted-");
+        const plan = yield* makeModelFirstContextOperationPlan({
+          repoRoot: checkout,
+          context: "notes",
+          module: "Note",
+        });
+        yield* applyCanonicalSliceOperationPlan(checkout, plan);
+        const refusal = yield* Effect.flip(ensureCurrentModelFirstReferences(checkout, staleOf(plan)));
+        expect(refusal.message).toContain("already exist");
+        expect(refusal.message).toContain("packages/notes/contract/tsconfig.json");
+        expect(refusal.message).toContain("reconcile");
+        expect(refusal.message).toContain("never overwrites a differing file");
       })
     );
 
@@ -582,25 +647,7 @@ describe("beep architecture: model-first context", () => {
     it.effect(
       "refuses a context whose identity accessors another package already owns, and replays its own",
       Effect.fnUntraced(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const root = yield* repoRoot;
-        const tmpRoot = path.join(root, "packages/tooling/tool/cli/tmp");
-        yield* fs.makeDirectory(tmpRoot, { recursive: true });
-        const checkout = yield* fs.makeTempDirectoryScoped({ directory: tmpRoot, prefix: "model-first-accessors-" });
-        const identity = "packages/foundation/modeling/identity";
-        const kit = "packages/foundation/modeling/contract-kit";
-        const rootManifest = yield* jsonStringifyPretty({
-          name: "accessor-proof",
-          private: true,
-          workspaces: [identity, kit],
-        });
-        yield* fs.writeFileString(path.join(checkout, "package.json"), rootManifest);
-        yield* fs.makeDirectory(path.join(checkout, identity, "src"), { recursive: true });
-        yield* fs.makeDirectory(path.join(checkout, kit), { recursive: true });
-        for (const file of [`${identity}/package.json`, `${identity}/src/packages.ts`, `${kit}/package.json`]) {
-          yield* fs.copyFile(path.join(root, file), path.join(checkout, file));
-        }
+        const checkout = yield* makeCheckout("model-first-accessors-");
 
         // Create notes2 the way create context does: apply, then register.
         const notes2 = yield* makeModelFirstContextOperationPlan({

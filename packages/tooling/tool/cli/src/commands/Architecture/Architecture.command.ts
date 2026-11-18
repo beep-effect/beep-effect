@@ -333,7 +333,9 @@ const architectureCheckCommand = Command.make(
   Effect.fn(function* ({ file, shape }) {
     const rootDir = yield* findRepoRoot();
     const plan = yield* readOperationPlanFile(file);
-    yield* ensurePlanShape(plan, shape);
+    const planShape = yield* ensurePlanShape(plan, shape);
+    // The same read-only freshness check apply runs; legacy plans skip it.
+    if (planShape === "model-first") yield* ensureCurrentModelFirstReferences(rootDir, plan);
     const result = yield* checkCanonicalSliceOperationPlan(rootDir, plan);
     yield* reportCheckResult(result);
     yield* ensureIdempotent(result);

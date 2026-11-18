@@ -633,9 +633,22 @@ export const ensureCurrentModelFirstReferences = Effect.fn(function* (
     A.map(([path]) => path),
     A.sort(Order.String)
   );
-  if (A.isReadonlyArrayNonEmpty(stale)) {
-    return yield* DomainError.newMessage(
-      `The plan's project references no longer match the workspace graph (${A.join(stale, ", ")}). Regenerate the plan with \`beep architecture plan --slice ${plan.target.boundedContext} --concept ${plan.target.concept}\`.`
-    );
-  }
+  if (A.isReadonlyArrayEmpty(stale)) return;
+  // An interrupted apply may have written some of the plan's files already; the
+  // executor never overwrites a differing file, so regenerating alone cannot
+  // get past them.
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const written = yield* Effect.filter(
+    A.map(plan.operations, (operation) => operation.path),
+    (file) => fs.exists(path.join(repoRoot, file)).pipe(Effect.orElseSucceed(thunkFalse)),
+    { concurrency: 1 }
+  );
+  const regenerate = `Regenerate the plan with \`beep architecture plan --slice ${plan.target.boundedContext} --concept ${plan.target.concept}\``;
+  const recovery = A.isReadonlyArrayNonEmpty(written)
+    ? ` These files of the plan already exist, likely from an interrupted apply: ${A.join(A.sort(written, Order.String), ", ")}. Review and reconcile each against the regenerated plan (keep local edits; move or delete a file the regenerated plan should write) before applying it, since apply never overwrites a differing file.`
+    : "";
+  return yield* DomainError.newMessage(
+    `The plan's project references no longer match the workspace graph (${A.join(stale, ", ")}). ${regenerate}.${recovery}`
+  );
 });
