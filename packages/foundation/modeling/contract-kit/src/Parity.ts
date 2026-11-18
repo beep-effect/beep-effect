@@ -120,9 +120,9 @@ export const shapeOf = (rpc: Rpc.AnyWithProps): RpcShape => {
  * @category getters
  * @since 0.0.0
  */
-export const groupShape = (group: RpcGroup.RpcGroup<Rpc.Any>): ReadonlyArray<RpcShape> =>
+export const groupShape = <R extends Rpc.Any>(group: RpcGroup.RpcGroup<R>): ReadonlyArray<RpcShape> =>
   pipe(
     A.fromIterable(group.requests.values()),
-    A.map((rpc) => shapeOf(rpc as Rpc.AnyWithProps)),
+    A.map((rpc) => shapeOf(rpc as unknown as Rpc.AnyWithProps)),
     A.sort(Order.mapInput(Order.String, (shape: RpcShape) => shape.tag))
   );
