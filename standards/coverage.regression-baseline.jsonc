@@ -5871,15 +5871,15 @@
     },
     "@beep/contract-kit": {
       "path": "packages/foundation/modeling/contract-kit",
-      "lines": 87.5,
-      "statements": 88.23,
-      "branches": 50,
-      "functions": 75,
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
       "uncovered": {
-        "lines": 2,
-        "statements": 2,
-        "branches": 2,
-        "functions": 2
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
       },
       "files": {
         "packages/foundation/modeling/contract-kit/src/Catalog.ts": {
@@ -5895,15 +5895,15 @@
           }
         },
         "packages/foundation/modeling/contract-kit/src/Parity.ts": {
-          "lines": 81.81,
-          "statements": 83.33,
-          "branches": 50,
-          "functions": 66.66,
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 2,
-            "functions": 2
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
           }
         },
         "packages/foundation/modeling/contract-kit/src/index.ts": {

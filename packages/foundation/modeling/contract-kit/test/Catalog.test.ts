@@ -2,7 +2,9 @@ import * as Domain from "@alchemy.run/domain";
 import * as Catalog from "@beep/contract-kit/Catalog";
 import { groupShape } from "@beep/contract-kit/Parity";
 import { describe, expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import type * as Rpc from "effect/rpc/Rpc";
 
 const NoteId = S.String.pipe(S.brand("NoteId"));
 
@@ -65,5 +67,40 @@ describe("Catalog.waitsOnProjection", () => {
     const waits = Catalog.waitsOnProjection("NoteIndex");
     expect(waits.kind).toBe("Projection");
     expect(waits.projectionName).toBe("NoteIndex");
+  });
+});
+
+class WaitingNoteIndex extends Domain.Query("NoteIndex", {
+  input: { title: S.String },
+  success: NoteId,
+  waitsFor: [Catalog.waitsOnProjection("NoteIndex")],
+}) {}
+
+class ImmediateNoteIndex extends Domain.Query("NoteIndex", {
+  input: { title: S.String },
+  success: NoteId,
+}) {}
+
+const queryRpcOf = (query: typeof WaitingNoteIndex | typeof ImmediateNoteIndex) => {
+  class IndexContract extends Domain.Api("IndexContract", {
+    model: Catalog.make({ name: "Notes", commands: [], views: [], queries: [query] }),
+    commands: [],
+    views: [],
+    queries: ["NoteIndex"],
+    streams: [],
+  }) {}
+  return A.map(A.fromIterable(IndexContract.group.requests.values()), (rpc) => rpc as unknown as Rpc.AnyWithProps);
+};
+
+const timeout = Domain.ConsistencyTimeout.make({ view: "NoteIndex", key: "note_1", stream: "Note/note_1", version: 1 });
+
+describe("a contract query that waits on a projection", () => {
+  it("fails with ConsistencyTimeout on the wire; the same query without a wait cannot", () => {
+    const waiting = queryRpcOf(WaitingNoteIndex);
+    const immediate = queryRpcOf(ImmediateNoteIndex);
+    expect(waiting.length).toBe(1);
+    expect(immediate.length).toBe(1);
+    expect(A.every(waiting, (rpc) => S.is(rpc.errorSchema)(timeout))).toBe(true);
+    expect(A.some(immediate, (rpc) => S.is(rpc.errorSchema)(timeout))).toBe(false);
   });
 });
