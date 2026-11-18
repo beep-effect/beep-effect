@@ -17,6 +17,7 @@
  * @since 0.0.0
  */
 
+import { CliColor } from "@beep/cli-kit/CliColor";
 import { LINT_POLICY_SUBCOMMANDS } from "@beep/repo-cli-kit/cli/LintRouting";
 import * as A from "effect/Array";
 import * as Command from "effect/cli/Command";
@@ -25,6 +26,7 @@ import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { commandGroupRoutes, QUALITY_TASK_NAMES } from "./Dispatch.manifest.ts";
 import { DispatchTarget } from "./Dispatch.schemas.ts";
@@ -48,6 +50,24 @@ export const ROOT_COMMAND_NAME = "beep-cli";
  * @since 0.0.0
  */
 export const ROOT_COMMAND_DESCRIPTION = "CLI tool for managing beep-effect monorepo packages";
+
+/**
+ * The help formatter every `beep-cli` command renders with.
+ *
+ * **Details**
+ *
+ * `CliColor.formatterLayer` with `globalFlags: "summary"`: the root's
+ * `--help` keeps the five built-in global flags in full, and every other
+ * command's `--help` prints the single line
+ * `Run 'beep-cli --help' for global flags` in their place. Colour follows the
+ * shared `CliColor` decision. Bound once, so providing it does not re-read
+ * that decision per use.
+ *
+ * @internal
+ * @category configuration
+ * @since 0.0.0
+ */
+export const rootHelpFormatterLayer = CliColor.formatterLayer(R.empty(), { globalFlags: "summary" });
 
 type CommandGroupRoute = (typeof commandGroupRoutes)[number];
 
