@@ -31,7 +31,7 @@ import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { Cast, rolesOf } from "./Cast.ts";
 import { member, oneSource, onOrg, readmitted, twoSources } from "./fixtures.ts";
 

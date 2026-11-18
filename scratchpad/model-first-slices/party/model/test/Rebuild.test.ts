@@ -31,7 +31,7 @@ import * as Ref from "effect/Ref";
 import * as Order from "effect/Order";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { Cast, rolesOf } from "./Cast.ts";
 import { member, twoSources } from "./fixtures.ts";
 
@@ -168,6 +168,55 @@ it.live.prop("a rebuild writes a new generation beside the old one, with zero si
     expect(platform.control.commits.length).toBe(commits);
     const callsAfter = yield* Ref.get(calls);
     expect(callsAfter).toBe(callsBefore);
+    expect(platform.control.deaths).toEqual([]);
+    expect(platform.control.failures).toEqual([]);
+  }).pipe(Effect.scoped),
+  runs,
+);
+
+it.live.prop("a party registered while a generation is building is found before the switch, and after it", [Cast, Refusals], ([cast, refusals]) =>
+  Effect.gen(function* () {
+    const scene = sceneOf(cast);
+    const platform = InMemory.make();
+    const calls = yield* Ref.make(0);
+    const storeContext = yield* Layer.build(MemoryPartyDirectoryStore);
+    const store = Layer.succeedContext(storeContext);
+    const directory = Effect.flatMap(Effect.service(PartyDirectoryStore), (s) => s.search(scene.home, scene.text, page));
+    const lateName = `${cast.names.elsewhere} ${cast.names.family}`;
+    const hasLate = (found: { readonly entries: ReadonlyArray<{ readonly partyId: string }> }) =>
+      A.some(found.entries, (row) => row.partyId === scene.elsewhere);
+
+    // Generation 0 holds the history.
+    yield* Effect.scoped(
+      Effect.gen(function* () {
+        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 0, store, countingPorts(calls, refusals)), store));
+        yield* Effect.gen(function* () {
+          yield* history(cast, scene);
+          yield* until(directory, merged);
+        }).pipe(Effect.provideContext(deployment));
+      }),
+    );
+
+    // Generation 1 is building; only its projection runs now, and queries read generation 0.
+    yield* Effect.scoped(
+      Effect.gen(function* () {
+        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 1, store, countingPorts(calls, refusals)), store));
+        yield* Effect.gen(function* () {
+          const s = yield* PartyDirectoryStore;
+          const parties = yield* Party;
+          yield* as(scene.intake)(parties.send(scene.elsewhere, RegisterParty.make({ org: scene.home, name: lateName })));
+          // The building generation forwards the registration to the one queries read.
+          const found = yield* until(directory, hasLate);
+          expect(found.entries).toContainEqual({ partyId: scene.elsewhere, org: scene.home, name: lateName, absorbed: [] });
+          expect(found.entries).toHaveLength(3);
+          yield* switchWhenCaughtUp(1);
+          const activeAfter = yield* s.active;
+          expect(activeAfter).toEqual(O.some(1));
+          const after = yield* directory;
+          expect(after).toEqual(found);
+        }).pipe(Effect.provideContext(deployment));
+      }),
+    );
     expect(platform.control.deaths).toEqual([]);
     expect(platform.control.failures).toEqual([]);
   }).pipe(Effect.scoped),

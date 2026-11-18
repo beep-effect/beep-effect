@@ -29,7 +29,7 @@ import {
   PartyDirectoryTables,
   StoreKit,
 } from "./PartyDirectory.table.ts";
-import { thunkEffectSucceedNone, thunkUndefined } from "@beep/utils/thunk";
+import { thunkEffectSucceedNone, thunkEffectVoid, thunkUndefined } from "@beep/utils/thunk";
 
 /**
  * The store was asked for a generation this deploy declares no row table
@@ -72,8 +72,10 @@ const storeOf = Effect.fnUntraced(function* (connection: Connection) {
  * each generation's rows in its own table, and the per-source positions
  * beside them, written together in one transaction, so a replayed or
  * redelivered change is refused exactly as the in-memory store refuses it
- * (D14, D16). The model's port is unchanged; only this adapter knows about
- * Postgres.
+ * (D14, D16). A generation still building forwards each write to the active
+ * generation in the same transaction, so a search that waited for a write
+ * finds it before the switch. The model's port is unchanged; only this
+ * adapter knows about Postgres.
  *
  * **Details**
  *
@@ -112,6 +114,48 @@ export const pgPartyDirectoryStoreFor = (rows: Readonly<Record<number, PartyDire
           Effect.catchTag("NoSuchElementError", thunkEffectSucceedNone),
         );
 
+      /**
+       * Apply one write to one generation's rows unless that generation's position for the stream
+       * is at or past it: the change and the position together. Says whether it applied.
+       */
+      const applyTo =
+        (store: Effect.Success<typeof connected>, generation: number, { model, table }: PartyDirectoryRowGeneration) =>
+        (write: DirectoryWrite) =>
+          Effect.gen(function* () {
+            // Lock the position row: two runners applying one stream serialise here.
+            const position = yield* store.db
+              .select({ seq: positions.seq })
+              .from(positions)
+              .where(and(eq(positions.generation, generation), eq(positions.stream, write.stream)))
+              .for("update");
+            if (O.exists(A.head(position), (row) => write.seq <= row.seq)) return false;
+            yield* DirectoryChange.match(write.change, {
+              Registered: ({ partyId, org, name }) => {
+                // The insert variant starts `absorbed` empty; a registration replayed over a merged row resets it, as before.
+                const row = model.insert.make({ partyId, org, name });
+                const values = { ...row, absorbed: A.copy(row.absorbed) };
+                return Effect.asVoid(
+                  store.db
+                    .insert(table)
+                    .values(values)
+                    .onConflictDoUpdate({ target: table.partyId, set: { org: values.org, name: values.name, absorbed: values.absorbed } }),
+                );
+              },
+              Merged: ({ partyId, absorbed }) =>
+                Effect.asVoid(
+                  store.db
+                    .update(table)
+                    .set({ absorbed: sql`array_append(${table.absorbed}, ${absorbed})` })
+                    .where(and(eq(table.partyId, partyId), not(arrayContains(table.absorbed, [absorbed])))),
+                ),
+            });
+            yield* store.db
+              .insert(positions)
+              .values({ generation, stream: write.stream, seq: write.seq })
+              .onConflictDoUpdate({ target: [positions.generation, positions.stream], set: { seq: write.seq } });
+            return true;
+          });
+
       return PartyDirectoryStore.of({
         apply: dual(
           2,
@@ -122,45 +166,23 @@ export const pgPartyDirectoryStoreFor = (rows: Readonly<Record<number, PartyDire
                   Effect.gen(function* () {
                     const current = yield* activeGeneration(store);
                     if (O.exists(current, (at) => generation < at)) return 0;
-                    const { model, table } = yield* rowsOf(generation);
+                    const target = yield* rowsOf(generation);
+                    const write = applyTo(store, generation, target);
                     if (O.isNone(current)) {
                       const pointer = yield* encodeActive(PartyDirectoryActive.insert.make({ generation }));
                       yield* store.db.insert(active).values(pointer).onConflictDoNothing();
                     }
-                    return yield* Effect.reduce(writes, () => 0, (applied, write) =>
+                    // A generation still building forwards each write to the one queries read, in the
+                    // same transaction; the active generation's own positions refuse what it has.
+                    const forward = yield* O.match(O.filter(current, (at) => at < generation), {
+                      onNone: () => Effect.succeed(O.none<ReturnType<typeof applyTo>>()),
+                      onSome: (at) => Effect.map(rowsOf(at), (rows) => O.some(applyTo(store, at, rows))),
+                    });
+                    return yield* Effect.reduce(writes, () => 0, (applied, next) =>
                       Effect.gen(function* () {
-                        // Lock the position row: two runners applying one stream serialise here.
-                        const position = yield* store.db
-                          .select({ seq: positions.seq })
-                          .from(positions)
-                          .where(and(eq(positions.generation, generation), eq(positions.stream, write.stream)))
-                          .for("update");
-                        if (O.exists(A.head(position), (row) => write.seq <= row.seq)) return applied;
-                        yield* DirectoryChange.match(write.change, {
-                          Registered: ({ partyId, org, name }) => {
-                            // The insert variant starts `absorbed` empty; a registration replayed over a merged row resets it, as before.
-                            const row = model.insert.make({ partyId, org, name });
-                            const values = { ...row, absorbed: A.copy(row.absorbed) };
-                            return Effect.asVoid(
-                              store.db
-                                .insert(table)
-                                .values(values)
-                                .onConflictDoUpdate({ target: table.partyId, set: { org: values.org, name: values.name, absorbed: values.absorbed } }),
-                            );
-                          },
-                          Merged: ({ partyId, absorbed }) =>
-                            Effect.asVoid(
-                              store.db
-                                .update(table)
-                                .set({ absorbed: sql`array_append(${table.absorbed}, ${absorbed})` })
-                                .where(and(eq(table.partyId, partyId), not(arrayContains(table.absorbed, [absorbed])))),
-                            ),
-                        });
-                        yield* store.db
-                          .insert(positions)
-                          .values({ generation, stream: write.stream, seq: write.seq })
-                          .onConflictDoUpdate({ target: [positions.generation, positions.stream], set: { seq: write.seq } });
-                        return applied + 1;
+                        const landed = yield* write(next);
+                        yield* O.match(forward, { onNone: thunkEffectVoid, onSome: (toActive) => Effect.asVoid(toActive(next)) });
+                        return landed ? applied + 1 : applied;
                       }),
                     );
                   }),

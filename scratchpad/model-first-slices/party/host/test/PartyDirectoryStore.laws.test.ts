@@ -25,7 +25,7 @@ import {
   PartyDirectoryStore,
 } from "@proto/party-model/Directory/PartyDirectory.store";
 import { generateDrizzleJson, generateMigration } from "drizzle-kit/api-postgres";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -33,10 +33,10 @@ import * as Exit from "effect/Exit";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 
 // The directory store's laws, held by both implementations: the in-memory twin the stories use and
 // the Postgres adapter, here on PGlite. Every value is generated: a scene says which parties exist,
@@ -245,8 +245,12 @@ it.layer(Postgres, { timeout: "60 seconds" })("the directory store's laws", (it)
             partiesOf(scene),
             Effect.fnUntraced(function* (party) {
               // A search text has no outer whitespace: the part is trimmed, and is still a part of the name.
-              const from = start % party.name.length;
-              const text = Str.trim(Str.toUpperCase(Str.slice(from, from + (length % 5))(party.name)));
+              // Cut by character, never through one: half of a surrogate pair is not text a search takes.
+              const characters = A.fromIterable(party.name);
+              const part = Str.trim(A.join(A.take(A.drop(characters, start % characters.length), length % 5), ""));
+              // Upper-cased, when that is the same text in another case (`ß` upper-cases to `SS`, which is not).
+              const upper = Str.toUpperCase(part);
+              const text = DirectoryText.make(Str.toLowerCase(upper) === Str.toLowerCase(part) ? upper : part);
               const pages = yield* searchHolds(store, scene, orgOf(scene, party), text);
               expect(A.some(A.flatMap(pages, (page) => page.entries), (row) => row.partyId === party.key)).toBe(true);
             }),
@@ -283,6 +287,38 @@ it.layer(Postgres, { timeout: "60 seconds" })("the directory store's laws", (it)
             }),
             { concurrency: 1, discard: true },
           );
+        }),
+      options,
+    );
+
+    it.effect.prop(
+      `${name}: a generation still building forwards its writes to the active one, which ends complete whatever part it had, and a replay changes nothing`,
+      [Scene, Count],
+      ([scene, cut]) =>
+        Effect.gen(function* () {
+          const store = yield* fresh;
+          const writes = allWrites(scene);
+          const org = OrgId.make(scene.orgs[0]);
+          // What the retired code applied before the deploy: any part of the history, cut even mid-stream.
+          const at = cut % (writes.length + 1);
+          yield* store.apply(A.take(writes, at), 0);
+          // The new generation takes the whole history and what arrived since, in stream order.
+          const built = yield* store.apply(writes, 1);
+          expect(built).toBe(writes.length);
+          const reading = yield* store.active;
+          expect(reading).toEqual(O.some(0));
+          // Queries still read generation 0, and it holds every write: a search that waited for one finds it.
+          const pages = yield* searchHolds(store, scene, org, "");
+          const forwarded = yield* store.checkpoints(0);
+          expect(forwarded).toEqual(expectedCheckpoints(scene));
+          const replayed = yield* store.apply(writes, 1);
+          expect(replayed).toBe(0);
+          const pagesAfter = yield* allPages(store, org, "", scene.take);
+          expect(pagesAfter).toEqual(pages);
+          // The switch changes nothing a search finds.
+          yield* store.switchTo(1);
+          const switched = yield* allPages(store, org, "", scene.take);
+          expect(switched).toEqual(pages);
         }),
       options,
     );

@@ -70,7 +70,7 @@ export class GenerationBehind extends S.TaggedError<GenerationBehind, { readonly
  * party of the page it ends. Pages follow party id order, the only order the
  * directory keeps.
  */
-const CursorPosition = S.Struct({ order: S.Literal("partyId"), partyId: PartyId });
+const CursorPosition = S.Struct({ order: S.tag("partyId"), partyId: PartyId });
 
 /**
  * The cursor a directory page hands back, as the client sees it: the page's
@@ -171,6 +171,18 @@ export const pageOf: {
  * Queries read the active generation; a rebuild writes the next generation
  * beside it and `switchTo` makes it active once it has caught up.
  *
+ * While a newer generation is building, the store forwards its writes to the
+ * active generation, under the active generation's own checkpoints: what the
+ * active generation already applied is refused there, and what it has not
+ * seen lands in both. So a search that waited for a write finds it, before
+ * the switch as after it.
+ *
+ * **Gotchas**
+ *
+ * Forwarding applies one change to two generations. It holds only while a
+ * change means the same row in both; a generation that changes what a change
+ * means cannot be built beside the one it replaces this way.
+ *
  * @category ports
  * @since 0.0.0
  */
@@ -181,8 +193,10 @@ export class PartyDirectoryStore extends Context.Service<
      * Apply a generation's writes in order, each with its checkpoint in the
      * same write. Refused, and not counted: a write at or before the
      * generation's checkpoint for its stream, and every write of a generation
-     * older than the active one. Returns how many were applied. The writes
-     * come first, so a batch pipes into `apply(generation)`.
+     * older than the active one. Returns how many were applied to that
+     * generation. A generation newer than the active one also forwards each
+     * write to the active generation, which applies it unless it already
+     * has. The writes come first, so a batch pipes into `apply(generation)`.
      */
     readonly apply: {
       (generation: number): (writes: ReadonlyArray<DirectoryWrite>) => Effect.Effect<number>;
@@ -247,6 +261,10 @@ const applyWrite = (
         },
       ];
 
+/** Apply writes in order to one generation: how many it applied, and the generation after them. */
+const applyWrites = (generation: Generation, writes: ReadonlyArray<DirectoryWrite>) =>
+  A.reduce(writes, [0, generation] as const, applyWrite);
+
 /** The source streams where `candidate` has not applied what `active` has. */
 const behindOf = (active: Generation, candidate: Generation) =>
   pipe(
@@ -281,12 +299,17 @@ export const MemoryPartyDirectoryStore = Layer.effect(
         Effect.fn("PartyDirectoryStore.apply")((writes: ReadonlyArray<DirectoryWrite>, generation: number) =>
           Ref.modify(table, (current): readonly [number, Table] => {
             if (O.exists(current.active, (active) => generation < active)) return [0, current];
-            const [applied, next] = A.reduce(writes, [0, generationOf(current, generation)] as const, applyWrite);
+            const [applied, next] = applyWrites(generationOf(current, generation), writes);
+            const written = HashMap.set(current.generations, generation, next);
             return [
               applied,
               {
                 active: O.orElse(current.active, () => O.some(generation)),
-                generations: HashMap.set(current.generations, generation, next),
+                // A generation still building forwards to the one queries read.
+                generations: O.match(O.filter(current.active, (active) => active < generation && false), {
+                  onNone: () => written,
+                  onSome: (active) => HashMap.set(written, active, applyWrites(generationOf(current, active), writes)[1]),
+                }),
               },
             ];
           }),
