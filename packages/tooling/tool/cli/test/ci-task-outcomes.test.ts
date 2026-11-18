@@ -18,7 +18,7 @@ import {
   writeTaskOutcomes,
 } from "@beep/repo-cli/commands/Ci";
 import { hostedJobRedOrigin } from "@beep/repo-cli/commands/Ci/RouteCensus";
-import { makeRouteCorpus, makeRouteGithubRunner } from "@beep/repo-cli/commands/Ci/RouteCorpus";
+import { makeRouteCorpus, makeRouteGithubRunner, RouteGhRateLimited } from "@beep/repo-cli/commands/Ci/RouteCorpus";
 import { layerGithubRest } from "@beep/repo-cli/test/SharedInternals";
 import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
@@ -52,6 +52,7 @@ const encodeRecord = S.encodeEffect(S.fromJsonString(TaskOutcomeRecord));
 const encodeRecordValue = S.encodeEffect(TaskOutcomeRecord);
 const Payload = S.Struct({ requests: S.Int, records: S.Array(TaskOutcomeRecord) });
 const decodePayload = S.decodeUnknownEffect(S.fromJsonString(Payload));
+const isRateLimited = S.is(RouteGhRateLimited);
 
 const RUN = 9_000_001;
 const DAY = "2026-11-17";
@@ -425,6 +426,122 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           ["Test Unit (unit-c)", null, null],
         ]
       );
+    })
+  );
+
+  it.effect("a rate-limited download reports the requests it had sent, and the runner stops there", () =>
+    Effect.gen(function* () {
+      const recordText = yield* encodeRecord(record("Test Unit (unit-a)", [["@beep/a#test", "fail"]]));
+      const archive = zipSync({ "record.json": new TextEncoder().encode(recordText) });
+      const listing = yield* encode({
+        total_count: 2,
+        artifacts: [
+          { id: 1, name: `task-outcomes-${RUN}-1-test-unit-shard-unit-a`, expired: false, size_in_bytes: 300 },
+          { id: 2, name: `task-outcomes-${RUN}-1-lint-shard-lint-1`, expired: false, size_in_bytes: 300 },
+        ],
+      });
+      const fetch: RecordedFetch = Object.assign(
+        (input: string | URL | Request): Promise<Response> => {
+          const url = new URL(input instanceof Request ? input.url : input);
+          // The first download succeeds; GitHub refuses the second for the rate limit.
+          const response = Str.endsWith("/artifacts/2/zip")(url.pathname)
+            ? new Response("{}", { status: 429, headers: { "content-type": "application/json", "retry-after": "60" } })
+            : Str.endsWith("/zip")(url.pathname)
+              ? new Response(archive, { status: 200, headers: { "content-type": "application/zip" } })
+              : new Response(listing, { status: 200, headers: { "content-type": "application/json" } });
+          Object.defineProperty(response, "url", { value: url.href });
+          return Promise.resolve(response);
+        },
+        { preconnect: () => undefined }
+      );
+      const run = yield* restRunner(fetch);
+      // Any other failure maps to -1, so only the rate-limit refusal can carry the count.
+      const requests = yield* run(["run", "task-outcomes", `${RUN}`, "1"], ".").pipe(
+        Effect.flip,
+        Effect.map((refused) => (isRateLimited(refused) ? refused.requests : -1))
+      );
+      // One listing page and two downloads were sent before the refusal.
+      strictEqual(requests, 3);
+    })
+  );
+
+  it.effect("the capture adds a rate-limited attempt's requests to the read that follows the wait", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const temp = yield* fs.makeTempDirectoryScoped({ prefix: "beep-route-task-outcomes-limit-" });
+      const root = yield* fs.realPath(temp);
+      yield* TestClock.setTime(DateTime.makeUnsafe("2026-11-18T12:00:00Z").pipe(DateTime.toEpochMillis));
+      const view = yield* encode({
+        databaseId: RUN,
+        workflowName: "Check",
+        event: "pull_request",
+        status: "completed",
+        conclusion: "failure",
+        createdAt: `${DAY}T08:00:00Z`,
+        headBranch: "feat/seeded",
+        headSha: HEAD,
+        attempt: 1,
+        jobs: [
+          {
+            name: "Test Unit (unit-a)",
+            conclusion: "failure",
+            startedAt: `${DAY}T08:00:00Z`,
+            completedAt: `${DAY}T08:10:00Z`,
+            steps: [{ name: "Run Test Unit shard", conclusion: "failure" }],
+          },
+        ],
+      });
+      const list = yield* encode([
+        {
+          databaseId: RUN,
+          workflowName: "Check",
+          event: "pull_request",
+          status: "completed",
+          conclusion: "failure",
+          createdAt: `${DAY}T08:00:00Z`,
+          updatedAt: `${DAY}T08:20:00Z`,
+          headBranch: "feat/seeded",
+          headSha: HEAD,
+          attempt: 1,
+        },
+      ]);
+      const outcomes = yield* encode({ requests: 2, records: [] });
+      // The reset is reported as already past, so the capture waits only its safety margin.
+      const rateLimit = yield* encode({ resources: { core: { reset: 1_794_000_000 } } });
+      let readCalls = 0;
+      // Lazy, as the real runner is: a retried effect re-runs its body.
+      const runGh: RouteGhRunner = (args) =>
+        Effect.suspend(() => {
+          readCalls += args[1] === "task-outcomes" ? 1 : 0;
+          return args[0] === "api"
+            ? Effect.succeed(rateLimit)
+            : args[1] === "list"
+              ? Effect.succeed(args[5] === DAY && args[3] === "Check" ? list : "[]")
+              : args[1] === "task-outcomes"
+                ? readCalls === 1
+                  ? Effect.fail(
+                      RouteGhRateLimited.make({ command: "gh run task-outcomes", output: "429", requests: 3 })
+                    )
+                  : Effect.succeed(outcomes)
+                : Effect.succeed(view);
+        });
+      const corpus = yield* makeRouteCorpus(runGh);
+      const fiber = yield* Effect.forkChild(
+        corpus.capture(
+          RouteCorpusCaptureOptions.make({
+            repoRoot: root,
+            since: DAY,
+            until: O.some(DAY),
+            workflows: ["Check"],
+            outDir: "corpus",
+          })
+        )
+      );
+      // The capture does real file I/O before it sleeps, so keep advancing the clock until it has finished.
+      yield* TestClock.adjust("1 second").pipe(Effect.repeat({ until: () => fiber.pollUnsafe() !== undefined }));
+      const receipt = yield* Fiber.join(fiber);
+      // Three requests before the refusal, two in the read after the wait.
+      deepStrictEqual([readCalls, receipt.taskOutcomeReads], [2, O.some(5)]);
     })
   );
 });

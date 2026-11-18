@@ -196,6 +196,8 @@ export class RouteGhRateLimited extends S.TaggedError<RouteGhRateLimited, { read
   {
     command: S.String,
     output: S.String,
+    // The task-outcome requests the refused call had already sent, so the capture can count them across the wait.
+    requests: S.Int.pipe(S.withConstructorDefault(Effect.succeed(0))),
   },
   $I.annoteError<RouteGhRateLimited>("RouteGhRateLimited", {
     description: "A gh call refused because the GitHub API rate limit was exhausted.",
@@ -615,7 +617,11 @@ export const makeRouteGithubRunner = Effect.gen(function* () {
           times: 2,
           schedule: Schedule.exponential(Duration.seconds(1)),
           while: P.not(P.isTagged("RouteGhRateLimited")),
-        })
+        }),
+        // A rate-limited call hands the requests it already sent to the caller that waits for the reset.
+        Effect.catchTag("RouteGhRateLimited", (refused) =>
+          Effect.flatMap(Ref.get(spent), (requests) => Effect.fail(RouteGhRateLimited.make({ ...refused, requests })))
+        )
       )
     );
   return runGh;
@@ -979,11 +985,19 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
     // A failed job's per-task records ride the run as artifacts of its attempt; only runs with a failed job
     // are read, since only failed jobs keep steps and tasks.
     const label = `gh run task-outcomes ${runId} ${view.attempt}`;
-    const outcomes = yield* callGh(label, ["run", "task-outcomes", `${runId}`, `${view.attempt}`], repoRoot);
+    // A call refused for the rate limit reports the requests it had sent; they are added to the retried call's.
+    const carried = yield* Ref.make(0);
+    const attemptRead = runGh(["run", "task-outcomes", `${runId}`, `${view.attempt}`], repoRoot).pipe(
+      Effect.tapErrorTag("RouteGhRateLimited", (refused) => Ref.update(carried, (n) => n + refused.requests))
+    );
+    const outcomes = yield* attemptRead.pipe(
+      Effect.catchTag("RouteGhRateLimited", () => waitForReset(label, repoRoot, attemptRead))
+    );
     const read = yield* decodeTaskOutcomeRead(outcomes).pipe(
       Effect.mapError(RouteError.mapError("corpus-fetch", `${label} returned an unreadable payload.`))
     );
-    return O.some({ run: withTaskOutcomes(run, read.records), reads: read.requests });
+    const before = yield* Ref.get(carried);
+    return O.some({ run: withTaskOutcomes(run, read.records), reads: read.requests + before });
   });
 
   // Where this capture starts and what the receipt already covers. A receipt
