@@ -39,6 +39,8 @@ import { findRepoRoot, insertEndOfOptions } from "@beep/repo-utils";
 import { FsUtils, FsUtilsLive, GlobOptions } from "@beep/repo-utils/FsUtils";
 import { enumerate } from "@beep/repo-workspaces/internal/enumerate";
 import { WorkspacePatterns } from "@beep/repo-workspaces/WorkspacePatterns";
+import { Audience, AudienceKind } from "@beep/runtime-env/Audience";
+import { RuntimeEnv } from "@beep/runtime-env/RuntimeEnv";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -147,6 +149,7 @@ import { localQualityConcurrencyPlan, provideQualityConcurrency, qualityConcurre
 import {
   GatePrecisionClass,
   GateRedSchedulingDecision,
+  GITHUB_CHECK_RUN_REPORT_FILE_NAME,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
   GithubCheckLaneIsolation,
@@ -1473,14 +1476,43 @@ const turboCacheArgsFor = (tasks: ReadonlyArray<string>, args: ReadonlyArray<str
     ? localOnlyTurboCacheArgs(localTurboCacheArgs(args))
     : localTurboCacheArgs(args);
 
-const turboRunArgs = (tasks: ReadonlyArray<string>, args: ReadonlyArray<string>): ReadonlyArray<string> => {
+// The task path's audience, decided by `@beep/runtime-env` over the live
+// environment and read once per built step, so its argv and environment agree.
+// Turbo hides undeclared variables from tasks and replays a cache hit with the
+// log of whichever audience ran first; an agent run therefore exports `AGENT=1`,
+// the one variable Bun's quiet mode reads under every agent (it does not read
+// `AI_AGENT` or `CODEX_*`), and asks Turbo to replay errors only.
+const taskAudience = (): AudienceKind => Audience.detect(RuntimeEnv.fromRecord(Bun.env));
+
+const isTurboOutputLogsArg = (arg: string): boolean => arg === "--output-logs" || Str.startsWith("--output-logs=")(arg);
+
+const audienceStepEnv = (audience: AudienceKind): Readonly<Record<string, string>> =>
+  AudienceKind.is.agent(audience) ? { AGENT: "1" } : {};
+
+// A caller-owned `--output-logs` stays caller-owned, as a caller's `--cache` does.
+const audienceTurboArgs = (audience: AudienceKind, optionArgs: ReadonlyArray<string>): ReadonlyArray<string> =>
+  AudienceKind.is.agent(audience) && !A.some(optionArgs, isTurboOutputLogsArg) ? ["--output-logs=errors-only"] : [];
+
+const turboRunArgs = (
+  tasks: ReadonlyArray<string>,
+  args: ReadonlyArray<string>,
+  audience: AudienceKind
+): ReadonlyArray<string> => {
   const [optionArgs, passthroughArgs] = splitAtTurboPassthrough(args);
   // Golden regeneration writes fixtures, so even a second identical invocation
   // must execute instead of replaying a successful cached regeneration.
   const executionArgs = configStringEqualsSync("REGEN_GOLDENS", "1")
     ? ["--force", ...A.filter(optionArgs, (arg) => arg !== "--force" && !Str.startsWith(arg, "--force="))]
     : optionArgs;
-  return ["turbo", "run", ...tasks, ...turboCacheArgsFor(tasks, args), ...executionArgs, ...passthroughArgs];
+  return [
+    "turbo",
+    "run",
+    ...tasks,
+    ...turboCacheArgsFor(tasks, args),
+    ...audienceTurboArgs(audience, optionArgs),
+    ...executionArgs,
+    ...passthroughArgs,
+  ];
 };
 
 const boundedRootTurboArgs = (
@@ -3099,78 +3131,89 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
 
 const githubCheckRunReportJson = JsonStringCodec(GithubCheckRunReport);
 const qualityTaskLaneRunReportJson = JsonStringCodec(QualityTaskLaneRunReport);
-const decodeQualityTaskLaneRunReportOption = S.decodeUnknownOption(S.fromJsonString(QualityTaskLaneRunReport));
 const laneReportTextEncoder = new TextEncoder();
 
+// The durable side channel a parent Yeet step named, if any. When it is set the
+// files under it are the record, and stdout carries no copy of either envelope.
+const laneRunArtifactPath = (): O.Option<string> => O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV]);
+const laneRunParentId = (): O.Option<string> => O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_PARENT_ID_ENV]);
+
+const appendDurableReportLine = Effect.fn("QualityTasks.appendDurableReportLine")(function* (
+  target: string,
+  line: string,
+  failureMessage: string
+) {
+  yield* Effect.scoped(
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* fs.makeDirectory(path.dirname(target), { recursive: true });
+      const file = yield* fs.open(target, { flag: "a" });
+      yield* file.writeAll(laneReportTextEncoder.encode(`${line}\n`));
+      yield* file.sync;
+    }).pipe(QualityTaskConfigurationError.mapError(failureMessage))
+  );
+});
+
 const appendQualityTaskLaneRun = Effect.fn("QualityTasks.appendLaneRun")(function* (lane: QualityTaskLaneRun) {
-  const parentLaneId = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_PARENT_ID_ENV]);
-  const artifactPath = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV]);
-  yield* O.match(artifactPath, {
+  yield* O.match(laneRunArtifactPath(), {
     onNone: () => Effect.void,
     onSome: Effect.fn("QualityTasks.appendLaneRun.onSome")(function* (target) {
       const reportJson = yield* qualityTaskLaneRunReportJson
         .encode(
           QualityTaskLaneRunReport.make({
             schemaVersion: "quality-task-lane-run/v1",
-            parentLaneId,
+            parentLaneId: laneRunParentId(),
             lanes: [lane],
           })
         )
         .pipe(QualityTaskConfigurationError.mapError("Failed to encode the quality-task lane run report."));
-      yield* Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          yield* fs.makeDirectory(path.dirname(target), { recursive: true });
-          const file = yield* fs.open(target, { flag: "a" });
-          yield* file.writeAll(laneReportTextEncoder.encode(`${reportJson}\n`));
-          yield* file.sync;
-        }).pipe(QualityTaskConfigurationError.mapError("Failed to write the durable quality-task lane report."))
-      );
+      yield* appendDurableReportLine(target, reportJson, "Failed to write the durable quality-task lane report.");
     }),
   });
 });
 
-const qualityTaskLaneRunReportFromArtifact = Effect.fn("QualityTasks.reportFromArtifact")(function* (
-  fallback: QualityTaskLaneRunReport
-) {
-  const artifactPath = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV]);
-  const parentLaneId = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_PARENT_ID_ENV]);
-  return yield* O.match(artifactPath, {
-    onNone: () => Effect.succeed(QualityTaskLaneRunReport.make({ ...fallback, parentLaneId })),
-    onSome: Effect.fn("QualityTasks.reportFromArtifact.onSome")(function* (target) {
-      const fs = yield* FileSystem.FileSystem;
-      const text = yield* fs.readFileString(target).pipe(Effect.option);
-      if (O.isNone(text)) {
-        return QualityTaskLaneRunReport.make({ ...fallback, parentLaneId });
-      }
-      const reports = A.getSomes(
-        A.map(pipe(text.value, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-          decodeQualityTaskLaneRunReportOption(line)
-        )
-      );
-      const matchingReports = A.filter(
-        reports,
-        (report) => O.getOrElse(report.parentLaneId, () => Str.empty) === O.getOrElse(parentLaneId, () => Str.empty)
-      );
-      return A.isReadonlyArrayNonEmpty(matchingReports)
-        ? QualityTaskLaneRunReport.make({
-            schemaVersion: "quality-task-lane-run/v1",
-            parentLaneId,
-            lanes: A.flatMap(matchingReports, (report) => report.lanes),
-          })
-        : QualityTaskLaneRunReport.make({ ...fallback, parentLaneId });
-    }),
-  });
-});
-
+// With the side channel set, every lane is already journalled under it as it
+// finishes, so the summary envelope is printed only to a bare terminal run.
 const emitQualityTaskLaneRunReport = Effect.fn("QualityTasks.emitLaneRunReport")(function* (
   report: QualityTaskLaneRunReport
 ) {
+  if (O.isSome(laneRunArtifactPath())) {
+    return;
+  }
   const reportJson = yield* qualityTaskLaneRunReportJson
-    .encode(report)
+    .encode(QualityTaskLaneRunReport.make({ ...report, parentLaneId: laneRunParentId() }))
     .pipe(QualityTaskConfigurationError.mapError("Failed to encode the quality-task lane run report."));
   yield* Console.log(`${QUALITY_TASK_LANE_RUN_REPORT_PREFIX}${reportJson}`);
+});
+
+const githubCheckRunReportPathFor = (path: Path.Path, laneReportPath: string): string =>
+  path.join(path.dirname(laneReportPath), GITHUB_CHECK_RUN_REPORT_FILE_NAME);
+
+// The GitHub-check report goes to its own durable file beside the lane report
+// when the side channel is set, and to stdout otherwise.
+const emitGithubCheckRunReport = Effect.fn("QualityTasks.emitGithubCheckRunReport")(function* (
+  report: GithubCheckRunReport
+) {
+  yield* O.match(laneRunArtifactPath(), {
+    onNone: Effect.fnUntraced(function* () {
+      const reportJson = yield* githubCheckRunReportJson
+        .encode(report)
+        .pipe(QualityTaskConfigurationError.mapError("Failed to encode the GitHub-check wave report."));
+      yield* Console.log(`${GITHUB_CHECK_RUN_REPORT_PREFIX}${reportJson}`);
+    }),
+    onSome: Effect.fnUntraced(function* (laneReportPath) {
+      const path = yield* Path.Path;
+      const reportJson = yield* githubCheckRunReportJson
+        .encode(GithubCheckRunReport.make({ ...report, parentLaneId: laneRunParentId() }))
+        .pipe(QualityTaskConfigurationError.mapError("Failed to encode the GitHub-check wave report."));
+      yield* appendDurableReportLine(
+        githubCheckRunReportPathFor(path, laneReportPath),
+        reportJson,
+        "Failed to write the durable GitHub-check wave report."
+      );
+    }),
+  });
 });
 
 /**
@@ -3199,10 +3242,7 @@ export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGit
   concurrency = 1
 ) {
   const result = yield* collectGithubCheckLaneWaves(label, waves, failurePolicy, undefined, concurrency);
-  const reportJson = yield* githubCheckRunReportJson
-    .encode(result.report)
-    .pipe(QualityTaskConfigurationError.mapError("Failed to encode the GitHub-check wave report."));
-  yield* Console.log(`${GITHUB_CHECK_RUN_REPORT_PREFIX}${reportJson}`);
+  yield* emitGithubCheckRunReport(result.report);
   yield* O.match(result.report.firstRed, {
     onNone: () => Effect.void,
     onSome: (firstRed) =>
@@ -3210,8 +3250,7 @@ export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGit
         `[beep-cli] ${label}: first red ${firstRed}; skipped ${result.report.skippedAfterRed} lane(s) after red`
       ),
   });
-  const qualityTaskLaneRunReportFromArtifact5 = yield* qualityTaskLaneRunReportFromArtifact(result.laneReport);
-  yield* emitQualityTaskLaneRunReport(qualityTaskLaneRunReportFromArtifact5);
+  yield* emitQualityTaskLaneRunReport(result.laneReport);
   yield* failQualityTaskFailures(label, result.failures);
 });
 
@@ -3240,8 +3279,7 @@ export const runQualityTaskStreamingLaneGroup = Effect.fn("QualityTasks.runStrea
   concurrency = 1
 ) {
   const result = yield* collectQualityTaskLaneRuns(label, lanes, concurrency);
-  const qualityTaskLaneRunReportFromArtifact6 = yield* qualityTaskLaneRunReportFromArtifact(result.report);
-  yield* emitQualityTaskLaneRunReport(qualityTaskLaneRunReportFromArtifact6);
+  yield* emitQualityTaskLaneRunReport(result.report);
   yield* failQualityTaskFailures(label, result.failures);
 });
 
@@ -3345,19 +3383,69 @@ const runStepGroup = Effect.fn("QualityTasks.runStepGroup")(function* (
   yield* failQualityTaskGroup(label, failures);
 });
 
-const turboStep = (cwd: string, label: string, tasks: ReadonlyArray<string>, args: ReadonlyArray<string>) => {
-  const env = turboCoverageEnv(tasks, args);
+const turboStep = (
+  cwd: string,
+  label: string,
+  tasks: ReadonlyArray<string>,
+  args: ReadonlyArray<string>,
+  audience: AudienceKind = taskAudience()
+) => {
+  // The secret-session choice keys on the step's own environment, never on the
+  // audience variable, so an agent run wraps exactly the steps a human run does.
+  const ownEnv = turboCoverageEnv(tasks, args);
+  const env = AudienceKind.is.agent(audience) ? { ...ownEnv, ...audienceStepEnv(audience) } : ownEnv;
   return QualityTaskStep.make({
     label,
     command: "bunx",
-    args: turboRunArgs(tasks, args),
+    args: turboRunArgs(tasks, args, audience),
     cwd,
     ...O.getSomesStruct({
       env: O.fromUndefinedOr(env),
-      useLocalEnv: turboStepLocalEnv(env, turboCachePlanNeedsSecretSession(turboCachePlan(args))),
+      useLocalEnv: turboStepLocalEnv(ownEnv, turboCachePlanNeedsSecretSession(turboCachePlan(args))),
     }),
   });
 };
+
+/**
+ * Build the step for one root `turbo run` invocation for an explicit audience.
+ * Exposed for focused unit tests.
+ *
+ * **Details**
+ *
+ * The task path reads the audience once per step from `@beep/runtime-env` and
+ * passes it here. Under `agent`, the step's environment carries `AGENT=1` and
+ * its argv carries `--output-logs=errors-only` unless the caller already passed
+ * an `--output-logs` option; `human` and `ci` leave both untouched.
+ *
+ * **Example** (Build a quiet agent check step)
+ *
+ * ```ts
+ * import { turboStepForTesting } from "@beep/repo-cli/test/Quality"
+ * import * as A from "effect/Array"
+ *
+ * const step = turboStepForTesting("/repo", "check", ["check"], ["--summarize"], "agent")
+ * console.log(step.env?.AGENT) // "1"
+ * console.log(A.contains(step.args, "--output-logs=errors-only")) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const turboStepForTesting: {
+  (
+    cwd: string,
+    label: string,
+    tasks: ReadonlyArray<string>,
+    args: ReadonlyArray<string>,
+    audience: AudienceKind
+  ): QualityTaskStep;
+  (
+    label: string,
+    tasks: ReadonlyArray<string>,
+    args: ReadonlyArray<string>,
+    audience: AudienceKind
+  ): (cwd: string) => QualityTaskStep;
+} = dual(5, turboStep);
 
 const coverageStep = (cwd: string, options: CoverageTaskOptions) => {
   // A narrow ratchet run resolves its owners through the planner, but a direct
@@ -3367,14 +3455,16 @@ const coverageStep = (cwd: string, options: CoverageTaskOptions) => {
     (A.isReadonlyArrayNonEmpty(options.expectedPackageNames)
       ? options.expectedPackageNames
       : explicitTurboFilterValues(options.args));
+  const audience = taskAudience();
   return QualityTaskStep.make({
     label: options.writeBaseline ? "coverage:baseline" : "coverage:ratchet",
     command: "bunx",
-    args: turboRunArgs(["coverage"], [...options.args, ...coverageVitestTopologyArgs(topologyPackageNames)]),
+    args: turboRunArgs(["coverage"], [...options.args, ...coverageVitestTopologyArgs(topologyPackageNames)], audience),
     cwd,
     env: {
       ...coverageEnvironment(),
       ...(options.writeBaseline ? { VITEST_COVERAGE_REPORT_ONLY: "1" } : {}),
+      ...audienceStepEnv(audience),
     },
   });
 };
@@ -3385,8 +3475,9 @@ const coverageFullShardStep = (
   packageNames: ReadonlyArray<string>,
   passthroughArgs: ReadonlyArray<string>,
   writeBaseline: boolean
-) =>
-  QualityTaskStep.make({
+) => {
+  const audience = taskAudience();
+  return QualityTaskStep.make({
     label: `coverage:shard-${index}`,
     command: "bunx",
     args: turboRunArgs(
@@ -3398,14 +3489,17 @@ const coverageFullShardStep = (
         ...passthroughArgs,
         ...A.map(packageNames, (packageName) => `--filter=${packageName}`),
         ...coverageVitestTopologyArgs(packageNames),
-      ]
+      ],
+      audience
     ),
     cwd,
     env: {
       ...coverageEnvironment(),
       ...(writeBaseline ? { VITEST_COVERAGE_REPORT_ONLY: "1" } : {}),
+      ...audienceStepEnv(audience),
     },
   });
+};
 
 const bunRunStep = (cwd: string, label: string, args: ReadonlyArray<string>) =>
   QualityTaskStep.make({
@@ -3450,9 +3544,12 @@ const sqlIntegrationEnv = (connectionUri: string): Record<string, string> => ({
   BEEP_TEST_DATABASE_URL: connectionUri,
 });
 
-const sqlIntegrationChildCommand = (args: ReadonlyArray<string>): SqlIntegrationChildCommand => ({
+const sqlIntegrationChildCommand = (
+  args: ReadonlyArray<string>,
+  audience: AudienceKind
+): SqlIntegrationChildCommand => ({
   command: "bunx",
-  args: turboRunArgs(["test:integration:serial"], ["--concurrency=1", ...withoutTurboConcurrencyArgs(args)]),
+  args: turboRunArgs(["test:integration:serial"], ["--concurrency=1", ...withoutTurboConcurrencyArgs(args)], audience),
 });
 
 const withRyukDisabledDuringAcquire = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
@@ -3481,15 +3578,18 @@ const sqlIntegrationStep = (
   repoRoot: string,
   args: ReadonlyArray<string>,
   resource: SqlIntegrationLaneResource,
-  childCommand: SqlIntegrationChildCommand = sqlIntegrationChildCommand(args)
-) =>
-  QualityTaskStep.make({
+  childCommand?: SqlIntegrationChildCommand
+) => {
+  const audience = taskAudience();
+  const child = childCommand ?? sqlIntegrationChildCommand(args, audience);
+  return QualityTaskStep.make({
     label: "test:integration:serial",
-    command: childCommand.command,
-    args: childCommand.args,
+    command: child.command,
+    args: child.args,
     cwd: repoRoot,
-    env: sqlIntegrationEnv(resource.connectionUri),
+    env: { ...sqlIntegrationEnv(resource.connectionUri), ...audienceStepEnv(audience) },
   });
+};
 
 const loadTestUtilsModule = Effect.tryPromise({
   try: () => import("@beep/test-utils"),

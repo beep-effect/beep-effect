@@ -6,7 +6,9 @@ import {
   decodeYeetAttemptJournalEvent,
   defaultYeetRunOptions,
   ensureAttemptTerminatedForTesting,
+  executeStepWithArtifacts,
   GreptileSummary,
+  MONITOR_READY_SUBMIT_STEP_ID,
   PrCloseoutReport,
   PrCloseoutReportJson,
   RepoPlanStep,
@@ -424,3 +426,52 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
     );
   }
 );
+
+// AC7 (gate-output-switch-on): the detached readiness-monitor submit is parsed, not read, so it runs
+// through the split executor. Its job-record line lands in the step log and the parsed output, never
+// the live console; the attached fallback, which drops `--detach`, keeps streaming.
+it.layer(platformLayer, { timeout: "30 seconds" })("executeStepWithArtifacts readiness-monitor submit", (it) => {
+  const submitRecordLine = '{"jobId":"job-submit-split"}';
+  const submitStep = (cwd: string, args: ReadonlyArray<string>) =>
+    RepoPlanStep.make({
+      id: MONITOR_READY_SUBMIT_STEP_ID,
+      label: "monitor:until-ready:submit",
+      phase: "monitor",
+      command: "bun",
+      args: ["--eval", `console.log('${submitRecordLine}'); console.error("submit advice on stderr")`, ...args],
+      cwd,
+      scope: "repo",
+      mutability: "readonly",
+      resume: "never",
+    });
+
+  it.effect("keeps the detached submit's record in its step log and out of the merged stream", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tmpDir = yield* fs.makeTempDirectoryScoped();
+      const context = contextForRoot(tmpDir);
+      const result = yield* executeStepWithArtifacts(context, submitStep(tmpDir, ["--detach"]));
+
+      expect(result.exitCode).toBe(0);
+      // Split capture: a clean run's output is stdout alone, which only the non-streaming executor yields.
+      expect(result.output).toBe(submitRecordLine);
+      const logPath = O.getOrThrow(O.fromUndefinedOr(result.rawOutputRef));
+      expect(path.basename(path.dirname(logPath))).toBe("logs");
+      const logged = yield* fs.readFileString(logPath);
+      expect(Str.trim(logged)).toBe(submitRecordLine);
+    })
+  );
+
+  it.effect("streams the attached monitor fallback, which runs without --detach", () =>
+    Effect.gen(function* () {
+      const tmpDir = yield* (yield* FileSystem.FileSystem).makeTempDirectoryScoped();
+      const result = yield* executeStepWithArtifacts(contextForRoot(tmpDir), submitStep(tmpDir, []));
+
+      expect(result.exitCode).toBe(0);
+      // The streaming executor merges stderr into the output it tees live.
+      expect(result.output).toContain(submitRecordLine);
+      expect(result.output).toContain("submit advice on stderr");
+    })
+  );
+});

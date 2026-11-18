@@ -1,4 +1,5 @@
 import { agentCiKeys, detectAgent, detectCi } from "@beep/runtime-env/internal/agentCi";
+import { AgentEnvKey } from "@beep/runtime-env/RuntimeEnv";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import { identity } from "effect/Function";
@@ -110,6 +111,33 @@ describe("detectCi", () => {
     it(`unknown CI=${Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(v), identity)} → generic`, () =>
       assert.deepStrictEqual(ci({ CI: v }), O.some("generic")));
   }
+});
+
+// The public presence-key domain is the table's presence keys, in order: no row key is missing from it, and it
+// names nothing the table does not test. PATH and EDITOR are pattern rows, AI_AGENT the explicit override.
+describe("AgentEnvKey", () => {
+  const nonPresenceKeys = ["AI_AGENT", "PATH", "EDITOR", "GITHUB_ACTIONS", "CI", "CONTINUOUS_INTEGRATION"];
+  const presenceFixtureKeys = A.dedupe(
+    A.filter(
+      A.flatMap(AGENTS, ([, env]) => R.keys(env)),
+      (key) => !A.contains(nonPresenceKeys, key)
+    )
+  );
+
+  const literals: ReadonlyArray<string> = AgentEnvKey.literals;
+
+  it("lists the std-env table's presence keys in their declared order", () =>
+    assert.deepStrictEqual(literals, presenceFixtureKeys));
+  it("is exactly the presence keys the detector reads", () =>
+    assert.deepStrictEqual(
+      A.filter(agentCiKeys, (key) => !A.contains(nonPresenceKeys, key)),
+      literals
+    ));
+  it("detects an agent from each key alone", () =>
+    assert.deepStrictEqual(
+      A.filter(literals, (key) => O.isNone(detectAgent({ [key]: "1" }))),
+      []
+    ));
 });
 
 // Added beyond the brief: the key list and the detector cannot drift.

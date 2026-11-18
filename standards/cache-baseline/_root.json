@@ -40,6 +40,22 @@
         "TSRS_FAST"
       ],
       "passThroughEnv": [
+        "AGENT",
+        "AI_AGENT",
+        "AUGMENT_AGENT",
+        "CLAUDECODE",
+        "CLAUDE_CODE",
+        "CODEX_SANDBOX",
+        "COPILOT_AGENT",
+        "COPILOT_CLI",
+        "CURSOR_AGENT",
+        "EDITOR",
+        "GEMINI_CLI",
+        "GOOSE_PROVIDER",
+        "JUNIE_DATA",
+        "JUNIE_SHIM_PATH",
+        "OPENCODE",
+        "REPL_ID",
         "BEEP_AGENT_SESSION_ID",
         "BEEP_NODE_BIN",
         "BEEP_DOCGEN_CONCURRENCY",
@@ -188,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "53bfcea22f38f88f4408c20b66ca7968c71435fb54b1ba04ca8376f7a1a04400"
+      "sha256": "c51700b3f8f5beffd882e1f2d41f6bcb4e51ca78eaf5ba7d7275b4141289b9ea"
     }
   ],
   "nodes": [

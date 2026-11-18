@@ -168,6 +168,30 @@ export type QualityLocalConcurrencyOverride = typeof QualityLocalConcurrencyOver
 export const GITHUB_CHECK_RUN_REPORT_PREFIX = "[beep-github-check-run] ";
 
 /**
+ * File name of the durable GitHub-check run report, written beside the inner-lane report.
+ *
+ * **Details**
+ *
+ * When {@link QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV} names the inner-lane
+ * report, a GitHub-check battery appends one `github-check-run/v1` line,
+ * carrying the wrapper's `parentLaneId`, to this file in the same directory
+ * and prints no `[beep-github-check-run] ` line. For a Yeet run that is
+ * `<run dir>/github-check-runs.ndjson` beside `inner-lanes.ndjson`.
+ *
+ * **Example** (Name the durable GitHub-check report)
+ *
+ * ```ts
+ * import { GITHUB_CHECK_RUN_REPORT_FILE_NAME } from "@beep/repo-cli/commands/Quality"
+ *
+ * console.log(GITHUB_CHECK_RUN_REPORT_FILE_NAME) // "github-check-runs.ndjson"
+ * ```
+ *
+ * @category protocols
+ * @since 0.0.0
+ */
+export const GITHUB_CHECK_RUN_REPORT_FILE_NAME = "github-check-runs.ndjson";
+
+/**
  * Output-line prefix carrying execution facts for the lanes inside a wrapper.
  *
  * **Example** (Recognize a lane report line)
@@ -2311,6 +2335,7 @@ export class GithubCheckLaneRun extends S.Opaque<GithubCheckLaneRun, { readonly 
 export class GithubCheckRunReport extends S.Opaque<GithubCheckRunReport, { readonly brand: unique symbol }>()(
   S.Struct({
     schemaVersion: S.tag("github-check-run/v1"),
+    parentLaneId: OptionalLaneRunString,
     failurePolicy: GithubCheckFailurePolicy,
     lanes: S.Array(GithubCheckLaneRun),
     firstRed: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(EffectRuntime.succeedNone)),

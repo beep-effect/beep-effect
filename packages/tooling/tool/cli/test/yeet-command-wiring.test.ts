@@ -1549,10 +1549,12 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
       // a literal the child serializes itself.
       const record = `{"schemaVersion":"yeet-proof-job/v1","jobId":"${SUBMITTED_ID}","phase":"submitted","submittedAt":"2026-10-05T11:00:00.000Z","request":{"mode":"monitor","argv":["monitor","--until-ready","--json"],"checkout":"/repo","branch":"feat/push-first","base":"origin/main","head":"0123456789abcdef0123456789abcdef01234567","forwardedEnvNames":[]},"submitter":{"pid":4242,"cwd":"/repo"},"unit":{"unitName":"beep-proof-${SUBMITTED_ID}.service","slice":"agent-runs.slice","description":"beep-yeet-job","logPath":"/repo/.beep/yeet/jobs/${SUBMITTED_ID}.log","execStart":["/opt/bun"],"execStopPost":["/opt/bun"]},"returnedWaveRowIds":[]}`;
       const fixture = yield* tailFixture(root, `console.log(JSON.stringify(${record}))`);
+      // `--detach`, as the planned submit carries it, routes the step through the split executor (AC7).
+      const submit = RepoPlanStep.make({ ...fixture.submit, args: A.append(fixture.submit.args, "--detach") });
       const result = yield* finishPublishWithPullRequestForTesting(
-        fixture.plan,
+        RepoRunPlan.make({ context: fixture.plan.context, steps: [submit] }),
         defaultYeetRunOptions({ message: "fix(repo-cli): first push", pr: true }),
-        [fixture.submit],
+        [submit],
         fixture.recorder,
         fixture.extras,
         false,
@@ -1567,6 +1569,9 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
       expect(A.map(entries, (entry) => entry.step.id)).toEqual([MONITOR_READY_SUBMIT_STEP_ID]);
       expect(A.map(entries, (entry) => entry.result.exitCode)).toEqual([0]);
       expect(A.map(entries, (entry) => entry.status)).not.toContain("skipped");
+      // The parent decodes the record from the split output and prints the job id itself.
+      const logs = yield* TestConsole.logLines;
+      expect(A.join(A.map(logs, String), "\n")).toContain(`[yeet] readiness monitor job: ${SUBMITTED_ID}`);
     })
   );
 

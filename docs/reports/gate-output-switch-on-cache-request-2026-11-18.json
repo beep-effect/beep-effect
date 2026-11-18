@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "//": "fbffa0f0b53f2e9605875cd90d93f3967fa0ef94906b4eeb70df0733aacedbc3"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on P1 lane, fix/gate-output-switch-on)",
+    "reason": "Re-record the root subject for turbo.json's global passThroughEnv, which gains every @beep/runtime-env agent presence key plus AI_AGENT, EDITOR and AGENT so a tool under Turbo sees the agent signal. Pass-through values stay out of task hashes (an agent and a human dry run hash @beep/glob#test identically), so reuse is unchanged; no task command, cache flag, input, output or env entry changed and no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/gate-output-switch-on-cache-review-2026-11-18.md",
+      "sha256": "58cdc97cfca9560177b1157f129f8c65720f85bee468db52161ed4a2ac882fb0"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
