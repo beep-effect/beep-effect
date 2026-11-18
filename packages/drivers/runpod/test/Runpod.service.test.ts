@@ -516,18 +516,18 @@ describe("@beep/runpod", () => {
 
   it.layer(makeRunpodUnitLayer(), { timeout: "5 seconds" })((it) =>
     it.effect(
-      "refuses a v1 body field before sending while record fields keep any key",
+      "refuses a body key that bypassed the constructor while record fields keep any key",
       Effect.fnUntraced(function* () {
         const testHttp = yield* RunpodTestHttp;
         const runpod = yield* Runpod;
-        // A JavaScript caller, or one behind a cast, can still send a v1 field
-        // name; the closed v2 body must refuse it rather than strip it.
-        const v1Request: unknown = {
-          body: { dataCenterId: "US-KS-2", image: "runpod/pytorch", name: "demo" },
-        };
+        // `make` drops unknown keys like every Effect Schema constructor, so the
+        // encode check guards the values that skip it: here a v1 field name a
+        // JavaScript caller writes onto the body after construction.
+        const params = CreatePodParams.make({ body: { image: "runpod/pytorch", name: "demo" } });
+        const keyAdded = Reflect.set(params.body, "dataCenterId", "US-KS-2");
 
         yield* testHttp.reset;
-        const failure = yield* runpod.createPod(v1Request as CreatePodParams).pipe(Effect.flip);
+        const failure = yield* runpod.createPod(params).pipe(Effect.flip);
         const refusedCaptures = yield* testHttp.captures;
         yield* runpod.createPod(
           CreatePodParams.make({
@@ -543,6 +543,7 @@ describe("@beep/runpod", () => {
           Effect.flatMap(decodeUnknownJsonEffect)
         );
 
+        expect(keyAdded).toBe(true);
         assertSome(failure.operationId, "createPod");
         expect(failure.reason).toBe("request encoding");
         // Driver causes are labels: the schema issue would print the rejected value.

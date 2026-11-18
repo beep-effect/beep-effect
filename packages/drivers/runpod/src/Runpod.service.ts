@@ -328,10 +328,11 @@ const encodingError =
     RunpodError.fromDescriptor(descriptor, "request encoding", RunpodErrorOptionsInput.make({ cause }));
 
 // Every v2 request body is closed (`unevaluatedProperties: false`, lowered to a
-// closed struct), so an unknown key fails encoding instead of being stripped.
-// An untyped caller that sends a v1 field name then gets a typed encoding
-// error, where Runpod would answer 422, not a request that silently lacks
-// the field. Index-signature fields such as `env` still accept any key.
+// closed struct). `<Operation>Params.make` drops unknown keys like any Effect
+// Schema constructor, so this guards the values that bypass it: a key written
+// onto a constructed body fails encoding, where Runpod would answer 422, rather
+// than going out silently without it. Index-signature fields such as `env`
+// still accept any key.
 const requestEncodeOptions: SchemaAST.ParseOptions = { onExcessProperty: "error" };
 
 const encodeRequest = Effect.fnUntraced(function* <Request>(
