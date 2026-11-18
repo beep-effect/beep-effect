@@ -40,6 +40,28 @@ describe("Parity.shapeOf", () => {
     expect(shapeOf(lenient)).not.toEqual(shapeOf(finite));
   });
 
+  it("lines the codecs up field by field, counting a reused sub-schema at each position", () => {
+    const toFinite = S.String.pipe(S.decodeTo(S.Finite, SchemaTransformation.numberFromString));
+    const toLength = S.String.pipe(
+      S.decodeTo(
+        S.Finite,
+        SchemaTransformation.transform({ decode: Str.length, encode: (n: number) => Str.repeat(n)("x") })
+      )
+    );
+    const repeatFirst = schemaShapeOf(S.Struct({ a: toFinite, b: toLength, c: toFinite }));
+    const repeatSecond = schemaShapeOf(S.Struct({ a: toFinite, b: toLength, c: toLength }));
+    expect(repeatFirst.codecs.length).toBe(3);
+    expect(repeatFirst.codecs).not.toEqual(repeatSecond.codecs);
+  });
+
+  it("counts a reused sub-schema the same as a separately built copy", () => {
+    const toFinite = S.String.pipe(S.decodeTo(S.Finite, SchemaTransformation.numberFromString));
+    const copy = S.String.pipe(S.decodeTo(S.Finite, SchemaTransformation.numberFromString));
+    expect(schemaShapeOf(S.Struct({ a: toFinite, b: toFinite }))).toEqual(
+      schemaShapeOf(S.Struct({ a: toFinite, b: copy }))
+    );
+  });
+
   it("requires the same transformation, not only the same two sides", () => {
     const toNumber = SchemaTransformation.transform({
       decode: (s: string) => s.length,

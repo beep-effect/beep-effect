@@ -133,25 +133,25 @@ const transformationsOf = (node: { readonly [key: PropertyKey]: unknown }): Read
   return A.isArray(encoding) ? A.map(encoding as ReadonlyArray<SchemaAST.Link>, (link) => link.transformation) : [];
 };
 
-interface Walk {
-  readonly codecs: ReadonlyArray<number>;
-  readonly visited: ReadonlyArray<unknown>;
-}
-
-// Depth-first over the AST object graph, each object once (suspended schemas
-// are thunks, which the walk does not call).
-const walk = (state: Walk, value: unknown): Walk => {
-  if (!P.isObjectOrArray(value) || A.some(state.visited, (seen) => seen === value)) return state;
-  const entered: Walk = { ...state, visited: A.append(state.visited, value) };
-  if (A.isArray(value)) return A.reduce(value, entered, walk);
-  const withCodecs: Walk = {
-    ...entered,
-    codecs: A.appendAll(entered.codecs, A.map(transformationsOf(value), codecIdentity)),
-  };
-  return A.reduce(R.values(value), withCodecs, walk);
+// Depth-first over the AST, recording each transformation at every position it
+// occupies, so a reused sub-schema counts once per field and the codecs line
+// up field by field. Only the current path is tracked, which is enough to stop
+// a cycle; suspended schemas are thunks, which the walk does not call, and
+// annotations are data about a node, never part of its codec.
+const walk = (path: ReadonlyArray<unknown>, value: unknown): ReadonlyArray<number> => {
+  if (!P.isObjectOrArray(value) || A.some(path, (ancestor) => ancestor === value)) return [];
+  const inside = A.append(path, value);
+  if (A.isArray(value)) return A.flatMap(value, (item) => walk(inside, item));
+  const own = A.map(transformationsOf(value), codecIdentity);
+  const children = pipe(
+    R.toEntries(value),
+    A.filter(([key]) => key !== "annotations"),
+    A.flatMap(([, child]) => walk(inside, child))
+  );
+  return A.appendAll(own, children);
 };
 
-const codecsOf = (schema: S.Top): ReadonlyArray<number> => walk({ visited: [], codecs: [] }, schema.ast).codecs;
+const codecsOf = (schema: S.Top): ReadonlyArray<number> => walk([], schema.ast);
 
 /**
  * The parity shape of one schema: its encoded and decoded representations and
