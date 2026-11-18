@@ -8,46 +8,15 @@
 
 import { $RepoCliId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
-import * as HashSet from "effect/HashSet";
+import { pipe } from "effect/Function";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { ArchitectureContextRole } from "../Architecture.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Architecture/internal/ModelFirstTemplates");
 
 const fence = "```";
-
-/**
- * Module names the generated files cannot take: every fixed binding a template
- * imports or declares beside the Module's own names (`Domain`, `Effect`, `S`,
- * `Story`, ...). A Module named after one would shadow its import.
- *
- * **Example** (A reserved Module name)
- *
- * ```ts
- * import { reservedModuleNames } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
- * import * as HashSet from "effect/HashSet"
- *
- * console.log(HashSet.has(reservedModuleNames, "Domain")) // true
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const reservedModuleNames: HashSet.HashSet<string> = HashSet.make(
-  "A",
-  "Catalog",
-  "Domain",
-  "Effect",
-  "FileSystem",
-  "Host",
-  "Layer",
-  "NodeServices",
-  "O",
-  "Path",
-  "S",
-  "Story",
-  "Str"
-);
 
 /**
  * The names a model-first context is generated from: the context slug and
@@ -138,45 +107,82 @@ export const modelFirstContextNamesFor = ({ context, module }: ModelFirstContext
   });
 };
 
-const contextBindingSuffixes = [
-  "Adapters",
-  "Api",
-  "Catalog",
-  "Contract",
-  "Handlers",
-  "Hosted",
-  "Model",
-  "Ports",
-] as const;
+// A binding is a value, a type, or both (an import or a class).
+type Space = "value" | "type" | "both";
+
+const bindingsIn = (names: string, space: Space): ReadonlyArray<readonly [string, Space]> =>
+  pipe(
+    Str.split(names, ","),
+    A.map(Str.trim),
+    A.filter(Str.isNonEmpty),
+    A.map((entry): readonly [string, Space] => {
+      const typeOnly = Str.startsWith("type ")(entry);
+      const local = pipe(
+        Str.split(Str.replace(/^type\s+/u, "")(entry), /\s+as\s+/u),
+        A.last,
+        O.getOrElse(() => entry)
+      );
+      return [Str.trim(local), typeOnly ? "type" : space];
+    })
+  );
+
+const matchesOf = (content: string, pattern: RegExp): ReadonlyArray<RegExpMatchArray> =>
+  A.fromIterable(pipe(content, Str.matchAll(pattern)));
+
+const declarationSpace = (keyword: string): Space =>
+  keyword === "class" ? "both" : keyword === "type" || keyword === "interface" ? "type" : "value";
+
+const topLevelBindings = (content: string): ReadonlyArray<readonly [string, Space]> => [
+  ...A.map(
+    matchesOf(content, /^import\s+(type\s+)?\*\s+as\s+(\$?\w+)\s+from/gmu),
+    (match): readonly [string, Space] => [match[2] ?? "", match[1] === undefined ? "both" : "type"]
+  ),
+  ...A.flatMap(matchesOf(content, /^import\s+(type\s+)?\{([^}]*)\}\s+from/gmu), (match) =>
+    bindingsIn(match[2] ?? "", match[1] === undefined ? "both" : "type")
+  ),
+  ...A.flatMap(matchesOf(content, /^(?:export\s+)?const\s+\{([^}]*)\}\s*=/gmu), (match) =>
+    bindingsIn(match[1] ?? "", "value")
+  ),
+  ...A.map(
+    matchesOf(content, /^(?:export\s+)?(const|let|function|class|type|interface)\s+(\$?\w+)/gmu),
+    (match): readonly [string, Space] => [match[2] ?? "", declarationSpace(match[1] ?? "")]
+  ),
+];
+
+const overlaps = (left: Space, right: Space): boolean => left === "both" || right === "both" || left === right;
 
 /**
- * Whether a Module name would collide with a binding the generated files
- * declare or import: a fixed import (`Domain`, `Effect`, ...) or a name the
- * context derives (`NotesModel`, `NotesApi`, ...).
+ * The top-level names a generated file binds twice in one namespace: an
+ * import and a declaration, two imports, or two declarations. A value and a
+ * type of the same name (`const NoteId` beside `type NoteId`) do not clash.
  *
- * **Example** (A Module named after an import collides)
+ * **Example** (A Module named after an import)
  *
  * ```ts
- * import {
- *   ModelFirstContextRequest,
- *   moduleNameCollides,
- * } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
+ * import { duplicateBindingsOf } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates"
  *
- * console.log(moduleNameCollides(ModelFirstContextRequest.make({ context: "notes", module: "Domain" }))) // true
- * console.log(moduleNameCollides(ModelFirstContextRequest.make({ context: "notes", module: "NotesModel" }))) // true
- * console.log(moduleNameCollides(ModelFirstContextRequest.make({ context: "notes", module: "Note" }))) // false
+ * const source = 'import * as Domain from "@alchemy.run/domain";\nexport class Domain {}\n'
+ * console.log(duplicateBindingsOf(source)) // ["Domain"]
  * ```
  *
- * @param request - The context slug and Module name.
- * @returns `true` when the Module name is taken by a generated binding.
- * @category predicates
+ * @param content - A generated TypeScript file.
+ * @returns The clashing names, sorted and once each.
+ * @category getters
  * @since 0.0.0
  */
-export const moduleNameCollides = (request: ModelFirstContextRequest): boolean => {
-  const { contextPascal, module } = modelFirstContextNamesFor(request);
-  return (
-    HashSet.has(reservedModuleNames, module) ||
-    A.some(contextBindingSuffixes, (suffix) => `${contextPascal}${suffix}` === module)
+export const duplicateBindingsOf = (content: string): ReadonlyArray<string> => {
+  const bindings = topLevelBindings(content);
+  return pipe(
+    bindings,
+    A.filter(([name, space], index) =>
+      A.some(
+        bindings,
+        ([other, otherSpace], otherIndex) => otherIndex !== index && other === name && overlaps(space, otherSpace)
+      )
+    ),
+    A.map(([name]) => name),
+    A.dedupe,
+    A.sort(Order.String)
   );
 };
 

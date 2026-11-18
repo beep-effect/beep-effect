@@ -14,6 +14,7 @@ import {
   WriteFileOperation,
   WritePackageJsonOperation,
 } from "@beep/repo-cli/commands/Architecture";
+import { duplicateBindingsOf } from "@beep/repo-cli/commands/Architecture/internal/ModelFirstTemplates";
 import { registerScaffoldedWorkspaceEntries } from "@beep/repo-cli/commands/CreatePackage";
 import { TsconfigSyncPlan } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan";
 import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
@@ -544,16 +545,88 @@ describe("beep architecture: model-first context", () => {
       })
     );
 
-    for (const module of ["Domain", "Effect", "Story", "NotesModel", "NotesApi"]) {
+    const clashCases: ReadonlyArray<readonly [context: string, module: string, clash: string]> = [
+      ["notes", "Domain", "model/src/Domain/Domain.aggregate.ts: Domain"],
+      ["notes", "Effect", "model/src/Effect/Effect.aggregate.ts: Effect"],
+      ["notes", "Story", "model/test/Notes.story.test.ts: Story"],
+      ["notes", "NotesModel", "model/src/Notes.model.ts: NotesModel"],
+      ["create", "Model", "model/test/Create.story.test.ts: CreateModel"],
+    ];
+    for (const [context, module, clash] of clashCases) {
       it.effect(
-        `rejects the Module name ${module}, which a generated file already binds`,
+        `rejects ${context}/${module}, which binds a name twice in a generated file`,
         Effect.fnUntraced(function* () {
           const refusal = yield* Effect.flip(
-            makeModelFirstContextOperationPlan({ repoRoot: "/repo", context: "notes", module })
+            makeModelFirstContextOperationPlan({ repoRoot: "/repo", context, module })
           );
-          expect(refusal.message).toContain("already bind that name");
+          expect(refusal.message).toContain("would bind a name twice");
+          expect(refusal.message).toContain(clash);
         })
       );
     }
+
+    it.effect(
+      "notes/Note binds every name once in every generated file",
+      Effect.fnUntraced(function* () {
+        const plan = yield* notesPlan;
+        const clashes = pipe(
+          plan.operations,
+          A.filter(isWriteFileOperation),
+          A.filter((operation) => Str.endsWith(".ts")(operation.path)),
+          A.flatMap((operation) => duplicateBindingsOf(operation.content))
+        );
+        expect(clashes).toEqual([]);
+      })
+    );
+
+    it.effect(
+      "refuses a context whose identity accessors another package already owns, and replays its own",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* repoRoot;
+        const tmpRoot = path.join(root, "packages/tooling/tool/cli/tmp");
+        yield* fs.makeDirectory(tmpRoot, { recursive: true });
+        const checkout = yield* fs.makeTempDirectoryScoped({ directory: tmpRoot, prefix: "model-first-accessors-" });
+        const identity = "packages/foundation/modeling/identity";
+        const kit = "packages/foundation/modeling/contract-kit";
+        const rootManifest = yield* jsonStringifyPretty({
+          name: "accessor-proof",
+          private: true,
+          workspaces: [identity, kit],
+        });
+        yield* fs.writeFileString(path.join(checkout, "package.json"), rootManifest);
+        yield* fs.makeDirectory(path.join(checkout, identity, "src"), { recursive: true });
+        yield* fs.makeDirectory(path.join(checkout, kit), { recursive: true });
+        for (const file of [`${identity}/package.json`, `${identity}/src/packages.ts`, `${kit}/package.json`]) {
+          yield* fs.copyFile(path.join(root, file), path.join(checkout, file));
+        }
+
+        // Create notes2 the way create context does: apply, then register.
+        const notes2 = yield* makeModelFirstContextOperationPlan({
+          repoRoot: checkout,
+          context: "notes2",
+          module: "Note",
+        });
+        yield* applyCanonicalSliceOperationPlan(checkout, notes2);
+        yield* registerScaffoldedWorkspaceEntries(
+          checkout,
+          A.map(notes2.roles, (role) => role.path)
+        );
+
+        const refusal = yield* Effect.flip(
+          makeModelFirstContextOperationPlan({ repoRoot: checkout, context: "notes-2", module: "Note" })
+        );
+        expect(refusal.message).toContain("$Notes2ContractId (registered to @beep/notes2-contract)");
+        expect(refusal.message).toContain("$Notes2ModelId (registered to @beep/notes2-model)");
+        expect(refusal.message).toContain("$Notes2HostId (registered to @beep/notes2-host)");
+        const replay = yield* makeModelFirstContextOperationPlan({
+          repoRoot: checkout,
+          context: "notes2",
+          module: "Note",
+        });
+        expect(replay.operations).toEqual(notes2.operations);
+      })
+    );
   });
 });

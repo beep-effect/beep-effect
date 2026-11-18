@@ -17,6 +17,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import { toIdentityAccessorName } from "../CreatePackage/internal/IdentityExportBlock.ts";
 import {
   ArchitectureContextRole,
   ArchitecturePlanTarget,
@@ -36,9 +37,10 @@ import {
   modelFirstWorkspaceDependenciesFor,
 } from "./internal/ModelFirstContext.ts";
 import {
+  duplicateBindingsOf,
   ModelFirstContextRequest,
   modelFirstContextNamesFor,
-  moduleNameCollides,
+  modelFirstSourceFilesFor,
 } from "./internal/ModelFirstTemplates.ts";
 import {
   packageShellFileOperationsFor,
@@ -379,6 +381,48 @@ export const makeArchitecturePackageOperationPlan = Effect.fn(function* (input: 
 
 const isContextRole = S.is(ArchitectureContextRole);
 
+// The identity registrar names a package's composer `$<PascalCase slug>Id` and keeps
+// the first export of a name, so `notes2-contract` and `notes-2-contract` would
+// share `$Notes2ContractId`. An accessor the registry already gives another
+// package is refused; one it gives this package replays.
+const ensureIdentityAccessorsFree = Effect.fnUntraced(function* (
+  repoRoot: string,
+  members: ReadonlyArray<{ readonly name: string; readonly relativePath: string }>,
+  target: ArchitecturePlanTarget
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const identity = A.findFirst(members, (member) => member.name === "@beep/identity");
+  if (O.isNone(identity)) return;
+  const registryPath = path.join(repoRoot, identity.value.relativePath, "src/packages.ts");
+  const registry = yield* fs
+    .readFileString(registryPath)
+    .pipe(Effect.mapError(DomainError.newCause(`Failed to read the identity registry "${registryPath}"`)));
+  const owners = HashMap.fromIterable(
+    A.map(
+      A.fromIterable(
+        pipe(registry, Str.matchAll(/export const (\$\w+): Identity\.IdentityComposer<"@beep\/([^"]+)">/gu))
+      ),
+      (match) => [match[1] ?? "", match[2] ?? ""] as const
+    )
+  );
+  const clashes = A.flatMap(generatedContextRoles, (role) => {
+    const slug = Str.replace("@beep/", "")(packageNameForRole(target, role));
+    const accessor = toIdentityAccessorName(slug);
+    return pipe(
+      HashMap.get(owners, accessor),
+      O.filter((owner) => owner !== slug),
+      O.map((owner) => `${accessor} (registered to @beep/${owner})`),
+      O.toArray
+    );
+  });
+  if (A.isReadonlyArrayNonEmpty(clashes)) {
+    return yield* DomainError.newMessage(
+      `Context "${target.boundedContext}" would reuse identity accessors another package owns: ${A.join(clashes, ", ")}. Choose another context name.`
+    );
+  }
+});
+
 // The tsconfig sync gives each package one reference per direct workspace
 // dependency (dev dependencies included), sorted by target path and relative
 // to the package; computing the same here keeps apply-then-check idempotent.
@@ -406,6 +450,7 @@ const modelFirstReferencesFor = Effect.fnUntraced(function* (repoRoot: string, n
       `Context "${names.context}" would generate workspace names already in use: ${A.join(owners, ", ")}. Choose another context name.`
     );
   }
+  yield* ensureIdentityAccessorsFree(repoRoot, members, target);
   const directories = HashMap.fromIterable([
     ...A.map(members, (member) => [member.name, member.relativePath] as const),
     ...A.map(generatedContextRoles, (role) => [packageNameForRole(target, role), pathForRole(target, role)] as const),
@@ -504,14 +549,18 @@ export const makeModelFirstContextOperationPlan = Effect.fn(function* (input: {
       `Invalid Module "${input.module}": a Module is a PascalCase name such as "Note".`
     );
   }
-  if (moduleNameCollides(ModelFirstContextRequest.make({ context: input.context, module: input.module }))) {
-    return yield* DomainError.newMessage(
-      `Invalid Module "${input.module}": the generated files already bind that name (an import or a context-derived name); choose another Module name.`
-    );
-  }
   const names = modelFirstContextNamesFor(
     ModelFirstContextRequest.make({ context: input.context, module: input.module })
   );
+  // Every file the plan writes must bind each top-level name once.
+  const clashes = A.flatMap(modelFirstSourceFilesFor(names), (file) =>
+    A.map(duplicateBindingsOf(file.content), (name) => `${file.role}/${file.path}: ${name}`)
+  );
+  if (A.isReadonlyArrayNonEmpty(clashes)) {
+    return yield* DomainError.newMessage(
+      `Context "${input.context}" with Module "${input.module}" would bind a name twice in a generated file (${A.join(clashes, ", ")}). Choose another context or Module name.`
+    );
+  }
   const references = yield* modelFirstReferencesFor(input.repoRoot, names);
   return CanonicalSliceOperationPlan.make({
     schemaVersion: "architecture-operation-plan/v1",
