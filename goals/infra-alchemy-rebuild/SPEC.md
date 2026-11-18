@@ -1565,7 +1565,7 @@ Released by the operator's 2026-11-18 ruling on the window-5 holds. The workflow
 
 Lane goals/infra-alchemy-rebuild-p3-turbo-cache-stage-2
 
-Reverse: Revert the stage-2 PR: the six callers and cache-warm go back to vars.TURBO_API/TURBO_TEAM, secrets.TURBO_TOKEN/TURBO_READ_TOKEN and the R2 inputs, all still live; then gh variable delete TURBO_CACHE_API TURBO_CACHE_TEAM and gh secret delete TURBO_CACHE_READ_TOKEN (repo) and TURBO_CACHE_WRITE_TOKEN (--env turbo-cache-write).
+Reverse: Revert the stage-2 PR: the callers and cache-warm go back to vars.TURBO_API/TURBO_TEAM, secrets.TURBO_TOKEN/TURBO_READ_TOKEN and the R2 inputs, all still live. Then, one name per command: gh variable delete TURBO_CACHE_API -R beep-effect/beep-effect; gh variable delete TURBO_CACHE_TEAM -R beep-effect/beep-effect; gh secret delete TURBO_CACHE_READ_TOKEN -R beep-effect/beep-effect; gh secret delete TURBO_CACHE_WRITE_TOKEN --env turbo-cache-write -R beep-effect/beep-effect.
 
 <!-- beep:decisions:end -->
 

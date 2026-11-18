@@ -63,6 +63,32 @@ describe("CI governance policy", () => {
       expect(workflowPolicyDiagnostics5).toContain("writer: write token requires the trusted Turbo writer environment");
     })
   );
+  // Turbo-cache stage 2 renamed the writer secret; every writer-isolation rule must
+  // fire for the Worker cache's TURBO_CACHE_WRITE_TOKEN exactly as for TURBO_TOKEN,
+  // which P6 retires.
+  it.effect("applies every writer-isolation rule to both Turbo write-token secrets", () =>
+    Effect.gen(function* () {
+      for (const secret of ["TURBO_TOKEN", "TURBO_CACHE_WRITE_TOKEN"]) {
+        const guarded = `\${{ github.event_name == 'push' && secrets.${secret} || '' }}`;
+        const unguarded = yield* workflowPolicyDiagnostics(
+          "fixture.yml",
+          writer("turbo-cache-write", `\${{ secrets.${secret} }}`)
+        );
+        expect(unguarded, secret).toContain("writer: writer input must stay guarded in the caller workflow");
+        const outsideEnvironment = yield* workflowPolicyDiagnostics("fixture.yml", writer("", guarded));
+        expect(outsideEnvironment, secret).toContain(
+          "writer: write token requires the trusted Turbo writer environment"
+        );
+        const jobLevel = yield* workflowPolicyDiagnostics(
+          "fixture.yml",
+          `on: push\njobs:\n  writer:\n    environment: turbo-cache-write\n    env:\n      TURBO_TOKEN: "${guarded}"\n    steps:\n      - run: bun run check\n`
+        );
+        expect(jobLevel, secret).toContain("writer: job-level writer credential bypasses setup policy");
+        const clean = yield* workflowPolicyDiagnostics("fixture.yml", writer("turbo-cache-write", guarded));
+        expect(clean, secret).toEqual([]);
+      }
+    })
+  );
   it.effect("rejects unbounded artifacts and cancelled main pushes", () =>
     Effect.gen(function* () {
       const text =
