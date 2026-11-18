@@ -106,7 +106,7 @@ decision file per object).
 | `BeepEffectWeb` | `apps/beep-effect-web/alchemy.run.ts` | `deploy-beep-effect-web.yml` | `beep-effect-web-prod` | `https://beep-effect.com` (custom domain, `www` redirect) |
 | `Storybook` | `apps/storybook/alchemy.run.ts` | `deploy-storybook.yml` | `storybook-prod` | `https://beep-effect.com/storybook/` (zone route `beep-effect.com/storybook*` in front of the apex Worker) |
 | `CostControls` | `packages/tooling/infra/cost-controls/alchemy.run.ts` | `deploy-cost-controls.yml` | `cost-controls-prod` | AWS account budget, services anomaly monitor and subscription, cost allocation tags, Compute Optimizer and Cost Optimization Hub enrollment |
-| `InfraGithub` | `packages/tooling/infra/github/alchemy.run.ts` | `deploy-infra-github.yml` (disarmed) | `infra-github-prod` | settings, `main` ruleset, deploy environments, variables, labels of `beep-effect/beep-effect` |
+| `InfraGithub` | `packages/tooling/infra/github/alchemy.run.ts` | `deploy-infra-github.yml` (armed by repo variable `INFRA_GITHUB_DEPLOY_ARMED=true`, 2026-11-18) | `infra-github-prod` | settings, `main` ruleset, deploy environments, variables, labels of `beep-effect/beep-effect` |
 | `HostsAiMetrics` | `packages/tooling/infra/infra-hosts/alchemy.run.ts` | none (operator workstation only, D21) | none | Arize Phoenix on dankserver behind Tailscale Serve |
 | `HostsOpenClaw` | `packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts` | none (operator workstation only, D21) | none | the OpenClaw generation on the operator workstation |
 | `OipWeb` | `apps/oip-web/alchemy.run.ts` | `deploy-oip-web-infra.yml` (armed by repo variable `OIP_WEB_INFRA_DEPLOY=enabled`) | `oip-web-infra-prod` | oip.law Vercel project settings, variables and domains, their Cloudflare DNS records, the assets buckets (stages `staging` then `prod`) |
@@ -188,7 +188,13 @@ The `prod` plan runs only in the workflow, never from a workstation.
 
 Cutover from Pulumi (decision "Cost controls cutover from Pulumi"), `live`
 first and the Pulumi destroy second (packet gate ruling, 2026-11-14), so the
-account, already over its budget, is never without alerts:
+account, already over its budget, is never without alerts. Steps 1 to 3 ran
+on 2026-11-14 (decision "Cost controls Pulumi cutover executed"): `live`
+deploy run 43560670140, the old budget and subscription destroyed, eleven
+state entries removed, `beep-ci-runners/production` down from 367 to 354
+resources with nothing else changed. From 2026-11-14T05:22:55Z until the
+component-removal PR merges, no `pulumi preview` or `pulumi up` runs on that
+stack: the program still declares the component and would plan it again.
 
 1. Merge the `live` PR. Its deploy adds the budget notifications and creates
    `AnomalyAlerts`; the gate accepts a budget update and an `AnomalyAlerts`
@@ -209,7 +215,12 @@ account, already over its budget, is never without alerts:
    runs the program and none needs `pulumi up`.
 4. The PR deleting the component from the program merges after `live` has
    been green for 24 hours, and before the next `pulumi preview` of that
-   stack.
+   stack. It keeps `accountCostControls:notificationEmailAddresses` and
+   `decodeNotificationRecipients` (now `infra/src/NotificationRecipients.ts`),
+   which the AWS turbo cache's throttle alarm reads. After it merges, the
+   first `pulumi preview --expect-no-changes` must be clean. The cutover's
+   export archives stay until the packet closes: the rollback imports the
+   BEFORE export and compares against the AFTER export.
 
 Rollback (decision "Cost controls cutover from Pulumi"):
 
@@ -218,13 +229,39 @@ Rollback (decision "Cost controls cutover from Pulumi"):
   (by logical id, `delete` only); the nine adopted settings still may not
   change. The Pulumi pair is still live, so nothing else is needed.
 - After step 3, before the component-removal PR merges, restore the Pulumi
-  budget and subscription: `pulumi stack import` of the newest archive
-  (state only), then `pulumi refresh --target` the old budget and
-  subscription URNs, `pulumi preview --target` them and confirm exactly two
-  creates, `pulumi up --target` them, and check both exist in AWS. Then take
-  `prod` back to `silent` (first case) so only one set mails.
+  budget and subscription. Name the stack in full on every command
+  (`--stack organization/beep-ci-runners/production`). First take `prod` back
+  to `silent` (first case), so only one set mails and the Alchemy stage is
+  disarmed before Pulumi state changes. Then check whether the stack moved
+  after the AFTER export: `pulumi stack export` it to a new archive (record
+  its size and sha256) and compare that with
+  `~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-2026-11-14T0524Z-after.json`
+  on the deployment version and checkpoint (`.version`,
+  `.deployment.manifest`) and the resource URN set. Bytes are not comparable:
+  the CLI re-encrypts secrets on every state rewrite.
+  - Unchanged since AFTER: `pulumi stack import` the BEFORE export
+    `~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-2026-11-14T0520Z-before.json`
+    (367 resources, sha256
+    `2c5933f882423d165f2a7469d85131305369bedf3d4ec8ef44dccc567291d00c`).
+  - Moved since AFTER: never import BEFORE wholesale, because it would roll
+    back every later fleet and cache change. `pulumi import` cannot restore
+    the pair either, because both were destroyed in AWS. Splice the 13
+    `AccountCostControls` URNs from BEFORE into the current export instead
+    (the `jq` filter is in the decision): every current resource stays as it
+    is, and the 13 are appended in BEFORE's order, so parents precede
+    children. Check for the current count plus 13. Then run the reference
+    check (its `jq` filter is beside the splice filter in the decision):
+    every resource's `parent`, `dependencies`, `propertyDependencies` and the
+    URN part of `provider` must name a resource earlier in the spliced list.
+    It prints only the violation count; on any violation, stop and do not
+    import. Import the spliced file only at 0.
+  - Either way: `pulumi refresh --target` the old budget and subscription
+    URNs, which drops the destroyed pair from state; then `pulumi preview`
+    and `pulumi up --target` them with `--target-dependents` (the preview
+    must show exactly two creates), and check both exist in AWS.
 - After the component-removal PR merged, `pulumi up` no longer sees the old
-  declarations: revert that PR first, then import, refresh, preview and up.
+  declarations: revert that PR first, then run the rollback above from its
+  stack-moved check.
 
 ## InfraGithub
 
@@ -359,6 +396,22 @@ live settings; run them only when the gate asks.
    bun run beep github app mint beep-infra-github --dry-run   # review the manifest
    bun run beep github app mint beep-infra-github
    ```
+
+   The launcher writes the credentials with `op-human` (your desktop-approved 1Password
+   CLI) when it is on `PATH`, else with `op`; `--op-cli <command>` names another one.
+   On agent workstations `op` is the service-account shim, which cannot create items.
+   Before the server listens, the launcher runs a startup access check: it creates and
+   deletes a throwaway secure note in `BEEP_SECRETS` with that CLI, and refuses to start
+   if either step fails. Approve the 1Password prompts it raises. The check makes a lost
+   key unlikely, not impossible: 1Password access can expire, or you can reject the later
+   approval, between the check and the callback's write. The 2026-11-15 mint lost its key
+   to a service-account `op` that could not create items.
+
+   If the callback reports that the App was registered but storing it failed, do not
+   reload the page (the code is single-use). Revoke the new App's generated private key,
+   delete the uninstalled registration, then run the launcher again. Deleting an
+   organization App needs GitHub sudo mode (a passkey prompt) at
+   `https://github.com/organizations/beep-effect/settings/apps/<slug>/advanced`.
 
    Confirm the registration page lists exactly: Administration, Environments, Variables
    and Issues read and write, Metadata read-only, no webhook. The launcher stores

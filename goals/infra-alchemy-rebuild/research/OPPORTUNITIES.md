@@ -554,3 +554,48 @@ to the gap between the reference checkout (main) and the pinned release.
   `adopted` predictions came from reading the code, not from a plan probe against seeded state.
 - **Would have prevented it:** a create allow-list in the plan guard (now in `plan-guard.ts`), and adoption
   predictions taken from a plan against seeded state.
+
+## 2026-11-18: new packages land with no coverage baseline row
+
+- **Doing:** packet gate, reading Heavy / Coverage Regression on PR #3367 (job 134497133455) and PR #3369
+  (job 134501277702).
+- **Evidence:** seven packages this packet added had no row in `standards/coverage.regression-baseline.jsonc`.
+  The ratchet only warns ("package(s) without baseline entry (warning only)"), and only on a full-matrix run,
+  because an affected run never measures a package that did not change. The packages merged without anyone
+  seeing it. Seeding the rows from hosted artifacts took a checkout of the tested SHA, a real install and the
+  producer's exact Node pin, because a local whole-package `--coverage` run is ruled out on this workstation.
+- **Would have prevented it:** `bun run beep create-package` writes a seed row, or the package-scoped ratchet
+  fails a PR that adds a coverage-owning package without a row. A writer mode that adopts rows from downloaded
+  hosted artifacts (`--coverage-input` with `--write-baseline`) would make the repair one command.
+
+## 2026-11-15: `beep github app mint` registered an App and lost its private key
+
+- **Doing:** arming InfraGithub, minting `beep-infra-github` with `bun run beep github app mint beep-infra-github`.
+- **Evidence:** GitHub registered App 5766296, then the vault write `cat | op item create --vault BEEP_SECRETS -`
+  exited 1. On agent workstations the `op` on `PATH` is the 1Password service-account shim (`~/.local/bin/op`),
+  and that account cannot create items. The key existed only in the one-use conversion response, so it was lost.
+  The operator deleted the orphan App under GitHub sudo mode. The 2026-11-18 retry worked only behind a `PATH` shim
+  that mapped `op` to `op-human`.
+- **Would have prevented it:** a writer chosen for a human-attended flow and checked before GitHub is involved. The
+  launcher now writes with `op-human` when it is on `PATH`, else `op`, or `--op-cli <command>`. Before the server
+  listens, it creates and deletes a throwaway item in `BEEP_SECRETS` and refuses to start if either step fails
+  (PR for branch `goals/infra-alchemy-rebuild-mint-vault-writer`).
+## 2026-11-14: a base-sync merge that re-records a baseline has no Yeet push path
+
+- **Doing:** P3 GitHub stack (#3324), merging `main` after #3348 split the cache baseline into per-subject
+  files, which turned the lane's edit of the old single file into a modify/delete conflict.
+- **Evidence:** `yeet publish --push-only` refused the merge as unreproducible, and `--push-only --reuse-verified`
+  refused it with "no full-proof state for this head". The lane got its one push by running `yeet open` on the
+  already-open PR (d772dd7ca88).
+- **Would have prevented it:** `--push-only` accepting a merge whose only non-reproducible paths are cache-baseline
+  subject files re-recorded through a reviewed request, or `--reuse-verified` accepting a passing final-check
+  receipt.
+
+## 2026-11-14: a test git fixture inherited the repository-locating environment
+
+- **Doing:** reviewing the repo-cli delete-package fixture (#3350).
+- **Evidence:** `gitFixture` spawned git with the inherited environment, so an inherited `GIT_DIR` or
+  `GIT_OBJECT_DIRECTORY` (set by hooks and linked worktrees) would point the fixture's `git init` and `git add` at
+  the real checkout. Getting the full key list took two review rounds (CodeRabbit, then beep-reviewer).
+- **Would have prevented it:** one exported constant that scrubs the repository-locating variables, shared by every
+  test-support and probe git spawn, with a test that plants them.

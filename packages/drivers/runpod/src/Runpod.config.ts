@@ -25,7 +25,7 @@ const normalizeConfigUrl = Str.replace(/\/+$/, "");
  * import { RunpodConfigUrl } from "@beep/runpod"
  * import * as S from "effect/Schema"
  *
- * const url = S.decodeUnknownSync(RunpodConfigUrl)("https://rest.runpod.io/v1/")
+ * const url = S.decodeUnknownSync(RunpodConfigUrl)("https://api.runpod.io/v2/")
  * console.log(url)
  * ```
  *
@@ -51,7 +51,7 @@ export const RunpodConfigUrl = S.String.pipe(
  * import { RunpodConfigUrl } from "@beep/runpod"
  * import * as S from "effect/Schema"
  *
- * const url: RunpodConfigUrl = S.decodeUnknownSync(RunpodConfigUrl)("https://rest.runpod.io/v1/")
+ * const url: RunpodConfigUrl = S.decodeUnknownSync(RunpodConfigUrl)("https://api.runpod.io/v2/")
  * console.log(url)
  * ```
  *
@@ -61,7 +61,7 @@ export const RunpodConfigUrl = S.String.pipe(
 export type RunpodConfigUrl = typeof RunpodConfigUrl.Type;
 
 /**
- * Default Runpod REST API v1 base URL.
+ * Default Runpod REST API v2 base URL.
  *
  * **Example** (Log default API base URL)
  *
@@ -74,7 +74,7 @@ export type RunpodConfigUrl = typeof RunpodConfigUrl.Type;
  * @category constants
  * @since 0.1.0
  */
-export const RUNPOD_API_URL = "https://rest.runpod.io/v1";
+export const RUNPOD_API_URL = "https://api.runpod.io/v2";
 
 /**
  * Default Runpod documentation index URL for LLM-oriented docs.
@@ -102,7 +102,7 @@ const runpodConfigInputHeadersDefault = R.empty();
  * import { RunpodConfigInput } from "@beep/runpod"
  *
  * const config = RunpodConfigInput.make({
- *   apiUrl: "https://rest.runpod.io/v1",
+ *   apiUrl: "https://api.runpod.io/v2",
  *   headers: { "x-client": "beep" }
  * })
  * console.log(config.apiUrl)
@@ -124,7 +124,7 @@ export class RunpodConfigInput extends S.Opaque<RunpodConfigInput, { readonly br
     ),
   }).pipe(
     $I.annoteSchema("RunpodConfigInput", {
-      description: "Runtime configuration accepted by the Runpod REST API driver layer.",
+      description: "Runtime configuration accepted by the Runpod REST API v2 driver layer.",
     })
   )
 ) {}
