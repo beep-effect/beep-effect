@@ -4,7 +4,13 @@ import { assertNone, assertSome, deepStrictEqual, strictEqual } from "@effect/vi
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { arrivalsFromJournal, deployedReplayTiming, replayTailWaits, summarizeWaits } from "@/backfill/JournalReplay";
+import {
+  arrivalsFromJournal,
+  decodeJournalLines,
+  deployedReplayTiming,
+  replayTailWaits,
+  summarizeWaits,
+} from "@/backfill/JournalReplay";
 import { ReplayArmSpec, ReplayEtaEstimator } from "@/backfill/Schemas";
 import { PosInt } from "@/projection/PosInt";
 import { AdmissionJournalEvent } from "@/projection/Schemas";
@@ -257,6 +263,29 @@ describe("SCHE-06 journal replay", () => {
       );
       strictEqual(flat.etaDeclared, 3);
       expect(A.getUnsafe(flat.arms, 0).waits.maxMillis).toBeGreaterThan(0);
+    })
+  );
+
+  it.effect("skips routed rows, torn tails and unknown tags, and refuses a replay row that does not decode", () =>
+    Effect.gen(function* () {
+      const released =
+        '{"checkoutRoot":"/repo/alice","branch":"feat/alice","_tag":"admission-released","schemaVersion":"yeet-admission-journal/v3","nonce":"a","pid":7,"releasedAtMillis":20}';
+      const routed =
+        '{"_tag":"admission-routed","schemaVersion":"yeet-admission-journal/v3","nonce":"r","pid":7,"procStart":"7","routedAtMillis":5,"checkoutRoot":"/repo/alice","branch":"feat/alice","command":"bun run beep yeet final-check","computeProfile":"worker","outcome":"refusal"}';
+      const read = yield* decodeJournalLines([
+        released,
+        routed,
+        '{"_tag":"admission-adm',
+        '{"_tag":"admission-future","nonce":"f"}',
+      ]);
+      deepStrictEqual([A.map(read.events, (event) => event.nonce), read.opaqueLines], [["a"], 3]);
+      const drift = yield* Effect.exit(
+        decodeJournalLines([
+          released,
+          '{"_tag":"admission-admitted","schemaVersion":"yeet-admission-journal/v9","nonce":"x"}',
+        ])
+      );
+      strictEqual(drift._tag, "Failure");
     })
   );
 });
