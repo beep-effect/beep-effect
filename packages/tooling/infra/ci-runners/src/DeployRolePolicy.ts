@@ -169,7 +169,7 @@ const fleetRoles = fleetRolesOf("prod");
  * console.log(fleetBoundaryPolicyArnFor("prod")) // "arn:aws:iam::832907639880:policy/beep-fleet-boundary/fleet-boundary-prod"
  * ```
  *
- * @param stage - The stage.
+ * @param stage - The Alchemy stage, slugged into the policy name (`dev_Alice` becomes `fleet-boundary-dev-alice`).
  * @returns The boundary policy ARN of that stage.
  * @category configuration
  * @since 0.0.0
