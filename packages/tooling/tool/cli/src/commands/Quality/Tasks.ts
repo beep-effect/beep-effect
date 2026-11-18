@@ -5166,6 +5166,14 @@ const readPackageJson = Effect.fn("QualityTasks.readPackageJson")(function* (pac
 // there is no separate `beep:audit` script (see `rootAuditSteps`).
 const packageAuditTasks: ReadonlyArray<QualityTaskName> = ["build", "check", "test", "lint"];
 
+// `beep:check` runs `tsrs -p`, which prints one TS6305 per reference whose
+// declarations are unbuilt; the filesystem probe prints one line instead.
+const probeBeforePackageCheck = (
+  packageDir: string,
+  task: QualityTaskInvocation["task"]
+): Effect.Effect<void, CheckProbeReadError | UnbuiltReferenceOutputs, FileSystem.FileSystem | Path.Path> =>
+  QualityTaskName.is.check(task) ? checkPackageReferencesBuilt(packageDir) : Effect.void;
+
 const runPackageTask: (
   packageDir: string,
   invocation: QualityTaskInvocation
@@ -5195,11 +5203,7 @@ const runPackageTask: (
       return;
     }
 
-    // `beep:check` runs `tsrs -p`, which prints one TS6305 per reference whose
-    // declarations are unbuilt; the filesystem probe prints one line instead.
-    if (QualityTaskName.is.check(invocation.task)) {
-      yield* checkPackageReferencesBuilt(packageDir);
-    }
+    yield* probeBeforePackageCheck(packageDir, invocation.task);
 
     yield* runStep(
       QualityTaskStep.make({

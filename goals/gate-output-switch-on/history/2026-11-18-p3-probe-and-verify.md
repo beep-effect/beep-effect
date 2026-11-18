@@ -27,6 +27,10 @@ Through `bun run check` Bun adds its command echo before the line and its exit l
 those two lines are Bun's, and the probe prints one. No compiler starts in either unbuilt run. On a
 built tree the probe prints nothing and the check runs as before.
 
+The compiler run on the unbuilt tree also did damage. It emitted the declarations of `@beep/schema`
+itself with degraded types, and the next check of `@beep/repo-cli` failed with 82 unrelated errors
+until `@beep/schema` was rebuilt. The probe stops before that write.
+
 An earlier measurement on the same package with every upstream unbuilt printed 216,967 characters
 in 1,348 lines from the compiler, against the same 269 from `bun run check`.
 
