@@ -10,7 +10,7 @@ Status: `pending`
 | --- | --- | --- | --- |
 | P0 Research | pending | Re-verify the six sites against the current head and settle the two open choices: which entry carries the unbuilt-dependency probe (the generated `check` script or a `beep-cli` route), and where the GitHub-check report's durable file lives. | Each site's state matches `SPEC.md` Target Surfaces or the spec is corrected; one decision file per choice. |
 | P1 Agent signal through Turbo | pending | Fixes 1 and 2: export the agent keys from `@beep/runtime-env`, add them to `turbo.json`, set `AGENT=1` and `--output-logs=errors-only` in `turboStep`/`turboRunArgs` under a detected agent, and re-record the cache baseline. | AC1 to AC4 and AC9 hold; the two measured numbers are written to `history/`. |
-| P2 Quiet surfaces | pending | Fixes 3, 4 and 5: formatter options on `CliColor.formatterLayer` and `globalFlags: "summary"` in the repo CLI; envelopes off stdout when the artifact env is set, with a durable GitHub-check report; the submit step on the split executor. | AC5 to AC7 hold. |
+| P2 Quiet surfaces | complete | Fixes 3, 4 and 5: formatter options on `CliColor.formatterLayer` and `globalFlags: "summary"` in the repo CLI; envelopes off stdout when the artifact env is set, with a durable GitHub-check report; the submit step on the split executor. | AC5 to AC7 hold. |
 | P3 Unbuilt-dependency probe | pending | Fix 6: the one-line probe on both package-local check entry points, reusing `missingReferenceOutputs`. | AC8 holds; a fresh lane's package check prints one line where it printed one TS6305 per reference. |
 | P4 Verify | pending | Run `bun run beep quality package-verify` for every touched package and `bun run beep cache audit`; record the before and after character counts. | AC9 and AC10 hold; evidence is under `history/`. |
 | P5 Yeet: PR to mergeable | pending | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
@@ -75,6 +75,12 @@ git diff --check -- goals/gate-output-switch-on
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug gate-output-switch-on`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### P2 quiet surfaces built, 2026-11-18
+
+Fixes 3, 4 and 5 are implemented with tests. AC5: a test walks every command path; a subcommand help page fell from 2,490 to 1,911 characters and root help is unchanged at 4,776. AC6: with the side channel set, both envelopes go to their files and stdout carries neither; without it stdout is byte-identical to before. AC7: the detached submit step runs on the split executor, its JSON line stays in the step log, and the parent still prints the readiness monitor job id. The attached fallback, which shares the step id without `--detach`, keeps streaming.
+
+Lane fix/gate-output-quiet-surfaces
+
+Reverse: Revert the three commits on the lane.
 
 <!-- beep:decisions:end -->

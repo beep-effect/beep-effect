@@ -147,6 +147,7 @@ import { localQualityConcurrencyPlan, provideQualityConcurrency, qualityConcurre
 import {
   GatePrecisionClass,
   GateRedSchedulingDecision,
+  GITHUB_CHECK_RUN_REPORT_FILE_NAME,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
   GithubCheckLaneIsolation,
@@ -3099,78 +3100,89 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
 
 const githubCheckRunReportJson = JsonStringCodec(GithubCheckRunReport);
 const qualityTaskLaneRunReportJson = JsonStringCodec(QualityTaskLaneRunReport);
-const decodeQualityTaskLaneRunReportOption = S.decodeUnknownOption(S.fromJsonString(QualityTaskLaneRunReport));
 const laneReportTextEncoder = new TextEncoder();
 
+// The durable side channel a parent Yeet step named, if any. When it is set the
+// files under it are the record, and stdout carries no copy of either envelope.
+const laneRunArtifactPath = (): O.Option<string> => O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV]);
+const laneRunParentId = (): O.Option<string> => O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_PARENT_ID_ENV]);
+
+const appendDurableReportLine = Effect.fn("QualityTasks.appendDurableReportLine")(function* (
+  target: string,
+  line: string,
+  failureMessage: string
+) {
+  yield* Effect.scoped(
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* fs.makeDirectory(path.dirname(target), { recursive: true });
+      const file = yield* fs.open(target, { flag: "a" });
+      yield* file.writeAll(laneReportTextEncoder.encode(`${line}\n`));
+      yield* file.sync;
+    }).pipe(QualityTaskConfigurationError.mapError(failureMessage))
+  );
+});
+
 const appendQualityTaskLaneRun = Effect.fn("QualityTasks.appendLaneRun")(function* (lane: QualityTaskLaneRun) {
-  const parentLaneId = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_PARENT_ID_ENV]);
-  const artifactPath = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV]);
-  yield* O.match(artifactPath, {
+  yield* O.match(laneRunArtifactPath(), {
     onNone: () => Effect.void,
     onSome: Effect.fn("QualityTasks.appendLaneRun.onSome")(function* (target) {
       const reportJson = yield* qualityTaskLaneRunReportJson
         .encode(
           QualityTaskLaneRunReport.make({
             schemaVersion: "quality-task-lane-run/v1",
-            parentLaneId,
+            parentLaneId: laneRunParentId(),
             lanes: [lane],
           })
         )
         .pipe(QualityTaskConfigurationError.mapError("Failed to encode the quality-task lane run report."));
-      yield* Effect.scoped(
-        Effect.gen(function* () {
-          const fs = yield* FileSystem.FileSystem;
-          const path = yield* Path.Path;
-          yield* fs.makeDirectory(path.dirname(target), { recursive: true });
-          const file = yield* fs.open(target, { flag: "a" });
-          yield* file.writeAll(laneReportTextEncoder.encode(`${reportJson}\n`));
-          yield* file.sync;
-        }).pipe(QualityTaskConfigurationError.mapError("Failed to write the durable quality-task lane report."))
-      );
+      yield* appendDurableReportLine(target, reportJson, "Failed to write the durable quality-task lane report.");
     }),
   });
 });
 
-const qualityTaskLaneRunReportFromArtifact = Effect.fn("QualityTasks.reportFromArtifact")(function* (
-  fallback: QualityTaskLaneRunReport
-) {
-  const artifactPath = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV]);
-  const parentLaneId = O.fromUndefinedOr(Bun.env[QUALITY_TASK_LANE_RUN_PARENT_ID_ENV]);
-  return yield* O.match(artifactPath, {
-    onNone: () => Effect.succeed(QualityTaskLaneRunReport.make({ ...fallback, parentLaneId })),
-    onSome: Effect.fn("QualityTasks.reportFromArtifact.onSome")(function* (target) {
-      const fs = yield* FileSystem.FileSystem;
-      const text = yield* fs.readFileString(target).pipe(Effect.option);
-      if (O.isNone(text)) {
-        return QualityTaskLaneRunReport.make({ ...fallback, parentLaneId });
-      }
-      const reports = A.getSomes(
-        A.map(pipe(text.value, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-          decodeQualityTaskLaneRunReportOption(line)
-        )
-      );
-      const matchingReports = A.filter(
-        reports,
-        (report) => O.getOrElse(report.parentLaneId, () => Str.empty) === O.getOrElse(parentLaneId, () => Str.empty)
-      );
-      return A.isReadonlyArrayNonEmpty(matchingReports)
-        ? QualityTaskLaneRunReport.make({
-            schemaVersion: "quality-task-lane-run/v1",
-            parentLaneId,
-            lanes: A.flatMap(matchingReports, (report) => report.lanes),
-          })
-        : QualityTaskLaneRunReport.make({ ...fallback, parentLaneId });
-    }),
-  });
-});
-
+// With the side channel set, every lane is already journalled under it as it
+// finishes, so the summary envelope is printed only to a bare terminal run.
 const emitQualityTaskLaneRunReport = Effect.fn("QualityTasks.emitLaneRunReport")(function* (
   report: QualityTaskLaneRunReport
 ) {
+  if (O.isSome(laneRunArtifactPath())) {
+    return;
+  }
   const reportJson = yield* qualityTaskLaneRunReportJson
-    .encode(report)
+    .encode(QualityTaskLaneRunReport.make({ ...report, parentLaneId: laneRunParentId() }))
     .pipe(QualityTaskConfigurationError.mapError("Failed to encode the quality-task lane run report."));
   yield* Console.log(`${QUALITY_TASK_LANE_RUN_REPORT_PREFIX}${reportJson}`);
+});
+
+const githubCheckRunReportPathFor = (path: Path.Path, laneReportPath: string): string =>
+  path.join(path.dirname(laneReportPath), GITHUB_CHECK_RUN_REPORT_FILE_NAME);
+
+// The GitHub-check report goes to its own durable file beside the lane report
+// when the side channel is set, and to stdout otherwise.
+const emitGithubCheckRunReport = Effect.fn("QualityTasks.emitGithubCheckRunReport")(function* (
+  report: GithubCheckRunReport
+) {
+  yield* O.match(laneRunArtifactPath(), {
+    onNone: Effect.fnUntraced(function* () {
+      const reportJson = yield* githubCheckRunReportJson
+        .encode(report)
+        .pipe(QualityTaskConfigurationError.mapError("Failed to encode the GitHub-check wave report."));
+      yield* Console.log(`${GITHUB_CHECK_RUN_REPORT_PREFIX}${reportJson}`);
+    }),
+    onSome: Effect.fnUntraced(function* (laneReportPath) {
+      const path = yield* Path.Path;
+      const reportJson = yield* githubCheckRunReportJson
+        .encode(GithubCheckRunReport.make({ ...report, parentLaneId: laneRunParentId() }))
+        .pipe(QualityTaskConfigurationError.mapError("Failed to encode the GitHub-check wave report."));
+      yield* appendDurableReportLine(
+        githubCheckRunReportPathFor(path, laneReportPath),
+        reportJson,
+        "Failed to write the durable GitHub-check wave report."
+      );
+    }),
+  });
 });
 
 /**
@@ -3199,10 +3211,7 @@ export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGit
   concurrency = 1
 ) {
   const result = yield* collectGithubCheckLaneWaves(label, waves, failurePolicy, undefined, concurrency);
-  const reportJson = yield* githubCheckRunReportJson
-    .encode(result.report)
-    .pipe(QualityTaskConfigurationError.mapError("Failed to encode the GitHub-check wave report."));
-  yield* Console.log(`${GITHUB_CHECK_RUN_REPORT_PREFIX}${reportJson}`);
+  yield* emitGithubCheckRunReport(result.report);
   yield* O.match(result.report.firstRed, {
     onNone: () => Effect.void,
     onSome: (firstRed) =>
@@ -3210,8 +3219,7 @@ export const runQualityTaskGithubCheckLaneWaves = Effect.fn("QualityTasks.runGit
         `[beep-cli] ${label}: first red ${firstRed}; skipped ${result.report.skippedAfterRed} lane(s) after red`
       ),
   });
-  const qualityTaskLaneRunReportFromArtifact5 = yield* qualityTaskLaneRunReportFromArtifact(result.laneReport);
-  yield* emitQualityTaskLaneRunReport(qualityTaskLaneRunReportFromArtifact5);
+  yield* emitQualityTaskLaneRunReport(result.laneReport);
   yield* failQualityTaskFailures(label, result.failures);
 });
 
@@ -3240,8 +3248,7 @@ export const runQualityTaskStreamingLaneGroup = Effect.fn("QualityTasks.runStrea
   concurrency = 1
 ) {
   const result = yield* collectQualityTaskLaneRuns(label, lanes, concurrency);
-  const qualityTaskLaneRunReportFromArtifact6 = yield* qualityTaskLaneRunReportFromArtifact(result.report);
-  yield* emitQualityTaskLaneRunReport(qualityTaskLaneRunReportFromArtifact6);
+  yield* emitQualityTaskLaneRunReport(result.report);
   yield* failQualityTaskFailures(label, result.failures);
 });
 

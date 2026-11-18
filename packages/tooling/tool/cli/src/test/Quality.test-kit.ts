@@ -51,6 +51,7 @@ export {
   GateOrderSeedRow,
   GatePrecisionClass,
   GateRedSchedulingDecision,
+  GITHUB_CHECK_RUN_REPORT_FILE_NAME,
   GITHUB_CHECK_RUN_REPORT_PREFIX,
   GithubCheckFailurePolicy,
   GithubCheckLaneRun,

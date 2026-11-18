@@ -73,7 +73,13 @@ export class CliColor {
    *
    * `overrides` replaces individual methods of the default formatter — for
    * example `formatVersion`, to append a "via `<carrier>`" line without
-   * losing the other defaults. Each call mints a fresh layer; bind the
+   * losing the other defaults. `options` takes core's other
+   * `CliOutput.defaultFormatter` options beside the colour decision:
+   * `globalFlags: "summary"` replaces the `GLOBAL FLAGS` block of every
+   * subcommand's help with one `Run '<root> --help' for global flags` line,
+   * while the declaring (root) command still lists them in full;
+   * `inheritedFlags` makes the same choice for flags inherited from ancestor
+   * commands. Both default to `"full"`. Each call mints a fresh layer; bind the
    * result to a `const` or the decision is re-read every time it is
    * provided.
    *
@@ -94,16 +100,27 @@ export class CliColor {
    * console.log(Layer.isLayer(formatter)); // true
    * ```
    *
+   * **Example** (Summarise global flags below the root command)
+   *
+   * ```ts
+   * import { CliColor } from "@beep/cli-kit/CliColor";
+   * import * as Layer from "effect/Layer";
+   *
+   * const formatter = CliColor.formatterLayer({}, { globalFlags: "summary" });
+   * console.log(Layer.isLayer(formatter)); // true
+   * ```
+   *
    * @public
    * @category layers
    * @since 0.0.0
    */
   static readonly formatterLayer = (
-    overrides: Partial<CliOutput.Formatter> = R.empty()
+    overrides: Partial<CliOutput.Formatter> = R.empty(),
+    options: Omit<NonNullable<Parameters<typeof CliOutput.defaultFormatter>[0]>, "colors"> = R.empty()
   ): Layer.Layer<never, never, Stdio.Stdio> =>
     Layer.unwrap(
       Effect.map(CliColor.enabled, (colors) =>
-        CliOutput.layer({ ...CliOutput.defaultFormatter({ colors }), ...overrides })
+        CliOutput.layer({ ...CliOutput.defaultFormatter({ ...options, colors }), ...overrides })
       )
     );
 }

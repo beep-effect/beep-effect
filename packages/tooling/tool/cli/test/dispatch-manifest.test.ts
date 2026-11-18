@@ -13,6 +13,7 @@ import {
   ROOT_COMMAND_NAME,
   resolveCommandTarget,
   resolveDispatchTarget,
+  rootHelpFormatterLayer,
 } from "@beep/repo-cli/test/Dispatch";
 import { it } from "@beep/test-runner";
 import { A, O, P } from "@beep/utils";
@@ -87,6 +88,15 @@ const renderedOutput = Effect.fnUntraced(function* <Name extends string>(
 
 const realRoot = rootCommand;
 
+const GLOBAL_FLAG_NAMES = ["--help", "--version", "--wizard", "--completions", "--log-level"];
+const GLOBAL_FLAGS_POINTER = `Run '${ROOT_COMMAND_NAME} --help' for global flags`;
+
+// Every command path below the root, depth first, each as the argv tokens that name it.
+const commandPaths = (command: Command.Command.Any): ReadonlyArray<ReadonlyArray<string>> =>
+  A.flatMap(command.subcommands, ({ commands }) =>
+    A.flatMap(commands, (child) => A.prepend(A.map(commandPaths(child), A.prepend(child.name)), [child.name]))
+  );
+
 describe("lazy dispatch manifest", () => {
   it("registers every group of the real command tree, in root help order", () => {
     expect(A.map(commandGroupRoutes, ({ help }) => help.name)).toStrictEqual(A.map(realGroups, ({ name }) => name));
@@ -147,6 +157,28 @@ it.layer(HelpRenderLayer, { timeout: "30 seconds" })((it) => {
         expect(errors).toContain("Run the sweep with `bun run lint`, or one policy check:");
         const logs = yield* TestConsole.logLines;
         expect(logs).toEqual([]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+  });
+});
+
+// AC5 (gate-output-switch-on): under the formatter `bin-main` builds, only the root lists the built-in
+// global flags; every other command in the tree prints one pointer line to it instead.
+it.layer(Layer.provideMerge(rootHelpFormatterLayer, HelpRenderLayer), { timeout: "60 seconds" })((it) => {
+  describe("repo CLI help formatter", () => {
+    it.effect("lists global flags on root help only, with one pointer line on every other command", () =>
+      Effect.gen(function* () {
+        const rootHelp = yield* renderedOutput(realRoot, ["--help"]);
+        A.forEach(GLOBAL_FLAG_NAMES, (flag) => expect(rootHelp, `root help lists ${flag}`).toContain(flag));
+        expect(rootHelp).not.toContain(GLOBAL_FLAGS_POINTER);
+        const paths = commandPaths(realRoot);
+        expect(A.length(paths)).toBeGreaterThan(A.length(realGroups));
+        for (const path of paths) {
+          const help = yield* renderedOutput(realRoot, A.append(path, "--help"));
+          const label = `beep-cli ${A.join(path, " ")} --help`;
+          expect(help, label).toContain(GLOBAL_FLAGS_POINTER);
+          A.forEach(["--wizard", "--completions", "--log-level"], (flag) => expect(help, label).not.toContain(flag));
+        }
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });
