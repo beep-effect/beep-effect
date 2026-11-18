@@ -123,6 +123,14 @@ regexes = ['''^runtimeKey(?:Digest|Value|ObservationSha256)"\s*:\s*"[0-9a-f]{64}
 paths = ['''^(?:/repo/)?goals/turborepo-task-qualification/research/(?:runtime-key-checkpoint|runtime-keyed-invalidation-observation|pilot-runtime-key-v5-stable|pilot-runtime-key-v5-canary)\.json$''']
 
 [[allowlists]]
+description = "Reviewed cache baseline requests record the SHA-256 of each re-recorded standards/cache-baseline file in a `previous` map keyed by workspace package name. A package named after a vendor, or with api, key, token or secret in its name, puts that word beside a 64-hex digest and trips a token detector. Scoped to request files under docs/reports and to a line that is exactly one package-name key with a 64-hex value; every other line of those files is still scanned. Path and line allowlist, because the hosted scan pins this file and .gitleaksignore to the base, so a PR cannot suppress its own findings."
+targetRules = ["generic-api-key", "discord-api-token", "freshbooks-access-token"]
+condition = "AND"
+regexTarget = "line"
+paths = ['''^(?:/repo/)?docs/reports/[a-z0-9-]+-cache-(?:baseline-)?request(?:-[a-z0-9-]+)?\.json$''']
+regexes = ['''^\s*"@beep/[a-z0-9-]+"\s*:\s*"[0-9a-f]{64}",?\s*$''']
+
+[[allowlists]]
 description = "Exact public synthetic canary used to verify cache capture rejection; never an operator credential."
 targetRules = ["generic-api-key"]
 condition = "AND"
