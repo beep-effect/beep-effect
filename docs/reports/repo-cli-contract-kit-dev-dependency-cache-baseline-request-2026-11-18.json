@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "@beep/repo-cli": "2f6ad96474de75f054191343c0d60d3e877039d98fc50740ed3839074e239911"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (model-first-standard scaffolder lane, claude/model-first-standard-scaffolder)",
+    "reason": "Record the @beep/contract-kit dev dependency edge @beep/repo-cli gains so its model-first context test's build input is declared. No command, cache flag, input, output or environment changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/repo-cli-contract-kit-dev-dependency-cache-review-2026-11-18.md",
+      "sha256": "7e8fcd6baec0720a672d21c012a9197962b4258aaba3e571f21a17d76255563a"
+    }
+  },
+  "subjects": ["@beep/repo-cli"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

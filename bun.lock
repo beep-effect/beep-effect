@@ -4563,6 +4563,7 @@
         "vitest": "catalog:",
       },
       "devDependencies": {
+        "@beep/contract-kit": "workspace:^",
         "@beep/fc-runs": "workspace:^",
         "@beep/memfs": "workspace:^",
         "@beep/test-runner": "workspace:^",
