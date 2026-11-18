@@ -8,8 +8,8 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (gate-output-switch-on P1 lane, fix/gate-output-switch-on)",
-    "reason": "Re-record the root subject for turbo.json's global passThroughEnv, which gains every @beep/runtime-env agent presence key plus AI_AGENT, EDITOR and AGENT so a tool under Turbo sees the agent signal. Pass-through values stay out of task hashes (an agent and a human dry run hash @beep/glob#test identically), so reuse is unchanged; no task command, cache flag, input, output or env entry changed and no qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-output-switch-on P1 lane, fix/gate-output-switch-on)",
+    "reason": "Re-record the root subject for turbo.json's global passThroughEnv, which gains every @beep/runtime-env agent presence key plus AI_AGENT, EDITOR and AGENT so a tool under Turbo sees the agent signal. Pass-through values stay out of task hashes (an agent and a human dry run hash @beep/glob#test identically), so reuse is unchanged; no task command, cache flag, input, output or env entry changed and no qualification is granted. Re-recorded after merging main at 51f698a46ae, which changed the root subject independently.",
     "basis": {
       "path": "docs/reports/gate-output-switch-on-cache-review-2026-11-18.md",
       "sha256": "58cdc97cfca9560177b1157f129f8c65720f85bee468db52161ed4a2ac882fb0"
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "ed0eafb5ed8a11fc06a4f75fa0e025d69d69b4864b74ad57ba87d39cd1dc3d05"
+      "sha256": "7fc93f7b13075dd6ef47d25b5f3b291f62885cf1155ffa594e6009a9238beedb"
     }
   ],
   "nodes": [
@@ -2177,6 +2177,7 @@
           "packages/foundation/capability/walker/src/**",
           "packages/foundation/capability/xdg/package.json",
           "packages/foundation/capability/xdg/src/**",
+          "packages/foundation/modeling/contract-kit/package.json",
           "packages/foundation/modeling/epistemics/package.json",
           "packages/foundation/modeling/epistemics/src/**",
           "packages/foundation/modeling/github-commands/package.json",

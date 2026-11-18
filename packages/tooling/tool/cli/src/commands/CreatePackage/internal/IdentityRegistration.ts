@@ -72,6 +72,27 @@ const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
   return path.relative(repoRoot, path.join(identityWorkspaceDir.value, ...IDENTITY_PACKAGES_EXPORT_PATH));
 });
 
+// Adds the package's composer segment and typed accessor to the registry file.
+const registerIdentityIn = (packageName: string) => (sourceFile: SourceFile) => {
+  const composersDeclaration =
+    sourceFile.getVariableDeclaration("generatedComposers") ?? sourceFile.getVariableDeclarationOrThrow("composers");
+  const composersCall = composersDeclaration.getInitializerIfKindOrThrow(SyntaxKind.CallExpression);
+  const existingSegments = pipe(
+    composersCall.getArguments(),
+    A.flatMap((argument) => pipe(O.fromNullishOr(argument.asKind(SyntaxKind.StringLiteral)), O.toArray)),
+    A.map((literal) => literal.getLiteralText())
+  );
+
+  if (!A.some(existingSegments, Str.equivalence(packageName))) {
+    composersCall.addArgument(`"${packageName}"`);
+  }
+
+  const accessorName = toIdentityAccessorName(packageName);
+  if (sourceFile.getVariableDeclaration(accessorName) === undefined) {
+    sourceFile.addStatements(typedIdentityExportBlock(packageName));
+  }
+};
+
 /**
  * Add a package segment and typed identity export to `@beep/identity`.
  *
@@ -91,27 +112,13 @@ const resolveIdentityPackagesFilePath = Effect.fn(function* (repoRoot: string) {
  * @category utilities
  * @since 0.0.0
  */
-const ensureIdentityPackageRegistration = Effect.fn(function* (identityPackagesFilePath: string, packageName: string) {
+const ensureIdentityPackageRegistration = Effect.fn(function* (
+  identityPackagesFilePath: string,
+  packageName: string,
+  repoRoot?: string | undefined
+) {
   const tsMorphService = yield* TSMorphService;
-  return yield* tsMorphService.updateSourceFile(identityPackagesFilePath, (sourceFile) => {
-    const composersDeclaration =
-      sourceFile.getVariableDeclaration("generatedComposers") ?? sourceFile.getVariableDeclarationOrThrow("composers");
-    const composersCall = composersDeclaration.getInitializerIfKindOrThrow(SyntaxKind.CallExpression);
-    const existingSegments = pipe(
-      composersCall.getArguments(),
-      A.flatMap((argument) => pipe(O.fromNullishOr(argument.asKind(SyntaxKind.StringLiteral)), O.toArray)),
-      A.map((literal) => literal.getLiteralText())
-    );
-
-    if (!A.some(existingSegments, Str.equivalence(packageName))) {
-      composersCall.addArgument(`"${packageName}"`);
-    }
-
-    const accessorName = toIdentityAccessorName(packageName);
-    if (sourceFile.getVariableDeclaration(accessorName) === undefined) {
-      sourceFile.addStatements(typedIdentityExportBlock(packageName));
-    }
-  });
+  return yield* tsMorphService.updateSourceFile(identityPackagesFilePath, registerIdentityIn(packageName), repoRoot);
 });
 
 const composeCallExpressions = (sourceFile: SourceFile): ReadonlyArray<CallExpression> =>

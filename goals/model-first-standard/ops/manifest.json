@@ -34,7 +34,10 @@
     "goals/model-first-standard/GOAL.md",
     "goals/model-first-standard/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": [
+    "research/01-scaffolder-design.md",
+    "research/SOURCES.md"
+  ],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

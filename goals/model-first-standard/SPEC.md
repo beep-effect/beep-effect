@@ -126,6 +126,22 @@ Lane claude/model-first-standard-doctrine-b72d36
 
 Reverse: Rename the packages in the standard and the scaffolder plan, or require web for every context
 
+### The contract kit lives in a foundation package, @beep/contract-kit, 2026-11-18
+
+Catalog.make and waitsOnProjection (ported from scratchpad/model-first-slices/shared/contract-kit) go into a new packages/foundation/modeling/contract-kit created with bun run beep create-package. The kit is product-neutral substrate over @alchemy.run/domain, so it is foundation, not the shared kernel, which the doctrine keeps to language. It is deleted when upstream splits the Api from the model (explorations/model-first-slices/DECISIONS.md D9). Design: research/01-scaffolder-design.md.
+
+Lane claude/model-first-standard-scaffolder
+
+Reverse: Move Catalog into the shared kernel package or inline it in each contract, and delete @beep/contract-kit
+
+### The scaffolder generates contract, model and host; web, cluster and descriptor files come later, 2026-11-18
+
+bun run beep architecture create context <context> <Module> writes the contract, model and host packages with one aggregate, one command and one view. It generates no web package (the bindings generator is net-new in product-slice-model-first), no cluster or descriptor file (the descriptor schema is kernel work and the cluster wiring is goals/effect-cluster-host), and no Invocation or provenance (goals/authority-context). The seven-role commands stay and are labelled legacy. Design: research/01-scaffolder-design.md.
+
+Lane claude/model-first-standard-scaffolder
+
+Reverse: Add the web, cluster and descriptor templates to the model-first plan
+
 ### The v3-consistency-audit deferred rows are settled against the four-package shape, 2026-11-18
 
 The nine rows explorations/v3-consistency-audit/DECISIONS.md deferred to the superseded slice-topology-audit P0 are settled in the 2026-11-18 entry of standards/architecture/DECISIONS.md: the create-package shell is the skeleton law; the source export map is the truth and exact; coverage ratio stays with the coverage ratchet; every package type-checks its test tree; concept-local server/worker shims are not admitted in a model-first context; `.ts` specifiers are codified; a root entry is a pure re-export; the lab client and view-model files are superseded by web bindings and machines and stay until the lab migrates. The 2026-08-30 member-vocabulary and contract sub-choices bind legacy slices only.
