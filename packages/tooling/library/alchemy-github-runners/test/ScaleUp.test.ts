@@ -4,7 +4,6 @@ import {
   FleetLaunchResult,
   handleScaleUp,
   RunnerPool,
-  SsmStore,
   sanitizeAllocationStrategy,
   toCreateFleetRequest,
 } from "@beep/alchemy-github-runners";
@@ -159,17 +158,18 @@ describe("handleScaleUp", () => {
     })
   );
 
-  it.effect("counts a runner that boots between the two reads: its config is read first, EC2 then shows it", () =>
+  it.effect("counts a runner that boots right after the EC2 read: its config was already read first", () =>
     Effect.gen(function* () {
       const world = new World();
       world.ssm["/beep-ci/heavy/tokens/i-booting"] = { value: "jit", modified: 0, tags: { InstanceId: "i-booting" } };
       const base = worldContext(world);
-      const ssm = Context.get(base, SsmStore);
-      // The runner boots right after Parameter Store is read: it deletes its config and EC2 starts to show it.
-      const booting = SsmStore.of({
-        ...ssm,
-        listByPath: Effect.fn("BootingSsm.listByPath")(function* (path) {
-          const listed = yield* ssm.listByPath(path);
+      const fleet = Context.get(base, Ec2Fleet);
+      // The runner boots right after EC2 is read: it deletes its config and EC2 starts to show it. Reading EC2 first,
+      // the old order would count neither and launch; Parameter Store read first still holds its config.
+      const booting = Ec2Fleet.of({
+        ...fleet,
+        listRunners: Effect.fn("BootingEc2.listRunners")(function* (filter) {
+          const listed = yield* fleet.listRunners(filter);
           world.ssm = R.remove(world.ssm, "/beep-ci/heavy/tokens/i-booting");
           world.launch(1, {
             "ghr:Application": "github-action-runner",
@@ -183,7 +183,7 @@ describe("handleScaleUp", () => {
       const retry = yield* handleScaleUp({
         config: poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 })),
         batch: [queued({ id: 1 })],
-      }).pipe(Effect.provideContext(Context.add(base, SsmStore, booting)));
+      }).pipe(Effect.provideContext(Context.add(base, Ec2Fleet, booting)));
       expect(world.fleetRequests).toStrictEqual([]);
       expect(retry).toStrictEqual(["m-1"]);
     })
