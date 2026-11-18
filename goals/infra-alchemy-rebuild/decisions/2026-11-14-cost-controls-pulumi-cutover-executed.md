@@ -2,7 +2,7 @@
 title: "Cost controls Pulumi cutover executed: live verified, old pair destroyed, 11 state entries removed"
 date: 2026-11-14
 lane: "goals/infra-alchemy-rebuild-p3-cost-controls-pulumi-removal"
-reversal: "The 'after step 4' and 'after step 6' rollback paragraphs of decision 'Cost controls cutover from Pulumi' (import the BEFORE archive, refresh, preview two creates, targeted up; revert the removal PR first if it has merged)."
+reversal: "The 'after step 4' and 'after step 6' rollback paragraphs of decision 'Cost controls cutover from Pulumi' (disarm the Alchemy prod stage; compare a fresh export with the AFTER archive; import the BEFORE archive if unchanged, else splice its 13 URNs into the current export and import that; refresh, preview two creates, targeted up with --target-dependents; revert the removal PR first if it has merged)."
 ---
 
 Executed by the packet gate session, attended with the orchestrator, on 2026-11-14, in the live-first order (decision "Cost controls cutover goes live first, Pulumi destroy second"). Facts from the gate session.
@@ -23,4 +23,4 @@ Executed by the packet gate session, attended with the orchestrator, on 2026-11-
 
 **Step 6.** The component-removal PR deletes `AccountCostControls` from the program (`infra/src/internal/ci-runners-entry.ts`, infra/src/AccountCostControls.ts (removed in #3366) and its test) and the `accountCostControls:` keys `expectedAccountId`, `monthlyBudgetUsd` and `anomalyImpactUsd` from `infra/ci-runners/Pulumi.production.yaml`. It keeps `accountCostControls:notificationEmailAddresses` and moves `decodeNotificationRecipients` unchanged into `infra/src/NotificationRecipients.ts`, because the AWS turbo cache's throttle alarm reads both. With the 13 URNs already gone from state, the program's desired graph after this PR equals the AFTER state, so the diff against the stack is nothing; `preview` being frozen, that is proven by reading the program diff (only the component's import and construction removed; every other declaration and the alarm's config read untouched). It merges only after `live` has been green for 24 hours (not before 2026-11-15T05:18Z).
 
-**Archives.** Both exports stay under `~/.local/state/beep/infra-archives/pulumi-exports/` until this PR has merged and `pulumi preview --expect-no-changes` on the stack is clean.
+**Archives.** Both exports stay under `~/.local/state/beep/infra-archives/pulumi-exports/` until the packet closes, not just until the first clean `pulumi preview --expect-no-changes --stack organization/beep-ci-runners/production`: the rollback imports the BEFORE export, or splices its 13 URNs, and compares the current state with the AFTER export.

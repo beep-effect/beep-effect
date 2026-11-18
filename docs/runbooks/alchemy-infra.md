@@ -218,8 +218,9 @@ stack: the program still declares the component and would plan it again.
    stack. It keeps `accountCostControls:notificationEmailAddresses` and
    `decodeNotificationRecipients` (now `infra/src/NotificationRecipients.ts`),
    which the AWS turbo cache's throttle alarm reads. After it merges, the
-   first `pulumi preview --expect-no-changes` must be clean, and the
-   cutover's export archives may then be cleaned up.
+   first `pulumi preview --expect-no-changes` must be clean. The cutover's
+   export archives stay until the packet closes: the rollback imports the
+   BEFORE export and compares against the AFTER export.
 
 Rollback (decision "Cost controls cutover from Pulumi"):
 
@@ -228,15 +229,35 @@ Rollback (decision "Cost controls cutover from Pulumi"):
   (by logical id, `delete` only); the nine adopted settings still may not
   change. The Pulumi pair is still live, so nothing else is needed.
 - After step 3, before the component-removal PR merges, restore the Pulumi
-  budget and subscription: `pulumi stack import` of the BEFORE export
-  `~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-2026-11-14T0520Z-before.json`
-  (367 resources, sha256 `2c5933f882423d165f2a7469d85131305369bedf3d4ec8ef44dccc567291d00c`; the newer AFTER export has none of the 13
-  AccountCostControls URNs) (state only), then `pulumi refresh --target` the old budget and
-  subscription URNs, `pulumi preview --target` them and confirm exactly two
-  creates, `pulumi up --target` them, and check both exist in AWS. Then take
-  `prod` back to `silent` (first case) so only one set mails.
+  budget and subscription. Name the stack in full on every command
+  (`--stack organization/beep-ci-runners/production`). First take `prod` back
+  to `silent` (first case), so only one set mails and the Alchemy stage is
+  disarmed before Pulumi state changes. Then check whether the stack moved
+  after the AFTER export: `pulumi stack export` it to a new archive (record
+  its size and sha256) and compare that with
+  `~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-2026-11-14T0524Z-after.json`
+  on the deployment version and checkpoint (`.version`,
+  `.deployment.manifest`) and the resource URN set. Bytes are not comparable:
+  the CLI re-encrypts secrets on every state rewrite.
+  - Unchanged since AFTER: `pulumi stack import` the BEFORE export
+    `~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-2026-11-14T0520Z-before.json`
+    (367 resources, sha256
+    `2c5933f882423d165f2a7469d85131305369bedf3d4ec8ef44dccc567291d00c`).
+  - Moved since AFTER: never import BEFORE wholesale, because it would roll
+    back every later fleet and cache change. `pulumi import` cannot restore
+    the pair either, because both were destroyed in AWS. Splice the 13
+    `AccountCostControls` URNs from BEFORE into the current export instead
+    (the `jq` filter is in the decision): every current resource stays as it
+    is, and the 13 are appended in BEFORE's order, so parents precede
+    children. Check for the current count plus 13, then import the spliced
+    file.
+  - Either way: `pulumi refresh --target` the old budget and subscription
+    URNs, which drops the destroyed pair from state; then `pulumi preview`
+    and `pulumi up --target` them with `--target-dependents` (the preview
+    must show exactly two creates), and check both exist in AWS.
 - After the component-removal PR merged, `pulumi up` no longer sees the old
-  declarations: revert that PR first, then import, refresh, preview and up.
+  declarations: revert that PR first, then run the rollback above from its
+  stack-moved check.
 
 ## InfraGithub
 
