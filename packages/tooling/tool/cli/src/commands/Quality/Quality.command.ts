@@ -45,7 +45,9 @@ import { XMLParser } from "fast-xml-parser";
 import { checkScriptTestTypecheckCoverage } from "../../internal/quality/TestTypecheckCoverage.ts";
 import {
   ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS,
+  AdmissionBackfillMode,
   AdmissionConfig,
+  AdmissionFairnessMode,
   AdmissionJournalEvent,
   AdmissionJournalHistory,
   AdmissionJournalReleasedV3,
@@ -4210,8 +4212,20 @@ const schedulerProtocolCommand = Command.make(
         "Turn the capacity and host-pressure stamp on admitted and released journal rows on, or off; every reader ignores it, so it can go on at any time"
       )
     ),
+    backfill: Flag.Literals("backfill", AdmissionBackfillMode.literals).pipe(
+      Flag.optional,
+      Flag.withDescription(
+        "Turn the SCHE-06 EASY backfill verdict on (easy) or off; older checkouts keep the head-of-line rule, so it is capacity safe under mixed revisions"
+      )
+    ),
+    fairness: Flag.Literals("fairness", AdmissionFairnessMode.literals).pipe(
+      Flag.optional,
+      Flag.withDescription(
+        "Turn the SCHE-06 origin-then-checkout fairness order on (origin-checkout) or off; each scan then reads the admission journal"
+      )
+    ),
   },
-  Effect.fn(function* ({ disableEvictions, enableEvictions, pressure, units }) {
+  Effect.fn(function* ({ backfill, disableEvictions, enableEvictions, fairness, pressure, units }) {
     if (disableEvictions && enableEvictions) {
       return yield* QualityScriptCommandError.make({
         message: "Choose only one of --enable-evictions or --disable-evictions.",
@@ -4229,9 +4243,17 @@ const schedulerProtocolCommand = Command.make(
       onNone: () => Effect.succeed(evictionProtocol),
       onSome: scheduler.setUnitProtocol,
     });
-    const protocol = yield* O.match(pressure, {
+    const pressureProtocol = yield* O.match(pressure, {
       onNone: () => Effect.succeed(unitProtocol),
       onSome: scheduler.setPressureProtocol,
+    });
+    const backfillProtocol = yield* O.match(backfill, {
+      onNone: () => Effect.succeed(pressureProtocol),
+      onSome: scheduler.setBackfillProtocol,
+    });
+    const protocol = yield* O.match(fairness, {
+      onNone: () => Effect.succeed(backfillProtocol),
+      onSome: scheduler.setFairnessProtocol,
     });
     yield* printLines([
       `admission eviction rows: ${protocol.eviction}`,
@@ -4240,11 +4262,14 @@ const schedulerProtocolCommand = Command.make(
       "Turn on only after every live checkout runs a revision that reads them (SCHE-08).",
       `admission pressure stamps: ${protocol.pressure}`,
       "Readers of every revision ignore them; each promotion and release reads procfs and cgroup files (SCHE-09).",
+      `admission backfill verdict: ${protocol.backfill}`,
+      `admission fairness order: ${protocol.fairness}`,
+      "Older checkouts keep the head-of-line rule; only this revision or later backfills or reorders (SCHE-06).",
     ]);
   })
 ).pipe(
   Command.withDescription(
-    "Inspect or change the mixed-checkout eviction-row, unit-field and pressure-stamp protocol gates"
+    "Inspect or change the mixed-checkout eviction-row, unit-field, pressure-stamp, backfill and fairness protocol gates"
   )
 );
 
