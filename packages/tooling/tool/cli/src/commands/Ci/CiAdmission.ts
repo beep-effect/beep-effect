@@ -161,8 +161,8 @@ export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
     cwd: input.cwd,
   });
   const route = yield* readHeavyAdmissionRoute(readInput);
-  // HOST-06: the goals-only and Docgen skips heavy.yml's in-VM lane gate takes, decided here so the
-  // caller can skip those lanes at job level before a runner boots. Fails open to no skip.
+  // HOST-06: the goals-only and Docgen skips, decided here so the caller skips those lanes at job
+  // level before a runner boots (heavy.yml has no in-VM lane gate). Fails open to no skip.
   const laneSkips = yield* readHeavyLaneSkips(readInput);
   const admission = HeavyAdmission.make({ ...decideHeavyAdmission(event), route, laneSkips });
   yield* input.json
