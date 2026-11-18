@@ -104,6 +104,15 @@ only merges the base, with the AGENTS.md mergeable amendment) is open as #3329.
   definition and the yeet and orchestrate skills state the rule. Replay fixtures recorded from git 2.56.1
   (`test/support/YeetBaseMergeReplay.ts`) run the real classifier through `Git.layerTest` and a scripted spawner, on
   Node and Bun.
+- 2026-11-18: slice 11 (SCHE-06) models backfill and fairness in `apps/labs/ciops/src/backfill/`. Protected
+  units (120 s) lead in enqueue order; the rest follow by rank, then least windowed origin and checkout
+  token-milliseconds. A non-head unit backfills only while the head is capacity-blocked, when its declared ETA
+  ends by the head's projected start; a deadline stamped at protection disables backfill once breached. Property
+  laws over effect/Arbitrary streams (tiny-arrival trains, a one-origin flood, oversized units, crashes,
+  overruns) and two rejected mutants are in `test/backfill-fairness.test.ts`. With both modes off the model equals
+  the deployed scheduler; with fairness off, tier units that carry no ETA also replay the deployed admissions
+  under EASY. Fairness compares usage, not ETAs, so with it on the order can differ even for tier units. The live
+  scheduler is unchanged until slice 12.
 
 ## Notes
 
