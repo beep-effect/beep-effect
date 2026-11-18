@@ -38,7 +38,7 @@ rebuilding them). Date sections; research goes stale.
   cases. Those claims did not go through the run's verifier.
 
 Three of Astra's source claims were re-read in the library and hold
-(`~/YeeBois/references/effect/alchemy/packages/domain/src`):
+(the `domain` package source in a local reference checkout of alchemy):
 
 - `DurableObjects.ts` `commit`: a stored receipt for the command id is returned before `kit.handle`
   runs, so a retried id skips `decide`.

@@ -18,8 +18,8 @@ Status: `pending`
 
 In order. Each step lands through Yeet; the packet has at most three open pull requests.
 
-1. Bump: Alchemy to 2.0.0-beta.87 across the catalog, re-derive the existing in-memory timer patch, keep vault-sync and `@beep/alchemy-postgres` green.
-2. Fixes: add `@alchemy.run/effect-cluster`, carry the fixes as root patches, write the patch ledger.
+1. Fixes: add `@alchemy.run/effect-cluster` at the pinned Alchemy version (2.0.0-beta.87), fold the domain fixes into the existing root patch for `@alchemy.run/domain`, add the patch for `@alchemy.run/effect-cluster`, write the patch ledger, keep vault-sync and `@beep/alchemy-postgres` green.
+2. Canaries: pin the constants the guarantees depend on against the installed sources.
 3. Conformance package: port the prototype's in-memory cases and upstream's ten, each fix with a case that fails without it.
 4. Swarm recipe: the stack, the driver inside the stack's network, the one command, the baseline check, the runbook.
 5. Cluster run: the full suite on the swarm, including the points not yet observed.

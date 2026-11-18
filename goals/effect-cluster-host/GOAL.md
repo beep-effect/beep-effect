@@ -20,7 +20,7 @@ prose when they conflict.
 
 Scope:
 
-- In: the root `package.json`, `patches/`, `bun.lock`, a new conformance package, a local swarm recipe with a runbook, deployment descriptors and generated entry modules for one app pool, and `packages/drivers/alchemy-postgres` or `packages/documents` only as the beta.87 bump requires.
+- In: the root `package.json`, `patches/`, `bun.lock`, a new conformance package, a local swarm recipe with a runbook, deployment descriptors and generated entry modules for one app pool, and `packages/drivers/alchemy-postgres` or `packages/documents` only as the patched library requires.
 - Out: retiring `@beep/alchemy-postgres`, cloud deployment, building a context, posting anything upstream without the operator's say-so. See `SPEC.md` Non-Goals.
 
 Workflow:

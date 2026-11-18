@@ -12,7 +12,7 @@
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| alchemy-run/alchemy (`packages/domain`, `packages/effect-cluster`) | Apache-2.0 (`LICENSE` at 33c10dd) | dependency, patched at the root where a fix is not yet released | the domain blocks and cluster hosting |
+| alchemy-run/alchemy (its `domain` and `effect-cluster` packages) | Apache-2.0 (`LICENSE` at 33c10dd) | dependency, patched at the root where a fix is not yet released | the domain blocks and cluster hosting |
 | Effect-TS/effect (`effect/cluster`) | MIT | dependency, not vendored | Effect Cluster primitives |
 
 ## 3. External research sources

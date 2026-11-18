@@ -34,13 +34,13 @@ Higher sources outrank lower sources when they conflict.
 - A conformance package created with `bun run beep create-package`, holding the in-memory and the cluster cases.
 - A local swarm recipe: the stack definition, one command to deploy, run and tear down, and a runbook under `docs/runbooks/`.
 - Deployment descriptors as data and the generated cluster entry modules for one app pool (D13, D40).
-- `packages/drivers/alchemy-postgres` and `packages/documents`, only as far as the bump to beta.87 requires.
+- `packages/drivers/alchemy-postgres` and `packages/documents`, only as far as the patched library requires.
 
 ## Constraints
 
 - The fixes ride as root patches and leave when an Alchemy release has them (D61). Their source is `scratchpad/model-first-slices/patches/` (as run on the cluster against beta.87) and `scratchpad/model-first-slices/notes/upstream/` (rebased onto upstream main with tests, in `rebased/`).
 - A ledger in this packet maps every root patch to its upstream thread and its removal condition. The threads as of 2026-11-18 are in `scratchpad/model-first-slices/notes/upstream/SENT.md`.
-- Vault-sync and `@beep/alchemy-postgres` stay green through the bump. The root is on beta.86 with one patch, and the platform driver was written against the beta.85 contract.
+- The root is already on Alchemy 2.0.0-beta.87 and carries one patch to `@alchemy.run/domain` (an in-memory timer fix). A package version takes one patch file, so the domain fixes join that file. Vault-sync and `@beep/alchemy-postgres` stay green when they do; the platform driver says it was written against the beta.85 contract.
 - The suite asserts upstream's ten Domain cases and the four host guarantees: no acknowledged write is overwritten (D41); a runner that lost its shard cannot commit (D45, D49); reactions resume within one lease after a runner dies (D42); a write to a frozen runner completes or fails within the caller's retry budget and is never stored twice (D55). Backup and restore by `pg_dump` is a case.
 - Constants the guarantees depend on (the lease, the message poll, Effect's shard-lock expiry and lock numbering) are pinned by canary tests against the installed sources, as the prototype does.
 - A runner whose pool is not named for it fails at start. A connection pooler that rewrites the session name makes every commit refused; the runbook says so.
@@ -49,7 +49,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Acceptance Criteria
 
-- [ ] The root catalog pins Alchemy 2.0.0-beta.87 with `@alchemy.run/effect-cluster`, the root patches carry the fixes, `bun install --frozen-lockfile` is clean, and the existing vault-sync and `@beep/alchemy-postgres` tests pass.
+- [ ] The root catalog has `@alchemy.run/effect-cluster` at the pinned Alchemy version, the root patches carry the fixes, `bun install --frozen-lockfile` is clean, and the existing vault-sync and `@beep/alchemy-postgres` tests pass.
 - [ ] The conformance package's in-memory cases run in hosted CI. Each fix has a case that fails without its patch.
 - [ ] One documented command deploys a two-runner swarm, runs upstream's ten cases and the four guarantees with backup and restore, and tears down to the recorded Docker baseline.
 - [ ] The points the exploration never observed on a cluster are observed or recorded as findings with a decision file: the startup guard failing a misnamed runner, the refusal on an unnamed pool, and the frozen-runner case as rewritten for D55.

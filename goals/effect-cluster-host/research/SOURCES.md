@@ -12,7 +12,7 @@
 
 | Repo | License | Port discipline | What we take |
 |------|---------|-----------------|--------------|
-| alchemy-run/alchemy (`packages/domain`, `packages/effect-cluster`) | Apache-2.0 (`LICENSE` at 33c10dd) | dependency, patched at the root where a fix is not yet released | the domain blocks and cluster hosting |
+| alchemy-run/alchemy (its `domain` and `effect-cluster` packages) | Apache-2.0 (`LICENSE` at 33c10dd) | dependency, patched at the root where a fix is not yet released | the domain blocks and cluster hosting |
 | Effect-TS/effect (`effect/cluster`) | MIT | dependency, not vendored | Effect Cluster primitives |
 
 ## 3. External research sources
@@ -24,7 +24,7 @@ external citations.
 
 | Brick | Path | Disposition |
 | --- | --- | --- |
-| Pins and the patch precedent | root `package.json` (`catalog`, `patchedDependencies`); `patches/@alchemy.run%2Fdomain@2.0.0-beta.86.patch` | extend |
+| Pins and the patch precedent | root `package.json` (`catalog`, `patchedDependencies`); `patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch` (an in-memory timer fix) | extend |
 | Existing conformance shape | `packages/drivers/alchemy-postgres/test/conformance/`; `packages/documents/use-cases/test/vault-sync/scenarios.ts` | reuse the shape |
 | Repo-owned platform | `packages/drivers/alchemy-postgres` | stays; keep green |
 | Effect Cluster in the repo | `packages/drivers/alchemy-postgres/src/AlchemyPostgresWorkflows.ts`; `packages/drivers/duckdb/src/` | precedent |

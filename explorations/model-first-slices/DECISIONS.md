@@ -156,7 +156,7 @@ policies and sagas. Until it lands: a hand-authored contract `RpcGroup` built fr
 are already aggregate-free (commands, events, rejections, ids, queries), with a server test that it
 matches the real Api group.
 
-**Rationale:** Sub-agent fact-find, 2026-11-13, library `packages/domain/src`: `Api.ts` reads the
+**Rationale:** Sub-agent fact-find, 2026-11-13, the library's `domain` package source: `Api.ts` reads the
 Model's commands, views, streams and queries at declaration and builds the `RpcGroup` then; remote
 clients need only that group; `Aggregate.ts` keeps `decide` and `evolve` as static definition data;
 no schema-only form of an Api exists; the upstream example's web app imports the Api and with it
