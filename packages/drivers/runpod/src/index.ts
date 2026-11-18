@@ -6,7 +6,7 @@
  */
 
 /**
- * Generated Runpod REST API v1 request, response, and operation models.
+ * Generated Runpod REST API v2 request, response, and operation models.
  *
  * @category models
  * @since 0.1.0

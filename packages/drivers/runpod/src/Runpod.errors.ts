@@ -7,18 +7,21 @@
 
 import { $RunpodId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import { O } from "@beep/utils";
+import { A, O } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual, flow, pipe } from "effect/Function";
 import * as HttpClientError from "effect/http/HttpClientError";
+import * as ProblemDetails from "effect/http/ProblemDetails";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import { RunpodHttpMethod, RunpodOperationDescriptor, RunpodOperationId } from "./_generated/Runpod.operations.gen.ts";
 
 const $I = $RunpodId.create("Runpod.errors");
 const RunpodErrorReasonBase = LiteralKit([
   "config",
+  "pagination",
   "request encoding",
   "response decoding",
   "response status",
@@ -65,7 +68,7 @@ export const RunpodHttpStatusCode = S.Int.check(S.isBetween({ minimum: 100, maxi
 export type RunpodHttpStatusCode = typeof RunpodHttpStatusCode.Type;
 
 /**
- * Technical error reasons emitted by the Runpod REST API driver.
+ * Technical error reasons emitted by the Runpod REST API v2 driver.
  *
  * **Example** (Inspecting error reason AST)
  *
@@ -140,8 +143,113 @@ export const RunpodDocsErrorReason = RunpodDocsErrorReasonBase.pipe(
  */
 export type RunpodDocsErrorReason = typeof RunpodDocsErrorReason.Type;
 
+const runpodProblemErrorsDefault = A.empty<string>();
+/**
+ * RFC 9457 problem details returned by a failed Runpod REST API v2 request.
+ *
+ * **Details**
+ *
+ * Runpod v2 answers every failure with `application/problem+json`: a
+ * required `title`, `status`, and `detail`, plus an `errors` array that
+ * lists request-validation failures (for example an unknown body field).
+ * Members are optional here because a proxy in front of Runpod can answer
+ * with a partial problem.
+ *
+ * **Example** (Read a validation problem)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { RunpodProblem } from "@beep/runpod"
+ *
+ * const problem = RunpodProblem.make({
+ *   detail: O.some("request body failed validation"),
+ *   errors: ["$: additional properties 'dataCenterId' not allowed"],
+ *   status: O.some(422),
+ *   title: O.some("Unprocessable Entity")
+ * })
+ *
+ * console.log(problem.errors[0]) // => "$: additional properties 'dataCenterId' not allowed"
+ * ```
+ *
+ * @category errors
+ * @since 0.1.0
+ */
+export class RunpodProblem extends S.Opaque<RunpodProblem, { readonly brand: unique symbol }>()(
+  S.Struct({
+    detail: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    errors: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(runpodProblemErrorsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(runpodProblemErrorsDefault))
+    ),
+    instance: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    title: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    type: S.String.pipe(S.withConstructorDefault(Effect.succeed(ProblemDetails.blankType))),
+  }).pipe(
+    $I.annoteSchema("RunpodProblem", {
+      description: "RFC 9457 problem details returned by a failed Runpod REST API v2 request.",
+    })
+  )
+) {}
+
+const isRunpodHttpStatusCode = S.is(RunpodHttpStatusCode);
+const isProblemValidationErrors = S.is(S.Array(S.String));
+
+/**
+ * Decode a Runpod problem body through Effect's lenient RFC 9457 codec.
+ *
+ * **Details**
+ *
+ * Standard members with the wrong JSON type are dropped, a missing `type`
+ * becomes `about:blank`, and the `errors` extension is kept only when it is
+ * an array of strings, so a malformed problem never masks the failed status.
+ *
+ * **Example** (Decode a v2 problem body)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ * import { RunpodProblemFromProblemDetails } from "@beep/runpod"
+ *
+ * const program = S.decodeUnknownEffect(RunpodProblemFromProblemDetails)({
+ *   detail: "The requested Pod does not exist.",
+ *   status: 404,
+ *   title: "Not Found"
+ * })
+ *
+ * Effect.runPromise(program).then((problem) => console.log(problem.type)) // => "about:blank"
+ * ```
+ *
+ * @category errors
+ * @since 0.1.0
+ */
+export const RunpodProblemFromProblemDetails = ProblemDetails.Schema.pipe(
+  S.decodeTo(RunpodProblem, {
+    decode: SchemaGetter.transform((problem): typeof RunpodProblem.Encoded => ({
+      type: problem.type,
+      ...O.getSomesStruct({
+        detail: O.fromUndefinedOr(problem.detail),
+        errors: O.liftPredicate(problem.errors, isProblemValidationErrors),
+        instance: O.fromUndefinedOr(problem.instance),
+        status: O.liftPredicate(problem.status, isRunpodHttpStatusCode),
+        title: O.fromUndefinedOr(problem.title),
+      }),
+    })),
+    encode: SchemaGetter.transform((problem): ProblemDetails.ProblemDetails => problem),
+  }),
+  $I.annoteSchema("RunpodProblemFromProblemDetails", {
+    description: "Runpod problem details decoded leniently from an RFC 9457 problem body.",
+  })
+);
+
 /**
  * Technical failure raised by the Runpod REST API driver boundary.
+ *
+ * **Details**
+ *
+ * A `response status` failure carries the HTTP status and, when Runpod
+ * answered with an RFC 9457 body, the decoded `problem`, including any
+ * request-validation `errors` that name the rejected field.
  *
  * **Example** (Creating config RunpodError)
  *
@@ -163,6 +271,7 @@ export class RunpodError extends S.TaggedError<RunpodError, { readonly brand: un
     methodName: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     operationId: S.OptionFromOptionalKey(RunpodOperationId).pipe(S.withConstructorDefault(Effect.succeedNone)),
     path: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    problem: S.OptionFromOptionalKey(RunpodProblem).pipe(S.withConstructorDefault(Effect.succeedNone)),
     reason: RunpodErrorReason,
     status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
@@ -196,6 +305,7 @@ export class RunpodError extends S.TaggedError<RunpodError, { readonly brand: un
         methodName: O.some(descriptor.methodName),
         operationId: O.some(descriptor.operationId),
         path: O.some(descriptor.path),
+        problem: O.fromUndefinedOr(options.problem),
         reason,
         cause: causeFromUnknown(options.cause),
         status: O.fromUndefinedOr(options.status),
@@ -299,6 +409,7 @@ export class RunpodErrorOptions extends S.Opaque<RunpodErrorOptions, { readonly 
     // deterministically. Raw thrown causes are accepted via the private
     // `RunpodErrorOptionsInput` and normalized through `causeFromUnknown`.
     cause: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    problem: S.OptionFromOptionalKey(RunpodProblem).pipe(S.withConstructorDefault(Effect.succeedNone)),
     status: S.OptionFromOptionalKey(RunpodHttpStatusCode).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("RunpodErrorOptions", {
@@ -331,6 +442,7 @@ export class RunpodErrorOptions extends S.Opaque<RunpodErrorOptions, { readonly 
 export class RunpodErrorOptionsInput extends S.Opaque<RunpodErrorOptionsInput, { readonly brand: unique symbol }>()(
   S.Struct({
     cause: S.optionalKey(S.Defect({ includeStack: true }).pipe(S.overrideToEquivalence(SchemaUtils.alwaysEquivalent))),
+    problem: S.optionalKey(RunpodProblem),
     status: S.optionalKey(RunpodHttpStatusCode),
   }).pipe(
     $I.annoteSchema("RunpodErrorOptionsInput", {

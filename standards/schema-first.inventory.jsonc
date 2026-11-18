@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-15",
+  "generatedOn": "2026-11-17",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -392,6 +392,14 @@
       "status": "exception",
       "owner": "@beep/occt",
       "reason": "Internal kernel carrier of replicad WASM shape handles (one Shape3D plus its line style); not data, never encoded or persisted."
+    },
+    {
+      "file": "packages/drivers/runpod/scripts/openapi.lowering.ts",
+      "symbol": "LoweringNode",
+      "kind": "plain-data-schema-class",
+      "status": "exception",
+      "owner": "@beep/runpod",
+      "reason": "Keep-as-class allowlist (goals/schema-opaque-default/ops/codemod/keep-class.jsonc): Self-recursive schema: S.suspend((): S.Codec<LoweringNode, Encoded>) needs the class Self type; Opaque's Rebuild type carries no brand (TS2322)."
     },
     {
       "file": "packages/drivers/runpod/scripts/operations.renderer.ts",
