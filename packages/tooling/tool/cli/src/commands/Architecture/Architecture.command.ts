@@ -20,6 +20,7 @@ import * as S from "effect/Schema";
 import { registerScaffoldedWorkspaces } from "../CreatePackage/CreatePackage.command.ts";
 import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/internal/IdentityBulkRegistration.ts";
 import {
+  ensureCurrentModelFirstReferences,
   makeArchitectureOperationPlan,
   makeArchitecturePackageOperationPlan,
   makeModelFirstContextOperationPlan,
@@ -268,9 +269,12 @@ const registerLegacyIdentities = Effect.fn(function* (rootDir: string) {
 
 const applyAndRegister = Effect.fn(function* (plan: CanonicalSliceOperationPlan, register: boolean) {
   const rootDir = yield* findRepoRoot();
+  const shape = shapeOfOperationPlan(plan);
+  // A saved model-first plan must carry the references the sync would write now.
+  if (shape === "model-first") yield* ensureCurrentModelFirstReferences(rootDir, plan);
   const result = yield* applyCanonicalSliceOperationPlan(rootDir, plan);
   yield* reportApplyResult(result);
-  yield* ArchitectureShape.match(shapeOfOperationPlan(plan), {
+  yield* ArchitectureShape.match(shape, {
     "model-first": () => registerModelFirstPackages(rootDir, plan),
     legacy: () => (register ? registerLegacyIdentities(rootDir) : Effect.void),
   });

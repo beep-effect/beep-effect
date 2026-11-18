@@ -522,3 +522,71 @@ export const makeModelFirstContextOperationPlan = Effect.fn(function* (input: {
     ),
   });
 });
+
+const isProjectConfig = S.is(S.String.check(S.isPattern(/\/tsconfig(\.[a-z]+)?\.json$/u)));
+
+const projectConfigs = (plan: CanonicalSliceOperationPlan): HashMap.HashMap<string, string> =>
+  HashMap.fromIterable(
+    pipe(
+      plan.operations,
+      A.filter(S.is(WriteFileOperation)),
+      A.filter((operation) => isProjectConfig(operation.path)),
+      A.map((operation) => [operation.path, operation.content] as const)
+    )
+  );
+
+/**
+ * Refuse a saved model-first plan whose project references no longer match
+ * the workspace graph, for example after `@beep/contract-kit` moved.
+ *
+ * **Details**
+ *
+ * The plan is regenerated for its context and Module against the current
+ * workspace manifests; every planned tsconfig must equal the regenerated one.
+ * A plan generated against the current graph passes unchanged. Applying a
+ * stale plan would write references the registration sync then rewrites, so
+ * `check` would report drift against the same plan.
+ *
+ * **Example** (Check a fresh plan)
+ *
+ * ```ts
+ * import {
+ *   ensureCurrentModelFirstReferences,
+ *   makeModelFirstContextOperationPlan,
+ * } from "@beep/repo-cli/commands/Architecture"
+ * import { NodeServices } from "@effect/platform-node"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.flatMap(
+ *   makeModelFirstContextOperationPlan({ repoRoot: "/workspace/beep-effect", context: "notes", module: "Note" }),
+ *   (plan) => ensureCurrentModelFirstReferences("/workspace/beep-effect", plan)
+ * )
+ * Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then(console.log)
+ * ```
+ *
+ * @effects Reads the workspace manifests to regenerate the plan's references.
+ * @category validation
+ * @since 0.0.0
+ */
+export const ensureCurrentModelFirstReferences = Effect.fn(function* (
+  repoRoot: string,
+  plan: CanonicalSliceOperationPlan
+) {
+  const current = yield* makeModelFirstContextOperationPlan({
+    repoRoot,
+    context: plan.target.boundedContext,
+    module: plan.target.concept,
+  });
+  const expected = projectConfigs(current);
+  const stale = pipe(
+    A.fromIterable(projectConfigs(plan)),
+    A.filter(([path, content]) => !O.contains(HashMap.get(expected, path), content)),
+    A.map(([path]) => path),
+    A.sort(Order.String)
+  );
+  if (A.isReadonlyArrayNonEmpty(stale)) {
+    return yield* DomainError.newMessage(
+      `The plan's project references no longer match the workspace graph (${A.join(stale, ", ")}). Regenerate the plan with \`beep architecture plan --slice ${plan.target.boundedContext} --concept ${plan.target.concept}\`.`
+    );
+  }
+});

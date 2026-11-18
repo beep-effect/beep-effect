@@ -3,9 +3,11 @@ import * as Parity from "@beep/contract-kit/Parity";
 import {
   applyCanonicalSliceOperationPlan,
   architectureCommand,
+  CanonicalSliceOperationPlan,
   checkCanonicalSliceOperationPlan,
   decodeCanonicalSliceOperationPlanJson,
   encodeCanonicalSliceOperationPlanJson,
+  ensureCurrentModelFirstReferences,
   makeModelFirstContextOperationPlan,
   renderPackageJsonOperation,
   shapeOfOperationPlan,
@@ -451,6 +453,33 @@ describe("beep architecture: model-first context", () => {
           makeModelFirstContextOperationPlan({ repoRoot: "/repo", context: "Notes", module: "Note" })
         );
         expect(refusal.message).toContain("kebab-case slug");
+      })
+    );
+
+    it.effect(
+      "a saved plan applies only while its project references match the workspace graph",
+      Effect.fnUntraced(function* () {
+        const root = yield* repoRoot;
+        const plan = yield* notesPlan;
+        yield* ensureCurrentModelFirstReferences(root, plan);
+        // As if @beep/contract-kit had moved after the plan was saved.
+        const stale = CanonicalSliceOperationPlan.make({
+          ...plan,
+          operations: A.map(plan.operations, (operation) =>
+            isWriteFileOperation(operation)
+              ? WriteFileOperation.make({
+                  ...operation,
+                  content: Str.replaceAll(
+                    "foundation/modeling/contract-kit",
+                    "foundation/capability/contract-kit"
+                  )(operation.content),
+                })
+              : operation
+          ),
+        });
+        const refusal = yield* Effect.flip(ensureCurrentModelFirstReferences(root, stale));
+        expect(refusal.message).toContain("packages/notes/contract/tsconfig.json");
+        expect(refusal.message).toContain("Regenerate the plan");
       })
     );
 
