@@ -306,7 +306,7 @@ export const MemoryPartyDirectoryStore = Layer.effect(
               {
                 active: O.orElse(current.active, () => O.some(generation)),
                 // A generation still building forwards to the one queries read.
-                generations: O.match(O.filter(current.active, (active) => active < generation && false), {
+                generations: O.match(O.filter(current.active, (active) => active < generation), {
                   onNone: () => written,
                   onSome: (active) => HashMap.set(written, active, applyWrites(generationOf(current, active), writes)[1]),
                 }),
