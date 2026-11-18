@@ -10,11 +10,13 @@ import {
   fleetBoundaryPolicyArnFor,
   wildcardResourceReasons,
 } from "@beep/infra-ci-runners/DeployRolePolicy";
+import { requireDistinctStage } from "@beep/infra-ci-runners/Guards";
 import { physicalNames, poolEnvironment } from "@beep/infra-ci-runners/Names";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -500,54 +502,97 @@ const stringsOf = (value: unknown): ReadonlyArray<string> =>
 
 describe("CiRunners fleet boundary per stage", () => {
   const prodBoundary = fleetBoundary("prod");
-  // Every ARN and tag value a dev-alice stage would own, from the same name helpers the stack uses, plus Alchemy's
-  // generated names for the resources it leaves unpinned there.
-  const devNames = physicalNames("dev-alice");
-  const pools = A.map(["heavy", "overflow"] as const, (pool) => poolResourceNames(devNames.fleet, pool));
-  const fleetNames = fleetResourceNames(devNames.fleet);
-  const generated = ["CiRunners-Runners-Poolheavy-ScaleUp-dev-alice-0123456789abcdef"];
-  const names = [
-    ...A.filter(A.filter(R.values(devNames), P.isString), (value) => !Str.startsWith("/")(value)),
-    ...A.flatMap(pools, (pool) => A.filter(R.values(pool), P.isString)),
-    ...A.filter(R.values(fleetNames), P.isString),
-    ...generated,
-  ];
-  const devArns = [
-    ...A.flatMap(names, (name) => [
-      `arn:aws:iam::832907639880:role/${name}`,
-      `arn:aws:lambda:us-east-1:832907639880:function:${name}`,
-      `arn:aws:sqs:us-east-1:832907639880:${name}`,
-      `arn:aws:logs:us-east-1:832907639880:log-group:/aws/lambda/${name}:log-stream:x`,
-      `arn:aws:s3:::${name}/x`,
-      `arn:aws:s3:::${Str.toLowerCase(name)}/x`,
-    ]),
-    `arn:aws:s3:::${fleetNames.binariesBucketPrefix}-832907639880/x`,
-    `arn:aws:ssm:us-east-1:832907639880:parameter${devNames.ssmRoot}/app/id`,
-    `arn:aws:logs:us-east-1:832907639880:log-group:${devNames.flowLogGroup}:log-stream:x`,
-    poolEnvironment("dev-alice", "heavy"),
-    poolEnvironment("dev-alice", "overflow"),
-    "dev-alice",
-  ];
+  // Every ARN and tag value a stage would own, from the same name helpers the stack uses, plus Alchemy's generated
+  // names for the resources it leaves unpinned there.
+  const stageArns = (stage: string): ReadonlyArray<string> => {
+    const stageNames = physicalNames(stage);
+    const pools = A.map(["heavy", "overflow"] as const, (pool) => poolResourceNames(stageNames.fleet, pool));
+    const fleetNames = fleetResourceNames(stageNames.fleet);
+    const names = [
+      ...A.filter(A.filter(R.values(stageNames), P.isString), (value) => !Str.startsWith("/")(value)),
+      ...A.flatMap(pools, (pool) => A.filter(R.values(pool), P.isString)),
+      ...A.filter(R.values(fleetNames), P.isString),
+      `CiRunners-Runners-Poolheavy-ScaleUp-${stageNames.slug}-0123456789abcdef`,
+    ];
+    return [
+      ...A.flatMap(names, (name) => [
+        `arn:aws:iam::832907639880:role/${name}`,
+        `arn:aws:lambda:us-east-1:832907639880:function:${name}`,
+        `arn:aws:sqs:us-east-1:832907639880:${name}`,
+        `arn:aws:logs:us-east-1:832907639880:log-group:/aws/lambda/${name}:log-stream:x`,
+        `arn:aws:s3:::${name}/x`,
+        `arn:aws:s3:::${Str.toLowerCase(name)}/x`,
+      ]),
+      `arn:aws:s3:::${fleetNames.binariesBucketPrefix}-832907639880/x`,
+      `arn:aws:ssm:us-east-1:832907639880:parameter${stageNames.ssmRoot}/app/id`,
+      `arn:aws:logs:us-east-1:832907639880:log-group:${stageNames.flowLogGroup}:log-stream:x`,
+      poolEnvironment(stage, "heavy"),
+      poolEnvironment(stage, "overflow"),
+      stage,
+    ];
+  };
+  const namePatterns = A.filter(
+    A.dedupe(
+      A.flatMap(prodBoundary.Statement, (statement) => [
+        ...stringsOf(statement.Resource),
+        ...stringsOf(statement.NotResource),
+        ...stringsOf(statement.Condition),
+      ])
+    ),
+    (pattern) => /beep-fleet|CiRunners-|cirunners-/u.test(pattern)
+  );
+  const matchesOf = (stage: string) =>
+    A.filter(
+      A.flatMap(namePatterns, (pattern) => A.map(stageArns(stage), (value) => [pattern, value] as const)),
+      ([pattern, value]) => globMatches(pattern, value)
+    );
 
   it.effect("matches no name, ARN or tag value of another stage, and scopes every name pattern to prod", () =>
     Effect.sync(() => {
-      const patterns = A.dedupe(
-        A.flatMap(prodBoundary.Statement, (statement) => [
-          ...stringsOf(statement.Resource),
-          ...stringsOf(statement.NotResource),
-          ...stringsOf(statement.Condition),
-        ])
-      );
-      const namePatterns = A.filter(patterns, (pattern) => /beep-fleet|CiRunners-|cirunners-/u.test(pattern));
       assertTrue(A.isReadonlyArrayNonEmpty(namePatterns));
       for (const pattern of namePatterns) {
         expect([pattern, Str.includes("prod")(pattern)]).toStrictEqual([pattern, true]);
       }
-      for (const pattern of namePatterns) {
-        for (const value of devArns) {
-          expect([pattern, value, globMatches(pattern, value)]).toStrictEqual([pattern, value, false]);
-        }
+      expect(matchesOf("dev-alice")).toStrictEqual([]);
+    })
+  );
+
+  it.effect("matches nothing of any stage the stage guard accepts", () =>
+    Effect.sync(() => {
+      // A sample around prod: segments, prefixes, suffixes and near misses; the guard decides which are stages.
+      const sample = [
+        "dev-alice",
+        "staging",
+        "dev-product",
+        "reprod-1",
+        "xprod",
+        "a-prodx",
+        "pr",
+        "dev-al",
+        "alice-prod",
+        "dev-prod-x",
+        "prod-x",
+        "product-x",
+        "p-r-o-d",
+      ];
+      const accepted = A.filter(sample, (stage) =>
+        Exit.isSuccess(requireDistinctStage(stage).pipe(Effect.runSyncExit))
+      );
+      expect(accepted).toStrictEqual([
+        "dev-alice",
+        "staging",
+        "dev-product",
+        "reprod-1",
+        "xprod",
+        "a-prodx",
+        "dev-al",
+        "p-r-o-d",
+      ]);
+      for (const stage of accepted) {
+        expect([stage, matchesOf(stage)]).toStrictEqual([stage, []]);
       }
+      // The refused `alice-prod` is the case the guard exists for: the prod patterns do match its generated names.
+      assertTrue(A.isReadonlyArrayNonEmpty(matchesOf("alice-prod")));
     })
   );
 

@@ -851,6 +851,20 @@ Simulations (this list is the record; placeholder ARNs stand in for the new VPC,
 
 Results. Simulations 1 to 11 passed on 2026-11-18 (packet gate session, `aws iam simulate-custom-policy`, account 832907639880, us-east-1) on the chunks generated before the IAM boundary change. Simulations 9 and 10 cover the CWE-863 bypass path: a direct `ec2:CreateTags` that sets the ownership tags on a resource without them is refused. On the chunks of a2c68248391, 51 of 51 simulations passed on 2026-11-18 (packet gate session, same account and region): #1 to #19, #20 with the extended cases 20a to 20s, #21 to #24, #25, #26a to #26c, #27 and #28, plus #25b: `sqs:ReceiveMessage` and `sqs:DeleteMessage` on the non-fleet `beep-ci-build` queue under the boundary, both implicitDeny.
 
+Results at 8e3b3a45301 (2026-11-18, packet gate session, same account and region, #3386 r4613848496): 59 of 59 passed, plus #25b.
+
+- #1 to #19 and #21 to #28 passed.
+- #29a to #29d were all explicitDeny on the live `beep-ci-scale-up` mapping, even with the ownership tags and a fleet `lambda:FunctionArn` in the context.
+- #20 base passed, and so did 20a to 20s, both the deny half and the allow half.
+- 20t to 20w (dev-alice resources under the prod boundary) were all denied.
+- #25b was implicitDeny.
+
+Mapping inventory. The gate's read-only `aws lambda list-event-source-mappings` (us-east-1, 2026-11-18 about 11:4xZ) returned exactly the six ARNs `DenyLiveFleetMappings` denies. All six were `Enabled`, all target live-fleet functions, and no fleet mapping existed yet. The cutover decision re-reads the list before step 1b and before the drain.
+
+Principal-access assumption. Only this deploy role can call `CreateEventSourceMapping` on `beep-fleet-prod-*` functions. No other principal in the account manages fleet functions or their mappings, which is what makes the owned-tag condition sufficient for the stack's own mappings.
+
+Live validation. Tag on create and the direct-tag, update and delete sequence are validated live at step 1a, when the stack creates its mappings with tags, and at step 1b. The results go into the cutover record before the traffic move. No separate fixture account exists, and a fixture in the prod account would add risk without adding coverage.
+
 Commands, run by the gate from the operator workstation (`AWS_PROFILE=elpresidank-vault`), after the policy JSON is generated and reviewed: `aws iam create-role --role-name beep-alchemy-ci-runners-deploy --assume-role-policy-document file://$D/trust.json --max-session-duration 3600 --tags Key=beep:owner,Value=infra-alchemy-rebuild`, `aws iam put-role-policy --role-name beep-alchemy-ci-runners-deploy --policy-name ci-runners-deploy --policy-document file://$D/policy-v1.json` (v2 at step 1a/1b, same command), `gh api -X PUT repos/beep-effect/beep-effect/environments/ci-runners-prod` with the `main` branch policy, `gh variable set CI_RUNNERS_DEPLOY_ROLE_ARN --env ci-runners-prod`, and the three `gh secret set` pipes. Checks: `aws iam simulate-principal-policy` must say `allowed` for `ec2:DeleteVpc` on a VPC tagged `alchemy::stack=CiRunners` and `implicitDeny` on the live `beep-ci-runners-vpc`; `implicitDeny` for `ec2:CreateTags` on the live `beep-ci-runners-vpc` (foreign tags, no `ec2:CreateAction`) even with request tags `alchemy::stack=CiRunners` and `alchemy::stage=prod`, and `allowed` for `ec2:CreateTags` with `ec2:CreateAction=CreateVpc` and those request tags; `implicitDeny` for `ec2:RevokeSecurityGroupIngress` on a security group in the live VPC; and `implicitDeny` for `lambda:UpdateFunctionCode` on `beep-ci-scale-up`.
 
 Lane goals/infra-alchemy-rebuild-p5-ci-runners

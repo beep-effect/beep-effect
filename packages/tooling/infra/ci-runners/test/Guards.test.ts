@@ -48,6 +48,27 @@ describe("CiRunners guards and providers", () => {
     })
   );
 
+  it.effect("refuses a personal stage whose slug has a prod segment, and keeps prod the production stage", () =>
+    Effect.gen(function* () {
+      yield* requireDistinctStage("prod");
+      yield* requireDistinctStage("dev-alice");
+      yield* requireDistinctStage("dev-product");
+      yield* requireDistinctStage("reprod-1");
+      const refused = yield* Effect.forEach(
+        ["alice-prod", "dev-prod-x", "prod-x"],
+        (stage) => requireDistinctStage(stage).pipe(Effect.flip),
+        { concurrency: 1 }
+      );
+      for (const error of refused) {
+        expect(error.message).toContain("stage slug contains a 'prod' segment, reserved for production");
+      }
+      // `product-x` is refused by the older prefix rule: its fleet name starts with `beep-fleet-prod`.
+      const product = yield* requireDistinctStage("product-x").pipe(Effect.flip);
+      expect(product.message).toContain("prefix one another");
+      expect(product.message).not.toContain("'prod' segment");
+    })
+  );
+
   it.effect("builds the RunnerSweep provider for a stage without calling AWS or GitHub", () =>
     Effect.gen(function* () {
       const context = yield* Layer.build(

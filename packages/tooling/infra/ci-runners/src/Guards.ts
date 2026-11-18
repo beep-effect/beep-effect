@@ -137,6 +137,12 @@ const stageRules: ReadonlyArray<{
     refuses: (_stage, slug) => Str.startsWith(productionStage)(slug) || Str.startsWith(slug)(productionStage),
     reason: (slug) => `its fleet name beep-fleet-${slug} and the ${productionStage} fleet name prefix one another`,
   },
+  // The prod boundary matches Alchemy's generated names by `CiRunners-*-prod-*`, which a personal slug with a `prod`
+  // segment (`alice-prod`) would also produce.
+  {
+    refuses: (_stage, slug) => /(?:^|-)prod(?:-|$)/u.test(slug),
+    reason: () => "stage slug contains a 'prod' segment, reserved for production",
+  },
 ];
 
 const stageRefusal = (stage: string, slug: string): ReadonlyArray<string> =>
@@ -149,8 +155,8 @@ const stageRefusal = (stage: string, slug: string): ReadonlyArray<string> =>
 
 /**
  * Fail a stage other than `prod` that is not canonical, whose fleet name
- * and the `prod` fleet name prefix one another, or whose slug is empty or
- * too long.
+ * and the `prod` fleet name prefix one another, whose slug has a `prod`
+ * segment, or whose slug is empty or too long.
  *
  * **Details**
  *
@@ -161,6 +167,9 @@ const stageRefusal = (stage: string, slug: string): ReadonlyArray<string> =>
  * termination watcher matches `ghr:environment` by prefix, so the check
  * runs both ways against `prod`: `prodfoo` (whose fleet name starts with
  * `beep-fleet-prod`) and `pro` (whose fleet name prefixes it) are refused.
+ * A slug with `prod` as a `-`-delimited segment (`alice-prod`, `dev-prod-x`)
+ * is refused too: the prod boundary's `CiRunners-*-prod-*` patterns would
+ * match the names Alchemy generates for it.
  *
  * **Example** (A personal stage passes)
  *
