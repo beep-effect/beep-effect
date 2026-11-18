@@ -4,11 +4,7 @@ import {
   WebhookRuntimeConfig,
 } from "@beep/alchemy-github-runners/RunnerRuntime.models";
 import { program } from "@beep/infra-ci-runners/CiRunners";
-import {
-  deployRolePolicy,
-  fleetBoundaryDocument,
-  fleetBoundaryPolicyArn,
-} from "@beep/infra-ci-runners/DeployRolePolicy";
+import { deployRolePolicy, fleetBoundary, fleetBoundaryPolicyArn } from "@beep/infra-ci-runners/DeployRolePolicy";
 import { touchesLiveFleet } from "@beep/infra-ci-runners/Names";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -288,7 +284,7 @@ describe("CiRunners production stage", () => {
         (statement: IAM.PolicyStatement) => resourceList(statement.Resource)
       );
       const boundaryPatterns = A.flatMap(
-        A.filter(fleetBoundaryDocument.Statement, (statement) => statement.Sid === "DenyPassOutsideFleet"),
+        A.filter(fleetBoundary("prod").Statement, (statement) => statement.Sid === "DenyPassOutsideFleet"),
         (statement: IAM.PolicyStatement) => resourceList(statement.NotResource)
       );
       expect(A.length(grantPatterns)).toBe(2);

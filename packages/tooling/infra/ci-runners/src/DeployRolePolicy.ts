@@ -23,6 +23,7 @@
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
+import { stageSlug } from "./Names.ts";
 import type * as IAM from "@alchemy.run/aws/IAM";
 
 const account = "832907639880";
@@ -146,16 +147,39 @@ const ec2Statements: ReadonlyArray<IAM.PolicyStatement> = [
   },
 ];
 
-const fleetRoles = [
-  `arn:aws:iam::${account}:role/beep-fleet-prod-*`,
-  `arn:aws:iam::${account}:role/CiRunners-*-prod-*`,
+// The roles of one stage: pinned `beep-fleet-<slug>-*` names and Alchemy's generated `CiRunners-<id>-<slug>-<suffix>`.
+const fleetRolesOf = (slug: string) => [
+  `arn:aws:iam::${account}:role/beep-fleet-${slug}-*`,
+  `arn:aws:iam::${account}:role/CiRunners-*-${slug}-*`,
 ];
 
+const fleetRoles = fleetRolesOf("prod");
+
 /**
- * The fleet's permissions boundary: a bootstrap object the gate creates out of
- * band (decision "CI runners deploy through a stack-scoped OIDC role"), at a
- * path no deploy-role policy grant reaches, so the deploy role can neither
- * edit it nor replace it.
+ * The ARN of a stage's permissions boundary: a bootstrap object the gate
+ * creates out of band (decision "CI runners deploy through a stack-scoped
+ * OIDC role"), one per stage, at a path no deploy-role policy grant reaches,
+ * so the deploy role can neither edit nor replace it.
+ *
+ * **Example** (The production boundary)
+ *
+ * ```ts
+ * import { fleetBoundaryPolicyArnFor } from "@beep/infra-ci-runners/DeployRolePolicy"
+ *
+ * console.log(fleetBoundaryPolicyArnFor("prod")) // "arn:aws:iam::832907639880:policy/beep-fleet-boundary/fleet-boundary-prod"
+ * ```
+ *
+ * @param stage - The stage.
+ * @returns The boundary policy ARN of that stage.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const fleetBoundaryPolicyArnFor = (stage: string): string =>
+  `arn:aws:iam::${account}:policy/beep-fleet-boundary/fleet-boundary-${stageSlug(stage)}`;
+
+/**
+ * The production boundary ARN, the only one the deploy role's role grants
+ * accept.
  *
  * **Example** (Outside the stack's policy path)
  *
@@ -168,16 +192,10 @@ const fleetRoles = [
  * @category configuration
  * @since 0.0.0
  */
-export const fleetBoundaryPolicyArn = `arn:aws:iam::${account}:policy/beep-fleet-boundary/fleet-boundary`;
+export const fleetBoundaryPolicyArn = fleetBoundaryPolicyArnFor("prod");
 
 const withBoundary = { "iam:PermissionsBoundary": fleetBoundaryPolicyArn };
 
-// Every role of every fleet stage: the boundary also caps personal stages' roles.
-const anyFleetRole = [`arn:aws:iam::${account}:role/beep-fleet-*`, `arn:aws:iam::${account}:role/CiRunners-*`];
-
-const fleetEnvironment = { "aws:ResourceTag/ghr:environment": "beep-fleet-*" };
-const stackOwned = { "aws:ResourceTag/alchemy::stack": "CiRunners" };
-const fleetParameters = `arn:aws:ssm:${region}:${account}:parameter/beep-fleet/*`;
 const instances = `arn:aws:ec2:${region}:${account}:instance/*`;
 
 /**
@@ -201,171 +219,183 @@ export const boundaryWildcardReasons: Readonly<Record<string, string>> = {
   CeilingListReads: "DescribeParameters, DescribeLogGroups and GetCallerIdentity take no resource-level scope.",
 };
 
-// Each allow is the fleet's own reach, mirroring the deploy role: personal stages are named beep-fleet-<stage>
-// where the composite pins names, and CiRunners-<id>-<stage>-<suffix> (S3: lower case) where Alchemy generates them.
-const fleetCeilingStatements: ReadonlyArray<IAM.PolicyStatement> = [
-  {
-    Sid: "CeilingEc2Reads",
-    Effect: "Allow",
-    Action: ["ec2:DescribeInstances", "ec2:DescribeLaunchTemplateVersions", "ec2:DescribeTags"],
-    Resource: ["*"],
-  },
-  {
-    Sid: "CeilingListReads",
-    Effect: "Allow",
-    Action: ["ssm:DescribeParameters", "logs:DescribeLogGroups", "sts:GetCallerIdentity"],
-    Resource: ["*"],
-  },
-  // A launch creates the instance, its volumes and the EC2 Fleet request, each tagged with the pool's environment.
-  {
-    Sid: "CeilingLaunchTagged",
-    Effect: "Allow",
-    Action: ["ec2:CreateFleet", "ec2:RunInstances"],
-    Resource: [instances, `arn:aws:ec2:${region}:${account}:volume/*`, `arn:aws:ec2:${region}:${account}:fleet/*`],
-    Condition: { StringLike: { "aws:RequestTag/ghr:environment": "beep-fleet-*" } },
-  },
-  // ...and only into the stack's own subnet and security group (and its launch template, when one is named).
-  {
-    Sid: "CeilingLaunchFromStack",
-    Effect: "Allow",
-    Action: ["ec2:CreateFleet", "ec2:RunInstances"],
-    Resource: [
-      `arn:aws:ec2:${region}:${account}:launch-template/*`,
-      `arn:aws:ec2:${region}:${account}:subnet/*`,
-      `arn:aws:ec2:${region}:${account}:security-group/*`,
-    ],
-    Condition: { StringEquals: stackOwned },
-  },
-  // The launch reads the AMI and its snapshots and creates the interface and the Spot request it has no tags for;
-  // the subnet and security group the interface joins are held by CeilingLaunchFromStack.
-  {
-    Sid: "CeilingLaunchInputs",
-    Effect: "Allow",
-    Action: ["ec2:CreateFleet", "ec2:RunInstances"],
-    Resource: [
-      `arn:aws:ec2:${region}::image/*`,
-      `arn:aws:ec2:${region}::snapshot/*`,
-      `arn:aws:ec2:${region}:${account}:network-interface/*`,
-      `arn:aws:ec2:${region}:${account}:spot-instances-request/*`,
-    ],
-  },
-  {
-    Sid: "CeilingTagOnLaunch",
-    Effect: "Allow",
-    Action: ["ec2:CreateTags"],
-    Resource: [instances, `arn:aws:ec2:${region}:${account}:volume/*`, `arn:aws:ec2:${region}:${account}:fleet/*`],
-    Condition: {
-      StringEquals: { "ec2:CreateAction": ["CreateFleet", "RunInstances"] },
-      StringLike: { "aws:RequestTag/ghr:environment": "beep-fleet-*" },
+// Each allow is one stage's own reach: pinned names start `beep-fleet-<slug>-` and Alchemy's generated ones
+// `CiRunners-<id>-<slug>-` (S3: lower case), so no pattern reaches another stage.
+const fleetCeilingStatements = (stage: string): ReadonlyArray<IAM.PolicyStatement> => {
+  const slug = stageSlug(stage);
+  const environment = `beep-fleet-${slug}-*`;
+  const parameters = `arn:aws:ssm:${region}:${account}:parameter/beep-fleet/${slug}/*`;
+  const named = (service: string) => [
+    `arn:aws:${service}:${region}:${account}:${service === "lambda" ? "function:" : ""}beep-fleet-${slug}-*`,
+    `arn:aws:${service}:${region}:${account}:${service === "lambda" ? "function:" : ""}CiRunners-*-${slug}-*`,
+  ];
+  return [
+    {
+      Sid: "CeilingEc2Reads",
+      Effect: "Allow",
+      Action: ["ec2:DescribeInstances", "ec2:DescribeLaunchTemplateVersions", "ec2:DescribeTags"],
+      Resource: ["*"],
     },
-  },
-  {
-    Sid: "CeilingFleetInstances",
-    Effect: "Allow",
-    Action: ["ec2:CreateTags", "ec2:DeleteTags", "ec2:TerminateInstances", "ec2:ModifyInstanceMetadataOptions"],
-    Resource: [instances],
-    Condition: { StringLike: fleetEnvironment },
-  },
-  {
-    Sid: "CeilingFleetParameters",
-    Effect: "Allow",
-    Action: [
-      "ssm:AddTagsToResource",
-      "ssm:DeleteParameter",
-      "ssm:GetParameter",
-      "ssm:GetParameters",
-      "ssm:GetParametersByPath",
-      "ssm:PutParameter",
-    ],
-    Resource: [fleetParameters],
-  },
-  // Fleet secrets are SecureStrings under the fleet key or aws/ssm: a key serves the fleet only through SSM and only
-  // for a fleet parameter, whose ARN SSM puts in the encryption context.
-  {
-    Sid: "CeilingKmsThroughFleetParameters",
-    Effect: "Allow",
-    Action: ["kms:Decrypt", "kms:Encrypt", "kms:GenerateDataKey"],
-    Resource: [`arn:aws:kms:${region}:${account}:key/*`],
-    Condition: {
-      StringEquals: { "kms:ViaService": `ssm.${region}.amazonaws.com` },
-      StringLike: { "kms:EncryptionContext:PARAMETER_ARN": fleetParameters },
+    {
+      Sid: "CeilingListReads",
+      Effect: "Allow",
+      Action: ["ssm:DescribeParameters", "logs:DescribeLogGroups", "sts:GetCallerIdentity"],
+      Resource: ["*"],
     },
-  },
-  {
-    Sid: "CeilingFleetBinaries",
-    Effect: "Allow",
-    Action: ["s3:GetObject", "s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"],
-    Resource: ["arn:aws:s3:::beep-fleet-*-binaries-*/*", "arn:aws:s3:::cirunners-*/*"],
-  },
-  {
-    Sid: "CeilingFleetLogs",
-    Effect: "Allow",
-    Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:DescribeLogStreams", "logs:PutLogEvents"],
-    Resource: [
-      `arn:aws:logs:${region}:${account}:log-group:/beep-fleet/*`,
-      `arn:aws:logs:${region}:${account}:log-group:/aws/lambda/beep-fleet-*`,
-      `arn:aws:logs:${region}:${account}:log-group:/aws/lambda/CiRunners-*`,
-    ],
-  },
-  {
-    Sid: "CeilingFleetQueues",
-    Effect: "Allow",
-    Action: [
-      "sqs:ChangeMessageVisibility",
-      "sqs:DeleteMessage",
-      "sqs:GetQueueAttributes",
-      "sqs:ReceiveMessage",
-      "sqs:SendMessage",
-    ],
-    Resource: [`arn:aws:sqs:${region}:${account}:beep-fleet-*`, `arn:aws:sqs:${region}:${account}:CiRunners-*`],
-  },
-  {
-    Sid: "CeilingFleetFunctions",
-    Effect: "Allow",
-    Action: ["lambda:InvokeFunction"],
-    Resource: [
-      `arn:aws:lambda:${region}:${account}:function:beep-fleet-*`,
-      `arn:aws:lambda:${region}:${account}:function:CiRunners-*`,
-    ],
-  },
-  { Sid: "CeilingPassFleetRoles", Effect: "Allow", Action: ["iam:PassRole"], Resource: anyFleetRole },
-];
+    // A launch creates the instance, its volumes and the EC2 Fleet request, each tagged with the pool's environment.
+    {
+      Sid: "CeilingLaunchTagged",
+      Effect: "Allow",
+      Action: ["ec2:CreateFleet", "ec2:RunInstances"],
+      Resource: [instances, `arn:aws:ec2:${region}:${account}:volume/*`, `arn:aws:ec2:${region}:${account}:fleet/*`],
+      Condition: { StringLike: { "aws:RequestTag/ghr:environment": environment } },
+    },
+    // ...and only into the stack's own subnet and security group (and its launch template, when one is named).
+    {
+      Sid: "CeilingLaunchFromStack",
+      Effect: "Allow",
+      Action: ["ec2:CreateFleet", "ec2:RunInstances"],
+      Resource: [
+        `arn:aws:ec2:${region}:${account}:launch-template/*`,
+        `arn:aws:ec2:${region}:${account}:subnet/*`,
+        `arn:aws:ec2:${region}:${account}:security-group/*`,
+      ],
+      Condition: {
+        StringEquals: { "aws:ResourceTag/alchemy::stack": "CiRunners", "aws:ResourceTag/alchemy::stage": stage },
+      },
+    },
+    // The launch reads the AMI and its snapshots and creates the interface and the Spot request it has no tags for;
+    // the subnet and security group the interface joins are held by CeilingLaunchFromStack.
+    {
+      Sid: "CeilingLaunchInputs",
+      Effect: "Allow",
+      Action: ["ec2:CreateFleet", "ec2:RunInstances"],
+      Resource: [
+        `arn:aws:ec2:${region}::image/*`,
+        `arn:aws:ec2:${region}::snapshot/*`,
+        `arn:aws:ec2:${region}:${account}:network-interface/*`,
+        `arn:aws:ec2:${region}:${account}:spot-instances-request/*`,
+      ],
+    },
+    {
+      Sid: "CeilingTagOnLaunch",
+      Effect: "Allow",
+      Action: ["ec2:CreateTags"],
+      Resource: [instances, `arn:aws:ec2:${region}:${account}:volume/*`, `arn:aws:ec2:${region}:${account}:fleet/*`],
+      Condition: {
+        StringEquals: { "ec2:CreateAction": ["CreateFleet", "RunInstances"] },
+        StringLike: { "aws:RequestTag/ghr:environment": environment },
+      },
+    },
+    {
+      Sid: "CeilingFleetInstances",
+      Effect: "Allow",
+      Action: ["ec2:CreateTags", "ec2:DeleteTags", "ec2:TerminateInstances", "ec2:ModifyInstanceMetadataOptions"],
+      Resource: [instances],
+      Condition: { StringLike: { "aws:ResourceTag/ghr:environment": environment } },
+    },
+    {
+      Sid: "CeilingFleetParameters",
+      Effect: "Allow",
+      Action: [
+        "ssm:AddTagsToResource",
+        "ssm:DeleteParameter",
+        "ssm:GetParameter",
+        "ssm:GetParameters",
+        "ssm:GetParametersByPath",
+        "ssm:PutParameter",
+      ],
+      Resource: [parameters],
+    },
+    // Fleet secrets are SecureStrings under the fleet key or aws/ssm: a key serves the fleet only through SSM and only
+    // for a fleet parameter, whose ARN SSM puts in the encryption context.
+    {
+      Sid: "CeilingKmsThroughFleetParameters",
+      Effect: "Allow",
+      Action: ["kms:Decrypt", "kms:Encrypt", "kms:GenerateDataKey"],
+      Resource: [`arn:aws:kms:${region}:${account}:key/*`],
+      Condition: {
+        StringEquals: { "kms:ViaService": `ssm.${region}.amazonaws.com` },
+        StringLike: { "kms:EncryptionContext:PARAMETER_ARN": parameters },
+      },
+    },
+    {
+      Sid: "CeilingFleetBinaries",
+      Effect: "Allow",
+      Action: ["s3:GetObject", "s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"],
+      Resource: [`arn:aws:s3:::beep-fleet-${slug}-binaries-*/*`, `arn:aws:s3:::cirunners-*-${slug}-*/*`],
+    },
+    {
+      Sid: "CeilingFleetLogs",
+      Effect: "Allow",
+      Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:DescribeLogStreams", "logs:PutLogEvents"],
+      Resource: [
+        `arn:aws:logs:${region}:${account}:log-group:/beep-fleet/${slug}/*`,
+        `arn:aws:logs:${region}:${account}:log-group:/aws/lambda/beep-fleet-${slug}-*`,
+        `arn:aws:logs:${region}:${account}:log-group:/aws/lambda/CiRunners-*-${slug}-*`,
+      ],
+    },
+    {
+      Sid: "CeilingFleetQueues",
+      Effect: "Allow",
+      Action: [
+        "sqs:ChangeMessageVisibility",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:ReceiveMessage",
+        "sqs:SendMessage",
+      ],
+      Resource: named("sqs"),
+    },
+    {
+      Sid: "CeilingFleetFunctions",
+      Effect: "Allow",
+      Action: ["lambda:InvokeFunction"],
+      Resource: named("lambda"),
+    },
+    { Sid: "CeilingPassFleetRoles", Effect: "Allow", Action: ["iam:PassRole"], Resource: fleetRolesOf(slug) },
+  ];
+};
 
 /**
- * The permissions boundary of every role the stack creates (runner, Lambda
- * execution, flow logs). A role's permissions are the intersection of its
- * policies and this ceiling, so even a policy the deploy role writes cannot
- * exceed it.
+ * The permissions boundary of every role one stage creates (runner, Lambda
+ * execution, flow logs, reaper), published at
+ * {@link fleetBoundaryPolicyArnFor}. A role's permissions are the
+ * intersection of its policies and this ceiling, so even a policy the deploy
+ * role writes cannot exceed it.
  *
  * **Details**
  *
- * The allow statements are the ceiling, no wider than the deploy role's own
- * reach: the fleet's SSM parameters, queues, functions, log groups and
+ * The allow statements are the ceiling, scoped to the one stage: for `prod`
+ * no wider than the deploy role's own reach, and matching no name of another
+ * stage. They cover that stage's SSM parameters, queues, functions, log groups and
  * binaries bucket by ARN, KMS only through SSM for a fleet parameter, and EC2
  * mutations only on instances tagged with a fleet `ghr:environment`; a
  * launch needs that request tag and a stack-owned subnet and security group
  * (and launch template, when the request names one). Only the reads in {@link boundaryWildcardReasons} name
  * `Resource: "*"`. There is no snapshot, image or volume-attribute grant. The deny statements close the escalation paths
  * explicitly: every IAM write but passing a fleet role, assuming or passing
- * any role outside the fleet, and every Organizations, account and billing
+ * any role outside the stage's fleet, and every Organizations, account and billing
  * action. The IMDS deny keeps a runner from re-enabling the metadata endpoint
  * once its boundary script has disabled it.
  *
  * **Example** (Read the escalation denies)
  *
  * ```ts
- * import { fleetBoundaryDocument } from "@beep/infra-ci-runners/DeployRolePolicy"
+ * import { fleetBoundary } from "@beep/infra-ci-runners/DeployRolePolicy"
  *
- * console.log(fleetBoundaryDocument.Statement.filter((statement) => statement.Effect === "Deny").length) // 5
+ * console.log(fleetBoundary("prod").Statement.filter((statement) => statement.Effect === "Deny").length) // 5
  * ```
  *
+ * @param stage - The stage whose roles the boundary caps.
+ * @returns The boundary document.
  * @category configuration
  * @since 0.0.0
  */
-export const fleetBoundaryDocument: IAM.PolicyDocument = {
+export const fleetBoundary = (stage: string): IAM.PolicyDocument => ({
   Version: "2012-10-17",
   Statement: [
-    ...fleetCeilingStatements,
+    ...fleetCeilingStatements(stage),
     {
       Sid: "DenyIamWrites",
       Effect: "Deny",
@@ -389,8 +419,18 @@ export const fleetBoundaryDocument: IAM.PolicyDocument = {
       ],
       Resource: ["*"],
     },
-    { Sid: "DenyPassOutsideFleet", Effect: "Deny", Action: ["iam:PassRole"], NotResource: anyFleetRole },
-    { Sid: "DenyAssumeOutsideFleet", Effect: "Deny", Action: ["sts:AssumeRole*"], NotResource: anyFleetRole },
+    {
+      Sid: "DenyPassOutsideFleet",
+      Effect: "Deny",
+      Action: ["iam:PassRole"],
+      NotResource: fleetRolesOf(stageSlug(stage)),
+    },
+    {
+      Sid: "DenyAssumeOutsideFleet",
+      Effect: "Deny",
+      Action: ["sts:AssumeRole*"],
+      NotResource: fleetRolesOf(stageSlug(stage)),
+    },
     {
       Sid: "DenyOrganizationAccountBilling",
       Effect: "Deny",
@@ -405,7 +445,7 @@ export const fleetBoundaryDocument: IAM.PolicyDocument = {
       Condition: { StringEquals: { "ec2:MetadataHttpEndpoint": "disabled" } },
     },
   ],
-};
+});
 
 // The only AWS-managed policy the stack attaches: Alchemy's Lambda execution roles get it.
 const lambdaBasicExecution = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole";
@@ -695,6 +735,31 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
   { Sid: "Sts", Effect: "Allow", Action: ["sts:GetCallerIdentity"], Resource: ["*"] },
 ];
 
+// The live Pulumi fleet's six event-source mappings (beep-ci and beep-ovf: scale-up, job-retry, deregister-retry),
+// read with `aws lambda list-event-source-mappings` on 2026-11-18. Removed at P5 drain+destroy.
+const liveFleetMappingUuids = [
+  "fbc1f039-9aef-40a2-9481-c8a18e6c4157", // beep-ci-job-retry
+  "e93fcf22-bfe9-4da4-92e7-a124812ac31b", // beep-ci-scale-up
+  "eb15d409-4ee9-4d5c-b599-d7116dcf804c", // beep-ci-deregister-retry
+  "5bd25a59-5455-4923-aadb-e4db4c600439", // beep-ovf-job-retry
+  "c54ad5fd-8b22-4e61-b52b-1fb9857c70a7", // beep-ovf-deregister-retry
+  "fe8ccc78-bafa-4ea2-aff9-b022acd2f642", // beep-ovf-scale-up
+];
+
+// Mapping tags grant ownership, and an update can retarget a mapping, so no grant may reach the live fleet's mappings:
+// a stalled live scale-up stalls production CI. Keyed on the ARNs alone, with no condition. Removed at P5 drain+destroy.
+const denyLiveFleetMappings: IAM.PolicyStatement = {
+  Sid: "DenyLiveFleetMappings",
+  Effect: "Deny",
+  Action: [
+    "lambda:TagResource",
+    "lambda:UntagResource",
+    "lambda:UpdateEventSourceMapping",
+    "lambda:DeleteEventSourceMapping",
+  ],
+  Resource: A.map(liveFleetMappingUuids, (uuid) => `arn:aws:lambda:${region}:${account}:event-source-mapping:${uuid}`),
+};
+
 /**
  * The default group's two revokes, held to the fleet VPC itself.
  *
@@ -722,6 +787,8 @@ export const defaultGroupStatement = (vpcArn: string): IAM.PolicyStatement => ({
 
 /**
  * The deploy role's inline policy: v1 without a VPC, v2 with the fleet VPC.
+ * Both end with `DenyLiveFleetMappings`, which keeps every grant off the
+ * live fleet's six event-source mappings until the P5 drain and destroy.
  *
  * **Example** (Build v1)
  *
@@ -744,6 +811,7 @@ export const deployRolePolicy = (vpcArn: O.Option<string>): IAM.PolicyDocument =
     ...ec2Statements,
     ...iamStatements,
     ...O.toArray(O.map(vpcArn, defaultGroupStatement)),
+    denyLiveFleetMappings,
   ],
 });
 

@@ -18,7 +18,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { effectiveCap, PoolName, productionStage, resolveStageConfig } from "./Config.ts";
 import { stageCredentials } from "./Credentials.ts";
-import { fleetBoundaryPolicyArn } from "./DeployRolePolicy.ts";
+import { fleetBoundaryPolicyArnFor } from "./DeployRolePolicy.ts";
 import { requireCiForProduction, requireConfiguredTarget, requireDistinctStage, requireFencedNames } from "./Guards.ts";
 import { physicalNames } from "./Names.ts";
 import { declareNetwork, networkTags } from "./Network.ts";
@@ -155,8 +155,8 @@ export const declareCiRunners = Effect.fn("CiRunners.declare")(function* (input:
       runAs: config.image.runAs,
       postInstall: yield* packPostInstall(runnerPostInstall),
       runnerManagedPolicyArns: [policies.imdsDisableArn],
-      // Every role the fleet creates carries the bootstrap fleet boundary (deploy-role decision).
-      permissionsBoundaryArn: fleetBoundaryPolicyArn,
+      // Every role the fleet creates carries the stage's bootstrap fleet boundary (deploy-role decision).
+      permissionsBoundaryArn: fleetBoundaryPolicyArnFor(names.slug),
       launchTemplate: {
         imageId: config.image.amiId,
         securityGroupIds: [network.runnerSecurityGroupId],
@@ -182,6 +182,7 @@ export const declareCiRunners = Effect.fn("CiRunners.declare")(function* (input:
 
   yield* declareReaper({
     functionName: names.reaperFunction,
+    permissionsBoundary: fleetBoundaryPolicyArnFor(names.slug),
     scheduleName: production ? O.some(names.reaperSchedule) : O.none(),
     config: ReaperRuntimeConfig.make({
       environments: [`${names.fleet}-${PoolName.Enum.heavy}`, `${names.fleet}-${PoolName.Enum.overflow}`],

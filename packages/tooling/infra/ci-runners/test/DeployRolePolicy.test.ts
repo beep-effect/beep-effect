@@ -1,13 +1,16 @@
+import { fleetResourceNames, poolResourceNames } from "@beep/alchemy-github-runners/RunnerFleetNames";
 import {
   boundaryWildcardReasons,
   chunkByLength,
   defaultGroupStatement,
   deployRolePolicy,
   ec2CreateActions,
-  fleetBoundaryDocument,
+  fleetBoundary,
   fleetBoundaryPolicyArn,
+  fleetBoundaryPolicyArnFor,
   wildcardResourceReasons,
 } from "@beep/infra-ci-runners/DeployRolePolicy";
+import { physicalNames, poolEnvironment } from "@beep/infra-ci-runners/Names";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -132,7 +135,7 @@ describe("CiRunners deploy role policy", () => {
   const mappingArn = "arn:aws:lambda:us-east-1:832907639880:event-source-mapping:*";
   const mappingStatements = (action: string) =>
     A.map(
-      A.filter(v2.Statement, (statement) => grants(statement, action)),
+      A.filter(v2.Statement, (statement) => statement.Effect === "Allow" && grants(statement, action)),
       (statement) => ({ resources: resourcesOf(statement), condition: statement.Condition })
     );
 
@@ -178,6 +181,45 @@ describe("CiRunners deploy role policy", () => {
         },
       ]);
       expect(onMappings("lambda:UntagResource")).toStrictEqual([]);
+    })
+  );
+
+  it.effect("denies every mapping write on exactly the live fleet's six mappings, by ARN alone", () =>
+    Effect.sync(() => {
+      const liveMappings = A.map(
+        [
+          "fbc1f039-9aef-40a2-9481-c8a18e6c4157",
+          "e93fcf22-bfe9-4da4-92e7-a124812ac31b",
+          "eb15d409-4ee9-4d5c-b599-d7116dcf804c",
+          "5bd25a59-5455-4923-aadb-e4db4c600439",
+          "c54ad5fd-8b22-4e61-b52b-1fb9857c70a7",
+          "fe8ccc78-bafa-4ea2-aff9-b022acd2f642",
+        ],
+        (uuid) => `arn:aws:lambda:us-east-1:832907639880:event-source-mapping:${uuid}`
+      );
+      for (const policy of [v1, v2]) {
+        const denies = A.filter(policy.Statement, (statement) => statement.Effect === "Deny");
+        expect(denies).toStrictEqual([
+          {
+            Sid: "DenyLiveFleetMappings",
+            Effect: "Deny",
+            Action: [
+              "lambda:TagResource",
+              "lambda:UntagResource",
+              "lambda:UpdateEventSourceMapping",
+              "lambda:DeleteEventSourceMapping",
+            ],
+            Resource: liveMappings,
+          },
+        ]);
+      }
+      // Tag on create for the stack's own mappings is untouched.
+      expect(
+        A.map(
+          A.filter(v2.Statement, (statement) => statement.Sid === "LambdaMappingsTagOnCreate"),
+          (statement) => [statement.Effect, statement.Action, statement.Resource]
+        )
+      ).toStrictEqual([["Allow", ["lambda:TagResource"], [mappingArn]]]);
     })
   );
 
@@ -255,7 +297,8 @@ describe("CiRunners deploy role policy", () => {
 });
 
 describe("CiRunners fleet boundary", () => {
-  const denies = A.filter(fleetBoundaryDocument.Statement, (statement) => statement.Effect === "Deny");
+  const prodBoundary = fleetBoundary("prod");
+  const denies = A.filter(prodBoundary.Statement, (statement) => statement.Effect === "Deny");
   const denied = (action: string) => A.some(denies, (statement) => A.contains(actionsOf(statement), action));
 
   it.effect("denies IAM writes, roles outside the fleet, and organization, account and billing actions", () =>
@@ -270,14 +313,14 @@ describe("CiRunners fleet boundary", () => {
       expect(A.flatMap(outsideFleet, actionsOf)).toStrictEqual(["iam:PassRole", "sts:AssumeRole*"]);
       for (const statement of outsideFleet) {
         expect(statement.NotResource).toStrictEqual([
-          "arn:aws:iam::832907639880:role/beep-fleet-*",
-          "arn:aws:iam::832907639880:role/CiRunners-*",
+          "arn:aws:iam::832907639880:role/beep-fleet-prod-*",
+          "arn:aws:iam::832907639880:role/CiRunners-*-prod-*",
         ]);
       }
     })
   );
 
-  const allows = A.filter(fleetBoundaryDocument.Statement, (statement) => statement.Effect === "Allow");
+  const allows = A.filter(prodBoundary.Statement, (statement) => statement.Effect === "Allow");
   const allowedActions = A.flatMap(allows, actionsOf);
 
   it.effect("allows no IAM action but passing a fleet role, and no wildcard action", () =>
@@ -286,8 +329,8 @@ describe("CiRunners fleet boundary", () => {
       assertFalse(A.some(allowedActions, Str.includes("*")));
       for (const statement of A.filter(allows, (allow) => grants(allow, "iam:PassRole"))) {
         expect(resourcesOf(statement)).toStrictEqual([
-          "arn:aws:iam::832907639880:role/beep-fleet-*",
-          "arn:aws:iam::832907639880:role/CiRunners-*",
+          "arn:aws:iam::832907639880:role/beep-fleet-prod-*",
+          "arn:aws:iam::832907639880:role/CiRunners-*-prod-*",
         ]);
       }
     })
@@ -350,8 +393,8 @@ describe("CiRunners fleet boundary", () => {
         "arn:aws:ec2:us-east-1:832907639880:subnet/*",
         "arn:aws:ec2:us-east-1:832907639880:security-group/*",
       ]);
-      expect(A.flatMap(fromStack, (statement) => conditionKeys(statement))).toStrictEqual([
-        "aws:ResourceTag/alchemy::stack",
+      expect(A.map(fromStack, (statement) => statement.Condition)).toStrictEqual([
+        { StringEquals: { "aws:ResourceTag/alchemy::stack": "CiRunners", "aws:ResourceTag/alchemy::stage": "prod" } },
       ]);
       // Unconditioned launch inputs are only those a launch reads or creates untagged: never an instance or a volume.
       const unconditioned = A.filter(ec2Writes, (statement) => P.isUndefined(statement.Condition));
@@ -369,7 +412,7 @@ describe("CiRunners fleet boundary", () => {
         expect(statement.Condition).toStrictEqual({
           StringEquals: { "kms:ViaService": "ssm.us-east-1.amazonaws.com" },
           StringLike: {
-            "kms:EncryptionContext:PARAMETER_ARN": "arn:aws:ssm:us-east-1:832907639880:parameter/beep-fleet/*",
+            "kms:EncryptionContext:PARAMETER_ARN": "arn:aws:ssm:us-east-1:832907639880:parameter/beep-fleet/prod/*",
           },
         });
       }
@@ -379,14 +422,14 @@ describe("CiRunners fleet boundary", () => {
   it.effect("scopes SSM, S3, logs, SQS and Lambda to fleet ARNs, never the alchemy state bucket", () =>
     Effect.sync(() => {
       const fleetScoped = [
-        ["ssm:", /^arn:aws:ssm:us-east-1:832907639880:parameter\/beep-fleet\/\*$/u],
-        ["s3:", /^arn:aws:s3:::(?:beep-fleet-\*-binaries-\*|cirunners-\*)\/\*$/u],
+        ["ssm:", /^arn:aws:ssm:us-east-1:832907639880:parameter\/beep-fleet\/prod\/\*$/u],
+        ["s3:", /^arn:aws:s3:::(?:beep-fleet-prod-binaries-\*|cirunners-\*-prod-\*)\/\*$/u],
         [
           "logs:",
-          /^arn:aws:logs:us-east-1:832907639880:log-group:\/(?:beep-fleet\/|aws\/lambda\/(?:beep-fleet-|CiRunners-))\*$/u,
+          /^arn:aws:logs:us-east-1:832907639880:log-group:\/(?:beep-fleet\/prod\/|aws\/lambda\/(?:beep-fleet-prod-|CiRunners-\*-prod-))\*$/u,
         ],
-        ["sqs:", /^arn:aws:sqs:us-east-1:832907639880:(?:beep-fleet-|CiRunners-)\*$/u],
-        ["lambda:", /^arn:aws:lambda:us-east-1:832907639880:function:(?:beep-fleet-|CiRunners-)\*$/u],
+        ["sqs:", /^arn:aws:sqs:us-east-1:832907639880:(?:beep-fleet-prod-|CiRunners-\*-prod-)\*$/u],
+        ["lambda:", /^arn:aws:lambda:us-east-1:832907639880:function:(?:beep-fleet-prod-|CiRunners-\*-prod-)\*$/u],
       ] as const;
       for (const [service, pattern] of fleetScoped) {
         const scoped = A.filter(
@@ -438,6 +481,95 @@ describe("CiRunners fleet boundary", () => {
         "iam:PassRole",
       ]) {
         assertTrue(A.contains(allowedActions, action));
+      }
+    })
+  );
+});
+
+const globMatches = (pattern: string, value: string) =>
+  new RegExp(`^${Str.replaceAll("*", ".*")(Str.replaceAll(".", "\\.")(pattern))}$`, "u").test(value);
+
+const stringsOf = (value: unknown): ReadonlyArray<string> =>
+  P.isString(value)
+    ? [value]
+    : A.isArray(value)
+      ? A.flatMap(value, stringsOf)
+      : P.isObject(value)
+        ? A.flatMap(R.values(value as Record<string, unknown>), stringsOf)
+        : [];
+
+describe("CiRunners fleet boundary per stage", () => {
+  const prodBoundary = fleetBoundary("prod");
+  // Every ARN and tag value a dev-alice stage would own, from the same name helpers the stack uses, plus Alchemy's
+  // generated names for the resources it leaves unpinned there.
+  const devNames = physicalNames("dev-alice");
+  const pools = A.map(["heavy", "overflow"] as const, (pool) => poolResourceNames(devNames.fleet, pool));
+  const fleetNames = fleetResourceNames(devNames.fleet);
+  const generated = ["CiRunners-Runners-Poolheavy-ScaleUp-dev-alice-0123456789abcdef"];
+  const names = [
+    ...A.filter(A.filter(R.values(devNames), P.isString), (value) => !Str.startsWith("/")(value)),
+    ...A.flatMap(pools, (pool) => A.filter(R.values(pool), P.isString)),
+    ...A.filter(R.values(fleetNames), P.isString),
+    ...generated,
+  ];
+  const devArns = [
+    ...A.flatMap(names, (name) => [
+      `arn:aws:iam::832907639880:role/${name}`,
+      `arn:aws:lambda:us-east-1:832907639880:function:${name}`,
+      `arn:aws:sqs:us-east-1:832907639880:${name}`,
+      `arn:aws:logs:us-east-1:832907639880:log-group:/aws/lambda/${name}:log-stream:x`,
+      `arn:aws:s3:::${name}/x`,
+      `arn:aws:s3:::${Str.toLowerCase(name)}/x`,
+    ]),
+    `arn:aws:s3:::${fleetNames.binariesBucketPrefix}-832907639880/x`,
+    `arn:aws:ssm:us-east-1:832907639880:parameter${devNames.ssmRoot}/app/id`,
+    `arn:aws:logs:us-east-1:832907639880:log-group:${devNames.flowLogGroup}:log-stream:x`,
+    poolEnvironment("dev-alice", "heavy"),
+    poolEnvironment("dev-alice", "overflow"),
+    "dev-alice",
+  ];
+
+  it.effect("matches no name, ARN or tag value of another stage, and scopes every name pattern to prod", () =>
+    Effect.sync(() => {
+      const patterns = A.dedupe(
+        A.flatMap(prodBoundary.Statement, (statement) => [
+          ...stringsOf(statement.Resource),
+          ...stringsOf(statement.NotResource),
+          ...stringsOf(statement.Condition),
+        ])
+      );
+      const namePatterns = A.filter(patterns, (pattern) => /beep-fleet|CiRunners-|cirunners-/u.test(pattern));
+      assertTrue(A.isReadonlyArrayNonEmpty(namePatterns));
+      for (const pattern of namePatterns) {
+        expect([pattern, Str.includes("prod")(pattern)]).toStrictEqual([pattern, true]);
+      }
+      for (const pattern of namePatterns) {
+        for (const value of devArns) {
+          expect([pattern, value, globMatches(pattern, value)]).toStrictEqual([pattern, value, false]);
+        }
+      }
+    })
+  );
+
+  it.effect("puts each stage's boundary at its own ARN, and the deploy role accepts only prod's", () =>
+    Effect.sync(() => {
+      expect(fleetBoundaryPolicyArn).toBe("arn:aws:iam::832907639880:policy/beep-fleet-boundary/fleet-boundary-prod");
+      expect(fleetBoundaryPolicyArnFor("dev-alice")).toBe(
+        "arn:aws:iam::832907639880:policy/beep-fleet-boundary/fleet-boundary-dev-alice"
+      );
+      const boundaryValues = A.dedupe(
+        A.flatMap(v2.Statement, (statement) =>
+          A.filter(stringsOf(statement.Condition), Str.includes("beep-fleet-boundary"))
+        )
+      );
+      expect(boundaryValues).toStrictEqual([fleetBoundaryPolicyArn]);
+      // No grant of the deploy role reaches any boundary policy object.
+      const anyBoundary = "arn:aws:iam::832907639880:policy/beep-fleet-boundary/fleet-boundary-prod";
+      for (const statement of A.filter(v2.Statement, (allow) => allow.Effect === "Allow")) {
+        const iamActions = A.filter(actionsOf(statement), Str.startsWith("iam:"));
+        if (A.isReadonlyArrayNonEmpty(iamActions)) {
+          assertFalse(A.some(resourcesOf(statement), (pattern) => globMatches(pattern, anyBoundary)));
+        }
       }
     })
   );

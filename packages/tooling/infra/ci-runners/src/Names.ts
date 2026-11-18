@@ -45,6 +45,7 @@ const $I = $InfraCiRunnersId.create("Names");
 export class PhysicalNames extends S.Opaque<PhysicalNames, { readonly brand: unique symbol }>()(
   S.Struct({
     fleet: S.String,
+    slug: S.String,
     ssmRoot: S.String,
     vpc: S.String,
     internetGateway: S.String,
@@ -109,6 +110,7 @@ export const physicalNames = (stage: string): PhysicalNames => {
   const fleet = `beep-fleet-${slug}`;
   return PhysicalNames.make({
     fleet,
+    slug,
     ssmRoot: `/beep-fleet/${slug}`,
     vpc: `${fleet}-vpc`,
     internetGateway: `${fleet}-igw`,

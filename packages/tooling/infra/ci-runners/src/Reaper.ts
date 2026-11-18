@@ -20,7 +20,6 @@ import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { fleetBoundaryPolicyArn } from "./DeployRolePolicy.ts";
 import type { RunnerInstance } from "@beep/alchemy-github-runners/RunnerInstance.models";
 
 const $I = $InfraCiRunnersId.create("Reaper");
@@ -197,26 +196,28 @@ export const reapExpiredRunners = Effect.fn("CiRunners.reapExpiredRunners")(func
  *
  * const reaper = declareReaper({
  *   functionName: "beep-fleet-prod-reaper",
+ *   permissionsBoundary: "arn:aws:iam::832907639880:policy/beep-fleet-boundary/fleet-boundary-prod",
  *   scheduleName: O.some("beep-fleet-prod-reaper"),
  *   config: ReaperRuntimeConfig.make({ environments: ["beep-fleet-prod-heavy"], ttlMinutes: 90 }),
  * })
  * console.log(typeof reaper) // "object"
  * ```
  *
- * @param input - The pinned function name, the optional pinned schedule name and the runtime configuration.
+ * @param input - The pinned function name, the stage's boundary ARN, the optional pinned schedule name and the runtime configuration.
  * @returns The reaper function.
  * @category resources
  * @since 0.0.0
  */
 export const declareReaper = Effect.fn("CiRunners.declareReaper")(function* (input: {
   readonly functionName: string;
+  readonly permissionsBoundary: string;
   readonly scheduleName: O.Option<string>;
   readonly config: ReaperRuntimeConfig;
 }) {
   const runtimeConfig = yield* encodeReaperConfig(input.config);
   const reaper = yield* Lambda.Function("Reaper", {
     functionName: input.functionName,
-    permissionsBoundary: fleetBoundaryPolicyArn,
+    permissionsBoundary: input.permissionsBoundary,
     main: `${import.meta.dirname}/internal/lambda/reaper.ts`,
     handler: "handler",
     functionUrl: false,
