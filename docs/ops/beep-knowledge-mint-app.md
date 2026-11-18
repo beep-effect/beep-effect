@@ -28,14 +28,18 @@ holds the manifest, and `bun run beep github app mint beep-knowledge-mint` serve
 - The form POSTs the manifest to the organization's App registration page with a random
   `state`.
 - The one-use callback exchanges the code with `POST /app-manifests/{code}/conversions`
-  and pipes the item template into `op item create --vault BEEP_SECRETS -` through
+  and pipes the item template into `<writer> item create --vault BEEP_SECRETS -` through
   `bash -o pipefail -c "cat | ..."`. Bun's child stdin is a socket on Linux, and the
   1Password CLI only recognizes a real pipe as template input.
 - The key never reaches argv, a file, the page, or the terminal. Responses disable
   caching and referrer propagation.
 
-Agent service accounts are read-only on `BEEP_SECRETS`, so a person runs the launcher
-with their own write-capable 1Password lane on `PATH` as `op`. Never use GitHub's
+Agent service accounts are read-only on `BEEP_SECRETS`, so the writer is a human-capable
+1Password CLI: `op-human` when it is on `PATH`, else `op`, or the `--op-cli <command>`
+override. Before the server listens, the launcher runs a startup access check: it creates
+and deletes a throwaway item in `BEEP_SECRETS` with that writer, and refuses to start if
+either step fails. That makes a lost key unlikely, not impossible: 1Password access can
+expire, or you can reject the later approval, after the check passes. Never use GitHub's
 "Generate a private key" button: it downloads a PEM.
 
 If conversion succeeds but storage fails, do not reload the callback; the code is

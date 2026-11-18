@@ -74,7 +74,12 @@ not create or install an App, create a service account, or enable a live rule.
    `https://github.com/organizations/beep-effect/settings/apps/new`. The localhost
    callback validates a random state, exchanges the one-use code with
    `POST /app-manifests/{code}/conversions`, and sends `id`, `client_id`, and
-   `pem` to `op item create --vault BEEP_SECRETS -` through stdin. The field names
+   `pem` to `<writer> item create --vault BEEP_SECRETS -` through stdin. The writer
+   is `op-human` when it is on `PATH`, else `op`, or the `--op-cli <command>`
+   override. Before it listens, the launcher runs a startup access check (create
+   and delete a throwaway item in `BEEP_SECRETS`) and refuses to start if it
+   fails. The check makes a lost key unlikely, not impossible: 1Password access
+   can expire, or the later approval can be rejected, after it passes. The field names
    are `app_id`, `client_id`, `installation_id`, and `private_key`. No conversion
    response is printed or saved. The callback is one-use, binds loopback only,
    disables caching and referrer propagation, and never renders credentials.

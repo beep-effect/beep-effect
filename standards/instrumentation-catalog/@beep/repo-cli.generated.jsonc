@@ -1815,6 +1815,7 @@
     {"name":"GitHubAppMint.convertAndStore","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GitHubAppMint.make","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GitHubAppMint.manifestText","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"GitHubAppMint.preflight","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GitHubAppMint.serve","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GitWorktree.isRegisteredWorktree","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GitWorktree.removeGitWorktree","owner":"@beep/repo-cli","family":"tooling","conforms":true},
