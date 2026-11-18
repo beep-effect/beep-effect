@@ -282,18 +282,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const { root, write } = yield* workspace([["@beep/a", "packages/a"]]);
-      yield* write(".git/HEAD", "ref: refs/heads/main\n");
       yield* write(
         "packages/a/coverage/unit-results.json",
         report(root, true, [{ file: "packages/a/test/one.test.ts", start: 0, end: 5, tests: 1 }])
       );
       const out = ".beep/ci-unit-timings/unit-a.json";
-      const previous = process.cwd();
-      yield* Effect.acquireRelease(
-        Effect.sync(() => process.chdir(root)),
-        () => Effect.sync(() => process.chdir(previous))
-      );
-      yield* writeUnitTimings("unit-a", ".beep/ci-coverage/unit-a", out).pipe(
+      yield* writeUnitTimings(root, "unit-a", ".beep/ci-coverage/unit-a", out).pipe(
         Effect.provideService(
           ConfigProvider.ConfigProvider,
           ConfigProvider.fromEnvRecord({

@@ -498,6 +498,7 @@ const ActionsIdentity = Config.all({
  * console.log(typeof writeUnitTimings) // "function"
  * ```
  *
+ * @param repoRoot - The checkout the partition ran in; `out` and `coverageOutput` resolve against it.
  * @param partition - The Test Unit partition id.
  * @param coverageOutput - The partition's coverage output directory.
  * @param out - Where to write the projection JSON.
@@ -506,13 +507,13 @@ const ActionsIdentity = Config.all({
  * @since 0.0.0
  */
 export const writeUnitTimings = Effect.fn("CiUnitTimings.write")(function* (
+  repoRoot: string,
   partition: string,
   coverageOutput: string,
   out: string
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const repoRoot = yield* findRepoRoot().pipe(CiCommandError.mapError("Failed to locate repository root."));
   const identity = yield* ActionsIdentity.pipe(CiCommandError.mapError("Failed to read the run identity."));
   const options = yield* S.decodeEffect(UnitTimingOptions)({
     partition,
@@ -559,7 +560,9 @@ export const ciUnitTimingsCommand = Command.make(
     out: Flag.String("out").pipe(Flag.withDescription("Where to write the unit-timings/v1 projection")),
   },
   ({ partition, coverageOutput, out }) =>
-    writeUnitTimings(partition, coverageOutput, out).pipe(
+    findRepoRoot().pipe(
+      CiCommandError.mapError("Failed to locate repository root."),
+      Effect.flatMap((repoRoot) => writeUnitTimings(repoRoot, partition, coverageOutput, out)),
       Effect.asVoid,
       Effect.catchTag("CiCommandError", reportCiCommandError)
     )
