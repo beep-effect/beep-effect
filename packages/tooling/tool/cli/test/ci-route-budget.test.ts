@@ -9,7 +9,7 @@ import {
   makeGithubLedgerStoreMemory,
 } from "@beep/repo-cli/test/SharedInternals";
 import { describe, expect, it } from "@effect/vitest";
-import { assertInclude } from "@effect/vitest/utils";
+import { assertInclude, assertNone, assertSome } from "@effect/vitest/utils";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -80,7 +80,7 @@ describe("route corpus read budget", () => {
       const spend = yield* budget.spend;
       expect(spend.requests).toBe(2);
       expect(spend.metered).toBe(false);
-      expect(O.isNone(spend.identity)).toBe(true);
+      assertNone(spend.identity);
       const forwardedCount = yield* Ref.get(forwarded);
       expect(forwardedCount).toBe(2);
     })
@@ -96,7 +96,7 @@ describe("route corpus read budget", () => {
         expect(spend.requests).toBe(1);
         expect(spend.reserveWaits).toBe(0);
         expect(spend.metered).toBe(true);
-        expect(O.getOrUndefined(spend.identity)).toBe(identity);
+        assertSome(spend.identity, identity);
       })
     )
   );
