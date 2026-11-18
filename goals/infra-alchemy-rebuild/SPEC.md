@@ -691,14 +691,14 @@ Executable procedure for replacing the Pulumi fleet (`beep-ci-runners/production
 **Live-fleet mapping guard (amended 2026-11-18, `DenyLiveFleetMappings`).** The deploy role is denied every tag, untag, update and delete on the live fleet's six event-source mappings, by ARN. The rules while it holds:
 
 - No `pulumi up` on the live fleet stack during the overlap, and never during a burst: a Pulumi replace would mint new mapping UUIDs outside the deny.
-- Re-run the read-only `aws lambda list-event-source-mappings` immediately before step 1b and again before the drain. If any live UUID differs from the six in `DeployRolePolicy.ts`, HOLD and push the new ARNs first.
+- Re-run the read-only `aws lambda list-event-source-mappings` immediately before step 1b and again before the drain, as part of the mapping check below. If any live UUID differs from the six in `DeployRolePolicy.ts`, HOLD and push the new ARNs first.
 - The deny is removed in the P5 drain-and-destroy PR, together with the live fleet.
 
-**Mapping check after 1a and again after 1b, before any traffic move (amended 2026-11-18, #3386 r4614022089).** Read-only; every STOP holds the cutover at that step.
+**Mapping check after 1a, after 1b and before the drain, each before any traffic move (amended 2026-11-18, #3386 r4614022089).** Read-only; every STOP holds the cutover at that step.
 
-- (a) Run `aws lambda list-event-source-mappings` (us-east-1). For every mapping whose `FunctionArn` is a `function:beep-fleet-prod-*` function, `aws lambda list-tags --resource <mapping arn>` must show `alchemy::stack=CiRunners` and `alchemy::stage=prod`; that proves tag on create worked. STOP if any fleet-function mapping is untagged or carries a foreign `alchemy::` tag.
-- (b) The six live mapping UUIDs must equal the six in `DeployRolePolicy.ts`. STOP if any changed, and push the new ARNs first.
-- (c) Record in the cutover record the count of fleet mappings, their UUIDs, and the six live UUIDs.
+- (a) Run `aws lambda list-event-source-mappings` (us-east-1) and select by target, not by name or tag: count every mapping whose `FunctionArn` is a `function:beep-fleet-prod-*` function. For each, `aws lambda list-tags --resource <mapping arn>` must show `alchemy::stack=CiRunners` and `alchemy::stage=prod`; that proves tag on create worked and catches a mapping a foreign principal attached to a fleet function. STOP if any such mapping lacks either tag or carries a foreign `alchemy::` tag.
+- (b) In the same run, the six live mapping UUIDs must equal the six in `DeployRolePolicy.ts`. STOP if any changed, and push the new ARNs first.
+- (c) Report each run's fleet-target count, the UUIDs and the STOP/pass verdict to the orchestrator, and record them in the cutover record.
 
 There is no mutating direct-tag test against live resources. The simulations prove the policy, and check (a) proves the stack's real tagging.
 
