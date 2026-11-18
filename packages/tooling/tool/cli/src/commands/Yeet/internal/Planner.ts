@@ -649,11 +649,34 @@ const prProvenanceStampStep = (context: RepoRunContext): RepoPlanStep =>
     verification: "registry-backed-provenance-footer",
   });
 
+/**
+ * Step id of the monitor plan's pull-request context read (`gh pr view --json`).
+ *
+ * **Details**
+ *
+ * The monitor decodes this step's output as JSON, so the executor captures its
+ * stdout apart from stderr. The planner, the handler and the executor all name
+ * the step through this constant, so a rename cannot leave one of them on the
+ * merged capture.
+ *
+ * **Example** (Recognize the context step)
+ *
+ * ```ts
+ * import { MONITOR_CONTEXT_STEP_ID } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(MONITOR_CONTEXT_STEP_ID) // "monitor:01-pr-context"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const MONITOR_CONTEXT_STEP_ID = "monitor:01-pr-context" as const;
+
 const monitorContextStep = (context: RepoRunContext): RepoPlanStep =>
   // KEEP (D-13): a recorded step that resolves the pull request from the checked-out branch.
   // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   RepoPlanStep.make({
-    id: "monitor:01-pr-context",
+    id: MONITOR_CONTEXT_STEP_ID,
     label: "monitor:pr-context",
     phase: "monitor",
     command: "gh",

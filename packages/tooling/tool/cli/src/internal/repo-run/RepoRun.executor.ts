@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import { repoRunOutputBound, runCaptured } from "@beep/repo-cli-kit/process/StepExec";
+import { repoRunOutputBound, runCaptured, runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import { DomainError } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
@@ -15,6 +15,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Str from "effect/String";
 import { attributeGhSpawn } from "./GhSpawnSink.ts";
 import { commandTextForStep, RepoStepRunResult } from "./RepoRun.models.ts";
 import type { CaptureSource } from "@beep/repo-cli-kit/process/StepExec";
@@ -183,6 +184,82 @@ export const runRepoCommandCaptureRaw = makeRepoCommandCapture("RepoRun.runRepoC
   trim: false,
 });
 
+type RepoCommandSplitOutput = RepoCommandOutput & {
+  readonly stdout: string;
+  readonly stderr: string;
+};
+
+// What a failed run said, in the order a reader expects it: whatever stdout
+// carried (a `gh api` error body) and then the stderr error line.
+const splitOutputText = (stdout: string, stderr: string): string =>
+  A.join(A.filter([stdout, stderr], Str.isNonEmpty), "\n");
+
+/**
+ * Execute a command with stdout and stderr captured apart, for a reader that
+ * parses the command's stdout.
+ *
+ * Non-zero exit codes are represented in the returned value. Spawn failures
+ * remain typed operational errors.
+ *
+ * **Details**
+ *
+ * `output` is stdout alone on a zero exit and the text of both streams, stdout
+ * first, otherwise; `stdout` and `stderr` are each trimmed. A tool may write
+ * advice to stderr on a clean run (gh 2.105.0 prints a multi-line `hint:` after
+ * `gh pr view` whenever `AI_AGENT` or `CLAUDECODE` is set), and the merged
+ * {@link runRepoCommandCapture} hands that text to the parser beside the JSON.
+ * A failed run's error line, which gh writes to stderr, still reaches `output`.
+ * `truncated` reports that either stream hit the repo-run bound, applied to
+ * each stream.
+ *
+ * **Example** (Read a pull request's JSON without stderr advice)
+ *
+ * ```ts
+ * import { runRepoCommandCaptureSplit } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const capture = runRepoCommandCaptureSplit("gh", ["pr", "view", "--json", "number"], process.cwd())
+ * console.log(capture)
+ * ```
+ *
+ * @param command - Executable name or path.
+ * @param args - Command arguments.
+ * @param cwd - Working directory.
+ * @param env - Optional environment overrides.
+ * @returns Parser-facing output, both streams, exit code and truncation flag.
+ * @category execution
+ * @since 0.0.0
+ */
+export const runRepoCommandCaptureSplit = Effect.fn("RepoRun.runRepoCommandCaptureSplit")(function* (
+  command: string,
+  args: ReadonlyArray<string>,
+  cwd: string,
+  env: Record<string, string | undefined> | undefined = undefined
+): Effect.fn.Return<
+  RepoCommandSplitOutput,
+  DomainError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const run = runCapturedStreams({
+    command,
+    args,
+    cwd,
+    env,
+    extendEnv: true,
+    stdin: "inherit",
+    bound: repoRunOutputBound,
+    trim: true,
+  }).pipe(Effect.mapError(DomainError.newCause(`Failed to spawn ${A.join([command, ...args], " ")}.`)));
+  // Attributed to the GitHub budget ledger exactly as the merged capture's gh children are.
+  const { exitCode, stdout, stderr, truncated } = yield* command === "gh" ? attributeGhSpawn(args, run) : run;
+  return {
+    exitCode,
+    output: exitCode === 0 ? stdout : splitOutputText(stdout, stderr),
+    stdout,
+    stderr,
+    truncated,
+  };
+});
+
 const writeRawOutput = Effect.fn("RepoRun.writeRawOutput")(function* (
   filePath: string,
   output: string
@@ -290,6 +367,46 @@ export const executeRepoPlanStep = makeRepoPlanStepExecutor("RepoRun.executeRepo
 export const executeRepoPlanStepStreaming = makeRepoPlanStepExecutor(
   "RepoRun.executeRepoPlanStepStreaming",
   runRepoCommandStreamingCapture
+);
+
+/**
+ * Execute a planned repository step whose output a parser reads, and
+ * optionally persist its raw output.
+ *
+ * **Details**
+ *
+ * The step runs through {@link runRepoCommandCaptureSplit}: the result's
+ * `output` is stdout alone on a zero exit and both streams otherwise, and
+ * nothing is streamed live.
+ *
+ * **Example** (Execute a pull request context read)
+ *
+ * ```ts
+ * import { executeRepoPlanStepSplit, RepoPlanStep } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const step = RepoPlanStep.make({
+ *   args: ["pr", "view", "--json", "number"],
+ *   command: "gh",
+ *   cwd: process.cwd(),
+ *   id: "monitor:01-pr-context",
+ *   label: "monitor:pr-context",
+ *   mutability: "readonly",
+ *   phase: "monitor",
+ *   resume: "never",
+ *   scope: "repo"
+ * })
+ * console.log(executeRepoPlanStepSplit(step))
+ * ```
+ *
+ * @param step - Planned step to execute.
+ * @param rawOutputPath - Optional path for captured command output.
+ * @returns Captured step result.
+ * @category execution
+ * @since 0.0.0
+ */
+export const executeRepoPlanStepSplit = makeRepoPlanStepExecutor(
+  "RepoRun.executeRepoPlanStepSplit",
+  runRepoCommandCaptureSplit
 );
 
 /**
