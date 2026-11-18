@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "authority-context",
+    "packetId": "goal-packet/v1:fcf7d33326e2a60430da0337be069fc4c05363e68d6be0f3019ffe5d99fc6429",
+    "title": "Authority Context",
+    "status": "active",
+    "created": "2026-11-17",
+    "updated": "2026-11-17",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/authority-context",
+  "lifecycle": "active",
+  "mission": "Build authority as the first four-package slice: Invocation and grant-check language, grants, narrowing delegation, accountability, admission and re-admission, on Effect Cluster",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/model-first-slices",
+    "graduated": "2026-11-17"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/authority-context/README.md",
+    "goals/authority-context/SPEC.md",
+    "goals/authority-context/PLAN.md",
+    "goals/authority-context/GOAL.md",
+    "goals/authority-context/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/authority-context/GOAL.md"
+    }
+  ],
+  "provides": ["slice/authority", "kernel/invocation"],
+  "requires": [
+    "architecture/four-package-scaffolder",
+    "platform/effect-cluster-host"
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/authority-context/GOAL.md)\" -le 4000",
+    "jq . goals/authority-context/ops/manifest.json",
+    "rg -n \"authority-context|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/authority-context",
+    "git diff --check -- goals/authority-context",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

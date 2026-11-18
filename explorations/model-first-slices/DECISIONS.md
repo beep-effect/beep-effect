@@ -1273,3 +1273,59 @@ Rejected: opening the pull request from a fork now; reading the drafts first; se
 Recommended answer accepted. Posted 2026-11-18 (UTC): the comments, and issues #3494 and #3495.
 The record is `notes/upstream/SENT.md` in the prototype. Local patch 06 is dropped from the
 upstream set in favour of upstream's #3382.
+
+## 2026-11-17 — D63 the first real slice
+
+**Question:** The appetite is the standard plus one real slice (D60). Which context is built first
+on the four-package shape?
+
+**Answer:** `authority`. Grants, delegation, accountability and re-admission, hosted on Effect
+Cluster.
+
+**Rationale:** Every other context's commands need an Invocation and a grant check, and authority
+depends only on the kernel. Rejected: re-shaping documents vault-sync first (real data and a real
+screen, and none of the authority design); `party` first, with authority and runs built minimally
+beside it. Recommended answer accepted.
+
+## 2026-11-17 — D64 authority and the existing execution-authority slice
+
+**Question:** `packages/execution-authority` already models grants for MCP tool calls
+(`ExecutionGrant`, a frozen grant set, a pure evaluator, a hash-chained decision ledger, the tier
+gate), and this packet never accounted for it. How do the two relate?
+
+**Answer:** One context. The new `authority` context is the home for all grants.
+`goals/execution-authority-slice` finishes as planned (D17). A later, gated goal moves that slice's
+grant language, ledger and gates into `authority`.
+
+**Rationale:** A slice is a bounded context with one language (D2), and "grant", "principal",
+"operation" and "expiry" mean the same thing in both. Rejected: two contexts that agree through a
+contract; rebuilding execution-authority in place as the first slice and folding its active goal
+in. Recommended answer accepted. The capability inventory that found the omission is cited in
+`MAP.md`.
+
+## 2026-11-17 — D65 the paused slice-topology-audit goal
+
+**Question:** `goals/slice-topology-audit` is paused. Its mission was to amend the doctrine for the
+seven-package grammar and ship `beep architecture audit` with a baseline ratchet. What happens to
+it?
+
+**Answer:** It is superseded. The new standard goal takes over the mission on the four-package
+shape: the doctrine amendment, the scaffolder and checkers under a ratchet.
+
+**Rationale:** Making a grammar mechanical that the standard is about to replace would be redone.
+Rejected: resuming it after the new standard lands; leaving it paused undecided. Recommended answer
+accepted.
+
+## 2026-11-17 — D66 the goal packets created now
+
+**Question:** Which goal packets are created at graduation?
+
+**Answer:** Three. `model-first-standard` (the standard, the scaffolder and the checkers),
+`effect-cluster-host` (beta.87, the fixes as root patches, the conformance suite as a repo package,
+a local swarm recipe) and `authority-context` (the first slice). Everything else stays in `MAP.md`
+behind a gate.
+
+**Rationale:** The host work has its own evidence and its own exit (a conformance pass in the
+monorepo) and can run beside the doctrine work; the slice needs both. Rejected: two goals with the
+host as the slice's opening phase; one goal with phases for everything. Recommended answer
+accepted.

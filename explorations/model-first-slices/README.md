@@ -3,8 +3,8 @@
 ## Status
 
 <!-- BEGIN GENERATED: EXPLORATION STATUS -->
-Stage: `shape`
-Status: `active`
+Stage: `graduate`
+Status: `graduated`
 <!-- END GENERATED: EXPLORATION STATUS -->
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
@@ -17,23 +17,30 @@ system alongside people?
 
 ## Next Open Question
 
-The shape review. [`BRIEF.md`](./BRIEF.md) and the fifth draft of the artifact (text in
-`research/21`) are current to D58 and await the operator's confirmation in words (D56). The
-appetite is still unset. After that: decompose into `MAP.md`, create the goal packets, and send the
-branch to one pull request (D57). The upstream set has been checked against Alchemy's main (D58);
-what is sent, and where, is the operator's call. Retiring the repo-owned platform (D5) waits on an
-upstream release.
+None blocking. The packet graduated on 2026-11-17 into three goal packets (D66):
+[`goals/model-first-standard`](../../goals/model-first-standard/README.md),
+[`goals/effect-cluster-host`](../../goals/effect-cluster-host/README.md) and
+[`goals/authority-context`](../../goals/authority-context/README.md). Two things wait on others:
+retiring the repo-owned platform (D5) waits on an Alchemy release, and the pull request for
+upstream issue 3490 waits on a maintainer's answer (D62). The gated candidates in
+[`MAP.md`](./MAP.md) are the re-entry points; a fired gate reopens the packet at decompose.
 
 ## Read This First
 
 1. [`ops/manifest.json`](./ops/manifest.json) - machine state: stage, status, open questions.
 2. [`CAPTURE.md`](./CAPTURE.md) - the operator's brief and ground rules.
 3. [`RESEARCH.md`](./RESEARCH.md) - the proposal, the prototype, the outside reviews.
-4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D58.
-5. [`BRIEF.md`](./BRIEF.md) - shaped pitch, awaiting the operator's confirmation.
+4. [`DECISIONS.md`](./DECISIONS.md) - grilling log, D1 to D66.
+5. [`BRIEF.md`](./BRIEF.md) - shaped pitch, confirmed by the operator (D59).
+6. [`MAP.md`](./MAP.md) - the goal packets created and the gated candidates.
 
 ## Trail
 
+- 2026-11-17: graduated. D59 to D66: the shape confirmed; the appetite set to the standard plus
+  one real slice; the fixes as root patches; `authority` first, as the one context for grants;
+  `goals/slice-topology-audit` superseded; three goal packets created. A capability inventory
+  found the packet had never accounted for `packages/execution-authority`. Four comments and two
+  issues were posted upstream on the operator's say-so (D62); no pull request is open there.
 - 2026-11-17: D56 to D58: update the brief and artifact, then graduate; one pull request after the
   brief update; check the upstream set against Alchemy's main. `BRIEF.md` rewritten to D58 and the
   artifact's fifth draft published at a new address (the earlier one no longer opens) and filed as

@@ -7,7 +7,7 @@ the implementing goal packets. The exploration is shaped when the human says
 this file matches the picture in their head.
 -->
 
-Current to D61 (2026-11-17). Confirmed by the operator on 2026-11-17 (D59). The fifth-draft design
+Current to D66 (2026-11-17). Confirmed by the operator on 2026-11-17 (D59). The fifth-draft design
 artifact (`research/21`) is the long form of this brief; `DECISIONS.md` is the source of truth
 where they differ.
 
