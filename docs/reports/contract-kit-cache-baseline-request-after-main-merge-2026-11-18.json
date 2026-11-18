@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "//": "00d00c055e00e1c1b7ce2b92506ce0a2af1bcf893db762b40ace9232bac05635"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (model-first-standard scaffolder lane, claude/model-first-standard-scaffolder)",
+    "reason": "Re-record // after merging origin/main (#3396): main re-recorded the root baseline, and this branch's one added //#lint:policy-fingerprint input (packages/foundation/modeling/contract-kit/package.json) must be recorded on top of it. No qualification is granted.",
+    "basis": {
+      "path": "docs/reports/contract-kit-cache-review-2026-11-18.md",
+      "sha256": "714e6f90d843ebbd3a0aa27cf4becaf8d599a2d50e67d16a7d47506b8ba43b56"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

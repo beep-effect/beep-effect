@@ -158,8 +158,31 @@ const JsonText = S.fromJsonString(S.Unknown);
 // A drive (`C:/`), UNC (`//host`) or POSIX (`/`) absolute pattern, after backslashes become slashes.
 const absolutePattern = /^(?:[A-Za-z]:\/|\/\/|\/)/;
 
-// Generated directories the retired repo-utils glob ignored; nothing beneath one is read or is a member.
-const GENERATED_DIRECTORIES: ReadonlyArray<string> = ["node_modules", "dist", "build", "coverage", ".turbo"];
+/**
+ * Directory names workspace discovery skips: generated directories the
+ * retired repo-utils glob ignored. Nothing beneath one is read or is a member,
+ * so a package placed under one is never discovered.
+ *
+ * **Example** (A package under `build/` is never a workspace)
+ *
+ * ```ts
+ * import { skippedWorkspaceDirectoryNames } from "@beep/repo-cli-kit/RepoWorkspaces"
+ *
+ * console.log(skippedWorkspaceDirectoryNames.includes("build")) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const skippedWorkspaceDirectoryNames: ReadonlyArray<string> = [
+  "node_modules",
+  "dist",
+  "build",
+  "coverage",
+  ".turbo",
+];
+
+const GENERATED_DIRECTORIES = skippedWorkspaceDirectoryNames;
 
 /**
  * The reason a root pattern is unsafe, if it is.

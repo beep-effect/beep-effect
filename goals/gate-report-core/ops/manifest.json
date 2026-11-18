@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "gate-report-core",
+    "packetId": "goal-packet/v1:a67f0d389b4036591ce56673e605f5f8d581b2bbc2c2308145f6852d59840f3d",
+    "title": "Gate Report Core",
+    "status": "active",
+    "created": "2026-11-18",
+    "updated": "2026-11-18",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/gate-report-core",
+  "lifecycle": "active",
+  "mission": "Build the gate-neutral report model and its console renderer by porting vitest-agent's core into @beep/* packages, and prove it on the test and check gates.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-verification-output",
+    "graduated": "2026-11-18"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/gate-report-core/README.md",
+    "goals/gate-report-core/SPEC.md",
+    "goals/gate-report-core/PLAN.md",
+    "goals/gate-report-core/GOAL.md",
+    "goals/gate-report-core/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/gate-report-core/GOAL.md"
+    }
+  ],
+  "provides": [
+    "gate-report/model",
+    "gate-report/console",
+    "gate-report/recorder",
+    "gate-report/vitest-adapter"
+  ],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research and homes",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Schema",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Service contracts",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Implementation and first slice",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Every package and the queries",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Port review",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/gate-report-core/GOAL.md)\" -le 4000",
+    "jq . goals/gate-report-core/ops/manifest.json",
+    "rg -n \"gate-report-core|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/gate-report-core",
+    "git diff --check -- goals/gate-report-core",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

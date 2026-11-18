@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement — step 1 (doctrine) written and in review; step 2 (scaffolder) next.
+P1 Implement — step 1 (doctrine) merged in #3391; step 2 (scaffolder) in review; step 3 (checkers) next.
 
 ## Latest Evidence
 

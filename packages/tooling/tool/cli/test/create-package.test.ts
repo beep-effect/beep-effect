@@ -1,6 +1,16 @@
 import { Jsonc } from "@beep/jsonc/Jsonc";
+import {
+  applyCanonicalSliceOperationPlan,
+  architectureCommand,
+  encodeCanonicalSliceOperationPlanJson,
+  makeModelFirstContextOperationPlan,
+} from "@beep/repo-cli/commands/Architecture";
 import { CI_LANE_PARTITIONS, proveCiLanePartition } from "@beep/repo-cli/commands/Ci";
-import { CreatePackageScripts, createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
+import {
+  CreatePackageScripts,
+  createPackageCommand,
+  registerScaffoldedWorkspaces,
+} from "@beep/repo-cli/commands/CreatePackage";
 import { syncTsconfigAtRoot, TsconfigSyncRunOptionsCheck } from "@beep/repo-cli/commands/TsconfigSync";
 import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { FsUtilsLive, findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils";
@@ -18,6 +28,7 @@ import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -34,6 +45,7 @@ const CommandTestLayer = Layer.mergeAll(
   TSMorphServiceLive.pipe(Layer.provideMerge(CommandPlatformLayer))
 );
 const runCreatePackageCommandRaw = Command.runWith(createPackageCommand, { version: "0.0.0" });
+const runArchitectureCommand = Command.runWith(architectureCommand, { version: "0.0.0" });
 const shouldAppendSkipLockfile = (args: ReadonlyArray<string>): boolean =>
   !A.some(args, (arg) => arg === "--dry-run" || arg === "--skip-lockfile");
 const runCreatePackageCommand = (args: ReadonlyArray<string>) =>
@@ -411,6 +423,28 @@ export default config;
 `
     );
 
+  const IdentityRegistryWithLabMarkers = `import * as Identity from "./Id.ts";
+
+export const $I = {
+  compose: (..._segments: ReadonlyArray<string>) => ({}) as Record<string, Identity.IdentityComposer<string>>,
+};
+
+const generatedComposers = $I.compose(
+  "identity"
+);
+
+// GENERATED LAB COMPOSERS START
+const generatedLabComposers = $I.compose();
+// GENERATED LAB COMPOSERS END
+
+const composers = { ...generatedComposers, ...generatedLabComposers };
+
+// GENERATED LAB EXPORTS START
+// GENERATED LAB EXPORTS END
+
+export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composers.$IdentityId;
+`;
+
   const withBunShim = <A, E, R>(binDir: string, argsFilePath: string, use: Effect.Effect<A, E, R>) =>
     Effect.acquireUseRelease(
       Effect.sync(() => {
@@ -669,6 +703,113 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
 
             const readFileString5 = yield* fs.readFileString(bunArgsPath);
             expect(readFileString5).toBe("install\n--lockfile-only\n");
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
+
+    it.effect(
+      "registers scaffolded package directories as workspaces, composers, synced references and a refreshed lockfile",
+      () =>
+        withBootstrappedRootConfig(PackageParentRootConfig, ({ fs, path, rootDir }) =>
+          Effect.gen(function* () {
+            const binDir = path.join(rootDir, ".bin");
+            const bunArgsPath = path.join(rootDir, "bun-args.txt");
+            yield* bootstrapIdentityWorkspace(rootDir);
+            // A registry with the four generated-labs markers bulk registration requires
+            // and no Notes composer, so the test always starts from missing ones.
+            yield* writeTextFile(
+              path.join(rootDir, "packages/foundation/modeling/identity/src/packages.ts"),
+              IdentityRegistryWithLabMarkers
+            );
+            yield* fs.makeDirectory(binDir, { recursive: true });
+            yield* writeBunShim(binDir);
+            // Two packages another scaffolder wrote outside the workspace globs.
+            const packagePaths = ["packages/notes/contract", "packages/notes/model"] as const;
+            for (const packagePath of packagePaths) {
+              const role = Str.replace("packages/notes/", "")(packagePath);
+              yield* writeJsonFile(path.join(rootDir, packagePath, "package.json"), {
+                name: `@beep/notes-${role}`,
+                version: "0.0.0",
+                exports: { "./package.json": "./package.json" },
+              });
+              yield* writeJsonFile(path.join(rootDir, packagePath, "tsconfig.json"), {
+                compilerOptions: { outDir: "dist", rootDir: "src" },
+                include: ["src"],
+              });
+            }
+
+            const registered = yield* withBunShim(
+              binDir,
+              bunArgsPath,
+              registerScaffoldedWorkspaces(rootDir, packagePaths)
+            );
+
+            expect(registered.addedWorkspaces).toEqual(packagePaths);
+            expect(registered.registeredSlugs).toEqual(["notes-contract", "notes-model"]);
+            const rootManifest = yield* fs.readFileString(path.join(rootDir, "package.json"));
+            expect(rootManifest).toContain('"packages/notes/contract"');
+            expect(rootManifest).toContain('"packages/notes/model"');
+            const packagesConfig = yield* readJsoncFile(path.join(rootDir, "tsconfig.packages.json"));
+            const references = yield* decodeTsconfigReferences(packagesConfig);
+            const referencePaths = A.map(references.references, (reference) => reference.path);
+            expect(A.filter(referencePaths, Str.startsWith("packages/notes/"))).toEqual(packagePaths);
+            const identityPackages = yield* fs.readFileString(
+              path.join(rootDir, "packages", "foundation", "modeling", "identity", "src", "packages.ts")
+            );
+            expect(identityPackages).toContain("export const $NotesContractId");
+            expect(identityPackages).toContain("export const $NotesModelId");
+            const bunArgs = yield* fs.readFileString(bunArgsPath);
+            expect(bunArgs).toBe("install\n--lockfile-only\n");
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
+
+    it.effect(
+      "check refuses an unregistered model-first context, apply registers it and says to install, then check passes",
+      () =>
+        withBootstrappedRootConfig(PackageParentRootConfig, ({ fs, path, rootDir }) =>
+          Effect.gen(function* () {
+            const binDir = path.join(rootDir, ".bin");
+            const bunArgsPath = path.join(rootDir, "bun-args.txt");
+            yield* bootstrapIdentityWorkspace(rootDir);
+            yield* writeTextFile(
+              path.join(rootDir, "packages/foundation/modeling/identity/src/packages.ts"),
+              IdentityRegistryWithLabMarkers
+            );
+            const kit = path.join(rootDir, "packages/foundation/modeling/contract-kit");
+            yield* writeJsonFile(path.join(kit, "package.json"), { name: "@beep/contract-kit", version: "0.0.0" });
+            yield* writeJsonFile(path.join(kit, "tsconfig.json"), { include: ["src"] });
+            yield* fs.makeDirectory(binDir, { recursive: true });
+            yield* writeBunShim(binDir);
+
+            const plan = yield* makeModelFirstContextOperationPlan({
+              repoRoot: rootDir,
+              context: "notes",
+              module: "Note",
+            });
+            const planPath = path.join(rootDir, "notes-plan.json");
+            const planJson = yield* encodeCanonicalSliceOperationPlanJson(plan);
+            yield* writeTextFile(planPath, planJson);
+            // An interrupted apply: every file written, nothing registered.
+            yield* applyCanonicalSliceOperationPlan(rootDir, plan);
+
+            const unregistered = yield* Effect.flip(runArchitectureCommand(["check", "--file", planPath]));
+            expect(String(unregistered)).toContain("Architecture operation plan is not registered.");
+            expect(String(unregistered)).toContain(
+              "missing-workspaces=packages/notes/contract,packages/notes/model,packages/notes/host"
+            );
+
+            yield* withBunShim(binDir, bunArgsPath, runArchitectureCommand(["apply", "--file", planPath]));
+            const applyLines = yield* TestConsole.logLines;
+            const applyLog = A.join(A.filter(applyLines, P.isString), "\n");
+            expect(applyLog).toContain("run `bun install` from the repository root");
+
+            yield* runArchitectureCommand(["check", "--file", planPath]);
+            const checkLines = yield* TestConsole.logLines;
+            const checkLog = A.join(A.filter(checkLines, P.isString), "\n");
+            expect(checkLog).toContain("idempotent=true");
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       CreatePackageTestTimeoutMs

@@ -358,6 +358,9 @@
       "path": "packages/foundation/capability/xdg"
     },
     {
+      "path": "packages/foundation/modeling/contract-kit"
+    },
+    {
       "path": "packages/foundation/modeling/epistemics"
     },
     {

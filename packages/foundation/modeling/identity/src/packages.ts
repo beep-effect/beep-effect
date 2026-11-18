@@ -263,6 +263,7 @@ const generatedComposers = $I.compose(
   "infra-cost-controls",
   "infra-hosts",
   "infra-github",
+  "contract-kit",
   "infra-ci-runners"
 );
 
@@ -3935,6 +3936,23 @@ export const $InfraHostsId: Identity.IdentityComposer<"@beep/infra-hosts"> = com
  * @since 0.0.0
  */
 export const $InfraGithubId: Identity.IdentityComposer<"@beep/infra-github"> = composers.$InfraGithubId;
+
+/**
+ * Identity composer for `@beep/contract-kit`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $ContractKitId } from "@beep/identity/packages"
+ *
+ * const id = $ContractKitId.make("ContractKit")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $ContractKitId: Identity.IdentityComposer<"@beep/contract-kit"> = composers.$ContractKitId;
 
 /**
  * Identity composer for `@beep/infra-ci-runners`.

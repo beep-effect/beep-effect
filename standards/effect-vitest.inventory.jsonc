@@ -10746,6 +10746,28 @@
       "reason": "The plan is checked against the committed accepted-work-item manifest under the real checkout root (new URL(\"../../../../..\", import.meta.url)), and Bun.spawnSync probes real paths. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the manifest is read from a seeded volume and the path probes go through FileSystem."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/architecture-model-first-context.test.ts:26:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/architecture-model-first-context.test.ts",
+      "line": 26,
+      "endLine": 26,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The proof writes a generated model-first context into the checkout's git-ignored tmp/ so its packages resolve the root node_modules, then runs tsrs, biome and vitest on it as child processes; a memory filesystem cannot host those. Owner: @beep/repo-cli. Exit: retire when the generated-context proof runs against an in-memory compiler host."
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/basic-ftp-compatibility.test.ts:2:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",

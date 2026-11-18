@@ -188,7 +188,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "d0d5286c09e62145c56ba87060307e4d6fc516b34f231b73c22e12b16d4e357b"
+      "sha256": "53bfcea22f38f88f4408c20b66ca7968c71435fb54b1ba04ca8376f7a1a04400"
     }
   ],
   "nodes": [
@@ -2161,6 +2161,7 @@
           "packages/foundation/capability/walker/src/**",
           "packages/foundation/capability/xdg/package.json",
           "packages/foundation/capability/xdg/src/**",
+          "packages/foundation/modeling/contract-kit/package.json",
           "packages/foundation/modeling/epistemics/package.json",
           "packages/foundation/modeling/epistemics/src/**",
           "packages/foundation/modeling/github-commands/package.json",
