@@ -1,5 +1,6 @@
 import { make } from "@beep/effect-drizzle";
 import { $PartyHostId } from "@proto/kernel/Identity";
+import { StreamId } from "@proto/kernel/Measure";
 import { DirectoryRow } from "@proto/party-contract/Directory/FindParties.read";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import type { PartyDirectoryGeneration } from "@proto/party-model/Directory/PartyDirectory.handler";
@@ -111,7 +112,7 @@ export const PartyDirectoryRowTables = { 0: generationOf(PartyDirectoryRowsV0) }
 export class PartyDirectoryPositions extends Model<PartyDirectoryPositions>($I`PartyDirectoryPositions`)(
   {
     generation: S.Int.pipe(pg.integer()),
-    stream: S.String.pipe(pg.text()),
+    stream: StreamId.pipe(pg.text()),
     seq: S.Int.pipe(pg.integer()),
   },
   { description: "The last position each directory generation applied, per source stream." },

@@ -19,7 +19,7 @@
           ]
         },
         "factId": {
-          "type": "string"
+          "$ref": "#/$defs/IdTextCheck"
         },
         "claim": {
           "$ref": "#/$defs/IdTextCheck"

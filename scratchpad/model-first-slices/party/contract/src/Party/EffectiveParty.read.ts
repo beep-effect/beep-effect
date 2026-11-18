@@ -6,6 +6,7 @@ import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 import { PartiesMerged } from "./MergeParties.command.ts";
 import { PartyId } from "./Party.id.ts";
+import { PartyName } from "./PartyName.ts";
 import { PartyRegistered } from "./RegisterParty.command.ts";
 
 /**
@@ -30,7 +31,7 @@ export const EffectivePartyState = S.TaggedUnion({
   Unregistered: {},
   Registered: {
     org: OrgId,
-    name: S.String,
+    name: PartyName,
     absorbed: Initial.empty(PartyId, { description: "The parties merged into this one; none at first." }),
   },
 });

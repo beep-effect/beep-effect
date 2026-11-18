@@ -7,7 +7,7 @@ import * as Effect from "effect/Effect";
 import * as O from "@beep/utils/Option";
 import { claimIn } from "./Claim.rules.ts";
 import { ClaimReview } from "./ClaimReview.view.ts";
-import { thunkEffectVoid } from "@beep/utils"
+import { thunkEffectVoid } from "@beep/utils/thunk"
 
 /**
  * Who may read a claim: an invocation with a `party.read` grant on its org

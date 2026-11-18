@@ -14,8 +14,8 @@ import * as S from "effect/Schema";
 // Members that must differ are generated together, as a tuple with unique items, so a generated
 // cast is distinct by construction rather than by discarding.
 
-/** A party's name, as `RegisterParty` takes it. */
-const PartyName = PartyRegistered.fields.name;
+/** A party's name, as `RegisterParty` takes it, and short enough that a given name and a family name joined by a space are one too. */
+const PartyName = PartyRegistered.fields.name.check(S.isMaxLength(99));
 
 /** Signals from as many sources as there are signals. */
 const fromDistinctSources = S.makeFilter(

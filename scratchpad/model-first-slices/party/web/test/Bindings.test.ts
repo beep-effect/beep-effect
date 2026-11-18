@@ -1,7 +1,7 @@
 import * as Domain from "@alchemy.run/domain";
 import { expect, it } from "@effect/vitest";
 import { PrincipalId } from "@proto/kernel/Ids";
-import { Count, IdText } from "@proto/kernel/Measure";
+import { Count, IdText, Sequence } from "@proto/kernel/Measure";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { ClaimReviewState, proposalOf, ProposalView } from "@proto/party-contract/Claim/ClaimReview.read";
 import { IntakeContract } from "@proto/party-contract/IntakeApi.contract";
@@ -21,6 +21,7 @@ import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import * as P from "@beep/utils/Predicate";
 import * as Schedule from "effect/Schedule";
+import * as Str from "@beep/utils/Str";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
@@ -55,8 +56,8 @@ const withClients = <A, E, R>(story: Effect.Effect<A, E, R>) =>
 
 const as = (principal: PrincipalId) => Effect.provide(fixedCredentials(asHuman(principal).headers));
 
-/** The command ids a reviewer story sends under: one the authority refuses, one that commits; never the same. */
-const Commands = S.Struct({ refused: IdText, approved: IdText, staleSuffix: S.NonEmptyString }).check(
+/** The command ids a reviewer story sends under: one the authority refuses, one that commits; never the same. And how far a stale digest is from the proposal's. */
+const Commands = S.Struct({ refused: IdText, approved: IdText, staleOffset: Sequence.check(S.isLessThan(2 ** 32)) }).check(
   S.makeFilter(({ refused, approved }) => refused !== approved, {
     identifier: "CommandsCheck",
     title: "Distinct commands",
@@ -64,6 +65,9 @@ const Commands = S.Struct({ refused: IdText, approved: IdText, staleSuffix: S.No
     message: "Expected two distinct command ids",
   }),
 );
+
+/** Another digest: the proposal hash `offset` further on, modulo 2^32, so it is a digest and never the same one. */
+const otherDigest = (digest: string, offset: number) => `p${((Number.parseInt(Str.slice(1)(digest), 16) + offset) >>> 0).toString(16)}`;
 
 /** The cast's claim about its party's identifier, on two sources: the fixture reasoner proposes to accept. */
 const assertionOf = (cast: Cast) => ({ org: cast.org, proposition: hasIdentifier(cast), signals: cast.signals });
@@ -126,7 +130,7 @@ it.live.prop(
       expect(denied).toEqual({ _tag: "Denied", commandId: commands.refused, reason: "MissingGrant" });
       const mismatch = yield* Reviewer.ApproveProposal.send({
         target: claim,
-        input: { digest: `${digest}${commands.staleSuffix}`, evidenceRevision: 1 },
+        input: { digest: otherDigest(digest, commands.staleOffset), evidenceRevision: 1 },
       }).pipe(as(cast.reviewer));
       expect(mismatch).toMatchObject({ _tag: "Rejected", rejection: { _tag: "ProposalMismatch", reason: "digest" } });
 

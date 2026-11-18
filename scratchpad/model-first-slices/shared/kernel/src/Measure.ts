@@ -1,4 +1,5 @@
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 /**
  * A count: a whole number that is never negative. A generation, a version,
@@ -137,3 +138,34 @@ export const StreamId = S.String.check(
  * @since 0.0.0
  */
 export type StreamId = typeof StreamId.Type;
+
+/**
+ * Text a person or a model wrote: a purpose, a reason, a rationale, a quote.
+ * Any content is allowed, as long as it stores and travels unchanged: it is
+ * well-formed Unicode (no half of a surrogate pair) and holds no NUL, which
+ * neither JSON over UTF-8 nor a Postgres `text` column keeps.
+ *
+ * **Example** (A reason)
+ * ```ts
+ * import { Text } from "@proto/kernel/Measure";
+ * import * as S from "effect/Schema";
+ *
+ * const valid = S.is(Text)("Duplicate of claim 7; see the intake note.");
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const Text = S.String.check(
+  S.makeFilter((text) => text.isWellFormed() && !Str.includes("\u0000")(text), {
+    identifier: "TextCheck",
+    title: "Text",
+    description: "Well-formed Unicode text with no NUL character.",
+    message: "Expected well-formed text with no NUL character",
+  }),
+);
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type Text = typeof Text.Type;

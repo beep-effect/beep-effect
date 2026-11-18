@@ -1,5 +1,6 @@
 import { make } from "@beep/effect-drizzle";
 import { $RunsHostId } from "@proto/kernel/Identity";
+import { IdText, Name } from "@proto/kernel/Measure";
 import * as S from "effect/Schema";
 
 const $I = $RunsHostId.create("Inbox/Inbox.table");
@@ -22,7 +23,7 @@ const { Model, pg, toPgTable } = StoreKit;
  */
 export class RunsInboxCheckpoints extends Model<RunsInboxCheckpoints>($I`RunsInboxCheckpoints`)(
   {
-    producer: S.String.pipe(pg.text(), pg.primaryKey()),
+    producer: Name.pipe(pg.text(), pg.primaryKey()),
     seq: S.Int.pipe(pg.integer()),
   },
   { description: "The last position the runs inbox handled, per producer." },
@@ -35,7 +36,7 @@ export class RunsInboxCheckpoints extends Model<RunsInboxCheckpoints>($I`RunsInb
  * @since 0.0.0
  */
 export class RunsInboxSeen extends Model<RunsInboxSeen>($I`RunsInboxSeen`)(
-  { key: S.String.pipe(pg.text(), pg.primaryKey()) },
+  { key: IdText.pipe(pg.text(), pg.primaryKey()) },
   { description: "The inbox keys of the facts the runs inbox acted on." },
 ) {}
 

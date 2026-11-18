@@ -1,6 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import { AuthorityDeployment } from "@proto/authority-host/Authority.descriptor";
 import { ConformanceDeployment } from "@proto/conformance/Conformance.descriptor";
+import { FactId } from "@proto/kernel/Ids";
 import { StreamPin } from "@proto/kernel/PublishedStream";
 import { ClaimDecided } from "@proto/party-contract/Facts/ClaimDecided.fact";
 import { PartyDeployment } from "@proto/party-host/Party.descriptor";
@@ -29,7 +30,7 @@ const entriesOf = (stream: string) => `SELECT coalesce(json_agg(json_build_objec
 
 const StoredEntry = S.Struct({ position: S.Int, event: S.Unknown });
 const decodeEntries = S.Array(StoredEntry).pipe(S.fromJsonString, S.decodeEffect);
-const decodeFact = S.decodeUnknownOption(S.Struct({ _tag: S.String, factId: S.String }));
+const decodeFact = S.decodeUnknownOption(S.Struct({ _tag: S.String, factId: FactId }));
 
 /** The fact version an event's tag names (`ClaimDecided.versions`). */
 const versionOf = (tag: string): O.Option<number> =>

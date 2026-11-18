@@ -2,7 +2,9 @@ import { CapabilityId, GrantId, OrgId, PrincipalId, RunId } from "@proto/kernel/
 import { Count, IdText, Name } from "@proto/kernel/Measure";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { ClaimDecidedV2, Decision } from "@proto/party-contract/Facts/ClaimDecided.fact";
+import { StepRecorded } from "@proto/runs-contract/Run/RecordStep.command";
 import { ReservationId } from "@proto/runs-contract/Run/Reservation.id";
+import { RunRequested } from "@proto/runs-contract/Run/RequestRun.command";
 import { RunVersions } from "@proto/runs-contract/Run/RunVersions";
 import { SessionId } from "@proto/runs-contract/Run/Session.id";
 import * as A from "@beep/utils/Array";
@@ -45,9 +47,9 @@ export const Cast = S.Struct({
   runs: S.Struct({ run: RunId, peer: RunId }),
   reservations: S.Tuple([ReservationId, ReservationId]),
   versions: RunVersions,
-  purpose: S.String,
+  purpose: RunRequested.fields.purpose,
   ledger: S.Struct({ used: Units, unused: Units, free: Units }),
-  steps: S.NonEmptyArray(S.String).check(S.isMaxLength(4)),
+  steps: S.NonEmptyArray(StepRecorded.fields.step).check(S.isMaxLength(4)),
   claims: S.Tuple([ClaimId, ClaimId]),
   outcome: Decision,
   decided: ClaimDecidedV2,

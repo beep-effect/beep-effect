@@ -6,6 +6,7 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as O from "@beep/utils/Option";
 import * as P from "@beep/utils/Predicate";
+import * as Str from "@beep/utils/Str";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
 import type { Receipt } from "../Bindings.ts";
@@ -30,7 +31,8 @@ export const searchText = Atom.make("");
 export const lastRegistration = Atom.make<O.Option<Receipt>>(O.none());
 
 /**
- * One page of the org's parties matching the search text.
+ * One page of the org's parties matching the search text, trimmed as the
+ * directory takes it.
  *
  * @category atoms
  * @since 0.0.0
@@ -39,15 +41,15 @@ export const searchResults = Atom.family((org: OrgId) =>
   partyRuntime.atom((get) => {
     const atLeast = get(lastRegistration);
     return Reviewer.FindParties(
-      { org, text: get(searchText) },
+      { org, text: Str.trim(get(searchText)) },
       { take: 20, ...O.match(atLeast, { onNone: () => ({}), onSome: (receipt) => ({ atLeast: receipt }) }) },
     );
   }),
 );
 
 /**
- * Register a party under the search text as its name; on commit, record the
- * receipt so the search catches up with it.
+ * Register a party under the search text, trimmed, as its name; on commit,
+ * record the receipt so the search catches up with it.
  *
  * @category atoms
  * @since 0.0.0
@@ -86,7 +88,7 @@ export const FindPartiesScreen = ({ org }: { readonly org: OrgId }) => {
   return (
     <section aria-label="Party directory">
       <input aria-label="Search parties" value={text} onChange={(event) => setText(event.currentTarget.value)} />
-      <button type="button" disabled={text === ""} onClick={() => register(text)}>
+      <button type="button" disabled={Str.isEmpty(Str.trim(text))} onClick={() => register(Str.trim(text))}>
         Register
       </button>
       {AsyncResult.isSuccess(registered) ? <p role="status">Registration: {registered.value}</p> : null}

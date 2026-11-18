@@ -1,8 +1,7 @@
 import * as Domain from "@alchemy.run/domain";
 import { RunId } from "@proto/kernel/Ids";
 import { Provenance } from "@proto/kernel/Invocation";
-import * as S from "effect/Schema";
-import { Count } from "@proto/kernel/Measure";
+import { Count, Text } from "@proto/kernel/Measure";
 import { RunEvent } from "./RunEvent.ts";
 import { SessionId } from "./Session.id.ts";
 import { Since } from "./Since.ts";
@@ -18,7 +17,7 @@ import { Since } from "./Since.ts";
  */
 export class RunRejected extends Domain.Event(
   "RunRejected",
-  RunEvent.fields({ reason: S.String, released: Since.phase7(Count, 0) }),
+  RunEvent.fields({ reason: Text, released: Since.phase7(Count, 0) }),
   { description: "The run was refused or could not continue, and why: its grant was refused at request, or a hop was refused at re-admission mid-run. `released` is the units its open reservations held, given back as it ends." },
 ) {}
 
@@ -32,6 +31,6 @@ export class RunRejected extends Domain.Event(
  */
 export class RejectRun extends Domain.Command(
   "RejectRun",
-  { target: RunId, input: { session: SessionId, reason: S.String, provenance: Provenance }, events: [RunRejected] },
+  { target: RunId, input: { session: SessionId, reason: Text, provenance: Provenance }, events: [RunRejected] },
   { description: "Record that a run was refused, and why." },
 ) {}

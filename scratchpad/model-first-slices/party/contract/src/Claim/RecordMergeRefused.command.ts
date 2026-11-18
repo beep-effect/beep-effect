@@ -1,5 +1,8 @@
 import * as Domain from "@alchemy.run/domain";
+import { CapabilityId } from "@proto/kernel/Ids";
 import { carry, Provenance } from "@proto/kernel/Invocation";
+import { Text } from "@proto/kernel/Measure";
+import { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
 import * as A from "@beep/utils/Array";
 import { pipe } from "effect/Function";
 import * as Match from "effect/Match";
@@ -9,16 +12,18 @@ import * as Str from "@beep/utils/Str";
 import { ClaimId } from "./Claim.id.ts";
 
 /**
- * Why a merge did not happen: re-admission refused, the merge vetoed, or a
- * missing grant.
+ * Why a merge did not happen: re-admission refused (for the reason the
+ * authority context gave), the merge vetoed, or a missing grant on a
+ * capability.
  *
  * @category models
  * @since 0.0.0
  */
 export const MergeRefusal = S.TaggedUnion({
-  Readmission: { reason: S.String },
-  Vetoed: { reason: S.String },
-  MissingGrant: { capability: S.String },
+  Readmission: { reason: ReadmissionRefused.fields.reason },
+  // Vetoed also holds phase 2 text that did not parse, so its reason is free text.
+  Vetoed: { reason: Text },
+  MissingGrant: { capability: CapabilityId },
 });
 /**
  * @category models
@@ -39,14 +44,23 @@ export const renderMergeRefusal: (refusal: MergeRefusal) => string = MergeRefusa
   MissingGrant: ({ capability }) => `missing-grant:${capability}`,
 });
 
+const isReadmissionReason = S.is(ReadmissionRefused.fields.reason);
+const isCapabilityId = S.is(CapabilityId);
+
+/** A line that names no known kind, or a detail its kind does not hold, reads as vetoed, the whole line its reason. */
 const parseMergeRefusal = (text: string): MergeRefusal => {
   const [kind = "", ...rest] = pipe(text, Str.split(":"));
   const detail = A.join(rest, ":");
+  const unparsed = () => MergeRefusal.cases.Vetoed.make({ reason: text });
   return Match.value(kind).pipe(
-    Match.when("readmission", () => MergeRefusal.cases.Readmission.make({ reason: detail })),
-    Match.when("missing-grant", () => MergeRefusal.cases.MissingGrant.make({ capability: detail })),
+    Match.when("readmission", () =>
+      isReadmissionReason(detail) ? MergeRefusal.cases.Readmission.make({ reason: detail }) : unparsed(),
+    ),
+    Match.when("missing-grant", () =>
+      isCapabilityId(detail) ? MergeRefusal.cases.MissingGrant.make({ capability: detail }) : unparsed(),
+    ),
     Match.when("vetoed", () => MergeRefusal.cases.Vetoed.make({ reason: detail })),
-    Match.orElse(() => MergeRefusal.cases.Vetoed.make({ reason: text })),
+    Match.orElse(unparsed),
   );
 };
 
@@ -60,8 +74,8 @@ const parseMergeRefusal = (text: string): MergeRefusal => {
  */
 export const StoredMergeRefusal = S.Union([
   MergeRefusal,
-  S.String.pipe(
-    S.decodeTo(MergeRefusal, {
+  Text.pipe(
+    S.decodeTo(S.toType(MergeRefusal), {
       decode: SchemaGetter.transform(parseMergeRefusal),
       encode: SchemaGetter.transform(renderMergeRefusal),
     }),

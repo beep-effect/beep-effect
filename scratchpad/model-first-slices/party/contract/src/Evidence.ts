@@ -1,3 +1,4 @@
+import { Text } from "@proto/kernel/Measure"
 import * as Effect from "effect/Effect"
 import { LiteralKit } from "@beep/schema/LiteralKit"
 import * as S from "effect/Schema"
@@ -39,7 +40,7 @@ export type Trust = typeof Trust.Type;
 export const EvidenceSignal = S.Struct({
   // A signal names the source it came from: an empty source is no source.
   source: S.NonEmptyString,
-  quote: S.String,
+  quote: Text,
   trust: Trust.pipe((self) => {
       const defaultValue = Effect.succeed(Trust.Enum.normal)
       return self.pipe(

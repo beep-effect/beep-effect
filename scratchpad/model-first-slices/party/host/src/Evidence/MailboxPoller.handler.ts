@@ -7,7 +7,7 @@ import type * as Headers from "effect/http/Headers";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import { MailboxPoller } from "./MailboxPoller.singleton.ts";
-import { thunkEffectVoid } from "@beep/utils"
+import { thunkEffectVoid } from "@beep/utils/thunk"
 
 /**
  * The poller: every minute, read the mailbox through the port the model

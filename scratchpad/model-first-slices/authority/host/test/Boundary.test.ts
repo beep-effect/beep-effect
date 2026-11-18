@@ -420,7 +420,7 @@ it.live.prop(
 const Asked = S.Struct({ narrower: Narrower, free: S.Option(TermsSpec) });
 
 /** A need to probe terms with: picks from the pools, and when it is asked. */
-const Probe = S.Struct({ capability: Pick, operation: Pick, org: Pick, record: S.Option(Pick), at: Ahead, description: S.String });
+const Probe = S.Struct({ capability: Pick, operation: Pick, org: Pick, record: S.Option(Pick), at: Ahead, description: Capability.fields.description });
 
 /**
  * A human asks the gateway to grant a run part of a grant they hold; the run then asks for part of

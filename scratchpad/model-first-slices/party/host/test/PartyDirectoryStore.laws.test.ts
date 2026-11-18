@@ -3,8 +3,10 @@ import { makeLayer } from "@beep/pglite";
 import { expect, it } from "@effect/vitest";
 import { OrgId } from "@proto/kernel/Ids";
 import { Count, Name } from "@proto/kernel/Measure";
-import type { DirectoryRow } from "@proto/party-contract/Directory/FindParties.read";
+import { type DirectoryRow, DirectoryText } from "@proto/party-contract/Directory/FindParties.read";
+import { InvalidCursor } from "@proto/party-contract/Directory/InvalidCursor.rejection";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
+import { PartyName } from "@proto/party-contract/Party/PartyName";
 import { ClusterSql, clusterSqlFrom, clusterSqlNames } from "@proto/party-host/ClusterSql";
 import {
   generationOf,
@@ -16,6 +18,7 @@ import { pgPartyDirectoryStoreFor } from "@proto/party-host/Directory/PgPartyDir
 import { PartyMigrations } from "@proto/party-host/Party.migrations";
 import {
   DirectoryChange,
+  DirectoryCursor,
   DirectoryWrite,
   GenerationBehind,
   MemoryPartyDirectoryStore,
@@ -44,23 +47,14 @@ import * as Str from "effect/String";
 class PartyDirectoryRowsV1 extends StoreKit.Model<PartyDirectoryRowsV1>("PartyDirectoryRowsV1")(PartyDirectoryRowFields) {}
 const rows = { ...PartyDirectoryRowTables, 1: generationOf(PartyDirectoryRowsV1) };
 
-/** A display name holding the characters a pattern search treats specially, in either case. */
-const DisplayName = S.String.check(
-  S.isPattern(/^[A-Za-z0-9 %_\\]{0,12}$/, {
-    identifier: "DisplayNameCheck",
-    title: "DisplayName",
-    description: "A short ASCII name that may hold `%`, `_`, `\\` and spaces.",
-  }),
-);
-
-/** One party: its key, which of the scene's two orgs it is in, its name, and whom it absorbed, in order, by index into the scene's parties (so a party is often absorbed twice). */
-const ScenedParty = S.Struct({ key: Name, inSecondOrg: S.Boolean, name: DisplayName, merges: S.Array(Count).check(S.isMaxLength(4)) });
+/** One party: its key, which of the scene's two orgs it is in, its name as registered (which may hold `%`, `_` and `\`), and whom it absorbed, in order, by index into the scene's parties (so a party is often absorbed twice). */
+const ScenedParty = S.Struct({ key: Name, inSecondOrg: S.Boolean, name: PartyName, merges: S.Array(Count).check(S.isMaxLength(4)) });
 type ScenedParty = typeof ScenedParty.Type;
 
 const Scene = S.Struct({
   orgs: S.Tuple([Name, Name]),
   parties: S.Array(ScenedParty).check(S.isMaxLength(8)),
-  text: DisplayName,
+  text: DirectoryText,
   take: Count.check(S.isBetween({ minimum: 1, maximum: 4 })),
 });
 type Scene = typeof Scene.Type;
@@ -124,21 +118,27 @@ const allPages = (
   take: number,
   after: string | undefined = undefined,
   read: ReadonlyArray<Page> = [],
-): Effect.Effect<ReadonlyArray<Page>> =>
+): Effect.Effect<ReadonlyArray<Page>, InvalidCursor> =>
   Effect.flatMap(store.search(org, text, { after, take }), (page) =>
     page.cursor === null || read.length >= 50
       ? Effect.succeed(A.append(read, page))
       : allPages(store, org, text, take, page.cursor, A.append(read, page)),
   );
 
-/** The pages hold every expected row once, in order: full pages each with its last party as the cursor, then one last page with none. */
+/** What a cursor says, when it is one: the order it follows and the party it resumes after. */
+const cursorOf = S.decodeUnknownOption(DirectoryCursor);
+
+/** A cursor of the directory's shape that follows some other order, as a client or another store might forge one. */
+const ForeignCursor = S.StringFromBase64Url.pipe(S.decodeTo(S.fromJsonString(S.Struct({ order: Name, partyId: PartyId }))));
+
+/** The pages hold every expected row once, in order: full pages each with a cursor naming its last party, then one last page with none. */
 const expectPaged = (pages: ReadonlyArray<Page>, expected: ReadonlyArray<DirectoryRow>, take: number) => {
   expect(A.flatMap(pages, (page) => page.entries)).toEqual(expected);
   expect(pages.length).toBe(Math.max(1, Math.ceil(expected.length / take)));
   expect(A.last(pages).pipe(O.map((page) => page.cursor))).toEqual(O.some(null));
   A.forEach(A.dropRight(pages, 1), (page) => {
     expect(page.entries).toHaveLength(take);
-    expect(page.cursor).toEqual(A.last(page.entries).pipe(O.map((row) => row.partyId), O.getOrNull));
+    expect(cursorOf(page.cursor)).toEqual(A.last(page.entries).pipe(O.map((row) => ({ order: "partyId", partyId: row.partyId }))));
   });
 };
 
@@ -244,10 +244,42 @@ it.layer(Postgres, { timeout: "60 seconds" })("the directory store's laws", (it)
           yield* Effect.forEach(
             partiesOf(scene),
             Effect.fnUntraced(function* (party) {
-              const from = party.name.length === 0 ? 0 : start % party.name.length;
-              const text = Str.toUpperCase(Str.slice(from, from + (length % 5))(party.name));
+              // A search text has no outer whitespace: the part is trimmed, and is still a part of the name.
+              const from = start % party.name.length;
+              const text = Str.trim(Str.toUpperCase(Str.slice(from, from + (length % 5))(party.name)));
               const pages = yield* searchHolds(store, scene, orgOf(scene, party), text);
               expect(A.some(A.flatMap(pages, (page) => page.entries), (row) => row.partyId === party.key)).toBe(true);
+            }),
+            { concurrency: 1, discard: true },
+          );
+        }),
+      options,
+    );
+
+    it.effect.prop(
+      `${name}: a cursor the store did not issue is refused with InvalidCursor: arbitrary text, a bare party id, another order's cursor`,
+      [Scene, S.String, Name, Name],
+      ([scene, text, key, order]) =>
+        Effect.gen(function* () {
+          const store = yield* fresh;
+          yield* store.apply(allWrites(scene), 0);
+          const org = OrgId.make(scene.orgs[0]);
+          const everyRow = expectedSearch(scene, org, "");
+          const otherOrder = yield* S.encodeEffect(ForeignCursor)({ order, partyId: partyIdOf(key) }).pipe(Effect.orDie);
+          yield* Effect.forEach(
+            [text, key, otherOrder],
+            Effect.fnUntraced(function* (after) {
+              const exit = yield* Effect.exit(store.search(org, "", { after, take: scene.take }));
+              // The store answers as the cursor schema reads the cursor: refused unless it decodes,
+              // and then the page after the party it names.
+              O.match(cursorOf(after), {
+                onNone: () =>
+                  expect(exit).toMatchObject({ _tag: "Failure", cause: { reasons: [{ _tag: "Fail", error: InvalidCursor.make({}) }] } }),
+                onSome: ({ partyId }) =>
+                  expect(Exit.map(exit, (page) => page.entries)).toEqual(
+                    Exit.succeed(A.take(A.filter(everyRow, (row) => row.partyId > partyId), scene.take)),
+                  ),
+              });
             }),
             { concurrency: 1, discard: true },
           );
@@ -292,13 +324,13 @@ it.layer(Postgres, { timeout: "60 seconds" })("the directory store's laws", (it)
     );
   });
 
-  it.effect.prop("postgres: a generation with no declared row table dies, saying what to add", [Name, Name], ([key, org]) =>
+  it.effect.prop("postgres: a generation with no declared row table dies, saying what to add", [Name, Name, PartyName], ([key, org, name]) =>
     Effect.gen(function* () {
       const store = yield* implementations.postgres;
       const write = DirectoryWrite.make({
         stream: `Party/${key}`,
         seq: 1,
-        change: DirectoryChange.cases.Registered.make({ partyId: partyIdOf(key), org: OrgId.make(org), name: key }),
+        change: DirectoryChange.cases.Registered.make({ partyId: partyIdOf(key), org: OrgId.make(org), name }),
       });
       const exit = yield* Effect.exit(store.apply([write], 2));
       expect(Exit.isFailure(exit) && Cause.pretty(exit.cause)).toContain("declare PartyDirectoryRowsV2");

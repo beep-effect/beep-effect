@@ -1,6 +1,7 @@
 import { GrantTerms } from "@proto/kernel/Capability";
 import { DelegationId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { GrantRef, Hop, type Invocation, Provenance } from "@proto/kernel/Invocation";
+import { Name } from "@proto/kernel/Measure";
 import { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
 import { $AuthorityContractId } from "@proto/kernel/Identity";
 import * as Context from "effect/Context";
@@ -55,7 +56,7 @@ export type RunGrant = typeof RunGrant.Type;
  * @category errors
  * @since 0.0.0
  */
-export class RunGrantRefused extends S.TaggedError<RunGrantRefused, { readonly brand: unique symbol }>()("RunGrantRefused", { reason: S.String }) {}
+export class RunGrantRefused extends S.TaggedError<RunGrantRefused, { readonly brand: unique symbol }>()("RunGrantRefused", { reason: Name }) {}
 
 /**
  * Why `grantRun` refused: the run's authority could not be granted, or the

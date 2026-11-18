@@ -1,6 +1,7 @@
 import * as A from "@beep/utils/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { FactId } from "./Ids.ts";
 import { Count, Name, Sequence } from "./Measure.ts";
 
 /**
@@ -146,7 +147,7 @@ export type StreamPins = typeof StreamPins.Type;
  * @category models
  * @since 0.0.0
  */
-export const GenerationEntry = S.Struct({ position: Sequence, factId: S.String, version: Sequence, payload: S.Unknown });
+export const GenerationEntry = S.Struct({ position: Sequence, factId: FactId, version: Sequence, payload: S.Unknown });
 /**
  * @category models
  * @since 0.0.0

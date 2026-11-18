@@ -1,11 +1,14 @@
 import type * as Domain from "@alchemy.run/domain";
 import type { OrgId } from "@proto/kernel/Ids";
-import type { PartyId } from "@proto/party-contract/Party/Party.id";
+import { Text } from "@proto/kernel/Measure";
+import type { DirectoryText } from "@proto/party-contract/Directory/FindParties.read";
 import {
   DirectoryChange,
   type DirectoryWrite,
   GenerationBehind,
+  pageOf,
   PartyDirectoryStore,
+  resumeAfter,
 } from "@proto/party-model/Directory/PartyDirectory.store";
 import { and, arrayContains, eq, isNull, lt, not, or, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
@@ -26,7 +29,7 @@ import {
   PartyDirectoryTables,
   StoreKit,
 } from "./PartyDirectory.table.ts";
-import { thunkEffectSucceedNone } from "@beep/utils"
+import { thunkEffectSucceedNone, thunkUndefined } from "@beep/utils/thunk";
 
 /**
  * The store was asked for a generation this deploy declares no row table
@@ -37,7 +40,7 @@ import { thunkEffectSucceedNone } from "@beep/utils"
  */
 export class UndeclaredGeneration extends S.TaggedError<UndeclaredGeneration, { readonly brand: unique symbol }>()("UndeclaredGeneration", {
   generation: S.Int,
-  message: S.String,
+  message: Text,
 }) {}
 
 const undeclared = (generation: number) =>
@@ -209,11 +212,13 @@ export const pgPartyDirectoryStoreFor = (rows: Readonly<Record<number, PartyDire
         ),
         search: dual(
           3,
-          Effect.fn("PgPartyDirectoryStore.search")((org: OrgId, text: string, { after, take }: Domain.Query.PageRequest) =>
+          Effect.fn("PgPartyDirectoryStore.search")((org: OrgId, text: DirectoryText, { after, take }: Domain.Query.PageRequest) =>
             withStore((store) =>
               Effect.gen(function* () {
-                const current = yield* activeGeneration(store);
-                if (O.isNone(current)) return { entries: A.empty(), cursor: null };
+                // A cursor the store did not issue is refused before anything is read.
+                const from = yield* resumeAfter(after);
+                const current = yield* activeGeneration(store).pipe(Effect.orDie);
+                if (O.isNone(current)) return yield* pageOf(A.empty(), take);
                 const { model, table } = yield* rowsOf(current.value);
                 // Contains `text`, case-insensitively: `strpos` matches the text as written, so `%`, `_` and `\` are plain characters.
                 const found = yield* store.db
@@ -223,18 +228,15 @@ export const pgPartyDirectoryStoreFor = (rows: Readonly<Record<number, PartyDire
                     and(
                       eq(table.org, org),
                       sql`strpos(lower(${table.name}), ${Str.toLowerCase(text)}) > 0`,
-                      after === undefined ? undefined : sql`${partyIdOrder(table.partyId)} > ${after}`,
+                      O.match(from, { onNone: thunkUndefined, onSome: (at) => sql`${partyIdOrder(table.partyId)} > ${at}` }),
                     ),
                   )
                   .orderBy(partyIdOrder(table.partyId))
-                  .limit(take + 1);
-                const decoded = yield* S.decodeEffect(S.Array(model.select))(found);
-                const entries = A.take(decoded, take);
-                return {
-                  entries,
-                  cursor: decoded.length > take ? O.getOrNull(O.map(A.last(entries), (row): PartyId => row.partyId)) : null,
-                };
-              }).pipe(Effect.orDie),
+                  .limit(take + 1)
+                  .pipe(Effect.orDie);
+                const decoded = yield* S.decodeEffect(S.Array(model.select))(found).pipe(Effect.orDie);
+                return yield* pageOf(decoded, take);
+              }),
             ),
           ),
         ),

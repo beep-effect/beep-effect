@@ -10,6 +10,7 @@ import { AdmissionGateUnmet } from "./AcceptClaim.command.ts";
 import { ApprovalId } from "./Approval.id.ts";
 import { ClaimId } from "./Claim.id.ts";
 import { ClaimNotPending } from "./ClaimNotPending.rejection.ts";
+import { ProposalDigest } from "./ProposalDigest.ts";
 import { DecisionScope } from "./DecisionScope.ts";
 import { $PartyContractId } from "@proto/kernel/Identity";
 
@@ -52,7 +53,7 @@ export class ProposalApproved extends Domain.Event(
   carry({
     approval: ApprovalId,
     run: RunId,
-    digest: S.String,
+    digest: ProposalDigest,
     evidenceRevision: Sequence,
     outcome: S.Literals(["accepted", "retracted"]),
     proposition: Proposition,
@@ -76,7 +77,7 @@ export class ApproveProposal extends Domain.Command(
   {
     target: ClaimId,
     middleware: [Session],
-    input: { digest: S.String, evidenceRevision: Sequence },
+    input: { digest: ProposalDigest, evidenceRevision: Sequence },
     events: [ProposalApproved],
     rejects: [HumanApprovalRequired, MissingGrant, ClaimNotPending, ProposalMismatch, AdmissionGateUnmet],
   },

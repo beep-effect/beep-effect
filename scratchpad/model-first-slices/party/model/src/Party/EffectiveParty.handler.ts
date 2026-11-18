@@ -7,7 +7,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as O from "@beep/utils/Option";
 import { EffectiveParty } from "./EffectiveParty.view.ts";
-import { thunkEffectVoid } from "@beep/utils"
+import { thunkEffectVoid } from "@beep/utils/thunk"
 
 /**
  * Who may read a party: an invocation with a `party.read` grant on its org

@@ -1,4 +1,5 @@
 import { type DeploymentDescriptor, FactVersion } from "@proto/kernel/Deployment";
+import { FactId } from "@proto/kernel/Ids";
 import { Count, Name, Sequence } from "@proto/kernel/Measure";
 import { type GenerationEntry, type LiveGeneration, StreamPin } from "@proto/kernel/PublishedStream";
 import * as A from "@beep/utils/Array";
@@ -77,8 +78,8 @@ export const RetirementRefusal = S.TaggedUnion({
   NotClosed: { stream: Name },
   Unread: { stream: Name },
   NoSuccessor: { stream: Name },
-  FactMissing: { stream: Name, successor: Name, factId: S.String, version: Sequence },
-  PayloadDiffers: { stream: Name, successor: Name, factId: S.String, version: Sequence },
+  FactMissing: { stream: Name, successor: Name, factId: FactId, version: Sequence },
+  PayloadDiffers: { stream: Name, successor: Name, factId: FactId, version: Sequence },
   ConsumerBehind: { stream: Name, consumer: Name, checkpoint: Count, through: Count },
   CheckpointUnread: { stream: Name, consumer: Name },
   PinsMoved: { current: S.Array(Name), next: S.Array(Name) },

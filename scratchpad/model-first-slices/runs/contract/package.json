@@ -27,6 +27,7 @@
     "./Run/ReserveBudget.command": "./src/Run/ReserveBudget.command.ts",
     "./Run/RunEvent": "./src/Run/RunEvent.ts",
     "./Run/RunNotRunning.rejection": "./src/Run/RunNotRunning.rejection.ts",
+    "./Run/RunState.read": "./src/Run/RunState.read.ts",
     "./Run/RunStatus": "./src/Run/RunStatus.ts",
     "./Run/RunVersions": "./src/Run/RunVersions.ts",
     "./Run/Session.id": "./src/Run/Session.id.ts",

@@ -6,7 +6,7 @@ import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
-import { Count } from "@proto/kernel/Measure";
+import { Count, IdText, Text } from "@proto/kernel/Measure";
 import { HistoryBound } from "./Run/HistoryBound.ts";
 import { ReservationId } from "./Run/Reservation.id.ts";
 import { RunStatus } from "./Run/RunStatus.ts";
@@ -17,7 +17,9 @@ const $I = $RunsContractId.create("Runs.gateway");
 
 /**
  * What a product context reports to a run, as the run: budget, steps and
- * how it ended.
+ * how it ended. A step name is an id: two equal steps under one hop are
+ * one retried command. An outcome and a refusal's reason are text the
+ * product context wrote.
  *
  * @category models
  * @since 0.0.0
@@ -26,11 +28,11 @@ export const RunReport = S.TaggedUnion({
   Reserve: { reservation: ReservationId, units: Count },
   Settle: { reservation: ReservationId, units: Count },
   Release: { reservation: ReservationId },
-  Step: { step: S.String },
+  Step: { step: IdText },
   AwaitApproval: {},
-  Complete: { outcome: S.String },
+  Complete: { outcome: Text },
   Exhausted: {},
-  Refused: { reason: S.String },
+  Refused: { reason: Text },
 });
 /**
  * @category models
@@ -49,7 +51,7 @@ export const RunRequest = S.Struct({
   hop: Hop,
   run: RunId,
   session: SessionId,
-  purpose: S.String,
+  purpose: Text,
   versions: RunVersions,
   allowance: Count,
   historyBound: HistoryBound,
@@ -76,23 +78,28 @@ export const CurrentRun = S.Struct({ run: RunId, provenance: Provenance });
 export type CurrentRun = typeof CurrentRun.Type;
 
 /**
- * The run could not be started, and why.
+ * The run could not be started, and why: the tag of the rejection that refused
+ * the request, the tag of the state it reached instead of running, or the
+ * reason the run was rejected with, which can be prose, so it is text.
  *
  * @category errors
  * @since 0.0.0
  */
 export class RunRequestRefused extends S.TaggedError<RunRequestRefused, { readonly brand: unique symbol }>()("RunRequestRefused", {
-  reason: S.String,
+  reason: Text,
 }) {}
 
 /**
- * A report was refused, and why.
+ * A report was refused, and why: a refusal code, never prose. It is the
+ * tag of the run's rejection, `readmission:` and the re-admission's reason,
+ * `continuation:` and the state of a continuation that could not be
+ * followed, or `unknown-run`.
  *
  * @category errors
  * @since 0.0.0
  */
 export class RunReportRefused extends S.TaggedError<RunReportRefused, { readonly brand: unique symbol }>()("RunReportRefused", {
-  reason: S.String,
+  reason: IdText,
 }) {}
 
 /**

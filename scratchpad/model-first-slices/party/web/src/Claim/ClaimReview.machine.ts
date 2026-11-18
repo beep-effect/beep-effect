@@ -1,5 +1,6 @@
 import { Count, IdText, Name, Sequence } from "@proto/kernel/Measure";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
+import { ProposalDigest } from "@proto/party-contract/Claim/ProposalDigest";
 import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
 import { dual } from "effect/Function";
 import * as Match from "effect/Match";
@@ -8,12 +9,12 @@ import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { Receipt } from "../Bindings.ts";
-import { thunk0, thunkTrue } from "@beep/utils"
+import { thunk0, thunkTrue } from "@beep/utils/thunk"
 
 /** What every approval in flight carries: its command id, what it approves, the view revision it was made from, and how many times it was sent. */
 const inFlight = {
   commandId: IdText,
-  digest: S.String,
+  digest: ProposalDigest,
   evidenceRevision: Sequence,
   baseRevision: Count,
   attempts: Sequence,
@@ -143,7 +144,7 @@ export type Message = typeof Message.Type;
  */
 export const Intent = S.TaggedUnion({
   /** Send `ApproveProposal` under this command id (a retry reuses it). */
-  Approve: { commandId: IdText, digest: S.String, evidenceRevision: Sequence },
+  Approve: { commandId: IdText, digest: ProposalDigest, evidenceRevision: Sequence },
   /** Read the view once it has applied this receipt. */
   ReadAfterWrite: { commandId: IdText, receipt: Receipt },
 });

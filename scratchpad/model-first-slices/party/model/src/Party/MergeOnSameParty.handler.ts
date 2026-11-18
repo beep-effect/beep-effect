@@ -9,7 +9,7 @@ import { Authority } from "../Authority.external.ts";
 import { Claim } from "../Claim/Claim.aggregate.ts";
 import { MergeOnSameParty, MergeOnSamePartyTrigger } from "./MergeOnSameParty.policy.ts";
 import { Party } from "./Party.aggregate.ts";
-import { thunkEffectVoid, thunkTrue } from "@beep/utils"
+import { thunkEffectVoid, thunkTrue } from "@beep/utils/thunk"
 
 /**
  * Asks the authority context to re-admit the accepting provenance for this

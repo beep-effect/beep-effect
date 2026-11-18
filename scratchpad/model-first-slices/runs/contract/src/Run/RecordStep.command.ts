@@ -4,7 +4,7 @@ import { PrincipalId, RunId } from "@proto/kernel/Ids";
 import { GrantRef } from "@proto/kernel/Invocation";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as S from "effect/Schema";
-import { Count, Sequence } from "@proto/kernel/Measure";
+import { Count, IdText, Sequence, Text } from "@proto/kernel/Measure";
 import { HistoryBound } from "./HistoryBound.ts";
 import { NotThisRun } from "./NotThisRun.rejection.ts";
 import { HeldReservation } from "./Reservation.id.ts";
@@ -19,7 +19,7 @@ import { RunVersions } from "./RunVersions.ts";
  * @category events
  * @since 0.0.0
  */
-export class StepRecorded extends Domain.Event("StepRecorded", RunEvent.fields({ step: S.String, count: Sequence }), { description: "The run took a step. `count` is how many it has recorded." }) {}
+export class StepRecorded extends Domain.Event("StepRecorded", RunEvent.fields({ step: IdText, count: Sequence }), { description: "The run took a step. `count` is how many it has recorded." }) {}
 
 /**
  * The fact: the run reached its history bound and continues as `next`,
@@ -38,7 +38,7 @@ export class RunContinued extends Domain.Event(
     parent: Since.phase3(S.OptionFromNullOr(RunId), null),
     remaining: Count,
     reservations: Since.phase3(S.Array(HeldReservation), []),
-    purpose: S.String,
+    purpose: Text,
     versions: RunVersions,
     historyBound: HistoryBound,
     source: GrantRef,
@@ -59,7 +59,7 @@ export class RecordStep extends Domain.Command(
   {
     target: RunId,
     middleware: [Session],
-    input: { step: S.String },
+    input: { step: IdText },
     events: [StepRecorded, RunContinued],
     rejects: [RunNotRunning, NotThisRun],
   },

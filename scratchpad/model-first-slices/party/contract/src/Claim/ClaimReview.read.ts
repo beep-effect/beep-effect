@@ -1,6 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { OrgId, RunId } from "@proto/kernel/Ids";
-import { Count, Sequence } from "@proto/kernel/Measure";
+import { Count, Sequence, Text } from "@proto/kernel/Measure";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as O from "@beep/utils/Option";
@@ -13,6 +13,7 @@ import { EvidenceAdded } from "./AddEvidence.command.ts";
 import { ProposalApproved } from "./ApproveProposal.command.ts";
 import { ClaimAsserted } from "./AssertClaim.command.ts";
 import { ClaimId } from "./Claim.id.ts";
+import { ProposalDigest } from "./ProposalDigest.ts";
 import { DispositionProposed } from "./ProposeDisposition.command.ts";
 import { MergeRefused } from "./RecordMergeRefused.command.ts";
 import { ReviewRefused } from "./RecordReviewRefused.command.ts";
@@ -28,10 +29,10 @@ import { ReviewRequested } from "./ReviewRequested.event.ts";
  */
 export const ProposalView = S.Struct({
   disposition: Disposition,
-  rationale: S.String,
+  rationale: Text,
   run: RunId,
   evidenceRevision: Sequence,
-  digest: S.String,
+  digest: ProposalDigest,
 });
 /**
  * @category models
@@ -47,8 +48,8 @@ export type ProposalView = typeof ProposalView.Type;
  * @since 0.0.0
  */
 export const ClaimNote = S.TaggedUnion({
-  MergeRefused: { reason: S.String },
-  ReviewRefused: { run: RunId, reason: S.String },
+  MergeRefused: { reason: Text },
+  ReviewRefused: { run: RunId, reason: Text },
 });
 /**
  * @category models

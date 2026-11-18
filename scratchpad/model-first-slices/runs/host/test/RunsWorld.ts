@@ -4,6 +4,7 @@ import { RevokeGrant } from "@proto/authority-contract/Grant/RevokeGrant.command
 import { AuthorityGatewayLive } from "@proto/authority-host/AuthorityGateway.adapter";
 import { bootstrap } from "@proto/authority-host/Boundary/Boundary";
 import { hostAuthority } from "@proto/authority-host/Host";
+import { SessionLive } from "@proto/authority-host/Session.adapter";
 import { Grant } from "@proto/authority-model/Grant/Grant.aggregate";
 import { HolderGrants } from "@proto/authority-model/Grant/HolderGrants.view";
 import { type GrantTerms, ResourceScope } from "@proto/kernel/Capability";
@@ -18,6 +19,7 @@ import { InboxStore, MemoryInboxStore } from "@proto/runs-host/Inbox/Inbox.store
 import { RunsGatewayLive } from "@proto/runs-host/RunsGateway.adapter";
 import { type RunRequestRefused, RunsGateway } from "@proto/runs-contract/Runs.gateway";
 import { AgentRun, type AgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
+import { RunsApi } from "@proto/runs-model/RunsApi.api";
 import { $RunsHostId } from "@proto/kernel/Identity";
 import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
@@ -51,6 +53,9 @@ export class Harness extends Context.Service<
   }
 >()($I`Harness`) {}
 
+/** The runs Api's client in process, behind the boundary's `Session`, as a person's client reaches it. */
+export class RunsClient extends Context.Service<RunsClient, Effect.Success<typeof RunsApi.clientInProcess>>()($I`RunsClient`) {}
+
 const settled = <S, E>(read: Effect.Effect<S, E>, done: (state: S) => boolean) =>
   read.pipe(Effect.repeat({ schedule: Schedule.spaced("20 millis"), until: done, times: 250 }), Effect.orDie);
 
@@ -66,7 +71,7 @@ type Requested = Effect.Effect<{ readonly provenance: Provenance }, RunRequestRe
  * - `requestRun(run, historyBound?)`: request a run as the requester, with the cast's whole
  *   ledger as its allowance and its steps' number as its history bound, and wait until it is granted;
  * - `World`: the runs host, the authority host and a fixture feed, on an in-memory platform of its
- *   own, so every build of it starts from nothing.
+ *   own, so every build of it starts from nothing; and the runs Api's client behind the boundary.
  */
 export const worldOf = (cast: Cast) => {
   const terms: GrantTerms = {
@@ -170,7 +175,12 @@ export const worldOf = (cast: Cast) => {
         }),
       ).pipe(Layer.provide(Layer.merge(AuthorityWorld, RunsWorld)));
 
-      return Layer.mergeAll(Control, Runs, Inbox);
+      // The Api over the same hosted runs model, admitted by the authority host's boundary.
+      const Client = Layer.effect(RunsClient, RunsApi.clientInProcess).pipe(
+        Layer.provide(Layer.merge(RunsWorld, SessionLive.pipe(Layer.provide(AuthorityWorld)))),
+      );
+
+      return Layer.mergeAll(Control, Runs, Inbox, Client);
     }),
   );
 

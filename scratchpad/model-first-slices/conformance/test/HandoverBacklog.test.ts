@@ -13,7 +13,7 @@ import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { type AssertedReview, ClaimReviewState } from "@proto/party-contract/Claim/ClaimReview.read";
 import { RequestReview } from "@proto/party-contract/Claim/RequestReview.command";
 import { ClaimRetracted } from "@proto/party-contract/Claim/RetractClaim.command";
-import { ClaimDecidedV1, ClaimDecidedV2, ClaimFeed } from "@proto/party-contract/Facts/ClaimDecided.fact";
+import { ClaimDecided, ClaimDecidedV1, ClaimDecidedV2, ClaimFeed } from "@proto/party-contract/Facts/ClaimDecided.fact";
 import { PartyIntake, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { Claim, ClaimState } from "@proto/party-model/Claim/Claim.aggregate";
 import { ClaimReviewLive } from "@proto/party-model/Claim/ClaimReview.handler";
@@ -70,7 +70,7 @@ const claimFactsLive = (gate: Deferred.Deferred<void>) =>
               ProposalApproved: (approved) => ({ decision: approved.outcome, basis: "approval" as const, approval: O.some(approved.approval) }),
             }),
           );
-          const common = { factId: `${claim}:decided`, claim, org, reviewRuns: reviews };
+          const common = { factId: ClaimDecided.factIdOf(claim), claim, org, reviewRuns: reviews };
           yield* facts.append(input, ClaimDecidedV1.make({ ...common, outcome: decided.decision }), ClaimDecidedV2.make({ ...common, ...decided }));
         }
       });
@@ -139,7 +139,7 @@ it.live.prop("the generic backlog and Party's own query agree: one undelivered d
         const state = yield* claims.get(claim);
         const page = yield* Effect.flatMap(Effect.service(PartyFacts), (facts) => facts.list("claims"));
         const decided = ClaimState.isAnyOf(["Accepted", "Retracted"])(state);
-        return decided && !A.some(page.entries, (entry) => entry.event.factId === `${claim}:decided`) ? 1 : 0;
+        return decided && !A.some(page.entries, (entry) => entry.event.factId === ClaimDecided.factIdOf(claim)) ? 1 : 0;
       });
       const held = yield* generic.pipe(Effect.repeat({ schedule: Schedule.spaced("50 millis"), until: (backlog) => backlog.pending >= 1, times: 100 }));
       const heldOracle = yield* oracle;

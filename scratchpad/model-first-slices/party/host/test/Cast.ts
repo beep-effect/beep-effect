@@ -34,9 +34,10 @@ export const Cast = S.Struct({
   outsider: PrincipalId,
   party: PartyId,
   duplicate: PartyId,
-  surname: Name,
-  partyGiven: Name,
-  duplicateGiven: Name,
+  // Short enough that a given name and the surname joined by a space are a party's name.
+  surname: Name.check(S.isMaxLength(99)),
+  partyGiven: Name.check(S.isMaxLength(99)),
+  duplicateGiven: Name.check(S.isMaxLength(99)),
   claim: ClaimId,
   otherClaim: ClaimId,
   orphanRun: RunId,

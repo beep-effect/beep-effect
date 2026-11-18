@@ -68,7 +68,7 @@ type Generations = typeof Generations.Type;
 
 /** The facts Party publishes for one decision, version 1 then version 2, under one fact id (`ClaimDecisions`). */
 const factsOf = ({ claim, org, decision, approval, reviewRuns }: Decided): ReadonlyArray<Fact> => {
-  const common = { factId: `${claim}:decided`, claim, org, reviewRuns };
+  const common = { factId: ClaimDecided.factIdOf(claim), claim, org, reviewRuns };
   return [
     ClaimDecidedV1.make({ ...common, outcome: decision }),
     ClaimDecidedV2.make({ ...common, decision, basis: O.isSome(approval) ? "approval" : "direct", approval }),

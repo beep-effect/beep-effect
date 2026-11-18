@@ -1,7 +1,7 @@
 import * as Domain from "@alchemy.run/domain";
 import { RunId } from "@proto/kernel/Ids";
 import { carry, Provenance } from "@proto/kernel/Invocation";
-import * as S from "effect/Schema";
+import { Text } from "@proto/kernel/Measure";
 import { ClaimId } from "./Claim.id.ts";
 
 /**
@@ -10,7 +10,7 @@ import { ClaimId } from "./Claim.id.ts";
  * @category events
  * @since 0.0.0
  */
-export class ReviewRefused extends Domain.Event("ReviewRefused", carry({ run: RunId, reason: S.String }), { description: "A review run could not start or could not continue, and why." }) {}
+export class ReviewRefused extends Domain.Event("ReviewRefused", carry({ run: RunId, reason: Text }), { description: "A review run could not start or could not continue, and why." }) {}
 
 /**
  * Record a refused review run on the claim. Sent only by the model's own
@@ -21,6 +21,6 @@ export class ReviewRefused extends Domain.Event("ReviewRefused", carry({ run: Ru
  */
 export class RecordReviewRefused extends Domain.Command(
   "RecordReviewRefused",
-  { target: ClaimId, input: { run: RunId, reason: S.String, provenance: Provenance }, events: [ReviewRefused] },
+  { target: ClaimId, input: { run: RunId, reason: Text, provenance: Provenance }, events: [ReviewRefused] },
   { description: "Record that a review run was refused." },
 ) {}

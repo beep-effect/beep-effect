@@ -28,7 +28,7 @@ const encodeV2 = S.encodeEffect(S.toCodecJson(ClaimDecidedV2));
 const worldRuns = { arbitrary: { runs: 25 }, timeout: 120_000 };
 
 /** The id Party gives the fact that a claim was decided. */
-const factIdOf = (claim: ClaimId) => `${claim}:decided`;
+const factIdOf = (claim: ClaimId) => ClaimDecided.factIdOf(claim);
 
 /** The cast's decision of a claim, published as version 1 and naming these review runs. */
 const v1 = Effect.fn("v1")(function* (cast: Cast, claim: ClaimId, runs: ReadonlyArray<RunId>) {

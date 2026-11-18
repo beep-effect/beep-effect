@@ -274,7 +274,9 @@ export const view: {
 });
 
 /**
- * Bind one query of a contract Api: ask it, optionally after a receipt.
+ * Bind one query of a contract Api: ask it, optionally after one receipt or
+ * one per command sent before it, and, for a paged query, from a page's
+ * cursor (`after`) for a page size (`take`).
  *
  * @category constructors
  * @since 0.0.0
@@ -285,7 +287,7 @@ export const query: {
 } = dual(
   2,
   <Id, Client, Input, Result, E>(api: ContractApi<Id, Client>, select: QuerySelect<Client, Input, Result, E>): QueryBinding<Id, Input, Result, E> =>
-    Effect.fn("Bindings.query")(function* (input: Input, options?: { readonly atLeast?: Receipt; readonly take?: number }) {
+    Effect.fn("Bindings.query")(function* (input: Input, options?: QueryAsk) {
       const client = yield* Effect.service(api.Client);
       const credentials = yield* Credentials;
       const headers = yield* credentials.headers;
@@ -293,16 +295,17 @@ export const query: {
     }),
 );
 
+/** How a binding asks a query: after the receipts of the caller's own commands, from a page's cursor, for a page size. */
+type QueryAsk = {
+  readonly atLeast?: Receipt | ReadonlyArray<Receipt>;
+  readonly after?: string;
+  readonly take?: number;
+};
+
 /** Picks a query's call off a contract's client. */
 type QuerySelect<Client, Input, Result, E> = (
   client: Client,
-) => (
-  input: Input,
-  options?: { readonly headers?: Headers.Input; readonly atLeast?: Receipt; readonly take?: number },
-) => Effect.Effect<Result, E>;
+) => (input: Input, options?: QueryAsk & { readonly headers?: Headers.Input }) => Effect.Effect<Result, E>;
 
-/** A query's binding: ask it, optionally after a receipt or for a page size. */
-type QueryBinding<Id, Input, Result, E> = (
-  input: Input,
-  options?: { readonly atLeast?: Receipt; readonly take?: number },
-) => Effect.Effect<Result, E, Id | Credentials>;
+/** A query's binding: ask it, optionally after receipts, from a cursor, or for a page size. */
+type QueryBinding<Id, Input, Result, E> = (input: Input, options?: QueryAsk) => Effect.Effect<Result, E, Id | Credentials>;

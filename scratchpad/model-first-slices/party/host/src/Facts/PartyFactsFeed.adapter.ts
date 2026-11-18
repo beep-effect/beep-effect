@@ -17,7 +17,7 @@ import * as N from "effect/Number"
 import * as O from "@beep/utils/Option"
 import * as S from "effect/Schema"
 import { flow, pipe } from "effect/Function"
-import { thunk0 } from "@beep/utils"
+import { thunk0 } from "@beep/utils/thunk"
 
 const encodeV1 = S.encodeEffect(S.toCodecJson(ClaimDecided.versions[1]))
 const encodeV2 = S.encodeEffect(S.toCodecJson(ClaimDecided.versions[2]))

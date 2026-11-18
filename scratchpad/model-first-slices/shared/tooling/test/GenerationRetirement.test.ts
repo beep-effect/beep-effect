@@ -1,6 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import { DeploymentDescriptor } from "@proto/kernel/Deployment";
-import { Count, IdText, Name, Sequence } from "@proto/kernel/Measure";
+import { FactId } from "@proto/kernel/Ids";
+import { Count, Name, Sequence } from "@proto/kernel/Measure";
 import { type GenerationEntry, type LiveGeneration, StreamPin } from "@proto/kernel/PublishedStream";
 import { checkGenerationRetirement, type ConsumerCheckpoint, FeedRef, Retirement, RetirementRefusal } from "@proto/tooling/GenerationRetirement";
 import * as A from "@beep/utils/Array";
@@ -19,7 +20,7 @@ import { Writer, writerOf } from "./Writer.ts";
 // the refusal it names is known from the scene.
 
 /** A fact a generation holds: its id, its version and the outcome its payload carries. */
-const Fact = S.Struct({ id: IdText, version: Sequence, outcome: Name });
+const Fact = S.Struct({ id: FactId, version: Sequence, outcome: Name });
 type Fact = typeof Fact.Type;
 /** A consumer of the feed: its context, the published version it consumes (by index), and how far past the retiring generation it has read. */
 const Consumer = S.Struct({ context: Name, version: Count, lead: Count });

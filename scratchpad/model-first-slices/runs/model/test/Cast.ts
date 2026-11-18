@@ -1,9 +1,16 @@
-import { CapabilityId, GrantId, OrgId, PrincipalId, RunId } from "@proto/kernel/Ids";
+import { CapabilityId, FactId, GrantId, OrgId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { Count, IdText, Name, Sequence } from "@proto/kernel/Measure";
+import { RunCancelled } from "@proto/runs-contract/Run/CancelRun.command";
+import { RunCompleted } from "@proto/runs-contract/Run/CompleteRun.command";
+import { ChildRequested } from "@proto/runs-contract/Run/DelegateRun.command";
 import { HistoryBound } from "@proto/runs-contract/Run/HistoryBound";
+import { StepRecorded } from "@proto/runs-contract/Run/RecordStep.command";
+import { RunRejected } from "@proto/runs-contract/Run/RejectRun.command";
 import { ReservationId } from "@proto/runs-contract/Run/Reservation.id";
+import { RunRequested } from "@proto/runs-contract/Run/RequestRun.command";
 import { RunVersions } from "@proto/runs-contract/Run/RunVersions";
 import { SessionId } from "@proto/runs-contract/Run/Session.id";
+import { GrantDenied } from "@proto/runs-model/Authority.external";
 import * as A from "@beep/utils/Array";
 import * as S from "effect/Schema";
 
@@ -46,18 +53,18 @@ export const Cast = S.Struct({
   runs: S.Struct({ run: RunId, child: RunId, stray: RunId, peer: RunId }),
   reservations: S.Tuple([ReservationId, ReservationId, ReservationId, ReservationId, ReservationId]),
   versions: RunVersions,
-  purposes: S.Struct({ run: S.String, child: S.String }),
+  purposes: S.Struct({ run: RunRequested.fields.purpose, child: ChildRequested.fields.purpose }),
   bound: HistoryBound.check(S.isLessThanOrEqualTo(1_000)),
-  steps: S.NonEmptyArray(S.String).check(S.isMaxLength(6)),
+  steps: S.NonEmptyArray(StepRecorded.fields.step).check(S.isMaxLength(6)),
   ledger: S.Struct({ used: Units, unused: Units, free: Units, over: Over }),
   words: S.Struct({
-    outcome: S.String,
-    denial: S.String,
-    refusal: S.String,
-    reasons: S.Tuple([S.String, S.String, S.String]),
+    outcome: RunCompleted.fields.outcome,
+    denial: GrantDenied.fields.reason,
+    refusal: RunRejected.fields.reason,
+    reasons: S.Tuple([RunCancelled.fields.reason, RunCancelled.fields.reason, RunCancelled.fields.reason]),
   }),
   commandId: IdText,
-  fact: S.Struct({ process: Name, producer: Name, contract: Name, version: Sequence, fact: IdText }),
+  fact: S.Struct({ process: Name, producer: Name, contract: Name, version: Sequence, fact: FactId }),
 }).check(
   S.makeFilter(
     ({ principals, runs, reservations, operations }) =>

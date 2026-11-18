@@ -5,7 +5,7 @@ import { dual } from "effect/Function";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { CapabilityId, DelegationId, GrantId, OrgId } from "./Ids.ts";
-import { Name, StreamId } from "./Measure.ts";
+import { Name, StreamId, Text } from "./Measure.ts";
 import { thunkFalse, thunkTrue } from "@beep/utils"
 
 /**
@@ -123,7 +123,7 @@ export type CapabilityGrant = typeof CapabilityGrant.Type;
 export const Capability = S.Struct({
   id: CapabilityId,
   operations: S.Array(Name),
-  description: S.String,
+  description: Text,
 });
 /**
  * @category models

@@ -36,7 +36,7 @@ import { identity } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "@beep/utils/Option";
 import * as Initial from "@proto/kernel/Initial";
-import { Count } from "@proto/kernel/Measure";
+import { Count, Text } from "@proto/kernel/Measure";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Struct from "effect/Struct";
@@ -97,7 +97,7 @@ export const RunRecord = S.Struct({
   generation: Count,
   parent: S.OptionFromNullOr(RunId),
   previous: S.OptionFromNullOr(RunId),
-  purpose: S.String,
+  purpose: Text,
   versions: RunVersions,
   requester: PrincipalId,
   accountable: PrincipalId,
@@ -153,11 +153,11 @@ export const AgentRunState = S.TaggedUnion({
   Running: { run: RunRecord },
   AwaitingApproval: { run: RunRecord },
   AwaitingChild: { run: RunRecord, child: RunId, allowance: Count },
-  Completed: { run: RunRecord, outcome: S.String },
-  Rejected: { session: SessionId, reason: S.String },
-  Refused: { run: RunRecord, reason: S.String },
-  Withdrawn: { run: RunRequest, reason: S.String },
-  Cancelled: { run: RunRecord, reason: S.String },
+  Completed: { run: RunRecord, outcome: Text },
+  Rejected: { session: SessionId, reason: Text },
+  Refused: { run: RunRecord, reason: Text },
+  Withdrawn: { run: RunRequest, reason: Text },
+  Cancelled: { run: RunRecord, reason: Text },
   Exhausted: { run: RunRecord },
   Continued: { run: RunRecord, next: RunId },
 });
@@ -173,7 +173,7 @@ export type AgentRunState = typeof AgentRunState.Type;
  */
 const CancelledBeforeGrant = S.TaggedStruct("Cancelled", {
   run: RunRequest.mapFields(Struct.assign({ accountable: S.Null, delegation: S.Null, provenance: S.Null })),
-  reason: S.String,
+  reason: Text,
 }).pipe(
   S.decodeTo(
     S.toType(AgentRunState.cases.Withdrawn),
@@ -224,7 +224,22 @@ export const remaining = (budget: Budget): number => budget.allowance - budget.r
  */
 export const unspent = (budget: Budget): number => budget.allowance - budget.spent - budget.allocated;
 
-const statusOf = (state: AgentRunState): RunStatus =>
+/**
+ * Where a run is, as readers see it: a refused run reads as rejected, and a
+ * request withdrawn before its grant as cancelled. A run nobody requested
+ * reads as unrequested.
+ *
+ * **Example** (A run nobody requested)
+ * ```ts
+ * import { AgentRunState, statusOf } from "@proto/runs-model/Run/AgentRun.aggregate";
+ *
+ * const status = statusOf(AgentRunState.cases.Unrequested.make({}));
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const statusOf = (state: AgentRunState): RunStatus =>
   AgentRunState.match(state, {
     Unrequested: () => "unrequested" as const,
     Requested: () => "requested" as const,
@@ -322,6 +337,15 @@ export const recordOf = (state: AgentRunState): O.Option<RunRecord> =>
     Exhausted: ({ run }) => O.some(run),
     Continued: ({ run }) => O.some(run),
   });
+
+/**
+ * What a completed run concluded; none in any other state.
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const outcomeOf = (state: AgentRunState): O.Option<Text> =>
+  AgentRunState.matchOrElse(state, { Completed: ({ outcome }) => O.some(outcome) }, O.none<Text>);
 
 /**
  * The session a run belongs to, from any state that knows it.

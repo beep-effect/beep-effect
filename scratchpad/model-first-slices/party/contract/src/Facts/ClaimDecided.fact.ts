@@ -1,5 +1,5 @@
 import * as Domain from "@alchemy.run/domain";
-import { OrgId, RunId } from "@proto/kernel/Ids";
+import { FactId, OrgId, RunId } from "@proto/kernel/Ids";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import { ApprovalId } from "../Claim/Approval.id.ts";
@@ -29,7 +29,7 @@ export type Decision = typeof Decision.Type;
  * @since 0.0.0
  */
 export class ClaimDecidedV1 extends Domain.Event("ClaimDecidedV1", {
-  factId: S.String,
+  factId: FactId,
   claim: ClaimId,
   org: OrgId,
   outcome: Decision,
@@ -45,7 +45,7 @@ export class ClaimDecidedV1 extends Domain.Event("ClaimDecidedV1", {
  * @since 0.0.0
  */
 export class ClaimDecidedV2 extends Domain.Event("ClaimDecidedV2", {
-  factId: S.String,
+  factId: FactId,
   claim: ClaimId,
   org: OrgId,
   decision: Decision,
@@ -74,6 +74,8 @@ export const ClaimDecided = {
   producer: "party",
   contract: "ClaimDecided",
   versions: { 1: ClaimDecidedV1, 2: ClaimDecidedV2 },
+  /** The fact of one claim's decision: the same id in every version and on every redelivery. */
+  factIdOf: (claim: ClaimId): FactId => FactId.make(`${claim}:decided`),
 } as const;
 
 /**

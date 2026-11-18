@@ -1,4 +1,5 @@
 import * as S from "effect/Schema";
+import { FactId } from "./Ids.ts";
 import { Name, Sequence } from "./Measure.ts";
 
 /**
@@ -29,7 +30,7 @@ export const FactEnvelope = S.Struct({
   producer: Name,
   contract: Name,
   version: Sequence,
-  factId: S.String,
+  factId: FactId,
   seq: Sequence,
   payload: S.Unknown,
 });
@@ -46,5 +47,5 @@ export type FactEnvelope = typeof FactEnvelope.Type;
  * @category getters
  * @since 0.0.0
  */
-export const inboxKey = (fact: { readonly producer: string; readonly factId: string; readonly version: number }) =>
+export const inboxKey = (fact: { readonly producer: string; readonly factId: FactId; readonly version: number }) =>
   `${fact.producer}:${fact.factId}:v${fact.version}`;

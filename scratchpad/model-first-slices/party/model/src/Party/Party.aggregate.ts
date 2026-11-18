@@ -6,6 +6,7 @@ import { provenanceOf } from "@proto/kernel/Invocation";
 import { PartyIntake, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { MergeParties, MergeVetoed, PartiesMerged } from "@proto/party-contract/Party/MergeParties.command";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
+import { PartyName } from "@proto/party-contract/Party/PartyName";
 import {
   PartyAlreadyRegistered,
   PartyRegistered,
@@ -27,7 +28,7 @@ export const PartyState = S.TaggedUnion({
   Unregistered: {},
   Active: {
     org: OrgId,
-    name: S.String,
+    name: PartyName,
     absorbed: Initial.empty(PartyId, { description: "The parties merged into this one; none at first." }),
   },
 });

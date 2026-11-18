@@ -124,3 +124,24 @@ export const DelegationId = IdText.pipe(S.brand("DelegationId"));
  * @since 0.0.0
  */
 export type DelegationId = typeof DelegationId.Type;
+
+/**
+ * A published fact: stable for the thing the fact says, so every consumer
+ * recognises a redelivery, and the same across the fact's versions.
+ *
+ * **Example** (Brand a fact id)
+ * ```ts
+ * import { FactId } from "@proto/kernel/Ids";
+ *
+ * const fact = FactId.make("claim_1:decided");
+ * ```
+ *
+ * @category ids
+ * @since 0.0.0
+ */
+export const FactId = IdText.pipe(S.brand("FactId"));
+/**
+ * @category ids
+ * @since 0.0.0
+ */
+export type FactId = typeof FactId.Type;

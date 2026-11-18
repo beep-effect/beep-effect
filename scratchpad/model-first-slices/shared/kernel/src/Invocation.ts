@@ -3,7 +3,7 @@ import { dual, pipe } from "effect/Function";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { CapabilityGrant } from "./Capability.ts";
-import { DelegationId, GrantId, PrincipalId, RunId } from "./Ids.ts";
+import { DelegationId, FactId, GrantId, PrincipalId, RunId } from "./Ids.ts";
 import { IdText, Name, Sequence, StreamId } from "./Measure.ts";
 
 /**
@@ -61,7 +61,7 @@ export const Cause = S.TaggedUnion({
   Event: { stream: StreamId, seq: Sequence, event: Name },
   SagaStep: { saga: Name, key: IdText, step: IdText },
   Session: { scheme: Name },
-  Fact: { producer: Name, contract: Name, version: Sequence, fact: S.String },
+  Fact: { producer: Name, contract: Name, version: Sequence, fact: FactId },
 });
 /**
  * @category models

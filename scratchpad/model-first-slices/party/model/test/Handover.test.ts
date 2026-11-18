@@ -12,7 +12,7 @@ import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { type AssertedReview, ClaimReviewState } from "@proto/party-contract/Claim/ClaimReview.read";
 import { ClaimRetracted } from "@proto/party-contract/Claim/RetractClaim.command";
 import { ReviewRequested } from "@proto/party-contract/Claim/ReviewRequested.event";
-import { ClaimDecidedV1, ClaimDecidedV2, ClaimFeed } from "@proto/party-contract/Facts/ClaimDecided.fact";
+import { ClaimDecided, ClaimDecidedV1, ClaimDecidedV2, ClaimFeed } from "@proto/party-contract/Facts/ClaimDecided.fact";
 import { PartyIntake, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { Authority } from "@proto/party-model/Authority.external";
 import { Claim, ClaimState } from "@proto/party-model/Claim/Claim.aggregate";
@@ -78,7 +78,7 @@ const claimFactsLive = (gate: Deferred.Deferred<void>) =>
               ProposalApproved: (approved) => ({ decision: approved.outcome, basis: "approval" as const, approval: O.some(approved.approval) }),
             }),
           );
-          const common = { factId: `${claim}:decided`, claim, org, reviewRuns: reviews };
+          const common = { factId: ClaimDecided.factIdOf(claim), claim, org, reviewRuns: reviews };
           yield* facts.append(input, ClaimDecidedV1.make({ ...common, outcome: decided.decision }), ClaimDecidedV2.make({ ...common, ...decided }));
         }
       });
@@ -157,7 +157,7 @@ it.live.prop("an upgrade that closes generation 1 waits for the old publisher; t
           const state = yield* Effect.flatMap(Effect.service(Claim), (claims) => claims.get(claim));
           const page = yield* Effect.flatMap(Effect.service(PartyFacts), (facts) => facts.list("claims"));
           const decided = ClaimState.isAnyOf(["Accepted", "Retracted"])(state);
-          const published = A.some(page.entries, (entry) => entry.event.factId === `${claim}:decided`);
+          const published = A.some(page.entries, (entry) => entry.event.factId === ClaimDecided.factIdOf(claim));
           return [{ stream: "PartyFacts", writer: "ClaimFacts", pending: decided && !published ? 1 : 0 }];
         }).pipe(Effect.provideContext(old));
         const before = yield* backlog;
@@ -187,8 +187,8 @@ it.live.prop("an upgrade that closes generation 1 waits for the old publisher; t
     );
     // The scope generation 1 published, both review runs: the lookup, not the fallback (which would name none).
     expect(A.map(republished.entries, (entry) => entry.event)).toMatchObject([
-      { _tag: "ClaimDecidedV1", factId: `${claim}:decided`, org, reviewRuns: runs },
-      { _tag: "ClaimDecidedV2", factId: `${claim}:decided`, org, reviewRuns: runs, basis: "direct" },
+      { _tag: "ClaimDecidedV1", factId: ClaimDecided.factIdOf(claim), org, reviewRuns: runs },
+      { _tag: "ClaimDecidedV2", factId: ClaimDecided.factIdOf(claim), org, reviewRuns: runs, basis: "direct" },
     ]);
   }).pipe(Effect.scoped),
   { timeout: 120_000, arbitrary: { runs: 10 } },

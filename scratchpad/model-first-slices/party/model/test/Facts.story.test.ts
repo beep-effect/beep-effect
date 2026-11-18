@@ -11,7 +11,7 @@ import { proposalDigest } from "@proto/party-contract/Claim/ProposalDigest";
 import { DispositionProposed, ProposeDisposition } from "@proto/party-contract/Claim/ProposeDisposition.command";
 import { ClaimRetracted, RetractClaim } from "@proto/party-contract/Claim/RetractClaim.command";
 import { ReviewRequested } from "@proto/party-contract/Claim/ReviewRequested.event";
-import { ClaimDecidedV1, ClaimDecidedV2 } from "@proto/party-contract/Facts/ClaimDecided.fact";
+import { ClaimDecided, ClaimDecidedV1, ClaimDecidedV2 } from "@proto/party-contract/Facts/ClaimDecided.fact";
 import { PartyIntake, PartyPropose, PartyRead, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { Authority } from "@proto/party-model/Authority.external";
 import { Claim } from "@proto/party-model/Claim/Claim.aggregate";
@@ -70,7 +70,7 @@ const sceneOf = (cast: Cast, words: typeof Words.Type) => {
     ReviewRequested.make({ run, org: roles.home, proposition, signals, evidenceRevision: 1, provenance: provenanceOf(intake) }),
   );
   const proposed = DispositionProposed.make({ ...proposal, digest, provenance: provenanceOf(asRun) });
-  const common = { factId: `${roles.claim}:decided`, claim: roles.claim, org: roles.home, reviewRuns: [run] };
+  const common = { factId: ClaimDecided.factIdOf(roles.claim), claim: roles.claim, org: roles.home, reviewRuns: [run] };
   /** What each decision event carries since phase 9 (D43): the fact is built from it alone. */
   const scope = { org: O.some(roles.home), reviewRuns: O.some([run]) };
   return { reviewer, claim, run, proposition, digest, asserted, proposed, common, scope };

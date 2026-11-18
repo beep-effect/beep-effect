@@ -1,13 +1,15 @@
 import type * as Domain from "@alchemy.run/domain";
 import { OrgId } from "@proto/kernel/Ids";
-import { Count, Sequence } from "@proto/kernel/Measure";
-import { DirectoryRow } from "@proto/party-contract/Directory/FindParties.read";
+import { Count, Sequence, StreamId } from "@proto/kernel/Measure";
+import { DirectoryRow, type DirectoryText } from "@proto/party-contract/Directory/FindParties.read";
+import { InvalidCursor } from "@proto/party-contract/Directory/InvalidCursor.rejection";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
+import { PartyName } from "@proto/party-contract/Party/PartyName";
 import { $PartyModelId } from "@proto/kernel/Identity";
 import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
@@ -15,6 +17,7 @@ import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "@beep/utils/Str";
+import { thunkEffectSucceedNone, thunkEffectSucceedNull } from "@beep/utils/thunk";
 
 const $I = $PartyModelId.create("Directory/PartyDirectory.store");
 
@@ -27,7 +30,7 @@ const $I = $PartyModelId.create("Directory/PartyDirectory.store");
  * @since 0.0.0
  */
 export const DirectoryChange = S.TaggedUnion({
-  Registered: { partyId: PartyId, org: OrgId, name: S.String },
+  Registered: { partyId: PartyId, org: OrgId, name: PartyName },
   Merged: { partyId: PartyId, absorbed: PartyId },
 });
 /**
@@ -43,7 +46,7 @@ export type DirectoryChange = typeof DirectoryChange.Type;
  * @category models
  * @since 0.0.0
  */
-export const DirectoryWrite = S.Struct({ stream: S.String, seq: Sequence, change: DirectoryChange });
+export const DirectoryWrite = S.Struct({ stream: StreamId, seq: Sequence, change: DirectoryChange });
 /**
  * @category models
  * @since 0.0.0
@@ -59,8 +62,100 @@ export type DirectoryWrite = typeof DirectoryWrite.Type;
  */
 export class GenerationBehind extends S.TaggedError<GenerationBehind, { readonly brand: unique symbol }>()("GenerationBehind", {
   generation: Count,
-  behind: S.Array(S.String),
+  behind: S.Array(StreamId),
 }) {}
+
+/**
+ * A directory cursor's contents: the order the pages follow and the last
+ * party of the page it ends. Pages follow party id order, the only order the
+ * directory keeps.
+ */
+const CursorPosition = S.Struct({ order: S.Literal("partyId"), partyId: PartyId });
+
+/**
+ * The cursor a directory page hands back, as the client sees it: the page's
+ * order and its last party, as JSON in base64url. Both stores issue and read
+ * cursors through it, so a cursor one issues the other reads, and text that
+ * does not decode is no cursor (`InvalidCursor`).
+ *
+ * **Example** (A page's cursor)
+ * ```ts
+ * import { DirectoryCursor } from "@proto/party-model/Directory/PartyDirectory.store";
+ * import { PartyId } from "@proto/party-contract/Party/Party.id";
+ * import * as S from "effect/Schema";
+ *
+ * const cursor = S.encodeSync(DirectoryCursor)({ order: "partyId", partyId: PartyId.make("party_1") });
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const DirectoryCursor = S.StringFromBase64Url.pipe(S.decodeTo(S.fromJsonString(CursorPosition)));
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type DirectoryCursor = typeof DirectoryCursor.Type;
+
+const decodeCursor = S.decodeEffect(DirectoryCursor);
+const encodeCursor = S.encodeEffect(DirectoryCursor);
+
+/**
+ * Where a page starts: after the party a cursor names, or at the first party
+ * when there is no cursor. A cursor the directory did not issue is refused
+ * with `InvalidCursor`, never read as a position.
+ *
+ * **Example** (The first page)
+ * ```ts
+ * import { resumeAfter } from "@proto/party-model/Directory/PartyDirectory.store";
+ *
+ * const first = resumeAfter(undefined);
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const resumeAfter = (after: string | undefined): Effect.Effect<O.Option<PartyId>, InvalidCursor> =>
+  O.match(O.fromUndefinedOr(after), {
+    onNone: thunkEffectSucceedNone<PartyId>,
+    onSome: flow(
+      decodeCursor,
+      Effect.map((cursor) => O.some(cursor.partyId)),
+      Effect.mapError(() => InvalidCursor.make({})),
+    ),
+  });
+
+/**
+ * One page from the rows a search found from its start, in order: at most
+ * `take` of them, and, when more were found, the cursor that resumes after
+ * the last. A store finds `take + 1` rows, or all of them, and pages them
+ * here, so both stores page alike.
+ *
+ * **Example** (A first page of two)
+ * ```ts
+ * import { pageOf } from "@proto/party-model/Directory/PartyDirectory.store";
+ *
+ * const page = pageOf([], 2);
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const pageOf: {
+  (take: number): (found: ReadonlyArray<DirectoryRow>) => Effect.Effect<Domain.Query.Page<DirectoryRow>>;
+  (found: ReadonlyArray<DirectoryRow>, take: number): Effect.Effect<Domain.Query.Page<DirectoryRow>>;
+} = dual(2, (found: ReadonlyArray<DirectoryRow>, take: number) => {
+  const entries = A.take(found, take);
+  return Effect.map(
+    found.length > take
+      ? O.match(A.last(entries), {
+          onNone: thunkEffectSucceedNull,
+          onSome: (row) => encodeCursor({ order: "partyId", partyId: row.partyId }).pipe(Effect.orDie),
+        })
+      : thunkEffectSucceedNull(),
+    (cursor): Domain.Query.Page<DirectoryRow> => ({ entries, cursor }),
+  );
+});
 
 /**
  * Where the directory lives: a port the model declares. The projection
@@ -99,10 +194,14 @@ export class PartyDirectoryStore extends Context.Service<
     readonly checkpoints: (generation: number) => Effect.Effect<HashMap.HashMap<string, number>>;
     /** Make a generation the one queries read, once it has caught up; older generations are dropped. */
     readonly switchTo: (generation: number) => Effect.Effect<void, GenerationBehind>;
-    /** One page of an org's parties whose name contains `text`, ordered by party id, from the active generation. */
+    /**
+     * One page of an org's parties whose name contains `text`, ordered by
+     * party id, from the active generation. A cursor the store did not
+     * issue is refused with `InvalidCursor`.
+     */
     readonly search: {
-      (text: string, page: Domain.Query.PageRequest): (org: OrgId) => Effect.Effect<Domain.Query.Page<DirectoryRow>>;
-      (org: OrgId, text: string, page: Domain.Query.PageRequest): Effect.Effect<Domain.Query.Page<DirectoryRow>>;
+      (text: DirectoryText, page: Domain.Query.PageRequest): (org: OrgId) => Effect.Effect<Domain.Query.Page<DirectoryRow>, InvalidCursor>;
+      (org: OrgId, text: DirectoryText, page: Domain.Query.PageRequest): Effect.Effect<Domain.Query.Page<DirectoryRow>, InvalidCursor>;
     };
   }
 >()($I`PartyDirectoryStore`) {}
@@ -221,26 +320,22 @@ export const MemoryPartyDirectoryStore = Layer.effect(
       ),
       search: dual(
         3,
-        Effect.fn("PartyDirectoryStore.search")((org: OrgId, text: string, { after, take }: Domain.Query.PageRequest) =>
-          Effect.map(Ref.get(table), (current) => {
-            const rows = O.match(current.active, {
-              onNone: () => HashMap.empty<PartyId, DirectoryRow>(),
-              onSome: (active) => generationOf(current, active).rows,
-            });
-            const matching = rows.pipe(
-              HashMap.values,
-              A.fromIterable,
-              A.filter((row) => row.org === org && pipe(Str.toLowerCase(row.name), Str.includes(Str.toLowerCase(text)))),
-              A.sort(byPartyId),
-              A.filter((row) => after === undefined || row.partyId > after),
-            );
-            const entries = A.take(matching, take);
-            return {
-              entries,
-              cursor: matching.length > take ? O.getOrNull(O.map(A.last(entries), (row) => row.partyId)) : null,
-            };
-          }),
-        ),
+        Effect.fn("PartyDirectoryStore.search")(function* (org: OrgId, text: DirectoryText, { after, take }: Domain.Query.PageRequest) {
+          const from = yield* resumeAfter(after);
+          const current = yield* Ref.get(table);
+          const rows = O.match(current.active, {
+            onNone: () => HashMap.empty<PartyId, DirectoryRow>(),
+            onSome: (active) => generationOf(current, active).rows,
+          });
+          return yield* rows.pipe(
+            HashMap.values,
+            A.fromIterable,
+            A.filter((row) => row.org === org && pipe(Str.toLowerCase(row.name), Str.includes(Str.toLowerCase(text)))),
+            A.sort(byPartyId),
+            A.filter((row) => !O.exists(from, (at) => row.partyId <= at)),
+            pageOf(take),
+          );
+        }),
       ),
     };
   }),

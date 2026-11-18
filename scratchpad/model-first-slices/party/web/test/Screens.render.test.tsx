@@ -31,7 +31,7 @@ const review = (standing: "Pending" | "Accepted"): ClaimReviewState => ({
   sources: 2,
   revision: 1,
   reviews: [RunId.make("review:claim_1:1")],
-  proposal: O.some({ disposition: "accept", rationale: "two sources", run: RunId.make("review:claim_1:1"), evidenceRevision: 1, digest: "d1" }),
+  proposal: O.some({ disposition: "accept", rationale: "two sources", run: RunId.make("review:claim_1:1"), evidenceRevision: 1, digest: "pd1" }),
   notes: [],
 });
 

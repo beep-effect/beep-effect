@@ -3,6 +3,7 @@ import { byAgent, extend, sagaStep } from "@proto/kernel/Invocation";
 import { ProposeDisposition } from "@proto/party-contract/Claim/ProposeDisposition.command";
 import { RecordReviewRefused } from "@proto/party-contract/Claim/RecordReviewRefused.command";
 import * as Effect from "effect/Effect";
+import { Text } from "@proto/kernel/Measure";
 import * as S from "effect/Schema";
 import * as Activity from "effect/workflow/Activity";
 import { Authority } from "../Authority.external.ts";
@@ -11,10 +12,10 @@ import { Reasoner } from "./Reasoner.external.ts";
 import { ProposalSent, Reservation, ReviewAssist, ReviewAssistActivities } from "./ReviewAssist.saga.ts";
 import { ReviewPlan } from "./ReviewPlan.ts";
 import { type BudgetRefused, type LiveRun, ReviewRuns, RunEnded, type RunRefused } from "./ReviewRuns.external.ts";
-import { thunkEffectVoid } from "@beep/utils"
+import { thunkEffectVoid } from "@beep/utils/thunk"
 
 /** How the proposal went, in memory: what the activity recorded, or a claim already decided. */
-const Proposal = S.TaggedUnion({ Made: {}, Refused: { refusal: S.String }, AlreadyDecided: {} });
+const Proposal = S.TaggedUnion({ Made: {}, Refused: { refusal: Text }, AlreadyDecided: {} });
 type Proposal = typeof Proposal.Type;
 
 /**

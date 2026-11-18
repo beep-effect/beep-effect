@@ -1,6 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { CurrentInvocation, requireGrant } from "@proto/kernel/CurrentInvocation.context";
-import { Count, Sequence } from "@proto/kernel/Measure";
+import { Count, Sequence, Text } from "@proto/kernel/Measure";
 import { OrgId } from "@proto/kernel/Ids";
 import { Operator, operatorOf, provenanceOf, Root } from "@proto/kernel/Invocation";
 import { AcceptClaim, ClaimAccepted } from "@proto/party-contract/Claim/AcceptClaim.command";
@@ -58,7 +58,7 @@ export const ClaimState = S.TaggedUnion({
     proposal: Initial.none(ProposalView, { description: "The latest proposal still standing; absent until a review proposes one." }),
   },
   Accepted: { org: OrgId, proposition: Proposition },
-  Retracted: { org: OrgId, reason: S.String },
+  Retracted: { org: OrgId, reason: Text },
 });
 /**
  * @category models

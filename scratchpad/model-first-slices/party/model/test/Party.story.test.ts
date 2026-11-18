@@ -18,7 +18,7 @@ import { Authority } from "@proto/party-model/Authority.external";
 import { Claim } from "@proto/party-model/Claim/Claim.aggregate";
 import { ClaimReview } from "@proto/party-model/Claim/ClaimReview.view";
 import { FindParties } from "@proto/party-model/Directory/FindParties.query";
-import { MemoryPartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
+import { DirectoryCursor, MemoryPartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
 import { PartyHandlers } from "@proto/party-model/Party.handlers";
 import { PartyModel } from "@proto/party-model/Party.model";
 import { EffectiveParty } from "@proto/party-model/Party/EffectiveParty.view";
@@ -30,6 +30,7 @@ import * as A from "@beep/utils/Array";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { Cast, rolesOf } from "./Cast.ts";
 import { member, oneSource, onOrg, readmitted, twoSources } from "./fixtures.ts";
@@ -168,6 +169,8 @@ it.effect.prop("a party search returns only a granted org's rows, a page at a ti
   ] as const;
   const first = Order.min(byPartyId)(...rows);
   const second = Order.max(byPartyId)(...rows);
+  // The cursor a page ending at the first row carries; were it not to encode, the raw id stands in and the store refuses it.
+  const afterFirst = O.getOrElse(S.encodeOption(DirectoryCursor)({ order: "partyId", partyId: first.id }), () => first.id);
   return story(
     as(intake),
     when(survivor, RegisterParty.make({ org: home, name: named(cast.names.survivor) })),
@@ -187,11 +190,11 @@ it.effect.prop("a party search returns only a granted org's rows, a page at a ti
       { org: home, text },
       ({ entries, cursor }) => {
         expect(A.map(entries, (row) => row.partyId)).toEqual([first.id]);
-        expect(cursor).toBe(first.id);
+        expect(cursor).toBe(afterFirst);
       },
       { take: 1 },
     ),
-    query(FindParties, { org: home, text }, [{ partyId: second.id }], { take: 1, after: first.id }),
+    query(FindParties, { org: home, text }, [{ partyId: second.id }], { take: 1, after: afterFirst }),
     // No grant on another org: refused, not an empty page.
     query(FindParties, { org: other, text }),
     rejected(MissingGrant.make({ capability: PartyRead.id, operation: FindParties.queryName })),

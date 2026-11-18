@@ -2,8 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import { GrantTerms } from "@proto/kernel/Capability";
 import { DelegationId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { GrantRef, Provenance } from "@proto/kernel/Invocation";
-import * as S from "effect/Schema";
-import { Count } from "@proto/kernel/Measure";
+import { Count, Text } from "@proto/kernel/Measure";
 import { HistoryBound } from "./HistoryBound.ts";
 import { RunEvent } from "./RunEvent.ts";
 import { RunVersions } from "./RunVersions.ts";
@@ -20,7 +19,7 @@ export class ChildRunOpened extends Domain.Event(
   "ChildRunOpened",
   RunEvent.fields({
     parent: RunId,
-    purpose: S.String,
+    purpose: Text,
     versions: RunVersions,
     allowance: Count,
     historyBound: HistoryBound,
@@ -48,7 +47,7 @@ export class OpenChildRun extends Domain.Command(
     input: {
       session: SessionId,
       parent: RunId,
-      purpose: S.String,
+      purpose: Text,
       versions: RunVersions,
       allowance: Count,
       historyBound: HistoryBound,
