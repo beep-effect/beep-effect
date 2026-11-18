@@ -636,24 +636,17 @@ const prepareResponseFormat = (
             schemaConversionDescription("Unable to convert structured response schema to JSON Schema.", error)
           ),
         try: () =>
-          jsonObjectOrEmpty(Tool.getJsonSchemaFromSchema(responseFormat.schema, { transformer: toCodecOpenAI })),
-      }).pipe(
-        Effect.flatMap((schema) =>
-          OpenAiCompatJsonSchemaResponseFormat.makeEffect({
-            json_schema: { name: responseFormat.objectName, schema, strict: config.strictJsonSchema },
+          OpenAiCompatJsonSchemaResponseFormat.make({
+            json_schema: {
+              name: responseFormat.objectName,
+              schema: jsonObjectOrEmpty(
+                Tool.getJsonSchemaFromSchema(responseFormat.schema, { transformer: toCodecOpenAI })
+              ),
+              strict: config.strictJsonSchema,
+            },
             type: "json_schema",
-          }).pipe(
-            Effect.mapError((issue) =>
-              makeUnsupportedSchema(
-                moduleName,
-                "prepareResponseFormat",
-                `Structured response format refused by its schema: ${issue.toString()}`
-              )
-            )
-          )
-        ),
-        Effect.asSome
-      )
+          }),
+      }).pipe(Effect.asSome)
     ),
     Match.discriminator("type")("text", () => Effect.succeedNone),
     Match.exhaustive
