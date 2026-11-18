@@ -2,8 +2,8 @@
 /**
  * Writes the deploy role's inline policy (`src/DeployRolePolicy.ts`) as JSON,
  * plus the chunks `aws iam simulate-custom-policy` takes: each at most 2,000
- * characters, statements kept whole. The policy only allows, so the chunks
- * evaluate together exactly as the whole document does.
+ * characters, statements kept whole (`chunkByLength`). The policy only allows,
+ * so the chunks evaluate together exactly as the whole document does.
  *
  * `--vpc-arn <arn>` writes v2 (`policy-v2.json`, `v2-<n>.json`); without it,
  * v1. The gate runs it from the operator workstation; nothing here calls AWS.
@@ -22,26 +22,11 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { deployRolePolicy } from "./src/DeployRolePolicy.ts";
+import { chunkByLength, deployRolePolicy } from "./src/DeployRolePolicy.ts";
 import type * as IAM from "@alchemy.run/aws/IAM";
 
-const encode = S.encodeEffect(S.UnknownFromJsonString);
+const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
 const chunkLimit = 2000;
-
-const document = (statements: ReadonlyArray<IAM.PolicyStatement>) =>
-  encode({ Version: "2012-10-17", Statement: statements });
-
-// Greedy chunking: a statement joins the open chunk while the encoded chunk stays within the limit.
-const chunk = Effect.fn("CiRunners.chunkPolicy")(function* (statements: ReadonlyArray<IAM.PolicyStatement>) {
-  let chunks: ReadonlyArray<ReadonlyArray<IAM.PolicyStatement>> = [];
-  for (const statement of statements) {
-    const open = A.last(chunks);
-    const grown = O.map(open, (current) => A.append(current, statement));
-    const fits = O.isSome(grown) && (yield* document(grown.value)).length <= chunkLimit;
-    chunks = fits && O.isSome(grown) ? A.append(A.dropRight(chunks, 1), grown.value) : A.append(chunks, [statement]);
-  }
-  return chunks;
-});
 
 const write = Command.make(
   "deploy-role-policy",
@@ -57,19 +42,25 @@ const write = Command.make(
     yield* fs.makeDirectory(outDir, { recursive: true });
     const text = yield* encode(policy);
     yield* fs.writeFileString(path.join(outDir, `policy-${version}.json`), text);
-    const chunks = yield* chunk(policy.Statement);
+    const encoded = yield* Effect.forEach(policy.Statement, (statement) => encode(statement), { concurrency: 1 });
+    const empty = yield* encode({ Version: policy.Version, Statement: [] });
+    const groups = chunkByLength({
+      lengths: A.map(encoded, (statement) => statement.length),
+      limit: chunkLimit,
+      overhead: empty.length,
+    });
     yield* Effect.forEach(
-      chunks,
-      Effect.fnUntraced(function* (statements, index) {
-        const chunkText = yield* document(statements);
-        if (chunkText.length > chunkLimit) {
-          return yield* Effect.die(`statement ${String(statements[0]?.Sid)} alone exceeds ${chunkLimit} characters`);
-        }
-        yield* fs.writeFileString(path.join(outDir, `${version}-${index}.json`), chunkText);
+      groups,
+      Effect.fnUntraced(function* (group, index) {
+        const statements: Array<IAM.PolicyStatement> = A.flatMap(group, (member) =>
+          O.toArray(A.get(policy.Statement, member))
+        );
+        const chunk = yield* encode({ Version: policy.Version, Statement: statements });
+        yield* fs.writeFileString(path.join(outDir, `${version}-${index}.json`), chunk);
       }),
       { concurrency: 1, discard: true }
     );
-    yield* Console.log(`${version}: ${text.length} characters, ${chunks.length} chunks in ${outDir}`);
+    yield* Console.log(`${version}: ${text.length} characters, ${groups.length} chunks in ${outDir}`);
   })
 ).pipe(Command.withDescription("Write the CiRunners deploy role policy and its simulation chunks."));
 

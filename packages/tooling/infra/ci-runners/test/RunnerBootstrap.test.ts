@@ -1,11 +1,14 @@
 import { RunnerUserDataInput, renderRunnerUserData } from "@beep/alchemy-github-runners/RunnerUserData";
 import { packPostInstall, runnerPostInstall, userDataLimitBytes } from "@beep/infra-ci-runners/RunnerBootstrap";
-import * as BunServices from "@effect/platform-bun/BunServices";
+import * as BunChildProcessSpawner from "@effect/platform-bun/BunChildProcessSpawner";
+import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";
+import * as BunPath from "@effect/platform-bun/BunPath";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
+import * as Layer from "effect/Layer";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Str from "effect/String";
@@ -26,7 +29,10 @@ const bytes = (text: string) => new TextEncoder().encode(text).length;
 const gunzip = (data: Uint8Array) =>
   Effect.promise(() => new Response(new Blob([data]).stream().pipeThrough(new DecompressionStream("gzip"))).text());
 
-it.layer(BunServices.layer)("CiRunners packed post-install in bash", (it) => {
+// Only the child-process spawner the test runs bash with, over the native filesystem and path it needs.
+const BashSpawner = BunChildProcessSpawner.layer.pipe(Layer.provide([BunFileSystem.layer, BunPath.layer]));
+
+it.layer(BashSpawner)("CiRunners packed post-install in bash", (it) => {
   it.effect("writes the script, sources it into the same shell, and cleans up", () =>
     Effect.gen(function* () {
       const loader = yield* packPostInstall("fixture_value=sourced-into-this-shell\n");

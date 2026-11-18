@@ -1,4 +1,5 @@
 import {
+  chunkByLength,
   defaultGroupStatement,
   deployRolePolicy,
   ec2CreateActions,
@@ -25,6 +26,19 @@ const conditionKeys = (statement: IAM.PolicyStatement): ReadonlyArray<string> =>
   A.flatMap(R.values(statement.Condition ?? {}), (operator) => R.keys(operator));
 const grants = (statement: IAM.PolicyStatement, action: string) => A.contains(actionsOf(statement), action);
 const isReadOnly = (action: string) => /^[a-z0-9]+:(?:Describe|Get|List)/u.test(action);
+
+describe("CiRunners deploy role policy chunks", () => {
+  it.effect("keeps items whole and in order, within the limit, and isolates an oversized item", () =>
+    Effect.sync(() => {
+      const chunk = (lengths: ReadonlyArray<number>) => chunkByLength({ lengths, limit: 2000, overhead: 100 });
+      expect(chunk([])).toStrictEqual([]);
+      expect(chunk([600, 600, 600])).toStrictEqual([[0, 1, 2]]);
+      expect(chunk([900, 900, 900])).toStrictEqual([[0, 1], [2]]);
+      expect(chunk([2500, 10])).toStrictEqual([[0], [1]]);
+      expect(chunk([900, 900])).toStrictEqual([[0, 1]]);
+    })
+  );
+});
 
 describe("CiRunners deploy role policy", () => {
   it.effect("binds every tag-on-create grant to ec2:CreateAction and the requested ownership tags", () =>

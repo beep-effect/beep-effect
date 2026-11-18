@@ -13,6 +13,7 @@ import {
 import { program } from "@beep/infra-ci-runners/CiRunners";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Digest from "effect/crypto/Digest";
@@ -208,6 +209,31 @@ describe("CiRunners checked deploy", () => {
       const wrote = yield* Ref.get(written);
       assertFalse(wrote);
     })
+  );
+});
+
+describe("CiRunners checked-plan properties", () => {
+  it.effect.prop(
+    "round-trips every checked plan through its JSON codec",
+    [Arbitrary.schema(CheckedPlan)],
+    ([plan]) =>
+      Effect.gen(function* () {
+        const text = yield* S.encodeEffect(CheckedPlanJson)(plan);
+        const decoded = yield* S.decodeEffect(CheckedPlanJson)(text);
+        // Arbitrary values carry null prototypes, so compare by the schema's own equivalence.
+        const same = S.toEquivalence(CheckedPlan)(decoded, plan);
+        assertTrue(same);
+      }),
+    { arbitrary: { runs: 25 } }
+  );
+
+  it.prop(
+    "never reports a checked plan as drifting from itself",
+    [Arbitrary.schema(CheckedPlan)],
+    ([plan]) => {
+      expect(planDifferences(plan, plan)).toStrictEqual({ added: [], removed: [], changed: [] });
+    },
+    { arbitrary: { runs: 25 } }
   );
 });
 

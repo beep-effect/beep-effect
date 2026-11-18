@@ -1,7 +1,12 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "../../../../tsconfig.base.json",
-  "include": ["src", "alchemy.run.ts", "plan-check.ts"],
+  "include": [
+    "src",
+    "alchemy.run.ts",
+    "plan-check.ts",
+    "deploy-role-policy.ts"
+  ],
   "compilerOptions": {
     "types": ["node"],
     "outDir": "dist",

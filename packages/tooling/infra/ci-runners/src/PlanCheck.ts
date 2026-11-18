@@ -84,8 +84,8 @@ export class PlannedResource extends S.Opaque<PlannedResource, { readonly brand:
  * the plan header that is no resource, binding, task or property line.
  * `MissingPlan`: zero or several `Plan:` headers. `ActionTask`: a planned
  * Alchemy action (`run` or `drop`), which this stack never declares.
- * `IncompletePlan`: a `Plan:` summary count (`N to <action>`, `N binding
- * changes`) that the rows after it do not account for, such as a truncated
+ * `IncompletePlan`: a `Plan:` summary count (`N to <action>`,
+ * `N binding changes`) that the rows after it do not account for, such as a truncated
  * log. `PendingReplacement`: an `update` of a resource whose state still holds an
  * unfinished replacement, which the apply would also finish by deleting the
  * old generation. `UnexpectedChange`: a change the requested cutover

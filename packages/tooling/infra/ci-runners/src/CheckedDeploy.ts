@@ -223,11 +223,8 @@ const digestOf = Effect.fn("CiRunners.propsDigest")(function* (props: O.Option<u
 const isPlainRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   P.isObject(value) && !A.isArray(value) && [Object.prototype, null].includes(Object.getPrototypeOf(value));
 
-/**
- * Every `Redacted` value under a declared value, as `<path>=<value>` in key
- * order. Values known only after apply, effects and functions carry no
- * declared secret and are skipped.
- */
+// Every `Redacted` value under a declared value, as `<path>=<value>` in key order. Values known only after
+// apply, effects and functions carry no declared secret and are skipped.
 const redactedEntries = (value: unknown, path: string): ReadonlyArray<string> => {
   if (Redacted.isRedacted(value)) return [`${path}=${String(Redacted.value(value))}`];
   if (Output.isExpr(value) || Effect.isEffect(value)) return [];
@@ -271,14 +268,6 @@ export const newSecretSalt = Effect.map(
 /**
  * Read an engine plan into a {@link CheckedPlan}.
  *
- * **Example** (Read a plan)
- *
- * ```ts
- * import { readEnginePlan } from "@beep/infra-ci-runners/CheckedDeploy"
- *
- * console.log(typeof readEnginePlan) // "function"
- * ```
- *
  * **Details**
  *
  * Per resource it records the action, the binding actions, a SHA-256 of the
@@ -289,6 +278,14 @@ export const newSecretSalt = Effect.map(
  * fingerprint while the plan holds no secret; the App key and the webhook
  * secret are long random values, so the fingerprint cannot be reversed by
  * guessing.
+ *
+ * **Example** (Read a plan)
+ *
+ * ```ts
+ * import { readEnginePlan } from "@beep/infra-ci-runners/CheckedDeploy"
+ *
+ * console.log(typeof readEnginePlan) // "function"
+ * ```
  *
  * @param input - The planned stage, the engine plan `Alchemist.plan` returned, the secrets-fingerprint key (`newSecretSalt` for a new plan, the saved one to compare) and the cutover expectation.
  * @returns The plan's resources and stack actions, sorted by FQN.

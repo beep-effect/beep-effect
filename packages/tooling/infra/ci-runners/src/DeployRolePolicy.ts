@@ -454,3 +454,43 @@ export const deployRolePolicy = (vpcArn: O.Option<string>): IAM.PolicyDocument =
     ...O.toArray(O.map(vpcArn, defaultGroupStatement)),
   ],
 });
+
+/**
+ * Split items into groups whose encoded document stays within `limit`
+ * characters, keeping order and every item whole: an item joins the open
+ * group while `overhead` plus the group's lengths and one separator per extra
+ * item fits. An item longer than the limit sits alone in its group.
+ *
+ * **Example** (Two chunks)
+ *
+ * ```ts
+ * import { chunkByLength } from "@beep/infra-ci-runners/DeployRolePolicy"
+ *
+ * console.log(chunkByLength({ lengths: [900, 900, 900], limit: 2000, overhead: 100 })) // [[0, 1], [2]]
+ * ```
+ *
+ * @param input - Each item's encoded length in order, the most characters one encoded group may take, and the characters the enclosing document adds once per group.
+ * @returns The item indexes of each group.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const chunkByLength = (input: {
+  readonly lengths: ReadonlyArray<number>;
+  readonly limit: number;
+  readonly overhead: number;
+}): ReadonlyArray<ReadonlyArray<number>> => {
+  // Each open group carries its encoded size so far: the overhead plus its items and their separators.
+  const groups = A.reduce(
+    input.lengths,
+    A.empty<{ readonly members: ReadonlyArray<number>; readonly used: number }>(),
+    (open, length, index) =>
+      O.match(A.last(open), {
+        onNone: () => [{ members: [index], used: input.overhead + length }],
+        onSome: (last) =>
+          last.used + 1 + length <= input.limit
+            ? A.append(A.dropRight(open, 1), { members: A.append(last.members, index), used: last.used + 1 + length })
+            : A.append(open, { members: [index], used: input.overhead + length }),
+      })
+  );
+  return A.map(groups, (group) => group.members);
+};

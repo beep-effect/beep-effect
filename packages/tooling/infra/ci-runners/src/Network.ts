@@ -154,8 +154,8 @@ const publicSubnets = Effect.fn("CiRunners.publicSubnets")(function* (input: {
  * The VPC's default security group is pinned empty, so a runner launched
  * into it by mistake has no ingress and no egress. Subnets do not map public
  * IPs on launch; the runner launch template asks for one per instance.
- * Flow logs record the VPC's accepted and rejected traffic (`trafficType:
- * ALL`) to a log group with the configured retention. VPC Flow Logs do not
+ * Flow logs record the VPC's accepted and rejected traffic
+ * (`trafficType: ALL`) to a log group with the configured retention. VPC Flow Logs do not
  * capture IMDS traffic (169.254.169.254) or queries to the Amazon DNS
  * resolver, so an empty flow log never shows that a runner did not reach
  * IMDS. The logs go through a role trusted only by the flow-logs

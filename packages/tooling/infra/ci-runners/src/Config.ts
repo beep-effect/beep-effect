@@ -337,7 +337,7 @@ export class ImageSettings extends S.Opaque<ImageSettings, { readonly brand: uni
     rootDeviceName: S.String.check(S.isPattern(/^\/dev\/[a-z0-9]+$/u)),
     rootVolumeGb: S.Int.check(S.isBetween({ minimum: 30, maximum: 1000 })),
     // The post-install grants its IMDS helper to `ec2-user` only (RunnerBootstrap), so no other run-as user is accepted.
-    runAs: S.Literal("ec2-user"),
+    runAs: S.tag("ec2-user"),
   }).pipe($I.annoteSchema("ImageSettings", { description: "AMI, root device and run-as user of every runner." }))
 ) {}
 

@@ -21,6 +21,7 @@
     {"name":"CiRunners.requireFencedNames","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
     {"name":"CiRunners.resolveStageConfig","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
     {"name":"CiRunners.runnerPolicies","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
+    {"name":"CiRunners.secretsDigest","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true},
     {"name":"CiRunners.stageCredentials","owner":"@beep/infra-ci-runners","family":"tooling","conforms":true}
   ]
 }
