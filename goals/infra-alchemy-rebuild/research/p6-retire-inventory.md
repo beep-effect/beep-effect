@@ -124,7 +124,8 @@ never had Pulumi state, decision `2026-11-13-hosts-no-pulumi-state.md`). Leaves 
 
 **Runner fleet, shard-overflow pool, AWS turbo cache and the turbo-cache throttle alarm** (Pulumi
 project `beep-ci-runners`, stack `production`, the only live stack). Frozen until the cost-controls
-removal PR merges. Leaves with R6 (fleet) and R5/R6 (cache).
+removal PR merges and `pulumi preview --expect-no-changes --stack organization/beep-ci-runners/production`
+is clean. Leaves with R6 (fleet) and R5/R6 (cache).
 
 - `infra/ci-runners/Pulumi.yaml` (pins the `ghaRunners` terraform-module package 0.2.2),
   `infra/ci-runners/Pulumi.production.yaml`
@@ -355,7 +356,7 @@ Nothing here was changed. "Who" is the actor with the authority; "First" is the 
 
 | State | Who | First |
 | --- | --- | --- |
-| Live stack `beep-ci-runners/production` (354 resources) | gate, operator workstation, YubiKey route | cost-controls removal PR merged (freeze lifted); P5 steps 0-6c (fresh export archived, size and sha256 in a decision); then step 6d's whole-stack or targeted destroy and `pulumi stack rm` |
+| Live stack `beep-ci-runners/production` (354 resources) | gate, operator workstation, YubiKey route | cost-controls removal PR merged and `pulumi preview --expect-no-changes --stack organization/beep-ci-runners/production` clean (freeze lifted); P5 steps 0-6c (fresh export archived, size and sha256 in a decision); then step 6d's whole-stack or targeted destroy and `pulumi stack rm` |
 | Five `.bak` stack files, `.pulumi/history`, `.pulumi/backups`, `.pulumi-migration-archive`, `meta.yaml` in `s3://oip-law-pulumi-state` | operator decides; the packet keeps it (Q5 ruling) | **Kept.** The bucket is what makes the archived exports restorable, and deleting it (every version, since it is versioned) is irreversible and the operator's call. P6 only requires that it holds no stack. It goes on the closeout's operator list |
 | Out-of-repo export archive: the workstation's beep state directory, `infra-archives/pulumi-exports/` (2026-11-14: `beep-ci-runners-production-2026-11-13.json`, the 0520Z/0524Z before/after pair, `beep-storybook-production-2026-11-13.json`, 19 `opip-web-*` exports and logs, two URN lists) | operator | never delete before the packet closes; it holds every `pulumi stack import` reversal the decision files promise |
 | 1Password field `PULUMI_ENCRYPTION_PASSPHRASE` in item `BEEP_SECRETS/BEEP_SECRETS` (backend passphrase for `beep-ci-runners`; slated for rename to `CLOUD_PULUMI_ENCRYPTION_PASSPHRASE`) | operator decides; the packet keeps it (Q5 ruling) | **Kept.** The archived exports hold secrets encrypted with this passphrase, so deleting it makes them unreadable. It goes on the closeout's operator list |
@@ -487,7 +488,8 @@ The same PR drops its three "(removed in #3341)" rewrites in `apps/oip-web` (gat
 
 ### Cost-controls removal PR (P3, held; opens not before 2026-11-15T05:18Z)
 
-Not a P6 PR, but R5 and R6 wait for it: it lifts the freeze on `beep-ci-runners/production`. It
+Not a P6 PR, but R5 and R6 wait for it: it starts lifting the freeze on `beep-ci-runners/production`, which ends after it merges and
+`pulumi preview --expect-no-changes --stack organization/beep-ci-runners/production` is clean. It
 deletes infra/src/AccountCostControls.ts (removed in #3366), adds infra/src/NotificationRecipients.ts, and breaks
 the 2 live spans listed above. Its lane should rewrite them per Q3, or semantic-delta will be red.
 It also lowers `@beep/infra` coverage (see "Coverage"). Merge it after R1+R2, or follow it with a

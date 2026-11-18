@@ -228,8 +228,10 @@ Rollback (decision "Cost controls cutover from Pulumi"):
   (by logical id, `delete` only); the nine adopted settings still may not
   change. The Pulumi pair is still live, so nothing else is needed.
 - After step 3, before the component-removal PR merges, restore the Pulumi
-  budget and subscription: `pulumi stack import` of the newest archive
-  (state only), then `pulumi refresh --target` the old budget and
+  budget and subscription: `pulumi stack import` of the BEFORE export
+  `~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-2026-11-14T0520Z-before.json`
+  (367 resources, sha256 `2c5933f882423d165f2a7469d85131305369bedf3d4ec8ef44dccc567291d00c`; the newer AFTER export has none of the 13
+  AccountCostControls URNs) (state only), then `pulumi refresh --target` the old budget and
   subscription URNs, `pulumi preview --target` them and confirm exactly two
   creates, `pulumi up --target` them, and check both exist in AWS. Then take
   `prod` back to `silent` (first case) so only one set mails.

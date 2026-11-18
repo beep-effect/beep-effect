@@ -392,10 +392,12 @@ const withChangedProperty = (entries: ReadonlyArray<PlanEntry>, line: string): R
 
 interface ParseState {
   readonly entries: ReadonlyArray<PlanEntry>;
+  // False after an unreadable resource line: its change lines belong to no readable entry.
+  readonly latestReadable: boolean;
   readonly unreadable: ReadonlyArray<UnreadableResourceLine>;
 }
 
-const emptyParse: ParseState = { entries: [], unreadable: [] };
+const emptyParse: ParseState = { entries: [], unreadable: [], latestReadable: true };
 
 /**
  * Parse a detailed `alchemy plan` log (`--detailed`, pretty or CI log
@@ -406,7 +408,8 @@ const emptyParse: ParseState = { entries: [], unreadable: [] };
  *
  * A `[Fqn] word` resource line whose word is not a {@link PlanAction} is
  * not skipped: it lands in `unreadable` by name and word only, and
- * {@link checkPlan} refuses the plan on it. Lines that are not resource
+ * {@link checkPlan} refuses the plan on it. Its change lines are attributed to no
+ * entry, so they never land on the readable resource before it. Lines that are not resource
  * lines (the summary, `Done:` and other log output) never match.
  *
  * **Example** (Parse one adopted resource)
@@ -433,13 +436,21 @@ export const parsePlanLog = (log: string): PlanLog => {
       const action = resource?.[2];
       if (fqn !== undefined && action !== undefined) {
         return isPlanAction(action)
-          ? { ...state, entries: A.append(state.entries, PlanEntry.make({ fqn, action, changedProperties: [] })) }
-          : { ...state, unreadable: A.append(state.unreadable, UnreadableResourceLine.make({ fqn, action })) };
+          ? {
+              ...state,
+              entries: A.append(state.entries, PlanEntry.make({ fqn, action, changedProperties: [] })),
+              latestReadable: true,
+            }
+          : {
+              ...state,
+              unreadable: A.append(state.unreadable, UnreadableResourceLine.make({ fqn, action })),
+              latestReadable: false,
+            };
       }
-      return { ...state, entries: withChangedProperty(state.entries, line) };
+      return state.latestReadable ? { ...state, entries: withChangedProperty(state.entries, line) } : state;
     }
   );
-  return PlanLog.make(parsed);
+  return PlanLog.make({ entries: parsed.entries, unreadable: parsed.unreadable });
 };
 
 /**

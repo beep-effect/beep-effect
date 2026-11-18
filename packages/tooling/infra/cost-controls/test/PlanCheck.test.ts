@@ -348,4 +348,20 @@ describe("parsePlanLog fails closed on unreadable actions", () => {
       ]);
     })
   );
+
+  it.effect("attributes change lines after an unreadable resource line to no readable entry", () =>
+    Effect.gen(function* () {
+      const log = parsePlanLog(A.join(["[AppTag] noop", "[MonthlyBudget] migrate", "  + notifications:"], "\n"));
+      expect(A.map(log.entries, (entry) => [entry.fqn, entry.changedProperties])).toEqual([["AppTag", []]]);
+      expect(A.map(log.unreadable, (line) => [line.fqn, line.action])).toEqual([["MonthlyBudget", "migrate"]]);
+      const plan = Str.replace(
+        "[MonthlyBudget] noop",
+        A.join(["[MonthlyBudget] migrate", "  + notifications:"], "\n")
+      )(A.join([...A.map(singletons, (fqn) => `[${fqn}] noop`), "[MonthlyBudget] noop"], "\n"));
+      const failure = yield* refusal(plan);
+      expect(A.map(failure.violations, (v) => [v.subject, v.reason, v.detail])).toEqual([
+        ["MonthlyBudget", "unreadable-action", "migrate"],
+      ]);
+    })
+  );
 });
