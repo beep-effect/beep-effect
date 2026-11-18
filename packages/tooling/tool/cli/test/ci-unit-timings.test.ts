@@ -175,7 +175,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
       const pr = yield* Effect.fromOption(A.head(unitTimingCensus([projection])));
       deepStrictEqual(
         [pr.event, pr.executedTestFiles, pr.unmatched, pr.unsealed],
-        ["pull_request", 1, [], ["7:1:@beep/a:0", "7:1:@beep/b:0"]]
+        ["pull_request", 1, [], ["7:@beep/a:0", "7:@beep/b:0"]]
       );
     })
   );
@@ -193,19 +193,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
         [["@beep/a", "missing", 0]]
       );
       const push = yield* Effect.fromOption(A.head(unitTimingCensus([projection])));
-      deepStrictEqual([push.expectedTestFiles, push.unmatched], [1, ["7:1:@beep/a:0"]]);
+      deepStrictEqual([push.expectedTestFiles, push.unmatched], [1, ["7:@beep/a:0"]]);
     })
   );
 
-  it.effect("a sharded package's partitions add up to its selection, and events stay apart", () =>
+  it.effect("a sharded package's partitions add up to its selection across a re-run, and events stay apart", () =>
     Effect.sync(() => {
-      const shard = (event: string, runId: number, index: number, executed: number) =>
+      const shard = (event: string, runId: number, index: number, executed: number, attempt = 1) =>
         UnitTimingProjection.make({
           schemaVersion: "unit-timings/v1",
           partition: `repo-cli-${index}`,
           event,
           runId: O.some(runId),
-          runAttempt: O.some(1),
+          runAttempt: O.some(attempt),
           sha: O.none(),
           sealed: true,
           packages: [
@@ -229,6 +229,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
         shard("push", 1, 2, 4),
         shard("pull_request", 2, 1, 6),
         shard("pull_request", 2, 2, 3),
+        // "Re-run failed jobs": shard 2 failed on attempt 1 and passed on attempt 2; shard 1 stays on attempt 1.
+        shard("merge_group", 3, 1, 6),
+        shard("merge_group", 3, 2, 1),
+        shard("merge_group", 3, 2, 4, 2),
       ]);
       deepStrictEqual(
         A.map(census, (row) => [
@@ -240,7 +244,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
           row.unmatched,
         ]),
         [
-          ["pull_request", 2, 1, 9, 10, ["2:1:@beep/repo-cli:0"]],
+          ["merge_group", 2, 1, 10, 10, []],
+          ["pull_request", 2, 1, 9, 10, ["2:@beep/repo-cli:0"]],
           ["push", 2, 1, 10, 10, []],
         ]
       );

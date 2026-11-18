@@ -360,16 +360,30 @@ type CensusGroup = {
   readonly expected: O.Option<number>;
 };
 
-const runKey = (projection: UnitTimingProjection) =>
-  `${O.getOrElse(projection.runId, () => "local")}:${O.getOrElse(projection.runAttempt, () => 1)}`;
+const runKey = (projection: UnitTimingProjection) => `${O.getOrElse(projection.runId, () => "local")}`;
+const attemptOf = (projection: UnitTimingProjection) => O.getOrElse(projection.runAttempt, () => 1);
+
+// "Re-run failed jobs" gives only the re-run partitions a new attempt, so a run's evidence is each partition's
+// latest attempt: an older attempt of a partition the run re-ran is dropped, never added.
+const latestAttempts = (projections: ReadonlyArray<UnitTimingProjection>): ReadonlyArray<UnitTimingProjection> =>
+  HashMap.toValues(
+    A.reduce(projections, HashMap.empty<string, UnitTimingProjection>(), (acc, projection) => {
+      const key = `${runKey(projection)}:${projection.partition}`;
+      return O.exists(HashMap.get(acc, key), (kept) => attemptOf(kept) >= attemptOf(projection))
+        ? acc
+        : HashMap.set(acc, key, projection);
+    })
+  );
 
 /**
  * Fold projections into one file census per event.
  *
  * **Details**
  *
- * Rows group by run, attempt, package and invocation, so a sharded package's
- * partitions add their executed files toward one selection. A group matches
+ * Each partition counts once per run, at its latest attempt, since "Re-run
+ * failed jobs" gives only the re-run partitions a new attempt. Rows then group
+ * by run, package and invocation, so a sharded package's partitions add
+ * their executed files toward one selection, across attempts. A group matches
  * when its executed files equal its selection; a group no manifest stamped is
  * `unsealed`, and its executed files still count. Events sort by name.
  *
@@ -420,7 +434,7 @@ export const unitTimingCensus = (
     A.groupBy(projections, (projection) => projection.event),
     (byEvent) =>
       A.map(A.sort(R.keys(byEvent), Order.String), (event) => {
-        const rows = byEvent[event] ?? [];
+        const rows = latestAttempts(byEvent[event] ?? []);
         const groups = A.reduce(rows, HashMap.empty<string, CensusGroup>(), (acc, projection) =>
           A.reduce(projection.packages, acc, (inner, row) => {
             const key = `${runKey(projection)}:${row.packageName}:${row.invocationId}`;
