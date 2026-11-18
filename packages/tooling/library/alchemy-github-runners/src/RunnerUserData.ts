@@ -164,7 +164,7 @@ export const renderRunnerUserData = (input: RunnerUserDataInput): string => {
       "tar xzf actions-runner.tar.gz && rm -f actions-runner.tar.gz",
       'if [ "$os_family" = apt ]; then ./bin/installdependencies.sh; else install_with_retry libicu; fi',
       'chown -R "$run_as":"$run_as" /opt/actions-runner /opt/hostedtoolcache',
-      input.postInstall,
+      // The EXIT trap is installed before the post-install runs, so a post-install failure under `bash -e` still terminates the instance.
       "cleanup() {",
       "  status=$?",
       '  echo "runner exited with status $status"',
@@ -173,6 +173,7 @@ export const renderRunnerUserData = (input: RunnerUserDataInput): string => {
         : '  if [ "$status" -ne 0 ]; then aws ec2 terminate-instances --instance-ids "$instance_id" --region "$region" || true; fi',
       "}",
       "trap cleanup EXIT",
+      input.postInstall,
       'config=""',
       'until [ -n "$config" ]; do',
       '  config="$(aws ssm get-parameter --name "$token_path/$instance_id" --with-decryption --region "$region" --query Parameter.Value --output text 2>/dev/null || true)"',

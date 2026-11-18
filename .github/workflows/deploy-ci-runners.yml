@@ -20,7 +20,10 @@ name: Deploy CI runners
 # destructive binding change, a foreign resource or a stack action. The deploy
 # step plans again under the stage lease, checks again and applies that same
 # plan object only when it equals the saved one (src/CheckedDeploy.ts,
-# applyIfUnchanged); any drift between the two stops it before a write.
+# applyIfUnchanged); any drift between the two stops it before a write. The
+# dispatch input `mode` names the cutover expectation both steps enforce:
+# `bootstrap` (step 1a) and `default-security-group` (step 1b) refuse any other
+# change; pushes run as `routine`.
 # Credentials: the stack-scoped OIDC role vars.CI_RUNNERS_DEPLOY_ROLE_ARN on
 # the ci-runners-prod environment; App credentials are that environment's
 # secrets, passed only to the plan and deploy steps, and stay Redacted to SSM.
@@ -36,10 +39,11 @@ on:
       - .github/workflows/deploy-ci-runners.yml
   workflow_dispatch:
     inputs:
-      bootstrap:
-        description: "Cutover step 1a only: deploy without DefaultSecurityGroup, before the deploy role is scoped to the new VPC"
-        type: boolean
-        default: false
+      mode:
+        description: "routine; bootstrap (cutover step 1a: creates only, no DefaultSecurityGroup); default-security-group (step 1b: that one create)"
+        type: choice
+        options: [routine, bootstrap, default-security-group]
+        default: routine
 
 concurrency:
   group: alchemy-ci-runners-prod
@@ -87,9 +91,14 @@ jobs:
           CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
           CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
           CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
-          EXCLUDE: ${{ inputs.bootstrap && 'DefaultSecurityGroup' || '' }}
+          # A push carries no inputs, so it plans as routine.
+          MODE: ${{ inputs.mode || 'routine' }}
+          EXCLUDE: ${{ inputs.mode == 'bootstrap' && 'DefaultSecurityGroup' || '' }}
         shell: bash
-        run: bun plan-check.ts plan --stage prod ${EXCLUDE:+--exclude "$EXCLUDE"} --out "$RUNNER_TEMP/ci-runners-checked-plan.json"
+        run: |
+          set -euo pipefail
+          bun plan-check.ts plan --stage prod --expect "$MODE" ${EXCLUDE:+--exclude "$EXCLUDE"} \
+            --out "$RUNNER_TEMP/ci-runners-checked-plan.json"
 
       # Applies only the checked change set: plans again, checks again, and
       # refuses before any write when the plan differs from the saved one.
@@ -101,18 +110,21 @@ jobs:
           CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
           CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
           CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
-          EXCLUDE: ${{ inputs.bootstrap && 'DefaultSecurityGroup' || '' }}
+          MODE: ${{ inputs.mode || 'routine' }}
+          EXCLUDE: ${{ inputs.mode == 'bootstrap' && 'DefaultSecurityGroup' || '' }}
         run: |
           set -euo pipefail
-          bun plan-check.ts deploy --stage prod ${EXCLUDE:+--exclude "$EXCLUDE"} --checked "$RUNNER_TEMP/ci-runners-checked-plan.json" \
+          bun plan-check.ts deploy --stage prod --expect "$MODE" ${EXCLUDE:+--exclude "$EXCLUDE"} \
+            --checked "$RUNNER_TEMP/ci-runners-checked-plan.json" \
             | tee "$RUNNER_TEMP/ci-runners-deploy.log"
 
-      # One unsigned request to the webhook: the function must answer and refuse
-      # it (401). No AWS describe call, so the check adds nothing to the
+      # One unsigned request to the webhook: the handler must answer and refuse
+      # it with 401. A 403 is Lambda refusing to invoke the function URL, so
+      # GitHub could not deliver either: it fails the job. No AWS describe call, so the check adds nothing to the
       # account's EC2 API rate the live scale-up shares.
       # A bootstrap deploy is filtered, so it prints no stack output; the next full deploy checks the webhook.
       - name: Verify the webhook answers and refuses an unsigned event
-        if: ${{ !inputs.bootstrap }}
+        if: ${{ inputs.mode != 'bootstrap' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -123,4 +135,4 @@ jobs:
           fi
           status="$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{}' "$url")"
           echo "webhook status=${status}"
-          [[ "$status" == "401" || "$status" == "403" ]]
+          [[ "$status" == "401" ]]

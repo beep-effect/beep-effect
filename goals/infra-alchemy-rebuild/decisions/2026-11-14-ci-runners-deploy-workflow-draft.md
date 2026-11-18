@@ -30,7 +30,10 @@ name: Deploy CI runners
 # destructive binding change, a foreign resource or a stack action. The deploy
 # step plans again under the stage lease, checks again and applies that same
 # plan object only when it equals the saved one (src/CheckedDeploy.ts,
-# applyIfUnchanged); any drift between the two stops it before a write.
+# applyIfUnchanged); any drift between the two stops it before a write. The
+# dispatch input `mode` names the cutover expectation both steps enforce:
+# `bootstrap` (step 1a) and `default-security-group` (step 1b) refuse any other
+# change; pushes run as `routine`.
 # Credentials: the stack-scoped OIDC role vars.CI_RUNNERS_DEPLOY_ROLE_ARN on
 # the ci-runners-prod environment; App credentials are that environment's
 # secrets, passed only to the plan and deploy steps, and stay Redacted to SSM.
@@ -45,6 +48,12 @@ on:
       - bun.lock
       - .github/workflows/deploy-ci-runners.yml
   workflow_dispatch:
+    inputs:
+      mode:
+        description: "routine; bootstrap (cutover step 1a: creates only, no DefaultSecurityGroup); default-security-group (step 1b: that one create)"
+        type: choice
+        options: [routine, bootstrap, default-security-group]
+        default: routine
 
 concurrency:
   group: alchemy-ci-runners-prod
@@ -92,7 +101,14 @@ jobs:
           CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
           CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
           CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
-        run: bun plan-check.ts plan --stage prod --out "$RUNNER_TEMP/ci-runners-checked-plan.json"
+          # A push carries no inputs, so it plans as routine.
+          MODE: ${{ inputs.mode || 'routine' }}
+          EXCLUDE: ${{ inputs.mode == 'bootstrap' && 'DefaultSecurityGroup' || '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun plan-check.ts plan --stage prod --expect "$MODE" ${EXCLUDE:+--exclude "$EXCLUDE"} \
+            --out "$RUNNER_TEMP/ci-runners-checked-plan.json"
 
       # Applies only the checked change set: plans again, checks again, and
       # refuses before any write when the plan differs from the saved one.
@@ -104,15 +120,21 @@ jobs:
           CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
           CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
           CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
+          MODE: ${{ inputs.mode || 'routine' }}
+          EXCLUDE: ${{ inputs.mode == 'bootstrap' && 'DefaultSecurityGroup' || '' }}
         run: |
           set -euo pipefail
-          bun plan-check.ts deploy --stage prod --checked "$RUNNER_TEMP/ci-runners-checked-plan.json" \
+          bun plan-check.ts deploy --stage prod --expect "$MODE" ${EXCLUDE:+--exclude "$EXCLUDE"} \
+            --checked "$RUNNER_TEMP/ci-runners-checked-plan.json" \
             | tee "$RUNNER_TEMP/ci-runners-deploy.log"
 
-      # One unsigned request to the webhook: the function must answer and refuse
-      # it (401). No AWS describe call, so the check adds nothing to the
+      # One unsigned request to the webhook: the handler must answer and refuse
+      # it with 401. A 403 is Lambda refusing to invoke the function URL, so
+      # GitHub could not deliver either: it fails the job. No AWS describe call, so the check adds nothing to the
       # account's EC2 API rate the live scale-up shares.
+      # A bootstrap deploy is filtered, so it prints no stack output; the next full deploy checks the webhook.
       - name: Verify the webhook answers and refuses an unsigned event
+        if: ${{ inputs.mode != 'bootstrap' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -123,9 +145,9 @@ jobs:
           fi
           status="$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{}' "$url")"
           echo "webhook status=${status}"
-          [[ "$status" == "401" || "$status" == "403" ]]
+          [[ "$status" == "401" ]]
 ```
 
-Open points in the draft for the releasing lane: `plan-check.ts deploy` prints the stack output's webhook URL as one `webhookUrl=<url>` line, which the last step reads (beta.87 has no `alchemy output` command); an unsigned request gets 401 from `Webhook.program.ts`, a payload that fails the allow list 403 (an empty allow list admits no repository); the `paths` filter redeploys the fleet on every library source change, which is intended (the Lambdas are bundled from that source) but means every `@beep/alchemy-github-runners` PR deploys runner code on merge, so those PRs need the same review bar as this package.
+Open points in the draft for the releasing lane: `plan-check.ts deploy` prints the stack output's webhook URL as one `webhookUrl=<url>` line, which the last step reads (beta.87 has no `alchemy output` command); the unsigned probe passes only on the handler's 401 from `Webhook.program.ts`; a 403 means Lambda refused to invoke the function URL (missing invoke permission), so GitHub could not deliver either, and it fails the job (amended 2026-11-18); the `mode` dispatch input runs cutover step 1a (`bootstrap`: `--exclude DefaultSecurityGroup` on both commands, creates only, no probe) and step 1b (`default-security-group`: exactly that one create); the `paths` filter redeploys the fleet on every library source change, which is intended (the Lambdas are bundled from that source) but means every `@beep/alchemy-github-runners` PR deploys runner code on merge, so those PRs need the same review bar as this package.
 
 Added at the packet gate's GO (2026-11-18), disarmed: the workflow ships in the P5 PR with its job gated on `if: vars.CI_RUNNERS_DEPLOY_ARMED == 'true'`, the pattern `deploy-infra-github.yml` uses, so merging it, a later push and a manual dispatch all skip the job before any step while the variable is unset. The gate sets the variable for cutover step 1, only after the deploy role and environment exist and the orchestrator confirms `BEEP_HEAVY_BURST_MAX=6`; unsetting it disarms again. Its `ci-runner-security` exemption line is added in the same PR.

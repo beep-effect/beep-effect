@@ -175,12 +175,48 @@ export const PoolName = LiteralKit(["heavy", "overflow"]).pipe(
  */
 export type PoolName = typeof PoolName.Type;
 
+// An IPv4 CIDR read as its first address (an unsigned 32-bit integer) and its address count.
+const cidrPattern = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})\/(\d{1,2})$/u;
+
+const readCidr = (cidr: string): O.Option<{ readonly first: number; readonly size: number; readonly prefix: number }> =>
+  O.flatMap(O.fromNullishOr(cidrPattern.exec(cidr)), (match) => {
+    const octets = A.map(A.take(A.drop(match, 1), 4), Number);
+    const prefix = Number(match[5]);
+    const first = A.reduce(octets, 0, (address, octet) => address * 256 + octet);
+    return A.every(octets, (octet) => octet <= 255) ? O.some({ first, size: 2 ** (32 - prefix), prefix }) : O.none();
+  });
+
+// AWS accepts VPC and subnet blocks from /16 to /28; the block must start on its own boundary.
+const isAwsCidr = (cidr: string): boolean =>
+  O.exists(readCidr(cidr), (block) => block.prefix >= 16 && block.prefix <= 28 && block.first % block.size === 0);
+
 const Ipv4Cidr = S.String.check(
-  S.isPattern(
-    /^(?:\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/u,
-    $I.annote("Ipv4CidrFormat", { description: "An IPv4 CIDR block.", message: "Expected an IPv4 CIDR block" })
-  )
-).pipe($I.annoteSchema("Ipv4Cidr", { description: "An IPv4 CIDR block." }));
+  S.makeFilter(isAwsCidr, {
+    message: "Expected an IPv4 CIDR block from /16 to /28 whose address is the block's first address",
+  })
+).pipe($I.annoteSchema("Ipv4Cidr", { description: "An IPv4 CIDR block AWS accepts for a VPC or subnet." }));
+
+const contains =
+  (outer: string) =>
+  (inner: string): boolean =>
+    O.exists(
+      O.all([readCidr(outer), readCidr(inner)]),
+      ([o, i]) => i.first >= o.first && i.first + i.size <= o.first + o.size
+    );
+
+const apart = (left: string, right: string): boolean =>
+  O.exists(
+    O.all([readCidr(left), readCidr(right)]),
+    ([a, b]) => a.first + a.size <= b.first || b.first + b.size <= a.first
+  );
+
+const disjoint = (blocks: ReadonlyArray<string>): boolean =>
+  A.every(blocks, (cidr, index) => A.every(A.drop(blocks, index + 1), (other) => apart(cidr, other)));
+
+// The retention periods CloudWatch Logs PutRetentionPolicy accepts.
+const FlowLogRetentionDays = S.Literals([
+  1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653,
+]);
 
 const AvailabilityZone = S.String.check(
   S.isPattern(
@@ -251,8 +287,18 @@ export class NetworkSettings extends S.Opaque<NetworkSettings, { readonly brand:
   S.Struct({
     vpcCidr: Ipv4Cidr,
     subnets: S.NonEmptyArray(SubnetSlot),
-    flowLogRetentionDays: S.Int.check(S.isBetween({ minimum: 1, maximum: 3653 })),
-  }).pipe($I.annoteSchema("NetworkSettings", { description: "VPC, public subnets and flow-log retention." }))
+    flowLogRetentionDays: FlowLogRetentionDays,
+  }).pipe(
+    S.check(
+      S.makeFilter((network) => A.every(network.subnets, (subnet) => contains(network.vpcCidr)(subnet.cidrBlock)), {
+        message: "Every subnet block must lie inside the VPC block",
+      }),
+      S.makeFilter((network) => disjoint(A.map(network.subnets, (subnet) => subnet.cidrBlock)), {
+        message: "Subnet blocks must not overlap",
+      })
+    ),
+    $I.annoteSchema("NetworkSettings", { description: "VPC, public subnets and flow-log retention." })
+  )
 ) {}
 
 /**
@@ -290,7 +336,8 @@ export class ImageSettings extends S.Opaque<ImageSettings, { readonly brand: uni
     amiId: S.String.check(S.isPattern(/^ami-[0-9a-f]{8,17}$/u)),
     rootDeviceName: S.String.check(S.isPattern(/^\/dev\/[a-z0-9]+$/u)),
     rootVolumeGb: S.Int.check(S.isBetween({ minimum: 30, maximum: 1000 })),
-    runAs: S.String.check(S.isPattern(/^[a-z_][a-z0-9_-]{0,31}$/u)),
+    // The post-install grants its IMDS helper to `ec2-user` only (RunnerBootstrap), so no other run-as user is accepted.
+    runAs: S.Literal("ec2-user"),
   }).pipe($I.annoteSchema("ImageSettings", { description: "AMI, root device and run-as user of every runner." }))
 ) {}
 
@@ -397,11 +444,21 @@ const SpotBudgetFields = S.Struct({
   liveFleetReserveVcpu: NonNegativeInt,
   heavy: PoolSettings,
   overflow: PoolSettings,
+  repositoryAllowList: S.Array(S.String),
 });
 
+// Scale-up caps each pool per runner owner (`ScaleUp.program` counts runners by environment and owner),
+// so the worst case is the pools' caps times the distinct owners the allow list admits (at least one).
+const ownerCount = (allowList: ReadonlyArray<string>): number =>
+  Math.max(
+    1,
+    A.dedupe(A.map(allowList, (repository) => Str.toLowerCase(A.headNonEmpty(Str.split("/")(repository))))).length
+  );
+
 /**
- * The Spot vCPU a stage commits: both pools' worst case plus, in the
- * `overlap` phase, the live fleet's reserve.
+ * The Spot vCPU a stage commits: both pools' worst case, once per runner
+ * owner the allow list admits, plus, in the `overlap` phase, the live
+ * fleet's reserve.
  *
  * **Example** (Production overlap budget)
  *
@@ -413,14 +470,14 @@ const SpotBudgetFields = S.Struct({
  * console.log(spotVcpuCommitted(config)) // 512
  * ```
  *
- * @param config - The stage's phase, quota, reserve and pools.
+ * @param config - The stage's phase, quota, reserve, pools and allow list.
  * @returns The committed vCPU.
  * @category configuration
  * @since 0.0.0
  */
 export const spotVcpuCommitted = (config: typeof SpotBudgetFields.Type): number =>
-  poolWorstCaseVcpu(config.heavy, config.phase) +
-  poolWorstCaseVcpu(config.overflow, config.phase) +
+  (poolWorstCaseVcpu(config.heavy, config.phase) + poolWorstCaseVcpu(config.overflow, config.phase)) *
+    ownerCount(config.repositoryAllowList) +
   FleetPhase.match(config.phase, { overlap: () => config.liveFleetReserveVcpu, primary: () => 0 });
 
 /**
@@ -465,7 +522,12 @@ export class CiRunnersConfig extends S.Opaque<CiRunnersConfig, { readonly brand:
     S.check(
       S.makeFilter((config) => spotVcpuCommitted(config) <= config.spotQuotaVcpu, {
         message: "The pools' worst-case Spot vCPU plus the live-fleet reserve exceeds the Spot vCPU quota",
-      })
+      }),
+      // Each slot names its own pool: two pools under one name would share resource ids and ghr:environment.
+      S.makeFilter(
+        (config) => config.heavy.name === PoolName.Enum.heavy && config.overflow.name === PoolName.Enum.overflow,
+        { message: "The heavy slot must hold the heavy pool and the overflow slot the overflow pool" }
+      )
     ),
     $I.annoteSchema("CiRunnersConfig", {
       description: "Account guard, network, image, pools and Spot budget of one stack stage.",

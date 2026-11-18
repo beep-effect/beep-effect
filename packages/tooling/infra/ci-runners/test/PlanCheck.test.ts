@@ -90,7 +90,32 @@ describe("CiRunners plan check", () => {
   it.effect("fails closed on a line it cannot read", () =>
     Effect.sync(() => {
       expect(reasons(planOf("Plan: 1 to create", "[Vpc] create", "something unexpected"))).toEqual(["UnreadableLine"]);
-      expect(reasons(planOf("Plan: 1 to create", "[Vpc] recreate"))).toEqual(["UnreadableLine"]);
+      // The unreadable row also leaves the summary's create unaccounted for.
+      expect(reasons(planOf("Plan: 1 to create", "[Vpc] recreate"))).toEqual(["UnreadableLine", "IncompletePlan"]);
+    })
+  );
+
+  it.effect("refuses a log whose rows do not account for the summary counts", () =>
+    Effect.sync(() => {
+      expect(reasons(planOf("Plan: 1 to delete"))).toEqual(["IncompletePlan"]);
+      expect(reasons(planOf("Plan: 2 to create, 1 binding changes", "[Vpc] create", "[Reaper] create"))).toEqual([
+        "IncompletePlan",
+      ]);
+      expect(
+        reasons(planOf("Plan: 1 to create, 1 binding changes", "[Reaper] create", "[Reaper/Reaper] create"))
+      ).toEqual([]);
+      expect(reasons(planOf("Plan: no changes", "[Vpc] noop"))).toEqual([]);
+    })
+  );
+
+  it.effect("reads an indented line only as a property or a continuation inside a property block", () =>
+    Effect.sync(() => {
+      expect(reasons(planOf("Plan: 1 to update", "[Vpc] update", "  + tags:", "      Name: beep-fleet-prod"))).toEqual(
+        []
+      );
+      expect(reasons(planOf("Plan: no changes", "[Vpc] noop", "  no declared property changes"))).toEqual([]);
+      expect(reasons(planOf("Plan: no changes", "[Vpc] noop", "      stray continuation"))).toEqual(["UnreadableLine"]);
+      expect(reasons(planOf("Plan: no changes", "[Vpc] noop", "  !! not a property"))).toEqual(["UnreadableLine"]);
     })
   );
 

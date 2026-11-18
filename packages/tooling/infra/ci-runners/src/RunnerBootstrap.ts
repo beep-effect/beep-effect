@@ -243,6 +243,13 @@ case "$other_disable_code" in
   *) beep_exit_reason="IMDS_EDGE other_disable failed ($other_disable_code)"; beep_log beep-imds-edges "IMDS_EDGE other_disable: FAIL ($other_disable_code)"; exit 1 ;;
 esac
 
+# The bootstrap token lives 60 s and the two dry-runs above can take most of it: take a fresh one for both reads.
+beep_exit_reason="IMDSv2 credential token request failed"
+imds_token="$(curl --noproxy '*' --silent --show-error --fail \\
+  --connect-timeout 2 --max-time 5 \\
+  --request PUT \\
+  --header 'X-aws-ec2-metadata-token-ttl-seconds: 60' \\
+  http://169.254.169.254/latest/api/token)"
 beep_exit_reason="instance-profile role name resolution failed"
 role_name="$(curl --noproxy '*' --silent --show-error --fail \\
   --connect-timeout 2 --max-time 5 \\

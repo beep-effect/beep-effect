@@ -849,9 +849,11 @@ dispatch deploys nothing). The packet gate arms it for cutover step 1, after the
 deploy role and the `ci-runners-prod` environment exist and the orchestrator
 confirms the heavy burst cap is 6.
 
-Personal stage (plan needs no credentials; a deploy builds a fleet that cannot
-launch or register a runner unless `CI_RUNNERS_REHEARSAL_REPOSITORY` names a
-sandbox repository):
+Personal stage. A plan needs AWS credentials for the configured account and
+region (the state store and the account guard read them), but no GitHub App
+credentials. A deploy builds a fleet that cannot launch or register a runner.
+Rehearsals that launch runners are deferred while the overlap budget holds the
+whole Spot quota (personal-stage fence decision):
 
 ```sh
 eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
@@ -865,10 +867,13 @@ is refused) and its fleet name must not prefix `beep-fleet-prod` or start
 with it (`requireDistinctStage`).
 
 Bootstrap (cutover step 1a): the first deploy is a `workflow_dispatch` with
-`bootstrap: true`, which excludes `DefaultSecurityGroup` from both the plan
-and the deploy, because the deploy role's default-group grant is scoped to
-the new VPC and that VPC does not exist yet. After the gate scopes the role
-to the new VPC, a normal dispatch deploys the full stack (step 1b).
+`mode: bootstrap`, which excludes `DefaultSecurityGroup` from both the plan
+and the deploy and accepts creates only, because the deploy role's
+default-group grant is scoped to the new VPC and that VPC does not exist yet.
+After the gate scopes the role to the new VPC (policy v2 from
+`src/DeployRolePolicy.ts`), a dispatch with `mode: default-security-group`
+accepts exactly the one `DefaultSecurityGroup` create (step 1b). Pushes run as
+`routine`.
 
 Read a saved personal plan log with `bun plan-check.ts log <plan log>`.
 

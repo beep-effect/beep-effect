@@ -14,6 +14,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { productionStage, rehearsalRepository } from "./Config.ts";
 
 const $I = $InfraCiRunnersId.create("Credentials");
@@ -107,8 +108,25 @@ export const placeholderCredentials = AppCredentials.make({
   webhookSecret: Redacted.make(placeholderWebhookSecret),
 });
 
+// A real credential: neither blank (GitHub Actions passes an unset secret as "") nor the placeholder.
+const RealCredential = S.String.check(
+  S.makeFilter((value: string) => Str.isNonEmpty(Str.trim(value)) && value !== placeholderWebhookSecret, {
+    message: "Expected a real credential: an empty value or the placeholder is refused",
+  })
+).pipe($I.annoteSchema("RealCredential", { description: "A credential that is neither blank nor the placeholder." }));
+
+const realCredential = (name: string) => Config.schema(S.Redacted(RealCredential), name);
+
 /**
  * Read the App credentials from the environment.
+ *
+ * **Details**
+ *
+ * Each value must be real: an empty value, which GitHub Actions passes for
+ * an unset secret, or the placeholder `unset` fails with a `ConfigError`
+ * before any resource is declared, so a fleet never stores a secret that
+ * would refuse every delivery. Only the blank or placeholder value can fail
+ * this check, and neither is a secret.
  *
  * **Example** (Reference the config)
  *
@@ -122,9 +140,9 @@ export const placeholderCredentials = AppCredentials.make({
  * @since 0.0.0
  */
 export const appCredentials = Config.all({
-  id: Config.Redacted(appCredentialVariables.id),
-  keyBase64: Config.Redacted(appCredentialVariables.keyBase64),
-  webhookSecret: Config.Redacted(appCredentialVariables.webhookSecret),
+  id: realCredential(appCredentialVariables.id),
+  keyBase64: realCredential(appCredentialVariables.keyBase64),
+  webhookSecret: realCredential(appCredentialVariables.webhookSecret),
 }).pipe(Config.map(AppCredentials.make));
 
 /**

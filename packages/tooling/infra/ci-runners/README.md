@@ -24,7 +24,7 @@ Spot vCPU plus the reserve exceeds the quota.
 | --- | --- | --- | --- | --- | --- | --- |
 | `prod` | `overlap` | 1 (live 2) | 2 (live 48) | Org | `beep-effect/beep-effect` | `CI_RUNNERS_GITHUB_*` from the `ci-runners-prod` environment |
 | `dev-$USER` | `overlap` | 0 | 0 | Repo | none | placeholders |
-| `dev-$USER` with `CI_RUNNERS_REHEARSAL_REPOSITORY` | `overlap` | 1 | 1 | Repo | the sandbox repository | `CI_RUNNERS_GITHUB_*` through `op run` |
+| `dev-$USER` with `CI_RUNNERS_REHEARSAL_REPOSITORY` | refused during the overlap (deferred) | 1 | 1 | Repo | the sandbox repository | `CI_RUNNERS_GITHUB_*` through `op run` |
 
 Every physical name derives from the stage (`beep-fleet-<stage>`), and a guard
 refuses any name that overlaps the live fleet's (`beep-ci`, `beep-ovf`,

@@ -74,7 +74,15 @@ const table: ReadonlyArray<readonly [ResourceClass<never>, string, Attributes]> 
     "Logs.LogGroup",
     (fqn, news) => ({ logGroupName: news.logGroupName, logGroupArn: arn("logs", `log-group/${fqn}`) }),
   ],
-  [AWS.IAM.Role as never, "IAM.Role", (fqn) => ({ roleArn: arn("iam", `role/${fqn}`), roleName: slug(fqn) })],
+  // Pinned names come back as declared, like the real providers; generated ones derive from the FQN.
+  [
+    AWS.IAM.Role as never,
+    "IAM.Role",
+    (fqn, news) => {
+      const roleName = P.isString(news.roleName) ? news.roleName : slug(fqn);
+      return { roleArn: `arn:aws:iam::832907639880:role/${roleName}`, roleName };
+    },
+  ],
   [AWS.IAM.Policy as never, "IAM.Policy", (fqn) => ({ policyArn: arn("iam", `policy/${fqn}`) })],
   [
     AWS.IAM.InstanceProfile as never,
@@ -91,7 +99,10 @@ const table: ReadonlyArray<readonly [ResourceClass<never>, string, Attributes]> 
   [
     AWS.S3.Bucket as never,
     "S3.Bucket",
-    (fqn) => ({ bucketName: Str.toLowerCase(slug(fqn)), bucketArn: `arn:aws:s3:::${Str.toLowerCase(slug(fqn))}` }),
+    (fqn, news) => {
+      const bucketName = P.isString(news.bucketName) ? news.bucketName : Str.toLowerCase(slug(fqn));
+      return { bucketName, bucketArn: `arn:aws:s3:::${bucketName}` };
+    },
   ],
   [
     AWS.SQS.Queue as never,

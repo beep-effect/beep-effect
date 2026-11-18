@@ -46,7 +46,7 @@ const sqsEvent = Effect.fn("sqsEvent")(function* (bodies: ReadonlyArray<unknown>
 });
 
 const watcherConfig = TerminationWatcherRuntimeConfig.make({
-  environmentPrefix: "beep-ci",
+  environments: ["beep-ci-heavy"],
   app: appParameterNames("/beep-ci"),
   deregisterRetryQueueUrl: "https://sqs/deregister-retry",
 });

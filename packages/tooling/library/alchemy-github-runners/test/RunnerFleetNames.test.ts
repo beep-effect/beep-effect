@@ -115,6 +115,10 @@ describe("RunnerFleetNames", () => {
       for (const reserved of ["xn--fleet", "sthree-fleet", "amzn-s3-demo-fleet", "sthree", "xn-", "amzn-s3-demo"]) {
         assertFalse(isPrefix(reserved));
       }
+      // Dash-free pool names keep `<prefix>-<pool>` unique per (prefix, pool).
+      const isPool = S.is(RunnerPool.fields.name);
+      assertTrue(isPool("heavy"));
+      assertFalse(isPool("heavy-two"));
       for (const allowed of ["sthre", "xn", "amzn-s3-dem", "s3alias", "beep-fleet-prod"]) {
         assertTrue(isPrefix(allowed));
       }

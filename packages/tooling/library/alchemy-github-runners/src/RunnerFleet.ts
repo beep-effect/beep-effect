@@ -703,7 +703,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         Output.mapEffect((deregisterRetryQueueUrl) =>
           encodeWatcher(
             TerminationWatcherRuntimeConfig.make({
-              environmentPrefix: props.name,
+              environments: A.map(pools, (pool) => pool.environment),
               app: appNames,
               deregisterRetryQueueUrl,
             })

@@ -207,6 +207,11 @@ describe("CiRunners update and destroy", () => {
         "delete:EC2.SecurityGroup:",
         "delete:RunnerLaunchTemplate:",
         "delete:Lambda.Function:Runners/Poolheavy/ScaleUp",
+        "delete:Lambda.Function:Runners/Pooloverflow/ScaleUp",
+        "delete:EC2.Route:",
+        "delete:EC2.RouteTableAssociation:",
+        "delete:EC2.InternetGateway:",
+        "delete:EC2.RouteTable:",
         "delete:KMS.Key:",
       ]) {
         expect(Fakes.eventIndex(recorder)(prefix)).toBeGreaterThan(sweep);

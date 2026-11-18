@@ -24,11 +24,19 @@ import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Digest from "effect/crypto/Digest";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { applyIfUnchanged, CheckedPlanJson, checkEnginePlan, readEnginePlan } from "./src/CheckedDeploy.ts";
+import {
+  applyIfUnchanged,
+  CheckedPlanJson,
+  checkEnginePlan,
+  newSecretSalt,
+  PlanExpectation,
+  readEnginePlan,
+} from "./src/CheckedDeploy.ts";
 import { checkPlan, mustEscalate, PlanViolation, readPlanLog } from "./src/PlanCheck.ts";
 import type { CheckedPlan, CheckedResource, PlanDrift } from "./src/CheckedDeploy.ts";
 import type { PlannedResource, PlanRefused } from "./src/PlanCheck.ts";
@@ -60,6 +68,9 @@ const explain = PlanViolation.match({
   UnreadableLine: (v) => `unreadable plan line: ${v.line}`,
   MissingPlan: (v) => `expected one "Plan:" header, found ${v.headers}`,
   ActionTask: (v) => `${v.fqn}: planned action task (${v.verb})`,
+  PendingReplacement: (v) => `${v.fqn}: an update that would also finish a pending replacement`,
+  IncompletePlan: (v) => `the summary reports ${v.summary} ${v.change}, the log lists ${v.read}`,
+  UnexpectedChange: (v) => `${v.fqn}: ${v.change} is not allowed by the ${v.expectation} expectation`,
 });
 
 const escalate = Console.error(
@@ -101,7 +112,19 @@ const exclude = Flag.String("exclude").pipe(
   Flag.atLeast(0)
 );
 
-const planStage = Effect.fn("CiRunners.planStage")(function* (stageName: string, excluded: ReadonlyArray<string>) {
+// The cutover expectation (cutover decision, step 1): routine pushes, step 1a bootstrap, step 1b default group.
+const expect = Flag.Literals("expect", PlanExpectation.literals).pipe(
+  Flag.withDescription("The change set this deploy may apply; plan and deploy must pass the same one"),
+  Flag.withDefault(PlanExpectation.Enum.routine)
+);
+
+const planStage = Effect.fn("CiRunners.planStage")(function* (input: {
+  readonly stage: string;
+  readonly excluded: ReadonlyArray<string>;
+  readonly salt: string;
+  readonly expectation: PlanExpectation;
+}) {
+  const { stage: stageName, excluded, salt, expectation } = input;
   const stack = yield* Alchemist.importStack("alchemy.run.ts");
   const snapshot = yield* Alchemist.plan({
     stack,
@@ -110,7 +133,7 @@ const planStage = Effect.fn("CiRunners.planStage")(function* (stageName: string,
     envFile: "/dev/null",
     ...(A.isReadonlyArrayNonEmpty(excluded) ? { exclude: excluded } : {}),
   });
-  const checked = yield* readEnginePlan(stageName, snapshot.native);
+  const checked = yield* readEnginePlan({ stage: stageName, plan: snapshot.native, salt, expectation });
   yield* Effect.forEach(checked.resources, listChecked, { concurrency: 1, discard: true });
   yield* checkEnginePlan(checked).pipe(Effect.catchTag("PlanRefused", refuse));
   return { snapshot, checked };
@@ -131,9 +154,10 @@ const log = Command.make(
 
 const plan = Command.make(
   "plan",
-  { stage, exclude, out: Flag.String("out").pipe(Flag.withDescription("Where to save the checked plan")) },
-  Effect.fn("CiRunners.planCheckPlan")(function* ({ stage: stageName, exclude: excluded, out }) {
-    const { checked } = yield* planStage(stageName, excluded);
+  { stage, exclude, expect, out: Flag.String("out").pipe(Flag.withDescription("Where to save the checked plan")) },
+  Effect.fn("CiRunners.planCheckPlan")(function* ({ stage: stageName, exclude: excluded, expect: expectation, out }) {
+    const salt = yield* newSecretSalt;
+    const { checked } = yield* planStage({ stage: stageName, excluded, salt, expectation });
     const fs = yield* FileSystem.FileSystem;
     const text = yield* S.encodeEffect(CheckedPlanJson)(checked);
     yield* fs.writeFileString(out, text);
@@ -146,12 +170,28 @@ const webhookUrl = (output: unknown) =>
 
 const deploy = Command.make(
   "deploy",
-  { stage, exclude, checked: Flag.String("checked").pipe(Flag.withDescription("The plan the plan step saved")) },
-  Effect.fn("CiRunners.planCheckDeploy")(function* ({ stage: stageName, exclude: excluded, checked: checkedPath }) {
+  {
+    stage,
+    exclude,
+    expect,
+    checked: Flag.String("checked").pipe(Flag.withDescription("The plan the plan step saved")),
+  },
+  Effect.fn("CiRunners.planCheckDeploy")(function* ({
+    stage: stageName,
+    exclude: excluded,
+    expect: expectation,
+    checked: checkedPath,
+  }) {
     const fs = yield* FileSystem.FileSystem;
     const text = yield* fs.readFileString(checkedPath);
     const checked: CheckedPlan = yield* S.decodeEffect(CheckedPlanJson)(text);
-    const { snapshot, checked: current } = yield* planStage(stageName, excluded);
+    // The saved salt keys the secrets fingerprint, so an unchanged secret reads the same and a changed one does not.
+    const { snapshot, checked: current } = yield* planStage({
+      stage: stageName,
+      excluded,
+      salt: checked.secretSalt,
+      expectation,
+    });
     const output = yield* applyIfUnchanged(checked, current, Alchemist.apply(snapshot)).pipe(
       Effect.catchTag("PlanDrift", refuseDrift)
     );
@@ -169,6 +209,6 @@ const planCheck = Command.make("plan-check").pipe(
 );
 
 Command.run(planCheck, { version: "0.0.0" }).pipe(
-  Effect.provide([BunServices.layer, Alchemist.layer(), Digest.layerWebCrypto]),
+  Effect.provide([BunServices.layer, Alchemist.layer(), Digest.layerWebCrypto, SecureRandom.layerWebCrypto]),
   BunRuntime.runMain
 );

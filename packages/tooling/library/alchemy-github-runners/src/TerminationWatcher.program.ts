@@ -65,7 +65,7 @@ export type DeregisterOutcome = typeof DeregisterOutcome.Type;
 
 /**
  * Whether an instance belongs to this watcher: its `ghr:environment` tag
- * starts with the configured prefix.
+ * equals one of the fleet's pool environments.
  *
  * **Example** (A heavy-pool instance)
  *
@@ -74,16 +74,22 @@ export type DeregisterOutcome = typeof DeregisterOutcome.Type;
  * import { TaggedInstance } from "@beep/alchemy-github-runners/Ec2Fleet.models"
  *
  * const instance = TaggedInstance.make({ instanceId: "i-1", tags: { "ghr:environment": "beep-ci-heavy" } })
- * console.log(matchesEnvironment({ instance, prefix: "beep-ci" })) // true
+ * console.log(matchesEnvironment({ instance, environments: ["beep-ci-heavy"] })) // true
+ * console.log(matchesEnvironment({ instance, environments: ["beep-ci"] })) // false
  * ```
  *
- * @param input - The instance and the environment prefix.
+ * @param input - The instance and the fleet's pool environments.
  * @returns Whether the watcher should act on it.
  * @category use-cases
  * @since 0.0.0
  */
-export const matchesEnvironment = (input: { readonly instance: TaggedInstance; readonly prefix: string }): boolean =>
-  O.exists(O.fromUndefinedOr(input.instance.tags[RunnerTag.environment]), Str.startsWith(input.prefix));
+export const matchesEnvironment = (input: {
+  readonly instance: TaggedInstance;
+  readonly environments: ReadonlyArray<string>;
+}): boolean =>
+  O.exists(O.fromUndefinedOr(input.instance.tags[RunnerTag.environment]), (environment) =>
+    A.contains(input.environments, environment)
+  );
 
 /**
  * Finds the instance's runner on GitHub and deletes it.
@@ -174,7 +180,7 @@ export const handleTerminationEvent = Effect.fn("TerminationWatcher.handleEvent"
       const owner = O.fromUndefinedOr(instance.tags[RunnerTag.owner]);
       const type = O.getOrElse(O.fromUndefinedOr(instance.tags[RunnerTag.type]), () => "Org");
       if (
-        !matchesEnvironment({ instance, prefix: input.config.environmentPrefix }) ||
+        !matchesEnvironment({ instance, environments: input.config.environments }) ||
         O.isNone(owner) ||
         !isRunnerType(type)
       ) {
@@ -232,7 +238,13 @@ export const handleDeregisterRetry = Effect.fn("TerminationWatcher.handleRetry")
   readonly message: DeregisterRetryMessage;
 }) {
   const { message } = input;
-  if (!isRunnerType(message.runnerType)) {
+  // The retry re-reads the instance: only one of this fleet's pools may be deregistered, whatever the message says.
+  const ec2 = yield* Ec2Fleet;
+  const instances = yield* ec2.describeInstances([message.instanceId]);
+  const owned = A.some(instances, (instance) =>
+    matchesEnvironment({ instance, environments: input.config.environments })
+  );
+  if (!owned || !isRunnerType(message.runnerType)) {
     return "ignored" as const;
   }
   const outcome = yield* deregisterRunner({

@@ -103,6 +103,8 @@ const flowLogsRole = (names: PhysicalNames, logGroupArn: Output.Output<string>) 
           },
           // The flow-logs service calls DescribeLogGroups, which takes no resource-level scope.
           { Effect: "Allow", Action: ["logs:DescribeLogGroups"], Resource: ["*"] },
+          // CreateLogGroup is in AWS's flow-log role policy; scoped to this group, it only ever finds it existing.
+          { Effect: "Allow", Action: ["logs:CreateLogGroup"], Resource: [logGroupArn] },
         ],
       },
     },
@@ -114,6 +116,7 @@ const publicSubnets = Effect.fn("CiRunners.publicSubnets")(function* (input: {
   readonly names: PhysicalNames;
   readonly vpc: EC2.Vpc;
   readonly routeTable: EC2.RouteTable;
+  readonly defaultRoute: EC2.Route;
 }) {
   const declareSubnet = Effect.fnUntraced(function* (slot: SubnetSlot, index: number) {
     const id = `PublicSubnet${index + 1}`;
@@ -125,11 +128,16 @@ const publicSubnets = Effect.fn("CiRunners.publicSubnets")(function* (input: {
       mapPublicIpOnLaunch: false,
       tags: networkTags(input.names.fleet, name),
     });
-    yield* EC2.RouteTableAssociation(`${id}Route`, {
+    const association = yield* EC2.RouteTableAssociation(`${id}Route`, {
       routeTableId: input.routeTable.routeTableId,
       subnetId: subnet.subnetId,
     });
-    return subnet;
+    // The id handed to the fleet runs through the association and the default route, so the fleet depends on both:
+    // destroy removes them, and the internet gateway behind the route, only after the sweep has ended the runners.
+    return Output.map(
+      Output.all(subnet.subnetId, association.associationId, input.defaultRoute.routeTableId),
+      ([subnetId]) => subnetId
+    );
   });
   const [first, ...rest] = input.network.subnets;
   // The first subnet is declared on its own so the list stays non-empty by type.
@@ -146,8 +154,11 @@ const publicSubnets = Effect.fn("CiRunners.publicSubnets")(function* (input: {
  * The VPC's default security group is pinned empty, so a runner launched
  * into it by mistake has no ingress and no egress. Subnets do not map public
  * IPs on launch; the runner launch template asks for one per instance.
- * Flow logs record all traffic of the VPC to a log group with the
- * configured retention, through a role trusted only by the flow-logs
+ * Flow logs record the VPC's accepted and rejected traffic (`trafficType:
+ * ALL`) to a log group with the configured retention. VPC Flow Logs do not
+ * capture IMDS traffic (169.254.169.254) or queries to the Amazon DNS
+ * resolver, so an empty flow log never shows that a runner did not reach
+ * IMDS. The logs go through a role trusted only by the flow-logs
  * service.
  *
  * **Example** (Declare the production network)
@@ -189,12 +200,12 @@ export const declareNetwork = Effect.fn("CiRunners.declareNetwork")(function* (
     vpcId: vpc.vpcId,
     tags: networkTags(names.fleet, names.routeTable),
   });
-  yield* EC2.Route("PublicDefaultRoute", {
+  const defaultRoute = yield* EC2.Route("PublicDefaultRoute", {
     routeTableId: routeTable.routeTableId,
     destinationCidrBlock: "0.0.0.0/0",
     gatewayId: internetGateway.internetGatewayId,
   });
-  const subnets = yield* publicSubnets({ network, names, vpc, routeTable });
+  const subnetIds = yield* publicSubnets({ network, names, vpc, routeTable, defaultRoute });
 
   const runnerSecurityGroup = yield* EC2.SecurityGroup("RunnerSecurityGroup", {
     vpcId: vpc.vpcId,
@@ -223,7 +234,7 @@ export const declareNetwork = Effect.fn("CiRunners.declareNetwork")(function* (
 
   return {
     vpcId: vpc.vpcId,
-    subnetIds: A.map(subnets, (subnet) => subnet.subnetId),
+    subnetIds,
     runnerSecurityGroupId: runnerSecurityGroup.groupId,
     flowLogGroupName: flowLogGroup.logGroupName,
   };

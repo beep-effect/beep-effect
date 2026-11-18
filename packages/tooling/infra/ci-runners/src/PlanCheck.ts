@@ -15,6 +15,7 @@ import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -83,6 +84,12 @@ export class PlannedResource extends S.Opaque<PlannedResource, { readonly brand:
  * the plan header that is no resource, binding, task or property line.
  * `MissingPlan`: zero or several `Plan:` headers. `ActionTask`: a planned
  * Alchemy action (`run` or `drop`), which this stack never declares.
+ * `IncompletePlan`: a `Plan:` summary count (`N to <action>`, `N binding
+ * changes`) that the rows after it do not account for, such as a truncated
+ * log. `PendingReplacement`: an `update` of a resource whose state still holds an
+ * unfinished replacement, which the apply would also finish by deleting the
+ * old generation. `UnexpectedChange`: a change the requested cutover
+ * expectation does not allow (`src/CheckedDeploy.ts`).
  *
  * **Example** (Construct a violation)
  *
@@ -103,6 +110,9 @@ export const PlanViolation = S.TaggedUnion({
   UnreadableLine: { line: S.String },
   MissingPlan: { headers: S.Int },
   ActionTask: { fqn: S.String, verb: S.String },
+  PendingReplacement: { fqn: S.String },
+  IncompletePlan: { change: S.String, summary: S.Int, read: S.Int },
+  UnexpectedChange: { fqn: S.String, change: S.String, expectation: S.String },
 }).pipe($I.annoteSchema("PlanViolation", { description: "One reason the pre-deploy gate refuses a plan." }));
 
 /**
@@ -298,21 +308,51 @@ const readTask = (reading: PlanReading, line: string): O.Option<PlanReading> =>
   );
 
 // An indented line belongs to the resource above it; before any resource it is unreadable.
+const noPropertyChanges = /^ {2}no declared property changes$/u;
+const continuationPattern = /^ {4,}\S/u;
+
+// A property line names a property; a continuation (4+ spaces) is readable only inside a property block.
 const readProperty = (reading: PlanReading, line: string): O.Option<PlanReading> =>
   pipe(
     A.last(reading.resources),
     O.filter(() => indentedPattern.test(line)),
-    O.map((last) =>
+    O.flatMap((last) =>
       O.match(O.fromNullishOr(propertyNamePattern.exec(line)?.[1]), {
-        onNone: () => reading,
+        onNone: () =>
+          noPropertyChanges.test(line) ||
+          (continuationPattern.test(line) && A.isReadonlyArrayNonEmpty(last.changedProperties))
+            ? O.some(reading)
+            : O.none(),
         onSome: (name) =>
-          withLast(
-            reading,
-            PlannedResource.make({ ...last, changedProperties: A.dedupe(A.append(last.changedProperties, name)) })
+          O.some(
+            withLast(
+              reading,
+              PlannedResource.make({ ...last, changedProperties: A.dedupe(A.append(last.changedProperties, name)) })
+            )
           ),
       })
     )
   );
+
+const summaryCountPattern = /(\d+) (?:to (create|update|adopted|replace|delete|orphaned)|(binding) changes)/gu;
+
+// The summary's counts against the rows read: `N to <action>` per resource action and `N binding changes`.
+const countViolations = (header: string, reading: PlanReading): ReadonlyArray<PlanViolation> => {
+  const read = (change: string): number =>
+    change === "binding"
+      ? A.filter(
+          A.flatMap(reading.resources, (resource) => resource.bindings),
+          (binding) => !Str.endsWith(" noop")(binding)
+        ).length
+      : A.filter(reading.resources, (resource) => resource.action === change).length;
+  return A.filterMap(A.fromIterable(Str.matchAll(summaryCountPattern)(header)), (match) => {
+    const change = String(match[2] ?? match[3]);
+    const summary = Number(match[1]);
+    return summary === read(change)
+      ? Result.failVoid
+      : Result.succeed(PlanViolation.cases.IncompletePlan.make({ change, summary, read: read(change) }));
+  });
+};
 
 const lineReaders = [readBinding, readResource, readTask, readProperty];
 
@@ -346,15 +386,16 @@ const readLine = (reading: PlanReading, line: string): PlanReading =>
  */
 export const readPlanLog = (log: string): PlanReading => {
   const lines = pipe(log, Str.split("\n"), A.map(stripDecoration));
-  const headers = A.filter(lines, (line) => headerPattern.test(line)).length;
+  const headerLines = A.filter(lines, (line) => headerPattern.test(line));
+  const headers = headerLines.length;
   const empty = PlanReading.make({ resources: [], violations: [] });
   if (headers !== 1) return flag(empty, PlanViolation.cases.MissingPlan.make({ headers }));
-  return pipe(
-    lines,
-    A.dropWhile((line) => !headerPattern.test(line)),
-    A.drop(1),
-    A.reduce(empty, readLine)
-  );
+  const fromHeader = A.dropWhile(lines, (line) => !headerPattern.test(line));
+  const reading = A.reduce(A.drop(fromHeader, 1), empty, readLine);
+  return PlanReading.make({
+    ...reading,
+    violations: [...reading.violations, ...countViolations(A.join(headerLines, ""), reading)],
+  });
 };
 
 const isDestructive = (action: PlanAction): boolean =>

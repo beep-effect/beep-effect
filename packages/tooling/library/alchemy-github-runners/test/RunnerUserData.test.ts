@@ -31,6 +31,10 @@ describe("renderRunnerUserData", () => {
     expect(/echo post[\s\S]*\.\/run\.sh/u.test(script)).toBe(true);
   });
 
+  it("installs the terminating EXIT trap before the post-install, so a failed post-install still ends the instance", () => {
+    expect(/trap cleanup EXIT[\s\S]*echo post/u.test(script)).toBe(true);
+  });
+
   const failedStartTerminates = 'if [ "$status" -ne 0 ]; then aws ec2 terminate-instances';
 
   it("registers with config.sh for non-ephemeral pools and terminates only after a failed start", () => {
