@@ -34,7 +34,7 @@ until `@beep/schema` was rebuilt. The probe stops before that write.
 An earlier measurement on the same package with every upstream unbuilt printed 216,967 characters
 in 1,348 lines from the compiler, against the same 269 from `bun run check`.
 
-Tests: `check-probe.test.ts` in `@beep/repo-cli`, five tests over a fixture package with one
+Tests: `check-probe.test.ts` in `@beep/repo-cli`, eight tests over a fixture package with one
 unbuilt reference, covering the slim entry, the task path and the built case.
 
 ## AC9: cache policy

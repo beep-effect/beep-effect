@@ -1,4 +1,8 @@
-import { checkPackageReferencesBuilt, UnbuiltReferenceOutputs } from "@beep/repo-cli/commands/Quality/CheckProbe";
+import {
+  CheckProbeReadError,
+  checkPackageReferencesBuilt,
+  UnbuiltReferenceOutputs,
+} from "@beep/repo-cli/commands/Quality/CheckProbe";
 import { scaffoldPackageScripts } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 import { runCaptured } from "@beep/repo-cli-kit/process/StepExec";
 import { findRepoRoot } from "@beep/repo-utils/Root";
@@ -163,6 +167,59 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "120 s
         }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
 
         expect(lines).toStrictEqual([]);
+      })
+    );
+
+    it.effect(
+      "passes silently for a package that references no project",
+      Effect.fnUntraced(function* () {
+        const fixture = yield* writeFixtureRepo();
+        yield* writeJson(fixture.consumerDir, "tsconfig.json", {
+          compilerOptions: { composite: true, declaration: true, outDir: "dist" },
+          include: ["src"],
+        });
+
+        const lines = yield* Effect.gen(function* () {
+          yield* checkPackageReferencesBuilt(fixture.consumerDir);
+          const errors = yield* TestConsole.errorLines;
+          const logs = yield* TestConsole.logLines;
+          return A.appendAll(errors, logs);
+        }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make));
+
+        expect(lines).toStrictEqual([]);
+      })
+    );
+
+    it.effect(
+      "names a package whose manifest has no name by its directory",
+      Effect.fnUntraced(function* () {
+        const fixture = yield* writeFixtureRepo();
+        yield* writeJson(fixture.consumerDir, "package.json", { private: true });
+
+        const failure = yield* checkPackageReferencesBuilt(fixture.consumerDir).pipe(
+          Effect.flip,
+          Effect.provideServiceEffect(Console.Console, TestConsole.make)
+        );
+
+        assertInstanceOf(failure, UnbuiltReferenceOutputs);
+        expect(failure.package).toBe(fixture.consumerDir);
+        expect(failure.missing).toBe(1);
+      })
+    );
+
+    it.effect(
+      "reports a package without a tsconfig as a read error naming the file",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const fixture = yield* writeFixtureRepo();
+        const tsconfigPath = path.join(fixture.consumerDir, "tsconfig.json");
+        yield* fs.remove(tsconfigPath);
+
+        const failure = yield* Effect.flip(checkPackageReferencesBuilt(fixture.consumerDir));
+
+        assertInstanceOf(failure, CheckProbeReadError);
+        expect(failure.message).toBe(`Failed to read references from ${tsconfigPath}.`);
       })
     );
 
