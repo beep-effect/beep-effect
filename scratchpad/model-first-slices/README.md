@@ -1,5 +1,22 @@
 # model-first-slices
 
+## Install and hosted check
+
+A root `bun install` also installs this workspace: the root `postinstall` runs
+`bun run install:model-first-slices`, a `bun install --frozen-lockfile` here, and the root install
+fails when `scratchpad/model-first-slices/bun.lock` is out of date. Hosted CI runs the root Turbo
+task `check:model-first-slices` in the Lint Policy lane whenever this workspace, the root
+`tsconfig.base.json`, the root `package.json` or `bun.lock`, or the linked `@beep/identity` and
+`@beep/schema` sources change. The task installs this workspace first, then runs its check and its
+toolchain guard tests. To run the two by hand from the repository root:
+
+```sh
+bun run --cwd scratchpad/model-first-slices check
+bun run --cwd scratchpad/model-first-slices/shared/tooling test
+```
+
+## Overview
+
 A standalone prototype of the model-first slices design, reworked to
 `explorations/model-first-slices/DECISIONS.md` through phase 12 (phase 4 was the last in-memory phase; phase 5 ran it on Effect Cluster; phase 6 patched two library defects locally and ran it again; phase 7 put `bun run check` on the Effect build of the compiler and applied the owner's review; phase 8 ran the suite on the swarm against the phase 7 code; phase 9 built the rulings on its three failures, D41 to D43, and ran it again; phase 10 built D45 to D47 and ran it a fifth time; phase 11 built D49 to D51 and ran it a sixth time, with an upgrade from phase 8's code; phase 12, in process only, added the fence's start check and the frozen-runner case):
 file grammar, contract packages, the authority context, re-admission at each hop, the `runs`

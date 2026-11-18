@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "//": "0f6bf02d514da1ab6d3667112264a12bb5ba5809c1212c5b01c5928e65367fca"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (model-first-slices check wiring lane, ci/model-first-slices-check)",
+    "reason": "Record the new cached root task //#check:model-first-slices (the standalone prototype's typecheck and toolchain guard tests; inputs: the prototype's tracked sources, manifests, lockfile, bunfig and dependency patches, the root tsconfig.base.json, package.json and bun.lock, and the linked @beep/identity, @beep/schema, @beep/utils and @beep/types sources) and the root drift of three new root script words (install:model-first-slices, postinstall, check:model-first-slices): every cached root computation drifts on the manifest bytes. No existing command, cache flag, input, output or environment changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/model-first-slices-check-cache-review-2026-11-18.md",
+      "sha256": "085365bbc1d87b3f16b35d8682b8c3ab76e871ca0ce5d1cc7ed787b3ceb12ad4"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
