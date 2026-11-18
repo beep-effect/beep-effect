@@ -8,8 +8,10 @@ import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo } from "@beep/github/Repo";
 import { RetryPolicy } from "@beep/github/Resilience";
 import {
+  ciTaskOutcomesCommand,
   HostedTaskOutcome,
   RouteCorpusCaptureOptions,
+  RouteCorpusReceipt,
   TaskOutcomeRecord,
   taskOutcomeArtifactPrefix,
   taskOutcomesOf,
@@ -25,6 +27,7 @@ import { assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -33,13 +36,17 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as Stdio from "effect/Stdio";
 import * as Str from "effect/String";
+import * as Terminal from "effect/Terminal";
 import * as TestClock from "effect/testing/TestClock";
+import * as TestConsole from "effect/testing/TestConsole";
 import { zipSync } from "fflate";
 import type { RouteGhRunner } from "@beep/repo-cli/commands/Ci/RouteCorpus";
 
 const encode = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeRecord = S.decodeUnknownEffect(S.fromJsonString(TaskOutcomeRecord));
+const encodeReceipt = S.encodeEffect(S.fromJsonString(RouteCorpusReceipt));
 const encodeRecord = S.encodeEffect(S.fromJsonString(TaskOutcomeRecord));
 const encodeRecordValue = S.encodeEffect(TaskOutcomeRecord);
 const Payload = S.Struct({ requests: S.Int, records: S.Array(TaskOutcomeRecord) });
@@ -103,12 +110,22 @@ it.effect("maps exit codes to outcomes and keeps the strongest evidence across s
           { taskId: "@beep/b#test" },
           // Turbo writes a killed task, or a failure with no code, as `exitCode: null`.
           { taskId: "@beep/d#test", execution: { exitCode: null } },
+          // e passed, then a later invocation killed it; f was killed in one and never ran in the other.
+          { taskId: "@beep/e#test", execution: { exitCode: 0 } },
+          { taskId: "@beep/f#test", execution: { exitCode: null } },
+          // g was killed, then passed; h was killed, then failed.
+          { taskId: "@beep/g#test", execution: { exitCode: null } },
+          { taskId: "@beep/h#test", execution: { exitCode: null } },
         ],
       },
       {
         tasks: [
           { taskId: "@beep/a#test", execution: { exitCode: 0 } },
           { taskId: "@beep/b#test", execution: {} },
+          { taskId: "@beep/e#test", execution: { exitCode: null } },
+          { taskId: "@beep/f#test" },
+          { taskId: "@beep/g#test", execution: { exitCode: 0 } },
+          { taskId: "@beep/h#test", execution: { exitCode: 1 } },
         ],
       },
       {},
@@ -118,6 +135,10 @@ it.effect("maps exit codes to outcomes and keeps the strongest evidence across s
       "@beep/b#test=not-run",
       "@beep/c#test=pass",
       "@beep/d#test=unknown",
+      "@beep/e#test=unknown",
+      "@beep/f#test=unknown",
+      "@beep/g#test=unknown",
+      "@beep/h#test=fail",
     ]);
     strictEqual(taskOutcomeArtifactPrefix(RUN, 2), `task-outcomes-${RUN}-2-`);
   })
@@ -150,13 +171,25 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         [written.job, written.runId, written.runAttempt, outcomeRows(written.tasks)],
         ["Test Unit (unit-a)", O.some(RUN), O.some(1), ["@beep/a#test=pass", "@beep/b#test=fail"]]
       );
+      // A job that stopped before Turbo ran leaves no `.turbo/runs/`: its record has no tasks.
+      const bare = yield* fs.makeTempDirectoryScoped({ prefix: "beep-ci-task-outcomes-bare-" });
+      const none = yield* writeTaskOutcomes(bare, "Lint (lint-1)", "record.json").pipe(
+        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord({}))
+      );
+      deepStrictEqual([none.tasks, none.runId], [[], O.none()]);
     })
   );
 
   it.effect("the REST runner reads only this attempt's unexpired record artifacts and counts its requests", () =>
     Effect.gen(function* () {
       const recordText = yield* encodeRecord(record("Test Unit (unit-a)", [["@beep/a#test", "fail"]]));
-      const archive = zipSync({ "record.json": new TextEncoder().encode(recordText) });
+      const otherText = yield* encodeRecord(record("Test Unit (unit-z)", [["@beep/z#test", "pass"]]));
+      // Two JSON files and a non-JSON one in one archive: both records are read, in file-name order.
+      const archive = zipSync({
+        "record.json": new TextEncoder().encode(recordText),
+        "a-extra.json": new TextEncoder().encode(otherText),
+        "notes.txt": new TextEncoder().encode("ignored"),
+      });
       const artifacts = {
         total_count: 4,
         artifacts: [
@@ -187,7 +220,13 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       deepStrictEqual(downloads, ["/repos/example/repo/actions/artifacts/1/zip"]);
       deepStrictEqual(
         [payload.requests, A.map(payload.records, (entry) => [entry.job, outcomeRows(entry.tasks)])],
-        [2, [["Test Unit (unit-a)", ["@beep/a#test=fail"]]]]
+        [
+          2,
+          [
+            ["Test Unit (unit-z)", ["@beep/z#test=pass"]],
+            ["Test Unit (unit-a)", ["@beep/a#test=fail"]],
+          ],
+        ]
       );
     })
   );
@@ -283,6 +322,21 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       );
       strictEqual(A.length(A.filter(calls, (call) => call === "run task-outcomes")), 1);
       deepStrictEqual(receipt.taskOutcomeReads, O.some(4));
+      // A receipt written before the count decodes with no key; continuing from it carries 0 reads, and a window
+      // already fully captured reads nothing new.
+      const receiptPath = `${root}/corpus/RECEIPTS.json`;
+      const legacyText = yield* encodeReceipt(RouteCorpusReceipt.make({ ...receipt, taskOutcomeReads: O.none() }));
+      yield* fs.writeFileString(receiptPath, legacyText);
+      const continued = yield* corpus.capture(
+        RouteCorpusCaptureOptions.make({
+          repoRoot: root,
+          since: DAY,
+          until: O.some(DAY),
+          workflows: ["Check"],
+          outDir: "corpus",
+        })
+      );
+      deepStrictEqual(continued.taskOutcomeReads, O.some(0));
       const loaded = yield* corpus.load(`${root}/corpus/RECEIPTS.json`);
       const jobs = A.flatMap(loaded.runs, (run) => run.jobs);
       deepStrictEqual(
@@ -298,6 +352,41 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           ["Test Unit (unit-c)", null, null],
         ]
       );
+    })
+  );
+});
+
+// The command resolves the checkout it runs in, so it reads this checkout's own `.turbo/runs/` (whatever summaries
+// it holds) and writes only to the scratch path it is given.
+const CommandLayer = Layer.mergeAll(
+  NodeServices.layer,
+  Stdio.layerTest({ stdinIsTerminal: Effect.succeed(false), stdoutIsTerminal: Effect.succeed(false) }),
+  Layer.succeed(
+    Terminal.Terminal,
+    Terminal.make({
+      columns: Effect.succeed(80),
+      rows: Effect.succeed(24),
+      size: Effect.die("unused"),
+      readInput: Effect.die("unused"),
+      readLine: Effect.die("unused"),
+      display: () => Effect.void,
+    })
+  ),
+  TestConsole.layer
+);
+const runTaskOutcomesCommand = Command.runWith(ciTaskOutcomesCommand, { version: "0.0.0" });
+
+it.layer(CommandLayer, { timeout: "60 seconds" })("ci task-outcomes command", (it) => {
+  it.effect("writes a decodable record for the checkout it runs in", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const temp = yield* fs.makeTempDirectoryScoped({ prefix: "beep-ci-task-outcomes-command-" });
+      const out = path.join(temp, "out", "record.json");
+      yield* runTaskOutcomesCommand(["--job-name", "Labs", "--out", out]);
+      const text = yield* fs.readFileString(out);
+      const written = yield* decodeRecord(text);
+      strictEqual(written.job, "Labs");
     })
   );
 });

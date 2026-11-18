@@ -133,9 +133,10 @@ const outcomeOf = (task: typeof SummaryTask.Type): RouteTaskOutcome =>
     Match.orElse(() => RouteTaskOutcome.Enum.fail)
   );
 
-// A task several invocations list keeps its strongest evidence: a failure anywhere is a failure, a pass beats a
-// task that never ran.
-const OUTCOME_RANK: Readonly<Record<RouteTaskOutcome, number>> = { fail: 3, pass: 2, "not-run": 1, unknown: 0 };
+// A task several invocations list keeps its strongest evidence: a failure anywhere is a failure, and a task that
+// started without exiting (`unknown`) is never masked by a pass or a not-run elsewhere, which would charge a
+// killed task's red to the harness. A pass beats a task that never ran.
+const OUTCOME_RANK: Readonly<Record<RouteTaskOutcome, number>> = { fail: 3, unknown: 2, pass: 1, "not-run": 0 };
 
 /**
  * One `{task, outcome}` row per Turbo task across a job's run summaries.
@@ -145,8 +146,9 @@ const OUTCOME_RANK: Readonly<Record<RouteTaskOutcome, number>> = { fail: 3, pass
  * Exit code 0 (a run or a cache replay) is `pass`, any other exit code is
  * `fail`, a task with no exit code (planned, never executed) is `not-run`,
  * and a task Turbo wrote with `exitCode: null` (killed, or failed with no
- * code) is `unknown`. A task several summaries list keeps `fail` over `pass` over
- * `not-run`. Rows sort by task id.
+ * code) is `unknown`. A task several summaries list keeps `fail` over
+ * `unknown` over `pass` over `not-run`, so a task that passed and was later
+ * killed stays `unknown`. Rows sort by task id.
  *
  * **Example** (Two invocations)
  *
