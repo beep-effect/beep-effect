@@ -456,14 +456,24 @@ export const CiOperationalLive = Layer.effect(
     );
 
     const entry = (name: string, value: string): typeof environmentEntry.Type => [name, Redacted.make(value)];
-    const turboEnvironment = Effect.fn("Ci.selectTurboEnvironment")(function* (trusted: boolean, same: boolean) {
+    // `same` is a same-repository pull request; `mainRead` a scheduled or
+    // dispatched run on `refs/heads/main`. Both read, neither writes: only a
+    // push holds the write token.
+    const turboEnvironment = Effect.fn("Ci.selectTurboEnvironment")(function* (
+      trusted: boolean,
+      same: boolean,
+      mainRead: boolean
+    ) {
       if ((yield* text("BEEP_CI_TURBO_REMOTE_CACHE")) !== "true")
         return CiEnvironmentSelection.make({ mode: "not requested", entries: [] });
       const api = yield* text("BEEP_CI_TURBO_API");
       const team = yield* text("BEEP_CI_TURBO_TEAM");
       const token = yield* secret(trusted ? "TURBO_TOKEN" : "TURBO_READ_TOKEN");
       const permitted =
-        (trusted || same) && Str.isNonEmpty(api) && Str.isNonEmpty(team) && token.pipe(Redacted.value, Str.isNonEmpty);
+        (trusted || same || mainRead) &&
+        Str.isNonEmpty(api) &&
+        Str.isNonEmpty(team) &&
+        token.pipe(Redacted.value, Str.isNonEmpty);
       const select = (
         mode: CiEnvironmentSelection["mode"],
         cache: string,
@@ -482,12 +492,15 @@ export const CiOperationalLive = Layer.effect(
             entry("BEEP_CI_TURBO_REMOTE_MODE", mode),
           ],
         });
-      return Match.value({ permitted, trusted }).pipe(
+      return Match.value({ permitted, trusted, same }).pipe(
         Match.when({ permitted: false }, () => select("local-only", "local:rw", "", "", Redacted.make(""))),
         Match.when({ trusted: true }, () =>
           select("read-write (trusted push)", "local:rw,remote:rw", api, team, token)
         ),
-        Match.orElse(() => select("read-only (same-repository pull request)", "local:rw,remote:r", api, team, token))
+        Match.when({ same: true }, () =>
+          select("read-only (same-repository pull request)", "local:rw,remote:r", api, team, token)
+        ),
+        Match.orElse(() => select("read-only (main schedule or dispatch)", "local:rw,remote:r", api, team, token))
       );
     });
     const applicationEnvironment = Effect.fn("Ci.selectApplicationEnvironment")(function* (trusted: boolean) {
@@ -518,7 +531,9 @@ export const CiOperationalLive = Layer.effect(
       const head = yield* text("BEEP_CI_HEAD_REPOSITORY");
       const trusted = event === "push";
       const same = event === "pull_request" && Str.isNonEmpty(repo) && repo === head;
-      const turbo = yield* turboEnvironment(trusted, same);
+      const ref = yield* text("GITHUB_REF");
+      const mainRead = (event === "schedule" || event === "workflow_dispatch") && ref === "refs/heads/main";
+      const turbo = yield* turboEnvironment(trusted, same, mainRead);
       const app = yield* applicationEnvironment(trusted);
       yield* Effect.forEach(A.appendAll(turbo.entries, app.entries), exportEnvironmentEntry, {
         concurrency: 1,

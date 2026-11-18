@@ -1,0 +1,52 @@
+{
+  "key": "review:claim_1:1",
+  "claim": "claim_1",
+  "proposition": {
+    "_tag": "HasIdentifier",
+    "party": "party_dana",
+    "scheme": "email",
+    "value": "dana@acme.test"
+  },
+  "signals": [
+    {
+      "source": "mailbox:intake",
+      "excerpt": "From: Dana Smith <dana@acme.test>"
+    },
+    {
+      "source": "crm",
+      "excerpt": "dana@acme.test on file"
+    }
+  ],
+  "evidenceRevision": 1,
+  "provenance": {
+    "root": {
+      "_tag": "Human",
+      "principal": "p_intake"
+    },
+    "onBehalfOf": "p_intake",
+    "grants": [
+      {
+        "grant": "g_intake",
+        "delegation": null
+      },
+      {
+        "grant": "g_intake_propose",
+        "delegation": null
+      }
+    ],
+    "chain": [
+      {
+        "by": {
+          "_tag": "Process",
+          "process": "ReviewOnRequest"
+        },
+        "cause": {
+          "_tag": "Event",
+          "stream": "Claim/claim_1",
+          "seq": 2,
+          "event": "ReviewRequested"
+        }
+      }
+    ]
+  }
+}

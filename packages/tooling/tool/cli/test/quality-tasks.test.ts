@@ -196,6 +196,7 @@ import {
   turboCachePlanArgs,
 } from "@beep/repo-cli/test/SharedInternals";
 import { DEFAULT_GATE_ORDER_SEED, WaveOrder } from "@beep/repo-cli/test/Yeet";
+import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
 import { Percentage } from "@beep/schema/Percentage";
 import { it } from "@beep/test-runner";
@@ -233,6 +234,7 @@ import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Project } from "ts-morph";
+import { currentCheckoutInventory, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { PolicySweepProgram } from "@beep/repo-cli/commands/Quality";
@@ -9285,8 +9287,11 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(CoverageScopeMode.is.affected(resolveCoverageScopeMode([], false))).toBe(true);
     });
 
-    it.effect("gives law-practice-server and repo-cli their own shards across the live workspace", () =>
+    it.effect("gives law-practice-server and repo-cli their own shards across the live workspace", (ctx) =>
       Effect.gen(function* () {
+        // The plan is read from the live workspace; a checkout without the law-practice server skips.
+        const inventory = yield* currentCheckoutInventory;
+        skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject("@beep/law-practice-server")]);
         const repoRoot = yield* findRepoRoot();
         const owners = yield* workspaceCoverageScopeOwners(repoRoot);
         const packageNames = pipe(

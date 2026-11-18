@@ -1,0 +1,204 @@
+[
+  {
+    "_tag": "ClaimAsserted",
+    "org": "org_acme",
+    "proposition": {
+      "_tag": "HasIdentifier",
+      "party": "party_dana",
+      "scheme": "email",
+      "value": "dana@acme.test"
+    },
+    "signals": [
+      {
+        "source": "mailbox:intake",
+        "excerpt": "From: Dana Smith <dana@acme.test>"
+      },
+      {
+        "source": "crm",
+        "excerpt": "dana@acme.test on file"
+      }
+    ],
+    "provenance": {
+      "root": {
+        "_tag": "Human",
+        "principal": "p_intake"
+      },
+      "onBehalfOf": "p_intake",
+      "grants": [
+        {
+          "grant": "g_intake",
+          "delegation": null
+        },
+        {
+          "grant": "g_intake_propose",
+          "delegation": null
+        }
+      ],
+      "chain": []
+    }
+  },
+  {
+    "_tag": "ReviewRequested",
+    "run": "review:claim_1:1",
+    "org": "org_acme",
+    "proposition": {
+      "_tag": "HasIdentifier",
+      "party": "party_dana",
+      "scheme": "email",
+      "value": "dana@acme.test"
+    },
+    "signals": [
+      {
+        "source": "mailbox:intake",
+        "excerpt": "From: Dana Smith <dana@acme.test>"
+      },
+      {
+        "source": "crm",
+        "excerpt": "dana@acme.test on file"
+      }
+    ],
+    "evidenceRevision": 1,
+    "provenance": {
+      "root": {
+        "_tag": "Human",
+        "principal": "p_intake"
+      },
+      "onBehalfOf": "p_intake",
+      "grants": [
+        {
+          "grant": "g_intake",
+          "delegation": null
+        },
+        {
+          "grant": "g_intake_propose",
+          "delegation": null
+        }
+      ],
+      "chain": []
+    }
+  },
+  {
+    "_tag": "EvidenceAdded",
+    "signals": [
+      {
+        "source": "phone",
+        "excerpt": "confirmed by phone"
+      }
+    ],
+    "revision": 2,
+    "provenance": {
+      "root": {
+        "_tag": "Human",
+        "principal": "p_intake"
+      },
+      "onBehalfOf": "p_intake",
+      "grants": [
+        {
+          "grant": "g_intake",
+          "delegation": null
+        },
+        {
+          "grant": "g_intake_propose",
+          "delegation": null
+        }
+      ],
+      "chain": []
+    }
+  },
+  {
+    "_tag": "DispositionProposed",
+    "disposition": "accept",
+    "rationale": "three sources agree",
+    "run": "review:claim_1:1",
+    "evidenceRevision": 2,
+    "digest": "pdf3524c",
+    "provenance": {
+      "root": {
+        "_tag": "Agent",
+        "run": "review:claim_1:1",
+        "accountable": "p_intake"
+      },
+      "onBehalfOf": "p_intake",
+      "grants": [
+        {
+          "grant": "g_intake_propose",
+          "delegation": "dlg:review:claim_1:1"
+        }
+      ],
+      "chain": [
+        {
+          "by": {
+            "_tag": "Agent",
+            "run": "review:claim_1:1"
+          },
+          "cause": {
+            "_tag": "SagaStep",
+            "saga": "ReviewAssist",
+            "key": "review:claim_1:1",
+            "step": "propose"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "_tag": "ProposalApproved",
+    "approval": "approval_1",
+    "run": "review:claim_1:1",
+    "digest": "pdf3524c",
+    "evidenceRevision": 2,
+    "outcome": "accepted",
+    "proposition": {
+      "_tag": "HasIdentifier",
+      "party": "party_dana",
+      "scheme": "email",
+      "value": "dana@acme.test"
+    },
+    "corroboration": 3,
+    "provenance": {
+      "root": {
+        "_tag": "Human",
+        "principal": "p_rev"
+      },
+      "onBehalfOf": "p_rev",
+      "grants": [
+        {
+          "grant": "g_rev",
+          "delegation": null
+        }
+      ],
+      "chain": []
+    }
+  },
+  {
+    "_tag": "MergeRefused",
+    "reason": "vetoed:not-registered",
+    "provenance": {
+      "root": {
+        "_tag": "Human",
+        "principal": "p_rev"
+      },
+      "onBehalfOf": "p_rev",
+      "grants": [
+        {
+          "grant": "g_rev",
+          "delegation": null
+        }
+      ],
+      "chain": [
+        {
+          "by": {
+            "_tag": "Process",
+            "process": "MergeOnSameParty"
+          },
+          "cause": {
+            "_tag": "Event",
+            "stream": "Claim/claim_1",
+            "seq": 5,
+            "event": "ProposalApproved"
+          }
+        }
+      ]
+    }
+  }
+]

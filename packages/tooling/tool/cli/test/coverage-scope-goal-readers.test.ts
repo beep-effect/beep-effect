@@ -4,6 +4,7 @@ import {
   planCoverageAffectedScope,
   workspaceCoverageScopeOwners,
 } from "@beep/repo-cli/test/Quality";
+import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import * as NodeServices from "@effect/platform-node/NodeServices";
@@ -16,6 +17,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { currentCheckoutInventory, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 
 // D-cov (goals/goal-closeout-hosted-verification): a goal or exploration path selects coverage
 // owners only through the ROUT-03 registry `ciGoalDataConsumers`, and a packet document
@@ -158,40 +160,47 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("live workspace goal rea
     })
   );
 
-  it.effect("finds every registry consumer as a live owner with a coverage script", () =>
-    Effect.gen(function* () {
-      const repoRoot = yield* findRepoRoot();
-      const workspace = yield* workspaceCoverageScopeOwners(repoRoot);
-      const consumers = pipe(
-        ciGoalDataConsumers,
-        A.flatMap((row) => row.consumers),
-        A.dedupe,
-        A.sort(Order.String)
-      );
-      const measurable = A.filter(consumers, (name) =>
-        A.some(workspace, (entry) => entry.packageName === name && entry.hasCoverage)
-      );
-      expect(measurable).toEqual(consumers);
-    })
+  // A consumer the checkout lacks (a fork or trimmed lane removed it) is skipped by name; a present
+  // one must be a live owner with a coverage script, wherever it lives.
+  const registryConsumers = pipe(
+    ciGoalDataConsumers,
+    A.flatMap((row) => row.consumers),
+    A.dedupe,
+    A.sort(Order.String)
   );
+  for (const name of registryConsumers) {
+    it.effect(`finds registry consumer ${name} as a live owner with a coverage script`, (ctx) =>
+      Effect.gen(function* () {
+        const inventory = yield* currentCheckoutInventory;
+        skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject(name)]);
+        const repoRoot = yield* findRepoRoot();
+        const workspace = yield* workspaceCoverageScopeOwners(repoRoot);
+        expect(
+          A.some(workspace, (entry) => entry.packageName === name && entry.hasCoverage),
+          name
+        ).toBe(true);
+      })
+    );
+  }
 
-  it.effect("places every synthetic owner above at a live package directory", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      // Canonical, as workspace discovery resolves member containment against the real root.
-      const found = yield* findRepoRoot();
-      const repoRoot = yield* fs.realPath(found);
-      const workspace = yield* workspaceCoverageScopeOwners(repoRoot);
-      const registryOwners = A.filter(owners, (entry) => entry.packageName !== "@beep/b");
-      for (const entry of registryOwners) {
+  for (const entry of A.filter(owners, (owner) => owner.packageName !== "@beep/b")) {
+    it.effect(`places synthetic owner ${entry.packageName} at its live package directory`, (ctx) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const inventory = yield* currentCheckoutInventory;
+        skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject(entry.packageName)]);
+        // Canonical, as workspace discovery resolves member containment against the real root.
+        const found = yield* findRepoRoot();
+        const repoRoot = yield* fs.realPath(found);
+        const workspace = yield* workspaceCoverageScopeOwners(repoRoot);
         const manifest = yield* fs.exists(path.join(repoRoot, entry.packagePath, "package.json"));
         expect(manifest, entry.packagePath).toBe(true);
         expect(
           A.some(workspace, (live) => live.packageName === entry.packageName && live.packagePath === entry.packagePath),
           entry.packageName
         ).toBe(true);
-      }
-    })
-  );
+      })
+    );
+  }
 });

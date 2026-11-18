@@ -1,0 +1,35 @@
+{
+  "name": "@proto/conformance",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./Conformance.cluster": "./src/Conformance.cluster.ts",
+    "./Conformance.descriptor": "./src/Conformance.descriptor.ts",
+    "./TwoRunners.model": "./src/TwoRunners.model.ts"
+  },
+  "scripts": {
+    "conformance": "vitest run --config vitest.config.ts",
+    "test": "vitest run --config vitest.memory.config.ts"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@proto/conformance-upstream": "workspace:*",
+    "@proto/kernel": "workspace:*",
+    "effect": "4.1.4"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "4.1.4",
+    "@effect/vitest": "4.1.4",
+    "@proto/authority-host": "workspace:*",
+    "@proto/party-contract": "workspace:*",
+    "@proto/party-host": "workspace:*",
+    "@proto/party-model": "workspace:*",
+    "@proto/runs-contract": "workspace:*",
+    "@proto/runs-host": "workspace:*",
+    "@proto/tooling": "workspace:*",
+    "alchemy": "2.0.0-beta.87",
+    "vitest": "5.0.4"
+  }
+}

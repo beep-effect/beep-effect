@@ -1,0 +1,4 @@
+[1/2 ✓1 ✗0] ✓ test/Domain/CommitVersionCheck.test.ts > Domain commit version check, two runners on one instance > a commit on a version that moved since its decide is retried, and no write is lost (130ms)
+[2/2 ✓1 ✗1] ✗ test/Domain/CommitVersionCheck.test.ts > Domain commit version check, two runners on one instance > a commit on an instance a decision holds waits for the decision, then decides again (408ms)
+  AssertionError: expected [ "Deposited 100", "Withdrawn 100" ] to equal [ "Deposited 100" ]
+Tests: 1 failed | 1 passed (1 files, 596ms)

@@ -815,9 +815,20 @@ const lawsPrivateHomePathsCommand = Command.make(
         ["scanned_files", summary.scannedFiles],
         ["skipped_binary_files", summary.skippedBinaryFiles],
         ["exempt_files", summary.exemptFiles],
+        ["skipped_exemptions", A.length(summary.skippedExemptions)],
       ],
       findings: A.map(summary.findings, formatPrivateHomePathFinding),
     });
+    if (!json) {
+      yield* Effect.forEach(
+        summary.skippedExemptions,
+        (file) =>
+          Console.log(
+            `[effect-governance-private-home-paths] skipped ${file}: its packet is absent from this checkout`
+          ),
+        { concurrency: 1, discard: true }
+      );
+    }
 
     if (summary.strictFailure) {
       return yield* failWithReportedExit("effect-governance-private-home-paths: check failed.");

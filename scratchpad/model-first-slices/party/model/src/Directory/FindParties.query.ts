@@ -1,12 +1,13 @@
 import * as Domain from "@alchemy.run/domain";
-import "@proto/kernel/Audience";
+import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
-import * as S from "effect/Schema";
+import { DirectoryRow, FindPartiesInput } from "@proto/party-contract/Directory/FindParties.read";
 import { PartyDirectory } from "./PartyDirectory.projection.ts";
-import { DirectoryRow } from "./PartyDirectory.store.ts";
 
 /**
- * Search the caller's org for parties by name, a page at a time.
+ * Search an org for parties by name, a page at a time. Declared from the
+ * contract's parts; it waits on this model's own projection, which the
+ * contract's `FindPartiesRead` cannot name.
  *
  * @category queries
  * @since 0.0.0
@@ -14,11 +15,12 @@ import { DirectoryRow } from "./PartyDirectory.store.ts";
 export class FindParties extends Domain.Query(
   "FindParties",
   {
-    input: { text: S.String },
+    input: FindPartiesInput,
     success: DirectoryRow,
     paged: true,
     waitsFor: [PartyDirectory],
     middleware: [Session],
+    rejects: [MissingGrant],
   },
-  { description: "Search the caller's organization for parties by name.", audience: "reviewer" },
+  { description: "Search an organization for parties by name." },
 ) {}

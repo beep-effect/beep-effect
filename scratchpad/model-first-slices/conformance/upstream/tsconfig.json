@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  // Upstream's Domain conformance model, app and cases, ported from alchemy at 33c10dd (2.0.0-beta.87)
+  // and adapted to this repository's Effect rules, with upstream's routes, case names and assertions
+  // unchanged. Like every other project they take the full rule set from the monorepo's base config.
+  // The conformance package reaches these files through this package's exports, so its own check
+  // does not report them; this project does.
+  "include": [],
+  "files": ["src/app.ts", "src/conformance.ts", "src/model.ts"]
+}

@@ -1,0 +1,31 @@
+{
+  "stream": "AgentRun/run_1~1",
+  "version": 2,
+  "events": [
+    {
+      "_tag": "BudgetReserved",
+      "session": "session_1",
+      "reservation": "r2",
+      "units": 30,
+      "remaining": 58,
+      "provenance": {
+        "root": {
+          "_tag": "Agent",
+          "run": "run_1~1",
+          "accountable": "p_req"
+        },
+        "onBehalfOf": "p_req",
+        "grants": [
+          {
+            "grant": "g_req",
+            "delegation": "dlg:run_1~1"
+          }
+        ],
+        "chain": []
+      }
+    }
+  ],
+  "reply": {
+    "remaining": 58
+  }
+}

@@ -12,8 +12,8 @@
   "packetPath": "goals/canonical-proof-reconciliation",
   "lifecycle": "paused",
   "mission": "Bring the CLI accepted proof and the eight live slices onto the amended grammar: manifest + architecture-lab first, then one codemod PR per slice proven by an audit baseline delta",
-  "statusNote": "Paused 2026-11-13 by operator ruling (finish board): It is blocked on a prerequisite and has made no progress in months, so it should not count as active. Resume with `bun run beep goals set-status canonical-proof-reconciliation active` when it is picked up. Before the ruling: Graduated 2026-08-30 from explorations/v3-consistency-audit; waits for architecture/slice-audit (audit command, baseline and required check on main) before any codemod PR.",
-  "blockedBy": ["goals/slice-topology-audit"],
+  "statusNote": "Paused. Since 2026-11-17 it waits on goals/model-first-standard, which superseded goals/slice-topology-audit and now provides architecture/slice-audit (explorations/model-first-slices/DECISIONS.md D65). Its mission was written for the seven-package grammar and must be re-scoped against the four-package standard before it resumes; see decisions/2026-11-17-blocker-retargeted-to-model-first-standard.md. History: paused 2026-11-13 by operator ruling (finish board); graduated 2026-08-30 from explorations/v3-consistency-audit.",
+  "blockedBy": ["goals/model-first-standard"],
   "executionCapable": true,
   "reflectionRequired": true,
   "provenance": {

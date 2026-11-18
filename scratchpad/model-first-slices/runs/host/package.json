@@ -1,0 +1,37 @@
+{
+  "name": "@proto/runs-host",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./Authority.adapter": "./src/Authority.adapter.ts",
+    "./Host": "./src/Host.ts",
+    "./Inbox/ClaimDecided.inbox": "./src/Inbox/ClaimDecided.inbox.ts",
+    "./Inbox/Inbox.store": "./src/Inbox/Inbox.store.ts",
+    "./Lineage": "./src/Lineage.ts",
+    "./Runs.cluster": "./src/Runs.cluster.ts",
+    "./Runs.descriptor": "./src/Runs.descriptor.ts",
+    "./RunsGateway.adapter": "./src/RunsGateway.adapter.ts"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@effect/sql-pg": "4.1.4",
+    "@proto/authority-contract": "workspace:*",
+    "@proto/kernel": "workspace:*",
+    "@proto/party-contract": "workspace:*",
+    "@proto/runs-contract": "workspace:*",
+    "@proto/runs-model": "workspace:*",
+    "effect": "4.1.4"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "4.1.4",
+    "@effect/vitest": "4.1.4",
+    "@proto/authority-host": "workspace:*",
+    "@proto/authority-model": "workspace:*",
+    "vitest": "5.0.4"
+  }
+}

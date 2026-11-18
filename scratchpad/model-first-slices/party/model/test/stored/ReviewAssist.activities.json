@@ -1,0 +1,77 @@
+{
+  "reserve": {
+    "_tag": "Success",
+    "value": {
+      "run": "review:claim_1:1",
+      "provenance": {
+        "root": {
+          "_tag": "Agent",
+          "run": "review:claim_1:1",
+          "accountable": "p_intake"
+        },
+        "onBehalfOf": "p_intake",
+        "grants": [
+          {
+            "grant": "g_intake_propose",
+            "delegation": "dlg:review:claim_1:1"
+          }
+        ],
+        "chain": []
+      }
+    }
+  },
+  "assess": {
+    "_tag": "Success",
+    "value": {
+      "assessment": {
+        "disposition": "accept",
+        "rationale": "two sources agree"
+      },
+      "usage": {
+        "units": 12
+      },
+      "receipt": {
+        "idempotencyKey": "review:claim_1:1:assess",
+        "promptVersion": "review-v1",
+        "model": "fixture"
+      }
+    }
+  },
+  "settle": {
+    "_tag": "Success",
+    "value": {
+      "run": "review:claim_1:1",
+      "provenance": {
+        "root": {
+          "_tag": "Agent",
+          "run": "review:claim_1:1",
+          "accountable": "p_intake"
+        },
+        "onBehalfOf": "p_intake",
+        "grants": [
+          {
+            "grant": "g_intake_propose",
+            "delegation": "dlg:review:claim_1:1"
+          }
+        ],
+        "chain": []
+      }
+    }
+  },
+  "step": {
+    "_tag": "Failure",
+    "cause": [
+      {
+        "_tag": "Fail",
+        "error": {
+          "_tag": "RunEnded",
+          "status": "completed"
+        }
+      }
+    ]
+  },
+  "propose": {
+    "_tag": "Success",
+    "value": "readmission:lapsed"
+  }
+}

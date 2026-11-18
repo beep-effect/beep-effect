@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "model-first-slices",
+    "title": "Model-First Slices",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [
+      "WAITING on upstream: retiring @beep/alchemy-postgres (D5, D53) needs the fixes in an Alchemy release; the pull request for upstream issue 3490 is held for a maintainer's answer (D62).",
+      "DEFERRED: browser session credentials, tenant and cache clearing; carried by the gated candidate product-slice-model-first in MAP.md."
+    ],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/model-first-standard",
+        "goals/effect-cluster-host",
+        "goals/authority-context"
+      ],
+      "docs": [
+        "standards/ARCHITECTURE.md",
+        "explorations/alchemy-domain-adoption/DECISIONS.md"
+      ],
+      "supersededBy": null
+    },
+    "created": "2026-11-13",
+    "updated": "2026-11-17"
+  }
+}

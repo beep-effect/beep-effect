@@ -176,6 +176,20 @@ export * from "./CiShardOverflow.ts";
  */
 export * from "./CiShardOverflowPreflight.ts";
 /**
+ * Public Test Unit timing projection schemas (MEAS-06).
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./CiUnitTimings.schemas.ts";
+/**
+ * Public Test Unit timing projection (`beep ci unit-timings`, MEAS-06).
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiUnitTimings.ts";
+/**
  * Public per-check cost ledger schemas.
  *
  * @category models

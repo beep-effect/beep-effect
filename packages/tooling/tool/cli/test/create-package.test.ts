@@ -2,6 +2,7 @@ import { Jsonc } from "@beep/jsonc/Jsonc";
 import { CI_LANE_PARTITIONS, proveCiLanePartition } from "@beep/repo-cli/commands/Ci";
 import { CreatePackageScripts, createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
 import { syncTsconfigAtRoot, TsconfigSyncRunOptionsCheck } from "@beep/repo-cli/commands/TsconfigSync";
+import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { FsUtilsLive, findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -14,14 +15,17 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
+import { currentCheckoutInventory, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
+const OIP_WEB = "@beep/oip-web";
 
 const CommandPlatformLayer = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const CommandTestLayer = Layer.mergeAll(
@@ -621,13 +625,17 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
 
     it.effect(
       "keeps the checked-in OIP plugin profile aligned with the canonical root profile",
-      () =>
+      (ctx) =>
         Effect.gen(function* () {
           const path = yield* Path.Path;
+          // The OIP app is read from wherever @beep/oip-web lives; a checkout without it skips.
+          const inventory = yield* currentCheckoutInventory;
+          skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject(OIP_WEB)]);
+          const oipDirectory = yield* Effect.fromOption(HashMap.get(inventory.workspaces, OIP_WEB));
           const repoRoot = yield* findRepoRoot();
           const readJsoncFile3 = yield* readJsoncFile(path.join(repoRoot, "tsconfig.base.json"));
           const rootConfig = yield* decodeTypeScriptPluginsConfig(readJsoncFile3);
-          const readJsoncFile4 = yield* readJsoncFile(path.join(repoRoot, "apps", "oip-web", "tsconfig.json"));
+          const readJsoncFile4 = yield* readJsoncFile(path.join(repoRoot, oipDirectory, "tsconfig.json"));
           const oipConfig = yield* decodeTypeScriptPluginsConfig(readJsoncFile4);
 
           expect(oipConfig.compilerOptions.plugins).toEqual(

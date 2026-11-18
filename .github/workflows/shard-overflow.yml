@@ -160,6 +160,26 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
+      # Per-package and per-file timings from the shard's Vitest reports, on every
+      # event (goals/certainty-scorecard MEAS-06); the raw reports above upload only
+      # on failure. A measurement: it never decides the job, so it continues on error.
+      - name: Project Unit test timings
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        env:
+          PARTITION: ${{ inputs.partition }}
+        run: bun run beep ci unit-timings --partition "$PARTITION" --coverage-output ".beep/ci-coverage/$PARTITION" --out ".beep/ci-unit-timings/$PARTITION.json"
+
+      - name: Upload Unit test timings
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: unit-timings-${{ github.run_id }}-${{ github.run_attempt }}-${{ inputs.partition }}
+          path: .beep/ci-unit-timings/${{ inputs.partition }}.json
+          retention-days: 7
+          if-no-files-found: warn
+
       - name: Append Turbo summary
         if: steps.lane-gate.outputs.should_run == 'true' && always()
         run: bun run beep ci append-turbo-summary

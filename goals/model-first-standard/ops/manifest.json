@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "model-first-standard",
+    "packetId": "goal-packet/v1:6a4ec1fd35a800c838feff4506c22abeb3a0c31b4b8ae856a0a3ef361b4e5d41",
+    "title": "Model-First Standard",
+    "status": "active",
+    "created": "2026-11-17",
+    "updated": "2026-11-17",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/model-first-standard",
+  "lifecycle": "active",
+  "mission": "Amend the architecture standard to the model-first four-package slice, retarget beep architecture to it, and enforce the grammar with checkers under a ratchet",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/model-first-slices",
+    "graduated": "2026-11-17"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/model-first-standard/README.md",
+    "goals/model-first-standard/SPEC.md",
+    "goals/model-first-standard/PLAN.md",
+    "goals/model-first-standard/GOAL.md",
+    "goals/model-first-standard/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/model-first-standard/GOAL.md"
+    }
+  ],
+  "provides": [
+    "architecture/model-first-standard",
+    "architecture/four-package-scaffolder",
+    "architecture/slice-audit"
+  ],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/model-first-standard/GOAL.md)\" -le 4000",
+    "jq . goals/model-first-standard/ops/manifest.json",
+    "rg -n \"model-first-standard|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/model-first-standard",
+    "git diff --check -- goals/model-first-standard",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

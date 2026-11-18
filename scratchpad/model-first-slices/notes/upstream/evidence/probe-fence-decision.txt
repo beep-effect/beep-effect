@@ -1,0 +1,9 @@
+[1/1 ✓1 ✗0] ✓ test/Domain/ProbeFenceDecision.test.ts.txt > probe > a decision whose primary commit is fenced (3.0s)
+Tests: 0 failed | 1 passed (1 files, 3.1s)
+PROBE send exit: {"_id":"Exit","_tag":"Failure","cause":{"_id":"Cause","reasons":[{"_tag":"Die","defect":{}}]}}
+PROBE right after: a=["Deposited 100"] a.meta={"state":{"balance":100,"amounts":[100]},"version":1,"held":true} b.meta={"state":null,"version":0,"held":true} committers a=[0,0] b=[1]
+PROBE after 3 s: a=["Deposited 100"] a.meta={"state":{"balance":100,"amounts":[100]},"version":1,"held":true} b.meta={"state":null,"version":0,"held":true} committers a=[0,0] b=[1]
+PROBE same command id again: {"_id":"Exit","_tag":"Success","value":{"commits":[{"stream":"Account/probe-from","version":2},{"stream":"Account/probe-to","version":1}],"events":[{"_tag":"TransferSent","to":"probe-to","amount":30},{"_tag":"TransferReceived","from":"probe-from","amount":30}]}}
+PROBE next deposit on a: {"_id":"Exit","_tag":"Success","value":{"stream":"Account/probe-from","version":3,"commits":[{"stream":"Account/probe-from","version":3}],"events":[{"_tag":"Deposited","amount":1}]}}
+PROBE end: a=["Deposited 100","TransferSent 30","Deposited 1"] a.meta={"state":{"balance":71,"amounts":[100,-30,1]},"version":3} b.meta={"state":{"balance":30,"amounts":[30]},"version":1} committers a=[0,0,1,1] b=[1,1]
+PROBE balances a={"balance":71,"amounts":[100,-30,1]} b={"balance":30,"amounts":[30]}

@@ -3,13 +3,11 @@ import * as Cluster from "@alchemy.run/effect-cluster";
 import * as Alchemy from "alchemy";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import PartyMailboxPollerLive from "./src/cluster/PartyMailboxPoller.ts";
-import PracticeApi from "./src/PracticeApi.ts";
+import PracticeFront from "./generated/Practice.front.ts";
 
-/**
- * The practice deployment: the Party model and its mailbox poller on a local
- * Docker swarm. Type-checked only; never deployed by the prototype.
- */
+// The conformance stage (D37): Postgres, a swarm pool of two runners hosting every composed
+// context, and one front. Deploy with `bun run deploy` (stage mfs-conformance, local state only),
+// tear down with `bun run destroy`. Run the CLI on Bun: under Node it fails importing this file.
 export default Alchemy.Stack(
   "Practice",
   {
@@ -17,9 +15,7 @@ export default Alchemy.Stack(
     state: Alchemy.localState(),
   },
   Effect.gen(function* () {
-    // Brings the model's entity, the pool and the database with it.
-    const api = yield* PracticeApi;
-    return { api: api.name };
-    // Nothing calls a singleton; its Layer is provided to the stack.
-  }).pipe(Effect.provide(PartyMailboxPollerLive)),
+    const front = yield* PracticeFront;
+    return { front: front.name };
+  }),
 );

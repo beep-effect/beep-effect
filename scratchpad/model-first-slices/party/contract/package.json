@@ -1,0 +1,55 @@
+{
+  "name": "@proto/party-contract",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./AgentApi.contract": "./src/AgentApi.contract.ts",
+    "./Claim/AcceptClaim.command": "./src/Claim/AcceptClaim.command.ts",
+    "./Claim/AddEvidence.command": "./src/Claim/AddEvidence.command.ts",
+    "./Claim/Approval.id": "./src/Claim/Approval.id.ts",
+    "./Claim/ApproveProposal.command": "./src/Claim/ApproveProposal.command.ts",
+    "./Claim/AssertClaim.command": "./src/Claim/AssertClaim.command.ts",
+    "./Claim/Claim.id": "./src/Claim/Claim.id.ts",
+    "./Claim/ClaimNotPending.rejection": "./src/Claim/ClaimNotPending.rejection.ts",
+    "./Claim/ClaimReview.read": "./src/Claim/ClaimReview.read.ts",
+    "./Claim/DecisionScope": "./src/Claim/DecisionScope.ts",
+    "./Claim/ProposalDigest": "./src/Claim/ProposalDigest.ts",
+    "./Claim/ProposeDisposition.command": "./src/Claim/ProposeDisposition.command.ts",
+    "./Claim/RecordMergeRefused.command": "./src/Claim/RecordMergeRefused.command.ts",
+    "./Claim/RecordReviewRefused.command": "./src/Claim/RecordReviewRefused.command.ts",
+    "./Claim/RequestReview.command": "./src/Claim/RequestReview.command.ts",
+    "./Claim/RetractClaim.command": "./src/Claim/RetractClaim.command.ts",
+    "./Claim/ReviewRequested.event": "./src/Claim/ReviewRequested.event.ts",
+    "./Directory/FindParties.read": "./src/Directory/FindParties.read.ts",
+    "./Disposition": "./src/Disposition.ts",
+    "./Evidence": "./src/Evidence.ts",
+    "./Facts/ClaimDecided.fact": "./src/Facts/ClaimDecided.fact.ts",
+    "./Facts/PartyFacts.gateway": "./src/Facts/PartyFacts.gateway.ts",
+    "./IntakeApi.contract": "./src/IntakeApi.contract.ts",
+    "./Party.capabilities": "./src/Party.capabilities.ts",
+    "./Party.catalog": "./src/Party.catalog.ts",
+    "./Party/EffectiveParty.read": "./src/Party/EffectiveParty.read.ts",
+    "./Party/MergeParties.command": "./src/Party/MergeParties.command.ts",
+    "./Party/Party.id": "./src/Party/Party.id.ts",
+    "./Party/RegisterParty.command": "./src/Party/RegisterParty.command.ts",
+    "./Proposition": "./src/Proposition.ts",
+    "./ReviewerApi.contract": "./src/ReviewerApi.contract.ts"
+  },
+  "scripts": {
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@alchemy.run/domain": "2.0.0-beta.87",
+    "@proto/contract-kit": "workspace:*",
+    "@proto/kernel": "workspace:*",
+    "effect": "4.1.4"
+  },
+  "devDependencies": {
+    "@effect/platform-node": "4.1.4",
+    "@effect/vitest": "4.1.4",
+    "@proto/tooling": "workspace:*",
+    "vitest": "5.0.4"
+  }
+}

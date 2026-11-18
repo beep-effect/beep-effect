@@ -1,22 +1,55 @@
 {
-  "name": "@proto/party",
+  "name": "@proto/party-model",
   "version": "0.0.0",
   "private": true,
   "type": "module",
   "sideEffects": false,
   "exports": {
-    "./*": "./src/*.ts"
+    "./AgentApi.api": "./src/AgentApi.api.ts",
+    "./Authority.external": "./src/Authority.external.ts",
+    "./Claim/Claim.aggregate": "./src/Claim/Claim.aggregate.ts",
+    "./Claim/Claim.rules": "./src/Claim/Claim.rules.ts",
+    "./Claim/ClaimReview.handler": "./src/Claim/ClaimReview.handler.ts",
+    "./Claim/ClaimReview.view": "./src/Claim/ClaimReview.view.ts",
+    "./Directory/FindParties.query": "./src/Directory/FindParties.query.ts",
+    "./Directory/PartyDirectory.handler": "./src/Directory/PartyDirectory.handler.ts",
+    "./Directory/PartyDirectory.projection": "./src/Directory/PartyDirectory.projection.ts",
+    "./Directory/PartyDirectory.store": "./src/Directory/PartyDirectory.store.ts",
+    "./Directory/RebuildDirectory": "./src/Directory/RebuildDirectory.ts",
+    "./Evidence/ContactSource.external": "./src/Evidence/ContactSource.external.ts",
+    "./Facts/ClaimDecisions.handler": "./src/Facts/ClaimDecisions.handler.ts",
+    "./Facts/ClaimDecisions.projection": "./src/Facts/ClaimDecisions.projection.ts",
+    "./Facts/PartyFacts.stream": "./src/Facts/PartyFacts.stream.ts",
+    "./Facts/PartyFacts2.stream": "./src/Facts/PartyFacts2.stream.ts",
+    "./Facts/StreamPins": "./src/Facts/StreamPins.ts",
+    "./IntakeApi.api": "./src/IntakeApi.api.ts",
+    "./Party.handlers": "./src/Party.handlers.ts",
+    "./Party.model": "./src/Party.model.ts",
+    "./Party.ports": "./src/Party.ports.ts",
+    "./Party/EffectiveParty.view": "./src/Party/EffectiveParty.view.ts",
+    "./Party/MergeOnSameParty.policy": "./src/Party/MergeOnSameParty.policy.ts",
+    "./Party/Party.aggregate": "./src/Party/Party.aggregate.ts",
+    "./Review/Reasoner.external": "./src/Review/Reasoner.external.ts",
+    "./Review/ReviewAssist.saga": "./src/Review/ReviewAssist.saga.ts",
+    "./Review/ReviewOnRequest.policy": "./src/Review/ReviewOnRequest.policy.ts",
+    "./Review/ReviewPlan": "./src/Review/ReviewPlan.ts",
+    "./Review/ReviewRuns.external": "./src/Review/ReviewRuns.external.ts",
+    "./ReviewerApi.api": "./src/ReviewerApi.api.ts"
   },
   "scripts": {
+    "handlers": "bun scripts/handlers.ts",
     "test": "vitest run"
   },
   "dependencies": {
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@proto/kernel": "workspace:*",
+    "@proto/party-contract": "workspace:*",
     "effect": "4.1.4"
   },
   "devDependencies": {
+    "@effect/platform-node": "4.1.4",
     "@effect/vitest": "4.1.4",
+    "@proto/tooling": "workspace:*",
     "vitest": "5.0.4"
   }
 }
