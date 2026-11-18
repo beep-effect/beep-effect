@@ -28,7 +28,6 @@
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx --bun vitest run",
     "dev": "portless ciops.labs.beep sh -c 'bun --watch src/main.ts'",
-    "evidence:backfill-ab": "bun run scripts/backfill-ab.ts",
     "evidence:kpi": "bun run scripts/generate-kpi-reading.ts --check",
     "evidence:kpi-adoption": "bun run scripts/generate-adoption-table.ts --check",
     "evidence:kpi-adoption:write": "bun run scripts/generate-adoption-table.ts --write",
