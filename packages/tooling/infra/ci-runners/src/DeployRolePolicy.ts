@@ -175,6 +175,162 @@ const withBoundary = { "iam:PermissionsBoundary": fleetBoundaryPolicyArn };
 // Every role of every fleet stage: the boundary also caps personal stages' roles.
 const anyFleetRole = [`arn:aws:iam::${account}:role/beep-fleet-*`, `arn:aws:iam::${account}:role/CiRunners-*`];
 
+const fleetEnvironment = { "aws:ResourceTag/ghr:environment": "beep-fleet-*" };
+const stackOwned = { "aws:ResourceTag/alchemy::stack": "CiRunners" };
+const fleetParameters = `arn:aws:ssm:${region}:${account}:parameter/beep-fleet/*`;
+const instances = `arn:aws:ec2:${region}:${account}:instance/*`;
+
+/**
+ * Why each boundary allow that names `Resource: "*"` needs the wildcard, by
+ * `Sid`. Every one grants read-only actions: the property tests hold the rest
+ * of the ceiling to fleet ARNs and fleet tags.
+ *
+ * **Example** (The EC2 reads)
+ *
+ * ```ts
+ * import { boundaryWildcardReasons } from "@beep/infra-ci-runners/DeployRolePolicy"
+ *
+ * console.log(typeof boundaryWildcardReasons.CeilingEc2Reads) // "string"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const boundaryWildcardReasons: Readonly<Record<string, string>> = {
+  CeilingEc2Reads: "EC2 Describe calls take no resource-level scope.",
+  CeilingListReads: "DescribeParameters, DescribeLogGroups and GetCallerIdentity take no resource-level scope.",
+};
+
+// Each allow is the fleet's own reach, mirroring the deploy role: personal stages are named beep-fleet-<stage>
+// where the composite pins names, and CiRunners-<id>-<stage>-<suffix> (S3: lower case) where Alchemy generates them.
+const fleetCeilingStatements: ReadonlyArray<IAM.PolicyStatement> = [
+  {
+    Sid: "CeilingEc2Reads",
+    Effect: "Allow",
+    Action: ["ec2:DescribeInstances", "ec2:DescribeLaunchTemplateVersions", "ec2:DescribeTags"],
+    Resource: ["*"],
+  },
+  {
+    Sid: "CeilingListReads",
+    Effect: "Allow",
+    Action: ["ssm:DescribeParameters", "logs:DescribeLogGroups", "sts:GetCallerIdentity"],
+    Resource: ["*"],
+  },
+  // A launch creates the instance, its volumes and the EC2 Fleet request, each tagged with the pool's environment.
+  {
+    Sid: "CeilingLaunchTagged",
+    Effect: "Allow",
+    Action: ["ec2:CreateFleet", "ec2:RunInstances"],
+    Resource: [instances, `arn:aws:ec2:${region}:${account}:volume/*`, `arn:aws:ec2:${region}:${account}:fleet/*`],
+    Condition: { StringLike: { "aws:RequestTag/ghr:environment": "beep-fleet-*" } },
+  },
+  // ...only from the stack's own launch templates, subnets and security groups.
+  {
+    Sid: "CeilingLaunchFromStack",
+    Effect: "Allow",
+    Action: ["ec2:CreateFleet", "ec2:RunInstances"],
+    Resource: [
+      `arn:aws:ec2:${region}:${account}:launch-template/*`,
+      `arn:aws:ec2:${region}:${account}:subnet/*`,
+      `arn:aws:ec2:${region}:${account}:security-group/*`,
+    ],
+    Condition: { StringEquals: stackOwned },
+  },
+  // The launch reads the AMI and its snapshots and creates the interface and the Spot request it has no tags for;
+  // the subnet and security group the interface joins are held by CeilingLaunchFromStack.
+  {
+    Sid: "CeilingLaunchInputs",
+    Effect: "Allow",
+    Action: ["ec2:CreateFleet", "ec2:RunInstances"],
+    Resource: [
+      `arn:aws:ec2:${region}::image/*`,
+      `arn:aws:ec2:${region}::snapshot/*`,
+      `arn:aws:ec2:${region}:${account}:network-interface/*`,
+      `arn:aws:ec2:${region}:${account}:spot-instances-request/*`,
+    ],
+  },
+  {
+    Sid: "CeilingTagOnLaunch",
+    Effect: "Allow",
+    Action: ["ec2:CreateTags"],
+    Resource: [instances, `arn:aws:ec2:${region}:${account}:volume/*`, `arn:aws:ec2:${region}:${account}:fleet/*`],
+    Condition: {
+      StringEquals: { "ec2:CreateAction": ["CreateFleet", "RunInstances"] },
+      StringLike: { "aws:RequestTag/ghr:environment": "beep-fleet-*" },
+    },
+  },
+  {
+    Sid: "CeilingFleetInstances",
+    Effect: "Allow",
+    Action: ["ec2:CreateTags", "ec2:DeleteTags", "ec2:TerminateInstances", "ec2:ModifyInstanceMetadataOptions"],
+    Resource: [instances],
+    Condition: { StringLike: fleetEnvironment },
+  },
+  {
+    Sid: "CeilingFleetParameters",
+    Effect: "Allow",
+    Action: [
+      "ssm:AddTagsToResource",
+      "ssm:DeleteParameter",
+      "ssm:GetParameter",
+      "ssm:GetParameters",
+      "ssm:GetParametersByPath",
+      "ssm:PutParameter",
+    ],
+    Resource: [fleetParameters],
+  },
+  // Fleet secrets are SecureStrings under the fleet key or aws/ssm: a key serves the fleet only through SSM and only
+  // for a fleet parameter, whose ARN SSM puts in the encryption context.
+  {
+    Sid: "CeilingKmsThroughFleetParameters",
+    Effect: "Allow",
+    Action: ["kms:Decrypt", "kms:Encrypt", "kms:GenerateDataKey"],
+    Resource: [`arn:aws:kms:${region}:${account}:key/*`],
+    Condition: {
+      StringEquals: { "kms:ViaService": `ssm.${region}.amazonaws.com` },
+      StringLike: { "kms:EncryptionContext:PARAMETER_ARN": fleetParameters },
+    },
+  },
+  {
+    Sid: "CeilingFleetBinaries",
+    Effect: "Allow",
+    Action: ["s3:GetObject", "s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"],
+    Resource: ["arn:aws:s3:::beep-fleet-*-binaries-*/*", "arn:aws:s3:::cirunners-*/*"],
+  },
+  {
+    Sid: "CeilingFleetLogs",
+    Effect: "Allow",
+    Action: ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:DescribeLogStreams", "logs:PutLogEvents"],
+    Resource: [
+      `arn:aws:logs:${region}:${account}:log-group:/beep-fleet/*`,
+      `arn:aws:logs:${region}:${account}:log-group:/aws/lambda/beep-fleet-*`,
+      `arn:aws:logs:${region}:${account}:log-group:/aws/lambda/CiRunners-*`,
+    ],
+  },
+  {
+    Sid: "CeilingFleetQueues",
+    Effect: "Allow",
+    Action: [
+      "sqs:ChangeMessageVisibility",
+      "sqs:DeleteMessage",
+      "sqs:GetQueueAttributes",
+      "sqs:ReceiveMessage",
+      "sqs:SendMessage",
+    ],
+    Resource: [`arn:aws:sqs:${region}:${account}:beep-fleet-*`, `arn:aws:sqs:${region}:${account}:CiRunners-*`],
+  },
+  {
+    Sid: "CeilingFleetFunctions",
+    Effect: "Allow",
+    Action: ["lambda:InvokeFunction"],
+    Resource: [
+      `arn:aws:lambda:${region}:${account}:function:beep-fleet-*`,
+      `arn:aws:lambda:${region}:${account}:function:CiRunners-*`,
+    ],
+  },
+  { Sid: "CeilingPassFleetRoles", Effect: "Allow", Action: ["iam:PassRole"], Resource: anyFleetRole },
+];
+
 /**
  * The permissions boundary of every role the stack creates (runner, Lambda
  * execution, flow logs). A role's permissions are the intersection of its
@@ -183,8 +339,13 @@ const anyFleetRole = [`arn:aws:iam::${account}:role/beep-fleet-*`, `arn:aws:iam:
  *
  * **Details**
  *
- * The allow statement is the ceiling: exactly the services and actions the
- * fleet's own policies use. The deny statements close the escalation paths
+ * The allow statements are the ceiling, no wider than the deploy role's own
+ * reach: the fleet's SSM parameters, queues, functions, log groups and
+ * binaries bucket by ARN, KMS only through SSM for a fleet parameter, and EC2
+ * mutations only on instances tagged with a fleet `ghr:environment`,
+ * launched from the stack's own launch templates, subnets and security
+ * groups. Only the reads in {@link boundaryWildcardReasons} name
+ * `Resource: "*"`. There is no snapshot, image or volume-attribute grant. The deny statements close the escalation paths
  * explicitly: every IAM write but passing a fleet role, assuming or passing
  * any role outside the fleet, and every Organizations, account and billing
  * action. The IMDS deny keeps a runner from re-enabling the metadata endpoint
@@ -204,40 +365,7 @@ const anyFleetRole = [`arn:aws:iam::${account}:role/beep-fleet-*`, `arn:aws:iam:
 export const fleetBoundaryDocument: IAM.PolicyDocument = {
   Version: "2012-10-17",
   Statement: [
-    {
-      Sid: "FleetCeiling",
-      Effect: "Allow",
-      Action: [
-        "ec2:*",
-        "sqs:ChangeMessageVisibility",
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes",
-        "sqs:ReceiveMessage",
-        "sqs:SendMessage",
-        "ssm:AddTagsToResource",
-        "ssm:DeleteParameter",
-        "ssm:DescribeParameters",
-        "ssm:GetParameter",
-        "ssm:GetParametersByPath",
-        "ssm:PutParameter",
-        "s3:GetObject",
-        "s3:GetObjectTagging",
-        "s3:PutObject",
-        "s3:PutObjectTagging",
-        "kms:Decrypt",
-        "kms:Encrypt",
-        "kms:GenerateDataKey",
-        "logs:CreateLogGroup",
-        "logs:CreateLogStream",
-        "logs:DescribeLogGroups",
-        "logs:DescribeLogStreams",
-        "logs:PutLogEvents",
-        "lambda:InvokeFunction",
-        "iam:PassRole",
-        "sts:GetCallerIdentity",
-      ],
-      Resource: ["*"],
-    },
+    ...fleetCeilingStatements,
     {
       Sid: "DenyIamWrites",
       Effect: "Deny",
@@ -413,8 +541,8 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
     ],
     Resource: [fleetFunctions],
   },
-  // An event-source mapping has no ARN until it exists: its create is scoped by the target function and the
-  // ownership tags Alchemy stamps on it; every later write needs those tags on the mapping itself.
+  // Every mapping write names a fleet function by lambda:FunctionArn (the Service Authorization Reference lists the
+  // key on Create, Update and Delete); a later write also needs the ownership tags on the mapping.
   {
     Sid: "LambdaMappingsCreate",
     Effect: "Allow",
@@ -422,12 +550,18 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
     Resource: ["*"],
     Condition: { ArnLike: { "lambda:FunctionArn": fleetFunctions }, StringEquals: requested },
   },
+  // CreateEventSourceMapping with Tags depends on lambda:TagResource, and tag on create carries no create-action
+  // key, so this is the narrowest tag grant Alchemy's create needs: only the three ownership keys, with the stack's
+  // values. A tag put on a foreign mapping grants no write on it: Update and Delete also need a fleet function.
   {
     Sid: "LambdaMappingsTagOnCreate",
     Effect: "Allow",
     Action: ["lambda:TagResource"],
     Resource: [`arn:aws:lambda:${region}:${account}:event-source-mapping:*`],
-    Condition: { StringEquals: requested },
+    Condition: {
+      StringEquals: requested,
+      "ForAllValues:StringEquals": { "aws:TagKeys": ["alchemy::stack", "alchemy::stage", "alchemy::id"] },
+    },
   },
   {
     Sid: "LambdaMappingsRead",
@@ -440,7 +574,7 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
     Effect: "Allow",
     Action: ["lambda:UpdateEventSourceMapping", "lambda:DeleteEventSourceMapping"],
     Resource: [`arn:aws:lambda:${region}:${account}:event-source-mapping:*`],
-    Condition: { StringEquals: owned },
+    Condition: { ArnLike: { "lambda:FunctionArn": fleetFunctions }, StringEquals: owned },
   },
   {
     Sid: "SqsFleetQueues",

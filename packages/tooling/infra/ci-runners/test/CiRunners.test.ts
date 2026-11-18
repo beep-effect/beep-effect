@@ -4,6 +4,11 @@ import {
   WebhookRuntimeConfig,
 } from "@beep/alchemy-github-runners/RunnerRuntime.models";
 import { program } from "@beep/infra-ci-runners/CiRunners";
+import {
+  deployRolePolicy,
+  fleetBoundaryDocument,
+  fleetBoundaryPolicyArn,
+} from "@beep/infra-ci-runners/DeployRolePolicy";
 import { touchesLiveFleet } from "@beep/infra-ci-runners/Names";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -17,6 +22,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { fakeAppKeyBase64, fakeWebhookSecret } from "./support/Credentials.ts";
 import * as Fakes from "./support/Fakes.ts";
+import type * as IAM from "@alchemy.run/aws/IAM";
 import type { Recorder } from "./support/Fakes.ts";
 
 const decodePool = S.decodeUnknownEffect(S.fromJsonString(PoolRuntimeConfig));
@@ -31,6 +37,13 @@ const productionSecrets = {
   CI_RUNNERS_GITHUB_APP_KEY_BASE64: fakeAppKeyBase64,
   CI_RUNNERS_GITHUB_WEBHOOK_SECRET: fakeWebhookSecret,
 };
+
+// IAM ARN globbing: `*` matches any run of characters, `/` included. Role patterns hold no other regex syntax.
+const globMatches = (pattern: string, arn: string) =>
+  /^[A-Za-z0-9:/*-]+$/u.test(pattern) && new RegExp(`^${Str.replaceAll("*", ".*")(pattern)}$`, "u").test(arn);
+
+const resourceList = (value: string | ReadonlyArray<string> | undefined): ReadonlyArray<string> =>
+  P.isString(value) ? [value] : (value ?? []);
 
 const typeCounts = (recorder: Recorder) =>
   A.reduce(recorder.reconciled, R.empty<string, number>(), (counts, entry) =>
@@ -245,6 +258,48 @@ describe("CiRunners production stage", () => {
     Effect.gen(function* () {
       yield* stack.deploy(program.pipe(environmentOf(productionSecrets)));
       expect(R.fromEntries(physicalNamesOf(pinnedNames.recorder))).toStrictEqual(productionPhysicalNames);
+    })
+  );
+
+  const roleArns = Fakes.harness({ stage: "prod" });
+  roleArns.provider("plans every role at an ARN the deploy role's grants and the boundary both match", (stack) =>
+    Effect.gen(function* () {
+      yield* stack.deploy(program.pipe(environmentOf(productionSecrets)));
+      const { reconciled } = roleArns.recorder;
+      const roles = A.filter(reconciled, (entry) => entry.type === "IAM.Role");
+      const functions = A.filter(reconciled, (entry) => entry.type === "Lambda.Function");
+      // Declared roles keep the default path; each Lambda execution role is Alchemy's generated
+      // CiRunners-<id>-<stage>-<suffix> name, also at the default path.
+      const planned = [
+        ...A.map(
+          roles,
+          (entry) => `arn:aws:iam::832907639880:role${String(entry.news.path ?? "/")}${String(entry.news.roleName)}`
+        ),
+        ...A.map(
+          functions,
+          (entry) =>
+            `arn:aws:iam::832907639880:role/CiRunners-${Str.replaceAll("/", "-")(entry.fqn)}-prod-0123456789abcdef`
+        ),
+      ];
+      expect(A.length(roles)).toBe(3);
+      expect(A.length(functions)).toBe(11);
+      const grantPatterns = A.flatMap(
+        A.filter(deployRolePolicy(O.none()).Statement, (statement) => statement.Sid === "IamFleetRoleBounded"),
+        (statement: IAM.PolicyStatement) => resourceList(statement.Resource)
+      );
+      const boundaryPatterns = A.flatMap(
+        A.filter(fleetBoundaryDocument.Statement, (statement) => statement.Sid === "DenyPassOutsideFleet"),
+        (statement: IAM.PolicyStatement) => resourceList(statement.NotResource)
+      );
+      expect(A.length(grantPatterns)).toBe(2);
+      expect(A.length(boundaryPatterns)).toBe(2);
+      for (const arn of planned) {
+        expect([arn, A.some(grantPatterns, (pattern) => globMatches(pattern, arn))]).toStrictEqual([arn, true]);
+        expect([arn, A.some(boundaryPatterns, (pattern) => globMatches(pattern, arn))]).toStrictEqual([arn, true]);
+      }
+      for (const entry of [...roles, ...functions]) {
+        expect([entry.fqn, entry.news.permissionsBoundary]).toStrictEqual([entry.fqn, fleetBoundaryPolicyArn]);
+      }
     })
   );
 

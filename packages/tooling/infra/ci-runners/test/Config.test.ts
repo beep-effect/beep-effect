@@ -247,12 +247,16 @@ describe("CiRunners production credentials", () => {
       const refusals: ReadonlyArray<readonly [string, string, string]> = [
         // An empty value fails on the type itself, so its message names the schema, still without value or length.
         ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", "", "Credentials/WebhookSecret"],
-        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", "unset", "webhook secret too short"],
-        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", Str.repeat(7)("unset"), "webhook secret too short"],
-        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", `unset${fakeWebhookSecret}`, "webhook secret too short"],
-        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", Str.repeat(40)("a"), "webhook secret too short"],
-        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", Str.slice(0, 31)(fakeWebhookSecret), "webhook secret too short"],
-        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", `${fakeWebhookSecret}      `, "webhook secret too short"],
+        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", "unset", "webhook secret is a placeholder"],
+        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", Str.repeat(7)("unset"), "webhook secret is a placeholder"],
+        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", `unset${fakeWebhookSecret}`, "webhook secret is a placeholder"],
+        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", Str.repeat(40)("a"), "webhook secret too weak"],
+        ["CI_RUNNERS_GITHUB_WEBHOOK_SECRET", Str.slice(0, 31)(fakeWebhookSecret), "webhook secret too weak"],
+        [
+          "CI_RUNNERS_GITHUB_WEBHOOK_SECRET",
+          `${fakeWebhookSecret}      `,
+          "webhook secret has characters outside [A-Za-z0-9+/=_-]",
+        ],
         ["CI_RUNNERS_GITHUB_APP_KEY_BASE64", "a2V5", "App key is not a PEM private key"],
         ["CI_RUNNERS_GITHUB_APP_KEY_BASE64", pem(64), "App key is not a PEM private key"],
         ["CI_RUNNERS_GITHUB_APP_KEY_BASE64", "not base64 at all!", "App key is not a PEM private key"],

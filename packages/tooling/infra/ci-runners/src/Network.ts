@@ -86,7 +86,6 @@ export const networkTags: {
 const flowLogsRole = (names: PhysicalNames, logGroupArn: Output.Output<string>) =>
   IAM.Role("FlowLogsRole", {
     roleName: names.flowLogRole,
-    path: names.iamPath,
     permissionsBoundary: fleetBoundaryPolicyArn,
     assumeRolePolicyDocument: {
       Version: "2012-10-17",

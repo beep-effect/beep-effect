@@ -112,9 +112,13 @@ export const placeholderCredentials = AppCredentials.make({
 });
 
 /**
- * The fewest characters a webhook secret may have: 32 characters from the
- * hex alphabet (16 symbols, 4 bits each) carry 128 bits, and every wider
- * alphabet the check admits (base64, base64url, alphanumerics) carries more.
+ * The fewest characters a webhook secret may have. A secret generated from
+ * a random source in the hex alphabet (16 symbols, 4 bits each) carries 128
+ * bits at this length, and the wider alphabets the check admits carry more.
+ * The check cannot measure entropy: it refuses values that are short, use
+ * other characters, repeat few characters or hold the placeholder, and the
+ * 128 bits assume the secret was generated, as GitHub and `openssl rand`
+ * generate one.
  *
  * **Example** (128 bits as hex)
  *
@@ -129,22 +133,31 @@ export const placeholderCredentials = AppCredentials.make({
  */
 export const minimumWebhookSecretLength = 32;
 
-// Every alphabet a generated secret uses: hex, base64 and base64url. Anything else (spaces, punctuation) is refused.
+// The required format: hex, base64 or base64url, the alphabets `openssl rand -hex|-base64` and GitHub generate.
 const secretAlphabet = /^[A-Za-z0-9+/=_-]+$/u;
 
 // A random 32-character secret from even the hex alphabet shows at least 10 distinct characters with near
 // certainty; fewer means a pattern ("unset" repeated, a run of one character), not a random value.
 const minimumDistinctCharacters = 10;
 
-const isRandomLooking = (value: string): boolean =>
-  value.length >= minimumWebhookSecretLength &&
-  secretAlphabet.test(value) &&
-  HashSet.size(HashSet.fromIterable(value)) >= minimumDistinctCharacters &&
-  !Str.includes(placeholderWebhookSecret)(Str.toLowerCase(value));
-
 // Failure messages name the problem only, never the value or its length.
-const WebhookSecret = S.String.check(S.makeFilter(isRandomLooking, { message: "webhook secret too short" })).pipe(
-  $I.annoteSchema("WebhookSecret", { description: "A webhook secret of at least 128 bits." })
+const WebhookSecret = S.String.check(
+  S.makeFilter((value: string) => !Str.includes(placeholderWebhookSecret)(Str.toLowerCase(value)), {
+    message: "webhook secret is a placeholder",
+  }),
+  S.makeFilter((value: string) => secretAlphabet.test(value), {
+    message: "webhook secret has characters outside [A-Za-z0-9+/=_-]",
+  }),
+  S.makeFilter(
+    (value: string) =>
+      value.length >= minimumWebhookSecretLength &&
+      HashSet.size(HashSet.fromIterable(value)) >= minimumDistinctCharacters,
+    { message: "webhook secret too weak" }
+  )
+).pipe(
+  $I.annoteSchema("WebhookSecret", {
+    description: "A generated webhook secret: hex, base64 or base64url, at least 32 characters.",
+  })
 );
 
 const pemPrivateKey =
@@ -175,16 +188,18 @@ const AppId = S.String.check(
  * This is the one loader every stage that holds real credentials uses
  * (`prod` and a rehearsal), so both `plan-check.ts plan` and
  * `plan-check.ts deploy` decode through it before any resource is
- * declared. The webhook secret must have at least
- * {@link minimumWebhookSecretLength} characters (128 bits even as hex) from
- * the hex or base64 alphabets, with at least 10 distinct characters, so a
- * padded placeholder or a run of one character is refused. The App key
+ * declared. The webhook secret must be generated in the hex, base64 or
+ * base64url format (`[A-Za-z0-9+/=_-]`), with at least
+ * {@link minimumWebhookSecretLength} characters and at least 10 distinct
+ * ones, so a padded placeholder or a run of one character is refused; a
+ * generated secret of that length carries at least 128 bits. The App key
  * must decode from base64 to a PEM private-key block of plausible RSA
  * length, and the App id must be a number. An empty value, which GitHub
  * Actions passes for an unset secret, fails all three. Each failure is a
- * `ConfigError` whose message names the problem only ("webhook secret too
- * short", "App key is not a PEM private key"), never the value or its
- * length. These checks are what make the checked plan's salted secret
+ * `ConfigError` whose message names the problem only ("webhook secret is a
+ * placeholder", "webhook secret has characters outside [A-Za-z0-9+/=_-]",
+ * "webhook secret too weak", "App key is not a PEM private key"), never the
+ * value or its length. These checks are what make the checked plan's salted secret
  * fingerprint safe to store beside its salt.
  *
  * **Example** (Reference the config)

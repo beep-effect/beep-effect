@@ -1,4 +1,5 @@
 import {
+  boundaryWildcardReasons,
   chunkByLength,
   defaultGroupStatement,
   deployRolePolicy,
@@ -127,27 +128,57 @@ describe("CiRunners deploy role policy", () => {
       })
   );
 
-  it.effect(
-    "creates event-source mappings only for fleet functions, with the ownership tags, and writes only owned ones",
-    () =>
-      Effect.sync(() => {
-        const statementFor = (action: string) => A.filter(v2.Statement, (statement) => grants(statement, action));
-        for (const create of statementFor("lambda:CreateEventSourceMapping")) {
-          expect(create.Condition?.ArnLike?.["lambda:FunctionArn"]).toBe(
-            "arn:aws:lambda:us-east-1:832907639880:function:beep-fleet-prod-*"
-          );
-          expect(create.Condition?.StringEquals?.["aws:RequestTag/alchemy::stack"]).toBe("CiRunners");
-          expect(create.Condition?.StringEquals?.["aws:RequestTag/alchemy::stage"]).toBe("prod");
-        }
-        for (const action of ["lambda:UpdateEventSourceMapping", "lambda:DeleteEventSourceMapping"]) {
-          const owned = statementFor(action);
-          assertTrue(A.isReadonlyArrayNonEmpty(owned));
-          for (const statement of owned) {
-            expect(statement.Condition?.StringEquals?.["aws:ResourceTag/alchemy::stack"]).toBe("CiRunners");
-            expect(statement.Condition?.StringEquals?.["aws:ResourceTag/alchemy::stage"]).toBe("prod");
-          }
-        }
-      })
+  const fleetFunctions = { "lambda:FunctionArn": "arn:aws:lambda:us-east-1:832907639880:function:beep-fleet-prod-*" };
+  const mappingArn = "arn:aws:lambda:us-east-1:832907639880:event-source-mapping:*";
+  const mappingStatements = (action: string) =>
+    A.map(
+      A.filter(v2.Statement, (statement) => grants(statement, action)),
+      (statement) => ({ resources: resourcesOf(statement), condition: statement.Condition })
+    );
+
+  it.effect("creates an event-source mapping only for a fleet function, with the ownership tags", () =>
+    Effect.sync(() => {
+      expect(mappingStatements("lambda:CreateEventSourceMapping")).toStrictEqual([
+        {
+          resources: ["*"],
+          condition: {
+            ArnLike: fleetFunctions,
+            StringEquals: { "aws:RequestTag/alchemy::stack": "CiRunners", "aws:RequestTag/alchemy::stage": "prod" },
+          },
+        },
+      ]);
+    })
+  );
+
+  it.effect("updates and deletes only owned mappings that target a fleet function", () =>
+    Effect.sync(() => {
+      const owned = {
+        resources: [mappingArn],
+        condition: {
+          ArnLike: fleetFunctions,
+          StringEquals: { "aws:ResourceTag/alchemy::stack": "CiRunners", "aws:ResourceTag/alchemy::stage": "prod" },
+        },
+      };
+      expect(mappingStatements("lambda:UpdateEventSourceMapping")).toStrictEqual([owned]);
+      expect(mappingStatements("lambda:DeleteEventSourceMapping")).toStrictEqual([owned]);
+    })
+  );
+
+  it.effect("tags a mapping only with the ownership keys and values, and never untags one", () =>
+    Effect.sync(() => {
+      const onMappings = (action: string) =>
+        A.filter(mappingStatements(action), (statement) => A.contains(statement.resources, mappingArn));
+      expect(onMappings("lambda:TagResource")).toStrictEqual([
+        {
+          resources: [mappingArn],
+          condition: {
+            StringEquals: { "aws:RequestTag/alchemy::stack": "CiRunners", "aws:RequestTag/alchemy::stage": "prod" },
+            "ForAllValues:StringEquals": { "aws:TagKeys": ["alchemy::stack", "alchemy::stage", "alchemy::id"] },
+          },
+        },
+      ]);
+      expect(onMappings("lambda:UntagResource")).toStrictEqual([]);
+    })
   );
 
   const roleMutations = [
@@ -246,15 +277,167 @@ describe("CiRunners fleet boundary", () => {
     })
   );
 
-  it.effect("allows no IAM action but passing a role, and covers what the runners and Lambdas use", () =>
+  const allows = A.filter(fleetBoundaryDocument.Statement, (statement) => statement.Effect === "Allow");
+  const allowedActions = A.flatMap(allows, actionsOf);
+
+  it.effect("allows no IAM action but passing a fleet role, and no wildcard action", () =>
     Effect.sync(() => {
-      const allowed = A.flatMap(
-        A.filter(fleetBoundaryDocument.Statement, (statement) => statement.Effect === "Allow"),
-        actionsOf
+      expect(A.filter(allowedActions, Str.startsWith("iam:"))).toStrictEqual(["iam:PassRole"]);
+      assertFalse(A.some(allowedActions, Str.includes("*")));
+      for (const statement of A.filter(allows, (allow) => grants(allow, "iam:PassRole"))) {
+        expect(resourcesOf(statement)).toStrictEqual([
+          "arn:aws:iam::832907639880:role/beep-fleet-*",
+          "arn:aws:iam::832907639880:role/CiRunners-*",
+        ]);
+      }
+    })
+  );
+
+  it.effect('names Resource "*" only for read-only actions, each statement with its reason', () =>
+    Effect.sync(() => {
+      const wildcard = A.filter(allows, (statement) => A.contains(resourcesOf(statement), "*"));
+      expect(A.map(wildcard, (statement) => statement.Sid)).toStrictEqual(R.keys(boundaryWildcardReasons));
+      for (const statement of wildcard) {
+        expect(resourcesOf(statement)).toStrictEqual(["*"]);
+        assertTrue(A.every(actionsOf(statement), isReadOnly));
+        assertTrue(P.isUndefined(statement.Condition));
+      }
+    })
+  );
+
+  it.effect("grants no snapshot, image or instance-attribute write", () =>
+    Effect.sync(() => {
+      for (const action of [
+        "ec2:CreateSnapshot",
+        "ec2:ModifySnapshotAttribute",
+        "ec2:CreateImage",
+        "ec2:ModifyImageAttribute",
+        "ec2:ModifyInstanceAttribute",
+        "ec2:StopInstances",
+        "ec2:AttachVolume",
+      ]) {
+        assertFalse(A.contains(allowedActions, action));
+      }
+    })
+  );
+
+  it.effect("holds every EC2 write to fleet tags, and launches to the stack's templates, subnets and groups", () =>
+    Effect.sync(() => {
+      const ec2Writes = A.filter(
+        allows,
+        (statement) =>
+          A.some(actionsOf(statement), Str.startsWith("ec2:")) && !A.every(actionsOf(statement), isReadOnly)
       );
-      expect(A.filter(allowed, Str.startsWith("iam:"))).toStrictEqual(["iam:PassRole"]);
-      for (const action of ["ec2:*", "sqs:ReceiveMessage", "ssm:GetParameter", "kms:Decrypt", "logs:PutLogEvents"]) {
-        assertTrue(A.contains(allowed, action));
+      for (const statement of ec2Writes) {
+        const keys = conditionKeys(statement);
+        const launchOnly = A.every(
+          actionsOf(statement),
+          (action) => action === "ec2:RunInstances" || action === "ec2:CreateFleet"
+        );
+        assertTrue(
+          A.contains(keys, "aws:RequestTag/ghr:environment") ||
+            A.contains(keys, "aws:ResourceTag/ghr:environment") ||
+            A.contains(keys, "aws:ResourceTag/alchemy::stack") ||
+            launchOnly
+        );
+        for (const resource of resourcesOf(statement)) {
+          assertTrue(Str.startsWith("arn:aws:ec2:us-east-1:")(resource));
+        }
+      }
+      const fromStack = A.filter(allows, (statement) => statement.Sid === "CeilingLaunchFromStack");
+      expect(A.flatMap(fromStack, resourcesOf)).toStrictEqual([
+        "arn:aws:ec2:us-east-1:832907639880:launch-template/*",
+        "arn:aws:ec2:us-east-1:832907639880:subnet/*",
+        "arn:aws:ec2:us-east-1:832907639880:security-group/*",
+      ]);
+      expect(A.flatMap(fromStack, (statement) => conditionKeys(statement))).toStrictEqual([
+        "aws:ResourceTag/alchemy::stack",
+      ]);
+      // Unconditioned launch inputs are only those a launch reads or creates untagged: never an instance or a volume.
+      const unconditioned = A.filter(ec2Writes, (statement) => P.isUndefined(statement.Condition));
+      for (const resource of A.flatMap(unconditioned, resourcesOf)) {
+        assertTrue(/:(?:image|snapshot|network-interface|spot-instances-request)\/\*$/u.test(resource));
+      }
+    })
+  );
+
+  it.effect("serves KMS only through SSM, for a fleet parameter", () =>
+    Effect.sync(() => {
+      const kms = A.filter(allows, (statement) => A.some(actionsOf(statement), Str.startsWith("kms:")));
+      expect(A.length(kms)).toBe(1);
+      for (const statement of kms) {
+        expect(statement.Condition).toStrictEqual({
+          StringEquals: { "kms:ViaService": "ssm.us-east-1.amazonaws.com" },
+          StringLike: {
+            "kms:EncryptionContext:PARAMETER_ARN": "arn:aws:ssm:us-east-1:832907639880:parameter/beep-fleet/*",
+          },
+        });
+      }
+    })
+  );
+
+  it.effect("scopes SSM, S3, logs, SQS and Lambda to fleet ARNs, never the alchemy state bucket", () =>
+    Effect.sync(() => {
+      const fleetScoped = [
+        ["ssm:", /^arn:aws:ssm:us-east-1:832907639880:parameter\/beep-fleet\/\*$/u],
+        ["s3:", /^arn:aws:s3:::(?:beep-fleet-\*-binaries-\*|cirunners-\*)\/\*$/u],
+        [
+          "logs:",
+          /^arn:aws:logs:us-east-1:832907639880:log-group:\/(?:beep-fleet\/|aws\/lambda\/(?:beep-fleet-|CiRunners-))\*$/u,
+        ],
+        ["sqs:", /^arn:aws:sqs:us-east-1:832907639880:(?:beep-fleet-|CiRunners-)\*$/u],
+        ["lambda:", /^arn:aws:lambda:us-east-1:832907639880:function:(?:beep-fleet-|CiRunners-)\*$/u],
+      ] as const;
+      for (const [service, pattern] of fleetScoped) {
+        const scoped = A.filter(
+          allows,
+          (statement) =>
+            A.some(actionsOf(statement), Str.startsWith(service)) && !A.contains(resourcesOf(statement), "*")
+        );
+        assertTrue(A.isReadonlyArrayNonEmpty(scoped));
+        for (const resource of A.flatMap(scoped, resourcesOf)) {
+          assertTrue(pattern.test(resource));
+          assertFalse(Str.includes("alchemy-state")(resource));
+        }
+      }
+    })
+  );
+
+  it.effect("keeps every action the fleet's own role policies grant", () =>
+    Effect.sync(() => {
+      for (const action of [
+        "ec2:CreateFleet",
+        "ec2:RunInstances",
+        "ec2:CreateTags",
+        "ec2:DeleteTags",
+        "ec2:TerminateInstances",
+        "ec2:ModifyInstanceMetadataOptions",
+        "ec2:DescribeInstances",
+        "ec2:DescribeTags",
+        "ec2:DescribeLaunchTemplateVersions",
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:ChangeMessageVisibility",
+        "sqs:SendMessage",
+        "ssm:GetParameter",
+        "ssm:PutParameter",
+        "ssm:AddTagsToResource",
+        "ssm:DeleteParameter",
+        "ssm:GetParametersByPath",
+        "kms:Decrypt",
+        "s3:GetObject",
+        "s3:GetObjectTagging",
+        "s3:PutObject",
+        "s3:PutObjectTagging",
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogStreams",
+        "logs:DescribeLogGroups",
+        "iam:PassRole",
+      ]) {
+        assertTrue(A.contains(allowedActions, action));
       }
     })
   );
