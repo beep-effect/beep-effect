@@ -554,3 +554,16 @@ to the gap between the reference checkout (main) and the pinned release.
   `adopted` predictions came from reading the code, not from a plan probe against seeded state.
 - **Would have prevented it:** a create allow-list in the plan guard (now in `plan-guard.ts`), and adoption
   predictions taken from a plan against seeded state.
+
+## 2026-11-15: `beep github app mint` registered an App and lost its private key
+
+- **Doing:** arming InfraGithub, minting `beep-infra-github` with `bun run beep github app mint beep-infra-github`.
+- **Evidence:** GitHub registered App 5766296, then the vault write `cat | op item create --vault BEEP_SECRETS -`
+  exited 1. On agent workstations the `op` on `PATH` is the 1Password service-account shim (`~/.local/bin/op`),
+  and that account cannot create items. The key existed only in the one-use conversion response, so it was lost.
+  The operator deleted the orphan App under GitHub sudo mode. The 2026-11-18 retry worked only behind a `PATH` shim
+  that mapped `op` to `op-human`.
+- **Would have prevented it:** a writer chosen for a human-attended flow and checked before GitHub is involved. The
+  launcher now writes with `op-human` when it is on `PATH`, else `op`, or `--op-cli <command>`. Before the server
+  listens, it creates and deletes a throwaway item in `BEEP_SECRETS` and refuses to start if either step fails
+  (PR for branch `goals/infra-alchemy-rebuild-mint-vault-writer`).

@@ -6,8 +6,13 @@
  * `serve` starts a loopback server on `127.0.0.1:8787`. Its `/` page POSTs the
  * checked-in manifest to the beep-effect organization's App registration page
  * with a random `state`; `/callback` accepts one request whose `state` matches,
- * converts the code, and stores the credentials through the `op` process's stdin.
+ * converts the code, and stores the credentials through the vault writer's stdin.
  * No secret reaches argv, stdout, stderr, the callback page, or a file.
+ *
+ * The vault writer is a human-capable 1Password CLI (`op-human` when it is on
+ * `PATH`, else `op`, or the `--op-cli` override). Before the server listens, a
+ * preflight creates and deletes a throwaway item in the vault, so an App is never
+ * registered whose credentials cannot be stored.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -41,11 +46,17 @@ import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { GithubCommandError } from "./Github.errors.ts";
-import { GitHubAppManifest, GitHubAppManifestConversion, GitHubAppRegistrationOutcome } from "./Github.schemas.ts";
+import {
+  GitHubAppManifest,
+  GitHubAppManifestConversion,
+  GitHubAppRegistrationOutcome,
+  GitHubAppVaultWriter,
+} from "./Github.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Github/Github.service");
 
 const PORT = 8787;
+const VAULT = "BEEP_SECRETS";
 const ALLOWED_HOSTS = [`localhost:${PORT}`, `127.0.0.1:${PORT}`];
 const Json = S.fromJsonString(S.Unknown);
 const encodeJson = S.encodeEffect(Json);
@@ -185,21 +196,152 @@ const vaultTemplate = (profile: AppProfile, converted: GitHubAppManifestConversi
   });
 
 // No secret in argv, stdout, stderr, the callback page, or a temporary file. The op CLI needs a
-// real pipe to detect a JSON template, so cat bridges the in-memory stdin stream into one.
-const storeCommand = (template: string) =>
-  ChildProcess.make("bash", ["-o", "pipefail", "-c", "cat | op item create --vault BEEP_SECRETS -"], {
-    stdin: Stream.make(template).pipe(Stream.encodeText),
-    stdout: "ignore",
-    stderr: "ignore",
-    extendEnv: true,
+// real pipe to detect a JSON template, so cat bridges the in-memory stdin stream into one. The
+// writer's command is a positional shell argument, never interpolated into the script.
+const storeCommand = (writer: GitHubAppVaultWriter, template: string) =>
+  ChildProcess.make(
+    "bash",
+    ["-o", "pipefail", "-c", `cat | "$1" item create --vault ${VAULT} -`, "github-app-mint", writer.command],
+    {
+      stdin: Stream.make(template).pipe(Stream.encodeText),
+      stdout: "ignore",
+      stderr: "ignore",
+      extendEnv: true,
+    }
+  );
+
+// A spawn failure counts as a failed exit; the caller only needs to know the step did not succeed.
+const exitCodeOf = (command: ChildProcess.Command) =>
+  ChildProcessSpawner.ChildProcessSpawner.use((spawner) => spawner.exitCode(command)).pipe(
+    Effect.orElseSucceed(constant(127))
+  );
+
+const hasOpHuman = Effect.map(
+  exitCodeOf(
+    ChildProcess.make("sh", ["-c", "command -v op-human"], { stdout: "ignore", stderr: "ignore", extendEnv: true })
+  ),
+  (exitCode) => exitCode === 0
+);
+
+/**
+ * Chooses the 1Password CLI that stores a minted App's credentials.
+ *
+ * **Details**
+ *
+ * A non-empty override wins. Otherwise `op-human`, the operator's
+ * desktop-approved CLI, is chosen when it is on `PATH`, and `op` is the
+ * fallback. The mint is always operator-attended, so a human-capable CLI is
+ * the right writer; on agent workstations `op` is a service-account shim that
+ * cannot create items.
+ *
+ * **Example** (Resolve with an explicit override)
+ *
+ * ```ts
+ * import { resolveGitHubAppVaultWriter } from "@beep/repo-cli/commands/Github"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const program = resolveGitHubAppVaultWriter(O.some("/usr/bin/op"))
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param override - The operator's `--op-cli` value, if any.
+ * @returns The chosen writer and the reason it was chosen.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const resolveGitHubAppVaultWriter = (
+  override: O.Option<string>
+): Effect.Effect<GitHubAppVaultWriter, never, ChildProcessSpawner.ChildProcessSpawner> =>
+  O.match(O.filter(override, Str.isNonEmpty), {
+    onSome: (command) => Effect.succeed(GitHubAppVaultWriter.make({ command, source: "override" })),
+    onNone: () =>
+      Effect.map(hasOpHuman, (found) =>
+        found
+          ? GitHubAppVaultWriter.make({ command: "op-human", source: "op-human" })
+          : GitHubAppVaultWriter.make({ command: "op", source: "op" })
+      ),
   });
+
+const preflightTemplate = (title: string) =>
+  encodeJson({
+    title,
+    category: "SECURE_NOTE",
+    fields: [
+      {
+        id: "notesPlain",
+        label: "notesPlain",
+        type: "STRING",
+        purpose: "NOTES",
+        value: "Throwaway write check from beep github app mint; safe to delete.",
+      },
+    ],
+  });
+
+/**
+ * Proves the vault writer can create and delete an item in the target vault.
+ *
+ * **Details**
+ *
+ * The check creates a throwaway secure note through the same stdin pipe the
+ * credential write uses, then deletes it by its unique title. Either step
+ * failing refuses the mint before the loopback server listens, so GitHub never
+ * registers an App whose private key would be lost.
+ *
+ * **Example** (Build the preflight)
+ *
+ * ```ts
+ * import { GitHubAppVaultWriter, preflightGitHubAppVaultWriter } from "@beep/repo-cli/commands/Github"
+ * import * as Effect from "effect/Effect"
+ *
+ * const writer = GitHubAppVaultWriter.make({ command: "op-human", source: "op-human" })
+ * console.log(Effect.isEffect(preflightGitHubAppVaultWriter(writer, "nonce"))) // true
+ * ```
+ *
+ * @param writer - The CLI that will store the credentials.
+ * @param nonce - A unique suffix for the throwaway item's title.
+ * @returns Nothing on success; a refusal naming the failed step otherwise.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const preflightGitHubAppVaultWriter = Effect.fn("GitHubAppMint.preflight")(function* (
+  writer: GitHubAppVaultWriter,
+  nonce: string
+) {
+  const title = `beep github app mint preflight ${nonce}`;
+  const refuse = (message: string) =>
+    GithubCommandError.make({ path: `${writer.command} (${writer.source}) -> ${VAULT}`, message });
+  const template = yield* Effect.orDie(preflightTemplate(title));
+  const created = yield* exitCodeOf(storeCommand(writer, template));
+  if (created !== 0) {
+    return yield* refuse(
+      `${writer.command} cannot create items in ${VAULT} (exit ${created}); refusing to start, so no App is registered whose credentials cannot be stored. Sign in a human-capable 1Password CLI (op-human) or pass --op-cli <command>.`
+    );
+  }
+  const deleted = yield* exitCodeOf(
+    ChildProcess.make(writer.command, ["item", "delete", title, "--vault", VAULT], {
+      stdout: "ignore",
+      stderr: "ignore",
+      extendEnv: true,
+    })
+  );
+  if (deleted !== 0) {
+    return yield* refuse(
+      `${writer.command} created the preflight item "${title}" in ${VAULT} but could not delete it (exit ${deleted}); refusing to start. Delete that item by hand before retrying.`
+    );
+  }
+});
 
 // One safe, count-only diagnosis for the operator; a missing op-doctor changes nothing.
 const diagnose = ChildProcessSpawner.ChildProcessSpawner.use((spawner) =>
   spawner.exitCode(ChildProcess.make("op-doctor", [], { stdout: "inherit", stderr: "ignore", extendEnv: true }))
 ).pipe(Effect.ignore);
 
-const convertAndStore = Effect.fn("GitHubAppMint.convertAndStore")(function* (profile: AppProfile, code: string) {
+const convertAndStore = Effect.fn("GitHubAppMint.convertAndStore")(function* (
+  profile: AppProfile,
+  writer: GitHubAppVaultWriter,
+  code: string
+) {
   const client = yield* HttpClient.HttpClient;
   const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
   const response = yield* client.execute(
@@ -216,7 +358,7 @@ const convertAndStore = Effect.fn("GitHubAppMint.convertAndStore")(function* (pr
     return GitHubAppRegistrationOutcome.cases.Failed.make({});
   }
   const template = yield* vaultTemplate(profile, converted, slug);
-  const exitCode = yield* spawner.exitCode(storeCommand(template));
+  const exitCode = yield* spawner.exitCode(storeCommand(writer, template));
   return exitCode === 0
     ? GitHubAppRegistrationOutcome.cases.Stored.make({ slug, appId: converted.id })
     : GitHubAppRegistrationOutcome.cases.StoreFailed.make({ slug, exitCode });
@@ -242,19 +384,22 @@ const escapeAttribute = (value: string) =>
  * registration page with `state` set to `nonce`. `/callback` accepts exactly one
  * GET whose `state` matches, exchanges the code, and stores the credentials. Any
  * other host, method, path, state, or a second callback is rejected with 400.
+ * The credentials go through `writer`, which `serve` has already preflighted.
  *
  * **Example** (Build a handler)
  *
  * ```ts
- * import { makeGitHubAppMintHandler } from "@beep/repo-cli/commands/Github"
+ * import { GitHubAppVaultWriter, makeGitHubAppMintHandler } from "@beep/repo-cli/commands/Github"
  * import * as Effect from "effect/Effect"
  *
- * const program = makeGitHubAppMintHandler({ app: "beep-reviewer", nonce: "state", manifestJson: "{}" })
+ * const writer = GitHubAppVaultWriter.make({ command: "op-human", source: "op-human" })
+ * const program = makeGitHubAppMintHandler({ app: "beep-reviewer", nonce: "state", manifestJson: "{}", writer })
  * console.log(Effect.isEffect(program)) // true
  * ```
  *
  * @param options - The App being registered, the random `state` bound into the form and checked on
- * callback, and the serialized App manifest posted to GitHub.
+ * callback, the serialized App manifest posted to GitHub, and the vault writer that stores the
+ * credentials.
  * @returns The request handler; the conversion needs the HTTP client and the process spawner.
  * @category constructors
  * @since 0.0.0
@@ -263,10 +408,12 @@ export const makeGitHubAppMintHandler = ({
   app,
   nonce,
   manifestJson,
+  writer,
 }: {
   readonly app: GitHubAppName;
   readonly nonce: string;
   readonly manifestJson: string;
+  readonly writer: GitHubAppVaultWriter;
 }): Effect.Effect<
   Effect.Effect<
     HttpServerResponse.HttpServerResponse,
@@ -286,7 +433,7 @@ export const makeGitHubAppMintHandler = ({
       if (yield* Ref.getAndSet(attempted, true)) {
         return page("Invalid or already used callback", 400);
       }
-      const outcome = yield* convertAndStore(profile, code.value).pipe(
+      const outcome = yield* convertAndStore(profile, writer, code.value).pipe(
         Effect.catchCause(() => Effect.succeed(GitHubAppRegistrationOutcome.cases.Failed.make({})))
       );
       return yield* reportOutcome(profile, outcome);
@@ -314,8 +461,11 @@ export const makeGitHubAppMintHandler = ({
 export interface GitHubAppMintShape {
   /** Reads, validates, and returns the App manifest exactly as checked in. */
   readonly manifestText: (app: GitHubAppName) => Effect.Effect<string, GithubCommandError>;
-  /** Serves the registration flow until interrupted. */
-  readonly serve: (app: GitHubAppName) => Effect.Effect<never, GithubCommandError>;
+  /**
+   * Preflights the vault writer (the override, else `op-human` on `PATH`, else `op`), then serves
+   * the registration flow until interrupted.
+   */
+  readonly serve: (app: GitHubAppName, opCli: O.Option<string>) => Effect.Effect<never, GithubCommandError>;
 }
 
 /**
@@ -359,12 +509,16 @@ const makeGitHubAppMint = Effect.fn("GitHubAppMint.make")(function* (owner: stri
     return text;
   });
 
-  const serve: GitHubAppMintShape["serve"] = Effect.fn("GitHubAppMint.serve")(function* (app) {
+  const serve: GitHubAppMintShape["serve"] = Effect.fn("GitHubAppMint.serve")(function* (app, opCli) {
     const text = yield* manifestText(app);
     // manifestText already decoded this text as a manifest, so re-encoding it cannot fail; a failure is a defect.
     const manifestJson = yield* decodeJson(text).pipe(Effect.flatMap(encodeJson), Effect.orDie);
     const nonce = yield* SecureRandom.SecureRandom.use((random) => random.uuidV4()).pipe(Effect.provide(context));
-    const handler = yield* makeGitHubAppMintHandler({ app, nonce, manifestJson });
+    // Before anything listens: an App registered with no writable vault loses its private key.
+    const writer = yield* resolveGitHubAppVaultWriter(opCli).pipe(Effect.provide(context));
+    yield* preflightGitHubAppVaultWriter(writer, nonce).pipe(Effect.provide(context));
+    yield* Console.log(`Vault writer ${writer.command} (${writer.source}) can create and delete items in ${VAULT}.`);
+    const handler = yield* makeGitHubAppMintHandler({ app, nonce, manifestJson, writer });
     const server = HttpServer.serve(Effect.provide(handler, context)).pipe(
       Layer.provide(BunHttpServer.layer({ hostname: "127.0.0.1", port: PORT }))
     );

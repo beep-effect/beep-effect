@@ -106,7 +106,7 @@ decision file per object).
 | `BeepEffectWeb` | `apps/beep-effect-web/alchemy.run.ts` | `deploy-beep-effect-web.yml` | `beep-effect-web-prod` | `https://beep-effect.com` (custom domain, `www` redirect) |
 | `Storybook` | `apps/storybook/alchemy.run.ts` | `deploy-storybook.yml` | `storybook-prod` | `https://beep-effect.com/storybook/` (zone route `beep-effect.com/storybook*` in front of the apex Worker) |
 | `CostControls` | `packages/tooling/infra/cost-controls/alchemy.run.ts` | `deploy-cost-controls.yml` | `cost-controls-prod` | AWS account budget, services anomaly monitor and subscription, cost allocation tags, Compute Optimizer and Cost Optimization Hub enrollment |
-| `InfraGithub` | `packages/tooling/infra/github/alchemy.run.ts` | `deploy-infra-github.yml` (disarmed) | `infra-github-prod` | settings, `main` ruleset, deploy environments, variables, labels of `beep-effect/beep-effect` |
+| `InfraGithub` | `packages/tooling/infra/github/alchemy.run.ts` | `deploy-infra-github.yml` (armed by repo variable `INFRA_GITHUB_DEPLOY_ARMED=true`, 2026-11-18) | `infra-github-prod` | settings, `main` ruleset, deploy environments, variables, labels of `beep-effect/beep-effect` |
 | `HostsAiMetrics` | `packages/tooling/infra/infra-hosts/alchemy.run.ts` | none (operator workstation only, D21) | none | Arize Phoenix on dankserver behind Tailscale Serve |
 | `HostsOpenClaw` | `packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts` | none (operator workstation only, D21) | none | the OpenClaw generation on the operator workstation |
 | `OipWeb` | `apps/oip-web/alchemy.run.ts` | `deploy-oip-web-infra.yml` (armed by repo variable `OIP_WEB_INFRA_DEPLOY=enabled`) | `oip-web-infra-prod` | oip.law Vercel project settings, variables and domains, their Cloudflare DNS records, the assets buckets (stages `staging` then `prod`) |
@@ -359,6 +359,15 @@ live settings; run them only when the gate asks.
    bun run beep github app mint beep-infra-github --dry-run   # review the manifest
    bun run beep github app mint beep-infra-github
    ```
+
+   The launcher writes the credentials with `op-human` (your desktop-approved 1Password
+   CLI) when it is on `PATH`, else with `op`; `--op-cli <command>` names another one.
+   On agent workstations `op` is the service-account shim, which cannot create items.
+   Before the server listens, the launcher creates and deletes a throwaway secure note
+   in `BEEP_SECRETS` with that CLI. If either step fails it refuses to start, so GitHub
+   never registers an App whose private key cannot be stored. Approve the 1Password
+   prompts the preflight raises. The 2026-11-15 mint lost its key this way, and the
+   orphan App had to be deleted under GitHub sudo mode.
 
    Confirm the registration page lists exactly: Administration, Environments, Variables
    and Issues read and write, Metadata read-only, no webhook. The launcher stores
