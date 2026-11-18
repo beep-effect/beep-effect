@@ -151,27 +151,177 @@ const fleetRoles = [
   `arn:aws:iam::${account}:role/CiRunners-*-prod-*`,
 ];
 
+/**
+ * The fleet's permissions boundary: a bootstrap object the gate creates out of
+ * band (decision "CI runners deploy through a stack-scoped OIDC role"), at a
+ * path no deploy-role policy grant reaches, so the deploy role can neither
+ * edit it nor replace it.
+ *
+ * **Example** (Outside the stack's policy path)
+ *
+ * ```ts
+ * import { fleetBoundaryPolicyArn } from "@beep/infra-ci-runners/DeployRolePolicy"
+ *
+ * console.log(fleetBoundaryPolicyArn.includes("/beep-fleet/prod/")) // false
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const fleetBoundaryPolicyArn = `arn:aws:iam::${account}:policy/beep-fleet-boundary/fleet-boundary`;
+
+const withBoundary = { "iam:PermissionsBoundary": fleetBoundaryPolicyArn };
+
+// Every role of every fleet stage: the boundary also caps personal stages' roles.
+const anyFleetRole = [`arn:aws:iam::${account}:role/beep-fleet-*`, `arn:aws:iam::${account}:role/CiRunners-*`];
+
+/**
+ * The permissions boundary of every role the stack creates (runner, Lambda
+ * execution, flow logs). A role's permissions are the intersection of its
+ * policies and this ceiling, so even a policy the deploy role writes cannot
+ * exceed it.
+ *
+ * **Details**
+ *
+ * The allow statement is the ceiling: exactly the services and actions the
+ * fleet's own policies use. The deny statements close the escalation paths
+ * explicitly: every IAM write but passing a fleet role, assuming or passing
+ * any role outside the fleet, and every Organizations, account and billing
+ * action. The IMDS deny keeps a runner from re-enabling the metadata endpoint
+ * once its boundary script has disabled it.
+ *
+ * **Example** (Read the escalation denies)
+ *
+ * ```ts
+ * import { fleetBoundaryDocument } from "@beep/infra-ci-runners/DeployRolePolicy"
+ *
+ * console.log(fleetBoundaryDocument.Statement.filter((statement) => statement.Effect === "Deny").length) // 5
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const fleetBoundaryDocument: IAM.PolicyDocument = {
+  Version: "2012-10-17",
+  Statement: [
+    {
+      Sid: "FleetCeiling",
+      Effect: "Allow",
+      Action: [
+        "ec2:*",
+        "sqs:ChangeMessageVisibility",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes",
+        "sqs:ReceiveMessage",
+        "sqs:SendMessage",
+        "ssm:AddTagsToResource",
+        "ssm:DeleteParameter",
+        "ssm:DescribeParameters",
+        "ssm:GetParameter",
+        "ssm:GetParametersByPath",
+        "ssm:PutParameter",
+        "s3:GetObject",
+        "s3:GetObjectTagging",
+        "s3:PutObject",
+        "s3:PutObjectTagging",
+        "kms:Decrypt",
+        "kms:Encrypt",
+        "kms:GenerateDataKey",
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:DescribeLogGroups",
+        "logs:DescribeLogStreams",
+        "logs:PutLogEvents",
+        "lambda:InvokeFunction",
+        "iam:PassRole",
+        "sts:GetCallerIdentity",
+      ],
+      Resource: ["*"],
+    },
+    {
+      Sid: "DenyIamWrites",
+      Effect: "Deny",
+      Action: [
+        "iam:Add*",
+        "iam:Attach*",
+        "iam:Change*",
+        "iam:Create*",
+        "iam:Deactivate*",
+        "iam:Delete*",
+        "iam:Detach*",
+        "iam:Enable*",
+        "iam:Put*",
+        "iam:Remove*",
+        "iam:Reset*",
+        "iam:Set*",
+        "iam:Tag*",
+        "iam:Untag*",
+        "iam:Update*",
+        "iam:Upload*",
+      ],
+      Resource: ["*"],
+    },
+    { Sid: "DenyPassOutsideFleet", Effect: "Deny", Action: ["iam:PassRole"], NotResource: anyFleetRole },
+    { Sid: "DenyAssumeOutsideFleet", Effect: "Deny", Action: ["sts:AssumeRole*"], NotResource: anyFleetRole },
+    {
+      Sid: "DenyOrganizationAccountBilling",
+      Effect: "Deny",
+      Action: ["organizations:*", "account:*", "aws-portal:*", "billing:*"],
+      Resource: ["*"],
+    },
+    {
+      Sid: "DenyMetadataOptionsOnceDisabled",
+      Effect: "Deny",
+      Action: ["ec2:ModifyInstanceMetadataOptions"],
+      Resource: ["*"],
+      Condition: { StringEquals: { "ec2:MetadataHttpEndpoint": "disabled" } },
+    },
+  ],
+};
+
+// The only AWS-managed policy the stack attaches: Alchemy's Lambda execution roles get it.
+const lambdaBasicExecution = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole";
+const fleetPolicies = `arn:aws:iam::${account}:policy/beep-fleet/prod/*`;
+
 const iamStatements: ReadonlyArray<IAM.PolicyStatement> = [
   {
-    Sid: "IamFleetRoles",
+    Sid: "IamFleetRoleReads",
+    Effect: "Allow",
+    Action: [
+      "iam:GetRole",
+      "iam:GetRolePolicy",
+      "iam:ListRolePolicies",
+      "iam:ListAttachedRolePolicies",
+      "iam:ListRoleTags",
+    ],
+    Resource: fleetRoles,
+  },
+  // Every write to a fleet role's permissions needs the fleet boundary on the role, so whatever it holds stays capped.
+  {
+    Sid: "IamFleetRoleBounded",
     Effect: "Allow",
     Action: [
       "iam:CreateRole",
-      "iam:DeleteRole",
-      "iam:GetRole",
-      "iam:UpdateRole",
-      "iam:UpdateAssumeRolePolicy",
-      "iam:TagRole",
-      "iam:UntagRole",
       "iam:PutRolePolicy",
       "iam:DeleteRolePolicy",
-      "iam:GetRolePolicy",
-      "iam:ListRolePolicies",
-      "iam:AttachRolePolicy",
       "iam:DetachRolePolicy",
-      "iam:ListAttachedRolePolicies",
       "iam:PutRolePermissionsBoundary",
     ],
+    Resource: fleetRoles,
+    Condition: { StringEquals: withBoundary },
+  },
+  {
+    Sid: "IamFleetRoleAttach",
+    Effect: "Allow",
+    Action: ["iam:AttachRolePolicy"],
+    Resource: fleetRoles,
+    Condition: { StringEquals: withBoundary, ArnLike: { "iam:PolicyARN": [fleetPolicies, lambdaBasicExecution] } },
+  },
+  // Metadata only: tags, description and the delete of a fleet role grant no permission.
+  {
+    Sid: "IamFleetRoleMetadata",
+    Effect: "Allow",
+    Action: ["iam:TagRole", "iam:UntagRole", "iam:UpdateRole", "iam:DeleteRole"],
     Resource: fleetRoles,
   },
   {
@@ -188,7 +338,7 @@ const iamStatements: ReadonlyArray<IAM.PolicyStatement> = [
       "iam:TagPolicy",
       "iam:UntagPolicy",
     ],
-    Resource: [`arn:aws:iam::${account}:policy/beep-fleet/prod/*`],
+    Resource: [fleetPolicies],
   },
   {
     Sid: "IamFleetProfiles",
@@ -263,26 +413,34 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
     ],
     Resource: [fleetFunctions],
   },
-  // An event-source mapping has no ARN until it exists: its create is scoped by the target function instead.
+  // An event-source mapping has no ARN until it exists: its create is scoped by the target function and the
+  // ownership tags Alchemy stamps on it; every later write needs those tags on the mapping itself.
   {
     Sid: "LambdaMappingsCreate",
     Effect: "Allow",
     Action: ["lambda:CreateEventSourceMapping"],
     Resource: ["*"],
-    Condition: { ArnLike: { "lambda:FunctionArn": fleetFunctions } },
+    Condition: { ArnLike: { "lambda:FunctionArn": fleetFunctions }, StringEquals: requested },
+  },
+  {
+    Sid: "LambdaMappingsTagOnCreate",
+    Effect: "Allow",
+    Action: ["lambda:TagResource"],
+    Resource: [`arn:aws:lambda:${region}:${account}:event-source-mapping:*`],
+    Condition: { StringEquals: requested },
   },
   {
     Sid: "LambdaMappingsRead",
     Effect: "Allow",
-    Action: ["lambda:ListEventSourceMappings", "lambda:GetEventSourceMapping"],
+    Action: ["lambda:ListEventSourceMappings", "lambda:GetEventSourceMapping", "lambda:ListTags"],
     Resource: ["*"],
   },
   {
     Sid: "LambdaMappingsOwned",
     Effect: "Allow",
     Action: ["lambda:UpdateEventSourceMapping", "lambda:DeleteEventSourceMapping"],
-    Resource: ["*"],
-    Condition: { ArnLike: { "lambda:FunctionArn": fleetFunctions } },
+    Resource: [`arn:aws:lambda:${region}:${account}:event-source-mapping:*`],
+    Condition: { StringEquals: owned },
   },
   {
     Sid: "SqsFleetQueues",

@@ -6,7 +6,9 @@
  * so the chunks evaluate together exactly as the whole document does.
  *
  * `--vpc-arn <arn>` writes v2 (`policy-v2.json`, `v2-<n>.json`); without it,
- * v1. The gate runs it from the operator workstation; nothing here calls AWS.
+ * v1. Either run also writes `fleet-boundary.json`, the document of the
+ * bootstrap boundary policy. The gate runs it from the operator workstation;
+ * nothing here calls AWS.
  *
  * @internal
  * @since 0.0.0
@@ -22,7 +24,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { chunkByLength, deployRolePolicy } from "./src/DeployRolePolicy.ts";
+import { chunkByLength, deployRolePolicy, fleetBoundaryDocument } from "./src/DeployRolePolicy.ts";
 import type * as IAM from "@alchemy.run/aws/IAM";
 
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -42,6 +44,8 @@ const write = Command.make(
     yield* fs.makeDirectory(outDir, { recursive: true });
     const text = yield* encode(policy);
     yield* fs.writeFileString(path.join(outDir, `policy-${version}.json`), text);
+    const boundary = yield* encode(fleetBoundaryDocument);
+    yield* fs.writeFileString(path.join(outDir, "fleet-boundary.json"), boundary);
     const encoded = yield* Effect.forEach(policy.Statement, (statement) => encode(statement), { concurrency: 1 });
     const empty = yield* encode({ Version: policy.Version, Statement: [] });
     const groups = chunkByLength({

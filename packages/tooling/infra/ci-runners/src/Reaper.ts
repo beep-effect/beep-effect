@@ -20,6 +20,7 @@ import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { fleetBoundaryPolicyArn } from "./DeployRolePolicy.ts";
 import type { RunnerInstance } from "@beep/alchemy-github-runners/RunnerInstance.models";
 
 const $I = $InfraCiRunnersId.create("Reaper");
@@ -215,6 +216,7 @@ export const declareReaper = Effect.fn("CiRunners.declareReaper")(function* (inp
   const runtimeConfig = yield* encodeReaperConfig(input.config);
   const reaper = yield* Lambda.Function("Reaper", {
     functionName: input.functionName,
+    permissionsBoundary: fleetBoundaryPolicyArn,
     main: `${import.meta.dirname}/internal/lambda/reaper.ts`,
     handler: "handler",
     functionUrl: false,

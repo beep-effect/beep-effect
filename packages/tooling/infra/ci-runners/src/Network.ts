@@ -15,6 +15,7 @@ import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import { fleetBoundaryPolicyArn } from "./DeployRolePolicy.ts";
 import type { NetworkSettings, SubnetSlot } from "./Config.ts";
 import type { PhysicalNames } from "./Names.ts";
 
@@ -86,6 +87,7 @@ const flowLogsRole = (names: PhysicalNames, logGroupArn: Output.Output<string>) 
   IAM.Role("FlowLogsRole", {
     roleName: names.flowLogRole,
     path: names.iamPath,
+    permissionsBoundary: fleetBoundaryPolicyArn,
     assumeRolePolicyDocument: {
       Version: "2012-10-17",
       Statement: [

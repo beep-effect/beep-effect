@@ -15,6 +15,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { fakeAppKeyBase64, fakeWebhookSecret } from "./support/Credentials.ts";
 import * as Fakes from "./support/Fakes.ts";
 import type { Recorder } from "./support/Fakes.ts";
 
@@ -27,8 +28,8 @@ const environmentOf = (values: Record<string, string>) =>
 const productionSecrets = {
   CI: "true",
   CI_RUNNERS_GITHUB_APP_ID: "12345",
-  CI_RUNNERS_GITHUB_APP_KEY_BASE64: "a2V5",
-  CI_RUNNERS_GITHUB_WEBHOOK_SECRET: "webhook-secret",
+  CI_RUNNERS_GITHUB_APP_KEY_BASE64: fakeAppKeyBase64,
+  CI_RUNNERS_GITHUB_WEBHOOK_SECRET: fakeWebhookSecret,
 };
 
 const typeCounts = (recorder: Recorder) =>
@@ -82,7 +83,6 @@ const productionPhysicalNames: Readonly<Record<string, string>> = {
   ImdsDisablePolicy: "beep-fleet-prod-runner-imds-disable",
   Reaper: "beep-fleet-prod-reaper",
   ReaperSchedule: "beep-fleet-prod-reaper",
-  RunnerBoundaryPolicy: "beep-fleet-prod-runner-boundary",
   RunnerSecurityGroup: "beep-fleet-prod-runner",
   "Runners/DeregisterRetryQueue": "beep-fleet-prod-deregister-retry",
   "Runners/DeregisterRetryQueueDlq": "beep-fleet-prod-deregister-retry-dlq",
@@ -138,7 +138,7 @@ describe("CiRunners personal stage", () => {
         "EC2.FlowLog": 1,
         "Logs.LogGroup": 1,
         "IAM.Role": 3,
-        "IAM.Policy": 2,
+        "IAM.Policy": 1,
         "IAM.InstanceProfile": 2,
         "KMS.Key": 1,
         "KMS.Alias": 1,
@@ -187,8 +187,8 @@ describe("CiRunners update and destroy", () => {
           environmentOf({
             CI_RUNNERS_REHEARSAL_REPOSITORY: "alice/sandbox",
             CI_RUNNERS_GITHUB_APP_ID: "1",
-            CI_RUNNERS_GITHUB_APP_KEY_BASE64: "a2V5",
-            CI_RUNNERS_GITHUB_WEBHOOK_SECRET: "s",
+            CI_RUNNERS_GITHUB_APP_KEY_BASE64: fakeAppKeyBase64,
+            CI_RUNNERS_GITHUB_WEBHOOK_SECRET: fakeWebhookSecret,
           })
         )
       );

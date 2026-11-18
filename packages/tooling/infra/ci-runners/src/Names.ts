@@ -58,7 +58,6 @@ export class PhysicalNames extends S.Opaque<PhysicalNames, { readonly brand: uni
     reaperFunction: S.String,
     reaperSchedule: S.String,
     imdsDisablePolicy: S.String,
-    runnerBoundaryPolicy: S.String,
     iamPath: S.String,
     kmsAlias: S.String,
   }).pipe($I.annoteSchema("PhysicalNames", { description: "Every physical name the stack pins for one stage." }))
@@ -123,7 +122,6 @@ export const physicalNames = (stage: string): PhysicalNames => {
     reaperFunction: `${fleet}-reaper`,
     reaperSchedule: `${fleet}-reaper`,
     imdsDisablePolicy: `${fleet}-runner-imds-disable`,
-    runnerBoundaryPolicy: `${fleet}-runner-boundary`,
     iamPath: `/beep-fleet/${slug}/`,
     kmsAlias: `alias/${fleet}-github-app`,
   });
@@ -234,7 +232,6 @@ export const liveFleetOverlaps = (names: PhysicalNames): ReadonlyArray<string> =
       names.reaperFunction,
       names.reaperSchedule,
       names.imdsDisablePolicy,
-      names.runnerBoundaryPolicy,
       names.iamPath,
       names.kmsAlias,
     ],

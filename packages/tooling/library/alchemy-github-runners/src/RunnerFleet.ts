@@ -106,9 +106,10 @@ export type RunnerFleetLaunchTemplate = Pick<
  * the termination watcher's tag filter. `ssmRoot` holds the App parameters
  * and each pool's token and config paths. `app` values are written as
  * SecureString parameters under the fleet's own KMS key; nothing here mints
- * an App. `runnerManagedPolicyArns` and `runnerPermissionsBoundaryArn` go on
- * every pool's runner role (the live fleet attaches its IMDS-disable policy
- * this way). `namePrefix` pins every physical name the composite chooses
+ * an App. `runnerManagedPolicyArns` go on every pool's runner role (the live
+ * fleet attaches its IMDS-disable policy this way). `permissionsBoundaryArn`
+ * is the permissions boundary of every role the composite creates: the
+ * runner roles and each Lambda function's execution role. `namePrefix` pins every physical name the composite chooses
  * (see `RunnerFleetNames`); without it the resources take Alchemy's
  * generated names.
  *
@@ -154,7 +155,7 @@ export class RunnerFleetProps extends S.Opaque<RunnerFleetProps, { readonly bran
     repositoryAllowList: S.Array(S.String),
     runAs: S.optionalKey(S.String),
     runnerManagedPolicyArns: StringValue.pipe(S.Array, S.optionalKey),
-    runnerPermissionsBoundaryArn: S.optionalKey(StringValue),
+    permissionsBoundaryArn: S.optionalKey(StringValue),
     runnerType: RunnerType,
     ssmRoot: S.String,
     subnetIds: S.NonEmptyArray(StringValue),
@@ -214,6 +215,10 @@ const scheduledFunction = Effect.fn("RunnerFleet.scheduledFunction")(function* (
   });
   return rule;
 });
+
+// The permissions boundary every role of the fleet carries, when the fleet sets one.
+const boundaryOf = (props: RunnerFleetProps) =>
+  props.permissionsBoundaryArn === undefined ? {} : { permissionsBoundary: props.permissionsBoundaryArn };
 
 const queueConsumer = (queue: SQS.Queue): Statement =>
   allow({
@@ -351,9 +356,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                     { Effect: "Allow", Principal: { Service: "ec2.amazonaws.com" }, Action: ["sts:AssumeRole"] },
                   ],
                 },
-                ...(props.runnerPermissionsBoundaryArn === undefined
-                  ? {}
-                  : { permissionsBoundary: props.runnerPermissionsBoundaryArn }),
+                ...boundaryOf(props),
                 ...(props.runnerManagedPolicyArns === undefined
                   ? {}
                   : { managedPolicyArns: A.copy(props.runnerManagedPolicyArns) }),
@@ -468,6 +471,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
               );
               const poolFunction = (logicalId: string, file: string, extra: Partial<Lambda.FunctionProps> = {}) =>
                 Lambda.Function(logicalId, {
+                  ...boundaryOf(props),
                   main: `${lambdaDir}/${file}`,
                   handler: "handler",
                   functionUrl: false,
@@ -605,6 +609,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         )
       );
       const webhook = yield* Lambda.Function("Webhook", {
+        ...boundaryOf(props),
         ...pinFunction((names) => names.webhook),
         main: `${lambdaDir}/webhook.ts`,
         handler: "handler",
@@ -625,6 +630,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
 
       const tokenPaths = A.map(pools, (pool) => pool.tokenPath);
       const housekeeper = yield* Lambda.Function("SsmHousekeeper", {
+        ...boundaryOf(props),
         ...pinFunction((names) => names.housekeeper),
         main: `${lambdaDir}/ssm-housekeeper.ts`,
         handler: "handler",
@@ -668,6 +674,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         )
       );
       const syncer = yield* Lambda.Function("RunnerBinariesSyncer", {
+        ...boundaryOf(props),
         ...pinFunction((names) => names.syncer),
         main: `${lambdaDir}/runner-binaries-syncer.ts`,
         handler: "handler",
@@ -711,6 +718,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         )
       );
       const watcher = yield* Lambda.Function("TerminationWatcher", {
+        ...boundaryOf(props),
         ...pinFunction((names) => names.terminationWatcher),
         main: `${lambdaDir}/termination-watcher.ts`,
         handler: "handler",

@@ -18,6 +18,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import { effectiveCap, PoolName, productionStage, resolveStageConfig } from "./Config.ts";
 import { stageCredentials } from "./Credentials.ts";
+import { fleetBoundaryPolicyArn } from "./DeployRolePolicy.ts";
 import { requireCiForProduction, requireConfiguredTarget, requireDistinctStage, requireFencedNames } from "./Guards.ts";
 import { physicalNames } from "./Names.ts";
 import { declareNetwork, networkTags } from "./Network.ts";
@@ -87,56 +88,6 @@ export const toRunnerPool: {
     })
 );
 
-/**
- * The permissions boundary of every runner role: the live
- * `beep-ci-fleet-boundary` ceiling narrowed to what a runner does (read and
- * delete its token, decrypt it, fetch the runner tarball, tag, describe and
- * terminate itself, disable its own IMDS), with the live denies on IAM
- * mutation and on touching metadata options once disabled.
- *
- * **Example** (Count the statements)
- *
- * ```ts
- * import { runnerBoundaryDocument } from "@beep/infra-ci-runners/CiRunners"
- *
- * console.log(runnerBoundaryDocument.Statement.length) // 3
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const runnerBoundaryDocument: IAM.PolicyDocument = {
-  Version: "2012-10-17",
-  Statement: [
-    {
-      Sid: "RunnerCeiling",
-      Effect: "Allow",
-      Action: [
-        "ec2:*",
-        "ssm:GetParameter",
-        "ssm:DeleteParameter",
-        "s3:GetObject",
-        "kms:Decrypt",
-        "sts:GetCallerIdentity",
-      ],
-      Resource: ["*"],
-    },
-    {
-      Sid: "NoIamMutation",
-      Effect: "Deny",
-      Action: ["iam:Create*", "iam:Put*", "iam:Attach*", "iam:Delete*", "iam:Update*"],
-      Resource: ["*"],
-    },
-    {
-      Sid: "DenyMetadataOptionsOnceDisabled",
-      Effect: "Deny",
-      Action: ["ec2:ModifyInstanceMetadataOptions"],
-      Resource: ["*"],
-      Condition: { StringEquals: { "ec2:MetadataHttpEndpoint": "disabled" } },
-    },
-  ],
-};
-
 const runnerPolicies = Effect.fn("CiRunners.runnerPolicies")(function* (names: PhysicalNames) {
   const imdsDisable = yield* IAM.Policy("ImdsDisablePolicy", {
     policyName: names.imdsDisablePolicy,
@@ -145,14 +96,7 @@ const runnerPolicies = Effect.fn("CiRunners.runnerPolicies")(function* (names: P
     policyDocument: imdsDisablePolicyDocument,
     tags: networkTags(names.fleet, names.imdsDisablePolicy),
   });
-  const boundary = yield* IAM.Policy("RunnerBoundaryPolicy", {
-    policyName: names.runnerBoundaryPolicy,
-    path: names.iamPath,
-    description: "Permissions boundary of the CI runner roles.",
-    policyDocument: runnerBoundaryDocument,
-    tags: networkTags(names.fleet, names.runnerBoundaryPolicy),
-  });
-  return { imdsDisableArn: imdsDisable.policyArn, boundaryArn: boundary.policyArn };
+  return { imdsDisableArn: imdsDisable.policyArn };
 });
 
 /**
@@ -211,7 +155,8 @@ export const declareCiRunners = Effect.fn("CiRunners.declare")(function* (input:
       runAs: config.image.runAs,
       postInstall: yield* packPostInstall(runnerPostInstall),
       runnerManagedPolicyArns: [policies.imdsDisableArn],
-      runnerPermissionsBoundaryArn: policies.boundaryArn,
+      // Every role the fleet creates carries the bootstrap fleet boundary (deploy-role decision).
+      permissionsBoundaryArn: fleetBoundaryPolicyArn,
       launchTemplate: {
         imageId: config.image.amiId,
         securityGroupIds: [network.runnerSecurityGroupId],

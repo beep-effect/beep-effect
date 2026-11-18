@@ -4773,6 +4773,7 @@
     },
   },
   "patchedDependencies": {
+    "@alchemy.run/aws@2.0.0-beta.87": "patches/@alchemy.run%2Faws@2.0.0-beta.87.patch",
     "@alchemy.run/domain@2.0.0-beta.87": "patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch",
   },
   "overrides": {

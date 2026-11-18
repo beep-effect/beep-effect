@@ -3,10 +3,12 @@ import {
   defaultGroupStatement,
   deployRolePolicy,
   ec2CreateActions,
+  fleetBoundaryDocument,
+  fleetBoundaryPolicyArn,
   wildcardResourceReasons,
 } from "@beep/infra-ci-runners/DeployRolePolicy";
 import { describe, expect, it } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -125,16 +127,134 @@ describe("CiRunners deploy role policy", () => {
       })
   );
 
-  it.effect("scopes event-source mapping writes to the fleet's functions", () =>
+  it.effect(
+    "creates event-source mappings only for fleet functions, with the ownership tags, and writes only owned ones",
+    () =>
+      Effect.sync(() => {
+        const statementFor = (action: string) => A.filter(v2.Statement, (statement) => grants(statement, action));
+        for (const create of statementFor("lambda:CreateEventSourceMapping")) {
+          expect(create.Condition?.ArnLike?.["lambda:FunctionArn"]).toBe(
+            "arn:aws:lambda:us-east-1:832907639880:function:beep-fleet-prod-*"
+          );
+          expect(create.Condition?.StringEquals?.["aws:RequestTag/alchemy::stack"]).toBe("CiRunners");
+          expect(create.Condition?.StringEquals?.["aws:RequestTag/alchemy::stage"]).toBe("prod");
+        }
+        for (const action of ["lambda:UpdateEventSourceMapping", "lambda:DeleteEventSourceMapping"]) {
+          const owned = statementFor(action);
+          assertTrue(A.isReadonlyArrayNonEmpty(owned));
+          for (const statement of owned) {
+            expect(statement.Condition?.StringEquals?.["aws:ResourceTag/alchemy::stack"]).toBe("CiRunners");
+            expect(statement.Condition?.StringEquals?.["aws:ResourceTag/alchemy::stage"]).toBe("prod");
+          }
+        }
+      })
+  );
+
+  const roleMutations = [
+    "iam:CreateRole",
+    "iam:PutRolePolicy",
+    "iam:DeleteRolePolicy",
+    "iam:AttachRolePolicy",
+    "iam:DetachRolePolicy",
+    "iam:PutRolePermissionsBoundary",
+  ];
+
+  it.effect("holds every role permission write to the exact fleet boundary, and never deletes a boundary", () =>
     Effect.sync(() => {
-      const mappingWrites = A.filter(v2.Statement, (statement) =>
-        A.some(actionsOf(statement), (action) => /^lambda:(?:Create|Update|Delete)EventSourceMapping$/u.test(action))
-      );
-      assertTrue(A.isReadonlyArrayNonEmpty(mappingWrites));
-      for (const statement of mappingWrites) {
-        expect(statement.Condition?.ArnLike?.["lambda:FunctionArn"]).toBe(
-          "arn:aws:lambda:us-east-1:832907639880:function:beep-fleet-prod-*"
+      for (const action of roleMutations) {
+        const statements = A.filter(v2.Statement, (statement) => grants(statement, action));
+        assertTrue(A.isReadonlyArrayNonEmpty(statements));
+        for (const statement of statements) {
+          expect(statement.Condition?.StringEquals?.["iam:PermissionsBoundary"]).toBe(fleetBoundaryPolicyArn);
+        }
+      }
+      const everyAction = A.flatMap(v2.Statement, actionsOf);
+      assertFalse(A.contains(everyAction, "iam:DeleteRolePermissionsBoundary"));
+      assertFalse(A.contains(everyAction, "iam:UpdateAssumeRolePolicy"));
+    })
+  );
+
+  it.effect("attaches only the fleet's own policies and the one named AWS-managed policy", () =>
+    Effect.sync(() => {
+      const attach = A.filter(v2.Statement, (statement) => grants(statement, "iam:AttachRolePolicy"));
+      for (const statement of attach) {
+        expect(statement.Condition?.ArnLike?.["iam:PolicyARN"]).toStrictEqual([
+          "arn:aws:iam::832907639880:policy/beep-fleet/prod/*",
+          "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+        ]);
+      }
+    })
+  );
+
+  it.effect("passes fleet roles only to the fleet's services", () =>
+    Effect.sync(() => {
+      const pass = A.filter(v2.Statement, (statement) => grants(statement, "iam:PassRole"));
+      assertTrue(A.isReadonlyArrayNonEmpty(pass));
+      for (const statement of pass) {
+        expect(statement.Condition?.StringEquals?.["iam:PassedToService"]).toStrictEqual([
+          "lambda.amazonaws.com",
+          "ec2.amazonaws.com",
+          "vpc-flow-logs.amazonaws.com",
+        ]);
+      }
+    })
+  );
+
+  it.effect(
+    "keeps the boundary outside every policy path the role can write, with no version or delete grant on it",
+    () =>
+      Effect.sync(() => {
+        const policyWrites = A.filter(v2.Statement, (statement) =>
+          A.some(actionsOf(statement), (action) =>
+            /^iam:(?:CreatePolicy|CreatePolicyVersion|SetDefaultPolicyVersion|DeletePolicyVersion|DeletePolicy|TagPolicy|UntagPolicy)$/u.test(
+              action
+            )
+          )
         );
+        assertTrue(A.isReadonlyArrayNonEmpty(policyWrites));
+        for (const statement of policyWrites) {
+          for (const pattern of resourcesOf(statement)) {
+            const matches = new RegExp(`^${Str.replaceAll("*", ".*")(Str.replaceAll(".", "\\.")(pattern))}$`, "u");
+            assertFalse(matches.test(fleetBoundaryPolicyArn));
+          }
+        }
+        assertFalse(Str.includes("/beep-fleet/prod/")(fleetBoundaryPolicyArn));
+      })
+  );
+});
+
+describe("CiRunners fleet boundary", () => {
+  const denies = A.filter(fleetBoundaryDocument.Statement, (statement) => statement.Effect === "Deny");
+  const denied = (action: string) => A.some(denies, (statement) => A.contains(actionsOf(statement), action));
+
+  it.effect("denies IAM writes, roles outside the fleet, and organization, account and billing actions", () =>
+    Effect.sync(() => {
+      for (const action of ["iam:Create*", "iam:Put*", "iam:Attach*", "iam:Delete*", "iam:Update*", "iam:Detach*"]) {
+        assertTrue(denied(action));
+      }
+      for (const action of ["organizations:*", "account:*", "aws-portal:*", "billing:*"]) {
+        assertTrue(denied(action));
+      }
+      const outsideFleet = A.filter(denies, (statement) => A.isReadonlyArrayNonEmpty(statement.NotResource ?? []));
+      expect(A.flatMap(outsideFleet, actionsOf)).toStrictEqual(["iam:PassRole", "sts:AssumeRole*"]);
+      for (const statement of outsideFleet) {
+        expect(statement.NotResource).toStrictEqual([
+          "arn:aws:iam::832907639880:role/beep-fleet-*",
+          "arn:aws:iam::832907639880:role/CiRunners-*",
+        ]);
+      }
+    })
+  );
+
+  it.effect("allows no IAM action but passing a role, and covers what the runners and Lambdas use", () =>
+    Effect.sync(() => {
+      const allowed = A.flatMap(
+        A.filter(fleetBoundaryDocument.Statement, (statement) => statement.Effect === "Allow"),
+        actionsOf
+      );
+      expect(A.filter(allowed, Str.startsWith("iam:"))).toStrictEqual(["iam:PassRole"]);
+      for (const action of ["ec2:*", "sqs:ReceiveMessage", "ssm:GetParameter", "kms:Decrypt", "logs:PutLogEvents"]) {
+        assertTrue(A.contains(allowed, action));
       }
     })
   );
