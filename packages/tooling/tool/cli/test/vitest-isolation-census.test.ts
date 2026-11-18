@@ -10,7 +10,7 @@ import * as Str from "effect/String";
 // Process-wide state a suite can leak into the next file of a shared (`isolate: false`) worker.
 const leakPatterns = [
   /process\.chdir\(/,
-  /\b(?:temporaryWorkingDirectory|withTempWorkingDirectory)\b/,
+  /\b(?:temporaryWorkingDirectory|temporaryGitWorkingDirectory|withTempWorkingDirectory)\b/,
   // Any reassignment, anywhere on a line; `exitCode` only appears in child-process scripts.
   /(?<![\w$.])process\.(?!exitCode\b)[A-Za-z_$][\w$]*\s*=(?!=)/,
   /(?<![\w$.])globalThis\.[A-Za-z_$][\w$]*\s*=(?!=)/,
@@ -32,10 +32,13 @@ const censusInputs = Effect.fn("VitestIsolationCensus.inputs")(function* (packag
     readDirectory1,
     (entry) => /\.test\.tsx?$/.test(entry) && !Str.startsWith("fixtures/")(entry)
   );
-  const leaking = yield* Effect.forEach(testFiles, (entry) =>
-    Effect.map(fs.readFileString(path.join(testRoot, entry)), (source) =>
-      A.some(leakPatterns, (pattern) => pattern.test(source)) ? [`test/${entry}`] : []
-    )
+  const leaking = yield* Effect.forEach(
+    testFiles,
+    (entry) =>
+      Effect.map(fs.readFileString(path.join(testRoot, entry)), (source) =>
+        A.some(leakPatterns, (pattern) => pattern.test(source)) ? [`test/${entry}`] : []
+      ),
+    { concurrency: 1 }
   );
   const config = yield* fs.readFileString(path.join(packageRoot, "vitest.config.ts"));
   const listed = Str.split(config, "const isolatedSuites = [")[1] ?? "";

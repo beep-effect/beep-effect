@@ -1,0 +1,115 @@
+name: Deploy Storybook
+
+# Deploys the `prod` stage of the Alchemy stack in apps/storybook: the static
+# Storybook build as an assets-only Cloudflare Worker on the zone route
+# `beep-effect.com/storybook*`
+# (https://beep-effect.com/storybook/). State lives in the repo's shared AWS
+# S3 state store (goals/infra-alchemy-rebuild); its stage lease plus this
+# concurrency group serialize every prod deploy and never cancel one
+# mid-apply. The plan step runs first without `--yes` and fails on a missing
+# or outdated store, so the store stays operator-bootstrapped. AWS credentials
+# come from the GitHub OIDC state role (vars.ALCHEMY_STATE_ROLE_ARN on the
+# storybook-prod environment); Cloudflare credentials are that environment's
+# secrets. Runbook: docs/runbooks/alchemy-infra.md.
+#
+# The path filter names the roots Storybook's stories and host live under. A
+# change deeper in a story's dependency closure deploys with the next push
+# that touches one of them, or on dispatch.
+on:
+  push:
+    branches: [main]
+    paths:
+      - apps/storybook/**
+      - packages/foundation/ui-system/**
+      - packages/drivers/graph-3d/**
+      - packages/epistemic/ui/**
+      - packages/foundation/modeling/public-site/**
+      - bun.lock
+      - .github/workflows/deploy-storybook.yml
+  workflow_dispatch:
+
+concurrency:
+  group: alchemy-storybook-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Storybook (prod)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: storybook-prod
+      url: https://beep-effect.com/storybook/
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+
+      - name: Configure AWS credentials (state store)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.ALCHEMY_STATE_ROLE_ARN }}
+          role-session-name: alchemy-storybook-prod
+          aws-region: us-east-1
+
+      # The plan log is the acceptance evidence: after the first deploy it
+      # shows no create or replace (alchemy plan has no changes-pending exit
+      # code, so the log is the record).
+      - name: Plan prod stage
+        working-directory: apps/storybook
+        shell: bash
+        env:
+          CI: "true"
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bunx alchemy plan --stage prod --env-file /dev/null
+
+      - name: Deploy prod stage
+        working-directory: apps/storybook
+        shell: bash
+        env:
+          CI: "true"
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: bunx alchemy deploy --stage prod --yes --env-file /dev/null
+
+      # The asset layer redirects `iframe.html` to `iframe` (query kept), so the
+      # iframe probe follows redirects. The bare probe is the slug without a
+      # slash but with a query: the route must take it and the redirect must
+      # keep the query. The apex probe proves the route took only the slug.
+      # A probe straight after a first deploy races edge propagation (run
+      # 43517423865: iframe 404 one second after the route was created, 200 a
+      # minute later), and curl's retries do not cover a 404. Poll every probe
+      # until all four hold or 120 seconds pass, then fail with the last values.
+      - name: Smoke-check the public route
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe() { curl -sS -o /dev/null --max-time 20 "$@" || echo "curl-failed"; }
+          deadline=$((SECONDS + 120))
+          while :; do
+            index="$(probe -L -w '%{http_code}' https://beep-effect.com/storybook/)"
+            frame="$(probe -L -w '%{http_code}' https://beep-effect.com/storybook/iframe.html)"
+            bare="$(probe -L -w '%{http_code} %{url_effective}' 'https://beep-effect.com/storybook?path=/docs/smoke')"
+            apex="$(probe -w '%{http_code}' https://beep-effect.com/)"
+            echo "index=${index} iframe=${frame} bare=${bare} apex=${apex}"
+            if [[ "$index" == "200" && "$frame" == "200" \
+              && "$bare" == "200 https://beep-effect.com/storybook/?path=/docs/smoke" && "$apex" == "200" ]]; then
+              exit 0
+            fi
+            if (( SECONDS >= deadline )); then
+              echo "smoke check did not converge within 120s" >&2
+              exit 1
+            fi
+            sleep 5
+          done

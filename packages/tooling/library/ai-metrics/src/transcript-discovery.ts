@@ -280,7 +280,8 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
         excludedLinks: 0,
         handle: O.none(),
       } satisfies RootRuntime;
-    })
+    }),
+    { concurrency: 1 }
   );
   const semaphore = yield* Semaphore.make(1);
   const suspendRoots = Effect.forEach(
@@ -293,14 +294,14 @@ export const makeTranscriptDiscovery = Effect.fn("AiMetrics.makeTranscriptDiscov
           })
         )
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   let cursor = 0;
   let closed = false;
   yield* Effect.addFinalizer(
     Effect.fnUntraced(function* () {
       closed = true;
-      yield* Effect.forEach(roots, closeRoot, { discard: true }).pipe(Effect.orDie);
+      yield* Effect.forEach(roots, closeRoot, { concurrency: 1, discard: true }).pipe(Effect.orDie);
     })
   );
   const report = (operations: number, candidates: number) =>

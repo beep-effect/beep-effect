@@ -37,7 +37,9 @@ const $I = $LintRulesId;
  *   "no-hand-built-identity-annotation",
  *   "prefer-exact-optional-key",
  *   "no-hand-rolled-canonical-json",
- *   "no-citation-optional-invocation"
+ *   "no-citation-optional-invocation",
+ *   "no-hand-rolled-git-gh-spawn",
+ *   "no-unrecorded-spawner-double"
  * ])
  * ```
  *
@@ -55,6 +57,8 @@ export const RULE_NAMES = [
   "prefer-exact-optional-key",
   "no-hand-rolled-canonical-json",
   "no-citation-optional-invocation",
+  "no-hand-rolled-git-gh-spawn",
+  "no-unrecorded-spawner-double",
 ] as const;
 
 /**
@@ -179,6 +183,8 @@ export class RuleRegistrySchema extends S.Opaque<RuleRegistrySchema, { readonly 
     "prefer-exact-optional-key": RuleMetadataSchema,
     "no-hand-rolled-canonical-json": RuleMetadataSchema,
     "no-citation-optional-invocation": RuleMetadataSchema,
+    "no-hand-rolled-git-gh-spawn": RuleMetadataSchema,
+    "no-unrecorded-spawner-double": RuleMetadataSchema,
   }).pipe(
     $I.annoteSchema("RuleRegistrySchema", {
       description: "Schema for the finite rule registry keyed by rule slug.",
@@ -208,7 +214,7 @@ export const RULES: { readonly [K in RuleName]: RuleMetadata } = RuleRegistrySch
     severity: "error",
     replaces: O.none(),
     summary:
-      "Require explicit citation authority; reject optional serviceOption/getOption/getOrUndefined lookups. Local aliases and aliased named imports require semantic linting.",
+      "Require explicit citation authority; reject optional serviceOption/getOption/getOrUndefined and captured-context get/getUnsafe/getOrElse lookups of CitationTextBudget, CitationOperationAdmission and CitationInvocation. Not caught (syntactic rule): local aliases and aliased named imports, raw context map access, a picked or omitted Context passed along, and any Scope.Scope capture.",
     scope: O.some("packages/law-practice/server/src/internal/Citation/**"),
   }),
   "no-file-url-pathname": RuleMetadataSchema.make({
@@ -277,6 +283,22 @@ export const RULES: { readonly [K in RuleName]: RuleMetadata } = RuleRegistrySch
     summary:
       "Disallow hand-rolled JSON object text (braces around a join of members) outside `@beep/jsonc`; canonical bytes come from `JsoncFingerprint.canonicalizeResult`.",
     scope: O.some("**/src/** except packages/foundation/modeling/jsonc/**"),
+  }),
+  "no-hand-rolled-git-gh-spawn": RuleMetadataSchema.make({
+    name: "no-hand-rolled-git-gh-spawn",
+    severity: "error",
+    replaces: O.none(),
+    summary:
+      "Disallow hand-rolled git and gh spawns in repo-cli and ai-metrics source; use `@beep/git`, `@beep/github` or `@beep/commands`, or keep the spawn with a recorded `KEEP (D-nn)` biome-ignore.",
+    scope: O.some("packages/tooling/tool/cli/src/**, packages/tooling/library/ai-metrics/src/**"),
+  }),
+  "no-unrecorded-spawner-double": RuleMetadataSchema.make({
+    name: "no-unrecorded-spawner-double",
+    severity: "error",
+    replaces: O.none(),
+    summary:
+      "Disallow hand-rolled `ChildProcessSpawner.make(...)` test doubles in repo-cli and ai-metrics tests; use `ScriptedSpawner`, or keep the double with a recorded `Own double` biome-ignore. Never-spawn `Effect.die` guards are exempt.",
+    scope: O.some("packages/tooling/tool/cli/test/**, packages/tooling/library/ai-metrics/test/**"),
   }),
 });
 

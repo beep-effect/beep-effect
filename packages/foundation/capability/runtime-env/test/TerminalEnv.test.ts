@@ -181,7 +181,9 @@ describe("TerminalEnv.layer", () => {
     it.layer(Layer.mergeAll(invalidWidth.layer, envWidth.layer), { timeout: "30 seconds" })((it) => {
       it.effect("with no columns, COLUMNS supplies the width, then the fallback", () =>
         Effect.map(
-          Effect.all([Effect.map(envWidth.key, (t) => t.width()), Effect.map(invalidWidth.key, (t) => t.width(60))]),
+          Effect.all([Effect.map(envWidth.key, (t) => t.width()), Effect.map(invalidWidth.key, (t) => t.width(60))], {
+            concurrency: 1,
+          }),
           ([fromEnv, fallback]) => {
             assert.strictEqual(fromEnv, 100);
             assert.strictEqual(fallback, 60);
@@ -201,7 +203,7 @@ describe("TerminalEnv.layer", () => {
       (it) => {
         it.effect("COLUMNS must be a positive integer: anything else falls back", () =>
           Effect.map(
-            Effect.forEach(invalidWidths, (fixture) => Effect.map(fixture.key, (t) => t.width(60))),
+            Effect.forEach(invalidWidths, (fixture) => Effect.map(fixture.key, (t) => t.width(60)), { concurrency: 1 }),
             (widths) => assert.deepStrictEqual(widths, [60, 60, 60, 60, 60, 60, 60])
           )
         );

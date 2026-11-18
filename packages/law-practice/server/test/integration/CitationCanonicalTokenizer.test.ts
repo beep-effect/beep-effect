@@ -23,7 +23,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("complete de
           const setup = yield* setupCitationTokenizer(kind, config);
           for (const row of controls.corpus.cases) yield* assertCitationTokenizerCase(setup, row);
           const snapshot = yield* setup.observed.snapshot;
-          expect(snapshot).toEqual({ spawned: 192, confirmed: 192 });
+          expect(snapshot).toEqual({ spawned: 17, confirmed: 17 });
         }),
       { timeout: 360000 }
     );

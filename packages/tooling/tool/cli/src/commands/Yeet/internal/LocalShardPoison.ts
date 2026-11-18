@@ -120,6 +120,6 @@ export const recordYeetLocalShardOutcome = Effect.fn("Yeet.recordYeetLocalShardO
           resolution: YeetAckFixResolution.make({ sha: outcome.headSha }),
         })
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });

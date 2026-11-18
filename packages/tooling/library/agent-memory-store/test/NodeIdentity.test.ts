@@ -75,7 +75,9 @@ describe("NodeIdentity", () => {
   it.effect(
     "decodes every node kind literal and rejects others",
     Effect.fnUntraced(function* () {
-      const decoded = yield* Effect.forEach(NodeKind.literals, (literal) => decodeNodeKind(literal));
+      const decoded = yield* Effect.forEach(NodeKind.literals, (literal) => decodeNodeKind(literal), {
+        concurrency: 1,
+      });
       expect(decoded).toEqual([...NodeKind.literals]);
       expect(decoded).toHaveLength(9);
       expect(NodeKind.is.gap("gap")).toBe(true);

@@ -320,12 +320,15 @@ const fixtureRepo = Effect.fn("CiPartitionsTest.fixtureRepo")(function* () {
     workspaces: A.map(fixturePackages, ([, packagePath]) => packagePath),
   });
   yield* fs.writeFileString(path.join(root, "package.json"), rootManifest);
-  yield* Effect.forEach(fixturePackages, ([name, packagePath]) =>
-    Effect.gen(function* () {
-      yield* fs.makeDirectory(path.join(root, packagePath), { recursive: true });
-      const manifest = yield* encodeJson({ name, version: "0.0.0" });
-      yield* fs.writeFileString(path.join(root, packagePath, "package.json"), manifest);
-    })
+  yield* Effect.forEach(
+    fixturePackages,
+    ([name, packagePath]) =>
+      Effect.gen(function* () {
+        yield* fs.makeDirectory(path.join(root, packagePath), { recursive: true });
+        const manifest = yield* encodeJson({ name, version: "0.0.0" });
+        yield* fs.writeFileString(path.join(root, packagePath, "package.json"), manifest);
+      }),
+    { concurrency: 1 }
   );
   return root;
 });
@@ -336,6 +339,8 @@ const FixtureCheckout = Layer.mergeAll(
   MemoryFileSystem.layer,
   NodePath.layer,
   NodeCrypto.layer,
+  // Own double: dies on any spawn, so a fixture that must not spawn Biome fails loudly;
+  // `ScriptedSpawner` records and answers every spawn instead.
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make(() => Effect.die("a bare fixture checkout must not spawn Biome"))

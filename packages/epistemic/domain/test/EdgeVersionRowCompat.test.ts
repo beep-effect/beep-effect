@@ -39,12 +39,15 @@ const preExtractionRows = [
 
 describe("EdgeVersion row compatibility", () => {
   it.effect("decodes and re-encodes pre-extraction rows to identical JSON", () =>
-    Effect.forEach(preExtractionRows, (row) =>
-      Effect.gen(function* () {
-        const decoded = yield* S.decodeUnknownEffect(EdgeVersion)(row);
-        const encoded = yield* S.encodeEffect(EdgeVersion)(decoded);
-        expect(encoded).toStrictEqual(row);
-      })
+    Effect.forEach(
+      preExtractionRows,
+      (row) =>
+        Effect.gen(function* () {
+          const decoded = yield* S.decodeUnknownEffect(EdgeVersion)(row);
+          const encoded = yield* S.encodeEffect(EdgeVersion)(decoded);
+          expect(encoded).toStrictEqual(row);
+        }),
+      { concurrency: 1 }
     )
   );
 });

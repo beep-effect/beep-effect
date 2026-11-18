@@ -1095,7 +1095,7 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
       },
       options?.page
     );
-    return yield* Effect.forEach(raw, project);
+    return yield* Effect.forEach(raw, project, { concurrency: 1 });
   });
 
   const create = Effect.fn("PullRequest.create")(function* (input: {
@@ -1179,7 +1179,7 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
         );
         // The same `diff-entry` wire shape the single-commit read answers with,
         // so the same projection turns it into `CommitFile`s.
-        return yield* Effect.forEach(files, fileOf("PullRequest.listFiles"));
+        return yield* Effect.forEach(files, fileOf("PullRequest.listFiles"), { concurrency: 1 });
       })
     ),
 
@@ -1196,7 +1196,7 @@ const make = (client: GitHubClient["Service"]): PullRequestShape => {
           { owner, repo, commit_sha: sha },
           options?.page
         );
-        return yield* Effect.forEach(raw, project);
+        return yield* Effect.forEach(raw, project, { concurrency: 1 });
       })
     ),
 

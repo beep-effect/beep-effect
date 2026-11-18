@@ -1,4 +1,5 @@
-import { makeCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
+import { makeCitationHtmlWorker as makeOwnedCitationHtmlWorker } from "@beep/law-practice-server/internal/Citation/HtmlWorker";
+import { CitationNativeProcessRuntime } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { it } from "@beep/test-runner";
 import * as BunServices from "@effect/platform-bun/BunServices";
@@ -8,7 +9,17 @@ import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationHtmlWorker = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationHtmlWorker>[0],
+  a1: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(CitationNativeProcessRuntime, a1);
+  return yield* makeOwnedCitationHtmlWorker(a0, o1);
+});
 
 const runtime = { kind: "bun", executable: "/citation-unused-bun", workerFile: "/citation-unused.mjs", cwd: "/" };
 

@@ -2,9 +2,9 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `completed-retained`
 
-**Paused by operator ruling (finish board, 2026-11-13).** Hygiene work with no execution yet and no urgency. No lane is working on it; resume with `bun run beep goals set-status python-free-repo active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
+**Completed 2026-11-14 by #3322 (final PR).** #3283 (photo-face on onnxruntime-node), #3293 (skill scripts) and #3296 (probe deletions, workflow and r2-cache Python, small ports) removed every tracked Python file; #3322 deleted the last two and added the `no-tracked-python` law. The packet is retained because other packets cite it; see `retentionReason` in the manifest. The earlier pause is recorded in [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,12 +33,17 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. First step: the per-file triage table (`git ls-files '*.py'`, ~290 files) with consumer evidence.
+P4 Close — all four lanes are done. #3283 (photo-face on onnxruntime-node), #3293 (skill scripts) and #3296 (probe deletions, workflow and r2-cache Python, small ports) merged on 2026-11-14. The final PR deletes the last two tracked `.py` files, lands the `no-tracked-python` law, the lefthook hook, the cheap-tier CI lane and the AGENTS.md line, and carries the closeout and the reflection.
 
 ## Latest Evidence
 
 - 2026-11-06 grill session decisions D4, D8, D15 in [`explorations/pulumi-to-alchemy/DECISIONS.md`](../../explorations/pulumi-to-alchemy/DECISIONS.md).
 - Inventory by location in `SPEC.md` Target Surfaces.
+- Per-file triage of all 308 tracked Python files: [`research/triage.md`](./research/triage.md).
+- photo-face parity against the retained Python: [`research/photo-face-parity.md`](./research/photo-face-parity.md).
+- infra/r2-cache port: [`research/r2-cache-port.md`](./research/r2-cache-port.md).
+- Friction receipts: [`research/OPPORTUNITIES.md`](./research/OPPORTUNITIES.md). Reflection: [`history/reflections/2026-11-13-claude.md`](./history/reflections/2026-11-13-claude.md).
+- On the final head `git ls-files '*.py'` is empty, and `bun run beep laws no-tracked-python --check` reports tracked_python_files=0.
 
 ## Notes
 

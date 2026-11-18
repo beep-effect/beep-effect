@@ -28,13 +28,6 @@
 export const infraProjectName = "beep-effect";
 
 /**
- * Account cost visibility and protected budget ownership.
- *
- * @category resources
- * @since 0.0.0
- */
-export * from "./AccountCostControls.ts";
-/**
  * AI metrics Pulumi orchestration exports.
  *
  * @example
@@ -116,19 +109,13 @@ export * from "./CiShardOverflowPool.ts";
  */
 export * from "./CiTurboCache.ts";
 /**
- * OIP web Pulumi orchestration exports.
+ * The account notification recipient list the AWS turbo cache's throttle
+ * alarm reads.
  *
- * @example
- * ```ts
- * import { OipWebStack } from "@beep/infra"
- *
- * console.log(OipWebStack)
- * ```
- *
- * @category resources
+ * @category configuration
  * @since 0.0.0
  */
-export * from "./OipWeb.ts";
+export * from "./NotificationRecipients.ts";
 /**
  * OpenClaw workstation Pulumi orchestration exports.
  *
@@ -157,31 +144,3 @@ export * from "./OpenClaw.ts";
  * @since 0.0.0
  */
 export * from "./OpenClawArtifacts.ts";
-/**
- * Storybook Pulumi orchestration exports.
- *
- * @example
- * ```ts
- * import { StorybookStack } from "@beep/infra"
- *
- * console.log(StorybookStack)
- * ```
- *
- * @category resources
- * @since 0.0.0
- */
-export * from "./Storybook.ts";
-/**
- * Shared Vercel provider schemas for infra stacks.
- *
- * @example
- * ```ts
- * import { VercelAuthenticationDeploymentType } from "@beep/infra"
- *
- * console.log(VercelAuthenticationDeploymentType.Enum.none)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export * from "./Vercel.ts";

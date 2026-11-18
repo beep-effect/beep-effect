@@ -139,10 +139,13 @@ const fixtureRepo = Effect.gen(function* () {
   const encodedJsonString3 = yield* encodeJsonString({ extends: "./tsconfig.json", references: [] });
   yield* writeProjectFile("packages/consumer/tsconfig.check.json", encodedJsonString3);
   yield* writeProjectFile("packages/consumer/src/index.ts", "export const consumerValue = 1;\n");
-  yield* Effect.forEach(["tsc", "tsgo"], (compiler) =>
-    writeProjectFile(`node_modules/.bin/${compiler}`, compilerShim).pipe(
-      Effect.andThen(fs.chmod(`node_modules/.bin/${compiler}`, 0o755))
-    )
+  yield* Effect.forEach(
+    ["tsc", "tsgo"],
+    (compiler) =>
+      writeProjectFile(`node_modules/.bin/${compiler}`, compilerShim).pipe(
+        Effect.andThen(fs.chmod(`node_modules/.bin/${compiler}`, 0o755))
+      ),
+    { concurrency: 1 }
   );
   yield* writeCheckCensusBaseline(CHECK_CENSUS_BASELINE_PATH, fixtureBaseline);
   return root;
@@ -327,8 +330,10 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
         ["--equivalence-output-json", "out/equivalence.json"],
       ];
 
-      const errors = yield* Effect.forEach(others, (flags) =>
-        runCheckCensusCommand(["--stamp-only", ...flags]).pipe(Effect.flip)
+      const errors = yield* Effect.forEach(
+        others,
+        (flags) => runCheckCensusCommand(["--stamp-only", ...flags]).pipe(Effect.flip),
+        { concurrency: 1 }
       );
 
       expect(A.map(errors, (error) => error._tag)).toStrictEqual(A.map(others, () => "QualityScriptCommandError"));
@@ -433,7 +438,9 @@ it.layer(TestLayer, { timeout: "60 seconds" })("check-census command", (it) => {
         ]
       );
 
-      const errors = yield* Effect.forEach(combinations, (flags) => runCheckCensusCommand(flags).pipe(Effect.flip));
+      const errors = yield* Effect.forEach(combinations, (flags) => runCheckCensusCommand(flags).pipe(Effect.flip), {
+        concurrency: 1,
+      });
 
       expect(A.dedupe(A.map(errors, (error) => error.message))).toStrictEqual([
         "--defer-stale-stamp and --row-packages shape the gate (not --write-baseline, --stamp-only or --build-equivalence).",

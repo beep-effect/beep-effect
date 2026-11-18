@@ -274,7 +274,9 @@ const readAttachments = Effect.fn("Provenance.readAttachments")(function* (root:
   const attachmentDir = path.join(directory, "Attachments");
   if (!(yield* fs.exists(attachmentDir).pipe(Effect.mapError(fail)))) return [];
   const names = yield* fs.readDirectory(attachmentDir).pipe(Effect.mapError(fail));
-  const forEach1 = yield* Effect.forEach(names, (name) => readAttachment(root, attachmentDir, name));
+  const forEach1 = yield* Effect.forEach(names, (name) => readAttachment(root, attachmentDir, name), {
+    concurrency: 1,
+  });
   return A.getSomes(forEach1);
 });
 const readBody = Effect.fn("Provenance.readBody")(function* (directory: string) {
@@ -468,7 +470,9 @@ const sniffBatch = Effect.fn("Provenance.sniffBatch")(function* (batch: Readonly
   );
 });
 const sniff = Effect.fn("Provenance.sniff")(function* (paths: ReadonlyArray<string>, command: string) {
-  const forEach3 = yield* Effect.forEach(A.chunksOf(paths, 2000), (batch) => sniffBatch(batch, command));
+  const forEach3 = yield* Effect.forEach(A.chunksOf(paths, 2000), (batch) => sniffBatch(batch, command), {
+    concurrency: 1,
+  });
   return A.flatten(forEach3);
 });
 /**
@@ -538,7 +542,8 @@ export const AttachmentRepairJournalLive = Layer.effect(
           const text = yield* fs.readFileString(file);
           return yield* Effect.forEach(
             A.filter(Str.split(text, /\r?\n/), Str.isNonEmpty),
-            P.AttachmentRepairJournalRowJson.decode
+            P.AttachmentRepairJournalRowJson.decode,
+            { concurrency: 1 }
           );
         },
         Effect.mapError(fail),
@@ -794,7 +799,8 @@ const readBatch = Effect.fn("Provenance.readBatch")(function* (
             fields: yield* S.decodeEffect(P.DocumentMetadataFields)(fields),
             tags: retained,
           });
-        })
+        }),
+        { concurrency: 1 }
       );
     })
   ).pipe(Effect.mapError(fail));
@@ -887,7 +893,8 @@ export const indexMailExportTrees = Effect.fn("Provenance.indexMailExportTrees")
       const pipe1 = yield* P.MailMessageIndexSummaryJson.encode(summary).pipe(Effect.mapError(fail));
       yield* writeProvenance(output, argument, pipe1);
       return summary;
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 
@@ -1038,7 +1045,9 @@ const scanAttachments = Effect.fn("Provenance.scanAttachments")(function* (
     yield* Effect.forEach(
       A.chunksOf(files, 2000),
       Effect.fn("Provenance.scanBatch")(function* (batch) {
-        const observations = yield* Effect.forEach(batch, (file) => fs.stat(file).pipe(Effect.mapError(fail)));
+        const observations = yield* Effect.forEach(batch, (file) => fs.stat(file).pipe(Effect.mapError(fail)), {
+          concurrency: 1,
+        });
         const verdicts = yield* sniffer.sniff(batch);
         yield* Effect.forEach(
           verdicts,
@@ -1057,9 +1066,11 @@ const scanAttachments = Effect.fn("Provenance.scanAttachments")(function* (
             if (options.mode !== "apply") return;
             const outcome = yield* applyProposal(options.corpusRoot, row, observation, journalPath, runId);
             bump(byOutcome, outcome);
-          })
+          }),
+          { concurrency: 1 }
         );
-      })
+      }),
+      { concurrency: 1 }
     );
   }
   return { scannedFiles, proposedRenames, byFlag, byMime, byOutcome };

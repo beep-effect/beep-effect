@@ -767,7 +767,7 @@ describe.skipIf(!isBunRuntime)("Admission layer (Bun runtime)", () => {
         expect(kindsOf(sequential)).toEqual(["landed", "rejected"]);
         expect(nearRaced.outcome).toBe("landed");
         expect(codesOf(farRaced)).toEqual(["backwardStatusMove"]);
-        const heads = yield* Effect.forEach(rows, (row) => headOf(log, row.nodeId));
+        const heads = yield* Effect.forEach(rows, (row) => headOf(log, row.nodeId), { concurrency: 1 });
         expect(A.map(heads, (head) => head.text)).toEqual(A.map(rows, () => O.some(statusRow("complete"))));
         const holds = yield* admission.held;
         expect(holds).toEqual([]);
@@ -915,7 +915,8 @@ describe.skipIf(!isBunRuntime)("Admission layer (Bun runtime)", () => {
         const entries = yield* log.entriesAfter(LogCursor.make(0));
         const resolutions = yield* Effect.forEach(
           A.filter(entries, (entry) => entry.event === HoldResolvedEvent.tag),
-          (entry) => decodeResolved(entry.payload)
+          (entry) => decodeResolved(entry.payload),
+          { concurrency: 1 }
         );
         deepStrictEqual(
           A.map(resolutions, (resolution) => resolution.revisionId),
@@ -1005,7 +1006,9 @@ describe.skipIf(!isBunRuntime)("Admission layer (Bun runtime)", () => {
         );
         expect(holdIdOf(alphaTheirs)).not.toBe(holdIdOf(heldWrites[0]));
         // Nothing was overwritten: each node still holds the text that moved it on.
-        const heads = yield* Effect.forEach([alpha, beta, gamma, delta], (node) => headOf(log, node.nodeId));
+        const heads = yield* Effect.forEach([alpha, beta, gamma, delta], (node) => headOf(log, node.nodeId), {
+          concurrency: 1,
+        });
         deepStrictEqual(
           A.map(heads, (head) => head.text),
           [
@@ -1156,7 +1159,8 @@ describe.skipIf(!isBunRuntime)("Admission layer (Bun runtime)", () => {
         const entries = yield* log.entriesAfter(LogCursor.make(0));
         const resolutions = yield* Effect.forEach(
           A.filter(entries, (entry) => entry.event === HoldResolvedEvent.tag),
-          (entry) => decodeResolved(entry.payload)
+          (entry) => decodeResolved(entry.payload),
+          { concurrency: 1 }
         );
         assertNone(resolutions[0]?.revisionId ?? O.some(bogusRevision));
       })

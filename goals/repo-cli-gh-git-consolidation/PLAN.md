@@ -2,17 +2,17 @@
 
 ## Status
 
-Status: `active` — P0 research complete (`research/p0-site-inventory-2026-11-02.md`); P1 runs the waves below, one PR each, W0 first.
+Status: `completed-retained` — closeout PR #3287 carries W8 (D-22), the site-list ledger, the reflection and `closeout`.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Inspect source hierarchy and confirm scope. | `research/p0-site-inventory-2026-11-02.md`: every site-list row, the kit gaps G1-G10, the off-list spawns and the wave plan; decisions D-02 to D-05 in `SPEC.md`. |
-| P1 Implement | in-progress | Land the kit features with tests, then switch the sites, one owner per PR (the Waves table). | Acceptance criteria are met. |
-| P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P1 Implement | complete | Land the kit features with tests, then switch the sites, one owner per PR (the Waves table). | Acceptance criteria are met. |
+| P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Waves
 
@@ -35,8 +35,9 @@ zero unclassified differences). Each PR flips its own row.
 | W7a | none (the W7 kit) | `R/commands/Yeet/**` census rows Y1-Y88 (`research/w7-site-census-2026-11-03.md`, D-16) | merged, #2708 (D-18) |
 | W7b | none (the W7 kit) | the other command groups plus Qa and Refs, census rows B1-B136 (D-16) | merged, #2721 (D-19) |
 | W7c | none (the W7 kit) | `R/commands/Worktree/**` census rows W1-W45 (D-16) | merged, #2736 (D-20) |
-| W7 retire | none | delete the generic runners from `internal/repo-run/GitExec.ts`, census rows X1-X10 (D-16) | in review, #2753 (D-21) |
-| C | none | Closeout: ledger of every site-list row (migrated or kept with reason), reflection, `closeout` | pending |
+| W7 retire | none | delete the generic runners from `internal/repo-run/GitExec.ts`, census rows X1-X10 (D-16) | merged, #2753 (D-21) |
+| W8 | none (the W7 kit) | the drift merged after the W7 census: 34 argv templates in 14 files and 24 test doubles (`research/w8-drift-census-2026-11-13.md`) | in the closeout PR (D-22) |
+| C | none | Closeout: ledger of every site-list row (migrated or kept with reason), reflection, `closeout` | in the closeout PR: `research/closeout-ledger-2026-11-13.md` (D-22) |
 
 ## Closeout Checklist
 

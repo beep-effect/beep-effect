@@ -13,14 +13,15 @@ import { CitationLawMetadataInput, CitationLawMetadataPatch, CitationLawMetadata
 import {
   CitationPublicationMetadataConfiguration,
   citationMetadataContext,
-  decodeCitationMetadataConfiguration,
+  installCitationMetadataContextMatch,
+  installCitationOwnedStage,
   makeCitationMetadataOperation,
-  matchCitationMetadataContext,
   prepareCitationPublicationMetadata,
 } from "./MetadataComposition.ts";
 import { makeCitationMetadataStrings } from "./MetadataStrings.ts";
 import { makeCitationMetadataYearFromBound } from "./MetadataYear.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/PostCaseMetadata");
@@ -109,67 +110,71 @@ export class CitationPostCaseMetadataResult extends S.Opaque<
   )
 ) {}
 const Input = S.toType(CitationPostCaseMetadataInput);
-const Config = S.toType(CitationPostCaseMetadataConfiguration);
 const pointLength = (word: CitationPythonUnicodeStorage | null) => (word === null ? 0 : word.bytes.length / word.width);
-/** Reuse the original helper within an enclosing captured metadata operation.
+/** Install the original helper once for reuse within an enclosing captured metadata operation.
  * @internal @category operations @since 0.0.0
  */
-export const extractCitationPostCaseMetadata = Effect.fn("Citation.preparePostCaseMetadata")(function* (
+export const installCitationPostCaseMetadataExtraction = Effect.fn("Citation.installPostCaseMetadata")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
   config: CitationPublicationMetadataConfiguration,
-  courtTable: string,
-  raw: unknown
+  courtTable: string
 ) {
-  const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-  const context = citationMetadataContext({ ...request, forward: true });
-  const owned = yield* matchCitationMetadataContext(limits, runtime, config, { ...context, stringsOnly: false }, () =>
-    fail("missing-capture")
+  const match = yield* installCitationMetadataContextMatch(limits, runtime, config);
+  const installedStrings = yield* Effect.exit(
+    makeCitationMetadataStrings(limits, runtime, config.yearPattern, config.yearBindings)
   );
-  if (O.isNone(owned)) return O.none<CitationPostCaseMetadataPatch>();
-  const capture = owned.value.capture;
-  const rawPin = yield* capture("pin_cite");
-  const strings = yield* makeCitationMetadataStrings(limits, runtime, config.yearPattern, config.yearBindings);
-  const cleanedPin = yield* strings.cleanPinCite(rawPin);
-  const rawExtra = yield* capture("extra");
-  const extra = yield* strings.stripWhitespace(rawExtra);
-  const rawParenthetical = yield* capture("parenthetical");
-  const parenthetical = yield* strings.parenthetical(rawParenthetical);
-  let fullSpanEnd = request.spanEnd + owned.value.end;
-  if (fullSpanEnd !== 0 && rawParenthetical !== null && parenthetical !== null)
-    fullSpanEnd -= pointLength(rawParenthetical) - pointLength(parenthetical);
-  const year = yield* capture("year");
-  const month = yield* capture("month");
-  const day = yield* capture("day");
-  let numericYear = request.year;
-  if (pointLength(year) > 0) {
-    const years = yield* makeCitationMetadataYearFromBound(limits, config.highestValidYear);
-    const parsedYear = yield* years.getYear(year);
-    numericYear = O.getOrNull(parsedYear);
-  }
-  const rawCourt = yield* capture("court");
-  let court = O.none<CourtId | null>();
-  if (pointLength(rawCourt) > 0) {
-    const courts = yield* makeCitationCourtLookup(limits, courtTable);
-    const selected = yield* courts.lookup(rawCourt);
-    court = selected.court.pipe(O.getOrNull, O.some);
-  }
-  return O.some(
-    CitationPostCaseMetadataPatch.make({
-      fullSpanEnd,
-      year: numericYear,
-      metadata: {
-        pinCite: pointLength(cleanedPin) === 0 ? null : cleanedPin,
-        extra,
-        parenthetical,
-        year,
-        month,
-        day,
-        pinCiteSpanEnd: pointLength(rawPin) > 0 ? O.some(request.spanEnd + pointLength(rawPin)) : O.none(),
-        court,
-      },
-    })
-  );
+  const installedYears = yield* Effect.exit(makeCitationMetadataYearFromBound(limits, config.highestValidYear));
+  const installedCourts = yield* Effect.exit(makeCitationCourtLookup(limits, courtTable));
+  return Effect.fn("Citation.preparePostCaseMetadata")(function* (raw: unknown) {
+    const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+    const context = citationMetadataContext({ ...request, forward: true });
+    const owned = yield* match({ ...context, stringsOnly: false }, () => fail("missing-capture"));
+    if (O.isNone(owned)) return O.none<CitationPostCaseMetadataPatch>();
+    const capture = owned.value.capture;
+    const rawPin = yield* capture("pin_cite");
+    const strings = yield* installedStrings;
+    const cleanedPin = yield* strings.cleanPinCite(rawPin);
+    const rawExtra = yield* capture("extra");
+    const extra = yield* strings.stripWhitespace(rawExtra);
+    const rawParenthetical = yield* capture("parenthetical");
+    const parenthetical = yield* strings.parenthetical(rawParenthetical);
+    let fullSpanEnd = request.spanEnd + owned.value.end;
+    if (fullSpanEnd !== 0 && rawParenthetical !== null && parenthetical !== null)
+      fullSpanEnd -= pointLength(rawParenthetical) - pointLength(parenthetical);
+    const year = yield* capture("year");
+    const month = yield* capture("month");
+    const day = yield* capture("day");
+    let numericYear = request.year;
+    if (pointLength(year) > 0) {
+      const years = yield* installedYears;
+      const parsedYear = yield* years.getYear(year);
+      numericYear = O.getOrNull(parsedYear);
+    }
+    const rawCourt = yield* capture("court");
+    let court = O.none<CourtId | null>();
+    if (pointLength(rawCourt) > 0) {
+      const courts = yield* installedCourts;
+      const selected = yield* courts.lookup(rawCourt);
+      court = selected.court.pipe(O.getOrNull, O.some);
+    }
+    return O.some(
+      CitationPostCaseMetadataPatch.make({
+        fullSpanEnd,
+        year: numericYear,
+        metadata: {
+          pinCite: pointLength(cleanedPin) === 0 ? null : cleanedPin,
+          extra,
+          parenthetical,
+          year,
+          month,
+          day,
+          pinCiteSpanEnd: pointLength(rawPin) > 0 ? O.some(request.spanEnd + pointLength(rawPin)) : O.none(),
+          court,
+        },
+      })
+    );
+  });
 });
 /** Capture the source helper's owners without running later name, pre-citation,
  * court-guessing or superclass phases out of order. Methods have R = never.
@@ -177,33 +182,27 @@ export const extractCitationPostCaseMetadata = Effect.fn("Citation.preparePostCa
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationPostCaseMetadata = Effect.fn("Citation.makePostCaseMetadata")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  configuration: CitationOwned<CitationPostCaseMetadataConfiguration>
 ) {
-  const { limits, configuration: decoded } = yield* decodeCitationMetadataConfiguration(
-    policy,
-    configurationInput,
-    Config,
-    invalidConfiguration
-  );
-  // Installation authenticates even when later input has no raw court capture.
-  yield* makeCitationCourtLookup(limits, decoded.courtTable);
-  const { runtime, config } = yield* prepareCitationPublicationMetadata(
-    limits,
-    runtimeInput,
-    decoded,
-    "173f538b2d3f8f2522eeb298388114e59bca173d00e03ac7f7b844f02c1be040",
-    invalidConfiguration
-  );
-  const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
-    extractCitationPostCaseMetadata(limits, runtime, config, decoded.courtTable, raw)
-  );
-  const apply = Effect.fn("Citation.addPostCaseMetadata")((raw: unknown) =>
-    Effect.gen(function* () {
-      const [patch, reservedUnits] = yield* installed.run(raw);
-      return CitationPostCaseMetadataResult.make({ patch, reservedUnits });
-    })
-  );
-  return { apply };
+  return yield* installCitationOwnedStage(limits, configuration, function* (limits, decoded) {
+    // Installation authenticates even when later input has no raw court capture.
+    yield* makeCitationCourtLookup(limits, decoded.courtTable);
+    const config = yield* prepareCitationPublicationMetadata(
+      limits,
+      decoded,
+      "173f538b2d3f8f2522eeb298388114e59bca173d00e03ac7f7b844f02c1be040",
+      invalidConfiguration
+    );
+    const prepare = yield* installCitationPostCaseMetadataExtraction(limits, runtime, config, decoded.courtTable);
+    const installed = yield* makeCitationMetadataOperation(prepare);
+    const apply = Effect.fn("Citation.addPostCaseMetadata")((raw: unknown) =>
+      Effect.gen(function* () {
+        const [patch, reservedUnits] = yield* installed.run(raw);
+        return CitationPostCaseMetadataResult.make({ patch, reservedUnits });
+      })
+    );
+    return { apply };
+  });
 });

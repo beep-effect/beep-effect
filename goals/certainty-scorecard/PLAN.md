@@ -155,9 +155,9 @@ Lane feat/certainty-rout-05-step-outcomes
 
 Reverse: Delete this checkpoint so the slice-6 checkpoint is the latest PLAN status note, and revert the slice-11 commits.
 
-### Slice 14 (MEAS-05 slice 1) in review: one lane map for every job-name join, 2026-11-13
+### Slice 14 (MEAS-05 slice 1), merged as #3274: one lane map for every job-name join, 2026-11-13
 
-Slice 14 makes `CI_LANE_DESCRIPTORS` the one job-name map: the descriptors gain `jobAliases` and `shardFamily`, and the new `packages/tooling/tool/cli/src/commands/Ci/CiLaneJobs.ts` derives the joins the route census, the lane-timings census, the certainty scorecard, heavy admission and the ruleset governance check read, in place of their own literals (decision `lane-job-map`). #3256's overflow name is the map's one called shard job. The admission gate holds: no existing test changed, `ci-lane-jobs.test.ts` reproduces every answer the replaced mappers gave on a56516d6d30 (fixture `test/fixtures/ci-lane-jobs/job-name-conservation.json`), and the 2026-09-01..10-30 receipt still replays to 242 skipped lane runs and 0 skipped reds. Slice 15 (the ledger fold) can read lanes and shard families from the map.
+Slice 14 merged as #3274. It makes `CI_LANE_DESCRIPTORS` the one job-name map: the descriptors gain `jobAliases` and `shardFamily`, and the new `packages/tooling/tool/cli/src/commands/Ci/CiLaneJobs.ts` derives the joins the route census, the lane-timings census, the certainty scorecard, heavy admission and the ruleset governance check read, in place of their own literals (decision `lane-job-map`). #3256's overflow name is the map's one called shard job. The admission gate holds: no existing test changed, `ci-lane-jobs.test.ts` reproduces every answer the replaced mappers gave on a56516d6d30 (fixture `test/fixtures/ci-lane-jobs/job-name-conservation.json`), and the 2026-09-01..10-30 receipt still replays to 242 skipped lane runs and 0 skipped reds. Slice 15 (the ledger fold) can read lanes and shard families from the map.
 
 Lane refactor/certainty-meas-05-lane-map
 
@@ -210,5 +210,53 @@ Slices 1 to 7, 10 and 11 merged (7 as #3263, 4 as #3266); the certainty nightly 
 Lane chore/certainty-peril-11-fleet-roots
 
 Reverse: Delete this checkpoint so the slice-7 checkpoint is the latest PLAN status note, and revert the slice-8 PR.
+
+### Slice 10b: residual handler errors typed and located, 2026-11-14
+
+Slice 10b (MEAS-03 slice 2) types the handler errors slice 10 left `unlocated`. `YeetCommandError` carries an optional `handlerErrorKind` from the closed `YeetHandlerErrorKind` domain (`publish-input`, `review-threads`, `github-rate-limit`, `github-transport`), set at the publish input and review-thread raise sites and read from a `GitHubError` cause by its structural kind; the run verdict records it. `packages/tooling/tool/cli/src/commands/Yeet/internal/Economics.ts` locates such a red, after the lane and step tiers and before `unexecuted`, as `refusal:publish-input`, `refusal:review-threads`, `github:rate-limit` or `github:transport`, reading the raise sites' sentences for rows written before the key existed; `unlocated` stays the unknown bucket (decision `handler-errors-typed-and-located`). On the workstation fleet 133 of the 160 `unlocated` reds are now located and 27 stay unknown, with `redAttempts` and the mix total unchanged at 1201. The admission gate is `packages/tooling/tool/cli/test/yeet-economics-handler-errors.test.ts` over the committed journal `test/fixtures/yeet-economics/adjudicated-handler-errors.ndjson`. Slice 10b is unscheduled and does not gate the closeout.
+
+Lane fix/certainty-type-unlocated-errors
+
+Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-10b PR.
+
+### Slice 15: ledger fold with absent-source rows, 2026-11-14
+
+Slice 15 (MEAS-05 slice 2) adds `beep ci ledger`, a read-only fold of named workflow runs into rows at (lane, partition) grain over the slice-14 lane map, with the run's lane, support and unknown minutes summing to its total and every Test Unit and Test Integration partition row judged `selected`, `empty` or `undetermined` against the run's Test Plan output (decision `ledger-fold-absent-sources`). Rerun copies are dropped, skipped jobs and wrappers are counted apart, and an aggregate that ran is its own row beside its partitions, so no minute is counted twice. The local and per-task sources (turbo tasks, final-check journals, economics lanes, PSI) are `absent` rows. The admission gate holds on three Check runs read 2026-11-14 and committed as `packages/tooling/tool/cli/test/fixtures/ci-cost-ledger/reference-runs.json`: 43604442987 (full matrix, 307.1 job-minutes), 43585338714 (documentation only, 7.1) and 43605277972 (an empty `int-rest` leg of 1.97 min) each map 100% of their job-minutes to a lane or a named support job (lane share 99.4%, 78.2% and 98.2%), and `packages/tooling/tool/cli/test/ci-cost-ledger.test.ts` holds an umbrella, wrapper and rerun fixture with no double count. MEAS-08 can now join pressure samples onto ledger rows.
+
+Lane feat/certainty-ledger-fold-absent-sources
+
+Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-15 PR.
+
+### Slice 16: PSI samples joined, 2026-11-14
+
+Slice 16 (MEAS-08) adds a `pressure` section to `yeet economics` (decision `psi-join-onto-attempts`). It joins the PSI recorder samples (`safe-pressure.jsonl`) onto each local attempt by time window, and the SCHE-09 slice 2 stamps on admitted and released rows by attempt id, grouped into leases by nonce. Nothing new is sampled, stamped or written, and the closeout summary reads neither source. Each joined field is present or absent with its reason (remote host, source unread, untimed, outside the recorder span, no samples in the window, no admission row, no row for the transition, unstamped). The `psi-recorder` and `admission-journal` source rows read `present` only when every line or row was decoded, the cost ledger's rule, now shared as `ciLedgerSourceStatus`. Fleet-host attempts count as `remote-host` and are never listed. The ledger's `psi` row stays `absent`, with the reason that hosted runners are not the sampled host. Proof: `packages/tooling/tool/cli/test/yeet-economics-pressure.test.ts`, fixtures only, on Node and Bun. MEAS-08 is built.
+
+Lane feat/certainty-join-psi-samples
+
+Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-16 PR.
+
+### Slice 5b: capacity and host pressure on admission rows, 2026-11-14
+
+Slice 8 (PERIL-11 slice 2) merged as #3273 and slice 14 (MEAS-05 slice 1) as #3274. Slice 5b (SCHE-09 slice 2) is in review: admitted and v3 released rows carry an optional `pressure` stamp (capacity, active and queued tokens, MemAvailable, PSI some avg10 for cpu, memory and io, and unadmitted agent-runs.slice memory), written only while the admission protocol's new `pressure` key is on (`bun run beep quality scheduler protocol --pressure on`). `quality scheduler history` counts the stamped rows and `--json` lists them (decision `sche-09-pressure-stamps`). The key needs no reader census, because every revision ignores it and keeps the row's bytes, so it can go on once this slice merges. From then on local-proof-under-ten's scheduler levers (SCHE-01, SCHE-02, SCHE-04, SCHE-07) can read capacity at admit and release from the retained history. With 5b merged, both SCHE-09 PR slices have landed.
+
+Lane feat/certainty-admission-pressure-fields
+
+Reverse: Delete this checkpoint so the previous checkpoint is the latest PLAN status note, and revert the slice-5b PR.
+
+### Slice 9: host and seat fields, read-only fleet read, 2026-11-14
+
+Slices 10b (MEAS-03 slice 2) and 5b (SCHE-09 slice 2) merged as #3342 and #3344. Slice 9 (PERIL-11 slice 3) is built: attempt-started rows carry optional `host` (the writer's short host label) and `seat` (`codex`, `claude-code` or `unknown`, the provenance footer's harness vocabulary), every attempt mix gains `hostMix` and `seatMix` (`unrecorded` for older rows), and `yeet economics --fleet-hosts` reads the hosts in the fleet's `hosts.json` over their existing ordinary SSH wrappers, one at a time, with one read-only `find`/`tail` command each, folding the printed journals in memory and reporting only per-host receipts in `scope.hosts` (decision `peril-11-slice-3-host-seat-fleet-hosts`). An unreachable host is a receipt with its reason (`timeout`, `connection-failed`, `route-failed`, `spawn-failed`, `output-truncated`, `refused-command`) and never fails the read. The admission gate is `packages/tooling/tool/cli/test/yeet-attempt-journal-host-seat.test.ts` (a mixed-revision fixture with rows from origin/main's encoder: both revisions decode, origin/main's reader reads the new rows, retention keeps their bytes) and `packages/tooling/tool/cli/test/yeet-economics-fleet-hosts.test.ts` (a fake SSH executor that dies on any command but the exact read, five hosts covering every status, the store dedupe, branch narrowing, and a report that holds no raw row). No live fleet read was run; the workstation has no `hosts.json` yet. With slice 9, all three PERIL-11 PR slices are built; the fleet census across a lane retirement is P2 evidence.
+
+Lane feat/certainty-fleet-host-fields
+
+Reverse: Delete this checkpoint so the slice-5b checkpoint is the latest PLAN status note, and revert the slice-9 PR.
+
+### Slice 12: route corpus captured through 2026-11-17 under the reserve, 2026-11-18
+
+Slice 12 (ROUT-05 slice 3) is built. `beep ci route capture` holds each GitHub call while the capture identity's `core` bucket is below `github-budget-ledger`'s 15% reserve, counts every response, and reads a run's jobs in pages of 30 after a 502 (decision `route-capture-reserve-gated`). The corpus receipt now covers 2026-09-01..2026-11-17: 10,435 runs, sha256 `d8328a6dd060…`, 4,107 runs beyond the old receipt, captured in five checkpointed bursts for 8,282 metered responses. The first corpus whose failed jobs carry steps: 4,439 in the new window. Census conservation holds: lane, support and unknown jobs and minutes sum to the totals (315,252 jobs). Unknown is 2.4% of job time overall and 0.84% on the new window, all retired `Shadcn Lint` (folded into Repo Sanity by #3117) and two unexpanded conditional names on skipped jobs. With slice 12, ROUT-05 is landed except the per-task outcomes of slice 11b.
+
+Lane t3/certainty-scorecard-route-capture-2026-10-31
+
+Reverse: Delete this checkpoint so the slice-9 checkpoint is the latest PLAN status note, and revert the slice-12 PR.
 
 <!-- beep:decisions:end -->

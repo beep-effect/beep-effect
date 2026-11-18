@@ -9,10 +9,14 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { CitationLawMetadataResult } from "./LawMetadata.ts";
-import { makeCitationPublicationMetadataOperation, matchCitationMetadataContext } from "./MetadataComposition.ts";
+import {
+  installCitationMetadataContextMatch,
+  makeCitationPublicationMetadataOperation,
+} from "./MetadataComposition.ts";
 import { makeCitationMetadataStrings } from "./MetadataStrings.ts";
 import { CitationTokenContextInput } from "./TokenContext.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationPublicationMetadataConfiguration } from "./MetadataComposition.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
@@ -78,41 +82,46 @@ export class CitationPinExtractionResult extends S.Opaque<
   )
 ) {}
 const Input = S.toType(CitationPinExtractionInput);
-/** Reuse the exact pin helper inside an enclosing operation.
+/** Install the exact pin helper once for reuse inside an enclosing operation.
  * @internal @category operations @since 0.0.0
  */
-export const extractCitationPinCite = Effect.fn("Citation.preparePinExtraction")(function* (
+export const installCitationPinCiteExtraction = Effect.fn("Citation.installPinExtraction")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationPublicationMetadataConfiguration,
-  raw: unknown
+  config: CitationPublicationMetadataConfiguration
 ) {
-  const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-  const index = request.index < 0 ? request.words.length + request.index : request.index;
-  if (index < 0 || index >= request.words.length) return yield* fail("index-out-of-range");
-  const selected = A.getUnsafe(request.words, index);
-  const prefixLength = request.prefix.bytes.length / request.prefix.width;
-  const context = CitationTokenContextInput.make({
-    words: request.words,
-    prefix: request.prefix,
-    startIndex: request.index + 1,
-    forward: true,
-    stringsOnly: true,
+  const match = yield* installCitationMetadataContextMatch(limits, runtime, config);
+  const installedStrings = yield* Effect.exit(
+    makeCitationMetadataStrings(limits, runtime, config.yearPattern, config.yearBindings)
+  );
+  return Effect.fn("Citation.preparePinExtraction")(function* (raw: unknown) {
+    const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+    const index = request.index < 0 ? request.words.length + request.index : request.index;
+    if (index < 0 || index >= request.words.length) return yield* fail("index-out-of-range");
+    const selected = A.getUnsafe(request.words, index);
+    const prefixLength = request.prefix.bytes.length / request.prefix.width;
+    const context = CitationTokenContextInput.make({
+      words: request.words,
+      prefix: request.prefix,
+      startIndex: request.index + 1,
+      forward: true,
+      stringsOnly: true,
+    });
+    const matched = yield* match(context, () => fail("missing-capture"));
+    if (O.isNone(matched)) return { pinCite: null, pinCiteSpanEnd: null, parenthetical: null };
+    const pin = yield* matched.value.capture("pin_cite");
+    const capturedParenthetical = yield* matched.value.capture("parenthetical");
+    const strings = yield* installedStrings;
+    const details = yield* strings.inspectPinCite(pin);
+    const parenthetical = yield* strings.parenthetical(capturedParenthetical);
+    // Source reads from_token.end only after matching and parenthetical processing.
+    if (selected.kind === "Text") return yield* fail("invalid-token");
+    return {
+      pinCite: details.pinCite,
+      pinCiteSpanEnd: request.tokenEnd + details.trailingEnd - prefixLength,
+      parenthetical,
+    };
   });
-  const matched = yield* matchCitationMetadataContext(limits, runtime, config, context, () => fail("missing-capture"));
-  if (O.isNone(matched)) return { pinCite: null, pinCiteSpanEnd: null, parenthetical: null };
-  const pin = yield* matched.value.capture("pin_cite");
-  const capturedParenthetical = yield* matched.value.capture("parenthetical");
-  const strings = yield* makeCitationMetadataStrings(limits, runtime, config.yearPattern, config.yearBindings);
-  const details = yield* strings.inspectPinCite(pin);
-  const parenthetical = yield* strings.parenthetical(capturedParenthetical);
-  // Source reads from_token.end only after matching and parenthetical processing.
-  if (selected.kind === "Text") return yield* fail("invalid-token");
-  return {
-    pinCite: details.pinCite,
-    pinCiteSpanEnd: request.tokenEnd + details.trailingEnd - prefixLength,
-    parenthetical,
-  };
 });
 /** Capture exact source patterns and the existing metadata operation owners.
  * Python index lookup precedes native matching; token-end access follows string
@@ -121,16 +130,16 @@ export const extractCitationPinCite = Effect.fn("Citation.preparePinExtraction")
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationPinExtraction = Effect.fn("Citation.makePinExtraction")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  configuration: CitationOwned<CitationPublicationMetadataConfiguration>
 ) {
   const installed = yield* makeCitationPublicationMetadataOperation(
-    policy,
-    runtimeInput,
-    configurationInput,
+    limits,
+    runtime,
+    configuration,
     "3d1b06d98647ef244e02b08aee15ff80a0fb3971528a8a9c97854dd35916bb3d",
-    extractCitationPinCite,
+    installCitationPinCiteExtraction,
     () => fail("invalid-configuration")
   );
   const apply = Effect.fn("Citation.extractPinCite")((raw: unknown) =>

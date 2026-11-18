@@ -63,10 +63,12 @@ const readRows = Effect.fn("CanonicalPageCorrectionTest.read")(function* () {
             line === 246 ? context.corrected_citation : context.corrected_page
           );
           return { id, line, expected: criterion.operands[1].value };
-        })
+        }),
+        { concurrency: 1 }
       );
       return { id: row.id, raw: body.input.plain_text, models, targets };
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 

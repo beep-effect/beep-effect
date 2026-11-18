@@ -117,17 +117,21 @@ export const replayCitationCanonicalLongDiff = Effect.fn("CanonicalLongDiffTest.
   const replacements = yield* Effect.forEach(
     original.options.annotations,
     Effect.fnUntraced(function* ([range, beforeText, afterText]) {
-      const { before, after } = yield* Effect.all({
-        before: unicode.fromText(beforeText),
-        after: unicode.fromText(afterText),
-      });
+      const { before, after } = yield* Effect.all(
+        {
+          before: unicode.fromText(beforeText),
+          after: unicode.fromText(afterText),
+        },
+        { concurrency: 1 }
+      );
       return CitationAnnotationReplacement.make({
         start: range[0],
         end: range[1],
         before: before.storage,
         after: after.storage,
       });
-    })
+    }),
+    { concurrency: 1 }
   );
   const result = yield* built.engine
     .annotate(

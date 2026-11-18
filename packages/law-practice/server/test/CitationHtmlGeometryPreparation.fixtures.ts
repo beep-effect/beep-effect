@@ -1,7 +1,10 @@
 /** Original Document geometry through four owned children per preparation.
  * @internal @packageDocumentation @since 0.0.0
  */
-import { makeCitationHtmlGeometryPreparation } from "@beep/law-practice-server/internal/Citation/HtmlGeometryPreparation";
+import {
+  CitationHtmlGeometryPreparationConfiguration,
+  makeCitationHtmlGeometryPreparation as makeOwnedCitationHtmlGeometryPreparation,
+} from "@beep/law-practice-server/internal/Citation/HtmlGeometryPreparation";
 import { makeCitationHtmlTagGeometry } from "@beep/law-practice-server/internal/Citation/HtmlTagGeometry";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
@@ -10,6 +13,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { makeCitationDiffTestRuntime } from "./CitationDiffWorker.fixtures.ts";
 import { readCitationHtmlDiscoveryCorpus } from "./CitationHtmlDiscovery.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
@@ -20,6 +24,11 @@ import {
 import { readCitationSpanOffsetsCorpus } from "./CitationSpanOffsets.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
 import type { CitationCaseNameDocument } from "./CitationTokenSeed.fixtures.ts";
+
+const makeCitationHtmlGeometryPreparation = installCitationOwnedTestStage({
+  schema: CitationHtmlGeometryPreparationConfiguration,
+  install: makeOwnedCitationHtmlGeometryPreparation,
+});
 
 /** Install connected geometry using the existing runtime, timing and physical owners. */
 export const installCitationHtmlGeometryFixture = Effect.fn("HtmlGeometryPreparationTest.installConnected")(function* (

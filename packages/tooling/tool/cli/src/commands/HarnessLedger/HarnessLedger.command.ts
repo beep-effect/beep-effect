@@ -249,7 +249,9 @@ export const harnessLedgerDispositionCommand = Command.make(
         return yield* HarnessLedgerInputError.new("--evidence is required and must be non-empty.");
       }
       const delta = yield* buildDelta(input.score, input.cost);
-      const touched = yield* Effect.forEach(input.touched, (spec) => parseHarnessSurfaceSpec(Str.trim(spec)));
+      const touched = yield* Effect.forEach(input.touched, (spec) => parseHarnessSurfaceSpec(Str.trim(spec)), {
+        concurrency: 1,
+      });
       const options = yield* decodeDispositionOptions({
         repoRoot,
         rowId: Str.trim(input.row),

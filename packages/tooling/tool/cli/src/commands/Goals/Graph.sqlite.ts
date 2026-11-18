@@ -177,7 +177,7 @@ const statement = Effect.fn("Goals.graphStatement")(function* (sql: string, para
 
 const loadProjection = Effect.fn("Goals.loadGraphProjection")(function* (projection: CapabilityProjection) {
   const client = yield* SqlClient.SqlClient;
-  yield* Effect.forEach(SCHEMA_SQL, (sql) => statement(sql), { discard: true });
+  yield* Effect.forEach(SCHEMA_SQL, (sql) => statement(sql), { concurrency: 1, discard: true });
   yield* client
     .withTransaction(
       Effect.gen(function* () {
@@ -189,12 +189,12 @@ const loadProjection = Effect.fn("Goals.loadGraphProjection")(function* (project
               packet.status,
               packet.executionCapable ? 1 : 0,
             ]),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
         yield* Effect.forEach(
           projection.capabilities,
           (capability) => statement("INSERT INTO capabilities (capability_slug) VALUES (?)", [capability]),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
         yield* Effect.forEach(
           projection.provides,
@@ -203,7 +203,7 @@ const loadProjection = Effect.fn("Goals.loadGraphProjection")(function* (project
               edge.packetId,
               edge.capability,
             ]),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
         yield* Effect.forEach(
           projection.requires,
@@ -212,7 +212,7 @@ const loadProjection = Effect.fn("Goals.loadGraphProjection")(function* (project
               edge.packetId,
               edge.capability,
             ]),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       })
     )

@@ -1,0 +1,120 @@
+name: Deploy turbo cache
+
+# Deploys the `prod` stage of the Alchemy stack in
+# packages/tooling/infra/turbo-cache (@beep/infra-turbo-cache): the Turborepo
+# remote cache as a Cloudflare Worker over an R2 bucket
+# (https://beep-turbo-cache.beep-effect.workers.dev). State lives in the repo's
+# shared AWS S3 state store (goals/infra-alchemy-rebuild); its stage lease plus
+# this concurrency group serialize every prod deploy and never cancel one
+# mid-apply. The plan step runs first without `--yes` and fails on a missing
+# or outdated store, so the store stays operator-bootstrapped. AWS credentials
+# come from the GitHub OIDC state role (vars.ALCHEMY_STATE_ROLE_ARN on the
+# turbo-cache-prod environment); Cloudflare credentials and the optional alert
+# recipients are that environment's secrets. Tokens never leave state here:
+# they are issued with the package's `token.ts` handoff. Runbook:
+# docs/runbooks/alchemy-infra.md.
+on:
+  push:
+    branches: [main]
+    paths:
+      - packages/tooling/infra/turbo-cache/**
+      - bun.lock
+      - .github/workflows/deploy-turbo-cache.yml
+  workflow_dispatch:
+
+concurrency:
+  group: alchemy-turbo-cache-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy turbo cache (prod)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment:
+      name: turbo-cache-prod
+      url: https://beep-turbo-cache.beep-effect.workers.dev
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ALCHEMY_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+
+      # The protocol, policy and stack tests run on local workerd with no
+      # credentials; a red here stops the deploy before it touches the account.
+      - name: Test package
+        working-directory: packages/tooling/infra/turbo-cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun run test
+          bun run test:integration
+
+      - name: Configure AWS credentials (state store)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.ALCHEMY_STATE_ROLE_ARN }}
+          role-session-name: alchemy-turbo-cache-prod
+          aws-region: us-east-1
+
+      # alchemy plan has no changes-pending exit code, so this log is the
+      # record that a deploy creates or replaces nothing unexpected.
+      - name: Plan prod stage
+        working-directory: packages/tooling/infra/turbo-cache
+        shell: bash
+        env:
+          CI: "true"
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TURBO_CACHE_ALERT_EMAIL: ${{ secrets.TURBO_CACHE_ALERT_EMAIL }}
+        run: bunx alchemy plan --stage prod --env-file /dev/null
+
+      - name: Deploy prod stage
+        working-directory: packages/tooling/infra/turbo-cache
+        shell: bash
+        env:
+          CI: "true"
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TURBO_CACHE_ALERT_EMAIL: ${{ secrets.TURBO_CACHE_ALERT_EMAIL }}
+        run: bunx alchemy deploy --stage prod --yes --env-file /dev/null
+
+      # The Worker answers an anonymous status request and an anonymous upload
+      # with 401 (Cloudflare's edge never answers 401 itself) and an unknown
+      # path with an empty-bodied 404 (the edge's own 404 page has a body), so
+      # these prove the Worker and its policy are live without a token. A probe
+      # straight after a first deploy races propagation, and curl's retries do
+      # not cover a 404: poll until all three hold or 120 seconds pass, then
+      # fail with the last values.
+      - name: Smoke-check the Worker
+        shell: bash
+        run: |
+          set -euo pipefail
+          origin=https://beep-turbo-cache.beep-effect.workers.dev
+          probe() { curl -sS -o /dev/null --max-time 20 "$@" || echo "curl-failed"; }
+          deadline=$((SECONDS + 120))
+          while :; do
+            status="$(probe -w '%{http_code}' "$origin/v8/artifacts/status?slug=beep")"
+            upload="$(probe -w '%{http_code}' -X PUT -H 'content-length: 1' --data x "$origin/v8/artifacts/smoke?slug=beep")"
+            root="$(probe -w '%{http_code} %{size_download}' "$origin/")"
+            echo "status=${status} upload=${upload} root=${root}"
+            if [[ "$status" == "401" && "$upload" == "401" && "$root" == "404 0" ]]; then
+              exit 0
+            fi
+            if (( SECONDS >= deadline )); then
+              echo "smoke check did not converge within 120s" >&2
+              exit 1
+            fi
+            sleep 5
+          done

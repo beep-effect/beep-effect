@@ -22,7 +22,7 @@ import * as Tuple from "effect/Tuple";
 import { CitationGeneratedReference } from "./GeneratedReferences.ts";
 import { CitationInvocation } from "./Invocation.ts";
 import { citationPythonPointAt, makeCitationPythonUnicode } from "./PythonUnicode.ts";
-import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { CitationFullExtractionResult } from "./FullExtraction.ts";
 import type { CitationPythonUnicodeValue } from "./PythonUnicode.ts";
 import type { CitationReferenceTokenResult } from "./ReferenceTokenExtraction.ts";
@@ -155,9 +155,8 @@ export const projectCitationExtractionSelection = Effect.fn("Citation.projectExt
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationExtractionSelection = Effect.fn("Citation.makeExtractionSelection")(function* (
-  policy: unknown
+  limits: CitationEngineLimits
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
   const unicode = yield* makeCitationPythonUnicode(limits);
   const select = Effect.fn("Citation.selectExtractedCitations")(function* (raw: unknown) {
     const { reserve: reserveParent } = (yield* CitationInvocation).budget;

@@ -15,7 +15,8 @@ import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ExtractorRecipes");
 const References = S.Array(Sha256Hex).check(S.isMaxLength(CitationEngineAbsoluteMaxima.candidates));
@@ -52,10 +53,6 @@ export class CitationExtractorEditionId extends S.Opaque<
     })
   )
 ) {}
-const Recipes = CitationExtractorRecipe.pipe(S.toType, S.Array).check(
-  S.isMaxLength(CitationEngineAbsoluteMaxima.patterns)
-);
-const Editions = CitationExtractorEditionId.pipe(S.toType, S.Array).check(S.isMaxLength(2533));
 const Reason = LiteralKit(["invalid-bindings", "unknown-extractor", "program-mismatch"]).pipe(
   $I.annoteSchema("Reason", { description: "Closed source recipe binding failures." })
 );
@@ -78,18 +75,11 @@ const failure = (reason: typeof Reason.Type) => CitationExtractorRecipeFailure.m
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationExtractorRecipes = Effect.fn("Citation.makeExtractorRecipes")(function* (
-  policy: unknown,
-  recipeInput: unknown,
-  editionInput: unknown
+  limits: CitationEngineLimits,
+  recipes: ReadonlyArray<CitationExtractorRecipe>,
+  editions: ReadonlyArray<Pick<CitationExtractorEditionId, "ref" | "id">>
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => failure("invalid-bindings"));
   const timing = yield* makeCitationRegexTiming(limits, true);
-  const recipes = yield* S.decodeUnknownEffect(Recipes)(recipeInput).pipe(
-    Effect.mapError(() => failure("invalid-bindings"))
-  );
-  const editions = yield* S.decodeUnknownEffect(Editions)(editionInput).pipe(
-    Effect.mapError(() => failure("invalid-bindings"))
-  );
   if (recipes.length > limits.patterns)
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "patterns" });
   const editionIds = HashMap.fromIterable(A.map(editions, (row) => Tuple.make(row.ref, row.id)));

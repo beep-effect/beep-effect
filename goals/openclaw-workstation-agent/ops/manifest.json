@@ -65,7 +65,7 @@
       "id": "P2",
       "name": "Generation engine + workstation applicator",
       "status": "in-progress",
-      "statusNote": "IN PROGRESS 2026-07-27: code surface landed via goals/openclaw-p2-generation (infra/src/OpenClaw.ts + infra/openclaw project — renderers, staged-upgrade applicator with snapshot/rollback and downgrade guard, fail-closed identity preflight, alert-only drift audit, encrypted dankserver backup-ship). Remaining exit criteria are operator-gated: pulumi up vertical slice on the workstation (armed sudo pty), second-generation switch with forced rollback, live drift-audit demo, and backups + restore drill landing on dankserver."
+      "statusNote": "IN PROGRESS 2026-07-27: code surface landed via the openclaw-p2-generation branch (infra/src/OpenClaw.ts + infra/openclaw project — renderers, staged-upgrade applicator with snapshot/rollback and downgrade guard, fail-closed identity preflight, alert-only drift audit, encrypted dankserver backup-ship). Remaining exit criteria are operator-gated: pulumi up vertical slice on the workstation (armed sudo pty), second-generation switch with forced rollback, live drift-audit demo, and backups + restore drill landing on dankserver."
     },
     {
       "id": "P3",

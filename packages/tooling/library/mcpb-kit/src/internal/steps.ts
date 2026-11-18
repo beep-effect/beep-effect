@@ -112,7 +112,7 @@ export const copyDirectory = Effect.fn("McpbPackage.copyDirectory")(function* (s
             McpbPackageFailure.make({ cause, message: `Failed copying DuckDB sidecar "${entry}".` })
           )
         ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 

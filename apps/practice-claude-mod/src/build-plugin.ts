@@ -177,7 +177,7 @@ const program = Effect.gen(function* () {
   yield* Effect.forEach(
     tests,
     (name) => fs.copyFile(path.join(appRoot, "plugin-test", name), path.join(plugin, "test", name)),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   // Skills are plugin components discovered from their directories.
@@ -186,6 +186,7 @@ const program = Effect.gen(function* () {
   yield* fs.makeDirectory(pluginSkills, { recursive: true });
   const skillEntries = yield* fs.readDirectory(skills);
   yield* Effect.forEach(skillEntries, (name) => fs.copy(path.join(skills, name), path.join(pluginSkills, name)), {
+    concurrency: 1,
     discard: true,
   });
 

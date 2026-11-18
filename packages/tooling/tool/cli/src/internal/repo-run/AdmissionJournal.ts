@@ -50,10 +50,14 @@ import {
   processStartIdentityForPid,
 } from "./ProcessIdentity.ts";
 import {
+  AdmissionBackfillMode,
+  AdmissionFairnessMode,
   AdmissionPriority,
   AdmissionRoute,
-  AdmissionWorkKind,
+  admissionPressureFields,
+  admissionUnitFields,
   QualitySchedulerError,
+  RecordedAdmissionWorkKind,
   YeetAdmissionTicket,
 } from "./QualityScheduler.schemas.ts";
 import type * as SchemaAST from "effect/SchemaAST";
@@ -207,6 +211,77 @@ export const AdmissionEvictionEmission = LiteralKit(["off", "on"]).pipe(
 export type AdmissionEvictionEmission = typeof AdmissionEvictionEmission.Type;
 
 /**
+ * Whether scheduler writers may record admission-unit fields (SCHE-08).
+ *
+ * **Details**
+ *
+ * `on` lets writers add the unit, weight source and owner keys to tickets,
+ * leases and journal rows. Turn it on only once every live checkout runs a
+ * revision that reads those keys; `off` keeps every record in the pre-unit
+ * format.
+ *
+ * **Example** (Recognize the rollout-safe default)
+ *
+ * ```ts
+ * import { AdmissionUnitEmission } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionUnitEmission.is.off("off")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionUnitEmission = LiteralKit(["off", "on"]).pipe(
+  $I.annoteSchema("AdmissionUnitEmission", {
+    description: "Whether current scheduler writers may record admission-unit fields on tickets, leases and rows.",
+  })
+);
+
+/**
+ * Whether current scheduler writers may record admission-unit fields.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionUnitEmission = typeof AdmissionUnitEmission.Type;
+
+/**
+ * Whether scheduler writers stamp capacity and host pressure on admission rows (SCHE-09 slice 2).
+ *
+ * **Details**
+ *
+ * `on` lets writers add the `pressure` stamp to promotion transitions and to
+ * the admitted and released journal rows, which costs a few procfs and cgroup
+ * reads per transition. Every reader revision ignores the key and every locked
+ * rewrite keeps a row's bytes, so it can go on at any time; `off` keeps every
+ * record in the format before the stamp.
+ *
+ * **Example** (Recognize the default)
+ *
+ * ```ts
+ * import { AdmissionPressureEmission } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionPressureEmission.is.off("off")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionPressureEmission = LiteralKit(["off", "on"]).pipe(
+  $I.annoteSchema("AdmissionPressureEmission", {
+    description: "Whether current scheduler writers stamp capacity and host pressure on admitted and released rows.",
+  })
+);
+
+/**
+ * Whether current scheduler writers stamp capacity and host pressure on admission rows.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionPressureEmission = typeof AdmissionPressureEmission.Type;
+
+/**
  * Versioned mixed-checkout protocol marker stored in the admission root.
  *
  * **Details**
@@ -214,6 +289,12 @@ export type AdmissionEvictionEmission = typeof AdmissionEvictionEmission.Type;
  * Protocol v2 authorizes v3 eviction rows. Pre-v3 workers only decode protocol
  * v1, so they fail closed and defer recovery instead of duplicating a v3 receipt
  * they cannot recognize after an interrupted claim acknowledgment.
+ *
+ * `units` gates the admission-unit fields. It is an additive key: a marker
+ * without it reads `off`, older readers ignore it, and an older writer that
+ * rewrites the marker drops it, which turns the fields off again. `pressure`
+ * gates the capacity and host-pressure stamp the same way, and `backfill` and
+ * `fairness` gate the SCHE-06 admission verdict (both default `off`).
  *
  * **Example** (Construct the disabled protocol)
  *
@@ -224,7 +305,8 @@ export type AdmissionEvictionEmission = typeof AdmissionEvictionEmission.Type;
  *   schemaVersion: "yeet-admission-protocol/v2",
  *   eviction: "off",
  * })
- * console.log(protocol.eviction) // "off"
+ * console.log(protocol.units) // "off"
+ * console.log(protocol.pressure) // "off"
  * ```
  *
  * @category models
@@ -234,9 +316,26 @@ export class AdmissionProtocol extends S.Opaque<AdmissionProtocol, { readonly br
   S.Struct({
     schemaVersion: S.tag("yeet-admission-protocol/v2"),
     eviction: AdmissionEvictionEmission,
+    units: AdmissionUnitEmission.pipe(
+      S.withConstructorDefault(Effect.succeed(AdmissionUnitEmission.Enum.off)),
+      S.withDecodingDefaultKey(Effect.succeed(AdmissionUnitEmission.Enum.off))
+    ),
+    pressure: AdmissionPressureEmission.pipe(
+      S.withConstructorDefault(Effect.succeed(AdmissionPressureEmission.Enum.off)),
+      S.withDecodingDefaultKey(Effect.succeed(AdmissionPressureEmission.Enum.off))
+    ),
+    backfill: AdmissionBackfillMode.pipe(
+      S.withConstructorDefault(Effect.succeed(AdmissionBackfillMode.Enum.off)),
+      S.withDecodingDefaultKey(Effect.succeed(AdmissionBackfillMode.Enum.off))
+    ),
+    fairness: AdmissionFairnessMode.pipe(
+      S.withConstructorDefault(Effect.succeed(AdmissionFairnessMode.Enum.off)),
+      S.withDecodingDefaultKey(Effect.succeed(AdmissionFairnessMode.Enum.off))
+    ),
   }).pipe(
     $I.annoteSchema("AdmissionProtocol", {
-      description: "Versioned rollout marker controlling admission-journal eviction event emission.",
+      description:
+        "Versioned rollout marker gating admission-journal eviction events, admission-unit fields, pressure stamps and the SCHE-06 backfill and fairness verdict.",
     })
   )
 ) {}
@@ -314,6 +413,13 @@ class AdmissionJournalLockReapAdopter extends S.Opaque<
 /**
  * Durable transition recorded when a queued ticket becomes an active lease.
  *
+ * **Details**
+ *
+ * The row copies the ticket's admission-unit fields ({@link admissionUnitFields}),
+ * which are optional keys, and reads a newer writer's kind as unrecognized. It
+ * copies the promotion transition's pressure stamp ({@link admissionPressureFields}),
+ * taken where the admission was checked against capacity, when there is one.
+ *
  * **Example** (Reference an admitted transition)
  *
  * ```ts
@@ -332,13 +438,15 @@ export class AdmissionJournalAdmitted extends S.Opaque<AdmissionJournalAdmitted,
     nonce: S.String,
     pid: S.Finite,
     procStart: S.String,
-    kind: AdmissionWorkKind,
+    kind: RecordedAdmissionWorkKind,
     weightTokens: S.Finite,
     priority: AdmissionPriority,
     originKey: S.String,
     enqueuedAtMillis: S.Finite,
     admittedAtMillis: S.Finite,
     attemptId: UUID.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    ...admissionUnitFields,
+    ...admissionPressureFields,
   }).pipe(
     $I.annoteSchema("AdmissionJournalAdmitted", {
       description: "Durable transition recorded when a queued ticket becomes an active admission lease.",
@@ -532,6 +640,9 @@ class AdmissionJournalQueuedIdentity extends S.Class<AdmissionJournalQueuedIdent
       "checkoutRoot",
       "branch",
       "enqueuedAtMillis",
+      "unit",
+      "weightSource",
+      "owner",
     ]),
     schemaVersion: S.tag("yeet-admission-journal/v3"),
   },
@@ -601,6 +712,12 @@ class AdmissionJournalCheckoutIdentity extends S.Class<
 /**
  * Version-three release retaining the lease's checkout and branch.
  *
+ * **Details**
+ *
+ * Besides the lease's admission-unit fields, the row carries the pressure
+ * stamp ({@link admissionPressureFields}) read just before the release is
+ * journaled, when the protocol's `pressure` gate is on at that moment.
+ *
  * **Example** (Read the release version)
  *
  * ```ts
@@ -615,7 +732,12 @@ class AdmissionJournalCheckoutIdentity extends S.Class<
 export class AdmissionJournalReleasedV3 extends AdmissionJournalCheckoutIdentity.extend<AdmissionJournalReleasedV3>(
   $I`AdmissionJournalReleasedV3`
 )(
-  { ...AdmissionJournalReleased.fields, schemaVersion: S.tag("yeet-admission-journal/v3") },
+  {
+    ...AdmissionJournalReleased.fields,
+    schemaVersion: S.tag("yeet-admission-journal/v3"),
+    ...admissionUnitFields,
+    ...admissionPressureFields,
+  },
   $I.annote("AdmissionJournalReleasedV3", { description: "A released lease with direct checkout attribution." })
 ) {}
 
@@ -973,7 +1095,8 @@ export const admissionProtocolPath = Effect.fn("AdmissionJournal.protocolPath")(
  *
  * A missing, unreadable, or undecodable marker means the mixed-checkout
  * v3 recovery fence is not proven, so eviction rows remain disabled. A protocol
- * v1 marker is likewise disabled even when its eviction field is on.
+ * v1 marker is likewise disabled even when its eviction field is on. The same
+ * fallback keeps admission-unit fields off.
  *
  * **Example** (Read a protocol marker)
  *
@@ -1210,18 +1333,14 @@ const sweepOrphanJournalLockClaims = Effect.fnUntraced(function* (
     }
   }
   const tombstones = A.filter(sidecars, isJournalLockReapTombstone);
-  yield* Effect.forEach(tombstones, discardOrphanJournalLockReapTombstone, {
-    discard: true,
-  });
+  yield* Effect.forEach(tombstones, discardOrphanJournalLockReapTombstone, { concurrency: 1, discard: true });
   if (yield* fs.exists(lockPath).pipe(Effect.orElseSucceed(constant(true)))) {
     return;
   }
   yield* Effect.forEach(
     A.filter(sidecars, (sidecar) => !isJournalLockReapTombstone(sidecar)),
     (sidecar) => fs.remove(sidecar, { force: true, recursive: true }).pipe(Effect.ignore),
-    {
-      discard: true,
-    }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -1773,48 +1892,59 @@ export const withJournalFileLock = Effect.fnUntraced(function* <Success, Failure
 });
 
 /**
- * Atomically write the admission protocol marker under the fenced journal lock.
+ * Atomically change the admission protocol marker under the fenced journal lock.
+ *
+ * **Details**
+ *
+ * The current marker is read inside the lock (a missing or unreadable one reads
+ * as the disabled default) and `change` maps it to the marker to publish, so
+ * changing one gate keeps the other gate's state.
  *
  * **Example** (Enable eviction emission)
  *
  * ```ts
- * import { writeAdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
+ * import { AdmissionProtocol, writeAdmissionProtocol } from "@beep/repo-cli/test/RepoRun"
  * import * as Effect from "effect/Effect";
- * console.log(Effect.isEffect(writeAdmissionProtocol("/tmp/admission", "on"))) // true
+ * const enable = writeAdmissionProtocol("/tmp/admission", (current) =>
+ *   AdmissionProtocol.make({ ...current, eviction: "on" })
+ * )
+ * console.log(Effect.isEffect(enable)) // true
  * ```
  *
  * @param root - Machine-wide admission root directory.
- * @param eviction - Desired eviction-event emission state.
+ * @param change - Maps the current marker to the marker to publish.
  * @returns The protocol that was durably published.
  * @category utilities
  * @since 0.0.0
  */
 export const writeAdmissionProtocol = Effect.fn("AdmissionJournal.writeProtocol")(function* (
   root: string,
-  eviction: AdmissionEvictionEmission
+  change: (current: AdmissionProtocol) => AdmissionProtocol
 ): Effect.fn.Return<
   AdmissionProtocol,
   QualitySchedulerError,
   FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom | Digest.Digest
 > {
   const { lockPath, protocolPath } = yield* prepareAdmissionJournalPaths(root);
-  const protocol = AdmissionProtocol.make({ schemaVersion: "yeet-admission-protocol/v2", eviction });
-  const content = yield* encodeAdmissionProtocol(protocol).pipe(
-    Effect.mapError(QualitySchedulerError.new("Failed to encode the admission protocol marker."))
-  );
-  yield* withJournalFileLock(
+  return yield* withJournalFileLock(
     lockPath,
-    (lockToken) =>
-      publishJournalTextAtomically(
+    Effect.fnUntraced(function* (lockToken) {
+      const current = yield* readAdmissionProtocol(root);
+      const protocol = change(current);
+      const content = yield* encodeAdmissionProtocol(protocol).pipe(
+        Effect.mapError(QualitySchedulerError.new("Failed to encode the admission protocol marker."))
+      );
+      yield* publishJournalTextAtomically(
         protocolPath,
         `${content}\n`,
         "admission protocol marker",
         assertJournalFileLockOwned(lockPath, lockToken)
-      ),
+      );
+      return protocol;
+    }),
     LOCKED_OPERATION_RETRY_ATTEMPTS,
     `Admission journal lock "${lockPath}" stayed busy; could not change the protocol marker.`
   );
-  return protocol;
 });
 
 const publishJournalAtomic = Effect.fnUntraced(function* (
@@ -1898,11 +2028,14 @@ const rewriteJournalLocked = Effect.fnUntraced(function* (
   // newer protocol event before all checkouts have rolled forward.
   const serviceOption6 = yield* Effect.serviceOption(AdmissionJournalReader);
   const reader = O.getOrElse(serviceOption6, constant(currentAdmissionJournalReader));
-  const retained = yield* Effect.forEach(rawLines, (raw) =>
-    reader.decode(raw).pipe(
-      Effect.option,
-      Effect.map((decoded) => ({ event: decoded, line: raw }))
-    )
+  const retained = yield* Effect.forEach(
+    rawLines,
+    (raw) =>
+      reader.decode(raw).pipe(
+        Effect.option,
+        Effect.map((decoded) => ({ event: decoded, line: raw }))
+      ),
+    { concurrency: 1 }
   );
   const alreadyRecorded = A.some(retained, ({ event: recorded }) =>
     O.exists(
@@ -2217,10 +2350,55 @@ export const readAdmissionJournalArchive = Effect.fn("AdmissionJournal.readArchi
 export const readAdmissionJournalHistory = Effect.fn("AdmissionJournal.readHistory")(function* (
   root: string
 ): Effect.fn.Return<AdmissionJournalHistory, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
-  const path = yield* Path.Path;
   const archive = yield* readAdmissionJournalArchive(root);
-  const segmentLines = yield* Effect.forEach(archive.segments, (name) =>
-    readJournalLines(path.join(archive.directory, name), "admission journal archive segment")
+  return yield* foldAdmissionJournalHistory(root, archive);
+});
+
+/**
+ * Fold only the archive segments whose UTC day ends after `sinceMillis`, then the live journal.
+ *
+ * **Details**
+ *
+ * The SCHE-06 fairness scan needs only releases inside its 30-minute window,
+ * so it reads at most the current and previous day segments instead of the
+ * 30-day archive. Rows dated before `sinceMillis` can still appear (a segment
+ * covers a whole day); callers filter by instant.
+ *
+ * **Example** (Read the recent admission history)
+ *
+ * ```ts
+ * import { readAdmissionJournalHistorySince } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readAdmissionJournalHistorySince("/tmp/admission", 0))) // true
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @param sinceMillis - Earliest instant the caller reads rows for.
+ * @returns The history of the live journal and the segments that can hold rows after `sinceMillis`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readAdmissionJournalHistorySince = Effect.fn("AdmissionJournal.readHistorySince")(function* (
+  root: string,
+  sinceMillis: number
+): Effect.fn.Return<AdmissionJournalHistory, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const archive = yield* readAdmissionJournalArchive(root);
+  const recent = A.filter(archive.segments, (name) =>
+    O.exists(archiveSegmentDayStartMillis(name), (dayStart) => dayStart + ARCHIVE_SEGMENT_SPAN_MILLIS > sinceMillis)
+  );
+  return yield* foldAdmissionJournalHistory(root, AdmissionJournalArchive.make({ ...archive, segments: recent }));
+});
+
+const foldAdmissionJournalHistory = Effect.fnUntraced(function* (
+  root: string,
+  archive: AdmissionJournalArchive
+): Effect.fn.Return<AdmissionJournalHistory, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
+  const segmentLines = yield* Effect.forEach(
+    archive.segments,
+    (name) => readJournalLines(path.join(archive.directory, name), "admission journal archive segment"),
+    { concurrency: 1 }
   );
   const archivedLines = A.flatten(segmentLines);
   const liveLines = yield* readJournalLines(path.join(root, JOURNAL_FILE_NAME), "admission journal");
@@ -2231,7 +2409,7 @@ export const readAdmissionJournalHistory = Effect.fn("AdmissionJournal.readHisto
   const unique = A.filter(lines, (line, index) => O.contains(HashMap.get(firstIndexByLine, line), index));
   const providedReader = yield* Effect.serviceOption(AdmissionJournalReader);
   const reader = O.getOrElse(providedReader, constant(currentAdmissionJournalReader));
-  const decoded = yield* Effect.forEach(unique, flow(reader.decode, Effect.option));
+  const decoded = yield* Effect.forEach(unique, flow(reader.decode, Effect.option), { concurrency: 1 });
   const events = A.getSomes(decoded);
   return AdmissionJournalHistory.make({
     archive,
@@ -2276,8 +2454,10 @@ export const pruneAgedAdmissionJournalArchive = Effect.fn("AdmissionJournal.prun
   const nowMillis = yield* Clock.currentTimeMillis;
   const directory = path.join(root, ADMISSION_JOURNAL_ARCHIVE_DIRECTORY_NAME);
   const segments = yield* listArchiveSegmentNames(directory).pipe(Effect.orElseSucceed(A.empty<string>));
-  const removed = yield* Effect.forEach(A.filter(segments, isAgedAdmissionJournalArchiveSegment(nowMillis)), (name) =>
-    fs.remove(path.join(directory, name)).pipe(Effect.as(true), Effect.orElseSucceed(constant(false)))
+  const removed = yield* Effect.forEach(
+    A.filter(segments, isAgedAdmissionJournalArchiveSegment(nowMillis)),
+    (name) => fs.remove(path.join(directory, name)).pipe(Effect.as(true), Effect.orElseSucceed(constant(false))),
+    { concurrency: 1 }
   );
   const count = A.length(A.filter(removed, identity));
   yield* count > 0

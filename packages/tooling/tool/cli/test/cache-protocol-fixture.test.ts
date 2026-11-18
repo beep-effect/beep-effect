@@ -167,8 +167,10 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
         assertSome(Headers.get(taggedRead.headers, "x-artifact-tag"), tag);
         yield* taggedRead.arrayBuffer;
         const events = yield* fixture.events;
-        const expected = yield* Effect.forEach([tag, readTag], (value) =>
-          S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(value))
+        const expected = yield* Effect.forEach(
+          [tag, readTag],
+          (value) => S.decodeEffect(Sha256HexFromBytes)(new TextEncoder().encode(value)),
+          { concurrency: 1 }
         );
         deepStrictEqual(
           A.map(events, (event) => event.requestTagSha256),
@@ -326,7 +328,7 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, FetchHttpClient.layer), { timeout: "20
             expect(serve).toHaveBeenCalledTimes(attempts);
           }).pipe(Effect.ensuring(Effect.sync(() => serve.mockRestore())));
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       )
     );
 

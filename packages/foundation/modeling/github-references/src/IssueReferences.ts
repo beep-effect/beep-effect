@@ -218,6 +218,10 @@ const BARE_LINE_PATTERN = new RegExp(`^(${KEYWORDS}):?[ \\t]+#(\\d+)$`, "i");
  * Duplicates are preserved: whether `fixes #1, fixes #1` means one reference
  * or two is the caller's business, not a parser's.
  *
+ * The keyword needs only a word boundary before it, so markdown emphasis,
+ * brackets and list markers around a reference do not hide it; a match's
+ * span runs from the keyword through the last digit and excludes them.
+ *
  * A match whose digits exceed `Number.MAX_SAFE_INTEGER` is skipped, not
  * misparsed. Cross-repo (`owner/repo#N`) and full-URL references are not
  * recognized.

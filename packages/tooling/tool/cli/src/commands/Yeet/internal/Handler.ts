@@ -36,16 +36,15 @@ import {
   commandTextForStep,
   noAdmissionOriginGate,
   processStartIdentityForPid,
+  QualityScheduler,
   QualitySchedulerError,
   RepoPlanStep,
   RepoRunContext,
   RepoStepRunResult,
   repoProofStepDefinition,
   sortedUniquePaths,
-  withQualityAdmission,
 } from "../../../internal/repo-run/index.ts";
 import { patientGit } from "../../../internal/repo-run/PatientGit.ts";
-import { processIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
 import { CiLocalStepPlan } from "../../Ci/CiLane.ts";
 import { HEAVY_ADMISSION_LABEL } from "../../Ci/HeavyAdmission.ts";
 import {
@@ -57,7 +56,7 @@ import {
   QUALITY_TASK_LANE_RUN_ARTIFACT_PATH_ENV,
   QUALITY_TASK_LANE_RUN_PARENT_ID_ENV,
 } from "../../Quality/Quality.schemas.ts";
-import { YeetCommandError } from "../Yeet.errors.ts";
+import { YeetCommandError, YeetHandlerErrorKind, yeetHandlerErrorKind } from "../Yeet.errors.ts";
 import {
   artifactDirForContext,
   runIdForContext,
@@ -67,6 +66,7 @@ import {
 } from "./ArtifactPaths.ts";
 import {
   appendYeetAttemptJournalEvent,
+  currentYeetAttemptOrigin,
   generateYeetAttemptId,
   YeetAttemptFinished,
   YeetAttemptStarted,
@@ -81,7 +81,6 @@ import {
   collectUntrackedPaths,
   currentCommitSha,
   currentYeetBranch,
-  lockfileChangedSinceBase,
   refreshAndPinBaseRef,
   refreshBaseRef,
   resolveYeetMergeBase,
@@ -132,14 +131,20 @@ import {
   buildYeetRunPlanWithMode,
   CI_PARITY_STEP_ID,
   emptyTurboPlanSnapshot,
+  MONITOR_READY_SUBMIT_ARGV,
   MONITOR_READY_SUBMIT_STEP_ID,
   PR_HEAVY_ADMISSION_LABEL_STEP_ID,
   YeetProofTier,
   YeetRunPlanModeOptions,
 } from "./Planner.ts";
 import { enforcePortfolioIndexPublishIntent } from "./PortfolioIndexGuard.ts";
-import { findLiveReadyMonitorJob, ProofJobOutcome, ProofJobRecord, ProofJobRunner } from "./ProofJob.ts";
-import { ProofJobLauncher, updateProofJobBookkeeping } from "./ProofJobLauncher.ts";
+import { ProofJobOutcome, ProofJobRecord, ProofJobRunner, ReadyMonitorRequest } from "./ProofJob.ts";
+import {
+  findReusableReadyMonitor,
+  ProofJobLauncher,
+  readyMonitorRunnerStatus,
+  updateProofJobBookkeeping,
+} from "./ProofJobLauncher.ts";
 import {
   changedPackagesForAttempt,
   proofShadowAttemptFacts,
@@ -173,22 +178,23 @@ import { applyPublishLabels, ensurePullRequest, findOpenPullRequest, YeetPrBodyR
 import { buildQualityIssueIndex } from "./QualityIssueIndex.ts";
 import { linkYeetStackLayer, resolveYeetPublishStackLayer, YeetPublishStackLayer } from "./StackPublish.ts";
 import { collectRemoteChecks, collectYeetStatus, renderYeetStatusSummary, writeYeetStatusSnapshot } from "./Status.ts";
+import { decideTurboForce, turboForceReceiptFor } from "./TurboForce.ts";
 import { collectTurboPlanSnapshot } from "./TurboQuery.ts";
 import { BuildYeetVerdictInput, buildYeetVerdict, YeetExecutedStep, YeetVerdictJson } from "./Verdict.ts";
 import { classifyYeetCheckOutcome, YeetCheckSignal } from "./WatchStream.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { AdmissionOriginGate, MemoryStats, RepoRunPlan } from "../../../internal/repo-run/index.ts";
-import type { ProcessIdentityStatus } from "../../../internal/repo-run/ProcessIdentity.ts";
 import type { FlakeQuarantineIncident } from "../../Quality/internal/FlakeQuarantine.ts";
 import type { QualityTaskLaneRunReport } from "../../Quality/Quality.schemas.ts";
 import type { YeetPublishIntent, YeetRunOptions, YeetRunResult } from "../Yeet.schemas.ts";
 import type { ParityLaneDecision, ProofEnvironment } from "./ParityReuse.ts";
 import type { ProofEnvProfile, ProofStage } from "./ProofFact.ts";
-import type { ProofJobLauncherShape } from "./ProofJobLauncher.ts";
+import type { ProofJobLauncherShape, ReadyMonitorRunnerProbe } from "./ProofJobLauncher.ts";
 import type { YeetStackLayerDecision } from "./StackPublish.ts";
 import type { YeetStatusReviewThread } from "./Status.schemas.ts";
 import type { YeetStatusSnapshot } from "./Status.ts";
+import type { TurboForceReceipt } from "./TurboForce.ts";
 import type { YeetBaseFreshness, YeetMergeReady, YeetStashState, YeetVerdict } from "./Verdict.ts";
 
 const decodeGhPrViewJson = S.decodeEffect(S.fromJsonString(GhPrView));
@@ -451,7 +457,10 @@ const decideCiParityReuse = Effect.fn("Yeet.decideCiParityReuse")(function* (
     proven,
     parity
   );
-  yield* Effect.forEach(A.getSomes(A.map(decisions, renderParityLaneDecision)), Console.log, { discard: true });
+  yield* Effect.forEach(A.getSomes(A.map(decisions, renderParityLaneDecision)), Console.log, {
+    concurrency: 1,
+    discard: true,
+  });
   return decisions;
 });
 
@@ -509,7 +518,7 @@ const recordProofStepEnvironments = Effect.fn("Yeet.recordProofStepEnvironments"
       collectProofEnvironment(step.id, context.repoRoot, effectiveStepEnvironment(step), baseSha).pipe(
         Effect.flatMap((environment) => recordProofEnvironment(context, environment))
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -621,7 +630,8 @@ const runWithFullProofCoordinator = Effect.fn("Yeet.runWithFullProofCoordinator"
     ...admissionAttemptFields(attempt),
   });
   const originGate = fullProofAdmissionOriginGate(lockPath, context, request.command);
-  return yield* schedulerErrorToYeetError(withQualityAdmission(request, originGate, use));
+  const scheduler = yield* QualityScheduler;
+  return yield* schedulerErrorToYeetError(scheduler.admit(request, originGate, use));
 });
 
 const runWithMergedPreviewAdmission = Effect.fn("Yeet.runWithMergedPreviewAdmission")(function* <
@@ -642,7 +652,8 @@ const runWithMergedPreviewAdmission = Effect.fn("Yeet.runWithMergedPreviewAdmiss
     ...admissionAttemptFields(O.some(attempt)),
   });
   const originGate = fullProofAdmissionOriginGate(lockPath, context, request.command);
-  return yield* schedulerErrorToYeetError(withQualityAdmission(request, originGate, use));
+  const scheduler = yield* QualityScheduler;
+  return yield* schedulerErrorToYeetError(scheduler.admit(request, originGate, use));
 });
 
 // Review-fix loops take one admission token (class-capped at three concurrent
@@ -663,7 +674,8 @@ const runWithReviewFixAdmission = Effect.fn("Yeet.runWithReviewFixAdmission")(fu
     command: "bun run beep yeet verify --tier review-fix",
     ...admissionAttemptFields(attempt),
   });
-  return yield* schedulerErrorToYeetError(withQualityAdmission(request, noAdmissionOriginGate, use));
+  const scheduler = yield* QualityScheduler;
+  return yield* schedulerErrorToYeetError(scheduler.admit(request, noAdmissionOriginGate, use));
 });
 
 /**
@@ -933,6 +945,7 @@ const validatePublishCommitMessage = Effect.fn("Yeet.validatePublishCommitMessag
   return yield* YeetCommandError.make({
     message: "yeet publish requires --message with a conventional commit message for reviewed staged changes.",
     exitCode: 1,
+    handlerErrorKind: YeetHandlerErrorKind.Enum["publish-input"],
   });
 });
 
@@ -1164,49 +1177,8 @@ export interface PublishTailDependencies {
     | ChildProcessSpawner.ChildProcessSpawner
   >;
   readonly monitorSupport?: ProofJobLauncherShape["support"];
-  readonly runnerStatus?: (
-    record: ProofJobRecord
-  ) => Effect.Effect<ProcessIdentityStatus, never, FileSystem.FileSystem>;
+  readonly runnerStatus?: ReadyMonitorRunnerProbe;
 }
-
-// A job record can say `running` after its runner died without a finalizer
-// (the unit stays loaded, the record is never stamped). The record's runner
-// pid and process-start identity are the liveness evidence; a `submitted` job
-// has no runner yet because its unit is still starting.
-const readyMonitorRunnerStatus = (
-  record: ProofJobRecord
-): Effect.Effect<ProcessIdentityStatus, never, FileSystem.FileSystem> =>
-  O.match(record.runner, {
-    onNone: () => Effect.succeed<ProcessIdentityStatus>("alive"),
-    onSome: (runner) => processIdentityStatus({ pid: runner.pid, procStart: O.getOrElse(runner.procStart, () => "") }),
-  });
-
-// Newest live monitor whose runner is not provably dead; a dead one is named
-// and skipped so the publish submits a replacement instead of handing back a
-// job that no longer polls.
-const pickReusableReadyMonitor = (
-  records: ReadonlyArray<ProofJobRecord>,
-  target: { readonly branch: string; readonly prNumber: number },
-  runnerStatus: NonNullable<PublishTailDependencies["runnerStatus"]>
-): Effect.Effect<O.Option<ProofJobRecord>, never, FileSystem.FileSystem> =>
-  O.match(findLiveReadyMonitorJob(records, target), {
-    onNone: () => Effect.succeedNone,
-    onSome: (candidate) =>
-      Effect.flatMap(runnerStatus(candidate), (status) =>
-        status !== "dead"
-          ? Effect.succeedSome(candidate)
-          : Effect.andThen(
-              Console.error(
-                `[yeet] warning: readiness monitor job ${candidate.jobId} is recorded ${candidate.phase} but its runner process is gone; not reusing it`
-              ),
-              pickReusableReadyMonitor(
-                A.filter(records, (record) => record.jobId !== candidate.jobId),
-                target,
-                runnerStatus
-              )
-            )
-      ),
-  });
 
 // The checkout's own job registry: the same records `yeet job list` prints.
 const listCheckoutProofJobs = Effect.fn("Yeet.listCheckoutProofJobs")(function* (context: RepoRunContext) {
@@ -1214,32 +1186,20 @@ const listCheckoutProofJobs = Effect.fn("Yeet.listCheckoutProofJobs")(function* 
   return yield* launcher.list;
 });
 
-// A registry read failure must not block the publish: fall back to submitting
-// a fresh monitor and say why.
-const findRunningReadyMonitor = Effect.fn("Yeet.findRunningReadyMonitor")(function* (
+// The newest live monitor on the pull request with the readiness flags publish
+// would submit, whose runner is not provably dead. A dead one is named and
+// skipped, and a registry read failure falls back to submitting a fresh monitor.
+const findRunningReadyMonitor = (
   context: RepoRunContext,
   prNumber: number,
   listJobs: NonNullable<PublishTailDependencies["listJobs"]>,
-  runnerStatus: NonNullable<PublishTailDependencies["runnerStatus"]>
-): Effect.fn.Return<
-  O.Option<ProofJobRecord>,
-  never,
-  | SecureRandom.SecureRandom
-  | FileSystem.FileSystem
-  | Path.Path
-  | ChildProcessSpawner.ChildProcessSpawner
-  | Digest.Digest
-  | Git
-> {
-  return yield* listJobs(context).pipe(
-    Effect.flatMap((records) => pickReusableReadyMonitor(records, { branch: context.branch, prNumber }, runnerStatus)),
-    Effect.catch((error) =>
-      Console.error(`[yeet] warning: could not read the job registry; submitting a new monitor: ${error.message}`).pipe(
-        Effect.as(O.none<ProofJobRecord>())
-      )
-    )
+  runnerStatus: ReadyMonitorRunnerProbe
+) =>
+  findReusableReadyMonitor(
+    listJobs(context),
+    ReadyMonitorRequest.make({ branch: context.branch, prNumber: O.some(prNumber), argv: MONITOR_READY_SUBMIT_ARGV }),
+    runnerStatus
   );
-});
 
 const renderReadyMonitorJob = (record: ProofJobRecord, reused: boolean): string =>
   `[yeet] readiness monitor job: ${record.jobId}${reused ? ` (already ${record.phase}; not re-submitted)` : ""}\n[yeet] wait with: bun run beep yeet job wait ${record.jobId}`;
@@ -1627,6 +1587,7 @@ const runPushFirstPublishPhases = Effect.fn("Yeet.runPushFirstPublishPhases")(fu
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -1770,6 +1731,7 @@ const publishPostCommitPhases = (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > =>
@@ -1826,6 +1788,7 @@ const runPublishMode = Effect.fn("Yeet.runPublishMode")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -1980,6 +1943,7 @@ const assertNoUnresolvedReviewThreads = Effect.fn("Yeet.assertNoUnresolvedReview
     message: `Yeet merge readiness requires zero outstanding review threads; found ${outstanding} (${remote.unresolvedReviewThreadCount ?? 0} unresolved, ${remote.followUpThreadCount ?? 0} reviewer follow-up)${detail}`,
     command: "bun run beep yeet reply",
     exitCode: 1,
+    handlerErrorKind: YeetHandlerErrorKind.Enum["review-threads"],
   });
 });
 
@@ -2535,7 +2499,8 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
   extras: Ref.Ref<YeetVerdictExtras>,
   outcome: "success" | "failure",
   message: string,
-  artifacts: O.Option<YeetRunResult>
+  artifacts: O.Option<YeetRunResult>,
+  handlerErrorKind: O.Option<YeetHandlerErrorKind> = O.none()
 ): Effect.fn.Return<
   void,
   YeetCommandError,
@@ -2663,6 +2628,7 @@ const writeRunVerdict = Effect.fn("Yeet.writeRunVerdict")(function* (
         mergeReady: extraState.mergeReady,
         stash: extraState.stash,
         failedStepId,
+        handlerErrorKind,
       }),
       ...(outcome === "failure" ? { failureKind: O.isSome(failedExecution) ? "step-exit" : "handler-error" } : {}),
     })
@@ -2838,7 +2804,8 @@ const attemptComputeProfile = ComputeProfileProbe.use((probe) => probe.resolve).
 const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
   context: RepoRunContext,
   options: YeetRunOptions,
-  attemptId: YeetAttemptId
+  attemptId: YeetAttemptId,
+  turboForce: O.Option<TurboForceReceipt>
 ): Effect.fn.Return<
   YeetAttemptStarted,
   YeetCommandError,
@@ -2853,6 +2820,7 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
   const resolvedHeadSha = yield* currentCommitSha(context);
   const diffFingerprint = yield* collectDiffFingerprint(context);
   const ownerProcStart = yield* processStartIdentityForPid(process.pid);
+  const origin = yield* currentYeetAttemptOrigin;
   return YeetAttemptStarted.make({
     schemaVersion: "yeet-attempt-journal/v1",
     _tag: "attempt-started",
@@ -2872,6 +2840,9 @@ const makeYeetAttempt = Effect.fn("Yeet.makeAttempt")(function* (
     computeProfile: yield* attemptComputeProfile,
     forceLocal: options.forceLocal ? O.some(true) : O.none(),
     stage: O.some(attemptStageFor(options)),
+    turboForce,
+    host: origin.host,
+    seat: origin.seat,
   });
 });
 
@@ -2894,7 +2865,8 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   plan: RepoRunPlan,
   options: YeetRunOptions,
   message: O.Option<string>,
-  providedAttempt: O.Option<YeetAttemptStarted> = O.none()
+  providedAttempt: O.Option<YeetAttemptStarted> = O.none(),
+  turboForce: O.Option<TurboForceReceipt> = O.none()
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
@@ -2903,6 +2875,7 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -2912,7 +2885,9 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
   const startedAtEpochMillis = yield* Clock.currentTimeMillis;
   const attempt = yield* O.match(providedAttempt, {
     onNone: () =>
-      Effect.flatMap(generateYeetAttemptId(), (attemptId) => makeYeetAttempt(plan.context, options, attemptId)),
+      Effect.flatMap(generateYeetAttemptId(), (attemptId) =>
+        makeYeetAttempt(plan.context, options, attemptId, turboForce)
+      ),
     onSome: Effect.succeed,
   });
   const recorder = yield* Ref.make<ReadonlyArray<YeetExecutedStep>>(A.empty());
@@ -3018,7 +2993,8 @@ const runPlanExecution = Effect.fn("Yeet.runPlanExecution")(function* (
             extras,
             "failure",
             error.message,
-            O.none()
+            O.none(),
+            yeetHandlerErrorKind(error)
           ).pipe(
             Effect.tap(() => Ref.set(terminalWritten, true)),
             Effect.uninterruptible,
@@ -3119,7 +3095,8 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
   options: YeetRunOptions,
   message: O.Option<string>,
   modeOptions: YeetRunPlanModeOptions,
-  attemptId: YeetAttemptId
+  attemptId: YeetAttemptId,
+  turboForce: O.Option<TurboForceReceipt>
 ): Effect.fn.Return<
   YeetRunResult,
   YeetCommandError,
@@ -3128,6 +3105,7 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -3140,7 +3118,7 @@ const runMergedVerify = Effect.fn("Yeet.runMergedVerify")(function* (
         `[yeet] proving the merge preview ${pipe(preview.commitSha, Str.takeLeft(12))} (${context.branch} merged with ${context.base} at ${pipe(preview.baseSha, Str.takeLeft(12))})`
       );
       const previewContext = yeetMergedPreviewContext(context, preview, artifactDir);
-      const attempt = yield* makeYeetAttempt(previewContext, options, attemptId);
+      const attempt = yield* makeYeetAttempt(previewContext, options, attemptId, turboForce);
       return yield* runWithMergedPreviewAdmission(
         context,
         Effect.gen(function* () {
@@ -3202,6 +3180,7 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
   | MemoryStats
+  | QualityScheduler
   | Digest.Digest
   | Git
 > {
@@ -3211,20 +3190,12 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
   yield* validateMonitorGuards(context, options);
   // A bad --body-file fails here, before anything is committed or pushed.
   yield* readPrBodySummary(context, options.bodyFile);
-  const forceTurbo =
-    options.mode === "repair" || options.mode === "verify" || options.mode === "publish"
-      ? yield* lockfileChangedSinceBase(context)
-      : false;
-  if (forceTurbo) {
-    yield* Console.log(
-      `[yeet] bun.lock changed since ${context.base}; forcing dependency-sensitive lanes (TURBO_FORCE=true)`
-    );
-  }
+  const forceDecision = yield* decideTurboForce(context, options.mode);
   const modeOptions = YeetRunPlanModeOptions.make({
     amend: options.amend,
     ciParity: options.ciParity,
     collectAll: options.collectAll,
-    forceTurbo,
+    forceTurbo: A.isReadonlyArrayNonEmpty(forceDecision.reasons),
     hostedProof: options.hostedProof,
     mode: options.mode,
     monitor: options.monitor,
@@ -3242,12 +3213,14 @@ export const runYeet = Effect.fn("Yeet.runYeet")(function* (
     yield* renderPlan(plan, options.json);
     return yield* emptyPlanResult(context);
   }
+  // Recorded on the attempt row only; nothing reads it to plan or decide (ruling D14).
+  const turboForce = yield* turboForceReceiptFor(context, options.mode, forceDecision);
   if (options.merged) {
     const attemptId = yield* generateYeetAttemptId();
-    return yield* runMergedVerify(context, options, message, modeOptions, attemptId);
+    return yield* runMergedVerify(context, options, message, modeOptions, attemptId, turboForce);
   }
 
-  return yield* runPlanExecution(plan, options, message);
+  return yield* runPlanExecution(plan, options, message, O.none(), turboForce);
 });
 
 /**

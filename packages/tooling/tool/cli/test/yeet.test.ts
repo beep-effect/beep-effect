@@ -16,6 +16,7 @@ import {
   MemoryStats,
   processStartIdentityForPid,
   provideRuntimeRootForTesting,
+  QualitySchedulerLive,
   RuntimeRootChoice,
   reconcileAttemptJournal,
   reconcileAttemptJournalsForCheckout,
@@ -192,7 +193,7 @@ const encodeStarted = S.encodeEffect(S.fromJsonString(YeetAttemptStarted));
 const encodeTerminated = S.encodeEffect(S.fromJsonString(YeetAttemptTerminated));
 
 const PlatformLayer = Layer.provideMerge(
-  Git.layer,
+  Layer.merge(Git.layer, QualitySchedulerLive),
   NodeChildProcessSpawner.layer.pipe(
     Layer.provideMerge(Layer.mergeAll(NodeCrypto.layer, NodeFileSystem.layer, NodePath.layer))
   )
@@ -211,35 +212,43 @@ const encodedAttemptPairs = Effect.fnUntraced(function* (family: string, count: 
     A.range(0, count - 1),
     Effect.fnUntraced(function* (index) {
       return yield* attemptUuid(`00000000-0000-4000-${family}-${Str.padStart(12, "0")(`${index + offset}`)}`);
-    })
+    }),
+    { concurrency: 1 }
   );
-  const forEach2 = yield* Effect.forEach(attemptIds, (attemptId, index) => {
-    const ordinal = Str.padStart(3, "0")(`${index + offset}`);
-    return Effect.all([
-      encodeStarted(
-        YeetAttemptStarted.make({
-          schemaVersion: "yeet-attempt-journal/v1",
-          _tag: "attempt-started",
-          attemptId,
-          runId: `retained-${family}-${ordinal}`,
-          branch: "retention-fixture",
-          base: "origin/main",
-          head: "HEAD",
-          mode: "verify",
-          startedAt: `2026-09-03T00:00:00.${ordinal}Z`,
-        })
-      ),
-      encodeTerminated(
-        YeetAttemptTerminated.make({
-          schemaVersion: "yeet-attempt-journal/v1",
-          _tag: "attempt-terminated",
-          attemptId,
-          recordedAt: `2026-09-03T00:00:01.${ordinal}Z`,
-          reason: "interrupted",
-        })
-      ),
-    ]);
-  });
+  const forEach2 = yield* Effect.forEach(
+    attemptIds,
+    (attemptId, index) => {
+      const ordinal = Str.padStart(3, "0")(`${index + offset}`);
+      return Effect.all(
+        [
+          encodeStarted(
+            YeetAttemptStarted.make({
+              schemaVersion: "yeet-attempt-journal/v1",
+              _tag: "attempt-started",
+              attemptId,
+              runId: `retained-${family}-${ordinal}`,
+              branch: "retention-fixture",
+              base: "origin/main",
+              head: "HEAD",
+              mode: "verify",
+              startedAt: `2026-09-03T00:00:00.${ordinal}Z`,
+            })
+          ),
+          encodeTerminated(
+            YeetAttemptTerminated.make({
+              schemaVersion: "yeet-attempt-journal/v1",
+              _tag: "attempt-terminated",
+              attemptId,
+              recordedAt: `2026-09-03T00:00:01.${ordinal}Z`,
+              reason: "interrupted",
+            })
+          ),
+        ],
+        { concurrency: 1 }
+      );
+    },
+    { concurrency: 1 }
+  );
   const lines = A.flatten(forEach2);
   return { attemptIds, lines };
 });
@@ -362,6 +371,7 @@ const acquireProofCoordinator = Effect.fn("YeetTest.acquireProofCoordinator")(fu
       yield* fs.makeDirectory(path.dirname(lockPath), { recursive: true, mode: 0o700 });
       const fallbackPath = path.join(path.dirname(lockPath), "scheduler-fallback.lock");
       yield* Effect.all([fs.remove(lockPath, { force: true }), fs.remove(fallbackPath, { force: true })], {
+        concurrency: 1,
         discard: true,
       });
       return { ...repo, lockPath } as const;
@@ -374,13 +384,14 @@ const acquireProofCoordinator = Effect.fn("YeetTest.acquireProofCoordinator")(fu
         const coordinatorPrefix = path.basename(lockPath);
         const fallbackPath = path.join(coordinatorDirectory, "scheduler-fallback.lock");
         yield* Effect.all([fs.remove(lockPath, { force: true }), fs.remove(fallbackPath, { force: true })], {
+          concurrency: 1,
           discard: true,
         });
         const entries = yield* fs.readDirectory(coordinatorDirectory).pipe(Effect.orElseSucceed(A.empty<string>));
         yield* Effect.forEach(
           A.filter(entries, Str.startsWith(coordinatorPrefix)),
           (entry) => fs.remove(path.join(coordinatorDirectory, entry), { force: true }).pipe(Effect.ignore),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       }).pipe(Effect.orDie)
   );
@@ -653,13 +664,15 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
                 yield* ensureAttemptTerminatedForTesting(tempContext, started, terminalWritten, exit);
               }
             }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
 
         const journalPath = yield* attemptJournalPath(tempContext);
         const readFileString5 = yield* fs.readFileString(journalPath);
-        const events = yield* Effect.forEach(pipe(readFileString5, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-          decodeYeetAttemptJournalEvent(line)
+        const events = yield* Effect.forEach(
+          pipe(readFileString5, Str.split("\n"), A.filter(Str.isNonEmpty)),
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
         expect(A.map(terminals, (terminal) => terminal.reason)).toEqual(A.map(cases, ([, , reason]) => reason));
@@ -1316,6 +1329,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         );
 
         expect(error.message).toContain("yeet publish requires --message with a conventional commit message");
+        expect(error.handlerErrorKind).toBe("publish-input");
       })
     );
 
@@ -3131,7 +3145,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const journalPath = yield* attemptJournalPath(tempContext);
         const readFileString13 = yield* fs.readFileString(journalPath);
         const lines = pipe(readFileString13, Str.split("\n"), A.filter(Str.isNonEmpty));
-        const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
+        const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line), { concurrency: 1 });
 
         expect(events).toHaveLength(60);
         const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
@@ -3182,7 +3196,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const readFileString14 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
           pipe(readFileString14, Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeYeetAttemptJournalEvent(line)
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const oldestAttemptRows = A.filter(
           events,
@@ -3212,7 +3227,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           (name) =>
             fs
               .readFileString(path.join(fixtureRoot, name))
-              .pipe(Effect.map((text) => pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty))))
+              .pipe(Effect.map((text) => pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)))),
+          { concurrency: 1 }
         );
         const fixtureLines = pipe(forEach15, A.flatten);
         const seededLines = pipe(
@@ -3241,7 +3257,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const readFileString16 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
           pipe(readFileString16, Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeYeetAttemptJournalEvent(line)
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         expect(events).toHaveLength(151);
         expect(A.filter(events, YeetAttemptJournalEvent.guards["journal-compacted"])).toHaveLength(30);
@@ -3297,8 +3314,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const reconcileAttemptJournal17 = yield* reconcileAttemptJournal(journalPath);
         expect(reconcileAttemptJournal17).toBe(0);
         const text = yield* fs.readFileString(journalPath);
-        const events = yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-          decodeYeetAttemptJournalEvent(line)
+        const events = yield* Effect.forEach(
+          pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)),
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
         const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
@@ -3346,7 +3365,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           });
         const lines = yield* Effect.forEach(
           [started(deadAttemptId, DEAD_PID, "fake-dead-owner"), started(liveAttemptId, process.pid, ownerProcStart)],
-          (event) => encodeStarted(event)
+          (event) => encodeStarted(event),
+          { concurrency: 1 }
         );
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(lines, "\n")}\n`);
@@ -3359,7 +3379,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const readFileString21 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
           pipe(readFileString21, Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeYeetAttemptJournalEvent(line)
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
         expect(terminals).toHaveLength(1);
@@ -3453,7 +3474,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
                 stage: index === 0 ? O.some("repair-loop") : O.none(),
               })
             );
-          })
+          }),
+          { concurrency: 1 }
         );
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         const writeOverLimitJournal = fs.writeFileString(journalPath, `${A.join(starts, "\n")}\n`);
@@ -3461,7 +3483,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           const readFileString26 = yield* fs.readFileString(journalPath);
           const events = yield* Effect.forEach(
             pipe(readFileString26, Str.split("\n"), A.filter(Str.isNonEmpty)),
-            (line) => decodeYeetAttemptJournalEvent(line)
+            (line) => decodeYeetAttemptJournalEvent(line),
+            { concurrency: 1 }
           );
           expect(A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"])).toHaveLength(expectedStartCount);
           expect(
@@ -3535,55 +3558,63 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           A.makeBy(59, (index) => index),
           Effect.fnUntraced(function* (index) {
             const attemptId = yield* attemptUuid(`00000000-0000-4000-8004-${Str.padStart(12, "0")(`${index}`)}`);
-            return yield* Effect.all([
-              encodeStarted(
-                YeetAttemptStarted.make({
-                  schemaVersion: "yeet-attempt-journal/v1",
-                  _tag: "attempt-started",
-                  attemptId,
-                  runId: `prior-${index}`,
-                  branch: "dead-batch-reconciliation",
-                  base: "origin/main",
-                  head: "HEAD",
-                  mode: "repair",
-                  startedAt: `2026-09-02T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
-                })
-              ),
-              encodeTerminated(
-                YeetAttemptTerminated.make({
-                  schemaVersion: "yeet-attempt-journal/v1",
-                  _tag: "attempt-terminated",
-                  attemptId,
-                  recordedAt: `2026-09-02T00:01:${Str.padStart(2, "0")(`${index}`)}.000Z`,
-                  reason: "interrupted",
-                })
-              ),
-            ]);
-          })
+            return yield* Effect.all(
+              [
+                encodeStarted(
+                  YeetAttemptStarted.make({
+                    schemaVersion: "yeet-attempt-journal/v1",
+                    _tag: "attempt-started",
+                    attemptId,
+                    runId: `prior-${index}`,
+                    branch: "dead-batch-reconciliation",
+                    base: "origin/main",
+                    head: "HEAD",
+                    mode: "repair",
+                    startedAt: `2026-09-02T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
+                  })
+                ),
+                encodeTerminated(
+                  YeetAttemptTerminated.make({
+                    schemaVersion: "yeet-attempt-journal/v1",
+                    _tag: "attempt-terminated",
+                    attemptId,
+                    recordedAt: `2026-09-02T00:01:${Str.padStart(2, "0")(`${index}`)}.000Z`,
+                    reason: "interrupted",
+                  })
+                ),
+              ],
+              { concurrency: 1 }
+            );
+          }),
+          { concurrency: 1 }
         );
         const priorPairs = A.flatten(forEach29);
         const deadAttemptIds = yield* Effect.forEach(
           A.range(0, 30 - 1),
           Effect.fnUntraced(function* (index) {
             return yield* attemptUuid(`00000000-0000-4000-8005-${Str.padStart(12, "0")(`${index}`)}`);
-          })
+          }),
+          { concurrency: 1 }
         );
-        const deadStarts = yield* Effect.forEach(deadAttemptIds, (attemptId, index) =>
-          encodeStarted(
-            YeetAttemptStarted.make({
-              schemaVersion: "yeet-attempt-journal/v1",
-              _tag: "attempt-started",
-              attemptId,
-              runId: `dead-batch-${index}`,
-              branch: "dead-batch-reconciliation",
-              base: "origin/main",
-              head: "HEAD",
-              mode: "repair",
-              startedAt: `2026-09-03T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
-              ownerPid: O.some(DEAD_PID),
-              ownerProcStart: O.some(`dead-batch-${index}`),
-            })
-          )
+        const deadStarts = yield* Effect.forEach(
+          deadAttemptIds,
+          (attemptId, index) =>
+            encodeStarted(
+              YeetAttemptStarted.make({
+                schemaVersion: "yeet-attempt-journal/v1",
+                _tag: "attempt-started",
+                attemptId,
+                runId: `dead-batch-${index}`,
+                branch: "dead-batch-reconciliation",
+                base: "origin/main",
+                head: "HEAD",
+                mode: "repair",
+                startedAt: `2026-09-03T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
+                ownerPid: O.some(DEAD_PID),
+                ownerProcStart: O.some(`dead-batch-${index}`),
+              })
+            ),
+          { concurrency: 1 }
         );
         const seededLines = A.appendAll(legacyLines, A.appendAll(priorPairs, deadStarts));
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
@@ -3594,7 +3625,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const readFileString31 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
           pipe(readFileString31, Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeYeetAttemptJournalEvent(line)
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const retainedStarts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
         const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
@@ -3631,30 +3663,35 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           A.range(0, 50 - 1),
           Effect.fnUntraced(function* (index) {
             return yield* attemptUuid(`00000000-0000-4000-8006-${Str.padStart(12, "0")(`${index}`)}`);
-          })
+          }),
+          { concurrency: 1 }
         );
         const liveAttemptIds = yield* Effect.forEach(
           A.range(0, 2 - 1),
           Effect.fnUntraced(function* (index) {
             return yield* attemptUuid(`00000000-0000-4000-8007-${Str.padStart(12, "0")(`${index}`)}`);
-          })
+          }),
+          { concurrency: 1 }
         );
-        const starts = yield* Effect.forEach(A.appendAll(deadAttemptIds, liveAttemptIds), (attemptId, index) =>
-          encodeStarted(
-            YeetAttemptStarted.make({
-              schemaVersion: "yeet-attempt-journal/v1",
-              _tag: "attempt-started",
-              attemptId,
-              runId: `protected-plus-live-${index}`,
-              branch: "protected-batch-reconciliation",
-              base: "origin/main",
-              head: "HEAD",
-              mode: "repair",
-              startedAt: `2026-09-03T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
-              ownerPid: O.some(index < 50 ? DEAD_PID : process.pid),
-              ownerProcStart: O.some(index < 50 ? `protected-batch-${index}` : ownerProcStart),
-            })
-          )
+        const starts = yield* Effect.forEach(
+          A.appendAll(deadAttemptIds, liveAttemptIds),
+          (attemptId, index) =>
+            encodeStarted(
+              YeetAttemptStarted.make({
+                schemaVersion: "yeet-attempt-journal/v1",
+                _tag: "attempt-started",
+                attemptId,
+                runId: `protected-plus-live-${index}`,
+                branch: "protected-batch-reconciliation",
+                base: "origin/main",
+                head: "HEAD",
+                mode: "repair",
+                startedAt: `2026-09-03T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
+                ownerPid: O.some(index < 50 ? DEAD_PID : process.pid),
+                ownerProcStart: O.some(index < 50 ? `protected-batch-${index}` : ownerProcStart),
+              })
+            ),
+          { concurrency: 1 }
         );
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(starts, "\n")}\n`);
@@ -3664,7 +3701,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const readFileString34 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
           pipe(readFileString34, Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeYeetAttemptJournalEvent(line)
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const retainedStarts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
         const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
@@ -3699,23 +3737,27 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           A.range(0, 55 - 1),
           Effect.fnUntraced(function* (index) {
             return yield* attemptUuid(`00000000-0000-4000-8008-${Str.padStart(12, "0")(`${index}`)}`);
-          })
+          }),
+          { concurrency: 1 }
         );
-        const starts = yield* Effect.forEach(attemptIds, (attemptId, index) =>
-          encodeStarted(
-            YeetAttemptStarted.make({
-              schemaVersion: "yeet-attempt-journal/v1",
-              _tag: "attempt-started",
-              attemptId,
-              runId: `unfinished-${index}`,
-              branch: "unfinished-over-limit",
-              base: "origin/main",
-              head: "HEAD",
-              mode: "repair",
-              startedAt: `2026-09-03T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
-              ...owner,
-            })
-          )
+        const starts = yield* Effect.forEach(
+          attemptIds,
+          (attemptId, index) =>
+            encodeStarted(
+              YeetAttemptStarted.make({
+                schemaVersion: "yeet-attempt-journal/v1",
+                _tag: "attempt-started",
+                attemptId,
+                runId: `unfinished-${index}`,
+                branch: "unfinished-over-limit",
+                base: "origin/main",
+                head: "HEAD",
+                mode: "repair",
+                startedAt: `2026-09-03T00:00:${Str.padStart(2, "0")(`${index}`)}.000Z`,
+                ...owner,
+              })
+            ),
+          { concurrency: 1 }
         );
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(starts, "\n")}\n`);
@@ -3725,7 +3767,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const readFileString36 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
           pipe(readFileString36, Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeYeetAttemptJournalEvent(line)
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const retainedStarts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
         expect(retainedStarts).toHaveLength(55);
@@ -3754,7 +3797,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
             ...owner,
           });
         });
-        const started = yield* Effect.forEach(A.range(0, 49), attemptStarted);
+        const started = yield* Effect.forEach(A.range(0, 49), attemptStarted, { concurrency: 1 });
         yield* Effect.forEach(started, (event) => appendYeetAttemptJournalEvent(tempContext, event), {
           discard: true,
           concurrency: 1,
@@ -3763,7 +3806,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           A.range(0, 10 - 1),
           Effect.fnUntraced(function* (offset) {
             return yield* attemptStarted(100 + offset);
-          })
+          }),
+          { concurrency: 1 }
         );
         yield* Effect.forEach(concurrent, (event) => appendYeetAttemptJournalEvent(tempContext, event), {
           discard: true,
@@ -3773,7 +3817,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const journalPath = yield* attemptJournalPath(tempContext);
         const readFileString37 = yield* fs.readFileString(journalPath);
         const lines = pipe(readFileString37, Str.split("\n"), A.filter(Str.isNonEmpty));
-        const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
+        const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line), { concurrency: 1 });
         const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
         const retainedIds = A.map(starts, (event) => event.attemptId);
 
@@ -3822,7 +3866,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 
         const readFileString41 = yield* fs.readFileString(journalPath);
         const lines = pipe(readFileString41, Str.split("\n"), A.filter(Str.isNonEmpty));
-        const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
+        const events = yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line), { concurrency: 1 });
 
         expect(events).toHaveLength(2);
         const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
@@ -3843,23 +3887,27 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           A.range(0, 5 - 1),
           Effect.fnUntraced(function* (index) {
             return yield* attemptUuid(`00000000-0000-4000-8011-${Str.padStart(12, "0")(`${index}`)}`);
-          })
+          }),
+          { concurrency: 1 }
         );
-        const starts = yield* Effect.forEach(attemptIds, (attemptId, index) =>
-          encodeStarted(
-            YeetAttemptStarted.make({
-              schemaVersion: "yeet-attempt-journal/v1",
-              _tag: "attempt-started",
-              attemptId,
-              runId: `legacy-owner-${index}`,
-              branch: "legacy-owner-reconciliation",
-              base: "origin/main",
-              head: "HEAD",
-              mode: "repair",
-              startedAt: `2026-09-03T00:00:00.00${index}Z`,
-              ...(index < 3 ? {} : owner),
-            })
-          )
+        const starts = yield* Effect.forEach(
+          attemptIds,
+          (attemptId, index) =>
+            encodeStarted(
+              YeetAttemptStarted.make({
+                schemaVersion: "yeet-attempt-journal/v1",
+                _tag: "attempt-started",
+                attemptId,
+                runId: `legacy-owner-${index}`,
+                branch: "legacy-owner-reconciliation",
+                base: "origin/main",
+                head: "HEAD",
+                mode: "repair",
+                startedAt: `2026-09-03T00:00:00.00${index}Z`,
+                ...(index < 3 ? {} : owner),
+              })
+            ),
+          { concurrency: 1 }
         );
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(starts, "\n")}\n`);
@@ -3867,8 +3915,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const reconcileAttemptJournal42 = yield* reconcileAttemptJournal(journalPath);
         expect(reconcileAttemptJournal42).toBe(3);
         const once = yield* fs.readFileString(journalPath);
-        const events = yield* Effect.forEach(pipe(once, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-          decodeYeetAttemptJournalEvent(line)
+        const events = yield* Effect.forEach(
+          pipe(once, Str.split("\n"), A.filter(Str.isNonEmpty)),
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
         expect(terminals).toHaveLength(3);
@@ -3909,19 +3959,24 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
             startedAt,
             ownerPid: O.some(ownerPid),
           });
-        const lines = yield* Effect.all([
-          encodeStarted(started(youngAttemptId, process.pid, "2026-09-02T12:00:00.001Z")),
-          encodeStarted(started(staleAttemptId, process.pid, "2026-09-02T11:59:59.999Z")),
-          encodeStarted(started(deadAttemptId, DEAD_PID, "2026-09-03T11:59:59.999Z")),
-        ]);
+        const lines = yield* Effect.all(
+          [
+            encodeStarted(started(youngAttemptId, process.pid, "2026-09-02T12:00:00.001Z")),
+            encodeStarted(started(staleAttemptId, process.pid, "2026-09-02T11:59:59.999Z")),
+            encodeStarted(started(deadAttemptId, DEAD_PID, "2026-09-03T11:59:59.999Z")),
+          ],
+          { concurrency: 1 }
+        );
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(lines, "\n")}\n`);
 
         const reconcileAttemptJournal45 = yield* reconcileAttemptJournal(journalPath);
         expect(reconcileAttemptJournal45).toBe(2);
         const once = yield* fs.readFileString(journalPath);
-        const events = yield* Effect.forEach(pipe(once, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-          decodeYeetAttemptJournalEvent(line)
+        const events = yield* Effect.forEach(
+          pipe(once, Str.split("\n"), A.filter(Str.isNonEmpty)),
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
         expect(
@@ -3954,23 +4009,27 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           A.range(0, 50 - 1),
           Effect.fnUntraced(function* (index) {
             return yield* attemptUuid(`00000000-0000-4000-8012-${Str.padStart(12, "0")(`${index}`)}`);
-          })
+          }),
+          { concurrency: 1 }
         );
-        const unfinishedLines = yield* Effect.forEach(unfinishedIds, (attemptId, index) =>
-          encodeStarted(
-            YeetAttemptStarted.make({
-              schemaVersion: "yeet-attempt-journal/v1",
-              _tag: "attempt-started",
-              attemptId,
-              runId: `unfinished-budget-${index}`,
-              branch: "unfinished-budget",
-              base: "origin/main",
-              head: "HEAD",
-              mode: "repair",
-              startedAt: `2026-09-03T00:00:00.${Str.padStart(3, "0")(`${index}`)}Z`,
-              ...owner,
-            })
-          )
+        const unfinishedLines = yield* Effect.forEach(
+          unfinishedIds,
+          (attemptId, index) =>
+            encodeStarted(
+              YeetAttemptStarted.make({
+                schemaVersion: "yeet-attempt-journal/v1",
+                _tag: "attempt-started",
+                attemptId,
+                runId: `unfinished-budget-${index}`,
+                branch: "unfinished-budget",
+                base: "origin/main",
+                head: "HEAD",
+                mode: "repair",
+                startedAt: `2026-09-03T00:00:00.${Str.padStart(3, "0")(`${index}`)}Z`,
+                ...owner,
+              })
+            ),
+          { concurrency: 1 }
         );
         const completed = yield* encodedAttemptPairs("8013", 5);
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
@@ -3985,8 +4044,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         expect(reconcileAttemptJournal50).toBe(0);
         const after = yield* fs.readFileString(journalPath);
         expect(after).toBe(before);
-        const events = yield* Effect.forEach(pipe(after, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-          decodeYeetAttemptJournalEvent(line)
+        const events = yield* Effect.forEach(
+          pipe(after, Str.split("\n"), A.filter(Str.isNonEmpty)),
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         expect(A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"])).toHaveLength(55);
         expect(A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"])).toHaveLength(5);
@@ -4006,23 +4067,27 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           A.range(0, 60 - 1),
           Effect.fnUntraced(function* (index) {
             return yield* attemptUuid(`00000000-0000-4000-8014-${Str.padStart(12, "0")(`${index}`)}`);
-          })
+          }),
+          { concurrency: 1 }
         );
-        const unfinishedLines = yield* Effect.forEach(unfinishedIds, (attemptId, index) =>
-          encodeStarted(
-            YeetAttemptStarted.make({
-              schemaVersion: "yeet-attempt-journal/v1",
-              _tag: "attempt-started",
-              attemptId,
-              runId: `unfinished-pair-budget-${index}`,
-              branch: "pair-budget",
-              base: "origin/main",
-              head: "HEAD",
-              mode: "repair",
-              startedAt: `2026-09-03T00:00:02.${Str.padStart(3, "0")(`${index}`)}Z`,
-              ...owner,
-            })
-          )
+        const unfinishedLines = yield* Effect.forEach(
+          unfinishedIds,
+          (attemptId, index) =>
+            encodeStarted(
+              YeetAttemptStarted.make({
+                schemaVersion: "yeet-attempt-journal/v1",
+                _tag: "attempt-started",
+                attemptId,
+                runId: `unfinished-pair-budget-${index}`,
+                branch: "pair-budget",
+                base: "origin/main",
+                head: "HEAD",
+                mode: "repair",
+                startedAt: `2026-09-03T00:00:02.${Str.padStart(3, "0")(`${index}`)}Z`,
+                ...owner,
+              })
+            ),
+          { concurrency: 1 }
         );
         const completed = yield* encodedAttemptPairs("8015", 60);
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
@@ -4031,8 +4096,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const reconcileAttemptJournal51 = yield* reconcileAttemptJournal(journalPath);
         expect(reconcileAttemptJournal51).toBe(0);
         const once = yield* fs.readFileString(journalPath);
-        const events = yield* Effect.forEach(pipe(once, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-          decodeYeetAttemptJournalEvent(line)
+        const events = yield* Effect.forEach(
+          pipe(once, Str.split("\n"), A.filter(Str.isNonEmpty)),
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
         const terminals = A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"]);
@@ -4063,24 +4130,28 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           A.range(0, 60 - 1),
           Effect.fnUntraced(function* (index) {
             return yield* attemptUuid(`00000000-0000-4000-8016-${Str.padStart(12, "0")(`${index}`)}`);
-          })
+          }),
+          { concurrency: 1 }
         );
-        const starts = yield* Effect.forEach(deadIds, (attemptId, index) =>
-          encodeStarted(
-            YeetAttemptStarted.make({
-              schemaVersion: "yeet-attempt-journal/v1",
-              _tag: "attempt-started",
-              attemptId,
-              runId: `protected-overflow-${index}`,
-              branch: "protected-overflow",
-              base: "origin/main",
-              head: "HEAD",
-              mode: "repair",
-              startedAt: `2026-09-03T00:00:00.${Str.padStart(3, "0")(`${index}`)}Z`,
-              ownerPid: O.some(DEAD_PID),
-              ownerProcStart: O.some(`protected-overflow-${index}`),
-            })
-          )
+        const starts = yield* Effect.forEach(
+          deadIds,
+          (attemptId, index) =>
+            encodeStarted(
+              YeetAttemptStarted.make({
+                schemaVersion: "yeet-attempt-journal/v1",
+                _tag: "attempt-started",
+                attemptId,
+                runId: `protected-overflow-${index}`,
+                branch: "protected-overflow",
+                base: "origin/main",
+                head: "HEAD",
+                mode: "repair",
+                startedAt: `2026-09-03T00:00:00.${Str.padStart(3, "0")(`${index}`)}Z`,
+                ownerPid: O.some(DEAD_PID),
+                ownerProcStart: O.some(`protected-overflow-${index}`),
+              })
+            ),
+          { concurrency: 1 }
         );
         yield* fs.makeDirectory(path.dirname(journalPath), { recursive: true });
         yield* fs.writeFileString(journalPath, `${A.join(starts, "\n")}\n`);
@@ -4090,7 +4161,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const readFileString55 = yield* fs.readFileString(journalPath);
         const events = yield* Effect.forEach(
           pipe(readFileString55, Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeYeetAttemptJournalEvent(line)
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         expect(A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"])).toHaveLength(60);
         expect(A.filter(events, YeetAttemptJournalEvent.guards["attempt-terminated"])).toHaveLength(60);
@@ -4116,7 +4188,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const readFileString57 = yield* fs.readFileString(journalPath);
         const firstEvents = yield* Effect.forEach(
           pipe(readFileString57, Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeYeetAttemptJournalEvent(line)
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const firstReceipt = pipe(
           firstEvents,
@@ -4136,7 +4209,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const readFileString59 = yield* fs.readFileString(journalPath);
         const secondEvents = yield* Effect.forEach(
           pipe(readFileString59, Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeYeetAttemptJournalEvent(line)
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const receipts = A.filter(secondEvents, YeetAttemptJournalEvent.guards["journal-compacted"]);
         expect(receipts).toHaveLength(1);
@@ -4186,8 +4260,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const text = yield* fs.readFileString(journalPath);
         expect(Str.includes(`${corrupt}\n`)(text)).toBe(true);
         expect(Str.includes(`${future}\n`)(text)).toBe(true);
-        const forEach60 = yield* Effect.forEach(pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-          decodeYeetAttemptJournalEvent(line).pipe(Effect.option)
+        const forEach60 = yield* Effect.forEach(
+          pipe(text, Str.split("\n"), A.filter(Str.isNonEmpty)),
+          (line) => decodeYeetAttemptJournalEvent(line).pipe(Effect.option),
+          { concurrency: 1 }
         );
         const known = A.getSomes(forEach60);
         expect(A.filter(known, YeetAttemptJournalEvent.guards["attempt-terminated"])).toHaveLength(50);
@@ -4257,7 +4333,8 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
         const readFileString63 = yield* fs.readFileString(finishedJournal);
         const finishedEvents = yield* Effect.forEach(
           pipe(readFileString63, Str.split("\n"), A.filter(Str.isNonEmpty)),
-          (line) => decodeYeetAttemptJournalEvent(line)
+          (line) => decodeYeetAttemptJournalEvent(line),
+          { concurrency: 1 }
         );
         const terminalEvents = A.filter(
           finishedEvents,
@@ -4303,8 +4380,9 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
           Effect.fnUntraced(function* (journalPath) {
             const readFileString66 = yield* fs.readFileString(journalPath);
             const lines = pipe(readFileString66, Str.split("\n"), A.filter(Str.isNonEmpty));
-            return yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line));
-          })
+            return yield* Effect.forEach(lines, (line) => decodeYeetAttemptJournalEvent(line), { concurrency: 1 });
+          }),
+          { concurrency: 1 }
         );
         const events = A.flatten(decoded);
         const starts = A.filter(events, YeetAttemptJournalEvent.guards["attempt-started"]);
@@ -4411,6 +4489,7 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
 
         const noAhead = yield* collectPublishIntent(tempContext, false).pipe(Effect.flip);
         expect(noAhead.message).toContain("requires reviewed staged changes or a clean local commit ahead");
+        expect(noAhead.handlerErrorKind).toBe("publish-input");
 
         yield* fs.writeFileString(filePath, "dirty\n");
         const dirty = yield* collectPublishIntent(tempContext, false).pipe(Effect.flip);
@@ -5174,9 +5253,10 @@ printf '%s\\n' '{"number":874,"headRefName":"repo-cli-yeet","state":"OPEN"}'
             expect(fallbackError.cause).toBeDefined();
           }).pipe(
             Effect.ensuring(
-              Effect.all([fs.chmod(lockPath, 0o600), fs.chmod(fallbackPath, 0o600)], { discard: true }).pipe(
-                Effect.ignore
-              )
+              Effect.all([fs.chmod(lockPath, 0o600), fs.chmod(fallbackPath, 0o600)], {
+                concurrency: 1,
+                discard: true,
+              }).pipe(Effect.ignore)
             )
           );
 

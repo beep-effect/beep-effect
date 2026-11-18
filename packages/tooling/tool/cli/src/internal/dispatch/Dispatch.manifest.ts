@@ -34,6 +34,7 @@ import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as HttpClient from "effect/http/HttpClient";
 import type * as Scope from "effect/Scope";
+import type { QualityScheduler } from "../repo-run/QualityScheduler.service.ts";
 import type { MemoryStats } from "../repo-run/QualityScheduler.ts";
 import type { RuntimeService } from "./Dispatch.schemas.ts";
 
@@ -55,7 +56,7 @@ export type BaseServices =
 // The service each `RuntimeService` key provides; a type-level map, never a value.
 interface RuntimeServiceTypes {
   readonly "fs-utils": FsUtils;
-  readonly "memory-stats": MemoryStats;
+  readonly "memory-stats": MemoryStats | QualityScheduler;
   readonly "ts-morph": TSMorphService;
 }
 

@@ -432,6 +432,8 @@ const runGitProbe = Effect.fn("Fleet.runGitProbe")(function* (
   never,
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
+  // KEEP funnel: `runGitProbe` runs the KEEP (D-20) probes below; each call site records its reason.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP funnel, reason above
   const captured = yield* runCapturedStreams({
     command: "git",
     args,
@@ -585,9 +587,11 @@ const enumerateFleet = Effect.fn("Fleet.enumerateFleet")(function* (
   FleetMirrorServiceRequirements
 > {
   const configured = roots.source !== "derived";
-  const perRoot = yield* Effect.forEach(roots.roots, (root) => discoverClones(root, normalizedOrigin, configured));
+  const perRoot = yield* Effect.forEach(roots.roots, (root) => discoverClones(root, normalizedOrigin, configured), {
+    concurrency: 1,
+  });
   const clones = A.dedupe(A.flatten(perRoot));
-  const forEach2 = yield* Effect.forEach(clones, cloneStubs);
+  const forEach2 = yield* Effect.forEach(clones, cloneStubs, { concurrency: 1 });
   const stubs = dedupeStubs(A.flatten(forEach2));
   return { clones, stubs: A.sortWith(stubs, (stub) => stub.path, Order.String) };
 });
@@ -641,7 +645,7 @@ const scanProcesses = Effect.fn("Fleet.scanProcesses")(function* (
     return { counts, scanned: 0, unreadable: 0, complete: false };
   }
   const pids = A.filter(names.value, (name) => PID_DIRECTORY_NAME.test(name));
-  const readings = yield* Effect.forEach(pids, processCwdReading);
+  const readings = yield* Effect.forEach(pids, processCwdReading, { concurrency: 1 });
   for (const cwd of A.getSomes(A.map(readings, (reading) => reading.cwd))) {
     attributeProcessCwd(counts, byLengthDesc, cwd);
   }
@@ -707,7 +711,7 @@ const scanSessionRegistry = Effect.fn("Fleet.scanSessionRegistry")(function* (
     Order.mapInput(Order.Number, (candidate: string) => -candidate.length)
   );
   const files = A.filter(names.value, (name) => O.isSome(Str.match(SESSION_REGISTRY_FILE)(name)));
-  const cwds = yield* Effect.forEach(files, (name) => confirmedSessionCwd(registryDir, name));
+  const cwds = yield* Effect.forEach(files, (name) => confirmedSessionCwd(registryDir, name), { concurrency: 1 });
   for (const cwd of A.getSomes(cwds)) {
     attributeProcessCwd(counts, byLengthDesc, cwd);
   }
@@ -765,7 +769,7 @@ const childMillis = Effect.fn("Fleet.childMillis")(function* (
   if (O.isNone(children)) {
     return A.empty();
   }
-  const forEach3 = yield* Effect.forEach(children.value, entryReading);
+  const forEach3 = yield* Effect.forEach(children.value, entryReading, { concurrency: 1 });
   return entryMillis(forEach3);
 });
 
@@ -773,12 +777,12 @@ const childMillis = Effect.fn("Fleet.childMillis")(function* (
 const treeMillis = Effect.fn("Fleet.treeMillis")(function* (
   entryPaths: ReadonlyArray<string>
 ): Effect.fn.Return<ReadonlyArray<number>, never, FleetMirrorServiceRequirements> {
-  const readings = yield* Effect.forEach(entryPaths, entryReading);
+  const readings = yield* Effect.forEach(entryPaths, entryReading, { concurrency: 1 });
   const directories = A.map(
     A.filter(A.zip(entryPaths, readings), ([, reading]) => reading.directory),
     ([entryPath]) => entryPath
   );
-  const nested = yield* Effect.forEach(directories, childMillis);
+  const nested = yield* Effect.forEach(directories, childMillis, { concurrency: 1 });
   return A.appendAll(entryMillis(readings), A.flatten(nested));
 });
 
@@ -816,7 +820,7 @@ const transcriptReading = Effect.fn("Fleet.transcriptReading")(function* (
   if (transcripts.length === 0) {
     return PROBE_ABSENT;
   }
-  const readings = yield* Effect.forEach(transcripts, (name) => entryReading(path.join(dir, name)));
+  const readings = yield* Effect.forEach(transcripts, (name) => entryReading(path.join(dir, name)), { concurrency: 1 });
   return measuredSince(entryMillis(readings), nowMillis);
 });
 
@@ -836,6 +840,53 @@ const worktreeMtimeReading = Effect.fn("Fleet.worktreeMtimeReading")(function* (
   const rootMillis = A.getSomes([O.map(rootInfo.value.mtime, (date) => date.getTime())]);
   const treeMillis4 = yield* treeMillis(entries.value);
   return measuredSince(A.appendAll(rootMillis, treeMillis4), nowMillis);
+});
+
+/**
+ * Measure one checkout's non-process liveness readings the way the mirror scan does.
+ *
+ * **Details**
+ *
+ * Returns the transcript reading, the tree-mtime reading and the confirmed
+ * Claude session-registry count for `checkoutPath`. The process probe is left
+ * to the caller, so a consumer with its own process policy (residue reap's
+ * drain) can feed all four into {@link classifyFleetLiveness}.
+ *
+ * **Example** (Build the readings effect)
+ *
+ * ```ts
+ * import { checkoutLivenessReadings } from "@beep/repo-cli/commands/Worktree"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * console.log(Effect.isEffect(checkoutLivenessReadings("/p/beep-effect0", O.some("/home/me"), 0))) // true
+ * ```
+ *
+ * @param checkoutPath - Absolute checkout path.
+ * @param homeDir - Home directory holding `.claude`; `None` fails the transcript reading.
+ * @param nowMillis - Clock reading the ages are measured against.
+ * @returns The transcript and tree-mtime readings and the session-registry match count.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const checkoutLivenessReadings = Effect.fn("Fleet.checkoutLivenessReadings")(function* (
+  checkoutPath: string,
+  homeDir: O.Option<string>,
+  nowMillis: number
+): Effect.fn.Return<
+  {
+    readonly transcript: FleetProbeReading;
+    readonly worktreeMtime: FleetProbeReading;
+    readonly sessionMatches: number;
+  },
+  never,
+  FleetMirrorServiceRequirements
+> {
+  const transcript = yield* transcriptReading(homeDir, checkoutPath, nowMillis);
+  const worktreeMtime = yield* worktreeMtimeReading(checkoutPath, nowMillis);
+  const sessions = yield* scanSessionRegistry(homeDir, [checkoutPath]);
+  const sessionMatches = O.getOrElse(MutableHashMap.get(sessions, checkoutPath), () => 0);
+  return { transcript, worktreeMtime, sessionMatches };
 });
 
 const ensureScanner = Effect.fn("Fleet.ensureScanner")(function* (

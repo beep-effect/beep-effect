@@ -272,14 +272,17 @@ const fixture = Effect.fn("CursorLifecycleTest.fixture")(function* (maxPages = 3
   const namespaceId = yield* hashPrivateIdentifier("ai-metrics-hash-salt-namespace/v1", O.some(salt));
   const sourceRoot = yield* fs.makeTempDirectoryScoped({ prefix: "cursor-source-fixture-" });
   const sources = [`${sourceRoot}/dispatcher.js`, `${sourceRoot}/envelope.js`];
-  yield* Effect.forEach(sources, (path) =>
-    fs.writeFileString(path, "// synthetic public source fixture; no native code\n", { mode: 0o600 })
+  yield* Effect.forEach(
+    sources,
+    (path) => fs.writeFileString(path, "// synthetic public source fixture; no native code\n", { mode: 0o600 }),
+    { concurrency: 1 }
   );
   const sourcePins = yield* Effect.forEach(
     sources,
     Effect.fnUntraced(function* (path) {
       return { path, sha256: yield* sha(path) };
-    })
+    }),
+    { concurrency: 1 }
   );
   const policy = CursorLifecyclePolicy.make({
     workspace: process.cwd(),
@@ -324,7 +327,7 @@ const fixture = Effect.fn("CursorLifecycleTest.fixture")(function* (maxPages = 3
 });
 
 const syntheticHelperFrames = Effect.fnUntraced(function* (fault: string, policy: CursorLifecyclePolicy) {
-  const ready = yield* encode({ ready: fault === "ready" ? false : true });
+  const ready = yield* encode({ ready: fault !== "ready" });
   const observed = yield* encode({
     peer: {
       peerPid: 1,
@@ -412,6 +415,9 @@ for (const scenario of [
             )
           )
         );
+        // Own double: a scoped handle whose exit waits on the durable ACK it reads from stdin, counting
+        // releases; per-spawn behaviour `ScriptedSpawner` cannot express.
+        // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
         const spawner = ChildProcessSpawner.make((command) =>
           Effect.gen(function* () {
             yield* Effect.acquireRelease(Effect.void, () =>
@@ -622,6 +628,9 @@ it.layer(Layer.mergeAll(Layer.fresh(sql), NodeCrypto.layer, platformLayer), { ti
             Stream.drain,
             Stream.concat(output)
           );
+          // Own double: reads the helper's stdin stream to release the scripted output only after the policy
+          // frame; `ScriptedSpawner` answers statically.
+          // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
           const synthetic = ChildProcessSpawner.make((command) =>
             Effect.gen(function* () {
               const input = command._tag === "StandardCommand" ? command.options.stdin : undefined;
@@ -780,6 +789,9 @@ it.layer(Layer.mergeAll(NodeCrypto.layer, platformLayer), { memoMap: Layer.makeM
             Stream.fromEffect(Deferred.succeed(requested, undefined)).pipe(Stream.drain),
             output
           );
+          // Own double: a scoped handle that signals when its output is requested and counts its release;
+          // `ScriptedSpawner` answers statically.
+          // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
           const spawner = ChildProcessSpawner.make(() =>
             Effect.acquireRelease(Effect.succeed(syntheticHandle(observedOutput, Sink.drain, false)), () =>
               Effect.sync(() => {

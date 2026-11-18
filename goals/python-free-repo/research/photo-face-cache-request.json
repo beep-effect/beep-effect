@@ -1,0 +1,15 @@
+{
+  "previous": "cee095d0e9c10408d09e50617d5b7d491995b58dde1590d97b31ba75304b2888",
+  "review": {
+    "reviewer": "Codex GPT-6.1 Sol (photo-face lane input review)",
+    "reason": "Preserve the merged main lint pin and existing ONNX catalog entry; regenerated lockfile, unchanged cache posture and qualification.",
+    "basis": {
+      "path": "goals/python-free-repo/research/photo-face-cache-review.md",
+      "sha256": "9154e259d18c60b32150cc6ffc3215e95ad0d225cecbbaa1ae3b4f23a84afc59"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/repo-cli"]
+}

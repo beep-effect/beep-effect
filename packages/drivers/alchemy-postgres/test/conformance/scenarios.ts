@@ -411,6 +411,12 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
           yield* accounts.schedule(id, Remind.make({}), { after: "100 millis", commandId: "early" });
           yield* accounts.send(id, Remind.make({}), { commandId: "early" }).pipe(asUser);
           yield* elapse(target.clock, 400);
+          // Wait for the fire itself where the target can report it, so a loaded runner cannot race the asserts.
+          if (target.scheduleStatus !== undefined) {
+            const scheduleStatus = target.scheduleStatus;
+            const status = yield* eventually(scheduleStatus("Account", id, "early"), (value) => value === "executed");
+            strictEqual(status, "executed");
+          }
           const state = yield* accounts.get(id);
           deepStrictEqual(state, { _tag: "Open", owner: "jay", balance: 0, reminders: 2 });
           const executed = yield* accounts.unschedule(id, "early").pipe(Effect.flip);
@@ -487,6 +493,7 @@ export const conformance = <R, E, PE>(target: ConformanceTarget<R, E, PE>) => {
               { concurrency: "unbounded", discard: true }
             );
             yield* Effect.forEach(ids, (id) => eventually(ledgers.get(id), (state) => state._tag === "Created"), {
+              concurrency: 1,
               discard: true,
             });
             yield* Effect.sleep(Duration.millis(300));

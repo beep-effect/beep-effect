@@ -30,7 +30,7 @@ import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 // Route-soundness-repair ROUT-02 (exploration ruling D8): a docs_only pull request never starts
 // Heavy / Lint Policy, so every root Turbo task that can fail on a docs-classified path must run in
 // the Docs Policy lane or carry a reason in DOCS_POLICY_EXCLUSIONS. Uncached root tasks are always
-// classified: only cached task inputs are certified (standards/cache-qualification-baseline.json).
+// classified: only cached task inputs are certified (standards/cache-baseline/).
 
 const TurboTask = S.Struct({
   inputs: S.String.pipe(S.Array, S.optionalKey),
@@ -63,12 +63,15 @@ const workspacesByName = Effect.fnUntraced(function* () {
     A.map(entries, (entry) => entry.path),
     (file) => isManifestPath(file) && !WORKSPACE_MANIFEST_EXCLUSION.test(file)
   );
-  const manifests = yield* Effect.forEach(manifestPaths, (file) =>
-    fs.readFileString(path.join(repoRoot, file)).pipe(
-      Effect.flatMap(decodeWorkspaceManifest),
-      Effect.map((manifest): Workspace => ({ manifest, directory: path.dirname(file) })),
-      Effect.option
-    )
+  const manifests = yield* Effect.forEach(
+    manifestPaths,
+    (file) =>
+      fs.readFileString(path.join(repoRoot, file)).pipe(
+        Effect.flatMap(decodeWorkspaceManifest),
+        Effect.map((manifest): Workspace => ({ manifest, directory: path.dirname(file) })),
+        Effect.option
+      ),
+    { concurrency: 1 }
   );
   return HashMap.fromIterable(
     A.flatMap(A.getSomes(manifests), (workspace) =>
@@ -180,32 +183,38 @@ const rootTaskObligations = Effect.fnUntraced(function* (repoRoot: string, docsP
     R.toEntries(turbo.tasks),
     A.filter(([key]) => Str.startsWith(ROOT_TASK_PREFIX)(key))
   );
-  return yield* Effect.forEach(rootTasks, ([key, task]) =>
-    Effect.gen(function* () {
-      const sources = A.map(task.inputs ?? ["$TURBO_DEFAULT$"], (input) =>
-        pipe(input, Str.replace("$TURBO_DEFAULT$", "**/*"), Str.replace("$TURBO_ROOT$/", ""))
-      );
-      const excludeSources = A.filter(sources, Str.startsWith("!"));
-      const includeSources = A.filter(sources, (source) => !Str.startsWith("!")(source));
-      // A docs-classified path never sits under a code root, so those includes cannot match.
-      const includes = yield* Effect.forEach(
-        A.filter(includeSources, (source) => !CODE_ROOT_GLOB.test(source)),
-        (source) => GlobPattern.compile(source, globOptions)
-      );
-      const excludes = yield* Effect.forEach(excludeSources, (source) =>
-        GlobPattern.compile(Str.slice(1)(source), globOptions)
-      );
-      const docsHit = A.findFirst(
-        docsPaths,
-        (candidate) =>
-          A.some(includes, (glob) => glob.matches(candidate)) && !A.some(excludes, (glob) => glob.matches(candidate))
-      );
-      return {
-        task: Str.slice(ROOT_TASK_PREFIX.length)(key),
-        uncached: task.cache === false,
-        docsHit,
-      } satisfies RootTaskObligation;
-    })
+  return yield* Effect.forEach(
+    rootTasks,
+    ([key, task]) =>
+      Effect.gen(function* () {
+        const sources = A.map(task.inputs ?? ["$TURBO_DEFAULT$"], (input) =>
+          pipe(input, Str.replace("$TURBO_DEFAULT$", "**/*"), Str.replace("$TURBO_ROOT$/", ""))
+        );
+        const excludeSources = A.filter(sources, Str.startsWith("!"));
+        const includeSources = A.filter(sources, (source) => !Str.startsWith("!")(source));
+        // A docs-classified path never sits under a code root, so those includes cannot match.
+        const includes = yield* Effect.forEach(
+          A.filter(includeSources, (source) => !CODE_ROOT_GLOB.test(source)),
+          (source) => GlobPattern.compile(source, globOptions),
+          { concurrency: 1 }
+        );
+        const excludes = yield* Effect.forEach(
+          excludeSources,
+          (source) => GlobPattern.compile(Str.slice(1)(source), globOptions),
+          { concurrency: 1 }
+        );
+        const docsHit = A.findFirst(
+          docsPaths,
+          (candidate) =>
+            A.some(includes, (glob) => glob.matches(candidate)) && !A.some(excludes, (glob) => glob.matches(candidate))
+        );
+        return {
+          task: Str.slice(ROOT_TASK_PREFIX.length)(key),
+          uncached: task.cache === false,
+          docsHit,
+        } satisfies RootTaskObligation;
+      }),
+    { concurrency: 1 }
   );
 });
 

@@ -21,7 +21,7 @@ import { CitationEngineEffectivePolicy } from "../CitationEngine/CitationEngine.
  * @since 0.0.0
  */
 export const defaultCitationEnginePolicy = S.decodeEffect(CitationEngineEffectivePolicy)({
-  version: "citation-engine-policy/v1",
+  version: "citation-engine-policy/v2",
   execution: "isolated-process",
   limits: {
     sourceUtf16: 250_000,

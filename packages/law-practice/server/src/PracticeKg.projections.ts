@@ -772,7 +772,7 @@ const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(func
     PracticeKgProjectionError.mapError("Graph build counts failed JSON encoding.")
   );
   const sql = (yield* SqlClient.SqlClient).withoutTransforms();
-  yield* Effect.forEach(createKgTables, (statement) => sql.unsafe(statement), { discard: true });
+  yield* Effect.forEach(createKgTables, (statement) => sql.unsafe(statement), { concurrency: 1, discard: true });
   yield* Effect.forEach(
     nodes,
     (node) =>
@@ -794,7 +794,7 @@ const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(func
           ])
         )
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     edges,
@@ -807,7 +807,7 @@ const writePgliteProjection = Effect.fn("PracticeKg.writePgliteProjection")(func
         edge.provenanceKind,
         edge.provenanceRef,
       ]),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* sql.unsafe(
     `INSERT INTO ${KG_BUILD_TABLE_NAME} (bundle_version, built_from_runs, counts, built_at, corpus_snapshot_at) VALUES ($1, $2, $3::jsonb, $4, $5)`,
@@ -831,18 +831,22 @@ const existingSourceSpecs = Effect.fn("PracticeKg.existingSourceSpecs")(function
     A.map(includedRuns, (run) => `staging/extract-${run}`),
     "staging/extract"
   );
-  const candidates = yield* Effect.forEach(roots, (root) => {
-    const sourcesPath = path.join(corpusRoot, root, "sources.jsonl");
-    const textDir = path.join(corpusRoot, root, "text");
-    return Effect.all([fs.exists(sourcesPath), fs.exists(textDir)], { concurrency: 2 }).pipe(
-      Effect.orElseSucceed(() => [false, false]),
-      Effect.map(([sourcesExist, textExists]) =>
-        sourcesExist && textExists
-          ? O.some(GraphTextSourceSpec.make({ sourcesPath, textGlob: path.join(textDir, "operation:*.txt") }))
-          : O.none()
-      )
-    );
-  });
+  const candidates = yield* Effect.forEach(
+    roots,
+    (root) => {
+      const sourcesPath = path.join(corpusRoot, root, "sources.jsonl");
+      const textDir = path.join(corpusRoot, root, "text");
+      return Effect.all([fs.exists(sourcesPath), fs.exists(textDir)], { concurrency: 2 }).pipe(
+        Effect.orElseSucceed(() => [false, false]),
+        Effect.map(([sourcesExist, textExists]) =>
+          sourcesExist && textExists
+            ? O.some(GraphTextSourceSpec.make({ sourcesPath, textGlob: path.join(textDir, "operation:*.txt") }))
+            : O.none()
+        )
+      );
+    },
+    { concurrency: 1 }
+  );
   return A.getSomes(candidates);
 });
 

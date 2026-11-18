@@ -6,7 +6,7 @@ description: >
   Claude account hits its weekly limit, when `bun run beep accounts` shows the
   fleet's account used up, or on `/auth-environments`. Opens each host's OAuth
   page and a masked KDE code dialog together and verifies the admitted account.
-compatibility: KDE Plasma with kdialog and Python 3 on the workstation, plus the canonical fleet SSH wrappers on its PATH.
+compatibility: KDE Plasma with kdialog and Bun on the workstation, plus the canonical fleet SSH wrappers on its PATH.
 metadata:
   status: active
 ---
@@ -21,7 +21,7 @@ the SSH, OAuth and code handoff. You pick the account and watch the result.
 
 ```sh
 bun run beep accounts                                           # weekly headroom per Claude account
-python3 .claude/skills/auth-environments/scripts/auth_env.py status
+bun .claude/skills/auth-environments/scripts/auth_env.ts status
 ```
 
 `status` lists the account each host is signed in to now. Choose the account
@@ -37,7 +37,7 @@ holds a different one, they either switch it or pick that account instead.
 ## 2. Log in
 
 ```sh
-python3 .claude/skills/auth-environments/scripts/auth_env.py login --email <account>
+bun .claude/skills/auth-environments/scripts/auth_env.ts login --email <account>
 ```
 
 Run it in the foreground with a long timeout (about 25 minutes); it serializes
@@ -75,5 +75,5 @@ touch the YubiKey when it blinks". Never ask for the code in chat.
 ## Verification
 
 ```sh
-PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s .claude/skills/auth-environments/scripts -p 'test_*.py'
+bun test ./.claude/skills/auth-environments/scripts/auth_env.test.ts
 ```

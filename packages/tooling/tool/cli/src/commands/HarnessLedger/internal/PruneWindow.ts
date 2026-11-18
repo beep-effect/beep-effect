@@ -102,13 +102,16 @@ export const enumeratePruneCandidates = Effect.fn("HarnessLedger.enumeratePruneC
     A.map(skills, (name) => [PrunableSurfaceKind.Enum.skill, name] as const),
     A.map(servers, (name) => [PrunableSurfaceKind.Enum["mcp-server"], name] as const),
   ]);
-  return yield* Effect.forEach(refs, ([kind, name]) =>
-    contextSurfaceId(kind, name).pipe(
-      Effect.mapBoth({
-        onFailure: HarnessLedgerIoError.wrap(`Failed to hash surface ${kind}:${name}.`),
-        onSuccess: (surfaceId) => PruneSurfaceCandidate.make({ kind, name, surfaceId }),
-      })
-    )
+  return yield* Effect.forEach(
+    refs,
+    ([kind, name]) =>
+      contextSurfaceId(kind, name).pipe(
+        Effect.mapBoth({
+          onFailure: HarnessLedgerIoError.wrap(`Failed to hash surface ${kind}:${name}.`),
+          onSuccess: (surfaceId) => PruneSurfaceCandidate.make({ kind, name, surfaceId }),
+        })
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -626,7 +629,7 @@ export const observeSessionWindow = Effect.fn("HarnessLedger.observeSessionWindo
     refusalRows,
     refusalUndecodableLines,
   };
-  yield* Effect.forEach(names, (name) => readShard(scan, name), { discard: true });
+  yield* Effect.forEach(names, (name) => readShard(scan, name), { concurrency: 1, discard: true });
   return windowReport(scan, scan.tallies, window, harnessHash, agentKind, namespaceCutover);
 });
 
@@ -1019,10 +1022,13 @@ const previousRegimeHooks = Effect.fnUntraced(function* (
   let matched = 0;
   for (const salt of previousSalts) {
     const counts = yield* hashTranscriptCounts(identities, salt.hashSalt);
-    const forEach3 = yield* Effect.forEach(file.aliasPaths, (alias) =>
-      hashPrivateIdentifier(alias, salt.hashSalt).pipe(
-        Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript alias identity."))
-      )
+    const forEach3 = yield* Effect.forEach(
+      file.aliasPaths,
+      (alias) =>
+        hashPrivateIdentifier(alias, salt.hashSalt).pipe(
+          Effect.mapError(HarnessLedgerIoError.wrap("Cannot hash transcript alias identity."))
+        ),
+      { concurrency: 1 }
     );
     const hookKeys = A.dedupe(forEach3);
     matched += matchingTranscriptHooks(counts, hookKeys, bindings);

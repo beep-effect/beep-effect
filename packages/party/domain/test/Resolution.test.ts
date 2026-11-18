@@ -49,12 +49,15 @@ const survivors = (versions: ReadonlyArray<ClaimVersion>, at = 10) =>
 describe("cannot-link-first resolution", () => {
   it.effect("ignores redundant merge edges and applies reversed veto endpoints", () =>
     Effect.gen(function* () {
-      const rows = yield* Effect.all([
-        claim("a", pair("SameParty", 1, 2)),
-        claim("b", pair("SameParty", 2, 1)),
-        claim("c", pair("SameParty", 1, 3)),
-        claim("d", pair("DistinctParty", 3, 2)),
-      ]);
+      const rows = yield* Effect.all(
+        [
+          claim("a", pair("SameParty", 1, 2)),
+          claim("b", pair("SameParty", 2, 1)),
+          claim("c", pair("SameParty", 1, 3)),
+          claim("d", pair("DistinctParty", 3, 2)),
+        ],
+        { concurrency: 1 }
+      );
       expect(survivors(rows)).toEqual([
         [1, 1],
         [2, 1],
@@ -65,10 +68,10 @@ describe("cannot-link-first resolution", () => {
   );
   it.effect("a late veto splits a prior merge only from its knowledge time", () =>
     Effect.gen(function* () {
-      const rows = yield* Effect.all([
-        claim("merge", pair("SameParty", 1, 2)),
-        claim("veto", pair("DistinctParty", 1, 2), 5, 9),
-      ]);
+      const rows = yield* Effect.all(
+        [claim("merge", pair("SameParty", 1, 2)), claim("veto", pair("DistinctParty", 1, 2), 5, 9)],
+        { concurrency: 1 }
+      );
       expect(survivors(rows, 4)).toEqual([
         [1, 1],
         [2, 1],
@@ -101,7 +104,8 @@ describe("cannot-link-first resolution", () => {
               key: PartyKey.make(`pk:v1:${Str.repeat(64)(token)}`),
             }),
             0
-          )
+          ),
+        { concurrency: 1 }
       );
       for (const { mergeId, vetoId } of [
         { mergeId: "a", vetoId: "z" },
@@ -135,11 +139,14 @@ describe("cannot-link-first resolution", () => {
 
   it.effect("equal-time competing merges replay by id independently of input order", () =>
     Effect.gen(function* () {
-      const rows = yield* Effect.all([
-        claim("a", pair("SameParty", 1, 2)),
-        claim("b", pair("SameParty", 2, 3)),
-        claim("z", pair("DistinctParty", 1, 3)),
-      ]);
+      const rows = yield* Effect.all(
+        [
+          claim("a", pair("SameParty", 1, 2)),
+          claim("b", pair("SameParty", 2, 3)),
+          claim("z", pair("DistinctParty", 1, 3)),
+        ],
+        { concurrency: 1 }
+      );
       const view = resolveParties(rows, scope(10));
       expect(survivors(rows)).toEqual([
         [1, 1],
@@ -153,11 +160,14 @@ describe("cannot-link-first resolution", () => {
 
   it.effect("retraction of an earlier merge re-enables a previously blocked edge", () =>
     Effect.gen(function* () {
-      const rows = yield* Effect.all([
-        claim("a", pair("SameParty", 1, 2), 1, 5),
-        claim("b", pair("SameParty", 2, 3)),
-        claim("v", pair("DistinctParty", 1, 3)),
-      ]);
+      const rows = yield* Effect.all(
+        [
+          claim("a", pair("SameParty", 1, 2), 1, 5),
+          claim("b", pair("SameParty", 2, 3)),
+          claim("v", pair("DistinctParty", 1, 3)),
+        ],
+        { concurrency: 1 }
+      );
       expect(survivors(rows, 4)).toEqual([
         [1, 1],
         [2, 1],
@@ -174,11 +184,14 @@ describe("cannot-link-first resolution", () => {
 
   it.effect("a cycle stays connected when one edge expires", () =>
     Effect.gen(function* () {
-      const rows = yield* Effect.all([
-        claim("a", pair("SameParty", 1, 2), 1, 5),
-        claim("b", pair("SameParty", 2, 3)),
-        claim("c", pair("SameParty", 1, 3)),
-      ]);
+      const rows = yield* Effect.all(
+        [
+          claim("a", pair("SameParty", 1, 2), 1, 5),
+          claim("b", pair("SameParty", 2, 3)),
+          claim("c", pair("SameParty", 1, 3)),
+        ],
+        { concurrency: 1 }
+      );
       expect(survivors(rows)).toEqual([
         [1, 1],
         [2, 1],
@@ -189,12 +202,15 @@ describe("cannot-link-first resolution", () => {
 
   it.effect("orders non-BMP ids by Unicode code point and retains every blocking veto", () =>
     Effect.gen(function* () {
-      const rows = yield* Effect.all([
-        claim("\u{10000}", pair("SameParty", 1, 2)),
-        claim("\ue000", pair("SameParty", 2, 3)),
-        claim("v1", pair("DistinctParty", 1, 3)),
-        claim("v2", pair("DistinctParty", 1, 3)),
-      ]);
+      const rows = yield* Effect.all(
+        [
+          claim("\u{10000}", pair("SameParty", 1, 2)),
+          claim("\ue000", pair("SameParty", 2, 3)),
+          claim("v1", pair("DistinctParty", 1, 3)),
+          claim("v2", pair("DistinctParty", 1, 3)),
+        ],
+        { concurrency: 1 }
+      );
       const view = resolveParties(rows, scope(10));
       expect(survivors(rows)).toEqual([
         [1, 1],

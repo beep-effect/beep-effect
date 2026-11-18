@@ -921,7 +921,8 @@ const makeLog = Effect.fnUntraced(function* (directory: string) {
     const names = yield* fs.readDirectory(directory);
     const texts = yield* Effect.forEach(
       pipe(A.filter(names, Str.endsWith(AUDIT_FILE_SUFFIX)), A.sort(Order.String)),
-      (name) => fs.readFileString(path.join(directory, name))
+      (name) => fs.readFileString(path.join(directory, name)),
+      { concurrency: 1 }
     );
     // Empty lines separate records. A line that does not decode (a torn write after a crash)
     // is skipped rather than blocking every later send.

@@ -30,7 +30,7 @@ const clock: ScenarioClock = {
   advance: (millis) =>
     Effect.suspend(() => {
       clockMillis += millis;
-      return Effect.forEach(controls, (control) => control.drain, { discard: true });
+      return Effect.forEach(controls, (control) => control.drain, { concurrency: 1, discard: true });
     }),
   now: Effect.sync(() => DateTime.makeUnsafe(clockMillis)),
 };

@@ -375,7 +375,7 @@ export class Funding extends S.Class<Funding, { readonly brand: unique symbol }>
         ) => {
           const bare = !A.isArray<typeof input>(input);
           const values = bare ? [input] : input;
-          return Effect.map(Effect.forEach(values, decodeEntry), (entries) => {
+          return Effect.map(Effect.forEach(values, decodeEntry, { concurrency: 1 }), (entries) => {
             const only = entries[0];
             if (bare && only !== undefined) Funding.rememberBareField(only);
             return entries;

@@ -84,7 +84,6 @@ export const RegistrationWriter = LiteralKit([
   "tsconfig-sync",
   "install",
   "fallow-boundaries",
-  "jsdoc-inventory",
   "schema-first-inventory",
   "schema-catalog",
   "instrumentation-catalog",
@@ -874,6 +873,14 @@ export type DependentHitKind = typeof DependentHitKind.Type;
  * One location that still depends on or mentions the target, with its owning
  * workspace, optional line number, and whether the edge is direct.
  *
+ * **Details**
+ *
+ * `text` is the trimmed content of the matched line for a line-located hit and
+ * the command for a root `script` hit; a manifest edge or a whole-file hit has
+ * none. `script` is the root script's name, set only on a `script` hit, so two
+ * scripts with the same command stay two hits. Both default to `Option.none()`
+ * at construction. Acknowledgements match hits by `file`, `script` and `text`.
+ *
  * **Example** (Record a production import)
  *
  * ```ts
@@ -902,6 +909,8 @@ export class DependentHit extends S.Opaque<DependentHit, { readonly brand: uniqu
     file: PosixPath,
     line: S.OptionFromOptionalKey(S.Int),
     direct: S.Boolean,
+    text: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    script: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("DependentHit", {
       description: "One classified manifest, import, path, packet, baseline, or historical hit.",

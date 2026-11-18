@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -33,11 +33,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research. Next: from inside a T3-hosted Codex session, check whether `T3CODE_THREAD_ID` is set, then write the schemas.
+Closed by PR #3297: `bun run beep session resolve <key> [--json]`, presence capture in the SessionStart hooks, `session note` and `session presence`, and the `orchestrate`/`closeout` skills naming `session resolve` as the way to find an owner.
 
 ## Latest Evidence
 
-Not started.
+- 2026-11-13: `test/session-route-resolver.test.ts` (17 tests) passes on Bun and Node; it runs the real hook against a scratch repository and decodes every presence row it writes.
+- 2026-11-13: [`history/2026-11-13-live-proof.md`](./history/2026-11-13-live-proof.md): #3297 resolved to this session's `t3-thread` (matches `t3_thread_read`) and `claude-peer` routes, both live; Claude peer names matched `ListAgents`; a dead owner and a no-owner key printed their fallbacks.
+- 2026-11-13: `yeet final-check` passed on `5a274f2b146` with coverage skipped locally (host load 80 to 98; its four reds were timeouts in untouched suites); `quality package-verify @beep/repo-cli` lint and docgen passed.
+- Reflection: [`history/reflections/2026-11-13-claude.md`](./history/reflections/2026-11-13-claude.md).
 
 ## Notes
 

@@ -417,13 +417,16 @@ const verifyDriftingRetention = Effect.gen(function* () {
   yield* TestClock.setTime(T + 5);
   const store = yield* GithubLedgerStore;
   const resets = [100_000, 105_000, 110_000, 100_500];
-  yield* Effect.forEach(resets, (reset, index) =>
-    store.writeLatestTransport({
-      ...readingOfTransport(row(0, 4900, reset, O.none())),
-      asOf: DateTime.makeUnsafe(T + index + 1),
-      remaining: index === 3 ? 4000 : 100,
-      used: O.some(index === 3 ? 1000 : 4900),
-    })
+  yield* Effect.forEach(
+    resets,
+    (reset, index) =>
+      store.writeLatestTransport({
+        ...readingOfTransport(row(0, 4900, reset, O.none())),
+        asOf: DateTime.makeUnsafe(T + index + 1),
+        remaining: index === 3 ? 4000 : 100,
+        used: O.some(index === 3 ? 1000 : 4900),
+      }),
+    { concurrency: 1 }
   );
   const retained = yield* store.latestTransport;
   deepStrictEqual(

@@ -90,6 +90,9 @@ export interface GhOutputOptions<E> {
  */
 export const ghOutput = Effect.fn("GhCommand.ghOutput")(function* <E>(options: GhOutputOptions<E>) {
   const command = A.join(["gh", ...options.args], " ");
+  // owner: owner: `ghOutput` is repo-cli's shared gh-CLI route for KEEP gh reads; each caller records its
+  // reason.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: owner, reason above
   const result = yield* runRepoCommandCapture("gh", options.args, options.cwd).pipe(
     Effect.mapError((cause) => options.onFailure({ _tag: "spawn", label: options.label, command, cause }))
   );

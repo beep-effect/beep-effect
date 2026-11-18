@@ -466,7 +466,9 @@ export const decodeCodexFindingsCsv = Effect.fnUntraced(function* (text: string)
 
   const dataRows = A.filter(A.drop(1)(rows), (row) => !(A.length(row) === 1 && row[0] === ""));
 
-  const decoded = yield* Effect.forEach(dataRows, securityCloud ? decodeSecurityCloudRow : decodeRow);
+  const decoded = yield* Effect.forEach(dataRows, securityCloud ? decodeSecurityCloudRow : decodeRow, {
+    concurrency: 1,
+  });
   const findings = A.map(decoded, (entry) => entry.finding);
   const reports = A.map(decoded, (entry) => entry.report);
 

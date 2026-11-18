@@ -196,7 +196,10 @@ describe("GithubLedger file store retention and failures", () => {
         const rowsDir = path.join(root, "rows");
         yield* Effect.gen(function* () {
           const store = yield* GithubLedgerStore;
-          yield* Effect.forEach([0, 1, 2, 4], (index) => store.append(sampleAt(hour(index))), { discard: true });
+          yield* Effect.forEach([0, 1, 2, 4], (index) => store.append(sampleAt(hour(index))), {
+            concurrency: 1,
+            discard: true,
+          });
           // Stray `.json` hour files: one expired, one kept; neither has a `.jsonl` to stat or remove.
           yield* fs.writeFileString(path.join(rowsDir, `${hourFileKey(hour(-1))}.json`), "stray\n");
           yield* fs.writeFileString(path.join(rowsDir, `${hourFileKey(hour(3))}.json`), "stray\n");

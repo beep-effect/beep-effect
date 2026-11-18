@@ -2,6 +2,7 @@
  * Free Law Project eyecite 2.7.6, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineAbsoluteMaxima, CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
@@ -14,19 +15,25 @@ import {
   CitationCaseNameConfiguration,
   CitationCaseNameInput,
   citationCaseNameWordText,
-  copyCitationCaseNameConfiguration,
-  findCitationPlainCaseName,
+  installCitationPlainCaseName,
+  verifyCitationCaseNameConfiguration,
 } from "./CaseName.ts";
 import { CitationCaseNameProcessPatch, citationUnchangedCaseNamePatch } from "./CaseNameProcess.ts";
 import { CitationCaseNameScanFailure } from "./CaseNameScan.ts";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import {
   CitationHtmlCaseNameConfiguration,
-  copyCitationHtmlCaseNameConfiguration,
-  extractCitationHtmlCaseName,
+  installCitationHtmlCaseName,
+  verifyCitationHtmlCaseNameConfiguration,
 } from "./HtmlCaseName.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
-import { decodeCitationMetadataWordRequest, makeCitationMetadataStage } from "./MetadataComposition.ts";
+import {
+  decodeCitationMetadataWordRequest,
+  makeCitationMetadataStage,
+  ownCitationStageCall,
+} from "./MetadataComposition.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseNameSelection");
@@ -82,7 +89,6 @@ export class CitationCaseNameSelectionResult extends S.Opaque<
     })
   )
 ) {}
-const invalid = () => CitationCaseNameScanFailure.make({ reason: "invalid-configuration" });
 const merge = (before: CitationCaseNameProcessPatch, after: CitationCaseNameProcessPatch) =>
   CitationCaseNameProcessPatch.make({
     plaintiff: O.orElse(after.plaintiff, () => before.plaintiff),
@@ -95,49 +101,59 @@ const merge = (before: CitationCaseNameProcessPatch, after: CitationCaseNameProc
 /** Reuse the original helper within an enclosing captured metadata operation.
  * @internal @category operations @since 0.0.0
  */
-export const selectCitationCaseName = Effect.fn("Citation.selectCaseNameHelpers")(function* (
+export const installCitationCaseNameSelection = Effect.fn("Citation.installCaseNameSelection")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationCaseNameSelectionConfiguration,
-  raw: unknown
+  config: CitationCaseNameSelectionConfiguration
 ) {
-  const request = yield* decodeCitationMetadataWordRequest(limits, S.toType(CitationCaseNameSelectionInput), raw, () =>
-    CitationCaseNameScanFailure.make({ reason: "invalid-input" })
-  );
-  const short = request.mode === "Short";
-  let patch = citationUnchangedCaseNamePatch;
-  if (O.isSome(request.geometry)) {
-    const html = yield* extractCitationHtmlCaseName(limits, runtime, config.html, {
-      words: A.map(request.words, (word) => ({
-        kind: word.kind,
-        data: citationCaseNameWordText(word.data),
-        start: word.start,
-        stopWord: O.getOrElse(R.get(word.groups, "stop_word"), () => null),
-      })),
-      index: request.index,
-      spanStart: request.spanStart,
-      short,
-      geometry: request.geometry.value,
-    });
-    patch = CitationCaseNameProcessPatch.make({ ...patch, ...html });
-    const selected = short ? patch.antecedentGuess : patch.defendant;
-    // The source checks `is None`; an empty assignment or retained empty field
-    // suppresses fallback just like a nonempty field.
-    if (O.getOrElse(selected, () => request.currentName) !== null) return { patch, usedHtml: true, usedPlain: false };
-  }
-  const plain = yield* findCitationPlainCaseName(limits, runtime, config.plain, { ...request, short });
-  return { patch: merge(patch, plain.patch), usedHtml: O.isSome(request.geometry), usedPlain: true };
+  const extractHtml = yield* installCitationHtmlCaseName(limits, runtime, config.html);
+  const findPlain = yield* installCitationPlainCaseName(limits, runtime, config.plain);
+  return Effect.fn("Citation.selectCaseNameHelpers")(function* (raw: unknown) {
+    const request = yield* decodeCitationMetadataWordRequest(
+      limits,
+      S.toType(CitationCaseNameSelectionInput),
+      raw,
+      () => CitationCaseNameScanFailure.make({ reason: "invalid-input" })
+    );
+    const short = request.mode === "Short";
+    let patch = citationUnchangedCaseNamePatch;
+    if (O.isSome(request.geometry)) {
+      const html = yield* extractHtml({
+        words: A.map(request.words, (word) => ({
+          kind: word.kind,
+          data: citationCaseNameWordText(word.data),
+          start: word.start,
+          stopWord: O.getOrElse(R.get(word.groups, "stop_word"), () => null),
+        })),
+        index: request.index,
+        spanStart: request.spanStart,
+        short,
+        geometry: request.geometry.value,
+      });
+      patch = CitationCaseNameProcessPatch.make({ ...patch, ...html });
+      const selected = short ? patch.antecedentGuess : patch.defendant;
+      // The source checks `is None`; an empty assignment or retained empty field
+      // suppresses fallback just like a nonempty field.
+      if (O.getOrElse(selected, () => request.currentName) !== null) return { patch, usedHtml: true, usedPlain: false };
+    }
+    const plain = yield* findPlain({ ...request, short });
+    return { patch: merge(patch, plain.patch), usedHtml: O.isSome(request.geometry), usedPlain: true };
+  });
 });
 /** Reuse the original helper within an enclosing captured metadata operation.
  * @internal @category operations @since 0.0.0
  */
-export const copyCitationCaseNameSelectionConfiguration = Effect.fn("Citation.ownCaseNameSelection")(function* (
+export const verifyCitationCaseNameSelectionConfiguration = Effect.fn("Citation.ownCaseNameSelection")(function* (
   limits: CitationEngineLimits,
-  config: CitationCaseNameSelectionConfiguration
+  config: CitationOwned<CitationCaseNameSelectionConfiguration>
 ) {
-  const plain = yield* copyCitationCaseNameConfiguration(limits, config.plain);
-  const html = yield* copyCitationHtmlCaseNameConfiguration(limits, config.html);
+  const plain = yield* verifyCitationCaseNameConfiguration(limits, ownedField(config, "plain"));
+  const html = yield* verifyCitationHtmlCaseNameConfiguration(limits, ownedField(config, "html"));
   return CitationCaseNameSelectionConfiguration.make({ plain, html });
+});
+const ownSelection = ownCitationStageCall({
+  verify: verifyCitationCaseNameSelectionConfiguration,
+  install: installCitationCaseNameSelection,
 });
 /** HTML and fallback share one operation, Scope, text budget and deadline. The
  * enclosing model supplies its actual current field; extract requires R=never.
@@ -145,9 +161,7 @@ export const copyCitationCaseNameSelectionConfiguration = Effect.fn("Citation.ow
  */
 export const makeCitationCaseNameSelection = makeCitationMetadataStage({
   method: "extract",
-  schema: S.toType(CitationCaseNameSelectionConfiguration),
-  invalid,
-  own: copyCitationCaseNameSelectionConfiguration,
-  prepare: selectCitationCaseName,
+  own: ownSelection,
+  prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownSelection>>, raw) => run(raw),
   project: (result, reservedUnits) => CitationCaseNameSelectionResult.make({ ...result, reservedUnits }),
 });

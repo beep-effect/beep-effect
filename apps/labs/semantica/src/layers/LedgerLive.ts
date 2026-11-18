@@ -207,11 +207,14 @@ const makeLedger = Effect.fn("Ledger.make")(function* (runId: RunId) {
         });
       }
       const readRows = yield* recoverSql(
-        Effect.all({
-          batches: sql<StoredRow>`SELECT digest, payload FROM batches ORDER BY id`,
-          documents: sql<StoredRow>`SELECT digest, payload FROM parse_outcomes ORDER BY document`,
-          events: sql<StoredRow>`SELECT digest, payload FROM events ORDER BY recorded_at, id`,
-        })
+        Effect.all(
+          {
+            batches: sql<StoredRow>`SELECT digest, payload FROM batches ORDER BY id`,
+            documents: sql<StoredRow>`SELECT digest, payload FROM parse_outcomes ORDER BY document`,
+            events: sql<StoredRow>`SELECT digest, payload FROM events ORDER BY recorded_at, id`,
+          },
+          { concurrency: 1 }
+        )
       );
       const documents = yield* Effect.forEach(
         readRows.documents,

@@ -36,7 +36,7 @@ import {
   printParcel,
   stageAccountHeadroomReport,
 } from "@beep/repo-cli/test/Palantiri";
-import { MemoryStats } from "@beep/repo-cli/test/RepoRun";
+import { MemoryStats, QualitySchedulerLive } from "@beep/repo-cli/test/RepoRun";
 import { fcRuns } from "@beep/test-utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
@@ -217,9 +217,15 @@ describe("beep palantiri parcel account-headroom", () => {
     expect(A.map(parcel, (command) => command.name)).toEqual(["parcel", "parcels", "mcp"]);
   });
 
-  it.layer(Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)), {
-    timeout: "30 seconds",
-  })((it) => {
+  it.layer(
+    Layer.provideMerge(
+      Layer.merge(Git.layer, QualitySchedulerLive),
+      Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)
+    ),
+    {
+      timeout: "30 seconds",
+    }
+  )((it) => {
     it.effect("runs the live command over a collector snapshot", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

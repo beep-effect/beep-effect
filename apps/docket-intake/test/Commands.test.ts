@@ -495,7 +495,7 @@ describe("@beep/docket-intake commands", () => {
           yield* handlers.backfillQuestions({ apply: true });
           const printed22 = yield* printed;
           const lines = A.drop(printed22, 1);
-          const reports = yield* Effect.forEach(lines, (line) => decodeBackfillReport(line));
+          const reports = yield* Effect.forEach(lines, (line) => decodeBackfillReport(line), { concurrency: 1 });
 
           expect(A.map(reports, ({ applied, enriched, found }) => [applied, found, enriched])).toStrictEqual([
             [false, 1, 1],

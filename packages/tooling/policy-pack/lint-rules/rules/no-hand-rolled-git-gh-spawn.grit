@@ -1,0 +1,80 @@
+language js
+
+// goals/repo-cli-gh-git-consolidation (D-23): repo-cli and ai-metrics run git
+// and gh through `@beep/git`, `@beep/github` and `@beep/commands`. A spawn that
+// stays hand-rolled carries a recorded KEEP reason as an in-source
+// `biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-nn): <reason>`.
+// The rule rejects the four shapes those spawns take:
+//
+//   ChildProcess.make("git", [...])           a call that passes "git", "gh" or
+//   runRepoCommandCapture("gh", args, cwd)    "/usr/bin/git" as one of its first
+//   captureVersion(root, "git", [...])        three arguments, followed by argv
+//   { command: "git", args, cwd }             a runner spec with a program and argv
+//   Bun.spawnSync({ cmd: ["git", ...] })      Bun spawn whose argv starts with one
+//   ghOutput({ args, cwd, ... })              the shared gh-CLI route for KEEP reads
+//
+// `Command.make("git", {}, ...)` CLI definitions (an object follows), error
+// labels (`RouteError.new("git", "...")`, a string follows) and the command
+// line formatters (`formatCommandLine`, `withExitCode`, `commandText`) do not
+// match. A helper that wraps a spawn (`captureGit(root, [...])`) is not
+// followed: its one spawn is the site the rule reports.
+//
+// The root biome.jsonc scopes it to `packages/tooling/tool/cli/src/**` and
+// `packages/tooling/library/ai-metrics/src/**`.
+
+pattern program_literal() { r"^[\"'](?:git|gh|/usr/bin/git)[\"']$" }
+
+pattern argv_literal() { r"^\[\s*[\"'](?:git|gh|/usr/bin/git)[\"'][\s\S]*\]$" }
+
+// The argument after the program: argv, never an object (a CLI definition's
+// config), a string or a template (an error label's message).
+pattern argv_value() {
+  not or {
+    JsObjectExpression(),
+    JsStringLiteralExpression(),
+    JsTemplateExpression()
+  }
+}
+
+or {
+  // Each position carries its own `where`, so a failed position falls through
+  // to the next one instead of ending the `or`.
+  or {
+    `$runner($executable, $argv, $...)` where { $executable <: program_literal(), $argv <: argv_value() },
+    `$runner($first, $executable, $argv, $...)` where { $executable <: program_literal(), $argv <: argv_value() },
+    `$runner($first, $second, $executable, $argv, $...)` where {
+      $executable <: program_literal(),
+      $argv <: argv_value()
+    }
+  } as $spawn where {
+    $runner <: not or {
+      `formatCommandLine`,
+      `withExitCode`,
+      `commandText`
+    },
+    register_diagnostic(span=$spawn, message="Rule: hand-rolled git or gh spawn. Why: repo-cli and ai-metrics run git and gh through @beep/git (Git), @beep/github (GithubRest, PullRequest) and @beep/commands (Run), so a new raw spawn is unrecorded drift (goals/repo-cli-gh-git-consolidation, D-22, D-23). Fix: call the kit member that covers the argv; when none covers it exactly, keep the spawn with a `// biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-nn): <reason>` line directly above it.", severity="error")
+  },
+  JsObjectExpression(members=$members) as $spawn where {
+    $members <: some or {
+      JsPropertyObjectMember(name=`args`),
+      JsShorthandPropertyObjectMember(name=`args`)
+    },
+    $members <: some JsPropertyObjectMember(name=`command`, value=program_literal()),
+    register_diagnostic(span=$spawn, message="Rule: hand-rolled git or gh spawn: a runner spec names git or gh as its command. Why: repo-cli and ai-metrics run git and gh through @beep/git (Git), @beep/github (GithubRest, PullRequest) and @beep/commands (Run), so a new raw spawn is unrecorded drift (goals/repo-cli-gh-git-consolidation, D-22, D-23). Fix: call the kit member that covers the argv; when none covers it exactly, keep the spec with a `// biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-nn): <reason>` line directly above it.", severity="error")
+  },
+  or {
+    `Bun.spawn($argv, $...)`,
+    `Bun.spawnSync($argv, $...)`
+  } as $spawn where {
+    $argv <: or {
+      argv_literal(),
+      JsObjectExpression(members=$options) where {
+        $options <: some JsPropertyObjectMember(name=`cmd`, value=argv_literal())
+      }
+    },
+    register_diagnostic(span=$spawn, message="Rule: hand-rolled git or gh spawn: Bun spawns git or gh. Why: repo-cli and ai-metrics run git and gh through @beep/git (Git), @beep/github (GithubRest, PullRequest) and @beep/commands (Run), so a new raw spawn is unrecorded drift (goals/repo-cli-gh-git-consolidation, D-22, D-23). Fix: call the kit member that covers the argv; a read that must run before any Effect runtime exists keeps the spawn with a `// biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-nn): <reason>` line directly above it.", severity="error")
+  },
+  `ghOutput($...)` as $spawn where {
+    register_diagnostic(span=$spawn, message="Rule: hand-rolled git or gh spawn: a gh CLI read through ghOutput. Why: ghOutput is the shared route for recorded KEEP gh reads only; typed GitHub reads go through @beep/github (GithubRest, PullRequest), so a new ghOutput call is unrecorded drift (goals/repo-cli-gh-git-consolidation, D-13, D-22, D-23). Fix: call the @beep/github member that covers the read; when none covers it exactly, keep the call with a `// biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-nn): <reason>` line directly above it.", severity="error")
+  }
+}

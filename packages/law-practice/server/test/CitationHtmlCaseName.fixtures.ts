@@ -4,7 +4,7 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationHtmlCaseNameConfiguration,
-  makeCitationHtmlCaseName,
+  makeCitationHtmlCaseName as makeOwnedCitationHtmlCaseName,
 } from "@beep/law-practice-server/internal/Citation/HtmlCaseName";
 import { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import { expect } from "@effect/vitest";
@@ -14,6 +14,7 @@ import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationHtmlGeometryFixture } from "./CitationHtmlGeometryPreparation.fixtures.ts";
 import { makeCitationTestInvocationBinding, withCitationTestInvocation } from "./CitationInvocation.fixtures.ts";
 import {
@@ -24,6 +25,11 @@ import {
 import { CitationNativeUnicodeHex } from "./CitationTokenSeed.fixtures.ts";
 import type { CitationHtmlTagGeometryInput } from "@beep/law-practice-server/internal/Citation/HtmlTagGeometry";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationHtmlCaseName = installCitationOwnedTestStage({
+  schema: CitationHtmlCaseNameConfiguration,
+  install: makeOwnedCitationHtmlCaseName,
+});
 
 const $I = $LawPracticeServerId.create("test/CitationHtmlCaseName");
 const Native = CitationNativeUnicodeHex;
@@ -160,8 +166,9 @@ export const replayCitationHtmlCaseName = Effect.fn("HtmlCaseNameTest.replay")(f
     ).toEqual(row.after.fullSpanStart);
     expectedChildren +=
       4 +
-      3 * A.filter(row.calls, (call) => call.operation === "clean").length +
-      A.filter(row.calls, (call) => call.name === "_extract_from_single_html_element").length;
+      (A.some(row.calls, (call) => call.operation === "clean" || call.name === "_extract_from_single_html_element")
+        ? 1
+        : 0);
   }
   expect(rows).toHaveLength(full ? 128 : 11);
   yield* assertCitationWorkerCompositionReleased(

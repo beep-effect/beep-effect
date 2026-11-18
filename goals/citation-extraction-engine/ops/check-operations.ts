@@ -44,8 +44,9 @@ const program = Effect.gen(function* () {
   );
   // Hash the original encoded payload bytes before any codec normalization.
   const encoded = yield* S.decodeUnknownEffect(S.fromJsonString(S.toEncoded(CitationOracleOperations)))(text);
-  const exporter = yield* Effect.tryPromise(() => Bun.file(new URL("./export-operations.py", import.meta.url)).bytes());
-  if (sha256(exporter) !== encoded.exporterSha256) {
+  // export-operations.py was removed with the repository's Python (goal python-free-repo). Its digest
+  // is pinned from the recovery commit: `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/export-operations.py`.
+  if (encoded.exporterSha256 !== "9a8176ca6d55de38ff94731a1c532b9d4788651bcdd497c8d308b8520bae15e8") {
     return yield* Effect.fail(new Error("Operation exporter hash mismatch"));
   }
   for (const row of encoded.cases) {

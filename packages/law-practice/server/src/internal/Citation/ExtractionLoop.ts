@@ -3,6 +3,7 @@
  * import-time joke shortcut are separate entry-point duties.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationEngineAbsoluteMaxima,
@@ -16,6 +17,7 @@ import * as Effect from "effect/Effect";
 import * as MutableList from "effect/MutableList";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import { captureCitationExtractionChildren } from "./ExtractionChildren.ts";
 import { CitationTokenExtractionInput } from "./ExtractionContext.ts";
 import {
@@ -30,11 +32,7 @@ import {
   makeCitationFullExtraction,
 } from "./FullExtraction.ts";
 import { CitationGeneratedReference, makeCitationGeneratedCombinedReferences } from "./GeneratedReferences.ts";
-import {
-  decodeCitationMetadataRuntimeConfiguration,
-  detachCitationMetadataConfiguration,
-  makeCitationMetadataOperation,
-} from "./MetadataComposition.ts";
+import { makeCitationMetadataOperation, provideCitationStageAdmission } from "./MetadataComposition.ts";
 import { CitationReferencePatternConfiguration } from "./ReferencePatterns.ts";
 import {
   CitationReferenceTokenConfiguration,
@@ -42,6 +40,8 @@ import {
   makeCitationReferenceTokenExtraction,
 } from "./ReferenceTokenExtraction.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type * as Exit from "effect/Exit";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ExtractionLoop");
@@ -142,29 +142,38 @@ export class CitationExtractionLoopResult extends S.Opaque<
   )
 ) {}
 const Input = S.toType(CitationExtractionLoopInput);
-const Configuration = S.toType(CitationExtractionLoopConfiguration);
-// Upstream Schema owns native byte representation and fresh decoding; no custom
-// recursive configuration clone or JSON string parser is introduced.
-const ConfigurationJson = Configuration.pipe(S.toCodecJson);
 const isFull = S.is(CitationFullExtractionResult);
 const referenceToken = (token: CitationTokenSeed) =>
   token.kind === "IdToken" ||
   token.kind === "SupraToken" ||
   token.kind === "SectionToken" ||
   (token.kind === "CitationToken" && token.short);
-const prepare = Effect.fn("Citation.extractPreparedDocument")(function* (
+/** Install the loop's child stages once; the loop body closes over their methods.
+ * @internal @category operations @since 0.0.0
+ */
+const installChildren = Effect.fn("Citation.installExtractionLoopChildren")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationExtractionLoopConfiguration,
+  config: CitationOwned<CitationExtractionLoopConfiguration>
+) {
+  const full = yield* makeCitationFullExtraction(limits, runtime, ownedField(config, "full"));
+  const reference = yield* makeCitationReferenceTokenExtraction(limits, runtime, ownedField(config, "reference"));
+  const generated = yield* makeCitationGeneratedCombinedReferences(limits, runtime, ownedField(config, "generated"));
+  const selection = yield* makeCitationExtractionSelection(limits);
+  return { full, reference, generated, selection };
+});
+const prepare = Effect.fn("Citation.extractPreparedDocument")(function* (
+  limits: CitationEngineLimits,
+  installed: Exit.Exit<
+    Effect.Success<ReturnType<typeof installChildren>>,
+    Effect.Error<ReturnType<typeof installChildren>>
+  >,
   raw: unknown
 ) {
   const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
   if (request.words.length > limits.tokens || request.tokens.length > limits.tokens)
     return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
-  const full = yield* makeCitationFullExtraction(limits, runtime, config.full);
-  const reference = yield* makeCitationReferenceTokenExtraction(limits, runtime, config.reference);
-  const generated = yield* makeCitationGeneratedCombinedReferences(limits, runtime, config.generated);
-  const selection = yield* makeCitationExtractionSelection(limits);
+  const { full, reference, generated, selection } = yield* installed;
   const models = MutableList.make<CitationExtractionLoopEntry>();
   let prior = O.none<CitationExtractionLoopEntry>();
   const append = Effect.fn("Citation.appendExtractedModel")(function* (
@@ -214,43 +223,39 @@ const prepare = Effect.fn("Citation.extractPreparedDocument")(function* (
   const retained = request.removeAmbiguous ? filtered.disambiguated : filtered.selected;
   return { models: all, citations: A.map(retained, (id) => A.getUnsafe(all, id)), selection: filtered, retained };
 });
-/** Install one admitted extraction operation. Child stages are installed inside
- * its Scope and receive the existing budget plus an admission view that reuses
- * the already-held parent permit. Native process admission is never replaced.
- * No child stage escapes this private invocation; returned extract has R=never.
+/** Install one extraction operation and its child stages once. Each call reads
+ * CitationInvocation for its budget and Scope; no child admits again. Native
+ * process admission is never replaced.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationExtractionLoop = Effect.fn("Citation.makeExtractionLoop")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  config: CitationOwned<CitationExtractionLoopConfiguration>
 ) {
-  const { limits, runtime, configuration } = yield* decodeCitationMetadataRuntimeConfiguration(
-    policy,
-    runtimeInput,
-    configurationInput,
-    Configuration,
-    () => fail("invalid-configuration")
-  );
-  const config = yield* detachCitationMetadataConfiguration(ConfigurationJson, configuration, () =>
-    fail("invalid-configuration")
-  );
-  const children = yield* captureCitationExtractionChildren();
-  const installed = yield* makeCitationMetadataOperation(limits, (raw: unknown) =>
-    prepare(limits, runtime, config, raw).pipe(Effect.provideContext(children))
-  );
-  const extract = Effect.fn("Citation.extractDocumentLoop")((raw: unknown) =>
+  return yield* provideCitationStageAdmission(
+    limits,
     Effect.gen(function* () {
-      const [result, reservedUnits] = yield* installed.run(raw);
-      const completed = CitationExtractionLoopResult.make({ ...result, reservedUnits });
-      // Struct construction validates each occurrence independently. Reconnect
-      // returned entries to that one validated model list by original ids.
-      const restored: CitationExtractionLoopResult = {
-        ...completed,
-        citations: A.map(result.retained, (id) => A.getUnsafe(completed.models, id)),
-      };
-      return restored;
+      const children = yield* captureCitationExtractionChildren();
+      // Installed once; an install failure surfaces where each request used to install it.
+      const stages = yield* Effect.exit(installChildren(limits, runtime, config).pipe(Effect.provideContext(children)));
+      const installed = yield* makeCitationMetadataOperation((raw: unknown) =>
+        prepare(limits, stages, raw).pipe(Effect.provideContext(children))
+      );
+      const extract = Effect.fn("Citation.extractDocumentLoop")((raw: unknown) =>
+        Effect.gen(function* () {
+          const [result, reservedUnits] = yield* installed.run(raw);
+          const completed = CitationExtractionLoopResult.make({ ...result, reservedUnits });
+          // Struct construction validates each occurrence independently. Reconnect
+          // returned entries to that one validated model list by original ids.
+          const restored: CitationExtractionLoopResult = {
+            ...completed,
+            citations: A.map(result.retained, (id) => A.getUnsafe(completed.models, id)),
+          };
+          return restored;
+        })
+      );
+      return { extract };
     })
   );
-  return { extract };
 });

@@ -10,13 +10,15 @@ import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import { CitationDocumentStepContainers } from "./DocumentCleanerProtocols.ts";
 import { CitationDocumentExtractionConfiguration, ownCitationDocumentExtraction } from "./DocumentExtraction.ts";
 import { CitationExtractionEntryResult, makeCitationExtractionEntry } from "./ExtractionEntry.ts";
-import { detachCitationMetadataConfiguration, makeCitationMetadataStage } from "./MetadataComposition.ts";
+import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { CitationSemanticProjectionConfiguration, makeCitationSemanticProjection } from "./SemanticProjection.ts";
 import { CitationTokenDispatchBindings } from "./TokenDispatch.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SemanticExtraction");
@@ -65,32 +67,49 @@ export class CitationSemanticExtractionResult extends S.Opaque<
     })
   )
 ) {}
-const Configuration = S.toType(CitationSemanticExtractionConfiguration);
-const ConfigurationJson = Configuration.pipe(S.toCodecJson);
 const sameBindings = S.toEquivalence(CitationTokenDispatchBindings);
-/** Capture the complete semantic extraction configuration and its private child services.
+/** Check the owned semantic extraction configuration and capture its private child services.
  * @internal @category operations @since 0.0.0
  */
 export const ownCitationSemanticExtraction = Effect.fn("Citation.ownSemanticExtraction")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationSemanticExtractionConfiguration
+  config: CitationOwned<CitationSemanticExtractionConfiguration>
 ) {
-  const config = yield* detachCitationMetadataConfiguration(ConfigurationJson, configuration, invalid);
   if (!sameBindings(config.semantic.editions, config.extraction.extraction.loop.full.editions)) return yield* invalid();
-  const document = yield* ownCitationDocumentExtraction(limits, config.extraction);
+  const document = yield* ownCitationDocumentExtraction(limits, ownedField(config, "extraction"));
   const containers = yield* CitationDocumentStepContainers;
   const children = document.children.pipe(Context.add(CitationDocumentStepContainers, containers));
   return { config, children };
 });
+/** Own the configuration and install the entry and projection stages once.
+ * @internal @category operations @since 0.0.0
+ */
+const ownStages = Effect.fn("Citation.ownSemanticExtractionStages")(function* (
+  limits: CitationEngineLimits,
+  configuration: CitationOwned<CitationSemanticExtractionConfiguration>,
+  runtime: CitationNativeProcessRuntime
+) {
+  const owned = yield* ownCitationSemanticExtraction(limits, configuration);
+  return yield* Effect.gen(function* () {
+    // Installed once; an install failure surfaces where each request used to install it.
+    const entry = yield* Effect.exit(
+      makeCitationExtractionEntry(limits, runtime, ownedField(owned.config, "extraction"))
+    );
+    const semantic = yield* Effect.exit(
+      makeCitationSemanticProjection(limits, runtime, ownedField(owned.config, "semantic"))
+    );
+    return { ...owned, entry, semantic };
+  }).pipe(Effect.provideContext(owned.children));
+});
 const prepare = Effect.fn("Citation.extractSemanticCitations")(function* (
   limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
-  owned: Effect.Success<ReturnType<typeof ownCitationSemanticExtraction>>,
+  _runtime: CitationNativeProcessRuntime,
+  { entry: installedEntry, semantic: installedSemantic, children }: Effect.Success<ReturnType<typeof ownStages>>,
   request: unknown
 ) {
   return yield* Effect.gen(function* () {
-    const entry = yield* makeCitationExtractionEntry(limits, runtime, owned.config.extraction);
-    const semantic = yield* makeCitationSemanticProjection(limits, runtime, owned.config.semantic);
+    const entry = yield* installedEntry;
+    const semantic = yield* installedSemantic;
     const raw = yield* entry.extract(request);
     const models =
       raw.outcome._tag === "Shortcut"
@@ -100,7 +119,7 @@ const prepare = Effect.fn("Citation.extractSemanticCitations")(function* (
       return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "candidates" });
     const citations = yield* Effect.forEach(models, semantic.project, { concurrency: 1 });
     return { raw, citations };
-  }).pipe(Effect.provideContext(owned.children));
+  }).pipe(Effect.provideContext(children));
 });
 /** One admitted raw request through original extraction and the domain Citation
  * codec. Native admission, one cumulative budget and the enclosing deadline are
@@ -110,9 +129,7 @@ const prepare = Effect.fn("Citation.extractSemanticCitations")(function* (
  */
 export const makeCitationSemanticExtraction = makeCitationMetadataStage({
   method: "extract",
-  schema: Configuration,
-  invalid,
-  own: ownCitationSemanticExtraction,
+  own: ownStages,
   prepare,
   project: (result, reservedUnits) => {
     const validated = CitationSemanticExtractionResult.make({ ...result, reservedUnits });

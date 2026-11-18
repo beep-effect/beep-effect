@@ -26,8 +26,9 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import { gitPathListFromNulOutput } from "../../internal/repo-run/GitExec.ts";
-import { AdmissionRequest } from "../../internal/repo-run/QualityScheduler.schemas.ts";
-import { noAdmissionOriginGate, withQualityAdmission } from "../../internal/repo-run/QualityScheduler.ts";
+import { AdmissionRequest, admissionTokenWeight } from "../../internal/repo-run/QualityScheduler.schemas.ts";
+import { QualityScheduler } from "../../internal/repo-run/QualityScheduler.service.ts";
+import { noAdmissionOriginGate } from "../../internal/repo-run/QualityScheduler.ts";
 import { CacheProducerAdapterLaunch } from "./Cache.adapter.schemas.ts";
 import { CacheConformanceBearers, CacheConformanceTarget } from "./Cache.conformance.schemas.ts";
 import { loadCacheConformanceBearers } from "./Cache.conformance.ts";
@@ -132,8 +133,9 @@ const hashDirectoryAlias = Effect.fn("CacheWorkflow.directoryAlias")(function* (
   return yield* digest(new TextEncoder().encode(`beep/cache-producer-directory/v1\0${manifest}`));
 });
 const bound = OutputBound.make({ maxChars: 4 * 1024 * 1024, truncatedNotice: "workflow inventory exceeded bound" });
-// KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
 const captureGit = Effect.fn("CacheWorkflow.git")(function* (root: string, args: ReadonlyArray<string>) {
+  // KEEP (D-19): producer trust boundary (pinned /usr/bin/git in the identity, scrubbed env).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
   const captured = yield* runCapturedStreams({
     command: "/usr/bin/git",
     args,
@@ -806,10 +808,11 @@ export const runCacheProducerWorkflow = Effect.fn("CacheWorkflow.run")(function*
   }
   const runtime = yield* assertCacheProducerUploadRuntime(trusted, uploadRuntime);
   const issuer = yield* openCacheProducerIssuer(directory, trusted);
-  const verifyWorkflow = withQualityAdmission(
+  const scheduler = yield* QualityScheduler;
+  const verifyWorkflow = scheduler.admit(
     AdmissionRequest.make({
-      kind: "review-fix",
-      weightTokens: 1,
+      kind: "cache",
+      weightTokens: admissionTokenWeight("cache"),
       priority: "verify",
       originKey: "",
       checkoutRoot: root,

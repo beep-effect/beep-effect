@@ -584,7 +584,7 @@ export const withCatalog = Effect.fn("ResearchLibrary.withCatalog")(function* <E
         }
         yield* saveImmutable(root, artifact.path, bytes);
       });
-      yield* Effect.forEach(artifacts, migrateArtifact);
+      yield* Effect.forEach(artifacts, migrateArtifact, { concurrency: 1 });
       const catalog = yield* update(migrated);
       if (migrateLegacyIdentities === false && catalog === migrated) return catalog;
       return yield* writeCatalog(catalog);

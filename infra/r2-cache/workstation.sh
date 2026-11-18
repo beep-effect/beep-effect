@@ -32,9 +32,8 @@ PYCONFIG
     cp "$source_dir/adapter.sh" "$installed"
     chmod 700 "$installed"
     cp "$source_dir/workstation.sh" "$(dirname "$installed")/workstation.sh"
-    cp "$source_dir/fleet.py" "$(dirname "$installed")/fleet.py"
     cp "$source_dir/turbo.sh" "$(dirname "$installed")/turbo.sh"
-    chmod 700 "$(dirname "$installed")/"{workstation.sh,fleet.py,turbo.sh}
+    chmod 700 "$(dirname "$installed")/"{workstation.sh,turbo.sh}
     fi
     bin_home="${BEEP_R2_BIN_HOME:-$HOME/.local/bin}"
     mkdir -p "$bin_home"

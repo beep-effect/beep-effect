@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { runQaDoctor } from "@beep/repo-cli/commands/Qa/Doctor";
 import { it } from "@beep/test-runner";
@@ -9,7 +10,6 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as PlatformError from "effect/PlatformError";
 import * as P from "effect/Predicate";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
 const unavailable = PlatformError.systemError({
   _tag: "NotFound",
@@ -21,10 +21,8 @@ const Platform = Layer.mergeAll(
   MemoryFileSystem.layer,
   NodePath.layer,
   BunCrypto.layer,
-  Layer.succeed(
-    ChildProcessSpawner.ChildProcessSpawner,
-    ChildProcessSpawner.make(() => Effect.fail(unavailable))
-  )
+  // Every probe's tool is missing (D-14: `ScriptedSpawner`).
+  ScriptedSpawner.make(() => ScriptedSpawner.notFound("synthetic-missing-tool")).layer
 );
 
 it.layer(Platform, { timeout: "30 seconds" })("QA environment probes", (it) => {

@@ -163,6 +163,9 @@ const ghSpawner = Effect.fn("YeetRetireTest.ghSpawner")(function* (
       unref: Effect.succeed(Effect.void),
     });
   };
+  // Own double (D-14): the gh decorator over the real platform spawner, which `ScriptedSpawner` replaces
+  // rather than wraps.
+  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
   return ChildProcessSpawner.make((command) =>
     ChildProcess.isStandardCommand(command) && command.command === "gh"
       ? Effect.succeed(
@@ -1773,7 +1776,9 @@ describe("yeet sweep --retire", { concurrent: false }, () => {
         // The sweep speaks for main, so it counts only the claims on origin/main.
         expect(scopes).toEqual(["origin-main"]);
         // The rows of finals main no longer binds are acknowledged: demo's #6 and plain's #8.
-        const superseded = yield* Effect.all([ackedFor("goal-closeout:demo#6"), ackedFor("goal-closeout:plain#8")]);
+        const superseded = yield* Effect.all([ackedFor("goal-closeout:demo#6"), ackedFor("goal-closeout:plain#8")], {
+          concurrency: 1,
+        });
         expect(superseded).toEqual([[true], [true]]);
 
         // A transient check prints an advisory and leaves the row open.

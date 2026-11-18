@@ -50,20 +50,27 @@ export const replayCitationCanonicalResourceComparison = Effect.fn("CanonicalRes
     assertions,
     A.map([36, 37], (line) => `${prefix}${line}:8:caseDeclaration::1`)
   );
-  const events = yield* Effect.forEach(payloads, (payload) => S.decodeEffect(Criterion)(payload));
+  const events = yield* Effect.forEach(payloads, (payload) => S.decodeEffect(Criterion)(payload), { concurrency: 1 });
   const equality = A.getUnsafe(events, 0);
   const context = yield* S.decodeUnknownEffect(Context)(equality.context.values);
   const profile = { family: "case", reporter: "U.S.", factory: "case_citation", line: 48 } as const;
   const defaultModel = yield* factory.create(profile);
   const reference = yield* Effect.fromOption(defaultModel.publication.selectedEdition);
-  const citations = yield* Effect.forEach([0, 1], () =>
-    factory.create(profile, { reporter: "U.S.", volume: "2", page: "2", reference })
+  const citations = yield* Effect.forEach(
+    [0, 1],
+    () => factory.create(profile, { reporter: "U.S.", volume: "2", page: "2", reference }),
+    { concurrency: 1 }
   );
-  yield* Effect.forEach(citations, (citation, i) =>
-    compareCitationCanonicalModel(citation, A.getUnsafe(context.resources, i).fields.citation, "resource comparison")
+  yield* Effect.forEach(
+    citations,
+    (citation, i) =>
+      compareCitationCanonicalModel(citation, A.getUnsafe(context.resources, i).fields.citation, "resource comparison"),
+    { concurrency: 1 }
   );
-  const expectedOperands = yield* Effect.forEach(equality.operands, (operand) =>
-    S.decodeUnknownEffect(Resource)(operand.value)
+  const expectedOperands = yield* Effect.forEach(
+    equality.operands,
+    (operand) => S.decodeUnknownEffect(Resource)(operand.value),
+    { concurrency: 1 }
   );
   expect(expectedOperands).toEqual(context.resources);
   const persistentId =
@@ -91,9 +98,9 @@ export const replayCitationCanonicalResourceComparison = Effect.fn("CanonicalRes
       Effect.provideService(CitationFrozenEditions, factory.owner)
     ),
     Effect.fnUntraced(function* (objects) {
-      const resources = yield* Effect.forEach(references, objects.create);
+      const resources = yield* Effect.forEach(references, objects.create, { concurrency: 1 });
       expect(A.getUnsafe(resources, 0)).not.toBe(A.getUnsafe(resources, 1));
-      const keys = yield* Effect.forEach(resources, objects.key);
+      const keys = yield* Effect.forEach(resources, objects.key, { concurrency: 1 });
       const equal = yield* objects.comparison.equal(A.getUnsafe(keys, 0).objectId, A.getUnsafe(keys, 1).objectId);
       expect(equal).toBe(true);
       const hashEvent = A.getUnsafe(events, 1);
@@ -103,18 +110,20 @@ export const replayCitationCanonicalResourceComparison = Effect.fn("CanonicalRes
         hashEvent.operands,
         Effect.fnUntraced(function* (operand) {
           return (yield* S.decodeUnknownEffect(Integer)(operand.value)).integer;
-        })
+        }),
+        { concurrency: 1 }
       );
       expect(A.map(A.take(keys, 2), (key) => key.hash)).toEqual(expectedHashes);
       const persistentHashes = yield* Effect.forEach(
         persistent.operands,
         Effect.fnUntraced(function* (operand) {
           return (yield* S.decodeUnknownEffect(Integer)(operand.value)).integer;
-        })
+        }),
+        { concurrency: 1 }
       );
       expect(persistentHashes[0]).toBe(persistentHashes[1]);
       expect(A.getUnsafe(keys, 2).hash).toBe(persistentHashes[1]);
-      const retained = yield* Effect.forEach(resources, objects.referenceOf);
+      const retained = yield* Effect.forEach(resources, objects.referenceOf, { concurrency: 1 });
       expect(retained).toEqual(references);
     }),
     (objects) => objects.close

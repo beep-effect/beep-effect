@@ -23,7 +23,8 @@ an existing Desktop task merely to deliver a closeout message.
 Read `bun run beep session open` (the Claude SessionStart hook prints the
 same rows). Each live row is a resume candidate: offer them in the first
 prompt alongside whatever the operator asked for, newest first, and never
-silently take over a row another live session owns.
+silently take over a row another live session owns: `bun run beep session
+resolve <lane or PR>` names its owner and says whether that session is live.
 
 ## When
 
@@ -47,7 +48,9 @@ which tool the operator should use to answer.
    <open|blocked|done> --next "<one line>" [--summary "<one line>"]
    [--pr <n>]` from the checkout you worked in. This is what the next session
    (yours or a sibling's) sees at start through `bun run beep session open`;
-   the prompt below is for the operator, the row is for the fleet. `yeet
+   the prompt below is for the operator, the row is for the fleet. The note
+   also records this session's message routes, so `session resolve` can find
+   it. `yeet
    sweep` and `yeet sweep --retire` write the `done` row themselves.
 1. **Recap, three lines at most, above the prompt.** What landed (PR numbers,
    commits), what is verified, what is not. Numbers in a short table if more

@@ -88,8 +88,8 @@ import {
   parseAttributedCheck,
 } from "./MergeGate.ts";
 import { YEET_READY_COMMAND } from "./MonitorPolicy.ts";
-import { findLiveReadyMonitorJob } from "./ProofJob.ts";
-import { ProofJobLauncher } from "./ProofJobLauncher.ts";
+import { isLiveReadyMonitorJob } from "./ProofJob.ts";
+import { ProofJobLauncher, pickLiveReadyMonitor, readyMonitorRunnerStatus } from "./ProofJobLauncher.ts";
 import { admitPullRequestToHeavy } from "./PullRequest.ts";
 import { ReviewLaneFlipRow, ReviewLaneReadyTransition, YEET_REVIEW_LANE_SCHEMA_VERSION } from "./ReviewLane.schemas.ts";
 import { readYeetReviewLaneLedger, recordYeetReviewLaneRows } from "./ReviewLane.ts";
@@ -109,6 +109,7 @@ import type { FinalCheckReceipt } from "./FinalCheck.schemas.ts";
 import type { FinalCheckRefreshOwnChange, FinalCheckRefreshRefused } from "./FinalCheckRefresh.schemas.ts";
 import type { YeetOpenReadyHooks } from "./OpenReady.ts";
 import type { ProofJobRecord } from "./ProofJob.ts";
+import type { ReadyMonitorRunnerProbe } from "./ProofJobLauncher.ts";
 import type { SquashCommitlintReport } from "./SquashCommitlint.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ReadyGate");
@@ -557,25 +558,52 @@ const readPullRequestForReady = Effect.fn("Yeet.readPullRequestForReady")(functi
   return YeetReadyPullRequestRead.make({ remote: snapshot.remote, mergeReady: snapshot.mergeReady });
 });
 
-// The live `monitor --until-ready` job for the pull request, when one exists.
-// A registry read failure only loses the hint, never the flip.
-const findLiveMonitorForReady = (
-  context: RepoRunContext,
-  prNumber: number
-): Effect.Effect<
-  O.Option<ProofJobRecord>,
-  never,
+type ReadyGateMonitorRequirements =
   | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
   | ChildProcessSpawner.ChildProcessSpawner
-  | Digest.Digest
-> =>
-  ProofJobLauncher.make(context.repoRoot).pipe(
-    Effect.flatMap((launcher) => launcher.list),
-    Effect.map(findLiveReadyMonitorJob({ branch: context.branch, prNumber })),
+  | Digest.Digest;
+
+const listReadyGateJobs = (
+  context: RepoRunContext
+): Effect.Effect<ReadonlyArray<ProofJobRecord>, YeetCommandError, ReadyGateMonitorRequirements> =>
+  ProofJobLauncher.make(context.repoRoot).pipe(Effect.flatMap((launcher) => launcher.list));
+
+// The live `monitor --until-ready` job for the pull request, when one exists.
+// A record still reads `running` after its runner died without a finalizer, so
+// the runner is checked before the job is named as the watcher. A registry
+// read failure only loses the hint, never the flip.
+const findLiveMonitorForReady = Effect.fn("Yeet.findLiveMonitorForReady")(function* (
+  context: RepoRunContext,
+  prNumber: number,
+  listJobs: typeof listReadyGateJobs = listReadyGateJobs,
+  runnerStatus: ReadyMonitorRunnerProbe = readyMonitorRunnerStatus
+): Effect.fn.Return<O.Option<ProofJobRecord>, never, ReadyGateMonitorRequirements> {
+  return yield* listJobs(context).pipe(
+    Effect.flatMap((records) =>
+      pickLiveReadyMonitor(records, isLiveReadyMonitorJob({ branch: context.branch, prNumber }), runnerStatus)
+    ),
     Effect.catch(() => Effect.succeedNone)
   );
+});
+
+/**
+ * Find the detached readiness monitor `yeet ready` names as the watcher after
+ * a flip, with the registry listing and the runner probe injected.
+ *
+ * **Example** (Reference the lookup for a test)
+ *
+ * ```ts
+ * import { findLiveMonitorForReadyForTesting } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof findLiveMonitorForReadyForTesting) // "function"
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const findLiveMonitorForReadyForTesting = findLiveMonitorForReady;
 
 const markReadyThroughBudget = (prNumber: number, confirmedHead: string) =>
   flipPullRequestReady(prNumber, confirmedHead).pipe(
@@ -611,6 +639,7 @@ const readPullRequestAuthor = Effect.fn("Yeet.ReadyGate.readPullRequestAuthor")(
   prNumber: number
 ): Effect.fn.Return<O.Option<string>, never, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   // KEEP (D-13): gh's GraphQL `author.login` comes without the `[bot]` suffix REST adds.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   return yield* ghOutput({
     args: ["pr", "view", `${prNumber}`, "--json", "author", "--jq", ".author.login"],
     cwd: context.repoRoot,
@@ -895,6 +924,8 @@ const decodeReviewerResponse = Effect.fnUntraced(function* <T, I>(schema: S.Code
 });
 
 const reviewerRequestOutput = Effect.fnUntraced(function* (context: RepoRunContext, args: ReadonlyArray<string>) {
+  // KEEP funnel: `reviewerRequestOutput` runs the KEEP (D-22) reads below; each call site records its reason.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP funnel, reason above
   return yield* ghOutput({
     args,
     cwd: context.repoRoot,
@@ -905,6 +936,8 @@ const reviewerRequestOutput = Effect.fnUntraced(function* (context: RepoRunConte
 });
 
 const readReviewerPull = Effect.fnUntraced(function* (context: RepoRunContext, prNumber: number) {
+  // KEEP (D-22): `GithubRest.pullRequest`'s record drops `base.repo.full_name`, which decides whether
+  // the comment routine covers this pull request.
   return yield* reviewerRequestOutput(context, ["api", `repos/{owner}/{repo}/pulls/${prNumber}`]).pipe(
     Effect.flatMap((value) => decodeReviewerResponse(ReviewerRequestPull, value))
   );
@@ -923,6 +956,8 @@ const readReviewerReadyAt = Effect.fnUntraced(function* (
   // Match ReviewWindow's latest ready_for_review event, or the open a ready
   // open passes in (`openedAt`; a flip passes none). A missing transition on one that was a draft
   // is unknown: an eventually consistent timeline must not validate a draft-era request.
+  // KEEP (D-22): `GithubRest.reviewTimeline` skips an undated event and folds the transitions to
+  // one `readyAt`, where this read refuses an undated ready event and checks every draft transition.
   const events = yield* reviewerRequestOutput(context, [
     "api",
     `repos/{owner}/{repo}/issues/${prNumber}/timeline?per_page=100`,
@@ -969,6 +1004,8 @@ const requestReviewerComment = Effect.fnUntraced(function* (
   confirmedHead: string,
   openedAt: O.Option<DateTime.Utc>
 ) {
+  // KEEP (D-22): no kit member reads the authenticated login; `gh api user` names the gh login the
+  // comment below posts as.
   const login = yield* reviewerRequestOutput(context, ["api", "user", "--jq", ".login"]).pipe(Effect.map(Str.trim));
   if (login !== REVIEWER_COMMENT_AUTHOR) {
     return yield* YeetCommandError.make({
@@ -978,6 +1015,7 @@ const requestReviewerComment = Effect.fnUntraced(function* (
   }
   const readyAt = yield* readReviewerReadyAt(context, prNumber, openedAt);
   const body = reviewerCommentBody(confirmedHead);
+  // KEEP (D-22): `GithubRest` has no issue-comment listing.
   const pages = yield* reviewerRequestOutput(context, [
     "api",
     `repos/{owner}/{repo}/issues/${prNumber}/comments?per_page=100`,
@@ -1001,14 +1039,15 @@ const requestReviewerComment = Effect.fnUntraced(function* (
       exitCode: 1,
     });
   }
-  yield* reviewerRequestOutput(context, [
-    "api",
-    `repos/{owner}/{repo}/issues/${prNumber}/comments`,
-    "--method",
-    "POST",
-    "--field",
-    `body=${body}`,
-  ]);
+  // `GithubRest.createIssueComment` (`POST /repos/{owner}/{repo}/issues/{n}/comments`, W8, SPEC
+  // D-22) on the same gh login the `gh api user` check above read.
+  yield* provideYeetGhLogin(context.repoRoot)(GithubRest.use((rest) => rest.createIssueComment(prNumber, body))).pipe(
+    Effect.mapError((failure) =>
+      failure._tag === "YeetCommandError"
+        ? failure
+        : YeetCommandError.make({ message: `gh reviewer request failed (${failure._tag})`, exitCode: 1 })
+    )
+  );
   return `[yeet] posted beep-reviewer request for #${prNumber} at ${confirmedHead}; checkout and head unchanged`;
 });
 
@@ -1396,6 +1435,7 @@ const acceptHostedDeferrals = Effect.fn("Yeet.acceptHostedDeferrals")(function* 
   const judged = judgeHostedDeferrals(receipt, runs);
   if (O.isSome(judged.refusal)) return yield* refuseFinalCheck(judged.refusal.value);
   yield* Effect.forEach(judged.accepted, (gate) => Console.log(`[yeet] hosted green stands in for ${gate}`), {
+    concurrency: 1,
     discard: true,
   });
   return judged.accepted;
@@ -1623,7 +1663,7 @@ export const runYeetReadyGate = Effect.fn("Yeet.runYeetReadyGate")(function* (
       Console.log(
         `[yeet] note: --inherited ${red.check} is not a failing required check on this head; ignored (optional reds never hold the flip)`
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* YeetReadyGateDecision.match(decision, {
     blocked: (blocked) =>

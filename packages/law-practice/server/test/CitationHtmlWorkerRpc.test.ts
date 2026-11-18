@@ -27,7 +27,8 @@ const replies = Effect.forEach(
     CitationHtmlWorkerStarted.make({}),
     CitationHtmlWorkerSuccess.make({ text: "a\ud800b" }),
   ],
-  (reply) => encodeCitationHtmlReply(reply, 4096)
+  (reply) => encodeCitationHtmlReply(reply, 4096),
+  { concurrency: 1 }
 );
 
 it.effect("an immediate complete reply waits for request registration and a stalled write", () =>

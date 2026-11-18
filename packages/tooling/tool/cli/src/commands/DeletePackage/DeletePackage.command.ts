@@ -6,6 +6,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { Jsonc } from "@beep/jsonc/Jsonc";
 import { FrontmatterSource, FrontmatterSourceBlock, FrontmatterSourceSplit } from "@beep/markdown/FrontmatterSource";
 import { isCi } from "@beep/repo-cli-kit/cli/EnvConfig";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
@@ -49,6 +50,7 @@ import {
   BaselineStepOutcome,
   BaselineWriterExitPolicy,
   BaselineWriterStep,
+  DeletePackageAcknowledgements,
   DeletePackageManifest,
   DeletePackagePolicy,
 } from "./DeletePackage.schemas.ts";
@@ -73,6 +75,8 @@ import type {
 const decodeJsonEffect = S.decodeEffect(S.fromJsonString(S.Unknown));
 
 const decodeDeletePackageManifestJson = S.decodeEffect(S.fromJsonString(DeletePackageManifest));
+
+const decodeAcknowledgementsJsonc = Jsonc.bind(DeletePackageAcknowledgements).decode;
 
 const $I = $RepoCliId.create("commands/DeletePackage");
 
@@ -264,13 +268,7 @@ const printPlan = Effect.fn("DeletePackage.printPlan")(function* (
     `  transitive: ${A.isReadonlyArrayNonEmpty(report.transitiveWorkspaceDependents) ? A.join(report.transitiveWorkspaceDependents, ", ") : "(none)"}`
   );
   for (const hit of report.hits) {
-    yield* Console.log(
-      `  - ${hit.kind}: ${hit.owner} ${hit.file}${pipe(
-        hit.line,
-        O.map((line) => `:${line}`),
-        O.getOrElse(() => Str.empty)
-      )}`
-    );
+    yield* Console.log(`  - ${hit.kind}: ${hit.owner} ${DeletePackagePolicyEvaluation.hitLocation(hit)}`);
   }
   yield* Console.log(`${prefix} Inverse plan ${plan.version}:`);
   for (const operation of plan.operations) {
@@ -497,7 +495,6 @@ const BASELINE_WRITER_STEPS: ReadonlyArray<BaselineWriterStep> = [
     verifiedOutput: O.some(PosixPath.make("standards/fallow.health.regression-baseline.jsonc")),
   }),
   BaselineWriterStep.make({ label: "fallow dead-code baseline", args: ["run", "fallow:dead-code:baseline:write"] }),
-  BaselineWriterStep.make({ label: "JSDoc inventory pair", args: ["run", "beep", "quality", "jsdoc-inventory"] }),
   BaselineWriterStep.make({
     label: "schema-first inventory",
     args: ["run", "beep", "lint", "schema-first", "--write"],
@@ -668,23 +665,50 @@ type DeletePackageHandlerOptions = {
   readonly retireChangesets: boolean;
   readonly identityMajor: boolean;
   readonly cascade: boolean;
-  readonly also: string;
   readonly rewritePackets: boolean;
   readonly allowStalePackets: boolean;
   readonly allowPublished: boolean;
   readonly pruneCatalog: boolean;
-  readonly force: boolean;
   readonly dropData: boolean;
   readonly allowNonLocalData: boolean;
+  readonly acknowledge: O.Option<string>;
 };
 
 const planPrintPrefix = (options: DeletePackageHandlerOptions): string =>
   options.dryRun ? "[dry-run]" : options.check ? "[check]" : "[delete-package]";
 
+// The committed `--acknowledge` file, resolved against the repository root and decoded as JSONC.
+const readAcknowledgements = Effect.fn("DeletePackage.readAcknowledgements")(function* (
+  repoRoot: string,
+  file: O.Option<string>
+) {
+  if (O.isNone(file)) return O.none<DeletePackageAcknowledgements>();
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const content = yield* fs
+    .readFileString(path.resolve(repoRoot, file.value))
+    .pipe(Effect.mapError(DomainError.newCause(`Failed to read acknowledgement file ${file.value}.`)));
+  const acknowledgements = yield* decodeAcknowledgementsJsonc(content).pipe(
+    Effect.mapError(DomainError.newCause(`Failed to decode acknowledgement file ${file.value}.`))
+  );
+  return O.some(acknowledgements);
+});
+
+const printAcknowledgedHits = Effect.fn("DeletePackage.printAcknowledgedHits")(function* (
+  report: DependentsReport,
+  policy: DeletePackagePolicy
+) {
+  const lines = DeletePackagePolicyEvaluation.acknowledgedHitLines(report, policy);
+  if (A.isReadonlyArrayEmpty(lines)) return;
+  yield* Console.log(`[delete-package] ACK ${A.length(lines)} acknowledged dependent hit(s):`);
+  for (const line of lines) yield* Console.log(`  - ${line}`);
+});
+
 const assembleDeletePolicy = Effect.fn("DeletePackage.assembleDeletePolicy")(function* (
   repoRoot: string,
   resolved: ResolvedDeleteTarget,
-  options: DeletePackageHandlerOptions
+  options: DeletePackageHandlerOptions,
+  acknowledgements: O.Option<DeletePackageAcknowledgements>
 ) {
   const inCi = yield* isCi;
   const retiredNameCollision =
@@ -698,7 +722,6 @@ const assembleDeletePolicy = Effect.fn("DeletePackage.assembleDeletePolicy")(fun
     allowPublished: options.allowPublished,
     allowStalePackets: options.allowStalePackets,
     cascade: options.cascade,
-    force: options.force,
     pruneCatalog: options.pruneCatalog,
     rewritePackets: options.rewritePackets,
     skipBaselines: options.skipBaselines,
@@ -714,6 +737,7 @@ const assembleDeletePolicy = Effect.fn("DeletePackage.assembleDeletePolicy")(fun
     dataOwnershipProven: O.exists(dataSurface, (surface) =>
       DeletePackageDataResource.labSchemaOwnershipProven(slug, surface.resourceName)
     ),
+    acknowledgements,
   });
 });
 
@@ -743,7 +767,7 @@ const reportResidueObservations = (observations: ReadonlyArray<RegistrationObser
   Effect.forEach(
     A.filter(observations, (item) => !Str.equivalence(item.status, "clean")),
     (item) => Console.error(`[delete-package] residue ${item.surfaceId}: ${A.join(item.evidence, ", ")}`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
 // The accepted consent-required lab data-resource observation carries the
@@ -752,7 +776,7 @@ const reportConsentRequiredObservations = (observations: ReadonlyArray<Registrat
   Effect.forEach(
     A.filter(observations, (item) => Str.equivalence(item.status, "consent-required")),
     (item) => Console.log(`[delete-package] data-resource ${item.surfaceId}: ${A.join(item.evidence, ", ")}`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
 const runApplyMode = Effect.fn("DeletePackage.runApplyMode")(function* (
@@ -836,12 +860,19 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
     if (!options.skipBaselines) yield* runBaselineWriters(repoRoot, plan.target.packageName);
     yield* invalidateCiMirrors(repoRoot);
   });
-  const geometry = yield* makeRegistrationGeometryService(repoRoot, executePlan);
+  const acknowledgements = yield* readAcknowledgements(repoRoot, options.acknowledge);
+  const policy = yield* assembleDeletePolicy(repoRoot, resolved, options, acknowledgements);
+  const geometry = yield* makeRegistrationGeometryService(
+    repoRoot,
+    executePlan,
+    DeletePackagePolicyEvaluation.acknowledgedOccurrencesFor(policy),
+    O.map(options.acknowledge, (file) => normalizePath(path.relative(repoRoot, path.resolve(repoRoot, file))))
+  );
   const report = yield* geometry.dependentsOf(resolved.target);
   const plan = yield* geometry.planInverse(resolved.target);
   yield* printPlan(plan, report, planPrintPrefix(options));
+  yield* printAcknowledgedHits(report, policy);
 
-  const policy = yield* assembleDeletePolicy(repoRoot, resolved, options);
   const refusals = DeletePackagePolicyEvaluation.refusalReasons(resolved.target, report, policy);
   for (const refusal of refusals)
     yield* Console.error(`[delete-package] REFUSE [${refusal.kind}/${refusal.severity}] ${refusal.detail}`);
@@ -854,6 +885,15 @@ const handler = Effect.fn("DeletePackage.handler")(function* (options: DeletePac
 
 /**
  * Delete a leaf workspace package or inspect a deleted target for registration residue.
+ *
+ * **Details**
+ *
+ * `--acknowledge <file>` reads a committed JSONC
+ * `DeletePackageAcknowledgements` file (resolved against the repository root)
+ * naming reviewed `file-path` and `script` hits by path and trimmed line text.
+ * Accepted hits print under `[delete-package] ACK`; a stale, miscounted,
+ * edge-matching or wrong-target entry refuses, and the doctor reads the same
+ * file. No flag overrides an unacknowledged dependent.
  *
  * **Example** (Preview a deletion)
  *
@@ -875,14 +915,13 @@ export const deletePackageCommand = Command.make(
     retireChangesets: Flag.Boolean("retire-changesets").pipe(Flag.withDefault(false)),
     identityMajor: Flag.Boolean("identity-major").pipe(Flag.withDefault(false)),
     cascade: Flag.Boolean("cascade").pipe(Flag.withDefault(false)),
-    also: Flag.String("also").pipe(Flag.withDefault(Str.empty)),
     rewritePackets: Flag.Boolean("rewrite-packets").pipe(Flag.withDefault(false)),
     allowStalePackets: Flag.Boolean("allow-stale-packets").pipe(Flag.withDefault(false)),
     allowPublished: Flag.Boolean("allow-published").pipe(Flag.withDefault(false)),
     pruneCatalog: Flag.Boolean("prune-catalog").pipe(Flag.withDefault(false)),
-    force: Flag.Boolean("force").pipe(Flag.withDefault(false)),
     dropData: Flag.Boolean("drop-data").pipe(Flag.withDefault(false)),
     allowNonLocalData: Flag.Boolean("allow-non-local-data").pipe(Flag.withDefault(false)),
+    acknowledge: Flag.String("acknowledge").pipe(Flag.optional),
   },
   handler
 ).pipe(Command.withDescription("Delete a leaf workspace package or doctor a deleted package for registration residue"));

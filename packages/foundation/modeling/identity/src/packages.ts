@@ -255,7 +255,14 @@ const generatedComposers = $I.compose(
   "execution-authority-config",
   "eyecite",
   "agent-memory-store",
-  "sqlite"
+  "sqlite",
+  "infra-turbo-cache",
+  "alchemy-github-runners",
+  "alchemy-aws-extras",
+  "alchemy-vercel",
+  "infra-cost-controls",
+  "infra-hosts",
+  "infra-github"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3806,3 +3813,124 @@ export const $AgentMemoryStoreId: Identity.IdentityComposer<"@beep/agent-memory-
  * @since 0.0.0
  */
 export const $SqliteId: Identity.IdentityComposer<"@beep/sqlite"> = composers.$SqliteId;
+
+/**
+ * Identity composer for `@beep/infra-turbo-cache`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $InfraTurboCacheId } from "@beep/identity/packages"
+ *
+ * const id = $InfraTurboCacheId.make("InfraTurboCache")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $InfraTurboCacheId: Identity.IdentityComposer<"@beep/infra-turbo-cache"> = composers.$InfraTurboCacheId;
+
+/**
+ * Identity composer for `@beep/alchemy-github-runners`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $AlchemyGithubRunnersId } from "@beep/identity/packages"
+ *
+ * const id = $AlchemyGithubRunnersId.make("AlchemyGithubRunners")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $AlchemyGithubRunnersId: Identity.IdentityComposer<"@beep/alchemy-github-runners"> =
+  composers.$AlchemyGithubRunnersId;
+
+/**
+ * Identity composer for `@beep/alchemy-aws-extras`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $AlchemyAwsExtrasId } from "@beep/identity/packages"
+ *
+ * const id = $AlchemyAwsExtrasId.make("AlchemyAwsExtras")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $AlchemyAwsExtrasId: Identity.IdentityComposer<"@beep/alchemy-aws-extras"> = composers.$AlchemyAwsExtrasId;
+
+/**
+ * Identity composer for `@beep/alchemy-vercel`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $AlchemyVercelId } from "@beep/identity/packages"
+ *
+ * const id = $AlchemyVercelId.make("AlchemyVercel")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $AlchemyVercelId: Identity.IdentityComposer<"@beep/alchemy-vercel"> = composers.$AlchemyVercelId;
+
+/**
+ * Identity composer for `@beep/infra-cost-controls`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $InfraCostControlsId } from "@beep/identity/packages"
+ *
+ * const id = $InfraCostControlsId.make("InfraCostControls")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $InfraCostControlsId: Identity.IdentityComposer<"@beep/infra-cost-controls"> =
+  composers.$InfraCostControlsId;
+
+/**
+ * Identity composer for `@beep/infra-hosts`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $InfraHostsId } from "@beep/identity/packages"
+ *
+ * const id = $InfraHostsId.make("InfraHosts")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $InfraHostsId: Identity.IdentityComposer<"@beep/infra-hosts"> = composers.$InfraHostsId;
+
+/**
+ * Identity composer for `@beep/infra-github`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $InfraGithubId } from "@beep/identity/packages"
+ *
+ * const id = $InfraGithubId.make("InfraGithub")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $InfraGithubId: Identity.IdentityComposer<"@beep/infra-github"> = composers.$InfraGithubId;

@@ -48,6 +48,7 @@ const seedBackupDirectory = Effect.fn("ToolchainPruneTest.seedBackupDirectory")(
   const path = yield* Path.Path;
   yield* fs.makeDirectory(directory, { recursive: true });
   yield* Effect.forEach(BACKUP_FIXTURE_FILES, (file) => fs.writeFileString(path.join(directory, file), file), {
+    concurrency: 1,
     discard: true,
   });
 });
@@ -57,11 +58,14 @@ const expectPrunedDirectory = Effect.fn("ToolchainPruneTest.expectPrunedDirector
   const path = yield* Path.Path;
   const removed = yield* Effect.forEach(
     ["tsc.original.1", "tsc.original.12", "tsc.original.7", "tsc.patched"],
-    (file) => fs.exists(path.join(directory, file))
+    (file) => fs.exists(path.join(directory, file)),
+    { concurrency: 1 }
   );
   expect(removed).toEqual([false, false, false, false]);
   const kept = ["tsc.original", "tsc.original.old", "tsc"];
-  const contents = yield* Effect.forEach(kept, (file) => fs.readFileString(path.join(directory, file)));
+  const contents = yield* Effect.forEach(kept, (file) => fs.readFileString(path.join(directory, file)), {
+    concurrency: 1,
+  });
   expect(contents).toEqual(kept);
 });
 
@@ -76,7 +80,7 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("beep toolchain prune-ts
         path.join(root, "node_modules", "@typescript", "typescript-linux-x64", "lib"),
         path.join(root, "node_modules", "@tsrs", "linux-x64"),
       ];
-      yield* Effect.forEach(directories, seedBackupDirectory, { discard: true });
+      yield* Effect.forEach(directories, seedBackupDirectory, { concurrency: 1, discard: true });
       // A 3 MiB rotation proves the reclaimed size is reported in rounded MB.
       yield* fs.writeFile(path.join(directories[0] ?? root, "tsc.original.7"), new Uint8Array(3 * 1024 * 1024));
       yield* pruneTsgoBackups(root);
@@ -86,7 +90,7 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("beep toolchain prune-ts
         A.filter((line) => P.isString(line) && Str.startsWith("[prune-tsgo-backups]")(line))
       );
       expect(reported).toEqual(["[prune-tsgo-backups] reclaimed ~3 MB of stale binary backups"]);
-      yield* Effect.forEach(directories, expectPrunedDirectory, { discard: true });
+      yield* Effect.forEach(directories, expectPrunedDirectory, { concurrency: 1, discard: true });
       const rerun = yield* runCli(root);
       expect(rerun).toEqual({
         exitCode: 0,

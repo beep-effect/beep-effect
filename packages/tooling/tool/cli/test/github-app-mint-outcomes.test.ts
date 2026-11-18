@@ -1,5 +1,10 @@
 import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
-import { GitHubAppMint, gitHubAppMintLayer, makeGitHubAppMintHandler } from "@beep/repo-cli/commands/Github";
+import {
+  GitHubAppMint,
+  GitHubAppVaultWriter,
+  gitHubAppMintLayer,
+  makeGitHubAppMintHandler,
+} from "@beep/repo-cli/commands/Github";
 import { gitHubAppManifestPath } from "@beep/repo-configs/PolicyData";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
@@ -55,7 +60,12 @@ const callback = Effect.fn("GitHubAppMintOutcomesTest.callback")(function* (
   client: HttpClient.HttpClient,
   spawner: ChildProcessSpawner.ChildProcessSpawner["Service"]
 ) {
-  const handler = yield* makeGitHubAppMintHandler({ app, nonce: "fixture-state", manifestJson: "{}" });
+  const handler = yield* makeGitHubAppMintHandler({
+    app,
+    nonce: "fixture-state",
+    manifestJson: "{}",
+    writer: GitHubAppVaultWriter.make({ command: "op", source: "op" }),
+  });
   const response = yield* handler.pipe(
     Effect.provideService(HttpServerRequest.HttpServerRequest, HttpServerRequest.fromWeb(new Request(CALLBACK))),
     Effect.provideService(HttpClient.HttpClient, client),
@@ -117,6 +127,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("github app mint callbac
     Effect.fnUntraced(function* () {
       const store = yield* scripted(17);
       // The vault write exits 17; op-doctor then dies instead of failing, which `Effect.ignore` passes on.
+      // Own double: decorates the scripted store, dying only on the `op-doctor` spawn (a defect, which
+      // `ScriptedSpawner` cannot script).
+      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
       const spawner = ChildProcessSpawner.make((command) =>
         ChildProcess.isStandardCommand(command) && command.command === "op-doctor"
           ? Effect.die("injected op-doctor defect")

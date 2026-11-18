@@ -594,7 +594,7 @@ const make = Effect.fnUntraced(function* (statusFields: StatusFields) {
   });
 
   const held = catchUp.pipe(
-    Effect.flatMap(() => Effect.forEach(openHolds(fold), conflictOf)),
+    Effect.flatMap(() => Effect.forEach(openHolds(fold), conflictOf, { concurrency: 1 })),
     Effect.mapError(failure("held", O.none())),
     Effect.withSpan("Admission.held")
   );

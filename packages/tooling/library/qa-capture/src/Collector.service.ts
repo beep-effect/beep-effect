@@ -407,7 +407,7 @@ const makeService = Effect.fnUntraced(function* () {
     const ingestBatch = Effect.fnUntraced(function* (payload: string) {
       const lines = pipe(payload, Str.split("\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
       const before = { accepted: yield* Ref.get(acceptedRef), rejected: yield* Ref.get(rejectedRef) };
-      yield* Effect.forEach(lines, ingestLine, { discard: true });
+      yield* Effect.forEach(lines, ingestLine, { concurrency: 1, discard: true });
       const accepted = (yield* Ref.get(acceptedRef)) - before.accepted;
       const rejected = (yield* Ref.get(rejectedRef)) - before.rejected;
       return EventsAccepted.make({ accepted, rejected });
@@ -429,7 +429,7 @@ const makeService = Effect.fnUntraced(function* () {
       group
         .handle("health", () =>
           Effect.map(
-            Effect.all({ eventsWritten: Ref.get(acceptedRef), rejected: Ref.get(rejectedRef) }),
+            Effect.all({ eventsWritten: Ref.get(acceptedRef), rejected: Ref.get(rejectedRef) }, { concurrency: 1 }),
             ({ eventsWritten, rejected }) =>
               CollectorHealth.make({
                 eventsWritten,

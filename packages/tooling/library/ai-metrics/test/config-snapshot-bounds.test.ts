@@ -104,7 +104,7 @@ const makeFixtureRepo = Effect.fn("configSnapshotBoundsTest.makeFixtureRepo")(fu
   yield* Effect.forEach(
     A.range(1, options?.nestedWorktreeFileCount ?? 50),
     (index) => writeText(pathApi.join(worktreeRoot, `pkg-${index}/AGENTS.md`), `nested ${index}\n`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   const vendorRoot = pathApi.join(repoRoot, "vendor/sub");
@@ -456,7 +456,7 @@ describe("@beep/repo-ai-metrics bounded config snapshots", () => {
         yield* Effect.forEach(
           A.range(1, 20),
           (index) => writeText(pathApi.join(repoRoot, `.claude/leftover/note-${index}.md`), `leftover ${index}\n`),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
 
         const result = yield* makeAiMetricsConfigSnapshot(

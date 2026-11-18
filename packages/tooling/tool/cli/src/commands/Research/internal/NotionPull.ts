@@ -366,16 +366,19 @@ export const readLinksFile = Effect.fn("NotionPull.readLinksFile")(function* (
   const inputs = yield* decodeSavedLinkInputsJson(content).pipe(
     ResearchCommandError.mapError(`Links file "${filePath}" failed schema validation.`)
   );
-  return yield* Effect.forEach(inputs, (input) =>
-    Effect.map(sha256HexOf(input.url), (pageId) =>
-      NotionSavedLink.make({
-        createdIso: input.createdIso ?? "",
-        pageId,
-        tags: input.tags ?? [],
-        title: Str.isEmpty(Str.trim(input.title)) ? input.url : Str.trim(input.title),
-        url: O.some(input.url),
-      })
-    )
+  return yield* Effect.forEach(
+    inputs,
+    (input) =>
+      Effect.map(sha256HexOf(input.url), (pageId) =>
+        NotionSavedLink.make({
+          createdIso: input.createdIso ?? "",
+          pageId,
+          tags: input.tags ?? [],
+          title: Str.isEmpty(Str.trim(input.title)) ? input.url : Str.trim(input.title),
+          url: O.some(input.url),
+        })
+      ),
+    { concurrency: 1 }
   );
 });
 

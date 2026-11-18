@@ -475,13 +475,16 @@ export const updateRootConfigsForTargets: {
   2,
   Effect.fn(function* (repoRoot, targets) {
     const normalizedTargets = normalizeTargets(targets);
-    const targetResults = yield* Effect.forEach(normalizedTargets, (target) =>
-      Effect.map(updateRootConfigsForTarget(repoRoot, target), (result) =>
-        ConfigUpdateTargetResult.make({
-          target,
-          result,
-        })
-      )
+    const targetResults = yield* Effect.forEach(
+      normalizedTargets,
+      (target) =>
+        Effect.map(updateRootConfigsForTarget(repoRoot, target), (result) =>
+          ConfigUpdateTargetResult.make({
+            target,
+            result,
+          })
+        ),
+      { concurrency: 1 }
     );
 
     return ConfigUpdateBatchResult.make({
@@ -523,13 +526,16 @@ export const checkConfigNeedsUpdateForTargets: {
   2,
   Effect.fn(function* (repoRoot, targets) {
     const normalizedTargets = normalizeTargets(targets);
-    const targetResults = yield* Effect.forEach(normalizedTargets, (target) =>
-      Effect.map(checkConfigNeedsUpdateForTarget(repoRoot, target), (result) =>
-        ConfigUpdateTargetResult.make({
-          target,
-          result,
-        })
-      )
+    const targetResults = yield* Effect.forEach(
+      normalizedTargets,
+      (target) =>
+        Effect.map(checkConfigNeedsUpdateForTarget(repoRoot, target), (result) =>
+          ConfigUpdateTargetResult.make({
+            target,
+            result,
+          })
+        ),
+      { concurrency: 1 }
     );
 
     return ConfigUpdateBatchResult.make({

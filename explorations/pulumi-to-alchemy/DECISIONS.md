@@ -114,11 +114,12 @@ client-facing site is unchanged. Storybook follows the same resources if it stay
 
 ### D4 — photo-face: port to TypeScript on onnxruntime-node
 
-**Question:** `packages/tooling/tool/cli/python/photo-face` backs `beep files match-person`
+**Question:** The former Python photo-face worker backs `beep files match-person`
 (InsightFace buffalo_l, AdaFace KPRPE) in a pinned Python 3.12 venv. Port, retire, or
 externalise?
 
-**Answer:** Port to Effect over `onnxruntime-node` and `sharp`, same ONNX model pins; detection,
+**Answer:** Port into `packages/tooling/tool/cli/src/commands/Files/internal/` as Effect code
+over `onnxruntime-node` and `sharp`, same ONNX model pins; detection,
 alignment, embedding, quality and scoring reimplemented and parity-tested against saved
 embeddings. The feature stays; the Python venv and its supply chain go.
 
@@ -151,7 +152,7 @@ the operator's `scratchpad/turbo-cache-r2` Effect-native Worker port?
 **Answer:** The scratchpad module is moved (not copied) into `@beep/infra-turbo-cache` and the
 scratchpad module is deleted once moved. The AWS Lambda cache, `infra/lambda/turbo-cache`,
 `infra/r2-cache` (patches, Python labs, shell wrappers, frozen Alchemy tool clone) and
-`infra/turbo-cache-lab` are deleted. CI and workstations re-enroll against the Worker URL and
+infra/turbo-cache-lab (removed in #3341) are deleted. CI and workstations re-enroll against the Worker URL and
 per-team tokens. Carried over as requirements: signed-policy semantics, the cache-input baseline
 review, and the throttle alarm's intent.
 

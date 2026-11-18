@@ -29,11 +29,11 @@ import {
   preflightCitationHtmlJob,
 } from "./HtmlWorkerProtocol.ts";
 import { CitationHtmlWorkerStartup, prepareCitationHtmlRpc } from "./HtmlWorkerRpc.ts";
-import { makeCitationMarkupWorker } from "./MarkupWorker.ts";
-import { CitationNativeProcessRuntime } from "./NativeProcess.ts";
+import { CitationMarkupWorkerSnapshot, makeCitationMarkupWorker } from "./MarkupWorker.ts";
+import { makeCitationStandaloneNativeStarter } from "./NativeLane.ts";
 import type { CitationCleanerWork } from "@beep/law-practice-use-cases/server";
+import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
-const CitationEngineLimitsType = S.toType(CitationEngineLimits);
 const NativeStorage = S.toType(CitationPythonUnicodeStorage);
 
 const $I = $LawPracticeServerId.create("internal/Citation/HtmlWorker");
@@ -78,12 +78,9 @@ const WorkerStartupJson = S.fromJsonString(CitationHtmlWorkerStartup).pipe(
  * @since 0.0.0
  */
 export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(function* (
-  policy: unknown,
-  runtimeInput: unknown
+  decodedLimits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime
 ) {
-  const decodedLimits = yield* S.decodeUnknownEffect(CitationEngineLimitsType)(policy).pipe(
-    Effect.mapError(invalidRuntime)
-  );
   const limits = CitationEngineLimits.make({
     ...decodedLimits,
     cleanDeadline: decodedLimits.cleanDeadline.pipe(Duration.toMillis, Duration.millis),
@@ -91,9 +88,6 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     queueDeadline: decodedLimits.queueDeadline.pipe(Duration.toMillis, Duration.millis),
     cleanupDeadline: decodedLimits.cleanupDeadline.pipe(Duration.toMillis, Duration.millis),
   });
-  const runtime = yield* S.decodeUnknownEffect(CitationNativeProcessRuntime)(runtimeInput).pipe(
-    Effect.mapError(invalidRuntime)
-  );
   const path = yield* Path.Path;
   const assetPath = yield* path
     .fromFileUrl(new URL("../../../assets/citation-html/kernel.wasm", import.meta.url))
@@ -102,6 +96,7 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
     CitationHtmlWorkerStartup.make({ maximum: limits.processMessageBytes, assetPath })
   ).pipe(Effect.mapError(invalidRuntime));
   const preparation = yield* makeCitationHtmlInput(limits);
+  const standalone = yield* makeCitationStandaloneNativeStarter(limits, "clean");
   const worker = yield* makeCitationMarkupWorker(limits, runtime, argument, "clean", failure);
   const validateSource = Effect.fnUntraced(function* (input: unknown, kind: "raw" | "text" | "bytes" | "unicode") {
     if (kind === "bytes") {
@@ -144,7 +139,8 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
           }),
           limits.processMessageBytes
         );
-      })
+      }),
+      standalone.start
     );
   });
 
@@ -161,8 +157,16 @@ export const makeCitationHtmlWorker = Effect.fn("Citation.makeHtmlWorker")(funct
         )
   );
   return {
-    snapshot: worker.snapshot,
-    reap: worker.reap,
+    snapshot: Effect.gen(function* () {
+      const local = yield* worker.snapshot;
+      const physical = yield* standalone.snapshot;
+      return CitationMarkupWorkerSnapshot.make({
+        ...local,
+        ...physical,
+        active: local.active,
+      });
+    }),
+    reap: () => standalone.reap().pipe(Effect.andThen(worker.reap())),
     clean: (input: unknown) => clean(input, limits.producedTextUtf16, "raw"),
     cleanBytes: (input: unknown) => clean(input, limits.producedTextUtf16, "bytes"),
     cleanUnicode: (input: unknown) => clean(input, limits.producedTextUtf16, "unicode"),

@@ -183,6 +183,7 @@ const checksRead = Effect.fn("Yeet.checksRead")(function* (
   SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
 > {
   // KEEP (D-13): `gh pr checks` gives the checks rollup with `bucket`, which no kit member does.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   const result = yield* runRepoCommandCapture(
     "gh",
     ["pr", "checks", ...(required ? ["--required"] : []), "--json", "name,state,bucket,link,workflow,description"],
@@ -287,6 +288,7 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
   | Digest.Digest
 > {
   // KEEP (D-13): `gh pr view` resolves the pull request from the checked-out branch.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
   const viewResult = yield* runRepoCommandCapture(
     "gh",
     [
@@ -307,7 +309,9 @@ export const collectYeetWatchSnapshot = Effect.fn("Yeet.collectYeetWatchSnapshot
     Effect.mapError(YeetCommandError.new("Failed to decode gh pr view JSON for yeet watch."))
   );
 
-  const [checkRows, requiredCheckRows] = yield* Effect.all([checksRead(context, false), checksRead(context, true)]);
+  const [checkRows, requiredCheckRows] = yield* Effect.all([checksRead(context, false), checksRead(context, true)], {
+    concurrency: 1,
+  });
 
   const threadStates = yield* reviewThreadStatesRead(view.id).pipe(provideYeetGhLogin(context.repoRoot));
 
@@ -653,7 +657,7 @@ const emitWatchCommentRows = Effect.fn("Yeet.emitWatchCommentRows")(function* (
   yield* Effect.forEach(
     A.filter(polled.success, isYeetMonitorThreadComment),
     flow(yeetWatchCommentEvent(at, snapshot.headSha), emitWatchEvent),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* acknowledgeYeetMonitorComments(context, snapshot.prNumber, session.watermarkRef, polled.success);
   return A.length(polled.success);
@@ -725,7 +729,7 @@ const advanceYeetWatchTick = Effect.fn("Yeet.advanceYeetWatchTick")(function* (
   const next = yield* settle(polled.value);
   const observedAt = yield* isoNow;
   const events = diffYeetWatchSnapshots(YeetWatchDiffInput.make({ at: observedAt, next, prev }));
-  yield* Effect.forEach(events, emitWatchEvent, { discard: true });
+  yield* Effect.forEach(events, emitWatchEvent, { concurrency: 1, discard: true });
   const headChanged = next.headSha !== prev.headSha;
   if (headChanged) {
     yield* supersedeYeetDispatchState(context.repoRoot, next.headSha, next.prNumber, observedAt);

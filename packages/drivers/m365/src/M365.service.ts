@@ -2873,14 +2873,17 @@ const uploadAttachmentInChunks = Effect.fnUntraced(function* (
   // The upload URL carries the session token in its query, and the HTTP client's own span
   // records `url.full` and `url.query`, so client tracing is off for the chunk requests.
   // The enclosing driver span still records the size and the chunk count.
-  const responses = yield* Effect.forEach(chunks, (chunk) =>
-    executeWithRetry(
-      runtime.client,
-      unsignedChunkPut(session.uploadUrl, chunk),
-      UPLOAD_CHUNK_RESOURCE,
-      sessionUrl,
-      runtime.config.maxRetries
-    )
+  const responses = yield* Effect.forEach(
+    chunks,
+    (chunk) =>
+      executeWithRetry(
+        runtime.client,
+        unsignedChunkPut(session.uploadUrl, chunk),
+        UPLOAD_CHUNK_RESOURCE,
+        sessionUrl,
+        runtime.config.maxRetries
+      ),
+    { concurrency: 1 }
   ).pipe(Effect.provideService(HttpClient.TracerDisabledWhen, constTrue));
   const id = yield* pipe(
     A.last(responses),
@@ -3260,10 +3263,13 @@ const makeService = (runtime: M365Runtime): M365Shape => ({
     );
     const isPresent = (category: M365MasterCategoryDraft): boolean =>
       HashSet.has(presentNames, normalizeCategoryName(category.displayName));
-    const attempts = yield* Effect.forEach(A.filter(request.categories, P.not(isPresent)), (category) =>
-      createMasterCategoryUnlessPresent(runtime, request.userId, category).pipe(
-        Effect.map((created) => ({ created, displayName: category.displayName }))
-      )
+    const attempts = yield* Effect.forEach(
+      A.filter(request.categories, P.not(isPresent)),
+      (category) =>
+        createMasterCategoryUnlessPresent(runtime, request.userId, category).pipe(
+          Effect.map((created) => ({ created, displayName: category.displayName }))
+        ),
+      { concurrency: 1 }
     );
     const created = A.getSomes(A.map(attempts, (attempt) => attempt.created));
     yield* Effect.annotateCurrentSpan({ m365_created_count: A.length(created) });

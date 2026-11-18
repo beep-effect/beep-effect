@@ -57,7 +57,7 @@ type Output = Queue.Queue<string>;
 
 // One stdin chunk holding every message, so the client must frame a batch.
 const sendAll = (input: Input, messages: ReadonlyArray<unknown>) =>
-  Effect.forEach(messages, (message) => encodeUnknownJsonText(message)).pipe(
+  Effect.forEach(messages, (message) => encodeUnknownJsonText(message), { concurrency: 1 }).pipe(
     Effect.map((lines) =>
       encoder.encode(
         A.join(
@@ -415,7 +415,7 @@ it.effect(
       request("permission-a", "session/request_permission", toolCallPermission),
       request("permission-b", "session/request_permission", toolCallPermission),
     ]);
-    const responses = yield* Effect.all([takeResponse(output), takeResponse(output)]);
+    const responses = yield* Effect.all([takeResponse(output), takeResponse(output)], { concurrency: 1 });
     assert.sameMembers(
       A.map(responses, ({ id }) => id),
       ["permission-a", "permission-b"]

@@ -945,7 +945,9 @@ export const registerLibraryBoxSources = Effect.fn("Library.registerBoxSources")
     "application/json",
     "box-listing"
   );
-  const sources = yield* Effect.forEach(unique, (file) => libraryBoxSource(file, options.accessClass));
+  const sources = yield* Effect.forEach(unique, (file) => libraryBoxSource(file, options.accessClass), {
+    concurrency: 1,
+  });
   yield* withCatalog(root, (catalog) =>
     Effect.succeed(
       LibraryCatalog.make({

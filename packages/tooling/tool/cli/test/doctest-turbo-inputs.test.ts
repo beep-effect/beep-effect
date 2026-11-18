@@ -115,7 +115,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("doctest Turbo inputs", (it) 
       ];
       yield* Effect.forEach(
         A.filter([...inputs, ...unrelated], (file) => file !== "packages/consumer/package.json"),
-        (file) => writeFile(root, file, "{}\n")
+        (file) => writeFile(root, file, "{}\n"),
+        { concurrency: 1 }
       );
       const hash = Effect.fnUntraced(function* (flag = "1") {
         const run = yield* StepExec.runCaptured({
@@ -195,7 +196,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("test and docgen Turbo cache 
         "vitest.setup.ts",
         "vitest.aliases.generated.json",
       ];
-      yield* Effect.forEach(files, (file) => writeFile(root, file, "{}\n"));
+      yield* Effect.forEach(files, (file) => writeFile(root, file, "{}\n"), { concurrency: 1 });
       const hashes = Effect.fnUntraced(function* (regeneration = "0") {
         const run = yield* StepExec.runCaptured({
           command: path.join(repoRoot, "node_modules/.bin/turbo"),

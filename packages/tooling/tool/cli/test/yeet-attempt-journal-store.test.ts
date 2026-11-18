@@ -10,6 +10,7 @@ import {
 } from "@beep/repo-cli/commands/Worktree";
 import { UUID } from "@beep/repo-cli/test/SharedInternals";
 import {
+  layerResidueDrainProbeTest,
   layerResidueTerminalLaneProbeTest,
   ResidueTerminalLaneAuthority,
   ResidueTerminalLaneProbe,
@@ -112,7 +113,7 @@ const appendJournal = Effect.fnUntraced(function* (
   const path = yield* Path.Path;
   const directory = path.join(checkout, ".beep", "yeet", "runs", runId);
   yield* fs.makeDirectory(directory, { recursive: true });
-  const lines = yield* Effect.forEach(events, (event) => encodeEvent(event));
+  const lines = yield* Effect.forEach(events, (event) => encodeEvent(event), { concurrency: 1 });
   yield* fs.writeFileString(path.join(directory, "attempts.ndjson"), `${A.join(lines, "\n")}\n`, { flag: "a" });
 });
 
@@ -328,6 +329,11 @@ const TestLayer = Layer.provideMerge(
     AttemptJournalStore.layer,
     YeetEconomicsSource.layer,
     layerResidueTerminalLaneProbeTest(() => Effect.succeedNone),
+    layerResidueDrainProbeTest({
+      facts: () => Effect.succeedNone,
+      livenessReadings: () => Effect.die("attempt-journal tests read no drain liveness"),
+      updateRegistry: () => Effect.succeedNone,
+    }),
     TestConsole.layer
   ),
   NodeCommandTestLayer
@@ -527,8 +533,15 @@ describe("attempt journal store", () => {
             [linked, "skip", "census-failed"],
           ]);
           deepStrictEqual(
-            A.map(reaped.candidates, (candidate) => candidate.embeddedCheckouts),
-            [[codexLane], undefined]
+            // Directory listings have no stable order; keep each census attached to its path.
+            A.sort(
+              A.map(reaped.candidates, (candidate) => [candidate.path, candidate.embeddedCheckouts] as const),
+              Order.mapInput(Order.String, (row: readonly [string, ReadonlyArray<string> | undefined]) => row[0])
+            ),
+            [
+              [container, [codexLane]],
+              [linked, undefined],
+            ]
           );
           const containerGone = yield* fs.exists(container);
           assertTrue(!containerGone);

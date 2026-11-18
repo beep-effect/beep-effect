@@ -80,11 +80,14 @@ const program = Effect.gen(function* () {
   for (const file of implementation.files) {
     yield* verifiedText(file.path, file.sha256);
   }
-  const inputs = yield* Effect.forEach(manifest.sets, (row) =>
-    verifiedText(
-      `packages/law-practice/domain/test/fixtures/claim-element/allowed/${row.patentNumber}.claims.xml`,
-      row.claimsXmlSha256
-    ).pipe(Effect.map((xml) => ({ row, xml })))
+  const inputs = yield* Effect.forEach(
+    manifest.sets,
+    (row) =>
+      verifiedText(
+        `packages/law-practice/domain/test/fixtures/claim-element/allowed/${row.patentNumber}.claims.xml`,
+        row.claimsXmlSha256
+      ).pipe(Effect.map((xml) => ({ row, xml }))),
+    { concurrency: 1 }
   );
   if (yield* fs.exists(output)) {
     return yield* StructuralEvaluationError.make({

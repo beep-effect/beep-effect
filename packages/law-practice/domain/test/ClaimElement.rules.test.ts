@@ -88,7 +88,7 @@ describe("ClaimElement rules", () => {
                   body,
                 })
         );
-        const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+        const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
         const findings = antecedentPolicy(trees, claims);
         assert.isTrue(A.isReadonlyArrayNonEmpty(findings));
         assert.isTrue(A.every(findings, ({ rule }) => rule !== "chain-work-limit"));
@@ -231,7 +231,7 @@ describe("ClaimElement rules", () => {
           body,
         })
       );
-      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
       for (const tree of trees) assert.deepStrictEqual(antecedentPolicy([tree], claims), []);
       const findings = antecedentPolicy(trees, claims);
       assert.isTrue(A.isReadonlyArrayNonEmpty(findings));
@@ -308,7 +308,7 @@ describe("ClaimElement rules", () => {
           body: referringBody,
         })
       );
-      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
       const findings = antecedentPolicy(trees, claims);
       const outside = A.filter(findings, (finding) => finding.kind === "antecedent-outside-chain");
       assert.isTrue(A.isReadonlyArrayNonEmpty(outside));
@@ -327,79 +327,82 @@ describe("ClaimElement rules", () => {
   for (const fixture of ruleFixtures) {
     it.effect(`fixture ${fixture.id}: ${fixture.rule}`, () =>
       Effect.gen(function* () {
-        const trees = yield* Effect.forEach(fixture.trees, (expected) =>
-          Effect.gen(function* () {
-            const claim = O.getOrThrow(
-              A.findFirst(fixture.context, ({ claimNumber }) => claimNumber === expected.claimNumber)
-            );
-            const actual = yield* decomposeClaim(claim, fixture.context);
-            assert.isTrue(S.is(ClaimElementTree)(expected));
-            // Preserve exact legacy assertions on their original surface. New functional
-            // classifications, bare mentions and ancestor edges have separate exact tests.
-            const localTerms = A.flatMap(actual.elements, (element) =>
-              A.map(element.terms, (term) => ({ path: element.path, term }))
-            );
-            const legacy = yield* S.decodeEffect(ClaimElementTree)({
-              ...actual,
-              elements: A.map(actual.elements, (element) => {
-                const prior = A.findFirst(expected.elements, (candidate) => candidate.path === element.path);
-                return {
-                  ...element,
-                  kind:
-                    element.kind === "functional-relation"
-                      ? O.match(prior, { onNone: () => element.kind, onSome: (value) => value.kind })
-                      : element.kind,
-                  terms: A.filter(
-                    element.terms,
-                    (term) =>
-                      term.determiner !== "bare" ||
-                      O.exists(prior, (value) =>
-                        A.some(
-                          value.terms,
-                          (candidate) =>
-                            candidate.anchor.startChar === term.anchor.startChar && candidate.determiner === "bare"
-                        )
-                      )
-                  ),
-                };
-              }),
-              edges: A.filter(
-                actual.edges,
-                (edge) =>
-                  edge.kind !== "functional" &&
-                  (edge.kind !== "depends-on-element" || edge.dependent === `${actual.claimNumber}`) &&
-                  (edge.kind !== "antecedent" ||
-                    (claimNumberOfPath(edge.introducing.path) === actual.claimNumber &&
-                      A.some(
-                        localTerms,
-                        (referring) =>
-                          referring.path === edge.referring.path &&
-                          referring.term.anchor.startChar === edge.referring.anchor.startChar &&
-                          A.some(
-                            localTerms,
-                            (introducing) =>
-                              introducing.path === edge.introducing.path &&
-                              introducing.term.anchor.startChar === edge.introducing.anchor.startChar &&
-                              introducing.term.head === referring.term.head
-                          )
-                      )))
-              ),
-            });
-            assert.deepStrictEqual(legacy, expected);
-            assert.isTrue(Equal.equals(legacy, expected));
-            for (const element of actual.elements) {
-              assert.strictEqual(
-                Str.slice(element.anchor.startChar, element.anchor.endChar)(claim.claimText),
-                element.anchor.quote
+        const trees = yield* Effect.forEach(
+          fixture.trees,
+          (expected) =>
+            Effect.gen(function* () {
+              const claim = O.getOrThrow(
+                A.findFirst(fixture.context, ({ claimNumber }) => claimNumber === expected.claimNumber)
               );
-              for (const term of element.terms)
+              const actual = yield* decomposeClaim(claim, fixture.context);
+              assert.isTrue(S.is(ClaimElementTree)(expected));
+              // Preserve exact legacy assertions on their original surface. New functional
+              // classifications, bare mentions and ancestor edges have separate exact tests.
+              const localTerms = A.flatMap(actual.elements, (element) =>
+                A.map(element.terms, (term) => ({ path: element.path, term }))
+              );
+              const legacy = yield* S.decodeEffect(ClaimElementTree)({
+                ...actual,
+                elements: A.map(actual.elements, (element) => {
+                  const prior = A.findFirst(expected.elements, (candidate) => candidate.path === element.path);
+                  return {
+                    ...element,
+                    kind:
+                      element.kind === "functional-relation"
+                        ? O.match(prior, { onNone: () => element.kind, onSome: (value) => value.kind })
+                        : element.kind,
+                    terms: A.filter(
+                      element.terms,
+                      (term) =>
+                        term.determiner !== "bare" ||
+                        O.exists(prior, (value) =>
+                          A.some(
+                            value.terms,
+                            (candidate) =>
+                              candidate.anchor.startChar === term.anchor.startChar && candidate.determiner === "bare"
+                          )
+                        )
+                    ),
+                  };
+                }),
+                edges: A.filter(
+                  actual.edges,
+                  (edge) =>
+                    edge.kind !== "functional" &&
+                    (edge.kind !== "depends-on-element" || edge.dependent === `${actual.claimNumber}`) &&
+                    (edge.kind !== "antecedent" ||
+                      (claimNumberOfPath(edge.introducing.path) === actual.claimNumber &&
+                        A.some(
+                          localTerms,
+                          (referring) =>
+                            referring.path === edge.referring.path &&
+                            referring.term.anchor.startChar === edge.referring.anchor.startChar &&
+                            A.some(
+                              localTerms,
+                              (introducing) =>
+                                introducing.path === edge.introducing.path &&
+                                introducing.term.anchor.startChar === edge.introducing.anchor.startChar &&
+                                introducing.term.head === referring.term.head
+                            )
+                        )))
+                ),
+              });
+              assert.deepStrictEqual(legacy, expected);
+              assert.isTrue(Equal.equals(legacy, expected));
+              for (const element of actual.elements) {
                 assert.strictEqual(
-                  Str.slice(term.anchor.startChar, term.anchor.endChar)(claim.claimText),
-                  term.anchor.quote
+                  Str.slice(element.anchor.startChar, element.anchor.endChar)(claim.claimText),
+                  element.anchor.quote
                 );
-            }
-            return actual;
-          })
+                for (const term of element.terms)
+                  assert.strictEqual(
+                    Str.slice(term.anchor.startChar, term.anchor.endChar)(claim.claimText),
+                    term.anchor.quote
+                  );
+              }
+              return actual;
+            }),
+          { concurrency: 1 }
         );
         assert.deepStrictEqual(antecedentPolicy(trees, fixture.claims), fixture.findings);
       })

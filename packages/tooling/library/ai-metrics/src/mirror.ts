@@ -858,12 +858,15 @@ const privacyProofFor = Effect.fnUntraced(function* (
   additionalForbiddenTokens: ReadonlyArray<ForbiddenTokenCheck> = A.empty<ForbiddenTokenCheck>()
 ): Effect.fn.Return<AiMetricsMirrorPrivacyProof, S.SchemaError> {
   const checkedTokens = [...forbiddenFieldTokens, ...additionalForbiddenTokens];
-  const checked = yield* Effect.forEach(checkedTokens, (token) =>
-    token.matchMode === "json-string"
-      ? aiMetricsMirrorPayloadContainsJsonStringPrefix(payload, token.value).pipe(
-          Effect.map((matches) => ({ label: token.label, matches }))
-        )
-      : Effect.succeed({ label: token.label, matches: Str.includes(token.value)(payload) })
+  const checked = yield* Effect.forEach(
+    checkedTokens,
+    (token) =>
+      token.matchMode === "json-string"
+        ? aiMetricsMirrorPayloadContainsJsonStringPrefix(payload, token.value).pipe(
+            Effect.map((matches) => ({ label: token.label, matches }))
+          )
+        : Effect.succeed({ label: token.label, matches: Str.includes(token.value)(payload) }),
+    { concurrency: 1 }
   );
   const forbiddenMatches = pipe(
     checked,
@@ -907,7 +910,8 @@ const buildMirrorTables = Effect.fn("AiMetrics.buildMirrorTables")(function* ({
         rowCount: count,
         tableName: projection.targetTable,
       });
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 

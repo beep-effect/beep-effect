@@ -25,7 +25,9 @@ const sameDocgenPackagePath: Equivalence.Equivalence<DocgenWorkspacePackage> = E
 );
 
 const resolveSelectedDocgenPackages = (selectors: A.NonEmptyReadonlyArray<string>) =>
-  Effect.forEach(selectors, resolveDocgenWorkspacePackage()).pipe(Effect.map(A.dedupeWith(sameDocgenPackagePath)));
+  Effect.forEach(selectors, resolveDocgenWorkspacePackage(), { concurrency: 1 }).pipe(
+    Effect.map(A.dedupeWith(sameDocgenPackagePath))
+  );
 
 /**
  * Resolve generation targets from the CLI package selectors.

@@ -222,11 +222,10 @@ describe("@beep/law-practice-server NoticeMailbox", () => {
           const noCalls4 = yield* noCalls();
           const mailbox = yield* argument2(mailboxLayer(dataDirectory, noCalls4));
 
-          const claims = yield* Effect.all([
-            mailbox.claimDay(day(14)),
-            mailbox.claimDay(day(14)),
-            mailbox.claimDay(day(15)),
-          ]);
+          const claims = yield* Effect.all(
+            [mailbox.claimDay(day(14)), mailbox.claimDay(day(14)), mailbox.claimDay(day(15))],
+            { concurrency: 1 }
+          );
           const files = yield* (yield* FileSystem.FileSystem).readDirectory(path.join(dataDirectory, "notice-sent"));
 
           expect(claims).toStrictEqual([true, false, true]);

@@ -360,6 +360,9 @@ const runGitStructured = <E>(
   capture: Omit<RunCapturedStreamsOptions, "command" | "args">
 ): Effect.Effect<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> => {
   const commandLine = formatCommandLine("git", args);
+  // owner: owner: GitExec's generic argv runners are repo-cli's bounded child-process owner for arbitrary git
+  // argv (module header).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: owner, reason above
   return runCapturedStreams({ command: "git", args, ...capture }).pipe(
     Effect.mapError(adapter.onSpawnFailure(commandLine)),
     Effect.flatMap((captured) =>
@@ -443,6 +446,9 @@ export const runGitFoldedStdout = Effect.fn("GitExec.runGitFoldedStdout")(functi
   fold: RunFoldedStdoutOptions["fold"]
 ): Effect.fn.Return<string, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
   const commandLine = formatCommandLine("git", args);
+  // owner: owner: GitExec's generic argv runners are repo-cli's bounded child-process owner for arbitrary git
+  // argv (module header).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: owner, reason above
   const folded = yield* runFoldedStdout({ command: "git", args, cwd, extendEnv: true, stdin: "ignore", fold }).pipe(
     Effect.mapError(adapter.onSpawnFailure(commandLine))
   );
@@ -600,6 +606,8 @@ export const writeGitArchive = Effect.fn("GitExec.writeGitArchive")(function* <E
   archivePath: string,
   adapter: GitCommandErrorAdapter<E>
 ): Effect.fn.Return<void, E, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+  // KEEP (D-21, X3): the canonical archive needs `-c` config and a per-call environment the kit
+  // cannot pass, and it writes bytes to `--output` rather than returning text.
   yield* runGitStructured(gitArchiveArgs(archivePath, commit), adapter, {
     cwd,
     stdin: "ignore",

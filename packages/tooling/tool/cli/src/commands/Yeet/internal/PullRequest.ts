@@ -65,9 +65,6 @@ const $I = $RepoCliId.create("commands/Yeet/internal/PullRequest");
 // The stack layer a publish runs as: the parent's branch and head it builds on.
 type YeetStackLayerTarget = typeof YeetStackPublishDecision.cases.Layer.Type;
 
-// KEEP (W6): `gh pr view` of the checked-out branch resolves the pull request
-// from the branch itself, which no kit member does; it stays the fallback for a
-// REST lookup that failed.
 const ghPullRequestViewArgs = ["pr", "view", "--json", "number,headRefName,state,url,title"] as const;
 const ghPullRequestViewCommand = "gh pr view --json number,headRefName,state,url,title";
 const decodeGhPullRequestView = S.decodeUnknownEffect(S.fromJsonString(GhPrView));
@@ -89,6 +86,9 @@ const confirmedMissingPullRequest = (
     Str.trim(failure.output)
   );
 const ghPullRequestViewOutput = (context: RepoRunContext) =>
+  // KEEP (W6): `gh pr view` of the checked-out branch resolves the pull request from the branch itself, which
+  // no kit member does; it stays the fallback for a REST lookup that failed.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (W6), reason above
   ghOutput({
     args: ghPullRequestViewArgs,
     cwd: context.repoRoot,

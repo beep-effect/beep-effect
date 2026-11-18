@@ -4,13 +4,13 @@
     "id": "github-budget-ledger",
     "packetId": "goal-packet/v1:480366fa6c6d68b8790aeeded50d22592f2c12098c96e75ba471335b4008a23b",
     "title": "GitHub Budget Ledger",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-09",
-    "updated": "2026-11-10",
+    "updated": "2026-11-13",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/github-budget-ledger",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Record the cost of every GitHub request per identity, resource, command and host in a host-scoped ledger fed by x-ratelimit-* headers and the free /rate_limit, show it as a github-headroom parcel in session open, and publish the 15% reserve signal and the T3 share threshold that later goals obey.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's work ships as a PR driven to mergeable via /yeet (bun run beep yeet: repair -> verify -> publish --pr -> monitor).",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3300,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -59,22 +65,22 @@
     {
       "id": "P1",
       "name": "Implement",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -89,5 +95,10 @@
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
   ],
-  "statusNote": "P0 complete 2026-11-10: the design (research/2026-11-10-design.md) resolves SPEC ambiguities A1-A20, one decision file each. P1 in progress: driver observations, the host ledger, the /rate_limit sampler, gh spawn attribution, the ledger-first GraphqlBudget and the github-headroom session-open parcel are implemented on the lane; goals 2 and 3 wait on its ledger and reserve signal."
+  "statusNote": "P0 complete 2026-11-10: the design (research/2026-11-10-design.md) resolves SPEC ambiguities A1-A20, one decision file each. P1 in progress: driver observations, the host ledger, the /rate_limit sampler, gh spawn attribution, the ledger-first GraphqlBudget and the github-headroom session-open parcel are implemented on the lane; goals 2 and 3 wait on its ledger and reserve signal.",
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3300
+  },
+  "retentionReason": "Documents a live system and a live gate: the host GitHub budget ledger, sampler timer, reserve signal and github-headroom parcel that github-state-worker and yeet-monitor-app-identity build on, the 24 h baseline that is their before-number, and the T3 share threshold those goals re-measure."
 }

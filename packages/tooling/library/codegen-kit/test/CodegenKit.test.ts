@@ -485,6 +485,52 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
     })
   );
 
+  it.effect(
+    "renders optional array and record fields of schema modules in pipeable form",
+    Effect.fnUntraced(function* () {
+      const kit = yield* CodegenKit;
+      const document: S.Json = {
+        $defs: {
+          Item: {
+            type: "object",
+            additionalProperties: false,
+            required: ["id"],
+            properties: { id: { type: "string" } },
+          },
+          Holder: {
+            type: "object",
+            additionalProperties: false,
+            properties: {
+              items: { type: "array", items: { $ref: "#/$defs/Item" } },
+              labels: { type: "object", additionalProperties: { type: "string" } },
+            },
+          },
+        },
+      };
+      const structConfig = config("pipeable.gen.ts");
+      const classConfig = GenerateConfig.make({
+        packageName: "@beep/codegen-kit-fixture",
+        identity: { composer: "$CodegenKitId", moduleId: "fixture/pipeable-classes.gen" },
+        source: { _tag: "file", path: "fixture.json" },
+        dialect: "json-schema-2020-12",
+        format: "schemas",
+        schemaStyle: "class",
+        output: { path: "pipeable-classes.gen.ts" },
+      });
+      const raw = yield* kit.generate(document, structConfig);
+      const structOutput = yield* kit.postProcess(raw, structConfig);
+      const classOutput = yield* kit.postProcess(raw, classConfig);
+
+      expect(raw).toContain("Schema.optionalKey(Schema.Array(Item))");
+      for (const output of [structOutput, classOutput]) {
+        expect(output).toContain("S.Array(Item).pipe(S.optionalKey)");
+        expect(output).toContain("S.Record(S.String, S.String).pipe(S.optionalKey)");
+        expect(output).not.toContain("S.optionalKey(S.Array(");
+        expect(output).not.toContain("S.optionalKey(S.Record(");
+      }
+    })
+  );
+
   it.effect("documents runtime HTTP exports and removes unused imports", () =>
     Effect.gen(function* () {
       const kit = yield* CodegenKit;
@@ -1710,22 +1756,25 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit ACP 
       const kit = yield* CodegenKit;
       const formats: ReadonlyArray<GenerateConfig["format"]> = ["httpclient", "httpapi", "type-only"];
       yield* Effect.logInfo("Codegen stage: generate");
-      const failures = yield* Effect.forEach(formats, (format) =>
-        kit
-          .generate(
-            closedOpenApi,
-            GenerateConfig.make({
-              packageName: "@beep/codegen-kit-fixture",
-              name: "ClosedApi",
-              identity: { composer: "$CodegenKitId", moduleId: "fixture/ClosedApi.gen" },
-              source: { _tag: "file", path: "closed.json" },
-              dialect: "openapi-3.1",
-              transforms: ["unevaluatedPropertiesOpen"],
-              format,
-              output: { path: "ClosedApi.gen.ts" },
-            })
-          )
-          .pipe(Effect.flip)
+      const failures = yield* Effect.forEach(
+        formats,
+        (format) =>
+          kit
+            .generate(
+              closedOpenApi,
+              GenerateConfig.make({
+                packageName: "@beep/codegen-kit-fixture",
+                name: "ClosedApi",
+                identity: { composer: "$CodegenKitId", moduleId: "fixture/ClosedApi.gen" },
+                source: { _tag: "file", path: "closed.json" },
+                dialect: "openapi-3.1",
+                transforms: ["unevaluatedPropertiesOpen"],
+                format,
+                output: { path: "ClosedApi.gen.ts" },
+              })
+            )
+            .pipe(Effect.flip),
+        { concurrency: 1 }
       );
 
       expect(A.map(failures, (failure) => failure._tag)).toEqual([

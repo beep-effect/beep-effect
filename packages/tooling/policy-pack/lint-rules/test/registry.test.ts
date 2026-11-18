@@ -125,7 +125,7 @@ describe("rule registry", () => {
           severity: "error",
           replaces: null,
           summary:
-            "Require explicit citation authority; reject optional serviceOption/getOption/getOrUndefined lookups. Local aliases and aliased named imports require semantic linting.",
+            "Require explicit citation authority; reject optional serviceOption/getOption/getOrUndefined and captured-context get/getUnsafe/getOrElse lookups of CitationTextBudget, CitationOperationAdmission and CitationInvocation. Not caught (syntactic rule): local aliases and aliased named imports, raw context map access, a picked or omitted Context passed along, and any Scope.Scope capture.",
           scope: "packages/law-practice/server/src/internal/Citation/**",
         },
         "no-file-url-pathname": {
@@ -194,6 +194,22 @@ describe("rule registry", () => {
           summary:
             "Disallow hand-rolled JSON object text (braces around a join of members) outside `@beep/jsonc`; canonical bytes come from `JsoncFingerprint.canonicalizeResult`.",
           scope: "**/src/** except packages/foundation/modeling/jsonc/**",
+        },
+        "no-hand-rolled-git-gh-spawn": {
+          name: "no-hand-rolled-git-gh-spawn",
+          severity: "error",
+          replaces: null,
+          summary:
+            "Disallow hand-rolled git and gh spawns in repo-cli and ai-metrics source; use `@beep/git`, `@beep/github` or `@beep/commands`, or keep the spawn with a recorded `KEEP (D-nn)` biome-ignore.",
+          scope: "packages/tooling/tool/cli/src/**, packages/tooling/library/ai-metrics/src/**",
+        },
+        "no-unrecorded-spawner-double": {
+          name: "no-unrecorded-spawner-double",
+          severity: "error",
+          replaces: null,
+          summary:
+            "Disallow hand-rolled `ChildProcessSpawner.make(...)` test doubles in repo-cli and ai-metrics tests; use `ScriptedSpawner`, or keep the double with a recorded `Own double` biome-ignore. Never-spawn `Effect.die` guards are exempt.",
+          scope: "packages/tooling/tool/cli/test/**, packages/tooling/library/ai-metrics/test/**",
         },
       });
     })

@@ -327,10 +327,13 @@ export const previewCacheProducerImport = Effect.fn("Producer.previewImport")(fu
   const stable = yield* openCacheProducerVerifier(trust.stable);
   const canary = yield* openCacheProducerVerifier(trust.canary);
   const verifiers = { stable, canary };
-  const approvals = yield* Effect.all({
-    stable: stable.verify(request.observations.stable.envelope, request.observations.stable.observation),
-    canary: canary.verify(request.observations.canary.envelope, request.observations.canary.observation),
-  });
+  const approvals = yield* Effect.all(
+    {
+      stable: stable.verify(request.observations.stable.envelope, request.observations.stable.observation),
+      canary: canary.verify(request.observations.canary.envelope, request.observations.canary.observation),
+    },
+    { concurrency: 1 }
+  );
   const contract = approvals.stable.contract;
   if (!S.toEquivalence(CacheTaskContract)(contract, approvals.canary.contract)) {
     return yield* CacheCommandError.new("Channel approvals do not describe the same reviewed task contract.");

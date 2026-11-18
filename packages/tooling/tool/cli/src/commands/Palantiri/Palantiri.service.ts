@@ -54,7 +54,8 @@ import * as Str from "effect/String";
 import { bucketKeyString, ReserveState, reserveFloor } from "../../internal/github/GithubLedger.schemas.ts";
 import { GithubBudgetLedger, layerGithubBudgetLedgerLive } from "../../internal/github/GithubLedger.service.ts";
 import { ComputeProfileProbe } from "../../internal/repo-run/ComputeProfile.ts";
-import { admissionStatus, MemoryStats } from "../../internal/repo-run/QualityScheduler.ts";
+import { QualityScheduler } from "../../internal/repo-run/QualityScheduler.service.ts";
+import { MemoryStats } from "../../internal/repo-run/QualityScheduler.ts";
 import { writePrivateFile } from "../../internal/state/PrivateFile.ts";
 import { resolveWorkstationStateDir } from "../../internal/state/WorkstationState.ts";
 import {
@@ -728,8 +729,8 @@ export const layerLaneRedsSourceLive = Layer.effect(
 
 /**
  * Machine-wide admission occupancy from the same snapshot
- * `beep quality status` prints, or `None` when the admission state cannot be
- * read.
+ * `beep quality status` prints, read through the `QualityScheduler` service,
+ * or `None` when the admission state cannot be read.
  *
  * **Example** (Build the reading effect)
  *
@@ -743,7 +744,7 @@ export const layerLaneRedsSourceLive = Layer.effect(
  * @category constructors
  * @since 0.0.0
  */
-export const liveAdmissionSlots = admissionStatus().pipe(
+export const liveAdmissionSlots = QualityScheduler.use((scheduler) => scheduler.observe()).pipe(
   Effect.map((snapshot) =>
     AdmissionSlotsInput.make({
       capacityTokens: snapshot.capacityTokens,
@@ -808,11 +809,14 @@ export const makeHostPressureSource = Effect.fnUntraced(function* <R>(readers: H
         detail: "no /proc/pressure on this host (non-Linux, container, vendor cloud VM, or a kernel without PSI)",
       });
     }
-    const files = yield* Effect.forEach(PressureResource.literals, (resource) =>
-      fs.readFileString(path.join(pressureDir, resource)).pipe(
-        Effect.map((text) => PressureFile.make({ resource, text })),
-        Effect.option
-      )
+    const files = yield* Effect.forEach(
+      PressureResource.literals,
+      (resource) =>
+        fs.readFileString(path.join(pressureDir, resource)).pipe(
+          Effect.map((text) => PressureFile.make({ resource, text })),
+          Effect.option
+        ),
+      { concurrency: 1 }
     );
     return PressureSourceInput.cases.Read.make({ files: A.getSomes(files) });
   });
@@ -1092,12 +1096,15 @@ export const makeGithubHeadroomSource = Effect.gen(function* () {
   const snapshot = Effect.gen(function* () {
     const signals = yield* ledger.reserves;
     const summary = yield* ledger.summary;
-    const readings = yield* Effect.forEach(signals, (signal) =>
-      // The reading the verdict rests on, so a bucket's numbers and its reserve agree.
-      Effect.map(
-        ledger.latestUsable(signal.key),
-        O.map((reading) => [signal, reading] as const)
-      )
+    const readings = yield* Effect.forEach(
+      signals,
+      (signal) =>
+        // The reading the verdict rests on, so a bucket's numbers and its reserve agree.
+        Effect.map(
+          ledger.latestUsable(signal.key),
+          O.map((reading) => [signal, reading] as const)
+        ),
+      { concurrency: 1 }
     );
     const buckets = A.getSomes(A.map(A.getSomes(readings), bucketInputOf(summary)));
     if (A.isArrayEmpty(buckets) && O.isNone(summary)) {

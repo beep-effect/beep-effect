@@ -60,7 +60,7 @@ const script = A.prepend(
   ProcessReading.make({ cpuMicros: 0, rssBytes: 40 * mebibyte })
 );
 
-const gauges = Effect.all([Metric.value(processCpuGauge), Metric.value(processRssGauge)]).pipe(
+const gauges = Effect.all([Metric.value(processCpuGauge), Metric.value(processRssGauge)], { concurrency: 1 }).pipe(
   Effect.map(([cpu, rss]) => [cpu.value, rss.value])
 );
 

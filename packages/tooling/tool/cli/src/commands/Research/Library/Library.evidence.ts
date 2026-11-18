@@ -570,11 +570,14 @@ const observeGithubRepositoryIdentity = Effect.fn("Library.observeGithubReposito
   const identityProofs = yield* json("repository-identity-provenance", RepositoryIdentityReceipts);
   if (A.isReadonlyArrayEmpty(identityProofs)) return observedRepository;
 
-  const identities = yield* Effect.forEach(role("repository-identity-response"), (artifact) =>
-    read(artifact).pipe(
-      Effect.flatMap(decodeLibraryJson(RepositoryIdentity)),
-      Effect.map((item) => ({ artifact, item }))
-    )
+  const identities = yield* Effect.forEach(
+    role("repository-identity-response"),
+    (artifact) =>
+      read(artifact).pipe(
+        Effect.flatMap(decodeLibraryJson(RepositoryIdentity)),
+        Effect.map((item) => ({ artifact, item }))
+      ),
+    { concurrency: 1 }
   );
   for (const receipts of identityProofs) {
     const requested = A.findFirst(
@@ -616,8 +619,9 @@ const prepareGithubContext = Effect.fn("Library.prepareGithubContext")(function*
   const realClone = yield* fs.realPath(clone);
   const relative = path.relative(realRoot, realClone);
   if (path.isAbsolute(relative) || relative === ".." || Str.startsWith(`..${path.sep}`)(relative)) return O.none();
-  // KEEP (D-19): every git call below rides this helper and its hardened untrusted-clone boundary.
   const git = (args: ReadonlyArray<string>) =>
+    // KEEP (D-19): every git call below rides this helper and its hardened untrusted-clone boundary.
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
     runLibraryCommand(root, "git", ["-c", "core.hooksPath=/dev/null", "-C", clone, ...args]);
   if (
     (yield* git(["remote", "get-url", "origin"]).pipe(Effect.map(Str.trim))) !== pin.value.remote ||
@@ -962,11 +966,14 @@ const captionPlayerTrackMatches = (
 const readXmlCaptionCues = Effect.fn("Library.readXmlCaptionCues")(function* (xml: string) {
   const parsed = yield* parseCaptionXml(xml).pipe(Effect.flatMap(S.decodeUnknownEffect(XmlCaptionTranscript)));
   const cues = S.is(XmlCaptionCues)(parsed.transcript.text) ? parsed.transcript.text : [parsed.transcript.text];
-  const cueTexts = yield* Effect.forEach(cues, (cue) =>
-    parseCaptionXml(`<r>${Str.replaceAll(">", "&gt;")(Str.replaceAll("<", "&lt;")(cue["#text"]))}</r>`).pipe(
-      Effect.flatMap(S.decodeUnknownEffect(CaptionTextNode)),
-      Effect.map((item) => item.r)
-    )
+  const cueTexts = yield* Effect.forEach(
+    cues,
+    (cue) =>
+      parseCaptionXml(`<r>${Str.replaceAll(">", "&gt;")(Str.replaceAll("<", "&lt;")(cue["#text"]))}</r>`).pipe(
+        Effect.flatMap(S.decodeUnknownEffect(CaptionTextNode)),
+        Effect.map((item) => item.r)
+      ),
+    { concurrency: 1 }
   );
   return { cues, cueTexts };
 });
@@ -1536,7 +1543,8 @@ export const libraryEffectiveCaptures = Effect.fn("Library.effectiveCaptures")(f
         if (O.isSome(claim)) selected = claim.value;
       }
       return selected;
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 

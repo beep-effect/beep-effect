@@ -481,32 +481,36 @@ const makeEvaluator = Effect.gen(function* () {
       const files = yield* goldSource.load(requestedGoldIds(run), snapshot.documents);
       const outcomes = mergeOutcomes(snapshot, suppliedOutcomes);
       const required = HashMap.get(RequiredMetrics, run.stage).pipe(O.getOrElse(() => []));
-      const metrics = yield* Effect.forEach(required, (metric) => {
-        const unsupported =
-          metric.lane === "pattern" && (metric.subset === "structure" || metric.subset === "relation");
-        if (unsupported) {
+      const metrics = yield* Effect.forEach(
+        required,
+        (metric) => {
+          const unsupported =
+            metric.lane === "pattern" && (metric.subset === "structure" || metric.subset === "relation");
+          if (unsupported) {
+            return Effect.succeed(
+              MetricScore.make({
+                ...metric,
+                status: "unsupported",
+                support: S.Natural.make(0),
+                value: UnitInterval.make(0),
+              })
+            );
+          }
+          const coverage = coverageFor(run, snapshot, files, metric.subset);
+          if (A.isReadonlyArrayEmpty(coverage)) {
+            return Effect.fail(reportInvalid(`No covered document supports ${metric.name}:${metric.lane}.`));
+          }
           return Effect.succeed(
             MetricScore.make({
               ...metric,
-              status: "unsupported",
-              support: S.Natural.make(0),
-              value: UnitInterval.make(0),
+              status: "scored",
+              support: S.Natural.make(A.length(coverage)),
+              value: UnitInterval.make(metricValue(metric.name, coverage, outcomes, metric.lane)),
             })
           );
-        }
-        const coverage = coverageFor(run, snapshot, files, metric.subset);
-        if (A.isReadonlyArrayEmpty(coverage)) {
-          return Effect.fail(reportInvalid(`No covered document supports ${metric.name}:${metric.lane}.`));
-        }
-        return Effect.succeed(
-          MetricScore.make({
-            ...metric,
-            status: "scored",
-            support: S.Natural.make(A.length(coverage)),
-            value: UnitInterval.make(metricValue(metric.name, coverage, outcomes, metric.lane)),
-          })
-        );
-      });
+        },
+        { concurrency: 1 }
+      );
       const documents = A.map(snapshot.documents, (document) => documentOutcome(document, outcomes));
       const nonEmptyDocuments = yield* A.match(documents, {
         onEmpty: () => Effect.fail(reportInvalid("The ledger snapshot contains no selected documents.")),

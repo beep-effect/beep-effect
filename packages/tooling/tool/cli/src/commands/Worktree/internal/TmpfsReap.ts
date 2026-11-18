@@ -1354,7 +1354,9 @@ export const runTmpfsReap = Effect.fn("TmpfsReap.runTmpfsReap")(function* (
 
   const apply = O.getOrElse(O.fromUndefinedOr(options.apply), () => false);
   const outcomes = apply
-    ? yield* Effect.forEach(measured, (candidate) => applyCandidate(candidate, processListing, effectiveNowMillis))
+    ? yield* Effect.forEach(measured, (candidate) => applyCandidate(candidate, processListing, effectiveNowMillis), {
+        concurrency: 1,
+      })
     : A.map(measured, (): ApplyOutcome => ({ reaped: false, warnings: [] }));
   const reapedIndexes = A.map(
     A.filter(A.zip(measured, outcomes), ([, outcome]) => outcome.reaped),

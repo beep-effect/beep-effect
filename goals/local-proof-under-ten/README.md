@@ -36,8 +36,12 @@ Use this command for execution-capable sessions:
 ## Current Phase
 
 P1 Implement — in progress. P0 closed with the baseline checkpoint
-(`decisions/2026-11-10-p0-baseline.md`); slice 1 (PERIL-13) and slice 2 (PERIL-10 summary and archive) landed;
-slice 3 (SCHE-08) and slice 4 (the beep-heavy retirement) are next.
+(`decisions/2026-11-10-p0-baseline.md`). Slices 1 (PERIL-13), 2 (PERIL-10 summary and archive), 3 (SCHE-08, the
+admission unit schema, #3308), 4 (the beep-heavy retirement, which completes PERIL-10, #3312), 5 (PERIL-02, one
+live readiness monitor per pull request and readiness argv, #3316), 6 (SCHE-08, the scheduler service facade and
+the Cache work kind, #3317) and 9 (TURB-05: the force reason, the narrowed-force shadow, and forcing patch-only
+and override-only commits, #3331) are merged. Slice 7 (PERIL-09, the review-window anchor kept across a push that
+only merges the base, with the AGENTS.md mergeable amendment) is open as #3329.
 
 ## Latest Evidence
 
@@ -55,6 +59,60 @@ slice 3 (SCHE-08) and slice 4 (the beep-heavy retirement) are next.
   (`goals/yeet-async-merge-and-stacks`, merged 2026-11-12) adds `Yeet/internal/PatchIdentity.ts` and carries the review window
   across GitHub-made unchanged rewrites (cascade, restack); merges fail closed there, so PERIL-09 (a
   diff-preserving merge of main) stays open and should build on that classifier.
+- 2026-11-13: slice 3 (SCHE-08) adds optional `unit`, `weightSource` and `owner` keys to tickets, leases and the
+  enqueue, admission, release and withdrawal rows, read by a tolerant decoder: a newer writer's work kind stays
+  charged instead of quarantined and an unreadable new key reads as absent. Writers add the keys only behind a
+  `units` key on `protocol.json` (`quality scheduler protocol --units on`), off by default; with it off the bytes
+  match origin/main's. The ciops frozen-journal replay stays 41 of 41, with and without the keys on every row.
+  SCHE-09 slice 1 (#3227) and MEAS-07 (#3228) landed on main.
+- 2026-11-14: slice 4 (PERIL-10) retires the `beep-heavy` wrapper rule. The orchestrate skill's gate poller and
+  hand-off use `systemd-run --user` or a T3 scheduled task; its "Where to launch" section says Yeet's proofs take
+  quality-scheduler admission on their own and other commands run directly. The practice-contacts runbook and
+  `goals/design-figure-review-loop`'s plan drop the wrapper. PERIL-10 is complete.
+- 2026-11-14: slice 5 (PERIL-02) makes `yeet monitor --until-ready --detach` hand back a live readiness monitor
+  submitted from the same branch with the same readiness argv instead of submitting a second job. The key drops
+  launch, output and cadence flags (`--detach`, `--job-max-runtime`, `--json`, `--summary`, `--poll-interval`)
+  and keeps every other flag, so a stricter request still gets its own job. A reused job's time left under its
+  runtime cap must be at least what `--job-max-runtime` asks for (`none` asks for no cap). A record whose runner process is gone
+  is skipped. Publish keys its reuse on the same argv, and `yeet ready` no longer names a dead-runner job as the
+  monitor still watching (the defect at the old `ReadyGate.ts:565`). Tests use a fake registry and runner probe,
+  on Node and Bun.
+- 2026-11-14: slice 6 (SCHE-08) puts the scheduler behind one `QualityScheduler` service (`admit`, `observe`,
+  `reap`, the protocol gates, history, archive, worker route rows) with a live Layer over the existing functions,
+  and moves Yeet, Cache, `quality scheduler`, Palantiri and the quality concurrency plan onto it. Cache commands
+  request their own `cache` kind at weight 1, kept in the review-fix class cap. With the units gate off a Cache
+  admission writes origin/main's `review-fix` bytes (fixture captured from its encoder); with it on, `cache`.
+  The scheduler suites pass on Node and Bun.
+- 2026-11-14: slice 9 (TURB-05) records why a run forced Turbo and closes a stale-green hole. Patch-only commits
+  (`patches/` or the root `patchedDependencies`, as #2873 was) and override-only commits (root `overrides` or
+  `resolutions`) are now forced; before, only a `bun.lock` change forced, and nothing else about the forced set
+  changed. The decision moved into `Yeet/internal/TurboForce.ts`, with one `git diff --name-only` and the root
+  `package.json` read only when it is in that diff (43 to 55 ms). Every repair, verify and publish attempt-started row
+  carries `turboForce`: the reasons that applied and a shadow of the narrowed decision (no force for a lockfile-only
+  change), with each package's locked installed-tree digest at the merge base and HEAD on lockfile attempts (0.62 s
+  under load on this repo's 209 packages). The shadow drives nothing (D14).
+- 2026-11-14: slice 7 (PERIL-09) keeps the review-window anchor across a push that only merges the base. #3130's
+  `YeetHeadMoveClassifier` gains `classifyBaseMerge`: the head is one two-parent commit on the old head, the merged
+  commit is on `base.sha`, the pushed tree is git's clean automatic merge, and the PR's three-dot patch has the same
+  identity before and after, with every config-dependent diff default pinned. `ReviewWindow.ts` walks push rows back
+  across consecutive such merges and stops at the first row that is not one, usually the push that changed the
+  patch; at a force-push row the anchor stays at that rewrite. It learns whether the head is a merge commit from the
+  timeline it already reads, or else the local object store, so an ordinary push costs no new request and no fetch;
+  only a two-parent head reads the ref activity, and it is fetched when the checkout lacks it, once per head per
+  process, within 60 seconds. A conflict resolution, an edited merge, a moved hunk context, a force push of the
+  merged head, a shallow history, a failed read or fetch and any unknown verdict re-arm. AGENTS.md's mergeable
+  definition and the yeet and orchestrate skills state the rule. Replay fixtures recorded from git 2.56.1
+  (`test/support/YeetBaseMergeReplay.ts`) run the real classifier through `Git.layerTest` and a scripted spawner, on
+  Node and Bun.
+- 2026-11-18: slice 11 (SCHE-06) models backfill and fairness in `apps/labs/ciops/src/backfill/`. Protected
+  units (120 s) lead in enqueue order; the rest follow by rank, then least windowed origin and checkout
+  token-milliseconds. A non-head unit backfills only while the head is capacity-blocked, when its declared ETA
+  ends by the head's projected start; a deadline stamped at protection disables backfill once breached. Property
+  laws over effect/Arbitrary streams (tiny-arrival trains, a one-origin flood, oversized units, crashes,
+  overruns) and two rejected mutants are in `test/backfill-fairness.test.ts`. With both modes off the model equals
+  the deployed scheduler; with fairness off, tier units that carry no ETA also replay the deployed admissions
+  under EASY. Fairness compares usage, not ETAs, so with it on the order can differ even for tier units. The live
+  scheduler is unchanged until slice 12.
 
 ## Notes
 

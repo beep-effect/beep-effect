@@ -182,6 +182,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
   ) {
     const ambientPath = yield* readAmbientPath(cwd);
     // KEEP (D-19): per-call HOME/PATH/CI with extendEnv off and a 15-minute deadline (O-23).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
     return yield* runCapturedStreams({
       command: "git",
       args,
@@ -225,7 +226,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
             : `clone ${member.url} --branch ${member.branch} -> ${memberRoot}`,
           `link ${path.join(owner, ".repos", member.name)} -> ${memberRoot}`,
         ];
-      })
+      }),
+      { concurrency: 1 }
     );
     return [
       `Reference workspace: ${root}`,
@@ -267,7 +269,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           }
           yield* fs.symlink(target, link);
           return `${relative} -> ${target}`;
-        })
+        }),
+        { concurrency: 1 }
       );
     },
     Effect.mapError((cause) =>
@@ -293,6 +296,7 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           const memberRoot = path.join(canonicalRoot, member.name);
           if (yield* fs.exists(path.join(memberRoot, ".git"))) return `keep ${memberRoot}; existing checkout preserved`;
           // KEEP (D-19): per-call HOME/PATH/CI with extendEnv off and a 15-minute deadline (O-23).
+          // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
           yield* mustRun(home, canonicalRoot, "git", [
             "clone",
             "--quiet",
@@ -303,7 +307,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
             memberRoot,
           ]);
           return `cloned ${member.name}`;
-        })
+        }),
+        { concurrency: 1 }
       );
       return [...reports, ...(yield* linkInto(checkoutRoot, canonicalRoot))];
     },
@@ -458,7 +463,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           const file = path.join(directory, unit.fileName);
           yield* fs.writeFileString(file, unit.text);
           return file;
-        })
+        }),
+        { concurrency: 1 }
       );
       yield* mustRun(options.home, options.home, "systemctl", ["--user", "daemon-reload"]);
       yield* mustRun(options.home, options.home, "systemctl", ["--user", "enable", "--now", `${unitBase}.timer`]);
@@ -521,7 +527,8 @@ const makeReferenceWorkspace = Effect.fn("ReferenceWorkspace.make")(function* (o
           const target = path.join(directory, file);
           yield* fs.remove(target);
           return target;
-        })
+        }),
+        { concurrency: 1 }
       );
       yield* mustRun(home, home, "systemctl", ["--user", "daemon-reload"]);
       return removed;

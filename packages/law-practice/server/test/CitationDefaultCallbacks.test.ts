@@ -213,13 +213,16 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("production defau
                       );
                       const indices = expected.candidateIndices;
                       if (indices === undefined) return yield* Effect.die("source candidate indices missing");
-                      const authorities = yield* Effect.forEach(indices, (index) =>
-                        Effect.gen(function* () {
-                          const prior = A.getUnsafe(result.document.resolutions, index);
-                          if (prior.status !== "Resolved")
-                            return yield* Effect.die("source candidate is not a resolved full");
-                          return prior.authorityId;
-                        })
+                      const authorities = yield* Effect.forEach(
+                        indices,
+                        (index) =>
+                          Effect.gen(function* () {
+                            const prior = A.getUnsafe(result.document.resolutions, index);
+                            if (prior.status !== "Resolved")
+                              return yield* Effect.die("source candidate is not a resolved full");
+                            return prior.authorityId;
+                          }),
+                        { concurrency: 1 }
                       );
                       expect(resolution.candidateAuthorityIds, row.name).toEqual(expect.arrayContaining(authorities));
                     }

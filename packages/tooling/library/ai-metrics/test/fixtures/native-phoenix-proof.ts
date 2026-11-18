@@ -336,7 +336,8 @@ const program = Effect.gen(function* () {
           state: argument1,
           attempt: O.getOrNull(attempt4),
         };
-      })
+      }),
+    { concurrency: 1 }
   );
   const reconstruct = Effect.fn("NativePhoenixProof.reconstruct")(function* () {
     const transcript = yield* makeTranscriptIntakeJournal(intake).pipe(Effect.provideService(SqlClient.SqlClient, sql));
@@ -377,52 +378,56 @@ const program = Effect.gen(function* () {
       { name: "codex-last", source: "codex", text: `${session}\n${yield* token("last_token_usage")}\n` },
       { name: "codex-cumulative", source: "codex", text: `${session}\n${yield* token("total_token_usage")}\n` },
     ] satisfies ReadonlyArray<{ name: string; source: "claude" | "codex"; text: string }>;
-    const expected = yield* Effect.forEach(declarations, (declaration) =>
-      Effect.gen(function* () {
-        const path = `${directory}/${declaration.name}.jsonl`;
-        yield* fs.writeFileString(path, declaration.text, { mode: 0o600 });
-        const page = yield* readTranscriptPage(
-          TranscriptPageInput.make({
-            path,
-            source: declaration.source,
-            hashSalt: Redacted.make(salt),
-            cursor: O.none(),
-            maxBytes: 8192,
-            maxLineBytes: 2048,
-            maxFrames: 8,
-          })
-        );
-        if (page.frames.length !== 2 || A.some(page.frames, (f) => f._tag !== "Accepted")) {
-          return yield* Effect.die("Invalid reconstructed source fixture");
-        }
-        yield* transcript.acceptPage(page, O.none());
-        return yield* Effect.forEach(
-          A.filter(page.frames, (f) => f._tag === "Accepted"),
-          (frame) =>
-            Effect.gen(function* () {
-              const m = frame.metadata;
-              const argument2 = Str.slice(0, 32);
-              const hashPublicTextSha2565 = yield* hashPublicTextSha256(
-                `reconstructed-trace/v1:${intake.hostId}:${intake.namespaceId}:${frame.occurrenceId}`
-              );
-              const argument3 = argument2(hashPublicTextSha2565);
-              const argument4 = Str.slice(0, 16);
-              const hashPublicTextSha2566 = yield* hashPublicTextSha256(
-                `reconstructed-span/v1:${intake.hostId}:${intake.namespaceId}:${frame.occurrenceId}`
-              );
-              return {
-                scenario: declaration.name,
-                eventId: frame.occurrenceId,
-                traceId: argument3,
-                spanId: argument4(hashPublicTextSha2566),
-                sessionId: O.getOrNull(m.session.id),
-                kind: m.kind,
-                source: declaration.source,
-                usage: O.getOrNull(m.usage),
-              };
+    const expected = yield* Effect.forEach(
+      declarations,
+      (declaration) =>
+        Effect.gen(function* () {
+          const path = `${directory}/${declaration.name}.jsonl`;
+          yield* fs.writeFileString(path, declaration.text, { mode: 0o600 });
+          const page = yield* readTranscriptPage(
+            TranscriptPageInput.make({
+              path,
+              source: declaration.source,
+              hashSalt: Redacted.make(salt),
+              cursor: O.none(),
+              maxBytes: 8192,
+              maxLineBytes: 2048,
+              maxFrames: 8,
             })
-        );
-      })
+          );
+          if (page.frames.length !== 2 || A.some(page.frames, (f) => f._tag !== "Accepted")) {
+            return yield* Effect.die("Invalid reconstructed source fixture");
+          }
+          yield* transcript.acceptPage(page, O.none());
+          return yield* Effect.forEach(
+            A.filter(page.frames, (f) => f._tag === "Accepted"),
+            (frame) =>
+              Effect.gen(function* () {
+                const m = frame.metadata;
+                const argument2 = Str.slice(0, 32);
+                const hashPublicTextSha2565 = yield* hashPublicTextSha256(
+                  `reconstructed-trace/v1:${intake.hostId}:${intake.namespaceId}:${frame.occurrenceId}`
+                );
+                const argument3 = argument2(hashPublicTextSha2565);
+                const argument4 = Str.slice(0, 16);
+                const hashPublicTextSha2566 = yield* hashPublicTextSha256(
+                  `reconstructed-span/v1:${intake.hostId}:${intake.namespaceId}:${frame.occurrenceId}`
+                );
+                return {
+                  scenario: declaration.name,
+                  eventId: frame.occurrenceId,
+                  traceId: argument3,
+                  spanId: argument4(hashPublicTextSha2566),
+                  sessionId: O.getOrNull(m.session.id),
+                  kind: m.kind,
+                  source: declaration.source,
+                  usage: O.getOrNull(m.usage),
+                };
+              }),
+            { concurrency: 1 }
+          );
+        }),
+      { concurrency: 1 }
     );
     const rows = A.flatten(expected);
     const sent = yield* scheduler.tick;
@@ -446,18 +451,21 @@ const program = Effect.gen(function* () {
       ) {
         return yield* Effect.die("Reconstructed read-back mismatch/deadline");
       }
-      const states = yield* Effect.forEach(rows, (row) => worker.ledger.state(row.eventId));
+      const states = yield* Effect.forEach(rows, (row) => worker.ledger.state(row.eventId), { concurrency: 1 });
       if (A.every(states, (state) => O.isSome(state) && state.value.state === "visible")) {
-        return yield* Effect.forEach(rows, (row) =>
-          Effect.gen(function* () {
-            return {
-              ...row,
-              automaticScheduling: true,
-              readbackPasses,
-              priorAcceptanceState: "accepted-unverified",
-              state: yield* Effect.map(worker.ledger.state(row.eventId), O.getOrNull),
-            };
-          })
+        return yield* Effect.forEach(
+          rows,
+          (row) =>
+            Effect.gen(function* () {
+              return {
+                ...row,
+                automaticScheduling: true,
+                readbackPasses,
+                priorAcceptanceState: "accepted-unverified",
+                state: yield* Effect.map(worker.ledger.state(row.eventId), O.getOrNull),
+              };
+            }),
+          { concurrency: 1 }
         );
       }
     }

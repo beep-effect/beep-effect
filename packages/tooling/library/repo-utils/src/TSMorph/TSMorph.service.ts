@@ -1070,11 +1070,14 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
     scope: TsMorphProjectScope
   ): Effect.fn.Return<ScopeSymbolIndex, TSMorphServiceError> {
     const project = yield* projectPool.getOrCreate(scope);
-    const entriesPerFile = yield* Effect.forEach(project.getSourceFiles(), (sourceFile) =>
-      O.match(scopedImplementationFilePath(pathApi, scope, sourceFile.getFilePath()), {
-        onNone: () => Effect.succeed(A.empty<ScopeSymbolEntry>()),
-        onSome: (filePath) => collectOutlineEntries(filePath, sourceFile).pipe(Effect.provide(cryptoContext)),
-      })
+    const entriesPerFile = yield* Effect.forEach(
+      project.getSourceFiles(),
+      (sourceFile) =>
+        O.match(scopedImplementationFilePath(pathApi, scope, sourceFile.getFilePath()), {
+          onNone: () => Effect.succeed(A.empty<ScopeSymbolEntry>()),
+          onSome: (filePath) => collectOutlineEntries(filePath, sourceFile).pipe(Effect.provide(cryptoContext)),
+        }),
+      { concurrency: 1 }
     );
     const entries = A.flatten(entriesPerFile);
 
@@ -1320,7 +1323,8 @@ export const createTSMorphService = Effect.fn("createTSMorphService")(function* 
                 message: `Failed to normalize diagnostic for "${loadedSourceFile.filePath}": ${message}`,
               })
           );
-        })
+        }),
+        { concurrency: 1 }
       ),
       Effect.map(A.sort(byNormalizedDiagnosticAscending))
     );

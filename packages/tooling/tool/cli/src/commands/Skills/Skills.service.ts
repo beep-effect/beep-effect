@@ -310,8 +310,10 @@ export const renderSkillTreeDiff = Effect.fn("SkillsProvenance.renderSkillTreeDi
     const rightFile = findFile(right.files, filePath);
     return !(O.isSome(leftFile) && O.isSome(rightFile) && filesMatch(leftFile.value, rightFile.value));
   });
-  const sections = yield* Effect.forEach(changed, (filePath) =>
-    renderFilePatch(skill, filePath, findFile(left.files, filePath), findFile(right.files, filePath))
+  const sections = yield* Effect.forEach(
+    changed,
+    (filePath) => renderFilePatch(skill, filePath, findFile(left.files, filePath), findFile(right.files, filePath)),
+    { concurrency: 1 }
   );
   return A.join(sections, "");
 });
@@ -413,8 +415,10 @@ const buildPatchSeries = Effect.fn("SkillsProvenance.buildPatchSeries")(function
   local: ComputedSkillTree,
   driftPaths: ReadonlyArray<string>
 ): Effect.fn.Return<PatchSeries, SkillsCommandError, SkillPatchOwnerSource | Digest.Digest> {
-  const built = yield* Effect.forEach(driftPaths, (filePath, index) =>
-    buildPatch(skill, repoRoot, upstream, local, filePath, index)
+  const built = yield* Effect.forEach(
+    driftPaths,
+    (filePath, index) => buildPatch(skill, repoRoot, upstream, local, filePath, index),
+    { concurrency: 1 }
   );
   const files = A.map(built, ({ file }) => file);
   return {
@@ -1049,11 +1053,14 @@ export const buildSkillPatchAdditions = Effect.fn("SkillsProvenance.buildSkillPa
   SkillsCommandError,
   SkillPatchOwnerSource | Digest.Digest
 > {
-  return yield* Effect.forEach(driftPathsOf(before, after), (filePath, index) =>
-    Effect.map(
-      buildPatch(skill, repoRoot, before, after, filePath, firstIndex + index),
-      ({ patch, file }) => [patch, file] as const
-    )
+  return yield* Effect.forEach(
+    driftPathsOf(before, after),
+    (filePath, index) =>
+      Effect.map(
+        buildPatch(skill, repoRoot, before, after, filePath, firstIndex + index),
+        ({ patch, file }) => [patch, file] as const
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -1562,7 +1569,9 @@ export const listInstalledSkillNames = Effect.fn("SkillsLock.listInstalledSkillN
   const entries = yield* fs
     .readDirectory(skillsDir)
     .pipe(SkillsCommandError.mapError(`Failed to read ${skillsDir}.`, skillsDir));
-  const names = yield* Effect.forEach(A.sort(entries, Str.Order), (entry) => installedSkillName(skillsDir, entry));
+  const names = yield* Effect.forEach(A.sort(entries, Str.Order), (entry) => installedSkillName(skillsDir, entry), {
+    concurrency: 1,
+  });
   return A.flatten(names);
 });
 

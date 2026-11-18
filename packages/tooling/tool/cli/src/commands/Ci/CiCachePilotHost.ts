@@ -269,6 +269,9 @@ const cleanupWorktree = Effect.fn("Ci.cleanupWorktree")(function* (workspace: st
   if (Str.isEmpty(tree) || !(yield* fs.exists(tree).pipe(Effect.orElseSucceed(() => false)))) return false;
   const owned = `${workspace}-worktrees/cache-producer-${yield* variable("GITHUB_RUN_ID")}-${yield* variable("GITHUB_RUN_ATTEMPT")}-`;
   if (tree !== `${owned}a` && tree !== `${owned}b`) return yield* refusePath("Refusing unexpected producer worktree.");
+  // KEEP (D-22): git's own stderr (`... is not a working tree`) streams to the job log, the parity the
+  // `ci-cache-pilot` goldens pin against the retired shell adapter; the kit captures it.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
   return (yield* runInherited("git", ["worktree", "remove", "--", tree])) !== 0;
 });
 
@@ -338,7 +341,7 @@ export const cleanupCachePilot = Effect.fn("Ci.cleanupCachePilot")(function* (mo
   const workspace = yield* variable("GITHUB_WORKSPACE");
   const expectedInputs = `${workspace}/.beep/cache/${mode === "signed" ? "protected-producer-trial" : "local-pilot-observation"}`;
   const trees = [yield* variable("TRIAL_WORKTREE_A"), yield* variable("TRIAL_WORKTREE_B")];
-  const treeFailures = yield* Effect.forEach(trees, (tree) => cleanupWorktree(workspace, tree));
+  const treeFailures = yield* Effect.forEach(trees, (tree) => cleanupWorktree(workspace, tree), { concurrency: 1 });
   const inputs = yield* variable("TRIAL_INPUTS");
   const inputsFailed = yield* cleanupInputs(inputs, expectedInputs);
   const trialRoot = yield* variable("TRIAL_ROOT");

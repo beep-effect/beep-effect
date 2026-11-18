@@ -12,6 +12,7 @@ import {
 } from "@beep/repo-utils/JSDoc/JSDocSections";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str, thunkFalse } from "@beep/utils";
+import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -46,7 +47,6 @@ import {
 } from "./QualityArtifactSupport.ts";
 import type { Git } from "@beep/git/Git";
 import type { JSDocSectionName } from "@beep/repo-utils/JSDoc/JSDocSections";
-import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { SourceFile } from "ts-morph";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
@@ -215,22 +215,28 @@ type DirectExportDescriptor =
       readonly declaration: Node;
     };
 
-const outputJsonRelativePath = "standards/jsdoc-documentation.inventory.jsonc";
+const outputJsonRelativePath = ".beep/ci/jsdoc-documentation.inventory.jsonc";
 /**
  * Default path for the human-readable JSDoc documentation inventory.
+ *
+ * **Details**
+ *
+ * Both inventory outputs live under the gitignored `.beep/ci/` root. The
+ * committed gate input is the totals baseline, so a committed whole-repo copy
+ * only collected unrelated drift.
  *
  * **Example** (Resolve the companion inventory)
  *
  * ```ts
  * import { defaultJSDocDocumentationInventoryMarkdownPath } from "@beep/repo-cli/test/Quality"
  *
- * console.log(defaultJSDocDocumentationInventoryMarkdownPath === "standards/jsdoc-documentation.inventory.md") // true
+ * console.log(defaultJSDocDocumentationInventoryMarkdownPath === ".beep/ci/jsdoc-documentation.inventory.md") // true
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const defaultJSDocDocumentationInventoryMarkdownPath = "standards/jsdoc-documentation.inventory.md";
+export const defaultJSDocDocumentationInventoryMarkdownPath = ".beep/ci/jsdoc-documentation.inventory.md";
 const requiredExportTags = ["@example", "@category", "@since"];
 const requiredModuleTags = ["@since"];
 const forbiddenTags = ["@module", "@template"];
@@ -308,6 +314,50 @@ export class JSDocDocumentationInventoryWriteResult extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Program settings for the per-package ts-morph projects the inventory scans.
+ *
+ * **Details**
+ *
+ * Production scans build every package program with `noResolve: true`: only declarations in the
+ * added files are scored, so imports into other packages stay unloaded. Tests pass
+ * `{ noResolve: false }` to prove the report does not depend on module resolution
+ * (goals/heavy-pool-diet LINT-01); no CLI flag or environment variable reaches this seam.
+ *
+ * **Example** (Build with resolution on in a parity test)
+ *
+ * ```ts
+ * import {
+ *   buildJSDocDocumentationInventory,
+ *   JSDocDocumentationInventoryOptions,
+ *   JSDocInventoryProgramOptions,
+ * } from "@beep/repo-cli/test/Quality"
+ *
+ * const resolved = buildJSDocDocumentationInventory(
+ *   JSDocDocumentationInventoryOptions.make({}),
+ *   JSDocInventoryProgramOptions.make({ noResolve: false })
+ * )
+ * console.log(resolved)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export class JSDocInventoryProgramOptions extends S.Opaque<
+  JSDocInventoryProgramOptions,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
+    noResolve: S.Boolean,
+  }).pipe(
+    $I.annoteSchema("JSDocInventoryProgramOptions", {
+      description: "Compiler settings for the per-package programs the JSDoc inventory scans.",
+    })
+  )
+) {}
+
+const productionProgramOptions = JSDocInventoryProgramOptions.make({ noResolve: true });
 
 const resolveJSDocInventoryOptions = Effect.fn("JSDocDocumentationInventory.resolveOptions")(function* (
   options: JSDocDocumentationInventoryOptions = JSDocDocumentationInventoryOptions.make({})
@@ -1325,7 +1375,8 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
   repoRoot: string,
   path: Path.Path,
   candidatePaths: O.Option<MutableHashSet.MutableHashSet<string>>,
-  forbiddenRootImports: MutableHashSet.MutableHashSet<string>
+  forbiddenRootImports: MutableHashSet.MutableHashSet<string>,
+  programOptions: JSDocInventoryProgramOptions
 ): Effect.fn.Return<PackageInventory, QualityArtifactGeneratorError, FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   const docgenPath = path.join(packageInfo.absolutePath, "docgen.json");
@@ -1338,8 +1389,9 @@ const analyzePackage = Effect.fn("JSDocDocumentationInventory.analyzePackage")(f
   const sourceFiles = A.filter(listSourceFiles1, (sourceFilePath) =>
     sourceFileIsInPackageInventory(sourceFilePath, packageInfo, srcDir, exclude, repoRoot, path, candidatePaths)
   );
-  // Only declarations in the added files are scored, so imports into other packages stay unloaded.
-  const project = createInMemoryTsMorphProject({ compilerOptions: { noResolve: true } });
+  // Only declarations in the added files are scored, so imports into other packages stay unloaded
+  // (production `noResolve: true`; the parity fixtures also build with resolution on).
+  const project = createInMemoryTsMorphProject({ compilerOptions: { noResolve: programOptions.noResolve } });
   // Populate the project before asking for semantic exports: adding another
   // source file invalidates the compiler program used by getExportedDeclarations.
   const projectSourceFiles = A.map(sourceFiles, (sourceFilePath) => project.addSourceFileAtPath(sourceFilePath));
@@ -1619,7 +1671,8 @@ const renderMarkdown = (inventory: Inventory): string => {
  * @since 0.0.0
  */
 export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInventory.build")(function* (
-  options: JSDocDocumentationInventoryOptions = JSDocDocumentationInventoryOptions.make({})
+  options: JSDocDocumentationInventoryOptions = JSDocDocumentationInventoryOptions.make({}),
+  programOptions: JSDocInventoryProgramOptions = productionProgramOptions
 ): Effect.fn.Return<
   Inventory,
   QualityArtifactGeneratorError,
@@ -1673,7 +1726,15 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
       const packageInfo = MutableHashMap.get(packageByName, packageName);
       return O.isNone(packageInfo)
         ? Effect.succeed(analyzeMissingPackage(packageName, index + 1))
-        : analyzePackage(packageInfo.value, index + 1, repoRoot, path, candidatePaths, forbiddenRootImports);
+        : analyzePackage(
+            packageInfo.value,
+            index + 1,
+            repoRoot,
+            path,
+            candidatePaths,
+            forbiddenRootImports,
+            programOptions
+          );
     },
     { concurrency: 1 }
   );
@@ -1704,42 +1765,36 @@ export const buildJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
  * @since 0.0.0
  */
 export const writeJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInventory.write")(function* (
-  options: JSDocDocumentationInventoryOptions = JSDocDocumentationInventoryOptions.make({})
+  options: JSDocDocumentationInventoryOptions = JSDocDocumentationInventoryOptions.make({}),
+  programOptions: JSDocInventoryProgramOptions = productionProgramOptions
 ): Effect.fn.Return<
   JSDocDocumentationInventoryWriteResult,
   QualityArtifactGeneratorError,
   FileSystem.FileSystem | Path.Path | ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | Git
 > {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const { generatedAt, outputJsonPath, outputMarkdownPath, repoRoot } = yield* resolveJSDocInventoryOptions(options);
-  const inventory = yield* buildJSDocDocumentationInventory({
-    ...options,
-    rootDir: repoRoot,
-    generatedAt,
-  });
-  yield* fs.makeDirectory(path.dirname(outputJsonPath), { recursive: true }).pipe(
-    QualityArtifactGeneratorError.mapError(`Failed to create artifact directory for ${outputJsonPath}.`, {
-      filePath: outputJsonPath,
-    })
+  const inventory = yield* buildJSDocDocumentationInventory(
+    {
+      ...options,
+      rootDir: repoRoot,
+      generatedAt,
+    },
+    programOptions
   );
   const jsonContent = yield* formatJsonc(inventory).pipe(
     QualityArtifactGeneratorError.mapError("Failed to format generated JSONC artifact.", {})
   );
-  yield* fs
-    .writeFileString(outputJsonPath, jsonContent)
-    .pipe(QualityArtifactGeneratorError.mapError(`Failed to write ${outputJsonPath}.`, { filePath: outputJsonPath }));
   const markdownContent = renderMarkdown(inventory);
-  yield* fs.writeFileString(outputMarkdownPath, markdownContent).pipe(
-    QualityArtifactGeneratorError.mapError(`Failed to write ${outputMarkdownPath}.`, {
-      filePath: outputMarkdownPath,
-    })
-  );
-  // One scan, two output sets (quality-lane audit A3 / D14): the CI copies
-  // under `.beep/ci/` are byte-identical mirrors so a ratchet lane handed
-  // `--inventory` reads the same scan the committed artifact came from.
-  yield* writeJSDocInventoryMirror(options.ciOutputJsonPath, jsonContent);
-  yield* writeJSDocInventoryMirror(options.ciOutputMarkdownPath, markdownContent);
+  // Every output creates its own parent: the defaults sit under the ignored
+  // `.beep/ci/`, which a fresh clone lacks, and the Markdown path may name a
+  // different directory from the JSONC one.
+  yield* writeJSDocInventoryOutput(outputJsonPath, jsonContent);
+  yield* writeJSDocInventoryOutput(outputMarkdownPath, markdownContent);
+  // One scan, two output sets (quality-lane audit A3 / D14): optional mirrors
+  // are byte-identical copies, so a ratchet lane handed `--inventory` reads
+  // the same scan as the primary outputs.
+  yield* writeJSDocInventoryOutput(options.ciOutputJsonPath, jsonContent);
+  yield* writeJSDocInventoryOutput(options.ciOutputMarkdownPath, markdownContent);
 
   return JSDocDocumentationInventoryWriteResult.make({
     outputJsonPath,
@@ -1748,21 +1803,39 @@ export const writeJSDocDocumentationInventory = Effect.fn("JSDocDocumentationInv
   });
 });
 
-const writeJSDocInventoryMirror = Effect.fn("JSDocDocumentationInventory.writeMirror")(function* (
-  mirrorPath: string | undefined,
+// Publish by rename: the text goes to a uniquely named sibling, then a rename
+// within the one directory replaces the target, so a concurrent reader (the
+// ratchet, or another gate that reads the `.beep/ci/` copy) sees the previous
+// complete file or the new one, never a truncated write. A failed write
+// removes its staging file and leaves the target untouched. The staging name
+// is dot-prefixed so a file a killed run leaves behind falls outside Turbo's
+// `.beep/ci/jsdoc-documentation.inventory.*` outputs glob and is never cached.
+const writeJSDocInventoryOutput = Effect.fn("JSDocDocumentationInventory.writeOutput")(function* (
+  outputPath: string | undefined,
   content: string
-): Effect.fn.Return<void, QualityArtifactGeneratorError, FileSystem.FileSystem | Path.Path> {
-  if (mirrorPath === undefined) {
+): Effect.fn.Return<
+  void,
+  QualityArtifactGeneratorError,
+  FileSystem.FileSystem | Path.Path | SecureRandom.SecureRandom
+> {
+  if (outputPath === undefined) {
     return;
   }
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  yield* fs.makeDirectory(path.dirname(mirrorPath), { recursive: true }).pipe(
-    QualityArtifactGeneratorError.mapError(`Failed to create artifact directory for ${mirrorPath}.`, {
-      filePath: mirrorPath,
+  const random = yield* SecureRandom.SecureRandom;
+  yield* fs.makeDirectory(path.dirname(outputPath), { recursive: true }).pipe(
+    QualityArtifactGeneratorError.mapError(`Failed to create artifact directory for ${outputPath}.`, {
+      filePath: outputPath,
     })
   );
-  yield* fs
-    .writeFileString(mirrorPath, content)
-    .pipe(QualityArtifactGeneratorError.mapError(`Failed to write ${mirrorPath}.`, { filePath: mirrorPath }));
+  const stagingPath = path.join(
+    path.dirname(outputPath),
+    `.${path.basename(outputPath)}.${yield* random.uuidV4()}.tmp`
+  );
+  yield* fs.writeFileString(stagingPath, content).pipe(
+    Effect.flatMap(() => fs.rename(stagingPath, outputPath)),
+    Effect.onError(() => fs.remove(stagingPath, { force: true }).pipe(Effect.ignore)),
+    QualityArtifactGeneratorError.mapError(`Failed to write ${outputPath}.`, { filePath: outputPath })
+  );
 });

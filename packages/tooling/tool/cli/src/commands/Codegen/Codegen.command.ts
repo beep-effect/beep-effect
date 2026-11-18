@@ -211,7 +211,8 @@ const discoverModules = Effect.fn(function* (srcDir: string) {
           }
 
           return A.empty<string>();
-        })
+        }),
+        { concurrency: 1 }
       );
 
       return A.flatten(discovered);
@@ -427,7 +428,7 @@ const barrelCommand = Command.make(
     }
 
     yield* Console.log(`Found ${A.length(modules)} module(s):`);
-    yield* Effect.forEach(modules, (mod) => Console.log(`  - ${mod}`), { discard: true });
+    yield* Effect.forEach(modules, (mod) => Console.log(`  - ${mod}`), { concurrency: 1, discard: true });
 
     const indexPath = pathSvc.join(srcDir, "index.ts");
 

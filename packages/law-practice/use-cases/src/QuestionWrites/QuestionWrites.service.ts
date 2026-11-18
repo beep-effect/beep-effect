@@ -72,17 +72,20 @@ const makeQuestionWrites = (calendar: QuestionCalendarShape): QuestionWritesShap
     );
 
   const restoreAll = (applied: ReadonlyArray<AppliedWrite>) =>
-    Effect.forEach(A.reverse(applied), calendar.restore, { discard: true });
+    Effect.forEach(A.reverse(applied), calendar.restore, { concurrency: 1, discard: true });
 
   // Take back every write of a failed apply, newest first, trying each one even after another
   // fails. The original error is never lost: it is the failure when every write came back, and
   // the cause of a `restore-failed` naming the questions still applied when some did not.
   const rollback = Effect.fnUntraced(function* (applied: ReadonlyArray<AppliedWrite>, error: QuestionWriteError) {
-    const kept = yield* Effect.forEach(A.reverse(applied), (write) =>
-      calendar.restore(write).pipe(
-        Effect.as(O.none<string>()),
-        Effect.catchTag("QuestionWriteError", () => Effect.succeedSome(write.proposal.itemId))
-      )
+    const kept = yield* Effect.forEach(
+      A.reverse(applied),
+      (write) =>
+        calendar.restore(write).pipe(
+          Effect.as(O.none<string>()),
+          Effect.catchTag("QuestionWriteError", () => Effect.succeedSome(write.proposal.itemId))
+        ),
+      { concurrency: 1 }
     );
     const pendingItemIds = A.reverse(A.getSomes(kept));
     return yield* A.isReadonlyArrayEmpty(pendingItemIds)

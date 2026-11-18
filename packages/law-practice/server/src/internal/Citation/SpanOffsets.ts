@@ -10,7 +10,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CitationRegexInputLayout } from "./RegexInput.ts";
-import { decodeCitationRegexPolicy } from "./RegexPolicy.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SpanOffsets");
 const max = CitationEngineAbsoluteMaxima;
@@ -151,8 +151,10 @@ const bisectOffsetEntries = (
  * cooperative construction and lookup methods require no caller services.
  * @internal @category operations @since 0.0.0
  */
-export const makeCitationSpanOffsets = Effect.fn("Citation.makeSpanOffsets")(function* (policy: unknown, raw: unknown) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
+export const makeCitationSpanOffsets = Effect.fn("Citation.makeSpanOffsets")(function* (
+  limits: CitationEngineLimits,
+  raw: unknown
+) {
   const decoded = yield* S.decodeUnknownEffect(Plan)(raw).pipe(Effect.mapError(() => fail("invalid-plan")));
   if (decoded.steps.length > limits.diffSteps) return yield* safety("diffSteps");
   if (decoded.before.utf16Units + decoded.after.utf16Units > limits.diffInputUtf16)

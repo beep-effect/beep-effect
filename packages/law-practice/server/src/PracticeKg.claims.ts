@@ -409,7 +409,7 @@ export const runPracticeKgClaimsBatch = Effect.fn("PracticeKgClaims.run")(
     const path = yield* Path.Path;
     const review = yield* OfficeActionReview;
     const sql = (yield* SqlClientService).withoutTransforms();
-    yield* Effect.forEach(createClaimsTables, (statement) => sql.unsafe(statement), { discard: true });
+    yield* Effect.forEach(createClaimsTables, (statement) => sql.unsafe(statement), { concurrency: 1, discard: true });
     const canonicalInputs = yield* fs.realPath(options.inputs);
     const bundleDuckDbPath = path.join(options.bundleOut, "practice.duckdb");
     const bundleDuckDbExists = yield* fs.exists(bundleDuckDbPath).pipe(Effect.orElseSucceed(constFalse));
@@ -858,7 +858,7 @@ export const writePracticeKgClaimsCarry = Effect.fn("PracticeKgClaims.writeCarry
     const path = yield* Path.Path;
     const sql = (yield* SqlClientService).withoutTransforms();
     const bundleDuckDbPath = path.join(request.bundleOut, "practice.duckdb");
-    yield* Effect.forEach(createClaimsTables, (statement) => sql.unsafe(statement), { discard: true });
+    yield* Effect.forEach(createClaimsTables, (statement) => sql.unsafe(statement), { concurrency: 1, discard: true });
     const resolved = yield* Effect.forEach(
       request.carry.candidates,
       (candidate) =>

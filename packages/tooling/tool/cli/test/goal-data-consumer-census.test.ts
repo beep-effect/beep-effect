@@ -217,10 +217,15 @@ const census = Effect.gen(function* () {
     (source) =>
       fs.readFileString(path.join(root, source)).pipe(
         Effect.flatMap((text) =>
-          Effect.forEach(scanSource(source, text), ([reference, bare]) =>
-            Effect.map(resolveReference(reference, packetPaths), (resolved) =>
-              A.map(keepResolved(bare, resolved), (consumed) => CensusEntry.make({ path: consumed, reference, source }))
-            )
+          Effect.forEach(
+            scanSource(source, text),
+            ([reference, bare]) =>
+              Effect.map(resolveReference(reference, packetPaths), (resolved) =>
+                A.map(keepResolved(bare, resolved), (consumed) =>
+                  CensusEntry.make({ path: consumed, reference, source })
+                )
+              ),
+            { concurrency: 1 }
           )
         ),
         Effect.map(A.flatten)
@@ -259,8 +264,8 @@ const owningPackageDirectory = (source: string, tracked: HashSet.HashSet<string>
 
 const decodePackageName = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ name: S.NonEmptyString })));
 
-// The mutations the packet names: malform the frozen citation fixture, a citation ops `.py` probe
-// and a ciops research JSON (the `.ts` ops script is the first tracked one the census finds), plus
+// The mutations the packet names: malform the frozen citation fixture, the spawned citation
+// ops child and a ciops research JSON (the `.ts` ops script is the first tracked one the census finds), plus
 // the runner-burst script and the two exploration fixtures the post-merge review found. Each is a
 // one-path pull request diff.
 const mutations: ReadonlyArray<readonly [string, string]> = [
@@ -268,7 +273,7 @@ const mutations: ReadonlyArray<readonly [string, string]> = [
     "frozen citation profile fixture",
     "goals/citation-extraction-engine/history/evidence/2026-11-08-six-form-selection/profile.frozen.json.txt",
   ],
-  ["citation ops .py probe", "goals/citation-extraction-engine/ops/probe-html-bytes.py"],
+  ["citation ops spawned child", "goals/citation-extraction-engine/ops/qualify-regex-translator.child.mjs"],
   ["ciops research JSON", "goals/time-to-certainty/research/gate-order-handoff.json"],
   ["runner-burst ops script", "goals/speed-loop/ops/runner-burst/teardown-burst-runners.sh"],
   ["ciops exploration ABox", "explorations/beep-ci-operational-ontology/ontology/extraction/s6/graphs/abox.ttl"],
@@ -390,7 +395,8 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { timeout: "120 seco
             const text = yield* fs.readFileString(path.join(root, directory.value, "package.json"));
             const manifest = yield* decodePackageName(text);
             return [source, O.some(manifest.name)] as const;
-          })
+          }),
+          { concurrency: 1 }
         );
         const owners = HashMap.fromIterable(ownerRows);
         // The coverage planner selects a registry path's readers from its row's consumers, so a

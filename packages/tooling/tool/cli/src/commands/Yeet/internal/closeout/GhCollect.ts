@@ -81,6 +81,9 @@ export const closeoutGhOutput = Effect.fn("YeetCloseout.ghOutput")(function* (
   args: ReadonlyArray<string>,
   label: string
 ): Effect.fn.Return<string, YeetCommandError, SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> {
+  // KEEP funnel (W7 census Y80): `closeoutGhOutput` runs the KEEP (D-13) closeout reads below; each call site
+  // records its reason.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP funnel (W7 census Y80), reason above
   return yield* ghOutput({
     args,
     cwd: context.repoRoot,

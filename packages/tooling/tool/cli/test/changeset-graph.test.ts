@@ -288,7 +288,7 @@ Record a private workspace change.
           expect(releaseNames, name).toEqual(packages);
           expect(guardNames, name).toEqual(releaseNames);
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       )
     );
   });

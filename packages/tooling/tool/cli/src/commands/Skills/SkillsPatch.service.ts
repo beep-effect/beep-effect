@@ -139,15 +139,18 @@ const readInstalledTree = Effect.fn("SkillsPatch.readInstalledTree")(function* (
   skill: string,
   targets: ReadonlyArray<string>
 ): Effect.fn.Return<ComputedSkillTree, SkillsCommandError | SkillPatchRefusal, PatchRequirements> {
-  const trees = yield* Effect.forEach(targets, (target) =>
-    readTargetTree(repoRoot, target, skill).pipe(
-      Effect.flatMap(
-        O.match({
-          onNone: () => refuse(skill, "missing-target", `Install target ${target} of ${skill} does not exist.`),
-          onSome: Effect.succeed,
-        })
-      )
-    )
+  const trees = yield* Effect.forEach(
+    targets,
+    (target) =>
+      readTargetTree(repoRoot, target, skill).pipe(
+        Effect.flatMap(
+          O.match({
+            onNone: () => refuse(skill, "missing-target", `Install target ${target} of ${skill} does not exist.`),
+            onSome: Effect.succeed,
+          })
+        )
+      ),
+    { concurrency: 1 }
   );
   const hashes = HashSet.fromIterable(A.map(trees, (tree) => tree.treeHash));
   return yield* O.match(A.head(trees), {
@@ -254,9 +257,10 @@ const planAdd = Effect.fn("SkillsPatch.planAdd")(function* (
       skill
     ),
   });
-  const encoded = yield* Effect.all({ patches: encodePatches(patches), effective: encodeEffective(effective) }).pipe(
-    SkillsCommandError.mapError(`Failed to encode the ${skill} patch-add plan.`, SKILLS_LOCK_PATH, skill)
-  );
+  const encoded = yield* Effect.all(
+    { patches: encodePatches(patches), effective: encodeEffective(effective) },
+    { concurrency: 1 }
+  ).pipe(SkillsCommandError.mapError(`Failed to encode the ${skill} patch-add plan.`, SKILLS_LOCK_PATH, skill));
   const planDigest = yield* digestOf(
     {
       schemaVersion: PATCH_ADD_SCHEMA_VERSION,
@@ -310,13 +314,14 @@ const publishAdd = Effect.fn("SkillsPatch.publishAdd")(function* (
           SkillsCommandError.mapError(`Failed to write ${file.path}.`, absolute)
         );
     },
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   return yield* writeFiles.pipe(
     Effect.andThen(publishSkillsLockEntry(repoRoot, planned.lock, skill, planned.entry, planned.planDigest)),
     Effect.onError(() =>
       Effect.flatMap(Ref.get(created), (paths) =>
         Effect.forEach(paths, (absolute) => fs.remove(absolute, { force: true }).pipe(Effect.ignore), {
+          concurrency: 1,
           discard: true,
         })
       )
@@ -389,8 +394,11 @@ const labelPatches = Effect.fn("SkillsPatch.labelPatches")(function* (
   const entry = yield* requireVendored(lock.document.skills, skill);
   const files = yield* readVerifiedPatchSeries(repoRoot, skill, entry);
   const ledger = yield* readHunkLedger(repoRoot);
-  const verdicts = yield* Effect.forEach(A.zip(entry.patches.series, files), ([patch, file]) =>
-    Effect.map(classifyPatch(skill, ledger, patch, file.bytes), (verdict) => [patch, verdict] as const)
+  const verdicts = yield* Effect.forEach(
+    A.zip(entry.patches.series, files),
+    ([patch, file]) =>
+      Effect.map(classifyPatch(skill, ledger, patch, file.bytes), (verdict) => [patch, verdict] as const),
+    { concurrency: 1 }
   );
   const changes = A.flatMap(verdicts, ([patch, verdict]) => {
     if (verdict._tag !== "label") {

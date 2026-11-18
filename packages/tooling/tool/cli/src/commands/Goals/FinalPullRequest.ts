@@ -15,6 +15,7 @@
  * @since 0.0.0
  */
 
+import { PullRequest } from "@beep/github/PullRequest";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -25,6 +26,8 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ghOutput } from "../../internal/github/GhCommand.ts";
+import { layerWorktreeGithub } from "../Worktree/Worktree.service.ts";
+import type { PullRequestInfo } from "@beep/github/PullRequest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
@@ -103,24 +106,49 @@ export type GoalFinalPullRequestResolverShape = {
 const GH_PR_VIEW_FIELDS = "number,state,headRefName";
 
 const decodeCandidate = S.decodeUnknownOption(S.fromJsonString(GoalFinalPullRequestCandidate));
+const decodeCandidateFields = S.decodeUnknownOption(GoalFinalPullRequestCandidate);
+
+// `gh pr view`'s GraphQL state from the REST record: GitHub's REST `closed` covers a merge.
+const candidateFromPull = (pull: PullRequestInfo): O.Option<GoalFinalPullRequestCandidate> =>
+  decodeCandidateFields({
+    number: pull.number,
+    state: pull.merged ? "MERGED" : pull.state === "open" ? "OPEN" : "CLOSED",
+    headRefName: pull.head,
+  });
 
 const makeGoalFinalPullRequestResolver: Effect.Effect<
   GoalFinalPullRequestResolverShape,
   never,
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom
 > = Effect.map(Effect.context<ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom>(), (context) => {
-  const view = (root: string, target: ReadonlyArray<string>) =>
+  const forBranch = (root: string) =>
+    // KEEP (D-22): the branch's pull request in any state; the kit only has `openPullRequestForBranch`, and
+    // `PullRequest.list` filters one state per read.
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
     ghOutput({
-      args: ["pr", "view", ...target, "--json", GH_PR_VIEW_FIELDS],
+      args: ["pr", "view", "--json", GH_PR_VIEW_FIELDS],
       cwd: root,
       label: "gh pr view",
       onFailure: identity,
     }).pipe(Effect.map(decodeCandidate), Effect.orElseSucceed(O.none), Effect.provideContext(context));
+  // `PullRequest.get` (`GET /repos/{owner}/{repo}/pulls/{n}`, W8, SPEC D-22) on the `gh` login and the
+  // checkout's repository; any token, repository, transport or decode failure is `None`, as gh's was.
+  const byNumber = (root: string, number: number) =>
+    Layer.build(layerWorktreeGithub(root)).pipe(
+      Effect.flatMap((services) =>
+        Effect.provideContext(
+          PullRequest.use((pulls) => pulls.get(number)),
+          services
+        )
+      ),
+      Effect.scoped,
+      Effect.map(candidateFromPull),
+      Effect.orElseSucceed(O.none<GoalFinalPullRequestCandidate>),
+      Effect.provideContext(context)
+    );
   return {
-    forBranch: Effect.fn("GoalFinalPullRequestResolver.forBranch")((root: string) => view(root, A.empty())),
-    byNumber: Effect.fn("GoalFinalPullRequestResolver.byNumber")((root: string, number: number) =>
-      view(root, [`${number}`])
-    ),
+    forBranch: Effect.fn("GoalFinalPullRequestResolver.forBranch")(forBranch),
+    byNumber: Effect.fn("GoalFinalPullRequestResolver.byNumber")(byNumber),
   };
 });
 

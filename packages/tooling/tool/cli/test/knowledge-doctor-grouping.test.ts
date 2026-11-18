@@ -343,7 +343,8 @@ describe("knowledge doctor causal grouping", () => {
         assert.deepStrictEqual(reflectionFiles1, ["2026-10-14-claude.md"]);
         const forEach2 = yield* Effect.forEach(
           ["explorations/live", "explorations/live/README.md", "explorations/gone", "../outside", "/abs", ""],
-          reader.explorationPath
+          reader.explorationPath,
+          { concurrency: 1 }
         );
         assert.deepStrictEqual(forEach2, ["present", "present", "absent", "escapes", "escapes", "present"]);
       })
@@ -387,7 +388,9 @@ describe("goals packet core parity", () => {
         const repoRoot = yield* findRepoRoot();
         const records = yield* listGoalPackets(repoRoot);
         const reader = yield* makeGoalPacketWorkingTreeReader(repoRoot);
-        const results = yield* Effect.forEach(records, (record) => goalPacketFindings(record, reader));
+        const results = yield* Effect.forEach(records, (record) => goalPacketFindings(record, reader), {
+          concurrency: 1,
+        });
         const filesystem = A.appendAll(
           A.flatMap(results, (result) => result.findings),
           capabilityPacketFindings(

@@ -118,7 +118,9 @@ it.layer(testLayer, { timeout: "30 seconds" })("research notion-pull", (it) => {
       const xPosts = path.join(vaultRoot, "sources/x-posts");
       const written = yield* fs.readDirectory(xPosts);
       expect(A.length(written)).toBe(2);
-      const cards = yield* Effect.forEach(written, (name) => fs.readFileString(path.join(xPosts, name)));
+      const cards = yield* Effect.forEach(written, (name) => fs.readFileString(path.join(xPosts, name)), {
+        concurrency: 1,
+      });
       expect(A.every(cards, (card) => Str.includes("source-type: x-post")(card))).toBe(true);
       expect(A.some(cards, (card) => Str.includes('Saved to Notion ("Reading List")')(card))).toBe(true);
       expect(A.some(cards, (card) => Str.includes("title: Schema First")(card))).toBe(true);

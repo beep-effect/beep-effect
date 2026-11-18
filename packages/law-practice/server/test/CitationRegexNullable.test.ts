@@ -1,5 +1,8 @@
 import { it } from "@beep/test-runner";
-import { replayCitationRegexNullable } from "./CitationRegexNullable.fixtures.ts";
+import {
+  refuseCitationEmptyMetadataSubstitution,
+  replayCitationRegexNullable,
+} from "./CitationRegexNullable.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("nullable single native regex", (it) => {
@@ -10,4 +13,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("nullable si
       { timeout: 60000 }
     );
   }
+  it.effect("refuses an empty match in metadata substitution", () => refuseCitationEmptyMetadataSubstitution("bun"), {
+    timeout: 60000,
+  });
 });

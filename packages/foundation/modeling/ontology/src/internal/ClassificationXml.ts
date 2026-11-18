@@ -200,7 +200,8 @@ const walkIpc = Effect.fnUntraced(function* (
         O.orElse(concept, () => parent)
       );
       return A.appendAll(O.toArray(concept), children);
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.flatten(branches);
 });
@@ -295,7 +296,8 @@ const walkCpc = Effect.fnUntraced(function* (
         O.orElse(withRootParent, () => parent)
       );
       return A.appendAll(O.toArray(withRootParent), children);
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.flatten(branches);
 });
@@ -404,10 +406,12 @@ export const parseNice = Effect.fnUntraced(function* (
             O.some(classConcept),
             1
           ).pipe(Effect.mapError(() => sourceFailure("Invalid Nice basic number")));
-        })
+        }),
+        { concurrency: 1 }
       );
       return A.prepend(goods, classConcept);
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.flatten(forEach1);
 });

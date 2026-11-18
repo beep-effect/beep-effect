@@ -5,7 +5,10 @@ import {
   prepareCitationAnnotations,
 } from "@beep/law-practice-server/internal/Citation/AnnotationPreparation";
 import { CitationHtmlDiscoveryConfiguration } from "@beep/law-practice-server/internal/Citation/HtmlDiscovery";
-import { CitationHtmlGeometryPreparationConfiguration } from "@beep/law-practice-server/internal/Citation/HtmlGeometryPreparation";
+import {
+  CitationHtmlGeometryPreparationConfiguration,
+  installCitationHtmlGeometry,
+} from "@beep/law-practice-server/internal/Citation/HtmlGeometryPreparation";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import {
   citationUnaccountedText,
@@ -125,7 +128,7 @@ const install = Effect.fn("AnnotationAssemblyTest.install")(function* (
   const unicode = yield* makeCitationPythonUnicode(base);
   return { assembly, unicode, budget, limits };
 });
-it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: false })(
+it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: false, timeout: "30 seconds" })(
   "native annotation assembly",
   (it) => {
     it.effect(
@@ -179,57 +182,68 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
     it.effect(
       "creates implicit source maps with actual placeholder and diff workers on Bun and Node",
       () =>
-        withCitationTestInvocation(
-          Effect.gen(function* () {
-            const corpus = yield* loadMapping;
-            const discovery = yield* readCitationHtmlDiscoveryCorpus();
-            const fs = yield* FileSystem.FileSystem;
-            const captured = yield* Effect.context<Scope.Scope | Digest.Digest | Path.Path>();
-            for (const kind of ["bun", "node"] as const) {
-              const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
-              const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-annotation-diff-" });
-              const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
-              const assembly = yield* makeCitationAnnotationAssembly(setup.limits).pipe(
-                Effect.provideService(CitationTextBudget, setup.budget)
-              );
-              for (const row of A.filter(corpus.cases, (_, index) => index % 6 === 0)) {
-                const output = yield* setup.operation.run(
-                  "annotate",
-                  Effect.gen(function* () {
-                    const mapped = yield* prepareCitationAnnotationSourceMap(
-                      setup.limits,
-                      setup.runtime,
-                      CitationHtmlGeometryPreparationConfiguration.make({
-                        discovery: CitationHtmlDiscoveryConfiguration.make(discovery.configuration),
-                        diffRuntime,
-                      }),
-                      CitationPythonUnicodeStorage.make(row.plain),
-                      CitationPythonUnicodeStorage.make(row.source)
-                    );
-                    const prepared = yield* prepareCitationAnnotations(
-                      setup.limits,
-                      nativeReplacements(row.input),
-                      O.some(mapped.updater)
-                    );
-                    expect(prepared).toEqual(nativeReplacements(row.mapped));
-                    return yield* assembly.assemble(mapped.source, prepared);
-                  }).pipe(
-                    Effect.provideContext(setup.provided),
-                    Effect.provideContext(captured),
+        Effect.gen(function* () {
+          const corpus = yield* loadMapping;
+          const discovery = yield* readCitationHtmlDiscoveryCorpus();
+          const fs = yield* FileSystem.FileSystem;
+          const captured = yield* Effect.context<Scope.Scope | Digest.Digest | Path.Path>();
+          // Each row is one annotate request, so it opens its own invocation that owns the request's
+          // diff runtime and assembly: one invocation around the whole loop held six requests to a
+          // single real-time extract deadline, which contended runs exceeded. The invocation's scope
+          // releases each request's workers before the runtime's spawn count is checked.
+          for (const kind of ["bun", "node"] as const) {
+            const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
+            for (const row of A.filter(corpus.cases, (_, index) => index % 6 === 0)) {
+              const output = yield* withCitationTestInvocation(
+                Effect.gen(function* () {
+                  const directory = yield* fs.makeTempDirectoryScoped({ prefix: "citation-annotation-diff-" });
+                  const diffRuntime = yield* makeCitationDiffTestRuntime(kind, directory);
+                  const assembly = yield* makeCitationAnnotationAssembly(setup.limits).pipe(
                     Effect.provideService(CitationTextBudget, setup.budget)
-                  )
-                );
-                expect(output).toEqual(row.result);
-              }
-              yield* assertCitationWorkerCompositionReleased(
-                setup.operation,
-                setup.admission,
-                setup.observed.snapshot,
-                12
-              );
+                  );
+                  return yield* setup.operation.run(
+                    "annotate",
+                    Effect.gen(function* () {
+                      const html = yield* installCitationHtmlGeometry(
+                        setup.limits,
+                        setup.runtime,
+                        CitationHtmlGeometryPreparationConfiguration.make({
+                          discovery: CitationHtmlDiscoveryConfiguration.make(discovery.configuration),
+                          diffRuntime,
+                        })
+                      );
+                      const mapped = yield* prepareCitationAnnotationSourceMap(
+                        setup.limits,
+                        html,
+                        CitationPythonUnicodeStorage.make(row.plain),
+                        CitationPythonUnicodeStorage.make(row.source)
+                      );
+                      const prepared = yield* prepareCitationAnnotations(
+                        setup.limits,
+                        nativeReplacements(row.input),
+                        O.some(mapped.updater)
+                      );
+                      expect(prepared).toEqual(nativeReplacements(row.mapped));
+                      return yield* assembly.assemble(mapped.source, prepared);
+                    }).pipe(
+                      Effect.provideContext(setup.provided),
+                      Effect.provideContext(captured),
+                      Effect.provideService(CitationTextBudget, setup.budget)
+                    )
+                  );
+                }),
+                setup.limits
+              ).pipe(Effect.provideContext(setup.provided));
+              expect(output).toEqual(row.result);
             }
-          })
-        ),
+            yield* assertCitationWorkerCompositionReleased(
+              setup.operation,
+              setup.admission,
+              setup.observed.snapshot,
+              12
+            );
+          }
+        }),
       { timeout: 120000 }
     );
     it.effect("checks exact output, growth and cumulative allocation before materializing annotation output", () =>

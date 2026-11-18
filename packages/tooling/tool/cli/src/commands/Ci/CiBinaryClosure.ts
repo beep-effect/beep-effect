@@ -216,8 +216,10 @@ const closurePaths = Effect.fnUntraced(function* (tree: PolicySourceTree, worksp
     ROOT_TSCONFIG,
     ...A.map(directories, (directory) => `${directory}/tsconfig.json`),
   ]).pipe(Effect.mapError(CiCommandError.new("Cannot read the TypeScript configurations of the CI binary closure.")));
-  const opaque = yield* Effect.forEach(A.fromIterable(reached.opaqueWorkspaces), (directory) =>
-    listFiles(tree, `${directory}/src`)
+  const opaque = yield* Effect.forEach(
+    A.fromIterable(reached.opaqueWorkspaces),
+    (directory) => listFiles(tree, `${directory}/src`),
+    { concurrency: 1 }
   );
   // `bun.lock` names each patch by path only, so the patch bytes enter here.
   const patches = yield* listFiles(tree, PATCHES_DIRECTORY);
@@ -262,10 +264,13 @@ export const ciBinaryClosureOf: (source: {
   readonly workspaces: ReadonlyArray<PolicyWorkspace>;
 }) {
   const paths = yield* closurePaths(tree, workspaces);
-  const files = yield* Effect.forEach(paths, (path) =>
-    Effect.flatMap(readRequired(tree, path), (text) =>
-      Effect.map(sha256Hex(text), (sha256) => CiBinaryClosureFile.make({ path, sha256 }))
-    )
+  const files = yield* Effect.forEach(
+    paths,
+    (path) =>
+      Effect.flatMap(readRequired(tree, path), (text) =>
+        Effect.map(sha256Hex(text), (sha256) => CiBinaryClosureFile.make({ path, sha256 }))
+      ),
+    { concurrency: 1 }
   );
   const listing = A.join([CLOSURE_VERSION, ...A.map(files, (file) => `${file.sha256}  ${file.path}`), ""], "\n");
   const digest = yield* sha256Hex(listing);
@@ -347,6 +352,7 @@ export const ciBinaryClosureCommand = Command.make(
       const closure = yield* computeCiBinaryClosure(root);
       if (O.isSome(out)) yield* writeClosure(closure, out.value);
       yield* Console.log(closure.digest);
-      if (list) yield* Effect.forEach(closure.files, (file) => Console.log(`${file.sha256}  ${file.path}`));
+      if (list)
+        yield* Effect.forEach(closure.files, (file) => Console.log(`${file.sha256}  ${file.path}`), { concurrency: 1 });
     }).pipe(Effect.catchTag("CiCommandError", reportCiCommandError))
 ).pipe(Command.withDescription("Print the content digest of the compiled CI binary's closure"));

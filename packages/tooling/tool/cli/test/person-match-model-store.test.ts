@@ -195,7 +195,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
           const error = yield* Effect.flip(prepareAdaFaceArtifacts(root));
 
           expect(error._tag).toBe("MatchPersonModelAcquisitionError");
-          expect(error.message).toContain("Could not acquire the AdaFace model-store lock");
+          expect(error.message).toContain("Could not acquire the person-match model-store lock");
           const readFileString6 = yield* fs.readFileString(lockPath);
           expect(readFileString6).toBe("active-owner-token");
         })

@@ -82,7 +82,7 @@ const program = Effect.scoped(
           const readFileString3 = yield* fs.readFileString(path.join(scratch, folder, "migration.sql"));
           yield* Console.error(readFileString3);
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       return yield* MigrationsDriftError.make({
         message:

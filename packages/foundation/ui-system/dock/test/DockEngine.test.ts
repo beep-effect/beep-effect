@@ -444,47 +444,50 @@ describe("DockEngine", () => {
         const transition23 = yield* engine.transition(DockWorkspace.empty, openPanelOne);
         const root = (yield* requireChanged(transition23)).state;
 
-        yield* Effect.forEach(DockSide.literals, (side) =>
-          Effect.gen(function* () {
-            const transition24 = yield* engine.transition(
-              root,
-              envelope(
-                `command-side-${side}`,
-                OpenPanelCommand.make({
-                  panel: panelTwo,
-                  placement: SplitPlacement.make({
-                    referenceGroupId: groupOne,
-                    newGroupId: groupTwo,
-                    splitId: splitOne,
-                    side,
-                    newGroupRatio: SplitRatio.make(2_500),
+        yield* Effect.forEach(
+          DockSide.literals,
+          (side) =>
+            Effect.gen(function* () {
+              const transition24 = yield* engine.transition(
+                root,
+                envelope(
+                  `command-side-${side}`,
+                  OpenPanelCommand.make({
+                    panel: panelTwo,
+                    placement: SplitPlacement.make({
+                      referenceGroupId: groupOne,
+                      newGroupId: groupTwo,
+                      splitId: splitOne,
+                      side,
+                      newGroupRatio: SplitRatio.make(2_500),
+                    }),
+                  })
+                )
+              );
+              const opened = yield* requireChanged(transition24);
+              const split = yield* requireRootSplit(opened.state);
+              const expected = DockSide.match({
+                left: () => ({ axis: "horizontal", groupId: groupTwo, ratio: 2_500 }),
+                right: () => ({ axis: "horizontal", groupId: groupOne, ratio: 7_500 }),
+                top: () => ({ axis: "vertical", groupId: groupTwo, ratio: 2_500 }),
+                bottom: () => ({ axis: "vertical", groupId: groupOne, ratio: 7_500 }),
+              })(side);
+              const geometry = yield* SplitLayout.match(split.layout, {
+                horizontal: ({ left, leftRatio }) =>
+                  DockNode.match(left, {
+                    Tabs: (tabs) => Effect.succeed({ axis: "horizontal", groupId: tabs.groupId, ratio: leftRatio }),
+                    Split: () => Effect.die("expected a tab leaf"),
                   }),
-                })
-              )
-            );
-            const opened = yield* requireChanged(transition24);
-            const split = yield* requireRootSplit(opened.state);
-            const expected = DockSide.match({
-              left: () => ({ axis: "horizontal", groupId: groupTwo, ratio: 2_500 }),
-              right: () => ({ axis: "horizontal", groupId: groupOne, ratio: 7_500 }),
-              top: () => ({ axis: "vertical", groupId: groupTwo, ratio: 2_500 }),
-              bottom: () => ({ axis: "vertical", groupId: groupOne, ratio: 7_500 }),
-            })(side);
-            const geometry = yield* SplitLayout.match(split.layout, {
-              horizontal: ({ left, leftRatio }) =>
-                DockNode.match(left, {
-                  Tabs: (tabs) => Effect.succeed({ axis: "horizontal", groupId: tabs.groupId, ratio: leftRatio }),
-                  Split: () => Effect.die("expected a tab leaf"),
-                }),
-              vertical: ({ top, topRatio }) =>
-                DockNode.match(top, {
-                  Tabs: (tabs) => Effect.succeed({ axis: "vertical", groupId: tabs.groupId, ratio: topRatio }),
-                  Split: () => Effect.die("expected a tab leaf"),
-                }),
-            });
+                vertical: ({ top, topRatio }) =>
+                  DockNode.match(top, {
+                    Tabs: (tabs) => Effect.succeed({ axis: "vertical", groupId: tabs.groupId, ratio: topRatio }),
+                    Split: () => Effect.die("expected a tab leaf"),
+                  }),
+              });
 
-            expect(geometry).toEqual(expected);
-          })
+              expect(geometry).toEqual(expected);
+            }),
+          { concurrency: 1 }
         );
       })
     );
@@ -522,7 +525,8 @@ describe("DockEngine", () => {
               const opened = yield* requireChanged(transition26);
 
               expect(SplitLayout.ratio((yield* requireRootSplit(opened.state)).layout)).toBe(expected);
-            })
+            }),
+          { concurrency: 1 }
         );
       })
     );

@@ -1,0 +1,18 @@
+[
+  {
+    "markdown": "| a\tb |\n",
+    "html": "<p>| a\tb |</p>\n",
+    "example": 1,
+    "start_line": 5,
+    "end_line": 9,
+    "section": "Tables draft (EXTENSION)"
+  },
+  {
+    "markdown": "caf\u00e9 \ud83d\ude00\n",
+    "html": "<p>caf\u00e9 \ud83d\ude00</p>\n",
+    "example": 3,
+    "start_line": 19,
+    "end_line": 23,
+    "section": "Plain section"
+  }
+]

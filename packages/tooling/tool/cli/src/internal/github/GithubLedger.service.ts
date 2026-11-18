@@ -337,7 +337,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
     const row = { ...sample, identity, credential: Str.startsWith("app:")(identity) ? O.none() : sample.credential };
     yield* store.append(row);
     yield* store.writeLatestSample(row);
-    yield* Effect.forEach(readingsOfSample(row), remember, { discard: true });
+    yield* Effect.forEach(readingsOfSample(row), remember, { concurrency: 1, discard: true });
   }, absorb("recordSample"));
 
   const recordCalibration = (row: CalibrationRow) =>
@@ -431,7 +431,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
       A.filter((key) => A.contains(RESERVE_RESOURCES, key.resource)),
       A.dedupeWith((self: BucketKey, that: BucketKey) => bucketKeyString(self) === bucketKeyString(that))
     );
-    return yield* Effect.forEach(keys, (key) => signalOf(key, all));
+    return yield* Effect.forEach(keys, (key) => signalOf(key, all), { concurrency: 1 });
   });
 
   const lastSampleAt = Effect.fnUntraced(function* (identity: GithubIdentityLabel) {
@@ -512,7 +512,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
     const now = yield* DateTime.now;
     const calibration = yield* calibrationRows(now);
     const admit = admitter(now, calibration);
-    const stored = yield* Effect.forEach(hoursOfRange(range), storedComplete);
+    const stored = yield* Effect.forEach(hoursOfRange(range), storedComplete, { concurrency: 1 });
     const contextOf = yield* contextRowsFor(incompleteHours(stored), now);
     return yield* Effect.forEach(
       stored,
@@ -552,7 +552,8 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
           });
         }
         return rollupOf({ hour, host, complete: false, rows, admitGraphqlSamples: admit });
-      })
+      }),
+      { concurrency: 1 }
     );
   });
 
@@ -567,7 +568,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
       rowHours,
       (hour) => nowMillis >= DateTime.toEpochMillis(hour) + Duration.toMillis(ROLLUP_GRACE)
     );
-    const stored = yield* Effect.forEach(graced, storedComplete);
+    const stored = yield* Effect.forEach(graced, storedComplete, { concurrency: 1 });
     const pending = incompleteHours(stored);
     const contextOf = yield* contextRowsFor(pending, now);
     yield* Effect.forEach(
@@ -579,7 +580,7 @@ export const makeGithubBudgetLedger = Effect.fn("GithubBudgetLedger.make")(funct
           ? store.writeRollup(rollupOf({ hour, host, complete, rows, admitGraphqlSamples: admit }))
           : Effect.void;
       },
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     const recentRows = yield* store.rows(LedgerRange.make({ from: DateTime.subtract(now, { hours: 1 }), to: now }));
     const previous = yield* store.readRollup(DateTime.subtract(hourStartOf(now), { hours: 1 }));

@@ -186,7 +186,8 @@ export const makeVaultSyncFileStore = Effect.fn($I`makeVaultSyncFileStore`)(func
             return VaultScanObservation.make({ files: [file], folders: [] });
           }
           return emptyObservation;
-        })
+        }),
+        { concurrency: 1 }
       );
 
       return mergeObservations(observations);

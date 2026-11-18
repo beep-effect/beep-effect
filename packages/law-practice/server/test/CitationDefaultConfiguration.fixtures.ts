@@ -9,10 +9,12 @@ import {
 import { CitationDefaultConfigurationInput } from "@beep/law-practice-server/internal/Citation/DefaultConfiguration";
 import { makeCitationDefaultEngineConfiguration } from "@beep/law-practice-server/internal/Citation/EngineArtifact";
 import { CitationFrozenEditions } from "@beep/law-practice-server/internal/Citation/FrozenEditions";
+import { CitationSemanticExtractionConfiguration } from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import {
   installCitationDocumentExtractionFixture,
   installCitationDocumentRuntimeFixture,
@@ -51,8 +53,12 @@ const installDefaults = Effect.fn("DefaultConfigurationTest.defaults")(function*
     citationDefaultFixtureAssetInput(diffRuntime),
     citationFixtureEngineBuild(kind)
   ).pipe(Effect.provideContext(provided), DateTime.withCurrentZoneOffset(0));
+  const defaultConfiguration = yield* ownCitationTestConfiguration(
+    CitationSemanticExtractionConfiguration,
+    installed.configuration
+  );
   return {
-    defaultConfiguration: installed.configuration,
+    defaultConfiguration,
     assets: installed.assets,
     engineArtifact: installed.engineArtifact,
     artifactDescriptor: installed.descriptor,

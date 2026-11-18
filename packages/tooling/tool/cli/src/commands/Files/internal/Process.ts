@@ -1156,8 +1156,10 @@ const writeProcessOutcomeArtifacts = Effect.fn("Files.writeProcessOutcomeArtifac
   }
 
   if (A.length(outcome.childRecords) > 0) {
-    const childLines = yield* Effect.forEach(outcome.childRecords, (record) =>
-      encodeProcessJsonLine(record, encodeChildArtifactRecordJson, "process child artifact record")
+    const childLines = yield* Effect.forEach(
+      outcome.childRecords,
+      (record) => encodeProcessJsonLine(record, encodeChildArtifactRecordJson, "process child artifact record"),
+      { concurrency: 1 }
     );
     yield* writeProcessStringFile(
       path.join(outputDirectory, "children", `${outcome.sourceRecord.artifactId}`, "artifacts.jsonl"),
@@ -1198,11 +1200,15 @@ const writeProcessManifestTree = Effect.fn("Files.writeProcessManifestTree")(fun
     sourceRootLabel: "input",
     strategies: A.map(outcomes, (outcome) => outcome.strategy),
   });
-  const sourceLines = yield* Effect.forEach(sourceRecords, (record) =>
-    encodeProcessJsonLine(record, encodeSourceProcessingRecordJson, "process source record")
+  const sourceLines = yield* Effect.forEach(
+    sourceRecords,
+    (record) => encodeProcessJsonLine(record, encodeSourceProcessingRecordJson, "process source record"),
+    { concurrency: 1 }
   );
-  const failureLines = yield* Effect.forEach(failureRecords, (record) =>
-    encodeProcessJsonLine(record, encodeFileProcessingFailureRecordJson, "process failure record")
+  const failureLines = yield* Effect.forEach(
+    failureRecords,
+    (record) => encodeProcessJsonLine(record, encodeFileProcessingFailureRecordJson, "process failure record"),
+    { concurrency: 1 }
   );
   const coverageJson = yield* encodeFileProcessingCoverageSummaryJson(coverage).pipe(
     FilesCommandError.mapError("Failed to encode process coverage")
@@ -1323,7 +1329,7 @@ export const processFilesImpl = Effect.fn("FilesCommandService.processFiles")(fu
       (left, right) => (left === "pst") === (right === "pst")
     ),
     engineFor,
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   const outcomes = yield* processCollectedSources(collection.files, outputDirectory, options, engineFor);

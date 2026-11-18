@@ -235,7 +235,7 @@ const productOperationBuilder = <A, B, C, R1, E1, R2, E2>(
   outputSchema: S.Schema<readonly [B, C]>
 ): OperationBuilder<A, readonly [B, C], R1 | R2, E1 | E2> =>
   new OperationBuilder(
-    (input) => Effect.all([self.operation(input), that.operation(input)]),
+    (input) => Effect.all([self.operation(input), that.operation(input)], { concurrency: 1 }),
     self.inputSchema,
     outputSchema,
     `${self.name}x${that.name}`
@@ -582,7 +582,7 @@ export const identity = <A>(schema: S.Schema<A>): OperationBuilder<A, A> =>
 export const traverse =
   <A, B, R, E>(operation: OperationBuilder<A, B, R, E>) =>
   (inputs: ReadonlyArray<A>): Effect.Effect<ReadonlyArray<B>, E, R> =>
-    Effect.forEach(inputs, (input) => operation.run(input));
+    Effect.forEach(inputs, (input) => operation.run(input), { concurrency: 1 });
 
 /**
  * The aggregated result carried by a {@link Monoid.Monoid} over carrier `M`.

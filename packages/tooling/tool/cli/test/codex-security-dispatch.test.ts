@@ -96,6 +96,7 @@ const fixture = Effect.fn("SecurityDispatchTest.fixture")(function* (
   yield* fs.writeFileString(argument1, encodedJson1);
   const calls = yield* Ref.make<ReadonlyArray<ChildProcess.StandardCommand>>([]);
   // Own double: the scan spawn swaps the output directory on disk; ScriptedSpawner scripts are synchronous.
+  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
   const spawner = ChildProcessSpawner.make(
     Effect.fnUntraced(function* (command: ChildProcess.Command) {
       if (!ChildProcess.isStandardCommand(command)) {
@@ -316,6 +317,7 @@ it.layer(Layer.mergeAll(WorkingDirectory, TestConsole.layer), { timeout: "30 sec
         const started = yield* Deferred.make<void>();
         const released = yield* Ref.make(false);
         // Own double: the spawn registers a release finalizer and completes the `started` Deferred.
+        // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
         const stalled = ChildProcessSpawner.make(() =>
           Effect.gen(function* () {
             yield* Effect.addFinalizer(() => Ref.set(released, true));

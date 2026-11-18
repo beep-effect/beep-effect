@@ -1,7 +1,7 @@
 # P2 Slice-Proof Runbook (operator-gated legs)
 
 The P2 code surface is landed and verified (`infra/src/OpenClaw.ts`,
-`infra/openclaw`, branch `goals/openclaw-p2-generation`). This runbook is the
+`infra/openclaw`, the `openclaw-p2-generation` branch, merged in #490). This runbook is the
 executable checklist for the remaining P2 exit criteria, which need an
 operator present (YubiKey-FIDO sudo, 1Password, Tailscale). Evidence lands
 under `history/p2/` in the spike NOTES format (assertion → commands →
@@ -10,7 +10,7 @@ raw output).
 ## 0. Prerequisites (operator)
 
 1. Merge PR #482 (`@beep/openclaw` driver), then rebase
-   `goals/openclaw-p2-generation` onto `origin/main` and drive its PR to
+   the `openclaw-p2-generation` branch onto `origin/main` and drive its PR to
    mergeable via `/yeet` (verify already green on the stacked branch).
 2. Armed sudo pty for every privileged step — same mechanics as the
    gauntlet: run the WHOLE session inside one pty via

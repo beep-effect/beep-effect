@@ -285,29 +285,32 @@ describe("ClaimElement", () => {
   it.effect("rejects incoherent trees", () =>
     Effect.gen(function* () {
       const tree = rejects(ClaimElementTree);
-      const results = yield* Effect.all([
-        tree({ ...claimOneTree, elements: [{ ...claimOneTree.elements[0], path: "2" }], edges: [] }),
-        tree({ ...claimOneTree, elements: [claimOneTree.elements[0], claimOneTree.elements[0]], edges: [] }),
-        tree({ ...claimOneTree, edges: [{ kind: "part-of", child: "1.z", parent: "1" }] }),
-        tree({ ...claimOneTree, elements: [] }),
-        tree({ ...claimOneTree, producer: "model" }),
-        // two terms of one element overlap
-        tree({
-          ...claimOneTree,
-          edges: [],
-          elements: [
-            claimOneTree.elements[0],
-            claimOneTree.elements[1],
-            {
-              ...claimOneTree.elements[2],
-              terms: [
-                { anchor: processorClauseAnchor, determiner: "a", head: "processor" },
-                { anchor: processorAnchor, determiner: "a", head: "processor" },
-              ],
-            },
-          ],
-        }),
-      ]);
+      const results = yield* Effect.all(
+        [
+          tree({ ...claimOneTree, elements: [{ ...claimOneTree.elements[0], path: "2" }], edges: [] }),
+          tree({ ...claimOneTree, elements: [claimOneTree.elements[0], claimOneTree.elements[0]], edges: [] }),
+          tree({ ...claimOneTree, edges: [{ kind: "part-of", child: "1.z", parent: "1" }] }),
+          tree({ ...claimOneTree, elements: [] }),
+          tree({ ...claimOneTree, producer: "model" }),
+          // two terms of one element overlap
+          tree({
+            ...claimOneTree,
+            edges: [],
+            elements: [
+              claimOneTree.elements[0],
+              claimOneTree.elements[1],
+              {
+                ...claimOneTree.elements[2],
+                terms: [
+                  { anchor: processorClauseAnchor, determiner: "a", head: "processor" },
+                  { anchor: processorAnchor, determiner: "a", head: "processor" },
+                ],
+              },
+            ],
+          }),
+        ],
+        { concurrency: 1 }
+      );
       expect(results).toEqual(A.replicate(true, results.length));
     })
   );
@@ -316,63 +319,66 @@ describe("ClaimElement", () => {
     Effect.gen(function* () {
       const withEdge = (edge: unknown) => rejects(ClaimElementTree)({ ...claimOneTree, edges: [edge] });
       const sensorRef = { path: "1.b", anchor: sensorBackAnchor };
-      const results = yield* Effect.all([
-        // claim-local introducing path that names no element
-        withEdge({ kind: "antecedent", referring: sensorRef, introducing: { path: "1.z", anchor: sensorAnchor } }),
-        // introduction in a later claim
-        withEdge({ kind: "antecedent", referring: sensorRef, introducing: { path: "3", anchor: sensorAnchor } }),
-        // referring term outside this claim
-        withEdge({ kind: "antecedent", referring: { path: "2", anchor: sensorBackAnchor }, introducing: introRef }),
-        // referring anchor that names no term of its element
-        withEdge({
-          kind: "antecedent",
-          referring: { path: "1.b", anchor: { startChar: 50, endChar: 53, quote: "abc" } },
-          introducing: introRef,
-        }),
-        // dependency on the tree's own claim
-        withEdge({ kind: "depends-on-element", dependent: "1.a", ancestor: "1" }),
-        // dependency on a dangling element of the tree's own claim
-        withEdge({ kind: "depends-on-element", dependent: "1.a", ancestor: "1.z" }),
-        // dependency on a later claim
-        withEdge({ kind: "depends-on-element", dependent: "1.a", ancestor: "5" }),
-        // functional term part that names no element
-        withEdge({
-          kind: "functional",
-          element: "1.b",
-          parts: [{ kind: "term", term: { path: "1.q", anchor: processorAnchor } }],
-        }),
-        // functional term part that names a term of another element
-        withEdge({
-          kind: "functional",
-          element: "1.b",
-          parts: [{ kind: "term", term: { path: "1.a", anchor: sensorAnchor } }],
-        }),
-        // functional connecting text outside the element it is read from
-        withEdge({
-          kind: "functional",
-          element: "1.b",
-          parts: [{ kind: "text", anchor: anchorIn(claimOneText, "comprising") }],
-        }),
-        // functional edge read from a non-functional element
-        withEdge({ kind: "functional", element: "1.a", parts: [{ kind: "text", anchor: connectAnchor }] }),
-        // part-of self-loop
-        withEdge({ kind: "part-of", child: "1", parent: "1" }),
-        // part-of child not nested under its parent
-        withEdge({ kind: "part-of", child: "1.a", parent: "1.b" }),
-        // term outside its element's span
-        rejects(ClaimElementTree)({
-          ...claimOneTree,
-          elements: [
-            claimOneTree.elements[0],
-            {
-              ...claimOneTree.elements[1],
-              terms: [{ anchor: processorAnchor, determiner: "a", head: "processor" }],
-            },
-            claimOneTree.elements[2],
-          ],
-          edges: [],
-        }),
-      ]);
+      const results = yield* Effect.all(
+        [
+          // claim-local introducing path that names no element
+          withEdge({ kind: "antecedent", referring: sensorRef, introducing: { path: "1.z", anchor: sensorAnchor } }),
+          // introduction in a later claim
+          withEdge({ kind: "antecedent", referring: sensorRef, introducing: { path: "3", anchor: sensorAnchor } }),
+          // referring term outside this claim
+          withEdge({ kind: "antecedent", referring: { path: "2", anchor: sensorBackAnchor }, introducing: introRef }),
+          // referring anchor that names no term of its element
+          withEdge({
+            kind: "antecedent",
+            referring: { path: "1.b", anchor: { startChar: 50, endChar: 53, quote: "abc" } },
+            introducing: introRef,
+          }),
+          // dependency on the tree's own claim
+          withEdge({ kind: "depends-on-element", dependent: "1.a", ancestor: "1" }),
+          // dependency on a dangling element of the tree's own claim
+          withEdge({ kind: "depends-on-element", dependent: "1.a", ancestor: "1.z" }),
+          // dependency on a later claim
+          withEdge({ kind: "depends-on-element", dependent: "1.a", ancestor: "5" }),
+          // functional term part that names no element
+          withEdge({
+            kind: "functional",
+            element: "1.b",
+            parts: [{ kind: "term", term: { path: "1.q", anchor: processorAnchor } }],
+          }),
+          // functional term part that names a term of another element
+          withEdge({
+            kind: "functional",
+            element: "1.b",
+            parts: [{ kind: "term", term: { path: "1.a", anchor: sensorAnchor } }],
+          }),
+          // functional connecting text outside the element it is read from
+          withEdge({
+            kind: "functional",
+            element: "1.b",
+            parts: [{ kind: "text", anchor: anchorIn(claimOneText, "comprising") }],
+          }),
+          // functional edge read from a non-functional element
+          withEdge({ kind: "functional", element: "1.a", parts: [{ kind: "text", anchor: connectAnchor }] }),
+          // part-of self-loop
+          withEdge({ kind: "part-of", child: "1", parent: "1" }),
+          // part-of child not nested under its parent
+          withEdge({ kind: "part-of", child: "1.a", parent: "1.b" }),
+          // term outside its element's span
+          rejects(ClaimElementTree)({
+            ...claimOneTree,
+            elements: [
+              claimOneTree.elements[0],
+              {
+                ...claimOneTree.elements[1],
+                terms: [{ anchor: processorAnchor, determiner: "a", head: "processor" }],
+              },
+              claimOneTree.elements[2],
+            ],
+            edges: [],
+          }),
+        ],
+        { concurrency: 1 }
+      );
       expect(results).toEqual(A.replicate(true, results.length));
     })
   );
@@ -403,32 +409,35 @@ describe("ClaimElement", () => {
     Effect.gen(function* () {
       const term = rejects(ClaimTerm);
       const termRef = rejects(ClaimTermRef);
-      const results = yield* Effect.all([
-        term({ anchor: sensorAnchor, determiner: "an", head: "Optical sensor" }),
-        term({ anchor: sensorAnchor, determiner: "an", head: "optical  sensor" }),
-        term({ anchor: sensorAnchor, determiner: "some", head: "optical sensor" }),
-        term({ anchor: sensorAnchor, determiner: "the", head: "optical sensor" }),
-        term({ anchor: sensorAnchor, determiner: "at-least-one", head: "optical sensor" }),
-        term({ anchor: sensorAnchor, determiner: "bare", head: "optical sensor" }),
-        term({ anchor: anchorAt(0, "a plurality of sensors"), determiner: "a", head: "plurality of sensors" }),
-        term({ anchor: { startChar: 0, endChar: 3, quote: "an optical" }, determiner: "an", head: "x" }),
-        termRef({ path: "b.ii", anchor: sensorAnchor }),
-        termRef({ path: "0.a", anchor: sensorAnchor }),
-      ]);
+      const results = yield* Effect.all(
+        [
+          term({ anchor: sensorAnchor, determiner: "an", head: "Optical sensor" }),
+          term({ anchor: sensorAnchor, determiner: "an", head: "optical  sensor" }),
+          term({ anchor: sensorAnchor, determiner: "some", head: "optical sensor" }),
+          term({ anchor: sensorAnchor, determiner: "the", head: "optical sensor" }),
+          term({ anchor: sensorAnchor, determiner: "at-least-one", head: "optical sensor" }),
+          term({ anchor: sensorAnchor, determiner: "bare", head: "optical sensor" }),
+          term({ anchor: anchorAt(0, "a plurality of sensors"), determiner: "a", head: "plurality of sensors" }),
+          term({ anchor: { startChar: 0, endChar: 3, quote: "an optical" }, determiner: "an", head: "x" }),
+          termRef({ path: "b.ii", anchor: sensorAnchor }),
+          termRef({ path: "0.a", anchor: sensorAnchor }),
+        ],
+        { concurrency: 1 }
+      );
       expect(results).toEqual(A.replicate(true, results.length));
     })
   );
 
   it.effect("decodes every edge kind", () =>
     Effect.gen(function* () {
-      const edges = yield* Effect.forEach(edgeFixtures, (edge) => decodeEdge(edge));
+      const edges = yield* Effect.forEach(edgeFixtures, (edge) => decodeEdge(edge), { concurrency: 1 });
       expect(A.map(edges, ({ kind }) => kind)).toEqual(ClaimElementEdgeKind.literals);
     })
   );
 
   it.effect("decodes every finding kind", () =>
     Effect.gen(function* () {
-      const findings = yield* Effect.forEach(findingFixtures, (finding) => decodeFinding(finding));
+      const findings = yield* Effect.forEach(findingFixtures, (finding) => decodeFinding(finding), { concurrency: 1 });
       expect(A.map(findings, ({ kind }) => kind)).toEqual(AntecedentFindingKind.literals);
       expect(A.every(findings, (finding) => finding.referring.anchor.quote === "the lever")).toBe(true);
     })
@@ -449,22 +458,25 @@ describe("ClaimElement", () => {
     Effect.gen(function* () {
       const finding = rejects(AntecedentFinding);
       const edge = rejects(ClaimElementEdge);
-      const results = yield* Effect.all([
-        finding({ ...findingFixtures[1], candidates: [introRef] }),
-        finding({ ...findingFixtures[1], candidates: [] }),
-        finding({ kind: "unsupported-claim", rule: "x", referring: leverRef }),
-        finding({ kind: "missing-antecedent", rule: "x", chain: [2, 1] }),
-        finding({ ...findingFixtures[0], rule: "Not Kebab" }),
-        finding({ ...findingFixtures[0], chain: [] }),
-        finding({ kind: "number-mismatch", rule: "x", referring: leverRef, chain: [2, 1] }),
-        finding({ ...findingFixtures[0], chain: [7, 7, 9] }),
-        finding({ ...findingFixtures[0], chain: [2, 7] }),
-        finding({ ...findingFixtures[0], chain: [3, 1] }),
-        finding({ ...findingFixtures[3], chain: [2, 2] }),
-        finding({ ...findingFixtures[1], candidates: [introRef, introRef] }),
-        edge({ kind: "contains", child: "1.a", parent: "1" }),
-        edge({ kind: "functional", element: "1.b", parts: [] }),
-      ]);
+      const results = yield* Effect.all(
+        [
+          finding({ ...findingFixtures[1], candidates: [introRef] }),
+          finding({ ...findingFixtures[1], candidates: [] }),
+          finding({ kind: "unsupported-claim", rule: "x", referring: leverRef }),
+          finding({ kind: "missing-antecedent", rule: "x", chain: [2, 1] }),
+          finding({ ...findingFixtures[0], rule: "Not Kebab" }),
+          finding({ ...findingFixtures[0], chain: [] }),
+          finding({ kind: "number-mismatch", rule: "x", referring: leverRef, chain: [2, 1] }),
+          finding({ ...findingFixtures[0], chain: [7, 7, 9] }),
+          finding({ ...findingFixtures[0], chain: [2, 7] }),
+          finding({ ...findingFixtures[0], chain: [3, 1] }),
+          finding({ ...findingFixtures[3], chain: [2, 2] }),
+          finding({ ...findingFixtures[1], candidates: [introRef, introRef] }),
+          edge({ kind: "contains", child: "1.a", parent: "1" }),
+          edge({ kind: "functional", element: "1.b", parts: [] }),
+        ],
+        { concurrency: 1 }
+      );
       expect(results).toEqual(A.replicate(true, results.length));
     })
   );

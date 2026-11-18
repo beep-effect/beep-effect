@@ -146,7 +146,6 @@ const readConfigArgument = (args: ReadonlyArray<string>): O.Option<string> =>
     )
   );
 
-// Own double: each spawn reads the scorer-generated config file it is pointed at, inside the spawn.
 /**
  * Spawner stand-in for the three law-lane tools: records each spawned command
  * name, snapshots the scorer-generated config a lane is pointed at, and answers
@@ -158,6 +157,8 @@ const fakeLawSpawner = Effect.fn("AgentEffectivenessEvalScorerTest.fakeLawSpawne
   responses: LaneResponses
 ) {
   const fs = yield* FileSystem.FileSystem;
+  // Own double: each spawn reads the scorer-generated config file it is pointed at, inside the spawn.
+  // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
   return ChildProcessSpawner.make((command) => {
     if (!ChildProcess.isStandardCommand(command)) {
       return Effect.die("unexpected piped law-lane command");
@@ -214,8 +215,10 @@ const runFakeLaw = Effect.fn("AgentEffectivenessEvalScorerTest.runFakeLaw")(func
       const fixtureDir = yield* fs.makeTempDirectoryScoped();
       const repoRoot = yield* fs.makeTempDirectoryScoped();
       yield* prepareRepo(repoRoot);
-      yield* Effect.forEach(sourceFiles, (file) =>
-        writeText(path.join(fixtureDir, file), "export const contact = 1;\n")
+      yield* Effect.forEach(
+        sourceFiles,
+        (file) => writeText(path.join(fixtureDir, file), "export const contact = 1;\n"),
+        { concurrency: 1 }
       );
       return { repoRoot, law: yield* evaluateLaw(fixtureDir, repoRoot, sourceFiles) };
     })
@@ -434,7 +437,10 @@ it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effecti
       expect(A.sort(commands, Str.Order)).toEqual(["biome", "bun", "tsgo"]);
       assertSome(A.last(commands), "tsgo");
 
-      const [biomeConfig, tsgoConfig] = yield* Effect.all(A.map(configs, (text) => decodeUnknownJson(text)));
+      const [biomeConfig, tsgoConfig] = yield* Effect.all(
+        A.map(configs, (text) => decodeUnknownJson(text)),
+        { concurrency: 1 }
+      );
       expect(biomeConfig).toMatchObject({
         root: true,
         vcs: { enabled: false },
@@ -484,7 +490,10 @@ it.layer(TestLayer, { concurrent: false, timeout: "10 seconds" })("agent-effecti
         "biome did not measure a staged source file: it processed 3 of 4.",
       ]);
 
-      const [biomeConfig, tsgoConfig] = yield* Effect.all(A.map(configs, (text) => decodeUnknownJson(text)));
+      const [biomeConfig, tsgoConfig] = yield* Effect.all(
+        A.map(configs, (text) => decodeUnknownJson(text)),
+        { concurrency: 1 }
+      );
       expect(biomeConfig).toMatchObject({ files: { maxSize: 1024 * 1024 * 1024 } });
       expect(tsgoConfig).toMatchObject({
         files: ["packages/fixture/src/Contact.ts", "packages/fixture/src/generated/impl.ts"],

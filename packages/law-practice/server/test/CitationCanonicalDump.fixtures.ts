@@ -1,13 +1,20 @@
 /** Original dump_citations workflow, eyecite 2.7.6 BSD-2-Clause.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { makeCitationBuiltinDump } from "@beep/law-practice-server/internal/Citation/BuiltinDump";
 import { copyCitationCleanerUnicode } from "@beep/law-practice-server/internal/Citation/CleanerValues";
 import { CitationDumpFailure, makeCitationDump } from "@beep/law-practice-server/internal/Citation/Dump";
 import { CitationGeneratedReference } from "@beep/law-practice-server/internal/Citation/GeneratedReferences";
-import { makeCitationOccurrenceProjection } from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
+import {
+  CitationOccurrenceProjectionConfiguration,
+  makeCitationOccurrenceProjection as makeOwnedCitationOccurrenceProjection,
+} from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
 import { makeCitationPythonUnicode } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
-import { makeCitationSemanticExtraction } from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
+import {
+  CitationSemanticExtractionConfiguration,
+  makeCitationSemanticExtraction as makeOwnedCitationSemanticExtraction,
+} from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { expect } from "@effect/vitest";
@@ -21,12 +28,22 @@ import * as Str from "effect/String";
 import { readCitationCanonicalCaptures } from "./CitationCanonicalCaptures.fixtures.ts";
 import { readCitationCanonicalPlainExtraction } from "./CitationCanonicalCriteria.fixtures.ts";
 import { compareCitationCanonicalModel } from "./CitationCanonicalModel.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationDefaultConfigurationFixture } from "./CitationDefaultConfiguration.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationNativeRenderingAsset } from "./CitationNativeRendering.fixtures.ts";
 import { assertCitationMentionRanges, citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtures.ts";
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
+
+const makeCitationSemanticExtraction = installCitationOwnedTestStage({
+  schema: CitationSemanticExtractionConfiguration,
+  install: makeOwnedCitationSemanticExtraction,
+});
+const makeCitationOccurrenceProjection = installCitationOwnedTestStage({
+  schema: CitationOccurrenceProjectionConfiguration,
+  install: makeOwnedCitationOccurrenceProjection,
+});
 
 const prefix = "tests.test_UtilsTest.UtilsTest.test_dump_citations::tests/test_UtilsTest.py:";
 const StringValue = S.Struct({ kind: S.tag("value"), value: S.String });
@@ -74,8 +91,10 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
     removeAmbiguous: false,
   });
   expect(actual.citations).toHaveLength(modelsExpected.length);
-  yield* Effect.forEach(actual.citations, (citation, i) =>
-    compareCitationCanonicalModel(citation, A.getUnsafe(modelsExpected, i), call.id)
+  yield* Effect.forEach(
+    actual.citations,
+    (citation, i) => compareCitationCanonicalModel(citation, A.getUnsafe(modelsExpected, i), call.id),
+    { concurrency: 1 }
   );
   if (actual.raw.outcome._tag !== "Document") return yield* Effect.die("Expected real original Document branch");
   const models = A.map(actual.raw.outcome.result.extraction.extraction.citations, (entry) => entry.model);
@@ -104,7 +123,7 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
     ),
     Effect.provideService(CitationTextBudget, utilityBudget)
   );
-  const rows = yield* Effect.forEach(models, adapter.project);
+  const rows = yield* Effect.forEach(models, adapter.project, { concurrency: 1 });
   // References carry no year field, a generated reference has no constructor outcome, and a citation
   // with no parsed year still reports the field as None.
   const references = yield* stage.extract({
@@ -115,7 +134,7 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
   });
   if (references.raw.outcome._tag !== "Document") return yield* Effect.die("Expected real original Document branch");
   const referenceModels = A.map(references.raw.outcome.result.extraction.extraction.citations, (entry) => entry.model);
-  const referenceRows = yield* Effect.forEach(referenceModels, adapter.project);
+  const referenceRows = yield* Effect.forEach(referenceModels, adapter.project, { concurrency: 1 });
   expect(A.map(referenceRows, (row) => row.kind)).toContain("IdCitation");
   const dated = A.findFirst(referenceModels, (model) => "outcome" in model && "year" in model.outcome);
   if (dated._tag === "None" || !("outcome" in dated.value)) return yield* Effect.die("Expected a dated citation");
@@ -154,7 +173,8 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
       const expected = yield* S.decodeEffect(Ranges)(A.getUnsafe(modelsExpected, i));
       expect(row.span).toEqual(expected.span);
       yield* assertCitationMentionRanges(source.sourceText, A.getUnsafe(occurrences.mentions, i), expected);
-    })
+    }),
+    { concurrency: 1 }
   );
   const printability = yield* readCitationNativeRenderingAsset("python-printability");
   const dump = yield* makeCitationDump(setup.limits, printability).pipe(

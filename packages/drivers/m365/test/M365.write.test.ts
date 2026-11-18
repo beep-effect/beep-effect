@@ -318,14 +318,17 @@ describe("@beep/m365 app-only lane and write verbs", () => {
         const testHttp = yield* WriteTestHttp;
         const m365 = yield* M365;
 
-        const failures = yield* Effect.all([
-          failureOf(m365.createEvent(M365CreateEventRequest.make({ event: draft }))),
-          failureOf(m365.listMessages(M365ListMessagesRequest.make({}))),
-          failureOf(m365.listDrives(M365ListDrivesRequest.make({}))),
-          failureOf(
-            m365.updateMessageCategories(M365UpdateMessageCategoriesRequest.make({ categories: [], messageId: "m" }))
-          ),
-        ]);
+        const failures = yield* Effect.all(
+          [
+            failureOf(m365.createEvent(M365CreateEventRequest.make({ event: draft }))),
+            failureOf(m365.listMessages(M365ListMessagesRequest.make({}))),
+            failureOf(m365.listDrives(M365ListDrivesRequest.make({}))),
+            failureOf(
+              m365.updateMessageCategories(M365UpdateMessageCategoriesRequest.make({ categories: [], messageId: "m" }))
+            ),
+          ],
+          { concurrency: 1 }
+        );
 
         for (const failure of failures) {
           assertSome(

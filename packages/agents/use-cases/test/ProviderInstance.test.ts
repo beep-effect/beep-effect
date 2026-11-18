@@ -182,12 +182,15 @@ describe("@beep/agents-use-cases ProviderInstance", () => {
         kind: "claude",
         label: Domain.InstanceLabel.make("Missing"),
       });
-      const failures = yield* Effect.all([
-        Effect.flip(useCases.get(GetProviderInstanceQuery.make({ id: missingId }))),
-        Effect.flip(useCases.update(update)),
-        Effect.flip(useCases.remove(RemoveProviderInstanceCommand.make({ id: missingId }))),
-        Effect.flip(useCases.probe(ProbeProviderInstanceCommand.make({ id: missingId }))),
-      ]);
+      const failures = yield* Effect.all(
+        [
+          Effect.flip(useCases.get(GetProviderInstanceQuery.make({ id: missingId }))),
+          Effect.flip(useCases.update(update)),
+          Effect.flip(useCases.remove(RemoveProviderInstanceCommand.make({ id: missingId }))),
+          Effect.flip(useCases.probe(ProbeProviderInstanceCommand.make({ id: missingId }))),
+        ],
+        { concurrency: 1 }
+      );
       expect(A.every(failures, isProviderInstanceNotFound)).toBe(true);
     })
   );

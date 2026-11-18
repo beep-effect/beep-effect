@@ -106,6 +106,8 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
   if (!(yield* fs.exists(clone))) {
     yield* fs.makeDirectory(path.dirname(clone), { recursive: true });
     // --no-checkout prevents remote working-tree filters; no recursive submodule or LFS checkout.
+    // KEEP (D-19, B87): hardened untrusted-clone boundary (isolated config, hooks off, caps, timeout).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19, B87), reason above
     yield* runLibraryCommand(
       root,
       "git",
@@ -113,7 +115,8 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       20_000
     );
   }
-  // KEEP (D-19): hardened untrusted-clone boundary (isolated config, hooks off, caps, timeout).
+  // KEEP (D-19, B88): hardened untrusted-clone boundary (isolated config, hooks off, caps, timeout).
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19, B88), reason above
   const resultLibraryCommand = yield* runLibraryCommand(
     root,
     "git",
@@ -127,6 +130,8 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       cause: "identity",
     });
   const git = (args: ReadonlyArray<string>, cap = 8_000_000) =>
+    // KEEP (D-19, B87-B107 clone reads): this helper keeps every clone read behind the hardened boundary.
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19, B87-B107 clone reads), reason above
     runLibraryCommand(root, "git", ["-c", "core.hooksPath=/dev/null", "-C", clone, ...args], cap);
   const resolvePinnedRevision = Effect.fn("Library.github.resolvePinnedRevision")(function* () {
     const requested = Str.isEmpty(source.revision)
@@ -253,6 +258,8 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
         [1, observedSlug],
       ] as const) {
         const endpoint = renamedRepositoryEndpoint(index, first, identitySlug);
+        // KEEP (D-19, B108): the raw gh response text is the stored evidence.
+        // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19, B108), reason above
         const raw = yield* runLibraryCommand(root, "gh", ["api", endpoint]);
         const artifact = yield* saveLibraryText(
           root,
@@ -299,6 +306,8 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       const pages: Array<unknown> = [];
       const paginated = Str.includes("per_page=100")(endpoint);
       for (const page of A.range(1, 100)) {
+        // KEEP (D-19, B109): the raw gh response text is the stored evidence.
+        // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19, B109), reason above
         const raw = yield* runLibraryCommand(root, "gh", ["api", paginated ? `${endpoint}&page=${page}` : endpoint]);
         const decoded = yield* decodeLibraryJson(S.Unknown)(raw);
         pages.push(decoded);
@@ -369,6 +378,8 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       yield* captureApi("reviews", `repos/${slug}/pulls/${n}/reviews?per_page=100`);
       yield* captureApi("review-comments", `repos/${slug}/pulls/${n}/comments?per_page=100`);
       yield* captureApi("files", `repos/${slug}/pulls/${n}/files?per_page=100`);
+      // KEEP (D-19, B110): the raw gh diff text is the stored evidence.
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19, B110), reason above
       const remoteDiff = yield* runLibraryCommand(root, "gh", [
         "api",
         "-H",
@@ -454,6 +465,8 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
         let more = comment.replies.pageInfo.hasNextPage;
         for (const replyPage of A.range(1, 99)) {
           if (!more) break;
+          // KEEP (D-19, B111): the raw gh response text is the stored evidence.
+          // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19, B111), reason above
           const replyRaw = yield* runLibraryCommand(root, "gh", [
             "api",
             "graphql",
@@ -484,6 +497,8 @@ export const acquireLibraryGithub = Effect.fn("Library.acquireGithub")(function*
       let cursor = "";
       let exhausted = false;
       const captureDiscussionPage = Effect.fn("Library.github.captureDiscussionPage")(function* (page: number) {
+        // KEEP (D-19, B112): the raw gh response text is the stored evidence.
+        // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19, B112), reason above
         const raw = yield* runLibraryCommand(root, "gh", [
           "api",
           "graphql",

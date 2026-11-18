@@ -2,6 +2,7 @@
  * Reuses the existing resolver, verifier, extraction stages and Effect ownership.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationEngineReport,
@@ -11,18 +12,16 @@ import {
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { ownCitationSemanticExtraction } from "./SemanticExtraction.ts";
 import { captureCitationOperationPolicy } from "./Snapshot.ts";
 import { makeCitationSourceRequestAdapter } from "./SourceRequest.ts";
-import {
-  CitationVerifiedExtractionConfiguration,
-  CitationVerifiedExtractionFailure,
-  CitationVerifiedExtractionResult,
-  makeCitationVerifiedExtraction,
-} from "./VerifiedExtraction.ts";
+import { CitationVerifiedExtractionResult, makeCitationVerifiedExtraction } from "./VerifiedExtraction.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
+import type { CitationVerifiedExtractionConfiguration } from "./VerifiedExtraction.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SourceExtraction");
 /** Completed verified source extraction and separate source-free diagnostics.
@@ -43,39 +42,36 @@ export class CitationSourceExtractionResult extends S.Opaque<
  */
 export const ownCitationSourceExtraction = Effect.fn("Citation.ownSourceExtraction")(function* (
   limits: CitationEngineLimits,
-  configuration: CitationVerifiedExtractionConfiguration
+  config: CitationOwned<CitationVerifiedExtractionConfiguration>,
+  runtime: CitationNativeProcessRuntime
 ) {
   const source = yield* makeCitationSourceRequestAdapter(limits);
-  const semantic = yield* ownCitationSemanticExtraction(limits, configuration.extraction);
-  const config = CitationVerifiedExtractionConfiguration.make({
-    extraction: semantic.config,
-    engineArtifact: configuration.engineArtifact,
-  });
-  return { source, config, children: semantic.children };
+  const semantic = yield* ownCitationSemanticExtraction(limits, ownedField(config, "extraction"));
+  // Installed once; an install failure surfaces where each request used to install it.
+  const extraction = yield* Effect.exit(
+    makeCitationVerifiedExtraction(limits, runtime, config).pipe(Effect.provideContext(semantic.children))
+  );
+  return { source, config, children: semantic.children, extraction };
 });
 const own = ownCitationSourceExtraction;
 const extractPrepared = Effect.fn("Citation.extractPreparedSource")(function* (
-  limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
   owned: Effect.Success<ReturnType<typeof own>>,
   request: Effect.Success<ReturnType<Effect.Success<ReturnType<typeof makeCitationSourceRequestAdapter>>["prepare"]>>
 ) {
-  return yield* Effect.gen(function* () {
-    const extraction = yield* makeCitationVerifiedExtraction(limits, runtime, owned.config);
-    return yield* extraction.extract(request);
-  }).pipe(Effect.provideContext(owned.children));
+  const extraction = yield* owned.extraction;
+  return yield* extraction.extract(request).pipe(Effect.provideContext(owned.children));
 });
 const prepareSource = (method: keyof Effect.Success<ReturnType<typeof makeCitationSourceRequestAdapter>>) =>
   Effect.fn("Citation.extractResolvedSource")(function* (
     limits: CitationEngineLimits,
-    runtime: CitationNativeProcessRuntime,
+    _runtime: CitationNativeProcessRuntime,
     owned: Effect.Success<ReturnType<typeof own>>,
     raw: unknown
   ) {
     const [workDuration, result] = yield* Effect.timed(
       Effect.gen(function* () {
         const request = yield* owned.source[method](raw);
-        return yield* extractPrepared(limits, runtime, owned, request);
+        return yield* extractPrepared(owned, request);
       })
     );
     const reportPolicy = yield* captureCitationOperationPolicy(limits, owned.config.engineArtifact, () =>
@@ -131,8 +127,6 @@ export const projectCitationSourceExtractionReport: {
  * @internal @category constructors @since 0.0.0
  */
 const definition = {
-  schema: S.toType(CitationVerifiedExtractionConfiguration),
-  invalid: () => CitationVerifiedExtractionFailure.make({ reason: "invalid-configuration" }),
   own,
   project: (
     patch: Effect.Success<ReturnType<typeof prepare>>,

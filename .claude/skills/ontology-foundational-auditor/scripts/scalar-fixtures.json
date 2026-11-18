@@ -1,0 +1,127 @@
+[
+  {
+    "source": "1.0",
+    "type": "float",
+    "text": "1.0"
+  },
+  {
+    "source": "0.0",
+    "type": "float",
+    "text": "0.0"
+  },
+  {
+    "source": "-0.0",
+    "type": "float",
+    "text": "-0.0"
+  },
+  {
+    "source": "0.5",
+    "type": "float",
+    "text": "0.5"
+  },
+  {
+    "source": "1e3",
+    "type": "str",
+    "text": "1e3"
+  },
+  {
+    "source": "1.0e3",
+    "type": "str",
+    "text": "1.0e3"
+  },
+  {
+    "source": "1.0e+3",
+    "type": "float",
+    "text": "1000.0"
+  },
+  {
+    "source": "!!float 1",
+    "type": "float",
+    "text": "1.0"
+  },
+  {
+    "source": "1",
+    "type": "int",
+    "text": "1"
+  },
+  {
+    "source": "012",
+    "type": "int",
+    "text": "10"
+  },
+  {
+    "source": "09",
+    "type": "str",
+    "text": "09"
+  },
+  {
+    "source": "0x10",
+    "type": "int",
+    "text": "16"
+  },
+  {
+    "source": "-0x10",
+    "type": "int",
+    "text": "-16"
+  },
+  {
+    "source": "1:20",
+    "type": "int",
+    "text": "80"
+  },
+  {
+    "source": "1:20.0",
+    "type": "float",
+    "text": "80.0"
+  },
+  {
+    "source": "yes",
+    "type": "bool",
+    "text": "True"
+  },
+  {
+    "source": "TrUe",
+    "type": "str",
+    "text": "TrUe"
+  },
+  {
+    "source": "!!str 1.0",
+    "type": "str",
+    "text": "1.0"
+  },
+  {
+    "source": "!!bool yes",
+    "type": "bool",
+    "text": "True"
+  },
+  {
+    "source": "null",
+    "type": "NoneType",
+    "text": "None"
+  },
+  {
+    "source": "~",
+    "type": "NoneType",
+    "text": "None"
+  },
+  {
+    "source": "'1.0'",
+    "type": "str",
+    "text": "1.0"
+  },
+  {
+    "source": ".inf",
+    "type": "float",
+    "text": "inf"
+  },
+  {
+    "source": "-.inf",
+    "type": "float",
+    "text": "-inf"
+  },
+  {
+    "source": ".nan",
+    "type": "float",
+    "text": "nan"
+  }
+]

@@ -107,6 +107,22 @@ const requiredChecksJson = Result.getOrThrowWith(
   ]),
   identity
 );
+// A failing check whose own name and description quote an old gh's flag error.
+const quotedFlagErrorChecksJson = Result.getOrThrowWith(
+  S.encodeUnknownResult(S.fromJsonString(S.Unknown))([
+    {
+      bucket: "fail",
+      completedAt: "2026-09-25T11:53:05Z",
+      description: "unknown flag: --json",
+      link,
+      name: "unknown flag: --json",
+      startedAt: "2026-09-25T11:27:04Z",
+      state: "FAILURE",
+      workflow: "Check",
+    },
+  ]),
+  identity
+);
 const threadsJson = Result.getOrThrowWith(
   S.encodeUnknownResult(S.fromJsonString(S.Unknown))({
     data: {
@@ -151,8 +167,10 @@ const readRows = Effect.fn("checkFidelityTest.readRows")(function* (root: string
   const fs = yield* FileSystem.FileSystem;
   const paths = yield* yeetInboxPaths(root);
   const text = yield* fs.readFileString(paths.failuresPath);
-  return yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) =>
-    YeetInboxRowJson.decode(line)
+  return yield* Effect.forEach(
+    A.filter(Str.split(text, "\n"), Str.isNonEmpty),
+    (line) => YeetInboxRowJson.decode(line),
+    { concurrency: 1 }
   );
 });
 
@@ -284,25 +302,32 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("--until-ready check fidelity
   it.effect("writes a check-failed capsule equal, field for field, to the one --watch writes", () =>
     Effect.gen(function* () {
       const gh = withGh(fidelitySpawner());
-      const [watchRows, statusRows] = yield* Effect.all([
-        Effect.gen(function* () {
-          const root = yield* tempRoot();
-          const watch = yield* collectYeetWatchSnapshot(contextFor(root)).pipe(gh);
-          const failing = A.filter(watch.checks, (check) => check.outcome === "fail");
-          yield* Effect.forEach(failing, (check) => dispatchYeetCheckFailure(root, watch, check, at));
-          return yield* readRows(root);
-        }),
-        Effect.gen(function* () {
-          const root = yield* tempRoot();
-          // The capsule's PR coordinates come from the snapshot argument and
-          // are the same in both loops; the check record is what differs.
-          const watch = yield* collectYeetWatchSnapshot(contextFor(root)).pipe(gh);
-          const status = yield* collectYeetStatus(contextFor(root), true).pipe(gh);
-          const failing = A.filter(status.remote.checks, (check) => check.outcome === "fail");
-          yield* Effect.forEach(failing, (check) => dispatchYeetCheckFailure(root, watch, check, at));
-          return yield* readRows(root);
-        }),
-      ]);
+      const [watchRows, statusRows] = yield* Effect.all(
+        [
+          Effect.gen(function* () {
+            const root = yield* tempRoot();
+            const watch = yield* collectYeetWatchSnapshot(contextFor(root)).pipe(gh);
+            const failing = A.filter(watch.checks, (check) => check.outcome === "fail");
+            yield* Effect.forEach(failing, (check) => dispatchYeetCheckFailure(root, watch, check, at), {
+              concurrency: 1,
+            });
+            return yield* readRows(root);
+          }),
+          Effect.gen(function* () {
+            const root = yield* tempRoot();
+            // The capsule's PR coordinates come from the snapshot argument and
+            // are the same in both loops; the check record is what differs.
+            const watch = yield* collectYeetWatchSnapshot(contextFor(root)).pipe(gh);
+            const status = yield* collectYeetStatus(contextFor(root), true).pipe(gh);
+            const failing = A.filter(status.remote.checks, (check) => check.outcome === "fail");
+            yield* Effect.forEach(failing, (check) => dispatchYeetCheckFailure(root, watch, check, at), {
+              concurrency: 1,
+            });
+            return yield* readRows(root);
+          }),
+        ],
+        { concurrency: 1 }
+      );
 
       const capsulesOf = (rows: typeof watchRows) =>
         A.filterMap(rows, (row) => (row.kind === "check-failed" ? Result.succeed(row.capsule) : Result.failVoid));
@@ -323,6 +348,43 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("--until-ready check fidelity
         ["Check / Coverage", link, "Check", "fail", "FAILURE"],
         ["Vercel", null, null, "fail", "FAILURE"],
       ]);
+    })
+  );
+
+  it.effect("names a gh that rejects --json instead of returning an unreadable census", () =>
+    Effect.gen(function* () {
+      const root = yield* tempRoot();
+      // gh 2.46.0's own answer: the flag error, then its usage text, exit 1.
+      const oldGh = ScriptedSpawner.make((command, args) =>
+        command === "gh" && isPrChecks(args)
+          ? { stderr: "unknown flag: --json\n\nUsage:  gh pr checks [<number> | <url> | <branch>] [flags]\n", exit: 1 }
+          : {}
+      );
+      const failure = yield* collectRemoteChecksForTesting(contextFor(root), true).pipe(withGh(oldGh), Effect.flip);
+      expect(failure.message).toContain("gh pr checks --json");
+
+      // A head with no checks yet is still a complete, empty census.
+      const noChecks = ScriptedSpawner.make((command, args) =>
+        command === "gh" && isPrChecks(args)
+          ? { stderr: "no checks reported on the 'feature/fidelity' branch", exit: 1 }
+          : {}
+      );
+      const census = yield* collectRemoteChecksForTesting(contextFor(root), false).pipe(withGh(noChecks));
+      assertSome(census, []);
+
+      // A red check that quotes the flag error is still a census: JSON decodes
+      // first, and gh exits non-zero for any failing check.
+      const quoting = ScriptedSpawner.make((command, args) =>
+        command === "gh" && isPrChecks(args) ? { stdout: quotedFlagErrorChecksJson, exit: 1 } : {}
+      );
+      const quoted = yield* collectRemoteChecksForTesting(contextFor(root), false).pipe(withGh(quoting));
+      assertSome(
+        O.map(
+          quoted,
+          A.map((row) => row.name)
+        ),
+        ["unknown flag: --json"]
+      );
     })
   );
 });

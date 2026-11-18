@@ -2,6 +2,7 @@
  * eyecite 2.7.6, Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationTokenizerResult } from "@beep/law-practice-use-cases/server";
 import { LiteralKit } from "@beep/schema";
@@ -10,6 +11,7 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import { captureCitationExtractionChildren } from "./ExtractionChildren.ts";
 import {
   CitationExtractionLoopConfiguration,
@@ -18,10 +20,11 @@ import {
   makeCitationExtractionLoop,
 } from "./ExtractionLoop.ts";
 import { reserveCitationInvocationText } from "./Invocation.ts";
-import { detachCitationMetadataConfiguration, makeCitationMetadataStage } from "./MetadataComposition.ts";
+import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
 import { CitationTokenizerConfiguration, makeCitationTokenizer } from "./Tokenizer.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/TokenizedExtraction");
@@ -85,30 +88,37 @@ export class CitationTokenizedExtractionResult extends S.Opaque<
   )
 ) {}
 const Input = S.toType(CitationTokenizedExtractionInput);
-const Configuration = S.toType(CitationTokenizedExtractionConfiguration);
-const ConfigurationJson = Configuration.pipe(S.toCodecJson);
 const own = Effect.fn("Citation.ownTokenizedExtraction")(function* (
-  _limits: CitationEngineLimits,
-  configuration: CitationTokenizedExtractionConfiguration
+  limits: CitationEngineLimits,
+  config: CitationOwned<CitationTokenizedExtractionConfiguration>,
+  runtime: CitationNativeProcessRuntime
 ) {
-  const config = yield* detachCitationMetadataConfiguration(ConfigurationJson, configuration, () =>
-    fail("invalid-configuration")
-  );
   const children = yield* captureCitationExtractionChildren();
-  return { config, children };
+  // Installed once; an install failure surfaces where each request used to install it.
+  const tokenizer = yield* Effect.exit(makeCitationTokenizer(limits, runtime, ownedField(config, "tokenizer")));
+  const loop = yield* Effect.exit(
+    makeCitationExtractionLoop(limits, runtime, ownedField(config, "loop")).pipe(Effect.provideContext(children))
+  );
+  const input = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText, "source"));
+  return { config, children, tokenizer, loop, input };
 });
 const prepare = Effect.fn("Citation.tokenizeAndExtract")(function* (
-  limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
-  owned: Effect.Success<ReturnType<typeof own>>,
+  _limits: CitationEngineLimits,
+  _runtime: CitationNativeProcessRuntime,
+  {
+    children,
+    tokenizer: installedTokenizer,
+    loop: installedLoop,
+    input: installedInput,
+  }: Effect.Success<ReturnType<typeof own>>,
   raw: unknown
 ) {
   const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
   return yield* Effect.gen(function* () {
-    const tokenizer = yield* makeCitationTokenizer(limits, runtime, owned.config.tokenizer);
-    const loop = yield* makeCitationExtractionLoop(limits, runtime, owned.config.loop);
+    const tokenizer = yield* installedTokenizer;
+    const loop = yield* installedLoop;
     const tokenized = yield* tokenizer.port.tokenize(request.plain);
-    const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText, "source");
+    const input = yield* installedInput;
     const source = yield* input.prepareUnicode(tokenized.source, () => Effect.void);
     const tokens = HashMap.fromIterable(A.map(tokenized.tokens, (row) => Tuple.make(row.id, row.seed)));
     const lookup = (id: number) => Effect.fromOption(HashMap.get(tokens, id), () => fail("missing-token"));
@@ -134,7 +144,7 @@ const prepare = Effect.fn("Citation.tokenizeAndExtract")(function* (
     );
     const extraction = yield* loop.extract({ ...request, plain: tokenized.source, words, tokens: citations });
     return { tokenizer: tokenized, extraction };
-  }).pipe(Effect.provideContext(owned.children));
+  }).pipe(Effect.provideContext(children));
 });
 /** Tokenize native Document text and construct/filter citations under one captured
  * admission, Scope, deadline and text authority. Input cleaning and the joke
@@ -143,8 +153,6 @@ const prepare = Effect.fn("Citation.tokenizeAndExtract")(function* (
  */
 export const makeCitationTokenizedExtraction = makeCitationMetadataStage({
   method: "extract",
-  schema: Configuration,
-  invalid: () => fail("invalid-configuration"),
   own,
   prepare,
   project: (result, reservedUnits) => {

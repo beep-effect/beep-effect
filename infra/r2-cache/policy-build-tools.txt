@@ -1,0 +1,11 @@
+# Reviewed portable build tools for the Linux x86_64 musl policy candidate.
+# heavy.yml's "Install pinned portable build tools" step reads every pin here,
+# verifies each download against its sha256 and checks the installed versions;
+# the candidate's build.json digests this file as a source input. One
+# KEY=value per line; no shell expansion.
+ZIG_VERSION=0.14.1
+ZIG_URL=https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz
+ZIG_SHA256=24aeeec8af16c381934a6cd7d95c807a8cb2cf7df9fa40d359aa884195c4716c
+CARGO_ZIGBUILD_VERSION=0.20.1
+CARGO_ZIGBUILD_URL=https://files.pythonhosted.org/packages/32/dd/ccec85254c252a784ed795639b51f7ea75dadbcba6b0a8c58b983ff20c96/cargo_zigbuild-0.20.1-py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl
+CARGO_ZIGBUILD_SHA256=cb9508149ee63d60e5110ff24b527ab25ed418a6329252aa4f86868197c55bf6

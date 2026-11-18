@@ -289,37 +289,40 @@ describe("retention authority rebuild", { concurrent: false }, () => {
             const store = path.join(temp, "projections");
             const decodedIdentity = yield* decodeIdentity(scenario.identity);
             const key = logicalEdgeKey(decodedIdentity);
-            const answers = yield* Effect.forEach([1500, 2500], (knownAt) =>
-              Effect.gen(function* () {
-                const query = yield* S.decodeEffect(RetentionQuery)({
-                  orgId: 1,
-                  logicalKeys: [key],
-                  validAt: 1500,
-                  knownAt,
-                  dispositions: [],
-                });
-                const report = yield* rebuildRetentionStore(store, query, O.some(candidate));
-                expect(report.rows.length).toBe(1);
-                expect(report.rows[0]?.version).toBe(knownAt === 1500 ? 1 : 2);
-                expect(report.rows[0]?.sourceDisposition).toBe(knownAt === 1500 ? "unresolved" : "rejected");
-                expect(report.admission.state).toBe("inert");
-                const bytes = yield* fs.readFile(path.join(store, "report.json"));
-                const text = yield* fs.readFile(path.join(store, "report.txt"));
-                // Destroy the complete store, including an unrelated derived cache artifact.
-                yield* fs.writeFileString(path.join(store, "derived.cache"), "disposable");
-                yield* fs.remove(store, { recursive: true });
-                const exists4 = yield* fs.exists(store);
-                expect(exists4).toBe(false);
-                const rebuilt = yield* rebuildRetentionStore(store, query, O.some(candidate));
-                const readFile5 = yield* fs.readFile(path.join(store, "report.json"));
-                expect(readFile5).toEqual(bytes);
-                const readFile6 = yield* fs.readFile(path.join(store, "report.txt"));
-                expect(readFile6).toEqual(text);
-                expect(rebuilt).toStrictEqual(report);
-                const readDirectory7 = yield* fs.readDirectory(store);
-                expect(A.sort(readDirectory7, Str.Order)).toEqual(["report.json", "report.txt"]);
-                return report;
-              })
+            const answers = yield* Effect.forEach(
+              [1500, 2500],
+              (knownAt) =>
+                Effect.gen(function* () {
+                  const query = yield* S.decodeEffect(RetentionQuery)({
+                    orgId: 1,
+                    logicalKeys: [key],
+                    validAt: 1500,
+                    knownAt,
+                    dispositions: [],
+                  });
+                  const report = yield* rebuildRetentionStore(store, query, O.some(candidate));
+                  expect(report.rows.length).toBe(1);
+                  expect(report.rows[0]?.version).toBe(knownAt === 1500 ? 1 : 2);
+                  expect(report.rows[0]?.sourceDisposition).toBe(knownAt === 1500 ? "unresolved" : "rejected");
+                  expect(report.admission.state).toBe("inert");
+                  const bytes = yield* fs.readFile(path.join(store, "report.json"));
+                  const text = yield* fs.readFile(path.join(store, "report.txt"));
+                  // Destroy the complete store, including an unrelated derived cache artifact.
+                  yield* fs.writeFileString(path.join(store, "derived.cache"), "disposable");
+                  yield* fs.remove(store, { recursive: true });
+                  const exists4 = yield* fs.exists(store);
+                  expect(exists4).toBe(false);
+                  const rebuilt = yield* rebuildRetentionStore(store, query, O.some(candidate));
+                  const readFile5 = yield* fs.readFile(path.join(store, "report.json"));
+                  expect(readFile5).toEqual(bytes);
+                  const readFile6 = yield* fs.readFile(path.join(store, "report.txt"));
+                  expect(readFile6).toEqual(text);
+                  expect(rebuilt).toStrictEqual(report);
+                  const readDirectory7 = yield* fs.readDirectory(store);
+                  expect(A.sort(readDirectory7, Str.Order)).toEqual(["report.json", "report.txt"]);
+                  return report;
+                }),
+              { concurrency: 1 }
             );
             return answers;
           }).pipe(Effect.scoped);

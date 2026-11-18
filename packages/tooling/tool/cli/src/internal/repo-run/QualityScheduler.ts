@@ -33,7 +33,10 @@ import * as Hex from "effect/encoding/Hex";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { constant, dual, flow, identity, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as HS from "effect/HashSet";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -52,6 +55,9 @@ import {
   AdmissionJournalRouted,
   AdmissionJournalTicketEvictedV3,
   AdmissionJournalWithdrawn,
+  AdmissionPressureEmission,
+  AdmissionProtocol,
+  AdmissionUnitEmission,
   acquireJournalFileLock,
   appendAdmissionEvictionJournalEvent,
   appendAdmissionJournalEvent,
@@ -59,6 +65,7 @@ import {
   pruneAgedAdmissionJournalArchive,
   readAdmissionJournalArchive,
   readAdmissionJournalHistory,
+  readAdmissionJournalHistorySince,
   readAdmissionProtocol,
   releaseJournalFileLock,
   writeAdmissionProtocol,
@@ -66,13 +73,27 @@ import {
 import { appendSchedulerAttemptTerminated } from "./AttemptTerminationJournal.ts";
 import { computeEnvelopeGib, resolveComputeProfileForCeiling } from "./ComputeProfile.ts";
 import { gateRouteFor } from "./GateRoute.schemas.ts";
-import { admissionCapacityTokensFor, MemoryStats, parseMeminfoFieldGib } from "./MemoryStats.service.ts";
+import {
+  admissionCapacityTokensFor,
+  MemoryStats,
+  parseMeminfoFieldGib,
+  readAdmissionHostPressure,
+} from "./MemoryStats.service.ts";
 import { isProcessIdentityAlive, processStartIdentityForPid } from "./ProcessIdentity.ts";
 import {
+  AdmissionAttemptVerdict,
+  AdmissionBackfillContext,
+  AdmissionBackfillMode,
+  AdmissionBackfillPolicy,
+  AdmissionBackfillView,
   AdmissionClaimSinkState,
   AdmissionConfig,
   AdmissionCoordinationProtocol,
+  AdmissionEtaEstimator,
+  AdmissionFairnessMode,
   AdmissionLeaseReapClaim,
+  AdmissionOwner,
+  AdmissionPressureStamp,
   AdmissionPromotionPhase,
   AdmissionPromotionTransition,
   AdmissionReapClaim,
@@ -80,12 +101,15 @@ import {
   AdmissionRoute,
   AdmissionSnapshot,
   AdmissionTicketReapClaim,
+  AdmissionUsageInterval,
+  AdmissionWorkKind,
   ComputeProfileRefusal,
   DeadLeaseScopePlan,
   QualitySchedulerError,
   YeetAdmissionLease,
   YeetAdmissionTicket,
 } from "./QualityScheduler.schemas.ts";
+import { QualityScheduler } from "./QualityScheduler.service.ts";
 import {
   isProofJobUnitName,
   RunScopeRecord,
@@ -103,7 +127,14 @@ import {
 import { admissionRootFor, perUserRuntimeRoot } from "./RuntimeRoot.ts";
 import type { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { AdmissionJournalLeaseEvicted, AdmissionJournalTicketEvicted } from "./AdmissionJournal.ts";
+import type {
+  AdmissionJournalEvent,
+  AdmissionJournalHistory,
+  AdmissionJournalLeaseEvicted,
+  AdmissionJournalTicketEvicted,
+} from "./AdmissionJournal.ts";
+import type { MemoryStatsShape } from "./MemoryStats.service.ts";
+import type { AdmissionWaitReason, RecordedAdmissionWorkKind } from "./QualityScheduler.schemas.ts";
 
 const $I = $RepoCliId.create("internal/repo-run/QualityScheduler");
 
@@ -244,7 +275,32 @@ const encodeReapClaim = S.encodeUnknownEffect(S.fromJsonString(AdmissionReapClai
 const decodePromotionTransition = S.decodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
 const encodePromotionTransition = S.encodeUnknownEffect(S.fromJsonString(AdmissionPromotionTransition));
 
-const recoveryRecordSettlementWindow = Duration.seconds(5);
+/**
+ * How long a reaper that finds a reap claim or promotion locked waits for the
+ * owner to settle it before failing with a retryable "stayed busy" error.
+ *
+ * **Details**
+ *
+ * The wait is wall-clock time, so a CPU-starved but healthy owner can outlast
+ * it: the waiter then fails closed and never takes the claim over. A caller
+ * that must order itself after the owner, such as a test that holds the owner
+ * mid-sink, provides {@link Duration.infinity} instead of racing the window.
+ *
+ * **Example** (Read the default window)
+ *
+ * ```ts
+ * import { RecoveryRecordSettlementWindow } from "@beep/repo-cli/test/RepoRun"
+ * import * as Duration from "effect/Duration"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Duration.toMillis(Effect.runSync(RecoveryRecordSettlementWindow))) // 5000
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const RecoveryRecordSettlementWindow: Context.Reference<Duration.Duration> =
+  Context.Reference<Duration.Duration>($I`RecoveryRecordSettlementWindow`, { defaultValue: () => Duration.seconds(5) });
 const recoveryRecordSettlementPollInterval = Duration.millis(25);
 const textEncoder = new TextEncoder();
 
@@ -255,6 +311,7 @@ export {
   MemoryStats,
   MemoryStatsLive,
   memoryStatsLayerFor,
+  readAdmissionHostPressure,
 } from "./MemoryStats.service.ts";
 export type { MemoryStatsShape } from "./MemoryStats.service.ts";
 
@@ -393,7 +450,7 @@ const ensureAdmissionDirectories = Effect.fnUntraced(function* (): Effect.fn.Ret
       fs
         .makeDirectory(directory, { recursive: true, mode: 0o700 })
         .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to create admission directory ${directory}.`))),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* validateAdmissionDirectory(directories.root);
   return directories;
@@ -481,7 +538,133 @@ export const setAdmissionEvictionProtocol = Effect.fn("QualityScheduler.setAdmis
   eviction: AdmissionEvictionEmission
 ) {
   const directories = yield* ensureAdmissionDirectories();
-  return yield* writeAdmissionProtocol(directories.root, eviction);
+  return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, eviction }));
+});
+
+/**
+ * Atomically change whether writers record admission-unit fields (SCHE-08).
+ *
+ * **Details**
+ *
+ * Turn it on only once every live checkout runs SCHE-08 slice 6 or later. With
+ * the gate on, Cache tickets record the `cache` kind. A slice 3 checkout reads the
+ * unit, weight source and owner keys but not that kind: it keeps the lease charged
+ * yet leaves it out of its review-fix class cap, so it can admit one review-fix
+ * run too many. The eviction gate keeps its state.
+ *
+ * **Example** (Reference the unit-gate writer)
+ *
+ * ```ts
+ * import { setAdmissionUnitProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof setAdmissionUnitProtocol) // "function"
+ * ```
+ *
+ * @param units - Desired admission-unit field emission state.
+ * @returns The protocol marker that was published.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const setAdmissionUnitProtocol = Effect.fn("QualityScheduler.setAdmissionUnitProtocol")(function* (
+  units: AdmissionUnitEmission
+) {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, units }));
+});
+
+/**
+ * Atomically change whether writers stamp capacity and host pressure on admission rows (SCHE-09 slice 2).
+ *
+ * **Details**
+ *
+ * Every reader revision ignores the stamp, so the gate can go on at any time;
+ * it costs a few procfs and cgroup reads per promotion and release. Each
+ * admission and release reads the gate when it samples, so the change applies
+ * to requests already queued or running; recovery still journals a stamp an
+ * admission took before the change. The eviction and unit gates keep their
+ * state, and an older checkout that rewrites the marker drops the key, which
+ * turns the stamps off again.
+ *
+ * **Example** (Reference the pressure-gate writer)
+ *
+ * ```ts
+ * import { setAdmissionPressureProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof setAdmissionPressureProtocol) // "function"
+ * ```
+ *
+ * @param pressure - Desired pressure-stamp emission state.
+ * @returns The protocol marker that was published.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const setAdmissionPressureProtocol = Effect.fn("QualityScheduler.setAdmissionPressureProtocol")(function* (
+  pressure: AdmissionPressureEmission
+) {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, pressure }));
+});
+
+/**
+ * Turn the SCHE-06 EASY backfill verdict on (`easy`) or off.
+ *
+ * **Details**
+ *
+ * With it on, new tickets declare a journal-derived ETA, protected tickets
+ * stamp their conditional bound, and a contender behind a capacity-blocked
+ * head may pass it when its ETA ends before the head's projected start. A
+ * checkout at an older revision keeps the head-of-line rule and the overshoot
+ * rollback, so mixed revisions never exceed capacity. Every other gate keeps
+ * its state.
+ *
+ * **Example** (Reference the backfill gate writer)
+ *
+ * ```ts
+ * import { setAdmissionBackfillProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof setAdmissionBackfillProtocol) // "function"
+ * ```
+ *
+ * @param backfill - Desired backfill mode.
+ * @returns The protocol marker that was published.
+ * @category admission
+ * @since 0.0.0
+ */
+export const setAdmissionBackfillProtocol = Effect.fn("QualityScheduler.setAdmissionBackfillProtocol")(function* (
+  backfill: AdmissionBackfillMode
+) {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, backfill }));
+});
+
+/**
+ * Turn the SCHE-06 origin-then-checkout fairness order on (`origin-checkout`) or off.
+ *
+ * **Details**
+ *
+ * With it on, tickets that have not waited the protection window are ordered
+ * by their origin's, then their checkout's, token-milliseconds over the last
+ * 30 minutes, read from the admission journal on each scan. Protected tickets
+ * keep enqueue order. Every other gate keeps its state.
+ *
+ * **Example** (Reference the fairness gate writer)
+ *
+ * ```ts
+ * import { setAdmissionFairnessProtocol } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof setAdmissionFairnessProtocol) // "function"
+ * ```
+ *
+ * @param fairness - Desired fairness mode.
+ * @returns The protocol marker that was published.
+ * @category admission
+ * @since 0.0.0
+ */
+export const setAdmissionFairnessProtocol = Effect.fn("QualityScheduler.setAdmissionFairnessProtocol")(function* (
+  fairness: AdmissionFairnessMode
+) {
+  const directories = yield* ensureAdmissionDirectories();
+  return yield* writeAdmissionProtocol(directories.root, (current) => AdmissionProtocol.make({ ...current, fairness }));
 });
 
 // Staging siblings are named `<target>.tmp-<pid>[-<start identity>]-<uuid>`.
@@ -672,10 +855,12 @@ const collectStaleStagingFiles = Effect.fnUntraced(function* (
         ({ name, owner }) =>
           Effect.map(isProcessIdentityAlive(owner), (alive) =>
             alive ? O.none<string>() : O.some(path.join(directory, name))
-          )
+          ),
+        { concurrency: 1 }
       );
       return A.getSomes(forEach10);
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.flatten(forEach1);
 });
@@ -868,7 +1053,8 @@ const archiveAgedQuarantine = Effect.fnUntraced(function* (
           return yield* fs
             .rename(path.join(directories.quarantine, name), destination)
             .pipe(Effect.as(true), Effect.orElseSucceed(constant(false)));
-        })
+        }),
+        { concurrency: 1 }
       );
       const count = A.length(A.filter(moved, identity));
       yield* count > 0
@@ -931,16 +1117,20 @@ const collectAdmissionEntries = Effect.fnUntraced(function* <Entry, DecodeError>
   const names = yield* fs
     .readDirectory(directory)
     .pipe(Effect.mapError(QualitySchedulerError.new(`Failed to list admission state in ${directory}.`)));
-  const classified = yield* Effect.forEach(A.filter(names, Str.endsWith(".json")), (name) => {
-    const entryPath = path.join(directory, name);
-    return Effect.map(classifyAdmissionEntry(entryPath, codec), (outcome) => ({ entryPath, outcome }));
-  });
+  const classified = yield* Effect.forEach(
+    A.filter(names, Str.endsWith(".json")),
+    (name) => {
+      const entryPath = path.join(directory, name);
+      return Effect.map(classifyAdmissionEntry(entryPath, codec), (outcome) => ({ entryPath, outcome }));
+    },
+    { concurrency: 1 }
+  );
   yield* repair
     ? Effect.forEach(
         classified,
         ({ entryPath, outcome }) =>
           outcome.kind === "malformed" ? quarantineEntry(directories, entryPath, "undecodable") : Effect.void,
-        { discard: true }
+        { concurrency: 1, discard: true }
       )
     : Effect.void;
   return {
@@ -989,7 +1179,8 @@ const readReapClaims = Effect.fnUntraced(function* (
         return O.none<{ readonly claimPath: string; readonly claim: AdmissionReapClaim }>();
       }
       return O.some({ claimPath, claim: claim.value });
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.getSomes(forEach2);
 });
@@ -1141,10 +1332,11 @@ const recoveryRecordRemainsAfterSettlement = Effect.fnUntraced(function* (
 ): Effect.fn.Return<boolean, never, SecureRandom.SecureRandom | FileSystem.FileSystem> {
   const fs = yield* FileSystem.FileSystem;
   // A healthy owner may need several seconds to finish its sinks on a loaded runner.
+  const window = yield* RecoveryRecordSettlementWindow;
   return yield* Effect.repeat(fs.exists(recoveryPath).pipe(Effect.orElseSucceed(constant(true))), {
     until: Bool.not,
     schedule: Schedule.spaced(recoveryRecordSettlementPollInterval),
-  }).pipe(Effect.timeout(recoveryRecordSettlementWindow), Effect.orElseSucceed(constant(true)));
+  }).pipe(Effect.timeout(window), Effect.orElseSucceed(constant(true)));
 });
 
 const processAttemptJournalSink = Effect.fnUntraced(function* (
@@ -1371,7 +1563,7 @@ const coalesceOverlappingAdmissionState = Effect.fnUntraced(function* (
             QualitySchedulerError.new(`Failed to coalesce promoted admission ticket ${ticketPath} with its lease.`)
           )
         ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const duplicatePaths = pipe(
     duplicateTickets,
@@ -1399,15 +1591,16 @@ const repairDeadAdmissionState = Effect.fnUntraced(function* (
   yield* Effect.forEach(
     A.filter(coalesced.deadLeases, ({ path }) => !A.contains(retainedDeadLeasePaths, path)),
     ({ lease, path: sourcePath }) => claimDeadLease(directories, sourcePath, lease),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(
     coalesced.deadTickets,
     ({ ticket, path: sourcePath }) => claimDeadTicket(directories, sourcePath, ticket),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const readReapClaims5 = yield* readReapClaims(directories);
   yield* Effect.forEach(readReapClaims5, ({ claimPath, claim }) => processReapClaim(directories, claimPath, claim), {
+    concurrency: 1,
     discard: true,
   });
   yield* archiveAgedQuarantine(directories);
@@ -1441,6 +1634,10 @@ const promotionAdmissionEvent = (transition: AdmissionPromotionTransition): Admi
     enqueuedAtMillis: transition.ticket.enqueuedAtMillis,
     admittedAtMillis: transition.lease.admittedAtMillis,
     attemptId: transition.ticket.attemptId,
+    unit: transition.ticket.unit,
+    weightSource: transition.ticket.weightSource,
+    owner: transition.ticket.owner,
+    pressure: transition.pressure,
   });
 
 const readPromotionLease = Effect.fnUntraced(function* (
@@ -1596,7 +1793,7 @@ const recoverPromotionTransitions = Effect.fnUntraced(function* (
       }
       yield* processPromotionTransition(directories, transitionPath, transition.value.nonce);
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -1611,7 +1808,7 @@ const scanAdmissionState = Effect.fnUntraced(function* (
 > {
   yield* repair ? recoverPromotionTransitions(directories) : Effect.void;
   const staleStaging = yield* collectStaleStagingFiles(directories);
-  yield* repair ? Effect.forEach(staleStaging, removeStagingFile, { discard: true }) : Effect.void;
+  yield* repair ? Effect.forEach(staleStaging, removeStagingFile, { concurrency: 1, discard: true }) : Effect.void;
   const leases = yield* collectAdmissionEntries(
     directories,
     directories.leases,
@@ -1691,6 +1888,90 @@ export const orderAdmissionTicketsForTesting: {
 const activeTokenTotal = (state: LiveAdmissionState): number =>
   A.reduce(state.leases, 0, (total, { lease }) => total + lease.weightTokens);
 
+// The capacity the scheduler admits against: the provider's cgroup-scoped reservation capacity,
+// or the chartered formula over the reading for a provider without one.
+const capacityTokensFor = (
+  stats: MemoryStatsShape,
+  availableGib: number,
+  leases: ReadonlyArray<YeetAdmissionLease>,
+  config: AdmissionConfig,
+  destination: O.Option<string>
+): Effect.Effect<number> =>
+  stats.reservationCapacity === undefined
+    ? Effect.succeed(admissionCapacityTokensFor(availableGib, config))
+    : stats.reservationCapacity(leases, config, destination);
+
+// One pressure stamp from a scan: every live lease counts as active, and the
+// tickets other than the stamped admission's own count as queued.
+const readAdmissionPressureStamp = Effect.fnUntraced(function* (
+  state: LiveAdmissionState,
+  capacityTokens: number,
+  availableGib: number,
+  nonce: string
+): Effect.fn.Return<AdmissionPressureStamp, never, FileSystem.FileSystem> {
+  const queued = A.filter(state.tickets, ({ ticket }) => ticket.nonce !== nonce);
+  const host = yield* readAdmissionHostPressure(A.map(state.leases, ({ lease }) => lease));
+  return AdmissionPressureStamp.make({
+    capacityTokens,
+    activeTokens: activeTokenTotal(state),
+    queuedTokens: A.reduce(queued, 0, (total, { ticket }) => total + ticket.weightTokens),
+    queuedTickets: A.length(queued),
+    memAvailableGib: Num.round(availableGib, 3),
+    ...host,
+  });
+});
+
+// Each transition reads the pressure gate at its own instant, so turning it off stops the
+// next admission and release sampling, and turning it on starts it, even for a running request.
+// The admitted stamp reuses the scan, capacity and memory reading the admission was checked against.
+const stampAdmittedPressure = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  state: LiveAdmissionState,
+  capacityTokens: number,
+  availableGib: number,
+  nonce: string
+): Effect.fn.Return<O.Option<AdmissionPressureStamp>, never, FileSystem.FileSystem | Path.Path> {
+  const protocol = yield* readAdmissionProtocol(directories.root);
+  return yield* AdmissionPressureEmission.match(protocol.pressure, {
+    off: () => Effect.succeedNone,
+    on: () => Effect.asSome(readAdmissionPressureStamp(state, capacityTokens, availableGib, nonce)),
+  });
+});
+
+// The released stamp scans afresh, read-only; a scan that fails leaves the row unstamped.
+const readReleasedPressureStamp = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  config: AdmissionConfig,
+  nonce: string
+): Effect.fn.Return<
+  AdmissionPressureStamp,
+  QualitySchedulerError,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | MemoryStats | Digest.Digest
+> {
+  const state = yield* scanAdmissionState(directories, false);
+  const stats = yield* MemoryStats;
+  const availableGib = yield* stats.availableGib;
+  const leases = A.map(state.leases, ({ lease }) => lease);
+  const capacityTokens = yield* capacityTokensFor(stats, availableGib, leases, config, O.none());
+  return yield* readAdmissionPressureStamp(state, capacityTokens, availableGib, nonce);
+});
+
+const stampReleasedPressure = Effect.fnUntraced(function* (
+  directories: AdmissionDirectories,
+  config: AdmissionConfig,
+  nonce: string
+): Effect.fn.Return<
+  O.Option<AdmissionPressureStamp>,
+  never,
+  SecureRandom.SecureRandom | FileSystem.FileSystem | Path.Path | MemoryStats | Digest.Digest
+> {
+  const protocol = yield* readAdmissionProtocol(directories.root);
+  return yield* AdmissionPressureEmission.match(protocol.pressure, {
+    off: () => Effect.succeedNone,
+    on: () => Effect.option(readReleasedPressureStamp(directories, config, nonce)),
+  });
+});
+
 const hasLegacySameOriginLease = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
   A.some(
     state.leases,
@@ -1716,6 +1997,10 @@ const hasLegacySameOriginOwner = (state: LiveAdmissionState, ticket: YeetAdmissi
 const hasSameCheckoutLease = (state: LiveAdmissionState, ticket: YeetAdmissionTicket): boolean =>
   A.some(state.leases, ({ lease }) => lease.checkoutRoot === ticket.checkoutRoot);
 
+// Cache work stays in the review-fix class it borrowed before SCHE-08, so the
+// class cap admits exactly as it did while Cache commands requested `review-fix`.
+const isReviewFixClassKind = S.is(AdmissionWorkKind.pick(["review-fix", "cache"]));
+
 // A ticket is skippable (stays queued without blocking later tickets) when it
 // targets a checkout that already has admitted work, recently reported its
 // origin migration gate busy (held by a process on the previous Yeet release),
@@ -1738,8 +2023,8 @@ const isTicketSkippable = (
   if (!ignoreOriginStamp && stampFresh) {
     return true;
   }
-  if (ticket.kind === "review-fix") {
-    const activeReviewFix = A.length(A.filter(state.leases, ({ lease }) => lease.kind === "review-fix"));
+  if (isReviewFixClassKind(ticket.kind)) {
+    const activeReviewFix = A.length(A.filter(state.leases, ({ lease }) => isReviewFixClassKind(lease.kind)));
     return activeReviewFix >= config.reviewFixClassCap;
   }
   return false;
@@ -1774,6 +2059,745 @@ const selfMayAttempt = (
   }
   return false;
 };
+
+const isProtected = (policy: AdmissionBackfillPolicy, nowMillis: number, ticket: YeetAdmissionTicket): boolean =>
+  nowMillis - ticket.enqueuedAtMillis >= policy.protectAfterMillis;
+
+const effectiveRank = (policy: AdmissionBackfillPolicy, nowMillis: number, ticket: YeetAdmissionTicket): number =>
+  ticket.priority === "publish" || nowMillis - ticket.enqueuedAtMillis >= policy.publishAgingMillis ? 0 : 1;
+
+// Length-prefixed, so no two (origin, checkout) pairs share a key whatever characters they hold.
+const checkoutUsageKey = (originKey: string, checkoutRoot: string): string =>
+  `${Str.length(originKey)}:${originKey}${checkoutRoot}`;
+
+interface UsageIndex {
+  readonly byCheckout: HashMap.HashMap<string, number>;
+  readonly byOrigin: HashMap.HashMap<string, number>;
+}
+
+const addUsage = (index: HashMap.HashMap<string, number>, key: string, tokenMillis: number) =>
+  HashMap.set(index, key, O.getOrElse(HashMap.get(index, key), () => 0) + tokenMillis);
+
+const usageIndex = (policy: AdmissionBackfillPolicy, view: AdmissionBackfillView): UsageIndex => {
+  const windowStart = view.nowMillis - policy.fairnessWindowMillis;
+  const spans = A.appendAll(
+    A.map(view.leases, (lease) => ({
+      originKey: lease.originKey,
+      checkoutRoot: lease.checkoutRoot,
+      weightTokens: lease.weightTokens,
+      startMillis: lease.admittedAtMillis,
+      endMillis: view.nowMillis,
+    })),
+    A.map(view.finished, (interval) => ({
+      originKey: interval.originKey,
+      checkoutRoot: interval.checkoutRoot,
+      weightTokens: interval.weightTokens,
+      startMillis: interval.admittedAtMillis,
+      endMillis: interval.releasedAtMillis,
+    }))
+  );
+  return A.reduce(
+    spans,
+    { byOrigin: HashMap.empty<string, number>(), byCheckout: HashMap.empty<string, number>() },
+    (index, span) => {
+      const overlap = Num.min(span.endMillis, view.nowMillis) - Num.max(span.startMillis, windowStart);
+      const tokenMillis = span.weightTokens * Num.max(overlap, 0);
+      return {
+        byOrigin: addUsage(index.byOrigin, span.originKey, tokenMillis),
+        byCheckout: addUsage(index.byCheckout, checkoutUsageKey(span.originKey, span.checkoutRoot), tokenMillis),
+      };
+    }
+  );
+};
+
+const fifoOrder: Order.Order<YeetAdmissionTicket> = pipe(
+  Order.mapInput(Order.Number, (ticket: YeetAdmissionTicket) => ticket.enqueuedAtMillis),
+  Order.combine(Order.mapInput(Order.String, (ticket: YeetAdmissionTicket) => ticket.nonce))
+);
+
+/**
+ * The SCHE-06 order of the in-line tickets on one view.
+ *
+ * **Details**
+ *
+ * Protected tickets lead, oldest first by enqueue instant and nonce, so no
+ * newer ticket overtakes them. The rest follow by the deployed effective
+ * rank, then (fairness on) the least windowed origin usage and the least
+ * checkout usage within it, then enqueue order. With fairness off and
+ * protection at the aging instant this is the deployed ticket order.
+ *
+ * **Example** (Order an empty queue)
+ *
+ * ```ts
+ * import { AdmissionBackfillPolicy, AdmissionBackfillView, admissionBackfillOrder } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const policy = AdmissionBackfillPolicy.make({
+ *   capacityTokens: 10,
+ *   publishAgingMillis: 120_000,
+ *   protectAfterMillis: 120_000,
+ *   fairnessWindowMillis: 1_800_000,
+ *   promotionOverheadMillis: 5_000,
+ *   backfill: "easy",
+ *   fairness: "origin-checkout"
+ * })
+ * const view = AdmissionBackfillView.make({ nowMillis: 0, tickets: [], leases: [], finished: [] })
+ * console.log(admissionBackfillOrder(view, policy).length) // 0
+ * ```
+ *
+ * @category ordering
+ * @since 0.0.0
+ */
+export const admissionBackfillOrder: {
+  (policy: AdmissionBackfillPolicy): (view: AdmissionBackfillView) => ReadonlyArray<YeetAdmissionTicket>;
+  (view: AdmissionBackfillView, policy: AdmissionBackfillPolicy): ReadonlyArray<YeetAdmissionTicket>;
+} = dual(2, (view: AdmissionBackfillView, policy: AdmissionBackfillPolicy): ReadonlyArray<YeetAdmissionTicket> => {
+  const fairness = AdmissionFairnessMode.match(policy.fairness, {
+    off: () => fifoOrder,
+    "origin-checkout": () => {
+      const usage = usageIndex(policy, view);
+      return Order.combineAll([
+        Order.mapInput(Order.Number, (ticket: YeetAdmissionTicket) =>
+          O.getOrElse(HashMap.get(usage.byOrigin, ticket.originKey), () => 0)
+        ),
+        Order.mapInput(Order.Number, (ticket: YeetAdmissionTicket) =>
+          O.getOrElse(HashMap.get(usage.byCheckout, checkoutUsageKey(ticket.originKey, ticket.checkoutRoot)), () => 0)
+        ),
+        fifoOrder,
+      ]);
+    },
+  });
+  const unprotectedOrder = pipe(
+    Order.mapInput(Order.Number, (ticket: YeetAdmissionTicket) => effectiveRank(policy, view.nowMillis, ticket)),
+    Order.combine(fairness)
+  );
+  const order = Order.make<YeetAdmissionTicket>((self, that) => {
+    const selfProtected = isProtected(policy, view.nowMillis, self);
+    const thatProtected = isProtected(policy, view.nowMillis, that);
+    if (selfProtected && thatProtected) {
+      return fifoOrder(self, that);
+    }
+    if (selfProtected !== thatProtected) {
+      return selfProtected ? -1 : 1;
+    }
+    return unprotectedOrder(self, that);
+  });
+  return A.sort(view.tickets, order);
+});
+
+const activeTokens = (view: AdmissionBackfillView): number =>
+  Num.sumAll(A.map(view.leases, (lease) => lease.weightTokens));
+
+// A lease's end is projected only from a declared ETA it has not overrun.
+const projectedEnd = (nowMillis: number, lease: YeetAdmissionLease): O.Option<number> =>
+  pipe(
+    lease.etaMillis,
+    O.map((eta) => lease.admittedAtMillis + eta),
+    O.filter((end) => end > nowMillis)
+  );
+
+const projectedEnds = (
+  view: AdmissionBackfillView
+): O.Option<ReadonlyArray<{ readonly end: number; readonly weight: number }>> =>
+  O.all(
+    A.map(view.leases, (lease) =>
+      O.map(projectedEnd(view.nowMillis, lease), (end) => ({ end, weight: lease.weightTokens }))
+    )
+  );
+
+// The earliest instant the head fits if every lease ends at its ETA; None when one cannot be projected.
+const projectedHeadStart = (
+  view: AdmissionBackfillView,
+  policy: AdmissionBackfillPolicy,
+  head: YeetAdmissionTicket
+): O.Option<number> =>
+  O.flatMap(projectedEnds(view), (ends) => {
+    const byEnd = A.sort(
+      ends,
+      Order.mapInput(Order.Number, (entry: { readonly end: number }) => entry.end)
+    );
+    const released = A.scan(
+      byEnd,
+      { end: view.nowMillis, freed: policy.capacityTokens - activeTokens(view) },
+      (acc, entry) => ({ end: entry.end, freed: acc.freed + entry.weight })
+    );
+    return pipe(
+      A.findFirst(released, (step) => step.freed >= Num.min(head.weightTokens, policy.capacityTokens)),
+      O.map((step) => step.end)
+    );
+  });
+
+/**
+ * The conditional starvation bound for one ticket entering protected ordering.
+ *
+ * **Details**
+ *
+ * `now` plus the remaining ETA of every lease, plus the ETA of every ticket
+ * ahead, plus `promotionOverheadMillis` once per ticket ahead and once for the
+ * ticket itself. `None` when any of those ETAs is undeclared or overrun, or
+ * the ticket is not in line: the bound is not declared.
+ *
+ * **Example** (An idle machine bounds at the overhead)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import {
+ *   AdmissionBackfillPolicy,
+ *   AdmissionBackfillView,
+ *   YeetAdmissionTicket,
+ *   admissionConditionalDeadline
+ * } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const policy = AdmissionBackfillPolicy.make({
+ *   capacityTokens: 10,
+ *   publishAgingMillis: 120_000,
+ *   protectAfterMillis: 120_000,
+ *   fairnessWindowMillis: 1_800_000,
+ *   promotionOverheadMillis: 5_000,
+ *   backfill: "easy",
+ *   fairness: "off"
+ * })
+ * const ticket = YeetAdmissionTicket.make({
+ *   schemaVersion: "yeet-admission-ticket/v1",
+ *   pid: 1,
+ *   procStart: "1",
+ *   kind: "full-proof",
+ *   weightTokens: 3,
+ *   priority: "verify",
+ *   originKey: "aaaabbbbcccc",
+ *   checkoutRoot: "/repo",
+ *   branch: "feat/x",
+ *   enqueuedAtMillis: 0,
+ *   heartbeatAtMillis: 0,
+ *   nonce: "ticket-1"
+ * })
+ * const view = AdmissionBackfillView.make({ nowMillis: 120_000, tickets: [ticket], leases: [], finished: [] })
+ * console.log(O.getOrNull(admissionConditionalDeadline(view, policy, "ticket-1"))) // 125000
+ * ```
+ *
+ * @category projections
+ * @since 0.0.0
+ */
+export const admissionConditionalDeadline: {
+  (policy: AdmissionBackfillPolicy, nonce: string): (view: AdmissionBackfillView) => O.Option<number>;
+  (view: AdmissionBackfillView, policy: AdmissionBackfillPolicy, nonce: string): O.Option<number>;
+} = dual(3, (view: AdmissionBackfillView, policy: AdmissionBackfillPolicy, nonce: string): O.Option<number> => {
+  const ordered = admissionBackfillOrder(view, policy);
+  return O.flatMap(
+    A.findFirstIndex(ordered, (ticket) => ticket.nonce === nonce),
+    (index) => {
+      const ahead = A.take(ordered, index);
+      const remaining = O.map(projectedEnds(view), (ends) =>
+        Num.sumAll(A.map(ends, (entry) => entry.end - view.nowMillis))
+      );
+      const aheadEtas = O.map(O.all(A.map(ahead, (ticket) => ticket.etaMillis)), Num.sumAll);
+      return O.zipWith(
+        remaining,
+        aheadEtas,
+        (running, queued) => view.nowMillis + running + queued + (index + 1) * policy.promotionOverheadMillis
+      );
+    }
+  );
+});
+
+const isBoundBreached = (view: AdmissionBackfillView): boolean =>
+  A.some(view.tickets, (ticket) => O.exists(ticket.deadlineMillis, (deadline) => view.nowMillis > deadline));
+
+const wait = (reason: AdmissionWaitReason): AdmissionAttemptVerdict =>
+  AdmissionAttemptVerdict.cases.Wait.make({ reason });
+
+/**
+ * One contender's SCHE-06 verdict on one scan.
+ *
+ * **Details**
+ *
+ * The head attempts when it fits, as today. Another ticket waits while the
+ * head fits, while backfill is off, and while a queued ticket is past its
+ * deadline. Otherwise it may backfill when it fits and its declared ETA ends
+ * no later than the head's projected start, and no earlier non-head ticket
+ * may backfill first. Concurrent attempts still meet the overshoot rollback.
+ *
+ * **Example** (A lone ticket attempts as head)
+ *
+ * ```ts
+ * import {
+ *   AdmissionAttemptVerdict,
+ *   AdmissionBackfillPolicy,
+ *   AdmissionBackfillView,
+ *   YeetAdmissionTicket,
+ *   admissionAttemptVerdict
+ * } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const policy = AdmissionBackfillPolicy.make({
+ *   capacityTokens: 10,
+ *   publishAgingMillis: 120_000,
+ *   protectAfterMillis: 120_000,
+ *   fairnessWindowMillis: 1_800_000,
+ *   promotionOverheadMillis: 5_000,
+ *   backfill: "easy",
+ *   fairness: "origin-checkout"
+ * })
+ * const ticket = YeetAdmissionTicket.make({
+ *   schemaVersion: "yeet-admission-ticket/v1",
+ *   pid: 1,
+ *   procStart: "1",
+ *   kind: "review-fix",
+ *   weightTokens: 1,
+ *   priority: "verify",
+ *   originKey: "aaaabbbbcccc",
+ *   checkoutRoot: "/repo",
+ *   branch: "feat/x",
+ *   enqueuedAtMillis: 0,
+ *   heartbeatAtMillis: 0,
+ *   nonce: "ticket-1"
+ * })
+ * const view = AdmissionBackfillView.make({ nowMillis: 0, tickets: [ticket], leases: [], finished: [] })
+ * console.log(AdmissionAttemptVerdict.guards.Attempt(admissionAttemptVerdict(view, policy, "ticket-1"))) // true
+ * ```
+ *
+ * @category policies
+ * @since 0.0.0
+ */
+export const admissionAttemptVerdict: {
+  (policy: AdmissionBackfillPolicy, nonce: string): (view: AdmissionBackfillView) => AdmissionAttemptVerdict;
+  (view: AdmissionBackfillView, policy: AdmissionBackfillPolicy, nonce: string): AdmissionAttemptVerdict;
+} = dual(3, (view: AdmissionBackfillView, policy: AdmissionBackfillPolicy, nonce: string): AdmissionAttemptVerdict => {
+  const ordered = admissionBackfillOrder(view, policy);
+  const active = activeTokens(view);
+  const fits = (ticket: YeetAdmissionTicket): boolean => active + ticket.weightTokens <= policy.capacityTokens;
+  return pipe(
+    A.head(ordered),
+    O.flatMap((head) =>
+      O.map(
+        A.findFirstIndex(ordered, (ticket) => ticket.nonce === nonce),
+        (index) => ({ head, index })
+      )
+    ),
+    O.match({
+      onNone: () => wait("not-queued"),
+      onSome: ({ head, index }) => {
+        if (index === 0) {
+          return fits(head) ? AdmissionAttemptVerdict.cases.Attempt.make({ route: "head" }) : wait("capacity");
+        }
+        if (fits(head) || AdmissionBackfillMode.is.off(policy.backfill)) {
+          return wait("behind-head");
+        }
+        if (isBoundBreached(view)) {
+          return wait("backfill-disabled");
+        }
+        const headStart = projectedHeadStart(view, policy, head);
+        const backfillReason = (ticket: YeetAdmissionTicket): O.Option<AdmissionWaitReason> =>
+          O.match(
+            O.zipWith(ticket.etaMillis, headStart, (eta, start) => view.nowMillis + eta <= start),
+            {
+              onNone: () => O.some<AdmissionWaitReason>("eta-unknown"),
+              onSome: (endsInTime) =>
+                !endsInTime
+                  ? O.some<AdmissionWaitReason>("ends-after-head-start")
+                  : fits(ticket)
+                    ? O.none()
+                    : O.some<AdmissionWaitReason>("capacity"),
+            }
+          );
+        const earlier = A.take(A.drop(ordered, 1), index - 1);
+        return O.match(backfillReason(A.getUnsafe(ordered, index)), {
+          onSome: wait,
+          onNone: () =>
+            A.some(earlier, (ticket) => O.isNone(backfillReason(ticket)))
+              ? wait("behind-backfill")
+              : AdmissionAttemptVerdict.cases.Attempt.make({ route: "backfill" }),
+        });
+      },
+    })
+  );
+});
+
+interface JoinedLease {
+  readonly admittedAtMillis: number;
+  readonly checkoutRoot: string;
+  readonly kind: RecordedAdmissionWorkKind;
+  readonly originKey: string;
+  readonly releasedAtMillis: number;
+  readonly weightTokens: number;
+}
+
+interface LeaseRows {
+  readonly admitted: O.Option<{
+    readonly admittedAtMillis: number;
+    readonly kind: RecordedAdmissionWorkKind;
+    readonly originKey: string;
+    readonly weightTokens: number;
+  }>;
+  readonly checkoutRoot: O.Option<string>;
+  readonly releasedAtMillis: O.Option<number>;
+}
+
+const emptyRows: LeaseRows = { admitted: O.none(), checkoutRoot: O.none(), releasedAtMillis: O.none() };
+
+const checkoutOf = (event: AdmissionJournalEvent): O.Option<string> =>
+  "checkoutRoot" in event ? O.liftPredicate(event.checkoutRoot, Str.isNonEmpty) : O.none();
+
+const foldRow = (rows: LeaseRows, event: AdmissionJournalEvent): LeaseRows =>
+  Match.value(event).pipe(
+    Match.tag("admission-admitted", (admitted): LeaseRows => ({ ...rows, admitted: O.some(admitted) })),
+    Match.tag(
+      "admission-released",
+      (released): LeaseRows => ({
+        ...rows,
+        releasedAtMillis: O.some(released.releasedAtMillis),
+        checkoutRoot: O.orElse(rows.checkoutRoot, () => checkoutOf(released)),
+      })
+    ),
+    Match.tag(
+      "admission-enqueued",
+      (enqueued): LeaseRows => ({ ...rows, checkoutRoot: O.orElse(checkoutOf(enqueued), () => rows.checkoutRoot) })
+    ),
+    Match.orElse(() => rows)
+  );
+
+// Every admitted-and-released nonce in the journal, oldest release first.
+const joinReleasedLeases = (events: ReadonlyArray<AdmissionJournalEvent>): ReadonlyArray<JoinedLease> => {
+  const byNonce = A.reduce(events, HashMap.empty<string, LeaseRows>(), (index, event) =>
+    HashMap.set(
+      index,
+      event.nonce,
+      foldRow(
+        O.getOrElse(HashMap.get(index, event.nonce), () => emptyRows),
+        event
+      )
+    )
+  );
+  return pipe(
+    HashMap.values(byNonce),
+    A.fromIterable,
+    A.map((rows) =>
+      O.zipWith(
+        rows.admitted,
+        rows.releasedAtMillis,
+        (admitted, releasedAtMillis): JoinedLease => ({
+          admittedAtMillis: admitted.admittedAtMillis,
+          kind: admitted.kind,
+          originKey: admitted.originKey,
+          weightTokens: admitted.weightTokens,
+          checkoutRoot: O.getOrElse(rows.checkoutRoot, () => ""),
+          releasedAtMillis,
+        })
+      )
+    ),
+    A.getSomes,
+    A.sort(Order.mapInput(Order.Number, (lease: JoinedLease) => lease.releasedAtMillis))
+  );
+};
+
+/**
+ * The released lease intervals still inside the fairness window.
+ *
+ * **Example** (An empty journal counts nothing)
+ *
+ * ```ts
+ * import { admissionUsageIntervals } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(admissionUsageIntervals([], 0, 1_800_000).length) // 0
+ * ```
+ *
+ * @param events - Decoded admission-journal transitions.
+ * @param nowMillis - The scan instant.
+ * @param windowMillis - The fairness window.
+ * @returns Every released interval ending after the window opened.
+ * @category projections
+ * @since 0.0.0
+ */
+export const admissionUsageIntervals: {
+  (
+    nowMillis: number,
+    windowMillis: number
+  ): (events: ReadonlyArray<AdmissionJournalEvent>) => ReadonlyArray<AdmissionUsageInterval>;
+  (
+    events: ReadonlyArray<AdmissionJournalEvent>,
+    nowMillis: number,
+    windowMillis: number
+  ): ReadonlyArray<AdmissionUsageInterval>;
+} = dual(
+  3,
+  (
+    events: ReadonlyArray<AdmissionJournalEvent>,
+    nowMillis: number,
+    windowMillis: number
+  ): ReadonlyArray<AdmissionUsageInterval> =>
+    A.map(
+      A.filter(joinReleasedLeases(events), (lease) => lease.releasedAtMillis > nowMillis - windowMillis),
+      (lease) =>
+        AdmissionUsageInterval.make({
+          originKey: lease.originKey,
+          checkoutRoot: lease.checkoutRoot,
+          weightTokens: lease.weightTokens,
+          admittedAtMillis: lease.admittedAtMillis,
+          releasedAtMillis: lease.releasedAtMillis,
+        })
+    )
+);
+
+/**
+ * The ETA a new ticket of one kind declares: a quantile of that kind's recorded holds.
+ *
+ * **Example** (Too little history declares none)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { AdmissionEtaEstimator, admissionEtaFor } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const estimator = AdmissionEtaEstimator.make({ quantilePermille: 900, minSamples: 5, historyLimit: 200 })
+ * console.log(O.isNone(admissionEtaFor([], "full-proof", estimator))) // true
+ * ```
+ *
+ * @param events - Decoded admission-journal transitions.
+ * @param kind - The new ticket's recorded work kind.
+ * @param estimator - The quantile, sample floor and history depth.
+ * @returns The nearest-rank hold quantile in whole milliseconds, or `None`.
+ * @category projections
+ * @since 0.0.0
+ */
+export const admissionEtaFor: {
+  (
+    kind: RecordedAdmissionWorkKind,
+    estimator: AdmissionEtaEstimator
+  ): (events: ReadonlyArray<AdmissionJournalEvent>) => O.Option<number>;
+  (
+    events: ReadonlyArray<AdmissionJournalEvent>,
+    kind: RecordedAdmissionWorkKind,
+    estimator: AdmissionEtaEstimator
+  ): O.Option<number>;
+} = dual(
+  3,
+  (
+    events: ReadonlyArray<AdmissionJournalEvent>,
+    kind: RecordedAdmissionWorkKind,
+    estimator: AdmissionEtaEstimator
+  ): O.Option<number> => {
+    const holds = pipe(
+      A.filter(joinReleasedLeases(events), (lease) => lease.kind === kind),
+      A.takeRight(estimator.historyLimit),
+      A.map((lease) => Num.max(Math.round(lease.releasedAtMillis - lease.admittedAtMillis), 1)),
+      A.sort(Order.Number)
+    );
+    const count = A.length(holds);
+    return count < estimator.minSamples
+      ? O.none()
+      : A.get(
+          holds,
+          Num.clamp(Math.ceil((estimator.quantilePermille * count) / 1000) - 1, { minimum: 0, maximum: count - 1 })
+        );
+  }
+);
+// SCHE-06 (PLAN slice 12). The ETA a new ticket declares under the backfill gate:
+// the p90 of its kind's last 200 recorded holds, once five exist.
+const backfillEtaEstimator = AdmissionEtaEstimator.make({ quantilePermille: 900, minSamples: 5, historyLimit: 200 });
+const BACKFILL_FAIRNESS_WINDOW_MILLIS = Duration.toMillis(Duration.minutes(30));
+
+const isBackfillProtocolOn = (protocol: AdmissionProtocol): boolean =>
+  !AdmissionBackfillMode.is.off(protocol.backfill) || !AdmissionFairnessMode.is.off(protocol.fairness);
+
+// Protection starts at the deployed publish aging, so with both modes off the order
+// is the deployed one; the bound adds one heartbeat of polling slack per ticket.
+const backfillPolicyFor = (
+  protocol: AdmissionProtocol,
+  capacityTokens: number,
+  config: AdmissionConfig
+): AdmissionBackfillPolicy =>
+  AdmissionBackfillPolicy.make({
+    capacityTokens,
+    publishAgingMillis: config.publishAgingSeconds * 1000,
+    protectAfterMillis: config.publishAgingSeconds * 1000,
+    fairnessWindowMillis: BACKFILL_FAIRNESS_WINDOW_MILLIS,
+    promotionOverheadMillis: config.heartbeatSeconds * 1000,
+    backfill: protocol.backfill,
+    fairness: protocol.fairness,
+  });
+
+// The journal is read only behind the gates; an unreadable journal reads as empty,
+// which only drops the fairness usage and the ETA (so nothing backfills).
+const journalEventsOrEmpty = (
+  history: Effect.Effect<AdmissionJournalHistory, QualitySchedulerError, FileSystem.FileSystem | Path.Path>
+) =>
+  history.pipe(
+    Effect.map((read) => read.events),
+    Effect.orElseSucceed(A.empty<AdmissionJournalEvent>)
+  );
+
+// The ETA reads the whole retained history, once per enqueue.
+const readBackfillJournalEvents = (root: string) => journalEventsOrEmpty(readAdmissionJournalHistory(root));
+
+// A fairness scan runs every heartbeat, so it reads only the segments that can hold
+// a lease released inside the window, with a day of margin for its admitted row.
+const BACKFILL_ADMITTED_ROW_MARGIN_MILLIS = Duration.toMillis(Duration.days(1));
+const readRecentBackfillJournalEvents = (root: string, nowMillis: number) =>
+  journalEventsOrEmpty(
+    readAdmissionJournalHistorySince(
+      root,
+      nowMillis - BACKFILL_FAIRNESS_WINDOW_MILLIS - BACKFILL_ADMITTED_ROW_MARGIN_MILLIS
+    )
+  );
+
+const readBackfillContext = Effect.fnUntraced(function* (
+  root: string,
+  protocol: AdmissionProtocol,
+  capacityTokens: number,
+  nowMillis: number,
+  config: AdmissionConfig
+): Effect.fn.Return<O.Option<AdmissionBackfillContext>, never, FileSystem.FileSystem | Path.Path> {
+  if (!isBackfillProtocolOn(protocol)) {
+    return O.none();
+  }
+  const finished = AdmissionFairnessMode.is.off(protocol.fairness)
+    ? A.empty<AdmissionUsageInterval>()
+    : yield* Effect.map(
+        readRecentBackfillJournalEvents(root, nowMillis),
+        admissionUsageIntervals(nowMillis, BACKFILL_FAIRNESS_WINDOW_MILLIS)
+      );
+  return O.some(
+    AdmissionBackfillContext.make({ policy: backfillPolicyFor(protocol, capacityTokens, config), finished })
+  );
+});
+
+// A new ticket declares an ETA only under the backfill gate, so with it off every
+// ticket and lease keeps the bytes it had before SCHE-06.
+const backfillEtaFor = Effect.fnUntraced(function* (
+  root: string,
+  protocol: AdmissionProtocol,
+  kind: AdmissionWorkKind
+): Effect.fn.Return<O.Option<number>, never, FileSystem.FileSystem | Path.Path> {
+  return AdmissionBackfillMode.is.off(protocol.backfill)
+    ? O.none()
+    : yield* Effect.map(readBackfillJournalEvents(root), admissionEtaFor(kind, backfillEtaEstimator));
+});
+
+const scanLeases = (state: LiveAdmissionState): ReadonlyArray<YeetAdmissionLease> =>
+  A.map(state.leases, ({ lease }) => lease);
+
+// The verdict runs after the deployed skippable checks, unchanged: a skippable ticket
+// leaves the line (the contender's own origin stamp is ignored for itself).
+const backfillViewFor = (
+  state: LiveAdmissionState,
+  nowMillis: number,
+  config: AdmissionConfig,
+  self: YeetAdmissionTicket,
+  context: AdmissionBackfillContext
+): AdmissionBackfillView =>
+  AdmissionBackfillView.make({
+    nowMillis,
+    tickets: A.filter(
+      A.map(state.tickets, ({ ticket }) => ticket),
+      (ticket) =>
+        !isTicketSkippable(state, ticket, nowMillis, config, ticket.pid === self.pid && ticket.nonce === self.nonce)
+    ),
+    leases: scanLeases(state),
+    finished: context.finished,
+  });
+
+const selfMayAttemptWith = (
+  state: LiveAdmissionState,
+  capacityTokens: number,
+  nowMillis: number,
+  config: AdmissionConfig,
+  self: YeetAdmissionTicket,
+  context: O.Option<AdmissionBackfillContext>
+): boolean =>
+  O.match(context, {
+    onNone: () => selfMayAttempt(state, capacityTokens, nowMillis, config, self),
+    onSome: (backfill) =>
+      AdmissionAttemptVerdict.guards.Attempt(
+        admissionAttemptVerdict(backfillViewFor(state, nowMillis, config, self, backfill), backfill.policy, self.nonce)
+      ),
+  });
+
+// The order the progress line reports under a backfill gate: every queued ticket, skippable ones
+// included, in the SCHE-06 order the verdict uses.
+const backfillQueueOrderFor = (
+  state: LiveAdmissionState,
+  nowMillis: number,
+  context: O.Option<AdmissionBackfillContext>
+): O.Option<ReadonlyArray<YeetAdmissionTicket>> =>
+  O.map(context, (backfill) =>
+    admissionBackfillOrder(
+      AdmissionBackfillView.make({
+        nowMillis,
+        tickets: A.map(state.tickets, ({ ticket }) => ticket),
+        leases: scanLeases(state),
+        finished: backfill.finished,
+      }),
+      backfill.policy
+    )
+  );
+
+// The bound a contender stamps on its own ticket: once, on the first scan at which it
+// is protected, and only under the backfill gate.
+const backfillDeadlineFor = (
+  state: LiveAdmissionState,
+  nowMillis: number,
+  config: AdmissionConfig,
+  self: YeetAdmissionTicket,
+  context: O.Option<AdmissionBackfillContext>
+): O.Option<number> =>
+  pipe(
+    context,
+    O.filter(
+      (backfill) =>
+        AdmissionBackfillMode.is.easy(backfill.policy.backfill) &&
+        O.isNone(self.deadlineMillis) &&
+        nowMillis - self.enqueuedAtMillis >= backfill.policy.protectAfterMillis
+    ),
+    O.flatMap((backfill) =>
+      admissionConditionalDeadline(
+        backfillViewFor(state, nowMillis, config, self, backfill),
+        backfill.policy,
+        self.nonce
+      )
+    )
+  );
+
+/**
+ * Exposes the gated self-selection for deterministic scheduler tests.
+ *
+ * **Details**
+ *
+ * `None` runs the deployed rule; `Some` runs the SCHE-06 verdict after the
+ * deployed skippable checks. With both modes `off` the two agree.
+ *
+ * **Example** (Reference the self-selection seam)
+ *
+ * ```ts
+ * import { selfMayAttemptForTesting } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(typeof selfMayAttemptForTesting) // "function"
+ * ```
+ *
+ * @internal
+ * @category testing
+ * @since 0.0.0
+ */
+export const selfMayAttemptForTesting = (scan: {
+  readonly capacityTokens: number;
+  readonly config: AdmissionConfig;
+  readonly context: O.Option<AdmissionBackfillContext>;
+  readonly leases: ReadonlyArray<YeetAdmissionLease>;
+  readonly nowMillis: number;
+  readonly self: YeetAdmissionTicket;
+  readonly tickets: ReadonlyArray<YeetAdmissionTicket>;
+}): boolean =>
+  selfMayAttemptWith(
+    {
+      leases: A.map(scan.leases, (lease) => ({ path: lease.nonce, lease })),
+      tickets: A.map(scan.tickets, (ticket) => ({ path: ticket.nonce, ticket })),
+      dead: A.empty(),
+      deadLeases: A.empty(),
+      deadTickets: A.empty(),
+      quarantined: A.empty(),
+    },
+    scan.capacityTokens,
+    scan.nowMillis,
+    scan.config,
+    scan.self,
+    scan.context
+  );
 
 /**
  * Gate coordinating origin-lock migration and the below-envelope fallback
@@ -2045,6 +3069,10 @@ const stageSelfLease = Effect.fnUntraced(function* (
     computeProfile: ticket.computeProfile,
     stage: ticket.stage,
     forceLocal: ticket.forceLocal,
+    unit: ticket.unit,
+    weightSource: ticket.weightSource,
+    owner: ticket.owner,
+    etaMillis: ticket.etaMillis,
   });
   const leasePath = path.join(directories.leases, `${ticket.nonce}-${ticket.pid}.lease.json`);
   const promotionPath = promotionTransitionPath(path, directories, ticket.nonce);
@@ -2083,13 +3111,11 @@ const stageSelfLease = Effect.fnUntraced(function* (
   const rescanned = yield* scanAdmissionState(directories, false);
   const stats = yield* MemoryStats;
   const availableGib7 = yield* stats.availableGib;
-  const capacityNow = admissionCapacityTokensFor(availableGib7, config);
   const prefix = A.filter(
     A.map(rescanned.leases, ({ lease }) => lease),
     (candidate) => admissionInstantOrder(candidate, lease) < 0
   );
-  const scopedCapacity =
-    stats.reservationCapacity === undefined ? capacityNow : yield* stats.reservationCapacity(prefix, config);
+  const scopedCapacity = yield* capacityTokensFor(stats, availableGib7, prefix, config, O.none());
   if (A.reduce(prefix, lease.weightTokens, (total, candidate) => total + candidate.weightTokens) > scopedCapacity) {
     const fs = yield* FileSystem.FileSystem;
     yield* fs.remove(leasePath, { force: true }).pipe(Effect.ignore);
@@ -2098,9 +3124,11 @@ const stageSelfLease = Effect.fnUntraced(function* (
   }
   const encodedLeaseText = yield* encodeLeaseText(scopedLease);
   yield* refreshHeartbeat(leasePath, encodedLeaseText);
+  // Read only once the admission holds, from the scan and capacity it was checked against.
+  const stamp = yield* stampAdmittedPressure(directories, rescanned, scopedCapacity, availableGib7, ticket.nonce);
   yield* persistPromotionTransition(
     promotionPath,
-    AdmissionPromotionTransition.make({ ...prepared, lease: scopedLease, phase: "lease-published" })
+    AdmissionPromotionTransition.make({ ...prepared, lease: scopedLease, phase: "lease-published", pressure: stamp })
   );
   return [O.some({ lease: scopedLease, leasePath, promotionPath }), scopeUnavailable];
 });
@@ -2125,7 +3153,11 @@ const heartbeatLoop = Effect.fnUntraced(function* (
 interface PromotionTickInfo {
   readonly availableGib: number;
   readonly capacityTokens: number;
+  // The SCHE-06 bound this scan stamps on the contender's own ticket, when it is due.
+  readonly deadlineMillis: O.Option<number>;
   readonly nowMillis: number;
+  // The SCHE-06 order of every queued ticket, while a backfill gate is on; the progress line reports it.
+  readonly order: O.Option<ReadonlyArray<YeetAdmissionTicket>>;
   readonly state: LiveAdmissionState;
 }
 
@@ -2161,16 +3193,24 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
   const state = yield* scanAdmissionState(directories, true);
   const stats = yield* MemoryStats;
   const availableGib = yield* stats.availableGib;
-  const capacityTokens =
-    stats.reservationCapacity === undefined
-      ? admissionCapacityTokensFor(availableGib, config)
-      : yield* stats.reservationCapacity(
-          A.map(state.leases, ({ lease }) => lease),
-          config,
-          destination
-        );
-  const info: PromotionTickInfo = { availableGib, capacityTokens, nowMillis, state };
-  if (!selfMayAttempt(state, capacityTokens, nowMillis, config, ticket)) {
+  const capacityTokens = yield* capacityTokensFor(
+    stats,
+    availableGib,
+    A.map(state.leases, ({ lease }) => lease),
+    config,
+    destination
+  );
+  const protocol = yield* readAdmissionProtocol(directories.root);
+  const backfill = yield* readBackfillContext(directories.root, protocol, capacityTokens, nowMillis, config);
+  const info: PromotionTickInfo = {
+    availableGib,
+    capacityTokens,
+    deadlineMillis: backfillDeadlineFor(state, nowMillis, config, ticket, backfill),
+    nowMillis,
+    order: backfillQueueOrderFor(state, nowMillis, backfill),
+    state,
+  };
+  if (!selfMayAttemptWith(state, capacityTokens, nowMillis, config, ticket, backfill)) {
     return { admitted: O.none(), info, originBusy: hasLegacySameOriginOwner(state, ticket), scopeUnavailable: false };
   }
   const attempt = yield* tryAdmitSelf(directories, request, ticket, gate, config);
@@ -2200,9 +3240,11 @@ const noteAdmissionWait = Effect.fnUntraced(function* (
   const waitedMillis = info.nowMillis - startMillis;
   let next = progress;
   if (info.nowMillis - progress.lastProgressMillis >= config.progressSeconds * 1000) {
-    const ordered = A.sort(
-      A.map(info.state.tickets, ({ ticket: queued }) => queued),
-      ticketOrder(info.nowMillis, config)
+    const ordered = O.getOrElse(info.order, () =>
+      A.sort(
+        A.map(info.state.tickets, ({ ticket: queued }) => queued),
+        ticketOrder(info.nowMillis, config)
+      )
     );
     const position =
       1 +
@@ -2293,6 +3335,7 @@ const waitForAdmission = Effect.fnUntraced(function* <OriginLease, GateError, Ga
       ...ticket,
       heartbeatAtMillis: refreshedMillis,
       blockedOnOriginAtMillis: tick.originBusy ? refreshedMillis : ticket.blockedOnOriginAtMillis,
+      deadlineMillis: O.orElse(ticket.deadlineMillis, () => tick.info.deadlineMillis),
     });
     const encodedTicketText = yield* encodeTicketText(ticket);
     yield* refreshHeartbeat(ticketPath, encodedTicketText);
@@ -2336,6 +3379,7 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
   | SecureRandom.SecureRandom
   | FileSystem.FileSystem
   | Path.Path
+  | MemoryStats
   | ChildProcessSpawner.ChildProcessSpawner
   | GateRequirements
   | Digest.Digest
@@ -2350,6 +3394,7 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
       );
       const releasedAtMillis = yield* Clock.currentTimeMillis;
       const telemetry = yield* readLeaseRunScopeTelemetry(admitted.lease);
+      const stamp = yield* stampReleasedPressure(directories, config, admitted.lease.nonce);
       yield* appendAdmissionJournalEvent(
         directories.root,
         AdmissionJournalReleasedV3.make({
@@ -2361,6 +3406,10 @@ const runAdmitted = Effect.fnUntraced(function* <Success, UseError, UseRequireme
           attemptId: admitted.lease.attemptId,
           checkoutRoot: admitted.lease.checkoutRoot,
           branch: admitted.lease.branch,
+          unit: admitted.lease.unit,
+          weightSource: admitted.lease.weightSource,
+          owner: admitted.lease.owner,
+          pressure: stamp,
           ...OptionUtils.getSomesStruct({
             memoryPeakBytes: O.fromUndefinedOr(telemetry.memoryPeakBytes),
           }),
@@ -2423,6 +3472,33 @@ const workerProfileRefusal = (
     )
   );
 };
+
+// With the units gate off Cache work records the `review-fix` kind it borrowed
+// before, because no earlier reader counts `cache` correctly. A reader older than
+// SCHE-08 decodes a closed kind literal and quarantines a kind it does not know.
+// A slice 3 reader keeps the lease charged but leaves it out of its review-fix
+// class cap. So the gate goes on only once every live checkout runs slice 6.
+const preUnitAdmissionWorkKind = (kind: AdmissionWorkKind): AdmissionWorkKind =>
+  AdmissionWorkKind.is.cache(kind) ? AdmissionWorkKind.Enum["review-fix"] : kind;
+
+// The ticket fields the protocol's units gate decides (SCHE-08): the work kind
+// and the unit, weight source and owner. With the gate off every ticket, lease
+// and journal row keeps the pre-unit bytes. The lease and rows copy the ticket.
+const unitGatedTicketFieldsFor = (units: AdmissionUnitEmission, request: AdmissionRequest, owner: AdmissionOwner) =>
+  AdmissionUnitEmission.match(units, {
+    off: () => ({
+      kind: preUnitAdmissionWorkKind(request.kind),
+      unit: O.none(),
+      weightSource: O.none(),
+      owner: O.none(),
+    }),
+    on: () => ({
+      kind: request.kind,
+      unit: O.some(request.unit),
+      weightSource: O.some(request.weightSource),
+      owner: O.some(owner),
+    }),
+  });
 
 const workerBypassLine = (request: AdmissionRequest): string =>
   `[yeet] admission: compute-profile=worker${request.forceLocal ? " force-local=true" : ""}; coordinating ${request.kind} through the origin gate only`;
@@ -2612,11 +3688,23 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
   const nowMillis = yield* Clock.currentTimeMillis;
   const processStartIdentityForPid9 = yield* processStartIdentityForPid(process.pid);
   const procStart = O.getOrElse(processStartIdentityForPid9, () => "");
+  const nonce = yield* SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4());
+  const protocol = yield* readAdmissionProtocol(directories.root);
+  const owner = AdmissionOwner.make({
+    proofNonce: nonce,
+    pid: process.pid,
+    procStart,
+    attemptId: admittedRequest.attemptId,
+    originKey: admittedRequest.originKey,
+    checkoutRoot: admittedRequest.checkoutRoot,
+    branch: admittedRequest.branch,
+    command: admittedRequest.command,
+  });
+  const unitGatedFields = unitGatedTicketFieldsFor(protocol.units, admittedRequest, owner);
   const ticket = YeetAdmissionTicket.make({
     schemaVersion: "yeet-admission-ticket/v1",
     pid: process.pid,
     procStart,
-    kind: admittedRequest.kind,
     weightTokens: admittedRequest.weightTokens,
     priority: admittedRequest.priority,
     originKey: admittedRequest.originKey,
@@ -2625,7 +3713,7 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     coordinationProtocol: AdmissionCoordinationProtocol.Enum["scheduler-origin-concurrency/v1"],
     enqueuedAtMillis: nowMillis,
     heartbeatAtMillis: nowMillis,
-    nonce: yield* SecureRandom.SecureRandom.use((crypto) => crypto.uuidV4()),
+    nonce,
     attemptId: admittedRequest.attemptId,
     resolvedHeadSha: admittedRequest.resolvedHeadSha,
     diffFingerprint: admittedRequest.diffFingerprint,
@@ -2634,6 +3722,8 @@ export const withQualityAdmission = Effect.fn("QualityScheduler.withQualityAdmis
     computeProfile: O.some(computeProfile.profile),
     stage: admittedRequest.stage,
     forceLocal: admittedRequest.forceLocal,
+    ...unitGatedFields,
+    etaMillis: yield* backfillEtaFor(directories.root, protocol, unitGatedFields.kind),
   });
   const ticketPath = path.join(directories.queue, `${ticket.nonce}-${ticket.pid}.ticket.json`);
   return yield* Effect.uninterruptibleMask((restore) =>
@@ -2785,13 +3875,13 @@ const snapshotAdmissionState = Effect.fnUntraced(function* (
   const persistedQuarantine = yield* fs
     .readDirectory(directories.quarantine)
     .pipe(Effect.map(A.map((name) => path.join(directories.quarantine, name))), Effect.orElseSucceed(A.empty<string>));
-  const capacityTokens =
-    stats.reservationCapacity === undefined
-      ? admissionCapacityTokensFor(availableGib, config)
-      : yield* stats.reservationCapacity(
-          A.map(state.leases, ({ lease }) => lease),
-          config
-        );
+  const capacityTokens = yield* capacityTokensFor(
+    stats,
+    availableGib,
+    A.map(state.leases, ({ lease }) => lease),
+    config,
+    O.none()
+  );
   return AdmissionSnapshot.make({
     capacityTokens,
     activeTokens: activeTokenTotal(state),
@@ -2860,7 +3950,7 @@ const stopLeakedRunScopes = Effect.fnUntraced(function* (
     retained,
     (plan) =>
       Console.error(`[yeet] retaining dead admission lease ${plan.leasePath}: run-scope authority ${plan.reason}.`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const stopGroups = pipe(
     A.filter(plans, isStoppedDeadLeaseScopePlan),
@@ -2926,3 +4016,56 @@ export const reapAdmissionState = Effect.fn("QualityScheduler.reapAdmissionState
     : A.empty<string>();
   return yield* snapshotAdmissionState(directories, AdmissionConfig.make({}), options.apply, retainedDeadLeasePaths);
 });
+
+/**
+ * Production {@link QualityScheduler} Layer over this module's scheduler.
+ *
+ * **Details**
+ *
+ * Each operation is the existing implementation: `admit` is
+ * {@link withQualityAdmission}, `observe` is {@link admissionStatus}, `reap` is
+ * {@link reapAdmissionState}, and the protocol, history, archive and route
+ * operations are their module functions. The Layer needs nothing; each
+ * operation reads its platform services and `MemoryStats` from the caller.
+ *
+ * **Example** (Admit work through the live scheduler)
+ *
+ * ```ts
+ * import { AdmissionRequest, noAdmissionOriginGate, QualityScheduler, QualitySchedulerLive } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ *
+ * const request = AdmissionRequest.make({
+ *   kind: "cache",
+ *   weightTokens: 1,
+ *   priority: "verify",
+ *   originKey: "",
+ *   checkoutRoot: "/repo",
+ *   branch: "",
+ *   command: "bun run beep cache pilot"
+ * })
+ * const admitted = QualityScheduler.use((scheduler) =>
+ *   scheduler.admit(request, noAdmissionOriginGate, Effect.succeed("ran"))
+ * ).pipe(Effect.provide(QualitySchedulerLive))
+ * console.log(Effect.isEffect(admitted)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const QualitySchedulerLive: Layer.Layer<QualityScheduler> = Layer.succeed(
+  QualityScheduler,
+  QualityScheduler.of({
+    admit: withQualityAdmission,
+    observe: admissionStatus,
+    reap: reapAdmissionState,
+    protocol: admissionProtocolStatus(),
+    setEvictionProtocol: setAdmissionEvictionProtocol,
+    setUnitProtocol: setAdmissionUnitProtocol,
+    setPressureProtocol: setAdmissionPressureProtocol,
+    setBackfillProtocol: setAdmissionBackfillProtocol,
+    setFairnessProtocol: setAdmissionFairnessProtocol,
+    history: admissionJournalHistory(),
+    archive: admissionJournalArchiveStatus(),
+    recordRoute: recordAdmissionRoute,
+  })
+);

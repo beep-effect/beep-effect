@@ -885,7 +885,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       const recycleAttempt = familyAttemptStart("recycle", pair.content.objectId, digest.sha256);
       const encodedInterruptedSeed = yield* Effect.forEach(
         [recycleStart, recycleAttempt],
-        encodeTransformationLedgerRecordJson
+        encodeTransformationLedgerRecordJson,
+        { concurrency: 1 }
       );
       yield* fs.writeFileString(recycleContext.ledgerPath, `${A.join(encodedInterruptedSeed, "\n")}\n`);
       yield* RT.recoverRecycleInterruptedAttempts(recycleContext, [pair]);
@@ -896,7 +897,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
 
       const encodedTooManyMappings = yield* Effect.forEach(
         [recycleStart, recycleAttempt, mapping],
-        encodeTransformationLedgerRecordJson
+        encodeTransformationLedgerRecordJson,
+        { concurrency: 1 }
       );
       yield* fs.writeFileString(recycleContext.ledgerPath, `${A.join(encodedTooManyMappings, "\n")}\n`);
       const tooManyMappingsError = yield* RT.recycleResumeState(
@@ -929,7 +931,8 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
       });
       const encodedPrematureJoin = yield* Effect.forEach(
         [recycleStart, prematureJoin],
-        encodeTransformationLedgerRecordJson
+        encodeTransformationLedgerRecordJson,
+        { concurrency: 1 }
       );
       yield* fs.writeFileString(recycleContext.ledgerPath, `${A.join(encodedPrematureJoin, "\n")}\n`);
       const prematureJoinError = yield* RT.recycleResumeState(
@@ -951,7 +954,7 @@ layer(testLayer, { timeout: 30_000 })("restoration transformation semantic helpe
         ledgerPath: string,
         records: ReadonlyArray<TransformationLedgerRecord>
       ) {
-        const encoded = yield* Effect.forEach(records, encodeTransformationLedgerRecordJson);
+        const encoded = yield* Effect.forEach(records, encodeTransformationLedgerRecordJson, { concurrency: 1 });
         yield* fs.writeFileString(ledgerPath, `${A.join(encoded, "\n")}\n`);
       });
 
@@ -1724,7 +1727,7 @@ else exit 92; fi
       yield* fs.writeFileString(path.join(ledgerDirectory, "archive-ledger.jsonl"), "");
       const unsealed = yield* RT.currentPreservationEvidence(corpusRoot, "run-1").pipe(Effect.option);
       unsealed.pipe(assertNone);
-      const encoded = yield* Effect.forEach([preflight, seal], encodeArchiveLedgerRecordJson);
+      const encoded = yield* Effect.forEach([preflight, seal], encodeArchiveLedgerRecordJson, { concurrency: 1 });
       yield* fs.writeFileString(path.join(ledgerDirectory, "archive-ledger.jsonl"), `${A.join(encoded, "\n")}\n`);
       const evidence = yield* RT.currentPreservationEvidence(corpusRoot, "run-1");
       expect(evidence.records).toHaveLength(2);
@@ -1766,7 +1769,9 @@ else exit 92; fi
         terminalCount: S.Natural.make(0),
         unapprovedCount: 0,
       });
-      const encoded = yield* Effect.forEach([runStart, summary, acceptance], encodeTransformationLedgerRecordJson);
+      const encoded = yield* Effect.forEach([runStart, summary, acceptance], encodeTransformationLedgerRecordJson, {
+        concurrency: 1,
+      });
       yield* fs.writeFileString(ledgerPath, `${A.join(encoded, "\n")}\n`);
       const evidence = yield* RT.readStrictFamilyEvidence(strictContext);
       expect(evidence.segment).toEqual([runStart]);

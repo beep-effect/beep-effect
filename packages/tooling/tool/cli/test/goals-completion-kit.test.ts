@@ -106,14 +106,17 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("completion kit", (it) => {
         };
       });
       const io = yield* goalCompletionIo();
-      const observed = yield* Effect.all([
-        io.checkRuns(".", "head"),
-        io.timeline(".", 7),
-        io.checkSuites(".", "head"),
-        io.rulesetHistory(".", 42),
-        io.ruleSuites(".", "refs/heads/main"),
-        io.rulesets("."),
-      ]).pipe(Effect.provideService(GithubTransportFetch, O.some(transport.fetch)));
+      const observed = yield* Effect.all(
+        [
+          io.checkRuns(".", "head"),
+          io.timeline(".", 7),
+          io.checkSuites(".", "head"),
+          io.rulesetHistory(".", 42),
+          io.ruleSuites(".", "refs/heads/main"),
+          io.rulesets("."),
+        ],
+        { concurrency: 1 }
+      ).pipe(Effect.provideService(GithubTransportFetch, O.some(transport.fetch)));
       for (const result of observed) {
         expect(result).toHaveLength(1);
       }
@@ -165,11 +168,9 @@ it.layer(NodeTestLayer, { timeout: "30 seconds" })("completion kit", (it) => {
             : suite,
       }));
       const io = yield* goalCompletionIo();
-      const values = yield* Effect.all([
-        io.commit(".", "merge"),
-        io.rulesetVersion(".", 42, 3),
-        io.ruleSuite(".", 7),
-      ]).pipe(Effect.provideService(GithubTransportFetch, O.some(transport.fetch)));
+      const values = yield* Effect.all([io.commit(".", "merge"), io.rulesetVersion(".", 42, 3), io.ruleSuite(".", 7)], {
+        concurrency: 1,
+      }).pipe(Effect.provideService(GithubTransportFetch, O.some(transport.fetch)));
       expect(values).toEqual([commit, version, { ...suite, pushed_at: DateTime.makeUnsafe(suite.pushed_at) }]);
       expect(A.map(transport.calls, (url) => url.pathname)).toEqual([
         "/repos/example/repo/commits/merge",

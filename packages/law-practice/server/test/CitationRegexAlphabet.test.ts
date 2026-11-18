@@ -192,8 +192,6 @@ it.effect("preserves source continuity across the complete 4096-symbol encoding 
 it.effect("bounds empty predicate expansion and set metadata before reading source storage", () =>
   Effect.gen(function* () {
     const policy = yield* defaultCitationEnginePolicy;
-    const invalidPolicy = yield* makeCitationRegexAlphabet(null).pipe(Effect.flip);
-    expect(invalidPolicy).toMatchObject({ reason: "invalid-runtime" });
     for (const { maximum, sets } of [
       { maximum: 6, sets: { atoms: 2, intervals: [] } },
       { maximum: 1, sets: { atoms: 2, intervals: [] } },

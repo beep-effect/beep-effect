@@ -1096,7 +1096,8 @@ describe("Box authentication precedence", () => {
             { CLOUD_BOX_TOKEN: "  " },
             {},
           ],
-          modeWith
+          modeWith,
+          { concurrency: 1 }
         );
         expect(modes).toEqual(["ccg-user", "ccg-enterprise", "developer-token", "ccg-enterprise", "ccg-enterprise"]);
       })
@@ -1306,7 +1307,8 @@ describe("research library route edges", () => {
             [source, without("raw-full-text")],
             [source, without("box-file-metadata")],
           ] as const,
-          ([item, claim]) => validateLibraryBoxEvidence(root, item, claim)
+          ([item, claim]) => validateLibraryBoxEvidence(root, item, claim),
+          { concurrency: 1 }
         );
         expect(checks).toEqual([true, false, false, false, false]);
         const original = O.getOrThrow(A.findFirst(capture.artifacts, (artifact) => artifact.role === "raw-full-text"));
@@ -1449,11 +1451,14 @@ describe("research library route edges", () => {
           ],
           ["blank.json", LibraryVidbeeImportPayload.make({ ...base, transcript: blank })],
         ] as const;
-        const messages = yield* Effect.forEach(refusals, ([name, value]) =>
-          importAs(name, value).pipe(
-            Effect.flip,
-            Effect.map((error) => error.message)
-          )
+        const messages = yield* Effect.forEach(
+          refusals,
+          ([name, value]) =>
+            importAs(name, value).pipe(
+              Effect.flip,
+              Effect.map((error) => error.message)
+            ),
+          { concurrency: 1 }
         );
         expect(messages).toEqual([
           "Import source nope is not in the inventory.",
@@ -1643,14 +1648,17 @@ describe("Box acquisition edges", () => {
         const { root } = yield* tempLibrary();
         yield* registerLibraryBoxSources(root, LibraryBoxAcquireOptions.make({ folderIds: ["docs"], fileIds: [] }));
         const catalog = yield* loadCatalog(root);
-        const originals = yield* Effect.forEach(catalog.sources, (source) =>
-          acquireLibraryBoxFile(root, source, `captures/${source.id}`).pipe(
-            Effect.map((result) => {
-              const original = A.getUnsafe(result.artifacts, 0);
-              const name = O.getOrElse(A.last(Str.split("/")(original.path)), () => "");
-              return [result.status, result.revision, name, original.mediaType];
-            })
-          )
+        const originals = yield* Effect.forEach(
+          catalog.sources,
+          (source) =>
+            acquireLibraryBoxFile(root, source, `captures/${source.id}`).pipe(
+              Effect.map((result) => {
+                const original = A.getUnsafe(result.artifacts, 0);
+                const name = O.getOrElse(A.last(Str.split("/")(original.path)), () => "");
+                return [result.status, result.revision, name, original.mediaType];
+              })
+            ),
+          { concurrency: 1 }
         );
         expect(originals).toEqual([
           ["readable", "201:3", "file", "application/octet-stream"],

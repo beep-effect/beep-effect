@@ -480,14 +480,14 @@ describe("CI lane partitions", () => {
       { id: "repo-cli-7", packages: 1, weightSeconds: 392 },
       { id: "repo-cli-8", packages: 1, weightSeconds: 392 },
       { id: "repo-cli-9", packages: 1, weightSeconds: 392 },
-      { id: "law-practice-1", packages: 1, weightSeconds: 564 },
-      { id: "law-practice-2", packages: 1, weightSeconds: 564 },
-      { id: "law-practice-3", packages: 1, weightSeconds: 564 },
-      { id: "law-practice-4", packages: 1, weightSeconds: 564 },
-      { id: "law-practice-5", packages: 1, weightSeconds: 564 },
-      { id: "law-practice-6", packages: 1, weightSeconds: 564 },
-      { id: "law-practice-7", packages: 1, weightSeconds: 564 },
-      { id: "law-practice-8", packages: 1, weightSeconds: 564 },
+      { id: "law-practice-1", packages: 1, weightSeconds: 364 },
+      { id: "law-practice-2", packages: 1, weightSeconds: 364 },
+      { id: "law-practice-3", packages: 1, weightSeconds: 364 },
+      { id: "law-practice-4", packages: 1, weightSeconds: 364 },
+      { id: "law-practice-5", packages: 1, weightSeconds: 364 },
+      { id: "law-practice-6", packages: 1, weightSeconds: 364 },
+      { id: "law-practice-7", packages: 1, weightSeconds: 364 },
+      { id: "law-practice-8", packages: 1, weightSeconds: 364 },
       { id: "unit-a", packages: 26, weightSeconds: 594 },
       { id: "unit-b", packages: 28, weightSeconds: 593 },
       { id: "unit-c", packages: 27, weightSeconds: 594 },
@@ -818,8 +818,10 @@ describe("CI lane partitions", () => {
     Effect.gen(function* () {
       const lintPartitions = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "lint");
       const taskPackages = [...A.flatMap(lintPartitions, (partition) => partition.packages), "@beep/fresh-package"];
-      const proofs = yield* Effect.forEach(["lint-a", "lint-b"] as const, (partition) =>
-        proveCiLanePartition("lint", partition, taskPackages, taskPackages, taskPackages, false)
+      const proofs = yield* Effect.forEach(
+        ["lint-a", "lint-b"] as const,
+        (partition) => proveCiLanePartition("lint", partition, taskPackages, taskPackages, taskPackages, false),
+        { concurrency: 1 }
       );
       const holders = A.filter(proofs, (proof) => A.contains(proof.packages, "@beep/fresh-package"));
 
@@ -1867,7 +1869,7 @@ describe("ciLaneStepsForTesting", () => {
     const steps = ciLaneStepsForTesting(
       REPO_ROOT,
       "jsdoc-ratchet",
-      CiLaneRunOptions.make({ ...baseOptions, inventory: "standards/jsdoc-documentation.inventory.jsonc" })
+      CiLaneRunOptions.make({ ...baseOptions, inventory: ".beep/prebuilt/jsdoc-documentation.inventory.jsonc" })
     );
     expect(A.map(steps, (step) => step.label)).toEqual(["ci:jsdoc-ratchet:ratchet"]);
     expect(steps[0]?.args).toEqual([
@@ -1876,7 +1878,7 @@ describe("ciLaneStepsForTesting", () => {
       "quality",
       "jsdoc-ratchet",
       "--inventory",
-      "standards/jsdoc-documentation.inventory.jsonc",
+      ".beep/prebuilt/jsdoc-documentation.inventory.jsonc",
     ]);
   });
 
@@ -2692,6 +2694,9 @@ const fallowCiLayer = (probe: FallowLaneProbe, failingTask?: string, released = 
   });
   const processLayer = Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
+    // Own double (D-14): exits held on a latch with an in-flight count (the Fallow sub-lane concurrency
+    // probe).
+    // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
     ChildProcessSpawner.make((command) => {
       if (!ChildProcess.isStandardCommand(command)) {
         return Effect.die("the Fallow lane test never spawns a piped command");

@@ -83,7 +83,9 @@ const fixture = Effect.fn("ResearchTimersTest.fixture")(function* () {
     const readUnit1 = yield* readUnit(fileName);
     return A.findFirst(argument(readUnit1), Str.startsWith("ExecStart="));
   });
-  const unitsPresent = Effect.forEach(UNIT_FILES, (fileName) => fs.exists(path.join(unitDir, fileName)));
+  const unitsPresent = Effect.forEach(UNIT_FILES, (fileName) => fs.exists(path.join(unitDir, fileName)), {
+    concurrency: 1,
+  });
   return { fs, path, home, unitDir, touch, readUnit, execLine, unitsPresent };
 });
 
@@ -255,8 +257,10 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
         // Bun path is rendered quoted; the rest systemd would rewrite.
         const decodedUnitPath = yield* decodeUnitPath("/opt/bun 1/bin/bun");
         expect(decodedUnitPath).toBe("/opt/bun 1/bin/bun");
-        yield* Effect.forEach(["/opt/%h/bun", "/opt/$HOME/bun", "/opt\\bun", "/opt/bun\n", ""], (bad) =>
-          Effect.map(Effect.flip(decodeUnitPath(bad)), (failure) => strictEqual(failure._tag, "SchemaError"))
+        yield* Effect.forEach(
+          ["/opt/%h/bun", "/opt/$HOME/bun", "/opt\\bun", "/opt/bun\n", ""],
+          (bad) => Effect.map(Effect.flip(decodeUnitPath(bad)), (failure) => strictEqual(failure._tag, "SchemaError")),
+          { concurrency: 1 }
         );
       })
     );
@@ -382,7 +386,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
             assertSuccess(installed.result, undefined);
             const readUnit19 = yield* readUnit("beep-research-daily.service");
             expect(Str.split(readUnit19, "\n")).toContain(`WorkingDirectory=${root}`);
-          })
+          }),
+          { concurrency: 1 }
         );
       })
     );
@@ -490,7 +495,8 @@ layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { excludeTestService
             assertSome(execLine24, `ExecStart="${shim}" run beep research repo-card`);
             const readUnit25 = yield* readUnit("beep-research-daily.service");
             expect(Str.split(readUnit25, "\n")).toContain(`WorkingDirectory=${root}`);
-          })
+          }),
+          { concurrency: 1 }
         );
       })
     );

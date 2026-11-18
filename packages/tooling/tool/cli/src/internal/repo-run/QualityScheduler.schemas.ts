@@ -11,6 +11,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { ScopedPackageName } from "@beep/package-json/PackageName";
+import { PressureStats } from "@beep/palantiri/HostPressure.models";
 import { OpaqueDefect } from "@beep/repo-cli-kit/schema/OpaqueDefect";
 import { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import { LiteralKit } from "@beep/schema";
@@ -20,6 +22,7 @@ import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Runtime from "effect/Runtime";
 import * as S from "effect/Schema";
+import * as Struct from "effect/Struct";
 import { ComputeProfile } from "./ComputeProfile.schemas.ts";
 import { GateRouteId } from "./GateRoute.schemas.ts";
 import { RunScopeRecord } from "./RunScope.schemas.ts";
@@ -29,18 +32,27 @@ const $I = $RepoCliId.create("internal/repo-run/QualityScheduler.schemas");
 /**
  * Kind of heavy repository work admitted through the machine-wide scheduler.
  *
+ * **Details**
+ *
+ * `cache` is the work `beep cache` admits: dependency materialization, the
+ * pilot, signed-pilot and protocol experiments, and producer workflow
+ * verification. Before SCHE-08 those commands requested `review-fix`; a ticket
+ * records `cache` only while the admission protocol's `units` gate is on,
+ * because a reader older than SCHE-08 quarantines a kind it does not know.
+ *
  * **Example** (Match on an admission kind)
  *
  * ```ts
  * import { AdmissionWorkKind } from "@beep/repo-cli/test/RepoRun"
  *
  * console.log(AdmissionWorkKind.is["full-proof"]("full-proof")) // true
+ * console.log(AdmissionWorkKind.is.cache("cache")) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const AdmissionWorkKind = LiteralKit(["full-proof", "merged-preview", "review-fix", "publish"]).pipe(
+export const AdmissionWorkKind = LiteralKit(["full-proof", "merged-preview", "review-fix", "publish", "cache"]).pipe(
   $I.annoteSchema("AdmissionWorkKind", {
     description: "Class of heavyweight repository work admitted through the machine-wide scheduler.",
   })
@@ -53,6 +65,96 @@ export const AdmissionWorkKind = LiteralKit(["full-proof", "merged-preview", "re
  * @since 0.0.0
  */
 export type AdmissionWorkKind = typeof AdmissionWorkKind.Type;
+
+const isKnownAdmissionWorkKind = S.is(AdmissionWorkKind);
+
+/**
+ * A work kind this revision does not know, kept verbatim from a newer writer.
+ *
+ * **Details**
+ *
+ * Every checkout on the host shares one set of tickets, leases and journal
+ * rows, so a newer checkout may admit a kind this one has never seen. Reading
+ * it as an unrecognized kind keeps the record decodable: the lease stays
+ * charged by its `weightTokens` and sits outside the review-fix class cap,
+ * where a closed literal would quarantine the whole file and drop its tokens
+ * from capacity. A known kind never decodes as unrecognized.
+ *
+ * **Example** (Recognize a kind from a newer writer)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { UnrecognizedAdmissionWorkKind } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(S.is(UnrecognizedAdmissionWorkKind)("cache-qualification")) // true
+ * console.log(S.is(UnrecognizedAdmissionWorkKind)("full-proof")) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const UnrecognizedAdmissionWorkKind = S.NonEmptyString.check(
+  S.makeFilter(
+    (kind: string) => !isKnownAdmissionWorkKind(kind),
+    $I.annote("UnrecognizedAdmissionWorkKindCheck", {
+      title: "Unrecognized admission work kind",
+      description: "The kind is not one of this revision's admission work kinds.",
+    })
+  )
+).pipe(
+  S.brand("UnrecognizedAdmissionWorkKind"),
+  $I.annoteSchema("UnrecognizedAdmissionWorkKind", {
+    description: "An admission work kind written by a newer revision and kept verbatim.",
+  })
+);
+
+/**
+ * An admission work kind written by a newer revision and kept verbatim.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UnrecognizedAdmissionWorkKind = typeof UnrecognizedAdmissionWorkKind.Type;
+
+/**
+ * Work kind as recorded on a ticket, lease or journal row: known or unrecognized.
+ *
+ * **Details**
+ *
+ * This is the tolerant reader for the persisted `kind` field. Callers still
+ * request one of the known {@link AdmissionWorkKind} literals; only records
+ * read back from the shared admission root may carry an
+ * {@link UnrecognizedAdmissionWorkKind}.
+ *
+ * **Example** (Decode a known and a newer kind)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { RecordedAdmissionWorkKind } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const decode = S.decodeUnknownOption(RecordedAdmissionWorkKind)
+ * console.log(O.isSome(decode("review-fix"))) // true
+ * console.log(O.isSome(decode("cache-qualification"))) // true
+ * console.log(O.isSome(decode(""))) // false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RecordedAdmissionWorkKind = S.Union([AdmissionWorkKind, UnrecognizedAdmissionWorkKind]).pipe(
+  $I.annoteSchema("RecordedAdmissionWorkKind", {
+    description: "Admission work kind recorded in shared scheduler state: a known kind or one from a newer writer.",
+  })
+);
+
+/**
+ * Admission work kind recorded in shared scheduler state.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RecordedAdmissionWorkKind = typeof RecordedAdmissionWorkKind.Type;
 
 /**
  * Queue ordering class for one admission request.
@@ -245,13 +347,16 @@ export const attemptInputFactFields = {
  * embedded full proof is requested as `full-proof` with publish priority, so
  * no caller requests the `publish` kind yet (reserved with `hotPaths` for the
  * chartered follow-ups; see goals/ship-velocity/research/d1-admission-scheduler.md).
+ * The `cache` weight is the review-fix weight Cache commands paid while they
+ * borrowed that kind.
  *
- * **Example** (Read the full-proof weight)
+ * **Example** (Read the full-proof and cache weights)
  *
  * ```ts
  * import { admissionTokenWeight } from "@beep/repo-cli/test/RepoRun"
  *
  * console.log(admissionTokenWeight("full-proof")) // 3
+ * console.log(admissionTokenWeight("cache")) // 1
  * ```
  *
  * @param kind - Admission work kind to weigh.
@@ -265,6 +370,7 @@ export const admissionTokenWeight = (kind: AdmissionWorkKind): number =>
     "merged-preview": () => 5,
     "review-fix": () => 1,
     publish: () => 1,
+    cache: () => 1,
   });
 
 const admissionOwnerFields = {
@@ -272,7 +378,7 @@ const admissionOwnerFields = {
   ...attemptInputFactFields,
   pid: S.Finite,
   procStart: S.String,
-  kind: AdmissionWorkKind,
+  kind: RecordedAdmissionWorkKind,
   weightTokens: S.Finite,
   priority: AdmissionPriority,
   originKey: S.String,
@@ -289,6 +395,373 @@ const admissionOwnerFields = {
 };
 
 /**
+ * The work one admission charges for: a whole tier, one lane or one package task.
+ *
+ * **Details**
+ *
+ * `tier` is the whole work kind as one unit, the grain every admission has
+ * today. `lane` is one gate family ({@link GateRouteId}). `package` is one
+ * Turbo task of one (scoped) workspace package; its Turbo task id is
+ * `<packageName>#<task>`. A record written before units existed carries no
+ * unit and reads as a whole tier.
+ *
+ * **Example** (Build a package unit)
+ *
+ * ```ts
+ * import { ScopedPackageName } from "@beep/package-json/PackageName"
+ * import { AdmissionUnit } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const unit = AdmissionUnit.cases.package.make({ packageName: ScopedPackageName.make("@beep/repo-cli"), task: "test" })
+ * console.log(AdmissionUnit.guards.package(unit)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionUnit = S.TaggedUnion({
+  tier: {},
+  lane: { lane: GateRouteId },
+  package: { packageName: ScopedPackageName, task: S.NonEmptyString },
+}).pipe(
+  $I.annoteSchema("AdmissionUnit", {
+    description: "The work one admission charges for: a whole tier, one gate-family lane, or one package Turbo task.",
+  })
+);
+
+/**
+ * The work one admission charges for.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionUnit = typeof AdmissionUnit.Type;
+
+/**
+ * Where an admission's token weight came from.
+ *
+ * **Details**
+ *
+ * `static-seed` is the per-kind table ({@link admissionTokenWeight}), which
+ * the scheduler may still clamp to the machine ceiling. `measured` is a weight
+ * calibrated from `sampleCount` observed memory envelopes.
+ * `conservative-fallback` is a conservative bound used when no qualifying
+ * measurement exists. A record written before weight sources existed carries
+ * none and reads as the static seed.
+ *
+ * **Example** (Recognize a measured weight)
+ *
+ * ```ts
+ * import { AdmissionWeightSource } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const source = AdmissionWeightSource.cases.measured.make({ sampleCount: 14 })
+ * console.log(AdmissionWeightSource.guards.measured(source)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionWeightSource = S.TaggedUnion({
+  "static-seed": {},
+  measured: { sampleCount: S.Int.check(S.isGreaterThan(0)) },
+  "conservative-fallback": {},
+}).pipe(
+  $I.annoteSchema("AdmissionWeightSource", {
+    description:
+      "Where an admission's token weight came from: the static seed, a measurement, or a conservative bound.",
+  })
+);
+
+/**
+ * Where an admission's token weight came from.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionWeightSource = typeof AdmissionWeightSource.Type;
+
+/**
+ * The proof that owns an admitted unit.
+ *
+ * **Details**
+ *
+ * `proofNonce` names the proof the unit belongs to; for a whole-tier unit it
+ * is the record's own nonce. The owner carries the attribution a journal row
+ * needs on its own (checkout, branch, origin, command, attempt), so a row can
+ * be attributed after the checkout's attempt journal is gone.
+ *
+ * **Example** (Construct an owner)
+ *
+ * ```ts
+ * import { AdmissionOwner } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const owner = AdmissionOwner.make({
+ *   proofNonce: "d0a7b0dc-54ec-4b51-95c7-6fafdc18d206",
+ *   pid: 1234,
+ *   procStart: "8241991",
+ *   originKey: "aaaabbbbcccc",
+ *   checkoutRoot: "/repo",
+ *   branch: "feat/x",
+ *   command: "bun run beep yeet verify"
+ * })
+ * console.log(owner.branch) // "feat/x"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionOwner extends S.Opaque<AdmissionOwner, { readonly brand: unique symbol }>()(
+  S.Struct({
+    proofNonce: S.String,
+    ...Struct.pick(admissionOwnerFields, ["attemptId", "pid", "procStart", "originKey", "checkoutRoot", "branch"]),
+    command: S.String,
+  }).pipe(
+    $I.annoteSchema("AdmissionOwner", {
+      description: "The proof that owns an admitted unit, with the attribution a journal row needs on its own.",
+    })
+  )
+) {}
+
+/**
+ * Encoded form of {@link AdmissionOwner}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace AdmissionOwner {
+  /**
+   * Encoded form of {@link AdmissionOwner}.
+   *
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AdmissionOwner.Encoded;
+}
+
+// A present value this revision cannot read (a newer unit variant, weight
+// source or owner shape) is dropped to None instead of failing the record.
+const unrecognizedAsNone = () => Effect.succeedSome(O.none());
+
+/**
+ * Admission-unit fields carried by tickets, leases and journal rows (SCHE-08).
+ *
+ * **Details**
+ *
+ * Each field is an optional key read as an `Option`. A record from before
+ * these fields existed reads `None` for all three: a whole-tier unit, the
+ * static-seed weight, and the record's own process as owner. A present value
+ * this revision cannot decode also reads `None`, so the record stays live and
+ * charged. Writers emit the keys only when the admission protocol's `units`
+ * gate is on; with it off every record is byte-identical to the pre-unit
+ * format.
+ *
+ * **Example** (Reuse the unit field group)
+ *
+ * ```ts
+ * import { admissionUnitFields } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(Object.keys(admissionUnitFields)) // ["unit", "weightSource", "owner"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const admissionUnitFields = {
+  unit: AdmissionUnit.pipe(
+    S.OptionFromOptionalKey,
+    S.catchDecoding(unrecognizedAsNone),
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
+  weightSource: AdmissionWeightSource.pipe(
+    S.OptionFromOptionalKey,
+    S.catchDecoding(unrecognizedAsNone),
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
+  owner: AdmissionOwner.pipe(
+    S.OptionFromOptionalKey,
+    S.catchDecoding(unrecognizedAsNone),
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
+};
+
+/**
+ * The declared ETA a ticket carries and its lease copies (SCHE-06).
+ *
+ * **Details**
+ *
+ * An optional key read as an `Option` of whole milliseconds. Writers emit it
+ * only while the admission protocol's `backfill` gate is `easy`; with it off
+ * every ticket and lease is byte-identical to the format before SCHE-06. A
+ * record without it never backfills, and a lease without it (or past it) makes
+ * the head's start unprojectable, which stops backfill.
+ *
+ * **Example** (Reuse the ETA field)
+ *
+ * ```ts
+ * import { admissionEtaFields } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(Object.keys(admissionEtaFields)) // ["etaMillis"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const admissionEtaFields = {
+  etaMillis: S.Int.check(S.isGreaterThan(0)).pipe(
+    S.OptionFromOptionalKey,
+    S.catchDecoding(unrecognizedAsNone),
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
+};
+
+/**
+ * The conditional starvation bound a ticket stamps on entering protected ordering (SCHE-06).
+ *
+ * **Details**
+ *
+ * The owning contender writes it once, on the scan at which its ticket has
+ * waited the protection window, and only when every ETA the bound reads is
+ * declared. Backfill is off while any queued ticket is past its deadline.
+ *
+ * **Example** (Reuse the deadline field)
+ *
+ * ```ts
+ * import { admissionDeadlineFields } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(Object.keys(admissionDeadlineFields)) // ["deadlineMillis"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const admissionDeadlineFields = {
+  deadlineMillis: S.Int.check(S.isGreaterThanOrEqualTo(0)).pipe(
+    S.OptionFromOptionalKey,
+    S.catchDecoding(unrecognizedAsNone),
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
+};
+
+// A pressure stall share in percent, as the host-pressure parcel decodes it.
+const PressureSome10 = PressureStats.fields.avg10.pipe(
+  S.OptionFromOptionalKey,
+  S.withConstructorDefault(Effect.succeedNone)
+);
+
+/**
+ * The scheduler's capacity and the host's pressure at one admission transition (SCHE-09 slice 2).
+ *
+ * **Details**
+ *
+ * An admitted row's stamp is taken where the admission was checked against
+ * capacity: `capacityTokens` is the capacity it was checked against,
+ * `activeTokens` the weight of every live lease at that check (its own
+ * included), and `queuedTokens` and `queuedTickets` the other tickets still
+ * waiting. A released row's stamp is read just before the release is
+ * journaled, while the lease still counts as active. `memAvailableGib` is the
+ * `MemoryStats` reading the capacity came from, rounded to 0.001 GiB.
+ *
+ * The `psi*Some10` fields are the `some avg10` share (percent of the last 10
+ * seconds with some task stalled) of `/proc/pressure/{cpu,memory,io}`, absent
+ * on a host without pressure stall information. `unadmittedSliceGib` is
+ * `agent-runs.slice` `memory.current` minus the `memory.current` of every
+ * live lease's cgroup in the slice: memory the slice holds for work no lease
+ * accounts for. It is absent when the writer does not run inside the slice
+ * (run scopes off or unsupported), when a lease owner's cgroup membership
+ * cannot be read, or when a cgroup file cannot be read, so it is never a sum
+ * over only some of the leases.
+ *
+ * Each admission and release reads the protocol's `pressure` gate when it
+ * samples, so turning the gate off or on applies to requests already queued
+ * or running. The stamp is telemetry: no admission decision reads it.
+ *
+ * **Example** (Stamp an admission on a host without pressure files)
+ *
+ * ```ts
+ * import { AdmissionPressureStamp } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const stamp = AdmissionPressureStamp.make({
+ *   capacityTokens: 8,
+ *   activeTokens: 3,
+ *   queuedTokens: 0,
+ *   queuedTickets: 0,
+ *   memAvailableGib: 50
+ * })
+ * console.log(stamp.activeTokens) // 3
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionPressureStamp extends S.Opaque<AdmissionPressureStamp, { readonly brand: unique symbol }>()(
+  S.Struct({
+    // The same scalar types as the scheduler's snapshot: a stamp never refuses what the scan read.
+    capacityTokens: S.Finite,
+    activeTokens: S.Finite,
+    queuedTokens: S.Finite,
+    queuedTickets: S.Int.check(S.isGreaterThanOrEqualTo(0)),
+    memAvailableGib: S.Finite,
+    psiCpuSome10: PressureSome10,
+    psiMemorySome10: PressureSome10,
+    psiIoSome10: PressureSome10,
+    unadmittedSliceGib: S.Finite.check(S.isGreaterThanOrEqualTo(0)).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+  }).pipe(
+    $I.annoteSchema("AdmissionPressureStamp", {
+      description:
+        "Scheduler capacity, active and queued tokens, MemAvailable, PSI some avg10 and unadmitted slice memory at one admission transition.",
+    })
+  )
+) {}
+
+/**
+ * Encoded form of {@link AdmissionPressureStamp}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export declare namespace AdmissionPressureStamp {
+  /**
+   * Encoded form of {@link AdmissionPressureStamp}.
+   *
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AdmissionPressureStamp.Encoded;
+}
+
+/**
+ * Pressure-stamp field carried by promotion transitions and the admitted and released journal rows.
+ *
+ * **Details**
+ *
+ * `pressure` is an optional key read as an `Option`, written only when the
+ * admission protocol's `pressure` gate is on at the moment the transition
+ * samples (read afresh at each admission and release); with it off every record is
+ * byte-identical to the format before the stamp. A row without the key, or
+ * with a stamp shape this revision cannot decode, reads `None`, and the row
+ * itself still decodes. Readers older than the stamp ignore the key, and a
+ * locked journal rewrite keeps every row's bytes, so the key survives them.
+ *
+ * **Example** (Reuse the stamp field group)
+ *
+ * ```ts
+ * import { admissionPressureFields } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(Object.keys(admissionPressureFields)) // ["pressure"]
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const admissionPressureFields = {
+  pressure: AdmissionPressureStamp.pipe(
+    S.OptionFromOptionalKey,
+    S.catchDecoding(unrecognizedAsNone),
+    S.withConstructorDefault(Effect.succeedNone)
+  ),
+};
+
+/**
  * One active admission lease: heavy work currently charged against capacity.
  *
  * `pid` plus `procStart` (procfs on Linux, otherwise a prefixed platform
@@ -296,7 +769,9 @@ const admissionOwnerFields = {
  * are reaped only when the pid is dead or the recorded identity no longer
  * matches. The lease retains the originating
  * ticket identity (`nonce`) and queue instant (`enqueuedAtMillis`); legacy
- * lease files decode those fields with `""` and `0` sentinels.
+ * lease files decode those fields with `""` and `0` sentinels. The unit,
+ * weight source and owner ({@link admissionUnitFields}) are optional keys, and
+ * `kind` reads a newer writer's kind as unrecognized instead of failing.
  *
  * **Example** (Construct a lease value)
  *
@@ -341,6 +816,8 @@ export class YeetAdmissionLease extends S.Opaque<YeetAdmissionLease, { readonly 
     nonce: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultKey(Effect.succeed(""))),
     hotPaths: ArrayKeyDefaultEmpty(S.String),
     runScope: S.optionalKey(RunScopeRecord),
+    ...admissionUnitFields,
+    ...admissionEtaFields,
   }).pipe(
     $I.annoteSchema("YeetAdmissionLease", {
       description: "One machine-wide admission lease charging heavy repository work against memory capacity.",
@@ -365,6 +842,12 @@ export declare namespace YeetAdmissionLease {
 
 /**
  * One durable queue ticket: a contender waiting for admission.
+ *
+ * **Details**
+ *
+ * The unit, weight source and owner ({@link admissionUnitFields}) are optional
+ * keys written only behind the admission protocol's `units` gate; the lease
+ * and journal rows copy them from the ticket.
  *
  * **Example** (Construct a ticket value)
  *
@@ -402,6 +885,9 @@ export class YeetAdmissionTicket extends S.Opaque<YeetAdmissionTicket, { readonl
       S.withDecodingDefaultKey(Effect.succeed(0))
     ),
     nonce: S.String,
+    ...admissionUnitFields,
+    ...admissionEtaFields,
+    ...admissionDeadlineFields,
   }).pipe(
     $I.annoteSchema("YeetAdmissionTicket", {
       description: "One durable admission-queue ticket owned by a waiting contender process.",
@@ -605,6 +1091,14 @@ export type AdmissionPromotionPhase = typeof AdmissionPromotionPhase.Type;
 /**
  * Recoverable transition tying one queue ticket to its active lease.
  *
+ * **Details**
+ *
+ * A transition published with its lease carries the admission's pressure stamp
+ * ({@link admissionPressureFields}) when the protocol's `pressure` gate was on
+ * as the admission sampled, so the admitted row recovery journals later still
+ * records the instant of admission, whatever the gate says by then. A transition recovered from the `prepared` phase has no stamp,
+ * and neither has its admitted row.
+ *
  * **Example** (Reference the promotion transition class)
  *
  * ```ts
@@ -629,6 +1123,7 @@ export class AdmissionPromotionTransition extends S.Opaque<
     lease: YeetAdmissionLease,
     phase: AdmissionPromotionPhase,
     createdAtMillis: S.Finite,
+    ...admissionPressureFields,
   }).pipe(
     $I.annoteSchema("AdmissionPromotionTransition", {
       description: "Recoverable nonce-keyed transition tying one admission ticket to its promoted lease.",
@@ -682,6 +1177,8 @@ export class AdmissionConfig extends S.Opaque<AdmissionConfig, { readonly brand:
  * `gateRoute` names the gate family the work proves, when the caller knows it.
  * On a `worker` compute profile a hosted-only route is refused unless
  * `forceLocal` is set; both default so existing callers are unchanged.
+ * `unit` defaults to the whole tier and `weightSource` to the static seed;
+ * the scheduler records them only behind the protocol's `units` gate.
  *
  * **Example** (Build a full-proof request)
  *
@@ -716,6 +1213,10 @@ export class AdmissionRequest extends S.Opaque<AdmissionRequest, { readonly bran
     command: S.String,
     gateRoute: GateRouteId.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     forceLocal: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    unit: AdmissionUnit.pipe(S.withConstructorDefault(Effect.succeed(AdmissionUnit.cases.tier.make({})))),
+    weightSource: AdmissionWeightSource.pipe(
+      S.withConstructorDefault(Effect.succeed(AdmissionWeightSource.cases["static-seed"].make({})))
+    ),
   }).pipe(
     $I.annoteSchema("AdmissionRequest", {
       description: "One admission request for heavyweight repository work.",
@@ -1028,3 +1529,360 @@ export class QualitySchedulerError extends S.TaggedError<QualitySchedulerError, 
       })
   );
 }
+
+/**
+ * Whether a waiting ticket may pass a capacity-blocked head (SCHE-06).
+ *
+ * **Details**
+ *
+ * `off` keeps the deployed head-of-line rule. `easy` lets a non-head ticket
+ * attempt when its declared ETA ends no later than the head's projected start,
+ * and stamps a conditional deadline on each ticket entering protected
+ * ordering. Every reader ignores the ticket keys it adds, and a revision
+ * without it keeps the head-of-line rule, so mixed checkouts stay capacity
+ * safe; only checkouts at this revision or later backfill.
+ *
+ * **Example** (Recognize the default)
+ *
+ * ```ts
+ * import { AdmissionBackfillMode } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionBackfillMode.is.off("off")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionBackfillMode = LiteralKit(["off", "easy"]).pipe(
+  $I.annoteSchema("AdmissionBackfillMode", {
+    description: "Whether a waiting admission ticket may pass a capacity-blocked head (EASY backfill) or not.",
+  })
+);
+
+/**
+ * Whether a waiting ticket may pass a capacity-blocked head.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionBackfillMode = typeof AdmissionBackfillMode.Type;
+
+/**
+ * Whether unprotected tickets are ordered by recent origin, then checkout, usage (SCHE-06).
+ *
+ * **Details**
+ *
+ * `origin-checkout` orders tickets that have not yet waited the protection
+ * window by the token-milliseconds their origin, then their checkout, held in
+ * the last 30 minutes, after the deployed priority rank. Protected tickets
+ * keep enqueue order. `off` keeps the deployed order.
+ *
+ * **Example** (Recognize the fair order)
+ *
+ * ```ts
+ * import { AdmissionFairnessMode } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionFairnessMode.is["origin-checkout"]("origin-checkout")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionFairnessMode = LiteralKit(["off", "origin-checkout"]).pipe(
+  $I.annoteSchema("AdmissionFairnessMode", {
+    description: "Whether unprotected admission tickets are ordered by recent origin, then checkout, usage.",
+  })
+);
+
+/**
+ * Whether unprotected tickets are ordered by recent origin, then checkout, usage.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionFairnessMode = typeof AdmissionFairnessMode.Type;
+
+const PositiveMillis = S.Int.check(S.isGreaterThan(0));
+
+/**
+ * The policy the SCHE-06 verdict applies on one scan.
+ *
+ * **Details**
+ *
+ * `capacityTokens` is the scan's live capacity. `publishAgingMillis` is the
+ * deployed aging of `verify` work; `protectAfterMillis` is the wait after
+ * which a ticket keeps enqueue order and stamps its bound (120 s, the same
+ * instant, so with both modes off the order is the deployed one).
+ * `promotionOverheadMillis` is the polling slack the bound adds per ticket,
+ * the heartbeat.
+ *
+ * **Example** (The deployed timing with both modes off)
+ *
+ * ```ts
+ * import { AdmissionBackfillPolicy } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const policy = AdmissionBackfillPolicy.make({
+ *   capacityTokens: 10,
+ *   publishAgingMillis: 120_000,
+ *   protectAfterMillis: 120_000,
+ *   fairnessWindowMillis: 1_800_000,
+ *   promotionOverheadMillis: 5_000,
+ *   backfill: "off",
+ *   fairness: "off"
+ * })
+ * console.log(policy.backfill) // "off"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionBackfillPolicy extends S.Opaque<AdmissionBackfillPolicy, { readonly brand: unique symbol }>()(
+  S.Struct({
+    capacityTokens: S.Finite,
+    publishAgingMillis: S.Finite,
+    protectAfterMillis: S.Finite,
+    fairnessWindowMillis: PositiveMillis,
+    promotionOverheadMillis: S.Finite,
+    backfill: AdmissionBackfillMode,
+    fairness: AdmissionFairnessMode,
+  }).pipe(
+    $I.annoteSchema("AdmissionBackfillPolicy", {
+      description: "Capacity, aging, protection, fairness window, overhead and modes of one SCHE-06 verdict.",
+    })
+  )
+) {}
+
+/**
+ * One released lease interval the fairness window counts.
+ *
+ * **Example** (A one-token interval)
+ *
+ * ```ts
+ * import { AdmissionUsageInterval } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const interval = AdmissionUsageInterval.make({
+ *   originKey: "aaaabbbbcccc",
+ *   checkoutRoot: "/repo",
+ *   weightTokens: 1,
+ *   admittedAtMillis: 0,
+ *   releasedAtMillis: 60_000
+ * })
+ * console.log(interval.weightTokens) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionUsageInterval extends S.Opaque<AdmissionUsageInterval, { readonly brand: unique symbol }>()(
+  S.Struct({
+    originKey: S.String,
+    checkoutRoot: S.String,
+    weightTokens: S.Finite,
+    admittedAtMillis: S.Finite,
+    releasedAtMillis: S.Finite,
+  }).pipe(
+    $I.annoteSchema("AdmissionUsageInterval", {
+      description: "A released admission lease interval counted by the SCHE-06 fairness window.",
+    })
+  )
+) {}
+
+/**
+ * What one SCHE-06 verdict reads: the queue and leases of one scan and the windowed released leases.
+ *
+ * **Details**
+ *
+ * `tickets` holds only the tickets the deployed skippable checks leave in
+ * line (same-checkout lease, legacy origin owner, origin stamp, review-fix
+ * class cap): the verdict runs after those checks, unchanged.
+ *
+ * **Example** (An idle machine)
+ *
+ * ```ts
+ * import { AdmissionBackfillView } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const view = AdmissionBackfillView.make({ nowMillis: 0, tickets: [], leases: [], finished: [] })
+ * console.log(view.tickets.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionBackfillView extends S.Opaque<AdmissionBackfillView, { readonly brand: unique symbol }>()(
+  S.Struct({
+    nowMillis: S.Finite,
+    tickets: S.Array(YeetAdmissionTicket),
+    leases: S.Array(YeetAdmissionLease),
+    finished: S.Array(AdmissionUsageInterval),
+  }).pipe(
+    $I.annoteSchema("AdmissionBackfillView", {
+      description: "In-line tickets, live leases and windowed released leases one SCHE-06 verdict reads.",
+    })
+  )
+) {}
+
+/**
+ * How a contender was let through: as the queue head or by passing a blocked head.
+ *
+ * **Example** (Recognize a backfill)
+ *
+ * ```ts
+ * import { AdmissionAttemptRoute } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionAttemptRoute.is.backfill("backfill")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionAttemptRoute = LiteralKit(["head", "backfill"]).pipe(
+  $I.annoteSchema("AdmissionAttemptRoute", {
+    description: "Whether a contender attempts as the queue head or by passing a capacity-blocked head.",
+  })
+);
+
+/**
+ * How a contender was let through.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionAttemptRoute = typeof AdmissionAttemptRoute.Type;
+
+/**
+ * Why a contender stays queued on one scan.
+ *
+ * **Example** (Recognize an unknown ETA)
+ *
+ * ```ts
+ * import { AdmissionWaitReason } from "@beep/repo-cli/test/RepoRun"
+ *
+ * console.log(AdmissionWaitReason.is["eta-unknown"]("eta-unknown")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionWaitReason = LiteralKit([
+  "capacity",
+  "behind-head",
+  "behind-backfill",
+  "backfill-disabled",
+  "eta-unknown",
+  "ends-after-head-start",
+  "not-queued",
+]).pipe(
+  $I.annoteSchema("AdmissionWaitReason", {
+    description: "Why an admission contender stays queued on one scheduler scan.",
+  })
+);
+
+/**
+ * Why a contender stays queued on one scan.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionWaitReason = typeof AdmissionWaitReason.Type;
+
+/**
+ * Whether one contender may attempt admission now, and by which route, or why it waits.
+ *
+ * **Example** (A head attempt)
+ *
+ * ```ts
+ * import { AdmissionAttemptVerdict } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const verdict = AdmissionAttemptVerdict.cases.Attempt.make({ route: "head" })
+ * console.log(AdmissionAttemptVerdict.guards.Attempt(verdict)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const AdmissionAttemptVerdict = S.TaggedUnion({
+  Attempt: { route: AdmissionAttemptRoute },
+  Wait: { reason: AdmissionWaitReason },
+}).pipe(
+  $I.annoteSchema("AdmissionAttemptVerdict", {
+    description: "Whether one admission contender may attempt now, and by which route, or why it waits.",
+  })
+);
+
+/**
+ * Whether one contender may attempt admission now.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type AdmissionAttemptVerdict = typeof AdmissionAttemptVerdict.Type;
+
+/**
+ * How a contender declares its ETA from the admission journal.
+ *
+ * **Details**
+ *
+ * The ETA is the nearest-rank `quantilePermille` quantile of the last
+ * `historyLimit` holds (release minus admission) of the same work kind; a
+ * kind with fewer than `minSamples` holds declares none and never backfills.
+ *
+ * **Example** (The p90 estimator)
+ *
+ * ```ts
+ * import { AdmissionEtaEstimator } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const estimator = AdmissionEtaEstimator.make({ quantilePermille: 900, minSamples: 5, historyLimit: 200 })
+ * console.log(estimator.minSamples) // 5
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionEtaEstimator extends S.Opaque<AdmissionEtaEstimator, { readonly brand: unique symbol }>()(
+  S.Struct({
+    quantilePermille: S.Int.check(S.isBetween({ minimum: 1, maximum: 1000 })),
+    minSamples: PositiveMillis,
+    historyLimit: PositiveMillis,
+  }).pipe(
+    $I.annoteSchema("AdmissionEtaEstimator", {
+      description: "Per-kind hold quantile a contender declares as its ETA under the SCHE-06 backfill gate.",
+    })
+  )
+) {}
+
+/**
+ * What one scan's SCHE-06 verdict reads beyond the scan: its policy and the windowed released leases.
+ *
+ * **Example** (A context with nothing in the window)
+ *
+ * ```ts
+ * import { AdmissionBackfillContext, AdmissionBackfillPolicy } from "@beep/repo-cli/test/RepoRun"
+ *
+ * const context = AdmissionBackfillContext.make({
+ *   policy: AdmissionBackfillPolicy.make({
+ *     capacityTokens: 10,
+ *     publishAgingMillis: 120_000,
+ *     protectAfterMillis: 120_000,
+ *     fairnessWindowMillis: 1_800_000,
+ *     promotionOverheadMillis: 5_000,
+ *     backfill: "easy",
+ *     fairness: "off"
+ *   }),
+ *   finished: []
+ * })
+ * console.log(context.finished.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AdmissionBackfillContext extends S.Opaque<AdmissionBackfillContext, { readonly brand: unique symbol }>()(
+  S.Struct({
+    policy: AdmissionBackfillPolicy,
+    finished: S.Array(AdmissionUsageInterval),
+  }).pipe(
+    $I.annoteSchema("AdmissionBackfillContext", {
+      description: "The policy and windowed released leases one SCHE-06 verdict reads beyond its scan.",
+    })
+  )
+) {}

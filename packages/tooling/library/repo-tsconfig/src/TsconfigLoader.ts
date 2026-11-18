@@ -281,8 +281,10 @@ const collectLayers = Effect.fnUntraced(function* (
   // Parse phase: absolutize this config's path options against its own dir.
   const absolutized = ResolvedTsconfig.absolutize(doc, path.dirname(abs), path.resolve);
   // Depth-first and sequential: fully flatten each entry's nested chain before the sibling.
-  const nested = yield* Effect.forEach(extendsSpecs(absolutized), (spec) =>
-    Effect.flatMap(resolveSpec(spec, abs, chain), (target) => collect(target, chain))
+  const nested = yield* Effect.forEach(
+    extendsSpecs(absolutized),
+    (spec) => Effect.flatMap(resolveSpec(spec, abs, chain), (target) => collect(target, chain)),
+    { concurrency: 1 }
   );
   // Own config last: it wins over everything it extends.
   return A.append(A.flatten(nested), { doc: absolutized, path: abs });

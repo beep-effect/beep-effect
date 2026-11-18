@@ -180,7 +180,7 @@ describe("@beep/practice-review-hub", () => {
         expect(before).toStrictEqual(["kg-answer", "question"]);
         expect([answered.isError, lock.isError]).toStrictEqual([false, false]);
         expect(after).toStrictEqual([]);
-        const all2 = yield* Effect.all([codeOf(locked), codeOf(unknownOption)]);
+        const all2 = yield* Effect.all([codeOf(locked), codeOf(unknownOption)], { concurrency: 1 });
         expect(all2).toStrictEqual(["locked", "unknown-option"]);
       })
     );

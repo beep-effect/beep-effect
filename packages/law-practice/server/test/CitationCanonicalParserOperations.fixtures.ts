@@ -49,7 +49,8 @@ const readRows = Effect.fn("CanonicalParserTest.read")(function* () {
       const models = yield* S.decodeEffect(JsonModels)(body.outcome.value);
       expect(models, id).toEqual(criterion.context.values.cites);
       return { id, body, models, expected: A.getUnsafe(body.outcome.value, 0) };
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 type ParserReplayRow = Pick<Effect.Success<ReturnType<typeof readRows>>[number], "id" | "body" | "models">;
@@ -124,7 +125,8 @@ const readCourtRows = Effect.fn("CanonicalParserTest.courts")(function* () {
       const model = yield* S.decodeUnknownEffect(CourtModel)(A.getUnsafe(models, 0));
       expect(model.fields.metadata.fields.court, id).toBe(criterion.operands[1].value);
       return { id, body, models };
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 /** Replay original court assertions, retaining independent operands and raw input.

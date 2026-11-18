@@ -399,7 +399,7 @@ const withEnv = Effect.provideService(
 
 const RUN_ENDPOINT = "repos/{owner}/{repo}/actions/runs/36763005302";
 const jobsEndpoint = (page: number) =>
-  `repos/{owner}/{repo}/actions/runs/36763005302/attempts/1/jobs?per_page=100&page=${page}`;
+  `repos/{owner}/{repo}/actions/runs/36763005302/attempts/1/jobs?per_page=30&page=${page}`;
 const annotationsEndpoint = (id: number, page = 1) =>
   `repos/{owner}/{repo}/check-runs/${id}/annotations?per_page=100&page=${page}`;
 // The REST shapes, built from the fields the decision reads.
@@ -746,7 +746,7 @@ it.layer(platform, { timeout: "30 seconds" })("ci rerun-runner-loss", (layerIt) 
       ...A.map(
         attempts,
         (jobs, index): GhReply => [
-          `repos/{owner}/{repo}/actions/runs/36763005302/attempts/${index + 1}/jobs?per_page=100&page=1`,
+          `repos/{owner}/{repo}/actions/runs/36763005302/attempts/${index + 1}/jobs?per_page=30&page=1`,
           0,
           jobsJson(A.length(jobs), jobs),
         ]

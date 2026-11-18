@@ -233,11 +233,14 @@ it.effect("closure wakes every blocked HTML and regex claimant without acknowled
     }).pipe(Effect.provideService(Scope.Scope, owner));
     const regex = yield* admission.acquireRegex("extract");
     const html = yield* admission.acquire("clean");
-    const waiting = yield* Effect.all([
-      admission.acquireRegex("extract").pipe(Effect.forkChild),
-      admission.acquire("clean").pipe(Effect.forkChild),
-      admission.acquireRegex("extract").pipe(Effect.forkChild),
-    ]);
+    const waiting = yield* Effect.all(
+      [
+        admission.acquireRegex("extract").pipe(Effect.forkChild),
+        admission.acquire("clean").pipe(Effect.forkChild),
+        admission.acquireRegex("extract").pipe(Effect.forkChild),
+      ],
+      { concurrency: 1 }
+    );
     yield* TestClock.adjust(Duration.zero);
     const citationResult33 = yield* admission.snapshot;
     expect(citationResult33).toMatchObject({ active: 2, regexActive: 1, queued: 3 });
@@ -247,7 +250,8 @@ it.effect("closure wakes every blocked HTML and regex claimant without acknowled
       Effect.fnUntraced(function* (fiber) {
         const citationResult34 = yield* Fiber.join(fiber).pipe(Effect.flip);
         expect(citationResult34).toMatchObject({ reason: "closed" });
-      })
+      }),
+      { concurrency: 1 }
     );
     const citationResult35 = yield* admission.snapshot;
     expect(citationResult35).toEqual({ active: 2, regexActive: 1, queued: 0, quarantined: 0, closed: true });

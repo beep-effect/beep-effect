@@ -149,6 +149,7 @@ const makeOxlintFixture = Effect.fn("oxlintHarness.makeOxlintFixture")(function*
   yield* fs.writeFileString(configPath, `${encodeConfig(ruleConfig(rule))}\n`);
   yield* fs.writeFileString(sourcePath, `${source}\n`);
   yield* Effect.forEach(supportingFiles, (supportingFile) => writeSupportingFile(tempDir, supportingFile), {
+    concurrency: 1,
     discard: true,
   });
 

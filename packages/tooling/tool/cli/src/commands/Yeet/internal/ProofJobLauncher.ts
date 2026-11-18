@@ -35,7 +35,11 @@ import {
   appendProofJobAttemptTerminated,
   attemptJournalPathForCheckout,
 } from "../../../internal/repo-run/AttemptTerminationJournal.ts";
-import { processIdentityStatus, processStartIdentityForPid } from "../../../internal/repo-run/ProcessIdentity.ts";
+import {
+  ProcessIdentityStatus,
+  processIdentityStatus,
+  processStartIdentityForPid,
+} from "../../../internal/repo-run/ProcessIdentity.ts";
 import { runRepoCommandCapture } from "../../../internal/repo-run/RepoRun.executor.ts";
 import { detectRunScopeSupport } from "../../../internal/repo-run/RunScope.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -45,8 +49,10 @@ import { loadYeetPrWave, YeetPrWave } from "./InboxView.ts";
 import {
   forwardedProofJobEnvironment,
   isDeniedProofJobEnvName,
+  isReadyMonitorRequest,
   isSettledProofJob,
   isTerminalProofJobPhase,
+  matchesReadyMonitorRequest,
   needsProofJobPublication,
   PROOF_JOB_RETENTION_BUDGET,
   PROOF_JOB_SECRET_REFERENCE_ENV_NAMES,
@@ -64,6 +70,10 @@ import {
   proofJobRowSeverityFor,
   proofJobSystemdRunArguments,
   proofJobUnitName,
+  ReadyMonitorRequest,
+  readyMonitorRuntimeLeft,
+  readyMonitorRuntimeShortfall,
+  renderReadyMonitorRuntimeLeft,
   stripProofJobSubmitFlags,
   terminationReasonForServiceResult,
   YeetProofJobCapsule,
@@ -71,7 +81,12 @@ import {
 import type * as Digest from "effect/crypto/Digest";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { RunScopeSupport } from "../../../internal/repo-run/RunScope.schemas.ts";
-import type { ProofJobOutcome, ProofJobSubmission, ProofJobWaitOptions } from "./ProofJob.ts";
+import type {
+  ProofJobOutcome,
+  ProofJobRuntimeCapRequest,
+  ProofJobSubmission,
+  ProofJobWaitOptions,
+} from "./ProofJob.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/ProofJobLauncher");
 // A record transition holds its lock for one read-modify-write of a small JSON file; inbox and
@@ -901,6 +916,237 @@ const makeProofJobLauncher = Effect.fn("Yeet.ProofJobLauncher.make")(function* (
 export class ProofJobLauncher extends Context.Service<ProofJobLauncher, ProofJobLauncherShape>()($I`ProofJobLauncher`, {
   make: makeProofJobLauncher,
 }) {}
+
+/**
+ * Probe whether a job record's runner process is still alive.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ReadyMonitorRunnerProbe = (
+  record: ProofJobRecord
+) => Effect.Effect<ProcessIdentityStatus, never, FileSystem.FileSystem>;
+
+/**
+ * Read whether a readiness monitor's runner process still exists.
+ *
+ * **Details**
+ *
+ * A record can say `running` after its runner died without a finalizer: the
+ * unit stays loaded and the record is never stamped. The runner's pid and
+ * process-start identity are the liveness evidence. A `submitted` job has no
+ * runner yet because its unit is still starting, so it reads as alive; a unit
+ * that is gone with its submitter is already stamped by the registry read.
+ *
+ * **Example** (Use the live probe where a test would inject a fake)
+ *
+ * ```ts
+ * import { readyMonitorRunnerStatus } from "@beep/repo-cli/test/Yeet"
+ * import type { ReadyMonitorRunnerProbe } from "@beep/repo-cli/test/Yeet"
+ *
+ * const probe: ReadyMonitorRunnerProbe = readyMonitorRunnerStatus
+ * console.log(typeof probe) // "function"
+ * ```
+ *
+ * @param record - The job record whose runner is probed.
+ * @returns `alive`, `dead`, or `unknown`; a job without a runner yet is `alive`.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const readyMonitorRunnerStatus: ReadyMonitorRunnerProbe = (record) =>
+  O.match(record.runner, {
+    onNone: () => Effect.succeed(ProcessIdentityStatus.Enum.alive),
+    onSome: (runner) => processIdentityStatus({ pid: runner.pid, procStart: O.getOrElse(runner.procStart, () => "") }),
+  });
+
+/**
+ * Pick the newest matching readiness monitor whose runner is not provably dead.
+ *
+ * **Details**
+ *
+ * Records are newest first, as `ProofJobLauncher.list` returns them. Each
+ * matching record whose runner is dead is named on stderr and skipped, so a
+ * caller never hands back, or names as the watcher, a job that no longer polls.
+ * An `unknown` runner keeps the job.
+ *
+ * **Example** (No monitor in an empty registry)
+ *
+ * ```ts
+ * import { pickLiveReadyMonitor, readyMonitorRunnerStatus } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = pickLiveReadyMonitor([], () => true, readyMonitorRunnerStatus)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param records - The checkout's job records, newest first.
+ * @param matches - Which records the caller would accept.
+ * @param runnerStatus - The runner liveness probe.
+ * @returns The newest accepted record with a live runner, when one exists.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const pickLiveReadyMonitor = Effect.fn("ProofJob.pickLiveReadyMonitor")(function* (
+  records: ReadonlyArray<ProofJobRecord>,
+  matches: (record: ProofJobRecord) => boolean,
+  runnerStatus: ReadyMonitorRunnerProbe
+): Effect.fn.Return<O.Option<ProofJobRecord>, never, FileSystem.FileSystem> {
+  for (const candidate of A.filter(records, matches)) {
+    const live = yield* hasLiveRunner(candidate, runnerStatus);
+    if (live) return O.some(candidate);
+  }
+  return O.none();
+});
+
+// A dead runner is named on stderr so the caller knows why the job was passed over.
+const hasLiveRunner = Effect.fnUntraced(function* (candidate: ProofJobRecord, runnerStatus: ReadyMonitorRunnerProbe) {
+  const status = yield* runnerStatus(candidate);
+  if (!ProcessIdentityStatus.is.dead(status)) return true;
+  yield* Console.error(
+    `[yeet] warning: readiness monitor job ${candidate.jobId} is recorded ${candidate.phase} but its runner process is gone; not reusing it`
+  );
+  return false;
+});
+
+// Newest first: a matching job whose time left falls short of the requested
+// runtime cap is named with the reason, then the runner of one that fits is checked.
+const pickReusableReadyMonitor = Effect.fnUntraced(function* (
+  records: ReadonlyArray<ProofJobRecord>,
+  request: ReadyMonitorRequest,
+  runnerStatus: ReadyMonitorRunnerProbe
+): Effect.fn.Return<O.Option<ProofJobRecord>, never, FileSystem.FileSystem> {
+  const now = yield* DateTime.now;
+  for (const candidate of A.filter(records, matchesReadyMonitorRequest(request))) {
+    const shortfall = readyMonitorRuntimeShortfall(readyMonitorRuntimeLeft(candidate, now), request.runtimeCap);
+    if (O.isSome(shortfall)) {
+      yield* Console.error(
+        `[yeet] warning: readiness monitor job ${candidate.jobId} has ${shortfall.value}; not reusing it`
+      );
+      continue;
+    }
+    const live = yield* hasLiveRunner(candidate, runnerStatus);
+    if (live) return O.some(candidate);
+  }
+  return O.none();
+});
+
+/**
+ * Find the live readiness monitor a new request may reuse.
+ *
+ * **Details**
+ *
+ * The listing is matched with `matchesReadyMonitorRequest`, newest first.
+ * A match whose time left (`readyMonitorRuntimeLeft`, at the Effect clock's
+ * current time) falls short of the request's runtime cap is named on stderr
+ * with the reason and skipped, and so is one whose runner is dead. A registry
+ * read failure never blocks a submit: it is reported and reads as no monitor,
+ * so the caller submits a fresh one.
+ *
+ * **Example** (Build the lookup)
+ *
+ * ```ts
+ * import { findReusableReadyMonitor, ReadyMonitorRequest, readyMonitorRunnerStatus } from "@beep/repo-cli/test/Yeet"
+ * import * as Effect from "effect/Effect"
+ *
+ * const request = ReadyMonitorRequest.make({ branch: "feat/x", argv: ["monitor", "--until-ready"] })
+ * const program = findReusableReadyMonitor(Effect.succeed([]), request, readyMonitorRunnerStatus)
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param listed - The checkout's job records, newest first.
+ * @param request - The monitor about to be submitted.
+ * @param runnerStatus - The runner liveness probe.
+ * @returns The live monitor to hand back, when one exists.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const findReusableReadyMonitor = Effect.fn("ProofJob.findReusableReadyMonitor")(function* <Requirements>(
+  listed: Effect.Effect<ReadonlyArray<ProofJobRecord>, YeetCommandError, Requirements>,
+  request: ReadyMonitorRequest,
+  runnerStatus: ReadyMonitorRunnerProbe
+): Effect.fn.Return<O.Option<ProofJobRecord>, never, Requirements | FileSystem.FileSystem> {
+  return yield* listed.pipe(
+    Effect.flatMap((records) => pickReusableReadyMonitor(records, request, runnerStatus)),
+    Effect.catch((error) =>
+      Console.error(`[yeet] warning: could not read the job registry; submitting a new monitor: ${error.message}`).pipe(
+        Effect.as(O.none<ProofJobRecord>())
+      )
+    )
+  );
+});
+
+/**
+ * Submit a detached proof job, or hand back the live readiness monitor that
+ * already does what a `monitor --until-ready --detach` submission asks for.
+ *
+ * **Details**
+ *
+ * Only a readiness monitor request looks for a job to reuse: one submitted
+ * from the same branch with the same `readyMonitorArgvKey`, enough time left
+ * under its runtime cap for what `runtimeCap` asks, and a runner that is alive.
+ * It is returned with a stderr note stating its time left, and nothing is
+ * submitted. When an earlier `job wait` on that job already returned inbox
+ * rows, a second note says so: `job wait` does not return them again, and
+ * `yeet inbox list` still shows them. Any other request, a stricter or looser readiness argv, a job
+ * with less time left than the requested cap, or a monitor whose runner is
+ * dead submits a new job. The lookup takes no
+ * submit lock: `yeet publish` runs this command as its child while it holds
+ * that lock, and has already looked for a monitor to reuse for its pull
+ * request.
+ *
+ * **Example** (Build the submit)
+ *
+ * ```ts
+ * import { submitProofJobReusingReadyMonitor } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(typeof submitProofJobReusingReadyMonitor) // "function"
+ * ```
+ *
+ * @param launcher - The checkout's job listing and submit.
+ * @param submission - The job the command would submit.
+ * @param runtimeCap - The runtime cap `submission` was built from, as `--job-max-runtime` asked for it.
+ * @param runnerStatus - The runner liveness probe.
+ * @returns The submitted record, or the reused live monitor's record.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const submitProofJobReusingReadyMonitor = Effect.fn("ProofJob.submitReusingReadyMonitor")(function* (
+  launcher: Pick<ProofJobLauncherShape, "list" | "submit">,
+  submission: ProofJobSubmission,
+  runtimeCap: ProofJobRuntimeCapRequest,
+  runnerStatus: ReadyMonitorRunnerProbe = readyMonitorRunnerStatus
+): Effect.fn.Return<ProofJobRecord, YeetCommandError, FileSystem.FileSystem> {
+  const { request } = submission;
+  const live = isReadyMonitorRequest(request)
+    ? yield* findReusableReadyMonitor(
+        launcher.list,
+        ReadyMonitorRequest.make({ branch: request.branch, argv: request.argv, runtimeCap }),
+        runnerStatus
+      )
+    : O.none<ProofJobRecord>();
+  return yield* O.match(live, {
+    onNone: () => launcher.submit(submission),
+    onSome: (record) => reportReusedReadyMonitor(record, request.branch),
+  });
+});
+
+// The note states the time left, not the configured cap. `job wait` never
+// returns a row an earlier wait on the same job returned, so a caller handed a
+// job someone already waited on is told where those rows are.
+const reportReusedReadyMonitor = Effect.fnUntraced(function* (record: ProofJobRecord, branch: string) {
+  const now = yield* DateTime.now;
+  yield* Console.error(
+    `[yeet] readiness monitor job ${record.jobId} is already ${record.phase} for ${branch} with the same readiness flags and ${renderReadyMonitorRuntimeLeft(readyMonitorRuntimeLeft(record, now))}; not re-submitted`
+  );
+  yield* A.match(record.returnedWaveRowIds, {
+    onEmpty: () => Effect.void,
+    onNonEmpty: (ids) =>
+      Console.error(
+        `[yeet] note: an earlier job wait on ${record.jobId} already returned ${A.length(ids)} inbox row(s); job wait will not return them again, so read them with \`bun run beep yeet inbox list\``
+      ),
+  });
+  return record;
+});
 
 /**
  * Apply one bookkeeping transition to the detached proof job this process runs inside.

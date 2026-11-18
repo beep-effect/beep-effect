@@ -25,7 +25,7 @@ const usableRunpodApiKey = Config.Redacted("RUNPOD_API_KEY").pipe(
 describe("@beep/runpod live", () => {
   it.layer(Runpod.layer, { timeout: "30 seconds" })((it) => {
     it.effect(
-      "lists pods when RUNPOD_API_KEY is configured",
+      "lists one page of pods when RUNPOD_API_KEY is configured",
       Effect.fnUntraced(function* (context) {
         const apiKey = yield* usableRunpodApiKey;
         if (O.isNone(apiKey)) {
@@ -33,19 +33,21 @@ describe("@beep/runpod live", () => {
         }
 
         const runpod = yield* Runpod;
-        const pods = yield* runpod.listPods();
-        expect(A.isArray(pods)).toBe(true);
+        const page = yield* runpod.listPods();
+        expect(A.isArray(page.pods)).toBe(true);
+        expect(typeof page.pagination.hasNextPage).toBe("boolean");
       })
     );
   });
 
   it.layer(Runpod.layer, { timeout: "30 seconds" })((it) => {
     it.effect(
-      "fetches the unauthenticated OpenAPI document",
+      "fetches the unauthenticated REST API v2 OpenAPI document",
       Effect.fnUntraced(function* () {
         const runpod = yield* Runpod;
-        const openApi = yield* runpod.getOpenAPI();
-        expect(openApi).toHaveProperty("openapi");
+        const openApi = yield* runpod.getOpenApi();
+        expect(openApi.openapi).toBe("3.1.0");
+        expect(openApi).toHaveProperty("paths");
       })
     );
   });

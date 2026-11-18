@@ -12,13 +12,14 @@ import * as HashMap from "effect/HashMap";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import { CitationExtractorSelectionBinding, makeCitationExtractorSelection } from "./ExtractorSelection.ts";
-import { decodeCitationRegexPolicy, makeCitationRegexTiming } from "./RegexPolicy.ts";
+import { makeCitationRegexTiming } from "./RegexPolicy.ts";
 import {
   CitationRuntimeDictionaryComparison,
   CitationRuntimeDictionaryFailure,
   CitationRuntimeDictionaryKey,
 } from "./RuntimeDictionary.ts";
 import { makeCitationRuntimeSet } from "./RuntimeSet.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 
 const $I = $LawPracticeServerId.create("internal/Citation/ExtractorOrdering");
 /** @internal @category models @since 0.0.0 */
@@ -36,9 +37,6 @@ export class CitationExtractorOrderingBinding extends S.Opaque<
     })
   )
 ) {}
-const Bindings = S.toType(
-  S.Array(CitationExtractorOrderingBinding).check(S.isMaxLength(CitationEngineAbsoluteMaxima.patterns))
-).pipe($I.annoteSchema("Bindings", { description: "Bounded decoded frozen extractor ordering metadata." }));
 const Reason = LiteralKit(["invalid-policy", "invalid-bindings", "set-failed"]).pipe(
   $I.annoteSchema("Reason", { description: "Closed static ordering failure without source words or causes." })
 );
@@ -82,12 +80,10 @@ const setFailure = (failure: CitationRuntimeDictionaryFailure) =>
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationExtractorOrdering = Effect.fn("Citation.makeExtractorOrdering")(function* (
-  policy: unknown,
-  input: unknown
+  limits: CitationEngineLimits,
+  bindings: ReadonlyArray<CitationExtractorOrderingBinding>
 ) {
-  const limits = yield* decodeCitationRegexPolicy(policy, () => fail("invalid-policy"));
   const timing = yield* makeCitationRegexTiming(limits, true);
-  const bindings = yield* S.decodeUnknownEffect(Bindings)(input).pipe(Effect.mapError(invalidBindings));
   const keys = HashMap.fromIterable(
     A.map(bindings, (binding) =>
       Tuple.make(binding.id, CitationRuntimeDictionaryKey.make({ objectId: binding.id, hash: binding.hash }))

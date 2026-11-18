@@ -50,6 +50,9 @@ const legacyListingSpawnerLayer = Layer.effect(
   Effect.gen(function* () {
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const target = yield* LegacyListingTarget;
+    // Own double (D-14): decorates the real platform spawner, which `ScriptedSpawner` replaces rather than
+    // wraps.
+    // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
     return ChildProcessSpawner.make((command) =>
       Effect.gen(function* () {
         const alpha = yield* Ref.get(target);
@@ -396,11 +399,14 @@ it.layer(testLayer, { timeout: "30 seconds" })("fleet mirror scan", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
 
-      yield* Effect.forEach([fixture.alpha, fixture.beta], (checkout) =>
-        Effect.gen(function* () {
-          yield* fs.makeDirectory(path.join(checkout, "notes"), { recursive: true });
-          yield* fs.writeFileString(path.join(checkout, "notes", "shared.md"), "# shared\n");
-        })
+      yield* Effect.forEach(
+        [fixture.alpha, fixture.beta],
+        (checkout) =>
+          Effect.gen(function* () {
+            yield* fs.makeDirectory(path.join(checkout, "notes"), { recursive: true });
+            yield* fs.writeFileString(path.join(checkout, "notes", "shared.md"), "# shared\n");
+          }),
+        { concurrency: 1 }
       );
 
       const snapshot = yield* scanFixture(fixture);

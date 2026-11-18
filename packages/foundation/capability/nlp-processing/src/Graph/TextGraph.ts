@@ -234,12 +234,15 @@ export const fromDocument = Effect.fn("fromDocument")(function* (
       type: "document",
       operation: "root",
     });
-    const sentenceNodes = yield* Effect.forEach(sentenceModels, (sentence) =>
-      makeTextNode({
-        text: sentence.text,
-        type: "sentence",
-        operation: "sentencize",
-      })
+    const sentenceNodes = yield* Effect.forEach(
+      sentenceModels,
+      (sentence) =>
+        makeTextNode({
+          text: sentence.text,
+          type: "sentence",
+          operation: "sentencize",
+        }),
+      { concurrency: 1 }
     );
     const graph = Graph.directed<TextNode, TextEdge>((mutable) => {
       const docIndex = Graph.addNode(mutable, docNode);
@@ -437,8 +440,10 @@ export const tokenizeNodes = Effect.fn("tokenizeNodes")(function* (
 
       const tokens = yield* Tok.tokenize(node.text);
       tokenCount = tokenCount + A.length(tokens);
-      const tokenNodes = yield* Effect.forEach(tokens, (token) =>
-        makeTextNode({ text: token.text, type: "token", operation: "tokenize" })
+      const tokenNodes = yield* Effect.forEach(
+        tokens,
+        (token) => makeTextNode({ text: token.text, type: "token", operation: "tokenize" }),
+        { concurrency: 1 }
       );
       result = Graph.mutate(result, (mutable) => {
         A.forEach(tokenNodes, (tokenNode) => {

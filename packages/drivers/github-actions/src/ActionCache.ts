@@ -479,7 +479,7 @@ const dropCoveredPaths = Effect.fnUntraced(function* (
         .pipe(Effect.mapError((cause) => failed(`could not inspect "${candidate}"`, cause)));
       if (info.type === "Directory") MutableHashSet.add(directories, candidate);
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   // Walk up from a candidate's parent: a symlinked ancestor ends the walk
   // uncovered (its contents are not this tree's), a matched directory covers
@@ -534,13 +534,17 @@ const resolvePaths = Effect.fnUntraced(function* (
   const gotOptional = yield* resolution.env.getOptional("GITHUB_WORKSPACE");
   const workspace = O.getOrElse(gotOptional, () => ".");
   const base = posixFor(resolution.windows, resolution.path.resolve(workspace));
-  const rooted = yield* Effect.forEach(cleaned, (pattern) => rootPattern(resolution, base, failed, pattern));
+  const rooted = yield* Effect.forEach(cleaned, (pattern) => rootPattern(resolution, base, failed, pattern), {
+    concurrency: 1,
+  });
   const set = yield* GlobSet.compile(rooted).pipe(
     Effect.mapError((cause) => failed(`"${cause.pattern}" is not a usable glob pattern`, cause))
   );
   const plan = searchPlan(set);
-  const candidates = yield* Effect.forEach(plan.roots, (root) =>
-    rootCandidates(resolution, plan.needsWalk, failed, root)
+  const candidates = yield* Effect.forEach(
+    plan.roots,
+    (root) => rootCandidates(resolution, plan.needsWalk, failed, root),
+    { concurrency: 1 }
   );
   const matched = uniqueInOrder(A.filter(A.flatten(candidates), (candidate) => set.matches(candidate)));
   if (!A.isReadonlyArrayNonEmpty(matched)) {

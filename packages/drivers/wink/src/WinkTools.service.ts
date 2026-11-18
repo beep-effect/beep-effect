@@ -442,10 +442,10 @@ export const WinkNlpToolkitLive: Layer.Layer<
       BowCosineSimilarity: Effect.fn("WinkNlpToolkit.BowCosineSimilarity")(
         function* ({ text1, text2 }) {
           yield* Effect.annotateCurrentSpan(textPairLengthAttributes(text1, text2));
-          const [doc1, doc2] = yield* Effect.all([
-            tokenization.document(text1, "bow-text-1"),
-            tokenization.document(text2, "bow-text-2"),
-          ]);
+          const [doc1, doc2] = yield* Effect.all(
+            [tokenization.document(text1, "bow-text-1"), tokenization.document(text2, "bow-text-2")],
+            { concurrency: 1 }
+          );
 
           const score = yield* similarity.bowCosine(
             BagOfWords.make({
@@ -609,11 +609,10 @@ export const WinkNlpToolkitLive: Layer.Layer<
             include_custom: `${includeCustom ?? true}`,
             ...textLengthAttribute(text, "text"),
           });
-          const [document, its, winkDoc] = yield* Effect.all([
-            tokenization.document(text, "entities"),
-            engine.its,
-            engine.getWinkDoc(text),
-          ]);
+          const [document, its, winkDoc] = yield* Effect.all(
+            [tokenization.document(text, "entities"), engine.its, engine.getWinkDoc(text)],
+            { concurrency: 1 }
+          );
           const tokens = Chunk.toReadonlyArray(document.tokens);
           const builtinEntities = mapEntityOutput(
             decodeEntityOutputDetails(winkDoc.entities().out(its.detail)),
@@ -708,8 +707,11 @@ export const WinkNlpToolkitLive: Layer.Layer<
             ...countAttribute("document_count", A.length(documents)),
           });
           const nowMs = yield* Clock.currentTimeMillis;
-          const resolvedDocuments = yield* Effect.forEach(documents, (document, index) =>
-            tokenization.document(document.text, document.id ?? `${corpusId}-doc-${nowMs}-${index}`)
+          const resolvedDocuments = yield* Effect.forEach(
+            documents,
+            (document, index) =>
+              tokenization.document(document.text, document.id ?? `${corpusId}-doc-${nowMs}-${index}`),
+            { concurrency: 1 }
           );
           return yield* corpusManager.learnDocuments({
             corpusId,
@@ -855,14 +857,14 @@ export const WinkNlpToolkitLive: Layer.Layer<
             A.filter((token) => Str.length(token) >= minimumLength)
           );
 
-          const [leftTokens, rightTokens] = yield* Effect.all([
-            tokenization.tokenize(text1),
-            tokenization.tokenize(text2),
-          ]);
-          const [leftCodes, rightCodes] = yield* Effect.all([
-            encode(toCandidateTokens(leftTokens)),
-            encode(toCandidateTokens(rightTokens)),
-          ]);
+          const [leftTokens, rightTokens] = yield* Effect.all(
+            [tokenization.tokenize(text1), tokenization.tokenize(text2)],
+            { concurrency: 1 }
+          );
+          const [leftCodes, rightCodes] = yield* Effect.all(
+            [encode(toCandidateTokens(leftTokens)), encode(toCandidateTokens(rightTokens))],
+            { concurrency: 1 }
+          );
           const sortedLeft = sortStrings(pipe(leftCodes, A.map(Str.trim), A.filter(Str.isNonEmpty)));
           const sortedRight = sortStrings(pipe(rightCodes, A.map(Str.trim), A.filter(Str.isNonEmpty)));
 
@@ -906,10 +908,12 @@ export const WinkNlpToolkitLive: Layer.Layer<
                     totalTexts: 0,
                   }),
                 onNonEmpty: Effect.fn("Wink.NlpToolkit.RankByRelevance.onNonEmpty")(function* () {
-                  const documents = yield* Effect.forEach(texts, (text, index) =>
-                    tokenization.document(text, `rank-${index}`)
+                  const documents = yield* Effect.forEach(
+                    texts,
+                    (text, index) => tokenization.document(text, `rank-${index}`),
+                    { concurrency: 1 }
                   );
-                  yield* Effect.forEach(documents, isolated.learnDocument, { discard: true });
+                  yield* Effect.forEach(documents, isolated.learnDocument, { concurrency: 1, discard: true });
 
                   const queryDocument = yield* tokenization.document(query, "rank-query");
                   const queryVector = yield* isolated.vectorizeDocument(queryDocument);
@@ -923,7 +927,8 @@ export const WinkNlpToolkitLive: Layer.Layer<
                         index,
                         score: score.score,
                       };
-                    })
+                    }),
+                    { concurrency: 1 }
                   );
 
                   const limit = topN ?? A.length(texts);
@@ -1026,16 +1031,19 @@ export const WinkNlpToolkitLive: Layer.Layer<
           yield* Effect.annotateCurrentSpan(textPairLengthAttributes(text1, text2));
           return yield* vectorizer.withFreshInstance(
             Effect.fn(function* (isolated) {
-              const [doc1, doc2] = yield* Effect.all([
-                tokenization.document(text1, "text-similarity-1"),
-                tokenization.document(text2, "text-similarity-2"),
-              ]);
+              const [doc1, doc2] = yield* Effect.all(
+                [tokenization.document(text1, "text-similarity-1"), tokenization.document(text2, "text-similarity-2")],
+                { concurrency: 1 }
+              );
 
-              yield* Effect.forEach([doc1, doc2], (document) => isolated.learnDocument(document), { discard: true });
-              const [leftVector, rightVector] = yield* Effect.all([
-                isolated.vectorizeDocument(doc1),
-                isolated.vectorizeDocument(doc2),
-              ]);
+              yield* Effect.forEach([doc1, doc2], (document) => isolated.learnDocument(document), {
+                concurrency: 1,
+                discard: true,
+              });
+              const [leftVector, rightVector] = yield* Effect.all(
+                [isolated.vectorizeDocument(doc1), isolated.vectorizeDocument(doc2)],
+                { concurrency: 1 }
+              );
               const score = yield* similarity.vectorCosine(leftVector, rightVector);
 
               return {
@@ -1089,10 +1097,10 @@ export const WinkNlpToolkitLive: Layer.Layer<
             beta: `${beta}`,
             ...textPairLengthAttributes(text1, text2),
           });
-          const [leftTokens, rightTokens] = yield* Effect.all([
-            tokenization.tokenize(text1),
-            tokenization.tokenize(text2),
-          ]);
+          const [leftTokens, rightTokens] = yield* Effect.all(
+            [tokenization.tokenize(text1), tokenization.tokenize(text2)],
+            { concurrency: 1 }
+          );
           const params = TverskyParams.make({
             alpha,
             beta,

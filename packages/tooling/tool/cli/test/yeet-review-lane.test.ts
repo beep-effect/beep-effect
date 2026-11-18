@@ -4,6 +4,7 @@ import {
   classifyYeetReviewer,
   EconomicsReviewLanePrecisionRow,
   EconomicsScopeRequest,
+  FleetHostsRead,
   planReplyActions,
   ReplyDraft,
   ReplyDraftOutcome,
@@ -33,6 +34,7 @@ import {
   YeetEconomicsOptions,
   YeetEconomicsReportJson,
   YeetEconomicsSource,
+  YeetFleetHostSource,
   YeetReviewDisposition,
   YeetReviewerIdentity,
   YeetReviewerKind,
@@ -52,6 +54,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import { NoPressure } from "./support/EconomicsPressure.ts";
 import type { YeetThreadDisposition } from "@beep/repo-cli/test/Yeet";
 
 const BRANCH = "feat/review-lane";
@@ -716,7 +719,19 @@ it.layer(Layer.mergeAll(Platform, TestConsole.layer), { timeout: "30 seconds" })
   );
 });
 
-const Sources = Layer.provideMerge(Layer.mergeAll(YeetEconomicsSource.layer, YeetReviewLaneSource.layer), Platform);
+// No test here reads fleet hosts; their source is `test/yeet-economics-fleet-hosts.test.ts`'s.
+const NoFleetHosts = Layer.succeed(
+  YeetFleetHostSource,
+  YeetFleetHostSource.of({
+    read: Effect.fn("YeetFleetHostSource.read")(() =>
+      Effect.succeed(FleetHostsRead.make({ journals: [], receipts: [] }))
+    ),
+  })
+);
+const Sources = Layer.provideMerge(
+  Layer.mergeAll(YeetEconomicsSource.layer, YeetReviewLaneSource.layer, NoFleetHosts, NoPressure),
+  Platform
+);
 
 it.layer(Layer.mergeAll(Sources, TestConsole.layer), { timeout: "30 seconds" })(
   "yeet economics review lane",

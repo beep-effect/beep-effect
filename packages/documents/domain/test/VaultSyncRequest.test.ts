@@ -55,7 +55,8 @@ layer(hosted, { excludeTestServices: true, timeout: "20 seconds" })("request ide
           { kind: "ConnectorAccount", connectorAccountId: 6 },
           { kind: "System", component: "Runtime" },
         ] as const,
-        (encoded) => Effect.map(decodePrincipal(encoded), V.principalKeyOf)
+        (encoded) => Effect.map(decodePrincipal(encoded), V.principalKeyOf),
+        { concurrency: 1 }
       );
       expect(keys).toEqual(["User:3", "ServiceAccount:4", "Agent:5", "ConnectorAccount:6", "System:Runtime"]);
       expect(A.every(keys, S.is(V.PrincipalKey))).toBe(true);

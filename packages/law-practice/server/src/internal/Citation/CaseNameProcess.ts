@@ -2,6 +2,7 @@
  * Free Law Project; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   CitationEngineAbsoluteMaxima,
@@ -14,23 +15,26 @@ import * as Effect from "effect/Effect";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { ownedField } from "./ConfigurationOwnership.ts";
 import { reserveCitationInvocationText } from "./Invocation.ts";
 import {
-  copyCitationMetadataPatternConfiguration,
   makeCitationMetadataStage,
+  ownCitationStageCall,
+  prepareCitationMetadataPatternConfiguration,
   substituteCitationMetadataMatches,
 } from "./MetadataComposition.ts";
 import { trimCitationMetadataBoundary } from "./MetadataStrings.ts";
 import { parseCitationPythonInteger } from "./PythonInteger.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { makeCitationRegexWorker } from "./RegexWorker.ts";
+import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import {
   CitationStopWordsConfiguration,
-  cleanCitationStopWords,
-  copyCitationStopWordsConfiguration,
+  installCitationStopWordCleanup,
+  verifyCitationStopWordsConfiguration,
 } from "./StopWords.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseNameProcess");
@@ -138,7 +142,6 @@ export class CitationCaseNameProcessResult extends S.Opaque<
   )
 ) {}
 const Input = S.toType(CitationCaseNameProcessInput);
-const Config = S.toType(CitationCaseNameProcessConfiguration);
 const empty = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array(0) });
 const bound = (index: number, length: number) => Num.max(0, Num.min(length, index < 0 ? length + index : index));
 const plaintiffBoundary = (point: number) =>
@@ -157,127 +160,134 @@ export const citationUnchangedCaseNamePatch = CitationCaseNameProcessPatch.make(
 /** Process a source candidate inside an existing operation, Scope and text authority.
  * @internal @category operations @since 0.0.0
  */
-export const processCitationCaseName = Effect.fn("Citation.processNativeCaseName")(function* (
+export const installCitationCaseNameProcess = Effect.fn("Citation.installCaseNameProcess")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationCaseNameProcessConfiguration,
-  raw: unknown
+  config: CitationCaseNameProcessConfiguration
 ) {
-  const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-  if (request.candidateCaseName === null) return yield* fail("missing-candidate");
-  if (request.words.length > limits.tokens)
-    return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
-  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
-  const words = yield* Effect.forEach(request.words, (word) => input.prepareUnicode(word, () => Effect.void));
-  const candidate = (yield* input.prepareUnicode(request.candidateCaseName, () => Effect.void)).value.storage;
-  const worker = yield* makeCitationRegexWorker(limits, runtime, config.bindings, "python-regex-v0");
-  const clean = (source: CitationPythonUnicodeStorage) =>
-    cleanCitationStopWords(limits, runtime, config.cleaner, source);
-  const split = Effect.fn("Citation.splitCaseNameOnce")(function* () {
-    const evaluated = yield* worker.evaluate(config.patterns.splitV, candidate, 0, 1, "search");
-    if (evaluated.result.matches === 0) return { plaintiff: empty, defendant: evaluated.source.value.storage };
-    const match = yield* evaluated.result.capture(0, 0);
-    if (match._tag === "Unmatched") return yield* fail("invalid-match");
-    const plaintiff = yield* evaluated.source.slice({ start: 0, end: match.start }, () => Effect.void);
-    const defendant = yield* evaluated.source.slice(
-      { start: match.end, end: evaluated.source.value.pythonLength },
-      () => Effect.void
-    );
-    return { plaintiff, defendant };
-  });
-  const cleanPlaintiff = Effect.fn("Citation.processPlaintiffName")(function* (raw: CitationPythonUnicodeStorage) {
-    const prepared = yield* input.prepareUnicode(raw, () => Effect.void);
-    const start = yield* trimCitationMetadataBoundary(
-      prepared.value,
-      0,
-      prepared.value.pythonLength,
-      1,
-      plaintiffBoundary
-    );
-    const end =
-      1 +
-      (yield* trimCitationMetadataBoundary(
+  const installedInput = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText));
+  const installedWorker = yield* Effect.exit(
+    installCitationRegexEvaluator(limits, runtime, config.bindings, "python-regex-v0")
+  );
+  const clean = yield* installCitationStopWordCleanup(limits, runtime, config.cleaner);
+  return Effect.fn("Citation.processNativeCaseName")(function* (raw: unknown) {
+    const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+    if (request.candidateCaseName === null) return yield* fail("missing-candidate");
+    if (request.words.length > limits.tokens)
+      return yield* CitationSafetyLimitExceeded.make({ operation: "extract", limit: "tokens" });
+    const input = yield* installedInput;
+    const words = yield* Effect.forEach(request.words, (word) => input.prepareUnicode(word, () => Effect.void), {
+      concurrency: 1,
+    });
+    const candidate = (yield* input.prepareUnicode(request.candidateCaseName, () => Effect.void)).value.storage;
+    const worker = yield* installedWorker;
+    const split = Effect.fn("Citation.splitCaseNameOnce")(function* () {
+      const evaluated = yield* worker.evaluate(config.patterns.splitV, candidate, 0, 1, "search");
+      if (evaluated.result.matches === 0) return { plaintiff: empty, defendant: evaluated.source.value.storage };
+      const match = yield* evaluated.result.capture(0, 0);
+      if (match._tag === "Unmatched") return yield* fail("invalid-match");
+      const plaintiff = yield* evaluated.source.slice({ start: 0, end: match.start }, () => Effect.void);
+      const defendant = yield* evaluated.source.slice(
+        { start: match.end, end: evaluated.source.value.pythonLength },
+        () => Effect.void
+      );
+      return { plaintiff, defendant };
+    });
+    const cleanPlaintiff = Effect.fn("Citation.processPlaintiffName")(function* (raw: CitationPythonUnicodeStorage) {
+      const prepared = yield* input.prepareUnicode(raw, () => Effect.void);
+      const start = yield* trimCitationMetadataBoundary(
         prepared.value,
-        prepared.value.pythonLength - 1,
-        start - 1,
-        -1,
+        0,
+        prepared.value.pythonLength,
+        1,
         plaintiffBoundary
-      ));
-    const trimmed = yield* prepared.slice({ start, end }, () => Effect.void);
-    const evaluated = yield* worker.evaluate(config.patterns.lowercase, trimmed, 0);
-    const removed = yield* substituteCitationMetadataMatches(evaluated, O.none(), () => fail("invalid-match"));
-    return yield* clean(removed);
-  });
-  const finishName = Effect.fn("Citation.finishCaseNameAssignments")(function* (
-    defendant: CitationPythonUnicodeStorage,
-    cleaned: CitationPythonUnicodeStorage
-  ) {
-    if (cleaned.bytes.length === 0) return citationUnchangedCaseNamePatch;
-    const name = request.short ? yield* clean(defendant) : cleaned;
-    const first = bound(request.startIndex === null ? 0 : request.startIndex, words.length);
-    const last = bound(request.index - 1, words.length);
-    const length = A.reduce(
-      A.take(A.drop(words, first), Num.max(0, last - first)),
-      0,
-      (sum, word) => sum + word.value.pythonLength
-    );
-    return CitationCaseNameProcessPatch.make({
-      ...citationUnchangedCaseNamePatch,
-      defendant: request.short ? O.none() : O.some(name),
-      antecedentGuess: request.short ? O.some(name) : O.none(),
-      fullSpanStart: O.some(request.spanStart - length - 1),
+      );
+      const end =
+        1 +
+        (yield* trimCitationMetadataBoundary(
+          prepared.value,
+          prepared.value.pythonLength - 1,
+          start - 1,
+          -1,
+          plaintiffBoundary
+        ));
+      const trimmed = yield* prepared.slice({ start, end }, () => Effect.void);
+      const evaluated = yield* worker.evaluate(config.patterns.lowercase, trimmed, 0);
+      const removed = yield* substituteCitationMetadataMatches(evaluated, O.none(), () => fail("invalid-match"));
+      return yield* clean(removed);
     });
-  });
-  const processYear = Effect.fn("Citation.processPreCitationYear")(function* () {
-    if (request.preCiteYear === null || request.preCiteYear.bytes.length === 0) return citationUnchangedCaseNamePatch;
-    const prepared = yield* input.prepareUnicode(request.preCiteYear, () => Effect.void);
-    const numericYear = yield* parseCitationPythonInteger(prepared.value);
-    if (O.isNone(numericYear)) return yield* fail("invalid-year");
-    return CitationCaseNameProcessPatch.make({
-      ...citationUnchangedCaseNamePatch,
-      year: O.some(prepared.value.storage),
-      numericYear,
+    const finishName = Effect.fn("Citation.finishCaseNameAssignments")(function* (
+      defendant: CitationPythonUnicodeStorage,
+      cleaned: CitationPythonUnicodeStorage
+    ) {
+      if (cleaned.bytes.length === 0) return citationUnchangedCaseNamePatch;
+      const name = request.short ? yield* clean(defendant) : cleaned;
+      const first = bound(request.startIndex === null ? 0 : request.startIndex, words.length);
+      const last = bound(request.index - 1, words.length);
+      const length = A.reduce(
+        A.take(A.drop(words, first), Num.max(0, last - first)),
+        0,
+        (sum, word) => sum + word.value.pythonLength
+      );
+      return CitationCaseNameProcessPatch.make({
+        ...citationUnchangedCaseNamePatch,
+        defendant: request.short ? O.none() : O.some(name),
+        antecedentGuess: request.short ? O.some(name) : O.none(),
+        fullSpanStart: O.some(request.spanStart - length - 1),
+      });
     });
+    const processYear = Effect.fn("Citation.processPreCitationYear")(function* () {
+      if (request.preCiteYear === null || request.preCiteYear.bytes.length === 0) return citationUnchangedCaseNamePatch;
+      const prepared = yield* input.prepareUnicode(request.preCiteYear, () => Effect.void);
+      const numericYear = yield* parseCitationPythonInteger(prepared.value);
+      if (O.isNone(numericYear)) return yield* fail("invalid-year");
+      return CitationCaseNameProcessPatch.make({
+        ...citationUnchangedCaseNamePatch,
+        year: O.some(prepared.value.storage),
+        numericYear,
+      });
+    });
+    let plaintiff = O.none<CitationPythonUnicodeStorage>();
+    let defendant = candidate;
+    if (request.hasV) {
+      const selected = yield* split();
+      const name = yield* cleanPlaintiff(selected.plaintiff);
+      plaintiff = O.some(name);
+      defendant = selected.defendant;
+    }
+    const cleaned = yield* clean(defendant);
+    const names = yield* finishName(defendant, cleaned);
+    const year = yield* processYear();
+    return CitationCaseNameProcessPatch.make({ ...names, plaintiff, year: year.year, numericYear: year.numericYear });
   });
-  let plaintiff = O.none<CitationPythonUnicodeStorage>();
-  let defendant = candidate;
-  if (request.hasV) {
-    const selected = yield* split();
-    const name = yield* cleanPlaintiff(selected.plaintiff);
-    plaintiff = O.some(name);
-    defendant = selected.defendant;
-  }
-  const cleaned = yield* clean(defendant);
-  const names = yield* finishName(defendant, cleaned);
-  const year = yield* processYear();
-  return CitationCaseNameProcessPatch.make({ ...names, plaintiff, year: year.year, numericYear: year.numericYear });
 });
-/** Copy the source-bound processing configuration for enclosing composition.
+/** Authenticate the owned source-bound processing configuration for enclosing composition.
  * @internal @category operations @since 0.0.0
  */
-export const copyCitationCaseNameProcessConfiguration = Effect.fn("Citation.copyCaseNameProcessConfiguration")(
-  function* (limits: CitationEngineLimits, decoded: CitationCaseNameProcessConfiguration) {
-    const owned = yield* copyCitationMetadataPatternConfiguration(
+export const verifyCitationCaseNameProcessConfiguration = Effect.fn("Citation.verifyCaseNameProcessConfiguration")(
+  function* (limits: CitationEngineLimits, decoded: CitationOwned<CitationCaseNameProcessConfiguration>) {
+    const owned = yield* prepareCitationMetadataPatternConfiguration(
       limits,
-      Patterns,
       decoded.patterns,
       decoded.bindings,
       fingerprints,
       () => fail("invalid-configuration")
     );
-    const cleaner = yield* copyCitationStopWordsConfiguration(limits, decoded.cleaner);
+    const cleaner = yield* verifyCitationStopWordsConfiguration(limits, ownedField(decoded, "cleaner"));
     return CitationCaseNameProcessConfiguration.make({ ...owned, cleaner });
   }
 );
+const ownProcess = ownCitationStageCall({
+  verify: verifyCitationCaseNameProcessConfiguration,
+  install: installCitationCaseNameProcess,
+});
 /** Install one admitted composition; cleaner calls share its Scope and budget
  * without reacquiring the enclosing operation's permit. Methods have R=never.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationCaseNameProcess = makeCitationMetadataStage({
   method: "apply",
-  schema: Config,
-  invalid: () => fail("invalid-configuration"),
-  own: copyCitationCaseNameProcessConfiguration,
-  prepare: processCitationCaseName,
+  own: ownProcess,
+  prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownProcess>>, raw) => run(raw),
   project: (patch, reservedUnits) => CitationCaseNameProcessResult.make({ patch, reservedUnits }),
 });

@@ -2,16 +2,16 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | pending | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
-| P2 Verify | pending | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
+| P1 Implement | complete | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 <!--
@@ -74,5 +74,19 @@ SPEC.md's line that beep-effect-cutover is archived is done: on 2026-11-06 goals
 Lane git-history-rewrite · PR #2785
 
 Reverse: mv $HOME/.local/state/beep/archive/beep-effect-cutover $HOME/YeeBois/projects/beep-effect-cutover
+
+### drainable class built; first live observation started 221 grace windows, 2026-11-13
+
+P0 to P2 done in lane goals/legacy-drain. The `drainable` class lives in `ResidueReapDrain*.ts` with the live probe in `ResidueReapDrainLive.ts`; `residue-reap-drain.test.ts` proves the predicate against real git fixtures (grace window, opt-in, bundle-before-remove with an unwritable bundle refused, unknown liveness refused, registered worktree refused, borrowed object store refused, HEAD movement restarting grace).
+
+First live dry run, 2026-11-13T22:06Z, `residue-reap --fleet --classes drainable`, 56 s: 352 fleet checkouts, 9 registered legacy clones holding 166,242,401,382 bytes. 221 lanes met the predicate and started their grace windows (registry `draining`). 129 were refused: session-ledger 78, clean-tree 42, liveness 18, open-pr 11, proof-unit 9, owned-worktrees 9 (every legacy clone), timer-host 3 (`beep-effect`, `beep-effect0`, one `beep-effect11` lane), object-borrowers 1 (`beep-effect0` borrows from `beep-effect`), plus 1 unreadable layout. Liveness was confirmed dormant for 332 checkouts, against 0 under the mirror's own rule.
+
+The first apply wave is time-gated: the earliest grace expiry is 2026-11-20T22:06Z, and only after the merged code runs at least one more observation at unchanged HEADs.
+
+Fix found by the live run: a dangling unit symlink in `~/.config/systemd/user` failed the timer-host probe for every checkout; dangling unit links are now skipped, since systemd cannot load them either.
+
+Lane goals/legacy-drain
+
+Reverse: Clear drainingSince/drainingHead in registry.json rows, or revert the drainable class PR
 
 <!-- beep:decisions:end -->

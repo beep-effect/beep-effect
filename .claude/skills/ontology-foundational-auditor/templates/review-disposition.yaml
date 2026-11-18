@@ -24,7 +24,7 @@
 # correspond to targets (otp-<slug>-<nnn>[-rN].review.yaml), and targets are
 # otp: ids ONLY — taxonomy edges live in the proposal's `parents`.
 #
-# Gate semantics (mechanical — validate_artifacts.py --gate --repo .): FAIL
+# Gate semantics (mechanical — validate_artifacts.ts --gate --repo .): FAIL
 # blocks until revised + re-reviewed; INDETERMINATE submits FLAGGED with
 # needed_evidence. Surface coverage: `identity`, `warrant`, and
 # `null_discriminator` can NEVER be no_surface (every submittable proposal has

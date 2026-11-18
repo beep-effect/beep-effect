@@ -226,7 +226,7 @@ non-empty `cq_justification` whose ids exist in the frozen CQ suite, and every
 same-output decision candidates; every literal-domain-member carries `source_domain`;
 every evidence path exists in the pinned tree; all statuses are `candidate`/`open`;
 and `candidate_count`/`fact_count`/`issue_count` match actual list lengths. The executable carrier is
-[`../../research/scripts/validate_packet.py`](../../research/scripts/validate_packet.py)
+research/scripts/validate_packet.py (removed; see [`../../history/2026-11-13-python-removed.md`](../../history/2026-11-13-python-removed.md))
 (the committed mechanical checker — round-2 seats F+G: prose predicates are not a
 validator), extended with an `--s4-lane <file>` mode before S4 launch. Digests:
 `sha256sum <path> | cut -c1-12`. Sources living only on the pinned tree (units 5/7 when

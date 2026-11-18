@@ -672,17 +672,20 @@ describe("@beep/m365 mail outbound verbs", () => {
         const testHttp = yield* MailTestHttp;
         const m365 = yield* M365;
 
-        const reasons = yield* Effect.all([
-          reasonOf(m365.createDraftMessage(M365CreateDraftMessageRequest.make({ draft: mailDraft }))),
-          reasonOf(m365.addMessageAttachment(attachmentRequest(syntheticBytes(8), O.none()))),
-          reasonOf(
-            m365.addMessageAttachment(
-              attachmentRequest(new Uint8Array(M365_ATTACHMENT_SINGLE_REQUEST_MAX_BYTES + 1), O.none())
-            )
-          ),
-          reasonOf(m365.sendDraftMessage(M365SendDraftMessageRequest.make({ messageId: "message-id" }))),
-          reasonOf(m365.deleteDraftMessage(M365DeleteDraftMessageRequest.make({ messageId: "message-id" }))),
-        ]);
+        const reasons = yield* Effect.all(
+          [
+            reasonOf(m365.createDraftMessage(M365CreateDraftMessageRequest.make({ draft: mailDraft }))),
+            reasonOf(m365.addMessageAttachment(attachmentRequest(syntheticBytes(8), O.none()))),
+            reasonOf(
+              m365.addMessageAttachment(
+                attachmentRequest(new Uint8Array(M365_ATTACHMENT_SINGLE_REQUEST_MAX_BYTES + 1), O.none())
+              )
+            ),
+            reasonOf(m365.sendDraftMessage(M365SendDraftMessageRequest.make({ messageId: "message-id" }))),
+            reasonOf(m365.deleteDraftMessage(M365DeleteDraftMessageRequest.make({ messageId: "message-id" }))),
+          ],
+          { concurrency: 1 }
+        );
 
         expect(reasons).toStrictEqual(A.replicate(O.some("request encoding"), 5));
         const captures9 = yield* testHttp.captures;

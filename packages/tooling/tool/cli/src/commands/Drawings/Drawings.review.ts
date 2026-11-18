@@ -401,22 +401,25 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
   }) {
     const { request, set, pdfPath, page } = options;
     const file = path.basename(pdfPath);
-    const candidates = yield* Effect.forEach(set.manifest.figures, (figure) =>
-      tools
-        .inkCoverage(
-          InkCoverageRequest.make({
-            base: PdfPageRef.make({ pdfPath: set.pdfPath, page: figure.figure }),
-            marked: PdfPageRef.make({ pdfPath, page }),
-            dpi: request.dpi,
-            dilatePx: request.dilatePx,
-          })
-        )
-        .pipe(
-          Effect.mapBoth({
-            onFailure: fail(`Could not compare ${file} page ${page} with FIG. ${figure.figure}.`),
-            onSuccess: (coverage) => SheetCandidate.make({ figure: figure.figure, page: figure.figure, coverage }),
-          })
-        )
+    const candidates = yield* Effect.forEach(
+      set.manifest.figures,
+      (figure) =>
+        tools
+          .inkCoverage(
+            InkCoverageRequest.make({
+              base: PdfPageRef.make({ pdfPath: set.pdfPath, page: figure.figure }),
+              marked: PdfPageRef.make({ pdfPath, page }),
+              dpi: request.dpi,
+              dilatePx: request.dilatePx,
+            })
+          )
+          .pipe(
+            Effect.mapBoth({
+              onFailure: fail(`Could not compare ${file} page ${page} with FIG. ${figure.figure}.`),
+              onSuccess: (coverage) => SheetCandidate.make({ figure: figure.figure, page: figure.figure, coverage }),
+            })
+          ),
+      { concurrency: 1 }
     );
     const override = pipe(
       A.findFirst(request.figureOverrides, (entry) => entry.file === file && entry.page === page),
@@ -460,13 +463,16 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
         `The manifest's sheet set ${set.sheetSetSha256} is not the set review round ${round.round} reviewed (${round.reviewedSheetSetSha256}).`
       );
     }
-    const pdfPaths = yield* Effect.forEach(request.pdfPaths, (file) =>
-      realPath(path.resolve(file), "The reviewer PDF").pipe(
-        Effect.filterOrFail(
-          (real) => isWithin(root, real),
-          (real) => refuse(`The reviewer PDF "${real}" is not under the corpus root "${root}".`)
-        )
-      )
+    const pdfPaths = yield* Effect.forEach(
+      request.pdfPaths,
+      (file) =>
+        realPath(path.resolve(file), "The reviewer PDF").pipe(
+          Effect.filterOrFail(
+            (real) => isWithin(root, real),
+            (real) => refuse(`The reviewer PDF "${real}" is not under the corpus root "${root}".`)
+          )
+        ),
+      { concurrency: 1 }
     );
     const names = A.map(pdfPaths, (file) => path.basename(file));
     const stray = A.filter(request.figureOverrides, (entry) => !A.contains(names, entry.file));
@@ -489,9 +495,11 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
           .pipe(Effect.mapError(fail(`Could not read the annotations of "${pdfPath}".`)));
         return yield* Effect.forEach(
           A.map(structure.pages, (_, index) => index + 1),
-          (page) => ingestPage({ request, set, pdfPath, pdfSha256, page, annotations })
+          (page) => ingestPage({ request, set, pdfPath, pdfSha256, page, annotations }),
+          { concurrency: 1 }
         );
-      })
+      }),
+      { concurrency: 1 }
     ).pipe(Effect.map(A.flatten));
     const intake = ReviewIntake.make({
       schemaVersion: "drawing-review-intake/v1",
@@ -630,20 +638,23 @@ const makeService = Effect.fn("DrawingReview.makeService")(function* () {
           })
         ),
     });
-    const rounds = yield* Effect.forEach(entries, (roundDir) =>
-      fs.exists(path.join(roundDir, "round.json")).pipe(
-        Effect.orElseSucceed(() => false),
-        Effect.flatMap((exists) =>
-          exists
-            ? Effect.map(readStatus(roundDir, 0, true), (status) =>
-                O.some({
-                  round: ReviewRound.make(status.round),
-                  findings: O.map(status.inventory, (inventory) => inventory.findings),
-                })
-              )
-            : Effect.succeedNone
-        )
-      )
+    const rounds = yield* Effect.forEach(
+      entries,
+      (roundDir) =>
+        fs.exists(path.join(roundDir, "round.json")).pipe(
+          Effect.orElseSucceed(() => false),
+          Effect.flatMap((exists) =>
+            exists
+              ? Effect.map(readStatus(roundDir, 0, true), (status) =>
+                  O.some({
+                    round: ReviewRound.make(status.round),
+                    findings: O.map(status.inventory, (inventory) => inventory.findings),
+                  })
+                )
+              : Effect.succeedNone
+          )
+        ),
+      { concurrency: 1 }
     );
     const verdict = statementGuard({
       sheetSetSha256: Sha256Hex.make(manifest.pdfSha256),

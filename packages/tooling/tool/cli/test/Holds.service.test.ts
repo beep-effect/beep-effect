@@ -108,7 +108,7 @@ const platformFor = (files: Readonly<Record<string, string>>, spawner: ScriptedS
               fs
                 .makeDirectory(path.dirname(path.join(root, name)), { recursive: true })
                 .pipe(Effect.andThen(fs.writeFileString(path.join(root, name), content))),
-            { discard: true }
+            { concurrency: 1, discard: true }
           );
         })
       ),
@@ -276,7 +276,7 @@ layer(layerFor(ledgerFiles), { timeout: "30 seconds" })("probing the statelyai h
       expect(lastLine(resultHoldsProbe3)).toContain("confirmed verdict: Flipped");
       const ledger = yield* HoldLedger;
       const versions = yield* ledger.currentVersions;
-      const runs = yield* Effect.forEach(versions, ledger.runsFor);
+      const runs = yield* Effect.forEach(versions, ledger.runsFor, { concurrency: 1 });
       expect(A.map(runs, A.length)).toEqual([2]);
     })
   );
@@ -324,10 +324,15 @@ layer(
       const ledger = yield* HoldLedger;
       const probe = yield* HoldProbe;
       const versions = yield* ledger.currentVersions;
-      const errors = yield* Effect.forEach(versions, (version) =>
-        Effect.flip(
-          probe.probe(HoldProbeRequest.make({ proposition: version.proposition, holdVersionId: version.id, commitSha }))
-        )
+      const errors = yield* Effect.forEach(
+        versions,
+        (version) =>
+          Effect.flip(
+            probe.probe(
+              HoldProbeRequest.make({ proposition: version.proposition, holdVersionId: version.id, commitSha })
+            )
+          ),
+        { concurrency: 1 }
       );
       expect(A.map(errors, (error) => error.reason)).toEqual(["usage"]);
     })

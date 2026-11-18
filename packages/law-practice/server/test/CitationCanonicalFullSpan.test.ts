@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import {
   CitationCanonicalFullSpanReplay,
+  checkCitationCanonicalFullSpanConstruction,
   citationCanonicalFullSpanCalls,
   citationCanonicalFullSpanReplayLayer,
   prepareCitationCanonicalFullSpanReplay,
@@ -23,6 +24,9 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
     it.layer(citationCanonicalFullSpanReplayLayer("bun"), { concurrent: false, timeout: "120 seconds" })(
       "recomputes all thirteen original full-span equalities on bun",
       (it) => {
+        it.effect("installs the stage tree once at engine construction", () =>
+          CitationCanonicalFullSpanReplay.use(checkCitationCanonicalFullSpanConstruction)
+        );
         for (const index of A.range(0, citationCanonicalFullSpanCalls - 1)) {
           it.effect(
             `recomputes original call ${index + 1} of ${citationCanonicalFullSpanCalls}`,

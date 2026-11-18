@@ -38,7 +38,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         yield* Effect.forEach(
           [binDir, repoRoot, workingDirectory, home],
           (directory) => fs.makeDirectory(directory, { recursive: true }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
         yield* writeExecutable(
           path.join(binDir, "git"),
@@ -136,7 +136,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
             "\n"
           )
         );
-        const before = yield* Effect.forEach(links, (name) => fs.stat(path.join(repoRoot, ".repos", name)));
+        const before = yield* Effect.forEach(links, (name) => fs.stat(path.join(repoRoot, ".repos", name)), {
+          concurrency: 1,
+        });
         const second = yield* run();
         expect(second.stderr).toBe("");
         expect(second.stdout).not.toContain("cloning");
@@ -144,7 +146,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         yield* assertLinks();
         const readFileString2 = yield* fs.readFileString(gitLog);
         expect(readFileString2).toBe(clones);
-        const forEach3 = yield* Effect.forEach(links, (name) => fs.stat(path.join(repoRoot, ".repos", name)));
+        const forEach3 = yield* Effect.forEach(links, (name) => fs.stat(path.join(repoRoot, ".repos", name)), {
+          concurrency: 1,
+        });
         expect(forEach3).toEqual(before);
 
         // A linked worktree has a .git file; even dirty content must survive.

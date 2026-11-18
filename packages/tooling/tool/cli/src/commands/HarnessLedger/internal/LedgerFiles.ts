@@ -85,14 +85,18 @@ export const readLedgerRows = Effect.fn("HarnessLedger.readLedgerRows")(function
         .readFileString(file)
         .pipe(Effect.mapError(HarnessLedgerIoError.wrap(`Failed to read ${file}.`)));
       const lines = pipe(text, Str.split("\n"), A.map(Str.trim), A.filter(Str.isNonEmpty));
-      return yield* Effect.forEach(lines, (line, index) =>
-        HarnessLedgerRow.decodeJsonEffect(line).pipe(
-          Effect.mapError(
-            HarnessLedgerIoError.wrap(`harness-ledger/rows/${name}:${index + 1} is not a HarnessLedgerRow.`)
-          )
-        )
+      return yield* Effect.forEach(
+        lines,
+        (line, index) =>
+          HarnessLedgerRow.decodeJsonEffect(line).pipe(
+            Effect.mapError(
+              HarnessLedgerIoError.wrap(`harness-ledger/rows/${name}:${index + 1} is not a HarnessLedgerRow.`)
+            )
+          ),
+        { concurrency: 1 }
       );
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.flatten(perFile);
 });
@@ -119,34 +123,41 @@ export const appendLedgerRows = Effect.fn("HarnessLedger.appendLedgerRows")(func
   yield* fs
     .makeDirectory(dir, { recursive: true })
     .pipe(Effect.mapError(HarnessLedgerIoError.wrap(`Failed to create ${dir}.`)));
-  const encoded = yield* Effect.forEach(rows, (row) =>
-    HarnessLedgerRow.encodeJsonEffect(row).pipe(
-      Effect.mapBoth({
-        onFailure: HarnessLedgerIoError.wrap(`Failed to encode ledger row ${row.rowId}.`),
-        onSuccess: (line) => [ledgerMonthOf(row.createdAt), line] as const,
-      })
-    )
+  const encoded = yield* Effect.forEach(
+    rows,
+    (row) =>
+      HarnessLedgerRow.encodeJsonEffect(row).pipe(
+        Effect.mapBoth({
+          onFailure: HarnessLedgerIoError.wrap(`Failed to encode ledger row ${row.rowId}.`),
+          onSuccess: (line) => [ledgerMonthOf(row.createdAt), line] as const,
+        })
+      ),
+    { concurrency: 1 }
   );
   const months = pipe(
     encoded,
     A.map(([month]) => month),
     A.dedupe
   );
-  const written = yield* Effect.forEach(months, (month) => {
-    const file = path.join(dir, `${month}.jsonl`);
-    const text = pipe(
-      encoded,
-      A.filter(([rowMonth]) => rowMonth === month),
-      A.map(([, line]) => `${line}\n`),
-      A.join("")
-    );
-    return fs
-      .writeFileString(file, text, { flag: "a" })
-      .pipe(
-        Effect.as(`harness-ledger/rows/${month}.jsonl`),
-        Effect.mapError(HarnessLedgerIoError.wrap(`Failed to append ${file}.`))
+  const written = yield* Effect.forEach(
+    months,
+    (month) => {
+      const file = path.join(dir, `${month}.jsonl`);
+      const text = pipe(
+        encoded,
+        A.filter(([rowMonth]) => rowMonth === month),
+        A.map(([, line]) => `${line}\n`),
+        A.join("")
       );
-  });
+      return fs
+        .writeFileString(file, text, { flag: "a" })
+        .pipe(
+          Effect.as(`harness-ledger/rows/${month}.jsonl`),
+          Effect.mapError(HarnessLedgerIoError.wrap(`Failed to append ${file}.`))
+        );
+    },
+    { concurrency: 1 }
+  );
   return written;
 });
 

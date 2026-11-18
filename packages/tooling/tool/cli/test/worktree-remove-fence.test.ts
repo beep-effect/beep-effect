@@ -440,7 +440,7 @@ describe("worktree remove archive fence", { concurrent: false }, () => {
                   ? Effect.forEach(
                       directories,
                       (directory) => fs.writeFileString(path.join(directory, "late-data.txt"), "uncaptured data"),
-                      { discard: true }
+                      { concurrency: 1, discard: true }
                     )
                   : Effect.void
               ),

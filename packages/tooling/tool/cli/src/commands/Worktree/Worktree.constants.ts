@@ -35,3 +35,26 @@ export const WORKTREES_ROOT_SUFFIX = "-worktrees";
  * @since 0.0.0
  */
 export const CLAUDE_WORKTREES_RELATIVE_ROOT = ".claude/worktrees";
+
+/**
+ * Where T3 Code creates its lane worktrees, relative to the home directory.
+ *
+ * **Details**
+ *
+ * T3 Code adds each lane as a linked worktree of the clone it was opened on,
+ * at `<home>/.t3/worktrees/<clone name>/<lane>`, outside the projects
+ * directory. The removal fence treats `<home>/.t3/worktrees/<clone name>` as a
+ * worktree root of that clone, so a T3 lane can retire itself.
+ *
+ * **Example** (Locate a T3 lane)
+ *
+ * ```ts
+ * import { T3_WORKTREES_RELATIVE_ROOT } from "@beep/repo-cli/commands/Worktree"
+ *
+ * console.log(`/home/user/${T3_WORKTREES_RELATIVE_ROOT}/beep-effect/lane`) // /home/user/.t3/worktrees/beep-effect/lane
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const T3_WORKTREES_RELATIVE_ROOT = ".t3/worktrees";

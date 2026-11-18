@@ -413,7 +413,10 @@ export class FinalCheckRoute extends S.Opaque<FinalCheckRoute, { readonly brand:
  *
  * `complete` is true only when every {@link FinalCheckGate} ran or was skipped
  * with a reason; a `--gates` subset run is never complete and never admits
- * the flip. `gateSetDigest` records the gate set the run replayed; a receipt
+ * the flip. A full run writes `.beep/yeet/final-check/<head>.json`; a subset
+ * run writes the same schema to its own file under
+ * `.beep/yeet/final-check/subsets/<head>/` and leaves the head receipt as it
+ * was. `gateSetDigest` records the gate set the run replayed; a receipt
  * whose digest differs from the current gate set, or a `yeet-final-check/v1`
  * receipt with no digest, never admits the flip on its own head or through a
  * carry.

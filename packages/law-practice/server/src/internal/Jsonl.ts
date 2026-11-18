@@ -34,7 +34,8 @@ const decodeNumberedLines = <Row, E>(
       A.map(lines, (content, index) => ({ content, lineNumber: index + 1 })),
       ({ content }) => Str.isNonEmpty(Str.trim(content))
     ),
-    ({ content, lineNumber }) => decodeLine(content, lineNumber)
+    ({ content, lineNumber }) => decodeLine(content, lineNumber),
+    { concurrency: 1 }
   );
 
 /**

@@ -98,10 +98,9 @@ const COVERAGE_NOOP_PREFIXES = [".changeset/", "docs/", "explorations/", "goals/
  */
 export const COVERAGE_GENERATED_STANDARDS_OWNER_ROWS: ReadonlyArray<readonly [string, string, string]> = [
   ["standards/instrumentation-catalog", "standards/instrumentation-catalog/**", "@beep/repo-cli"],
-  ["standards/jsdoc-documentation.inventory.jsonc", "standards/jsdoc-documentation.inventory.jsonc", "@beep/repo-cli"],
   ["standards/schema-first.inventory.jsonc", "standards/schema-first.inventory.jsonc", "@beep/repo-cli"],
   ["standards/policy-tools.fingerprint.json", "standards/policy-tools.fingerprint.json", "@beep/repo-cli"],
-  ["standards/cache-qualification-baseline.json", "standards/cache-qualification-baseline.json", "@beep/repo-cli"],
+  ["standards/cache-baseline", "standards/cache-baseline/**", "@beep/repo-cli"],
   ["standards/fallow.boundaries.generated.jsonc", "standards/fallow.boundaries.generated.jsonc", "@beep/repo-cli"],
   [
     "standards/check-census.regression-baseline.jsonc",
@@ -181,7 +180,7 @@ export const COVERAGE_TOOLING_INPUT_OWNER_ROWS: ReadonlyArray<readonly [string, 
  * import { COVERAGE_SCANNED_OWNER_ROWS } from "@beep/repo-cli/test/Quality"
  * import * as A from "effect/Array"
  *
- * console.log(A.dedupe(A.map(COVERAGE_SCANNED_OWNER_ROWS, ([readerPath]) => readerPath)).length) // 12
+ * console.log(A.dedupe(A.map(COVERAGE_SCANNED_OWNER_ROWS, ([readerPath]) => readerPath)).length) // 11
  * ```
  *
  * @category constants

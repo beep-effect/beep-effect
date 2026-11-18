@@ -256,25 +256,28 @@ describe("CI commands", () => {
           const runDirectory = path.join(root, ".turbo", "runs");
 
           yield* fs.makeDirectory(runDirectory, { recursive: true });
-          yield* Effect.forEach(["build", "coverage"], (task, index) =>
-            fs.writeFileString(
-              path.join(runDirectory, `${task}.json`),
-              encodeJson({
-                execution: {
-                  attempted: 1,
-                  command: `turbo run ${task}`,
-                  endTime: 2_000 + index,
-                  startTime: index,
-                  success: 1,
-                },
-                tasks: [
-                  {
-                    execution: { endTime: 1_500, startTime: 500 },
-                    taskId: `@beep/repo-cli#${task}`,
+          yield* Effect.forEach(
+            ["build", "coverage"],
+            (task, index) =>
+              fs.writeFileString(
+                path.join(runDirectory, `${task}.json`),
+                encodeJson({
+                  execution: {
+                    attempted: 1,
+                    command: `turbo run ${task}`,
+                    endTime: 2_000 + index,
+                    startTime: index,
+                    success: 1,
                   },
-                ],
-              })
-            )
+                  tasks: [
+                    {
+                      execution: { endTime: 1_500, startTime: 500 },
+                      taskId: `@beep/repo-cli#${task}`,
+                    },
+                  ],
+                })
+              ),
+            { concurrency: 1 }
           );
 
           yield* appendTurboSummary(O.none(), true).pipe(

@@ -81,16 +81,16 @@ const program = Effect.gen(function* () {
   const report = yield* S.decodeEffect(S.fromJsonString(Corpus), { onExcessProperty: "error" })(
     new TextDecoder("utf-8", { fatal: true }).decode(bytes)
   );
-  const producer = yield* Effect.tryPromise(() =>
-    Bun.file(new URL("./probe-cleaner-pipeline.py", import.meta.url)).bytes()
-  );
+  // probe-cleaner-pipeline.py was removed with the repository's Python (goal python-free-repo). Its
+  // digest is pinned from the recovery commit: `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/probe-cleaner-pipeline.py`.
+  const producerSha256 = "15d13496e4a904732851e5766173ca78b67fee299cc16346ec3b95c4c0b0cdc7";
   const operations = yield* Effect.tryPromise(() =>
     Bun.file(
       process.argv[3] ??
         new URL("../../../packages/law-practice/use-cases/test/fixtures/eyecite/operation-cases.json", import.meta.url)
     ).bytes()
   );
-  yield* require(sha(producer) === report.producerSha256 && sha(operations) === operationSha);
+  yield* require(producerSha256 === report.producerSha256 && sha(operations) === operationSha);
   yield* require(report.customScenes.length === 51 && new Set(report.customScenes).size === 51);
   const expectedNames = [
     ...A.flatMap(A.range(0, 6), (text) => A.map(A.range(0, 155), (sequence) => `named:${text}:${sequence}`)),

@@ -221,7 +221,7 @@ const requirePromotionClear = Effect.fn("agents.professional_runtime.require_pro
             })
           )
         ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 
   // The first pass establishes policy clearance before acceptance work. The

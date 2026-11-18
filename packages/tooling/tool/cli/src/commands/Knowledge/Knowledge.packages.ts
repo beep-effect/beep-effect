@@ -246,7 +246,9 @@ export const deriveKnowledgePackages = Effect.fn("KnowledgeDoctorDomain.packages
     oracle.trackedEntries,
     (entry) => isRegularBlob(entry.mode) && isPackageManifestEntry(entry.path) && isWorkspaceManifest(globs, entry.path)
   );
-  const forEach1 = yield* Effect.forEach(manifests, (entry) => readWorkspacePackage(oracle, entry.path));
+  const forEach1 = yield* Effect.forEach(manifests, (entry) => readWorkspacePackage(oracle, entry.path), {
+    concurrency: 1,
+  });
   return A.getSomes(forEach1);
 });
 

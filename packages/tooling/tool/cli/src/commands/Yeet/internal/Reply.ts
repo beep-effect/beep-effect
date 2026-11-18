@@ -813,6 +813,9 @@ const replyGhOutput = (
   args: ReadonlyArray<string>,
   label: string
 ): Effect.Effect<string, YeetCommandError, ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom> =>
+  // KEEP funnel (W7 census Y79): `replyGhOutput` runs the KEEP (D-13) `gh repo view` read; the call site
+  // records its reason.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP funnel (W7 census Y79), reason above
   ghOutput({ args, cwd: context.repoRoot, label, onFailure: replyGhFailure });
 
 /**

@@ -407,7 +407,8 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal merge-time comp
           O.map(factOf(receipt, "Lint"), (fact) => fact.conclusion),
           conclusion
         );
-      })
+      }),
+      { concurrency: 1 }
     )
   );
   it.effect("the newest run on the accepted head binds, whenever it ran", () =>
@@ -493,7 +494,8 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal merge-time comp
       Effect.fn("CompletionEvidenceTest.networkFailure")(function* (failing) {
         const receipt = yield* observe({ fail: Str.includes(failing) });
         expect(receipt.outcome).toBe("unknown");
-      })
+      }),
+      { concurrency: 1 }
     )
   );
   it.effect("a deleted ruleset without recoverable history is unknown", () =>
@@ -564,9 +566,11 @@ it.layer(ReceiptStoreTestLayer, { timeout: "30 seconds" })("goal merge-time comp
             });
             expect(receipt.outcome).toBe("unknown");
             expect(gapsOf(receipt)).toContain("inventory-mismatch");
-          })
+          }),
+          { concurrency: 1 }
         );
-      })
+      }),
+      { concurrency: 1 }
     )
   );
   it.effect("a deleted ruleset whose history GitHub still serves is recovered", () =>

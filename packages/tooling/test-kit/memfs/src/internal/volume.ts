@@ -3596,7 +3596,9 @@ const compileGlobPattern: {
     if (segments.includes("") || segments.includes(".") || segments.includes("..")) {
       return yield* argumentError(method, "pattern must not contain empty or dot path segments");
     }
-    const compiled = yield* Effect.forEach(segments, (segment) => parseGlobSegment(method, segment));
+    const compiled = yield* Effect.forEach(segments, (segment) => parseGlobSegment(method, segment), {
+      concurrency: 1,
+    });
     return { segments: compiled, directoryOnly } satisfies CompiledGlobPattern;
   })
 );
@@ -3608,7 +3610,9 @@ const compileGlobPatterns: {
   2,
   Effect.fnUntraced(function* (method: string, pattern: string) {
     const expanded = yield* expandBraces(method, pattern);
-    return yield* Effect.forEach(expanded, (alternative) => compileGlobPattern(method, alternative));
+    return yield* Effect.forEach(expanded, (alternative) => compileGlobPattern(method, alternative), {
+      concurrency: 1,
+    });
   })
 );
 
@@ -3797,8 +3801,10 @@ const glob = (volume: Volume) =>
     options?: { readonly root?: string | undefined; readonly exclude?: ReadonlyArray<string> | undefined }
   ) {
     const includes = yield* compileGlobPatterns("glob", pattern);
-    const excludes = yield* Effect.forEach(options?.exclude ?? [], (excluded) =>
-      compileGlobPatterns("glob", excluded)
+    const excludes = yield* Effect.forEach(
+      options?.exclude ?? [],
+      (excluded) => compileGlobPatterns("glob", excluded),
+      { concurrency: 1 }
     ).pipe(Effect.map((patterns) => patterns.flat()));
     const rootPath = options?.root ?? "/";
     return yield* volume.withState(

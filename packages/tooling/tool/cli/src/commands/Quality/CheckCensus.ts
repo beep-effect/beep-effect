@@ -850,10 +850,13 @@ const hasCheckOverlay = Effect.fn("CheckCensus.hasCheckOverlay")(function* (
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const [overlay, build] = yield* Effect.all([
-    fs.exists(path.join(dir, "tsconfig.check.json")).pipe(Effect.orElseSucceed(thunkFalse)),
-    fs.exists(path.join(dir, "tsconfig.json")).pipe(Effect.orElseSucceed(thunkFalse)),
-  ]);
+  const [overlay, build] = yield* Effect.all(
+    [
+      fs.exists(path.join(dir, "tsconfig.check.json")).pipe(Effect.orElseSucceed(thunkFalse)),
+      fs.exists(path.join(dir, "tsconfig.json")).pipe(Effect.orElseSucceed(thunkFalse)),
+    ],
+    { concurrency: 1 }
+  );
 
   return overlay && build;
 });

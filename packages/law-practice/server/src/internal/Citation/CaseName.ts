@@ -2,6 +2,7 @@
  * Free Law Project, BSD-2-Clause; see THIRD_PARTY_NOTICES.md.
  * @internal @packageDocumentation @since 0.0.0
  */
+
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationPythonUnicodeStorage } from "@beep/law-practice-use-cases/server";
 import * as A from "effect/Array";
@@ -12,19 +13,21 @@ import {
   CitationCaseNameProcessInput,
   CitationCaseNameProcessPatch,
   citationUnchangedCaseNamePatch,
-  copyCitationCaseNameProcessConfiguration,
-  processCitationCaseName,
+  installCitationCaseNameProcess,
+  verifyCitationCaseNameProcessConfiguration,
 } from "./CaseNameProcess.ts";
 import {
   CitationCaseNameScanConfiguration,
   CitationCaseNameScanFailure,
   CitationCaseNameScanInput,
   CitationCaseNameScanState,
-  copyCitationCaseNameScanConfiguration,
-  scanCitationCaseName,
+  installCitationCaseNameScan,
+  verifyCitationCaseNameScanConfiguration,
 } from "./CaseNameScan.ts";
-import { makeCitationMetadataStage } from "./MetadataComposition.ts";
+import { ownedField } from "./ConfigurationOwnership.ts";
+import { makeCitationMetadataStage, ownCitationStageCall } from "./MetadataComposition.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/CaseName");
@@ -60,7 +63,6 @@ export class CitationCaseNameResult extends S.Opaque<CitationCaseNameResult, { r
     })
   )
 ) {}
-const invalid = () => CitationCaseNameScanFailure.make({ reason: "invalid-configuration" });
 const noneText = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array([78, 111, 110, 101]) });
 /** Project the built-in None token spelling without changing native text values.
  * @internal @category utilities @since 0.0.0
@@ -75,52 +77,59 @@ const CaseNameInputValue = S.toType(CitationCaseNameInput).pipe(
 /** Run the built-in name helper inside an existing captured operation.
  * @internal @category operations @since 0.0.0
  */
-export const findCitationPlainCaseName = Effect.fn("Citation.findPlainCaseName")(function* (
+export const installCitationPlainCaseName = Effect.fn("Citation.installPlainCaseName")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationCaseNameConfiguration,
-  raw: unknown
-) {
-  const request = yield* S.decodeUnknownEffect(CaseNameInputValue)(raw).pipe(
-    Effect.mapError(() => CitationCaseNameScanFailure.make({ reason: "invalid-input" }))
-  );
-  const state = yield* scanCitationCaseName(limits, runtime, config.scan, request).pipe(
-    Effect.catchTag("CitationCaseNamePredicateFailure", () =>
-      Effect.fail(CitationCaseNameScanFailure.make({ reason: "empty-word" }))
-    )
-  );
-  if (state.candidateCaseName === null || state.candidateCaseName.bytes.length === 0)
-    return { state, patch: citationUnchangedCaseNamePatch };
-  let hasV = false;
-  if (state.vTokenIndex !== null) {
-    const word = yield* Effect.fromOption(A.get(request.words, state.vTokenIndex), () =>
-      CitationCaseNameScanFailure.make({ reason: "index-out-of-range" })
-    );
-    if (word.data === null) return yield* CitationCaseNameScanFailure.make({ reason: "invalid-token-length" });
-    hasV = word.data.bytes.length !== 0;
-  }
-  const patch = yield* processCitationCaseName(limits, runtime, config.process, {
-    words: A.map(request.words, (word) => citationCaseNameWordText(word.data)),
-    index: request.index,
-    spanStart: request.spanStart,
-    short: request.short,
-    candidateCaseName: state.candidateCaseName,
-    hasV,
-    startIndex: state.startIndex,
-    preCiteYear: state.preCiteYear,
-  });
-  return { state, patch };
-});
-/** Copy trusted helper configuration for enclosing metadata composition.
- * @internal @category operations @since 0.0.0
- */
-export const copyCitationCaseNameConfiguration = Effect.fn("Citation.ownCaseNameConfiguration")(function* (
-  limits: CitationEngineLimits,
   config: CitationCaseNameConfiguration
 ) {
-  const scan = yield* copyCitationCaseNameScanConfiguration(limits, config.scan);
-  const process = yield* copyCitationCaseNameProcessConfiguration(limits, config.process);
+  const scan = yield* installCitationCaseNameScan(limits, runtime, config.scan);
+  const processName = yield* installCitationCaseNameProcess(limits, runtime, config.process);
+  return Effect.fn("Citation.findPlainCaseName")(function* (raw: unknown) {
+    const request = yield* S.decodeUnknownEffect(CaseNameInputValue)(raw).pipe(
+      Effect.mapError(() => CitationCaseNameScanFailure.make({ reason: "invalid-input" }))
+    );
+    const state = yield* scan(request).pipe(
+      Effect.catchTag("CitationCaseNamePredicateFailure", () =>
+        Effect.fail(CitationCaseNameScanFailure.make({ reason: "empty-word" }))
+      )
+    );
+    if (state.candidateCaseName === null || state.candidateCaseName.bytes.length === 0)
+      return { state, patch: citationUnchangedCaseNamePatch };
+    let hasV = false;
+    if (state.vTokenIndex !== null) {
+      const word = yield* Effect.fromOption(A.get(request.words, state.vTokenIndex), () =>
+        CitationCaseNameScanFailure.make({ reason: "index-out-of-range" })
+      );
+      if (word.data === null) return yield* CitationCaseNameScanFailure.make({ reason: "invalid-token-length" });
+      hasV = word.data.bytes.length !== 0;
+    }
+    const patch = yield* processName({
+      words: A.map(request.words, (word) => citationCaseNameWordText(word.data)),
+      index: request.index,
+      spanStart: request.spanStart,
+      short: request.short,
+      candidateCaseName: state.candidateCaseName,
+      hasV,
+      startIndex: state.startIndex,
+      preCiteYear: state.preCiteYear,
+    });
+    return { state, patch };
+  });
+});
+/** Authenticate owned helper configuration for enclosing metadata composition.
+ * @internal @category operations @since 0.0.0
+ */
+export const verifyCitationCaseNameConfiguration = Effect.fn("Citation.ownCaseNameConfiguration")(function* (
+  limits: CitationEngineLimits,
+  config: CitationOwned<CitationCaseNameConfiguration>
+) {
+  const scan = yield* verifyCitationCaseNameScanConfiguration(limits, ownedField(config, "scan"));
+  const process = yield* verifyCitationCaseNameProcessConfiguration(limits, ownedField(config, "process"));
   return CitationCaseNameConfiguration.make({ scan, process });
+});
+const ownPlainCaseName = ownCitationStageCall({
+  verify: verifyCitationCaseNameConfiguration,
+  install: installCitationPlainCaseName,
 });
 /** Both phases share operation admission, deadline, native Scope and text budget;
  * each invocation initializes fresh source state and extract requires R=never.
@@ -128,9 +137,7 @@ export const copyCitationCaseNameConfiguration = Effect.fn("Citation.ownCaseName
  */
 export const makeCitationCaseName = makeCitationMetadataStage({
   method: "extract",
-  schema: S.toType(CitationCaseNameConfiguration),
-  invalid,
-  own: copyCitationCaseNameConfiguration,
-  prepare: findCitationPlainCaseName,
+  own: ownPlainCaseName,
+  prepare: (_limits, _runtime, run: Effect.Success<ReturnType<typeof ownPlainCaseName>>, raw) => run(raw),
   project: (result, reservedUnits) => CitationCaseNameResult.make({ ...result, reservedUnits }),
 });

@@ -212,7 +212,7 @@ const renderArray = Effect.fn("Observability.renderArray")(function* (key: strin
   if (A.isReadonlyArrayEmpty(values)) {
     return `  "${key}": []`;
   }
-  const lines = yield* Effect.forEach(values, (value) => encodeCompactJson(value));
+  const lines = yield* Effect.forEach(values, (value) => encodeCompactJson(value), { concurrency: 1 });
   return `  "${key}": [\n${A.join(
     A.map(lines, (line) => `    ${line}`),
     ",\n"
@@ -328,7 +328,8 @@ export const renderShardText = Effect.fn("Observability.renderShardText")(functi
       ["generatedBy", encoded.generatedBy],
       ["package", encoded.package],
     ] as const,
-    ([key, value]) => Effect.map(encodeCompactJson(value), (json) => `  "${key}": ${json}`)
+    ([key, value]) => Effect.map(encodeCompactJson(value), (json) => `  "${key}": ${json}`),
+    { concurrency: 1 }
   );
   const attributes = yield* renderArray("attributes", encoded.attributes);
   const instruments = yield* renderArray("instruments", encoded.instruments);

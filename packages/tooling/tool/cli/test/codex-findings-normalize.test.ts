@@ -98,7 +98,7 @@ describe("codex findings identity assignment", () => {
     const c = captureFinding({ codexId: hex("cc", 32), severity: "Medium" });
     const encode = encodeUnknownJsonSync;
 
-    return Effect.all([planFrom(payloadOf([a, b, c])), planFrom(payloadOf([c, a, b]))]).pipe(
+    return Effect.all([planFrom(payloadOf([a, b, c])), planFrom(payloadOf([c, a, b]))], { concurrency: 1 }).pipe(
       Effect.map(([first, second]) => {
         expect(encode(first)).toBe(encode(second));
       })

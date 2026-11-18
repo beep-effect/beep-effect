@@ -83,8 +83,10 @@ it.layer(Layer.mergeAll(NodeServices.layer, Digest.layerWebCrypto), { timeout: "
         yield* fs.writeFileString(path.join(directory, "ubuntu.sources"), "Types: deb\n");
         const spawner = ScriptedSpawner.make((command) => ({ exit: 0, stdout: command === "ls" ? "total 0\n" : "" }));
         yield* runCi(["ci", "prune-apt", directory]).pipe(provideSpawner(spawner));
-        const kept = yield* Effect.forEach(["third-party.list", "ubuntu.sources"], (name) =>
-          fs.exists(path.join(directory, name))
+        const kept = yield* Effect.forEach(
+          ["third-party.list", "ubuntu.sources"],
+          (name) => fs.exists(path.join(directory, name)),
+          { concurrency: 1 }
         );
         expect(kept).toEqual([false, true]);
         yield* runCi(["ci", "prune-apt"]).pipe(provideSpawner(spawner));

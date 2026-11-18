@@ -614,6 +614,6 @@ const readIndexFile = (path: string) =>
 export const readPracticeKgMailIndex = Effect.fn("PracticeKg.readMailIndex")(function* (
   input: PracticeKgMailIndexInput
 ): Effect.fn.Return<PracticeKgMailIndexMessages, PracticeKgProjectionError, FileSystem.FileSystem> {
-  const rows = yield* Effect.forEach(input.paths, readIndexFile);
+  const rows = yield* Effect.forEach(input.paths, readIndexFile, { concurrency: 1 });
   return attributePracticeKgMailIndexRows(input.tables)(A.flatten(rows));
 });

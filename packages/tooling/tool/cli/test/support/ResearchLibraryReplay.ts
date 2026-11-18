@@ -42,7 +42,8 @@ export const fixture = Effect.fn("replay.fixture")(function* (date: string) {
         expectedOccurrences: 1,
         topics: ["ontology"],
       };
-    })
+    }),
+    { concurrency: 1 }
   );
   const sources = A.map(["web", "paper", "github-repository"], (kind, i) => ({
     id: `s${i}`,

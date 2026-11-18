@@ -24,7 +24,6 @@ import {
   ImageCurationOptions,
   MatchPersonOptions,
   NormalizeFilesOptions,
-  PersonMatchDeviceIndexesFromCsv,
   PersonMatchThresholdProfile,
   ProcessFilesOptions,
   SortAndRenameOptions,
@@ -50,7 +49,6 @@ import type { PersonMatchBackend } from "./Files.schemas.ts";
 import type { FilesCommandService } from "./Files.service.ts";
 
 const decodeMatchPersonOptions = S.decodeEffect(MatchPersonOptions);
-const decodePersonMatchDeviceIndexesFromCsv = S.decodeEffect(PersonMatchDeviceIndexesFromCsv);
 
 const runFilesProgram = <A>(
   effect: Effect.Effect<A, FilesCommandError, FilesCommandService>
@@ -113,7 +111,7 @@ const matchPersonOutDirFlag = Flag.Directory("out-dir").pipe(
   Flag.optional
 );
 const matchPersonCacheDirFlag = Flag.Directory("cache-dir").pipe(
-  Flag.withDescription("Optional cache root for isolated Python environments and pinned face-recognition models"),
+  Flag.withDescription("Optional cache root for pinned face-recognition models and generated ONNX graphs"),
   Flag.optional
 );
 const matchPersonBackendFlag = Flag.ChoiceWithValue("backend", [
@@ -121,25 +119,9 @@ const matchPersonBackendFlag = Flag.ChoiceWithValue("backend", [
   ["adaface-kprpe", "adaface-kprpe"],
 ]).pipe(
   Flag.withDescription(
-    "Recognition backend: AdaFace on Linux x64; Buffalo CPU on Linux x64/arm64, macOS x64/arm64, or Windows x64"
+    "Recognition backend: AdaFace on Linux x64; Buffalo CPU on Linux x64/arm64, macOS arm64, or Windows x64"
   ),
   Flag.optional
-);
-const matchPersonComputeFlag = Flag.ChoiceWithValue("compute", [
-  ["auto", "auto"],
-  ["cpu", "cpu"],
-  ["rocm", "rocm"],
-]).pipe(
-  Flag.withDefault("auto"),
-  Flag.withDescription("Compute policy: prefer ROCm when available, require CPU, or require ROCm")
-);
-const matchPersonDevicesFlag = Flag.String("devices").pipe(
-  Flag.withDescription("Optional single ROCm device index, for example 0"),
-  Flag.optional
-);
-const matchPersonBatchSizeFlag = Flag.Int("batch-size").pipe(
-  Flag.withDefault(32),
-  Flag.withDescription("Positive face-embedding inference batch size")
 );
 const archiveDirFlag = Flag.Directory("archive-dir").pipe(
   Flag.withDescription("Directory that receives archived poor image candidates")
@@ -410,20 +392,6 @@ const resolveMatchPersonThresholdProfile = (
   });
 };
 
-const decodeMatchPersonDevices = (
-  devices: O.Option<string>
-): Effect.Effect<O.Option<PersonMatchDeviceIndexesFromCsv>, FilesCommandError> =>
-  O.match(devices, {
-    onNone: () => Effect.succeed(O.none<PersonMatchDeviceIndexesFromCsv>()),
-    onSome: (value) =>
-      decodePersonMatchDeviceIndexesFromCsv(value).pipe(
-        Effect.asSome,
-        FilesCommandError.mapError(
-          `Invalid --devices value "${value}"; expected exactly one non-negative device index such as 0.`
-        )
-      ),
-  });
-
 const filesAuditImagesCommand = Command.make(
   "audit-images",
   {
@@ -610,16 +578,13 @@ const filesCurateImagesCommand = Command.make(
   Command.provide(FilesCommandServiceLive)
 );
 
-const filesMatchPersonCommand = Command.make(
+const filesMatchPersonCommandDefinition = Command.make(
   "match-person",
   {
     acceptModelLicense: matchPersonAcceptModelLicenseFlag,
     backend: matchPersonBackendFlag,
-    batchSize: matchPersonBatchSizeFlag,
     cacheDir: matchPersonCacheDirFlag,
-    compute: matchPersonComputeFlag,
     detectionThreshold: matchPersonDetectionThresholdFlag,
-    devices: matchPersonDevicesFlag,
     dir: matchPersonDirFlag,
     json: jsonFlag,
     manifest: matchPersonManifestFlag,
@@ -634,11 +599,8 @@ const filesMatchPersonCommand = Command.make(
   Effect.fn(function* ({
     acceptModelLicense,
     backend,
-    batchSize,
     cacheDir,
-    compute,
     detectionThreshold,
-    devices: deviceCsv,
     dir,
     json,
     manifest,
@@ -655,7 +617,6 @@ const filesMatchPersonCommand = Command.make(
     const resolvedBackend = O.getOrElse(backend, () =>
       defaultPersonMatchBackendForPlatform(hostPlatform, hostArchitecture)
     );
-    const devices = yield* decodeMatchPersonDevices(deviceCsv);
     const thresholds = resolveMatchPersonThresholdProfile(
       resolvedBackend,
       detectionThreshold,
@@ -669,11 +630,11 @@ const filesMatchPersonCommand = Command.make(
     const options = yield* decodeMatchPersonOptions({
       acceptModelLicense,
       backend: resolvedBackend,
-      batchSize,
+      batchSize: 1,
       cacheDir,
-      compute,
       detectionThreshold: thresholds.detectionThreshold,
-      devices,
+      devices: O.none(),
+      compute: "cpu",
       dir,
       json,
       manifest,
@@ -688,10 +649,28 @@ const filesMatchPersonCommand = Command.make(
     }).pipe(FilesCommandError.mapError("Invalid match-person options."));
     yield* runFilesProgram(matchPerson(options));
   })
-).pipe(
-  Command.withDescription("Match one trusted person across a local photo collection with a pinned local backend"),
-  Command.provide(FilesCommandServiceLive)
-);
+).pipe(Command.withDescription("Match one trusted person across a local photo collection with a pinned local backend"));
+
+/**
+ * Build the matcher command with an explicit service layer for runtime composition and tests.
+ *
+ * **Example** (Build the live command)
+ *
+ * ```ts
+ * import { makeFilesMatchPersonCommand, FilesCommandServiceLive } from "@beep/repo-cli/test/Files"
+ * const command = makeFilesMatchPersonCommand(FilesCommandServiceLive)
+ * console.log(command)
+ * ```
+ *
+ * @param serviceLayer - Files command service implementation to provide.
+ * @returns The match-person subcommand.
+ * @internal
+ * @category commands
+ * @since 0.0.0
+ */
+export const makeFilesMatchPersonCommand = (serviceLayer: typeof FilesCommandServiceLive) =>
+  filesMatchPersonCommandDefinition.pipe(Command.provide(serviceLayer));
+const filesMatchPersonCommand = filesMatchPersonCommandDefinition.pipe(Command.provide(FilesCommandServiceLive));
 
 const filesNormalizeCommand = Command.make(
   "normalize",

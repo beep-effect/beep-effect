@@ -10,13 +10,10 @@ import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import { Sha256Hex } from "@beep/schema/Sha256";
-import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as SchemaTransformation from "effect/SchemaTransformation";
-import * as Str from "effect/String";
 import type * as AST from "effect/SchemaAST";
 
 const $I = $RepoCliId.create("commands/Files/internal/MatchPerson.schemas");
@@ -529,7 +526,11 @@ export type PersonMatchReferenceRejectionReason = typeof PersonMatchReferenceRej
  * @category schemas
  * @since 0.0.0
  */
-export const PersonMatchEntryReason = LiteralKit(["aligner-confidence-failed", "image-decode-failed"]).pipe(
+export const PersonMatchEntryReason = LiteralKit([
+  "aligner-confidence-failed",
+  "image-decode-failed",
+  "invalid-embedding",
+]).pipe(
   $I.annoteSchema("PersonMatchEntryReason", {
     description: "A machine-readable diagnostic reason attached to a candidate-image entry.",
   })
@@ -799,65 +800,11 @@ export const PersonMatchDeviceIndexes = S.UniqueArray(S.Natural).pipe(
  */
 export type PersonMatchDeviceIndexes = typeof PersonMatchDeviceIndexes.Type;
 
-const PersonMatchDeviceIndexFromString = S.NonEmptyString.pipe(
-  S.decodeTo(S.Finite, SchemaTransformation.numberFromString),
-  S.decodeTo(S.Natural),
-  $I.annoteSchema("PersonMatchDeviceIndexFromString", {
-    description: "A non-empty decimal string decoded into a non-negative integer device index.",
-  })
-);
-
 const PersonMatchRequestedDeviceIndexes = S.Tuple([S.Natural]).pipe(
   $I.annoteSchema("PersonMatchRequestedDeviceIndexes", {
     description: "Exactly one explicitly requested ROCm device index.",
   })
 );
-
-const PersonMatchDeviceIndexList = S.Tuple([PersonMatchDeviceIndexFromString]).pipe(
-  $I.annoteSchema("PersonMatchDeviceIndexList", {
-    description: "Exactly one ROCm device index decoded from its decimal string.",
-  })
-);
-
-/**
- * Decodes a CLI value into exactly one requested ROCm device index.
- *
- * **Example** (Decode one device index)
- *
- * ```ts
- * import { PersonMatchDeviceIndexesFromCsv } from "@beep/repo-cli/commands/Files"
- * import * as O from "effect/Option"
- * import * as S from "effect/Schema"
- *
- * const decoded = S.decodeUnknownOption(PersonMatchDeviceIndexesFromCsv)("0")
- *
- * console.log(O.getOrNull(decoded))
- * // [0]
- * ```
- *
- * @category decoding
- * @since 0.0.0
- */
-export const PersonMatchDeviceIndexesFromCsv = S.NonEmptyString.pipe(
-  S.decodeTo(
-    PersonMatchDeviceIndexList,
-    SchemaTransformation.transform<readonly [string], string>({
-      decode: (value) => [Str.trim(value)],
-      encode: A.headNonEmpty,
-    })
-  ),
-  $I.annoteSchema("PersonMatchDeviceIndexesFromCsv", {
-    description: "A CLI value decoded into exactly one explicitly requested ROCm device index.",
-  })
-);
-
-/**
- * A singleton ROCm device-index tuple decoded from a CLI value.
- *
- * @category type-level
- * @since 0.0.0
- */
-export type PersonMatchDeviceIndexesFromCsv = typeof PersonMatchDeviceIndexesFromCsv.Type;
 
 /**
  * Command inputs for a local person-matching run.
@@ -897,11 +844,11 @@ export class MatchPersonOptions extends S.Opaque<MatchPersonOptions, { readonly 
     outDir: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
     cacheDir: S.Option(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(O.none<string>()))),
     backend: PersonMatchBackend,
-    compute: PersonMatchComputePolicy.pipe(S.withConstructorDefault(Effect.succeed("auto"))),
+    compute: PersonMatchComputePolicy.pipe(S.withConstructorDefault(Effect.succeed("cpu"))),
     devices: S.Option(PersonMatchRequestedDeviceIndexes).pipe(
       S.withConstructorDefault(Effect.succeed(O.none<typeof PersonMatchRequestedDeviceIndexes.Type>()))
     ),
-    batchSize: PosInt.pipe(S.withConstructorDefault(Effect.succeed(PosInt.make(32)))),
+    batchSize: PosInt.pipe(S.withConstructorDefault(Effect.succeed(PosInt.make(1)))),
     thresholdSource: PersonMatchThresholdSource.pipe(S.withConstructorDefault(Effect.succeed("calibrated-default"))),
     recursive: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     detectionThreshold: PersonMatchConfidence,
@@ -995,7 +942,7 @@ export class PersonMatchModelComponent extends S.Opaque<PersonMatchModelComponen
 ) {}
 
 /**
- * Describes one runtime device that actually participated in inference.
+ * Describes a device in saved runtime provenance.
  *
  * **Example** (Create a ROCm device record)
  *
@@ -1050,7 +997,7 @@ export class PersonMatchRuntimeDevice extends S.Opaque<PersonMatchRuntimeDevice,
 export class PersonMatchOnnxRuntime extends S.Opaque<PersonMatchOnnxRuntime, { readonly brand: unique symbol }>()(
   S.Struct({
     framework: S.tag("onnxruntime"),
-    packageVersion: S.tag("1.23.2"),
+    packageVersion: S.NonEmptyString,
     actualCompute: S.tag("cpu"),
     precision: PersonMatchPrecision,
     providers: S.Tuple([S.Literal("CPUExecutionProvider")]),
@@ -1058,13 +1005,13 @@ export class PersonMatchOnnxRuntime extends S.Opaque<PersonMatchOnnxRuntime, { r
     warnings: S.Array(PersonMatchRuntimeWarning),
   }).pipe(
     $I.annoteSchema("PersonMatchOnnxRuntime", {
-      description: "Pinned CPU ONNX Runtime provenance for the InsightFace Buffalo backend.",
+      description: "CPU ONNX Runtime provenance for person matching.",
     })
   )
 ) {}
 
 /**
- * Records the PyTorch runtime and concrete device used by the AdaFace backend.
+ * Decodes historical PyTorch runtime and device provenance from saved AdaFace reports.
  *
  * **Details**
  *
@@ -1150,8 +1097,8 @@ export class PersonMatchBuffaloModel extends S.Opaque<PersonMatchBuffaloModel, {
   S.Struct({
     backend: S.tag("buffalo-l"),
     name: S.tag("buffalo_l"),
-    packageName: S.tag("insightface"),
-    packageVersion: S.tag("1.0.1"),
+    packageName: S.Literals(["insightface", "onnxruntime-node"]),
+    packageVersion: S.NonEmptyString,
     runtime: PersonMatchOnnxRuntime,
     root: S.NonEmptyString,
     allowedModules: S.Tuple([S.Literal("detection"), S.Literal("recognition")]),
@@ -1202,12 +1149,12 @@ export class PersonMatchAdaFaceModel extends S.Opaque<PersonMatchAdaFaceModel, {
     backend: S.tag("adaface-kprpe"),
     name: S.tag("cvlface_adaface_vit_base_kprpe_webface12m"),
     codeRevision: S.tag("308142aa50adf2e187711354f7524635d3414f1e"),
-    runtime: PersonMatchPyTorchRuntime,
+    runtime: S.Union([PersonMatchPyTorchRuntime, PersonMatchOnnxRuntime]),
     root: S.NonEmptyString,
     components: S.Array(PersonMatchModelComponent),
   }).pipe(
     $I.annoteSchema("PersonMatchAdaFaceModel", {
-      description: "Pinned CVLFace AdaFace ViT-Base KP-RPE model, component, and PyTorch runtime provenance.",
+      description: "Pinned CVLFace model components with current ONNX or historical PyTorch provenance.",
     })
   )
 ) {}
@@ -1589,7 +1536,7 @@ export class PersonMatchWorkerLimits extends S.Opaque<PersonMatchWorkerLimits, {
 ) {}
 
 /**
- * Defines a successful response from the local person-matching Python worker.
+ * Defines a successful report from the in-process person matcher.
  *
  * **Example** (Validate an empty worker success)
  *
@@ -1680,13 +1627,13 @@ export class PersonMatchWorkerSuccess extends S.Opaque<PersonMatchWorkerSuccess,
     elapsedSeconds: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   }).pipe(
     $I.annoteSchema("PersonMatchWorkerSuccess", {
-      description: "A successful versioned response from the local person-matching Python worker.",
+      description: "A successful versioned response from the local person-matching inference service.",
     })
   )
 ) {}
 
 /**
- * Defines a failed response from the local person-matching Python worker.
+ * Defines a failed response from the local person-matching inference service.
  *
  * **Example** (Validate a worker failure)
  *
@@ -1729,7 +1676,7 @@ export class PersonMatchWorkerFailure extends S.Opaque<PersonMatchWorkerFailure,
     elapsedSeconds: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
   }).pipe(
     $I.annoteSchema("PersonMatchWorkerFailure", {
-      description: "A failed versioned response from the local person-matching Python worker.",
+      description: "A failed versioned response from the local person-matching inference service.",
     })
   )
 ) {}
@@ -1768,12 +1715,12 @@ export class PersonMatchWorkerFailure extends S.Opaque<PersonMatchWorkerFailure,
  */
 export const PersonMatchWorkerReport = S.Union([PersonMatchWorkerSuccess, PersonMatchWorkerFailure]).pipe(
   $I.annoteSchema("PersonMatchWorkerReport", {
-    description: "A versioned success or failure response emitted by the person-matching Python worker.",
+    description: "A versioned success or failure response emitted by the person-matching inference service.",
   })
 );
 
 /**
- * A decoded success or failure response from the person-matching Python worker.
+ * A decoded success or failure response from the person-matching inference service.
  *
  * @category type-level
  * @since 0.0.0

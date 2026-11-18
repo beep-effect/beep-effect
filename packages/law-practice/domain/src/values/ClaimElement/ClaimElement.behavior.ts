@@ -2601,7 +2601,7 @@ export const decomposeClaimInput = Effect.fn("ClaimElement.decomposeClaimInput")
 ): Effect.fn.Return<ReadonlyArray<ClaimInputDecomposition>> {
   const qualifications = yield* qualifyClaimInput(input);
   const claims = A.map(A.filter(qualifications, ClaimInputQualification.guards["context-ready"]), ({ claim }) => claim);
-  return yield* Effect.forEach(qualifications, inputDecomposition(claims, inspectionTreeInput));
+  return yield* Effect.forEach(qualifications, inputDecomposition(claims, inspectionTreeInput), { concurrency: 1 });
 });
 
 const sourcePlanFor = (
@@ -3101,7 +3101,8 @@ const decomposePreparedClaimRolesWith = (projector: ReturnType<typeof projectedC
       )(elements, ancestors, parents, ancestorBindings);
     const decompositions = yield* Effect.forEach(
       prepared.qualifications,
-      inputDecomposition(claims, construct, resolve)
+      inputDecomposition(claims, construct, resolve),
+      { concurrency: 1 }
     );
     return ClaimRoleDecomposition.make({ decompositions, plans });
   });

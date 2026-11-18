@@ -153,6 +153,8 @@ const services = Layer.mergeAll(
   Path.layer,
   NodeCrypto.layer,
   ShaclValidationServiceLive,
+  // Own double: dies on any spawn, so a PDF mining path that spawns fails loudly;
+  // `ScriptedSpawner` records and answers every spawn instead.
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make(() => Effect.die("the research library mine PDF suite must not spawn a process"))
@@ -374,8 +376,10 @@ const recordsUnder = Effect.fn("test.recordsUnder")(function* <A>(
   const directory = path.join(root, "ops/mine", tier, "records");
   const entries = yield* fs.readDirectory(directory);
   const listed = A.sort(entries, Str.Order);
-  return yield* Effect.forEach(listed, (file) =>
-    fs.readFileString(path.join(directory, file)).pipe(Effect.flatMap(decode))
+  return yield* Effect.forEach(
+    listed,
+    (file) => fs.readFileString(path.join(directory, file)).pipe(Effect.flatMap(decode)),
+    { concurrency: 1 }
   );
 });
 
@@ -614,8 +618,10 @@ it.layer(services, { timeout: "30 seconds" })("research library mine PDFs", (it)
       const directory = path.join(root, "ops/mine/t2/receipts");
       const entries = yield* fs.readDirectory(directory, { recursive: true });
       const listed = A.filter(entries, Str.endsWith(".json"));
-      const receipts = yield* Effect.forEach(listed, (file) =>
-        fs.readFileString(path.join(directory, file)).pipe(Effect.flatMap(S.decodeEffect(ReceiptJson)))
+      const receipts = yield* Effect.forEach(
+        listed,
+        (file) => fs.readFileString(path.join(directory, file)).pipe(Effect.flatMap(S.decodeEffect(ReceiptJson))),
+        { concurrency: 1 }
       );
       const paper = O.getOrThrow(A.findFirst(receipts, (receipt) => Str.startsWith("capture-paper-")(receipt.jobKey)));
       expect([paper.outcome, paper.errorTag]).toStrictEqual(["rejected", "LibraryMineSpanError"]);

@@ -67,7 +67,9 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
           seq: 2,
           tEpochMs: 1753838000100,
         });
-        const validLines = yield* Effect.forEach([down, marker], (event) => encodeActionEventJson(event));
+        const validLines = yield* Effect.forEach([down, marker], (event) => encodeActionEventJson(event), {
+          concurrency: 1,
+        });
         const batch = A.join([...validLines, "this is not json"], "\n");
 
         // This shorter scope is the subject of the cleanup assertions below:
@@ -142,7 +144,7 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
         const written = yield* fs.readFileString(eventsPath);
         const lines = pipe(written, Str.split("\n"), A.filter(Str.isNonEmpty));
         expect(A.length(lines)).toBe(3);
-        const decoded = yield* Effect.forEach(lines, (line) => decodeActionEventJson(line));
+        const decoded = yield* Effect.forEach(lines, (line) => decodeActionEventJson(line), { concurrency: 1 });
         expect(A.map(decoded, (event) => event.kind)).toEqual(["pointer-down", "marker", "marker"]);
         // On-disk seqs are the canonical rewrite: strictly monotone from 1.
         expect(A.map(decoded, (event) => event.seq)).toEqual([1, 2, 3]);
@@ -175,7 +177,9 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
           seq: 2,
           tEpochMs: 1753838000100,
         });
-        const validLines = yield* Effect.forEach([down, marker], (event) => encodeActionEventJson(event));
+        const validLines = yield* Effect.forEach([down, marker], (event) => encodeActionEventJson(event), {
+          concurrency: 1,
+        });
         const batch = A.join([...validLines, "this is not json"], "\n");
         const secondPage = [
           MarkerEvent.make({ ...marker, seq: 8, label: "second-page:first" }),
@@ -229,7 +233,9 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
             expect(accepted.accepted).toBe(2);
             expect(accepted.rejected).toBe(1);
 
-            const secondLines = yield* Effect.forEach(secondPage, (event) => encodeActionEventJson(event));
+            const secondLines = yield* Effect.forEach(secondPage, (event) => encodeActionEventJson(event), {
+              concurrency: 1,
+            });
             const secondResponse = yield* HttpClient.post(`${base}/events`, {
               body: HttpBody.text(A.join([...secondLines, "still not json"], "\n"), "text/plain;charset=UTF-8"),
               headers: { origin: appOrigin },
@@ -261,7 +267,7 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
         const written = yield* fs.readFileString(eventsPath);
         const lines = pipe(written, Str.split("\n"), A.filter(Str.isNonEmpty));
         expect(A.length(lines)).toBe(6);
-        const decoded = yield* Effect.forEach(lines, (line) => decodeActionEventJson(line));
+        const decoded = yield* Effect.forEach(lines, (line) => decodeActionEventJson(line), { concurrency: 1 });
         expect(A.map(decoded, (event) => event.kind)).toEqual([
           "pointer-down",
           "marker",

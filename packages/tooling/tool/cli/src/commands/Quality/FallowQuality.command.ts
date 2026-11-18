@@ -1639,10 +1639,14 @@ export const collectAuditDiffInputForTesting = Effect.fn("FallowQuality.collectA
     return untrackedFiles.failure;
   }
 
-  const untrackedDiffs = yield* Effect.forEach(untrackedFiles.success, (filePath) => {
-    const untracked = { noIndex: ["/dev/null", filePath], binary: true, unified: context } as const;
-    return diffGit.diffPatch(repoRoot, untracked).pipe(kitProcessResult(GitCommand.diffPatch(untracked)));
-  });
+  const untrackedDiffs = yield* Effect.forEach(
+    untrackedFiles.success,
+    (filePath) => {
+      const untracked = { noIndex: ["/dev/null", filePath], binary: true, unified: context } as const;
+      return diffGit.diffPatch(repoRoot, untracked).pipe(kitProcessResult(GitCommand.diffPatch(untracked)));
+    },
+    { concurrency: 1 }
+  );
   const failedDiff = A.findFirst(untrackedDiffs, (result) => result.exitCode !== 0 && result.exitCode !== 1);
   if (O.isSome(failedDiff)) {
     return failedDiff.value;
@@ -1746,7 +1750,8 @@ const collectCodemodInheritance = Effect.fn("FallowQuality.collectCodemodInherit
       fs.readFileString(path.join(repoRoot, file)).pipe(
         Effect.map((text) => Result.getOrUndefined(Jsonc.parseResult(text, strictJson))),
         Effect.orElseSucceed(() => undefined)
-      )
+      ),
+    { concurrency: 1 }
   );
   return inheritedCodemodDuplicationCountForTesting(document, diff.stdout, reports);
 });

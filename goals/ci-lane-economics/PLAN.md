@@ -160,6 +160,28 @@ Status: `active`
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug ci-lane-economics`; add a `kind: checkpoint` file there, never edit this block._
 
+### First overflow VM launched, 2026-11-13
+
+The overflow pool launched its first VMs at 2026-11-13T20:36:42Z, 48 minutes after `BEEP_SHARD_OVERFLOW` went on, and every job it took passed.
+
+- Run: Check 43502623814 (pull request, head `b6e833f1c2`, created 20:33:19Z). The route job sent all 24 Test Unit shards to `Test Unit (<shard>) / Overflow`.
+- Result: 24 of 24 overflow jobs concluded `success`. Each ran on its own runner named `beep-ovf-<instance id>`.
+- First VM: `i-0befcf82d46671a6c`, `r7a.2xlarge`, spot, launched 20:36:42Z. Its job, `Test Unit (repo-cli-3) / Overflow`, was queued at 20:36:36Z, started at 20:37:30Z and finished at 20:42:18Z.
+- Scale-up log (`/aws/lambda/beep-ovf-scale-up`): `Created instance(s): i-0befcf82d46671a6c` at 20:36:42.876Z. 31 such lines between 20:36:42Z and 20:45:16Z, and no `PassRole`, `UnauthorizedOperation` or `ERROR` line. This is the proof that the `beep-ovf` entry in `beep-ci-fleet-boundary` v5 lets the scale-up role pass the runner role.
+- Pickup wait (job queued to started) over the 24 jobs: shortest 54s, median about 4m00s, longest 6m50s. The last shard finished at 20:48:44Z, 15m25s after the run was created.
+- Conditions: the heavy pool was in its 2 to 8 burst (from 20:27:07Z) and #3278 had merged at 20:35:50Z with a cold cache.
+
+Two things to watch, neither changed here because a pool change inside window 5 would restart it:
+
+- The pool launched about one VM every 30 seconds, so the 24th shard waited 6m50s for its runner. That is inside the 10-minute tripwire but it is most of the budget.
+- 32 instances launched for 24 jobs. The eight extra launched between 20:43Z and 20:45Z and no other recent Check run had overflow jobs. Cause not yet read; check on the next overflow event.
+
+All 32 instances are terminated. The switch stays on.
+
+Lane docs/ci-overflow-first-launch
+
+Reverse: Delete this file and run goals decisions write; overflow itself is switched off with gh variable set BEEP_SHARD_OVERFLOW --body off
+
 ### Window 5 waits on four changes; routing alone does not reach 20 minutes at 17 branches, 2026-11-13
 
 State after the first day under the restated bound.
@@ -173,5 +195,18 @@ State after the first day under the restated bound.
 Lane docs/check-lane-baseline-break
 
 Reverse: Delete this checkpoint; it records measurements and open work and changes no behaviour.
+
+### Window 5 cannot pass; the heavy-pool lanes breach on wait at two branches, so the held set merges and the window restarts, 2026-11-18
+
+Preview census on 2026-11-18 at about 02:30Z, on main `3199097213`, with `bun run beep ci lane-timings --window --preview`.
+
+- Whole window so far (2026-11-13T20:00Z to now): 13 of the 15 required contexts breach on wait p95, from 20m37s (SAST) to 70m49s (Docgen). Every lane's own duration p95 is under 20 minutes; the longest is Test Unit at 19m20s. Worst shard pickup p95 is 13m44s against the 10m00s tripwire (n=11,738). Peak CI-active branches: 14 on 11-13, 11 on 11-14, at most 2 on 11-15 to 11-17, 7 on 11-18. Load never reached the 15 to 20 branch charter band.
+- Quiet days only (2026-11-15T00:00Z to 2026-11-18T02:00Z): pickup p95 is 1m25s and passes, and so do eleven contexts. Check (28m25s), Doctest (27m00s), Docgen (26m51s) and Test Unit (23m20s) still breach on wait at one or two branches. That is structural, not load: these lanes wait behind heavy admission and the two-runner heavy pool.
+- Overflow pool `beep-ovf`: 810 scale-up calls, 858 runners requested, 847 launched, 11 retryable errors and none fatal. It launched from 2026-11-13T20:36Z to 2026-11-14T06:34Z and not since, because no hosted queue built up on the quiet days.
+- Window 5 cannot pass at its census. The operator ruled on 2026-11-18 to merge the held set now and restart the window rather than run it out. The order is heavy-pool-diet lanes-first (#3302) and its slice 6, then infra turbo-cache stage 2, then infra P5, then certainty slices 13 (#3367) and 11b (#3369). Window 6 is the seven days after the last of them merges, and its census is scheduled at that time.
+
+Lane docs/ci-window5-preview-restart
+
+Reverse: Delete this checkpoint and keep the held set held until the window-5 census on 2026-11-20T20:10Z.
 
 <!-- beep:decisions:end -->

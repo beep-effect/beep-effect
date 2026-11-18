@@ -16,7 +16,7 @@ engine:                            # the ENGINE that judges this run is inside t
                                    # a manifest that cannot name its engine
                                    # reconstructs nothing (model WEIGHTS remain a
                                    # claim; see Known Limits)
-  validator_sha256_12: ""          # sha256[:12] of scripts/validate_artifacts.py
+  validator_sha256_12: ""          # sha256[:12] of scripts/validate_artifacts.ts
   contracts_sha256_12: ""          # framed sha256[:12] over the FULL contract closure:
                                    # _shared/schemas/*.yaml, _shared/*.yaml (rules,
                                    # authority matrix), _shared/*.md (foundational

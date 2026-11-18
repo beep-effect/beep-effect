@@ -991,6 +991,7 @@ describe("Yeet provenance footer splice", () => {
         const registry = yield* PrSessionRegistry;
         const real = yield* ChildProcessSpawner.ChildProcessSpawner;
         // Own double: git reaches the real repository; every credential source (gh, op, ssh) exits 1.
+        // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
         const noLogin = ChildProcessSpawner.make((command) =>
           ChildProcess.isStandardCommand(command) && command.command !== "git"
             ? real.spawn(ChildProcess.make("false", [], command.options))

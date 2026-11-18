@@ -1,17 +1,19 @@
-import { Git } from "@beep/git/Git";
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   layerYeetHeadMoveClassifierTest,
+  provideYeetHeadMoveClassifier,
   YeetHeadMoveClassifier,
   YeetHeadMoveRequest,
   YeetHeadMoveUnknown,
 } from "@beep/repo-cli/test/Yeet";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
@@ -19,7 +21,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as Str from "effect/String";
-import { commit, FILE_A, FILE_B, git, init, stack } from "./support/YeetHeadMove.ts";
+import { commit, configureHostileGit, FILE_A, FILE_B, git, init, stack } from "./support/YeetHeadMove.ts";
 
 const classify = Effect.fn("HeadMoveTest.classify")(function* (
   root: string,
@@ -36,14 +38,92 @@ const expectChange = (verdict: Awaited<Effect.Success<ReturnType<typeof classify
   if (verdict._tag === "changed") expect(verdict.change, verdict.detail).toBe(change);
 };
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
+// Thirty numbered lines under `shifted` header lines; the lane and the base each retag one line,
+// keeping its length, so a binary delta would copy the same offsets on both sides.
+const numbered = (laneAt: number, baseAt: number, shifted: number) =>
+  `${Str.repeat(shifted)("header\n")}${A.join(
+    A.map(A.range(100, 129), (n) => `line ${n} ${n === laneAt ? "lane" : n === baseAt ? "main" : "base"}`),
+    "\n"
+  )}\n`;
+// The lane retags line 120 of `file`; the base retags `baseAt` and inserts `shifted` lines above
+// it; GitHub replays the lane commit onto the moved base.
+const rewriteOver = Effect.fn("HeadMoveTest.rewriteOver")(function* (
+  root: string,
+  file: string,
+  baseAt: number,
+  shifted: number
+) {
+  const main = yield* commit(root, [], { [file]: O.some(numbered(0, 0, 0)) }, "main");
+  const lane = yield* commit(root, [main], { [file]: O.some(numbered(120, 0, 0)) }, "lane: retag line 120");
+  const moved = yield* commit(root, [main], { [file]: O.some(numbered(0, baseAt, shifted)) }, "main moving");
+  const rewrite = yield* commit(
+    root,
+    [moved],
+    { [file]: O.some(numbered(120, baseAt, shifted)) },
+    "lane: retag line 120",
+    undefined,
+    "noreply@github.com"
+  );
+  return yield* classify(root, lane, rewrite, moved);
+});
+// A `-diff` file diffs as a binary delta unless the read forces text; read as pathspec magic,
+// `:(top)a` names the absent top-level `a`, so both of its patches would be empty.
+const contextCases = [
+  { label: "a -diff file", file: "data.txt", attributes: "data.txt -diff\n" },
+  { label: "a path shaped like pathspec magic", file: ":(top)a", attributes: "" },
+];
+// One commit whose tree is its parent's with `vendor/lib` pointing at `pointer`, authored like the
+// stack fixtures; `committer` is the lane mailbox or a GitHub cascade mailbox.
+const gitlinkCommit = Effect.fn("HeadMoveTest.gitlinkCommit")(function* (
+  root: string,
+  parent: string,
+  pointer: string,
+  committer: string
+) {
+  yield* git(root, ["read-tree", parent]);
+  yield* git(root, ["update-index", "--add", "--cacheinfo", `160000,${pointer},vendor/lib`]);
+  const tree = yield* git(root, ["write-tree"]);
+  return yield* git(root, ["commit-tree", tree, "-p", parent, "-m", "chore: bump vendor/lib"], {
+    GIT_AUTHOR_NAME: "Stack Probe Author",
+    GIT_AUTHOR_EMAIL: "stack-probe@users.noreply.github.com",
+    GIT_AUTHOR_DATE: "2026-11-14T10:00:00Z",
+    GIT_COMMITTER_NAME: "Committer",
+    GIT_COMMITTER_EMAIL: committer,
+    GIT_COMMITTER_DATE: "2026-11-14T10:05:00Z",
+  });
+});
 it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeout: "120 seconds" })(
   "head-move real Git",
   (it) => {
+    it.effect("keeps a moved gitlink in the patch identity under diff.ignoreSubmodules=all", () =>
+      Effect.gen(function* () {
+        const root = yield* init();
+        const main = yield* commit(root, [], { "main.md": O.some("main\n") }, "main");
+        const linked = yield* gitlinkCommit(root, main, `${Str.repeat(39)("0")}1`, "lane@example.invalid");
+        const lane = yield* gitlinkCommit(root, linked, Str.repeat(40)("1"), "lane@example.invalid");
+        const moved = yield* commit(root, [linked], { "main.md": O.some("main moved\n") }, "main moving");
+        const rewrite = yield* gitlinkCommit(
+          root,
+          moved,
+          Str.repeat(40)("2"),
+          "12345+octocat@users.noreply.github.com"
+        );
+        yield* git(root, ["config", "diff.ignoreSubmodules", "all"]);
+        const verdict = yield* classify(root, lane, rewrite, moved);
+        expectChange(verdict, "patch");
+        if (verdict._tag === "changed") expect(verdict.detail).toBe("Commit 0: vendor/lib differs.");
+      })
+    );
     it.effect("propagates interruption while failures and defects remain unknown", () =>
       Effect.gen(function* () {
         const s = yield* stack();
         const interruptCause = Cause.interrupt(42);
-        const interrupted = Git.layerTest({ isAncestor: () => Effect.failCause(interruptCause) });
+        // The local mailbox and object probes run on `Git.configGet` / `Git.refExists` (W8, SPEC D-22).
+        const interrupted = Git.layerTest({
+          configGet: () => Effect.succeedNone,
+          refExists: () => Effect.succeed(true),
+          isAncestor: () => Effect.failCause(interruptCause),
+        });
         const serviceContext = yield* Layer.build(
           YeetHeadMoveClassifier.layer(s.root).pipe(Layer.provide(interrupted))
         );
@@ -247,6 +327,28 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expectChange(verdict17, "replay-tree");
       })
     );
+    for (const { label, file, attributes } of contextCases) {
+      it.effect(`refuses a rewrite of ${label} that kept the lane's line but not its context`, () =>
+        Effect.gen(function* () {
+          const root = yield* init();
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* fs.makeDirectory(path.join(root, ".git", "info"), { recursive: true });
+          yield* fs.writeFileString(path.join(root, ".git", "info", "attributes"), attributes);
+          const verdict = yield* rewriteOver(root, file, 118, 0);
+          expectChange(verdict, "patch");
+          if (verdict._tag === "changed") expect(verdict.detail).toBe(`Commit 0: ${file} differs.`);
+        })
+      );
+    }
+    it.effect("carries a rewrite that only moved a hunk, under a hostile git config", () =>
+      Effect.gen(function* () {
+        const root = yield* init();
+        yield* configureHostileGit(root);
+        const verdict = yield* rewriteOver(root, "data.txt", 0, 4);
+        expect(verdict).toMatchObject({ _tag: "unchanged", commits: 1 });
+      })
+    );
     it.effect("fetches missing pinned objects once without replacing FETCH_HEAD", () =>
       Effect.gen(function* () {
         const remote = yield* stack();
@@ -327,6 +429,56 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expect(result._tag).toBe("unknown");
       })
     );
+    it.effect("reads a failed object probe as missing and fetches the object", () =>
+      Effect.gen(function* () {
+        const remote = yield* stack();
+        const local = yield* init();
+        yield* git(local, ["remote", "add", "origin", remote.root]);
+        // Every `Git.refExists` probe fails (W8, SPEC D-22): the first pass reads each object as
+        // missing and fetches it, and the post-fetch check failing keeps the verdict unknown.
+        const failingProbes = Git.layerTest({
+          configGet: () => Effect.succeedNone,
+          refExists: (cwd, ref) =>
+            Effect.fail(
+              GitCommandError.make({
+                kind: "failed",
+                args: ["cat-file", "-e", ref],
+                cwd,
+                exitCode: 128,
+                stderr: "fatal: probe failed",
+              })
+            ),
+        });
+        const serviceContext = yield* Layer.build(
+          YeetHeadMoveClassifier.layer(local).pipe(Layer.provide(failingProbes))
+        );
+        const verdict = yield* Context.get(serviceContext, YeetHeadMoveClassifier).classify(
+          YeetHeadMoveRequest.make({ before: remote.l2, after: remote.c2, base: remote.squash })
+        );
+        expect(verdict._tag).toBe("unknown");
+        const fetched = yield* git(local, ["cat-file", "-t", remote.c2]);
+        expect(Str.trim(fetched)).toBe("commit");
+      })
+    );
+    it.effect("returns unknown when a fetched object is still missing", () =>
+      Effect.gen(function* () {
+        const remote = yield* stack();
+        const local = yield* init();
+        yield* git(local, ["remote", "add", "origin", remote.root]);
+        const neverPresent = Git.layerTest({
+          configGet: () => Effect.succeedNone,
+          refExists: () => Effect.succeed(false),
+        });
+        const serviceContext = yield* Layer.build(
+          YeetHeadMoveClassifier.layer(local).pipe(Layer.provide(neverPresent))
+        );
+        const verdict = yield* Context.get(serviceContext, YeetHeadMoveClassifier).classify(
+          YeetHeadMoveRequest.make({ before: remote.l2, after: remote.c2, base: remote.squash })
+        );
+        expect(verdict._tag).toBe("unknown");
+        if (verdict._tag === "unknown") expect(verdict.reason).toContain("is still missing after the fetch");
+      })
+    );
     it.effect("fails closed with a typed error for invalid UTF-8 commit metadata", () =>
       Effect.gen(function* () {
         const s = yield* stack();
@@ -343,6 +495,18 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         if (result._tag === "unknown") expect(result.reason).toContain("UTF-8");
       })
     );
+    it.effect("reads a commit's committer instant through Git.log and none for an unknown commit", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        const context = yield* Layer.build(YeetHeadMoveClassifier.layer(s.root));
+        const service = Context.get(context, YeetHeadMoveClassifier);
+        const expected = yield* git(s.root, ["show", "-s", "--format=%cI", s.c2]);
+        const instant = yield* service.committerInstant(s.c2);
+        assertSome(O.map(instant, DateTime.toEpochMillis), DateTime.toEpochMillis(DateTime.makeUnsafe(expected)));
+        const missing = yield* service.committerInstant(Str.repeat(40)("f"));
+        assertNone(missing);
+      })
+    );
     it.effect("provides a requirement-free deterministic test service", () =>
       Effect.gen(function* () {
         const request = YeetHeadMoveRequest.make({ before: "b", after: "a", base: "s" });
@@ -354,6 +518,20 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
         expect(result._tag).toBe("unknown");
         const instant = yield* service.committerInstant("a");
         assertNone(instant);
+      })
+    );
+    it.effect("supplies a checkout classifier unless one is already provided", () =>
+      Effect.gen(function* () {
+        const s = yield* stack();
+        const request = YeetHeadMoveRequest.make({ before: s.l2, after: s.c2, base: s.squash });
+        const classifyRequest = YeetHeadMoveClassifier.use((classifier) => classifier.classify(request));
+        const live = yield* provideYeetHeadMoveClassifier(s.root)(classifyRequest);
+        expect(live).toMatchObject({ _tag: "unchanged", commits: 1 });
+        const fixture = yield* Layer.build(
+          layerYeetHeadMoveClassifierTest((input) => YeetHeadMoveUnknown.make({ ...input, reason: "fixture" }))
+        );
+        const kept = yield* provideYeetHeadMoveClassifier(s.root)(classifyRequest).pipe(Effect.provideContext(fixture));
+        expect(kept).toMatchObject({ _tag: "unknown", reason: "fixture" });
       })
     );
   }

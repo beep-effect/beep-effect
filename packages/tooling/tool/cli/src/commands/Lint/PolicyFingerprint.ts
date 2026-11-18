@@ -231,7 +231,8 @@ const readWorkspaceEntries = Effect.fnUntraced(function* (root: string) {
         }),
         scripts: manifest.scripts ?? {},
       };
-    })
+    }),
+    { concurrency: 1 }
   );
   return workspaces;
 });
@@ -630,8 +631,11 @@ const fingerprintFromSources = Effect.fnUntraced(function* (sources: Fingerprint
   });
   const layout = cliLayout(sources.cliDirectory);
   const scripts = yield* policyTaskScripts(sources);
-  const paths = yield* Effect.forEach(scripts, (entry) =>
-    Effect.map(scriptPath(graph, layout, sources.rootScripts, entry), (path) => pathPrefixes(entry.task, path))
+  const paths = yield* Effect.forEach(
+    scripts,
+    (entry) =>
+      Effect.map(scriptPath(graph, layout, sources.rootScripts, entry), (path) => pathPrefixes(entry.task, path)),
+    { concurrency: 1 }
   );
   const prefixes = A.reduce(A.flatten(paths), HashMap.empty<string, PrefixSeal>(), addPrefix);
   const rootFiles = makeRootFileReader(tree);
@@ -861,13 +865,16 @@ export class PolicyToolsFingerprintPolicy extends Context.Service<
       const declaration = renderJsonDocument(pipe5);
       const turbo = materializeTurbo(sources.turboText, sources.turbo, fingerprint);
       const manifest = materializeRootManifest(sources.rootManifestText, sources.rootScripts);
-      yield* Effect.all([
-        fs
-          .makeDirectory(path.dirname(declarationFile), { recursive: true })
-          .pipe(Effect.andThen(fs.writeFileString(declarationFile, `${declaration}\n`))),
-        fs.writeFileString(path.join(root, "turbo.json"), turbo),
-        fs.writeFileString(path.join(root, "package.json"), manifest),
-      ]).pipe(
+      yield* Effect.all(
+        [
+          fs
+            .makeDirectory(path.dirname(declarationFile), { recursive: true })
+            .pipe(Effect.andThen(fs.writeFileString(declarationFile, `${declaration}\n`))),
+          fs.writeFileString(path.join(root, "turbo.json"), turbo),
+          fs.writeFileString(path.join(root, "package.json"), manifest),
+        ],
+        { concurrency: 1 }
+      ).pipe(
         Effect.mapError((cause) => PolicyFingerprintError.make({ message: "Cannot write the fingerprint", cause }))
       );
     }).pipe(Effect.withSpan("PolicyToolsFingerprintPolicy.write"));

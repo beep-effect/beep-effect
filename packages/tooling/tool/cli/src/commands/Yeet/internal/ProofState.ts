@@ -308,7 +308,9 @@ export const collectGitDiffBytes = Effect.fn("Yeet.collectGitDiffBytes")(functio
   const diffArgs = ["diff", "--binary", `--output=${diffPath}`, ...args];
   const commandLine = formatCommandLine("git", diffArgs);
   return yield* Effect.gen(function* () {
-    // KEEP (D-18): git writes a byte-exact patch into a path fenced inside the artifact tree; the kit only returns decoded stdout.
+    // KEEP (D-18): git writes a byte-exact patch into a path fenced inside the artifact tree; the kit only
+    // returns decoded stdout.
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-18), reason above
     const written = yield* runRepoCommandCapture("git", diffArgs, context.repoRoot).pipe(
       Effect.mapError(yeetGitOutputErrorAdapter.onSpawnFailure(commandLine))
     );

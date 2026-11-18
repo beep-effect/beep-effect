@@ -295,7 +295,7 @@ describe("GlobSet: literals key on the effective unescaped path", () => {
     Effect.gen(function* () {
       const patterns = ["foo\\*bar", "a\\{b", "#c", "plain/lit", ""];
       const set = yield* GlobSet.compile(patterns);
-      const members = yield* Effect.forEach(patterns, (p) => GlobPattern.compile(p));
+      const members = yield* Effect.forEach(patterns, (p) => GlobPattern.compile(p), { concurrency: 1 });
       for (const candidate of ["foo*bar", "foo\\*bar", "a{b", "#c", "plain/lit", "", "other"]) {
         assert.strictEqual(
           set.matches(candidate),

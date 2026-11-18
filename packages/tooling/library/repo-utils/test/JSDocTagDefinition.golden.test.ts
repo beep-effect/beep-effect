@@ -54,14 +54,17 @@ const fingerprint = Effect.fnUntraced(function* (schema: MemberSchema, sample: u
 });
 
 const fingerprints = Effect.fnUntraced(function* (implementation: MakeMember, jsDocTag: JSDocTagSchema) {
-  const entries = yield* Effect.forEach(jsDocTag.discriminants, (tag) =>
-    Effect.gen(function* () {
-      const definition = pipe(getJSDocTagMetadata(jsDocTag.cases[tag]), O.getOrThrow);
-      const { _tag: _, ...meta } = yield* encodeJSDocTagDefinition(definition);
-      const schema = implementation(tag, meta);
+  const entries = yield* Effect.forEach(
+    jsDocTag.discriminants,
+    (tag) =>
+      Effect.gen(function* () {
+        const definition = pipe(getJSDocTagMetadata(jsDocTag.cases[tag]), O.getOrThrow);
+        const { _tag: _, ...meta } = yield* encodeJSDocTagDefinition(definition);
+        const schema = implementation(tag, meta);
 
-      return [tag, yield* fingerprint(schema, sampleMember(tag))] as const;
-    })
+        return [tag, yield* fingerprint(schema, sampleMember(tag))] as const;
+      }),
+    { concurrency: 1 }
   );
 
   return R.fromEntries(entries);

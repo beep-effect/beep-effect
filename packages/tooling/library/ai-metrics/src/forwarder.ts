@@ -1637,7 +1637,7 @@ export const runAiMetricsForwarder = Effect.fn("AiMetrics.runAiMetricsForwarder"
           });
         }
       }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     // Completeness describes collection only. Qualification comes from each record's own
     // join outcome; completeness only decides whether an unresolved join is a verdict.

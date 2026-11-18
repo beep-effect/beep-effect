@@ -186,33 +186,7 @@ export class MatchPersonRuntimeError extends S.TaggedError<MatchPersonRuntimeErr
     workerCode: S.optionalKey(PersonMatchWorkerErrorCode),
   },
   $I.annoteError<MatchPersonRuntimeError>("MatchPersonRuntimeError", {
-    description: "Unsupported CPU or ROCm runtime selection, device selection, framework, or compute fallback.",
-  })
-) {}
-
-/**
- * Typed failure to execute the isolated Python worker process.
- *
- * **Example** (Report a spawn failure)
- *
- * ```ts
- * import { MatchPersonProcessError } from "./MatchPerson.errors.ts"
- *
- * const error = MatchPersonProcessError.make({ message: "Could not start the isolated worker." })
- * console.log(error._tag)
- * ```
- *
- * @internal
- * @category errors
- * @since 0.0.0
- */
-export class MatchPersonProcessError extends S.TaggedError<MatchPersonProcessError, { readonly brand: unique symbol }>(
-  $I`MatchPersonProcessError`
-)(
-  "MatchPersonProcessError",
-  failureFields,
-  $I.annoteError<MatchPersonProcessError>("MatchPersonProcessError", {
-    description: "Failure to spawn or complete the isolated person-match Python worker process.",
+    description: "Failure to load or execute the native CPU inference runtime.",
   })
 ) {}
 
@@ -321,7 +295,6 @@ export const MatchPersonError = {
   modelAcquisition: errorConstructor(MatchPersonModelAcquisitionError),
   modelIntegrity: errorConstructor(MatchPersonModelIntegrityError),
   path: errorConstructor(MatchPersonPathError),
-  process: errorConstructor(MatchPersonProcessError),
   protocol: errorConstructor(MatchPersonProtocolError),
   runtime: errorConstructor(MatchPersonRuntimeError),
   runtimeFromWorker: (workerCode: PersonMatchWorkerErrorCode, message: string) =>
@@ -343,7 +316,6 @@ export type PersonMatchWorkerServiceError =
   | MatchPersonModelAcquisitionError
   | MatchPersonModelIntegrityError
   | MatchPersonRuntimeError
-  | MatchPersonProcessError
   | MatchPersonProtocolError
   | MatchPersonSemanticError;
 
@@ -385,7 +357,6 @@ export const toFilesCommandError = Match.type<MatchPersonControlPlaneError>().pi
   Match.tag("MatchPersonModelAcquisitionError", commandError),
   Match.tag("MatchPersonModelIntegrityError", commandError),
   Match.tag("MatchPersonPathError", commandError),
-  Match.tag("MatchPersonProcessError", commandError),
   Match.tag("MatchPersonProtocolError", commandError),
   Match.tag("MatchPersonRuntimeError", commandError),
   Match.tag("MatchPersonSemanticError", commandError),

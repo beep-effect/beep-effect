@@ -44,6 +44,8 @@ const commandLayer = Layer.mergeAll(
   NodePath.layer,
   NodeStdio.layer,
   NodeTerminal.layer,
+  // Own double: dies on any spawn, so a compute-profile path that spawns fails loudly;
+  // `ScriptedSpawner` records and answers every spawn instead.
   Layer.succeed(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make(() => Effect.die("compute profile must not spawn"))

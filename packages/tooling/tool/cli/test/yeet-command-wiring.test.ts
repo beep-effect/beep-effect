@@ -8,6 +8,7 @@ import {
   MemoryStats,
   makeComputeProfileProbe,
   provideRuntimeRootForTesting,
+  QualitySchedulerLive,
   RepoPlanStep,
   RepoRunPlan,
   RuntimeRootChoice,
@@ -19,8 +20,11 @@ import {
   buildYeetRunPlanWithMode,
   decodeYeetAttemptJournalEvent,
   defaultYeetRunOptions,
+  FINAL_CHECK_RECEIPT_DIR,
+  FINAL_CHECK_SUBSET_RECEIPT_DIR,
   findLiveReadyMonitorJob,
   finishPublishWithPullRequestForTesting,
+  InstalledTreesLockfileUnchanged,
   isLiveReadyMonitorJob,
   MONITOR_READY_SUBMIT_STEP_ID,
   PR_HEAVY_ADMISSION_LABEL_STEP_ID,
@@ -37,6 +41,8 @@ import {
   runPlanExecutionForTesting,
   runPushFirstPublishPhasesForTesting,
   runStandardPublishPhasesForTesting,
+  TurboForceReceipt,
+  TurboForceShadowComputed,
   TurboPlanSnapshot,
   YeetAttemptJournalEvent,
   YeetAttemptStarted,
@@ -110,7 +116,8 @@ const commandTestLayer = Layer.provideMerge(
         totalGib: Effect.succeed(128),
         ceilingGib: Effect.succeed(128),
       })
-    )
+    ),
+    QualitySchedulerLive
   )
 );
 
@@ -202,23 +209,33 @@ describe("yeet final-check command", () => {
           "--skip",
           "cheap-gates=covered by publish",
         ]);
-        const receipts = yield* fs.readDirectory(`${root}/.beep/yeet/final-check`);
+        // A subset run writes its own receipt under subsets/<head>/, never the head receipt.
+        const receiptDir = yield* fs.readDirectory(`${root}/${FINAL_CHECK_RECEIPT_DIR}`);
+        expect(receiptDir).toEqual(["subsets"]);
+        const subsetDir = `${root}/${FINAL_CHECK_SUBSET_RECEIPT_DIR}`;
+        const heads = yield* fs.readDirectory(subsetDir);
+        expect(heads).toHaveLength(1);
+        const receipts = yield* fs.readDirectory(`${subsetDir}/${heads[0]}`);
         expect(receipts).toHaveLength(1);
-        const receipt = yield* fs.readFileString(`${root}/.beep/yeet/final-check/${receipts[0]}`);
+        const receipt = yield* fs.readFileString(`${subsetDir}/${heads[0]}/${receipts[0]}`);
         assertInclude(receipt, '"complete":false');
         assertInclude(receipt, '"verdict":"pass"');
         assertInclude(receipt, '"status":"skipped"');
 
         const red = yield* finalCheck(["--base", "HEAD~1", "--gates", "repo-sanity", "--fail-fast"]).pipe(Effect.flip);
         expect(red.message).toContain("yeet final-check failed: final-check:repo-sanity");
+        const afterRed = yield* fs.readDirectory(`${subsetDir}/${heads[0]}`);
+        expect(afterRed).toHaveLength(2);
 
         // A gate that edits a tracked file while it runs: the gates then saw bytes
         // the pinned head does not hold, so no receipt may be written.
         yield* commit(root, "package.json", '{"scripts":{"beep":"echo drift >> README.md"}}\n', "drifting gate");
         const moved = yield* finalCheck(["--base", "HEAD~1", "--gates", "repo-sanity"]).pipe(Effect.flip);
         expect(moved.message).toContain("the checkout changed while the gates ran");
-        const readDirectory3 = yield* fs.readDirectory(`${root}/.beep/yeet/final-check`);
-        expect(readDirectory3).toHaveLength(1);
+        const headsAfterMove = yield* fs.readDirectory(subsetDir);
+        expect(headsAfterMove).toEqual(heads);
+        const receiptDirAfterMove = yield* fs.readDirectory(`${root}/${FINAL_CHECK_RECEIPT_DIR}`);
+        expect(receiptDirAfterMove).toEqual(["subsets"]);
       })
     );
 
@@ -304,7 +321,7 @@ describe("yeet merge-loop command wiring", () => {
               ),
               Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}))
             ),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       })
     );
@@ -1488,6 +1505,41 @@ it.layer(publishTailLayer, { timeout: "30 seconds" })("publish readiness-monitor
   );
 
   it.effect(
+    "submits a new monitor when the live monitor runs with other readiness flags",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* fs.makeTempDirectoryScoped({ prefix: "yeet-monitor-other-flags-" });
+      const marker = `${root}/submitted.txt`;
+      const fixture = yield* tailFixture(root, `require("node:fs").writeFileSync("${marker}", "x")`);
+      // PERIL-02: publish keys reuse on its own readiness argv, so a monitor an
+      // agent started with a longer settle timeout is not handed back.
+      const longerSettle = ProofJobRecord.make({
+        ...running,
+        request: ProofJobRequest.make({
+          ...running.request,
+          argv: ["monitor", "--until-ready", "--settle-timeout", "2h"],
+        }),
+      });
+      const result = yield* finishPublishWithPullRequestForTesting(
+        fixture.plan,
+        defaultYeetRunOptions({ message: "fix(repo-cli): second push", pr: true }),
+        [fixture.submit],
+        fixture.recorder,
+        fixture.extras,
+        false,
+        {
+          ensurePullRequest: fixture.ensurePullRequest,
+          monitorSupport: Effect.succeed("active"),
+          listJobs: () => Effect.succeed([longerSettle]),
+        }
+      );
+      expect(result.pushed).toBe(true);
+      const exists = yield* fs.exists(marker);
+      expect(exists).toBe(true);
+    })
+  );
+
+  it.effect(
     "submits a new monitor when the registry has no live monitor for the pull request",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -1998,6 +2050,16 @@ const decodeLedgerFactHead = S.decodeUnknownOption(
 
 type CommittingPublishOutcome = "pushed" | "push-failed" | "commit-failed" | "interrupted-after-commit";
 
+// The force receipt `runYeet` hands the plan; the attempt-started row carries it unchanged.
+const publishTurboForce = TurboForceReceipt.make({
+  reasons: ["lockfile-changed"],
+  shadow: TurboForceShadowComputed.make({
+    kind: "computed",
+    reasons: ["patches-changed"],
+    installedTrees: InstalledTreesLockfileUnchanged.make({ kind: "lockfile-unchanged" }),
+  }),
+});
+
 it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdict identity", (it) => {
   const publish = Effect.fn("YeetCommittingPublishTest.publish")(function* (outcome: CommittingPublishOutcome) {
     const fs = yield* FileSystem.FileSystem;
@@ -2124,7 +2186,9 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
     const run = yield* runPlanExecutionForTesting(
       RepoRunPlan.make({ context, steps: [commit, gate, push] }),
       defaultYeetRunOptions({ mode: "publish", pr: false, message }),
-      O.some(message)
+      O.some(message),
+      O.none(),
+      O.some(publishTurboForce)
     ).pipe(
       provideRuntimeRootForTesting(RuntimeRootChoice.make({ kind: "test-override", root: runtimeDir })),
       Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({ BEEP_RUN_SCOPES: "0" })),
@@ -2144,8 +2208,10 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
       .pipe(Effect.flatMap(YeetVerdictJson.decode), Effect.option);
     const attemptJournalPath30 = yield* attemptJournalPath(context);
     const journal = yield* fs.readFileString(attemptJournalPath30);
-    const events = yield* Effect.forEach(pipe(journal, Str.split("\n"), A.filter(Str.isNonEmpty)), (line) =>
-      decodeYeetAttemptJournalEvent(line)
+    const events = yield* Effect.forEach(
+      pipe(journal, Str.split("\n"), A.filter(Str.isNonEmpty)),
+      (line) => decodeYeetAttemptJournalEvent(line),
+      { concurrency: 1 }
     );
     const proofLedgerPathForCheckout31 = yield* proofLedgerPathForCheckout(root);
     const ledgerHeads = yield* fs.readFileString(proofLedgerPathForCheckout31).pipe(
@@ -2200,6 +2266,15 @@ it.layer(commandTestLayer, { timeout: "60 seconds" })("committing publish verdic
       expect(verdict.head).toBe(run.startingHead);
       assertSome(startedHead(run.events), run.startingHead);
       assertSome(finishedHead(run.events), run.finalHead);
+      // The started row records the run's force receipt as it was handed in.
+      assertSome(
+        pipe(
+          A.findFirst(run.events, YeetAttemptJournalEvent.guards["attempt-started"]),
+          O.flatMap((started) => started.turboForce),
+          O.map((receipt) => receipt.reasons)
+        ),
+        ["lockfile-changed"]
+      );
       // The cheap-gates admission ran after the commit, on the commit's tree.
       assertSome(run.leaseHead, run.finalHead);
       expect(run.ledgerHeads).toEqual([run.finalHead]);

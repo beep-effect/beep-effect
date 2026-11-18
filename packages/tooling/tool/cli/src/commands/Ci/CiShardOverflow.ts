@@ -678,6 +678,9 @@ const decodeJobLine = S.decodeUnknownOption(S.fromJsonString(ShardOverflowJob));
 
 const ghLines = Effect.fn("Ci.shardOverflowGhLines")(function* (args: ReadonlyArray<string>) {
   const gh = yield* ChildProcessSpawner.ChildProcessSpawner.use((spawner) =>
+    // KEEP (D-22): `GithubRest` has no listing of runs by status or of a run's jobs with runner `labels`;
+    // both reads are gh `--jq` projections of the raw pages.
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
     spawner.spawn(ChildProcess.make("gh", args, { stdin: "ignore", stderr: "inherit" }))
   );
   const lines = gh.stdout.pipe(Stream.decodeText, Stream.splitLines, Stream.filter(Str.isNonEmpty), Stream.runCollect);
@@ -699,7 +702,9 @@ const runIdsWithStatus = (status: string) =>
     ".workflow_runs[].id",
   ]).pipe(
     Effect.flatMap((lines) =>
-      Effect.forEach(lines, (line) => Effect.fromOption(decodeRunIdLine(line), () => `unexpected run id ${line}`))
+      Effect.forEach(lines, (line) => Effect.fromOption(decodeRunIdLine(line), () => `unexpected run id ${line}`), {
+        concurrency: 1,
+      })
     )
   );
 
@@ -718,7 +723,9 @@ const runJobs = (runId: number) =>
     ".jobs[] | {status, labels}",
   ]).pipe(
     Effect.flatMap((lines) =>
-      Effect.forEach(lines, (line) => Effect.fromOption(decodeJobLine(line), () => `unexpected job ${line}`))
+      Effect.forEach(lines, (line) => Effect.fromOption(decodeJobLine(line), () => `unexpected job ${line}`), {
+        concurrency: 1,
+      })
     )
   );
 

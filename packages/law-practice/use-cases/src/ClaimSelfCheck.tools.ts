@@ -220,7 +220,8 @@ export const claimSelfCheckReview = Effect.fn("ClaimSelfCheck.review")(function*
         return yield* oversized();
       }
       return item;
-    })
+    }),
+    { concurrency: 1 }
   );
   return ClaimSelfCheckReviewResult.make({ items, candidates: checked.candidates, undecomposed: checked.undecomposed });
 });

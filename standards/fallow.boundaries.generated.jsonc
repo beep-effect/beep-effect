@@ -60,9 +60,27 @@
         ]
       },
       {
+        "name": "@beep/alchemy-aws-extras",
+        "patterns": [
+          "packages/tooling/library/alchemy-aws-extras/src/**"
+        ]
+      },
+      {
+        "name": "@beep/alchemy-github-runners",
+        "patterns": [
+          "packages/tooling/library/alchemy-github-runners/src/**"
+        ]
+      },
+      {
         "name": "@beep/alchemy-postgres",
         "patterns": [
           "packages/drivers/alchemy-postgres/src/**"
+        ]
+      },
+      {
+        "name": "@beep/alchemy-vercel",
+        "patterns": [
+          "packages/tooling/library/alchemy-vercel/src/**"
         ]
       },
       {
@@ -495,6 +513,30 @@
         "name": "@beep/infra",
         "patterns": [
           "infra/src/**"
+        ]
+      },
+      {
+        "name": "@beep/infra-cost-controls",
+        "patterns": [
+          "packages/tooling/infra/cost-controls/src/**"
+        ]
+      },
+      {
+        "name": "@beep/infra-github",
+        "patterns": [
+          "packages/tooling/infra/github/src/**"
+        ]
+      },
+      {
+        "name": "@beep/infra-hosts",
+        "patterns": [
+          "packages/tooling/infra/infra-hosts/src/**"
+        ]
+      },
+      {
+        "name": "@beep/infra-turbo-cache",
+        "patterns": [
+          "packages/tooling/infra/turbo-cache/src/**"
         ]
       },
       {
@@ -1443,6 +1485,36 @@
         ]
       },
       {
+        "from": "@beep/alchemy-aws-extras",
+        "allow": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/alchemy-github-runners",
+        "allow": [
+          "@beep/alchemy-aws-extras",
+          "@beep/alchemy-github-runners",
+          "@beep/identity",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-aws-extras",
+          "@beep/alchemy-github-runners",
+          "@beep/identity",
+          "@beep/schema"
+        ]
+      },
+      {
         "from": "@beep/alchemy-postgres",
         "allow": [
           "@beep/alchemy-postgres",
@@ -1459,6 +1531,21 @@
           "@beep/observability",
           "@beep/pglite",
           "@beep/postgres",
+          "@beep/schema",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/alchemy-vercel",
+        "allow": [
+          "@beep/alchemy-vercel",
+          "@beep/identity",
+          "@beep/schema",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-vercel",
+          "@beep/identity",
           "@beep/schema",
           "@beep/utils"
         ]
@@ -3011,6 +3098,7 @@
         "allow": [
           "@beep/identity",
           "@beep/infra",
+          "@beep/infra-hosts",
           "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
@@ -3021,12 +3109,79 @@
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/infra",
+          "@beep/infra-hosts",
           "@beep/openclaw",
           "@beep/repo-ai-metrics",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/infra-cost-controls",
+        "allow": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/infra-cost-controls",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-aws-extras",
+          "@beep/identity",
+          "@beep/infra-cost-controls",
+          "@beep/schema"
+        ]
+      },
+      {
+        "from": "@beep/infra-github",
+        "allow": [
+          "@beep/identity",
+          "@beep/infra-github",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/infra-github",
+          "@beep/schema"
+        ]
+      },
+      {
+        "from": "@beep/infra-hosts",
+        "allow": [
+          "@beep/identity",
+          "@beep/infra-hosts",
+          "@beep/memfs",
+          "@beep/openclaw",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/infra-hosts",
+          "@beep/memfs",
+          "@beep/openclaw",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/infra-turbo-cache",
+        "allow": [
+          "@beep/identity",
+          "@beep/infra-turbo-cache",
+          "@beep/memfs",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/infra-turbo-cache",
+          "@beep/memfs",
+          "@beep/schema"
         ]
       },
       {
@@ -3731,6 +3886,7 @@
       {
         "from": "@beep/oip-web",
         "allow": [
+          "@beep/alchemy-vercel",
           "@beep/hubspot",
           "@beep/identity",
           "@beep/oip-web",
@@ -3744,6 +3900,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/alchemy-vercel",
           "@beep/hubspot",
           "@beep/identity",
           "@beep/oip-web",
@@ -5490,6 +5647,7 @@
         "allow": [
           "@beep/epistemic-ui",
           "@beep/graph-3d",
+          "@beep/public-site",
           "@beep/storybook",
           "@beep/ui",
           "@beep/utils"
@@ -5497,6 +5655,7 @@
         "allowTypeOnly": [
           "@beep/epistemic-ui",
           "@beep/graph-3d",
+          "@beep/public-site",
           "@beep/storybook",
           "@beep/ui",
           "@beep/utils"

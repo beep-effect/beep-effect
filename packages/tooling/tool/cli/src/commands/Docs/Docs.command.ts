@@ -154,7 +154,7 @@ const DocsSections: ReadonlyArray<DocsSection> = [
 const printSection = Effect.fn(function* (section: DocsSection) {
   yield* Console.log(`${section.title}`);
   yield* Console.log(`${section.summary}`);
-  yield* Effect.forEach(section.lines, (line) => Console.log(`- ${line}`), { discard: true });
+  yield* Effect.forEach(section.lines, (line) => Console.log(`- ${line}`), { concurrency: 1, discard: true });
 });
 
 const printDocsIndex = () =>
@@ -233,7 +233,7 @@ const docsFindCommand = Command.make(
             }
             yield* printSection(section);
           }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       }),
     });

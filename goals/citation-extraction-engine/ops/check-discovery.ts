@@ -10,8 +10,9 @@ const program = Effect.gen(function* () {
     Bun.file(process.argv[2] ?? new URL("../history/evidence/oracle-discovery.json", import.meta.url)).text()
   );
   const report = yield* S.decodeUnknownEffect(S.fromJsonString(CitationOracleDiscovery))(text);
-  const exporter = yield* Effect.tryPromise(() => Bun.file(new URL("./audit-oracle.py", import.meta.url)).bytes());
-  const exporterHash = new Bun.CryptoHasher("sha256").update(exporter).digest("hex");
+  // audit-oracle.py was removed with the repository's Python (goal python-free-repo). Its digest is
+  // pinned from the recovery commit: `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/audit-oracle.py`.
+  const exporterHash = "23ef461df9f511b1559fb57014155e2907fbdc6d6e9d4c74914decff2d3d53f4";
   if (report.exporterSha256 !== exporterHash) {
     return yield* Effect.fail(new Error("Discovery exporter hash does not match the retained source"));
   }

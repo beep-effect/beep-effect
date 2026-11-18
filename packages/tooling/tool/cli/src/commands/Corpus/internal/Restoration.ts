@@ -1008,9 +1008,9 @@ const compareArchivePrefixes = Effect.fn("CorpusRestoration.compareArchivePrefix
   let remaining = prefixBytes;
   while (remaining > 0) {
     const size = Math.min(chunkSize, remaining);
-    const [sourceChunk, partialChunk] = yield* Effect.all([source.readAlloc(size), partial.readAlloc(size)]).pipe(
-      CorpusCommandError.mapError("Failed reading partial-prefix verification bytes.")
-    );
+    const [sourceChunk, partialChunk] = yield* Effect.all([source.readAlloc(size), partial.readAlloc(size)], {
+      concurrency: 1,
+    }).pipe(CorpusCommandError.mapError("Failed reading partial-prefix verification bytes."));
     if (O.isNone(sourceChunk) || O.isNone(partialChunk)) return false;
     if (!bytesEqual(sourceChunk.value, partialChunk.value)) return false;
     remaining -= sourceChunk.value.length;
@@ -1335,13 +1335,18 @@ const reconcileCollectorManifest = Effect.fn("CorpusRestoration.reconcileCollect
     .readFileString(canonicalPaths.sourceManifestPath)
     .pipe(CorpusCommandError.mapError("Failed reading inherited collector manifest."));
   const lines = A.filter(Str.split(/\r?\n/u)(manifestText), Str.isNonEmpty);
-  const records = yield* Effect.forEach(lines, (line) =>
-    decodeCollectorManifestRecordJson(line).pipe(
-      CorpusCommandError.mapError("Inherited collector manifest contains an invalid JSONL row.")
-    )
+  const records = yield* Effect.forEach(
+    lines,
+    (line) =>
+      decodeCollectorManifestRecordJson(line).pipe(
+        CorpusCommandError.mapError("Inherited collector manifest contains an invalid JSONL row.")
+      ),
+    { concurrency: 1 }
   );
-  const dispositions = yield* Effect.forEach(records, (record) =>
-    reconcileCollectorRecord(record, canonicalPaths.sourceRoot, options.collectorDestinationPrefixSegments)
+  const dispositions = yield* Effect.forEach(
+    records,
+    (record) => reconcileCollectorRecord(record, canonicalPaths.sourceRoot, options.collectorDestinationPrefixSegments),
+    { concurrency: 1 }
   );
   const successfulDispositions = A.filter(dispositions, isSuccessfulCollectorDisposition);
   const collectorErrorCount = A.filter(dispositions, (value) => value.kind === "collector-error").length;
@@ -1551,13 +1556,16 @@ const reconcileCompleteArchiveDestination = Effect.fn("CorpusRestoration.reconci
   if (sameDeviceAndInode(sourceIdentity(preInfo), sourceIdentity(destinationInfo))) {
     return yield* archiveError("Existing archive destination aliases its preservation source.");
   }
-  const [sourceHash, destinationHash, postInfo] = yield* Effect.all([
-    hashRestorationFileStreaming(context.object.sourcePath, context.chunkSize),
-    hashRestorationFileStreaming(context.destinationPath, context.chunkSize),
-    fs
-      .stat(context.object.sourcePath)
-      .pipe(CorpusCommandError.mapError("Failed re-inspecting complete archive source.")),
-  ]);
+  const [sourceHash, destinationHash, postInfo] = yield* Effect.all(
+    [
+      hashRestorationFileStreaming(context.object.sourcePath, context.chunkSize),
+      hashRestorationFileStreaming(context.destinationPath, context.chunkSize),
+      fs
+        .stat(context.object.sourcePath)
+        .pipe(CorpusCommandError.mapError("Failed re-inspecting complete archive source.")),
+    ],
+    { concurrency: 1 }
+  );
   const postCopySource = sourceStat(postInfo);
   if (!sameSourceIdentity(sourceIdentity(preInfo), sourceIdentity(postInfo))) {
     const recordArchiveSourceChange4 = yield* recordArchiveSourceChange(context, preCopySource, postCopySource);
@@ -1712,9 +1720,9 @@ const copyArchiveBytes = Effect.fn("CorpusRestoration.copyArchiveBytes")(functio
       flag: partialArchiveOpenFlag(partialState),
     })
     .pipe(CorpusCommandError.mapError("Failed opening partial preservation destination."));
-  const [openedSourceInfo, openedDestinationInfo] = yield* Effect.all([source.stat, destination.stat]).pipe(
-    CorpusCommandError.mapError("Failed inspecting opened preservation copy handles.")
-  );
+  const [openedSourceInfo, openedDestinationInfo] = yield* Effect.all([source.stat, destination.stat], {
+    concurrency: 1,
+  }).pipe(CorpusCommandError.mapError("Failed inspecting opened preservation copy handles."));
   yield* validateOpenedArchiveCopy(context, partialState, openedSourceInfo, openedDestinationInfo);
   if (partialState.resumeBytes === 0) {
     yield* destination
@@ -1868,10 +1876,13 @@ const appendProvenance = Effect.fn("CorpusRestoration.appendProvenance")(functio
       .readFileString(provenancePath)
       .pipe(CorpusCommandError.mapError("Failed reading restoration provenance for resume reconciliation."));
     const existingLines = A.filter(argument(pipe1), Str.isNonEmpty);
-    const existing = yield* Effect.forEach(existingLines, (line) =>
-      decodeCorpusProvenanceRecordJson(line).pipe(
-        CorpusCommandError.mapError("Existing restoration provenance failed resume decoding.")
-      )
+    const existing = yield* Effect.forEach(
+      existingLines,
+      (line) =>
+        decodeCorpusProvenanceRecordJson(line).pipe(
+          CorpusCommandError.mapError("Existing restoration provenance failed resume decoding.")
+        ),
+      { concurrency: 1 }
     );
     const destinationRows = A.filter(existing, (candidate) => candidate.destPath === record.destPath);
     if (destinationRows.length > 0) {
@@ -2134,7 +2145,7 @@ const reconcileStableSourceDirectories = Effect.fn("CorpusRestoration.reconcileS
       expectedInfo: { ...directory.expectedInfo, mtimeMillis: observedIdentity.mtimeMillis },
     };
   });
-  return yield* Effect.forEach(context.inventory.directories, reconcileOneDirectory);
+  return yield* Effect.forEach(context.inventory.directories, reconcileOneDirectory, { concurrency: 1 });
 });
 
 const validateFinalArchiveInventory = Effect.fn("CorpusRestoration.validateFinalInventory")(function* (
@@ -2317,10 +2328,13 @@ const persistVerificationReport = Effect.fn("CorpusRestoration.persistVerificati
 ): Effect.fn.Return<void, CorpusCommandError, RestorationRequirements> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const lines = yield* Effect.forEach(records, (record) =>
-    encodeArchiveVerificationRecordJson(record).pipe(
-      CorpusCommandError.mapError("Archive verification row failed JSONL encoding.")
-    )
+  const lines = yield* Effect.forEach(
+    records,
+    (record) =>
+      encodeArchiveVerificationRecordJson(record).pipe(
+        CorpusCommandError.mapError("Archive verification row failed JSONL encoding.")
+      ),
+    { concurrency: 1 }
   );
   const text = lines.length === 0 ? "" : `${A.join(lines, "\n")}\n`;
   const directory = path.join(archiveRoot, "verification");
@@ -2382,10 +2396,13 @@ const readArchiveManifest = Effect.fn("CorpusRestoration.readArchiveManifest")(f
     .readFile(manifestPath)
     .pipe(CorpusCommandError.mapError("Failed reading preservation manifest for independent verification."));
   const lines = A.filter(Str.split(/\r?\n/u)(textDecoder.decode(manifestBytes)), Str.isNonEmpty);
-  const records = yield* Effect.forEach(lines, (line) =>
-    decodeArchiveLedgerRecordJson(line).pipe(
-      CorpusCommandError.mapError("Preservation manifest failed fresh-process schema decoding.")
-    )
+  const records = yield* Effect.forEach(
+    lines,
+    (line) =>
+      decodeArchiveLedgerRecordJson(line).pipe(
+        CorpusCommandError.mapError("Preservation manifest failed fresh-process schema decoding.")
+      ),
+    { concurrency: 1 }
   );
   return { lines, records };
 });
@@ -2819,8 +2836,10 @@ export const verifyRestorationArchiveImpl = Effect.fn("CorpusRestoration.verifyA
   const { currentPreflight, currentRecords } = yield* validateCurrentArchiveRun(archiveRoot, records, seal);
   const terminals = yield* validateArchiveTerminalIndex(archiveRoot, currentRecords, currentPreflight);
   yield* requireArchivePayloadOwned(archiveRoot, terminals);
-  const outcomes = yield* Effect.forEach(A.fromIterable(terminals), ([objectId, terminal]) =>
-    verifyArchiveTerminal(archiveRoot, objectId, terminal)
+  const outcomes = yield* Effect.forEach(
+    A.fromIterable(terminals),
+    ([objectId, terminal]) => verifyArchiveTerminal(archiveRoot, objectId, terminal),
+    { concurrency: 1 }
   );
   const results = A.getSomes(A.map(outcomes, (outcome) => outcome.record));
   const bytesVerified = A.reduce(outcomes, 0, (total, outcome) => total + outcome.bytesVerified);

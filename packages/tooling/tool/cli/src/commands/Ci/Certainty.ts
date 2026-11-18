@@ -1160,6 +1160,9 @@ const gitLines = Effect.fn("Ci.certaintyGitLines")(
   function* (repoRoot: string, args: ReadonlyArray<string>) {
     const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
     const handle = yield* spawner.spawn(
+      // KEEP (D-22): `Git.log` has no `--first-parent` or `--until`, and the per-commit `diff-tree` answers
+      // nothing for a merge commit, which no kit diff member reproduces (`changedFiles` compares two trees).
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
       ChildProcess.make("git", ["-C", repoRoot, ...args], { stdin: "ignore", stdout: "pipe", stderr: "pipe" })
     );
     const [stdout, status] = yield* Effect.all(

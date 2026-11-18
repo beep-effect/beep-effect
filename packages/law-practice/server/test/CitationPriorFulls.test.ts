@@ -104,25 +104,28 @@ it.layer(Layer.mergeAll(BunCrypto.layer, BunFileSystem.layer))("retained prior-f
               outcome: { status: "value", groups: [] },
             })
           );
-          const mentions = yield* Effect.forEach(input.mentions, (mention) =>
-            Effect.gen(function* () {
-              const wire = yield* S.encodeEffect(Citation)(mention.citation);
-              if (wire.type !== "reference") {
-                return mention;
-              }
-              const citation = yield* S.decodeEffect(Citation)({
-                ...wire,
-                metadata: {
-                  pinCite: null,
-                  parenthetical: null,
-                  plaintiff: "Smith",
-                  defendant: null,
-                  shortCaseName: null,
-                  caseName: null,
-                },
-              });
-              return CitationMention.make({ ...mention, citation });
-            })
+          const mentions = yield* Effect.forEach(
+            input.mentions,
+            (mention) =>
+              Effect.gen(function* () {
+                const wire = yield* S.encodeEffect(Citation)(mention.citation);
+                if (wire.type !== "reference") {
+                  return mention;
+                }
+                const citation = yield* S.decodeEffect(Citation)({
+                  ...wire,
+                  metadata: {
+                    pinCite: null,
+                    parenthetical: null,
+                    plaintiff: "Smith",
+                    defendant: null,
+                    shortCaseName: null,
+                    caseName: null,
+                  },
+                });
+                return CitationMention.make({ ...mention, citation });
+              }),
+            { concurrency: 1 }
           );
           const prepared = yield* prepareCitationResolution({ ...input, mentions });
           const work = yield* makeCitationResolutionWork(prepared.limits);

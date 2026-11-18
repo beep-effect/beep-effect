@@ -1759,6 +1759,612 @@
         }
       }
     },
+    "@beep/alchemy-aws-extras": {
+      "path": "packages/tooling/library/alchemy-aws-extras",
+      "lines": 92.71,
+      "statements": 91.51,
+      "branches": 73.01,
+      "functions": 83.78,
+      "uncovered": {
+        "lines": 15,
+        "statements": 19,
+        "branches": 34,
+        "functions": 12
+      },
+      "files": {
+        "packages/tooling/library/alchemy-aws-extras/src/ComputeOptimizerEnrollment.ts": {
+          "lines": 92.59,
+          "statements": 89.28,
+          "branches": 75,
+          "functions": 77.77,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 4,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/alchemy-aws-extras/src/CostAllocationTag.ts": {
+          "lines": 93.75,
+          "statements": 91.42,
+          "branches": 76.66,
+          "functions": 75,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 7,
+            "functions": 3
+          }
+        },
+        "packages/tooling/library/alchemy-aws-extras/src/CostOptimizationHubEnrollment.ts": {
+          "lines": 88.46,
+          "statements": 85.18,
+          "branches": 75,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 3,
+            "statements": 4,
+            "branches": 4,
+            "functions": 3
+          }
+        },
+        "packages/tooling/library/alchemy-aws-extras/src/EnrollmentStatus.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-aws-extras/src/Errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-aws-extras/src/Providers.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-aws-extras/src/RunnerLaunchTemplate.ts": {
+          "lines": 92.92,
+          "statements": 92.85,
+          "branches": 70.31,
+          "functions": 90.24,
+          "uncovered": {
+            "lines": 8,
+            "statements": 9,
+            "branches": 19,
+            "functions": 4
+          }
+        },
+        "packages/tooling/library/alchemy-aws-extras/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-aws-extras/src/internal/ExtrasResource.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-aws-extras/src/internal/decodeProps.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/alchemy-github-runners": {
+      "path": "packages/tooling/library/alchemy-github-runners",
+      "lines": 94.69,
+      "statements": 93.72,
+      "branches": 74.62,
+      "functions": 87.24,
+      "uncovered": {
+        "lines": 44,
+        "statements": 56,
+        "branches": 68,
+        "functions": 43
+      },
+      "files": {
+        "packages/tooling/library/alchemy-github-runners/src/Aws.layer.ts": {
+          "lines": 93,
+          "statements": 93.33,
+          "branches": 52.77,
+          "functions": 89.85,
+          "uncovered": {
+            "lines": 7,
+            "statements": 7,
+            "branches": 17,
+            "functions": 7
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/Ec2Events.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/Ec2Fleet.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/Ec2Fleet.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/GitHubApp.layer.ts": {
+          "lines": 97.01,
+          "statements": 97.01,
+          "branches": 62.5,
+          "functions": 93.75,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 6,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/GitHubApp.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/GitHubRunners.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/JobRetry.program.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/MessageQueue.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/RunnerBinaries.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/RunnerBinariesSyncer.program.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 75,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/RunnerFleet.errors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/RunnerFleet.ts": {
+          "lines": 98.13,
+          "statements": 97.36,
+          "branches": 61.29,
+          "functions": 91.89,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 12,
+            "functions": 3
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/RunnerInstance.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/RunnerMessages.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/RunnerPool.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/RunnerRuntime.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/RunnerSweep.ts": {
+          "lines": 95.34,
+          "statements": 95.65,
+          "branches": 100,
+          "functions": 90.9,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/RunnerUserData.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/ScaleDown.program.ts": {
+          "lines": 94.11,
+          "statements": 92,
+          "branches": 81.25,
+          "functions": 84.37,
+          "uncovered": {
+            "lines": 5,
+            "statements": 8,
+            "branches": 6,
+            "functions": 5
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/ScaleUp.program.ts": {
+          "lines": 90.07,
+          "statements": 87.76,
+          "branches": 72.36,
+          "functions": 80.48,
+          "uncovered": {
+            "lines": 13,
+            "statements": 17,
+            "branches": 21,
+            "functions": 8
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/SsmHousekeeper.program.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/SsmParameters.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/SsmStore.service.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/TerminationWatcher.program.ts": {
+          "lines": 97.82,
+          "statements": 97.91,
+          "branches": 93.33,
+          "functions": 100,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/WebCrypto.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/Webhook.program.ts": {
+          "lines": 97.95,
+          "statements": 96.42,
+          "branches": 100,
+          "functions": 88.88,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/WorkflowJob.models.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/internal/Installation.ts": {
+          "lines": 87.5,
+          "statements": 87.5,
+          "branches": 75,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 1,
+            "functions": 1
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/internal/lambda/Runtime.ts": {
+          "lines": 94.44,
+          "statements": 94.73,
+          "branches": 100,
+          "functions": 89.47,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/internal/lambda/job-retry.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/internal/lambda/runner-binaries-syncer.ts": {
+          "lines": 66.66,
+          "statements": 66.66,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/internal/lambda/scale-down.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/internal/lambda/scale-up.ts": {
+          "lines": 93.75,
+          "statements": 89.47,
+          "branches": 100,
+          "functions": 81.81,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/internal/lambda/ssm-housekeeper.ts": {
+          "lines": 66.66,
+          "statements": 66.66,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/internal/lambda/termination-watcher.ts": {
+          "lines": 92.85,
+          "statements": 93.33,
+          "branches": 100,
+          "functions": 75,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/tooling/library/alchemy-github-runners/src/internal/lambda/webhook.ts": {
+          "lines": 86.66,
+          "statements": 76.47,
+          "branches": 50,
+          "functions": 42.85,
+          "uncovered": {
+            "lines": 2,
+            "statements": 4,
+            "branches": 3,
+            "functions": 4
+          }
+        }
+      }
+    },
     "@beep/alchemy-postgres": {
       "path": "packages/drivers/alchemy-postgres",
       "lines": 96.88,
@@ -1905,6 +2511,105 @@
           }
         },
         "packages/drivers/alchemy-postgres/src/AlchemyPostgres.instruments.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/alchemy-vercel": {
+      "path": "packages/tooling/library/alchemy-vercel",
+      "lines": 92.99,
+      "statements": 91.73,
+      "branches": 87.79,
+      "functions": 82.05,
+      "uncovered": {
+        "lines": 15,
+        "statements": 20,
+        "branches": 21,
+        "functions": 14
+      },
+      "files": {
+        "packages/tooling/library/alchemy-vercel/src/Domain.ts": {
+          "lines": 93.61,
+          "statements": 92.45,
+          "branches": 87.23,
+          "functions": 92.3,
+          "uncovered": {
+            "lines": 3,
+            "statements": 4,
+            "branches": 6,
+            "functions": 1
+          }
+        },
+        "packages/tooling/library/alchemy-vercel/src/EnvVar.ts": {
+          "lines": 96.77,
+          "statements": 94.44,
+          "branches": 90.12,
+          "functions": 87.5,
+          "uncovered": {
+            "lines": 3,
+            "statements": 6,
+            "branches": 8,
+            "functions": 4
+          }
+        },
+        "packages/tooling/library/alchemy-vercel/src/Project.ts": {
+          "lines": 87.14,
+          "statements": 87.01,
+          "branches": 84.09,
+          "functions": 71.87,
+          "uncovered": {
+            "lines": 9,
+            "statements": 10,
+            "branches": 7,
+            "functions": 9
+          }
+        },
+        "packages/tooling/library/alchemy-vercel/src/Providers.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-vercel/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-vercel/src/internal/resource.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/library/alchemy-vercel/src/internal/scope.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -15752,18 +16457,6 @@
             "functions": 19
           }
         },
-        "infra/src/AccountCostControls.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "infra/src/CiFleetController.ts": {
           "lines": 98.03,
           "statements": 98.03,
@@ -15800,18 +16493,6 @@
             "functions": 0
           }
         },
-        "infra/src/OipWeb.ts": {
-          "lines": 39.04,
-          "statements": 38.67,
-          "branches": 18.91,
-          "functions": 12.5,
-          "uncovered": {
-            "lines": 64,
-            "statements": 65,
-            "branches": 30,
-            "functions": 21
-          }
-        },
         "infra/src/OpenClaw.ts": {
           "lines": 80.88,
           "statements": 81.77,
@@ -15825,30 +16506,6 @@
           }
         },
         "infra/src/OpenClawArtifacts.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "infra/src/Storybook.ts": {
-          "lines": 70,
-          "statements": 67.74,
-          "branches": 75,
-          "functions": 57.14,
-          "uncovered": {
-            "lines": 9,
-            "statements": 10,
-            "branches": 1,
-            "functions": 3
-          }
-        },
-        "infra/src/Vercel.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -15920,18 +16577,6 @@
             "functions": 0
           }
         },
-        "infra/src/internal/oip-web-entry.ts": {
-          "lines": 0,
-          "statements": 0,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 6,
-            "statements": 6,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "infra/src/internal/openclaw-entry.ts": {
           "lines": 0,
           "statements": 0,
@@ -15943,27 +16588,435 @@
             "branches": 0,
             "functions": 0
           }
+        }
+      }
+    },
+    "@beep/infra-cost-controls": {
+      "path": "packages/tooling/infra/cost-controls",
+      "lines": 99.37,
+      "statements": 99.42,
+      "branches": 92.94,
+      "functions": 98.36,
+      "uncovered": {
+        "lines": 1,
+        "statements": 1,
+        "branches": 6,
+        "functions": 1
+      },
+      "files": {
+        "packages/tooling/infra/cost-controls/src/Config.ts": {
+          "lines": 94.44,
+          "statements": 94.44,
+          "branches": 100,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
         },
-        "infra/src/internal/storybook-entry.ts": {
-          "lines": 0,
-          "statements": 0,
+        "packages/tooling/infra/cost-controls/src/CostControls.ts": {
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
           "functions": 100,
           "uncovered": {
-            "lines": 5,
-            "statements": 5,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
             "functions": 0
           }
         },
-        "infra/src/internal/turbo-cache-lab-entry.ts": {
-          "lines": 0,
-          "statements": 0,
+        "packages/tooling/infra/cost-controls/src/Guards.ts": {
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
           "functions": 100,
           "uncovered": {
-            "lines": 7,
-            "statements": 7,
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/cost-controls/src/PlanCheck.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 90.76,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 6,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/cost-controls/src/Providers.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/cost-controls/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/infra-github": {
+      "path": "packages/tooling/infra/github",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/tooling/infra/github/src/Config.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/github/src/ProdWriteGuard.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/github/src/Production.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/github/src/ReadOnlyProviders.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/github/src/RulesetGuard.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/github/src/RulesetWriteGuard.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/github/src/Stack.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/github/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/infra-hosts": {
+      "path": "packages/tooling/infra/infra-hosts",
+      "lines": 99.61,
+      "statements": 99.63,
+      "branches": 100,
+      "functions": 98.75,
+      "uncovered": {
+        "lines": 1,
+        "statements": 1,
+        "branches": 0,
+        "functions": 1
+      },
+      "files": {
+        "packages/tooling/infra/infra-hosts/src/AiMetricsConfig.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/infra-hosts/src/AiMetricsStack.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/infra-hosts/src/HostConfigFile.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/infra-hosts/src/HostsStage.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/infra-hosts/src/OpenClawArtifacts.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/infra-hosts/src/OpenClawGeneration.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/infra-hosts/src/OpenClawStack.ts": {
+          "lines": 96.42,
+          "statements": 96.42,
+          "branches": 100,
+          "functions": 85.71,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/tooling/infra/infra-hosts/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/infra-hosts/src/internal/Shell.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/infra-turbo-cache": {
+      "path": "packages/tooling/infra/turbo-cache",
+      "lines": 72.9,
+      "statements": 74.1,
+      "branches": 58.62,
+      "functions": 72.28,
+      "uncovered": {
+        "lines": 55,
+        "statements": 58,
+        "branches": 36,
+        "functions": 23
+      },
+      "files": {
+        "packages/tooling/infra/turbo-cache/src/Bucket.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/turbo-cache/src/CachePolicy.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/turbo-cache/src/Protocol.ts": {
+          "lines": 71.87,
+          "statements": 72.64,
+          "branches": 58.33,
+          "functions": 67.5,
+          "uncovered": {
+            "lines": 27,
+            "statements": 29,
+            "branches": 25,
+            "functions": 13
+          }
+        },
+        "packages/tooling/infra/turbo-cache/src/TokenHandoff.ts": {
+          "lines": 86.48,
+          "statements": 87.5,
+          "branches": 70.58,
+          "functions": 75,
+          "uncovered": {
+            "lines": 5,
+            "statements": 5,
+            "branches": 5,
+            "functions": 3
+          }
+        },
+        "packages/tooling/infra/turbo-cache/src/TurboCache.ts": {
+          "lines": 28.12,
+          "statements": 29.41,
+          "branches": 0,
+          "functions": 30,
+          "uncovered": {
+            "lines": 23,
+            "statements": 24,
+            "branches": 6,
+            "functions": 7
+          }
+        },
+        "packages/tooling/infra/turbo-cache/src/Worker.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/turbo-cache/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/infra/turbo-cache/src/internal/StateReader.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
             "functions": 0
           }
@@ -19804,14 +20857,14 @@
         },
         "packages/law-practice/server/src/internal/Citation/AnnotationEntry.ts": {
           "lines": 100,
-          "statements": 100,
+          "statements": 98.64,
           "branches": 100,
-          "functions": 100,
+          "functions": 94.44,
           "uncovered": {
             "lines": 0,
-            "statements": 0,
+            "statements": 1,
             "branches": 0,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/law-practice/server/src/internal/Citation/AnnotationFailure.ts": {
@@ -20152,14 +21205,14 @@
         },
         "packages/law-practice/server/src/internal/Citation/CleanerRegistry.ts": {
           "lines": 100,
-          "statements": 98.59,
+          "statements": 98.11,
           "branches": 87.67,
-          "functions": 98.52,
+          "functions": 97.05,
           "uncovered": {
             "lines": 0,
-            "statements": 3,
+            "statements": 4,
             "branches": 9,
-            "functions": 1
+            "functions": 2
           }
         },
         "packages/law-practice/server/src/internal/Citation/CleanerTextIdentity.ts": {
@@ -20500,14 +21553,14 @@
         },
         "packages/law-practice/server/src/internal/Citation/ExtractorOrdering.ts": {
           "lines": 100,
-          "statements": 97.72,
+          "statements": 92.5,
           "branches": 75,
-          "functions": 92.85,
+          "functions": 76.92,
           "uncovered": {
             "lines": 0,
-            "statements": 1,
+            "statements": 3,
             "branches": 1,
-            "functions": 1
+            "functions": 3
           }
         },
         "packages/law-practice/server/src/internal/Citation/ExtractorRecipes.ts": {
@@ -20871,15 +21924,15 @@
           }
         },
         "packages/law-practice/server/src/internal/Citation/MetadataYear.ts": {
-          "lines": 100,
-          "statements": 100,
+          "lines": 95.45,
+          "statements": 95.65,
           "branches": 100,
-          "functions": 100,
+          "functions": 87.5,
           "uncovered": {
-            "lines": 0,
-            "statements": 0,
+            "lines": 1,
+            "statements": 1,
             "branches": 0,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/law-practice/server/src/internal/Citation/NativeAdmission.ts": {
@@ -21208,14 +22261,14 @@
         },
         "packages/law-practice/server/src/internal/Citation/RecognizerWorker.ts": {
           "lines": 100,
-          "statements": 100,
+          "statements": 98.3,
           "branches": 100,
-          "functions": 100,
+          "functions": 92.85,
           "uncovered": {
             "lines": 0,
-            "statements": 0,
+            "statements": 1,
             "branches": 0,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/law-practice/server/src/internal/Citation/RecognizerWorkerProgram.ts": {
@@ -21422,18 +22475,6 @@
             "functions": 1
           }
         },
-        "packages/law-practice/server/src/internal/Citation/RegexWorkerClient.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/law-practice/server/src/internal/Citation/RegexWorkerEvaluation.ts": {
           "lines": 95.74,
           "statements": 90.9,
@@ -21446,28 +22487,16 @@
             "functions": 2
           }
         },
-        "packages/law-practice/server/src/internal/Citation/RegexWorkerProgram.ts": {
-          "lines": 96.87,
-          "statements": 91.42,
-          "branches": 83.33,
-          "functions": 75,
-          "uncovered": {
-            "lines": 1,
-            "statements": 3,
-            "branches": 1,
-            "functions": 3
-          }
-        },
         "packages/law-practice/server/src/internal/Citation/RegexWorkerProtocol.ts": {
           "lines": 100,
-          "statements": 98.64,
+          "statements": 97.26,
           "branches": 90,
-          "functions": 100,
+          "functions": 94.11,
           "uncovered": {
             "lines": 0,
-            "statements": 1,
+            "statements": 2,
             "branches": 1,
-            "functions": 0
+            "functions": 1
           }
         },
         "packages/law-practice/server/src/internal/Citation/RegexWorkerRpc.ts": {
@@ -37577,6 +38606,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.adapter.host.ts": {
+          "lines": 96.66,
+          "statements": 96.13,
+          "branches": 100,
+          "functions": 89.87,
+          "uncovered": {
+            "lines": 6,
+            "statements": 8,
+            "branches": 0,
+            "functions": 8
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.census.ts": {
           "lines": 39.66,
           "statements": 40,
@@ -37707,6 +38748,18 @@
             "statements": 47,
             "branches": 15,
             "functions": 12
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.diagnostics.ts": {
+          "lines": 98.59,
+          "statements": 97.33,
+          "branches": 94.24,
+          "functions": 94.48,
+          "uncovered": {
+            "lines": 7,
+            "statements": 16,
+            "branches": 16,
+            "functions": 8
           }
         },
         "packages/tooling/tool/cli/src/commands/Cache/Cache.entrypoints.schemas.ts": {
@@ -37970,6 +39023,42 @@
             "lines": 0,
             "statements": 0,
             "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.r2.command.ts": {
+          "lines": 100,
+          "statements": 96.15,
+          "branches": 100,
+          "functions": 85.71,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.r2.live.ts": {
+          "lines": 97.89,
+          "statements": 97.14,
+          "branches": 94.44,
+          "functions": 92.1,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 1,
+            "functions": 3
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Cache/Cache.r2.ts": {
+          "lines": 100,
+          "statements": 99.35,
+          "branches": 91.66,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 4,
             "functions": 0
           }
         },
@@ -40145,6 +41234,18 @@
             "functions": 0
           }
         },
+        "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.inference.ts": {
+          "lines": 97.42,
+          "statements": 97.36,
+          "branches": 98.3,
+          "functions": 91.07,
+          "uncovered": {
+            "lines": 5,
+            "statements": 6,
+            "branches": 1,
+            "functions": 5
+          }
+        },
         "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.model-store.ts": {
           "lines": 84.43,
           "statements": 84.5,
@@ -40155,6 +41256,18 @@
             "statements": 33,
             "branches": 22,
             "functions": 21
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.onnx.ts": {
+          "lines": 100,
+          "statements": 99.56,
+          "branches": 93.44,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 4,
+            "functions": 0
           }
         },
         "packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.schemas.ts": {
@@ -45195,6 +46308,30 @@
             "statements": 146,
             "branches": 130,
             "functions": 38
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReapDrain.ts": {
+          "lines": 96.35,
+          "statements": 92.99,
+          "branches": 82.02,
+          "functions": 91.83,
+          "uncovered": {
+            "lines": 13,
+            "statements": 29,
+            "branches": 32,
+            "functions": 12
+          }
+        },
+        "packages/tooling/tool/cli/src/commands/Worktree/internal/ResidueReapDrainLive.ts": {
+          "lines": 87.32,
+          "statements": 87.01,
+          "branches": 100,
+          "functions": 71.42,
+          "uncovered": {
+            "lines": 9,
+            "statements": 10,
+            "branches": 0,
+            "functions": 10
           }
         },
         "packages/tooling/tool/cli/src/commands/Worktree/internal/TmpfsReap.schemas.ts": {

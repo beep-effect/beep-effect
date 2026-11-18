@@ -147,7 +147,7 @@ export const summarizeCacheLocalObservation = Effect.fn("Ci.summarizeCacheLocalO
     const requestJson = yield* decodeJson(requestText);
     const report = yield* decodeReceipt(reportJson);
     const request = yield* decodeRequest(requestJson);
-    const rawClients = yield* Effect.all([decodeEnvelope(reportJson), decodeEnvelope(requestJson)]);
+    const rawClients = yield* Effect.all([decodeEnvelope(reportJson), decodeEnvelope(requestJson)], { concurrency: 1 });
     if (
       report.sourceRevision !== revision ||
       report.channel !== channel ||
@@ -158,7 +158,8 @@ export const summarizeCacheLocalObservation = Effect.fn("Ci.summarizeCacheLocalO
       return yield* refused;
     const failed = yield* Effect.forEach(
       A.filter(report.checks, (check) => !check.passed),
-      (check) => hashBytes(encoder.encode(check.name))
+      (check) => hashBytes(encoder.encode(check.name)),
+      { concurrency: 1 }
     );
     const counts = {
       checks: A.length(report.checks),

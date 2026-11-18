@@ -149,7 +149,8 @@ export const parseYarn = Effect.fn("YarnLockfile.parse")(function* (
     ([key, value]) =>
       decodeYarnEntry(value).pipe(
         Effect.mapBoth({ onFailure: validationFailure, onSuccess: (entry) => [key, entry] as const })
-      )
+      ),
+    { concurrency: 1 }
   );
   return yield* toFields(lockfileVersion, MutableHashMap.fromIterable(decoded));
 });
@@ -226,7 +227,7 @@ const toFields: {
       )
     );
     const instanceIds = HashSet.fromIterable(A.flatMap(rows, (row) => (row.instanceId === "" ? [] : [row.instanceId])));
-    const packages = yield* Effect.forEach(rows, (row) => yarnPackage(row, locators, instanceIds));
+    const packages = yield* Effect.forEach(rows, (row) => yarnPackage(row, locators, instanceIds), { concurrency: 1 });
     // Only emitted workspace rows contribute dependency sections.
     const workspaceEntries = MutableHashMap.fromIterable(
       A.flatMap(rows, (row) =>

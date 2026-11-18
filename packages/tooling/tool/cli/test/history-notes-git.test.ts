@@ -30,6 +30,8 @@ const IsolatedSpawner = Layer.effect(
   ChildProcessSpawner.ChildProcessSpawner,
   Effect.gen(function* () {
     const real = yield* ChildProcessSpawner.ChildProcessSpawner;
+    // Own double: decorates the real platform spawner, adding the isolated git config to every spawn.
+    // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
     return ChildProcessSpawner.make((command) =>
       real.spawn(ChildProcess.setEnv(command, { GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_SYSTEM: "/dev/null" }))
     );

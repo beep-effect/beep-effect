@@ -719,7 +719,7 @@ describe("@beep/occt service", () => {
               })
             ).toBe(true);
           }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       })
     );

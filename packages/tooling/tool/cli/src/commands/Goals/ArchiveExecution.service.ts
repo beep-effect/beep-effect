@@ -463,7 +463,7 @@ const pushPlan = Effect.fn("ArchiveStore.push")(function* (plan: ArchivePlan) {
       "archive checkout is missing or not a git repository; clone the archive repo there first"
     );
   }
-  yield* Effect.forEach(plan.entries, (entry) => mirrorEntry(workspace, entry), { discard: true });
+  yield* Effect.forEach(plan.entries, (entry) => mirrorEntry(workspace, entry), { concurrency: 1, discard: true });
   const readmePath = path.join(workspace.archiveDir, ARCHIVE_README_FILE);
   const hasReadme = yield* fs.exists(readmePath).pipe(Effect.orElseSucceed(() => false));
   if (!hasReadme) {
@@ -507,19 +507,22 @@ const verifyPlan = Effect.fn("ArchiveStore.verify")(function* (plan: ArchivePlan
   const workspace = yield* ArchiveWorkspace;
   const git = yield* Git;
   const verifyFailed = gitFailed(workspace.archiveDir, "archive-git-failed");
-  return yield* Effect.forEach(plan.entries, (entry) =>
-    git.revParse(workspace.archiveDir, `${commit}:${packetPath(entry)}`).pipe(
-      Effect.mapBoth({
-        onFailure: verifyFailed,
-        onSuccess: (hash) =>
-          ArchiveVerification.make({
-            root: entry.root,
-            slug: entry.slug,
-            archiveTreeHash: hash,
-            verified: hash === entry.localTreeHash,
-          }),
-      })
-    )
+  return yield* Effect.forEach(
+    plan.entries,
+    (entry) =>
+      git.revParse(workspace.archiveDir, `${commit}:${packetPath(entry)}`).pipe(
+        Effect.mapBoth({
+          onFailure: verifyFailed,
+          onSuccess: (hash) =>
+            ArchiveVerification.make({
+              root: entry.root,
+              slug: entry.slug,
+              archiveTreeHash: hash,
+              verified: hash === entry.localTreeHash,
+            }),
+        })
+      ),
+    { concurrency: 1 }
   );
 });
 
@@ -867,7 +870,7 @@ const tombstoneEntry = Effect.fnUntraced(function* (
       fs
         .remove(path.join(workspace.repoRoot, file), { force: true })
         .pipe(Effect.mapError(fsFailure("tombstone-conflict", entry.slug, file))),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* writeContainedFileString(workspace.repoRoot, readmeFile, renderTombstoneReadme(stub)).pipe(
     Effect.mapError(fsFailure("tombstone-conflict", entry.slug, readmeFile))
@@ -883,25 +886,33 @@ const applyTombstones = Effect.fn("TombstoneWriter.apply")(function* (plan: Arch
   const records = HashMap.fromIterable(
     A.map(receipt.entries, (entry): readonly [string, ArchiveReceiptEntry] => [`${entry.root}/${entry.slug}`, entry])
   );
-  const manifests = yield* Effect.forEach(plan.entries, (entry) =>
-    Effect.flatMap(
-      Effect.fromOption(HashMap.get(records, packetPath(entry))).pipe(
-        Effect.mapError(() =>
-          ArchiveError.new("tombstone-conflict", entry.slug, packetPath(entry), "receipt has no record for this packet")
-        )
-      ),
-      (receiptEntry) =>
-        receiptEntry.verified
-          ? tombstoneEntry(workspace, entry, receiptEntry.record)
-          : Effect.fail(
-              ArchiveError.new(
-                "archive-verify-mismatch",
-                entry.slug,
-                packetPath(entry),
-                "receipt entry is not verified"
-              )
+  const manifests = yield* Effect.forEach(
+    plan.entries,
+    (entry) =>
+      Effect.flatMap(
+        Effect.fromOption(HashMap.get(records, packetPath(entry))).pipe(
+          Effect.mapError(() =>
+            ArchiveError.new(
+              "tombstone-conflict",
+              entry.slug,
+              packetPath(entry),
+              "receipt has no record for this packet"
             )
-    )
+          )
+        ),
+        (receiptEntry) =>
+          receiptEntry.verified
+            ? tombstoneEntry(workspace, entry, receiptEntry.record)
+            : Effect.fail(
+                ArchiveError.new(
+                  "archive-verify-mismatch",
+                  entry.slug,
+                  packetPath(entry),
+                  "receipt entry is not verified"
+                )
+              )
+      ),
+    { concurrency: 1 }
   );
   const formatter = yield* Effect.serviceOption(GoalManifestFormatter);
   yield* O.getOrElse(formatter, () => biomeManifestFormatter)
@@ -1073,7 +1084,10 @@ const rewriteLinks = Effect.fn("InboundLinkRewriter.rewrite")(function* (links: 
     R.toEntries(byFile),
     Order.mapInput(Order.String, ([file]: readonly [string, ReadonlyArray<InboundLink>]) => file)
   );
-  yield* Effect.forEach(files, ([file, fileLinks]) => rewriteFile(workspace, file, fileLinks), { discard: true });
+  yield* Effect.forEach(files, ([file, fileLinks]) => rewriteFile(workspace, file, fileLinks), {
+    concurrency: 1,
+    discard: true,
+  });
   return A.length(links);
 });
 

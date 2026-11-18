@@ -495,11 +495,12 @@ const LANE_WORK_ENTRY_STEPS: ReadonlyArray<string> = [
 ];
 // Steps that run before a lane's entry step and are classified as the lane's own work on purpose, so their reds
 // stay on the lane: Repo Sanity's documentation and merge-driver checks, and the coverage comparison's
-// evidence authentication and download (missing evidence is that lane's verdict).
+// evidence authentication, download and layout (missing or foreign evidence is that lane's verdict).
 const LANE_WORK_PRELUDE_STEPS: ReadonlyArray<string> = [
   "Authenticate latest Labs execution",
   "Check documentation sanity",
   "Download coverage evidence",
+  "Normalize coverage evidence layout",
   "Verify regenerate merge-driver bootstrap",
 ];
 
@@ -560,38 +561,42 @@ const reportedJobsOf = (
 ): Effect.Effect<ReadonlyArray<ContractJob>, Cause.NoSuchElementError | S.SchemaError> =>
   Effect.flatMap(read(file), (jobs) =>
     Effect.map(
-      Effect.forEach(R.toEntries(jobs), ([key, job]) => {
-        const names = A.flatMap(prefixes, (prefix) =>
-          hostedNamesOf(
-            prefix,
-            O.getOrElse(O.fromUndefinedOr(job.name), () => key)
-          )
-        );
-        return O.match(
-          pipe(
-            O.fromUndefinedOr(job.uses),
-            O.flatMap(Str.match(REUSABLE_WORKFLOW)),
-            O.filter(() => depth < MAX_WORKFLOW_DEPTH)
-          ),
-          {
-            onNone: () =>
-              Effect.succeed<ReadonlyArray<ContractJob>>([
-                {
-                  job: `${file}#${key}`,
-                  lanes: A.dedupe(A.getSomes(A.map(names, (name) => hostedJobAttribution(name).lane))),
-                  steps: A.map(O.getOrElse(O.fromUndefinedOr(job.steps), A.empty<WorkflowStepDoc>), listedStepName),
-                },
-              ]),
-            onSome: (match) =>
-              reportedJobsOf(
-                read,
-                match[0],
-                A.map(names, (name) => `${name} / `),
-                depth + 1
-              ),
-          }
-        );
-      }),
+      Effect.forEach(
+        R.toEntries(jobs),
+        ([key, job]) => {
+          const names = A.flatMap(prefixes, (prefix) =>
+            hostedNamesOf(
+              prefix,
+              O.getOrElse(O.fromUndefinedOr(job.name), () => key)
+            )
+          );
+          return O.match(
+            pipe(
+              O.fromUndefinedOr(job.uses),
+              O.flatMap(Str.match(REUSABLE_WORKFLOW)),
+              O.filter(() => depth < MAX_WORKFLOW_DEPTH)
+            ),
+            {
+              onNone: () =>
+                Effect.succeed<ReadonlyArray<ContractJob>>([
+                  {
+                    job: `${file}#${key}`,
+                    lanes: A.dedupe(A.getSomes(A.map(names, (name) => hostedJobAttribution(name).lane))),
+                    steps: A.map(O.getOrElse(O.fromUndefinedOr(job.steps), A.empty<WorkflowStepDoc>), listedStepName),
+                  },
+                ]),
+              onSome: (match) =>
+                reportedJobsOf(
+                  read,
+                  match[0],
+                  A.map(names, (name) => `${name} / `),
+                  depth + 1
+                ),
+            }
+          );
+        },
+        { concurrency: 1 }
+      ),
       A.flatten
     )
   );

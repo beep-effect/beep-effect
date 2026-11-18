@@ -19,11 +19,7 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { makeCitationCleanerPipeline } from "./CleanerPipeline.ts";
 import { CitationCleanerValues, copyCitationCleanerUnicode } from "./CleanerValues.ts";
-import {
-  CitationHtmlGeometryPreparationConfiguration,
-  copyCitationHtmlGeometryConfiguration,
-  prepareCitationHtmlGeometry,
-} from "./HtmlGeometryPreparation.ts";
+import { installCitationHtmlGeometry, verifyCitationHtmlGeometryConfiguration } from "./HtmlGeometryPreparation.ts";
 import { CitationHtmlTagGeometryInput } from "./HtmlTagGeometry.ts";
 import { makeCitationMetadataStage } from "./MetadataComposition.ts";
 import type {
@@ -32,6 +28,8 @@ import type {
   CitationEngineLimits,
   CitationSafetyLimitExceeded,
 } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
+import type { CitationHtmlGeometryPreparationConfiguration } from "./HtmlGeometryPreparation.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/InputDocument");
@@ -135,14 +133,16 @@ const selectMode = Effect.fn("Citation.selectInputDocumentMode")(function* (
 });
 const own = Effect.fn("Citation.captureInputDocument")(function* (
   limits: CitationEngineLimits,
-  config: CitationHtmlGeometryPreparationConfiguration
+  config: CitationOwned<CitationHtmlGeometryPreparationConfiguration>,
+  runtime: CitationNativeProcessRuntime
 ) {
-  const configuration = yield* copyCitationHtmlGeometryConfiguration(limits, config);
+  const configuration = yield* verifyCitationHtmlGeometryConfiguration(limits, config);
+  const html = yield* installCitationHtmlGeometry(limits, runtime, configuration);
   const values = yield* CitationCleanerValues;
   const protocols = yield* CitationDocumentInputProtocols;
   const cleanerRuntime = yield* CitationCleaner;
   const empty = yield* values.text("");
-  return { configuration, values, protocols, cleanerRuntime, limits, empty };
+  return { configuration, html, values, protocols, cleanerRuntime, limits, empty };
 });
 type Owned = Effect.Success<ReturnType<typeof own>>;
 const Patch = S.Struct({
@@ -183,8 +183,6 @@ const plainBranch = Effect.fn("Citation.initializePlainDocument")(function* (
   });
 });
 const markupBranch = Effect.fn("Citation.initializeMarkupDocument")(function* (
-  limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
   owned: Owned,
   input: CitationDocumentInput
 ) {
@@ -195,10 +193,7 @@ const markupBranch = Effect.fn("Citation.initializeMarkupDocument")(function* (
   const result = yield* cleanValue(owned, input, input.markup);
   const markup = yield* nativeValue(owned, input.markup);
   const budget = yield* CitationTextBudget;
-  const geometry = yield* prepareCitationHtmlGeometry(
-    limits,
-    runtime,
-    owned.configuration,
+  const geometry = yield* owned.html.geometry(
     markup,
     nativeValue(owned, result.value).pipe(Effect.provideService(CitationTextBudget, budget))
   );
@@ -217,8 +212,8 @@ const bothBranch = Effect.fn("Citation.initializeSuppliedDocument")(function* (
   return Patch.make({ plain: input.plain, source: input.markup, geometry: O.none(), cleanerTextUtf16: 0 });
 });
 const prepare = Effect.fn("Citation.initializeInputDocument")(function* (
-  limits: CitationEngineLimits,
-  runtime: CitationNativeProcessRuntime,
+  _limits: CitationEngineLimits,
+  _runtime: CitationNativeProcessRuntime,
   owned: Owned,
   raw: unknown
 ) {
@@ -231,7 +226,7 @@ const prepare = Effect.fn("Citation.initializeInputDocument")(function* (
   const mode = yield* selectMode(owned.protocols, input);
   const patch = yield* Match.value(mode).pipe(
     Match.when("Plain", () => plainBranch(owned, input)),
-    Match.when("Markup", () => markupBranch(limits, runtime, owned, input)),
+    Match.when("Markup", () => markupBranch(owned, input)),
     Match.when("Empty", () => Effect.fail(fail("empty-input", "ValueError"))),
     Match.when("Both", () => bothBranch(owned, input)),
     Match.when("Unchanged", () =>
@@ -248,8 +243,6 @@ const prepare = Effect.fn("Citation.initializeInputDocument")(function* (
  */
 export const makeCitationInputDocument = makeCitationMetadataStage({
   method: "initialize",
-  schema: S.toType(CitationHtmlGeometryPreparationConfiguration),
-  invalid: () => fail("invalid-input", "TypeError"),
   own,
   prepare,
   project: (patch, reservedUnits) => CitationInputDocument.make({ ...patch, reservedUnits }),

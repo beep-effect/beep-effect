@@ -207,7 +207,7 @@ const makeFixtureRepo = Effect.fn("ArchiveTest.makeFixtureRepo")(function* () {
         yield* fs.makeDirectory(path.dirname(target), { recursive: true });
         yield* fs.writeFileString(target, text);
       }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* fs.symlink("AGENTS.md", path.join(root, "docs/CLAUDE.md"));
   yield* git(root, ["add", "-A"]);
@@ -271,7 +271,7 @@ const makeArchiveCheckout = Effect.fn("ArchiveTest.makeArchiveCheckout")(functio
 const existsAll = Effect.fn("ArchiveTest.existsAll")(function* (base: string, files: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  return yield* Effect.forEach(files, (file) => fs.exists(path.join(base, file)));
+  return yield* Effect.forEach(files, (file) => fs.exists(path.join(base, file)), { concurrency: 1 });
 });
 
 const readText = Effect.fn("ArchiveTest.readText")(function* (base: string, file: string) {
@@ -650,7 +650,8 @@ describe("goals archive", () => {
             { ...base, plan: true, repo: "nope" },
             { ...base, plan: true, batch: 0 },
           ],
-          (options) => Effect.map(Effect.flip(runGoalsArchive(options, root)), (error) => error.reason)
+          (options) => Effect.map(Effect.flip(runGoalsArchive(options, root)), (error) => error.reason),
+          { concurrency: 1 }
         );
         assert.deepStrictEqual(reasons, [
           "archive-input-invalid",
@@ -835,13 +836,13 @@ describe("goals archive", () => {
         // An uncommitted edit diverges the copied working tree from the HEAD tree the plan recorded.
         yield* fs.writeFileString(path.join(root, "goals/done/PLAN.md"), "# Plan (edited)\n");
         const watched = ["goals/done/PLAN.md", "goals/done/ops/manifest.json", "docs/guide.md"];
-        const before = yield* Effect.forEach(watched, (file) => readText(root, file));
+        const before = yield* Effect.forEach(watched, (file) => readText(root, file), { concurrency: 1 });
         const failure = yield* runGoalsArchive(
           { ...writeOptions(archiveDir), slugs: ["done"], expect: plan.planId },
           root
         ).pipe(Effect.provideService(GoalManifestFormatter, noFormatter), Effect.flip);
         assert.strictEqual(failure.reason, "archive-verify-mismatch");
-        const after = yield* Effect.forEach(watched, (file) => readText(root, file));
+        const after = yield* Effect.forEach(watched, (file) => readText(root, file), { concurrency: 1 });
         assert.deepStrictEqual(after, before);
         const present = yield* existsAll(root, ["goals/done/SPEC.md", ".beep/archive"]);
         assert.deepStrictEqual(present, [true, false]);

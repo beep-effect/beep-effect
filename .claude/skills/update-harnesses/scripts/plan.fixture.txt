@@ -1,0 +1,6 @@
+dankstation  t3code claude codex grok kimi junie cursor-agent muse chatgpt-desktop claude-desktop cursor-desktop kimi-desktop
+beep-worker  t3code claude codex grok kimi junie cursor-agent muse
+dankserver   t3code claude codex grok kimi junie cursor-agent muse
+tbk-worker   t3code claude codex grok kimi junie cursor-agent muse
+tom-pc-1-wsl t3code claude codex grok kimi junie cursor-agent muse
+grok-bot     t3code claude codex grok kimi junie cursor-agent muse chatgpt-desktop claude-desktop

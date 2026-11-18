@@ -10,11 +10,12 @@ import * as S from "effect/Schema";
 import { CitationLawMetadataInput, CitationLawMetadataResult } from "./LawMetadata.ts";
 import {
   citationMetadataContext,
+  installCitationMetadataContextMatch,
   makeCitationPublicationMetadataOperation,
-  matchCitationMetadataContext,
 } from "./MetadataComposition.ts";
 import { makeCitationPinCiteCleaner } from "./MetadataStrings.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationPublicationMetadataConfiguration } from "./MetadataComposition.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
@@ -101,43 +102,40 @@ const Envelope = S.Struct({ plaintiff: Value, defendant: S.Unknown }).pipe(
   $I.annoteSchema("Envelope", { description: "Read only source guard state before inspecting words or span inputs." })
 );
 const truthy = (value: CitationPythonUnicodeStorage | null) => value !== null && value.bytes.length > 0;
-/** Reuse the original helper within an enclosing captured metadata operation.
+/** Install the original helper once for reuse within an enclosing captured metadata operation.
  * @internal @category operations @since 0.0.0
  */
-export const extractCitationPreCaseMetadata = Effect.fn("Citation.preparePreCaseMetadata")(function* (
+export const installCitationPreCaseMetadataExtraction = Effect.fn("Citation.installPreCaseMetadata")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationPublicationMetadataConfiguration,
-  raw: unknown
+  config: CitationPublicationMetadataConfiguration
 ) {
-  const envelope = yield* S.decodeUnknownEffect(Envelope)(raw).pipe(Effect.mapError(invalidInput));
-  if (truthy(envelope.plaintiff)) return O.none<CitationPreCaseMetadataPatch>();
-  const defendant = yield* S.decodeUnknownEffect(Value)(envelope.defendant).pipe(Effect.mapError(invalidInput));
-  if (truthy(defendant)) return O.none<CitationPreCaseMetadataPatch>();
-  const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(invalidInput));
-  const owned = yield* matchCitationMetadataContext(
-    limits,
-    runtime,
-    config,
-    citationMetadataContext({ ...request, forward: false }),
-    () => fail("missing-capture")
-  );
-  if (O.isNone(owned)) return O.none<CitationPreCaseMetadataPatch>();
-  const pin = yield* owned.value.capture("pin_cite");
-  const antecedentGuess = yield* owned.value.capture("antecedent");
-  const strings = yield* makeCitationPinCiteCleaner(limits);
-  const cleaned = yield* strings.cleanPinCite(pin);
-  const fullSpanStart = request.spanStart - (owned.value.end - owned.value.start);
-  return O.some(
-    CitationPreCaseMetadataPatch.make({
-      fullSpanStart,
-      metadata: {
-        pinCite: truthy(cleaned) ? cleaned : null,
-        antecedentGuess,
-        pinCiteSpanStart: truthy(pin) ? fullSpanStart : request.pinCiteSpanStart,
-      },
-    })
-  );
+  const match = yield* installCitationMetadataContextMatch(limits, runtime, config);
+  const installedStrings = yield* Effect.exit(makeCitationPinCiteCleaner(limits));
+  return Effect.fn("Citation.preparePreCaseMetadata")(function* (raw: unknown) {
+    const envelope = yield* S.decodeUnknownEffect(Envelope)(raw).pipe(Effect.mapError(invalidInput));
+    if (truthy(envelope.plaintiff)) return O.none<CitationPreCaseMetadataPatch>();
+    const defendant = yield* S.decodeUnknownEffect(Value)(envelope.defendant).pipe(Effect.mapError(invalidInput));
+    if (truthy(defendant)) return O.none<CitationPreCaseMetadataPatch>();
+    const request = yield* S.decodeUnknownEffect(Input)(raw).pipe(Effect.mapError(invalidInput));
+    const owned = yield* match(citationMetadataContext({ ...request, forward: false }), () => fail("missing-capture"));
+    if (O.isNone(owned)) return O.none<CitationPreCaseMetadataPatch>();
+    const pin = yield* owned.value.capture("pin_cite");
+    const antecedentGuess = yield* owned.value.capture("antecedent");
+    const strings = yield* installedStrings;
+    const cleaned = yield* strings.cleanPinCite(pin);
+    const fullSpanStart = request.spanStart - (owned.value.end - owned.value.start);
+    return O.some(
+      CitationPreCaseMetadataPatch.make({
+        fullSpanStart,
+        metadata: {
+          pinCite: truthy(cleaned) ? cleaned : null,
+          antecedentGuess,
+          pinCiteSpanStart: truthy(pin) ? fullSpanStart : request.pinCiteSpanStart,
+        },
+      })
+    );
+  });
 });
 /** Capture authenticated PRE_FULL/Year patterns and existing metadata owners.
  * Skip guards precede word decoding. Backward context and source patching share
@@ -146,16 +144,16 @@ export const extractCitationPreCaseMetadata = Effect.fn("Citation.preparePreCase
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationPreCaseMetadata = Effect.fn("Citation.makePreCaseMetadata")(function* (
-  policy: unknown,
-  runtimeInput: unknown,
-  configurationInput: unknown
+  limits: CitationEngineLimits,
+  runtime: CitationNativeProcessRuntime,
+  configuration: CitationOwned<CitationPublicationMetadataConfiguration>
 ) {
   const installed = yield* makeCitationPublicationMetadataOperation(
-    policy,
-    runtimeInput,
-    configurationInput,
+    limits,
+    runtime,
+    configuration,
     "d151b7a02a061593bb44bd881eee2dc174fff7f1b5449512f25cc2b98fb315b0",
-    extractCitationPreCaseMetadata,
+    installCitationPreCaseMetadataExtraction,
     () => fail("invalid-configuration")
   );
   const apply = Effect.fn("Citation.addPreCaseMetadata")((raw: unknown) =>

@@ -2,24 +2,25 @@
 
 ## Status
 
-Status: `in-progress`
+Status: `complete`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | complete | Inspect source hierarchy and confirm scope. | Required facts and blockers are recorded. |
-| P1 Implement | in-progress | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
-| P2 Verify | in-progress | Run required checks and capture evidence. | Verification is green or blockers are documented. |
-| P3 Yeet: PR to mergeable | in-progress | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P4 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P1 Implement | complete | Make the smallest changes that satisfy `SPEC.md`. | Acceptance criteria are met. |
+| P2 Verify | complete | Run required checks and capture evidence. | Verification is green or blockers are documented. |
+| P3 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P4 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 Implementation slices P0 #2925, P1 #2959 (fix #2972) and P2 #3226 merged. The
 2026-11-13 dankserver acceptance run (#3267) failed SPEC criterion 3; #3276 fixed its
-findings and the repeat run of 2026-11-13 (#3277) closed findings 1, 2, 4 and 6. This lane
-settles criterion 2b by measurement (decision 2026-11-13: a forced gate on a worker
-completes serially or refuses with its measured reason). Remaining before P4's final PR
-and reflection: one short dankserver run showing a forced gate (coverage over a small package) completing with forceLocal: true on its receipt, and the lane's own draft-to-ready flip through yeet ready.
+findings and the repeat run (#3277) closed findings 1, 2, 4 and 6. #3281 made a forced gate
+on a worker complete serially or refuse with its measured reason, and proved the lane's own
+draft-to-ready flip on beep-worker. #3288 showed forced coverage completing on dankserver
+with `forceLocal: true` on its receipt, and a refusal with its `admission-routed` row. The
+final PR carries the reflection, the closeout record and the subset-receipt fix.
 
 ## Closeout Checklist
 

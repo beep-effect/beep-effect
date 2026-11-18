@@ -41,7 +41,7 @@ import {
   encodePersonMatchReport,
   PERSON_MATCH_MAX_CANDIDATE_IMAGES,
   PERSON_MATCH_MAX_REFERENCE_IMAGES,
-  PersonMatchModel,
+  PersonMatchParameters,
   PersonMatchReport,
 } from "./MatchPerson.schemas.ts";
 import { CanonicalMatchPersonInputs, PersonMatchWorkerService } from "./MatchPerson.worker-service.ts";
@@ -50,10 +50,10 @@ import type {
   PersonMatchBackend,
   PersonMatchDisposition,
   PersonMatchEntry,
+  PersonMatchModel,
   PersonMatchModelArtifact,
   PersonMatchModelComponent,
   PersonMatchOnnxRuntime,
-  PersonMatchPyTorchRuntime,
   PersonMatchReference,
   PersonMatchWorkerSuccess,
 } from "./MatchPerson.schemas.ts";
@@ -66,10 +66,6 @@ const workerModelArtifactSha256: Readonly<Record<string, string>> = {
   "w600k_r50.onnx": "4c06341c33c2ca1f86781dab0e829f88ad5b64be9fba56e56bc9ebdefc619e43",
 };
 const workerScoreRoundingTolerance = 0.000001;
-const adaFaceHipVersionPrefix = "7.2";
-const adaFaceRocmArchitecture = "gfx1201";
-const trustedUvRoots = ["/usr/bin", "/usr/local/bin"] as const;
-const personMatchDeviceIndexesEquivalence = S.toEquivalence(S.Array(S.Natural));
 const PersonMatchSupportedImageExtension = LiteralKit(["jpg", "jpeg", "png", "webp"]).pipe(
   $I.annoteSchema("PersonMatchSupportedImageExtension", {
     description: "A lowercase image extension discovered by the isolated person-match worker.",
@@ -90,7 +86,7 @@ const adaFaceRuntimeSupportsPlatform = (platform: string, architecture: string):
 const buffaloRuntimeSupportsPlatform = (platform: string, architecture: string): boolean =>
   Match.value(platform).pipe(
     Match.when("linux", () => Str.Equivalence(architecture, "x64") || Str.Equivalence(architecture, "arm64")),
-    Match.when("darwin", () => Str.Equivalence(architecture, "x64") || Str.Equivalence(architecture, "arm64")),
+    Match.when("darwin", () => Str.Equivalence(architecture, "arm64")),
     Match.when("win32", () => Str.Equivalence(architecture, "x64")),
     Match.orElse(() => false)
   );
@@ -124,52 +120,6 @@ export const defaultPersonMatchBackendForPlatform: {
       onTrue: () => "adaface-kprpe",
     })
 );
-
-/**
- * Resolve the trusted uv executable leaf for a host platform.
- *
- * **Example** (Select the Windows executable)
- *
- * ```ts
- * import { trustedUvExecutableNameForPlatform } from "./MatchPerson.ts"
- *
- * console.log(trustedUvExecutableNameForPlatform("win32"))
- * // "uv.exe"
- * ```
- *
- * @param platform - Node.js host platform identifier.
- * @returns The platform-specific uv executable filename.
- * @category utilities
- * @since 0.0.0
- */
-export const trustedUvExecutableNameForPlatform = (platform: string): string =>
-  Match.value(platform).pipe(
-    Match.when("win32", () => "uv.exe"),
-    Match.orElse(() => "uv")
-  );
-
-/**
- * Resolve the fixed system directories eligible for trusted uv discovery.
- *
- * **Example** (Avoid POSIX roots on Windows)
- *
- * ```ts
- * import { trustedUvRootDirectoriesForPlatform } from "./MatchPerson.ts"
- *
- * console.log(trustedUvRootDirectoriesForPlatform("win32"))
- * // []
- * ```
- *
- * @param platform - Node.js host platform identifier.
- * @returns POSIX trusted roots on non-Windows hosts and no fixed roots on Windows.
- * @category utilities
- * @since 0.0.0
- */
-export const trustedUvRootDirectoriesForPlatform = (platform: string): ReadonlyArray<string> =>
-  Bool.match(Str.Equivalence(platform, "win32"), {
-    onFalse: () => trustedUvRoots,
-    onTrue: A.empty<string>,
-  });
 
 /**
  * Validate that the selected backend has a pinned runtime for the host.
@@ -208,14 +158,14 @@ export const validatePersonMatchBackendPlatform = Effect.fn("Files.validatePerso
           Match.when(
             "buffalo-l",
             () =>
-              `InsightFace Buffalo is unavailable on ${platform}/${architecture}; its pinned CPU environment ` +
-              "supports Linux x64/arm64, macOS x64/arm64, and Windows x64."
+              `InsightFace Buffalo is unavailable on ${platform}/${architecture}; its native ONNX runtime ` +
+              "supports Linux x64/arm64, macOS arm64, and Windows x64."
           ),
           Match.when(
             "adaface-kprpe",
             () =>
-              `AdaFace KP-RPE is unavailable on ${platform}/${architecture}; its pinned ROCm PyTorch runtime ` +
-              "supports only Linux x64. Re-run with --backend buffalo-l --compute cpu."
+              `AdaFace KP-RPE is unavailable on ${platform}/${architecture}; its fixed CPU ONNX runtime ` +
+              "supports only Linux x64. Re-run with --backend buffalo-l."
           ),
           Match.exhaustive
         ),
@@ -255,12 +205,9 @@ class CanonicalMatchPersonCacheChildren extends S.Opaque<
 >()(
   S.Struct({
     modelRoot: S.NonEmptyString,
-    uvCacheRoot: S.NonEmptyString,
-    uvCpuEnvironment: S.NonEmptyString,
-    uvEnvironment: S.NonEmptyString,
   }).pipe(
     $I.annoteSchema("CanonicalMatchPersonCacheChildren", {
-      description: "Backend-specific canonical model, uv download-cache, and isolated environment paths.",
+      description: "Backend-specific canonical model-cache paths.",
     })
   )
 ) {}
@@ -442,18 +389,6 @@ const readOptionalConfig = (name: string): Effect.Effect<O.Option<string>> =>
     Effect.map(flow(O.map(Str.trim), O.filter(Str.isNonEmpty)))
   );
 
-const readConfiguredHome = Effect.fn("Files.matchPersonReadConfiguredHome")(function* (): Effect.fn.Return<
-  O.Option<string>
-> {
-  const [home, userProfile] = yield* Effect.all([readOptionalConfig("HOME"), readOptionalConfig("USERPROFILE")], {
-    concurrency: 2,
-  });
-  return pipe(
-    home,
-    O.orElse(() => userProfile)
-  );
-});
-
 const canonicalizeExistingDirectory = Effect.fn("Files.matchPersonCanonicalizeDirectory")(function* (
   directory: string,
   description: string
@@ -574,73 +509,8 @@ const canonicalizeMatchPersonCacheChildren = Effect.fn("Files.canonicalizeMatchP
     Match.when("adaface-kprpe", () => "adaface-kprpe"),
     Match.exhaustive
   );
-  const environmentChild = Match.value(backend).pipe(
-    Match.when("buffalo-l", () => "venv-cpu-py312-v1"),
-    Match.when("adaface-kprpe", () => "venv-adaface-rocm72-py312-v1"),
-    Match.exhaustive
-  );
-  const cpuEnvironmentChild = Match.value(backend).pipe(
-    Match.when("buffalo-l", () => environmentChild),
-    Match.when("adaface-kprpe", () => "venv-adaface-cpu-py312-v1"),
-    Match.exhaustive
-  );
   return CanonicalMatchPersonCacheChildren.make({
     modelRoot: yield* canonicalizeMatchPersonCacheChild(cacheRoot, modelChild, "person-match model directory"),
-    uvCacheRoot: yield* canonicalizeMatchPersonCacheChild(cacheRoot, "uv-cache", "person-match uv cache directory"),
-    uvCpuEnvironment: yield* canonicalizeMatchPersonCacheChild(
-      cacheRoot,
-      cpuEnvironmentChild,
-      "person-match CPU uv environment"
-    ),
-    uvEnvironment: yield* canonicalizeMatchPersonCacheChild(cacheRoot, environmentChild, "person-match uv environment"),
-  });
-});
-
-const resolveTrustedUvPath = Effect.fn("Files.matchPersonResolveUvPath")(function* (): Effect.fn.Return<
-  string,
-  FilesCommandError,
-  FileSystem.FileSystem | Path.Path
-> {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const configured = yield* readOptionalConfig("BEEP_UV_PATH");
-  const home = yield* readConfiguredHome();
-  const platform = yield* HostProcessPlatform;
-  const executableName = trustedUvExecutableNameForPlatform(platform);
-
-  if (O.isSome(configured) && !path.isAbsolute(configured.value)) {
-    return yield* FilesCommandError.make({ message: "BEEP_UV_PATH must be an absolute path to a trusted uv binary." });
-  }
-
-  const candidates = O.isSome(configured)
-    ? [configured.value]
-    : [
-        ...A.map(trustedUvRootDirectoriesForPlatform(platform), (root) => path.join(root, executableName)),
-        ...pipe(
-          home,
-          O.map((root) => [path.join(root, ".local", "bin", executableName)]),
-          O.getOrElse(A.empty<string>)
-        ),
-      ];
-
-  for (const candidate of candidates) {
-    const exists = yield* fs.exists(candidate).pipe(Effect.orElseSucceed(() => false));
-    if (!exists) continue;
-
-    const stat = yield* fs
-      .stat(candidate)
-      .pipe(
-        Effect.mapError((cause) =>
-          formatPlatformError("Failed to stat uv binary", candidate, PlatformErrorOptions.make({ cause }))
-        )
-      );
-    if (stat.type === "File") return candidate;
-  }
-
-  return yield* FilesCommandError.make({
-    message:
-      "Could not find a trusted uv binary in the platform's supported install locations. " +
-      "Set BEEP_UV_PATH to an absolute path when uv is installed elsewhere.",
   });
 });
 
@@ -734,7 +604,6 @@ const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(f
     onSome: (directory) => canonicalizeFileTargetPath(directory, "person-match output directory").pipe(Effect.asSome),
   });
   const cacheRoot = yield* resolveCacheRoot(options.cacheDir);
-  const uvPath = yield* resolveTrustedUvPath();
 
   yield* validateMatchPersonPathIsolation(
     path,
@@ -764,13 +633,7 @@ const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(f
     candidateDirectory,
     referenceDirectory,
     manifestPath,
-    [
-      canonicalCacheRoot,
-      cacheChildren.modelRoot,
-      cacheChildren.uvEnvironment,
-      cacheChildren.uvCpuEnvironment,
-      cacheChildren.uvCacheRoot,
-    ],
+    [canonicalCacheRoot, cacheChildren.modelRoot],
     outputDirectory
   );
 
@@ -781,10 +644,6 @@ const validateMatchPersonInputs = Effect.fn("Files.validateMatchPersonInputs")(f
     modelRoot: cacheChildren.modelRoot,
     outputDirectory,
     referenceDirectory,
-    uvCacheRoot: cacheChildren.uvCacheRoot,
-    uvCpuEnvironment: cacheChildren.uvCpuEnvironment,
-    uvEnvironment: cacheChildren.uvEnvironment,
-    uvPath,
   });
 });
 
@@ -1177,122 +1036,18 @@ const validateBuffaloWorkerRuntime = Effect.fn("Files.validateBuffaloPersonMatch
   }
 });
 
-const isPinnedAdaFaceRocmRuntime = (runtime: PersonMatchPyTorchRuntime): boolean =>
-  runtime.distribution === "rocm72" &&
-  O.exists(runtime.hipVersion, Str.startsWith(adaFaceHipVersionPrefix)) &&
-  A.length(runtime.devices) === 1 &&
-  A.every(runtime.devices, (device) => Str.Equivalence(device.architecture, adaFaceRocmArchitecture));
-
-const adaFaceRuntimeUsesRequestedDevices = (
-  runtime: PersonMatchPyTorchRuntime,
-  requestedDevices: MatchPersonOptions["devices"]
-): boolean =>
-  !O.exists(
-    requestedDevices,
-    (requested) =>
-      !personMatchDeviceIndexesEquivalence(
-        A.map(runtime.devices, (device) => device.index),
-        requested
-      )
-  );
-
-const validateAdaFaceRocmRuntime = Effect.fn("Files.validateAdaFaceRocmPersonMatchWorkerRuntime")(function* (
-  runtime: PersonMatchPyTorchRuntime,
-  requestedDevices: MatchPersonOptions["devices"]
-): Effect.fn.Return<void, FilesCommandError> {
-  if (!isPinnedAdaFaceRocmRuntime(runtime)) {
-    return yield* FilesCommandError.make({
-      message: "AdaFace ROCm runtime requires the pinned HIP 7.2 family and one selected gfx1201 device.",
-    });
-  }
-  if (!adaFaceRuntimeUsesRequestedDevices(runtime, requestedDevices)) {
-    return yield* FilesCommandError.make({
-      message: "AdaFace runtime did not select the explicitly requested ROCm device.",
-    });
-  }
-});
-
-const validateAdaFaceRuntimeDevices = (
-  runtime: PersonMatchPyTorchRuntime,
-  requestedDevices: MatchPersonOptions["devices"]
-): Effect.Effect<void, FilesCommandError> =>
-  Match.value(runtime.actualCompute).pipe(
-    Match.when("rocm", () => validateAdaFaceRocmRuntime(runtime, requestedDevices)),
-    Match.when("cpu", () =>
-      Bool.match(A.isReadonlyArrayNonEmpty(runtime.devices), {
-        onFalse: () => Effect.void,
-        onTrue: () => FilesCommandError.make({ message: "AdaFace CPU runtime reported a selected ROCm device." }),
-      })
-    ),
-    Match.exhaustive
-  );
-
-const adaFaceRuntimeHonorsComputePolicy = (
-  runtime: PersonMatchPyTorchRuntime,
-  compute: MatchPersonOptions["compute"]
-): boolean =>
-  Match.value(compute).pipe(
-    Match.when("auto", () => true),
-    Match.when("rocm", () => runtime.actualCompute === "rocm"),
-    Match.when("cpu", () => runtime.actualCompute === "cpu"),
-    Match.exhaustive
-  );
-
-const validateAdaFaceComputePolicy = Effect.fn("Files.validateAdaFacePersonMatchComputePolicy")(function* (
-  runtime: PersonMatchPyTorchRuntime,
-  compute: MatchPersonOptions["compute"]
-): Effect.fn.Return<void, FilesCommandError> {
-  if (!adaFaceRuntimeHonorsComputePolicy(runtime, compute)) {
-    return yield* FilesCommandError.make({ message: "AdaFace runtime did not honor the explicit compute policy." });
-  }
-});
-
-const hasSingleRocmFallbackWarning = (runtime: PersonMatchPyTorchRuntime): boolean =>
-  A.length(runtime.warnings) === 1 &&
-  O.exists(A.head(runtime.warnings), (warning) => warning.code === "rocm-fallback-to-cpu");
-
-const hasCoherentAdaFaceRuntimeWarnings = (
-  runtime: PersonMatchPyTorchRuntime,
-  compute: MatchPersonOptions["compute"]
-): boolean =>
-  Match.value(compute).pipe(
-    Match.when("auto", () =>
-      Bool.match(runtime.actualCompute === "cpu", {
-        onFalse: () => A.isReadonlyArrayEmpty(runtime.warnings),
-        onTrue: () => hasSingleRocmFallbackWarning(runtime),
-      })
-    ),
-    Match.orElse(() => A.isReadonlyArrayEmpty(runtime.warnings))
-  );
-
-const validateAdaFaceRuntimeWarnings = Effect.fn("Files.validateAdaFacePersonMatchRuntimeWarnings")(function* (
-  runtime: PersonMatchPyTorchRuntime,
-  compute: MatchPersonOptions["compute"]
-): Effect.fn.Return<void, FilesCommandError> {
-  if (!hasCoherentAdaFaceRuntimeWarnings(runtime, compute)) {
-    return yield* FilesCommandError.make({
-      message: "AdaFace runtime reported incoherent compute fallback provenance.",
-    });
-  }
-});
-
-const validateAdaFaceWorkerRuntime = Effect.fn("Files.validateAdaFacePersonMatchWorkerRuntime")(function* (
-  runtime: PersonMatchPyTorchRuntime,
-  options: MatchPersonOptions
-): Effect.fn.Return<void, FilesCommandError> {
-  yield* validateAdaFaceRuntimeDevices(runtime, options.devices);
-  yield* validateAdaFaceComputePolicy(runtime, options.compute);
-  yield* validateAdaFaceRuntimeWarnings(runtime, options.compute);
-});
-
 const validateWorkerRuntime = Effect.fn("Files.validatePersonMatchWorkerRuntime")(function* (
   model: PersonMatchModel,
-  options: MatchPersonOptions
+  _options: MatchPersonOptions
 ): Effect.fn.Return<void, FilesCommandError> {
-  yield* PersonMatchModel.match({
-    "buffalo-l": (buffalo) => validateBuffaloWorkerRuntime(buffalo.runtime),
-    "adaface-kprpe": (adaFace) => validateAdaFaceWorkerRuntime(adaFace.runtime, options),
-  })(model);
+  if (
+    model.runtime.framework !== "onnxruntime" ||
+    model.runtime.actualCompute !== "cpu" ||
+    A.isReadonlyArrayNonEmpty(model.runtime.warnings)
+  ) {
+    return yield* FilesCommandError.make({ message: "Person-match inference requires the CPU ONNX runtime." });
+  }
+  yield* validateBuffaloWorkerRuntime(model.runtime);
 });
 
 const validateWorkerModel = Effect.fn("Files.validatePersonMatchWorkerModel")(function* (
@@ -1467,12 +1222,12 @@ const isWorkerDispositionCoherent = (
   const couldMeetReviewThreshold = maximumMatchScore >= options.reviewThreshold - workerScoreRoundingTolerance;
   const couldMissReviewThreshold = maximumMatchScore <= options.reviewThreshold + workerScoreRoundingTolerance;
   const hasQualityFlags = A.some(entry.faces, (face) => A.isReadonlyArrayNonEmpty(face.qualityFlags));
-  const hasPartialAlignerRejection = entry.reason === "aligner-confidence-failed";
+  const hasRejectedEmbedding = entry.reason === "aligner-confidence-failed" || entry.reason === "invalid-embedding";
   return Match.value(entry.disposition).pipe(
     Match.when("solo-match", () => entry.faceCount === 1 && couldMeetMatchThreshold && !hasQualityFlags),
     Match.when("low-quality-match", () => entry.faceCount === 1 && couldMeetMatchThreshold && hasQualityFlags),
     Match.when("group-match", () => entry.faceCount > 1 && couldMeetMatchThreshold),
-    Match.when("review", () => hasPartialAlignerRejection || (!mustMeetMatchThreshold && couldMeetReviewThreshold)),
+    Match.when("review", () => hasRejectedEmbedding || (!mustMeetMatchThreshold && couldMeetReviewThreshold)),
     Match.when("no-match", () => couldMissReviewThreshold),
     Match.when("no-face", () => false),
     Match.when("unreadable", () => false),
@@ -1481,7 +1236,9 @@ const isWorkerDispositionCoherent = (
 };
 
 const hasNoComparableWorkerFace = (entry: PersonMatchEntry): boolean =>
-  entry.disposition === "no-face" || entry.disposition === "unreadable";
+  entry.disposition === "no-face" ||
+  entry.disposition === "unreadable" ||
+  (entry.disposition === "review" && entry.reason === "invalid-embedding" && entry.faceCount === 0);
 
 const validateWorkerEntryFaceShape = Effect.fn("Files.validatePersonMatchWorkerEntryFaceShape")(function* (
   entry: PersonMatchEntry,
@@ -1508,7 +1265,13 @@ const validateWorkerEntryReason = Effect.fn("Files.validatePersonMatchWorkerEntr
   const coherent = Match.value(entry.disposition).pipe(
     Match.when("unreadable", () => entry.reason === "image-decode-failed"),
     Match.when("no-face", () => entry.reason === undefined || entry.reason === "aligner-confidence-failed"),
-    Match.when("review", () => entry.reason === undefined || entry.reason === "aligner-confidence-failed"),
+    Match.when(
+      "review",
+      () =>
+        entry.reason === undefined ||
+        entry.reason === "aligner-confidence-failed" ||
+        entry.reason === "invalid-embedding"
+    ),
     Match.orElse(() => entry.reason === undefined)
   );
   if (!coherent) {
@@ -1617,12 +1380,53 @@ const validateWorkerCompleteness = Effect.fn("Files.validatePersonMatchWorkerCom
   }
 });
 
+const requestedWorkerParametersEqual = S.toEquivalence(
+  S.Struct({
+    backend: PersonMatchParameters.fields.backend,
+    compute: PersonMatchParameters.fields.compute,
+    batchSize: PersonMatchParameters.fields.batchSize,
+    thresholdSource: PersonMatchParameters.fields.thresholdSource,
+    detectionThreshold: PersonMatchParameters.fields.detectionThreshold,
+    matchThreshold: PersonMatchParameters.fields.matchThreshold,
+    reviewThreshold: PersonMatchParameters.fields.reviewThreshold,
+    minFaceAreaPct: PersonMatchParameters.fields.minFaceAreaPct,
+    recursive: PersonMatchParameters.fields.recursive,
+  }).pipe(
+    $I.annoteSchema("RequestedWorkerParameters", {
+      description: "The requested scan parameters whose exact echo is required.",
+    })
+  )
+);
 const validateWorkerSemantics = Effect.fn("Files.validatePersonMatchWorkerSemantics")(function* (
   worker: PersonMatchWorkerSuccess,
   inputs: CanonicalMatchPersonInputs,
   expected: ExpectedPersonMatchFiles,
   options: MatchPersonOptions
 ): Effect.fn.Return<void, FilesCommandError, Path.Path> {
+  if (!requestedWorkerParametersEqual(worker.parameters, options)) {
+    return yield* FilesCommandError.make({
+      message: "Person-match worker reported parameters that do not match the requested scan.",
+    });
+  }
+  const reported =
+    A.reduce(worker.references, 0, (sum, r) => sum + r.faceCount) +
+    A.reduce(worker.entries, 0, (sum, e) => sum + e.faceCount);
+  if (reported > 65536)
+    return yield* FilesCommandError.make({
+      message: "Person-match worker reported more than 65536 faces; split the scan into smaller batches.",
+    });
+  if (A.some(worker.entries, (e) => e.faceCount !== e.faces.length))
+    return yield* FilesCommandError.make({
+      message: "Person-match worker reported a face count inconsistent with its retained face evidence.",
+    });
+  const accepted = A.map(
+    A.filter(worker.references, (r) => r.accepted),
+    (r) => r.sourceName
+  );
+  if (options.recursive && A.dedupe(accepted).length !== accepted.length)
+    return yield* FilesCommandError.make({
+      message: "Recursive person-match references contain duplicate accepted file names.",
+    });
   yield* validateWorkerModel(worker.model, inputs.modelRoot, options);
   const references = yield* validateWorkerReferences(worker.references, inputs.referenceDirectory);
   const sourcePaths = MutableHashSet.empty<string>();
@@ -2149,8 +1953,8 @@ const materializeReport = Effect.fn("Files.materializePersonMatchReport")(functi
  *
  * **Details**
  *
- * The default Python environment, verified InsightFace models, and dependency
- * cache live outside the repository; `--cache-dir` selects another location.
+ * The verified models and locally generated ONNX graphs
+ * live outside the repository; `--cache-dir` selects another location.
  * Candidate photos remain immutable; optional materialization copies only
  * accepted and review-lane images, and raw face embeddings never cross the
  * worker boundary.

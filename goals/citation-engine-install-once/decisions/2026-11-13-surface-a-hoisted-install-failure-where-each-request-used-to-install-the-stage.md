@@ -1,0 +1,10 @@
+---
+title: "Surface each hoisted install outcome where main ran the install"
+date: 2026-11-13
+lane: "perf/citation-hoist-installs"
+reversal: "Let hoisted installs fail engine construction directly."
+---
+
+CitationSemanticExtraction.test.ts installs the semantic stage under a deliberately tiny producedTextUtf16 and expects the eyecite shortcut to succeed; hoisted, the tokenizer install refused at construction. Review round 1 then showed the first fix was incomplete: only the eight stage-tree sites replayed their install Exit, while helpers that main built lazily inside a helper call (context matchers, metadata strings and years, the court lookup, the pin-cite cleaner, stop words, the case-name chain, generated-reference inputs and evaluators, HTML discovery and geometry, the annotation wrap worker) were built in the parent install, so their refusals replayed for every request at the stage point, ahead of refusals main reported first.
+
+Mechanism now: every install keeps its work at engine construction and captures its outcome with Effect.exit. Installs that were eager on main (a child stage installed by its parent's prepare) replay their Exit at the stage install point, as before. Installs that were lazy on main replay their Exit at main's call point: the helper call, inside markupBranch through the HTML geometry's forward map, inside the year and court branches of the post-case helper, inside the single-element HTML case name, and before bindDescriptors. Helper installs therefore cannot fail at construction. The annotation processor builds its templates per request before yielding the installed wrap worker, in main's order. The evidence file classifies every moved install. Tests: a plain request through an input document whose HTML geometry install refuses still initializes and only markup refuses; a patternUtf16 policy one unit above the pin pattern extracts a section reference and refuses an Id reference with patternUtf16; the wrap processor reports the template refusal when both refuse.

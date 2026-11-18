@@ -1,6 +1,8 @@
+import * as NodeOS from "node:os";
 import * as NodeURL from "node:url";
 import { A, Str } from "@beep/utils";
 import { pipe } from "effect/Function";
+import * as Num from "effect/Number";
 import { defineConfig, mergeConfig } from "vitest/config";
 import shared, { fcDeepSweepActive, vitestDoctestActive } from "../../../vitest.shared.ts";
 import { LawPracticeSequencer } from "./vitest.integration.sequencer.ts";
@@ -38,6 +40,13 @@ const nativeWallclockSuites = [
   "test/CitationNativeSocket.test.ts",
   "test/integration/**/*.test.{ts,tsx}",
 ];
+
+// Replay-group width. Vitest defaults to one worker per core minus one: 63 on a 64-core
+// workstation, where this package alone then peaked at 92.8 GB resident, load 91 and 123 Bun
+// processes (2026-11-17), and a concurrent `turbo test` swapped and stalled native children past
+// the 29.75 s watchdog on tests that take 47 ms alone. Eight workers peaked at 53 GB, load 24 and
+// 32 processes for 7% more wall time. 8-vCPU hosted runners keep their default of 7.
+const replayMaxWorkers = Num.clamp(NodeOS.availableParallelism() - 1, { minimum: 1, maximum: 8 });
 
 // Vitest 5.1 forwards only a fixed list of CLI options to project configs (`maxWorkers`,
 // `isolate`, `passWithNoTests`, ...); `--exclude` is not among them, so the unit scripts'
@@ -110,8 +119,9 @@ export default splitProjects
               name: "replay",
               include: ["test/**/*.test.{ts,tsx}"],
               exclude: [...nativeWallclockSuites, ...cliExcludes],
+              maxWorkers: replayMaxWorkers,
               // Distinct group order: projects with different worker caps cannot share one group, and
-              // the wall-clock group drains before the replay group widens to the default worker count.
+              // the wall-clock group drains before the replay group widens to its own cap.
               sequence: { groupOrder: 1 },
             },
           },

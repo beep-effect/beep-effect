@@ -45,7 +45,6 @@
     "research/cache-baseline-review-main-8e6ebf-2026-11-07.md",
     "research/census-components-rows-001.jsonl",
     "research/census-components-summary-001.json",
-    "research/census-components.py",
     "research/citation-dump-ci-preservation-001.json",
     "research/clause-dependency-metadata-admission-002.json",
     "research/component-census-001.json",
@@ -59,9 +58,6 @@
     "research/coverage-repair-measurement-001.json",
     "research/coverage-runtime-replay-001.json",
     "research/dependency-metadata-admission-001.json",
-    "research/diagnose-structures.py",
-    "research/evaluate-gates.py",
-    "research/freeze-runtime-closure.py",
     "research/implementation-accepted-main-metadata-001.json",
     "research/implementation-accepted-main-metadata-002.json",
     "research/implementation-accepted-main-metadata-003.json",
@@ -137,14 +133,8 @@
     "research/source-certified-fallback-measurement-001.json",
     "research/source-inspection-view-measurement-001.json",
     "research/source-public-composition-measurement-001.json",
-    "research/test_census_components.py",
-    "research/test_evaluation_coverage.py",
-    "research/test_preservation.py",
-    "research/test_usefulness.py",
     "research/tool-pages-002-receipt.json",
-    "research/usefulness-gates.json",
-    "research/usefulness.py",
-    "research/verify-preservation.py"
+    "research/usefulness-gates.json"
   ],
   "agentLaunchers": [
     {
@@ -189,9 +179,7 @@
     "jq . goals/claim-check-performance/ops/manifest.json",
     "rg -n \"claim-check-performance|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/claim-check-performance",
     "git diff --check -- goals/claim-check-performance",
-    "bun run beep lint reflection-artifacts",
-    "python goals/claim-check-performance/research/verify-preservation.py",
-    "python -m unittest discover -s goals/claim-check-performance/research -p \"test_*.py\""
+    "bun run beep lint reflection-artifacts"
   ],
   "stopConditions": [
     "Required source files are missing or materially contradictory.",

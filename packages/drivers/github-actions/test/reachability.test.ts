@@ -164,8 +164,10 @@ describe("bundle reachability", () => {
       // consumer's bundle. The default runtime (`Action.ts`) reaches no Azure
       // and no installer vocabulary; the shared internals reach `effect` and
       // the Twirp client and nothing heavier.
-      const actual = yield* Effect.forEach(R.keys(EXPECTED_PACKAGES), (module) =>
-        Effect.map(packagesOf(module), (packages) => [module, packages] as const)
+      const actual = yield* Effect.forEach(
+        R.keys(EXPECTED_PACKAGES),
+        (module) => Effect.map(packagesOf(module), (packages) => [module, packages] as const),
+        { concurrency: 1 }
       );
       assert.deepStrictEqual(R.fromEntries(actual), EXPECTED_PACKAGES);
     })

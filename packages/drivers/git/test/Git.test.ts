@@ -1112,7 +1112,7 @@ describe("Git", () => {
     };
     const withGit = <A, E>(invoke: (git: Git["Service"]) => Effect.Effect<A, E>) => Effect.flatMap(Git, invoke);
 
-    it.effect("changedFiles renders diffFilter, noRenames, twoDot and the pathspec, and still NUL-splits", () =>
+    it.effect("changedFiles renders every option in order and still NUL-splits", () =>
       Effect.gen(function* () {
         const result = yield* run(
           withGit((git) =>
@@ -1121,6 +1121,7 @@ describe("Git", () => {
               head: "HEAD",
               diffFilter: "ACMR",
               noRenames: true,
+              ignoreSubmodules: "none",
               twoDot: true,
               pathspec: ["src", "docs/a b.md"],
             })
@@ -1133,6 +1134,7 @@ describe("Git", () => {
               "--no-relative",
               "--no-renames",
               "--diff-filter=ACMR",
+              "--ignore-submodules=none",
               "main",
               "HEAD",
               "--",

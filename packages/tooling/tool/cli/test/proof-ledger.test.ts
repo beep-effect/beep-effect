@@ -447,8 +447,10 @@ describe("ProofLedger", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const internal = path.join(import.meta.dirname, "..", "src", "commands", "Yeet", "internal");
-        const sources = yield* Effect.forEach(["ProofLedger.ts", "ProofFact.ts"], (file) =>
-          fs.readFileString(path.join(internal, file))
+        const sources = yield* Effect.forEach(
+          ["ProofLedger.ts", "ProofFact.ts"],
+          (file) => fs.readFileString(path.join(internal, file)),
+          { concurrency: 1 }
         );
         const legacyImports = A.filter(sources, (source) =>
           A.some(["ProofState.ts", "LaneProofReuse.ts"], (legacy) => Str.includes(`/${legacy}"`)(source))
@@ -486,7 +488,8 @@ describe("ProofLedger", () => {
           const target = relativeGitdir ? path.relative(lane, gitDir) : gitDir;
           yield* fs.writeFileString(path.join(lane, ".git"), `gitdir: ${target}\n`);
           return lane;
-        })
+        }),
+        { concurrency: 1 }
       );
       return { clone, lanes, ledgerPath: path.join(clone, ".beep", "yeet", "proof-ledger.ndjson") };
     });

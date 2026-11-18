@@ -13,7 +13,7 @@ describe("source discourse and grammatical dependency roles", () => {
         ["1", "A fixture comprising a panel."],
         ["2", "A fixture of claim 1 wherein said fixture is attached to a post."],
       ]);
-      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
       const child = O.getOrThrow(A.last(trees));
       assert.isTrue(
         A.some(

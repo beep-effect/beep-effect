@@ -1,3 +1,4 @@
+import { ScriptedSpawner } from "@beep/commands/ScriptedSpawner";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import {
   GhSpawnSink,
@@ -16,10 +17,10 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as PlatformError from "effect/PlatformError";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Str from "effect/String";
 import { scriptedSpawner } from "./support/GithubLedgerFakes.ts";
+import { provideSpawner } from "./support/ScriptedProcess.ts";
 
 const ledger = layerGithubBudgetLedger({ host: HostLabel.make("hub") }).pipe(
   Layer.provideMerge(layerGithubLedgerStoreMemory)
@@ -33,16 +34,8 @@ const spawnRows = GithubLedgerStore.use((store) =>
 const withLedgerSink = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | GithubBudgetLedger> =>
   GithubBudgetLedger.use((bound) => Effect.provideService(effect, GhSpawnSink, bound.ghSink));
 
-const failingSpawner = ChildProcessSpawner.make(() =>
-  Effect.fail(
-    PlatformError.systemError({
-      _tag: "NotFound",
-      module: "ChildProcess",
-      method: "spawn",
-      description: "gh is not installed",
-    })
-  )
-);
+// Every spawn fails as `gh` not found (D-14: `ScriptedSpawner`).
+const failingSpawner = ScriptedSpawner.make(() => ScriptedSpawner.notFound("gh"));
 
 const ghFailure = (failure: { readonly _tag: string }) => failure._tag;
 
@@ -78,7 +71,7 @@ describe("gh spawn attribution", () => {
         const spawnFailed = yield* Effect.flip(
           ghOutput({ args: ["issue", "list"], cwd: ".", label: "gh issue list", onFailure: ghFailure }).pipe(
             withLedgerSink,
-            Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, failingSpawner)
+            provideSpawner(failingSpawner)
           )
         );
         expect(spawnFailed).toBe("spawn");

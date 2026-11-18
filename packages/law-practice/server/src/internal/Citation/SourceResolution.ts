@@ -27,7 +27,10 @@ import { CitationResourceBinding } from "./ResourceIdentity.ts";
 import { captureCitationOperationPolicy, snapshotCitationValue } from "./Snapshot.ts";
 import { makeCitationSourceEvidence } from "./SourceEvidence.ts";
 import { measureCitationTextWork } from "./TextBudget.ts";
+import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import type { Sha256Hex } from "@beep/schema";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/SourceResolution");
 const SourceEvidenceField: { readonly source: S.Codec<VerifiedSourceText> } = {
@@ -64,13 +67,12 @@ const InputJson = CitationEngineResolutionInput.pipe(S.toCodecJson, S.fromJsonSt
  * @internal @category constructors @since 0.0.0
  */
 export const makeCitationSourceResolution = Effect.fn("Citation.makeSourceResolution")(
-  function* (policy: unknown, artifact: unknown) {
+  function* (limits: CitationOwned<CitationEngineLimits>, engineArtifact: Sha256Hex) {
     const invalid = () => CitationInputError.make({ operation: "resolve" });
     const evidenceFailure = () =>
       CitationPrerequisiteError.make({ operation: "resolve", dependency: "source-evidence" });
     const vocabularyFailure = () =>
       CitationPrerequisiteError.make({ operation: "resolve", dependency: "court-reporter-vocabulary" });
-    const { limits, engineArtifact } = yield* captureCitationOperationPolicy(policy, artifact, invalid);
     const digest = yield* Digest.Digest;
     const evidence = yield* makeCitationSourceEvidence(limits);
     const editions = yield* makeCitationResolutionEditions();

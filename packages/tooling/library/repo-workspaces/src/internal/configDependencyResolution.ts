@@ -300,13 +300,16 @@ const pnpmConfigEntries = Effect.fnUntraced(function* (
 ): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError, LadderServices> {
   const path = yield* Path.Path;
   const entriesOf2 = yield* entriesOf(root, base);
-  const nested = yield* Effect.forEach(entriesOf2, (entry) =>
-    Str.startsWith("@")(entry)
-      ? Effect.map(
-          entriesOf(root, path.join(base, entry)),
-          A.map((inner) => `${entry}/${inner}`)
-        )
-      : Effect.succeed([entry])
+  const nested = yield* Effect.forEach(
+    entriesOf2,
+    (entry) =>
+      Str.startsWith("@")(entry)
+        ? Effect.map(
+            entriesOf(root, path.join(base, entry)),
+            A.map((inner) => `${entry}/${inner}`)
+          )
+        : Effect.succeed([entry]),
+    { concurrency: 1 }
   );
   return A.flatten(nested);
 });
@@ -322,8 +325,10 @@ const storesFromLinks = Effect.fn("ConfigDependencyResolution.storesFromLinks")(
   const path = yield* Path.Path;
   const base = pnpmConfigDir(path, root);
   const pnpmConfigEntries3 = yield* pnpmConfigEntries(root, base);
-  const resolved = yield* Effect.forEach(pnpmConfigEntries3, (candidate) =>
-    realPathOf(root, path.join(base, candidate))
+  const resolved = yield* Effect.forEach(
+    pnpmConfigEntries3,
+    (candidate) => realPathOf(root, path.join(base, candidate)),
+    { concurrency: 1 }
   );
   return A.getSomes(A.map(A.getSomes(resolved), (target) => storeOfLinkedPath(path, target)));
 });
@@ -348,13 +353,16 @@ const environmentStoreRoots = Effect.fnUntraced(function* (): Effect.fn.Return<
 > {
   const path = yield* Path.Path;
   const platform = yield* HostProcessPlatform;
-  const [pnpmHome, xdgDataHome, localAppData, home, userProfile] = yield* Effect.all([
-    environmentValue("PNPM_HOME"),
-    environmentValue("XDG_DATA_HOME"),
-    environmentValue("LOCALAPPDATA"),
-    environmentValue("HOME"),
-    environmentValue("USERPROFILE"),
-  ]);
+  const [pnpmHome, xdgDataHome, localAppData, home, userProfile] = yield* Effect.all(
+    [
+      environmentValue("PNPM_HOME"),
+      environmentValue("XDG_DATA_HOME"),
+      environmentValue("LOCALAPPDATA"),
+      environmentValue("HOME"),
+      environmentValue("USERPROFILE"),
+    ],
+    { concurrency: 1 }
+  );
   const windows = platform === "win32";
   const homeDirectory = O.orElse(windows ? userProfile : home, () => (windows ? home : userProfile));
   return A.getSomes([
@@ -387,19 +395,22 @@ const storesFromEnvironment = Effect.fn("ConfigDependencyResolution.storesFromEn
 ): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError, LadderServices> {
   const path = yield* Path.Path;
   const environmentStoreRoots4 = yield* environmentStoreRoots();
-  const expanded = yield* Effect.forEach(environmentStoreRoots4, (storeRoot) =>
-    // A plain `.sort()` orders `v10 < v11 < v9`, and since the first store
-    // holding a version answers, a pnpm upgrade that left `v10` beside `v11`
-    // would otherwise replay the stale copy without a word.
-    Effect.map(entriesOf(root, storeRoot), (entries) =>
-      A.map(
-        A.sort(
-          A.filter(entries, (entry) => /^v\d+$/.test(entry)),
-          NewestStoreFormatFirst
-        ),
-        (version) => path.join(storeRoot, version)
-      )
-    )
+  const expanded = yield* Effect.forEach(
+    environmentStoreRoots4,
+    (storeRoot) =>
+      // A plain `.sort()` orders `v10 < v11 < v9`, and since the first store
+      // holding a version answers, a pnpm upgrade that left `v10` beside `v11`
+      // would otherwise replay the stale copy without a word.
+      Effect.map(entriesOf(root, storeRoot), (entries) =>
+        A.map(
+          A.sort(
+            A.filter(entries, (entry) => /^v\d+$/.test(entry)),
+            NewestStoreFormatFirst
+          ),
+          (version) => path.join(storeRoot, version)
+        )
+      ),
+    { concurrency: 1 }
   );
   return A.flatten(expanded);
 });
@@ -413,19 +424,20 @@ const storesFromEnvironment = Effect.fn("ConfigDependencyResolution.storesFromEn
 const discoverStores = Effect.fn("ConfigDependencyResolution.discoverStores")(function* (
   root: string
 ): Effect.fn.Return<ReadonlyArray<string>, CatalogAssemblyError, LadderServices> {
-  const [fromYaml, fromLinks, fromEnvironment] = yield* Effect.all([
-    storeFromModulesYaml(root),
-    storesFromLinks(root),
-    storesFromEnvironment(root),
-  ]);
+  const [fromYaml, fromLinks, fromEnvironment] = yield* Effect.all(
+    [storeFromModulesYaml(root), storesFromLinks(root), storesFromEnvironment(root)],
+    { concurrency: 1 }
+  );
   // Dedupe by PHYSICAL directory, not by spelling: rung 2 already answers a
   // realpath, while `.modules.yaml` and the environment rungs answer
   // whatever spelling they were given — a symlinked home, `/var` versus
   // `/private/var` — so string equality would keep one store twice and every
   // entry in it would then read as two copies. A store that does not exist
   // is dropped here; it could never hold anything.
-  const resolved = yield* Effect.forEach([...fromYaml, ...fromLinks, ...fromEnvironment], (store) =>
-    realPathOf(root, store)
+  const resolved = yield* Effect.forEach(
+    [...fromYaml, ...fromLinks, ...fromEnvironment],
+    (store) => realPathOf(root, store),
+    { concurrency: 1 }
   );
   return A.dedupe(A.getSomes(resolved));
 });
@@ -825,24 +837,28 @@ export const lookupPnpmfiles: {
     configDependencies: Readonly<Record<string, string>>
   ): Effect.Effect<ReadonlyArray<ResolvedPnpmfile>, CatalogAssemblyError> =>
     Effect.flatMap(declaredEntries(configDependencies), (declared) =>
-      Effect.forEach(declared, ({ name, version }) => {
-        const key = `${name}@${version}`;
-        const path = entries[key];
-        if (path === undefined) {
-          const known = R.keys(entries);
-          return Effect.fail(
-            hooksError(
-              name,
-              ConfigDependencyResolutionError.make({
-                message: `config dependency ${key} has no entry in the supplied pnpmfile map (known: ${
-                  known.length === 0 ? "none" : A.join(known, ", ")
-                })`,
-              }),
-              undefined
-            )
-          );
-        }
-        return Effect.succeed(ResolvedPnpmfile.make({ name, version, source: "supplied", path }));
-      })
+      Effect.forEach(
+        declared,
+        ({ name, version }) => {
+          const key = `${name}@${version}`;
+          const path = entries[key];
+          if (path === undefined) {
+            const known = R.keys(entries);
+            return Effect.fail(
+              hooksError(
+                name,
+                ConfigDependencyResolutionError.make({
+                  message: `config dependency ${key} has no entry in the supplied pnpmfile map (known: ${
+                    known.length === 0 ? "none" : A.join(known, ", ")
+                  })`,
+                }),
+                undefined
+              )
+            );
+          }
+          return Effect.succeed(ResolvedPnpmfile.make({ name, version, source: "supplied", path }));
+        },
+        { concurrency: 1 }
+      )
     )
 );

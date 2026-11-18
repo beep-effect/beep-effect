@@ -316,8 +316,11 @@ systemd-run --user --scope -q -p MemoryHigh=2G -p MemoryMax=3G -p MemorySwapMax=
   bun run beep yeet final-check --force-local --gates coverage
 ```
 
-A `--gates` run writes an incomplete receipt, which never admits `yeet ready`; run the plain
-`yeet final-check` on the head again afterwards.
+A `--gates` run writes an incomplete receipt to a file of its own,
+`.beep/yeet/final-check/subsets/<head>/<ulid>.json`, which never admits `yeet ready`. It leaves
+the head receipt `.beep/yeet/final-check/<head>.json` as it was, and a later `--gates` run on the
+same head adds another file, so a forced run's receipt survives the refusal run after it. If the
+head has no complete passing receipt yet, run the plain `yeet final-check` on it.
 
 ### Hosted catalog regeneration
 

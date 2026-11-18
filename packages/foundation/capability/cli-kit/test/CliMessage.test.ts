@@ -283,7 +283,7 @@ describe("CliMessage joins the output policy: sanitised, and neutralized under G
     Effect.gen(function* () {
       for (const audience of ["human", "agent", "ci"] as const) {
         const { out, err } = yield* run(
-          Effect.all([CliMessage.info(HOSTILE), CliMessage.failure(HOSTILE)]).pipe(Effect.asVoid),
+          Effect.all([CliMessage.info(HOSTILE), CliMessage.failure(HOSTILE)], { concurrency: 1 }).pipe(Effect.asVoid),
           {
             audience,
             ci: "github-actions",

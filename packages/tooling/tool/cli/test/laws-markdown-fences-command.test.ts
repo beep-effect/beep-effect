@@ -58,6 +58,9 @@ const withStubCompiler =
       Effect.provideService(
         self,
         ChildProcessSpawner.ChildProcessSpawner,
+        // Own double (D-14): decorates the real platform spawner, which `ScriptedSpawner` replaces rather
+        // than wraps.
+        // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
         ChildProcessSpawner.make((command) =>
           ChildProcess.isStandardCommand(command) && Str.endsWith("tsrs")(command.command)
             ? Effect.succeed(compilerHandle(output, exitCode))

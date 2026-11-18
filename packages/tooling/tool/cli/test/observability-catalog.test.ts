@@ -280,8 +280,10 @@ describe("shardCatalog", () => {
       const base = [site("Box.list", pkgA), site("Parcels.read", pkgB)];
       const render = Effect.fn(function* (sites: ReadonlyArray<SpanSite>) {
         const build = buildCatalog(harvestOf(sites), []);
-        return yield* Effect.forEach(shardCatalog(build.document), (shard) =>
-          Effect.map(renderShardText(shard), (text) => [shardPath(shard.package), text] as const)
+        return yield* Effect.forEach(
+          shardCatalog(build.document),
+          (shard) => Effect.map(renderShardText(shard), (text) => [shardPath(shard.package), text] as const),
+          { concurrency: 1 }
         );
       });
       const changed = (

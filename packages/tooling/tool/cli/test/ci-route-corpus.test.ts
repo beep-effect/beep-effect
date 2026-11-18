@@ -45,6 +45,7 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
@@ -179,7 +180,9 @@ const sha256Hex = Effect.fn("RouteCorpusTest.sha256Hex")(function* (bytes: Uint8
 const gunzip = (bytes: Uint8Array): string => new TextDecoder().decode(NodeZlib.gunzipSync(bytes));
 
 const ndjsonRuns = (bytes: Uint8Array) =>
-  Effect.forEach(A.filter(Str.split(gunzip(bytes), "\n"), Str.isNonEmpty), (line) => decodeRun(line));
+  Effect.forEach(A.filter(Str.split(gunzip(bytes), "\n"), Str.isNonEmpty), (line) => decodeRun(line), {
+    concurrency: 1,
+  });
 
 const pinnedCorpusPath = Effect.fn("RouteCorpusTest.pinnedCorpusPath")(function* (outDir: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -654,7 +657,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         // Five rows of the 2026-09-01..10-30 corpus (sha256 e840ea6d...), branch names replaced.
         const text = yield* fs.readFileString(path.join(directory, "v1-rows-2026-09.ndjson"));
         const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
-        const runs = yield* Effect.forEach(lines, (line) => decodeRun(line));
+        const runs = yield* Effect.forEach(lines, (line) => decodeRun(line), { concurrency: 1 });
         const jobs = A.flatMap(runs, (run) => run.jobs);
         expect([runs.length, jobs.length]).toEqual([5, 120]);
         assertTrue(A.every(jobs, (job) => O.isNone(job.steps) && O.isNone(job.tasks)));
@@ -662,7 +665,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const origins = A.getSomes(A.map(jobs, hostedJobRedOrigin));
         expect(origins.length).toBe(15);
         assertTrue(A.every(origins, (origin) => origin === "unattributed"));
-        const reencoded = yield* Effect.forEach(runs, (run) => encodeRun(run));
+        const reencoded = yield* Effect.forEach(runs, (run) => encodeRun(run), { concurrency: 1 });
         expect(reencoded).toEqual(lines);
       })
     );
@@ -1022,7 +1025,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const listed = yield* run(["run", "list", "--workflow", "Check", "--created", "2026-10-28"], ".");
         const rows = yield* decodeListedIds(listed);
         expect(A.map(rows, (row) => row.databaseId)).toEqual([7, 8]);
-        const viewed = yield* run(["run", "view", "7"], ".");
+        const viewed = yield* untilDone(run(["run", "view", "7"], "."));
         const view = yield* decodeViewedJobs(viewed);
         expect(A.map(view.jobs, (job) => job.name)).toEqual(["Check", "Lint"]);
         // Steps pass through as name and conclusion; a job listed without them carries null.
@@ -1089,6 +1092,42 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       })
     );
 
+    it.effect("reads a run's jobs in pages of 30 when every 100-job page answers 502", () =>
+      Effect.gen(function* () {
+        const wire = {
+          id: 7,
+          name: "Check",
+          event: "pull_request",
+          status: "completed",
+          conclusion: "success",
+          created_at: "2026-11-08T00:00:00Z",
+          head_branch: "feat/alice",
+          head_sha: "abc",
+          run_attempt: 1,
+        };
+        const job = {
+          name: "Lint",
+          conclusion: "success",
+          started_at: "2026-11-08T00:01:00Z",
+          completed_at: "2026-11-08T00:02:00Z",
+          steps: null,
+        };
+        const transport = completionFetch((url) =>
+          Str.endsWith("/jobs")(url.pathname)
+            ? url.searchParams.get("per_page") === "100"
+              ? { status: 502, body: { message: "Server Error" } }
+              : { body: { total_count: 1, jobs: [job] } }
+            : { body: wire }
+        );
+        const run = yield* restRunner(transport.fetch);
+        const viewed = yield* untilDone(run(["run", "view", "7"], "."));
+        expect(viewed).toContain('"name":"Lint"');
+        const pages = A.filterMap(transport.calls, (url) =>
+          Str.endsWith("/jobs")(url.pathname) ? Result.succeed(url.searchParams.get("per_page")) : Result.failVoid
+        );
+        expect(pages).toEqual(["100", "30"]);
+      })
+    );
     it.effect("maps REST rate limits, reads the core reset, and retries refused or malformed reads twice", () =>
       Effect.gen(function* () {
         const limited = completionFetch((url) =>

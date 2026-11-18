@@ -429,7 +429,8 @@ describe("failWithIssueArtifacts", () => {
           ],
           // `encodeReport` also accepts `ParseOptions`, so passing it bare would
           // select the data-last `forEach` overload and leak `unknown` channels.
-          (report) => encodeReport(report)
+          (report) => encodeReport(report),
+          { concurrency: 1 }
         );
         yield* fs.writeFileString(reportPath, `${A.join(lines, "\n")}\n`);
 

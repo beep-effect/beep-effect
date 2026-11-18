@@ -27,6 +27,9 @@
       "path": "../../packages/foundation/modeling/utils/tsconfig.json"
     },
     {
+      "path": "../../packages/tooling/infra/infra-hosts/tsconfig.json"
+    },
+    {
       "path": "../../packages/tooling/library/ai-metrics/tsconfig.json"
     },
     {

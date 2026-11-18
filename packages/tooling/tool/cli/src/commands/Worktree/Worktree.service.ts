@@ -90,8 +90,8 @@ import {
   sessionRootOf,
 } from "../../internal/repo-run/index.ts";
 import { AttemptJournalStore } from "../Yeet/internal/AttemptJournalStore.ts";
+import { resolveWorktreeRemovalRoots, worktreeRemovalCandidates } from "./internal/RemovalRoots.ts";
 import { isRetainedCheckoutResidueName } from "./internal/ResidueReap.ts";
-import { CLAUDE_WORKTREES_RELATIVE_ROOT } from "./Worktree.constants.ts";
 import { WorktreeCommandError, WorktreeDirtyError, WorktreePreservationError } from "./Worktree.errors.ts";
 import {
   WorktreeArchivePlan,
@@ -120,6 +120,7 @@ import type {
   AttemptJournalStoreError,
   AttemptJournalStoreLocation,
 } from "../Yeet/internal/AttemptJournalStore.schemas.ts";
+import type { WorktreeRemovalRoot } from "./internal/RemovalRoots.schemas.ts";
 import type {
   WorktreeListEntry,
   WorktreeResidueReason as WorktreeResidueReasonType,
@@ -287,7 +288,8 @@ export const mergedPullRequestsForBranch = Effect.fn("WorktreeMergedPullRequestP
       onSome: (rows) =>
         Effect.forEach(
           A.filter(rows, (row) => row.merged),
-          (row) => decodeMergedPullRequest({ number: row.number, headRefOid: row.headSha })
+          (row) => decodeMergedPullRequest({ number: row.number, headRefOid: row.headSha }),
+          { concurrency: 1 }
         ).pipe(Effect.option),
     });
   }
@@ -1097,7 +1099,7 @@ const describeMaterialTree = Effect.fn("WorktreeRemovalService.describeMaterialT
         (value) => A.sort(value, Str.Order)
       )
     : A.empty<string>();
-  const forEach1 = yield* Effect.forEach(relatives, describe);
+  const forEach1 = yield* Effect.forEach(relatives, describe, { concurrency: 1 });
   const nodes = A.prepend(forEach1, top);
   const digest = yield* decodeSha256HexFromBytes(
     textEncoder.encode(
@@ -1142,7 +1144,7 @@ const copyMaterialTree: (
   yield* Effect.forEach(
     A.sort(children, Str.Order),
     (child) => copyMaterialTree(step, path.join(source, child), path.join(destination, child)),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -1226,35 +1228,38 @@ const preserveBeepMaterial = Effect.fn("WorktreeRemovalService.preserveBeepMater
   yield* fs
     .makeDirectory(plan.materialRoot, { recursive: true })
     .pipe(materialError("preserve-beep-material", "Could not create the .beep material directory.", plan.materialRoot));
-  return yield* Effect.forEach(materialEntries, (name) =>
-    transferMaterialEntry(
-      "preserve-beep-material",
-      path.join(targetPath, ".beep", name),
-      path.join(plan.materialRoot, name),
-      plan.materialRoot,
-      renameCap,
-      () =>
-        Ref.update(
-          rollback,
-          A.prepend(
-            Effect.gen(function* () {
-              const source = path.join(plan.materialRoot, name);
-              const destination = path.join(targetPath, ".beep", name);
-              // This is the lane's newest data, even if a writer changed it after
-              // the move. Return it without requiring the pre-move digest.
-              yield* fs
-                .rename(source, destination)
-                .pipe(
-                  materialError(
-                    "preserve-beep-material",
-                    `Could not roll back the moved material at ${source}.`,
-                    source
-                  )
-                );
-            })
+  return yield* Effect.forEach(
+    materialEntries,
+    (name) =>
+      transferMaterialEntry(
+        "preserve-beep-material",
+        path.join(targetPath, ".beep", name),
+        path.join(plan.materialRoot, name),
+        plan.materialRoot,
+        renameCap,
+        () =>
+          Ref.update(
+            rollback,
+            A.prepend(
+              Effect.gen(function* () {
+                const source = path.join(plan.materialRoot, name);
+                const destination = path.join(targetPath, ".beep", name);
+                // This is the lane's newest data, even if a writer changed it after
+                // the move. Return it without requiring the pre-move digest.
+                yield* fs
+                  .rename(source, destination)
+                  .pipe(
+                    materialError(
+                      "preserve-beep-material",
+                      `Could not roll back the moved material at ${source}.`,
+                      source
+                    )
+                  );
+              })
+            )
           )
-        )
-    ).pipe(Effect.map((tree) => WorktreeBeepMaterialEntry.make({ name, ...tree })))
+      ).pipe(Effect.map((tree) => WorktreeBeepMaterialEntry.make({ name, ...tree }))),
+    { concurrency: 1 }
   );
 });
 
@@ -1340,7 +1345,7 @@ export const restoreBeepMaterial = Effect.fn("WorktreeRemovalService.restoreBeep
         );
       }
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   // Every source and destination passes preflight before the first transfer.
   yield* Effect.forEach(
@@ -1353,7 +1358,7 @@ export const restoreBeepMaterial = Effect.fn("WorktreeRemovalService.restoreBeep
         beepRoot,
         renameCap
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   return manifest.materialEntries;
 });
@@ -1492,7 +1497,7 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
     Effect.catchCause(
       Effect.fnUntraced(function* (cause) {
         const got = yield* Ref.get(rollback);
-        const restored = yield* Effect.forEach(got, Effect.exit);
+        const restored = yield* Effect.forEach(got, Effect.exit, { concurrency: 1 });
         const cleanup = [
           fs
             .remove(plan.manifestPath, { force: true })
@@ -1513,7 +1518,7 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
               )
           );
         }
-        const cleaned = yield* Effect.forEach(cleanup, Effect.exit);
+        const cleaned = yield* Effect.forEach(cleanup, Effect.exit, { concurrency: 1 });
         const failures = A.filter([...restored, ...cleaned], Exit.isFailure);
         const combined = A.reduce(failures, cause, (original, result) => Cause.combine(original, result.cause));
         if (A.isReadonlyArrayNonEmpty(failures)) {
@@ -1533,6 +1538,87 @@ const preserveResidue = Effect.fn("WorktreeRemovalService.preserveResidue")(func
   );
 });
 
+const removalFenceRefusal = (request: WorktreeRemovalRequest) => () =>
+  WorktreeCommandError.make({
+    message:
+      "Removal target must be an exact registered worktree beneath a declared worktree root (managed, nested, T3 or fleet roots registry) with the same Git common directory.",
+    path: request.targetPath,
+  });
+
+// A lane sits directly under one of its clone's worktree roots: the sibling
+// `-worktrees` directory, the Claude Code nested root, the T3 Code root, or a
+// root the fleet roots registry lists. A root only says where a lane may sit;
+// registration and the Git common directory decide whether it is one.
+const rootedRemovalCandidates = Effect.fnUntraced(function* (request: WorktreeRemovalRequest) {
+  const path = yield* Path.Path;
+  const target = path.resolve(request.targetPath);
+  const roots = yield* resolveWorktreeRemovalRoots(request.mainCheckout);
+  const named = isWorktreeRemovalName(request.name)
+    ? worktreeRemovalCandidates({ path, roots, name: request.name })
+    : A.empty<{ readonly root: WorktreeRemovalRoot; readonly target: string }>();
+  const candidates = A.filter(named, (candidate) => candidate.target === target);
+  if (!A.isReadonlyArrayNonEmpty(candidates) || target === path.resolve(request.mainCheckout)) {
+    return yield* removalFenceRefusal(request)();
+  }
+  return candidates;
+});
+
+// The real target must still be `<root>/<name>` for one admitting root once
+// symbolic links resolve. Returns the canonical target.
+const canonicalRootedTarget = Effect.fnUntraced(function* (
+  request: WorktreeRemovalRequest,
+  candidates: ReadonlyArray<{ readonly root: WorktreeRemovalRoot }>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const invalid = removalFenceRefusal(request);
+  const canonicalTarget = yield* fs.realPath(path.resolve(request.targetPath)).pipe(Effect.mapError(invalid));
+  const canonicalRoots = yield* Effect.forEach(
+    candidates,
+    (candidate) => fs.realPath(candidate.root.path).pipe(Effect.option),
+    { concurrency: 1 }
+  );
+  if (!A.some(A.getSomes(canonicalRoots), (root) => canonicalTarget === path.join(root, request.name))) {
+    return yield* invalid();
+  }
+  return canonicalTarget;
+});
+
+// The target must share the clone's Git common directory and never be the
+// primary checkout: that one is registered and shares the common directory, and
+// a root that happens to hold it (a fleet root over the projects directory)
+// must not make the clone itself removable.
+const assertSameCommonDirectory = Effect.fnUntraced(function* (
+  request: WorktreeRemovalRequest,
+  canonicalTarget: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const git = yield* Git;
+  const invalid = removalFenceRefusal(request);
+  const expectedCommon = yield* git
+    .commonDir(request.mainCheckout)
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(GitCommand.commonDir(), worktreeGitErrorAdapter("Could not resolve the owning Git directory."))
+      )
+    );
+  const targetCommon = yield* git
+    .commonDir(path.resolve(request.targetPath))
+    .pipe(
+      Effect.mapError(
+        adaptGitKitError(GitCommand.commonDir(), worktreeGitErrorAdapter("Could not resolve the target Git directory."))
+      )
+    );
+  const expectedReal = yield* fs.realPath(Str.trim(expectedCommon)).pipe(Effect.mapError(invalid));
+  const targetReal = yield* fs.realPath(Str.trim(targetCommon)).pipe(Effect.mapError(invalid));
+  const primaryReal = yield* fs.realPath(request.mainCheckout).pipe(Effect.mapError(invalid));
+  const primaries = [primaryReal, path.dirname(expectedReal)];
+  if (expectedReal !== targetReal || A.contains(primaries, canonicalTarget)) {
+    return yield* invalid();
+  }
+});
+
 const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemovalRequest")(function* (
   request: WorktreeRemovalRequest
 ): Effect.fn.Return<
@@ -1546,23 +1632,10 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
       path: request.targetPath,
     });
   }
-  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+  const invalid = removalFenceRefusal(request);
   const target = path.resolve(request.targetPath);
-  const managedRoot = path.join(path.dirname(request.mainCheckout), `${path.basename(request.mainCheckout)}-worktrees`);
-  // Claude Code's desktop app nests its lanes under the clone itself; both
-  // roots are retirement-eligible, and the target must sit in exactly one.
-  const nestedRoot = path.join(request.mainCheckout, CLAUDE_WORKTREES_RELATIVE_ROOT);
-  const root = target === path.resolve(nestedRoot, request.name) ? nestedRoot : managedRoot;
-  const invalid = () =>
-    WorktreeCommandError.make({
-      message:
-        "Removal target must be an exact registered worktree beneath the managed or nested worktrees root with the same Git common directory.",
-      path: request.targetPath,
-    });
-  if (!isWorktreeRemovalName(request.name) || target !== path.resolve(root, request.name)) {
-    return yield* invalid();
-  }
+  const candidates = yield* rootedRemovalCandidates(request);
   const git = yield* Git;
   const entries = yield* git.worktreeList(request.mainCheckout).pipe(
     Effect.mapBoth({
@@ -1577,30 +1650,8 @@ const validateRemovalRequest = Effect.fn("WorktreeRemovalService.validateRemoval
   if (!A.some(entries, (entry) => path.resolve(entry.path) === target)) {
     return yield* invalid();
   }
-  const canonicalRoot = yield* fs.realPath(root).pipe(Effect.mapError(invalid));
-  const canonicalTarget = yield* fs.realPath(target).pipe(Effect.mapError(invalid));
-  if (canonicalTarget !== path.join(canonicalRoot, request.name)) {
-    return yield* invalid();
-  }
-  const expectedCommon = yield* git
-    .commonDir(request.mainCheckout)
-    .pipe(
-      Effect.mapError(
-        adaptGitKitError(GitCommand.commonDir(), worktreeGitErrorAdapter("Could not resolve the owning Git directory."))
-      )
-    );
-  const targetCommon = yield* git
-    .commonDir(target)
-    .pipe(
-      Effect.mapError(
-        adaptGitKitError(GitCommand.commonDir(), worktreeGitErrorAdapter("Could not resolve the target Git directory."))
-      )
-    );
-  const expectedReal = yield* fs.realPath(Str.trim(expectedCommon)).pipe(Effect.mapError(invalid));
-  const targetReal = yield* fs.realPath(Str.trim(targetCommon)).pipe(Effect.mapError(invalid));
-  if (expectedReal !== targetReal) {
-    return yield* invalid();
-  }
+  const canonicalTarget = yield* canonicalRootedTarget(request, candidates);
+  yield* assertSameCommonDirectory(request, canonicalTarget);
 });
 
 const makeRemovalReceipt = (
@@ -1969,7 +2020,7 @@ const describeAttachedProcesses = Effect.fnUntraced(function* (
 ): Effect.fn.Return<{ readonly listed: string; readonly hint: string }, never, FileSystem.FileSystem> {
   const holders = A.dedupeWith(attachments, (left, right) => left.pid === right.pid);
   const shown = A.take(holders, MAX_REPORTED_HOLDERS);
-  const described = yield* Effect.forEach(shown, (holder) => describeHolder(holder, note));
+  const described = yield* Effect.forEach(shown, (holder) => describeHolder(holder, note), { concurrency: 1 });
   const listed = A.join(
     A.map(described, (holder) => holder.text),
     ", "
@@ -2117,11 +2168,14 @@ const setAsideIdleTerminalShells = Effect.fnUntraced(function* (
     return { blocking: holders, quietShells: HashMap.empty() };
   }
   const pids = A.dedupe(A.map(holders, (holder) => holder.pid));
-  const counted = yield* Effect.forEach(pids, (pid) =>
-    Effect.map(
-      quietShellCount(holders, pid, earlier),
-      O.map((count) => [pid, count] as const)
-    )
+  const counted = yield* Effect.forEach(
+    pids,
+    (pid) =>
+      Effect.map(
+        quietShellCount(holders, pid, earlier),
+        O.map((count) => [pid, count] as const)
+      ),
+    { concurrency: 1 }
   );
   const quiet = HashMap.fromIterable(A.getSomes(counted));
   return {
@@ -2172,7 +2226,7 @@ const holderStanding = Effect.fnUntraced(function* (
   if (!A.every(handles, (handle) => ProcessAttachmentKind.is.descriptor(handle.kind))) {
     return FenceHolderStanding.Enum.holding;
   }
-  const directories = yield* Effect.forEach(handles, (handle) => isDirectoryTarget(handle.target));
+  const directories = yield* Effect.forEach(handles, (handle) => isDirectoryTarget(handle.target), { concurrency: 1 });
   return Bool.every(directories) ? FenceHolderStanding.Enum.walking : FenceHolderStanding.Enum.holding;
 });
 
@@ -2188,7 +2242,8 @@ const sortHolders = Effect.fnUntraced(function* (
   const ranked = yield* Effect.forEach(
     groups,
     (group): Effect.Effect<RankedHolder, never, FileSystem.FileSystem> =>
-      Effect.map(holderStanding(group), (standing) => ({ standing, group }))
+      Effect.map(holderStanding(group), (standing) => ({ standing, group })),
+    { concurrency: 1 }
   );
   const holdersIn = (standing: FenceHolderStanding): ReadonlyArray<ProcessAttachment> =>
     A.flatMap(
@@ -2318,7 +2373,8 @@ const nameInotifyWatchers = (
   Effect.forEach(
     A.dedupeWith(watchers, (left, right) => left.pid === right.pid),
     (watcher) =>
-      Effect.map(processName(watcher.pid), (command) => WorktreeInotifyWatcher.make({ pid: watcher.pid, command }))
+      Effect.map(processName(watcher.pid), (command) => WorktreeInotifyWatcher.make({ pid: watcher.pid, command })),
+    { concurrency: 1 }
   );
 
 const fencedArchivePlan = Effect.fn("WorktreeRemovalService.fencedArchivePlan")(function* (

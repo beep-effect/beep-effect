@@ -1,0 +1,15 @@
+{
+  "previous": "f2eee29e2bfe634a15e078f63d86b63882154e662843ed0bc8bc5ab5326f661b",
+  "review": {
+    "reviewer": "Claude Opus 5.5 (P2 aws-extras lane)",
+    "reason": "Record @beep/alchemy-aws-extras at its generated scripts with its @beep/utils dependency, and its manifest joining the //#lint:policy-fingerprint inputs in turbo.json; no command, output or environment changes, no qualification granted.",
+    "basis": {
+      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-alchemy-aws-extras.md",
+      "sha256": "779b3def1044935e456fefe25b8c3d70a8c27874969103d777f739f571637750"
+    }
+  },
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3",
+  "subjects": ["//", "@beep/alchemy-aws-extras"]
+}

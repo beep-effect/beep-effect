@@ -11,7 +11,8 @@ Every path-dependent surface reads one ordered list of discovery roots:
 - `beep worktree fleet` (mirror, `--join`, `describe`, `register`)
 - `beep quality residue-reap --fleet` (it asks the fleet mirror for its
   checkouts)
-- `beep yeet economics --fleet`
+- `beep yeet economics --fleet` (and `--fleet-hosts`, which adds the
+  [fleet hosts](#fleet-hosts) read over SSH)
 
 Each root is a directory whose immediate children are candidates. Discovery
 reads one level, never recurses and never follows symlinks. A child counts when
@@ -93,15 +94,99 @@ projects directory.
   census: a sibling clone of another repository named `beep-effect*` (such as
   `beep-effect-private`), and an orphaned lane whose clone was deleted, since
   its `.git` file names a clone that no longer exists.
-- Removal does not know the T3 root. `beep worktree remove`, `beep yeet sweep
-  --retire` and `beep worktree reap` remove only lanes in the clone's sibling
-  `-worktrees` directory or in the worktrees Claude Code nests inside the
-  clone. For a T3 lane the removal service refuses ("Removal target must be an
-  exact registered worktree beneath the managed or nested worktrees root")
-  before it exports, fences or deletes anything. T3 removes its own lanes with `git worktree
-  remove`, which deletes the git-ignored `.beep/yeet/runs` without filing the
-  journals in the attempt-journal store, so economics counts a T3 lane's
-  attempts only while the lane exists.
+- Removal knows the T3 root. The removal fence behind `beep worktree remove`,
+  `beep yeet sweep --retire` and `beep worktree reap` admits a lane directly under any of its
+  clone's worktree roots: the sibling `-worktrees` directory, the worktrees
+  Claude Code nests inside the clone, `<home>/.t3/worktrees/<clone name>`
+  (from `HOME`, with or without a roots list), and each root that
+  `BEEP_FLEET_ROOTS` or `roots.json` lists, honoring its `namePrefix`. A root
+  only says where a lane may sit: the target must still be an exact
+  registered worktree of the same Git common directory and never the clone
+  itself, and archive export, residue capture, the holder refusal and the
+  invoker and `CLAUDE_PID` exemptions apply unchanged. A `roots.json` that
+  does not decode adds no roots to the fence and never widens it.
+  `beep worktree remove <name>` looks the name up under every root and refuses
+  a name registered under two of them. `beep worktree reap` archives merged
+  lanes through the same fence but only from the sibling and nested roots: a
+  T3 thread stays bound to its worktree with no process standing in it, so the
+  reap liveness probe cannot see it, and removing the lane kills the thread.
+  Reap therefore reports a lane under the T3 root or another fleet root as
+  `self-retire-only` instead of retiring it (before this change the fence
+  refused it and reap reported `retirement-failed`). Such a lane is retired by
+  its own session with `beep yeet sweep --retire`, or by an explicit
+  `beep worktree remove <name> --archive` once its thread is gone. A lane T3 removes itself with `git
+  worktree remove` still skips the attempt-journal store, so retire T3 lanes
+  through the fence to keep their journals.
+
+## Fleet hosts
+
+`beep yeet economics --fleet-hosts` (it implies `--fleet`) also reads the
+attempt journals of other machines, read-only, over the ordinary SSH wrappers
+the [host profiles](../../.claude/skills/remote-development-agents/references/hosts.md)
+already name. The hosts are listed in
+`<state>/beep/fleet/<repo-key>/hosts.json`, next to `roots.json`
+(`BEEP_FLEET_STATE_ROOT` relocates it):
+
+```json
+{
+  "schemaVersion": "fleet-hosts/v1",
+  "hosts": [
+    {
+      "host": "beep-worker",
+      "route": "ssh-beep-worker-yubi",
+      "roots": ["projects"],
+      "store": true
+    }
+  ]
+}
+```
+
+- `route` is one of `ssh-beep-worker-yubi`, `ssh-tbk-worker`,
+  `ssh-dankserver-worker`, `ssh-tom-pc-1-wsl` or `ssh-grok-bot`, always
+  without `--admin`. Any other value, a raw `ssh` or an administrative
+  wrapper does not decode, so the read never opens a new route or needs a new
+  credential.
+- `roots` are relative to the remote login's home directory, made of plain
+  segments (letters, digits, `.`, `_`, `-`), each starting with a letter,
+  digit or `_`. A root can therefore never start with `-` or `+` (which
+  `find` would read as its expression, such as `-delete`), name a hidden
+  directory, or use `.` or `..`; such a `hosts.json` does not decode. A
+  remote checkout is admitted by root, not by origin: reading a remote
+  `.git/config` would be a read beyond the journals, so list only
+  directories that hold this repository's checkouts.
+- `store` (default `false`) also reads the host's own attempt-journal store
+  at the fixed `.local/state/beep/yeet/attempts`, only for this fleet's
+  `<repo-key>` partition. No `hosts.json` string names that path. A host
+  with `store` and no store reads as `partial`.
+- Each host runs exactly one remote command (sent with every token
+  single-quoted, so the remote shell expands nothing):
+  `find ./<root>… [./.local/state/beep/yeet/attempts] -maxdepth 8 ( -name
+  node_modules -o -name .git ) -prune -o -type f -path */runs/*/attempts.ndjson
+  -exec tail -v -c +1 -- {} +`. Every start path begins with `./`, so none
+  can be read as an expression primary; no portable `find` has an option
+  that ends the start-path list, so the prefix is the guard. It lists and
+  prints run journals and creates nothing on the host: no temporary file,
+  directory or lock. The shell refuses any other command line before starting
+  the wrapper (a start path must be `./<root>` or the fixed store path), and
+  standard input is closed.
+- Hosts are read one at a time, because each wrapper may ask for a touch of
+  the same YubiKey; a read has two minutes. A host that times out, cannot be
+  reached (`ssh` exit 255), whose wrapper refuses (any other status), whose
+  wrapper is not installed, or whose output passes 64 MiB is reported as
+  `unreachable` with that reason, and the other hosts are still read. `find`
+  exiting 1 (a missing root) is `partial`: what it printed is still read.
+- The printed journals are folded in memory, labelled `<host>:<checkout>`
+  and `<host>:(retained)`, and dropped. The report gets one receipt per host
+  in `scope.hosts` (status, reason, exit code, journal, attempt and
+  skipped-file counts) and the attempts' `hostMix` and `seatMix`. No raw
+  row is written to disk, printed, or kept in any report. A remote path with
+  a control or non-ASCII character is skipped, so a remote file name never
+  writes an escape sequence into the printed report.
+
+New attempt-started rows carry `host` (the writer's short host label) and
+`seat` (`codex`, `claude-code` or `unknown`, the harness whose shell
+started the attempt). Rows written before those keys decode with them absent
+and count as `unrecorded`; readers that predate them ignore them.
 
 ## Registry
 

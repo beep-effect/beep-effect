@@ -236,6 +236,8 @@ const readShardLog = Effect.fn("CiPartitionTimingSource.readShardLog")(function*
   repo: string,
   shard: TestUnitShardJob
 ) {
+  // KEEP (D-22): the job log is a raw redirect download under its own bound; no kit member reads job logs.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-22), reason above
   const log = yield* runCaptured({
     command: "gh",
     // Reporter output carries ANSI colours, which `gh api` refuses to print without this flag.

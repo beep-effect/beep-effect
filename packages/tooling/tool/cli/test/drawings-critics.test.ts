@@ -229,7 +229,7 @@ describe("extractReportText", () => {
     Effect.fnUntraced(function* () {
       const lines = (events: ReadonlyArray<unknown>) =>
         Effect.map(
-          Effect.forEach(events, (event) => encodeJson(event)),
+          Effect.forEach(events, (event) => encodeJson(event), { concurrency: 1 }),
           (encoded) => `${A.join(encoded, "\n")}\n`
         );
       const stream = yield* lines([
@@ -828,6 +828,8 @@ const fakeSeatHandle = (command: ChildProcess.StandardCommand) =>
     Match.orElse(() => command.pipe(seatOutput, seatHandle))
   );
 
+// Own double (D-14): never-ending streams whose piece split is asserted.
+// biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double (D-14), reason above
 const fakeSeats = ChildProcessSpawner.make((command) =>
   ChildProcess.isStandardCommand(command)
     ? Effect.sync(() => {

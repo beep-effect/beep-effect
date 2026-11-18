@@ -328,7 +328,7 @@ export const makeDocketFileJournalLayer = (
 
       return DocketIntakeJournal.of({
         append: Effect.fn("DocketJournal.append")(function* (entries) {
-          const lines = yield* Effect.forEach(entries, encodeLine).pipe(
+          const lines = yield* Effect.forEach(entries, encodeLine, { concurrency: 1 }).pipe(
             Effect.mapError(journalError("journal-encode"))
           );
           yield* Effect.scoped(
@@ -381,7 +381,9 @@ export const readDocketJournal: (
   const contents = yield* fs.readFileString(file).pipe(Effect.mapError(journalError("journal-read")));
   // Every complete line ends with a break, so the last piece is empty or an unfinished line.
   const complete = A.dropRight(Str.split(LINE_BREAK)(contents), 1);
-  return yield* Effect.forEach(complete, decodeLine).pipe(Effect.mapError(journalError("journal-decode")));
+  return yield* Effect.forEach(complete, decodeLine, { concurrency: 1 }).pipe(
+    Effect.mapError(journalError("journal-decode"))
+  );
 });
 
 // Record a write that already succeeded. A write the journal cannot record is one an undo could

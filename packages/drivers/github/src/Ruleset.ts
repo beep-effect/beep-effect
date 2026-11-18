@@ -359,14 +359,19 @@ const make = (client: GitHubClient["Service"]): RulesetShape => {
         owner,
         repo,
       });
-      return yield* Effect.forEach(rulesets, (ruleset) =>
-        S.decodeEffect(RulesetInfo)({
-          id: ruleset.id,
-          name: ruleset.name,
-          ...O.getSomesStruct({ source_type: O.fromUndefinedOr(ruleset.source_type) }),
-        }).pipe(
-          Effect.mapError((error) => GitHubError.decode("Ruleset.list", "GitHub returned an unexpected ruleset", error))
-        )
+      return yield* Effect.forEach(
+        rulesets,
+        (ruleset) =>
+          S.decodeEffect(RulesetInfo)({
+            id: ruleset.id,
+            name: ruleset.name,
+            ...O.getSomesStruct({ source_type: O.fromUndefinedOr(ruleset.source_type) }),
+          }).pipe(
+            Effect.mapError((error) =>
+              GitHubError.decode("Ruleset.list", "GitHub returned an unexpected ruleset", error)
+            )
+          ),
+        { concurrency: 1 }
       );
     })
   );

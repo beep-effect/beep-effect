@@ -237,8 +237,10 @@ const decodeCsvRowsEffect = <RowSchema extends RowSchemaWithFields>(
       const rowsAfterLimit =
         normalized.codec.maxRows > 0 ? A.take(rowsAfterSkipRows, normalized.codec.maxRows) : rowsAfterSkipRows;
 
-      const mappedRows = yield* Effect.forEach(rowsAfterLimit, (row) =>
-        mapRowToHeaderRecord(headerRow, row, normalized.codec.strictColumnHandling)
+      const mappedRows = yield* Effect.forEach(
+        rowsAfterLimit,
+        (row) => mapRowToHeaderRecord(headerRow, row, normalized.codec.strictColumnHandling),
+        { concurrency: 1 }
       );
 
       return yield* S.decodeEffect(S.Array(rowSchema))(mappedRows);
@@ -280,8 +282,10 @@ const encodeCsvRowsEffect = <RowSchema extends RowSchemaWithFields>(
     const normalized = yield* normalizeParserOptions(options);
     const schemaColumns = getSchemaColumns(rowSchema);
     const encodedRows = yield* S.encodeEffect(S.Array(rowSchema))(rows);
-    const formattedRows = yield* Effect.forEach(encodedRows, (row) =>
-      Effect.forEach(schemaColumns, (column) => getEncodedCell(row, column))
+    const formattedRows = yield* Effect.forEach(
+      encodedRows,
+      (row) => Effect.forEach(schemaColumns, (column) => getEncodedCell(row, column), { concurrency: 1 }),
+      { concurrency: 1 }
     );
     const document = yield* formatCsvDocument(schemaColumns, formattedRows, normalized.codec);
 

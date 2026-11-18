@@ -17,7 +17,9 @@ import {
   RoutePlan,
   RouteReplay,
 } from "@beep/repo-cli/commands/Ci";
+import { RouteReadBudget, RouteReadSpend } from "@beep/repo-cli/commands/Ci/RouteBudget";
 import { RouteCensusReaderLive, RouteGit, verificationRouteLayer } from "@beep/repo-cli/commands/Ci/RouteCensus";
+import { GithubIdentityLabel } from "@beep/repo-cli/test/SharedInternals";
 import { WaveOrder } from "@beep/repo-cli/test/Yeet";
 import * as NodeStdio from "@effect/platform-node/NodeStdio";
 import * as NodeTerminal from "@effect/platform-node/NodeTerminal";
@@ -27,7 +29,7 @@ import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
-import { identity } from "effect/Function";
+import { constant, identity } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -206,6 +208,40 @@ it.layer(CliLayer, { timeout: "30 seconds" })("beep ci route command", (it) => {
           "base0",
           "head1",
           ["base0:affected", "head1:affected"],
+        ]);
+      })
+    )
+  );
+
+  it.effect("prints what a capture spent on stderr, metered or not", () =>
+    withConsole(
+      Effect.gen(function* () {
+        const { run } = yield* harness([]);
+        const budget = (spend: RouteReadSpend) =>
+          RouteReadBudget.of({ admit: constant(Effect.void), metered: identity, spend: Effect.succeed(spend) });
+        yield* run(["capture", "--out", "corpus-out"]).pipe(
+          Effect.provideService(
+            RouteReadBudget,
+            budget(
+              RouteReadSpend.make({
+                requests: 263,
+                reserveWaits: 2,
+                identity: O.some(GithubIdentityLabel.make("user:alice")),
+                metered: true,
+              })
+            )
+          )
+        );
+        yield* run(["capture", "--out", "corpus-out", "--json"]).pipe(
+          Effect.provideService(
+            RouteReadBudget,
+            budget(RouteReadSpend.make({ requests: 4, reserveWaits: 0, identity: O.none(), metered: false }))
+          )
+        );
+        const errorLines = yield* TestConsole.errorLines;
+        expect(A.map(errorLines, String)).toEqual([
+          "[ci route] capture metered 263 GitHub response(s) as user:alice; waited 2 time(s) for the core reserve",
+          "[ci route] capture metered 4 GitHub response(s); unmetered: no GitHub budget ledger, the reserve was not read",
         ]);
       })
     )

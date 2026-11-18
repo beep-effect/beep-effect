@@ -1,6 +1,11 @@
 import { Git } from "@beep/git/Git";
 import { CommandJsonOutput } from "@beep/repo-cli/test/Cli";
-import { EffectImportRulesOptions, lawsCommand, runEffectImportRules } from "@beep/repo-cli/test/Laws";
+import {
+  EffectImportManualReview,
+  EffectImportRulesOptions,
+  lawsCommand,
+  runEffectImportRules,
+} from "@beep/repo-cli/test/Laws";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
@@ -1462,6 +1467,113 @@ it.layer(testLayer, { concurrent: false, timeout: "5 seconds" })((it) => {
           expect(summary.strictFailure).toBe(true);
           const readProjectFile29 = yield* readProjectFile("infra/manual.ts");
           expect(readProjectFile29).toBe(source);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    // LINT-04 P55 parity gate (goals/heavy-pool-diet): every node kind the single raw visitor must
+    // reach, planted in one file. The check-mode summary below is the one the pre-#3019 descendant
+    // walks produced on this exact file; comments and string literals contribute nothing.
+    it.effect("reports the exact rows for every planted root-import node kind in check mode", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          yield* writeTsconfig;
+          const source = A.join(
+            [
+              "/**",
+              " * **Example** (A root import in a JSDoc fence)",
+              " *",
+              " * ```ts",
+              ' * import { Effect } from "effect"',
+              " * console.log(Effect.void)",
+              " * ```",
+              " */",
+              "export const documented = 1;",
+              'import type { Option } from "effect";',
+              'import EffectRoot = require("effect");',
+              'const load = () => import("effect");',
+              'const legacy = require("effect");',
+              'type Program = import("effect").Effect.Effect<void>;',
+              '// import { Effect } from "effect"',
+              "const spelled = 'import { Effect } from \"effect\"';",
+              "export class Holder {",
+              "  /**",
+              "   * ```ts",
+              '   * import { Schema } from "effect"',
+              "   * ```",
+              "   */",
+              "  readonly member = 1;",
+              "}",
+              "export type { Option, Program };",
+              "export { EffectRoot, legacy, load, spelled };",
+              "",
+            ],
+            "\n"
+          );
+          yield* writeProjectFile("infra/planted.ts", source);
+
+          const summary = yield* runEffectImportRules(
+            EffectImportRulesOptions.make({
+              strictCheck: true,
+              excludePaths: [],
+              promotedFamilyPrefixes: ["infra"],
+            })
+          );
+
+          const review = (
+            kind: EffectImportManualReview["kind"],
+            line: number,
+            binding: string,
+            reason: string
+          ): EffectImportManualReview =>
+            EffectImportManualReview.make({
+              kind,
+              file: "infra/planted.ts",
+              line,
+              moduleSpecifier: "effect",
+              binding,
+              reason,
+            });
+          expect(summary.manualReviews).toEqual([
+            review(
+              "dynamic-import",
+              12,
+              "import()",
+              "A dynamic root import may require multiple lazy module loads; split it manually."
+            ),
+            review(
+              "require",
+              13,
+              "require()",
+              "A CommonJS root require cannot be split safely without inspecting its runtime use."
+            ),
+            review(
+              "import-type",
+              14,
+              "import type expression",
+              "A type-level root import must be routed by the referenced qualifier."
+            ),
+            review(
+              "import-equals",
+              11,
+              "EffectRoot",
+              "An import-equals root namespace has no single per-module equivalent."
+            ),
+          ]);
+          // Seven root specifiers: the type-only import, the four reviewed forms and both JSDoc fences
+          // (the module's and the class member's). The comment and the string literal are not counted.
+          expect(summary.rootSpecifierCounts).toEqual({ effect: 7 });
+          expect(summary.scannedFiles).toBe(1);
+          expect(summary.scannedFences).toBe(2);
+          expect(summary.rootImportsRewritten).toBe(3);
+          expect(summary.emittedImports).toBe(3);
+          expect(summary.rootExportsRewritten).toBe(0);
+          expect(summary.changedFiles).toEqual(["infra/planted.ts"]);
+          expect(summary.parserWarnings).toEqual([]);
+          expect(summary.strictFailure).toBe(true);
+          const unchanged = yield* readProjectFile("infra/planted.ts");
+          expect(unchanged).toBe(source);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

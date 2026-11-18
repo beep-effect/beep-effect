@@ -259,12 +259,15 @@ describe("MailTagging assembled service", () => {
         const providers = yield* makeProviders(() => Promise.resolve(boxFiles("7001")));
         const serviceFor = serviceOver(workspace, providers.layer);
         const tag = taggingOver(workspace, providers.layer);
-        const files = Effect.all({
-          tags: linesOf(workspace.tagLedgerPath),
-          filings: linesOf(workspace.filingLedgerPath),
-          checkpoint: linesOf(workspace.checkpointPath),
-          boxCalls: linesOf(workspace.boxCallLedgerPath),
-        });
+        const files = Effect.all(
+          {
+            tags: linesOf(workspace.tagLedgerPath),
+            filings: linesOf(workspace.filingLedgerPath),
+            checkpoint: linesOf(workspace.checkpointPath),
+            boxCalls: linesOf(workspace.boxCallLedgerPath),
+          },
+          { concurrency: 1 }
+        );
         const lineCounts = Effect.map(files, (found) => [
           found.tags.length,
           found.filings.length,
@@ -340,7 +343,7 @@ describe("MailTagging assembled service", () => {
 
         const report = yield* taggingOver(workspace, providers.layer)("apply", "run-0002");
         const linesOf5 = yield* linesOf(workspace.filingLedgerPath);
-        const records = yield* Effect.forEach(linesOf5, (line) => decodeFilingRecord(line));
+        const records = yield* Effect.forEach(linesOf5, (line) => decodeFilingRecord(line), { concurrency: 1 });
 
         expect([report.attachmentsFiled, report.attachmentsReconciled, report.attachmentsDeduped]).toStrictEqual([
           1, 0, 0,
@@ -387,7 +390,7 @@ describe("MailTagging assembled service", () => {
 
         const report = yield* taggingOver(workspace, providers.layer)("apply", "run-0002");
         const linesOf7 = yield* linesOf(workspace.filingLedgerPath);
-        const records = yield* Effect.forEach(linesOf7, (line) => decodeFilingRecord(line));
+        const records = yield* Effect.forEach(linesOf7, (line) => decodeFilingRecord(line), { concurrency: 1 });
 
         expect([report.attachmentsFiled, report.attachmentsReconciled, report.attachmentsDeduped]).toStrictEqual([
           0, 1, 0,

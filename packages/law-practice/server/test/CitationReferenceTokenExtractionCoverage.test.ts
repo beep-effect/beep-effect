@@ -1,4 +1,7 @@
-import { makeCitationReferenceTokenExtraction } from "@beep/law-practice-server/internal/Citation/ReferenceTokenExtraction";
+import {
+  CitationReferenceTokenConfiguration,
+  makeCitationReferenceTokenExtraction as makeOwnedCitationReferenceTokenExtraction,
+} from "@beep/law-practice-server/internal/Citation/ReferenceTokenExtraction";
 import { CitationTokenDispatchBindings } from "@beep/law-practice-server/internal/Citation/TokenDispatch";
 import { it } from "@beep/test-runner";
 import { expect } from "@effect/vitest";
@@ -8,11 +11,17 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { readCitationCaseMetadataConfiguration } from "./CitationCaseMetadata.fixtures.ts";
+import { installCitationOwnedTestStage } from "./CitationConfigurationOwnership.fixtures.ts";
 import { installCitationFrozenMetadataRuntime } from "./CitationFrozenEditions.fixtures.ts";
 import { makeCitationTestScaffoldBinding } from "./CitationInvocation.fixtures.ts";
 import { readCitationPinExtractionCorpus } from "./CitationPinExtraction.fixtures.ts";
 import { readCitationReferenceTokenCorpus } from "./CitationReferenceToken.fixtures.ts";
 import { citationTokenizerTestLayer } from "./CitationTokenizer.fixtures.ts";
+
+const makeCitationReferenceTokenExtraction = installCitationOwnedTestStage({
+  schema: CitationReferenceTokenConfiguration,
+  install: makeOwnedCitationReferenceTokenExtraction,
+});
 
 const install = Effect.fnUntraced(function* () {
   const corpus = yield* readCitationReferenceTokenCorpus();
@@ -26,17 +35,15 @@ const install = Effect.fnUntraced(function* () {
     editions,
     supra: corpus.configuration.supra,
   };
-  const make = (input: unknown) =>
-    makeCitationReferenceTokenExtraction(setup.limits, setup.runtime, input).pipe(
+  const make = (input: unknown, limits = setup.limits) =>
+    makeCitationReferenceTokenExtraction(limits, setup.runtime, input).pipe(
       Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(setup.limits).pipe(
-          Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-        )
+        makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) })))
       ),
       Effect.provideContext(setup.provided),
       DateTime.withCurrentZoneOffset(0)
     );
-  return { corpus, configuration, make };
+  return { corpus, configuration, make, limits: setup.limits };
 });
 const refuses = Effect.fnUntraced(function* <A, E, R>(body: Effect.Effect<A, E, R>, expected: object) {
   const failure = yield* Effect.flip(body);
@@ -46,11 +53,33 @@ const invalidConfiguration = { _tag: "CitationReferenceTokenFailure", reason: "i
 
 it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference-token refusals", (it) => {
   it.effect(
-    "refuses malformed, unauthenticated and ambiguous installation data",
+    "refuses a context pattern beyond patternUtf16 only for tokens that reach the context helper",
+    () =>
+      Effect.gen(function* () {
+        const { configuration, corpus, make, limits } = yield* install();
+        // The pin pattern is the longest raw pattern; its wrapped context form is
+        // five units longer. One unit of headroom passes every installation check.
+        const pin = configuration.pin.pattern;
+        const stage = yield* make(configuration, { ...limits, patternUtf16: pin.bytes.length / pin.width + 1 });
+        const row = (kind: string) =>
+          Effect.fromOption(A.findFirst(corpus.cases, (row) => row.expected.kind === kind && row.markup === null));
+        const section = yield* row("UnknownCitation");
+        const unknown = yield* stage.extract({ ...section, geometry: O.none() });
+        expect(unknown.outcome._tag).toBe("UnknownCitation");
+        const id = yield* row("IdCitation");
+        yield* refuses(stage.extract({ ...id, geometry: O.none() }), {
+          _tag: "CitationSafetyLimitExceeded",
+          limit: "patternUtf16",
+        });
+      }),
+    { timeout: 60_000 }
+  );
+
+  it.effect(
+    "refuses unauthenticated and ambiguous installation data",
     () =>
       Effect.gen(function* () {
         const { configuration, make } = yield* install();
-        yield* refuses(make({ ...configuration, editions: "none" }), invalidConfiguration);
         const pin = { ...configuration.pin, pattern: configuration.supra.pattern };
         yield* refuses(make({ ...configuration, pin }), invalidConfiguration);
         const supra = { ...configuration.supra, pattern: configuration.pin.pattern };

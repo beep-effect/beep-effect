@@ -8,7 +8,10 @@ import {
   CitationAnnotationCallbackResult,
 } from "@beep/law-practice-server/internal/Citation/AnnotationCallback";
 import { makeCitationSkipAnnotationSpans } from "@beep/law-practice-server/internal/Citation/AnnotationSkip";
-import { makeCitationWrapAnnotationSpans } from "@beep/law-practice-server/internal/Citation/AnnotationWrap";
+import {
+  makeCitationAnnotationWrap,
+  makeCitationWrapAnnotationSpans,
+} from "@beep/law-practice-server/internal/Citation/AnnotationWrap";
 import { concatCitationPythonRanges } from "@beep/law-practice-server/internal/Citation/PythonUnicode";
 import { CitationXmlBalance } from "@beep/law-practice-server/internal/Citation/XmlWorker";
 import { CitationPythonUnicodeStorage, CitationTextBudget } from "@beep/law-practice-use-cases/server";
@@ -147,7 +150,12 @@ export const replayCitationAnnotationCallbacks = Effect.fn("AnnotationCallbackTe
     const processor = yield* Match.value(row.mode).pipe(
       Match.when("unchecked", () => Effect.succeedNone),
       Match.when("skip", () => makeCitationSkipAnnotationSpans().pipe(Effect.asSome)),
-      Match.when("wrap", () => makeCitationWrapAnnotationSpans(setup.limits, setup.regexRuntime).pipe(Effect.asSome)),
+      Match.when("wrap", () =>
+        makeCitationWrapAnnotationSpans(
+          setup.limits,
+          makeCitationAnnotationWrap(setup.limits, setup.regexRuntime)
+        ).pipe(Effect.asSome)
+      ),
       Match.exhaustive,
       Effect.provideContext(setup.provided),
       Effect.provideService(CitationTextBudget, setup.budget),
@@ -159,7 +167,8 @@ export const replayCitationAnnotationCallbacks = Effect.fn("AnnotationCallbackTe
           Effect.map((bind) => ({ ...stage, assemble: bind(stage.assemble) }))
         )
       ),
-      Effect.provideService(CitationAnnotationAnnotator, port)
+      Effect.provideService(CitationAnnotationAnnotator, port),
+      Effect.provideContext(setup.provided)
     );
     const output = replay.assemble(row.source, row.input);
     if (row.result._tag === "Failure") {

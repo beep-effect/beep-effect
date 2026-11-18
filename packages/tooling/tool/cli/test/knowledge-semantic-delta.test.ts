@@ -1386,7 +1386,9 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           [],
           bunExecutable
         );
-        const [staticTree, liveTree] = yield* Effect.all([oracle.commandTree, oracle.currentCommandTree]);
+        const [staticTree, liveTree] = yield* Effect.all([oracle.commandTree, oracle.currentCommandTree], {
+          concurrency: 1,
+        });
 
         assert.isTrue(KnowledgeCommandSurface.staticCommandNodeEquivalent(staticTree, liveTree));
       })
@@ -1587,10 +1589,13 @@ describe("knowledge semantic-delta current-checkout probes", () => {
           )
         );
 
-        const [factoryError, listError] = yield* Effect.all([
-          Effect.flip(KnowledgeCommandSurface.buildStaticCommandTree(path.join(tempRoot, "factory"))),
-          Effect.flip(KnowledgeCommandSurface.buildStaticCommandTree(path.join(tempRoot, "list"))),
-        ]);
+        const [factoryError, listError] = yield* Effect.all(
+          [
+            Effect.flip(KnowledgeCommandSurface.buildStaticCommandTree(path.join(tempRoot, "factory"))),
+            Effect.flip(KnowledgeCommandSurface.buildStaticCommandTree(path.join(tempRoot, "list"))),
+          ],
+          { concurrency: 1 }
+        );
 
         assert.strictEqual(factoryError._tag, "KnowledgeOperationalError");
         assert.include(factoryError.message, "factory declarations contain a cycle");
@@ -2256,7 +2261,8 @@ describe("knowledge semantic-delta shared static command surface", () => {
 
         const shared = yield* Effect.forEach(
           [same, changedCommand, changedFlags, changedMode, linkedCommand, extraCommand],
-          (base) => sharesStaticCommandSurfaceForTesting(base.trackedEntries, head)
+          (base) => sharesStaticCommandSurfaceForTesting(base.trackedEntries, head),
+          { concurrency: 1 }
         );
 
         assert.deepStrictEqual(shared, [true, false, false, false, false, false]);
@@ -2278,12 +2284,15 @@ describe("knowledge semantic-delta shared static command surface", () => {
               : plainHead.readBytes(repoPath),
         };
 
-        const shared = yield* Effect.all([
-          sharesStaticCommandSurfaceForTesting(plainHead.trackedEntries, plainHead),
-          sharesStaticCommandSurfaceForTesting(changedAttributes.trackedEntries, plainHead),
-          sharesStaticCommandSurfaceForTesting(substitutingHead.trackedEntries, substitutingHead),
-          sharesStaticCommandSurfaceForTesting(plainHead.trackedEntries, unreadableHead),
-        ]);
+        const shared = yield* Effect.all(
+          [
+            sharesStaticCommandSurfaceForTesting(plainHead.trackedEntries, plainHead),
+            sharesStaticCommandSurfaceForTesting(changedAttributes.trackedEntries, plainHead),
+            sharesStaticCommandSurfaceForTesting(substitutingHead.trackedEntries, substitutingHead),
+            sharesStaticCommandSurfaceForTesting(plainHead.trackedEntries, unreadableHead),
+          ],
+          { concurrency: 1 }
+        );
 
         assert.deepStrictEqual(shared, [true, false, false, false]);
       })

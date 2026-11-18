@@ -2381,8 +2381,10 @@ const resolveLaneInputDigest = Effect.fn("QualityTasks.resolveLaneInputDigest")(
 const laneStepsWithLedgers = Effect.fn("QualityTasks.laneStepsWithLedgers")(function* (
   lanes: ReadonlyArray<QualityTaskLaneInput>
 ) {
-  return yield* Effect.forEach(lanes, ([, step]) =>
-    isWrapperLaneStep(step) ? withTurboLaneLedger(step) : Effect.succeed(step)
+  return yield* Effect.forEach(
+    lanes,
+    ([, step]) => (isWrapperLaneStep(step) ? withTurboLaneLedger(step) : Effect.succeed(step)),
+    { concurrency: 1 }
   ).pipe(QualityTaskConfigurationError.mapError("Failed to prepare a wrapper lane ledger"));
 });
 
@@ -2897,14 +2899,14 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
   // A lane blocked by an earlier lane of its wave starts only once that lane
   // finished; the pool starts lanes in declaration order, so a waiting lane
   // never holds the slot its blocker needs.
-  const laneFinished = yield* Effect.forEach(wave.lanes, () => Deferred.make<void>());
+  const laneFinished = yield* Effect.forEach(wave.lanes, () => Deferred.make<void>(), { concurrency: 1 });
   const awaitBlockers = (lane: GithubCheckWaveLane, index: number) =>
     Effect.forEach(
       A.filter(A.zip(A.take(wave.lanes, index), A.take(laneFinished, index)), ([blocker]) =>
         A.contains(lane.blockedBy, blocker.id)
       ),
       ([, blocker]) => Deferred.await(blocker),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   const runPooledLane = ([index, lane]: readonly [index: number, lane: GithubCheckWaveLane]) =>
     awaitBlockers(lane, index).pipe(
@@ -2931,8 +2933,10 @@ const runGithubCheckWave = Effect.fn("QualityTasks.runGithubCheckWave")(function
     );
   // Segments run in sequence (an exclusive lane runs alone); the lanes of one
   // shared segment share the pool.
-  const forEach3 = yield* Effect.forEach(githubCheckWaveSegments(wave.lanes), (segment) =>
-    Effect.forEach(segment, runPooledLane, { concurrency: Math.max(1, concurrency) })
+  const forEach3 = yield* Effect.forEach(
+    githubCheckWaveSegments(wave.lanes),
+    (segment) => Effect.forEach(segment, runPooledLane, { concurrency: Math.max(1, concurrency) }),
+    { concurrency: 1 }
   );
   const outcomes = A.flatten(forEach3);
   const ran = A.getSomes(outcomes);
@@ -3031,7 +3035,7 @@ const collectGithubCheckLaneWaves = Effect.fn("QualityTasks.collectGithubCheckLa
           GithubCheckLaneRun.make({ id: lane.id, stage: lane.stage, status: "not-run-early-stop", wave: lane.wave })
         )
       );
-      const forEach4 = yield* Effect.forEach(wave.lanes, appendSkippedQualityTaskLaneRun);
+      const forEach4 = yield* Effect.forEach(wave.lanes, appendSkippedQualityTaskLaneRun, { concurrency: 1 });
       qualityTaskLaneRuns = A.appendAll(qualityTaskLaneRuns, forEach4);
       continue;
     }
@@ -3322,9 +3326,11 @@ const runStepGroup = Effect.fn("QualityTasks.runStepGroup")(function* (
 
   yield* Console.log(`[beep-cli] ${label}: running ${A.length(steps)} step(s) with concurrency ${concurrency}`);
   // Not point-free: `forEach` passes the index second, where it would land in `environmentHealth`.
-  const resolvedSteps = yield* Effect.forEach(steps, (step) => withTurboSecretSession(step));
-  yield* Effect.forEach(resolvedSteps, (step) =>
-    Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`)
+  const resolvedSteps = yield* Effect.forEach(steps, (step) => withTurboSecretSession(step), { concurrency: 1 });
+  yield* Effect.forEach(
+    resolvedSteps,
+    (step) => Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`),
+    { concurrency: 1 }
   );
   const results = yield* Effect.forEach(
     resolvedSteps,
@@ -3337,7 +3343,7 @@ const runStepGroup = Effect.fn("QualityTasks.runStepGroup")(function* (
     { concurrency }
   );
 
-  yield* Effect.forEach(results, renderStepOutput, { discard: true });
+  yield* Effect.forEach(results, renderStepOutput, { concurrency: 1, discard: true });
 
   const failures = failedStepOutputs(results);
   yield* failQualityTaskGroup(label, failures);
@@ -3741,6 +3747,7 @@ const policyTrackedDiscoveryTasks = [
   "lint:retired-iri-authorities",
   "lint:private-home-paths",
   "lint:tracked-shell-allowlist",
+  "lint:no-tracked-python",
   "lint:opaque-roundtrips",
   "lint:schema-tag-idioms",
   "lint:jsdoc-module-tags",
@@ -3763,7 +3770,7 @@ const policyStateTasks = [
   ...policyTrackedDiscoveryTasks,
 ];
 // Changed scope splits the state phase by cache contract. The cached tasks' inputs are certified
-// (standards/cache-qualification-baseline.json), so Turbo's task-input selection skips them exactly
+// (standards/cache-baseline/), so Turbo's task-input selection skips them exactly
 // when a cache hit would replay them; they join the affected medium graph. The D2 git-delta and
 // clock checks and the uncertified binary walkers stay unfiltered (standards/turbo-remote-cache.md)
 // in a graph that runs abreast of the medium one, so its long poles overlap as they do in the
@@ -3859,12 +3866,16 @@ export const rootDocsCacheKey = Effect.fn("QualityTasks.rootDocsCacheKey")(
   function* (repoRoot: string) {
     const fs = yield* FileSystem.FileSystem;
     const crypto = yield* Digest.Digest;
-    const forEach7 = yield* Effect.forEach(rootDocsCacheKeySources, (source) =>
-      listRootDocsCacheKeyFiles(repoRoot, source)
+    const forEach7 = yield* Effect.forEach(
+      rootDocsCacheKeySources,
+      (source) => listRootDocsCacheKeyFiles(repoRoot, source),
+      { concurrency: 1 }
     );
     const files = pipe(forEach7, A.flatten, A.sort(Order.String));
-    const parts = yield* Effect.forEach(files, (file) =>
-      fs.readFileString(`${repoRoot}/${file}`).pipe(Effect.map((content) => `${file}\0${content}\0`))
+    const parts = yield* Effect.forEach(
+      files,
+      (file) => fs.readFileString(`${repoRoot}/${file}`).pipe(Effect.map((content) => `${file}\0${content}\0`)),
+      { concurrency: 1 }
     );
     const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(A.join(parts, "")));
     return Str.slice(0, 16)(Hex.encode(digest));
@@ -4131,14 +4142,16 @@ const runPolicyStage = Effect.fn("QualityTasks.runPolicyStage")(function* (
   stage: LintPolicyStage,
   environmentHealth: TurboEnvironmentHealthReport
 ) {
-  const resolved = yield* Effect.forEach(stage, (step) => withTurboSecretSession(step, environmentHealth));
+  const resolved = yield* Effect.forEach(stage, (step) => withTurboSecretSession(step, environmentHealth), {
+    concurrency: 1,
+  });
   yield* Effect.forEach(
     stage,
     (step) => Console.log(`[beep-cli] ${step.label}: ${commandText(step.command, step.args)}`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   const results = yield* Effect.forEach(resolved, collectResolvedStepOutput, { concurrency: "unbounded" });
-  yield* Effect.forEach(results, renderStepOutput, { discard: true });
+  yield* Effect.forEach(results, renderStepOutput, { concurrency: 1, discard: true });
   return results;
 });
 

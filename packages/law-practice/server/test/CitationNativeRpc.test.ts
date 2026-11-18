@@ -31,7 +31,8 @@ const conversation = (frames: ReadonlyArray<number>) =>
     isReady: (message) => message === "ready",
     isStarted: (message) => message === "started",
     isTerminal: (message) => message === "done" || message === "failed",
-    read: (onFrame) => Effect.forEach(frames, (frame) => onFrame(new Uint8Array([frame])), { discard: true }),
+    read: (onFrame) =>
+      Effect.forEach(frames, (frame) => onFrame(new Uint8Array([frame])), { concurrency: 1, discard: true }),
     terminal: (message) => Effect.succeed(message === "done" ? Exit.succeed(1) : Exit.fail("native")),
   });
 

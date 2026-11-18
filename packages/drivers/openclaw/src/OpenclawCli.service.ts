@@ -429,12 +429,14 @@ const projectAgentTurn = (wire: OpenclawAgentTurnWire): OpenclawAgentTurn => {
 };
 
 const toChannelAccountStatus = (entry: unknown) =>
-  Effect.map(Effect.all([decodeChannelAccount(entry), decodeChannelAccountEnvelope(entry)]), ([account, envelope]) =>
-    OpenclawChannelAccountStatus.make({
-      ...account,
-      probeError: O.flatMap(envelope.probe, (probe) => probe.error),
-      probeOk: O.flatMap(envelope.probe, (probe) => probe.ok),
-    })
+  Effect.map(
+    Effect.all([decodeChannelAccount(entry), decodeChannelAccountEnvelope(entry)], { concurrency: 1 }),
+    ([account, envelope]) =>
+      OpenclawChannelAccountStatus.make({
+        ...account,
+        probeError: O.flatMap(envelope.probe, (probe) => probe.error),
+        probeOk: O.flatMap(envelope.probe, (probe) => probe.ok),
+      })
   );
 
 /**
@@ -676,7 +678,7 @@ const makeService = (runner: OpenclawCliRunner): OpenclawCliShape => {
 
     return yield* decodeChannelsStatusWire(result.stdout).pipe(
       Effect.flatMap((document) =>
-        Effect.forEach(A.flatten(R.values(document.channelAccounts)), toChannelAccountStatus)
+        Effect.forEach(A.flatten(R.values(document.channelAccounts)), toChannelAccountStatus, { concurrency: 1 })
       ),
       Effect.mapError(parseFailure(ctx.binaryPath, "channels status", result.stdout))
     );

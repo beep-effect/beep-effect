@@ -10,16 +10,18 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { reserveCitationInvocationText } from "./Invocation.ts";
 import {
-  copyCitationMetadataPatternConfiguration,
   makeCitationMetadataStage,
+  ownCitationStageCall,
+  prepareCitationMetadataPatternConfiguration,
   substituteCitationMetadataMatches,
 } from "./MetadataComposition.ts";
 import { citationMetadataWhitespaceBoundary, trimCitationMetadataBoundary } from "./MetadataStrings.ts";
 import { citationPythonPointAt } from "./PythonUnicode.ts";
 import { CitationRegexPatternDescriptor } from "./RegexDescriptors.ts";
 import { makeCitationRegexInput } from "./RegexInput.ts";
-import { makeCitationRegexWorker } from "./RegexWorker.ts";
+import { installCitationRegexEvaluator } from "./RegexWorker.ts";
 import type { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
+import type { CitationOwned } from "./ConfigurationOwnership.ts";
 import type { CitationNativeProcessRuntime } from "./NativeProcess.ts";
 
 const $I = $LawPracticeServerId.create("internal/Citation/StopWords");
@@ -68,99 +70,104 @@ export class CitationStopWordsResult extends S.Opaque<CitationStopWordsResult, {
     })
   )
 ) {}
-const Config = S.toType(CitationStopWordsConfiguration);
 const Native = S.toType(CitationPythonUnicodeStorage);
 const space = CitationPythonUnicodeStorage.make({ width: 1, bytes: new Uint8Array([32]) });
 const commaSpace = (point: number) => point === 44 || point === 32;
 /** Run under an enclosing admitted operation, native Scope and text budget.
  * @internal @category operations @since 0.0.0
  */
-export const cleanCitationStopWords = Effect.fn("Citation.runStopWordCleanup")(function* (
+export const installCitationStopWordCleanup = Effect.fn("Citation.installStopWordCleanup")(function* (
   limits: CitationEngineLimits,
   runtime: CitationNativeProcessRuntime,
-  config: CitationStopWordsConfiguration,
-  raw: unknown
+  config: CitationStopWordsConfiguration
 ) {
-  const request = yield* S.decodeUnknownEffect(Native)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
-  const input = yield* makeCitationRegexInput(limits, reserveCitationInvocationText);
-  const worker = yield* makeCitationRegexWorker(limits, runtime, config.bindings, "python-regex-v0");
-  const substitute = Effect.fn("Citation.substituteStopWordPattern")(function* (
-    name: keyof typeof fingerprints,
-    source: CitationPythonUnicodeStorage,
-    flags: number,
-    withSpace: boolean
-  ) {
-    const evaluated = yield* worker.evaluate(config.patterns[name], source, flags);
-    return yield* substituteCitationMetadataMatches(evaluated, withSpace ? O.some(space) : O.none(), () =>
-      fail("invalid-match")
-    );
-  });
-  const trim = Effect.fn("Citation.trimStopWordText")(function* (
-    source: CitationPythonUnicodeStorage,
-    left: (point: number) => boolean,
-    right = left
-  ) {
-    const prepared = yield* input.prepareUnicode(source, () => Effect.void);
-    const length = prepared.value.pythonLength;
-    const start = yield* trimCitationMetadataBoundary(prepared.value, 0, length, 1, left);
-    const end = 1 + (yield* trimCitationMetadataBoundary(prepared.value, length - 1, start - 1, -1, right));
-    return yield* prepared.slice({ start, end }, () => Effect.void);
-  });
-  const secondSemicolonPart = Effect.fn("Citation.selectSecondCaseNamePart")(function* (
-    source: CitationPythonUnicodeStorage
-  ) {
-    const prepared = yield* input.prepareUnicode(source, () => Effect.void);
-    let start = 0;
-    for (let index = 0; index < prepared.value.pythonLength; index++) {
-      if (index % 256 === 0) yield* Effect.yieldNow;
-      if (citationPythonPointAt(prepared.value.storage, index) !== 59) continue;
-      if (start > 0) return yield* prepared.slice({ start, end: index }, () => Effect.void);
-      start = index + 1;
-    }
-    return start === 0
-      ? prepared.value.storage
-      : yield* prepared.slice({ start, end: prepared.value.pythonLength }, () => Effect.void);
-  });
-  const cleaned = yield* substitute("stopWords", request, 0, true);
-  const withoutIn = yield* substitute("leadingIn", cleaned, 0, false);
-  const stripped = yield* trim(withoutIn, citationMetadataWhitespaceBoundary);
-  const unparenthesized = yield* trim(
-    stripped,
-    (point) => point === 40,
-    (point: number) => point === 41
+  const installedInput = yield* Effect.exit(makeCitationRegexInput(limits, reserveCitationInvocationText));
+  const installedWorker = yield* Effect.exit(
+    installCitationRegexEvaluator(limits, runtime, config.bindings, "python-regex-v0")
   );
-  const selected = yield* secondSemicolonPart(unparenthesized);
-  const unpunctuated = yield* trim(selected, commaSpace);
-  const final = yield* substitute("stopWords", unpunctuated, 2, false);
-  const withoutCommas = yield* trim(final, commaSpace);
-  return yield* trim(withoutCommas, citationMetadataWhitespaceBoundary);
+  return Effect.fn("Citation.runStopWordCleanup")(function* (raw: unknown) {
+    const request = yield* S.decodeUnknownEffect(Native)(raw).pipe(Effect.mapError(() => fail("invalid-input")));
+    const input = yield* installedInput;
+    const worker = yield* installedWorker;
+    const substitute = Effect.fn("Citation.substituteStopWordPattern")(function* (
+      name: keyof typeof fingerprints,
+      source: CitationPythonUnicodeStorage,
+      flags: number,
+      withSpace: boolean
+    ) {
+      const evaluated = yield* worker.evaluate(config.patterns[name], source, flags);
+      return yield* substituteCitationMetadataMatches(evaluated, withSpace ? O.some(space) : O.none(), () =>
+        fail("invalid-match")
+      );
+    });
+    const trim = Effect.fn("Citation.trimStopWordText")(function* (
+      source: CitationPythonUnicodeStorage,
+      left: (point: number) => boolean,
+      right = left
+    ) {
+      const prepared = yield* input.prepareUnicode(source, () => Effect.void);
+      const length = prepared.value.pythonLength;
+      const start = yield* trimCitationMetadataBoundary(prepared.value, 0, length, 1, left);
+      const end = 1 + (yield* trimCitationMetadataBoundary(prepared.value, length - 1, start - 1, -1, right));
+      return yield* prepared.slice({ start, end }, () => Effect.void);
+    });
+    const secondSemicolonPart = Effect.fn("Citation.selectSecondCaseNamePart")(function* (
+      source: CitationPythonUnicodeStorage
+    ) {
+      const prepared = yield* input.prepareUnicode(source, () => Effect.void);
+      let start = 0;
+      for (let index = 0; index < prepared.value.pythonLength; index++) {
+        if (index % 256 === 0) yield* Effect.yieldNow;
+        if (citationPythonPointAt(prepared.value.storage, index) !== 59) continue;
+        if (start > 0) return yield* prepared.slice({ start, end: index }, () => Effect.void);
+        start = index + 1;
+      }
+      return start === 0
+        ? prepared.value.storage
+        : yield* prepared.slice({ start, end: prepared.value.pythonLength }, () => Effect.void);
+    });
+    const cleaned = yield* substitute("stopWords", request, 0, true);
+    const withoutIn = yield* substitute("leadingIn", cleaned, 0, false);
+    const stripped = yield* trim(withoutIn, citationMetadataWhitespaceBoundary);
+    const unparenthesized = yield* trim(
+      stripped,
+      (point) => point === 40,
+      (point: number) => point === 41
+    );
+    const selected = yield* secondSemicolonPart(unparenthesized);
+    const unpunctuated = yield* trim(selected, commaSpace);
+    const final = yield* substitute("stopWords", unpunctuated, 2, false);
+    const withoutCommas = yield* trim(final, commaSpace);
+    return yield* trim(withoutCommas, citationMetadataWhitespaceBoundary);
+  });
 });
-/** Capture trusted patterns, Clock, admission, process services and optional
- * cumulative text budget. Each call owns fresh scoped workers; methods are R=never.
+/** Authenticate the owned fixed cleanup patterns before the cleanup is installed.
+ * The configuration is already owned, so nothing is decoded or copied.
  * @internal @category operations @since 0.0.0
  */
-export const copyCitationStopWordsConfiguration = Effect.fn("Citation.copyStopWordsConfiguration")(function* (
+export const verifyCitationStopWordsConfiguration = Effect.fn("Citation.verifyStopWordsConfiguration")(function* (
   limits: CitationEngineLimits,
-  decoded: CitationStopWordsConfiguration
+  owned: CitationOwned<CitationStopWordsConfiguration>
 ) {
-  const owned = yield* copyCitationMetadataPatternConfiguration(
+  const verified = yield* prepareCitationMetadataPatternConfiguration(
     limits,
-    Patterns,
-    decoded.patterns,
-    decoded.bindings,
+    owned.patterns,
+    owned.bindings,
     fingerprints,
     () => fail("invalid-configuration")
   );
-  return CitationStopWordsConfiguration.make(owned);
+  return CitationStopWordsConfiguration.make(verified);
+});
+const ownCleanup = ownCitationStageCall({
+  verify: verifyCitationStopWordsConfiguration,
+  install: installCitationStopWordCleanup,
 });
 /** Install the standalone admitted cleaner with captured services and timing.
  * @internal @category operations @since 0.0.0
  */
 export const makeCitationStopWords = makeCitationMetadataStage({
   method: "clean",
-  schema: Config,
-  invalid: () => fail("invalid-configuration"),
-  own: copyCitationStopWordsConfiguration,
-  prepare: cleanCitationStopWords,
+  own: ownCleanup,
+  prepare: (_limits, _runtime, clean: Effect.Success<ReturnType<typeof ownCleanup>>, raw) => clean(raw),
   project: (text, reservedUnits) => CitationStopWordsResult.make({ text, reservedUnits }),
 });

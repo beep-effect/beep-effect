@@ -178,7 +178,7 @@ const goalCandidate = Effect.fnUntraced(function* (record: GoalPacketRecord) {
 
 const goalCandidates = Effect.fnUntraced(function* (repoRoot: string) {
   const records = yield* listGoalPackets(repoRoot);
-  const decoded = yield* Effect.forEach(records, goalCandidate);
+  const decoded = yield* Effect.forEach(records, goalCandidate, { concurrency: 1 });
   return A.sort(A.getSomes(decoded), candidateOrder(GoalStatus.literals));
 });
 
@@ -189,25 +189,28 @@ const explorationCandidates = Effect.fnUntraced(function* (repoRoot: string) {
     .readDirectory(path.join(repoRoot, EXPLORATIONS_DIR))
     .pipe(Effect.orElseSucceed(A.empty<string>));
   const slugs = A.filter(entries, (entry) => !Str.startsWith("_")(entry) && !Str.startsWith(".")(entry));
-  const decoded = yield* Effect.forEach(slugs, (slug) =>
-    fs.readFileString(path.join(repoRoot, EXPLORATIONS_DIR, slug, "ops", "manifest.json")).pipe(
-      Effect.option,
-      Effect.map(
-        flow(
-          O.flatMap(parseGoalManifestText),
-          O.flatMap(decodeExplorationManifest),
-          O.map((manifest) => manifest.exploration),
-          O.filter(
-            (entry) =>
-              entry.slug === slug &&
-              isTerminalPacketStatus("explorations", entry.status) &&
-              entry.archive === undefined &&
-              entry.retentionReason === undefined
-          ),
-          O.map((entry): Candidate => ({ root: "explorations", slug, status: entry.status }))
+  const decoded = yield* Effect.forEach(
+    slugs,
+    (slug) =>
+      fs.readFileString(path.join(repoRoot, EXPLORATIONS_DIR, slug, "ops", "manifest.json")).pipe(
+        Effect.option,
+        Effect.map(
+          flow(
+            O.flatMap(parseGoalManifestText),
+            O.flatMap(decodeExplorationManifest),
+            O.map((manifest) => manifest.exploration),
+            O.filter(
+              (entry) =>
+                entry.slug === slug &&
+                isTerminalPacketStatus("explorations", entry.status) &&
+                entry.archive === undefined &&
+                entry.retentionReason === undefined
+            ),
+            O.map((entry): Candidate => ({ root: "explorations", slug, status: entry.status }))
+          )
         )
-      )
-    )
+      ),
+    { concurrency: 1 }
   );
   return A.sort(A.getSomes(decoded), candidateOrder(ExplorationStatus.literals));
 });
@@ -328,19 +331,22 @@ const scanFileLinks = Effect.fnUntraced(function* (repoRoot: string, file: strin
       (link) => ({ line: line.number, destination: link.destination })
     )
   );
-  const resolved = yield* Effect.forEach(candidates, (candidate) =>
-    Effect.map(
-      resolveLinkDestination(file, candidate.destination),
-      O.map(
-        (target): ScannedLink => ({
-          file,
-          line: candidate.line,
-          destination: candidate.destination,
-          form: "link",
-          target,
-        })
-      )
-    )
+  const resolved = yield* Effect.forEach(
+    candidates,
+    (candidate) =>
+      Effect.map(
+        resolveLinkDestination(file, candidate.destination),
+        O.map(
+          (target): ScannedLink => ({
+            file,
+            line: candidate.line,
+            destination: candidate.destination,
+            form: "link",
+            target,
+          })
+        )
+      ),
+    { concurrency: 1 }
   );
   const codeSpans = A.some(CODE_SPAN_CITATION_EXTENSIONS, (extension) => Str.endsWith(extension)(file))
     ? A.flatMap(proseLines, (line) => scanLineCodeSpans(file, line))

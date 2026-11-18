@@ -35,3 +35,19 @@ identifiers are redacted; hosts are named by their label only.
   pinned `.bun-version` on worker hosts, or `yeet open` (which runs no local
   gates by design) naming the mismatch and the `~/.local/bin/bun` upgrade path
   before it pushes instead of failing inside the hook.
+
+## 2026-11-13: `yeet ready` refuses a goal final that carries its owner's merge-hold thread
+
+- **Doing:** flipping the goal's final PR #3298 from draft to ready with
+  `bun run beep yeet ready`, after posting the one unresolved review thread
+  that holds a goal final until `merge-ready: yes`.
+- **Evidence:** `yeet ready refused: blocked on threads-resolved: 1 review
+  thread(s) still owe an answer`. The thread was the owner's own
+  `owner-merge-hold` comment. It had to be resolved, the PR flipped, and the
+  thread re-opened in one command, which leaves the PR ready and unheld for
+  the seconds between the two calls. The readiness monitor then raised the
+  same thread as a P1 inbox row.
+- **Would have prevented it:** a first-class hold on a goal final (a flag on
+  `yeet open` or `yeet ready` that the merge gate reads), or `yeet ready` and
+  the monitor ignoring an unresolved thread whose only comment is the PR
+  author's hold marker.

@@ -69,12 +69,15 @@ export const decodeMatterLookup = Effect.fn("PracticeMod.decodeMatterLookup")(fu
     O.getOrElse(() => Effect.fail(unreadable("Missing lookup content."))),
     Effect.mapError(unreadable)
   );
-  return yield* Effect.forEach(envelope.data.rows, (cells) =>
-    cells.length !== envelope.data.columns.length
-      ? Effect.fail(unreadable("Column count does not match row width."))
-      : S.decodeUnknownEffect(MatterRow)(R.fromEntries(A.zip(envelope.data.columns, cells))).pipe(
-          Effect.mapError(unreadable)
-        )
+  return yield* Effect.forEach(
+    envelope.data.rows,
+    (cells) =>
+      cells.length !== envelope.data.columns.length
+        ? Effect.fail(unreadable("Column count does not match row width."))
+        : S.decodeUnknownEffect(MatterRow)(R.fromEntries(A.zip(envelope.data.columns, cells))).pipe(
+            Effect.mapError(unreadable)
+          ),
+    { concurrency: 1 }
   );
 });
 

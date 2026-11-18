@@ -311,17 +311,20 @@ const prepare = Effect.fn("HostTest.prepare")(function* (
       outcome: { status: "value", groups: [] },
     })
   );
-  const mentions = yield* Effect.forEach(input.mentions, (mention, index) =>
-    Effect.gen(function* () {
-      const wire = yield* S.encodeEffect(Citation)(mention.citation);
-      const citation = yield* S.decodeUnknownEffect(Citation)({
-        ...wire,
-        components:
-          wire.type === "case" ? { volume: "1", reporter: "U.S.", page: index === 0 ? "1" : "2" } : wire.components,
-        metadata: { ...wire.metadata, pinCite: wire.type === "case" ? null : "2" },
-      });
-      return CitationMention.make({ ...mention, citation });
-    })
+  const mentions = yield* Effect.forEach(
+    input.mentions,
+    (mention, index) =>
+      Effect.gen(function* () {
+        const wire = yield* S.encodeEffect(Citation)(mention.citation);
+        const citation = yield* S.decodeUnknownEffect(Citation)({
+          ...wire,
+          components:
+            wire.type === "case" ? { volume: "1", reporter: "U.S.", page: index === 0 ? "1" : "2" } : wire.components,
+          metadata: { ...wire.metadata, pinCite: wire.type === "case" ? null : "2" },
+        });
+        return CitationMention.make({ ...mention, citation });
+      }),
+    { concurrency: 1 }
   );
   return yield* prepareCitationResolution({ ...input, mentions });
 });
@@ -931,29 +934,32 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
               outcome: { status: "value", groups: [] },
             })
           );
-          const mentions = yield* Effect.forEach(input.mentions, (mention, index) =>
-            Effect.gen(function* () {
-              const wire = yield* S.encodeEffect(Citation)(mention.citation);
-              const citation = yield* S.decodeUnknownEffect(Citation)({
-                ...wire,
-                components: A.contains(["case", "shortFormCase"], wire.type)
-                  ? { volume: "1", reporter: "U.S.", page: index === 0 ? "1" : "2" }
-                  : wire.components,
-                metadata: {
-                  ...wire.metadata,
-                  ...(wire.type === "case"
-                    ? { plaintiff: A.getUnsafe(row.fullNames, index) }
-                    : wire.type === "reference"
-                      ? { plaintiff: "Alpha" }
+          const mentions = yield* Effect.forEach(
+            input.mentions,
+            (mention, index) =>
+              Effect.gen(function* () {
+                const wire = yield* S.encodeEffect(Citation)(mention.citation);
+                const citation = yield* S.decodeUnknownEffect(Citation)({
+                  ...wire,
+                  components: A.contains(["case", "shortFormCase"], wire.type)
+                    ? { volume: "1", reporter: "U.S.", page: index === 0 ? "1" : "2" }
+                    : wire.components,
+                  metadata: {
+                    ...wire.metadata,
+                    ...(wire.type === "case"
+                      ? { plaintiff: A.getUnsafe(row.fullNames, index) }
+                      : wire.type === "reference"
+                        ? { plaintiff: "Alpha" }
+                        : {}),
+                    ...(A.contains(["shortFormCase", "supra"], wire.type)
+                      ? { antecedentGuess: row.antecedentGuess }
                       : {}),
-                  ...(A.contains(["shortFormCase", "supra"], wire.type)
-                    ? { antecedentGuess: row.antecedentGuess }
-                    : {}),
-                  pinCite: index < 2 ? null : "2",
-                },
-              });
-              return CitationMention.make({ ...mention, citation });
-            })
+                    pinCite: index < 2 ? null : "2",
+                  },
+                });
+                return CitationMention.make({ ...mention, citation });
+              }),
+            { concurrency: 1 }
           );
           const prepared = yield* prepareCitationResolution({ ...input, mentions });
           const work = yield* makeCitationResolutionWork(prepared.limits);
@@ -1032,14 +1038,18 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("captured host resou
             owner.start,
             () =>
               Effect.gen(function* () {
-                let keys = yield* Effect.forEach(row.keys, (key) =>
-                  key.kind === "canonical"
-                    ? owner.canonicalResource(ref)
-                    : owner.hostResource(A.getUnsafe(host.states, key.host))
+                let keys = yield* Effect.forEach(
+                  row.keys,
+                  (key) =>
+                    key.kind === "canonical"
+                      ? owner.canonicalResource(ref)
+                      : owner.hostResource(A.getUnsafe(host.states, key.host)),
+                  { concurrency: 1 }
                 );
                 const lists = yield* Effect.forEach(
                   A.makeBy(4, (i) => i),
-                  () => owner.allocate([])
+                  () => owner.allocate([]),
+                  { concurrency: 1 }
                 );
                 const prior = yield* owner.hostResource(A.getUnsafe(host.states, 0));
                 const citationResult21 = yield* owner.createFullPair(ref, prior);

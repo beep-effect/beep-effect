@@ -90,7 +90,8 @@ const extractPages = Effect.fn("Library.mine.text.extractPages")(function* (pdfP
   const structure = yield* tools.inspect(pdfPath);
   const pages = yield* Effect.forEach(
     A.makeBy(structure.pages.length, (index) => index + 1),
-    (page) => tools.pageText(PageTextRequest.make({ pdfPath, page }))
+    (page) => tools.pageText(PageTextRequest.make({ pdfPath, page })),
+    { concurrency: 1 }
   );
   return { pageCount: structure.pages.length, text: A.join(pages, "") };
 });

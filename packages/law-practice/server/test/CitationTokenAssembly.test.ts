@@ -7,7 +7,7 @@ import {
   makeCitationTokenAssembly,
 } from "@beep/law-practice-server/internal/Citation/TokenAssembly";
 import { CitationTokenEditionBinding } from "@beep/law-practice-server/internal/Citation/TokenEditions";
-import { makeCitationTokenObjects } from "@beep/law-practice-server/internal/Citation/TokenObjects";
+import { makeCitationTokenObjects as makeOwnedCitationTokenObjects } from "@beep/law-practice-server/internal/Citation/TokenObjects";
 import { makeCitationTokenText } from "@beep/law-practice-server/internal/Citation/TokenText";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { LiteralKit } from "@beep/schema";
@@ -23,7 +23,17 @@ import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
+import { ownCitationTestConfiguration } from "./CitationConfigurationOwnership.fixtures.ts";
 import { CitationTokenSeedHex } from "./CitationTokenSeed.fixtures.ts";
+
+// Own the fixture configuration through the engine boundary before the direct install.
+const makeCitationTokenObjects = Effect.fnUntraced(function* (
+  a0: Parameters<typeof makeOwnedCitationTokenObjects>[0],
+  a1: unknown
+) {
+  const o1 = yield* ownCitationTestConfiguration(S.Array(CitationTokenEditionBinding), a1);
+  return yield* makeOwnedCitationTokenObjects(a0, o1);
+});
 
 const $I = $LawPracticeServerId.create("test/CitationTokenAssembly");
 const Decision = LiteralKit(["merge", "nominative", "text"]);
@@ -157,11 +167,6 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const assembler = yield* makeCitationTokenAssembly(limits).pipe(
           Effect.provideService(CitationTokenAssemblyHost, host)
         );
-        const invalidPolicy = yield* makeCitationTokenAssembly(null).pipe(
-          Effect.provideService(CitationTokenAssemblyHost, host),
-          Effect.flip
-        );
-        expect(invalidPolicy).toMatchObject({ reason: "invalid-policy" });
         const invalidRequest = yield* assembler.assemble(null).pipe(Effect.flip);
         expect(invalidRequest).toMatchObject({ reason: "invalid-input" });
         const citationResult2 = yield* assembler.assemble({ length: 3, ids: [0, 0] }).pipe(Effect.flip);

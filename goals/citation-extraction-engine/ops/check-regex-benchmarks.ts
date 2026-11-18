@@ -89,13 +89,15 @@ const program = Effect.gen(function* () {
     hash(controlRaw) !== contract.controlsSha256
   )
     return yield* reject();
-  for (const [name, expected] of [
-    ["export-regex-contract.py", contract.generatorSha256],
-    ["probe-regex-benchmark.py", controls.parentSha256],
-    ["regex-benchmark-control.child.mjs", controls.childSha256],
-  ]) {
-    if (hash(yield* read(new URL(`./${name}`, import.meta.url))) !== expected) return yield* reject();
-  }
+  // export-regex-contract.py and probe-regex-benchmark.py were removed with the repository's Python
+  // (goal python-free-repo). Their digests are pinned from the recovery commit:
+  // `git show 05ed8bc6b6cc50f2a284ed02caaab16f216bb9c3:goals/citation-extraction-engine/ops/<name>`.
+  if (
+    contract.generatorSha256 !== "392b4c869a56a11362a83ca360ffc98de9e0d4bade84c9e57af1047c7d5cd4d9" ||
+    controls.parentSha256 !== "02b0c87e1dd85e054e274d799078d20ab009fb9cffa0abbc7b9fab9bf83e70e0" ||
+    hash(yield* read(new URL("./regex-benchmark-control.child.mjs", import.meta.url))) !== controls.childSha256
+  )
+    return yield* reject();
   if (hash(yield* read(new URL("LICENSE", root))) !== contract.syntheticLicense.sha256) return yield* reject();
   if (
     plan.sizes.length !== 10 ||

@@ -74,7 +74,12 @@ not create or install an App, create a service account, or enable a live rule.
    `https://github.com/organizations/beep-effect/settings/apps/new`. The localhost
    callback validates a random state, exchanges the one-use code with
    `POST /app-manifests/{code}/conversions`, and sends `id`, `client_id`, and
-   `pem` to `op item create --vault BEEP_SECRETS -` through stdin. The field names
+   `pem` to `<writer> item create --vault BEEP_SECRETS -` through stdin. The writer
+   is `op-human` when it is on `PATH`, else `op`, or the `--op-cli <command>`
+   override. Before it listens, the launcher runs a startup access check (create
+   and delete a throwaway item in `BEEP_SECRETS`) and refuses to start if it
+   fails. The check makes a lost key unlikely, not impossible: 1Password access
+   can expire, or the later approval can be rejected, after it passes. The field names
    are `app_id`, `client_id`, `installation_id`, and `private_key`. No conversion
    response is printed or saved. The callback is one-use, binds loopback only,
    disables caching and referrer propagation, and never renders credentials.
@@ -280,6 +285,22 @@ BEEP_REVIEWER_APP_ID=5321138 beep reviewer ruleset require --apply
 
 Record each switch, its reason and the restore condition in the owning packet's
 decision log (`goals/cloud-agent-readiness/SPEC.md`).
+
+The `InfraGithub` Alchemy stack (`packages/tooling/infra/github`) also writes this
+ruleset, as a whole body, once its deploy workflow is armed. It does not own the
+`beep-reviewer` entry: each deploy reads the live ruleset and writes that entry back
+exactly as `release` or `require` left it, so these commands remain the switch whether
+or not the stack is armed. Immediately before its write, a deploy re-reads the ruleset
+and refuses, writing nothing, if the switch moved after its capture. That closes the
+capture-to-write window except for the single GET-to-PUT round-trip: a switch flipped
+inside that round-trip is overwritten and not detected. The post-deploy check fails when
+the ruleset differs from what the deploy wrote, which means it moved after the write and
+nothing was undone. Do not flip the switch while a `Deploy infra-github` run is in
+progress. After any `Deploy infra-github` run that overlapped a switch, read the ruleset
+(`gh api repos/beep-effect/beep-effect/rulesets/10240248`) and re-run
+`beep reviewer ruleset release|require --apply` if `beep-reviewer` is not in the intended state. A pre-write guard also refuses a deploy that
+would change any other required check, the strict policy, bypass actors, merge methods or
+conditions (`docs/runbooks/alchemy-infra.md`, InfraGithub section).
 
 ## Acceptance on a scratch PR
 

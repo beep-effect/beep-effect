@@ -48,7 +48,9 @@ export const resolveBeepCacheRoot = Effect.fn("BeepCacheRoot.resolveBeepCacheRoo
   if (O.isSome(explicit)) {
     return pathService.resolve(explicit.value);
   }
-  const [xdgCacheHome, home] = yield* Effect.all([configuredPath("XDG_CACHE_HOME"), configuredPath("HOME")]);
+  const [xdgCacheHome, home] = yield* Effect.all([configuredPath("XDG_CACHE_HOME"), configuredPath("HOME")], {
+    concurrency: 1,
+  });
   const windowsCache = O.filter(xdgCacheHome, isAbsoluteWin32);
   if (O.isSome(windowsCache)) {
     return pathService.normalize(windowsCache.value);

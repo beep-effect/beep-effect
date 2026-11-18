@@ -225,7 +225,7 @@ against the CQ file itself under `--repo`; an asserted count is not a count.
 One exact command per workflow stage. `$SKILL` = this skill's directory;
 `$ONT` = `ontologies/{name}` (`{name}` = manifest `ontology.name`); `$WORK` =
 `$ONT/work`; `VAL` = the validator invocation below. The validator
-(`$SKILL/scripts/validate_artifacts.py`) is the machine enforcement of every
+(`$SKILL/scripts/validate_artifacts.ts`) is the machine enforcement of every
 contract — the schema files are readable exemplars; the script encodes
 required keys, enums, object grammars, content rules, and cross-record rules.
 Run `--self-test` once per session to prove the rules fire. Validation ALWAYS
@@ -234,15 +234,11 @@ manifest must be inside the scan.
 
 ```bash
 # Step 0 — layout + self-test. VAL is a FUNCTION (an alias defined in the same
-# non-interactive block does not survive parsing). UV_CACHE_DIR keeps uv usable
-# when its default cache is read-only. $SHARED = the family contract dir.
+# non-interactive block does not survive parsing). $SHARED = the family contract dir.
 mkdir -p $WORK/{observations,prose-observations,hypotheses,foundational,alternative,proposals,rejections} $ONT/governance/ratifications $ONT/adapters/golden
 SHARED="$SKILL/../_shared"
-# warm uv's cache OFFLINE-FIRST: touch the network only when the cache
-# actually misses (a warm cache never waits on DNS retries)
-UV_CACHE_DIR="${UV_CACHE_DIR:-$PWD/.uv-cache}" uv run --offline --with pyyaml python -c "import yaml" 2>/dev/null || \
-UV_CACHE_DIR="${UV_CACHE_DIR:-$PWD/.uv-cache}" uv run --with pyyaml python -c "import yaml" || echo "cache warm failed — first-ever run needs network once"
-VAL() { UV_CACHE_DIR="${UV_CACHE_DIR:-$PWD/.uv-cache}" uv run --offline --with pyyaml python "$SKILL/scripts/validate_artifacts.py" "$@"; }
+# Dependencies are the checkout root node_modules; no workspace build is needed.
+VAL() { bun "$SKILL/scripts/validate_artifacts.ts" "$@"; }
 VAL --self-test
 # MODEL = the exact model id every seat command runs with; it is what the
 # manifest records (the harness cannot cryptographically bind it — Known limits)
@@ -253,14 +249,14 @@ EFFORT="<reasoning-effort-recorded-in-manifest>"  # Exact effort every Codex sea
 # (FULL sha256 for record ids; 12-hex short forms for manifest display fields).
 # Adapter scripts are PER-RUN artifacts, but repository copies are NEVER
 # executed. Author or audit each adapter in a fresh, user-owned 0700 directory
-# outside the audited repository. Adapters use the Python standard library so
+# outside the audited repository. Adapters are TypeScript run by Bun and use only Bun/Node builtins, so
 # the sandbox needs no package cache or writable environment.
 TRUSTED_ADAPTER_BASE="${XDG_RUNTIME_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/beep}"
 mkdir -p "$TRUSTED_ADAPTER_BASE"
 chmod 700 "$TRUSTED_ADAPTER_BASE"
 TRUSTED_ADAPTER_DIR=$(mktemp -d "$TRUSTED_ADAPTER_BASE/ontology-adapter.XXXXXX")
 chmod 700 "$TRUSTED_ADAPTER_DIR"
-TRUSTED_ADAPTER=$TRUSTED_ADAPTER_DIR/adapter-typescript.py  # author here; do not seed from $ONT/adapters
+TRUSTED_ADAPTER=$TRUSTED_ADAPTER_DIR/adapter-typescript.ts  # author here; do not seed from $ONT/adapters
 RUN_ADAPTER="$SKILL/scripts/run_adapter_sandbox.sh"
 [ -e $WORK/run-manifest.yaml ] || cp $SHARED/schemas/run-manifest.schema.yaml $WORK/run-manifest.yaml   # NEVER overwrite an existing manifest — it is run provenance
 # then EDIT every field. Pin script_sha256_12 from the exact trusted bytes that
@@ -280,7 +276,7 @@ find $ONT/adapters/golden -type f -exec sha256sum {} +
 # (The dispositions index is a COMPLETION invariant — the validator does not
 # demand it until proposals exist, so this stage-boundary check is green on a
 # legitimate observe-stage tree.)
-ADAPTER=$ONT/adapters/adapter-typescript.py   # committed provenance copy; never execute this path
+ADAPTER=$ONT/adapters/adapter-typescript.ts   # committed provenance copy; never execute this path
 "$RUN_ADAPTER" "$TRUSTED_ADAPTER" . self-check $ONT/adapters/golden/
 "$RUN_ADAPTER" "$TRUSTED_ADAPTER" . observe $WORK/observations
 install -m 0644 "$TRUSTED_ADAPTER" "$ADAPTER"

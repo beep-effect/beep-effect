@@ -142,7 +142,8 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("Poppler rasterizer", (i
           const { pdfinfoPath, pdfPath } = yield* fixture({ pdfinfo: pdfinfoStub(pagesLine) });
           const rasterizer = yield* makePopplerRasterizer(PopplerConfig.make({ pdfinfoPath }));
           return (yield* rasterizer.pageCount(pdfPath).pipe(Effect.flip)).reason;
-        })
+        }),
+        { concurrency: 1 }
       );
 
       expect(reasons).toEqual(A.replicate("output-invalid", 4));

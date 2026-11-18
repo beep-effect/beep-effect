@@ -561,7 +561,7 @@ describe("GithubBudgetLedger over memory", () => {
           ledger.recordTransport(observation({ at: at(0), budgetLabel: "user:alice" }))
         ).pipe(withLayer(layerGithubBudgetLedger({ host }).pipe(Layer.provide(store))), Effect.exit);
       });
-      const exits = yield* Effect.forEach([failing, dying], record);
+      const exits = yield* Effect.forEach([failing, dying], record, { concurrency: 1 });
       expect(A.map(exits, Exit.isSuccess)).toStrictEqual([true, true]);
     })
   );
@@ -625,7 +625,7 @@ describe("GithubBudgetLedger over memory", () => {
       yield* Effect.forEach(
         A.range(0, 4),
         (hour) => base.append(transportRow({ at: at(hour * HOUR + MINUTE), used: 10 + hour })),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       yield* TestClock.setTime(T0 + 5 * HOUR + 20 * MINUTE);
       yield* GithubBudgetLedger.use((ledger) => ledger.prune).pipe(
@@ -679,7 +679,7 @@ describe("GithubBudgetLedger over memory", () => {
               spanMillis: 150,
             })
           ),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       const after = yield* signalOf;
       expect(after.state._tag).toBe("Clear");
@@ -734,9 +734,7 @@ describe("GithubLedger file store", () => {
             Effect.forEach(
               A.range(1, 500),
               (index) => store.append(transportRow({ at: at(index), used: index, pid })),
-              {
-                discard: true,
-              }
+              { concurrency: 1, discard: true }
             );
           yield* Effect.all([writer(1), writer(2)], { concurrency: 2 });
           const rows = yield* store.rows(LedgerRange.make({ from: at(-1), to: at(HOUR - 1) }));
@@ -850,6 +848,8 @@ describe("GithubLedger file store", () => {
           expect(value11).toHaveLength(1);
         }).pipe(
           withLayer(liveLedger),
+          // Own double: dies on any spawn, so a ledger read that spawns fails loudly;
+          // `ScriptedSpawner` records and answers every spawn instead.
           Effect.provideService(
             ChildProcessSpawner.ChildProcessSpawner,
             ChildProcessSpawner.make(() => Effect.die("the read side must not spawn"))
@@ -930,7 +930,8 @@ describe("GithubLedger file store", () => {
         const files = yield* fs.readDirectory(root, { recursive: true });
         const texts = yield* Effect.forEach(
           A.filter(files, (file) => Str.endsWith(".json")(file) || Str.endsWith(".jsonl")(file)),
-          (file) => fs.readFileString(path.join(root, file))
+          (file) => fs.readFileString(path.join(root, file)),
+          { concurrency: 1 }
         );
         const all = A.join(texts, "\n");
         expect(all.length).toBeGreaterThan(0);

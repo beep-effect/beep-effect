@@ -569,8 +569,10 @@ it.layer(PgliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live PGl
         status: "active",
       });
       const snapshot = yield* repository.insert(insert);
-      const requests = yield* forEach(["Concurrent A", "Concurrent B"], (name) =>
-        makeEffect(User.update)({ id: snapshot.id, rowVersion: snapshot.rowVersion, name })
+      const requests = yield* forEach(
+        ["Concurrent A", "Concurrent B"],
+        (name) => makeEffect(User.update)({ id: snapshot.id, rowVersion: snapshot.rowVersion, name }),
+        { concurrency: 1 }
       );
       const results = yield* forEach(requests, (request) => exit(repository.update(request)), { concurrency: 2 });
       expect(filter(results, isSuccess)).toHaveLength(1);

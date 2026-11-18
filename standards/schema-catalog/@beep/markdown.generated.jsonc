@@ -4,6 +4,7 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/markdown",
   "entries": [
+    {"file":"packages/foundation/modeling/markdown/scripts/extract-gfm-corpora.ts","symbol":"GfmExample","kind":"struct-const","owner":"@beep/markdown","identity":"GfmExample","description":"One cmark spec example: its markdown, expected HTML, number, source line span and section."},
     {"file":"packages/foundation/modeling/markdown/src/Frontmatter.ts","symbol":"FrontmatterDecodeError","kind":"tagged-error","owner":"@beep/markdown","identity":"FrontmatterDecodeError"},
     {"file":"packages/foundation/modeling/markdown/src/Frontmatter.ts","symbol":"FrontmatterEncodeError","kind":"tagged-error","owner":"@beep/markdown","identity":"FrontmatterEncodeError"},
     {"file":"packages/foundation/modeling/markdown/src/Frontmatter.ts","symbol":"FrontmatterFormatMismatchError","kind":"tagged-error","owner":"@beep/markdown","identity":"FrontmatterFormatMismatchError"},

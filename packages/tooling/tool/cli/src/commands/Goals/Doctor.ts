@@ -640,7 +640,9 @@ export const makeGoalPacketWorkingTreeReader = Effect.fn("Goals.makeGoalPacketWo
 ) {
   const path = yield* Path.Path;
   const base = makeGoalPacketFilesystemReader();
-  // KEEP (D-21): `ls-files --others --ignored` has no kit member; the raw stdout capture keeps the NUL records.
+  // KEEP (D-21): `ls-files --others --ignored` has no kit member; the raw stdout capture keeps the NUL
+  // records.
+  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-21), reason above
   const listed = yield* runRepoCommandCaptureRaw(
     "git",
     ["ls-files", "-z", "--others", "--ignored", "--exclude-standard", "--", GOALS_DIR],
@@ -919,11 +921,14 @@ const collectExplorationArchiveFindings = Effect.fn("Goals.collectExplorationArc
     A.filter(entries, (entry) => !Str.startsWith("_")(entry) && !Str.startsWith(".")(entry)),
     Order.String
   );
-  const findings = yield* Effect.forEach(slugs, (slug) =>
-    fs.readFileString(path.join(root, slug, "ops", "manifest.json")).pipe(
-      Effect.map((text) => explorationArchiveFindings(slug, text)),
-      Effect.orElseSucceed(A.empty<GoalDoctorFinding>)
-    )
+  const findings = yield* Effect.forEach(
+    slugs,
+    (slug) =>
+      fs.readFileString(path.join(root, slug, "ops", "manifest.json")).pipe(
+        Effect.map((text) => explorationArchiveFindings(slug, text)),
+        Effect.orElseSucceed(A.empty<GoalDoctorFinding>)
+      ),
+    { concurrency: 1 }
   );
   return A.flatten(findings);
 });
@@ -1767,7 +1772,7 @@ const printErrorSection = Effect.fn("Goals.printErrorSection")(function* (
     return;
   }
   yield* Console.error(header);
-  yield* Effect.forEach(lines, (line) => Console.error(line), { discard: true });
+  yield* Effect.forEach(lines, (line) => Console.error(line), { concurrency: 1, discard: true });
 });
 
 const printNonFatalFindings = Effect.fn("Goals.printNonFatalFindings")(function* (input: {
@@ -1775,7 +1780,10 @@ const printNonFatalFindings = Effect.fn("Goals.printNonFatalFindings")(function*
   readonly advisories: ReadonlyArray<GoalDoctorFinding>;
   readonly classified: GoalDoctorClassification;
 }) {
-  yield* Effect.forEach(input.notes, (note) => Console.log(`[goals:doctor] note: ${note}`), { discard: true });
+  yield* Effect.forEach(input.notes, (note) => Console.log(`[goals:doctor] note: ${note}`), {
+    concurrency: 1,
+    discard: true,
+  });
   yield* printErrorSection("[goals:doctor] advisories (non-fatal):", A.map(input.advisories, findingLine));
   yield* printErrorSection(
     "[goals:doctor] inherited baseline findings (non-fatal, burn down over time):",
@@ -1822,7 +1830,9 @@ export const runGoalsDoctor = Effect.fn("Goals.runGoalsDoctor")(function* (optio
 
   const advisoriesFromGit = yield* gitAdvisories(packets);
   const online = options.online === true;
-  const structuredRun = Effect.forEach(packets, (packet) => structuredCompletionAdvisory(packet, online));
+  const structuredRun = Effect.forEach(packets, (packet) => structuredCompletionAdvisory(packet, online), {
+    concurrency: 1,
+  });
   // One memoized completion port serves the whole online run, so packets that
   // share a base branch read its rule-suite listing once.
   const forEach3 = yield* online ? withGoalCompletionIo(structuredRun) : structuredRun;

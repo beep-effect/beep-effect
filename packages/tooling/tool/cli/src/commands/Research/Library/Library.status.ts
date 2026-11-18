@@ -82,7 +82,7 @@ const libraryStatusSummary = Effect.fnUntraced(function* (
     `private partition: documents=${A.filter(catalog.documents, (d) => d.accessClass === "private" && HashSet.has(snapshots, d.snapshotPath)).length} sources=${A.filter(catalog.sources, (s) => s.accessClass === "private" && (O.isNone(scope) || HashSet.has(scoped, s.id))).length}`
   );
   const hops = yield* libraryHopTotals(root, catalog, undefined, scope);
-  return yield* Effect.forEach(hops, (line) => Console.log(line), { discard: true });
+  return yield* Effect.forEach(hops, (line) => Console.log(line), { concurrency: 1, discard: true });
 });
 
 /**
@@ -147,5 +147,5 @@ export const libraryStatus = Effect.fn("Research.Library.status")(function* (
     `private partition: documents=${privateCount("Report")} sources=${privateCount("Source")} artifacts=${privateCount("Artifact")} occurrences=${privateCount("Occurrence")}`
   );
   const hops = yield* libraryHopTotals(root, catalog);
-  yield* Effect.forEach(hops, (line) => Console.log(line), { discard: true });
+  yield* Effect.forEach(hops, (line) => Console.log(line), { concurrency: 1, discard: true });
 });

@@ -86,17 +86,21 @@ const writeGoldFixture = Effect.fn("GoldSourceTest.writeFixture")(function* (dir
   const forEach1 = yield* Effect.forEach(
     A.flatMap(GOLD_SUBSETS, (subset) => A.map(subsets[subset], (paperId) => ({ paperId, subset }))),
     ({ paperId, subset }) =>
-      Effect.succeed(GoldFile.make({ labels: [], paperId, proposer, subset, version: "gold/v1" }))
+      Effect.succeed(GoldFile.make({ labels: [], paperId, proposer, subset, version: "gold/v1" })),
+    { concurrency: 1 }
   );
   const files = A.sort(forEach1, goldFileOrder);
-  yield* Effect.forEach(files, (file) =>
-    encodeGoldFileJson(file).pipe(
-      Effect.flatMap((json) =>
-        fs.writeFileString(path.join(directory, `${file.paperId}.${file.subset}.json`), `${json}\n`)
-      )
-    )
+  yield* Effect.forEach(
+    files,
+    (file) =>
+      encodeGoldFileJson(file).pipe(
+        Effect.flatMap((json) =>
+          fs.writeFileString(path.join(directory, `${file.paperId}.${file.subset}.json`), `${json}\n`)
+        )
+      ),
+    { concurrency: 1 }
   );
-  const encodedFiles = yield* Effect.forEach(files, (file) => encodeGoldFile(file));
+  const encodedFiles = yield* Effect.forEach(files, (file) => encodeGoldFile(file), { concurrency: 1 });
   const digest = yield* contentDigest(S.Array(GoldFileEncoded))(encodedFiles);
   const reference = GoldRef.make({
     digest,

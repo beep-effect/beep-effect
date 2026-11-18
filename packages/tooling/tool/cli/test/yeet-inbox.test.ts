@@ -200,7 +200,7 @@ describe("yeetInboxRowId", () => {
 
         const yeetSiblingCollisionRowId4 = yield* yeetSiblingCollisionRowId(siblingCapsule);
         expect(yeetSiblingCollisionRowId4).toBe(resortedSibling);
-        const all5 = yield* Effect.all(A.map(rows, yeetInboxExpectedRowId));
+        const all5 = yield* Effect.all(A.map(rows, yeetInboxExpectedRowId), { concurrency: 1 });
         expect(all5).toStrictEqual(A.map(rows, (subject) => subject.id));
         const yeetPrMergeReadyRowId6 = yield* yeetPrMergeReadyRowId(mergeReadyCapsule);
         const argument = expect(yeetPrMergeReadyRowId6).not;
@@ -276,7 +276,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("appendYeetInboxRow", (it) =>
       const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
       expect(A.length(lines)).toBe(2);
 
-      const decoded = yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line));
+      const decoded = yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line), { concurrency: 1 });
       expect(
         A.getSomes(
           A.map(decoded, (entry) => (entry.kind === "check-failed" ? O.some(entry.capsule.lane) : O.none<string>()))
@@ -284,8 +284,10 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("appendYeetInboxRow", (it) =>
       ).toEqual(["Check / Coverage", "Check / Lint"]);
 
       const activeText = yield* fs.readFileString(paths.activePath);
-      const activeRows = yield* Effect.forEach(A.filter(Str.split(activeText, "\n"), Str.isNonEmpty), (line) =>
-        YeetInboxRowJson.decode(line)
+      const activeRows = yield* Effect.forEach(
+        A.filter(Str.split(activeText, "\n"), Str.isNonEmpty),
+        (line) => YeetInboxRowJson.decode(line),
+        { concurrency: 1 }
       );
       expect(A.map(activeRows, (entry) => entry.id)).toEqual(expect.arrayContaining([first.id, second.id]));
     })
@@ -362,10 +364,11 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("appendYeetInboxRow", (it) =>
       yield* fs.makeDirectory(paths.dir, { recursive: true });
       const protectedP0 = yield* row(capsule({ lane: "Check / Protected P0" }));
       const historicalP1 = yield* Effect.all(
-        A.makeBy(3_000, (index) => row(capsule({ lane: `Check / Historical ${index}` }), "P1"))
+        A.makeBy(3_000, (index) => row(capsule({ lane: `Check / Historical ${index}` }), "P1")),
+        { concurrency: 1 }
       );
       const historical = [protectedP0, ...historicalP1];
-      const lines = yield* Effect.forEach(historical, renderYeetInboxRowLine);
+      const lines = yield* Effect.forEach(historical, renderYeetInboxRowLine, { concurrency: 1 });
       yield* fs.writeFileString(paths.failuresPath, `${A.join(lines, "\n")}\n`);
       yield* fs.writeFileString(paths.activePath, `${lines.at(-1) ?? ""}\n`);
 
@@ -410,7 +413,7 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("appendYeetInboxRow", (it) =>
       const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
       expect(A.length(lines)).toBe(2);
 
-      const decoded = yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line));
+      const decoded = yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line), { concurrency: 1 });
       expect(
         A.getSomes(
           A.map(decoded, (entry) => (entry.kind === "check-failed" ? O.some(entry.capsule.lane) : O.none<string>()))

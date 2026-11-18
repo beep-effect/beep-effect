@@ -44,7 +44,9 @@ describe("@beep/test-runner pinned IRI parity", () => {
   it.effect(
     "pins every Vitest error IRI and CURIE exactly as $TestUtilsId derives them",
     Effect.fnUntraced(function* () {
-      const pinned = yield* Effect.forEach(pinnedAnnotations, (annotations) => decodePinned(annotations));
+      const pinned = yield* Effect.forEach(pinnedAnnotations, (annotations) => decodePinned(annotations), {
+        concurrency: 1,
+      });
       const derived = A.map(derivedComposers, (composer) => ({
         identifier: composer.string(),
         iri: composer.iri,

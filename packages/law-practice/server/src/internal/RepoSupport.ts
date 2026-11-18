@@ -165,6 +165,6 @@ export const makeRowDecoders = <Operation, Unavailable>(
       operation: Operation,
       decode: (row: unknown) => Result.Result<Entity, S.SchemaError>
     ): Effect.Effect<ReadonlyArray<Entity>, Unavailable> =>
-      Effect.forEach(rows, flow(decode, Effect.fromResult)).pipe(repositoryUnavailable(operation))
+      Effect.forEach(rows, flow(decode, Effect.fromResult), { concurrency: 1 }).pipe(repositoryUnavailable(operation))
   ),
 });

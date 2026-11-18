@@ -189,28 +189,35 @@ export const readKnowledgeGoalPacketRecords = Effect.fn("KnowledgeDoctorDomain.g
     A.dedupe(A.getSomes(A.map(oracle.trackedEntries, (entry) => packetSlug(entry.path)))),
     Order.String
   );
-  return yield* Effect.forEach(slugs, (slug) => {
-    const packetPath = `${GOALS_DIR}/${slug}`;
-    const manifestPath = `${packetPath}/ops/manifest.json`;
-    const readmePath = `${packetPath}/README.md`;
-    return Effect.map(
-      Effect.all({
-        manifestText: knowledgeTreeFacts.readTextIfTracked(oracle, paths, manifestPath),
-        readmeText: knowledgeTreeFacts.readTextIfTracked(oracle, paths, readmePath),
-        goalMd: knowledgeTreeFacts.readTextIfTracked(oracle, paths, `${packetPath}/GOAL.md`),
-      }),
-      ({ manifestText, readmeText, goalMd }) =>
-        GoalPacketRecord.make({
-          slug,
-          packetPath,
-          manifestPath,
-          readmePath,
-          ...optionalProp("manifestText", manifestText),
-          ...optionalProp("readmeText", readmeText),
-          ...optionalProp("goalMdChars", O.map(goalMd, Str.length)),
-        })
-    );
-  });
+  return yield* Effect.forEach(
+    slugs,
+    (slug) => {
+      const packetPath = `${GOALS_DIR}/${slug}`;
+      const manifestPath = `${packetPath}/ops/manifest.json`;
+      const readmePath = `${packetPath}/README.md`;
+      return Effect.map(
+        Effect.all(
+          {
+            manifestText: knowledgeTreeFacts.readTextIfTracked(oracle, paths, manifestPath),
+            readmeText: knowledgeTreeFacts.readTextIfTracked(oracle, paths, readmePath),
+            goalMd: knowledgeTreeFacts.readTextIfTracked(oracle, paths, `${packetPath}/GOAL.md`),
+          },
+          { concurrency: 1 }
+        ),
+        ({ manifestText, readmeText, goalMd }) =>
+          GoalPacketRecord.make({
+            slug,
+            packetPath,
+            manifestPath,
+            readmePath,
+            ...optionalProp("manifestText", manifestText),
+            ...optionalProp("readmeText", readmeText),
+            ...optionalProp("goalMdChars", O.map(goalMd, Str.length)),
+          })
+      );
+    },
+    { concurrency: 1 }
+  );
 });
 
 const packetFacts = (
@@ -253,7 +260,9 @@ const recordFacts = Effect.fn("KnowledgeDoctorDomain.recordFacts")(function* (re
 });
 
 const derivePackets = (oracle: KnowledgeTreeOracle) =>
-  Effect.flatMap(readKnowledgeGoalPacketRecords(oracle), (records) => Effect.forEach(records, recordFacts));
+  Effect.flatMap(readKnowledgeGoalPacketRecords(oracle), (records) =>
+    Effect.forEach(records, recordFacts, { concurrency: 1 })
+  );
 
 const REFLECTIONS_DIR = "history/reflections";
 const DECISIONS_DIR = "decisions";
@@ -417,7 +426,7 @@ export const readKnowledgeGoalsDoctorFindings = Effect.fn("KnowledgeDoctorDomain
 ) {
   const records = yield* readKnowledgeGoalPacketRecords(oracle);
   const reader = makeKnowledgeGoalPacketReader(oracle);
-  const results = yield* Effect.forEach(records, (record) => goalPacketFindings(record, reader));
+  const results = yield* Effect.forEach(records, (record) => goalPacketFindings(record, reader), { concurrency: 1 });
   const capability = capabilityPacketFindings(
     A.zipWith(records, results, (record, result) => ({ slug: record.slug, manifest: result.manifest }))
   );
@@ -741,20 +750,57 @@ const deriveSkills = Effect.fn("KnowledgeDoctorDomain.skills")(function* (
  *
  * @param oracle - Tree whose bytes the facts come from.
  * @returns Lookups for packets, packages, path aliases, file exports, goals-doctor findings, and skills.
+ * @see {@link deriveKnowledgeDoctorDomainFromPaths} when the tracked-path set is already in hand.
  * @category constructors
  * @since 0.0.0
  */
-export const deriveKnowledgeDoctorDomain = (oracle: KnowledgeTreeOracle): KnowledgeDoctorDomain => {
-  const paths = trackedPaths(oracle);
-  return {
+export const deriveKnowledgeDoctorDomain = (oracle: KnowledgeTreeOracle): KnowledgeDoctorDomain =>
+  deriveKnowledgeDoctorDomainFromPaths(oracle, trackedPaths(oracle));
+
+/**
+ * Derives the knowledge facts of one tree from its oracle and its already-built tracked-path set.
+ *
+ * **Details**
+ *
+ * The same lookups as {@link deriveKnowledgeDoctorDomain}, which builds `paths` from the oracle's
+ * entries. A caller that already holds the set, such as a counterfactual overlay that removed one
+ * path from it, passes it here instead of re-hashing every tracked path.
+ *
+ * **Example** (Derive the facts of an empty tree with its path set)
+ *
+ * ```ts
+ * import { deriveKnowledgeDoctorDomainFromPaths } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.domain"
+ * import * as Effect from "effect/Effect"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * const domain = deriveKnowledgeDoctorDomainFromPaths(
+ *   { commit: "HEAD", treeish: "HEAD", trackedEntries: [], readBytes: () => Effect.succeed(new Uint8Array()) },
+ *   HashSet.empty()
+ * )
+ *
+ * console.log(Effect.isEffect(domain.packets)) // true
+ * ```
+ *
+ * @param oracle - Tree whose bytes the facts come from.
+ * @param paths - Exactly the oracle's tracked entry paths.
+ * @returns Lookups for packets, packages, path aliases, file exports, goals-doctor findings, and skills.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const deriveKnowledgeDoctorDomainFromPaths: {
+  (paths: HashSet.HashSet<string>): (oracle: KnowledgeTreeOracle) => KnowledgeDoctorDomain;
+  (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<string>): KnowledgeDoctorDomain;
+} = dual(
+  2,
+  (oracle: KnowledgeTreeOracle, paths: HashSet.HashSet<string>): KnowledgeDoctorDomain => ({
     packets: derivePackets(oracle),
     packages: deriveKnowledgePackages(oracle, paths),
     pathAliases: derivePathAliases(oracle, paths),
     fileExports: (file) => deriveFileExports(oracle, paths, file),
     goalsDoctorFindings: readKnowledgeGoalsDoctorFindings(oracle),
     skills: deriveSkills(oracle, paths),
-  };
-};
+  })
+);
 
 /**
  * Memoizes every lookup of a domain for the lifetime of one scan.

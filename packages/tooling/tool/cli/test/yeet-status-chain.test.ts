@@ -252,9 +252,10 @@ const withFakeRunner = (
   flow(
     provideLegacyGh,
     Effect.provideServiceEffect(Git, Git.make),
-    // Own double: each gh spawn sleeps on the live clock and counts in-flight calls.
     Effect.provideService(
       ChildProcessSpawner.ChildProcessSpawner,
+      // Own double: each gh spawn sleeps on the live clock and counts in-flight calls.
+      // biome-ignore lint/plugin/no-unrecorded-spawner-double: Own double, reason above
       ChildProcessSpawner.make((command) => {
         if (!ChildProcess.isStandardCommand(command)) return Effect.die("unexpected pipe");
         const args = commandArgs(command);
@@ -346,7 +347,7 @@ const PRE_CHANGE_SNAPSHOT_JSON = A.join(
     'unproven","gateId":"test-typecheck-blindspot","detail":"standards/test-typecheck.blindspot-baseline.',
     'jsonc does not exist"},{"status":"unproven","gateId":"goals-doctor","detail":"goals/goals-doctor.',
     'baseline.jsonc does not exist"},{"status":"unproven","gateId":"jsdoc-documentation-inventory","',
-    'detail":"standards/jsdoc-documentation.inventory.jsonc does not exist"},{"status":"unproven","gateId',
+    'detail":".beep/ci/jsdoc-documentation.inventory.jsonc does not exist"},{"status":"unproven","gateId',
     '":"fallow-health","detail":"standards/fallow.health.regression-baseline.jsonc does not exist"},{"',
     'status":"unproven","gateId":"schema-first-inventory","detail":"standards/schema-first.inventory.',
     'jsonc does not exist"}]}',

@@ -1,7 +1,7 @@
 ---
 name: plasma-sensitive-entry
 description: Requests sensitive human input through a masked KDE Plasma dialog and delivers it directly to an authorized consumer. Use whenever an agent needs a password, OTP, recovery code, token, or other sensitive text from the human. Apply before asking in chat, a question tool, terminal input, or an ordinary form. Existing YubiKey, remote authentication wrappers, and agent 1Password routes take precedence.
-compatibility: KDE Plasma with kdialog, Python 3, and a reachable user session bus; otherwise stop sensitive collection.
+compatibility: KDE Plasma with kdialog, Bun, and a reachable user session bus; otherwise stop sensitive collection.
 ---
 
 # Plasma sensitive entry
@@ -34,12 +34,12 @@ chat. A dialog collects the value; the agent receives only sanitized status.
    [current-user preparation](./references/integration.md#current-user-gui-preparation).
    A missing GUI is a blocker: arrange human entry in the trusted application.
    Never fall back to chat, question tools, terminal typing or plaintext files.
-3. Use [the pipe helper](./scripts/prompt.py) from a trusted adapter, following
+3. Use [the pipe helper](./scripts/prompt.ts) from a trusted adapter, following
    [the integration contract](./references/integration.md). The adapter creates
-   a private pipe, passes its write descriptor using `pass_fds`, and consumes
+   a private pipe, inherits only its write descriptor as child fd 3, and consumes
    the read side in memory. The helper refuses standard descriptors and only
    writes a successful, nonempty answer to that inherited pipe. The bundled
-   [SSH askpass adapter](./scripts/ssh-askpass.py) is the concrete SSH consumer;
+   [SSH askpass adapter](./scripts/ssh-askpass.ts) is the concrete SSH consumer;
    never run it directly.
 4. Keep answers out of tool arguments/results, stdout/stderr, environment,
    shell history, files, screenshots and telemetry. Do not invoke `kdialog
@@ -49,7 +49,7 @@ chat. A dialog collects the value; the agent receives only sanitized status.
    echo is disabled and suppress **all** child bytes until independently
    confirmed authentication; echoed input must never reach the transcript.
    Drop answer and capture-buffer references immediately after delivery.
-   Python cannot guarantee memory erasure; do not claim otherwise.
+   JavaScript cannot guarantee memory erasure; do not claim otherwise.
 6. Report only success, cancellation, timeout or sanitized failure. Never
    return the answer, length, prefix, digest or an untrusted exception message.
 
@@ -73,7 +73,7 @@ chat. A dialog collects the value; the agent receives only sanitized status.
 
 ## Verification
 
-Run `PYTHONDONTWRITEBYTECODE=1 python3 -B -m unittest discover -s <skill>/scripts -p 'test_*.py'`.
+Run `bun test <skill>/scripts/prompt.test.ts`.
 Tests use synthetic input and fake dialogs; they never request real credentials.
 A live masked-dialog acceptance check must be explicitly described as such and
 use disposable synthetic input. Automated tests alone do not prove GUI delivery.

@@ -722,7 +722,8 @@ export const runCacheConformanceNative = Effect.fn("CacheConformance.runNativeMa
         yield* proxy.setScenario(plan.name, plan.fault);
         const work = yield* prepareWorkspace(directory, plan);
         return [plan.name, yield* runNative(work, executable, proxy.url, plan, bearers, client.pin, secrets)] as const;
-      })
+      }),
+      { concurrency: 1 }
     );
     yield* proxy.setScenario("native-done", "none");
     const events = yield* proxy.events;

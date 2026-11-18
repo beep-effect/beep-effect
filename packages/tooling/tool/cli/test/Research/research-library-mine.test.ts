@@ -249,7 +249,7 @@ const addIntakeDocuments = Effect.fn("test.addIntakeDocuments")(function* (
       }),
     };
   });
-  const added = yield* Effect.forEach(entries, add);
+  const added = yield* Effect.forEach(entries, add, { concurrency: 1 });
   yield* withCatalog(root, (catalog) =>
     Effect.succeed(
       LibraryCatalog.make({
@@ -330,8 +330,10 @@ const receiptsUnder = Effect.fn("test.receiptsUnder")(function* (root: string, t
   const directory = path.join(root, "ops/mine", tier, "receipts");
   const listed = yield* fs.readDirectory(directory, { recursive: true });
   const files = A.filter(listed, Str.endsWith(".json"));
-  return yield* Effect.forEach(files, (file) =>
-    fs.readFileString(path.join(directory, file)).pipe(Effect.flatMap(S.decodeEffect(ReceiptJson)))
+  return yield* Effect.forEach(
+    files,
+    (file) => fs.readFileString(path.join(directory, file)).pipe(Effect.flatMap(S.decodeEffect(ReceiptJson))),
+    { concurrency: 1 }
   );
 });
 

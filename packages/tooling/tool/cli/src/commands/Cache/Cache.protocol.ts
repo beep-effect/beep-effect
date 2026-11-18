@@ -272,7 +272,10 @@ export const validateCacheProtocolExecution = Effect.fn("Cache.validateProtocolE
     );
     yield* validateProtocolExchange(exchange, event);
   }
-  yield* Effect.forEach(failures, (failure) => validateProtocolReadFailure(failure, events, upload), { discard: true });
+  yield* Effect.forEach(failures, (failure) => validateProtocolReadFailure(failure, events, upload), {
+    concurrency: 1,
+    discard: true,
+  });
 
   return report;
 });

@@ -747,7 +747,8 @@ const toReports = Effect.fn("SkillPatches.toReports")(function* (
         shift: verdict.shift,
         detail: verdict.detail,
       });
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 
@@ -893,7 +894,8 @@ const toPatchHunks = Effect.fn("SkillPatches.toPatchHunks")(function* (
         hunkHash: yield* hashBytes(concatBytes(entry.identity), `${patch}:${file}:hunk-${entry.hunk}`),
         text: entry.text,
       });
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 
@@ -937,8 +939,10 @@ export const listSkillPatchHunks = Effect.fn("SkillPatches.listSkillPatchHunks")
       { hunk: 0, identity: appendFramedText(A.empty<Uint8Array>(), text), text: parsed.failure.message },
     ]);
   }
-  const perSection = yield* Effect.forEach(parsed.success, (section) =>
-    toPatchHunks(patch, section.path, listedHunks(section))
+  const perSection = yield* Effect.forEach(
+    parsed.success,
+    (section) => toPatchHunks(patch, section.path, listedHunks(section)),
+    { concurrency: 1 }
   );
   return A.flatten(perSection);
 });

@@ -166,7 +166,7 @@ const page = (value: ReadonlyArray<GraphMessage>, nextLink: O.Option<string>) =>
 
 const conversationPage = (ids: ReadonlyArray<string>, nextLink: O.Option<string>) =>
   Effect.map(
-    Effect.forEach(ids, (id) => decodeMessage(MESSAGES[id])),
+    Effect.forEach(ids, (id) => decodeMessage(MESSAGES[id]), { concurrency: 1 }),
     (value) => page(value, nextLink)
   );
 const cappedPage = Effect.succeed(page([], O.some(CAPPED_PAGE)));

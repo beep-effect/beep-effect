@@ -1724,7 +1724,7 @@ rm -f -- "$incoming"
         fs.remove(outputPath).pipe(Effect.ignore),
         fs.remove(versionPath).pipe(Effect.ignore),
       ],
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     return yield* YeetCommandError.make({
       message: `Failed to update the bounded active inbox index "${paths.activePath}": ${Str.trim(result.stderr.toString())}`,
