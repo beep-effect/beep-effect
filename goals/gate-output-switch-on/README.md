@@ -33,12 +33,19 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+All phases complete. The six fixes landed in three pull requests: quiet surfaces (#3400), the agent
+signal through Turbo (#3401) and the unbuilt-dependency probe, which also closes the goal.
 
 ## Latest Evidence
 
-2026-11-18 baseline, from the exploration: `@beep/glob`'s 273 green tests print 13,450 characters
-through Turbo with an agent variable set in the shell, and 282 when Vitest sees the variable.
+2026-11-18, measured on the lanes (`history/2026-11-18-p1-agent-signal-measurements.md` and
+`history/2026-11-18-p3-probe-and-verify.md` in this packet):
+
+- A green `@beep/glob` test run through Turbo under an agent: 14,238 characters before, 820 after.
+- The same task as a cache hit through the task path: 1,098 characters and no test summary.
+- A subcommand help page: 2,490 characters before, 1,911 after.
+- `check` in a package with two unbuilt upstream projects: 134,905 characters before, one line of
+  175 after.
 
 ## Notes
 

@@ -34,7 +34,7 @@
     "goals/gate-output-switch-on/GOAL.md",
     "goals/gate-output-switch-on/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -56,7 +56,7 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
@@ -71,17 +71,17 @@
     {
       "id": "P3",
       "name": "Unbuilt-dependency probe",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Verify",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P6",

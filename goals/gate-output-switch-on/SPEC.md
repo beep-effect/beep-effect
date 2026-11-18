@@ -119,42 +119,42 @@ Other surfaces this goal may change:
 
 ## Acceptance Criteria
 
-- [ ] **AC1 Agent keys pass through.** `turbo.json` `global.passThroughEnv` contains every key of the
+- [x] **AC1 Agent keys pass through.** `turbo.json` `global.passThroughEnv` contains every key of the
   `@beep/runtime-env` agent table plus `AI_AGENT`, `AGENT` and `EDITOR`. A test fails when the table
   gains a key the list lacks.
-- [ ] **AC2 Green test under Turbo is short.** With only `CLAUDECODE=1` set as an agent marker,
+- [x] **AC2 Green test under Turbo is short.** With only `CLAUDECODE=1` set as an agent marker,
   `turbo run test --filter=@beep/glob --only --force` prints under 1,000 characters (stdout plus
   stderr, `wc -m`), against 13,450 at baseline. The same holds with only `CODEX_THREAD_ID` set.
-- [ ] **AC3 Bun quiet under Codex.** When `@beep/runtime-env` detects an agent, every step the task
+- [x] **AC3 Bun quiet under Codex.** When `@beep/runtime-env` detects an agent, every step the task
   path builds carries `AGENT=1` in its environment; with no agent detected it does not. Unit test
   over `turboStep`.
-- [ ] **AC4 Cache hit replays nothing.** Under a detected agent the task path's `turbo run` argv
+- [x] **AC4 Cache hit replays nothing.** Under a detected agent the task path's `turbo run` argv
   carries `--output-logs=errors-only`, and a caller's own `--output-logs` wins. Measured: run the
   `@beep/glob` test task once with no agent variable (cache miss), then through the task path with
   `CLAUDECODE=1` (cache hit); the second run prints under 1,200 characters and contains no
   `Test Files` line.
-- [ ] **AC5 Help without boilerplate.** The root `--help` lists the five built-in global flags.
+- [x] **AC5 Help without boilerplate.** The root `--help` lists the five built-in global flags.
   Every other command's `--help` contains none of `--wizard`, `--completions` or `--log-level` and
   contains the line `Run 'beep-cli --help' for global flags`. A test walks the full command tree.
   `CliColor.formatterLayer` accepts the formatter options, tested in
   `packages/foundation/capability/cli-kit/test/CliColor.test.ts`.
-- [ ] **AC6 Envelopes stay in files.** With `BEEP_YEET_INNER_LANE_REPORT_PATH` set, stdout carries
+- [x] **AC6 Envelopes stay in files.** With `BEEP_YEET_INNER_LANE_REPORT_PATH` set, stdout carries
   no line starting with `[beep-quality-task-lane-run] ` or `[beep-github-check-run] `; the lane
   report is in its file and the GitHub-check report is in its own durable file. Without the env,
   stdout is unchanged. Tests in `quality-tasks.test.ts`.
-- [ ] **AC7 Monitor submit stays in its log.** `executeStepWithArtifacts` runs
+- [x] **AC7 Monitor submit stays in its log.** `executeStepWithArtifacts` runs
   `MONITOR_READY_SUBMIT_STEP_ID` through the split executor. The submit JSON line appears in the
   step's log under `.beep/yeet/runs/<branch>/logs/` and not on the console; the parent still prints
   `[yeet] readiness monitor job: <id>`. Test beside `yeet-artifact-writers.test.ts`.
-- [ ] **AC8 One line for an unbuilt tree.** In a package whose referenced project lacks its
+- [x] **AC8 One line for an unbuilt tree.** In a package whose referenced project lacks its
   declaration index, both `bun run check` and `beep-cli check` print exactly one line naming the
   count, the first missing output and the build-closure command, exit non-zero, and spawn no
   compiler. Fixture test; a built tree runs the check unchanged.
-- [ ] **AC9 Cache policy holds.** `bun run beep cache audit` passes with the re-recorded baseline.
-- [ ] **AC10 Packages verified.** `bun run beep quality package-verify` passes for every touched
+- [x] **AC9 Cache policy holds.** `bun run beep cache audit` passes with the re-recorded baseline.
+- [x] **AC10 Packages verified.** `bun run beep quality package-verify` passes for every touched
   package (`@beep/repo-cli`, `@beep/cli-kit`, `@beep/runtime-env`, and `@beep/repo-cli-kit` when
   the script generator changes).
-- [ ] No unrelated refactors or formatting churn.
+- [x] No unrelated refactors or formatting churn.
 
 Once `agent-output-census` lands, the closeout also cites its rows for this goal's window: test,
 check and Yeet output characters per run, and the share of runs piped through a filter. The census
@@ -216,6 +216,22 @@ Settles the open P0 point for fix 4. The report is appended to `github-check-run
 Lane fix/gate-output-quiet-surfaces
 
 Reverse: Print the envelope to stdout again and drop the file-name constant and its delete in the Yeet handler.
+
+### A package-local task resolves no concurrency plan, 2026-11-18
+
+The task runner resolved the admission-aware concurrency plan for every invocation and printed its admission note, including for a package-local task that runs one script and never reads the plan. Only a repo-root task resolves it now. This keeps the probe's failure to exactly one line through `beep-cli check`, and removes one line from every package-local task.
+
+Lane fix/gate-output-check-probe
+
+Reverse: Wrap the package branch of the task runner in the concurrency provider again.
+
+### The probe leads the generated check script and the package task path, 2026-11-18
+
+Settles the open P0 point for fix 6. A package's generated `check` now reads `beep-cli quality check-probe && bun run beep:check`, and `beep-cli check` inside a package runs the same probe before it starts `beep:check`. Both print one line and stop before any compiler. The alternative, pointing the script at `beep-cli check`, loads the whole CLI on every check: about 1.1 seconds against 0.6 on a built `@beep/schema`. The probe has its own slim entry instead, which loads only the filesystem probe and costs about 0.14 seconds. `@beep/infra` keeps its plain script because its check builds the referenced projects itself. Inside a package script `beep-cli` resolves to the workspace source, so hosted CI runs the lane's own probe. The writer changed 208 manifests and each one's cache baseline was re-recorded; reviews and requests are under `docs/reports`.
+
+Lane fix/gate-output-check-probe
+
+Reverse: Drop the guard from the check rules in the package-scripts schema, run the scripts writer, remove the slim entry for the probe and re-record the per-package cache baselines.
 
 ### The durable file is the record; stdout does not repeat it, 2026-11-18
 
