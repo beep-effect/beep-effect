@@ -61,8 +61,8 @@ port-to-action error translation.
 
 New to this architecture? Read
 [`13-onboarding-the-minimum-viable-slice.md`](./13-onboarding-the-minimum-viable-slice.md)
-first. It walks through the smallest legal slice, the smallest legal
-cross-slice promotion, and a 60-second guide to reading any slice path. Come
+first. It walks through the smallest legal model-first slice, the first
+fact another context reads, and a 60-second guide to reading any slice path. Come
 back here for the rationale once the shape clicks.
 
 ## Document Index
@@ -72,7 +72,7 @@ back here for the rationale once the shape clicks.
 | [`GLOSSARY.md`](GLOSSARY.md)                                         | Canonical taxonomy for architecture terms.                                     |
 | [`DECISIONS.md`](DECISIONS.md)                                       | Dated decision log and amendment trail.                                        |
 | [`00-philosophy.md`](00-philosophy.md)                               | North star and grounding principles.                                           |
-| [`01-hexagonal-vertical-slices.md`](01-hexagonal-vertical-slices.md) | Why slices combine hexagonal ports with vertical package topology.             |
+| [`01-hexagonal-vertical-slices.md`](01-hexagonal-vertical-slices.md) | Why a slice is a bounded context in four packages, one per dependency closure, with hexagonal ports; the legacy seven-package shape. |
 | [`02-shared-kernel.md`](02-shared-kernel.md)                         | Why `shared` is a DDD shared kernel, not a dump.                               |
 | [`03-driver-boundaries.md`](03-driver-boundaries.md)                 | Why drivers expose technical capability while server implements product ports. |
 | [`04-rich-domain-model.md`](04-rich-domain-model.md)                 | Why the repo prefers hybrid rich domain models over anemic data bags.          |
@@ -81,10 +81,10 @@ back here for the rationale once the shape clicks.
 | [`07-non-slice-families.md`](07-non-slice-families.md)               | Why non-slice families (foundation, drivers, tooling, ecosystem) need explicit topology grammar. |
 | [`08-testing.md`](./08-testing.md)                                   | Testing strategy: domain in isolation, use-case stubs, fixture ownership, contract tests, slice-isolation guarantee. |
 | [`09-errors-across-boundaries.md`](./09-errors-across-boundaries.md) | Error translation across hexagonal boundaries: who translates, where, what the function looks like. |
-| [`10-cross-slice-coordination.md`](./10-cross-slice-coordination.md) | Workflow / saga / process-manager governance; future `shared/use-cases` event contracts; God Process Manager anti-pattern. |
+| [`10-cross-slice-coordination.md`](./10-cross-slice-coordination.md) | Integration facts, published streams and inboxes, synchronous calls through consumer ports; legacy `shared/use-cases` event promotion; God Process Manager anti-pattern. |
 | [`11-evolution-and-deprecation.md`](./11-evolution-and-deprecation.md) | Slice retirement, `shared/use-cases` versioning, port deprecation, feature-flag lifetime. |
 | [`12-observability.md`](./12-observability.md)                       | Span naming, attribute conventions, logging vs tracing vs Console; slice boundaries as span boundaries. |
-| [`13-onboarding-the-minimum-viable-slice.md`](./13-onboarding-the-minimum-viable-slice.md) | Scratchpad lane, minimum-viable-slice walkthrough, first cross-slice promotion, slice-path reading guide. |
+| [`13-onboarding-the-minimum-viable-slice.md`](./13-onboarding-the-minimum-viable-slice.md) | Scratchpad lane, the smallest model-first slice, the first fact another context reads, slice-path reading guide. |
 | [`14-ecosystem-packages.md`](./14-ecosystem-packages.md) | Why publishable repo-authored libraries get their own flat family: inverted `@beep/*` gate, style-law scoping, artifact/peer policy, release lane, gate profile, promotion/demotion. |
 | [`15-lab-apps.md`](./15-lab-apps.md) | Why law-abiding experiments get `apps/labs/*`: full code law with path-scoped ceremony exemption, zero-root-churn registration geometry, manifest/disposition lifecycle, promotion runbook, pre-v1 retirement class. |
 
@@ -100,8 +100,9 @@ the ones that contact has not settled.
   is in place. `lint:promotion-records` is still only a name in these
   documents; no lint command implements it.
 - **Cross-slice workflow boundaries.** `10-cross-slice-coordination.md`
-  codifies the rules. The God Process Manager diagnostic has not caught a real
-  case in this repo.
+  codifies integration facts and published streams, proven in the
+  `scratchpad/model-first-slices/` prototype and not yet in a repo slice. The
+  God Process Manager diagnostic has not caught a real case in this repo.
 - **Deprecation windows.** The 2026-09-02 decision removes unreleased in-repo
   symbols on discovery. The 2-minor-release / 1-quarter / 6-week defaults in
   `11-evolution-and-deprecation.md` still govern published and cross-slice
@@ -109,10 +110,10 @@ the ones that contact has not settled.
 - **Span/attribute conventions.** `12-observability.md` codifies the mapping.
   No live trace from this repo has validated that the names render legibly in
   the tracing tooling.
-- **Onboarding walkthrough.** The file count in
-  `13-onboarding-the-minimum-viable-slice.md` is now the counted drawing and
-  the counted lab. A new contributor has not yet walked that drawing on a real
-  task.
+- **Onboarding walkthrough.** `13-onboarding-the-minimum-viable-slice.md`
+  draws the model-first slice from the prototype. No repo slice has been
+  generated from it yet; `goals/model-first-standard` retargets the scaffolder
+  and `goals/authority-context` builds the first one.
 
 When any of the above is revised, append a corresponding `DECISIONS.md` entry
 and remove or update the bullet here.

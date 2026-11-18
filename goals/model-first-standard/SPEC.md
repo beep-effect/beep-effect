@@ -110,6 +110,30 @@ Lane explore/model-first-slices
 
 Reverse: Set goals/slice-topology-audit back to paused and remove its supersededBy
 
+### Legacy sections stay in the standard behind banners, 2026-11-18
+
+The seven-package sections of standards/ARCHITECTURE.md are kept and marked legacy rather than deleted, because existing slices stay legal on that shape until their own migration (D17) and edits to them still need the rules. The new "Model-First Slice Topology" section is the target doctrine; "Legacy Seven-Package Slice Topology" and the sections it lists carry a banner pointing to it. Chapters 01, 10 and 13 lead with the model-first shape and keep the legacy rules in a marked part. The anchors other files cite (package-dependency-graph, how-to-use-this-standard, enforcement-and-migration-posture) are unchanged.
+
+Lane claude/model-first-standard-doctrine-b72d36
+
+Reverse: Delete the legacy sections once the last seven-package slice migrates
+
+### Package names follow @beep/<context>-<role>; web exists only with screens, 2026-11-18
+
+The four packages are `@beep/<context>-contract`, `-model`, `-host` and `-web`, the same `@beep/<slice>-<role>` convention legacy slices use, so package metadata, identity composers and Fallow zones keep one naming rule. `contract`, `model` and `host` exist for every context; `web` exists when the context has screens, as in the prototype, where `authority` and `runs` have no web package (explorations/model-first-slices/DECISIONS.md D3). The smallest legal slice in chapter 13 is therefore three packages.
+
+Lane claude/model-first-standard-doctrine-b72d36
+
+Reverse: Rename the packages in the standard and the scaffolder plan, or require web for every context
+
+### The v3-consistency-audit deferred rows are settled against the four-package shape, 2026-11-18
+
+The nine rows explorations/v3-consistency-audit/DECISIONS.md deferred to the superseded slice-topology-audit P0 are settled in the 2026-11-18 entry of standards/architecture/DECISIONS.md: the create-package shell is the skeleton law; the source export map is the truth and exact; coverage ratio stays with the coverage ratchet; every package type-checks its test tree; concept-local server/worker shims are not admitted in a model-first context; `.ts` specifiers are codified; a root entry is a pure re-export; the lab client and view-model files are superseded by web bindings and machines and stay until the lab migrates. The 2026-08-30 member-vocabulary and contract sub-choices bind legacy slices only.
+
+Lane claude/model-first-standard-doctrine-b72d36
+
+Reverse: Reopen the rows in a new standards/architecture/DECISIONS.md entry and change the settled answers
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

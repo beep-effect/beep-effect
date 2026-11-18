@@ -31,11 +31,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P1 Implement — step 1 (doctrine) written and in review; step 2 (scaffolder) next.
 
 ## Latest Evidence
 
-Not started.
+2026-11-18: the doctrine amendment to `standards/ARCHITECTURE.md`, `standards/architecture/DECISIONS.md` (entry 2026-11-18), the glossary and chapters 01, 10 and 13. Decisions and checkpoints are under [`decisions/`](./decisions/).
 
 ## Notes
 
