@@ -216,6 +216,12 @@
         ]
       },
       {
+        "name": "@beep/contract-kit",
+        "patterns": [
+          "packages/foundation/modeling/contract-kit/src/**"
+        ]
+      },
+      {
         "name": "@beep/cosmos",
         "patterns": [
           "packages/drivers/cosmos/src/**"
@@ -2010,6 +2016,17 @@
           "@beep/utils",
           "@beep/walker",
           "@beep/yaml"
+        ]
+      },
+      {
+        "from": "@beep/contract-kit",
+        "allow": [
+          "@beep/contract-kit",
+          "@beep/identity"
+        ],
+        "allowTypeOnly": [
+          "@beep/contract-kit",
+          "@beep/identity"
         ]
       },
       {
@@ -4932,6 +4949,7 @@
           "@beep/colors",
           "@beep/commands",
           "@beep/config-file",
+          "@beep/contract-kit",
           "@beep/duckdb",
           "@beep/epistemics",
           "@beep/exiftool",
@@ -5006,6 +5024,7 @@
           "@beep/colors",
           "@beep/commands",
           "@beep/config-file",
+          "@beep/contract-kit",
           "@beep/duckdb",
           "@beep/epistemics",
           "@beep/exiftool",
