@@ -41,15 +41,22 @@ four seams that make it hold, then a guard that keeps it holding.
   discovery finds a member with that package name. A present subject keeps
   every assertion strict, stale-file checks included: a fixture or evidence
   file missing from a present packet or workspace still fails.
-- **Prune rehearsal.** In a disposable worktree: delete the product leaves and
-  their packets; regenerate the generated projections (root `package.json`
-  workspaces, tsconfig references through `bun run beep tsconfig-sync`, the
-  db-admin aggregation and its manifest edges through seam 4's generator, the
-  fallow boundary zones); rewrite the ratchet baselines and inventories that
-  list product paths with their own `--write` commands (for example
-  `standards/entity-kit-freeze.baseline.jsonc` through
-  `bun run beep laws entity-kit-freeze --write`), which may only shrink them;
-  then install, and run check, lint and test for every remaining workspace.
+- **Prune rehearsal.** In a disposable worktree, in this order:
+  1. `bun install` on the full checkout, so the `beep` CLI and its
+     dependencies resolve for the steps below.
+  2. Delete the product leaves and their packets.
+  3. Regenerate the generated projections: root `package.json` workspaces,
+     tsconfig references through `bun run beep tsconfig-sync`, the db-admin
+     aggregation and its manifest edges through seam 4's generator, and the
+     fallow boundary zones.
+  4. Rewrite the ratchet baselines and inventories that list product paths
+     with their own `--write` commands (for example
+     `standards/entity-kit-freeze.baseline.jsonc` through
+     `bun run beep laws entity-kit-freeze --write`); they may only shrink.
+  5. `bun install` again, so the lockfile and workspace links name no removed
+     package.
+  6. Check, lint and test every remaining workspace.
+
   Hand edits to kept packages are not part of the rehearsal.
 
 ## Non-Goals
