@@ -133,9 +133,11 @@ describe("AgentEnvKey", () => {
       A.filter(agentCiKeys, (key) => !A.contains(nonPresenceKeys, key)),
       literals
     ));
-  it("detects an agent from each key alone", () => {
-    for (const key of AgentEnvKey.literals) assert.isTrue(O.isSome(detectAgent({ [key]: "1" })), key);
-  });
+  it("detects an agent from each key alone", () =>
+    assert.deepStrictEqual(
+      A.filter(literals, (key) => O.isNone(detectAgent({ [key]: "1" }))),
+      []
+    ));
 });
 
 // Added beyond the brief: the key list and the detector cannot drift.
