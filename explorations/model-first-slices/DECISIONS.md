@@ -1256,3 +1256,20 @@ when an Alchemy release includes them. `@beep/alchemy-postgres` stays until then
 meant to run on the host the standard names. Rejected: proving slices in memory only until
 upstream ships; running new slices on the repo-owned platform meanwhile. Recommended answer
 accepted. D53's rejection stands: the repo-owned platform is not retired on carried patches.
+
+## 2026-11-17 — D62 what goes upstream first (follows D58)
+
+**Question:** The check against Alchemy's main found every defect still present, no release since
+beta.87, and open upstream threads for most of the set (`research/22`). Six texts are drafted and
+four rebased patches fix upstream issue #3490. What is posted?
+
+**Answer:** Comments and issues first. The four comments (on #3490, #3220, #3423, #3381) and the
+two new issues are posted as drafted. The pull request for #3490 waits until a maintainer says the
+direction is welcome.
+
+**Rationale:** Three of the defects already have an upstream fix in review, so evidence on those
+threads is worth more than a competing patch, and the #3490 comment itself offers the pull request.
+Rejected: opening the pull request from a fork now; reading the drafts first; sending nothing.
+Recommended answer accepted. Posted 2026-11-18 (UTC): the comments, and issues #3494 and #3495.
+The record is `notes/upstream/SENT.md` in the prototype. Local patch 06 is dropped from the
+upstream set in favour of upstream's #3382.

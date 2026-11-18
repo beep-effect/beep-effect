@@ -1,6 +1,7 @@
 # Fixes and proposals for alchemy, from running a Domain application on Effect Cluster
 
-**Nothing here has been sent.** No issue, pull request or message has been posted upstream.
+**Four comments and two issues were posted on 2026-11-18; see [`SENT.md`](./SENT.md).** No pull
+request has been opened. The patches below have not been sent.
 
 Checked against alchemy `main` on 2026-11-17: see [`MAIN-CHECK.md`](./MAIN-CHECK.md). Copies
 rebased onto `main`, formatted and carrying tests are in `rebased/`; draft texts are in `drafts/`;
