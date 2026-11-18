@@ -542,14 +542,16 @@ export const shapeOfOperationPlan = (plan: CanonicalSliceOperationPlan): Archite
  *
  * ```ts
  * import { makeModelFirstContextOperationPlan } from "@beep/repo-cli/commands/Architecture"
+ * import { FsUtilsLive } from "@beep/repo-utils"
  * import { NodeServices } from "@effect/platform-node"
  * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
  *
  * const program = Effect.map(
  *   makeModelFirstContextOperationPlan({ repoRoot: "/workspace/beep-effect", context: "notes", module: "Note" }),
  *   (plan) => plan.roles.map((role) => role.packageName)
  * )
- * Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then(console.log)
+ * Effect.runPromise(program.pipe(Effect.provide(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer))))).then(console.log)
  * ```
  *
  * @effects Reads the workspace manifests to resolve project references; filesystem writes happen only when the plan is applied.
@@ -632,14 +634,16 @@ const projectConfigs = (plan: CanonicalSliceOperationPlan): HashMap.HashMap<stri
  *   ensureCurrentModelFirstReferences,
  *   makeModelFirstContextOperationPlan,
  * } from "@beep/repo-cli/commands/Architecture"
+ * import { FsUtilsLive } from "@beep/repo-utils"
  * import { NodeServices } from "@effect/platform-node"
  * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
  *
  * const program = Effect.flatMap(
  *   makeModelFirstContextOperationPlan({ repoRoot: "/workspace/beep-effect", context: "notes", module: "Note" }),
  *   (plan) => ensureCurrentModelFirstReferences("/workspace/beep-effect", plan)
  * )
- * Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then(console.log)
+ * Effect.runPromise(program.pipe(Effect.provide(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer))))).then(console.log)
  * ```
  *
  * @effects Reads the workspace manifests to regenerate the plan's references.
@@ -699,14 +703,16 @@ const isWritePackageJsonOperation = S.is(WritePackageJsonOperation);
  *
  * ```ts
  * import { makeModelFirstContextOperationPlan, modelFirstPackagePathsOf } from "@beep/repo-cli/commands/Architecture"
+ * import { FsUtilsLive } from "@beep/repo-utils"
  * import { NodeServices } from "@effect/platform-node"
  * import * as Effect from "effect/Effect"
+ * import * as Layer from "effect/Layer"
  *
  * const program = Effect.flatMap(
  *   makeModelFirstContextOperationPlan({ repoRoot: "/workspace/beep-effect", context: "notes", module: "Note" }),
  *   modelFirstPackagePathsOf
  * )
- * Effect.runPromise(program.pipe(Effect.provide(NodeServices.layer))).then(console.log)
+ * Effect.runPromise(program.pipe(Effect.provide(FsUtilsLive.pipe(Layer.provideMerge(NodeServices.layer))))).then(console.log)
  * ```
  *
  * @param plan - A model-first operation plan.
