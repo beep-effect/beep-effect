@@ -21,7 +21,10 @@ holds the rule once:
 Tests reach it through `packages/tooling/tool/cli/test/support/CheckoutSkip.ts`
 (`skipWhenAbsent`, `skipUnlessCheckoutHolds`, `currentCheckoutInventory`,
 `CurrentCheckoutLive` for a test whose ambient file system is in memory). A
-skip is a Vitest skip whose note names each absent subject.
+skip is a Vitest skip whose note names each absent subject;
+`packages/tooling/tool/cli/test/checkout-skip.test.ts` proves that step with a
+recording context: no skip while every subject is present, one note naming
+each absent subject otherwise.
 
 ## Surfaces covered
 
