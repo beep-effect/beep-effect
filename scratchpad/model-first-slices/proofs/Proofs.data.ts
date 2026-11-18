@@ -178,7 +178,6 @@ export const proofs: ReadonlyArray<Proof> = [
     id: "sink-positions",
     invariant: "The directory sink applies each source stream's changes once, in order, and refuses stale application, writes and checkpoints together.",
     checkers: [
-      "party/model/test/PartyDirectory.sink.test.ts",
       "party/model/test/Rebuild.test.ts",
       "party/host/test/PartyDirectoryStore.laws.test.ts",
     ],

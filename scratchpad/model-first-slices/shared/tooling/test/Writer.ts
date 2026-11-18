@@ -43,13 +43,13 @@ export const changedOf = ({ writer, change, extra, bump }: Changed): { readonly 
   );
 };
 
-/** Two source lists over the same three names, so they often repeat a name and often have the same length. */
+/** Two source lists picked from the same three names, each name read once, so they often read the same set in another order. */
 export const Listings = S.Struct({ writer: Writer, names: S.Tuple([Name, Name, Name]), before: S.Array(Count), after: S.Array(Count) });
 export type Listings = typeof Listings.Type;
 
 /** The two writers the listings give, and whether they read the same set of sources. */
 export const listedOf = ({ writer, names, before, after }: Listings) => {
-  const sourcesOf = (picks: ReadonlyArray<number>) => A.map(picks, (pick) => names[pick % names.length] ?? names[0]);
+  const sourcesOf = (picks: ReadonlyArray<number>) => A.dedupe(A.map(picks, (pick) => names[pick % names.length] ?? names[0]));
   const first = StreamWriter.make({ ...writer, sources: sourcesOf(before) });
   const second = StreamWriter.make({ ...writer, sources: sourcesOf(after) });
   const setOf = (listed: StreamWriter) => HashSet.fromIterable(listed.sources);

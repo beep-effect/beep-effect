@@ -71,6 +71,22 @@ export const HttpStatus = S.Int.check(
  */
 export type HttpStatus = typeof HttpStatus.Type;
 
+/**
+ * Companion namespace for {@link HttpStatus}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace HttpStatus {
+  /**
+   * Encoded (wire) form of {@link HttpStatus}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof HttpStatus.Encoded;
+}
+
 // The keys of the JSON body the platform sends with a failed request. `ApiError` carries the same
 // keys beside the status, so both are built from this one record.
 const errorBodyFields = {
@@ -130,6 +146,28 @@ export class ApiErrorBody extends S.Opaque<ApiErrorBody, { readonly brand: uniqu
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ApiErrorBody}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ApiErrorBody {
+  /**
+   * Encoded (wire) form of {@link ApiErrorBody}: an absent `errorDescription` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly errorCode: string;
+    readonly errorName: ErrorName.Encoded;
+    readonly errorInstanceId: string;
+    readonly errorDescription?: string;
+    readonly parameters?: R.ReadonlyRecord<string, typeof S.Json.Encoded>;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Failures of the transport
@@ -191,6 +229,30 @@ export class ApiError extends S.TaggedError<ApiError, { readonly brand: unique s
 }
 
 /**
+ * Companion namespace for {@link ApiError}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ApiError {
+  /**
+   * Encoded (wire) form of {@link ApiError}: an absent `errorDescription` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "ApiError";
+    readonly status: HttpStatus.Encoded;
+    readonly errorCode: string;
+    readonly errorName: ErrorName.Encoded;
+    readonly errorInstanceId: string;
+    readonly errorDescription?: string;
+    readonly parameters?: R.ReadonlyRecord<string, typeof S.Json.Encoded>;
+  }
+}
+
+/**
  * A request produced no answer from the platform: the connection failed, timed out or was cut.
  *
  * **Details**
@@ -224,6 +286,26 @@ export class TransportError extends S.TaggedError<TransportError, { readonly bra
     description: "A request produced no answer from the platform.",
   })
 ) {}
+
+/**
+ * Companion namespace for {@link TransportError}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TransportError {
+  /**
+   * Encoded (wire) form of {@link TransportError}: the cause travels as JSON.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "TransportError";
+    readonly message: string;
+    readonly cause: typeof S.Json.Encoded;
+  }
+}
 
 /**
  * A value did not match its schema where the client meets the platform.
@@ -278,6 +360,29 @@ export class DecodeError extends S.TaggedError<DecodeError, { readonly brand: un
     description: "A value did not match its schema where the client meets the platform.",
   })
 ) {}
+
+/**
+ * Companion namespace for {@link DecodeError}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DecodeError {
+  /**
+   * Encoded (wire) form of {@link DecodeError}: the cause travels as JSON;
+   * an absent `index` or `locator` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "DecodeError";
+    readonly message: string;
+    readonly cause: typeof S.Json.Encoded;
+    readonly index?: number;
+    readonly locator?: ObjectLocator.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Failures of a read that promises exactly one object
@@ -338,6 +443,25 @@ export class ObjectNotFound extends S.TaggedError<ObjectNotFound, { readonly bra
 }
 
 /**
+ * Companion namespace for {@link ObjectNotFound}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectNotFound {
+  /**
+   * Encoded (wire) form of {@link ObjectNotFound}: an absent `objectType` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "ObjectNotFound";
+    readonly objectType?: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * A read that promises exactly one object found more than one.
  *
  * **Details**
@@ -379,6 +503,25 @@ export class MultipleObjectsFound extends S.TaggedError<MultipleObjectsFound, { 
 ) {
   override get message(): string {
     return `Expected exactly one ${sought(this.objectType)} but the object set holds several`;
+  }
+}
+
+/**
+ * Companion namespace for {@link MultipleObjectsFound}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MultipleObjectsFound {
+  /**
+   * Encoded (wire) form of {@link MultipleObjectsFound}: an absent `objectType` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "MultipleObjectsFound";
+    readonly objectType?: ObjectTypeApiName.Encoded;
   }
 }
 
@@ -434,6 +577,26 @@ export class ActionRejected extends S.TaggedError<ActionRejected, { readonly bra
   }
 }
 
+/**
+ * Companion namespace for {@link ActionRejected}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionRejected {
+  /**
+   * Encoded (wire) form of {@link ActionRejected}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "ActionRejected";
+    readonly action: ActionTypeApiName.Encoded;
+    readonly validation: ActionValidation.Encoded;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Unions
 // -----------------------------------------------------------------------------
@@ -480,6 +643,25 @@ export const TransportFailure = S.Union([ApiError, TransportError, DecodeError])
 export type TransportFailure = typeof TransportFailure.Type;
 
 /**
+ * Companion namespace for {@link TransportFailure}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TransportFailure {
+  /**
+   * Encoded (wire) form of {@link TransportFailure}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ApiError.Encoded
+    | TransportError.Encoded
+    | DecodeError.Encoded;
+}
+
+/**
  * Every way a call of the client can fail.
  *
  * **Example** (Name each failure)
@@ -523,3 +705,25 @@ export const ClientError = S.Union([
  * @since 0.0.0
  */
 export type ClientError = typeof ClientError.Type;
+
+/**
+ * Companion namespace for {@link ClientError}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ClientError {
+  /**
+   * Encoded (wire) form of {@link ClientError}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ApiError.Encoded
+    | TransportError.Encoded
+    | DecodeError.Encoded
+    | ObjectNotFound.Encoded
+    | MultipleObjectsFound.Encoded
+    | ActionRejected.Encoded;
+}

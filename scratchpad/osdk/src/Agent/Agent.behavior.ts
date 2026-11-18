@@ -344,6 +344,27 @@ export class AgentStateTimeout extends S.TaggedError<AgentStateTimeout, { readon
 }
 
 /**
+ * Companion namespace for {@link AgentStateTimeout}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentStateTimeout {
+  /**
+   * Encoded (wire) form of {@link AgentStateTimeout}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "AgentStateTimeout";
+    readonly sessionId: AgentSessionId.Encoded;
+    readonly timeout: typeof S.Duration.Encoded;
+    readonly consistencyKey?: AgentConsistencyKey.Encoded;
+  }
+}
+
+/**
  * Sending an event to a session was not accepted within the timeout.
  *
  * **Details**
@@ -392,5 +413,26 @@ export class AgentEventTimeout extends S.TaggedError<AgentEventTimeout, { readon
 ) {
   override get message(): string {
     return `Agent event sending timed out after ${Duration.format(this.timeout)}`;
+  }
+}
+
+/**
+ * Companion namespace for {@link AgentEventTimeout}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentEventTimeout {
+  /**
+   * Encoded (wire) form of {@link AgentEventTimeout}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly _tag: "AgentEventTimeout";
+    readonly sessionId: AgentSessionId.Encoded;
+    readonly eventId: AgentEventId.Encoded;
+    readonly timeout: typeof S.Duration.Encoded;
   }
 }

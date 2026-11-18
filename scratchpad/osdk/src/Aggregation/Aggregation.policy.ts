@@ -292,6 +292,22 @@ export const MetricResultKind = LiteralKit(["integer", "numeric", "sameAsPropert
 export type MetricResultKind = typeof MetricResultKind.Type;
 
 /**
+ * Companion namespace for {@link MetricResultKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MetricResultKind {
+  /**
+   * Encoded (wire) form of {@link MetricResultKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MetricResultKind.Encoded;
+}
+
+/**
  * The kind of value each metric produces.
  *
  * **Details**
@@ -360,6 +376,26 @@ export class UnknownAggregatedProperty extends S.Opaque<UnknownAggregatedPropert
 ) {}
 
 /**
+ * Companion namespace for {@link UnknownAggregatedProperty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UnknownAggregatedProperty {
+  /**
+   * Encoded (wire) form of {@link UnknownAggregatedProperty}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "unknownProperty";
+    readonly operation: PropertyMetricKind.Encoded | GroupByKind.Encoded;
+    readonly property: PropertySelector.Encoded;
+  }
+}
+
+/**
  * A request computes a metric that the property's type does not admit, such as the sum of a string.
  *
  * @category models
@@ -378,6 +414,28 @@ export class MetricNotAllowed extends S.Opaque<MetricNotAllowed, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MetricNotAllowed}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MetricNotAllowed {
+  /**
+   * Encoded (wire) form of {@link MetricNotAllowed}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "metricNotAllowed";
+    readonly metric: PropertyMetricKind.Encoded;
+    readonly property: PropertySelector.Encoded;
+    readonly propertyType: PropertyTypeKind.Encoded;
+    readonly allowed: ReadonlyArray<PropertyMetricKind.Encoded>;
+  }
+}
 
 /**
  * A request groups by a property in a way its type does not admit, such as fixed-width buckets of a string.
@@ -400,6 +458,28 @@ export class GroupingNotAllowed extends S.Opaque<GroupingNotAllowed, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link GroupingNotAllowed}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GroupingNotAllowed {
+  /**
+   * Encoded (wire) form of {@link GroupingNotAllowed}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "groupingNotAllowed";
+    readonly grouping: GroupByKind.Encoded;
+    readonly property: PropertySelector.Encoded;
+    readonly propertyType: PropertyTypeKind.Encoded;
+    readonly allowed: ReadonlyArray<GroupByKind.Encoded>;
+  }
+}
+
+/**
  * A duration grouping buckets a calendar date by a unit shorter than a day.
  *
  * @category models
@@ -418,6 +498,28 @@ export class DurationUnitNotAllowed extends S.Opaque<DurationUnitNotAllowed, { r
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DurationUnitNotAllowed}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DurationUnitNotAllowed {
+  /**
+   * Encoded (wire) form of {@link DurationUnitNotAllowed}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "durationUnitNotAllowed";
+    readonly property: PropertySelector.Encoded;
+    readonly propertyType: TemporalKind.Encoded;
+    readonly unit: TimeUnit.Encoded;
+    readonly allowed: ReadonlyArray<TimeUnit.Encoded>;
+  }
+}
 
 /**
  * One way an aggregation request can disagree with the object type it is meant for.
@@ -463,6 +565,26 @@ export const AggregationViolation = AggregationViolationKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type AggregationViolation = typeof AggregationViolation.Type;
+
+/**
+ * Companion namespace for {@link AggregationViolation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AggregationViolation {
+  /**
+   * Encoded (wire) form of {@link AggregationViolation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | UnknownAggregatedProperty.Encoded
+    | MetricNotAllowed.Encoded
+    | GroupingNotAllowed.Encoded
+    | DurationUnitNotAllowed.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Checking a request against an object type

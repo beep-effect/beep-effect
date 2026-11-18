@@ -1,6 +1,6 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Count, Name } from "@proto/kernel/Measure";
-import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
+import { sameWriter, StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
 import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as O from "@beep/utils/Option";
@@ -27,7 +27,7 @@ export type HandoverChange = typeof HandoverChange.Type;
  * @category models
  * @since 0.0.0
  */
-export const Handover = S.Struct({ stream: S.String, writer: StreamWriter, change: HandoverChange });
+export const Handover = S.Struct({ stream: Name, writer: StreamWriter, change: HandoverChange });
 /**
  * @category models
  * @since 0.0.0
@@ -60,13 +60,6 @@ export class PublisherPending extends S.TaggedError<PublisherPending, { readonly
   pending: S.Array(S.Struct({ handover: Handover, pending: Count })),
   unread: S.Array(Handover),
 }) {}
-
-/** The same projection and generation, reading the same set of sources: a source listed twice is read once. */
-const sameWriter = (a: StreamWriter, b: StreamWriter): boolean =>
-  a.projection === b.projection &&
-  a.generation === b.generation &&
-  A.every(a.sources, (source) => A.contains(b.sources, source)) &&
-  A.every(b.sources, (source) => A.contains(a.sources, source));
 
 const handoverOf = (next: ReadonlyArray<StreamPin>) => (pin: StreamPin): O.Option<Handover> =>
   StreamPin.match(pin, {

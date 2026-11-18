@@ -1,6 +1,6 @@
 import type * as Domain from "@alchemy.run/domain";
 import { Name } from "@proto/kernel/Measure";
-import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
+import { sameWriter, StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
 import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
@@ -39,11 +39,11 @@ export type LiveStream = typeof LiveStream.Type;
  * @since 0.0.0
  */
 export const StreamDrift = S.TaggedUnion({
-  Unpinned: { stream: S.String },
-  Changed: { stream: S.String, pinned: StreamWriter, live: StreamWriter },
-  Reopened: { stream: S.String, writer: StreamWriter },
-  Unwritten: { stream: S.String, pinned: StreamWriter },
-  Undeclared: { stream: S.String },
+  Unpinned: { stream: Name },
+  Changed: { stream: Name, pinned: StreamWriter, live: StreamWriter },
+  Reopened: { stream: Name, writer: StreamWriter },
+  Unwritten: { stream: Name, pinned: StreamWriter },
+  Undeclared: { stream: Name },
 });
 /**
  * @category models
@@ -61,13 +61,6 @@ export class PublishedStreamDrift extends S.TaggedError<PublishedStreamDrift, { 
   "PublishedStreamDrift",
   { drift: S.Array(StreamDrift) },
 ) {}
-
-/** The same projection and generation, reading the same set of sources: a source listed twice is read once. */
-const sameWriter = (a: StreamWriter, b: StreamWriter): boolean =>
-  a.projection === b.projection &&
-  a.generation === b.generation &&
-  A.every(a.sources, (source) => A.contains(b.sources, source)) &&
-  A.every(b.sources, (source) => A.contains(a.sources, source));
 
 const driftOfLive = (pins: ReadonlyArray<StreamPin>) => (live: LiveStream): O.Option<StreamDrift> =>
   O.match(

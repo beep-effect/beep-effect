@@ -183,7 +183,7 @@ A saga run in flight finishes on the version it started while new runs start on 
 
 The directory sink applies each source stream's changes once, in order, and refuses stale application, writes and checkpoints together.
 
-- **Checker:** `party/model/test/PartyDirectory.sink.test.ts`, `party/model/test/Rebuild.test.ts`, `party/host/test/PartyDirectoryStore.laws.test.ts`
+- **Checker:** `party/model/test/Rebuild.test.ts`, `party/host/test/PartyDirectoryStore.laws.test.ts`
 - **Reads:** The store's apply, checkpoints, switch and search; a crash injected between the write and the library's checkpoint; one set of laws over generated scenes, held by the in-memory store and by the Postgres adapter on PGlite (one row table per generation, one positions table).
 - **Assumes:** One store write is atomic: in memory one update, in Postgres one transaction around the batch. PGlite is one connection, so the position row lock (`FOR UPDATE`) that serialises two runners is never contended in a test.
 - **Gaps:** Two runners applying one stream at once are shown only on the cluster. Names are ASCII in the laws: `lower()` follows the database's locale beyond ASCII, and a NUL in a name cannot be stored.

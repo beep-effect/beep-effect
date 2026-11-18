@@ -5,6 +5,7 @@ import { dual } from "effect/Function";
 import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { CapabilityId, DelegationId, GrantId, OrgId } from "./Ids.ts";
+import { Name, StreamId } from "./Measure.ts";
 import { thunkFalse, thunkTrue } from "@beep/utils"
 
 /**
@@ -24,7 +25,7 @@ import { thunkFalse, thunkTrue } from "@beep/utils"
  */
 export const ResourceScope = S.TaggedUnion({
   Org: { org: OrgId },
-  Record: { org: OrgId, record: S.String },
+  Record: { org: OrgId, record: StreamId },
 });
 /**
  * @category models
@@ -75,7 +76,7 @@ export const covers: {
  */
 export const GrantTerms = S.Struct({
   capability: CapabilityId,
-  operations: S.String.pipe(S.Array, S.OptionFromNullOr),
+  operations: Name.pipe(S.Array, S.OptionFromNullOr),
   resource: ResourceScope,
   expires: S.OptionFromNullOr(S.DateTimeUtc),
 });
@@ -121,7 +122,7 @@ export type CapabilityGrant = typeof CapabilityGrant.Type;
  */
 export const Capability = S.Struct({
   id: CapabilityId,
-  operations: S.Array(S.String),
+  operations: S.Array(Name),
   description: S.String,
 });
 /**

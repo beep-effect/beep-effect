@@ -94,6 +94,24 @@ export const ReferenceTarget = S.Union([ObjectTypeApiName, InterfaceTypeApiName]
 export type ReferenceTarget = typeof ReferenceTarget.Type;
 
 /**
+ * Companion namespace for {@link ReferenceTarget}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ReferenceTarget {
+  /**
+   * Encoded (wire) form of {@link ReferenceTarget}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ObjectTypeApiName.Encoded
+    | InterfaceTypeApiName.Encoded;
+}
+
+/**
  * What a spec is made of, besides its tag and codec: the specs it nests and what it refers to.
  *
  * **Details**

@@ -1,5 +1,6 @@
 import { DeploymentDescriptor, FactVersion } from "@proto/kernel/Deployment";
 import * as Initial from "@proto/kernel/Initial";
+import { Name } from "@proto/kernel/Measure";
 import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -12,7 +13,7 @@ import * as S from "effect/Schema";
  * @since 0.0.0
  */
 export class UnpublishedFact extends S.TaggedError<UnpublishedFact, { readonly brand: unique symbol }>()("UnpublishedFact", {
-  missing: S.Array(S.Struct({ consumer: S.String, fact: FactVersion })),
+  missing: S.Array(S.Struct({ consumer: Name, fact: FactVersion })),
 }) {}
 
 /**
@@ -24,8 +25,8 @@ export class UnpublishedFact extends S.TaggedError<UnpublishedFact, { readonly b
  * @since 0.0.0
  */
 export const FactLedger = S.Struct({
-  missing: Initial.empty(S.Struct({ consumer: S.String, fact: FactVersion }), { description: "Fact versions a consumer needs that nobody publishes; none unless found." }),
-  retirable: Initial.empty(S.Struct({ publisher: S.String, fact: FactVersion }), { description: "Fact versions nobody consumes that a newer version supersedes; none unless found." }),
+  missing: Initial.empty(S.Struct({ consumer: Name, fact: FactVersion }), { description: "Fact versions a consumer needs that nobody publishes; none unless found." }),
+  retirable: Initial.empty(S.Struct({ publisher: Name, fact: FactVersion }), { description: "Fact versions nobody consumes that a newer version supersedes; none unless found." }),
 });
 /**
  * @category models

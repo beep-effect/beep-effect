@@ -88,6 +88,22 @@ export const FilterOperator = LiteralKit(ObjectFilter.discriminants).pipe(
 export type FilterOperator = typeof FilterOperator.Type;
 
 /**
+ * Companion namespace for {@link FilterOperator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FilterOperator {
+  /**
+   * Encoded (wire) form of {@link FilterOperator}: the same literals as the runtime type.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof FilterOperator.Encoded;
+}
+
+/**
  * Operators that test one property: every operator except the logical combinators.
  *
  * **Example** (Tell a property operator from a combinator)
@@ -119,6 +135,22 @@ export const PropertyOperator = FilterOperator.omit(["and", "or", "not"]).pipe(
 export type PropertyOperator = typeof PropertyOperator.Type;
 
 /**
+ * Companion namespace for {@link PropertyOperator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyOperator {
+  /**
+   * Encoded (wire) form of {@link PropertyOperator}: the same literals as the runtime type.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PropertyOperator.Encoded;
+}
+
+/**
  * Operators that compare a property with one value: the four orderings and equality.
  *
  * **Example** (List the comparison operators)
@@ -147,6 +179,22 @@ export const ComparisonOperator = FilterOperator.pick(["lt", "gt", "lte", "gte",
 export type ComparisonOperator = typeof ComparisonOperator.Type;
 
 /**
+ * Companion namespace for {@link ComparisonOperator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ComparisonOperator {
+  /**
+   * Encoded (wire) form of {@link ComparisonOperator}: the same literals as the runtime type.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ComparisonOperator.Encoded;
+}
+
+/**
  * Operators that test membership or presence: one of a list, null or not, array contains.
  *
  * **Example** (List the membership operators)
@@ -173,6 +221,22 @@ export const MembershipOperator = FilterOperator.pick(["in", "isNull", "contains
  * @since 0.0.0
  */
 export type MembershipOperator = typeof MembershipOperator.Type;
+
+/**
+ * Companion namespace for {@link MembershipOperator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MembershipOperator {
+  /**
+   * Encoded (wire) form of {@link MembershipOperator}: the same literals as the runtime type.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MembershipOperator.Encoded;
+}
 
 /**
  * Operators that search the text of a string property.
@@ -214,6 +278,22 @@ export const TextOperator = FilterOperator.pick([
 export type TextOperator = typeof TextOperator.Type;
 
 /**
+ * Companion namespace for {@link TextOperator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TextOperator {
+  /**
+   * Encoded (wire) form of {@link TextOperator}: the same literals as the runtime type.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TextOperator.Encoded;
+}
+
+/**
  * Operators that only make sense on dates and instants.
  *
  * **Example** (List the temporal operators)
@@ -240,6 +320,22 @@ export const TemporalOperator = FilterOperator.pick(["relativeDateRange"]).pipe(
  * @since 0.0.0
  */
 export type TemporalOperator = typeof TemporalOperator.Type;
+
+/**
+ * Companion namespace for {@link TemporalOperator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TemporalOperator {
+  /**
+   * Encoded (wire) form of {@link TemporalOperator}: the same literals as the runtime type.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TemporalOperator.Encoded;
+}
 
 /**
  * Operators that compare a geospatial property with an area or a geometry.
@@ -281,6 +377,22 @@ export const GeoOperator = FilterOperator.pick([
 export type GeoOperator = typeof GeoOperator.Type;
 
 /**
+ * Companion namespace for {@link GeoOperator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeoOperator {
+  /**
+   * Encoded (wire) form of {@link GeoOperator}: the same literals as the runtime type.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof GeoOperator.Encoded;
+}
+
+/**
  * Operators that combine filters rather than test a property.
  *
  * **Example** (List the logical operators)
@@ -307,6 +419,22 @@ export const LogicalOperator = FilterOperator.pick(["and", "or", "not"]).pipe(
  * @since 0.0.0
  */
 export type LogicalOperator = typeof LogicalOperator.Type;
+
+/**
+ * Companion namespace for {@link LogicalOperator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LogicalOperator {
+  /**
+   * Encoded (wire) form of {@link LogicalOperator}: the same literals as the runtime type.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LogicalOperator.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Property type -> operators
@@ -447,6 +575,22 @@ export const OperandFamily = LiteralKit(["text", "number", "boolean"]).pipe(
 export type OperandFamily = typeof OperandFamily.Type;
 
 /**
+ * Companion namespace for {@link OperandFamily}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OperandFamily {
+  /**
+   * Encoded (wire) form of {@link OperandFamily}: the same literals as the runtime type.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OperandFamily.Encoded;
+}
+
+/**
  * The family of a wire operand: which JSON scalar it is.
  *
  * **Example** (Classify operands by their JSON form)
@@ -567,6 +711,26 @@ export class UnknownProperty extends S.Opaque<UnknownProperty, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link UnknownProperty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UnknownProperty {
+  /**
+   * Encoded (wire) form of {@link UnknownProperty}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "unknownProperty";
+    readonly operator: PropertyOperator.Encoded;
+    readonly property: PropertySelector.Encoded;
+  }
+}
+
+/**
  * A filter applies an operator that the property's type does not admit.
  *
  * @category models
@@ -585,6 +749,28 @@ export class OperatorNotAllowed extends S.Opaque<OperatorNotAllowed, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link OperatorNotAllowed}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OperatorNotAllowed {
+  /**
+   * Encoded (wire) form of {@link OperatorNotAllowed}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "operatorNotAllowed";
+    readonly operator: PropertyOperator.Encoded;
+    readonly property: PropertySelector.Encoded;
+    readonly propertyType: PropertyTypeKind.Encoded;
+    readonly allowed: ReadonlyArray<PropertyOperator.Encoded>;
+  }
+}
 
 /**
  * A filter compares a property with an operand of a family its type does not admit.
@@ -608,6 +794,29 @@ export class OperandMismatch extends S.Opaque<OperandMismatch, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link OperandMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OperandMismatch {
+  /**
+   * Encoded (wire) form of {@link OperandMismatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "operandMismatch";
+    readonly operator: PropertyOperator.Encoded;
+    readonly property: PropertySelector.Encoded;
+    readonly propertyType: PropertyTypeKind.Encoded;
+    readonly operand: OperandFamily.Encoded;
+    readonly expected: ReadonlyArray<OperandFamily.Encoded>;
+  }
+}
+
+/**
  * An `and` or an `or` combines no filters at all.
  *
  * **Details**
@@ -629,6 +838,25 @@ export class EmptyCombinator extends S.Opaque<EmptyCombinator, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link EmptyCombinator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EmptyCombinator {
+  /**
+   * Encoded (wire) form of {@link EmptyCombinator}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "emptyCombinator";
+    readonly operator: "and" | "or";
+  }
+}
 
 /**
  * One way a filter can disagree with the object type it is meant for.
@@ -666,6 +894,26 @@ export const FilterViolation = FilterViolationKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type FilterViolation = typeof FilterViolation.Type;
+
+/**
+ * Companion namespace for {@link FilterViolation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FilterViolation {
+  /**
+   * Encoded (wire) form of {@link FilterViolation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | UnknownProperty.Encoded
+    | OperatorNotAllowed.Encoded
+    | OperandMismatch.Encoded
+    | EmptyCombinator.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Checking a filter against an object type

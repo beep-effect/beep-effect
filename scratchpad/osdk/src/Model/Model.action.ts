@@ -786,6 +786,26 @@ export class ActionNameMismatch extends S.Opaque<ActionNameMismatch, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link ActionNameMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionNameMismatch {
+  /**
+   * Encoded (wire) form of {@link ActionNameMismatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "actionNameMismatch";
+    readonly declared: ActionTypeApiName.Encoded;
+    readonly served: ActionTypeApiName.Encoded;
+  }
+}
+
+/**
  * The model declares a parameter the served action or query type does not have.
  *
  * @category models
@@ -801,6 +821,25 @@ export class MissingParameter extends S.Opaque<MissingParameter, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MissingParameter}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MissingParameter {
+  /**
+   * Encoded (wire) form of {@link MissingParameter}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "missingParameter";
+    readonly parameter: ParameterId.Encoded;
+  }
+}
 
 /**
  * The served type requires a parameter the model does not declare, so no typed request can supply it.
@@ -823,6 +862,25 @@ export class UndeclaredRequiredParameter extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link UndeclaredRequiredParameter}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UndeclaredRequiredParameter {
+  /**
+   * Encoded (wire) form of {@link UndeclaredRequiredParameter}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "undeclaredRequiredParameter";
+    readonly parameter: ParameterId.Encoded;
+  }
+}
+
+/**
  * A parameter, or a field of a struct parameter, is required on one side and optional on the other.
  *
  * @category models
@@ -841,6 +899,28 @@ export class RequiredMismatch extends S.Opaque<RequiredMismatch, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RequiredMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RequiredMismatch {
+  /**
+   * Encoded (wire) form of {@link RequiredMismatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "requiredMismatch";
+    readonly parameter: ParameterId.Encoded;
+    readonly path: ReadonlyArray<TypePathStep.Encoded>;
+    readonly declared: boolean;
+    readonly served: boolean;
+  }
+}
 
 /**
  * A parameter, an element, a field or a returned value has another type tag on the server than in the model.
@@ -863,6 +943,29 @@ export class ValueTagMismatch extends S.Opaque<ValueTagMismatch, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link ValueTagMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueTagMismatch {
+  /**
+   * Encoded (wire) form of {@link ValueTagMismatch}: `parameter` stays an `Option`, because the schema declares it
+   * with `S.Option`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "valueTagMismatch";
+    readonly parameter: O.Option<ParameterId.Encoded>;
+    readonly path: ReadonlyArray<TypePathStep.Encoded>;
+    readonly declared: DataTypeKind.Encoded;
+    readonly served: DataTypeKind.Encoded;
+  }
+}
+
+/**
  * The model declares a struct field the served struct type does not have.
  *
  * @category models
@@ -880,6 +983,28 @@ export class MissingValueField extends S.Opaque<MissingValueField, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MissingValueField}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MissingValueField {
+  /**
+   * Encoded (wire) form of {@link MissingValueField}: `parameter` stays an `Option`, because the schema declares
+   * it with `S.Option`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "missingValueField";
+    readonly parameter: O.Option<ParameterId.Encoded>;
+    readonly path: ReadonlyArray<TypePathStep.Encoded>;
+    readonly field: StructFieldApiName.Encoded;
+  }
+}
 
 /**
  * A reference ranges over another object type or interface on the server than the model declares.
@@ -900,6 +1025,29 @@ export class ReferenceTargetMismatch extends S.Opaque<ReferenceTargetMismatch, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ReferenceTargetMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ReferenceTargetMismatch {
+  /**
+   * Encoded (wire) form of {@link ReferenceTargetMismatch}: `parameter` stays an `Option`, because the schema
+   * declares it with `S.Option`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "referenceTargetMismatch";
+    readonly parameter: O.Option<ParameterId.Encoded>;
+    readonly path: ReadonlyArray<TypePathStep.Encoded>;
+    readonly declared: ReferenceTarget.Encoded;
+    readonly served: ReferenceTarget.Encoded;
+  }
+}
 
 const ActionFindingKind = LiteralKit([
   "actionNameMismatch",
@@ -971,6 +1119,29 @@ export const ActionFinding = ActionFindingKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type ActionFinding = typeof ActionFinding.Type;
+
+/**
+ * Companion namespace for {@link ActionFinding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionFinding {
+  /**
+   * Encoded (wire) form of {@link ActionFinding}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ActionNameMismatch.Encoded
+    | MissingParameter.Encoded
+    | UndeclaredRequiredParameter.Encoded
+    | RequiredMismatch.Encoded
+    | ValueTagMismatch.Encoded
+    | MissingValueField.Encoded
+    | ReferenceTargetMismatch.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // The comparison

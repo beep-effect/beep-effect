@@ -1,7 +1,7 @@
 # Phase 14: schemas that carry their own rules (2026-11-18)
 
 In process only. No swarm, deploy or container this phase. Everything here is in the working tree;
-`bun run check` exits 0 and `bun run test` passes 222 tests.
+`bun run check` exits 0, `bun run test` passes 253 tests and 110 of 110 declared outcomes execute.
 
 ## Initial values and defaults
 
@@ -62,8 +62,72 @@ in-memory stores, on PGlite.
 Every event and every contract read has a plain `description`; each model view passes its
 contract's annotations, so the two cannot drift. The two session errors are described.
 
-## Tests
+## Tests are properties over generated values
 
-`shared/tooling/test/PublisherBacklog.test.ts` is five properties over schema-generated values. It
-found two defects in `backlogOf`: a delivery with sequence 0 read as already taken, and another
-model's records counted against the writer. The rest of the suite is still example-based.
+Every test whose subject is behaviour now takes its values from schemas. Pure functions are laws.
+Stories run over a generated cast, declared once per package in `test/Cast.ts` (party model, party
+host, authority model, runs model, runs host, conformance), with distinct members by construction
+(`S.Tuple([...]).check(S.isUnique())`) and every derived id computed from it. 222 tests became 253.
+
+- **Left as written, on purpose.** Stored bytes and tapes (`StoredFormat`, `SagaVersions`,
+  `Reasoner.contract`), the frozen `ClaimDecided` snapshots, cluster conformance, recorded
+  interleavings on the simulated host (`FencedCommit`, `LostWrite`, `FrozenRunner`,
+  `StrandedDrain`, `BackfillArgs`), and structure guards (imports, parity, handlers, verify,
+  `PrimaryExport`, `RootConstruction`, `Screens.render`, `Deployment`).
+- **Runs lowered where a run is slow.** Host stories build a fresh world for each run: runs host 25,
+  party host 5 to 20 for hosted stories, `Rebuild` 4 (each waits out the directory's batch twice).
+  Everything else runs the default 100.
+- **`party/model/test/PartyDirectory.sink.test.ts` is gone.** Its three cases are laws in
+  `party/host/test/PartyDirectoryStore.laws.test.ts`, held against both stores.
+
+### Defects the properties found
+
+1. **A run could be granted another run's delegation** (`AuthorityGateway.adapter.ts`). `grantRun`
+   under a delegation id already open for another run returned a grant that re-admits to nothing.
+   It now refuses unless the open delegation is exactly the one asked for; the same request again
+   is still granted.
+2. **Re-admission returned a grant the provenance never named** (`Boundary.ts`). A reference
+   pairing a grant with another grant's delegation came back as that delegation's parent. The
+   reference now lapses.
+3. **A malformed credential header was a defect, not a refusal** (`FixtureCredential.ts`). With
+   patterned ids, `Fixture human:a/b` threw in `make`. Parsing decodes and reads it as no
+   credential.
+4. **A settlement could spend past its reservation** (`AgentRun.aggregate.ts`). Allowance 100,
+   reserve 60, settle 200 left -100. `SettleUsage` now refuses with `UsageExceedsReservation`.
+5. **Two writers compared wrongly when a source was listed twice** (`PublishedStreams.ts`,
+   `PublisherHandover.ts`). Fixed at the root: sources are a unique list in the kernel, and the two
+   copies of the comparison are one `sameWriter` in `@proto/kernel/PublishedStream`.
+6. **`backlogOf`** read sequence 0 as taken and counted another model's records (found first, by
+   the exemplar).
+7. **An empty evidence source was accepted.** `EvidenceSignal.source` is non-empty.
+
+One story assertion was wrong rather than the code: `Bindings.test.ts` required the first snapshot
+with a proposal to be strictly newer than the first read, which a fast review run falsifies.
+
+### Schemas the laws tightened
+
+- **Kernel.** Names (`Name`): processes, saga names, session schemes, fact producers and contracts,
+  event names, operations in grants and capabilities, stream, projection and source names,
+  deployment contexts, models, parts and exports. Counts and sequences: event and fact positions,
+  fact versions, writer generations, retired lengths. A stream id is `StreamId` (`Aggregate/id`),
+  used by event causes and record-scoped grants. Saga keys and steps are `IdText` (production has
+  the step `record-refusal`). `StreamPins` refuses a stream pinned twice.
+- **Runs.** Every amount is a `Count`; history bounds are one or more; `Budget` refuses a state
+  where reserved, spent and allocated pass the allowance. Every stored file still decodes.
+- **Party.** Revisions are `Sequence`; corroboration, usage units and allowances are `Count`. The
+  web machine's command ids, revisions and attempts are tightened to match.
+- **Tooling.** Check inputs and outputs use `Name`, `Count` and `Sequence`.
+
+### Still loose, and why
+
+- **Fact ids** (`factId` on the envelope, in `ClaimDecided`, in fact causes) are free strings: they
+  are part of a published contract, and the owner's ruling covered ids only.
+- **Party names and identifier values** can be empty or hold any text; the store laws generate
+  empty and blank names on purpose. The rule belongs to the domain, not to a test.
+- **`RunGrantRefused.reason` and `RunEnded.status`** are free strings that hold a small fixed set.
+- **Free text** stays free: purposes, rationales, quotes, descriptions.
+
+## Generators follow the lint pass
+
+`apps/practice/scripts/entries.ts` writes `onSome: identity`, the form the owner's lint pass left in
+the committed file, so `bun run generated:check` passes again.

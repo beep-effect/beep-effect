@@ -1,5 +1,5 @@
 import { type DeploymentDescriptor, FactVersion } from "@proto/kernel/Deployment";
-import { Count, Name } from "@proto/kernel/Measure";
+import { Count, Name, Sequence } from "@proto/kernel/Measure";
 import { type GenerationEntry, type LiveGeneration, StreamPin } from "@proto/kernel/PublishedStream";
 import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
@@ -46,7 +46,7 @@ export type FeedRef = typeof FeedRef.Type;
  * @category models
  * @since 0.0.0
  */
-export const Retirement = S.Struct({ stream: S.String, from: S.Int, through: S.Int });
+export const Retirement = S.Struct({ stream: Name, from: Count, through: Count });
 /**
  * @category models
  * @since 0.0.0
@@ -74,16 +74,16 @@ export type Retirement = typeof Retirement.Type;
  * @since 0.0.0
  */
 export const RetirementRefusal = S.TaggedUnion({
-  NotClosed: { stream: S.String },
-  Unread: { stream: S.String },
-  NoSuccessor: { stream: S.String },
-  FactMissing: { stream: S.String, successor: S.String, factId: S.String, version: S.Int },
-  PayloadDiffers: { stream: S.String, successor: S.String, factId: S.String, version: S.Int },
-  ConsumerBehind: { stream: S.String, consumer: S.String, checkpoint: S.Int, through: S.Int },
-  CheckpointUnread: { stream: S.String, consumer: S.String },
-  PinsMoved: { current: S.Array(S.String), next: S.Array(S.String) },
-  LengthDiffers: { stream: S.String, pinned: S.Int, live: S.Int },
-  VersionUnpublished: { consumer: S.String, fact: FactVersion },
+  NotClosed: { stream: Name },
+  Unread: { stream: Name },
+  NoSuccessor: { stream: Name },
+  FactMissing: { stream: Name, successor: Name, factId: S.String, version: Sequence },
+  PayloadDiffers: { stream: Name, successor: Name, factId: S.String, version: Sequence },
+  ConsumerBehind: { stream: Name, consumer: Name, checkpoint: Count, through: Count },
+  CheckpointUnread: { stream: Name, consumer: Name },
+  PinsMoved: { current: S.Array(Name), next: S.Array(Name) },
+  LengthDiffers: { stream: Name, pinned: Count, live: Count },
+  VersionUnpublished: { consumer: Name, fact: FactVersion },
 });
 /**
  * @category models

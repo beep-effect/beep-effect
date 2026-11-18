@@ -1,6 +1,7 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import * as Initial from "./Initial.ts";
+import { Name, Sequence } from "./Measure.ts";
 
 /**
  * One version of a published integration fact: who produces it, the fact's
@@ -9,7 +10,7 @@ import * as Initial from "./Initial.ts";
  * @category models
  * @since 0.0.0
  */
-export const FactVersion = S.Struct({ producer: S.String, contract: S.String, version: S.Int });
+export const FactVersion = S.Struct({ producer: Name, contract: Name, version: Sequence });
 /**
  * @category models
  * @since 0.0.0
@@ -41,13 +42,13 @@ export type ProcessKind = typeof ProcessKind.Type;
  */
 export const ClusterWiring = S.Struct({
   module: S.String,
-  export: S.String,
+  export: Name,
   parts: Initial.empty(
     S.Struct({
-      name: S.String,
-      uses: Initial.empty(S.String, { description: "The parts this part uses; none unless stated." }),
+      name: Name,
+      uses: Initial.empty(Name, { description: "The parts this part uses; none unless stated." }),
     }), { description: "The parts the wiring provides; none unless stated." }),
-  apis: Initial.empty(S.String, { description: "The parts the context's Apis use; none unless stated." }),
+  apis: Initial.empty(Name, { description: "The parts the context's Apis use; none unless stated." }),
 });
 /**
  * @category models
@@ -79,9 +80,9 @@ export type ClusterWiring = typeof ClusterWiring.Type;
  * @since 0.0.0
  */
 export const DeploymentDescriptor = S.Struct({
-  context: S.String,
-  models: S.Array(S.String),
-  processes: Initial.empty(S.Struct({ name: S.String, kind: ProcessKind }), { description: "The processes the host runs beside its models; none unless stated." }),
+  context: Name,
+  models: S.Array(Name),
+  processes: Initial.empty(S.Struct({ name: Name, kind: ProcessKind }), { description: "The processes the host runs beside its models; none unless stated." }),
   publishes: Initial.empty(FactVersion, { description: "The fact versions the context publishes; none unless stated." }),
   consumes: Initial.empty(FactVersion, { description: "The fact versions the context consumes; none unless stated." }),
   cluster: ClusterWiring,

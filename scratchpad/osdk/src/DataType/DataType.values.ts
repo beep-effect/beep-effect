@@ -93,6 +93,22 @@ export const DataTypeKind = LiteralKit([
  */
 export type DataTypeKind = typeof DataTypeKind.Type;
 
+/**
+ * Companion namespace for {@link DataTypeKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DataTypeKind {
+  /**
+   * Encoded (wire) form of {@link DataTypeKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DataTypeKind.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Universes
 // -----------------------------------------------------------------------------
@@ -156,6 +172,22 @@ export const PropertyTypeKind = DataTypeKind.pick([
 export type PropertyTypeKind = typeof PropertyTypeKind.Type;
 
 /**
+ * Companion namespace for {@link PropertyTypeKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyTypeKind {
+  /**
+   * Encoded (wire) form of {@link PropertyTypeKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PropertyTypeKind.Encoded;
+}
+
+/**
  * Tags an action parameter may have.
  *
  * **Example** (Reject the property tags an action cannot take)
@@ -208,6 +240,22 @@ export const ActionParameterTypeKind = DataTypeKind.pick([
  * @since 0.0.0
  */
 export type ActionParameterTypeKind = typeof ActionParameterTypeKind.Type;
+
+/**
+ * Companion namespace for {@link ActionParameterTypeKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionParameterTypeKind {
+  /**
+   * Encoded (wire) form of {@link ActionParameterTypeKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ActionParameterTypeKind.Encoded;
+}
 
 /**
  * Tags a query parameter or query output may have.
@@ -275,6 +323,22 @@ export const QueryDataTypeKind = DataTypeKind.pick([
 export type QueryDataTypeKind = typeof QueryDataTypeKind.Type;
 
 /**
+ * Companion namespace for {@link QueryDataTypeKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryDataTypeKind {
+  /**
+   * Encoded (wire) form of {@link QueryDataTypeKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof QueryDataTypeKind.Encoded;
+}
+
+/**
  * Tags a value type (a reusable constrained base type) may be built from.
  *
  * **Example** (Tell the wrappers from the base types)
@@ -333,6 +397,22 @@ export const ValueTypeKind = DataTypeKind.pick([
  * @since 0.0.0
  */
 export type ValueTypeKind = typeof ValueTypeKind.Type;
+
+/**
+ * Companion namespace for {@link ValueTypeKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueTypeKind {
+  /**
+   * Encoded (wire) form of {@link ValueTypeKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ValueTypeKind.Encoded;
+}
 
 /**
  * Tags of the legacy ontology data types that version 1 parameters and outputs used.
@@ -404,6 +484,22 @@ export const LegacyDataTypeKind = DataTypeKind.pick([
  */
 export type LegacyDataTypeKind = typeof LegacyDataTypeKind.Type;
 
+/**
+ * Companion namespace for {@link LegacyDataTypeKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LegacyDataTypeKind {
+  /**
+   * Encoded (wire) form of {@link LegacyDataTypeKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LegacyDataTypeKind.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Semantic families
 // -----------------------------------------------------------------------------
@@ -448,6 +544,22 @@ export const NumericKind = DataTypeKind.pick(["byte", "short", "integer", "long"
 export type NumericKind = typeof NumericKind.Type;
 
 /**
+ * Companion namespace for {@link NumericKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumericKind {
+  /**
+   * Encoded (wire) form of {@link NumericKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof NumericKind.Encoded;
+}
+
+/**
  * Tags whose values are points in time: a calendar date or an instant.
  *
  * **Example** (Refuse the generated client's name for a date)
@@ -479,6 +591,22 @@ export const TemporalKind = DataTypeKind.pick(["date", "timestamp"]).pipe(
 export type TemporalKind = typeof TemporalKind.Type;
 
 /**
+ * Companion namespace for {@link TemporalKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TemporalKind {
+  /**
+   * Encoded (wire) form of {@link TemporalKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TemporalKind.Encoded;
+}
+
+/**
  * Tags whose values are geometry on the globe.
  *
  * **Example** (Leave geohashes and geotime series out of the geometry family)
@@ -508,6 +636,22 @@ export const GeospatialKind = DataTypeKind.pick(["geopoint", "geoshape"]).pipe(
  * @since 0.0.0
  */
 export type GeospatialKind = typeof GeospatialKind.Type;
+
+/**
+ * Companion namespace for {@link GeospatialKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeospatialKind {
+  /**
+   * Encoded (wire) form of {@link GeospatialKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof GeospatialKind.Encoded;
+}
 
 /**
  * Tags a primary key property may have.
@@ -555,6 +699,22 @@ export const PrimaryKeyKind = DataTypeKind.pick([
  * @since 0.0.0
  */
 export type PrimaryKeyKind = typeof PrimaryKeyKind.Type;
+
+/**
+ * Companion namespace for {@link PrimaryKeyKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PrimaryKeyKind {
+  /**
+   * Encoded (wire) form of {@link PrimaryKeyKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PrimaryKeyKind.Encoded;
+}
 
 /**
  * Tags whose values every universe that has the tag reads with the same codec.
@@ -614,6 +774,22 @@ export const SharedValueKind = DataTypeKind.pick([
  */
 export type SharedValueKind = typeof SharedValueKind.Type;
 
+/**
+ * Companion namespace for {@link SharedValueKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SharedValueKind {
+  /**
+   * Encoded (wire) form of {@link SharedValueKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SharedValueKind.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Literal domains carried by type tags
 // -----------------------------------------------------------------------------
@@ -658,6 +834,22 @@ export const MarkingKind = MappedLiteralKit([
 export type MarkingKind = typeof MarkingKind.Type;
 
 /**
+ * Companion namespace for {@link MarkingKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MarkingKind {
+  /**
+   * Encoded (wire) form of {@link MarkingKind}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MarkingKind.Encoded;
+}
+
+/**
  * Similarity function a vector property can be searched with.
  *
  * **Example** (Write a similarity function back to its wire name)
@@ -693,6 +885,22 @@ export const VectorSimilarity = MappedLiteralKit([
  * @since 0.0.0
  */
 export type VectorSimilarity = typeof VectorSimilarity.Type;
+
+/**
+ * Companion namespace for {@link VectorSimilarity}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VectorSimilarity {
+  /**
+   * Encoded (wire) form of {@link VectorSimilarity}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof VectorSimilarity.Encoded;
+}
 
 /**
  * Hosted embedding models that can populate a vector property.
@@ -734,3 +942,19 @@ export const HostedEmbeddingModel = MappedLiteralKit([
  * @since 0.0.0
  */
 export type HostedEmbeddingModel = typeof HostedEmbeddingModel.Type;
+
+/**
+ * Companion namespace for {@link HostedEmbeddingModel}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace HostedEmbeddingModel {
+  /**
+   * Encoded (wire) form of {@link HostedEmbeddingModel}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof HostedEmbeddingModel.Encoded;
+}

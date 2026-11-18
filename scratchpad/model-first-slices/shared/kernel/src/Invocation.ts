@@ -4,6 +4,7 @@ import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { CapabilityGrant } from "./Capability.ts";
 import { DelegationId, GrantId, PrincipalId, RunId } from "./Ids.ts";
+import { IdText, Name, Sequence, StreamId } from "./Measure.ts";
 
 /**
  * Where an invocation's authority starts: a human principal, or an agent run
@@ -39,7 +40,7 @@ export type Root = typeof Root.Type;
  * @since 0.0.0
  */
 export const Relayer = S.TaggedUnion({
-  Process: { process: S.String },
+  Process: { process: Name },
   Agent: { run: RunId },
 });
 /**
@@ -57,10 +58,10 @@ export type Relayer = typeof Relayer.Type;
  * @since 0.0.0
  */
 export const Cause = S.TaggedUnion({
-  Event: { stream: S.String, seq: S.Int, event: S.String },
-  SagaStep: { saga: S.String, key: S.String, step: S.String },
-  Session: { scheme: S.String },
-  Fact: { producer: S.String, contract: S.String, version: S.Int, fact: S.String },
+  Event: { stream: StreamId, seq: Sequence, event: Name },
+  SagaStep: { saga: Name, key: IdText, step: IdText },
+  Session: { scheme: Name },
+  Fact: { producer: Name, contract: Name, version: Sequence, fact: S.String },
 });
 /**
  * @category models
@@ -120,7 +121,7 @@ export type Invocation = typeof Invocation.Type;
 export const Operator = S.TaggedUnion({
   Human: { principal: PrincipalId },
   Agent: { run: RunId },
-  Process: { process: S.String },
+  Process: { process: Name },
 });
 /**
  * @category models

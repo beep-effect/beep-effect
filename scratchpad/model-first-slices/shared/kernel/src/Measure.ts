@@ -107,3 +107,33 @@ export const Name = S.String.check(
  * @since 0.0.0
  */
 export type Name = typeof Name.Type;
+
+/**
+ * The id of one aggregate's stream: the aggregate's {@link Name}, a `/`, and
+ * the record's {@link IdText}. It is what an event's envelope carries and
+ * what a record-scoped grant names.
+ *
+ * **Example** (A claim's stream)
+ * ```ts
+ * import { StreamId } from "@proto/kernel/Measure";
+ * import * as S from "effect/Schema";
+ *
+ * const valid = S.is(StreamId)("Claim/claim_1");
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const StreamId = S.String.check(
+  S.isPattern(/^[A-Za-z][A-Za-z0-9]*\/[A-Za-z0-9][A-Za-z0-9_.:~-]*$/, {
+    identifier: "StreamIdCheck",
+    title: "Stream id",
+    description: "A stream id: an aggregate name, `/`, and a record id.",
+    message: "Expected a stream id of the form `Aggregate/id`",
+  }),
+);
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type StreamId = typeof StreamId.Type;
