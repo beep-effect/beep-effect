@@ -36,7 +36,7 @@ Scope:
   with their export maps; the audit baseline under `standards/`;
   codemods + golden-diff tests under this packet's `ops/codemods/`.
 - Out: new audit rules or gate wiring (file them in
-  `goals/slice-topology-audit`), `beep architecture check` and the
+  `goals/model-first-standard`), `beep architecture check` and the
   `architecture-operation-plan/v1` schema, bulk rewrites of persisted `$I`
   tag strings, casing, any v3 structure.
 

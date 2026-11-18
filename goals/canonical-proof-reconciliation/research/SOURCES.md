@@ -13,7 +13,7 @@
 |--------|-------|-----------------|------------------------|-------|-------------|
 | `v3-iam` | v3 IAM slice | `effect-v3-main-archive` (local `~/YeeBois/projects/beep-effect4`, HEAD `997a827454`) | `packages/iam/**` | role-named members (`Account.Model` / `.Repo` / `.RepoLive` 39/39), `contracts/<Op>.contract.ts` quartet (72), client `Handler`/`Wrapper` pairs (120) | reference — patterns only; no code ported |
 | `v3-knowledge` | v3 Knowledge slice | same | `packages/knowledge/**` | entity-folder grammar, hollow protocol shells (14/22 — the anti-pattern) | reference — patterns only |
-| `v4-doctrine` | Architecture standard | this repo | `standards/ARCHITECTURE.md` (tree L827-952, role tables L969-1129, `Model` example L1778); `standards/architecture/{04,05,08,09,10,13}.md`, `DECISIONS.md` (2026-04-21 protocol declarations; 2026-04-23 no live Layers in use-cases; 2026-05-22 namespace-first `@beep/schema` modules) | binding; amended by `slice-topology-audit` only |
+| `v4-doctrine` | Architecture standard | this repo | `standards/ARCHITECTURE.md` (tree L827-952, role tables L969-1129, `Model` example L1778); `standards/architecture/{04,05,08,09,10,13}.md`, `DECISIONS.md` (2026-04-21 protocol declarations; 2026-04-23 no live Layers in use-cases; 2026-05-22 namespace-first `@beep/schema` modules) | binding; amended by `model-first-standard` only (it superseded `slice-topology-audit` on 2026-11-17) |
 | `v4-slices` | Live slice packages | this repo | `packages/{agents,architecture-lab,documents,epistemic,law-practice,ontology,shared,workspace}/**` | conformance census (exploration `synthesis/00`, 110 rows) | measured |
 | `v4-cli` | Architecture command + gates | this repo | `packages/tooling/tool/cli/src/commands/{Architecture,Lint,Laws,Quality,Fallow,Ci}/**` | hook points and reusable bricks (§4) | extend |
 | `v4-proof` | Canonical slice factory | this repo | `goals/canonical-slice-factory/{README,SPEC,PLAN}.md`, `packages/architecture-lab/**`, `commands/Architecture/internal/AcceptedProofManifest.ts` L130-847 | the accepted proof and its nine divergences (exploration `synthesis/15`) | extend |
@@ -59,7 +59,8 @@ per-file verification logs) and the 2026-08-30 capability gate.
   (binding), `BRIEF.md` (grammar block), `MAP.md` (sequencing, first vertical
   slice, risks), `synthesis/00` (110-row inventory), `synthesis/40` (ranked
   mechanisms R1–R12 + R6a/R6b), `synthesis/15` (proof divergences).
-- Sibling goal: [`goals/slice-topology-audit`](../../slice-topology-audit/README.md)
+- Sibling goal: [`goals/model-first-standard`](../../model-first-standard/README.md), which superseded
+  [`goals/slice-topology-audit`](../../slice-topology-audit/README.md) on 2026-11-17
   ⇄ [`goals/canonical-proof-reconciliation`](../../canonical-proof-reconciliation/README.md)
   (`architecture/slice-audit` → `architecture/proof-reconciled`).
 - Related packets: `goals/canonical-slice-factory` (completed-retained; the
