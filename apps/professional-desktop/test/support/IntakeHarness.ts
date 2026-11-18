@@ -61,10 +61,8 @@ export const startIntake = startIntakeWithRetryBase(2000);
 // A retry test advances its own TestClock, so it runs outside the shared layer
 // block and brings a Reactivity service of its own.
 export const startIntakeIsolated = (configRetryBaseMillis: number) => (client: DesktopIntakeClient["Service"]) =>
-  Effect.flatMap(Reactivity.make, (reactivity) =>
-    startIntakeWithRetryBase(configRetryBaseMillis)(client).pipe(
-      Effect.provideService(Reactivity.Reactivity, reactivity)
-    )
+  startIntakeWithRetryBase(configRetryBaseMillis)(client).pipe(
+    Effect.provideServiceEffect(Reactivity.Reactivity, Reactivity.make)
   );
 
 type IntakeActor = Effect.Success<ReturnType<typeof startIntake>>;
