@@ -16,6 +16,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { writeArtifact } from "@beep/repo-cli-kit/artifacts/ArtifactIo";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -242,9 +243,7 @@ export const writeTaskOutcomes = Effect.fn("CiTaskOutcomes.write")(function* (
   });
   const target = path.resolve(repoRoot, out);
   const text = yield* encodeTaskOutcomeRecord(record).pipe(CiCommandError.mapError("Failed to encode the record."));
-  yield* fs
-    .makeDirectory(path.dirname(target), { recursive: true })
-    .pipe(Effect.andThen(fs.writeFileString(target, `${text}\n`)), CiCommandError.mapError(`Failed to write ${out}.`));
+  yield* writeArtifact({ path: target, body: `${text}\n`, onError: CiCommandError.new(`Failed to write ${out}.`) });
   const failed = A.length(A.filter(record.tasks, (task) => RouteTaskOutcome.is.fail(task.outcome)));
   yield* Console.log(
     `[ci] task outcomes for ${job}: ${A.length(record.tasks)} task(s) from ${A.length(summaries)} summary file(s), ${failed} failed; wrote ${path.relative(repoRoot, target)}.`
