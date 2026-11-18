@@ -587,7 +587,7 @@ Under `origin-checkout`, each scan folds the journal history into the released i
 
 The SCHE-06 section of `QualityScheduler.ts` and the lab's `JournalReplay.ts` are at 100% line, branch and function coverage.
 
-**The A/B harness.** `apps/labs/ciops/src/backfill/JournalReplay.ts` and `scripts/backfill-ab.ts` replay a journal root (archive day segments, then the live file). The replay:
+**The A/B harness.** `apps/labs/ciops/src/backfill/JournalReplay.ts` and `apps/labs/ciops/scripts/backfill-ab.ts` replay a journal root (archive day segments, then the live file). The replay:
 - joins each nonce's admitted and released rows into an arrival with its recorded enqueue instant, weight, priority, origin, checkout and true hold;
 - declares a causal ETA from holds already released when the unit enqueued, so it never reads the future;
 - runs each arm through the slice 11 simulator;
@@ -615,7 +615,7 @@ The pressure-stamped window since 2026-11-17T23:46:54Z holds only 12 chains. The
 - *Fairness reordered unprotected proofs* among the journal's 144 checkouts in two origins. It raised p99 by 4% and max by 21% at capacity 8 and 6, and it lowered p95 at capacity 6 by 2%. The tail cost outweighs that.
 - *The constant-capacity replay is not the live machine.* At capacity 10 it predicts p99 24.8 s against 181.6 s recorded, because the live capacity follows MemAvailable, and the skippable checks and the review-fix cap sit outside the model. Arm-to-arm differences are the measurement; absolute values are not.
 
-**Recommendation to the driver.** Leave both gates off. Re-run the A/B (`bun run scripts/backfill-ab.ts <admission-root>` in `apps/labs/ciops`) once SCHE-02 (slice 13) admits final-check gates per step and lane or package units mix weights on the queue. That is the workload backfill exists for. Turn `--backfill easy` on only if that run shows a lower p99 with zero breaches. Leave fairness off unless a run shows it does not lengthen the tail.
+**Recommendation to the driver.** Leave both gates off. Re-run the A/B (`bun run apps/labs/ciops/scripts/backfill-ab.ts <admission-root>`) once SCHE-02 (slice 13) admits final-check gates per step and lane or package units mix weights on the queue. That is the workload backfill exists for. Turn `--backfill easy` on only if that run shows a lower p99 with zero breaches. Leave fairness off unless a run shows it does not lengthen the tail.
 
 Lane t3/local-proof-backfill-self-may-attempt
 

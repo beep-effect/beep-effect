@@ -24,10 +24,13 @@ import {
   currentEffectiveUserIdOption,
   MemoryStats,
   noAdmissionOriginGate,
+  noteAdmissionWaitForTesting,
   provideRuntimeRootForTesting,
   QualityScheduler,
   QualitySchedulerLive,
   RuntimeRootChoice,
+  readAdmissionJournalHistory,
+  readAdmissionJournalHistorySince,
   selfMayAttemptForTesting,
   YeetAdmissionLease,
   YeetAdmissionTicket,
@@ -38,6 +41,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -48,6 +52,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
+import * as TestConsole from "effect/testing/TestConsole";
 
 // SCHE-06 in the live scheduler (goals/local-proof-under-ten PLAN slice 12): the
 // verdict ported from the ciops lab, applied after the deployed skippable checks
@@ -347,6 +352,96 @@ describe("SCHE-06 journal readings", () => {
 });
 
 // With both modes off the gated verdict is the deployed rule, on any small queue.
+describe("SCHE-06 wait progress", () => {
+  const progressRequest = AdmissionRequest.make({
+    kind: "full-proof",
+    weightTokens: 3,
+    priority: "verify",
+    originKey: "origin-alice",
+    checkoutRoot: "/repo/alice",
+    branch: "feat/alice",
+    command: "bun run beep yeet verify",
+  });
+  const older = ticketOf({ nonce: "older", enqueuedAtMillis: 0 });
+  const self = ticketOf({ nonce: "self", enqueuedAtMillis: 1_000 });
+  const progressLine = Effect.fn("progressLine")(
+    function* (order: O.Option<ReadonlyArray<YeetAdmissionTicket>>) {
+      yield* noteAdmissionWaitForTesting(
+        progressRequest,
+        self,
+        0,
+        { escalated: 0, lastProgressMillis: -60_000 },
+        AdmissionConfig.make({}),
+        {
+          availableGib: 10,
+          capacityTokens: 3,
+          deadlineMillis: O.none(),
+          order,
+          nowMillis: 30_000,
+          state: {
+            dead: [],
+            deadLeases: [],
+            deadTickets: [],
+            leases: [],
+            quarantined: [],
+            tickets: [
+              { path: "older", ticket: older },
+              { path: "self", ticket: self },
+            ],
+          },
+        }
+      );
+      const lines = yield* TestConsole.logLines;
+      return A.join(A.filter(lines, S.is(S.String)), "\n");
+    },
+    Effect.provideServiceEffect(Console.Console, TestConsole.make)
+  );
+
+  it.effect("reports the queue position in the order the verdict uses", () =>
+    Effect.gen(function* () {
+      const deployed = yield* progressLine(O.none());
+      expect(deployed).toContain("position 2");
+      // Under fairness the scan may put this ticket first; the progress line follows it.
+      const fair = yield* progressLine(O.some([self, older]));
+      expect(fair).toContain("position 1");
+    })
+  );
+});
+
+it.layer(Layer.mergeAll(MemoryFileSystem.layer, Path.layer), { timeout: "20 seconds" })(
+  "SCHE-06 windowed journal read",
+  (it) => {
+    it.effect("reads only the archive segments whose day ends after the instant", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = "/run/sche-06-window/admit";
+        const archive = path.join(root, "journal-archive");
+        yield* fs.makeDirectory(archive, { recursive: true });
+        const day = 86_400_000;
+        const rowsFor = Effect.fn("rowsFor")(function* (nonce: string, at: number) {
+          const admitted = yield* S.encodeEffect(S.fromJsonString(AdmissionJournalAdmitted))(
+            admittedRow(nonce, "full-proof", at)
+          );
+          const released = yield* S.encodeEffect(S.fromJsonString(AdmissionJournalReleasedV3))(
+            releasedRow(nonce, at + 1_000)
+          );
+          return `${admitted}\n${released}\n`;
+        });
+        const oldRows = yield* rowsFor("old", 1_000);
+        const recentRows = yield* rowsFor("recent", 2 * day + 1_000);
+        yield* fs.writeFileString(path.join(archive, "1970-01-01.ndjson"), oldRows);
+        yield* fs.writeFileString(path.join(archive, "1970-01-03.ndjson"), recentRows);
+        const recent = yield* readAdmissionJournalHistorySince(root, 2 * day);
+        deepStrictEqual(A.dedupe(A.map(recent.events, (event) => event.nonce)), ["recent"]);
+        deepStrictEqual(recent.archive.segments, ["1970-01-03.ndjson"]);
+        const all = yield* readAdmissionJournalHistory(root);
+        deepStrictEqual(A.dedupe(A.map(all.events, (event) => event.nonce)), ["old", "recent"]);
+      })
+    );
+  }
+);
+
 describe("SCHE-06 modes off equal the deployed self-selection", () => {
   const config = AdmissionConfig.make({});
 

@@ -1117,6 +1117,7 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           availableGib: 10,
           capacityTokens: 0,
           deadlineMillis: O.none(),
+          order: O.none(),
           nowMillis,
           state: {
             dead: [],

@@ -65,6 +65,7 @@ import {
   pruneAgedAdmissionJournalArchive,
   readAdmissionJournalArchive,
   readAdmissionJournalHistory,
+  readAdmissionJournalHistorySince,
   readAdmissionProtocol,
   releaseJournalFileLock,
   writeAdmissionProtocol,
@@ -128,6 +129,7 @@ import type { UUID } from "@beep/repo-cli-kit/schema/Uuid";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type {
   AdmissionJournalEvent,
+  AdmissionJournalHistory,
   AdmissionJournalLeaseEvicted,
   AdmissionJournalTicketEvicted,
 } from "./AdmissionJournal.ts";
@@ -2613,10 +2615,26 @@ const backfillPolicyFor = (
 
 // The journal is read only behind the gates; an unreadable journal reads as empty,
 // which only drops the fairness usage and the ETA (so nothing backfills).
-const readBackfillJournalEvents = (root: string) =>
-  readAdmissionJournalHistory(root).pipe(
-    Effect.map((history) => history.events),
+const journalEventsOrEmpty = (
+  history: Effect.Effect<AdmissionJournalHistory, QualitySchedulerError, FileSystem.FileSystem | Path.Path>
+) =>
+  history.pipe(
+    Effect.map((read) => read.events),
     Effect.orElseSucceed(A.empty<AdmissionJournalEvent>)
+  );
+
+// The ETA reads the whole retained history, once per enqueue.
+const readBackfillJournalEvents = (root: string) => journalEventsOrEmpty(readAdmissionJournalHistory(root));
+
+// A fairness scan runs every heartbeat, so it reads only the segments that can hold
+// a lease released inside the window, with a day of margin for its admitted row.
+const BACKFILL_ADMITTED_ROW_MARGIN_MILLIS = Duration.toMillis(Duration.days(1));
+const readRecentBackfillJournalEvents = (root: string, nowMillis: number) =>
+  journalEventsOrEmpty(
+    readAdmissionJournalHistorySince(
+      root,
+      nowMillis - BACKFILL_FAIRNESS_WINDOW_MILLIS - BACKFILL_ADMITTED_ROW_MARGIN_MILLIS
+    )
   );
 
 const readBackfillContext = Effect.fnUntraced(function* (
@@ -2632,7 +2650,7 @@ const readBackfillContext = Effect.fnUntraced(function* (
   const finished = AdmissionFairnessMode.is.off(protocol.fairness)
     ? A.empty<AdmissionUsageInterval>()
     : yield* Effect.map(
-        readBackfillJournalEvents(root),
+        readRecentBackfillJournalEvents(root, nowMillis),
         admissionUsageIntervals(nowMillis, BACKFILL_FAIRNESS_WINDOW_MILLIS)
       );
   return O.some(
@@ -2652,6 +2670,9 @@ const backfillEtaFor = Effect.fnUntraced(function* (
     : yield* Effect.map(readBackfillJournalEvents(root), admissionEtaFor(kind, backfillEtaEstimator));
 });
 
+const scanLeases = (state: LiveAdmissionState): ReadonlyArray<YeetAdmissionLease> =>
+  A.map(state.leases, ({ lease }) => lease);
+
 // The verdict runs after the deployed skippable checks, unchanged: a skippable ticket
 // leaves the line (the contender's own origin stamp is ignored for itself).
 const backfillViewFor = (
@@ -2668,7 +2689,7 @@ const backfillViewFor = (
       (ticket) =>
         !isTicketSkippable(state, ticket, nowMillis, config, ticket.pid === self.pid && ticket.nonce === self.nonce)
     ),
-    leases: A.map(state.leases, ({ lease }) => lease),
+    leases: scanLeases(state),
     finished: context.finished,
   });
 
@@ -2687,6 +2708,25 @@ const selfMayAttemptWith = (
         admissionAttemptVerdict(backfillViewFor(state, nowMillis, config, self, backfill), backfill.policy, self.nonce)
       ),
   });
+
+// The order the progress line reports under a backfill gate: every queued ticket, skippable ones
+// included, in the SCHE-06 order the verdict uses.
+const backfillQueueOrderFor = (
+  state: LiveAdmissionState,
+  nowMillis: number,
+  context: O.Option<AdmissionBackfillContext>
+): O.Option<ReadonlyArray<YeetAdmissionTicket>> =>
+  O.map(context, (backfill) =>
+    admissionBackfillOrder(
+      AdmissionBackfillView.make({
+        nowMillis,
+        tickets: A.map(state.tickets, ({ ticket }) => ticket),
+        leases: scanLeases(state),
+        finished: backfill.finished,
+      }),
+      backfill.policy
+    )
+  );
 
 // The bound a contender stamps on its own ticket: once, on the first scan at which it
 // is protected, and only under the backfill gate.
@@ -3116,6 +3156,8 @@ interface PromotionTickInfo {
   // The SCHE-06 bound this scan stamps on the contender's own ticket, when it is due.
   readonly deadlineMillis: O.Option<number>;
   readonly nowMillis: number;
+  // The SCHE-06 order of every queued ticket, while a backfill gate is on; the progress line reports it.
+  readonly order: O.Option<ReadonlyArray<YeetAdmissionTicket>>;
   readonly state: LiveAdmissionState;
 }
 
@@ -3165,6 +3207,7 @@ const tryPromoteTicket = Effect.fnUntraced(function* <OriginLease, GateError, Ga
     capacityTokens,
     deadlineMillis: backfillDeadlineFor(state, nowMillis, config, ticket, backfill),
     nowMillis,
+    order: backfillQueueOrderFor(state, nowMillis, backfill),
     state,
   };
   if (!selfMayAttemptWith(state, capacityTokens, nowMillis, config, ticket, backfill)) {
@@ -3197,9 +3240,11 @@ const noteAdmissionWait = Effect.fnUntraced(function* (
   const waitedMillis = info.nowMillis - startMillis;
   let next = progress;
   if (info.nowMillis - progress.lastProgressMillis >= config.progressSeconds * 1000) {
-    const ordered = A.sort(
-      A.map(info.state.tickets, ({ ticket: queued }) => queued),
-      ticketOrder(info.nowMillis, config)
+    const ordered = O.getOrElse(info.order, () =>
+      A.sort(
+        A.map(info.state.tickets, ({ ticket: queued }) => queued),
+        ticketOrder(info.nowMillis, config)
+      )
     );
     const position =
       1 +

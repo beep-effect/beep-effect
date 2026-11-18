@@ -2350,8 +2350,51 @@ export const readAdmissionJournalArchive = Effect.fn("AdmissionJournal.readArchi
 export const readAdmissionJournalHistory = Effect.fn("AdmissionJournal.readHistory")(function* (
   root: string
 ): Effect.fn.Return<AdmissionJournalHistory, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
-  const path = yield* Path.Path;
   const archive = yield* readAdmissionJournalArchive(root);
+  return yield* foldAdmissionJournalHistory(root, archive);
+});
+
+/**
+ * Fold only the archive segments whose UTC day ends after `sinceMillis`, then the live journal.
+ *
+ * **Details**
+ *
+ * The SCHE-06 fairness scan needs only releases inside its 30-minute window,
+ * so it reads at most the current and previous day segments instead of the
+ * 30-day archive. Rows dated before `sinceMillis` can still appear (a segment
+ * covers a whole day); callers filter by instant.
+ *
+ * **Example** (Read the recent admission history)
+ *
+ * ```ts
+ * import { readAdmissionJournalHistorySince } from "@beep/repo-cli/test/RepoRun"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(readAdmissionJournalHistorySince("/tmp/admission", 0))) // true
+ * ```
+ *
+ * @param root - Machine-wide admission root directory.
+ * @param sinceMillis - Earliest instant the caller reads rows for.
+ * @returns The history of the live journal and the segments that can hold rows after `sinceMillis`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const readAdmissionJournalHistorySince = Effect.fn("AdmissionJournal.readHistorySince")(function* (
+  root: string,
+  sinceMillis: number
+): Effect.fn.Return<AdmissionJournalHistory, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const archive = yield* readAdmissionJournalArchive(root);
+  const recent = A.filter(archive.segments, (name) =>
+    O.exists(archiveSegmentDayStartMillis(name), (dayStart) => dayStart + ARCHIVE_SEGMENT_SPAN_MILLIS > sinceMillis)
+  );
+  return yield* foldAdmissionJournalHistory(root, AdmissionJournalArchive.make({ ...archive, segments: recent }));
+});
+
+const foldAdmissionJournalHistory = Effect.fnUntraced(function* (
+  root: string,
+  archive: AdmissionJournalArchive
+): Effect.fn.Return<AdmissionJournalHistory, QualitySchedulerError, FileSystem.FileSystem | Path.Path> {
+  const path = yield* Path.Path;
   const segmentLines = yield* Effect.forEach(
     archive.segments,
     (name) => readJournalLines(path.join(archive.directory, name), "admission journal archive segment"),
