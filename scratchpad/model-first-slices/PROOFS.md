@@ -344,8 +344,8 @@ A closed generation stops being served only when the retirement check approves t
 
 An Effect-only finding (a floating Effect) fails the check: the canary project fails under the Effect build, with exactly one effect(floatingEffect) error and no unknown-rule warning.
 
-- **Checker:** `shared/tooling/test/Compiler.guard.test.ts`, `shared/tooling/canary/Canary.ts`
-- **Reads:** The compiler's output and exit code over the canary project.
+- **Checker:** `shared/tooling/test/Compiler.guard.test.ts`
+- **Reads:** The compiler's output and exit code over a canary project the test writes and removes.
 - **Assumes:** The canary's one finding is one the stock compiler cannot report.
 - **Gaps:** One rule; a rule the Effect build stopped reporting would pass unnoticed.
 - **Left to a reviewer:** Nothing beyond keeping the canary's finding Effect-only.

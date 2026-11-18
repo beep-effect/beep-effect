@@ -50,7 +50,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { adaptGitKitError, runRepoCommandCapture } from "../../../internal/repo-run/index.ts";
+import { adaptGitKitError, runRepoCommandCaptureSplit } from "../../../internal/repo-run/index.ts";
 import { HEAVY_CONTEXT_PREFIX } from "../../Ci/CiLaneJobs.ts";
 import { HEAVY_ADMISSION_LABEL, HeavyAdmission, HeavyAdmissionVerdict } from "../../Ci/HeavyAdmission.ts";
 import { YeetCommandError } from "../Yeet.errors.ts";
@@ -358,7 +358,7 @@ export const readYeetRulesetRequiredContexts = Effect.fn("Yeet.readYeetRulesetRe
   const readAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
   // KEEP (D-13): the raw branch-rules payload has no kit resource.
   // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-13), reason above
-  const read = runRepoCommandCapture(
+  const read = runRepoCommandCaptureSplit(
     "gh",
     ["api", `repos/{owner}/{repo}/rules/branches/${base}`],
     context.repoRoot

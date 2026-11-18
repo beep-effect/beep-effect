@@ -150,6 +150,10 @@ const prView = (
   } = {}
 ) => encodeJson({ number: 7, headRefName: BRANCH, state: "OPEN", ...overrides });
 
+// gh 2.105.0 prints this on stderr after a clean `gh pr view` under `AI_AGENT` or `CLAUDECODE`.
+const GH_AGENT_HINT =
+  "hint: if you need to wait for this pull request to be reviewed, merged, or closed before continuing, use this instead of polling:\n";
+
 const MERGE_TITLE = `Merge remote-tracking branch 'origin/main' into ${BRANCH}`;
 
 // The REST pull request GitHub answers a create, a title PATCH or a branch lookup with.
@@ -192,7 +196,7 @@ const bodyLog = (...commits: ReadonlyArray<readonly [subject: string, body: stri
 // One scripted process response, matched by a substring of the whole command
 // line. The first matching reply wins; an unscripted command exits 1. A
 // negative exit code scripts a command that could not be spawned at all.
-type Reply = readonly [needle: string, exitCode: number, output: string];
+type Reply = readonly [needle: string, exitCode: number, output: string, stderr?: string];
 
 const commandLine = ({ command, args }: { readonly command: string; readonly args: ReadonlyArray<string> }) =>
   A.join([command, ...args], " ");
@@ -204,7 +208,7 @@ const scriptedSpawner = (replies: ReadonlyArray<Reply>) =>
       A.findFirst(replies, ([needle]) => pipe(line, Str.includes(needle))),
       {
         onNone: () => ({ exit: 1, stdout: `unscripted: ${line}` }),
-        onSome: ([, exit, output]) =>
+        onSome: ([, exit, output, stderr]) =>
           exit < 0
             ? PlatformError.systemError({
                 _tag: "NotFound",
@@ -212,7 +216,7 @@ const scriptedSpawner = (replies: ReadonlyArray<Reply>) =>
                 method: "spawn",
                 description: output,
               })
-            : { exit, stdout: output },
+            : { exit, stdout: output, ...(P.isUndefined(stderr) ? {} : { stderr }) },
       }
     );
   });
@@ -445,6 +449,22 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet pull request l
           withProcesses([["gh pr view", 0, "not json"]], commands)
         );
         expect(undecodable.message).toBe("Failed to decode gh pr view JSON.");
+      })
+    );
+
+    it.effect("decodes the view when gh writes agent advice to stderr beside clean JSON", () =>
+      Effect.gen(function* () {
+        const commands = yield* makeCommands;
+        const view = yield* runGhPullRequestView(contextAt("/repo")).pipe(
+          withProcesses([["gh pr view", 0, prView({ url: PR_URL }), GH_AGENT_HINT]], commands)
+        );
+        expect([view.number, view.url]).toStrictEqual([7, PR_URL]);
+
+        const missing = yield* runGhPullRequestView(contextAt("/repo")).pipe(
+          Effect.flip,
+          withProcesses([["gh pr view", 1, "", "no pull requests found"]], commands)
+        );
+        expect(missing.message).toContain("yeet monitor requires an open pull request for the current branch.");
       })
     );
 
