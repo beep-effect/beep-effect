@@ -4,7 +4,6 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/contract-kit",
   "entries": [
-    {"file":"packages/foundation/modeling/contract-kit/src/Parity.ts","symbol":"RpcShape","kind":"struct-const","owner":"@beep/contract-kit","identity":"RpcShape","description":"The wire shape of one RPC: payload, reply-exit and streamed-element representations, streaming and middleware."},
-    {"file":"packages/foundation/modeling/contract-kit/src/Parity.ts","symbol":"SchemaShape","kind":"struct-const","owner":"@beep/contract-kit","identity":"SchemaShape","description":"A schema's encoded and decoded representations and the identities of its transformations."}
+    {"file":"packages/foundation/modeling/contract-kit/src/Parity.ts","symbol":"RpcShape","kind":"struct-const","owner":"@beep/contract-kit","identity":"RpcShape","description":"The wire shape of one RPC: payload, reply-exit and streamed-element parity signatures, streaming and middleware."}
   ]
 }

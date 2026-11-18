@@ -8,7 +8,8 @@
 
 import { $ContractKitId } from "@beep/identity/packages";
 import * as A from "effect/Array";
-import { flow, pipe } from "effect/Function";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -22,58 +23,178 @@ import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $ContractKitId.create("Parity");
 
+// Each opaque object (a transformation, an undescribed filter or declaration, a
+// unique symbol) gets one number for the life of the process, so two
+// signatures hold the same number exactly when they hold the same object.
+const identities = MutableHashMap.empty<object | symbol, number>();
+
+const identityOf = (value: object | symbol): number =>
+  O.getOrElse(MutableHashMap.get(identities, value), () => {
+    const identity = MutableHashMap.size(identities);
+    MutableHashMap.set(identities, value, identity);
+    return identity;
+  });
+
+// Plain data inside a `representation` annotation, with functions dropped (an
+// array becomes an index-keyed record, which compares the same way).
+const dataOf = (value: unknown): unknown => {
+  if (P.isObject(value)) {
+    return R.map(
+      R.filter(value as R.ReadonlyRecord<string, unknown>, (entry) => !P.isFunction(entry)),
+      dataOf
+    );
+  }
+  return value;
+};
+
+// A node or check a schema representation can describe carries a
+// `representation` annotation; anything else is compared by reference.
+const describedBy = (annotations: SchemaAST.AST["annotations"]): O.Option<unknown> =>
+  pipe(
+    O.fromNullishOr(annotations),
+    O.flatMap((value) => O.fromNullishOr(value.representation)),
+    O.map(dataOf)
+  );
+
+const checkSignature = (check: SchemaAST.Check<unknown>): unknown =>
+  check._tag === "FilterGroup"
+    ? { _tag: "FilterGroup", checks: A.map(check.checks, checkSignature) }
+    : O.match(describedBy(check.annotations), {
+        onNone: () => ({ _tag: "Filter", aborted: check.aborted, identity: identityOf(check) }),
+        onSome: (representation) => ({ _tag: "Filter", aborted: check.aborted, representation }),
+      });
+
+const keySignature = (key: PropertyKey): unknown => (P.isSymbol(key) ? { symbol: identityOf(key) } : key);
+
 /**
- * One schema as parity compares it: the representation of its encoded side,
- * the representation of its decoded side, and the identity of every
- * transformation in it, in traversal order.
+ * The parity signature of one schema AST: its structure node by node, with
+ * every node a representation cannot describe (a transformation, a filter or
+ * declaration without a `representation` annotation, a unique symbol) held as
+ * the identity of that object at its position.
  *
  * **Details**
  *
- * A representation describes the nodes and checks on either side but not what
- * a transformation does between them, so two schemas are only the same codec
- * when they also share each transformation by reference: built from the same
- * schemas, as a model built from its contract's declarations is.
+ * `Suspend` is resolved and walked; a node already on the current path is a
+ * cycle and is recorded by its depth, so a recursive schema terminates.
+ * Annotations other than `representation` are not part of the wire and are
+ * not compared.
  *
- * **Example** (Shape a string schema)
- *
- * ```ts
- * import { schemaShapeOf } from "@beep/contract-kit/Parity"
- * import * as S from "effect/Schema"
- *
- * console.log(schemaShapeOf(S.String).codecs.length) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
+ * @param ast - The AST to sign.
+ * @param path - The nodes from the root to `ast`, for cycle detection.
+ * @returns A plain value; two schemas are in parity when their signatures are deeply equal.
  */
-export class SchemaShape extends S.Opaque<SchemaShape, { readonly brand: unique symbol }>()(
-  S.Struct({
-    encoded: S.Unknown,
-    decoded: S.Unknown,
-    codecs: S.Array(S.Int),
-  }).pipe(
-    $I.annoteSchema("SchemaShape", {
-      description: "A schema's encoded and decoded representations and the identities of its transformations.",
+const signatureOf = (ast: SchemaAST.AST, path: ReadonlyArray<SchemaAST.AST>): unknown => {
+  const depth = A.findFirstIndex(path, (ancestor) => ancestor === ast);
+  if (O.isSome(depth)) return { _tag: "Cycle", depth: A.length(path) - depth.value };
+  const inside = A.append(path, ast);
+  const sign = (child: SchemaAST.AST): unknown => signatureOf(child, inside);
+  const common = {
+    _tag: ast._tag,
+    checks: A.map(ast.checks ?? [], checkSignature),
+    encoding: A.map(ast.encoding ?? [], (link) => ({
+      transformation: identityOf(link.transformation),
+      to: sign(link.to),
+    })),
+    optional: ast.context?.isOptional ?? false,
+    mutable: ast.context?.isMutable ?? false,
+  };
+  return Match.value(ast).pipe(
+    Match.discriminatorsExhaustive("_tag")({
+      Declaration: (node) => ({
+        ...common,
+        typeParameters: A.map(node.typeParameters, sign),
+        declaration: O.match(describedBy(node.annotations), {
+          onNone: () => ({ identity: identityOf(node) }),
+          onSome: (representation) => ({ representation }),
+        }),
+      }),
+      Null: () => common,
+      Undefined: () => common,
+      Void: () => common,
+      Never: () => common,
+      Unknown: () => common,
+      Any: () => common,
+      String: () => common,
+      Number: () => common,
+      Boolean: () => common,
+      BigInt: () => common,
+      Symbol: () => common,
+      ObjectKeyword: () => common,
+      Literal: (node) => ({ ...common, literal: P.isBigInt(node.literal) ? `${node.literal}n` : node.literal }),
+      UniqueSymbol: (node) => ({ ...common, symbol: identityOf(node.symbol) }),
+      Enum: (node) => ({ ...common, enums: node.enums }),
+      TemplateLiteral: (node) => ({ ...common, parts: A.map(node.parts, sign) }),
+      Arrays: (node) => ({
+        ...common,
+        readonly: !node.isMutable,
+        elements: A.map(node.elements, sign),
+        rest: A.map(node.rest, sign),
+      }),
+      Objects: (node) => ({
+        ...common,
+        propertySignatures: A.map(node.propertySignatures, (property) => ({
+          name: keySignature(property.name),
+          type: sign(property.type),
+        })),
+        indexSignatures: A.map(node.indexSignatures, (index) => ({
+          parameter: sign(index.parameter),
+          type: sign(index.type),
+        })),
+      }),
+      Union: (node) => ({ ...common, mode: node.options?.mode ?? "anyOf", types: A.map(node.types, sign) }),
+      Suspend: (node) => ({ ...common, thunk: sign(node.thunk()) }),
     })
-  )
-) {}
+  );
+};
 
 /**
- * One RPC as its wire sees it: the schema representations of its payload,
- * its reply codec and its streamed element, whether it streams, and the
- * middleware keys it runs. Two shapes are the same wire when they are deeply equal.
+ * The parity signature of one schema: its AST node by node, with every node a
+ * representation cannot describe held by reference at its position.
+ *
+ * **Details**
+ *
+ * Two schemas are in parity when their signatures are deeply equal: the same
+ * structure on both sides, and the same transformation, undescribed filter and
+ * undescribed declaration objects at the same places. A model built from its
+ * contract's declarations shares those objects, so its RPCs are in parity with
+ * the contract's.
+ *
+ * **Example** (A codec decoding to S.Number is not one decoding to S.Finite)
+ *
+ * ```ts
+ * import { schemaSignatureOf } from "@beep/contract-kit/Parity"
+ * import * as Equal from "effect/Equal"
+ * import * as S from "effect/Schema"
+ *
+ * const same = Equal.equals(schemaSignatureOf(S.Number), schemaSignatureOf(S.Finite))
+ * console.log(same) // false
+ * ```
+ *
+ * @param schema - The schema to sign.
+ * @returns Its parity signature, a plain value.
+ * @category getters
+ * @since 0.0.0
+ */
+export const schemaSignatureOf = (schema: S.Top): unknown => signatureOf(schema.ast, []);
+
+/**
+ * One RPC as its wire sees it: the parity signatures of its payload, of its
+ * reply codec (`Rpc.exitSchema`, which unions the RPC's errors with every
+ * middleware's) and of its streamed element, whether it streams, and the
+ * middleware keys it runs. Two shapes are the same wire when they are deeply
+ * equal.
  *
  * **Example** (Make an RPC shape)
  *
  * ```ts
- * import { RpcShape, schemaShapeOf } from "@beep/contract-kit/Parity"
+ * import { RpcShape, schemaSignatureOf } from "@beep/contract-kit/Parity"
  * import * as S from "effect/Schema"
  *
  * const shape = RpcShape.make({
  *   tag: "Ping",
  *   stream: false,
- *   payload: schemaShapeOf(S.Void),
- *   exit: schemaShapeOf(S.Void),
+ *   payload: schemaSignatureOf(S.Void),
+ *   exit: schemaSignatureOf(S.Void),
  *   chunk: null,
  *   middleware: [],
  * })
@@ -87,114 +208,20 @@ export class RpcShape extends S.Opaque<RpcShape, { readonly brand: unique symbol
   S.Struct({
     tag: S.String,
     stream: S.Boolean,
-    payload: SchemaShape,
-    exit: SchemaShape,
-    chunk: S.NullOr(SchemaShape),
+    payload: S.Unknown,
+    exit: S.Unknown,
+    chunk: S.Unknown,
     middleware: S.Array(S.String),
   }).pipe(
     $I.annoteSchema("RpcShape", {
       description:
-        "The wire shape of one RPC: payload, reply-exit and streamed-element representations, streaming and middleware.",
+        "The wire shape of one RPC: payload, reply-exit and streamed-element parity signatures, streaming and middleware.",
     })
   )
 ) {}
 
-// The schema representation keeps every node and check, including filters
-// JSON Schema cannot export; only function-valued annotations (code
-// generators, arbitraries) are dropped, since two equal schemas built in two
-// places never share those closures.
-const structureOf = (value: unknown): unknown => {
-  if (A.isArray(value)) return A.map(value, structureOf);
-  if (P.isObject(value)) {
-    return R.map(
-      R.filter(value as R.ReadonlyRecord<string, unknown>, (entry) => !P.isFunction(entry)),
-      structureOf
-    );
-  }
-  return value;
-};
-
-const representationOf: (schema: S.Top) => unknown = flow(S.toRepresentation, structureOf);
-
-// Each transformation object gets one number for the life of the process, so
-// two schemas share a codec exactly when they share its transformation.
-const codecIdentities = MutableHashMap.empty<object, number>();
-
-const codecIdentity = (transformation: object): number =>
-  O.getOrElse(MutableHashMap.get(codecIdentities, transformation), () => {
-    const identity = MutableHashMap.size(codecIdentities);
-    MutableHashMap.set(codecIdentities, transformation, identity);
-    return identity;
-  });
-
-const transformationsOf = (node: { readonly [key: PropertyKey]: unknown }): ReadonlyArray<object> => {
-  const encoding = node.encoding;
-  // Only an AST node carries an `encoding`: its links, each with a transformation.
-  return A.isArray(encoding) ? A.map(encoding as ReadonlyArray<SchemaAST.Link>, (link) => link.transformation) : [];
-};
-
-// Depth-first over the AST, recording each transformation at every position it
-// occupies, so a reused sub-schema counts once per field and the codecs line
-// up field by field. Only the current path is tracked, which is enough to stop
-// a cycle; suspended schemas are thunks, which the walk does not call, and
-// annotations are data about a node, never part of its codec.
-const walk = (path: ReadonlyArray<unknown>, value: unknown): ReadonlyArray<number> => {
-  if (!P.isObjectOrArray(value) || A.some(path, (ancestor) => ancestor === value)) return [];
-  const inside = A.append(path, value);
-  if (A.isArray(value)) return A.flatMap(value, (item) => walk(inside, item));
-  const own = A.map(transformationsOf(value), codecIdentity);
-  const children = pipe(
-    R.toEntries(value),
-    A.filter(([key]) => key !== "annotations"),
-    A.flatMap(([, child]) => walk(inside, child))
-  );
-  return A.appendAll(own, children);
-};
-
-const codecsOf = (schema: S.Top): ReadonlyArray<number> => walk([], schema.ast);
-
-/**
- * The parity shape of one schema: its encoded and decoded representations and
- * its transformation identities.
- *
- * **Example** (Two finite-number decoders differ from a plain number decoder)
- *
- * ```ts
- * import { schemaShapeOf } from "@beep/contract-kit/Parity"
- * import * as S from "effect/Schema"
- *
- * console.log(schemaShapeOf(S.Finite).decoded === schemaShapeOf(S.Number).decoded) // false
- * ```
- *
- * @param schema - The schema to shape.
- * @returns Its parity shape.
- * @category getters
- * @since 0.0.0
- */
-export const schemaShapeOf = (schema: S.Top): SchemaShape =>
-  SchemaShape.make({
-    encoded: representationOf(schema),
-    decoded: schema.pipe(S.toType, representationOf),
-    codecs: codecsOf(schema),
-  });
-
 /**
  * The wire shape of one RPC.
- *
- * **Details**
- *
- * `payload` and `exit` are schema representations: every node and check of
- * the payload and of `Rpc.exitSchema(rpc)`, the codec a reply is encoded and
- * decoded with, which unions the RPC's errors with every middleware's error.
- * `chunk` is the streamed element's representation for a streaming RPC.
- *
- * **Gotchas**
- *
- * A filter with no representation (an unannotated `Schema.makeFilter`) is
- * compared by its position and its non-function annotations, not by its
- * predicate: give each such filter an identifier annotation, or share the
- * schema between the contract and the model, so two different predicates
- * cannot compare equal.
  *
  * **Example** (Shape one RPC)
  *
@@ -216,9 +243,9 @@ export const shapeOf = <R extends Rpc.Any>(self: R): RpcShape => {
   return RpcShape.make({
     tag: rpc._tag,
     stream: RpcSchema.isStreamSchema(success),
-    payload: schemaShapeOf(rpc.payloadSchema),
-    exit: rpc.pipe(Rpc.exitSchema, schemaShapeOf),
-    chunk: RpcSchema.isStreamSchema(success) ? schemaShapeOf(success.success) : null,
+    payload: schemaSignatureOf(rpc.payloadSchema),
+    exit: rpc.pipe(Rpc.exitSchema, schemaSignatureOf),
+    chunk: RpcSchema.isStreamSchema(success) ? schemaSignatureOf(success.success) : null,
     middleware: pipe(
       A.fromIterable(rpc.middlewares),
       A.map((middleware) => middleware.key),
