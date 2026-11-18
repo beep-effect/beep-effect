@@ -1,19 +1,22 @@
 /**
  * What a repository fixture, census row or law exemption depends on, and
- * whether the current checkout holds it.
+ * whether the current checkout pruned it.
  *
  * **Details**
  *
- * A checkout may drop packages and packets (a downstream fork, a trimmed cloud
+ * A checkout may drop the product leaves (a downstream fork, a trimmed cloud
  * lane). A check that reads a real repository file then names its subject: the
  * goal or exploration packet the file lives in, or the workspace package that
- * owns it. When the checkout does not hold the subject, the check is skipped
- * and reported as skipped; when it does, the check runs exactly as before, so
- * a row that goes stale while its subject exists still fails.
+ * owns it, by package name. The check is skipped, with a note naming the
+ * subject, only when the checkout pruned that subject: the subject is declared
+ * prunable (see `ProductLeaves.ts`) and its directory is gone. Every other
+ * check runs exactly as before. A present subject keeps its stale-row and
+ * missing-fixture failures, and so does an absent subject nobody declared
+ * prunable, so a typo or a renamed package still fails instead of reading as a
+ * pruned one.
  *
  * A packet is present when its directory exists. A workspace is present when
- * workspace discovery finds a member with that package name, so a package
- * that moved keeps its subject and its checks stay strict.
+ * workspace discovery finds a member with that package name.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -140,14 +143,76 @@ export const CheckoutSubject = S.TaggedUnion({
 export type CheckoutSubject = typeof CheckoutSubject.Type;
 
 /**
- * The packets and workspace packages one checkout holds.
+ * A workspace package a checkout may remove, with the directory it lives in.
+ *
+ * **Details**
+ *
+ * The directory is what tells pruning from renaming: a package whose name is
+ * gone while its directory remains was renamed, not pruned.
+ *
+ * **Example** (Declare a prunable driver)
+ *
+ * ```ts
+ * import { PrunableWorkspace } from "@beep/repo-cli-kit/CheckoutSubject"
+ *
+ * const box = PrunableWorkspace.make({ packageName: "@beep/box", directory: "packages/drivers/box" })
+ * console.log(box.directory) // "packages/drivers/box"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PrunableWorkspace extends S.Opaque<PrunableWorkspace, { readonly brand: unique symbol }>()(
+  S.Struct({
+    packageName: S.NonEmptyString,
+    directory: S.NonEmptyString,
+  }).pipe(
+    $I.annoteSchema("PrunableWorkspace", {
+      description: "A workspace package a checkout may remove, by package name and repository-relative directory.",
+    })
+  )
+) {}
+
+/**
+ * The subjects a checkout may remove: the product leaves and their packets.
+ *
+ * **Example** (Declare one leaf and its packet)
+ *
+ * ```ts
+ * import { PacketRoot, PrunableLeaves, PrunableWorkspace } from "@beep/repo-cli-kit/CheckoutSubject"
+ *
+ * const leaves = PrunableLeaves.make({
+ *   workspaces: [PrunableWorkspace.make({ packageName: "@beep/demo", directory: "packages/demo" })],
+ *   packets: [PacketRoot.make("goals/demo")],
+ * })
+ * console.log(leaves.packets.length) // 1
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class PrunableLeaves extends S.Opaque<PrunableLeaves, { readonly brand: unique symbol }>()(
+  S.Struct({
+    workspaces: S.Array(PrunableWorkspace),
+    packets: S.Array(PacketRoot),
+  }).pipe(
+    $I.annoteSchema("PrunableLeaves", {
+      description: "The workspace packages and packets a checkout may remove without editing kept packages.",
+    })
+  )
+) {}
+
+/**
+ * The packets and workspace packages one checkout holds, and the declared
+ * prunable subjects it removed.
  *
  * **Details**
  *
  * `workspaces` maps each present package name to its repository-relative
- * directory.
+ * directory. `prunedPackets` and `prunedWorkspaces` hold the declared
+ * prunable subjects whose directories are gone.
  *
- * **Example** (Describe a small checkout)
+ * **Example** (Describe a small pruned checkout)
  *
  * ```ts
  * import { CheckoutInventory, packetRootsOf } from "@beep/repo-cli-kit/CheckoutSubject"
@@ -155,10 +220,12 @@ export type CheckoutSubject = typeof CheckoutSubject.Type;
  * import * as HashSet from "effect/HashSet"
  *
  * const inventory = CheckoutInventory.make({
- *   packets: packetRootsOf(["goals/demo/README.md"]),
- *   workspaces: HashMap.make(["@beep/demo", "packages/demo"]),
+ *   packets: packetRootsOf(["goals/kept/README.md"]),
+ *   workspaces: HashMap.make(["@beep/kept", "packages/kept"]),
+ *   prunedPackets: packetRootsOf(["goals/leaf/README.md"]),
+ *   prunedWorkspaces: HashSet.make("@beep/leaf"),
  * })
- * console.log(HashSet.size(inventory.packets)) // 1
+ * console.log(HashSet.size(inventory.prunedWorkspaces)) // 1
  * ```
  *
  * @category models
@@ -168,9 +235,12 @@ export class CheckoutInventory extends S.Opaque<CheckoutInventory, { readonly br
   S.Struct({
     packets: S.HashSet(PacketRoot),
     workspaces: S.HashMap(S.NonEmptyString, S.String),
+    prunedPackets: S.HashSet(PacketRoot),
+    prunedWorkspaces: S.HashSet(S.NonEmptyString),
   }).pipe(
     $I.annoteSchema("CheckoutInventory", {
-      description: "The packet roots and the workspace packages, by name and directory, that one checkout holds.",
+      description:
+        "The packet roots and workspace packages one checkout holds, and the declared prunable subjects it removed.",
     })
   )
 ) {}
@@ -270,10 +340,13 @@ export const workspaceSubject = (packageName: string): CheckoutSubject =>
  *   workspaceSubject,
  * } from "@beep/repo-cli-kit/CheckoutSubject"
  * import * as HashMap from "effect/HashMap"
+ * import * as HashSet from "effect/HashSet"
  *
  * const inventory = CheckoutInventory.make({
  *   packets: packetRootsOf(["goals/demo/README.md"]),
  *   workspaces: HashMap.make(["@beep/demo", "packages/demo"]),
+ *   prunedPackets: HashSet.empty(),
+ *   prunedWorkspaces: HashSet.empty(),
  * })
  * console.log(isCheckoutSubjectPresent(inventory, workspaceSubject("@beep/demo"))) // true
  * console.log(isCheckoutSubjectPresent(inventory, workspaceSubject("@beep/gone"))) // false
@@ -296,36 +369,80 @@ export const isCheckoutSubjectPresent: {
 );
 
 /**
- * The subjects a checkout does not hold, in their given order.
+ * Whether a checkout pruned a subject: declared prunable, and its directory is
+ * gone.
  *
- * **Example** (List the absent subjects)
+ * **Details**
+ *
+ * An absent subject that was never declared prunable is not pruned. Its check
+ * runs and fails, as a typo or a renamed package should.
+ *
+ * **Example** (Tell a pruned leaf from a missing name)
  *
  * ```ts
- * import { absentCheckoutSubjects, CheckoutInventory, workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject"
+ * import { CheckoutInventory, isCheckoutSubjectPruned, workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject"
+ * import * as HashMap from "effect/HashMap"
+ * import * as HashSet from "effect/HashSet"
+ *
+ * const inventory = CheckoutInventory.make({
+ *   packets: HashSet.empty(),
+ *   workspaces: HashMap.empty(),
+ *   prunedPackets: HashSet.empty(),
+ *   prunedWorkspaces: HashSet.make("@beep/leaf"),
+ * })
+ * console.log(isCheckoutSubjectPruned(inventory, workspaceSubject("@beep/leaf"))) // true
+ * console.log(isCheckoutSubjectPruned(inventory, workspaceSubject("@beep/typo"))) // false
+ * ```
+ *
+ * @param inventory - The checkout's packets, workspaces and pruned subjects.
+ * @param subject - The subject to look up.
+ * @returns `true` when the checkout removed the subject as a declared product leaf.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isCheckoutSubjectPruned: {
+  (subject: CheckoutSubject): (inventory: CheckoutInventory) => boolean;
+  (inventory: CheckoutInventory, subject: CheckoutSubject): boolean;
+} = dual(2, (inventory: CheckoutInventory, subject: CheckoutSubject): boolean =>
+  CheckoutSubject.match(subject, {
+    PacketSubject: ({ root }) => HashSet.has(inventory.prunedPackets, root),
+    WorkspaceSubject: ({ packageName }) => HashSet.has(inventory.prunedWorkspaces, packageName),
+  })
+);
+
+/**
+ * The subjects a checkout pruned, in their given order.
+ *
+ * **Example** (List the pruned subjects of one check)
+ *
+ * ```ts
+ * import { CheckoutInventory, prunedCheckoutSubjects, workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject"
  * import * as HashMap from "effect/HashMap"
  * import * as HashSet from "effect/HashSet"
  *
  * const inventory = CheckoutInventory.make({
  *   packets: HashSet.empty(),
  *   workspaces: HashMap.make(["@beep/kept", "packages/kept"]),
+ *   prunedPackets: HashSet.empty(),
+ *   prunedWorkspaces: HashSet.make("@beep/leaf"),
  * })
- * const absent = absentCheckoutSubjects(inventory, [workspaceSubject("@beep/kept"), workspaceSubject("@beep/gone")])
- * console.log(absent.length) // 1
+ * const pruned = prunedCheckoutSubjects(inventory, [workspaceSubject("@beep/kept"), workspaceSubject("@beep/leaf")])
+ * console.log(pruned.length) // 1
  * ```
  *
- * @param inventory - The checkout's packets and workspaces.
+ * @param inventory - The checkout's packets, workspaces and pruned subjects.
  * @param subjects - The subjects one check depends on.
- * @returns The subjects the checkout does not hold.
+ * @returns The subjects the checkout removed as declared product leaves.
  * @category utilities
  * @since 0.0.0
  */
-export const absentCheckoutSubjects: {
+export const prunedCheckoutSubjects: {
   (subjects: ReadonlyArray<CheckoutSubject>): (inventory: CheckoutInventory) => ReadonlyArray<CheckoutSubject>;
   (inventory: CheckoutInventory, subjects: ReadonlyArray<CheckoutSubject>): ReadonlyArray<CheckoutSubject>;
 } = dual(
   2,
   (inventory: CheckoutInventory, subjects: ReadonlyArray<CheckoutSubject>): ReadonlyArray<CheckoutSubject> =>
-    A.filter(subjects, (subject) => !isCheckoutSubjectPresent(inventory, subject))
+    A.filter(subjects, (subject) => isCheckoutSubjectPruned(inventory, subject))
 );
 
 const byDirectoryLengthDescending: Order.Order<readonly [string, string]> = Order.mapInput(
@@ -351,6 +468,8 @@ const byDirectoryLengthDescending: Order.Order<readonly [string, string]> = Orde
  * const inventory = CheckoutInventory.make({
  *   packets: HashSet.empty(),
  *   workspaces: HashMap.make(["@beep/demo", "packages/demo"]),
+ *   prunedPackets: HashSet.empty(),
+ *   prunedWorkspaces: HashSet.empty(),
  * })
  * console.log(checkoutWorkspaceOf(inventory, "packages/demo/test/Demo.test.ts")) // Some("@beep/demo")
  * console.log(checkoutWorkspaceOf(inventory, "packages/gone/test/Gone.test.ts")) // None
@@ -398,51 +517,56 @@ export const describeCheckoutSubject = (subject: CheckoutSubject): string =>
   });
 
 /**
- * The note a skipped check reports for its absent subjects.
+ * The note a skipped check reports for the subjects the checkout pruned.
  *
  * **Example** (Explain a skip)
  *
  * ```ts
- * import { absentCheckoutSubjectsNote, workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject"
+ * import { prunedCheckoutSubjectsNote, workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject"
  *
- * console.log(absentCheckoutSubjectsNote([workspaceSubject("@beep/gone")]))
- * // "absent from this checkout: workspace @beep/gone"
+ * console.log(prunedCheckoutSubjectsNote([workspaceSubject("@beep/leaf")]))
+ * // "pruned from this checkout: workspace @beep/leaf"
  * ```
  *
- * @param subjects - What the checkout lacks, in the order the check declared it.
- * @returns One line naming each absent subject.
+ * @param subjects - What the checkout removed, in the order the check declared it.
+ * @returns One line naming each pruned subject.
  * @category utilities
  * @since 0.0.0
  */
-export const absentCheckoutSubjectsNote = (subjects: ReadonlyArray<CheckoutSubject>): string =>
-  `absent from this checkout: ${A.join(A.map(subjects, describeCheckoutSubject), ", ")}`;
+export const prunedCheckoutSubjectsNote = (subjects: ReadonlyArray<CheckoutSubject>): string =>
+  `pruned from this checkout: ${A.join(A.map(subjects, describeCheckoutSubject), ", ")}`;
 
 /**
- * Read the packets and workspace packages a checkout holds.
+ * Read the packets and workspace packages a checkout holds, and which of the
+ * declared prunable subjects it removed.
  *
  * **Details**
  *
  * Packets are the directories under `goals/` and `explorations/`; a parent
  * the checkout lacks holds none. Workspaces come from workspace discovery, so
  * a pruned member whose root pattern names a missing directory is simply not
- * listed.
+ * listed. A declared prunable workspace counts as pruned only when its name is
+ * not discovered and its directory does not exist.
  *
  * **Example** (Compose the inventory read)
  *
  * ```ts
- * import { loadCheckoutInventory } from "@beep/repo-cli-kit/CheckoutSubject"
+ * import { loadCheckoutInventory, PrunableLeaves } from "@beep/repo-cli-kit/CheckoutSubject"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(loadCheckoutInventory("/repo"))) // true
+ * const read = loadCheckoutInventory("/repo", PrunableLeaves.make({ workspaces: [], packets: [] }))
+ * console.log(Effect.isEffect(read)) // true
  * ```
  *
  * @param repoRoot - Absolute repository root.
- * @returns The checkout's packet roots and workspace packages.
+ * @param leaves - The subjects the checkout may remove.
+ * @returns The checkout's packet roots, workspace packages and pruned subjects.
  * @category utilities
  * @since 0.0.0
  */
 export const loadCheckoutInventory = Effect.fn("CheckoutSubject.loadCheckoutInventory")(function* (
-  repoRoot: string
+  repoRoot: string,
+  leaves: PrunableLeaves
 ): Effect.fn.Return<
   CheckoutInventory,
   RepoWorkspacesError | PlatformError.PlatformError,
@@ -466,8 +590,20 @@ export const loadCheckoutInventory = Effect.fn("CheckoutSubject.loadCheckoutInve
     }),
     { concurrency: 1 }
   );
+  const packets = packetRootsOf(A.flatten(packetDirectories));
+  const workspaces = HashMap.fromIterable(A.map(members, (member) => [member.name, member.relativePath] as const));
+  const prunedWorkspaces = yield* Effect.filter(
+    leaves.workspaces,
+    (leaf) =>
+      HashMap.has(workspaces, leaf.packageName)
+        ? Effect.succeed(false)
+        : Effect.map(fs.exists(path.join(repoRoot, leaf.directory)), (exists) => !exists),
+    { concurrency: 1 }
+  );
   return CheckoutInventory.make({
-    packets: packetRootsOf(A.flatten(packetDirectories)),
-    workspaces: HashMap.fromIterable(A.map(members, (member) => [member.name, member.relativePath] as const)),
+    packets,
+    workspaces,
+    prunedPackets: HashSet.fromIterable(A.filter(leaves.packets, (root) => !HashSet.has(packets, root))),
+    prunedWorkspaces: HashSet.fromIterable(A.map(prunedWorkspaces, (leaf) => leaf.packageName)),
   });
 });

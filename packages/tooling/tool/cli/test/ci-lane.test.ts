@@ -76,7 +76,7 @@ import * as Sink from "effect/Sink";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { CurrentCheckout, CurrentCheckoutLive, skipUnlessCheckoutHolds } from "./support/CheckoutSkip.ts";
+import { CurrentCheckout, CurrentCheckoutLive, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 import { commandArgs } from "./support/commandArgs.ts";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
 import type { SpawnRecord } from "@beep/commands/ScriptedSpawner";
@@ -597,7 +597,7 @@ describe("CI lane partitions", () => {
     it.effect("sizes the law-practice-server integration shards from the committed LPT plan", (ctx) =>
       Effect.gen(function* () {
         const inventory = yield* CurrentCheckout;
-        skipUnlessCheckoutHolds(ctx, inventory, [workspaceSubject(INTEGRATION_SHARD_PACKAGE)]);
+        skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject(INTEGRATION_SHARD_PACKAGE)]);
         const path = yield* Path.Path;
         const repoRoot = yield* findRepoRoot();
         const directory = yield* Effect.fromOption(HashMap.get(inventory.workspaces, INTEGRATION_SHARD_PACKAGE));

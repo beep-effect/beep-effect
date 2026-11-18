@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress` (seam 1 done on branch `feat/prunable-seam-1`; seam 2 next)
+Status: `in-progress` (seam 1 done in #3379; seam 2 next)
 
 ## Phases
 
@@ -23,7 +23,7 @@ packet's PRs are open at once.
 
 | Seam | Status | First step | Done when |
 | --- | --- | --- | --- |
-| 1, tooling fixtures tolerate absent product paths | done: branch `feat/prunable-seam-1`; surfaces and the pruned run in [`research/2026-11-17-seam-1-surfaces.md`](research/2026-11-17-seam-1-surfaces.md) | Search for an existing repo-path presence helper; design the subject schema; then the census, shard-plan, `PrivateHomePaths`, `runner-burst` and ontology surfaces, plus the `packages/tooling/**` sweep. | Each surface skips and reports an absent subject, keeps a present one strict, and has both tests; `package-verify` passes for `@beep/repo-cli` and `@beep/ontology`. |
+| 1, tooling fixtures tolerate absent product paths | done: #3379; surfaces and the pruned run in [`research/2026-11-17-seam-1-surfaces.md`](research/2026-11-17-seam-1-surfaces.md) | Search for an existing repo-path presence helper; design the subject schema; then the census, shard-plan, `PrivateHomePaths`, `runner-burst` and ontology surfaces, plus the `packages/tooling/**` sweep. | Each surface skips and reports an absent subject, keeps a present one strict, and has both tests; `package-verify` passes for `@beep/repo-cli` and `@beep/ontology`. |
 | 2, legal CLI command groups become their own package | pending | Map the command-group registry (`commands/Root.ts`, `internal/dispatch/Dispatch.manifest.ts`) and how a package registers commands into the CLI. | `@beep/repo-cli` has no product-leaf manifest edge; the import-boundary rule is green with the seam 3 and 4 rows allowlisted. |
 | 3, party is provider-neutral | pending | Design the party-owned contact-evidence schema `ContactEvidence.model.ts` reads instead of `GraphContact`. | `@beep/party-server` and `@beep/scratchpad` have no product-leaf edge; the seam 3 allowlist rows are deleted. |
 | 4, generated aggregation, re-homed proof, agents thread model | pending | Design the db-admin generator over present slices (the tsconfig-sync pattern), and the doctrine text. | db-admin's barrel, registry and manifest edges are generated from the present slices; the leaf migration modules (`src/migrations/<Leaf>*.ts`) and their `test/**` and `test/integration/**` files live in the owning slices' `tables` packages; the `drizzle/` SQL and migration-module placement decisions are recorded and the generator leaves no SQL for a removed leaf; the accepted-proof manifest leaves repo-cli; agents has no `workspace` edge; the allowlist is empty; the doctrine amendment and `DECISIONS.md` entry are merged. |
@@ -73,11 +73,11 @@ git diff --check -- goals/prunable-product-leaves
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug prunable-product-leaves`; add a `kind: checkpoint` file there, never edit this block._
 
-### Seam 1 done: repository fixtures skip an absent packet or workspace, 2026-11-17
+### Seam 1 done: repository fixtures skip a pruned packet or workspace, 2026-11-17
 
-@beep/repo-cli-kit/CheckoutSubject holds the rule; twelve surfaces in repo-cli and @beep/ontology use it (research/2026-11-17-seam-1-surfaces.md). In the full checkout none of their tests skips. In a pruned run every surface skipped with its note, and each remaining repo-cli failure is attributed to seam 2, seam 4, the new seam 5 (CI tables), a rehearsal regeneration step, or the run itself. Next: seam 2.
+@beep/repo-cli-kit/CheckoutSubject holds the rule; eleven surfaces in repo-cli and @beep/ontology use it, and @beep/repo-cli-kit/ProductLeaves declares what may be pruned (research/2026-11-17-seam-1-surfaces.md). In the full checkout none of their tests skips. In a run with the product leaves and their packets pruned, every surface that names one skipped with its note, and each remaining repo-cli failure is attributed to seam 2, seam 4, the new seam 5 (CI tables), a rehearsal regeneration step, or the run itself. Next: seam 2.
 
-Lane feat/prunable-seam-1
+Lane feat/prunable-seam-1 · PR #3379
 
 Reverse: Revert the seam 1 PR; the surfaces assert unconditionally again.
 

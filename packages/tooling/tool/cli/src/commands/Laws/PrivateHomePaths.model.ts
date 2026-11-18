@@ -24,6 +24,8 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { PacketRoot } from "@beep/repo-cli-kit/CheckoutSubject";
+import { productLeaves } from "@beep/repo-cli-kit/ProductLeaves";
 import { LiteralKit } from "@beep/schema";
 import { ArrayKeyDefaultEmpty } from "@beep/schema/SchemaUtils/withKeyDefaults";
 import { A } from "@beep/utils";
@@ -480,7 +482,10 @@ export class PrivateHomePathFinding extends S.Opaque<PrivateHomePathFinding, { r
  * **Details**
  *
  * `exemptions` defaults to {@link privateHomePathExemptions}; tests pass their
- * own rows for a scratch repository.
+ * own rows for a scratch repository. `prunablePackets` defaults to the product
+ * leaves' packets (`@beep/repo-cli-kit/ProductLeaves`): an exemption whose file
+ * is untracked is skipped only when its packet is one of them and the checkout
+ * holds none of its files.
  *
  * **Example** (Configure a strict scan)
  *
@@ -506,6 +511,10 @@ export class PrivateHomePathsOptions extends S.Opaque<PrivateHomePathsOptions, {
       S.withConstructorDefault(Effect.succeed(privateHomePathExemptions)),
       S.withDecodingDefaultKey(Effect.succeed(privateHomePathExemptions))
     ),
+    prunablePackets: S.Array(PacketRoot).pipe(
+      S.withConstructorDefault(Effect.succeed(productLeaves.packets)),
+      S.withDecodingDefaultKey(Effect.succeed(productLeaves.packets))
+    ),
   }).pipe(
     $I.annoteSchema("PrivateHomePathsOptions", {
       description: "Runtime options for the private home path law.",
@@ -519,9 +528,9 @@ export class PrivateHomePathsOptions extends S.Opaque<PrivateHomePathsOptions, {
  * **Details**
  *
  * `skippedExemptions` lists the exemption files the run did not check because
- * the checkout does not hold their packet (a fork or trimmed lane that removed
- * it). An exemption whose packet is present but whose file is gone is a stale
- * row and stays a finding.
+ * the checkout pruned their packet, a declared product-leaf packet (a fork or
+ * trimmed lane that removed it). An exemption whose packet is present, or not
+ * declared prunable, but whose file is gone is a stale row and stays a finding.
  *
  * **Example** (Construct a clean summary)
  *

@@ -10,14 +10,15 @@ import {
   isHeavyDocsOnlyPath,
 } from "@beep/repo-cli/commands/Ci";
 import {
-  absentCheckoutSubjects,
   CheckoutInventory,
   checkoutWorkspaceOf,
   loadCheckoutInventory,
   packetRootsOf,
   packetSubjectOf,
+  prunedCheckoutSubjects,
   workspaceSubject,
 } from "@beep/repo-cli-kit/CheckoutSubject";
+import { productLeaves } from "@beep/repo-cli-kit/ProductLeaves";
 import { findRepoRoot } from "@beep/repo-utils/Root";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
@@ -39,7 +40,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { skipWhenAbsent } from "./support/CheckoutSkip.ts";
+import { skipWhenPruned } from "./support/CheckoutSkip.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { CheckoutSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 
@@ -336,19 +337,20 @@ const changeProfileFor = Effect.fnUntraced(function* (changed: string) {
 
 // The checkout-subject rule (goals/prunable-product-leaves, seam 1). A row reads one packet's paths
 // for its consumer packages, so it depends on that packet and on those workspaces. A checkout that
-// removed the packet, or every consumer, holds nothing the row could prove: the row is skipped and
-// the skip names what is absent. Otherwise the row is checked exactly as before. An evidence file
-// the checkout does not track is stale unless it lies in no present workspace while one of the
-// row's consumers is absent; then it belonged to that pruned consumer. A consumer that moved keeps
-// its package name, so its evidence stays strict.
+// pruned the packet, or every consumer, holds nothing the row could prove: the row is skipped and
+// the skip names what was pruned. "Pruned" means a declared product leaf whose directory is gone
+// (@beep/repo-cli-kit/ProductLeaves); an absent subject nobody declared is a typo or a rename, and
+// its row is checked and fails as before. An evidence file the checkout does not track is stale
+// unless it lies in no present workspace while one of the row's consumers was pruned; then it
+// belonged to that consumer.
 const rowAbsence = (inventory: CheckoutInventory, row: CiGoalDataConsumer): ReadonlyArray<CheckoutSubject> => {
-  const packet = absentCheckoutSubjects(inventory, A.fromOption(packetSubjectOf(row.reference)));
+  const packet = prunedCheckoutSubjects(inventory, A.fromOption(packetSubjectOf(row.reference)));
   if (A.isReadonlyArrayNonEmpty(packet)) {
     return packet;
   }
   const consumers = A.map(row.consumers, workspaceSubject);
-  const absentConsumers = absentCheckoutSubjects(inventory, consumers);
-  return A.length(absentConsumers) === A.length(consumers) ? absentConsumers : A.empty();
+  const prunedConsumers = prunedCheckoutSubjects(inventory, consumers);
+  return A.length(prunedConsumers) === A.length(consumers) ? prunedConsumers : A.empty();
 };
 
 const evidenceAbsence = (
@@ -359,7 +361,7 @@ const evidenceAbsence = (
 ): ReadonlyArray<CheckoutSubject> =>
   HashSet.has(tracked, evidence) || O.isSome(checkoutWorkspaceOf(inventory, evidence))
     ? A.empty()
-    : absentCheckoutSubjects(inventory, A.map(row.consumers, workspaceSubject));
+    : prunedCheckoutSubjects(inventory, A.map(row.consumers, workspaceSubject));
 
 // A mutated path depends on what the row that registers it depends on.
 const mutationAbsence = (inventory: CheckoutInventory, mutated: string): ReadonlyArray<CheckoutSubject> =>
@@ -370,7 +372,7 @@ const mutationAbsence = (inventory: CheckoutInventory, mutated: string): Readonl
   );
 
 const exclusionAbsence = (inventory: CheckoutInventory, exclusion: CensusExclusion): ReadonlyArray<CheckoutSubject> =>
-  absentCheckoutSubjects(inventory, [
+  prunedCheckoutSubjects(inventory, [
     workspaceSubject(exclusion.owner),
     ...A.fromOption(packetSubjectOf(exclusion.reference)),
   ]);
@@ -391,7 +393,7 @@ const CensusFactsLive = Layer.effect(
   CensusFacts,
   Effect.gen(function* () {
     const scanned = yield* census;
-    const inventory = yield* loadCheckoutInventory(scanned.root);
+    const inventory = yield* loadCheckoutInventory(scanned.root, productLeaves);
     return { ...scanned, tracked: HashSet.fromIterable(scanned.paths), inventory };
   })
 );
@@ -424,7 +426,7 @@ it.layer(Layer.provideMerge(CensusFactsLive, Layer.provideMerge(Git.layer, NodeS
     it.effect(`tracks and consumes the ${label}`, (ctx) =>
       Effect.gen(function* () {
         const { entries, inventory, tracked } = yield* CensusFacts;
-        skipWhenAbsent(ctx, mutationAbsence(inventory, mutated));
+        skipWhenPruned(ctx, mutationAbsence(inventory, mutated));
         expect(HashSet.has(tracked, mutated), `${label}: ${mutated} is tracked`).toBe(true);
         expect(A.contains(consumedPathsOf(entries), mutated), mutated).toBe(true);
       })
@@ -436,8 +438,22 @@ it.layer(Layer.provideMerge(CensusFactsLive, Layer.provideMerge(Git.layer, NodeS
   for (const exclusion of exclusions) {
     it.effect(`still finds the ${exclusion.kind} exclusion ${exclusion.reference} in ${exclusion.source}`, (ctx) =>
       Effect.gen(function* () {
-        const { entries, inventory } = yield* CensusFacts;
-        skipWhenAbsent(ctx, exclusionAbsence(inventory, exclusion));
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { root, entries, inventory, tracked } = yield* CensusFacts;
+        skipWhenPruned(ctx, exclusionAbsence(inventory, exclusion));
+        // The hand-written owner must be the package that owns the source, so it cannot drift.
+        const directory = owningPackageDirectory(exclusion.source, tracked);
+        assertTrue(O.isSome(directory), exclusion.source);
+        const text = yield* fs.readFileString(
+          path.join(
+            root,
+            O.getOrElse(directory, () => ""),
+            "package.json"
+          )
+        );
+        const manifest = yield* decodePackageName(text);
+        expect(manifest.name, exclusion.source).toBe(exclusion.owner);
         const excluded = A.filter(
           entries,
           (entry) => entry.reference === exclusion.reference && entry.source === exclusion.source
@@ -458,7 +474,7 @@ it.layer(Layer.provideMerge(CensusFactsLive, Layer.provideMerge(Git.layer, NodeS
     it.effect(`keeps the ${row.reference} row matching census paths`, (ctx) =>
       Effect.gen(function* () {
         const { entries, inventory } = yield* CensusFacts;
-        skipWhenAbsent(ctx, rowAbsence(inventory, row));
+        skipWhenPruned(ctx, rowAbsence(inventory, row));
         const pattern = pathPattern(row.pattern);
         expect(
           A.some(consumedPathsOf(entries), (consumed) => pattern.test(consumed)),
@@ -472,8 +488,8 @@ it.layer(Layer.provideMerge(CensusFactsLive, Layer.provideMerge(Git.layer, NodeS
           const fs = yield* FileSystem.FileSystem;
           const path = yield* Path.Path;
           const { root, inventory, tracked } = yield* CensusFacts;
-          skipWhenAbsent(ctx, rowAbsence(inventory, row));
-          skipWhenAbsent(ctx, evidenceAbsence(inventory, tracked, row, evidence));
+          skipWhenPruned(ctx, rowAbsence(inventory, row));
+          skipWhenPruned(ctx, evidenceAbsence(inventory, tracked, row, evidence));
           expect(HashSet.has(tracked, evidence), evidence).toBe(true);
           const text = yield* fs.readFileString(path.join(root, evidence));
           expect(Str.includes(row.reference)(text), `${evidence} reaches ${row.reference}`).toBe(true);
@@ -553,12 +569,16 @@ it.layer(Layer.provideMerge(CensusFactsLive, Layer.provideMerge(Git.layer, NodeS
   );
 });
 
-// The rule itself, over a synthetic checkout that holds goals/demo and @beep/kept only. Every case
-// that is stale while its subject exists must come back empty, which keeps its assertion running.
+// The rule itself, over a synthetic checkout that holds goals/demo and @beep/kept, pruned the
+// product leaf @beep/leaf and the packet goals/leaf, and lacks @beep/typo and goals/typo, which
+// nobody declared prunable. Every case that is stale while its subject exists, or whose subject is
+// merely missing, must come back empty, which keeps its assertion running.
 describe("the checkout-subject rule for census rows", () => {
   const inventory = CheckoutInventory.make({
     packets: packetRootsOf(["goals/demo/README.md"]),
     workspaces: HashMap.make(["@beep/kept", "packages/kept"]),
+    prunedPackets: packetRootsOf(["goals/leaf/README.md"]),
+    prunedWorkspaces: HashSet.make("@beep/leaf"),
   });
   const demoRow = (reference: string, consumers: A.NonEmptyReadonlyArray<string>) =>
     CiGoalDataConsumer.make({
@@ -572,37 +592,44 @@ describe("the checkout-subject rule for census rows", () => {
 
   it("checks a row whose packet and consumers are present, or whose consumers are partly present", () => {
     expect(rowAbsence(inventory, demoRow("goals/demo/ops/", ["@beep/kept"]))).toEqual([]);
-    expect(rowAbsence(inventory, demoRow("goals/demo/ops/", ["@beep/kept", "@beep/pruned"]))).toEqual([]);
+    expect(rowAbsence(inventory, demoRow("goals/demo/ops/", ["@beep/kept", "@beep/leaf"]))).toEqual([]);
     expect(rowAbsence(inventory, demoRow("goals/*/ops/**/*.ts", ["@beep/kept"]))).toEqual([]);
   });
 
-  it("skips a row whose packet is absent, or whose every consumer is absent", () => {
-    expect(rowAbsence(inventory, demoRow("goals/pruned/ops/", ["@beep/kept"]))).toEqual(
-      A.fromOption(packetSubjectOf("goals/pruned/ops/"))
+  it("skips a row whose packet was pruned, or whose every consumer was pruned", () => {
+    expect(rowAbsence(inventory, demoRow("goals/leaf/ops/", ["@beep/kept"]))).toEqual(
+      A.fromOption(packetSubjectOf("goals/leaf/ops/"))
     );
-    expect(rowAbsence(inventory, demoRow("goals/demo/ops/", ["@beep/pruned"]))).toEqual([
-      workspaceSubject("@beep/pruned"),
-    ]);
+    expect(rowAbsence(inventory, demoRow("goals/demo/ops/", ["@beep/leaf"]))).toEqual([workspaceSubject("@beep/leaf")]);
   });
 
-  it("keeps an untracked evidence file stale inside a present workspace or when every consumer is present", () => {
-    const row = demoRow("goals/demo/ops/", ["@beep/kept", "@beep/pruned"]);
+  it("checks a row whose packet or consumer is missing without being declared prunable", () => {
+    // A typo or a renamed package reads as missing, never as pruned, so the row still fails.
+    expect(rowAbsence(inventory, demoRow("goals/typo/ops/", ["@beep/kept"]))).toEqual([]);
+    expect(rowAbsence(inventory, demoRow("goals/demo/ops/", ["@beep/typo"]))).toEqual([]);
+    expect(rowAbsence(inventory, demoRow("goals/demo/ops/", ["@beep/leaf", "@beep/typo"]))).toEqual([]);
+  });
+
+  it("keeps an untracked evidence file stale inside a present workspace or when no consumer was pruned", () => {
+    const row = demoRow("goals/demo/ops/", ["@beep/kept", "@beep/leaf"]);
     expect(evidenceAbsence(inventory, noTracked, row, "packages/kept/test/Renamed.test.ts")).toEqual([]);
     // A consumer that moved directories keeps its name, so its old evidence path is stale.
     const moved = demoRow("goals/demo/ops/", ["@beep/kept"]);
     expect(evidenceAbsence(inventory, noTracked, moved, "packages/old-home/test/Demo.test.ts")).toEqual([]);
+    const missing = demoRow("goals/demo/ops/", ["@beep/kept", "@beep/typo"]);
+    expect(evidenceAbsence(inventory, noTracked, missing, "packages/typo/test/Demo.test.ts")).toEqual([]);
   });
 
   it("skips an untracked evidence file that belonged to a pruned consumer, and checks a tracked one", () => {
-    const row = demoRow("goals/demo/ops/", ["@beep/kept", "@beep/pruned"]);
-    expect(evidenceAbsence(inventory, noTracked, row, "packages/pruned/test/Demo.test.ts")).toEqual([
-      workspaceSubject("@beep/pruned"),
+    const row = demoRow("goals/demo/ops/", ["@beep/kept", "@beep/leaf"]);
+    expect(evidenceAbsence(inventory, noTracked, row, "packages/leaf/test/Demo.test.ts")).toEqual([
+      workspaceSubject("@beep/leaf"),
     ]);
-    const tracked = HashSet.make("packages/pruned/test/Demo.test.ts");
-    expect(evidenceAbsence(inventory, tracked, row, "packages/pruned/test/Demo.test.ts")).toEqual([]);
+    const tracked = HashSet.make("packages/leaf/test/Demo.test.ts");
+    expect(evidenceAbsence(inventory, tracked, row, "packages/leaf/test/Demo.test.ts")).toEqual([]);
   });
 
-  it("skips an exclusion whose owner or packet is absent, and checks one whose subjects are present", () => {
+  it("skips an exclusion whose owner or packet was pruned, and checks every other", () => {
     const exclusion = (owner: string, reference: string) =>
       CensusExclusion.make({
         reference,
@@ -612,11 +639,12 @@ describe("the checkout-subject rule for census rows", () => {
         reason: "demo",
       });
     expect(exclusionAbsence(inventory, exclusion("@beep/kept", "goals/demo/research/x.json"))).toEqual([]);
-    expect(exclusionAbsence(inventory, exclusion("@beep/pruned", "goals/demo/research/x.json"))).toEqual([
-      workspaceSubject("@beep/pruned"),
+    expect(exclusionAbsence(inventory, exclusion("@beep/typo", "goals/demo/research/x.json"))).toEqual([]);
+    expect(exclusionAbsence(inventory, exclusion("@beep/leaf", "goals/demo/research/x.json"))).toEqual([
+      workspaceSubject("@beep/leaf"),
     ]);
-    expect(exclusionAbsence(inventory, exclusion("@beep/kept", "goals/pruned/research/x.json"))).toEqual(
-      A.fromOption(packetSubjectOf("goals/pruned/research/x.json"))
+    expect(exclusionAbsence(inventory, exclusion("@beep/kept", "goals/leaf/research/x.json"))).toEqual(
+      A.fromOption(packetSubjectOf("goals/leaf/research/x.json"))
     );
   });
 

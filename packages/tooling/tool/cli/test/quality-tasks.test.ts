@@ -234,7 +234,7 @@ import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { Project } from "ts-morph";
-import { currentCheckoutInventory, skipUnlessCheckoutHolds } from "./support/CheckoutSkip.ts";
+import { currentCheckoutInventory, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { CiLaneId } from "@beep/repo-cli/commands/Ci";
 import type { PolicySweepProgram } from "@beep/repo-cli/commands/Quality";
@@ -9291,7 +9291,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       Effect.gen(function* () {
         // The plan is read from the live workspace; a checkout without the law-practice server skips.
         const inventory = yield* currentCheckoutInventory;
-        skipUnlessCheckoutHolds(ctx, inventory, [workspaceSubject("@beep/law-practice-server")]);
+        skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject("@beep/law-practice-server")]);
         const repoRoot = yield* findRepoRoot();
         const owners = yield* workspaceCoverageScopeOwners(repoRoot);
         const packageNames = pipe(

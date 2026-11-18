@@ -1,6 +1,7 @@
 // The shared skip step of every tolerant fixture surface (goals/prunable-product-leaves, seam 1):
-// it skips, naming each absent subject, only when the checkout lacks one, and is a no-op when the
-// checkout holds them all. A recording context stands in for Vitest's, so both paths are observed.
+// it skips, naming each pruned subject, only when the checkout pruned a declared product leaf, and
+// is a no-op otherwise, including for a missing name nobody declared prunable. A recording context
+// stands in for Vitest's, so every path is observed.
 
 import {
   CheckoutInventory,
@@ -12,11 +13,14 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as HashMap from "effect/HashMap";
-import { skipUnlessCheckoutHolds, skipWhenAbsent } from "./support/CheckoutSkip.ts";
+import * as HashSet from "effect/HashSet";
+import { skipWhenCheckoutPruned, skipWhenPruned } from "./support/CheckoutSkip.ts";
 
 const inventory = CheckoutInventory.make({
   packets: packetRootsOf(["goals/kept/README.md"]),
   workspaces: HashMap.make(["@beep/kept", "packages/kept"]),
+  prunedPackets: packetRootsOf(["goals/leaf/README.md"]),
+  prunedWorkspaces: HashSet.make("@beep/leaf"),
 });
 
 // Records each skip note instead of throwing, as Vitest's skip would.
@@ -31,27 +35,37 @@ const recordingContext = () => {
 describe("checkout skip", () => {
   it("does not skip when the checkout holds every subject", () => {
     const ctx = recordingContext();
-    skipUnlessCheckoutHolds(ctx, inventory, [
+    skipWhenCheckoutPruned(ctx, inventory, [
       workspaceSubject("@beep/kept"),
       ...A.fromOption(packetSubjectOf("goals/kept/research/x.json")),
     ]);
-    skipWhenAbsent(ctx, []);
+    skipWhenPruned(ctx, []);
     expect(ctx.notes).toEqual([]);
   });
 
-  it("skips once, naming every absent packet and workspace", () => {
+  it("does not skip for a missing subject nobody declared prunable", () => {
     const ctx = recordingContext();
-    skipUnlessCheckoutHolds(ctx, inventory, [
-      workspaceSubject("@beep/kept"),
-      workspaceSubject("@beep/pruned"),
-      ...A.fromOption(packetSubjectOf("goals/pruned/research/x.json")),
+    skipWhenCheckoutPruned(ctx, inventory, [
+      workspaceSubject("@beep/typo"),
+      ...A.fromOption(packetSubjectOf("goals/typo/research/x.json")),
     ]);
-    expect(ctx.notes).toEqual(["absent from this checkout: workspace @beep/pruned, packet goals/pruned"]);
+    expect(ctx.notes).toEqual([]);
+  });
+
+  it("skips once, naming every pruned packet and workspace", () => {
+    const ctx = recordingContext();
+    skipWhenCheckoutPruned(ctx, inventory, [
+      workspaceSubject("@beep/kept"),
+      workspaceSubject("@beep/leaf"),
+      workspaceSubject("@beep/typo"),
+      ...A.fromOption(packetSubjectOf("goals/leaf/research/x.json")),
+    ]);
+    expect(ctx.notes).toEqual(["pruned from this checkout: workspace @beep/leaf, packet goals/leaf"]);
   });
 
   it("takes the context last in a pipeline", () => {
     const ctx = recordingContext();
-    skipUnlessCheckoutHolds(inventory, [workspaceSubject("@beep/pruned")])(ctx);
-    expect(ctx.notes).toEqual(["absent from this checkout: workspace @beep/pruned"]);
+    skipWhenCheckoutPruned(inventory, [workspaceSubject("@beep/leaf")])(ctx);
+    expect(ctx.notes).toEqual(["pruned from this checkout: workspace @beep/leaf"]);
   });
 });

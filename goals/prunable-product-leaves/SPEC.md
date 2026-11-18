@@ -42,6 +42,13 @@ guard that keeps it holding.
   discovery finds a member with that package name. A present subject keeps
   every assertion strict, stale-file checks included: a fixture or evidence
   file missing from a present packet or workspace still fails.
+- **Pruned.** What a skip needs, beyond absence. The product leaves and their
+  packets are declared prunable in `@beep/repo-cli-kit/ProductLeaves`
+  (workspaces by name and directory). A subject is pruned when it is declared
+  and its directory is gone; only a pruned subject skips. An absent subject
+  nobody declared (a typo, a renamed or archived packet, a renamed kept
+  package) fails as before, and so does a declared package whose name is gone
+  while its directory remains (renamed in place).
 - **Prune rehearsal.** In a disposable worktree, in this order:
   1. `bun install` on the full checkout, so the `beep` CLI and its
      dependencies resolve for the steps below.
@@ -240,7 +247,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 ### An absent subject is skipped and reported; a present subject stays strict, 2026-11-17
 
-Operator decision, 2026-11-17. A census row, law exemption or test fixture whose subject is absent from the checkout is skipped and reported as skipped, not failed. A subject is the packet (goals/<slug> or explorations/<slug>) a path lives in, or a workspace named by its package name, which the surface declares (a census row's consumers, the package that owns a fixture); any other path belongs to the repository, which is always present. Identity never comes from the files the checkout holds: a packet is present when its directory exists, a workspace when workspace discovery finds a member with that name. Keying on the owning packet or package name, not on the path itself, keeps the full checkout exactly as strict as today: a renamed evidence file, a deleted fixture inside a present packet or workspace, or the old path of a package that moved still fails, because its subject exists. Each tolerant surface carries a test that simulates an absent subject and one that proves a stale row on a present subject still fails. One shared presence helper serves every surface.
+Operator decision, 2026-11-17. A census row, law exemption or test fixture whose subject the checkout pruned is skipped and reported as skipped, not failed. Pruned means declared prunable (the product leaves and their packets, @beep/repo-cli-kit/ProductLeaves) and its directory gone; an absent subject nobody declared still fails, so a typo or a rename never reads as pruning (review of #3379). A subject is the packet (goals/<slug> or explorations/<slug>) a path lives in, or a workspace named by its package name, which the surface declares (a census row's consumers, the package that owns a fixture); any other path belongs to the repository, which is always present. Identity never comes from the files the checkout holds: a packet is present when its directory exists, a workspace when workspace discovery finds a member with that name. Keying on the owning packet or package name, not on the path itself, keeps the full checkout exactly as strict as today: a renamed evidence file, a deleted fixture inside a present packet or workspace, or the old path of a package that moved still fails, because its subject exists. Each tolerant surface carries a test that simulates an absent subject and one that proves a stale row on a present subject still fails. One shared presence helper serves every surface.
 
 Lane feat/prunable-product-leaves
 

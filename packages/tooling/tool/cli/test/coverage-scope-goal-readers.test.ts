@@ -17,7 +17,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import { currentCheckoutInventory, skipUnlessCheckoutHolds } from "./support/CheckoutSkip.ts";
+import { currentCheckoutInventory, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 
 // D-cov (goals/goal-closeout-hosted-verification): a goal or exploration path selects coverage
 // owners only through the ROUT-03 registry `ciGoalDataConsumers`, and a packet document
@@ -172,7 +172,7 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("live workspace goal rea
     it.effect(`finds registry consumer ${name} as a live owner with a coverage script`, (ctx) =>
       Effect.gen(function* () {
         const inventory = yield* currentCheckoutInventory;
-        skipUnlessCheckoutHolds(ctx, inventory, [workspaceSubject(name)]);
+        skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject(name)]);
         const repoRoot = yield* findRepoRoot();
         const workspace = yield* workspaceCoverageScopeOwners(repoRoot);
         expect(
@@ -189,7 +189,7 @@ it.layer(NodeServices.layer, { timeout: "60 seconds" })("live workspace goal rea
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const inventory = yield* currentCheckoutInventory;
-        skipUnlessCheckoutHolds(ctx, inventory, [workspaceSubject(entry.packageName)]);
+        skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject(entry.packageName)]);
         // Canonical, as workspace discovery resolves member containment against the real root.
         const found = yield* findRepoRoot();
         const repoRoot = yield* fs.realPath(found);

@@ -19,7 +19,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { currentCheckoutInventory, skipUnlessCheckoutHolds } from "./support/CheckoutSkip.ts";
+import { currentCheckoutInventory, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 
 // Quality audit K3 and M10 (2026-11-02): package prose never enters a build, check, test or transit
 // hash, and test sources stay out of `build` and `transit`, so neither cascades through `^build` or
@@ -204,7 +204,7 @@ describe("package role task inputs", () => {
       it.effect(`detects that the build program of ${name} compiles its tests`, (ctx) =>
         Effect.gen(function* () {
           const inventory = yield* currentCheckoutInventory;
-          skipUnlessCheckoutHolds(ctx, inventory, [workspaceSubject(name)]);
+          skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject(name)]);
           const { repo } = yield* readRoot();
           const directories = yield* workspaceDirectories(repo);
           const directory = yield* Effect.fromOption(HashMap.get(directories, name));

@@ -27,7 +27,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { vi } from "vitest";
-import { currentCheckoutInventory, skipUnlessCheckoutHolds } from "./support/CheckoutSkip.ts";
+import { currentCheckoutInventory, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 import { fixturePackageFiles, policyCliFixtureFiles, writeFixtureFiles } from "./support/PolicyCliFixture.ts";
 import type {
   canUseTurboCacheSecretSession,
@@ -872,7 +872,7 @@ describe("executed lint workers", { concurrent: false }, () => {
         Effect.gen(function* () {
           // The lab package is found by name; a checkout without @beep/ciops skips.
           const inventory = yield* currentCheckoutInventory;
-          skipUnlessCheckoutHolds(ctx, inventory, [workspaceSubject("@beep/ciops")]);
+          skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject("@beep/ciops")]);
           const ciops = yield* Effect.fromOption(HashMap.get(inventory.workspaces, "@beep/ciops"));
           const root = yield* findRepoRoot();
           const result = yield* StepExec.runCaptured({

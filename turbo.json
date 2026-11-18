@@ -1788,6 +1788,7 @@
         "$TURBO_ROOT$/packages/tooling/library/ai-sync/src/Skills.schemas.ts",
         "$TURBO_ROOT$/packages/tooling/library/ai-sync/src/SkillsLock.schemas.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/CheckoutSubject.ts",
+        "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/ProductLeaves.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/RepoWorkspaces.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/artifacts/ArtifactIo.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/artifacts/GeneratedFileDrift.ts",

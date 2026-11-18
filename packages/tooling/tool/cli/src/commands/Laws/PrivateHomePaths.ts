@@ -471,9 +471,10 @@ export const formatPrivateHomePathFinding = (finding: PrivateHomePathFinding): s
  * scans the working-tree text, decoding a file that contains a NUL byte rather
  * than skipping it, so `skippedBinaryFiles` stays 0. Exempt
  * archives are scanned too, so a count change fails; an exemption row whose
- * file is no longer tracked is reported as stale, unless the checkout holds no
- * file of the row's packet at all: then the row lands in `skippedExemptions`
- * instead (a fork or trimmed lane removed the packet). `exemptFiles` counts the
+ * file is no longer tracked is reported as stale, unless the row's packet is a
+ * declared product-leaf packet (`prunablePackets`) of which the checkout holds
+ * no file: then the row lands in `skippedExemptions` instead (a fork or trimmed
+ * lane removed the packet). `exemptFiles` counts the
  * archives that matched their sealed count.
  *
  * **Example** (Count findings in the repository)
@@ -525,11 +526,13 @@ export const runPrivateHomePaths = Effect.fn("PrivateHomePaths.runPrivateHomePat
   });
   const seen = HashSet.fromIterable(A.map(outcomes, (outcome) => outcome.file));
   const presentPackets = packetRootsOf(seen);
-  // An untracked row whose packet the checkout lacks is skipped, not stale: a fork or trimmed lane
-  // removed the packet. A row whose packet is present, or that lives in no packet, stays strict.
+  // An untracked row is skipped, not stale, only when its packet is a declared product-leaf packet
+  // the checkout pruned. A row whose packet is present, undeclared, or that lives in no packet stays
+  // strict, so a renamed or archived packet still fails the law.
   const untracked = A.filter(options.exemptions, (row) => !HashSet.has(seen, row.file));
+  const prunable = HashSet.fromIterable(options.prunablePackets);
   const inAbsentPacket = (row: PrivateHomePathExemption): boolean =>
-    O.exists(packetRootOf(row.file), (root) => !HashSet.has(presentPackets, root));
+    O.exists(packetRootOf(row.file), (root) => HashSet.has(prunable, root) && !HashSet.has(presentPackets, root));
   const absentPacket = A.filter(untracked, inAbsentPacket);
   const stale = A.filter(untracked, (row) => !inAbsentPacket(row));
   const reported = A.appendAll(

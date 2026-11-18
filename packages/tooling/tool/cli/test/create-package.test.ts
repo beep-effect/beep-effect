@@ -21,7 +21,7 @@ import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { currentCheckoutInventory, skipUnlessCheckoutHolds } from "./support/CheckoutSkip.ts";
+import { currentCheckoutInventory, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 import { temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 const UnknownJson = S.fromJsonString(S.Unknown);
@@ -630,7 +630,7 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
           const path = yield* Path.Path;
           // The OIP app is read from wherever @beep/oip-web lives; a checkout without it skips.
           const inventory = yield* currentCheckoutInventory;
-          skipUnlessCheckoutHolds(ctx, inventory, [workspaceSubject(OIP_WEB)]);
+          skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject(OIP_WEB)]);
           const oipDirectory = yield* Effect.fromOption(HashMap.get(inventory.workspaces, OIP_WEB));
           const repoRoot = yield* findRepoRoot();
           const readJsoncFile3 = yield* readJsoncFile(path.join(repoRoot, "tsconfig.base.json"));

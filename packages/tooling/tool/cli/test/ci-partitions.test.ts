@@ -35,7 +35,7 @@ import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { CurrentCheckout, CurrentCheckoutLive, skipUnlessCheckoutHolds } from "./support/CheckoutSkip.ts";
+import { CurrentCheckout, CurrentCheckoutLive, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 
 const esc = "\u001b";
 
@@ -175,7 +175,7 @@ it.layer(Layer.merge(CommittedCheckout, CurrentCheckoutLive), { timeout: "30 sec
         // The law-practice plan is that package's file; a checkout without the package has no committed
         // plan to judge, so the check skips. CurrentCheckout reads the real checkout, not the in-memory one.
         const inventory = yield* CurrentCheckout;
-        skipUnlessCheckoutHolds(ctx, inventory, [workspaceSubject("@beep/law-practice-server")]);
+        skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject("@beep/law-practice-server")]);
         const report = yield* checkCiPartitions("/repo");
         const testUnit = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "test-unit");
         deepStrictEqual(

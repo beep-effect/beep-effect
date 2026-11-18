@@ -19,7 +19,7 @@ import * as Str from "effect/String";
 // vitest 5: `resolveConfig` returns Vite's ResolvedConfig; the `test` key is a module augmentation from "vitest/config".
 import "vitest/config";
 import { resolveConfig } from "vitest/node";
-import { currentCheckoutInventory, skipUnlessCheckoutHolds } from "./support/CheckoutSkip.ts";
+import { currentCheckoutInventory, skipWhenCheckoutPruned } from "./support/CheckoutSkip.ts";
 
 const PlatformLayer = FsUtilsLive.pipe(Layer.provideMerge(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer)));
 const fixture = NodeURL.fileURLToPath(new URL("./fixtures/doctest-lane/package/", import.meta.url));
@@ -239,7 +239,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })("doctest l
         Effect.gen(function* () {
           const path = yield* Path.Path;
           const inventory = yield* currentCheckoutInventory;
-          skipUnlessCheckoutHolds(ctx, inventory, [workspaceSubject(name)]);
+          skipWhenCheckoutPruned(ctx, inventory, [workspaceSubject(name)]);
           const root = yield* findRepoRoot();
           const relative = yield* Effect.fromOption(HashMap.get(inventory.workspaces, name));
           const directory = path.join(root, relative);
