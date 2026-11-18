@@ -8,6 +8,7 @@ import {
   decodeCanonicalSliceOperationPlanJson,
   encodeCanonicalSliceOperationPlanJson,
   ensureCurrentModelFirstReferences,
+  makeArchitectureOperationPlan,
   makeModelFirstContextOperationPlan,
   renderPackageJsonOperation,
   shapeOfOperationPlan,
@@ -30,6 +31,7 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
@@ -225,26 +227,31 @@ const staleOf = (plan: CanonicalSliceOperationPlan): CanonicalSliceOperationPlan
     ),
   });
 
-// A disposable checkout in the git-ignored tmp/ holding the identity workspace
-// and the contract kit's manifest: enough for the planner to resolve a context.
-const makeCheckout = Effect.fnUntraced(function* (prefix: string) {
+const checkoutIdentity = "packages/foundation/modeling/identity";
+const checkoutKit = "packages/foundation/modeling/contract-kit";
+
+// A disposable checkout in the git-ignored tmp/ holding the named workspaces
+// (by default the identity workspace and the contract kit's manifest: enough
+// for the planner to resolve a context).
+const makeCheckout = Effect.fnUntraced(function* (
+  prefix: string,
+  workspaces: ReadonlyArray<string> = [checkoutIdentity, checkoutKit]
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* repoRoot;
   const tmpRoot = path.join(root, "packages/tooling/tool/cli/tmp");
   yield* fs.makeDirectory(tmpRoot, { recursive: true });
   const checkout = yield* fs.makeTempDirectoryScoped({ directory: tmpRoot, prefix });
-  const identity = "packages/foundation/modeling/identity";
-  const kit = "packages/foundation/modeling/contract-kit";
-  const rootManifest = yield* jsonStringifyPretty({
-    name: "proof-checkout",
-    private: true,
-    workspaces: [identity, kit],
-  });
+  const rootManifest = yield* jsonStringifyPretty({ name: "proof-checkout", private: true, workspaces });
   yield* fs.writeFileString(path.join(checkout, "package.json"), rootManifest);
-  yield* fs.makeDirectory(path.join(checkout, identity, "src"), { recursive: true });
-  yield* fs.makeDirectory(path.join(checkout, kit), { recursive: true });
-  for (const file of [`${identity}/package.json`, `${identity}/src/packages.ts`, `${kit}/package.json`]) {
+  const files = A.flatMap(workspaces, (workspace) =>
+    workspace === checkoutIdentity
+      ? [`${workspace}/package.json`, `${workspace}/src/packages.ts`]
+      : [`${workspace}/package.json`]
+  );
+  for (const file of files) {
+    yield* fs.makeDirectory(path.dirname(path.join(checkout, file)), { recursive: true });
     yield* fs.copyFile(path.join(root, file), path.join(checkout, file));
   }
   return checkout;
@@ -558,6 +565,59 @@ describe("beep architecture: model-first context", () => {
         expect(refusal.message).toContain("Regenerate the plan");
         // Nothing of the plan exists in the checkout, so there is nothing to reconcile.
         expect(refusal.message).not.toContain("already exist");
+      })
+    );
+
+    it.effect(
+      "rejects a Module name that is not PascalCase",
+      Effect.fnUntraced(function* () {
+        const refusal = yield* Effect.flip(
+          makeModelFirstContextOperationPlan({ repoRoot: "/repo", context: "notes", module: "note" })
+        );
+        expect(refusal.message).toContain("a Module is a PascalCase name");
+      })
+    );
+
+    it.effect(
+      "rejects a checkout without the @beep/identity workspace",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("model-first-no-identity-", [checkoutKit]);
+        const refusal = yield* Effect.flip(
+          makeModelFirstContextOperationPlan({ repoRoot: checkout, context: "notes", module: "Note" })
+        );
+        expect(refusal.message).toContain("The @beep/identity workspace is not in the repository");
+      })
+    );
+
+    it.effect(
+      "rejects a checkout missing a workspace the generated packages depend on",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("model-first-no-kit-", [checkoutIdentity]);
+        const refusal = yield* Effect.flip(
+          makeModelFirstContextOperationPlan({ repoRoot: checkout, context: "notes", module: "Note" })
+        );
+        expect(refusal.message).toContain('Workspace package "@beep/contract-kit" is not in the repository.');
+      })
+    );
+
+    it.effect(
+      "a legacy plan refuses a role its domain kind does not support and keeps one it does",
+      Effect.fnUntraced(function* () {
+        const root = yield* repoRoot;
+        const refusal = yield* Effect.flip(
+          makeArchitectureOperationPlan(
+            root,
+            { boundedContext: "research-lab", concept: "Priority", domainKind: "values" },
+            O.some(["server"])
+          )
+        );
+        expect(refusal.message).toContain("do not support role(s): server");
+        const allowed = yield* makeArchitectureOperationPlan(
+          root,
+          { boundedContext: "research-lab", concept: "Priority", domainKind: "values" },
+          O.some(["domain"])
+        );
+        expect(A.map(allowed.roles, (role) => role.role)).toEqual(["domain"]);
       })
     );
 

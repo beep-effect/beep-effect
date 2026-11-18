@@ -1,6 +1,10 @@
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { CI_LANE_PARTITIONS, proveCiLanePartition } from "@beep/repo-cli/commands/Ci";
-import { CreatePackageScripts, createPackageCommand } from "@beep/repo-cli/commands/CreatePackage";
+import {
+  CreatePackageScripts,
+  createPackageCommand,
+  registerScaffoldedWorkspaces,
+} from "@beep/repo-cli/commands/CreatePackage";
 import { syncTsconfigAtRoot, TsconfigSyncRunOptionsCheck } from "@beep/repo-cli/commands/TsconfigSync";
 import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { FsUtilsLive, findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils";
@@ -669,6 +673,62 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
 
             const readFileString5 = yield* fs.readFileString(bunArgsPath);
             expect(readFileString5).toBe("install\n--lockfile-only\n");
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      CreatePackageTestTimeoutMs
+    );
+
+    it.effect(
+      "registers scaffolded package directories as workspaces, composers, synced references and a refreshed lockfile",
+      () =>
+        withBootstrappedRootConfig(PackageParentRootConfig, ({ fs, path, rootDir }) =>
+          Effect.gen(function* () {
+            const binDir = path.join(rootDir, ".bin");
+            const bunArgsPath = path.join(rootDir, "bun-args.txt");
+            yield* bootstrapIdentityWorkspace(rootDir);
+            // The real registry, whose generated-labs markers bulk registration requires.
+            const registry = yield* path.fromFileUrl(
+              new URL("../../../../foundation/modeling/identity/src/packages.ts", import.meta.url)
+            );
+            yield* fs.copyFile(registry, path.join(rootDir, "packages/foundation/modeling/identity/src/packages.ts"));
+            yield* fs.makeDirectory(binDir, { recursive: true });
+            yield* writeBunShim(binDir);
+            // Two packages another scaffolder wrote outside the workspace globs.
+            const packagePaths = ["packages/notes/contract", "packages/notes/model"] as const;
+            for (const packagePath of packagePaths) {
+              const role = Str.replace("packages/notes/", "")(packagePath);
+              yield* writeJsonFile(path.join(rootDir, packagePath, "package.json"), {
+                name: `@beep/notes-${role}`,
+                version: "0.0.0",
+                exports: { "./package.json": "./package.json" },
+              });
+              yield* writeJsonFile(path.join(rootDir, packagePath, "tsconfig.json"), {
+                compilerOptions: { outDir: "dist", rootDir: "src" },
+                include: ["src"],
+              });
+            }
+
+            const registered = yield* withBunShim(
+              binDir,
+              bunArgsPath,
+              registerScaffoldedWorkspaces(rootDir, packagePaths)
+            );
+
+            expect(registered.addedWorkspaces).toEqual(packagePaths);
+            expect(registered.registeredSlugs).toEqual(["notes-contract", "notes-model"]);
+            const rootManifest = yield* fs.readFileString(path.join(rootDir, "package.json"));
+            expect(rootManifest).toContain('"packages/notes/contract"');
+            expect(rootManifest).toContain('"packages/notes/model"');
+            const references = yield* fs.readFileString(path.join(rootDir, "tsconfig.packages.json"));
+            expect(references).toContain("packages/notes/contract");
+            expect(references).toContain("packages/notes/model");
+            const identityPackages = yield* fs.readFileString(
+              path.join(rootDir, "packages", "foundation", "modeling", "identity", "src", "packages.ts")
+            );
+            expect(identityPackages).toContain("export const $NotesContractId");
+            expect(identityPackages).toContain("export const $NotesModelId");
+            const bunArgs = yield* fs.readFileString(bunArgsPath);
+            expect(bunArgs).toBe("install\n--lockfile-only\n");
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       CreatePackageTestTimeoutMs

@@ -392,9 +392,18 @@ const ensureIdentityAccessorsFree = Effect.fnUntraced(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const identity = A.findFirst(members, (member) => member.name === "@beep/identity");
-  if (O.isNone(identity)) return;
-  const registryPath = path.join(repoRoot, identity.value.relativePath, "src/packages.ts");
+  // Registration writes the composers into @beep/identity, so a checkout without it cannot host a context.
+  const identity = yield* O.match(
+    A.findFirst(members, (member) => member.name === "@beep/identity"),
+    {
+      onNone: () =>
+        DomainError.newMessage(
+          "The @beep/identity workspace is not in the repository; its registry names every identity accessor."
+        ),
+      onSome: Effect.succeed,
+    }
+  );
+  const registryPath = path.join(repoRoot, identity.relativePath, "src/packages.ts");
   const registry = yield* fs
     .readFileString(registryPath)
     .pipe(Effect.mapError(DomainError.newCause(`Failed to read the identity registry "${registryPath}"`)));
@@ -403,7 +412,8 @@ const ensureIdentityAccessorsFree = Effect.fnUntraced(function* (
       A.fromIterable(
         pipe(registry, Str.matchAll(/export const (\$\w+): Identity\.IdentityComposer<"@beep\/([^"]+)">/gu))
       ),
-      (match) => [match[1] ?? "", match[2] ?? ""] as const
+      // Both groups always take part in a match of this pattern.
+      (match) => [String(match[1]), String(match[2])] as const
     )
   );
   const clashes = A.flatMap(generatedContextRoles, (role) => {
@@ -434,18 +444,14 @@ const modelFirstReferencesFor = Effect.fnUntraced(function* (repoRoot: string, n
   const target = modelFirstTargetFor(names);
   // A generated name another workspace already owns is refused; the same name
   // at the same path is this context, so a saved plan replays.
-  const taken = A.filter(generatedContextRoles, (role) =>
-    A.some(
+  const taken = A.flatMap(generatedContextRoles, (role) =>
+    A.filter(
       members,
       (member) => member.name === packageNameForRole(target, role) && member.relativePath !== pathForRole(target, role)
     )
   );
   if (A.isReadonlyArrayNonEmpty(taken)) {
-    const owners = A.map(taken, (role) => {
-      const name = packageNameForRole(target, role);
-      const owner = A.findFirst(members, (member) => member.name === name);
-      return `${name} (owned by ${O.match(owner, { onNone: () => "another workspace", onSome: (member) => member.relativePath })})`;
-    });
+    const owners = A.map(taken, (member) => `${member.name} (owned by ${member.relativePath})`);
     return yield* DomainError.newMessage(
       `Context "${names.context}" would generate workspace names already in use: ${A.join(owners, ", ")}. Choose another context name.`
     );
