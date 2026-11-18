@@ -93,7 +93,7 @@ authority context re-admits (D39).
 | Crosses | Never crosses |
 |---------|---------------|
 | A provider's contract: ids, commands, read contracts, facts, gateway contracts, capabilities | Another context's aggregate, private event, view, store, handler, model or host |
-| Integration facts through a published stream into an inbox | Direct reads of another context's tables, projections or streams |
+| Integration facts through a published stream into an inbox | Direct reads of another context's tables, projections or unpublished streams |
 | The shared kernel's language: ids, `Invocation` and `Provenance` schemas, the grant-check language, the fact envelope, the request key | Kernel Layers, aggregates or credential handling (the kernel holds none) |
 
 A process that listens to facts from three or more contexts and owns logic one

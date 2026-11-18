@@ -2758,7 +2758,7 @@ Rejected:
 - A hand-authored contract `RpcGroup` for good: it loses the typed nested
   client (D9).
 - Keeping `.live.ts`, kind folders or wildcard exports (D10).
-- Consumers following the producer's `Domain.Stream` or private events, and a
+- Consumers following the producer's private events or internal streams, and a
   host-owned outbox table (D11, D33).
 - Rewriting stored events, or widen-only schemas (D22).
 - Retiring `@beep/alchemy-postgres` on fixes carried in the monorepo (D53, D61).

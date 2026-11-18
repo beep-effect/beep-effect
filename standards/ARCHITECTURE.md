@@ -495,8 +495,8 @@ extensions.
 |---------|----------|----------------|
 | contract | `@alchemy.run/domain`, `effect`, the shared kernel, the contract kit, `foundation/primitive` and `foundation/modeling` | any model, host, aggregate or handler file; drivers |
 | model | its own contract, `@alchemy.run/domain`, `effect`, the shared kernel, `foundation/primitive` and `foundation/modeling` | drivers, React, the DOM, Node, any other context |
-| host | its own model and contract, other contexts' contracts, drivers, `foundation/capability`, `@alchemy.run/effect-cluster` | React, another context's model or host |
-| web | its own contract and generated bindings, React, Effect Atom, browser-safe `foundation/ui-system` and driver `/browser` entries; its own model only for a listed `Aggregate.predict` screen | any `.handler.ts` or `.adapter.ts`, the host, driver roots |
+| host | its own model and contract, other contexts' contracts, drivers, `@alchemy.run/effect-cluster` | React, another context's model or host |
+| web | its own contract and generated bindings, React, Effect Atom; its own model only for a listed `Aggregate.predict` screen | any `.handler.ts` or `.adapter.ts`, the host, driver roots |
 | app | slice hosts and their deployment descriptors, webs, pools and cloud provider packages | Module-level internals of any context |
 
 Between contexts:
@@ -540,9 +540,10 @@ that needs a lapsed one is refused and the refusal recorded (D30). A command an
 integration fact starts runs under the consuming record's own provenance plus a
 hop naming the fact; facts carry no provenance and nobody is re-admitted for
 them (D32). Command ids are request keys over the org, the operation and a
-request fingerprint (D36). The `audience` annotation, `Actor`, `CurrentActor`
+request fingerprint, and the org is the same resource scope grants are
+checked against (D14, D36). The `audience` annotation, `Actor`, `CurrentActor`
 and the kernel's `stamp` and `relay` are retired. Approval is an authenticated
-command in the product context, not a workflow signal (D4).
+command in the product context, not a workflow signal (D4, D28).
 
 Agent runs belong to a context named `runs`: the `AgentRun` aggregate, the
 budget ledger and run lineage (D6, D28). A run gets its authority by
@@ -557,9 +558,9 @@ a sandbox (D21). A Reasoner port carries an evaluation contract (D19).
 
 Effect Cluster on Postgres is the first host (D5). Each context's host
 publishes a deployment descriptor as data, naming its models, its processes and
-the fact versions it consumes. The app composes descriptors onto pools and
-names no individual model or process, and the cluster entry modules are
-generated into the app from the composed descriptors (D13, D40). A slice names
+the fact versions it consumes (D13, D34). The app composes descriptors onto
+pools and names no individual model or process, and the cluster entry modules
+are generated into the app from the composed descriptors (D40). A slice names
 no cloud.
 
 One context calls another through the provider's contract Api over the pool's
@@ -568,7 +569,9 @@ presents that pool's gateway token, and a host has no principal of its own;
 every call still carries provenance that authority re-admits (D39).
 
 A pool is a host for a model-first context when it meets these guarantees,
-each with its bound, and the conformance suite proves them:
+each with its bound. The conformance suite proves the first three on the
+cluster; the startup refusal of D54 and the frozen-runner case of D55 are
+proven in process, and their cluster cases have not run yet:
 
 - No acknowledged write is overwritten: the commit transaction re-reads the
   version and refuses when it moved (D41).
@@ -576,7 +579,8 @@ each with its bound, and the conformance suite proves them:
   ownership, identified by a connection pool named for the runner, and a
   runner whose pool is not named fails at start (D45, D49, D54).
 - After a runner dies, every reaction happens exactly once within one lease
-  (80 seconds on the present library constants) (D42).
+  plus wake latency: 80 seconds on the present library constants, a 60-second
+  lease and two 10-second polls (D42).
 - A write sent to a frozen runner completes or fails within the caller's retry
   budget, is never stored twice, and a retry under the same id gets its
   receipt (D55).
@@ -636,6 +640,13 @@ Frozen old-format fixtures and replay equivalence prove each change. A rebuild
 or replay suppresses side effects, and a projection sink takes the source
 position and generation (D14).
 
+Every stored field has a retention class. Content that may have to be erased
+(names, document text, evidence excerpts) lives in a store behind a port, and
+erasure leaves a tombstone; events are never rewritten for it. An agent's reads
+of privileged material are recorded, and untrusted content carries a trust
+label that limits which actions it can influence (D14). These rules are decided
+and have no checker yet.
+
 ### Web
 
 React stays. An ordinary screen is one `.screen.tsx` over bindings generated
@@ -650,10 +661,12 @@ Each invariant of a context is listed in a generated proof inventory with its
 checker, the inputs the checker reads, its assumptions, its known gaps and its
 evidence. The inventory is rendered from data and a check fails on drift (D8).
 
-- Mechanical laws run automatically: `Domain.verify` on each Model, the
+- Mechanical laws run in every check: `Domain.verify` on each Model, the
   primary-export rule, import-graph walks of the contract and web closures,
-  the port purity type, handler-registry drift, contract parity, stream pins,
-  stored-format fixtures and the conformance suite.
+  the port purity type, handler-registry drift, contract parity, stream pins
+  and stored-format fixtures. The model, host and app import rows are held by
+  the package manifests. The cluster entries run as the conformance suite
+  against a deployed stack.
 - Story coverage counts executed outcomes: every declared command outcome must
   execute in some story or test. A rejection tag found in a file does not count.
   A story fails on any event, rejection or external call it does not account

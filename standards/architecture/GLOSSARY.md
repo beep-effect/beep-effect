@@ -109,7 +109,9 @@ not client-safe.
 
 ## Command (event-sourced)
 
-A `Domain.Command` declaration in `domain`: the target aggregate's id schema,
+A `Domain.Command` declaration, in the contract package of a model-first slice
+(`<Module>/<VerbNoun>.command.ts`, with its events and private rejections) and
+in `domain` of a legacy slice: the target aggregate's id schema,
 its input fields, the events it may record, the rejections it may answer with,
 its middleware list and an optional reply. Alchemy's command dispatch is the
 use-case execution boundary.
@@ -388,8 +390,8 @@ migration under the checkers' baselines; no new slice and no new migration to
 A `Domain.Model` declaration, in the model package of a model-first slice
 (`<Context>.model.ts`) and in `use-cases` of a legacy slice: the aggregates, views, policies,
 projections, streams and sagas hosted together. `Model.layer(handlers)` hosts
-them on whatever Platform is provided. A `Domain.Api` selects what one audience
-may call from a model and derives HTTP, CLI and MCP surfaces from it.
+them on whatever Platform is provided. A `Domain.Api` selects what one kind of
+caller may call from a model and derives HTTP, CLI and MCP surfaces from it.
 
 ## Model Package
 
@@ -631,6 +633,10 @@ commands, queries, driver-neutral DTOs, driver-neutral boundary contracts,
 client-safe application errors, facade interfaces, and ultra-high-bar product
 ports, but not workflows, process managers, schedulers, handlers, concrete
 adapters, driver imports, or live Layers.
+Model-first contexts use only the kernel's language (ids, the `Invocation` and
+`Provenance` schemas, the grant-check language, the fact envelope, the request
+key, the descriptor and stream pin schemas); their synchronous contracts live in
+the provider's contract package, never in `shared/use-cases`.
 Shared packages consume shared-kernel language from shared and may consume
 appropriate `foundation` packages beside it; they do not own drivers. Shared
 is not a synonym for `common` or `foundation`, and it is not a place for
@@ -643,9 +649,11 @@ miscellaneous leftovers from product slices.
 The `RpcMiddleware.Service` a command, view or stream declares to authenticate
 its caller. Its server half resolves the session and provides the
 `RequestContext` (principal, source kind) that `decide` and `validate` read and
-that the Platform driver persists as provenance. Views are security boundaries:
-`validate` judges every read, and one view per audience replaces caller
-filtering.
+that, in a legacy slice, the Platform driver persists as provenance. In a
+model-first slice the library does not persist request context: events store
+[provenance](#provenance-event-sourced) in their payload, and only the authority
+context builds an Invocation. Views are security boundaries: `validate` judges
+every read, and one view per kind of caller replaces caller filtering.
 
 ## Site Route
 
@@ -667,10 +675,14 @@ tables, UI). Drivers stay repo-level instead of being slice package kinds.
 
 ## Saga (event-sourced)
 
-A `Domain.Saga` declaration in `use-cases`: an Effect workflow keyed by the
+A `Domain.Saga` declaration, in the model package of a model-first slice with
+its `.handler.ts` beside it and in `use-cases` of a legacy slice: an Effect
+workflow keyed by the
 aggregate it is about, with one command per `Activity` step, compensations and
-durable waits. Its `toLayer` implementation lives in `server` and runs on the
-workflow engine the Platform driver provides (`effect/cluster` on Postgres).
+durable waits. In a legacy slice its `toLayer` implementation lives in `server`
+and runs on the workflow engine the Platform driver provides (`effect/cluster`
+on Postgres). Its activity results are a stored format: an incompatible change
+is a new saga version.
 
 ## Scratchpad Lane
 
@@ -731,7 +743,9 @@ them local to the concept that uses them.
 
 ## View (event-sourced)
 
-A `Domain.View` declaration in `domain`: a pure fold of events from one or more
+A `Domain.View` declaration, in the model package of a model-first slice (its
+read contract repeated in the contract as a `.read.ts`) and in `domain` of a
+legacy slice: a pure fold of events from one or more
 aggregates or views into state keyed by what it is about, with `validate` as its
 security boundary. MCP tools derived from an `Api` expose Views only until the
 view-security tests pass.

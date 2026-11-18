@@ -20,7 +20,7 @@ Use the scratchpad lane to learn. Use slice packages to commit.
 
 ## 2. The smallest legal slice
 
-A slice is a bounded context with one `Domain.Model`, shipped as packages that
+A slice is a bounded context with one `Domain.Model` by default, shipped as packages that
 each hold one dependency closure. The smallest legal slice is three packages:
 `contract`, `model` and `host`. `web` joins when the context has a screen. The
 drawing names the files of a `notes` context with a single `Note` aggregate and
@@ -118,7 +118,7 @@ packages/notes/
   model/src/Facts/
     NoteOpenings.projection.ts      reads Note events directly; writes the published stream
     NoteOpenings.handler.ts
-    NotesFacts.stream.ts            generation 1, open
+    NotesFacts.stream.ts            generation 0, open
     StreamPins.ts                   the stream pinned to its writer, generation and sources
   host/src/Facts/
     NotesFactsFeed.adapter.ts       serves the stream as a feed
@@ -179,9 +179,9 @@ in memory and on a cluster.
 | web | `.screen.tsx` | a React screen over generated bindings |
 | web | `.machine.ts`, `.controller.ts` | a screen's pure state machine and the code that runs its intents |
 
-The full vocabulary is in `standards/ARCHITECTURE.md`, "File Grammar". If a
-path matches none of these suffixes, it is a violation of the role topology,
-and the role-suffix checker reports it.
+The full vocabulary is in `standards/ARCHITECTURE.md`, "File Grammar". A path
+that matches no kind in that table is a violation of the role topology; the
+role-suffix checker that reports it lands with `goals/model-first-standard`.
 
 ### Reading a legacy slice
 
