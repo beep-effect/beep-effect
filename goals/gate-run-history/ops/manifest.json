@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "gate-run-history",
+    "packetId": "goal-packet/v1:ce590844cbda1534732d58da53947162684bf3fecd67de3a9c47b2c52dae040a",
+    "title": "Gate Run History",
+    "status": "active",
+    "created": "2026-11-18",
+    "updated": "2026-11-18",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/gate-run-history",
+  "lifecycle": "active",
+  "mission": "Record every gate report by branch and label each failure against the lane's own runs and main's hosted results, with a fix-loop delta on every re-run.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/agent-verification-output",
+    "graduated": "2026-11-18"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/gate-run-history/README.md",
+    "goals/gate-run-history/SPEC.md",
+    "goals/gate-run-history/PLAN.md",
+    "goals/gate-run-history/GOAL.md",
+    "goals/gate-run-history/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/gate-run-history/GOAL.md"
+    }
+  ],
+  "provides": ["gate-report/run-history"],
+  "requires": [
+    "gate-report/model",
+    "gate-report/console",
+    "gate-report/recorder",
+    "ci/gate-report-feed"
+  ],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Schema",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Service contracts",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Lane history",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Hosted-main baseline",
+      "status": "pending"
+    },
+    {
+      "id": "P5",
+      "name": "Port review",
+      "status": "pending"
+    },
+    {
+      "id": "P6",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P7",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/gate-run-history/GOAL.md)\" -le 4000",
+    "jq . goals/gate-run-history/ops/manifest.json",
+    "rg -n \"gate-run-history|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/gate-run-history",
+    "git diff --check -- goals/gate-run-history",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ],
+  "blockedBy": ["goals/gate-report-core"],
+  "statusNote": "Authored 2026-11-18 at graduation from explorations/agent-verification-output, not started. Every phase waits on goals/gate-report-core (the model, the console slots and the recorder it provides). Lane history and the fix-loop delta (P1 to P3) start when that lands; the hosted-main baseline phase (P4) also waits on goals/ci-gate-reports, which chooses the carrier and uploads main's reports."
+}

@@ -1,0 +1,50 @@
+# CI Gate Reports
+
+## Status
+
+Lifecycle: `active`
+
+Source: [`ops/manifest.json`](./ops/manifest.json)
+
+## Mission
+
+Render GitHub Actions output from gate reports, upload every hosted run's reports as the feed for
+main's baseline, and put a failing job's cause one command away.
+
+## Launch
+
+Use this command for execution-capable sessions:
+
+```text
+/goal follow the instructions in goals/ci-gate-reports/GOAL.md
+```
+
+`GOAL.md` is the compact launcher. `SPEC.md` remains the normative contract.
+
+## Read This First
+
+1. [`GOAL.md`](./GOAL.md) - compact `/goal` launcher.
+2. [`SPEC.md`](./SPEC.md) - normative source of truth: the workflow census, the CI projection
+   and its limits, the carrier criteria, the failing-region command, the CI-job adapter.
+3. [`PLAN.md`](./PLAN.md) - phases and how they map to pull requests.
+4. [`ops/manifest.json`](./ops/manifest.json) - machine-readable routing.
+5. [`research/SOURCES.md`](./research/SOURCES.md) - provenance, linked to the exploration ledger.
+6. [`decisions/`](./decisions/) - the exploration rulings this goal carries.
+7. [`history/`](./history/) - evidence and closeouts, if present.
+
+## Current Phase
+
+P0 Research — not started. P1 waits for `goals/gate-report-core` (manifest `blockedBy`).
+
+## Latest Evidence
+
+2026-11-18: packet authored from `explorations/agent-verification-output` (MAP candidate 6).
+
+## Notes
+
+Graduated 2026-11-18 with five siblings. `gate-run-history` reads this goal's feed for its
+hosted-main baseline phase (capability `ci/gate-report-feed`). `heavy.yml` is called at `main`,
+so its changes prove on the first `main` run after merge. GitHub API quota is shared across
+sessions; every request this goal adds is REST through `GitHubClient` and shows in the budget
+ledger. Census-based acceptance uses the planned census command of `agent-output-census` once it
+lands; fixtures stand in until then.
