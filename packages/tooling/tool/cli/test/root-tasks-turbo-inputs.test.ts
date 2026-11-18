@@ -219,6 +219,7 @@ const directInputs: Readonly<Record<string, string>> = {
   "lint:policy-fingerprint": "standards/policy-tools.fingerprint.json",
   "lint:jsdoc:root": "infra/standalone/c3-probe.ts",
   "lint:native-runtime:roots": "scratchpad/c3-probe.ts",
+  "check:model-first-slices": "scratchpad/model-first-slices/c3-probe.ts",
   "lint:package-scripts": "packages/fixture/vitest.config.ts",
   "knowledge:semantic-delta": "docs/c3-probe.md",
   "knowledge:refs-check": "docs/c3-probe.md",

@@ -44,6 +44,7 @@ const TURBO_CONFIG_PROOF_TASK_VALUES = [
   "//#lint:jsdoc:root",
   "//#lint:policy-fingerprint",
   "//#lint:native-runtime:roots",
+  "//#check:model-first-slices",
   "//#lint:package-scripts",
   "//#knowledge:semantic-delta",
   "//#knowledge:refs-check",

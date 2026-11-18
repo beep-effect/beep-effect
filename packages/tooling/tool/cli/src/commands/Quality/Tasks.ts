@@ -3734,6 +3734,10 @@ const policyMediumTasks = [
   "lint:tsconfig-overlay",
   "lint:package-test-typecheck",
   "lint:effect-vitest",
+  // The standalone model-first-slices prototype's typecheck and toolchain guard tests. The
+  // prototype sits outside the root workspace, so no package check sees a root rule-set or
+  // toolchain-pin change break it; the cached task re-runs only when its inputs change.
+  "check:model-first-slices",
 ];
 // Index-only membership changes cannot drive native affected selection until
 // the complete discovery boundary is qualified, even with result caching off.
