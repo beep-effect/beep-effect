@@ -4529,10 +4529,8 @@ export const ciLaneTimingsCommand = Command.make(
       ...O.getSomesStruct({ branch, headSha, since, until }),
     });
     const boundsVerdict = yield* guardCiLaneTimingWindowBounds(options, preview);
-    const windowReport = yield* makeCiLaneTimingGithubClient().pipe(
-      Effect.flatMap((githubClient) =>
-        collectCiLaneTimingWindow(options, preview).pipe(Effect.provideService(CiLaneTimingGithubClient, githubClient))
-      ),
+    const windowReport = yield* collectCiLaneTimingWindow(options, preview).pipe(
+      Effect.provideServiceEffect(CiLaneTimingGithubClient, makeCiLaneTimingGithubClient()),
       withCiGithub(repoRoot)
     );
     const verdict = withCiLaneTimingWindowPopulation(boundsVerdict, windowReport);
