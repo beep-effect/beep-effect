@@ -91,8 +91,9 @@ type FairnessMode = typeof FairnessMode.Type;
  * ordering and is never overtaken by a newer unit; with both at 120 s and both
  * modes `off` the order equals the deployed `ticketOrder`.
  * `promotionOverheadMillis` is slack added to the conditional bound once per
- * unit ahead and once for the unit itself (the live scheduler polls on a
- * heartbeat; the event-driven model needs none).
+ * unit ahead and once for the unit itself; slice 12 sets it from the live
+ * heartbeat. The model decides only at events (see `simulateStream`), so it
+ * charges no polling delay.
  *
  * **Example** (Construct the SCHE-06 policy)
  *

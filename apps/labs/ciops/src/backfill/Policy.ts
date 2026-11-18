@@ -79,7 +79,9 @@ const effectiveRank = (policy: BackfillPolicy, nowMillis: number, unit: QueuedUn
 // The keys fairness reads from a unit: its origin and its checkout.
 type FairnessKeys = Pick<QueuedUnit, "checkoutKey" | "originKey">;
 
-const checkoutUsageKey = (originKey: string, checkoutKey: string): string => `${originKey}\u0000${checkoutKey}`;
+// Length-prefixed, so no two (origin, checkout) pairs share a key whatever characters they hold.
+const checkoutUsageKey = (originKey: string, checkoutKey: string): string =>
+  `${originKey.length}:${originKey}${checkoutKey}`;
 
 interface WindowSpan {
   readonly checkoutKey: string;
@@ -251,10 +253,9 @@ const projectedHeadStart: {
   (policy: BackfillPolicy, head: QueuedUnit): (view: SchedulerView) => O.Option<number>;
   (view: SchedulerView, policy: BackfillPolicy, head: QueuedUnit): O.Option<number>;
 } = dual(3, (view: SchedulerView, policy: BackfillPolicy, head: QueuedUnit): O.Option<number> => {
+  // The scan starts at the current instant with the free tokens, so a head that
+  // already fits projects to now.
   const free = policy.capacityTokens - activeTokens(view);
-  if (head.weightTokens <= free) {
-    return O.some(view.nowMillis);
-  }
   return O.flatMap(projectedEnds(view), (ends) => {
     const byEnd = A.sort(
       ends,

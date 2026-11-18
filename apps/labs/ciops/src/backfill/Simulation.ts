@@ -163,22 +163,25 @@ const protectDue = (policy: BackfillPolicy, state: SimulationState): SimulationS
 
 const reportBreaches = (state: SimulationState): SimulationState =>
   A.reduce(
-    A.filter(
-      state.waiting,
-      (unit) =>
-        O.exists(unit.deadlineMillis, (deadline) => state.nowMillis > deadline) &&
-        !HashSet.has(state.breachReported, unit.nonce)
+    A.getSomes(
+      A.map(state.waiting, (unit) =>
+        pipe(
+          unit.deadlineMillis,
+          O.filter((deadline) => state.nowMillis > deadline && !HashSet.has(state.breachReported, unit.nonce)),
+          O.map((deadlineMillis) => ({ nonce: unit.nonce, deadlineMillis }))
+        )
+      )
     ),
     state,
-    (next, unit) => ({
+    (next, breach) => ({
       ...next,
-      breachReported: HashSet.add(next.breachReported, unit.nonce),
+      breachReported: HashSet.add(next.breachReported, breach.nonce),
       events: A.append(
         next.events,
         SimulationEvent.cases.BoundBreached.make({
           atMillis: S.Natural.make(state.nowMillis),
-          nonce: unit.nonce,
-          deadlineMillis: O.getOrElse(unit.deadlineMillis, () => S.Natural.make(0)),
+          nonce: breach.nonce,
+          deadlineMillis: breach.deadlineMillis,
         })
       ),
     })
@@ -192,7 +195,8 @@ const admit = (
 ): SimulationState => {
   const fairness = fairnessReadingFor(viewOf(policy, state), policy, unit);
   const activeTokens = state.activeTokens + unit.weightTokens;
-  const holdMillis = O.getOrElse(HashMap.get(state.holds, unit.nonce), () => 1);
+  // Every queued unit recorded its hold on enqueue.
+  const holdMillis = HashMap.getUnsafe(state.holds, unit.nonce);
   return {
     ...state,
     activeTokens,
@@ -261,7 +265,9 @@ const admitAll = (policy: BackfillPolicy, verdict: VerdictFunction, state: Simul
 };
 
 // Decision instants: arrivals, releases, protection and aging boundaries, and
-// the first instant after each stamped deadline.
+// the first instant after each stamped deadline. Fairness usage also drifts
+// between them (running leases accrue, finished ones leave the window); the
+// model does not decide at those moments. See simulateStream's Gotchas.
 const nextInstant = (policy: BackfillPolicy, state: SimulationState): O.Option<number> => {
   const later = (instant: number): O.Option<number> => (instant > state.nowMillis ? O.some(instant) : O.none());
   const candidates = A.getSomes([
@@ -299,6 +305,18 @@ const validateArrivals = (arrivals: ReadonlyArray<UnitArrival>): Effect.Effect<v
  * The verdict defaults to {@link attemptVerdict}; the property suite passes
  * mutants to prove the laws can fail. A verdict that never admits a queued
  * unit ends the run with that unit missing from `outcomes`.
+ *
+ * **Gotchas**
+ *
+ * Decisions happen only at the instants above. With fairness on, windowed
+ * usage keeps changing between them, so the queue order (and with it which
+ * unit is head) can change while nothing is released or enqueued. A polling
+ * scheduler re-reads the order every heartbeat and may admit such a unit
+ * earlier than the model does. The laws do not depend on the instant: capacity,
+ * the conditional bound and the backfill rule hold at every decision, and the
+ * protected order, the only one the bound reads, never drifts. Admission times
+ * under fairness are therefore an event-driven approximation of the live
+ * scheduler, not a replay of it.
  *
  * **Example** (Simulate one unit)
  *

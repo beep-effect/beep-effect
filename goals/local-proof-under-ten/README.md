@@ -109,8 +109,10 @@ only merges the base, with the AGENTS.md mergeable amendment) is open as #3329.
   token-milliseconds. A non-head unit backfills only while the head is capacity-blocked, when its declared ETA
   ends by the head's projected start; a deadline stamped at protection disables backfill once breached. Property
   laws over effect/Arbitrary streams (tiny-arrival trains, a one-origin flood, oversized units, crashes,
-  overruns) and two rejected mutants are in `test/backfill-fairness.test.ts`; with both modes off, or with tier
-  units that carry no ETA, the model equals the deployed scheduler. The live scheduler is unchanged until slice 12.
+  overruns) and two rejected mutants are in `test/backfill-fairness.test.ts`. With both modes off the model equals
+  the deployed scheduler; with fairness off, tier units that carry no ETA also replay the deployed admissions
+  under EASY. Fairness compares usage, not ETAs, so with it on the order can differ even for tier units. The live
+  scheduler is unchanged until slice 12.
 
 ## Notes
 

@@ -12,7 +12,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { BackfillModel, BackfillModelLive } from "@/backfill/BackfillModel";
-import { attemptVerdict, conditionalDeadline, isProtectedAt, queueOrder } from "@/backfill/Policy";
+import { attemptVerdict, conditionalDeadline, fairnessReadingFor, isProtectedAt, queueOrder } from "@/backfill/Policy";
 import {
   AttemptVerdict,
   BackfillPolicy,
@@ -291,10 +291,15 @@ it.layer(BackfillModelLive, { timeout: "60 seconds" })("@beep/ciops SCHE-06 back
             BoundBreached: () => undefined,
           });
         }
-        const clamped = A.filter(report.events, SimulationEvent.guards.Enqueued);
-        expect(A.map(clamped, (enqueued) => enqueued.clamped)).toEqual(
-          A.map(seeds, (seed) => seed.weight > policy.capacityTokens)
+        // Enqueue rows follow the simulator's (instant, nonce) order, so match each row to its arrival by nonce.
+        const requested = HashMap.fromIterable(
+          A.map(arrivalsFrom(seeds, overrunHold), (unit) => [unit.nonce, unit.requestedWeightTokens] as const)
         );
+        for (const enqueued of A.filter(report.events, SimulationEvent.guards.Enqueued)) {
+          expect(enqueued.clamped).toBe(
+            O.exists(HashMap.get(requested, enqueued.nonce), (weight) => weight > policy.capacityTokens)
+          );
+        }
         return true;
       }),
     { arbitrary: fcRuns(64) }
@@ -562,12 +567,14 @@ it.layer(BackfillModelLive, { timeout: "60 seconds" })("@beep/ciops SCHE-06 back
           unit("short", 2, 10, O.some(9_000)),
           unit("long", 2, 20, O.some(9_001)),
           unit("unknown", 2, 30, O.none()),
+          unit("wide", 5, 40, O.some(1_000)),
+          unit("late", 1, 50, O.some(1_000)),
         ],
         running: [running],
         finished: [],
       });
       const reasons = yield* Effect.forEach(
-        ["head", "short", "long", "unknown"],
+        ["head", "short", "long", "unknown", "wide", "late", "missing"],
         (nonce) => model.verdict(policy, view, nonce),
         { concurrency: 1 }
       );
@@ -577,10 +584,76 @@ it.layer(BackfillModelLive, { timeout: "60 seconds" })("@beep/ciops SCHE-06 back
         AttemptVerdict.cases.Attempt.make({ route: "backfill" }),
         AttemptVerdict.cases.Wait.make({ reason: "ends-after-head-start" }),
         AttemptVerdict.cases.Wait.make({ reason: "eta-unknown" }),
+        AttemptVerdict.cases.Wait.make({ reason: "capacity" }),
+        AttemptVerdict.cases.Wait.make({ reason: "behind-backfill" }),
+        AttemptVerdict.cases.Wait.make({ reason: "not-queued" }),
       ]);
       const deadline = yield* model.deadline(policy, view, unit("short", 2, 10, O.some(9_000)));
       assertSome(deadline, 1_000 + 9_000 + 60_000);
       assertSome(conditionalDeadline(view, policy, A.getUnsafe(queueOrder(view, policy), 0)), 10_000);
+    })
+  );
+
+  it.effect("aging shorter than protection ranks an aged unit ahead of fairness", () =>
+    Effect.gen(function* () {
+      const model = yield* BackfillModel;
+      const queued = (nonce: string, originKey: string, enqueuedAtMillis: number) =>
+        QueuedUnit.make({
+          nonce,
+          originKey,
+          checkoutKey: "checkout",
+          priority: "verify",
+          weightTokens: PosInt.make(1),
+          enqueuedAtMillis: S.Natural.make(enqueuedAtMillis),
+          etaMillis: O.none(),
+          deadlineMillis: O.none(),
+        });
+      const view = SchedulerView.make({
+        nowMillis: S.Natural.make(90_000),
+        waiting: [queued("old", "origin-busy", 0), queued("fresh", "origin-idle", 50_000)],
+        running: [
+          RunningLease.make({
+            nonce: "busy",
+            originKey: "origin-busy",
+            checkoutKey: "checkout",
+            weightTokens: PosInt.make(1),
+            admittedAtMillis: S.Natural.make(0),
+            etaMillis: O.none(),
+          }),
+        ],
+        finished: [],
+      });
+      const agingFirst = BackfillPolicy.make({ ...policy, publishAgingMillis: PosInt.make(60_000) });
+      const aged = yield* model.order(agingFirst, view);
+      const fair = yield* model.order(policy, view);
+
+      expect(A.map(aged, (unit) => unit.nonce)).toEqual(["old", "fresh"]);
+      expect(A.map(fair, (unit) => unit.nonce)).toEqual(["fresh", "old"]);
+    })
+  );
+
+  it.effect("keys checkout usage by the (origin, checkout) pair without collisions", () =>
+    Effect.sync(() => {
+      const view = SchedulerView.make({
+        nowMillis: S.Natural.make(1_000),
+        waiting: [],
+        running: [
+          RunningLease.make({
+            nonce: "lease",
+            originKey: "a\u0000b",
+            checkoutKey: "c",
+            weightTokens: PosInt.make(1),
+            admittedAtMillis: S.Natural.make(0),
+            etaMillis: O.none(),
+          }),
+        ],
+        finished: [],
+      });
+      const reading = fairnessReadingFor(view, policy, { originKey: "a", checkoutKey: "b\u0000c" });
+
+      expect([reading.originTokenMillis, reading.checkoutTokenMillis, reading.windowTokenMillis]).toEqual([
+        0, 0, 1_000,
+      ]);
     })
   );
 
