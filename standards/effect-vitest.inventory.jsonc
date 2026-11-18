@@ -10746,13 +10746,13 @@
       "reason": "The plan is checked against the committed accepted-work-item manifest under the real checkout root (new URL(\"../../../../..\", import.meta.url)), and Bun.spawnSync probes real paths. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the manifest is read from a seeded volume and the path probes go through FileSystem."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/architecture-model-first-context.test.ts:17:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/architecture-model-first-context.test.ts:19:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/architecture-model-first-context.test.ts",
-      "line": 17,
-      "endLine": 17,
+      "line": 19,
+      "endLine": 19,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",

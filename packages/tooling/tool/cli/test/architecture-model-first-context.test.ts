@@ -1,3 +1,5 @@
+import * as Catalog from "@beep/contract-kit/Catalog";
+import * as Parity from "@beep/contract-kit/Parity";
 import {
   applyCanonicalSliceOperationPlan,
   architectureCommand,
@@ -240,6 +242,26 @@ describe("beep architecture: model-first context", () => {
           expect(decoded.scripts["beep:check:tests"]).toBe("tsrs -p tsconfig.test.json --noEmit");
         }
         expect(A.every(A.filter(plan.operations, isWriteFileOperation), (op) => op.content.length > 0)).toBe(true);
+
+        // The templates call only what @beep/contract-kit exports.
+        const generatedText = A.join(
+          A.map(A.filter(plan.operations, isWriteFileOperation), (op) => op.content),
+          "\n"
+        );
+        const catalogCalls = pipe(
+          A.fromIterable(pipe(generatedText, Str.matchAll(/Catalog\.(\w+)\(/g))),
+          A.map((match) => match[1] ?? ""),
+          A.dedupe
+        );
+        const parityImports = pipe(
+          A.fromIterable(pipe(generatedText, Str.matchAll(/import \{ (\w+) \} from "@beep\/contract-kit\/Parity"/g))),
+          A.map((match) => match[1] ?? ""),
+          A.dedupe
+        );
+        expect(catalogCalls).toEqual(["make"]);
+        expect(A.every(catalogCalls, (name) => A.some(R.keys(Catalog), (key) => key === name))).toBe(true);
+        expect(parityImports).toEqual(["groupShape"]);
+        expect(A.every(parityImports, (name) => A.some(R.keys(Parity), (key) => key === name))).toBe(true);
       })
     );
   });
