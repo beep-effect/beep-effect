@@ -24,15 +24,13 @@ describe("CiRunners guards and providers", () => {
   );
 
   it.effect("builds the RunnerSweep provider for a stage without calling AWS or GitHub", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const context = yield* Layer.build(
-          sweepProvider.pipe(
-            Layer.provide(Layer.mergeAll(Layer.succeed(Stage, "prod"), FetchHttpClient.layer, AwsCredentials.mock))
-          )
-        );
-        expect(context).toBeDefined();
-      })
-    )
+    Effect.gen(function* () {
+      const context = yield* Layer.build(
+        sweepProvider.pipe(
+          Layer.provide(Layer.mergeAll(Layer.succeed(Stage, "prod"), FetchHttpClient.layer, AwsCredentials.mock))
+        )
+      );
+      expect(context).toBeDefined();
+    })
   );
 });
