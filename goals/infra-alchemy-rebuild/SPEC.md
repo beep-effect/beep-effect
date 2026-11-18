@@ -1559,6 +1559,14 @@ Lane goals/infra-alchemy-rebuild-mint-vault-writer
 
 Reverse: gh variable delete INFRA_GITHUB_DEPLOY_ARMED -R beep-effect/beep-effect
 
+### job-env grants main schedule and dispatch runs read-only Turbo cache access, 2026-11-18
+
+Root fix for #3380's review thread on the schedule- and dispatch-only callers, landing first in the follow-on chain the packet gate and the CI driver ruled (job-env fix, then the beep-ci pin bump, then the callers' inputs restored; one at a time, not gating window 6). `beep ci job-env` now treats a `schedule` or `workflow_dispatch` run whose `GITHUB_REF` is `refs/heads/main` as a reader: `local:rw,remote:r` with the read token, mode `read-only (main schedule or dispatch)`, no application secrets, never the write token. Any other ref for those events stays local-only, and push and pull-request output is pinned byte-identical by a test that passed on the unmodified code before the change (the exact GITHUB_ENV bytes for a push on main and a same-repository pull request) and passes after it; a raw before-and-after capture compared equal with `cmp`. The R2 pilot's adapter had allowed the same main schedule and dispatch reads before stage 2. Pin bump: the setup action runs `bun run beep ci job-env` after installing dependencies, and the root `beep` script runs the checkout's `packages/tooling/tool/cli/src/bin.ts`, so this behaviour takes effect on every checkout of main as soon as it merges, not only after a pin bump. `CiOperational.service.ts` is in the `bin-ci.ts` closure, though, so the merge cuts a new `beep-ci-*` release through `beep-ci-binary.yml`, whose main run opens the routine pin bump on `ci/beep-ci-pin-bump`; that bump goes through the orchestrator for the driver's closure re-diff as its own PR, after this one. The third PR then restores the cache inputs of `data-sync.yml` (dispatch only) and `property-laws-nightly.yml` (schedule and dispatch), the only remote-cache callers that run on schedule or dispatch alone; no caller mixes schedule or dispatch with push or pull_request. The heavy.yml runs reached from the cache-producer and cache-local-observe dispatchers do not run the remote-cache Lint Policy job, so they are unaffected.
+
+Lane goals/infra-alchemy-rebuild-job-env-scheduled-read
+
+Reverse: Revert this PR: job-env again treats schedule and workflow_dispatch as local-only; push and pull-request output never changed.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
