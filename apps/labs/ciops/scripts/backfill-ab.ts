@@ -26,21 +26,34 @@ import { AdmissionJournalEvent } from "@/projection/Schemas";
 const decodeRow = S.decodeUnknownOption(S.fromJsonString(AdmissionJournalEvent));
 const encodeReport = S.encodeUnknownEffect(S.fromJsonString(ReplayReport));
 
-const flagValue = (argv: ReadonlyArray<string>, flag: string): O.Option<string> =>
-  O.flatMap(
+// A numeric flag: absent reads as its default; present, it needs an operand that parses and passes `valid`.
+const flagNumber = (argv: ReadonlyArray<string>, flag: string, fallback: number, valid: (value: number) => boolean) =>
+  O.match(
     A.findFirstIndex(argv, (arg) => arg === flag),
-    (index) => A.get(argv, index + 1)
+    {
+      onNone: () => Effect.succeed(fallback),
+      onSome: (index) =>
+        O.match(A.get(argv, index + 1), {
+          onNone: () => Effect.fail(SimulationInputError.make({ message: `${flag} needs a value.` })),
+          onSome: (raw) =>
+            Effect.fromOption(O.liftPredicate(Number(raw), valid)).pipe(
+              Effect.mapError(() => SimulationInputError.make({ message: `${flag} ${raw} is not a valid value.` }))
+            ),
+        }),
+    }
   );
 
-// A numeric flag: absent reads as its default, anything else must parse and pass `valid`.
-const flagNumber = (argv: ReadonlyArray<string>, flag: string, fallback: number, valid: (value: number) => boolean) =>
-  O.match(flagValue(argv, flag), {
-    onNone: () => Effect.succeed(fallback),
-    onSome: (raw) =>
-      Effect.fromOption(O.liftPredicate(Number(raw), valid)).pipe(
-        Effect.mapError(() => SimulationInputError.make({ message: `${flag} ${raw} is not a valid value.` }))
-      ),
-  });
+// The tags the replay reads. A row carrying one of them that does not decode is schema drift; any
+// other line (a worker `admission-routed` row, a torn tail, a tag this lab does not know) is opaque.
+const ReplayTag = S.Literals([
+  "admission-admitted",
+  "admission-released",
+  "admission-enqueued",
+  "admission-withdrawn",
+  "admission-lease-evicted",
+  "admission-ticket-evicted",
+]);
+const decodeTag = S.decodeUnknownOption(S.fromJsonString(S.Struct({ _tag: ReplayTag })));
 
 const arms = A.flatMap([10, 8, 6, 5], (capacity) =>
   A.map(
@@ -76,21 +89,31 @@ const program = Effect.gen(function* () {
   }
   // The archive directory is optional; every file that exists must read.
   const archive = path.join(root, "journal-archive");
-  const segments = yield* fs.readDirectory(archive).pipe(Effect.orElseSucceed(A.empty<string>));
+  const segments = yield* fs
+    .readDirectory(archive)
+    .pipe(
+      Effect.catchTag("PlatformError", (error) =>
+        error.reason._tag === "NotFound" ? Effect.succeed(A.empty<string>()) : Effect.fail(error)
+      )
+    );
   const files = A.append(
     A.map(A.sort(A.filter(segments, Str.endsWith(".ndjson")), Order.String), (name) => path.join(archive, name)),
     path.join(root, "journal.ndjson")
   );
   const texts = yield* Effect.forEach(files, (file) => fs.readFileString(file), { concurrency: 1 });
   const lines = A.filter(A.flatMap(texts, Str.split("\n")), Str.isNonEmpty);
-  const decoded = A.map(lines, (line) => decodeRow(line));
-  // A row this decoder rejects (a newer schema version or work kind) would silently shrink the replay.
-  const undecoded = A.length(A.filter(decoded, O.isNone));
-  if (undecoded > 0) {
+  const replayLines = A.filter(lines, (line) => O.isSome(decodeTag(line)));
+  const decoded = A.map(replayLines, (line) => decodeRow(line));
+  // A replay row this decoder rejects (a newer schema version or work kind) would silently shrink the replay.
+  const drifted = A.length(A.filter(decoded, O.isNone));
+  if (drifted > 0) {
     return yield* SimulationInputError.make({
-      message: `${undecoded} of ${A.length(lines)} journal rows did not decode; update the lab journal decoder before replaying.`,
+      message: `${drifted} of ${A.length(replayLines)} replay rows did not decode; update the lab journal decoder before replaying.`,
     });
   }
+  yield* Console.error(
+    `[backfill-ab] ${A.length(lines) - A.length(replayLines)} of ${A.length(lines)} journal lines carry no replay row (routed rows, torn tails) and were skipped.`
+  );
   const events = A.filter(
     A.getSomes(decoded),
     (event) => !("enqueuedAtMillis" in event) || event.enqueuedAtMillis >= since
