@@ -63,6 +63,7 @@
   },
   "dependencies": {
     "@alchemy.run/domain": "catalog:",
+    "@beep/identity": "workspace:^",
     "effect": "catalog:"
   },
   "devDependencies": {

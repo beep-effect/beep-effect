@@ -12,5 +12,10 @@
     "rootDir": ".",
     "sourceMap": false,
     "types": ["node", "bun-types"]
-  }
+  },
+  "references": [
+    {
+      "path": "../identity/tsconfig.json"
+    }
+  ]
 }

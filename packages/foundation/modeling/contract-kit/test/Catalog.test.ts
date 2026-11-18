@@ -1,8 +1,7 @@
 import * as Domain from "@alchemy.run/domain";
 import * as Catalog from "@beep/contract-kit/Catalog";
+import { groupShape } from "@beep/contract-kit/Parity";
 import { describe, expect, it } from "@effect/vitest";
-import * as A from "effect/Array";
-import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
 const NoteId = S.String.pipe(S.brand("NoteId"));
@@ -44,8 +43,6 @@ class NotesContract extends Domain.Api("NotesContract", {
   streams: [],
 }) {}
 
-const tags = (requests: ReadonlyMap<string, unknown>) => A.sort(A.fromIterable(requests.keys()), Order.String);
-
 describe("Catalog.make", () => {
   it("holds the context's commands, views and queries and no aggregate", () => {
     expect(NotesCatalog.kind).toBe("Model");
@@ -56,8 +53,10 @@ describe("Catalog.make", () => {
     expect(NotesCatalog.definitions.policies).toEqual([]);
   });
 
-  it("builds the same RPC tags as an Api over the real model", () => {
-    expect(tags(NotesContract.group.requests)).toEqual(tags(NotesApi.group.requests));
+  it("builds the same RPC group as an Api over the real model", () => {
+    const expected = groupShape(NotesApi.group);
+    expect(expected.length).toBe(1);
+    expect(groupShape(NotesContract.group)).toEqual(expected);
   });
 });
 

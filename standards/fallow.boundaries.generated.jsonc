@@ -2017,10 +2017,12 @@
       {
         "from": "@beep/contract-kit",
         "allow": [
-          "@beep/contract-kit"
+          "@beep/contract-kit",
+          "@beep/identity"
         ],
         "allowTypeOnly": [
-          "@beep/contract-kit"
+          "@beep/contract-kit",
+          "@beep/identity"
         ]
       },
       {

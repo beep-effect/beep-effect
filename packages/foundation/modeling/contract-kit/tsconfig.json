@@ -6,5 +6,10 @@
     "types": ["node"],
     "outDir": "dist",
     "rootDir": "src"
-  }
+  },
+  "references": [
+    {
+      "path": "../identity/tsconfig.json"
+    }
+  ]
 }
