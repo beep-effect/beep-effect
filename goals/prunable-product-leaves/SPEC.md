@@ -28,16 +28,29 @@ four seams that make it hold, then a guard that keeps it holding.
 - **Their packets.** The `goals/` and `explorations/` packets whose files a
   kept package's test, law or fixture reads for a product leaf. The census in
   the research note names them; the prune rehearsal removes them.
-- **Subject.** What a tolerant surface checks against. A path under
-  `goals/<slug>/` or `explorations/<slug>/` belongs to that packet; a path
-  under a workspace belongs to the nearest ancestor directory holding a
-  tracked `package.json`; any other path belongs to the repository. A subject
-  is present when the checkout tracks it. The repository is always present.
+- **Subject.** What a tolerant surface checks against, named independently of
+  the files the checkout currently holds. A packet subject is a packet root,
+  `goals/<slug>` or `explorations/<slug>`, derived from the path the surface
+  reads. A workspace subject is a workspace package name (`@beep/<name>`),
+  declared by the surface (a census row's consumers, the package that owns a
+  fixture); it is never derived from a directory, so a package that moves
+  keeps its subject. Any other path belongs to the repository, which is always
+  present.
+- **Presence.** Checked separately from identity. A packet is present when its
+  root directory exists in the checkout; a workspace is present when workspace
+  discovery finds a member with that package name. A present subject keeps
+  every assertion strict, stale-file checks included: a fixture or evidence
+  file missing from a present packet or workspace still fails.
 - **Prune rehearsal.** In a disposable worktree: delete the product leaves and
-  their packets, regenerate the generated projections (root `package.json`
-  workspaces, tsconfig references, the db-admin aggregation, the fallow
-  boundary zones), install, then run check, lint and test for every remaining
-  workspace.
+  their packets; regenerate the generated projections (root `package.json`
+  workspaces, tsconfig references through `bun run beep tsconfig-sync`, the
+  db-admin aggregation and its manifest edges through seam 4's generator, the
+  fallow boundary zones); rewrite the ratchet baselines and inventories that
+  list product paths with their own `--write` commands (for example
+  `standards/entity-kit-freeze.baseline.jsonc` through
+  `bun run beep laws entity-kit-freeze --write`), which may only shrink them;
+  then install, and run check, lint and test for every remaining workspace.
+  Hand edits to kept packages are not part of the rehearsal.
 
 ## Non-Goals
 
@@ -95,7 +108,23 @@ Built in payoff order, one PR each (`PLAN.md` tracks status).
    architecture-lab accepted-proof manifest leaves repo-cli. The agents slice
    owns (or takes from `shared`) the thread model it reads from `workspace`.
    The doctrine amendment and its `standards/architecture/DECISIONS.md` entry
-   land with this seam.
+   land with this seam. Every db-admin file group that names a product leaf
+   leaves with that leaf:
+   - **Manifest edges.** The generator writes db-admin's `dependencies` and
+     `devDependencies` on slice tables and domain packages from the present
+     slices, as `tsconfig-sync` writes references; the rehearsal runs it before
+     `bun install`, so no edge names a removed workspace.
+   - **Leaf migration modules** (`src/migrations/<Leaf>*.ts`) and the
+     `test/**` and `test/integration/**` files that import them or a leaf's
+     tables move into the owning slice (its `tables` package), so deleting the
+     leaf deletes them; db-admin keeps only slice-neutral modules and the
+     generated registry.
+   - **Generated migration SQL** (`drizzle/`). The generator rebuilds the
+     aggregate from the present slices' migration sources, or each slice owns
+     its own migration folder that the registry aggregates; seam 4 records the
+     choice as a decision. Either way the rehearsal's generator step leaves no
+     SQL for a removed leaf, and db-admin's live migration tests read only the
+     regenerated output.
 
 ## Target Surfaces
 
@@ -187,7 +216,7 @@ _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions wr
 
 ### An absent subject is skipped and reported; a present subject stays strict, 2026-11-17
 
-Operator decision, 2026-11-17. A census row, law exemption or test fixture whose subject is absent from the checkout is skipped and reported as skipped, not failed. A subject is the packet (goals/<slug> or explorations/<slug>) or the workspace (nearest ancestor with a tracked package.json) a path belongs to; any other path belongs to the repository, which is always present. Keying on the owning packet or workspace, not on the path itself, keeps the full checkout exactly as strict as today: a renamed evidence file or a deleted fixture inside a present packet or workspace still fails, because its subject exists. Each tolerant surface carries a test that simulates an absent subject and one that proves a stale row on a present subject still fails. One shared presence helper serves every surface.
+Operator decision, 2026-11-17. A census row, law exemption or test fixture whose subject is absent from the checkout is skipped and reported as skipped, not failed. A subject is the packet (goals/<slug> or explorations/<slug>) a path lives in, or a workspace named by its package name, which the surface declares (a census row's consumers, the package that owns a fixture); any other path belongs to the repository, which is always present. Identity never comes from the files the checkout holds: a packet is present when its directory exists, a workspace when workspace discovery finds a member with that name. Keying on the owning packet or package name, not on the path itself, keeps the full checkout exactly as strict as today: a renamed evidence file, a deleted fixture inside a present packet or workspace, or the old path of a package that moved still fails, because its subject exists. Each tolerant surface carries a test that simulates an absent subject and one that proves a stale row on a present subject still fails. One shared presence helper serves every surface.
 
 Lane feat/prunable-product-leaves
 

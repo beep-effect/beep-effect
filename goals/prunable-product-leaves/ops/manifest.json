@@ -11,7 +11,7 @@
   },
   "packetPath": "goals/prunable-product-leaves",
   "lifecycle": "active",
-  "mission": "Let a checkout that removes the product leaves install, typecheck and test without editing kept packages",
+  "mission": "Let a checkout that removes the product leaves install, typecheck, lint and test without editing kept packages",
   "executionCapable": true,
   "reflectionRequired": true,
   "completionGate": {
@@ -49,12 +49,12 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Implement",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",

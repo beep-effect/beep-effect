@@ -4,7 +4,7 @@ Repo root: the current working directory — the `beep-effect` checkout you are
 running in. Do not assume an absolute path; several checkouts exist. All paths
 below are repo-relative.
 
-Outcome: Let a checkout that removes the product leaves install, typecheck and test without editing kept packages
+Outcome: Let a checkout that removes the product leaves install, typecheck, lint and test without editing kept packages
 
 This is a compact `/goal` launcher. Treat the packet files as the detailed
 contract:

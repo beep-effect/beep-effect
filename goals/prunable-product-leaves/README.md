@@ -8,7 +8,7 @@ Source: [`ops/manifest.json`](./ops/manifest.json)
 
 ## Mission
 
-Let a checkout that removes the product leaves install, typecheck and test without editing kept packages
+Let a checkout that removes the product leaves install, typecheck, lint and test without editing kept packages
 
 ## Launch
 
@@ -44,5 +44,5 @@ P1 Implement, seam 1 next (P0 Research done 2026-11-17).
   db-admin doctrine amendment on 2026-11-17; `decisions/` records them. Do not
   reopen them without a new decision file.
 - The motive stated in this packet is the only one: a checkout that removes
-  product leaves must install, typecheck and test without editing kept
+  product leaves must install, typecheck, lint and test without editing kept
   packages.
