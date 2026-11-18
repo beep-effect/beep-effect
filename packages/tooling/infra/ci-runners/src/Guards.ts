@@ -118,18 +118,34 @@ export const requireFencedNames = Effect.fn("CiRunners.requireFencedNames")(func
  */
 export const maxStageSlugLength = 40;
 
+// Each rule: when it refuses a stage, and the reason it gives. `stage` is the stage name, `slug` its name slug.
+const stageRules: ReadonlyArray<{
+  readonly refuses: (stage: string, slug: string) => boolean;
+  readonly reason: (slug: string) => string;
+}> = [
+  { refuses: (_stage, slug) => Str.isEmpty(slug), reason: () => "its name slug is empty" },
+  {
+    refuses: (_stage, slug) => slug.length > maxStageSlugLength,
+    reason: () => `its name slug is longer than ${maxStageSlugLength} characters`,
+  },
+  {
+    refuses: (stage, slug) => stage !== slug,
+    reason: (slug) => `it is not canonical: use "${slug}", lower case letters, digits and "-" only`,
+  },
+  // The termination watcher matches `ghr:environment` by prefix, so neither fleet name may prefix the other.
+  {
+    refuses: (_stage, slug) => Str.startsWith(productionStage)(slug) || Str.startsWith(slug)(productionStage),
+    reason: (slug) => `its fleet name beep-fleet-${slug} and the ${productionStage} fleet name prefix one another`,
+  },
+];
+
 const stageRefusal = (stage: string, slug: string): ReadonlyArray<string> =>
   stage === productionStage
     ? []
-    : [
-        ...(Str.isEmpty(slug) ? ["its name slug is empty"] : []),
-        ...(slug.length > maxStageSlugLength ? [`its name slug is longer than ${maxStageSlugLength} characters`] : []),
-        ...(stage === slug ? [] : [`it is not canonical: use "${slug}", lower case letters, digits and "-" only`]),
-        // The termination watcher matches `ghr:environment` by prefix, so neither fleet name may prefix the other.
-        ...(Str.startsWith(productionStage)(slug) || Str.startsWith(slug)(productionStage)
-          ? [`its fleet name beep-fleet-${slug} and the ${productionStage} fleet name prefix one another`]
-          : []),
-      ];
+    : A.map(
+        A.filter(stageRules, (rule) => rule.refuses(stage, slug)),
+        (rule) => rule.reason(slug)
+      );
 
 /**
  * Fail a stage other than `prod` that is not canonical, whose fleet name
